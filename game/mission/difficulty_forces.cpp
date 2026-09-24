@@ -18,6 +18,7 @@
 #include "game/mission/spawn_placement.h"
 #include "game/session/session_context.h"
 #include "game/systems/owner_registry.h"
+#include "game/systems/undead_awakening_system.h"
 #include "game/units/factory.h"
 #include "game/units/spawn_type.h"
 
@@ -263,6 +264,17 @@ auto apply_starting_force_difficulty(Engine::Core::World& world,
   }
 
   return result;
+}
+
+auto apply_undead_wave_difficulty(Engine::Core::World& world,
+                                  const MatchDifficulty& difficulty) -> float {
+  auto* undead = world.get_system<Game::Systems::UndeadAwakeningSystem>();
+  if (undead == nullptr) {
+    return 1.0F;
+  }
+  const float multiplier = resolve_difficulty(difficulty.baseline_id()).wave_multiplier;
+  undead->set_wave_multiplier(multiplier);
+  return multiplier;
 }
 
 } // namespace Game::Mission

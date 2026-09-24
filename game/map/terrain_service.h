@@ -87,6 +87,12 @@ public:
                                    float world_y_offset = 0.0F,
                                    float fallback_y = 0.0F) const -> QVector3D;
 
+  // Smoothed up-vector of the drawn terrain, for tilting objects that rest on
+  // it (siege engines, horses, corpses, ground decals). Steady across triangle
+  // edges; (0, 1, 0) when no terrain is loaded.
+  [[nodiscard]] auto sample_ground_normal(float world_x,
+                                          float world_z) const -> QVector3D;
+
   [[nodiscard]] auto get_terrain_height_grid(int grid_x, int grid_z) const -> float;
 
   [[nodiscard]] auto is_walkable(int grid_x, int grid_z) const -> bool;

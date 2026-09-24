@@ -162,7 +162,10 @@ enum class CommanderMessageTrigger {
   CallAccepted,
   CallRefused,
   AllyNeedsResources,
-  GiftReceived
+  GiftReceived,
+  UndeadAwakened,
+  UndeadStirring,
+  UndeadCleared
 };
 
 [[nodiscard]] inline constexpr auto

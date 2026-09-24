@@ -14,8 +14,13 @@
 #include "render/gl/primitives.h"
 #include "render/gl/resources.h"
 #include "render/scene_renderer.h"
+#include "render/terrain_contact.h"
 
 namespace Render::GL {
+
+namespace {
+constexpr float k_siege_max_ground_tilt_degrees = 20.0F;
+} // namespace
 
 auto siege_winding(float progress) -> float {
   const float t = std::clamp(progress, 0.0F, 1.0F);
@@ -81,6 +86,10 @@ auto siege_motion(const DrawContext& ctx,
 
 auto siege_body_model(const DrawContext& ctx, const SiegeMotion& motion) -> QMatrix4x4 {
   auto model = ctx.model;
+  // The carriage sits on its wheels, so it pitches and rolls with the slope
+  // instead of hanging one wheel pair in the air and burying the other.
+  Render::tilt_model_to_ground(
+      model, ctx.world_view.terrain_or_empty(), k_siege_max_ground_tilt_degrees);
   const float rolling = (motion.left_roll + motion.right_roll) * 0.5F;
   model.translate(0.0F,
                   std::sin(rolling * 4.0F) * 0.006F * motion.movement,

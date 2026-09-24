@@ -38,13 +38,14 @@ A zone can define its trigger, guardians, haze, reward, and decorative anchor:
 | `radius`       | Awaken radius and the ring guardians hold their posts on                                   |
 | `leash_radius` | How far from the anchor a guardian may fight; defaults to `max(radius, 14)`                |
 | `wave_timeout` | Seconds before a `next_wave` wave rises even if the previous wave still stands             |
+| `wave_delay`   | Seconds between a wave falling and the next one rising; defaults to 1.5                    |
 | `fog_density`  | Optional zone haze; `0` disables it                                                        |
 | `clear_reward` | Optional one-time resources granted when the garrison is broken                            |
 
 Wave triggers:
 
 - `initial` (also `awaken`, `mission_start`) — the first wave, raised the moment the zone wakes;
-- `after_clear` (also `on_clear`) — rises 1.5 s after every guardian of the previous wave is dead, and never on a timer; and
+- `after_clear` (also `on_clear`) — rises `wave_delay` seconds (1.5 by default) after every guardian of the previous wave is dead, and never on a timer; and
 - `next_wave` (also `after_timeout`, `timed`) — rises when the previous wave dies **or** after `wave_timeout` seconds, whichever comes first. A `wave_timeout` of `0` disables the timer.
 
 The default `wave_timeout` is 45 s, but it only ever applies to `next_wave` waves. An `after_clear` wave with a `wave_timeout` authored on the zone still waits for the kill.
@@ -153,6 +154,12 @@ Each zone announces each event at most once:
 - when its garrison is broken, either by killing the guardians or by losing the shrine.
 
 `GameEngine` spaces mission announcements 4.5 s apart. The toast host merges any two announcements that land on its channel within its 4 s dwell into one toast with a "×2" suffix and only the newer text, so an unspaced pair (two zones waking together, or a wave rising on top of a commander line) used to lose a message. Queued announcements are shown in order; an identical text already waiting is not queued twice.
+
+When a wave falls and another is still to come, the zone publishes `Engine::Core::UndeadZonePhaseEvent` with phase `Stirring` and the seconds until the next rising. A `wave_delay` of 5 s or more is long enough to be a breather rather than a stutter, so it also gets its own toast ("The ground is moving under the dead. More are coming up."). When the last guardian of the last wave falls, the same event is published with phase `Cleared`, next to the "hold the shrine" toast.
+
+Mission commander lines can answer all three moments: `undead_awakened`, `undead_stirring` and `undead_cleared` triggers take a `zone_id` (or `kind`) that names the zone, so a line can be written for one zone and stay silent for another.
+
+The number of squads in each rising follows the player's difficulty preset; see `docs/DIFFICULTY.md`.
 
 Awakening also publishes `Engine::Core::UndeadZoneAwakenedEvent` with the anchor position. `GameEngine` turns it into a `MinimapAlert::ShrineStirred` ping so a player looking elsewhere gets a spatial cue as well as the toast and the sound.
 

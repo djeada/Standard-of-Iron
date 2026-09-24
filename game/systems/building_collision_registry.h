@@ -285,7 +285,6 @@ private:
   float m_max_half_extent{0.0F};
 
   static const std::map<std::string, BuildingSize, std::less<>> s_building_sizes;
-  static const std::map<std::string, BuildingBody, std::less<>> s_building_bodies;
 
   static float s_grid_padding;
 

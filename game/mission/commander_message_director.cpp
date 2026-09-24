@@ -306,6 +306,23 @@ void CommanderMessageDirector::subscribe() {
                          .subject_owner_id = event.owner_id,
                          .final_wave = event.final_wave});
           });
+  m_undead_awakened_subscription =
+      ScopedEventSubscription<Engine::Core::UndeadZoneAwakenedEvent>(
+          [this](const auto& event) {
+            notify_fact({.trigger = CommanderMessageTrigger::UndeadAwakened,
+                         .subject_owner_id = event.zone_owner_id,
+                         .actor_owner_id = event.woken_by_owner_id,
+                         .subject_type = event.zone_id});
+          });
+  m_undead_phase_subscription =
+      ScopedEventSubscription<Engine::Core::UndeadZonePhaseEvent>(
+          [this](const auto& event) {
+            const bool cleared = event.phase == Engine::Core::UndeadZonePhase::Cleared;
+            notify_fact({.trigger = cleared ? CommanderMessageTrigger::UndeadCleared
+                                            : CommanderMessageTrigger::UndeadStirring,
+                         .subject_owner_id = event.zone_owner_id,
+                         .subject_type = event.zone_id});
+          });
 }
 
 void CommanderMessageDirector::unsubscribe() {
@@ -319,6 +336,8 @@ void CommanderMessageDirector::unsubscribe() {
   m_eliminated_subscription.unsubscribe();
   m_wave_incoming_subscription.unsubscribe();
   m_wave_cleared_subscription.unsubscribe();
+  m_undead_awakened_subscription.unsubscribe();
+  m_undead_phase_subscription.unsubscribe();
 }
 
 void CommanderMessageDirector::notify_fact(const CommanderMessageFact& fact) {

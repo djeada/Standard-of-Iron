@@ -18,6 +18,7 @@
 #include "map/terrain.h"
 #include "map/terrain_service.h"
 #include "render/scene_renderer.h"
+#include "render/terrain_contact.h"
 #include "scatter_runtime.h"
 #include "scatter_submission.h"
 
@@ -35,6 +36,18 @@ constexpr float k_plant_type_shrub = 0.0F;
 constexpr float k_plant_type_rosette = 1.0F;
 constexpr float k_plant_type_frond = 2.0F;
 constexpr float k_plant_type_count = 3.0F;
+
+// Plants are crossed cards rising from their origin. They rest on the ground
+// with the downhill edge of their base sunk into the slope, never lifted clear
+// of it: a few centimetres of air under a knee-high shrub reads as floating.
+auto bed_plant_base(const Game::Map::TerrainService& terrain,
+                    float world_x,
+                    float world_z,
+                    float surface_y,
+                    float scale) -> float {
+  return Render::bedded_prop_world_y(
+      terrain, world_x, world_z, surface_y, scale * 0.25F, scale * 0.20F);
+}
 
 } // namespace
 
@@ -101,12 +114,14 @@ void PlantRenderer::generate_plant_instances() {
       const float sway_phase = rand_01(var_state) * MathConstants::k_two_pi;
       const float plant_type = std::floor(rand_01(var_state) * k_plant_type_count);
 
+      const float plant_scale = prop.scale * Game::Map::world_prop_render_scale(
+                                                 Game::Map::WorldProp::Type::Plant);
       PlantInstanceGpu inst;
-      inst.pos_scale = QVector4D(pos.x(),
-                                 pos.y() + 0.05F,
-                                 pos.z(),
-                                 prop.scale * Game::Map::world_prop_render_scale(
-                                                  Game::Map::WorldProp::Type::Plant));
+      inst.pos_scale = QVector4D(
+          pos.x(),
+          bed_plant_base(terrain_service, pos.x(), pos.z(), pos.y(), plant_scale),
+          pos.z(),
+          plant_scale);
       inst.color_sway = QVector4D(tint.x(), tint.y(), tint.z(), sway_phase);
       inst.type_params = QVector4D(plant_type, prop.rotation, 1.0F, 1.0F);
       plant_instances.push_back(inst);
@@ -199,7 +214,11 @@ void PlantRenderer::generate_plant_instances() {
 
     PlantInstanceGpu instance;
 
-    instance.pos_scale = QVector4D(world_x, world_y + 0.05F, world_z, scale);
+    instance.pos_scale = QVector4D(
+        world_x,
+        bed_plant_base(world().terrain_or_empty(), world_x, world_z, world_y, scale),
+        world_z,
+        scale);
     instance.color_sway =
         QVector4D(tint_color.x(), tint_color.y(), tint_color.z(), sway_phase);
     instance.type_params = QVector4D(plant_type, rotation, sway_strength, sway_speed);

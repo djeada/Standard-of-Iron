@@ -7010,10 +7010,6 @@ to see preview</source>
         <translation>Шесть лагерей в полосатой скальной пустыне. Три русла скрещиваются посередине и режут землю на шесть клиньев, так что до любого соседа — две переправы: одна под скальными уступами перекрёстка, другая у столбов по краю. Поперёк каждого клина лежит столовая гора, и участок решается коридором рядом с ней.</translation>
     </message>
     <message>
-        <source>Small authored scenario that demonstrates ruins, a shrine, and undead awakening zones.</source>
-        <translation>Небольшой авторский сценарий, показывающий руины, святилище и зоны пробуждения мёртвых.</translation>
-    </message>
-    <message>
         <source>Sunbaked Terraces</source>
         <translation>Выжженные Террасы</translation>
     </message>
@@ -7040,6 +7036,10 @@ to see preview</source>
     <message>
         <source>Aurelia Magna</source>
         <translation>Аврелия Магна</translation>
+    </message>
+    <message>
+        <source>A Roman watch camp on the old road, the night it finds out why the shepherds stopped using it. Timber, stone and a flock are close to the camp; the barrow ruins hold the middle ground; the cursed shrine stands alone on the north-east ground. A low knoll between the camp and the barrow is the only high ground worth having, and the road runs past the dead the whole way.</source>
+        <translation>Римский сторожевой лагерь на старой дороге в ту ночь, когда он узнаёт, почему пастухи перестали по ней ходить. Лес, камень и стадо — рядом с лагерем; руины гробницы занимают середину; проклятое святилище одиноко стоит на северо-востоке. Низкий бугор между лагерем и гробницей — единственная высота, которую стоит занять, а дорога всю дорогу идёт мимо мёртвых.</translation>
     </message>
 </context>
 <context>
@@ -7583,10 +7583,6 @@ to see preview</source>
         <translation>Доведите колонну до понтонного моста на ближнем берегу.</translation>
     </message>
     <message>
-        <source>Burn every cursed guardian from the sepulcher ruins. Kill what cannot die.</source>
-        <translation>Выжгите каждого проклятого стража из руин гробницы. Убейте то, что не может умереть.</translation>
-    </message>
-    <message>
         <source>Cavalry reaches it first; hold the yard until the standard changes.</source>
         <translation>Конница доходит первой; держите двор, пока не сменится знамя.</translation>
     </message>
@@ -7641,10 +7637,6 @@ to see preview</source>
     <message>
         <source>End the war with the men who lead it.</source>
         <translation>Закончите войну вместе с теми, кто её ведёт.</translation>
-    </message>
-    <message>
-        <source>Endure both waves from the depths. Do not flinch when the ground tears open.</source>
-        <translation>Переживите обе волны из глубин. Не дрогните, когда земля разверзнется.</translation>
     </message>
     <message>
         <source>Enemy camps fall neutral once their commander is dead.</source>
@@ -7931,10 +7923,6 @@ to see preview</source>
         <translation>Поставьте строителей на склоны; за перевал платят материалами, а не кровью.</translation>
     </message>
     <message>
-        <source>Sixty men and a shrine the local people will not walk past after dark. My orders say investigate. I would sooner burn it and write that we investigated, but the Senate reads.</source>
-        <translation>Шестьдесят человек и святилище, мимо которого местные после темноты не ходят. В приказе сказано: обследовать. Я бы охотнее сжёг его и написал, что обследовали, но Сенат читает.</translation>
-    </message>
-    <message>
         <source>So the centre gave and the wings did not. That was well done, and I say so, and I was inside it. Rome has lost an army and a ring for every knight in it. Rome has not yet lost anything that matters.</source>
         <translation>Итак, центр подался, а крылья нет. Сделано хорошо, я это говорю, и я был внутри. Рим потерял армию и по перстню за каждого всадника в ней. Ничего, что имеет значение, Рим ещё не потерял.</translation>
     </message>
@@ -7957,10 +7945,6 @@ to see preview</source>
     <message>
         <source>Stand in the gate yard of the northern advance camp until it falls to Carthage.</source>
         <translation>Стойте в надворотном дворе северного передового лагеря, пока он не отойдёт Карфагену.</translation>
-    </message>
-    <message>
-        <source>Stand your ground. The last soldier alone is not a force — he is a sacrifice.</source>
-        <translation>Стойте насмерть. Последний воин в одиночку — не сила, а жертва.</translation>
     </message>
     <message>
         <source>Supply is a target - and it cuts both ways. Your market and your homes are what the Romans are actually marching at, and their siege camp keeps its own stockpile within reach of a raid.</source>
@@ -8049,10 +8033,6 @@ to see preview</source>
     <message>
         <source>The commander falls — and every line collapses behind him.</source>
         <translation>Полководец падает — и каждая линия за ним рушится.</translation>
-    </message>
-    <message>
-        <source>The commander falls — the vigil ends. And the dead keep walking.</source>
-        <translation>Полководец падает — бдение окончено. А мёртвые идут дальше.</translation>
     </message>
     <message>
         <source>The crew is gone and the officer is standing in a clearing with an axe. That is not a work party.</source>
@@ -8575,22 +8555,6 @@ to see preview</source>
         <translation>Все ворота не прикрыть. Следи за упреждающим знаком и перемещайся по внутренним линиям.</translation>
     </message>
     <message>
-        <source>Drive the dead from the shrine, then plant the standard on it. Salt the earth where they stood.</source>
-        <translation>Изгоните мёртвых со святилища, затем водрузите на нём штандарт. Посыпьте солью землю, где они стояли.</translation>
-    </message>
-    <message>
-        <source>Pull the wounded back to the household and send for the men we still have. The dead are patient. We can afford to be patient too.</source>
-        <translation>Отведите раненых к дому и пошлите за людьми, что у нас остались. Мёртвые терпеливы. Мы тоже можем позволить себе терпение.</translation>
-    </message>
-    <message>
-        <source>Take the cursed shrine above the sepulcher ruins and hold what you take. Sixty men, a barracks and one household are all Rome could spare: clear the guardians out of the ruins, then drive the dead off the shrine and plant the standard on it.</source>
-        <translation>Возьмите проклятое святилище над руинами гробницы и удержите взятое. Шестьдесят человек, казармы и один дом - всё, что смог выделить Рим: выбейте стражей из руин, затем изгоните мёртвых со святилища и водрузите на нём штандарт.</translation>
-    </message>
-    <message>
-        <source>There they are. Do not look at the faces. Archers loose, shields close, and nobody chases anything back into that fog.</source>
-        <translation>Вот они. Не смотрите в лица. Лучники, стреляй; щиты, сомкнуть; и никто не гонится ни за чем обратно в этот туман.</translation>
-    </message>
-    <message>
         <source>Both risings of the dead at the south-western ruins must also fall before the war ends.</source>
         <translation>Оба восстания мёртвых у юго-западных руин тоже должны пасть, прежде чем закончится война.</translation>
     </message>
@@ -9045,6 +9009,70 @@ to see preview</source>
     <message>
         <source>Africa, then, and the two of us, and no river to stand behind. I have the measure of your elephants and I have your Numidians. Whatever you mean to do, do it where I can see it. I have waited sixteen years to stand across a field from you with an army of my own.</source>
         <translation>Значит, Африка, и мы двое, и нет реки, за которой можно встать. Я знаю цену твоим слонам, и твои нумидийцы теперь у меня. Что бы ты ни задумал, делай это у меня на виду. Шестнадцать лет я ждал, чтобы встать напротив тебя через поле с собственной армией.</translation>
+    </message>
+    <message>
+        <source>Break both risings at the shrine. Do not flinch when the ground tears open.</source>
+        <translation>Сломите оба восстания у святилища. Не дрогните, когда земля разверзнется.</translation>
+    </message>
+    <message>
+        <source>Clear the barrow ruins. Both risings of the dead must fall.</source>
+        <translation>Очистите руины гробницы. Оба восстания мёртвых должны пасть.</translation>
+    </message>
+    <message>
+        <source>Fabius falls. The watch ends, and the dead keep walking.</source>
+        <translation>Фабий пал. Дозор окончен, а мёртвые идут дальше.</translation>
+    </message>
+    <message>
+        <source>Fabius stands alone, with no soldiers left and no barracks to raise more.</source>
+        <translation>Фабий остался один: ни солдат, ни казарм, чтобы набрать новых.</translation>
+    </message>
+    <message>
+        <source>It is calling up the last of them, and another priest with them. Whatever comes out of that ground now is all it has left. So is what we have.</source>
+        <translation>Оно поднимает последних, а с ними ещё одного могильного жреца. Всё, что сейчас выйдет из этой земли, — всё, что у него осталось. Как и у нас.</translation>
+    </message>
+    <message>
+        <source>Listen. The ground is still moving, and one of them is coming up in robes. That one first, archers. The rest are only bones.</source>
+        <translation>Слушайте. Земля всё ещё шевелится, и один из них поднимается в балахоне. Лучники, сначала его. Остальные — просто кости.</translation>
+    </message>
+    <message>
+        <source>Now. Get men onto that shrine and keep them there until the standard is up. Nobody steps off it. Not for loot, not for the wounded, not for me.</source>
+        <translation>Сейчас. Заводите людей на святилище и держите их там, пока не поднимут штандарт. Никто не сходит. Ни ради добычи, ни ради раненых, ни ради меня.</translation>
+    </message>
+    <message>
+        <source>Pull the wounded back to the camp and send for the men we still have. The dead are patient. We can afford to be patient too.</source>
+        <translation>Отведите раненых в лагерь и пошлите за теми, кто у нас ещё остался. Мёртвые терпеливы. Мы тоже можем позволить себе терпение.</translation>
+    </message>
+    <message>
+        <source>Quiet again. Count the living, bring the builders up, and find out what the dead were sitting on. Then look at that shrine and tell me you want to go up there.</source>
+        <translation>Снова тихо. Пересчитайте живых, подтяните строителей и выясните, на чём сидели мёртвые. А потом взгляните на то святилище и скажите мне, что хотите туда подняться.</translation>
+    </message>
+    <message>
+        <source>Raise a marketplace at the watch camp. Gold buys nothing buried in a barrow.</source>
+        <translation>Постройте рынок в сторожевом лагере. Золото не купит ничего из того, что зарыто в гробнице.</translation>
+    </message>
+    <message>
+        <source>Rome sent sixty men to find out why the shepherds will not use the old road after dark. Build up the watch camp first, then clear the barrow ruins and take the shrine on the rise. The dead will not come to you: you choose when to wake them, and you can choose to be ready.</source>
+        <translation>Рим послал шестьдесят человек выяснить, почему пастухи не ходят по старой дороге после темноты. Сначала обустройте сторожевой лагерь, затем очистите руины гробницы и возьмите святилище на возвышенности. Мёртвые не придут к вам сами: вы выбираете, когда их разбудить, и можете выбрать быть готовыми.</translation>
+    </message>
+    <message>
+        <source>Sixty men and a road the shepherds will not walk after dark. The Senate wants a report. Cut timber, raise the camp, and keep everyone off that barrow until I say otherwise.</source>
+        <translation>Шестьдесят человек и дорога, по которой пастухи после темноты не ходят. Сенат хочет доклад. Рубите лес, ставьте лагерь и никого не подпускайте к той гробнице, пока я не скажу иначе.</translation>
+    </message>
+    <message>
+        <source>Take the shrine on the rise: cut down its guardians, then keep troops beside it until the standard is planted.</source>
+        <translation>Возьмите святилище на возвышенности: перебейте его стражей, затем держите рядом войска, пока не будет водружён штандарт.</translation>
+    </message>
+    <message>
+        <source>The hill as well. Of course the hill as well. Shields in front, every bow on the one in robes, and nobody chases anything into that haze.</source>
+        <translation>И холм тоже. Ну конечно, и холм тоже. Щиты впереди, все луки — на того, что в балахоне, и никто ни за чем не гонится в эту дымку.</translation>
+    </message>
+    <message>
+        <source>The quartermaster sent gold, and gold does not hold a shield wall. Build a market and turn it into iron. When we do go to that barrow, the archers stand still and let the dead walk onto the shields.</source>
+        <translation>Квартирмейстер прислал золото, а золото не удержит стену щитов. Постройте рынок и превратите его в железо. Когда мы всё же пойдём к той гробнице, лучники стоят на месте и дают мёртвым самим прийти на щиты.</translation>
+    </message>
+    <message>
+        <source>Those are men. Were men. Jupiter keep us. ...Steady. Bones break like anything else. Archers, hold where you stand and let them come to the shields.</source>
+        <translation>Это люди. Были людьми. Юпитер, сохрани нас. ...Спокойно. Кости ломаются, как и всё остальное. Лучники, стоять на месте, пусть идут на щиты.</translation>
     </message>
 </context>
 <context>
@@ -10649,14 +10677,6 @@ Wide vision and a durable settlement anchor</source>
         <translation>ОГЛУШЁН</translation>
     </message>
     <message>
-        <source>BOW  ·  X</source>
-        <translation>ЛУК  ·  X</translation>
-    </message>
-    <message>
-        <source>BLADE  ·  X</source>
-        <translation>КЛИНОК  ·  X</translation>
-    </message>
-    <message>
         <source>SPECIAL</source>
         <translation>ПРИЁМ</translation>
     </message>
@@ -10671,6 +10691,86 @@ Wide vision and a durable settlement anchor</source>
     <message>
         <source>READY</source>
         <translation>ГОТОВО</translation>
+    </message>
+    <message>
+        <source>Strike</source>
+        <translation>Удар</translation>
+    </message>
+    <message>
+        <source>Heavy</source>
+        <translation>Тяжёлый</translation>
+    </message>
+    <message>
+        <source>Guard</source>
+        <translation>Защита</translation>
+    </message>
+    <message>
+        <source>Dodge</source>
+        <translation>Уклон</translation>
+    </message>
+    <message>
+        <source>Lock on</source>
+        <translation>Захват</translation>
+    </message>
+    <message>
+        <source>Sprint</source>
+        <translation>Рывок</translation>
+    </message>
+    <message>
+        <source>Camera</source>
+        <translation>Камера</translation>
+    </message>
+    <message>
+        <source>Army view</source>
+        <translation>Вид армии</translation>
+    </message>
+    <message>
+        <source>WINDED</source>
+        <translation>ВЫДОХСЯ</translation>
+    </message>
+    <message>
+        <source>%1  ·  %2 to swap</source>
+        <translation>%1  ·  %2 — сменить</translation>
+    </message>
+    <message>
+        <source>BOW</source>
+        <translation>ЛУК</translation>
+    </message>
+    <message>
+        <source>BLADE</source>
+        <translation>КЛИНОК</translation>
+    </message>
+    <message>
+        <source>AURA</source>
+        <translation>АУРА</translation>
+    </message>
+    <message>
+        <source>RALLY</source>
+        <translation>СБОР</translation>
+    </message>
+    <message>
+        <source>ON %1</source>
+        <translation>АКТИВНО %1</translation>
+    </message>
+    <message>
+        <source>ON</source>
+        <translation>АКТИВНО</translation>
+    </message>
+    <message>
+        <source>CAMERA  ·  CLOSE</source>
+        <translation>КАМЕРА  ·  БЛИЗКО</translation>
+    </message>
+    <message>
+        <source>CAMERA  ·  CHASE</source>
+        <translation>КАМЕРА  ·  СЛЕЖЕНИЕ</translation>
+    </message>
+    <message>
+        <source>BOW DRAWN</source>
+        <translation>ЛУК НАГОТОВЕ</translation>
+    </message>
+    <message>
+        <source>BLADE DRAWN</source>
+        <translation>КЛИНОК ОБНАЖЁН</translation>
     </message>
 </context>
 <context>
@@ -11906,6 +12006,10 @@ Wide vision and a durable settlement anchor</source>
     <message>
         <source>The risen guardians are put down. Hold the shrine to purify it.</source>
         <translation>Восставшие стражи повержены. Удержите святилище, чтобы очистить его.</translation>
+    </message>
+    <message>
+        <source>The ground is moving under the dead. More are coming up.</source>
+        <translation>Земля под мёртвыми шевелится. Поднимаются новые.</translation>
     </message>
 </context>
 <context>

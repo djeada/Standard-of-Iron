@@ -286,6 +286,27 @@ public:
   int woken_by_owner_id;
 };
 
+enum class UndeadZonePhase : std::uint8_t {
+  Stirring,
+  Cleared
+};
+
+class UndeadZonePhaseEvent : public Event {
+public:
+  UndeadZonePhaseEvent(QString zone_id,
+                       UndeadZonePhase phase,
+                       int zone_owner_id,
+                       float seconds_until_wave = 0.0F)
+      : zone_id(std::move(zone_id))
+      , phase(phase)
+      , zone_owner_id(zone_owner_id)
+      , seconds_until_wave(seconds_until_wave) {}
+  QString zone_id;
+  UndeadZonePhase phase;
+  int zone_owner_id;
+  float seconds_until_wave;
+};
+
 class AiAttackLaunchedEvent : public Event {
 public:
   AiAttackLaunchedEvent(int attacker_owner_id, int target_owner_id, EntityID target_id)

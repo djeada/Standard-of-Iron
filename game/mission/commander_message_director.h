@@ -242,6 +242,10 @@ private:
       m_wave_incoming_subscription;
   Engine::Core::ScopedEventSubscription<Engine::Core::MissionWaveClearedEvent>
       m_wave_cleared_subscription;
+  Engine::Core::ScopedEventSubscription<Engine::Core::UndeadZoneAwakenedEvent>
+      m_undead_awakened_subscription;
+  Engine::Core::ScopedEventSubscription<Engine::Core::UndeadZonePhaseEvent>
+      m_undead_phase_subscription;
 };
 
 } // namespace Game::Mission
