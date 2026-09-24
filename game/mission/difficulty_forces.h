@@ -33,4 +33,7 @@ apply_starting_force_difficulty(Engine::Core::World& world,
                                 const MatchDifficulty& difficulty,
                                 int local_owner_id) -> DifficultyForceResult;
 
+auto apply_undead_wave_difficulty(Engine::Core::World& world,
+                                  const MatchDifficulty& difficulty) -> float;
+
 } // namespace Game::Mission

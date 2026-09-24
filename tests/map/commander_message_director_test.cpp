@@ -159,6 +159,69 @@ TEST_F(CommanderMessageDirectorTest, CaptureLineFiresOnlyForTheNamedOwners) {
   EXPECT_EQ(m_director.active().id, QStringLiteral("river_town"));
 }
 
+TEST_F(CommanderMessageDirectorTest, UndeadLinesFollowTheZoneThatMoved) {
+  using Game::Mission::CommanderMessageTrigger;
+  constexpr int k_sepulcher_owner = 99;
+  auto barrow_wakes = make_message(QStringLiteral("barrow_wakes"),
+                                   CommanderMessageTrigger::UndeadAwakened);
+  barrow_wakes.condition.subject_type = QStringLiteral("ruins_guard");
+  barrow_wakes.priority = 110;
+  auto shrine_stirs = make_message(QStringLiteral("shrine_stirs"),
+                                   CommanderMessageTrigger::UndeadStirring);
+  shrine_stirs.condition.subject_type = QStringLiteral("shrine_sentinels");
+  shrine_stirs.priority = 110;
+  auto shrine_clear = make_message(QStringLiteral("shrine_clear"),
+                                   CommanderMessageTrigger::UndeadCleared);
+  shrine_clear.condition.subject_type = QStringLiteral("shrine_sentinels");
+  shrine_clear.priority = 110;
+  Game::Mission::MissionDefinition mission;
+  mission.commander_messages = {barrow_wakes, shrine_stirs, shrine_clear};
+  configure(std::move(mission));
+
+  auto& events = Engine::Core::EventManager::instance();
+  events.publish(
+      Engine::Core::UndeadZoneAwakenedEvent(QStringLiteral("shrine_sentinels"),
+                                            0.0F,
+                                            0.0F,
+                                            k_sepulcher_owner,
+                                            k_local_owner));
+  m_director.update(0.0F);
+  EXPECT_FALSE(m_director.has_active()) << "no line was written for the shrine waking";
+
+  events.publish(Engine::Core::UndeadZoneAwakenedEvent(
+      QStringLiteral("ruins_guard"), 0.0F, 0.0F, k_sepulcher_owner, k_local_owner));
+  m_director.update(0.0F);
+  ASSERT_TRUE(m_director.has_active());
+  EXPECT_EQ(m_director.active().id, QStringLiteral("barrow_wakes"));
+  m_director.update(20.0F);
+
+  events.publish(
+      Engine::Core::UndeadZonePhaseEvent(QStringLiteral("ruins_guard"),
+                                         Engine::Core::UndeadZonePhase::Stirring,
+                                         k_sepulcher_owner,
+                                         18.0F));
+  m_director.update(0.0F);
+  EXPECT_FALSE(m_director.has_active()) << "the barrow stirring is not the shrine's";
+
+  events.publish(
+      Engine::Core::UndeadZonePhaseEvent(QStringLiteral("shrine_sentinels"),
+                                         Engine::Core::UndeadZonePhase::Stirring,
+                                         k_sepulcher_owner,
+                                         18.0F));
+  m_director.update(0.0F);
+  ASSERT_TRUE(m_director.has_active());
+  EXPECT_EQ(m_director.active().id, QStringLiteral("shrine_stirs"));
+  m_director.update(20.0F);
+
+  events.publish(
+      Engine::Core::UndeadZonePhaseEvent(QStringLiteral("shrine_sentinels"),
+                                         Engine::Core::UndeadZonePhase::Cleared,
+                                         k_sepulcher_owner));
+  m_director.update(0.0F);
+  ASSERT_TRUE(m_director.has_active());
+  EXPECT_EQ(m_director.active().id, QStringLiteral("shrine_clear"));
+}
+
 TEST_F(CommanderMessageDirectorTest, CommanderDeathLineFiltersOnNationAndKiller) {
   auto message =
       make_message(QStringLiteral("consul_down"),

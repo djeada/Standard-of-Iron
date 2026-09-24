@@ -6951,10 +6951,6 @@ para ver la vista previa</translation>
         <translation>Vigilia del Sepulcro de Hierro</translation>
     </message>
     <message>
-        <source>Small authored scenario that demonstrates ruins, a shrine, and undead awakening zones.</source>
-        <translation>Pequeño escenario diseñado que muestra ruinas, un santuario y zonas de despertar de los no muertos.</translation>
-    </message>
-    <message>
         <source>A quiet meadow between a Carthaginian camp and a Roman outpost, laid out for the tutorial: timber, stone and ore within a short walk of the barracks, a scouting party to practise on, and a small enemy camp to take once the army is ready.</source>
         <translation>Una pradera tranquila entre un campamento cartaginés y un puesto avanzado romano, dispuesta para el tutorial: madera, piedra y mineral a un corto paseo del cuartel, una partida de exploradores con la que practicar y un pequeño campamento enemigo que tomar cuando el ejército esté listo.</translation>
     </message>
@@ -7037,6 +7033,10 @@ para ver la vista previa</translation>
     <message>
         <source>Aurelia Magna</source>
         <translation>Aurelia Magna</translation>
+    </message>
+    <message>
+        <source>A Roman watch camp on the old road, the night it finds out why the shepherds stopped using it. Timber, stone and a flock are close to the camp; the barrow ruins hold the middle ground; the cursed shrine stands alone on the north-east ground. A low knoll between the camp and the barrow is the only high ground worth having, and the road runs past the dead the whole way.</source>
+        <translation>Un campamento de guardia romano en el viejo camino, la noche en que descubre por qué los pastores dejaron de usarlo. Madera, piedra y un rebaño quedan cerca del campamento; las ruinas del sepulcro ocupan el terreno central; el santuario maldito se alza solo en el terreno del noreste. Un otero bajo entre el campamento y el sepulcro es la única altura que vale la pena, y el camino pasa junto a los muertos todo el trayecto.</translation>
     </message>
 </context>
 <context>
@@ -7528,10 +7528,6 @@ para ver la vista previa</translation>
         <translation>Quiebra las tres fases de asalto romanas. El barrio resiste cuando la última columna consular yazca muerta en las calles.</translation>
     </message>
     <message>
-        <source>Burn every cursed guardian from the sepulcher ruins. Kill what cannot die.</source>
-        <translation>Quema a todos los guardianes malditos de las ruinas del sepulcro. Mata a lo que no puede morir.</translation>
-    </message>
-    <message>
         <source>Cold water and an early start, and my colleague is very pleased with both. He has the men in the river before their porridge. I said what I thought and was overruled, so I shall stand here and watch your ambush do its arithmetic.</source>
         <translation>Agua fría y una marcha temprana, y a mi colega le complacen ambas cosas. Ha metido a los hombres en el río antes de las gachas. Dije lo que pensaba y me desautorizaron, así que me quedaré aquí a ver cómo tu emboscada hace sus cuentas.</translation>
     </message>
@@ -7566,10 +7562,6 @@ para ver la vista previa</translation>
     <message>
         <source>Eighty thousand. I would rather you heard the number than saw it, because seeing it takes most of a morning. Varro has the command today, and Varro believes in going forward. Stand wherever you like.</source>
         <translation>Ochenta mil. Prefiero que oigas la cifra a que la veas, porque verla lleva casi toda una mañana. Hoy manda Varrón, y Varrón cree en avanzar. Colócate donde te plazca.</translation>
-    </message>
-    <message>
-        <source>Endure both waves from the depths. Do not flinch when the ground tears open.</source>
-        <translation>Resiste ambas oleadas surgidas de las profundidades. No retrocedas cuando la tierra se abra.</translation>
     </message>
     <message>
         <source>Every soldier lost is counted by the enemy tonight.</source>
@@ -7664,10 +7656,6 @@ para ver la vista previa</translation>
         <translation>Toma ambos campamentos romanos. La emboscada no termina hasta que caigan sus estandartes.</translation>
     </message>
     <message>
-        <source>Sixty men and a shrine the local people will not walk past after dark. My orders say investigate. I would sooner burn it and write that we investigated, but the Senate reads.</source>
-        <translation>Sesenta hombres y un santuario junto al que los lugareños no pasan después del anochecer. Mis órdenes dicen investigar. Preferiría quemarlo y escribir que investigamos, pero el Senado lee.</translation>
-    </message>
-    <message>
         <source>So the centre gave and the wings did not. That was well done, and I say so, and I was inside it. Rome has lost an army and a ring for every knight in it. Rome has not yet lost anything that matters.</source>
         <translation>Así que el centro cedió y las alas no. Estuvo bien hecho, y lo digo yo, que estaba dentro. Roma ha perdido un ejército y un anillo por cada caballero que había en él. Roma aún no ha perdido nada que importe.</translation>
     </message>
@@ -7688,10 +7676,6 @@ para ver la vista previa</translation>
         <translation>Desata la emboscada y captura ambos campamentos de campaña romanos en veinte minutos, antes de que la niebla se levante y una cohorte escape de la cuenca.</translation>
     </message>
     <message>
-        <source>Stand your ground. The last soldier alone is not a force — he is a sacrifice.</source>
-        <translation>Mantén el terreno. El último soldado a solas no es una fuerza: es un sacrificio.</translation>
-    </message>
-    <message>
         <source>Take the crossings, then. Take the whole cold length of the road north and every stone laid on it. Rome does not lose provinces - she lends them, at interest, and I am told the collectors on this road wear no faces at all.</source>
         <translation>Toma los pasos, pues. Toma toda la fría longitud del camino del norte y cada piedra puesta en él. Roma no pierde provincias: las presta, con interés, y me dicen que los cobradores de este camino no tienen rostro alguno.</translation>
     </message>
@@ -7710,10 +7694,6 @@ para ver la vista previa</translation>
     <message>
         <source>The commander falls — and every line collapses behind him.</source>
         <translation>El comandante cae, y todas las líneas se derrumban tras él.</translation>
-    </message>
-    <message>
-        <source>The commander falls — the vigil ends. And the dead keep walking.</source>
-        <translation>El comandante cae y la vigilia termina. Y los muertos siguen caminando.</translation>
     </message>
     <message>
         <source>The crossing is a running battle against terrain, local resistance, and Roman influence. Sepulcher grave-lights remain a dangerous side path rather than the campaign&apos;s main enemy.</source>
@@ -8572,22 +8552,6 @@ para ver la vista previa</translation>
         <translation>No puedes cubrir todas las puertas. Vigila el aviso previo y muévete por líneas interiores.</translation>
     </message>
     <message>
-        <source>Drive the dead from the shrine, then plant the standard on it. Salt the earth where they stood.</source>
-        <translation>Expulsa a los muertos del santuario y luego planta el estandarte sobre él. Sala la tierra donde estuvieron.</translation>
-    </message>
-    <message>
-        <source>Pull the wounded back to the household and send for the men we still have. The dead are patient. We can afford to be patient too.</source>
-        <translation>Retirad a los heridos a la casa y mandad a buscar a los hombres que aún nos quedan. Los muertos son pacientes. Nosotros también podemos permitirnos serlo.</translation>
-    </message>
-    <message>
-        <source>Take the cursed shrine above the sepulcher ruins and hold what you take. Sixty men, a barracks and one household are all Rome could spare: clear the guardians out of the ruins, then drive the dead off the shrine and plant the standard on it.</source>
-        <translation>Toma el santuario maldito sobre las ruinas del sepulcro y conserva lo que tomes. Sesenta hombres, un cuartel y una casa son todo lo que Roma pudo prescindir: limpia las ruinas de guardianes, luego expulsa a los muertos del santuario y planta el estandarte sobre él.</translation>
-    </message>
-    <message>
-        <source>There they are. Do not look at the faces. Archers loose, shields close, and nobody chases anything back into that fog.</source>
-        <translation>Ahí están. No miréis las caras. Arqueros, disparad; escudos, cerrad filas; y nadie persigue nada de vuelta a esa niebla.</translation>
-    </message>
-    <message>
         <source>Both risings of the dead at the south-western ruins must also fall before the war ends.</source>
         <translation>Ambos alzamientos de los muertos en las ruinas del suroeste también deben caer antes de que termine la guerra.</translation>
     </message>
@@ -9042,6 +9006,70 @@ para ver la vista previa</translation>
     <message>
         <source>Africa, then, and the two of us, and no river to stand behind. I have the measure of your elephants and I have your Numidians. Whatever you mean to do, do it where I can see it. I have waited sixteen years to stand across a field from you with an army of my own.</source>
         <translation>África, pues, y nosotros dos, y ningún río tras el que resguardarse. Conozco la medida de tus elefantes y tengo a tus númidas. Hagas lo que hagas, hazlo donde pueda verlo. He esperado dieciséis años para plantarme frente a ti en un campo con un ejército propio.</translation>
+    </message>
+    <message>
+        <source>Break both risings at the shrine. Do not flinch when the ground tears open.</source>
+        <translation>Quiebra ambos alzamientos en el santuario. No te inmutes cuando la tierra se abra.</translation>
+    </message>
+    <message>
+        <source>Clear the barrow ruins. Both risings of the dead must fall.</source>
+        <translation>Limpia las ruinas del sepulcro. Ambos alzamientos de los muertos deben caer.</translation>
+    </message>
+    <message>
+        <source>Fabius falls. The watch ends, and the dead keep walking.</source>
+        <translation>Fabio cae. La guardia termina, y los muertos siguen caminando.</translation>
+    </message>
+    <message>
+        <source>Fabius stands alone, with no soldiers left and no barracks to raise more.</source>
+        <translation>Fabio queda solo, sin soldados y sin cuartel para reclutar más.</translation>
+    </message>
+    <message>
+        <source>It is calling up the last of them, and another priest with them. Whatever comes out of that ground now is all it has left. So is what we have.</source>
+        <translation>Está llamando a los últimos, y a otro sacerdote sepulcral con ellos. Lo que salga ahora de esa tierra es todo lo que le queda. Igual que lo que tenemos nosotros.</translation>
+    </message>
+    <message>
+        <source>Listen. The ground is still moving, and one of them is coming up in robes. That one first, archers. The rest are only bones.</source>
+        <translation>Escuchad. La tierra aún se mueve, y uno de ellos sube con túnica. Ese primero, arqueros. El resto no son más que huesos.</translation>
+    </message>
+    <message>
+        <source>Now. Get men onto that shrine and keep them there until the standard is up. Nobody steps off it. Not for loot, not for the wounded, not for me.</source>
+        <translation>Ahora. Subid hombres a ese santuario y mantenedlos allí hasta que el estandarte esté en pie. Nadie se baja. Ni por el botín, ni por los heridos, ni por mí.</translation>
+    </message>
+    <message>
+        <source>Pull the wounded back to the camp and send for the men we still have. The dead are patient. We can afford to be patient too.</source>
+        <translation>Llevad a los heridos de vuelta al campamento y mandad a buscar a los hombres que aún tenemos. Los muertos son pacientes. Nosotros también podemos permitirnos serlo.</translation>
+    </message>
+    <message>
+        <source>Quiet again. Count the living, bring the builders up, and find out what the dead were sitting on. Then look at that shrine and tell me you want to go up there.</source>
+        <translation>Otra vez en calma. Contad a los vivos, traed a los constructores y averiguad sobre qué estaban sentados los muertos. Luego mirad ese santuario y decidme que queréis subir allí.</translation>
+    </message>
+    <message>
+        <source>Raise a marketplace at the watch camp. Gold buys nothing buried in a barrow.</source>
+        <translation>Levanta un mercado en el campamento de guardia. El oro no compra nada de lo que yace en un sepulcro.</translation>
+    </message>
+    <message>
+        <source>Rome sent sixty men to find out why the shepherds will not use the old road after dark. Build up the watch camp first, then clear the barrow ruins and take the shrine on the rise. The dead will not come to you: you choose when to wake them, and you can choose to be ready.</source>
+        <translation>Roma envió a sesenta hombres a averiguar por qué los pastores no usan el viejo camino después del anochecer. Refuerza primero el campamento de guardia, luego limpia las ruinas del sepulcro y toma el santuario de la loma. Los muertos no vendrán a ti: tú eliges cuándo despertarlos, y puedes elegir estar preparado.</translation>
+    </message>
+    <message>
+        <source>Sixty men and a road the shepherds will not walk after dark. The Senate wants a report. Cut timber, raise the camp, and keep everyone off that barrow until I say otherwise.</source>
+        <translation>Sesenta hombres y un camino que los pastores no pisan después del anochecer. El Senado quiere un informe. Cortad madera, levantad el campamento y que nadie se acerque a ese sepulcro hasta que yo diga lo contrario.</translation>
+    </message>
+    <message>
+        <source>Take the shrine on the rise: cut down its guardians, then keep troops beside it until the standard is planted.</source>
+        <translation>Toma el santuario de la loma: abate a sus guardianes y luego mantén tropas a su lado hasta que se plante el estandarte.</translation>
+    </message>
+    <message>
+        <source>The hill as well. Of course the hill as well. Shields in front, every bow on the one in robes, and nobody chases anything into that haze.</source>
+        <translation>La colina también. Claro, la colina también. Escudos al frente, todos los arcos sobre el de la túnica, y nadie persigue nada dentro de esa neblina.</translation>
+    </message>
+    <message>
+        <source>The quartermaster sent gold, and gold does not hold a shield wall. Build a market and turn it into iron. When we do go to that barrow, the archers stand still and let the dead walk onto the shields.</source>
+        <translation>El intendente envió oro, y el oro no sostiene un muro de escudos. Construid un mercado y convertidlo en hierro. Cuando vayamos a ese sepulcro, los arqueros se quedan quietos y dejan que los muertos caminen hasta los escudos.</translation>
+    </message>
+    <message>
+        <source>Those are men. Were men. Jupiter keep us. ...Steady. Bones break like anything else. Archers, hold where you stand and let them come to the shields.</source>
+        <translation>Son hombres. Eran hombres. Júpiter nos guarde. ...Calma. Los huesos se rompen como cualquier otra cosa. Arqueros, quietos donde estáis, y dejad que lleguen a los escudos.</translation>
     </message>
 </context>
 <context>
@@ -10646,14 +10674,6 @@ Los constructores lo siegan para la comida que recluta civiles</translation>
         <translation>TAMBALEANTE</translation>
     </message>
     <message>
-        <source>BOW  ·  X</source>
-        <translation>ARCO  ·  X</translation>
-    </message>
-    <message>
-        <source>BLADE  ·  X</source>
-        <translation>HOJA  ·  X</translation>
-    </message>
-    <message>
         <source>RUSH</source>
         <translation>EMBESTIDA</translation>
     </message>
@@ -10668,6 +10688,86 @@ Los constructores lo siegan para la comida que recluta civiles</translation>
     <message>
         <source>SPECIAL</source>
         <translation>ESPECIAL</translation>
+    </message>
+    <message>
+        <source>Strike</source>
+        <translation>Golpe</translation>
+    </message>
+    <message>
+        <source>Heavy</source>
+        <translation>Fuerte</translation>
+    </message>
+    <message>
+        <source>Guard</source>
+        <translation>Guardia</translation>
+    </message>
+    <message>
+        <source>Dodge</source>
+        <translation>Esquivar</translation>
+    </message>
+    <message>
+        <source>Lock on</source>
+        <translation>Fijar</translation>
+    </message>
+    <message>
+        <source>Sprint</source>
+        <translation>Esprintar</translation>
+    </message>
+    <message>
+        <source>Camera</source>
+        <translation>Cámara</translation>
+    </message>
+    <message>
+        <source>Army view</source>
+        <translation>Vista del ejército</translation>
+    </message>
+    <message>
+        <source>WINDED</source>
+        <translation>SIN ALIENTO</translation>
+    </message>
+    <message>
+        <source>%1  ·  %2 to swap</source>
+        <translation>%1  ·  %2 para cambiar</translation>
+    </message>
+    <message>
+        <source>BOW</source>
+        <translation>ARCO</translation>
+    </message>
+    <message>
+        <source>BLADE</source>
+        <translation>HOJA</translation>
+    </message>
+    <message>
+        <source>AURA</source>
+        <translation>AURA</translation>
+    </message>
+    <message>
+        <source>RALLY</source>
+        <translation>REUNIR</translation>
+    </message>
+    <message>
+        <source>ON %1</source>
+        <translation>ACTIVO %1</translation>
+    </message>
+    <message>
+        <source>ON</source>
+        <translation>ACTIVO</translation>
+    </message>
+    <message>
+        <source>CAMERA  ·  CLOSE</source>
+        <translation>CÁMARA  ·  CERCANA</translation>
+    </message>
+    <message>
+        <source>CAMERA  ·  CHASE</source>
+        <translation>CÁMARA  ·  SEGUIMIENTO</translation>
+    </message>
+    <message>
+        <source>BOW DRAWN</source>
+        <translation>ARCO TENSADO</translation>
+    </message>
+    <message>
+        <source>BLADE DRAWN</source>
+        <translation>HOJA DESENVAINADA</translation>
     </message>
 </context>
 <context>
@@ -11903,6 +12003,10 @@ Los constructores lo siegan para la comida que recluta civiles</translation>
     <message>
         <source>The risen guardians are put down. Hold the shrine to purify it.</source>
         <translation>Los guardianes alzados han sido abatidos. Mantén el santuario para purificarlo.</translation>
+    </message>
+    <message>
+        <source>The ground is moving under the dead. More are coming up.</source>
+        <translation>La tierra se mueve bajo los muertos. Vienen más.</translation>
     </message>
 </context>
 <context>

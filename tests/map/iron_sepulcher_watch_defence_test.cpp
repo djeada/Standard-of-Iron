@@ -219,7 +219,7 @@ INSTANTIATE_TEST_SUITE_P(ZonesAndApproaches,
                          ::testing::Values(Approach{"ruins_guard", -1.0F, 0.2F},
                                            Approach{"ruins_guard", 0.1F, 1.0F},
                                            Approach{"shrine_sentinels", -1.0F, 0.3F},
-                                           Approach{"shrine_sentinels", 0.2F, -1.0F}),
+                                           Approach{"shrine_sentinels", 0.3F, 1.0F}),
                          [](const ::testing::TestParamInfo<Approach>& info) {
                            std::string name = info.param.zone_id;
                            name += info.index % 2 == 0 ? "_first_approach"

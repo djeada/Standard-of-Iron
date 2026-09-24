@@ -49,6 +49,11 @@ public:
   ~UndeadAwakeningSystem() override;
 
   void configure(const Game::Map::MapDefinition& map_definition);
+
+  void set_wave_multiplier(float multiplier);
+  [[nodiscard]] auto wave_multiplier() const -> float { return m_wave_multiplier; }
+  [[nodiscard]] auto wave_squad_count(const QString& zone_id,
+                                      int wave_index) const -> int;
   void restore_state(const QJsonArray& state);
   [[nodiscard]] auto serialize_state() const -> QJsonArray;
 
@@ -68,6 +73,9 @@ public:
 
   [[nodiscard]] auto zones_without_shrine() const -> std::vector<QString>;
 
+  [[nodiscard]] auto
+  would_wake_a_zone(float world_x, float world_z, float body_radius) const -> bool;
+
   struct ShrineMarker {
     QString zone_id;
     QVector3D world_position;
@@ -80,6 +88,7 @@ public:
 private:
   struct RuntimeZone {
     Game::Map::UndeadZone definition;
+    std::vector<Game::Map::UndeadWave> authored_waves;
     QVector3D center_world;
     QVector3D anchor_world;
     QVector3D shrine_world;
@@ -131,6 +140,8 @@ private:
                                           int post_count) const -> QVector3D;
   [[nodiscard]] auto zone_origin(const RuntimeZone& zone) const -> QVector3D;
   void announce_wave(const RuntimeZone& zone) const;
+  void begin_wave_interval(RuntimeZone& zone) const;
+  void apply_wave_multiplier(RuntimeZone& zone) const;
   [[nodiscard]] auto
   should_awaken_zone(Engine::Core::World& world,
                      const RuntimeZone& zone) const -> std::optional<int>;
@@ -150,6 +161,7 @@ private:
   float m_zone_music_poll = 0.0F;
   float m_leash_poll = 0.0F;
   bool m_allow_mission_start_trigger = false;
+  float m_wave_multiplier = 1.0F;
 };
 
 } // namespace Game::Systems

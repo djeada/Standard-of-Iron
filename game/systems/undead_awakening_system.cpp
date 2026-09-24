@@ -40,7 +40,9 @@ namespace Game::Systems {
 
 namespace {
 
-constexpr float k_between_wave_delay_seconds = 1.5F;
+constexpr float k_announced_wave_delay_seconds = 5.0F;
+constexpr float k_min_wave_multiplier = 0.1F;
+constexpr float k_max_wave_multiplier = 8.0F;
 constexpr float k_spawn_y_offset = 0.05F;
 constexpr float k_anchor_match_distance = 3.5F;
 
@@ -145,6 +147,8 @@ void UndeadAwakeningSystem::configure(const Game::Map::MapDefinition& map_defini
     if (zone.definition.waves.empty()) {
       zone.definition.waves = Game::Map::default_undead_waves();
     }
+    zone.authored_waves = zone.definition.waves;
+    apply_wave_multiplier(zone);
     zone.center_world =
         Game::Map::undead_zone_center_world(map_definition, zone_definition);
     zone.center_world.setY(terrain_service.resolve_surface_world_y(
@@ -181,6 +185,57 @@ void UndeadAwakeningSystem::configure(const Game::Map::MapDefinition& map_defini
   }
 
   m_allow_mission_start_trigger = true;
+}
+
+void UndeadAwakeningSystem::set_wave_multiplier(float multiplier) {
+  m_wave_multiplier =
+      std::clamp(multiplier, k_min_wave_multiplier, k_max_wave_multiplier);
+  for (auto& zone : m_zones) {
+    apply_wave_multiplier(zone);
+  }
+}
+
+void UndeadAwakeningSystem::apply_wave_multiplier(RuntimeZone& zone) const {
+  zone.definition.waves = zone.authored_waves;
+  for (auto& wave : zone.definition.waves) {
+    for (auto& unit_spawn : wave.units) {
+      if (unit_spawn.count <= 0) {
+        continue;
+      }
+      unit_spawn.count =
+          std::max(1,
+                   static_cast<int>(std::lround(static_cast<float>(unit_spawn.count) *
+                                                m_wave_multiplier)));
+    }
+  }
+}
+
+auto UndeadAwakeningSystem::wave_squad_count(const QString& zone_id,
+                                             int wave_index) const -> int {
+  const RuntimeZone* zone = find_zone(zone_id);
+  if (zone == nullptr || wave_index < 0 ||
+      wave_index >= static_cast<int>(zone->definition.waves.size())) {
+    return 0;
+  }
+  int total = 0;
+  for (const auto& unit_spawn : zone->definition.waves[wave_index].units) {
+    total += std::max(0, unit_spawn.count);
+  }
+  return total;
+}
+
+auto UndeadAwakeningSystem::would_wake_a_zone(float world_x,
+                                              float world_z,
+                                              float body_radius) const -> bool {
+  return std::any_of(m_zones.begin(), m_zones.end(), [&](const RuntimeZone& zone) {
+    if (zone.awakened || zone.garrison_broken) {
+      return false;
+    }
+    const float reach = zone.definition.radius + std::max(0.0F, body_radius);
+    const float dx = world_x - zone.center_world.x();
+    const float dz = world_z - zone.center_world.z();
+    return (dx * dx) + (dz * dz) < reach * reach;
+  });
 }
 
 void UndeadAwakeningSystem::restore_state(const QJsonArray& state) {
@@ -319,8 +374,28 @@ void UndeadAwakeningSystem::refresh_active_spawns(Engine::Core::World& world,
   if (zone.awakened && zone.active_spawn_ids.empty() &&
       zone.completed_waves < zone.next_wave_index) {
     zone.completed_waves = zone.next_wave_index;
-    zone.respawn_delay_remaining = k_between_wave_delay_seconds;
+    begin_wave_interval(zone);
   }
+}
+
+void UndeadAwakeningSystem::begin_wave_interval(RuntimeZone& zone) const {
+  zone.respawn_delay_remaining = std::max(0.0F, zone.definition.wave_delay_seconds);
+  if (zone.next_wave_index >= static_cast<int>(zone.definition.waves.size()) ||
+      zone.garrison_broken) {
+    return;
+  }
+  Engine::Core::EventManager::instance().publish(
+      Engine::Core::UndeadZonePhaseEvent(zone.definition.id,
+                                         Engine::Core::UndeadZonePhase::Stirring,
+                                         zone.definition.owner_id,
+                                         zone.respawn_delay_remaining));
+  if (zone.respawn_delay_remaining < k_announced_wave_delay_seconds) {
+    return;
+  }
+  Engine::Core::EventManager::instance().publish(
+      Engine::Core::MissionAnnouncementEvent(QCoreApplication::translate(
+          "UndeadAwakeningSystem",
+          "The ground is moving under the dead. More are coming up.")));
 }
 
 auto UndeadAwakeningSystem::should_awaken_zone(
@@ -848,6 +923,10 @@ void UndeadAwakeningSystem::update(Engine::Core::World* world, float delta_time)
     if (!zone.announced_defeat && zone.awakened && zone.active_spawn_ids.empty() &&
         zone.next_wave_index >= static_cast<int>(zone.definition.waves.size())) {
       zone.announced_defeat = true;
+      Engine::Core::EventManager::instance().publish(
+          Engine::Core::UndeadZonePhaseEvent(zone.definition.id,
+                                             Engine::Core::UndeadZonePhase::Cleared,
+                                             zone.definition.owner_id));
       Engine::Core::EventManager::instance().publish(
           Engine::Core::MissionAnnouncementEvent(QCoreApplication::translate(
               "UndeadAwakeningSystem",

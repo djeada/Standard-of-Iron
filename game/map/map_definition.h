@@ -130,6 +130,7 @@ struct Forest {
 
 inline constexpr float k_undead_zone_default_fog_density = 0.16F;
 inline constexpr float k_undead_zone_default_wave_timeout = 45.0F;
+inline constexpr float k_undead_zone_default_wave_delay = 1.5F;
 
 struct UndeadZone {
   QString id;
@@ -144,6 +145,7 @@ struct UndeadZone {
   float fog_density = k_undead_zone_default_fog_density;
 
   float wave_timeout_seconds = k_undead_zone_default_wave_timeout;
+  float wave_delay_seconds = k_undead_zone_default_wave_delay;
   std::vector<QString> awaken_on;
   std::vector<UndeadWave> waves;
 
