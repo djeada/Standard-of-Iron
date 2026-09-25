@@ -836,6 +836,16 @@ void HumanoidPoseController::guard_sword_and_shield_formation(ShieldFormationPos
   m_pose.shoulder_r += to_qvec(sample.shoulder_r_delta);
   m_pose.neck_base += to_qvec(sample.neck_delta);
   m_pose.head_pos += to_qvec(sample.head_delta);
+
+  // The guard moves both hands but used to leave the blade wherever the
+  // underlying clip pointed it, which in the braced and kneeling stances is up
+  // and back, straight through the bearer's own helmet. Hold it the way a
+  // legionary holds a gladius behind the shield: forward past the shield's
+  // edge, a little outward and tip-up, clear of the head.
+  if (sample.blend_amount > 0.5F) {
+    aim_held_weapon(
+        m_pose, QVector3D(0.28F, 0.45F, 0.85F).normalized(), baked_sword_direction());
+  }
 }
 
 void HumanoidPoseController::carry_sword_and_shield() {
