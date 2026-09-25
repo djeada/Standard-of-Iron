@@ -82,10 +82,10 @@ void ensure_builder_styles_registered() {
 constexpr float k_team_mix_weight = 0.65F;
 constexpr float k_style_mix_weight = 0.35F;
 constexpr std::uint32_t k_builder_work_tunic_role_count = 2;
-constexpr std::uint32_t k_builder_hammer_role_count = 3;
+constexpr std::uint32_t k_builder_hammer_role_count = 1;
 constexpr std::uint32_t k_builder_saw_role_count = 1;
-constexpr std::uint32_t k_builder_chisel_role_count = 2;
-constexpr std::uint32_t k_builder_sickle_role_count = 2;
+constexpr std::uint32_t k_builder_chisel_role_count = 1;
+constexpr std::uint32_t k_builder_sickle_role_count = 1;
 constexpr std::uint32_t k_roman_civilian_mantle_role_count = 2;
 constexpr std::uint32_t k_civilian_pack_role_count = 3;
 constexpr std::uint32_t k_civilian_cudgel_role_count = 2;
@@ -151,9 +151,7 @@ auto builder_hammer_fill_role_colors(const HumanoidPalette& palette,
   if (max < k_builder_hammer_role_count) {
     return 0U;
   }
-  out[0] = palette.wood;
-  out[1] = palette.metal;
-  out[2] = palette.metal * 0.72F;
+  out[0] = palette.metal * 0.72F;
   return k_builder_hammer_role_count;
 }
 
@@ -184,8 +182,7 @@ auto builder_chisel_fill_role_colors(const HumanoidPalette& palette,
   if (max < k_builder_chisel_role_count) {
     return 0U;
   }
-  out[0] = palette.wood;
-  out[1] = palette.metal * 0.88F;
+  out[0] = palette.metal * 0.88F;
   return k_builder_chisel_role_count;
 }
 
@@ -195,8 +192,7 @@ auto builder_sickle_fill_role_colors(const HumanoidPalette& palette,
   if (max < k_builder_sickle_role_count) {
     return 0U;
   }
-  out[0] = palette.wood;
-  out[1] = palette.metal * 0.92F;
+  out[0] = palette.metal * 0.92F;
   return k_builder_sickle_role_count;
 }
 
@@ -752,16 +748,21 @@ void ensure_roman_civilian_equipment_contributions_registered() {
 }
 
 auto roman_builder_hammer_unit_archetype() -> Render::Creature::ArchetypeId {
-  static constexpr std::array<std::uint8_t, 3> k_slots{
-      k_builder_hammer_wood_slot,
-      k_builder_hammer_metal_slot,
+  static constexpr std::array<std::uint8_t, 1> k_slots{
       k_builder_hammer_metal_dark_slot};
-  static const auto k_tool_spec = builder_tool_make_static_attachment(
-      builder_hammer_archetype(),
-      Render::Creature::ArchetypeRegistry::instance()
-          .get(roman_builder_idle_archetype())
-          ->role_count,
-      k_slots);
+  static const auto k_tool_spec = [] {
+    auto spec = builder_tool_make_static_attachment(
+        builder_hammer_archetype(),
+        Render::Creature::ArchetypeRegistry::instance()
+            .get(roman_builder_idle_archetype())
+            ->role_count,
+        k_slots);
+    spec.palette_role_remap[k_builder_hammer_wood_slot] =
+        Render::Humanoid::k_humanoid_wood_role;
+    spec.palette_role_remap[k_builder_hammer_metal_slot] =
+        Render::Humanoid::k_humanoid_metal_role;
+    return spec;
+  }();
   static const auto k_archetype = register_builder_tool_variant_archetype(
       "troops/roman/builder/construction_hammer",
       roman_builder_idle_archetype(),
@@ -816,14 +817,18 @@ auto roman_builder_saw_unit_archetype() -> Render::Creature::ArchetypeId {
 }
 
 auto roman_builder_chisel_unit_archetype() -> Render::Creature::ArchetypeId {
-  static constexpr std::array<std::uint8_t, 2> k_slots{k_chisel_wood_slot,
-                                                       k_chisel_metal_slot};
-  static const auto k_tool_spec = builder_tool_make_static_attachment(
-      builder_chisel_archetype(),
-      Render::Creature::ArchetypeRegistry::instance()
-          .get(roman_builder_idle_archetype())
-          ->role_count,
-      k_slots);
+  static constexpr std::array<std::uint8_t, 1> k_slots{k_chisel_metal_slot};
+  static const auto k_tool_spec = [] {
+    auto spec = builder_tool_make_static_attachment(
+        builder_chisel_archetype(),
+        Render::Creature::ArchetypeRegistry::instance()
+            .get(roman_builder_idle_archetype())
+            ->role_count,
+        k_slots);
+    spec.palette_role_remap[k_chisel_wood_slot] =
+        Render::Humanoid::k_humanoid_wood_role;
+    return spec;
+  }();
   static const auto k_archetype = register_builder_tool_variant_archetype(
       "troops/roman/builder/construction_chisel",
       roman_builder_idle_archetype(),
@@ -844,14 +849,18 @@ auto roman_builder_chisel_unit_archetype() -> Render::Creature::ArchetypeId {
 }
 
 auto roman_builder_sickle_unit_archetype() -> Render::Creature::ArchetypeId {
-  static constexpr std::array<std::uint8_t, 2> k_slots{k_builder_sickle_wood_slot,
-                                                       k_builder_sickle_metal_slot};
-  static const auto k_tool_spec = builder_tool_make_static_attachment(
-      builder_sickle_archetype(),
-      Render::Creature::ArchetypeRegistry::instance()
-          .get(roman_builder_idle_archetype())
-          ->role_count,
-      k_slots);
+  static constexpr std::array<std::uint8_t, 1> k_slots{k_builder_sickle_metal_slot};
+  static const auto k_tool_spec = [] {
+    auto spec = builder_tool_make_static_attachment(
+        builder_sickle_archetype(),
+        Render::Creature::ArchetypeRegistry::instance()
+            .get(roman_builder_idle_archetype())
+            ->role_count,
+        k_slots);
+    spec.palette_role_remap[k_builder_sickle_wood_slot] =
+        Render::Humanoid::k_humanoid_wood_role;
+    return spec;
+  }();
   static const auto k_archetype = register_builder_tool_variant_archetype(
       "troops/roman/builder/construction_sickle",
       roman_builder_idle_archetype(),
