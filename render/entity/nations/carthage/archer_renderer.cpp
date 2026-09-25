@@ -35,8 +35,9 @@ const ArcherRendererProfile k_archer_profile{
                       ArcherLoadoutSlot::Quiver,
                       ArcherLoadoutSlot::Bow,
                       ArcherLoadoutSlot::Cloak,
-                      ArcherLoadoutSlot::Greaves},
-    .loadout_slot_count = 6U,
+                      ArcherLoadoutSlot::Greaves,
+                      ArcherLoadoutSlot::Shoulder},
+    .loadout_slot_count = 7U,
     .apply_skin_override = true,
     .apply_carthage_variant_traits = true,
     .ensure_styles_registered = ensure_archer_styles_registered};

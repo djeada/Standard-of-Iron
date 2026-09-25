@@ -33,6 +33,8 @@
 #include "elephant/dimensions.h"
 #include "elephant/elephant_renderer_base.h"
 #include "entity/building_render_common.h"
+#include "entity/civilian_actor.h"
+#include "entity/civilian_actor_prewarm.h"
 #include "entity/mounted_humanoid_renderer_base.h"
 #include "entity/registry.h"
 #include "equipment/equipment_registry.h"
@@ -304,6 +306,65 @@ void prewarm_humanoid_assets_for_profile(Renderer& renderer,
   }
 }
 
+// Bakes the humanoid bodies nothing in the template pass reaches: the tools a
+// unit's variant table swaps in while it works, and the bodies the building-side
+// actors draw straight from an archetype. Returns how many bodies were baked.
+auto prewarm_humanoid_body_variants(Renderer& renderer,
+                                    const EntityRendererRegistry* entity_registry,
+                                    const std::vector<PrewarmProfile>& profiles,
+                                    bool full_lod_only) -> std::size_t {
+  using Render::Creature::CreatureLOD;
+  std::vector<HumanoidPrewarmTarget> unit_targets;
+  if (entity_registry != nullptr) {
+    for (const auto& profile : profiles) {
+      const auto handle = entity_registry->get_handle(profile.renderer_id);
+      if (handle == k_invalid_renderer_handle) {
+        continue;
+      }
+      const auto* humanoid = dynamic_cast<const HumanoidRendererBase*>(
+          entity_registry->get_preparer(handle));
+      if (humanoid == nullptr) {
+        continue;
+      }
+      for (const auto& target :
+           variant_table_prewarm_targets(humanoid->visual_spec())) {
+        if (std::find(unit_targets.begin(), unit_targets.end(), target) ==
+            unit_targets.end()) {
+          unit_targets.push_back(target);
+        }
+      }
+    }
+  }
+
+  Render::Humanoid::HumanoidAssetPrewarmer prewarmer(renderer.rigged_mesh_cache());
+  std::size_t baked = 0;
+  auto bake = [&](const HumanoidPrewarmTarget& target, CreatureLOD lod) {
+    if (prewarmer.prewarm({.archetype = target.archetype,
+                           .lod = lod,
+                           .variant = Render::Creature::k_canonical_variant,
+                           .creature_asset = target.asset})) {
+      ++baked;
+    }
+  };
+
+  // Units follow the preset: without creature LOD they are only drawn in full.
+  for (const auto& target : unit_targets) {
+    bake(target, CreatureLOD::Full);
+    if (!full_lod_only) {
+      bake(target, CreatureLOD::Minimal);
+    }
+  }
+  // Actors pick Minimal by their size on screen wherever the preset allows it.
+  bool const actors_use_minimal = civilian_actor_minimal_lod_allowed();
+  for (const auto& target : civilian_actor_prewarm_targets()) {
+    bake(target, CreatureLOD::Full);
+    if (actors_use_minimal) {
+      bake(target, CreatureLOD::Minimal);
+    }
+  }
+  return baked;
+}
+
 } // namespace
 
 void Renderer::cancel_async_template_prewarm() {
@@ -397,6 +458,20 @@ void Renderer::process_async_template_prewarm() {
 void Renderer::prewarm_unit_templates(
     Engine::Core::World* world, TemplatePrewarmProgressCallback progress_callback) {
   Render::Profiling::count_asset(Render::Profiling::AssetCounter::PrewarmInvocations);
+  // One line per load says how long the blocking part of the prewarm took, so a
+  // change to what it bakes can be weighed against the loading screen it costs.
+  struct PrewarmTimer {
+    std::chrono::steady_clock::time_point started{std::chrono::steady_clock::now()};
+    std::size_t profiles{0};
+    ~PrewarmTimer() {
+      auto const elapsed = std::chrono::duration<double, std::milli>(
+                               std::chrono::steady_clock::now() - started)
+                               .count();
+      qInfo().noquote() << "Template prewarm: finished in"
+                        << QString::number(elapsed, 'f', 1) << "ms for" << profiles
+                        << "profiles";
+    }
+  } prewarm_timer;
   cancel_async_template_prewarm();
   m_forbids_runtime_bake = false;
   Render::Creature::set_runtime_bake_forbidden(false);
@@ -655,6 +730,17 @@ void Renderer::prewarm_unit_templates(
           nation.available_troops.empty()) {
         continue;
       }
+      // A nation that lists its roster fields only those troops, plus whatever
+      // already stands on the map (added above) and the builders, civilians
+      // and undead added below. Walking the whole catalog for it instead bakes
+      // every other nation's commanders, elephants and skeletons under its
+      // colours, which more than doubles the prewarm for bodies never drawn.
+      if (!nation.available_troops.empty()) {
+        for (const auto& troop : nation.available_troops) {
+          add_troop_profile(nation, troop.unit_type);
+        }
+        continue;
+      }
       if (has_catalog_entries) {
         for (const auto& entry : troops) {
           add_troop_profile(nation, entry.first);
@@ -705,6 +791,41 @@ void Renderer::prewarm_unit_templates(
     }
   }
 
+  // Builders and civilians work for every nation in the match even when none of
+  // them stands on the map at load: a siege engine's crew, a farm's hands and a
+  // trained work gang are all builder or civilian bodies. The roster above only
+  // knows the unit types it can see when the session's nations are not bound
+  // yet, so these two are added for every nation that fields units.
+  for (auto const nation_id : active_nation_ids) {
+    if (nation_id == Game::Systems::NationID::IronSepulcher) {
+      continue;
+    }
+    for (auto const type :
+         {Game::Units::TroopType::Builder, Game::Units::TroopType::Civilian}) {
+      auto const* profile = world_view().find_troop_profile(nation_id, type);
+      if (profile != nullptr && !profile->visuals.renderer_id.empty()) {
+        add_profile(profile->visuals.renderer_id,
+                    Game::Units::spawn_typeFromTroopType(type),
+                    nation_id,
+                    profile->combat.max_health);
+      }
+    }
+  }
+
+  prewarm_timer.profiles = profiles.size();
+  {
+    auto const started = std::chrono::steady_clock::now();
+    std::size_t const baked = prewarm_humanoid_body_variants(
+        *this, m_entity_registry.get(), profiles, full_lod_only);
+    qInfo().noquote() << "Template prewarm: baked" << baked
+                      << "worker and actor bodies in"
+                      << QString::number(std::chrono::duration<double, std::milli>(
+                                             std::chrono::steady_clock::now() - started)
+                                             .count(),
+                                         'f',
+                                         1)
+                      << "ms";
+  }
   if (profiles.empty()) {
     set_forbids_runtime_bake(true);
     report_progress(TemplatePrewarmProgress::Phase::Completed, 0, 0);

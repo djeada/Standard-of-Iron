@@ -1,5 +1,6 @@
 #include "static_attachment_spec.h"
 
+#include <array>
 #include <cstring>
 
 namespace Render::Creature {
@@ -33,6 +34,15 @@ auto static_attachment_hash(const StaticAttachmentSpec& spec) noexcept
   h = mix_bytes(h, &spec.override_color_role, sizeof(spec.override_color_role));
   h = mix_bytes(h, &spec.uniform_scale, sizeof(spec.uniform_scale));
   h = mix_bytes(h, &spec.material_id, sizeof(spec.material_id));
+  if (spec.drape.enabled) {
+    const auto& d = spec.drape;
+    h = mix_bytes(h, &d.pelvis_bone, sizeof(d.pelvis_bone));
+    h = mix_bytes(h, &d.leg_l_bone, sizeof(d.leg_l_bone));
+    h = mix_bytes(h, &d.leg_r_bone, sizeof(d.leg_r_bone));
+    const std::array<float, 4> params{
+        d.top_y, d.bottom_y, d.leg_share, d.leg_crossfade_half_width};
+    h = mix_bytes(h, params.data(), sizeof(float) * params.size());
+  }
   return h;
 }
 
@@ -50,13 +60,24 @@ auto static_attachment_equal(const StaticAttachmentSpec& a,
                              const StaticAttachmentSpec& b) noexcept -> bool {
   if (a.archetype != b.archetype || a.socket_bone_index != b.socket_bone_index ||
       a.override_color_role != b.override_color_role ||
-      a.uniform_scale != b.uniform_scale || a.material_id != b.material_id) {
+      a.uniform_scale != b.uniform_scale || a.material_id != b.material_id ||
+      a.drape.enabled != b.drape.enabled) {
     return false;
   }
   if (std::memcmp(a.palette_role_remap.data(),
                   b.palette_role_remap.data(),
                   a.palette_role_remap.size()) != 0) {
     return false;
+  }
+  if (a.drape.enabled) {
+    const auto& x = a.drape;
+    const auto& y = b.drape;
+    if (x.pelvis_bone != y.pelvis_bone || x.leg_l_bone != y.leg_l_bone ||
+        x.leg_r_bone != y.leg_r_bone || x.top_y != y.top_y ||
+        x.bottom_y != y.bottom_y || x.leg_share != y.leg_share ||
+        x.leg_crossfade_half_width != y.leg_crossfade_half_width) {
+      return false;
+    }
   }
   return std::memcmp(a.local_offset.constData(),
                      b.local_offset.constData(),

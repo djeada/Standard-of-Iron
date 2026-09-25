@@ -230,68 +230,71 @@ TEST_F(ArmorRendererTest, CloakRendererCreation) {
   ASSERT_NE(cloak, nullptr);
 }
 
-TEST_F(ArmorRendererTest, CloakBackMeshHasDepthAndTaper) {
-  CloakMeshes const meshes = shared_cloak_meshes();
-  ASSERT_NE(meshes.back, nullptr);
+TEST_F(ArmorRendererTest, CloakHangsFromShouldersAndFlaresToTheHem) {
+  CloakMeshes const meshes = shared_cloak_meshes(CloakConfig{});
+  ASSERT_NE(meshes.cloak, nullptr);
 
   float min_y = std::numeric_limits<float>::infinity();
   float max_y = -std::numeric_limits<float>::infinity();
+  for (const auto& v : meshes.cloak->get_vertices()) {
+    min_y = std::min(min_y, v.position[1]);
+    max_y = std::max(max_y, v.position[1]);
+  }
   float top_half_width = 0.0F;
   float bottom_half_width = 0.0F;
-  for (const auto& v : meshes.back->get_vertices()) {
-    QVector3D const pos(v.position[0], v.position[1], v.position[2]);
-    min_y = std::min(min_y, pos.y());
-    max_y = std::max(max_y, pos.y());
-    if (pos.z() <= -0.45F) {
-      top_half_width = std::max(top_half_width, std::abs(pos.x()));
-    }
-    if (pos.z() >= 0.45F) {
-      bottom_half_width = std::max(bottom_half_width, std::abs(pos.x()));
+  const auto& verts = meshes.cloak->get_vertices();
+  // The first grid row is the collar edge that wraps the neck.
+  for (std::size_t i = 0; i < 25U; ++i) {
+    top_half_width = std::max(top_half_width, std::abs(verts[i].position[0]));
+  }
+  for (const auto& v : verts) {
+    if (v.position[1] <= min_y + 0.06F) {
+      bottom_half_width = std::max(bottom_half_width, std::abs(v.position[0]));
     }
   }
 
-  EXPECT_GT(max_y - min_y, 0.08F);
-  EXPECT_LT(bottom_half_width, top_half_width - 0.05F);
+  // Collar sits just above the shoulder line and the hem near the knees.
+  EXPECT_LT(max_y, 0.14F);
+  EXPECT_GT(max_y - min_y, 0.6F);
+  // The collar wraps the neck; the hem hangs wider than the shoulders.
+  EXPECT_LT(top_half_width, 0.15F);
+  EXPECT_GT(bottom_half_width, 0.30F);
 }
 
-TEST_F(ArmorRendererTest, CloakMeshesStaySymmetricLeftToRight) {
-  auto assert_mirror_symmetry = [](Mesh* mesh, int row_stride, int row_count) {
-    ASSERT_NE(mesh, nullptr);
-    const auto& vertices = mesh->get_vertices();
-    ASSERT_GE(vertices.size(), static_cast<std::size_t>(row_stride * row_count * 2));
-    for (int row = 0; row < row_count; ++row) {
-      for (int col = 0; col < row_stride; ++col) {
-        int const mirror_col = row_stride - 1 - col;
-        const auto& lhs = vertices[static_cast<std::size_t>(row * row_stride + col)];
-        const auto& rhs =
-            vertices[static_cast<std::size_t>(row * row_stride + mirror_col)];
-        EXPECT_NEAR(lhs.position[0], -rhs.position[0], 1e-4F);
-        EXPECT_NEAR(lhs.position[1], rhs.position[1], 1e-4F);
-        EXPECT_NEAR(lhs.position[2], rhs.position[2], 1e-4F);
-      }
+TEST_F(ArmorRendererTest, CloakMeshStaysSymmetricLeftToRight) {
+  constexpr int k_columns = 25;
+  constexpr int k_rows = 23;
+  CloakMeshes const meshes = shared_cloak_meshes(CloakConfig{});
+  ASSERT_NE(meshes.cloak, nullptr);
+  const auto& vertices = meshes.cloak->get_vertices();
+  ASSERT_GE(vertices.size(), static_cast<std::size_t>(k_columns * k_rows * 2));
+  for (int row = 0; row < k_rows; ++row) {
+    for (int col = 0; col < k_columns; ++col) {
+      const auto& lhs = vertices[static_cast<std::size_t>(row * k_columns + col)];
+      const auto& rhs =
+          vertices[static_cast<std::size_t>(row * k_columns + k_columns - 1 - col)];
+      EXPECT_NEAR(lhs.position[0], -rhs.position[0], 1e-4F);
+      EXPECT_NEAR(lhs.position[1], rhs.position[1], 1e-4F);
+      EXPECT_NEAR(lhs.position[2], rhs.position[2], 1e-4F);
     }
-  };
-
-  CloakMeshes const meshes = shared_cloak_meshes();
-  assert_mirror_symmetry(meshes.back, 13, 19);
-  assert_mirror_symmetry(meshes.shoulder, 11, 7);
+  }
 }
 
 TEST_F(ArmorRendererTest, CloakFacesHaveSeparateDepthToPreventZFight) {
-  CloakMeshes const meshes = shared_cloak_meshes();
-  for (Mesh* mesh : {meshes.back, meshes.shoulder}) {
-    ASSERT_NE(mesh, nullptr);
-    auto const& vertices = mesh->get_vertices();
-    ASSERT_EQ(vertices.size() % 2U, 0U);
-    auto const side_count = vertices.size() / 2U;
-    ASSERT_GT(side_count, 0U);
-    for (std::size_t i = 0; i < side_count; ++i) {
-      auto const& front = vertices[i];
-      auto const& back = vertices[i + side_count];
-      EXPECT_GT(front.position[1] - back.position[1], 0.001F);
-      for (std::size_t axis = 0; axis < 3U; ++axis) {
-        EXPECT_NEAR(front.normal[axis], -back.normal[axis], 1e-6F);
-      }
+  constexpr std::size_t k_side_count = 25U * 23U;
+  CloakMeshes const meshes = shared_cloak_meshes(CloakConfig{});
+  ASSERT_NE(meshes.cloak, nullptr);
+  auto const& vertices = meshes.cloak->get_vertices();
+  ASSERT_GE(vertices.size(), k_side_count * 2U);
+  for (std::size_t i = 0; i < k_side_count; ++i) {
+    auto const& front = vertices[i];
+    auto const& back = vertices[i + k_side_count];
+    QVector3D const gap(front.position[0] - back.position[0],
+                        front.position[1] - back.position[1],
+                        front.position[2] - back.position[2]);
+    EXPECT_GT(gap.length(), 0.004F);
+    for (std::size_t axis = 0; axis < 3U; ++axis) {
+      EXPECT_NEAR(front.normal[axis], -back.normal[axis], 1e-6F);
     }
   }
 }
@@ -517,7 +520,8 @@ TEST_F(ArmorRendererTest, CloakTopEdgeStaysNearShoulders) {
   AABB const box = archetype_aabb(batch);
   float const shoulder_mid_y =
       (frames.shoulder_l.origin.y() + frames.shoulder_r.origin.y()) * 0.5F;
-  EXPECT_LT(box.mx.y(), shoulder_mid_y + frames.torso.radius * 0.40F);
+  // The collar lies over the base of the neck, just above the shoulder line.
+  EXPECT_LT(box.mx.y(), shoulder_mid_y + frames.torso.radius * 0.55F);
   EXPECT_LT(box.mn.y(), shoulder_mid_y - frames.torso.radius * 2.5F);
 }
 
@@ -606,7 +610,7 @@ TEST_F(ArmorRendererTest, RomanGreavesRenderThroughArchetypePath) {
   EXPECT_TRUE(batch.meshes.empty());
   EXPECT_EQ(batch.archetypes.size(), 2U);
 
-  EXPECT_EQ(draw_count_of(batch), 10);
+  EXPECT_EQ(draw_count_of(batch), 2);
 }
 
 TEST_F(ArmorRendererTest, ArmGuardsRenderThroughArchetypePath) {

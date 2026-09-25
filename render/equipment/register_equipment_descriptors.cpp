@@ -309,6 +309,12 @@ void register_body_armor_descriptors() {
                                 .append_role_colors = &carthage_greaves_role_colors,
                                 .role_count = static_cast<std::uint8_t>(
                                     Render::GL::k_roman_greaves_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Armor,
+      "commander_pauldron",
+      {.build_attachments = &build_commander_pauldron_attachments,
+       .append_role_colors = &commander_pauldron_role_colors,
+       .role_count = 0U});
   register_humanoid_descriptor(EquipmentCategory::Armor,
                                "roman_shoulder_cover",
                                {.build_attachments = &build_roman_shoulder_attachments,

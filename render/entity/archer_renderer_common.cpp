@@ -92,6 +92,8 @@ auto loadout_handle_for_slot(const Nation::ResolvedEquipmentLoadout& loadout,
     return loadout.bow_handle;
   case ArcherLoadoutSlot::Cloak:
     return loadout.cloak_handle;
+  case ArcherLoadoutSlot::Shoulder:
+    return loadout.shoulder_handle;
   }
   return k_invalid_equipment_handle;
 }
@@ -132,7 +134,7 @@ public:
     }
 
     const auto loadout = Render::GL::Nation::resolve_equipment_loadout(m_renderer_key);
-    std::array<EquipmentHandle, 6> handles{};
+    std::array<EquipmentHandle, 7> handles{};
     for (std::size_t i = 0; i < m_profile.loadout_slot_count; ++i) {
       handles[i] = loadout_handle_for_slot(loadout, m_profile.loadout_slots[i]);
     }

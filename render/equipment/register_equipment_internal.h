@@ -38,6 +38,8 @@ auto humanoid_knee_r_bone() -> std::uint16_t;
 auto humanoid_foot_l_bone() -> std::uint16_t;
 auto humanoid_foot_r_bone() -> std::uint16_t;
 auto humanoid_hip_l_bone() -> std::uint16_t;
+auto humanoid_metal_role_byte() -> std::uint8_t;
+auto humanoid_leather_dark_role_byte() -> std::uint8_t;
 auto humanoid_shoulder_l_bone() -> std::uint16_t;
 auto humanoid_shoulder_r_bone() -> std::uint16_t;
 auto humanoid_forearm_l_bone() -> std::uint16_t;
@@ -189,6 +191,8 @@ auto build_roman_greaves_attachments(std::uint8_t base_role_byte)
 auto build_roman_shoulder_attachments(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec>;
 auto build_carthage_shoulder_attachments(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec>;
+auto build_commander_pauldron_attachments(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec>;
 auto build_tool_belt_attachments(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec>;
@@ -402,6 +406,10 @@ auto carthage_greaves_role_colors(const void* variant_void,
                                   QVector3D* out,
                                   std::uint32_t base_count,
                                   std::size_t max_count) -> std::uint32_t;
+auto commander_pauldron_role_colors(const void* variant_void,
+                                    QVector3D* out,
+                                    std::uint32_t base_count,
+                                    std::size_t max_count) -> std::uint32_t;
 auto roman_shoulder_role_colors(const void* variant_void,
                                 QVector3D* out,
                                 std::uint32_t base_count,

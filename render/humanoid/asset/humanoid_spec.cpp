@@ -143,7 +143,12 @@ constexpr auto make_full_deltoid(bool left) noexcept -> Creature::PrimitiveInsta
   p.shape = Creature::PrimitiveShape::OrientedSphere;
   p.params.anchor_bone = bone(left ? HumanoidBone::ShoulderL : HumanoidBone::ShoulderR);
   p.params.head_offset = QVector3D(0.0F, 0.0F, 0.0F);
-  float const r = HP::UPPER_ARM_R * 1.45F;
+  // OrientedSphere scales the radius-1 unit sphere by twice the half
+  // extents, so these are half the rendered radii. The cap is sized to sit
+  // just proud of the upper arm (about 0.067 m at the shoulder): at the old
+  // UPPER_ARM_R * 1.45 it rendered 0.29 m across, a ball wider than the neck
+  // gap that swallowed every shoulder guard authored to the arm.
+  float const r = HP::UPPER_ARM_R * 0.80F;
   p.params.half_extents = QVector3D(r, r * 0.84F, r * 0.96F);
   p.color_role = Cloth;
   p.lod_mask = Creature::k_lod_full;

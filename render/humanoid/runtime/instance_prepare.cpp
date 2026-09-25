@@ -977,10 +977,11 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
     soldier_render_anim.is_hit_reacting = false;
   }
 
-  if (!is_mounted_spawn && guard_pose_amount(soldier_render_anim) > 0.0F &&
-      soldier_render_anim.shield_formation_pose == ShieldFormationPose::None) {
-    int const row = static_cast<int>(layout.row_index);
-    int const col = static_cast<int>(layout.col_index);
+  auto const resolve_guard_shield_pose = [&]() {
+    if (is_mounted_spawn || guard_pose_amount(soldier_render_anim) <= 0.0F ||
+        soldier_render_anim.shield_formation_pose != ShieldFormationPose::None) {
+      return;
+    }
     soldier_render_anim.shield_formation_pose = shared_guard_shield_pose(
         unit_comp,
         visual_spec,
@@ -989,11 +990,12 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
         creature_presentation != nullptr && creature_presentation->guard_requested,
         creature_presentation != nullptr &&
             creature_presentation->defensive_layout_locked,
-        row,
-        col,
+        static_cast<int>(layout.row_index),
+        static_cast<int>(layout.col_index),
         rows,
         cols);
-  }
+  };
+  resolve_guard_shield_pose();
   float const offset_x = layout.offset_x;
   float const offset_z = layout.offset_z;
   uint32_t const inst_seed = layout.inst_seed;
@@ -1471,6 +1473,7 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
     soldier_render_anim.guard_pose_progress =
         std::clamp(soldier_directive->target_held_seconds / 0.18F, 0.0F, 1.0F);
   }
+  resolve_guard_shield_pose();
 
   soldier_render_anim.melee_intent = Animation::melee_intent_rotated(
       soldier_render_anim.melee_intent, individuality.swing_plane_offset);

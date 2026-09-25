@@ -11,6 +11,9 @@
 #include <limits>
 #include <numbers>
 #include <numeric>
+#include <optional>
+#include <string>
+#include <string_view>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -11431,4 +11434,133 @@ TEST(HumanoidPrepare, ALaunchedCasualtyStaysLandedWhenItStartsSinking) {
   QVector3D const sinking = request_origin(prep, true);
 
   EXPECT_LT(landed.distanceToPoint(sinking), 0.02F);
+}
+
+namespace {
+
+struct GuardShieldFacingCase {
+  Render::GL::ShieldFormationPose pose;
+  std::string_view clip;
+  QVector3D threat;
+};
+
+constexpr auto k_guard_shield_hand_bone =
+    static_cast<std::size_t>(Render::Humanoid::HumanoidBone::HandL);
+
+auto baked_left_hand_skin(Render::Humanoid::BakeProfile profile,
+                          std::string_view clip_name) -> std::optional<QMatrix4x4> {
+  auto const& recipe = Render::Humanoid::humanoid_bake_recipe(profile);
+  if (recipe.bake_clip_frame == nullptr) {
+    return std::nullopt;
+  }
+  for (std::size_t i = 0; i < recipe.clips.size(); ++i) {
+    if (recipe.clips[i].name != clip_name) {
+      continue;
+    }
+    std::vector<QMatrix4x4> palettes;
+    recipe.bake_clip_frame(i, 0U, palettes, nullptr);
+    if (palettes.size() <= k_guard_shield_hand_bone) {
+      return std::nullopt;
+    }
+    QMatrix4x4 const bind_hand =
+        Render::Humanoid::humanoid_bind_palette()[k_guard_shield_hand_bone];
+    return palettes[k_guard_shield_hand_bone] * bind_hand.inverted();
+  }
+  return std::nullopt;
+}
+
+auto guard_shield_attachment_offset(Render::Creature::ArchetypeId base_archetype,
+                                    Render::GL::ShieldFormationPose pose)
+    -> std::optional<QMatrix4x4> {
+  Render::Creature::Pipeline::UnitVisualSpec spec{};
+  spec.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
+  spec.archetype_id = base_archetype;
+  spec.skip_default_facial_hair_archetype = true;
+  Render::GL::AnimationInputs anim{};
+  anim.is_guarding = true;
+  anim.guard_pose_progress = 1.0F;
+  anim.shield_formation_pose = pose;
+  auto const guarded =
+      Render::Creature::Pipeline::finalize_visible_humanoid_spec(spec, anim, false);
+  auto const* desc =
+      Render::Creature::ArchetypeRegistry::instance().get(guarded.archetype_id);
+  if (guarded.archetype_id == base_archetype || desc == nullptr ||
+      desc->bake_attachment_count != 1U) {
+    return std::nullopt;
+  }
+  return desc->bake_attachments.front().local_offset;
+}
+
+} // namespace
+
+TEST(HumanoidGuardShield, ShieldFrontFacesTheThreatInEveryGuardPose) {
+  using Pose = Render::GL::ShieldFormationPose;
+  constexpr QVector3D k_forward{0.0F, 0.0F, 1.0F};
+  constexpr QVector3D k_left{-1.0F, 0.0F, 0.0F};
+  constexpr QVector3D k_right{1.0F, 0.0F, 0.0F};
+  constexpr QVector3D k_up{0.0F, 1.0F, 0.0F};
+  std::array<GuardShieldFacingCase, 13> const cases{{
+      {Pose::GuardDefault, "hold", k_forward},
+      {Pose::GuardDefault, "idle", k_forward},
+      {Pose::GuardDefault, "riding_idle", k_forward},
+      {Pose::RomanFront, "hold", k_forward},
+      {Pose::CarthageFront, "hold", k_forward},
+      {Pose::RomanFront, "testudo_front", k_forward},
+      {Pose::RomanTop, "testudo_top", k_up},
+      {Pose::RomanLeft, "testudo_left", k_left},
+      {Pose::RomanRight, "testudo_right", k_right},
+      {Pose::RomanRear, "testudo_rear", -k_forward},
+      {Pose::CarthageFront, "carthage_shield_wall_front", k_forward},
+      {Pose::CarthageLeft, "carthage_shield_wall_left", k_left},
+      {Pose::CarthageRight, "carthage_shield_wall_right", k_right},
+  }};
+
+  constexpr std::uint8_t k_base_role = 6;
+  struct ShieldCase {
+    const char* name;
+    Render::Creature::StaticAttachmentSpec attachment;
+  };
+  std::array<ShieldCase, 2> const shields{{
+      {"roman_scutum", Render::GL::roman_scutum_make_static_attachment(k_base_role)},
+      {"carthage_shield",
+       Render::GL::carthage_shield_make_static_attachment({}, k_base_role)},
+  }};
+
+  auto& registry = Render::Creature::ArchetypeRegistry::instance();
+  for (auto const& shield : shields) {
+    std::array<Render::Creature::StaticAttachmentSpec, 1> attachments{
+        shield.attachment};
+    auto const base_archetype = registry.register_unit_archetype(
+        std::string("tests/guard_shield_facing/") + shield.name,
+        Render::Creature::Pipeline::CreatureKind::Humanoid,
+        attachments);
+    ASSERT_NE(base_archetype, Render::Creature::k_invalid_archetype);
+
+    for (auto const profile : {Render::Humanoid::BakeProfile::SwordReady,
+                               Render::Humanoid::BakeProfile::Skeleton}) {
+      for (auto const& c : cases) {
+        auto const hand_skin = baked_left_hand_skin(profile, c.clip);
+        ASSERT_TRUE(hand_skin.has_value()) << c.clip;
+        auto const offset = guard_shield_attachment_offset(base_archetype, c.pose);
+        ASSERT_TRUE(offset.has_value()) << c.clip;
+
+        QVector3D const front =
+            (*hand_skin * *offset).mapVector(QVector3D(0.0F, 0.0F, 1.0F)).normalized();
+        EXPECT_GT(QVector3D::dotProduct(front, c.threat), 0.4F)
+            << shield.name << " " << c.clip << " pose " << static_cast<int>(c.pose)
+            << " profile " << static_cast<int>(profile)
+            << ": the painted face must look at the threat, front (" << front.x()
+            << ", " << front.y() << ", " << front.z() << ")";
+
+        QVector3D const hand =
+            (*hand_skin *
+             Render::Humanoid::humanoid_bind_palette()[k_guard_shield_hand_bone])
+                .column(3)
+                .toVector3D();
+        QVector3D const shield_origin = (*hand_skin * *offset).column(3).toVector3D();
+        EXPECT_LT(hand.distanceToPoint(shield_origin), 0.30F)
+            << shield.name << " " << c.clip << ": the shield left the hand";
+      }
+    }
+  }
 }

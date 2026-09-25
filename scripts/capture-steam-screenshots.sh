@@ -29,9 +29,10 @@ shift || true
 
 # name | mission | action fixture | fps | seconds | start | frames to export
 readonly TAKES=(
-  "battle|battle.mission.json|battle.action.json|8|14|6|40"
-  "duel|duel.mission.json|duel.action.json|10|15|0|54"
-  "town|town.mission.json|town.action.json|8|30|0|111 200"
+  "battle|combined.mission.json|combined.action.json|8|14|3|80"
+  "duel|duel.mission.json|duel.action.json|10|15|0|87"
+  "oasis|oasis.mission.json|oasis.action.json|8|16|0|0 103"
+  "construction|construction.mission.json|construction.action.json|8|16|0|80"
   "winter|winter.mission.json|winter.action.json|8|24|0|100"
 )
 
@@ -79,7 +80,7 @@ for take in "${TAKES[@]}"; do
     --mission-file "${ROOT}/${FIXTURES}/${mission}" \
     --action-fixture "${ROOT}/${FIXTURES}/${fixture}" \
     --fps "${fps}" --seconds "${seconds}" --start "${start}" \
-    --size 1920x1080 --keep-frames
+    --size 1920x1080 --keep-frames -- --graphics-preset ultra
   kill "${keepawake}" 2>/dev/null || true
 
   for frame in ${frames}; do

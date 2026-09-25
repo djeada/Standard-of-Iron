@@ -91,6 +91,8 @@ inline constexpr char k_rpg_strike_lunge_id[] = "rpg_strike_lunge";
 inline constexpr char k_rpg_bow_volley_id[] = "rpg_bow_volley";
 inline constexpr char k_rpg_commander_sword_grammar_id[] =
     "rpg_commander_sword_grammar";
+inline constexpr char k_rpg_commander_duel_standoff_id[] =
+    "rpg_commander_duel_standoff";
 inline constexpr char k_rpg_commander_spear_grammar_id[] =
     "rpg_commander_spear_grammar";
 inline constexpr char k_rpg_commander_bow_grammar_id[] = "rpg_commander_bow_grammar";

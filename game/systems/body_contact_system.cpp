@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "../core/ambient_session.h"
+#include "../core/component_commander.h"
 #include "../core/component_economy.h"
 #include "../core/component_gameplay.h"
 #include "../core/entity.h"
@@ -17,7 +18,9 @@
 #include "body_profile.h"
 #include "building_collision_registry.h"
 #include "command_service.h"
+#include "duel_spacing.h"
 #include "nav_grid.h"
+#include "owner_registry.h"
 #include "walkability.h"
 
 namespace Game::Systems {
@@ -41,6 +44,9 @@ struct ContactBody {
   float travel_z{0.0F};
 
   bool in_one_lane_passage{false};
+
+  bool commander{false};
+  bool player_driven{false};
 };
 
 auto melee_intent_of(const Engine::Core::World& world,
@@ -147,6 +153,88 @@ auto try_push(ContactBody& body, float dx, float dz, bool forward_only) -> bool 
   return true;
 }
 
+void resolve_duel_standoffs(
+    Engine::Core::World& world,
+    const OwnerRegistry* owners,
+    const std::vector<Engine::Core::WorldSpatialIndex::Entry>& entries,
+    std::vector<ContactBody>& bodies,
+    const std::vector<std::size_t>& commander_slots,
+    BodyContactDiagnostics& diagnostics) {
+  // A commander and the lone fighter he duels -- above all the other side's
+  // commander -- are pushed back out to a sword's reach. Ordinary contact
+  // leaves any pair with melee intent alone so formation melee can overlap
+  // on purpose; this pass never touches a formation.
+  const auto& index = world.spatial_index();
+  const Engine::Core::WorldSpatialIndex::Entry* const first = entries.data();
+  for (std::size_t const slot : commander_slots) {
+    ContactBody& me = bodies[slot];
+    const auto& me_entry = entries[slot];
+    auto* me_entity = world.get_entity(me_entry.id);
+    if (me.transform == nullptr || me_entity == nullptr ||
+        !DuelSpacing::is_duel_body(*me_entity)) {
+      continue;
+    }
+    index.for_each_in_radius(
+        me.transform->position.x,
+        me.transform->position.z,
+        BodyContactSystem::k_duel_scan_radius,
+        [&](const auto& other) {
+          if (other.id == me_entry.id) {
+            return;
+          }
+          const auto other_slot = static_cast<std::size_t>(&other - first);
+          ContactBody& them = bodies[other_slot];
+          if (them.transform == nullptr || (them.commander && other.id < me_entry.id) ||
+              other.owner_id == me_entry.owner_id ||
+              (owners != nullptr &&
+               owners->are_allies(me_entry.owner_id, other.owner_id))) {
+            return;
+          }
+          bool const me_can = me.movable || me.player_driven;
+          bool const them_can = them.movable || them.player_driven;
+          if (!me_can && !them_can) {
+            return;
+          }
+          auto* them_entity = world.get_entity(other.id);
+          if (them_entity == nullptr || !DuelSpacing::is_duel_body(*them_entity)) {
+            return;
+          }
+          const float minimum =
+              DuelSpacing::standoff_between(*me_entity, *them_entity).minimum;
+          float const px = me.transform->position.x - them.transform->position.x;
+          float const pz = me.transform->position.z - them.transform->position.z;
+          float const distance = std::hypot(px, pz);
+          if (distance >= minimum) {
+            return;
+          }
+          float nx = 1.0F;
+          float nz = 0.0F;
+          if (distance > 1.0e-5F) {
+            nx = px / distance;
+            nz = pz / distance;
+          } else if (me.transform != nullptr) {
+            float const yaw = me.transform->rotation.y * 0.017453292519943295F;
+            nx = -std::sin(yaw);
+            nz = -std::cos(yaw);
+          }
+          float const overlap = minimum - distance;
+          float const my_share = me_can ? (them_can ? 0.5F : 1.0F) : 0.0F;
+          float const their_share = 1.0F - my_share;
+          ++diagnostics.duel_standoffs_resolved;
+          if (my_share > 0.0F &&
+              !try_push(me, nx * overlap * my_share, nz * overlap * my_share, false)) {
+            ++diagnostics.pushes_rejected;
+          }
+          if (their_share > 0.0F && !try_push(them,
+                                              -nx * overlap * their_share,
+                                              -nz * overlap * their_share,
+                                              false)) {
+            ++diagnostics.pushes_rejected;
+          }
+        });
+  }
+}
+
 } // namespace
 
 void BodyContactSystem::run(Engine::Core::SystemContext& context) {
@@ -169,6 +257,7 @@ void BodyContactSystem::run(Engine::Core::SystemContext& context) {
   const auto& buildings = *services.building_collision;
 
   std::vector<ContactBody> bodies(entries.size());
+  std::vector<std::size_t> commander_slots;
   float widest_radius = 0.0F;
   for (std::size_t slot = 0; slot < entries.size(); ++slot) {
     const auto& entry = entries[slot];
@@ -223,6 +312,12 @@ void BodyContactSystem::run(Engine::Core::SystemContext& context) {
                                                 transform->position.z);
     }
     body.melee_intent = melee_intent_of(world, entry.id);
+    if (const auto* commander =
+            world.try_get<Engine::Core::CommanderComponent>(entry.id)) {
+      body.commander = true;
+      body.player_driven = commander->fpv_controlled;
+      commander_slots.push_back(slot);
+    }
     widest_radius = std::max(widest_radius, body.radius);
   }
 
@@ -366,11 +461,16 @@ void BodyContactSystem::run(Engine::Core::SystemContext& context) {
       ++m_diagnostics.pushes_rejected;
     }
   }
+
+  resolve_duel_standoffs(
+      world, services.owners, entries, bodies, commander_slots, m_diagnostics);
 }
 
 auto BodyContactSystem::access() const -> Engine::Core::SystemAccess {
   using namespace Engine::Core;
   return SystemAccess::declare(Reads<UnitComponent,
+                                     CommanderComponent,
+                                     ElephantComponent,
                                      BuildingComponent,
                                      AttackComponent,
                                      AttackTargetComponent,

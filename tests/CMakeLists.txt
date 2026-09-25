@@ -492,6 +492,7 @@ add_executable(
     render/stateless_weapon_renderers_test.cpp
     render/creature/skeleton_test.cpp
     render/creature/species_manifest_parity_test.cpp
+    render/creature/commander_leg_pose_test.cpp
     render/creature/part_graph_test.cpp
     render/creature/creature_visual_definition_test.cpp
     render/creature/rigged_mesh_bake_test.cpp

@@ -237,6 +237,7 @@ add_library(
     formation/unit_layout_state_system.cpp
     systems/cohort_system.cpp
     systems/defensive_unit_layout_service.cpp
+    systems/duel_spacing.cpp
     systems/formation_combat_geometry.cpp
     systems/combat_system/structure_combat.cpp
 )

@@ -62,6 +62,7 @@ enum class ArcherLoadoutSlot : std::uint8_t {
   Armor,
   Bow,
   Cloak,
+  Shoulder,
 };
 
 struct ArcherRendererProfile {
@@ -73,7 +74,7 @@ struct ArcherRendererProfile {
   float kneel_depth_multiplier{1.125F};
   Render::Creature::Pipeline::CreatureAssetId creature_asset_id{
       Render::Creature::Pipeline::k_humanoid_asset};
-  std::array<ArcherLoadoutSlot, 6> loadout_slots{};
+  std::array<ArcherLoadoutSlot, 7> loadout_slots{};
   std::size_t loadout_slot_count{0U};
   bool apply_skin_override{false};
   bool apply_carthage_variant_traits{false};

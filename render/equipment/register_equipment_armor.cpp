@@ -3,6 +3,7 @@
 #include "armor/armor_light_carthage.h"
 #include "armor/carthage_shoulder_cover.h"
 #include "armor/cloak_renderer.h"
+#include "armor/commander_pauldron.h"
 #include "armor/roman_armor.h"
 #include "armor/roman_greaves.h"
 #include "armor/roman_shoulder_cover.h"
@@ -123,10 +124,11 @@ auto commander_cloak_config(CommanderCloakStyle style) -> const CloakConfig& {
 template <CommanderCloakStyle Style>
 auto build_commander_cloak(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec> {
-  return {Render::GL::cloak_make_static_attachment(commander_cloak_config(Style),
-                                                   Render::GL::shared_cloak_meshes(),
-                                                   humanoid_chest_bone(),
-                                                   base_role_byte)};
+  return {Render::GL::cloak_make_static_attachment(
+      commander_cloak_config(Style),
+      Render::GL::shared_cloak_meshes(commander_cloak_config(Style)),
+      humanoid_chest_bone(),
+      base_role_byte)};
 }
 
 template <CommanderCloakStyle Style>
@@ -268,6 +270,35 @@ auto build_roman_shoulder_attachments(std::uint8_t base_role_byte)
   };
 }
 
+auto build_commander_pauldron_attachments(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  (void)base_role_byte;
+  std::uint8_t const metal_role = humanoid_metal_role_byte();
+  std::uint8_t const strap_role = humanoid_leather_dark_role_byte();
+  return {
+      Render::GL::commander_pauldron_make_static_attachment(
+          humanoid_shoulder_l_bone(),
+          metal_role,
+          strap_role,
+          humanoid_shoulder_bind_matrix(true)),
+      Render::GL::commander_pauldron_make_static_attachment(
+          humanoid_shoulder_r_bone(),
+          metal_role,
+          strap_role,
+          humanoid_shoulder_bind_matrix(false)),
+  };
+}
+
+auto commander_pauldron_role_colors(const void* variant_void,
+                                    QVector3D* out,
+                                    std::uint32_t base_count,
+                                    std::size_t max_count) -> std::uint32_t {
+  (void)variant_void;
+  (void)out;
+  (void)max_count;
+  return base_count;
+}
+
 auto build_carthage_shoulder_attachments(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec> {
   return {
@@ -301,42 +332,47 @@ auto build_arm_guards_attachments(std::uint8_t base_role_byte)
 }
 auto build_carthage_cloak_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec> {
-  return {Render::GL::cloak_make_static_attachment(carthage_cloak_config(),
-                                                   Render::GL::shared_cloak_meshes(),
-                                                   humanoid_chest_bone(),
-                                                   base_role_byte)};
+  return {Render::GL::cloak_make_static_attachment(
+      carthage_cloak_config(),
+      Render::GL::shared_cloak_meshes(carthage_cloak_config()),
+      humanoid_chest_bone(),
+      base_role_byte)};
 }
 
 auto build_carthage_mounted_cloak_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec> {
-  return {Render::GL::cloak_make_static_attachment(carthage_mounted_cloak_config(),
-                                                   Render::GL::shared_cloak_meshes(),
-                                                   humanoid_chest_bone(),
-                                                   base_role_byte)};
+  return {Render::GL::cloak_make_static_attachment(
+      carthage_mounted_cloak_config(),
+      Render::GL::shared_cloak_meshes(carthage_mounted_cloak_config()),
+      humanoid_chest_bone(),
+      base_role_byte)};
 }
 
 auto build_sepulcher_cloak_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec> {
-  return {Render::GL::cloak_make_static_attachment(sepulcher_cloak_config(),
-                                                   Render::GL::shared_cloak_meshes(),
-                                                   humanoid_chest_bone(),
-                                                   base_role_byte)};
+  return {Render::GL::cloak_make_static_attachment(
+      sepulcher_cloak_config(),
+      Render::GL::shared_cloak_meshes(sepulcher_cloak_config()),
+      humanoid_chest_bone(),
+      base_role_byte)};
 }
 
 auto build_roman_cloak_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec> {
-  return {Render::GL::cloak_make_static_attachment(roman_cloak_config(),
-                                                   Render::GL::shared_cloak_meshes(),
-                                                   humanoid_chest_bone(),
-                                                   base_role_byte)};
+  return {Render::GL::cloak_make_static_attachment(
+      roman_cloak_config(),
+      Render::GL::shared_cloak_meshes(roman_cloak_config()),
+      humanoid_chest_bone(),
+      base_role_byte)};
 }
 
 auto build_roman_mounted_cloak_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec> {
-  return {Render::GL::cloak_make_static_attachment(roman_mounted_cloak_config(),
-                                                   Render::GL::shared_cloak_meshes(),
-                                                   humanoid_chest_bone(),
-                                                   base_role_byte)};
+  return {Render::GL::cloak_make_static_attachment(
+      roman_mounted_cloak_config(),
+      Render::GL::shared_cloak_meshes(roman_mounted_cloak_config()),
+      humanoid_chest_bone(),
+      base_role_byte)};
 }
 
 auto build_fabius_cloak_attachment(std::uint8_t base_role_byte)

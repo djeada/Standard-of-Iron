@@ -986,6 +986,7 @@ auto copy_presentation_snapshot_components(const Entity& source,
   copy_snapshot_component<StructureDamagePresentationComponent>(source, destination);
   copy_snapshot_component<StructureRepairPresentationComponent>(source, destination);
   copy_snapshot_component<RpgContactPresentationComponent>(source, destination);
+  copy_snapshot_component<CommanderSignaturePresentationComponent>(source, destination);
   copy_snapshot_component<BloodStainComponent>(source, destination);
   copy_snapshot_component<StockpileComponent>(source, destination);
   copy_snapshot_component<ProductionCompletionComponent>(source, destination);
@@ -1044,31 +1045,33 @@ auto render_entity_is_stable(const Entity& entity) -> bool {
       (combat != nullptr && combat->animation_state != CombatAnimationState::Idle) ||
       (contact != nullptr && (contact->in_contact || !contact->fronts.empty())) ||
       (casualties != nullptr && !casualties->entries.empty());
-  bool const transient = entity.has_component<PendingRemovalComponent>() ||
-                         entity.has_component<DeathAnimationComponent>() ||
-                         entity.has_component<BuilderProductionComponent>() ||
-                         entity.has_component<ProductionComponent>() ||
-                         entity.has_component<CaptureComponent>() ||
-                         entity.has_component<CommanderComponent>() ||
-                         entity.has_component<CommanderAuraBuffComponent>() ||
-                         entity.has_component<RpgCommanderActionComponent>() ||
-                         entity.has_component<RpgCommanderTargetComponent>() ||
-                         entity.has_component<HealerComponent>() ||
-                         entity.has_component<BurningStatusComponent>() ||
-                         entity.has_component<StaggerComponent>() ||
-                         entity.has_component<HitFeedbackComponent>() ||
-                         entity.has_component<FormationHitPresentationComponent>() ||
-                         entity.has_component<ConstructionPreviewComponent>() ||
-                         entity.has_component<WallConstructionSiteComponent>() ||
-                         entity.has_component<DismantleSiteComponent>() ||
-                         entity.has_component<StructureDamagePresentationComponent>() ||
-                         entity.has_component<StructureRepairPresentationComponent>() ||
-                         entity.has_component<RpgContactPresentationComponent>() ||
-                         entity.has_component<BloodStainComponent>() ||
-                         entity.has_component<FirePatchComponent>() ||
-                         entity.has_component<StructureFireComponent>() ||
-                         entity.has_component<ElephantStompImpactComponent>() ||
-                         entity.has_component<CatapultLoadingComponent>();
+  bool const transient =
+      entity.has_component<PendingRemovalComponent>() ||
+      entity.has_component<DeathAnimationComponent>() ||
+      entity.has_component<BuilderProductionComponent>() ||
+      entity.has_component<ProductionComponent>() ||
+      entity.has_component<CaptureComponent>() ||
+      entity.has_component<CommanderComponent>() ||
+      entity.has_component<CommanderAuraBuffComponent>() ||
+      entity.has_component<RpgCommanderActionComponent>() ||
+      entity.has_component<RpgCommanderTargetComponent>() ||
+      entity.has_component<HealerComponent>() ||
+      entity.has_component<BurningStatusComponent>() ||
+      entity.has_component<StaggerComponent>() ||
+      entity.has_component<HitFeedbackComponent>() ||
+      entity.has_component<FormationHitPresentationComponent>() ||
+      entity.has_component<ConstructionPreviewComponent>() ||
+      entity.has_component<WallConstructionSiteComponent>() ||
+      entity.has_component<DismantleSiteComponent>() ||
+      entity.has_component<StructureDamagePresentationComponent>() ||
+      entity.has_component<StructureRepairPresentationComponent>() ||
+      entity.has_component<RpgContactPresentationComponent>() ||
+      entity.has_component<CommanderSignaturePresentationComponent>() ||
+      entity.has_component<BloodStainComponent>() ||
+      entity.has_component<FirePatchComponent>() ||
+      entity.has_component<StructureFireComponent>() ||
+      entity.has_component<ElephantStompImpactComponent>() ||
+      entity.has_component<CatapultLoadingComponent>();
   return !moving && !active_creature && !active_combat && !transient;
 }
 

@@ -61,3 +61,11 @@ public:
                                 bool defer_ai_initialization,
                                 LoadingProgressTracker* progress_tracker = nullptr);
 };
+
+// Bakes every creature body the match can draw, then forbids render-time
+// bakes. Call it once the world, owners and nations of a new or loaded match
+// are in place and before its first frame: a body that was not baked here is
+// not drawn for the rest of the match.
+void prewarm_match_render_templates(Engine::Core::World& world,
+                                    const AppSceneContext& scene,
+                                    LoadingProgressTracker* progress_tracker = nullptr);

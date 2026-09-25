@@ -192,7 +192,13 @@ def battle() -> None:
 
 
 def duel() -> None:
-    """Scipio and Hannibal meet in the gap while 60 cohorts a side close in."""
+    """Scipio and Hannibal meet in the gap while 60 cohorts a side close in.
+
+    The Punic line starts twice as far out as the Roman one: it is the
+    aggressor and marches straight at Scipio, and at 12 m it swallowed the
+    duel before the dive and the spin came round. From 24 m it stands as the
+    backdrop through the whole exchange and closes in at the end.
+    """
     data = base_map("Steam: the duel", 192)
     spawns = data["spawns"]
     spawns.append(spawn("scipio", "roman_veteran_consul", 0, 3, 1, "roman_republic"))
@@ -205,7 +211,9 @@ def duel() -> None:
             spawns.append(
                 spawn(f"rome_{rank}_{col}", kind, x, depth, 1, "roman_republic")
             )
-            spawns.append(spawn(f"punic_{rank}_{col}", kind, x, -depth, 2, "carthage"))
+            spawns.append(
+                spawn(f"punic_{rank}_{col}", kind, x, -(depth + 12), 2, "carthage")
+            )
     write(
         "duel",
         data,
@@ -213,6 +221,41 @@ def duel() -> None:
             "steam_duel", "Steam: the duel", "duel.map.json", "Defeat Hannibal Barca."
         ),
     )
+    write_actions("duel", duel_actions(), coverage="selection_change")
+
+
+def duel_actions() -> list[dict]:
+    """Scipio, in direct control and locked on, runs his sword grammar.
+
+    The presses follow the authored branches (combat_action_definition.cpp):
+    a heavy from range is the gap closer and a light after it the left slash;
+    then a light, a heavy (the launcher), a jump inside the launcher (the air
+    cut) and a heavy in the air (the dive); last, special is the radial spin.
+    A jump from idle is only a grounded slash, and a press the stamina cannot
+    pay for (200 to start, 30 a light, 50 a heavy) is refused, so the combo
+    waits in the middle for Scipio to get his breath back.
+    rpg_commander_duel_standoff presses the same buttons one second earlier
+    and fails if any of these actions does not run.
+
+    The lock camera sits over Scipio's right shoulder with Hannibal facing
+    the lens. Strafing does not turn it side-on -- the camera follows Scipio
+    round and only lines the two figures up -- and the close camera barely
+    moves in while it prints a toast over the fight, so neither is used.
+    """
+    return [
+        act(0.05, "camera_look_at", "0,0"),
+        act(0.4, "select_id", "1"),
+        act(0.8, "commander_enter"),
+        act(1.4, "commander_lock_on"),
+        act(2.0, "commander_heavy"),
+        act(2.85, "commander_attack"),
+        act(7.0, "commander_attack"),
+        act(7.75, "commander_heavy"),
+        act(8.35, "commander_jump"),
+        act(8.8, "commander_heavy"),
+        act(12.2, "commander_special"),
+        act(13.4, "commander_aura"),
+    ]
 
 
 def winter() -> None:
@@ -395,13 +438,15 @@ def act(at: float, action: str, argument: str = "") -> dict:
     return {"at": round(at, 2), "action": action, "argument": argument}
 
 
-def write_actions(name: str, actions: list[dict]) -> None:
+def write_actions(
+    name: str, actions: list[dict], coverage: str = "build_panel"
+) -> None:
     actions = sorted(actions, key=lambda a: a["at"])
     document = {
         "version": 1,
         "name": f"steam_{name}",
         "loop_seconds": 0.0,
-        "required_coverage": ["build_panel"],
+        "required_coverage": [coverage],
         "actions": actions,
     }
     (HERE / f"{name}.action.json").write_text(json.dumps(document, indent=2) + "\n")
@@ -954,10 +999,83 @@ def construction() -> None:
     write_actions("construction", actions)
 
 
+def combined_arms() -> None:
+    """Every arm in one frame: cohorts, elephants, siege and healers within ~80 m."""
+    data = base_map("Steam: combined arms", 160)
+    spawns = data["spawns"]
+    columns = 16
+    for rank in range(4):
+        for col in range(columns):
+            x = -52.5 + col * 7
+            kind = ("spearman", "swordsman", "swordsman", "archer")[rank]
+            depth = 8 + rank * 6
+            spawns.append(
+                spawn(f"rome_{rank}_{col}", kind, x, depth, 1, "roman_republic")
+            )
+            spawns.append(spawn(f"punic_{rank}_{col}", kind, x, -depth, 2, "carthage"))
+    # Healers walk just behind the Roman archers; the siege train sits behind them.
+    for col in range(8):
+        spawns.append(
+            spawn(f"healer_{col}", "healer", -24.5 + col * 7, 31, 1, "roman_republic")
+        )
+    for col in range(4):
+        spawns.append(
+            spawn(
+                f"ballista_{col}", "ballista", -30 + col * 20, 37, 1, "roman_republic"
+            )
+        )
+        spawns.append(
+            spawn(
+                f"catapult_{col}", "catapult", -20 + col * 20, 43, 1, "roman_republic"
+            )
+        )
+    # Carthage leads with its elephants, straight at the Roman centre.
+    for col in range(8):
+        spawns.append(
+            spawn(f"elephant_{col}", "elephant", -24.5 + col * 7, -3, 2, "carthage")
+        )
+    for col in range(3):
+        spawns.append(
+            spawn(f"punic_healer_{col}", "healer", -14 + col * 14, -31, 2, "carthage")
+        )
+        spawns.append(
+            spawn(
+                f"punic_ballista_{col}", "ballista", -20 + col * 20, -37, 2, "carthage"
+            )
+        )
+    spawns.insert(
+        0, spawn("rome_consul", "roman_veteran_consul", 0, 50, 1, "roman_republic")
+    )
+    spawns.insert(
+        1, spawn("hannibal", "carthage_sword_commander", 0, -44, 2, "carthage")
+    )
+    centre = grid(0, 0)
+    data["camera"] = {
+        "center": [centre[0], 0, centre[1]],
+        "distance": 45.0,
+        "tilt_deg": 40.0,
+        "yaw": 200.0,
+        "fov_y": 45.0,
+        "near": 1.0,
+        "far": 500.0,
+    }
+    write(
+        "combined",
+        data,
+        mission(
+            "steam_combined",
+            "Steam: combined arms",
+            "combined.map.json",
+            "Break the Carthaginian line.",
+        ),
+    )
+
+
 if __name__ == "__main__":
     oasis()
     construction()
     town()
     battle()
+    combined_arms()
     duel()
     winter()
