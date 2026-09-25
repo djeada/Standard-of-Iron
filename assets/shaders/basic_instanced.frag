@@ -9,10 +9,10 @@ in vec2 v_tex_coord;
 in vec3 v_world_pos;
 flat in vec3 v_instance_color;
 flat in float v_instance_alpha;
+flat in int v_material_id;
 
 uniform sampler2D u_texture;
 uniform bool u_use_texture;
-uniform int u_material_id;
 
 out vec4 frag_color;
 
@@ -50,8 +50,8 @@ void main() {
   }
 
   vec3 normal = normalize(v_normal);
-  int soi_material = u_material_id % 10;
-  int soi_damage_tier = u_material_id / 10;
+  int soi_material = v_material_id % 10;
+  int soi_damage_tier = v_material_id / 10;
   color = soi_material_variation(color, v_world_pos, normal, soi_material);
   color = soi_apply_damage_soot(color, v_world_pos, soi_damage_tier);
 

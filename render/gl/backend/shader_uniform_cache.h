@@ -28,6 +28,7 @@ public:
     Shader::UniformHandle light_dir{Shader::InvalidUniform};
     Shader::UniformHandle ambient_strength{Shader::InvalidUniform};
     Shader::UniformHandle camera_pos{Shader::InvalidUniform};
+    Shader::UniformHandle time{Shader::InvalidUniform};
     Shader* instanced_variant{nullptr};
   };
 

@@ -61,6 +61,12 @@ public:
         mesh, material, model, unseen_surface_color(color), tex, alpha, material_id);
   }
 
+  void render_instance(const RenderInstance& instance) override {
+    RenderInstance unseen = instance;
+    unseen.unseen = true;
+    ForwardingSubmitter::render_instance(unseen);
+  }
+
   void cylinder(const QVector3D& start,
                 const QVector3D& end,
                 float radius,

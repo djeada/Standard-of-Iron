@@ -1,9 +1,9 @@
 #include "render_archetype.h"
 
 #include <array>
-#include <unordered_map>
 #include <utility>
 
+#include "entity/unseen_submitter.h"
 #include "geom/transforms.h"
 #include "gl/primitives.h"
 #include "submitter.h"
@@ -78,56 +78,51 @@ auto select_render_archetype_lod(const RenderArchetype& archetype,
   return fallback;
 }
 
-auto select_render_archetype_lod_stable(const RenderArchetype& archetype,
-                                        float distance,
-                                        std::uint64_t instance_id)
-    -> RenderArchetypeLod {
-  static thread_local std::unordered_map<std::uint64_t, RenderArchetypeLod> held;
-
-  const RenderArchetypeLod fresh = select_render_archetype_lod(archetype, distance);
-  if (instance_id == 0U) {
-    return fresh;
+auto resolve_render_draw(const RenderInstance& instance,
+                         const RenderArchetypeDraw& draw) -> ResolvedRenderDraw {
+  QVector3D color = draw.color;
+  if (draw.palette_slot != k_render_archetype_fixed_color_slot &&
+      draw.palette_slot < instance.palette.size()) {
+    color = instance.palette[draw.palette_slot];
   }
+  return ResolvedRenderDraw{
+      .world = instance.world * draw.local_model,
+      .color = instance.unseen ? unseen_surface_color(color) : color,
+      .texture = (draw.texture != nullptr) ? draw.texture : instance.default_texture,
+      .alpha = draw.alpha * instance.alpha_multiplier,
+      .material_id = damage_material_id(draw.material_id, instance.damage_material_id),
+  };
+}
 
-  constexpr float k_lod_release_scale = 1.18F;
-  auto const previous = held.find(instance_id);
-  if (previous != held.end() && previous->second == RenderArchetypeLod::Full &&
-      fresh == RenderArchetypeLod::Minimal) {
-    const RenderArchetypeSlice& full =
-        archetype.lods[lod_index(RenderArchetypeLod::Full)];
-    if (!full.draws.empty() && distance <= full.max_distance * k_lod_release_scale) {
-      return RenderArchetypeLod::Full;
-    }
+void submit_render_draw(ISubmitter& out,
+                        const RenderInstance& instance,
+                        const RenderArchetypeDraw& draw) {
+  const ResolvedRenderDraw resolved = resolve_render_draw(instance, draw);
+  if (draw.material != nullptr) {
+    out.part(draw.mesh,
+             draw.material,
+             resolved.world,
+             resolved.color,
+             resolved.texture,
+             resolved.alpha,
+             resolved.material_id);
+    return;
   }
-
-  held[instance_id] = fresh;
-  return fresh;
+  out.mesh(draw.mesh,
+           resolved.world,
+           resolved.color,
+           resolved.texture,
+           resolved.alpha,
+           resolved.material_id);
 }
 
 void submit_render_instance(ISubmitter& out, const RenderInstance& instance) {
   if (instance.archetype == nullptr) {
     return;
   }
-
-  const RenderArchetypeSlice& slice = instance.archetype->lods[lod_index(instance.lod)];
-  for (const RenderArchetypeDraw& draw : slice.draws) {
-    QVector3D color = draw.color;
-    if (draw.palette_slot != k_render_archetype_fixed_color_slot &&
-        draw.palette_slot < instance.palette.size()) {
-      color = instance.palette[draw.palette_slot];
-    }
-
-    QMatrix4x4 world = instance.world * draw.local_model;
-    float const alpha = draw.alpha * instance.alpha_multiplier;
-    Texture* texture =
-        (draw.texture != nullptr) ? draw.texture : instance.default_texture;
-
-    if (draw.material != nullptr) {
-      out.part(
-          draw.mesh, draw.material, world, color, texture, alpha, draw.material_id);
-      continue;
-    }
-    out.mesh(draw.mesh, world, color, texture, alpha, draw.material_id);
+  for (const RenderArchetypeDraw& draw :
+       instance.archetype->lods[lod_index(instance.lod)].draws) {
+    submit_render_draw(out, instance, draw);
   }
 }
 

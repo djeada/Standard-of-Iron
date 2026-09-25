@@ -305,6 +305,27 @@ TEST(DrawQueueSortOrder, NonMonotonicBucketSequenceFallsBackToGlobalSort) {
   EXPECT_EQ(queue.sort_key_for_sorted(1), queue.sort_key_for_sorted(2));
 }
 
+TEST(DrawQueuePreparedBatches, MeshMaterialsSharingAMeshGroupIntoTwoBatches) {
+  DrawQueue queue;
+
+  for (int i = 0; i < 6; ++i) {
+    MeshCmd part;
+    part.shader = reinterpret_cast<Shader*>(static_cast<std::uintptr_t>(0x10));
+    part.mesh = reinterpret_cast<Mesh*>(static_cast<std::uintptr_t>(0x20));
+    part.material_id = i % 2;
+    queue.submit(part);
+  }
+
+  queue.sort_for_batching();
+
+  const auto& batches = queue.prepared_batches();
+  ASSERT_EQ(batches.size(), 2U);
+  EXPECT_EQ(batches[0].kind, Render::GL::PreparedBatchKind::MeshInstanced);
+  EXPECT_EQ(batches[0].count, 3U);
+  EXPECT_EQ(batches[1].kind, Render::GL::PreparedBatchKind::MeshInstanced);
+  EXPECT_EQ(batches[1].count, 3U);
+}
+
 TEST(DrawQueueMemory, HighWaterMarkTrackedAfterClear) {
   DrawQueue queue;
 

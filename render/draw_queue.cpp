@@ -16,13 +16,13 @@ void DrawQueue::clear() {
       std::max(m_submission_bucket_high_water, m_submission_bucket_spans.size());
   m_local_light_high_water = std::max(m_local_light_high_water, m_local_lights.size());
   m_items.clear();
-  m_sort_indices.clear();
-  m_sort_keys.clear();
+  m_sort_entries.clear();
   m_prepared_batches.clear();
   m_submission_bucket_spans.clear();
   m_submission_bucket_ordered = true;
   m_local_lights.clear();
   m_type_counts.fill(0);
+  m_static_batch = nullptr;
 }
 
 void DrawQueue::submit_local_light(const LocalLight& light) {
@@ -36,8 +36,7 @@ void DrawQueue::reserve_for_frame(std::size_t items_hint) {
   const std::size_t target = std::max(items_hint, m_items_high_water);
   if (target > m_items.capacity()) {
     m_items.reserve(target);
-    m_sort_indices.reserve(target);
-    m_sort_keys.reserve(target);
+    m_sort_entries.reserve(target);
   }
   if (m_prepared_high_water > m_prepared_batches.capacity()) {
     m_prepared_batches.reserve(m_prepared_high_water);
@@ -50,18 +49,16 @@ void DrawQueue::reserve_for_frame(std::size_t items_hint) {
 void DrawQueue::sort_for_batching() {
   const std::size_t count = m_items.size();
 
-  m_sort_keys.resize(count);
-  m_sort_indices.resize(count);
+  m_sort_entries.resize(count);
   m_prepared_batches.clear();
 
   for (std::size_t i = 0; i < count; ++i) {
-    m_sort_indices[i] = static_cast<uint32_t>(i);
-    m_sort_keys[i] = compute_sort_key(m_items[i]);
+    m_sort_entries[i] = compute_sort_entry(m_items[i], static_cast<std::uint32_t>(i));
   }
 
   if (count >= 2) {
     if (!m_submission_bucket_ordered || !sort_bucketed_ranges(count)) {
-      sort_full_keys(0, count);
+      sort_entries(0, count);
     }
   }
   build_prepared_batches();
@@ -72,8 +69,8 @@ auto DrawQueue::can_batch_mesh(std::size_t sorted_idx_a,
   if (sorted_idx_a >= m_items.size() || sorted_idx_b >= m_items.size()) {
     return false;
   }
-  const auto& a = m_items[m_sort_indices[sorted_idx_a]];
-  const auto& b = m_items[m_sort_indices[sorted_idx_b]];
+  const auto& a = get_sorted(sorted_idx_a);
+  const auto& b = get_sorted(sorted_idx_b);
   if (a.index() != MeshCmdIndex || b.index() != MeshCmdIndex) {
     return false;
   }
@@ -89,20 +86,9 @@ auto DrawQueue::can_batch_mesh(std::size_t sorted_idx_a,
          mesh_a.blend_batchable == mesh_b.blend_batchable;
 }
 
-void DrawQueue::sort_full_keys(std::size_t start, std::size_t end) {
-  std::stable_sort(m_sort_indices.begin() + static_cast<std::ptrdiff_t>(start),
-                   m_sort_indices.begin() + static_cast<std::ptrdiff_t>(end),
-                   [&](std::uint32_t lhs, std::uint32_t rhs) {
-                     if (m_sort_keys[lhs] == m_sort_keys[rhs]) {
-                       const auto lhs_full = full_resource_identity(m_items[lhs]);
-                       const auto rhs_full = full_resource_identity(m_items[rhs]);
-                       if (lhs_full != rhs_full) {
-                         return lhs_full < rhs_full;
-                       }
-                       return lhs < rhs;
-                     }
-                     return m_sort_keys[lhs] < m_sort_keys[rhs];
-                   });
+void DrawQueue::sort_entries(std::size_t start, std::size_t end) {
+  std::sort(m_sort_entries.begin() + static_cast<std::ptrdiff_t>(start),
+            m_sort_entries.begin() + static_cast<std::ptrdiff_t>(end));
 }
 
 auto DrawQueue::sort_bucketed_ranges(std::size_t count) -> bool {
@@ -117,7 +103,7 @@ auto DrawQueue::sort_bucketed_ranges(std::size_t count) -> bool {
       return false;
     }
     if (span.count >= 2U && !span.preserves_append_order) {
-      sort_full_keys(span.start, span.end());
+      sort_entries(span.start, span.end());
     }
     covered = span.end();
   }
@@ -266,9 +252,12 @@ void DrawQueue::record_submission_bucket(const DrawCmd& cmd) {
                            .preserves_append_order = append_ordered});
 }
 
-auto DrawQueue::compute_sort_key(const DrawCmd& cmd) -> uint64_t {
+auto DrawQueue::compute_sort_entry(const DrawCmd& cmd,
+                                   std::uint32_t index) const -> SortEntry {
   SortIdentity identity;
   populate_sort_identity_prefix(cmd, identity);
+  SortEntry entry{.index = index};
+  auto& resources = entry.resources;
 
   switch (draw_cmd_type(cmd)) {
   case DrawCmdType::Mesh: {
@@ -276,12 +265,17 @@ auto DrawQueue::compute_sort_key(const DrawCmd& cmd) -> uint64_t {
     identity.material = pack_12(sort_id(mesh.shader));
     identity.mesh = pack_16(sort_id(mesh.mesh));
     identity.texture = pack_12(sort_id(mesh.texture));
+    resources = {ptr_value(mesh.shader),
+                 ptr_value(mesh.mesh),
+                 ptr_value(mesh.texture),
+                 static_cast<std::uint32_t>(mesh.material_id)};
     break;
   }
   case DrawCmdType::TerrainScatter: {
     const auto& deco = std::get<TerrainScatterCmdIndex>(cmd);
     identity.material = pack_12(sort_id(deco.material));
     identity.mesh = pack_16(sort_id(deco.instance_buffer));
+    resources = {ptr_value(deco.material), ptr_value(deco.instance_buffer), 0U, 0U};
     break;
   }
   case DrawCmdType::FogBatch: {
@@ -289,6 +283,8 @@ auto DrawQueue::compute_sort_key(const DrawCmd& cmd) -> uint64_t {
     identity.mesh = pack_16(sort_id(fog.instance_buffer != nullptr
                                         ? static_cast<const void*>(fog.instance_buffer)
                                         : static_cast<const void*>(fog.instances)));
+    resources = {
+        ptr_value(fog.instance_buffer), ptr_value(fog.instances), fog.count, 0U};
     break;
   }
   case DrawCmdType::TerrainSurface: {
@@ -296,18 +292,22 @@ auto DrawQueue::compute_sort_key(const DrawCmd& cmd) -> uint64_t {
     identity.material = pack_12(chunk.sort_key);
     identity.mesh = pack_16(sort_id(chunk.mesh));
     identity.texture = pack_12(sort_id(chunk.material));
+    resources = {chunk.sort_key, ptr_value(chunk.mesh), ptr_value(chunk.material), 0U};
     break;
   }
   case DrawCmdType::TerrainFeature: {
     const auto& feature = std::get<TerrainFeatureCmdIndex>(cmd);
     identity.mesh = pack_16(sort_id(feature.mesh));
     identity.texture = pack_12(sort_id(feature.visibility.texture));
+    resources = {
+        ptr_value(feature.mesh), ptr_value(feature.visibility.texture), 0U, 0U};
     break;
   }
   case DrawCmdType::PrimitiveBatch: {
     const auto& prim = std::get<PrimitiveBatchCmdIndex>(cmd);
     identity.mesh = pack_16(static_cast<std::uint32_t>(std::min<std::size_t>(
         prim.instance_count(), std::numeric_limits<std::uint16_t>::max())));
+    resources = {prim.instance_count(), 0U, 0U, 0U};
     break;
   }
   case DrawCmdType::DrawPart: {
@@ -316,6 +316,10 @@ auto DrawQueue::compute_sort_key(const DrawCmd& cmd) -> uint64_t {
     identity.mesh = pack_16(sort_id(part.mesh));
     identity.texture = pack_12(sort_id(part.texture));
     identity.skeleton = part.palette.empty() ? 0U : 1U;
+    resources = {ptr_value(part.material),
+                 ptr_value(part.mesh),
+                 ptr_value(part.texture),
+                 static_cast<std::uint32_t>(part.material_id)};
     break;
   }
   case DrawCmdType::RiggedCreature: {
@@ -324,6 +328,10 @@ auto DrawQueue::compute_sort_key(const DrawCmd& cmd) -> uint64_t {
     identity.mesh = pack_16(sort_id(rig.mesh));
     identity.texture = pack_12(sort_id(rig.texture));
     identity.skeleton = pack_4(rig.bone_count);
+    resources = {ptr_value(rig.material),
+                 ptr_value(rig.mesh),
+                 ptr_value(rig.texture),
+                 rig.bone_count};
     break;
   }
   case DrawCmdType::EffectBatch: {
@@ -344,12 +352,13 @@ auto DrawQueue::compute_sort_key(const DrawCmd& cmd) -> uint64_t {
     break;
   }
 
-  return identity.pack();
+  entry.key = identity.pack();
+  return entry;
 }
 
 void DrawQueue::build_prepared_batches() {
   m_prepared_batches.clear();
-  const std::size_t count = m_sort_indices.size();
+  const std::size_t count = m_sort_entries.size();
   std::size_t i = 0;
   while (i < count) {
     const DrawCmd& head = get_sorted(i);
@@ -457,11 +466,7 @@ void DrawQueue::build_prepared_batches() {
     }
 
     m_prepared_batches.push_back(
-        PreparedBatch{.start = i,
-                      .count = end - i,
-                      .type = type,
-                      .kind = kind,
-                      .sort_key = m_sort_keys[m_sort_indices[i]]});
+        PreparedBatch{.start = i, .count = end - i, .type = type, .kind = kind});
     i = end;
   }
 }
@@ -471,8 +476,8 @@ auto DrawQueue::can_batch_draw_part(std::size_t sorted_idx_a,
   if (sorted_idx_a >= m_items.size() || sorted_idx_b >= m_items.size()) {
     return false;
   }
-  const auto& a = m_items[m_sort_indices[sorted_idx_a]];
-  const auto& b = m_items[m_sort_indices[sorted_idx_b]];
+  const auto& a = get_sorted(sorted_idx_a);
+  const auto& b = get_sorted(sorted_idx_b);
   if (a.index() != DrawPartCmdIndex || b.index() != DrawPartCmdIndex) {
     return false;
   }
@@ -492,8 +497,8 @@ auto DrawQueue::can_batch_rigged(std::size_t sorted_idx_a,
   if (sorted_idx_a >= m_items.size() || sorted_idx_b >= m_items.size()) {
     return false;
   }
-  const auto& a = m_items[m_sort_indices[sorted_idx_a]];
-  const auto& b = m_items[m_sort_indices[sorted_idx_b]];
+  const auto& a = get_sorted(sorted_idx_a);
+  const auto& b = get_sorted(sorted_idx_b);
   if (a.index() != RiggedCreatureCmdIndex || b.index() != RiggedCreatureCmdIndex) {
     return false;
   }
@@ -510,8 +515,8 @@ auto DrawQueue::can_batch_terrain_surface(std::size_t sorted_idx_a,
   if (sorted_idx_a >= m_items.size() || sorted_idx_b >= m_items.size()) {
     return false;
   }
-  const auto& a = m_items[m_sort_indices[sorted_idx_a]];
-  const auto& b = m_items[m_sort_indices[sorted_idx_b]];
+  const auto& a = get_sorted(sorted_idx_a);
+  const auto& b = get_sorted(sorted_idx_b);
   if (a.index() != TerrainSurfaceCmdIndex || b.index() != TerrainSurfaceCmdIndex) {
     return false;
   }
@@ -529,8 +534,8 @@ auto DrawQueue::can_batch_terrain_feature(std::size_t sorted_idx_a,
   if (sorted_idx_a >= m_items.size() || sorted_idx_b >= m_items.size()) {
     return false;
   }
-  const auto& a = m_items[m_sort_indices[sorted_idx_a]];
-  const auto& b = m_items[m_sort_indices[sorted_idx_b]];
+  const auto& a = get_sorted(sorted_idx_a);
+  const auto& b = get_sorted(sorted_idx_b);
   if (a.index() != TerrainFeatureCmdIndex || b.index() != TerrainFeatureCmdIndex) {
     return false;
   }
@@ -553,60 +558,6 @@ auto DrawQueue::sort_id(const void* ptr) noexcept -> std::uint32_t {
   }
   const auto value = static_cast<std::uintptr_t>(reinterpret_cast<std::uintptr_t>(ptr));
   return static_cast<std::uint32_t>(value ^ (value >> 16U) ^ (value >> 32U));
-}
-
-auto DrawQueue::full_resource_identity(const DrawCmd& cmd) noexcept
-    -> std::array<std::uintptr_t, 4> {
-  if (cmd.index() == MeshCmdIndex) {
-    const auto& mesh = std::get<MeshCmdIndex>(cmd);
-    return {ptr_value(mesh.shader), ptr_value(mesh.mesh), ptr_value(mesh.texture), 0U};
-  }
-  if (cmd.index() == TerrainScatterCmdIndex) {
-    const auto& deco = std::get<TerrainScatterCmdIndex>(cmd);
-    return {ptr_value(deco.material), ptr_value(deco.instance_buffer), 0U, 0U};
-  }
-  if (cmd.index() == FogBatchCmdIndex) {
-    const auto& fog = std::get<FogBatchCmdIndex>(cmd);
-    return {ptr_value(fog.instance_buffer), ptr_value(fog.instances), fog.count, 0U};
-  }
-  if (cmd.index() == TerrainSurfaceCmdIndex) {
-    const auto& chunk = std::get<TerrainSurfaceCmdIndex>(cmd);
-    return {static_cast<std::uintptr_t>(chunk.sort_key),
-            ptr_value(chunk.mesh),
-            ptr_value(chunk.material),
-            0U};
-  }
-  if (cmd.index() == TerrainFeatureCmdIndex) {
-    const auto& feature = std::get<TerrainFeatureCmdIndex>(cmd);
-    return {ptr_value(feature.mesh), ptr_value(feature.visibility.texture), 0U, 0U};
-  }
-  if (cmd.index() == PrimitiveBatchCmdIndex) {
-    const auto& prim = std::get<PrimitiveBatchCmdIndex>(cmd);
-    return {prim.instance_count(), 0U, 0U, 0U};
-  }
-  if (cmd.index() == DrawPartCmdIndex) {
-    const auto& part = std::get<DrawPartCmdIndex>(cmd);
-    return {ptr_value(part.material),
-            ptr_value(part.mesh),
-            ptr_value(part.texture),
-            part.palette.empty() ? 0U : 1U};
-  }
-  if (cmd.index() == RiggedCreatureCmdIndex) {
-    const auto& rig = std::get<RiggedCreatureCmdIndex>(cmd);
-    return {ptr_value(rig.material),
-            ptr_value(rig.mesh),
-            ptr_value(rig.texture),
-            rig.bone_count};
-  }
-  if (cmd.index() == EffectBatchCmdIndex) {
-    const auto& effect = std::get<EffectBatchCmdIndex>(cmd);
-    return {static_cast<std::uintptr_t>(effect.kind), 0U, 0U, 0U};
-  }
-  if (cmd.index() == ModeIndicatorCmdIndex) {
-    const auto& mode = std::get<ModeIndicatorCmdIndex>(cmd);
-    return {static_cast<std::uintptr_t>(mode.mode_type), 0U, 0U, 0U};
-  }
-  return {0U, 0U, 0U, 0U};
 }
 
 } // namespace Render::GL

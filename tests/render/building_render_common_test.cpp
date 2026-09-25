@@ -106,16 +106,10 @@ TEST(BuildingRenderCommon, DamageMaterialTierPreservesSurfaceMaterial) {
   using namespace Render::GL;
 
   for (const int damage_tier : {10, 20}) {
-    RecordingSubmitter recorder;
-    DamageStateSubmitter damaged(recorder, damage_tier);
     for (const int surface : {0, 1, 2, 3, 4}) {
-      damaged.mesh(nullptr, QMatrix4x4{}, QVector3D{}, nullptr, 1.0F, surface);
-    }
-
-    ASSERT_EQ(recorder.meshes.size(), 5U);
-    for (std::size_t i = 0; i < recorder.meshes.size(); ++i) {
-      EXPECT_EQ(recorder.meshes[i].material_id % 10, static_cast<int>(i));
-      EXPECT_EQ(recorder.meshes[i].material_id / 10, damage_tier / 10);
+      const int resolved = damage_material_id(surface, damage_tier);
+      EXPECT_EQ(resolved % 10, surface);
+      EXPECT_EQ(resolved / 10, damage_tier / 10);
     }
   }
 }
@@ -180,44 +174,62 @@ TEST(BuildingRenderCommon, RegisteredVariantDispatcherRoutesByNation) {
   EXPECT_EQ(carthage_calls, 1);
 }
 
-TEST(BuildingRenderCommon, BuildingInstanceSelectsFullLodWhenNearby) {
+TEST(BuildingRenderCommon, BuildingInstanceCarriesEntityAndDamageState) {
   using namespace Render::GL;
-  reset_building_instance_cache_for_tests();
 
-  RenderArchetypeBuilder builder("building_lod_test");
-  builder.set_max_distance(60.0F);
+  RenderArchetypeBuilder builder("building_instance_forwarding");
   builder.add_mesh(fake_mesh(1), QMatrix4x4{}, QVector3D(1.0F, 0.0F, 0.0F));
-  builder.use_lod(RenderArchetypeLod::Minimal);
   builder.add_mesh(fake_mesh(2), QMatrix4x4{}, QVector3D(0.0F, 1.0F, 0.0F));
   RenderArchetype archetype = std::move(builder).build();
 
+  Engine::Core::StandaloneEntity entity_scratch(77);
+  Engine::Core::Entity& entity = entity_scratch.entity();
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+  ASSERT_NE(unit, nullptr);
+  unit->health = 10;
+
   DrawContext ctx;
-  ctx.distance_sq = 10.0F * 10.0F;
+  ctx.entity = &entity;
+  ctx.model.translate(3.0F, 0.0F, 0.0F);
   RecordingSubmitter submitter;
   submit_building_instance(submitter, ctx, archetype);
 
-  ASSERT_EQ(submitter.meshes.size(), 1u);
-  EXPECT_EQ(submitter.meshes.front().mesh, fake_mesh(1));
+  ASSERT_EQ(submitter.meshes.size(), 2U);
+  EXPECT_EQ(submitter.meshes[0].mesh, fake_mesh(1));
+  EXPECT_EQ(submitter.meshes[1].mesh, fake_mesh(2));
+  EXPECT_FLOAT_EQ(submitter.meshes[0].model(0, 3), 3.0F);
+  EXPECT_EQ(submitter.meshes[0].material_id, 20);
 }
 
-TEST(BuildingRenderCommon, BuildingInstanceSelectsMinimalLodWhenFar) {
+TEST(BuildingRenderCommon, PreviewBuildingInstanceHasNoStaticIdentity) {
   using namespace Render::GL;
-  reset_building_instance_cache_for_tests();
 
-  RenderArchetypeBuilder builder("building_lod_test_far");
-  builder.set_max_distance(60.0F);
+  class InstanceRecorder final : public ForwardingSubmitter {
+  public:
+    using ForwardingSubmitter::ForwardingSubmitter;
+    std::vector<RenderInstance> instances;
+    void render_instance(const RenderInstance& instance) override {
+      instances.push_back(instance);
+    }
+  };
+
+  RenderArchetypeBuilder builder("building_preview_identity");
   builder.add_mesh(fake_mesh(1), QMatrix4x4{}, QVector3D(1.0F, 0.0F, 0.0F));
-  builder.use_lod(RenderArchetypeLod::Minimal);
-  builder.add_mesh(fake_mesh(2), QMatrix4x4{}, QVector3D(0.0F, 1.0F, 0.0F));
   RenderArchetype archetype = std::move(builder).build();
 
-  DrawContext ctx;
-  ctx.distance_sq = 80.0F * 80.0F;
-  RecordingSubmitter submitter;
-  submit_building_instance(submitter, ctx, archetype);
+  RecordingSubmitter sink;
+  InstanceRecorder recorder(sink);
+  DrawContext preview_ctx;
+  submit_building_instance(recorder, preview_ctx, archetype);
 
-  ASSERT_EQ(submitter.meshes.size(), 1u);
-  EXPECT_EQ(submitter.meshes.front().mesh, fake_mesh(2));
+  Engine::Core::StandaloneEntity entity_scratch(91);
+  DrawContext entity_ctx;
+  entity_ctx.entity = &entity_scratch.entity();
+  submit_building_instance(recorder, entity_ctx, archetype);
+
+  ASSERT_EQ(recorder.instances.size(), 2U);
+  EXPECT_EQ(recorder.instances[0].static_id, 0U);
+  EXPECT_EQ(recorder.instances[1].static_id, 91U);
 }
 
 TEST(BuildingRenderCommon, RegisterBuildingRendererUsesCanonicalKeyOnly) {
@@ -229,68 +241,6 @@ TEST(BuildingRenderCommon, RegisterBuildingRendererUsesCanonicalKeyOnly) {
 
   EXPECT_TRUE(static_cast<bool>(registry.get("troops/roman/barracks")));
   EXPECT_FALSE(static_cast<bool>(registry.get("barracks_roman")));
-}
-
-TEST(BuildingRenderCommon, BuildingInstanceCacheReusesUnchangedEntityData) {
-  using namespace Render::GL;
-  reset_building_instance_cache_for_tests();
-
-  RenderArchetypeBuilder builder("building_cache_same");
-  builder.set_max_distance(60.0F);
-  builder.add_mesh(fake_mesh(1), QMatrix4x4{}, QVector3D(1.0F, 0.0F, 0.0F));
-  builder.use_lod(RenderArchetypeLod::Minimal);
-  builder.add_mesh(fake_mesh(2), QMatrix4x4{}, QVector3D(0.0F, 1.0F, 0.0F));
-  RenderArchetype archetype = std::move(builder).build();
-
-  Engine::Core::StandaloneEntity entity_scratch(77);
-  Engine::Core::Entity& entity = entity_scratch.entity();
-  DrawContext ctx;
-  ctx.entity = &entity;
-  ctx.distance_sq = 20.0F * 20.0F;
-  RecordingSubmitter submitter;
-
-  submit_building_instance(submitter, ctx, archetype);
-  const auto stats_after_first = get_building_instance_cache_stats();
-  submit_building_instance(submitter, ctx, archetype);
-  const auto stats_after_second = get_building_instance_cache_stats();
-
-  EXPECT_EQ(stats_after_first.misses, 1U);
-  EXPECT_EQ(stats_after_first.rebuilds, 1U);
-  EXPECT_EQ(stats_after_second.hits, 1U);
-  EXPECT_EQ(stats_after_second.rebuilds, 1U);
-}
-
-TEST(BuildingRenderCommon, BuildingInstanceCacheRebuildsOnLodChange) {
-  using namespace Render::GL;
-  reset_building_instance_cache_for_tests();
-
-  RenderArchetypeBuilder builder("building_cache_lod_change");
-  builder.set_max_distance(60.0F);
-  builder.add_mesh(fake_mesh(1), QMatrix4x4{}, QVector3D(1.0F, 0.0F, 0.0F));
-  builder.use_lod(RenderArchetypeLod::Minimal);
-  builder.add_mesh(fake_mesh(2), QMatrix4x4{}, QVector3D(0.0F, 1.0F, 0.0F));
-  RenderArchetype archetype = std::move(builder).build();
-
-  Engine::Core::StandaloneEntity entity_scratch(78);
-  Engine::Core::Entity& entity = entity_scratch.entity();
-  DrawContext ctx;
-  ctx.entity = &entity;
-  RecordingSubmitter submitter;
-
-  ctx.distance_sq = 10.0F * 10.0F;
-  submit_building_instance(submitter, ctx, archetype);
-  const auto stats_after_near = get_building_instance_cache_stats();
-
-  ctx.distance_sq = 90.0F * 90.0F;
-  submit_building_instance(submitter, ctx, archetype);
-  const auto stats_after_far = get_building_instance_cache_stats();
-
-  ASSERT_GE(submitter.meshes.size(), 2U);
-  EXPECT_EQ(submitter.meshes[0].mesh, fake_mesh(1));
-  EXPECT_EQ(submitter.meshes[1].mesh, fake_mesh(2));
-  EXPECT_EQ(stats_after_near.rebuilds, 1U);
-  EXPECT_EQ(stats_after_far.rebuilds, 2U);
-  EXPECT_EQ(stats_after_far.hits, 1U);
 }
 
 } // namespace

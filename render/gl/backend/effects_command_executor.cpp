@@ -420,7 +420,7 @@ void Backend::execute_effects_commands(const PreparedBatch& prepared,
                                    m_animation_time);
         }
 
-        m_mesh_instancing_pipeline->begin_batch(batch_mesh, inst_shader, nullptr);
+        m_mesh_instancing_pipeline->begin_batch(batch_mesh);
         for (std::size_t idx = prepared.start; idx < prepared.start + prepared.count;
              ++idx) {
           const auto& mc = std::get<ModeIndicatorCmdIndex>(queue.get_sorted(idx));

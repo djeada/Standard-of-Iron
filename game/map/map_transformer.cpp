@@ -211,8 +211,8 @@ auto runtime_grid_to_world(int grid_coord, int grid_size) -> float {
 
 auto effective_player_id_for_map_owner(
     int player_id, const std::unordered_map<int, int>& team_overrides) -> int {
-  if (!team_overrides.empty() && player_id != Game::Core::NEUTRAL_OWNER_ID &&
-      team_overrides.find(player_id) == team_overrides.end()) {
+  if (player_id <= 0 || (!team_overrides.empty() &&
+                         team_overrides.find(player_id) == team_overrides.end())) {
     return Game::Core::NEUTRAL_OWNER_ID;
   }
   return player_id;
@@ -404,7 +404,7 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
     if (Game::Units::is_building_spawn(spawn.type)) {
       continue;
     }
-    if (spawn.player_id == Game::Core::NEUTRAL_OWNER_ID) {
+    if (spawn.player_id <= 0) {
       continue;
     }
     unique_player_ids.insert(spawn.player_id);
@@ -415,7 +415,7 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
   }
 
   for (const auto& structure : def.structures) {
-    if (structure.player_id == Game::Core::NEUTRAL_OWNER_ID) {
+    if (structure.player_id <= 0) {
       continue;
     }
     unique_player_ids.insert(structure.player_id);

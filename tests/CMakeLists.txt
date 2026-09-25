@@ -430,6 +430,7 @@ add_executable(
     render/building_facade_coplanarity_test.cpp
     render/building_body_footprint_test.cpp
     render/building_render_common_test.cpp
+    render/static_building_batch_test.cpp
     render/mode_indicator_test.cpp
     render/mode_indicator_placement_test.cpp
     render/shader_source_test.cpp

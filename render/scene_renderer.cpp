@@ -232,6 +232,7 @@ void Renderer::begin_frame() {
   m_active_queue = &m_queues[m_fill_queue_index];
   m_active_queue->clear();
   m_active_queue->reserve_for_frame();
+  m_static_buildings.begin_frame();
 
   if (m_camera != nullptr) {
     m_view_proj = m_camera->get_view_projection_matrix();
@@ -262,6 +263,8 @@ void Renderer::end_frame() {
     {
       Render::Profiling::PhaseScope const sort_scope(&profile,
                                                      Render::Profiling::Phase::Sort);
+      m_static_buildings.finish_frame();
+      render_queue.set_static_batch(&m_static_buildings);
       render_queue.sort_for_batching();
     }
     profile.draw_calls = static_cast<std::uint64_t>(render_queue.size());
@@ -487,6 +490,22 @@ void Renderer::part(Mesh* mesh,
   cmd.material_id = resolve_material_id(material_id, color);
   if (m_active_queue != nullptr) {
     m_active_queue->submit(std::move(cmd));
+  }
+}
+
+void Renderer::render_instance(const RenderInstance& instance) {
+  const bool static_eligible =
+      m_gl_backend != nullptr && m_gl_backend->supports_static_batch() &&
+      instance.alpha_multiplier == 1.0F && instance.default_texture != nullptr &&
+      m_ghost_coverage <= 0.0F && m_current_shader == nullptr;
+  const auto* dynamic_draws =
+      static_eligible ? m_static_buildings.place(instance) : nullptr;
+  if (dynamic_draws == nullptr) {
+    submit_render_instance(*this, instance);
+    return;
+  }
+  for (const RenderArchetypeDraw* draw : *dynamic_draws) {
+    submit_render_draw(*this, instance, *draw);
   }
 }
 

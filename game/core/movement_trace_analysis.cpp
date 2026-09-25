@@ -834,8 +834,8 @@ void analyze_soldiers(const std::vector<MovementSoldierSample>& soldiers,
         .push_back(sample.stable_slot);
   }
 
-  for (auto& [frame_key, slots] : per_frame) {
-    std::vector<std::uint32_t> sorted = slots;
+  for (auto& [frame_key, frame_slots] : per_frame) {
+    std::vector<std::uint32_t> sorted = frame_slots;
     std::sort(sorted.begin(), sorted.end());
     auto const duplicate = std::adjacent_find(sorted.begin(), sorted.end());
     if (duplicate != sorted.end()) {

@@ -2,14 +2,13 @@
 
 #include <atomic>
 #include <chrono>
+#include <compare>
 #include <condition_variable>
 #include <cstdint>
 #include <memory>
 #include <mutex>
 #include <optional>
-#include <shared_mutex>
 #include <thread>
-#include <unordered_map>
 #include <vector>
 
 namespace Engine::Core {
@@ -85,20 +84,19 @@ public:
 
 private:
   auto in_bounds(int x, int z) const -> bool;
-  auto index(int x, int z) const -> int;
   auto world_to_grid(float world_coord, float half) const -> int;
 
   struct VisionSource {
-    int center_x;
     int center_z;
+    int center_x;
     int cell_radius;
     float expanded_radius_cells_sq;
+
+    auto operator<=>(const VisionSource&) const = default;
   };
 
   struct JobPayload {
-    int width;
-    int height;
-    std::vector<std::uint8_t> cells;
+    SnapshotPtr base;
     std::vector<VisionSource> sources;
     std::uint64_t generation;
   };
@@ -109,24 +107,18 @@ private:
     bool changed;
   };
 
-  struct GatheredVision {
-    bool changed = false;
-    std::vector<VisionSource> sources;
-  };
-
   auto gather_vision_sources(Engine::Core::World& world,
-                             int player_id) -> GatheredVision;
-  auto
-  compose_job_payload(const std::vector<VisionSource>& sources) const -> JobPayload;
+                             int player_id) const -> std::vector<VisionSource>;
+  auto compose_job_payload(std::vector<VisionSource> sources) const -> JobPayload;
   void enqueue_job(JobPayload&& payload);
   void integrate_result(JobResult&& result);
   auto should_start_new_job() const -> bool;
   void reset_throttle();
   void reset_worker_state();
-  void publish_snapshot_locked(std::uint64_t version);
+  void publish_snapshot_locked(std::vector<std::uint8_t> cells);
   void worker_loop();
   void ensure_worker_running();
-  static auto execute_job(JobPayload payload) -> JobResult;
+  static auto execute_job(const JobPayload& payload) -> JobResult;
 
   bool m_initialized = false;
   int m_width = 0;
@@ -135,9 +127,7 @@ private:
   float m_half_width = 0.0F;
   float m_half_height = 0.0F;
 
-  mutable std::shared_mutex m_cells_mutex;
-  std::vector<std::uint8_t> m_cells;
-  std::atomic<std::uint64_t> m_version{0};
+  std::mutex m_publish_mutex;
   mutable std::atomic<std::uint64_t> m_generation{0};
   std::shared_ptr<const Snapshot> m_published_snapshot;
   std::chrono::steady_clock::time_point m_last_job_start_time{};
@@ -150,14 +140,7 @@ private:
   std::atomic<bool> m_worker_running{false};
   std::atomic<bool> m_shutdown_requested{false};
 
-  struct CachedPosition {
-    int grid_x;
-    int grid_z;
-
-    int cell_radius;
-  };
-  std::unordered_map<std::uint64_t, CachedPosition> m_last_positions;
-  bool m_force_full_update{true};
+  std::vector<VisionSource> m_last_sources;
 };
 
 } // namespace Game::Map

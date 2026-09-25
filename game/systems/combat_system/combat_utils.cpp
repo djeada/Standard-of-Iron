@@ -24,8 +24,6 @@ namespace Game::Systems::Combat {
 
 namespace {
 
-constexpr float k_combat_query_stale_margin = 1.0F;
-
 constexpr int k_bypass_arc_samples = 12;
 
 constexpr float k_min_bypass_standoff = 0.75F;
@@ -768,8 +766,9 @@ auto find_nearest_enemy(Engine::Core::Entity* unit,
         unit_transform->position.x,
         unit_transform->position.z,
         max_range + k_combat_query_stale_margin,
-        [&nearby_ids](const Engine::Core::WorldSpatialIndex::Entry& entry) {
-          if (entry.is(Engine::Core::WorldSpatialIndex::k_building) ||
+        [&nearby_ids, &query](const Engine::Core::WorldSpatialIndex::Entry& entry) {
+          if ((!query.allow_buildings &&
+               entry.is(Engine::Core::WorldSpatialIndex::k_building)) ||
               entry.is(Engine::Core::WorldSpatialIndex::k_pending_removal) ||
               !entry.is(Engine::Core::WorldSpatialIndex::k_alive)) {
             return;

@@ -230,18 +230,13 @@ void WildlifeSystem::clear_cosmetic_focus() noexcept {
 }
 
 auto WildlifeSystem::tier_for(float world_x, float world_z) const -> Tier {
-  if (m_interest.empty()) {
+  if (m_interest.empty() ||
+      m_interest.any_within(world_x, world_z, m_settings.near_simulation_radius)) {
     return Tier::Near;
   }
-  const auto anchor =
-      m_interest.nearest(world_x, world_z, m_settings.far_simulation_radius);
-  if (!anchor.found) {
-    return Tier::Dormant;
-  }
-  if (anchor.distance <= m_settings.near_simulation_radius) {
-    return Tier::Near;
-  }
-  return Tier::Far;
+  return m_interest.any_within(world_x, world_z, m_settings.far_simulation_radius)
+             ? Tier::Far
+             : Tier::Dormant;
 }
 
 auto WildlifeSystem::find_group(std::uint16_t group_id) -> GroupState* {

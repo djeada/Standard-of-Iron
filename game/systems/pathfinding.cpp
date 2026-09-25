@@ -531,25 +531,37 @@ void Pathfinding::update_region(int min_x, int max_x, int min_z, int max_z) {
 }
 
 void Pathfinding::apply_gate_blocker_cells(int min_x, int max_x, int min_z, int max_z) {
+  for (int const index : closed_gate_cells(min_x, max_x, min_z, max_z)) {
+    Point const cell = to_point(index);
+    m_navigation_grid.set(cell.x, cell.y, CellValue::Blocked);
+  }
+}
+
+auto Pathfinding::closed_gate_cells(int min_x,
+                                    int max_x,
+                                    int min_z,
+                                    int max_z) const -> std::vector<int> {
+  std::vector<int> cells;
   if (!clamp_to_grid(min_x, max_x, min_z, max_z)) {
-    return;
+    return cells;
   }
   for (auto const& blocker : GateService::blockers()) {
-    float const center_x = (blocker.min_x + blocker.max_x) * 0.5F;
-    float const center_z = (blocker.min_z + blocker.max_z) * 0.5F;
-    float const half_x = (blocker.max_x - blocker.min_x) * 0.5F;
-    float const half_z = (blocker.max_z - blocker.min_z) * 0.5F;
-    auto const range = cells_covering(center_x, center_z, half_x, half_z);
+    auto const range = cells_covering((blocker.min_x + blocker.max_x) * 0.5F,
+                                      (blocker.min_z + blocker.max_z) * 0.5F,
+                                      (blocker.max_x - blocker.min_x) * 0.5F,
+                                      (blocker.max_z - blocker.min_z) * 0.5F);
     for (int grid_z = std::max(range.min_z, min_z);
          grid_z <= std::min(range.max_z, max_z);
          ++grid_z) {
       for (int grid_x = std::max(range.min_x, min_x);
            grid_x <= std::min(range.max_x, max_x);
            ++grid_x) {
-        m_navigation_grid.set(grid_x, grid_z, CellValue::Blocked);
+        cells.push_back(to_index(grid_x, grid_z));
       }
     }
   }
+  std::sort(cells.begin(), cells.end());
+  return cells;
 }
 
 void Pathfinding::force_navigation_passages_walkable(int min_x,
@@ -906,12 +918,8 @@ void Pathfinding::update_navigation_grid() {
 
 void Pathfinding::prewarm_navigation() {
   update_navigation_grid();
-  Point const origin{0, 0};
   for (std::size_t index = 0; index < k_passability_count; ++index) {
-    std::uint32_t first_label = 0;
-    std::uint32_t second_label = 0;
-    region_labels(
-        origin, origin, static_cast<Passability>(index), first_label, second_label);
+    (void)region_of(Point{}, static_cast<Passability>(index));
   }
 }
 
@@ -948,10 +956,8 @@ auto Pathfinding::find_path(const Point& start,
   auto path = find_path_internal(
       start, end, passability, static_cast<float>(clearance_quarters) * 0.25F);
 
-  bool const reached_goal = !path.empty() && path.back() == end;
   std::lock_guard<std::mutex> const cache_lock(m_path_cache_mutex);
-  if (!reached_goal || m_path_cache_revision != revision ||
-      navigation_revision() != revision) {
+  if (m_path_cache_revision != revision || navigation_revision() != revision) {
     return path;
   }
   evict_cold_paths();
@@ -984,22 +990,22 @@ void Pathfinding::note_navigation_change(int min_x, int max_x, int min_z, int ma
                            .max_z = max_z});
 }
 
+auto Pathfinding::navigation_changes_since(std::uint64_t from_revision,
+                                           std::uint64_t to_revision,
+                                           std::vector<NavChange>& changes) -> bool {
+  std::lock_guard<std::mutex> const lock(m_nav_change_mutex);
+  for (const NavChange& change : m_nav_changes) {
+    if (change.revision > from_revision && change.revision <= to_revision) {
+      changes.push_back(change);
+    }
+  }
+  return !changes.empty() && m_nav_changes.front().revision <= from_revision + 1;
+}
+
 void Pathfinding::drop_paths_crossing_changes(std::uint64_t from_revision,
                                               std::uint64_t to_revision) {
   std::vector<NavChange> changes;
-  bool covered = false;
-  {
-    std::lock_guard<std::mutex> const lock(m_nav_change_mutex);
-    covered =
-        !m_nav_changes.empty() && m_nav_changes.front().revision <= from_revision + 1;
-    for (const NavChange& change : m_nav_changes) {
-      if (change.revision > from_revision && change.revision <= to_revision) {
-        changes.push_back(change);
-      }
-    }
-  }
-
-  if (!covered || changes.empty()) {
+  if (!navigation_changes_since(from_revision, to_revision, changes)) {
     Engine::Core::count_nav(Engine::Core::NavCounter::RouteCacheFlushes);
     Engine::Core::count_nav(Engine::Core::NavCounter::RouteCacheEvictions,
                             static_cast<std::uint64_t>(m_path_cache.size()));
@@ -1010,8 +1016,11 @@ void Pathfinding::drop_paths_crossing_changes(std::uint64_t from_revision,
   constexpr int k_margin = 1;
   std::uint64_t dropped = 0;
   for (auto it = m_path_cache.begin(); it != m_path_cache.end();) {
-    const CachedPath& entry = it->second;
+    const auto& [key, entry] = *it;
+    const bool reached_goal =
+        !entry.path.empty() && entry.path.back() == Point{key.end_x, key.end_y};
     const bool crosses =
+        !reached_goal ||
         std::any_of(changes.begin(), changes.end(), [&](const NavChange& change) {
           return entry.min_x <= change.max_x + k_margin &&
                  entry.max_x >= change.min_x - k_margin &&
@@ -1069,18 +1078,9 @@ void Pathfinding::rebuild_region_map(RegionMap& map, Passability passability) co
     return;
   }
 
-  auto const& gates = GateService::blockers();
+  auto const gates = closed_gate_cells(0, m_width - 1, 0, m_height - 1);
   auto const connects = [&](int x, int y) {
-    if (is_walkable(x, y, passability)) {
-      return true;
-    }
-    if (gates.empty()) {
-      return false;
-    }
-    QVector3D const world = grid_to_world({x, y});
-    return std::any_of(gates.begin(), gates.end(), [&](GateBlocker const& gate) {
-      return gate.contains(world.x(), world.z());
-    });
+    return region_connects(x, y, passability, gates);
   };
 
   std::vector<int> frontier;
@@ -1122,6 +1122,50 @@ void Pathfinding::rebuild_region_map(RegionMap& map, Passability passability) co
   }
 }
 
+auto Pathfinding::region_connects(int x,
+                                  int y,
+                                  Passability passability,
+                                  const std::vector<int>& gate_cells) const -> bool {
+  return is_walkable(x, y, passability) ||
+         std::binary_search(gate_cells.begin(), gate_cells.end(), to_index(x, y));
+}
+
+auto Pathfinding::region_map_survives(const RegionMap& map,
+                                      Passability passability,
+                                      std::uint64_t revision) -> bool {
+  std::vector<NavChange> changes;
+  if (!navigation_changes_since(map.revision, revision, changes)) {
+    return false;
+  }
+  for (NavChange change : changes) {
+    auto const gates =
+        closed_gate_cells(change.min_x, change.max_x, change.min_z, change.max_z);
+    if (!clamp_to_grid(change.min_x, change.max_x, change.min_z, change.max_z)) {
+      continue;
+    }
+    for (int z = change.min_z; z <= change.max_z; ++z) {
+      for (int x = change.min_x; x <= change.max_x; ++x) {
+        if ((label_at(map, {x, z}) != k_unreachable_region) !=
+            region_connects(x, z, passability, gates)) {
+          return false;
+        }
+      }
+    }
+  }
+  return true;
+}
+
+auto Pathfinding::current_region_map(Passability passability) -> const RegionMap& {
+  std::uint64_t const revision = navigation_revision();
+  auto& map = m_region_maps[static_cast<std::size_t>(passability)];
+  if (map.revision != revision && !region_map_survives(map, passability, revision)) {
+    Engine::Core::count_nav(Engine::Core::NavCounter::RegionMapRebuilds);
+    rebuild_region_map(map, passability);
+  }
+  map.revision = revision;
+  return map;
+}
+
 void Pathfinding::region_labels(const Point& first,
                                 const Point& second,
                                 Passability passability,
@@ -1131,18 +1175,9 @@ void Pathfinding::region_labels(const Point& first,
     update_navigation_grid();
   }
 
-  std::uint64_t const revision = navigation_revision();
   std::shared_lock<std::shared_mutex> const navigation_lock(m_navigation_mutex);
   std::lock_guard<std::mutex> const region_lock(m_region_mutex);
-
-  auto& map = m_region_maps[static_cast<std::size_t>(passability)];
-  if (!map.built || map.revision != revision) {
-    Engine::Core::count_nav(Engine::Core::NavCounter::RegionMapRebuilds);
-    rebuild_region_map(map, passability);
-    map.revision = revision;
-    map.built = true;
-  }
-
+  auto const& map = current_region_map(passability);
   first_label = label_at(map, first);
   second_label = label_at(map, second);
 }
@@ -1228,32 +1263,45 @@ auto Pathfinding::find_nearest_connected_point(const Point& point,
                                                int max_search_radius,
                                                Passability passability)
     -> std::optional<Point> {
-  std::uint32_t const target_label = region_of(target, passability);
+  if (m_navigation_grid_dirty.load(std::memory_order_acquire)) {
+    update_navigation_grid();
+  }
+
+  std::shared_lock<std::shared_mutex> const navigation_lock(m_navigation_mutex);
+  std::lock_guard<std::mutex> const region_lock(m_region_mutex);
+  auto const& map = current_region_map(passability);
+  std::uint32_t const target_label = label_at(map, target);
   if (target_label == k_unreachable_region) {
     return std::nullopt;
   }
-  auto const connected = [&](int x, int y) {
-    return is_walkable(x, y, passability) &&
-           region_of({x, y}, passability) == target_label;
-  };
-  if (connected(point.x, point.y)) {
-    return point;
-  }
-  for (int radius = 1; radius <= max_search_radius; ++radius) {
+  return nearest_cell_in_region(
+      map, target_label, point, point, max_search_radius, passability, 0.0F);
+}
+
+auto Pathfinding::nearest_cell_in_region(const RegionMap& map,
+                                         std::uint32_t label,
+                                         const Point& point,
+                                         const Point& tie_break,
+                                         int max_search_radius,
+                                         Passability passability,
+                                         float clearance_radius) const
+    -> std::optional<Point> {
+  for (int radius = 0; radius <= max_search_radius; ++radius) {
     std::optional<Point> best;
-    int best_distance_sq = std::numeric_limits<int>::max();
-    for (int dy = -radius; dy <= radius; ++dy) {
-      for (int dx = -radius; dx <= radius; ++dx) {
-        if (std::abs(dx) != radius && std::abs(dy) != radius) {
-          continue;
-        }
-        int const distance_sq = (dx * dx) + (dy * dy);
-        if (distance_sq < best_distance_sq && connected(point.x + dx, point.y + dy)) {
-          best = Point{point.x + dx, point.y + dy};
-          best_distance_sq = distance_sq;
-        }
+    std::pair<int, int> best_distance{std::numeric_limits<int>::max(), 0};
+    for_each_ring_cell(radius, [&](int dx, int dy) {
+      Point const cell{point.x + dx, point.y + dy};
+      int const tie_x = cell.x - tie_break.x;
+      int const tie_y = cell.y - tie_break.y;
+      std::pair<int, int> const distance{(dx * dx) + (dy * dy),
+                                         (tie_x * tie_x) + (tie_y * tie_y)};
+      if (distance < best_distance && label_at(map, cell) == label &&
+          is_world_position_walkable(
+              grid_to_world(cell), passability, clearance_radius)) {
+        best = cell;
+        best_distance = distance;
       }
-    }
+    });
     if (best.has_value()) {
       return best;
     }
@@ -1342,8 +1390,21 @@ auto Pathfinding::find_path_internal(const Point& start,
         resolved_start, resolved_end, passability, clearance_radius);
   }
 
+  Point goal = end;
+  {
+    std::lock_guard<std::mutex> const region_lock(m_region_mutex);
+    auto const& map = current_region_map(passability);
+    std::uint32_t const start_region = label_at(map, start);
+    if (label_at(map, end) != start_region) {
+      int const reach = std::max(std::abs(end.x - start.x), std::abs(end.y - start.y));
+      goal = nearest_cell_in_region(
+                 map, start_region, end, start, reach, passability, one_man)
+                 .value_or(start);
+    }
+  }
+
   const int start_idx = to_index(start);
-  const int end_idx = to_index(end);
+  const int end_idx = to_index(goal);
 
   if (start_idx == end_idx) {
     return {start};
@@ -1356,17 +1417,14 @@ auto Pathfinding::find_path_internal(const Point& start,
   set_g_cost(buffers, start_idx, generation, 0);
   set_parent(buffers, start_idx, generation, start_idx);
 
-  push_open_node(buffers, {start_idx, calculate_heuristic(start, end), 0});
-
-  const int max_iterations = std::max(m_width * m_height, 1);
-  int iterations = 0;
+  push_open_node(buffers, {start_idx, calculate_heuristic(start, goal), 0});
 
   int final_cost = -1;
   int best_reachable_idx = start_idx;
-  int best_reachable_h = calculate_heuristic(start, end);
+  int best_reachable_h = calculate_heuristic(start, goal);
   int best_reachable_g = 0;
 
-  while (!buffers.open_heap.empty() && iterations < max_iterations) {
+  while (!buffers.open_heap.empty()) {
     QueueNode const current = pop_open_node(buffers);
 
     if (current.g_cost > get_g_cost(buffers, current.index, generation)) {
@@ -1377,12 +1435,11 @@ auto Pathfinding::find_path_internal(const Point& start,
       continue;
     }
 
-    ++iterations;
     Engine::Core::count_nav(Engine::Core::NavCounter::CellsExpanded);
     set_closed(buffers, current.index, generation);
 
     Point const current_point = to_point(current.index);
-    int const current_h = calculate_heuristic(current_point, end);
+    int const current_h = calculate_heuristic(current_point, goal);
     if (current_h < best_reachable_h ||
         (current_h == best_reachable_h && current.g_cost < best_reachable_g)) {
       best_reachable_idx = current.index;
@@ -1439,7 +1496,7 @@ auto Pathfinding::find_path_internal(const Point& start,
       set_g_cost(buffers, neighbor_idx, generation, tentative_gcost);
       set_parent(buffers, neighbor_idx, generation, current.index);
 
-      const int h_cost = calculate_heuristic(neighbor, end);
+      const int h_cost = calculate_heuristic(neighbor, goal);
       push_open_node(buffers,
                      {neighbor_idx, tentative_gcost + h_cost, tentative_gcost});
     }

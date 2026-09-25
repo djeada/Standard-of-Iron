@@ -8,6 +8,7 @@
 #include <cassert>
 #include <cstdint>
 #include <limits>
+#include <memory>
 #include <span>
 #include <string>
 #include <vector>
@@ -19,6 +20,7 @@ class Mesh;
 class Texture;
 struct Material;
 class ISubmitter;
+struct MergedBuildingMesh;
 } // namespace Render::GL
 
 namespace Render::GL {
@@ -53,6 +55,7 @@ struct RenderArchetype {
   std::string debug_name;
   std::array<RenderArchetypeSlice, static_cast<std::size_t>(RenderArchetypeLod::Count)>
       lods{};
+  mutable std::shared_ptr<const MergedBuildingMesh> merged_full;
 };
 
 struct RenderInstance {
@@ -62,7 +65,26 @@ struct RenderInstance {
   Texture* default_texture = nullptr;
   float alpha_multiplier = 1.0F;
   RenderArchetypeLod lod = RenderArchetypeLod::Full;
+  std::uint32_t static_id = 0U;
+  int damage_material_id = 0;
+  bool unseen = false;
 };
+
+struct ResolvedRenderDraw {
+  QMatrix4x4 world;
+  QVector3D color;
+  Texture* texture = nullptr;
+  float alpha = 1.0F;
+  int material_id = 0;
+};
+
+[[nodiscard]] constexpr auto
+damage_material_id(int material_id, int damage_material_id) noexcept -> int {
+  if (damage_material_id == 0 || material_id < 0 || material_id >= 10) {
+    return material_id;
+  }
+  return material_id + damage_material_id;
+}
 
 template <std::size_t PaletteCapacity>
 struct StoredRenderInstance {
@@ -100,10 +122,11 @@ auto cylinder_local_model(const QVector3D& start,
 auto select_render_archetype_lod(const RenderArchetype& archetype,
                                  float distance) -> RenderArchetypeLod;
 
-auto select_render_archetype_lod_stable(const RenderArchetype& archetype,
-                                        float distance,
-                                        std::uint64_t instance_id)
-    -> RenderArchetypeLod;
+auto resolve_render_draw(const RenderInstance& instance,
+                         const RenderArchetypeDraw& draw) -> ResolvedRenderDraw;
+void submit_render_draw(ISubmitter& out,
+                        const RenderInstance& instance,
+                        const RenderArchetypeDraw& draw);
 void submit_render_instance(ISubmitter& out, const RenderInstance& instance);
 
 class RenderArchetypeBuilder {

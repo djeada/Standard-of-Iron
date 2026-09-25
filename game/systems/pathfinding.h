@@ -308,7 +308,6 @@ private:
   struct RegionMap {
     std::vector<std::uint32_t> labels;
     std::uint64_t revision{0};
-    bool built{false};
   };
 
   struct NavChange {
@@ -332,6 +331,9 @@ private:
   static constexpr std::size_t k_max_cached_paths = 2048U;
 
   void note_navigation_change(int min_x, int max_x, int min_z, int max_z);
+  auto navigation_changes_since(std::uint64_t from_revision,
+                                std::uint64_t to_revision,
+                                std::vector<NavChange>& changes) -> bool;
   void drop_paths_crossing_changes(std::uint64_t from_revision,
                                    std::uint64_t to_revision);
   void evict_cold_paths();
@@ -344,8 +346,28 @@ private:
                      std::uint32_t& first_label,
                      std::uint32_t& second_label);
   void rebuild_region_map(RegionMap& map, Passability passability) const;
+  auto current_region_map(Passability passability) -> const RegionMap&;
+  auto region_map_survives(const RegionMap& map,
+                           Passability passability,
+                           std::uint64_t revision) -> bool;
+  [[nodiscard]] auto closed_gate_cells(int min_x,
+                                       int max_x,
+                                       int min_z,
+                                       int max_z) const -> std::vector<int>;
+  [[nodiscard]] auto region_connects(int x,
+                                     int y,
+                                     Passability passability,
+                                     const std::vector<int>& gate_cells) const -> bool;
   [[nodiscard]] auto label_at(const RegionMap& map,
                               const Point& cell) const -> std::uint32_t;
+  [[nodiscard]] auto
+  nearest_cell_in_region(const RegionMap& map,
+                         std::uint32_t label,
+                         const Point& point,
+                         const Point& tie_break,
+                         int max_search_radius,
+                         Passability passability,
+                         float clearance_radius) const -> std::optional<Point>;
 
   auto process_dirty_regions() -> DirtyRegion;
 

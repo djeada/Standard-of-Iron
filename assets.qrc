@@ -37,6 +37,7 @@
         <file>assets/shaders/basic.vert</file>
         <file>assets/shaders/basic_instanced.frag</file>
         <file>assets/shaders/basic_instanced.vert</file>
+        <file>assets/shaders/building_merged.vert</file>
         <file>assets/shaders/banner.frag</file>
         <file>assets/shaders/banner.vert</file>
         <file>assets/shaders/boundary_gas.frag</file>

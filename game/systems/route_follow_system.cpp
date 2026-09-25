@@ -91,6 +91,11 @@ route_stops_short_of_the_order(const Engine::Core::MovementComponent& movement,
   auto const passability = movement.get_can_enter_forest()
                                ? Pathfinding::Passability::Light
                                : Pathfinding::Passability::Heavy;
+  std::uint32_t const start_region = pathfinder->region_of(start, passability);
+  if (start_region != Pathfinding::k_unreachable_region &&
+      start_region != pathfinder->region_of(end, passability)) {
+    return false;
+  }
   auto const path = pathfinder->find_path(
       start, end, passability, movement.get_navigation_clearance());
   return !path.empty() && path.back() == end;

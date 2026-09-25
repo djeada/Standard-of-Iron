@@ -34,17 +34,12 @@ auto rigged_cache_gl_funcs() -> QOpenGLFunctions_3_3_Core* {
   return QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_3_3_Core>(ctx);
 }
 
-auto describe_rigged_key(const Render::Creature::CreatureSpec& spec,
-                         Render::Creature::CreatureLOD lod,
-                         std::uint16_t variant_bucket,
-                         std::uint32_t attachment_set_id,
-                         std::uint64_t attachments_hash,
-                         std::uint32_t skin_species_id) -> std::string {
+auto describe_rigged_key(const RiggedMeshCache::Key& key) -> std::string {
   std::ostringstream out;
-  out << "spec=" << &spec << " lod=" << static_cast<int>(lod)
-      << " variant_bucket=" << variant_bucket << " skin_species_id=" << skin_species_id
-      << " attachment_set_id=" << attachment_set_id << " attachments_hash=0x"
-      << std::hex << attachments_hash;
+  out << "spec=" << key.spec << " lod=" << static_cast<int>(key.lod)
+      << " skin_species_id=" << key.skin_species_id
+      << " attachment_set_id=" << key.attachment_set_id << " attachments_hash=0x"
+      << std::hex << key.attachments_hash;
   return out.str();
 }
 
@@ -166,12 +161,12 @@ auto RiggedMeshCache::find_rigged_asset(const Key& key) const noexcept
   return &it->second;
 }
 
-auto RiggedMeshCache::require_rigged_asset(
-    const Key& key, std::string_view detail) const -> const RiggedMeshEntry* {
+auto RiggedMeshCache::require_rigged_asset(const Key& key) const
+    -> const RiggedMeshEntry* {
   const auto* entry = find_rigged_asset(key);
   if (entry == nullptr) {
     ++m_frame_stats.misses;
-    Render::Creature::report_missing_preloaded_asset(detail);
+    Render::Creature::report_missing_preloaded_asset(describe_rigged_key(key));
   }
   return entry;
 }
@@ -180,11 +175,10 @@ auto RiggedMeshCache::create_rigged_asset(
     const Key& key,
     std::span<const QMatrix4x4> rest_palette,
     std::span<const Render::Creature::StaticAttachmentSpec> attachments,
-    std::uint16_t variant_bucket) -> const RiggedMeshEntry* {
+    std::uint16_t) -> const RiggedMeshEntry* {
   const Render::Creature::CreatureSpec& spec = *key.spec;
   const Render::Creature::CreatureLOD lod = key.lod;
   const std::uint32_t skin_species_id = key.skin_species_id;
-  const std::uint32_t attachment_set_id = key.attachment_set_id;
   const std::uint64_t attachments_hash = key.attachments_hash;
   if (auto it = m_entries.find(key); it != m_entries.end()) {
     ++m_frame_stats.hits;
@@ -206,12 +200,7 @@ auto RiggedMeshCache::create_rigged_asset(
     ++m_frame_stats.misses;
     Render::Creature::report_runtime_bake_violation(
         Render::Creature::RuntimeBakeOperation::RiggedMeshBake,
-        describe_rigged_key(spec,
-                            lod,
-                            variant_bucket,
-                            attachment_set_id,
-                            attachments_hash,
-                            skin_species_id));
+        describe_rigged_key(key));
     return nullptr;
   }
 

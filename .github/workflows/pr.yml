@@ -47,6 +47,7 @@ jobs:
     timeout-minutes: 60
     env:
       CMAKE_CXX_COMPILER_LAUNCHER: ccache
+      CCACHE_SLOPPINESS: pch_defines,time_macros,include_file_mtime,include_file_ctime
       CMAKE_C_COMPILER_LAUNCHER: ccache
       SOI_TEST_PROFILE: pr
     steps:

@@ -10,6 +10,7 @@
 #include "render/creature/pipeline/creature_render_graph.h"
 #include "render/creature/pipeline/humanoid_animation_selection.h"
 #include "render/gl/humanoid/humanoid_types.h"
+#include "render/graphics_settings.h"
 #include "render/world_view.h"
 
 namespace Render::GL {
@@ -111,7 +112,10 @@ void add_civilian_actor(const DrawContext& ctx,
   }
   Pipeline::CreatureGraphOutput output{};
 
-  output.lod = actor.distant ? CreatureLOD::Minimal : CreatureLOD::Full;
+  output.lod =
+      actor.distant && Render::GraphicsSettings::instance().creature_lod_enabled()
+          ? CreatureLOD::Minimal
+          : CreatureLOD::Full;
   output.pass_intent = Pipeline::RenderPassIntent::Main;
   output.seed = actor.seed;
 

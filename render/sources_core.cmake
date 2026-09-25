@@ -16,6 +16,7 @@ set(RENDER_CORE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/render_backend_factory.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/draw_queue.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/render_archetype.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/static_building_batch.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/world_view.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/prepare_worker_pool.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/world_chunk.cpp

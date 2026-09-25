@@ -12,6 +12,7 @@
 #include <utility>
 #include <vector>
 
+#include "backend/shader_uniform_cache.h"
 #include "backend/sky_box_transition.h"
 #include "directional_shadow_block.h"
 #include "persistent_buffer.h"
@@ -23,6 +24,7 @@
 #include "render/i_render_backend.h"
 #include "render/local_lighting.h"
 #include "render/mist_volume.h"
+#include "render/static_building_batch.h"
 #include "render/world_chunk.h"
 #include "render/world_render_mode.h"
 #include "resources.h"
@@ -54,8 +56,6 @@ class SkyBoxPipeline;
 
 namespace Render::GL {
 
-class ShaderUniformCache;
-
 class Backend : public IRenderBackend,
                 public IFrameEnvironment,
                 protected QOpenGLFunctions_3_3_Core {
@@ -76,6 +76,8 @@ public:
     std::size_t shadow_static_single_draws{0};
     std::size_t shadow_static_instanced_draws{0};
     std::size_t shadow_static_instanced_instances{0};
+    std::size_t static_batch_draws{0};
+    std::size_t static_batch_instances{0};
     double gpu_shadow_ms{0.0};
     double gpu_color_ms{0.0};
     double gpu_wait_ms{0.0};
@@ -165,6 +167,8 @@ public:
     return m_shadow_shader;
   }
 
+  [[nodiscard]] auto supports_static_batch() const noexcept -> bool;
+
   void enable_depth_test(bool enable) {
     if (enable) {
       glEnable(GL_DEPTH_TEST);
@@ -234,6 +238,38 @@ private:
                                      CommandExecutionContext& context);
   void execute_mesh_commands(const PreparedBatch& prepared,
                              CommandExecutionContext& context);
+  void execute_static_batch(const StaticBuildingBatch& batch,
+                            CommandExecutionContext& context);
+  struct ShadowCascadeCull {
+    QVector3D center;
+    float radius = 0.0F;
+    QVector3D light_right;
+    QVector3D light_up;
+    QVector3D camera_position;
+    float receiver_near = 0.0F;
+    float receiver_far = 0.0F;
+    float receiver_margin = 0.0F;
+    float ground_height = 0.0F;
+    float shadow_throw = 1.0F;
+    float min_caster_radius = 0.0F;
+
+    [[nodiscard]] auto accepts(const QVector3D& caster_center,
+                               float caster_radius) const -> bool;
+  };
+  void draw_static_batch_shadow(const StaticBuildingBatch& batch,
+                                const ShadowCascadeCull& cull);
+
+  struct MeshShaderBinding {
+    Shader* shader = nullptr;
+    const ShaderUniformCache::BasicUniforms* uniforms = nullptr;
+    bool instanced = false;
+  };
+  void bind_mesh_texture(Texture* texture);
+  auto bind_mesh_shader(Shader* active_shader,
+                        Texture* texture,
+                        int material_id,
+                        bool want_instanced,
+                        CommandExecutionContext& context) -> MeshShaderBinding;
   void execute_effects_commands(const PreparedBatch& prepared,
                                 CommandExecutionContext& context);
   void execute_rigged_commands(const PreparedBatch& prepared,
@@ -342,6 +378,9 @@ private:
   int m_directional_shadow_cascades{0};
   int m_directional_shadow_near_cascades{0};
 
+  std::vector<BuildingInstanceGpu> m_static_shadow_instances;
+  std::vector<StaticBatchDraw> m_static_shadow_draws;
+
   struct ShadowStaticCaster {
     Mesh* mesh = nullptr;
     const QMatrix4x4* model = nullptr;
@@ -361,6 +400,7 @@ private:
   std::array<float, k_max_shadow_cascades> m_directional_shadow_splits{};
   Shader* m_directional_shadow_depth_shader = nullptr;
   Shader* m_directional_shadow_depth_instanced_shader = nullptr;
+  Shader* m_building_merged_shader = nullptr;
   Shader* m_directional_shadow_rigged_shader = nullptr;
   Shader::UniformHandle m_shadow_depth_light_vp = Shader::InvalidUniform;
   Shader::UniformHandle m_shadow_depth_model = Shader::InvalidUniform;

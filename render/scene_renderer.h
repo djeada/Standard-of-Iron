@@ -40,6 +40,7 @@
 #include "scene/camera.h"
 #include "scene/environment_lighting.h"
 #include "snapshot_mesh_cache.h"
+#include "static_building_batch.h"
 #include "submission_visibility.h"
 #include "submitter.h"
 #include "template_prewarm_catalog.h"
@@ -319,6 +320,7 @@ public:
             Texture* texture = nullptr,
             float alpha = 1.0F,
             int material_id = 0) override;
+  void render_instance(const RenderInstance& instance) override;
   void cylinder(const QVector3D& start,
                 const QVector3D& end,
                 float radius,
@@ -604,6 +606,7 @@ private:
   ModelMatrixCache m_model_matrix_cache;
   RiggedMeshCache m_rigged_mesh_cache;
   SnapshotMeshCache m_snapshot_mesh_cache;
+  StaticBuildingBatch m_static_buildings;
   std::uint32_t m_frame_counter{0};
 
   Render::BattleRenderOptimizer m_battle_optimizer;
