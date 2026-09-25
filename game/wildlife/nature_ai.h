@@ -95,7 +95,7 @@ public:
   virtual void mark_hostile(const NatureContext& ctx,
                             Engine::Core::EntityID foe_id,
                             bool rally_pack) = 0;
-  virtual void note(NatureEvent event) = 0;
+  virtual void note(const NatureContext& ctx, NatureEvent event) = 0;
 
   [[nodiscard]] virtual auto pick_open_point(std::uint32_t& rng,
                                              float origin_x,

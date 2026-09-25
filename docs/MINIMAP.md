@@ -97,8 +97,12 @@ Current event kinds are:
 - `structure_attacked`;
 - `capture_started`;
 - `capture_contested`;
-- `capture_finished`; and
-- `shrine`.
+- `capture_finished`;
+- `shrine`;
+- `unit_lost` — one of the player's troops fell (a small cross); and
+- `structure_lost` — a building the player held was destroyed, or one the player brought down (a hollow square).
+
+Enemy troop deaths are not marked; the attack blips already show where fighting is.
 
 ### Event relation describes impact, not ownership
 
@@ -117,11 +121,11 @@ Two independent mechanisms keep large fights from turning the minimap into a str
 
 ### Early budget gate
 
-`consume_alert_budget()` applies a 60 ms gate that callers can check before resolving an event. The combat-hit path uses it so a dense melee pays only a boolean check per hit instead of repeated component lookups.
+`consume_alert_budget()` applies a 60 ms gate that callers can check before resolving an event. The combat-hit path uses it for fighting that does not involve the player, so a dense melee elsewhere pays only a boolean check per hit. Hits on or by the player skip the gate and rely on the per-cell cooldown below; otherwise a distant brawl between two AIs could spend the budget and swallow an attack on the player.
 
 ### Spatial and per-kind cooldown
 
-`accept_alert()` uses a direct-mapped 32-slot cache keyed by event kind and a 12 × 12 minimap cell. Each event type has its own cooldown. A cache collision can produce at most one extra blip.
+`accept_alert()` uses a direct-mapped 1024-slot cache keyed by event kind and a 12 × 12 minimap cell, which is enough that different cells do not share a slot. Each event type has its own cooldown.
 
 Capture-completion and shrine events use a zero cooldown because they are rare and important enough to always show.
 
@@ -154,6 +158,10 @@ Dormant, awakened, and cleared shrines receive different treatments, and awakene
 Passing raw world coordinates is incorrect on any map where `tile_size != 1`.
 
 Call `MinimapManager::world_to_normalized` instead. It performs the world-to-grid division, rotation, normalization, and clamp in one shared path. Every pin publisher should use that helper.
+
+### One projection for every layer
+
+The baked terrain fits the whole _rotated_ map into the image: at a 225° yaw the square map becomes a diamond, and the image spans `rotated_world_bounds(width, height)` (√2 × the side), not the grid size. Every layer drawn over it — `UnitLayer`, `CameraViewportLayer`, the fog lookup in `MinimapFogCompositor`, `world_to_normalized` and `pixel_to_world` — must project through that same rotated extent. Until September 2026 only the terrain did, so units, fog, the camera frame, pins and clicks sat up to 1.41× further from the centre than the ground they belonged to, and every barracks appeared twice (the baked keep and the live keep). `MinimapManagerTest.LiveMarkersLandOnTheBakedTerrainTheyStandOn` pins the terrain and the overlay together.
 
 ## Rules for extending the minimap
 

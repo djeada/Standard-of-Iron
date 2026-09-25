@@ -236,15 +236,10 @@ Rectangle {
                 return;
             }
             if (card.is_enabled) {
-                Design.UiSound.activate();
                 card.recruit_requested(card.unit_type);
             } else {
                 Design.UiSound.warning();
             }
-        }
-        onContainsMouseChanged: {
-            if (containsMouse && card.is_enabled)
-                Design.UiSound.hover();
         }
         cursorShape: card.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
         ToolTip.visible: containsMouse

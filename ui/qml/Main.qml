@@ -600,8 +600,6 @@ ApplicationWindow {
             if (visible) {
                 mapSelect.forceActiveFocus();
                 Design.UiSound.panelOpen();
-            } else {
-                Design.UiSound.panelClose();
             }
             mainWindow.sync_audio_context();
         }
@@ -647,8 +645,6 @@ ApplicationWindow {
             if (visible) {
                 campaign_screen.forceActiveFocus();
                 Design.UiSound.panelOpen();
-            } else {
-                Design.UiSound.panelClose();
             }
             mainWindow.sync_audio_context();
         }
@@ -682,8 +678,6 @@ ApplicationWindow {
             if (visible) {
                 missions_screen.forceActiveFocus();
                 Design.UiSound.panelOpen();
-            } else {
-                Design.UiSound.panelClose();
             }
             mainWindow.sync_audio_context();
         }
@@ -716,8 +710,6 @@ ApplicationWindow {
             if (visible) {
                 save_game_panel.forceActiveFocus();
                 Design.UiSound.panelOpen();
-            } else {
-                Design.UiSound.panelClose();
             }
             mainWindow.sync_audio_context();
         }
@@ -744,8 +736,6 @@ ApplicationWindow {
             if (visible) {
                 load_game_panel.forceActiveFocus();
                 Design.UiSound.panelOpen();
-            } else {
-                Design.UiSound.panelClose();
             }
             mainWindow.sync_audio_context();
         }
@@ -771,8 +761,6 @@ ApplicationWindow {
             if (visible) {
                 settingsPanel.forceActiveFocus();
                 Design.UiSound.panelOpen();
-            } else {
-                Design.UiSound.panelClose();
             }
             mainWindow.sync_audio_context();
         }
@@ -793,8 +781,6 @@ ApplicationWindow {
             if (visible) {
                 objectivesPanel.forceActiveFocus();
                 Design.UiSound.panelOpen();
-            } else {
-                Design.UiSound.panelClose();
             }
             mainWindow.sync_audio_context();
         }
@@ -820,8 +806,6 @@ ApplicationWindow {
             if (visible) {
                 help_panel.forceActiveFocus();
                 Design.UiSound.panelOpen();
-            } else {
-                Design.UiSound.panelClose();
             }
             mainWindow.sync_audio_context();
         }
@@ -1115,6 +1099,12 @@ ApplicationWindow {
 
     Connections {
         function onPresented(entry) {
+            // Ambient notes arrive silently, and a refusal has already been
+            // answered by its own error or refuse cue.
+            if (!entry || entry.priority === "ambient")
+                return;
+            if (entry.channel && String(entry.channel).indexOf("refusal-") === 0)
+                return;
             Design.UiSound.notification();
         }
 

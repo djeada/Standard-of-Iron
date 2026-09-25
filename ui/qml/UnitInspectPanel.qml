@@ -199,6 +199,7 @@ Item {
                 }
 
                 Design.IronIconButton {
+                    uiSound: "none"
                     Layout.alignment: Qt.AlignTop
                     iconText: Design.Icons.close
                     tooltip: qsTr("Close the unit details")

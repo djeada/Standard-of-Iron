@@ -16,6 +16,10 @@ Dialog {
     signal primaryActivated
     signal secondaryActivated
 
+    // Set when a footer button closed the dialog; that button has already
+    // answered with confirm or back, so the close itself stays quiet.
+    property bool answeredByButton: false
+
     modal: true
     focus: true
     padding: Design.Metrics.space16
@@ -23,7 +27,11 @@ Dialog {
     implicitWidth: Design.Metrics.space24 * 20
 
     onOpened: tone === "danger" || tone === "warning" ? Design.UiSound.warning() : Design.UiSound.panelOpen()
-    onClosed: Design.UiSound.panelClose()
+    onClosed: {
+        if (!answeredByButton)
+            Design.UiSound.panelClose();
+        answeredByButton = false;
+    }
 
     background: Rectangle {
         color: Design.Theme.backgroundRaised
@@ -102,7 +110,9 @@ Dialog {
             Design.IronButton {
                 visible: root.secondaryAction !== ""
                 text: root.secondaryAction
+                uiSound: "back"
                 onClicked: {
+                    root.answeredByButton = true;
                     root.secondaryActivated();
                     root.close();
                 }
@@ -111,7 +121,9 @@ Dialog {
             Design.IronButton {
                 text: root.primaryAction
                 tone: "primary"
+                uiSound: root.secondaryAction !== "" ? "confirm" : "click"
                 onClicked: {
+                    root.answeredByButton = true;
                     root.primaryActivated();
                     root.close();
                 }

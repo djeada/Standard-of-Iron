@@ -108,11 +108,17 @@ void DismantleSystem::update(Engine::Core::World* world, float delta_time) {
         dismantle_refund(Game::Units::spawn_typeToString(unit->spawn_type));
     grant_resources(unit->owner_id, structure_id, refund);
     release_crew(world, structure_id);
-    world->remove<Engine::Core::DismantleSiteComponent>(structure_id);
-    Engine::Core::EventManager::instance().publish(
-        Engine::Core::AudioCueEvent::for_owner(unit->owner_id,
-                                               "build.construction_complete"));
+    Engine::Core::AudioCueEvent done = Engine::Core::AudioCueEvent::for_owner(
+        unit->owner_id, "build.construction_complete");
+    if (const auto* transform =
+            world->try_get<Engine::Core::TransformComponent>(structure_id)) {
+      done.at(transform->position.x, transform->position.y, transform->position.z);
+    }
+    Engine::Core::EventManager::instance().publish(done);
+    // The site component stays on until the structure has died, so the audio
+    // handler can tell a dismantle from a collapse and stay quiet.
     Combat::apply_unit_damage(world, structure, unit->max_health);
+    world->remove<Engine::Core::DismantleSiteComponent>(structure_id);
     // A dismantled building has already been taken apart piece by piece, so
     // it leaves without the collapse a destroyed one plays.
     world->remove<Engine::Core::DeathAnimationComponent>(structure_id);

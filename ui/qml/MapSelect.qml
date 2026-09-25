@@ -954,6 +954,7 @@ Item {
                 }
 
                 StyledButton {
+                    uiSound: "none"
                     text: qsTr("← Back")
                     onClicked: root.cancelled()
                 }

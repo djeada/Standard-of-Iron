@@ -52,8 +52,8 @@ The ElevenLabs renders were generated under a licence held by the project author
 | Licence | Files |
 | --- | ---: |
 | ElevenLabs licence held by the project author; commercial use permitted | 78 |
+| CC0 1.0 | 70 |
 | Own work (MIT) | 67 |
-| CC0 1.0 | 62 |
 | Proprietary -- supplied by the project owner | 4 |
 | Public Domain Mark 1.0 | 4 |
 | Public Domain Mark 1.0 + CC0 1.0 | 4 |
@@ -190,6 +190,8 @@ The ElevenLabs renders were generated under a licence held by the project author
 | `army_march_dirt_mass.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC FOOTSTEPS, 'MCU_Running, Rocky Road'; TDC FOOTSTEPS, 'MCU_Footsteps, On Grass' | CC0 1.0 |
 | `army_retreat_panic.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC CROWDS, 'CU_Crowd Applause, Cheering, Yelling, Whooping'; TDC FOOTSTEPS, 'MCU_Running, Rocky Road' | CC0 1.0 |
 | `arrow_impact_01.ogg` | Sliced by `tools/audio_field/build_oneshots.py` from TDC WOOD, 'CU_Board Drop 03'; TDC WOOD, 'CU_Board Drop 04'; TDC WOOD, 'CU_Board Drop 05' | CC0 1.0 |
+| `arrow_impact_02.ogg` | Sliced by `tools/audio_field/build_oneshots.py` from TDC WOOD, 'CU_Board Drop 03'; TDC WOOD, 'CU_Board Drop 04'; TDC WOOD, 'CU_Board Drop 05' | CC0 1.0 |
+| `arrow_impact_03.ogg` | Sliced by `tools/audio_field/build_oneshots.py` from TDC WOOD, 'CU_Board Drop 03'; TDC WOOD, 'CU_Board Drop 04'; TDC WOOD, 'CU_Board Drop 05' | CC0 1.0 |
 | `arrows_many_overhead.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC SWOOSHES, 'MCU_Swishes, Medium Low'; TDC SWOOSHES, 'CU_Fly By, Short' | CC0 1.0 |
 | `arrows_overhead_dark.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC SWOOSHES, 'CU_Swishes, Big, Low' | CC0 1.0 |
 | `battlefield_crowd_chaos.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC CROWDS, 'CU_Crowd Applause, Cheering, Yelling, Whooping'; TDC FOOTSTEPS, 'MCU_Running, Rocky Road' | CC0 1.0 |
@@ -197,6 +199,7 @@ The ElevenLabs renders were generated under a licence held by the project author
 | `blade_clash_01.ogg` | Sliced by `tools/audio_field/build_oneshots.py` from TDC WEAPONS, 'Sword, Hits, Scrapes, Shings' | CC0 1.0 |
 | `blade_clash_02.ogg` | Sliced by `tools/audio_field/build_oneshots.py` from TDC WEAPONS, 'Sword, Hits, Scrapes, Shings' | CC0 1.0 |
 | `blade_clash_03.ogg` | Sliced by `tools/audio_field/build_oneshots.py` from TDC WEAPONS, 'Sword, Hits, Scrapes, Shings' | CC0 1.0 |
+| `blade_clash_04.ogg` | Sliced by `tools/audio_field/build_oneshots.py` from TDC WEAPONS, 'Sword, Hits, Scrapes, Shings' | CC0 1.0 |
 | `bow_draw_creak.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC WOOD, 'CU_Floorboard, Creak' | CC0 1.0 |
 | `bow_full_draw_seat.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC METAL, 'CU_Bolt, Drop'; TDC WOOD, 'CU_Floorboard, Creak' | CC0 1.0 |
 | `bow_hold_strain.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC WOOD, 'CU_Ship, Creaking, Sound Design' | CC0 1.0 |
@@ -238,7 +241,12 @@ The ElevenLabs renders were generated under a licence held by the project author
 | `spearmen_formation_advance.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC FOOTSTEPS, 'MCU_Footsteps, On Grass'; TDC MUSICAL, 'CU_Drum, Snare, Military Marching Band' | CC0 1.0 |
 | `stagger.ogg` | ElevenLabs render `Armored_Soldier_Stagger`, imported by `tools/audio_import/import_cues.py` | ElevenLabs licence held by the project author; commercial use permitted |
 | `stone_impact_01.ogg` | Sliced by `tools/audio_field/build_oneshots.py` from TDC ROCKS, 'CU_Small Stones, Kicked, X4' | CC0 1.0 |
+| `stone_impact_02.ogg` | Sliced by `tools/audio_field/build_oneshots.py` from TDC ROCKS, 'CU_Small Stones, Kicked, X4' | CC0 1.0 |
+| `stone_impact_03.ogg` | Sliced by `tools/audio_field/build_oneshots.py` from TDC ROCKS, 'CU_Small Stones, Kicked, X4' | CC0 1.0 |
 | `sword_hit_01.ogg` | Sliced by `tools/audio_field/build_oneshots.py` from TDC WEAPONS, 'CU_Sword, Hits' | CC0 1.0 |
+| `sword_hit_02.ogg` | Sliced by `tools/audio_field/build_oneshots.py` from TDC WEAPONS, 'CU_Sword, Hits' | CC0 1.0 |
+| `sword_hit_03.ogg` | Sliced by `tools/audio_field/build_oneshots.py` from TDC WEAPONS, 'CU_Sword, Hits' | CC0 1.0 |
+| `sword_hit_04.ogg` | Sliced by `tools/audio_field/build_oneshots.py` from TDC WEAPONS, 'CU_Sword, Hits' | CC0 1.0 |
 | `vanguard_rush.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC CROWDS, 'CU_Crowd Applause, Cheering, Yelling, Whooping'; TDC FOOTSTEPS, 'MCU_Running, Rocky Road' | CC0 1.0 |
 
 ### `sfx/economy/`

@@ -71,6 +71,7 @@ private:
     const char* cue_id{nullptr};
     Engine::Core::EntityID attacker_id{0};
     bool counts_toward_volley{false};
+    QVector3D position;
   };
 
   struct ImpactResolution {

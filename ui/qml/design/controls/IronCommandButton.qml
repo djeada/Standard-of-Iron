@@ -133,11 +133,6 @@ AbstractButton {
             Design.UiSound.activate();
         }
 
-        function onHoveredChanged() {
-            if (control.hovered && control.interactive)
-                Design.UiSound.hover();
-        }
-
         target: control
     }
 

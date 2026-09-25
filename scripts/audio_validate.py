@@ -27,6 +27,8 @@ Checks that only report:
 Checks that only report (--scan, needs ffmpeg):
 
   * leading silence, which delays a cue that gameplay fired on an exact frame
+  * trailing silence on an effect, which holds a mixer channel (and the
+    resource's instance limit) long after the sound has died away
   * a hard boundary at the first or last sample, which clicks on playback
 
 Usage:
@@ -63,6 +65,9 @@ EMBEDDED_CATEGORIES = ("sfx", "voice")
 
 
 LEADING_SILENCE_WARN_MS = 60.0
+TRAILING_SILENCE_WARN_MS = 250.0
+"""Effects are trimmed to within a few tens of ms of their tail."""
+TRAILING_SILENCE_FLOOR = 10 ** (-54 / 20)
 
 
 BOUNDARY_WARN = 0.08
@@ -214,6 +219,18 @@ def scan_findings() -> list[str]:
             findings.append(
                 f"{relative}: {leading_ms:.0f} ms of silence before it starts"
             )
+
+        if "sfx" in path.relative_to(AUDIO_DIR).parts:
+            peak = max(abs(value) for value in samples)
+            floor = peak * TRAILING_SILENCE_FLOOR
+            last = len(samples) - 1
+            while last > 0 and abs(samples[last]) <= floor:
+                last -= 1
+            trailing_ms = (len(samples) - 1 - last) * 1000.0 / SCAN_RATE
+            if trailing_ms > TRAILING_SILENCE_WARN_MS:
+                findings.append(
+                    f"{relative}: {trailing_ms:.0f} ms of silence after it ends"
+                )
 
         head = abs(samples[0]) / 32768.0
         tail = abs(samples[-1]) / 32768.0

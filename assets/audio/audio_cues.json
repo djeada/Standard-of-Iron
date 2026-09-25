@@ -628,9 +628,13 @@
       "cooldown_ms": 90,
       "resources": [
         "sfx.combat.sword_hit_01",
+        "sfx.combat.sword_hit_02",
+        "sfx.combat.sword_hit_03",
+        "sfx.combat.sword_hit_04",
         "sfx.combat.blade_clash_01",
         "sfx.combat.blade_clash_02",
         "sfx.combat.blade_clash_03",
+        "sfx.combat.blade_clash_04",
         "sfx.combat.gladius_shield_impacts_close"
       ],
       "spatial": true
@@ -658,7 +662,9 @@
       "priority": 3,
       "cooldown_ms": 120,
       "resources": [
-        "sfx.combat.arrow_impact_01"
+        "sfx.combat.arrow_impact_01",
+        "sfx.combat.arrow_impact_02",
+        "sfx.combat.arrow_impact_03"
       ],
       "spatial": true
     },
@@ -671,10 +677,14 @@
       "priority": 3,
       "cooldown_ms": 220,
       "resources": [
-        "sfx.combat.horse_gallop_close_pass",
-        "sfx.movement.hooves_gallop"
+        "sfx.combat.sword_hit_02",
+        "sfx.combat.sword_hit_03",
+        "sfx.combat.sword_hit_04",
+        "sfx.combat.armour_hit_01",
+        "sfx.combat.armour_hit_02"
       ],
-      "spatial": true
+      "spatial": true,
+      "wanted": "A rider's blade coming down from the saddle onto shield and mail. The strike, not the horse: a gallop per blow buries the melee."
     },
     {
       "id": "combat.hit.elephant",
@@ -685,10 +695,23 @@
       "priority": 3,
       "cooldown_ms": 260,
       "resources": [
+        "sfx.combat.land",
+        "sfx.combat.land_v2",
+        "sfx.combat.shield_bash",
+        "sfx.combat.shield_bash_v2",
         "sfx.combat.elephant_charge_carthage",
         "sfx.combat.elephant_panic"
       ],
-      "spatial": true
+      "spatial": true,
+      "weights": [
+        1,
+        1,
+        1,
+        1,
+        0.35,
+        0.35
+      ],
+      "wanted": "A heavy body blow -- tusk or trunk into shields -- with the trumpet only now and then, so a fighting elephant does not scream on every hit."
     },
     {
       "id": "combat.hit.siege",
@@ -699,7 +722,9 @@
       "priority": 3,
       "cooldown_ms": 250,
       "resources": [
-        "sfx.combat.stone_impact_01"
+        "sfx.combat.stone_impact_01",
+        "sfx.combat.stone_impact_02",
+        "sfx.combat.stone_impact_03"
       ],
       "spatial": true
     },
@@ -726,7 +751,9 @@
       "priority": 3,
       "cooldown_ms": 110,
       "resources": [
-        "sfx.combat.stone_impact_01"
+        "sfx.combat.stone_impact_02",
+        "sfx.combat.stone_impact_03",
+        "sfx.combat.spear_impact_01"
       ],
       "spatial": true
     },
@@ -825,7 +852,7 @@
     },
     {
       "id": "combat.arrow_flyby",
-      "description": "A projectile lands close enough to read as an arrow passing.",
+      "description": "Arrows land around a spot: heard where they come down, once per burst.",
       "category": "sfx",
       "importance": "ambient",
       "volume": 0.4,
@@ -839,7 +866,7 @@
     },
     {
       "id": "combat.arrow_volley",
-      "description": "A mass of arrows crosses overhead.",
+      "description": "A mass of arrows leaves the bows together; heard where the archers stand.",
       "category": "sfx",
       "importance": "ambient",
       "volume": 0.45,
@@ -848,8 +875,7 @@
       "resources": [
         "sfx.combat.arrow_launch",
         "sfx.combat.arrows_many_overhead",
-        "sfx.combat.arrows_overhead_dark",
-        "sfx.combat.arrow_impact_01"
+        "sfx.combat.arrows_overhead_dark"
       ],
       "spatial": true
     },
@@ -869,16 +895,60 @@
     },
     {
       "id": "combat.siege_impact",
-      "description": "A siege projectile lands.",
+      "description": "A siege projectile lands without hitting anything; a shot that hits plays combat.hit.siege instead.",
       "category": "sfx",
       "importance": "optional",
       "volume": 1.0,
       "priority": 5,
       "cooldown_ms": 300,
       "resources": [
-        "sfx.combat.stone_impact_01"
+        "sfx.combat.stone_impact_01",
+        "sfx.combat.stone_impact_02",
+        "sfx.combat.stone_impact_03"
       ],
       "wanted": "Stone striking earth or timber with a debris tail, ~1.5 s.",
+      "spatial": true
+    },
+    {
+      "id": "combat.spell_cast",
+      "description": "A grave priest hurls a fireball.",
+      "category": "sfx",
+      "importance": "optional",
+      "volume": 0.7,
+      "priority": 3,
+      "cooldown_ms": 400,
+      "resources": [
+        "sfx.combat.magic_arc"
+      ],
+      "wanted": "A crackling discharge as the flame leaves the hand; unnatural, short, nothing like a bowstring.",
+      "spatial": true
+    },
+    {
+      "id": "combat.fireball_impact",
+      "description": "A fireball bursts where it lands, whether or not it catches anyone.",
+      "category": "sfx",
+      "importance": "optional",
+      "volume": 0.8,
+      "priority": 4,
+      "cooldown_ms": 250,
+      "resources": [
+        "sfx.combat.fireball_impact"
+      ],
+      "wanted": "A flame burst with a soft concussion, under a second.",
+      "spatial": true
+    },
+    {
+      "id": "combat.javelin_throw",
+      "description": "A thrown javelin leaves the hand.",
+      "category": "sfx",
+      "importance": "optional",
+      "volume": 0.7,
+      "priority": 2,
+      "cooldown_ms": 150,
+      "resources": [
+        "sfx.combat.javelin_throw_whoosh"
+      ],
+      "wanted": "One heavy shaft whooshing away, lower and longer than an arrow.",
       "spatial": true
     },
     {
@@ -904,7 +974,8 @@
       "priority": 6,
       "cooldown_ms": 4000,
       "resources": [
-        "sfx.movement.hooves_gallop"
+        "sfx.movement.hooves_gallop",
+        "sfx.combat.horse_gallop_close_pass"
       ],
       "wanted": "Horses breaking from a walk into a gallop.",
       "spatial": true
@@ -1186,6 +1257,34 @@
       "spatial": true
     },
     {
+      "id": "wildlife.sheep_alarm",
+      "description": "A flock of sheep takes fright and bolts from soldiers or wolves.",
+      "category": "sfx",
+      "importance": "ambient",
+      "volume": 0.5,
+      "priority": 2,
+      "cooldown_ms": 4000,
+      "resources": [
+        "sfx.wildlife.sheep_bleat"
+      ],
+      "wanted": "One or two startled bleats, close and dry, with no pasture bed under them.",
+      "spatial": true
+    },
+    {
+      "id": "wildlife.birds_flush",
+      "description": "A flock of birds is startled off the ground and scatters.",
+      "category": "sfx",
+      "importance": "ambient",
+      "volume": 0.45,
+      "priority": 2,
+      "cooldown_ms": 12000,
+      "resources": [
+        "sfx.wildlife.bird_chirp"
+      ],
+      "wanted": "Alarm calls and a burst of wingbeats as a flock lifts off together.",
+      "spatial": true
+    },
+    {
       "id": "state.victory",
       "description": "The local player wins the mission.",
       "category": "sfx",
@@ -1206,7 +1305,8 @@
       "priority": 7,
       "cooldown_ms": 2000,
       "resources": [
-        "sfx.combat.army_retreat_panic"
+        "sfx.combat.army_retreat_panic",
+        "sfx.combat.aftermath_battlefield"
       ]
     },
     {
@@ -1298,7 +1398,8 @@
       "resources": [
         "sfx.combat.stagger"
       ],
-      "wanted": "Armour and body weight losing footing. Distinct from a hit landing."
+      "wanted": "Armour and body weight losing footing. Distinct from a hit landing.",
+      "spatial": true
     },
     {
       "id": "build.building_burning",
@@ -1325,7 +1426,8 @@
       "resources": [
         "sfx.combat.elephant_trumpet_panic"
       ],
-      "wanted": "Broken, distressed high trumpeting."
+      "wanted": "Broken, distressed high trumpeting.",
+      "spatial": true
     },
     {
       "id": "economy.income",
@@ -1334,7 +1436,7 @@
       "importance": "optional",
       "volume": 0.6,
       "priority": 3,
-      "cooldown_ms": 400,
+      "cooldown_ms": 1500,
       "resources": [
         "sfx.economy.income_tick"
       ],

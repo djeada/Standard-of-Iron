@@ -12,6 +12,12 @@ Button {
     property bool blocked: false
     readonly property bool interactive: enabled && !blocked
 
+    // What the button says when pressed: "click", "back" (cancel, close,
+    // leave), "confirm" (a committed decision), "toggle", or "none" when the
+    // action it triggers already makes its own sound.
+    property string uiSound: checkable ? "toggle" : "click"
+    property bool hoverSound: true
+
     readonly property bool destructive: tone === "destructive"
     readonly property bool primary: tone === "primary"
 
@@ -30,11 +36,11 @@ Button {
 
     Connections {
         function onClicked() {
-            Design.UiSound.activate();
+            Design.UiSound.play(control.uiSound);
         }
 
         function onHoveredChanged() {
-            if (control.hovered && control.interactive)
+            if (control.hovered && control.interactive && control.hoverSound)
                 Design.UiSound.hover();
         }
 

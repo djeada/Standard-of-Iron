@@ -27,7 +27,7 @@ Item {
     }
 
     function blipSpan(kind) {
-        return kind === "capture_finished" ? Design.Metrics.space16 : Design.Metrics.space12;
+        return (kind === "capture_finished" || kind === "structure_lost") ? Design.Metrics.space16 : Design.Metrics.space12;
     }
 
     function mapX(nx) {
@@ -284,6 +284,35 @@ Item {
                 width: Design.Metrics.space4
                 height: width
                 color: blip.tint
+                opacity: 1 - blip.ease * 0.6
+            }
+
+            Rectangle {
+                anchors.centerIn: parent
+                visible: blip.kind === "unit_lost"
+                width: Design.Metrics.space8
+                height: Design.Metrics.borderFocus
+                color: blip.tint
+                opacity: 1 - blip.ease * 0.6
+            }
+
+            Rectangle {
+                anchors.centerIn: parent
+                visible: blip.kind === "unit_lost"
+                width: Design.Metrics.borderFocus
+                height: Design.Metrics.space8
+                color: blip.tint
+                opacity: 1 - blip.ease * 0.6
+            }
+
+            Rectangle {
+                anchors.centerIn: parent
+                visible: blip.kind === "structure_lost"
+                width: Design.Metrics.space8
+                height: width
+                color: "transparent"
+                border.width: Design.Metrics.borderFocus
+                border.color: blip.tint
                 opacity: 1 - blip.ease * 0.6
             }
 

@@ -256,8 +256,12 @@ void MinimapFogCompositor::rebuild_lookup(int vis_width,
 
   m_lookup_entries.resize(static_cast<std::size_t>(img_width * img_height));
 
-  const float scale_x = static_cast<float>(vis_width) / static_cast<float>(img_width);
-  const float scale_y = static_cast<float>(vis_height) / static_cast<float>(img_height);
+  // Image pixels span the rotated extent of the visibility grid, the same
+  // projection the baked terrain uses.
+  const auto [extent_width, extent_height] = rotated_world_bounds(
+      static_cast<float>(vis_width), static_cast<float>(vis_height));
+  const float scale_x = extent_width / static_cast<float>(img_width);
+  const float scale_y = extent_height / static_cast<float>(img_height);
   const float half_img_w = static_cast<float>(img_width) * 0.5F;
   const float half_img_h = static_cast<float>(img_height) * 0.5F;
   const float half_vis_w = static_cast<float>(vis_width) * 0.5F;
@@ -268,11 +272,13 @@ void MinimapFogCompositor::rebuild_lookup(int vis_width,
     const float centered_y = static_cast<float>(y) - half_img_h;
     for (int x = 0; x < img_width; ++x) {
       const float centered_x = static_cast<float>(x) - half_img_w;
-      const float world_x = centered_x * inv_cos - centered_y * inv_sin;
-      const float world_y = centered_x * inv_sin + centered_y * inv_cos;
+      const float rotated_x = centered_x * scale_x;
+      const float rotated_y = centered_y * scale_y;
+      const float world_x = rotated_x * inv_cos - rotated_y * inv_sin;
+      const float world_y = rotated_x * inv_sin + rotated_y * inv_cos;
 
-      const float vis_x = (world_x * scale_x) + half_vis_w;
-      const float vis_y = (world_y * scale_y) + half_vis_h;
+      const float vis_x = world_x + half_vis_w;
+      const float vis_y = world_y + half_vis_h;
 
       const int base_vx = static_cast<int>(std::floor(vis_x));
       const int base_vy = static_cast<int>(std::floor(vis_y));

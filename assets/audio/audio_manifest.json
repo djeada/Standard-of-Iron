@@ -1327,7 +1327,7 @@
       "priority": 3,
       "cooldown_ms": 100,
       "max_instances": 6,
-      "load_policy": "mission",
+      "load_policy": "startup",
       "tags": {
         "source": "field"
       },
@@ -2939,6 +2939,60 @@
       }
     },
     {
+      "id": "sfx.combat.sword_hit_02",
+      "path": "sfx/combat/sword_hit_02.ogg",
+      "category": "sfx",
+      "volume": 0.85,
+      "priority": 4,
+      "cooldown_ms": 90,
+      "max_instances": 4,
+      "load_policy": "startup",
+      "tags": {
+        "attack_family": "sword",
+        "source": "field"
+      },
+      "provenance": {
+        "origin": "Sliced by `tools/audio_field/build_oneshots.py` from TDC WEAPONS, 'CU_Sword, Hits'",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "sfx.combat.sword_hit_03",
+      "path": "sfx/combat/sword_hit_03.ogg",
+      "category": "sfx",
+      "volume": 0.85,
+      "priority": 4,
+      "cooldown_ms": 90,
+      "max_instances": 4,
+      "load_policy": "startup",
+      "tags": {
+        "attack_family": "sword",
+        "source": "field"
+      },
+      "provenance": {
+        "origin": "Sliced by `tools/audio_field/build_oneshots.py` from TDC WEAPONS, 'CU_Sword, Hits'",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "sfx.combat.sword_hit_04",
+      "path": "sfx/combat/sword_hit_04.ogg",
+      "category": "sfx",
+      "volume": 0.85,
+      "priority": 4,
+      "cooldown_ms": 90,
+      "max_instances": 4,
+      "load_policy": "startup",
+      "tags": {
+        "attack_family": "sword",
+        "source": "field"
+      },
+      "provenance": {
+        "origin": "Sliced by `tools/audio_field/build_oneshots.py` from TDC WEAPONS, 'CU_Sword, Hits'",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
       "id": "sfx.combat.blade_clash_01",
       "path": "sfx/combat/blade_clash_01.ogg",
       "category": "sfx",
@@ -2977,6 +3031,24 @@
     {
       "id": "sfx.combat.blade_clash_03",
       "path": "sfx/combat/blade_clash_03.ogg",
+      "category": "sfx",
+      "volume": 0.85,
+      "priority": 4,
+      "cooldown_ms": 90,
+      "max_instances": 4,
+      "load_policy": "startup",
+      "tags": {
+        "attack_family": "spear",
+        "source": "field"
+      },
+      "provenance": {
+        "origin": "Sliced by `tools/audio_field/build_oneshots.py` from TDC WEAPONS, 'Sword, Hits, Scrapes, Shings'",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "sfx.combat.blade_clash_04",
+      "path": "sfx/combat/blade_clash_04.ogg",
       "category": "sfx",
       "volume": 0.85,
       "priority": 4,
@@ -3050,6 +3122,42 @@
       }
     },
     {
+      "id": "sfx.combat.arrow_impact_02",
+      "path": "sfx/combat/arrow_impact_02.ogg",
+      "category": "sfx",
+      "volume": 0.85,
+      "priority": 4,
+      "cooldown_ms": 90,
+      "max_instances": 4,
+      "load_policy": "startup",
+      "tags": {
+        "attack_family": "arrow",
+        "source": "field"
+      },
+      "provenance": {
+        "origin": "Sliced by `tools/audio_field/build_oneshots.py` from TDC WOOD, 'CU_Board Drop 03'; TDC WOOD, 'CU_Board Drop 04'; TDC WOOD, 'CU_Board Drop 05'",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "sfx.combat.arrow_impact_03",
+      "path": "sfx/combat/arrow_impact_03.ogg",
+      "category": "sfx",
+      "volume": 0.85,
+      "priority": 4,
+      "cooldown_ms": 90,
+      "max_instances": 4,
+      "load_policy": "startup",
+      "tags": {
+        "attack_family": "arrow",
+        "source": "field"
+      },
+      "provenance": {
+        "origin": "Sliced by `tools/audio_field/build_oneshots.py` from TDC WOOD, 'CU_Board Drop 03'; TDC WOOD, 'CU_Board Drop 04'; TDC WOOD, 'CU_Board Drop 05'",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
       "id": "sfx.combat.armour_hit_01",
       "path": "sfx/combat/armour_hit_01.ogg",
       "category": "sfx",
@@ -3088,6 +3196,42 @@
     {
       "id": "sfx.combat.stone_impact_01",
       "path": "sfx/combat/stone_impact_01.ogg",
+      "category": "sfx",
+      "volume": 0.85,
+      "priority": 4,
+      "cooldown_ms": 200,
+      "max_instances": 3,
+      "load_policy": "startup",
+      "tags": {
+        "attack_family": "siege",
+        "source": "field"
+      },
+      "provenance": {
+        "origin": "Sliced by `tools/audio_field/build_oneshots.py` from TDC ROCKS, 'CU_Small Stones, Kicked, X4'",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "sfx.combat.stone_impact_02",
+      "path": "sfx/combat/stone_impact_02.ogg",
+      "category": "sfx",
+      "volume": 0.85,
+      "priority": 4,
+      "cooldown_ms": 200,
+      "max_instances": 3,
+      "load_policy": "startup",
+      "tags": {
+        "attack_family": "siege",
+        "source": "field"
+      },
+      "provenance": {
+        "origin": "Sliced by `tools/audio_field/build_oneshots.py` from TDC ROCKS, 'CU_Small Stones, Kicked, X4'",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "sfx.combat.stone_impact_03",
+      "path": "sfx/combat/stone_impact_03.ogg",
       "category": "sfx",
       "volume": 0.85,
       "priority": 4,
@@ -3630,13 +3774,13 @@
       "load_policy": "mission",
       "tags": {
         "species": "sheep",
-        "state": "peaceful",
         "source": "generated"
       },
       "provenance": {
         "origin": "ElevenLabs render `Pastoral_Sheep_Bleat`, imported by `tools/audio_import/import_cues.py`",
         "licence": "ElevenLabs licence held by the project author; commercial use permitted"
-      }
+      },
+      "max_instances": 2
     },
     {
       "id": "sfx.wildlife.bird_chirp",
@@ -3645,13 +3789,13 @@
       "load_policy": "mission",
       "tags": {
         "species": "bird",
-        "state": "peaceful",
         "source": "generated"
       },
       "provenance": {
         "origin": "ElevenLabs render `Morning_Bird_Chirp`, imported by `tools/audio_import/import_cues.py`",
         "licence": "ElevenLabs licence held by the project author; commercial use permitted"
-      }
+      },
+      "max_instances": 2
     }
   ]
 }

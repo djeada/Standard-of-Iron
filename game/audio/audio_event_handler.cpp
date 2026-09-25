@@ -10,6 +10,7 @@
 #include <utility>
 
 #include "../core/component_core.h"
+#include "../core/component_gameplay.h"
 #include "../core/entity.h"
 #include "../core/world.h"
 #include "audio_cues.h"
@@ -156,7 +157,6 @@ auto hit_cue_for_attacker(Game::Units::SpawnType type) -> const char* {
   switch (type) {
   case Game::Units::SpawnType::Swordsman:
   case Game::Units::SpawnType::SkeletonSwordsman:
-  case Game::Units::SpawnType::GravePriest:
     return Cue::k_combat_hit_sword;
   case Game::Units::SpawnType::Spearman:
   case Game::Units::SpawnType::HorseSpearman:
@@ -298,6 +298,8 @@ void AudioEventHandler::shutdown() {
   m_last_sound_group_time.clear();
   m_last_sound_group_id.clear();
   m_current_music_id.clear();
+  m_current_music_group.clear();
+  m_music_state_left_at.clear();
 
   m_initialized = false;
 }
@@ -441,9 +443,15 @@ void AudioEventHandler::on_unit_died(const Engine::Core::UnitDiedEvent& event) {
     return;
   }
 
+  WorldPoint where;
+  const bool located = entity_point(m_world, event.unit_id, where);
+
   if (Game::Units::is_building_spawn(event.spawn_type)) {
-    WorldPoint where;
-    if (entity_point(m_world, event.unit_id, where)) {
+    if (m_world != nullptr &&
+        m_world->has<Engine::Core::DismantleSiteComponent>(event.unit_id)) {
+      return;
+    }
+    if (located) {
       play_cue_at(Cue::k_build_building_destroyed, where);
     } else {
       play_cue(Cue::k_build_building_destroyed);
@@ -451,7 +459,15 @@ void AudioEventHandler::on_unit_died(const Engine::Core::UnitDiedEvent& event) {
     return;
   }
 
-  play_cue(Cue::k_combat_death);
+  if (!Game::Units::is_troop_spawn(event.spawn_type)) {
+    return;
+  }
+
+  if (located) {
+    play_cue_at(Cue::k_combat_death, where, get_volume_variation());
+  } else {
+    play_cue(Cue::k_combat_death, get_volume_variation());
+  }
 
   if (m_audience.is_local(event.owner_id)) {
     play_cue(Cue::k_alert_unit_lost);
@@ -465,10 +481,23 @@ auto AudioEventHandler::rotate_ambient_music(Engine::Core::AmbientState state) -
   }
 
   const std::string group_key = ambient_music_group_key(state);
-  const std::string last_id = m_current_music_id.empty()
-                                  ? m_last_sound_group_id[group_key]
-                                  : m_current_music_id;
-  const std::string music_id = choose_loaded_variant(it->second, last_id);
+  // Coming back into a state shortly after leaving it resumes that state's
+  // track instead of starting a new one, so a lull in a battle does not turn
+  // the score over twice.
+  const auto now = std::chrono::steady_clock::now();
+  const std::string& previous_for_state = m_last_sound_group_id[group_key];
+  const auto left_at = m_music_state_left_at.find(group_key);
+  const bool returning = !previous_for_state.empty() &&
+                         left_at != m_music_state_left_at.end() &&
+                         now - left_at->second < k_music_return_window &&
+                         AudioSystem::get_instance().has_resource(previous_for_state);
+  if (!m_current_music_group.empty() && m_current_music_group != group_key) {
+    m_music_state_left_at[m_current_music_group] = now;
+  }
+  const std::string last_id =
+      m_current_music_id.empty() ? previous_for_state : m_current_music_id;
+  const std::string music_id =
+      returning ? previous_for_state : choose_loaded_variant(it->second, last_id);
   if (music_id.empty() || music_id == m_current_music_id) {
     return false;
   }
@@ -476,6 +505,7 @@ auto AudioEventHandler::rotate_ambient_music(Engine::Core::AmbientState state) -
   AudioSystem::get_instance().play_music(music_id);
   m_last_sound_group_id[group_key] = music_id;
   m_current_music_id = music_id;
+  m_current_music_group = group_key;
   qInfo().noquote() << QStringLiteral("Ambient music: %1 (%2)")
                            .arg(QString::fromStdString(music_id),
                                 QString::fromStdString(group_key));
@@ -486,6 +516,18 @@ void AudioEventHandler::on_ambient_state_changed(
     const Engine::Core::AmbientStateChangedEvent& event) {
   rotate_ambient_music(event.new_state);
 
+  // Victory and defeat have their own cues; the state stingers are for the
+  // battle turning, and a battle that ebbs and flows should not blow the horn
+  // every time it flares up again.
+  if (event.new_state == Engine::Core::AmbientState::VICTORY) {
+    play_cue(Cue::k_state_victory);
+    return;
+  }
+  if (event.new_state == Engine::Core::AmbientState::DEFEAT) {
+    play_cue(Cue::k_state_defeat);
+    return;
+  }
+
   auto sfx_it = m_ambient_state_sfx_map.find(event.new_state);
   if (sfx_it != m_ambient_state_sfx_map.end() && !sfx_it->second.empty()) {
     play_sound_group(ambient_sfx_group_key(event.new_state),
@@ -493,13 +535,7 @@ void AudioEventHandler::on_ambient_state_changed(
                      0.9F,
                      7,
                      AudioCategory::SFX,
-                     2000);
-  }
-
-  if (event.new_state == Engine::Core::AmbientState::VICTORY) {
-    play_cue(Cue::k_state_victory);
-  } else if (event.new_state == Engine::Core::AmbientState::DEFEAT) {
-    play_cue(Cue::k_state_defeat);
+                     STATE_STINGER_COOLDOWN_MS);
   }
 }
 
@@ -640,14 +676,6 @@ void AudioEventHandler::on_combat_hit(const Engine::Core::CombatHitEvent& event)
     note_distant_impact(where);
   } else {
     play_cue(impact, volume);
-  }
-
-  if (event.is_killing_blow && !event.target_is_structure) {
-    if (located) {
-      play_cue_at(Cue::k_combat_death, where, get_volume_variation());
-    } else {
-      play_cue(Cue::k_combat_death, get_volume_variation());
-    }
   }
 }
 

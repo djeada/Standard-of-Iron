@@ -48,10 +48,10 @@ auto world_to_pixel(const QImage& image,
   const auto& orient = Game::Map::Minimap::MinimapOrientation::instance();
   const float rotated_x = world_x * orient.cos_yaw() - world_z * orient.sin_yaw();
   const float rotated_z = world_x * orient.sin_yaw() + world_z * orient.cos_yaw();
-  const float world_width = static_cast<float>(map.grid.width);
-  const float world_height = static_cast<float>(map.grid.height);
-  const float scale_x = static_cast<float>(image.width() - 1) / world_width;
-  const float scale_y = static_cast<float>(image.height() - 1) / world_height;
+  const auto [world_width, world_height] = Game::Map::Minimap::rotated_world_bounds(
+      static_cast<float>(map.grid.width), static_cast<float>(map.grid.height));
+  const float scale_x = static_cast<float>(image.width()) / world_width;
+  const float scale_y = static_cast<float>(image.height()) / world_height;
   const float px = (rotated_x + world_width * 0.5F) * scale_x;
   const float py = (rotated_z + world_height * 0.5F) * scale_y;
   return {std::clamp(static_cast<int>(std::lround(px)), 0, image.width() - 1),
@@ -295,11 +295,14 @@ TEST(MinimapManagerTest, ClickingAMarkerPixelResolvesToThatUnitsWorldPosition) {
     for (const auto& [world_x, world_z] : unit_positions) {
       const auto [marker_px, marker_py] = world_to_pixel(image, map, world_x, world_z);
 
+      const auto [extent_width, extent_height] =
+          Game::Map::Minimap::rotated_world_bounds(manager.get_world_width(),
+                                                   manager.get_world_height());
       const auto [clicked_x, clicked_z] =
           Game::Map::Minimap::pixel_to_world(static_cast<float>(marker_px),
                                              static_cast<float>(marker_py),
-                                             manager.get_world_width(),
-                                             manager.get_world_height(),
+                                             extent_width,
+                                             extent_height,
                                              static_cast<float>(image.width()),
                                              static_cast<float>(image.height()),
                                              manager.get_tile_size());
@@ -990,4 +993,36 @@ TEST(MinimapManagerTest, LocalMarkersIgnoreFogVisibilityFiltering) {
   EXPECT_GT(
       changed_pixels_in_radius(fog_only, with_local_marker, local_px, local_py, 3), 0)
       << "Local markers must remain visible even if the fog snapshot is fully unseen.";
+}
+
+TEST(MinimapManagerTest, LiveMarkersLandOnTheBakedTerrainTheyStandOn) {
+  // The baked terrain fits the whole rotated map into the image; units, fog,
+  // pins and clicks must project through the same extent or they drift away
+  // from the ground they stand on by up to the rotation's sqrt(2).
+  for (const float yaw : {0.0F, 225.0F}) {
+    MapDefinition map = make_test_map(64, 64, yaw);
+    Lake lake;
+    lake.center = QVector3D(18.0F, 0.0F, -14.0F);
+    lake.width = 6.0F;
+    lake.depth = 6.0F;
+    map.lakes.push_back(lake);
+
+    MinimapManager manager;
+    manager.generate_for_map(map);
+    manager.clear_fog();
+    const QImage image = manager.get_image().copy();
+    ASSERT_FALSE(image.isNull()) << "yaw " << yaw;
+
+    float nx = 0.0F;
+    float ny = 0.0F;
+    ASSERT_TRUE(manager.world_to_normalized(lake.center.x(), lake.center.z(), nx, ny));
+    const QPoint pixel(static_cast<int>(nx * static_cast<float>(image.width())),
+                       static_cast<int>(ny * static_cast<float>(image.height())));
+    ASSERT_TRUE(image.rect().contains(pixel)) << "yaw " << yaw;
+    const QColor color = image.pixelColor(pixel);
+    EXPECT_GT(color.blue(), color.red() + 20)
+        << "a marker at the lake's centre must sit on the lake the terrain "
+           "drew (yaw "
+        << yaw << ", pixel " << pixel.x() << "," << pixel.y() << ")";
+  }
 }

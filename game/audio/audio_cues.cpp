@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "cue_trace.h"
+#include "spatial.h"
 
 namespace Game::Audio {
 
@@ -230,6 +231,16 @@ auto CueRegistry::play(const std::string& cue_id,
     }
 
     binding = it->second;
+
+    // A spatial cue out of earshot is dropped before it can spend the cue
+    // cooldown; otherwise fighting at the far edge of the map would silence
+    // the same sound right under the camera.
+    if (binding.spatial && position != nullptr &&
+        spatialize(AudioSystem::get_instance().listener(), *position).volume_scale <=
+            0.0F) {
+      trace_cue_drop(cue_id, CueOutcome::Muted, source);
+      return false;
+    }
 
     const auto now = std::chrono::steady_clock::now();
     if (binding.cooldown_ms > 0) {

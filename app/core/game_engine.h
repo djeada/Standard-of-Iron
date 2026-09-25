@@ -521,6 +521,7 @@ private:
   void publish_victory_objectives();
   void publish_minimap_overlays(float dt);
   void note_minimap_combat_hit(const Engine::Core::CombatHitEvent& event);
+  void note_minimap_unit_died(const Engine::Core::UnitDiedEvent& event);
   void note_minimap_shrine_stirred(const Engine::Core::UndeadZoneAwakenedEvent& event);
   void queue_mission_announcement(const QString& text);
   void flush_mission_announcements(float dt);
@@ -718,6 +719,8 @@ private:
       m_world_feedback_subscription;
   Engine::Core::ScopedEventSubscription<Engine::Core::BarrackCapturedEvent>
       m_barrack_captured_subscription;
+  Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>
+      m_minimap_unit_died_subscription;
   Engine::Core::ScopedEventSubscription<Engine::Core::MissionAnnouncementEvent>
       m_mission_announcement_subscription;
   Engine::Core::ScopedEventSubscription<Engine::Core::UndeadZoneAwakenedEvent>

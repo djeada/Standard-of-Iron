@@ -10,6 +10,7 @@ ComboBox {
 
     property bool blocked: false
     readonly property bool interactive: enabled && !blocked
+    property bool pickedWhileOpen: false
 
     property var labelFor: function (data) {
         return data;
@@ -27,6 +28,7 @@ ComboBox {
 
     Connections {
         function onActivated(index) {
+            control.pickedWhileOpen = true;
             Design.UiSound.activate();
         }
 
@@ -53,7 +55,13 @@ ComboBox {
         }
 
         function onClosed() {
-            Design.UiSound.panelClose();
+            // Picking an entry closes the popup too; that pick has already
+            // clicked, so only a dismissal is heard as a close.
+            Qt.callLater(function () {
+                    if (!control.pickedWhileOpen)
+                        Design.UiSound.panelClose();
+                    control.pickedWhileOpen = false;
+                });
         }
 
         target: control.popup

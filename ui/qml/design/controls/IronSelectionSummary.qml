@@ -764,14 +764,7 @@ Design.IronPanel {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            Design.UiSound.activate();
-                            root.unitActivated(chip.row.unit_id);
-                        }
-                        onContainsMouseChanged: {
-                            if (containsMouse)
-                                Design.UiSound.hover();
-                        }
+                        onClicked: root.unitActivated(chip.row.unit_id)
                     }
 
                     ToolTip.visible: chipMouse.containsMouse
@@ -954,13 +947,8 @@ Design.IronPanel {
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: function (mouse) {
-                            Design.UiSound.activate();
                             root.groupActivated(groupCard.row.typeKey);
                             mouse.accepted = true;
-                        }
-                        onContainsMouseChanged: {
-                            if (containsMouse)
-                                Design.UiSound.hover();
                         }
                     }
                 }

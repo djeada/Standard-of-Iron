@@ -4,7 +4,9 @@
 #include <cmath>
 #include <utility>
 
+#include "../audio/cue_ids.h"
 #include "../core/ambient_session.h"
+#include "../core/event_manager.h"
 
 namespace Game::Wildlife {
 
@@ -440,6 +442,11 @@ void BirdFlockManager::think(Bird& bird, Flock& flock, const ThreatField& threat
   if (threat.found) {
     if (bird.behavior != Behavior::Scatter) {
       m_stats.scatter_events += 1U;
+      if (flock.alarm_timer <= 0.0F) {
+        Engine::Core::AudioCueEvent cue(Game::Audio::Cue::k_wildlife_birds_flush);
+        cue.at(bird.x, bird.y, bird.z);
+        Engine::Core::EventManager::instance().publish(cue);
+      }
     }
     bird.behavior = Behavior::Scatter;
     bird.state_timer = random_range(bird.rng_state, 2.0F, 3.6F);

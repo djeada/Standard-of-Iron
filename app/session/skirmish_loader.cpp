@@ -312,7 +312,9 @@ auto SkirmishLoader::start(const QString& map_path,
       const QVariantMap config = config_var.toMap();
       int player_id = config.value("player_id", -1).toInt();
       const int team_id = config.value("team_id", 0).toInt();
-      const QString color_hex = config.value("colorHex", "#FFFFFF").toString();
+      // A seat with no chosen colour keeps its palette slot colour; painting it
+      // white made every computer-only army (observed matches) identical.
+      const QString color_hex = config.value("colorHex").toString();
       const bool is_human = config.value("isHuman", false).toBool();
       const QString nation_id_str = config.value("nationId").toString();
       const QString base_key = config.value("baseKey").toString();
@@ -423,7 +425,9 @@ auto SkirmishLoader::start(const QString& map_path,
     for (const QVariant& config_var : saved_player_configs) {
       const QVariantMap config = config_var.toMap();
       const int player_id = config.value("player_id", -1).toInt();
-      const QString color_hex = config.value("colorHex", "#FFFFFF").toString();
+      // A seat with no chosen colour keeps its palette slot colour; painting it
+      // white made every computer-only army (observed matches) identical.
+      const QString color_hex = config.value("colorHex").toString();
 
       if (player_id >= 0 && color_hex.startsWith("#") &&
           color_hex.length() == hex_color_length) {

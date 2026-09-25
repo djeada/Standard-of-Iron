@@ -80,6 +80,9 @@ inline constexpr const char* k_combat_arrow_flyby = "combat.arrow_flyby";
 inline constexpr const char* k_combat_arrow_volley = "combat.arrow_volley";
 inline constexpr const char* k_combat_siege_launch = "combat.siege_launch";
 inline constexpr const char* k_combat_siege_impact = "combat.siege_impact";
+inline constexpr const char* k_combat_spell_cast = "combat.spell_cast";
+inline constexpr const char* k_combat_fireball_impact = "combat.fireball_impact";
+inline constexpr const char* k_combat_javelin_throw = "combat.javelin_throw";
 inline constexpr const char* k_combat_charge = "combat.charge";
 inline constexpr const char* k_combat_charge_cavalry = "combat.charge_cavalry";
 inline constexpr const char* k_combat_charge_elephant = "combat.charge_elephant";
@@ -111,6 +114,8 @@ inline constexpr const char* k_economy_gather_success = "economy.gather_success"
 
 inline constexpr const char* k_wildlife_wolf_hunt = "wildlife.wolf_hunt";
 inline constexpr const char* k_wildlife_wolf_bite = "wildlife.wolf_bite";
+inline constexpr const char* k_wildlife_sheep_alarm = "wildlife.sheep_alarm";
+inline constexpr const char* k_wildlife_birds_flush = "wildlife.birds_flush";
 
 inline constexpr const char* k_state_victory = "state.victory";
 inline constexpr const char* k_state_defeat = "state.defeat";
@@ -120,7 +125,7 @@ inline constexpr const char* k_state_load_complete = "state.load_complete";
 inline constexpr const char* k_state_commander_enter = "state.commander_enter";
 inline constexpr const char* k_state_commander_exit = "state.commander_exit";
 
-inline constexpr std::array<const char*, 101> k_all = {
+inline constexpr std::array<const char*, 106> k_all = {
     k_ui_hover,
     k_ui_click,
     k_ui_back,
@@ -187,6 +192,9 @@ inline constexpr std::array<const char*, 101> k_all = {
     k_combat_arrow_volley,
     k_combat_siege_launch,
     k_combat_siege_impact,
+    k_combat_spell_cast,
+    k_combat_fireball_impact,
+    k_combat_javelin_throw,
     k_combat_charge,
     k_combat_charge_cavalry,
     k_combat_charge_elephant,
@@ -215,6 +223,8 @@ inline constexpr std::array<const char*, 101> k_all = {
     k_economy_gather_success,
     k_wildlife_wolf_hunt,
     k_wildlife_wolf_bite,
+    k_wildlife_sheep_alarm,
+    k_wildlife_birds_flush,
     k_state_victory,
     k_state_defeat,
     k_state_speed_change,

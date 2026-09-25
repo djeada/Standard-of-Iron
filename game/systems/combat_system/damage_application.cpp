@@ -669,8 +669,12 @@ void announce_new_stagger(const Engine::Core::Entity* entity, bool was_staggered
   if (entity == nullptr || was_staggered) {
     return;
   }
-  Engine::Core::EventManager::instance().publish(Engine::Core::AudioCueEvent::for_owner(
-      Engine::Core::owner_id_of(entity), "combat.stagger"));
+  Engine::Core::AudioCueEvent cue("combat.stagger");
+  if (const auto* transform =
+          entity->get_component<Engine::Core::TransformComponent>()) {
+    cue.at(transform->position.x, transform->position.y, transform->position.z);
+  }
+  Engine::Core::EventManager::instance().publish(cue);
 }
 
 void add_or_extend_stagger(Engine::Core::Entity* entity, float duration) {

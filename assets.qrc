@@ -227,6 +227,8 @@
         <file>assets/audio/sfx/combat/army_march_dirt_mass.ogg</file>
         <file>assets/audio/sfx/combat/army_retreat_panic.ogg</file>
         <file>assets/audio/sfx/combat/arrow_impact_01.ogg</file>
+        <file>assets/audio/sfx/combat/arrow_impact_02.ogg</file>
+        <file>assets/audio/sfx/combat/arrow_impact_03.ogg</file>
         <file>assets/audio/sfx/combat/arrows_many_overhead.ogg</file>
         <file>assets/audio/sfx/combat/arrows_overhead_dark.ogg</file>
         <file>assets/audio/sfx/combat/battlefield_crowd_chaos.ogg</file>
@@ -234,6 +236,7 @@
         <file>assets/audio/sfx/combat/blade_clash_01.ogg</file>
         <file>assets/audio/sfx/combat/blade_clash_02.ogg</file>
         <file>assets/audio/sfx/combat/blade_clash_03.ogg</file>
+        <file>assets/audio/sfx/combat/blade_clash_04.ogg</file>
         <file>assets/audio/sfx/combat/bow_draw_creak.ogg</file>
         <file>assets/audio/sfx/combat/bow_full_draw_seat.ogg</file>
         <file>assets/audio/sfx/combat/bow_hold_strain.ogg</file>
@@ -275,7 +278,12 @@
         <file>assets/audio/sfx/combat/spearmen_formation_advance.ogg</file>
         <file>assets/audio/sfx/combat/stagger.ogg</file>
         <file>assets/audio/sfx/combat/stone_impact_01.ogg</file>
+        <file>assets/audio/sfx/combat/stone_impact_02.ogg</file>
+        <file>assets/audio/sfx/combat/stone_impact_03.ogg</file>
         <file>assets/audio/sfx/combat/sword_hit_01.ogg</file>
+        <file>assets/audio/sfx/combat/sword_hit_02.ogg</file>
+        <file>assets/audio/sfx/combat/sword_hit_03.ogg</file>
+        <file>assets/audio/sfx/combat/sword_hit_04.ogg</file>
         <file>assets/audio/sfx/combat/vanguard_rush.ogg</file>
         <file>assets/audio/sfx/economy/gather_success.ogg</file>
         <file>assets/audio/sfx/economy/income_tick.ogg</file>

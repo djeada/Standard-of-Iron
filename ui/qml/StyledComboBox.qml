@@ -1,7 +1,6 @@
 import QtQuick 2.15
 import StandardOfIron 1.0
 import StandardOfIron.Design 1.0 as Design
-import "ui_audio.js" as UiAudio
 
 Design.IronDropdown {
     id: root
@@ -17,13 +16,4 @@ Design.IronDropdown {
     }
 
     labelFor: root.resolve_delegate_text
-
-    onHoveredChanged: {
-        if (hovered && enabled && typeof game !== "undefined")
-            UiAudio.play_hover(game.audio_system);
-    }
-    onActivated: {
-        if (typeof game !== "undefined")
-            UiAudio.play_click(game.audio_system);
-    }
 }

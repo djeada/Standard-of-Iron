@@ -12,7 +12,8 @@
 namespace Game::Map::Minimap {
 
 namespace {
-constexpr float k_corner_size_ratio = 0.15F;
+constexpr float k_corner_size_ratio = 0.25F;
+constexpr int k_outline_alpha = 110;
 constexpr float k_min_corner_size = 4.0F;
 constexpr float k_halo_pen_offset = 1.75F;
 } // namespace
@@ -26,10 +27,14 @@ void CameraViewportLayer::init(int width,
   m_world_width = world_width;
   m_world_height = world_height;
 
-  m_scale_x = static_cast<float>(width - 1) / world_width;
-  m_scale_y = static_cast<float>(height - 1) / world_height;
-  m_offset_x = world_width * 0.5F;
-  m_offset_y = world_height * 0.5F;
+  // The baked terrain fits the whole rotated map into the image, so every
+  // layer drawn over it has to project through the same rotated extent.
+  const auto [extent_width, extent_height] =
+      rotated_world_bounds(world_width, world_height);
+  m_scale_x = static_cast<float>(width) / extent_width;
+  m_scale_y = static_cast<float>(height) / extent_height;
+  m_offset_x = extent_width * 0.5F;
+  m_offset_y = extent_height * 0.5F;
 
   m_image = QImage(width, height, QImage::Format_ARGB32);
   m_image.fill(Qt::transparent);
@@ -124,6 +129,14 @@ void CameraViewportLayer::draw_viewport_rect(QPainter& painter,
   brackets.moveTo(rect.right() - actual_corner, rect.bottom());
   brackets.lineTo(rect.right(), rect.bottom());
   brackets.lineTo(rect.right(), rect.bottom() - actual_corner);
+
+  // A thin full outline makes the frame readable at a glance; the brackets
+  // on top keep its corners crisp over busy terrain.
+  QPen outline(QColor(m_border_r, m_border_g, m_border_b, k_outline_alpha));
+  outline.setWidthF(1.0);
+  painter.setPen(outline);
+  painter.setBrush(Qt::NoBrush);
+  painter.drawRect(rect);
 
   QPen halo(QColor(25, 20, 15, 135));
   halo.setWidthF(static_cast<qreal>(m_border_width + k_halo_pen_offset));

@@ -1,7 +1,6 @@
 import QtQuick 2.15
 import StandardOfIron 1.0
 import StandardOfIron.Design 1.0 as Design
-import "ui_audio.js" as UiAudio
 
 Design.IronButton {
     id: control
@@ -9,6 +8,8 @@ Design.IronButton {
     property string button_style: "primary"
     property bool ui_sound_enabled: true
 
+    uiSound: ui_sound_enabled ? (checkable ? "toggle" : "click") : "none"
+    hoverSound: ui_sound_enabled
     tone: button_style === "primary" ? "primary" : button_style === "danger" ? "destructive" : "secondary"
 
     implicitHeight: button_style === "small" ? Math.max(Design.Metrics.controlHeight - Design.Metrics.space8, Design.Metrics.minTouchTarget) : Design.Metrics.controlHeight
@@ -19,18 +20,5 @@ Design.IronButton {
         hoverEnabled: true
         acceptedButtons: Qt.NoButton
         cursorShape: control.interactive ? Qt.PointingHandCursor : Qt.ArrowCursor
-        onContainsMouseChanged: {
-            if (containsMouse && control.interactive && control.ui_sound_enabled && typeof game !== "undefined")
-                UiAudio.play_hover(game.audio_system);
-        }
-    }
-
-    Connections {
-        function onClicked() {
-            if (control.interactive && control.ui_sound_enabled && typeof game !== "undefined")
-                UiAudio.play_click(game.audio_system);
-        }
-
-        target: control
     }
 }

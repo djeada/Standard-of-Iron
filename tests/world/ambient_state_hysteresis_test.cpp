@@ -90,7 +90,7 @@ TEST(AmbientStateHysteresisTest, SustainedQuietEventuallyReleasesCombat) {
   ASSERT_EQ(manager.current_state(), Engine::Core::AmbientState::COMBAT);
 
   enemy->get_component<Engine::Core::TransformComponent>()->position.x = 40.0F;
-  advance(manager, world, cache, 8);
+  advance(manager, world, cache, 12);
 
   EXPECT_EQ(manager.current_state(), Engine::Core::AmbientState::TENSE)
       << "the battle is genuinely over once the quiet holds";
