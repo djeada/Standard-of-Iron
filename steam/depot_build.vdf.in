@@ -1,0 +1,14 @@
+"DepotBuild"
+{
+	"DepotID" "${depot_id}"
+	"ContentRoot" "${content_root}"
+	"FileMapping"
+	{
+		"LocalPath" "*"
+		"DepotPath" "."
+		"Recursive" "1"
+	}
+	"FileExclusion" "*.pdb"
+	"FileExclusion" "*.dSYM"
+	"FileExclusion" "*.debug"
+}

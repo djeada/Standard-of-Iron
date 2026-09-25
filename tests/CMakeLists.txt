@@ -478,6 +478,7 @@ add_executable(
     render/pass/frame_pass_runner_test.cpp
     render/rig_dsl/barracks_rig_test.cpp
     render/bpat/bpat_format_test.cpp
+    render/bpat/asset_compression_test.cpp
     render/bpat/bpat_registry_test.cpp
     render/formation_locomotion_state_test.cpp
     render/humanoid/skeleton_test.cpp

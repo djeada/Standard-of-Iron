@@ -1,155 +1,116 @@
 # macOS Code Signing and Notarization
 
-macOS packaging is implemented in `.github/workflows/build-macos.yml`. The workflow is reusable and is called by both the weekly packaging job and the release workflow.
-
-The packaging path uses two different kinds of signing:
-
-1. an **ad-hoc signature** that is always applied after `macdeployqt` and asset copying so the modified application bundle can run on macOS; and
-2. an optional **Developer ID** signing and notarization script when release credentials are available.
-
-These are separate stages with different purposes.
+macOS packaging is implemented in `.github/workflows/build-macos.yml`. The
+workflow is reusable: the weekly packaging job and the release workflow both
+call it. Developer ID signing and notarization are done by
+`scripts/sign-and-notarize-macos.sh`, which has two modes, `app` and `dmg`.
 
 ## Packaging order
 
-The current workflow performs the relevant steps in this order:
+1. Build `standard_of_iron.app`. With `debug-symbols`, extract the dSYM and
+   strip the binary's debug map.
+2. Run `macdeployqt`.
+3. Copy assets and licences into the bundle.
+4. Ad-hoc sign the complete bundle (`codesign --force --deep --sign -`).
+5. Run the packaged release self-test and the OpenGL 3.3 fallback self-test.
+6. **`sign-and-notarize-macos.sh app`**:
+    1. Developer-ID-sign the nested code, then the executable and the bundle,
+       with the hardened runtime and the entitlements.
+    2. Notarize a ZIP of that exact bundle.
+    3. Staple the ticket to the bundle.
+    4. Verify with `codesign`, `stapler` and `spctl`.
+7. Verify the final bundle: `codesign --verify --deep --strict`, a renderer
+   self-test, and `--print-data-paths`.
+8. Create the DMG from that bundle with `hdiutil create`.
+9. **`sign-and-notarize-macos.sh dmg`**: sign, notarize and staple the DMG,
+   then run `spctl` on it.
+10. Pack the bundle as `…-macos-<arch>.app.tar.gz`. This is the Steam depot
+    payload.
+11. Mount the DMG, and require its app to match the build-directory bundle file
+    for file, including symlinks and modes. When signed, run `stapler` and
+    `spctl` on the mounted copy.
+12. Stage and verify the Steam depot from the tarball, then run `hdiutil verify`
+    and write the checksums.
 
-1. build `standard_of_iron.app`;
-2. run `macdeployqt`;
-3. copy assets and licences into the bundle;
-4. ad-hoc sign the complete bundle with `codesign --sign -`;
-5. run packaged renderer and OpenGL self-tests;
-6. create the DMG with `hdiutil create`;
-7. run `scripts/sign-and-notarize-macos.sh` with the app path and the already-created DMG;
-8. verify the DMG and write its SHA-256 checksum.
+Steps 6 and 9 run only when every credential is present. Without them, the
+ad-hoc bundle from step 4 is packaged, unless `require-signing` is set; then
+step 6 fails the build.
 
-The ad-hoc signature is therefore part of every package produced by `build-macos.yml`, regardless of whether Developer ID credentials are configured.
+The DMG therefore always contains the final app. It used to be created before
+Developer ID signing, and the ticket was stapled to that earlier image, so the
+signed app never reached the DMG. `ReleaseContract.MacDmgIsBuiltFromTheNotarizedApp`
+keeps the order.
 
-## Ad-hoc signing
+## Entitlements
 
-After deployment and asset copying, the workflow runs:
+`dist/macos/standard_of_iron.entitlements` is applied to the main executable
+and the bundle, and to nothing else:
 
-```sh
-codesign --force --deep --sign - "${APP_DIR}/${APP_NAME}.app"
-codesign --verify --deep --strict --verbose=2 "${APP_DIR}/${APP_NAME}.app"
-```
+| Entitlement                                              | Why                                                                       |
+| -------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `com.apple.security.cs.disable-library-validation`       | lets the hardened runtime load the Steam overlay dylib, which Valve signs |
+| `com.apple.security.cs.allow-dyld-environment-variables` | Steam injects the overlay through `DYLD_INSERT_LIBRARIES`                 |
 
-This reseals the bundle after `macdeployqt` and the asset-copy steps have changed its contents. The packaged self-tests run against that ad-hoc-signed bundle.
+`com.apple.security.app-sandbox` is deliberately absent, because Steam cannot
+launch or overlay a sandboxed app. The script fails if the signed app is
+missing either entitlement or has the sandbox one.
 
-An ad-hoc signature is not a Developer ID signature and does not provide notarization or a verified external publisher identity.
+## Credentials
 
-## Optional Developer ID signing
+| Secret                       | Used for                                                                                   |
+| ---------------------------- | ------------------------------------------------------------------------------------------ |
+| `MACOS_CERTIFICATE`          | base64 `.p12` containing the Developer ID Application certificate and private key          |
+| `MACOS_CERTIFICATE_PASSWORD` | password for the `.p12` export                                                             |
+| `MACOS_KEYCHAIN_PASSWORD`    | password for the temporary CI keychain; the script generates one with `uuidgen` when empty |
+| `APPLE_ID`                   | Apple ID used for notarization                                                             |
+| `APPLE_ID_PASSWORD`          | app-specific password for that Apple ID                                                    |
+| `APPLE_TEAM_ID`              | 10-character team ID                                                                       |
 
-The workflow calls:
+Signing is all or nothing. If any of the five required values is missing, the
+script signs nothing. A signed but unnotarized app is still blocked by
+Gatekeeper, and looks more finished than it is.
 
-```sh
-./scripts/sign-and-notarize-macos.sh \
-  "${APP_DIR}/${APP_NAME}.app" \
-  "${DMG_NAME}"
-```
+With `SOI_REQUIRE_SIGNING=true`, a missing credential is an error. The release
+workflow passes this from the repository variable of the same name. Steam
+uploads always demand a Developer-ID-signed, notarized bundle
+(`steam-upload.yml`, `verify-macos`).
 
-The script exits successfully without Developer ID signing when either of these values is missing:
+Encode the certificate on macOS with `base64 -i certificate.p12 | pbcopy`, or on
+GNU/Linux with `base64 -w 0 certificate.p12`.
 
-- `MACOS_CERTIFICATE`; or
-- `MACOS_CERTIFICATE_PASSWORD`.
+## Bundle identity
 
-If they are present, the script decodes the `.p12`, imports it into a temporary keychain, locates a **Developer ID Application** identity, signs nested frameworks and plugins, signs the main executable, signs the `.app` bundle, and verifies the resulting application signature.
+`CMakeLists.txt` sets the Info.plist values that Qt's template would otherwise
+fill with placeholders:
 
-### Signing credentials
+- `CFBundleIdentifier`: `io.github.djeada.standardofiron`
+- `CFBundleName`: `Standard of Iron`
+- the version strings: `PROJECT_VERSION`
 
-| Secret                       | Used for                                                                                                 |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `MACOS_CERTIFICATE`          | Base64-encoded `.p12` containing the Developer ID certificate and private key                            |
-| `MACOS_CERTIFICATE_PASSWORD` | Password for the `.p12` export                                                                           |
-| `MACOS_KEYCHAIN_PASSWORD`    | Password for the temporary CI keychain; the script generates one with `uuidgen` when this value is empty |
-
-Only the certificate and certificate password determine whether Developer ID signing runs.
-
-## Optional notarization
-
-Notarization requires all three of these values:
-
-- `APPLE_ID`;
-- `APPLE_ID_PASSWORD`; and
-- `APPLE_TEAM_ID`.
-
-When any of them is absent, `sign-and-notarize-macos.sh` still performs Developer ID signing if the certificate credentials are present, but sets `SKIP_NOTARIZATION=true` and skips the notary submission.
-
-When all notarization credentials are present, the script:
-
-1. creates a ZIP of the signed `.app` with `ditto`;
-2. submits the ZIP through `xcrun notarytool submit --wait`;
-3. fails if Apple does not return `status: Accepted`;
-4. retrieves the notary log on failure when it can recover a submission ID;
-5. runs `xcrun stapler staple` on the DMG path; and
-6. validates the stapled target with `xcrun stapler validate`.
-
-## Current DMG ordering constraint
-
-`build-macos.yml` creates the DMG **before** `sign-and-notarize-macos.sh` performs Developer ID signing on the `.app` in the build directory.
-
-A DMG created by `hdiutil create -srcfolder` contains the state of the source bundle at DMG creation time. Later changes to `build/bin/standard_of_iron.app` do not rewrite the copy already stored in the DMG.
-
-The repository therefore establishes these facts:
-
-- the app used for packaged self-tests is ad-hoc signed;
-- the build-directory app can receive a Developer ID signature after the DMG exists; and
-- the script attempts to staple and validate the existing DMG after notarizing a ZIP of the subsequently signed app.
-
-The workflow does **not** currently establish that the Developer-ID-signed copy of the app is the copy contained in the already-created DMG. Documentation and release checks should not claim that property unless the packaging order or verification path is changed to prove it.
-
-## Encoding the certificate
-
-On macOS:
-
-```sh
-base64 -i /path/to/certificate.p12 | pbcopy
-```
-
-On GNU/Linux:
-
-```sh
-base64 -w 0 /path/to/certificate.p12
-```
-
-Store the result as `MACOS_CERTIFICATE` and the export password as `MACOS_CERTIFICATE_PASSWORD`.
+Notarization, Gatekeeper and Steam key on the identifier, so never change it.
+The save directory does not follow `CFBundleName`, because
+`App::Core::apply_application_identity` pins the name `QStandardPaths` uses.
 
 ## Verification commands
 
-For an app bundle:
-
 ```sh
 codesign --verify --deep --strict --verbose=2 standard_of_iron.app
-```
-
-For Gatekeeper assessment:
-
-```sh
+codesign --display --entitlements - standard_of_iron.app
+xcrun stapler validate standard_of_iron.app
 spctl --assess --type execute --verbose standard_of_iron.app
+spctl --assess --type open --context context:primary-signature --verbose standard_of_iron-<version>-macos-<arch>.dmg
 ```
-
-For a stapled target:
-
-```sh
-xcrun stapler validate standard_of_iron-macos.dmg
-```
-
-The CI workflow also runs `hdiutil verify` on the DMG and writes a SHA-256 checksum after the optional signing/notarization step.
 
 ## Temporary credential handling
 
-`sign-and-notarize-macos.sh` writes the decoded certificate to `$RUNNER_TEMP/certificate.p12` and imports it into a temporary keychain. The certificate file is removed after application signing, and the temporary keychain is deleted at the end of the successful path or explicitly on notarization failure.
-
-The `.p12`, its password, Apple authentication values, and private key material are release credentials and must not be committed or printed in logs.
-
-## When this workflow runs
-
-`.github/workflows/build-macos.yml` is called by:
-
-- `.github/workflows/weekly.yml` for weekly package validation; and
-- `.github/workflows/release.yml` for release candidates.
-
-Both callers use `secrets: inherit`, so either path can exercise the optional Developer ID and notarization stages when repository credentials are configured.
+The script decodes the certificate into `$RUNNER_TEMP` and imports it into a
+temporary keychain. It deletes the file right after the import. An `EXIT` trap
+removes the keychain and restores the keychain search list on every path,
+including failures. The `.p12`, its password and the Apple credentials must
+never be committed or printed.
 
 ## Source of truth
 
-The package order is defined by `.github/workflows/build-macos.yml`. Developer ID signing and notarization behavior is defined by `scripts/sign-and-notarize-macos.sh`.
+`.github/workflows/build-macos.yml` defines the package order.
+`scripts/sign-and-notarize-macos.sh` defines the signing and notarization
+behaviour.

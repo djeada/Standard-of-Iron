@@ -10,13 +10,14 @@
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
-#include <fstream>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <utility>
 #include <vector>
 
+#include "animation/bpat/asset_compression.h"
 #include "animation/bpat/bpat_format.h"
 #include "animation/bpat/bpat_writer.h"
 #include "animation/clip_manifest.h"
@@ -39,6 +40,16 @@
 #include "render/wildlife/wolf_manifest.h"
 
 namespace {
+
+// Every baked cache ships as one zstd frame; see animation/bpat/asset_compression.h.
+auto write_asset(const std::filesystem::path& path, const std::string& bytes) -> bool {
+  std::string error;
+  if (!Render::Creature::Bpat::write_compressed_asset(path, bytes, error)) {
+    std::cerr << "[bpat_baker] " << error << "\n";
+    return false;
+  }
+  return true;
+}
 
 namespace bpat = Render::Creature::Bpat;
 namespace snapshot = Render::Creature::Snapshot;
@@ -198,16 +209,14 @@ bool bake_species_manifest(const std::filesystem::path& out_dir,
 
   std::filesystem::create_directories(out_dir);
   std::filesystem::path const out_path = out_dir / std::string(manifest.bpat_file_name);
-  std::ofstream out(out_path, std::ios::binary | std::ios::trunc);
-  if (!out) {
-    std::cerr << "[bpat_baker] cannot open " << out_path << " for writing\n";
-    return false;
-  }
+  std::ostringstream out(std::ios::binary);
   if (!writer.write(out)) {
     std::cerr << "[bpat_baker] write failed for " << out_path << "\n";
     return false;
   }
-  out.flush();
+  if (!write_asset(out_path, out.str())) {
+    return false;
+  }
   std::cout << "[bpat_baker] wrote " << out_path << " (" << writer.frame_total()
             << " frames, " << recipe.clips.size() << " clips, " << bind_palette.size()
             << " bones, " << recipe.sockets.size() << " sockets)\n";
@@ -230,12 +239,14 @@ bool bake_species_manifest(const std::filesystem::path& out_dir,
 
     rigged::RiggedMeshWriter const body_writer(lod, body.vertices, body.indices);
     auto const body_path = out_dir / rigged::asset_file_name(body_name, lod);
-    std::ofstream body_out(body_path, std::ios::binary | std::ios::trunc);
-    if (!body_out || !body_writer.write(body_out)) {
+    std::ostringstream body_out(std::ios::binary);
+    if (!body_writer.write(body_out)) {
       std::cerr << "[bpat_baker] write failed for " << body_path << "\n";
       return false;
     }
-    body_out.flush();
+    if (!write_asset(body_path, body_out.str())) {
+      return false;
+    }
     std::cout << "[bpat_baker] wrote " << body_path << " (" << body.vertices.size()
               << " verts, " << body.indices.size() / 3U << " tris)\n";
   }
@@ -289,16 +300,14 @@ bool bake_species_manifest(const std::filesystem::path& out_dir,
 
   std::filesystem::path const snapshot_out_path =
       out_dir / std::string(manifest.minimal_snapshot_file_name);
-  std::ofstream snapshot_out(snapshot_out_path, std::ios::binary | std::ios::trunc);
-  if (!snapshot_out) {
-    std::cerr << "[bpat_baker] cannot open " << snapshot_out_path << " for writing\n";
-    return false;
-  }
+  std::ostringstream snapshot_out(std::ios::binary);
   if (!snapshot_writer.write(snapshot_out)) {
     std::cerr << "[bpat_baker] write failed for " << snapshot_out_path << "\n";
     return false;
   }
-  snapshot_out.flush();
+  if (!write_asset(snapshot_out_path, snapshot_out.str())) {
+    return false;
+  }
   std::cout << "[bpat_baker] wrote " << snapshot_out_path << " ("
             << source.vertices.size() << " verts/frame, " << source.indices.size()
             << " indices, " << static_cast<int>(Render::Creature::CreatureLOD::Minimal)

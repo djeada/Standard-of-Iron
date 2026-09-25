@@ -1,0 +1,419 @@
+---
+name: Steam upload
+
+# Ships a release candidate to a password-protected Steam beta branch. The
+# Release pipeline has already built, tested and verified it.
+#
+#   resolve -> verify-macos | verify-windows -> stage + upload
+#
+# Nothing is rebuilt. The depots are unpacked from the exact packages a
+# successful Release run produced, so the Steam build and the GitHub release
+# candidate are the same bytes from the same commit.
+#
+# This workflow never sets a build live on the default/public branch;
+# scripts/steam-release.py refuses to render that. Promoting a BuildID to
+# customers is a manual step in Steamworks, done after that BuildID has been
+# installed and accepted from the beta branch. See steam/README.md.
+on:
+  workflow_dispatch:
+    inputs:
+      release-run-id:
+        description: Database ID of a successful Release workflow run (from its URL)
+        type: string
+        required: true
+      branch:
+        description: Steam beta branch to set the build live on (never default/public)
+        type: string
+        default: rc
+      platforms:
+        description: Depots to upload, comma separated
+        type: string
+        default: windows,linux
+      require-windows-signature:
+        description: Fail when the Windows executable is not Authenticode-signed
+        type: boolean
+        default: false
+      preview:
+        description: >-
+          Stage, verify and render the SteamPipe scripts, then run SteamCMD in
+          preview mode (no upload). Turn this off to upload for real.
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: steam-upload
+  cancel-in-progress: false
+
+jobs:
+  # ---------------------------------------------------------------------
+  # The run must be a Release run that passed. Only its own commit's
+  # scripts may stage it.
+  # ---------------------------------------------------------------------
+  resolve:
+    name: Resolve release candidate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      sha: ${{ steps.run.outputs.sha }}
+      ref: ${{ steps.run.outputs.ref }}
+    steps:
+      - name: Confirm the run is a successful Release run
+        id: run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ inputs.release-run-id }}
+          PLATFORMS: ${{ inputs.platforms }}
+        run: |
+          set -euo pipefail
+          [[ "${RUN_ID}" =~ ^[0-9]+$ ]] || { echo "::error::release-run-id must be numeric"; exit 1; }
+          for platform in ${PLATFORMS//,/ }; do
+            case "${platform}" in
+              windows|linux|macos) ;;
+              *) echo "::error::unknown platform '${platform}'"; exit 1 ;;
+            esac
+          done
+
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}" > run.json
+          path="$(jq -r .path run.json)"
+          conclusion="$(jq -r .conclusion run.json)"
+          sha="$(jq -r .head_sha run.json)"
+          ref="$(jq -r .head_branch run.json)"
+          echo "run ${RUN_ID}: ${path} on ${ref} @ ${sha} -> ${conclusion}"
+
+          if [ "${path}" != ".github/workflows/release.yml" ]; then
+            echo "::error::run ${RUN_ID} is ${path}, not the Release workflow"
+            exit 1
+          fi
+          if [ "${conclusion}" != "success" ]; then
+            echo "::error::run ${RUN_ID} concluded '${conclusion}'; only a passing release candidate may ship"
+            exit 1
+          fi
+          {
+            echo "sha=${sha}"
+            echo "ref=${ref}"
+          } >> "$GITHUB_OUTPUT"
+
+  # ---------------------------------------------------------------------
+  # Only a Mac can say whether a bundle is Developer-ID-signed, notarized,
+  # stapled and acceptable to Gatekeeper. An ad-hoc bundle stops here.
+  # ---------------------------------------------------------------------
+  verify-macos:
+    name: Verify macOS bundle
+    needs: resolve
+    if: contains(inputs.platforms, 'macos')
+    runs-on: macos-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: steam-macos-app
+          path: packages
+          run-id: ${{ inputs.release-run-id }}
+          github-token: ${{ github.token }}
+
+      - name: Gatekeeper, notarization and entitlements
+        working-directory: packages
+        run: |
+          set -euo pipefail
+          shasum -a 256 -c ./*.app.tar.gz.sha256
+          tar -xzf ./*.app.tar.gz
+          app="standard_of_iron.app"
+
+          codesign --verify --deep --strict --verbose=2 "${app}"
+          authority="$(codesign -dvv "${app}" 2>&1 | sed -n 's/^Authority=//p' | head -1)"
+          echo "Signed by: ${authority:-ad-hoc}"
+          case "${authority}" in
+            "Developer ID Application:"*) ;;
+            *) echo "::error::the macOS bundle is not Developer-ID-signed (${authority:-ad-hoc}); set SOI_REQUIRE_SIGNING and the Apple secrets, then re-run Release"; exit 1 ;;
+          esac
+          xcrun stapler validate "${app}"
+          spctl --assess --type execute --verbose=4 "${app}"
+
+          codesign --display --entitlements - "${app}" > entitlements.txt 2>&1
+          grep -q com.apple.security.cs.disable-library-validation entitlements.txt
+          grep -q com.apple.security.cs.allow-dyld-environment-variables entitlements.txt
+          if grep -q com.apple.security.app-sandbox entitlements.txt; then
+            echo "::error::the Steam build must not be sandboxed"
+            exit 1
+          fi
+
+          archs="$(lipo -archs "${app}/Contents/MacOS/standard_of_iron")"
+          "${app}/Contents/MacOS/standard_of_iron" --print-data-paths
+          {
+            echo "### macOS depot"
+            echo
+            echo "| | |"
+            echo "| --- | --- |"
+            echo "| Signed by | ${authority} |"
+            echo "| Architectures | \`${archs}\` |"
+            echo "| Notarization | stapled, Gatekeeper accepts |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # ---------------------------------------------------------------------
+  # Authenticode, checked on the executable exactly as it will be installed.
+  # ---------------------------------------------------------------------
+  verify-windows:
+    name: Verify Windows signature
+    needs: resolve
+    if: contains(inputs.platforms, 'windows')
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: release-windows
+          path: packages
+          run-id: ${{ inputs.release-run-id }}
+          github-token: ${{ github.token }}
+
+      - name: Authenticode on the installed executable
+        shell: pwsh
+        working-directory: packages
+        env:
+          REQUIRE_SIGNATURE: ${{ inputs.require-windows-signature }}
+        run: |
+          $zip = Get-ChildItem -Filter *.zip | Select-Object -First 1
+          $want = (Get-Content "$($zip.Name).sha256").Split(' ')[0]
+          $got = (Get-FileHash $zip.FullName -Algorithm SHA256).Hash.ToLower()
+          if ($want -ne $got) { Write-Error "checksum mismatch for $($zip.Name)"; exit 1 }
+
+          Expand-Archive $zip.FullName -DestinationPath payload
+          # Steam does not require Authenticode, so an unsigned executable
+          # ships (with a warning). A signature that is present but broken,
+          # tampered with or expired never does.
+          $signature = Get-AuthenticodeSignature payload\standard_of_iron.exe
+          Write-Host "Authenticode: $($signature.Status) $($signature.SignerCertificate.Subject)"
+          if ($signature.Status -eq 'NotSigned') {
+            if ($env:REQUIRE_SIGNATURE -eq 'true') {
+              Write-Error "standard_of_iron.exe is unsigned and require-windows-signature is set"
+              exit 1
+            }
+            Write-Warning "standard_of_iron.exe is not Authenticode-signed. Steam accepts this; players may see SmartScreen prompts outside Steam."
+            "### Windows depot`n`n| Authenticode | not signed |" |
+              Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+            exit 0
+          }
+          if ($signature.Status -ne 'Valid') {
+            Write-Error "standard_of_iron.exe signature is $($signature.Status)"
+            exit 1
+          }
+          "### Windows depot`n`n| Authenticode | $($signature.SignerCertificate.Subject) |" |
+            Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+
+  # ---------------------------------------------------------------------
+  # Stage, verify and upload in one job. The staged trees are the depots,
+  # and moving them between jobs would mean re-uploading gigabytes.
+  # ---------------------------------------------------------------------
+  upload:
+    name: Stage and upload
+    needs: [resolve, verify-macos, verify-windows]
+    if: >-
+      !cancelled() && needs.resolve.result == 'success' &&
+      needs.verify-macos.result != 'failure' &&
+      needs.verify-windows.result != 'failure'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    environment: steam
+    env:
+      RUN_ID: ${{ inputs.release-run-id }}
+      SHA: ${{ needs.resolve.outputs.sha }}
+      REF: ${{ needs.resolve.outputs.ref }}
+      PLATFORMS: ${{ inputs.platforms }}
+      BRANCH: ${{ inputs.branch }}
+      PREVIEW: ${{ inputs.preview }}
+      STAGE: ${{ github.workspace }}/steam-stage
+      STEAM_OUT: ${{ github.workspace }}/steam-build
+      RECORD: ${{ github.workspace }}/steam-record
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          ref: ${{ needs.resolve.outputs.sha }}
+          persist-credentials: false
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          path: packages
+          pattern: release-*
+          merge-multiple: true
+          run-id: ${{ inputs.release-run-id }}
+          github-token: ${{ github.token }}
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        if: contains(inputs.platforms, 'macos')
+        with:
+          name: steam-macos-app
+          path: packages
+          run-id: ${{ inputs.release-run-id }}
+          github-token: ${{ github.token }}
+
+      - name: Verify package checksums
+        working-directory: packages
+        run: |
+          set -euo pipefail
+          ls -la
+          sha256sum --check --strict ./*.sha256
+
+      - name: Stage and verify depots
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          mkdir -p "${RECORD}"
+          for platform in ${PLATFORMS//,/ }; do
+            case "${platform}" in
+              windows) package=(packages/*-win-x64.zip) ;;
+              linux) package=(packages/*-linux-x86_64.AppImage) ;;
+              macos) package=(packages/*.app.tar.gz) ;;
+            esac
+            if [ "${#package[@]}" -ne 1 ]; then
+              echo "::error::expected one ${platform} package, found ${#package[@]}"
+              exit 1
+            fi
+            python3 scripts/steam-release.py stage --platform "${platform}" \
+              --package "${package[0]}" --out "${STAGE}/${platform}"
+            # No --allow-unsigned: an ad-hoc Mac bundle fails here as well.
+            python3 scripts/steam-release.py verify --platform "${platform}" \
+              --stage "${STAGE}/${platform}" \
+              --manifest "${RECORD}/depot-${platform}.json"
+          done
+
+      - name: Render SteamPipe scripts
+        id: vdf
+        run: |
+          set -euo pipefail
+          version="$(bash scripts/release-version.sh)"
+          desc="Standard of Iron ${version} (${REF} @ ${SHA:0:12}, release run ${RUN_ID})"
+          preview=()
+          [ "${PREVIEW}" = "true" ] && preview=(--preview)
+          script="$(python3 scripts/steam-release.py vdf \
+            --stage-root "${STAGE}" --platforms "${PLATFORMS}" \
+            --branch "${BRANCH}" --desc "${desc}" --out "${STEAM_OUT}" "${preview[@]}")"
+          {
+            echo "script=${script}"
+            echo "desc=${desc}"
+            echo "app_id=$(jq -r .app_id steam/steam.json)"
+          } >> "$GITHUB_OUTPUT"
+          cat "${STEAM_OUT}"/*.vdf
+
+      # SteamPipe keeps chunk state in the build output directory. Carrying it
+      # between runs lets unchanged content skip re-upload.
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.STEAM_OUT }}/output
+          key: steampipe-${{ steps.vdf.outputs.app_id }}-${{ github.run_id }}
+          restore-keys: steampipe-${{ steps.vdf.outputs.app_id }}-
+
+      - name: Install SteamCMD
+        run: |
+          set -euo pipefail
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends lib32gcc-s1
+          mkdir -p "${RUNNER_TEMP}/steamcmd"
+          curl -fsSL --retry 3 \
+            https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz |
+            tar -xz -C "${RUNNER_TEMP}/steamcmd"
+
+      # Credentials live only in the protected "steam" environment:
+      #   STEAM_USERNAME     the dedicated builder account (Edit App Metadata +
+      #                      Publish App Changes To Steam for this app only)
+      #   STEAM_CONFIG_VDF   base64 of Steam/config/config.vdf from a machine
+      #                      where that account already passed Steam Guard
+      - name: Run SteamPipe
+        id: steampipe
+        env:
+          STEAM_USERNAME: ${{ secrets.STEAM_USERNAME }}
+          STEAM_CONFIG_VDF: ${{ secrets.STEAM_CONFIG_VDF }}
+          SCRIPT: ${{ steps.vdf.outputs.script }}
+        run: |
+          set -euo pipefail
+          if [ -z "${STEAM_USERNAME}" ] || [ -z "${STEAM_CONFIG_VDF}" ]; then
+            if [ "${PREVIEW}" = "true" ]; then
+              echo "::notice::No Steam credentials in the 'steam' environment; staged, verified and rendered only."
+              echo "uploaded=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "::error::STEAM_USERNAME / STEAM_CONFIG_VDF are not set in the 'steam' environment"
+            exit 1
+          fi
+
+          # SteamCMD unpacked from Valve's tarball treats its own directory as
+          # the Steam root; other installs use ~/Steam or ~/.steam/steam.
+          # Restore the saved login into all of them.
+          umask 077
+          config_dirs=("${RUNNER_TEMP}/steamcmd/config" "${HOME}/Steam/config" "${HOME}/.steam/steam/config")
+          for dir in "${config_dirs[@]}"; do
+            mkdir -p "${dir}"
+            echo "${STEAM_CONFIG_VDF}" | base64 --decode > "${dir}/config.vdf"
+          done
+
+          status=0
+          "${RUNNER_TEMP}/steamcmd/steamcmd.sh" \
+            +@ShutdownOnFailedCommand 1 +@NoPromptForPassword 1 \
+            +login "${STEAM_USERNAME}" \
+            +run_app_build "${SCRIPT}" \
+            +quit 2>&1 | tee "${RECORD}/steamcmd.log" || status=$?
+          for dir in "${config_dirs[@]}"; do rm -f "${dir}/config.vdf"; done
+          if [ "${status}" -ne 0 ]; then
+            echo "::error::SteamCMD failed with ${status}"
+            exit "${status}"
+          fi
+
+          if [ "${PREVIEW}" = "true" ]; then
+            echo "uploaded=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          build_id="$(python3 scripts/steam-release.py build-id "${RECORD}/steamcmd.log")"
+          {
+            echo "build_id=${build_id}"
+            echo "uploaded=true"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Record the release candidate
+        if: always() && steps.vdf.outcome == 'success'
+        env:
+          BUILD_ID: ${{ steps.steampipe.outputs.build_id }}
+          UPLOADED: ${{ steps.steampipe.outputs.uploaded }}
+          DESC: ${{ steps.vdf.outputs.desc }}
+        run: |
+          set -euo pipefail
+          cp "${STEAM_OUT}"/*.vdf "${RECORD}/"
+          cp -r "${STEAM_OUT}/output" "${RECORD}/steampipe-output" 2>/dev/null || true
+          jq -n \
+            --arg sha "${SHA}" --arg ref "${REF}" --arg run "${RUN_ID}" \
+            --arg branch "${BRANCH}" --arg platforms "${PLATFORMS}" \
+            --arg build_id "${BUILD_ID:-}" --arg uploaded "${UPLOADED:-false}" \
+            --arg desc "${DESC}" \
+            '{commit: $sha, ref: $ref, release_run: $run, steam_branch: $branch,
+              platforms: ($platforms | split(",")), build_id: $build_id,
+              uploaded: ($uploaded == "true"), description: $desc}' \
+            > "${RECORD}/steam-build.json"
+          cat "${RECORD}/steam-build.json"
+          {
+            echo "## Steam release candidate"
+            echo
+            echo "| | |"
+            echo "| --- | --- |"
+            echo "| Commit | \`${SHA}\` (${REF}) |"
+            echo "| Release run | ${RUN_ID} |"
+            echo "| Depots | ${PLATFORMS} |"
+            echo "| Branch | \`${BRANCH}\` |"
+            if [ "${UPLOADED:-false}" = "true" ]; then
+              echo "| **BuildID** | **${BUILD_ID}** |"
+            else
+              echo "| BuildID | none (preview) |"
+            fi
+            echo
+            echo "Promote only this BuildID, and only after it passes the acceptance"
+            echo "checklist in steam/README.md from the \`${BRANCH}\` branch."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always() && steps.vdf.outcome == 'success'
+        with:
+          name: steam-record-${{ github.run_id }}
+          path: ${{ env.RECORD }}
+          retention-days: 90

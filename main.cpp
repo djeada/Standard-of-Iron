@@ -16,6 +16,7 @@
 #include <QQuickWindow>
 #include <QSGRendererInterface>
 #include <QSettings>
+#include <QSize>
 #include <QSurfaceFormat>
 #include <QTemporaryDir>
 #include <QTextStream>
@@ -42,12 +43,15 @@
 #include <optional>
 #include <string_view>
 
+#include "app/core/app_identity.h"
 #include "app/core/benchmark_action_fixture.h"
 #include "app/core/film_action_dispatch.h"
 #include "app/core/film_recorder.h"
+#include "app/core/user_settings.h"
 #include "app/viewmodels/orders_view_model.h"
 #include "app/viewmodels/production_view_model.h"
 #include "game/core/presentation_coverage.h"
+#include "game/systems/save_load_service.h"
 #include "render/gl/context_requirements.h"
 #include "render/profiling/frame_swap_clock.h"
 #include "render/profiling/presentation_cycle.h"
@@ -202,11 +206,12 @@ auto validate_release_campaign_map_resources() -> bool {
 void capture_screenshot_and_exit(QQuickWindow* window,
                                  const QString& path,
                                  const QString& view,
-                                 int delay_ms) {
+                                 int delay_ms,
+                                 QSize size) {
 
   window->setWindowState(Qt::WindowNoState);
-  window->setWidth(1600);
-  window->setHeight(900);
+  window->setWidth(size.width());
+  window->setHeight(size.height());
 
   auto grab_and_exit = [window, path]() {
     const QImage frame = window->grabWindow();
@@ -430,7 +435,20 @@ static bool g_opengl_crashed = false;
 static LONG WINAPI crashHandler(EXCEPTION_POINTERS* exceptionInfo) {
   if (exceptionInfo->ExceptionRecord->ExceptionCode == EXCEPTION_ACCESS_VIOLATION) {
 
-    FILE* crash_log = fopen("opengl_crash.txt", "w");
+    // %TEMP%, never the working directory: under Steam that is the install
+    // folder, which may be read-only, and which Steam's file verification
+    // treats as its own.
+    char crash_log_path[MAX_PATH + 32] = {};
+    const DWORD temp_length = GetTempPathA(MAX_PATH, crash_log_path);
+    if (temp_length == 0 || temp_length > MAX_PATH) {
+      crash_log_path[0] = '\0';
+    }
+    strcat_s(
+        crash_log_path, sizeof(crash_log_path), "standard_of_iron_opengl_crash.txt");
+    FILE* crash_log = nullptr;
+    if (fopen_s(&crash_log, crash_log_path, "w") != 0) {
+      crash_log = nullptr;
+    }
     if (crash_log) {
       fprintf(crash_log, "OpenGL/Qt rendering crash detected (Access Violation)\n");
       fprintf(crash_log, "Try running with: run_debug_softwaregl.cmd\n");
@@ -453,7 +471,41 @@ static LONG WINAPI crashHandler(EXCEPTION_POINTERS* exceptionInfo) {
 }
 #endif
 
+auto data_paths_requested_from_argv(int argc, char* argv[]) -> bool {
+  for (int index = 1; index < argc; ++index) {
+    if (argv[index] != nullptr &&
+        std::string_view(argv[index]) == "--print-data-paths") {
+      return true;
+    }
+  }
+  return false;
+}
+
+// Prints where this build keeps player data, then exits without creating a
+// window. Steam Auto-Cloud root overrides and the release checklist are
+// written against these paths. Each platform's packaged build must therefore
+// be able to answer "where are my saves" without a display or a GL context.
+auto print_data_paths(int argc, char* argv[]) -> int {
+  QCoreApplication const app(argc, argv);
+  App::Core::apply_application_identity();
+
+  QSettings const settings = App::Core::UserSettings::open();
+  QTextStream out(stdout);
+  out << "SOI_APPLICATION_ID=" << QCoreApplication::applicationName() << '\n'
+      << "SOI_SAVES_DIR=" << Game::Systems::SaveLoadService::saves_directory() << '\n'
+      << "SOI_SAVE_DATABASE=" << Game::Systems::SaveLoadService::database_path() << '\n'
+      << "SOI_EXPORTS_DIR=" << Game::Systems::SaveLoadService::exports_directory()
+      << '\n'
+      << "SOI_SETTINGS_FILE=" << settings.fileName() << '\n';
+  out.flush();
+  return 0;
+}
+
 auto main(int argc, char* argv[]) -> int {
+
+  if (data_paths_requested_from_argv(argc, argv)) {
+    return print_data_paths(argc, argv);
+  }
 
 #if defined(Q_OS_MACOS)
   auto surface_gl_version = Render::GL::ContextRequirements::apple_maximum;
@@ -644,6 +696,7 @@ auto main(int argc, char* argv[]) -> int {
   QGuiApplication app(argc, argv);
   qInfo() << "QGuiApplication created successfully";
 
+  App::Core::apply_application_identity();
   app.setApplicationVersion(QStringLiteral(SOI_VERSION));
   qInfo() << "Game version:" << app.applicationVersion();
 
@@ -711,6 +764,7 @@ auto main(int argc, char* argv[]) -> int {
   QString screenshot_path;
   QString screenshot_view;
   int screenshot_delay_ms = 0;
+  QSize screenshot_size(1600, 900);
   double runtime_benchmark_seconds = 0.0;
   QString runtime_benchmark_output;
   QString runtime_action_fixture_path;
@@ -735,6 +789,8 @@ auto main(int argc, char* argv[]) -> int {
         "release-self-test",
         "Validate a fresh profile and campaign assets, start a real campaign "
         "mission, present frames, then exit.");
+    QCommandLineOption const print_data_paths_opt(
+        "print-data-paths", "Print where saves and settings are stored, then exit.");
     QCommandLineOption const graphics_preset_opt(
         "graphics-preset",
         "Override the complete graphics preset: low | medium | high | ultra.",
@@ -786,6 +842,11 @@ auto main(int argc, char* argv[]) -> int {
         "Milliseconds to let the surface settle before capturing.",
         "ms",
         "1200");
+    QCommandLineOption const screenshot_size_opt(
+        "screenshot-size",
+        "Window size for --screenshot, e.g. 1280x800 (Steam Deck) or 1920x1080.",
+        "WxH",
+        "1600x900");
     QCommandLineOption const game_speed_opt(
         "game-speed",
         "Start a directly launched mission at this battle speed (0.5, 1, 2, 3 or 4).",
@@ -828,6 +889,7 @@ auto main(int argc, char* argv[]) -> int {
     parser.addOption(quality_opt);
     parser.addOption(renderer_self_test_opt);
     parser.addOption(release_self_test_opt);
+    parser.addOption(print_data_paths_opt);
     parser.addOption(graphics_preset_opt);
     parser.addOption(campaign_mission_opt);
     parser.addOption(mission_file_opt);
@@ -841,6 +903,7 @@ auto main(int argc, char* argv[]) -> int {
     parser.addOption(screenshot_opt);
     parser.addOption(screenshot_view_opt);
     parser.addOption(screenshot_delay_opt);
+    parser.addOption(screenshot_size_opt);
     parser.addOption(benchmark_seconds_opt);
     parser.addOption(benchmark_output_opt);
     parser.addOption(action_fixture_opt);
@@ -863,6 +926,12 @@ auto main(int argc, char* argv[]) -> int {
       bool delay_ok = false;
       const int parsed_delay = parser.value(screenshot_delay_opt).toInt(&delay_ok);
       screenshot_delay_ms = (delay_ok && parsed_delay >= 0) ? parsed_delay : 1200;
+      const QStringList size =
+          parser.value(screenshot_size_opt).split(QLatin1Char('x'));
+      if (size.size() == 2) {
+        screenshot_size = QSize(std::clamp(size[0].toInt(), 320, 7680),
+                                std::clamp(size[1].toInt(), 240, 4320));
+      }
     }
 
     if (parser.isSet(graphics_preset_opt)) {
@@ -1156,7 +1225,7 @@ auto main(int argc, char* argv[]) -> int {
 
     if (!screenshot_path.isEmpty()) {
       capture_screenshot_and_exit(
-          window, screenshot_path, QString(), screenshot_delay_ms);
+          window, screenshot_path, QString(), screenshot_delay_ms, screenshot_size);
     }
     qInfo() << "Starting event loop (component gallery)...";
     const int gallery_result = QGuiApplication::exec();
@@ -1456,7 +1525,7 @@ auto main(int argc, char* argv[]) -> int {
 
   if (!screenshot_path.isEmpty()) {
     capture_screenshot_and_exit(
-        window, screenshot_path, screenshot_view, screenshot_delay_ms);
+        window, screenshot_path, screenshot_view, screenshot_delay_ms, screenshot_size);
   }
 
   if (runtime_benchmark_seconds > 0.0 &&

@@ -100,6 +100,11 @@ jobs:
           python scripts/validate_opengl_requirements.py
           python scripts/validate_qrc_resources.py
 
+      # The release and Steam tooling only runs on tag builds and manual
+      # uploads. Its unit tests are what stop a PR from breaking it unnoticed.
+      - name: Release tooling unit tests
+        run: python -m unittest discover -s tests/scripts
+
   portability:
     name: Portability policy (compiler-free)
     runs-on: ubuntu-24.04

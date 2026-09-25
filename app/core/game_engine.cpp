@@ -799,6 +799,14 @@ void GameEngine::film_step(float dt) {
     return;
   }
   simulate(dt);
+  // The simulation tick publishes every unit's presentation snapshot, but a
+  // film step that advances no tick -- the loading overlay's frames, or a
+  // paused step -- would otherwise hand units without one to the renderer.
+  // Its prepare workers then publish it themselves and block on the registry
+  // lock this thread holds for the whole render, so the film hangs.
+  if (m_world != nullptr && !m_runtime.loading) {
+    Engine::Core::publish_creature_presentations(*m_world);
+  }
   update_presentation(dt);
   drain_pending_save_capture();
   end_simulation_tick();
@@ -3754,6 +3762,13 @@ void GameEngine::sync_scatter_world_props() {
     return;
   }
 
+  // The scatter passes place world props through their bound world view, which
+  // the renderer only binds when it first submits the terrain. The match's
+  // first refresh runs before that, and without the terrain it would lay every
+  // authored tree, cart and statue at its grid coordinates -- off in the far
+  // corner of the map -- until the next prop change (a felled tree) re-placed
+  // them.
+  m_scatter->set_world_view(Render::WorldView::of(*m_session));
   m_scatter->refresh_runtime_world_props(terrain_service.world_props());
   m_last_world_props_revision = revision;
 }

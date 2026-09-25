@@ -2,6 +2,7 @@ add_library(
     animation_core
     STATIC
     rig/quadruped_gait.cpp
+    bpat/asset_compression.cpp
     bpat/bpat_reader.cpp
     bpat/bpat_registry.cpp
     bpat/bpat_writer.cpp
@@ -38,3 +39,5 @@ target_include_directories(animation_core PUBLIC ${CMAKE_SOURCE_DIR})
 
 # The baked-pose (BPAT) readers hand back QMatrix4x4 socket transforms.
 target_link_libraries(animation_core PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui)
+# The baked creature caches ship zstd-compressed (bpat/asset_compression.h).
+target_link_libraries(animation_core PRIVATE soi_zstd)

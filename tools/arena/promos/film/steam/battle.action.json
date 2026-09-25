@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "name": "steam_battle",
+  "loop_seconds": 0.0,
+  "required_coverage": ["selection_change"],
+  "actions": [
+    { "at": 0.05, "action": "camera_look_at", "argument": "45,-6" },
+    { "at": 0.06, "action": "camera_orbit", "argument": "35,45" },
+    { "at": 0.1, "action": "camera_zoom", "argument": "-4" },
+    { "at": 0.5, "action": "select_all" },
+    { "at": 0.8, "action": "attack_at_world", "argument": "0,-20" },
+    { "at": 1.4, "action": "select_area_world", "argument": "-2,5,22,15" }
+  ]
+}

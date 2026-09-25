@@ -1,0 +1,218 @@
+{
+  "version": 1,
+  "name": "steam_construction",
+  "loop_seconds": 0.0,
+  "required_coverage": ["build_panel"],
+  "actions": [
+    {
+      "at": 0.05,
+      "action": "camera_look_at",
+      "argument": "-32,-38"
+    },
+    {
+      "at": 0.06,
+      "action": "camera_zoom",
+      "argument": "-10"
+    },
+    {
+      "at": 0.6,
+      "action": "select_area_world",
+      "argument": "-53.0,-48.5,-47.0,-42.5"
+    },
+    {
+      "at": 0.77,
+      "action": "build_start_world",
+      "argument": "temple,-50.0,-51.0"
+    },
+    {
+      "at": 0.95,
+      "action": "build_place_world",
+      "argument": "-50.0,-51.0"
+    },
+    {
+      "at": 1.1,
+      "action": "select_area_world",
+      "argument": "-42.0,-49.5,-36.0,-43.5"
+    },
+    {
+      "at": 1.28,
+      "action": "build_start_world",
+      "argument": "defense_tower,-39.0,-52.0"
+    },
+    {
+      "at": 1.45,
+      "action": "build_place_world",
+      "argument": "-39.0,-52.0"
+    },
+    {
+      "at": 1.6,
+      "action": "select_area_world",
+      "argument": "-24.0,-49.5,-18.0,-43.5"
+    },
+    {
+      "at": 1.78,
+      "action": "build_start_world",
+      "argument": "marketplace,-21.0,-52.0"
+    },
+    {
+      "at": 1.95,
+      "action": "build_place_world",
+      "argument": "-21.0,-52.0"
+    },
+    {
+      "at": 2.1,
+      "action": "select_area_world",
+      "argument": "-14.0,-50.5,-8.0,-44.5"
+    },
+    {
+      "at": 2.27,
+      "action": "build_start_world",
+      "argument": "home,-11.0,-53.0"
+    },
+    {
+      "at": 2.45,
+      "action": "build_place_world",
+      "argument": "-11.0,-53.0"
+    },
+    {
+      "at": 2.6,
+      "action": "select_area_world",
+      "argument": "-57.0,-37.5,-51.0,-31.5"
+    },
+    {
+      "at": 2.77,
+      "action": "build_start_world",
+      "argument": "home,-54.0,-40.0"
+    },
+    {
+      "at": 2.95,
+      "action": "build_place_world",
+      "argument": "-54.0,-40.0"
+    },
+    {
+      "at": 3.1,
+      "action": "select_area_world",
+      "argument": "-46.0,-37.5,-40.0,-31.5"
+    },
+    {
+      "at": 3.27,
+      "action": "build_start_world",
+      "argument": "barracks,-43.0,-40.0"
+    },
+    {
+      "at": 3.45,
+      "action": "build_place_world",
+      "argument": "-43.0,-40.0"
+    },
+    {
+      "at": 3.6,
+      "action": "select_area_world",
+      "argument": "-24.0,-37.5,-18.0,-31.5"
+    },
+    {
+      "at": 3.77,
+      "action": "build_start_world",
+      "argument": "home,-21.0,-40.0"
+    },
+    {
+      "at": 3.95,
+      "action": "build_place_world",
+      "argument": "-21.0,-40.0"
+    },
+    {
+      "at": 4.1,
+      "action": "select_area_world",
+      "argument": "-13.0,-37.5,-7.0,-31.5"
+    },
+    {
+      "at": 4.27,
+      "action": "build_start_world",
+      "argument": "temple,-10.0,-40.0"
+    },
+    {
+      "at": 4.45,
+      "action": "build_place_world",
+      "argument": "-10.0,-40.0"
+    },
+    {
+      "at": 4.6,
+      "action": "select_area_world",
+      "argument": "-57.0,-31.0,-51.0,-25.0"
+    },
+    {
+      "at": 4.77,
+      "action": "build_start_world",
+      "argument": "home,-54.0,-23.0"
+    },
+    {
+      "at": 4.95,
+      "action": "build_place_world",
+      "argument": "-54.0,-23.0"
+    },
+    {
+      "at": 5.1,
+      "action": "select_area_world",
+      "argument": "-46.0,-31.0,-40.0,-25.0"
+    },
+    {
+      "at": 5.27,
+      "action": "build_start_world",
+      "argument": "marketplace,-43.0,-23.0"
+    },
+    {
+      "at": 5.45,
+      "action": "build_place_world",
+      "argument": "-43.0,-23.0"
+    },
+    {
+      "at": 5.6,
+      "action": "select_area_world",
+      "argument": "-23.0,-31.0,-17.0,-25.0"
+    },
+    {
+      "at": 5.77,
+      "action": "build_start_world",
+      "argument": "home,-20.0,-23.0"
+    },
+    {
+      "at": 5.95,
+      "action": "build_place_world",
+      "argument": "-20.0,-23.0"
+    },
+    {
+      "at": 6.1,
+      "action": "select_area_world",
+      "argument": "-13.0,-31.0,-7.0,-25.0"
+    },
+    {
+      "at": 6.27,
+      "action": "build_start_world",
+      "argument": "defense_tower,-10.0,-23.0"
+    },
+    {
+      "at": 6.45,
+      "action": "build_place_world",
+      "argument": "-10.0,-23.0"
+    },
+    {
+      "at": 6.9,
+      "action": "camera_look_at",
+      "argument": "-30,-34"
+    },
+    {
+      "at": 6.91,
+      "action": "camera_orbit",
+      "argument": "0.0,40.0"
+    },
+    {
+      "at": 7.3,
+      "action": "camera_zoom",
+      "argument": "2.0"
+    },
+    {
+      "at": 8.1,
+      "action": "camera_orbit",
+      "argument": "0,40.0"
+    }
+  ]
+}

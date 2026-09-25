@@ -19,6 +19,12 @@ on:
         description: Name of the uploaded artifact
         type: string
         default: linux-appimage
+      debug-symbols:
+        description: >-
+          Build with debug information, ship a stripped binary, and upload the
+          split .debug file as a private symbols-linux artifact.
+        type: boolean
+        default: false
     outputs:
       package:
         description: File name of the produced AppImage
@@ -102,8 +108,26 @@ jobs:
             -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
             -DDEFAULT_LANG=en \
             -DENABLE_GENERATED_CAMPAIGN_MAP_ASSETS=ON \
+            -DSOI_RELEASE_DEBUG_INFO=${{ inputs.debug-symbols && 'ON' || 'OFF' }} \
             -DBUILD_TESTING=OFF
           cmake --build build --config ${BUILD_TYPE} --target standard_of_iron
+
+      # The debug information leaves the binary before linuxdeploy copies it
+      # into the AppDir. The GNU debuglink and the build ID are what let a
+      # debugger find the private .debug file again for a crash report.
+      - name: Split debug symbols
+        if: inputs.debug-symbols
+        run: |
+          set -euo pipefail
+          binary="${APP_DIR}/${APP_NAME}"
+          mkdir -p symbols-linux
+          objcopy --only-keep-debug "${binary}" "symbols-linux/${APP_NAME}.debug"
+          objcopy --strip-debug --strip-unneeded \
+            --add-gnu-debuglink="symbols-linux/${APP_NAME}.debug" "${binary}"
+          build_id="$(readelf -n "${binary}" | awk '/Build ID/ {print $3}')"
+          test -n "${build_id}"
+          echo "${build_id}" > symbols-linux/BUILD_ID
+          echo "GNU build ID ${build_id}"
 
       - name: Validate OpenGL requirements
         run: python3 scripts/validate_opengl_requirements.py
@@ -162,6 +186,34 @@ jobs:
           # is simply mute. The self-test reports on it; fail the release here.
           grep -q "SOI_AUDIO_SELF_TEST: PASS" renderer_self_test.log
 
+      # Saves live under QStandardPaths::AppDataLocation, and Steam Auto-Cloud
+      # is configured against that exact directory. Ask the packaged build
+      # where it is, rather than trusting that it has not moved.
+      - name: Report the save location
+        env:
+          APPIMAGE: ${{ steps.package.outputs.name }}
+        run: |
+          set -euo pipefail
+          "./${APPIMAGE}" --print-data-paths | tee data_paths.txt
+          expected="${XDG_DATA_HOME:-${HOME}/.local/share}/standard_of_iron/saves"
+          grep -qx "SOI_SAVES_DIR=${expected}" data_paths.txt
+          echo "| Save directory | \`$(sed -n 's/^SOI_SAVES_DIR=//p' data_paths.txt)\` |" \
+            >> "$GITHUB_STEP_SUMMARY"
+
+      # Steam installs the unpacked AppDir, not the AppImage. Stage it the way
+      # the Steam upload will. If anything a depot needs is missing, or
+      # anything private leaked in, this fails on the build that produced it.
+      - name: Verify the Steam depot this package would produce
+        env:
+          APPIMAGE: ${{ steps.package.outputs.name }}
+        run: |
+          set -euo pipefail
+          python3 scripts/steam-release.py stage --platform linux \
+            --package "${APPIMAGE}" --out "${RUNNER_TEMP}/steam-stage/linux"
+          python3 scripts/steam-release.py verify --platform linux \
+            --stage "${RUNNER_TEMP}/steam-stage/linux"
+          rm -rf "${RUNNER_TEMP}/steam-stage"
+
       - name: Verify package integrity
         env:
           APPIMAGE: ${{ steps.package.outputs.name }}
@@ -185,4 +237,12 @@ jobs:
             ${{ steps.package.outputs.name }}
             ${{ steps.package.outputs.name }}.sha256
           retention-days: 14
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: inputs.debug-symbols
+        with:
+          name: symbols-linux
+          path: symbols-linux/
+          retention-days: 90
           if-no-files-found: error

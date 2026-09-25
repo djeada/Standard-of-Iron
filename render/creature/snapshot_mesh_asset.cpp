@@ -11,6 +11,7 @@
 #include <unordered_map>
 #include <utility>
 
+#include "animation/bpat/asset_compression.h"
 #include "mesh_asset_io.h"
 
 namespace Render::Creature::Snapshot {
@@ -25,14 +26,13 @@ auto SnapshotMeshBlob::from_bytes(std::vector<std::uint8_t> bytes) -> SnapshotMe
 }
 
 auto SnapshotMeshBlob::from_file(const std::string& path) -> SnapshotMeshBlob {
-  std::ifstream in(path, std::ios::binary);
-  if (!in) {
+  std::vector<std::uint8_t> data;
+  std::string error;
+  if (!Render::Creature::Bpat::read_asset_file(path, data, error)) {
     SnapshotMeshBlob blob{};
-    blob.m_last_error = "failed to open " + path;
+    blob.m_last_error = error;
     return blob;
   }
-  std::vector<std::uint8_t> data((std::istreambuf_iterator<char>(in)),
-                                 std::istreambuf_iterator<char>());
   return from_bytes(std::move(data));
 }
 

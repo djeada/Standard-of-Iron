@@ -1166,6 +1166,12 @@ auto publish_creature_presentation(Entity* entity,
   return publish_creature_presentation_entity(entity, world);
 }
 
+void publish_creature_presentations(World& world) {
+  if (world.presentation_enabled()) {
+    publish_creature_presentation_frame(world);
+  }
+}
+
 auto World::HandleTable::bind(EntityID entity_id, Registry* registry) -> Entity* {
   const std::uint32_t index = Handle::index_of(entity_id);
   const std::size_t page_index = index / k_page_size;

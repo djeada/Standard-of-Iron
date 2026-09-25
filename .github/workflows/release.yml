@@ -44,6 +44,7 @@ jobs:
     with:
       build-type: Release
       artifact-name: release-linux
+      debug-symbols: true
 
   build-macos:
     name: Build macOS
@@ -52,6 +53,14 @@ jobs:
     with:
       build-type: Release
       artifact-name: release-macos
+      # Not release-*: the verify and publish jobs collect release-* as the
+      # GitHub download set, and the Steam bundle is not one of those.
+      bundle-artifact-name: steam-macos-app
+      debug-symbols: true
+      # Once the Apple and Authenticode secrets exist, set the repository
+      # variable SOI_REQUIRE_SIGNING=true. From then on, a release without
+      # them fails instead of publishing ad-hoc or unsigned builds.
+      require-signing: ${{ vars.SOI_REQUIRE_SIGNING == 'true' }}
     secrets: inherit
 
   build-windows:
@@ -61,6 +70,8 @@ jobs:
     with:
       build-type: Release
       artifact-name: release-windows
+      debug-symbols: true
+      require-signing: ${{ vars.SOI_REQUIRE_SIGNING == 'true' }}
     secrets: inherit
 
   # ---------------------------------------------------------------------

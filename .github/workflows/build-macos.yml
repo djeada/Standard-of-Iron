@@ -17,6 +17,26 @@ on:
         description: Name of the uploaded artifact
         type: string
         default: macos-dmg
+      bundle-artifact-name:
+        description: >-
+          When set, upload the final .app as a tarball under this name: the
+          payload of the Steam macOS depot. Kept separate from artifact-name so
+          the release's package set stays one DMG. Empty skips the upload.
+        type: string
+        default: ""
+      require-signing:
+        description: >-
+          Fail instead of falling back to ad-hoc signing when Developer ID or
+          notarization credentials are missing. Steam release candidates set
+          this.
+        type: boolean
+        default: false
+      debug-symbols:
+        description: >-
+          Build with debug information and upload the dSYM as a private
+          symbols-macos artifact. It never enters the app or the DMG.
+        type: boolean
+        default: false
     outputs:
       package:
         description: File name of the produced DMG
@@ -151,10 +171,24 @@ jobs:
             -DDEFAULT_LANG=en \
             -DCMAKE_OSX_ARCHITECTURES="${SOI_MACOS_ARCHS}" \
             -DENABLE_GENERATED_CAMPAIGN_MAP_ASSETS=ON \
+            -DSOI_RELEASE_DEBUG_INFO=${{ inputs.debug-symbols && 'ON' || 'OFF' }} \
             -DBUILD_TESTING=OFF
 
       - name: Build
         run: cmake --build build --config ${BUILD_TYPE} --target standard_of_iron
+
+      # The dSYM is gathered from the freshly linked binary. The binary's debug
+      # map is then stripped, before anything is deployed or signed.
+      - name: Extract the dSYM
+        if: inputs.debug-symbols
+        run: |
+          set -euo pipefail
+          binary="${APP_DIR}/${APP_NAME}.app/Contents/MacOS/${APP_NAME}"
+          mkdir -p symbols-macos
+          dsymutil "${binary}" -o "symbols-macos/${APP_NAME}.dSYM"
+          dwarfdump --uuid "symbols-macos/${APP_NAME}.dSYM" | tee symbols-macos/UUIDS
+          test -s symbols-macos/UUIDS
+          strip -S "${binary}"
 
       # A universal build that silently lost a slice is indistinguishable from
       # a working one until an Apple Silicon player reports that it will not
@@ -274,15 +308,17 @@ jobs:
           "${binary}" --renderer-self-test 2>&1 | tee renderer_fallback.log
           grep -q "SOI_RENDERER_SELF_TEST: PASS" renderer_fallback.log
 
-      - name: Create DMG
-        id: package
-        run: |
-          set -euo pipefail
-          hdiutil create -volname "Standard of Iron" \
-            -srcfolder "${APP_DIR}/${APP_NAME}.app" -ov -format UDZO "${DMG_NAME}"
-          echo "name=${DMG_NAME}" >> "$GITHUB_OUTPUT"
-
-      - name: Sign and notarize (optional)
+      # ---- Production signing, in the only order that proves anything ----
+      #
+      #   sign + notarize + staple the app  ->  verify and re-test that app
+      #   -> DMG from that app  ->  sign + notarize + staple the DMG
+      #   -> prove the DMG holds the same bytes as the Steam bundle
+      #
+      # Without credentials (weekly builds, forks), the ad-hoc bundle above is
+      # packaged as before. The exception is require-signing: then the build
+      # fails rather than ship a Mac build that Gatekeeper will block.
+      - name: Sign, notarize and staple the app
+        id: sign-app
         env:
           MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
           MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
@@ -290,7 +326,98 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: ./scripts/sign-and-notarize-macos.sh "${APP_DIR}/${APP_NAME}.app" "${DMG_NAME}"
+          SOI_REQUIRE_SIGNING: ${{ inputs.require-signing }}
+        run: ./scripts/sign-and-notarize-macos.sh app "${APP_DIR}/${APP_NAME}.app"
+
+      # The hardened runtime and the new signature change how the loader
+      # treats every framework and plugin. So the bundle that will actually
+      # ship renders a frame again, and reports where it keeps saves.
+      - name: Verify the final app bundle
+        run: |
+          set -euo pipefail
+          bundle="${APP_DIR}/${APP_NAME}.app"
+          binary="${bundle}/Contents/MacOS/${APP_NAME}"
+          codesign --verify --deep --strict --verbose=2 "${bundle}"
+          signer="$(codesign -dvv "${bundle}" 2>&1 | sed -n 's/^Authority=//p' | head -1)"
+          echo "Signed by: ${signer:-ad-hoc}"
+
+          "${binary}" --renderer-self-test 2>&1 | tee final_self_test.log
+          grep -q "SOI_RENDERER_SELF_TEST: PASS" final_self_test.log
+
+          "${binary}" --print-data-paths | tee data_paths.txt
+          grep -qx "SOI_SAVES_DIR=${HOME}/Library/Application Support/standard_of_iron/saves" \
+            data_paths.txt
+
+          identifier="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "${bundle}/Contents/Info.plist")"
+          {
+            echo "| Bundle identifier | \`${identifier}\` |"
+            echo "| Signed by | ${signer:-ad-hoc (no Developer ID credentials)} |"
+            echo "| Notarized and stapled | ${{ steps.sign-app.outputs.signed == 'true' && 'yes' || 'no' }} |"
+            echo "| Save directory | \`$(sed -n 's/^SOI_SAVES_DIR=//p' data_paths.txt)\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Create DMG from the final app
+        id: package
+        run: |
+          set -euo pipefail
+          hdiutil create -volname "Standard of Iron" \
+            -srcfolder "${APP_DIR}/${APP_NAME}.app" -ov -format UDZO "${DMG_NAME}"
+          echo "name=${DMG_NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Sign, notarize and staple the DMG
+        if: steps.sign-app.outputs.signed == 'true'
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+          MACOS_KEYCHAIN_PASSWORD: ${{ secrets.MACOS_KEYCHAIN_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          SOI_REQUIRE_SIGNING: ${{ inputs.require-signing }}
+        run: ./scripts/sign-and-notarize-macos.sh dmg "${DMG_NAME}"
+
+      # The Steam depot ships this tarball's app, and GitHub ships the DMG's.
+      # They must be the same app, byte for byte and symlink for symlink.
+      - name: Package the Steam app bundle
+        run: |
+          set -euo pipefail
+          bundle_tar="standard_of_iron-${SOI_VERSION}-macos-${SOI_ARCH_TAG}.app.tar.gz"
+          # COPYFILE_DISABLE keeps AppleDouble ._ files out; codesign rejects
+          # a bundle that has grown them.
+          COPYFILE_DISABLE=1 tar -czf "${bundle_tar}" -C "${APP_DIR}" "${APP_NAME}.app"
+          shasum -a 256 "${bundle_tar}" | tee "${bundle_tar}.sha256"
+          echo "BUNDLE_TAR=${bundle_tar}" >> "$GITHUB_ENV"
+
+      - name: Prove the DMG holds the Steam bundle
+        run: |
+          set -euo pipefail
+          mount="$(mktemp -d)"
+          hdiutil attach "${DMG_NAME}" -readonly -nobrowse -mountpoint "${mount}"
+          trap 'hdiutil detach "${mount}" -force >/dev/null || true' EXIT
+          python3 scripts/steam-release.py manifest "${APP_DIR}/${APP_NAME}.app" > built.json
+          python3 scripts/steam-release.py manifest "${mount}/${APP_NAME}.app" > in_dmg.json
+          cmp built.json in_dmg.json
+          codesign --verify --deep --strict "${mount}/${APP_NAME}.app"
+          if [ "${{ steps.sign-app.outputs.signed }}" = "true" ]; then
+            xcrun stapler validate "${mount}/${APP_NAME}.app"
+            spctl --assess --type execute --verbose "${mount}/${APP_NAME}.app"
+          fi
+          echo "The DMG's app is the signed, verified bundle."
+
+      - name: Verify the Steam depot this bundle would produce
+        run: |
+          set -euo pipefail
+          allow=()
+          if [ "${{ steps.sign-app.outputs.signed }}" != "true" ]; then
+            allow=(--allow-unsigned)
+          fi
+          stage="${RUNNER_TEMP}/steam-stage/macos"
+          python3 scripts/steam-release.py stage --platform macos \
+            --package "${BUNDLE_TAR}" --out "${stage}"
+          python3 scripts/steam-release.py verify --platform macos \
+            --stage "${stage}" "${allow[@]}"
+          codesign --verify --deep --strict "${stage}/${APP_NAME}.app"
+          rm -rf "${RUNNER_TEMP}/steam-stage"
 
       - name: Verify package integrity
         run: |
@@ -310,4 +437,22 @@ jobs:
             ${{ env.DMG_NAME }}
             ${{ env.DMG_NAME }}.sha256
           retention-days: 14
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: inputs.upload-artifacts && inputs.bundle-artifact-name != ''
+        with:
+          name: ${{ inputs.bundle-artifact-name }}
+          path: |
+            ${{ env.BUNDLE_TAR }}
+            ${{ env.BUNDLE_TAR }}.sha256
+          retention-days: 14
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: inputs.debug-symbols
+        with:
+          name: symbols-macos
+          path: symbols-macos/
+          retention-days: 90
           if-no-files-found: error
