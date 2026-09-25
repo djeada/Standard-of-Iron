@@ -10,6 +10,23 @@ QtObject {
             audioSystem.play_cue(cue_id);
     }
 
+    function play(kind) {
+        if (kind === "none")
+            return;
+        if (kind === "back")
+            back();
+        else if (kind === "confirm")
+            confirm();
+        else if (kind === "toggle")
+            toggle();
+        else
+            activate();
+    }
+
+    function confirm() {
+        cue("ui.confirm");
+    }
+
     function hover() {
         cue("ui.hover");
     }

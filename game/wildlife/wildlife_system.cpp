@@ -935,17 +935,31 @@ public:
     }
   }
 
-  void note(NatureEvent event) override {
+  void note(const NatureContext& ctx, NatureEvent event) override {
+    const char* cue_id = nullptr;
     switch (event) {
     case NatureEvent::Flee:
       m_owner.m_stats.flee_events += 1U;
+      if (ctx.wildlife != nullptr &&
+          ctx.wildlife->species == Game::Wildlife::Species::Sheep) {
+        cue_id = Game::Audio::Cue::k_wildlife_sheep_alarm;
+      }
       break;
     case NatureEvent::Hunt:
       m_owner.m_stats.hunt_events += 1U;
-      Engine::Core::EventManager::instance().publish(
-          Engine::Core::AudioCueEvent(Game::Audio::Cue::k_wildlife_wolf_hunt));
+      cue_id = Game::Audio::Cue::k_wildlife_wolf_hunt;
       break;
     }
+    if (cue_id == nullptr) {
+      return;
+    }
+    Engine::Core::AudioCueEvent cue(cue_id);
+    const auto* transform =
+        (ctx.world != nullptr && ctx.entity != nullptr)
+            ? ctx.world->try_get<Engine::Core::TransformComponent>(ctx.entity->get_id())
+            : nullptr;
+    cue.at(ctx.x, transform != nullptr ? transform->position.y : 0.0F, ctx.z);
+    Engine::Core::EventManager::instance().publish(cue);
   }
 
   auto pick_open_point(std::uint32_t& rng,

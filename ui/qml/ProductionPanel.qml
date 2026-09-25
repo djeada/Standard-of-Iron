@@ -807,15 +807,10 @@ Rectangle {
                             hoverEnabled: true
                             onClicked: {
                                 if (parent.is_enabled) {
-                                    Design.UiSound.activate();
                                     productionPanel.recruit_unit("civilian");
                                 } else {
                                     Design.UiSound.warning();
                                 }
-                            }
-                            onContainsMouseChanged: {
-                                if (containsMouse && parent.is_enabled)
-                                    Design.UiSound.hover();
                             }
                             cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                             ToolTip.visible: containsMouse
@@ -1214,15 +1209,10 @@ Rectangle {
                                 hoverEnabled: true
                                 onClicked: {
                                     if (parent.is_enabled) {
-                                        Design.UiSound.activate();
                                         productionPanel.builder_construction("catapult");
                                     } else {
                                         Design.UiSound.warning();
                                     }
-                                }
-                                onContainsMouseChanged: {
-                                    if (containsMouse && parent.is_enabled)
-                                        Design.UiSound.hover();
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -1384,15 +1374,10 @@ Rectangle {
                                 hoverEnabled: true
                                 onClicked: {
                                     if (parent.is_enabled) {
-                                        Design.UiSound.activate();
                                         productionPanel.builder_construction("ballista");
                                     } else {
                                         Design.UiSound.warning();
                                     }
-                                }
-                                onContainsMouseChanged: {
-                                    if (containsMouse && parent.is_enabled)
-                                        Design.UiSound.hover();
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -1554,15 +1539,10 @@ Rectangle {
                                 hoverEnabled: true
                                 onClicked: {
                                     if (parent.is_enabled) {
-                                        Design.UiSound.activate();
                                         productionPanel.builder_construction("defense_tower");
                                     } else {
                                         Design.UiSound.warning();
                                     }
-                                }
-                                onContainsMouseChanged: {
-                                    if (containsMouse && parent.is_enabled)
-                                        Design.UiSound.hover();
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -1724,15 +1704,10 @@ Rectangle {
                                 hoverEnabled: true
                                 onClicked: {
                                     if (parent.is_enabled) {
-                                        Design.UiSound.activate();
                                         productionPanel.builder_construction("home");
                                     } else {
                                         Design.UiSound.warning();
                                     }
-                                }
-                                onContainsMouseChanged: {
-                                    if (containsMouse && parent.is_enabled)
-                                        Design.UiSound.hover();
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -1894,15 +1869,10 @@ Rectangle {
                                 hoverEnabled: true
                                 onClicked: {
                                     if (parent.is_enabled) {
-                                        Design.UiSound.activate();
                                         productionPanel.builder_construction("farm");
                                     } else {
                                         Design.UiSound.warning();
                                     }
-                                }
-                                onContainsMouseChanged: {
-                                    if (containsMouse && parent.is_enabled)
-                                        Design.UiSound.hover();
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -2064,15 +2034,10 @@ Rectangle {
                                 hoverEnabled: true
                                 onClicked: {
                                     if (parent.is_enabled) {
-                                        Design.UiSound.activate();
                                         productionPanel.builder_construction("wall_segment");
                                     } else {
                                         Design.UiSound.warning();
                                     }
-                                }
-                                onContainsMouseChanged: {
-                                    if (containsMouse && parent.is_enabled)
-                                        Design.UiSound.hover();
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -2234,15 +2199,10 @@ Rectangle {
                                 hoverEnabled: true
                                 onClicked: {
                                     if (parent.is_enabled) {
-                                        Design.UiSound.activate();
                                         productionPanel.builder_construction("wall_gate");
                                     } else {
                                         Design.UiSound.warning();
                                     }
-                                }
-                                onContainsMouseChanged: {
-                                    if (containsMouse && parent.is_enabled)
-                                        Design.UiSound.hover();
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -2404,15 +2364,10 @@ Rectangle {
                                 hoverEnabled: true
                                 onClicked: {
                                     if (parent.is_enabled) {
-                                        Design.UiSound.activate();
                                         productionPanel.builder_construction("marketplace");
                                     } else {
                                         Design.UiSound.warning();
                                     }
-                                }
-                                onContainsMouseChanged: {
-                                    if (containsMouse && parent.is_enabled)
-                                        Design.UiSound.hover();
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -2574,15 +2529,10 @@ Rectangle {
                                 hoverEnabled: true
                                 onClicked: {
                                     if (parent.is_enabled) {
-                                        Design.UiSound.activate();
                                         productionPanel.builder_construction("temple");
                                     } else {
                                         Design.UiSound.warning();
                                     }
-                                }
-                                onContainsMouseChanged: {
-                                    if (containsMouse && parent.is_enabled)
-                                        Design.UiSound.hover();
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse

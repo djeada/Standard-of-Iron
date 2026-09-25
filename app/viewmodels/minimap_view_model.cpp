@@ -44,6 +44,10 @@ auto style_for(MinimapAlert alert) -> AlertStyle {
     return {"capture_finished", 0, 3.6F};
   case MinimapAlert::ShrineStirred:
     return {"shrine", 0, 3.6F};
+  case MinimapAlert::UnitLost:
+    return {"unit_lost", 3000, 3.0F};
+  case MinimapAlert::StructureLost:
+    return {"structure_lost", 0, 4.0F};
   }
   return {"troops_attacked", 2500, 2.0F};
 }
@@ -99,11 +103,15 @@ auto MinimapViewModel::world_at(qreal mx,
   const float py =
       (static_cast<float>(my) / static_cast<float>(minimap_height)) * image_height;
 
+  // The image spans the rotated extent of the map, the same projection the
+  // terrain and every overlay use.
+  const auto [extent_width, extent_height] = Game::Map::Minimap::rotated_world_bounds(
+      minimap->get_world_width(), minimap->get_world_height());
   const auto [world_x, world_z] =
       Game::Map::Minimap::pixel_to_world(px,
                                          py,
-                                         minimap->get_world_width(),
-                                         minimap->get_world_height(),
+                                         extent_width,
+                                         extent_height,
                                          image_width,
                                          image_height,
                                          minimap->get_tile_size());
@@ -153,12 +161,11 @@ void MinimapViewModel::note_order_marker(const App::Core::OrderMarker& marker) {
     return;
   }
 
-  const auto [nx, ny] = Game::Map::Minimap::world_to_pixel(marker.position.x(),
-                                                           marker.position.z(),
-                                                           minimap->get_world_width(),
-                                                           minimap->get_world_height(),
-                                                           1.0F,
-                                                           1.0F);
+  float nx = 0.0F;
+  float ny = 0.0F;
+  if (!minimap->world_to_normalized(marker.position.x(), marker.position.z(), nx, ny)) {
+    return;
+  }
 
   const QVector3D color = App::Core::order_marker_color(marker.kind, marker.rejected);
   emit order_ping(std::clamp(nx, 0.0F, 1.0F),

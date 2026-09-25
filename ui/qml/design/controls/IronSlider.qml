@@ -20,7 +20,8 @@ Slider {
 
     Connections {
         function onPressedChanged() {
-            Design.UiSound.toggle();
+            if (control.pressed)
+                Design.UiSound.toggle();
         }
 
         target: control

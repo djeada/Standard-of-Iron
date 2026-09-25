@@ -4,7 +4,6 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.3
 import StandardOfIron 1.0
 import StandardOfIron.Design 1.0 as Design
-import "ui_audio.js" as UiAudio
 import StandardOfIron.Core 1.0
 
 Item {
@@ -113,6 +112,7 @@ Item {
                 }
 
                 StyledButton {
+                    uiSound: "none"
                     text: qsTr("Cancel")
                     button_style: "secondary"
                     onClicked: root.cancelled()
@@ -355,10 +355,8 @@ Item {
         primaryAction: qsTr("Replace")
         secondaryAction: qsTr("Keep it")
         onPrimaryActivated: {
-            UiAudio.play_confirm(typeof game !== 'undefined' ? game.audio_system : null);
             root.save_requested(confirmOverwriteDialog.slot_name);
         }
-        onSecondaryActivated: UiAudio.play_back(typeof game !== 'undefined' ? game.audio_system : null)
     }
 
     Design.IronDialog {
@@ -374,10 +372,8 @@ Item {
         primaryAction: qsTr("Delete")
         secondaryAction: qsTr("Keep it")
         onPrimaryActivated: {
-            UiAudio.play_confirm(typeof game !== 'undefined' ? game.audio_system : null);
             if (root.saves && root.saves.delete_save_slot)
                 root.saves.delete_save_slot(confirmDeleteDialog.slot_name);
         }
-        onSecondaryActivated: UiAudio.play_back(typeof game !== 'undefined' ? game.audio_system : null)
     }
 }

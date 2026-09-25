@@ -4,7 +4,11 @@
 
 #include "app/core/game_engine.h"
 #include "game/core/component_combat.h"
+#include "game/core/ownership_constants.h"
 #include "game/core/world.h"
+#include "game/session/session_context.h"
+#include "game/systems/owner_registry.h"
+#include "game/units/spawn_type.h"
 
 AmbientStateManager::AmbientStateManager() = default;
 
@@ -12,7 +16,7 @@ namespace {
 
 constexpr float k_check_interval_seconds = 2.0F;
 
-constexpr float k_combat_release_seconds = 10.0F;
+constexpr float k_combat_release_seconds = 20.0F;
 
 constexpr float k_state_settle_seconds = 4.0F;
 
@@ -105,6 +109,16 @@ auto AmbientStateManager::is_player_in_combat(Engine::Core::World* world,
 
   auto units = world->collect_entities_with<Engine::Core::UnitComponent>();
   const float combat_check_radius = 15.0F;
+  // Allies, neutral wildlife and enemy buildings standing near the player's
+  // troops are not a fight; only enemy troops within reach are.
+  const auto* session = Game::Session::SessionContext::for_world(*world);
+  const auto is_enemy = [&](int owner_id) {
+    if (owner_id == local_owner_id || Game::Core::is_neutral_owner(owner_id)) {
+      return false;
+    }
+    return session == nullptr ||
+           session->owners().are_enemies(local_owner_id, owner_id);
+  };
 
   for (auto* entity : units) {
     auto* unit = entity->get_component<Engine::Core::UnitComponent>();
@@ -123,8 +137,9 @@ auto AmbientStateManager::is_player_in_combat(Engine::Core::World* world,
 
     for (auto* other_entity : units) {
       auto* other_unit = other_entity->get_component<Engine::Core::UnitComponent>();
-      if ((other_unit == nullptr) || other_unit->owner_id == local_owner_id ||
-          other_unit->health <= 0) {
+      if ((other_unit == nullptr) || other_unit->health <= 0 ||
+          !is_enemy(other_unit->owner_id) ||
+          !Game::Units::is_troop_spawn(other_unit->spawn_type)) {
         continue;
       }
 

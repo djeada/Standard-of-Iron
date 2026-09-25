@@ -28,6 +28,8 @@ enum class MinimapAlert : std::uint8_t {
   CaptureContested = 3,
   CaptureFinished = 4,
   ShrineStirred = 5,
+  UnitLost = 6,
+  StructureLost = 7,
 };
 
 class MinimapViewModel : public QObject {
@@ -89,7 +91,7 @@ private:
     bool used = false;
   };
 
-  static constexpr std::size_t k_alert_slot_count = 32;
+  static constexpr std::size_t k_alert_slot_count = 1024;
 
   [[nodiscard]] auto world_at(qreal mx,
                               qreal my,

@@ -402,7 +402,10 @@ void GameEngine::sync_render_camera() {
   }
   m_render_camera = *m_camera;
 
-  const QVector3D listener_position = m_camera->get_position();
+  // The RTS camera hangs tens of metres above the field, so hearing from the
+  // lens would push everything on screen into the distance fade. The player
+  // listens from the ground point the camera looks at.
+  const QVector3D listener_position = m_camera->get_target();
   Game::Audio::CueTrace::instance().set_listener(
       {.x = listener_position.x(),
        .y = listener_position.y(),
@@ -1480,11 +1483,15 @@ auto accepted_order_cue(App::Core::OrderKind kind,
   case App::Core::OrderKind::Rally:
     return Game::Audio::Cue::k_order_rally_set;
   case App::Core::OrderKind::Build:
-  case App::Core::OrderKind::Gather:
     return Game::Audio::Cue::k_build_placement_confirmed;
+  case App::Core::OrderKind::Gather:
+    return Game::Audio::Cue::k_order_move;
   case App::Core::OrderKind::Guard:
+    return Game::Audio::Cue::k_order_guard;
   case App::Core::OrderKind::Hold:
+    return Game::Audio::Cue::k_order_hold;
   case App::Core::OrderKind::Formation:
+    return Game::Audio::Cue::k_order_formation_placed;
   case App::Core::OrderKind::Squad:
   case App::Core::OrderKind::Recruit:
   case App::Core::OrderKind::None:
@@ -1597,7 +1604,8 @@ void GameEngine::handle_order_feedback(const App::Core::OrderOutcome& outcome) {
     }
     if (const char* cue = accepted_order_cue(outcome.kind, mounts)) {
       Game::Audio::play_cue(cue);
-    } else {
+    } else if (outcome.kind != App::Core::OrderKind::Recruit) {
+      // A recruit is answered by build.unit_queued from the production queue.
       Game::Audio::play_cue(Game::Audio::Cue::k_command_accept);
     }
     if (outcome.kind == App::Core::OrderKind::Attack && outcome.target != 0) {
@@ -2753,8 +2761,6 @@ void GameEngine::publish_mission_stages() {
   }
 
   const bool has_minimap = m_minimap_manager && m_minimap_manager->has_minimap();
-  const float world_width = has_minimap ? m_minimap_manager->get_world_width() : 0.0F;
-  const float world_height = has_minimap ? m_minimap_manager->get_world_height() : 0.0F;
 
   QVariantList stages;
   int index = 0;
@@ -2783,12 +2789,10 @@ void GameEngine::publish_mission_stages() {
       entry["world_x"] = status.target.x();
       entry["world_z"] = status.target.z();
       if (has_minimap) {
-        const auto [nx, ny] = Game::Map::Minimap::world_to_pixel(status.target.x(),
-                                                                 status.target.z(),
-                                                                 world_width,
-                                                                 world_height,
-                                                                 1.0F,
-                                                                 1.0F);
+        float nx = 0.0F;
+        float ny = 0.0F;
+        (void)m_minimap_manager->world_to_normalized(
+            status.target.x(), status.target.z(), nx, ny);
         entry["nx"] = std::clamp(nx, 0.0F, 1.0F);
         entry["ny"] = std::clamp(ny, 0.0F, 1.0F);
       }
@@ -2856,15 +2860,21 @@ void GameEngine::note_minimap_combat_hit(const Engine::Core::CombatHitEvent& eve
       !m_minimap_manager->has_minimap()) {
     return;
   }
-  if (!m_minimap_view_model->consume_alert_budget()) {
-    return;
-  }
-
   const auto* transform =
       m_world->try_get<Engine::Core::TransformComponent>(event.target_id);
   const auto* unit = m_world->try_get<Engine::Core::UnitComponent>(event.target_id);
   if (transform == nullptr || unit == nullptr ||
       Game::Units::is_wildlife_spawn(unit->spawn_type)) {
+    return;
+  }
+
+  // Hits on or by the player are always considered (the per-cell cooldown
+  // keeps them from flooding); only other players' fighting is rate limited,
+  // so a distant brawl cannot spend the budget an attack on the player needs.
+  const int local = m_runtime.local_owner_id;
+  const bool involves_local =
+      unit->owner_id == local || event.attacker_owner_id == local;
+  if (!involves_local && !m_minimap_view_model->consume_alert_budget()) {
     return;
   }
 
@@ -2876,6 +2886,36 @@ void GameEngine::note_minimap_combat_hit(const Engine::Core::CombatHitEvent& eve
       transform->position.z,
       unit->owner_id,
       event.attacker_owner_id);
+}
+
+void GameEngine::note_minimap_unit_died(const Engine::Core::UnitDiedEvent& event) {
+  if (!m_minimap_view_model || m_world == nullptr || m_minimap_manager == nullptr ||
+      !m_minimap_manager->has_minimap() ||
+      Game::Units::is_wildlife_spawn(event.spawn_type)) {
+    return;
+  }
+  const auto* transform =
+      m_world->try_get<Engine::Core::TransformComponent>(event.unit_id);
+  if (transform == nullptr) {
+    return;
+  }
+
+  const int local = m_runtime.local_owner_id;
+  const bool is_building = Game::Units::is_building_spawn(event.spawn_type);
+  const bool lost_by_local = event.owner_id == local;
+  const bool taken_by_local = event.killer_owner_id == local;
+  // A fallen troop is marked only when it was the player's; a building is
+  // marked when the player lost it or brought it down.
+  if (!lost_by_local && !(is_building && taken_by_local)) {
+    return;
+  }
+  m_minimap_view_model->note_alert(is_building
+                                       ? App::ViewModels::MinimapAlert::StructureLost
+                                       : App::ViewModels::MinimapAlert::UnitLost,
+                                   transform->position.x,
+                                   transform->position.z,
+                                   event.owner_id,
+                                   event.killer_owner_id);
 }
 
 void GameEngine::note_minimap_shrine_stirred(
@@ -3007,18 +3047,13 @@ void GameEngine::publish_wave_status() {
   QVariantMap status = m_mission_waves.status();
   QVariantList alerts = status.value("alerts").toList();
   if (!alerts.isEmpty() && m_minimap_manager && m_minimap_manager->has_minimap()) {
-    const float world_width = m_minimap_manager->get_world_width();
-    const float world_height = m_minimap_manager->get_world_height();
     QVariantList normalized;
     for (const auto& value : alerts) {
       QVariantMap alert = value.toMap();
-      const auto [nx, ny] =
-          Game::Map::Minimap::world_to_pixel(alert.value("x").toFloat(),
-                                             alert.value("z").toFloat(),
-                                             world_width,
-                                             world_height,
-                                             1.0F,
-                                             1.0F);
+      float nx = 0.0F;
+      float ny = 0.0F;
+      (void)m_minimap_manager->world_to_normalized(
+          alert.value("x").toFloat(), alert.value("z").toFloat(), nx, ny);
       alert["nx"] = std::clamp(nx, 0.0F, 1.0F);
       alert["ny"] = std::clamp(ny, 0.0F, 1.0F);
       normalized.append(alert);
@@ -4110,17 +4145,12 @@ void GameEngine::publish_tutorial_focus_points(const QVariantMap& wave_status) {
        .terrain = m_session != nullptr ? &m_session->terrain() : nullptr});
 
   if (!points.isEmpty() && m_minimap_manager && m_minimap_manager->has_minimap()) {
-    const float world_width = m_minimap_manager->get_world_width();
-    const float world_height = m_minimap_manager->get_world_height();
     for (auto& value : points) {
       QVariantMap point = value.toMap();
-      const auto [nx, ny] =
-          Game::Map::Minimap::world_to_pixel(point.value("world_x").toFloat(),
-                                             point.value("world_z").toFloat(),
-                                             world_width,
-                                             world_height,
-                                             1.0F,
-                                             1.0F);
+      float nx = 0.0F;
+      float ny = 0.0F;
+      (void)m_minimap_manager->world_to_normalized(
+          point.value("world_x").toFloat(), point.value("world_z").toFloat(), nx, ny);
       point["nx"] = std::clamp(nx, 0.0F, 1.0F);
       point["ny"] = std::clamp(ny, 0.0F, 1.0F);
       value = point;

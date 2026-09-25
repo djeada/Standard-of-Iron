@@ -1137,9 +1137,15 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
           builder_prod->has_site_approach = true;
           builder_prod->site_approach_x = transform->position.x;
           builder_prod->site_approach_z = transform->position.z;
-          Engine::Core::EventManager::instance().publish(
-              Engine::Core::AudioCueEvent::for_owner(builder_owner_id,
-                                                     "build.construction_started"));
+          if (!work_spot) {
+            Engine::Core::AudioCueEvent started =
+                Engine::Core::AudioCueEvent::for_owner(builder_owner_id,
+                                                       "build.construction_started");
+            started.at(builder_prod->construction_site_x,
+                       transform->position.y,
+                       builder_prod->construction_site_z);
+            Engine::Core::EventManager::instance().publish(started);
+          }
 
           transform->position.x = builder_prod->construction_site_x;
           transform->position.z = builder_prod->construction_site_z;
@@ -1319,6 +1325,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
     }
 
     if (builder_prod->time_remaining <= 0.0F) {
+      bool raised_structure = false;
 
       auto* t = world->try_get<Engine::Core::TransformComponent>(e->get_id());
       auto* u = world->try_get<Engine::Core::UnitComponent>(e->get_id());
@@ -1511,6 +1518,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
             }
             if (auto completed = reg->create(sp.spawn_type, *world, sp)) {
               start_completion_effect(*world, *completed, sp.spawn_type);
+              raised_structure = true;
             }
 
             if (is_wall_network_product(builder_prod->product_type) &&
@@ -1538,9 +1546,13 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
       builder_prod->in_progress = false;
       builder_prod->time_remaining = 0.0F;
       builder_prod->construction_complete = true;
-      Engine::Core::EventManager::instance().publish(
-          Engine::Core::AudioCueEvent::for_owner(builder_owner_id,
-                                                 "build.construction_complete"));
+      // Felling a tree or lifting a harvest also ends a builder task; only a
+      // structure actually raised earns the completion sound.
+      if (raised_structure) {
+        Engine::Core::EventManager::instance().publish(
+            Engine::Core::AudioCueEvent::for_owner(builder_owner_id,
+                                                   "build.construction_complete"));
+      }
       builder_prod->has_construction_site = false;
       builder_prod->at_construction_site = false;
       builder_prod->construction_site_entity_id = 0;

@@ -163,6 +163,7 @@ Item {
                 }
 
                 StyledButton {
+                    uiSound: "none"
                     text: qsTr("Close")
                     button_style: "secondary"
                     onClicked: root.cancelled()

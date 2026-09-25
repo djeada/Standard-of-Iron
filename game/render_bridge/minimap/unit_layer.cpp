@@ -76,10 +76,14 @@ void UnitLayer::init(
   m_world_height = world_height;
   m_inv_tile_size = 1.0F / std::max(tile_size, Constants::k_min_tile_size);
 
-  m_scale_x = static_cast<float>(width - 1) / world_width;
-  m_scale_y = static_cast<float>(height - 1) / world_height;
-  m_offset_x = world_width * 0.5F;
-  m_offset_y = world_height * 0.5F;
+  // The baked terrain fits the whole rotated map into the image, so every
+  // layer drawn over it has to project through the same rotated extent.
+  const auto [extent_width, extent_height] =
+      rotated_world_bounds(world_width, world_height);
+  m_scale_x = static_cast<float>(width) / extent_width;
+  m_scale_y = static_cast<float>(height) / extent_height;
+  m_offset_x = extent_width * 0.5F;
+  m_offset_y = extent_height * 0.5F;
 
   m_image = QImage(width, height, QImage::Format_ARGB32_Premultiplied);
   m_image.fill(Qt::transparent);

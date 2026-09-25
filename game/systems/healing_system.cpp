@@ -135,12 +135,6 @@ void HealingSystem::process_healing(Engine::Core::SystemContext& context) {
                        *target_unit,
                        healer_comp->healing_amount,
                        HealingRules::maximum_recoverable_health(*target));
-        Engine::Core::EventManager::instance().publish(
-            Engine::Core::AudioCueEvent::for_owner(
-                healer_unit->owner_id,
-                healer_unit->nation_id == NationID::RomanRepublic ? "combat.heal_bind"
-                                                                  : "combat.heal"));
-
         healer_comp->healing_target_x = target_transform->position.x;
         healer_comp->healing_target_z = target_transform->position.z;
 
@@ -169,6 +163,14 @@ void HealingSystem::process_healing(Engine::Core::SystemContext& context) {
     }
 
     if (healed_any) {
+      // One sound per healing pulse, at the healer, however many men it reached.
+      Engine::Core::AudioCueEvent cue(healer_unit->nation_id == NationID::RomanRepublic
+                                          ? "combat.heal_bind"
+                                          : "combat.heal");
+      cue.at(healer_transform->position.x,
+             healer_transform->position.y,
+             healer_transform->position.z);
+      Engine::Core::EventManager::instance().publish(cue);
       healer_comp->time_since_last_heal = 0.0F;
 
       healer_comp->is_healing_active = true;

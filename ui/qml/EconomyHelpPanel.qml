@@ -103,6 +103,7 @@ Item {
                 }
 
                 Design.IronIconButton {
+                    uiSound: "none"
                     iconText: Design.Icons.close
                     tooltip: qsTr("Close the economy guide")
                     onClicked: root.close_requested()
@@ -338,6 +339,7 @@ Item {
                 }
 
                 Design.IronButton {
+                    uiSound: "none"
                     text: qsTr("Back to the battle")
                     tone: "primary"
                     onClicked: root.close_requested()

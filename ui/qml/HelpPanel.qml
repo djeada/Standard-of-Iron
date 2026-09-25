@@ -210,6 +210,7 @@ Item {
                 }
 
                 Design.IronIconButton {
+                    uiSound: "none"
                     iconText: Design.Icons.close
                     tooltip: qsTr("Close the field manual")
                     onClicked: root.close_requested()
@@ -380,6 +381,7 @@ Item {
                 }
 
                 Design.IronButton {
+                    uiSound: "none"
                     text: qsTr("Close")
                     tone: "primary"
                     onClicked: root.close_requested()

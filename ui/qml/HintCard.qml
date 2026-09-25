@@ -77,6 +77,7 @@ Design.IronPanel {
             }
 
             Design.IronIconButton {
+                uiSound: "back"
                 iconText: Design.Icons.close
                 tooltip: hintCard.closeTooltip
                 onClicked: hintCard.dismiss()

@@ -37,6 +37,7 @@ gameplay code / system            QML (ui/qml/design/UiSound.qml)
         ▼                                 ▼
 CueRegistry::play                                   caller thread, mutex
   unbound? ─────────────► drop: unbound
+  spatial, out of earshot? ► drop: muted (spends no cooldown)
   cue cooldown? ────────► drop: cue_cooldown
   choose a variant ─────► drop: no_loaded_resource (none loaded)
         │
@@ -153,7 +154,9 @@ preload measured anywhere from under 1 ms to 5.6 s on the same map.
 
 **Frontend music.** Tracks tagged `screen_context=<context>` rotate round-robin per context. The context `battle` (or empty) stops music.
 
-**Mission music.** For each ambient state (`peaceful`, `tense`, `combat`, `victory`, `defeat`) the handler holds the tracks tagged `ambient_state=<state>`; for combat, victory and defeat the player's own `faction` is queried first. A state change rotates to the next track, plays one of the SFX tagged `state=<state>` (priority 7, two-second group cooldown) and, for victory and defeat, fires `state.victory` / `state.defeat`.
+**Mission music.** For each ambient state (`peaceful`, `tense`, `combat`, `victory`, `defeat`) the handler holds the tracks tagged `ambient_state=<state>`; for combat, victory and defeat the player's own `faction` is queried first. A state change rotates to the next track and plays one of the SFX tagged `state=<state>` as a stinger (priority 7, at most once a minute). Coming back into a state within 90 seconds of leaving it resumes that state's last track instead of rotating, so a lull in a battle does not turn the score over twice. Victory and defeat play only `state.victory` / `state.defeat`, never a stinger as well.
+
+**Ambient state.** `AmbientStateManager` samples every two seconds. Combat means one of the player's units has an attack target, or an _enemy troop_ (per `OwnerRegistry::are_enemies`: not an ally, not neutral wildlife, not a building) stands within 15 m of one. Combat is entered at once and released only after 20 seconds of quiet; other changes settle for 4 seconds.
 
 **Mission ambience.** One looping bed, chosen by the first query below that matches anything:
 
@@ -169,11 +172,29 @@ Among the matches the bed is picked by a hash of map path, faction and mission I
 
 **Cues chosen by who is acting.** Some actions pick their cue from the units doing them, because a resource pool is drawn at random and a mixed pool plays the wrong animal. A run order counts the selection's foot, cavalry and elephants (`CommandController::selection_mounts`) and plays `combat.charge_elephant` if any elephant is selected, `combat.charge_cavalry` if any cavalry is, and `combat.charge` otherwise (`CommandController::charge_cue`). An accepted move order plays `order.move_mounted` — horses moving off at a walk — only when every selected unit is cavalry (`CommandController::move_order_cue`). A Roman medicus binds wounds with `combat.heal_bind`; every other healer plays `combat.heal`.
 
+**One moment, one sound.** Each thing that happens is voiced by exactly one owner:
+
+| Moment                                 | Voiced by                                                                                                                                                             | Not by                                                       |
+| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| A unit dies                            | `on_unit_died`, positioned at the body; troops only (no human cry for a sheep or a wolf)                                                                              | the killing blow                                             |
+| An order is accepted                   | `accepted_order_cue` — hold, guard, formation placed and gather have their own cues; recruit is answered by `build.unit_queued`                                       | the mode-changed signals, or `command.accept` layered on top |
+| A projectile is loosed                 | a positioned launch cue, heard by anyone near it; a volley at the archers' centre                                                                                     | —                                                            |
+| A projectile lands                     | a hit is voiced by its `CombatHitEvent`; a siege shot plays `combat.siege_impact` only when it misses; arrows mark where a burst comes down with `combat.arrow_flyby` | —                                                            |
+| A builder task ends                    | `build.construction_complete` only when a structure is raised; `construction_started` only at a construction site                                                     | felling a tree, lifting a harvest                            |
+| A healer pulses                        | one `combat.heal` / `combat.heal_bind` per pulse, at the healer                                                                                                       | one per soldier healed                                       |
+| A dismantle finishes                   | `build.construction_complete`                                                                                                                                         | `build.building_destroyed` (the collapse)                    |
+| A dialog is answered                   | its footer button (`confirm` or `back`)                                                                                                                               | the dialog's close                                           |
+| A screen is left with Cancel or Escape | the screen's `onCancelled` (`ui.back`)                                                                                                                                | the Cancel button, or the screen hiding                      |
+
+In QML, `IronButton.uiSound` (`click`, `back`, `confirm`, `toggle`, `none`) says what a button plays; use `none` when the action it triggers already speaks. The in-game HUD's cards, chips and command buttons play no hover sound, and ambient-priority toasts and refusals raise no `ui.notification`.
+
+**Wildlife.** Wolves howl at the pack (`wildlife.wolf_hunt`), sheep bleat where a flock bolts (`wildlife.sheep_alarm`), and birds are heard where a flock is flushed (`wildlife.birds_flush`, once per flock alarm). All three are spatial.
+
 **Commander chatter.** The banks in `assets/data/commanders/voices/*.json` are on-screen lines. Each line may name a `voice_cue`, but no bank sets one today, so commanders speak in text only; the three files in `voices/commanders/` are their selection barks.
 
 ## Spatial audio
 
-A cue with `"spatial": true` fired through `play_cue_at` is heard relative to the camera. The engine publishes the listener every frame from the render camera (`app/core/game_engine.cpp`).
+A cue with `"spatial": true` fired through `play_cue_at` is heard relative to the listener. The engine publishes the listener every frame from the render camera (`app/core/game_engine.cpp`), placed at the **ground point the camera looks at**, not at the lens: the RTS camera hangs tens of metres up, and measuring from there put everything on screen 30–70% of the way into the fade.
 
 | Distance to listener | Volume                         |
 | -------------------- | ------------------------------ |
@@ -182,6 +203,8 @@ A cue with `"spatial": true` fired through `play_cue_at` is heard relative to th
 | ≥ 90 m               | silent, reported as `muted`    |
 
 Pan is the source's offset along the camera's right vector divided by 26 m, clamped, scaled to ±0.85. Before a camera exists the listener is invalid and every cue plays flat at full volume.
+
+A spatial request that distance would silence is dropped as `muted` _before_ it spends the cue cooldown, so a fight at the far edge of the map cannot starve the same cue under the camera.
 
 Distant fighting is not simply lost: `AudioEventHandler` counts impacts that distance silenced, and six inside three seconds become one `combat.distant_battle` cue. `tests/core/audio_battle_load_test.cpp` measures this against a paced melee.
 

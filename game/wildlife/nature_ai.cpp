@@ -273,7 +273,7 @@ public:
 
     auto& wildlife = *ctx.wildlife;
     if (wildlife.behavior != Behavior::Flee) {
-      actions.note(NatureEvent::Flee);
+      actions.note(ctx, NatureEvent::Flee);
     }
     wildlife.behavior = Behavior::Flee;
     wildlife.state_timer = k_alarm_duration;
@@ -496,7 +496,7 @@ public:
     }
     auto& wildlife = *ctx.wildlife;
     if (wildlife.behavior != Behavior::Stalk) {
-      actions.note(NatureEvent::Hunt);
+      actions.note(ctx, NatureEvent::Hunt);
     }
     actions.mark_hostile(ctx, toucher.id, true);
     close_and_bite(ctx, actions, toucher);
@@ -534,7 +534,7 @@ public:
     }
 
     if (wildlife.behavior != Behavior::Stalk) {
-      actions.note(NatureEvent::Hunt);
+      actions.note(ctx, NatureEvent::Hunt);
     }
     actions.mark_hostile(ctx, foe.id, true);
     close_and_bite(ctx, actions, foe);
@@ -575,7 +575,7 @@ public:
 
     auto& wildlife = *ctx.wildlife;
     if (wildlife.behavior != Behavior::Stalk) {
-      actions.note(NatureEvent::Hunt);
+      actions.note(ctx, NatureEvent::Hunt);
     }
     if (!prey.livestock) {
       actions.mark_hostile(ctx, prey.id, true);

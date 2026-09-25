@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cmath>
 #include <map>
+#include <string_view>
 
 #include "../core/ambient_session.h"
 #include "../core/component_gameplay.h"
@@ -32,8 +33,12 @@ auto launch_cue_for_kind(ProjectileKind kind,
   case ProjectileKind::Stone:
   case ProjectileKind::FlamingStone:
     return "combat.siege_launch";
+  case ProjectileKind::Fireball:
+    return "combat.spell_cast";
   default:
-
+    if (style == ArrowVisualStyle::Javelin) {
+      return "combat.javelin_throw";
+    }
     return style == ArrowVisualStyle::Aimed ||
                    style == ArrowVisualStyle::CommanderSignature
                ? "combat.bow_loose_heavy"
@@ -41,17 +46,27 @@ auto launch_cue_for_kind(ProjectileKind kind,
   }
 }
 
-auto impact_cue_for_kind(ProjectileKind kind, bool is_ballista_bolt) -> const char* {
-  if (is_ballista_bolt) {
-    return "combat.siege_impact";
+// A projectile that wounds something is already heard through its
+// CombatHitEvent, so a siege shot that lands on a target adds nothing here. An
+// aimed arrow always marks its hit, and ordinary arrows mark where a burst of
+// them comes down.
+auto impact_cue_for(ProjectileKind kind,
+                    bool is_ballista_bolt,
+                    bool aimed_shot,
+                    bool hit_target,
+                    bool damage_applied) -> const char* {
+  if (kind == ProjectileKind::Fireball) {
+    return "combat.fireball_impact";
   }
-  switch (kind) {
-  case ProjectileKind::Stone:
-  case ProjectileKind::FlamingStone:
-    return "combat.siege_impact";
-  default:
-    return "combat.arrow_flyby";
+  bool const siege = is_ballista_bolt || kind == ProjectileKind::Stone ||
+                     kind == ProjectileKind::FlamingStone;
+  if (siege) {
+    return damage_applied ? nullptr : "combat.siege_impact";
   }
+  if (aimed_shot) {
+    return hit_target ? "combat.hit.arrow" : nullptr;
+  }
+  return "combat.arrow_flyby";
 }
 constexpr float k_projectile_escape_radius = 1.5F;
 
@@ -244,13 +259,14 @@ void ProjectileSystem::spawn_arrow(const QVector3D& start,
                                         visual_profile,
                                         target_origin_at_launch.value_or(end)));
 
-  bool const counts_toward_volley = !is_ballista_bolt &&
-                                    kind != ProjectileKind::Stone &&
-                                    kind != ProjectileKind::FlamingStone;
+  bool const counts_toward_volley =
+      !is_ballista_bolt && kind != ProjectileKind::Stone &&
+      kind != ProjectileKind::FlamingStone && kind != ProjectileKind::Fireball;
   m_pending_launch_cues.push_back(
       {.cue_id = launch_cue_for_kind(kind, is_ballista_bolt, visual_style),
        .attacker_id = attacker_id,
-       .counts_toward_volley = counts_toward_volley});
+       .counts_toward_volley = counts_toward_volley,
+       .position = start});
 }
 
 void ProjectileSystem::spawn_stone(const QVector3D& start,
@@ -291,30 +307,46 @@ void ProjectileSystem::spawn_stone(const QVector3D& start,
 
   m_pending_launch_cues.push_back({.cue_id = launch_cue_for_kind(kind, false),
                                    .attacker_id = attacker_id,
-                                   .counts_toward_volley = false});
+                                   .counts_toward_volley = false,
+                                   .position = start});
 }
 
 void ProjectileSystem::flush_launch_cues(Engine::Core::World* world) {
 
-  std::map<int, int> arrows_launched_by_owner;
+  struct Volley {
+    int launched{0};
+    QVector3D position_sum;
+  };
+  std::map<int, Volley> volleys_by_owner;
   for (const auto& pending : m_pending_launch_cues) {
     const auto* attacker =
         world != nullptr
             ? world->try_get<Engine::Core::UnitComponent>(pending.attacker_id)
             : nullptr;
     int const owner_id = attacker != nullptr ? attacker->owner_id : 0;
-    Engine::Core::EventManager::instance().publish(
-        Engine::Core::AudioCueEvent::for_owner(owner_id, pending.cue_id));
+    // A commander's own aimed shot is feedback for the player drawing the bow;
+    // every other release is a sound in the world, heard by whoever is near it.
+    bool const personal = std::string_view(pending.cue_id) == "combat.bow_loose_heavy";
+    Engine::Core::AudioCueEvent cue =
+        personal ? Engine::Core::AudioCueEvent::for_owner(owner_id, pending.cue_id)
+                 : Engine::Core::AudioCueEvent(pending.cue_id);
+    cue.at(pending.position.x(), pending.position.y(), pending.position.z());
+    Engine::Core::EventManager::instance().publish(cue);
     if (pending.counts_toward_volley) {
-      ++arrows_launched_by_owner[owner_id];
+      auto& volley = volleys_by_owner[owner_id];
+      ++volley.launched;
+      volley.position_sum += pending.position;
     }
   }
   m_pending_launch_cues.clear();
 
-  for (const auto& [owner_id, launched] : arrows_launched_by_owner) {
-    if (launched >= k_volley_arrow_threshold) {
-      Engine::Core::EventManager::instance().publish(
-          Engine::Core::AudioCueEvent::for_owner(owner_id, "combat.arrow_volley"));
+  for (const auto& [owner_id, volley] : volleys_by_owner) {
+    if (volley.launched >= k_volley_arrow_threshold) {
+      QVector3D const centre =
+          volley.position_sum / static_cast<float>(volley.launched);
+      Engine::Core::AudioCueEvent cue("combat.arrow_volley");
+      cue.at(centre.x(), centre.y(), centre.z());
+      Engine::Core::EventManager::instance().publish(cue);
     }
   }
 }
@@ -528,23 +560,16 @@ void ProjectileSystem::publish_impact(Engine::Core::World* world,
       .target_id = projectile.get_target_id(),
   });
 
-  const auto* impact_attacker =
-      world != nullptr
-          ? world->try_get<Engine::Core::UnitComponent>(projectile.get_attacker_id())
-          : nullptr;
-  const auto* impact_target =
-      world != nullptr
-          ? world->try_get<Engine::Core::UnitComponent>(projectile.get_target_id())
-          : nullptr;
-  int const impact_owner_id =
-      impact_attacker != nullptr
-          ? impact_attacker->owner_id
-          : (impact_target != nullptr ? impact_target->owner_id : 0);
-  Engine::Core::EventManager::instance().publish(Engine::Core::AudioCueEvent::for_owner(
-      impact_owner_id,
-      (aimed_shot && resolution.hit_target)
-          ? "combat.hit.arrow"
-          : impact_cue_for_kind(projectile.get_kind(), ballista_bolt)));
+  if (const char* impact_cue = impact_cue_for(projectile.get_kind(),
+                                              ballista_bolt,
+                                              aimed_shot,
+                                              resolution.hit_target,
+                                              resolution.damage_applied)) {
+    Engine::Core::AudioCueEvent cue(impact_cue);
+    QVector3D const where = projectile.get_end();
+    cue.at(where.x(), where.y(), where.z());
+    Engine::Core::EventManager::instance().publish(cue);
+  }
 
   record_spent_projectile(world, projectile, incoming_direction, ballista_bolt);
 }

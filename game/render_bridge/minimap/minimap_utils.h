@@ -130,8 +130,10 @@ inline auto world_to_normalized(float world_x,
                                 float world_height,
                                 float tile_size) -> std::pair<float, float> {
   const float inv_tile = 1.0F / std::max(tile_size, Constants::k_min_tile_size);
+  const auto [extent_width, extent_height] =
+      rotated_world_bounds(world_width, world_height);
   auto [nx, ny] = world_to_pixel(
-      world_x * inv_tile, world_z * inv_tile, world_width, world_height, 1.0F, 1.0F);
+      world_x * inv_tile, world_z * inv_tile, extent_width, extent_height, 1.0F, 1.0F);
   return {std::clamp(nx, 0.0F, 1.0F), std::clamp(ny, 0.0F, 1.0F)};
 }
 

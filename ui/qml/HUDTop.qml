@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import QtQuick.Window 2.15
 import StandardOfIron 1.0
 import StandardOfIron.Design 1.0 as Design
 import StandardOfIron.Core 1.0
@@ -444,6 +445,7 @@ Item {
                     tooltip: ((!objectiveRow.fits && topRoot.primaryObjectiveText !== "") ? topRoot.primaryObjectiveText + (topRoot.objectiveDetailText !== "" ? "\n" + topRoot.objectiveDetailText : "") + "\n\n" : "") + (topRoot.objectives_visible ? qsTr("Hide the objectives list") : qsTr("Show every objective and defeat condition")) + " (O)"
                     accessibleName: qsTr("Objectives")
                     checkable: true
+                    uiSound: "none"
                     checked: topRoot.objectives_visible
                     tone: checked ? "primary" : "secondary"
                     onToggled: topRoot.objectives_toggled()
@@ -579,7 +581,7 @@ Item {
         id: minimap
 
         visible: !topRoot.ultraCompact
-        width: Design.Metrics.space24 * 8
+        width: Math.max(Design.Metrics.space24 * 8, Math.min(Design.Metrics.space24 * 10, (topRoot.Window.height > 0 ? topRoot.Window.height : 900) * 0.28))
         height: width
         anchors.right: parent.right
 
@@ -925,7 +927,8 @@ Item {
         readonly property color exploredSwatch: "#ff524f4c"
         readonly property color unseenSwatch: "#ff2d261e"
 
-        visible: minimap.visible
+        // A spectator sees the whole field, so there is no fog to explain.
+        visible: minimap.visible && !(topRoot.game_ready() && game.is_spectator_mode)
         anchors.right: minimap.right
         anchors.top: minimap.bottom
         anchors.topMargin: Design.Metrics.space4

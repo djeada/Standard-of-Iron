@@ -86,6 +86,11 @@ private:
   std::chrono::steady_clock::time_point m_last_selection_sound_time;
   std::string m_last_selection_sound_id;
   std::string m_current_music_id;
+  std::string m_current_music_group;
+  std::unordered_map<std::string, std::chrono::steady_clock::time_point>
+      m_music_state_left_at;
+  static constexpr std::chrono::seconds k_music_return_window{90};
+  static constexpr int STATE_STINGER_COOLDOWN_MS = 60000;
   static constexpr int SELECTION_SOUND_COOLDOWN_MS = 300;
 
   static constexpr int SELECTION_VOICE_FLOOR_MS = 120;

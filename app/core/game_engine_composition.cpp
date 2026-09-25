@@ -581,29 +581,23 @@ void GameEngine::build_services_and_controllers() {
             }
           });
   connect(m_command_controller.get(),
-          &App::Controllers::CommandController::hold_mode_changed,
-          this,
-          []() { Game::Audio::play_cue(Game::Audio::Cue::k_order_hold); });
-  connect(m_command_controller.get(),
           &App::Controllers::CommandController::gate_mode_changed,
           this,
           []() { Game::Audio::play_cue(Game::Audio::Cue::k_order_gate_mode); });
   connect(m_command_controller.get(),
-          &App::Controllers::CommandController::guard_mode_changed,
-          this,
-          []() { Game::Audio::play_cue(Game::Audio::Cue::k_order_guard); });
-  connect(m_command_controller.get(),
           &App::Controllers::CommandController::run_mode_changed,
           this,
-          []() { Game::Audio::play_cue(Game::Audio::Cue::k_order_run); });
+          [](bool active) {
+            // Breaking into a run is announced by the charge cue; this one is
+            // the order to fall back to a walk.
+            if (!active) {
+              Game::Audio::play_cue(Game::Audio::Cue::k_order_run);
+            }
+          });
   connect(m_command_controller.get(),
-          &App::Controllers::CommandController::formation_mode_changed,
+          &App::Controllers::CommandController::formation_placement_started,
           this,
           []() { Game::Audio::play_cue(Game::Audio::Cue::k_order_formation); });
-  connect(m_command_controller.get(),
-          &App::Controllers::CommandController::formation_placement_ended,
-          this,
-          []() { Game::Audio::play_cue(Game::Audio::Cue::k_order_formation_placed); });
   connect(m_command_controller.get(),
           &App::Controllers::CommandController::formation_placement_started,
           m_placement_view_model.get(),
@@ -703,6 +697,10 @@ void GameEngine::build_services_and_controllers() {
             }
             m_activity_view_model->record_world_feedback(e);
           });
+
+  m_minimap_unit_died_subscription =
+      Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>(
+          [this](const Engine::Core::UnitDiedEvent& e) { note_minimap_unit_died(e); });
 
   m_barrack_captured_subscription =
       Engine::Core::ScopedEventSubscription<Engine::Core::BarrackCapturedEvent>(

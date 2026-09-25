@@ -1193,6 +1193,9 @@ auto CommandController::on_run_command() -> CommandResult {
     }
   }
 
+  if (should_enable_run) {
+    Game::Audio::play_cue(charge_cue(selection_mounts(*m_world, selected)));
+  }
   emit run_mode_changed(should_enable_run);
 
   result.input_consumed = true;

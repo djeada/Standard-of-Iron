@@ -155,9 +155,12 @@ void begin_panic(Engine::Core::Entity* elephant, float duration) {
   bool const already_panicking = panic->duration > 0.0F;
   panic->duration = duration;
   if (!already_panicking) {
-    Engine::Core::EventManager::instance().publish(
-        Engine::Core::AudioCueEvent::for_owner(Engine::Core::owner_id_of(elephant),
-                                               "combat.elephant_panic"));
+    Engine::Core::AudioCueEvent cue("combat.elephant_panic");
+    if (const auto* transform =
+            elephant->get_component<Engine::Core::TransformComponent>()) {
+      cue.at(transform->position.x, transform->position.y, transform->position.z);
+    }
+    Engine::Core::EventManager::instance().publish(cue);
   }
 }
 
