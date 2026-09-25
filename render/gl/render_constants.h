@@ -38,6 +38,7 @@ inline constexpr int terrain_noise_atlas_detail = 13;
 inline constexpr int terrain_microdetail = 14;
 inline constexpr int material_detail = 15;
 inline constexpr int character_wear_volume = 16;
+inline constexpr int terrain_cover = 17;
 } // namespace Render::GL::TextureUnit
 
 namespace Render::GL::BufferCapacity {

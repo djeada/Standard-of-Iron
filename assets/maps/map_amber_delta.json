@@ -3011,7 +3011,7 @@
     "far_simulation_radius": 150.0,
     "sheep": {
       "enabled": true,
-      "groups": 2,
+      "groups": 6,
       "group_size_min": 5,
       "group_size_max": 8,
       "roam_radius": 13.0,
@@ -3019,14 +3019,34 @@
       "respawn_delay": 120.0,
       "spawn_areas": [
         {
-          "x": 72.0,
-          "z": 150.0,
-          "radius": 16.0
+          "x": 96.0,
+          "z": 84.0,
+          "radius": 13.0
         },
         {
-          "x": 228.0,
-          "z": 150.0,
-          "radius": 16.0
+          "x": 204.0,
+          "z": 216.0,
+          "radius": 13.0
+        },
+        {
+          "x": 84.0,
+          "z": 168.0,
+          "radius": 13.0
+        },
+        {
+          "x": 214.5,
+          "z": 132.0,
+          "radius": 13.0
+        },
+        {
+          "x": 64.0,
+          "z": 184.0,
+          "radius": 13.0
+        },
+        {
+          "x": 236.0,
+          "z": 116.0,
+          "radius": 13.0
         }
       ],
       "alert_radius": 11.0
@@ -3065,10 +3085,10 @@
   },
   "starting_resources": {
     "gold": 250,
-    "food": 200,
-    "wood": 250,
-    "stone": 120,
-    "iron": 80
+    "food": 260,
+    "wood": 240,
+    "stone": 100,
+    "iron": 60
   },
   "victory": {
     "type": "elimination",

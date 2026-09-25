@@ -41,6 +41,7 @@ constexpr float k_grass_full_screen_fraction = 0.0040F;
 constexpr float k_grass_min_screen_fraction = 0.0018F;
 constexpr float k_grass_cull_screen_fraction = 0.0010F;
 constexpr float k_grass_min_density = 0.04F;
+constexpr float k_forest_floor_grass_keep = 0.30F;
 
 inline auto section_for(Game::Map::TerrainType type) -> int {
   switch (type) {
@@ -454,6 +455,10 @@ void BiomeRenderer::generate_grass_instances() {
     int const iz = std::clamp(int(std::floor(sgz + 0.5F)), 0, m_height - 1);
 
     if (!check_riverbank(ix, iz, state)) {
+      return false;
+    }
+    if (terrain_cache.get_terrain_type_at(ix, iz) == Game::Map::TerrainType::Forest &&
+        rand_01(state) > k_forest_floor_grass_keep) {
       return false;
     }
 

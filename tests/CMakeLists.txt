@@ -238,6 +238,7 @@ add_executable(
     headless/formation_prop_clearance_test.cpp
     headless/hill_traversal_test.cpp
     headless/playable_ground_test.cpp
+    headless/forest_cover_test.cpp
     headless/wildlife_fight_motion_test.cpp
     headless/battle_speed_load_test.cpp
     headless/selected_unit_readout_test.cpp
@@ -649,6 +650,7 @@ add_executable(
     map/iron_sepulcher_skirmish_test.cpp
     map/iron_sepulcher_watch_defence_test.cpp
     map/skirmish_base_choice_test.cpp
+    map/skirmish_farmland_test.cpp
     systems/civilian_delivery_system_test.cpp
     systems/building_obstruction_lifecycle_test.cpp
     systems/command_service_test.cpp

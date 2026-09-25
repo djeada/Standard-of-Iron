@@ -279,6 +279,88 @@ TEST_F(TerrainServiceTest, GeneratedRuntimeTreesAvoidRoadClearanceOnInitialize) 
   EXPECT_TRUE(runtime_trees_respect_road_clearance(terrain, clearance));
 }
 
+TEST_F(TerrainServiceTest, AFieldsFlatKeepsGeneratedScatterOffItsLevelGround) {
+  auto build = [](bool fields) {
+    Game::Map::MapDefinition map_def;
+    map_def.grid.width = 96;
+    map_def.grid.height = 96;
+    map_def.grid.tile_size = 1.0F;
+    map_def.biome.seed = 42U;
+    Game::Map::apply_ground_type_defaults(map_def.biome,
+                                          Game::Map::GroundType::ForestMud);
+    Game::Map::TerrainFeature flat;
+    flat.type = Game::Map::TerrainType::Flat;
+    flat.width = 50.0F;
+    flat.depth = 34.0F;
+    flat.rotation_deg = 90.0F;
+    flat.fields = fields;
+    map_def.terrain.push_back(flat);
+    return map_def;
+  };
+  auto inside_level_core = [](const Game::Map::TerrainService& terrain) {
+    int count = 0;
+    for (const auto& prop : terrain.world_props()) {
+      const auto [x, z] = terrain.world_prop_world_xz(prop);
+      const float nx = x / (17.0F * 0.8F);
+      const float nz = z / (25.0F * 0.8F);
+      if (!prop.persistent && (nx * nx) + (nz * nz) <= 1.0F) {
+        ++count;
+      }
+    }
+    return count;
+  };
+
+  auto& terrain = Game::Map::TerrainService::instance();
+  terrain.initialize(build(false));
+  ASSERT_GT(inside_level_core(terrain), 0)
+      << "the wet pine biome must scatter into an ordinary clearing, or this proves "
+         "nothing";
+  const std::size_t trees_elsewhere = runtime_tree_count(terrain);
+
+  terrain.initialize(build(true));
+  EXPECT_EQ(inside_level_core(terrain), 0)
+      << "a flat authored as fields is where a player lays farms; a pine or boulder "
+         "scattered onto it refuses the plot";
+  EXPECT_GT(runtime_tree_count(terrain), 0U);
+  EXPECT_LT(runtime_tree_count(terrain), trees_elsewhere);
+}
+
+TEST_F(TerrainServiceTest, FieldsInsideAWoodAreAClearingNotForestGround) {
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = 96;
+  map_def.grid.height = 96;
+  map_def.grid.tile_size = 1.0F;
+  map_def.biome.procedural_trees_enabled = false;
+  map_def.biome.procedural_boulders_enabled = false;
+  map_def.biome.procedural_iron_ore_enabled = false;
+  Game::Map::TerrainFeature flat;
+  flat.type = Game::Map::TerrainType::Flat;
+  flat.width = 30.0F;
+  flat.depth = 30.0F;
+  flat.fields = true;
+  map_def.terrain.push_back(flat);
+  Game::Map::TerrainFeature wood;
+  wood.type = Game::Map::TerrainType::Forest;
+  wood.radius = 30.0F;
+  map_def.terrain.push_back(wood);
+
+  auto& terrain = Game::Map::TerrainService::instance();
+  terrain.initialize(map_def);
+  const auto* height_map = terrain.get_height_map();
+  ASSERT_NE(height_map, nullptr);
+
+  constexpr int k_centre = 48;
+  EXPECT_TRUE(height_map->is_fields(k_centre, k_centre));
+  EXPECT_EQ(height_map->getTerrainType(k_centre, k_centre),
+            Game::Map::TerrainType::Flat)
+      << "a wood painted over a clearing must not turn the tilled ground back into "
+         "forest, or cavalry is refused a field with no tree on it";
+  EXPECT_FALSE(height_map->is_fields(k_centre + 25, k_centre));
+  EXPECT_EQ(height_map->getTerrainType(k_centre + 25, k_centre),
+            Game::Map::TerrainType::Forest)
+      << "the wood round the clearing stays a wood";
+}
+
 TEST_F(TerrainServiceTest, HillEntrancesCarveLowerCenterPathThanShoulders) {
   Game::Map::TerrainHeightMap height_map(41, 41, 1.0F);
   Game::Map::TerrainFeature hill{

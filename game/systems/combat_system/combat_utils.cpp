@@ -804,6 +804,11 @@ auto find_nearest_enemy(Engine::Core::Entity* unit,
       continue;
     }
 
+    if (auto const* cover = target->get_component<Engine::Core::ForestCoverComponent>();
+        cover != nullptr && cover->hidden_from(attacker_owner_id)) {
+      continue;
+    }
+
     auto* target_transform = target->get_component<Engine::Core::TransformComponent>();
     if (target_transform == nullptr) {
       continue;

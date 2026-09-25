@@ -118,34 +118,52 @@
             "z": 180
         },
         {
-            "id": "cannae_river_screen",
+            "id": "cannae_river_screen_2",
             "radius": 28,
             "x": 336,
             "z": 385
         },
         {
-            "id": "cannae_river_screen",
+            "id": "cannae_river_screen_3",
             "radius": 28,
             "x": 315,
             "z": 489
         },
         {
-            "id": "cannae_river_screen",
+            "id": "cannae_river_screen_4",
             "radius": 28,
             "x": 229,
             "z": 580
         },
         {
-            "id": "cannae_river_screen",
+            "id": "cannae_river_screen_5",
             "radius": 28,
             "x": 174,
             "z": 31
         },
         {
-            "id": "cannae_river_screen",
+            "id": "cannae_river_screen_6",
             "radius": 28,
             "x": 581,
             "z": 75
+        },
+        {
+            "id": "cannae_ambush_wood_1",
+            "radius": 18.4,
+            "x": 279.2,
+            "z": 44.9
+        },
+        {
+            "id": "cannae_ambush_wood_2",
+            "radius": 16.2,
+            "x": 104.9,
+            "z": 352.7
+        },
+        {
+            "id": "cannae_ambush_wood_3",
+            "radius": 23.1,
+            "x": 232.7,
+            "z": 447.3
         }
     ],
     "grid": {
@@ -216,6 +234,13 @@
             "player_id": 3,
             "x": 520,
             "z": 100
+        },
+        {
+            "facing": "west",
+            "id": "cannae_woodside_hamlet",
+            "kind": "hamlet",
+            "x": 309,
+            "z": 21
         }
     ],
     "max_troops_per_player": 2250,
@@ -1747,6 +1772,38 @@
             "z": 412
         },
         {
+            "max_population": -1,
+            "nation": "carthage",
+            "player_id": 1,
+            "type": "carthage_sword_commander",
+            "x": 191.01,
+            "z": 270.69
+        },
+        {
+            "max_population": -1,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "type": "roman_field_commander",
+            "x": 294.0,
+            "z": 346.0
+        },
+        {
+            "max_population": -1,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "type": "roman_legion_organizer",
+            "x": 520.17,
+            "z": 114.93
+        },
+        {
+            "max_population": -1,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "type": "roman_veteran_consul",
+            "x": 420.88,
+            "z": 470.12
+        },
+        {
             "behavior": "guard",
             "landmark": "cannae_aufidus_sanctuary",
             "max_population": -1,
@@ -1844,38 +1901,6 @@
             "type": "archer",
             "x": 142,
             "z": 606
-        },
-        {
-            "max_population": -1,
-            "nation": "carthage",
-            "player_id": 1,
-            "type": "carthage_sword_commander",
-            "x": 191.01,
-            "z": 270.69
-        },
-        {
-            "max_population": -1,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "roman_field_commander",
-            "x": 294.0,
-            "z": 346.0
-        },
-        {
-            "max_population": -1,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "roman_legion_organizer",
-            "x": 520.17,
-            "z": 114.93
-        },
-        {
-            "max_population": -1,
-            "nation": "roman_republic",
-            "player_id": 4,
-            "type": "roman_veteran_consul",
-            "x": 420.88,
-            "z": 470.12
         }
     ],
     "starting_resources": {
@@ -1930,51 +1955,6 @@
             "nation": "roman_republic",
             "player_id": 4,
             "settlement": "cannae_allied_camp",
-            "type": "home",
-            "x": 462.0,
-            "z": 464.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 4,
-            "settlement": "cannae_allied_camp",
-            "type": "home",
-            "x": 462.0,
-            "z": 476.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 4,
-            "settlement": "cannae_allied_camp",
-            "type": "home",
-            "x": 468.0,
-            "z": 464.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 4,
-            "settlement": "cannae_allied_camp",
-            "type": "home",
-            "x": 396.0,
-            "z": 476.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 4,
-            "settlement": "cannae_allied_camp",
-            "type": "home",
-            "x": 468.0,
-            "z": 476.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 4,
-            "settlement": "cannae_allied_camp",
             "type": "defense_tower",
             "x": 398.33,
             "z": 467.69
@@ -2005,21 +1985,6 @@
             "type": "defense_tower",
             "x": 468.0,
             "z": 481.0
-        },
-        {
-            "landmark": "cannae_south_sanctuary",
-            "nation": "carthage",
-            "type": "temple",
-            "x": 140,
-            "z": 600
-        },
-        {
-            "landmark": "cannae_aufidus_sanctuary",
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "temple",
-            "x": 280,
-            "z": 346
         },
         {
             "authored": true,
@@ -2286,6 +2251,570 @@
             "type": "home",
             "x": 405,
             "z": 72.16
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "rotation": 0.0,
+            "settlement": "cannae_allied_camp",
+            "type": "home",
+            "x": 462.0,
+            "z": 464.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "rotation": 180.0,
+            "settlement": "cannae_allied_camp",
+            "type": "home",
+            "x": 462.0,
+            "z": 476.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "rotation": 0.0,
+            "settlement": "cannae_allied_camp",
+            "type": "home",
+            "x": 468.0,
+            "z": 464.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "rotation": 180.0,
+            "settlement": "cannae_allied_camp",
+            "type": "home",
+            "x": 396.0,
+            "z": 476.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "rotation": 180.0,
+            "settlement": "cannae_allied_camp",
+            "type": "home",
+            "x": 468.0,
+            "z": 476.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "type": "home",
+            "x": 543.5,
+            "z": 302.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "type": "home",
+            "x": 474.47,
+            "z": 316.13
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 270,
+            "type": "home",
+            "x": 513.56,
+            "z": 264.96
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 90,
+            "type": "home",
+            "x": 491.72,
+            "z": 354.51
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 270,
+            "type": "home",
+            "x": 502.2,
+            "z": 362.35
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "type": "home",
+            "x": 577.55,
+            "z": 316.15
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 90,
+            "type": "home",
+            "x": 502.86,
+            "z": 264.96
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 180,
+            "type": "home",
+            "x": 472.57,
+            "z": 329.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "type": "home",
+            "x": 468.6,
+            "z": 317.36
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 180,
+            "type": "home",
+            "x": 578.18,
+            "z": 328.7
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 270,
+            "type": "home",
+            "x": 512.07,
+            "z": 258.23
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 90,
+            "type": "home",
+            "x": 487.95,
+            "z": 360.99
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "type": "home",
+            "x": 583.44,
+            "z": 317.29
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 180,
+            "type": "home",
+            "x": 466.7,
+            "z": 330.23
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 270,
+            "type": "home",
+            "x": 498.43,
+            "z": 368.83
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 90,
+            "type": "home",
+            "x": 500.18,
+            "z": 257.96
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "type": "home",
+            "x": 462.72,
+            "z": 318.59
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 180,
+            "type": "home",
+            "x": 584.07,
+            "z": 329.84
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "type": "home",
+            "x": 590.1,
+            "z": 318.58
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 180,
+            "type": "home",
+            "x": 392.0,
+            "z": 94.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 180,
+            "type": "home",
+            "x": 392.0,
+            "z": 100.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 90,
+            "type": "home",
+            "x": 398.0,
+            "z": 101.5
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 180,
+            "type": "home",
+            "x": 381.5,
+            "z": 97.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "type": "home",
+            "x": 404.0,
+            "z": 79.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "type": "home",
+            "x": 358.72,
+            "z": 61.3
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 180,
+            "type": "home",
+            "x": 436.82,
+            "z": 93.8
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 90,
+            "type": "home",
+            "x": 409.33,
+            "z": 129.6
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "type": "home",
+            "x": 438.32,
+            "z": 82.2
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 270,
+            "type": "home",
+            "x": 420.13,
+            "z": 127.01
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 180,
+            "type": "home",
+            "x": 346.5,
+            "z": 66.99
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "type": "home",
+            "x": 352.3,
+            "z": 57.41
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 180,
+            "type": "home",
+            "x": 443.48,
+            "z": 93.8
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 90,
+            "type": "home",
+            "x": 413.24,
+            "z": 136.1
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "type": "home",
+            "x": 444.98,
+            "z": 82.2
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 270,
+            "type": "home",
+            "x": 424.84,
+            "z": 133.53
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 180,
+            "type": "home",
+            "x": 340.0,
+            "z": 63.05
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "type": "home",
+            "x": 345.8,
+            "z": 53.47
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "type": "home",
+            "x": 450.98,
+            "z": 82.2
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 90,
+            "type": "home",
+            "x": 417.51,
+            "z": 142.26
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 270,
+            "type": "home",
+            "x": 429.12,
+            "z": 139.69
+        },
+        {
+            "landmark": "cannae_south_sanctuary",
+            "nation": "carthage",
+            "type": "temple",
+            "x": 140,
+            "z": 600
+        },
+        {
+            "landmark": "cannae_aufidus_sanctuary",
+            "nation": "roman_republic",
+            "player_id": 2,
+            "type": "temple",
+            "x": 280,
+            "z": 346
+        },
+        {
+            "type": "farm",
+            "x": 558.0,
+            "z": 363.5,
+            "rotation": 0,
+            "dressing": "cannae_town_fields_southeast",
+            "player_id": 2,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 573.5,
+            "z": 262.5,
+            "rotation": 0,
+            "dressing": "cannae_town_fields_northeast",
+            "player_id": 2,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 590.5,
+            "z": 262.5,
+            "rotation": 0,
+            "dressing": "cannae_town_fields_northeast",
+            "player_id": 2,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 573.5,
+            "z": 279.5,
+            "rotation": 0,
+            "dressing": "cannae_town_fields_northeast",
+            "player_id": 2,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 590.5,
+            "z": 279.5,
+            "rotation": 0,
+            "dressing": "cannae_town_fields_northeast",
+            "player_id": 2,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 432.0,
+            "z": 34.0,
+            "rotation": 0,
+            "dressing": "cannae_river_fields_northeast",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 449.0,
+            "z": 34.0,
+            "rotation": 0,
+            "dressing": "cannae_river_fields_northeast",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 466.0,
+            "z": 34.0,
+            "rotation": 0,
+            "dressing": "cannae_river_fields_northeast",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 295.5,
+            "z": 81.5,
+            "rotation": 0,
+            "dressing": "cannae_river_fields_west",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 312.5,
+            "z": 81.5,
+            "rotation": 0,
+            "dressing": "cannae_river_fields_west",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 295.5,
+            "z": 98.5,
+            "rotation": 0,
+            "dressing": "cannae_river_fields_west",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 482.5,
+            "z": 518.5,
+            "rotation": 0,
+            "dressing": "cannae_allied_fields_southeast",
+            "player_id": 4,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 499.5,
+            "z": 518.5,
+            "rotation": 0,
+            "dressing": "cannae_allied_fields_southeast",
+            "player_id": 4,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 482.5,
+            "z": 535.5,
+            "rotation": 0,
+            "dressing": "cannae_allied_fields_southeast",
+            "player_id": 4,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 499.5,
+            "z": 535.5,
+            "rotation": 0,
+            "dressing": "cannae_allied_fields_southeast",
+            "player_id": 4,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 508.5,
+            "z": 469.0,
+            "rotation": 0,
+            "dressing": "cannae_allied_fields_east",
+            "player_id": 4,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 525.5,
+            "z": 469.0,
+            "rotation": 0,
+            "dressing": "cannae_allied_fields_east",
+            "player_id": 4,
+            "nation": "roman_republic"
         },
         {
             "authored": true,
@@ -2735,159 +3264,6 @@
             ],
             "type": "wall_segment",
             "width": 2
-        },
-        {
-            "type": "farm",
-            "x": 558.0,
-            "z": 363.5,
-            "rotation": 0,
-            "dressing": "cannae_town_fields_southeast",
-            "player_id": 2,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 573.5,
-            "z": 262.5,
-            "rotation": 0,
-            "dressing": "cannae_town_fields_northeast",
-            "player_id": 2,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 590.5,
-            "z": 262.5,
-            "rotation": 0,
-            "dressing": "cannae_town_fields_northeast",
-            "player_id": 2,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 573.5,
-            "z": 279.5,
-            "rotation": 0,
-            "dressing": "cannae_town_fields_northeast",
-            "player_id": 2,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 590.5,
-            "z": 279.5,
-            "rotation": 0,
-            "dressing": "cannae_town_fields_northeast",
-            "player_id": 2,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 432.0,
-            "z": 34.0,
-            "rotation": 0,
-            "dressing": "cannae_river_fields_northeast",
-            "player_id": 3,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 449.0,
-            "z": 34.0,
-            "rotation": 0,
-            "dressing": "cannae_river_fields_northeast",
-            "player_id": 3,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 466.0,
-            "z": 34.0,
-            "rotation": 0,
-            "dressing": "cannae_river_fields_northeast",
-            "player_id": 3,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 295.5,
-            "z": 81.5,
-            "rotation": 0,
-            "dressing": "cannae_river_fields_west",
-            "player_id": 3,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 312.5,
-            "z": 81.5,
-            "rotation": 0,
-            "dressing": "cannae_river_fields_west",
-            "player_id": 3,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 295.5,
-            "z": 98.5,
-            "rotation": 0,
-            "dressing": "cannae_river_fields_west",
-            "player_id": 3,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 482.5,
-            "z": 518.5,
-            "rotation": 0,
-            "dressing": "cannae_allied_fields_southeast",
-            "player_id": 4,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 499.5,
-            "z": 518.5,
-            "rotation": 0,
-            "dressing": "cannae_allied_fields_southeast",
-            "player_id": 4,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 482.5,
-            "z": 535.5,
-            "rotation": 0,
-            "dressing": "cannae_allied_fields_southeast",
-            "player_id": 4,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 499.5,
-            "z": 535.5,
-            "rotation": 0,
-            "dressing": "cannae_allied_fields_southeast",
-            "player_id": 4,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 508.5,
-            "z": 469.0,
-            "rotation": 0,
-            "dressing": "cannae_allied_fields_east",
-            "player_id": 4,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 525.5,
-            "z": 469.0,
-            "rotation": 0,
-            "dressing": "cannae_allied_fields_east",
-            "player_id": 4,
-            "nation": "roman_republic"
         }
     ],
     "terrain": [
@@ -3183,7 +3559,7 @@
             "enabled": true,
             "group_size_max": 4,
             "group_size_min": 2,
-            "groups": 2,
+            "groups": 4,
             "respawn": false,
             "roam_radius": 22,
             "spawn_areas": [
@@ -3196,6 +3572,16 @@
                     "radius": 26,
                     "x": 39,
                     "z": 572
+                },
+                {
+                    "radius": 20.0,
+                    "x": 289.61,
+                    "z": 227.04
+                },
+                {
+                    "radius": 20.0,
+                    "x": 336,
+                    "z": 385
                 }
             ],
             "waves": [
@@ -3983,374 +4369,6 @@
             "type": "abandoned_home",
             "x": 25.04,
             "z": 119.35000000000001
-        },
-        {
-            "landmark": "cannae_south_sanctuary",
-            "rotation": 180,
-            "scale": 1,
-            "type": "statue",
-            "x": 149,
-            "z": 605.5
-        },
-        {
-            "landmark": "cannae_south_sanctuary",
-            "scale": 1,
-            "type": "statue",
-            "x": 149,
-            "z": 594.5
-        },
-        {
-            "landmark": "cannae_south_sanctuary",
-            "rotation": 180,
-            "scale": 1,
-            "type": "statue",
-            "x": 158,
-            "z": 605.5
-        },
-        {
-            "landmark": "cannae_south_sanctuary",
-            "scale": 1,
-            "type": "statue",
-            "x": 158,
-            "z": 594.5
-        },
-        {
-            "landmark": "cannae_south_sanctuary",
-            "rotation": 180,
-            "scale": 1.1,
-            "type": "ruins",
-            "x": 129.62,
-            "z": 607.17
-        },
-        {
-            "landmark": "cannae_south_sanctuary",
-            "scale": 0.9,
-            "type": "ruins",
-            "x": 128.81,
-            "z": 594.02
-        },
-        {
-            "landmark": "cannae_south_sanctuary",
-            "rotation": 180,
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 126,
-            "z": 601
-        },
-        {
-            "intensity": 1.2,
-            "landmark": "cannae_south_sanctuary",
-            "persistent": true,
-            "radius": 3.2,
-            "rotation": 90,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 146,
-            "z": 600
-        },
-        {
-            "landmark": "cannae_north_hamlet",
-            "rotation": 270,
-            "scale": 1,
-            "type": "abandoned_home",
-            "x": 214,
-            "z": 80
-        },
-        {
-            "landmark": "cannae_north_hamlet",
-            "rotation": 90,
-            "scale": 1,
-            "type": "abandoned_home",
-            "x": 231,
-            "z": 87
-        },
-        {
-            "landmark": "cannae_north_hamlet",
-            "rotation": 90,
-            "scale": 1,
-            "type": "abandoned_home",
-            "x": 223.3,
-            "z": 73.53
-        },
-        {
-            "landmark": "cannae_north_hamlet",
-            "rotation": 270,
-            "scale": 0.9,
-            "type": "abandoned_home",
-            "x": 215,
-            "z": 68
-        },
-        {
-            "landmark": "cannae_north_hamlet",
-            "rotation": 270,
-            "scale": 1.1,
-            "type": "ruins",
-            "x": 216.21,
-            "z": 91.79
-        },
-        {
-            "landmark": "cannae_north_hamlet",
-            "rotation": 90,
-            "scale": 0.9,
-            "type": "ruins",
-            "x": 233,
-            "z": 76
-        },
-        {
-            "landmark": "cannae_north_hamlet",
-            "rotation": 270,
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 208,
-            "z": 84
-        },
-        {
-            "landmark": "cannae_north_hamlet",
-            "rotation": 90,
-            "scale": 0.9,
-            "type": "dead_tree",
-            "x": 222,
-            "z": 64
-        },
-        {
-            "landmark": "cannae_aufidus_sanctuary",
-            "rotation": 180,
-            "scale": 1,
-            "type": "statue",
-            "x": 289,
-            "z": 351.5
-        },
-        {
-            "landmark": "cannae_aufidus_sanctuary",
-            "scale": 1,
-            "type": "statue",
-            "x": 290.55,
-            "z": 346.3
-        },
-        {
-            "landmark": "cannae_aufidus_sanctuary",
-            "rotation": 180,
-            "scale": 1,
-            "type": "statue",
-            "x": 304,
-            "z": 351.5
-        },
-        {
-            "landmark": "cannae_aufidus_sanctuary",
-            "scale": 1,
-            "type": "statue",
-            "x": 301,
-            "z": 345.7
-        },
-        {
-            "landmark": "cannae_aufidus_sanctuary",
-            "rotation": 180,
-            "scale": 1.1,
-            "type": "ruins",
-            "x": 271,
-            "z": 353
-        },
-        {
-            "landmark": "cannae_aufidus_sanctuary",
-            "scale": 0.9,
-            "type": "ruins",
-            "x": 268.95,
-            "z": 336.91
-        },
-        {
-            "landmark": "cannae_aufidus_sanctuary",
-            "rotation": 180,
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 266,
-            "z": 347
-        },
-        {
-            "intensity": 1.2,
-            "landmark": "cannae_aufidus_sanctuary",
-            "persistent": true,
-            "radius": 3.2,
-            "rotation": 90,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 286,
-            "z": 346
-        },
-        {
-            "landmark": "cannae_grave_hamlet",
-            "rotation": 180,
-            "scale": 1,
-            "type": "abandoned_home",
-            "x": 144,
-            "z": 326
-        },
-        {
-            "landmark": "cannae_grave_hamlet",
-            "scale": 1,
-            "type": "abandoned_home",
-            "x": 149,
-            "z": 315
-        },
-        {
-            "landmark": "cannae_grave_hamlet",
-            "scale": 1,
-            "type": "abandoned_home",
-            "x": 132,
-            "z": 313
-        },
-        {
-            "landmark": "cannae_grave_hamlet",
-            "rotation": 180,
-            "scale": 0.9,
-            "type": "abandoned_home",
-            "x": 128,
-            "z": 325
-        },
-        {
-            "landmark": "cannae_grave_hamlet",
-            "rotation": 180,
-            "scale": 1.1,
-            "type": "ruins",
-            "x": 152,
-            "z": 323
-        },
-        {
-            "landmark": "cannae_grave_hamlet",
-            "scale": 0.9,
-            "type": "ruins",
-            "x": 136,
-            "z": 307
-        },
-        {
-            "landmark": "cannae_grave_hamlet",
-            "rotation": 180,
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 144,
-            "z": 332
-        },
-        {
-            "landmark": "cannae_grave_hamlet",
-            "scale": 0.9,
-            "type": "dead_tree",
-            "x": 124,
-            "z": 318
-        },
-        {
-            "landmark": "cannae_crossroad_shrine",
-            "scale": 1.1,
-            "type": "statue",
-            "x": 240,
-            "z": 424
-        },
-        {
-            "landmark": "cannae_crossroad_shrine",
-            "rotation": 90,
-            "scale": 1,
-            "type": "statue",
-            "x": 245,
-            "z": 412
-        },
-        {
-            "landmark": "cannae_crossroad_shrine",
-            "rotation": 270,
-            "scale": 1,
-            "type": "statue",
-            "x": 233.59,
-            "z": 410.59000000000003
-        },
-        {
-            "landmark": "cannae_crossroad_shrine",
-            "rotation": 90,
-            "scale": 1,
-            "type": "ruins",
-            "x": 245,
-            "z": 427
-        },
-        {
-            "landmark": "cannae_crossroad_shrine",
-            "rotation": 270,
-            "scale": 0.85,
-            "type": "ruins",
-            "x": 234,
-            "z": 428
-        },
-        {
-            "landmark": "cannae_crossroad_shrine",
-            "rotation": 90,
-            "scale": 1.1500000000000001,
-            "type": "ruins",
-            "x": 241,
-            "z": 433
-        },
-        {
-            "intensity": 1.2,
-            "landmark": "cannae_crossroad_shrine",
-            "persistent": true,
-            "radius": 3.2,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 240,
-            "z": 406
-        },
-        {
-            "landmark": "cannae_ridge_watch",
-            "rotation": 180,
-            "scale": 1,
-            "type": "statue",
-            "x": 520,
-            "z": 96
-        },
-        {
-            "landmark": "cannae_ridge_watch",
-            "rotation": 90,
-            "scale": 1,
-            "type": "tent",
-            "x": 524.57,
-            "z": 111.84
-        },
-        {
-            "landmark": "cannae_ridge_watch",
-            "rotation": 270,
-            "scale": 0.9500000000000001,
-            "type": "tent",
-            "x": 522.94,
-            "z": 120.7
-        },
-        {
-            "landmark": "cannae_ridge_watch",
-            "rotation": 90,
-            "scale": 1,
-            "type": "supply_cart",
-            "x": 528,
-            "z": 103
-        },
-        {
-            "landmark": "cannae_ridge_watch",
-            "rotation": 270,
-            "scale": 1,
-            "type": "weapon_rack",
-            "x": 510.88,
-            "z": 104.58
-        },
-        {
-            "intensity": 1.2,
-            "landmark": "cannae_ridge_watch",
-            "persistent": true,
-            "radius": 3.2,
-            "rotation": 180,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 519.96,
-            "z": 108.1
-        },
-        {
-            "landmark": "cannae_ridge_watch",
-            "rotation": 90,
-            "scale": 0.9,
-            "type": "ruins",
-            "x": 526,
-            "z": 88
         },
         {
             "authored_camp": true,
@@ -7252,6 +7270,438 @@
             "scale": 0.66,
             "rotation": 4.759,
             "dressing": "cannae_grove_west_low"
+        },
+        {
+            "landmark": "cannae_woodside_hamlet",
+            "rotation": 0.0,
+            "scale": 1.0,
+            "type": "abandoned_home",
+            "x": 309.0,
+            "z": 15.0
+        },
+        {
+            "landmark": "cannae_woodside_hamlet",
+            "rotation": 180.0,
+            "scale": 1.0,
+            "type": "abandoned_home",
+            "x": 302.0,
+            "z": 26.0
+        },
+        {
+            "landmark": "cannae_woodside_hamlet",
+            "rotation": 180.0,
+            "scale": 1.0,
+            "type": "abandoned_home",
+            "x": 317.0,
+            "z": 28.0
+        },
+        {
+            "landmark": "cannae_woodside_hamlet",
+            "rotation": 0.0,
+            "scale": 0.9,
+            "type": "abandoned_home",
+            "x": 321.0,
+            "z": 16.0
+        },
+        {
+            "landmark": "cannae_woodside_hamlet",
+            "rotation": 0.0,
+            "scale": 1.1,
+            "type": "ruins",
+            "x": 297.0,
+            "z": 18.0
+        },
+        {
+            "landmark": "cannae_woodside_hamlet",
+            "rotation": 180.0,
+            "scale": 0.9,
+            "type": "ruins",
+            "x": 313.0,
+            "z": 34.0
+        },
+        {
+            "landmark": "cannae_woodside_hamlet",
+            "rotation": 0.0,
+            "scale": 1.0,
+            "type": "dead_tree",
+            "x": 305.0,
+            "z": 9.0
+        },
+        {
+            "landmark": "cannae_woodside_hamlet",
+            "rotation": 180.0,
+            "scale": 0.9,
+            "type": "dead_tree",
+            "x": 325.0,
+            "z": 23.0
+        },
+        {
+            "landmark": "cannae_south_sanctuary",
+            "rotation": 180,
+            "scale": 1,
+            "type": "statue",
+            "x": 149,
+            "z": 605.5
+        },
+        {
+            "landmark": "cannae_south_sanctuary",
+            "scale": 1,
+            "type": "statue",
+            "x": 149,
+            "z": 594.5
+        },
+        {
+            "landmark": "cannae_south_sanctuary",
+            "rotation": 180,
+            "scale": 1,
+            "type": "statue",
+            "x": 158,
+            "z": 605.5
+        },
+        {
+            "landmark": "cannae_south_sanctuary",
+            "scale": 1,
+            "type": "statue",
+            "x": 158,
+            "z": 594.5
+        },
+        {
+            "landmark": "cannae_south_sanctuary",
+            "rotation": 180,
+            "scale": 1.1,
+            "type": "ruins",
+            "x": 129.62,
+            "z": 607.17
+        },
+        {
+            "landmark": "cannae_south_sanctuary",
+            "scale": 0.9,
+            "type": "ruins",
+            "x": 128.81,
+            "z": 594.02
+        },
+        {
+            "landmark": "cannae_south_sanctuary",
+            "rotation": 180,
+            "scale": 1,
+            "type": "dead_tree",
+            "x": 126,
+            "z": 601
+        },
+        {
+            "intensity": 1.2,
+            "landmark": "cannae_south_sanctuary",
+            "persistent": true,
+            "radius": 3.2,
+            "rotation": 90,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 146,
+            "z": 600
+        },
+        {
+            "landmark": "cannae_north_hamlet",
+            "rotation": 270,
+            "scale": 1,
+            "type": "abandoned_home",
+            "x": 214,
+            "z": 80
+        },
+        {
+            "landmark": "cannae_north_hamlet",
+            "rotation": 90,
+            "scale": 1,
+            "type": "abandoned_home",
+            "x": 231,
+            "z": 87
+        },
+        {
+            "landmark": "cannae_north_hamlet",
+            "rotation": 90,
+            "scale": 1,
+            "type": "abandoned_home",
+            "x": 223.3,
+            "z": 73.53
+        },
+        {
+            "landmark": "cannae_north_hamlet",
+            "rotation": 270,
+            "scale": 0.9,
+            "type": "abandoned_home",
+            "x": 215,
+            "z": 68
+        },
+        {
+            "landmark": "cannae_north_hamlet",
+            "rotation": 270,
+            "scale": 1.1,
+            "type": "ruins",
+            "x": 216.21,
+            "z": 91.79
+        },
+        {
+            "landmark": "cannae_north_hamlet",
+            "rotation": 90,
+            "scale": 0.9,
+            "type": "ruins",
+            "x": 233,
+            "z": 76
+        },
+        {
+            "landmark": "cannae_north_hamlet",
+            "rotation": 270,
+            "scale": 1,
+            "type": "dead_tree",
+            "x": 208,
+            "z": 84
+        },
+        {
+            "landmark": "cannae_north_hamlet",
+            "rotation": 90,
+            "scale": 0.9,
+            "type": "dead_tree",
+            "x": 222,
+            "z": 64
+        },
+        {
+            "landmark": "cannae_aufidus_sanctuary",
+            "rotation": 180,
+            "scale": 1,
+            "type": "statue",
+            "x": 289,
+            "z": 351.5
+        },
+        {
+            "landmark": "cannae_aufidus_sanctuary",
+            "scale": 1,
+            "type": "statue",
+            "x": 290.55,
+            "z": 346.3
+        },
+        {
+            "landmark": "cannae_aufidus_sanctuary",
+            "rotation": 180,
+            "scale": 1,
+            "type": "statue",
+            "x": 304,
+            "z": 351.5
+        },
+        {
+            "landmark": "cannae_aufidus_sanctuary",
+            "scale": 1,
+            "type": "statue",
+            "x": 301,
+            "z": 345.7
+        },
+        {
+            "landmark": "cannae_aufidus_sanctuary",
+            "rotation": 180,
+            "scale": 1.1,
+            "type": "ruins",
+            "x": 271,
+            "z": 353
+        },
+        {
+            "landmark": "cannae_aufidus_sanctuary",
+            "scale": 0.9,
+            "type": "ruins",
+            "x": 268.95,
+            "z": 336.91
+        },
+        {
+            "landmark": "cannae_aufidus_sanctuary",
+            "rotation": 180,
+            "scale": 1,
+            "type": "dead_tree",
+            "x": 266,
+            "z": 347
+        },
+        {
+            "intensity": 1.2,
+            "landmark": "cannae_aufidus_sanctuary",
+            "persistent": true,
+            "radius": 3.2,
+            "rotation": 90,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 286,
+            "z": 346
+        },
+        {
+            "landmark": "cannae_grave_hamlet",
+            "rotation": 180,
+            "scale": 1,
+            "type": "abandoned_home",
+            "x": 144,
+            "z": 326
+        },
+        {
+            "landmark": "cannae_grave_hamlet",
+            "scale": 1,
+            "type": "abandoned_home",
+            "x": 149,
+            "z": 315
+        },
+        {
+            "landmark": "cannae_grave_hamlet",
+            "scale": 1,
+            "type": "abandoned_home",
+            "x": 132,
+            "z": 313
+        },
+        {
+            "landmark": "cannae_grave_hamlet",
+            "rotation": 180,
+            "scale": 0.9,
+            "type": "abandoned_home",
+            "x": 128,
+            "z": 325
+        },
+        {
+            "landmark": "cannae_grave_hamlet",
+            "rotation": 180,
+            "scale": 1.1,
+            "type": "ruins",
+            "x": 152,
+            "z": 323
+        },
+        {
+            "landmark": "cannae_grave_hamlet",
+            "scale": 0.9,
+            "type": "ruins",
+            "x": 136,
+            "z": 307
+        },
+        {
+            "landmark": "cannae_grave_hamlet",
+            "rotation": 180,
+            "scale": 1,
+            "type": "dead_tree",
+            "x": 144,
+            "z": 332
+        },
+        {
+            "landmark": "cannae_grave_hamlet",
+            "scale": 0.9,
+            "type": "dead_tree",
+            "x": 124,
+            "z": 318
+        },
+        {
+            "landmark": "cannae_crossroad_shrine",
+            "scale": 1.1,
+            "type": "statue",
+            "x": 240,
+            "z": 424
+        },
+        {
+            "landmark": "cannae_crossroad_shrine",
+            "rotation": 90,
+            "scale": 1,
+            "type": "statue",
+            "x": 245,
+            "z": 412
+        },
+        {
+            "landmark": "cannae_crossroad_shrine",
+            "rotation": 270,
+            "scale": 1,
+            "type": "statue",
+            "x": 233.59,
+            "z": 410.59000000000003
+        },
+        {
+            "landmark": "cannae_crossroad_shrine",
+            "rotation": 90,
+            "scale": 1,
+            "type": "ruins",
+            "x": 245,
+            "z": 427
+        },
+        {
+            "landmark": "cannae_crossroad_shrine",
+            "rotation": 270,
+            "scale": 0.85,
+            "type": "ruins",
+            "x": 234,
+            "z": 428
+        },
+        {
+            "landmark": "cannae_crossroad_shrine",
+            "rotation": 90,
+            "scale": 1.1500000000000001,
+            "type": "ruins",
+            "x": 241,
+            "z": 433
+        },
+        {
+            "intensity": 1.2,
+            "landmark": "cannae_crossroad_shrine",
+            "persistent": true,
+            "radius": 3.2,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 240,
+            "z": 406
+        },
+        {
+            "landmark": "cannae_ridge_watch",
+            "rotation": 180,
+            "scale": 1,
+            "type": "statue",
+            "x": 520,
+            "z": 96
+        },
+        {
+            "landmark": "cannae_ridge_watch",
+            "rotation": 90,
+            "scale": 1,
+            "type": "tent",
+            "x": 524.57,
+            "z": 111.84
+        },
+        {
+            "landmark": "cannae_ridge_watch",
+            "rotation": 270,
+            "scale": 0.9500000000000001,
+            "type": "tent",
+            "x": 522.94,
+            "z": 120.7
+        },
+        {
+            "landmark": "cannae_ridge_watch",
+            "rotation": 90,
+            "scale": 1,
+            "type": "supply_cart",
+            "x": 528,
+            "z": 103
+        },
+        {
+            "landmark": "cannae_ridge_watch",
+            "rotation": 270,
+            "scale": 1,
+            "type": "weapon_rack",
+            "x": 510.88,
+            "z": 104.58
+        },
+        {
+            "intensity": 1.2,
+            "landmark": "cannae_ridge_watch",
+            "persistent": true,
+            "radius": 3.2,
+            "rotation": 180,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 519.96,
+            "z": 108.1
+        },
+        {
+            "landmark": "cannae_ridge_watch",
+            "rotation": 90,
+            "scale": 0.9,
+            "type": "ruins",
+            "x": 526,
+            "z": 88
         }
     ],
     "dressing": [
@@ -7677,6 +8127,15 @@
                 "olive_tree",
                 "olive_tree"
             ]
+        }
+    ],
+    "lakes": [
+        {
+            "depth": 40.1,
+            "id": "cannae_tarn",
+            "width": 40.3,
+            "x": 635.6,
+            "z": 113.2
         }
     ]
 }

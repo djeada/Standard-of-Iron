@@ -203,6 +203,7 @@ void TerrainPipeline::cache_terrain_uniforms(GL::Shader* shader,
   uniforms.has_height_texture = shader->optional_uniform_handle("u_has_height_tex");
   uniforms.height_texture = shader->optional_uniform_handle("u_height_tex");
   uniforms.has_field_texture = shader->optional_uniform_handle("u_has_field_tex");
+  uniforms.has_cover_texture = shader->optional_uniform_handle("u_has_cover_tex");
   uniforms.has_noise_atlas = shader->optional_uniform_handle("u_has_noise_atlas");
   uniforms.noise_atlas = shader->optional_uniform_handle("u_noise_atlas");
   uniforms.noise_atlas_detail = shader->optional_uniform_handle("u_noise_atlas_detail");
@@ -214,6 +215,7 @@ void TerrainPipeline::cache_terrain_uniforms(GL::Shader* shader,
   uniforms.noise_atlas_world_size =
       shader->optional_uniform_handle("u_noise_atlas_world_size");
   uniforms.field_texture = shader->optional_uniform_handle("u_field_tex");
+  uniforms.cover_texture = shader->optional_uniform_handle("u_cover_tex");
   uniforms.height_texel_size = shader->optional_uniform_handle("u_height_texel_size");
   uniforms.height_uv_scale = shader->optional_uniform_handle("u_height_uv_scale");
   uniforms.height_uv_offset = shader->optional_uniform_handle("u_height_uv_offset");

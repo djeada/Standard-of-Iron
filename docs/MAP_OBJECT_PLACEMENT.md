@@ -163,6 +163,14 @@ The script inspects authored JSON only. Procedural scatter—stones, grass, plan
 
 A procedural stone inside a ruin is therefore a scatter-clearance bug, not an authored-map bug.
 
+Ground that must stay open for building - a camp floor where a player lays
+farms - is authored as a `flat` with `"fields": true`. Generated scatter is kept
+off its level core (the inner `1 - taper` of the ellipse, grown by each prop's
+ground radius), so the field is not refused by a pine the scatter pass happened
+to drop on it. The core is one mask, `TerrainHeightMap::is_fields`, and the
+forest pass and the navigation grid's forest cells both read it too: fields laid
+inside a wood are a clearing, not tilled ground that still refuses cavalry.
+
 The script also refuses to move objects a designer has effectively pinned. An anchor building may step aside for a road or water, but not for other geometry. If a marketplace is authored into a hillside, the tool reports it and leaves it in place. A major building on broken ground is a design decision to revisit manually, not something an automated repair should slide several metres across its plaza.
 
 The central placement rule is simple: authored positions, physical footprints, rendered geometry, and built terrain must all describe the same world. The shared coordinate helpers and terrain-backed audit exist to keep those representations from drifting apart.

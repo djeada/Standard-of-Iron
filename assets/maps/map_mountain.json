@@ -490,6 +490,94 @@
       "height": 9.0,
       "rotation": 270.0,
       "description": "Rim range."
+    },
+    {
+      "id": "p1_barracks_fields",
+      "type": "flat",
+      "x": 32.0,
+      "z": 44.0,
+      "width": 44.0,
+      "depth": 34.0,
+      "rotation": 0.0,
+      "fields": true,
+      "description": "Camp floor of p1: levelled round the barracks and kept clear of scatter, so the camp has room for its fields."
+    },
+    {
+      "id": "p2_barracks_fields",
+      "type": "flat",
+      "x": 196.0,
+      "z": 32.0,
+      "width": 44.0,
+      "depth": 34.0,
+      "rotation": 90.0,
+      "fields": true,
+      "description": "Camp floor of p2: levelled round the barracks and kept clear of scatter, so the camp has room for its fields."
+    },
+    {
+      "id": "p3_barracks_fields",
+      "type": "flat",
+      "x": 208.0,
+      "z": 196.0,
+      "width": 44.0,
+      "depth": 34.0,
+      "rotation": 0.0,
+      "fields": true,
+      "description": "Camp floor of p3: levelled round the barracks and kept clear of scatter, so the camp has room for its fields."
+    },
+    {
+      "id": "p4_barracks_fields",
+      "type": "flat",
+      "x": 44.0,
+      "z": 208.0,
+      "width": 44.0,
+      "depth": 34.0,
+      "rotation": 90.0,
+      "fields": true,
+      "description": "Camp floor of p4: levelled round the barracks and kept clear of scatter, so the camp has room for its fields."
+    },
+    {
+      "id": "waystation_1_barracks_fields",
+      "type": "flat",
+      "x": 62.0,
+      "z": 106.0,
+      "width": 44.0,
+      "depth": 34.0,
+      "rotation": 0.0,
+      "fields": true,
+      "description": "Camp floor of waystation 1: levelled round the barracks and kept clear of scatter, so the camp has room for its fields."
+    },
+    {
+      "id": "waystation_2_barracks_fields",
+      "type": "flat",
+      "x": 134.0,
+      "z": 62.0,
+      "width": 44.0,
+      "depth": 34.0,
+      "rotation": 90.0,
+      "fields": true,
+      "description": "Camp floor of waystation 2: levelled round the barracks and kept clear of scatter, so the camp has room for its fields."
+    },
+    {
+      "id": "waystation_3_barracks_fields",
+      "type": "flat",
+      "x": 178.0,
+      "z": 134.0,
+      "width": 44.0,
+      "depth": 34.0,
+      "rotation": 0.0,
+      "fields": true,
+      "description": "Camp floor of waystation 3: levelled round the barracks and kept clear of scatter, so the camp has room for its fields."
+    },
+    {
+      "id": "waystation_4_barracks_fields",
+      "type": "flat",
+      "x": 106.0,
+      "z": 178.0,
+      "width": 44.0,
+      "depth": 34.0,
+      "rotation": 90.0,
+      "fields": true,
+      "description": "Camp floor of waystation 4: levelled round the barracks and kept clear of scatter, so the camp has room for its fields."
     }
   ],
   "forests": [
@@ -553,7 +641,249 @@
         239.0
       ],
       "width": 7.0,
-      "id": "north_south_race"
+      "id": "north_south_race",
+      "waypoints": [
+        [
+          120.0,
+          0.0
+        ],
+        [
+          120.0,
+          4.0
+        ],
+        [
+          120.0,
+          8.0
+        ],
+        [
+          120.0,
+          12.0
+        ],
+        [
+          120.0,
+          16.0
+        ],
+        [
+          120.0,
+          20.0
+        ],
+        [
+          120.0,
+          24.0
+        ],
+        [
+          120.0,
+          28.0
+        ],
+        [
+          120.0,
+          32.0
+        ],
+        [
+          120.0,
+          36.0
+        ],
+        [
+          120.0,
+          40.0
+        ],
+        [
+          120.0,
+          44.0
+        ],
+        [
+          119.92,
+          48.0
+        ],
+        [
+          118.25,
+          52.0
+        ],
+        [
+          115.42,
+          56.0
+        ],
+        [
+          113.3,
+          60.0
+        ],
+        [
+          113.3,
+          64.0
+        ],
+        [
+          115.42,
+          68.0
+        ],
+        [
+          118.25,
+          72.0
+        ],
+        [
+          119.92,
+          76.0
+        ],
+        [
+          120.0,
+          80.0
+        ],
+        [
+          120.0,
+          84.0
+        ],
+        [
+          120.0,
+          88.0
+        ],
+        [
+          120.1,
+          92.0
+        ],
+        [
+          122.14,
+          96.0
+        ],
+        [
+          124.6,
+          100.0
+        ],
+        [
+          124.6,
+          104.0
+        ],
+        [
+          122.14,
+          108.0
+        ],
+        [
+          120.1,
+          112.0
+        ],
+        [
+          120.0,
+          116.0
+        ],
+        [
+          120.0,
+          120.0
+        ],
+        [
+          120.0,
+          124.1
+        ],
+        [
+          119.85,
+          128.21
+        ],
+        [
+          117.64,
+          132.31
+        ],
+        [
+          115.25,
+          136.41
+        ],
+        [
+          115.62,
+          140.52
+        ],
+        [
+          118.29,
+          144.62
+        ],
+        [
+          119.99,
+          148.72
+        ],
+        [
+          120.0,
+          152.83
+        ],
+        [
+          120.0,
+          156.93
+        ],
+        [
+          120.0,
+          161.03
+        ],
+        [
+          120.35,
+          165.14
+        ],
+        [
+          122.59,
+          169.24
+        ],
+        [
+          125.46,
+          173.34
+        ],
+        [
+          126.98,
+          177.45
+        ],
+        [
+          126.08,
+          181.55
+        ],
+        [
+          123.39,
+          185.66
+        ],
+        [
+          120.78,
+          189.76
+        ],
+        [
+          120.0,
+          193.86
+        ],
+        [
+          120.0,
+          197.97
+        ],
+        [
+          120.0,
+          202.07
+        ],
+        [
+          120.0,
+          206.17
+        ],
+        [
+          120.0,
+          210.28
+        ],
+        [
+          120.0,
+          214.38
+        ],
+        [
+          120.0,
+          218.48
+        ],
+        [
+          120.0,
+          222.59
+        ],
+        [
+          120.0,
+          226.69
+        ],
+        [
+          120.0,
+          230.79
+        ],
+        [
+          120.0,
+          234.9
+        ],
+        [
+          120.0,
+          239.0
+        ]
+      ]
     },
     {
       "start": [
@@ -565,7 +895,249 @@
         120.0
       ],
       "width": 7.0,
-      "id": "east_west_race"
+      "id": "east_west_race",
+      "waypoints": [
+        [
+          0.0,
+          120.0
+        ],
+        [
+          4.0,
+          120.0
+        ],
+        [
+          8.0,
+          120.0
+        ],
+        [
+          12.0,
+          120.0
+        ],
+        [
+          16.0,
+          120.0
+        ],
+        [
+          20.0,
+          120.0
+        ],
+        [
+          24.0,
+          120.0
+        ],
+        [
+          28.0,
+          120.0
+        ],
+        [
+          32.0,
+          120.0
+        ],
+        [
+          36.0,
+          120.0
+        ],
+        [
+          40.0,
+          120.0
+        ],
+        [
+          44.0,
+          120.0
+        ],
+        [
+          48.0,
+          120.08
+        ],
+        [
+          52.0,
+          121.75
+        ],
+        [
+          56.0,
+          124.58
+        ],
+        [
+          60.0,
+          126.7
+        ],
+        [
+          64.0,
+          126.7
+        ],
+        [
+          68.0,
+          124.58
+        ],
+        [
+          72.0,
+          121.75
+        ],
+        [
+          76.0,
+          120.08
+        ],
+        [
+          80.0,
+          120.0
+        ],
+        [
+          84.0,
+          120.0
+        ],
+        [
+          88.0,
+          120.0
+        ],
+        [
+          92.0,
+          119.9
+        ],
+        [
+          96.0,
+          117.86
+        ],
+        [
+          100.0,
+          115.4
+        ],
+        [
+          104.0,
+          115.4
+        ],
+        [
+          108.0,
+          117.86
+        ],
+        [
+          112.0,
+          119.9
+        ],
+        [
+          116.0,
+          120.0
+        ],
+        [
+          120.0,
+          120.0
+        ],
+        [
+          124.1,
+          120.0
+        ],
+        [
+          128.21,
+          120.15
+        ],
+        [
+          132.31,
+          122.36
+        ],
+        [
+          136.41,
+          124.75
+        ],
+        [
+          140.52,
+          124.38
+        ],
+        [
+          144.62,
+          121.71
+        ],
+        [
+          148.72,
+          120.01
+        ],
+        [
+          152.83,
+          120.0
+        ],
+        [
+          156.93,
+          120.0
+        ],
+        [
+          161.03,
+          120.0
+        ],
+        [
+          165.14,
+          119.65
+        ],
+        [
+          169.24,
+          117.41
+        ],
+        [
+          173.34,
+          114.54
+        ],
+        [
+          177.45,
+          113.02
+        ],
+        [
+          181.55,
+          113.92
+        ],
+        [
+          185.66,
+          116.61
+        ],
+        [
+          189.76,
+          119.22
+        ],
+        [
+          193.86,
+          120.0
+        ],
+        [
+          197.97,
+          120.0
+        ],
+        [
+          202.07,
+          120.0
+        ],
+        [
+          206.17,
+          120.0
+        ],
+        [
+          210.28,
+          120.0
+        ],
+        [
+          214.38,
+          120.0
+        ],
+        [
+          218.48,
+          120.0
+        ],
+        [
+          222.59,
+          120.0
+        ],
+        [
+          226.69,
+          120.0
+        ],
+        [
+          230.79,
+          120.0
+        ],
+        [
+          234.9,
+          120.0
+        ],
+        [
+          239.0,
+          120.0
+        ]
+      ]
     }
   ],
   "lakes": [
@@ -1378,7 +1950,7 @@
           189.78
         ],
         [
-          60.55,
+          60.58,
           189.49
         ]
       ]
@@ -1966,8 +2538,8 @@
     {
       "id": "p4_cart",
       "type": "supply_cart",
-      "x": 58.78,
-      "z": 210.58,
+      "x": 50.88,
+      "z": 215.14,
       "rotation": 405.0
     },
     {
@@ -2661,7 +3233,7 @@
     "far_simulation_radius": 140.0,
     "sheep": {
       "enabled": true,
-      "groups": 2,
+      "groups": 4,
       "group_size_min": 5,
       "group_size_max": 8,
       "roam_radius": 13.0,
@@ -2669,21 +3241,31 @@
       "respawn_delay": 120.0,
       "spawn_areas": [
         {
-          "x": 88.0,
-          "z": 104.0,
-          "radius": 15.0
+          "x": 86.0,
+          "z": 66.0,
+          "radius": 13.0
         },
         {
-          "x": 152.0,
-          "z": 136.0,
-          "radius": 15.0
+          "x": 174.0,
+          "z": 86.0,
+          "radius": 13.0
+        },
+        {
+          "x": 154.0,
+          "z": 174.0,
+          "radius": 13.0
+        },
+        {
+          "x": 66.0,
+          "z": 154.0,
+          "radius": 13.0
         }
       ],
       "alert_radius": 11.0
     },
     "wolves": {
       "enabled": true,
-      "groups": 2,
+      "groups": 4,
       "group_size_min": 3,
       "group_size_max": 5,
       "roam_radius": 26.0,
@@ -2696,8 +3278,18 @@
           "radius": 18.0
         },
         {
+          "x": 180.0,
+          "z": 196.0,
+          "radius": 18.0
+        },
+        {
           "x": 44.0,
           "z": 180.0,
+          "radius": 18.0
+        },
+        {
+          "x": 60.0,
+          "z": 44.0,
           "radius": 18.0
         }
       ],
@@ -2715,10 +3307,10 @@
   },
   "starting_resources": {
     "gold": 250,
-    "food": 200,
+    "food": 140,
     "wood": 250,
-    "stone": 120,
-    "iron": 80
+    "stone": 160,
+    "iron": 100
   },
   "victory": {
     "type": "elimination",

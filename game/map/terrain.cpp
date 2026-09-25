@@ -8,6 +8,7 @@
 #include <numbers>
 #include <vector>
 
+#include "forest_outline.h"
 #include "terrain_footprint.h"
 #include "terrain_landform.h"
 #include "terrain_surface.h"
@@ -138,6 +139,7 @@ TerrainHeightMap::TerrainHeightMap(int width, int height, float tile_size)
   m_terrain_types.resize(count, TerrainType::Flat);
   m_hill_entrances.resize(count, false);
   m_hill_walkable.resize(count, false);
+  m_fields.resize(count, 0);
 }
 
 void TerrainHeightMap::build_from_features(
@@ -151,6 +153,7 @@ void TerrainHeightMap::build_from_features(
   std::fill(m_terrain_types.begin(), m_terrain_types.end(), TerrainType::Flat);
   std::fill(m_hill_entrances.begin(), m_hill_entrances.end(), false);
   std::fill(m_hill_walkable.begin(), m_hill_walkable.end(), false);
+  m_fields.assign(static_cast<std::size_t>(map_cell_count), 0);
   m_hill_entrance_centerlines.clear();
 
   const float grid_half_width = m_width * 0.5F - 0.5F;
@@ -870,10 +873,15 @@ void TerrainHeightMap::build_from_features(
     }
 
     if (feature.type == TerrainType::Forest || feature.type == TerrainType::River) {
+      const bool lobed =
+          feature.type == TerrainType::Forest && feature.outline_seed >= 0.0F;
+      const float reach = lobed ? k_forest_outline_reach : 1.0F;
       const float half_width =
-          feature.width > 0.0F ? feature.width * 0.5F / m_tile_size : grid_radius;
+          (feature.width > 0.0F ? feature.width * 0.5F / m_tile_size : grid_radius) *
+          reach;
       const float half_depth =
-          feature.depth > 0.0F ? feature.depth * 0.5F / m_tile_size : grid_radius;
+          (feature.depth > 0.0F ? feature.depth * 0.5F / m_tile_size : grid_radius) *
+          reach;
       const int min_x = std::max(0, int(std::floor(grid_center_x - half_width - 1.0F)));
       const int max_x =
           std::min(m_width - 1, int(std::ceil(grid_center_x + half_width + 1.0F)));
@@ -887,7 +895,12 @@ void TerrainHeightMap::build_from_features(
               (float(x) - grid_center_x) / std::max(half_width, 0.0001F);
           const float normalized_z =
               (float(z) - grid_center_z) / std::max(half_depth, 0.0001F);
-          if (normalized_x * normalized_x + normalized_z * normalized_z > 1.0F) {
+          const float edge = lobed ? forest_outline_scale(feature.outline_seed,
+                                                          float(x) - grid_center_x,
+                                                          float(z) - grid_center_z) /
+                                         reach
+                                   : 1.0F;
+          if (normalized_x * normalized_x + normalized_z * normalized_z > edge * edge) {
             continue;
           }
 
@@ -895,7 +908,7 @@ void TerrainHeightMap::build_from_features(
           if (feature.type == TerrainType::River) {
             m_heights[idx] = 0.0F;
             m_terrain_types[idx] = TerrainType::River;
-          } else if (m_terrain_types[idx] == TerrainType::Flat) {
+          } else if (m_terrain_types[idx] == TerrainType::Flat && m_fields[idx] == 0) {
             m_terrain_types[idx] = TerrainType::Forest;
           }
         }
@@ -949,6 +962,9 @@ void TerrainHeightMap::build_from_features(
           erosion_strength[idx] = 0.0F;
           erosion_protected[idx] = 1;
         }
+        if (feature.fields && feather >= 1.0F) {
+          m_fields[idx] = 1;
+        }
       }
     }
   }
@@ -956,6 +972,9 @@ void TerrainHeightMap::build_from_features(
   for (int idx = 0; idx < map_cell_count; ++idx) {
     if (m_hill_walkable[idx]) {
       erosion_protected[idx] = 1;
+    }
+    if (m_terrain_types[idx] != TerrainType::Flat) {
+      m_fields[idx] = 0;
     }
   }
   if (std::max(m_width, m_height) >= 128) {
@@ -1066,6 +1085,13 @@ auto TerrainHeightMap::getHillEntranceTraversalPosition(
     }
   }
   return closest;
+}
+
+auto TerrainHeightMap::is_fields(int grid_x, int grid_z) const -> bool {
+  if (!in_bounds(grid_x, grid_z) || m_fields.empty()) {
+    return false;
+  }
+  return m_fields[static_cast<std::size_t>(indexAt(grid_x, grid_z))] != 0;
 }
 
 auto TerrainHeightMap::getTerrainType(int grid_x, int grid_z) const -> TerrainType {
@@ -1714,6 +1740,7 @@ void TerrainHeightMap::restore_from_data(const std::vector<float>& heights,
   m_hill_entrances.resize(expected_size, false);
   m_hill_walkable.clear();
   m_hill_walkable.resize(expected_size, true);
+  m_fields.assign(expected_size, 0);
   m_hill_entrance_centerlines.clear();
 
   for (size_t i = 0; i < m_terrain_types.size(); ++i) {

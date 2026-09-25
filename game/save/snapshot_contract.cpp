@@ -194,6 +194,10 @@ constexpr std::array k_fields = std::to_array<FieldSpec>({
     {"CommanderAuraBuffComponent",
      DerivedRebuilt,
      "Recomputed every tick from nearby commanders."},
+    {"ForestCoverComponent",
+     DerivedRebuilt,
+     "Recomputed every tick from the ground a unit stands on, when it last "
+     "struck and which armies have someone close enough to see into the wood."},
 
     {"MotionPresentationComponent",
      PresentationOnly,

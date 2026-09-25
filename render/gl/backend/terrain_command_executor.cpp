@@ -331,6 +331,16 @@ void Backend::set_terrain_chunk_uniforms(Shader& shader,
       shader.set_uniform(uniforms.field_texture, TextureUnit::terrain_fields);
     }
   }
+  const bool cover_ready = height.enabled && height.cover_texture != nullptr;
+  if (uniforms.has_cover_texture != Shader::InvalidUniform) {
+    shader.set_uniform(uniforms.has_cover_texture, cover_ready ? 1 : 0);
+  }
+  if (cover_ready) {
+    height.cover_texture->bind(TextureUnit::terrain_cover);
+    if (uniforms.cover_texture != Shader::InvalidUniform) {
+      shader.set_uniform(uniforms.cover_texture, TextureUnit::terrain_cover);
+    }
+  }
 
   const bool atlas_ready = height.noise_atlas != 0U && height.noise_atlas_detail != 0U;
   if (uniforms.has_noise_atlas != Shader::InvalidUniform) {

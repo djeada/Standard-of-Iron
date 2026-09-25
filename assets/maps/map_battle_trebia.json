@@ -178,28 +178,46 @@
             "z": 560
         },
         {
-            "id": "trebia_bank_screen",
+            "id": "trebia_bank_screen_2",
             "radius": 28,
             "x": 310,
             "z": 186
         },
         {
-            "id": "trebia_bank_screen",
+            "id": "trebia_bank_screen_3",
             "radius": 28,
             "x": 84,
             "z": 438
         },
         {
-            "id": "trebia_bank_screen",
+            "id": "trebia_bank_screen_4",
             "radius": 28,
             "x": 488,
             "z": 503
         },
         {
-            "id": "trebia_bank_screen",
+            "id": "trebia_bank_screen_5",
             "radius": 28,
             "x": 580,
             "z": 458
+        },
+        {
+            "id": "trebia_ambush_wood_1",
+            "radius": 17.8,
+            "x": 77.4,
+            "z": 319.8
+        },
+        {
+            "id": "trebia_ambush_wood_2",
+            "radius": 16.1,
+            "x": 413.2,
+            "z": 57.6
+        },
+        {
+            "id": "trebia_ambush_wood_3",
+            "radius": 14.6,
+            "x": 186.6,
+            "z": 477.5
         }
     ],
     "grid": {
@@ -268,6 +286,13 @@
             "player_id": 3,
             "x": 440,
             "z": 420
+        },
+        {
+            "facing": "east",
+            "id": "trebia_woodside_hamlet",
+            "kind": "hamlet",
+            "x": 41,
+            "z": 305
         }
     ],
     "max_troops_per_player": 2140,
@@ -2473,6 +2498,30 @@
             "z": 62.11
         },
         {
+            "max_population": -1,
+            "nation": "carthage",
+            "player_id": 1,
+            "type": "carthage_sword_commander",
+            "x": 280.11,
+            "z": 445.39
+        },
+        {
+            "max_population": -1,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "type": "roman_veteran_consul",
+            "x": 153.0,
+            "z": 50.0
+        },
+        {
+            "max_population": -1,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "type": "roman_legion_organizer",
+            "x": 383.6,
+            "z": 268.0
+        },
+        {
             "behavior": "guard",
             "landmark": "trebia_ridge_sanctuary",
             "max_population": -1,
@@ -2552,30 +2601,6 @@
             "type": "archer",
             "x": 302,
             "z": 290
-        },
-        {
-            "max_population": -1,
-            "nation": "carthage",
-            "player_id": 1,
-            "type": "carthage_sword_commander",
-            "x": 280.11,
-            "z": 445.39
-        },
-        {
-            "max_population": -1,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "roman_veteran_consul",
-            "x": 153.0,
-            "z": 50.0
-        },
-        {
-            "max_population": -1,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "roman_legion_organizer",
-            "x": 383.6,
-            "z": 268.0
         }
     ],
     "starting_resources": {
@@ -2624,24 +2649,6 @@
             "type": "marketplace",
             "x": 144.46,
             "z": 43.7
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "trebia_winter_camp",
-            "type": "home",
-            "x": 138.0,
-            "z": 34.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "trebia_winter_camp",
-            "type": "home",
-            "x": 138.0,
-            "z": 46.0
         },
         {
             "authored": true,
@@ -2723,168 +2730,6 @@
             "nation": "roman_republic",
             "player_id": 3,
             "settlement": "trebia_placentia_town",
-            "type": "home",
-            "x": 578.0,
-            "z": 124.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "trebia_placentia_town",
-            "type": "home",
-            "x": 572.0,
-            "z": 130.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "trebia_placentia_town",
-            "type": "home",
-            "x": 560.0,
-            "z": 100.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "trebia_placentia_town",
-            "type": "home",
-            "x": 572.0,
-            "z": 100.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "trebia_placentia_town",
-            "type": "home",
-            "x": 554.0,
-            "z": 106.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "trebia_placentia_town",
-            "type": "home",
-            "x": 578.0,
-            "z": 106.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "trebia_placentia_town",
-            "type": "home",
-            "x": 548.0,
-            "z": 124.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "trebia_placentia_town",
-            "type": "home",
-            "x": 584.0,
-            "z": 124.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "trebia_placentia_town",
-            "type": "home",
-            "x": 578.0,
-            "z": 130.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "trebia_placentia_town",
-            "type": "home",
-            "x": 560.0,
-            "z": 136.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "trebia_placentia_town",
-            "type": "home",
-            "x": 572.0,
-            "z": 136.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "trebia_placentia_town",
-            "type": "home",
-            "x": 554.0,
-            "z": 100.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "trebia_placentia_town",
-            "type": "home",
-            "x": 578.0,
-            "z": 100.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "trebia_placentia_town",
-            "type": "home",
-            "x": 548.0,
-            "z": 106.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "trebia_placentia_town",
-            "type": "home",
-            "x": 584.0,
-            "z": 106.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "trebia_placentia_town",
-            "type": "home",
-            "x": 548.0,
-            "z": 130.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "trebia_placentia_town",
-            "type": "home",
-            "x": 584.0,
-            "z": 130.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "trebia_placentia_town",
-            "type": "home",
-            "x": 578.0,
-            "z": 136.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "trebia_placentia_town",
             "type": "defense_tower",
             "x": 590.34,
             "z": 124.29
@@ -2897,21 +2742,6 @@
             "type": "defense_tower",
             "x": 541.66,
             "z": 124.29
-        },
-        {
-            "landmark": "trebia_south_sanctuary",
-            "nation": "carthage",
-            "type": "temple",
-            "x": 300,
-            "z": 284
-        },
-        {
-            "landmark": "trebia_ridge_sanctuary",
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "temple",
-            "x": 392,
-            "z": 268
         },
         {
             "authored": true,
@@ -2987,6 +2817,444 @@
             "type": "home",
             "x": 319.7,
             "z": 510
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 0.0,
+            "settlement": "trebia_winter_camp",
+            "type": "home",
+            "x": 138.0,
+            "z": 34.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 180.0,
+            "settlement": "trebia_winter_camp",
+            "type": "home",
+            "x": 138.0,
+            "z": 46.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 180.0,
+            "settlement": "trebia_placentia_town",
+            "type": "home",
+            "x": 578.0,
+            "z": 124.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 270.0,
+            "settlement": "trebia_placentia_town",
+            "type": "home",
+            "x": 572.0,
+            "z": 130.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 180.0,
+            "settlement": "trebia_placentia_town",
+            "type": "home",
+            "x": 560.0,
+            "z": 100.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 180.0,
+            "settlement": "trebia_placentia_town",
+            "type": "home",
+            "x": 572.0,
+            "z": 100.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "trebia_placentia_town",
+            "type": "home",
+            "x": 554.0,
+            "z": 106.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "trebia_placentia_town",
+            "type": "home",
+            "x": 578.0,
+            "z": 106.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 180.0,
+            "settlement": "trebia_placentia_town",
+            "type": "home",
+            "x": 548.0,
+            "z": 124.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 180.0,
+            "settlement": "trebia_placentia_town",
+            "type": "home",
+            "x": 584.0,
+            "z": 124.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "trebia_placentia_town",
+            "type": "home",
+            "x": 578.0,
+            "z": 130.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "trebia_placentia_town",
+            "type": "home",
+            "x": 560.0,
+            "z": 136.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "trebia_placentia_town",
+            "type": "home",
+            "x": 572.0,
+            "z": 136.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 180.0,
+            "settlement": "trebia_placentia_town",
+            "type": "home",
+            "x": 554.0,
+            "z": 100.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 180.0,
+            "settlement": "trebia_placentia_town",
+            "type": "home",
+            "x": 578.0,
+            "z": 100.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 270.0,
+            "settlement": "trebia_placentia_town",
+            "type": "home",
+            "x": 548.0,
+            "z": 106.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 90.0,
+            "settlement": "trebia_placentia_town",
+            "type": "home",
+            "x": 584.0,
+            "z": 106.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 270.0,
+            "settlement": "trebia_placentia_town",
+            "type": "home",
+            "x": 548.0,
+            "z": 130.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 90.0,
+            "settlement": "trebia_placentia_town",
+            "type": "home",
+            "x": 584.0,
+            "z": 130.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "trebia_placentia_town",
+            "type": "home",
+            "x": 578.0,
+            "z": 136.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 90,
+            "type": "home",
+            "x": 142.88,
+            "z": 16.93
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 270,
+            "type": "home",
+            "x": 154.26,
+            "z": 16.42
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "type": "home",
+            "x": 151.84,
+            "z": 61.28
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 90,
+            "type": "home",
+            "x": 142.6,
+            "z": 10.94
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 270,
+            "type": "home",
+            "x": 154.19,
+            "z": 10.41
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "type": "home",
+            "x": 157.74,
+            "z": 64.45
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 270,
+            "type": "home",
+            "x": 164.14,
+            "z": 68.9
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 90,
+            "type": "home",
+            "x": 142.33,
+            "z": 4.95
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 270,
+            "type": "home",
+            "x": 153.92,
+            "z": 4.42
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 180,
+            "type": "home",
+            "x": 185.99,
+            "z": 50.64
+        },
+        {
+            "dressing": "trebia_winter_fields_1",
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 0,
+            "type": "farm",
+            "x": 117.0,
+            "z": 35.0
+        },
+        {
+            "dressing": "trebia_winter_fields_2",
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 0,
+            "type": "farm",
+            "x": 113.0,
+            "z": 19.0
+        },
+        {
+            "dressing": "trebia_winter_fields_3",
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 0,
+            "type": "farm",
+            "x": 185.0,
+            "z": 67.0
+        },
+        {
+            "landmark": "trebia_south_sanctuary",
+            "nation": "carthage",
+            "type": "temple",
+            "x": 300,
+            "z": 284
+        },
+        {
+            "landmark": "trebia_ridge_sanctuary",
+            "nation": "roman_republic",
+            "player_id": 3,
+            "type": "temple",
+            "x": 392,
+            "z": 268
+        },
+        {
+            "type": "farm",
+            "x": 550.0,
+            "z": 33.5,
+            "rotation": 0,
+            "dressing": "trebia_placentia_fields_north",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 567.0,
+            "z": 33.5,
+            "rotation": 0,
+            "dressing": "trebia_placentia_fields_north",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 584.0,
+            "z": 33.5,
+            "rotation": 0,
+            "dressing": "trebia_placentia_fields_north",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 550.0,
+            "z": 50.5,
+            "rotation": 0,
+            "dressing": "trebia_placentia_fields_north",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 567.0,
+            "z": 50.5,
+            "rotation": 0,
+            "dressing": "trebia_placentia_fields_north",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 584.0,
+            "z": 50.5,
+            "rotation": 0,
+            "dressing": "trebia_placentia_fields_north",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 504.5,
+            "z": 52.5,
+            "rotation": 0,
+            "dressing": "trebia_placentia_fields_northwest",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 521.5,
+            "z": 52.5,
+            "rotation": 0,
+            "dressing": "trebia_placentia_fields_northwest",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 504.5,
+            "z": 69.5,
+            "rotation": 0,
+            "dressing": "trebia_placentia_fields_northwest",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 521.5,
+            "z": 69.5,
+            "rotation": 0,
+            "dressing": "trebia_placentia_fields_northwest",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 608.5,
+            "z": 191.0,
+            "rotation": 0,
+            "dressing": "trebia_placentia_fields_southeast",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 625.5,
+            "z": 191.0,
+            "rotation": 0,
+            "dressing": "trebia_placentia_fields_southeast",
+            "player_id": 3,
+            "nation": "roman_republic"
         },
         {
             "authored": true,
@@ -4037,114 +4305,6 @@
             ],
             "type": "wall_segment",
             "width": 2
-        },
-        {
-            "type": "farm",
-            "x": 550.0,
-            "z": 33.5,
-            "rotation": 0,
-            "dressing": "trebia_placentia_fields_north",
-            "player_id": 3,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 567.0,
-            "z": 33.5,
-            "rotation": 0,
-            "dressing": "trebia_placentia_fields_north",
-            "player_id": 3,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 584.0,
-            "z": 33.5,
-            "rotation": 0,
-            "dressing": "trebia_placentia_fields_north",
-            "player_id": 3,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 550.0,
-            "z": 50.5,
-            "rotation": 0,
-            "dressing": "trebia_placentia_fields_north",
-            "player_id": 3,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 567.0,
-            "z": 50.5,
-            "rotation": 0,
-            "dressing": "trebia_placentia_fields_north",
-            "player_id": 3,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 584.0,
-            "z": 50.5,
-            "rotation": 0,
-            "dressing": "trebia_placentia_fields_north",
-            "player_id": 3,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 504.5,
-            "z": 52.5,
-            "rotation": 0,
-            "dressing": "trebia_placentia_fields_northwest",
-            "player_id": 3,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 521.5,
-            "z": 52.5,
-            "rotation": 0,
-            "dressing": "trebia_placentia_fields_northwest",
-            "player_id": 3,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 504.5,
-            "z": 69.5,
-            "rotation": 0,
-            "dressing": "trebia_placentia_fields_northwest",
-            "player_id": 3,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 521.5,
-            "z": 69.5,
-            "rotation": 0,
-            "dressing": "trebia_placentia_fields_northwest",
-            "player_id": 3,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 608.5,
-            "z": 191.0,
-            "rotation": 0,
-            "dressing": "trebia_placentia_fields_southeast",
-            "player_id": 3,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 625.5,
-            "z": 191.0,
-            "rotation": 0,
-            "dressing": "trebia_placentia_fields_southeast",
-            "player_id": 3,
-            "nation": "roman_republic"
         }
     ],
     "terrain": [
@@ -4367,7 +4527,7 @@
             "enabled": true,
             "group_size_max": 7,
             "group_size_min": 4,
-            "groups": 2,
+            "groups": 4,
             "respawn": true,
             "respawn_delay": 90,
             "roam_radius": 16,
@@ -4386,6 +4546,11 @@
                     "radius": 14,
                     "x": 415,
                     "z": 567
+                },
+                {
+                    "radius": 12.0,
+                    "x": 91.1,
+                    "z": 37.8
                 }
             ]
         },
@@ -4394,7 +4559,7 @@
             "enabled": true,
             "group_size_max": 4,
             "group_size_min": 2,
-            "groups": 1,
+            "groups": 5,
             "respawn": false,
             "roam_radius": 22,
             "spawn_areas": [
@@ -4412,6 +4577,16 @@
                     "radius": 22,
                     "x": 396,
                     "z": 617
+                },
+                {
+                    "radius": 20.0,
+                    "x": 310,
+                    "z": 186
+                },
+                {
+                    "radius": 20.0,
+                    "x": 84,
+                    "z": 438
                 }
             ],
             "waves": [
@@ -5240,358 +5415,6 @@
             "type": "abandoned_home",
             "x": 469.57,
             "z": 614.08
-        },
-        {
-            "landmark": "trebia_south_sanctuary",
-            "rotation": 90,
-            "scale": 1,
-            "type": "statue",
-            "x": 305.5,
-            "z": 275
-        },
-        {
-            "landmark": "trebia_south_sanctuary",
-            "rotation": 270,
-            "scale": 1,
-            "type": "statue",
-            "x": 294.5,
-            "z": 281
-        },
-        {
-            "landmark": "trebia_south_sanctuary",
-            "rotation": 90,
-            "scale": 1,
-            "type": "statue",
-            "x": 305.5,
-            "z": 266
-        },
-        {
-            "landmark": "trebia_south_sanctuary",
-            "rotation": 270,
-            "scale": 1,
-            "type": "statue",
-            "x": 294.5,
-            "z": 266
-        },
-        {
-            "landmark": "trebia_south_sanctuary",
-            "rotation": 90,
-            "scale": 1.1,
-            "type": "ruins",
-            "x": 307,
-            "z": 293
-        },
-        {
-            "landmark": "trebia_south_sanctuary",
-            "rotation": 270,
-            "scale": 0.9,
-            "type": "ruins",
-            "x": 294,
-            "z": 295
-        },
-        {
-            "landmark": "trebia_south_sanctuary",
-            "rotation": 90,
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 301,
-            "z": 298
-        },
-        {
-            "intensity": 1.2,
-            "landmark": "trebia_south_sanctuary",
-            "persistent": true,
-            "radius": 3.2,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 301.56,
-            "z": 274.99
-        },
-        {
-            "landmark": "trebia_east_hamlet",
-            "scale": 1,
-            "type": "abandoned_home",
-            "x": 516.3,
-            "z": 372.47
-        },
-        {
-            "landmark": "trebia_east_hamlet",
-            "rotation": 180,
-            "scale": 1,
-            "type": "abandoned_home",
-            "x": 514.41,
-            "z": 386.41
-        },
-        {
-            "landmark": "trebia_east_hamlet",
-            "rotation": 180,
-            "scale": 1,
-            "type": "abandoned_home",
-            "x": 528,
-            "z": 387
-        },
-        {
-            "landmark": "trebia_east_hamlet",
-            "scale": 0.9,
-            "type": "abandoned_home",
-            "x": 534,
-            "z": 375
-        },
-        {
-            "landmark": "trebia_east_hamlet",
-            "scale": 1.1,
-            "type": "ruins",
-            "x": 508,
-            "z": 377
-        },
-        {
-            "landmark": "trebia_east_hamlet",
-            "rotation": 180,
-            "scale": 0.9,
-            "type": "ruins",
-            "x": 524,
-            "z": 393
-        },
-        {
-            "landmark": "trebia_east_hamlet",
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 516,
-            "z": 368
-        },
-        {
-            "landmark": "trebia_east_hamlet",
-            "rotation": 180,
-            "scale": 0.9,
-            "type": "dead_tree",
-            "x": 536,
-            "z": 382
-        },
-        {
-            "landmark": "trebia_ridge_sanctuary",
-            "scale": 1,
-            "type": "statue",
-            "x": 387.7,
-            "z": 264.15
-        },
-        {
-            "landmark": "trebia_ridge_sanctuary",
-            "rotation": 180,
-            "scale": 1,
-            "type": "statue",
-            "x": 385.7,
-            "z": 271.85
-        },
-        {
-            "landmark": "trebia_ridge_sanctuary",
-            "scale": 1.1,
-            "type": "ruins",
-            "x": 398.3,
-            "z": 263.1
-        },
-        {
-            "landmark": "trebia_ridge_sanctuary",
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 401.8,
-            "z": 267.3
-        },
-        {
-            "intensity": 1.2,
-            "landmark": "trebia_ridge_sanctuary",
-            "persistent": true,
-            "radius": 3.2,
-            "rotation": 270,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 387.8,
-            "z": 268
-        },
-        {
-            "landmark": "trebia_frozen_hamlet",
-            "rotation": 270,
-            "scale": 1,
-            "type": "abandoned_home",
-            "x": 234,
-            "z": 200
-        },
-        {
-            "landmark": "trebia_frozen_hamlet",
-            "rotation": 90,
-            "scale": 1,
-            "type": "abandoned_home",
-            "x": 251,
-            "z": 207
-        },
-        {
-            "landmark": "trebia_frozen_hamlet",
-            "rotation": 90,
-            "scale": 1,
-            "type": "abandoned_home",
-            "x": 247,
-            "z": 192
-        },
-        {
-            "landmark": "trebia_frozen_hamlet",
-            "rotation": 270,
-            "scale": 0.9,
-            "type": "abandoned_home",
-            "x": 239,
-            "z": 188
-        },
-        {
-            "landmark": "trebia_frozen_hamlet",
-            "rotation": 270,
-            "scale": 1.1,
-            "type": "ruins",
-            "x": 237,
-            "z": 212
-        },
-        {
-            "landmark": "trebia_frozen_hamlet",
-            "rotation": 90,
-            "scale": 0.9,
-            "type": "ruins",
-            "x": 253,
-            "z": 196
-        },
-        {
-            "landmark": "trebia_frozen_hamlet",
-            "rotation": 270,
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 228,
-            "z": 204
-        },
-        {
-            "landmark": "trebia_frozen_hamlet",
-            "rotation": 90,
-            "scale": 0.9,
-            "type": "dead_tree",
-            "x": 242,
-            "z": 184
-        },
-        {
-            "landmark": "trebia_west_shrine",
-            "rotation": 90,
-            "scale": 1.1,
-            "type": "statue",
-            "x": 100,
-            "z": 358
-        },
-        {
-            "landmark": "trebia_west_shrine",
-            "rotation": 180,
-            "scale": 1,
-            "type": "statue",
-            "x": 108,
-            "z": 363
-        },
-        {
-            "landmark": "trebia_west_shrine",
-            "scale": 1,
-            "type": "statue",
-            "x": 108,
-            "z": 355
-        },
-        {
-            "landmark": "trebia_west_shrine",
-            "rotation": 180,
-            "scale": 1,
-            "type": "ruins",
-            "x": 92.42,
-            "z": 365.87
-        },
-        {
-            "landmark": "trebia_west_shrine",
-            "scale": 0.85,
-            "type": "ruins",
-            "x": 92.39,
-            "z": 353.41
-        },
-        {
-            "landmark": "trebia_west_shrine",
-            "rotation": 180,
-            "scale": 1.1500000000000001,
-            "type": "ruins",
-            "x": 86.17,
-            "z": 362.26
-        },
-        {
-            "intensity": 1.2,
-            "landmark": "trebia_west_shrine",
-            "persistent": true,
-            "radius": 3.2,
-            "rotation": 90,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 114,
-            "z": 360
-        },
-        {
-            "landmark": "trebia_ford_watch",
-            "scale": 1,
-            "type": "statue",
-            "x": 437.17,
-            "z": 421.17
-        },
-        {
-            "landmark": "trebia_ford_watch",
-            "rotation": 90,
-            "scale": 1,
-            "type": "tent",
-            "x": 445.06,
-            "z": 414.03
-        },
-        {
-            "landmark": "trebia_ford_watch",
-            "rotation": 270,
-            "scale": 1,
-            "type": "tent",
-            "x": 436,
-            "z": 413
-        },
-        {
-            "landmark": "trebia_ford_watch",
-            "rotation": 90,
-            "scale": 0.9500000000000001,
-            "type": "tent",
-            "x": 442,
-            "z": 408
-        },
-        {
-            "landmark": "trebia_ford_watch",
-            "rotation": 270,
-            "scale": 1,
-            "type": "supply_cart",
-            "x": 432,
-            "z": 417
-        },
-        {
-            "landmark": "trebia_ford_watch",
-            "rotation": 90,
-            "scale": 1,
-            "type": "weapon_rack",
-            "x": 447.68,
-            "z": 417.47
-        },
-        {
-            "intensity": 1.2,
-            "landmark": "trebia_ford_watch",
-            "persistent": true,
-            "radius": 3.2,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 440,
-            "z": 412
-        },
-        {
-            "landmark": "trebia_ford_watch",
-            "rotation": 270,
-            "scale": 0.9,
-            "type": "ruins",
-            "x": 435.34,
-            "z": 434.23
         },
         {
             "authored_camp": true,
@@ -8087,6 +7910,446 @@
             "scale": 0.64,
             "rotation": 5.57,
             "dressing": "trebia_wood_north_edge"
+        },
+        {
+            "dressing": "trebia_winter_fields_1",
+            "rotation": 0.0,
+            "scale": 1.0,
+            "type": "supply_cart",
+            "x": 106.17,
+            "z": 36.72
+        },
+        {
+            "dressing": "trebia_winter_fields_2",
+            "rotation": 0.0,
+            "scale": 1.0,
+            "type": "supply_cart",
+            "x": 102.17,
+            "z": 20.72
+        },
+        {
+            "dressing": "trebia_winter_fields_3",
+            "rotation": 0.0,
+            "scale": 1.0,
+            "type": "supply_cart",
+            "x": 174.17,
+            "z": 68.72
+        },
+        {
+            "landmark": "trebia_woodside_hamlet",
+            "rotation": 180.0,
+            "scale": 1.0,
+            "type": "abandoned_home",
+            "x": 41.0,
+            "z": 311.0
+        },
+        {
+            "landmark": "trebia_woodside_hamlet",
+            "rotation": 0.0,
+            "scale": 1.0,
+            "type": "abandoned_home",
+            "x": 48.0,
+            "z": 300.0
+        },
+        {
+            "landmark": "trebia_woodside_hamlet",
+            "rotation": 0.0,
+            "scale": 1.0,
+            "type": "abandoned_home",
+            "x": 33.0,
+            "z": 298.0
+        },
+        {
+            "landmark": "trebia_woodside_hamlet",
+            "rotation": 180.0,
+            "scale": 0.9,
+            "type": "abandoned_home",
+            "x": 29.0,
+            "z": 310.0
+        },
+        {
+            "landmark": "trebia_woodside_hamlet",
+            "rotation": 180.0,
+            "scale": 1.1,
+            "type": "ruins",
+            "x": 53.0,
+            "z": 308.0
+        },
+        {
+            "landmark": "trebia_woodside_hamlet",
+            "rotation": 0.0,
+            "scale": 0.9,
+            "type": "ruins",
+            "x": 37.0,
+            "z": 292.0
+        },
+        {
+            "landmark": "trebia_woodside_hamlet",
+            "rotation": 180.0,
+            "scale": 1.0,
+            "type": "dead_tree",
+            "x": 45.0,
+            "z": 317.0
+        },
+        {
+            "landmark": "trebia_woodside_hamlet",
+            "rotation": 0.0,
+            "scale": 0.9,
+            "type": "dead_tree",
+            "x": 25.0,
+            "z": 303.0
+        },
+        {
+            "landmark": "trebia_south_sanctuary",
+            "rotation": 90,
+            "scale": 1,
+            "type": "statue",
+            "x": 305.5,
+            "z": 275
+        },
+        {
+            "landmark": "trebia_south_sanctuary",
+            "rotation": 270,
+            "scale": 1,
+            "type": "statue",
+            "x": 294.5,
+            "z": 281
+        },
+        {
+            "landmark": "trebia_south_sanctuary",
+            "rotation": 90,
+            "scale": 1,
+            "type": "statue",
+            "x": 305.5,
+            "z": 266
+        },
+        {
+            "landmark": "trebia_south_sanctuary",
+            "rotation": 270,
+            "scale": 1,
+            "type": "statue",
+            "x": 294.5,
+            "z": 266
+        },
+        {
+            "landmark": "trebia_south_sanctuary",
+            "rotation": 90,
+            "scale": 1.1,
+            "type": "ruins",
+            "x": 307,
+            "z": 293
+        },
+        {
+            "landmark": "trebia_south_sanctuary",
+            "rotation": 270,
+            "scale": 0.9,
+            "type": "ruins",
+            "x": 294,
+            "z": 295
+        },
+        {
+            "landmark": "trebia_south_sanctuary",
+            "rotation": 90,
+            "scale": 1,
+            "type": "dead_tree",
+            "x": 301,
+            "z": 298
+        },
+        {
+            "intensity": 1.2,
+            "landmark": "trebia_south_sanctuary",
+            "persistent": true,
+            "radius": 3.2,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 301.56,
+            "z": 274.99
+        },
+        {
+            "landmark": "trebia_east_hamlet",
+            "scale": 1,
+            "type": "abandoned_home",
+            "x": 516.3,
+            "z": 372.47
+        },
+        {
+            "landmark": "trebia_east_hamlet",
+            "rotation": 180,
+            "scale": 1,
+            "type": "abandoned_home",
+            "x": 514.41,
+            "z": 386.41
+        },
+        {
+            "landmark": "trebia_east_hamlet",
+            "rotation": 180,
+            "scale": 1,
+            "type": "abandoned_home",
+            "x": 528,
+            "z": 387
+        },
+        {
+            "landmark": "trebia_east_hamlet",
+            "scale": 0.9,
+            "type": "abandoned_home",
+            "x": 534,
+            "z": 375
+        },
+        {
+            "landmark": "trebia_east_hamlet",
+            "scale": 1.1,
+            "type": "ruins",
+            "x": 508,
+            "z": 377
+        },
+        {
+            "landmark": "trebia_east_hamlet",
+            "rotation": 180,
+            "scale": 0.9,
+            "type": "ruins",
+            "x": 524,
+            "z": 393
+        },
+        {
+            "landmark": "trebia_east_hamlet",
+            "scale": 1,
+            "type": "dead_tree",
+            "x": 516,
+            "z": 368
+        },
+        {
+            "landmark": "trebia_east_hamlet",
+            "rotation": 180,
+            "scale": 0.9,
+            "type": "dead_tree",
+            "x": 536,
+            "z": 382
+        },
+        {
+            "landmark": "trebia_ridge_sanctuary",
+            "scale": 1,
+            "type": "statue",
+            "x": 387.7,
+            "z": 264.15
+        },
+        {
+            "landmark": "trebia_ridge_sanctuary",
+            "rotation": 180,
+            "scale": 1,
+            "type": "statue",
+            "x": 385.7,
+            "z": 271.85
+        },
+        {
+            "landmark": "trebia_ridge_sanctuary",
+            "scale": 1.1,
+            "type": "ruins",
+            "x": 398.3,
+            "z": 263.1
+        },
+        {
+            "landmark": "trebia_ridge_sanctuary",
+            "scale": 1,
+            "type": "dead_tree",
+            "x": 401.8,
+            "z": 267.3
+        },
+        {
+            "intensity": 1.2,
+            "landmark": "trebia_ridge_sanctuary",
+            "persistent": true,
+            "radius": 3.2,
+            "rotation": 270,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 387.8,
+            "z": 268
+        },
+        {
+            "landmark": "trebia_frozen_hamlet",
+            "rotation": 270,
+            "scale": 1,
+            "type": "abandoned_home",
+            "x": 234,
+            "z": 200
+        },
+        {
+            "landmark": "trebia_frozen_hamlet",
+            "rotation": 90,
+            "scale": 1,
+            "type": "abandoned_home",
+            "x": 251,
+            "z": 207
+        },
+        {
+            "landmark": "trebia_frozen_hamlet",
+            "rotation": 90,
+            "scale": 1,
+            "type": "abandoned_home",
+            "x": 247,
+            "z": 192
+        },
+        {
+            "landmark": "trebia_frozen_hamlet",
+            "rotation": 270,
+            "scale": 0.9,
+            "type": "abandoned_home",
+            "x": 239,
+            "z": 188
+        },
+        {
+            "landmark": "trebia_frozen_hamlet",
+            "rotation": 270,
+            "scale": 1.1,
+            "type": "ruins",
+            "x": 237,
+            "z": 212
+        },
+        {
+            "landmark": "trebia_frozen_hamlet",
+            "rotation": 90,
+            "scale": 0.9,
+            "type": "ruins",
+            "x": 253,
+            "z": 196
+        },
+        {
+            "landmark": "trebia_frozen_hamlet",
+            "rotation": 270,
+            "scale": 1,
+            "type": "dead_tree",
+            "x": 228,
+            "z": 204
+        },
+        {
+            "landmark": "trebia_frozen_hamlet",
+            "rotation": 90,
+            "scale": 0.9,
+            "type": "dead_tree",
+            "x": 242,
+            "z": 184
+        },
+        {
+            "landmark": "trebia_west_shrine",
+            "rotation": 90,
+            "scale": 1.1,
+            "type": "statue",
+            "x": 100,
+            "z": 358
+        },
+        {
+            "landmark": "trebia_west_shrine",
+            "rotation": 180,
+            "scale": 1,
+            "type": "statue",
+            "x": 108,
+            "z": 363
+        },
+        {
+            "landmark": "trebia_west_shrine",
+            "scale": 1,
+            "type": "statue",
+            "x": 108,
+            "z": 355
+        },
+        {
+            "landmark": "trebia_west_shrine",
+            "rotation": 180,
+            "scale": 1,
+            "type": "ruins",
+            "x": 92.42,
+            "z": 365.87
+        },
+        {
+            "landmark": "trebia_west_shrine",
+            "scale": 0.85,
+            "type": "ruins",
+            "x": 92.39,
+            "z": 353.41
+        },
+        {
+            "landmark": "trebia_west_shrine",
+            "rotation": 180,
+            "scale": 1.1500000000000001,
+            "type": "ruins",
+            "x": 86.17,
+            "z": 362.26
+        },
+        {
+            "intensity": 1.2,
+            "landmark": "trebia_west_shrine",
+            "persistent": true,
+            "radius": 3.2,
+            "rotation": 90,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 114,
+            "z": 360
+        },
+        {
+            "landmark": "trebia_ford_watch",
+            "scale": 1,
+            "type": "statue",
+            "x": 437.17,
+            "z": 421.17
+        },
+        {
+            "landmark": "trebia_ford_watch",
+            "rotation": 90,
+            "scale": 1,
+            "type": "tent",
+            "x": 445.06,
+            "z": 414.03
+        },
+        {
+            "landmark": "trebia_ford_watch",
+            "rotation": 270,
+            "scale": 1,
+            "type": "tent",
+            "x": 436,
+            "z": 413
+        },
+        {
+            "landmark": "trebia_ford_watch",
+            "rotation": 90,
+            "scale": 0.9500000000000001,
+            "type": "tent",
+            "x": 442,
+            "z": 408
+        },
+        {
+            "landmark": "trebia_ford_watch",
+            "rotation": 270,
+            "scale": 1,
+            "type": "supply_cart",
+            "x": 432,
+            "z": 417
+        },
+        {
+            "landmark": "trebia_ford_watch",
+            "rotation": 90,
+            "scale": 1,
+            "type": "weapon_rack",
+            "x": 447.68,
+            "z": 417.47
+        },
+        {
+            "intensity": 1.2,
+            "landmark": "trebia_ford_watch",
+            "persistent": true,
+            "radius": 3.2,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 440,
+            "z": 412
+        },
+        {
+            "landmark": "trebia_ford_watch",
+            "rotation": 270,
+            "scale": 0.9,
+            "type": "ruins",
+            "x": 435.34,
+            "z": 434.23
         }
     ],
     "dressing": [
@@ -8425,6 +8688,48 @@
                 "pine_tree"
             ],
             "dead_trees": 2
+        },
+        {
+            "cols": 1,
+            "id": "trebia_winter_fields_1",
+            "kind": "farmland",
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 0,
+            "rows": 1,
+            "x": 117,
+            "z": 35
+        },
+        {
+            "cols": 1,
+            "id": "trebia_winter_fields_2",
+            "kind": "farmland",
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 0,
+            "rows": 1,
+            "x": 113,
+            "z": 19
+        },
+        {
+            "cols": 1,
+            "id": "trebia_winter_fields_3",
+            "kind": "farmland",
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 0,
+            "rows": 1,
+            "x": 185,
+            "z": 67
+        }
+    ],
+    "lakes": [
+        {
+            "depth": 37.1,
+            "id": "trebia_tarn",
+            "width": 42.7,
+            "x": 12.6,
+            "z": 344.9
         }
     ]
 }

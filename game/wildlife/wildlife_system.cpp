@@ -298,10 +298,9 @@ void WildlifeSystem::plan_groups() {
       float origin_z = 0.0F;
       float reach = 0.0F;
       if (!config.spawn_areas.empty()) {
-        auto const area_index = static_cast<std::size_t>(
-            next_random(rng) * static_cast<float>(config.spawn_areas.size()));
-        const auto& area =
-            config.spawn_areas[std::min(area_index, config.spawn_areas.size() - 1U)];
+        (void)next_random(rng);
+        const auto& area = config.spawn_areas[static_cast<std::size_t>(index) %
+                                              config.spawn_areas.size()];
         origin_x = area.x;
         origin_z = area.z;
         reach = area.radius;

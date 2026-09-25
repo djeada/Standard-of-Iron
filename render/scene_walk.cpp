@@ -745,6 +745,12 @@ void Renderer::collect_unit_entries(Engine::Core::World& world,
           FogExtent::Anchor);
       entry.in_frustum = visibility_result.in_frustum;
       entry.fog_visible = visibility_result.fog_visible;
+      if (filter_enemy && entry.fog_visible) {
+        auto const* cover =
+            world.try_get<Engine::Core::ForestCoverComponent>(entity_id);
+        entry.fog_visible =
+            cover == nullptr || !cover->hidden_from(m_view.local_owner_id());
+      }
       entry.fog_unseen = map_landmark && visibility_enabled &&
                          static_world_visibility_filter_enabled() &&
                          !m_submission_visibility

@@ -21,6 +21,7 @@
 #include <utility>
 #include <vector>
 
+#include "forest_outline.h"
 #include "json_keys.h"
 #include "map/map_definition.h"
 #include "map/terrain.h"
@@ -649,6 +650,7 @@ void read_forests(const QJsonArray& arr, std::vector<Forest>& out) {
     if (forest.radius <= 0.0F) {
       continue;
     }
+    forest.outline_seed = forest_outline_seed(forest.x, forest.z);
     out.push_back(forest);
   }
 }
@@ -678,6 +680,7 @@ void append_forest_terrain(const std::vector<Forest>& forests,
       feature.radius = forest.radius;
     }
     feature.height = 0.0F;
+    feature.outline_seed = forest.outline_seed;
     out_terrain.push_back(feature);
   }
 }
@@ -851,6 +854,7 @@ void read_terrain(const QJsonArray& arr,
     if (feature.type == TerrainType::Flat) {
       feature.taper = float(terrain_obj.value("taper").toDouble(0.0));
       feature.raise_only = terrain_obj.value("raise").toBool(false);
+      feature.fields = terrain_obj.value("fields").toBool(false);
     }
 
     if (feature.type == TerrainType::Hill) {

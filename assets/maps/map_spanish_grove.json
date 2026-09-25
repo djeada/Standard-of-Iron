@@ -523,6 +523,94 @@
       "height": 8.0,
       "rotation": 270.0,
       "description": "Sierra shoulder."
+    },
+    {
+      "id": "p1_barracks_fields",
+      "type": "flat",
+      "x": 98.0,
+      "z": 40.0,
+      "width": 44.0,
+      "depth": 34.0,
+      "rotation": 90.0,
+      "fields": true,
+      "description": "Camp floor of p1: levelled round the barracks and kept clear of scatter, so the camp has room for its fields."
+    },
+    {
+      "id": "p2_barracks_fields",
+      "type": "flat",
+      "x": 200.0,
+      "z": 98.0,
+      "width": 44.0,
+      "depth": 34.0,
+      "rotation": 0.0,
+      "fields": true,
+      "description": "Camp floor of p2: levelled round the barracks and kept clear of scatter, so the camp has room for its fields."
+    },
+    {
+      "id": "p3_barracks_fields",
+      "type": "flat",
+      "x": 142.0,
+      "z": 200.0,
+      "width": 44.0,
+      "depth": 34.0,
+      "rotation": 90.0,
+      "fields": true,
+      "description": "Camp floor of p3: levelled round the barracks and kept clear of scatter, so the camp has room for its fields."
+    },
+    {
+      "id": "p4_barracks_fields",
+      "type": "flat",
+      "x": 40.0,
+      "z": 142.0,
+      "width": 44.0,
+      "depth": 34.0,
+      "rotation": 0.0,
+      "fields": true,
+      "description": "Camp floor of p4: levelled round the barracks and kept clear of scatter, so the camp has room for its fields."
+    },
+    {
+      "id": "press_farm_1_barracks_fields",
+      "type": "flat",
+      "x": 36.0,
+      "z": 88.0,
+      "width": 44.0,
+      "depth": 34.0,
+      "rotation": 0.0,
+      "fields": true,
+      "description": "Camp floor of press farm 1: levelled round the barracks and kept clear of scatter, so the camp has room for its fields."
+    },
+    {
+      "id": "press_farm_2_barracks_fields",
+      "type": "flat",
+      "x": 152.0,
+      "z": 36.0,
+      "width": 44.0,
+      "depth": 34.0,
+      "rotation": 90.0,
+      "fields": true,
+      "description": "Camp floor of press farm 2: levelled round the barracks and kept clear of scatter, so the camp has room for its fields."
+    },
+    {
+      "id": "press_farm_3_barracks_fields",
+      "type": "flat",
+      "x": 204.0,
+      "z": 152.0,
+      "width": 44.0,
+      "depth": 34.0,
+      "rotation": 0.0,
+      "fields": true,
+      "description": "Camp floor of press farm 3: levelled round the barracks and kept clear of scatter, so the camp has room for its fields."
+    },
+    {
+      "id": "press_farm_4_barracks_fields",
+      "type": "flat",
+      "x": 88.0,
+      "z": 204.0,
+      "width": 44.0,
+      "depth": 34.0,
+      "rotation": 90.0,
+      "fields": true,
+      "description": "Camp floor of press farm 4: levelled round the barracks and kept clear of scatter, so the camp has room for its fields."
     }
   ],
   "forests": [
@@ -2707,7 +2795,7 @@
     "far_simulation_radius": 140.0,
     "sheep": {
       "enabled": true,
-      "groups": 2,
+      "groups": 4,
       "group_size_min": 5,
       "group_size_max": 8,
       "roam_radius": 13.0,
@@ -2715,21 +2803,31 @@
       "respawn_delay": 120.0,
       "spawn_areas": [
         {
-          "x": 96.0,
-          "z": 120.0,
-          "radius": 15.0
+          "x": 70.0,
+          "z": 38.0,
+          "radius": 13.0
         },
         {
-          "x": 144.0,
-          "z": 120.0,
-          "radius": 15.0
+          "x": 202.0,
+          "z": 70.0,
+          "radius": 13.0
+        },
+        {
+          "x": 170.0,
+          "z": 202.0,
+          "radius": 13.0
+        },
+        {
+          "x": 38.0,
+          "z": 170.0,
+          "radius": 13.0
         }
       ],
       "alert_radius": 11.0
     },
     "wolves": {
       "enabled": true,
-      "groups": 2,
+      "groups": 4,
       "group_size_min": 3,
       "group_size_max": 5,
       "roam_radius": 26.0,
@@ -2742,8 +2840,18 @@
           "radius": 18.0
         },
         {
+          "x": 40.0,
+          "z": 60.0,
+          "radius": 18.0
+        },
+        {
           "x": 180.0,
           "z": 40.0,
+          "radius": 18.0
+        },
+        {
+          "x": 200.0,
+          "z": 180.0,
           "radius": 18.0
         }
       ],
@@ -2761,10 +2869,10 @@
   },
   "starting_resources": {
     "gold": 250,
-    "food": 200,
-    "wood": 250,
-    "stone": 120,
-    "iron": 80
+    "food": 170,
+    "wood": 190,
+    "stone": 150,
+    "iron": 140
   },
   "victory": {
     "type": "elimination",

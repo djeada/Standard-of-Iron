@@ -88,12 +88,47 @@ A `baseKey` that does not match any base on the map is a no-op for that player. 
 
 This fallback protects saved or externally supplied configurations from turning an unknown base identifier into an unplayable roster.
 
+## Every base has room for fields
+
+A base is only a real start if its player can feed a household from it. Food
+comes from farms (see [FOOD_AND_FARMS.md](FOOD_AND_FARMS.md)), and a farm is a
+13.6 m square that needs level, open ground. Every authored starting seat
+therefore has room for at least **three** farm plots within 42 m of its
+barracks, and every neutral base at least **two**. A neutral outpost may trade
+farmland for something else - the Copper Canyons mine camps sit between the
+rivers and the mesas, close to ore and short of fields - but none is left
+unable to feed anyone.
+
+`tests/map/skirmish_farmland_test.cpp` measures this with the engine's own
+`assess_ground`, after loading each shipped skirmish map through
+`SkirmishLoader`, so the count includes procedural scatter and every building
+the match spawns.
+
+Two map features make that room:
+
+- **Camp floors.** A `flat` terrain feature listed after the camp's shoulder
+  ridge levels the ground around the barracks (a flat painted after a hill
+  erases it where they overlap). The camp may cut back its own shoulder; the
+  map's other landforms are left alone.
+- **`"fields": true`.** Procedural trees, boulders and ore are scattered at load
+  without knowing where buildings will go, so a clearing fills up with the same
+  pines as the forest around it. A flat authored with `"fields": true` keeps
+  generated scatter off its level core (`build_runtime_world_props` in
+  `game/map/terrain_service.cpp`), and out of forest ground and forest
+  navigation cells as well, so a camp floor cut into a wood is a real clearing.
+  Every camp floor carries it.
+
+Food has a second source: sheep. Each skirmish map authors one pasture per
+starting seat, and wildlife groups are dealt to authored pastures in order, so
+every seat has a flock to raise near home.
+
 ## Test coverage
 
 The behavior is covered at three levels:
 
 - `tests/map/base_options_test.cpp` validates the option list, authored defaults, marker naming and placement, and verifies that every skirmish map contains at least as many bases as the player slots it advertises.
 - `tests/map/map_transformer_test.cpp` checks seating rules in isolation, including ownership, the one-base-per-player invariant, troop-cap preservation, translated retinues, unknown keys, and assignment isolation between matches.
+- `tests/map/skirmish_farmland_test.cpp` checks every base has room for fields (above).
 - `tests/map/skirmish_base_choice_test.cpp` exercises the complete path through `SkirmishLoader`, including the opening camera framing the selected base.
 
 The result is a flexible setup choice that changes where a player begins without weakening the map's ownership, population, spawn-placement, or fallback guarantees.

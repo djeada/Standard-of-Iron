@@ -30,6 +30,24 @@ class RouteFollowSystem;
 
 namespace Engine::Core {
 
+class ForestCoverComponent {
+public:
+  ForestCoverComponent() = default;
+
+  bool in_forest{false};
+  bool concealed{false};
+  std::uint64_t seen_by{0};
+
+  [[nodiscard]] static constexpr auto
+  owner_bit(int owner_id) noexcept -> std::uint64_t {
+    return owner_id >= 0 && owner_id < 64 ? (std::uint64_t{1} << owner_id) : 0U;
+  }
+
+  [[nodiscard]] auto hidden_from(int owner_id) const noexcept -> bool {
+    return concealed && (seen_by & owner_bit(owner_id)) == 0U;
+  }
+};
+
 class AttackComponent {
 public:
   enum class CombatMode {

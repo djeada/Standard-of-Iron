@@ -115,34 +115,52 @@
             "z": 600
         },
         {
-            "id": "alps_pass_screen",
+            "id": "alps_pass_screen_2",
             "radius": 30,
             "x": 572,
             "z": 190
         },
         {
-            "id": "alps_pass_screen",
+            "id": "alps_pass_screen_3",
             "radius": 30,
             "x": 494,
             "z": 141
         },
         {
-            "id": "alps_pass_screen",
+            "id": "alps_pass_screen_4",
             "radius": 30,
             "x": 400,
             "z": 96
         },
         {
-            "id": "alps_descent_timber",
+            "id": "alps_descent_timber_2",
             "radius": 30,
             "x": 132,
             "z": 565
         },
         {
-            "id": "alps_descent_timber",
+            "id": "alps_descent_timber_3",
             "radius": 30,
             "x": 36,
             "z": 507
+        },
+        {
+            "id": "alps_ambush_wood_1",
+            "radius": 17.0,
+            "x": 288.6,
+            "z": 358.9
+        },
+        {
+            "id": "alps_ambush_wood_2",
+            "radius": 14.1,
+            "x": 357.6,
+            "z": 544.7
+        },
+        {
+            "id": "alps_ambush_wood_3",
+            "radius": 15.3,
+            "x": 433.6,
+            "z": 446.9
         }
     ],
     "grid": {
@@ -213,6 +231,13 @@
             "player_id": 3,
             "x": 300,
             "z": 520
+        },
+        {
+            "facing": "east",
+            "id": "alps_woodside_hamlet",
+            "kind": "hamlet",
+            "x": 393,
+            "z": 457
         }
     ],
     "max_troops_per_player": 1690,
@@ -1286,8 +1311,8 @@
                     26
                 ],
                 "size": [
-                    17,
-                    12
+                    22,
+                    16
                 ]
             },
             "player_id": 4,
@@ -1501,6 +1526,38 @@
             "z": 382.02
         },
         {
+            "max_population": -1,
+            "nation": "carthage",
+            "player_id": 1,
+            "type": "carthage_sword_commander",
+            "x": 44.0,
+            "z": 58.0
+        },
+        {
+            "max_population": -1,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "type": "roman_field_commander",
+            "x": 60.0,
+            "z": 226.0
+        },
+        {
+            "max_population": -1,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "type": "roman_legion_organizer",
+            "x": 285.36,
+            "z": 520
+        },
+        {
+            "max_population": -1,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "type": "roman_veteran_consul",
+            "x": 417.32,
+            "z": 564.45
+        },
+        {
             "behavior": "guard",
             "landmark": "alps_descent_sanctuary",
             "max_population": -1,
@@ -1598,38 +1655,6 @@
             "type": "archer",
             "x": 62,
             "z": 226
-        },
-        {
-            "max_population": -1,
-            "nation": "carthage",
-            "player_id": 1,
-            "type": "carthage_sword_commander",
-            "x": 44.0,
-            "z": 58.0
-        },
-        {
-            "max_population": -1,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "roman_field_commander",
-            "x": 60.0,
-            "z": 226.0
-        },
-        {
-            "max_population": -1,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "roman_legion_organizer",
-            "x": 285.36,
-            "z": 520
-        },
-        {
-            "max_population": -1,
-            "nation": "roman_republic",
-            "player_id": 4,
-            "type": "roman_veteran_consul",
-            "x": 417.34,
-            "z": 564.48
         }
     ],
     "starting_resources": {
@@ -1669,15 +1694,6 @@
             "type": "barracks",
             "x": 113.88,
             "z": 159.88
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "alps_first_pass_camp",
-            "type": "defense_tower",
-            "x": 122,
-            "z": 161.43
         },
         {
             "authored": true,
@@ -1731,78 +1747,6 @@
             "nation": "roman_republic",
             "player_id": 3,
             "settlement": "alps_high_pass_fort",
-            "type": "home",
-            "x": 202.0,
-            "z": 344.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "alps_high_pass_fort",
-            "type": "home",
-            "x": 184.0,
-            "z": 350.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "alps_high_pass_fort",
-            "type": "home",
-            "x": 208.0,
-            "z": 350.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "alps_high_pass_fort",
-            "type": "home",
-            "x": 184.0,
-            "z": 362.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "alps_high_pass_fort",
-            "type": "home",
-            "x": 184.0,
-            "z": 344.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "alps_high_pass_fort",
-            "type": "home",
-            "x": 208.0,
-            "z": 344.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "alps_high_pass_fort",
-            "type": "home",
-            "x": 178.0,
-            "z": 350.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "alps_high_pass_fort",
-            "type": "home",
-            "x": 214.0,
-            "z": 350.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "alps_high_pass_fort",
             "type": "defense_tower",
             "x": 178.02,
             "z": 305.53
@@ -1815,26 +1759,6 @@
             "type": "defense_tower",
             "x": 200.97,
             "z": 305.72
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 4,
-            "rotation": 90.0,
-            "settlement": "alps_descent_town",
-            "type": "wall_gate",
-            "x": 578.0,
-            "z": 546.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 4,
-            "rotation": 90.0,
-            "settlement": "alps_descent_town",
-            "type": "wall_gate",
-            "x": 544.0,
-            "z": 548.0
         },
         {
             "authored": true,
@@ -1854,111 +1778,6 @@
             "type": "marketplace",
             "x": 591.0,
             "z": 577.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 4,
-            "settlement": "alps_descent_town",
-            "type": "temple",
-            "x": 588.88,
-            "z": 570.08
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 4,
-            "settlement": "alps_descent_town",
-            "type": "home",
-            "x": 582.0,
-            "z": 576.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 4,
-            "settlement": "alps_descent_town",
-            "type": "home",
-            "x": 594.0,
-            "z": 570.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 4,
-            "settlement": "alps_descent_town",
-            "type": "home",
-            "x": 582.0,
-            "z": 582.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 4,
-            "settlement": "alps_descent_town",
-            "type": "home",
-            "x": 588.0,
-            "z": 582.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 4,
-            "settlement": "alps_descent_town",
-            "type": "home",
-            "x": 594.0,
-            "z": 582.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 4,
-            "settlement": "alps_descent_town",
-            "type": "defense_tower",
-            "x": 554.67,
-            "z": 552.98
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 4,
-            "settlement": "alps_descent_town",
-            "type": "defense_tower",
-            "x": 548.0,
-            "z": 559.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 4,
-            "settlement": "alps_descent_town",
-            "type": "defense_tower",
-            "x": 604.0,
-            "z": 569.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 4,
-            "settlement": "alps_descent_town",
-            "type": "defense_tower",
-            "x": 604.0,
-            "z": 585.0
-        },
-        {
-            "landmark": "alps_ascent_sanctuary",
-            "nation": "carthage",
-            "type": "temple",
-            "x": 60,
-            "z": 220
-        },
-        {
-            "landmark": "alps_descent_sanctuary",
-            "nation": "roman_republic",
-            "player_id": 4,
-            "type": "temple",
-            "x": 404.24,
-            "z": 564.24
         },
         {
             "authored": true,
@@ -2130,6 +1949,256 @@
             "type": "home",
             "x": 98.67,
             "z": 100.60000000000001
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "alps_first_pass_camp",
+            "type": "defense_tower",
+            "x": 121.87,
+            "z": 161.43
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 270.0,
+            "settlement": "alps_high_pass_fort",
+            "type": "home",
+            "x": 202.0,
+            "z": 344.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "alps_high_pass_fort",
+            "type": "home",
+            "x": 184.0,
+            "z": 350.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "alps_high_pass_fort",
+            "type": "home",
+            "x": 208.0,
+            "z": 350.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 180.0,
+            "settlement": "alps_high_pass_fort",
+            "type": "home",
+            "x": 184.0,
+            "z": 362.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "alps_high_pass_fort",
+            "type": "home",
+            "x": 184.0,
+            "z": 344.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "alps_high_pass_fort",
+            "type": "home",
+            "x": 208.0,
+            "z": 344.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "alps_high_pass_fort",
+            "type": "home",
+            "x": 178.0,
+            "z": 350.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "alps_high_pass_fort",
+            "type": "home",
+            "x": 214.0,
+            "z": 350.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "rotation": 0.0,
+            "settlement": "alps_descent_town",
+            "type": "wall_gate",
+            "x": 544.0,
+            "z": 536.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "rotation": 0.0,
+            "settlement": "alps_descent_town",
+            "type": "wall_gate",
+            "x": 606.0,
+            "z": 562.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "alps_descent_town",
+            "type": "temple",
+            "x": 591.0,
+            "z": 570.6
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "rotation": 270.0,
+            "settlement": "alps_descent_town",
+            "type": "home",
+            "x": 582.0,
+            "z": 576.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "rotation": 0.0,
+            "settlement": "alps_descent_town",
+            "type": "home",
+            "x": 582.0,
+            "z": 582.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "rotation": 0.0,
+            "settlement": "alps_descent_town",
+            "type": "home",
+            "x": 588.0,
+            "z": 582.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "rotation": 0.0,
+            "settlement": "alps_descent_town",
+            "type": "home",
+            "x": 546.0,
+            "z": 558.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "rotation": 180.0,
+            "settlement": "alps_descent_town",
+            "type": "home",
+            "x": 606.0,
+            "z": 570.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "rotation": 0.0,
+            "settlement": "alps_descent_town",
+            "type": "home",
+            "x": 594.0,
+            "z": 582.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "rotation": 90.0,
+            "settlement": "alps_descent_town",
+            "type": "home",
+            "x": 546.0,
+            "z": 552.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "rotation": 270.0,
+            "settlement": "alps_descent_town",
+            "type": "home",
+            "x": 606.0,
+            "z": 576.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "rotation": 0.0,
+            "settlement": "alps_descent_town",
+            "type": "home",
+            "x": 606.0,
+            "z": 582.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "alps_descent_town",
+            "type": "defense_tower",
+            "x": 543.0,
+            "z": 563.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "alps_descent_town",
+            "type": "defense_tower",
+            "x": 600.31,
+            "z": 567.33
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "alps_descent_town",
+            "type": "defense_tower",
+            "x": 603.0,
+            "z": 589.0
+        },
+        {
+            "landmark": "alps_ascent_sanctuary",
+            "nation": "carthage",
+            "type": "temple",
+            "x": 60,
+            "z": 220
+        },
+        {
+            "landmark": "alps_descent_sanctuary",
+            "nation": "roman_republic",
+            "player_id": 4,
+            "type": "temple",
+            "x": 404.24,
+            "z": 564.24
         },
         {
             "authored": true,
@@ -2566,40 +2635,266 @@
         {
             "authored": true,
             "end": [
-                578.0,
-                540.0
+                88,
+                96
             ],
-            "nation": "roman_republic",
-            "player_id": 4,
-            "settlement": "alps_descent_town",
+            "nation": "carthage",
+            "player_id": 1,
             "start": [
-                544.0,
-                540.0
+                84,
+                96
             ],
             "type": "wall_segment",
-            "width": 2.0
+            "width": 2
         },
         {
             "authored": true,
             "end": [
-                592.0,
-                558.0
+                100,
+                96
             ],
-            "nation": "roman_republic",
-            "player_id": 4,
-            "settlement": "alps_descent_town",
+            "nation": "carthage",
+            "player_id": 1,
             "start": [
-                580.0,
-                558.0
+                96,
+                96
             ],
             "type": "wall_segment",
-            "width": 2.0
+            "width": 2
         },
         {
             "authored": true,
             "end": [
-                592.0,
+                100,
+                102
+            ],
+            "nation": "carthage",
+            "player_id": 1,
+            "start": [
+                100,
+                96
+            ],
+            "type": "wall_segment",
+            "width": 2
+        },
+        {
+            "authored": true,
+            "end": [
+                106,
+                102
+            ],
+            "nation": "carthage",
+            "player_id": 1,
+            "start": [
+                100,
+                102
+            ],
+            "type": "wall_segment",
+            "width": 2
+        },
+        {
+            "authored": true,
+            "end": [
+                106,
+                106
+            ],
+            "nation": "carthage",
+            "player_id": 1,
+            "start": [
+                106,
+                102
+            ],
+            "type": "wall_segment",
+            "width": 2
+        },
+        {
+            "authored": true,
+            "end": [
+                106,
+                106
+            ],
+            "nation": "carthage",
+            "player_id": 1,
+            "start": [
+                100,
+                106
+            ],
+            "type": "wall_segment",
+            "width": 2
+        },
+        {
+            "authored": true,
+            "end": [
+                100,
+                112
+            ],
+            "nation": "carthage",
+            "player_id": 1,
+            "start": [
+                100,
+                106
+            ],
+            "type": "wall_segment",
+            "width": 2
+        },
+        {
+            "authored": true,
+            "end": [
+                88,
+                112
+            ],
+            "nation": "carthage",
+            "player_id": 1,
+            "start": [
+                84,
+                112
+            ],
+            "type": "wall_segment",
+            "width": 2
+        },
+        {
+            "authored": true,
+            "end": [
+                100,
+                112
+            ],
+            "nation": "carthage",
+            "player_id": 1,
+            "start": [
+                96,
+                112
+            ],
+            "type": "wall_segment",
+            "width": 2
+        },
+        {
+            "authored": true,
+            "end": [
+                84,
+                112
+            ],
+            "nation": "carthage",
+            "player_id": 1,
+            "start": [
+                84,
+                106
+            ],
+            "type": "wall_segment",
+            "width": 2
+        },
+        {
+            "authored": true,
+            "end": [
+                84,
+                106
+            ],
+            "nation": "carthage",
+            "player_id": 1,
+            "start": [
+                78,
+                106
+            ],
+            "type": "wall_segment",
+            "width": 2
+        },
+        {
+            "authored": true,
+            "end": [
+                78,
+                106
+            ],
+            "nation": "carthage",
+            "player_id": 1,
+            "start": [
+                78,
+                102
+            ],
+            "type": "wall_segment",
+            "width": 2
+        },
+        {
+            "authored": true,
+            "end": [
+                84,
+                102
+            ],
+            "nation": "carthage",
+            "player_id": 1,
+            "start": [
+                78,
+                102
+            ],
+            "type": "wall_segment",
+            "width": 2
+        },
+        {
+            "authored": true,
+            "end": [
+                84,
+                102
+            ],
+            "nation": "carthage",
+            "player_id": 1,
+            "start": [
+                84,
+                96
+            ],
+            "type": "wall_segment",
+            "width": 2
+        },
+        {
+            "authored": true,
+            "end": [
+                540.0,
                 566.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "alps_descent_town",
+            "start": [
+                540.0,
+                538.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                582.0,
+                558.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "alps_descent_town",
+            "start": [
+                582.0,
+                538.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                592.0,
+                558.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "alps_descent_town",
+            "start": [
+                584.0,
+                558.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                592.0,
+                562.0
             ],
             "nation": "roman_republic",
             "player_id": 4,
@@ -2614,15 +2909,31 @@
         {
             "authored": true,
             "end": [
-                560.0,
-                562.0
+                612.0,
+                576.0
             ],
             "nation": "roman_republic",
             "player_id": 4,
             "settlement": "alps_descent_town",
             "start": [
-                546.0,
-                562.0
+                612.0,
+                564.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                560.0,
+                566.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "alps_descent_town",
+            "start": [
+                542.0,
+                566.0
             ],
             "type": "wall_segment",
             "width": 2.0
@@ -2638,38 +2949,6 @@
             "settlement": "alps_descent_town",
             "start": [
                 560.0,
-                564.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                608.0,
-                566.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 4,
-            "settlement": "alps_descent_town",
-            "start": [
-                594.0,
-                566.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                608.0,
-                588.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 4,
-            "settlement": "alps_descent_town",
-            "start": [
-                608.0,
                 568.0
             ],
             "type": "wall_segment",
@@ -2678,7 +2957,7 @@
         {
             "authored": true,
             "end": [
-                574.0,
+                570.0,
                 570.0
             ],
             "nation": "roman_republic",
@@ -2694,14 +2973,14 @@
         {
             "authored": true,
             "end": [
-                574.0,
-                588.0
+                570.0,
+                592.0
             ],
             "nation": "roman_republic",
             "player_id": 4,
             "settlement": "alps_descent_town",
             "start": [
-                574.0,
+                570.0,
                 572.0
             ],
             "type": "wall_segment",
@@ -2711,14 +2990,14 @@
             "authored": true,
             "end": [
                 606.0,
-                588.0
+                592.0
             ],
             "nation": "roman_republic",
             "player_id": 4,
             "settlement": "alps_descent_town",
             "start": [
-                576.0,
-                588.0
+                572.0,
+                592.0
             ],
             "type": "wall_segment",
             "width": 2.0
@@ -2726,15 +3005,15 @@
         {
             "authored": true,
             "end": [
-                578.0,
-                542.0
+                582.0,
+                536.0
             ],
             "nation": "roman_republic",
             "player_id": 4,
             "settlement": "alps_descent_town",
             "start": [
-                578.0,
-                542.0
+                548.0,
+                536.0
             ],
             "type": "wall_segment",
             "width": 2.0
@@ -2742,47 +3021,15 @@
         {
             "authored": true,
             "end": [
-                578.0,
-                558.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 4,
-            "settlement": "alps_descent_town",
-            "start": [
-                578.0,
-                550.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                544.0,
-                544.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 4,
-            "settlement": "alps_descent_town",
-            "start": [
-                544.0,
-                542.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                544.0,
+                602.0,
                 562.0
             ],
             "nation": "roman_republic",
             "player_id": 4,
             "settlement": "alps_descent_town",
             "start": [
-                544.0,
-                552.0
+                594.0,
+                562.0
             ],
             "type": "wall_segment",
             "width": 2.0
@@ -2790,212 +3037,18 @@
         {
             "authored": true,
             "end": [
-                88,
-                96
+                612.0,
+                562.0
             ],
-            "nation": "carthage",
-            "player_id": 1,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "alps_descent_town",
             "start": [
-                84,
-                96
+                610.0,
+                562.0
             ],
             "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                100,
-                96
-            ],
-            "nation": "carthage",
-            "player_id": 1,
-            "start": [
-                96,
-                96
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                100,
-                102
-            ],
-            "nation": "carthage",
-            "player_id": 1,
-            "start": [
-                100,
-                96
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                106,
-                102
-            ],
-            "nation": "carthage",
-            "player_id": 1,
-            "start": [
-                100,
-                102
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                106,
-                106
-            ],
-            "nation": "carthage",
-            "player_id": 1,
-            "start": [
-                106,
-                102
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                106,
-                106
-            ],
-            "nation": "carthage",
-            "player_id": 1,
-            "start": [
-                100,
-                106
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                100,
-                112
-            ],
-            "nation": "carthage",
-            "player_id": 1,
-            "start": [
-                100,
-                106
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                88,
-                112
-            ],
-            "nation": "carthage",
-            "player_id": 1,
-            "start": [
-                84,
-                112
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                100,
-                112
-            ],
-            "nation": "carthage",
-            "player_id": 1,
-            "start": [
-                96,
-                112
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                84,
-                112
-            ],
-            "nation": "carthage",
-            "player_id": 1,
-            "start": [
-                84,
-                106
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                84,
-                106
-            ],
-            "nation": "carthage",
-            "player_id": 1,
-            "start": [
-                78,
-                106
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                78,
-                106
-            ],
-            "nation": "carthage",
-            "player_id": 1,
-            "start": [
-                78,
-                102
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                84,
-                102
-            ],
-            "nation": "carthage",
-            "player_id": 1,
-            "start": [
-                78,
-                102
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                84,
-                102
-            ],
-            "nation": "carthage",
-            "player_id": 1,
-            "start": [
-                84,
-                96
-            ],
-            "type": "wall_segment",
-            "width": 2
+            "width": 2.0
         }
     ],
     "terrain": [
@@ -3244,7 +3297,7 @@
             "enabled": true,
             "group_size_max": 7,
             "group_size_min": 4,
-            "groups": 2,
+            "groups": 3,
             "respawn": true,
             "respawn_delay": 90,
             "roam_radius": 16,
@@ -3271,7 +3324,7 @@
             "enabled": true,
             "group_size_max": 4,
             "group_size_min": 2,
-            "groups": 1,
+            "groups": 5,
             "respawn": false,
             "roam_radius": 22,
             "spawn_areas": [
@@ -3289,6 +3342,16 @@
                     "radius": 22,
                     "x": 54,
                     "z": 575
+                },
+                {
+                    "radius": 20.0,
+                    "x": 470,
+                    "z": 600
+                },
+                {
+                    "radius": 20.0,
+                    "x": 572,
+                    "z": 190
                 }
             ],
             "waves": [
@@ -4234,381 +4297,6 @@
             "z": 71.02
         },
         {
-            "landmark": "alps_ascent_sanctuary",
-            "rotation": 90,
-            "scale": 1,
-            "type": "statue",
-            "x": 65.5,
-            "z": 211
-        },
-        {
-            "landmark": "alps_ascent_sanctuary",
-            "rotation": 270,
-            "scale": 1,
-            "type": "statue",
-            "x": 54.5,
-            "z": 211
-        },
-        {
-            "landmark": "alps_ascent_sanctuary",
-            "rotation": 90,
-            "scale": 1,
-            "type": "statue",
-            "x": 65.5,
-            "z": 202
-        },
-        {
-            "landmark": "alps_ascent_sanctuary",
-            "rotation": 270,
-            "scale": 1,
-            "type": "statue",
-            "x": 54.5,
-            "z": 202
-        },
-        {
-            "landmark": "alps_ascent_sanctuary",
-            "rotation": 90,
-            "scale": 1.1,
-            "type": "ruins",
-            "x": 67,
-            "z": 229
-        },
-        {
-            "landmark": "alps_ascent_sanctuary",
-            "rotation": 270,
-            "scale": 0.9,
-            "type": "ruins",
-            "x": 54,
-            "z": 231
-        },
-        {
-            "landmark": "alps_ascent_sanctuary",
-            "rotation": 90,
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 61,
-            "z": 234
-        },
-        {
-            "intensity": 1.2,
-            "landmark": "alps_ascent_sanctuary",
-            "persistent": true,
-            "radius": 3.2,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 60,
-            "z": 214
-        },
-        {
-            "landmark": "alps_scree_hamlet",
-            "scale": 1,
-            "type": "abandoned_home",
-            "x": 340,
-            "z": 594
-        },
-        {
-            "landmark": "alps_scree_hamlet",
-            "rotation": 180,
-            "scale": 1,
-            "type": "abandoned_home",
-            "x": 333,
-            "z": 605
-        },
-        {
-            "landmark": "alps_scree_hamlet",
-            "rotation": 180,
-            "scale": 1,
-            "type": "abandoned_home",
-            "x": 352,
-            "z": 607
-        },
-        {
-            "landmark": "alps_scree_hamlet",
-            "scale": 0.9,
-            "type": "abandoned_home",
-            "x": 352,
-            "z": 595
-        },
-        {
-            "landmark": "alps_scree_hamlet",
-            "scale": 1.1,
-            "type": "ruins",
-            "x": 328,
-            "z": 597
-        },
-        {
-            "landmark": "alps_scree_hamlet",
-            "rotation": 180,
-            "scale": 0.9,
-            "type": "ruins",
-            "x": 340.29,
-            "z": 612.82
-        },
-        {
-            "landmark": "alps_scree_hamlet",
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 336,
-            "z": 588
-        },
-        {
-            "landmark": "alps_scree_hamlet",
-            "rotation": 180,
-            "scale": 0.9,
-            "type": "dead_tree",
-            "x": 356,
-            "z": 602
-        },
-        {
-            "landmark": "alps_descent_sanctuary",
-            "rotation": 180,
-            "scale": 1,
-            "type": "statue",
-            "x": 413.24,
-            "z": 569.74
-        },
-        {
-            "landmark": "alps_descent_sanctuary",
-            "scale": 1,
-            "type": "statue",
-            "x": 417.49,
-            "z": 562.99
-        },
-        {
-            "landmark": "alps_descent_sanctuary",
-            "rotation": 180,
-            "scale": 1,
-            "type": "statue",
-            "x": 422.24,
-            "z": 569.74
-        },
-        {
-            "landmark": "alps_descent_sanctuary",
-            "scale": 1,
-            "type": "statue",
-            "x": 423.77,
-            "z": 562.44
-        },
-        {
-            "landmark": "alps_descent_sanctuary",
-            "rotation": 180,
-            "scale": 1.1,
-            "type": "ruins",
-            "x": 395.24,
-            "z": 571.24
-        },
-        {
-            "landmark": "alps_descent_sanctuary",
-            "scale": 0.9,
-            "type": "ruins",
-            "x": 393.3,
-            "z": 558.58
-        },
-        {
-            "landmark": "alps_descent_sanctuary",
-            "rotation": 180,
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 390.24,
-            "z": 565.24
-        },
-        {
-            "intensity": 1.2,
-            "landmark": "alps_descent_sanctuary",
-            "persistent": true,
-            "radius": 3.2,
-            "rotation": 90,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 410.24,
-            "z": 564.24
-        },
-        {
-            "landmark": "alps_pass_shrine",
-            "scale": 1.1,
-            "type": "statue",
-            "x": 318,
-            "z": 420
-        },
-        {
-            "landmark": "alps_pass_shrine",
-            "rotation": 90,
-            "scale": 1,
-            "type": "statue",
-            "x": 327.83,
-            "z": 414.83
-        },
-        {
-            "landmark": "alps_pass_shrine",
-            "rotation": 270,
-            "scale": 1,
-            "type": "statue",
-            "x": 315,
-            "z": 414
-        },
-        {
-            "landmark": "alps_pass_shrine",
-            "rotation": 90,
-            "scale": 1,
-            "type": "ruins",
-            "x": 328.68,
-            "z": 427
-        },
-        {
-            "landmark": "alps_pass_shrine",
-            "rotation": 270,
-            "scale": 0.85,
-            "type": "ruins",
-            "x": 314,
-            "z": 428
-        },
-        {
-            "landmark": "alps_pass_shrine",
-            "rotation": 90,
-            "scale": 1.1500000000000001,
-            "type": "ruins",
-            "x": 317.12,
-            "z": 434.26
-        },
-        {
-            "intensity": 1.2,
-            "landmark": "alps_pass_shrine",
-            "persistent": true,
-            "radius": 3.2,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 320,
-            "z": 406
-        },
-        {
-            "landmark": "alps_frozen_hamlet",
-            "rotation": 270,
-            "scale": 1,
-            "type": "abandoned_home",
-            "x": 311.17,
-            "z": 62.83
-        },
-        {
-            "landmark": "alps_frozen_hamlet",
-            "rotation": 90,
-            "scale": 1,
-            "type": "abandoned_home",
-            "x": 325,
-            "z": 67
-        },
-        {
-            "landmark": "alps_frozen_hamlet",
-            "rotation": 90,
-            "scale": 1,
-            "type": "abandoned_home",
-            "x": 327,
-            "z": 52
-        },
-        {
-            "landmark": "alps_frozen_hamlet",
-            "rotation": 270,
-            "scale": 0.9,
-            "type": "abandoned_home",
-            "x": 321,
-            "z": 48
-        },
-        {
-            "landmark": "alps_frozen_hamlet",
-            "rotation": 270,
-            "scale": 1.1,
-            "type": "ruins",
-            "x": 322.07,
-            "z": 73.47
-        },
-        {
-            "landmark": "alps_frozen_hamlet",
-            "rotation": 90,
-            "scale": 0.9,
-            "type": "ruins",
-            "x": 333,
-            "z": 56
-        },
-        {
-            "landmark": "alps_frozen_hamlet",
-            "rotation": 270,
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 308,
-            "z": 66
-        },
-        {
-            "landmark": "alps_frozen_hamlet",
-            "rotation": 90,
-            "scale": 0.9,
-            "type": "dead_tree",
-            "x": 320,
-            "z": 44
-        },
-        {
-            "landmark": "alps_switchback_watch",
-            "rotation": 270,
-            "scale": 1,
-            "type": "statue",
-            "x": 304,
-            "z": 520
-        },
-        {
-            "landmark": "alps_switchback_watch",
-            "scale": 1,
-            "type": "tent",
-            "x": 294,
-            "z": 515
-        },
-        {
-            "landmark": "alps_switchback_watch",
-            "rotation": 180,
-            "scale": 1,
-            "type": "tent",
-            "x": 293,
-            "z": 524
-        },
-        {
-            "landmark": "alps_switchback_watch",
-            "scale": 0.9500000000000001,
-            "type": "tent",
-            "x": 288,
-            "z": 518
-        },
-        {
-            "landmark": "alps_switchback_watch",
-            "rotation": 180,
-            "scale": 1,
-            "type": "supply_cart",
-            "x": 297,
-            "z": 528
-        },
-        {
-            "landmark": "alps_switchback_watch",
-            "scale": 1,
-            "type": "weapon_rack",
-            "x": 298,
-            "z": 512
-        },
-        {
-            "intensity": 1.2,
-            "landmark": "alps_switchback_watch",
-            "persistent": true,
-            "radius": 3.2,
-            "rotation": 270,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 292,
-            "z": 520
-        },
-        {
-            "landmark": "alps_switchback_watch",
-            "rotation": 180,
-            "scale": 0.9,
-            "type": "ruins",
-            "x": 311.05,
-            "z": 526.77
-        },
-        {
             "authored_camp": true,
             "intensity": 1.3,
             "persistent": true,
@@ -4873,12 +4561,6 @@
             "type": "pine_tree",
             "x": 617,
             "z": 131
-        },
-        {
-            "scale": 1,
-            "type": "pine_tree",
-            "x": 538,
-            "z": 556
         },
         {
             "scale": 1,
@@ -6215,28 +5897,6 @@
             "scale": 1.0,
             "rotation": -1.271,
             "dressing": "alps_gate_3"
-        },
-        {
-            "type": "firecamp",
-            "x": 571.28,
-            "z": 535.47,
-            "scale": 1.0,
-            "rotation": 0.0,
-            "dressing": "alps_gate_4",
-            "radius": 3.2,
-            "intensity": 1.15,
-            "persistent": true
-        },
-        {
-            "type": "firecamp",
-            "x": 583.0,
-            "z": 537.0,
-            "scale": 1.0,
-            "rotation": 0.0,
-            "dressing": "alps_gate_4",
-            "radius": 3.2,
-            "intensity": 1.15,
-            "persistent": true
         },
         {
             "type": "weapon_rack",
@@ -7772,6 +7432,449 @@
             "scale": 0.66,
             "rotation": 2.084,
             "dressing": "alps_pines_north_crest"
+        },
+        {
+            "scale": 1,
+            "type": "pine_tree",
+            "x": 536.05,
+            "z": 556
+        },
+        {
+            "dressing": "alps_gate_4",
+            "intensity": 1.15,
+            "persistent": true,
+            "radius": 3.2,
+            "rotation": 0.0,
+            "scale": 1.0,
+            "type": "firecamp",
+            "x": 571.28,
+            "z": 533.93
+        },
+        {
+            "dressing": "alps_gate_4",
+            "intensity": 1.15,
+            "persistent": true,
+            "radius": 3.2,
+            "rotation": 0.0,
+            "scale": 1.0,
+            "type": "firecamp",
+            "x": 583.07,
+            "z": 536.93
+        },
+        {
+            "landmark": "alps_woodside_hamlet",
+            "rotation": 0.0,
+            "scale": 1.0,
+            "type": "abandoned_home",
+            "x": 398.59,
+            "z": 453.41
+        },
+        {
+            "landmark": "alps_woodside_hamlet",
+            "rotation": 0.0,
+            "scale": 1.0,
+            "type": "abandoned_home",
+            "x": 385.0,
+            "z": 450.0
+        },
+        {
+            "landmark": "alps_woodside_hamlet",
+            "rotation": 180.0,
+            "scale": 1.1,
+            "type": "ruins",
+            "x": 407.0,
+            "z": 460.0
+        },
+        {
+            "landmark": "alps_woodside_hamlet",
+            "rotation": 0.0,
+            "scale": 0.9,
+            "type": "ruins",
+            "x": 385.45,
+            "z": 445.52
+        },
+        {
+            "landmark": "alps_woodside_hamlet",
+            "rotation": 0.0,
+            "scale": 0.9,
+            "type": "dead_tree",
+            "x": 375.45,
+            "z": 449.2
+        },
+        {
+            "landmark": "alps_ascent_sanctuary",
+            "rotation": 90,
+            "scale": 1,
+            "type": "statue",
+            "x": 65.5,
+            "z": 211
+        },
+        {
+            "landmark": "alps_ascent_sanctuary",
+            "rotation": 270,
+            "scale": 1,
+            "type": "statue",
+            "x": 54.5,
+            "z": 211
+        },
+        {
+            "landmark": "alps_ascent_sanctuary",
+            "rotation": 90,
+            "scale": 1,
+            "type": "statue",
+            "x": 65.5,
+            "z": 202
+        },
+        {
+            "landmark": "alps_ascent_sanctuary",
+            "rotation": 270,
+            "scale": 1,
+            "type": "statue",
+            "x": 54.5,
+            "z": 202
+        },
+        {
+            "landmark": "alps_ascent_sanctuary",
+            "rotation": 90,
+            "scale": 1.1,
+            "type": "ruins",
+            "x": 67,
+            "z": 229
+        },
+        {
+            "landmark": "alps_ascent_sanctuary",
+            "rotation": 270,
+            "scale": 0.9,
+            "type": "ruins",
+            "x": 54,
+            "z": 231
+        },
+        {
+            "landmark": "alps_ascent_sanctuary",
+            "rotation": 90,
+            "scale": 1,
+            "type": "dead_tree",
+            "x": 61,
+            "z": 234
+        },
+        {
+            "intensity": 1.2,
+            "landmark": "alps_ascent_sanctuary",
+            "persistent": true,
+            "radius": 3.2,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 60,
+            "z": 214
+        },
+        {
+            "landmark": "alps_scree_hamlet",
+            "scale": 1,
+            "type": "abandoned_home",
+            "x": 340,
+            "z": 594
+        },
+        {
+            "landmark": "alps_scree_hamlet",
+            "rotation": 180,
+            "scale": 1,
+            "type": "abandoned_home",
+            "x": 333,
+            "z": 605
+        },
+        {
+            "landmark": "alps_scree_hamlet",
+            "rotation": 180,
+            "scale": 1,
+            "type": "abandoned_home",
+            "x": 352,
+            "z": 607
+        },
+        {
+            "landmark": "alps_scree_hamlet",
+            "scale": 0.9,
+            "type": "abandoned_home",
+            "x": 352,
+            "z": 595
+        },
+        {
+            "landmark": "alps_scree_hamlet",
+            "scale": 1.1,
+            "type": "ruins",
+            "x": 328,
+            "z": 597
+        },
+        {
+            "landmark": "alps_scree_hamlet",
+            "rotation": 180,
+            "scale": 0.9,
+            "type": "ruins",
+            "x": 340.29,
+            "z": 612.82
+        },
+        {
+            "landmark": "alps_scree_hamlet",
+            "scale": 1,
+            "type": "dead_tree",
+            "x": 336,
+            "z": 588
+        },
+        {
+            "landmark": "alps_scree_hamlet",
+            "rotation": 180,
+            "scale": 0.9,
+            "type": "dead_tree",
+            "x": 356,
+            "z": 602
+        },
+        {
+            "landmark": "alps_descent_sanctuary",
+            "rotation": 180,
+            "scale": 1,
+            "type": "statue",
+            "x": 413.24,
+            "z": 569.74
+        },
+        {
+            "landmark": "alps_descent_sanctuary",
+            "scale": 1,
+            "type": "statue",
+            "x": 417.49,
+            "z": 562.99
+        },
+        {
+            "landmark": "alps_descent_sanctuary",
+            "rotation": 180,
+            "scale": 1,
+            "type": "statue",
+            "x": 422.24,
+            "z": 569.74
+        },
+        {
+            "landmark": "alps_descent_sanctuary",
+            "scale": 1,
+            "type": "statue",
+            "x": 423.77,
+            "z": 562.44
+        },
+        {
+            "landmark": "alps_descent_sanctuary",
+            "rotation": 180,
+            "scale": 1.1,
+            "type": "ruins",
+            "x": 395.24,
+            "z": 571.24
+        },
+        {
+            "landmark": "alps_descent_sanctuary",
+            "scale": 0.9,
+            "type": "ruins",
+            "x": 393.3,
+            "z": 558.58
+        },
+        {
+            "landmark": "alps_descent_sanctuary",
+            "rotation": 180,
+            "scale": 1,
+            "type": "dead_tree",
+            "x": 390.24,
+            "z": 565.24
+        },
+        {
+            "intensity": 1.2,
+            "landmark": "alps_descent_sanctuary",
+            "persistent": true,
+            "radius": 3.2,
+            "rotation": 90,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 410.24,
+            "z": 564.24
+        },
+        {
+            "landmark": "alps_pass_shrine",
+            "scale": 1.1,
+            "type": "statue",
+            "x": 318,
+            "z": 420
+        },
+        {
+            "landmark": "alps_pass_shrine",
+            "rotation": 90,
+            "scale": 1,
+            "type": "statue",
+            "x": 327.83,
+            "z": 414.83
+        },
+        {
+            "landmark": "alps_pass_shrine",
+            "rotation": 270,
+            "scale": 1,
+            "type": "statue",
+            "x": 315,
+            "z": 414
+        },
+        {
+            "landmark": "alps_pass_shrine",
+            "rotation": 90,
+            "scale": 1,
+            "type": "ruins",
+            "x": 328.68,
+            "z": 427
+        },
+        {
+            "landmark": "alps_pass_shrine",
+            "rotation": 270,
+            "scale": 0.85,
+            "type": "ruins",
+            "x": 314,
+            "z": 428
+        },
+        {
+            "landmark": "alps_pass_shrine",
+            "rotation": 90,
+            "scale": 1.1500000000000001,
+            "type": "ruins",
+            "x": 317.12,
+            "z": 434.26
+        },
+        {
+            "intensity": 1.2,
+            "landmark": "alps_pass_shrine",
+            "persistent": true,
+            "radius": 3.2,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 320,
+            "z": 406
+        },
+        {
+            "landmark": "alps_frozen_hamlet",
+            "rotation": 270,
+            "scale": 1,
+            "type": "abandoned_home",
+            "x": 311.17,
+            "z": 62.83
+        },
+        {
+            "landmark": "alps_frozen_hamlet",
+            "rotation": 90,
+            "scale": 1,
+            "type": "abandoned_home",
+            "x": 325,
+            "z": 67
+        },
+        {
+            "landmark": "alps_frozen_hamlet",
+            "rotation": 90,
+            "scale": 1,
+            "type": "abandoned_home",
+            "x": 327,
+            "z": 52
+        },
+        {
+            "landmark": "alps_frozen_hamlet",
+            "rotation": 270,
+            "scale": 0.9,
+            "type": "abandoned_home",
+            "x": 321,
+            "z": 48
+        },
+        {
+            "landmark": "alps_frozen_hamlet",
+            "rotation": 270,
+            "scale": 1.1,
+            "type": "ruins",
+            "x": 322.07,
+            "z": 73.47
+        },
+        {
+            "landmark": "alps_frozen_hamlet",
+            "rotation": 90,
+            "scale": 0.9,
+            "type": "ruins",
+            "x": 333,
+            "z": 56
+        },
+        {
+            "landmark": "alps_frozen_hamlet",
+            "rotation": 270,
+            "scale": 1,
+            "type": "dead_tree",
+            "x": 308,
+            "z": 66
+        },
+        {
+            "landmark": "alps_frozen_hamlet",
+            "rotation": 90,
+            "scale": 0.9,
+            "type": "dead_tree",
+            "x": 320,
+            "z": 44
+        },
+        {
+            "landmark": "alps_switchback_watch",
+            "rotation": 270,
+            "scale": 1,
+            "type": "statue",
+            "x": 304,
+            "z": 520
+        },
+        {
+            "landmark": "alps_switchback_watch",
+            "scale": 1,
+            "type": "tent",
+            "x": 294,
+            "z": 515
+        },
+        {
+            "landmark": "alps_switchback_watch",
+            "rotation": 180,
+            "scale": 1,
+            "type": "tent",
+            "x": 293,
+            "z": 524
+        },
+        {
+            "landmark": "alps_switchback_watch",
+            "scale": 0.9500000000000001,
+            "type": "tent",
+            "x": 288,
+            "z": 518
+        },
+        {
+            "landmark": "alps_switchback_watch",
+            "rotation": 180,
+            "scale": 1,
+            "type": "supply_cart",
+            "x": 297,
+            "z": 528
+        },
+        {
+            "landmark": "alps_switchback_watch",
+            "scale": 1,
+            "type": "weapon_rack",
+            "x": 298,
+            "z": 512
+        },
+        {
+            "intensity": 1.2,
+            "landmark": "alps_switchback_watch",
+            "persistent": true,
+            "radius": 3.2,
+            "rotation": 270,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 292,
+            "z": 520
+        },
+        {
+            "landmark": "alps_switchback_watch",
+            "rotation": 180,
+            "scale": 0.9,
+            "type": "ruins",
+            "x": 311.05,
+            "z": 526.77
         }
     ],
     "dressing": [
@@ -8114,6 +8217,15 @@
                 "pine_tree"
             ],
             "dead_trees": 2
+        }
+    ],
+    "lakes": [
+        {
+            "depth": 38.0,
+            "id": "alps_tarn",
+            "width": 41.2,
+            "x": 283.9,
+            "z": 16.7
         }
     ]
 }

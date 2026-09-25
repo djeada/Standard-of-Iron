@@ -138,6 +138,7 @@ struct TerrainSurfaceCmd {
   struct HeightResources {
     Texture* texture = nullptr;
     Texture* field_texture = nullptr;
+    Texture* cover_texture = nullptr;
     unsigned int noise_atlas = 0U;
     unsigned int noise_atlas_detail = 0U;
     unsigned int microdetail = 0U;

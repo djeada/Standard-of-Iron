@@ -59,6 +59,8 @@ uniform int u_has_height_tex;
 uniform sampler2D u_height_tex;
 uniform int u_has_field_tex;
 uniform sampler2D u_field_tex;
+uniform int u_has_cover_tex;
+uniform sampler2D u_cover_tex;
 uniform int u_has_noise_atlas;
 uniform sampler2D u_noise_atlas;
 uniform sampler2D u_noise_atlas_detail;
@@ -1049,6 +1051,23 @@ void main() {
   vec3 worn_color = mix(u_grass_dry, u_soil_color, 0.48) * 0.94;
   terrain_color =
       mix(terrain_color, worn_color, worn_ground * k_soi_terrain_earth_amount);
+  if (u_has_cover_tex == 1) {
+    float forest_floor = texture(u_cover_tex, height_uv).r * (1.0 - rock_mask) *
+                         (1.0 - 0.55 * u_snow_coverage);
+    if (forest_floor > 0.002) {
+      float litter = gradient_noise(world_coord * 0.9 + vec2(13.0, -7.0)) * 0.5 + 0.5;
+      float moss_patch =
+          smoothstep(0.35,
+                     0.75,
+                     gradient_noise(world_coord * 0.23 + vec2(-5.0, 21.0)) * 0.5 + 0.5);
+      vec3 needle_litter =
+          mix(u_soil_color, u_grass_dry, 0.25) * vec3(0.66, 0.56, 0.42);
+      vec3 moss = u_grass_primary * vec3(0.52, 0.70, 0.46);
+      vec3 floor_color = mix(needle_litter, moss, moss_patch * 0.65);
+      floor_color *= 0.86 + 0.20 * litter;
+      terrain_color = mix(terrain_color, floor_color, forest_floor * 0.88);
+    }
+  }
   vec3 sunward_landform_tint = vec3(1.055, 1.018, 0.950);
   vec3 leeward_landform_tint = vec3(0.900, 0.965, 1.045);
   float hill_sun_tint = hill_shoulder * sunward_aspect * 0.14;
