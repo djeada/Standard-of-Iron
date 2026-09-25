@@ -8,7 +8,7 @@
   "supersample": 1,
   "grade": {
     "contrast": 1.1,
-    "saturation": 1.08
+    "saturation": 0.97
   },
   "transition": {
     "type": "cut"

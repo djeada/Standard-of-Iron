@@ -54,6 +54,7 @@
 #include "game/wildlife/wildlife_species.h"
 #include "render/graphics_settings.h"
 #include "render/profiling/combat_animation_diagnostics.h"
+#include "render/profiling/frame_profile.h"
 #include "render/profiling/performance_report.h"
 
 namespace Arena {
@@ -6825,6 +6826,16 @@ auto ArenaScenarioRunner::start() -> bool {
     return false;
   }
   m_impl->started = true;
+
+  bool const asserts_frame_budget =
+      std::any_of(m_impl->scenario.expectations.begin(),
+                  m_impl->scenario.expectations.end(),
+                  [](auto const& expectation) {
+                    return expectation.kind == ArenaExpectationKind::FrameBudget;
+                  });
+  if (asserts_frame_budget) {
+    Render::Profiling::global_profile().enabled = true;
+  }
 
   Game::Systems::Combat::EngagementTrace::instance().set_enabled(true);
   Game::Systems::Combat::EngagementTrace::instance().clear();

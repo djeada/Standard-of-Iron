@@ -26,9 +26,7 @@
   "music_volume": 0.55,
   "grade": {
     "contrast": 1.12,
-    "saturation": 1.14,
-    "brightness": 0.06,
-    "gamma": 1.12,
+    "saturation": 1.03,
     "grain": 3,
     "vignette": 0.1,
     "sharpen": 0.6

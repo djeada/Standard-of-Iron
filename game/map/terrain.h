@@ -514,10 +514,10 @@ inline void apply_ground_type_defaults(BiomeSettings& settings,
 
   case GroundType::SoilRocky:
 
-    settings.grass_primary = QVector3D(0.31F, 0.34F, 0.22F);
-    settings.grass_secondary = QVector3D(0.38F, 0.40F, 0.24F);
-    settings.grass_dry = QVector3D(0.51F, 0.44F, 0.30F);
-    settings.soil_color = QVector3D(0.44F, 0.34F, 0.24F);
+    settings.grass_primary = QVector3D(0.38F, 0.46F, 0.27F);
+    settings.grass_secondary = QVector3D(0.45F, 0.54F, 0.31F);
+    settings.grass_dry = QVector3D(0.58F, 0.52F, 0.38F);
+    settings.soil_color = QVector3D(0.55F, 0.48F, 0.38F);
     settings.rock_low = QVector3D(0.42F, 0.40F, 0.36F);
     settings.rock_high = QVector3D(0.62F, 0.59F, 0.53F);
     settings.terrain_ambient_boost = 0.93F;

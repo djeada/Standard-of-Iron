@@ -29,6 +29,9 @@ uniform float u_ambient_boost, u_rock_detail_strength;
 
 const float k_soi_terrain_detail_damping = 0.58;
 const float k_soi_terrain_relief_damping = 0.68;
+const float k_soi_meadow_drift_strength = 0.8;
+const float k_soi_meadow_frequency = 0.030;
+const float k_soi_normal_field_curvature_trust = 0.0;
 const float k_soi_terrain_hue_scale = 0.042;
 const float k_soi_terrain_hue_amount = 0.32;
 const float k_soi_terrain_earth_scale = 0.016;
@@ -347,7 +350,8 @@ void main() {
       (u_has_field_tex == 1)
           ? baked_fields.y
           : ((u_has_height_tex == 1) ? compute_curvature()
-                                     : curvature_from_normal_field(smooth_normal));
+                                     : curvature_from_normal_field(smooth_normal) *
+                                           k_soi_normal_field_curvature_trust);
   float curvature_response = clamp(u_curvature_response, 0.0, 1.0);
   float ridge_response = clamp(u_ridge_response, 0.0, 1.0);
   float gully_response = clamp(u_gully_response, 0.0, 1.0);
@@ -683,6 +687,23 @@ void main() {
                  grass_clumps * 0.020 + surface_detail * 0.050 + grass_weave * 0.012 +
                  surface_grain * 0.105 + tussock * 0.062 + granular * 0.042 +
                  speckle * 0.022;
+
+  vec2 meadow_coord =
+      v_world_pos.xz * k_soi_meadow_frequency + domain_warp * 0.35 + vec2(71.0, -23.0);
+  vec2 meadow_fine_coord = meadow_coord * 2.7 + vec2(5.3, 11.9);
+  float meadow_broad =
+      (HAS_MICRODETAIL) ? micro_sample(meadow_coord).g : gradient_fbm(meadow_coord);
+  float meadow_fine = (HAS_MICRODETAIL) ? micro_sample(meadow_fine_coord).g
+                                        : gradient_fbm(meadow_fine_coord);
+  float meadow_drift = clamp(0.5 + meadow_broad * 1.1 + meadow_fine * 0.45 +
+                                 (regional_field - 0.5) * 0.6,
+                             0.0,
+                             1.0);
+  vec3 sunlit_meadow = mix(grass_color, u_grass_dry, 0.55) * 1.08;
+  vec3 deep_meadow = mix(grass_color, u_grass_secondary, 0.55) * 0.84;
+  vec3 meadow_tone =
+      mix(deep_meadow, sunlit_meadow, smoothstep(0.20, 0.80, meadow_drift));
+  grass_color = mix(grass_color, meadow_tone, k_soi_meadow_drift_strength);
 
   vec3 cropped_sward = mix(u_grass_dry, u_grass_primary, 0.45);
   vec3 deep_sward = mix(u_grass_secondary, u_grass_primary, 0.30) * 0.88;

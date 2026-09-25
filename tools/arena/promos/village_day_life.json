@@ -278,9 +278,7 @@
   ],
   "grade": {
     "contrast": 1.08,
-    "saturation": 1.12,
-    "brightness": 0.04,
-    "gamma": 1.06,
+    "saturation": 1.01,
     "grain": 2,
     "vignette": 0.08,
     "sharpen": 0.6

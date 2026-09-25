@@ -400,6 +400,8 @@ The offline edit step applies the authored grade/output treatment consistently t
 
 That separation is useful when several shots come from different scenarios or camera conditions: the final reel can have one editorial treatment without modifying the renderer or mission content solely for the video.
 
+The grade is creative, not corrective. Until September 2026 the renderer had no display encode, and every spec carried `brightness` and `gamma` lift to make up for dark footage. The renderer now encodes its own output (see the display encode in `RENDERING_ARCHITECTURE.md`), so those keys were removed from the specs, the `promo-edit.py` defaults are brightness 0 and gamma 1, and each spec's `saturation` was divided by 1.11 to take out the saturation the renderer now adds. Clips captured before that change are still dark: re-capture them rather than re-editing them with the new grades.
+
 ## Formation promo orchestration
 
 `scripts/capture-formation-promos.sh` runs the shipped formation-reel workflow.

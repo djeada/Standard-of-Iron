@@ -179,9 +179,7 @@
   ],
   "grade": {
     "contrast": 1.13,
-    "saturation": 1.16,
-    "brightness": 0.07,
-    "gamma": 1.1,
+    "saturation": 1.05,
     "grain": 3,
     "vignette": 0.09,
     "sharpen": 0.7

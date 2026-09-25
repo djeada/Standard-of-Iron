@@ -14,7 +14,7 @@ camera work they belong to::
     {
       "title": "THE LAST STAND",
       "subtitle": "STANDARD OF IRON",
-      "grade": {"contrast": 1.12, "saturation": 1.14},
+      "grade": {"contrast": 1.12, "saturation": 1.03},
       "transition": {"type": "dissolve", "duration": 0.35},
       "sfx": [
         {"file": "assets/audio/sfx/combat/horse_gallop_close_pass.ogg",
@@ -825,9 +825,9 @@ def drawtext_block(
 def build_grade(grade: dict) -> str:
     """Contrast, colour and texture pass applied once to the whole cut."""
     contrast = float(grade.get("contrast", 1.12))
-    saturation = float(grade.get("saturation", 1.14))
-    brightness = float(grade.get("brightness", 0.03))
-    gamma = float(grade.get("gamma", 1.08))
+    saturation = float(grade.get("saturation", 1.03))
+    brightness = float(grade.get("brightness", 0.0))
+    gamma = float(grade.get("gamma", 1.0))
     vignette = float(grade.get("vignette", 0.10))
     grain = float(grade.get("grain", 5))
     sharpen = float(grade.get("sharpen", 0.6))

@@ -10,11 +10,16 @@ in vec3 v_world_pos;
 flat in vec3 v_instance_color;
 flat in float v_instance_alpha;
 flat in int v_material_id;
+flat in float v_ground_height;
 
 uniform sampler2D u_texture;
 uniform bool u_use_texture;
 
 out vec4 frag_color;
+
+const float k_plinth_height = 0.90;
+const float k_plinth_strength = 0.65;
+const vec3 k_plinth_tint = vec3(0.66, 0.60, 0.52);
 
 float soi_resolve_ghost_alpha(float alpha) {
   if (alpha <= 1.0) {
@@ -54,6 +59,11 @@ void main() {
   int soi_damage_tier = v_material_id / 10;
   color = soi_material_variation(color, v_world_pos, normal, soi_material);
   color = soi_apply_damage_soot(color, v_world_pos, soi_damage_tier);
+
+  float wall_face = 1.0 - smoothstep(0.55, 0.90, abs(normal.y));
+  float plinth =
+      1.0 - smoothstep(0.0, k_plinth_height, v_world_pos.y - v_ground_height);
+  color = mix(color, color * k_plinth_tint, plinth * wall_face * k_plinth_strength);
 
   float avg_color = (color.r + color.g + color.b) / 3.0;
   float wrap_amount = avg_color > 0.65 ? 0.38 : (avg_color > 0.40 ? 0.16 : 0.04);

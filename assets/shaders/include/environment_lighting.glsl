@@ -79,10 +79,24 @@ float environment_low_sun_amount() {
          (1.0 - environment_night_amount());
 }
 
+const float k_soi_sun_bounce_gain = 0.50;
+const float k_soi_horizon_fill_gain = 1.00;
+
+vec3 environment_sun_bounce() {
+  float sun_height = clamp(environment_primary_direction().y, 0.0, 1.0);
+  return environment_ground_bounce_color() * environment_primary_color() *
+         (environment_primary_intensity() * sun_height * k_soi_sun_bounce_gain);
+}
+
 vec3 environment_ambient_light(vec3 normal) {
   float hemisphere = clamp(normal.y * 0.5 + 0.5, 0.0, 1.0);
-  return mix(environment_ground_bounce_color(), environment_sky_color(), hemisphere) *
-         environment_ambient_intensity();
+  vec3 dome =
+      mix(environment_ground_bounce_color(), environment_sky_color(), hemisphere) *
+      environment_ambient_intensity();
+  float horizon_view = 1.0 - abs(normal.y);
+  vec3 horizon = environment_sky_color() * environment_ambient_intensity() *
+                 (horizon_view * k_soi_horizon_fill_gain);
+  return dome + horizon + environment_sun_bounce() * (1.0 - hemisphere);
 }
 
 const float k_soi_shade_wrap = 0.28;
@@ -111,6 +125,14 @@ float soi_wrapped_diffuse(vec3 normal) {
 vec3 soi_key_light(vec3 normal) {
   return environment_primary_color() * environment_primary_intensity() *
          soi_wrapped_diffuse(normal);
+}
+
+const float k_soi_canopy_scatter_gain = 0.34;
+
+vec3 soi_canopy_scatter(vec3 normal) {
+  float shaded = 1.0 - soi_wrapped_diffuse(normal);
+  return environment_primary_color() * environment_primary_intensity() *
+         (shaded * k_soi_canopy_scatter_gain);
 }
 
 vec3 soi_surface_lighting_scaled(vec3 normal, float key_scale) {

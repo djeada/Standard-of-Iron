@@ -239,9 +239,7 @@
   "subtitle": "STANDARD OF IRON",
   "grade": {
     "contrast": 1.1,
-    "saturation": 1.16,
-    "brightness": 0.045,
-    "gamma": 1.14,
+    "saturation": 1.05,
     "grain": 4,
     "vignette": 0.08
   },

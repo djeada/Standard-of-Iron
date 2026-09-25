@@ -32,9 +32,7 @@
   "transition": { "type": "dissolve", "duration": 0.4 },
   "grade": {
     "contrast": 1.08,
-    "saturation": 1.1,
-    "brightness": 0.02,
-    "gamma": 1.04,
+    "saturation": 0.99,
     "grain": 2,
     "vignette": 0.1,
     "sharpen": 0.5
