@@ -2,8 +2,8 @@ const float k_soi_grade_exposure = 2.15;
 const float k_soi_grade_white_point = 3.70;
 const float k_soi_grade_contrast = 1.10;
 const float k_soi_grade_pivot = 0.38;
-const float k_soi_grade_saturation = 1.08;
-const vec3 k_soi_grade_shadow_lift = vec3(0.017, 0.022, 0.040);
+const float k_soi_grade_saturation = 1.20;
+const vec3 k_soi_grade_shadow_lift = vec3(0.0076, 0.0103, 0.0210);
 const vec3 k_soi_grade_highlight_tint = vec3(1.012, 1.000, 0.980);
 const vec3 k_soi_grade_shadow_tone = vec3(0.86, 0.94, 1.14);
 const vec3 k_soi_grade_highlight_tone = vec3(1.035, 1.005, 0.955);
@@ -102,4 +102,10 @@ vec3 soi_time_of_day_grade(vec3 color, float night, float dusk) {
   dusk_color = mix(dusk_color, vec3(dot(dusk_color, k_soi_grade_luma)), neutral);
   color = mix(color, max(dusk_color, vec3(0.0)), clamp(dusk, 0.0, 1.0));
   return clamp(color, 0.0, 1.0);
+}
+
+const float k_soi_display_gamma = 1.2;
+
+vec3 soi_display_encode(vec3 graded_color) {
+  return pow(clamp(graded_color, 0.0, 1.0), vec3(1.0 / k_soi_display_gamma));
 }

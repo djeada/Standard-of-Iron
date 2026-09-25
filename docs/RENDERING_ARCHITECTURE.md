@@ -453,6 +453,39 @@ It carries the common scene inputs used across materials/passes, including value
 
 Time-of-day and weather systems update this environment state. Rendering consumes the resulting presentation values through shared lighting/shader code rather than letting each material invent an unrelated sun/fog model.
 
+### Shared fill terms
+
+`environment_lighting.glsl` adds two fill terms that every world material picks up through `environment_ambient_light()` and `soi_surface_lighting*()`:
+
+- **Sun bounce.** `environment_sun_bounce()` is sunlight reflected off the sunlit ground: ground-bounce colour × sun colour × sun intensity × sun height × `k_soi_sun_bounce_gain`. It lights faces that point sideways or down, weighted by `1 - hemisphere`, so flat ground is unchanged. Without it the ground bounce was scaled only by the _sky_ ambient intensity (about 0.27 at noon), and every wall, rock, log and trunk facing away from the sun rendered near-black while units beside it, which have their own readable floor in `character_shading.glsl`, stayed bright.
+- **Horizon fill.** `environment_ambient_light()` adds sky colour × ambient intensity × `k_soi_horizon_fill_gain`, weighted by `1 - |n.y|`. A wall sees the horizon band, which is the brightest part of a clear sky; the hemisphere term alone gave a sun-away wall about a seventh of its lit side's light, so village facades read black. Flat ground and roofs are unchanged.
+- **Canopy scatter.** `soi_canopy_scatter()` is sunlight transmitted through a leaf mass into its shaded side. Tree crowns are volumes, not shells, so the unlit hemisphere of a crown still glows. Olive and pine foliage add it on top of `soi_key_light()`, masked to foliage so trunks do not glow. Pines scale it by `k_needle_scatter` because dense needles transmit far less than olive leaves; at full strength the whole tree went flat lime.
+
+### Display encode
+
+`post_composite.frag` ends with `soi_display_encode()` from `tonemap.glsl`, a `1 / k_soi_display_gamma` power applied after the grade and time-of-day grade. The pipeline has no sRGB framebuffer or encode anywhere, so the tonemapped value used to reach an 8-bit display buffer as-is: daylight battle frames averaged about 65/255 below the horizon and 16% of a backlit frame was crushed below 26/255. The promo edit grade had been compensating with its own gamma and brightness. The encode is deliberately partial (1.2, not 2.2) because every albedo in the game was authored against the unencoded output; `k_soi_grade_saturation` was raised with it to restore the chroma a power curve removes.
+
+Measured on the Cannae spotlight battle (six shots, crushed means pixels below 26/255):
+
+|        | mean luma | crushed, backlit shot | saturation |
+| ------ | --------- | --------------------- | ---------- |
+| before | 60.8–71.6 | 15.9%                 | 0.37–0.40  |
+| after  | 79.3–90.3 | about 2%              | 0.34–0.38  |
+
+Any change to these constants needs the night and dusk check: the `lighting_moonlit_night` batch frame and a 19.5 h shot, compared on mean and standard deviation against HEAD shaders.
+
+### Meadow drift
+
+At gameplay zoom (40–90 m) the terrain's fine detail is damped for readability (`ground_tactical_distance()`), and the regional and patch fields vary over hundreds of metres, so a battlefield read as one flat green. `terrain_chunk.frag` blends the grass between a sun-cured and a deep-sward tone using two extra microdetail samples at about 33 m and 12 m wavelengths (`k_soi_meadow_frequency`), warped by the existing `domain_warp`. It changes colour only, never relief, so troops stay as readable as before.
+
+### Curvature without a height or field texture
+
+`terrain_chunk.frag` takes curvature from the baked field texture or the height texture. Meshes with neither (the boundary mountain ring drawn with `horizon_dressing`) fell back to `curvature_from_normal_field()`, the screen-space derivative of interpolated vertex normals. On a coarse mesh that derivative is constant per triangle, so the gully mask shaded each concave triangle as a dark wedge and the ring read as vertical streaks. `k_soi_normal_field_curvature_trust` scales that fallback to zero. Terrain chunks with baked fields are unaffected.
+
+### Building foot
+
+`building_merged.vert` passes each merged building's instance origin (its ground contact) as `v_ground_height`, and `basic_instanced.frag` darkens and warms wall faces within `k_plinth_height` of it, so houses sit in the soil instead of on it. `basic_instanced.vert` draws individual parts whose origin is not the ground, so it passes `k_no_ground_contact` and the effect is off. Buildings outside the static batch (under construction, damaged, or on a backend without it) do not get the foot.
+
 ## Directional shadows
 
 Directional shadows are configured by `DirectionalShadowSettings` in the active graphics profile.

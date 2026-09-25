@@ -300,6 +300,7 @@ void main() {
       mix(1.0, k_night_exposure_lift, night) * mix(1.0, k_dusk_exposure_lift, dusk);
   vec3 graded = soi_finalize(combined);
   graded = soi_time_of_day_grade(graded, night, dusk);
+  graded = soi_display_encode(graded);
 
   vec2 centered = v_uv * 2.0 - 1.0;
   float falloff = smoothstep(k_vignette_inner, k_vignette_outer, length(centered));

@@ -402,6 +402,11 @@ TEST(ShaderSource, WorldShadersLeaveGradingToThePostProcessPass) {
   ASSERT_FALSE(composite.empty());
   EXPECT_NE(composite.find("#include \"tonemap.glsl\""), std::string::npos);
   EXPECT_NE(composite.find("soi_finalize(combined)"), std::string::npos);
+  EXPECT_NE(grade.find("vec3 soi_display_encode(vec3 graded_color)"),
+            std::string::npos);
+  EXPECT_LT(composite.find("soi_time_of_day_grade(graded, night, dusk)"),
+            composite.find("soi_display_encode(graded)"))
+      << "the display encode runs last, after every grade that reads luma bands";
   EXPECT_NE(composite.find("u_bloom"), std::string::npos);
   EXPECT_NE(composite.find("u_vignette_strength"), std::string::npos);
 
@@ -450,6 +455,64 @@ TEST(ShaderSource, WorldSurfacesTakeTheirKeyLightFromTheSharedModel) {
             common.find("vec3 environment_direct_light("))
       << "GLSL has no forward declarations: the shared shading helpers must stay "
          "above their first caller in this include";
+}
+
+TEST(ShaderSource, WorldSurfacesShareTheSunBounceAndCanopyScatter) {
+  const auto root = find_repo_root();
+  const auto common =
+      read_text(root / "assets" / "shaders" / "include" / "environment_lighting.glsl");
+  ASSERT_FALSE(common.empty());
+  const auto flat_common = collapse_whitespace(common);
+  EXPECT_NE(
+      flat_common.find(
+          "return dome + horizon + environment_sun_bounce() * (1.0 - hemisphere);"),
+      std::string::npos)
+      << "walls and rocks facing away from the sun go black without the bounce off "
+         "the sunlit ground";
+  EXPECT_NE(flat_common.find("float horizon_view = 1.0 - abs(normal.y);"),
+            std::string::npos)
+      << "walls facing away from the sun see the bright horizon, not only the zenith";
+  EXPECT_LT(common.find("vec3 environment_sun_bounce()"),
+            common.find("vec3 environment_ambient_light(vec3 normal)"));
+  EXPECT_LT(common.find("vec3 soi_canopy_scatter(vec3 normal)"),
+            common.find("vec3 soi_surface_lighting_scaled("));
+
+  for (const auto* name : {"olive_instanced.frag", "pine_instanced.frag"}) {
+    const auto source = read_text(root / "assets" / "shaders" / name);
+    ASSERT_FALSE(source.empty()) << name;
+    EXPECT_NE(collapse_whitespace(source).find(
+                  "soi_canopy_scatter(geometric_normal) * v_foliage_mask"),
+              std::string::npos)
+        << name << " lights its crown as a shell, so the shaded side reads black";
+  }
+}
+
+TEST(ShaderSource, MergedBuildingsDarkenTheirFootAndPartsDoNot) {
+  const auto root = find_repo_root();
+  const auto merged = read_text(root / "assets" / "shaders" / "building_merged.vert");
+  const auto parts = read_text(root / "assets" / "shaders" / "basic_instanced.vert");
+  const auto frag = read_text(root / "assets" / "shaders" / "basic_instanced.frag");
+  ASSERT_FALSE(merged.empty());
+  ASSERT_FALSE(parts.empty());
+  ASSERT_FALSE(frag.empty());
+  EXPECT_NE(merged.find("v_ground_height = a_instance_model_col1.w;"),
+            std::string::npos)
+      << "a merged building's instance origin is its ground contact";
+  EXPECT_NE(parts.find("v_ground_height = k_no_ground_contact;"), std::string::npos)
+      << "per-part instances have no ground origin and must not grow a dirty foot";
+  EXPECT_NE(frag.find("flat in float v_ground_height;"), std::string::npos);
+}
+
+TEST(ShaderSource, FallbackCurvatureIsNotTrustedForGullies) {
+  const auto root = find_repo_root();
+  const auto terrain = read_text(root / "assets" / "shaders" / "terrain_chunk.frag");
+  ASSERT_FALSE(terrain.empty());
+  EXPECT_NE(
+      collapse_whitespace(terrain).find("curvature_from_normal_field(smooth_normal) * "
+                                        "k_soi_normal_field_curvature_trust"),
+      std::string::npos)
+      << "screen-space curvature is constant per triangle on the coarse boundary "
+         "mesh and shades every concave triangle as a dark streak";
 }
 
 TEST(ShaderSource, WorldMaterialHighlightsFollowTheCamera) {

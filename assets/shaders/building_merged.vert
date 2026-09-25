@@ -24,6 +24,7 @@ out vec3 v_world_pos;
 flat out vec3 v_instance_color;
 flat out float v_instance_alpha;
 flat out int v_material_id;
+flat out float v_ground_height;
 
 vec3 soi_transform_normal(mat3 m, vec3 n) {
   mat3 cofactor = mat3(cross(m[1], m[2]), cross(m[2], m[0]), cross(m[0], m[1]));
@@ -73,5 +74,6 @@ void main() {
   v_world_pos = world_pos4.xyz;
   v_normal = soi_transform_normal(mat3(model), a_normal);
   v_tex_coord = a_tex_coord;
+  v_ground_height = a_instance_model_col1.w;
   gl_Position = u_view_proj * world_pos4;
 }
