@@ -179,6 +179,33 @@ Automatic engagement is intentionally more conservative. An idle unit does not t
 
 Ranged attacks use ranged line/range rules rather than the melee structure-separation rule. A wall that blocks two swordsmen from contacting each other does not automatically imply that a projectile cannot pass over or around it.
 
+## Forest cover
+
+A wood hides the men inside it and turns arrows. `ForestCoverSystem`
+(`game/systems/forest_cover_system.cpp`) runs at the end of the movement phase and
+gives every unit standing on a forest navigation cell a `ForestCoverComponent`:
+
+- **`in_forest`** - the unit stands among the trees. Ranged hits on it are scaled by
+  `k_forest_ranged_cover_multiplier` (0.6) in `calculate_tactical_damage_multiplier`,
+  whether or not it has been seen.
+- **`concealed`** - it is in the wood, not locked in melee, and has not struck for
+  `k_forest_reveal_after_strike` (4 s). A unit that has just loosed a volley is marked
+  by its own arrows.
+- **`seen_by`** - a bitmask of the owners that can see it anyway: its own side and
+  allies always, and any army with a living unit within `k_forest_spot_distance`
+  (5.5 m), close enough to look in past the tree line. Alliances are folded into the
+  mask when it is computed, so every consumer tests one bit.
+
+`hidden_from(owner)` is the one question every consumer asks. Automatic acquisition
+(`find_nearest_enemy`) skips a hidden unit; the AI's `visible_enemies` leave it out;
+an automatically acquired target that slips into cover is dropped (a player's
+explicit attack order is kept); and the renderer, minimap, hover and selection treat
+an unseen enemy in a wood as fogged. Spotting distance is deliberately shorter than a
+bow's reach (archers shoot 7.5 m): an archer line in a wood beside a road sees and
+hits the column on it before the column can see where the arrows come from, and
+answering needs infantry willing to walk in. Spearmen, cavalry and siege engines
+cannot enter a forest at all.
+
 ## Combat state processing
 
 `process_combat_state()` maintains the state that determines whether units are entering, holding, or leaving a combat interaction.

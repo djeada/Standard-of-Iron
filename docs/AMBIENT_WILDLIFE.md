@@ -240,6 +240,12 @@ A species omitted from an authored wildlife block stays disabled even when the t
 
 `respawn: false` allows a hunted-out population to remain absent.
 
+Groups are dealt to authored `spawn_areas` in order: group _i_ is homed in area
+_i_ modulo the number of areas. A skirmish map therefore authors one pasture per
+starting seat and sets `groups` to match, and every seat gets a flock. Groups
+used to draw an area at random, and on a six-seat map with two pastures both
+flocks could land in the same one, leaving every other seat with no mutton.
+
 Bird `spawn_areas` matter for resident flocks. Flyovers enter relative to the map/camera traversal rather than treating the spawn range as a permanent roost.
 
 ## Scheduled wolf packs

@@ -16,6 +16,8 @@
 namespace Render::Ground {
 
 inline constexpr int k_tree_cell_span = 4;
+inline constexpr float k_forest_canopy_cluster = 1.15F;
+inline constexpr float k_forest_canopy_multiplier = 1.6F;
 inline constexpr float k_tree_density_area_scale = 16.0F / 36.0F;
 inline constexpr float k_tree_edge_padding_scale = 0.35F;
 
@@ -151,6 +153,8 @@ struct TreeScatterWalkInput {
   float density = 0.0F;
   float scale_min = 1.0F;
   float scale_max = 2.0F;
+  bool forest_only = false;
+  float forest_density_floor = 0.0F;
 };
 
 [[nodiscard]] inline auto
@@ -200,7 +204,16 @@ void walk_tree_scatter(const TreeScatterProfile& profile,
     if (scene.obstacle_influence >= 1.0F) {
       return false;
     }
-    if (rand_01(state) > scatter_spawn_chance(profile.rule_species, scene)) {
+    bool const under_canopy =
+        terrain_cache.get_terrain_type_at(
+            std::clamp(static_cast<int>(gx + 0.5F), 0, input.width - 1),
+            std::clamp(static_cast<int>(gz + 0.5F), 0, input.height - 1)) ==
+        Game::Map::TerrainType::Forest;
+    if (input.forest_only && !under_canopy) {
+      return false;
+    }
+    if (!under_canopy &&
+        rand_01(state) > scatter_spawn_chance(profile.rule_species, scene)) {
       return false;
     }
 
@@ -259,6 +272,11 @@ void walk_tree_scatter(const TreeScatterProfile& profile,
                                                       state ^ profile.cell_scene_salt);
 
       float density_mult = 1.0F;
+      bool const in_forest = terrain_cache.get_terrain_type_at(sample_x, sample_z) ==
+                             Game::Map::TerrainType::Forest;
+      if (input.forest_only && !in_forest) {
+        continue;
+      }
       switch (terrain_cache.get_terrain_type_at(sample_x, sample_z)) {
       case Game::Map::TerrainType::Hill:
         density_mult = profile.hill_density;
@@ -281,17 +299,27 @@ void walk_tree_scatter(const TreeScatterProfile& profile,
       float const mid_noise = rand_01(mid_state);
       float const cluster_noise = macro_noise * 0.65F + mid_noise * 0.35F;
       float const cluster_mult =
-          profile.cluster_base + cluster_noise * cluster_noise * profile.cluster_gain;
-      density_mult *= scatter_density_multiplier(profile.rule_species, cell_scene);
+          in_forest ? k_forest_canopy_cluster
+                    : profile.cluster_base +
+                          cluster_noise * cluster_noise * profile.cluster_gain;
+      if (!in_forest) {
+        density_mult *= scatter_density_multiplier(profile.rule_species, cell_scene);
+      } else if (input.forest_density_floor > 0.0F) {
+        density_mult = std::max(density_mult, k_forest_canopy_multiplier);
+      }
 
+      float const base_density =
+          in_forest ? std::max(input.density, input.forest_density_floor)
+                    : input.density;
       float const effective_density =
-          input.density * density_mult *
+          base_density * density_mult *
           (0.70F + cell_scene.cluster_bias * profile.cluster_bias_gain) *
           k_tree_density_area_scale * cluster_mult;
       if (effective_density < 0.04F) {
         continue;
       }
-      if (rand_01(state) > scatter_spawn_chance(profile.rule_species, cell_scene)) {
+      if (!in_forest &&
+          rand_01(state) > scatter_spawn_chance(profile.rule_species, cell_scene)) {
         continue;
       }
 

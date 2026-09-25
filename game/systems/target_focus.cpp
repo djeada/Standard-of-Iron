@@ -84,6 +84,10 @@ auto collect_target_focus_markers(const TargetFocusRequest& request)
         !visible(request.visibility, transform->position.x, transform->position.z)) {
       return nullptr;
     }
+    if (const auto* cover = entity->get_component<Engine::Core::ForestCoverComponent>();
+        cover != nullptr && cover->hidden_from(request.local_owner_id)) {
+      return nullptr;
+    }
     return entity;
   };
 

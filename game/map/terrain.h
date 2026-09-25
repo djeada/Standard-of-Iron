@@ -676,6 +676,8 @@ struct TerrainFeature {
   float taper = 0.0F;
 
   bool raise_only = false;
+  bool fields = false;
+  float outline_seed = -1.0F;
   bool has_sweep = false;
   bool has_sweep_start = false;
   std::vector<QVector3D> shape_points;
@@ -1134,6 +1136,8 @@ public:
 
   [[nodiscard]] auto getTerrainType(int grid_x, int grid_z) const -> TerrainType;
 
+  [[nodiscard]] auto is_fields(int grid_x, int grid_z) const -> bool;
+
   [[nodiscard]] auto
   isRiverOrNearby(int grid_x, int grid_z, int margin = 1) const -> bool;
 
@@ -1195,6 +1199,7 @@ private:
   std::vector<TerrainType> m_terrain_types;
   std::vector<bool> m_hill_entrances;
   std::vector<bool> m_hill_walkable;
+  std::vector<std::uint8_t> m_fields;
   std::vector<HillEntranceCenterline> m_hill_entrance_centerlines;
   std::vector<RiverSegment> m_river_segments;
   std::vector<Lake> m_lakes;

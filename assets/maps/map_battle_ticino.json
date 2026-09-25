@@ -173,6 +173,24 @@
             "radius": 30,
             "x": 558.4300000000001,
             "z": 459.94
+        },
+        {
+            "id": "ticino_ambush_wood_1",
+            "radius": 18.3,
+            "x": 331.8,
+            "z": 139.9
+        },
+        {
+            "id": "ticino_ambush_wood_2",
+            "radius": 16.9,
+            "x": 304.2,
+            "z": 498.7
+        },
+        {
+            "id": "ticino_ambush_wood_3",
+            "radius": 20.8,
+            "x": 617.8,
+            "z": 287.5
         }
     ],
     "grid": {
@@ -243,6 +261,13 @@
             "player_id": 2,
             "x": 380,
             "z": 400
+        },
+        {
+            "facing": "north",
+            "id": "ticino_woodside_hamlet",
+            "kind": "hamlet",
+            "x": 277,
+            "z": 530
         }
     ],
     "max_troops_per_player": 2480,
@@ -2441,6 +2466,30 @@
             "z": 339.95
         },
         {
+            "max_population": -1,
+            "nation": "carthage",
+            "player_id": 1,
+            "type": "carthage_sword_commander",
+            "x": 104.19,
+            "z": 240.37
+        },
+        {
+            "max_population": -1,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "type": "roman_veteran_consul",
+            "x": 238.59,
+            "z": 191.92
+        },
+        {
+            "max_population": -1,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "type": "roman_field_commander",
+            "x": 548.0,
+            "z": 200.0
+        },
+        {
             "behavior": "guard",
             "landmark": "ticino_forest_sanctuary",
             "max_population": -1,
@@ -2538,30 +2587,6 @@
             "type": "archer",
             "x": 254,
             "z": 56
-        },
-        {
-            "max_population": -1,
-            "nation": "carthage",
-            "player_id": 1,
-            "type": "carthage_sword_commander",
-            "x": 104.19,
-            "z": 240.37
-        },
-        {
-            "max_population": -1,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "roman_veteran_consul",
-            "x": 238.59,
-            "z": 191.92
-        },
-        {
-            "max_population": -1,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "roman_field_commander",
-            "x": 548.0,
-            "z": 200.0
         }
     ],
     "starting_resources": {
@@ -2616,195 +2641,6 @@
             "nation": "roman_republic",
             "player_id": 3,
             "settlement": "ticino_reserve_camp",
-            "type": "home",
-            "x": 612.0,
-            "z": 162.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "ticino_reserve_camp",
-            "type": "home",
-            "x": 588.0,
-            "z": 174.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "ticino_reserve_camp",
-            "type": "home",
-            "x": 612.0,
-            "z": 174.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "ticino_reserve_camp",
-            "type": "home",
-            "x": 594.0,
-            "z": 150.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "ticino_reserve_camp",
-            "type": "home",
-            "x": 606.0,
-            "z": 150.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "ticino_reserve_camp",
-            "type": "home",
-            "x": 582.0,
-            "z": 162.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "ticino_reserve_camp",
-            "type": "home",
-            "x": 618.0,
-            "z": 162.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "ticino_reserve_camp",
-            "type": "home",
-            "x": 582.0,
-            "z": 174.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "ticino_reserve_camp",
-            "type": "home",
-            "x": 618.0,
-            "z": 174.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "ticino_reserve_camp",
-            "type": "home",
-            "x": 588.0,
-            "z": 180.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "ticino_reserve_camp",
-            "type": "home",
-            "x": 612.0,
-            "z": 180.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "ticino_reserve_camp",
-            "type": "home",
-            "x": 594.0,
-            "z": 186.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "ticino_reserve_camp",
-            "type": "home",
-            "x": 588.0,
-            "z": 150.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "ticino_reserve_camp",
-            "type": "home",
-            "x": 618.0,
-            "z": 156.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "ticino_reserve_camp",
-            "type": "home",
-            "x": 582.0,
-            "z": 180.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "ticino_reserve_camp",
-            "type": "home",
-            "x": 618.0,
-            "z": 180.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "ticino_reserve_camp",
-            "type": "home",
-            "x": 588.0,
-            "z": 186.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "ticino_reserve_camp",
-            "type": "home",
-            "x": 612.0,
-            "z": 186.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "ticino_reserve_camp",
-            "type": "home",
-            "x": 582.0,
-            "z": 150.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "ticino_reserve_camp",
-            "type": "home",
-            "x": 582.0,
-            "z": 186.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "ticino_reserve_camp",
-            "type": "home",
-            "x": 618.0,
-            "z": 186.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "ticino_reserve_camp",
             "type": "defense_tower",
             "x": 576.83,
             "z": 156.19
@@ -2835,21 +2671,6 @@
             "type": "defense_tower",
             "x": 574.5,
             "z": 182.5
-        },
-        {
-            "landmark": "ticino_north_sanctuary",
-            "nation": "carthage",
-            "type": "temple",
-            "x": 252,
-            "z": 50
-        },
-        {
-            "landmark": "ticino_forest_sanctuary",
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "temple",
-            "x": 238.59,
-            "z": 178.59
         },
         {
             "authored": true,
@@ -3007,6 +2828,435 @@
             "type": "home",
             "x": 448,
             "z": 316.12
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 612.0,
+            "z": 162.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 180.0,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 588.0,
+            "z": 174.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 180.0,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 612.0,
+            "z": 174.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 180.0,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 594.0,
+            "z": 150.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 180.0,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 606.0,
+            "z": 150.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 582.0,
+            "z": 162.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 618.0,
+            "z": 162.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 180.0,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 582.0,
+            "z": 174.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 180.0,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 618.0,
+            "z": 174.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 588.0,
+            "z": 180.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 612.0,
+            "z": 180.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 594.0,
+            "z": 186.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 180.0,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 588.0,
+            "z": 150.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 90.0,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 618.0,
+            "z": 156.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 270.0,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 582.0,
+            "z": 180.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 90.0,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 618.0,
+            "z": 180.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 588.0,
+            "z": 186.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 612.0,
+            "z": 186.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 180.0,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 582.0,
+            "z": 150.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 582.0,
+            "z": 186.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 618.0,
+            "z": 186.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 270,
+            "type": "home",
+            "x": 420.76,
+            "z": 350.86
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 180,
+            "type": "home",
+            "x": 416.13,
+            "z": 360.38
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 180,
+            "type": "home",
+            "x": 487.41,
+            "z": 277.63
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "type": "home",
+            "x": 408.0,
+            "z": 350.85
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 180,
+            "type": "home",
+            "x": 410.26,
+            "z": 361.62
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "type": "home",
+            "x": 402.12,
+            "z": 352.09
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 180,
+            "type": "home",
+            "x": 404.39,
+            "z": 362.85
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 180,
+            "type": "home",
+            "x": 364.77,
+            "z": 301.29
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "type": "home",
+            "x": 396.25,
+            "z": 353.33
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 180,
+            "type": "home",
+            "x": 493.91,
+            "z": 271.39
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 90,
+            "type": "home",
+            "x": 390.05,
+            "z": 359.17
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 270,
+            "type": "home",
+            "x": 397.83,
+            "z": 366.95
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 180,
+            "type": "home",
+            "x": 354.95,
+            "z": 300.49
+        },
+        {
+            "landmark": "ticino_north_sanctuary",
+            "nation": "carthage",
+            "type": "temple",
+            "x": 252,
+            "z": 50
+        },
+        {
+            "landmark": "ticino_forest_sanctuary",
+            "nation": "roman_republic",
+            "player_id": 2,
+            "type": "temple",
+            "x": 238.59,
+            "z": 178.59
+        },
+        {
+            "type": "farm",
+            "x": 416.5,
+            "z": 219.5,
+            "rotation": 0,
+            "dressing": "ticino_town_fields_north",
+            "player_id": 2,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 433.5,
+            "z": 236.5,
+            "rotation": 0,
+            "dressing": "ticino_town_fields_north",
+            "player_id": 2,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 430.5,
+            "z": 364.0,
+            "rotation": 0,
+            "dressing": "ticino_town_fields_south",
+            "player_id": 2,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 447.5,
+            "z": 364.0,
+            "rotation": 0,
+            "dressing": "ticino_town_fields_south",
+            "player_id": 2,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 581.0,
+            "z": 79.5,
+            "rotation": 0,
+            "dressing": "ticino_reserve_fields",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 598.0,
+            "z": 79.5,
+            "rotation": 0,
+            "dressing": "ticino_reserve_fields",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 615.0,
+            "z": 79.5,
+            "rotation": 0,
+            "dressing": "ticino_reserve_fields",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 581.0,
+            "z": 96.5,
+            "rotation": 0,
+            "dressing": "ticino_reserve_fields",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 598.0,
+            "z": 96.5,
+            "rotation": 0,
+            "dressing": "ticino_reserve_fields",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 615.0,
+            "z": 96.5,
+            "rotation": 0,
+            "dressing": "ticino_reserve_fields",
+            "player_id": 3,
+            "nation": "roman_republic"
         },
         {
             "authored": true,
@@ -3464,96 +3714,6 @@
             ],
             "type": "wall_segment",
             "width": 2
-        },
-        {
-            "type": "farm",
-            "x": 416.5,
-            "z": 219.5,
-            "rotation": 0,
-            "dressing": "ticino_town_fields_north",
-            "player_id": 2,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 433.5,
-            "z": 236.5,
-            "rotation": 0,
-            "dressing": "ticino_town_fields_north",
-            "player_id": 2,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 430.5,
-            "z": 364.0,
-            "rotation": 0,
-            "dressing": "ticino_town_fields_south",
-            "player_id": 2,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 447.5,
-            "z": 364.0,
-            "rotation": 0,
-            "dressing": "ticino_town_fields_south",
-            "player_id": 2,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 581.0,
-            "z": 79.5,
-            "rotation": 0,
-            "dressing": "ticino_reserve_fields",
-            "player_id": 3,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 598.0,
-            "z": 79.5,
-            "rotation": 0,
-            "dressing": "ticino_reserve_fields",
-            "player_id": 3,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 615.0,
-            "z": 79.5,
-            "rotation": 0,
-            "dressing": "ticino_reserve_fields",
-            "player_id": 3,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 581.0,
-            "z": 96.5,
-            "rotation": 0,
-            "dressing": "ticino_reserve_fields",
-            "player_id": 3,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 598.0,
-            "z": 96.5,
-            "rotation": 0,
-            "dressing": "ticino_reserve_fields",
-            "player_id": 3,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 615.0,
-            "z": 96.5,
-            "rotation": 0,
-            "dressing": "ticino_reserve_fields",
-            "player_id": 3,
-            "nation": "roman_republic"
         }
     ],
     "terrain": [
@@ -3898,7 +4058,7 @@
             "enabled": true,
             "group_size_max": 4,
             "group_size_min": 2,
-            "groups": 1,
+            "groups": 3,
             "respawn": false,
             "roam_radius": 22,
             "spawn_areas": [
@@ -3906,6 +4066,16 @@
                     "radius": 28,
                     "x": 559,
                     "z": 540
+                },
+                {
+                    "radius": 20.0,
+                    "x": 558.4300000000001,
+                    "z": 459.94
+                },
+                {
+                    "radius": 20.0,
+                    "x": 251.57,
+                    "z": 332.03000000000003
                 }
             ],
             "waves": [
@@ -4818,384 +4988,6 @@
             "z": 584.96
         },
         {
-            "landmark": "ticino_north_sanctuary",
-            "rotation": 270,
-            "scale": 1,
-            "type": "statue",
-            "x": 246.5,
-            "z": 59
-        },
-        {
-            "landmark": "ticino_north_sanctuary",
-            "rotation": 90,
-            "scale": 1,
-            "type": "statue",
-            "x": 257.5,
-            "z": 59
-        },
-        {
-            "landmark": "ticino_north_sanctuary",
-            "rotation": 270,
-            "scale": 1,
-            "type": "statue",
-            "x": 246.5,
-            "z": 68
-        },
-        {
-            "landmark": "ticino_north_sanctuary",
-            "rotation": 90,
-            "scale": 1,
-            "type": "statue",
-            "x": 257.5,
-            "z": 68
-        },
-        {
-            "landmark": "ticino_north_sanctuary",
-            "rotation": 270,
-            "scale": 1.1,
-            "type": "ruins",
-            "x": 247.16,
-            "z": 42.37
-        },
-        {
-            "landmark": "ticino_north_sanctuary",
-            "rotation": 90,
-            "scale": 0.9,
-            "type": "ruins",
-            "x": 258,
-            "z": 39
-        },
-        {
-            "landmark": "ticino_north_sanctuary",
-            "rotation": 270,
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 251,
-            "z": 36
-        },
-        {
-            "intensity": 1.2,
-            "landmark": "ticino_north_sanctuary",
-            "persistent": true,
-            "radius": 3.2,
-            "rotation": 180,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 252,
-            "z": 56
-        },
-        {
-            "landmark": "ticino_south_hamlet",
-            "rotation": 180,
-            "scale": 1,
-            "type": "abandoned_home",
-            "x": 360,
-            "z": 466
-        },
-        {
-            "landmark": "ticino_south_hamlet",
-            "scale": 1,
-            "type": "abandoned_home",
-            "x": 367,
-            "z": 455
-        },
-        {
-            "landmark": "ticino_south_hamlet",
-            "scale": 1,
-            "type": "abandoned_home",
-            "x": 358,
-            "z": 453
-        },
-        {
-            "landmark": "ticino_south_hamlet",
-            "rotation": 180,
-            "scale": 0.9,
-            "type": "abandoned_home",
-            "x": 346.59000000000003,
-            "z": 466.41
-        },
-        {
-            "landmark": "ticino_south_hamlet",
-            "rotation": 180,
-            "scale": 1.1,
-            "type": "ruins",
-            "x": 372,
-            "z": 463
-        },
-        {
-            "landmark": "ticino_south_hamlet",
-            "scale": 0.9,
-            "type": "ruins",
-            "x": 356,
-            "z": 447
-        },
-        {
-            "landmark": "ticino_south_hamlet",
-            "rotation": 180,
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 364,
-            "z": 472
-        },
-        {
-            "landmark": "ticino_south_hamlet",
-            "scale": 0.9,
-            "type": "dead_tree",
-            "x": 344,
-            "z": 458
-        },
-        {
-            "landmark": "ticino_forest_sanctuary",
-            "rotation": 270,
-            "scale": 1,
-            "type": "statue",
-            "x": 229.39000000000001,
-            "z": 186.06
-        },
-        {
-            "landmark": "ticino_forest_sanctuary",
-            "rotation": 90,
-            "scale": 1,
-            "type": "statue",
-            "x": 244.09,
-            "z": 187.59
-        },
-        {
-            "landmark": "ticino_forest_sanctuary",
-            "rotation": 270,
-            "scale": 1,
-            "type": "statue",
-            "x": 235.09,
-            "z": 196.59
-        },
-        {
-            "landmark": "ticino_forest_sanctuary",
-            "rotation": 90,
-            "scale": 1,
-            "type": "statue",
-            "x": 244.09,
-            "z": 196.59
-        },
-        {
-            "landmark": "ticino_forest_sanctuary",
-            "rotation": 270,
-            "scale": 1.1,
-            "type": "ruins",
-            "x": 231.59,
-            "z": 169.59
-        },
-        {
-            "landmark": "ticino_forest_sanctuary",
-            "rotation": 90,
-            "scale": 0.9,
-            "type": "ruins",
-            "x": 244.59,
-            "z": 167.59
-        },
-        {
-            "landmark": "ticino_forest_sanctuary",
-            "rotation": 270,
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 237.59,
-            "z": 164.59
-        },
-        {
-            "intensity": 1.2,
-            "landmark": "ticino_forest_sanctuary",
-            "persistent": true,
-            "radius": 3.2,
-            "rotation": 180,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 236.32,
-            "z": 182.02
-        },
-        {
-            "landmark": "ticino_river_shrine",
-            "rotation": 270,
-            "scale": 1.1,
-            "type": "statue",
-            "x": 321.41,
-            "z": 121.41
-        },
-        {
-            "landmark": "ticino_river_shrine",
-            "scale": 1,
-            "type": "statue",
-            "x": 310.47,
-            "z": 111.3
-        },
-        {
-            "landmark": "ticino_river_shrine",
-            "rotation": 180,
-            "scale": 1,
-            "type": "statue",
-            "x": 312,
-            "z": 125
-        },
-        {
-            "landmark": "ticino_river_shrine",
-            "scale": 1,
-            "type": "ruins",
-            "x": 325.4,
-            "z": 112.72
-        },
-        {
-            "landmark": "ticino_river_shrine",
-            "rotation": 180,
-            "scale": 0.85,
-            "type": "ruins",
-            "x": 328,
-            "z": 126
-        },
-        {
-            "landmark": "ticino_river_shrine",
-            "scale": 1.1500000000000001,
-            "type": "ruins",
-            "x": 332.92,
-            "z": 121.22
-        },
-        {
-            "intensity": 1.2,
-            "landmark": "ticino_river_shrine",
-            "persistent": true,
-            "radius": 3.2,
-            "rotation": 270,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 306,
-            "z": 120
-        },
-        {
-            "landmark": "ticino_burnt_hamlet",
-            "rotation": 90,
-            "scale": 1,
-            "type": "abandoned_home",
-            "x": 344,
-            "z": 590
-        },
-        {
-            "landmark": "ticino_burnt_hamlet",
-            "rotation": 270,
-            "scale": 1,
-            "type": "abandoned_home",
-            "x": 335,
-            "z": 583
-        },
-        {
-            "landmark": "ticino_burnt_hamlet",
-            "rotation": 270,
-            "scale": 1,
-            "type": "abandoned_home",
-            "x": 333,
-            "z": 598
-        },
-        {
-            "landmark": "ticino_burnt_hamlet",
-            "rotation": 90,
-            "scale": 0.9,
-            "type": "abandoned_home",
-            "x": 343.59000000000003,
-            "z": 603.41
-        },
-        {
-            "landmark": "ticino_burnt_hamlet",
-            "rotation": 90,
-            "scale": 1.1,
-            "type": "ruins",
-            "x": 343,
-            "z": 578
-        },
-        {
-            "landmark": "ticino_burnt_hamlet",
-            "rotation": 270,
-            "scale": 0.9,
-            "type": "ruins",
-            "x": 327,
-            "z": 594
-        },
-        {
-            "landmark": "ticino_burnt_hamlet",
-            "rotation": 90,
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 352,
-            "z": 586
-        },
-        {
-            "landmark": "ticino_burnt_hamlet",
-            "rotation": 270,
-            "scale": 0.9,
-            "type": "dead_tree",
-            "x": 338,
-            "z": 606
-        },
-        {
-            "landmark": "ticino_ridge_watch",
-            "rotation": 90,
-            "scale": 1,
-            "type": "statue",
-            "x": 370.8,
-            "z": 397
-        },
-        {
-            "landmark": "ticino_ridge_watch",
-            "rotation": 180,
-            "scale": 1,
-            "type": "tent",
-            "x": 386,
-            "z": 405
-        },
-        {
-            "landmark": "ticino_ridge_watch",
-            "scale": 1,
-            "type": "tent",
-            "x": 387,
-            "z": 395.92
-        },
-        {
-            "landmark": "ticino_ridge_watch",
-            "rotation": 180,
-            "scale": 0.9500000000000001,
-            "type": "tent",
-            "x": 392.76,
-            "z": 404.34
-        },
-        {
-            "landmark": "ticino_ridge_watch",
-            "scale": 1,
-            "type": "supply_cart",
-            "x": 383,
-            "z": 392
-        },
-        {
-            "landmark": "ticino_ridge_watch",
-            "rotation": 180,
-            "scale": 1,
-            "type": "weapon_rack",
-            "x": 382,
-            "z": 408
-        },
-        {
-            "intensity": 1.2,
-            "landmark": "ticino_ridge_watch",
-            "persistent": true,
-            "radius": 3.2,
-            "rotation": 90,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 388,
-            "z": 400
-        },
-        {
-            "landmark": "ticino_ridge_watch",
-            "scale": 0.9,
-            "type": "ruins",
-            "x": 368,
-            "z": 394
-        },
-        {
             "authored_camp": true,
             "scale": 1,
             "type": "tent",
@@ -5330,21 +5122,7 @@
             "authored_camp": true,
             "scale": 1,
             "type": "supply_cart",
-            "x": 584.5,
-            "z": 182.3
-        },
-        {
-            "authored_camp": true,
-            "scale": 1,
-            "type": "supply_cart",
             "x": 600,
-            "z": 182.3
-        },
-        {
-            "authored_camp": true,
-            "scale": 1,
-            "type": "supply_cart",
-            "x": 615.5,
             "z": 182.3
         },
         {
@@ -7961,6 +7739,462 @@
             "scale": 0.89,
             "rotation": 3.287,
             "dressing": "ticino_wood_northwest"
+        },
+        {
+            "authored_camp": true,
+            "scale": 1,
+            "type": "supply_cart",
+            "x": 584.6,
+            "z": 182.3
+        },
+        {
+            "authored_camp": true,
+            "scale": 1,
+            "type": "supply_cart",
+            "x": 615.47,
+            "z": 182.3
+        },
+        {
+            "landmark": "ticino_woodside_hamlet",
+            "rotation": 90.0,
+            "scale": 1.0,
+            "type": "abandoned_home",
+            "x": 283.0,
+            "z": 530.0
+        },
+        {
+            "landmark": "ticino_woodside_hamlet",
+            "rotation": 270.0,
+            "scale": 1.0,
+            "type": "abandoned_home",
+            "x": 272.0,
+            "z": 523.0
+        },
+        {
+            "landmark": "ticino_woodside_hamlet",
+            "rotation": 270.0,
+            "scale": 1.0,
+            "type": "abandoned_home",
+            "x": 270.0,
+            "z": 538.0
+        },
+        {
+            "landmark": "ticino_woodside_hamlet",
+            "rotation": 90.0,
+            "scale": 0.9,
+            "type": "abandoned_home",
+            "x": 282.0,
+            "z": 542.0
+        },
+        {
+            "landmark": "ticino_woodside_hamlet",
+            "rotation": 90.0,
+            "scale": 1.1,
+            "type": "ruins",
+            "x": 283.83,
+            "z": 514.33
+        },
+        {
+            "landmark": "ticino_woodside_hamlet",
+            "rotation": 270.0,
+            "scale": 0.9,
+            "type": "ruins",
+            "x": 264.0,
+            "z": 534.0
+        },
+        {
+            "landmark": "ticino_woodside_hamlet",
+            "rotation": 90.0,
+            "scale": 1.0,
+            "type": "dead_tree",
+            "x": 291.07,
+            "z": 524.01
+        },
+        {
+            "landmark": "ticino_woodside_hamlet",
+            "rotation": 270.0,
+            "scale": 0.9,
+            "type": "dead_tree",
+            "x": 275.0,
+            "z": 546.0
+        },
+        {
+            "landmark": "ticino_north_sanctuary",
+            "rotation": 270,
+            "scale": 1,
+            "type": "statue",
+            "x": 246.5,
+            "z": 59
+        },
+        {
+            "landmark": "ticino_north_sanctuary",
+            "rotation": 90,
+            "scale": 1,
+            "type": "statue",
+            "x": 257.5,
+            "z": 59
+        },
+        {
+            "landmark": "ticino_north_sanctuary",
+            "rotation": 270,
+            "scale": 1,
+            "type": "statue",
+            "x": 246.5,
+            "z": 68
+        },
+        {
+            "landmark": "ticino_north_sanctuary",
+            "rotation": 90,
+            "scale": 1,
+            "type": "statue",
+            "x": 257.5,
+            "z": 68
+        },
+        {
+            "landmark": "ticino_north_sanctuary",
+            "rotation": 270,
+            "scale": 1.1,
+            "type": "ruins",
+            "x": 247.16,
+            "z": 42.37
+        },
+        {
+            "landmark": "ticino_north_sanctuary",
+            "rotation": 90,
+            "scale": 0.9,
+            "type": "ruins",
+            "x": 258,
+            "z": 39
+        },
+        {
+            "landmark": "ticino_north_sanctuary",
+            "rotation": 270,
+            "scale": 1,
+            "type": "dead_tree",
+            "x": 251,
+            "z": 36
+        },
+        {
+            "intensity": 1.2,
+            "landmark": "ticino_north_sanctuary",
+            "persistent": true,
+            "radius": 3.2,
+            "rotation": 180,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 252,
+            "z": 56
+        },
+        {
+            "landmark": "ticino_south_hamlet",
+            "rotation": 180,
+            "scale": 1,
+            "type": "abandoned_home",
+            "x": 360,
+            "z": 466
+        },
+        {
+            "landmark": "ticino_south_hamlet",
+            "scale": 1,
+            "type": "abandoned_home",
+            "x": 367,
+            "z": 455
+        },
+        {
+            "landmark": "ticino_south_hamlet",
+            "scale": 1,
+            "type": "abandoned_home",
+            "x": 358,
+            "z": 453
+        },
+        {
+            "landmark": "ticino_south_hamlet",
+            "rotation": 180,
+            "scale": 0.9,
+            "type": "abandoned_home",
+            "x": 346.59000000000003,
+            "z": 466.41
+        },
+        {
+            "landmark": "ticino_south_hamlet",
+            "rotation": 180,
+            "scale": 1.1,
+            "type": "ruins",
+            "x": 372,
+            "z": 463
+        },
+        {
+            "landmark": "ticino_south_hamlet",
+            "scale": 0.9,
+            "type": "ruins",
+            "x": 356,
+            "z": 447
+        },
+        {
+            "landmark": "ticino_south_hamlet",
+            "rotation": 180,
+            "scale": 1,
+            "type": "dead_tree",
+            "x": 364,
+            "z": 472
+        },
+        {
+            "landmark": "ticino_south_hamlet",
+            "scale": 0.9,
+            "type": "dead_tree",
+            "x": 344,
+            "z": 458
+        },
+        {
+            "landmark": "ticino_forest_sanctuary",
+            "rotation": 270,
+            "scale": 1,
+            "type": "statue",
+            "x": 229.39000000000001,
+            "z": 186.06
+        },
+        {
+            "landmark": "ticino_forest_sanctuary",
+            "rotation": 90,
+            "scale": 1,
+            "type": "statue",
+            "x": 244.09,
+            "z": 187.59
+        },
+        {
+            "landmark": "ticino_forest_sanctuary",
+            "rotation": 270,
+            "scale": 1,
+            "type": "statue",
+            "x": 235.09,
+            "z": 196.59
+        },
+        {
+            "landmark": "ticino_forest_sanctuary",
+            "rotation": 90,
+            "scale": 1,
+            "type": "statue",
+            "x": 244.09,
+            "z": 196.59
+        },
+        {
+            "landmark": "ticino_forest_sanctuary",
+            "rotation": 270,
+            "scale": 1.1,
+            "type": "ruins",
+            "x": 231.59,
+            "z": 169.59
+        },
+        {
+            "landmark": "ticino_forest_sanctuary",
+            "rotation": 90,
+            "scale": 0.9,
+            "type": "ruins",
+            "x": 244.59,
+            "z": 167.59
+        },
+        {
+            "landmark": "ticino_forest_sanctuary",
+            "rotation": 270,
+            "scale": 1,
+            "type": "dead_tree",
+            "x": 237.59,
+            "z": 164.59
+        },
+        {
+            "intensity": 1.2,
+            "landmark": "ticino_forest_sanctuary",
+            "persistent": true,
+            "radius": 3.2,
+            "rotation": 180,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 236.32,
+            "z": 182.02
+        },
+        {
+            "landmark": "ticino_river_shrine",
+            "rotation": 270,
+            "scale": 1.1,
+            "type": "statue",
+            "x": 321.41,
+            "z": 121.41
+        },
+        {
+            "landmark": "ticino_river_shrine",
+            "scale": 1,
+            "type": "statue",
+            "x": 310.47,
+            "z": 111.3
+        },
+        {
+            "landmark": "ticino_river_shrine",
+            "rotation": 180,
+            "scale": 1,
+            "type": "statue",
+            "x": 312,
+            "z": 125
+        },
+        {
+            "landmark": "ticino_river_shrine",
+            "scale": 1,
+            "type": "ruins",
+            "x": 325.4,
+            "z": 112.72
+        },
+        {
+            "landmark": "ticino_river_shrine",
+            "rotation": 180,
+            "scale": 0.85,
+            "type": "ruins",
+            "x": 328,
+            "z": 126
+        },
+        {
+            "landmark": "ticino_river_shrine",
+            "scale": 1.1500000000000001,
+            "type": "ruins",
+            "x": 332.92,
+            "z": 121.22
+        },
+        {
+            "intensity": 1.2,
+            "landmark": "ticino_river_shrine",
+            "persistent": true,
+            "radius": 3.2,
+            "rotation": 270,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 306,
+            "z": 120
+        },
+        {
+            "landmark": "ticino_burnt_hamlet",
+            "rotation": 90,
+            "scale": 1,
+            "type": "abandoned_home",
+            "x": 344,
+            "z": 590
+        },
+        {
+            "landmark": "ticino_burnt_hamlet",
+            "rotation": 270,
+            "scale": 1,
+            "type": "abandoned_home",
+            "x": 335,
+            "z": 583
+        },
+        {
+            "landmark": "ticino_burnt_hamlet",
+            "rotation": 270,
+            "scale": 1,
+            "type": "abandoned_home",
+            "x": 333,
+            "z": 598
+        },
+        {
+            "landmark": "ticino_burnt_hamlet",
+            "rotation": 90,
+            "scale": 0.9,
+            "type": "abandoned_home",
+            "x": 343.59000000000003,
+            "z": 603.41
+        },
+        {
+            "landmark": "ticino_burnt_hamlet",
+            "rotation": 90,
+            "scale": 1.1,
+            "type": "ruins",
+            "x": 343,
+            "z": 578
+        },
+        {
+            "landmark": "ticino_burnt_hamlet",
+            "rotation": 270,
+            "scale": 0.9,
+            "type": "ruins",
+            "x": 327,
+            "z": 594
+        },
+        {
+            "landmark": "ticino_burnt_hamlet",
+            "rotation": 90,
+            "scale": 1,
+            "type": "dead_tree",
+            "x": 352,
+            "z": 586
+        },
+        {
+            "landmark": "ticino_burnt_hamlet",
+            "rotation": 270,
+            "scale": 0.9,
+            "type": "dead_tree",
+            "x": 338,
+            "z": 606
+        },
+        {
+            "landmark": "ticino_ridge_watch",
+            "rotation": 90,
+            "scale": 1,
+            "type": "statue",
+            "x": 370.8,
+            "z": 397
+        },
+        {
+            "landmark": "ticino_ridge_watch",
+            "rotation": 180,
+            "scale": 1,
+            "type": "tent",
+            "x": 386,
+            "z": 405
+        },
+        {
+            "landmark": "ticino_ridge_watch",
+            "scale": 1,
+            "type": "tent",
+            "x": 387,
+            "z": 395.92
+        },
+        {
+            "landmark": "ticino_ridge_watch",
+            "rotation": 180,
+            "scale": 0.9500000000000001,
+            "type": "tent",
+            "x": 392.76,
+            "z": 404.34
+        },
+        {
+            "landmark": "ticino_ridge_watch",
+            "scale": 1,
+            "type": "supply_cart",
+            "x": 383,
+            "z": 392
+        },
+        {
+            "landmark": "ticino_ridge_watch",
+            "rotation": 180,
+            "scale": 1,
+            "type": "weapon_rack",
+            "x": 382,
+            "z": 408
+        },
+        {
+            "intensity": 1.2,
+            "landmark": "ticino_ridge_watch",
+            "persistent": true,
+            "radius": 3.2,
+            "rotation": 90,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 388,
+            "z": 400
+        },
+        {
+            "landmark": "ticino_ridge_watch",
+            "scale": 0.9,
+            "type": "ruins",
+            "x": 368,
+            "z": 394
         }
     ],
     "dressing": [
@@ -8326,6 +8560,15 @@
                 "pine_tree",
                 "cypress_tree"
             ]
+        }
+    ],
+    "lakes": [
+        {
+            "depth": 30.1,
+            "id": "ticino_tarn",
+            "width": 41.2,
+            "x": 368.2,
+            "z": 16.1
         }
     ]
 }

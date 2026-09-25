@@ -47,6 +47,42 @@ constexpr float k_microdetail_cells = 32.0F;
 
 } // namespace
 
+void TerrainRenderer::bake_cover_mask() {
+  const auto count =
+      static_cast<std::size_t>(m_width) * static_cast<std::size_t>(m_height);
+  std::vector<float> wood(count, 0.0F);
+  for (std::size_t index = 0; index < count && index < m_terrain_types.size();
+       ++index) {
+    wood[index] =
+        m_terrain_types[index] == Game::Map::TerrainType::Forest ? 1.0F : 0.0F;
+  }
+  constexpr int k_feather_passes = 2;
+  std::vector<float> pass(count, 0.0F);
+  for (int iteration = 0; iteration < k_feather_passes; ++iteration) {
+    for (int z = 0; z < m_height; ++z) {
+      for (int x = 0; x < m_width; ++x) {
+        float sum = 0.0F;
+        int taken = 0;
+        for (int dz = -1; dz <= 1; ++dz) {
+          for (int dx = -1; dx <= 1; ++dx) {
+            const int nx = x + dx;
+            const int nz = z + dz;
+            if (nx < 0 || nz < 0 || nx >= m_width || nz >= m_height) {
+              continue;
+            }
+            sum += wood[static_cast<std::size_t>(nz * m_width + nx)];
+            ++taken;
+          }
+        }
+        pass[static_cast<std::size_t>(z * m_width + x)] =
+            taken > 0 ? sum / static_cast<float>(taken) : 0.0F;
+      }
+    }
+    wood.swap(pass);
+  }
+  m_cover_data = std::move(wood);
+}
+
 void TerrainRenderer::bake_terrain_fields() {
   const std::size_t texel_count =
       static_cast<std::size_t>(m_width) * static_cast<std::size_t>(m_height);
@@ -462,6 +498,36 @@ auto TerrainRenderer::update_height_texture() -> TerrainSurfaceCmd::HeightResour
     m_terrain_fields_dirty = false;
   }
 
+  const bool cover_size_changed = m_cover_texture == nullptr ||
+                                  m_cover_texture->get_width() != m_width ||
+                                  m_cover_texture->get_height() != m_height;
+  if (cover_size_changed) {
+    m_cover_texture = std::make_unique<Texture>();
+    if (!m_cover_texture->create_empty(m_width, m_height, Texture::Format::R32F)) {
+      m_cover_texture.reset();
+    } else {
+      m_cover_texture->set_filter(Texture::Filter::Linear, Texture::Filter::Linear);
+      m_cover_texture->set_wrap(Texture::Wrap::ClampToEdge, Texture::Wrap::ClampToEdge);
+      m_cover_dirty = true;
+    }
+  }
+  if (m_cover_texture != nullptr && m_cover_dirty) {
+    bake_cover_mask();
+    m_cover_texture->bind();
+    gl->glTexSubImage2D(GL_TEXTURE_2D,
+                        0,
+                        0,
+                        0,
+                        m_width,
+                        m_height,
+                        GL_RED,
+                        GL_FLOAT,
+                        m_cover_data.data());
+    note_texture_transfer(texture_transfer_bytes(
+        static_cast<std::size_t>(m_width), static_cast<std::size_t>(m_height), 4U));
+    m_cover_dirty = false;
+  }
+
   static const bool noise_bake_allowed =
       qEnvironmentVariableIntValue("SOI_TERRAIN_NOISE_BAKE") != 0 ||
       !qEnvironmentVariableIsSet("SOI_TERRAIN_NOISE_BAKE");
@@ -474,6 +540,7 @@ auto TerrainRenderer::update_height_texture() -> TerrainSurfaceCmd::HeightResour
 
   resources.texture = m_height_texture.get();
   resources.field_texture = m_terrain_field_texture.get();
+  resources.cover_texture = m_cover_texture.get();
   resources.noise_atlas = m_noise_atlas_texture;
   resources.noise_atlas_detail = m_noise_atlas_detail_texture;
   resources.microdetail = m_microdetail_texture;

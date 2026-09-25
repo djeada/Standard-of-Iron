@@ -11,6 +11,47 @@ may change in any release — see [Save compatibility](#save-compatibility).
 
 ### Added
 
+- **Forests hide men and turn arrows, and look like forests.** A unit standing in
+  a wood is invisible to any army without someone within 5.5 m of it until it
+  strikes (`ForestCoverSystem`): automatic targeting skips it, the AI does not
+  count it, an automatically acquired target that slips into the trees is lost,
+  and the player's view, minimap and hover treat an unseen enemy in a wood as fog.
+  Arrows loosed into a wood do 60% damage. Archers in the trees beside a road now
+  bleed a column that cannot see them, and have to be dug out by infantry, since
+  spearmen and cavalry cannot enter at all. A wood is painted with a litter-and-moss
+  floor, its grass is thinned, its trees close into an even canopy of the biome's
+  canopy species (pine, or palm at Zama) even on dry ground and on maps that turn
+  procedural trees off, and its outline is lobed instead of a circle, the same
+  shape for the ground, the trees and the navigation grid.
+
+- **Campaign maps are less templated.** Every campaign map gains three ambush woods
+  flanking its roads, an abandoned hamlet beside one of them and wolf dens in its
+  deepest woods, and five gain sheep pastures beside their towns' fields; every map
+  but Trasimene gains a
+  tarn at its edge that closes a flank. Forest ids that several woods shared are
+  now unique.
+
+- **Every skirmish base has room for fields.** A player could start on Blackpine Hollow or Copper Canyons with nowhere
+  to lay a single farm: the camp sat inside its own shoulder ridge and the rest of
+  the ground was slope, water or procedural pines. Each seat now has a levelled camp
+  floor (`"fields": true` on a `flat`), and `tests/map/skirmish_farmland_test.cpp`
+  proves with the engine's own `assess_ground` that every seat has room for three
+  farm plots within 42 m and every neutral base for two. A fields flat keeps
+  procedural scatter, forest ground and forest navigation cells off its level core,
+  so a clearing cut into a wood is open ground. Every seat also gets its own sheep
+  pasture, and wildlife groups are dealt to authored pastures in order rather than
+  at random, so a six-seat map no longer hands both flocks to one corner. The
+  straight rivers on Copper Canyons and Frostmere Basin meander between their
+  bridges, and starting stocks follow the land: timber on Blackpine, ore and stone
+  in the canyons and on the Iberian terraces, grain on the Amber Delta.
+
+- **Campaign towns are lived in.** Generated houses turn their doors to their
+  street instead of all facing one way. Scipio's town at Zama grows from five houses
+  to twenty-five on a broader mesa crown. The consular towns at Ticino and Cannae,
+  the Cannae river camp and the Trebia winter camp grow a vicus of houses along
+  their approach roads. Every settlement that had none now works fields outside its
+  walls; the Numidian camp at Zama keeps its sheepfold instead.
+
 - **Homes, farms, markets and temples come alive, and every building carries fire
   at night.** Homes gain a household yard: beaten earth and a flagstone path, a
   woodpile with its chopping block, an herb planter, a vine on the front corner,

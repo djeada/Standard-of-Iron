@@ -158,16 +158,34 @@
             "z": 188.94
         },
         {
-            "id": "trasimene_ambush_screen",
+            "id": "trasimene_ambush_screen_2",
             "radius": 22,
             "x": 587,
             "z": 544
         },
         {
-            "id": "trasimene_ambush_screen",
+            "id": "trasimene_ambush_screen_3",
             "radius": 42,
             "x": 105,
             "z": 581
+        },
+        {
+            "id": "trasimene_ambush_wood_1",
+            "radius": 16.5,
+            "x": 76.8,
+            "z": 395.5
+        },
+        {
+            "id": "trasimene_ambush_wood_2",
+            "radius": 15.8,
+            "x": 424.3,
+            "z": 528.4
+        },
+        {
+            "id": "trasimene_ambush_wood_3",
+            "radius": 20.7,
+            "x": 600.7,
+            "z": 426.4
         }
     ],
     "grid": {
@@ -246,6 +264,13 @@
             "player_id": 2,
             "x": 220,
             "z": 440
+        },
+        {
+            "facing": "south",
+            "id": "trasimene_woodside_hamlet",
+            "kind": "hamlet",
+            "x": 424,
+            "z": 485
         }
     ],
     "max_troops_per_player": 1910,
@@ -562,56 +587,6 @@
         },
         {
             "end": [
-                290,
-                648
-            ],
-            "start": [
-                286,
-                552
-            ],
-            "style": "default",
-            "waypoints": [
-                [
-                    287.22,
-                    554.95
-                ],
-                [
-                    292.5,
-                    567.75
-                ],
-                [
-                    299,
-                    583.5
-                ],
-                [
-                    305.5,
-                    599.25
-                ],
-                [
-                    312,
-                    615
-                ],
-                [
-                    311.28,
-                    621.48
-                ],
-                [
-                    309.33,
-                    625.91
-                ],
-                [
-                    299.67,
-                    636.95
-                ],
-                [
-                    290,
-                    648
-                ]
-            ],
-            "width": 3.6
-        },
-        {
-            "end": [
                 286,
                 552
             ],
@@ -830,120 +805,6 @@
                 [
                     283.74,
                     550.83
-                ]
-            ],
-            "width": 3.6
-        },
-        {
-            "end": [
-                286,
-                552
-            ],
-            "start": [
-                648,
-                440
-            ],
-            "style": "default",
-            "waypoints": [
-                [
-                    648,
-                    440
-                ],
-                [
-                    631.9,
-                    445.63
-                ],
-                [
-                    615.8,
-                    451.25
-                ],
-                [
-                    599.71,
-                    456.88
-                ],
-                [
-                    583.61,
-                    462.51
-                ],
-                [
-                    567.51,
-                    468.13
-                ],
-                [
-                    551.41,
-                    473.76
-                ],
-                [
-                    535.31,
-                    479.39
-                ],
-                [
-                    529.4,
-                    478.36
-                ],
-                [
-                    522.51,
-                    477.16
-                ],
-                [
-                    516.6,
-                    476.13
-                ],
-                [
-                    500.12,
-                    481.55
-                ],
-                [
-                    483.65,
-                    486.97
-                ],
-                [
-                    467.18,
-                    492.39
-                ],
-                [
-                    450.71,
-                    497.81
-                ],
-                [
-                    434.24,
-                    503.23
-                ],
-                [
-                    417.77,
-                    508.65
-                ],
-                [
-                    401.3,
-                    514.07
-                ],
-                [
-                    384.83,
-                    519.49
-                ],
-                [
-                    368.36,
-                    524.9
-                ],
-                [
-                    351.88,
-                    530.32
-                ],
-                [
-                    335.41,
-                    535.74
-                ],
-                [
-                    318.94,
-                    541.16
-                ],
-                [
-                    302.47,
-                    546.58
-                ],
-                [
-                    286.77,
-                    551.75
                 ]
             ],
             "width": 3.6
@@ -1481,6 +1342,170 @@
             ],
             "style": "default",
             "width": 3
+        },
+        {
+            "end": [
+                290,
+                648
+            ],
+            "start": [
+                286,
+                552
+            ],
+            "style": "default",
+            "waypoints": [
+                [
+                    288.79,
+                    558.75
+                ],
+                [
+                    292.5,
+                    567.75
+                ],
+                [
+                    299,
+                    583.5
+                ],
+                [
+                    305.5,
+                    599.25
+                ],
+                [
+                    312,
+                    615
+                ],
+                [
+                    311.28,
+                    621.48
+                ],
+                [
+                    309.33,
+                    625.91
+                ],
+                [
+                    299.67,
+                    636.95
+                ],
+                [
+                    290,
+                    648
+                ]
+            ],
+            "width": 3.6
+        },
+        {
+            "end": [
+                286,
+                552
+            ],
+            "start": [
+                648,
+                440
+            ],
+            "style": "default",
+            "waypoints": [
+                [
+                    648,
+                    440
+                ],
+                [
+                    631.9,
+                    445.63
+                ],
+                [
+                    615.8,
+                    451.25
+                ],
+                [
+                    599.71,
+                    456.88
+                ],
+                [
+                    583.61,
+                    462.51
+                ],
+                [
+                    567.51,
+                    468.13
+                ],
+                [
+                    551.41,
+                    473.76
+                ],
+                [
+                    535.31,
+                    479.39
+                ],
+                [
+                    529.4,
+                    478.36
+                ],
+                [
+                    522.51,
+                    477.16
+                ],
+                [
+                    516.6,
+                    476.13
+                ],
+                [
+                    500.12,
+                    481.55
+                ],
+                [
+                    483.65,
+                    486.97
+                ],
+                [
+                    467.18,
+                    492.39
+                ],
+                [
+                    450.71,
+                    497.81
+                ],
+                [
+                    434.24,
+                    503.23
+                ],
+                [
+                    417.77,
+                    508.65
+                ],
+                [
+                    401.3,
+                    514.07
+                ],
+                [
+                    384.83,
+                    519.49
+                ],
+                [
+                    368.36,
+                    524.9
+                ],
+                [
+                    351.88,
+                    530.32
+                ],
+                [
+                    335.41,
+                    535.74
+                ],
+                [
+                    318.94,
+                    541.16
+                ],
+                [
+                    302.47,
+                    546.58
+                ],
+                [
+                    288.49,
+                    551.18
+                ]
+            ],
+            "width": 3.6
         }
     ],
     "settlements": [
@@ -1744,6 +1769,30 @@
             "z": 147
         },
         {
+            "max_population": -1,
+            "nation": "carthage",
+            "player_id": 1,
+            "type": "carthage_sword_commander",
+            "x": 131.0,
+            "z": 270.0
+        },
+        {
+            "max_population": -1,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "type": "roman_legion_organizer",
+            "x": 219.51,
+            "z": 425.75
+        },
+        {
+            "max_population": -1,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "type": "roman_veteran_consul",
+            "x": 444.67,
+            "z": 300.0
+        },
+        {
             "behavior": "guard",
             "landmark": "trasimene_shore_sanctuary",
             "max_population": -1,
@@ -1841,30 +1890,6 @@
             "type": "archer",
             "x": 500,
             "z": 464
-        },
-        {
-            "max_population": -1,
-            "nation": "carthage",
-            "player_id": 1,
-            "type": "carthage_sword_commander",
-            "x": 131.0,
-            "z": 270.0
-        },
-        {
-            "max_population": -1,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "roman_legion_organizer",
-            "x": 219.51,
-            "z": 425.75
-        },
-        {
-            "max_population": -1,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "roman_veteran_consul",
-            "x": 444.67,
-            "z": 300.0
         }
     ],
     "starting_resources": {
@@ -1902,132 +1927,6 @@
             "type": "temple",
             "x": 63.0,
             "z": 186.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "trasimene_column_town",
-            "type": "home",
-            "x": 66.0,
-            "z": 198.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "trasimene_column_town",
-            "type": "home",
-            "x": 78.0,
-            "z": 198.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "trasimene_column_town",
-            "type": "home",
-            "x": 66.0,
-            "z": 168.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "trasimene_column_town",
-            "type": "home",
-            "x": 60.0,
-            "z": 198.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "trasimene_column_town",
-            "type": "home",
-            "x": 84.0,
-            "z": 198.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "trasimene_column_town",
-            "type": "home",
-            "x": 60.0,
-            "z": 168.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "trasimene_column_town",
-            "type": "home",
-            "x": 90.0,
-            "z": 198.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "trasimene_column_town",
-            "type": "home",
-            "x": 60.0,
-            "z": 204.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "trasimene_column_town",
-            "type": "home",
-            "x": 84.0,
-            "z": 204.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "trasimene_column_town",
-            "type": "home",
-            "x": 54.0,
-            "z": 168.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "trasimene_column_town",
-            "type": "home",
-            "x": 54.0,
-            "z": 204.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "trasimene_column_town",
-            "type": "home",
-            "x": 90.0,
-            "z": 204.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "trasimene_column_town",
-            "type": "home",
-            "x": 102.0,
-            "z": 174.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "trasimene_column_town",
-            "type": "home",
-            "x": 102.0,
-            "z": 198.0
         },
         {
             "authored": true,
@@ -2109,177 +2008,6 @@
             "nation": "roman_republic",
             "player_id": 3,
             "settlement": "trasimene_shore_camp",
-            "type": "home",
-            "x": 606.0,
-            "z": 126.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "trasimene_shore_camp",
-            "type": "home",
-            "x": 588.0,
-            "z": 132.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "trasimene_shore_camp",
-            "type": "home",
-            "x": 612.0,
-            "z": 144.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "trasimene_shore_camp",
-            "type": "home",
-            "x": 594.0,
-            "z": 150.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "trasimene_shore_camp",
-            "type": "home",
-            "x": 606.0,
-            "z": 150.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "trasimene_shore_camp",
-            "type": "home",
-            "x": 594.0,
-            "z": 120.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "trasimene_shore_camp",
-            "type": "home",
-            "x": 606.0,
-            "z": 120.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "trasimene_shore_camp",
-            "type": "home",
-            "x": 588.0,
-            "z": 126.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "trasimene_shore_camp",
-            "type": "home",
-            "x": 612.0,
-            "z": 126.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "trasimene_shore_camp",
-            "type": "home",
-            "x": 582.0,
-            "z": 132.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "trasimene_shore_camp",
-            "type": "home",
-            "x": 618.0,
-            "z": 144.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "trasimene_shore_camp",
-            "type": "home",
-            "x": 588.0,
-            "z": 150.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "trasimene_shore_camp",
-            "type": "home",
-            "x": 612.0,
-            "z": 150.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "trasimene_shore_camp",
-            "type": "home",
-            "x": 594.0,
-            "z": 156.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "trasimene_shore_camp",
-            "type": "home",
-            "x": 606.0,
-            "z": 156.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "trasimene_shore_camp",
-            "type": "home",
-            "x": 582.0,
-            "z": 126.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "trasimene_shore_camp",
-            "type": "home",
-            "x": 618.0,
-            "z": 126.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "trasimene_shore_camp",
-            "type": "home",
-            "x": 582.0,
-            "z": 150.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "trasimene_shore_camp",
-            "type": "home",
-            "x": 618.0,
-            "z": 150.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "trasimene_shore_camp",
             "type": "defense_tower",
             "x": 612.13,
             "z": 155.15
@@ -2310,21 +2038,6 @@
             "type": "defense_tower",
             "x": 612.13,
             "z": 120.85
-        },
-        {
-            "landmark": "trasimene_ridge_sanctuary",
-            "nation": "carthage",
-            "type": "temple",
-            "x": 500,
-            "z": 476
-        },
-        {
-            "landmark": "trasimene_shore_sanctuary",
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "temple",
-            "x": 457.56,
-            "z": 299.37
         },
         {
             "authored": true,
@@ -2418,6 +2131,423 @@
             "type": "home",
             "x": 292.27,
             "z": 539
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 90.0,
+            "settlement": "trasimene_column_town",
+            "type": "home",
+            "x": 66.0,
+            "z": 198.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 270.0,
+            "settlement": "trasimene_column_town",
+            "type": "home",
+            "x": 78.0,
+            "z": 198.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 180.0,
+            "settlement": "trasimene_column_town",
+            "type": "home",
+            "x": 66.0,
+            "z": 168.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 0.0,
+            "settlement": "trasimene_column_town",
+            "type": "home",
+            "x": 60.0,
+            "z": 198.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 0.0,
+            "settlement": "trasimene_column_town",
+            "type": "home",
+            "x": 84.0,
+            "z": 198.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 180.0,
+            "settlement": "trasimene_column_town",
+            "type": "home",
+            "x": 60.0,
+            "z": 168.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 90.0,
+            "settlement": "trasimene_column_town",
+            "type": "home",
+            "x": 90.0,
+            "z": 198.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 0.0,
+            "settlement": "trasimene_column_town",
+            "type": "home",
+            "x": 60.0,
+            "z": 204.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 0.0,
+            "settlement": "trasimene_column_town",
+            "type": "home",
+            "x": 84.0,
+            "z": 204.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 180.0,
+            "settlement": "trasimene_column_town",
+            "type": "home",
+            "x": 54.0,
+            "z": 168.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 0.0,
+            "settlement": "trasimene_column_town",
+            "type": "home",
+            "x": 54.0,
+            "z": 204.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 0.0,
+            "settlement": "trasimene_column_town",
+            "type": "home",
+            "x": 90.0,
+            "z": 204.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 270.0,
+            "settlement": "trasimene_column_town",
+            "type": "home",
+            "x": 102.0,
+            "z": 174.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 270.0,
+            "settlement": "trasimene_column_town",
+            "type": "home",
+            "x": 102.0,
+            "z": 198.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 270.0,
+            "settlement": "trasimene_shore_camp",
+            "type": "home",
+            "x": 606.0,
+            "z": 126.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "trasimene_shore_camp",
+            "type": "home",
+            "x": 588.0,
+            "z": 132.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 180.0,
+            "settlement": "trasimene_shore_camp",
+            "type": "home",
+            "x": 612.0,
+            "z": 144.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 90.0,
+            "settlement": "trasimene_shore_camp",
+            "type": "home",
+            "x": 594.0,
+            "z": 150.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 270.0,
+            "settlement": "trasimene_shore_camp",
+            "type": "home",
+            "x": 606.0,
+            "z": 150.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 180.0,
+            "settlement": "trasimene_shore_camp",
+            "type": "home",
+            "x": 594.0,
+            "z": 120.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 180.0,
+            "settlement": "trasimene_shore_camp",
+            "type": "home",
+            "x": 606.0,
+            "z": 120.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "trasimene_shore_camp",
+            "type": "home",
+            "x": 588.0,
+            "z": 126.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "trasimene_shore_camp",
+            "type": "home",
+            "x": 612.0,
+            "z": 126.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "trasimene_shore_camp",
+            "type": "home",
+            "x": 582.0,
+            "z": 132.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 180.0,
+            "settlement": "trasimene_shore_camp",
+            "type": "home",
+            "x": 618.0,
+            "z": 144.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "trasimene_shore_camp",
+            "type": "home",
+            "x": 588.0,
+            "z": 150.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "trasimene_shore_camp",
+            "type": "home",
+            "x": 612.0,
+            "z": 150.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "trasimene_shore_camp",
+            "type": "home",
+            "x": 594.0,
+            "z": 156.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "trasimene_shore_camp",
+            "type": "home",
+            "x": 606.0,
+            "z": 156.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 270.0,
+            "settlement": "trasimene_shore_camp",
+            "type": "home",
+            "x": 582.0,
+            "z": 126.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 90.0,
+            "settlement": "trasimene_shore_camp",
+            "type": "home",
+            "x": 618.0,
+            "z": 126.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 270.0,
+            "settlement": "trasimene_shore_camp",
+            "type": "home",
+            "x": 582.0,
+            "z": 150.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 90.0,
+            "settlement": "trasimene_shore_camp",
+            "type": "home",
+            "x": 618.0,
+            "z": 150.0
+        },
+        {
+            "dressing": "trasimene_shore_fields_1",
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0,
+            "type": "farm",
+            "x": 599.0,
+            "z": 99.0
+        },
+        {
+            "dressing": "trasimene_shore_fields_2",
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0,
+            "type": "farm",
+            "x": 607.0,
+            "z": 177.0
+        },
+        {
+            "dressing": "trasimene_shore_fields_3",
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0,
+            "type": "farm",
+            "x": 583.0,
+            "z": 175.0
+        },
+        {
+            "landmark": "trasimene_ridge_sanctuary",
+            "nation": "carthage",
+            "type": "temple",
+            "x": 500,
+            "z": 476
+        },
+        {
+            "landmark": "trasimene_shore_sanctuary",
+            "nation": "roman_republic",
+            "player_id": 3,
+            "type": "temple",
+            "x": 457.56,
+            "z": 299.37
+        },
+        {
+            "type": "farm",
+            "x": 52.5,
+            "z": 257.5,
+            "rotation": 0,
+            "dressing": "trasimene_town_fields_south",
+            "player_id": 2,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 52.5,
+            "z": 274.5,
+            "rotation": 0,
+            "dressing": "trasimene_town_fields_south",
+            "player_id": 2,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 69.5,
+            "z": 274.5,
+            "rotation": 0,
+            "dressing": "trasimene_town_fields_south",
+            "player_id": 2,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 55.5,
+            "z": 108.0,
+            "rotation": 0,
+            "dressing": "trasimene_town_fields_lakeside",
+            "player_id": 2,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 72.5,
+            "z": 108.0,
+            "rotation": 0,
+            "dressing": "trasimene_town_fields_lakeside",
+            "player_id": 2,
+            "nation": "roman_republic"
         },
         {
             "authored": true,
@@ -3082,51 +3212,6 @@
             ],
             "type": "wall_segment",
             "width": 2
-        },
-        {
-            "type": "farm",
-            "x": 52.5,
-            "z": 257.5,
-            "rotation": 0,
-            "dressing": "trasimene_town_fields_south",
-            "player_id": 2,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 52.5,
-            "z": 274.5,
-            "rotation": 0,
-            "dressing": "trasimene_town_fields_south",
-            "player_id": 2,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 69.5,
-            "z": 274.5,
-            "rotation": 0,
-            "dressing": "trasimene_town_fields_south",
-            "player_id": 2,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 55.5,
-            "z": 108.0,
-            "rotation": 0,
-            "dressing": "trasimene_town_fields_lakeside",
-            "player_id": 2,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 72.5,
-            "z": 108.0,
-            "rotation": 0,
-            "dressing": "trasimene_town_fields_lakeside",
-            "player_id": 2,
-            "nation": "roman_republic"
         }
     ],
     "terrain": [
@@ -3378,6 +3463,11 @@
                     "radius": 24,
                     "x": 420,
                     "z": 140
+                },
+                {
+                    "radius": 12.0,
+                    "x": 632.8,
+                    "z": 88.4
                 }
             ]
         },
@@ -3386,7 +3476,7 @@
             "enabled": true,
             "group_size_max": 4,
             "group_size_min": 2,
-            "groups": 1,
+            "groups": 5,
             "respawn": false,
             "roam_radius": 22,
             "spawn_areas": [
@@ -3404,6 +3494,16 @@
                     "radius": 28,
                     "x": 251,
                     "z": 370
+                },
+                {
+                    "radius": 20.0,
+                    "x": 105,
+                    "z": 581
+                },
+                {
+                    "radius": 20.0,
+                    "x": 397.18,
+                    "z": 188.94
                 }
             ],
             "waves": [
@@ -4228,379 +4328,6 @@
             "z": 449.27
         },
         {
-            "landmark": "trasimene_ridge_sanctuary",
-            "rotation": 90,
-            "scale": 1,
-            "type": "statue",
-            "x": 505.5,
-            "z": 467
-        },
-        {
-            "landmark": "trasimene_ridge_sanctuary",
-            "rotation": 270,
-            "scale": 1,
-            "type": "statue",
-            "x": 494.5,
-            "z": 467
-        },
-        {
-            "landmark": "trasimene_ridge_sanctuary",
-            "rotation": 90,
-            "scale": 1,
-            "type": "statue",
-            "x": 505.5,
-            "z": 458
-        },
-        {
-            "landmark": "trasimene_ridge_sanctuary",
-            "rotation": 270,
-            "scale": 1,
-            "type": "statue",
-            "x": 494.5,
-            "z": 458
-        },
-        {
-            "landmark": "trasimene_ridge_sanctuary",
-            "rotation": 90,
-            "scale": 1.1,
-            "type": "ruins",
-            "x": 507.09,
-            "z": 485.28
-        },
-        {
-            "landmark": "trasimene_ridge_sanctuary",
-            "rotation": 270,
-            "scale": 0.9,
-            "type": "ruins",
-            "x": 494.28,
-            "z": 487.84
-        },
-        {
-            "landmark": "trasimene_ridge_sanctuary",
-            "rotation": 90,
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 501.04,
-            "z": 489.89
-        },
-        {
-            "intensity": 1.2,
-            "landmark": "trasimene_ridge_sanctuary",
-            "persistent": true,
-            "radius": 3.2,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 500,
-            "z": 470
-        },
-        {
-            "landmark": "trasimene_east_hamlet",
-            "scale": 1,
-            "type": "abandoned_home",
-            "x": 596.3000000000001,
-            "z": 452.47
-        },
-        {
-            "landmark": "trasimene_east_hamlet",
-            "rotation": 180,
-            "scale": 1,
-            "type": "abandoned_home",
-            "x": 593,
-            "z": 465
-        },
-        {
-            "landmark": "trasimene_east_hamlet",
-            "rotation": 180,
-            "scale": 1,
-            "type": "abandoned_home",
-            "x": 608,
-            "z": 467
-        },
-        {
-            "landmark": "trasimene_east_hamlet",
-            "scale": 0.9,
-            "type": "abandoned_home",
-            "x": 615.7,
-            "z": 456.53000000000003
-        },
-        {
-            "landmark": "trasimene_east_hamlet",
-            "scale": 1.1,
-            "type": "ruins",
-            "x": 587.41,
-            "z": 455.31
-        },
-        {
-            "landmark": "trasimene_east_hamlet",
-            "rotation": 180,
-            "scale": 0.9,
-            "type": "ruins",
-            "x": 604,
-            "z": 473
-        },
-        {
-            "landmark": "trasimene_east_hamlet",
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 596,
-            "z": 448
-        },
-        {
-            "landmark": "trasimene_east_hamlet",
-            "rotation": 180,
-            "scale": 0.9,
-            "type": "dead_tree",
-            "x": 616,
-            "z": 462
-        },
-        {
-            "landmark": "trasimene_shore_sanctuary",
-            "scale": 1,
-            "type": "statue",
-            "x": 449,
-            "z": 294.5
-        },
-        {
-            "landmark": "trasimene_shore_sanctuary",
-            "rotation": 180,
-            "scale": 1,
-            "type": "statue",
-            "x": 449,
-            "z": 305.5
-        },
-        {
-            "landmark": "trasimene_shore_sanctuary",
-            "scale": 1,
-            "type": "statue",
-            "x": 440,
-            "z": 294.5
-        },
-        {
-            "landmark": "trasimene_shore_sanctuary",
-            "rotation": 180,
-            "scale": 1,
-            "type": "statue",
-            "x": 440,
-            "z": 305.5
-        },
-        {
-            "landmark": "trasimene_shore_sanctuary",
-            "scale": 1.1,
-            "type": "ruins",
-            "x": 465.67,
-            "z": 291.1
-        },
-        {
-            "landmark": "trasimene_shore_sanctuary",
-            "rotation": 180,
-            "scale": 0.9,
-            "type": "ruins",
-            "x": 469,
-            "z": 306
-        },
-        {
-            "landmark": "trasimene_shore_sanctuary",
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 472,
-            "z": 299
-        },
-        {
-            "intensity": 1.2,
-            "landmark": "trasimene_shore_sanctuary",
-            "persistent": true,
-            "radius": 3.2,
-            "rotation": 270,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 452,
-            "z": 300
-        },
-        {
-            "landmark": "trasimene_via_shrine",
-            "rotation": 180,
-            "scale": 1.1,
-            "type": "statue",
-            "x": 300,
-            "z": 158
-        },
-        {
-            "landmark": "trasimene_via_shrine",
-            "rotation": 270,
-            "scale": 1,
-            "type": "statue",
-            "x": 289.8,
-            "z": 171
-        },
-        {
-            "landmark": "trasimene_via_shrine",
-            "rotation": 90,
-            "scale": 1,
-            "type": "statue",
-            "x": 306.41,
-            "z": 169.41
-        },
-        {
-            "landmark": "trasimene_via_shrine",
-            "rotation": 270,
-            "scale": 1,
-            "type": "ruins",
-            "x": 295,
-            "z": 153
-        },
-        {
-            "landmark": "trasimene_via_shrine",
-            "rotation": 90,
-            "scale": 0.85,
-            "type": "ruins",
-            "x": 306,
-            "z": 152
-        },
-        {
-            "landmark": "trasimene_via_shrine",
-            "rotation": 270,
-            "scale": 1.1500000000000001,
-            "type": "ruins",
-            "x": 299,
-            "z": 147
-        },
-        {
-            "intensity": 1.2,
-            "landmark": "trasimene_via_shrine",
-            "persistent": true,
-            "radius": 3.2,
-            "rotation": 180,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 300,
-            "z": 174
-        },
-        {
-            "landmark": "trasimene_drowned_hamlet",
-            "rotation": 180,
-            "scale": 1,
-            "type": "abandoned_home",
-            "x": 80,
-            "z": 426
-        },
-        {
-            "landmark": "trasimene_drowned_hamlet",
-            "scale": 1,
-            "type": "abandoned_home",
-            "x": 87,
-            "z": 415
-        },
-        {
-            "landmark": "trasimene_drowned_hamlet",
-            "scale": 1,
-            "type": "abandoned_home",
-            "x": 73.41,
-            "z": 414.41
-        },
-        {
-            "landmark": "trasimene_drowned_hamlet",
-            "rotation": 180,
-            "scale": 0.9,
-            "type": "abandoned_home",
-            "x": 69.41,
-            "z": 426.41
-        },
-        {
-            "landmark": "trasimene_drowned_hamlet",
-            "rotation": 180,
-            "scale": 1.1,
-            "type": "ruins",
-            "x": 91.94,
-            "z": 427.24
-        },
-        {
-            "landmark": "trasimene_drowned_hamlet",
-            "scale": 0.9,
-            "type": "ruins",
-            "x": 76,
-            "z": 407
-        },
-        {
-            "landmark": "trasimene_drowned_hamlet",
-            "rotation": 180,
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 84,
-            "z": 432
-        },
-        {
-            "landmark": "trasimene_drowned_hamlet",
-            "scale": 0.9,
-            "type": "dead_tree",
-            "x": 64,
-            "z": 418
-        },
-        {
-            "landmark": "trasimene_basin_watch",
-            "scale": 1,
-            "type": "statue",
-            "x": 220,
-            "z": 444
-        },
-        {
-            "landmark": "trasimene_basin_watch",
-            "rotation": 90,
-            "scale": 1,
-            "type": "tent",
-            "x": 225.06,
-            "z": 434.03
-        },
-        {
-            "landmark": "trasimene_basin_watch",
-            "rotation": 270,
-            "scale": 1,
-            "type": "tent",
-            "x": 216,
-            "z": 433
-        },
-        {
-            "landmark": "trasimene_basin_watch",
-            "rotation": 90,
-            "scale": 0.9500000000000001,
-            "type": "tent",
-            "x": 222,
-            "z": 428
-        },
-        {
-            "landmark": "trasimene_basin_watch",
-            "rotation": 270,
-            "scale": 1,
-            "type": "supply_cart",
-            "x": 212,
-            "z": 437
-        },
-        {
-            "landmark": "trasimene_basin_watch",
-            "rotation": 90,
-            "scale": 1,
-            "type": "weapon_rack",
-            "x": 228,
-            "z": 438
-        },
-        {
-            "intensity": 1.2,
-            "landmark": "trasimene_basin_watch",
-            "persistent": true,
-            "radius": 3.2,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 220,
-            "z": 432
-        },
-        {
-            "landmark": "trasimene_basin_watch",
-            "rotation": 270,
-            "scale": 0.9,
-            "type": "ruins",
-            "x": 214,
-            "z": 452
-        },
-        {
             "authored_camp": true,
             "scale": 1,
             "type": "tent",
@@ -4667,13 +4394,6 @@
             "authored_camp": true,
             "scale": 1,
             "type": "tent",
-            "x": 616.97,
-            "z": 139.92
-        },
-        {
-            "authored_camp": true,
-            "scale": 1,
-            "type": "tent",
             "x": 621.6,
             "z": 136.8
         },
@@ -4686,13 +4406,6 @@
             "type": "firecamp",
             "x": 606,
             "z": 146.4
-        },
-        {
-            "authored_camp": true,
-            "scale": 1,
-            "type": "supply_cart",
-            "x": 594,
-            "z": 146.8
         },
         {
             "rotation": 2.34,
@@ -7726,6 +7439,481 @@
             "scale": 0.94,
             "rotation": 3.278,
             "dressing": "trasimene_wood_basin_east"
+        },
+        {
+            "authored_camp": true,
+            "scale": 1,
+            "type": "tent",
+            "x": 616.97,
+            "z": 139.86
+        },
+        {
+            "authored_camp": true,
+            "scale": 1,
+            "type": "supply_cart",
+            "x": 594,
+            "z": 146.77
+        },
+        {
+            "dressing": "trasimene_shore_fields_1",
+            "rotation": 0.0,
+            "scale": 1.0,
+            "type": "supply_cart",
+            "x": 588.17,
+            "z": 100.72
+        },
+        {
+            "dressing": "trasimene_shore_fields_2",
+            "rotation": 0.0,
+            "scale": 1.0,
+            "type": "supply_cart",
+            "x": 596.17,
+            "z": 178.72
+        },
+        {
+            "dressing": "trasimene_shore_fields_3",
+            "rotation": 0.0,
+            "scale": 1.0,
+            "type": "supply_cart",
+            "x": 572.17,
+            "z": 176.72
+        },
+        {
+            "landmark": "trasimene_woodside_hamlet",
+            "rotation": 270.0,
+            "scale": 1.0,
+            "type": "abandoned_home",
+            "x": 418.0,
+            "z": 485.0
+        },
+        {
+            "landmark": "trasimene_woodside_hamlet",
+            "rotation": 90.0,
+            "scale": 1.0,
+            "type": "abandoned_home",
+            "x": 429.0,
+            "z": 492.0
+        },
+        {
+            "landmark": "trasimene_woodside_hamlet",
+            "rotation": 90.0,
+            "scale": 1.0,
+            "type": "abandoned_home",
+            "x": 431.0,
+            "z": 477.0
+        },
+        {
+            "landmark": "trasimene_woodside_hamlet",
+            "rotation": 270.0,
+            "scale": 0.9,
+            "type": "abandoned_home",
+            "x": 419.0,
+            "z": 473.0
+        },
+        {
+            "landmark": "trasimene_woodside_hamlet",
+            "rotation": 270.0,
+            "scale": 1.1,
+            "type": "ruins",
+            "x": 421.0,
+            "z": 497.0
+        },
+        {
+            "landmark": "trasimene_woodside_hamlet",
+            "rotation": 90.0,
+            "scale": 0.9,
+            "type": "ruins",
+            "x": 437.0,
+            "z": 481.0
+        },
+        {
+            "landmark": "trasimene_woodside_hamlet",
+            "rotation": 270.0,
+            "scale": 1.0,
+            "type": "dead_tree",
+            "x": 412.0,
+            "z": 489.0
+        },
+        {
+            "landmark": "trasimene_woodside_hamlet",
+            "rotation": 90.0,
+            "scale": 0.9,
+            "type": "dead_tree",
+            "x": 426.0,
+            "z": 469.0
+        },
+        {
+            "landmark": "trasimene_ridge_sanctuary",
+            "rotation": 90,
+            "scale": 1,
+            "type": "statue",
+            "x": 505.5,
+            "z": 467
+        },
+        {
+            "landmark": "trasimene_ridge_sanctuary",
+            "rotation": 270,
+            "scale": 1,
+            "type": "statue",
+            "x": 494.5,
+            "z": 467
+        },
+        {
+            "landmark": "trasimene_ridge_sanctuary",
+            "rotation": 90,
+            "scale": 1,
+            "type": "statue",
+            "x": 505.5,
+            "z": 458
+        },
+        {
+            "landmark": "trasimene_ridge_sanctuary",
+            "rotation": 270,
+            "scale": 1,
+            "type": "statue",
+            "x": 494.5,
+            "z": 458
+        },
+        {
+            "landmark": "trasimene_ridge_sanctuary",
+            "rotation": 90,
+            "scale": 1.1,
+            "type": "ruins",
+            "x": 507.09,
+            "z": 485.28
+        },
+        {
+            "landmark": "trasimene_ridge_sanctuary",
+            "rotation": 270,
+            "scale": 0.9,
+            "type": "ruins",
+            "x": 494.28,
+            "z": 487.84
+        },
+        {
+            "landmark": "trasimene_ridge_sanctuary",
+            "rotation": 90,
+            "scale": 1,
+            "type": "dead_tree",
+            "x": 501.04,
+            "z": 489.89
+        },
+        {
+            "intensity": 1.2,
+            "landmark": "trasimene_ridge_sanctuary",
+            "persistent": true,
+            "radius": 3.2,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 500,
+            "z": 470
+        },
+        {
+            "landmark": "trasimene_east_hamlet",
+            "scale": 1,
+            "type": "abandoned_home",
+            "x": 596.3000000000001,
+            "z": 452.47
+        },
+        {
+            "landmark": "trasimene_east_hamlet",
+            "rotation": 180,
+            "scale": 1,
+            "type": "abandoned_home",
+            "x": 593,
+            "z": 465
+        },
+        {
+            "landmark": "trasimene_east_hamlet",
+            "rotation": 180,
+            "scale": 1,
+            "type": "abandoned_home",
+            "x": 608,
+            "z": 467
+        },
+        {
+            "landmark": "trasimene_east_hamlet",
+            "scale": 0.9,
+            "type": "abandoned_home",
+            "x": 615.7,
+            "z": 456.53000000000003
+        },
+        {
+            "landmark": "trasimene_east_hamlet",
+            "scale": 1.1,
+            "type": "ruins",
+            "x": 587.41,
+            "z": 455.31
+        },
+        {
+            "landmark": "trasimene_east_hamlet",
+            "rotation": 180,
+            "scale": 0.9,
+            "type": "ruins",
+            "x": 604,
+            "z": 473
+        },
+        {
+            "landmark": "trasimene_east_hamlet",
+            "scale": 1,
+            "type": "dead_tree",
+            "x": 596,
+            "z": 448
+        },
+        {
+            "landmark": "trasimene_east_hamlet",
+            "rotation": 180,
+            "scale": 0.9,
+            "type": "dead_tree",
+            "x": 616,
+            "z": 462
+        },
+        {
+            "landmark": "trasimene_shore_sanctuary",
+            "scale": 1,
+            "type": "statue",
+            "x": 449,
+            "z": 294.5
+        },
+        {
+            "landmark": "trasimene_shore_sanctuary",
+            "rotation": 180,
+            "scale": 1,
+            "type": "statue",
+            "x": 449,
+            "z": 305.5
+        },
+        {
+            "landmark": "trasimene_shore_sanctuary",
+            "scale": 1,
+            "type": "statue",
+            "x": 440,
+            "z": 294.5
+        },
+        {
+            "landmark": "trasimene_shore_sanctuary",
+            "rotation": 180,
+            "scale": 1,
+            "type": "statue",
+            "x": 440,
+            "z": 305.5
+        },
+        {
+            "landmark": "trasimene_shore_sanctuary",
+            "scale": 1.1,
+            "type": "ruins",
+            "x": 465.67,
+            "z": 291.1
+        },
+        {
+            "landmark": "trasimene_shore_sanctuary",
+            "rotation": 180,
+            "scale": 0.9,
+            "type": "ruins",
+            "x": 469,
+            "z": 306
+        },
+        {
+            "landmark": "trasimene_shore_sanctuary",
+            "scale": 1,
+            "type": "dead_tree",
+            "x": 472,
+            "z": 299
+        },
+        {
+            "intensity": 1.2,
+            "landmark": "trasimene_shore_sanctuary",
+            "persistent": true,
+            "radius": 3.2,
+            "rotation": 270,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 452,
+            "z": 300
+        },
+        {
+            "landmark": "trasimene_via_shrine",
+            "rotation": 180,
+            "scale": 1.1,
+            "type": "statue",
+            "x": 300,
+            "z": 158
+        },
+        {
+            "landmark": "trasimene_via_shrine",
+            "rotation": 270,
+            "scale": 1,
+            "type": "statue",
+            "x": 289.8,
+            "z": 171
+        },
+        {
+            "landmark": "trasimene_via_shrine",
+            "rotation": 90,
+            "scale": 1,
+            "type": "statue",
+            "x": 306.41,
+            "z": 169.41
+        },
+        {
+            "landmark": "trasimene_via_shrine",
+            "rotation": 270,
+            "scale": 1,
+            "type": "ruins",
+            "x": 295,
+            "z": 153
+        },
+        {
+            "landmark": "trasimene_via_shrine",
+            "rotation": 90,
+            "scale": 0.85,
+            "type": "ruins",
+            "x": 306,
+            "z": 152
+        },
+        {
+            "landmark": "trasimene_via_shrine",
+            "rotation": 270,
+            "scale": 1.1500000000000001,
+            "type": "ruins",
+            "x": 299,
+            "z": 147
+        },
+        {
+            "intensity": 1.2,
+            "landmark": "trasimene_via_shrine",
+            "persistent": true,
+            "radius": 3.2,
+            "rotation": 180,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 300,
+            "z": 174
+        },
+        {
+            "landmark": "trasimene_drowned_hamlet",
+            "rotation": 180,
+            "scale": 1,
+            "type": "abandoned_home",
+            "x": 80,
+            "z": 426
+        },
+        {
+            "landmark": "trasimene_drowned_hamlet",
+            "scale": 1,
+            "type": "abandoned_home",
+            "x": 87,
+            "z": 415
+        },
+        {
+            "landmark": "trasimene_drowned_hamlet",
+            "scale": 1,
+            "type": "abandoned_home",
+            "x": 73.41,
+            "z": 414.41
+        },
+        {
+            "landmark": "trasimene_drowned_hamlet",
+            "rotation": 180,
+            "scale": 0.9,
+            "type": "abandoned_home",
+            "x": 69.41,
+            "z": 426.41
+        },
+        {
+            "landmark": "trasimene_drowned_hamlet",
+            "rotation": 180,
+            "scale": 1.1,
+            "type": "ruins",
+            "x": 91.94,
+            "z": 427.24
+        },
+        {
+            "landmark": "trasimene_drowned_hamlet",
+            "scale": 0.9,
+            "type": "ruins",
+            "x": 76,
+            "z": 407
+        },
+        {
+            "landmark": "trasimene_drowned_hamlet",
+            "rotation": 180,
+            "scale": 1,
+            "type": "dead_tree",
+            "x": 84,
+            "z": 432
+        },
+        {
+            "landmark": "trasimene_drowned_hamlet",
+            "scale": 0.9,
+            "type": "dead_tree",
+            "x": 64,
+            "z": 418
+        },
+        {
+            "landmark": "trasimene_basin_watch",
+            "scale": 1,
+            "type": "statue",
+            "x": 220,
+            "z": 444
+        },
+        {
+            "landmark": "trasimene_basin_watch",
+            "rotation": 90,
+            "scale": 1,
+            "type": "tent",
+            "x": 225.06,
+            "z": 434.03
+        },
+        {
+            "landmark": "trasimene_basin_watch",
+            "rotation": 270,
+            "scale": 1,
+            "type": "tent",
+            "x": 216,
+            "z": 433
+        },
+        {
+            "landmark": "trasimene_basin_watch",
+            "rotation": 90,
+            "scale": 0.9500000000000001,
+            "type": "tent",
+            "x": 222,
+            "z": 428
+        },
+        {
+            "landmark": "trasimene_basin_watch",
+            "rotation": 270,
+            "scale": 1,
+            "type": "supply_cart",
+            "x": 212,
+            "z": 437
+        },
+        {
+            "landmark": "trasimene_basin_watch",
+            "rotation": 90,
+            "scale": 1,
+            "type": "weapon_rack",
+            "x": 228,
+            "z": 438
+        },
+        {
+            "intensity": 1.2,
+            "landmark": "trasimene_basin_watch",
+            "persistent": true,
+            "radius": 3.2,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 220,
+            "z": 432
+        },
+        {
+            "landmark": "trasimene_basin_watch",
+            "rotation": 270,
+            "scale": 0.9,
+            "type": "ruins",
+            "x": 214,
+            "z": 452
         }
     ],
     "dressing": [
@@ -8105,6 +8293,39 @@
                 "olive_tree",
                 "olive_tree"
             ]
+        },
+        {
+            "cols": 1,
+            "id": "trasimene_shore_fields_1",
+            "kind": "farmland",
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0,
+            "rows": 1,
+            "x": 599,
+            "z": 99
+        },
+        {
+            "cols": 1,
+            "id": "trasimene_shore_fields_2",
+            "kind": "farmland",
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0,
+            "rows": 1,
+            "x": 607,
+            "z": 177
+        },
+        {
+            "cols": 1,
+            "id": "trasimene_shore_fields_3",
+            "kind": "farmland",
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0,
+            "rows": 1,
+            "x": 583,
+            "z": 175
         }
     ]
 }

@@ -386,6 +386,7 @@ add_library(
     command/command_validator.cpp
     command/replay.cpp
     map/match_loader.cpp
+    systems/forest_cover_system.cpp
     session/map_session.cpp
     session/session_context.cpp
     systems/alliance_board.cpp

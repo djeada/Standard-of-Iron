@@ -597,7 +597,10 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
 
     const bool is_building = entity->has_component<Engine::Core::BuildingComponent>();
     const bool is_commander = entity->has_component<Engine::Core::CommanderComponent>();
-    const bool visible = is_visible_to_sources(*transform, vision_sources, vision_grid);
+    const auto* cover = entity->get_component<Engine::Core::ForestCoverComponent>();
+    const bool visible =
+        is_visible_to_sources(*transform, vision_sources, vision_grid) &&
+        (cover == nullptr || !cover->hidden_from(ai_owner_id));
 
     if (is_building || is_commander) {
       if (known != nullptr) {

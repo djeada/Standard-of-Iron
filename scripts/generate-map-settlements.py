@@ -956,6 +956,40 @@ TIER_SPECS = {
 SIDE_AXIS = {"north": "z", "south": "z", "west": "x", "east": "x"}
 
 
+def street_facing(row: int, column: int, period: int) -> float | None:
+    """The rotation that turns a house's door onto the street of its block.
+
+    A house model's door is on its local +z, and a structure's rotation turns
+    that toward +x at 90, -z at 180 and -x at 270. Rows and columns that are a
+    multiple of ``period`` are streets, so a plot one step past a street line
+    fronts that street; a corner plot fronts one of its two by parity, and a plot
+    in the middle of a block alternates so no two neighbours are copies. A camp
+    without streets returns None and faces its houses in on the camp instead.
+    """
+    if period <= 0:
+        return None
+    rm = row % period
+    cm = column % period
+    on_z_street = rm in (1, period - 1)
+    on_x_street = cm in (1, period - 1)
+    toward_z = 180.0 if rm == 1 else 0.0
+    toward_x = 270.0 if cm == 1 else 90.0
+    if on_z_street and on_x_street:
+        return toward_z if (row + column) % 2 == 0 else toward_x
+    if on_z_street:
+        return toward_z
+    if on_x_street:
+        return toward_x
+    return 0.0 if (row + column) % 2 == 0 else 180.0
+
+
+def facing_centre(offset_x: float, offset_z: float) -> float:
+    """Turn a house's door toward the middle of its camp."""
+    if abs(offset_x) >= abs(offset_z):
+        return 270.0 if offset_x > 0 else 90.0
+    return 180.0 if offset_z > 0 else 0.0
+
+
 def opposite(facing: str) -> str:
     return {"north": "south", "south": "north", "east": "west", "west": "east"}[facing]
 
@@ -1976,18 +2010,21 @@ def layout_settlement(
 
             if not ground_is_clear(plot_x, plot_z, "home"):
                 continue
-            plots.append((plot_x, plot_z))
+            plots.append(
+                (plot_x, plot_z, street_facing(row, column, spec.street_period))
+            )
 
     plots.sort(key=lambda plot: abs(plot[0] - cx) + abs(plot[1] - cz))
     home_budget = settlement.homes if settlement.homes is not None else len(plots)
     placed_homes = 0
-    for x, z in plots:
+    for x, z, facing in plots:
         if placed_homes >= home_budget:
             break
 
         if not site_is_free(x, z, "home"):
             continue
-        buildings.append(Building("home", x, z, owner, nation))
+        rotation = facing if facing is not None else facing_centre(x - cx, z - cz)
+        buildings.append(Building("home", x, z, owner, nation, rotation=rotation))
         placed_homes += 1
 
     fallback_home_offsets = (
@@ -2002,7 +2039,16 @@ def layout_settlement(
         home_site = nearest_clear(cx + offset_x, cz + offset_z, "home", reach=9.0)
         if home_site is None:
             continue
-        buildings.append(Building("home", home_site[0], home_site[1], owner, nation))
+        buildings.append(
+            Building(
+                "home",
+                home_site[0],
+                home_site[1],
+                owner,
+                nation,
+                rotation=facing_centre(home_site[0] - cx, home_site[1] - cz),
+            )
+        )
         placed_homes += 1
     if placed_homes < settlement.minimum_homes:
         raise SettlementError(

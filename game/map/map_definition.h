@@ -126,6 +126,7 @@ struct Forest {
   float x = 0.0F;
   float z = 0.0F;
   float radius = 8.0F;
+  float outline_seed = 0.0F;
 };
 
 inline constexpr float k_undead_zone_default_fog_density = 0.16F;

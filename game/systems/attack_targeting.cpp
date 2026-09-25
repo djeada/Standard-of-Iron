@@ -168,6 +168,10 @@ auto collect_attack_target_highlights(const AttackTargetingRequest& request)
             request.visibility, transform.position.x, transform.position.z)) {
       continue;
     }
+    if (const auto* cover = entity.get_component<Engine::Core::ForestCoverComponent>();
+        cover != nullptr && cover->hidden_from(request.local_owner_id)) {
+      continue;
+    }
 
     float const dx = transform.position.x - request.anchor_x;
     float const dz = transform.position.z - request.anchor_z;

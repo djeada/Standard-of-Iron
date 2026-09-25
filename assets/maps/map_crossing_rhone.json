@@ -250,10 +250,28 @@
             "z": 306.67
         },
         {
-            "id": "rhone_south_screen",
+            "id": "rhone_south_screen_2",
             "radius": 32,
             "x": 393,
             "z": 548
+        },
+        {
+            "id": "rhone_ambush_wood_1",
+            "radius": 17.9,
+            "x": 565.3,
+            "z": 446.9
+        },
+        {
+            "id": "rhone_ambush_wood_2",
+            "radius": 15.6,
+            "x": 271.0,
+            "z": 384.4
+        },
+        {
+            "id": "rhone_ambush_wood_3",
+            "radius": 15.5,
+            "x": 350.5,
+            "z": 157.5
         }
     ],
     "grid": {
@@ -340,6 +358,13 @@
             "kind": "shrine",
             "x": 120,
             "z": 240
+        },
+        {
+            "facing": "south",
+            "id": "rhone_woodside_hamlet",
+            "kind": "hamlet",
+            "x": 541,
+            "z": 420
         }
     ],
     "max_troops_per_player": 2020,
@@ -4911,14 +4936,6 @@
             "nation": "roman_republic",
             "player_id": 3,
             "type": "archer",
-            "x": 560,
-            "z": 558.88
-        },
-        {
-            "max_population": -1,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "archer",
             "x": 546,
             "z": 538
         },
@@ -4929,6 +4946,30 @@
             "type": "archer",
             "x": 579.85,
             "z": 533.39
+        },
+        {
+            "max_population": -1,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "type": "roman_legion_organizer",
+            "x": 282.25,
+            "z": 87
+        },
+        {
+            "max_population": -1,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "type": "roman_veteran_consul",
+            "x": 415.46,
+            "z": 601.16
+        },
+        {
+            "max_population": -1,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "type": "archer",
+            "x": 560,
+            "z": 558.91
         },
         {
             "behavior": "guard",
@@ -5037,22 +5078,6 @@
             "type": "spearman",
             "x": 305.36,
             "z": 176
-        },
-        {
-            "max_population": -1,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "roman_legion_organizer",
-            "x": 282.25,
-            "z": 87
-        },
-        {
-            "max_population": -1,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "roman_veteran_consul",
-            "x": 415.46,
-            "z": 601.16
         }
     ],
     "starting_resources": {
@@ -5092,60 +5117,6 @@
             "type": "barracks",
             "x": 376.0,
             "z": 38.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "rhone_hill_fort",
-            "type": "home",
-            "x": 364.0,
-            "z": 44.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "rhone_hill_fort",
-            "type": "home",
-            "x": 388.0,
-            "z": 44.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "rhone_hill_fort",
-            "type": "home",
-            "x": 364.0,
-            "z": 38.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "rhone_hill_fort",
-            "type": "home",
-            "x": 388.0,
-            "z": 38.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "rhone_hill_fort",
-            "type": "home",
-            "x": 358.0,
-            "z": 44.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "rhone_hill_fort",
-            "type": "home",
-            "x": 364.0,
-            "z": 50.0
         },
         {
             "authored": true,
@@ -5236,159 +5207,6 @@
             "nation": "roman_republic",
             "player_id": 3,
             "settlement": "rhone_river_town",
-            "type": "home",
-            "x": 560.0,
-            "z": 551.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "rhone_river_town",
-            "type": "home",
-            "x": 572.0,
-            "z": 551.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "rhone_river_town",
-            "type": "home",
-            "x": 560.0,
-            "z": 533.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "rhone_river_town",
-            "type": "home",
-            "x": 572.0,
-            "z": 533.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "rhone_river_town",
-            "type": "home",
-            "x": 554.0,
-            "z": 539.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "rhone_river_town",
-            "type": "home",
-            "x": 578.0,
-            "z": 539.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "rhone_river_town",
-            "type": "home",
-            "x": 554.0,
-            "z": 551.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "rhone_river_town",
-            "type": "home",
-            "x": 578.0,
-            "z": 551.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "rhone_river_town",
-            "type": "home",
-            "x": 560.0,
-            "z": 557.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "rhone_river_town",
-            "type": "home",
-            "x": 572.0,
-            "z": 557.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "rhone_river_town",
-            "type": "home",
-            "x": 554.0,
-            "z": 533.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "rhone_river_town",
-            "type": "home",
-            "x": 578.0,
-            "z": 533.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "rhone_river_town",
-            "type": "home",
-            "x": 548.0,
-            "z": 539.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "rhone_river_town",
-            "type": "home",
-            "x": 548.0,
-            "z": 551.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "rhone_river_town",
-            "type": "home",
-            "x": 584.0,
-            "z": 551.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "rhone_river_town",
-            "type": "home",
-            "x": 554.0,
-            "z": 557.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "rhone_river_town",
-            "type": "home",
-            "x": 578.0,
-            "z": 557.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "settlement": "rhone_river_town",
             "type": "defense_tower",
             "x": 573.06,
             "z": 562.23
@@ -5421,6 +5239,272 @@
             "z": 536.51
         },
         {
+            "authored": true,
+            "nation": "carthage",
+            "player_id": 1,
+            "rotation": 90,
+            "type": "wall_gate",
+            "x": 58,
+            "z": 174
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 90.0,
+            "settlement": "rhone_hill_fort",
+            "type": "home",
+            "x": 364.0,
+            "z": 44.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 270.0,
+            "settlement": "rhone_hill_fort",
+            "type": "home",
+            "x": 388.0,
+            "z": 44.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 90.0,
+            "settlement": "rhone_hill_fort",
+            "type": "home",
+            "x": 364.0,
+            "z": 38.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 270.0,
+            "settlement": "rhone_hill_fort",
+            "type": "home",
+            "x": 388.0,
+            "z": 38.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 90.0,
+            "settlement": "rhone_hill_fort",
+            "type": "home",
+            "x": 358.0,
+            "z": 44.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 90.0,
+            "settlement": "rhone_hill_fort",
+            "type": "home",
+            "x": 364.0,
+            "z": 50.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 180.0,
+            "settlement": "rhone_river_town",
+            "type": "home",
+            "x": 560.0,
+            "z": 551.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 180.0,
+            "settlement": "rhone_river_town",
+            "type": "home",
+            "x": 572.0,
+            "z": 551.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 90.0,
+            "settlement": "rhone_river_town",
+            "type": "home",
+            "x": 560.0,
+            "z": 533.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 270.0,
+            "settlement": "rhone_river_town",
+            "type": "home",
+            "x": 572.0,
+            "z": 533.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "rhone_river_town",
+            "type": "home",
+            "x": 554.0,
+            "z": 539.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "rhone_river_town",
+            "type": "home",
+            "x": 578.0,
+            "z": 539.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 180.0,
+            "settlement": "rhone_river_town",
+            "type": "home",
+            "x": 554.0,
+            "z": 551.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 180.0,
+            "settlement": "rhone_river_town",
+            "type": "home",
+            "x": 578.0,
+            "z": 551.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 90.0,
+            "settlement": "rhone_river_town",
+            "type": "home",
+            "x": 560.0,
+            "z": 557.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 270.0,
+            "settlement": "rhone_river_town",
+            "type": "home",
+            "x": 572.0,
+            "z": 557.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "rhone_river_town",
+            "type": "home",
+            "x": 554.0,
+            "z": 533.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "rhone_river_town",
+            "type": "home",
+            "x": 578.0,
+            "z": 533.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "rhone_river_town",
+            "type": "home",
+            "x": 548.0,
+            "z": 539.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 180.0,
+            "settlement": "rhone_river_town",
+            "type": "home",
+            "x": 548.0,
+            "z": 551.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 180.0,
+            "settlement": "rhone_river_town",
+            "type": "home",
+            "x": 584.0,
+            "z": 551.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "rhone_river_town",
+            "type": "home",
+            "x": 554.0,
+            "z": 557.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "rhone_river_town",
+            "type": "home",
+            "x": 578.0,
+            "z": 557.0
+        },
+        {
+            "dressing": "rhone_hill_fields_1",
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 0,
+            "type": "farm",
+            "x": 337.0,
+            "z": 103.0
+        },
+        {
+            "dressing": "rhone_hill_fields_2",
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 0,
+            "type": "farm",
+            "x": 311.0,
+            "z": 15.0
+        },
+        {
+            "dressing": "rhone_hill_fields_3",
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 0,
+            "type": "farm",
+            "x": 417.0,
+            "z": 103.0
+        },
+        {
             "landmark": "rhone_east_sanctuary",
             "nation": "roman_republic",
             "player_id": 2,
@@ -5437,13 +5521,103 @@
             "z": 602
         },
         {
-            "authored": true,
-            "nation": "carthage",
-            "player_id": 1,
+            "type": "farm",
+            "x": 500.0,
+            "z": 538.5,
             "rotation": 90,
-            "type": "wall_gate",
-            "x": 58,
-            "z": 174
+            "dressing": "rhone_town_fields_west",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 500.0,
+            "z": 555.5,
+            "rotation": 90,
+            "dressing": "rhone_town_fields_west",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 483.0,
+            "z": 538.5,
+            "rotation": 90,
+            "dressing": "rhone_town_fields_west",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 483.0,
+            "z": 555.5,
+            "rotation": 90,
+            "dressing": "rhone_town_fields_west",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 466.0,
+            "z": 538.5,
+            "rotation": 90,
+            "dressing": "rhone_town_fields_west",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 466.0,
+            "z": 555.5,
+            "rotation": 90,
+            "dressing": "rhone_town_fields_west",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 492.5,
+            "z": 587.5,
+            "rotation": 0,
+            "dressing": "rhone_town_fields_southwest",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 509.5,
+            "z": 587.5,
+            "rotation": 0,
+            "dressing": "rhone_town_fields_southwest",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 557.0,
+            "z": 446.0,
+            "rotation": 0,
+            "dressing": "rhone_town_fields_north",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 574.0,
+            "z": 446.0,
+            "rotation": 0,
+            "dressing": "rhone_town_fields_north",
+            "player_id": 3,
+            "nation": "roman_republic"
+        },
+        {
+            "type": "farm",
+            "x": 591.0,
+            "z": 446.0,
+            "rotation": 0,
+            "dressing": "rhone_town_fields_north",
+            "player_id": 3,
+            "nation": "roman_republic"
         },
         {
             "authored": true,
@@ -6317,105 +6491,6 @@
             ],
             "type": "wall_segment",
             "width": 2
-        },
-        {
-            "type": "farm",
-            "x": 500.0,
-            "z": 538.5,
-            "rotation": 90,
-            "dressing": "rhone_town_fields_west",
-            "player_id": 3,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 500.0,
-            "z": 555.5,
-            "rotation": 90,
-            "dressing": "rhone_town_fields_west",
-            "player_id": 3,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 483.0,
-            "z": 538.5,
-            "rotation": 90,
-            "dressing": "rhone_town_fields_west",
-            "player_id": 3,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 483.0,
-            "z": 555.5,
-            "rotation": 90,
-            "dressing": "rhone_town_fields_west",
-            "player_id": 3,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 466.0,
-            "z": 538.5,
-            "rotation": 90,
-            "dressing": "rhone_town_fields_west",
-            "player_id": 3,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 466.0,
-            "z": 555.5,
-            "rotation": 90,
-            "dressing": "rhone_town_fields_west",
-            "player_id": 3,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 492.5,
-            "z": 587.5,
-            "rotation": 0,
-            "dressing": "rhone_town_fields_southwest",
-            "player_id": 3,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 509.5,
-            "z": 587.5,
-            "rotation": 0,
-            "dressing": "rhone_town_fields_southwest",
-            "player_id": 3,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 557.0,
-            "z": 446.0,
-            "rotation": 0,
-            "dressing": "rhone_town_fields_north",
-            "player_id": 3,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 574.0,
-            "z": 446.0,
-            "rotation": 0,
-            "dressing": "rhone_town_fields_north",
-            "player_id": 3,
-            "nation": "roman_republic"
-        },
-        {
-            "type": "farm",
-            "x": 591.0,
-            "z": 446.0,
-            "rotation": 0,
-            "dressing": "rhone_town_fields_north",
-            "player_id": 3,
-            "nation": "roman_republic"
         }
     ],
     "terrain": [
@@ -6770,7 +6845,7 @@
             "enabled": true,
             "group_size_max": 7,
             "group_size_min": 4,
-            "groups": 2,
+            "groups": 3,
             "respawn": true,
             "respawn_delay": 90,
             "roam_radius": 16,
@@ -6784,6 +6859,11 @@
                     "radius": 14,
                     "x": 20,
                     "z": 166
+                },
+                {
+                    "radius": 12.0,
+                    "x": 341.9,
+                    "z": 133.5
                 }
             ]
         },
@@ -6792,7 +6872,7 @@
             "enabled": true,
             "group_size_max": 4,
             "group_size_min": 2,
-            "groups": 1,
+            "groups": 4,
             "respawn": false,
             "roam_radius": 22,
             "spawn_areas": [
@@ -6805,6 +6885,16 @@
                     "radius": 26,
                     "x": 526,
                     "z": 300
+                },
+                {
+                    "radius": 20.0,
+                    "x": 280,
+                    "z": 550
+                },
+                {
+                    "radius": 20.0,
+                    "x": 426.21000000000004,
+                    "z": 273.18
                 }
             ]
         }
@@ -7341,12 +7431,6 @@
         {
             "scale": 1,
             "type": "weapon_rack",
-            "x": 386,
-            "z": 45
-        },
-        {
-            "scale": 1,
-            "type": "weapon_rack",
             "x": 397.52,
             "z": 45.5
         },
@@ -7399,12 +7483,6 @@
             "type": "firecamp",
             "x": 544.48,
             "z": 561.84
-        },
-        {
-            "scale": 1,
-            "type": "weapon_rack",
-            "x": 572,
-            "z": 549.12
         },
         {
             "scale": 1,
@@ -7537,438 +7615,6 @@
             "type": "firecamp",
             "x": 274,
             "z": 609
-        },
-        {
-            "landmark": "rhone_east_sanctuary",
-            "rotation": 270,
-            "scale": 1,
-            "type": "statue",
-            "x": 396.5,
-            "z": 169
-        },
-        {
-            "landmark": "rhone_east_sanctuary",
-            "rotation": 90,
-            "scale": 1,
-            "type": "statue",
-            "x": 407.5,
-            "z": 169
-        },
-        {
-            "landmark": "rhone_east_sanctuary",
-            "rotation": 270,
-            "scale": 1,
-            "type": "statue",
-            "x": 396.5,
-            "z": 178
-        },
-        {
-            "landmark": "rhone_east_sanctuary",
-            "rotation": 90,
-            "scale": 1,
-            "type": "statue",
-            "x": 407.5,
-            "z": 178
-        },
-        {
-            "landmark": "rhone_east_sanctuary",
-            "rotation": 270,
-            "scale": 1.1,
-            "type": "ruins",
-            "x": 395,
-            "z": 151
-        },
-        {
-            "landmark": "rhone_east_sanctuary",
-            "rotation": 90,
-            "scale": 0.9,
-            "type": "ruins",
-            "x": 409.95,
-            "z": 150.86
-        },
-        {
-            "landmark": "rhone_east_sanctuary",
-            "rotation": 270,
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 401,
-            "z": 146
-        },
-        {
-            "intensity": 1.2,
-            "landmark": "rhone_east_sanctuary",
-            "persistent": true,
-            "radius": 3.2,
-            "rotation": 180,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 402,
-            "z": 166
-        },
-        {
-            "landmark": "rhone_marsh_hamlet",
-            "scale": 1,
-            "type": "abandoned_home",
-            "x": 480,
-            "z": 334
-        },
-        {
-            "landmark": "rhone_marsh_hamlet",
-            "rotation": 180,
-            "scale": 1,
-            "type": "abandoned_home",
-            "x": 469,
-            "z": 345
-        },
-        {
-            "landmark": "rhone_marsh_hamlet",
-            "rotation": 180,
-            "scale": 1,
-            "type": "abandoned_home",
-            "x": 488,
-            "z": 349
-        },
-        {
-            "landmark": "rhone_marsh_hamlet",
-            "scale": 0.9,
-            "type": "abandoned_home",
-            "x": 492,
-            "z": 335
-        },
-        {
-            "landmark": "rhone_marsh_hamlet",
-            "scale": 1.1,
-            "type": "ruins",
-            "x": 468,
-            "z": 337
-        },
-        {
-            "landmark": "rhone_marsh_hamlet",
-            "rotation": 180,
-            "scale": 0.9,
-            "type": "ruins",
-            "x": 484,
-            "z": 353
-        },
-        {
-            "landmark": "rhone_marsh_hamlet",
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 476,
-            "z": 328
-        },
-        {
-            "landmark": "rhone_marsh_hamlet",
-            "rotation": 180,
-            "scale": 0.9,
-            "type": "dead_tree",
-            "x": 496.17,
-            "z": 341.28
-        },
-        {
-            "landmark": "rhone_upland_sanctuary",
-            "scale": 1,
-            "type": "statue",
-            "x": 416.69,
-            "z": 600.98
-        },
-        {
-            "landmark": "rhone_upland_sanctuary",
-            "rotation": 180,
-            "scale": 1,
-            "type": "statue",
-            "x": 424.63,
-            "z": 607.62
-        },
-        {
-            "landmark": "rhone_upland_sanctuary",
-            "scale": 1,
-            "type": "statue",
-            "x": 413.29,
-            "z": 596.74
-        },
-        {
-            "landmark": "rhone_upland_sanctuary",
-            "rotation": 180,
-            "scale": 1,
-            "type": "statue",
-            "x": 413.29,
-            "z": 606.09
-        },
-        {
-            "landmark": "rhone_upland_sanctuary",
-            "scale": 1.1,
-            "type": "ruins",
-            "x": 440.24,
-            "z": 595.46
-        },
-        {
-            "landmark": "rhone_upland_sanctuary",
-            "rotation": 180,
-            "scale": 0.9,
-            "type": "ruins",
-            "x": 439.94,
-            "z": 606.51
-        },
-        {
-            "landmark": "rhone_upland_sanctuary",
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 440.49,
-            "z": 600.5600000000001
-        },
-        {
-            "intensity": 1.2,
-            "landmark": "rhone_upland_sanctuary",
-            "persistent": true,
-            "radius": 3.2,
-            "rotation": 270,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 423.49,
-            "z": 601.41
-        },
-        {
-            "landmark": "rhone_ford_shrine",
-            "scale": 1.1,
-            "type": "statue",
-            "x": 324,
-            "z": 320
-        },
-        {
-            "landmark": "rhone_ford_shrine",
-            "rotation": 90,
-            "scale": 1,
-            "type": "statue",
-            "x": 325,
-            "z": 312
-        },
-        {
-            "landmark": "rhone_ford_shrine",
-            "rotation": 270,
-            "scale": 1,
-            "type": "statue",
-            "x": 313.59000000000003,
-            "z": 313.41
-        },
-        {
-            "landmark": "rhone_ford_shrine",
-            "rotation": 90,
-            "scale": 1,
-            "type": "ruins",
-            "x": 325,
-            "z": 327
-        },
-        {
-            "landmark": "rhone_ford_shrine",
-            "rotation": 270,
-            "scale": 0.85,
-            "type": "ruins",
-            "x": 310,
-            "z": 323
-        },
-        {
-            "landmark": "rhone_ford_shrine",
-            "rotation": 90,
-            "scale": 1.1500000000000001,
-            "type": "ruins",
-            "x": 321,
-            "z": 333
-        },
-        {
-            "intensity": 1.2,
-            "landmark": "rhone_ford_shrine",
-            "persistent": true,
-            "radius": 3.2,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 315,
-            "z": 306
-        },
-        {
-            "landmark": "rhone_burnt_steading",
-            "rotation": 270,
-            "scale": 1,
-            "type": "abandoned_home",
-            "x": 194,
-            "z": 282
-        },
-        {
-            "landmark": "rhone_burnt_steading",
-            "rotation": 90,
-            "scale": 1,
-            "type": "abandoned_home",
-            "x": 203.59,
-            "z": 288.41
-        },
-        {
-            "landmark": "rhone_burnt_steading",
-            "rotation": 90,
-            "scale": 1,
-            "type": "abandoned_home",
-            "x": 207,
-            "z": 272
-        },
-        {
-            "landmark": "rhone_burnt_steading",
-            "rotation": 270,
-            "scale": 0.9,
-            "type": "abandoned_home",
-            "x": 195,
-            "z": 268
-        },
-        {
-            "landmark": "rhone_burnt_steading",
-            "rotation": 270,
-            "scale": 1.1,
-            "type": "ruins",
-            "x": 201,
-            "z": 295
-        },
-        {
-            "landmark": "rhone_burnt_steading",
-            "rotation": 90,
-            "scale": 0.9,
-            "type": "ruins",
-            "x": 213,
-            "z": 276
-        },
-        {
-            "landmark": "rhone_burnt_steading",
-            "rotation": 270,
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 188,
-            "z": 279
-        },
-        {
-            "landmark": "rhone_burnt_steading",
-            "rotation": 90,
-            "scale": 0.9,
-            "type": "dead_tree",
-            "x": 202,
-            "z": 264
-        },
-        {
-            "landmark": "rhone_north_watch",
-            "rotation": 270,
-            "scale": 1,
-            "type": "statue",
-            "x": 325.6,
-            "z": 183.33
-        },
-        {
-            "landmark": "rhone_north_watch",
-            "scale": 1,
-            "type": "tent",
-            "x": 307.12,
-            "z": 172.5
-        },
-        {
-            "landmark": "rhone_north_watch",
-            "rotation": 180,
-            "scale": 1,
-            "type": "tent",
-            "x": 309.62,
-            "z": 183.62
-        },
-        {
-            "landmark": "rhone_north_watch",
-            "scale": 0.9500000000000001,
-            "type": "tent",
-            "x": 308,
-            "z": 178
-        },
-        {
-            "landmark": "rhone_north_watch",
-            "rotation": 180,
-            "scale": 1,
-            "type": "supply_cart",
-            "x": 317,
-            "z": 188
-        },
-        {
-            "landmark": "rhone_north_watch",
-            "scale": 1,
-            "type": "weapon_rack",
-            "x": 320,
-            "z": 171
-        },
-        {
-            "intensity": 1.2,
-            "landmark": "rhone_north_watch",
-            "persistent": true,
-            "radius": 3.2,
-            "rotation": 270,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 312,
-            "z": 180
-        },
-        {
-            "landmark": "rhone_north_watch",
-            "rotation": 180,
-            "scale": 0.9,
-            "type": "ruins",
-            "x": 327.46,
-            "z": 186.18
-        },
-        {
-            "landmark": "rhone_gaul_forest_shrine",
-            "rotation": 90,
-            "scale": 1.1,
-            "type": "statue",
-            "x": 122,
-            "z": 240
-        },
-        {
-            "landmark": "rhone_gaul_forest_shrine",
-            "rotation": 180,
-            "scale": 1,
-            "type": "statue",
-            "x": 128,
-            "z": 245
-        },
-        {
-            "landmark": "rhone_gaul_forest_shrine",
-            "scale": 1,
-            "type": "statue",
-            "x": 128,
-            "z": 237
-        },
-        {
-            "landmark": "rhone_gaul_forest_shrine",
-            "rotation": 180,
-            "scale": 1,
-            "type": "ruins",
-            "x": 112.3,
-            "z": 245.25
-        },
-        {
-            "landmark": "rhone_gaul_forest_shrine",
-            "scale": 0.85,
-            "type": "ruins",
-            "x": 107.62,
-            "z": 234.36
-        },
-        {
-            "landmark": "rhone_gaul_forest_shrine",
-            "rotation": 180,
-            "scale": 1.1500000000000001,
-            "type": "ruins",
-            "x": 107,
-            "z": 241
-        },
-        {
-            "intensity": 1.2,
-            "landmark": "rhone_gaul_forest_shrine",
-            "persistent": true,
-            "radius": 3.2,
-            "rotation": 90,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 134,
-            "z": 240
         },
         {
             "authored_camp": true,
@@ -10454,6 +10100,538 @@
             "z": 262,
             "scale": 1.0,
             "rotation": 2.86
+        },
+        {
+            "scale": 1,
+            "type": "weapon_rack",
+            "x": 385.96,
+            "z": 45
+        },
+        {
+            "scale": 1,
+            "type": "weapon_rack",
+            "x": 572,
+            "z": 549.06
+        },
+        {
+            "dressing": "rhone_hill_fields_1",
+            "rotation": 0.0,
+            "scale": 1.0,
+            "type": "supply_cart",
+            "x": 326.17,
+            "z": 104.72
+        },
+        {
+            "dressing": "rhone_hill_fields_2",
+            "rotation": 0.0,
+            "scale": 1.0,
+            "type": "supply_cart",
+            "x": 300.17,
+            "z": 16.72
+        },
+        {
+            "dressing": "rhone_hill_fields_3",
+            "rotation": 0.0,
+            "scale": 1.0,
+            "type": "supply_cart",
+            "x": 406.17,
+            "z": 104.72
+        },
+        {
+            "landmark": "rhone_woodside_hamlet",
+            "rotation": 270.0,
+            "scale": 1.0,
+            "type": "abandoned_home",
+            "x": 535.0,
+            "z": 420.0
+        },
+        {
+            "landmark": "rhone_woodside_hamlet",
+            "rotation": 90.0,
+            "scale": 1.0,
+            "type": "abandoned_home",
+            "x": 546.0,
+            "z": 427.0
+        },
+        {
+            "landmark": "rhone_woodside_hamlet",
+            "rotation": 90.0,
+            "scale": 1.0,
+            "type": "abandoned_home",
+            "x": 548.0,
+            "z": 412.0
+        },
+        {
+            "landmark": "rhone_woodside_hamlet",
+            "rotation": 270.0,
+            "scale": 0.9,
+            "type": "abandoned_home",
+            "x": 536.0,
+            "z": 408.0
+        },
+        {
+            "landmark": "rhone_woodside_hamlet",
+            "rotation": 270.0,
+            "scale": 1.1,
+            "type": "ruins",
+            "x": 538.0,
+            "z": 432.0
+        },
+        {
+            "landmark": "rhone_woodside_hamlet",
+            "rotation": 90.0,
+            "scale": 0.9,
+            "type": "ruins",
+            "x": 554.0,
+            "z": 416.0
+        },
+        {
+            "landmark": "rhone_woodside_hamlet",
+            "rotation": 270.0,
+            "scale": 1.0,
+            "type": "dead_tree",
+            "x": 529.0,
+            "z": 424.0
+        },
+        {
+            "landmark": "rhone_woodside_hamlet",
+            "rotation": 90.0,
+            "scale": 0.9,
+            "type": "dead_tree",
+            "x": 543.0,
+            "z": 404.0
+        },
+        {
+            "landmark": "rhone_east_sanctuary",
+            "rotation": 270,
+            "scale": 1,
+            "type": "statue",
+            "x": 396.5,
+            "z": 169
+        },
+        {
+            "landmark": "rhone_east_sanctuary",
+            "rotation": 90,
+            "scale": 1,
+            "type": "statue",
+            "x": 407.5,
+            "z": 169
+        },
+        {
+            "landmark": "rhone_east_sanctuary",
+            "rotation": 270,
+            "scale": 1,
+            "type": "statue",
+            "x": 396.5,
+            "z": 178
+        },
+        {
+            "landmark": "rhone_east_sanctuary",
+            "rotation": 90,
+            "scale": 1,
+            "type": "statue",
+            "x": 407.5,
+            "z": 178
+        },
+        {
+            "landmark": "rhone_east_sanctuary",
+            "rotation": 270,
+            "scale": 1.1,
+            "type": "ruins",
+            "x": 395,
+            "z": 151
+        },
+        {
+            "landmark": "rhone_east_sanctuary",
+            "rotation": 90,
+            "scale": 0.9,
+            "type": "ruins",
+            "x": 409.95,
+            "z": 150.86
+        },
+        {
+            "landmark": "rhone_east_sanctuary",
+            "rotation": 270,
+            "scale": 1,
+            "type": "dead_tree",
+            "x": 401,
+            "z": 146
+        },
+        {
+            "intensity": 1.2,
+            "landmark": "rhone_east_sanctuary",
+            "persistent": true,
+            "radius": 3.2,
+            "rotation": 180,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 402,
+            "z": 166
+        },
+        {
+            "landmark": "rhone_marsh_hamlet",
+            "scale": 1,
+            "type": "abandoned_home",
+            "x": 480,
+            "z": 334
+        },
+        {
+            "landmark": "rhone_marsh_hamlet",
+            "rotation": 180,
+            "scale": 1,
+            "type": "abandoned_home",
+            "x": 469,
+            "z": 345
+        },
+        {
+            "landmark": "rhone_marsh_hamlet",
+            "rotation": 180,
+            "scale": 1,
+            "type": "abandoned_home",
+            "x": 488,
+            "z": 349
+        },
+        {
+            "landmark": "rhone_marsh_hamlet",
+            "scale": 0.9,
+            "type": "abandoned_home",
+            "x": 492,
+            "z": 335
+        },
+        {
+            "landmark": "rhone_marsh_hamlet",
+            "scale": 1.1,
+            "type": "ruins",
+            "x": 468,
+            "z": 337
+        },
+        {
+            "landmark": "rhone_marsh_hamlet",
+            "rotation": 180,
+            "scale": 0.9,
+            "type": "ruins",
+            "x": 484,
+            "z": 353
+        },
+        {
+            "landmark": "rhone_marsh_hamlet",
+            "scale": 1,
+            "type": "dead_tree",
+            "x": 476,
+            "z": 328
+        },
+        {
+            "landmark": "rhone_marsh_hamlet",
+            "rotation": 180,
+            "scale": 0.9,
+            "type": "dead_tree",
+            "x": 496.17,
+            "z": 341.28
+        },
+        {
+            "landmark": "rhone_upland_sanctuary",
+            "scale": 1,
+            "type": "statue",
+            "x": 416.69,
+            "z": 600.98
+        },
+        {
+            "landmark": "rhone_upland_sanctuary",
+            "rotation": 180,
+            "scale": 1,
+            "type": "statue",
+            "x": 424.63,
+            "z": 607.62
+        },
+        {
+            "landmark": "rhone_upland_sanctuary",
+            "scale": 1,
+            "type": "statue",
+            "x": 413.29,
+            "z": 596.74
+        },
+        {
+            "landmark": "rhone_upland_sanctuary",
+            "rotation": 180,
+            "scale": 1,
+            "type": "statue",
+            "x": 413.29,
+            "z": 606.09
+        },
+        {
+            "landmark": "rhone_upland_sanctuary",
+            "scale": 1.1,
+            "type": "ruins",
+            "x": 440.24,
+            "z": 595.46
+        },
+        {
+            "landmark": "rhone_upland_sanctuary",
+            "rotation": 180,
+            "scale": 0.9,
+            "type": "ruins",
+            "x": 439.94,
+            "z": 606.51
+        },
+        {
+            "landmark": "rhone_upland_sanctuary",
+            "scale": 1,
+            "type": "dead_tree",
+            "x": 440.49,
+            "z": 600.5600000000001
+        },
+        {
+            "intensity": 1.2,
+            "landmark": "rhone_upland_sanctuary",
+            "persistent": true,
+            "radius": 3.2,
+            "rotation": 270,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 423.49,
+            "z": 601.41
+        },
+        {
+            "landmark": "rhone_ford_shrine",
+            "scale": 1.1,
+            "type": "statue",
+            "x": 324,
+            "z": 320
+        },
+        {
+            "landmark": "rhone_ford_shrine",
+            "rotation": 90,
+            "scale": 1,
+            "type": "statue",
+            "x": 325,
+            "z": 312
+        },
+        {
+            "landmark": "rhone_ford_shrine",
+            "rotation": 270,
+            "scale": 1,
+            "type": "statue",
+            "x": 313.59000000000003,
+            "z": 313.41
+        },
+        {
+            "landmark": "rhone_ford_shrine",
+            "rotation": 90,
+            "scale": 1,
+            "type": "ruins",
+            "x": 325,
+            "z": 327
+        },
+        {
+            "landmark": "rhone_ford_shrine",
+            "rotation": 270,
+            "scale": 0.85,
+            "type": "ruins",
+            "x": 310,
+            "z": 323
+        },
+        {
+            "landmark": "rhone_ford_shrine",
+            "rotation": 90,
+            "scale": 1.1500000000000001,
+            "type": "ruins",
+            "x": 321,
+            "z": 333
+        },
+        {
+            "intensity": 1.2,
+            "landmark": "rhone_ford_shrine",
+            "persistent": true,
+            "radius": 3.2,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 315,
+            "z": 306
+        },
+        {
+            "landmark": "rhone_burnt_steading",
+            "rotation": 270,
+            "scale": 1,
+            "type": "abandoned_home",
+            "x": 194,
+            "z": 282
+        },
+        {
+            "landmark": "rhone_burnt_steading",
+            "rotation": 90,
+            "scale": 1,
+            "type": "abandoned_home",
+            "x": 203.59,
+            "z": 288.41
+        },
+        {
+            "landmark": "rhone_burnt_steading",
+            "rotation": 90,
+            "scale": 1,
+            "type": "abandoned_home",
+            "x": 207,
+            "z": 272
+        },
+        {
+            "landmark": "rhone_burnt_steading",
+            "rotation": 270,
+            "scale": 0.9,
+            "type": "abandoned_home",
+            "x": 195,
+            "z": 268
+        },
+        {
+            "landmark": "rhone_burnt_steading",
+            "rotation": 270,
+            "scale": 1.1,
+            "type": "ruins",
+            "x": 201,
+            "z": 295
+        },
+        {
+            "landmark": "rhone_burnt_steading",
+            "rotation": 90,
+            "scale": 0.9,
+            "type": "ruins",
+            "x": 213,
+            "z": 276
+        },
+        {
+            "landmark": "rhone_burnt_steading",
+            "rotation": 270,
+            "scale": 1,
+            "type": "dead_tree",
+            "x": 188,
+            "z": 279
+        },
+        {
+            "landmark": "rhone_burnt_steading",
+            "rotation": 90,
+            "scale": 0.9,
+            "type": "dead_tree",
+            "x": 202,
+            "z": 264
+        },
+        {
+            "landmark": "rhone_north_watch",
+            "rotation": 270,
+            "scale": 1,
+            "type": "statue",
+            "x": 325.6,
+            "z": 183.33
+        },
+        {
+            "landmark": "rhone_north_watch",
+            "scale": 1,
+            "type": "tent",
+            "x": 307.12,
+            "z": 172.5
+        },
+        {
+            "landmark": "rhone_north_watch",
+            "rotation": 180,
+            "scale": 1,
+            "type": "tent",
+            "x": 309.62,
+            "z": 183.62
+        },
+        {
+            "landmark": "rhone_north_watch",
+            "scale": 0.9500000000000001,
+            "type": "tent",
+            "x": 308,
+            "z": 178
+        },
+        {
+            "landmark": "rhone_north_watch",
+            "rotation": 180,
+            "scale": 1,
+            "type": "supply_cart",
+            "x": 317,
+            "z": 188
+        },
+        {
+            "landmark": "rhone_north_watch",
+            "scale": 1,
+            "type": "weapon_rack",
+            "x": 320,
+            "z": 171
+        },
+        {
+            "intensity": 1.2,
+            "landmark": "rhone_north_watch",
+            "persistent": true,
+            "radius": 3.2,
+            "rotation": 270,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 312,
+            "z": 180
+        },
+        {
+            "landmark": "rhone_north_watch",
+            "rotation": 180,
+            "scale": 0.9,
+            "type": "ruins",
+            "x": 327.46,
+            "z": 186.18
+        },
+        {
+            "landmark": "rhone_gaul_forest_shrine",
+            "rotation": 90,
+            "scale": 1.1,
+            "type": "statue",
+            "x": 122,
+            "z": 240
+        },
+        {
+            "landmark": "rhone_gaul_forest_shrine",
+            "rotation": 180,
+            "scale": 1,
+            "type": "statue",
+            "x": 128,
+            "z": 245
+        },
+        {
+            "landmark": "rhone_gaul_forest_shrine",
+            "scale": 1,
+            "type": "statue",
+            "x": 128,
+            "z": 237
+        },
+        {
+            "landmark": "rhone_gaul_forest_shrine",
+            "rotation": 180,
+            "scale": 1,
+            "type": "ruins",
+            "x": 112.3,
+            "z": 245.25
+        },
+        {
+            "landmark": "rhone_gaul_forest_shrine",
+            "scale": 0.85,
+            "type": "ruins",
+            "x": 107.62,
+            "z": 234.36
+        },
+        {
+            "landmark": "rhone_gaul_forest_shrine",
+            "rotation": 180,
+            "scale": 1.1500000000000001,
+            "type": "ruins",
+            "x": 107,
+            "z": 241
+        },
+        {
+            "intensity": 1.2,
+            "landmark": "rhone_gaul_forest_shrine",
+            "persistent": true,
+            "radius": 3.2,
+            "rotation": 90,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 134,
+            "z": 240
         }
     ],
     "dressing": [
@@ -10765,6 +10943,48 @@
             "trees": [
                 "pine_tree"
             ]
+        },
+        {
+            "cols": 1,
+            "id": "rhone_hill_fields_1",
+            "kind": "farmland",
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 0,
+            "rows": 1,
+            "x": 337,
+            "z": 103
+        },
+        {
+            "cols": 1,
+            "id": "rhone_hill_fields_2",
+            "kind": "farmland",
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 0,
+            "rows": 1,
+            "x": 311,
+            "z": 15
+        },
+        {
+            "cols": 1,
+            "id": "rhone_hill_fields_3",
+            "kind": "farmland",
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 0,
+            "rows": 1,
+            "x": 417,
+            "z": 103
+        }
+    ],
+    "lakes": [
+        {
+            "depth": 36.1,
+            "id": "rhone_tarn",
+            "width": 63.3,
+            "x": 25.9,
+            "z": 565.4
         }
     ]
 }

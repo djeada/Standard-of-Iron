@@ -251,6 +251,11 @@ void MinimapManager::update_units(Engine::Core::World* world,
       if (unit.health <= 0 || Game::Units::is_wildlife_spawn(unit.spawn_type)) {
         continue;
       }
+      if (const auto* cover =
+              world->try_get<Engine::Core::ForestCoverComponent>(entity_id);
+          cover != nullptr && cover->hidden_from(local_owner_id)) {
+        continue;
+      }
 
       Game::Map::Minimap::UnitMarker marker;
       marker.world_x = transform.position.x;

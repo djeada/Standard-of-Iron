@@ -831,6 +831,13 @@ auto calculate_tactical_damage_multiplier(Engine::Core::Entity* attacker,
     }
   }
 
+  if (is_ranged_mode(attacker->get_component<Engine::Core::AttackComponent>())) {
+    if (auto const* cover = target->get_component<Engine::Core::ForestCoverComponent>();
+        cover != nullptr && cover->in_forest) {
+      multiplier *= Constants::k_forest_ranged_cover_multiplier;
+    }
+  }
+
   return multiplier;
 }
 

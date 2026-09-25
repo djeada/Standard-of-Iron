@@ -181,6 +181,25 @@ auto find_world_prop_near_grid(const TerrainHeightMap* height_map,
   return make_world_prop_target(height_map, coord_system, *best);
 }
 
+auto lies_in_fields(const TerrainHeightMap& height_map,
+                    float world_x,
+                    float world_z,
+                    float reach) -> bool {
+  const float tile = std::max(height_map.get_tile_size(), 0.0001F);
+  const float grid_x = (world_x / tile) + (height_map.get_width() * 0.5F - 0.5F);
+  const float grid_z = (world_z / tile) + (height_map.get_height() * 0.5F - 0.5F);
+  const float step = std::ceil(reach / tile);
+  for (const float dz : {-step, 0.0F, step}) {
+    for (const float dx : {-step, 0.0F, step}) {
+      if (height_map.is_fields(static_cast<int>(std::lround(grid_x + dx)),
+                               static_cast<int>(std::lround(grid_z + dz)))) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 auto build_runtime_world_props(const TerrainHeightMap& height_map,
                                const BiomeSettings& biome_settings,
                                CoordSystem coord_system,
@@ -189,6 +208,12 @@ auto build_runtime_world_props(const TerrainHeightMap& height_map,
   std::vector<WorldProp> runtime_world_props = authored_world_props;
   auto generated_world_props = generate_procedural_world_props(
       height_map, biome_settings, coord_system, authored_world_props);
+  std::erase_if(generated_world_props, [&](const WorldProp& prop) {
+    const auto [world_x, world_z] =
+        authored_prop_world_xz(&height_map, coord_system, prop);
+    return lies_in_fields(
+        height_map, world_x, world_z, world_prop_ground_radius(prop.type, prop.scale));
+  });
   for (auto& prop : generated_world_props) {
     prop.persistent = false;
   }

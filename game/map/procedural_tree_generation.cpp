@@ -65,16 +65,40 @@ void append_generated_world_prop(std::vector<WorldProp>& out,
   out.push_back(prop);
 }
 
+constexpr float k_forest_canopy_density = 0.50F;
+
+auto forest_canopy_species(const TerrainScatterRules& rules,
+                           const BiomeSettings& biome_settings) -> TreeSpecies {
+  auto const scale = [&](TreeSpecies species) {
+    return biome_settings.tree_density_scale[static_cast<std::size_t>(species)];
+  };
+  if (scale(TreeSpecies::Pine) > 0.0F) {
+    return TreeSpecies::Pine;
+  }
+  TreeSpecies best = TreeSpecies::Pine;
+  float best_scale = 0.0F;
+  for (std::size_t index = 0; index < k_tree_species_count; ++index) {
+    auto const species = static_cast<TreeSpecies>(index);
+    if (rules.tree(species).allowed && scale(species) > best_scale) {
+      best = species;
+      best_scale = scale(species);
+    }
+  }
+  return best;
+}
+
 void append_generated_trees(std::vector<WorldProp>& out,
                             const TerrainHeightMap& height_map,
                             const BiomeSettings& biome_settings,
                             CoordSystem coord_system,
                             const std::vector<WorldProp>& anchor_world_props,
-                            TreeSpecies species) {
+                            TreeSpecies species,
+                            bool canopy_only) {
   const auto scatter_profile = make_scatter_profile(biome_settings);
   const auto scatter_rules = make_scatter_rules(scatter_profile.ground_type);
   const auto& rule = scatter_rules.tree(species);
-  if (!rule.allowed) {
+  const bool canopy = forest_canopy_species(scatter_rules, biome_settings) == species;
+  if ((!rule.allowed || canopy_only) && !canopy) {
     return;
   }
 
@@ -101,6 +125,8 @@ void append_generated_trees(std::vector<WorldProp>& out,
                   biome_settings.tree_density_scale[static_cast<std::size_t>(species)];
   input.scale_min = rule.scale_min;
   input.scale_max = rule.scale_max;
+  input.forest_only = !rule.allowed || canopy_only;
+  input.forest_density_floor = canopy ? k_forest_canopy_density : 0.0F;
 
   const SpawnValidationConfig config = make_tree_scatter_spawn_config(
       profile, input, scatter_profile.spawn_edge_padding);
@@ -464,14 +490,15 @@ auto generate_procedural_world_props(const TerrainHeightMap& height_map,
   if (biome_settings.procedural_trees_enabled) {
     append_generated_dead_trees(
         generated, height_map, biome_settings, coord_system, anchor_world_props);
-    for (std::size_t i = 0; i < k_tree_species_count; ++i) {
-      append_generated_trees(generated,
-                             height_map,
-                             biome_settings,
-                             coord_system,
-                             anchor_world_props,
-                             static_cast<TreeSpecies>(i));
-    }
+  }
+  for (std::size_t i = 0; i < k_tree_species_count; ++i) {
+    append_generated_trees(generated,
+                           height_map,
+                           biome_settings,
+                           coord_system,
+                           anchor_world_props,
+                           static_cast<TreeSpecies>(i),
+                           !biome_settings.procedural_trees_enabled);
   }
   return generated;
 }

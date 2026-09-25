@@ -107,8 +107,8 @@
     {
       "id": "p1_shoulder",
       "type": "hill",
-      "x": 42.7,
-      "z": 133.3,
+      "x": 34.21,
+      "z": 141.79,
       "width": 54.0,
       "depth": 64.0,
       "height": 2.3,
@@ -120,20 +120,20 @@
       "description": "Boomerang ridge cupping player 1's camp; the mouth faces the hollow.",
       "entrances": [
         {
-          "x": 43.4,
-          "z": 146.22
+          "x": 34.91,
+          "z": 154.71
         },
         {
-          "x": 14.34,
-          "z": 136.82
+          "x": 5.85,
+          "z": 145.31
         }
       ]
     },
     {
       "id": "p2_shoulder",
       "type": "hill",
-      "x": 133.3,
-      "z": 42.7,
+      "x": 141.79,
+      "z": 34.21,
       "width": 54.0,
       "depth": 64.0,
       "height": 2.3,
@@ -145,12 +145,12 @@
       "description": "Boomerang ridge cupping player 2's camp.",
       "entrances": [
         {
-          "x": 132.6,
-          "z": 29.78
+          "x": 141.09,
+          "z": 21.29
         },
         {
-          "x": 161.66,
-          "z": 39.18
+          "x": 170.15,
+          "z": 30.69
         }
       ]
     },
@@ -403,6 +403,50 @@
       "height": 6.5,
       "rotation": 225.0,
       "description": "Crag over the south-west rim."
+    },
+    {
+      "id": "p1_barracks_fields",
+      "type": "flat",
+      "x": 34.7,
+      "z": 129.3,
+      "width": 60.0,
+      "depth": 46.0,
+      "rotation": 90.0,
+      "fields": true,
+      "description": "Camp floor of p1: levelled round the barracks and kept clear of scatter, so the camp has room for its fields."
+    },
+    {
+      "id": "p2_barracks_fields",
+      "type": "flat",
+      "x": 141.3,
+      "z": 46.7,
+      "width": 60.0,
+      "depth": 46.0,
+      "rotation": 90.0,
+      "fields": true,
+      "description": "Camp floor of p2: levelled round the barracks and kept clear of scatter, so the camp has room for its fields."
+    },
+    {
+      "id": "east_lodge_barracks_fields",
+      "type": "flat",
+      "x": 141.3,
+      "z": 125.3,
+      "width": 50.0,
+      "depth": 44.0,
+      "rotation": 0.0,
+      "fields": true,
+      "description": "Camp floor of east lodge: levelled round the barracks and kept clear of scatter, so the camp has room for its fields."
+    },
+    {
+      "id": "west_lodge_barracks_fields",
+      "type": "flat",
+      "x": 34.7,
+      "z": 50.7,
+      "width": 50.0,
+      "depth": 44.0,
+      "rotation": 0.0,
+      "fields": true,
+      "description": "Camp floor of west lodge: levelled round the barracks and kept clear of scatter, so the camp has room for its fields."
     }
   ],
   "forests": [
@@ -574,8 +618,8 @@
           134.5
         ],
         [
-          49.3,
-          133.98
+          51.46,
+          134.2
         ]
       ]
     },
@@ -667,8 +711,8 @@
       "style": "default",
       "waypoints": [
         [
-          49.07,
-          40.07
+          51.12,
+          39.23
         ],
         [
           57.8,
@@ -1076,15 +1120,15 @@
     {
       "id": "p1_vein_0",
       "type": "iron_ore",
-      "x": 48.94,
+      "x": 47.91,
       "z": 162.36,
       "rotation": 34.38
     },
     {
       "id": "p1_vein_1",
       "type": "iron_ore",
-      "x": 35.06,
-      "z": 161.07,
+      "x": 37.16,
+      "z": 164.26,
       "rotation": 106.38
     },
     {
@@ -1097,29 +1141,29 @@
     {
       "id": "p1_vein_3",
       "type": "iron_ore",
-      "x": 43.2,
-      "z": 154.73,
+      "x": 41.66,
+      "z": 152.06,
       "rotation": 250.38
     },
     {
       "id": "p1_vein_4",
       "type": "iron_ore",
-      "x": 47.42,
-      "z": 155.54,
+      "x": 49.51,
+      "z": 159.16,
       "rotation": 322.38
     },
     {
       "id": "p2_vein_0",
       "type": "iron_ore",
-      "x": 138.81,
-      "z": 22.15,
+      "x": 138.87,
+      "z": 22.55,
       "rotation": 34.38
     },
     {
       "id": "p2_vein_1",
       "type": "iron_ore",
-      "x": 130.3,
-      "z": 22.51,
+      "x": 132.54,
+      "z": 26.39,
       "rotation": 106.38
     },
     {
@@ -1132,15 +1176,15 @@
     {
       "id": "p2_vein_3",
       "type": "iron_ore",
-      "x": 125.2,
-      "z": 12.57,
+      "x": 126.17,
+      "z": 13.54,
       "rotation": 250.38
     },
     {
       "id": "p2_vein_4",
       "type": "iron_ore",
-      "x": 141.82,
-      "z": 13.95,
+      "x": 140.33,
+      "z": 12.5,
       "rotation": 322.38
     },
     {
@@ -1506,14 +1550,14 @@
       "respawn_delay": 120.0,
       "spawn_areas": [
         {
-          "x": 62.0,
-          "z": 112.0,
-          "radius": 15.0
+          "x": 72.7,
+          "z": 101.3,
+          "radius": 13.0
         },
         {
-          "x": 114.0,
-          "z": 64.0,
-          "radius": 15.0
+          "x": 103.3,
+          "z": 74.7,
+          "radius": 13.0
         }
       ],
       "alert_radius": 11.0
@@ -1552,10 +1596,10 @@
   },
   "starting_resources": {
     "gold": 250,
-    "food": 200,
-    "wood": 250,
-    "stone": 120,
-    "iron": 80
+    "food": 160,
+    "wood": 330,
+    "stone": 110,
+    "iron": 70
   },
   "victory": {
     "type": "elimination",

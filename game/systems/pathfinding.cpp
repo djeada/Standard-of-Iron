@@ -13,6 +13,7 @@
 #include <utility>
 #include <vector>
 
+#include "../map/forest_outline.h"
 #include "../map/terrain_service.h"
 #include "building_collision_registry.h"
 #include "game/core/nav_profile.h"
@@ -721,24 +722,29 @@ void Pathfinding::rebuild_forest_index() {
       radius = forest.radius / tile_size;
     }
 
-    int const min_x = std::max(0, static_cast<int>(std::floor(center_x - radius)));
+    float const reach = radius * Game::Map::k_forest_outline_reach;
+    int const min_x = std::max(0, static_cast<int>(std::floor(center_x - reach)));
     int const max_x =
-        std::min(m_width - 1, static_cast<int>(std::ceil(center_x + radius)));
-    int const min_z = std::max(0, static_cast<int>(std::floor(center_z - radius)));
+        std::min(m_width - 1, static_cast<int>(std::ceil(center_x + reach)));
+    int const min_z = std::max(0, static_cast<int>(std::floor(center_z - reach)));
     int const max_z =
-        std::min(m_height - 1, static_cast<int>(std::ceil(center_z + radius)));
-    float const radius_sq = radius * radius;
+        std::min(m_height - 1, static_cast<int>(std::ceil(center_z + reach)));
 
     for (int grid_z = min_z; grid_z <= max_z; ++grid_z) {
       for (int grid_x = min_x; grid_x <= max_x; ++grid_x) {
         float const dx = static_cast<float>(grid_x) - center_x;
         float const dz = static_cast<float>(grid_z) - center_z;
-        if (dx * dx + dz * dz > radius_sq) {
+        float const edge =
+            radius * Game::Map::forest_outline_scale(forest.outline_seed, dx, dz);
+        if (dx * dx + dz * dz > edge * edge) {
           continue;
         }
 
         QVector3D const world = grid_to_world({grid_x, grid_z});
         if (terrain_service.is_point_on_road(world.x(), world.z())) {
+          continue;
+        }
+        if (height_map != nullptr && height_map->is_fields(grid_x, grid_z)) {
           continue;
         }
         m_forest_cells[static_cast<std::size_t>(to_index(grid_x, grid_z))] = true;

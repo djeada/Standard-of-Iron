@@ -925,6 +925,7 @@ void copy_authoritative_snapshot_components(const Entity& source, Entity& destin
   copy_snapshot_component<PendingRemovalComponent>(source, destination);
   copy_snapshot_component<AttackComponent>(source, destination);
   copy_snapshot_component<AttackTargetComponent>(source, destination);
+  copy_snapshot_component<ForestCoverComponent>(source, destination);
   copy_snapshot_component<CombatStateComponent>(source, destination);
   copy_snapshot_component<FormationContactComponent>(source, destination);
   copy_snapshot_component<WildlifeComponent>(source, destination);
@@ -1104,6 +1105,10 @@ auto render_entity_signature(const Entity& entity) -> std::uint64_t {
   }
   if (auto const* farm = entity.get_component<FarmComponent>()) {
     render_hash_combine(signature, static_cast<std::uint64_t>(farm->growth_stage()));
+  }
+  if (auto const* cover = entity.get_component<ForestCoverComponent>()) {
+    render_hash_combine(signature, cover->concealed ? 1U : 0U);
+    render_hash_combine(signature, cover->seen_by);
   }
   if (auto const* stockpile = entity.get_component<StockpileComponent>()) {
 

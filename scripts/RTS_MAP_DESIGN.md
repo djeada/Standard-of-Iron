@@ -80,6 +80,28 @@ Rules the generator enforces, and the reasons behind them:
   for something else - a road threading past it, one wall of a pass - author
   `"grow_hill": false` and the settlement is shrunk to the crown it already has.
 
+### A town is lived in
+
+A ring of wall around bare grass reads as a pen, not a town. Three rules keep a
+settlement from looking stamped or empty:
+
+- **Houses face their street.** A house model's door is on its local +z, and the
+  generator turns each house toward the street of its block: a plot one step
+  past a street row or column fronts that street, a corner plot fronts one of
+  its two by parity, a mid-block plot alternates, and a camp without streets
+  turns its houses in on the camp. Roof ridges then follow the streets instead
+  of repeating one orientation across the whole town.
+- **The ring holds what its tier promises.** A town on a hill is limited by its
+  crown, so a hilltop town gets a hill with a broad `crown` (Zama's Scipio town
+  stands on a 0.8 crown) rather than a ring shrunk to five houses.
+- **Settled ground reaches past the wall.** Every settlement with a market works
+  fields outside its ring (`farmland` dressing, placed where the dressing
+  generator's own plot check accepts them). A small crossroads fort whose
+  interior is taken by its roads and public buildings grows a vicus instead:
+  houses lining the approach roads just outside the gates, turned to face the
+  road. Those houses are authored entries with no `dressing` or `settlement`
+  tag, so neither generator strips them on a rerun.
+
 ### Authored settlements
 
 A settlement marked `"authored": true` is laid out by hand in `structures` and
@@ -298,6 +320,22 @@ march down, the timber a gather objective is measured against, the den a wolf
 pack comes out of. A forest across the only route to a camp makes that camp an
 infantry problem.
 
+**As cover.** A unit in a wood is hidden from any army that has no one within
+5.5 m of it, until it strikes, and arrows loosed into the trees do 60% damage
+(docs/COMBAT_SYSTEM.md, "Forest cover"). So place woods where hiding matters: an
+_ambush wood_ whose edge comes to within a few metres of a road is where a player
+parks archers to bleed a column that cannot see them. Every campaign map carries
+three (`<map>_ambush_wood_N`), kept 90 m from settlements and 30 m from other woods.
+
+**As a look.** A wood must never be mistaken for a copse. Forest ground is painted
+as a litter-and-moss floor from a cover mask (`TerrainRenderer::bake_cover_mask`),
+grass is thinned to 30% on it, the trees inside close into an even canopy (cluster
+noise and dryness rolls are skipped, and the biome's canopy species - pine, or
+the species the map favours most when it zeroes pine - has a density floor), and
+the outline is lobed rather than round (`game/map/forest_outline.h`, one shape
+shared by terrain painting and the navigation grid). A map that turns procedural
+trees off still grows its woods; only the open-ground scatter stops.
+
 Three rules keep this from stranding an army or fighting the terrain:
 
 - **A road driven through a forest stays open to everyone.** Forest is only
@@ -306,6 +344,10 @@ Three rules keep this from stranding an army or fighting the terrain:
 - **Trunks, boulders and buildings keep their own cell value.** Forest only
   claims ground that was already walkable, so a forest never turns a blocked
   cell passable.
+- **Fields inside a forest are a clearing.** A `flat` with `"fields": true`
+  keeps its level core out of the forest: no Forest ground, no forest cell in
+  the navigation grid and no scattered trunks, so a woodland lodge's fields are
+  open ground cavalry can cross, exactly as they look.
 - **A forest laid over a hill is clipped, not blended.** The terrain feature
   paints only cells that are still flat, so the hill wins and the forest fills
   the ground around it. Overlap one deliberately and you get less forest than
@@ -386,6 +428,9 @@ a range-sized click target swallows everything standing inside it.
   another river or across a tributary mouth.
 - Rivers and lakes use one world-space water material, so color and motion are
   continuous at their join.
+- A tarn at the map edge is the simplest tactical lake: it closes a flank and needs
+  no road or river to anchor it. Every campaign map has one except Trasimene,
+  whose lake already closes a flank.
 - A lake must remove a flank, constrain a road, protect an objective, or form a
   sector boundary. A lake in otherwise open ground is decorative and should be
   removed or integrated into the route graph.

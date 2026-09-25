@@ -401,6 +401,12 @@ void GameEngine::build_services_and_controllers() {
     if (transform == nullptr) {
       return false;
     }
+    if (const auto* cover = entity->get_component<Engine::Core::ForestCoverComponent>();
+        cover != nullptr &&
+        cover->hidden_from(
+            Game::Session::session_for(*m_world).owners().get_local_player_id())) {
+      return false;
+    }
     const auto snapshot = m_visibility_coordinator->current_snapshot();
     if (snapshot == nullptr || !snapshot->initialized) {
       return true;
