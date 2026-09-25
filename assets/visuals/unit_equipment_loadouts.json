@@ -88,12 +88,13 @@
       "helmet": "commander_fabius",
       "greaves": "roman_greaves",
       "armor": "roman_anatomical_cuirass",
-      "shoulder": "roman_shoulder_cover",
+      "shoulder": "commander_pauldron",
       "cloak": "cloak_fabius"
     },
     "troops/roman/commanders/scipio_africanus": {
       "sword": "sword_scipio",
       "shield": "roman_scutum",
+      "shoulder": "commander_pauldron",
       "helmet": "commander_scipio",
       "greaves": "roman_greaves",
       "armor": "roman_heavy_armor",
@@ -102,6 +103,7 @@
     "troops/roman/commanders/marcellus": {
       "bow": "bow_marcellus",
       "quiver": "quiver_marcellus",
+      "shoulder": "commander_pauldron",
       "helmet": "commander_marcellus",
       "greaves": "roman_greaves",
       "armor": "roman_light_armor",
@@ -112,12 +114,13 @@
       "helmet": "commander_hanno",
       "greaves": "carthage_greaves",
       "armor": "armor_light_carthage",
-      "shoulder": "carthage_shoulder_cover",
+      "shoulder": "commander_pauldron",
       "cloak": "cloak_hanno"
     },
     "troops/carthage/commanders/hasdrubal_barca": {
       "bow": "bow_hasdrubal",
       "quiver": "quiver_hasdrubal",
+      "shoulder": "commander_pauldron",
       "helmet": "commander_hasdrubal",
       "greaves": "carthage_greaves",
       "armor": "armor_light_carthage",
@@ -129,7 +132,7 @@
       "helmet": "commander_hannibal",
       "greaves": "carthage_greaves",
       "armor": "carthage_gilded_scale",
-      "shoulder": "carthage_shoulder_cover",
+      "shoulder": "commander_pauldron",
       "cloak": "cloak_hannibal"
     },
     "troops/roman/horse_archer": {

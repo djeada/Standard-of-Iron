@@ -504,6 +504,129 @@ void render_frame(const BpatBlob& blob,
   out = rasterizer.render();
 }
 
+struct LegPose {
+  float flex{0.0F};
+  // Knee offset from the hip-to-foot line along the pelvis forward axis:
+  // positive is the knee in front of the leg line, as a knee bends.
+  float knee_forward{0.0F};
+  // Knee offset along the pelvis right axis, signed outward for this leg.
+  float knee_outward{0.0F};
+};
+
+auto leg_pose(std::span<const QMatrix4x4> palette,
+              Bone hip,
+              Bone knee,
+              Bone foot,
+              const QVector3D& forward,
+              const QVector3D& outward) -> LegPose {
+  QVector3D const h = bone_origin(palette, hip);
+  QVector3D const k = bone_origin(palette, knee);
+  QVector3D const f = bone_origin(palette, foot);
+  QVector3D const line = f - h;
+  float const t =
+      line.lengthSquared() > 1.0e-8F
+          ? std::clamp(
+                QVector3D::dotProduct(k - h, line) / line.lengthSquared(), 0.0F, 1.0F)
+          : 0.0F;
+  QVector3D const off = k - (h + line * t);
+  return {.flex = joint_flex_degrees(h, k, f),
+          .knee_forward = QVector3D::dotProduct(off, forward),
+          .knee_outward = QVector3D::dotProduct(off, outward)};
+}
+
+// Scans every frame of every clip for legs a human knee cannot make: a knee
+// bent backwards, a knee swung far off to the side of its leg, or feet
+// crossed through each other.
+auto scan_legs(const BpatBlob& blob, const std::string& only) -> int {
+  int flagged = 0;
+  for (std::uint32_t c = 0; c < blob.clip_count(); ++c) {
+    auto const clip = blob.clip(c);
+    if (!only.empty() && std::string(clip.name).find(only) == std::string::npos) {
+      continue;
+    }
+    float worst_back = 0.0F;
+    float worst_in = 0.0F;
+    float worst_cross = 0.0F;
+    std::uint32_t back_frame = 0;
+    std::uint32_t in_frame = 0;
+    std::uint32_t cross_frame = 0;
+    for (std::uint32_t f = 0; f < clip.frame_count; ++f) {
+      auto const palette = global_palette(blob, clip.frame_offset + f);
+      // Clips are baked facing +Z; the skeleton's hip line yaws with the
+      // knees, so it is no frame to judge them in.
+      QVector3D const right(1.0F, 0.0F, 0.0F);
+      QVector3D const forward(0.0F, 0.0F, 1.0F);
+      for (int side = 0; side < 2; ++side) {
+        bool const left = side == 0;
+        auto const leg = leg_pose(palette,
+                                  left ? Bone::HipL : Bone::HipR,
+                                  left ? Bone::KneeL : Bone::KneeR,
+                                  left ? Bone::FootL : Bone::FootR,
+                                  forward,
+                                  left ? -right : right);
+        if (std::getenv("SOI_SCAN_LEGS_DUMP") != nullptr) {
+          auto const h = bone_origin(palette, left ? Bone::HipL : Bone::HipR);
+          auto const k = bone_origin(palette, left ? Bone::KneeL : Bone::KneeR);
+          auto const ft = bone_origin(palette, left ? Bone::FootL : Bone::FootR);
+          std::cout << QString::asprintf(
+                           "  f%-3u %s hip(%+.2f,%+.2f,%+.2f) knee(%+.2f,%+.2f,%+.2f) "
+                           "foot(%+.2f,%+.2f,%+.2f) flex %.0f fwd %+.3f out %+.3f "
+                           "facing(%+.2f,%+.2f)\n",
+                           f,
+                           left ? "L" : "R",
+                           h.x(),
+                           h.y(),
+                           h.z(),
+                           k.x(),
+                           k.y(),
+                           k.z(),
+                           ft.x(),
+                           ft.y(),
+                           ft.z(),
+                           static_cast<double>(leg.flex),
+                           static_cast<double>(leg.knee_forward),
+                           static_cast<double>(leg.knee_outward),
+                           forward.x(),
+                           forward.z())
+                           .toStdString();
+        }
+        if (leg.flex > 12.0F && -leg.knee_forward > worst_back) {
+          worst_back = -leg.knee_forward;
+          back_frame = f;
+        }
+        if (std::abs(leg.knee_outward) > worst_in) {
+          worst_in = std::abs(leg.knee_outward);
+          in_frame = f;
+        }
+      }
+      float const feet = QVector3D::dotProduct(
+          bone_origin(palette, Bone::FootR) - bone_origin(palette, Bone::FootL), right);
+      float const knees = QVector3D::dotProduct(
+          bone_origin(palette, Bone::KneeR) - bone_origin(palette, Bone::KneeL), right);
+      float const cross = -std::min(feet, knees);
+      if (cross > worst_cross) {
+        worst_cross = cross;
+        cross_frame = f;
+      }
+    }
+    bool const bad = worst_back > 0.03F || worst_in > 0.16F || worst_cross > 0.0F;
+    flagged += bad ? 1 : 0;
+    std::cout << QString::asprintf(
+                     "%-34s back-knee %.3f m @f%-3u  knee-side %.3f m @f%-3u  "
+                     "crossed %.3f m @f%-3u%s\n",
+                     std::string(clip.name).c_str(),
+                     static_cast<double>(worst_back),
+                     back_frame,
+                     static_cast<double>(worst_in),
+                     in_frame,
+                     static_cast<double>(worst_cross),
+                     cross_frame,
+                     bad ? "  <<" : "")
+                     .toStdString();
+  }
+  return flagged;
+}
+
 auto usage() -> int {
   std::cout
       << "usage:\n"
@@ -511,6 +634,7 @@ auto usage() -> int {
          "  humanoid_preview --bpat <file.bpat> --clip <name> [--frames N]\n"
          "                   [--view side|front|iso|top] [--weapon sword|spear|none]\n"
          "                   [--out strip.png] [--report]\n"
+         "  humanoid_preview --bpat <file.bpat> --scan-legs [--clip <substring>]\n"
          "\n"
          "Renders baked humanoid clips as a phase strip so walk, run and weapon\n"
          "swings can be reviewed frame by frame, and reports per-frame bone\n"
@@ -531,6 +655,7 @@ auto main(int argc, char** argv) -> int {
   int frames = 10;
   bool list_clips = false;
   bool report = false;
+  bool scan = false;
 
   for (int i = 1; i < argc; ++i) {
     std::string_view const arg = argv[i];
@@ -553,6 +678,8 @@ auto main(int argc, char** argv) -> int {
       list_clips = true;
     } else if (arg == "--report") {
       report = true;
+    } else if (arg == "--scan-legs") {
+      scan = true;
     } else {
       return usage();
     }
@@ -562,6 +689,10 @@ auto main(int argc, char** argv) -> int {
   if (!blob.loaded()) {
     std::cerr << "failed to load " << bpat_path << ": " << blob.last_error() << "\n";
     return 1;
+  }
+
+  if (scan) {
+    return scan_legs(blob, clip_name) > 0 ? 3 : 0;
   }
 
   if (list_clips || clip_name.empty()) {

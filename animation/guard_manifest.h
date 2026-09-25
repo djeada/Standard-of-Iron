@@ -125,6 +125,7 @@ struct GuardShieldAttachmentProfile {
     ShieldFormationPose pose) noexcept -> GuardShieldAttachmentProfile {
   GuardShieldAttachmentProfile profile{};
   switch (pose) {
+  case ShieldFormationPose::GuardDefault:
   case ShieldFormationPose::RomanFront:
     profile.yaw_degrees = 180.0F;
     profile.pitch_degrees = -4.0F;
@@ -173,7 +174,6 @@ struct GuardShieldAttachmentProfile {
     profile.translate_y = 0.12F;
     profile.translate_z = 0.02F;
     break;
-  case ShieldFormationPose::GuardDefault:
   case ShieldFormationPose::None:
     break;
   }

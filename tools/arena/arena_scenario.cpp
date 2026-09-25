@@ -1107,6 +1107,8 @@ struct ArenaScenarioRunner::Impl {
   QHash<QString, bool> rpg_swing_carry_open;
   QHash<QString, TravelObservation> rpg_travel_observations;
   QHash<QString, float> minimum_group_pair_distance;
+  QHash<QString, float> minimum_group_pair_standoff;
+  QHash<QString, float> minimum_group_pair_standoff_at;
   QHash<int, int> completed_construction_by_owner;
   QHash<int, int> completed_harvest_by_owner;
   QSet<Engine::Core::EntityID> latched_builder_completions;
@@ -3872,7 +3874,14 @@ struct ArenaScenarioRunner::Impl {
 
   void observe_group_pair_proximity(const TraceFrame& frame) {
     for (auto const& expectation : scenario.expectations) {
-      if (expectation.kind != ArenaExpectationKind::RpgApproachWithin) {
+      bool const keeps_apart =
+          expectation.kind == ArenaExpectationKind::GroupPairKeepsApart;
+      if (expectation.kind != ArenaExpectationKind::RpgApproachWithin && !keeps_apart) {
+        continue;
+      }
+      if (keeps_apart && (frame.time_seconds < expectation.start_seconds ||
+                          (expectation.end_seconds > 0.0F &&
+                           frame.time_seconds > expectation.end_seconds))) {
         continue;
       }
       float closest = std::numeric_limits<float>::infinity();
@@ -3893,10 +3902,14 @@ struct ArenaScenarioRunner::Impl {
       }
       const QString key =
           projectile_pair_key(expectation.group, expectation.target_group);
-      auto const existing = minimum_group_pair_distance.constFind(key);
-      if (existing == minimum_group_pair_distance.cend() ||
-          closest < existing.value()) {
-        minimum_group_pair_distance[key] = closest;
+      auto& minima =
+          keeps_apart ? minimum_group_pair_standoff : minimum_group_pair_distance;
+      auto const existing = minima.constFind(key);
+      if (existing == minima.cend() || closest < existing.value()) {
+        minima[key] = closest;
+        if (keeps_apart) {
+          minimum_group_pair_standoff_at[key] = frame.time_seconds;
+        }
       }
     }
   }
@@ -6624,6 +6637,26 @@ struct ArenaScenarioRunner::Impl {
                         .arg(closest.value(), 0, 'f', 2)
                         .arg(expectation.target_group)
                         .arg(required, 0, 'f', 2));
+        }
+        break;
+      }
+      case ArenaExpectationKind::GroupPairKeepsApart: {
+        const QString key =
+            projectile_pair_key(expectation.group, expectation.target_group);
+        auto const closest = minimum_group_pair_standoff.constFind(key);
+        if (closest == minimum_group_pair_standoff.cend()) {
+          add_issue(QStringLiteral("group_pair_not_sampled"),
+                    QStringLiteral("%1 and %2 were never sampled together")
+                        .arg(expectation.group, expectation.target_group));
+        } else if (closest.value() < expectation.distance) {
+          add_issue(QStringLiteral("group_pair_interpenetrated"),
+                    QStringLiteral("%1 came within %2 m of %3 at %4 s but has to "
+                                   "keep %5 m apart")
+                        .arg(expectation.group)
+                        .arg(closest.value(), 0, 'f', 2)
+                        .arg(expectation.target_group)
+                        .arg(minimum_group_pair_standoff_at.value(key), 0, 'f', 2)
+                        .arg(expectation.distance, 0, 'f', 2));
         }
         break;
       }

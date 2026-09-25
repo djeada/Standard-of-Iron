@@ -2163,7 +2163,7 @@ auto apply_ground_stance_for_profile(Render::GL::HumanoidPoseController& ctrl,
   return false;
 }
 
-void restore_leg_lengths(Render::GL::HumanoidPose& pose) {
+void restore_leg_lengths(Render::GL::HumanoidPose& pose, bool knees_over_toes) {
   using HP = Render::GL::HumanProportions;
   constexpr float k_length_tolerance = 0.03F;
   constexpr int k_hip_iterations = 4;
@@ -2180,15 +2180,47 @@ void restore_leg_lengths(Render::GL::HumanoidPose& pose) {
       return std::abs(thigh - 1.0F) <= k_length_tolerance &&
              std::abs(shin - 1.0F) <= k_length_tolerance;
     };
-    if (lengths_hold()) {
+    auto hinges_forward = [&]() {
+      QVector3D const hip = skeleton_hip(knee);
+      QVector3D const line = foot - hip;
+      float const t = std::clamp(QVector3D::dotProduct(knee - hip, line) /
+                                     std::max(1.0e-6F, line.lengthSquared()),
+                                 0.0F,
+                                 1.0F);
+      QVector3D const off = knee - (hip + line * t);
+      constexpr float k_straight_leg_slack = 0.08F;
+      return off.z() >= -0.02F &&
+             off.x() * lateral_sign <= std::max(k_straight_leg_slack, off.z() * 0.25F);
+    };
+    if (lengths_hold() && (!knees_over_toes || hinges_forward())) {
       return;
     }
+    // A knee only hinges forward, tracking over the toes. Once the pelvis
+    // drops into a lunge the authored knee sits almost on the hip-to-foot
+    // line, and its offset from that line is a few centimetres pointing
+    // anywhere -- often sideways or backwards. Normalised, that noise flung
+    // the knee a third of a metre out to the side (the commander's slash,
+    // thrust, finisher and dive all squatted frog-legged) or folded it
+    // backwards. So the authored offset only chooses how the knee leans
+    // within the leg's own forward plane: it may not point backwards, and it
+    // may turn out no further than a knee over the toes does.
+    constexpr float k_min_forward_bend = 0.04F;
+    constexpr float k_max_outward_per_forward = 0.25F;
     QVector3D const authored_knee = knee;
     for (int round = 0; round < k_hip_iterations; ++round) {
       QVector3D const hip = skeleton_hip(knee);
       QVector3D bend = authored_knee - (hip + foot) * 0.5F;
-      if (bend.lengthSquared() < 1.0e-6F) {
+      float const forward = bend.z();
+      float const outward = bend.x() * lateral_sign;
+      if (!knees_over_toes) {
+        if (bend.lengthSquared() < 1.0e-6F) {
+          bend = QVector3D(lateral_sign * 0.24F, 0.0F, 0.95F);
+        }
+      } else if (forward < k_min_forward_bend) {
         bend = QVector3D(lateral_sign * 0.24F, 0.0F, 0.95F);
+      } else {
+        float const limit = forward * k_max_outward_per_forward;
+        bend.setX(lateral_sign * std::clamp(outward, -limit, limit));
       }
       knee = Render::Humanoid::PosePrimitives::solve_knee_ik(
           hip,
@@ -2614,7 +2646,10 @@ void bake_humanoid_clip_frame(BakeProfile profile,
   if (clip.death_collapse == Animation::HumanoidDeathCollapse::None &&
       clip.riding_type == BakerRidingType::None &&
       clip.showcase_type == BakerShowcaseType::None) {
-    restore_leg_lengths(pose);
+    // Only the commander moves are held to it: the skeleton builds its hip
+    // line from the knees, so pulling in a walk's or a run's knees swings
+    // the pelvis round by up to 90 degrees between frames.
+    restore_leg_lengths(pose, is_rpg_sword_clip(clip) || is_rpg_spear_clip(clip));
   }
 
   bool const shield_axis_applied = hold_shield_upright(profile, pose);

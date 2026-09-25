@@ -26,8 +26,71 @@
 #include "game/systems/troop_count_registry.h"
 #include "game/systems/victory_service.h"
 #include "render/scene_renderer.h"
+#include "render/world_view.h"
 #include "scene/camera.h"
 #include "utils/resource_utils.h"
+
+void prewarm_match_render_templates(Engine::Core::World& world,
+                                    const AppSceneContext& scene,
+                                    LoadingProgressTracker* progress_tracker) {
+  if (scene.renderer == nullptr) {
+    return;
+  }
+  const Engine::Core::ScopedStartupPhase prewarm_phase("render.template_prewarm");
+  // The prewarm reads the match roster (nations, owners, troop profiles)
+  // through the renderer's world view, and it ends by forbidding render-time
+  // bakes. The first frame, which would otherwise bind the view, only comes
+  // after the load, so without this a unit type that is not already standing
+  // on the map is never baked and is invisible when it is trained later.
+  auto& session =
+      scene.session != nullptr ? *scene.session : Game::Session::session_for(world);
+  scene.renderer->set_world_view(Render::WorldView::of(session));
+  scene.renderer->prewarm_unit_templates(
+      &world,
+      [progress_tracker](
+          const Render::GL::Renderer::TemplatePrewarmProgress& progress) -> bool {
+        if (progress_tracker == nullptr) {
+          return true;
+        }
+
+        QString detail;
+        using Phase = Render::GL::Renderer::TemplatePrewarmProgress::Phase;
+        switch (progress.phase) {
+        case Phase::CollectingProfiles:
+          detail = QCoreApplication::translate(
+              "LevelOrchestrator", "Prewarming templates: scanning unit profiles...");
+          break;
+        case Phase::BuildingCoreTemplates:
+          detail = QCoreApplication::translate("LevelOrchestrator",
+                                               "Prewarming templates: %1 / %2")
+                       .arg(progress.completed)
+                       .arg(progress.total);
+          break;
+        case Phase::QueueingExtendedTemplates:
+          detail = QCoreApplication::translate(
+                       "LevelOrchestrator",
+                       "Queued deferred template warmup (%1 additional)")
+                       .arg(progress.total);
+          break;
+        case Phase::Completed:
+          detail =
+              QCoreApplication::translate(
+                  "LevelOrchestrator", "Template warmup complete (%1 core, %2 total)")
+                  .arg(progress.completed)
+                  .arg(progress.total);
+          break;
+        case Phase::Cancelled:
+          detail = QCoreApplication::translate("LevelOrchestrator",
+                                               "Template warmup cancelled");
+          break;
+        }
+
+        progress_tracker->set_stage(
+            LoadingProgressTracker::LoadingStage::INITIALIZING_SYSTEMS, detail);
+        QCoreApplication::processEvents();
+        return !progress_tracker->has_failed();
+      });
+}
 
 auto LevelOrchestrator::load_skirmish(const QString& map_path,
                                       const QVariantList& player_configs,
@@ -245,54 +308,7 @@ auto LevelOrchestrator::load_skirmish(const QString& map_path,
     Game::Systems::NavGrid::prewarm();
   }
 
-  if (scene.renderer != nullptr) {
-    const Engine::Core::ScopedStartupPhase prewarm_phase("render.template_prewarm");
-    scene.renderer->prewarm_unit_templates(
-        &world,
-        [progress_tracker](
-            const Render::GL::Renderer::TemplatePrewarmProgress& progress) -> bool {
-          if (progress_tracker == nullptr) {
-            return true;
-          }
-
-          QString detail;
-          using Phase = Render::GL::Renderer::TemplatePrewarmProgress::Phase;
-          switch (progress.phase) {
-          case Phase::CollectingProfiles:
-            detail = QCoreApplication::translate(
-                "LevelOrchestrator", "Prewarming templates: scanning unit profiles...");
-            break;
-          case Phase::BuildingCoreTemplates:
-            detail = QCoreApplication::translate("LevelOrchestrator",
-                                                 "Prewarming templates: %1 / %2")
-                         .arg(progress.completed)
-                         .arg(progress.total);
-            break;
-          case Phase::QueueingExtendedTemplates:
-            detail = QCoreApplication::translate(
-                         "LevelOrchestrator",
-                         "Queued deferred template warmup (%1 additional)")
-                         .arg(progress.total);
-            break;
-          case Phase::Completed:
-            detail =
-                QCoreApplication::translate(
-                    "LevelOrchestrator", "Template warmup complete (%1 core, %2 total)")
-                    .arg(progress.completed)
-                    .arg(progress.total);
-            break;
-          case Phase::Cancelled:
-            detail = QCoreApplication::translate("LevelOrchestrator",
-                                                 "Template warmup cancelled");
-            break;
-          }
-
-          progress_tracker->set_stage(
-              LoadingProgressTracker::LoadingStage::INITIALIZING_SYSTEMS, detail);
-          QCoreApplication::processEvents();
-          return !progress_tracker->has_failed();
-        });
-  }
+  prewarm_match_render_templates(world, scene, progress_tracker);
 
   if (progress_tracker != nullptr) {
     progress_tracker->set_stage(LoadingProgressTracker::LoadingStage::FINALIZING);

@@ -10,6 +10,7 @@
 #include "app/audio/audio_coordinator.h"
 #include "app/audio/audio_resource_loader.h"
 #include "app/persistence/game_state_restorer.h"
+#include "app/session/level_orchestrator.h"
 #include "app/world/visibility_coordinator.h"
 #include "game/core/world.h"
 #include "game/map/map_context.h"
@@ -316,6 +317,11 @@ auto SaveLoadCoordinator::load_from_slot(const LoadFromSlotContext& context) con
   if (context.restore_battle_stats) {
     context.restore_battle_stats(metadata.value("battle_stats").toObject());
   }
+
+  // Loading dropped every baked creature body with the render caches above.
+  // Bake them again for the restored roster; without this the barrier left by
+  // the previous match's prewarm keeps anything not yet baked off screen.
+  prewarm_match_render_templates(context.world, context.scene);
 
   AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Mission);
   context.audio_coordinator->configure_audio_manifest_mappings(

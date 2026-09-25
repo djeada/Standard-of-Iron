@@ -16,91 +16,53 @@
     },
     {
       "at": 0.8,
-      "action": "commander_enter"
+      "action": "commander_enter",
+      "argument": ""
     },
     {
       "at": 1.4,
-      "action": "commander_lock_on"
+      "action": "commander_lock_on",
+      "argument": ""
     },
     {
       "at": 2.0,
-      "action": "commander_attack"
+      "action": "commander_heavy",
+      "argument": ""
     },
     {
-      "at": 2.45,
-      "action": "commander_attack"
+      "at": 2.85,
+      "action": "commander_attack",
+      "argument": ""
     },
     {
-      "at": 2.9,
-      "action": "commander_attack"
+      "at": 7.0,
+      "action": "commander_attack",
+      "argument": ""
     },
     {
-      "at": 3.35,
-      "action": "commander_attack"
+      "at": 7.75,
+      "action": "commander_heavy",
+      "argument": ""
     },
     {
-      "at": 3.8,
-      "action": "commander_heavy"
+      "at": 8.35,
+      "action": "commander_jump",
+      "argument": ""
     },
     {
-      "at": 4.7,
-      "action": "commander_special"
+      "at": 8.8,
+      "action": "commander_heavy",
+      "argument": ""
     },
     {
-      "at": 5.6,
-      "action": "commander_attack"
+      "at": 12.2,
+      "action": "commander_special",
+      "argument": ""
     },
     {
-      "at": 6.05,
-      "action": "commander_attack"
-    },
-    {
-      "at": 6.5,
-      "action": "commander_attack"
-    },
-    {
-      "at": 6.95,
-      "action": "commander_vanguard"
-    },
-    {
-      "at": 7.85,
-      "action": "commander_jump"
-    },
-    {
-      "at": 8.75,
-      "action": "commander_attack"
-    },
-    {
-      "at": 9.2,
-      "action": "commander_special"
-    },
-    {
-      "at": 10.1,
-      "action": "commander_heavy"
-    },
-    {
-      "at": 11.0,
-      "action": "commander_attack"
-    },
-    {
-      "at": 11.45,
-      "action": "commander_attack"
-    },
-    {
-      "at": 11.9,
-      "action": "commander_attack"
-    },
-    {
-      "at": 12.35,
-      "action": "commander_attack"
-    },
-    {
-      "at": 12.8,
-      "action": "commander_special"
-    },
-    {
-      "at": 13.7,
-      "action": "commander_aura"
+      "at": 13.4,
+      "action": "commander_aura",
+      "argument": ""
     }
   ]
 }

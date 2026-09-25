@@ -27,6 +27,8 @@ set(RENDER_EQUIPMENT_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/tool_belt_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/arm_guards_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/cloak_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/sheet_mesh.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/commander_pauldron.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/commander_regalia.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/weapons/bow_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/weapons/quiver_renderer.cpp

@@ -3,10 +3,13 @@
 #include <QMatrix4x4>
 #include <QVector3D>
 
+#include <algorithm>
 #include <gtest/gtest.h>
 #include <unordered_set>
 #include <vector>
 
+#include "animation/bpat/bpat_reader.h"
+#include "animation/clip_manifest.h"
 #include "game/core/component_combat.h"
 #include "game/core/entity.h"
 #include "game/core/world.h"
@@ -14,6 +17,8 @@
 #include "game/systems/nation_registry.h"
 #include "game/systems/troop_profile_service.h"
 #include "render/creature/archetype_registry.h"
+#include "render/creature/pipeline/creature_asset.h"
+#include "render/creature/pipeline/creature_asset_init.h"
 #include "render/creature/pipeline/creature_prepared_state.h"
 #include "render/creature/pipeline/creature_render_graph.h"
 #include "render/creature/pipeline/creature_render_state.h"
@@ -23,10 +28,14 @@
 #include "render/creature/pipeline/unit_visual_spec.h"
 #include "render/creature/runtime_bake_guard.h"
 #include "render/elephant/elephant_spec.h"
+#include "render/entity/civilian_actor.h"
+#include "render/entity/civilian_actor_prewarm.h"
 #include "render/entity/registry.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/horse/horse_spec.h"
 #include "render/humanoid/asset/humanoid_spec.h"
+#include "render/humanoid/runtime/humanoid_renderer.h"
+#include "render/rigged_mesh_cache.h"
 #include "render/scene_renderer.h"
 #include "render/submitter.h"
 #include "render/template_prewarm_catalog.h"
@@ -1244,4 +1253,206 @@ TEST(TemplatePrewarmRegression, RuntimeBakePolicyIsRendererScoped) {
   EXPECT_TRUE(Render::Creature::runtime_bake_forbidden());
 
   Render::Creature::set_runtime_bake_forbidden(false);
+}
+
+namespace {
+
+auto rigged_asset_is_baked(Render::GL::Renderer& renderer,
+                           const Render::GL::HumanoidPrewarmTarget& target,
+                           CreatureLOD lod) -> bool {
+  auto& handles = CreatureRenderAssetHandleRegistry::instance();
+  const auto* handle =
+      handles.get(handles.get_or_create(target.asset, target.archetype));
+  if (handle == nullptr) {
+    return false;
+  }
+  for (const auto& playback : handle->playback) {
+    if (playback.blob != nullptr && playback.frame_count != 0U) {
+      return renderer.rigged_mesh_cache().find_rigged_asset(rigged_asset_key(
+                 *handle, lod, playback.blob->species_id())) != nullptr;
+    }
+  }
+  return false;
+}
+
+} // namespace
+
+TEST(TemplatePrewarmRegression, WorldPrewarmBakesBuilderToolsAndActorBodies) {
+  using Game::Systems::NationID;
+  using Game::Units::SpawnType;
+
+  // The shipped nations, so each builder profile names its own nation's renderer.
+  auto& nation_registry = Game::Systems::NationRegistry::instance();
+  nation_registry.clear();
+  nation_registry.register_default_nations();
+
+  Render::GL::Renderer renderer(Render::ShaderQuality::None);
+  ASSERT_TRUE(renderer.initialize());
+
+  // Only archers stand on the map: no builder or civilian is in the roster, yet
+  // siege crews, farm hands and trained work gangs are drawn from their bodies.
+  Engine::Core::World world;
+  Engine::Core::Entity* roman = world.create_entity();
+  ASSERT_NE(roman, nullptr);
+  add_test_unit(
+      *roman, SpawnType::Archer, NationID::RomanRepublic, 1, "troops/roman/archer");
+  Engine::Core::Entity* punic = world.create_entity();
+  ASSERT_NE(punic, nullptr);
+  add_test_unit(
+      *punic, SpawnType::Archer, NationID::Carthage, 2, "troops/carthage/archer");
+
+  renderer.set_world_view(
+      Render::WorldView::of(Game::Session::SessionContext::active()));
+  renderer.prewarm_unit_templates(&world);
+
+  Render::GL::EntityRendererRegistry registry;
+  Render::GL::register_built_in_entity_renderers(registry);
+  const bool actors_use_minimal = Render::GL::civilian_actor_minimal_lod_allowed();
+
+  for (const char* renderer_id : {"troops/roman/builder", "troops/carthage/builder"}) {
+    SCOPED_TRACE(renderer_id);
+    const auto* builder = dynamic_cast<const Render::GL::HumanoidRendererBase*>(
+        registry.get_preparer(registry.get_handle(renderer_id)));
+    ASSERT_NE(builder, nullptr);
+    const auto& spec = builder->visual_spec();
+    ASSERT_NE(spec.animation_manifest.variant_table, nullptr);
+
+    auto const targets = Render::GL::variant_table_prewarm_targets(spec);
+    // Every tool a construction job or a seed can hand the builder: build
+    // (hammer, saw, chisel), timber (hammer), stone and butchery (kneeling
+    // chisel) and the harvest (sickle).
+    for (auto const job : {Animation::HumanoidWorkJob::Build,
+                           Animation::HumanoidWorkJob::Chop,
+                           Animation::HumanoidWorkJob::Quarry,
+                           Animation::HumanoidWorkJob::Reap,
+                           Animation::HumanoidWorkJob::Butcher}) {
+      auto const role = Animation::humanoid_construction_role_for_job(job);
+      auto const index = Animation::humanoid_construction_variant_for_role(role);
+      auto const archetype =
+          spec.animation_manifest.variant_table->archetype_for_variant[index];
+      ASSERT_NE(archetype, Render::Creature::k_invalid_archetype);
+      EXPECT_TRUE(std::any_of(
+          targets.begin(),
+          targets.end(),
+          [&](const auto& target) { return target.archetype == archetype; }))
+          << "job " << static_cast<int>(job);
+    }
+    for (std::uint8_t index = 0;
+         index < spec.animation_manifest.variant_table->variant_stride;
+         ++index) {
+      auto const archetype =
+          spec.animation_manifest.variant_table->archetype_for_variant[index];
+      EXPECT_TRUE(std::any_of(
+          targets.begin(),
+          targets.end(),
+          [&](const auto& target) { return target.archetype == archetype; }))
+          << "variant " << static_cast<int>(index);
+    }
+    for (const auto& target : targets) {
+      EXPECT_TRUE(rigged_asset_is_baked(renderer, target, CreatureLOD::Full))
+          << "archetype " << target.archetype;
+    }
+  }
+
+  auto const actors = Render::GL::civilian_actor_prewarm_targets();
+  // Crew, townsfolk and priest rigs of both nations, the farm hands and the
+  // resident with the bowl.
+  EXPECT_GE(actors.size(), 12U);
+  for (bool const carthage : {false, true}) {
+    auto const& crew = Render::GL::nation_crew_rig(carthage);
+    ASSERT_TRUE(crew.valid());
+    EXPECT_TRUE(std::any_of(actors.begin(), actors.end(), [&](const auto& target) {
+      return target.archetype == crew.idle;
+    }));
+  }
+  for (const auto& target : actors) {
+    EXPECT_TRUE(rigged_asset_is_baked(renderer, target, CreatureLOD::Full))
+        << "archetype " << target.archetype;
+    if (actors_use_minimal) {
+      EXPECT_TRUE(rigged_asset_is_baked(renderer, target, CreatureLOD::Minimal))
+          << "archetype " << target.archetype;
+    }
+  }
+
+  renderer.shutdown();
+  Render::Creature::set_runtime_bake_forbidden(false);
+  Game::Systems::TroopProfileService::instance().clear();
+  nation_registry.clear();
+}
+
+TEST(TemplatePrewarmRegression, WorldPrewarmBakesRosterTroopsNotYetOnTheMap) {
+  using Game::Systems::NationID;
+  using Game::Units::SpawnType;
+
+  auto& nation_registry = Game::Systems::NationRegistry::instance();
+  nation_registry.clear();
+  nation_registry.register_default_nations();
+
+  Render::GL::Renderer renderer(Render::ShaderQuality::None);
+  ASSERT_TRUE(renderer.initialize());
+
+  // Archers alone stand on the map at load; everything below is trained later.
+  Engine::Core::World world;
+  Engine::Core::Entity* roman = world.create_entity();
+  ASSERT_NE(roman, nullptr);
+  add_test_unit(
+      *roman, SpawnType::Archer, NationID::RomanRepublic, 1, "troops/roman/archer");
+  Engine::Core::Entity* punic = world.create_entity();
+  ASSERT_NE(punic, nullptr);
+  add_test_unit(
+      *punic, SpawnType::Archer, NationID::Carthage, 2, "troops/carthage/archer");
+
+  renderer.set_world_view(
+      Render::WorldView::of(Game::Session::SessionContext::active()));
+  renderer.prewarm_unit_templates(&world);
+  Render::Creature::set_runtime_bake_forbidden(true);
+
+  Render::GL::EntityRendererRegistry registry;
+  Render::GL::register_built_in_entity_renderers(registry);
+
+  struct Trained {
+    SpawnType spawn_type;
+    NationID nation;
+    const char* renderer_id;
+  };
+  std::uint32_t scratch_id = 9100;
+  for (const Trained& trained :
+       {Trained{
+            SpawnType::HorseArcher, NationID::Carthage, "troops/carthage/horse_archer"},
+        Trained{SpawnType::HorseSpearman,
+                NationID::Carthage,
+                "troops/carthage/horse_spearman"},
+        Trained{SpawnType::Spearman, NationID::RomanRepublic, "troops/roman/spearman"},
+        Trained{SpawnType::Healer, NationID::RomanRepublic, "troops/roman/healer"}}) {
+    SCOPED_TRACE(trained.renderer_id);
+    const auto fn = registry.get(trained.renderer_id);
+    ASSERT_TRUE(static_cast<bool>(fn));
+
+    Engine::Core::StandaloneEntity scratch(scratch_id++);
+    Engine::Core::Entity& unit = scratch.entity();
+    add_test_unit(unit, trained.spawn_type, trained.nation, 1, trained.renderer_id);
+
+    renderer.rigged_mesh_cache().reset_frame_stats();
+    Render::GL::DrawContext ctx{
+        renderer.resources(), &unit, nullptr, renderer.world_view(), QMatrix4x4()};
+    ctx.renderer_id = trained.renderer_id;
+    ctx.backend = renderer.backend();
+    ctx.allow_template_cache = true;
+    ctx.force_humanoid_lod = true;
+    ctx.forced_humanoid_lod = CreatureLOD::Full;
+    ctx.force_quadruped_lod = true;
+    ctx.forced_quadruped_lod = CreatureLOD::Full;
+    ctx.has_variant_override = true;
+    ctx.variant_override = 0;
+    fn(ctx, renderer);
+
+    const auto& stats = renderer.rigged_mesh_cache().frame_stats();
+    EXPECT_EQ(stats.misses, 0U);
+    EXPECT_GT(stats.hits, 0U);
+  }
+
+  renderer.shutdown();
+  Render::Creature::set_runtime_bake_forbidden(false);
+  Game::Systems::TroopProfileService::instance().clear();
+  nation_registry.clear();
 }

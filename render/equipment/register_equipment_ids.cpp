@@ -53,6 +53,7 @@ void register_equipment_ids(EquipmentRegistry& registry) {
   registry.register_equipment_id(EquipmentCategory::Armor, "carthage_linothorax");
   registry.register_equipment_id(EquipmentCategory::Armor, "carthage_gilded_scale");
   registry.register_equipment_id(EquipmentCategory::Armor, "roman_shoulder_cover");
+  registry.register_equipment_id(EquipmentCategory::Armor, "commander_pauldron");
   registry.register_equipment_id(EquipmentCategory::Armor,
                                  "roman_shoulder_cover_cavalry");
   registry.register_equipment_id(EquipmentCategory::Armor, "roman_greaves");

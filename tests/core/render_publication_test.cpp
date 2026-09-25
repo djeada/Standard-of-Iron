@@ -2,6 +2,7 @@
 #include <memory>
 #include <vector>
 
+#include "game/core/component_combat.h"
 #include "game/core/component_presentation.h"
 #include "game/core/world.h"
 #include "game/session/session_context.h"
@@ -109,4 +110,36 @@ TEST(RenderPublicationTest, PublicationIsSkippedRatherThanAllocatingAnotherWorld
       << "a reader holding every buffer must apply back-pressure, not force a new "
          "World to be allocated";
   EXPECT_LE(stats.publications, 8U);
+}
+
+TEST(RenderPublicationTest, CommanderStrikeCuesReachTheRenderer) {
+  // The swing arcs and impact bursts of a commander's authored strikes live on
+  // CommanderSignaturePresentationComponent. The game draws from the render
+  // snapshot, so a cue that is not copied there shows in the arena, which
+  // draws the live world, and never in a match.
+  Game::Session::SessionContext session;
+  const Game::Session::ScopedSession scope(session);
+  World& world = session.world();
+  world.request_render_snapshots(true);
+
+  auto* entity = world.create_entity();
+  entity->add_component<TransformComponent>();
+  entity->add_component<UnitComponent>();
+  entity->add_component<RenderableComponent>();
+  auto* cues =
+      entity->add_component<Engine::Core::CommanderSignaturePresentationComponent>();
+  cues->entries.emplace_back();
+  cues->entries.back().cue = Engine::Core::CommanderStrikeCue::Swing;
+  world.update(1.0F / 60.0F);
+
+  auto snapshot = world.acquire_render_snapshot();
+  ASSERT_NE(snapshot, nullptr);
+  auto* copied = snapshot->get_entity(entity->get_id());
+  ASSERT_NE(copied, nullptr);
+  const auto* copied_cues =
+      copied->get_component<Engine::Core::CommanderSignaturePresentationComponent>();
+  ASSERT_NE(copied_cues, nullptr)
+      << "commander strike cues never reach the renderer in the real game";
+  ASSERT_EQ(copied_cues->entries.size(), 1U);
+  EXPECT_EQ(copied_cues->entries.front().cue, Engine::Core::CommanderStrikeCue::Swing);
 }

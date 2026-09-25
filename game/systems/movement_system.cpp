@@ -21,6 +21,7 @@
 #include "command_service.h"
 #include "core/component_economy.h"
 #include "defensive_unit_layout_service.h"
+#include "duel_spacing.h"
 #include "formation_combat_geometry.h"
 #include "game/core/nav_profile.h"
 #include "nav_grid.h"
@@ -45,13 +46,6 @@ constexpr float k_duel_measure_advance = 0.17F;
 constexpr float k_duel_measure_retreat = -0.11F;
 constexpr float k_duel_measure_breath = 0.05F;
 constexpr float k_duel_measure_breath_period_seconds = 3.4F;
-constexpr float k_duel_min_separation = 0.55F;
-constexpr float k_duel_base_separation_fraction = 0.70F;
-constexpr float k_duel_base_separation_min = 0.85F;
-constexpr float k_duel_base_separation_max = 1.70F;
-
-constexpr float k_duel_body_clearance_per_scale = 0.90F;
-constexpr float k_duel_body_min_per_scale = 0.70F;
 constexpr float desired_yaw_turn_speed_degrees = 720.0F;
 
 constexpr float k_formation_heading_min_speed = 0.4F;
@@ -532,22 +526,6 @@ void MovementSystem::repath_after_obstruction_release(
 
 namespace {
 
-[[nodiscard]] auto duel_footwork_body(const Engine::Core::Entity& entity) -> bool {
-  if (entity.has_component<Engine::Core::BuildingComponent>() ||
-      entity.has_component<Engine::Core::ElephantComponent>()) {
-    return false;
-  }
-
-  if (entity.has_component<Engine::Core::WildlifeComponent>()) {
-    return false;
-  }
-  auto const* unit = entity.get_component<Engine::Core::UnitComponent>();
-  if (unit == nullptr || Game::Units::is_cavalry(unit->spawn_type)) {
-    return false;
-  }
-  return !FormationCombat::has_formation_slots(entity);
-}
-
 [[nodiscard]] auto duel_measure_target(const Engine::Core::Entity& entity,
                                        float clock,
                                        float breath_phase) -> float {
@@ -883,12 +861,12 @@ auto MovementSystem::apply_duel_footwork(Engine::Core::Entity* entity,
                                          Engine::Core::TransformComponent& transform,
                                          Engine::Core::AttackComponent& attack,
                                          float delta_time) const -> bool {
-  if (world == nullptr || !duel_footwork_body(*entity)) {
+  if (world == nullptr || !DuelSpacing::is_duel_body(*entity)) {
     return false;
   }
 
   auto* opponent = world->get_entity(attack.melee_lock_target_id);
-  if (opponent == nullptr || !duel_footwork_body(*opponent)) {
+  if (opponent == nullptr || !DuelSpacing::is_duel_body(*opponent)) {
     return false;
   }
 
@@ -933,23 +911,10 @@ auto MovementSystem::apply_duel_footwork(Engine::Core::Entity* entity,
                                2.0F * std::numbers::pi_v<float>;
     float const advance = duel_measure_target(*entity, m_duel_clock, breath_phase);
 
-    float const own_reach = attack.melee_range;
-    float const opponent_reach =
-        opponent_attack != nullptr ? opponent_attack->melee_range : own_reach;
-    float const body_scales =
-        std::max(0.0F, transform.scale.x) + std::max(0.0F, opponent_transform->scale.x);
-
-    float const weapon_span = std::min(own_reach, opponent_reach);
-    float const base_separation =
-        std::max(std::clamp(0.5F * (own_reach + opponent_reach) *
-                                k_duel_base_separation_fraction,
-                            k_duel_base_separation_min,
-                            k_duel_base_separation_max),
-                 std::min(body_scales * k_duel_body_clearance_per_scale, weapon_span));
-    float const min_separation =
-        std::max(k_duel_min_separation, body_scales * k_duel_body_min_per_scale);
+    auto const standoff = DuelSpacing::standoff_between(*entity, *opponent);
+    float const min_separation = standoff.minimum;
     float const desired_separation =
-        std::max(min_separation, base_separation - advance);
+        std::max(min_separation, standoff.preferred - advance);
     float const to_x = opponent_transform->position.x - transform.position.x;
     float const to_z = opponent_transform->position.z - transform.position.z;
     float const separation = std::hypot(to_x, to_z);

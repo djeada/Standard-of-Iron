@@ -83,17 +83,21 @@ void apply_knockback_step(Engine::Core::Entity& unit,
   float const total_z =
       feedback.knockback_z * knockback_travel_scale(feedback.reaction_kind);
   float const total = std::hypot(total_x, total_z);
-  if (total <= 0.0005F || !knockback_moves_body(unit, feedback)) {
-    return;
-  }
-  auto* transform = unit.get_component<Engine::Core::TransformComponent>();
-  if (transform == nullptr) {
+  if (total <= 0.0005F) {
     return;
   }
   float const clamped = std::clamp(progress, 0.0F, 1.0F);
   float const remaining = 1.0F - clamped;
   float const eased = 1.0F - remaining * remaining * remaining;
   float const desired = eased * total;
+  auto* transform = unit.get_component<Engine::Core::TransformComponent>();
+  if (transform == nullptr || !knockback_moves_body(unit, feedback)) {
+    // The part of the shove that could not move the body -- it was walking,
+    // or held its ground -- is forfeit. Carried over, it landed all at once
+    // the tick the body stopped: a 0.27 m jump in a single frame.
+    feedback.knockback_applied = std::max(feedback.knockback_applied, desired);
+    return;
+  }
   float const step = desired - feedback.knockback_applied;
   if (step <= 0.0F) {
     return;

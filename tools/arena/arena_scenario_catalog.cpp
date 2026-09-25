@@ -2552,6 +2552,100 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
 
   {
     auto s = definition(
+        QString::fromLatin1(k_rpg_commander_duel_standoff_id),
+        QStringLiteral("RPG Commander Duel Standoff"),
+        QStringLiteral(
+            "Scipio in direct control, locked on to Hannibal, runs his whole sword "
+            "grammar -- gap closer, light chain, launcher, radial special, air "
+            "attack and dive -- while Hannibal fights back. The two bodies have "
+            "to keep a sword's reach apart the whole time instead of standing "
+            "inside each other."),
+        13.0F,
+        {7.5F, 30.0F, 90.0F});
+    s.rpg_mode = true;
+    s.rpg_commander_group = QStringLiteral("rpg_commander");
+    s.suppress_terrain_scatter = true;
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.camera_focus = QVector3D(0.0F, 0.9F, 0.0F);
+    auto commander = group(QStringLiteral("rpg_commander"),
+                           Troop::RomanVeteranConsul,
+                           1,
+                           1,
+                           {0.0F, 0.0F, -3.0F},
+                           1);
+    commander.facing_degrees = 0.0F;
+    commander.health_override = commander.max_health_override = 9000;
+    auto hannibal = group(QStringLiteral("hannibal"),
+                          Troop::CarthageSwordCommander,
+                          2,
+                          1,
+                          {0.0F, 0.0F, 3.0F},
+                          1);
+    hannibal.facing_degrees = 180.0F;
+    hannibal.health_override = hannibal.max_health_override = 9000;
+    s.groups = {commander, hannibal};
+    s.steps = {
+        at(0.30F,
+           Command::Attack,
+           QStringLiteral("hannibal"),
+           QStringLiteral("rpg_commander")),
+        at(0.60F, Command::RpgCycleLockOn, QStringLiteral("rpg_commander")),
+        // One second ahead of the Steam duel fixture (duel.action.json),
+        // press for press, so this scenario proves the film's combo lands.
+        // The pause is stamina (200 to start, 30 a light, 50 a heavy): the
+        // launcher, air cut and dive need about 170 in one breath.
+        at(1.00F, Command::RpgHeavyAttack, QStringLiteral("rpg_commander")),
+        at(1.85F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+        at(6.00F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+        at(6.75F, Command::RpgHeavyAttack, QStringLiteral("rpg_commander")),
+        at(7.35F, Command::RpgJump, QStringLiteral("rpg_commander")),
+        at(7.80F, Command::RpgHeavyAttack, QStringLiteral("rpg_commander")),
+        at(11.20F, Command::RpgSpecial, QStringLiteral("rpg_commander")),
+    };
+    {
+      // A sword's reach apart, measured centre to centre: never inside
+      // each other, however hard the combo drives Scipio forward.
+      auto apart = expectation(Expect::GroupPairKeepsApart,
+                               QStringLiteral("rpg_commander"),
+                               QStringLiteral("hannibal"),
+                               0.0F,
+                               1.0F,
+                               1.10F);
+      s.expectations.push_back(apart);
+    }
+    s.expectations.push_back(expectation(Expect::RpgApproachWithin,
+                                         QStringLiteral("rpg_commander"),
+                                         QStringLiteral("hannibal"),
+                                         0.0F,
+                                         0.0F,
+                                         2.0F));
+    s.expectations.push_back(
+        expectation(Expect::AttackAnimationObserved, QStringLiteral("rpg_commander")));
+    s.expectations.push_back(
+        expectation(Expect::AttackAnimationObserved, QStringLiteral("hannibal")));
+    s.expectations.push_back(
+        expectation(Expect::GroupHealthReduced, QStringLiteral("hannibal")));
+    using Action = Game::Systems::CombatActions::CombatActionId;
+    s.expectations.push_back(commander_action_expectation(
+        QStringLiteral("rpg_commander"), Action::CommanderSwordGapCloser, 0.9F, 1.9F));
+    s.expectations.push_back(commander_action_expectation(
+        QStringLiteral("rpg_commander"), Action::RpgSwordSlashLeft, 1.8F, 2.7F));
+    s.expectations.push_back(commander_action_expectation(
+        QStringLiteral("rpg_commander"), Action::CommanderSwordLauncher, 6.6F, 7.7F));
+    s.expectations.push_back(commander_action_expectation(
+        QStringLiteral("rpg_commander"), Action::CommanderSwordAirLight, 7.2F, 8.2F));
+    s.expectations.push_back(commander_action_expectation(
+        QStringLiteral("rpg_commander"), Action::CommanderSwordDive, 7.6F, 9.2F));
+    s.expectations.push_back(commander_action_expectation(
+        QStringLiteral("rpg_commander"), Action::CommanderSwordSpin, 11.1F, 12.4F));
+    s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
         QString::fromLatin1(k_rpg_commander_spear_grammar_id),
         QStringLiteral("RPG Commander Spear Grammar"),
         QStringLiteral(

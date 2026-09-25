@@ -17,6 +17,7 @@
 #include "../combat_actions/projectile_release.h"
 #include "../combat_actions/weapon_trace.h"
 #include "../combat_rules.h"
+#include "../duel_spacing.h"
 #include "../formation_combat_geometry.h"
 #include "../pathfinding.h"
 #include "../rpg_combat_system/rpg_bow_draw.h"
@@ -1095,9 +1096,16 @@ void apply_rts_commander_root_motion(
           std::max(0.0F, transform->scale.x) +
           (target_transform != nullptr ? std::max(0.0F, target_transform->scale.x)
                                        : std::max(0.0F, transform->scale.x));
-      float const stop_distance =
+      float stop_distance =
           std::max(nearest->body_radius + own_radius + 0.16F,
                    drawn_scales * k_rts_commander_lunge_clearance_per_scale);
+      if (Game::Systems::DuelSpacing::is_duel_body(*target)) {
+        // A lone opponent is met at a sword's reach, the same standoff the
+        // direct-control lunge and duel footwork keep.
+        stop_distance = std::max(
+            stop_distance,
+            Game::Systems::DuelSpacing::standoff_between(entity, *target).preferred);
+      }
       float const contact_gap = nearest_distance - stop_distance;
       allowed = std::clamp(step, 0.0F, std::max(0.0F, contact_gap));
     }

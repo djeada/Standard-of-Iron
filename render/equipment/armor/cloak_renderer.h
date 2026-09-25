@@ -31,9 +31,12 @@ struct CloakConfig {
   int shoulder_material_id = 6;
 };
 
+// One continuous cloth sheet: it rises over both shoulders from brooches at
+// the front of the collar, lies on the upper back and falls to the hem. It is
+// built per cloak shape because length, width and hang change the geometry,
+// not only its scale.
 struct CloakMeshes {
-  Mesh* back = nullptr;
-  Mesh* shoulder = nullptr;
+  Mesh* cloak = nullptr;
 };
 
 inline constexpr std::uint32_t k_cloak_role_count = 2;
@@ -52,7 +55,7 @@ auto cloak_make_static_attachment(const CloakConfig& config,
                                   std::uint8_t base_role_byte)
     -> Render::Creature::StaticAttachmentSpec;
 
-[[nodiscard]] auto shared_cloak_meshes() -> CloakMeshes;
+[[nodiscard]] auto shared_cloak_meshes(const CloakConfig& config) -> CloakMeshes;
 
 class CloakRenderer : public IEquipmentRenderer {
 public:

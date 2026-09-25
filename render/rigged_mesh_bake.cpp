@@ -435,6 +435,32 @@ auto draw_world_extent(const std::vector<Render::GL::Vertex>& vertices,
   return std::max({span.x(), span.y(), span.z()});
 }
 
+void apply_drape_blend(const AttachmentDrapeBlend& drape,
+                       std::uint8_t socket_bone,
+                       const QVector3D& bind_pos,
+                       Render::GL::RiggedVertex& rv) {
+  float const span = drape.top_y - drape.bottom_y;
+  if (span <= 1e-5F) {
+    return;
+  }
+  float t = std::clamp((drape.top_y - bind_pos.y()) / span, 0.0F, 1.0F);
+  t = t * t * (3.0F - 2.0F * t);
+  if (t <= 0.0F) {
+    return;
+  }
+  float const leg_share = std::clamp(drape.leg_share, 0.0F, 1.0F);
+  float const half = std::max(1e-4F, drape.leg_crossfade_half_width);
+  // The body's left is -x in bind space.
+  float side = std::clamp(0.5F + 0.5F * bind_pos.x() / half, 0.0F, 1.0F);
+  side = side * side * (3.0F - 2.0F * side);
+  float const to_legs = t * leg_share;
+  rv.bone_indices = {socket_bone,
+                     static_cast<std::uint8_t>(drape.pelvis_bone & 0xFFU),
+                     static_cast<std::uint8_t>(drape.leg_l_bone & 0xFFU),
+                     static_cast<std::uint8_t>(drape.leg_r_bone & 0xFFU)};
+  rv.bone_weights = {1.0F - t, t - to_legs, to_legs * (1.0F - side), to_legs * side};
+}
+
 void append_static_attachment(const StaticAttachmentSpec& spec,
                               CreatureLOD lod,
                               BakedRiggedMeshCpu& out) {
@@ -505,6 +531,9 @@ void append_static_attachment(const StaticAttachmentSpec& spec,
       rv.color_role = role;
       rv.bone_indices = {bone, 0, 0, 0};
       rv.bone_weights = {1.0F, 0.0F, 0.0F, 0.0F};
+      if (spec.drape.enabled) {
+        apply_drape_blend(spec.drape, bone, baked_pos, rv);
+      }
       out.vertices.push_back(rv);
     }
 

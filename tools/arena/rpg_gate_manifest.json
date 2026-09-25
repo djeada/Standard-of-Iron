@@ -155,6 +155,12 @@
       "notes": "Direct-control commander-only sword grammar: gap closer, launcher branch, radial special, aerial branch, dive, defensive cancel, and extended light chain."
     },
     {
+      "id": "rpg_commander_duel_standoff",
+      "status": "required_green",
+      "gate": "5",
+      "notes": "Direct-control Scipio against AI Hannibal. The two commanders keep at least 1.1 m centre to centre through the whole sword grammar (gap closer, light chain, launcher, air attack, dive, radial special): strike lunges stop at the standoff, and the AI measures its distance to a direct-control opponent."
+    },
+    {
       "id": "rpg_commander_spear_grammar",
       "status": "required_green",
       "gate": "5",

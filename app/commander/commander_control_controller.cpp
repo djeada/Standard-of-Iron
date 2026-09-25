@@ -34,6 +34,7 @@
 #include "game/systems/combat_system/damage_processor.h"
 #include "game/systems/combat_system/mounted_charge_processor.h"
 #include "game/systems/combat_system/target_rules.h"
+#include "game/systems/duel_spacing.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/pathfinding.h"
@@ -904,9 +905,14 @@ struct StrikeTarget {
   float dir_x{0.0F};
   float dir_z{0.0F};
   float distance{0.0F};
+  // Centre distance the lunge stops at. A soldier out of a formation is met
+  // body to body; a lone fighter -- above all another commander -- is met at
+  // a sword's reach so the two figures never stand inside one another.
+  float stop_distance{0.0F};
 };
 
 auto resolve_strike_target(Engine::Core::World& world,
+                           const Engine::Core::Entity* commander,
                            const Engine::Core::RpgCommanderActionComponent& action,
                            const Engine::Core::TransformComponent& transform)
     -> StrikeTarget {
@@ -938,10 +944,18 @@ auto resolve_strike_target(Engine::Core::World& world,
   if (distance <= 1.0e-4F) {
     return {};
   }
+  float stop_distance =
+      App::Core::CommanderMotor::body_radius() + k_strike_body_overlap_radius;
+  if (commander != nullptr && Game::Systems::DuelSpacing::is_duel_body(*target)) {
+    stop_distance = std::max(
+        stop_distance,
+        Game::Systems::DuelSpacing::standoff_between(*commander, *target).preferred);
+  }
   return {.valid = true,
           .dir_x = to_x / distance,
           .dir_z = to_z / distance,
-          .distance = distance};
+          .distance = distance,
+          .stop_distance = stop_distance};
 }
 
 void steer_strike_toward(
@@ -1019,7 +1033,7 @@ void CommanderControlController::apply_strike_lunge(
     return;
   }
 
-  auto const target = resolve_strike_target(world, *action, transform);
+  auto const target = resolve_strike_target(world, &commander, *action, transform);
   steer_strike_toward(*definition, *action, target, transform, dt);
 
   float const authored_distance = definition->movement.distance;
@@ -1096,8 +1110,7 @@ void CommanderControlController::apply_strike_lunge(
     dir_x = target.dir_x;
     dir_z = target.dir_z;
     float const remaining_authored = std::abs(authored_distance) * (1.0F - before);
-    float const gap = target.distance - App::Core::CommanderMotor::body_radius() -
-                      k_strike_body_overlap_radius;
+    float const gap = target.distance - target.stop_distance;
     if (gap > remaining_authored) {
       step += (gap - remaining_authored) * advanced;
     }

@@ -14,6 +14,7 @@ struct BodyContactDiagnostics {
   std::uint32_t pairs_resolved{0};
   std::uint32_t pushes_rejected{0};
   float deepest_overlap{0.0F};
+  std::uint32_t duel_standoffs_resolved{0};
 };
 
 class BodyContactSystem : public Engine::Core::System {
@@ -31,6 +32,10 @@ public:
 
   static constexpr float k_separation_speed = 2.0F;
   static constexpr float k_max_separation_step = 0.15F;
+
+  // How far a commander looks for a lone opponent standing inside his duel
+  // standoff; comfortably past DuelSpacing's widest minimum.
+  static constexpr float k_duel_scan_radius = 2.0F;
 
 private:
   BodyContactDiagnostics m_diagnostics;

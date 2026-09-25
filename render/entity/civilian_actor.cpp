@@ -96,6 +96,10 @@ auto nation_civilian_rig(bool carthage) -> const NationCivilianRig& {
   return rigs()[carthage ? 1U : 0U];
 }
 
+auto civilian_actor_minimal_lod_allowed() -> bool {
+  return Render::GraphicsSettings::instance().creature_lod_enabled();
+}
+
 void begin_civilian_actors() {
   batch().clear();
 }
@@ -112,10 +116,12 @@ void add_civilian_actor(const DrawContext& ctx,
   }
   Pipeline::CreatureGraphOutput output{};
 
-  output.lod =
-      actor.distant && Render::GraphicsSettings::instance().creature_lod_enabled()
-          ? CreatureLOD::Minimal
-          : CreatureLOD::Full;
+  // A small actor drops to Minimal only where the preset uses creature LOD at
+  // all. High and Ultra draw every creature in full, and Minimal there has no
+  // prebaked snapshot to fall back on, so it would bake meshes per frame.
+  output.lod = actor.distant && civilian_actor_minimal_lod_allowed()
+                   ? CreatureLOD::Minimal
+                   : CreatureLOD::Full;
   output.pass_intent = Pipeline::RenderPassIntent::Main;
   output.seed = actor.seed;
 

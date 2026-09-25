@@ -336,6 +336,7 @@ enum class ArenaExpectationKind : std::uint8_t {
   RpgTravelObserved,
   RpgFormationSurvivesLensGap,
   RpgApproachWithin,
+  GroupPairKeepsApart,
   UndeadZoneDormantBefore,
   UndeadZoneAwakened,
   UndeadZoneCleared,

@@ -196,6 +196,7 @@
       "files": [
         "game/systems/cohort_system",
         "game/systems/defensive_unit_layout_service",
+        "game/systems/duel_spacing",
         "game/systems/formation_combat_geometry",
         "game/systems/combat_system/structure_combat"
       ],
