@@ -1,10 +1,10 @@
 #include "render/humanoid/runtime/skeleton_evaluator.h"
 
-#include <QQuaternion>
 #include <QVector3D>
 
 #include <algorithm>
 #include <cmath>
+#include <numbers>
 #include <span>
 
 #include "animation/rig/side.h"
@@ -27,8 +27,6 @@ struct HumanoidProviderContext {
   QVector3D body_up;
 };
 
-constexpr float k_shield_turn_sign = 1.0F;
-
 auto resolved_hand_axis(const Render::GL::HumanoidPose& pose,
                         Render::GL::Side side,
                         const QVector3D& body_up) noexcept -> QVector3D {
@@ -49,20 +47,38 @@ auto resolved_hand_axis(const Render::GL::HumanoidPose& pose,
   return axis;
 }
 
-auto shield_roll_hint(const Render::GL::HumanoidPose& pose,
-                      const QVector3D& hand_axis) noexcept -> QVector3D {
-  float const amount = std::clamp(pose.shield_face_forward, 0.0F, 1.0F);
-  if (amount <= 1.0e-3F) {
+auto shield_outward_hint(const Render::GL::HumanoidPose& pose,
+                         const QVector3D& pelvis,
+                         const QVector3D& neck_base) noexcept -> QVector3D {
+  if (!pose.shield_faces_outward) {
     return {};
   }
-  QVector3D right = pose.shoulder_r - pose.shoulder_l;
-  right.setY(0.0F);
-  right = right.lengthSquared() > 1.0e-8F ? right.normalized()
-                                          : QVector3D(1.0F, 0.0F, 0.0F);
-  constexpr float k_face_forward_degrees = 70.0F;
-  QQuaternion const turn = QQuaternion::fromAxisAndAngle(
-      hand_axis, k_shield_turn_sign * k_face_forward_degrees * amount);
-  return turn.rotatedVector(right);
+  QVector3D const spine = neck_base - pelvis;
+  float const along = std::clamp(QVector3D::dotProduct(pose.hand_l - pelvis, spine) /
+                                     std::max(spine.lengthSquared(), 1.0e-6F),
+                                 0.0F,
+                                 1.0F);
+  QVector3D outward = pose.hand_l - (pelvis + spine * along);
+  outward.setY(0.0F);
+  if (outward.lengthSquared() < 1.0e-6F) {
+    return {};
+  }
+  outward.normalize();
+
+  constexpr float k_flank_heading = std::numbers::pi_v<float>;
+  constexpr float k_free_turn = std::numbers::pi_v<float> / 3.0F;
+  float turn = std::atan2(outward.z(), outward.x()) - k_flank_heading;
+  if (turn > std::numbers::pi_v<float>) {
+    turn -= 2.0F * std::numbers::pi_v<float>;
+  } else if (turn < -std::numbers::pi_v<float>) {
+    turn += 2.0F * std::numbers::pi_v<float>;
+  }
+  if (std::abs(turn) <= k_free_turn) {
+    return {};
+  }
+  float const heading =
+      k_flank_heading + std::copysign(std::abs(turn) - k_free_turn, turn);
+  return {-std::cos(heading), 0.0F, -std::sin(heading)};
 }
 
 auto foot_up_axis(float pitch) noexcept -> QVector3D {
@@ -124,8 +140,7 @@ auto humanoid_provider(void* user,
     r.head = p->hand_l;
     r.tail = p->hand_l +
              resolved_hand_axis(*p, Render::GL::Side::Left, ctx->body_up) * 0.10F;
-    r.right_hint = shield_roll_hint(
-        *p, resolved_hand_axis(*p, Render::GL::Side::Left, ctx->body_up));
+    r.right_hint = shield_outward_hint(*p, ctx->pelvis, ctx->neck_base);
     break;
   case HumanoidBone::ShoulderR:
     r.kind = Creature::BoneBasisKind::FromParent;

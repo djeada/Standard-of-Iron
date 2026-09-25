@@ -432,12 +432,37 @@ auto resolve_unit_visual_spec(
   return spec;
 }
 
+namespace {
+
+auto holds_shield_to_the_threat(const UnitVisualSpec& spec,
+                                const Render::GL::AnimationInputs& anim,
+                                bool has_locomotion) -> bool {
+  if (!spec.capabilities.contains(
+          Render::Humanoid::HumanoidCapability::LeftHandShield) ||
+      anim.is_dying || anim.is_dead) {
+    return false;
+  }
+  if (anim.is_attacking) {
+    return anim.is_melee;
+  }
+  if (has_locomotion) {
+    return false;
+  }
+  if (anim.is_hit_reacting) {
+    return anim.hit_reaction_kind == Engine::Core::HitReactionKind::Block;
+  }
+  return anim.is_in_melee_lock && !anim.is_mounted;
+}
+
+} // namespace
+
 auto finalize_visible_humanoid_spec(UnitVisualSpec spec,
                                     const Render::GL::AnimationInputs& anim,
                                     bool has_locomotion) -> UnitVisualSpec {
-  if (Render::GL::guard_pose_amount(anim) > 0.0F &&
-      (anim.is_defensive_layout_locked || !has_locomotion) &&
-      (anim.is_defensive_layout_locked || !anim.is_attacking)) {
+  bool const guarding = Render::GL::guard_pose_amount(anim) > 0.0F &&
+                        (anim.is_defensive_layout_locked || !has_locomotion) &&
+                        (anim.is_defensive_layout_locked || !anim.is_attacking);
+  if (guarding || holds_shield_to_the_threat(spec, anim, has_locomotion)) {
     auto pose = anim.shield_formation_pose;
     if (pose == Render::GL::ShieldFormationPose::None) {
       pose = Render::GL::ShieldFormationPose::GuardDefault;

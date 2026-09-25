@@ -880,13 +880,13 @@ case roman_sword/run available 1 draws 6 meshes 0 requests 3
   socket roman_sword/run#5.10 1.000000 -0.000014 0.000049 0.000000 -0.000009 0.900529 0.434797 0.000000 -0.000050 -0.434797 0.900529 0.000000 0.148082 0.087143 -0.472411 1.000000
   socket roman_sword/run#5.11 1.000000 0.000182 0.000349 0.000000 -0.000131 0.990042 -0.140776 0.000000 -0.000372 0.140776 0.990042 0.000000 -0.147917 0.194817 0.203418 1.000000
 case roman_sword/attack available 1 draws 6 meshes 0 requests 3
-  request roman_sword/attack@0 archetype troops/roman/swordsman asset 3 variant 0 lod 0 pass 0 state 8 clip 12 clipvariant 2 roles 31 seed 1592594996 grounded 0
+  request roman_sword/attack@0 archetype troops/roman/swordsman_guard_shield asset 3 variant 0 lod 0 pass 0 state 8 clip 12 clipvariant 2 roles 31 seed 1592594996 grounded 0
   params roman_sword/attack@0 phase 0.451950 color 0.500000 0.500000 0.500000 wear 0.811213 0.658360 0.013718 0.265076
   requestworld roman_sword/attack@0 0.945059 0.000000 0.007645 0.000000 -0.000480 0.998751 0.059374 0.000000 -0.008075 -0.059346 0.998205 0.000000 -0.975134 0.000000 0.047290 1.000000
-  request roman_sword/attack@1 archetype troops/roman/swordsman asset 3 variant 0 lod 0 pass 0 state 8 clip 12 clipvariant 2 roles 31 seed 1592603116 grounded 0
+  request roman_sword/attack@1 archetype troops/roman/swordsman_guard_shield asset 3 variant 0 lod 0 pass 0 state 8 clip 12 clipvariant 2 roles 31 seed 1592603116 grounded 0
   params roman_sword/attack@1 phase 0.497450 color 0.500000 0.500000 0.500000 wear 0.811213 0.658360 0.013718 0.265076
   requestworld roman_sword/attack@1 1.015220 0.000000 0.004241 0.000000 -0.000433 1.017627 0.103576 0.000000 -0.004156 -0.101260 0.994851 0.000000 -0.022354 -0.000000 0.134111 1.000000
-  request roman_sword/attack@2 archetype troops/roman/swordsman asset 3 variant 0 lod 0 pass 0 state 8 clip 12 clipvariant 2 roles 31 seed 1592612228 grounded 0
+  request roman_sword/attack@2 archetype troops/roman/swordsman_guard_shield asset 3 variant 0 lod 0 pass 0 state 8 clip 12 clipvariant 2 roles 31 seed 1592612228 grounded 0
   params roman_sword/attack@2 phase 0.429200 color 0.500000 0.500000 0.500000 wear 0.811213 0.658360 0.013718 0.265076
   requestworld roman_sword/attack@2 0.903746 0.000000 0.002454 0.000000 -0.000093 1.028785 0.034341 0.000000 -0.002714 -0.033362 0.999440 0.000000 1.007417 -0.000000 0.013409 1.000000
   draw roman_sword/attack#0 topology 4824388095995588207 binding 14276080969778977336 bones 20 roles 31
@@ -2420,13 +2420,13 @@ case carthage_sword/guard available 1 draws 6 meshes 0 requests 3
   socket carthage_sword/guard#5.10 1.000000 -0.000000 -0.000000 0.000000 -0.000000 1.000000 -0.000000 0.000000 0.000000 0.000000 1.000000 0.000000 0.069438 0.000000 -0.478097 1.000000
   socket carthage_sword/guard#5.11 1.000000 0.000000 0.000000 0.000000 -0.000000 1.000000 -0.000000 0.000000 -0.000000 0.000000 1.000000 0.000000 -0.094438 0.000000 0.278616 1.000000
 case carthage_sword/attack available 1 draws 6 meshes 0 requests 3
-  request carthage_sword/attack@0 archetype troops/carthage/swordsman asset 3 variant 0 lod 0 pass 0 state 8 clip 12 clipvariant 2 roles 26 seed 1592594996 grounded 0
+  request carthage_sword/attack@0 archetype troops/carthage/swordsman_guard_shield asset 3 variant 0 lod 0 pass 0 state 8 clip 12 clipvariant 2 roles 26 seed 1592594996 grounded 0
   params carthage_sword/attack@0 phase 0.451950 color 0.500000 0.500000 0.500000 wear 0.811213 0.658360 0.013718 0.265076
   requestworld carthage_sword/attack@0 0.993134 -0.000000 0.058087 0.000000 -0.003607 1.039104 0.061670 0.000000 -0.058286 -0.059346 0.996534 0.000000 -1.042961 0.000000 0.004362 1.000000
-  request carthage_sword/attack@1 archetype troops/carthage/swordsman asset 3 variant 0 lod 0 pass 0 state 8 clip 12 clipvariant 2 roles 26 seed 1592603116 grounded 0
+  request carthage_sword/attack@1 archetype troops/carthage/swordsman_guard_shield asset 3 variant 0 lod 0 pass 0 state 8 clip 12 clipvariant 2 roles 26 seed 1592603116 grounded 0
   params carthage_sword/attack@1 phase 0.497450 color 0.500000 0.500000 0.500000 wear 0.811213 0.658360 0.013718 0.265076
   requestworld carthage_sword/attack@1 1.068176 0.000000 0.032238 0.000000 -0.003251 1.058743 0.107713 0.000000 -0.030011 -0.101260 0.994407 0.000000 -0.096752 0.000000 0.686550 1.000000
-  request carthage_sword/attack@2 archetype troops/carthage/swordsman asset 3 variant 0 lod 0 pass 0 state 8 clip 12 clipvariant 2 roles 26 seed 1592612228 grounded 0
+  request carthage_sword/attack@2 archetype troops/carthage/swordsman_guard_shield asset 3 variant 0 lod 0 pass 0 state 8 clip 12 clipvariant 2 roles 26 seed 1592612228 grounded 0
   params carthage_sword/attack@2 phase 0.429200 color 0.500000 0.500000 0.500000 wear 0.811213 0.658360 0.013718 0.265076
   requestworld carthage_sword/attack@2 0.951132 0.000000 0.018655 0.000000 -0.000701 1.070352 0.035722 0.000000 -0.019599 -0.033362 0.999251 0.000000 1.178614 0.000000 -0.044971 1.000000
   draw carthage_sword/attack#0 topology 2277892472574556900 binding 8926701712062308038 bones 20 roles 26
@@ -4840,13 +4840,13 @@ case roman_commander/idle available 1 draws 6 meshes 0 requests 3
   socket roman_commander/idle#5.10 1.000000 0.000000 0.000000 0.000000 0.000000 1.000000 0.000000 0.000000 0.000000 0.000000 1.000000 0.000000 0.000000 0.000000 0.000000 1.000000
   socket roman_commander/idle#5.11 1.000000 0.000000 0.000000 0.000000 0.000000 1.000000 0.000000 0.000000 0.000000 0.000000 1.000000 0.000000 0.000000 0.000000 0.000000 1.000000
 case roman_commander/attack available 1 draws 6 meshes 0 requests 3
-  request roman_commander/attack@0 archetype troops/roman/commanders/scipio_africanus asset 3 variant 0 lod 0 pass 0 state 8 clip 12 clipvariant 2 roles 31 seed 1592594996 grounded 0
+  request roman_commander/attack@0 archetype troops/roman/commanders/scipio_africanus_guard_shield asset 3 variant 0 lod 0 pass 0 state 8 clip 12 clipvariant 2 roles 31 seed 1592594996 grounded 0
   params roman_commander/attack@0 phase 0.451950 color 0.500000 0.500000 0.500000 wear 0.811213 0.658360 0.013718 0.265076
   requestworld roman_commander/attack@0 0.945059 0.000000 0.007645 0.000000 -0.000480 0.998751 0.059374 0.000000 -0.008075 -0.059346 0.998205 0.000000 -0.975134 0.000000 0.047290 1.000000
-  request roman_commander/attack@1 archetype troops/roman/commanders/scipio_africanus asset 3 variant 0 lod 0 pass 0 state 8 clip 12 clipvariant 2 roles 31 seed 1592603116 grounded 0
+  request roman_commander/attack@1 archetype troops/roman/commanders/scipio_africanus_guard_shield asset 3 variant 0 lod 0 pass 0 state 8 clip 12 clipvariant 2 roles 31 seed 1592603116 grounded 0
   params roman_commander/attack@1 phase 0.497450 color 0.500000 0.500000 0.500000 wear 0.811213 0.658360 0.013718 0.265076
   requestworld roman_commander/attack@1 1.015220 0.000000 0.004241 0.000000 -0.000433 1.017627 0.103576 0.000000 -0.004156 -0.101260 0.994851 0.000000 -0.022354 -0.000000 0.134111 1.000000
-  request roman_commander/attack@2 archetype troops/roman/commanders/scipio_africanus asset 3 variant 0 lod 0 pass 0 state 8 clip 12 clipvariant 2 roles 31 seed 1592612228 grounded 0
+  request roman_commander/attack@2 archetype troops/roman/commanders/scipio_africanus_guard_shield asset 3 variant 0 lod 0 pass 0 state 8 clip 12 clipvariant 2 roles 31 seed 1592612228 grounded 0
   params roman_commander/attack@2 phase 0.429200 color 0.500000 0.500000 0.500000 wear 0.811213 0.658360 0.013718 0.265076
   requestworld roman_commander/attack@2 0.903746 0.000000 0.002454 0.000000 -0.000093 1.028785 0.034341 0.000000 -0.002714 -0.033362 0.999440 0.000000 1.007417 -0.000000 0.013409 1.000000
   draw roman_commander/attack#0 topology 2724058666665016444 binding 9519947384580242282 bones 20 roles 31
@@ -5487,19 +5487,19 @@ case roman_mounted/attack available 1 draws 9 meshes 0 requests 6
   request roman_mounted/attack@0 archetype horse_base asset 1 variant 0 lod 0 pass 0 state 4 clip 65535 clipvariant 0 roles 8 seed 1592594996 grounded 1
   params roman_mounted/attack@0 phase 0.543983 color 0.500000 0.500000 0.500000 wear 0.000000 0.000000 0.000000 0.000000
   requestworld roman_mounted/attack@0 0.759931 0.000000 0.010246 0.000000 0.000000 0.800800 0.000000 0.000000 -0.013482 0.000000 0.999909 0.000000 0.015402 -0.284624 0.766802 1.000000
-  request roman_mounted/attack@1 archetype troops/roman/horse_swordsman/rider asset 3 variant 0 lod 0 pass 0 state 8 clip 21 clipvariant 0 roles 31 seed 1592594996 grounded 1
+  request roman_mounted/attack@1 archetype troops/roman/horse_swordsman/rider_guard_shield asset 3 variant 0 lod 0 pass 0 state 8 clip 21 clipvariant 0 roles 31 seed 1592594996 grounded 1
   params roman_mounted/attack@1 phase 0.536450 color 0.500000 0.500000 0.500000 wear 0.811213 0.658360 0.013718 0.265076
   requestworld roman_mounted/attack@1 0.759931 0.000000 0.010246 0.000000 -0.000368 0.800502 0.027283 0.000000 -0.013477 -0.021850 0.999537 0.000000 0.015216 -0.114087 0.780590 1.000000
   request roman_mounted/attack@2 archetype horse_base asset 1 variant 0 lod 0 pass 0 state 4 clip 65535 clipvariant 0 roles 8 seed 1592603116 grounded 1
   params roman_mounted/attack@2 phase 0.588201 color 0.500000 0.500000 0.500000 wear 0.000000 0.000000 0.000000 0.000000
   requestworld roman_mounted/attack@2 0.759982 0.000000 0.005291 0.000000 0.000000 0.800800 0.000000 0.000000 -0.006962 0.000000 0.999976 0.000000 -0.507178 -0.219302 -0.542087 1.000000
-  request roman_mounted/attack@3 archetype troops/roman/horse_swordsman/rider asset 3 variant 0 lod 0 pass 0 state 8 clip 21 clipvariant 0 roles 31 seed 1592603116 grounded 1
+  request roman_mounted/attack@3 archetype troops/roman/horse_swordsman/rider_guard_shield asset 3 variant 0 lod 0 pass 0 state 8 clip 21 clipvariant 0 roles 31 seed 1592603116 grounded 1
   params roman_mounted/attack@3 phase 0.445450 color 0.500000 0.500000 0.500000 wear 0.811213 0.658360 0.013718 0.265076
   requestworld roman_mounted/attack@3 0.759982 0.000000 0.005291 0.000000 -0.000239 0.800329 0.034301 0.000000 -0.006958 -0.027468 0.999387 0.000000 -0.507138 -0.080699 -0.547912 1.000000
   request roman_mounted/attack@4 archetype horse_base asset 1 variant 0 lod 0 pass 0 state 4 clip 65535 clipvariant 0 roles 8 seed 1592612228 grounded 1
   params roman_mounted/attack@4 phase 0.578551 color 0.500000 0.500000 0.500000 wear 0.000000 0.000000 0.000000 0.000000
   requestworld roman_mounted/attack@4 0.759992 0.000000 0.003440 0.000000 0.000000 0.800800 0.000000 0.000000 -0.004526 0.000000 0.999990 0.000000 0.505560 -0.284624 -0.565828 1.000000
-  request roman_mounted/attack@5 archetype troops/roman/horse_swordsman/rider asset 3 variant 0 lod 0 pass 0 state 8 clip 21 clipvariant 0 roles 31 seed 1592612228 grounded 1
+  request roman_mounted/attack@5 archetype troops/roman/horse_swordsman/rider_guard_shield asset 3 variant 0 lod 0 pass 0 state 8 clip 21 clipvariant 0 roles 31 seed 1592612228 grounded 1
   params roman_mounted/attack@5 phase 0.438950 color 0.500000 0.500000 0.500000 wear 0.811213 0.658360 0.013718 0.265076
   requestworld roman_mounted/attack@5 0.759992 0.000000 0.003440 0.000000 -0.000150 0.800363 0.033049 0.000000 -0.004523 -0.026466 0.999443 0.000000 0.505560 -0.135473 -0.565825 1.000000
   draw roman_mounted/attack#0 topology 3242970575873769263 binding 7897449695935931981 bones 50 roles 8
