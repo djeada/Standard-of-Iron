@@ -80,6 +80,9 @@ UndeadShrinePlacementTest.EveryShippedUndeadZoneCanPlaceItsShrine
 
 # campaign_tests
 CampaignContentIntegrationTest.*
+# Loads and simulates the harvest on every mission map on disk. It measured
+# 10.4 s on a pull-request runner against the 10 s fast budget.
+MissionAssetRulesTest.GatherObjectivesFitTheHarvestActuallyOnTheMap
 
 # render_tests
 BpatRegistry.*

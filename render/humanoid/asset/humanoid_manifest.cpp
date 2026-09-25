@@ -2235,12 +2235,17 @@ void restore_leg_lengths(Render::GL::HumanoidPose& pose, bool knees_over_toes) {
   restore(pose.knee_r, pose.foot_r, 1.0F);
 }
 
-auto shield_faces_forward(BakeProfile profile, const HumanoidClipSpec& clip) -> bool {
-  if (profile != BakeProfile::SwordReady && profile != BakeProfile::Skeleton) {
-    return false;
+auto shield_raised_to_front(BakeProfile profile, const HumanoidClipSpec& clip) -> bool {
+  if (clip.combat_pose_type == BakerCombatPoseType::ReadyStance ||
+      clip.combat_pose_type == BakerCombatPoseType::ReactBlock) {
+    return true;
   }
-  return clip.combat_pose_type == BakerCombatPoseType::ReadyStance ||
-         clip.combat_pose_type == BakerCombatPoseType::ReactBlock;
+  if (is_defensive_shield_hold(clip.hold_type) || is_rpg_sword_clip(clip) ||
+      clip.attack_type == BakerAttackType::Sword ||
+      clip.riding_type == BakerRidingType::SwordStrike) {
+    return true;
+  }
+  return profile == BakeProfile::SwordReady && clip.hold_type == BakerHoldType::Spear;
 }
 
 auto hold_shield_upright(BakeProfile profile, Render::GL::HumanoidPose& pose) -> bool {
@@ -2653,9 +2658,8 @@ void bake_humanoid_clip_frame(BakeProfile profile,
   }
 
   bool const shield_axis_applied = hold_shield_upright(profile, pose);
-  if (shield_faces_forward(profile, clip)) {
-    pose.shield_face_forward = 1.0F;
-  }
+  pose.shield_faces_outward =
+      profile == BakeProfile::SwordReady && !shield_raised_to_front(profile, clip);
 
   if (grip_oriented_by_stance || shield_axis_applied ||
       clip.showcase_type != BakerShowcaseType::None || is_rpg_sword_clip(clip) ||

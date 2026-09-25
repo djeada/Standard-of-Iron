@@ -11564,3 +11564,172 @@ TEST(HumanoidGuardShield, ShieldFrontFacesTheThreatInEveryGuardPose) {
     }
   }
 }
+
+namespace {
+
+auto closest_point_on_segment(const QVector3D& a,
+                              const QVector3D& b,
+                              const QVector3D& p) -> QVector3D {
+  QVector3D const ab = b - a;
+  float const t = std::clamp(QVector3D::dotProduct(p - a, ab) /
+                                 std::max(ab.lengthSquared(), 1.0e-6F),
+                             0.0F,
+                             1.0F);
+  return a + ab * t;
+}
+
+struct ShieldFacing {
+  QVector3D front;
+  float toward_holder{0.0F};
+};
+
+auto measure_shield_facing(const std::vector<QMatrix4x4>& palettes,
+                           const QMatrix4x4& local_offset) -> ShieldFacing {
+  constexpr auto k_pelvis =
+      static_cast<std::size_t>(Render::Humanoid::HumanoidBone::Pelvis);
+  constexpr auto k_neck =
+      static_cast<std::size_t>(Render::Humanoid::HumanoidBone::Neck);
+  QMatrix4x4 const bind_hand_inverse =
+      Render::Humanoid::humanoid_bind_palette()[k_guard_shield_hand_bone].inverted();
+  QMatrix4x4 const shield_to_model =
+      palettes[k_guard_shield_hand_bone] * bind_hand_inverse * local_offset;
+  QVector3D const centre = shield_to_model.column(3).toVector3D();
+  QVector3D const torso =
+      closest_point_on_segment(palettes[k_pelvis].column(3).toVector3D(),
+                               palettes[k_neck].column(3).toVector3D(),
+                               centre);
+  ShieldFacing facing;
+  facing.front = shield_to_model.mapVector(QVector3D(0.0F, 0.0F, 1.0F)).normalized();
+  facing.toward_holder =
+      QVector3D::dotProduct(facing.front, (torso - centre).normalized());
+  return facing;
+}
+
+auto sword_bearer_clip_frames()
+    -> std::vector<std::pair<std::string_view, std::vector<QMatrix4x4>>> {
+  auto const& recipe =
+      Render::Humanoid::humanoid_bake_recipe(Render::Humanoid::BakeProfile::SwordReady);
+  auto const never_played_with_a_shield = [](std::string_view clip) {
+    for (std::string_view const prefix : {"attack_spear",
+                                          "rpg_spear",
+                                          "hold_spear",
+                                          "attack_bow",
+                                          "hold_bow",
+                                          "idle_bow",
+                                          "riding_bow",
+                                          "riding_spear",
+                                          "archer_melee",
+                                          "construct_",
+                                          "crew_",
+                                          "resource_carry",
+                                          "showcase_spear_throw",
+                                          "showcase_front_flip",
+                                          "showcase_handstand",
+                                          "showcase_side_aerial",
+                                          "dead_"}) {
+      if (clip.starts_with(prefix)) {
+        return true;
+      }
+    }
+    return false;
+  };
+  std::vector<std::pair<std::string_view, std::vector<QMatrix4x4>>> out;
+  if (recipe.bake_clip_frame == nullptr) {
+    return out;
+  }
+  for (std::size_t clip = 0; clip < recipe.clips.size(); ++clip) {
+    std::string_view const name = recipe.clips[clip].name;
+    if (never_played_with_a_shield(name)) {
+      continue;
+    }
+    std::uint32_t const frames = recipe.clips[clip].frame_count;
+    std::uint32_t const last = name.starts_with("die_") ? 1U : frames;
+    for (std::uint32_t frame = 0; frame < last;
+         frame += std::max<std::uint32_t>(1U, frames / 8U)) {
+      std::vector<QMatrix4x4> palettes;
+      recipe.bake_clip_frame(clip, frame, palettes, nullptr);
+      if (palettes.size() > k_guard_shield_hand_bone) {
+        out.emplace_back(name, std::move(palettes));
+      }
+    }
+  }
+  return out;
+}
+
+auto is_guard_clip(std::string_view clip) -> bool {
+  return clip == "hold" || clip == "combat_ready" || clip == "react_block" ||
+         clip.starts_with("testudo_") || clip.starts_with("carthage_shield_wall_") ||
+         clip.starts_with("attack_sword_") || clip.starts_with("rpg_sword_") ||
+         clip == "riding_sword_strike";
+}
+
+} // namespace
+
+TEST(HumanoidGuardShield, ShieldFrontNeverFacesItsBearerInAnyState) {
+  using Pose = Render::GL::ShieldFormationPose;
+  constexpr std::uint8_t k_base_role = 6;
+  struct ShieldCase {
+    const char* name;
+    Render::Creature::StaticAttachmentSpec attachment;
+  };
+  std::array<ShieldCase, 2> const shields{{
+      {"roman_scutum", Render::GL::roman_scutum_make_static_attachment(k_base_role)},
+      {"carthage_shield",
+       Render::GL::carthage_shield_make_static_attachment({}, k_base_role)},
+  }};
+  auto const clip_frames = sword_bearer_clip_frames();
+  ASSERT_FALSE(clip_frames.empty());
+
+  auto& registry = Render::Creature::ArchetypeRegistry::instance();
+  for (auto const& shield : shields) {
+    std::array<Render::Creature::StaticAttachmentSpec, 1> attachments{
+        shield.attachment};
+    auto const base_archetype = registry.register_unit_archetype(
+        std::string("tests/shield_bearer_states/") + shield.name,
+        Render::Creature::Pipeline::CreatureKind::Humanoid,
+        attachments);
+    ASSERT_NE(base_archetype, Render::Creature::k_invalid_archetype);
+
+    for (auto const& [clip, palettes] : clip_frames) {
+      if (!is_guard_clip(clip)) {
+        auto const carried =
+            measure_shield_facing(palettes, shield.attachment.local_offset);
+        EXPECT_LT(carried.toward_holder, 0.0F)
+            << shield.name << " " << clip
+            << ": the carried shield turned its painted face onto its bearer";
+        bool const at_the_side = clip.starts_with("idle") || clip.starts_with("walk") ||
+                                 clip.starts_with("run") || clip.starts_with("riding_");
+        if (at_the_side) {
+          EXPECT_LT(carried.front.x(), -0.5F)
+              << shield.name << " " << clip
+              << ": a shield at rest faces out from the bearer's left flank, front ("
+              << carried.front.x() << ", " << carried.front.y() << ", "
+              << carried.front.z() << ")";
+        }
+      }
+      bool const played_under_a_guard =
+          !clip.starts_with("testudo_") && !clip.starts_with("carthage_shield_wall_") &&
+          !clip.starts_with("showcase_") &&
+          (!clip.starts_with("idle_") || clip == "idle_weapon");
+      for (auto const pose :
+           {Pose::GuardDefault, Pose::RomanFront, Pose::CarthageFront}) {
+        if (!played_under_a_guard) {
+          continue;
+        }
+        auto const offset = guard_shield_attachment_offset(base_archetype, pose);
+        ASSERT_TRUE(offset.has_value());
+        auto const guarded = measure_shield_facing(palettes, *offset);
+        EXPECT_LT(guarded.toward_holder, 0.0F)
+            << shield.name << " " << clip << " guard pose " << static_cast<int>(pose)
+            << ": the raised shield turned its painted face onto its bearer, front ("
+            << guarded.front.x() << ", " << guarded.front.y() << ", "
+            << guarded.front.z() << ")";
+        if (is_guard_clip(clip)) {
+          EXPECT_GT(guarded.front.z(), 0.4F)
+              << shield.name << " " << clip << " guard pose " << static_cast<int>(pose)
+              << ": a raised shield faces the threat";
+        }
+      }
+    }
+  }
+}

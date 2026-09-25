@@ -194,7 +194,7 @@ struct HumanoidPose {
 
   QVector3D grip_axis_l, grip_axis_r;
 
-  float shield_face_forward{0.0F};
+  bool shield_faces_outward{false};
 
   QVector3D pelvis_pos;
   QVector3D knee_l, knee_r;
