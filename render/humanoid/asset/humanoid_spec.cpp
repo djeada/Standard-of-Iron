@@ -1128,6 +1128,7 @@ auto beard_primitive(Render::GL::Mesh* mesh,
                                     k_beard_head_silhouette_radius,
                                     k_beard_head_silhouette_radius);
   p.custom_mesh = mesh;
+  p.mesh_skinning = Creature::MeshSkinning::Authored;
   p.color_role = Hair;
   p.lod_mask = lod_mask;
   return p;

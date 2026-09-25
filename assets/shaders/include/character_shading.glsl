@@ -263,3 +263,12 @@ vec3 soi_finish_character(vec3 color,
 #endif
   return color;
 }
+
+const int k_humanoid_hair_role = 8;
+
+vec3 apply_hair_tone(vec3 base, int material_id, int color_role, vec2 tex) {
+  if (material_id == 0 && color_role == k_humanoid_hair_role && tex.x > 0.0) {
+    return base * tex.x;
+  }
+  return base;
+}

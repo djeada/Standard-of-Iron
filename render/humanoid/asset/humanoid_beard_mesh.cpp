@@ -5,104 +5,50 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstdint>
 #include <numbers>
 #include <vector>
 
+#include "animation/rig/humanoid_proportions.h"
 #include "render/gl/mesh.h"
 #include "render/humanoid/asset/humanoid_spec.h"
+#include "render/humanoid/schema/skeleton_schema.h"
 
 namespace Render::Humanoid {
 
 namespace {
 
 using Render::GL::Vertex;
+using HP = Render::GL::HumanProportions;
 
-constexpr float k_theta_max = 1.85F;
-constexpr float k_head_center_y = -0.05F;
-constexpr float k_face_depth_scale = 0.97F;
-constexpr float k_jaw_center_y = -0.90F;
-constexpr float k_chest_clearance_z = 0.82F;
-constexpr float k_chest_top_y = -1.25F;
+constexpr float k_pi = std::numbers::pi_v<float>;
 
-struct BeardShape {
-  float coverage;
-  float top_center_y;
-  float side_rise;
-  float tip_y;
-  float tip_z;
-  float bottom_half_width;
-  float face_thickness;
-  float hang_depth;
-  float lock_count;
-  float lock_relief;
-  int hang_rows;
-  bool mustache;
-  float bulge;
-};
+constexpr float k_rig_to_beard = HP::HEAD_RADIUS / k_beard_head_silhouette_radius;
 
-auto shape_for(HumanoidBodyVariant variant) -> BeardShape {
-  switch (variant) {
-  case HumanoidBodyVariant::ShortBeard:
-    return {1.0F,
-            -0.64F,
-            0.36F,
-            -1.10F,
-            0.90F,
-            0.46F,
-            0.08F,
-            0.20F,
-            7.0F,
-            0.024F,
-            4,
-            false,
-            0.06F};
-  case HumanoidBodyVariant::FullBeard:
-    return {1.0F,
-            -0.64F,
-            0.38F,
-            -1.95F,
-            1.16F,
-            0.22F,
-            0.09F,
-            0.42F,
-            9.0F,
-            0.045F,
-            12,
-            true,
-            0.16F};
-  case HumanoidBodyVariant::LongGoatee:
-    return {0.30F,
-            -0.64F,
-            0.0F,
-            -1.60F,
-            1.08F,
-            0.08F,
-            0.08F,
-            0.24F,
-            4.0F,
-            0.030F,
-            9,
-            true,
-            0.08F};
-  case HumanoidBodyVariant::MustacheBeard:
-    return {1.0F,
-            -0.64F,
-            0.36F,
-            -1.24F,
-            0.96F,
-            0.36F,
-            0.08F,
-            0.24F,
-            8.0F,
-            0.028F,
-            5,
-            true,
-            0.08F};
-  case HumanoidBodyVariant::Clean:
-  case HumanoidBodyVariant::Count:
-    break;
-  }
-  return {};
+const QVector3D k_cranium_center(
+    0.0F, HP::HEAD_RADIUS * 0.06F / k_beard_head_silhouette_radius, 0.0F);
+const QVector3D k_cranium_radii(0.80F * 2.0F * k_rig_to_beard,
+                                0.98F * 2.0F * k_rig_to_beard,
+                                0.88F * 2.0F * k_rig_to_beard);
+
+constexpr float k_mouth_y = -0.52F;
+constexpr float k_mouth_half_width = 0.24F;
+constexpr float k_lip_clearance_top = k_mouth_y + 0.08F;
+constexpr float k_lip_clearance_bottom = k_mouth_y - 0.09F;
+constexpr float k_chin_y = -1.02F;
+constexpr float k_chest_clearance_z = 0.84F;
+constexpr float k_chest_top_y = -1.20F;
+
+constexpr std::uint8_t k_head_bone = static_cast<std::uint8_t>(HumanoidBone::Head);
+constexpr std::uint8_t k_chest_bone = static_cast<std::uint8_t>(HumanoidBone::Chest);
+
+auto hash01(std::uint32_t n) -> float {
+  n ^= n >> 16U;
+  n *= 0x7feb352dU;
+  n ^= n >> 15U;
+  n *= 0x846ca68bU;
+  n ^= n >> 16U;
+  return static_cast<float>(n & 0xffffffU) / 16777216.0F;
 }
 
 auto smoothstep(float edge0, float edge1, float x) -> float {
@@ -110,342 +56,349 @@ auto smoothstep(float edge0, float edge1, float x) -> float {
   return t * t * (3.0F - (2.0F * t));
 }
 
-auto face_point(float theta, float y) -> QVector3D {
-  float const dy = y - k_head_center_y;
-  float const ring = std::sqrt(std::max(0.12F, 1.0F - (dy * dy)));
-  return {ring * std::sin(theta), y, ring * std::cos(theta) * k_face_depth_scale};
+auto skull_point(float azimuth, float elevation) -> QVector3D {
+  return k_cranium_center +
+         QVector3D(k_cranium_radii.x() * std::cos(elevation) * std::sin(azimuth),
+                   k_cranium_radii.y() * std::sin(elevation),
+                   k_cranium_radii.z() * std::cos(elevation) * std::cos(azimuth));
 }
 
-auto face_normal(const QVector3D& p) -> QVector3D {
-  return QVector3D(p.x(),
-                   p.y() - k_head_center_y,
-                   p.z() / (k_face_depth_scale * k_face_depth_scale))
+auto skull_normal(const QVector3D& p) -> QVector3D {
+  QVector3D const d = p - k_cranium_center;
+  return QVector3D(d.x() / (k_cranium_radii.x() * k_cranium_radii.x()),
+                   d.y() / (k_cranium_radii.y() * k_cranium_radii.y()),
+                   d.z() / (k_cranium_radii.z() * k_cranium_radii.z()))
       .normalized();
 }
 
-auto hermite(const QVector3D& p0,
-             const QVector3D& t0,
-             const QVector3D& p1,
-             const QVector3D& t1,
-             float t) -> QVector3D {
-  float const t2 = t * t;
-  float const t3 = t2 * t;
-  return (p0 * ((2.0F * t3) - (3.0F * t2) + 1.0F)) + (t0 * (t3 - (2.0F * t2) + t)) +
-         (p1 * ((-2.0F * t3) + (3.0F * t2))) + (t1 * (t3 - t2));
+auto elevation_for_height(float y) -> float {
+  return std::asin(
+      std::clamp((y - k_cranium_center.y()) / k_cranium_radii.y(), -1.0F, 1.0F));
 }
 
-struct Surface {
-  std::vector<QVector3D> positions;
-  std::vector<std::array<std::uint32_t, 3>> triangles;
-};
-
-void orient(Surface& surface,
-            std::size_t first_triangle,
-            const QVector3D& outward_hint,
-            bool use_centroid,
-            const QVector3D& centroid) {
-  for (std::size_t i = first_triangle; i < surface.triangles.size(); ++i) {
-    auto& tri = surface.triangles[i];
-    QVector3D const a = surface.positions[tri[0]];
-    QVector3D const b = surface.positions[tri[1]];
-    QVector3D const c = surface.positions[tri[2]];
-    QVector3D const n = QVector3D::crossProduct(b - a, c - a);
-    QVector3D const hint =
-        use_centroid ? ((a + b + c) / 3.0F) - centroid : outward_hint;
-    if (QVector3D::dotProduct(n, hint) < 0.0F) {
-      std::swap(tri[1], tri[2]);
-    }
-  }
+auto in_lip_zone(const QVector3D& p) -> bool {
+  return p.z() > 0.0F && std::abs(p.x()) < k_mouth_half_width &&
+         p.y() < k_lip_clearance_top && p.y() > k_lip_clearance_bottom;
 }
 
-void append_group(std::vector<Vertex>& vertices,
-                  std::vector<unsigned int>& indices,
-                  const Surface& surface) {
-  std::vector<QVector3D> normals(surface.positions.size(), QVector3D());
-  for (auto const& tri : surface.triangles) {
-    QVector3D const a = surface.positions[tri[0]];
-    QVector3D const b = surface.positions[tri[1]];
-    QVector3D const c = surface.positions[tri[2]];
-    QVector3D const n = QVector3D::crossProduct(b - a, c - a);
-    for (auto const idx : tri) {
-      normals[idx] += n;
-    }
-  }
-  auto const base = static_cast<unsigned int>(vertices.size());
-  for (std::size_t i = 0; i < surface.positions.size(); ++i) {
+auto chest_weight(float y) -> float {
+  return 0.65F * smoothstep(k_chin_y, -1.9F, y);
+}
+
+struct MeshBuffers {
+  std::vector<Vertex> vertices;
+  std::vector<unsigned int> indices;
+
+  void add(const QVector3D& p, const QVector3D& n, float tone) {
     Vertex v{};
-    QVector3D const p = surface.positions[i];
-    QVector3D n = normals[i];
-    n = n.lengthSquared() > 1.0e-12F ? n.normalized() : QVector3D(0.0F, 0.0F, 1.0F);
     v.position = {p.x(), p.y(), p.z()};
-    v.normal = {n.x(), n.y(), n.z()};
+    QVector3D const unit =
+        n.lengthSquared() > 1.0e-12F ? n.normalized() : QVector3D(0, 0, 1);
+    v.normal = {unit.x(), unit.y(), unit.z()};
     v.color_role = k_humanoid_hair_role;
+    v.tex_coord = {tone, 0.0F};
+    float const w = chest_weight(p.y());
+    v.bone_indices = {k_head_bone, k_chest_bone, 0U, 0U};
+    v.bone_weights = {1.0F - w, w, 0.0F, 0.0F};
     vertices.push_back(v);
   }
-  for (auto const& tri : surface.triangles) {
-    indices.push_back(base + tri[0]);
-    indices.push_back(base + tri[1]);
-    indices.push_back(base + tri[2]);
-  }
-}
-
-void add_grid_triangles(Surface& surface,
-                        std::uint32_t base,
-                        std::uint32_t columns,
-                        std::uint32_t rows) {
-  for (std::uint32_t r = 0; r + 1U < rows; ++r) {
-    for (std::uint32_t c = 0; c + 1U < columns; ++c) {
-      std::uint32_t const i0 = base + (r * columns) + c;
-      std::uint32_t const i1 = i0 + 1U;
-      std::uint32_t const i2 = i0 + columns;
-      std::uint32_t const i3 = i2 + 1U;
-      surface.triangles.push_back({i0, i2, i1});
-      surface.triangles.push_back({i1, i2, i3});
-    }
-  }
-}
-
-struct Loft {
-  std::uint32_t columns = 0;
-  std::uint32_t rows = 0;
-  std::vector<QVector3D> outer;
-  std::vector<QVector3D> inner;
-
-  [[nodiscard]] auto at(std::uint32_t row,
-                        std::uint32_t column) const -> std::uint32_t {
-    return (row * columns) + column;
-  }
 };
 
-auto build_loft(const BeardShape& shape, bool detailed) -> Loft {
-  Loft loft;
-  int const face_rows = detailed ? 5 : 2;
-  int const hang_rows = detailed ? shape.hang_rows : std::max(2, shape.hang_rows / 3);
-  loft.columns = detailed ? 25U : 7U;
-  loft.rows = static_cast<std::uint32_t>(face_rows + hang_rows + 1);
-  loft.outer.resize(static_cast<std::size_t>(loft.columns) * loft.rows);
-  loft.inner.resize(loft.outer.size());
+constexpr float k_band_tone = 0.70F;
 
-  QVector3D const back_direction = QVector3D(0.0F, 0.18F, 1.0F).normalized();
-  float const lock_relief = detailed ? shape.lock_relief : 0.0F;
+auto tone_for(std::uint32_t seed) -> float {
+  float const pick = hash01(seed * 7919U + 17U);
+  if (pick < 0.30F) {
+    return 0.70F;
+  }
+  if (pick > 0.78F) {
+    return 1.22F;
+  }
+  return 0.92F + (0.16F * hash01(seed * 104729U + 3U));
+}
 
-  for (std::uint32_t c = 0; c < loft.columns; ++c) {
+struct BandShape {
+  float azimuth_half_range;
+  float center_top_y;
+  float side_top_y;
+  float bottom_elevation;
+  float thickness;
+};
+
+void append_band(MeshBuffers& out,
+                 const BandShape& band,
+                 bool detailed,
+                 std::uint32_t seed) {
+  int const columns = detailed ? 28 : 8;
+  int const rows = detailed ? 7 : 3;
+  auto const base = static_cast<unsigned int>(out.vertices.size());
+  std::vector<QVector3D> positions;
+  positions.reserve(static_cast<std::size_t>((columns + 1) * (rows + 1)));
+  for (int c = 0; c <= columns; ++c) {
     float const s =
-        ((2.0F * static_cast<float>(c)) / static_cast<float>(loft.columns - 1U)) - 1.0F;
-    float const arc = s * shape.coverage;
-    float const theta = arc * k_theta_max;
+        ((2.0F * static_cast<float>(c)) / static_cast<float>(columns)) - 1.0F;
+    float const azimuth = s * band.azimuth_half_range;
     float const edge = std::abs(s);
-    float const y_top =
-        shape.top_center_y + (shape.side_rise * smoothstep(0.25F, 1.0F, edge));
-    float const y_jaw = k_jaw_center_y + (0.34F * arc * arc);
-
-    float const lock_phase = s * shape.lock_count * std::numbers::pi_v<float> * 0.5F;
-    float const ridge = std::pow(std::abs(std::cos(lock_phase)), 0.6F);
-
-    QVector3D jaw_outer;
-    for (int r = 0; r <= face_rows; ++r) {
-      float const t = static_cast<float>(r) / static_cast<float>(face_rows);
-      float const y = y_top + ((y_jaw - y_top) * t);
-      QVector3D const p = face_point(theta, y);
-      QVector3D const n = face_normal(p);
-      float const relief = lock_relief * t * 0.5F * ridge;
-      auto const idx = loft.at(static_cast<std::uint32_t>(r), c);
-      loft.outer[idx] =
-          p + (n * (shape.face_thickness * (0.55F + (0.45F * t)) + relief));
-      loft.inner[idx] = p - (n * 0.10F);
-      jaw_outer = loft.outer[idx];
-    }
-
-    float const bottom_span = std::max(0.0F, k_jaw_center_y - shape.tip_y);
-    QVector3D bottom(s * shape.bottom_half_width,
-                     shape.tip_y + (bottom_span * 0.30F * s * s) -
-                         (lock_relief * 3.0F * ridge),
-                     shape.tip_z - (0.16F * s * s));
-    float const reach = (bottom - jaw_outer).length();
-    QVector3D const jaw_tangent =
-        QVector3D(jaw_outer.x() * -0.15F, -1.0F, 0.30F).normalized() * reach;
-    QVector3D const tip_tangent =
-        QVector3D(0.0F, -1.0F, 0.08F).normalized() * reach * 0.7F;
-
-    for (int r = 1; r <= hang_rows; ++r) {
-      float const t = static_cast<float>(r) / static_cast<float>(hang_rows);
-      QVector3D front = hermite(jaw_outer, jaw_tangent, bottom, tip_tangent, t);
-      float const depth = ((shape.face_thickness + 0.10F) +
-                           ((shape.hang_depth - shape.face_thickness - 0.10F) *
-                            smoothstep(0.0F, 0.35F, t))) *
-                          (1.0F - (0.85F * t * t * t));
-      QVector3D const lock_normal =
-          QVector3D(front.x() * 0.6F, 0.0F, 1.0F).normalized();
-      front += lock_normal * (lock_relief * ridge * std::min(1.0F, t * 2.0F));
-      float const belly =
-          std::sin(std::numbers::pi_v<float> * std::min(1.0F, t * 1.15F));
-      front += QVector3D(0.0F, 0.0F, shape.bulge * (1.0F - (s * s)) * belly);
-      QVector3D back = front - (back_direction * depth);
-      if (back.y() < k_chest_top_y && back.z() < k_chest_clearance_z) {
-        float const lift = k_chest_clearance_z - back.z();
-        back.setZ(k_chest_clearance_z);
-        front.setZ(std::max(front.z(), back.z() + 0.03F + (lift * 0.2F)));
-      }
-      auto const idx = loft.at(static_cast<std::uint32_t>(face_rows + r), c);
-      loft.outer[idx] = front;
-      loft.inner[idx] = back;
+    float top_y = band.center_top_y + ((band.side_top_y - band.center_top_y) *
+                                       smoothstep(0.28F, 0.95F, edge));
+    top_y += (hash01(seed + static_cast<std::uint32_t>(c) * 131U) - 0.5F) * 0.05F;
+    float const top_elevation = elevation_for_height(top_y);
+    float const bottom_elevation = band.bottom_elevation + (edge * 0.55F);
+    for (int r = 0; r <= rows; ++r) {
+      float const t = static_cast<float>(r) / static_cast<float>(rows);
+      float const elevation = top_elevation + ((bottom_elevation - top_elevation) * t);
+      QVector3D const p = skull_point(azimuth, elevation);
+      float const taper = std::min(1.0F, std::min(t * 3.0F, (1.0F - edge) * 5.0F));
+      positions.push_back(
+          p + (skull_normal(p) * (band.thickness * (0.35F + 0.65F * taper))));
     }
   }
-  return loft;
+  for (auto const& p : positions) {
+    out.add(p, skull_normal(p), k_band_tone);
+  }
+  auto const stride = static_cast<unsigned int>(rows + 1);
+  for (int c = 0; c < columns; ++c) {
+    for (int r = 0; r < rows; ++r) {
+      unsigned int const i0 =
+          base + (static_cast<unsigned int>(c) * stride) + static_cast<unsigned int>(r);
+      unsigned int const i1 = i0 + 1U;
+      unsigned int const i2 = i0 + stride;
+      unsigned int const i3 = i2 + 1U;
+      QVector3D const a = positions[i0 - base];
+      QVector3D const b = positions[i1 - base];
+      QVector3D const d = positions[i2 - base];
+      bool const outward = QVector3D::dotProduct(QVector3D::crossProduct(b - a, d - a),
+                                                 skull_normal(a)) > 0.0F;
+      if (outward) {
+        out.indices.insert(out.indices.end(), {i0, i1, i2, i2, i1, i3});
+      } else {
+        out.indices.insert(out.indices.end(), {i0, i2, i1, i2, i3, i1});
+      }
+    }
+  }
 }
 
-void append_loft(std::vector<Vertex>& vertices,
-                 std::vector<unsigned int>& indices,
-                 const Loft& loft) {
-  QVector3D centroid;
-  for (auto const& p : loft.outer) {
-    centroid += p;
-  }
-  for (auto const& p : loft.inner) {
-    centroid += p;
-  }
-  centroid /= static_cast<float>(loft.outer.size() + loft.inner.size());
+struct Lock {
+  QVector3D root;
+  QVector3D root_normal;
+  QVector3D tip;
+  float width;
+  float flatness;
+  float droop;
+  float tone;
+};
 
-  {
-    Surface outer;
-    outer.positions = loft.outer;
-    add_grid_triangles(outer, 0U, loft.columns, loft.rows);
-    for (auto& tri : outer.triangles) {
-      QVector3D const a = outer.positions[tri[0]];
-      QVector3D const b = outer.positions[tri[1]];
-      QVector3D const c = outer.positions[tri[2]];
-      QVector3D const out_dir = ((a - loft.inner[tri[0]]) + (b - loft.inner[tri[1]]) +
-                                 (c - loft.inner[tri[2]]));
-      if (QVector3D::dotProduct(QVector3D::crossProduct(b - a, c - a), out_dir) <
-          0.0F) {
-        std::swap(tri[1], tri[2]);
-      }
+auto bezier(const QVector3D& p0,
+            const QVector3D& p1,
+            const QVector3D& p2,
+            const QVector3D& p3,
+            float t) -> QVector3D {
+  float const u = 1.0F - t;
+  return (p0 * (u * u * u)) + (p1 * (3.0F * u * u * t)) + (p2 * (3.0F * u * t * t)) +
+         (p3 * (t * t * t));
+}
+
+void append_lock(MeshBuffers& out, const Lock& lock, bool detailed) {
+  int const segments = detailed ? 7 : 3;
+  int const sides = detailed ? 6 : 4;
+  float const length = (lock.tip - lock.root).length();
+  QVector3D const c1 = lock.root + (lock.root_normal * (length * 0.30F)) +
+                       QVector3D(0.0F, -length * 0.10F, 0.0F);
+  QVector3D const c2 = lock.tip + QVector3D(0.0F, length * lock.droop, length * 0.06F);
+
+  std::vector<QVector3D> spine;
+  for (int i = 0; i <= segments; ++i) {
+    QVector3D p = bezier(lock.root,
+                         c1,
+                         c2,
+                         lock.tip,
+                         static_cast<float>(i) / static_cast<float>(segments));
+    if (p.y() < k_chest_top_y && p.z() < k_chest_clearance_z) {
+      p.setZ(k_chest_clearance_z);
     }
-    append_group(vertices, indices, outer);
-  }
-  {
-    Surface inner;
-    inner.positions = loft.inner;
-    add_grid_triangles(inner, 0U, loft.columns, loft.rows);
-    for (auto& tri : inner.triangles) {
-      QVector3D const a = inner.positions[tri[0]];
-      QVector3D const b = inner.positions[tri[1]];
-      QVector3D const c = inner.positions[tri[2]];
-      QVector3D const in_dir = ((a - loft.outer[tri[0]]) + (b - loft.outer[tri[1]]) +
-                                (c - loft.outer[tri[2]]));
-      if (QVector3D::dotProduct(QVector3D::crossProduct(b - a, c - a), in_dir) < 0.0F) {
-        std::swap(tri[1], tri[2]);
-      }
-    }
-    append_group(vertices, indices, inner);
+    spine.push_back(p);
   }
 
-  auto add_wall = [&](auto&& index_at, std::uint32_t count) {
-    Surface wall;
-    for (std::uint32_t i = 0; i < count; ++i) {
-      auto const idx = index_at(i);
-      wall.positions.push_back(loft.outer[idx]);
-      wall.positions.push_back(loft.inner[idx]);
+  auto const base = static_cast<unsigned int>(out.vertices.size());
+  for (int i = 0; i <= segments; ++i) {
+    float const t = static_cast<float>(i) / static_cast<float>(segments);
+    QVector3D const prev = spine[static_cast<std::size_t>(std::max(0, i - 1))];
+    QVector3D const next = spine[static_cast<std::size_t>(std::min(segments, i + 1))];
+    QVector3D const tangent = (next - prev).normalized();
+    QVector3D outward = spine[static_cast<std::size_t>(i)] - k_cranium_center;
+    outward.setY(0.0F);
+    outward =
+        (outward - (tangent * QVector3D::dotProduct(outward, tangent))).normalized();
+    QVector3D const side = QVector3D::crossProduct(tangent, outward).normalized();
+    float const half_width = lock.width * std::pow(1.0F - (t * 0.94F), 0.75F);
+    float const half_depth = half_width * lock.flatness;
+    for (int k = 0; k < sides; ++k) {
+      float const a = (2.0F * k_pi * static_cast<float>(k)) / static_cast<float>(sides);
+      QVector3D const radial = (side * std::cos(a)) + (outward * std::sin(a));
+      QVector3D const p = spine[static_cast<std::size_t>(i)] +
+                          (side * std::cos(a) * half_width) +
+                          (outward * std::sin(a) * half_depth);
+      QVector3D const n = (side * (std::cos(a) / std::max(half_width, 1.0e-4F))) +
+                          (outward * (std::sin(a) / std::max(half_depth, 1.0e-4F)));
+      out.add(p, n.lengthSquared() > 0.0F ? n : radial, lock.tone);
     }
-    for (std::uint32_t i = 0; i + 1U < count; ++i) {
-      std::uint32_t const o0 = i * 2U;
-      std::uint32_t const i0 = o0 + 1U;
-      std::uint32_t const o1 = o0 + 2U;
-      std::uint32_t const i1 = o0 + 3U;
-      wall.triangles.push_back({o0, i0, o1});
-      wall.triangles.push_back({o1, i0, i1});
-    }
-    orient(wall, 0U, QVector3D(), true, centroid);
-    append_group(vertices, indices, wall);
+  }
+  auto const tip_index = static_cast<unsigned int>(out.vertices.size());
+  out.add(lock.tip +
+              ((lock.tip - spine[static_cast<std::size_t>(segments - 1)]).normalized() *
+               lock.width * 0.4F),
+          lock.tip - spine[static_cast<std::size_t>(segments - 1)],
+          lock.tone);
+
+  auto const ring = [&](int i, int k) {
+    return base + static_cast<unsigned int>((i * sides) + (k % sides));
   };
-
-  add_wall([&](std::uint32_t row) { return loft.at(row, 0U); }, loft.rows);
-  add_wall([&](std::uint32_t row) { return loft.at(row, loft.columns - 1U); },
-           loft.rows);
-  add_wall([&](std::uint32_t column) { return loft.at(0U, column); }, loft.columns);
-  add_wall([&](std::uint32_t column) { return loft.at(loft.rows - 1U, column); },
-           loft.columns);
-}
-
-void append_mustache(std::vector<Vertex>& vertices,
-                     std::vector<unsigned int>& indices) {
-  constexpr std::array<std::array<float, 2>, 5> k_path{{
-      {0.03F, -0.37F},
-      {0.16F, -0.40F},
-      {0.30F, -0.46F},
-      {0.40F, -0.56F},
-      {0.45F, -0.70F},
-  }};
-  constexpr int k_samples = 12;
-  constexpr int k_sides = 10;
-
-  for (float side : {-1.0F, 1.0F}) {
-    std::vector<QVector3D> centres;
-    std::vector<float> radii;
-    for (int i = 0; i <= k_samples; ++i) {
-      float const t = static_cast<float>(i) / static_cast<float>(k_samples);
-      float const f = t * static_cast<float>(k_path.size() - 1U);
-      auto const seg = std::min(static_cast<std::size_t>(f), k_path.size() - 2U);
-      float const u = f - static_cast<float>(seg);
-      float const x = k_path[seg][0] + ((k_path[seg + 1U][0] - k_path[seg][0]) * u);
-      float const y = k_path[seg][1] + ((k_path[seg + 1U][1] - k_path[seg][1]) * u);
-      float const radius = 0.070F * (1.0F - (0.85F * t * t)) + 0.006F;
-      float const dy = y - k_head_center_y;
-      float const ring = std::sqrt(std::max(0.12F, 1.0F - (dy * dy)));
-      float const theta = std::asin(std::clamp(x / ring, -1.0F, 1.0F));
-      QVector3D const surface = face_point(side * theta, y);
-      centres.push_back(surface + (face_normal(surface) * (radius * 0.75F)));
-      radii.push_back(radius);
-    }
-
-    auto const base = static_cast<unsigned int>(vertices.size());
-    for (std::size_t i = 0; i < centres.size(); ++i) {
-      QVector3D const prev = centres[i == 0 ? 0 : i - 1U];
-      QVector3D const next = centres[std::min(i + 1U, centres.size() - 1U)];
-      QVector3D const tangent = (next - prev).normalized();
-      QVector3D const out = face_normal(centres[i]);
-      QVector3D const binormal = QVector3D::crossProduct(tangent, out).normalized();
-      QVector3D const normal = QVector3D::crossProduct(binormal, tangent).normalized();
-      for (int k = 0; k < k_sides; ++k) {
-        float const a = (2.0F * std::numbers::pi_v<float> * static_cast<float>(k)) /
-                        static_cast<float>(k_sides);
-        QVector3D const radial = (normal * std::cos(a)) + (binormal * std::sin(a));
-        QVector3D const p = centres[i] + (radial * radii[i]);
-        Vertex v{};
-        v.position = {p.x(), p.y(), p.z()};
-        v.normal = {radial.x(), radial.y(), radial.z()};
-        v.color_role = k_humanoid_hair_role;
-        vertices.push_back(v);
-      }
-    }
-    for (std::size_t i = 0; i + 1U < centres.size(); ++i) {
-      for (int k = 0; k < k_sides; ++k) {
-        auto const k1 = static_cast<unsigned int>((k + 1) % k_sides);
-        auto const row0 = base + static_cast<unsigned int>(i * k_sides);
-        auto const row1 = row0 + static_cast<unsigned int>(k_sides);
-        std::array<unsigned int, 6> quad{row0 + static_cast<unsigned int>(k),
-                                         row1 + static_cast<unsigned int>(k),
-                                         row0 + k1,
-                                         row0 + k1,
-                                         row1 + static_cast<unsigned int>(k),
-                                         row1 + k1};
-        for (std::size_t q = 0; q < quad.size(); q += 3U) {
-          auto const& va = vertices[quad[q]];
-          auto const& vb = vertices[quad[q + 1U]];
-          auto const& vc = vertices[quad[q + 2U]];
-          QVector3D const a(va.position[0], va.position[1], va.position[2]);
-          QVector3D const b(vb.position[0], vb.position[1], vb.position[2]);
-          QVector3D const c(vc.position[0], vc.position[1], vc.position[2]);
-          QVector3D const n(va.normal[0], va.normal[1], va.normal[2]);
-          bool const flip =
-              QVector3D::dotProduct(QVector3D::crossProduct(b - a, c - a), n) < 0.0F;
-          indices.push_back(quad[q]);
-          indices.push_back(flip ? quad[q + 2U] : quad[q + 1U]);
-          indices.push_back(flip ? quad[q + 1U] : quad[q + 2U]);
-        }
-      }
+  for (int i = 0; i < segments; ++i) {
+    for (int k = 0; k < sides; ++k) {
+      unsigned int const a = ring(i, k);
+      unsigned int const b = ring(i, k + 1);
+      unsigned int const c = ring(i + 1, k);
+      unsigned int const d = ring(i + 1, k + 1);
+      out.indices.insert(out.indices.end(), {a, c, b, b, c, d});
     }
   }
+  for (int k = 0; k < sides; ++k) {
+    out.indices.insert(out.indices.end(),
+                       {ring(segments, k), tip_index, ring(segments, k + 1)});
+  }
+
+  for (std::size_t tri = out.indices.size() -
+                         static_cast<std::size_t>(segments * sides * 6 + sides * 3);
+       tri < out.indices.size();
+       tri += 3U) {
+    auto const& va = out.vertices[out.indices[tri]];
+    auto const& vb = out.vertices[out.indices[tri + 1U]];
+    auto const& vc = out.vertices[out.indices[tri + 2U]];
+    QVector3D const pa(va.position[0], va.position[1], va.position[2]);
+    QVector3D const pb(vb.position[0], vb.position[1], vb.position[2]);
+    QVector3D const pc(vc.position[0], vc.position[1], vc.position[2]);
+    QVector3D const na(va.normal[0], va.normal[1], va.normal[2]);
+    if (QVector3D::dotProduct(QVector3D::crossProduct(pb - pa, pc - pa), na) < 0.0F) {
+      std::swap(out.indices[tri + 1U], out.indices[tri + 2U]);
+    }
+  }
+}
+
+struct ClumpShape {
+  int clumps;
+  int locks_per_clump;
+  float azimuth_half_range;
+  float root_top_y;
+  float root_bottom_y;
+  float tip_center_y;
+  float tip_side_rise;
+  float tip_z;
+  float convergence;
+  float width;
+  float flatness;
+  float azimuth_min;
+};
+
+void append_clumps(MeshBuffers& out,
+                   const ClumpShape& shape,
+                   bool detailed,
+                   std::uint32_t seed) {
+  int const clumps = detailed ? shape.clumps : std::max(3, (shape.clumps + 1) / 2);
+  int const per_clump = detailed ? shape.locks_per_clump : 1;
+  for (int c = 0; c < clumps; ++c) {
+    float const s =
+        clumps > 1
+            ? ((2.0F * static_cast<float>(c)) / static_cast<float>(clumps - 1)) - 1.0F
+            : 0.0F;
+    std::uint32_t const clump_seed = seed + (static_cast<std::uint32_t>(c) * 977U);
+    float const clump_tip_y = shape.tip_center_y + (shape.tip_side_rise * s * s) +
+                              ((hash01(clump_seed + 3U) - 0.5F) * 0.18F);
+    for (int l = 0; l < per_clump; ++l) {
+      std::uint32_t const lock_seed =
+          clump_seed + (static_cast<std::uint32_t>(l) * 53U);
+      float const spread =
+          per_clump > 1
+              ? ((static_cast<float>(l) / static_cast<float>(per_clump - 1)) - 0.5F)
+              : 0.0F;
+      float const side = s < 0.0F ? -1.0F : 1.0F;
+      float const along =
+          shape.azimuth_min +
+          (std::abs(s) * (shape.azimuth_half_range - shape.azimuth_min));
+      float const azimuth =
+          (side * along) + (spread * (shape.azimuth_half_range - shape.azimuth_min) *
+                            1.6F / static_cast<float>(clumps));
+      float const root_y =
+          shape.root_top_y +
+          ((shape.root_bottom_y - shape.root_top_y) * hash01(lock_seed + 1U));
+      QVector3D root = skull_point(azimuth, elevation_for_height(root_y));
+      if (in_lip_zone(root)) {
+        root =
+            skull_point(azimuth, elevation_for_height(k_lip_clearance_bottom - 0.02F));
+      }
+      QVector3D const normal = skull_normal(root);
+      root -= normal * 0.015F;
+
+      float const tip_y = clump_tip_y + ((hash01(lock_seed + 5U) - 0.5F) * 0.14F);
+      QVector3D const tip(root.x() * shape.convergence +
+                              ((hash01(lock_seed + 7U) - 0.5F) * shape.width * 1.2F),
+                          tip_y,
+                          std::max(shape.tip_z - (0.12F * s * s) +
+                                       ((hash01(lock_seed + 9U) - 0.5F) * 0.06F),
+                                   root.z() * 0.5F));
+      Lock lock{};
+      lock.root = root;
+      lock.root_normal = normal;
+      lock.tip = tip;
+      lock.width = shape.width * (0.75F + (0.5F * hash01(lock_seed + 11U)));
+      lock.flatness = shape.flatness;
+      lock.droop = 0.18F + (0.12F * hash01(lock_seed + 13U));
+      lock.tone = tone_for(lock_seed);
+      append_lock(out, lock, detailed);
+    }
+  }
+}
+
+struct BeardRecipe {
+  BandShape band;
+  ClumpShape clumps;
+  ClumpShape cheeks;
+  bool cheeks_enabled;
+};
+
+auto recipe_for(HumanoidBodyVariant variant) -> BeardRecipe {
+  BeardRecipe r{};
+  r.band = {1.30F, k_lip_clearance_bottom, -0.24F, -1.20F, 0.028F};
+  r.cheeks_enabled = true;
+  switch (variant) {
+  case HumanoidBodyVariant::FullBeard:
+    r.clumps = {
+        9, 4, 0.95F, -0.66F, -1.02F, -1.88F, 0.55F, 1.02F, 0.48F, 0.088F, 0.40F, 0.0F};
+    r.cheeks = {
+        8, 3, 1.25F, -0.30F, -0.80F, -1.30F, 0.12F, 0.94F, 0.70F, 0.070F, 0.40F, 0.58F};
+    break;
+  case HumanoidBodyVariant::ShortBeard:
+    r.clumps = {
+        9, 3, 1.05F, -0.66F, -1.00F, -1.20F, 0.12F, 0.86F, 0.80F, 0.055F, 0.45F, 0.0F};
+    r.cheeks = {
+        6, 3, 1.25F, -0.30F, -0.80F, -1.05F, 0.10F, 0.84F, 0.85F, 0.045F, 0.45F, 0.62F};
+    break;
+  case HumanoidBodyVariant::MustacheBeard:
+    r.clumps = {
+        8, 3, 1.00F, -0.66F, -1.00F, -1.32F, 0.18F, 0.90F, 0.70F, 0.060F, 0.42F, 0.0F};
+    r.cheeks = {
+        6, 3, 1.25F, -0.30F, -0.80F, -1.10F, 0.10F, 0.86F, 0.80F, 0.048F, 0.42F, 0.62F};
+    break;
+  case HumanoidBodyVariant::LongGoatee:
+    r.band = {0.42F, k_lip_clearance_bottom, k_lip_clearance_bottom, -1.20F, 0.024F};
+    r.clumps = {
+        3, 4, 0.20F, -0.68F, -1.00F, -1.62F, 0.10F, 0.98F, 0.30F, 0.060F, 0.45F, 0.0F};
+    r.cheeks_enabled = false;
+    break;
+  case HumanoidBodyVariant::Clean:
+  case HumanoidBodyVariant::Count:
+    break;
+  }
+  return r;
 }
 
 } // namespace
@@ -497,15 +450,16 @@ auto build_humanoid_beard_mesh(HumanoidBodyVariant variant,
     return nullptr;
   }
   bool const detailed = lod == Render::Creature::CreatureLOD::Full;
-  BeardShape const shape = shape_for(variant);
+  BeardRecipe const recipe = recipe_for(variant);
+  auto const seed = static_cast<std::uint32_t>(variant) * 0x9E3779B9U;
 
-  std::vector<Vertex> vertices;
-  std::vector<unsigned int> indices;
-  append_loft(vertices, indices, build_loft(shape, detailed));
-  if (detailed && shape.mustache) {
-    append_mustache(vertices, indices);
+  MeshBuffers out;
+  append_band(out, recipe.band, detailed, seed);
+  append_clumps(out, recipe.clumps, detailed, seed + 1U);
+  if (recipe.cheeks_enabled) {
+    append_clumps(out, recipe.cheeks, detailed, seed + 2U);
   }
-  return std::make_unique<Render::GL::Mesh>(vertices, indices);
+  return std::make_unique<Render::GL::Mesh>(out.vertices, out.indices);
 }
 
 } // namespace Render::Humanoid

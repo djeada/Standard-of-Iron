@@ -29,6 +29,7 @@ void main() {
                       u_role_color_base + v_instance_id * 32 + v_color_role - 1)
                .rgb;
   }
+  base = apply_hair_tone(base, v_material_id, v_color_role, v_tex);
   float zoom = readable_zoom(v_pos_ws);
 
   vec4 readable_wear = v_wear_params;
