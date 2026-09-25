@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "name": "steam_winter",
+  "loop_seconds": 0.0,
+  "required_coverage": ["selection_change"],
+  "actions": [
+    { "at": 0.05, "action": "camera_look_at", "argument": "0,-6" },
+    { "at": 0.06, "action": "camera_orbit", "argument": "200,40" },
+    { "at": 0.1, "action": "camera_zoom", "argument": "-1" },
+    { "at": 0.5, "action": "select_all" },
+    { "at": 0.8, "action": "attack_at_world", "argument": "0,-16" },
+    { "at": 1.6, "action": "select_id", "argument": "4" }
+  ]
+}

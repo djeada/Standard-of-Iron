@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- The Steam overlay is a dylib Valve signs, injected into the game's
+	     process. Under the hardened runtime, library validation would refuse
+	     to load it because it is not signed by our team. -->
+	<key>com.apple.security.cs.disable-library-validation</key>
+	<true/>
+	<!-- Steam injects the overlay through DYLD_INSERT_LIBRARIES, which the
+	     hardened runtime strips from the environment unless this is set. -->
+	<key>com.apple.security.cs.allow-dyld-environment-variables</key>
+	<true/>
+	<!-- Deliberately absent: com.apple.security.app-sandbox. A sandboxed
+	     app cannot be launched or overlaid by Steam. -->
+</dict>
+</plist>

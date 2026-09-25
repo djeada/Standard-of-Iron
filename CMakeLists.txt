@@ -87,6 +87,15 @@ endif()
 # Optimised builds are stripped so shipped artifacts carry no debug info. A
 # sampling profiler needs the symbol table, so let a profiling build opt out.
 option(SOI_KEEP_SYMBOLS "Keep the symbol table in optimised builds" OFF)
+# Release candidates are built with full debug information, so every build a
+# player runs can be symbolised later. The workflows split it off before
+# packaging and keep it as a private CI artifact: a PDB, a dSYM, or a .debug
+# file. The shipped binary is exactly as lean as it would be without it.
+option(
+    SOI_RELEASE_DEBUG_INFO
+    "Emit debug information in optimised builds for separate symbol files"
+    OFF
+)
 
 # ---- Compiler Optimization Flags ----
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -143,11 +152,27 @@ else()
     # rather than carried, and leave no debug info in the shipped artifact.
     # Keep an unstripped copy from the build tree if you need to symbolise a
     # crash report; -g is still available through RelWithDebInfo.
+    if(SOI_RELEASE_DEBUG_INFO)
+        if(MSVC)
+            # /Z7 keeps the debug records in each object file, so parallel
+            # compiles never contend for one PDB. /OPT:REF and /OPT:ICF restore
+            # the folding that /DEBUG would otherwise switch off.
+            add_compile_options(/Z7)
+            add_link_options(/DEBUG /OPT:REF /OPT:ICF)
+        else()
+            add_compile_options(-g)
+            if(APPLE)
+                # With LTO the debug information lives in a temporary object
+                # that the linker deletes. Keep it so dsymutil can read it.
+                add_link_options("-Wl,-object_path_lto,${CMAKE_BINARY_DIR}/lto.o")
+            endif()
+        endif()
+    endif()
     if(NOT MSVC)
         add_compile_options(-ffunction-sections -fdata-sections)
         if(APPLE)
             add_link_options(-Wl,-dead_strip)
-        elseif(SOI_KEEP_SYMBOLS)
+        elseif(SOI_KEEP_SYMBOLS OR SOI_RELEASE_DEBUG_INFO)
             add_link_options(-Wl,--gc-sections)
         else()
             add_link_options(-Wl,--gc-sections -s)
@@ -504,6 +529,7 @@ else()
     message(STATUS "Python3 not found; skipping the layering and module checks")
 endif()
 
+include(${CMAKE_SOURCE_DIR}/cmake/zstd.cmake)
 add_subdirectory(animation)
 # ---- Translation support ----
 # Define default language (can be overridden with -DDEFAULT_LANG=de)
@@ -1027,6 +1053,20 @@ if(APPLE)
     # as a bundle. Without this property CMake emits only a bare executable,
     # so macdeployqt cannot find the expected .app directory.
     set_target_properties(standard_of_iron PROPERTIES MACOSX_BUNDLE TRUE)
+    # Without these, Qt's Info.plist template fills in com.yourcompany.<target>
+    # and a two-part version. Notarization, Gatekeeper and Steam all key on the
+    # bundle identifier, so it is fixed here once and never changed.
+    # CFBundleName does not move saves: App::Core::apply_application_identity
+    # pins the name QStandardPaths uses.
+    set_target_properties(
+        standard_of_iron
+        PROPERTIES
+            MACOSX_BUNDLE_GUI_IDENTIFIER "io.github.djeada.standardofiron"
+            MACOSX_BUNDLE_BUNDLE_NAME "Standard of Iron"
+            MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION}"
+            MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}"
+            MACOSX_BUNDLE_COPYRIGHT "Standard of Iron contributors"
+    )
 endif()
 if(WIN32)
     set_target_properties(standard_of_iron PROPERTIES WIN32_EXECUTABLE TRUE)

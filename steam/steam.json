@@ -1,0 +1,27 @@
+{
+  "app_id": 5129960,
+  "rc_branch": "rc",
+  "depots": {
+    "windows": {
+      "depot_id": 5129961,
+      "os": "windows",
+      "arch": "64",
+      "launch": "standard_of_iron.exe",
+      "working_dir": ""
+    },
+    "linux": {
+      "depot_id": 5129962,
+      "os": "linux",
+      "arch": "64",
+      "launch": "usr/bin/standard_of_iron",
+      "working_dir": "usr/bin"
+    },
+    "macos": {
+      "depot_id": 0,
+      "os": "macos",
+      "arch": "64",
+      "launch": "standard_of_iron.app",
+      "working_dir": ""
+    }
+  }
+}

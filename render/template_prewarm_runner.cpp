@@ -43,6 +43,7 @@
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
 #include "game/systems/combat_rules.h"
+#include "game/systems/nation_id.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/troop_profile_service.h"
@@ -683,6 +684,24 @@ void Renderer::prewarm_unit_templates(
                         TroopType::Elephant}) {
         add_troop_profile(nation, type);
       }
+    }
+  }
+
+  // The Iron Sepulcher is never in the roster at load. Its owner is registered
+  // only when an awakening zone wakes or the dead rise ambiently, and it is not
+  // one of the registry's playable nations, so the loop above never reaches it.
+  // Prewarm ends by forbidding render-time bakes, so an undead host that was
+  // not baked here rises invisible. Its three troop types are baked every time.
+  for (auto const type : {Game::Units::TroopType::SkeletonSwordsman,
+                          Game::Units::TroopType::SkeletonArcher,
+                          Game::Units::TroopType::GravePriest}) {
+    auto const* profile =
+        world_view().find_troop_profile(Game::Systems::NationID::IronSepulcher, type);
+    if (profile != nullptr && !profile->visuals.renderer_id.empty()) {
+      add_profile(profile->visuals.renderer_id,
+                  Game::Units::spawn_typeFromTroopType(type),
+                  Game::Systems::NationID::IronSepulcher,
+                  profile->combat.max_health);
     }
   }
 

@@ -7,6 +7,7 @@
 #include <QJsonObject>
 #include <QStandardPaths>
 #include <QString>
+#include <QTemporaryDir>
 
 #include <gtest/gtest.h>
 
@@ -16,6 +17,7 @@
 #include "save/serialization.h"
 #include "systems/save_format.h"
 #include "systems/save_load_service.h"
+#include "systems/save_storage.h"
 
 using namespace Game::Systems;
 
@@ -427,4 +429,37 @@ TEST_F(SaveLoadServiceTest, ASaveThatRestoresNoUnitsIsRefusedWithTheMatchIntact)
       << "the battle that was running was thrown away for a save that had no units";
   EXPECT_TRUE(service->get_last_error().contains("restored no units"))
       << service->get_last_error().toStdString();
+}
+
+// Steam Auto-Cloud syncs saves.sqlite alone (steam/README.md): not the -wal or
+// -shm sidecars, which only exist while the game runs. That is only safe if
+// quitting folds every committed save into the main file. So: save, shut down
+// the way GameEngine does, then open a copy of saves.sqlite alone somewhere
+// else, as the next machine would after a cloud download.
+TEST_F(SaveLoadServiceTest, ShutdownLeavesEverySaveInTheMainDatabaseFile) {
+  ASSERT_NE(service->begin_save(make_request("cloud_slot")), 0U);
+  wait_for_saves(*service);
+  ASSERT_TRUE(service->slot_exists("cloud_slot"));
+
+  const QString database = SaveLoadService::database_path();
+  service->shutdown();
+  service.reset();
+
+  const QFile wal(database + QStringLiteral("-wal"));
+  EXPECT_TRUE(!wal.exists() || wal.size() == 0)
+      << "a clean exit left " << wal.size() << " bytes in the WAL";
+
+  QTemporaryDir other_machine;
+  ASSERT_TRUE(other_machine.isValid());
+  const QString synced = other_machine.filePath(QStringLiteral("saves.sqlite"));
+  ASSERT_TRUE(QFile::copy(database, synced));
+
+  SaveStorage storage(synced);
+  QString error;
+  ASSERT_TRUE(storage.initialize(&error)) << error.toStdString();
+  Save::Record record;
+  ASSERT_TRUE(storage.read_slot(QStringLiteral("cloud_slot"), record, &error))
+      << error.toStdString();
+  EXPECT_TRUE(storage.verify_slot(QStringLiteral("cloud_slot"), &error))
+      << error.toStdString();
 }

@@ -415,14 +415,14 @@ installed alongside the binary and redistributed just the same.
 
 ## Bundled Libraries
 
-Two single-header libraries are vendored under `third_party/` and compiled
-directly into the game binary, so their terms travel with every release
-package.
+Three libraries are vendored under `third_party/` and compiled directly into
+the game binary, so their terms travel with every release package.
 
-| Library                                           | Version               | Licence                                                | Used for                       |
-| ------------------------------------------------- | --------------------- | ------------------------------------------------------ | ------------------------------ |
-| [miniaudio](https://github.com/mackron/miniaudio) | v0.11.23 (2025-09-11) | Public domain (Unlicense) **or** MIT-0, at your option | audio device output and mixing |
-| [stb_vorbis](https://github.com/nothings/stb)     | v1.22                 | Public domain (Unlicense) **or** MIT, at your option   | Ogg Vorbis decoding            |
+| Library                                           | Version               | Licence                                                | Used for                         |
+| ------------------------------------------------- | --------------------- | ------------------------------------------------------ | -------------------------------- |
+| [miniaudio](https://github.com/mackron/miniaudio) | v0.11.23 (2025-09-11) | Public domain (Unlicense) **or** MIT-0, at your option | audio device output and mixing   |
+| [stb_vorbis](https://github.com/nothings/stb)     | v1.22                 | Public domain (Unlicense) **or** MIT, at your option   | Ogg Vorbis decoding              |
+| [Zstandard](https://github.com/facebook/zstd)     | 1.5.7                 | BSD 3-Clause **or** GPLv2, at your option              | baked creature cache compression |
 
 **This project takes the public-domain option for both.** Neither library then
 requires attribution or a licence notice in the binary. They are recorded here
@@ -430,8 +430,45 @@ for the same reason as everything else in this file: what ships should be
 answerable. If a downstream redistributor prefers the MIT option instead, the
 full licence text sits at the bottom of each vendored header.
 
-Neither library is modified. Both are permissive enough to impose no
+None of the three is modified. All are permissive enough to impose no
 restriction on commercial use, and no shipped asset restricts it either.
+
+**Zstandard is used under its BSD licence**, which does require its notice to
+travel with binary redistributions. This file ships in every package, so the
+notice lives here:
+
+```text
+BSD License
+
+For Zstandard software
+
+Copyright (c) Meta Platforms, Inc. and affiliates. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+ * Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+
+ * Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+ * Neither the name Facebook, nor Meta, nor the names of its contributors may
+   be used to endorse or promote products derived from this software without
+   specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+```
 
 ## Bundled Fonts
 

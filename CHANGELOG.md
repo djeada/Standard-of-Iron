@@ -199,7 +199,61 @@ tools/font/build_standard_iron.py`, then `tools/font/proof.py` to look at it).
   loads them from qrc, the Qt Widgets tools register them through
   `Ui::BrandFonts`, and `scripts/promo-edit.py` resolves them repo-relative.
 
+- **Steam release tooling: depots staged from verified release packages.**
+  `scripts/steam-release.py` unpacks the exact ZIP, AppImage and notarized
+  `.app` from a passing Release run into Steam depots. It fails a depot that:
+  is missing a binary, Qt plugin, asset or licence; has lost an executable bit;
+  has a symlink leaving the depot; or carries anything private (keys, Steam
+  credentials, symbols, logs, build trees, stray tools, save databases). Every
+  package build now stages and verifies the depot its package would make.
+  **Steam upload** (`steam-upload.yml`) is a manual workflow that takes a
+  Release run ID. It re-checks Gatekeeper, notarization and entitlements on a
+  Mac, and Authenticode on Windows. It then uploads to a password-protected
+  beta branch and reports the BuildID. It will not set a build live on the
+  public branch. [steam/README.md](steam/README.md) is the runbook: Steamworks
+  setup, launch options, Auto-Cloud roots, the acceptance checklist and the
+  Content Survey disclosure.
+
+- **`standard_of_iron --print-data-paths`** prints where saves, exports and
+  settings live, without opening a window. Every package build checks the
+  answer on its own platform.
+
+- **Release builds keep their debug symbols, privately.** With
+  `SOI_RELEASE_DEBUG_INFO`, the release pipeline splits a PDB, a dSYM or a
+  `.debug` file off each platform's binary before packaging, and uploads them
+  as 90-day `symbols-*` artifacts. A crash in a shipped build can then be
+  symbolised. Players get the same stripped binaries as before.
+
 ### Fixed
+
+- **The macOS DMG held the ad-hoc app, not the signed one.** The image was
+  created before Developer ID signing ran, and the notarization ticket was
+  stapled to that earlier image. The new order:
+    1. Sign the app with the hardened runtime and the entitlements the Steam
+       overlay needs.
+    2. Notarize, staple and verify the app, and re-test it.
+    3. Build the DMG from that app.
+    4. Sign, notarize and staple the DMG itself.
+
+    A file-by-file comparison proves the DMG's app and the Steam bundle are
+    identical. Partial credentials no longer produce a signed-but-unnotarized
+    app. The bundle identifier was Qt's placeholder,
+    `com.yourcompany.standard_of_iron`; it is now `io.github.djeada.standardofiron`.
+
+- **The Windows ZIP shipped CI debris.** v0.1.0 included the release
+  self-test's two log files, and `bpat_baker.exe`, an asset build tool. The logs
+  now go to the runner's temp directory, and build tools are removed before
+  zipping. The Authenticode signature is re-checked on the executable that is
+  actually zipped.
+
+- **Signing can be made mandatory.** With the repository variable
+  `SOI_REQUIRE_SIGNING=true`, a release that lacks the Apple or Authenticode
+  credentials fails, instead of publishing ad-hoc or unsigned builds.
+
+- **Save location no longer depends on the executable's name.** Qt used to
+  infer the name from the file name, or from `CFBundleName` inside a Mac bundle.
+  It is now pinned to `standard_of_iron`, the same directory as before, so no
+  save moves. Steam Auto-Cloud is configured against these paths.
 
 - **Every box in the game was shaded with broken normals.** The shared unit cube
   had eight corners carrying only ±z normals, so the tops and sides of every

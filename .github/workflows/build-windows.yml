@@ -17,6 +17,18 @@ on:
         description: Name of the uploaded artifact
         type: string
         default: windows-zip
+      require-signing:
+        description: >-
+          Fail instead of shipping an unsigned executable when the Authenticode
+          certificate is missing. Steam release candidates set this.
+        type: boolean
+        default: false
+      debug-symbols:
+        description: >-
+          Build with PDBs and upload them as a private symbols-windows
+          artifact. They never enter the ZIP.
+        type: boolean
+        default: false
     outputs:
       package:
         description: File name of the produced ZIP
@@ -177,19 +189,43 @@ jobs:
             -DDEFAULT_LANG=en `
             -DCMAKE_PREFIX_PATH="$env:Qt6_DIR" `
             -DENABLE_GENERATED_CAMPAIGN_MAP_ASSETS=ON `
+            -DSOI_RELEASE_DEBUG_INFO=${{ inputs.debug-symbols && 'ON' || 'OFF' }} `
             -DBUILD_TESTING=OFF
 
       - name: Build
         run: cmake --build build --target standard_of_iron
 
-      # Code signing (optional: signs .exe with Authenticode)
+      # The PDB describes exactly this executable, so it is taken now and kept
+      # out of build\bin: everything left there is zipped for players.
+      - name: Move debug symbols out of the payload
+        if: inputs.debug-symbols
+        shell: pwsh
+        run: |
+          $symbols = Join-Path $env:RUNNER_TEMP "symbols-windows"
+          New-Item -ItemType Directory -Force -Path $symbols | Out-Null
+          $pdb = Join-Path $env:APP_DIR "$env:APP_NAME.pdb"
+          if (!(Test-Path $pdb)) {
+            Write-Error "SOI_RELEASE_DEBUG_INFO was on but $pdb was not produced"
+            exit 1
+          }
+          Get-ChildItem $env:APP_DIR -Filter *.pdb | Move-Item -Destination $symbols
+          "SYMBOLS_DIR=$symbols" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      # Authenticode signing. Optional for weekly and GitHub-only builds; a
+      # build that asked for require-signing (a Steam release candidate) fails
+      # here rather than quietly shipping an unsigned executable.
       - name: Sign executable
         shell: pwsh
         env:
           CERT_DATA: ${{ secrets.WINDOWS_CERTIFICATE }}
           CERT_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+          REQUIRE_SIGNING: ${{ inputs.require-signing }}
         run: |
           if ([string]::IsNullOrEmpty($env:CERT_DATA) -or [string]::IsNullOrEmpty($env:CERT_PASSWORD)) {
+            if ($env:REQUIRE_SIGNING -eq 'true') {
+              Write-Error "require-signing is set but WINDOWS_CERTIFICATE / WINDOWS_CERTIFICATE_PASSWORD are missing"
+              exit 1
+            }
             Write-Host "Code signing certificates not configured, skipping signing step"
             exit 0
           }
@@ -261,12 +297,20 @@ jobs:
             }
           }
 
-      # Deploy Qt DLLs (dynamic linking ensures LGPL v3 compliance)
+      # Deploy Qt DLLs (dynamic linking ensures LGPL v3 compliance).
+      # --no-system-dxc-compiler: dxcompiler.dll and dxil.dll (14 MB) serve only
+      # Qt's Direct3D 12 backend, and main.cpp pins Qt Quick to OpenGL, so they
+      # are never loaded. The packaged self-test below runs without them.
       - name: Deploy Qt
         shell: pwsh
         run: |
           $mode = if ("${{ inputs.build-type }}" -eq "Debug") { "--debug" } else { "--release" }
-          windeployqt $mode --compiler-runtime --qmldir "$env:QML_DIR" "$env:APP_DIR\$env:APP_NAME.exe"
+          windeployqt $mode --compiler-runtime --no-system-dxc-compiler `
+            --qmldir "$env:QML_DIR" "$env:APP_DIR\$env:APP_NAME.exe"
+          foreach ($unused in @('dxcompiler.dll', 'dxil.dll')) {
+            $path = Join-Path $env:APP_DIR $unused
+            if (Test-Path $path) { Remove-Item $path -Force }
+          }
 
       - name: Write qt.conf
         shell: pwsh
@@ -533,12 +577,18 @@ jobs:
           $env:QT_LOGGING_RULES = 'qt.rhi.*=false'
           $env:GALLIUM_DRIVER = 'llvmpipe'
 
+          # The logs go to the runner's temp directory, not the working
+          # directory. APP_DIR is zipped as-is, and v0.1.0 shipped these two CI
+          # logs to every player.
+          $stdoutLog = Join-Path $env:RUNNER_TEMP "renderer_self_test_out.log"
+          $stderrLog = Join-Path $env:RUNNER_TEMP "renderer_self_test_err.log"
+
           Push-Location "$env:APP_DIR"
           try {
             $process = Start-Process -FilePath ".\$env:APP_NAME.exe" `
               -ArgumentList "--release-self-test" `
-              -RedirectStandardOutput "renderer_self_test_out.log" `
-              -RedirectStandardError "renderer_self_test_err.log" `
+              -RedirectStandardOutput $stdoutLog `
+              -RedirectStandardError $stderrLog `
               -PassThru -NoNewWindow
 
             if (-not $process.WaitForExit(210000)) {
@@ -550,11 +600,11 @@ jobs:
             $process.WaitForExit()
 
             $output = @()
-            if (Test-Path "renderer_self_test_out.log") {
-              $output += Get-Content "renderer_self_test_out.log"
+            if (Test-Path $stdoutLog) {
+              $output += Get-Content $stdoutLog
             }
-            if (Test-Path "renderer_self_test_err.log") {
-              $output += Get-Content "renderer_self_test_err.log"
+            if (Test-Path $stderrLog) {
+              $output += Get-Content $stderrLog
             }
             $output | Write-Host
 
@@ -652,6 +702,51 @@ jobs:
             }
           }
 
+      # Only the game belongs in the payload. build\bin is shared with the
+      # asset bakers the game target depends on, and v0.1.0 shipped
+      # bpat_baker.exe to players because nothing removed it.
+      - name: Remove build tools from the payload
+        shell: pwsh
+        run: |
+          $keep = @("$env:APP_NAME.exe", "vc_redist.x64.exe")
+          Get-ChildItem $env:APP_DIR -Filter *.exe |
+            Where-Object { $keep -notcontains $_.Name } |
+            ForEach-Object {
+              Write-Host "Removing build tool $($_.Name)"
+              Remove-Item $_.FullName -Force
+            }
+          foreach ($pattern in @('*.pdb', '*.ilk', '*.log')) {
+            $stray = Get-ChildItem $env:APP_DIR -Recurse -Filter $pattern
+            if ($stray) {
+              Write-Error "Developer-only files in the payload: $($stray.FullName -join ', ')"
+              exit 1
+            }
+          }
+
+      # windeployqt and every later step rewrite build\bin. The signature is
+      # therefore re-checked on the exact file that goes into the ZIP, rather
+      # than trusted from the moment it was applied.
+      - name: Verify Authenticode on the packaged executable
+        shell: pwsh
+        env:
+          REQUIRE_SIGNING: ${{ inputs.require-signing }}
+        run: |
+          $exe = Join-Path $env:APP_DIR "$env:APP_NAME.exe"
+          $signature = Get-AuthenticodeSignature $exe
+          Write-Host "Authenticode status: $($signature.Status)"
+          if ($signature.SignerCertificate) {
+            Write-Host "Signer: $($signature.SignerCertificate.Subject)"
+          }
+          "| Authenticode | ``$($signature.Status)`` |" |
+            Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+          if ($signature.Status -eq 'NotSigned' -and $env:REQUIRE_SIGNING -ne 'true') {
+            exit 0
+          }
+          if ($signature.Status -ne 'Valid') {
+            Write-Error "Packaged executable signature is $($signature.Status)"
+            exit 1
+          }
+
       - name: Zip
         id: package
         shell: pwsh
@@ -681,6 +776,44 @@ jobs:
             (Join-Path (Get-Location).Path "$zip.sha256"), $line, $utf8NoBom)
           Write-Host "SHA256: $hash"
 
+      # Saves live under QStandardPaths::AppDataLocation (%APPDATA%), and
+      # Steam Auto-Cloud is configured against that exact directory. Ask the
+      # packaged build where it is, rather than trusting that it has not moved.
+      - name: Report the save location
+        shell: pwsh
+        run: |
+          $out = Join-Path $env:RUNNER_TEMP "data_paths.txt"
+          $process = Start-Process -FilePath (Join-Path $env:APP_DIR "$env:APP_NAME.exe") `
+            -ArgumentList "--print-data-paths" -RedirectStandardOutput $out `
+            -PassThru -NoNewWindow -Wait
+          Get-Content $out | Write-Host
+          if ($process.ExitCode -ne 0) {
+            Write-Error "--print-data-paths exited with $($process.ExitCode)"
+            exit 1
+          }
+          $saves = (Get-Content $out | Where-Object { $_ -like 'SOI_SAVES_DIR=*' }) -replace '^SOI_SAVES_DIR=', ''
+          $expected = (Join-Path $env:APPDATA 'standard_of_iron\saves') -replace '\\', '/'
+          if ($saves -ne $expected) {
+            Write-Error "Saves resolve to '$saves', expected '$expected'"
+            exit 1
+          }
+          "| Save directory | ``$saves`` |" |
+            Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+
+      # Steam installs the unpacked payload, not the ZIP. Stage it the way the
+      # Steam upload will, and fail here if a depot would be incomplete or
+      # would carry anything private.
+      - name: Verify the Steam depot this package would produce
+        shell: pwsh
+        run: |
+          $stage = Join-Path $env:RUNNER_TEMP "steam-stage\windows"
+          python scripts/steam-release.py stage --platform windows `
+            --package "${{ steps.package.outputs.name }}" --out $stage
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/steam-release.py verify --platform windows --stage $stage
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Remove-Item -Recurse -Force (Join-Path $env:RUNNER_TEMP "steam-stage")
+
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: inputs.upload-artifacts
         with:
@@ -689,4 +822,12 @@ jobs:
             standard_of_iron-*-win-x64.zip
             standard_of_iron-*-win-x64.zip.sha256
           retention-days: 14
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: inputs.debug-symbols
+        with:
+          name: symbols-windows
+          path: ${{ env.SYMBOLS_DIR }}
+          retention-days: 90
           if-no-files-found: error

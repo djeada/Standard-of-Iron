@@ -120,7 +120,7 @@ The Linux workflow produces an AppImage for x86-64.
 
 The macOS workflow reads the architecture set from the installed Qt framework, configures `CMAKE_OSX_ARCHITECTURES` to match it, and verifies the resulting executable with `lipo`. The package tag is `universal`, `arm64`, or `x86_64` according to the actual Qt/binary slices rather than being assumed in advance.
 
-The workflow always re-seals the deployed bundle with an ad-hoc signature. Developer ID signing and notarization are optional credential-driven stages. The exact current package order and its DMG-signing constraint are documented in [docs/MACOS_SIGNING.md](docs/MACOS_SIGNING.md).
+The workflow always re-seals the deployed bundle with an ad-hoc signature. When Apple credentials are configured, it Developer-ID-signs, notarizes and staples the app first, and only then builds the DMG from that app. See [docs/MACOS_SIGNING.md](docs/MACOS_SIGNING.md). Steam depots and uploads are described in [steam/README.md](steam/README.md).
 
 ### Windows
 

@@ -1,0 +1,3003 @@
+{
+  "name": "Steam: the oasis",
+  "description": "Steam store screenshot fixture: a desert town around an oasis.",
+  "theme": "Water, palms and a town that grows around them.",
+  "skirmish_hidden": true,
+  "coord_system": "grid",
+  "grid": {
+    "width": 200,
+    "height": 200,
+    "tile_size": 1.0
+  },
+  "max_troops_per_player": 900,
+  "camera": {
+    "center": [121.5, 0, 101.5],
+    "distance": 95.0,
+    "tilt_deg": 42.0,
+    "yaw": 45.0,
+    "fov_y": 45.0,
+    "near": 1.0,
+    "far": 600.0
+  },
+  "time_of_day": "afternoon",
+  "environment": {
+    "start_time": 16.0,
+    "time_mode": "locked",
+    "day_length_seconds": 2400.0,
+    "lighting_profile": "mediterranean_summer",
+    "fog_density": 0.006
+  },
+  "biome": {
+    "ground_type": "grass_dry",
+    "seed": 60925,
+    "patch_density": 2.2,
+    "patch_jitter": 0.86,
+    "plant_density": 0.3,
+    "grass_primary": [0.55, 0.49, 0.27],
+    "grass_secondary": [0.62, 0.54, 0.31],
+    "grass_dry": [0.74, 0.62, 0.4],
+    "soil_color": [0.66, 0.51, 0.31],
+    "rock_low": [0.58, 0.47, 0.33],
+    "rock_high": [0.78, 0.68, 0.52],
+    "height_noise": [0.16, 0.05],
+    "ground_irregularity_enabled": true,
+    "irregularity_scale": 0.12,
+    "irregularity_amplitude": 0.06,
+    "moisture_level": 0.08,
+    "grass_saturation": 0.55,
+    "sway_strength": 0.18,
+    "sway_speed": 1.0,
+    "procedural_boulders_enabled": false,
+    "procedural_iron_ore_enabled": false,
+    "tree_mix": {
+      "pine": 0.0,
+      "olive": 0.25,
+      "cypress": 0.1,
+      "palm": 3.0
+    }
+  },
+  "rain": {
+    "enabled": false
+  },
+  "terrain": [],
+  "forests": [
+    {
+      "id": "palm_belt_00",
+      "x": 184.0,
+      "z": 104.0,
+      "radius": 11.0
+    },
+    {
+      "id": "palm_belt_01",
+      "x": 178.9,
+      "z": 143.9,
+      "radius": 13.0
+    },
+    {
+      "id": "palm_belt_02",
+      "x": 155.9,
+      "z": 179.1,
+      "radius": 15.0
+    },
+    {
+      "id": "palm_belt_03",
+      "x": 115.6,
+      "z": 189.8,
+      "radius": 11.0
+    },
+    {
+      "id": "palm_belt_04",
+      "x": 75.5,
+      "z": 193.7,
+      "radius": 13.0
+    },
+    {
+      "id": "palm_belt_05",
+      "x": 36.1,
+      "z": 179.1,
+      "radius": 15.0
+    },
+    {
+      "id": "palm_belt_06",
+      "x": 16.7,
+      "z": 142.2,
+      "radius": 11.0
+    },
+    {
+      "id": "palm_belt_07",
+      "x": 4.0,
+      "z": 104.0,
+      "radius": 13.0
+    },
+    {
+      "id": "palm_belt_08",
+      "x": 9.5,
+      "z": 62.3,
+      "radius": 15.0
+    },
+    {
+      "id": "palm_belt_09",
+      "x": 41.1,
+      "z": 35.2,
+      "radius": 11.0
+    },
+    {
+      "id": "palm_belt_10",
+      "x": 75.5,
+      "z": 14.3,
+      "radius": 13.0
+    },
+    {
+      "id": "palm_belt_11",
+      "x": 117.4,
+      "z": 10.4,
+      "radius": 15.0
+    },
+    {
+      "id": "palm_belt_12",
+      "x": 150.9,
+      "z": 35.2,
+      "radius": 11.0
+    },
+    {
+      "id": "palm_belt_13",
+      "x": 178.9,
+      "z": 64.1,
+      "radius": 13.0
+    }
+  ],
+  "rivers": [],
+  "lakes": [
+    {
+      "id": "the_oasis",
+      "x": 96.0,
+      "z": 104.0,
+      "width": 42.0,
+      "depth": 30.0,
+      "rotation": 25.0
+    }
+  ],
+  "bridges": [],
+  "roads": [
+    {
+      "id": "street_00",
+      "start": [26.0, 60.0],
+      "end": [166.0, 60.0],
+      "width": 5.0,
+      "style": "default"
+    },
+    {
+      "id": "street_01",
+      "start": [36.0, 34.0],
+      "end": [36.0, 164.0],
+      "width": 4.0,
+      "style": "default"
+    },
+    {
+      "id": "street_02",
+      "start": [156.0, 34.0],
+      "end": [156.0, 164.0],
+      "width": 4.0,
+      "style": "default"
+    },
+    {
+      "id": "street_03",
+      "start": [36.0, 144.0],
+      "end": [156.0, 144.0],
+      "width": 3.6,
+      "style": "default"
+    }
+  ],
+  "landmarks": [],
+  "structures": [
+    {
+      "id": "temple_000",
+      "type": "temple",
+      "x": 100.0,
+      "z": 74.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "farm_001",
+      "type": "farm",
+      "x": 54.0,
+      "z": 112.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "farm_002",
+      "type": "farm",
+      "x": 54.0,
+      "z": 130.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "farm_003",
+      "type": "farm",
+      "x": 72.0,
+      "z": 134.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "farm_004",
+      "type": "farm",
+      "x": 90.0,
+      "z": 136.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "farm_005",
+      "type": "farm",
+      "x": 108.0,
+      "z": 136.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "farm_006",
+      "type": "farm",
+      "x": 56.0,
+      "z": 92.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "farm_007",
+      "type": "farm",
+      "x": 72.0,
+      "z": 152.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "farm_008",
+      "type": "farm",
+      "x": 90.0,
+      "z": 154.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "farm_009",
+      "type": "farm",
+      "x": 108.0,
+      "z": 154.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_010",
+      "type": "home",
+      "x": 45.92,
+      "z": 36.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_011",
+      "type": "home",
+      "x": 46.29,
+      "z": 41.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_012",
+      "type": "home",
+      "x": 45.71,
+      "z": 46.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_013",
+      "type": "home",
+      "x": 45.94,
+      "z": 51.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_014",
+      "type": "home",
+      "x": 50.93,
+      "z": 36.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_015",
+      "type": "home",
+      "x": 50.71,
+      "z": 41.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_016",
+      "type": "home",
+      "x": 50.66,
+      "z": 46.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_017",
+      "type": "home",
+      "x": 50.71,
+      "z": 51.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_018",
+      "type": "home",
+      "x": 56.37,
+      "z": 36.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_019",
+      "type": "home",
+      "x": 56.36,
+      "z": 51.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_020",
+      "type": "home",
+      "x": 61.36,
+      "z": 36.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_021",
+      "type": "home",
+      "x": 60.61,
+      "z": 41.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_022",
+      "type": "home",
+      "x": 61.3,
+      "z": 51.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_023",
+      "type": "home",
+      "x": 66.28,
+      "z": 36.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_024",
+      "type": "home",
+      "x": 65.61,
+      "z": 41.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_025",
+      "type": "home",
+      "x": 65.78,
+      "z": 46.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_026",
+      "type": "home",
+      "x": 66.36,
+      "z": 51.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_027",
+      "type": "home",
+      "x": 71.89,
+      "z": 34.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_028",
+      "type": "home",
+      "x": 72.3,
+      "z": 39.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_029",
+      "type": "home",
+      "x": 71.88,
+      "z": 44.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_030",
+      "type": "home",
+      "x": 72.26,
+      "z": 49.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_031",
+      "type": "home",
+      "x": 77.21,
+      "z": 34.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_032",
+      "type": "home",
+      "x": 77.37,
+      "z": 39.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_033",
+      "type": "home",
+      "x": 77.01,
+      "z": 44.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_034",
+      "type": "home",
+      "x": 76.84,
+      "z": 49.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_035",
+      "type": "home",
+      "x": 81.99,
+      "z": 34.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_036",
+      "type": "home",
+      "x": 81.76,
+      "z": 49.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_037",
+      "type": "home",
+      "x": 86.98,
+      "z": 34.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_038",
+      "type": "home",
+      "x": 86.79,
+      "z": 39.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_039",
+      "type": "home",
+      "x": 87.27,
+      "z": 49.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_040",
+      "type": "home",
+      "x": 91.79,
+      "z": 34.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_041",
+      "type": "home",
+      "x": 92.12,
+      "z": 39.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_042",
+      "type": "home",
+      "x": 91.61,
+      "z": 44.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_043",
+      "type": "home",
+      "x": 92.04,
+      "z": 49.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_044",
+      "type": "home",
+      "x": 113.97,
+      "z": 34.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_045",
+      "type": "home",
+      "x": 113.84,
+      "z": 39.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_046",
+      "type": "home",
+      "x": 114.36,
+      "z": 44.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_047",
+      "type": "home",
+      "x": 113.79,
+      "z": 49.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_048",
+      "type": "home",
+      "x": 119.3,
+      "z": 34.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_049",
+      "type": "home",
+      "x": 118.84,
+      "z": 39.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_050",
+      "type": "home",
+      "x": 118.89,
+      "z": 44.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_051",
+      "type": "home",
+      "x": 118.85,
+      "z": 49.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_052",
+      "type": "home",
+      "x": 123.94,
+      "z": 34.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_053",
+      "type": "home",
+      "x": 123.97,
+      "z": 49.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_054",
+      "type": "home",
+      "x": 128.63,
+      "z": 34.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_055",
+      "type": "home",
+      "x": 129.26,
+      "z": 39.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_056",
+      "type": "home",
+      "x": 129.13,
+      "z": 49.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_057",
+      "type": "home",
+      "x": 134.26,
+      "z": 34.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_058",
+      "type": "home",
+      "x": 134.16,
+      "z": 39.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_059",
+      "type": "home",
+      "x": 133.92,
+      "z": 44.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_060",
+      "type": "home",
+      "x": 134.17,
+      "z": 49.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_061",
+      "type": "home",
+      "x": 9.77,
+      "z": 70.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_062",
+      "type": "home",
+      "x": 9.82,
+      "z": 75.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_063",
+      "type": "home",
+      "x": 9.62,
+      "z": 80.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_064",
+      "type": "home",
+      "x": 9.7,
+      "z": 85.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_065",
+      "type": "home",
+      "x": 14.71,
+      "z": 70.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_066",
+      "type": "home",
+      "x": 15.26,
+      "z": 75.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_067",
+      "type": "home",
+      "x": 14.76,
+      "z": 80.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_068",
+      "type": "home",
+      "x": 14.77,
+      "z": 85.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_069",
+      "type": "home",
+      "x": 20.27,
+      "z": 70.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_070",
+      "type": "home",
+      "x": 19.84,
+      "z": 85.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_071",
+      "type": "home",
+      "x": 25.19,
+      "z": 70.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_072",
+      "type": "home",
+      "x": 24.71,
+      "z": 75.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_073",
+      "type": "home",
+      "x": 24.91,
+      "z": 85.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_074",
+      "type": "home",
+      "x": 29.9,
+      "z": 70.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_075",
+      "type": "home",
+      "x": 29.96,
+      "z": 75.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_076",
+      "type": "home",
+      "x": 29.9,
+      "z": 80.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_077",
+      "type": "home",
+      "x": 30.27,
+      "z": 85.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_078",
+      "type": "home",
+      "x": 9.94,
+      "z": 100.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_079",
+      "type": "home",
+      "x": 9.85,
+      "z": 105.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_080",
+      "type": "home",
+      "x": 10.06,
+      "z": 110.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_081",
+      "type": "home",
+      "x": 9.73,
+      "z": 115.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_082",
+      "type": "home",
+      "x": 14.61,
+      "z": 100.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_083",
+      "type": "home",
+      "x": 15.04,
+      "z": 105.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_084",
+      "type": "home",
+      "x": 15.17,
+      "z": 110.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_085",
+      "type": "home",
+      "x": 14.75,
+      "z": 115.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_086",
+      "type": "home",
+      "x": 20.39,
+      "z": 100.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_087",
+      "type": "home",
+      "x": 19.88,
+      "z": 115.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_088",
+      "type": "home",
+      "x": 25.22,
+      "z": 100.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_089",
+      "type": "home",
+      "x": 24.86,
+      "z": 105.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_090",
+      "type": "home",
+      "x": 25.24,
+      "z": 115.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_091",
+      "type": "home",
+      "x": 29.65,
+      "z": 100.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_092",
+      "type": "home",
+      "x": 30.34,
+      "z": 105.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_093",
+      "type": "home",
+      "x": 30.35,
+      "z": 110.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_094",
+      "type": "home",
+      "x": 30.33,
+      "z": 115.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_095",
+      "type": "home",
+      "x": 9.94,
+      "z": 130.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_096",
+      "type": "home",
+      "x": 10.05,
+      "z": 135.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_097",
+      "type": "home",
+      "x": 10.1,
+      "z": 140.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_098",
+      "type": "home",
+      "x": 9.85,
+      "z": 145.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_099",
+      "type": "home",
+      "x": 15.33,
+      "z": 130.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_100",
+      "type": "home",
+      "x": 15.28,
+      "z": 135.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_101",
+      "type": "home",
+      "x": 15.34,
+      "z": 140.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_102",
+      "type": "home",
+      "x": 14.95,
+      "z": 145.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_103",
+      "type": "home",
+      "x": 19.79,
+      "z": 130.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_104",
+      "type": "home",
+      "x": 20.0,
+      "z": 145.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_105",
+      "type": "home",
+      "x": 24.71,
+      "z": 130.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_106",
+      "type": "home",
+      "x": 24.65,
+      "z": 135.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_107",
+      "type": "home",
+      "x": 25.13,
+      "z": 145.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_108",
+      "type": "home",
+      "x": 29.64,
+      "z": 130.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_109",
+      "type": "home",
+      "x": 30.01,
+      "z": 135.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_110",
+      "type": "home",
+      "x": 30.01,
+      "z": 140.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_111",
+      "type": "home",
+      "x": 30.35,
+      "z": 145.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_112",
+      "type": "home",
+      "x": 139.95,
+      "z": 34.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_113",
+      "type": "home",
+      "x": 140.29,
+      "z": 39.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_114",
+      "type": "home",
+      "x": 140.2,
+      "z": 44.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_115",
+      "type": "home",
+      "x": 140.3,
+      "z": 49.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_116",
+      "type": "home",
+      "x": 144.97,
+      "z": 34.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_117",
+      "type": "home",
+      "x": 144.93,
+      "z": 39.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_118",
+      "type": "home",
+      "x": 145.35,
+      "z": 44.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_119",
+      "type": "home",
+      "x": 144.99,
+      "z": 49.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_120",
+      "type": "home",
+      "x": 149.78,
+      "z": 34.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_121",
+      "type": "home",
+      "x": 150.23,
+      "z": 49.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_122",
+      "type": "home",
+      "x": 155.17,
+      "z": 34.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_123",
+      "type": "home",
+      "x": 155.27,
+      "z": 39.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_124",
+      "type": "home",
+      "x": 155.29,
+      "z": 49.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_125",
+      "type": "home",
+      "x": 160.3,
+      "z": 34.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_126",
+      "type": "home",
+      "x": 159.74,
+      "z": 39.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_127",
+      "type": "home",
+      "x": 159.66,
+      "z": 44.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_128",
+      "type": "home",
+      "x": 160.31,
+      "z": 49.0,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "marketplace_129",
+      "type": "marketplace",
+      "x": 76.0,
+      "z": 58.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "marketplace_130",
+      "type": "marketplace",
+      "x": 122.0,
+      "z": 58.0,
+      "rotation": 270,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_131",
+      "type": "home",
+      "x": 169.0,
+      "z": 52.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_132",
+      "type": "home",
+      "x": 162.0,
+      "z": 59.0,
+      "rotation": 270,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_133",
+      "type": "home",
+      "x": 169.0,
+      "z": 59.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_134",
+      "type": "home",
+      "x": 162.0,
+      "z": 66.0,
+      "rotation": 270,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_135",
+      "type": "home",
+      "x": 169.0,
+      "z": 66.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_136",
+      "type": "home",
+      "x": 162.0,
+      "z": 73.0,
+      "rotation": 270,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_137",
+      "type": "home",
+      "x": 169.0,
+      "z": 73.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_138",
+      "type": "home",
+      "x": 162.0,
+      "z": 80.0,
+      "rotation": 270,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_139",
+      "type": "home",
+      "x": 169.0,
+      "z": 80.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_140",
+      "type": "home",
+      "x": 162.0,
+      "z": 87.0,
+      "rotation": 270,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_141",
+      "type": "home",
+      "x": 169.0,
+      "z": 87.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_142",
+      "type": "home",
+      "x": 162.0,
+      "z": 94.0,
+      "rotation": 270,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_143",
+      "type": "home",
+      "x": 169.0,
+      "z": 94.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_144",
+      "type": "home",
+      "x": 162.0,
+      "z": 101.0,
+      "rotation": 270,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_145",
+      "type": "home",
+      "x": 169.0,
+      "z": 101.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_146",
+      "type": "home",
+      "x": 162.0,
+      "z": 108.0,
+      "rotation": 270,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_147",
+      "type": "home",
+      "x": 169.0,
+      "z": 108.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_148",
+      "type": "home",
+      "x": 162.0,
+      "z": 115.0,
+      "rotation": 270,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_149",
+      "type": "home",
+      "x": 169.0,
+      "z": 115.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_150",
+      "type": "home",
+      "x": 162.0,
+      "z": 122.0,
+      "rotation": 270,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_151",
+      "type": "home",
+      "x": 169.0,
+      "z": 122.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_152",
+      "type": "home",
+      "x": 162.0,
+      "z": 129.0,
+      "rotation": 270,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_153",
+      "type": "home",
+      "x": 169.0,
+      "z": 129.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_154",
+      "type": "home",
+      "x": 162.0,
+      "z": 136.0,
+      "rotation": 270,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_155",
+      "type": "home",
+      "x": 169.0,
+      "z": 136.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_156",
+      "type": "home",
+      "x": 162.0,
+      "z": 143.0,
+      "rotation": 270,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_157",
+      "type": "home",
+      "x": 169.0,
+      "z": 143.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_158",
+      "type": "home",
+      "x": 162.0,
+      "z": 150.0,
+      "rotation": 270,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_159",
+      "type": "home",
+      "x": 169.0,
+      "z": 150.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_160",
+      "type": "home",
+      "x": 162.0,
+      "z": 157.0,
+      "rotation": 270,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "home_161",
+      "type": "home",
+      "x": 169.0,
+      "z": 157.0,
+      "rotation": 90,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "barracks_162",
+      "type": "barracks",
+      "x": 166.0,
+      "z": 164.0,
+      "rotation": 270,
+      "player_id": 1,
+      "team_id": 1,
+      "max_population": 200
+    },
+    {
+      "id": "defense_tower_163",
+      "type": "defense_tower",
+      "x": 10.0,
+      "z": 34.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "defense_tower_164",
+      "type": "defense_tower",
+      "x": 180.0,
+      "z": 32.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "defense_tower_165",
+      "type": "defense_tower",
+      "x": 12.0,
+      "z": 164.0,
+      "rotation": 0,
+      "player_id": 1,
+      "team_id": 1
+    },
+    {
+      "id": "barracks_166",
+      "type": "barracks",
+      "x": 16,
+      "z": 184,
+      "rotation": 45,
+      "player_id": 2,
+      "team_id": 2,
+      "max_population": 60
+    }
+  ],
+  "spawns": [
+    {
+      "id": "builder_000",
+      "type": "builder",
+      "x": 66.0,
+      "z": 122.0,
+      "player_id": 1
+    },
+    {
+      "id": "builder_001",
+      "type": "builder",
+      "x": 94.0,
+      "z": 145.0,
+      "player_id": 1
+    },
+    {
+      "id": "builder_002",
+      "type": "builder",
+      "x": 48.0,
+      "z": 102.0,
+      "player_id": 1
+    },
+    {
+      "id": "builder_003",
+      "type": "builder",
+      "x": 131.5,
+      "z": 101.0,
+      "player_id": 1
+    },
+    {
+      "id": "builder_004",
+      "type": "builder",
+      "x": 147.5,
+      "z": 101.0,
+      "player_id": 1
+    },
+    {
+      "id": "builder_005",
+      "type": "builder",
+      "x": 135.5,
+      "z": 119.0,
+      "player_id": 1
+    },
+    {
+      "id": "builder_006",
+      "type": "builder",
+      "x": 151.5,
+      "z": 119.0,
+      "player_id": 1
+    },
+    {
+      "id": "builder_007",
+      "type": "builder",
+      "x": 133.5,
+      "z": 135.0,
+      "player_id": 1
+    },
+    {
+      "id": "builder_008",
+      "type": "builder",
+      "x": 149.5,
+      "z": 135.0,
+      "player_id": 1
+    },
+    {
+      "id": "builder_009",
+      "type": "builder",
+      "x": 143.5,
+      "z": 83.0,
+      "player_id": 1
+    },
+    {
+      "id": "civilian_010",
+      "type": "civilian",
+      "x": 123.6,
+      "z": 116.87,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 12.0
+    },
+    {
+      "id": "civilian_011",
+      "type": "civilian",
+      "x": 119.89,
+      "z": 121.9,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 12.0
+    },
+    {
+      "id": "civilian_012",
+      "type": "civilian",
+      "x": 114.25,
+      "z": 125.48,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 12.0
+    },
+    {
+      "id": "civilian_013",
+      "type": "civilian",
+      "x": 107.13,
+      "z": 127.32,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 12.0
+    },
+    {
+      "id": "civilian_014",
+      "type": "civilian",
+      "x": 99.1,
+      "z": 127.28,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 12.0
+    },
+    {
+      "id": "civilian_015",
+      "type": "civilian",
+      "x": 90.83,
+      "z": 125.34,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 12.0
+    },
+    {
+      "id": "civilian_016",
+      "type": "civilian",
+      "x": 82.97,
+      "z": 121.68,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 12.0
+    },
+    {
+      "id": "civilian_017",
+      "type": "civilian",
+      "x": 76.17,
+      "z": 116.58,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 12.0
+    },
+    {
+      "id": "civilian_018",
+      "type": "civilian",
+      "x": 70.98,
+      "z": 110.47,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 12.0
+    },
+    {
+      "id": "civilian_019",
+      "type": "civilian",
+      "x": 67.81,
+      "z": 103.83,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 12.0
+    },
+    {
+      "id": "civilian_020",
+      "type": "civilian",
+      "x": 66.93,
+      "z": 97.21,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 12.0
+    },
+    {
+      "id": "civilian_021",
+      "type": "civilian",
+      "x": 68.4,
+      "z": 91.13,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 12.0
+    },
+    {
+      "id": "civilian_022",
+      "type": "civilian",
+      "x": 72.11,
+      "z": 86.1,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 12.0
+    },
+    {
+      "id": "civilian_023",
+      "type": "civilian",
+      "x": 77.75,
+      "z": 82.52,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 12.0
+    },
+    {
+      "id": "civilian_024",
+      "type": "civilian",
+      "x": 84.87,
+      "z": 80.68,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 12.0
+    },
+    {
+      "id": "civilian_025",
+      "type": "civilian",
+      "x": 92.9,
+      "z": 80.72,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 12.0
+    },
+    {
+      "id": "civilian_026",
+      "type": "civilian",
+      "x": 101.17,
+      "z": 82.66,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 12.0
+    },
+    {
+      "id": "civilian_027",
+      "type": "civilian",
+      "x": 109.03,
+      "z": 86.32,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 12.0
+    },
+    {
+      "id": "civilian_028",
+      "type": "civilian",
+      "x": 115.83,
+      "z": 91.42,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 12.0
+    },
+    {
+      "id": "civilian_029",
+      "type": "civilian",
+      "x": 121.02,
+      "z": 97.53,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 12.0
+    },
+    {
+      "id": "civilian_030",
+      "type": "civilian",
+      "x": 124.19,
+      "z": 104.17,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 12.0
+    },
+    {
+      "id": "civilian_031",
+      "type": "civilian",
+      "x": 125.07,
+      "z": 110.79,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 12.0
+    },
+    {
+      "id": "civilian_032",
+      "type": "civilian",
+      "x": 90.51,
+      "z": 62.0,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 16.0
+    },
+    {
+      "id": "civilian_033",
+      "type": "civilian",
+      "x": 57.44,
+      "z": 58.96,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 16.0
+    },
+    {
+      "id": "civilian_034",
+      "type": "civilian",
+      "x": 114.83,
+      "z": 60.57,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 16.0
+    },
+    {
+      "id": "civilian_035",
+      "type": "civilian",
+      "x": 98.38,
+      "z": 58.21,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 16.0
+    },
+    {
+      "id": "civilian_036",
+      "type": "civilian",
+      "x": 152.05,
+      "z": 60.7,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 16.0
+    },
+    {
+      "id": "civilian_037",
+      "type": "civilian",
+      "x": 96.41,
+      "z": 59.13,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 16.0
+    },
+    {
+      "id": "civilian_038",
+      "type": "civilian",
+      "x": 113.93,
+      "z": 59.92,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 16.0
+    },
+    {
+      "id": "civilian_039",
+      "type": "civilian",
+      "x": 154.94,
+      "z": 58.66,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 16.0
+    },
+    {
+      "id": "civilian_040",
+      "type": "civilian",
+      "x": 149.13,
+      "z": 60.38,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 16.0
+    },
+    {
+      "id": "civilian_041",
+      "type": "civilian",
+      "x": 72.02,
+      "z": 61.64,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 16.0
+    },
+    {
+      "id": "civilian_042",
+      "type": "civilian",
+      "x": 44.12,
+      "z": 59.85,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 16.0
+    },
+    {
+      "id": "civilian_043",
+      "type": "civilian",
+      "x": 80.64,
+      "z": 61.06,
+      "player_id": 1,
+      "behavior": "guard",
+      "guard_radius": 16.0
+    },
+    {
+      "id": "carthage_sword_commander_044",
+      "type": "carthage_sword_commander",
+      "x": 106.0,
+      "z": 66.0,
+      "player_id": 1
+    },
+    {
+      "id": "roman_veteran_consul_045",
+      "type": "roman_veteran_consul",
+      "x": 22,
+      "z": 178,
+      "player_id": 2,
+      "nation": "roman_republic"
+    }
+  ],
+  "world_props": [
+    {
+      "id": "palm_grove_0_0",
+      "type": "palm_tree",
+      "x": 120.18,
+      "z": 114.57,
+      "rotation": 266.8,
+      "scale": 1.2
+    },
+    {
+      "id": "palm_grove_0_1",
+      "type": "palm_tree",
+      "x": 118.56,
+      "z": 112.21,
+      "rotation": 175.2,
+      "scale": 0.94
+    },
+    {
+      "id": "palm_grove_0_2",
+      "type": "palm_tree",
+      "x": 119.38,
+      "z": 107.73,
+      "rotation": 3.4,
+      "scale": 1.01
+    },
+    {
+      "id": "palm_grove_0_3",
+      "type": "palm_tree",
+      "x": 120.67,
+      "z": 113.83,
+      "rotation": 249.7,
+      "scale": 1.11
+    },
+    {
+      "id": "palm_grove_0_4",
+      "type": "palm_tree",
+      "x": 117.68,
+      "z": 113.79,
+      "rotation": 91.6,
+      "scale": 1.16
+    },
+    {
+      "id": "palm_grove_1_0",
+      "type": "palm_tree",
+      "x": 114.11,
+      "z": 123.3,
+      "rotation": 83.6,
+      "scale": 1.28
+    },
+    {
+      "id": "palm_grove_1_1",
+      "type": "palm_tree",
+      "x": 110.74,
+      "z": 122.28,
+      "rotation": 27.5,
+      "scale": 0.94
+    },
+    {
+      "id": "palm_grove_1_2",
+      "type": "palm_tree",
+      "x": 115.77,
+      "z": 117.82,
+      "rotation": 55.5,
+      "scale": 0.98
+    },
+    {
+      "id": "palm_grove_1_3",
+      "type": "palm_tree",
+      "x": 106.69,
+      "z": 121.57,
+      "rotation": 315.8,
+      "scale": 1.27
+    },
+    {
+      "id": "palm_grove_1_4",
+      "type": "palm_tree",
+      "x": 112.66,
+      "z": 123.34,
+      "rotation": 197.7,
+      "scale": 1.3
+    },
+    {
+      "id": "palm_grove_2_0",
+      "type": "palm_tree",
+      "x": 92.97,
+      "z": 123.15,
+      "rotation": 185.9,
+      "scale": 1.29
+    },
+    {
+      "id": "palm_grove_2_1",
+      "type": "palm_tree",
+      "x": 93.72,
+      "z": 123.18,
+      "rotation": 14.6,
+      "scale": 0.95
+    },
+    {
+      "id": "palm_grove_2_2",
+      "type": "palm_tree",
+      "x": 96.17,
+      "z": 124.51,
+      "rotation": 246.6,
+      "scale": 1.13
+    },
+    {
+      "id": "palm_grove_2_3",
+      "type": "palm_tree",
+      "x": 91.66,
+      "z": 121.1,
+      "rotation": 158.3,
+      "scale": 1.32
+    },
+    {
+      "id": "palm_grove_2_4",
+      "type": "palm_tree",
+      "x": 91.54,
+      "z": 122.84,
+      "rotation": 337.5,
+      "scale": 1.07
+    },
+    {
+      "id": "palm_grove_2_5",
+      "type": "palm_tree",
+      "x": 95.5,
+      "z": 122.33,
+      "rotation": 201.6,
+      "scale": 1.2
+    },
+    {
+      "id": "palm_grove_2_6",
+      "type": "palm_tree",
+      "x": 103.15,
+      "z": 125.35,
+      "rotation": 332.2,
+      "scale": 0.92
+    },
+    {
+      "id": "palm_grove_2_7",
+      "type": "palm_tree",
+      "x": 95.4,
+      "z": 122.57,
+      "rotation": 255.9,
+      "scale": 1.1
+    },
+    {
+      "id": "palm_grove_3_0",
+      "type": "palm_tree",
+      "x": 86.14,
+      "z": 118.27,
+      "rotation": 325.6,
+      "scale": 0.96
+    },
+    {
+      "id": "palm_grove_3_1",
+      "type": "palm_tree",
+      "x": 77.43,
+      "z": 112.4,
+      "rotation": 181.6,
+      "scale": 0.95
+    },
+    {
+      "id": "palm_grove_3_2",
+      "type": "palm_tree",
+      "x": 82.54,
+      "z": 116.51,
+      "rotation": 127.9,
+      "scale": 0.95
+    },
+    {
+      "id": "palm_grove_3_3",
+      "type": "palm_tree",
+      "x": 80.69,
+      "z": 113.65,
+      "rotation": 223.0,
+      "scale": 0.96
+    },
+    {
+      "id": "palm_grove_3_4",
+      "type": "palm_tree",
+      "x": 78.36,
+      "z": 111.87,
+      "rotation": 82.2,
+      "scale": 1.17
+    },
+    {
+      "id": "palm_grove_4_0",
+      "type": "palm_tree",
+      "x": 68.58,
+      "z": 100.28,
+      "rotation": 58.0,
+      "scale": 1.12
+    },
+    {
+      "id": "palm_grove_4_1",
+      "type": "palm_tree",
+      "x": 74.47,
+      "z": 101.54,
+      "rotation": 214.1,
+      "scale": 1.09
+    },
+    {
+      "id": "palm_grove_4_2",
+      "type": "palm_tree",
+      "x": 72.8,
+      "z": 103.69,
+      "rotation": 51.7,
+      "scale": 1.25
+    },
+    {
+      "id": "palm_grove_4_3",
+      "type": "palm_tree",
+      "x": 71.21,
+      "z": 106.97,
+      "rotation": 330.3,
+      "scale": 1.08
+    },
+    {
+      "id": "palm_grove_4_4",
+      "type": "palm_tree",
+      "x": 75.4,
+      "z": 105.84,
+      "rotation": 264.2,
+      "scale": 1.09
+    },
+    {
+      "id": "palm_grove_5_0",
+      "type": "palm_tree",
+      "x": 75.13,
+      "z": 89.99,
+      "rotation": 3.2,
+      "scale": 1.33
+    },
+    {
+      "id": "palm_grove_5_1",
+      "type": "palm_tree",
+      "x": 73.56,
+      "z": 97.75,
+      "rotation": 212.2,
+      "scale": 0.92
+    },
+    {
+      "id": "palm_grove_5_2",
+      "type": "palm_tree",
+      "x": 74.47,
+      "z": 91.59,
+      "rotation": 258.3,
+      "scale": 1.27
+    },
+    {
+      "id": "palm_grove_5_3",
+      "type": "palm_tree",
+      "x": 75.73,
+      "z": 90.35,
+      "rotation": 17.0,
+      "scale": 1.14
+    },
+    {
+      "id": "palm_grove_5_4",
+      "type": "palm_tree",
+      "x": 73.36,
+      "z": 91.53,
+      "rotation": 331.7,
+      "scale": 1.17
+    },
+    {
+      "id": "palm_grove_5_5",
+      "type": "palm_tree",
+      "x": 71.47,
+      "z": 90.28,
+      "rotation": 70.6,
+      "scale": 1.29
+    },
+    {
+      "id": "palm_grove_5_6",
+      "type": "palm_tree",
+      "x": 71.05,
+      "z": 95.71,
+      "rotation": 178.8,
+      "scale": 0.94
+    },
+    {
+      "id": "palm_grove_5_7",
+      "type": "palm_tree",
+      "x": 72.42,
+      "z": 98.04,
+      "rotation": 252.2,
+      "scale": 1.08
+    },
+    {
+      "id": "palm_grove_6_0",
+      "type": "palm_tree",
+      "x": 77.62,
+      "z": 85.17,
+      "rotation": 106.2,
+      "scale": 0.92
+    },
+    {
+      "id": "palm_grove_6_1",
+      "type": "palm_tree",
+      "x": 84.04,
+      "z": 85.63,
+      "rotation": 245.2,
+      "scale": 0.92
+    },
+    {
+      "id": "palm_grove_6_2",
+      "type": "palm_tree",
+      "x": 78.11,
+      "z": 84.13,
+      "rotation": 172.6,
+      "scale": 1.22
+    },
+    {
+      "id": "palm_grove_6_3",
+      "type": "palm_tree",
+      "x": 79.42,
+      "z": 83.99,
+      "rotation": 117.1,
+      "scale": 1.17
+    },
+    {
+      "id": "palm_grove_6_4",
+      "type": "palm_tree",
+      "x": 79.88,
+      "z": 85.95,
+      "rotation": 228.2,
+      "scale": 1.35
+    },
+    {
+      "id": "palm_grove_6_5",
+      "type": "palm_tree",
+      "x": 78.99,
+      "z": 84.86,
+      "rotation": 302.3,
+      "scale": 0.93
+    },
+    {
+      "id": "palm_grove_7_0",
+      "type": "palm_tree",
+      "x": 99.51,
+      "z": 86.51,
+      "rotation": 115.1,
+      "scale": 0.92
+    },
+    {
+      "id": "palm_grove_7_1",
+      "type": "palm_tree",
+      "x": 97.2,
+      "z": 86.63,
+      "rotation": 152.7,
+      "scale": 1.03
+    },
+    {
+      "id": "palm_grove_7_2",
+      "type": "palm_tree",
+      "x": 98.39,
+      "z": 87.34,
+      "rotation": 49.9,
+      "scale": 0.9
+    },
+    {
+      "id": "palm_grove_7_3",
+      "type": "palm_tree",
+      "x": 92.32,
+      "z": 82.54,
+      "rotation": 136.7,
+      "scale": 1.21
+    },
+    {
+      "id": "palm_grove_7_4",
+      "type": "palm_tree",
+      "x": 100.31,
+      "z": 88.06,
+      "rotation": 32.7,
+      "scale": 1.11
+    },
+    {
+      "id": "palm_grove_7_5",
+      "type": "palm_tree",
+      "x": 95.95,
+      "z": 85.22,
+      "rotation": 331.8,
+      "scale": 1.28
+    },
+    {
+      "id": "palm_grove_7_6",
+      "type": "palm_tree",
+      "x": 101.93,
+      "z": 87.44,
+      "rotation": 176.8,
+      "scale": 1.3
+    },
+    {
+      "id": "palm_grove_7_7",
+      "type": "palm_tree",
+      "x": 101.01,
+      "z": 84.68,
+      "rotation": 112.6,
+      "scale": 1.16
+    },
+    {
+      "id": "palm_grove_8_0",
+      "type": "palm_tree",
+      "x": 111.18,
+      "z": 94.4,
+      "rotation": 125.3,
+      "scale": 1.23
+    },
+    {
+      "id": "palm_grove_8_1",
+      "type": "palm_tree",
+      "x": 109.22,
+      "z": 93.08,
+      "rotation": 276.2,
+      "scale": 1.13
+    },
+    {
+      "id": "palm_grove_8_2",
+      "type": "palm_tree",
+      "x": 109.68,
+      "z": 91.61,
+      "rotation": 64.4,
+      "scale": 1.33
+    },
+    {
+      "id": "palm_grove_8_3",
+      "type": "palm_tree",
+      "x": 107.46,
+      "z": 91.49,
+      "rotation": 186.6,
+      "scale": 0.91
+    },
+    {
+      "id": "palm_grove_9_0",
+      "type": "palm_tree",
+      "x": 121.59,
+      "z": 107.11,
+      "rotation": 18.0,
+      "scale": 0.93
+    },
+    {
+      "id": "palm_grove_9_1",
+      "type": "palm_tree",
+      "x": 113.89,
+      "z": 97.76,
+      "rotation": 202.1,
+      "scale": 1.09
+    },
+    {
+      "id": "palm_grove_9_2",
+      "type": "palm_tree",
+      "x": 117.91,
+      "z": 101.26,
+      "rotation": 81.6,
+      "scale": 1.27
+    },
+    {
+      "id": "palm_grove_9_3",
+      "type": "palm_tree",
+      "x": 116.8,
+      "z": 102.35,
+      "rotation": 27.7,
+      "scale": 0.98
+    },
+    {
+      "id": "palm_grove_9_4",
+      "type": "palm_tree",
+      "x": 121.51,
+      "z": 105.14,
+      "rotation": 205.0,
+      "scale": 0.95
+    },
+    {
+      "id": "palm_grove_9_5",
+      "type": "palm_tree",
+      "x": 118.21,
+      "z": 100.97,
+      "rotation": 319.1,
+      "scale": 1.13
+    },
+    {
+      "id": "palm_single_00",
+      "type": "palm_tree",
+      "x": 119.75,
+      "z": 88.0,
+      "rotation": 34.9,
+      "scale": 0.92
+    },
+    {
+      "id": "palm_single_01",
+      "type": "palm_tree",
+      "x": 93.55,
+      "z": 79.38,
+      "rotation": 261.4,
+      "scale": 1.22
+    },
+    {
+      "id": "palm_single_02",
+      "type": "palm_tree",
+      "x": 101.34,
+      "z": 76.94,
+      "rotation": 351.8,
+      "scale": 1.0
+    },
+    {
+      "id": "palm_single_05",
+      "type": "palm_tree",
+      "x": 109.85,
+      "z": 130.38,
+      "rotation": 102.7,
+      "scale": 1.1
+    },
+    {
+      "id": "palm_single_06",
+      "type": "palm_tree",
+      "x": 122.28,
+      "z": 94.32,
+      "rotation": 182.8,
+      "scale": 1.1
+    },
+    {
+      "id": "palm_single_07",
+      "type": "palm_tree",
+      "x": 77.01,
+      "z": 117.35,
+      "rotation": 58.1,
+      "scale": 1.2
+    },
+    {
+      "id": "palm_single_08",
+      "type": "palm_tree",
+      "x": 70.07,
+      "z": 84.71,
+      "rotation": 98.3,
+      "scale": 1.1
+    },
+    {
+      "id": "palm_single_09",
+      "type": "palm_tree",
+      "x": 121.07,
+      "z": 97.14,
+      "rotation": 239.3,
+      "scale": 1.18
+    },
+    {
+      "id": "palm_single_10",
+      "type": "palm_tree",
+      "x": 93.88,
+      "z": 126.48,
+      "rotation": 111.9,
+      "scale": 1.07
+    },
+    {
+      "id": "palm_single_11",
+      "type": "palm_tree",
+      "x": 105.77,
+      "z": 129.32,
+      "rotation": 169.7,
+      "scale": 1.0
+    },
+    {
+      "id": "palm_single_12",
+      "type": "palm_tree",
+      "x": 108.42,
+      "z": 78.98,
+      "rotation": 291.5,
+      "scale": 1.08
+    },
+    {
+      "id": "palm_single_13",
+      "type": "palm_tree",
+      "x": 91.65,
+      "z": 127.54,
+      "rotation": 65.5,
+      "scale": 1.0
+    },
+    {
+      "id": "palm_single_14",
+      "type": "palm_tree",
+      "x": 123.26,
+      "z": 92.57,
+      "rotation": 110.9,
+      "scale": 0.92
+    },
+    {
+      "id": "palm_single_15",
+      "type": "palm_tree",
+      "x": 125.97,
+      "z": 117.8,
+      "rotation": 325.1,
+      "scale": 1.18
+    },
+    {
+      "id": "statue_074",
+      "type": "statue",
+      "x": 89.6,
+      "z": 68.0,
+      "rotation": 180.0,
+      "scale": 1.0
+    },
+    {
+      "id": "statue_075",
+      "type": "statue",
+      "x": 110.4,
+      "z": 68.0,
+      "rotation": 180.0,
+      "scale": 1.0
+    },
+    {
+      "id": "palm_tree_076",
+      "type": "palm_tree",
+      "x": 56.5,
+      "z": 43.5,
+      "rotation": 2.2,
+      "scale": 1.1
+    },
+    {
+      "id": "palm_tree_077",
+      "type": "palm_tree",
+      "x": 82.5,
+      "z": 41.5,
+      "rotation": 87.9,
+      "scale": 1.1
+    },
+    {
+      "id": "palm_tree_078",
+      "type": "palm_tree",
+      "x": 124.5,
+      "z": 41.5,
+      "rotation": 171.9,
+      "scale": 1.1
+    },
+    {
+      "id": "palm_tree_079",
+      "type": "palm_tree",
+      "x": 20.5,
+      "z": 77.5,
+      "rotation": 347.6,
+      "scale": 1.1
+    },
+    {
+      "id": "palm_tree_080",
+      "type": "palm_tree",
+      "x": 20.5,
+      "z": 107.5,
+      "rotation": 156.1,
+      "scale": 1.1
+    },
+    {
+      "id": "palm_tree_081",
+      "type": "palm_tree",
+      "x": 20.5,
+      "z": 137.5,
+      "rotation": 351.8,
+      "scale": 1.1
+    },
+    {
+      "id": "palm_tree_082",
+      "type": "palm_tree",
+      "x": 150.5,
+      "z": 41.5,
+      "rotation": 184.3,
+      "scale": 1.1
+    },
+    {
+      "id": "supply_cart_083",
+      "type": "supply_cart",
+      "x": 80.0,
+      "z": 64.0,
+      "rotation": 90,
+      "scale": 1.0
+    },
+    {
+      "id": "supply_cart_084",
+      "type": "supply_cart",
+      "x": 126.0,
+      "z": 64.0,
+      "rotation": 270,
+      "scale": 1.0
+    },
+    {
+      "id": "supply_cart_085",
+      "type": "supply_cart",
+      "x": 157.5,
+      "z": 77.5,
+      "rotation": 33.2,
+      "scale": 1.0
+    },
+    {
+      "id": "supply_cart_086",
+      "type": "supply_cart",
+      "x": 159.5,
+      "z": 129.5,
+      "rotation": 295.8,
+      "scale": 1.0
+    },
+    {
+      "id": "supply_cart_087",
+      "type": "supply_cart",
+      "x": 117.5,
+      "z": 77.5,
+      "rotation": 338.5,
+      "scale": 1.0
+    },
+    {
+      "id": "boulder_088",
+      "type": "boulder",
+      "x": 160.86,
+      "z": 69.5,
+      "rotation": 149.7,
+      "scale": 0.8
+    },
+    {
+      "id": "boulder_089",
+      "type": "boulder",
+      "x": 161.58,
+      "z": 72.0,
+      "rotation": 124.4,
+      "scale": 0.8
+    },
+    {
+      "id": "boulder_090",
+      "type": "boulder",
+      "x": 164.47,
+      "z": 74.5,
+      "rotation": 294.8,
+      "scale": 0.8
+    },
+    {
+      "id": "boulder_091",
+      "type": "boulder",
+      "x": 163.59,
+      "z": 77.0,
+      "rotation": 199.8,
+      "scale": 0.8
+    },
+    {
+      "id": "boulder_092",
+      "type": "boulder",
+      "x": 160.76,
+      "z": 79.5,
+      "rotation": 97.8,
+      "scale": 0.8
+    },
+    {
+      "id": "boulder_093",
+      "type": "boulder",
+      "x": 166.01,
+      "z": 82.0,
+      "rotation": 301.4,
+      "scale": 0.8
+    }
+  ],
+  "firecamps": [
+    {
+      "id": "fire_00",
+      "x": 92.0,
+      "z": 82.0,
+      "intensity": 1.05,
+      "radius": 3.2
+    },
+    {
+      "id": "fire_01",
+      "x": 108.0,
+      "z": 82.0,
+      "intensity": 1.05,
+      "radius": 3.2
+    },
+    {
+      "id": "fire_02",
+      "x": 58.5,
+      "z": 45.0,
+      "intensity": 0.9,
+      "radius": 2.6
+    },
+    {
+      "id": "fire_03",
+      "x": 84.5,
+      "z": 43.0,
+      "intensity": 0.9,
+      "radius": 2.6
+    },
+    {
+      "id": "fire_04",
+      "x": 126.5,
+      "z": 43.0,
+      "intensity": 0.9,
+      "radius": 2.6
+    },
+    {
+      "id": "fire_05",
+      "x": 22.5,
+      "z": 79.0,
+      "intensity": 0.9,
+      "radius": 2.6
+    },
+    {
+      "id": "fire_06",
+      "x": 22.5,
+      "z": 109.0,
+      "intensity": 0.9,
+      "radius": 2.6
+    },
+    {
+      "id": "fire_07",
+      "x": 22.5,
+      "z": 139.0,
+      "intensity": 0.9,
+      "radius": 2.6
+    },
+    {
+      "id": "fire_08",
+      "x": 152.5,
+      "z": 43.0,
+      "intensity": 0.9,
+      "radius": 2.6
+    },
+    {
+      "id": "fire_09",
+      "x": 160.0,
+      "z": 171.0,
+      "intensity": 1.0,
+      "radius": 3.0
+    },
+    {
+      "id": "fire_10",
+      "x": 46.0,
+      "z": 64.0,
+      "intensity": 0.85,
+      "radius": 2.4
+    },
+    {
+      "id": "fire_11",
+      "x": 66.0,
+      "z": 64.0,
+      "intensity": 0.85,
+      "radius": 2.4
+    },
+    {
+      "id": "fire_12",
+      "x": 86.0,
+      "z": 64.0,
+      "intensity": 0.85,
+      "radius": 2.4
+    },
+    {
+      "id": "fire_13",
+      "x": 106.0,
+      "z": 64.0,
+      "intensity": 0.85,
+      "radius": 2.4
+    },
+    {
+      "id": "fire_14",
+      "x": 126.0,
+      "z": 64.0,
+      "intensity": 0.85,
+      "radius": 2.4
+    },
+    {
+      "id": "fire_15",
+      "x": 146.0,
+      "z": 64.0,
+      "intensity": 0.85,
+      "radius": 2.4
+    }
+  ],
+  "undead_zones": [],
+  "wildlife": {
+    "enabled": true,
+    "seed": 60925,
+    "near_simulation_radius": 60.0,
+    "far_simulation_radius": 120.0,
+    "sheep": {
+      "enabled": true,
+      "groups": 2,
+      "group_size_min": 5,
+      "group_size_max": 7,
+      "roam_radius": 8.0,
+      "respawn": false,
+      "spawn_areas": [
+        {
+          "x": 36.0,
+          "z": 164.0,
+          "radius": 6.0
+        },
+        {
+          "x": 126.0,
+          "z": 168.0,
+          "radius": 6.0
+        }
+      ]
+    }
+  },
+  "starting_resources": {
+    "gold": 4200,
+    "food": 3600,
+    "wood": 5200,
+    "stone": 3800,
+    "iron": 1500
+  },
+  "victory": {
+    "type": "elimination",
+    "key_structures": ["barracks"],
+    "defeat_conditions": [
+      "no_key_structures",
+      "no_commander",
+      "only_commander_remaining"
+    ]
+  }
+}

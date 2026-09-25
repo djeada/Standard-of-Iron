@@ -1,8 +1,12 @@
+#include <QStandardPaths>
+
 #include <filesystem>
 #include <fstream>
 #include <gtest/gtest.h>
 #include <sstream>
 #include <string>
+
+#include "app/core/app_identity.h"
 
 namespace {
 
@@ -124,6 +128,48 @@ TEST(ReleaseContract, FreshProfileDefaultAndPackagedCreatureLookupAreExplicit) {
   EXPECT_NE(graphics.find("k_default_graphics_quality = GraphicsQuality::High"),
             std::string::npos);
   EXPECT_NE(creature_assets.find("executable_directory"), std::string::npos);
+}
+
+TEST(ReleaseContract, SaveDirectoryIdentityIsPinned) {
+  // Steam Auto-Cloud root overrides point at <data root>/standard_of_iron/saves
+  // on every OS, and every existing save already lives there. Changing this
+  // name, or giving the game an organisation name, strands both.
+  EXPECT_STREQ(App::Core::k_application_id, "standard_of_iron");
+
+  const QString saved_name = QCoreApplication::applicationName();
+  const QString saved_organization = QCoreApplication::organizationName();
+  QCoreApplication::setOrganizationName(QStringLiteral("someone"));
+  App::Core::apply_application_identity();
+  const QString app_data =
+      QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+  QCoreApplication::setApplicationName(saved_name);
+  QCoreApplication::setOrganizationName(saved_organization);
+  EXPECT_TRUE(app_data.endsWith(QStringLiteral("/standard_of_iron")))
+      << app_data.toStdString();
+  EXPECT_FALSE(app_data.contains(QStringLiteral("someone"))) << app_data.toStdString();
+
+  const auto main_cpp = read_text(find_repo_root() / "main.cpp");
+  const auto startup = main_cpp.find("QGuiApplication app(argc, argv);");
+  ASSERT_NE(startup, std::string::npos);
+  EXPECT_NE(main_cpp.find("App::Core::apply_application_identity();", startup),
+            std::string::npos)
+      << "the game must pin its identity before anything reads a standard path";
+}
+
+TEST(ReleaseContract, MacDmgIsBuiltFromTheNotarizedApp) {
+  const auto workflow =
+      read_text(find_repo_root() / ".github" / "workflows" / "build-macos.yml");
+  const auto sign_app = workflow.find("sign-and-notarize-macos.sh app");
+  const auto create_dmg = workflow.find("hdiutil create");
+  const auto sign_dmg = workflow.find("sign-and-notarize-macos.sh dmg");
+  ASSERT_NE(sign_app, std::string::npos);
+  ASSERT_NE(create_dmg, std::string::npos);
+  ASSERT_NE(sign_dmg, std::string::npos);
+  EXPECT_LT(sign_app, create_dmg)
+      << "a DMG made before signing holds the ad-hoc app, not the notarized one";
+  EXPECT_LT(create_dmg, sign_dmg);
+  EXPECT_EQ(workflow.find("hdiutil create", create_dmg + 1), std::string::npos)
+      << "exactly one DMG, made from the final app";
 }
 
 } // namespace
