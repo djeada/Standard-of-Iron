@@ -1114,7 +1114,8 @@ void walk_formation_slot(const SlotWalk& walk,
   if (walk.position_is_authored) {
     step_x = dx;
     step_z = dz;
-    float const catch_up_limit = max_speed * k_obstacle_catch_up_ratio * dt;
+    float const catch_up_limit =
+        root_travel + (max_speed * k_obstacle_catch_up_ratio * dt);
     if (distance > catch_up_limit) {
       step_x *= catch_up_limit / distance;
       step_z *= catch_up_limit / distance;
