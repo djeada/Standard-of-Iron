@@ -1,11 +1,13 @@
 #include "equipment_loadout_catalog.h"
 
 #include <QFile>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <qjsonvalue.h>
 #include <qstringliteral.h>
 
+#include <array>
 #include <unordered_map>
 #include <utility>
 
@@ -236,6 +238,49 @@ auto default_loadouts() -> LoadoutMap {
   return map;
 }
 
+auto parse_facial_hair_style(const QString& name)
+    -> std::optional<Render::GL::FacialHairStyle> {
+  using Render::GL::FacialHairStyle;
+  static const std::array<std::pair<const char*, FacialHairStyle>, 8> k_styles{{
+      {"none", FacialHairStyle::None},
+      {"stubble", FacialHairStyle::Stubble},
+      {"short_beard", FacialHairStyle::ShortBeard},
+      {"full_beard", FacialHairStyle::FullBeard},
+      {"long_beard", FacialHairStyle::LongBeard},
+      {"goatee", FacialHairStyle::Goatee},
+      {"mustache", FacialHairStyle::Mustache},
+      {"mustache_and_beard", FacialHairStyle::MustacheAndBeard},
+  }};
+  for (const auto& [key, style] : k_styles) {
+    if (name == QLatin1String(key)) {
+      return style;
+    }
+  }
+  return std::nullopt;
+}
+
+auto parse_facial_hair(const QJsonValue& value)
+    -> std::optional<Render::GL::FacialHairParams> {
+  if (!value.isObject()) {
+    return std::nullopt;
+  }
+  const QJsonObject obj = value.toObject();
+  const auto style = parse_facial_hair_style(obj.value("style").toString());
+  if (!style.has_value()) {
+    return std::nullopt;
+  }
+  Render::GL::FacialHairParams params{};
+  params.style = *style;
+  const QJsonArray color = obj.value("color").toArray();
+  if (color.size() == 3) {
+    params.color = QVector3D(static_cast<float>(color.at(0).toDouble()),
+                             static_cast<float>(color.at(1).toDouble()),
+                             static_cast<float>(color.at(2).toDouble()));
+  }
+  params.greyness = static_cast<float>(obj.value("greyness").toDouble(0.0));
+  return params;
+}
+
 void parse_loadout_object(const QJsonObject& obj, EquipmentLoadoutIds& out) {
   out.bow = obj.value("bow").toString().toStdString();
   out.quiver = obj.value("quiver").toString().toStdString();
@@ -257,6 +302,7 @@ void parse_loadout_object(const QJsonObject& obj, EquipmentLoadoutIds& out) {
   out.horse_barding = obj.value("horse_barding").toString().toStdString();
   out.horse_crupper = obj.value("horse_crupper").toString().toStdString();
   out.horse_decoration = obj.value("horse_decoration").toString().toStdString();
+  out.facial_hair = parse_facial_hair(obj.value("facial_hair"));
 }
 
 void merge_json_loadouts(LoadoutMap& map) {

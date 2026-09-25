@@ -251,17 +251,45 @@ Item {
         anchors.fill: parent
         clip: true
 
-        Image {
+        Item {
             id: backdrop
+
+            property int shown: Math.floor(Math.random() * StyleGuide.backdrops.length)
 
             anchors.centerIn: parent
             width: parent.width
             height: parent.height
-            source: "qrc:/StandardOfIron/assets/visuals/load_screen.png"
-            fillMode: Image.PreserveAspectCrop
-            asynchronous: true
-            smooth: true
-            mipmap: true
+
+            Timer {
+                interval: 16000
+                running: root.visible
+                repeat: true
+                onTriggered: backdrop.shown = (backdrop.shown + 1) % StyleGuide.backdrops.length
+            }
+
+            Repeater {
+                model: StyleGuide.backdrops
+
+                Image {
+                    required property int index
+                    required property string modelData
+
+                    anchors.fill: parent
+                    source: modelData
+                    fillMode: Image.PreserveAspectCrop
+                    asynchronous: true
+                    smooth: true
+                    mipmap: true
+                    opacity: index === backdrop.shown ? 1 : 0
+
+                    Behavior on opacity  {
+                        NumberAnimation {
+                            duration: 2400
+                            easing.type: Easing.InOutSine
+                        }
+                    }
+                }
+            }
 
             SequentialAnimation on scale  {
                 running: root.visible

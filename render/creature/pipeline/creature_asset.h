@@ -50,6 +50,8 @@ using BodyPoseProbeFn = void (*)(std::uint32_t entity_id,
 using FillRoleColorsFn = std::uint32_t (*)(const void* variant,
                                            QVector3D* out,
                                            std::size_t max_roles);
+using BodyVariantSpecFn =
+    const Render::Creature::CreatureSpec* (*)(std::uint8_t body_variant) noexcept;
 
 inline constexpr CreatureAssetId k_humanoid_asset = 0;
 inline constexpr CreatureAssetId k_horse_asset = 1;
@@ -70,6 +72,7 @@ struct CreatureAsset {
   CreatureKind kind{CreatureKind::Humanoid};
   std::uint32_t bpat_species_id{0};
   const Render::Creature::CreatureSpec* spec{nullptr};
+  BodyVariantSpecFn body_variant_spec{nullptr};
   const Render::Creature::SkeletonTopology* topology{nullptr};
 
   const Render::Creature::SkeletonBlendProfile* blend_profile{nullptr};
@@ -108,6 +111,7 @@ struct CreatureRenderAssetHandle {
       Render::Creature::k_invalid_creature_render_asset_handle};
   const CreatureAsset* asset{nullptr};
   const Render::Creature::ArchetypeDescriptor* archetype{nullptr};
+  const Render::Creature::CreatureSpec* spec{nullptr};
   std::span<const QMatrix4x4> bind_palette{};
   std::span<const Render::Creature::StaticAttachmentSpec> attachments{};
   std::uint64_t attachments_hash{0U};

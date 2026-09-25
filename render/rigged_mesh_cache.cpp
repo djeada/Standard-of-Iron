@@ -186,9 +186,11 @@ auto RiggedMeshCache::create_rigged_asset(
   }
   RiggedMeshEntry entry;
 
+  auto const& rigged_registry =
+      Render::Creature::Rigged::RiggedMeshRegistry::instance();
   const Render::Creature::Rigged::RiggedMeshBlob* prebaked =
-      Render::Creature::Rigged::RiggedMeshRegistry::instance().blob(skin_species_id,
-                                                                    lod);
+      spec.body_variant != 0U ? rigged_registry.body(spec.species_name, lod)
+                              : rigged_registry.blob(skin_species_id, lod);
 
   const BaseMeshKey base_key{&spec, lod, skin_species_id};
   const AttachmentMeshKey attachment_key{&spec, lod, skin_species_id, attachments_hash};

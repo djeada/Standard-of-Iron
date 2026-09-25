@@ -137,16 +137,11 @@ Item {
 
                     Rectangle {
                         anchors.fill: parent
-                        color: Qt.rgba(0.10, 0.075, 0.055, 0.52)
-                    }
-
-                    Rectangle {
-                        anchors.fill: parent
 
                         gradient: Gradient {
                             GradientStop {
                                 position: 0.0
-                                color: Qt.rgba(0.06, 0.05, 0.04, 0.75)
+                                color: Qt.rgba(0.06, 0.05, 0.04, 0.35)
                             }
 
                             GradientStop {

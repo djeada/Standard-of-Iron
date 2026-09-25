@@ -116,6 +116,12 @@ public:
   std::vector<FormationContactFront> fronts;
 };
 
+enum class FormationSoldierGait : std::uint8_t {
+  Idle,
+  Walk,
+  Run
+};
+
 enum class FormationSoldierAction : std::uint8_t {
   FollowUnit,
   MeleeReady,
@@ -172,6 +178,10 @@ struct FormationSoldierPresentation {
   bool turning{false};
 
   bool reforming{false};
+
+  FormationSoldierGait gait{FormationSoldierGait::Idle};
+  float gait_held_seconds{0.0F};
+  float gait_run_pending_seconds{0.0F};
 
   float crowd_offset_x{0.0F};
   float crowd_offset_z{0.0F};

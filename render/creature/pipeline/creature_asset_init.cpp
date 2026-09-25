@@ -13,7 +13,9 @@ auto rigged_asset_key(const CreatureRenderAssetHandle& handle,
                       std::uint32_t skin_species_id) noexcept
     -> Render::GL::RiggedMeshCache::Key {
   return Render::GL::RiggedMeshCache::Key{
-      .spec = handle.asset != nullptr ? handle.asset->spec : nullptr,
+      .spec = handle.spec != nullptr
+                  ? handle.spec
+                  : (handle.asset != nullptr ? handle.asset->spec : nullptr),
       .lod = lod,
       .skin_species_id = skin_species_id,
       .attachment_set_id = handle.attachment_set_id,

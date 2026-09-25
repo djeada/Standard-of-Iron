@@ -124,11 +124,16 @@ public:
     if (m_profile.variant_decorator != nullptr) {
       m_profile.variant_decorator(ctx, seed, style, variant);
     }
+    if (m_facial_hair.has_value()) {
+      variant.facial_hair = *m_facial_hair;
+    }
   }
 
 private:
   const HealerRendererProfile& m_profile;
   std::string_view m_renderer_key;
+  std::optional<FacialHairParams> m_facial_hair{
+      Render::GL::Nation::resolve_equipment_loadout(m_renderer_key).ids.facial_hair};
   std::string_view m_style_key;
   Render::Creature::Pipeline::CreatureAssetId m_creature_asset_id;
 

@@ -13,8 +13,7 @@ Rectangle {
     property bool is_loading: false
     property string stage_text: qsTr("Loading...")
     property bool use_real_progress: true
-    property var bg_sources: ["qrc:/StandardOfIron/assets/visuals/load_screen.png", "qrc:/assets/visuals/load_screen.png", "assets/visuals/load_screen.png", "qrc:/qt/qml/StandardOfIron/assets/visuals/load_screen.png"]
-    property int bg_index: 0
+    property int bg_index: Math.floor(Math.random() * StyleGuide.backdrops.length)
     readonly property var hs: StyleGuide.historical
 
     function complete_loading() {
@@ -27,6 +26,7 @@ Rectangle {
     visible: is_loading
     onIs_loadingChanged: {
         if (is_loading) {
+            bg_index = (bg_index + 1) % StyleGuide.backdrops.length;
             target_progress = 0;
             display_progress = 0;
             tip_plate.draw_tip();
@@ -63,16 +63,10 @@ Rectangle {
         id: background_image
 
         anchors.fill: parent
-        source: load_screen.bg_sources[load_screen.bg_index]
+        source: StyleGuide.backdrops[load_screen.bg_index]
         cache: true
         asynchronous: false
         fillMode: Image.PreserveAspectCrop
-        onStatusChanged: {
-            if (status === Image.Error && load_screen.bg_index + 1 < load_screen.bg_sources.length) {
-                load_screen.bg_index += 1;
-                source = load_screen.bg_sources[load_screen.bg_index];
-            }
-        }
     }
 
     Rectangle {

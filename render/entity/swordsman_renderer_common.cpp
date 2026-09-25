@@ -132,11 +132,16 @@ public:
     QVector3D const team_tint = resolve_team_tint(ctx);
     variant.palette = make_humanoid_palette(team_tint, seed);
     apply_palette_overrides(resolve_style(ctx), team_tint, variant);
+    if (m_facial_hair.has_value()) {
+      variant.facial_hair = *m_facial_hair;
+    }
   }
 
 private:
   const SwordsmanRendererProfile& m_profile;
   std::string_view m_renderer_key;
+  std::optional<FacialHairParams> m_facial_hair{
+      Render::GL::Nation::resolve_equipment_loadout(m_renderer_key).ids.facial_hair};
   Render::Creature::Pipeline::CreatureAssetId m_creature_asset_id;
   Render::Humanoid::HumanoidPosePolicy m_pose_policy{
       Render::Humanoid::HumanoidPosePolicy::None};

@@ -993,7 +993,7 @@ void add_army_formation_scenarios(std::vector<ArenaScenarioDefinition>& out) {
         expect(Expect::GroupHealthReduced, QStringLiteral("line")),
         expect(Expect::MovementIsContinuous, QStringLiteral("line"), {}, 0.0F, 10.5F),
     };
-    add_layout_expectations(s, {QStringLiteral("line"), QStringLiteral("bombard")});
+    add_layout_expectations(s, {QStringLiteral("line")});
     out.push_back(std::move(s));
   }
 

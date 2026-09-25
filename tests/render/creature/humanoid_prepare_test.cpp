@@ -79,6 +79,7 @@
 #include "render/equipment/weapons/sword_renderer.h"
 #include "render/gl/humanoid/animation/animation_inputs.h"
 #include "render/gl/humanoid/humanoid_types.h"
+#include "render/humanoid/asset/humanoid_beard_mesh.h"
 #include "render/humanoid/asset/humanoid_manifest.h"
 #include "render/humanoid/asset/humanoid_spec.h"
 #include "render/humanoid/runtime/combat_root_smoothing.h"
@@ -1119,7 +1120,7 @@ TEST(HumanoidPrepare, EveryPosePolicyResolvesToADefinitionThatMovesThePose) {
       << "the grave priest must raise his casting hand";
 }
 
-TEST(HumanoidPrepare, FacialHairUsesBakedArchetypeWithoutPostBodyDraw) {
+TEST(HumanoidPrepare, FacialHairSelectsABeardedBodyWithoutAnAttachment) {
   BeardRenderer const renderer;
   Render::GL::DrawContext ctx{};
   ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
@@ -1138,8 +1139,12 @@ TEST(HumanoidPrepare, FacialHairUsesBakedArchetypeWithoutPostBodyDraw) {
 
   auto const* desc = Render::Creature::ArchetypeRegistry::instance().get(req.archetype);
   ASSERT_NE(desc, nullptr);
-  EXPECT_EQ(desc->bake_attachment_count, 1U);
-  EXPECT_GT(req.role_color_count, 7U);
+  EXPECT_EQ(desc->bake_attachment_count, 0U)
+      << "the beard belongs to the baked body, not to an attachment";
+  EXPECT_EQ(
+      desc->body_variant,
+      static_cast<std::uint8_t>(Render::Humanoid::HumanoidBodyVariant::FullBeard));
+  EXPECT_GE(req.role_color_count, Render::Humanoid::k_humanoid_role_count);
 }
 
 TEST(HumanoidPrepare, BuiltInArchersPreserveBowRoleColorsBeyondLegacyLimit) {

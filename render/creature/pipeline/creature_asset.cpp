@@ -104,6 +104,8 @@ CreatureAssetRegistry::CreatureAssetRegistry() {
   m_humanoid.kind = CreatureKind::Humanoid;
   m_humanoid.bpat_species_id = Render::Creature::Bpat::k_species_humanoid;
   m_humanoid.spec = &Render::Humanoid::humanoid_creature_spec();
+  m_humanoid.body_variant_spec =
+      &Render::Humanoid::humanoid_creature_spec_for_body_variant;
   m_humanoid.topology = &m_humanoid.spec->topology;
   m_humanoid.blend_profile = &Render::Humanoid::k_humanoid_blend_profile;
   m_humanoid.body_pose_probe = &Render::Humanoid::record_humanoid_body_pose;
@@ -180,6 +182,8 @@ CreatureAssetRegistry::CreatureAssetRegistry() {
   m_humanoid_sword.kind = CreatureKind::Humanoid;
   m_humanoid_sword.bpat_species_id = Render::Creature::Bpat::k_species_humanoid_sword;
   m_humanoid_sword.spec = &Render::Humanoid::humanoid_creature_spec();
+  m_humanoid_sword.body_variant_spec =
+      &Render::Humanoid::humanoid_creature_spec_for_body_variant;
   m_humanoid_sword.topology = &m_humanoid_sword.spec->topology;
   m_humanoid_sword.blend_profile = &Render::Humanoid::k_humanoid_blend_profile;
   m_humanoid_sword.body_pose_probe = &Render::Humanoid::record_humanoid_body_pose;
@@ -195,6 +199,8 @@ CreatureAssetRegistry::CreatureAssetRegistry() {
   m_humanoid_spear.kind = CreatureKind::Humanoid;
   m_humanoid_spear.bpat_species_id = Render::Creature::Bpat::k_species_humanoid_spear;
   m_humanoid_spear.spec = &Render::Humanoid::humanoid_creature_spec();
+  m_humanoid_spear.body_variant_spec =
+      &Render::Humanoid::humanoid_creature_spec_for_body_variant;
   m_humanoid_spear.topology = &m_humanoid_spear.spec->topology;
   m_humanoid_spear.blend_profile = &Render::Humanoid::k_humanoid_blend_profile;
   m_humanoid_spear.body_pose_probe = &Render::Humanoid::record_humanoid_body_pose;
@@ -311,6 +317,14 @@ auto resolve_creature_render_asset_handle(CreatureAssetId asset_id,
   }
 
   handle.bind_palette = handle.asset->bind_palette();
+  handle.spec = handle.asset->spec;
+  if (handle.archetype->body_variant != 0U &&
+      handle.asset->body_variant_spec != nullptr) {
+    if (const auto* variant_spec =
+            handle.asset->body_variant_spec(handle.archetype->body_variant)) {
+      handle.spec = variant_spec;
+    }
+  }
   handle.attachments = handle.archetype->attachments_view();
   handle.has_static_attachments = !handle.attachments.empty();
   handle.requires_prebaked_minimal_snapshot =

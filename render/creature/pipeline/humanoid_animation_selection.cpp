@@ -337,7 +337,10 @@ auto build_selection_for_pose(const UnitVisualSpec& spec,
     });
 
     if (override.archetype_changed) {
-      selection.resolved_archetype = override.archetype;
+      selection.resolved_archetype =
+          variant != nullptr ? Render::Humanoid::resolve_facial_hair_archetype(
+                                   override.archetype, *variant)
+                             : override.archetype;
     }
     if (override.state_changed) {
       selection.state = override.state;

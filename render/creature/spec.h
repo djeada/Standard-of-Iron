@@ -20,6 +20,7 @@ namespace Render::Creature {
 
 struct CreatureSpec {
   std::string_view species_name{};
+  std::uint8_t body_variant{0};
   SkeletonTopology topology{};
 
   PartGraph lod_full{};

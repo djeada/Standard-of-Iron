@@ -173,6 +173,9 @@ public:
       variant.scarring = next_rand(beard_seed) * 0.30F;
       variant.weathering = 0.40F + next_rand(beard_seed) * 0.40F;
     }
+    if (m_facial_hair.has_value()) {
+      variant.facial_hair = *m_facial_hair;
+    }
   }
 
   void append_companion_preparation(
@@ -187,6 +190,8 @@ public:
 private:
   const ArcherRendererProfile& m_profile;
   std::string_view m_renderer_key;
+  std::optional<FacialHairParams> m_facial_hair{
+      Render::GL::Nation::resolve_equipment_loadout(m_renderer_key).ids.facial_hair};
   std::string_view m_style_key;
   Render::Creature::Pipeline::CreatureAssetId m_creature_asset_id;
   Render::Humanoid::HumanoidPosePolicy m_pose_policy{

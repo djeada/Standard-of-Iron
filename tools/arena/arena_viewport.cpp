@@ -4552,7 +4552,8 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
   m_scenario_finished_emitted = false;
   set_force_full_creature_lod(definition->force_full_creature_lod);
   Render::Profiling::CombatAnimationDiagnostics::instance().set_enabled(
-      definition->collect_animation_diagnostics || m_force_animation_diagnostics);
+      Arena::scenario_needs_animation_diagnostics(*definition) ||
+      m_force_animation_diagnostics);
 
   if (!m_scenario_runner->start()) {
     qWarning().noquote() << QStringLiteral(

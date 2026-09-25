@@ -980,7 +980,9 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/visuals/unit_equipment_loadouts.json
             assets/visuals/emblems/rome.png
             assets/visuals/emblems/cartaghe.png
-            assets/visuals/load_screen.png
+            assets/visuals/load_screen_1.png
+            assets/visuals/load_screen_2.png
+            assets/visuals/load_screen_3.png
             assets/visuals/hannibal.png
             assets/visuals/scipio.png
             assets/visuals/standard_of_iron.png

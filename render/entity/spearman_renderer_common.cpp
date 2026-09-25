@@ -104,8 +104,7 @@ auto canonical_spear_cfg() -> const SpearRenderConfig& {
 auto append_spearman_role_colors_common(const HumanoidVariant& variant,
                                         QVector3D* out,
                                         std::uint32_t base_count,
-                                        std::size_t max_count,
-                                        bool include_facial_hair) -> std::uint32_t {
+                                        std::size_t max_count) -> std::uint32_t {
   auto count = base_count;
   count += Render::GL::carthage_heavy_helmet_fill_role_colors(
       variant.palette, out + count, max_count - count);
@@ -124,10 +123,7 @@ auto append_spearman_role_colors_common(const HumanoidVariant& variant,
   }
   count += Render::GL::armor_light_carthage_fill_role_colors(
       variant.palette, out + count, max_count - count);
-  if (!include_facial_hair || max_count <= count) {
-    return count;
-  }
-  return Render::Humanoid::facial_hair_role_colors(variant, out, count, max_count);
+  return count;
 }
 
 auto append_spearman_role_colors(const void* variant_void,
@@ -138,27 +134,7 @@ auto append_spearman_role_colors(const void* variant_void,
     return base_count;
   }
   return append_spearman_role_colors_common(
-      *static_cast<const HumanoidVariant*>(variant_void),
-      out,
-      base_count,
-      max_count,
-      false);
-}
-
-auto append_spearman_role_colors_with_facial_hair(const void* variant_void,
-                                                  QVector3D* out,
-                                                  std::uint32_t base_count,
-                                                  std::size_t max_count)
-    -> std::uint32_t {
-  if (variant_void == nullptr || max_count <= base_count) {
-    return base_count;
-  }
-  return append_spearman_role_colors_common(
-      *static_cast<const HumanoidVariant*>(variant_void),
-      out,
-      base_count,
-      max_count,
-      true);
+      *static_cast<const HumanoidVariant*>(variant_void), out, base_count, max_count);
 }
 
 struct SpearmanArchetypeSet {
@@ -182,8 +158,6 @@ auto spearman_archetypes() -> const SpearmanArchetypeSet& {
         k_shoulder_base_role_byte + Render::GL::k_carthage_shoulder_cover_role_count);
     static const auto k_armor_base_role_byte = static_cast<std::uint8_t>(
         k_spear_base_role_byte + Render::GL::k_spear_role_count);
-    static const auto k_facial_hair_base_role_byte = static_cast<std::uint8_t>(
-        k_armor_base_role_byte + Render::GL::k_armor_light_carthage_role_count);
     static const auto k_chest_bone =
         static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Chest);
     static const auto k_shoulder_l_bone =
@@ -257,22 +231,6 @@ auto spearman_archetypes() -> const SpearmanArchetypeSet& {
             k_armor_spec,
         };
 
-    auto const make_bearded_attachments = [&](Render::GL::FacialHairStyle style) {
-      std::array<Render::Creature::StaticAttachmentSpec, 14> attachments{};
-      std::copy(
-          k_base_attachments.begin(), k_base_attachments.end(), attachments.begin());
-      attachments.back() = Render::Humanoid::facial_hair_make_static_attachment(
-          style, k_facial_hair_base_role_byte);
-      return attachments;
-    };
-
-    static const auto k_full_beard_attachments =
-        make_bearded_attachments(Render::GL::FacialHairStyle::FullBeard);
-    static const auto k_long_beard_attachments =
-        make_bearded_attachments(Render::GL::FacialHairStyle::LongBeard);
-    static const auto k_short_beard_attachments =
-        make_bearded_attachments(Render::GL::FacialHairStyle::ShortBeard);
-
     auto& registry = Render::Creature::ArchetypeRegistry::instance();
     SpearmanArchetypeSet result{};
     result.clean = registry.register_unit_archetype(
@@ -281,24 +239,12 @@ auto spearman_archetypes() -> const SpearmanArchetypeSet& {
         std::span<const Render::Creature::StaticAttachmentSpec>(
             k_base_attachments.data(), k_base_attachments.size()),
         &append_spearman_role_colors);
-    result.full_beard = registry.register_unit_archetype(
-        "troops/carthage/spearman/full_beard",
-        CreatureKind::Humanoid,
-        std::span<const Render::Creature::StaticAttachmentSpec>(
-            k_full_beard_attachments.data(), k_full_beard_attachments.size()),
-        &append_spearman_role_colors_with_facial_hair);
-    result.long_beard = registry.register_unit_archetype(
-        "troops/carthage/spearman/long_beard",
-        CreatureKind::Humanoid,
-        std::span<const Render::Creature::StaticAttachmentSpec>(
-            k_long_beard_attachments.data(), k_long_beard_attachments.size()),
-        &append_spearman_role_colors_with_facial_hair);
-    result.short_beard = registry.register_unit_archetype(
-        "troops/carthage/spearman/short_beard",
-        CreatureKind::Humanoid,
-        std::span<const Render::Creature::StaticAttachmentSpec>(
-            k_short_beard_attachments.data(), k_short_beard_attachments.size()),
-        &append_spearman_role_colors_with_facial_hair);
+    result.full_beard = Render::Humanoid::facial_hair_body_archetype(
+        result.clean, Render::GL::FacialHairStyle::FullBeard);
+    result.long_beard = Render::Humanoid::facial_hair_body_archetype(
+        result.clean, Render::GL::FacialHairStyle::LongBeard);
+    result.short_beard = Render::Humanoid::facial_hair_body_archetype(
+        result.clean, Render::GL::FacialHairStyle::ShortBeard);
     return result;
   }();
   return ids;
@@ -417,11 +363,16 @@ public:
     if (m_profile.apply_carthage_beard_traits) {
       apply_carthage_beard_traits(ctx, seed, style, variant);
     }
+    if (m_facial_hair.has_value()) {
+      variant.facial_hair = *m_facial_hair;
+    }
   }
 
 private:
   const SpearmanRendererProfile& m_profile;
   std::string_view m_renderer_key;
+  std::optional<FacialHairParams> m_facial_hair{
+      Render::GL::Nation::resolve_equipment_loadout(m_renderer_key).ids.facial_hair};
   Render::Creature::Pipeline::CreatureAssetId m_creature_asset_id;
   bool m_use_beard_archetypes{true};
 

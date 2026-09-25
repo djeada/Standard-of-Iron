@@ -37,6 +37,15 @@ set(_soi_creature_asset_names
     # the humanoid stances that share one share a file.
     humanoid_full.bprm
     humanoid_minimal.bprm
+    # Bearded humanoid bodies: the beard is part of the body graph.
+    humanoid_short_beard_full.bprm
+    humanoid_short_beard_minimal.bprm
+    humanoid_full_beard_full.bprm
+    humanoid_full_beard_minimal.bprm
+    humanoid_long_goatee_full.bprm
+    humanoid_long_goatee_minimal.bprm
+    humanoid_mustache_beard_full.bprm
+    humanoid_mustache_beard_minimal.bprm
     skeleton_humanoid_full.bprm
     skeleton_humanoid_minimal.bprm
     horse_full.bprm

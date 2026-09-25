@@ -4,14 +4,18 @@
 #include <QVector3D>
 
 #include <array>
+#include <memory>
 #include <mutex>
 #include <span>
+#include <string>
 #include <vector>
 
 #include "animation/rig/humanoid_proportions.h"
 #include "render/bone_palette_arena.h"
 #include "render/creature/spec.h"
 #include "render/gl/humanoid/humanoid_types.h"
+#include "render/gl/mesh.h"
+#include "render/humanoid/asset/humanoid_beard_mesh.h"
 #include "render/humanoid/runtime/body_frame_resolver.h"
 #include "render/humanoid/runtime/humanoid_renderer.h"
 #include "render/humanoid/runtime/skeleton_evaluator.h"
@@ -33,7 +37,13 @@ enum HumanoidColorRole : std::uint8_t {
   Wood = 5,
   Metal = 6,
   ClothDark = 7,
+  Hair = 8,
 };
+
+static_assert(Hair == k_humanoid_hair_role);
+static_assert(LeatherDark == k_humanoid_leather_dark_role);
+static_assert(Wood == k_humanoid_wood_role);
+static_assert(Metal == k_humanoid_metal_role);
 
 void fill_humanoid_role_colors_impl(
     const Render::GL::HumanoidVariant& v,
@@ -45,6 +55,9 @@ void fill_humanoid_role_colors_impl(
   out[Wood - 1] = v.palette.wood;
   out[Metal - 1] = v.palette.metal;
   out[ClothDark - 1] = v.palette.cloth * 0.84F;
+  auto const& hair = v.facial_hair;
+  QVector3D const grey(0.72F, 0.71F, 0.69F);
+  out[Hair - 1] = (hair.color * (1.0F - hair.greyness)) + (grey * hair.greyness);
 }
 
 constexpr auto bone(HumanoidBone b) noexcept -> Creature::BoneIndex {
@@ -1092,6 +1105,82 @@ auto humanoid_creature_spec() noexcept -> const Creature::CreatureSpec& {
     return s;
   }();
   return spec;
+}
+
+namespace {
+
+struct BodyVariantSpec {
+  std::string species_name;
+  std::unique_ptr<Render::GL::Mesh> full_beard;
+  std::unique_ptr<Render::GL::Mesh> minimal_beard;
+  std::vector<Creature::PrimitiveInstance> full_parts;
+  std::vector<Creature::PrimitiveInstance> minimal_parts;
+  Creature::CreatureSpec spec;
+};
+
+auto beard_primitive(Render::GL::Mesh* mesh,
+                     std::uint8_t lod_mask) -> Creature::PrimitiveInstance {
+  Creature::PrimitiveInstance p{};
+  p.debug_name = "humanoid_beard";
+  p.shape = Creature::PrimitiveShape::Mesh;
+  p.params.anchor_bone = bone(HumanoidBone::Head);
+  p.params.half_extents = QVector3D(k_beard_head_silhouette_radius,
+                                    k_beard_head_silhouette_radius,
+                                    k_beard_head_silhouette_radius);
+  p.custom_mesh = mesh;
+  p.mesh_skinning = Creature::MeshSkinning::Authored;
+  p.color_role = Hair;
+  p.lod_mask = lod_mask;
+  return p;
+}
+
+auto build_body_variant_spec(HumanoidBodyVariant variant)
+    -> std::unique_ptr<BodyVariantSpec> {
+  auto out = std::make_unique<BodyVariantSpec>();
+  auto const& base = humanoid_creature_spec();
+  out->species_name =
+      std::string(base.species_name) + std::string(body_variant_name_suffix(variant));
+  out->full_beard = build_humanoid_beard_mesh(variant, Creature::CreatureLOD::Full);
+  out->minimal_beard =
+      build_humanoid_beard_mesh(variant, Creature::CreatureLOD::Minimal);
+  out->full_parts.assign(base.lod_full.primitives.begin(),
+                         base.lod_full.primitives.end());
+  out->minimal_parts.assign(base.lod_minimal.primitives.begin(),
+                            base.lod_minimal.primitives.end());
+  if (out->full_beard != nullptr) {
+    out->full_parts.push_back(
+        beard_primitive(out->full_beard.get(), Creature::k_lod_full));
+  }
+  if (out->minimal_beard != nullptr) {
+    out->minimal_parts.push_back(
+        beard_primitive(out->minimal_beard.get(), Creature::k_lod_minimal));
+  }
+  out->spec = base;
+  out->spec.species_name = out->species_name;
+  out->spec.body_variant = static_cast<std::uint8_t>(variant);
+  out->spec.lod_full = Creature::PartGraph{std::span<const Creature::PrimitiveInstance>(
+      out->full_parts.data(), out->full_parts.size())};
+  out->spec.lod_minimal =
+      Creature::PartGraph{std::span<const Creature::PrimitiveInstance>(
+          out->minimal_parts.data(), out->minimal_parts.size())};
+  return out;
+}
+
+} // namespace
+
+auto humanoid_creature_spec_for_body_variant(std::uint8_t body_variant) noexcept
+    -> const Creature::CreatureSpec* {
+  if (body_variant == 0U || body_variant >= k_humanoid_body_variant_count) {
+    return &humanoid_creature_spec();
+  }
+  static const auto variants = [] {
+    std::array<std::unique_ptr<BodyVariantSpec>, k_humanoid_body_variant_count> built{};
+    for (std::size_t i = 1; i < built.size(); ++i) {
+      built[i] = build_body_variant_spec(static_cast<HumanoidBodyVariant>(i));
+    }
+    return built;
+  }();
+  return &variants[body_variant]->spec;
 }
 
 auto skeleton_humanoid_creature_spec() noexcept -> const Creature::CreatureSpec& {

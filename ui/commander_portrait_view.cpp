@@ -88,10 +88,79 @@ constexpr QVector3D k_mouth{0.16F, 0.055F, 0.035F};
 constexpr QVector3D k_mouth_interior{0.085F, 0.030F, 0.024F};
 constexpr QVector3D k_lip{0.38F, 0.16F, 0.11F};
 constexpr QVector3D k_default_skin{0.78F, 0.62F, 0.49F};
+constexpr QVector3D k_eye_patch{0.07F, 0.05F, 0.035F};
+constexpr QVector3D k_scar{0.55F, 0.30F, 0.26F};
 constexpr float k_lid_shade = 0.90F;
 constexpr float k_lid_visible_close = 0.02F;
 constexpr float k_eye_half_height = k_head_radius * 0.27F;
 constexpr float k_lid_rim = k_head_radius * 0.008F;
+
+struct PortraitLook {
+  QVector3D iris;
+  QVector3D brow;
+  float brow_weight = 1.0F;
+  bool eye_patch = false;
+  bool scar = false;
+  QVector3D key_light;
+  QVector3D backdrop;
+};
+
+constexpr PortraitLook k_roman_look{.iris = k_roman_iris,
+                                    .brow = k_brow,
+                                    .key_light = {1.0F, 0.82F, 0.58F},
+                                    .backdrop = {0.055F, 0.048F, 0.042F}};
+constexpr PortraitLook k_carthage_look{.iris = k_carthage_iris,
+                                       .brow = k_brow,
+                                       .key_light = {1.0F, 0.82F, 0.58F},
+                                       .backdrop = {0.055F, 0.048F, 0.042F}};
+
+auto look_for(const QString& troop_type, const QString& nation) -> PortraitLook {
+  if (troop_type == QStringLiteral("roman_veteran_consul")) {
+    return {.iris = {0.30F, 0.19F, 0.08F},
+            .brow = {0.16F, 0.10F, 0.05F},
+            .brow_weight = 0.85F,
+            .key_light = {1.0F, 0.86F, 0.56F},
+            .backdrop = {0.20F, 0.13F, 0.05F}};
+  }
+  if (troop_type == QStringLiteral("roman_legion_organizer")) {
+    return {.iris = {0.30F, 0.33F, 0.36F},
+            .brow = {0.72F, 0.70F, 0.66F},
+            .brow_weight = 1.45F,
+            .key_light = {0.86F, 0.88F, 0.95F},
+            .backdrop = {0.07F, 0.09F, 0.15F}};
+  }
+  if (troop_type == QStringLiteral("roman_field_commander")) {
+    return {.iris = {0.22F, 0.14F, 0.07F},
+            .brow = {0.10F, 0.06F, 0.03F},
+            .brow_weight = 1.25F,
+            .scar = true,
+            .key_light = {1.0F, 0.74F, 0.52F},
+            .backdrop = {0.17F, 0.06F, 0.04F}};
+  }
+  if (troop_type == QStringLiteral("carthage_sword_commander")) {
+    return {.iris = {0.16F, 0.10F, 0.05F},
+            .brow = {0.05F, 0.035F, 0.025F},
+            .brow_weight = 1.30F,
+            .eye_patch = true,
+            .key_light = {1.0F, 0.66F, 0.42F},
+            .backdrop = {0.16F, 0.05F, 0.10F}};
+  }
+  if (troop_type == QStringLiteral("carthage_spear_commander")) {
+    return {.iris = {0.26F, 0.30F, 0.20F},
+            .brow = {0.16F, 0.12F, 0.09F},
+            .brow_weight = 1.35F,
+            .key_light = {0.92F, 0.90F, 0.74F},
+            .backdrop = {0.05F, 0.12F, 0.11F}};
+  }
+  if (troop_type == QStringLiteral("carthage_bow_commander")) {
+    return {.iris = {0.20F, 0.24F, 0.14F},
+            .brow = {0.09F, 0.06F, 0.04F},
+            .brow_weight = 1.0F,
+            .key_light = {0.95F, 0.80F, 0.92F},
+            .backdrop = {0.10F, 0.06F, 0.17F}};
+  }
+  return nation == QStringLiteral("carthage") ? k_carthage_look : k_roman_look;
+}
 
 struct PortraitDebug {
   bool trace = false;
@@ -307,14 +376,14 @@ auto face_disc_model(const QMatrix4x4& surface_frame,
   return model;
 }
 
-auto portrait_lighting() -> Render::EnvironmentLightingState {
+auto portrait_lighting(const PortraitLook& look) -> Render::EnvironmentLightingState {
   Render::EnvironmentLightingState lighting;
   lighting.primary_direction = QVector3D(0.45F, 0.80F, 0.55F);
-  lighting.primary_color = QVector3D(1.0F, 0.82F, 0.58F);
+  lighting.primary_color = look.key_light;
   lighting.primary_intensity = 1.15F;
-  lighting.sky_color = QVector3D(0.055F, 0.048F, 0.042F);
+  lighting.sky_color = look.backdrop * 1.6F;
   lighting.ground_bounce_color = QVector3D(0.12F, 0.08F, 0.05F);
-  lighting.ambient_intensity = 0.44F;
+  lighting.ambient_intensity = 0.52F;
   lighting.fog_density = 0.0F;
   lighting.shadow_tint = QVector3D(0.10F, 0.09F, 0.10F);
   lighting.shadow_strength = 0.5F;
@@ -343,8 +412,8 @@ auto camera_distance() -> float {
   return debug.camera_override ? debug.distance : k_bust_distance;
 }
 
-auto review_lighting() -> Render::EnvironmentLightingState {
-  Render::EnvironmentLightingState lighting = portrait_lighting();
+auto review_lighting(const PortraitLook& look) -> Render::EnvironmentLightingState {
+  Render::EnvironmentLightingState lighting = portrait_lighting(look);
   const auto& debug = portrait_debug();
   if (debug.camera_override) {
     QMatrix4x4 yaw;
@@ -436,7 +505,7 @@ private:
   void apply_pose();
   [[nodiscard]] auto resolve_skin() const -> QVector3D;
 
-  void submit_face(const QMatrix4x4& head_world);
+  void submit_face(const QMatrix4x4& head_world, const PortraitLook& look);
   [[nodiscard]] auto advance_focus(float delta) -> QVector3D;
   void debug_after_frame(const Render::Creature::Pipeline::BoneProbe& probe);
 
@@ -564,8 +633,8 @@ void CommanderPortraitView::PortraitRenderer::apply_pose() {
   m_world->update(k_portrait_seed_tick_seconds);
 }
 
-void CommanderPortraitView::PortraitRenderer::submit_face(
-    const QMatrix4x4& head_world) {
+void CommanderPortraitView::PortraitRenderer::submit_face(const QMatrix4x4& head_world,
+                                                          const PortraitLook& look) {
   if (m_renderer == nullptr) {
     return;
   }
@@ -585,8 +654,7 @@ void CommanderPortraitView::PortraitRenderer::submit_face(
                        m_expression.gaze.y() * k_head_radius * 0.050F);
   const float brow_rise = m_expression.brow_lift * k_head_radius * 0.030F;
 
-  const QVector3D iris =
-      m_nation == QStringLiteral("carthage") ? k_carthage_iris : k_roman_iris;
+  const QVector3D iris = look.iris;
   const float eye_y = (k_head_radius * 0.12F) - k_face_drop;
   const float brow_y = (k_head_radius * 0.47F) - k_face_drop + brow_rise;
   const float eye_z = face_shell_z(k_face_surface, eye_y);
@@ -596,74 +664,115 @@ void CommanderPortraitView::PortraitRenderer::submit_face(
 
     const QMatrix4x4 eye_frame =
         face_surface_frame(head_world, QVector3D(eye_x, eye_y, eye_z));
-    m_renderer->mesh(disc,
-                     face_disc_model(eye_frame,
-                                     QVector3D(0.0F, 0.0F, k_eye_shell_bias),
-                                     k_head_radius * 0.33F,
-                                     k_eye_half_height,
-                                     k_head_radius * 0.012F),
-                     k_eye_white);
-    const QVector3D gaze_offset(gaze.x(), gaze.y(), 0.0F);
-    m_renderer->mesh(
-        disc,
-        face_disc_model(
-            eye_frame,
-            gaze_offset +
-                QVector3D(0.0F, 0.0F, k_eye_shell_bias + (k_head_radius * 0.010F)),
-            k_head_radius * 0.155F,
-            k_head_radius * 0.165F,
-            k_head_radius * 0.010F),
-        iris);
-    m_renderer->mesh(
-        disc,
-        face_disc_model(
-            eye_frame,
-            gaze_offset +
-                QVector3D(0.0F, 0.0F, k_eye_shell_bias + (k_head_radius * 0.018F)),
-            k_head_radius * 0.075F,
-            k_head_radius * 0.090F,
-            k_head_radius * 0.008F),
-        k_pupil);
-    m_renderer->mesh(
-        disc,
-        face_disc_model(eye_frame,
-                        gaze_offset +
-                            QVector3D(k_head_radius * 0.080F,
-                                      k_head_radius * 0.082F,
-                                      k_eye_shell_bias + (k_head_radius * 0.026F)),
-                        k_head_radius * 0.038F,
-                        k_head_radius * 0.038F,
-                        k_head_radius * 0.008F),
-        k_catchlight);
-
-    if (lid_close > k_lid_visible_close) {
-
-      const float lid_reach = k_eye_half_height * lid_close;
-      const float lid_height = k_lid_rim + lid_reach;
-      const float lid_centre = k_eye_half_height + k_lid_rim - lid_reach;
+    if (look.eye_patch && side > 0.0F) {
+      m_renderer->mesh(disc,
+                       face_disc_model(eye_frame,
+                                       QVector3D(0.0F, 0.0F, k_eye_shell_bias * 2.0F),
+                                       k_head_radius * 0.40F,
+                                       k_head_radius * 0.34F,
+                                       k_head_radius * 0.030F),
+                       k_eye_patch);
+      m_renderer->mesh(
+          sphere,
+          face_feature_model(
+              head_world,
+              QVector3D(eye_x + (k_head_radius * 0.26F),
+                        eye_y + (k_head_radius * 0.30F),
+                        face_shell_z(k_face_surface, eye_y + (k_head_radius * 0.30F)) +
+                            k_eye_shell_bias),
+              QVector3D(k_head_radius * 0.34F,
+                        k_head_radius * 0.035F,
+                        k_head_radius * 0.025F),
+              48.0F),
+          k_eye_patch);
+    } else {
+      m_renderer->mesh(disc,
+                       face_disc_model(eye_frame,
+                                       QVector3D(0.0F, 0.0F, k_eye_shell_bias),
+                                       k_head_radius * 0.33F,
+                                       k_eye_half_height,
+                                       k_head_radius * 0.012F),
+                       k_eye_white);
+      const QVector3D gaze_offset(gaze.x(), gaze.y(), 0.0F);
       m_renderer->mesh(
           disc,
           face_disc_model(
               eye_frame,
-              QVector3D(0.0F, lid_centre, k_eye_shell_bias + (k_head_radius * 0.040F)),
-              k_head_radius * 0.37F,
-              lid_height,
+              gaze_offset +
+                  QVector3D(0.0F, 0.0F, k_eye_shell_bias + (k_head_radius * 0.010F)),
+              k_head_radius * 0.155F,
+              k_head_radius * 0.165F,
+              k_head_radius * 0.010F),
+          iris);
+      m_renderer->mesh(
+          disc,
+          face_disc_model(
+              eye_frame,
+              gaze_offset +
+                  QVector3D(0.0F, 0.0F, k_eye_shell_bias + (k_head_radius * 0.018F)),
+              k_head_radius * 0.075F,
+              k_head_radius * 0.090F,
               k_head_radius * 0.008F),
-          m_skin * k_lid_shade);
+          k_pupil);
+      m_renderer->mesh(
+          disc,
+          face_disc_model(eye_frame,
+                          gaze_offset +
+                              QVector3D(k_head_radius * 0.080F,
+                                        k_head_radius * 0.082F,
+                                        k_eye_shell_bias + (k_head_radius * 0.026F)),
+                          k_head_radius * 0.038F,
+                          k_head_radius * 0.038F,
+                          k_head_radius * 0.008F),
+          k_catchlight);
+
+      if (lid_close > k_lid_visible_close) {
+
+        const float lid_reach = k_eye_half_height * lid_close;
+        const float lid_height = k_lid_rim + lid_reach;
+        const float lid_centre = k_eye_half_height + k_lid_rim - lid_reach;
+        m_renderer->mesh(
+            disc,
+            face_disc_model(eye_frame,
+                            QVector3D(0.0F,
+                                      lid_centre,
+                                      k_eye_shell_bias + (k_head_radius * 0.040F)),
+                            k_head_radius * 0.37F,
+                            lid_height,
+                            k_head_radius * 0.008F),
+            m_skin * k_lid_shade);
+      }
     }
 
     const float brow_roll =
         side * (m_pose == QStringLiteral("dismissive") ? 5.0F : -3.0F);
     const QMatrix4x4 brow_frame =
         face_surface_frame(head_world, QVector3D(eye_x, brow_y, brow_z));
-    m_renderer->mesh(sphere,
-                     face_surface_model(brow_frame,
-                                        QVector3D(0.0F, 0.0F, k_head_radius * 0.015F),
-                                        QVector3D(k_head_radius * 0.28F,
-                                                  k_head_radius * 0.045F,
-                                                  k_head_radius * 0.032F),
-                                        brow_roll),
-                     k_brow);
+    m_renderer->mesh(
+        sphere,
+        face_surface_model(brow_frame,
+                           QVector3D(0.0F, 0.0F, k_head_radius * 0.015F),
+                           QVector3D(k_head_radius * 0.28F,
+                                     k_head_radius * 0.045F * look.brow_weight,
+                                     k_head_radius * 0.032F),
+                           brow_roll),
+        look.brow);
+  }
+
+  if (look.scar) {
+    const float scar_y = eye_y - (k_head_radius * 0.34F);
+    const float scar_x = -k_head_radius * 0.50F;
+    m_renderer->mesh(
+        sphere,
+        face_feature_model(
+            head_world,
+            QVector3D(scar_x,
+                      scar_y,
+                      face_shell_z(k_face_surface, scar_y) + k_eye_shell_bias),
+            QVector3D(
+                k_head_radius * 0.035F, k_head_radius * 0.26F, k_head_radius * 0.020F),
+            -28.0F),
+        k_scar);
   }
 
   const float mouth_height = k_head_radius * (0.025F + 0.14F * mouth_open);
@@ -787,9 +896,11 @@ void CommanderPortraitView::PortraitRenderer::render() {
 
   m_renderer->set_camera(m_camera);
   m_renderer->set_viewport(m_size.width(), m_size.height());
-  m_renderer->set_environment_lighting(review_lighting());
+  const PortraitLook look = look_for(m_troop_type, m_nation);
+  m_renderer->set_environment_lighting(review_lighting(look));
 
-  m_renderer->set_clear_color(0.055F, 0.048F, 0.042F, 1.0F);
+  m_renderer->set_clear_color(
+      look.backdrop.x(), look.backdrop.y(), look.backdrop.z(), 1.0F);
   m_renderer->set_local_owner_id(1);
   m_renderer->set_force_full_creature_lod(true);
   m_renderer->update_animation_time(delta);
@@ -806,7 +917,7 @@ void CommanderPortraitView::PortraitRenderer::render() {
   }
 
   if (head_probe.resolved) {
-    submit_face(head_probe.world);
+    submit_face(head_probe.world, look);
     if (!m_focus_locked) {
       QVector3D const head =
           head_probe.world.map(QVector3D(0.0F, k_cranium_rise, 0.0F));
