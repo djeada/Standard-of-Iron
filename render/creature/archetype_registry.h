@@ -32,6 +32,8 @@ struct ArchetypeDescriptor {
 
   std::uint8_t role_count{0};
 
+  std::uint8_t body_variant{0};
+
   using ExtraRoleColorsFn = std::uint32_t (*)(const void* variant,
                                               QVector3D* out,
                                               std::uint32_t base_count,

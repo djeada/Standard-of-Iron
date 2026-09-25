@@ -847,7 +847,7 @@ Item {
 
         Image {
             anchors.fill: parent
-            source: "qrc:/StandardOfIron/assets/visuals/load_screen.png"
+            source: StyleGuide.backdrops[Math.floor(Math.random() * StyleGuide.backdrops.length)]
             fillMode: Image.PreserveAspectCrop
             asynchronous: true
             smooth: true

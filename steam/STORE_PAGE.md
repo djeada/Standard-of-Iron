@@ -98,10 +98,10 @@ Real-Time Strategy, Strategy, Historical, City Builder, Medieval/Ancient
   survey's categories.
 - **Pre-generated AI content: audio.** 30 music tracks and 44 sound effects
   (ElevenLabs), disclosed in steam/README.md.
-- **Pre-generated AI content: art (confirm).** No provenance is recorded for
-  the painted menu art: `assets/visuals/load_screen.png`, the emblems, the
-  `standard_of_iron.png` banner, and the commander portraits. If any of it is
-  AI-generated, it must be disclosed too.
+- **Pre-generated AI content: art.** The three menu and load-screen paintings,
+  `assets/visuals/load_screen_*.png`, are AI-generated (ChatGPT image
+  generation) and must be disclosed. **confirm** the provenance of the
+  emblems, the `standard_of_iron.png` banner, and the commander portraits.
 - No content is generated at runtime, and the game makes no network requests.
 
 ## Steam Deck

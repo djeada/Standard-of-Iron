@@ -45,7 +45,16 @@
     },
     "troops/roman/healer": {
       "helmet": "roman_montefortino",
-      "armor": "roman_light_armor"
+      "armor": "roman_light_armor",
+      "facial_hair": {
+        "style": "short_beard",
+        "color": [
+          0.22,
+          0.16,
+          0.11
+        ],
+        "greyness": 0.35
+      }
     },
     "troops/carthage/healer": {
       "armor": "armor_light_carthage"
@@ -89,7 +98,16 @@
       "greaves": "roman_greaves",
       "armor": "roman_anatomical_cuirass",
       "shoulder": "commander_pauldron",
-      "cloak": "cloak_fabius"
+      "cloak": "cloak_fabius",
+      "facial_hair": {
+        "style": "full_beard",
+        "color": [
+          0.26,
+          0.21,
+          0.17
+        ],
+        "greyness": 0.35
+      }
     },
     "troops/roman/commanders/scipio_africanus": {
       "sword": "sword_scipio",
@@ -115,7 +133,16 @@
       "greaves": "carthage_greaves",
       "armor": "armor_light_carthage",
       "shoulder": "commander_pauldron",
-      "cloak": "cloak_hanno"
+      "cloak": "cloak_hanno",
+      "facial_hair": {
+        "style": "goatee",
+        "color": [
+          0.13,
+          0.09,
+          0.06
+        ],
+        "greyness": 0.1
+      }
     },
     "troops/carthage/commanders/hasdrubal_barca": {
       "bow": "bow_hasdrubal",
@@ -124,7 +151,15 @@
       "helmet": "commander_hasdrubal",
       "greaves": "carthage_greaves",
       "armor": "armor_light_carthage",
-      "cloak": "cloak_hasdrubal"
+      "cloak": "cloak_hasdrubal",
+      "facial_hair": {
+        "style": "full_beard",
+        "color": [
+          0.2,
+          0.12,
+          0.065
+        ]
+      }
     },
     "troops/carthage/commanders/hannibal_barca": {
       "sword": "sword_hannibal",
@@ -133,7 +168,15 @@
       "greaves": "carthage_greaves",
       "armor": "carthage_gilded_scale",
       "shoulder": "commander_pauldron",
-      "cloak": "cloak_hannibal"
+      "cloak": "cloak_hannibal",
+      "facial_hair": {
+        "style": "full_beard",
+        "color": [
+          0.075,
+          0.05,
+          0.038
+        ]
+      }
     },
     "troops/roman/horse_archer": {
       "bow": "bow_roman",

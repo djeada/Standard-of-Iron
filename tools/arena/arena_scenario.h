@@ -492,6 +492,12 @@ struct ArenaScenarioValidationError {
 [[nodiscard]] auto validate_scenario(const ArenaScenarioDefinition& definition)
     -> std::vector<ArenaScenarioValidationError>;
 
+[[nodiscard]] auto
+expectation_reads_soldier_samples(ArenaExpectationKind kind) noexcept -> bool;
+
+[[nodiscard]] auto
+scenario_needs_animation_diagnostics(const ArenaScenarioDefinition& definition) -> bool;
+
 struct ArenaBattleSideResult {
   int owner_id{0};
   QString label;

@@ -35,6 +35,7 @@ QtObject {
             "dangerColor": Design.Theme.danger,
             "startColor": Design.Theme.success
         })
+    readonly property var backdrops: ["qrc:/StandardOfIron/assets/visuals/load_screen_1.png", "qrc:/StandardOfIron/assets/visuals/load_screen_2.png", "qrc:/StandardOfIron/assets/visuals/load_screen_3.png"]
     readonly property var historical: ({
             "parchmentLight": Design.Theme.panelLeather,
             "parchmentDark": Design.Theme.panelIron,

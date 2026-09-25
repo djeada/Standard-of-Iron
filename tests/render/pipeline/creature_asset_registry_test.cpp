@@ -5,10 +5,13 @@
 #include "render/creature/archetype_registry.h"
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/elephant/elephant_spec.h"
+#include "render/entity/registry.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/horse/horse_spec.h"
+#include "render/humanoid/asset/humanoid_beard_mesh.h"
 #include "render/humanoid/asset/humanoid_spec.h"
 #include "render/humanoid/schema/skeleton_schema.h"
+#include "render/role_color_palette.h"
 #include "tests/render/test_asset_paths.h"
 
 namespace {
@@ -292,6 +295,38 @@ TEST(CreatureRenderAssetHandleRegistry, AttachmentSetIdDeduplicatesIdenticalSets
   const auto* base_again = handles.get(base_id_again);
   ASSERT_NE(base_again, nullptr);
   EXPECT_EQ(base_again->attachment_set_id, base->attachment_set_id);
+}
+
+TEST(CreatureAssetRegistry, EveryUnitArchetypeFitsTheRoleColorPalette) {
+  Render::GL::EntityRendererRegistry renderers;
+  Render::GL::register_built_in_entity_renderers(renderers);
+
+  auto const& archetypes = Render::Creature::ArchetypeRegistry::instance();
+  for (std::size_t i = 0; i < archetypes.size(); ++i) {
+    const auto* desc = archetypes.get(static_cast<Render::Creature::ArchetypeId>(i));
+    ASSERT_NE(desc, nullptr);
+    EXPECT_LE(desc->role_count, Render::RoleColorPalette::k_capacity + 1U)
+        << desc->debug_name << " has " << static_cast<int>(desc->role_count)
+        << " roles; the shader palette holds " << Render::RoleColorPalette::k_capacity;
+  }
+}
+
+TEST(CreatureAssetRegistry, BeardedBodyVariantsAddOnlyTheBeardToTheBody) {
+  auto const& clean = Render::Humanoid::humanoid_creature_spec();
+  for (std::size_t v = 1; v < Render::Humanoid::k_humanoid_body_variant_count; ++v) {
+    const auto* spec = Render::Humanoid::humanoid_creature_spec_for_body_variant(
+        static_cast<std::uint8_t>(v));
+    ASSERT_NE(spec, nullptr);
+    EXPECT_NE(spec, &clean);
+    EXPECT_EQ(spec->body_variant, v);
+    EXPECT_EQ(spec->lod_full.primitives.size(), clean.lod_full.primitives.size() + 1U);
+    EXPECT_EQ(spec->lod_minimal.primitives.size(),
+              clean.lod_minimal.primitives.size() + 1U);
+    auto const& beard = spec->lod_full.primitives.back();
+    EXPECT_EQ(beard.color_role, Render::Humanoid::k_humanoid_hair_role);
+    EXPECT_NE(beard.custom_mesh, nullptr);
+  }
+  EXPECT_EQ(Render::Humanoid::humanoid_creature_spec_for_body_variant(0U), &clean);
 }
 
 } // namespace

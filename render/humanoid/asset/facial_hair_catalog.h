@@ -1,25 +1,13 @@
 #pragma once
 
-#include <QVector3D>
-
-#include <cstddef>
-#include <cstdint>
-
 #include "render/creature/archetype_registry.h"
 #include "render/gl/humanoid/humanoid_types.h"
 
 namespace Render::Humanoid {
 
-inline constexpr std::uint32_t k_facial_hair_role_count = 3;
-
-auto facial_hair_role_colors(const Render::GL::HumanoidVariant& variant,
-                             QVector3D* out,
-                             std::uint32_t base_count,
-                             std::size_t max_count) -> std::uint32_t;
-
-auto facial_hair_make_static_attachment(Render::GL::FacialHairStyle style,
-                                        std::uint8_t base_role_byte)
-    -> Render::Creature::StaticAttachmentSpec;
+[[nodiscard]] auto facial_hair_body_archetype(
+    Render::Creature::ArchetypeId base_archetype,
+    Render::GL::FacialHairStyle style) -> Render::Creature::ArchetypeId;
 
 auto resolve_facial_hair_archetype(Render::Creature::ArchetypeId base_archetype,
                                    const Render::GL::HumanoidVariant& variant)

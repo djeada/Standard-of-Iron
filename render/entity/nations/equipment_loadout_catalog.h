@@ -1,9 +1,11 @@
 #pragma once
 
+#include <optional>
 #include <string>
 #include <string_view>
 
 #include "render/equipment/equipment_registry.h"
+#include "render/gl/humanoid/humanoid_types.h"
 
 namespace Render::GL::Nation {
 
@@ -28,6 +30,7 @@ struct EquipmentLoadoutIds {
   std::string horse_barding{};
   std::string horse_crupper{};
   std::string horse_decoration{};
+  std::optional<Render::GL::FacialHairParams> facial_hair{};
 };
 
 struct ResolvedEquipmentLoadout {

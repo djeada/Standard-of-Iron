@@ -2,6 +2,7 @@
 
 #include <QCoreApplication>
 
+#include <algorithm>
 #include <array>
 #include <filesystem>
 #include <utility>
@@ -132,7 +133,65 @@ auto RiggedMeshRegistry::load_all(const std::string& asset_root) -> std::size_t 
       }
     }
   }
+
+  namespace fs = std::filesystem;
+  std::error_code ec;
+  for (auto const& entry : fs::directory_iterator(resolved_root, ec)) {
+    if (!entry.is_regular_file(ec)) {
+      continue;
+    }
+    std::string const file = entry.path().filename().string();
+    for (auto const lod : k_lods) {
+      std::string const suffix = asset_file_name("", lod);
+      if (file.size() <= suffix.size() ||
+          file.compare(file.size() - suffix.size(), suffix.size(), suffix) != 0) {
+        continue;
+      }
+      std::string const body_name = file.substr(0, file.size() - suffix.size());
+      bool const is_species =
+          std::any_of(k_species.begin(), k_species.end(), [&](const auto& species) {
+            return species.second == body_name;
+          });
+      if (!is_species && load_body(body_name, lod, entry.path().string())) {
+        ++loaded;
+      }
+    }
+  }
   return loaded;
+}
+
+auto RiggedMeshRegistry::load_body(std::string_view body_name,
+                                   Render::Creature::CreatureLOD lod,
+                                   const std::string& path) -> bool {
+  auto const lod_slot = lod_slot_index(lod);
+  if (lod_slot >= 2U) {
+    m_last_error = "unsupported rigged mesh slot";
+    return false;
+  }
+  auto loaded = RiggedMeshBlob::from_file(path);
+  if (!loaded.loaded()) {
+    m_last_error = std::string{loaded.last_error()};
+    return false;
+  }
+  if (loaded.lod() != lod) {
+    m_last_error = "rigged mesh lod mismatch";
+    return false;
+  }
+  m_bodies[std::string(body_name)][lod_slot] = std::move(loaded);
+  m_last_error.clear();
+  return true;
+}
+
+auto RiggedMeshRegistry::body(std::string_view body_name,
+                              Render::Creature::CreatureLOD lod) const noexcept
+    -> const RiggedMeshBlob* {
+  auto const lod_slot = lod_slot_index(lod);
+  auto const it = m_bodies.find(body_name);
+  if (lod_slot >= 2U || it == m_bodies.end()) {
+    return nullptr;
+  }
+  const auto& candidate = it->second[lod_slot];
+  return candidate.loaded() ? &candidate : nullptr;
 }
 
 auto RiggedMeshRegistry::blob(std::uint32_t species_id,
@@ -146,6 +205,7 @@ void RiggedMeshRegistry::clear() {
   for (auto& blob : m_blobs) {
     blob = RiggedMeshBlob{};
   }
+  m_bodies.clear();
   m_last_error.clear();
 }
 

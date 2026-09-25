@@ -83,7 +83,7 @@ constexpr float k_team_mix_weight = 0.65F;
 constexpr float k_style_mix_weight = 0.35F;
 constexpr std::uint32_t k_builder_work_tunic_role_count = 2;
 constexpr std::uint32_t k_builder_hammer_role_count = 3;
-constexpr std::uint32_t k_builder_saw_role_count = 4;
+constexpr std::uint32_t k_builder_saw_role_count = 1;
 constexpr std::uint32_t k_builder_chisel_role_count = 2;
 constexpr std::uint32_t k_builder_sickle_role_count = 2;
 constexpr std::uint32_t k_roman_civilian_mantle_role_count = 2;
@@ -174,10 +174,7 @@ auto builder_saw_fill_role_colors(const HumanoidPalette& palette,
   if (max < k_builder_saw_role_count) {
     return 0U;
   }
-  out[0] = palette.wood;
-  out[1] = palette.metal;
-  out[2] = palette.metal * 0.72F;
-  out[3] = palette.leather_dark;
+  out[0] = palette.metal * 0.72F;
   return k_builder_saw_role_count;
 }
 
@@ -785,14 +782,20 @@ auto roman_builder_hammer_unit_archetype() -> Render::Creature::ArchetypeId {
 }
 
 auto roman_builder_saw_unit_archetype() -> Render::Creature::ArchetypeId {
-  static constexpr std::array<std::uint8_t, 4> k_slots{
-      k_saw_wood_slot, k_saw_metal_slot, k_saw_metal_dark_slot, k_saw_leather_slot};
-  static const auto k_tool_spec = builder_tool_make_static_attachment(
-      builder_saw_archetype(),
-      Render::Creature::ArchetypeRegistry::instance()
-          .get(roman_builder_idle_archetype())
-          ->role_count,
-      k_slots);
+  static constexpr std::array<std::uint8_t, 1> k_slots{k_saw_metal_dark_slot};
+  static const auto k_tool_spec = [] {
+    auto spec = builder_tool_make_static_attachment(
+        builder_saw_archetype(),
+        Render::Creature::ArchetypeRegistry::instance()
+            .get(roman_builder_idle_archetype())
+            ->role_count,
+        k_slots);
+    spec.palette_role_remap[k_saw_wood_slot] = Render::Humanoid::k_humanoid_wood_role;
+    spec.palette_role_remap[k_saw_metal_slot] = Render::Humanoid::k_humanoid_metal_role;
+    spec.palette_role_remap[k_saw_leather_slot] =
+        Render::Humanoid::k_humanoid_leather_dark_role;
+    return spec;
+  }();
   static const auto k_archetype = register_builder_tool_variant_archetype(
       "troops/roman/builder/construction_saw",
       roman_builder_idle_archetype(),

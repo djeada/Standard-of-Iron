@@ -1068,56 +1068,17 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
   }
   if (has_shared_footsteps && !soldier_render_anim.is_attacking &&
       !soldier_render_anim.is_in_melee_lock && !soldier_render_anim.is_constructing) {
-    const float speed = turn_smoothing.travel_speed;
-
-    const float running_speed =
-        std::max(2.6F, (unit_comp != nullptr ? unit_comp->speed : 2.0F) * 1.45F);
-    SoldierTurnSmoothingState* footing_latch =
-        (layout_cache_comp != nullptr &&
-         static_cast<std::size_t>(idx) < layout_cache_comp->turn_states.size())
-            ? &layout_cache_comp->turn_states[static_cast<std::size_t>(idx)]
-            : nullptr;
-    bool const was_stepping =
-        footing_latch != nullptr && footing_latch->footing_stepping;
-    bool const was_running = footing_latch != nullptr && footing_latch->footing_running;
-    const bool stepping = speed > (was_stepping ? 0.03F : 0.06F) ||
-                          shared_footing->angular_speed > (was_stepping ? 5.0F : 8.0F);
-
-    constexpr float k_run_entry_seconds = 0.15F;
-    bool running = false;
-    if (stepping && was_running) {
-      running = speed > running_speed * 0.85F;
-    } else if (stepping && speed > running_speed) {
-      float const pending =
-          (footing_latch != nullptr ? footing_latch->footing_run_pending_seconds
-                                    : k_run_entry_seconds) +
-          turn_smoothing_dt;
-      running = pending >= k_run_entry_seconds;
-      if (footing_latch != nullptr) {
-        footing_latch->footing_run_pending_seconds = pending;
-      }
-    } else if (footing_latch != nullptr) {
-      footing_latch->footing_run_pending_seconds = 0.0F;
+    switch (shared_footing->gait) {
+    case Engine::Core::FormationSoldierGait::Idle:
+      soldier_render_anim.movement_state = Animation::MovementState::Idle;
+      break;
+    case Engine::Core::FormationSoldierGait::Walk:
+      soldier_render_anim.movement_state = Animation::MovementState::Walk;
+      break;
+    case Engine::Core::FormationSoldierGait::Run:
+      soldier_render_anim.movement_state = Animation::MovementState::Run;
+      break;
     }
-    if (footing_latch != nullptr) {
-      footing_latch->footing_stepping = stepping;
-      footing_latch->footing_running = running;
-      if (running) {
-        footing_latch->footing_run_pending_seconds = 0.0F;
-      }
-    }
-    soldier_render_anim.movement_state = !stepping ? Animation::MovementState::Idle
-                                         : running ? Animation::MovementState::Run
-                                                   : Animation::MovementState::Walk;
-  } else if (has_shared_formation_layout &&
-             formation_presentation->soldiers[static_cast<std::size_t>(idx)]
-                 .reforming &&
-             !soldier_is_casualty_body && !soldier_render_anim.is_attacking &&
-             !soldier_render_anim.is_in_melee_lock &&
-             !soldier_render_anim.is_constructing &&
-             !Render::Creature::is_moving_animation(
-                 soldier_render_anim.movement_state)) {
-    soldier_render_anim.movement_state = Animation::MovementState::Walk;
   }
 
   bool const soldier_has_locomotion =

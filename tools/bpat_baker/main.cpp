@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
+#include <span>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -33,7 +34,9 @@
 #include "render/creature/snapshot_mesh_asset.h"
 #include "render/elephant/elephant_bake_recipe.h"
 #include "render/horse/horse_bake_recipe.h"
+#include "render/humanoid/asset/humanoid_beard_mesh.h"
 #include "render/humanoid/asset/humanoid_manifest.h"
+#include "render/humanoid/asset/humanoid_spec.h"
 #include "render/rigged_mesh_bake.h"
 #include "render/snapshot_mesh_bake.h"
 #include "render/wildlife/sheep_manifest.h"
@@ -109,6 +112,40 @@ auto build_clip_variant_table(std::uint32_t species_id,
     }
   }
   return table;
+}
+
+auto write_body_meshes(const std::filesystem::path& out_dir,
+                       const Render::Creature::CreatureSpec& spec,
+                       std::span<const QMatrix4x4> bind_palette) -> bool {
+  auto const body_name = spec.species_name;
+  for (auto const lod :
+       {Render::Creature::CreatureLOD::Full, Render::Creature::CreatureLOD::Minimal}) {
+    Render::Creature::BakeInput body_input{};
+    body_input.graph = &Render::Creature::part_graph_for(spec, lod);
+    body_input.bind_pose = bind_palette;
+    body_input.lod = lod;
+    auto const body = Render::Creature::bake_rigged_mesh_cpu(body_input);
+    if (body.vertices.empty() || body.indices.empty()) {
+      std::cerr << "[bpat_baker] warning: " << body_name << " has no geometry for the "
+                << (lod == Render::Creature::CreatureLOD::Full ? "full" : "minimal")
+                << " lod; skipping its body mesh\n";
+      continue;
+    }
+
+    rigged::RiggedMeshWriter const body_writer(lod, body.vertices, body.indices);
+    auto const body_path = out_dir / rigged::asset_file_name(body_name, lod);
+    std::ostringstream body_out(std::ios::binary);
+    if (!body_writer.write(body_out)) {
+      std::cerr << "[bpat_baker] write failed for " << body_path << "\n";
+      return false;
+    }
+    if (!write_asset(body_path, body_out.str())) {
+      return false;
+    }
+    std::cout << "[bpat_baker] wrote " << body_path << " (" << body.vertices.size()
+              << " verts, " << body.indices.size() / 3U << " tris)\n";
+  }
+  return true;
 }
 
 bool bake_species_manifest(const std::filesystem::path& out_dir,
@@ -221,34 +258,8 @@ bool bake_species_manifest(const std::filesystem::path& out_dir,
             << " frames, " << recipe.clips.size() << " clips, " << bind_palette.size()
             << " bones, " << recipe.sockets.size() << " sockets)\n";
 
-  auto const body_name = manifest.creature_spec().species_name;
-  for (auto const lod :
-       {Render::Creature::CreatureLOD::Full, Render::Creature::CreatureLOD::Minimal}) {
-    Render::Creature::BakeInput body_input{};
-    body_input.graph = &Render::Creature::part_graph_for(manifest.creature_spec(), lod);
-    body_input.bind_pose = bind_palette;
-    body_input.lod = lod;
-    auto const body = Render::Creature::bake_rigged_mesh_cpu(body_input);
-    if (body.vertices.empty() || body.indices.empty()) {
-      std::cerr << "[bpat_baker] warning: " << manifest.species_name
-                << " has no geometry for the "
-                << (lod == Render::Creature::CreatureLOD::Full ? "full" : "minimal")
-                << " lod; skipping its body mesh\n";
-      continue;
-    }
-
-    rigged::RiggedMeshWriter const body_writer(lod, body.vertices, body.indices);
-    auto const body_path = out_dir / rigged::asset_file_name(body_name, lod);
-    std::ostringstream body_out(std::ios::binary);
-    if (!body_writer.write(body_out)) {
-      std::cerr << "[bpat_baker] write failed for " << body_path << "\n";
-      return false;
-    }
-    if (!write_asset(body_path, body_out.str())) {
-      return false;
-    }
-    std::cout << "[bpat_baker] wrote " << body_path << " (" << body.vertices.size()
-              << " verts, " << body.indices.size() / 3U << " tris)\n";
+  if (!write_body_meshes(out_dir, manifest.creature_spec(), bind_palette)) {
+    return false;
   }
 
   if (manifest.minimal_snapshot_file_name.empty()) {
@@ -363,6 +374,15 @@ int main(int argc, char** argv) {
   for (auto const profile : Render::Humanoid::humanoid_bake_profiles()) {
     ok = bake_species_manifest(out_dir,
                                Render::Humanoid::humanoid_bake_recipe(profile)) &&
+         ok;
+  }
+  for (std::size_t variant = 1;
+       variant < Render::Humanoid::k_humanoid_body_variant_count;
+       ++variant) {
+    const auto* spec = Render::Humanoid::humanoid_creature_spec_for_body_variant(
+        static_cast<std::uint8_t>(variant));
+    ok = spec != nullptr &&
+         write_body_meshes(out_dir, *spec, Render::Humanoid::humanoid_bind_palette()) &&
          ok;
   }
   ok = bake_species_manifest(out_dir, Render::Horse::horse_bake_recipe()) && ok;

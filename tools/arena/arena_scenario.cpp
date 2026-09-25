@@ -416,6 +416,36 @@ auto expectation_requires_side(ArenaExpectationKind kind) -> bool {
 
 } // namespace
 
+auto expectation_reads_soldier_samples(ArenaExpectationKind kind) noexcept -> bool {
+  switch (kind) {
+  case ArenaExpectationKind::GroupIsRendered:
+  case ArenaExpectationKind::NoPoseOscillation:
+  case ArenaExpectationKind::NoRootTeleport:
+  case ArenaExpectationKind::NoUnexpectedFallPose:
+  case ArenaExpectationKind::NoPlantedFootSliding:
+  case ArenaExpectationKind::NoWeaponTeleport:
+  case ArenaExpectationKind::NoLimbOverextension:
+  case ArenaExpectationKind::NoPelvisSnap:
+  case ArenaExpectationKind::HoldPoseMaintained:
+  case ArenaExpectationKind::AllLivingSoldiersFight:
+  case ArenaExpectationKind::AttackHasTorsoRotation:
+  case ArenaExpectationKind::RpgFormationSurvivesLensGap:
+    return true;
+  default:
+    return false;
+  }
+}
+
+auto scenario_needs_animation_diagnostics(const ArenaScenarioDefinition& definition)
+    -> bool {
+  return definition.collect_animation_diagnostics ||
+         std::any_of(definition.expectations.begin(),
+                     definition.expectations.end(),
+                     [](const ArenaExpectation& expectation) {
+                       return expectation_reads_soldier_samples(expectation.kind);
+                     });
+}
+
 auto validate_scenario(const ArenaScenarioDefinition& definition)
     -> std::vector<ArenaScenarioValidationError> {
   std::vector<ArenaScenarioValidationError> errors;

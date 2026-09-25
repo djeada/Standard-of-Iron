@@ -619,6 +619,15 @@ constexpr float k_crowd_offset_settled = 0.005F;
 constexpr float k_mounted_crowd_width = 0.75F;
 constexpr float k_mounted_crowd_length_ratio = 0.55F;
 constexpr float k_authored_velocity_smoothing_seconds = 0.10F;
+constexpr float k_gait_walk_enter_speed = 0.10F;
+constexpr float k_gait_walk_exit_speed = 0.05F;
+constexpr float k_gait_turn_enter_degrees_per_second = 12.0F;
+constexpr float k_gait_turn_exit_degrees_per_second = 6.0F;
+constexpr float k_gait_min_run_speed = 2.6F;
+constexpr float k_gait_run_speed_ratio = 1.45F;
+constexpr float k_gait_run_exit_ratio = 0.85F;
+constexpr float k_gait_run_entry_seconds = 0.15F;
+constexpr float k_gait_min_dwell_seconds = 0.30F;
 
 class ForeignSoldierGrid {
 public:
@@ -745,6 +754,54 @@ struct SlotWalk {
   float delta_time{0.0F};
 };
 
+void settle_soldier_gait(const Engine::Core::FormationSoldierPresentation* previous,
+                         Engine::Core::FormationSoldierPresentation& soldier,
+                         float dt,
+                         float run_speed) {
+  using Gait = Engine::Core::FormationSoldierGait;
+  if (previous == nullptr || !previous->alive) {
+    soldier.gait = Gait::Idle;
+    soldier.gait_held_seconds = 0.0F;
+    soldier.gait_run_pending_seconds = 0.0F;
+    return;
+  }
+  soldier.gait = previous->gait;
+  soldier.gait_held_seconds = previous->gait_held_seconds + dt;
+  soldier.gait_run_pending_seconds = previous->gait_run_pending_seconds;
+
+  float const speed = std::hypot(soldier.world_velocity_x, soldier.world_velocity_z);
+  bool const stepping =
+      soldier.gait == Gait::Idle
+          ? speed > k_gait_walk_enter_speed ||
+                soldier.angular_speed > k_gait_turn_enter_degrees_per_second
+          : speed > k_gait_walk_exit_speed ||
+                soldier.angular_speed > k_gait_turn_exit_degrees_per_second;
+
+  Gait desired = Gait::Idle;
+  if (stepping) {
+    desired = Gait::Walk;
+    if (soldier.gait == Gait::Run) {
+      if (speed > run_speed * k_gait_run_exit_ratio) {
+        desired = Gait::Run;
+      }
+    } else if (speed > run_speed) {
+      soldier.gait_run_pending_seconds += dt;
+      if (soldier.gait_run_pending_seconds >= k_gait_run_entry_seconds) {
+        desired = Gait::Run;
+      }
+    }
+  }
+  if (desired != Gait::Run && soldier.gait != Gait::Run && speed <= run_speed) {
+    soldier.gait_run_pending_seconds = 0.0F;
+  }
+  if (desired != soldier.gait &&
+      soldier.gait_held_seconds >= k_gait_min_dwell_seconds) {
+    soldier.gait = desired;
+    soldier.gait_held_seconds = 0.0F;
+    soldier.gait_run_pending_seconds = 0.0F;
+  }
+}
+
 void walk_formation_slot(const SlotWalk& walk,
                          const Engine::Core::FormationSoldierPresentation* previous,
                          Engine::Core::FormationSoldierPresentation& soldier) {
@@ -764,6 +821,8 @@ void walk_formation_slot(const SlotWalk& walk,
                      !previous->world_motion_valid ||
                      !walk.formation.motion_root_valid ||
                      root_travel > std::max(12.0F, max_speed * dt * 4.0F);
+  const float run_speed =
+      std::max(k_gait_min_run_speed, walk.march_speed * k_gait_run_speed_ratio);
   if (reset || walk.external_reform) {
     soldier.world_x = destination.x();
     soldier.world_z = destination.z();
@@ -773,6 +832,7 @@ void walk_formation_slot(const SlotWalk& walk,
       soldier.world_velocity_x = (soldier.world_x - previous->world_x) / dt;
       soldier.world_velocity_z = (soldier.world_z - previous->world_z) / dt;
     }
+    settle_soldier_gait(reset ? nullptr : previous, soldier, dt, run_speed);
     return;
   }
 
@@ -854,7 +914,6 @@ void walk_formation_slot(const SlotWalk& walk,
   destination.setZ(destination.z() + soldier.crowd_offset_z);
   auto const props = Game::Map::shared_world_prop_clearance_index();
   float const clearance = std::max(walk.body_radius, k_min_prop_clearance);
-  QVector3D const slot_destination = destination;
   {
     float x = destination.x();
     float z = destination.z();
@@ -864,8 +923,6 @@ void walk_formation_slot(const SlotWalk& walk,
     }
   }
   auto const* pathfinder = NavGrid::get_pathfinder();
-  bool const obstructed =
-      destination != slot_destination || previous->relocation_blocked;
   const float heading_change =
       signed_yaw_delta(walk.formation.motion_root_yaw, walk.actor.rotation.y);
   if (std::abs(heading_change) > 0.05F && !soldier.turning) {
@@ -1058,7 +1115,7 @@ void walk_formation_slot(const SlotWalk& walk,
     step_x = dx;
     step_z = dz;
     float const catch_up_limit = max_speed * k_obstacle_catch_up_ratio * dt;
-    if (obstructed && distance > catch_up_limit) {
+    if (distance > catch_up_limit) {
       step_x *= catch_up_limit / distance;
       step_z *= catch_up_limit / distance;
     }
@@ -1134,6 +1191,7 @@ void walk_formation_slot(const SlotWalk& walk,
   if (std::abs(heading_change) < 0.05F && remaining < 0.08F && facing_error < 3.0F) {
     soldier.turning = false;
   }
+  settle_soldier_gait(previous, soldier, dt, run_speed);
 }
 
 void tick_formation_hit(Engine::Core::Entity& entity, float delta_time) {
