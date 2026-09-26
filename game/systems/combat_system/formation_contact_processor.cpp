@@ -914,6 +914,7 @@ void walk_formation_slot(const SlotWalk& walk,
   destination.setZ(destination.z() + soldier.crowd_offset_z);
   auto const props = Game::Map::shared_world_prop_clearance_index();
   float const clearance = std::max(walk.body_radius, k_min_prop_clearance);
+  QVector3D const slot_destination = destination;
   {
     float x = destination.x();
     float z = destination.z();
@@ -923,6 +924,8 @@ void walk_formation_slot(const SlotWalk& walk,
     }
   }
   auto const* pathfinder = NavGrid::get_pathfinder();
+  bool const obstructed =
+      destination != slot_destination || previous->relocation_blocked;
   const float heading_change =
       signed_yaw_delta(walk.formation.motion_root_yaw, walk.actor.rotation.y);
   if (std::abs(heading_change) > 0.05F && !soldier.turning) {
@@ -1114,8 +1117,8 @@ void walk_formation_slot(const SlotWalk& walk,
   if (walk.position_is_authored) {
     step_x = dx;
     step_z = dz;
-    float const catch_up_limit =
-        root_travel + (max_speed * k_obstacle_catch_up_ratio * dt);
+    float const catch_up_limit = (obstructed ? 0.0F : root_travel) +
+                                 (max_speed * k_obstacle_catch_up_ratio * dt);
     if (distance > catch_up_limit) {
       step_x *= catch_up_limit / distance;
       step_z *= catch_up_limit / distance;
