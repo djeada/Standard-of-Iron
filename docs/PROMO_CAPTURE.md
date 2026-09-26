@@ -475,6 +475,62 @@ not understood; Arena capture renders offscreen and is the dependable path for
 unattended footage. `--campaign-mission` takes a `campaign_id/mission_id`
 pair, not a path.
 
+## Cinematic camera rig
+
+The orbit keys above describe a camera circling a focus. Trailer work also
+needs cameras that are *placed*: a lens at shin height inside a shield wall, a
+dolly along a marching column, a crane that rises out of the rear ranks. A shot
+opts into that with `"rig": "free"`:
+
+```json
+{"name": "shield_rank", "scenario": "cine_field", "start": 1.0, "duration": 5.0,
+ "rig": "free", "eye_space": "world", "look_space": "world",
+ "focus": {"mode": "point", "point": [0, 0, 0]}, "ground_clearance": 0.3,
+ "camera": [{"time": 0, "eye": [-37, 0.62, 62], "look": [-45, 0.62, 6], "fov": 13},
+            {"time": 5, "eye": [-37, 0.62, 56], "look": [-45, 0.62, 2], "fov": 13}]}
+```
+
+- `eye` and `look` are positions. With `eye_space`/`look_space` `"focus"` (the
+  default) they are offsets from the resolved focus, so a camera can ride
+  alongside a moving group; `"world"` pins them to the ground, so a locked-off
+  camera can pan to follow a subject. World heights are above the terrain unless
+  `"terrain_relative": false`.
+- Free keys, and orbit keys with `"interp": "spline"`, are interpolated with
+  time-parametrised cubic Hermite splines, so a camera moves *through* a middle
+  key instead of stopping on it. `"ends": "moving"` (the default) keeps the
+  camera travelling at the cut, which is what makes a move feel photographed;
+  `"ends": "ease"` starts and finishes at rest.
+- `ground_clearance` (metres, default 2.2) is the terrain clearance the cinematic
+  lift enforces near the lens. Units render at roughly half scale (a soldier is
+  about a metre tall), so low lenses need `0.3`; `near` sets the near plane.
+- `handheld` (`degrees`, `frequency`, `seed`) adds smooth operator sway, and
+  `jolts` (`at`, `degrees`, `decay`) adds a decaying impact shake. Neither is
+  per-frame noise.
+- Focus following can be steadied with `"spring": true` (critically damped
+  instead of first-order), `dead_zone` (metres the subject may drift before the
+  camera reacts) and `lead` (seconds of anticipation along the subject's
+  velocity).
+
+## Per-shot lighting
+
+A shot's `lighting` block overrides the scenario's lighting for the length of
+the shot, without a rebuild: `hour`, `sun_azimuth` and `sun_elevation` (degrees;
+azimuth 90 puts the sun towards +x), `sun_scale`, `sun_color`, `ambient_scale`,
+`sky_color`, `fog_color`, `fog_density`, `exposure`, `shadow_strength` and
+`shadow_softness`. Keep the sun above about 18 degrees on battle shots: lower
+suns stretch every soldier's shadow into long stripes across the field. Match
+`fog_color` to the sky at dawn and dusk or the haze reads as grey cloud.
+
+Promo capture refuses to run below Ultra or on a software renderer
+(`SOI_PROMO_ALLOW_LOW_QUALITY` overrides it for tests only), and logs the GPU it
+rendered on.
+
+## The cinematic trailer
+
+`tools/arena/promos/cinematic/` holds the trailer: one `capture_*.json` per film
+set, and `cut.json`, the edit decision list with its looks and complete sound
+design. `scripts/trailer/` finishes it; see `docs/TRAILER.md`.
+
 ## Reproducibility rules
 
 The current pipeline depends on several invariants:
