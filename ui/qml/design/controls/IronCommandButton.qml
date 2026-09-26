@@ -45,6 +45,7 @@ AbstractButton {
     readonly property real tightChromeWidth: Design.Metrics.space16 + Design.Metrics.space4 + Design.Metrics.space4 + Design.Metrics.space4 + hotkeyWidth
     readonly property bool compact: control.iconOnly || (width > 0 && width < tightChromeWidth + minimumTightLabelWidth)
     readonly property bool tightLabel: !control.compact && width > 0 && width < minimumShortWidth
+    readonly property bool cornerHotkey: control.tightLabel && control.hotkey !== "" && width < tightChromeWidth + tightLabelMetrics.width + Design.Metrics.space4
 
     readonly property bool showsShortLabel: !control.iconOnly && control.shortLabel !== "" && width < minimumLabelledWidth
     readonly property string displayLabel: control.showsShortLabel ? control.shortLabel : control.label
@@ -70,6 +71,15 @@ AbstractButton {
         font.pixelSize: Design.Typography.label
         font.weight: Design.Typography.medium
         text: control.shortLabel
+    }
+
+    TextMetrics {
+        id: tightLabelMetrics
+
+        font.family: Design.Typography.family
+        font.pixelSize: Design.Typography.caption
+        font.weight: Design.Typography.medium
+        text: control.displayLabel
     }
 
     TextMetrics {
@@ -261,7 +271,7 @@ AbstractButton {
             anchors.right: parent.right
             anchors.rightMargin: Design.Metrics.space4
             anchors.verticalCenter: parent.verticalCenter
-            visible: !control.tile && control.hotkey !== ""
+            visible: !control.tile && !control.cornerHotkey && control.hotkey !== ""
             text: control.hotkey
         }
 
@@ -272,7 +282,7 @@ AbstractButton {
             anchors.bottom: parent.bottom
             anchors.rightMargin: Design.Metrics.space2
             anchors.bottomMargin: 1
-            visible: control.tile && control.hotkey !== ""
+            visible: (control.tile || control.cornerHotkey) && control.hotkey !== ""
             text: control.hotkey
             color: control.interactive ? Design.Theme.textSecondary : Design.Theme.textDisabled
             font.family: "monospace"

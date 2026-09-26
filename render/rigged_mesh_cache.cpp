@@ -316,7 +316,7 @@ void RiggedMeshCache::begin_frame() {
 
 auto RiggedMeshCache::evict_unused_over_budget() -> std::uint64_t {
   constexpr std::uint64_t k_min_idle_frames = 240U;
-  if (m_frame_index < k_min_idle_frames) {
+  if (m_frame_index < k_min_idle_frames || Render::Creature::runtime_bake_forbidden()) {
     return 0;
   }
   const std::uint64_t before = m_residency.total_bytes();

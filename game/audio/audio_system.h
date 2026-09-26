@@ -196,6 +196,7 @@ private:
   mutable std::mutex queue_mutex;
   std::condition_variable queue_condition;
   std::atomic<bool> is_running;
+  std::atomic<bool> m_audio_thread_done{true};
 
   std::atomic<int> listening_preset{1};
   std::atomic<float> master_volume;

@@ -491,7 +491,7 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
     if (terrain.is_initialized() && terrain.is_forbidden_world(world_x, world_z)) {
       const float tile = std::max(0.0001F, def.grid.tile_size);
       bool found = false;
-      const int max_radius = 12;
+      const int max_radius = 48;
       for (int r = 1; r <= max_radius && !found; ++r) {
         for (int ox = -r; ox <= r && !found; ++ox) {
           for (int oz = -r; oz <= r && !found; ++oz) {

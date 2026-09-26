@@ -1275,7 +1275,7 @@ Item {
                         id: briefing_panel
 
                         Layout.fillWidth: true
-                        Layout.preferredHeight: 286
+                        Layout.preferredHeight: Math.min(286, Math.max(190, right_column.height - 470))
                         radius: Theme.radiusMedium
                         gradient: Gradient {
                             GradientStop {

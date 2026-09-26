@@ -1080,6 +1080,7 @@ void Pathfinding::rebuild_region_map(RegionMap& map, Passability passability) co
   auto const cell_count = static_cast<std::size_t>(std::max(m_width, 0)) *
                           static_cast<std::size_t>(std::max(m_height, 0));
   map.labels.assign(cell_count, k_unreachable_region);
+  map.sizes_valid = false;
   if (cell_count == 0U) {
     return;
   }
@@ -1196,72 +1197,84 @@ auto Pathfinding::region_of(const Point& cell,
   return label;
 }
 
-auto Pathfinding::walkable_region_size(const Point& seed,
-                                       std::size_t cap,
-                                       Passability passability) const -> std::size_t {
-  if (!is_walkable(seed.x, seed.y, passability)) {
-    return 0;
-  }
-  auto const key = [](const Point& cell) {
-    return (static_cast<std::uint64_t>(static_cast<std::uint32_t>(cell.x)) << 32U) |
-           static_cast<std::uint32_t>(cell.y);
-  };
-  std::vector<Point> frontier{seed};
-  std::vector<std::uint64_t> visited{key(seed)};
-  constexpr std::array<std::pair<int, int>, 4> k_steps{
-      {{1, 0}, {-1, 0}, {0, 1}, {0, -1}}};
-  while (!frontier.empty() && visited.size() < cap) {
-    Point const cell = frontier.back();
-    frontier.pop_back();
-    for (auto const& [dx, dy] : k_steps) {
-      Point const next{cell.x + dx, cell.y + dy};
-      if (!is_walkable(next.x, next.y, passability) ||
-          std::find(visited.begin(), visited.end(), key(next)) != visited.end()) {
-        continue;
-      }
-      visited.push_back(key(next));
-      frontier.push_back(next);
-      if (visited.size() >= cap) {
-        break;
-      }
-    }
-  }
-  return visited.size();
-}
-
 auto Pathfinding::find_escape_point(const Point& point,
                                     const Point& target,
                                     Passability passability) -> std::optional<Point> {
   constexpr int k_pocket_search_cells = 8;
-  constexpr std::size_t k_sealed_pocket_max_cells = 900;
-  constexpr int k_escape_search_cells = 32;
+  constexpr int k_rescue_search_cells = 128;
 
-  if (can_reach(
-          find_nearest_walkable_point(point, k_pocket_search_cells, *this, passability),
-          target,
-          passability)) {
-    return std::nullopt;
+  if (m_navigation_grid_dirty.load(std::memory_order_acquire)) {
+    update_navigation_grid();
   }
+
+  std::shared_lock<std::shared_mutex> const navigation_lock(m_navigation_mutex);
+  std::lock_guard<std::mutex> const region_lock(m_region_mutex);
+  auto& map = m_region_maps[static_cast<std::size_t>(passability)];
+  static_cast<void>(current_region_map(passability));
 
   Point const seed =
       find_nearest_walkable_point(point, k_pocket_search_cells, *this, passability);
   Point const goal =
       find_nearest_walkable_point(target, k_pocket_search_cells, *this, passability);
-  std::size_t const own =
-      walkable_region_size(seed, k_sealed_pocket_max_cells, passability);
-  if (own >= k_sealed_pocket_max_cells) {
-    return std::nullopt;
-  }
-  if (own > 0 && walkable_region_size(goal, own + 1, passability) <= own) {
+  std::uint32_t const own_label = is_walkable(seed.x, seed.y, passability)
+                                      ? label_at(map, seed)
+                                      : k_unreachable_region;
+  std::uint32_t const goal_label = is_walkable(goal.x, goal.y, passability)
+                                       ? label_at(map, goal)
+                                       : k_unreachable_region;
+  if (own_label != k_unreachable_region && own_label == goal_label) {
     return std::nullopt;
   }
 
-  auto exit =
-      find_nearest_connected_point(point, target, k_escape_search_cells, passability);
+  ensure_region_sizes(map);
+  std::size_t const own_size = region_size(map, own_label);
+  std::uint32_t destination = k_unreachable_region;
+  if (region_size(map, goal_label) > own_size) {
+    destination = goal_label;
+  } else if (region_size(map, map.main_label) > own_size) {
+    destination = map.main_label;
+  }
+  if (destination == k_unreachable_region) {
+    return std::nullopt;
+  }
+
+  auto exit = nearest_cell_in_region(
+      map, destination, point, point, k_rescue_search_cells, passability, 0.0F);
   if (!exit.has_value() || (exit->x == point.x && exit->y == point.y)) {
     return std::nullopt;
   }
   return exit;
+}
+
+void Pathfinding::ensure_region_sizes(RegionMap& map) {
+  if (map.sizes_valid) {
+    return;
+  }
+  map.sizes.clear();
+  for (std::uint32_t const label : map.labels) {
+    if (label == k_unreachable_region) {
+      continue;
+    }
+    if (label >= map.sizes.size()) {
+      map.sizes.resize(static_cast<std::size_t>(label) + 1U, 0U);
+    }
+    ++map.sizes[label];
+  }
+  map.main_label = k_unreachable_region;
+  std::size_t largest = 0U;
+  for (std::size_t label = 1U; label < map.sizes.size(); ++label) {
+    if (map.sizes[label] > largest) {
+      largest = map.sizes[label];
+      map.main_label = static_cast<std::uint32_t>(label);
+    }
+  }
+  map.sizes_valid = true;
+}
+
+auto Pathfinding::region_size(const RegionMap& map,
+                              std::uint32_t label) -> std::size_t {
+  return label != k_unreachable_region && label < map.sizes.size() ? map.sizes[label]
+                                                                   : 0U;
 }
 
 auto Pathfinding::find_nearest_connected_point(const Point& point,

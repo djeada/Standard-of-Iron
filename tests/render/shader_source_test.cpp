@@ -503,6 +503,33 @@ TEST(ShaderSource, MergedBuildingsDarkenTheirFootAndPartsDoNot) {
   EXPECT_NE(frag.find("flat in float v_ground_height;"), std::string::npos);
 }
 
+TEST(ShaderSource, TerrainFacetNormalIsTakenBeforeTheFogEarlyReturn) {
+  const auto root = find_repo_root();
+  const auto terrain = read_text(root / "assets" / "shaders" / "terrain_chunk.frag");
+  ASSERT_FALSE(terrain.empty());
+
+  const auto main_at = terrain.find("void main()");
+  ASSERT_NE(main_at, std::string::npos);
+  const auto facet_at = terrain.find("geom_normal()", main_at);
+  const auto early_return_at =
+      terrain.find("visibility_is_unseen(visibility)", main_at);
+  ASSERT_NE(facet_at, std::string::npos);
+  ASSERT_NE(early_return_at, std::string::npos);
+  EXPECT_LT(facet_at, early_return_at)
+      << "screen-space derivatives taken after the unseen early return are undefined "
+         "in the 2x2 quads on the fog border; the NaN facet normal reached the "
+         "ambient light and bloom spread it into black squares";
+  EXPECT_EQ(terrain.find("geom_normal()", facet_at + 1), std::string::npos)
+      << "the facet normal must be computed once, before any divergent branch";
+
+  const auto helper_at = terrain.find("vec3 geom_normal()");
+  ASSERT_NE(helper_at, std::string::npos);
+  const auto helper =
+      terrain.substr(helper_at, terrain.find('}', helper_at) - helper_at);
+  EXPECT_EQ(helper.find("normalize(cross("), std::string::npos)
+      << "a degenerate cross product must fall back instead of normalising to NaN";
+}
+
 TEST(ShaderSource, FallbackCurvatureIsNotTrustedForGullies) {
   const auto root = find_repo_root();
   const auto terrain = read_text(root / "assets" / "shaders" / "terrain_chunk.frag");

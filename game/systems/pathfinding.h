@@ -159,10 +159,6 @@ public:
                                        const Point& target,
                                        Passability passability) -> std::optional<Point>;
 
-  [[nodiscard]] auto walkable_region_size(const Point& seed,
-                                          std::size_t cap,
-                                          Passability passability) const -> std::size_t;
-
   [[nodiscard]] auto
   find_nearest_connected_point(const Point& point,
                                const Point& target,
@@ -308,6 +304,9 @@ private:
   struct RegionMap {
     std::vector<std::uint32_t> labels;
     std::uint64_t revision{0};
+    std::vector<std::size_t> sizes;
+    std::uint32_t main_label{0};
+    bool sizes_valid{false};
   };
 
   struct NavChange {
@@ -358,6 +357,9 @@ private:
                                      int y,
                                      Passability passability,
                                      const std::vector<int>& gate_cells) const -> bool;
+  static void ensure_region_sizes(RegionMap& map);
+  [[nodiscard]] static auto region_size(const RegionMap& map,
+                                        std::uint32_t label) -> std::size_t;
   [[nodiscard]] auto label_at(const RegionMap& map,
                               const Point& cell) const -> std::uint32_t;
   [[nodiscard]] auto

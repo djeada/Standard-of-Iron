@@ -156,7 +156,12 @@ float compute_curvature() {
 vec3 geom_normal() {
   vec3 dx = dFdx(v_world_pos);
   vec3 dy = dFdy(v_world_pos);
-  vec3 n = normalize(cross(dx, dy));
+  vec3 n = cross(dx, dy);
+  float length_sq = dot(n, n);
+  if (!(length_sq > 1e-12)) {
+    return normalize(v_normal);
+  }
+  n *= inversesqrt(length_sq);
   return (dot(n, v_normal) < 0.0) ? -n : n;
 }
 
@@ -252,7 +257,7 @@ vec3 unseen_terrain_color() {
   vec4 macro_field = vec4(0.5);
   vec4 detail_field = vec4(0.5);
   if (HAS_NOISE_ATLAS) {
-    vec2 atlas_uv = v_world_pos.xz / max(u_noise_atlas_world_size, vec2(1e-4));
+    vec2 atlas_uv = v_world_pos.xz / max(u_noise_atlas_world_size, vec2(1e-4)) + 0.5;
     macro_field = texture(u_noise_atlas, atlas_uv);
     detail_field = texture(u_noise_atlas_detail, atlas_uv);
   }
@@ -292,6 +297,7 @@ vec3 unseen_terrain_color() {
 
 void main() {
 
+  vec3 facet_normal = geom_normal();
   VisibilityMask visibility = visibility_mask_fetch(v_world_pos.xz);
 
   if (visibility_is_unseen(visibility)) {
@@ -316,7 +322,6 @@ void main() {
   float feature_interior = 1.0 - smoothstep(0.18, 0.88, feature_foot);
 
   vec3 smooth_normal = normalize(v_normal);
-  vec3 facet_normal = geom_normal();
   float facet_break = 1.0 - clamp(dot(facet_normal, smooth_normal), 0.0, 1.0);
   float facet_weight = 0.20 * smoothstep(0.30, 0.80, facet_break);
   vec3 normal = normalize(mix(smooth_normal, facet_normal, facet_weight));
@@ -418,7 +423,7 @@ void main() {
   vec4 baked_noise = vec4(0.0);
   vec4 baked_noise_detail = vec4(0.0);
   if (HAS_NOISE_ATLAS) {
-    vec2 atlas_uv = v_world_pos.xz / max(u_noise_atlas_world_size, vec2(1e-4));
+    vec2 atlas_uv = v_world_pos.xz / max(u_noise_atlas_world_size, vec2(1e-4)) + 0.5;
     baked_noise = texture(u_noise_atlas, atlas_uv);
     baked_noise_detail = texture(u_noise_atlas_detail, atlas_uv);
   }

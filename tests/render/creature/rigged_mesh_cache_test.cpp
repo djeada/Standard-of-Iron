@@ -1,6 +1,9 @@
 
 
+#include <condition_variable>
 #include <gtest/gtest.h>
+#include <mutex>
+#include <thread>
 #include <type_traits>
 
 #include "render/creature/runtime_bake_guard.h"
@@ -344,6 +347,87 @@ TEST(RiggedMeshCache, PrehashedLookupFallsBackToHashWhenSetIdIsInvalid) {
   ASSERT_NE(second, nullptr);
   EXPECT_NE(first, second);
   EXPECT_EQ(cache.size(), 2U);
+}
+
+TEST(RiggedMeshCache, OverBudgetEvictionKeepsEntriesTheBakeBarrierCannotRebuild) {
+  RuntimeBakeGuardReset guard_reset;
+  RiggedMeshCache cache;
+  auto const& spec = Render::Humanoid::humanoid_creature_spec();
+  auto const bind = Render::Humanoid::humanoid_bind_palette();
+
+  const auto* warmed = cache.get_or_bake_prehashed(
+      spec, CreatureLOD::Minimal, bind, 0U, {}, 0x5AU, 7U, 7U);
+  ASSERT_NE(warmed, nullptr);
+  ASSERT_GT(cache.residency().total_bytes(), 1U);
+
+  cache.set_residency_budget_bytes(1U);
+  Render::Creature::set_runtime_bake_forbidden(true);
+  for (int frame = 0; frame < 600; ++frame) {
+    cache.begin_frame();
+  }
+
+  EXPECT_EQ(cache.size(), 1U)
+      << "a prewarmed body left idle behind the bake barrier must stay resident: "
+         "nothing may rebuild it once it is evicted";
+  EXPECT_EQ(cache.get_or_bake_prehashed(
+                spec, CreatureLOD::Minimal, bind, 0U, {}, 0x5AU, 7U, 7U),
+            warmed);
+  EXPECT_EQ(cache.frame_stats().misses, 0U);
+}
+
+TEST(RiggedMeshCache, OverBudgetEvictionStillTrimsColdEntriesBeforeTheBarrier) {
+  RuntimeBakeGuardReset guard_reset;
+  RiggedMeshCache cache;
+  auto const& spec = Render::Humanoid::humanoid_creature_spec();
+  auto const bind = Render::Humanoid::humanoid_bind_palette();
+
+  ASSERT_NE(cache.get_or_bake_prehashed(
+                spec, CreatureLOD::Minimal, bind, 0U, {}, 0x5AU, 7U, 7U),
+            nullptr);
+  cache.set_residency_budget_bytes(1U);
+  for (int frame = 0; frame < 600; ++frame) {
+    cache.begin_frame();
+  }
+
+  EXPECT_EQ(cache.size(), 0U);
+}
+
+TEST(RiggedMeshCache, AllowScopeOnAnotherThreadLeavesTheBarrierAlone) {
+  RuntimeBakeGuardReset guard_reset;
+  Render::Creature::set_runtime_bake_forbidden(true);
+
+  std::mutex mutex;
+  std::condition_variable changed;
+  bool scope_open = false;
+  bool release_scope = false;
+  std::thread portrait([&] {
+    const Render::Creature::RuntimeBakeAllowScope allow;
+    EXPECT_FALSE(Render::Creature::runtime_bake_forbidden());
+    std::unique_lock<std::mutex> lock(mutex);
+    scope_open = true;
+    changed.notify_all();
+    changed.wait(lock, [&] { return release_scope; });
+  });
+
+  {
+    std::unique_lock<std::mutex> lock(mutex);
+    changed.wait(lock, [&] { return scope_open; });
+  }
+  EXPECT_TRUE(Render::Creature::runtime_bake_forbidden())
+      << "another thread's allow scope must not open the barrier here";
+
+  Render::Creature::set_runtime_bake_forbidden(false);
+
+  {
+    std::lock_guard<std::mutex> const lock(mutex);
+    release_scope = true;
+  }
+  changed.notify_all();
+  portrait.join();
+
+  EXPECT_FALSE(Render::Creature::runtime_bake_forbidden())
+      << "closing another thread's allow scope must not restore a stale barrier "
+         "over a prewarm that has just lifted it";
 }
 
 } // namespace

@@ -166,6 +166,21 @@ TestCase {
         compare(primary.compact, false, "the orders row lost its labels");
     }
 
+    function test_order_labels_read_in_full_at_the_default_window() {
+        var primary = collect(panel, function (item) {
+                return String(item.objectName).indexOf("primaryCommand_") === 0;
+            });
+        compare(primary.length, 5);
+        for (var i = 0; i < primary.length; ++i) {
+            var button = primary[i];
+            var labels = collect(button, function (item) {
+                    return item.text === button.displayLabel && item.truncated !== undefined;
+                });
+            verify(labels.length > 0, button.objectName + " has no label text");
+            verify(!labels[0].truncated, button.objectName + " elides its label to fit " + button.width + " px");
+        }
+    }
+
     Component {
         id: hudComponent
 
