@@ -71,5 +71,4 @@ void submit_civilian_actors(ISubmitter& out);
 
 [[nodiscard]] auto ambient_hash(std::uint32_t value) noexcept -> std::uint32_t;
 
-[[nodiscard]] auto ambient_review_interval(const char* environment_variable) -> float;
 } // namespace Render::GL

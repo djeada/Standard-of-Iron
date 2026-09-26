@@ -212,9 +212,6 @@ auto RiggedCullPipeline::initialize() -> bool {
   reset_role_color_stream();
 
   m_available = m_vao != 0 && m_command_buffer != 0;
-  if (m_available) {
-    qInfo() << "RiggedCullPipeline: GPU crowd culling enabled";
-  }
   return m_available;
 }
 

@@ -44,15 +44,6 @@ auto ambient_hash(std::uint32_t value) noexcept -> std::uint32_t {
   return value ^ (value >> 16U);
 }
 
-auto ambient_review_interval(const char* environment_variable) -> float {
-  const char* value = std::getenv(environment_variable);
-  if (value == nullptr) {
-    return 0.0F;
-  }
-  const float seconds = static_cast<float>(std::atof(value));
-  return seconds > 0.0F ? seconds : 0.0F;
-}
-
 auto civilian_render_scale(const DrawContext& ctx,
                            const NationCivilianRig& rig) -> float {
   constexpr float k_fallback_civilian_scale = 0.48F;

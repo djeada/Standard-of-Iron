@@ -687,7 +687,6 @@ private:
   mutable FrameLockStats m_frame_lock_stats;
 
   int m_loading_overlay_frames_remaining = 0;
-  qint64 m_loading_overlay_last_frame_ms = 0;
   qint64 m_loading_overlay_min_duration_ms = 0;
   QElapsedTimer m_loading_overlay_timer;
   bool m_finalize_progress_after_overlay = false;

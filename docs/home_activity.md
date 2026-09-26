@@ -238,16 +238,9 @@ DISPLAY=:0 build/bin/arena_app --batch --scenario home_ambient_street --clean-ca
 DISPLAY=:0 build/bin/arena_app --batch --scenario home_ambient_dense --clean-capture --capture-interval 8 --artifact-dir /tmp/home-dense
 DISPLAY=:0 build/bin/arena_app --batch --scenario home_ambient_night --clean-capture --capture-interval 8 --artifact-dir /tmp/home-night
 DISPLAY=:0 build/bin/arena_app --batch --scenario home_ambient_street --fog-of-war --clean-capture --capture-interval 6 --artifact-dir /tmp/home-fog
-SOI_HOME_GAG_SECONDS=12 DISPLAY=:0 build/bin/arena_app --batch --scenario home_ambient_soup --duration 22 --scenario-distance 0.55 --clean-capture --capture-interval 1 --artifact-dir /tmp/home-soup
 ```
 
-Add `--scenario-distance 0.5` to read the shutters, cloth and residents. Two
-review hooks exist because both behaviours are deliberately rare:
-
-- `SOI_HOME_SMOKE_ALWAYS=1` lights every eligible hearth, which is the only
-  practical way to inspect both nations' anchors in one capture, and the right
-  way to measure a dense street's worst case.
-- `SOI_HOME_GAG_SECONDS=<n>` forces the spill every _n_ seconds.
+Add `--scenario-distance 0.5` to read the shutters, cloth and residents.
 
 `home_ambient_street` and `home_ambient_dense` destroy a house partway through;
 it must stop smoking at once. `home_ambient_night` moves the clock to 21:00 so

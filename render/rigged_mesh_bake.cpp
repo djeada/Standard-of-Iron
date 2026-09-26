@@ -474,10 +474,6 @@ void append_static_attachment(const StaticAttachmentSpec& spec,
   }
   const bool coarse = lod == CreatureLOD::Minimal;
 
-  static const bool log_attachment_triangles =
-      qEnvironmentVariableIntValue("SOI_ATTACHMENT_TRIS") != 0;
-  std::size_t logged_triangles = 0;
-
   for (const Render::GL::RenderArchetypeDraw& draw : slice.draws) {
     Mesh* src = coarse ? Render::GL::coarse_unit_mesh_for(draw.mesh) : draw.mesh;
     if (src == nullptr) {
@@ -498,9 +494,6 @@ void append_static_attachment(const StaticAttachmentSpec& spec,
     if (coarse &&
         draw_world_extent(src_verts, attach_model) < k_minimal_detail_cutoff) {
       continue;
-    }
-    if (log_attachment_triangles) {
-      logged_triangles += src_idx.size() / 3U;
     }
 
     std::uint8_t role = 0;
@@ -540,18 +533,6 @@ void append_static_attachment(const StaticAttachmentSpec& spec,
     reserve_for_append(out.indices, src_idx.size());
     for (unsigned int const idx : src_idx) {
       out.indices.push_back(base_vertex + static_cast<std::uint32_t>(idx));
-    }
-  }
-
-  if (log_attachment_triangles) {
-    static std::mutex mutex;
-    static std::set<std::pair<const void*, int>> seen;
-    std::lock_guard<std::mutex> const lock(mutex);
-    if (seen.emplace(spec.archetype, static_cast<int>(lod)).second) {
-      qInfo().noquote() << "SOI_ATTACHMENT_TRIS"
-                        << QString::fromStdString(spec.archetype->debug_name) << "lod"
-                        << static_cast<int>(lod) << "draws" << slice.draws.size()
-                        << "triangles" << logged_triangles;
     }
   }
 }

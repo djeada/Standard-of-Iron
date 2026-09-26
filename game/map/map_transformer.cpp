@@ -534,14 +534,6 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
     }
 
     apply_authored_unit_behavior(*e, authored_behavior, s, sp.position, def);
-
-    if (auto* t = e->get_component<Engine::Core::TransformComponent>()) {
-      qInfo() << "Spawned" << Game::Units::spawn_typeToQString(s.type)
-              << "id=" << e->get_id() << "at"
-              << QVector3D(t->position.x, t->position.y, t->position.z)
-              << "(coordSystem="
-              << (def.coordSystem == CoordSystem::Grid ? "Grid" : "World") << ")";
-    }
   }
 
   for (std::size_t structure_index = 0; structure_index < def.structures.size();

@@ -7,6 +7,7 @@
 #include "farm_activity.h"
 #include "home_activity.h"
 #include "render/creature/archetype_variant_table.h"
+#include "render/humanoid/asset/facial_hair_catalog.h"
 
 namespace Render::GL {
 
@@ -53,11 +54,22 @@ auto variant_table_prewarm_targets(const Render::Creature::Pipeline::UnitVisualS
     return out;
   }
   auto const asset = resolved_asset(spec);
-  for (auto const archetype : table->archetype_for_pose) {
+
+  auto append_with_beards = [&](Render::Creature::ArchetypeId archetype) {
     append_target(out, asset, archetype);
+    for (auto const style : {FacialHairStyle::ShortBeard,
+                             FacialHairStyle::FullBeard,
+                             FacialHairStyle::Goatee,
+                             FacialHairStyle::MustacheAndBeard}) {
+      append_target(
+          out, asset, Render::Humanoid::facial_hair_body_archetype(archetype, style));
+    }
+  };
+  for (auto const archetype : table->archetype_for_pose) {
+    append_with_beards(archetype);
   }
   for (auto const archetype : table->archetype_for_variant) {
-    append_target(out, asset, archetype);
+    append_with_beards(archetype);
   }
   return out;
 }

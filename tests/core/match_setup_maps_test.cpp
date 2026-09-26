@@ -8,7 +8,6 @@
 #include <set>
 
 #include "app/core/client_context.h"
-#include "app/core/loading_overlay_log.h"
 #include "app/input/cursor_mode.h"
 #include "app/viewmodels/match_setup_view_model.h"
 #include "game/map/map_catalog.h"
@@ -55,25 +54,6 @@ TEST(MatchSetupMapListTest, AFinishedScanKeepsWhatItCollected) {
   EXPECT_EQ(list.maps().first().toMap().value("name").toString(),
             QStringLiteral("map_rivers"));
   EXPECT_FALSE(list.empty());
-}
-
-TEST(LoadingOverlayLogTest, TheGapSinceThePreviousFrameIsNeverNegative) {
-  const QString line = App::Core::format_loading_overlay_line(1, 5, 1994, 3341);
-
-  EXPECT_FALSE(line.contains(QStringLiteral("+-")))
-      << line.toStdString() << ": a second load in one session printed a negative gap";
-  EXPECT_TRUE(line.contains(QStringLiteral("(+0ms since the previous one)")))
-      << line.toStdString();
-}
-
-TEST(LoadingOverlayLogTest, AnOrdinaryGapIsReported) {
-  const QString line = App::Core::format_loading_overlay_line(3, 5, 2967, 2774);
-
-  EXPECT_TRUE(line.contains(QStringLiteral("frame 3 of 5"))) << line.toStdString();
-  EXPECT_TRUE(line.contains(QStringLiteral("presented at 2967ms")))
-      << line.toStdString();
-  EXPECT_TRUE(line.contains(QStringLiteral("(+193ms since the previous one)")))
-      << line.toStdString();
 }
 
 namespace {

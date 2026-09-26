@@ -325,7 +325,6 @@ After any rebuild, `git status assets/audio` shows what was actually touched.
 | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | `SOI_AUDIO_TRACE=1`              | One log line per cue request                                                                                                 |
 | `SOI_AUDIO_TRACE_SUMMARY=<path>` | JSON summary per mission, written at mission teardown and at shutdown; later exports in the same process get an index suffix |
-| `SOI_AUDIO_HUD=1`                | In-game overlay: volumes, active channels, the last cue request and its outcome; refreshed every 250 ms                      |
 | `SOI_AUDIO_OFFLINE=1`            | Opens no audio device; the mixer is driven by offline rendering (reels, preview)                                             |
 | `SOI_AUDIO_PCM_BUDGET_MB=<n>`    | Resident decoded-PCM budget (default 320)                                                                                    |
 

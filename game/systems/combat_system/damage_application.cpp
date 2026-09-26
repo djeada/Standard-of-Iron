@@ -236,13 +236,6 @@ void publish_formation_hit(
   if (hit == nullptr) {
     return;
   }
-  if (std::getenv("SOI_HITDBG") != nullptr) {
-    std::fprintf(stderr,
-                 "[hitdbg] publish target=%llu slot=%u kind=%d\n",
-                 static_cast<unsigned long long>(target.get_id()),
-                 static_cast<unsigned>(*slot),
-                 static_cast<int>(kind));
-  }
   hit->attacker_id = attacker_id;
   hit->soldier_slot = *slot;
   hit->duration = Engine::Core::hit_reaction_duration(kind);

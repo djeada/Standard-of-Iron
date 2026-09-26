@@ -153,9 +153,7 @@ Backend::~Backend() {
 }
 
 auto Backend::initialize() -> bool {
-  qInfo() << "Backend::initialize() - Starting...";
 
-  qInfo() << "Backend: Initializing OpenGL functions...";
   if (!initializeOpenGLFunctions()) {
     qCritical() << "Backend::initialize() FAILED: QOpenGLFunctions_3_3_Core could not"
                    " be initialized. The current OpenGL context does not support"
@@ -173,7 +171,6 @@ auto Backend::initialize() -> bool {
   note_buffer_storage(static_cast<std::size_t>(64), false);
   glBindBufferBase(GL_UNIFORM_BUFFER, k_frame_data_binding_point, m_frame_ubo);
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
-  qInfo() << "Backend: Frame UBO created at binding 0";
   glGenBuffers(1, &m_environment_lighting_ubo);
   note_buffers_created(1);
   glBindBuffer(GL_UNIFORM_BUFFER, m_environment_lighting_ubo);
@@ -185,7 +182,6 @@ auto Backend::initialize() -> bool {
                    k_environment_lighting_binding_point,
                    m_environment_lighting_ubo);
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
-  qInfo() << "Backend: Environment lighting UBO created at binding 1";
   glGenBuffers(1, &m_local_lighting_ubo);
   note_buffers_created(1);
   glBindBuffer(GL_UNIFORM_BUFFER, m_local_lighting_ubo);
@@ -196,7 +192,6 @@ auto Backend::initialize() -> bool {
   glBindBufferBase(
       GL_UNIFORM_BUFFER, k_local_lighting_binding_point, m_local_lighting_ubo);
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
-  qInfo() << "Backend: Local lighting UBO created at binding 2";
   glGenBuffers(1, &m_directional_shadow_ubo);
   note_buffers_created(1);
   glBindBuffer(GL_UNIFORM_BUFFER, m_directional_shadow_ubo);
@@ -210,32 +205,24 @@ auto Backend::initialize() -> bool {
   glBindBufferBase(
       GL_UNIFORM_BUFFER, k_directional_shadow_binding_point, m_directional_shadow_ubo);
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
-  qInfo() << "Backend: Directional shadow UBO created at binding 3";
-  qInfo() << "Backend: OpenGL functions initialized";
 
-  qInfo() << "Backend: Setting up depth test...";
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LESS);
   glDepthRange(0.0, 1.0);
   glDepthMask(GL_TRUE);
 
-  qInfo() << "Backend: Setting up blending...";
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  qInfo() << "Backend: Creating ResourceManager...";
   m_resources = std::make_unique<ResourceManager>();
   if (!m_resources->initialize()) {
     qCritical()
         << "Backend::initialize() FAILED: ResourceManager initialization failed";
     return false;
   }
-  qInfo() << "Backend: ResourceManager created";
 
-  qInfo() << "Backend: Creating ShaderCache...";
   m_shader_cache = std::make_unique<ShaderCache>();
   m_shader_cache->initialize_defaults();
-  qInfo() << "Backend: ShaderCache created";
 
   if (!create_subsystem(
           m_cylinder_pipeline, "CylinderPipeline", m_shader_cache.get())) {
@@ -325,7 +312,6 @@ auto Backend::initialize() -> bool {
     m_sky_box_pipeline.reset();
   }
 
-  qInfo() << "Backend: Loading basic shaders...";
   m_basic_shader = m_shader_cache->get(QStringLiteral("basic"));
   m_grid_shader = m_shader_cache->get(QStringLiteral("grid"));
   m_shadow_shader = m_shader_cache->get(QStringLiteral("troop_shadow"));
@@ -373,7 +359,6 @@ auto Backend::initialize() -> bool {
   MaterialRegistry::instance().init(m_basic_shader, m_shadow_shader);
 
   apply_graphics_profile(Render::GraphicsSettings::instance().profile(), false);
-  qInfo() << "Backend::initialize() - Complete!";
   return true;
 }
 
@@ -588,10 +573,7 @@ auto allocate_shadow_array(QOpenGLFunctions_3_3_Core& gl,
 }
 
 auto near_cascade_split(int cascades, int resolution) -> int {
-  static const bool split_allowed =
-      qEnvironmentVariableIntValue("SOI_SHADOW_CASCADE_SPLIT") != 0 ||
-      !qEnvironmentVariableIsSet("SOI_SHADOW_CASCADE_SPLIT");
-  if (!split_allowed || cascades <= 2 || resolution <= 512) {
+  if (cascades <= 2 || resolution <= 512) {
     return cascades;
   }
   return 2;

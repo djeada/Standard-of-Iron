@@ -39,40 +39,6 @@ auto sanitize_backend_volume(float volume) -> float {
   return std::clamp(volume, MiniaudioBackend::MIN_VOLUME, MiniaudioBackend::MAX_VOLUME);
 }
 
-void log_resample(const QString& id, const Game::Audio::ResampleReport& report) {
-  if (!report.applied) {
-    return;
-  }
-  qInfo().nospace() << "audio resample " << id << ": " << report.rate_in << " -> "
-                    << report.rate_out << " Hz, " << report.up << "/" << report.down
-                    << ", " << int(report.taps_per_phase) << " taps per phase";
-}
-
-void log_loop_seam(const QString& id, const Game::Audio::LoopSeamReport& seam) {
-  static constexpr float REPORTABLE_STEP = 0.02F;
-  if (seam.step_before < REPORTABLE_STEP) {
-    return;
-  }
-  qInfo().nospace() << "audio loop seam " << id << ": wrap step " << seam.step_before
-                    << " -> " << seam.step_after << " over " << int(seam.fade_frames)
-                    << " frames";
-}
-
-void log_mastering(const QString& id, const Game::Audio::Mastering::Report& report) {
-  static constexpr float REPORTABLE_CHANGE_DB = 0.5F;
-  if (report.input_peak_db < 0.0F &&
-      std::abs(report.loudness_gain_db) < REPORTABLE_CHANGE_DB &&
-      report.notch_count == 0 && report.limiter_reduction_db > -REPORTABLE_CHANGE_DB) {
-    return;
-  }
-  qInfo().nospace() << "audio mastering " << id << ": peak " << report.input_peak_db
-                    << " -> " << report.output_peak_db << " dBFS, loudness "
-                    << report.input_lufs << " LUFS " << report.loudness_gain_db
-                    << " dB, notches " << int(report.notch_count) << ", tilt "
-                    << report.presence_tilt_db << '/' << report.air_tilt_db
-                    << " dB, limiter " << report.limiter_reduction_db << " dB";
-}
-
 } // namespace
 
 #define MINIAUDIO_IMPLEMENTATION
@@ -525,21 +491,17 @@ auto MiniaudioBackend::decode_into_slot(const DecodeJob& job) -> bool {
     return false;
   }
 
-  const Game::Audio::ResampleReport resampled = Game::Audio::resample_to(
-      pcm, DEFAULT_OUTPUT_CHANNELS, source_rate, m_sample_rate);
-  log_resample(job.id, resampled);
+  Game::Audio::resample_to(pcm, DEFAULT_OUTPUT_CHANNELS, source_rate, m_sample_rate);
 
   auto frame_count = pcm.size() / DEFAULT_OUTPUT_CHANNELS;
   const Game::Audio::Mastering::Analysis analysis =
       analysis_for(job.id, pcm.data(), frame_count);
-  const Game::Audio::Mastering::Report report =
-      Game::Audio::Mastering::apply(pcm.data(),
-                                    frame_count,
-                                    DEFAULT_OUTPUT_CHANNELS,
-                                    m_sample_rate,
-                                    Game::Audio::Mastering::profile_for(job.material),
-                                    analysis);
-  log_mastering(job.id, report);
+  Game::Audio::Mastering::apply(pcm.data(),
+                                frame_count,
+                                DEFAULT_OUTPUT_CHANNELS,
+                                m_sample_rate,
+                                Game::Audio::Mastering::profile_for(job.material),
+                                analysis);
 
   const bool loops = job.material == Game::Audio::Mastering::Material::Music ||
                      job.material == Game::Audio::Mastering::Material::Ambience;
@@ -547,7 +509,6 @@ auto MiniaudioBackend::decode_into_slot(const DecodeJob& job) -> bool {
     const Game::Audio::LoopSeamReport seam = Game::Audio::seal_loop(
         pcm.data(), frame_count, DEFAULT_OUTPUT_CHANNELS, m_sample_rate);
     if (seam.loop_frames > 0) {
-      log_loop_seam(job.id, seam);
       frame_count = seam.loop_frames;
       pcm.resize(frame_count * DEFAULT_OUTPUT_CHANNELS);
     }

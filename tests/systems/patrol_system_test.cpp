@@ -6,6 +6,7 @@
 #include "core/ownership_constants.h"
 #include "core/world.h"
 #include "systems/patrol_system.h"
+#include "tests/support/movement_test_access.h"
 #include "units/spawn_type.h"
 
 using namespace Engine::Core;
@@ -215,4 +216,31 @@ TEST_F(PatrolSystemTest, PatrollingUnitIgnoresDeadEnemies) {
 
   auto* attack_target = unit->get_component<AttackTargetComponent>();
   EXPECT_EQ(attack_target, nullptr) << "Patrolling unit should not attack dead enemies";
+}
+
+TEST_F(PatrolSystemTest, AWaypointOnBlockedGroundIsPassedFromTheNearestReachableSpot) {
+  auto* rider = world->create_entity();
+  rider->add_component<TransformComponent>(6.0F, 0.0F, 2.0F);
+  auto* rider_unit = rider->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  rider_unit->owner_id = 1;
+  auto* movement = rider->add_component<MovementComponent>();
+  arm(rider);
+  auto* patrol = rider->add_component<PatrolComponent>();
+  patrol->waypoints.push_back({10.0F, 0.0F});
+  patrol->waypoints.push_back({-10.0F, 0.0F});
+  patrol->patrolling = true;
+  patrol->current_waypoint = 0;
+
+  // The first waypoint lies in a wall: the order resolved to the nearest ground,
+  // (6, 2), and the rider stands there. On the Rhone a patrol rider stood so for a
+  // whole mission with the order still open.
+  MovementTestAccess::set_has_target(*movement, true);
+  MovementTestAccess::set_requested_goal(*movement, 10.0F, 0.0F);
+  MovementTestAccess::set_goal_x(*movement, 6.0F);
+  MovementTestAccess::set_goal_y(*movement, 2.0F);
+
+  patrol_system->update(world.get(), 0.1F);
+
+  EXPECT_EQ(patrol->current_waypoint, 1U)
+      << "the patrol waited forever for a waypoint nobody can stand on";
 }

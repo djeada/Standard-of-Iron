@@ -27,8 +27,7 @@ private:
   float m_attack_timer = 0.0F;
   Engine::Core::EntityID m_last_target = 0;
   float m_target_lock_duration = 0.0F;
-  int m_scout_direction = 0;
-  float m_last_scout_time = 0.0F;
+  Engine::Core::EntityID m_advance_target = 0;
 };
 
 } // namespace Game::Systems::AI

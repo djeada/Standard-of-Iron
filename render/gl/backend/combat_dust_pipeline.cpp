@@ -162,7 +162,6 @@ auto CombatDustPipeline::initialize() -> bool {
     m_blood_uniforms = {};
   }
 
-  qInfo() << "CombatDustPipeline initialized successfully";
   return is_initialized();
 }
 

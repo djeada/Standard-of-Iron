@@ -14,6 +14,11 @@ struct MovementTestAccess {
   static void set_target_y(MovementComponent& m, float v) { m.target_y = v; }
   static void set_goal_x(MovementComponent& m, float v) { m.goal_x = v; }
   static void set_goal_y(MovementComponent& m, float v) { m.goal_y = v; }
+  static void set_requested_goal(MovementComponent& m, float x, float z) {
+    m.has_requested_goal = true;
+    m.requested_goal_x = x;
+    m.requested_goal_z = z;
+  }
   static void set_vx(MovementComponent& m, float v) { m.vx = v; }
   static void set_vz(MovementComponent& m, float v) { m.vz = v; }
   static void set_path(MovementComponent& m, std::vector<std::pair<float, float>> v) {

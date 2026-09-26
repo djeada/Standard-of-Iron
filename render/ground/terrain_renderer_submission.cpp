@@ -527,14 +527,9 @@ auto TerrainRenderer::update_height_texture() -> TerrainSurfaceCmd::HeightResour
     m_cover_dirty = false;
   }
 
-  static const bool noise_bake_allowed =
-      qEnvironmentVariableIntValue("SOI_TERRAIN_NOISE_BAKE") != 0 ||
-      !qEnvironmentVariableIsSet("SOI_TERRAIN_NOISE_BAKE");
-  if (noise_bake_allowed) {
-    bake_terrain_microdetail();
-    if (m_noise_atlas_dirty) {
-      bake_terrain_noise_atlas();
-    }
+  bake_terrain_microdetail();
+  if (m_noise_atlas_dirty) {
+    bake_terrain_noise_atlas();
   }
 
   resources.texture = m_height_texture.get();

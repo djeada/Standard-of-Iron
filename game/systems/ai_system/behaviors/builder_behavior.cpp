@@ -550,11 +550,6 @@ auto authored_plan_step(const AIContext& context,
       continue;
     }
     if (occupied) {
-      if (qEnvironmentVariableIsSet("SOI_BUILD_TRACE")) {
-        qWarning() << "BUILDTRACE p" << context.player_id << "plan slot" << slot
-                   << resolved << "at" << world_x << world_z << "occupied by"
-                   << occupied_by.c_str() << "at" << occupied_x << occupied_z;
-      }
       continue;
     }
 
@@ -1371,11 +1366,6 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
   review_stalled_workers(snapshot, snapshot.game_time);
 
   std::vector<Engine::Core::EntityID> available_builders;
-  int busy_site = 0;
-  int busy_task = 0;
-  int busy_load = 0;
-  int busy_moving = 0;
-  int busy_other = 0;
   for (const auto& entity : snapshot.friendly_units) {
     if (entity.spawn_type != Game::Units::SpawnType::Builder) {
       continue;
@@ -1386,9 +1376,6 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
         (entity.builder_production.has_construction_site ||
          entity.builder_production.has_task_target ||
          entity.builder_production.carrying_load)) {
-      busy_site += entity.builder_production.has_construction_site ? 1 : 0;
-      busy_task += entity.builder_production.has_task_target ? 1 : 0;
-      busy_load += entity.builder_production.carrying_load ? 1 : 0;
       continue;
     }
 
@@ -1400,32 +1387,6 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
 
     if (entity.movement.has_component && !entity.movement.has_target) {
       available_builders.push_back(entity.id);
-    } else if (entity.movement.has_component) {
-      ++busy_moving;
-    } else {
-      ++busy_other;
-    }
-  }
-
-  if (available_builders.empty()) {
-    if (qEnvironmentVariableIsSet("SOI_BUILD_TRACE")) {
-      qWarning() << "BUILDTRACE p" << context.player_id << "no available builders of"
-                 << context.builder_count << "site" << busy_site << "task" << busy_task
-                 << "load" << busy_load << "moving" << busy_moving << "other"
-                 << busy_other;
-      for (const auto& entity : snapshot.friendly_units) {
-        if (entity.spawn_type != Game::Units::SpawnType::Builder) {
-          continue;
-        }
-        qWarning() << "BUILDTRACE p" << context.player_id << "  builder" << entity.id
-                   << "site" << entity.builder_production.has_construction_site
-                   << "progress" << entity.builder_production.in_progress << "task"
-                   << entity.builder_production.has_task_target << "target"
-                   << entity.builder_production.task_target_id << "load"
-                   << entity.builder_production.carrying_load << "gather"
-                   << entity.builder_production.auto_gather << "moving"
-                   << entity.movement.has_target;
-      }
     }
   }
 
@@ -1792,12 +1753,6 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
     if (in_the_way.node != nullptr) {
       const auto builder = take_builder(in_the_way.node->pos_x, in_the_way.node->pos_z);
       if (builder != 0) {
-        if (qEnvironmentVariableIsSet("SOI_BUILD_TRACE")) {
-          qWarning() << "BUILDTRACE p" << context.player_id << "clears the line for"
-                     << building_to_construct << "at" << construction_x
-                     << construction_z << "node" << in_the_way.node->pos_x
-                     << in_the_way.node->pos_z;
-        }
         AICommand clearing;
         clearing.type = AICommandType::StartBuilderHarvest;
         clearing.units.push_back(builder);
@@ -1815,22 +1770,6 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
 
   if (building_to_construct != nullptr && site_resolved) {
     clamp_to_map_bounds(snapshot, construction_x, construction_z);
-
-    if (qEnvironmentVariableIsSet("SOI_BUILD_TRACE")) {
-      const auto* traced_plan = context.strategy_config.doctrine != nullptr
-                                    ? context.strategy_config.doctrine->town_plan
-                                    : nullptr;
-      qWarning() << "BUILDTRACE p" << context.player_id << "wants"
-                 << building_to_construct << "at" << construction_x << construction_z
-                 << "base" << context.base_pos_x << context.base_pos_z << "homes"
-                 << context.home_count << "barracks" << context.barracks_count << "plan"
-                 << (traced_plan != nullptr ? traced_plan->id.c_str() : "-") << "slot"
-                 << plan_slot
-                 << (traced_plan != nullptr &&
-                             traced_plan->is_silhouette_step(plan_slot)
-                         ? "silhouette"
-                         : "");
-    }
 
     const auto builder = take_strongest_builder(construction_x, construction_z);
     if (builder == 0) {

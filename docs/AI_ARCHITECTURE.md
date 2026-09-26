@@ -302,6 +302,16 @@ Targets can come from known strategic objectives as well as currently visible en
 
 Commander doctrine can tune committed wave size, garrison requirements, regroup timing, spent-wave threshold, and target priority.
 
+### A wave that knows of no enemy goes looking
+
+An opponent marches only on what it has seen, so on a large map a ready wave used to find no target, dissolve, and form again every round: on the historical battle maps played as skirmishes two AI armies stood a field apart for 25 minutes without a blow. Now a wave with no known target commits anyway, with `target_id == 0` and a place instead of a contact. From home the place is the far side of the map (the base mirrored through the centre, kept 15% inside the edges); on arrival, or after 30 s without closing, the next corner round the map from where the wave stands. Anything it sights becomes its target at once. No extra wave state carries the search: `target_id == 0` on a committed wave means "going to a place".
+
+This replaced `AttackBehavior`'s old scouting, which sent the attack force to points 36–60 m from its own base in turn. It never found an enemy that far away, and because it ran on the rounds between the wave's 4 s march orders, it pulled a marching wave back toward home every other round.
+
+### Advancing units belong to the attack
+
+When `AttackBehavior` advances on an enemy it has sighted but that is still out of engagement range, it claims the troops for `attacking` like every other order it gives. It used to move them unclaimed, so `GatherBehavior` still held them for the muster and ordered them back a second later; the two took turns and the army paced the same ground for minutes. The advance is re-ordered only when the target changes or a soldier has stopped short of it, not every round.
+
 ### Keeping a wave honest
 
 A committed wave records the closest it has come to its target (`best_gap`) and when it last got closer or fought (`progress_at`). A wave that neither gains 4 m on its target nor has a member engaged for 180 s is called off and regroups; before this, nothing read `committed_at`, and a wave that could not reach its target stayed "marching" for a whole match. Reinforcements join a committed wave only from within 30 m of its front, so recruits standing at home no longer keep an exhausted wave from ever counting as spent. When a committed wave sees no enemy, `AttackBehavior` marches it on the wave's own remembered target every 4 s instead of issuing nothing. The `Army` target class excludes non-combatants, so a wave aimed at an army goes for soldiers, not builders and civilians; those remain the `Economy` class. A commander who does not lead from the front anchors on the troops still at home, not on a wave that has marched out, so a garrison commander is not dragged after his own raid.

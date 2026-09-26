@@ -69,7 +69,6 @@ private:
     std::uint32_t m_fbo_graphics_generation = 0;
     std::chrono::steady_clock::time_point m_last_frame_time{};
     std::chrono::steady_clock::time_point m_last_render_end{};
-    struct RuntimeContinuityProbe;
     std::chrono::steady_clock::time_point m_benchmark_created_time{};
     std::chrono::steady_clock::time_point m_benchmark_ready_time{};
     std::chrono::steady_clock::time_point m_benchmark_previous_frame_time{};
@@ -124,14 +123,12 @@ private:
     std::uint64_t m_benchmark_frames_with_post_load_work = 0;
     std::int64_t m_benchmark_first_post_load_frame = -1;
     std::int64_t m_benchmark_last_post_load_frame = -1;
-    std::unique_ptr<RuntimeContinuityProbe> m_continuity_probe;
 
     void reset_runtime_benchmark_samples();
 
     int m_film_fps{0};
 
     void warm_commander_portraits();
-    void observe_runtime_continuity();
     void observe_runtime_benchmark(std::chrono::steady_clock::time_point frame_start,
                                    double update_ms,
                                    double render_ms,

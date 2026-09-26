@@ -1,6 +1,5 @@
 #include "commander_portrait_view.h"
 
-#include <QDir>
 #include <QImage>
 #include <QMatrix4x4>
 #include <QOpenGLContext>
@@ -13,7 +12,6 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
-#include <cstdio>
 #include <cstdlib>
 #include <numbers>
 
@@ -160,43 +158,6 @@ auto look_for(const QString& troop_type, const QString& nation) -> PortraitLook 
             .backdrop = {0.10F, 0.06F, 0.17F}};
   }
   return nation == QStringLiteral("carthage") ? k_carthage_look : k_roman_look;
-}
-
-struct PortraitDebug {
-  bool trace = false;
-  QString dump_dir;
-  int dump_frames = 0;
-  bool camera_override = false;
-  float yaw_degrees = 0.0F;
-  float distance = k_bust_distance;
-  float focus_y = k_default_focus_height;
-};
-
-auto portrait_debug() -> const PortraitDebug& {
-  static const PortraitDebug debug = [] {
-    PortraitDebug out;
-    out.trace = std::getenv("SOI_PORTRAIT_TRACE") != nullptr;
-    if (const char* dump = std::getenv("SOI_PORTRAIT_DUMP")) {
-      out.dump_dir = QString::fromUtf8(dump);
-      out.dump_frames = 240;
-      if (const char* frames = std::getenv("SOI_PORTRAIT_DUMP_FRAMES")) {
-        out.dump_frames = std::max(1, std::atoi(frames));
-      }
-    }
-    if (const char* camera = std::getenv("SOI_PORTRAIT_CAMERA")) {
-      float yaw = 0.0F;
-      float distance = k_bust_distance;
-      float focus_y = k_default_focus_height;
-      if (std::sscanf(camera, "%f,%f,%f", &yaw, &distance, &focus_y) >= 1) {
-        out.camera_override = true;
-        out.yaw_degrees = yaw;
-        out.distance = distance;
-        out.focus_y = focus_y;
-      }
-    }
-    return out;
-  }();
-  return debug;
 }
 
 auto next_portrait_instance_id() -> int {
@@ -397,32 +358,6 @@ auto move_for_pose(const QString& pose) -> Animation::HumanoidShowcaseMove {
   return Animation::HumanoidShowcaseMove::TauntCynical;
 }
 
-auto camera_direction() -> QVector3D {
-  const auto& debug = portrait_debug();
-  if (!debug.camera_override) {
-    return k_bust_direction.normalized();
-  }
-  QMatrix4x4 yaw;
-  yaw.rotate(debug.yaw_degrees, 0.0F, 1.0F, 0.0F);
-  return yaw.map(k_bust_direction).normalized();
-}
-
-auto camera_distance() -> float {
-  const auto& debug = portrait_debug();
-  return debug.camera_override ? debug.distance : k_bust_distance;
-}
-
-auto review_lighting(const PortraitLook& look) -> Render::EnvironmentLightingState {
-  Render::EnvironmentLightingState lighting = portrait_lighting(look);
-  const auto& debug = portrait_debug();
-  if (debug.camera_override) {
-    QMatrix4x4 yaw;
-    yaw.rotate(debug.yaw_degrees, 0.0F, 1.0F, 0.0F);
-    lighting.primary_direction = yaw.map(lighting.primary_direction);
-  }
-  return lighting;
-}
-
 } // namespace
 
 class CommanderPortraitView::PortraitRenderer
@@ -507,7 +442,6 @@ private:
 
   void submit_face(const QMatrix4x4& head_world, const PortraitLook& look);
   [[nodiscard]] auto advance_focus(float delta) -> QVector3D;
-  void debug_after_frame(const Render::Creature::Pipeline::BoneProbe& probe);
 
   QSize m_size;
   QSize m_item_size;
@@ -533,11 +467,6 @@ private:
   bool m_renderer_failed = false;
 
   std::chrono::steady_clock::time_point m_last_frame{};
-  int m_dumped_frames = 0;
-  float m_wall_ms = 0.0F;
-  float m_render_ms = 0.0F;
-  QVector3D m_last_head{};
-  bool m_has_last_head = false;
   int m_instance_id = next_portrait_instance_id();
 };
 
@@ -810,50 +739,6 @@ auto CommanderPortraitView::PortraitRenderer::advance_focus(float delta) -> QVec
   return m_focus;
 }
 
-void CommanderPortraitView::PortraitRenderer::debug_after_frame(
-    const Render::Creature::Pipeline::BoneProbe& probe) {
-  const auto& debug = portrait_debug();
-  if (debug.trace) {
-    const QVector3D head = probe.world.column(3).toVector3D();
-    float step_mm = 0.0F;
-    if (m_has_last_head) {
-      step_mm = (head - m_last_head).length() * 1000.0F;
-    }
-    m_last_head = head;
-    m_has_last_head = true;
-    std::fprintf(stderr,
-                 "SOI_PORTRAIT_TRACE id=%d troop=%s resolved=%d t=%.3f wall_ms=%.1f "
-                 "render_ms=%.1f "
-                 "head=(%.4f,%.4f,%.4f) step_mm=%.2f mouth=%.2f lid=%.2f "
-                 "gaze=(%.2f,%.2f)\n",
-                 m_instance_id,
-                 m_troop_type.toUtf8().constData(),
-                 probe.resolved ? 1 : 0,
-                 static_cast<double>(m_expression.time),
-                 static_cast<double>(m_wall_ms),
-                 static_cast<double>(m_render_ms),
-                 static_cast<double>(head.x()),
-                 static_cast<double>(head.y()),
-                 static_cast<double>(head.z()),
-                 static_cast<double>(step_mm),
-                 static_cast<double>(m_expression.mouth),
-                 static_cast<double>(m_expression.lid),
-                 static_cast<double>(m_expression.gaze.x()),
-                 static_cast<double>(m_expression.gaze.y()));
-  }
-  if (!debug.dump_dir.isEmpty() && m_dumped_frames < debug.dump_frames) {
-    if (auto* fbo = framebufferObject()) {
-      QDir().mkpath(debug.dump_dir);
-      const QString path = QStringLiteral("%1/portrait_r%2_%3.png")
-                               .arg(debug.dump_dir)
-                               .arg(m_instance_id)
-                               .arg(m_dumped_frames, 4, 10, QLatin1Char('0'));
-      fbo->toImage().save(path);
-      ++m_dumped_frames;
-    }
-  }
-}
-
 void CommanderPortraitView::PortraitRenderer::render() {
   const auto now = std::chrono::steady_clock::now();
   float delta = 0.0F;
@@ -861,13 +746,11 @@ void CommanderPortraitView::PortraitRenderer::render() {
     delta = std::clamp(std::chrono::duration<float>(now - m_last_frame).count(),
                        0.0F,
                        k_max_frame_seconds);
-    m_wall_ms = std::chrono::duration<float, std::milli>(now - m_last_frame).count();
   }
   m_last_frame = now;
 
   if (!m_speaking) {
     m_expression.reset();
-    m_has_last_head = false;
     return;
   }
 
@@ -889,7 +772,7 @@ void CommanderPortraitView::PortraitRenderer::render() {
                                                  static_cast<float>(m_size.height())
                                            : 1.0F;
   const QVector3D focus = advance_focus(delta);
-  m_camera->look_at(focus + (camera_direction() * camera_distance()),
+  m_camera->look_at(focus + (k_bust_direction.normalized() * k_bust_distance),
                     focus,
                     QVector3D(0.0F, 1.0F, 0.0F));
   m_camera->set_perspective(k_field_of_view, aspect, 0.05F, 40.0F);
@@ -897,7 +780,7 @@ void CommanderPortraitView::PortraitRenderer::render() {
   m_renderer->set_camera(m_camera);
   m_renderer->set_viewport(m_size.width(), m_size.height());
   const PortraitLook look = look_for(m_troop_type, m_nation);
-  m_renderer->set_environment_lighting(review_lighting(look));
+  m_renderer->set_environment_lighting(portrait_lighting(look));
 
   m_renderer->set_clear_color(
       look.backdrop.x(), look.backdrop.y(), look.backdrop.z(), 1.0F);
@@ -922,18 +805,10 @@ void CommanderPortraitView::PortraitRenderer::render() {
       QVector3D const head =
           head_probe.world.map(QVector3D(0.0F, k_cranium_rise, 0.0F));
       m_focus_target = QVector3D(head.x(), head.y() - k_bust_drop, head.z());
-      if (portrait_debug().camera_override) {
-        m_focus_target.setY(portrait_debug().focus_y);
-      }
       m_focus_locked = true;
     }
   }
   m_renderer->end_frame();
-
-  m_render_ms =
-      std::chrono::duration<float, std::milli>(std::chrono::steady_clock::now() - now)
-          .count();
-  debug_after_frame(head_probe);
 
   update();
 }

@@ -1197,16 +1197,6 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
           }
 
           if (builder_prod->site_approach_seconds > k_site_approach_limit_seconds) {
-            if (qEnvironmentVariableIsSet("SOI_BUILD_TRACE")) {
-              qWarning() << "BUILDTRACE p" << builder_owner_id << "gave up reaching"
-                         << builder_prod->product_type.c_str() << "site at"
-                         << builder_prod->construction_site_x
-                         << builder_prod->construction_site_z << "from"
-                         << transform->position.x << transform->position.z << "still"
-                         << std::sqrt(dist_sq) << "m out bypass"
-                         << builder_prod->bypass_movement_active << "routed"
-                         << (movement != nullptr && movement->get_has_target());
-            }
             abandon_site_route(*builder_prod, movement);
             builder_prod->has_construction_site = false;
             builder_prod->at_construction_site = false;
@@ -1477,20 +1467,6 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
                                   construction_rotation_y,
                                   finishing_crew);
               if (!clear_site.has_value()) {
-                if (qEnvironmentVariableIsSet("SOI_BUILD_TRACE")) {
-                  qWarning() << "BUILDTRACE p" << u->owner_id << "finished site refused"
-                             << builder_prod->product_type.c_str() << "at"
-                             << sp.position.x() << sp.position.z() << "yaw"
-                             << construction_rotation_y << "verdict"
-                             << static_cast<int>(
-                                    assess_ground(*world,
-                                                  builder_prod->product_type,
-                                                  sp.position.x(),
-                                                  sp.position.z(),
-                                                  0,
-                                                  construction_rotation_y,
-                                                  finishing_crew));
-                }
 
                 grant_resources_at(
                     u->owner_id,
@@ -1510,12 +1486,6 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
                   QVector3D(clear_site->x(), sp.position.y(), clear_site->z());
             }
 
-            if (qEnvironmentVariableIsSet("SOI_BUILD_TRACE")) {
-              qWarning() << "BUILDTRACE p" << u->owner_id << "raised"
-                         << builder_prod->product_type.c_str() << "at"
-                         << sp.position.x() << sp.position.z() << "yaw"
-                         << sp.rotation_y;
-            }
             if (auto completed = reg->create(sp.spawn_type, *world, sp)) {
               start_completion_effect(*world, *completed, sp.spawn_type);
               raised_structure = true;

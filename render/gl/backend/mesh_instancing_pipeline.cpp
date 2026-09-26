@@ -71,7 +71,6 @@ auto MeshInstancingPipeline::initialize() -> bool {
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 
   m_initialized = true;
-  qInfo() << "MeshInstancingPipeline initialized with capacity" << m_instance_capacity;
   return true;
 }
 

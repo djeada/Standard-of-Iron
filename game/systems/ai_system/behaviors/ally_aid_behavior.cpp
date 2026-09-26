@@ -118,11 +118,6 @@ void AllyAidBehavior::execute(const AISnapshot& snapshot,
     move.move_target_y.push_back(0.0F);
     move.move_target_z.push_back(call->pos_z + rank);
   }
-  if (!qEnvironmentVariableIsEmpty("SOI_AI_TRACE")) {
-    qInfo().nospace() << "SOI_AI_TRACE ally_aid player=" << context.player_id
-                      << " ally=" << call->owner_id << " sent=" << move.units.size()
-                      << " t=" << snapshot.game_time;
-  }
   out_commands.push_back(std::move(move));
 }
 

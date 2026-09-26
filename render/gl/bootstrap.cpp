@@ -49,7 +49,6 @@ auto RenderBootstrap::initialize(Renderer& renderer, Camera& camera) -> bool {
     qCritical() << "RenderBootstrap: renderer initialize failed";
     return false;
   }
-  qInfo() << "RenderBootstrap: Renderer initialized successfully";
 
   qInfo() << "RenderBootstrap: Setting camera...";
   renderer.set_camera(&camera);

@@ -284,7 +284,6 @@ auto AISystem::serialize_state() const -> QJsonObject {
   QJsonObject state;
   state["update_count"] = static_cast<double>(m_update_count);
   state["total_game_time"] = static_cast<double>(m_total_game_time);
-  state["next_trace_time"] = static_cast<double>(m_next_trace_time);
   QJsonArray players;
   for (const auto& ai : m_ai_instances) {
     QJsonObject entry;
@@ -318,7 +317,6 @@ void AISystem::restore_state(const QJsonObject& state) {
   m_update_count =
       static_cast<std::uint64_t>(state.value("update_count").toDouble(0.0));
   m_total_game_time = static_cast<float>(state.value("total_game_time").toDouble(0.0));
-  m_next_trace_time = static_cast<float>(state.value("next_trace_time").toDouble(0.0));
   for (const auto value : state.value("players").toArray()) {
     const auto entry = value.toObject();
     const int player_id = entry.value("player_id").toInt(-1);
@@ -362,8 +360,6 @@ void AISystem::update(Engine::Core::World* world, float delta_time) {
 
   m_total_game_time += delta_time;
   ++m_update_count;
-
-  trace_progress(*world);
 
   m_command_filter.update(m_total_game_time);
 
@@ -449,14 +445,6 @@ void AISystem::answer_ally_calls(Engine::Core::World& world) {
                                 .kind = call.kind,
                                 .target = call.target,
                                 .verdict = verdict});
-      if (!qEnvironmentVariableIsEmpty("SOI_AI_TRACE")) {
-        qInfo().nospace() << "SOI_AI_TRACE ally_call player=" << ai.context.player_id
-                          << " from=" << call.requester
-                          << " kind=" << ally_call_kind_key(call.kind)
-                          << " target=" << call.target
-                          << " verdict=" << static_cast<int>(verdict)
-                          << " spare=" << standing.spare_units;
-      }
     }
   }
 }
@@ -558,59 +546,6 @@ void AISystem::process_results(Engine::Core::World& world) {
 
       results.pop();
     }
-  }
-}
-
-void AISystem::trace_progress(const Engine::Core::World& world) {
-  static const bool enabled = !qEnvironmentVariableIsEmpty("SOI_AI_TRACE");
-  if (!enabled) {
-    return;
-  }
-  constexpr float k_trace_interval_seconds = 10.0F;
-  if (m_total_game_time < m_next_trace_time) {
-    return;
-  }
-  m_next_trace_time = m_total_game_time + k_trace_interval_seconds;
-
-  for (const auto& ai : m_ai_instances) {
-    const auto& context = ai.context;
-    const auto resources =
-        Game::Session::session_for(world).economy().get_all(context.player_id);
-    qInfo().nospace() << "SOI_AI_TRACE t=" << m_total_game_time
-                      << " player=" << context.player_id
-                      << " state=" << static_cast<int>(context.state) << " strategy="
-                      << static_cast<int>(context.strategy_config.strategy)
-                      << " posture="
-                      << static_cast<int>(context.strategy_config.posture)
-                      << " aggr=" << context.strategy_config.aggression_modifier
-                      << " proactive=" << context.strategy_config.proactive_attack_size
-                      << " units=" << context.total_units
-                      << " melee=" << context.melee_count
-                      << " ranged=" << context.ranged_count
-                      << " builders=" << context.builder_count
-                      << " buildings=" << context.buildings.size()
-                      << " primary_barracks=" << context.primary_barracks
-                      << " nation=" << (context.nation != nullptr)
-
-                      << " manpower=" << context.recruitment_manpower_available
-                      << " civilians_left=" << context.home_civilians_remaining
-                      << " gold=" << resources.get(ResourceType::Gold)
-                      << " food=" << resources.get(ResourceType::Food)
-                      << " wood=" << resources.get(ResourceType::Wood)
-                      << " stone=" << resources.get(ResourceType::Stone)
-                      << " iron=" << resources.get(ResourceType::Iron) << " wave="
-                      << (context.wave.committed    ? "marching"
-                          : context.wave.assembling ? "assembling"
-                                                    : "forming")
-                      << " wave_members=" << context.wave.members.size()
-                      << " stationed=" << context.station_report.stationed
-                      << " marching=" << context.station_report.marching
-                      << " fighting=" << context.station_report.fighting
-                      << " at_spawn=" << context.station_report.at_spawn
-                      << " adrift=" << context.station_report.adrift
-                      << " decisions=" << m_completed_decision_count
-                      << " commands=" << m_applied_command_count
-                      << " refused=" << m_refused_command_count;
   }
 }
 

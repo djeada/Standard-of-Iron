@@ -8,10 +8,6 @@ namespace App::Audio {
 
 AudioStatusHud::AudioStatusHud(QObject* parent)
     : QObject(parent) {
-  if (qEnvironmentVariableIntValue("SOI_AUDIO_HUD") != 0) {
-    m_enabled = true;
-  }
-
   m_timer.setInterval(250);
   m_timer.setSingleShot(false);
   QObject::connect(&m_timer, &QTimer::timeout, this, &AudioStatusHud::refresh);

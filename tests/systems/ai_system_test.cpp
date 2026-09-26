@@ -467,45 +467,6 @@ TEST_F(AISystemTest, GatherBehaviorUsesUnitAnchorWithoutBarracks) {
   EXPECT_EQ(commands.front().units.front(), 1U);
 }
 
-TEST_F(AISystemTest, AttackBehaviorScoutsFromUnitAnchorWithoutBarracks) {
-  Game::Systems::AI::AttackBehavior behavior;
-
-  Game::Systems::AI::AISnapshot snapshot;
-  snapshot.friendly_units = {
-      make_unit(1, 30.0F, 20.0F),
-      make_unit(2, 32.0F, 22.0F),
-      make_unit(3, 34.0F, 24.0F),
-  };
-
-  Game::Systems::AI::AIContext context;
-  context.player_id = 3;
-  context.state = Game::Systems::AI::AIState::Attacking;
-  context.total_units = 3;
-  context.has_base_anchor = true;
-  context.base_pos_x = 40.0F;
-  context.base_pos_z = 50.0F;
-
-  std::vector<Game::Systems::AI::AICommand> commands;
-  behavior.execute(snapshot, context, 1.6F, commands);
-
-  ASSERT_EQ(commands.size(), 1U);
-  EXPECT_EQ(commands.front().type, Game::Systems::AI::AICommandType::MoveUnits);
-  ASSERT_EQ(commands.front().move_target_x.size(), 3U);
-  ASSERT_EQ(commands.front().move_target_z.size(), 3U);
-
-  float average_target_x = 0.0F;
-  float average_target_z = 0.0F;
-  for (std::size_t index = 0; index < commands.front().move_target_x.size(); ++index) {
-    average_target_x += commands.front().move_target_x[index];
-    average_target_z += commands.front().move_target_z[index];
-  }
-  average_target_x /= static_cast<float>(commands.front().move_target_x.size());
-  average_target_z /= static_cast<float>(commands.front().move_target_z.size());
-
-  EXPECT_NEAR(average_target_x, 40.0F, 0.75F);
-  EXPECT_NEAR(average_target_z, 90.0F, 0.75F);
-}
-
 TEST_F(AISystemTest, AIReasonerKeepsDefensiveAIInGatheringWhenEnemyIsDistant) {
   Game::Systems::AI::AISnapshot snapshot;
   snapshot.player_id = 3;
@@ -1797,46 +1758,41 @@ TEST_F(AISystemTest, AttackBehaviorUsesConfiguredFormationSpacing) {
   EXPECT_LT(compact_span, wide_span);
 }
 
-TEST_F(AISystemTest, AttackBehaviorMarchesTowardStrategicObjectiveWithoutVision) {
-  Game::Systems::AI::AttackBehavior behavior;
+TEST_F(AISystemTest, AWaveMarchesOnARememberedObjectiveWithNothingInSight) {
+  Game::Systems::AI::AIDoctrine doctrine;
+  doctrine.wave.size = 3;
+  doctrine.wave.target_priority = {Game::Systems::AI::DoctrineTarget::Any};
+  doctrine.garrison.minimum_units = 0;
+  doctrine.garrison.fraction = 0.0F;
 
   Game::Systems::AI::AISnapshot snapshot;
+  snapshot.game_time = 500.0F;
   snapshot.friendly_units = {
-      make_unit(1, 30.0F, 20.0F),
-      make_unit(2, 32.0F, 22.0F),
-      make_unit(3, 34.0F, 24.0F),
+      make_unit(1, 40.0F, 50.0F),
+      make_unit(2, 41.0F, 50.0F),
+      make_unit(3, 42.0F, 50.0F),
   };
-  snapshot.strategic_objectives = {
-      make_enemy(101, 120.0F, 80.0F),
-  };
-  snapshot.strategic_objectives.front().is_building = true;
-  snapshot.strategic_objectives.front().spawn_type = Game::Units::SpawnType::Barracks;
+  snapshot.strategic_objectives = {make_enemy_building(101, 120.0F, 80.0F)};
 
   Game::Systems::AI::AIContext context;
   context.player_id = 3;
-  context.state = Game::Systems::AI::AIState::Attacking;
-  context.total_units = 3;
   context.has_base_anchor = true;
   context.base_pos_x = 40.0F;
   context.base_pos_z = 50.0F;
+  context.station.x = 40.0F;
+  context.station.z = 50.0F;
+  context.macro_targets.assembly_radius = 8.0F;
+  context.strategy_config.doctrine = &doctrine;
+  context.strategy_config.aggression_modifier = 1.0F;
 
-  std::vector<Game::Systems::AI::AICommand> commands;
-  behavior.execute(snapshot, context, 1.6F, commands);
-
-  ASSERT_EQ(commands.size(), 1U);
-  EXPECT_EQ(commands.front().type, Game::Systems::AI::AICommandType::MoveUnits);
-
-  float average_target_x = 0.0F;
-  float average_target_z = 0.0F;
-  for (std::size_t index = 0; index < commands.front().move_target_x.size(); ++index) {
-    average_target_x += commands.front().move_target_x[index];
-    average_target_z += commands.front().move_target_z[index];
-  }
-  average_target_x /= static_cast<float>(commands.front().move_target_x.size());
-  average_target_z /= static_cast<float>(commands.front().move_target_z.size());
-
-  EXPECT_NEAR(average_target_x, 120.0F, 0.75F);
-  EXPECT_NEAR(average_target_z, 80.0F, 0.75F);
+  Game::Systems::AI::update_attack_wave(snapshot, context);
+  snapshot.game_time = 503.0F;
+  Game::Systems::AI::update_attack_wave(snapshot, context);
+  ASSERT_TRUE(context.wave.committed);
+  EXPECT_EQ(context.wave.target_id, 101U)
+      << "a base scouted earlier is marched on without searching for it again";
+  EXPECT_FLOAT_EQ(context.wave.target_x, 120.0F);
+  EXPECT_FLOAT_EQ(context.wave.target_z, 80.0F);
 }
 
 TEST_F(AISystemTest, AttackBehaviorUsesChaseForUnitTargets) {
@@ -3868,6 +3824,123 @@ TEST_F(AISystemTest, AttackWaveAssemblesAtTheRallyBeforeItCommits) {
   Game::Systems::AI::update_attack_wave(snapshot, patient);
   EXPECT_TRUE(patient.wave.committed)
       << "a wave that has waited half a minute marches with what it has";
+}
+
+TEST_F(AISystemTest, AWaveThatKnowsOfNoEnemyGoesLookingAcrossTheMap) {
+  Game::Systems::AI::AIDoctrine doctrine;
+  doctrine.wave.size = 3;
+  doctrine.wave.target_priority = {Game::Systems::AI::DoctrineTarget::Any};
+  doctrine.garrison.minimum_units = 0;
+  doctrine.garrison.fraction = 0.0F;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.game_time = 500.0F;
+  snapshot.has_map_bounds = true;
+  snapshot.map_min_x = -200.0F;
+  snapshot.map_max_x = 200.0F;
+  snapshot.map_min_z = -200.0F;
+  snapshot.map_max_z = 200.0F;
+  snapshot.friendly_units = {make_unit(1, -150.0F, -150.0F),
+                             make_unit(2, -151.0F, -150.0F),
+                             make_unit(3, -152.0F, -150.0F)};
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.has_base_anchor = true;
+  context.base_pos_x = -150.0F;
+  context.base_pos_z = -150.0F;
+  context.station.x = -150.0F;
+  context.station.z = -150.0F;
+  context.macro_targets.assembly_radius = 8.0F;
+  context.strategy_config.doctrine = &doctrine;
+  context.strategy_config.aggression_modifier = 1.0F;
+
+  Game::Systems::AI::update_attack_wave(snapshot, context);
+  snapshot.game_time = 503.0F;
+  Game::Systems::AI::update_attack_wave(snapshot, context);
+  ASSERT_TRUE(context.wave.committed)
+      << "a ready army with nothing in sight stays home";
+  EXPECT_EQ(context.wave.target_id, 0U);
+  EXPECT_GT(context.wave.target_x, 100.0F) << "the search starts on the far side";
+  EXPECT_GT(context.wave.target_z, 100.0F);
+
+  for (auto& unit : snapshot.friendly_units) {
+    unit.pos_x = context.wave.target_x;
+    unit.pos_z = context.wave.target_z;
+  }
+  const float first_x = context.wave.target_x;
+  const float first_z = context.wave.target_z;
+  snapshot.game_time = 560.0F;
+  Game::Systems::AI::update_attack_wave(snapshot, context);
+  EXPECT_TRUE(context.wave.committed) << "an empty corner does not end the search";
+  EXPECT_GT(
+      std::hypot(context.wave.target_x - first_x, context.wave.target_z - first_z),
+      100.0F)
+      << "having looked there, the wave moves on round the map";
+
+  snapshot.visible_enemies = {make_enemy_building(90, 60.0F, 120.0F)};
+  snapshot.game_time = 561.0F;
+  Game::Systems::AI::update_attack_wave(snapshot, context);
+  EXPECT_EQ(context.wave.target_id, 90U) << "what the search finds becomes the target";
+}
+
+TEST_F(AISystemTest, AnArmyAdvancingOnASightedEnemyIsNotCalledBackToTheMuster) {
+  Game::Systems::AI::AttackBehavior attack;
+  Game::Systems::AI::GatherBehavior gather;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.game_time = 400.0F;
+  snapshot.friendly_units = {make_unit(1, 40.0F, 50.0F),
+                             make_unit(2, 42.0F, 50.0F),
+                             make_unit(3, 44.0F, 50.0F)};
+  snapshot.visible_enemies = {make_enemy(80, 42.0F, 130.0F)};
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.state = Game::Systems::AI::AIState::Attacking;
+  context.has_base_anchor = true;
+  context.base_pos_x = 40.0F;
+  context.base_pos_z = 50.0F;
+  context.station.x = 40.0F;
+  context.station.z = 30.0F;
+  context.strategy_config.aggression_modifier = 1.0F;
+
+  auto moved_units = [](const std::vector<Game::Systems::AI::AICommand>& commands) {
+    std::vector<Engine::Core::EntityID> units;
+    for (const auto& command : commands) {
+      if (command.type == Game::Systems::AI::AICommandType::MoveUnits) {
+        units.insert(units.end(), command.units.begin(), command.units.end());
+      }
+    }
+    return units;
+  };
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  attack.execute(snapshot, context, 1.6F, commands);
+  ASSERT_EQ(moved_units(commands).size(), 3U) << "the army should advance on the enemy";
+  for (const Engine::Core::EntityID id : {1U, 2U, 3U}) {
+    const auto claim = context.assigned_units.find(id);
+    ASSERT_NE(claim, context.assigned_units.end());
+    EXPECT_EQ(std::string_view(claim->second.assigned_task), "attacking");
+  }
+
+  for (auto& unit : snapshot.friendly_units) {
+    unit.pos_z = 70.0F;
+    unit.movement.has_target = true;
+    unit.movement.has_objective = true;
+    unit.movement.objective_x = unit.pos_x;
+    unit.movement.objective_z = 128.0F;
+  }
+  snapshot.game_time = 401.1F;
+  commands.clear();
+  gather.execute(snapshot, context, 1.1F, commands);
+  EXPECT_TRUE(moved_units(commands).empty()) << "the muster recalled the advance";
+
+  snapshot.game_time = 401.6F;
+  commands.clear();
+  attack.execute(snapshot, context, 1.6F, commands);
+  EXPECT_TRUE(moved_units(commands).empty())
+      << "an advance already under way is re-ordered every round";
 }
 
 namespace {
