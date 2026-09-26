@@ -12,6 +12,8 @@
 #include <QJsonObject>
 #include <QPainter>
 #include <QMatrix4x4>
+#include <QOpenGLContext>
+#include <QOpenGLFunctions>
 #include <QPen>
 #include <QTimer>
 #include <QtMath>
@@ -38,6 +40,7 @@
 #include "game/visuals/team_colors.h"
 #include "promo_casting_overlay.h"
 #include "promo_rpg_hud.h"
+#include "render/graphics_settings.h"
 #include "render/humanoid/runtime/runtime_stats.h"
 #include "video_encoder.h"
 
@@ -521,6 +524,33 @@ public:
 
     if (!m_viewport.has_graphics_quality_override()) {
       m_viewport.set_graphics_quality_override(Render::GraphicsQuality::Ultra);
+    }
+    if (qEnvironmentVariableIsEmpty("SOI_PROMO_ALLOW_LOW_QUALITY")) {
+      if (m_viewport.graphics_quality_override() != Render::GraphicsQuality::Ultra) {
+        if (error != nullptr) {
+          *error = QStringLiteral("promo capture renders at Ultra only; drop "
+                                  "--graphics-quality or set SOI_PROMO_ALLOW_LOW_QUALITY");
+        }
+        return false;
+      }
+      m_viewport.makeCurrent();
+      const auto* context = QOpenGLContext::currentContext();
+      const auto* name =
+          context != nullptr ? reinterpret_cast<const char*>(
+                                   context->functions()->glGetString(GL_RENDERER))
+                             : nullptr;
+      const QString renderer = name != nullptr ? QString::fromLatin1(name) : QString();
+      if (renderer.isEmpty() || renderer.contains(QStringLiteral("llvmpipe"), Qt::CaseInsensitive) ||
+          renderer.contains(QStringLiteral("softpipe"), Qt::CaseInsensitive) ||
+          renderer.contains(QStringLiteral("software"), Qt::CaseInsensitive)) {
+        if (error != nullptr) {
+          *error = QStringLiteral("promo capture needs a hardware GPU, got '%1'; run on "
+                                  "the real display, or set SOI_PROMO_ALLOW_LOW_QUALITY")
+                       .arg(renderer.isEmpty() ? QStringLiteral("no GL context") : renderer);
+        }
+        return false;
+      }
+      qInfo().noquote() << QStringLiteral("Promo capture on %1 at Ultra").arg(renderer);
     }
 
     m_viewport.set_capture_resolution(m_spec.width * m_spec.supersample,

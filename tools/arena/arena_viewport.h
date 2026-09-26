@@ -107,6 +107,10 @@ public:
   void set_graphics_quality_override(Render::GraphicsQuality quality) {
     m_graphics_quality_override = quality;
   }
+  [[nodiscard]] auto graphics_quality_override() const
+      -> std::optional<Render::GraphicsQuality> {
+    return m_graphics_quality_override;
+  }
   [[nodiscard]] auto has_graphics_quality_override() const -> bool {
     return m_graphics_quality_override.has_value();
   }

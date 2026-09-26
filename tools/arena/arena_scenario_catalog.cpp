@@ -22,6 +22,7 @@
 #include "arena_spotlight_scenarios.h"
 #include "arena_structure_lifecycle_scenarios.h"
 #include "arena_stuck_recovery_scenarios.h"
+#include "arena_cinematic_scenarios.h"
 #include "arena_trailer_scenarios.h"
 #include "arena_traversal_scenarios.h"
 #include "arena_wildlife_scenarios.h"
@@ -12104,6 +12105,10 @@ auto definitions() -> const std::vector<ArenaScenarioDefinition>& {
     values.insert(values.end(),
                   std::make_move_iterator(trailer.begin()),
                   std::make_move_iterator(trailer.end()));
+    auto cinematic = build_cinematic_definitions();
+    values.insert(values.end(),
+                  std::make_move_iterator(cinematic.begin()),
+                  std::make_move_iterator(cinematic.end()));
     auto ambience = build_ambience_definitions();
     values.insert(values.end(),
                   std::make_move_iterator(ambience.begin()),
