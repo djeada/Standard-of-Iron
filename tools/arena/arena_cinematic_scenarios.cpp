@@ -149,7 +149,8 @@ auto cine_field() -> ArenaScenarioDefinition {
                                      "with cavalry on the wings, elephants and the two "
                                      "commanders meeting at the centre."),
                       90.0F);
-  s.arena_floor_half_extent = 150.0F;
+  s.arena_floor_half_extent = 300.0F;
+  s.terrain_grid_extent = 640;
   s.suppress_boundary_mountains = true;
   s.ground_type = QStringLiteral("grass_dry");
   s.terrain_seed_override = 71218;
@@ -191,7 +192,7 @@ auto cine_field() -> ArenaScenarioDefinition {
                             2400));
   auto scipio =
       sturdy(file(QStringLiteral("scipio"), Troop::RomanVeteranConsul, 1, 1,
-                  {k_rome_front - 3.5F, 0.0F, 2.0F}, 1, 0.0F),
+                  {k_rome_front + 6.0F, 0.0F, 1.0F}, 1, 0.0F),
              60000);
   scipio.stamina_override = scipio.max_stamina_override = 900.0F;
   s.groups.push_back(scipio);
@@ -201,8 +202,11 @@ auto cine_field() -> ArenaScenarioDefinition {
   auto punic_bows = file(QStringLiteral("punic_bows"), Troop::Archer, 2, 16,
                          {k_carthage_front + 15.0F, 0.0F, 0.0F}, 14, 5.6F);
   s.groups.push_back(punic_bows);
-  s.groups.push_back(sturdy(file(QStringLiteral("punic_elephants"), Troop::Elephant, 2, 6,
-                                 {k_carthage_front + 24.0F, 0.0F, 0.0F}, 1, 11.0F),
+  s.groups.push_back(sturdy(file(QStringLiteral("punic_elephants_n"), Troop::Elephant, 2, 3,
+                                 {k_carthage_front + 22.0F, 0.0F, -36.0F}, 1, 10.0F),
+                            5200));
+  s.groups.push_back(sturdy(file(QStringLiteral("punic_elephants_s"), Troop::Elephant, 2, 3,
+                                 {k_carthage_front + 22.0F, 0.0F, 36.0F}, 1, 10.0F),
                             5200));
   s.groups.push_back(sturdy(file(QStringLiteral("numidians_n"), Troop::MountedSwordsman, 2, 8,
                                  {k_carthage_front + 4.0F, 0.0F, -74.0F}, 8, 4.4F),
@@ -214,7 +218,7 @@ auto cine_field() -> ArenaScenarioDefinition {
                                  {k_carthage_front + 32.0F, 0.0F, 0.0F}, 16, 4.0F),
                             3600));
   s.groups.push_back(sturdy(file(QStringLiteral("hannibal"), Troop::CarthageSwordCommander, 2, 1,
-                                 {k_carthage_front + 30.0F, 0.0F, -2.0F}, 1, 0.0F),
+                                 {k_carthage_front - 6.0F, 0.0F, -1.0F}, 1, 0.0F),
                             60000));
 
   s.resource_patches = {
@@ -234,9 +238,10 @@ auto cine_field() -> ArenaScenarioDefinition {
 
   s.steps = {
       form(14.0F, punic_foot, Intent::Line, {12.0F, 0.0F, 0.0F}, k_carthage_facing, 104.0F),
-      move_to(14.4F, QStringLiteral("punic_elephants"), {26.0F, 0.0F, 0.0F}),
+      move_to(14.4F, QStringLiteral("punic_elephants_n"), {26.0F, 0.0F, -36.0F}),
+      move_to(14.4F, QStringLiteral("punic_elephants_s"), {26.0F, 0.0F, 36.0F}),
       move_to(14.8F, QStringLiteral("punic_guard"), {32.0F, 0.0F, 0.0F}),
-      move_to(15.0F, QStringLiteral("hannibal"), {30.0F, 0.0F, -2.0F}),
+      move_to(15.0F, QStringLiteral("hannibal"), {17.0F, 0.0F, -1.0F}),
       move_to(16.0F, QStringLiteral("numidians_n"), {-6.0F, 0.0F, -96.0F}),
       move_to(16.0F, QStringLiteral("numidians_s"), {-6.0F, 0.0F, 96.0F}),
 
@@ -252,8 +257,8 @@ auto cine_field() -> ArenaScenarioDefinition {
 
       at(27.0F, Command::AttackMove, QStringLiteral("punic_swords"), QStringLiteral("rome_swords")),
       at(27.0F, Command::AttackMove, QStringLiteral("punic_spears"), QStringLiteral("rome_spears")),
-      at(29.0F, Command::AttackMove, QStringLiteral("punic_elephants"),
-         QStringLiteral("rome_swords")),
+      move_to(29.0F, QStringLiteral("punic_elephants_n"), {-34.0F, 0.0F, -38.0F}),
+      move_to(29.0F, QStringLiteral("punic_elephants_s"), {-34.0F, 0.0F, 38.0F}),
       at(31.0F, Command::AttackMove, QStringLiteral("rome_swords"), QStringLiteral("punic_swords")),
       at(31.0F, Command::AttackMove, QStringLiteral("rome_spears"), QStringLiteral("punic_spears")),
       at(36.0F, Command::AttackMove, QStringLiteral("punic_guard"), QStringLiteral("scipio")),
@@ -368,7 +373,9 @@ auto cine_sepulcher() -> ArenaScenarioDefinition {
   s.ground_type = QStringLiteral("alpine_mix");
   s.terrain_snowbound = true;
   s.terrain_seed_override = 9931;
-  s.arena_floor_half_extent = 70.0F;
+  s.arena_floor_half_extent = 180.0F;
+  s.terrain_grid_extent = 400;
+  s.suppress_boundary_mountains = true;
   s.environment.start_time = 22.4F;
   s.environment.lighting_profile = QStringLiteral("iron_sepulcher");
   s.environment.fog_density_override = 0.018F;
