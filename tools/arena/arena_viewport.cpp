@@ -2011,10 +2011,9 @@ auto ArenaViewport::active_lighting() const -> Game::Map::EnvironmentLightingSta
     const float azimuth = qDegreesToRadians(look.sun_azimuth.value_or(current_azimuth));
     const float elevation =
         qDegreesToRadians(look.sun_elevation.value_or(current_elevation));
-    lighting.primary_direction =
-        QVector3D(std::cos(elevation) * std::sin(azimuth),
-                  std::sin(elevation),
-                  std::cos(elevation) * std::cos(azimuth));
+    lighting.primary_direction = QVector3D(std::cos(elevation) * std::sin(azimuth),
+                                           std::sin(elevation),
+                                           std::cos(elevation) * std::cos(azimuth));
   }
   if (look.sun_scale) {
     lighting.primary_intensity *= *look.sun_scale;

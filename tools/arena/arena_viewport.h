@@ -22,7 +22,6 @@
 #include "arena_casting.h"
 #include "arena_feedback.h"
 #include "arena_scenario.h"
-#include "promo_spec.h"
 #include "game/core/component_combat.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain.h"
@@ -30,6 +29,7 @@
 #include "game/systems/nation_id.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
+#include "promo_spec.h"
 
 class QOpenGLShaderProgram;
 class QOpenGLVertexArrayObject;
@@ -107,8 +107,8 @@ public:
   void set_graphics_quality_override(Render::GraphicsQuality quality) {
     m_graphics_quality_override = quality;
   }
-  [[nodiscard]] auto graphics_quality_override() const
-      -> std::optional<Render::GraphicsQuality> {
+  [[nodiscard]] auto
+  graphics_quality_override() const -> std::optional<Render::GraphicsQuality> {
     return m_graphics_quality_override;
   }
   [[nodiscard]] auto has_graphics_quality_override() const -> bool {

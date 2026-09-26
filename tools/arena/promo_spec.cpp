@@ -87,10 +87,10 @@ auto parse_focus(const QJsonObject& object, QString* error) -> std::optional<Foc
       static_cast<float>(
           object.value(QStringLiteral("dead_zone")).toDouble(focus.dead_zone)));
   focus.spring = object.value(QStringLiteral("spring")).toBool(false);
-  focus.lead_seconds = std::max(
-      0.0F,
-      static_cast<float>(
-          object.value(QStringLiteral("lead")).toDouble(focus.lead_seconds)));
+  focus.lead_seconds =
+      std::max(0.0F,
+               static_cast<float>(
+                   object.value(QStringLiteral("lead")).toDouble(focus.lead_seconds)));
 
   if (focus.mode == FocusMode::Army && focus.owner <= 0) {
     if (error != nullptr) {
@@ -301,14 +301,10 @@ auto evaluate_spline(const std::vector<CameraKey>& keys,
   const std::size_t count = keys.size();
   auto channel = [&](auto field) {
     return spline_at<float>(
-        count,
-        [&](std::size_t index) { return field(index); },
-        times,
-        shot_time,
-        ends);
+        count, [&](std::size_t index) { return field(index); }, times, shot_time, ends);
   };
-  pose.distance = std::max(
-      0.2F, channel([&](std::size_t index) { return keys[index].distance; }));
+  pose.distance =
+      std::max(0.2F, channel([&](std::size_t index) { return keys[index].distance; }));
   pose.pitch = channel([&](std::size_t index) { return keys[index].pitch; });
   pose.yaw = channel([&](std::size_t index) { return yaws[index]; });
   pose.fov = channel([&](std::size_t index) { return keys[index].fov; });
@@ -331,13 +327,29 @@ auto evaluate_free(const std::vector<FreeKey>& keys,
   }
   const std::size_t count = keys.size();
   pose.eye = spline_at<QVector3D>(
-      count, [&](std::size_t index) { return keys[index].eye; }, times, shot_time, ends);
+      count,
+      [&](std::size_t index) { return keys[index].eye; },
+      times,
+      shot_time,
+      ends);
   pose.look = spline_at<QVector3D>(
-      count, [&](std::size_t index) { return keys[index].look; }, times, shot_time, ends);
+      count,
+      [&](std::size_t index) { return keys[index].look; },
+      times,
+      shot_time,
+      ends);
   pose.fov = spline_at<float>(
-      count, [&](std::size_t index) { return keys[index].fov; }, times, shot_time, ends);
+      count,
+      [&](std::size_t index) { return keys[index].fov; },
+      times,
+      shot_time,
+      ends);
   pose.roll = spline_at<float>(
-      count, [&](std::size_t index) { return keys[index].roll; }, times, shot_time, ends);
+      count,
+      [&](std::size_t index) { return keys[index].roll; },
+      times,
+      shot_time,
+      ends);
   return pose;
 }
 
@@ -348,15 +360,18 @@ auto handheld_wobble(const Handheld& handheld,
   if (handheld.degrees > 0.0F) {
     const float t = shot_time * handheld.frequency * 2.0F * std::numbers::pi_v<float>;
     wobble.yaw = handheld.degrees * smooth_noise(t, handheld.seed);
-    wobble.pitch = handheld.degrees * 0.7F * smooth_noise(t * 1.13F, handheld.seed + 11);
-    wobble.roll = handheld.degrees * 0.45F * smooth_noise(t * 0.87F, handheld.seed + 23);
+    wobble.pitch =
+        handheld.degrees * 0.7F * smooth_noise(t * 1.13F, handheld.seed + 11);
+    wobble.roll =
+        handheld.degrees * 0.45F * smooth_noise(t * 0.87F, handheld.seed + 23);
   }
   for (const Jolt& jolt : jolts) {
     const float since = shot_time - jolt.at;
     if (since < 0.0F) {
       continue;
     }
-    const float envelope = jolt.degrees * std::exp(-since / std::max(0.02F, jolt.decay));
+    const float envelope =
+        jolt.degrees * std::exp(-since / std::max(0.02F, jolt.decay));
     if (envelope < 1e-3F) {
       continue;
     }
@@ -677,25 +692,25 @@ auto load(const QString& path, QString* error) -> std::optional<Spec> {
       shot.look_space = space("look_space");
       shot.terrain_relative =
           shot_object.value(QStringLiteral("terrain_relative")).toBool(true);
-      shot.near_plane = static_cast<float>(
-          shot_object.value(QStringLiteral("near")).toDouble(0.0));
+      shot.near_plane =
+          static_cast<float>(shot_object.value(QStringLiteral("near")).toDouble(0.0));
       shot.ground_clearance = static_cast<float>(
           shot_object.value(QStringLiteral("ground_clearance")).toDouble(-1.0));
       if (const QJsonValue handheld = shot_object.value(QStringLiteral("handheld"));
           handheld.isObject()) {
         const QJsonObject hand = handheld.toObject();
-        shot.handheld.degrees = static_cast<float>(
-            hand.value(QStringLiteral("degrees")).toDouble(0.0));
-        shot.handheld.frequency = static_cast<float>(
-            hand.value(QStringLiteral("frequency")).toDouble(0.35));
+        shot.handheld.degrees =
+            static_cast<float>(hand.value(QStringLiteral("degrees")).toDouble(0.0));
+        shot.handheld.frequency =
+            static_cast<float>(hand.value(QStringLiteral("frequency")).toDouble(0.35));
         shot.handheld.seed = hand.value(QStringLiteral("seed")).toInt(7);
       }
       for (const QJsonValue jolt_value :
            shot_object.value(QStringLiteral("jolts")).toArray()) {
         const QJsonObject jolt_object = jolt_value.toObject();
         Jolt jolt;
-        jolt.at = static_cast<float>(
-            jolt_object.value(QStringLiteral("at")).toDouble(0.0));
+        jolt.at =
+            static_cast<float>(jolt_object.value(QStringLiteral("at")).toDouble(0.0));
         jolt.degrees = static_cast<float>(
             jolt_object.value(QStringLiteral("degrees")).toDouble(0.4));
         jolt.decay = static_cast<float>(
@@ -749,11 +764,12 @@ auto load(const QString& path, QString* error) -> std::optional<Spec> {
             static_cast<float>(key_object.value(QStringLiteral("time")).toDouble(0.0));
         key.eye = parse_vector(key_object.value(QStringLiteral("eye")), {});
         key.look = parse_vector(key_object.value(QStringLiteral("look")), {});
-        key.fov =
-            static_cast<float>(key_object.value(QStringLiteral("fov")).toDouble(key.fov));
+        key.fov = static_cast<float>(
+            key_object.value(QStringLiteral("fov")).toDouble(key.fov));
         key.roll = static_cast<float>(
             key_object.value(QStringLiteral("roll")).toDouble(key.roll));
-        if (key.fov < 5.0F || key.fov > 120.0F || (key.eye - key.look).length() < 0.05F) {
+        if (key.fov < 5.0F || key.fov > 120.0F ||
+            (key.eye - key.look).length() < 0.05F) {
           if (error != nullptr) {
             *error = QStringLiteral("shot '%1' has an out-of-range free camera key")
                          .arg(shot.name);

@@ -10,10 +10,10 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QPainter>
 #include <QMatrix4x4>
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
+#include <QPainter>
 #include <QPen>
 #include <QTimer>
 #include <QtMath>
@@ -528,25 +528,28 @@ public:
     if (qEnvironmentVariableIsEmpty("SOI_PROMO_ALLOW_LOW_QUALITY")) {
       if (m_viewport.graphics_quality_override() != Render::GraphicsQuality::Ultra) {
         if (error != nullptr) {
-          *error = QStringLiteral("promo capture renders at Ultra only; drop "
-                                  "--graphics-quality or set SOI_PROMO_ALLOW_LOW_QUALITY");
+          *error =
+              QStringLiteral("promo capture renders at Ultra only; drop "
+                             "--graphics-quality or set SOI_PROMO_ALLOW_LOW_QUALITY");
         }
         return false;
       }
       m_viewport.makeCurrent();
       const auto* context = QOpenGLContext::currentContext();
-      const auto* name =
-          context != nullptr ? reinterpret_cast<const char*>(
+      const auto* name = context != nullptr
+                             ? reinterpret_cast<const char*>(
                                    context->functions()->glGetString(GL_RENDERER))
                              : nullptr;
       const QString renderer = name != nullptr ? QString::fromLatin1(name) : QString();
-      if (renderer.isEmpty() || renderer.contains(QStringLiteral("llvmpipe"), Qt::CaseInsensitive) ||
+      if (renderer.isEmpty() ||
+          renderer.contains(QStringLiteral("llvmpipe"), Qt::CaseInsensitive) ||
           renderer.contains(QStringLiteral("softpipe"), Qt::CaseInsensitive) ||
           renderer.contains(QStringLiteral("software"), Qt::CaseInsensitive)) {
         if (error != nullptr) {
-          *error = QStringLiteral("promo capture needs a hardware GPU, got '%1'; run on "
-                                  "the real display, or set SOI_PROMO_ALLOW_LOW_QUALITY")
-                       .arg(renderer.isEmpty() ? QStringLiteral("no GL context") : renderer);
+          *error =
+              QStringLiteral("promo capture needs a hardware GPU, got '%1'; run on "
+                             "the real display, or set SOI_PROMO_ALLOW_LOW_QUALITY")
+                  .arg(renderer.isEmpty() ? QStringLiteral("no GL context") : renderer);
         }
         return false;
       }
@@ -1337,7 +1340,8 @@ private:
       turn.rotate(wobble.pitch, right.normalized());
     }
     direction = turn.map(direction).normalized();
-    m_viewport.set_cinematic_eye(eye, eye + (direction * reach), fov, roll + wobble.roll);
+    m_viewport.set_cinematic_eye(
+        eye, eye + (direction * reach), fov, roll + wobble.roll);
   }
 
   auto resolve_focus(const Shot& shot) -> QVector3D {
@@ -1418,7 +1422,8 @@ private:
       const float hhoo = dt * hoo;
       const float det = 1.0F / (f + hhoo);
       const QVector3D previous = m_smoothed_focus;
-      m_smoothed_focus = ((previous * f) + (m_focus_velocity * dt) + (desired * hhoo)) * det;
+      m_smoothed_focus =
+          ((previous * f) + (m_focus_velocity * dt) + (desired * hhoo)) * det;
       m_focus_velocity = (m_focus_velocity + ((desired - previous) * hoo)) * det;
       return m_smoothed_focus;
     }

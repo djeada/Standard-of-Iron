@@ -510,7 +510,8 @@ auto free_key(float time, QVector3D eye, QVector3D look) -> Arena::Promo::FreeKe
 TEST(ArenaPromoCinematicRigTest, TwoFreeKeysDollyAtConstantSpeed) {
   const std::vector keys{free_key(0.0F, {0.0F, 1.0F, 0.0F}, {10.0F, 1.0F, 0.0F}),
                          free_key(4.0F, {8.0F, 1.0F, 0.0F}, {18.0F, 1.0F, 0.0F})};
-  const auto quarter = Arena::Promo::evaluate_free(keys, 1.0F, Arena::Promo::Ends::Moving);
+  const auto quarter =
+      Arena::Promo::evaluate_free(keys, 1.0F, Arena::Promo::Ends::Moving);
   const auto half = Arena::Promo::evaluate_free(keys, 2.0F, Arena::Promo::Ends::Moving);
   EXPECT_NEAR(quarter.eye.x(), 2.0F, 1e-3F) << "a moving cut-in keeps constant speed";
   EXPECT_NEAR(half.eye.x(), 4.0F, 1e-3F);
@@ -527,17 +528,21 @@ TEST(ArenaPromoCinematicRigTest, EasedEndsStartFromRest) {
 
 TEST(ArenaPromoCinematicRigTest, SplineOrbitPassesThroughKeysWithoutStopping) {
   std::vector<CameraKey> keys{key(0.0F, 0.0F), key(2.0F, 20.0F), key(4.0F, 40.0F)};
-  const auto at_key = Arena::Promo::evaluate_spline(keys, 2.0F, Arena::Promo::Ends::Moving);
+  const auto at_key =
+      Arena::Promo::evaluate_spline(keys, 2.0F, Arena::Promo::Ends::Moving);
   EXPECT_NEAR(at_key.yaw, 20.0F, 1e-3F);
-  const auto before = Arena::Promo::evaluate_spline(keys, 1.9F, Arena::Promo::Ends::Moving);
-  const auto after = Arena::Promo::evaluate_spline(keys, 2.1F, Arena::Promo::Ends::Moving);
+  const auto before =
+      Arena::Promo::evaluate_spline(keys, 1.9F, Arena::Promo::Ends::Moving);
+  const auto after =
+      Arena::Promo::evaluate_spline(keys, 2.1F, Arena::Promo::Ends::Moving);
   EXPECT_NEAR(after.yaw - at_key.yaw, at_key.yaw - before.yaw, 1e-2F)
       << "velocity is continuous through a middle key";
 }
 
 TEST(ArenaPromoCinematicRigTest, SplineYawWrapsTheShortWay) {
   std::vector<CameraKey> keys{key(0.0F, 350.0F), key(2.0F, 10.0F)};
-  const auto mid = Arena::Promo::evaluate_spline(keys, 1.0F, Arena::Promo::Ends::Moving);
+  const auto mid =
+      Arena::Promo::evaluate_spline(keys, 1.0F, Arena::Promo::Ends::Moving);
   EXPECT_NEAR(std::fmod(mid.yaw + 360.0F, 360.0F), 0.0F, 1e-2F);
 }
 

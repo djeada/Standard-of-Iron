@@ -9,6 +9,7 @@
 
 #include "arena_ai_duel_scenarios.h"
 #include "arena_ambience_scenarios.h"
+#include "arena_cinematic_scenarios.h"
 #include "arena_city_scenarios.h"
 #include "arena_economy_scenarios.h"
 #include "arena_engagement_scenarios.h"
@@ -22,7 +23,6 @@
 #include "arena_spotlight_scenarios.h"
 #include "arena_structure_lifecycle_scenarios.h"
 #include "arena_stuck_recovery_scenarios.h"
-#include "arena_cinematic_scenarios.h"
 #include "arena_trailer_scenarios.h"
 #include "arena_traversal_scenarios.h"
 #include "arena_wildlife_scenarios.h"

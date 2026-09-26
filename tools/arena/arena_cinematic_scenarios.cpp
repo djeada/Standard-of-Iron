@@ -17,8 +17,10 @@ using Troop = Game::Units::TroopType;
 constexpr float k_rome_facing = 90.0F;
 constexpr float k_carthage_facing = 270.0F;
 
-auto definition(const char* id, QString label, QString description, float duration)
-    -> ArenaScenarioDefinition {
+auto definition(const char* id,
+                QString label,
+                QString description,
+                float duration) -> ArenaScenarioDefinition {
   ArenaScenarioDefinition result;
   result.id = QString::fromLatin1(id);
   result.label = std::move(label);
@@ -62,8 +64,10 @@ auto sturdy(ArenaScenarioGroup group, int health) -> ArenaScenarioGroup {
   return group;
 }
 
-auto at(float time, Command command, QString source, QString target = {})
-    -> ArenaScenarioStep {
+auto at(float time,
+        Command command,
+        QString source,
+        QString target = {}) -> ArenaScenarioStep {
   ArenaScenarioStep result;
   result.name = QStringLiteral("%1_%2").arg(QString::number(time, 'f', 2), source);
   result.trigger = {Trigger::AtTime, time, {}, {}, 0.0F};
@@ -87,7 +91,8 @@ auto form(float time,
           float frontage,
           bool keep_order = true) -> ArenaScenarioStep {
   ArenaScenarioStep result;
-  result.name = QStringLiteral("%1_%2").arg(QString::number(time, 'f', 2), groups.value(0));
+  result.name =
+      QStringLiteral("%1_%2").arg(QString::number(time, 'f', 2), groups.value(0));
   result.trigger = {Trigger::AtTime, time, {}, {}, 0.0F};
   result.command = Command::FormArmy;
   result.group = groups.value(0);
@@ -142,13 +147,14 @@ auto undead_wave(QString trigger, std::vector<Game::Map::UndeadWaveUnitSpawn> un
 // stillness; then Carthage comes on, the legion answers in assault order, the
 // flanks ride and the elephants go in. Hannibal seeks out Scipio at the centre.
 auto cine_field() -> ArenaScenarioDefinition {
-  auto s = definition(k_cine_field_id,
-                      QStringLiteral("Cinematic: The Field"),
-                      QStringLiteral("Trailer film set. Rome and Carthage drawn up on a "
-                                     "dry plain; they stand until 22 s, then close, "
-                                     "with cavalry on the wings, elephants and the two "
-                                     "commanders meeting at the centre."),
-                      90.0F);
+  auto s =
+      definition(k_cine_field_id,
+                 QStringLiteral("Cinematic: The Field"),
+                 QStringLiteral("Trailer film set. Rome and Carthage drawn up on a "
+                                "dry plain; they stand until 22 s, then close, "
+                                "with cavalry on the wings, elephants and the two "
+                                "commanders meeting at the centre."),
+                 90.0F);
   s.arena_floor_half_extent = 300.0F;
   s.terrain_grid_extent = 640;
   s.suppress_boundary_mountains = true;
@@ -163,8 +169,14 @@ auto cine_field() -> ArenaScenarioDefinition {
   s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
 
   s.elevation_patches = {
-      {.center = {-78.0F, 0.0F, 0.0F}, .radius = 60.0F, .height = 3.5F, .plateau = 30.0F},
-      {.center = {92.0F, 0.0F, -10.0F}, .radius = 55.0F, .height = 5.0F, .plateau = 20.0F},
+      {.center = {-78.0F, 0.0F, 0.0F},
+       .radius = 60.0F,
+       .height = 3.5F,
+       .plateau = 30.0F},
+      {.center = {92.0F, 0.0F, -10.0F},
+       .radius = 55.0F,
+       .height = 5.0F,
+       .plateau = 20.0F},
   };
 
   constexpr float k_rome_front = -46.0F;
@@ -172,8 +184,13 @@ auto cine_field() -> ArenaScenarioDefinition {
   constexpr int k_units = 26;
   constexpr float k_step = 4.0F;
 
-  auto add_line = [&](const char* prefix, Troop troop, int owner, float x, int men,
-                      int health, float z_offset = 0.0F) {
+  auto add_line = [&](const char* prefix,
+                      Troop troop,
+                      int owner,
+                      float x,
+                      int men,
+                      int health,
+                      float z_offset = 0.0F) {
     const QString name = QString::fromLatin1(prefix);
     s.groups.push_back(sturdy(
         file(name, troop, owner, k_units, {x, 0.0F, z_offset}, men, k_step), health));
@@ -181,44 +198,98 @@ auto cine_field() -> ArenaScenarioDefinition {
 
   add_line("rome_swords", Troop::Swordsman, 1, k_rome_front, 16, 2600);
   add_line("rome_spears", Troop::Spearman, 1, k_rome_front - 7.0F, 16, 2600);
-  auto rome_bows =
-      file(QStringLiteral("rome_bows"), Troop::Archer, 1, 18, {k_rome_front - 15.0F, 0.0F, 0.0F}, 14, 5.2F);
+  auto rome_bows = file(QStringLiteral("rome_bows"),
+                        Troop::Archer,
+                        1,
+                        18,
+                        {k_rome_front - 15.0F, 0.0F, 0.0F},
+                        14,
+                        5.2F);
   s.groups.push_back(rome_bows);
-  s.groups.push_back(sturdy(file(QStringLiteral("rome_horse_n"), Troop::MountedSwordsman, 1, 6,
-                                 {k_rome_front - 4.0F, 0.0F, -68.0F}, 8, 4.4F),
+  s.groups.push_back(sturdy(file(QStringLiteral("rome_horse_n"),
+                                 Troop::MountedSwordsman,
+                                 1,
+                                 6,
+                                 {k_rome_front - 4.0F, 0.0F, -68.0F},
+                                 8,
+                                 4.4F),
                             2400));
-  s.groups.push_back(sturdy(file(QStringLiteral("rome_horse_s"), Troop::MountedSwordsman, 1, 6,
-                                 {k_rome_front - 4.0F, 0.0F, 68.0F}, 8, 4.4F),
+  s.groups.push_back(sturdy(file(QStringLiteral("rome_horse_s"),
+                                 Troop::MountedSwordsman,
+                                 1,
+                                 6,
+                                 {k_rome_front - 4.0F, 0.0F, 68.0F},
+                                 8,
+                                 4.4F),
                             2400));
-  auto scipio =
-      sturdy(file(QStringLiteral("scipio"), Troop::RomanVeteranConsul, 1, 1,
-                  {k_rome_front + 6.0F, 0.0F, 1.0F}, 1, 0.0F),
-             60000);
+  auto scipio = sturdy(file(QStringLiteral("scipio"),
+                            Troop::RomanVeteranConsul,
+                            1,
+                            1,
+                            {k_rome_front + 6.0F, 0.0F, 1.0F},
+                            1,
+                            0.0F),
+                       60000);
   scipio.stamina_override = scipio.max_stamina_override = 900.0F;
   s.groups.push_back(scipio);
 
   add_line("punic_swords", Troop::Swordsman, 2, k_carthage_front, 16, 2200);
   add_line("punic_spears", Troop::Spearman, 2, k_carthage_front + 7.0F, 16, 2200);
-  auto punic_bows = file(QStringLiteral("punic_bows"), Troop::Archer, 2, 16,
-                         {k_carthage_front + 15.0F, 0.0F, 0.0F}, 14, 5.6F);
+  auto punic_bows = file(QStringLiteral("punic_bows"),
+                         Troop::Archer,
+                         2,
+                         16,
+                         {k_carthage_front + 15.0F, 0.0F, 0.0F},
+                         14,
+                         5.6F);
   s.groups.push_back(punic_bows);
-  s.groups.push_back(sturdy(file(QStringLiteral("punic_elephants_n"), Troop::Elephant, 2, 3,
-                                 {k_carthage_front + 22.0F, 0.0F, -36.0F}, 1, 10.0F),
+  s.groups.push_back(sturdy(file(QStringLiteral("punic_elephants_n"),
+                                 Troop::Elephant,
+                                 2,
+                                 3,
+                                 {k_carthage_front + 22.0F, 0.0F, -36.0F},
+                                 1,
+                                 10.0F),
                             5200));
-  s.groups.push_back(sturdy(file(QStringLiteral("punic_elephants_s"), Troop::Elephant, 2, 3,
-                                 {k_carthage_front + 22.0F, 0.0F, 36.0F}, 1, 10.0F),
+  s.groups.push_back(sturdy(file(QStringLiteral("punic_elephants_s"),
+                                 Troop::Elephant,
+                                 2,
+                                 3,
+                                 {k_carthage_front + 22.0F, 0.0F, 36.0F},
+                                 1,
+                                 10.0F),
                             5200));
-  s.groups.push_back(sturdy(file(QStringLiteral("numidians_n"), Troop::MountedSwordsman, 2, 8,
-                                 {k_carthage_front + 4.0F, 0.0F, -74.0F}, 8, 4.4F),
+  s.groups.push_back(sturdy(file(QStringLiteral("numidians_n"),
+                                 Troop::MountedSwordsman,
+                                 2,
+                                 8,
+                                 {k_carthage_front + 4.0F, 0.0F, -74.0F},
+                                 8,
+                                 4.4F),
                             2000));
-  s.groups.push_back(sturdy(file(QStringLiteral("numidians_s"), Troop::MountedSwordsman, 2, 8,
-                                 {k_carthage_front + 4.0F, 0.0F, 74.0F}, 8, 4.4F),
+  s.groups.push_back(sturdy(file(QStringLiteral("numidians_s"),
+                                 Troop::MountedSwordsman,
+                                 2,
+                                 8,
+                                 {k_carthage_front + 4.0F, 0.0F, 74.0F},
+                                 8,
+                                 4.4F),
                             2000));
-  s.groups.push_back(sturdy(file(QStringLiteral("punic_guard"), Troop::Swordsman, 2, 4,
-                                 {k_carthage_front + 32.0F, 0.0F, 0.0F}, 16, 4.0F),
+  s.groups.push_back(sturdy(file(QStringLiteral("punic_guard"),
+                                 Troop::Swordsman,
+                                 2,
+                                 4,
+                                 {k_carthage_front + 32.0F, 0.0F, 0.0F},
+                                 16,
+                                 4.0F),
                             3600));
-  s.groups.push_back(sturdy(file(QStringLiteral("hannibal"), Troop::CarthageSwordCommander, 2, 1,
-                                 {k_carthage_front - 6.0F, 0.0F, -1.0F}, 1, 0.0F),
+  s.groups.push_back(sturdy(file(QStringLiteral("hannibal"),
+                                 Troop::CarthageSwordCommander,
+                                 2,
+                                 1,
+                                 {k_carthage_front - 6.0F, 0.0F, -1.0F},
+                                 1,
+                                 0.0F),
                             60000));
 
   s.resource_patches = {
@@ -232,12 +303,18 @@ auto cine_field() -> ArenaScenarioDefinition {
       prop("ruins", 1, {-4.0F, 0.0F, 118.0F}, {}, 1.6F, 0.0F, 0.1F),
   };
 
-  const QStringList rome_foot = {QStringLiteral("rome_swords"), QStringLiteral("rome_spears")};
+  const QStringList rome_foot = {QStringLiteral("rome_swords"),
+                                 QStringLiteral("rome_spears")};
   const QStringList punic_foot = {QStringLiteral("punic_swords"),
                                   QStringLiteral("punic_spears")};
 
   s.steps = {
-      form(14.0F, punic_foot, Intent::Line, {12.0F, 0.0F, 0.0F}, k_carthage_facing, 104.0F),
+      form(14.0F,
+           punic_foot,
+           Intent::Line,
+           {12.0F, 0.0F, 0.0F},
+           k_carthage_facing,
+           104.0F),
       move_to(14.4F, QStringLiteral("punic_elephants_n"), {26.0F, 0.0F, -36.0F}),
       move_to(14.4F, QStringLiteral("punic_elephants_s"), {26.0F, 0.0F, 36.0F}),
       move_to(14.8F, QStringLiteral("punic_guard"), {32.0F, 0.0F, 0.0F}),
@@ -245,24 +322,65 @@ auto cine_field() -> ArenaScenarioDefinition {
       move_to(16.0F, QStringLiteral("numidians_n"), {-6.0F, 0.0F, -96.0F}),
       move_to(16.0F, QStringLiteral("numidians_s"), {-6.0F, 0.0F, 96.0F}),
 
-      form(18.0F, rome_foot, Intent::Assault, {-10.0F, 0.0F, 0.0F}, k_rome_facing, 96.0F),
+      form(18.0F,
+           rome_foot,
+           Intent::Assault,
+           {-10.0F, 0.0F, 0.0F},
+           k_rome_facing,
+           96.0F),
       move_to(18.5F, QStringLiteral("rome_bows"), {-40.0F, 0.0F, 0.0F}),
 
-      at(24.0F, Command::Charge, QStringLiteral("numidians_n"), QStringLiteral("rome_bows")),
-      at(24.0F, Command::Charge, QStringLiteral("numidians_s"), QStringLiteral("rome_bows")),
-      at(26.0F, Command::Attack, QStringLiteral("rome_bows"), QStringLiteral("punic_swords")),
-      at(26.5F, Command::Attack, QStringLiteral("punic_bows"), QStringLiteral("rome_swords")),
-      at(26.0F, Command::Charge, QStringLiteral("rome_horse_n"), QStringLiteral("numidians_n")),
-      at(26.0F, Command::Charge, QStringLiteral("rome_horse_s"), QStringLiteral("numidians_s")),
+      at(24.0F,
+         Command::Charge,
+         QStringLiteral("numidians_n"),
+         QStringLiteral("rome_bows")),
+      at(24.0F,
+         Command::Charge,
+         QStringLiteral("numidians_s"),
+         QStringLiteral("rome_bows")),
+      at(26.0F,
+         Command::Attack,
+         QStringLiteral("rome_bows"),
+         QStringLiteral("punic_swords")),
+      at(26.5F,
+         Command::Attack,
+         QStringLiteral("punic_bows"),
+         QStringLiteral("rome_swords")),
+      at(26.0F,
+         Command::Charge,
+         QStringLiteral("rome_horse_n"),
+         QStringLiteral("numidians_n")),
+      at(26.0F,
+         Command::Charge,
+         QStringLiteral("rome_horse_s"),
+         QStringLiteral("numidians_s")),
 
-      at(27.0F, Command::AttackMove, QStringLiteral("punic_swords"), QStringLiteral("rome_swords")),
-      at(27.0F, Command::AttackMove, QStringLiteral("punic_spears"), QStringLiteral("rome_spears")),
+      at(27.0F,
+         Command::AttackMove,
+         QStringLiteral("punic_swords"),
+         QStringLiteral("rome_swords")),
+      at(27.0F,
+         Command::AttackMove,
+         QStringLiteral("punic_spears"),
+         QStringLiteral("rome_spears")),
       move_to(29.0F, QStringLiteral("punic_elephants_n"), {-34.0F, 0.0F, -38.0F}),
       move_to(29.0F, QStringLiteral("punic_elephants_s"), {-34.0F, 0.0F, 38.0F}),
-      at(31.0F, Command::AttackMove, QStringLiteral("rome_swords"), QStringLiteral("punic_swords")),
-      at(31.0F, Command::AttackMove, QStringLiteral("rome_spears"), QStringLiteral("punic_spears")),
-      at(36.0F, Command::AttackMove, QStringLiteral("punic_guard"), QStringLiteral("scipio")),
-      at(36.0F, Command::AttackMove, QStringLiteral("hannibal"), QStringLiteral("scipio")),
+      at(31.0F,
+         Command::AttackMove,
+         QStringLiteral("rome_swords"),
+         QStringLiteral("punic_swords")),
+      at(31.0F,
+         Command::AttackMove,
+         QStringLiteral("rome_spears"),
+         QStringLiteral("punic_spears")),
+      at(36.0F,
+         Command::AttackMove,
+         QStringLiteral("punic_guard"),
+         QStringLiteral("scipio")),
+      at(36.0F,
+         Command::AttackMove,
+         QStringLiteral("hannibal"),
+         QStringLiteral("scipio")),
   };
 
   const auto rpg_move = [](float time, QVector3D axes) {
@@ -291,12 +409,13 @@ auto cine_field() -> ArenaScenarioDefinition {
 // the wall (flaming stones on structures), the elephants and infantry come on
 // and the legion holds the gate. Rome fields no elephants.
 auto cine_siege() -> ArenaScenarioDefinition {
-  auto s = definition(k_cine_siege_id,
-                      QStringLiteral("Cinematic: The Siege"),
-                      QStringLiteral("Trailer film set. Carthage bombards the east wall "
-                                     "of Aurelia Magna with flaming stones and storms "
-                                     "the gate; the legion holds it."),
-                      60.0F);
+  auto s =
+      definition(k_cine_siege_id,
+                 QStringLiteral("Cinematic: The Siege"),
+                 QStringLiteral("Trailer film set. Carthage bombards the east wall "
+                                "of Aurelia Magna with flaming stones and storms "
+                                "the gate; the legion holds it."),
+                 60.0F);
   constexpr float k_gate_z = -32.0F;
   dress_aurelia_magna(s, QRectF(176.0, -150.0, 184.0, 220.0));
   s.wildlife = {};
@@ -306,10 +425,18 @@ auto cine_siege() -> ArenaScenarioDefinition {
   s.environment.fog_density_override = 0.0035F;
   s.force_full_creature_lod = false;
 
-  auto add = [&](const char* name, Troop troop, int owner, int count, float x, float z,
-                 int men, float step, int health) {
+  auto add = [&](const char* name,
+                 Troop troop,
+                 int owner,
+                 int count,
+                 float x,
+                 float z,
+                 int men,
+                 float step,
+                 int health) {
     s.groups.push_back(sturdy(
-        file(QString::fromLatin1(name), troop, owner, count, {x, 0.0F, z}, men, step), health));
+        file(QString::fromLatin1(name), troop, owner, count, {x, 0.0F, z}, men, step),
+        health));
   };
   add("wall_swords", Troop::Swordsman, 1, 18, 214.0F, k_gate_z, 16, 3.6F, 3000);
   add("wall_spears", Troop::Spearman, 1, 18, 208.0F, k_gate_z, 16, 3.6F, 3000);
@@ -320,10 +447,33 @@ auto cine_siege() -> ArenaScenarioDefinition {
   add("siege_spears", Troop::Spearman, 2, 22, 268.0F, k_gate_z, 16, 3.6F, 2400);
   add("siege_bows", Troop::Archer, 2, 12, 276.0F, k_gate_z, 14, 5.0F, 1400);
   add("siege_elephants", Troop::Elephant, 2, 5, 282.0F, k_gate_z, 1, 12.0F, 6000);
-  add("siege_catapults_n", Troop::Catapult, 2, 4, 274.0F, k_gate_z - 26.0F, 1, 12.0F, 2000);
-  add("siege_catapults_s", Troop::Catapult, 2, 4, 274.0F, k_gate_z + 26.0F, 1, 12.0F, 2000);
+  add("siege_catapults_n",
+      Troop::Catapult,
+      2,
+      4,
+      274.0F,
+      k_gate_z - 26.0F,
+      1,
+      12.0F,
+      2000);
+  add("siege_catapults_s",
+      Troop::Catapult,
+      2,
+      4,
+      274.0F,
+      k_gate_z + 26.0F,
+      1,
+      12.0F,
+      2000);
   add("siege_ballistas", Troop::Ballista, 2, 6, 290.0F, k_gate_z, 1, 14.0F, 2000);
-  add("siege_hannibal", Troop::CarthageSwordCommander, 2, 1, 284.0F, k_gate_z + 6.0F, 1, 0.0F,
+  add("siege_hannibal",
+      Troop::CarthageSwordCommander,
+      2,
+      1,
+      284.0F,
+      k_gate_z + 6.0F,
+      1,
+      0.0F,
       12000);
 
   for (auto& group : s.groups) {
@@ -341,22 +491,53 @@ auto cine_siege() -> ArenaScenarioDefinition {
   s.steps = {
       at(0.3F, Command::Hold, QStringLiteral("wall_swords")),
       at(0.3F, Command::Hold, QStringLiteral("wall_spears")),
-      at(1.0F, Command::Attack, QStringLiteral("siege_catapults_n"),
+      at(1.0F,
+         Command::Attack,
+         QStringLiteral("siege_catapults_n"),
          QStringLiteral("capital_tower_e1")),
-      at(1.2F, Command::Attack, QStringLiteral("siege_catapults_s"),
+      at(1.2F,
+         Command::Attack,
+         QStringLiteral("siege_catapults_s"),
          QStringLiteral("capital_tower_e2")),
-      at(1.0F, Command::Attack, QStringLiteral("rome_ballistas"), QStringLiteral("siege_swords")),
-      at(2.0F, Command::Attack, QStringLiteral("siege_ballistas"), QStringLiteral("wall_bows")),
-      at(10.0F, Command::Attack, QStringLiteral("wall_bows"), QStringLiteral("siege_swords")),
-      at(12.0F, Command::AttackMove, QStringLiteral("siege_swords"), QStringLiteral("wall_swords")),
-      at(12.5F, Command::AttackMove, QStringLiteral("siege_spears"), QStringLiteral("wall_spears")),
-      at(13.0F, Command::Attack, QStringLiteral("siege_bows"), QStringLiteral("wall_bows")),
-      at(16.0F, Command::AttackMove, QStringLiteral("siege_elephants"),
+      at(1.0F,
+         Command::Attack,
+         QStringLiteral("rome_ballistas"),
+         QStringLiteral("siege_swords")),
+      at(2.0F,
+         Command::Attack,
+         QStringLiteral("siege_ballistas"),
+         QStringLiteral("wall_bows")),
+      at(10.0F,
+         Command::Attack,
+         QStringLiteral("wall_bows"),
+         QStringLiteral("siege_swords")),
+      at(12.0F,
+         Command::AttackMove,
+         QStringLiteral("siege_swords"),
          QStringLiteral("wall_swords")),
-      at(20.0F, Command::AttackMove, QStringLiteral("wall_swords"), QStringLiteral("siege_swords")),
-      at(20.0F, Command::AttackMove, QStringLiteral("wall_spears"), QStringLiteral("siege_spears")),
+      at(12.5F,
+         Command::AttackMove,
+         QStringLiteral("siege_spears"),
+         QStringLiteral("wall_spears")),
+      at(13.0F,
+         Command::Attack,
+         QStringLiteral("siege_bows"),
+         QStringLiteral("wall_bows")),
+      at(16.0F,
+         Command::AttackMove,
+         QStringLiteral("siege_elephants"),
+         QStringLiteral("wall_swords")),
+      at(20.0F,
+         Command::AttackMove,
+         QStringLiteral("wall_swords"),
+         QStringLiteral("siege_swords")),
+      at(20.0F,
+         Command::AttackMove,
+         QStringLiteral("wall_spears"),
+         QStringLiteral("siege_spears")),
   };
-  s.expectations = {exists("wall_swords"), exists("siege_catapults_n"), exists("capital_gate_road")};
+  s.expectations = {
+      exists("wall_swords"), exists("siege_catapults_n"), exists("capital_gate_road")};
   return s;
 }
 
@@ -389,7 +570,10 @@ auto cine_sepulcher() -> ArenaScenarioDefinition {
   s.rpg_mode = true;
   s.rpg_commander_group = QStringLiteral("consul");
   s.elevation_patches = {
-      {.center = {0.0F, 0.0F, -22.0F}, .radius = 26.0F, .height = 2.5F, .plateau = 10.0F},
+      {.center = {0.0F, 0.0F, -22.0F},
+       .radius = 26.0F,
+       .height = 2.5F,
+       .plateau = 10.0F},
   };
 
   constexpr float k_barrow_z = -18.0F;
@@ -401,9 +585,10 @@ auto cine_sepulcher() -> ArenaScenarioDefinition {
     int archers;
     int priests;
   };
-  for (auto const& barrow : {Barrow{"barrow_heart", 0.0F, k_barrow_z, 8, 4, 3},
-                             Barrow{"barrow_west", -22.0F, k_barrow_z + 4.0F, 6, 3, 2},
-                             Barrow{"barrow_east", 22.0F, k_barrow_z + 2.0F, 6, 3, 2}}) {
+  for (auto const& barrow :
+       {Barrow{"barrow_heart", 0.0F, k_barrow_z, 8, 4, 3},
+        Barrow{"barrow_west", -22.0F, k_barrow_z + 4.0F, 6, 3, 2},
+        Barrow{"barrow_east", 22.0F, k_barrow_z + 2.0F, 6, 3, 2}}) {
     Game::Map::UndeadZone zone;
     zone.id = QString::fromLatin1(barrow.id);
     zone.anchor_type = Game::Map::WorldProp::Type::MagicShrine;
@@ -425,22 +610,46 @@ auto cine_sepulcher() -> ArenaScenarioDefinition {
   }
 
   s.resource_patches = {
-      prop("ruins", 3, {-10.0F, 0.0F, k_barrow_z - 12.0F}, {9.0F, 0.0F, -3.0F}, 1.5F, 3.0F, 0.4F),
-      prop("ruins", 2, {18.0F, 0.0F, k_barrow_z - 10.0F}, {7.0F, 0.0F, 3.0F}, 1.3F, 3.0F, 0.4F),
-      prop("statue", 2, {-8.0F, 0.0F, k_barrow_z + 3.0F}, {16.0F, 0.0F, 0.0F}, 1.3F, 1.0F, 0.1F),
-      prop("dead_tree", 6, {-40.0F, 0.0F, -6.0F}, {6.0F, 0.0F, -5.0F}, 1.2F, 3.5F, 0.4F),
+      prop("ruins",
+           3,
+           {-10.0F, 0.0F, k_barrow_z - 12.0F},
+           {9.0F, 0.0F, -3.0F},
+           1.5F,
+           3.0F,
+           0.4F),
+      prop("ruins",
+           2,
+           {18.0F, 0.0F, k_barrow_z - 10.0F},
+           {7.0F, 0.0F, 3.0F},
+           1.3F,
+           3.0F,
+           0.4F),
+      prop("statue",
+           2,
+           {-8.0F, 0.0F, k_barrow_z + 3.0F},
+           {16.0F, 0.0F, 0.0F},
+           1.3F,
+           1.0F,
+           0.1F),
+      prop(
+          "dead_tree", 6, {-40.0F, 0.0F, -6.0F}, {6.0F, 0.0F, -5.0F}, 1.2F, 3.5F, 0.4F),
       prop("dead_tree", 5, {34.0F, 0.0F, -2.0F}, {5.0F, 0.0F, 6.0F}, 1.2F, 3.5F, 0.4F),
-      prop("dead_tree", 3, {-14.0F, 0.0F, 12.0F}, {12.0F, 0.0F, 4.0F}, 1.1F, 3.0F, 0.4F),
-      prop("pine_tree", 8, {-54.0F, 0.0F, 30.0F}, {4.0F, 0.0F, -6.0F}, 1.3F, 4.0F, 0.3F),
+      prop(
+          "dead_tree", 3, {-14.0F, 0.0F, 12.0F}, {12.0F, 0.0F, 4.0F}, 1.1F, 3.0F, 0.4F),
+      prop(
+          "pine_tree", 8, {-54.0F, 0.0F, 30.0F}, {4.0F, 0.0F, -6.0F}, 1.3F, 4.0F, 0.3F),
       prop("pine_tree", 7, {50.0F, 0.0F, 26.0F}, {4.0F, 0.0F, -6.0F}, 1.3F, 4.0F, 0.3F),
       prop("boulder", 6, {-26.0F, 0.0F, 6.0F}, {9.0F, 0.0F, 3.0F}, 1.2F, 3.0F, 0.5F),
-      prop("fire_camp", 2, {-8.0F, 0.0F, 30.0F}, {16.0F, 0.0F, 2.0F}, 0.55F, 1.0F, 0.1F),
-      prop("fire_camp", 2, {-6.0F, 0.0F, 46.0F}, {12.0F, 0.0F, -3.0F}, 0.5F, 1.0F, 0.1F),
+      prop(
+          "fire_camp", 2, {-8.0F, 0.0F, 30.0F}, {16.0F, 0.0F, 2.0F}, 0.55F, 1.0F, 0.1F),
+      prop(
+          "fire_camp", 2, {-6.0F, 0.0F, 46.0F}, {12.0F, 0.0F, -3.0F}, 0.5F, 1.0F, 0.1F),
       prop("fire_camp", 1, {-4.0F, 0.0F, k_barrow_z - 3.0F}, {}, 0.45F, 0.5F, 0.1F),
   };
 
   auto legion = [](const char* name, Troop troop, int count, float z, int men) {
-    auto group = file(QString::fromLatin1(name), troop, 1, count, {0.0F, 0.0F, z}, men, 0.0F);
+    auto group =
+        file(QString::fromLatin1(name), troop, 1, count, {0.0F, 0.0F, z}, men, 0.0F);
     group.spacing = {3.6F, 0.0F, 0.0F};
     group.facing_degrees = 180.0F;
     return sturdy(group, 2600);
@@ -448,8 +657,13 @@ auto cine_sepulcher() -> ArenaScenarioDefinition {
   s.groups = {legion("snow_swords", Troop::Swordsman, 10, 40.0F, 12),
               legion("snow_spears", Troop::Spearman, 10, 46.0F, 12),
               legion("snow_bows", Troop::Archer, 8, 52.0F, 10)};
-  auto consul = sturdy(file(QStringLiteral("consul"), Troop::RomanVeteranConsul, 1, 1,
-                            {2.0F, 0.0F, 33.0F}, 1, 0.0F),
+  auto consul = sturdy(file(QStringLiteral("consul"),
+                            Troop::RomanVeteranConsul,
+                            1,
+                            1,
+                            {2.0F, 0.0F, 33.0F},
+                            1,
+                            0.0F),
                        12000);
   consul.facing_degrees = 180.0F;
   s.groups.push_back(consul);

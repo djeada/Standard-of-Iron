@@ -274,9 +274,8 @@ struct CapturePass {
 
 [[nodiscard]] auto shake_offset(int frame_index, float amount) -> QVector3D;
 
-[[nodiscard]] auto evaluate_spline(const std::vector<CameraKey>& keys,
-                                   float shot_time,
-                                   Ends ends) -> Pose;
+[[nodiscard]] auto
+evaluate_spline(const std::vector<CameraKey>& keys, float shot_time, Ends ends) -> Pose;
 
 struct FreePose {
   QVector3D eye;
@@ -285,9 +284,8 @@ struct FreePose {
   float roll{0.0F};
 };
 
-[[nodiscard]] auto evaluate_free(const std::vector<FreeKey>& keys,
-                                 float shot_time,
-                                 Ends ends) -> FreePose;
+[[nodiscard]] auto
+evaluate_free(const std::vector<FreeKey>& keys, float shot_time, Ends ends) -> FreePose;
 
 struct Wobble {
   float yaw{0.0F};
