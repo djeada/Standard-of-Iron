@@ -89,6 +89,11 @@ def look_filter(look: dict, scope_h: int) -> str:
                 keys += [f"r{prefix}={rgb[0]:.3f}", f"g{prefix}={rgb[1]:.3f}", f"b{prefix}={rgb[2]:.3f}"]
         if keys:
             stages.append("colorbalance=" + ":".join(keys) + ":pl=1")
+    greens = look.get("greens")
+    if greens:
+        stages.append(f"huesaturation=colors=g+y:hue={float(greens.get('hue', 0)):.1f}"
+                      f":saturation={float(greens.get('saturation', 0)):.3f}"
+                      f":intensity={float(greens.get('intensity', 0)):.3f}:strength=2")
     curve = look.get("curve")
     if curve:
         stages.append(f"curves=master='{curve_points(curve)}'")

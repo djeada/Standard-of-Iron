@@ -188,6 +188,24 @@ def place_music(bus: np.ndarray, cue: dict, times) -> None:
     dsp.place(bus, clip, start)
 
 
+def clip_audio(folder: Path, name: str) -> np.ndarray | None:
+    """The arena's recorded mix for a clip: its WAV, or the MP4's audio track."""
+    wavs = sorted(folder.glob(f"[0-9][0-9]_{name}.mp4.wav"))
+    if wavs:
+        return dsp.load(wavs[0])
+    clips = sorted(folder.glob(f"[0-9][0-9]_{name}.mp4"))
+    if not clips:
+        return None
+    cache = clips[0].with_suffix(".game.wav")
+    if not cache.exists() or cache.stat().st_mtime < clips[0].stat().st_mtime:
+        result = subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(clips[0]), "-vn",
+                                 "-ac", "2", "-ar", str(dsp.RATE), str(cache)],
+                                capture_output=True)
+        if result.returncode != 0:
+            return None
+    return dsp.load(cache)
+
+
 def game_audio(bus: np.ndarray, cut: dict, clips: Path, times) -> None:
     """The arena's recorded mix under each event that asks for it."""
     t = 0.0
@@ -195,9 +213,8 @@ def game_audio(bus: np.ndarray, cut: dict, clips: Path, times) -> None:
         gain = event.get("game_audio")
         if gain is not None and "clip" in event:
             folder, _, name = event["clip"].partition("/")
-            wavs = sorted((clips / folder).glob(f"[0-9][0-9]_{name}.mp4.wav"))
-            if wavs:
-                src = dsp.load(wavs[0])
+            src = clip_audio(clips / folder, name)
+            if src is not None:
                 speed = float(event.get("speed", 1.0))
                 seg = dsp.trim(src, float(event.get("in", 0.0)), float(event["dur"]) * speed)
                 if abs(speed - 1.0) > 1e-3:

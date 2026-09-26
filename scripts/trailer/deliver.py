@@ -76,7 +76,31 @@ def main() -> int:
     parser.add_argument("--allow-freeze", default="",
                         help="comma list of start-end seconds where stillness is intended")
     parser.add_argument("--max-freeze", type=int, default=12)
+    parser.add_argument("--cut", type=Path,
+                        help="cut.json: its cards, dips and fades count as intended black")
     args = parser.parse_args()
+    if args.cut:
+        spans = []
+        t = 0.0
+        events = json.loads(args.cut.read_text())["events"]
+        for i, event in enumerate(events):
+            d = float(event["dur"])
+            if "card" in event:
+                spans.append(f"{t:.3f}-{t + d:.3f}")
+            fade_in = float(event.get("fade_in", 0.0))
+            fade_out = float(event.get("fade_out", 0.0))
+            if event.get("join") == "dip":
+                fade_in = max(fade_in, float(event.get("join_dur", 0.5)) / 2)
+            if i + 1 < len(events) and events[i + 1].get("join") == "dip":
+                fade_out = max(fade_out, float(events[i + 1].get("join_dur", 0.5)) / 2)
+            if fade_in:
+                spans.append(f"{t:.3f}-{t + fade_in:.3f}")
+            if fade_out:
+                spans.append(f"{t + d - fade_out:.3f}-{t + d:.3f}")
+            t += d
+        joined = ",".join(spans)
+        args.allow_black = ",".join(filter(None, [args.allow_black, joined]))
+        args.allow_freeze = ",".join(filter(None, [args.allow_freeze, joined]))
 
     fps_text = run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
                     "stream=r_frame_rate", "-of", "csv=p=0", str(args.picture)]).strip()

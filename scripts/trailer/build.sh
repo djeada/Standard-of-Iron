@@ -47,7 +47,7 @@ sound() {
 
 master() {
   "$PYTHON" "$ROOT/scripts/trailer/deliver.py" --picture "$OUT/picture.mov" \
-    --mix "$OUT/mix.wav" --out "$OUT/standard_of_iron_trailer.mp4"
+    --mix "$OUT/mix.wav" --cut "$CUT" --out "$OUT/standard_of_iron_trailer.mp4"
 }
 
 case "$STAGE" in
