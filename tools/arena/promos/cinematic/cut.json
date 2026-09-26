@@ -145,12 +145,12 @@
    "halation_threshold": 0.85
   },
   "night": {
-   "exposure": -0.45,
+   "exposure": -0.3,
    "balance": {
     "shadows": [
      -0.02,
      0.0,
-     0.04
+     0.03
     ],
     "highlights": [
      0.02,
@@ -161,36 +161,37 @@
    "curve": [
     [
      0,
-     0.0
+     0.02
     ],
     [
      0.25,
-     0.15
+     0.17
     ],
     [
      0.5,
-     0.42
+     0.44
     ],
     [
      0.75,
-     0.74
+     0.72
     ],
     [
      1,
-     0.96
+     0.93
     ]
    ],
-   "saturation": 0.8,
-   "halation": 0.06,
-   "halation_threshold": 0.9,
+   "saturation": 0.85,
+   "halation": 0.07,
+   "halation_threshold": 0.88,
    "halation_tint": [
     1.0,
     0.6,
     0.3
    ],
-   "vignette": 0.4,
+   "vignette": 0.45,
    "grain": 5,
-   "sharpen": 0.25
+   "sharpen": 0.25,
+   "gamma": 1.0
   },
   "fire": {
    "curve": [
@@ -418,8 +419,8 @@
   {
    "name": "temple",
    "clip": "cine_city/temple_rising",
-   "in": 3.4,
-   "dur": 1.8,
+   "in": 6.4,
+   "dur": 3.2,
    "look": "city",
    "game_audio": -14
   },

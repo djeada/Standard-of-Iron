@@ -62,7 +62,12 @@
      "fov": 27
     }
    ],
-   "ground_clearance": 0.3
+   "ground_clearance": 0.3,
+   "lighting": {
+    "ambient_scale": 2.2,
+    "sun_scale": 1.8,
+    "exposure": 1.35
+   }
   },
   {
    "name": "column_fires",
@@ -110,7 +115,12 @@
      "fov": 24
     }
    ],
-   "ground_clearance": 0.3
+   "ground_clearance": 0.3,
+   "lighting": {
+    "ambient_scale": 2.2,
+    "sun_scale": 1.8,
+    "exposure": 1.35
+   }
   },
   {
    "name": "consul_ascends",
@@ -155,7 +165,12 @@
      ],
      "fov": 24
     }
-   ]
+   ],
+   "lighting": {
+    "ambient_scale": 2.2,
+    "sun_scale": 1.8,
+    "exposure": 1.35
+   }
   },
   {
    "name": "the_rising",
@@ -203,7 +218,12 @@
      "fov": 25
     }
    ],
-   "ground_clearance": 0.3
+   "ground_clearance": 0.3,
+   "lighting": {
+    "ambient_scale": 2.2,
+    "sun_scale": 1.8,
+    "exposure": 1.35
+   }
   },
   {
    "name": "consul_fights",
@@ -252,6 +272,11 @@
    "handheld": {
     "degrees": 0.3,
     "frequency": 0.45
+   },
+   "lighting": {
+    "ambient_scale": 2.2,
+    "sun_scale": 1.8,
+    "exposure": 1.35
    }
   },
   {
@@ -300,7 +325,12 @@
      "fov": 22
     }
    ],
-   "ground_clearance": 0.3
+   "ground_clearance": 0.3,
+   "lighting": {
+    "ambient_scale": 2.2,
+    "sun_scale": 1.8,
+    "exposure": 1.35
+   }
   }
  ]
 }
