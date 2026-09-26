@@ -132,15 +132,14 @@ auto distance_to_site_edge(const Engine::Core::BuilderProductionComponent& build
   return std::hypot(outside_x, outside_z);
 }
 
-constexpr float k_site_bypass_reach = 2.5F;
 constexpr float k_site_route_goal_tolerance_sq = 0.25F;
 
 auto site_bypass_radius_sq(const Engine::Core::BuilderProductionComponent& builder,
                            const Engine::Core::MovementComponent* movement) -> float {
-  float radius = k_site_bypass_reach;
-  if (movement != nullptr && is_gather_builder_product(builder.product_type)) {
-    radius += std::max(0.0F, movement->get_navigation_clearance());
-  }
+  float const radius =
+      movement != nullptr && is_gather_builder_product(builder.product_type)
+          ? gather_bypass_reach(movement->get_navigation_clearance())
+          : k_site_bypass_reach;
   return radius * radius;
 }
 

@@ -215,6 +215,23 @@ auto is_movement_point_allowed(const QVector3D& pos,
                   builder_prod->construction_site_z)) {
       return true;
     }
+
+    auto const* movement = entity.get_component<Engine::Core::MovementComponent>();
+    auto const* pathfinder = NavGrid::get_pathfinder();
+    if (builder_prod->has_construction_site && movement != nullptr &&
+        pathfinder != nullptr) {
+      float const reach = gather_bypass_reach(movement->get_navigation_clearance());
+      float const dx = pos.x() - builder_prod->construction_site_x;
+      float const dz = pos.z() - builder_prod->construction_site_z;
+      Point const cell = NavGrid::world_to_grid(pos.x(), pos.z());
+      auto const value = pathfinder->cell_value(cell.x, cell.y);
+      bool const resource_cell = value == Pathfinding::CellValue::Tree ||
+                                 value == Pathfinding::CellValue::Boulder ||
+                                 value == Pathfinding::CellValue::IronOre;
+      if (resource_cell && (dx * dx) + (dz * dz) <= reach * reach) {
+        return true;
+      }
+    }
   }
 
   return Walkability::can_stand(pos, motor_profile_for(entity));
