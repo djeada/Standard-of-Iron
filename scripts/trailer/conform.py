@@ -197,6 +197,8 @@ def render_event(index: int, event: dict, cut: dict, clips: Path, work: Path) ->
     if capture_sub > 1:
         take = max(1, min(capture_sub, round(shutter * capture_sub / sub)))
         blur = [f"tmix=frames={take}", f"framestep={capture_sub}"]
+    elif clip_fps < fps - 0.5:
+        blur = [f"fps={fps}"]
     zoom = event.get("reframe", {})
     z = float(zoom.get("zoom", 1.0))
     cx = float(zoom.get("x", 0.5))
@@ -215,7 +217,8 @@ def render_event(index: int, event: dict, cut: dict, clips: Path, work: Path) ->
     graph = ",".join(
         pre
         + blur
-        + [f"setpts=N/{fps}/TB", "format=gbrp16le"]
+        + [f"setpts=N/{fps}/TB", "format=gbrp16le",
+           f"scale={WIDTH}:{HEIGHT}:flags=lanczos"]
         + flip
         + [f"crop={crop_w}:{crop_h}:{x0}:{y0}", f"scale={WIDTH}:{scope_h}:flags=lanczos"]
     )
@@ -243,6 +246,9 @@ def plan(cut: dict) -> list[dict]:
             if join == "dissolve":
                 events[i - 1]["_tail"] = d / 2
                 event["_head"] = d / 2
+            else:
+                events[i - 1]["fade_out"] = max(float(events[i - 1].get("fade_out", 0)), d / 2)
+                event["fade_in"] = max(float(event.get("fade_in", 0)), d / 2)
     return events
 
 

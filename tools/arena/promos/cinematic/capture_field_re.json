@@ -1,0 +1,260 @@
+{
+ "id": "cine_field_re",
+ "title": "STANDARD OF IRON",
+ "width": 1920,
+ "height": 1080,
+ "fps": 96,
+ "supersample": 2,
+ "gameplay_ui": false,
+ "audio": true,
+ "record_music": false,
+ "motion_limits": {
+  "yaw_degrees_per_second": 40,
+  "pitch_degrees_per_second": 20,
+  "fov_degrees_per_second": 20,
+  "minimum_clip_seconds": 1.0,
+  "mean_clip_seconds": 1.0
+ },
+ "shots": [
+  {
+   "name": "scipio_tele",
+   "scenario": "cine_field",
+   "start": 44.0,
+   "duration": 12.0,
+   "rig": "free",
+   "ground_clearance": 0.3,
+   "focus": {
+    "mode": "group",
+    "group": "scipio",
+    "smoothing": 0.7,
+    "spring": true,
+    "dead_zone": 0.8
+   },
+   "lighting": {
+    "hour": 7.7,
+    "sun_azimuth": 92,
+    "sun_elevation": 26.0,
+    "fog_density": 0.007,
+    "fog_color": [
+     0.82,
+     0.74,
+     0.64
+    ]
+   },
+   "handheld": {
+    "degrees": 0.12,
+    "frequency": 0.3
+   },
+   "camera": [
+    {
+     "time": 0,
+     "eye": [
+      9.5,
+      1.9,
+      8.5
+     ],
+     "look": [
+      0,
+      0.7,
+      0
+     ],
+     "fov": 13
+    },
+    {
+     "time": 12.0,
+     "eye": [
+      11.0,
+      1.9,
+      6.5
+     ],
+     "look": [
+      0,
+      0.7,
+      0
+     ],
+     "fov": 13
+    }
+   ]
+  },
+  {
+   "name": "hannibal_tele",
+   "scenario": "cine_field",
+   "start": 50.0,
+   "duration": 12.0,
+   "rig": "free",
+   "ground_clearance": 0.3,
+   "focus": {
+    "mode": "group",
+    "group": "hannibal",
+    "smoothing": 0.7,
+    "spring": true,
+    "dead_zone": 0.8
+   },
+   "lighting": {
+    "hour": 7.7,
+    "sun_azimuth": 260,
+    "sun_elevation": 26.0,
+    "fog_density": 0.007,
+    "fog_color": [
+     0.82,
+     0.74,
+     0.64
+    ]
+   },
+   "handheld": {
+    "degrees": 0.12,
+    "frequency": 0.3
+   },
+   "camera": [
+    {
+     "time": 0,
+     "eye": [
+      -10.5,
+      1.9,
+      -7.5
+     ],
+     "look": [
+      0,
+      0.7,
+      0
+     ],
+     "fov": 13
+    },
+    {
+     "time": 12.0,
+     "eye": [
+      -11.5,
+      1.9,
+      -5.0
+     ],
+     "look": [
+      0,
+      0.7,
+      0
+     ],
+     "fov": 13
+    }
+   ]
+  },
+  {
+   "name": "duel_tele",
+   "scenario": "cine_field",
+   "start": 55.0,
+   "duration": 12.0,
+   "rig": "free",
+   "ground_clearance": 0.3,
+   "focus": {
+    "mode": "group_pair",
+    "group": "scipio",
+    "second_group": "hannibal",
+    "smoothing": 0.8,
+    "spring": true,
+    "dead_zone": 0.8
+   },
+   "lighting": {
+    "hour": 7.7,
+    "sun_azimuth": 92,
+    "sun_elevation": 26.0,
+    "fog_density": 0.007,
+    "fog_color": [
+     0.82,
+     0.74,
+     0.64
+    ]
+   },
+   "handheld": {
+    "degrees": 0.12,
+    "frequency": 0.3
+   },
+   "camera": [
+    {
+     "time": 0,
+     "eye": [
+      3,
+      2.0,
+      14
+     ],
+     "look": [
+      0,
+      0.75,
+      0
+     ],
+     "fov": 14
+    },
+    {
+     "time": 12,
+     "eye": [
+      -2,
+      2.0,
+      14
+     ],
+     "look": [
+      0,
+      0.75,
+      0
+     ],
+     "fov": 14
+    }
+   ]
+  },
+  {
+   "name": "melee_tele",
+   "scenario": "cine_field",
+   "start": 50.0,
+   "duration": 10.0,
+   "rig": "free",
+   "eye_space": "world",
+   "look_space": "world",
+   "focus": {
+    "mode": "point",
+    "point": [
+     0,
+     0,
+     0
+    ]
+   },
+   "ground_clearance": 0.3,
+   "lighting": {
+    "hour": 7.7,
+    "sun_azimuth": 92,
+    "sun_elevation": 26.0,
+    "fog_density": 0.007,
+    "fog_color": [
+     0.82,
+     0.74,
+     0.64
+    ]
+   },
+   "camera": [
+    {
+     "time": 0,
+     "eye": [
+      -2,
+      1.6,
+      -40
+     ],
+     "look": [
+      -8,
+      0.7,
+      -2
+     ],
+     "fov": 12
+    },
+    {
+     "time": 10,
+     "eye": [
+      2,
+      1.6,
+      -40
+     ],
+     "look": [
+      -6,
+      0.7,
+      -2
+     ],
+     "fov": 12
+    }
+   ]
+  }
+ ]
+}
