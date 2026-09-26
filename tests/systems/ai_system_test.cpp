@@ -39,6 +39,7 @@
 #include "game/systems/ai_system/behaviors/economy_behavior.h"
 #include "game/systems/ai_system/behaviors/expand_behavior.h"
 #include "game/systems/ai_system/behaviors/gather_behavior.h"
+#include "game/systems/ai_system/behaviors/gold_vein_behavior.h"
 #include "game/systems/ai_system/behaviors/harass_behavior.h"
 #include "game/systems/ai_system/behaviors/local_engagement_behavior.h"
 #include "game/systems/ai_system/behaviors/production_behavior.h"
@@ -2443,6 +2444,75 @@ TEST_F(AISystemTest, ATownWithoutAMarketNeverTrades) {
 
   Game::Systems::AI::EconomyBehavior behavior;
   EXPECT_FALSE(behavior.should_execute(snapshot, context));
+}
+
+TEST_F(AISystemTest, ATownThatCannotBuildForWantOfStoneSellsTimberForIt) {
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+  snapshot.friendly_units = {
+      make_barracks(50, 40.0F, 40.0F),
+      make_building(70, 44.0F, 42.0F, Game::Units::SpawnType::Marketplace),
+  };
+  snapshot.has_resource_snapshot = true;
+  snapshot.resources.set(Game::Systems::ResourceType::Gold, 30);
+  snapshot.resources.set(Game::Systems::ResourceType::Wood, 250);
+  snapshot.resources.set(Game::Systems::ResourceType::Stone, 0);
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+  context.construction_need.set(Game::Systems::ResourceType::Wood, 50);
+  context.construction_need.set(Game::Systems::ResourceType::Stone, 15);
+
+  Game::Systems::AI::EconomyBehavior behavior;
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 10.0F, commands);
+
+  ASSERT_EQ(commands.size(), 1U)
+      << "a town stripped of stone sat on its timber and never raised another home";
+  EXPECT_EQ(commands.front().trade_resource, Game::Systems::ResourceType::Wood);
+  EXPECT_FALSE(commands.front().trade_is_purchase);
+}
+
+TEST_F(AISystemTest, AnIdlePairIsSentToClaimTheNearestGoldVein) {
+  Game::Systems::AI::GoldVeinBehavior behavior;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 100.0F;
+  snapshot.friendly_units = {make_unit(1, 40.0F, 50.0F),
+                             make_unit(2, 41.0F, 50.0F),
+                             make_unit(3, 42.0F, 50.0F)};
+  snapshot.gold_veins = {
+      {.anchor_id = 90, .owner_id = -1, .pos_x = 140.0F, .pos_z = 50.0F},
+      {.anchor_id = 91, .owner_id = -1, .pos_x = 80.0F, .pos_z = 50.0F}};
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.has_base_anchor = true;
+  context.base_pos_x = 40.0F;
+  context.base_pos_z = 50.0F;
+
+  ASSERT_TRUE(behavior.should_execute(snapshot, context));
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 2.0F, commands);
+  ASSERT_EQ(commands.size(), 1U) << "the veins lay unclaimed all match";
+  const auto& move = commands.front();
+  ASSERT_EQ(move.units.size(), 2U) << "two soldiers claim a vein; the rest stay home";
+  for (float x : move.move_target_x) {
+    EXPECT_NEAR(x, 76.0F, 3.0F) << "the nearer vein is claimed first";
+  }
+
+  snapshot.gold_veins[1].owner_id = 3;
+  snapshot.game_time = 160.0F;
+  commands.clear();
+  behavior.execute(snapshot, context, 2.0F, commands);
+  EXPECT_TRUE(commands.empty());
+  for (const auto id : move.units) {
+    EXPECT_EQ(context.assigned_units.find(id), context.assigned_units.end())
+        << "a won vein's cursed ground was left occupied";
+  }
 }
 
 TEST_F(AISystemTest, ForwardPlanAbandonsOutpostSiteAfterRepeatedFailures) {
@@ -4873,6 +4943,32 @@ TEST_F(AISystemTest, CheapestRecruitIgnoresMountsElephantsAndEngines) {
   EXPECT_FALSE(is_foot_line_recruit(TroopType::Catapult));
   EXPECT_FALSE(is_foot_line_recruit(TroopType::Builder));
   EXPECT_FALSE(is_foot_line_recruit(TroopType::Civilian));
+}
+
+TEST_F(AISystemTest, SoldiersAlreadyStrikingTheTargetAreNotOrderedAgain) {
+  Game::Systems::AI::AttackBehavior behavior;
+  Game::Systems::AI::AIDoctrine doctrine;
+  auto context = committed_wave_context(doctrine);
+  context.wave.members = {1, 2};
+  context.state = Game::Systems::AI::AIState::Attacking;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.game_time = 200.0F;
+  snapshot.friendly_units = {make_unit(1, 138.0F, 55.0F), make_unit(2, 139.0F, 56.0F)};
+  snapshot.visible_enemies = {make_enemy_building(90, 140.0F, 55.0F)};
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 1.6F, commands);
+  ASSERT_FALSE(commands.empty()) << "the wave at the walls should strike the building";
+
+  for (auto& unit : snapshot.friendly_units) {
+    unit.attack_target_id = 90;
+  }
+  snapshot.game_time = 201.6F;
+  commands.clear();
+  behavior.execute(snapshot, context, 1.6F, commands);
+  EXPECT_TRUE(commands.empty())
+      << "re-sending the ranks every round broke off the blows against the walls";
 }
 
 TEST_F(AISystemTest, ACommittedWaveWithNothingInSightMarchesOnItsOwnTarget) {

@@ -244,6 +244,8 @@ Examples include:
 
 A tool can add orchestration or measurement, but it should not invent a second rule set for the subsystem it is measuring.
 
+`soi_headless --map` once fell short of this: it loaded the match but skipped `configure_map_systems` and the map's starting stock, so its matches had no cursed gold veins and every economy started empty. It now configures the map systems and endows every owner with the map's `starting_resources` (gold from `GameConfig::get_starting_gold`), as a live skirmish does.
+
 ## Architecture enforcement
 
 The architecture is guarded at several levels.

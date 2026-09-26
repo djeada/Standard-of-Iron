@@ -42,7 +42,8 @@ void ExpandBehavior::execute(const AISnapshot& snapshot,
       continue;
     }
 
-    if (!Game::Core::is_neutral_owner(enemy.owner_id)) {
+    if (!Game::Core::is_neutral_owner(enemy.owner_id) ||
+        is_gold_vein_anchor(snapshot, enemy.id)) {
       continue;
     }
 
@@ -168,7 +169,8 @@ auto ExpandBehavior::should_execute(const AISnapshot& snapshot,
 
   for (const auto& enemy : snapshot.visible_enemies) {
     if (enemy.is_building && enemy.spawn_type == Game::Units::SpawnType::Barracks &&
-        Game::Core::is_neutral_owner(enemy.owner_id)) {
+        Game::Core::is_neutral_owner(enemy.owner_id) &&
+        !is_gold_vein_anchor(snapshot, enemy.id)) {
       return true;
     }
   }

@@ -29,6 +29,7 @@
 #include "ai_system/behaviors/economy_behavior.h"
 #include "ai_system/behaviors/expand_behavior.h"
 #include "ai_system/behaviors/gather_behavior.h"
+#include "ai_system/behaviors/gold_vein_behavior.h"
 #include "ai_system/behaviors/harass_behavior.h"
 #include "ai_system/behaviors/local_engagement_behavior.h"
 #include "ai_system/behaviors/production_behavior.h"
@@ -99,6 +100,7 @@ void AISystem::populate_behavior_registry(AI::AIBehaviorRegistry& registry) {
   registry.register_behavior(std::make_unique<AI::SquadDisciplineBehavior>());
   registry.register_behavior(std::make_unique<AI::CommanderBehavior>());
   registry.register_behavior(std::make_unique<AI::ExpandBehavior>());
+  registry.register_behavior(std::make_unique<AI::GoldVeinBehavior>());
   registry.register_behavior(std::make_unique<AI::HarassBehavior>());
   registry.register_behavior(std::make_unique<AI::AttackBehavior>());
   registry.register_behavior(std::make_unique<AI::LocalEngagementBehavior>());

@@ -24,6 +24,8 @@ constexpr int k_gold_comfortable = 200;
 
 constexpr int k_glut = 320;
 
+constexpr int k_stalled_glut = 100;
+
 constexpr int k_war_chest_multiple = 3;
 
 struct Appetite {
@@ -145,7 +147,11 @@ void EconomyBehavior::execute(const AISnapshot& snapshot,
     }
   };
 
-  const ResourceAmounts recruiting = war_chest(context);
+  ResourceAmounts recruiting = war_chest(context);
+  for (const auto type : k_all_resource_types) {
+    recruiting.set(type,
+                   std::max(recruiting.get(type), context.construction_need.get(type)));
+  }
   std::array<ResourceType, 4> by_urgency{
       ResourceType::Iron, ResourceType::Wood, ResourceType::Food, ResourceType::Stone};
   std::stable_sort(by_urgency.begin(),
@@ -183,12 +189,17 @@ void EconomyBehavior::execute(const AISnapshot& snapshot,
     return;
   }
 
+  const bool building_stalled = std::any_of(
+      k_all_resource_types.begin(), k_all_resource_types.end(), [&](ResourceType type) {
+        return context.construction_need.get(type) > stock.get(type);
+      });
   ResourceType glut = ResourceType::Count;
-  int glut_stock = k_glut;
+  int glut_stock = building_stalled ? k_stalled_glut : k_glut;
   for (const auto& want : wants) {
     const int held = stock.get(want.type);
-    if (held > glut_stock && held > recruiting.get(want.type) &&
-        sell_price(rates, want.type) > 0) {
+    const int keep =
+        recruiting.get(want.type) + (building_stalled ? k_stalled_glut : 0);
+    if (held > glut_stock && held > keep && sell_price(rates, want.type) > 0) {
       glut_stock = held;
       glut = want.type;
     }

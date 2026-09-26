@@ -1640,6 +1640,8 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
   const ConstructionIntent* chosen = nullptr;
   ResourceType missing_resource = ResourceType::Count;
   ResourceType saving_for = ResourceType::Count;
+  context.construction_need = ResourceAmounts{};
+  bool need_noted = false;
   for (const auto& intent : intents) {
     if (is_deferred(intent.type, snapshot.game_time)) {
       continue;
@@ -1650,6 +1652,10 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
     }
     const auto verdict = affordability_of(snapshot, intent.type);
     if (verdict.blocked) {
+      if (!need_noted && intent.type != nullptr) {
+        context.construction_need = construction_cost_info(intent.type).resource_costs;
+        need_noted = true;
+      }
       continue;
     }
     if (verdict.missing != ResourceType::Count) {

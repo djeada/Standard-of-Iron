@@ -181,7 +181,7 @@ void AttackBehavior::execute(const AISnapshot& snapshot,
                                            group_center_x,
                                            group_center_y,
                                            group_center_z);
-    if (dist_sq <= engage_range_sq) {
+    if (dist_sq <= engage_range_sq && !is_gold_vein_anchor(snapshot, enemy.id)) {
       nearby_enemies.push_back(&enemy);
     }
   }
@@ -227,7 +227,8 @@ void AttackBehavior::execute(const AISnapshot& snapshot,
       }
       if (target == nullptr) {
         for (const auto& enemy : snapshot.visible_enemies) {
-          if (!enemy.is_building || enemy.health <= 0) {
+          if (!enemy.is_building || enemy.health <= 0 ||
+              is_gold_vein_anchor(snapshot, enemy.id)) {
             continue;
           }
           float const dist_sq = distance_squared(enemy.pos_x,
@@ -396,6 +397,11 @@ void AttackBehavior::execute(const AISnapshot& snapshot,
   auto claimed_units = claim_units(
       unit_ids, get_priority(), "attacking", context, snapshot.game_time, 2.5F);
 
+  std::erase_if(claimed_units, [&](Engine::Core::EntityID id) {
+    return std::any_of(ready_units.begin(), ready_units.end(), [&](const auto* unit) {
+      return unit->id == id && unit->attack_target_id == target_info.target_id;
+    });
+  });
   if (claimed_units.empty()) {
     return;
   }

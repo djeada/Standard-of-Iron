@@ -572,6 +572,7 @@ add_library(
     systems/ai_system/behaviors/defend_behavior.cpp
     systems/ai_system/behaviors/retreat_behavior.cpp
     systems/ai_system/behaviors/expand_behavior.cpp
+    systems/ai_system/behaviors/gold_vein_behavior.cpp
     systems/ai_system/behaviors/builder_behavior.cpp
     systems/ai_system/behaviors/economy_behavior.cpp
     systems/ai_system/behaviors/squad_discipline_behavior.cpp

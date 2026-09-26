@@ -35,6 +35,7 @@ auto minimum_deployable_strength(const AIContext& context, int required) -> int 
 namespace {
 
 constexpr float k_wave_refill_radius = 30.0F;
+constexpr float k_wave_call_up_seconds = 60.0F;
 constexpr float k_wave_progress_metres = 4.0F;
 constexpr float k_wave_stall_seconds = 180.0F;
 
@@ -90,14 +91,16 @@ auto spent_fraction_for(const AIContext& context) -> float {
   return doctrine != nullptr ? doctrine->wave.spent_fraction : 0.35F;
 }
 
-auto nearest_matching(const std::vector<ContactSnapshot>& contacts,
+auto nearest_matching(const AISnapshot& snapshot,
+                      const std::vector<ContactSnapshot>& contacts,
                       DoctrineTarget target_kind,
                       float from_x,
                       float from_z) -> const ContactSnapshot* {
   const ContactSnapshot* best = nullptr;
   float best_distance_sq = std::numeric_limits<float>::infinity();
   for (const auto& contact : contacts) {
-    if (contact.health <= 0 || !matches_target(contact, target_kind)) {
+    if (contact.health <= 0 || !matches_target(contact, target_kind) ||
+        is_gold_vein_anchor(snapshot, contact.id)) {
       continue;
     }
     if (!is_war_contact(contact)) {
@@ -118,15 +121,15 @@ auto select_wave_target(const AISnapshot& snapshot,
                         float from_x,
                         float from_z) -> const ContactSnapshot* {
   for (const auto target_kind : target_priority_for(context)) {
-    if (const auto* seen =
-            nearest_matching(snapshot.visible_enemies, target_kind, from_x, from_z)) {
+    if (const auto* seen = nearest_matching(
+            snapshot, snapshot.visible_enemies, target_kind, from_x, from_z)) {
       return seen;
     }
   }
 
   for (const auto target_kind : target_priority_for(context)) {
     if (const auto* known = nearest_matching(
-            snapshot.strategic_objectives, target_kind, from_x, from_z)) {
+            snapshot, snapshot.strategic_objectives, target_kind, from_x, from_z)) {
       return known;
     }
   }
@@ -475,7 +478,10 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
       const float front_z = centre_z / count;
       const std::unordered_set<Engine::Core::EntityID> marching(wave.members.begin(),
                                                                 wave.members.end());
-      const int wave_capacity = wave_capacity_for(context, required);
+      const bool calls_up_home =
+          snapshot.game_time - wave.committed_at > k_wave_call_up_seconds;
+      const int wave_capacity = calls_up_home ? static_cast<int>(candidates.size())
+                                              : wave_capacity_for(context, required);
       for (const auto* entity : candidates) {
         if (static_cast<int>(wave.members.size()) >= wave_capacity) {
           break;
@@ -483,9 +489,10 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
         if (marching.contains(entity->id) || garrison.contains(entity->id)) {
           continue;
         }
-        if (distance_squared(
+        if (!calls_up_home &&
+            distance_squared(
                 entity->pos_x, 0.0F, entity->pos_z, front_x, 0.0F, front_z) >
-            k_wave_refill_radius * k_wave_refill_radius) {
+                k_wave_refill_radius * k_wave_refill_radius) {
           continue;
         }
         wave.members.push_back(entity->id);

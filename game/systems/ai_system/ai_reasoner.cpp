@@ -1036,7 +1036,8 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
 
   for (const auto& enemy : snapshot.visible_enemies) {
     if (enemy.is_building && enemy.spawn_type == Game::Units::SpawnType::Barracks &&
-        Game::Core::is_neutral_owner(enemy.owner_id)) {
+        Game::Core::is_neutral_owner(enemy.owner_id) &&
+        !is_gold_vein_anchor(snapshot, enemy.id)) {
       ctx.neutral_barracks_count++;
     }
   }
