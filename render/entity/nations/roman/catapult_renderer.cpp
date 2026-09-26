@@ -4,6 +4,7 @@
 #include <QVector3D>
 #include <QVector4D>
 
+#include <algorithm>
 #include <cmath>
 #include <numbers>
 
@@ -74,7 +75,9 @@ inline auto arm_swing_rad(const CatapultAnimContext& anim_ctx) -> float {
   case CatapultAnimState::Resetting:
     break;
   }
-  return k_arm_rest_rad;
+  // The resting arm lifts off its padded buffer and knocks back down as the
+  // carriage rolls; only upward, since the buffer stops it going lower.
+  return k_arm_rest_rad + 0.07F * std::max(0.0F, anim_ctx.sway);
 }
 
 inline auto
@@ -528,6 +531,7 @@ void draw_catapult_body(const DrawContext& p,
                         const SiegeMotion& motion) {
   auto palette = make_palette(team_color);
   auto anim_ctx = get_anim_context(p.entity);
+  anim_ctx.sway = motion.jolt;
 
   DrawContext body = p;
   auto carriage_motion = motion;

@@ -30,8 +30,14 @@ constexpr float k_stock_tilt_deg = 22.0F;
 constexpr float k_nock_rest_z = -0.07F;
 constexpr float k_slide_travel = 0.38F;
 
-inline auto k_arm_tip(float side, float tension) -> QVector3D {
-  return {side * (0.66F - 0.065F * tension), 0.348F, -0.395F + 0.17F * tension};
+inline auto k_arm_tip(float side, float tension, float sway) -> QVector3D {
+  // The bow arms are long levers: on rough ground their tips bob out of step.
+  const float bob = 0.016F * sway * (side > 0.0F ? 1.0F : -0.8F);
+  return {side * (0.66F - 0.065F * tension), 0.348F + bob, -0.395F + 0.17F * tension};
+}
+
+inline auto tip_bob(float side, float sway) -> float {
+  return k_arm_tip(side, 0.0F, sway).y() - k_arm_tip(side, 0.0F, 0.0F).y();
 }
 
 inline auto slide_travel(const BallistaAnimContext& anim_ctx) -> float {
@@ -44,7 +50,8 @@ inline auto slide_travel(const BallistaAnimContext& anim_ctx) -> float {
   case BallistaAnimState::Resetting:
     break;
   }
-  return 0.0F;
+  // An unloaded slider knocks back and forth in its track while travelling.
+  return 0.012F * anim_ctx.sway;
 }
 
 inline auto
@@ -298,9 +305,10 @@ void draw_arms(const DrawContext& p,
 
   auto draw_arm = [&](float side) {
     QVector3D const root(side * 0.245F, 0.355F, -0.255F);
-    QVector3D const mid(
-        side * (0.46F - 0.03F * tension), 0.352F, -0.325F + 0.08F * tension);
-    QVector3D const tip = k_arm_tip(side, tension);
+    QVector3D const mid(side * (0.46F - 0.03F * tension),
+                        0.352F + 0.4F * (tip_bob(side, anim_ctx.sway)),
+                        -0.325F + 0.08F * tension);
+    QVector3D const tip = k_arm_tip(side, tension, anim_ctx.sway);
 
     draw_cyl(out, tilted, root, mid, 0.032F, c.wood_frame, white);
     draw_cyl(out, tilted, mid, tip, 0.023F, c.wood_light, white);
@@ -333,14 +341,14 @@ void draw_bowstring(const DrawContext& p,
 
   draw_cyl(out,
            tilted,
-           k_arm_tip(-1.0F, slide_travel(anim_ctx) / k_slide_travel),
+           k_arm_tip(-1.0F, slide_travel(anim_ctx) / k_slide_travel, anim_ctx.sway),
            nock,
            0.012F,
            c.rope,
            white);
   draw_cyl(out,
            tilted,
-           k_arm_tip(1.0F, slide_travel(anim_ctx) / k_slide_travel),
+           k_arm_tip(1.0F, slide_travel(anim_ctx) / k_slide_travel, anim_ctx.sway),
            nock,
            0.012F,
            c.rope,
@@ -554,6 +562,7 @@ void draw_ballista_geometry(const DrawContext& p,
   BallistaPalette c = palette;
   c.team = clamp_vec_01(team_color);
   auto anim_ctx = get_anim_context(p.entity);
+  anim_ctx.sway = motion.jolt;
 
   DrawContext ctx = p;
   ctx.model = siege_body_model(p, motion);
