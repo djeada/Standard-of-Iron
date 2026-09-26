@@ -1151,9 +1151,12 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
   const bool outside_frustum = !visibility_result.in_frustum;
   const bool hidden_by_fog = !unit_fog_visible;
 
-  const bool blocks_lens_gap =
-      ctx.submission_visibility != nullptr &&
-      ctx.submission_visibility->occludes_lens_gap(early_world_pos, ctx_entity_id);
+  const float lens_gap_visibility =
+      ctx.submission_visibility != nullptr
+          ? ctx.submission_visibility->lens_gap_visibility(early_world_pos,
+                                                           ctx_entity_id)
+          : 1.0F;
+  const bool blocks_lens_gap = lens_gap_visibility <= 0.0F;
   if (outside_frustum || hidden_by_fog || blocks_lens_gap) {
     if (outside_frustum) {
       ++stats.soldiers_skipped_frustum;
@@ -2066,9 +2069,12 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
       out.shadow_batch.init(
           shadow_state.shader, shadow_state.mesh, shadow_state.light_dir);
     }
-    out.shadow_batch.add(shadow_state.model, shadow_state.alpha, shadow_state.pass);
+    out.shadow_batch.add(shadow_state.model,
+                         shadow_state.alpha * lens_gap_visibility,
+                         shadow_state.pass);
   }
 
+  const std::size_t first_body_request = out.bodies.requests().size();
   switch (soldier_lod) {
   case HumanoidLOD::Full: {
 
@@ -2104,6 +2110,7 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
 
     break;
   }
+  out.bodies.fade_requests_from(first_body_request, lens_gap_visibility);
 }
 
 } // namespace

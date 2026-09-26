@@ -55,7 +55,6 @@ auto nearest_standable_world(const QVector3D& position,
                              Pathfinding::Passability passability,
                              float search_radius) -> std::optional<QVector3D> {
   BodyProfile profile;
-  profile.radius = 0.0F;
   profile.passability = passability;
   return Walkability::nearest_standable(position, profile, search_radius);
 }
@@ -86,7 +85,6 @@ auto resolve_walkable_target_toward(const QVector3D& target,
                                     const QVector3D& from,
                                     Pathfinding::Passability passability) -> QVector3D {
   BodyProfile profile;
-  profile.radius = 0.0F;
   profile.passability = passability;
   if (Walkability::can_stand(target, profile)) {
     return target;
@@ -490,13 +488,7 @@ void MovementSystem::assign_navigation_target(
   Point const end = NavGrid::world_to_grid(planned_target.x(), planned_target.z());
 
   movement.end_escape();
-  if (auto const exit =
-          pathfinder->find_escape_point(start, end, passability_for(movement))) {
-    assign_escape_route(*pathfinder,
-                        transform,
-                        movement,
-                        NavGrid::grid_to_world(*exit),
-                        planned_target);
+  if (assign_escape_if_sealed(*pathfinder, transform, movement, planned_target)) {
     movement.requested_goal_x = requested_target.x();
     movement.requested_goal_z = requested_target.z();
     movement.has_requested_goal = true;
@@ -539,12 +531,19 @@ void MovementSystem::assign_navigation_target(
   movement.has_requested_goal = true;
 }
 
-void MovementSystem::assign_escape_route(
+auto MovementSystem::assign_escape_if_sealed(
     Pathfinding& pathfinder,
     const Engine::Core::TransformComponent& transform,
     Engine::Core::MovementComponent& movement,
-    const QVector3D& exit,
-    const QVector3D& target) {
+    const QVector3D& target) -> bool {
+  auto const exit_cell = pathfinder.find_escape_point(
+      NavGrid::world_to_grid(transform.position.x, transform.position.z),
+      NavGrid::world_to_grid(target.x(), target.z()),
+      passability_for(movement));
+  if (!exit_cell.has_value()) {
+    return false;
+  }
+  QVector3D const exit = NavGrid::grid_to_world(*exit_cell);
   Engine::Core::TransformComponent at_exit = transform;
   at_exit.position.x = exit.x();
   at_exit.position.z = exit.z();
@@ -571,6 +570,7 @@ void MovementSystem::assign_escape_route(
   movement.target_y = exit.z();
   movement.has_target = true;
   movement.begin_escape(exit.x(), exit.z());
+  return true;
 }
 
 auto MovementSystem::assign_local_recovery_move(
@@ -824,7 +824,14 @@ void MovementSystem::issue_move_units(Engine::Core::World& world,
 
     QVector3D const member_target = resolve_walkable_target_toward(
         targets[i], current, passability_for(*move.movement));
-    if (options.kind == MoveOrderKind::FormationMove &&
+    if (assign_escape_if_sealed(
+            *pathfinder, *move.transform, *move.movement, member_target)) {
+      move.movement->requested_goal_x = targets[i].x();
+      move.movement->requested_goal_z = targets[i].z();
+      move.movement->has_requested_goal = true;
+      assigned = true;
+    }
+    if (!assigned && options.kind == MoveOrderKind::FormationMove &&
         is_direct_path_walkable(current,
                                 member_target,
                                 passability_for(*move.movement),

@@ -1,9 +1,11 @@
 #pragma once
 
+#include <span>
 #include <vector>
 
 #include "../core/entity.h"
 #include "../core/system.h"
+#include "../units/spawn_type.h"
 
 namespace Engine::Core {
 class World;
@@ -22,13 +24,20 @@ public:
                                          int new_owner_id);
 
 private:
+  struct CaptureTroop {
+    float x;
+    float z;
+    int owner_id;
+    Game::Units::SpawnType spawn_type;
+  };
+
   struct OwnerTroopTally {
     int owner_id{0};
     int troops{0};
   };
 
   static void process_barrack_capture(Engine::Core::World* world, float delta_time);
-  static void tally_nearby_troops(Engine::Core::World& world,
+  static void tally_nearby_troops(std::span<const CaptureTroop> troops,
                                   float barrack_x,
                                   float barrack_z,
                                   float radius,

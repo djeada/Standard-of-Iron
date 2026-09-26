@@ -234,7 +234,12 @@ the field is green again.
 The flare is `ProductionCompletionComponent`, and it must be copied into the
 render snapshot (`copy_presentation_snapshot_components`). The effect pass
 draws from the snapshot, and before that copy was added no recruit flare was
-ever visible either.
+ever visible either. It is also in `render_entity_is_stable`'s transient list.
+The snapshot re-copies a still entity only when its signature changes. A
+finished building never moves, so its first copy of the flare stayed in the
+snapshot. Farms and marketplaces then kept a strobing gold disc and sparks
+long after construction: until the next crop stage for a farm, and for good
+on a marketplace.
 
 When the builder delivers the sheaf, the "+N food" floating number rises from
 the stone yard's drop point, not from the barracks entity. Anchoring on the

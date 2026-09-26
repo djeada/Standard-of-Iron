@@ -45,22 +45,45 @@ struct LensGapExclusion {
 
   float focus_radius = 0.0F;
 
-  [[nodiscard]] auto contains(const QVector3D& point,
-                              float body_radius) const noexcept -> bool {
+  static constexpr float k_hidden_core_fraction = 0.35F;
+  static constexpr float k_end_fade_metres = 0.6F;
+  static constexpr float k_start_fade_metres = 0.4F;
+
+  // 1 outside the gap, 0 on the sight line, and a smooth ramp in between.
+  // The outer edge is where the gap used to cut bodies outright; a body now
+  // thins out from there and is gone only once it stands in the inner core,
+  // so walking past a soldier dissolves him instead of popping him away.
+  [[nodiscard]] auto visibility(const QVector3D& point,
+                                float body_radius) const noexcept -> float {
     if (!enabled || length <= 0.0F) {
-      return false;
+      return 1.0F;
     }
     const float offset_x = point.x() - eye_x;
     const float offset_z = point.z() - eye_z;
     const float along = (offset_x * axis_x) + (offset_z * axis_z);
     if (along < 0.0F || along > length) {
-      return false;
+      return 1.0F;
     }
     const float perpendicular_x = offset_x - (axis_x * along);
     const float perpendicular_z = offset_z - (axis_z * along);
+    const float perpendicular = std::sqrt((perpendicular_x * perpendicular_x) +
+                                          (perpendicular_z * perpendicular_z));
     const float limit = body_radius + (focus_radius * (along / length));
-    return ((perpendicular_x * perpendicular_x) +
-            (perpendicular_z * perpendicular_z)) <= limit * limit;
+    const float across = ramp(limit * k_hidden_core_fraction, limit, perpendicular);
+    const float near_end = 1.0F - ramp(0.0F, k_start_fade_metres, along);
+    const float far_end = ramp(length - k_end_fade_metres, length, along);
+    return std::max({across, near_end, far_end});
+  }
+
+  [[nodiscard]] auto contains(const QVector3D& point,
+                              float body_radius) const noexcept -> bool {
+    return visibility(point, body_radius) <= 0.0F;
+  }
+
+  [[nodiscard]] static auto ramp(float edge0, float edge1, float x) noexcept -> float {
+    const float t =
+        std::clamp((x - edge0) / std::max(edge1 - edge0, 1.0e-4F), 0.0F, 1.0F);
+    return t * t * (3.0F - (2.0F * t));
   }
 };
 
@@ -93,6 +116,16 @@ public:
       return false;
     }
     return m_lens_gap.contains(body_position, body_radius);
+  }
+
+  [[nodiscard]] auto lens_gap_visibility(
+      const QVector3D& body_position,
+      std::uint32_t entity_id = 0,
+      float body_radius = k_default_body_radius) const noexcept -> float {
+    if (entity_id != 0 && entity_id == m_lens_gap.focus_entity_id) {
+      return 1.0F;
+    }
+    return m_lens_gap.visibility(body_position, body_radius);
   }
 
   [[nodiscard]] auto

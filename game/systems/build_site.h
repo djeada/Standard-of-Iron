@@ -35,6 +35,19 @@ find_clear_site(const Engine::Core::World& world,
                 std::span<const Engine::Core::EntityID> crew = {},
                 std::span<const SiteKeepOut> keep_out = {}) -> std::optional<QVector3D>;
 
+// A building raised on standing troops seals them into its footprint, so an
+// order is refused while any unit other than the crew stands where the nav grid
+// will block: the padded footprint, widened by the unit's formation. Neutral
+// wildlife and wall runs are exempt. Order placement asks this; the ground
+// itself is assess_ground's question.
+[[nodiscard]] auto
+troops_stand_on(const Engine::Core::World& world,
+                const std::string& building_type,
+                float x,
+                float z,
+                float facing_degrees,
+                std::span<const Engine::Core::EntityID> crew) -> bool;
+
 [[nodiscard]] auto wall_ground_probe(const Engine::Core::World& world) -> GroundProbe;
 
 } // namespace Game::Systems

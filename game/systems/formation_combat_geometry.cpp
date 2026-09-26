@@ -252,6 +252,12 @@ void hash_float(std::uint64_t& seed, float value) noexcept {
 }
 
 auto definition_total_count(const Engine::Core::UnitComponent& unit) -> int {
+  if (unit.render_individuals_per_unit_override > 0) {
+    return unit.render_individuals_per_unit_override;
+  }
+  if (unit.squad_strength == 1) {
+    return 1;
+  }
   int total_count = 0;
   if (auto troop_type = Game::Units::spawn_typeToTroopType(unit.spawn_type);
       unit.uses_nation_formation_profile && troop_type) {
@@ -262,9 +268,7 @@ auto definition_total_count(const Engine::Core::UnitComponent& unit) -> int {
     total_count =
         Game::Units::TroopConfig::instance().get_individuals_per_unit(unit.spawn_type);
   }
-  if (unit.render_individuals_per_unit_override > 0) {
-    total_count = unit.render_individuals_per_unit_override;
-  } else if (unit.squad_strength > 0) {
+  if (unit.squad_strength > 0) {
     total_count = std::min(total_count, unit.squad_strength);
   }
   return std::max(1, total_count);
@@ -1038,7 +1042,7 @@ auto has_formation_slots(const Engine::Core::Entity& entity) -> bool {
     return false;
   }
   auto const* unit = entity.get_component<Engine::Core::UnitComponent>();
-  return unit != nullptr && resolve_definition(*unit).total_count > 1;
+  return unit != nullptr && definition_total_count(*unit) > 1;
 }
 
 namespace {

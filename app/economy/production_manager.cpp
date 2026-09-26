@@ -355,7 +355,8 @@ auto ProductionManager::ground_refusal(const QString& building_type,
       world_x,
       world_z,
       item_supports_preview_rotation(building_type) ? m_construction_preview_rotation_y
-                                                    : 0.0F));
+                                                    : 0.0F,
+      m_pending_construction_builders));
 }
 
 auto ProductionManager::nearest_legal_site(const QVector3D& wanted) const -> QVector3D {

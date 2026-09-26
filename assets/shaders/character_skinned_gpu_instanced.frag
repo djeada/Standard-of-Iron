@@ -23,6 +23,9 @@ uniform int u_role_color_base;
 out vec4 frag_color;
 
 void main() {
+  if (character_fade_discards(v_alpha)) {
+    discard;
+  }
   vec3 base = v_color;
   if (v_color_role > 0 && v_color_role <= v_role_color_count) {
     base = texelFetch(u_role_color_tbo,
@@ -59,5 +62,5 @@ void main() {
                                v_material_id,
                                v_color_role,
                                zoom);
-  frag_color = vec4(color, v_alpha);
+  frag_color = vec4(color, 1.0);
 }

@@ -99,7 +99,7 @@ auto CommanderMotor::reachable_ground_position(Game::Session::SessionContext& se
                                                const QVector3D& desired,
                                                unsigned int ignore_entity_id)
     -> QVector3D {
-  auto const profile = Game::Systems::body_profile_for(commander);
+  auto const profile = Game::Systems::motor_profile_for(commander);
   QVector3D candidate = desired;
   const float blocked_fraction = Game::Systems::first_building_intersection_fraction(
       session.building_collision(), start, desired, ignore_entity_id);
@@ -129,7 +129,7 @@ auto CommanderMotor::body_radius() -> float {
 auto CommanderMotor::is_walkable_at(const Engine::Core::Entity& commander,
                                     float x,
                                     float z) -> bool {
-  return walkable_point(Game::Systems::body_profile_for(commander), x, z);
+  return walkable_point(Game::Systems::motor_profile_for(commander), x, z);
 }
 
 auto CommanderMotor::advance(const Engine::Core::Entity& commander,
@@ -138,7 +138,7 @@ auto CommanderMotor::advance(const Engine::Core::Entity& commander,
     -> CommanderMotorResult {
   Engine::Core::Timing::ScopedAccumulator const scope(
       Engine::Core::Timing::commander_motor());
-  auto const profile = Game::Systems::body_profile_for(commander);
+  auto const profile = Game::Systems::motor_profile_for(commander);
   GroundMove const step = request.airborne
                               ? airborne_step(request.to.x(), request.to.z())
                               : resolve_ground_step(profile,

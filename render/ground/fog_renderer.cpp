@@ -46,6 +46,7 @@ void FogRenderer::clear_state() {
   m_seen_amount.clear();
   m_instances.clear();
   m_mask_texels.clear();
+  m_mask_filter_rows.clear();
   m_instance_buffer.reset();
   m_mask_texture.reset();
   m_mask_texture_width = 0;
@@ -274,8 +275,13 @@ void FogRenderer::upload_mask(Renderer& renderer) {
     return;
   }
 
-  Ground::encode_fog_mask_region(
-      m_fog_amount, m_seen_amount, m_width, m_height, m_mask_dirty, m_mask_texels);
+  Ground::encode_fog_mask_region(m_fog_amount,
+                                 m_seen_amount,
+                                 m_width,
+                                 m_height,
+                                 m_mask_dirty,
+                                 m_mask_texels,
+                                 m_mask_filter_rows);
   if (m_mask_texels.empty()) {
     return;
   }

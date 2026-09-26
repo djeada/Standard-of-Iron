@@ -10,6 +10,7 @@
 #include "../formation/army_formation_registry.h"
 #include "../units/spawn_type.h"
 #include "../util/planar_math.h"
+#include "body_profile.h"
 #include "builder_product_types.h"
 #include "combat_rules.h"
 #include "command_service.h"
@@ -216,16 +217,7 @@ auto is_movement_point_allowed(const QVector3D& pos,
     }
   }
 
-  auto const* movement = entity.get_component<Engine::Core::MovementComponent>();
-  BodyProfile profile;
-
-  profile.radius = 0.0F;
-  if (movement != nullptr) {
-    profile.passability = movement->get_can_enter_forest()
-                              ? Pathfinding::Passability::Light
-                              : Pathfinding::Passability::Heavy;
-  }
-  return Walkability::can_stand(pos, profile);
+  return Walkability::can_stand(pos, motor_profile_for(entity));
 }
 
 auto max_navigation_speed(const Engine::Core::UnitComponent& unit,

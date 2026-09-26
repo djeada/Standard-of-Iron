@@ -25,6 +25,15 @@ const float k_sun_rim_backlight_gain = 0.32;
 const float k_wet_sheen_gloss = 0.55;
 const float k_wet_sheen_power = 14.0;
 const vec3 k_wet_darken = vec3(0.78, 0.80, 0.82);
+bool character_fade_discards(float alpha) {
+  if (alpha >= 0.999) {
+    return false;
+  }
+  float threshold = fract(
+      52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));
+  return threshold >= alpha;
+}
+
 float readable_zoom(vec3 world_position) {
   float view_distance = length(u_camera_position - world_position);
   return smoothstep(k_readable_zoom_near, k_readable_zoom_far, view_distance);

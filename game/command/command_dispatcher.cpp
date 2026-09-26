@@ -495,7 +495,13 @@ void apply_start_construction(World& world,
                                                     0,
                                                     order.rotation_y,
                                                     order.units);
-  if (verdict != Game::Systems::GroundVerdict::Clear) {
+  if (verdict != Game::Systems::GroundVerdict::Clear ||
+      Game::Systems::troops_stand_on(world,
+                                     order.construction_type,
+                                     order.site.x(),
+                                     order.site.z(),
+                                     order.rotation_y,
+                                     order.units)) {
     return;
   }
 

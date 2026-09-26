@@ -2,10 +2,8 @@
 
 #include <QHash>
 #include <QPainter>
-#include <QPolygonF>
 #include <QRectF>
 #include <QStringView>
-#include <QVariantMap>
 
 #include <algorithm>
 #include <utility>
@@ -786,44 +784,6 @@ QString IconArtLibrary::resolve(const QString& id) {
   return Ui::IconArt::resolve_id(id);
 }
 
-QVariantList IconArtLibrary::strokes(const QString& id) {
-  QVariantList result;
-  const Ui::IconArt::Art* art = Ui::IconArt::find(id);
-  if (art == nullptr) {
-    return result;
-  }
-
-  constexpr qreal k_flatten_scale = 256.0;
-  for (const Ui::IconArt::Stroke& stroke : art->strokes) {
-    const QPainterPath path = Ui::IconArt::build_path(
-        stroke.path, k_flatten_scale / Ui::IconArt::k_design_grid, 0.0, 0.0);
-    QVariantList subpaths;
-    for (const QPolygonF& polygon : path.toSubpathPolygons()) {
-      QVariantList points;
-      points.reserve(polygon.size() * 2);
-      for (const QPointF& vertex : polygon) {
-        points.append(vertex.x() / k_flatten_scale);
-        points.append(vertex.y() / k_flatten_scale);
-      }
-      if (points.size() >= 4) {
-        subpaths.append(QVariant(points));
-      }
-    }
-    if (subpaths.isEmpty()) {
-      continue;
-    }
-
-    QVariantMap entry;
-    entry[QStringLiteral("tone")] = Ui::IconArt::tone_id(stroke.tone);
-    entry[QStringLiteral("filled")] = stroke.filled;
-    entry[QStringLiteral("width")] = static_cast<double>(stroke.width) /
-                                     static_cast<double>(Ui::IconArt::k_design_grid);
-    entry[QStringLiteral("subpaths")] = subpaths;
-    result.append(entry);
-  }
-  return result;
-}
-
 auto IconArtLibrary::create(QQmlEngine* engine,
                             QJSEngine* script_engine) -> IconArtLibrary* {
   Q_UNUSED(engine)
@@ -832,4 +792,38 @@ auto IconArtLibrary::create(QQmlEngine* engine,
   static IconArtLibrary library;
   QQmlEngine::setObjectOwnership(&library, QQmlEngine::CppOwnership);
   return &library;
+}
+
+IconArtItem::IconArtItem(QQuickItem* parent)
+    : QQuickPaintedItem(parent) {
+  setAntialiasing(true);
+  connect(this, &IconArtItem::icon_id_changed, this, [this]() { update(); });
+  connect(this, &IconArtItem::palette_changed, this, [this]() { update(); });
+}
+
+void IconArtItem::set_icon_id(const QString& id) {
+  if (m_icon_id == id) {
+    return;
+  }
+  m_icon_id = id;
+  emit icon_id_changed();
+}
+
+auto IconArtItem::available() const -> bool {
+  return !m_icon_id.isEmpty() && Ui::IconArt::find(m_icon_id) != nullptr;
+}
+
+void IconArtItem::paint(QPainter* painter) {
+  if (painter == nullptr) {
+    return;
+  }
+  Ui::IconArt::Palette palette;
+  if (m_monochrome) {
+    QColor faded = m_tint;
+    faded.setAlphaF(m_tint.alphaF() * 0.45F);
+    palette = {faded, m_tint, m_tint, m_tint, m_tint, m_tint, m_tint, m_tint};
+  } else {
+    palette = {m_ink, m_tint, m_edge, m_accent, m_timber, m_quarry, m_ore, m_bullion};
+  }
+  Ui::IconArt::paint(*painter, m_icon_id, QRectF(0.0, 0.0, width(), height()), palette);
 }

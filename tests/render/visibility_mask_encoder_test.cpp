@@ -208,3 +208,43 @@ TEST(VisibilityMaskEncoder, RegionOutsideTheGridEncodesNothing) {
 
   EXPECT_TRUE(texels.empty());
 }
+
+TEST(VisibilityMaskEncoder, FogRowReuseMatchesTheTentFilterAtEdgesAndDirtyRegions) {
+  for (const auto [width, height] :
+       {std::pair{1, 1}, std::pair{1, 7}, std::pair{9, 1}, std::pair{37, 29}}) {
+    std::vector<float> fog(static_cast<std::size_t>(width * height));
+    std::vector<float> seen(fog.size());
+    for (std::size_t i = 0; i < fog.size(); ++i) {
+      fog[i] = static_cast<float>((i * 17U) % 101U) / 100.0F;
+      seen[i] = i % 3U == 0U ? 1.0F : 0.0F;
+    }
+    std::vector<unsigned char> texels;
+    std::vector<float> scratch;
+    for (const auto region :
+         {MaskRegion::whole(width, height),
+          MaskRegion{width / 2, height / 2, width - width / 2, height - height / 2},
+          MaskRegion{0, 0, 1, 1}}) {
+      encode_fog_mask_region(fog, seen, width, height, region, texels, scratch);
+      ASSERT_EQ(texels.size(),
+                static_cast<std::size_t>(region.width * region.height * 4));
+      for (int row = 0; row < region.height; ++row) {
+        for (int column = 0; column < region.width; ++column) {
+          const auto offset =
+              static_cast<std::size_t>((row * region.width + column) * 4);
+          for (int channel = 0; channel < 2; ++channel) {
+            const auto& values = channel == 0 ? fog : seen;
+            const auto at = [&](int x, int z) {
+              return values[z * width + x];
+            };
+            const auto expected =
+                Render::Ground::detail::to_byte(Render::Ground::detail::tent_sample(
+                    at, width, height, region.x + column, region.z + row));
+            EXPECT_EQ(texels[offset + channel], expected);
+          }
+          EXPECT_EQ(texels[offset + 2], 0U);
+          EXPECT_EQ(texels[offset + 3], 255U);
+        }
+      }
+    }
+  }
+}

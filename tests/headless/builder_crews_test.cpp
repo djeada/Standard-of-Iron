@@ -12,6 +12,7 @@
 #include "game/map/terrain_service.h"
 #include "game/session/session_context.h"
 #include "game/session/simulation_clock.h"
+#include "game/systems/build_site.h"
 #include "game/systems/construction_cost_catalog.h"
 #include "game/systems/default_content.h"
 #include "game/systems/nav_grid.h"
@@ -68,6 +69,17 @@ protected:
     params.is_initial_spawn = true;
     auto unit =
         m_factory->create(Game::Units::SpawnType::Builder, m_session->world(), params);
+    return unit ? unit->id() : 0;
+  }
+
+  auto spawn_squad(int grid_x, int grid_z) -> EntityID {
+    Game::Units::SpawnParams params;
+    params.position = Game::Systems::NavGrid::grid_to_world({grid_x, grid_z});
+    params.player_id = k_player;
+    params.spawn_type = Game::Units::SpawnType::Spearman;
+    params.is_initial_spawn = true;
+    auto unit =
+        m_factory->create(Game::Units::SpawnType::Spearman, m_session->world(), params);
     return unit ? unit->id() : 0;
   }
 
@@ -157,6 +169,39 @@ TEST_F(BuilderCrewsTest, EveryCrewInTheOrderWorksTheSiteAndOneHouseRises) {
     EXPECT_FALSE(builder->has_construction_site) << "crew " << id << " never let go";
     EXPECT_FALSE(builder->in_progress);
   }
+}
+
+TEST_F(BuilderCrewsTest, AHouseCannotBeOrderedOnTopOfStandingTroops) {
+  // Raising a house on troops seals them into its footprint. The order is
+  // refused while they stand there; the crew itself never counts.
+  const EntityID crew = spawn_builder(48, 48);
+  const EntityID squad = spawn_squad(50, 48);
+  ASSERT_NE(crew, 0U);
+  ASSERT_NE(squad, 0U);
+  auto& economy = m_session->economy();
+  economy.add(k_player, Game::Systems::ResourceType::Wood, 500);
+  economy.add(k_player, Game::Systems::ResourceType::Stone, 500);
+
+  const QVector3D site = Game::Systems::NavGrid::grid_to_world({48, 48});
+  EXPECT_TRUE(Game::Systems::troops_stand_on(
+      m_session->world(), "home", site.x(), site.z(), 0.0F, {&crew, 1}));
+  ASSERT_TRUE(Game::Command::submit(
+      m_session->world(),
+      Game::Command::Source::LocalPlayer,
+      k_player,
+      Game::Command::StartConstruction{
+          .units = {crew}, .construction_type = "home", .site = site}));
+  step();
+
+  const auto* builder = builder_of(crew);
+  ASSERT_NE(builder, nullptr);
+  EXPECT_FALSE(builder->has_construction_site)
+      << "the house was ordered on ground a squad is standing on";
+
+  const QVector3D clear = Game::Systems::NavGrid::grid_to_world({70, 48});
+  EXPECT_FALSE(Game::Systems::troops_stand_on(
+      m_session->world(), "home", clear.x(), clear.z(), 0.0F, {&crew, 1}))
+      << "open ground away from the squad must stay buildable";
 }
 
 } // namespace

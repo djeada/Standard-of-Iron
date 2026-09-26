@@ -191,6 +191,7 @@ MISSIONS=(
   "second_punic_war/crossing_the_rhone:rhone"
   "second_punic_war/crossing_the_alps:alps"
   "second_punic_war/battle_of_ticino:ticino"
+  "assets/missions/siege_of_aurelia_magna.json:aurelia"
 )
 
 # A/B comparison is only meaningful when both sides simulate the same match, so
@@ -201,11 +202,13 @@ REPLAY_DIR="$OUT_DIR/replays"
 
 record_mission_replay() {
   local mission="$1" label="$2"
+  local launch_option=--campaign-mission
+  [[ "$mission" == *.json ]] && launch_option=--mission-file
   local replay="$REPLAY_DIR/${label}.soireplay"
   mkdir -p "$REPLAY_DIR"
   echo "run-perf-suite: recording $label"
   "$GAME" \
-    --campaign-mission "$mission" \
+    "$launch_option" "$mission" \
     --skip-briefing \
     --graphics-preset "$PRESET" \
     --record-replay "$replay" \
@@ -217,6 +220,8 @@ record_mission_replay() {
 
 run_mission() {
   local mission="$1" label="$2" repeat="$3"
+  local launch_option=--campaign-mission
+  [[ "$mission" == *.json ]] && launch_option=--mission-file
   local output="$OUT_DIR/${label}.run${repeat}.json"
   local replay="$REPLAY_DIR/${label}.soireplay"
   echo "run-perf-suite: $label repeat $repeat"
@@ -231,7 +236,7 @@ run_mission() {
     return 0
   fi
   "$GAME" \
-    --campaign-mission "$mission" \
+    "$launch_option" "$mission" \
     --skip-briefing \
     --graphics-preset "$PRESET" \
     --benchmark-seconds "$SECONDS_PER_MISSION" \
@@ -248,6 +253,8 @@ PERF_DELAY="${PERF_DELAY:-8}"
 
 profile_mission() {
   local mission="$1" label="$2"
+  local launch_option=--campaign-mission
+  [[ "$mission" == *.json ]] && launch_option=--mission-file
   if ! command -v perf >/dev/null 2>&1; then
     return 0
   fi
@@ -255,7 +262,7 @@ profile_mission() {
   perf record --delay "$((PERF_DELAY * 1000))" -g --call-graph dwarf -F 499 \
     -o "$OUT_DIR/${label}.perf.data" -- \
     "$GAME" \
-    --campaign-mission "$mission" \
+    "$launch_option" "$mission" \
     --skip-briefing \
     --graphics-preset "$PRESET" \
     --benchmark-seconds "$SECONDS_PER_MISSION" \
@@ -270,7 +277,7 @@ profile_mission() {
 
   perf stat -d -x, -o "$OUT_DIR/${label}.perf-stat.csv" -- \
     "$GAME" \
-    --campaign-mission "$mission" \
+    "$launch_option" "$mission" \
     --skip-briefing \
     --graphics-preset "$PRESET" \
     --benchmark-seconds "$SECONDS_PER_MISSION" \

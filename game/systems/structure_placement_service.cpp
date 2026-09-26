@@ -15,17 +15,24 @@
 
 namespace Game::Systems {
 
-auto StructurePlacementService::ground_ruling(const Engine::Core::World& world,
-                                              const std::string& building_type,
-                                              float x,
-                                              float z,
-                                              float rotation_y) -> PlacementRuling {
+auto StructurePlacementService::ground_ruling(
+    const Engine::Core::World& world,
+    const std::string& building_type,
+    float x,
+    float z,
+    float rotation_y,
+    std::span<const Engine::Core::EntityID> crew) -> PlacementRuling {
   const auto spawn_type = Game::Units::spawn_typeFromString(building_type);
   if (!spawn_type.has_value() || (!Game::Units::is_building_spawn(*spawn_type) &&
                                   !Game::Units::is_siege_engine_spawn(*spawn_type))) {
     return PlacementRuling::UnknownStructure;
   }
-  return ruling_for(assess_ground(world, building_type, x, z, 0, rotation_y));
+  const auto verdict = assess_ground(world, building_type, x, z, 0, rotation_y, crew);
+  if (verdict == GroundVerdict::Clear &&
+      troops_stand_on(world, building_type, x, z, rotation_y, crew)) {
+    return ruling_for(GroundVerdict::Occupied);
+  }
+  return ruling_for(verdict);
 }
 
 auto StructurePlacementService::ruling_for(GroundVerdict verdict) -> PlacementRuling {

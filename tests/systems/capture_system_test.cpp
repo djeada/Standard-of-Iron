@@ -117,6 +117,24 @@ TEST_F(CaptureSystemTest, EachBarracksIsJudgedByItsOwnNeighbourhood) {
       << "one pass over the units must still keep each barracks' ring separate";
 }
 
+TEST_F(CaptureSystemTest, MovingAndDyingTroopsChangeTheNextCaptureTally) {
+  auto* barracks = add_barracks(k_defender, 0.0F, 0.0F);
+  auto* troop = add_troop(k_attacker, 8.0F, 0.0F);
+  m_system.update(&world(), 0.1F);
+  auto* capture = barracks->get_component<Engine::Core::CaptureComponent>();
+  ASSERT_NE(capture, nullptr);
+  EXPECT_TRUE(capture->is_being_captured);
+
+  troop->get_component<Engine::Core::TransformComponent>()->position.x = 8.1F;
+  m_system.update(&world(), 0.1F);
+  EXPECT_FALSE(capture->is_being_captured);
+
+  troop->get_component<Engine::Core::TransformComponent>()->position.x = 0.0F;
+  troop->get_component<Engine::Core::UnitComponent>()->health = 0;
+  m_system.update(&world(), 0.1F);
+  EXPECT_FALSE(capture->is_being_captured);
+}
+
 } // namespace
 
 TEST_F(CaptureSystemTest, ADestroyedBarracksCannotBeCaptured) {

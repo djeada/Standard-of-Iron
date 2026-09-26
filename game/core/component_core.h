@@ -297,6 +297,7 @@ public:
     route_opening_waypoint_index = 0U;
     route_reform_waypoint_index = 0U;
     declared_group_pace = 0.0F;
+    escape_active = false;
   }
   void begin_route(std::uint64_t topology) {
     ++route_revision;

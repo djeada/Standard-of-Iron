@@ -101,7 +101,7 @@ TEST_F(CommanderSharedTraversalTest, TheCommanderMotorAsksTheSharedWalkabilityLa
   registry.register_building(9001U, "home", 0.0F, 0.0F, 2, 0.0F);
   Game::Systems::Walkability::refresh();
 
-  auto const profile = Game::Systems::body_profile_for(*commander);
+  auto const profile = Game::Systems::motor_profile_for(*commander);
   int sampled = 0;
   for (float x = -6.0F; x <= 6.0F; x += 0.5F) {
     for (float z = -6.0F; z <= 6.0F; z += 0.5F) {
@@ -380,3 +380,50 @@ TEST_F(CommanderSharedTraversalTest, ModeSwitchingMidApproachChangesNothing) {
 }
 
 } // namespace
+
+namespace {
+
+void wall_in_a_one_cell_lane(int lane_x, int from_z, int to_z) {
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
+  ASSERT_NE(pathfinder, nullptr);
+  for (int grid_z = from_z; grid_z <= to_z; ++grid_z) {
+    pathfinder->set_obstacle(lane_x - 1, grid_z, true);
+    pathfinder->set_obstacle(lane_x + 1, grid_z, true);
+  }
+}
+
+} // namespace
+
+TEST_F(CommanderSharedTraversalTest, DirectControlPassesEveryLaneAnRtsOrderPasses) {
+  // Gaps between hills are often one nav cell wide. The RTS motor stands a
+  // body on the cell under it; direct control swept a 0.34 m circle over the
+  // same grid, so it stopped at gaps its own RTS orders walked through.
+  auto walk_the_lane = [](bool direct_control) {
+    Engine::Core::World world;
+    Game::Systems::NavGrid::initialize(96, 96);
+    auto const lane = Game::Systems::NavGrid::world_to_grid(0.0F, 0.0F);
+    wall_in_a_one_cell_lane(lane.x, lane.y - 4, lane.y + 4);
+    // Nobody steers a keyboard down the exact centre of a one-metre lane.
+    QVector3D const off_centre(0.3F, 0.0F, 0.0F);
+    QVector3D const entry =
+        Game::Systems::NavGrid::grid_to_world({lane.x, lane.y - 7}) + off_centre;
+    QVector3D const exit =
+        Game::Systems::NavGrid::grid_to_world({lane.x, lane.y + 7}) + off_centre;
+    auto* commander = spawn_commander(world, entry.x(), entry.z(), direct_control);
+    world.add_system(std::make_unique<Game::Systems::MovementPipeline>());
+    if (direct_control) {
+      walk_forward(world, *commander, 8.0F);
+    } else {
+      Game::Systems::CommandService::move_units(world, {commander->get_id()}, {exit});
+      for (int frame = 0; frame < 600; ++frame) {
+        world.update(k_dt);
+      }
+    }
+    return commander->get_component<Engine::Core::TransformComponent>()->position.z -
+           exit.z();
+  };
+
+  EXPECT_GT(walk_the_lane(false), -1.0F) << "an RTS order did not clear the lane";
+  EXPECT_GT(walk_the_lane(true), -1.0F)
+      << "direct control stopped in a lane an RTS order walks through";
+}

@@ -157,7 +157,8 @@ auto make_rigged_cmd(Render::GL::RiggedMesh* mesh,
                      std::shared_ptr<const Render::RoleColorPalette> role_colors,
                      const QVector3D& base_color,
                      const QVector4D& wear_params,
-                     std::int32_t material_id) -> Render::GL::RiggedCreatureCmd {
+                     std::int32_t material_id,
+                     float alpha) -> Render::GL::RiggedCreatureCmd {
   Render::GL::RiggedCreatureCmd cmd{};
   cmd.mesh = mesh;
   cmd.world = world_from_unit;
@@ -168,6 +169,7 @@ auto make_rigged_cmd(Render::GL::RiggedMesh* mesh,
   cmd.color = base_color;
   cmd.wear_params = wear_params;
   cmd.material_id = material_id;
+  cmd.alpha = alpha;
   return cmd;
 }
 
@@ -708,6 +710,7 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
                             float upper_body_overlay_weight,
                             std::uint32_t entity_id,
                             std::uint16_t instance_index,
+                            float alpha,
                             Render::GL::ISubmitter& out,
                             Render::GL::Renderer* renderer) {
   const CreatureAsset* asset = handle.asset;
@@ -763,7 +766,8 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
                              std::move(role_colors),
                              base_color,
                              wear_params,
-                             material_id_for_species(handle.archetype->species));
+                             material_id_for_species(handle.archetype->species),
+                             alpha);
 
   const bool skin_ubo_covers_frame = skin_atlas->palette_ubo != 0U &&
                                      skin_atlas->frame_total != 0U &&
@@ -924,6 +928,7 @@ auto submit_snapshot_creature(
     std::uint32_t frame_in_clip,
     std::uint32_t entity_id,
     std::uint16_t instance_index,
+    float alpha,
     Render::GL::ISubmitter& out,
     Render::GL::Renderer* renderer,
     bool allow_bake_fallback = true) -> bool {
@@ -977,15 +982,15 @@ auto submit_snapshot_creature(
             key, *mesh_blob, mesh_global_frame);
         if (snap != nullptr && snap->mesh != nullptr &&
             snap->mesh->index_count() != 0U) {
-          auto cmd =
-              make_rigged_cmd(snap->mesh.get(),
-                              world_from_unit,
-                              Render::GL::SnapshotMeshCache::identity_palette(),
-                              1U,
-                              role_colors,
-                              base_color,
-                              wear_params,
-                              material_id_for_species(handle.archetype->species));
+          auto cmd = make_rigged_cmd(snap->mesh.get(),
+                                     world_from_unit,
+                                     Render::GL::SnapshotMeshCache::identity_palette(),
+                                     1U,
+                                     role_colors,
+                                     base_color,
+                                     wear_params,
+                                     material_id_for_species(handle.archetype->species),
+                                     alpha);
           cmd.palette_ubo = 0U;
           cmd.palette_offset = 0U;
 
@@ -1060,7 +1065,8 @@ auto submit_snapshot_creature(
                              std::move(role_colors),
                              base_color,
                              wear_params,
-                             material_id_for_species(handle.archetype->species));
+                             material_id_for_species(handle.archetype->species),
+                             alpha);
   cmd.palette_ubo = 0U;
   cmd.palette_offset = 0U;
 
@@ -1236,6 +1242,7 @@ auto CreaturePipeline::submit_requests(
                                    snapshot_playback.frame_in_clip,
                                    req.entity_id,
                                    req.instance_index,
+                                   req.alpha,
                                    out,
                                    renderer,
                                    !prebaked_lowpoly_required);
@@ -1294,6 +1301,7 @@ auto CreaturePipeline::submit_requests(
                            req.upper_body_overlay.weight,
                            req.entity_id,
                            req.instance_index,
+                           req.alpha,
                            out,
                            renderer);
   };

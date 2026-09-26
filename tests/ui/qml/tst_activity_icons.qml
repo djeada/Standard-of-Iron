@@ -108,7 +108,7 @@ TestCase {
                 "iconId": "teleport"
             });
         verify(known.available);
-        verify(known.shapes.length > 0);
+        verify(known.visible);
         verify(!unknown.available);
         verify(!unknown.visible, "an icon with no art must not leave an empty hole");
         known.destroy();

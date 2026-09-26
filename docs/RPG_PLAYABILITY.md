@@ -176,7 +176,9 @@ The camera is the presentation authority for the resolved commander pose. It pub
 
 ## Shared movement
 
-Direct control produces steering intent; it does not own collision policy. `Game::Systems::body_profile_for()`, `Walkability`, and `BodyContactSystem` decide where the commander may move in the same shared layer used by RTS-controlled bodies.
+Direct control produces steering intent; it does not own collision policy. `Game::Systems::body_profile_for()`, `Walkability`, and `BodyContactSystem` decide where the commander may move. They form the same shared layer used by RTS-controlled bodies.
+
+The commander's centre is tested exactly as an RTS body's is (`motor_profile_for`): the nav cell under it must be open, and its facade distance stays person-scale. `DirectControlPassesEveryLaneAnRtsOrderPasses` walks a one-cell lane 0.3 m off its centre line. That is the gap between two hills an RTS order crossed while direct control refused it. See "One Ground Rule, One Sealed-In Decision" in `PATHFINDING_ARCHITECTURE.md`.
 
 Dynamic contact has three important properties:
 
@@ -248,6 +250,12 @@ Terrain clearance is solved along the entire boom rather than only beneath the f
 Obstruction retraction is immediate. Extension is eased and capped at 6 m/s. Eye depenetration leaves a 0.14 m margin rather than resting exactly on the surface.
 
 `nearest_building_body_clearance()` and the shared obstruction layer expose signed eye clearance in the camera trace. `rpg_camera_prop_gauntlet`, `rpg_camera_wall_pocket`, and `rpg_camera_hill_bank` cover props, wall pockets, and steep terrain while requiring the commander to remain visible.
+
+## Lens gap
+
+Soldiers standing between the chase camera and the commander would fill the screen, so `Renderer::compute_rpg_lens_gap` lays a corridor along the ground from the eye to the commander, and `LensGapExclusion::visibility` dims bodies inside it. It returns a visibility from 0 to 1, not an in/out test. The old edge of the corridor is still where fading begins, so nothing that used to be fully visible thins out. A body reaches zero only in the inner core (35 % of the corridor's half-width) around the sight line. The corridor also fades over 0.4 m at the lens end and 0.6 m at the commander's end. A hard cut used to drop a soldier in one frame as the commander walked past, while he was still plainly in view.
+
+`instance_prepare` records the batch's request count before a soldier is appended. It multiplies the visibility into every request added after that count, which covers riders, mounts and attachments too. `CreaturePipeline` stamps it on each `RiggedCreatureCmd`. The character fragment shaders turn alpha into a screen-door dither (`character_fade_discards`) rather than blending. A fading body therefore stays opaque, writes depth and never shows its own insides. Soldier shadows come from the shadow pass, which the lens gap has never touched, so a body faded out of the corridor keeps its shadow on the ground.
 
 ## Camera motion and framing
 

@@ -5,9 +5,9 @@
 #include <QObject>
 #include <QPainterPath>
 #include <QQmlEngine>
+#include <QQuickPaintedItem>
 #include <QString>
 #include <QStringList>
-#include <QVariantList>
 
 #include <cstdint>
 #include <vector>
@@ -92,9 +92,49 @@ public:
   Q_INVOKABLE [[nodiscard]] static QStringList ids();
   Q_INVOKABLE [[nodiscard]] static QString resolve(const QString& id);
 
-  Q_INVOKABLE [[nodiscard]] static QVariantList strokes(const QString& id);
-
   static auto create(QQmlEngine* engine, QJSEngine* script_engine) -> IconArtLibrary*;
+};
+
+class IconArtItem : public QQuickPaintedItem {
+  Q_OBJECT
+  QML_NAMED_ELEMENT(IconArtItem)
+
+  Q_PROPERTY(QString iconId READ icon_id WRITE set_icon_id NOTIFY icon_id_changed)
+  Q_PROPERTY(bool available READ available NOTIFY icon_id_changed)
+  Q_PROPERTY(QColor tint MEMBER m_tint NOTIFY palette_changed)
+  Q_PROPERTY(QColor accent MEMBER m_accent NOTIFY palette_changed)
+  Q_PROPERTY(QColor ink MEMBER m_ink NOTIFY palette_changed)
+  Q_PROPERTY(QColor edge MEMBER m_edge NOTIFY palette_changed)
+  Q_PROPERTY(QColor timber MEMBER m_timber NOTIFY palette_changed)
+  Q_PROPERTY(QColor quarry MEMBER m_quarry NOTIFY palette_changed)
+  Q_PROPERTY(QColor ore MEMBER m_ore NOTIFY palette_changed)
+  Q_PROPERTY(QColor bullion MEMBER m_bullion NOTIFY palette_changed)
+  Q_PROPERTY(bool monochrome MEMBER m_monochrome NOTIFY palette_changed)
+
+public:
+  explicit IconArtItem(QQuickItem* parent = nullptr);
+
+  [[nodiscard]] auto icon_id() const -> QString { return m_icon_id; }
+  void set_icon_id(const QString& id);
+  [[nodiscard]] auto available() const -> bool;
+
+  void paint(QPainter* painter) override;
+
+signals:
+  void icon_id_changed();
+  void palette_changed();
+
+private:
+  QString m_icon_id;
+  QColor m_tint;
+  QColor m_accent;
+  QColor m_ink;
+  QColor m_edge;
+  QColor m_timber;
+  QColor m_quarry;
+  QColor m_ore;
+  QColor m_bullion;
+  bool m_monochrome{false};
 };
 
 #endif
