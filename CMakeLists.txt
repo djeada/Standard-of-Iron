@@ -877,6 +877,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/CameraGuide.qml
             ui/qml/CameraLegend.qml
             ui/qml/EconomyGuide.qml
+            ui/qml/AllyAppealPanel.qml
             ui/qml/EconomyCoach.qml
             ui/qml/EconomyHelpPanel.qml
             ui/qml/WaveTracker.qml

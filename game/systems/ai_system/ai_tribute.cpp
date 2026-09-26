@@ -67,7 +67,8 @@ auto ally_generosity(const AIStrategyConfig& config) -> float {
 auto answer_ally_request(const AIStrategyConfig& config,
                          const ResourceAmounts& stock,
                          const AllyTributeRequest& request,
-                         bool under_attack) -> AllyTributeAnswer {
+                         bool under_attack,
+                         float goodwill) -> AllyTributeAnswer {
   AllyTributeAnswer answer{.requester = request.requester,
                            .giver = request.giver,
                            .resource = request.resource,
@@ -83,7 +84,9 @@ auto answer_ally_request(const AIStrategyConfig& config,
   if (surplus <= 0) {
     return answer;
   }
-  float offer = static_cast<float>(surplus) * ally_generosity(config);
+  goodwill = std::clamp(goodwill, k_min_ally_goodwill, k_max_ally_goodwill);
+  float offer = static_cast<float>(surplus) *
+                std::clamp(ally_generosity(config) + 0.35F * goodwill, 0.0F, 1.0F);
   if (under_attack) {
     offer *= 0.3F;
   }
@@ -131,18 +134,21 @@ auto pick_ally_plea(const ResourceAmounts& own_stock,
 
 auto answer_ally_call(const AIStrategyConfig& config,
                       const AllyCallStanding& standing,
-                      AllyCallKind kind) -> AllyCallVerdict {
+                      AllyCallKind kind,
+                      float goodwill) -> AllyCallVerdict {
   constexpr float k_willing = 0.35F;
   if (standing.under_threat) {
     return AllyCallVerdict::RefusedUnderThreat;
   }
   const auto& p = config.personality;
+  const float trust =
+      0.25F * std::clamp(goodwill, k_min_ally_goodwill, k_max_ally_goodwill);
   if (kind == AllyCallKind::Defend) {
     if (standing.spare_units < k_ally_call_min_defenders) {
       return AllyCallVerdict::RefusedNoArmy;
     }
     const float willing = 0.50F + 0.40F * p.defense - 0.20F * p.aggression +
-                          0.5F * strategy_bias(config.strategy);
+                          0.5F * strategy_bias(config.strategy) + trust;
     return willing >= k_willing ? AllyCallVerdict::Accepted
                                 : AllyCallVerdict::RefusedUnwilling;
   }
@@ -154,7 +160,7 @@ auto answer_ally_call(const AIStrategyConfig& config,
     return AllyCallVerdict::RefusedNoArmy;
   }
   const float willing = 0.40F + 0.50F * p.aggression - 0.20F * p.defense -
-                        0.5F * strategy_bias(config.strategy);
+                        0.5F * strategy_bias(config.strategy) + trust;
   return willing >= k_willing ? AllyCallVerdict::Accepted
                               : AllyCallVerdict::RefusedUnwilling;
 }

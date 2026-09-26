@@ -47,6 +47,10 @@ Item {
     }
     property int selection_tick: 0
     property bool has_production_selection: false
+    // The production readout is republished once per frame, so a selection
+    // change is first seen against the previous frame's copy. Keep polling for
+    // a few ticks after every change so the panel catches up.
+    property int selection_settle_polls: 0
     property bool has_movable_units: false
     property bool commander_rpg_mode: typeof game !== 'undefined' && game.commander.mode_state === "active"
     property var commander_status: ({})
@@ -95,7 +99,7 @@ Item {
             return true;
         if (hud.blocks_edge_scroll(x, y))
             return true;
-        var floating = [cameraLegend, commanderMessage, waveTracker, economyCoach, objectivesCard, hudVictory.strip];
+        var floating = [cameraLegend, commanderMessage, waveTracker, economyCoach, allyAppeals, objectivesCard, hudVictory.strip];
         for (var i = 0; i < floating.length; ++i) {
             if (hud.item_covers_pointer(floating[i], x, y))
                 return true;
@@ -122,6 +126,7 @@ Item {
     Connections {
         function onSelected_units_changed() {
             selection_tick += 1;
+            selection_settle_polls = 3;
             has_production_selection = typeof game !== 'undefined' && game.production ? (game.production.selected_building_id() !== 0 || game.production.has_selected_type("builder")) : false;
             has_movable_units = typeof game !== 'undefined' && game.orders.has_commandable_selection ? game.orders.has_commandable_selection() : false;
             refresh_command_mode();
@@ -138,8 +143,13 @@ Item {
         repeat: true
         running: true
         onTriggered: {
-            if (has_production_selection)
+            if (selection_settle_polls > 0) {
+                selection_settle_polls -= 1;
+                has_production_selection = typeof game !== 'undefined' && game.production ? (game.production.selected_building_id() !== 0 || game.production.has_selected_type("builder")) : false;
                 selection_tick += 1;
+            } else if (has_production_selection) {
+                selection_tick += 1;
+            }
             refresh_command_mode();
         }
     }
@@ -331,6 +341,17 @@ Item {
         economy: hud.economy
         gate: !hud.commander_rpg_mode && !!hud.economy && hud.economy.coach_visible
         onHelp_requested: economyHelpPanel.visible = true
+    }
+
+    AllyAppealPanel {
+        id: allyAppeals
+
+        objectName: "allyAppealPanel"
+        anchors.top: topPanel.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.topMargin: Design.Metrics.space8
+
+        gate: !hud.commander_rpg_mode
     }
 
     CameraLegend {

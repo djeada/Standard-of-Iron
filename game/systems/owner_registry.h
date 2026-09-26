@@ -61,6 +61,7 @@ public:
   auto get_owner_type(int owner_id) const -> OwnerType;
 
   auto get_owner_name(int owner_id) const -> std::string;
+  void set_owner_name(int owner_id, const std::string& name);
 
   auto get_all_owners() const -> const std::vector<OwnerInfo>&;
 

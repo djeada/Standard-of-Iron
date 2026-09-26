@@ -26,21 +26,26 @@ HintCard {
 
     readonly property bool coach_ready: !!root.economy && root.economy.coach_visible === true
 
-    function sync() {
-        if (!root.economy)
-            return;
-        root.economy.coach_enabled = Core.UiHints.enabled[root.hintId] === true;
+    function sync_enabled() {
+        if (root.economy)
+            root.economy.coach_enabled = Core.UiHints.enabled[root.hintId] === true;
+    }
+
+    // Only arm when the coach becomes ready. Re-arming on every UiHints change
+    // re-opened the card inside the same click that dismissed it.
+    function arm_if_ready() {
+        root.sync_enabled();
         if (root.coach_ready)
             Core.UiHints.show(root.hintId);
     }
 
-    onCoach_readyChanged: sync()
+    onCoach_readyChanged: arm_if_ready()
 
-    Component.onCompleted: sync()
+    Component.onCompleted: arm_if_ready()
 
     Connections {
         function onChanged() {
-            root.sync();
+            root.sync_enabled();
         }
 
         target: Core.UiHints

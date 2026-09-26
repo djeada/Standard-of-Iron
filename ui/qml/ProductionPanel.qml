@@ -2889,6 +2889,8 @@ Rectangle {
                             visible: allyExchange.allies.length > 0
 
                             Design.IronButton {
+                                id: allySendButton
+
                                 objectName: "allySendButton"
                                 text: qsTr("Send")
                                 tone: "primary"
@@ -2898,12 +2900,21 @@ Rectangle {
                                     if (productionPanel.production && allyExchange.ally)
                                         productionPanel.production.send_to_ally(allyExchange.ally.owner_id, allyExchange.resource_key, allyExchange.amount);
                                 }
-                                ToolTip.visible: hovered
-                                ToolTip.delay: Design.Metrics.tooltipDelay
-                                ToolTip.text: allyExchange.ally ? qsTr("Give %1 %2 to %3").arg(allyExchange.amount).arg(allyExchange.resource_key).arg(allyExchange.ally.name) : ""
+
+                                // Above the whole ally block: the attached tooltip
+                                // covered the amount chips and the other button.
+                                Design.IronTooltip {
+                                    parent: allyExchange
+                                    x: Math.round((allyExchange.width - width) / 2)
+                                    y: -height - Design.Metrics.space4
+                                    visible: allySendButton.hovered && text !== ""
+                                    text: allyExchange.ally ? qsTr("Give %1 %2 to %3").arg(allyExchange.amount).arg(allyExchange.resource_key).arg(allyExchange.ally.name) : ""
+                                }
                             }
 
                             Design.IronButton {
+                                id: allyRequestButton
+
                                 objectName: "allyRequestButton"
                                 text: qsTr("Request")
                                 enabled: allyExchange.ally !== null && allyExchange.ally.is_ai === true
@@ -2912,9 +2923,16 @@ Rectangle {
                                     if (productionPanel.production && allyExchange.ally)
                                         productionPanel.production.request_from_ally(allyExchange.ally.owner_id, allyExchange.resource_key, allyExchange.amount);
                                 }
-                                ToolTip.visible: hovered
-                                ToolTip.delay: Design.Metrics.tooltipDelay
-                                ToolTip.text: allyExchange.ally ? qsTr("Ask %1 for %2 %3. A generous commander with plenty to spare says yes; a warlike or poor one keeps it.").arg(allyExchange.ally.name).arg(allyExchange.amount).arg(allyExchange.resource_key) : ""
+
+                                // Above the whole ally block: the attached tooltip
+                                // covered the amount chips and the other button.
+                                Design.IronTooltip {
+                                    parent: allyExchange
+                                    x: Math.round((allyExchange.width - width) / 2)
+                                    y: -height - Design.Metrics.space4
+                                    visible: allyRequestButton.hovered && text !== ""
+                                    text: allyExchange.ally ? qsTr("Ask %1 for %2 %3. A generous commander with plenty to spare says yes; a warlike or poor one keeps it.").arg(allyExchange.ally.name).arg(allyExchange.amount).arg(allyExchange.resource_key) : ""
+                                }
                             }
                         }
                     }

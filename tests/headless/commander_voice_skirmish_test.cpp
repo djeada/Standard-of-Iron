@@ -4,6 +4,7 @@
 
 #include <gtest/gtest.h>
 #include <memory>
+#include <optional>
 #include <vector>
 
 #include "game/command/command.h"
@@ -24,6 +25,7 @@
 #include "game/systems/ai_system/ai_commander_doctrine.h"
 #include "game/systems/alliance_board.h"
 #include "game/systems/default_content.h"
+#include "game/systems/marketplace_system.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
@@ -127,7 +129,7 @@ protected:
     return session;
   }
 
-  auto make_alliance_match() -> SessionContext& {
+  auto make_alliance_match(bool second_commander = false) -> SessionContext& {
     m_session = std::make_unique<SessionContext>();
     auto& session = *m_session;
     session.world().set_presentation_enabled(false);
@@ -143,9 +145,13 @@ protected:
     owners.set_owner_team(k_human, 1);
     owners.set_owner_team(k_player, 1);
     owners.set_owner_team(k_enemy, 2);
+    if (second_commander) {
+      owners.register_owner_with_id(k_second, Game::Systems::OwnerType::AI, "second");
+      owners.set_owner_team(k_second, 1);
+    }
 
     Game::Systems::initialize_default_content(session.nations());
-    for (const int owner : {k_human, k_player}) {
+    for (const int owner : {k_human, k_player, k_second}) {
       session.nations().set_player_nation(owner,
                                           Game::Systems::NationID::RomanRepublic);
     }
@@ -158,7 +164,7 @@ protected:
     session.terrain().initialize(map_definition);
     Game::Systems::register_runtime_systems(session.world());
 
-    for (const int owner : {k_human, k_player, k_enemy}) {
+    for (const int owner : {k_human, k_player, k_enemy, k_second}) {
       auto& economy = session.economy();
       economy.ensure_owner(owner);
       economy.set(owner, Game::Systems::ResourceType::Gold, 500);
@@ -173,6 +179,23 @@ protected:
             k_player,
             world_of(k_player_grid + 6 + (index % 4) * 2,
                      k_player_grid + 6 + (index / 4) * 2));
+    }
+    if (second_commander) {
+      spawn(session,
+            Game::Units::SpawnType::Barracks,
+            k_second,
+            world_of(k_second_grid_x, k_player_grid));
+      spawn(session,
+            Game::Units::SpawnType::RomanFieldCommander,
+            k_second,
+            world_of(k_second_grid_x + 2, k_player_grid + 2));
+      for (int index = 0; index < 6; ++index) {
+        spawn(session,
+              Game::Units::SpawnType::Spearman,
+              k_second,
+              world_of(k_second_grid_x + 6 + (index % 3) * 2,
+                       k_player_grid + 6 + (index / 3) * 2));
+      }
     }
     m_enemy_barracks = spawn(session,
                              Game::Units::SpawnType::Barracks,
@@ -315,6 +338,8 @@ protected:
   }
 
   static constexpr int k_human = 1;
+  static constexpr int k_second = 4;
+  static constexpr int k_second_grid_x = k_enemy_grid;
 
   std::shared_ptr<Game::Units::UnitFactoryRegistry> m_factory;
   EntityID m_enemy_barracks = 0;
@@ -442,4 +467,160 @@ TEST_F(CommanderVoiceSkirmishTest, ACallOnTheWrongSideIsRejectedBeforeAnyAllyHea
       k_human,
       Game::Command::AllyCall{.target = m_human_barracks,
                               .kind = Game::Systems::AllyCallKind::Defend}));
+}
+
+TEST_F(CommanderVoiceSkirmishTest,
+       AnAllyUnderAttackAsksThePlayerForMenAndNoticesThemArrive) {
+  auto& session = make_alliance_match();
+  run_for(session, 4.0);
+  const auto ally_base = world_of(k_player_grid, k_player_grid);
+  for (int index = 0; index < 6; ++index) {
+    spawn(session,
+          Game::Units::SpawnType::Spearman,
+          k_enemy,
+          world_of(k_player_grid - 4 + index, k_player_grid - 5));
+  }
+
+  std::optional<Game::Systems::AllyAppeal> appeal;
+  for (double waited = 0.0; waited < 30.0 && !appeal.has_value(); waited += 0.5) {
+    run_for(session, 0.5);
+    for (const auto& opened : session.alliance().take_new_appeals()) {
+      if (opened.kind == Game::Systems::AllyAppealKind::Defend) {
+        appeal = opened;
+      }
+    }
+  }
+  ASSERT_TRUE(appeal.has_value()) << "the besieged ally never asked the player for men";
+  EXPECT_EQ(appeal->from_ally, k_player);
+  EXPECT_EQ(appeal->to_owner, k_human);
+  EXPECT_NEAR(appeal->target_x, ally_base.x(), 1.0F);
+
+  ASSERT_TRUE(Game::Command::dispatch_immediately(
+      session.world(),
+      Game::Command::Source::LocalPlayer,
+      k_human,
+      Game::Command::AllyAppealAnswer{.appeal_id = appeal->appeal_id, .accept = true}));
+  run_for(session, 1.0);
+  auto replies = session.alliance().take_appeal_replies();
+  ASSERT_EQ(replies.size(), 1U);
+  EXPECT_EQ(replies.front().follow_up, Game::Systems::AllyAppealFollowUp::AwaitingAid);
+
+  for (int index = 0; index < 3; ++index) {
+    spawn(session,
+          Game::Units::SpawnType::Spearman,
+          k_human,
+          world_of(k_player_grid + 3 + index, k_player_grid + 3));
+  }
+  run_for(session, 1.0);
+  replies = session.alliance().take_appeal_replies();
+  ASSERT_EQ(replies.size(), 1U);
+  EXPECT_EQ(replies.front().follow_up, Game::Systems::AllyAppealFollowUp::AidArrived);
+  auto* ai = session.world().get_system<Game::Systems::AISystem>();
+  ASSERT_NE(ai, nullptr);
+  EXPECT_GT(ai->ally_goodwill(k_player, k_human), 0.0F);
+}
+
+TEST_F(CommanderVoiceSkirmishTest, AnAppealTheAllyNeverHearsBackOnIsWithdrawn) {
+  auto& session = make_alliance_match();
+  run_for(session, 4.0);
+  for (int index = 0; index < 6; ++index) {
+    spawn(session,
+          Game::Units::SpawnType::Spearman,
+          k_enemy,
+          world_of(k_player_grid - 4 + index, k_player_grid - 5));
+  }
+  bool asked = false;
+  for (double waited = 0.0; waited < 30.0 && !asked; waited += 0.5) {
+    run_for(session, 0.5);
+    asked = !session.alliance().take_new_appeals().empty();
+  }
+  ASSERT_TRUE(asked);
+  run_for(session, Game::Systems::k_ally_appeal_answer_seconds + 2.0);
+  bool withdrawn = false;
+  for (const auto& reply : session.alliance().take_appeal_replies()) {
+    withdrawn =
+        withdrawn || reply.follow_up == Game::Systems::AllyAppealFollowUp::Withdrawn;
+  }
+  EXPECT_TRUE(withdrawn) << "an unanswered appeal must close rather than hang forever";
+}
+
+TEST_F(CommanderVoiceSkirmishTest, AnAllyShortOfGoldAsksThePlayerAndTheGiftArrives) {
+  auto& session = make_alliance_match();
+  auto& economy = session.economy();
+  economy.set(k_human, Game::Systems::ResourceType::Gold, 2000);
+  std::optional<Game::Systems::AllyAppeal> appeal;
+  for (double waited = 0.0; waited < 320.0 && !appeal.has_value(); waited += 1.0) {
+    economy.set(k_player, Game::Systems::ResourceType::Gold, 0);
+    run_for(session, 1.0);
+    for (const auto& opened : session.alliance().take_new_appeals()) {
+      if (opened.kind == Game::Systems::AllyAppealKind::Resources) {
+        appeal = opened;
+      }
+    }
+  }
+  ASSERT_TRUE(appeal.has_value()) << "a penniless ally never asked for gold";
+  ASSERT_EQ(appeal->resource, Game::Systems::ResourceType::Gold);
+  ASSERT_GT(appeal->amount, 0);
+
+  const int human_before = economy.get(k_human, Game::Systems::ResourceType::Gold);
+  ASSERT_TRUE(Game::Command::dispatch_immediately(
+      session.world(),
+      Game::Command::Source::LocalPlayer,
+      k_human,
+      Game::Command::AllyAppealAnswer{.appeal_id = appeal->appeal_id, .accept = true}));
+  EXPECT_EQ(economy.get(k_human, Game::Systems::ResourceType::Gold),
+            human_before - appeal->amount);
+  run_for(session, 1.0);
+  std::vector<Game::Systems::AllyAppealReply> replies;
+  for (const auto& reply : session.alliance().take_appeal_replies()) {
+    if (reply.appeal_id == appeal->appeal_id) {
+      replies.push_back(reply);
+    }
+  }
+  ASSERT_EQ(replies.size(), 1U);
+  EXPECT_EQ(replies.front().follow_up, Game::Systems::AllyAppealFollowUp::Grateful);
+  EXPECT_EQ(replies.front().amount, appeal->amount);
+  EXPECT_EQ(replies.front().resource, appeal->resource)
+      << "the thanks must name what was given";
+  EXPECT_FALSE(Game::Command::dispatch_immediately(
+      session.world(),
+      Game::Command::Source::LocalPlayer,
+      k_human,
+      Game::Command::AllyAppealAnswer{.appeal_id = appeal->appeal_id, .accept = true}))
+      << "an appeal is answered once";
+}
+
+TEST_F(CommanderVoiceSkirmishTest, AlliedCommandersAskEachOtherForGoods) {
+  auto& session = make_alliance_match(true);
+  auto& economy = session.economy();
+  economy.set(k_player, Game::Systems::ResourceType::Gold, 3000);
+  bool answered = false;
+  for (double waited = 0.0; waited < 320.0 && !answered; waited += 1.0) {
+    economy.set(k_second, Game::Systems::ResourceType::Gold, 0);
+    run_for(session, 1.0);
+    for (const auto& answer : session.marketplace().take_ally_answers()) {
+      answered = answered || (answer.requester == k_second && answer.giver == k_player);
+    }
+  }
+  EXPECT_TRUE(answered) << "the broke commander never asked its allied commander";
+}
+
+TEST_F(CommanderVoiceSkirmishTest, AlliedCommandersCallEachOtherToDefend) {
+  auto& session = make_alliance_match(true);
+  run_for(session, 4.0);
+  for (int index = 0; index < 6; ++index) {
+    spawn(session,
+          Game::Units::SpawnType::Spearman,
+          k_enemy,
+          world_of(k_second_grid_x - 4 + index, k_player_grid - 5));
+  }
+  bool called = false;
+  for (double waited = 0.0; waited < 30.0 && !called; waited += 0.5) {
+    run_for(session, 0.5);
+    for (const auto& answer : session.alliance().take_call_answers()) {
+      called = called || (answer.requester == k_second && answer.ally == k_player &&
+                          answer.kind == Game::Systems::AllyCallKind::Defend);
+    }
+  }
+  EXPECT_TRUE(called) << "a besieged commander never called its allied commander";
 }

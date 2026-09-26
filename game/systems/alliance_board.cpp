@@ -53,23 +53,82 @@ auto AllianceBoard::take_call_answers() -> std::vector<AllyCallAnswer> {
   return take_all(m_call_answers);
 }
 
-void AllianceBoard::record_plea(const AllyPlea& plea) {
-  push_capped(m_pleas, plea);
+void AllianceBoard::record_appeal(const AllyAppeal& appeal) {
+  if (m_open_appeals.size() >= k_queue_cap) {
+    return;
+  }
+  m_open_appeals.push_back(appeal);
+  push_capped(m_new_appeals, appeal);
 }
 
-auto AllianceBoard::take_pleas() -> std::vector<AllyPlea> {
-  return take_all(m_pleas);
+auto AllianceBoard::take_new_appeals() -> std::vector<AllyAppeal> {
+  return take_all(m_new_appeals);
+}
+
+auto AllianceBoard::open_appeal(std::uint32_t appeal_id) const -> const AllyAppeal* {
+  for (const auto& appeal : m_open_appeals) {
+    if (appeal.appeal_id == appeal_id) {
+      return &appeal;
+    }
+  }
+  return nullptr;
+}
+
+void AllianceBoard::close_appeal(std::uint32_t appeal_id) {
+  std::erase_if(m_open_appeals, [appeal_id](const AllyAppeal& appeal) {
+    return appeal.appeal_id == appeal_id;
+  });
+}
+
+void AllianceBoard::record_appeal_answer(const AllyAppealAnswer& answer) {
+  push_capped(m_appeal_answers, answer);
+}
+
+auto AllianceBoard::take_appeal_answers_for(int ally) -> std::vector<AllyAppealAnswer> {
+  std::vector<AllyAppealAnswer> taken;
+  std::erase_if(m_appeal_answers, [&](const AllyAppealAnswer& answer) {
+    if (answer.from_ally != ally) {
+      return false;
+    }
+    taken.push_back(answer);
+    return true;
+  });
+  return taken;
+}
+
+void AllianceBoard::record_appeal_reply(const AllyAppealReply& reply) {
+  push_capped(m_appeal_replies, reply);
+}
+
+auto AllianceBoard::take_appeal_replies() -> std::vector<AllyAppealReply> {
+  return take_all(m_appeal_replies);
 }
 
 void AllianceBoard::clear() {
   m_last_call_id = 0;
   m_calls.clear();
   m_call_answers.clear();
-  m_pleas.clear();
+  m_last_appeal_id = 0;
+  m_new_appeals.clear();
+  m_open_appeals.clear();
+  m_appeal_answers.clear();
+  m_appeal_replies.clear();
 }
 
 auto ally_call_kind_key(AllyCallKind kind) -> const char* {
   return kind == AllyCallKind::Attack ? "attack" : "defend";
+}
+
+auto ally_appeal_kind_key(AllyAppealKind kind) -> const char* {
+  switch (kind) {
+  case AllyAppealKind::Defend:
+    return "defend";
+  case AllyAppealKind::Attack:
+    return "attack";
+  case AllyAppealKind::Resources:
+    break;
+  }
+  return "resources";
 }
 
 auto ai_allies_of(const OwnerRegistry& owners, int owner_id) -> std::vector<int> {

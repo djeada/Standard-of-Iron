@@ -12,6 +12,7 @@ namespace {
 constexpr int k_defender = 1;
 constexpr int k_attacker = 2;
 constexpr int k_bystander = 3;
+constexpr int k_ally = 4;
 
 class CaptureSystemTest : public ::testing::Test {
 protected:
@@ -26,6 +27,8 @@ protected:
     owners.set_owner_team(k_defender, 1);
     owners.set_owner_team(k_attacker, 2);
     owners.set_owner_team(k_bystander, 3);
+    owners.register_owner_with_id(k_ally, Game::Systems::OwnerType::AI, "Ally");
+    owners.set_owner_team(k_ally, 1);
   }
 
   [[nodiscard]] auto world() -> Engine::Core::World& { return m_session->world(); }
@@ -115,6 +118,38 @@ TEST_F(CaptureSystemTest, EachBarracksIsJudgedByItsOwnNeighbourhood) {
   EXPECT_FALSE(
       far_barracks->get_component<Engine::Core::CaptureComponent>()->is_being_captured)
       << "one pass over the units must still keep each barracks' ring separate";
+}
+
+TEST_F(CaptureSystemTest, AnAllySentToHoldABarracksNeverTakesIt) {
+  auto* barracks = add_barracks(k_defender, 0.0F, 0.0F);
+  for (int i = 0; i < 6; ++i) {
+    add_troop(k_ally, 1.0F + static_cast<float>(i), 0.0F);
+  }
+
+  for (int tick = 0; tick < 200; ++tick) {
+    m_system.update(&world(), 0.1F);
+  }
+
+  EXPECT_EQ(barracks->get_component<Engine::Core::UnitComponent>()->owner_id,
+            k_defender)
+      << "an ally answering a call to defend took the barracks and defeated its owner";
+  EXPECT_FALSE(
+      barracks->get_component<Engine::Core::CaptureComponent>()->is_being_captured);
+}
+
+TEST_F(CaptureSystemTest, AlliedTroopsInTheRingCountAsDefenders) {
+  auto* barracks = add_barracks(k_defender, 0.0F, 0.0F);
+  for (int i = 0; i < 3; ++i) {
+    add_troop(k_attacker, 1.0F + static_cast<float>(i), 0.0F);
+  }
+  add_troop(k_ally, 0.0F, 1.0F);
+  add_troop(k_ally, 0.0F, 2.0F);
+
+  m_system.update(&world(), 0.1F);
+
+  EXPECT_FALSE(
+      barracks->get_component<Engine::Core::CaptureComponent>()->is_being_captured)
+      << "two allied soldiers deny three attackers the three-to-one advantage";
 }
 
 } // namespace

@@ -168,6 +168,13 @@ auto OwnerRegistry::get_owner_name(int owner_id) const -> std::string {
   return m_owners[it->second].name;
 }
 
+void OwnerRegistry::set_owner_name(int owner_id, const std::string& name) {
+  auto it = m_owner_id_to_index.find(owner_id);
+  if (it != m_owner_id_to_index.end() && !name.empty()) {
+    m_owners[it->second].name = name;
+  }
+}
+
 auto OwnerRegistry::get_all_owners() const -> const std::vector<OwnerInfo>& {
   return m_owners;
 }
