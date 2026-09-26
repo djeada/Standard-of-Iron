@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <gtest/gtest.h>
+#include <utility>
 #include <vector>
 
 #include "game/map/visibility_service.h"

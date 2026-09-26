@@ -536,10 +536,12 @@ auto MovementSystem::assign_escape_if_sealed(
     const Engine::Core::TransformComponent& transform,
     Engine::Core::MovementComponent& movement,
     const QVector3D& target) -> bool {
+  Point const here = NavGrid::world_to_grid(transform.position.x, transform.position.z);
+  if (!pathfinder.is_walkable(here.x, here.y, passability_for(movement))) {
+    return false;
+  }
   auto const exit_cell = pathfinder.find_escape_point(
-      NavGrid::world_to_grid(transform.position.x, transform.position.z),
-      NavGrid::world_to_grid(target.x(), target.z()),
-      passability_for(movement));
+      here, NavGrid::world_to_grid(target.x(), target.z()), passability_for(movement));
   if (!exit_cell.has_value()) {
     return false;
   }

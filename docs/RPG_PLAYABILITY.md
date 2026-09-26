@@ -178,7 +178,7 @@ The camera is the presentation authority for the resolved commander pose. It pub
 
 Direct control produces steering intent; it does not own collision policy. `Game::Systems::body_profile_for()`, `Walkability`, and `BodyContactSystem` decide where the commander may move. They form the same shared layer used by RTS-controlled bodies.
 
-The commander's centre is tested exactly as an RTS body's is (`motor_profile_for`): the nav cell under it must be open, and its facade distance stays person-scale. `DirectControlPassesEveryLaneAnRtsOrderPasses` walks a one-cell lane 0.3 m off its centre line. That is the gap between two hills an RTS order crossed while direct control refused it. See "One Ground Rule, One Sealed-In Decision" in `PATHFINDING_ARCHITECTURE.md`.
+The commander's centre is tested the same way in both control modes (`motor_profile_for`): the nav cell under it must be open, and its facade distance stays person-scale. `DirectControlPassesEveryLaneAnRtsOrderPasses` walks a one-cell lane 0.3 m off its centre line. That is the gap between two hills an RTS order crossed while direct control refused it. See "One Ground Rule, One Sealed-In Decision" in `PATHFINDING_ARCHITECTURE.md`.
 
 Dynamic contact has three important properties:
 

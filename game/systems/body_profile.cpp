@@ -28,7 +28,9 @@ auto body_profile_for(const Engine::Core::Entity& entity) -> BodyProfile {
 
 auto motor_profile_for(const Engine::Core::Entity& entity) -> BodyProfile {
   BodyProfile profile = body_profile_for(entity);
-  profile.radius = 0.0F;
+  if (!profile.stops_at_building_facade) {
+    profile.radius = 0.0F;
+  }
   return profile;
 }
 

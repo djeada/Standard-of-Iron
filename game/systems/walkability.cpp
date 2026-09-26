@@ -80,10 +80,6 @@ auto building_body_penetration(float x, float z, float radius) -> float {
   return std::max(0.0F, deepest);
 }
 
-auto facade_reach(const BodyProfile& profile) -> float {
-  return std::max(profile.radius, k_person_body_radius);
-}
-
 auto cell_is_open(const Pathfinding& pathfinder,
                   int grid_x,
                   int grid_z,
@@ -159,8 +155,8 @@ auto can_stand_on(Pathfinding* pathfinder,
   Engine::Core::NavScope const scope(Engine::Core::NavCounter::StandabilityTests);
   if (pathfinder == nullptr) {
 
-    return building_body_penetration(
-               position.x(), position.z(), facade_reach(profile)) <= 0.0F;
+    return building_body_penetration(position.x(), position.z(), profile.radius) <=
+           0.0F;
   }
 
   float const radius = profile.clearance();
@@ -173,8 +169,8 @@ auto can_stand_on(Pathfinding* pathfinder,
     return false;
   }
   if (profile.stops_at_building_facade) {
-    return building_body_penetration(
-               position.x(), position.z(), facade_reach(profile)) <= 0.0F;
+    return building_body_penetration(position.x(), position.z(), profile.radius) <=
+           0.0F;
   }
   return true;
 }
@@ -195,7 +191,7 @@ auto penetration(const QVector3D& position, const BodyProfile& profile) -> float
   auto* pathfinder = current_pathfinder();
   float deepest =
       profile.stops_at_building_facade
-          ? building_body_penetration(position.x(), position.z(), facade_reach(profile))
+          ? building_body_penetration(position.x(), position.z(), profile.radius)
           : 0.0F;
   if (pathfinder == nullptr) {
     return deepest;

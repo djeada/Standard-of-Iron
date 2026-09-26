@@ -29,8 +29,8 @@ bool character_fade_discards(float alpha) {
   if (alpha >= 0.999) {
     return false;
   }
-  float threshold = fract(
-      52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));
+  float threshold =
+      fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));
   return threshold >= alpha;
 }
 
