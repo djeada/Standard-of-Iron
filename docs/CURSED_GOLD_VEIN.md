@@ -67,6 +67,10 @@ Health represents manpower, so the curse produces a steady trickle of casualties
 
 The query is bounded by the world spatial index. The system searches only the relevant radius and never scans the entire world for victims.
 
+## AI opponents
+
+AI opponents claim veins: `GoldVeinBehavior` sends a pair of soldiers to the nearest vein the AI does not hold and releases them once it is won, so they leave the curse radius. See "Gold veins and the market" in [AI_ARCHITECTURE.md](AI_ARCHITECTURE.md).
+
 ## Ownership changes and destruction
 
 Changing ownership resets the tick clock, preventing a newly captured vein from inheriting a partially elapsed payout interval.

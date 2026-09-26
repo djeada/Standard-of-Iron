@@ -139,7 +139,6 @@ private:
 
   float m_total_game_time = 0.0F;
   float m_update_interval = 0.3F;
-  float m_next_trace_time = 0.0F;
   std::uint64_t m_completed_decision_count{0};
   std::uint64_t m_snapshot_build_count{0};
   std::uint64_t m_applied_command_count{0};
@@ -156,7 +155,6 @@ private:
   std::atomic<bool> m_initial_decisions_ready{false};
 
   void initialize_ai_players();
-  void trace_progress(const Engine::Core::World& world);
 
   auto submit_decision_job(AIInstance& ai,
                            Engine::Core::World& world,

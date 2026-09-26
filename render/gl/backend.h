@@ -309,13 +309,11 @@ private:
   auto create_subsystem(std::unique_ptr<Subsystem>& slot,
                         const char* name,
                         Args&&... args) -> bool {
-    qInfo() << "Backend: Creating" << name << "...";
     slot = std::make_unique<Subsystem>(std::forward<Args>(args)...);
     if (!slot->initialize()) {
       qCritical() << "Backend::initialize() FAILED:" << name;
       return false;
     }
-    qInfo() << "Backend:" << name << "initialized";
     return true;
   }
 

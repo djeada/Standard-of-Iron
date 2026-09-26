@@ -285,9 +285,7 @@ the gateway case for the same reason.
 **Iterate headlessly.** `build/bin/ai_tests
 --gtest_filter='AiEstateEconomyTest.*'` is the same estate in forty seconds a
 run, deterministic, with `SOI_ESTATE_LOG=1` printing a per-minute census,
-muster, work sample and purse, and `SOI_BUILD_TRACE=1` printing every site the
-AI wants, submits, raises, refuses and gives up on. Four economy defects came
-out of that lane, none of them visible from the census alone:
+muster, work sample and purse. Four economy defects came out of that lane:
 
 - the settlement ring in `planned_settlement_offset` had no cap, and because
   `m_construction_counter` grows by 24 on every refused site, within eight

@@ -1334,8 +1334,6 @@ auto main(int argc, char* argv[]) -> int {
     window->update();
   }
 
-  qInfo() << "Connecting scene graph signals...";
-  qInfo() << "Connecting scene graph signals...";
   QObject::connect(window,
                    &QQuickWindow::sceneGraphInitialized,
                    window,

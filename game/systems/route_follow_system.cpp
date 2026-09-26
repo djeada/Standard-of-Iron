@@ -323,7 +323,6 @@ void RouteFollowSystem::update(Engine::Core::World* world, float delta_time) {
         auto* entity = world->get_entity(id);
         if (entity != nullptr) {
           follow(*entity, *world, delta_time);
-          report_idle_order(*entity, *world);
         }
       });
 
@@ -908,66 +907,6 @@ auto RouteFollowSystem::track_objective_stall(
   }
 
   return false;
-}
-
-void RouteFollowSystem::report_idle_order(const Engine::Core::Entity& entity,
-                                          const Engine::Core::World& world) {
-  static bool const enabled = std::getenv("SOI_DEBUG_IDLE_ORDER") != nullptr;
-  if (!enabled) {
-    return;
-  }
-  auto const* movement =
-      world.try_get<Engine::Core::MovementComponent>(entity.get_id());
-  auto const* facts =
-      world.try_get<Engine::Core::MovementFactsComponent>(entity.get_id());
-  auto const* transform =
-      world.try_get<Engine::Core::TransformComponent>(entity.get_id());
-  if (movement == nullptr || facts == nullptr || transform == nullptr ||
-      !movement->get_has_target()) {
-    return;
-  }
-  float const speed = facts->desired.valid ? planar_length(facts->desired.velocity_x,
-                                                           facts->desired.velocity_z)
-                                           : 0.0F;
-  if (speed > 1.0e-3F || facts->progress.remaining_arclength < 1.0F ||
-      classify_movement_gate(entity) != MovementGate::RouteFollowing) {
-    return;
-  }
-  if (world.tick_id() % 15U != 0U) {
-    return;
-  }
-  auto const found = m_routes.find(entity.get_id());
-  bool const has_route = found != m_routes.end() && found->second.valid();
-  std::fprintf(
-      stderr,
-      "SOI_IDLE_ORDER tick=%llu entity=%llu state=%s rung=%d desired_valid=%d "
-      "pos=(%.2f,%.2f) target=(%.2f,%.2f) goal=(%.2f,%.2f) requested=(%.2f,%.2f) "
-      "aim=(%.2f,%.2f) remaining=%.2f route=%d length=%.2f travelled=%.2f "
-      "points=%zu path=%zu index=%zu allowed_here=%d\n",
-      static_cast<unsigned long long>(world.tick_id()),
-      static_cast<unsigned long long>(entity.get_id()),
-      Engine::Core::movement_state_name(facts->progress.state),
-      static_cast<int>(facts->progress.stall.rung),
-      static_cast<int>(facts->desired.valid),
-      transform->position.x,
-      transform->position.z,
-      movement->get_target_x(),
-      movement->get_target_y(),
-      movement->get_goal_x(),
-      movement->get_goal_y(),
-      movement->get_requested_goal_x(),
-      movement->get_requested_goal_z(),
-      facts->desired.lookahead_x,
-      facts->desired.lookahead_z,
-      facts->progress.remaining_arclength,
-      static_cast<int>(has_route),
-      has_route ? found->second.length() : 0.0F,
-      has_route ? found->second.travelled() : 0.0F,
-      has_route ? found->second.point_count() : 0U,
-      movement->get_path().size(),
-      movement->get_path_index(),
-      static_cast<int>(is_movement_point_allowed(
-          QVector3D(transform->position.x, 0.0F, transform->position.z), entity)));
 }
 
 auto RouteFollowSystem::route_for(Engine::Core::EntityID entity_id) const

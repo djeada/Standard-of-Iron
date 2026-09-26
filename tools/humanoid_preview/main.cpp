@@ -564,32 +564,6 @@ auto scan_legs(const BpatBlob& blob, const std::string& only) -> int {
                                   left ? Bone::FootL : Bone::FootR,
                                   forward,
                                   left ? -right : right);
-        if (std::getenv("SOI_SCAN_LEGS_DUMP") != nullptr) {
-          auto const h = bone_origin(palette, left ? Bone::HipL : Bone::HipR);
-          auto const k = bone_origin(palette, left ? Bone::KneeL : Bone::KneeR);
-          auto const ft = bone_origin(palette, left ? Bone::FootL : Bone::FootR);
-          std::cout << QString::asprintf(
-                           "  f%-3u %s hip(%+.2f,%+.2f,%+.2f) knee(%+.2f,%+.2f,%+.2f) "
-                           "foot(%+.2f,%+.2f,%+.2f) flex %.0f fwd %+.3f out %+.3f "
-                           "facing(%+.2f,%+.2f)\n",
-                           f,
-                           left ? "L" : "R",
-                           h.x(),
-                           h.y(),
-                           h.z(),
-                           k.x(),
-                           k.y(),
-                           k.z(),
-                           ft.x(),
-                           ft.y(),
-                           ft.z(),
-                           static_cast<double>(leg.flex),
-                           static_cast<double>(leg.knee_forward),
-                           static_cast<double>(leg.knee_outward),
-                           forward.x(),
-                           forward.z())
-                           .toStdString();
-        }
         if (leg.flex > 12.0F && -leg.knee_forward > worst_back) {
           worst_back = -leg.knee_forward;
           back_frame = f;

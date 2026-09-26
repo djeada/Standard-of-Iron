@@ -112,8 +112,6 @@ void render_production_completions(Renderer* renderer,
     return;
   }
 
-  static const bool trace = qEnvironmentVariableIsSet("SOI_FX_TRACE");
-
   const auto& world_view = renderer->world_view();
   const auto visibility = world_view.has_visibility()
                               ? world_view.visibility()->snapshot_ptr()
@@ -151,14 +149,6 @@ void render_production_completions(Renderer* renderer,
     const float time = reduced_motion ? 0.0F : age;
     const float radius =
         effect.radius * (reduced_motion ? 1.0F : 1.0F + 0.18F * progress);
-    if (trace) {
-      qWarning("FXTRACE completion p%d age %.2f radius %.2f at %.1f %.1f",
-               unit.owner_id,
-               static_cast<double>(age),
-               static_cast<double>(effect.radius),
-               static_cast<double>(ground.x()),
-               static_cast<double>(ground.z()));
-    }
 
     submit_ground_disc(renderer,
                        ground,

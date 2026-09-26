@@ -188,6 +188,7 @@ struct EntitySnapshot {
   int max_health = 0;
   bool is_building = false;
   bool is_commander = false;
+  Engine::Core::EntityID attack_target_id = 0;
 
   int squad_strength = 0;
   int squad_establishment = 1;
@@ -231,6 +232,13 @@ struct ContactSnapshot {
   Game::Units::SpawnType spawn_type = Game::Units::SpawnType::Archer;
 };
 
+struct GoldVeinSnapshot {
+  Engine::Core::EntityID anchor_id = 0;
+  int owner_id = 0;
+  float pos_x = 0.0F;
+  float pos_z = 0.0F;
+};
+
 using KnownObjectives = std::unordered_map<Engine::Core::EntityID, ContactSnapshot>;
 
 struct AllyCall {
@@ -263,6 +271,7 @@ struct AISnapshot {
   std::vector<ContactSnapshot> visible_enemies;
   std::vector<ContactSnapshot> strategic_objectives;
   std::vector<ContactSnapshot> defense_anchors;
+  std::vector<GoldVeinSnapshot> gold_veins;
   std::vector<ResourceNodeSnapshot> resource_nodes;
   ResourceAmounts resources;
   bool has_resource_snapshot = false;
@@ -555,6 +564,8 @@ struct AIContext {
     float last_order_time = -1000.0F;
   };
   AttackWave wave;
+
+  Game::Systems::ResourceAmounts construction_need{};
 
   std::vector<Engine::Core::EntityID> garrison_unit_ids;
 

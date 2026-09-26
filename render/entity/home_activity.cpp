@@ -165,10 +165,6 @@ auto HomeActivity::meal_bias() const noexcept -> float {
 
 auto HomeActivity::hearth_intensity(std::uint64_t id, float time) const -> float {
 
-  static const bool always = ambient_review_interval("SOI_HOME_SMOKE_ALWAYS") > 0.0F;
-  if (always) {
-    return 0.85F;
-  }
   const auto seed = mix(low32(id));
 
   const float offset = static_cast<float>(seed % 1000U) / 1000.0F * k_hearth_period;
@@ -319,16 +315,7 @@ auto HomeActivity::shutter_angle(std::uint64_t id, int window) const -> float {
 }
 
 auto HomeActivity::gag(std::uint64_t id, float time) -> float {
-  const float review = ambient_review_interval("SOI_HOME_GAG_SECONDS");
-  if (gag_home == 0 && actors_allowed && review > 0.0F) {
-    const auto cycle =
-        static_cast<std::uint32_t>(std::max(0.0F, std::floor(time / review)));
-    const float start = static_cast<float>(cycle) * review;
-    if (previous_time < start && time >= start) {
-      gag_home = id;
-      gag_started = time;
-    }
-  } else if (gag_home == 0 && actors_allowed) {
+  if (gag_home == 0 && actors_allowed) {
 
     const float interval = std::max(330.0F, cooldown_seconds * 0.6F);
 

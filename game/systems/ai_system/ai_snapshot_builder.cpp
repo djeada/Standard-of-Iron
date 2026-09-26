@@ -1,5 +1,7 @@
 #include "ai_snapshot_builder.h"
 
+#include <QVector3D>
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -436,6 +438,10 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
     }
 
     EntitySnapshot data;
+    if (const auto* attack =
+            world.try_get<Engine::Core::AttackTargetComponent>(entity->get_id())) {
+      data.attack_target_id = attack->target_id;
+    }
     data.id = entity->get_id();
     data.spawn_type = unit->spawn_type;
     data.owner_id = unit->owner_id;
@@ -576,6 +582,45 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
       anchor.health = 1;
       anchor.max_health = 1;
       snapshot.defense_anchors.push_back(std::move(anchor));
+    }
+  }
+
+  std::vector<QVector3D> vein_sites;
+  for (const auto& prop : terrain_service.world_props()) {
+    if (prop.type == Game::Map::WorldProp::Type::CursedGoldVein) {
+      vein_sites.push_back(terrain_service.world_prop_world_position(prop));
+    }
+  }
+  if (!vein_sites.empty()) {
+    constexpr float k_anchor_reach = 3.0F;
+    auto note_vein = [&](Engine::Core::Entity* entity) {
+      const auto* unit = world.try_get<Engine::Core::UnitComponent>(entity->get_id());
+      const auto* transform =
+          world.try_get<Engine::Core::TransformComponent>(entity->get_id());
+      if (unit == nullptr || transform == nullptr || unit->health <= 0 ||
+          unit->spawn_type != Game::Units::SpawnType::Barracks) {
+        return;
+      }
+      for (const auto& site : vein_sites) {
+        if (distance_squared(transform->position.x,
+                             0.0F,
+                             transform->position.z,
+                             site.x(),
+                             0.0F,
+                             site.z()) <= k_anchor_reach * k_anchor_reach) {
+          snapshot.gold_veins.push_back({.anchor_id = entity->get_id(),
+                                         .owner_id = unit->owner_id,
+                                         .pos_x = transform->position.x,
+                                         .pos_z = transform->position.z});
+          return;
+        }
+      }
+    };
+    for (auto* entity : friendlies) {
+      note_vein(entity);
+    }
+    for (auto* entity : enemies) {
+      note_vein(entity);
     }
   }
 

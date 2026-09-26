@@ -40,7 +40,6 @@ auto ModeIndicatorPipeline::initialize() -> bool {
     cache_instanced_uniforms();
   }
 
-  qInfo() << "ModeIndicatorPipeline initialized successfully";
   return is_initialized();
 }
 

@@ -24,16 +24,22 @@ constexpr float k_patrol_goal_epsilon_sq = 0.01F;
 
 constexpr std::uint64_t k_enemy_scan_interval_ticks = 8;
 
-auto already_walking_to(const Engine::Core::MovementComponent& movement,
-                        float target_x,
-                        float target_z) -> bool {
-  if (!movement.get_has_target() || !movement.has_waypoints() ||
-      !movement.get_has_requested_goal()) {
+auto ordered_to(const Engine::Core::MovementComponent& movement,
+                float target_x,
+                float target_z) -> bool {
+  if (!movement.get_has_requested_goal()) {
     return false;
   }
   float const dx = movement.get_requested_goal_x() - target_x;
   float const dz = movement.get_requested_goal_z() - target_z;
   return (dx * dx) + (dz * dz) <= k_patrol_goal_epsilon_sq;
+}
+
+auto already_walking_to(const Engine::Core::MovementComponent& movement,
+                        float target_x,
+                        float target_z) -> bool {
+  return movement.get_has_target() && movement.has_waypoints() &&
+         ordered_to(movement, target_x, target_z);
 }
 
 } // namespace
@@ -129,7 +135,12 @@ void PatrolSystem::run(Engine::Core::SystemContext& context) {
     float const dz = target_z - transform.position.z;
     float const dist_sq = dx * dx + dz * dz;
 
-    if (dist_sq < 1.0F) {
+    float const to_goal_x = movement.get_goal_x() - transform.position.x;
+    float const to_goal_z = movement.get_goal_y() - transform.position.z;
+    bool const as_near_as_it_can_get =
+        movement.get_order_fell_short() && ordered_to(movement, target_x, target_z) &&
+        (to_goal_x * to_goal_x) + (to_goal_z * to_goal_z) < 1.0F;
+    if (dist_sq < 1.0F || as_near_as_it_can_get) {
 
       patrol->current_waypoint =
           (patrol->current_waypoint + 1) % patrol->waypoints.size();

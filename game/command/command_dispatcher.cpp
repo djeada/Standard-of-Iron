@@ -485,10 +485,6 @@ void apply_start_construction(World& world,
   auto& session = Game::Session::session_for(world);
   auto& resources = session.economy();
   if (!costs.empty() && !resources.has_at_least(owner_id, costs)) {
-    if (qEnvironmentVariableIsSet("SOI_BUILD_TRACE")) {
-      qWarning() << "BUILDTRACE p" << owner_id << "cannot pay for"
-                 << order.construction_type.c_str();
-    }
     return;
   }
 
@@ -500,12 +496,6 @@ void apply_start_construction(World& world,
                                                     order.rotation_y,
                                                     order.units);
   if (verdict != Game::Systems::GroundVerdict::Clear) {
-    if (qEnvironmentVariableIsSet("SOI_BUILD_TRACE")) {
-      qWarning() << "BUILDTRACE p" << owner_id << "ground refused"
-                 << order.construction_type.c_str() << "at" << order.site.x()
-                 << order.site.z() << "yaw" << order.rotation_y << "verdict"
-                 << static_cast<int>(verdict);
-    }
     return;
   }
 
@@ -522,11 +512,6 @@ void apply_start_construction(World& world,
       movement->set_rest_position(order.site.x(), order.site.z());
     }
     assigned_any = true;
-  }
-  if (qEnvironmentVariableIsSet("SOI_BUILD_TRACE")) {
-    qWarning() << "BUILDTRACE p" << owner_id << "assigned" << assigned_any
-               << order.construction_type.c_str() << "units" << order.units.size()
-               << "at" << order.site.x() << order.site.z() << "yaw" << order.rotation_y;
   }
   if (assigned_any) {
     Game::Systems::spend_resources_at(

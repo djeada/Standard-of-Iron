@@ -405,8 +405,8 @@ surface pass at 1.78 ms before and 1.23 ms after.
 ### Baked terrain shader variant
 
 `terrain_chunk.frag` is compiled twice. `terrain_chunk` keeps the procedural fallbacks for
-when the per-map noise atlas or microdetail texture is missing (`SOI_TERRAIN_NOISE_BAKE=0`
-or a failed bake). `terrain_chunk_baked` is compiled with `SOI_TERRAIN_BAKED`, which turns
+when the per-map noise atlas or microdetail texture is missing (a failed
+bake). `terrain_chunk_baked` is compiled with `SOI_TERRAIN_BAKED`, which turns
 `HAS_NOISE_ATLAS` and `HAS_MICRODETAIL` into compile-time `true`, so the compiler drops the
 fallback code instead of carrying it behind a uniform branch. The executor picks the baked
 program per draw when the command's height resources carry all three textures, and

@@ -434,7 +434,6 @@ void GameEngine::build_services_and_controllers() {
       [this](bool loading) { m_match_setup_view_model->set_maps_loading(loading); });
 
   if (AudioSystem::get_instance().initialize()) {
-    qInfo() << "AudioSystem initialized successfully";
     AudioResourceLoader::load_audio_resources();
     AudioResourceLoader::load_audio_cues();
   } else {
@@ -542,7 +541,6 @@ void GameEngine::build_services_and_controllers() {
               }});
   m_skirmish_runtime = std::make_unique<App::Core::SkirmishRuntimeCoordinator>();
   if (m_audio_event_handler->initialize()) {
-    qInfo() << "AudioEventHandler initialized successfully";
     AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Screen);
     m_audio_coordinator->configure_audio_manifest_mappings(m_runtime.local_owner_id);
 

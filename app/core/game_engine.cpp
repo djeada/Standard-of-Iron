@@ -66,7 +66,6 @@
 #include "app/commander/commander_status_builder.h"
 #include "app/core/frame_ui_coordinator.h"
 #include "app/core/game_speed.h"
-#include "app/core/loading_overlay_log.h"
 #include "app/core/match_presentation_sync.h"
 #include "app/core/user_settings.h"
 #include "app/economy/harvest_targeting.h"
@@ -1316,22 +1315,12 @@ void GameEngine::update_loading_overlay() {
 
   if (!m_renderer || (m_renderer->resources() == nullptr)) {
     m_loading_overlay_frames_remaining = 5;
-    m_loading_overlay_last_frame_ms = 0;
     m_loading_overlay_timer.restart();
     return;
   }
 
   if (m_loading_overlay_frames_remaining > 0) {
     m_loading_overlay_frames_remaining--;
-
-    const qint64 now_ms =
-        m_loading_overlay_timer.isValid() ? m_loading_overlay_timer.elapsed() : 0;
-    qInfo().noquote() << App::Core::format_loading_overlay_line(
-        5 - m_loading_overlay_frames_remaining,
-        5,
-        now_ms,
-        m_loading_overlay_last_frame_ms);
-    m_loading_overlay_last_frame_ms = now_ms;
   }
 
   constexpr qint64 k_loading_overlay_max_wait_ms = 15000;
@@ -1934,7 +1923,6 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
   }
 
   m_finalize_progress_after_overlay = false;
-  m_loading_overlay_last_frame_ms = 0;
   m_loading_overlay_active = true;
   m_runtime.loading = true;
   {
@@ -3460,7 +3448,6 @@ void GameEngine::load_game_from_slot(const QString& slot_name) {
   m_runtime.loading = false;
   m_loading_overlay_wait_for_first_frame.store(true, std::memory_order_release);
   m_loading_overlay_frames_remaining = 5;
-  m_loading_overlay_last_frame_ms = 0;
   m_loading_overlay_min_duration_ms = 1000;
   m_loading_overlay_timer.restart();
   m_finalize_progress_after_overlay = true;

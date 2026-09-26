@@ -43,7 +43,6 @@ auto HealingBeamPipeline::initialize() -> bool {
     return false;
   }
 
-  qInfo() << "HealingBeamPipeline initialized successfully";
   return is_initialized();
 }
 

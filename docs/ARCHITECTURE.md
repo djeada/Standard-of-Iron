@@ -149,7 +149,7 @@ The main ingredients are:
 
 ### What the replay digest covers
 
-`subsystem_digests()` hashes per-entity lines (identity, movement, combat, status, economy, wildlife), the session clock, RNG draw count and resource stock. It also hashes a `systems` part: the `digest` view of every registered `SessionSnapshot` contributor, serialized as compact JSON. Today those are AI runtime state (without `next_trace_time`, which only drives tracing), undead zones, cursed gold veins, and wildlife groups (without the bird flocks, which are cosmetic and follow the camera).
+`subsystem_digests()` hashes per-entity lines (identity, movement, combat, status, economy, wildlife), the session clock, RNG draw count and resource stock. It also hashes a `systems` part: the `digest` view of every registered `SessionSnapshot` contributor, serialized as compact JSON. Today those are AI runtime state, undead zones, cursed gold veins, and wildlife groups (without the bird flocks, which are cosmetic and follow the camera).
 
 A contributor opts in by providing `SnapshotContributor::digest`. The victory contributor does not: `VictoryService` and the mission-wave runtime are owned by `GameEngine`, so a headless replay would not produce the same part. Their timers are still tick-driven (see [VICTORY_SYSTEM.md](VICTORY_SYSTEM.md)), but a divergence there is not caught by the digest until they move into the session.
 
@@ -243,6 +243,8 @@ Examples include:
 - performance gates consuming runtime profiling counters and reports.
 
 A tool can add orchestration or measurement, but it should not invent a second rule set for the subsystem it is measuring.
+
+`soi_headless --map` once fell short of this: it loaded the match but skipped `configure_map_systems` and the map's starting stock, so its matches had no cursed gold veins and every economy started empty. It now configures the map systems and endows every owner with the map's `starting_resources` (gold from `GameConfig::get_starting_gold`), as a live skirmish does.
 
 ## Architecture enforcement
 

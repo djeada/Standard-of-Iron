@@ -522,16 +522,6 @@ void apply_clip_blend(Actor& actor, const ActorPose& pose) {
   }
 }
 
-auto gag_review_interval() -> float {
-  static const float seconds = []() {
-    const char* value = std::getenv("SOI_FARM_GAG_SECONDS");
-    if (value == nullptr) {
-      return 0.0F;
-    }
-    return std::max(0.0F, static_cast<float>(std::atof(value)));
-  }();
-  return seconds;
-}
 } // namespace
 
 auto farm_worker_visual(bool carthage) -> const FarmWorkerVisual& {
@@ -731,17 +721,7 @@ auto FarmActivity::gag(std::uint64_t id,
   if (gag_field == id && gag_stage != stage) {
     gag_field = 0;
   }
-  const float review = gag_review_interval();
-  if (gag_field == 0 && workers_per_field >= 2 && review > 0.0F) {
-    const auto cycle =
-        static_cast<std::uint32_t>(std::max(0.0F, std::floor(time / review)));
-    const float start = static_cast<float>(cycle) * review;
-    if (may_start && previous_time < start && time >= start) {
-      gag_field = id;
-      gag_stage = stage;
-      gag_started = time;
-    }
-  } else if (gag_field == 0 && workers_per_field >= 2) {
+  if (gag_field == 0 && workers_per_field >= 2) {
 
     const float interval = std::max(330.0F, cooldown_seconds * 0.6F);
 

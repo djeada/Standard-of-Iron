@@ -169,10 +169,6 @@ coworker does not skate. The sequence only starts when the sleeper's own loop
 keeps it on the spot for the full nine seconds (`farm_worker_stays_put`), so
 nobody sleeps while sliding down the row. Worker 2 keeps working throughout.
 
-`SOI_FARM_GAG_SECONDS=<n>` is the review hook: it forces the sequence to start
-every _n_ seconds on every eligible field, which is the only practical way to
-capture something meant to happen twice an hour.
-
 `FarmActivity::cooldown_seconds` defaults to 600 seconds and clamps to at least 300. Entity/cycle hashes select only roughly one quarter of eligible scheduling
 windows, with different start offsets. Consecutive possible starts are separated
 by at least the configured cooldown. Missed off-screen windows are not queued.
@@ -189,7 +185,6 @@ QT_QPA_PLATFORM=offscreen LC_ALL=C build/bin/render_tests --gtest_filter='FarmAc
 DISPLAY=:0 build/bin/arena_app --batch --scenario farm_activity_single --clean-capture --capture-interval 4 --artifact-dir /tmp/farm-single
 DISPLAY=:0 build/bin/arena_app --batch --scenario farm_activity_dense --scenario-distance 0.55 --clean-capture --capture-interval 6 --artifact-dir /tmp/farm-dense
 DISPLAY=:0 build/bin/arena_app --batch --scenario farm_activity_single --fog-of-war --clean-capture --capture-interval 4 --artifact-dir /tmp/farm-fog
-SOI_FARM_GAG_SECONDS=10 DISPLAY=:0 build/bin/arena_app --batch --scenario farm_activity_lazy_farmer --duration 20 --scenario-distance 0.75 --clean-capture --capture-interval 1 --artifact-dir /tmp/farm-lazy
 ```
 
 `building_preview` cannot show these workers: it replays captured primitive
@@ -215,10 +210,8 @@ Graphics-quality overrides exercise the LOD tiers.
 
 `farm_activity_lazy_farmer` is the exception. It frames a single field closely
 and holds it ripe, because a growth change cancels the sequence by design and
-would cut every capture short. Pair it with `SOI_FARM_GAG_SECONDS`; the
-deterministic scheduling test already covers the real cooldown, the shared
-concurrency cap and cancellation, so nobody has to sit through ten minutes of
-wheat to check the timing.
+would cut every capture short. The deterministic scheduling test covers the
+cooldown, the shared concurrency cap and cancellation.
 
 ## Ripe and reaped fields
 

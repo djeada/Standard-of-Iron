@@ -70,10 +70,7 @@ auto command_source_of(const Engine::Core::Entity* entity) -> CommandSource {
   return CommandSource::Auto;
 }
 
-EngagementTrace::EngagementTrace() {
-  m_log_to_console = !qEnvironmentVariableIsEmpty("SOI_ENGAGEMENT_TRACE");
-  m_enabled = m_log_to_console;
-}
+EngagementTrace::EngagementTrace() = default;
 
 auto EngagementTrace::instance() -> EngagementTrace& {
   static EngagementTrace trace;
@@ -81,7 +78,7 @@ auto EngagementTrace::instance() -> EngagementTrace& {
 }
 
 void EngagementTrace::set_enabled(bool enabled) {
-  m_enabled = enabled || m_log_to_console;
+  m_enabled = enabled;
   if (!m_enabled) {
     m_records.clear();
   }
@@ -94,22 +91,6 @@ void EngagementTrace::record(const Engine::Core::Entity* entity,
   }
 
   m_records[entity->get_id()] = record;
-
-  if (!m_log_to_console) {
-    return;
-  }
-
-  auto const reason = engagement_outcome_key(record.outcome);
-  auto const source = command_source_key(record.source);
-  qInfo().nospace() << "SOI_ENGAGEMENT unit=" << entity->get_id()
-                    << " candidate=" << record.candidate_id
-                    << " target=" << record.target_id
-                    << " range=" << record.acquisition_range << " reason="
-                    << QLatin1StringView(reason.data(),
-                                         static_cast<qsizetype>(reason.size()))
-                    << " source="
-                    << QLatin1StringView(source.data(),
-                                         static_cast<qsizetype>(source.size()));
 }
 
 auto EngagementTrace::find(Engine::Core::EntityID entity_id) const

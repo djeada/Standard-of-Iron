@@ -41,7 +41,6 @@ auto HealerAuraPipeline::initialize() -> bool {
     return false;
   }
 
-  qInfo() << "HealerAuraPipeline initialized successfully";
   return is_initialized();
 }
 

@@ -1,10 +1,12 @@
 #pragma once
 
+#include <vector>
+
 #include "../ai_behavior.h"
 
 namespace Game::Systems::AI {
 
-class AttackBehavior : public AIBehavior {
+class GoldVeinBehavior : public AIBehavior {
 public:
   void execute(const AISnapshot& snapshot,
                AIContext& context,
@@ -18,16 +20,15 @@ public:
     return BehaviorPriority::Normal;
   }
 
-  [[nodiscard]] auto can_run_concurrently() const -> bool override { return false; }
-
-  [[nodiscard]] auto
-  yields_to_exclusive(const AIContext& context) const -> bool override;
+  [[nodiscard]] auto can_run_concurrently() const -> bool override { return true; }
 
 private:
-  float m_attack_timer = 0.0F;
-  Engine::Core::EntityID m_last_target = 0;
-  float m_target_lock_duration = 0.0F;
-  Engine::Core::EntityID m_advance_target = 0;
+  float m_timer = 0.0F;
+  Engine::Core::EntityID m_vein = 0;
+  std::vector<Engine::Core::EntityID> m_party;
+  float m_sent_at = 0.0F;
+  Engine::Core::EntityID m_given_up = 0;
+  float m_given_up_until = 0.0F;
 };
 
 } // namespace Game::Systems::AI

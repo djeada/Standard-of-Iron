@@ -15,8 +15,11 @@
 #include "game/command/command_queue.h"
 #include "game/command/replay.h"
 #include "game/core/world.h"
+#include "game/game_config.h"
+#include "game/map/map_context.h"
 #include "game/map/map_transformer.h"
 #include "game/map/match_loader.h"
+#include "game/session/map_session.h"
 #include "game/session/session_context.h"
 #include "game/session/simulation_clock.h"
 #include "game/session/world_digest.h"
@@ -25,6 +28,7 @@
 #include "game/systems/nation_registry.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
+#include "game/systems/player_resource_registry.h"
 #include "game/systems/runtime_system_registry.h"
 
 namespace {
@@ -110,6 +114,21 @@ auto run_real_match_setup(Game::Session::SessionContext& session,
 
   Game::Systems::NavGrid::initialize(loaded.grid_width, loaded.grid_height);
   Game::Systems::register_runtime_systems(session.world());
+
+  if (const auto context = Game::Map::MapContextStore::acquire(
+          QString::fromStdString(options.map), nullptr);
+      context.valid()) {
+    const auto& definition = *context.definition();
+    Game::Session::configure_map_systems(session.world(), definition, nullptr);
+    Game::Systems::ResourceAmounts stock = definition.starting_resources;
+    stock.set(Game::Systems::ResourceType::Gold,
+              Game::GameConfig::instance().get_starting_gold());
+    for (const auto& owner : session.owners().get_all_owners()) {
+      for (const auto type : Game::Systems::k_all_resource_types) {
+        session.economy().set(owner.owner_id, type, stock.get(type));
+      }
+    }
+  }
 
   std::printf("soi_headless: loaded %s (%dx%d, local owner %d)\n",
               loaded.map_name.toStdString().c_str(),

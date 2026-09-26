@@ -503,22 +503,6 @@ auto run(const RunnerConfig& config, const TickObserver& observer) -> CaptureRes
         ++out.performance.damage_events;
         if (!action->action_running && !action->action_completed) {
           ++out.quality.damage_without_visible_action;
-          if (!qEnvironmentVariableIsEmpty("SOI_CAPTURE_TRACE") &&
-              out.quality.damage_without_visible_action < 12U) {
-            qWarning("invisible damage: entity=%llu spawn=%s action_id=%u phase=%u "
-                     "duration=%.3f elapsed=%.3f norm=%.3f active=%d trace=%d "
-                     "damage=%d",
-                     static_cast<unsigned long long>(id),
-                     Game::Units::spawn_typeToString(unit->spawn_type).c_str(),
-                     static_cast<unsigned>(action->combat_action_id),
-                     static_cast<unsigned>(action->phase),
-                     action->action_duration,
-                     action->action_elapsed_time,
-                     action->normalized_action_time,
-                     static_cast<int>(action->action_active),
-                     static_cast<int>(action->weapon_trace_active),
-                     action->last_damage);
-          }
         }
       }
       previous_action_damage[id] = action != nullptr ? action->last_damage : 0;

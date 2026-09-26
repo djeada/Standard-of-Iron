@@ -156,6 +156,14 @@ inline auto picks_its_own_fights(const EntitySnapshot& entity) -> bool {
   return !entity.is_building && Game::Units::pursues_targets(entity.spawn_type);
 }
 
+inline auto is_gold_vein_anchor(const AISnapshot& snapshot,
+                                Engine::Core::EntityID id) -> bool {
+  return std::any_of(
+      snapshot.gold_veins.begin(),
+      snapshot.gold_veins.end(),
+      [id](const GoldVeinSnapshot& vein) { return vein.anchor_id == id; });
+}
+
 inline auto is_war_contact(const ContactSnapshot& contact) -> bool {
   return !Game::Units::is_wildlife_spawn(contact.spawn_type) &&
          !Game::Core::is_neutral_owner(contact.owner_id);

@@ -74,9 +74,7 @@ void register_runtime_systems(Engine::Core::World& world) {
          if (system == nullptr) {
            return {};
          }
-         QJsonObject state = system->serialize_state();
-         state.remove(QStringLiteral("next_trace_time"));
-         return state;
+         return system->serialize_state();
        }});
 
   world.add_system(std::make_unique<Game::Command::CommandSystem>(),

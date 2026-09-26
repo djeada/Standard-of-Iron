@@ -78,7 +78,6 @@ private:
   EngagementTrace();
 
   bool m_enabled{false};
-  bool m_log_to_console{false};
   std::unordered_map<Engine::Core::EntityID, EngagementRecord> m_records;
 };
 

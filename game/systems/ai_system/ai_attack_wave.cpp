@@ -4,6 +4,7 @@
 #include <QtGlobal>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <limits>
 #include <unordered_set>
@@ -34,6 +35,7 @@ auto minimum_deployable_strength(const AIContext& context, int required) -> int 
 namespace {
 
 constexpr float k_wave_refill_radius = 30.0F;
+constexpr float k_wave_call_up_seconds = 60.0F;
 constexpr float k_wave_progress_metres = 4.0F;
 constexpr float k_wave_stall_seconds = 180.0F;
 
@@ -89,14 +91,16 @@ auto spent_fraction_for(const AIContext& context) -> float {
   return doctrine != nullptr ? doctrine->wave.spent_fraction : 0.35F;
 }
 
-auto nearest_matching(const std::vector<ContactSnapshot>& contacts,
+auto nearest_matching(const AISnapshot& snapshot,
+                      const std::vector<ContactSnapshot>& contacts,
                       DoctrineTarget target_kind,
                       float from_x,
                       float from_z) -> const ContactSnapshot* {
   const ContactSnapshot* best = nullptr;
   float best_distance_sq = std::numeric_limits<float>::infinity();
   for (const auto& contact : contacts) {
-    if (contact.health <= 0 || !matches_target(contact, target_kind)) {
+    if (contact.health <= 0 || !matches_target(contact, target_kind) ||
+        is_gold_vein_anchor(snapshot, contact.id)) {
       continue;
     }
     if (!is_war_contact(contact)) {
@@ -117,20 +121,67 @@ auto select_wave_target(const AISnapshot& snapshot,
                         float from_x,
                         float from_z) -> const ContactSnapshot* {
   for (const auto target_kind : target_priority_for(context)) {
-    if (const auto* seen =
-            nearest_matching(snapshot.visible_enemies, target_kind, from_x, from_z)) {
+    if (const auto* seen = nearest_matching(
+            snapshot, snapshot.visible_enemies, target_kind, from_x, from_z)) {
       return seen;
     }
   }
 
   for (const auto target_kind : target_priority_for(context)) {
     if (const auto* known = nearest_matching(
-            snapshot.strategic_objectives, target_kind, from_x, from_z)) {
+            snapshot, snapshot.strategic_objectives, target_kind, from_x, from_z)) {
       return known;
     }
   }
   return nullptr;
 }
+
+auto scout_point(const AISnapshot& snapshot,
+                 const AIContext& context,
+                 float from_x,
+                 float from_z,
+                 float& out_x,
+                 float& out_z) -> bool {
+  if (!snapshot.has_map_bounds || !context.has_base_anchor) {
+    return false;
+  }
+  constexpr float k_inset = 0.15F;
+  constexpr float k_home_radius = 40.0F;
+  const float inset_x = (snapshot.map_max_x - snapshot.map_min_x) * k_inset;
+  const float inset_z = (snapshot.map_max_z - snapshot.map_min_z) * k_inset;
+  const float min_x = snapshot.map_min_x + inset_x;
+  const float max_x = snapshot.map_max_x - inset_x;
+  const float min_z = snapshot.map_min_z + inset_z;
+  const float max_z = snapshot.map_max_z - inset_z;
+  if (distance_squared(
+          from_x, 0.0F, from_z, context.base_pos_x, 0.0F, context.base_pos_z) <
+      k_home_radius * k_home_radius) {
+    out_x = std::clamp(
+        snapshot.map_min_x + snapshot.map_max_x - context.base_pos_x, min_x, max_x);
+    out_z = std::clamp(
+        snapshot.map_min_z + snapshot.map_max_z - context.base_pos_z, min_z, max_z);
+    return true;
+  }
+  const std::array<std::pair<float, float>, 4> corners{
+      {{min_x, min_z}, {max_x, min_z}, {max_x, max_z}, {min_x, max_z}}};
+  std::size_t nearest = 0;
+  float best = std::numeric_limits<float>::infinity();
+  for (std::size_t i = 0; i < corners.size(); ++i) {
+    const float dist_sq = distance_squared(
+        corners[i].first, 0.0F, corners[i].second, from_x, 0.0F, from_z);
+    if (dist_sq < best) {
+      best = dist_sq;
+      nearest = i;
+    }
+  }
+  const auto& next = corners[(nearest + 1) % corners.size()];
+  out_x = next.first;
+  out_z = next.second;
+  return true;
+}
+
+constexpr float k_scout_arrival_metres = 20.0F;
+constexpr float k_scout_patience_seconds = 30.0F;
 
 auto find_contact(const AISnapshot& snapshot,
                   Engine::Core::EntityID id) -> const ContactSnapshot* {
@@ -305,11 +356,6 @@ auto join_an_ally_attack(const AISnapshot& snapshot,
   wave.assembling = false;
   wave.departed_under_strength = false;
   wave.ready_since = -1000.0F;
-  if (!qEnvironmentVariableIsEmpty("SOI_AI_TRACE")) {
-    qInfo().nospace() << "SOI_AI_TRACE ally_join player=" << context.player_id
-                      << " members=" << wave.members.size() << " target=" << best->id
-                      << " t=" << snapshot.game_time;
-  }
   return true;
 }
 
@@ -358,11 +404,6 @@ auto answer_an_ally_call(const AISnapshot& snapshot,
   wave.assembling = false;
   wave.departed_under_strength = false;
   wave.ready_since = -1000.0F;
-  if (!qEnvironmentVariableIsEmpty("SOI_AI_TRACE")) {
-    qInfo().nospace() << "SOI_AI_TRACE ally_called_attack player=" << context.player_id
-                      << " members=" << wave.members.size() << " target=" << target->id
-                      << " t=" << snapshot.game_time;
-  }
   return true;
 }
 
@@ -437,7 +478,11 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
       const float front_z = centre_z / count;
       const std::unordered_set<Engine::Core::EntityID> marching(wave.members.begin(),
                                                                 wave.members.end());
-      const int wave_capacity = wave_capacity_for(context, required);
+      const bool calls_up_home =
+          context.strategy_config.doctrine == nullptr &&
+          snapshot.game_time - wave.committed_at > k_wave_call_up_seconds;
+      const int wave_capacity = calls_up_home ? static_cast<int>(candidates.size())
+                                              : wave_capacity_for(context, required);
       for (const auto* entity : candidates) {
         if (static_cast<int>(wave.members.size()) >= wave_capacity) {
           break;
@@ -445,9 +490,10 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
         if (marching.contains(entity->id) || garrison.contains(entity->id)) {
           continue;
         }
-        if (distance_squared(
+        if (!calls_up_home &&
+            distance_squared(
                 entity->pos_x, 0.0F, entity->pos_z, front_x, 0.0F, front_z) >
-            k_wave_refill_radius * k_wave_refill_radius) {
+                k_wave_refill_radius * k_wave_refill_radius) {
           continue;
         }
         wave.members.push_back(entity->id);
@@ -501,6 +547,18 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
     const ContactSnapshot* target = find_contact(snapshot, wave.target_id);
     if (target == nullptr) {
       target = select_wave_target(snapshot, context, centre_x, centre_z);
+      if (target == nullptr && wave.target_id == 0) {
+        const bool arrived =
+            gap <= k_scout_arrival_metres ||
+            snapshot.game_time - wave.progress_at > k_scout_patience_seconds;
+        if (arrived &&
+            scout_point(
+                snapshot, context, centre_x, centre_z, wave.target_x, wave.target_z)) {
+          wave.best_gap = -1.0F;
+          wave.progress_at = snapshot.game_time;
+        }
+        return;
+      }
       if (target == nullptr) {
         wave.committed = false;
         wave.members.clear();
@@ -599,7 +657,10 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
 
   const ContactSnapshot* target =
       select_wave_target(snapshot, context, centre_x, centre_z);
-  if (target == nullptr) {
+  float scout_x = 0.0F;
+  float scout_z = 0.0F;
+  if (target == nullptr &&
+      !scout_point(snapshot, context, centre_x, centre_z, scout_x, scout_z)) {
     wave.assembling = false;
     wave.ready_since = -1000.0F;
     return;
@@ -650,9 +711,9 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
     wave.members.push_back(entity->id);
   }
   wave.initial_size = static_cast<int>(wave.members.size());
-  wave.target_id = target->id;
-  wave.target_x = target->pos_x;
-  wave.target_z = target->pos_z;
+  wave.target_id = target != nullptr ? target->id : 0;
+  wave.target_x = target != nullptr ? target->pos_x : scout_x;
+  wave.target_z = target != nullptr ? target->pos_z : scout_z;
   wave.committed = true;
   wave.committed_at = snapshot.game_time;
   wave.best_gap = -1.0F;

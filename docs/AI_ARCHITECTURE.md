@@ -302,6 +302,28 @@ Targets can come from known strategic objectives as well as currently visible en
 
 Commander doctrine can tune committed wave size, garrison requirements, regroup timing, spent-wave threshold, and target priority.
 
+### A wave that knows of no enemy goes looking
+
+An opponent marches only on what it has seen, so on a large map a ready wave used to find no target, dissolve, and form again every round: on the historical battle maps played as skirmishes two AI armies stood a field apart for 25 minutes without a blow. Now a wave with no known target commits anyway, with `target_id == 0` and a place instead of a contact. From home the place is the far side of the map (the base mirrored through the centre, kept 15% inside the edges); on arrival, or after 30 s without closing, the next corner round the map from where the wave stands. Anything it sights becomes its target at once. No extra wave state carries the search: `target_id == 0` on a committed wave means "going to a place".
+
+This replaced `AttackBehavior`'s old scouting, which sent the attack force to points 36–60 m from its own base in turn. It never found an enemy that far away, and because it ran on the rounds between the wave's 4 s march orders, it pulled a marching wave back toward home every other round.
+
+### A wave calls up the troops left at home
+
+A committed wave admits reinforcements only from within 30 m of its front, so recruits standing at home cannot keep a spent wave counted as alive. That rule also left an army idle: a wave of four settled into a long siege of towers while twenty soldiers stood at the muster for ten minutes, and no second wave can form while one is committed. After a wave has been out for 60 s (`k_wave_call_up_seconds`) an AI without a commander doctrine calls up every committable soldier outside the garrison, wherever it stands and past the usual wave capacity; the recruits march on the wave's target like any member. A doctrine keeps its authored wave size and reserve: calling up Fabius's whole army turned the Scipio-Fabius duel into a match where Scipio only ever defended.
+
+### Advancing units belong to the attack
+
+When `AttackBehavior` advances on an enemy it has sighted but that is still out of engagement range, it claims the troops for `attacking` like every other order it gives. It used to move them unclaimed, so `GatherBehavior` still held them for the muster and ordered them back a second later; the two took turns and the army paced the same ground for minutes. The advance is re-ordered only when the target changes or a soldier has stopped short of it, not every round. The same holds at the walls: soldiers already striking the chosen building (`EntitySnapshot::attack_target_id`) are not sent the move-to-ranks and attack orders again; re-sending them broke off every blow and left an undefended town standing for minutes. Unit targets are still re-ordered every round, because that order is also what turns on the chase.
+
+## Gold veins and the market
+
+Every skirmish map runs out of stone or timber between minutes 10 and 25. What keeps a match going past that is gold: cursed gold veins pay 25 gold every 6 s to whoever holds them, and the marketplace turns gold into whatever the town is short of.
+
+- `AISnapshot::gold_veins` lists every vein anchor with its owner, found by matching barracks-type anchors against the map's `cursed_gold_vein` props. Veins are landmarks every player sees on the minimap, so this is not scouted intel.
+- `GoldVeinBehavior` sends two idle soldiers (never the commander, the garrison or wave members) to claim the nearest vein the AI does not hold, neutral or enemy. It releases them the moment the vein is won so the muster pulls them out of the curse, and gives up on a vein it cannot take within 3 minutes for 5 minutes. Expansion ignores vein anchors, so an expansionist AI no longer camps inside the curse.
+- When `BuilderBehavior` finds its next building blocked by a resource the map has run out of, it records that building's cost in `AIContext::construction_need`. `EconomyBehavior` buys toward it like the recruiting war chest, and while a building is stalled it sells any stock more than 100 above what it needs, rather than only above 320. A town stripped of stone sells timber for gold and buys stone for its homes.
+
 ### Keeping a wave honest
 
 A committed wave records the closest it has come to its target (`best_gap`) and when it last got closer or fought (`progress_at`). A wave that neither gains 4 m on its target nor has a member engaged for 180 s is called off and regroups; before this, nothing read `committed_at`, and a wave that could not reach its target stayed "marching" for a whole match. Reinforcements join a committed wave only from within 30 m of its front, so recruits standing at home no longer keep an exhausted wave from ever counting as spent. When a committed wave sees no enemy, `AttackBehavior` marches it on the wave's own remembered target every 4 s instead of issuing nothing. The `Army` target class excludes non-combatants, so a wave aimed at an army goes for soldiers, not builders and civilians; those remain the `Economy` class. A commander who does not lead from the front anchors on the troops still at home, not on a wave that has marched out, so a garrison commander is not dragged after his own raid.

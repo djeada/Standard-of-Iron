@@ -42,6 +42,32 @@ auto can_advance_from_gathering(const AIContext& context, int ready_units) -> bo
 
 constexpr float k_siege_superiority_ratio = 1.5F;
 
+constexpr float k_attack_claim_lock_seconds = 2.5F;
+
+auto claim_marching_units(const std::vector<const EntitySnapshot*>& ready_units,
+                          BehaviorPriority priority,
+                          AIContext& context,
+                          float game_time) -> std::vector<const EntitySnapshot*> {
+  std::vector<Engine::Core::EntityID> unit_ids;
+  unit_ids.reserve(ready_units.size());
+  for (const auto* unit : ready_units) {
+    unit_ids.push_back(unit->id);
+  }
+  const auto claimed_ids = claim_units(
+      unit_ids, priority, "attacking", context, game_time, k_attack_claim_lock_seconds);
+  std::vector<const EntitySnapshot*> claimed;
+  claimed.reserve(claimed_ids.size());
+  for (const auto* unit : ready_units) {
+    if (std::find(claimed_ids.begin(), claimed_ids.end(), unit->id) !=
+        claimed_ids.end()) {
+      claimed.push_back(unit);
+    }
+  }
+  return claimed;
+}
+
+constexpr float k_advance_arrival_metres = 15.0F;
+
 auto wave_objective_in_reach(const AIContext& context,
                              const std::vector<const ContactSnapshot*>& nearby)
     -> const ContactSnapshot* {
@@ -58,41 +84,6 @@ auto wave_objective_in_reach(const AIContext& context,
   return nullptr;
 }
 
-auto select_strategic_objective(const AISnapshot& snapshot,
-                                float reference_x,
-                                float reference_z) -> const ContactSnapshot* {
-  const ContactSnapshot* best_objective = nullptr;
-  float best_score = std::numeric_limits<float>::infinity();
-  const ContactSnapshot* best_neutral = nullptr;
-  float best_neutral_score = std::numeric_limits<float>::infinity();
-
-  for (const auto& objective : snapshot.strategic_objectives) {
-    if (Game::Units::is_wildlife_spawn(objective.spawn_type)) {
-      continue;
-    }
-    const float dx = objective.pos_x - reference_x;
-    const float dz = objective.pos_z - reference_z;
-    float score = dx * dx + dz * dz;
-    if (!objective.is_building) {
-      score += 400.0F;
-    }
-
-    if (Game::Core::is_neutral_owner(objective.owner_id)) {
-      if (score < best_neutral_score) {
-        best_neutral_score = score;
-        best_neutral = &objective;
-      }
-      continue;
-    }
-
-    if (score < best_score) {
-      best_score = score;
-      best_objective = &objective;
-    }
-  }
-
-  return best_objective != nullptr ? best_objective : best_neutral;
-}
 } // namespace
 
 auto AttackBehavior::yields_to_exclusive(const AIContext& context) const -> bool {
@@ -150,9 +141,8 @@ void AttackBehavior::execute(const AISnapshot& snapshot,
   if (snapshot.visible_enemies.empty()) {
 
     constexpr float k_wave_march_reorder_seconds = 4.0F;
-    if (context.wave.committed && context.wave.target_id != 0 &&
-        snapshot.game_time - context.wave.last_order_time >=
-            k_wave_march_reorder_seconds) {
+    if (context.wave.committed && snapshot.game_time - context.wave.last_order_time >=
+                                      k_wave_march_reorder_seconds) {
       std::vector<Engine::Core::EntityID> unit_ids;
       unit_ids.reserve(ready_units.size());
       for (const auto* unit : ready_units) {
@@ -169,75 +159,6 @@ void AttackBehavior::execute(const AISnapshot& snapshot,
           move_to_slots(unit_ids, plan_ai_formation(formation_request, ready_units));
       if (!cmd.units.empty()) {
         context.wave.last_order_time = snapshot.game_time;
-        out_commands.push_back(std::move(cmd));
-      }
-      return;
-    }
-
-    constexpr int MIN_UNITS_FOR_SCOUTING = 3;
-    if ((context.state == AIState::Attacking || context.wave.committed) &&
-        !marches_only_in_waves(context) &&
-        static_cast<int>(ready_units.size()) >=
-            std::max(MIN_UNITS_FOR_SCOUTING,
-                     context.strategy_config.reactive_attack_size)) {
-
-      constexpr float SCOUT_ROTATION_INTERVAL = 10.0F;
-      const float scout_advance_distance =
-          context.strategy_config.scouting_distance *
-          context.strategy_config.difficulty.scouting_distance_multiplier;
-
-      m_last_scout_time += delta_time;
-      if (m_last_scout_time > SCOUT_ROTATION_INTERVAL) {
-        m_scout_direction = (m_scout_direction + 1) % 4;
-        m_last_scout_time = 0.0F;
-      }
-
-      float scout_x = 0.0F;
-      float scout_z = 0.0F;
-      const ContactSnapshot* strategic_objective =
-          select_strategic_objective(snapshot, group_center_x, group_center_z);
-
-      if (strategic_objective != nullptr) {
-        scout_x = strategic_objective->pos_x;
-        scout_z = strategic_objective->pos_z;
-      } else if (context.has_base_anchor) {
-
-        switch (m_scout_direction) {
-        case 0:
-          scout_x = context.base_pos_x;
-          scout_z = context.base_pos_z + scout_advance_distance;
-          break;
-        case 1:
-          scout_x = context.base_pos_x + scout_advance_distance;
-          scout_z = context.base_pos_z;
-          break;
-        case 2:
-          scout_x = context.base_pos_x;
-          scout_z = context.base_pos_z - scout_advance_distance;
-          break;
-        case 3:
-          scout_x = context.base_pos_x - scout_advance_distance;
-          scout_z = context.base_pos_z;
-          break;
-        }
-      }
-
-      std::vector<Engine::Core::EntityID> unit_ids;
-      unit_ids.reserve(ready_units.size());
-      for (const auto* unit : ready_units) {
-        unit_ids.push_back(unit->id);
-      }
-
-      QVector3D const scout_center(scout_x, 0.0F, scout_z);
-      AIFormationRequest formation_request;
-      formation_request.player_id = context.player_id;
-      formation_request.nation = context.nation;
-      formation_request.anchor = scout_center;
-      formation_request.spacing = context.strategy_config.attack_formation_spacing;
-      formation_request.intent = select_ai_intent(snapshot, context, false, false);
-      auto cmd =
-          move_to_slots(unit_ids, plan_ai_formation(formation_request, ready_units));
-      if (!cmd.units.empty()) {
         out_commands.push_back(std::move(cmd));
       }
     }
@@ -260,7 +181,7 @@ void AttackBehavior::execute(const AISnapshot& snapshot,
                                            group_center_x,
                                            group_center_y,
                                            group_center_z);
-    if (dist_sq <= engage_range_sq) {
+    if (dist_sq <= engage_range_sq && !is_gold_vein_anchor(snapshot, enemy.id)) {
       nearby_enemies.push_back(&enemy);
     }
   }
@@ -306,7 +227,8 @@ void AttackBehavior::execute(const AISnapshot& snapshot,
       }
       if (target == nullptr) {
         for (const auto& enemy : snapshot.visible_enemies) {
-          if (!enemy.is_building || enemy.health <= 0) {
+          if (!enemy.is_building || enemy.health <= 0 ||
+              is_gold_vein_anchor(snapshot, enemy.id)) {
             continue;
           }
           float const dist_sq = distance_squared(enemy.pos_x,
@@ -322,33 +244,31 @@ void AttackBehavior::execute(const AISnapshot& snapshot,
         }
       }
 
-      if ((target != nullptr) && !ready_units.empty()) {
+      const auto marching =
+          target != nullptr
+              ? claim_marching_units(
+                    ready_units, get_priority(), context, snapshot.game_time)
+              : std::vector<const EntitySnapshot*>{};
+      if (!marching.empty()) {
 
         float attack_pos_x = target->pos_x;
         float attack_pos_z = target->pos_z;
 
-        bool needs_new_command = false;
-        if (m_last_target != target->id) {
-          needs_new_command = true;
-          m_last_target = target->id;
-          m_target_lock_duration = 0.0F;
-        } else {
-
-          for (const auto* unit : ready_units) {
-            float const dx = unit->pos_x - attack_pos_x;
-            float const dz = unit->pos_z - attack_pos_z;
-            float const dist_sq = dx * dx + dz * dz;
-            if (dist_sq > 15.0F * 15.0F) {
-              needs_new_command = true;
-              break;
-            }
-          }
+        bool needs_new_command = m_advance_target != target->id;
+        for (const auto* unit : marching) {
+          float const dx = unit->pos_x - attack_pos_x;
+          float const dz = unit->pos_z - attack_pos_z;
+          needs_new_command =
+              needs_new_command ||
+              (!unit->movement.has_objective &&
+               dx * dx + dz * dz > k_advance_arrival_metres * k_advance_arrival_metres);
         }
 
         if (needs_new_command) {
+          m_advance_target = target->id;
           std::vector<Engine::Core::EntityID> unit_ids;
-          unit_ids.reserve(ready_units.size());
-          for (const auto* unit : ready_units) {
+          unit_ids.reserve(marching.size());
+          for (const auto* unit : marching) {
             unit_ids.push_back(unit->id);
           }
 
@@ -359,8 +279,8 @@ void AttackBehavior::execute(const AISnapshot& snapshot,
           formation_request.anchor = attack_center;
           formation_request.spacing = context.strategy_config.attack_formation_spacing;
           formation_request.intent = select_ai_intent(snapshot, context, false, false);
-          auto cmd = move_to_slots(unit_ids,
-                                   plan_ai_formation(formation_request, ready_units));
+          auto cmd =
+              move_to_slots(unit_ids, plan_ai_formation(formation_request, marching));
           if (!cmd.units.empty()) {
             out_commands.push_back(std::move(cmd));
           }
@@ -477,6 +397,13 @@ void AttackBehavior::execute(const AISnapshot& snapshot,
   auto claimed_units = claim_units(
       unit_ids, get_priority(), "attacking", context, snapshot.game_time, 2.5F);
 
+  if (target_snapshot->is_building) {
+    std::erase_if(claimed_units, [&](Engine::Core::EntityID id) {
+      return std::any_of(ready_units.begin(), ready_units.end(), [&](const auto* unit) {
+        return unit->id == id && unit->attack_target_id == target_info.target_id;
+      });
+    });
+  }
   if (claimed_units.empty()) {
     return;
   }

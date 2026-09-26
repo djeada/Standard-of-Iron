@@ -45,32 +45,6 @@ void submit(Engine::Core::World& world, int owner_id, Game::Command::Payload pay
   Game::Command::submit(world, Game::Command::Source::AI, owner_id, std::move(payload));
 }
 
-[[nodiscard]] auto production_refusal_name(ProductionResult result) -> const char* {
-  switch (result) {
-  case ProductionResult::Success:
-    return "success";
-  case ProductionResult::NoBarracks:
-    return "no_barracks";
-  case ProductionResult::InsufficientManpower:
-    return "insufficient_manpower";
-  case ProductionResult::InsufficientResources:
-    return "insufficient_resources";
-  case ProductionResult::PerBarracksLimitReached:
-    return "per_barracks_limit";
-  case ProductionResult::WrongBuilding:
-    return "wrong_building";
-  case ProductionResult::GlobalTroopLimitReached:
-    return "global_troop_limit";
-  case ProductionResult::CommanderNotRecruitable:
-    return "commander_not_recruitable";
-  case ProductionResult::AlreadyInProgress:
-    return "already_in_progress";
-  case ProductionResult::QueueFull:
-    return "queue_full";
-  }
-  return "unknown";
-}
-
 [[nodiscard]] auto owns_living_unit(Engine::Core::World& world,
                                     int owner_id,
                                     Engine::Core::EntityID unit_id) -> bool {
@@ -78,35 +52,6 @@ void submit(Engine::Core::World& world, int owner_id, Game::Command::Payload pay
   return unit != nullptr && unit->owner_id == owner_id && unit->health > 0;
 }
 
-void trace_refused_production(int owner_id,
-                              Game::Units::TroopType product,
-                              ProductionResult ruling,
-                              const Engine::Core::ProductionComponent& production,
-                              int cost,
-                              int population,
-                              int population_cap,
-                              const Game::Systems::ResourceAmounts& need,
-                              const Game::Systems::ResourceAmounts& have) {
-  static const bool enabled = !qEnvironmentVariableIsEmpty("SOI_AI_TRACE");
-  if (!enabled) {
-    return;
-  }
-  qInfo().nospace() << "SOI_AI_TRACE refused player=" << owner_id << " product="
-                    << QString::fromStdString(Game::Units::troop_typeToString(product))
-                    << " reason=" << production_refusal_name(ruling) << " cost=" << cost
-                    << " reserve=" << production.manpower_available
-                    << " produced=" << production.produced_count
-                    << " max_units=" << production.max_units
-                    << " queue=" << production.production_queue.size()
-                    << " in_progress=" << production.in_progress
-                    << " population=" << population << "/" << population_cap;
-  for (const auto type : Game::Systems::k_all_resource_types) {
-    if (need.get(type) > 0) {
-      qInfo().nospace() << "   needs " << Game::Systems::resource_type_key(type) << " "
-                        << need.get(type) << " has " << have.get(type);
-    }
-  }
-}
 } // namespace
 
 auto AICommandApplier::apply(Engine::Core::World& world,
@@ -209,24 +154,6 @@ auto AICommandApplier::apply(Engine::Core::World& world,
               world, command.building_id, command.product_type);
           ruling != Game::Systems::ProductionResult::Success) {
         ++report.refused_production;
-        const auto* owner_nation =
-            Game::Session::session_for(world).nations().get_nation_for_player(
-                ai_owner_id);
-        const auto& profile =
-            Game::Systems::TroopProfileService::instance().get_profile_ref(
-                owner_nation != nullptr ? owner_nation->id
-                                        : Game::Systems::NationID::RomanRepublic,
-                command.product_type);
-        trace_refused_production(
-            ai_owner_id,
-            command.product_type,
-            ruling,
-            *production,
-            profile.production.cost,
-            Game::Systems::troop_count_for(world, ai_owner_id),
-            Game::GameConfig::instance().get_max_troops_per_player(),
-            profile.production.resource_costs,
-            Game::Session::session_for(world).economy().get_all(ai_owner_id));
         break;
       }
       submit(world,
@@ -291,39 +218,7 @@ auto AICommandApplier::apply(Engine::Core::World& world,
       if (!site.has_value()) {
 
         ++report.refused_construction;
-        if (qEnvironmentVariableIsSet("SOI_BUILD_TRACE")) {
-          qWarning() << "BUILDTRACE p" << ai_owner_id << "no legal site for"
-                     << command.construction_type << "near"
-                     << command.construction_site_x << command.construction_site_z
-                     << "verdict"
-                     << static_cast<int>(
-                            Game::Systems::assess_ground(world,
-                                                         command.construction_type,
-                                                         command.construction_site_x,
-                                                         command.construction_site_z));
-          const auto& terrain = *Game::Session::services_for(world).terrain;
-          float nearest = std::numeric_limits<float>::infinity();
-          const Game::Map::WorldProp* culprit = nullptr;
-          for (const auto& prop : terrain.world_props()) {
-            const QVector3D at = terrain.world_prop_world_position(prop);
-            const float d = std::hypot(at.x() - command.construction_site_x,
-                                       at.z() - command.construction_site_z);
-            if (d < nearest) {
-              nearest = d;
-              culprit = &prop;
-            }
-          }
-          if (culprit != nullptr) {
-            qWarning() << "BUILDTRACE p" << ai_owner_id << "  nearest prop type"
-                       << static_cast<int>(culprit->type) << "scale" << culprit->scale
-                       << "at" << nearest << "m";
-          }
-        }
         break;
-      }
-      if (qEnvironmentVariableIsSet("SOI_BUILD_TRACE")) {
-        qWarning() << "BUILDTRACE p" << ai_owner_id << "submits"
-                   << command.construction_type << "at" << site->x() << site->z();
       }
       submit(world,
              ai_owner_id,

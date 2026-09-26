@@ -110,7 +110,6 @@ auto RainPipeline::initialize() -> bool {
     return false;
   }
 
-  qInfo() << "RainPipeline initialized successfully";
   return is_initialized();
 }
 

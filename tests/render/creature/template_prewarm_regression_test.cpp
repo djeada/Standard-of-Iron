@@ -33,6 +33,7 @@
 #include "render/entity/registry.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/horse/horse_spec.h"
+#include "render/humanoid/asset/facial_hair_catalog.h"
 #include "render/humanoid/asset/humanoid_spec.h"
 #include "render/humanoid/runtime/humanoid_renderer.h"
 #include "render/rigged_mesh_cache.h"
@@ -1347,6 +1348,15 @@ TEST(TemplatePrewarmRegression, WorldPrewarmBakesBuilderToolsAndActorBodies) {
           targets.end(),
           [&](const auto& target) { return target.archetype == archetype; }))
           << "variant " << static_cast<int>(index);
+      // A bearded builder keeps his beard when he takes up a tool: the tool body
+      // alone was baked, and a bearded Carthaginian reaping drew nothing.
+      auto const bearded = Render::Humanoid::facial_hair_body_archetype(
+          archetype, Render::GL::FacialHairStyle::FullBeard);
+      EXPECT_TRUE(
+          std::any_of(targets.begin(),
+                      targets.end(),
+                      [&](const auto& target) { return target.archetype == bearded; }))
+          << "bearded variant " << static_cast<int>(index);
     }
     for (const auto& target : targets) {
       EXPECT_TRUE(rigged_asset_is_baked(renderer, target, CreatureLOD::Full))
