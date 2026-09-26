@@ -112,7 +112,7 @@ def freeze_runs(path: Path, max_frames: int, fps: float) -> list[tuple[float, fl
     )
     starts = [float(v) for v in re.findall(r"freeze_start: ([0-9.]+)", out)]
     ends = [float(v) for v in re.findall(r"freeze_end: ([0-9.]+)", out)]
-    return list(zip(starts, ends + [None] * (len(starts) - len(ends))))
+    return list(zip(starts, ends + [None] * (len(starts) - len(ends)), strict=True))
 
 
 def main() -> int:

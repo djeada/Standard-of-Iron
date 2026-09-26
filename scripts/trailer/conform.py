@@ -457,7 +457,7 @@ def assemble(parts: list[Path], events: list[dict], cut: dict, out: Path) -> flo
         inputs += ["-i", str(p)]
     chains = []
     labels = []
-    for i, event in enumerate(events):
+    for i in range(len(events)):
         chains.append(f"[{i}:v]settb=AVTB,setpts=PTS-STARTPTS[p{i}]")
         labels.append(f"p{i}")
     stage = labels[0]
