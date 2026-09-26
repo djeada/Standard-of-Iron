@@ -250,8 +250,8 @@
    ],
    "saturation": 0.5,
    "gamma": 1.0,
-   "halation": 0.18,
-   "halation_threshold": 0.62,
+   "halation": 0.09,
+   "halation_threshold": 0.82,
    "halation_tint": [
     1.0,
     0.6,
@@ -354,25 +354,17 @@
   },
   {
    "name": "elephants",
-   "clip": "cine_field/elephant_charge",
+   "clip": "cine_field_re/elephants_wing",
    "in": 3.0,
-   "dur": 2.0,
+   "dur": 2.2,
    "look": "battle",
    "game_audio": -14
   },
   {
    "name": "archers",
-   "clip": "cine_field/archers_loose",
-   "in": 1.0,
-   "dur": 1.6,
-   "look": "battle",
-   "game_audio": -14
-  },
-  {
-   "name": "cavalry",
-   "clip": "cine_field/cavalry_clash",
-   "in": 1.0,
-   "dur": 1.6,
+   "clip": "cine_field_re/elephants_side",
+   "in": 4.0,
+   "dur": 1.8,
    "look": "battle",
    "game_audio": -14
   },
@@ -386,9 +378,9 @@
   },
   {
    "name": "melee",
-   "clip": "cine_field/melee_close",
-   "in": 1.0,
-   "dur": 1.4,
+   "clip": "cine_field_re/melee_tele",
+   "in": 6.6,
+   "dur": 1.6,
    "look": "battle",
    "game_audio": -14
   },
@@ -402,17 +394,17 @@
   },
   {
    "name": "scipio_fight",
-   "clip": "cine_field/scipio_fight",
-   "in": 3.0,
-   "dur": 2.0,
+   "clip": "cine_field_re/scipio_tele",
+   "in": 0.5,
+   "dur": 2.2,
    "look": "battle",
    "game_audio": -14
   },
   {
    "name": "hannibal_fight",
-   "clip": "cine_field/hannibal_fight",
-   "in": 3.0,
-   "dur": 1.8,
+   "clip": "cine_field_re/hannibal_tele",
+   "in": 4.0,
+   "dur": 2.0,
    "look": "battle",
    "game_audio": -14
   },
@@ -420,7 +412,7 @@
    "name": "duel",
    "clip": "cine_field/duel_pair",
    "in": 2.0,
-   "dur": 2.2,
+   "dur": 2.0,
    "look": "battle",
    "game_audio": -14
   },
@@ -428,7 +420,7 @@
    "name": "citadel",
    "clip": "cine_city/citadel_panorama",
    "in": 1.0,
-   "dur": 3.2,
+   "dur": 3.0,
    "look": "city",
    "join": "dip",
    "fade_in": 0.6,
@@ -437,8 +429,8 @@
   {
    "name": "temple",
    "clip": "cine_city/temple_rising",
-   "in": 1.0,
-   "dur": 2.6,
+   "in": 3.4,
+   "dur": 2.8,
    "look": "city",
    "game_audio": -14
   },
@@ -452,9 +444,9 @@
   },
   {
    "name": "docks",
-   "clip": "cine_city/dock_market",
-   "in": 1.0,
-   "dur": 1.8,
+   "clip": "cine_city/forum_crowd",
+   "in": 2.0,
+   "dur": 2.0,
    "look": "city",
    "game_audio": -14
   },
@@ -573,8 +565,8 @@
   },
   {
    "name": "x5",
-   "clip": "cine_field/hannibal_fight",
-   "in": 6.0,
+   "clip": "cine_field_re/hannibal_tele",
+   "in": 5.6,
    "dur": 0.8,
    "look": "battle",
    "game_audio": -14
@@ -589,8 +581,8 @@
   },
   {
    "name": "x7",
-   "clip": "cine_field/scipio_fight",
-   "in": 6.5,
+   "clip": "cine_field_re/scipio_tele",
+   "in": 2.6,
    "dur": 0.7,
    "look": "battle",
    "game_audio": -14
@@ -609,7 +601,7 @@
     "lines": [
      {
       "text": "STANDARD OF IRON",
-      "size": 84,
+      "size": 96,
       "tracking": 0.36,
       "at": 0.9,
       "fade": 2.2,
@@ -937,27 +929,6 @@
       0.6
      ]
     ]
-   },
-   {
-    "at": "cavalry+0.0",
-    "file": "assets/audio/sfx/combat/horse_gallop_close_pass.ogg",
-    "gain": -3,
-    "pan": [
-     [
-      0,
-      0.7
-     ],
-     [
-      1.6,
-      -0.7
-     ]
-    ]
-   },
-   {
-    "at": "cavalry+0.35",
-    "file": "assets/audio/sfx/combat/gladius_shield_impacts_close.ogg",
-    "gain": -6,
-    "pan": 0.1
    },
    {
     "at": "clash",
