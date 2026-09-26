@@ -363,8 +363,9 @@ public:
   void announce_player_defeats(float dt);
   void announce_ally_exchanges();
   void announce_ally_calls();
-  void announce_ally_pleas();
+  void announce_ally_appeals();
   [[nodiscard]] auto owner_display_name(int owner_id) const -> QString;
+  [[nodiscard]] auto is_friendly_commander(int owner_id) const -> bool;
   [[nodiscard]] static auto ally_resource_word(const QString& resource_key) -> QString;
   void capture_render_selection();
   void update(float dt);
@@ -758,6 +759,8 @@ signals:
   void mission_announcement(QString text);
   void player_defeated(QString text, bool ally, int owner_id);
   void ally_exchange(QString text, bool positive);
+  void ally_appeal_opened(QVariantMap appeal);
+  void ally_appeal_closed(quint32 appeal_id);
   void order_feedback(QString kind, bool accepted, QString message, QString failure);
   void autosave_settings_changed();
 

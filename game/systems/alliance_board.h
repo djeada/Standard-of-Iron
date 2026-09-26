@@ -46,14 +46,60 @@ struct AllyCallAnswer {
   AllyCallVerdict verdict = AllyCallVerdict::RefusedUnwilling;
 };
 
-struct AllyPlea {
+inline constexpr float k_ally_pledge_seconds = 90.0F;
+
+// An AI ally asking a human ally for something: resources, men to hold its
+// camp, or men to join the attack it is launching. The human answers yes or
+// no; the AI then says what it makes of the answer, and for the military asks
+// watches whether the promised men actually turn up.
+enum class AllyAppealKind : std::uint8_t {
+  Resources,
+  Defend,
+  Attack,
+};
+
+struct AllyAppeal {
+  std::uint32_t appeal_id = 0;
   int from_ally = 0;
   int to_owner = 0;
+  AllyAppealKind kind = AllyAppealKind::Resources;
+  ResourceType resource = ResourceType::Gold;
+  int amount = 0;
+  Engine::Core::EntityID target = Engine::Core::NULL_ENTITY;
+  float target_x = 0.0F;
+  float target_z = 0.0F;
+};
+
+struct AllyAppealAnswer {
+  std::uint32_t appeal_id = 0;
+  int from_ally = 0;
+  int answerer = 0;
+  bool accepted = false;
+  int given = 0;
+};
+
+enum class AllyAppealFollowUp : std::uint8_t {
+  Grateful,
+  AwaitingAid,
+  HoldAlone,
+  MarchAlone,
+  ManageWithout,
+  AidArrived,
+  AidNeverCame,
+  Withdrawn,
+};
+
+struct AllyAppealReply {
+  std::uint32_t appeal_id = 0;
+  int from_ally = 0;
+  int to_owner = 0;
+  AllyAppealKind kind = AllyAppealKind::Resources;
+  AllyAppealFollowUp follow_up = AllyAppealFollowUp::Withdrawn;
   ResourceType resource = ResourceType::Gold;
   int amount = 0;
 };
 
-inline constexpr float k_ally_pledge_seconds = 90.0F;
+inline constexpr float k_ally_appeal_answer_seconds = 45.0F;
 
 class AllianceBoard {
 public:
@@ -65,8 +111,17 @@ public:
   void record_call_answer(const AllyCallAnswer& answer);
   [[nodiscard]] auto take_call_answers() -> std::vector<AllyCallAnswer>;
 
-  void record_plea(const AllyPlea& plea);
-  [[nodiscard]] auto take_pleas() -> std::vector<AllyPlea>;
+  auto next_appeal_id() -> std::uint32_t { return ++m_last_appeal_id; }
+  void record_appeal(const AllyAppeal& appeal);
+  [[nodiscard]] auto take_new_appeals() -> std::vector<AllyAppeal>;
+  [[nodiscard]] auto open_appeal(std::uint32_t appeal_id) const -> const AllyAppeal*;
+  void close_appeal(std::uint32_t appeal_id);
+
+  void record_appeal_answer(const AllyAppealAnswer& answer);
+  [[nodiscard]] auto take_appeal_answers_for(int ally) -> std::vector<AllyAppealAnswer>;
+
+  void record_appeal_reply(const AllyAppealReply& reply);
+  [[nodiscard]] auto take_appeal_replies() -> std::vector<AllyAppealReply>;
 
   void clear();
 
@@ -74,10 +129,15 @@ private:
   std::uint32_t m_last_call_id = 0;
   std::vector<AllyCallRequest> m_calls;
   std::vector<AllyCallAnswer> m_call_answers;
-  std::vector<AllyPlea> m_pleas;
+  std::uint32_t m_last_appeal_id = 0;
+  std::vector<AllyAppeal> m_new_appeals;
+  std::vector<AllyAppeal> m_open_appeals;
+  std::vector<AllyAppealAnswer> m_appeal_answers;
+  std::vector<AllyAppealReply> m_appeal_replies;
 };
 
 [[nodiscard]] auto ally_call_kind_key(AllyCallKind kind) -> const char*;
+[[nodiscard]] auto ally_appeal_kind_key(AllyAppealKind kind) -> const char*;
 
 enum class AllyCallProblem : std::uint8_t {
   None,

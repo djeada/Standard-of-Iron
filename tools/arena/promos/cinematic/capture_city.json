@@ -1,0 +1,175 @@
+{
+  "width": 1920,
+  "height": 1080,
+  "fps": 96,
+  "supersample": 2,
+  "gameplay_ui": false,
+  "audio": true,
+  "record_music": false,
+  "motion_limits": {
+    "yaw_degrees_per_second": 40,
+    "pitch_degrees_per_second": 20,
+    "fov_degrees_per_second": 20,
+    "minimum_clip_seconds": 1.0,
+    "mean_clip_seconds": 1.0
+  },
+  "id": "cine_city",
+  "title": "STANDARD OF IRON",
+  "shots": [
+    {
+      "name": "citadel_panorama",
+      "scenario": "promo_imperial_capital",
+      "start": 20.0,
+      "duration": 10.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [70, 60, 150],
+          "look": [0, 18, -210],
+          "fov": 32
+        },
+        {
+          "time": 10.0,
+          "eye": [58, 60, 140],
+          "look": [0, 18, -210],
+          "fov": 31
+        }
+      ],
+      "ground_clearance": 0.3,
+      "lighting": {
+        "hour": 10.5
+      }
+    },
+    {
+      "name": "avenue_life",
+      "scenario": "promo_imperial_capital",
+      "start": 24.0,
+      "duration": 9.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [5, 0.9, 72],
+          "look": [-2, 0.8, 12],
+          "fov": 15
+        },
+        {
+          "time": 9.0,
+          "eye": [4, 0.9, 70],
+          "look": [-2, 0.8, 12],
+          "fov": 15
+        }
+      ],
+      "ground_clearance": 0.3,
+      "lighting": {
+        "hour": 10.5
+      }
+    },
+    {
+      "name": "temple_rising",
+      "scenario": "promo_imperial_capital",
+      "start": 26.0,
+      "duration": 12.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [35, 0.7, -87],
+          "look": [52.8, 2.2, -108],
+          "fov": 28
+        },
+        {
+          "time": 9.0,
+          "eye": [34, 0.7, -88],
+          "look": [52.8, 2.2, -108],
+          "fov": 27
+        }
+      ],
+      "ground_clearance": 0.3,
+      "lighting": {
+        "hour": 10.5
+      }
+    },
+    {
+      "name": "dock_market",
+      "scenario": "promo_imperial_capital",
+      "start": 32.0,
+      "duration": 9.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [-40, 1.0, 162],
+          "look": [-60, 0.9, 146],
+          "fov": 26
+        },
+        {
+          "time": 9.0,
+          "eye": [-41, 1.0, 162],
+          "look": [-60, 0.9, 146],
+          "fov": 26
+        }
+      ],
+      "ground_clearance": 0.3,
+      "lighting": {
+        "hour": 10.5
+      }
+    },
+    {
+      "name": "forum_crowd",
+      "scenario": "promo_imperial_capital",
+      "start": 36.0,
+      "duration": 9.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [10, 0.9, -66],
+          "look": [-2, 1.6, -102],
+          "fov": 24
+        },
+        {
+          "time": 9,
+          "eye": [8, 0.9, -66],
+          "look": [-2, 1.6, -102],
+          "fov": 24
+        }
+      ],
+      "ground_clearance": 0.3,
+      "lighting": {
+        "hour": 10.5
+      }
+    }
+  ]
+}

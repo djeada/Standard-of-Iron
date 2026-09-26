@@ -205,6 +205,33 @@
     </message>
 </context>
 <context>
+    <name>AllyAppealPanel</name>
+    <message>
+        <source>Accept</source>
+        <translation>قبول</translation>
+    </message>
+    <message>
+        <source>Refuse</source>
+        <translation>رفض</translation>
+    </message>
+    <message>
+        <source>%1 asks for supplies</source>
+        <translation>%1 يطلب مؤنًا</translation>
+    </message>
+    <message>
+        <source>%1 calls for help</source>
+        <translation>%1 يستغيث</translation>
+    </message>
+    <message>
+        <source>%1 calls you to arms</source>
+        <translation>%1 يدعوك إلى السلاح</translation>
+    </message>
+    <message>
+        <source>Show</source>
+        <translation>عرض</translation>
+    </message>
+</context>
+<context>
     <name>ArmyFormationController</name>
     <message>
         <source>Automatic</source>
@@ -3920,6 +3947,94 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>%1 asks you for %2 %3.</source>
         <translation>%1 يطلب منك %2 %3.</translation>
+    </message>
+    <message>
+        <source>%1 asked %2 for %3 %4 and received %5.</source>
+        <translation>طلب %1 من %2 %3 من %4 وتلقى %5.</translation>
+    </message>
+    <message>
+        <source>%1 asked %2 for %3 %4; %2 refused.</source>
+        <translation>طلب %1 من %2 %3 من %4؛ ورفض %2.</translation>
+    </message>
+    <message>
+        <source>%1 called %2 to the attack; %2 marches.</source>
+        <translation>دعا %1 %2 إلى الهجوم؛ %2 يزحف.</translation>
+    </message>
+    <message>
+        <source>%1 called %2 to the attack; %2 stays.</source>
+        <translation>دعا %1 %2 إلى الهجوم؛ %2 يبقى.</translation>
+    </message>
+    <message>
+        <source>%1 called for help; %2 sends men.</source>
+        <translation>استغاث %1؛ %2 يرسل رجالًا.</translation>
+    </message>
+    <message>
+        <source>%1 called for help; %2 cannot come.</source>
+        <translation>استغاث %1؛ %2 لا يستطيع القدوم.</translation>
+    </message>
+    <message>
+        <source>Give %1</source>
+        <translation>أعطِ %1</translation>
+    </message>
+    <message>
+        <source>Refuse</source>
+        <translation>رفض</translation>
+    </message>
+    <message>
+        <source>%1&apos;s camp is under attack. Will you send men to hold it?</source>
+        <translation>معسكر %1 يتعرض للهجوم. هل سترسل رجالًا للدفاع عنه؟</translation>
+    </message>
+    <message>
+        <source>Send men</source>
+        <translation>أرسل رجالًا</translation>
+    </message>
+    <message>
+        <source>%1 is marching on the enemy. Will you join the attack?</source>
+        <translation>%1 يزحف نحو العدو. هل ستنضم إلى الهجوم؟</translation>
+    </message>
+    <message>
+        <source>Join</source>
+        <translation>انضم</translation>
+    </message>
+    <message>
+        <source>%1 thanks you for the %2 %3.</source>
+        <translation>%1 يشكرك على %2 من %3.</translation>
+    </message>
+    <message>
+        <source>%1 will hold until your men arrive.</source>
+        <translation>سيصمد %1 حتى يصل رجالك.</translation>
+    </message>
+    <message>
+        <source>%1 expects your men at the enemy&apos;s gate.</source>
+        <translation>%1 ينتظر رجالك عند بوابة العدو.</translation>
+    </message>
+    <message>
+        <source>%1 will hold the camp alone.</source>
+        <translation>سيحمي %1 المعسكر وحده.</translation>
+    </message>
+    <message>
+        <source>%1 marches alone.</source>
+        <translation>%1 يزحف وحده.</translation>
+    </message>
+    <message>
+        <source>%1 will manage without your help.</source>
+        <translation>سيتدبر %1 أمره دون مساعدتك.</translation>
+    </message>
+    <message>
+        <source>%1: your men have reached the camp. Well met.</source>
+        <translation>%1: وصل رجالك إلى المعسكر. أهلًا بهم.</translation>
+    </message>
+    <message>
+        <source>%1: your men have joined the attack.</source>
+        <translation>%1: انضم رجالك إلى الهجوم.</translation>
+    </message>
+    <message>
+        <source>%1: the men you promised never came. That will be remembered.</source>
+        <translation>%1: الرجال الذين وعدت بهم لم يأتوا قط. لن يُنسى ذلك.</translation>
+    </message>
+    <message>
+        <source>%1 heard no answer and withdraws the request.</source>
+        <translation>لم يتلقَّ %1 ردًا ويسحب طلبه.</translation>
     </message>
 </context>
 <context>
@@ -10436,6 +10551,14 @@ Builders reap it for the food that recruits civilians</source>
     <message>
         <source>Ask your allied commanders to send men to hold this building. A cautious commander with men to spare agrees, one whose own camp is threatened refuses.</source>
         <translation>اطلب من قادتك الحلفاء إرسال رجال لحماية هذا المبنى. القائد الحذر الذي لديه رجال يستغني عنهم يوافق، ومن يتهدد معسكره يرفض.</translation>
+    </message>
+    <message>
+        <source>That request has already been withdrawn.</source>
+        <translation>سُحب ذلك الطلب بالفعل.</translation>
+    </message>
+    <message>
+        <source>Not enough %1 to give.</source>
+        <translation>لا يوجد ما يكفي من %1 للعطاء.</translation>
     </message>
 </context>
 <context>

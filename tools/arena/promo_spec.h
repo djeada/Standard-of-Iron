@@ -43,6 +43,71 @@ struct Focus {
   float home_radius{26.0F};
 
   float smoothing{0.25F};
+
+  float dead_zone{0.0F};
+  float lead_seconds{0.0F};
+  bool spring{false};
+};
+
+enum class Rig : std::uint8_t {
+  Orbit,
+  Free,
+};
+
+enum class Interp : std::uint8_t {
+  Keys,
+  Spline,
+};
+
+enum class Ends : std::uint8_t {
+  Moving,
+  Ease,
+};
+
+enum class Space : std::uint8_t {
+  Focus,
+  World,
+};
+
+struct FreeKey {
+  float time{0.0F};
+  QVector3D eye;
+  QVector3D look;
+  float fov{40.0F};
+  float roll{0.0F};
+};
+
+struct Handheld {
+  float degrees{0.0F};
+  float frequency{0.35F};
+  int seed{7};
+};
+
+struct Jolt {
+  float at{0.0F};
+  float degrees{0.4F};
+  float decay{0.35F};
+};
+
+struct LightingOverride {
+  std::optional<float> hour;
+  std::optional<float> sun_azimuth;
+  std::optional<float> sun_elevation;
+  std::optional<float> sun_scale;
+  std::optional<QVector3D> sun_color;
+  std::optional<float> ambient_scale;
+  std::optional<QVector3D> sky_color;
+  std::optional<QVector3D> fog_color;
+  std::optional<float> fog_density;
+  std::optional<float> exposure;
+  std::optional<float> shadow_strength;
+  std::optional<float> shadow_softness;
+
+  [[nodiscard]] auto empty() const -> bool {
+    return !hour && !sun_azimuth && !sun_elevation && !sun_scale && !sun_color &&
+           !ambient_scale && !sky_color && !fog_color && !fog_density && !exposure &&
+           !shadow_strength && !shadow_softness;
+  }
 };
 
 struct CameraKey {
@@ -100,6 +165,19 @@ struct Shot {
   float report_card_seconds{0.0F};
   Focus focus;
   std::vector<CameraKey> keys;
+
+  Rig rig{Rig::Orbit};
+  Interp interp{Interp::Keys};
+  Ends ends{Ends::Moving};
+  Space eye_space{Space::Focus};
+  Space look_space{Space::Focus};
+  bool terrain_relative{true};
+  std::vector<FreeKey> free_keys;
+  Handheld handheld;
+  std::vector<Jolt> jolts;
+  float near_plane{0.0F};
+  float ground_clearance{-1.0F};
+  LightingOverride lighting;
 };
 
 struct MotionLimits {
@@ -195,5 +273,28 @@ struct CapturePass {
                             float shot_time) -> Pose;
 
 [[nodiscard]] auto shake_offset(int frame_index, float amount) -> QVector3D;
+
+[[nodiscard]] auto
+evaluate_spline(const std::vector<CameraKey>& keys, float shot_time, Ends ends) -> Pose;
+
+struct FreePose {
+  QVector3D eye;
+  QVector3D look;
+  float fov{40.0F};
+  float roll{0.0F};
+};
+
+[[nodiscard]] auto
+evaluate_free(const std::vector<FreeKey>& keys, float shot_time, Ends ends) -> FreePose;
+
+struct Wobble {
+  float yaw{0.0F};
+  float pitch{0.0F};
+  float roll{0.0F};
+};
+
+[[nodiscard]] auto handheld_wobble(const Handheld& handheld,
+                                   const std::vector<Jolt>& jolts,
+                                   float shot_time) -> Wobble;
 
 } // namespace Arena::Promo

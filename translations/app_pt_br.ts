@@ -205,6 +205,33 @@
     </message>
 </context>
 <context>
+    <name>AllyAppealPanel</name>
+    <message>
+        <source>Accept</source>
+        <translation>Aceitar</translation>
+    </message>
+    <message>
+        <source>Refuse</source>
+        <translation>Recusar</translation>
+    </message>
+    <message>
+        <source>%1 asks for supplies</source>
+        <translation>%1 pede suprimentos</translation>
+    </message>
+    <message>
+        <source>%1 calls for help</source>
+        <translation>%1 pede ajuda</translation>
+    </message>
+    <message>
+        <source>%1 calls you to arms</source>
+        <translation>%1 te chama às armas</translation>
+    </message>
+    <message>
+        <source>Show</source>
+        <translation>Mostrar</translation>
+    </message>
+</context>
+<context>
     <name>ArmyFormationController</name>
     <message>
         <source>Automatic</source>
@@ -3920,6 +3947,94 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
     <message>
         <source>%1 asks you for %2 %3.</source>
         <translation>%1 pede a você %2 de %3.</translation>
+    </message>
+    <message>
+        <source>%1 asked %2 for %3 %4 and received %5.</source>
+        <translation>%1 pediu a %2 %3 de %4 e recebeu %5.</translation>
+    </message>
+    <message>
+        <source>%1 asked %2 for %3 %4; %2 refused.</source>
+        <translation>%1 pediu a %2 %3 de %4; %2 recusou.</translation>
+    </message>
+    <message>
+        <source>%1 called %2 to the attack; %2 marches.</source>
+        <translation>%1 chamou %2 para o ataque; %2 marcha.</translation>
+    </message>
+    <message>
+        <source>%1 called %2 to the attack; %2 stays.</source>
+        <translation>%1 chamou %2 para o ataque; %2 fica.</translation>
+    </message>
+    <message>
+        <source>%1 called for help; %2 sends men.</source>
+        <translation>%1 pediu ajuda; %2 envia homens.</translation>
+    </message>
+    <message>
+        <source>%1 called for help; %2 cannot come.</source>
+        <translation>%1 pediu ajuda; %2 não pode vir.</translation>
+    </message>
+    <message>
+        <source>Give %1</source>
+        <translation>Dar %1</translation>
+    </message>
+    <message>
+        <source>Refuse</source>
+        <translation>Recusar</translation>
+    </message>
+    <message>
+        <source>%1&apos;s camp is under attack. Will you send men to hold it?</source>
+        <translation>O acampamento de %1 está sob ataque. Você enviará homens para defendê-lo?</translation>
+    </message>
+    <message>
+        <source>Send men</source>
+        <translation>Enviar homens</translation>
+    </message>
+    <message>
+        <source>%1 is marching on the enemy. Will you join the attack?</source>
+        <translation>%1 marcha contra o inimigo. Você se juntará ao ataque?</translation>
+    </message>
+    <message>
+        <source>Join</source>
+        <translation>Juntar-se</translation>
+    </message>
+    <message>
+        <source>%1 thanks you for the %2 %3.</source>
+        <translation>%1 agradece pelos %2 de %3.</translation>
+    </message>
+    <message>
+        <source>%1 will hold until your men arrive.</source>
+        <translation>%1 resistirá até seus homens chegarem.</translation>
+    </message>
+    <message>
+        <source>%1 expects your men at the enemy&apos;s gate.</source>
+        <translation>%1 espera seus homens diante do portão inimigo.</translation>
+    </message>
+    <message>
+        <source>%1 will hold the camp alone.</source>
+        <translation>%1 defenderá o acampamento sozinho.</translation>
+    </message>
+    <message>
+        <source>%1 marches alone.</source>
+        <translation>%1 marcha sozinho.</translation>
+    </message>
+    <message>
+        <source>%1 will manage without your help.</source>
+        <translation>%1 vai se virar sem sua ajuda.</translation>
+    </message>
+    <message>
+        <source>%1: your men have reached the camp. Well met.</source>
+        <translation>%1: seus homens chegaram ao acampamento. Bem-vindos.</translation>
+    </message>
+    <message>
+        <source>%1: your men have joined the attack.</source>
+        <translation>%1: seus homens se juntaram ao ataque.</translation>
+    </message>
+    <message>
+        <source>%1: the men you promised never came. That will be remembered.</source>
+        <translation>%1: os homens que você prometeu nunca vieram. Isso será lembrado.</translation>
+    </message>
+    <message>
+        <source>%1 heard no answer and withdraws the request.</source>
+        <translation>%1 não recebeu resposta e retira o pedido.</translation>
     </message>
 </context>
 <context>
@@ -10424,6 +10539,14 @@ Os construtores os ceifam pela comida que recruta civis</translation>
     <message>
         <source>Ask your allied commanders to send men to hold this building. A cautious commander with men to spare agrees, one whose own camp is threatened refuses.</source>
         <translation>Peça a seus comandantes aliados que enviem homens para segurar este edifício. Um comandante cauteloso com homens de sobra aceita; um cujo próprio acampamento esteja ameaçado recusa.</translation>
+    </message>
+    <message>
+        <source>That request has already been withdrawn.</source>
+        <translation>Esse pedido já foi retirado.</translation>
+    </message>
+    <message>
+        <source>Not enough %1 to give.</source>
+        <translation>%1 insuficiente para dar.</translation>
     </message>
 </context>
 <context>

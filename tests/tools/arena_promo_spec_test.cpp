@@ -494,3 +494,105 @@ TEST(ArenaPromoSpecTest, WorldEdgeViolationsNamePointFocusShotsThatFrameTheRim) 
   EXPECT_FALSE(mentions(breaches, "dynamic:"))
       << "a dynamic focus cannot be judged before the match plays";
 }
+
+namespace {
+
+auto free_key(float time, QVector3D eye, QVector3D look) -> Arena::Promo::FreeKey {
+  Arena::Promo::FreeKey result;
+  result.time = time;
+  result.eye = eye;
+  result.look = look;
+  return result;
+}
+
+} // namespace
+
+TEST(ArenaPromoCinematicRigTest, TwoFreeKeysDollyAtConstantSpeed) {
+  const std::vector keys{free_key(0.0F, {0.0F, 1.0F, 0.0F}, {10.0F, 1.0F, 0.0F}),
+                         free_key(4.0F, {8.0F, 1.0F, 0.0F}, {18.0F, 1.0F, 0.0F})};
+  const auto quarter =
+      Arena::Promo::evaluate_free(keys, 1.0F, Arena::Promo::Ends::Moving);
+  const auto half = Arena::Promo::evaluate_free(keys, 2.0F, Arena::Promo::Ends::Moving);
+  EXPECT_NEAR(quarter.eye.x(), 2.0F, 1e-3F) << "a moving cut-in keeps constant speed";
+  EXPECT_NEAR(half.eye.x(), 4.0F, 1e-3F);
+}
+
+TEST(ArenaPromoCinematicRigTest, EasedEndsStartFromRest) {
+  const std::vector keys{free_key(0.0F, {0.0F, 1.0F, 0.0F}, {10.0F, 1.0F, 0.0F}),
+                         free_key(4.0F, {8.0F, 1.0F, 0.0F}, {18.0F, 1.0F, 0.0F})};
+  const auto early = Arena::Promo::evaluate_free(keys, 0.2F, Arena::Promo::Ends::Ease);
+  EXPECT_LT(early.eye.x(), 0.2F * 2.0F * 0.5F);
+  const auto mid = Arena::Promo::evaluate_free(keys, 2.0F, Arena::Promo::Ends::Ease);
+  EXPECT_NEAR(mid.eye.x(), 4.0F, 1e-3F);
+}
+
+TEST(ArenaPromoCinematicRigTest, SplineOrbitPassesThroughKeysWithoutStopping) {
+  std::vector<CameraKey> keys{key(0.0F, 0.0F), key(2.0F, 20.0F), key(4.0F, 40.0F)};
+  const auto at_key =
+      Arena::Promo::evaluate_spline(keys, 2.0F, Arena::Promo::Ends::Moving);
+  EXPECT_NEAR(at_key.yaw, 20.0F, 1e-3F);
+  const auto before =
+      Arena::Promo::evaluate_spline(keys, 1.9F, Arena::Promo::Ends::Moving);
+  const auto after =
+      Arena::Promo::evaluate_spline(keys, 2.1F, Arena::Promo::Ends::Moving);
+  EXPECT_NEAR(after.yaw - at_key.yaw, at_key.yaw - before.yaw, 1e-2F)
+      << "velocity is continuous through a middle key";
+}
+
+TEST(ArenaPromoCinematicRigTest, SplineYawWrapsTheShortWay) {
+  std::vector<CameraKey> keys{key(0.0F, 350.0F), key(2.0F, 10.0F)};
+  const auto mid =
+      Arena::Promo::evaluate_spline(keys, 1.0F, Arena::Promo::Ends::Moving);
+  EXPECT_NEAR(std::fmod(mid.yaw + 360.0F, 360.0F), 0.0F, 1e-2F);
+}
+
+TEST(ArenaPromoCinematicRigTest, HandheldIsSmoothAndJoltsDecay) {
+  Arena::Promo::Handheld hand;
+  hand.degrees = 0.5F;
+  const auto a = Arena::Promo::handheld_wobble(hand, {}, 1.0F);
+  const auto b = Arena::Promo::handheld_wobble(hand, {}, 1.0F + (1.0F / 96.0F));
+  EXPECT_LT(std::abs(a.yaw - b.yaw), 0.05F) << "no frame-to-frame jitter";
+  EXPECT_LE(std::abs(a.yaw), 0.5F + 1e-3F);
+
+  Arena::Promo::Jolt jolt;
+  jolt.at = 1.0F;
+  jolt.degrees = 1.0F;
+  jolt.decay = 0.2F;
+  const auto late = Arena::Promo::handheld_wobble({}, {jolt}, 3.0F);
+  EXPECT_LT(std::abs(late.pitch), 1e-3F);
+  const auto before = Arena::Promo::handheld_wobble({}, {jolt}, 0.9F);
+  EXPECT_EQ(before.pitch, 0.0F);
+}
+
+TEST(ArenaPromoCinematicRigTest, FreeRigShotsAndLightingLoadFromJson) {
+  QTemporaryDir dir;
+  ASSERT_TRUE(dir.isValid());
+  const QString path = dir.filePath(QStringLiteral("spec.json"));
+  QFile file(path);
+  ASSERT_TRUE(file.open(QIODevice::WriteOnly));
+  file.write(R"({"id":"c","width":1920,"height":1080,"fps":24,
+    "motion_limits":{"minimum_clip_seconds":0.5,"mean_clip_seconds":0.5},
+    "shots":[{"name":"a","scenario":"s","duration":2,"rig":"free","eye_space":"world",
+      "focus":{"mode":"group","group":"g","dead_zone":1.5,"lead":0.4,"spring":true},
+      "lighting":{"sun_azimuth":90,"sun_elevation":25,"fog_color":[0.8,0.7,0.6]},
+      "ground_clearance":0.3,"handheld":{"degrees":0.2},
+      "camera":[{"time":0,"eye":[0,1,0],"look":[5,1,0],"fov":20},
+                {"time":2,"eye":[1,1,0],"look":[6,1,0],"fov":20}]}]})");
+  file.close();
+  QString error;
+  const auto spec = Arena::Promo::load(path, &error);
+  ASSERT_TRUE(spec.has_value()) << error.toStdString();
+  const auto& loaded = spec->shots.front();
+  EXPECT_EQ(loaded.rig, Arena::Promo::Rig::Free);
+  EXPECT_EQ(loaded.eye_space, Arena::Promo::Space::World);
+  EXPECT_EQ(loaded.look_space, Arena::Promo::Space::Focus);
+  ASSERT_EQ(loaded.free_keys.size(), 2U);
+  EXPECT_FLOAT_EQ(loaded.focus.dead_zone, 1.5F);
+  EXPECT_FLOAT_EQ(loaded.focus.lead_seconds, 0.4F);
+  EXPECT_TRUE(loaded.focus.spring);
+  ASSERT_TRUE(loaded.lighting.sun_elevation.has_value());
+  EXPECT_FLOAT_EQ(*loaded.lighting.sun_elevation, 25.0F);
+  ASSERT_TRUE(loaded.lighting.fog_color.has_value());
+  EXPECT_FALSE(loaded.lighting.exposure.has_value());
+  EXPECT_FLOAT_EQ(loaded.ground_clearance, 0.3F);
+}
