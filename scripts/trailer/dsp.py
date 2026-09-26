@@ -39,7 +39,9 @@ def _load_cached(path: str) -> np.ndarray:
         data = data[:, :2]
     if rate != RATE:
         g = np.gcd(rate, RATE)
-        data = signal.resample_poly(data, RATE // g, rate // g, axis=0).astype(np.float32)
+        data = signal.resample_poly(data, RATE // g, rate // g, axis=0).astype(
+            np.float32
+        )
     return data
 
 
@@ -75,8 +77,9 @@ def trim(audio: np.ndarray, start: float, duration: float | None = None) -> np.n
     return out
 
 
-def fade(audio: np.ndarray, fade_in: float = 0.0, fade_out: float = 0.0,
-         shape: str = "equal") -> np.ndarray:
+def fade(
+    audio: np.ndarray, fade_in: float = 0.0, fade_out: float = 0.0, shape: str = "equal"
+) -> np.ndarray:
     out = audio.copy()
     n = out.shape[0]
     if fade_in > 0:
@@ -88,7 +91,7 @@ def fade(audio: np.ndarray, fade_in: float = 0.0, fade_out: float = 0.0,
         k = min(n, samples(fade_out))
         ramp = np.linspace(1.0, 0.0, k, dtype=np.float32)
         ramp = np.sin(ramp * np.pi / 2) if shape == "equal" else ramp
-        out[n - k:] *= ramp[:, None]
+        out[n - k :] *= ramp[:, None]
     return out
 
 
@@ -121,7 +124,9 @@ def pan(audio: np.ndarray, position: float | list[tuple[float, float]]) -> np.nd
         values = np.array([v for _, v in position], np.float64)
         p = np.interp(np.arange(n), times, values).astype(np.float32)
     angle = (np.clip(p, -1, 1) + 1.0) * np.pi / 4
-    return np.stack([source * np.cos(angle), source * np.sin(angle)], axis=1) * np.sqrt(2)
+    return np.stack([source * np.cos(angle), source * np.sin(angle)], axis=1) * np.sqrt(
+        2
+    )
 
 
 def width(audio: np.ndarray, amount: float) -> np.ndarray:
@@ -135,20 +140,26 @@ def _sos(kind: str, freq, order: int = 2):
 
 
 def lowpass(audio: np.ndarray, freq: float, order: int = 2) -> np.ndarray:
-    return signal.sosfilt(_sos("lowpass", min(freq, RATE * 0.45), order), audio,
-                          axis=0).astype(np.float32)
+    return signal.sosfilt(
+        _sos("lowpass", min(freq, RATE * 0.45), order), audio, axis=0
+    ).astype(np.float32)
 
 
 def highpass(audio: np.ndarray, freq: float, order: int = 2) -> np.ndarray:
-    return signal.sosfilt(_sos("highpass", freq, order), audio, axis=0).astype(np.float32)
+    return signal.sosfilt(_sos("highpass", freq, order), audio, axis=0).astype(
+        np.float32
+    )
 
 
 def bandpass(audio: np.ndarray, low: float, high: float, order: int = 2) -> np.ndarray:
-    return signal.sosfilt(_sos("bandpass", [low, min(high, RATE * 0.45)], order), audio,
-                          axis=0).astype(np.float32)
+    return signal.sosfilt(
+        _sos("bandpass", [low, min(high, RATE * 0.45)], order), audio, axis=0
+    ).astype(np.float32)
 
 
-def shelf(audio: np.ndarray, freq: float, gain_db: float, kind: str = "low") -> np.ndarray:
+def shelf(
+    audio: np.ndarray, freq: float, gain_db: float, kind: str = "low"
+) -> np.ndarray:
     """RBJ shelving biquad."""
     a = 10 ** (gain_db / 40)
     w0 = 2 * np.pi * freq / RATE
@@ -172,7 +183,9 @@ def shelf(audio: np.ndarray, freq: float, gain_db: float, kind: str = "low") -> 
     return signal.sosfilt(sos, audio, axis=0).astype(np.float32)
 
 
-def peak_eq(audio: np.ndarray, freq: float, gain_db: float, q: float = 1.0) -> np.ndarray:
+def peak_eq(
+    audio: np.ndarray, freq: float, gain_db: float, q: float = 1.0
+) -> np.ndarray:
     a = 10 ** (gain_db / 40)
     w0 = 2 * np.pi * freq / RATE
     alpha = np.sin(w0) / (2 * q)
@@ -183,8 +196,9 @@ def peak_eq(audio: np.ndarray, freq: float, gain_db: float, q: float = 1.0) -> n
     return signal.sosfilt(sos, audio, axis=0).astype(np.float32)
 
 
-def sweep_lowpass(audio: np.ndarray, points: list[tuple[float, float]],
-                  block: int = 1024) -> np.ndarray:
+def sweep_lowpass(
+    audio: np.ndarray, points: list[tuple[float, float]], block: int = 1024
+) -> np.ndarray:
     """Time-varying one-pole-pair lowpass: ``points`` are ``(seconds, hz)``."""
     n = audio.shape[0]
     times = np.array([samples(t) for t, _ in points], np.float64)
@@ -214,24 +228,33 @@ def _impulse(decay: float, predelay: float, damping: float, seed: int) -> np.nda
     early = np.zeros_like(ir)
     for k in range(10):
         pos = samples(0.004 + rng.random() * 0.045)
-        early[pos] += (0.7 ** k) * (rng.random(2) - 0.5)
+        early[pos] += (0.7**k) * (rng.random(2) - 0.5)
     ir = ir + early
     ir = np.concatenate([np.zeros((samples(predelay), 2), np.float32), ir])
     return (ir / np.sqrt(np.sum(ir**2) / 2)).astype(np.float32)
 
 
-def reverb(audio: np.ndarray, mix: float, decay: float = 2.2, predelay: float = 0.02,
-           damping: float = 6000.0, seed: int = 3) -> np.ndarray:
+def reverb(
+    audio: np.ndarray,
+    mix: float,
+    decay: float = 2.2,
+    predelay: float = 0.02,
+    damping: float = 6000.0,
+    seed: int = 3,
+) -> np.ndarray:
     """Synthetic stereo hall. Returns dry + wet, longer by the tail."""
     if mix <= 0:
         return audio
     ir = _impulse(round(decay, 2), round(predelay, 3), round(damping), seed)
     tail = ir.shape[0]
     padded = np.concatenate([audio, np.zeros((tail, 2), np.float32)])
-    wet = np.stack([
-        signal.fftconvolve(padded[:, 0], ir[:, 0])[: padded.shape[0]],
-        signal.fftconvolve(padded[:, 1], ir[:, 1])[: padded.shape[0]],
-    ], axis=1).astype(np.float32)
+    wet = np.stack(
+        [
+            signal.fftconvolve(padded[:, 0], ir[:, 0])[: padded.shape[0]],
+            signal.fftconvolve(padded[:, 1], ir[:, 1])[: padded.shape[0]],
+        ],
+        axis=1,
+    ).astype(np.float32)
     return padded * (1 - mix * 0.5) + wet * mix * 0.35
 
 
@@ -261,12 +284,17 @@ def rms_db(audio: np.ndarray) -> float:
 
 # --- synthesis -------------------------------------------------------------
 
+
 def _t(duration: float) -> np.ndarray:
     return np.arange(samples(duration)) / RATE
 
 
-def sub_drop(duration: float = 3.5, start_hz: float = 62.0, end_hz: float = 27.0,
-             attack: float = 0.004) -> np.ndarray:
+def sub_drop(
+    duration: float = 3.5,
+    start_hz: float = 62.0,
+    end_hz: float = 27.0,
+    attack: float = 0.004,
+) -> np.ndarray:
     t = _t(duration)
     freq = end_hz + (start_hz - end_hz) * np.exp(-t * 2.4)
     phase = 2 * np.pi * np.cumsum(freq) / RATE
@@ -285,8 +313,9 @@ def noise(duration: float, seed: int = 1, stereo: bool = True) -> np.ndarray:
     return np.stack([m, m], axis=1)
 
 
-def impact(duration: float = 4.0, weight: float = 1.0, brightness: float = 0.5,
-           seed: int = 5) -> np.ndarray:
+def impact(
+    duration: float = 4.0, weight: float = 1.0, brightness: float = 0.5, seed: int = 5
+) -> np.ndarray:
     """Layered trailer hit: sub drop, low body thump, filtered noise crack, hall."""
     t = _t(duration)
     body_f = 58 * np.exp(-t * 9) + 41
@@ -294,7 +323,9 @@ def impact(duration: float = 4.0, weight: float = 1.0, brightness: float = 0.5,
     body = np.stack([body, body], axis=1).astype(np.float32)
     crack = noise(0.35, seed) * np.exp(-_t(0.35) * 22)[:, None]
     crack = bandpass(crack, 180, 2500 + 6000 * brightness)
-    crack = np.concatenate([crack, np.zeros((samples(duration) - crack.shape[0], 2), np.float32)])
+    crack = np.concatenate(
+        [crack, np.zeros((samples(duration) - crack.shape[0], 2), np.float32)]
+    )
     sub = sub_drop(duration, 55, 26)
     hit = sub * 0.9 * weight + body * 0.8 * weight + crack * 0.55
     hit = reverb(hit, 0.55, decay=3.2, predelay=0.012, damping=4200, seed=seed)
@@ -325,7 +356,7 @@ def riser(duration: float = 4.0, seed: int = 11, top_hz: float = 9000.0) -> np.n
 def reverse_swell(source: np.ndarray, duration: float = 2.0) -> np.ndarray:
     """Reverse of a reverberated sound, ending on the downbeat."""
     wet = reverb(source, 1.0, decay=3.0, damping=5000)
-    rev = wet[::-1][-samples(duration):]
+    rev = wet[::-1][-samples(duration) :]
     rev = rev * np.linspace(0.0, 1.0, rev.shape[0])[:, None] ** 1.5
     return fade(rev.astype(np.float32), 0.2, 0.0)
 
@@ -342,12 +373,15 @@ def whoosh(duration: float = 1.2, seed: int = 21, centre: float = 0.55) -> np.nd
     return pan(out, [(0.0, -0.7), (duration, 0.7)]).astype(np.float32)
 
 
-def drone(duration: float, root_hz: float = 36.7, seed: int = 31,
-          darkness: float = 900.0) -> np.ndarray:
+def drone(
+    duration: float, root_hz: float = 36.7, seed: int = 31, darkness: float = 900.0
+) -> np.ndarray:
     """Slowly beating low cluster with filtered air on top."""
     t = _t(duration)
     sig = np.zeros((t.shape[0], 2), np.float32)
-    for k, (mult, det) in enumerate(((1.0, 0.0), (1.0, 0.35), (1.5, -0.2), (2.0, 0.12))):
+    for k, (mult, det) in enumerate(
+        ((1.0, 0.0), (1.0, 0.35), (1.5, -0.2), (2.0, 0.12))
+    ):
         f = root_hz * mult + det
         lfo = 0.7 + 0.3 * np.sin(2 * np.pi * (0.05 + 0.02 * k) * t + k)
         tone = np.sin(2 * np.pi * f * t + k) * lfo / (k + 1.2)
@@ -359,15 +393,22 @@ def drone(duration: float, root_hz: float = 36.7, seed: int = 31,
 
 # --- dynamics ---------------------------------------------------------------
 
-def compress(audio: np.ndarray, threshold_db: float = -18.0, ratio: float = 2.5,
-             attack: float = 0.01, release: float = 0.2, makeup_db: float = 0.0,
-             sidechain: np.ndarray | None = None) -> np.ndarray:
+
+def compress(
+    audio: np.ndarray,
+    threshold_db: float = -18.0,
+    ratio: float = 2.5,
+    attack: float = 0.01,
+    release: float = 0.2,
+    makeup_db: float = 0.0,
+    sidechain: np.ndarray | None = None,
+) -> np.ndarray:
     key = np.max(np.abs(sidechain if sidechain is not None else audio), axis=1)
     step = 64
     n = key.shape[0]
     blocks = key[: n - n % step].reshape(-1, step).max(axis=1)
     if n % step:
-        blocks = np.append(blocks, key[n - n % step:].max())
+        blocks = np.append(blocks, key[n - n % step :].max())
     level = 20 * np.log10(blocks + 1e-9)
     a = np.exp(-step / (attack * RATE))
     r = np.exp(-step / (release * RATE))
@@ -383,8 +424,14 @@ def compress(audio: np.ndarray, threshold_db: float = -18.0, ratio: float = 2.5,
     return audio * (10 ** ((curve + makeup_db) / 20))[:, None].astype(np.float32)
 
 
-def duck(audio: np.ndarray, key: np.ndarray, depth_db: float = -6.0,
-         threshold_db: float = -30.0, attack: float = 0.03, release: float = 0.45) -> np.ndarray:
+def duck(
+    audio: np.ndarray,
+    key: np.ndarray,
+    depth_db: float = -6.0,
+    threshold_db: float = -30.0,
+    attack: float = 0.03,
+    release: float = 0.45,
+) -> np.ndarray:
     """Pull ``audio`` down by up to ``depth_db`` while ``key`` is loud."""
     lvl = np.max(np.abs(key), axis=1)
     step = 256
@@ -410,8 +457,12 @@ def true_peak_db(audio: np.ndarray) -> float:
     return float(20 * np.log10(np.max(np.abs(up)) + 1e-12))
 
 
-def limit(audio: np.ndarray, ceiling_db: float = -1.0, lookahead: float = 0.005,
-          release: float = 0.08) -> np.ndarray:
+def limit(
+    audio: np.ndarray,
+    ceiling_db: float = -1.0,
+    lookahead: float = 0.005,
+    release: float = 0.08,
+) -> np.ndarray:
     """Lookahead brickwall on a 4x-oversampled peak estimate."""
     ceiling = db(ceiling_db)
     up = signal.resample_poly(audio, 4, 1, axis=0)
@@ -420,8 +471,9 @@ def limit(audio: np.ndarray, ceiling_db: float = -1.0, lookahead: float = 0.005,
         peak = np.pad(peak, (0, audio.shape[0] - peak.shape[0]))
     need = np.minimum(1.0, ceiling / np.maximum(peak, 1e-9))
     la = samples(lookahead)
-    win = np.lib.stride_tricks.sliding_window_view(np.pad(need, (0, la), constant_values=1.0),
-                                                   la + 1).min(axis=1)
+    win = np.lib.stride_tricks.sliding_window_view(
+        np.pad(need, (0, la), constant_values=1.0), la + 1
+    ).min(axis=1)
     r = np.exp(-1.0 / (release * RATE))
     gain = np.empty_like(win)
     g = 1.0
@@ -439,7 +491,9 @@ def integrated_lufs(audio: np.ndarray) -> float:
     return float(pyloudnorm.Meter(RATE).integrated_loudness(audio.astype(np.float64)))
 
 
-def short_term_lufs(audio: np.ndarray, window: float = 3.0, hop: float = 0.5) -> list[tuple[float, float]]:
+def short_term_lufs(
+    audio: np.ndarray, window: float = 3.0, hop: float = 0.5
+) -> list[tuple[float, float]]:
     import pyloudnorm
 
     meter = pyloudnorm.Meter(RATE, block_size=0.4)
@@ -447,7 +501,7 @@ def short_term_lufs(audio: np.ndarray, window: float = 3.0, hop: float = 0.5) ->
     step = samples(hop)
     size = samples(window)
     for start in range(0, max(1, audio.shape[0] - size), step):
-        chunk = audio[start:start + size].astype(np.float64)
+        chunk = audio[start : start + size].astype(np.float64)
         try:
             out.append((seconds(start), float(meter.integrated_loudness(chunk))))
         except ValueError:

@@ -52,9 +52,23 @@ def run(cmd: list[str]) -> None:
 
 def probe_frames(path: Path) -> tuple[int, float]:
     out = subprocess.run(
-        ["ffprobe", "-v", "error", "-select_streams", "v:0", "-count_packets",
-         "-show_entries", "stream=nb_read_packets,r_frame_rate", "-of", "json", str(path)],
-        capture_output=True, text=True, check=True).stdout
+        [
+            "ffprobe",
+            "-v",
+            "error",
+            "-select_streams",
+            "v:0",
+            "-count_packets",
+            "-show_entries",
+            "stream=nb_read_packets,r_frame_rate",
+            "-of",
+            "json",
+            str(path),
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout
     stream = json.loads(out)["streams"][0]
     num, den = stream["r_frame_rate"].split("/")
     return int(stream["nb_read_packets"]), float(num) / float(den)
@@ -80,27 +94,37 @@ def look_filter(look: dict, scope_h: int) -> str:
         stages.append(f"exposure=exposure={exposure:.3f}")
     temperature = look.get("temperature")
     if temperature:
-        stages.append(f"colortemperature=temperature={int(temperature)}:mix={look.get('temperature_mix', 0.6)}")
+        stages.append(
+            f"colortemperature=temperature={int(temperature)}:mix={look.get('temperature_mix', 0.6)}"
+        )
     balance = look.get("balance")
     if balance:
         keys = []
         for zone, prefix in (("shadows", "s"), ("mids", "m"), ("highlights", "h")):
             rgb = balance.get(zone)
             if rgb:
-                keys += [f"r{prefix}={rgb[0]:.3f}", f"g{prefix}={rgb[1]:.3f}", f"b{prefix}={rgb[2]:.3f}"]
+                keys += [
+                    f"r{prefix}={rgb[0]:.3f}",
+                    f"g{prefix}={rgb[1]:.3f}",
+                    f"b{prefix}={rgb[2]:.3f}",
+                ]
         if keys:
             stages.append("colorbalance=" + ":".join(keys) + ":pl=1")
     greens = look.get("greens")
     if greens:
-        stages.append(f"huesaturation=colors=g+y:hue={float(greens.get('hue', 0)):.1f}"
-                      f":saturation={float(greens.get('saturation', 0)):.3f}"
-                      f":intensity={float(greens.get('intensity', 0)):.3f}:strength=2")
+        stages.append(
+            f"huesaturation=colors=g+y:hue={float(greens.get('hue', 0)):.1f}"
+            f":saturation={float(greens.get('saturation', 0)):.3f}"
+            f":intensity={float(greens.get('intensity', 0)):.3f}:strength=2"
+        )
     curve = look.get("curve")
     if curve:
         stages.append(f"curves=master='{curve_points(curve)}'")
     for channel in ("red", "green", "blue"):
         if look.get(f"curve_{channel}"):
-            stages.append(f"curves={channel}='{curve_points(look[f'curve_{channel}'])}'")
+            stages.append(
+                f"curves={channel}='{curve_points(look[f'curve_{channel}'])}'"
+            )
     sat = float(look.get("saturation", 1.0))
     gamma = float(look.get("gamma", 1.0))
     contrast = float(look.get("contrast", 1.0))
@@ -125,8 +149,10 @@ def look_filter(look: dict, scope_h: int) -> str:
     # is green; everything after this point runs in YUV.
     chain += ",format=yuv444p16le"
     if sat != 1.0 or gamma != 1.0 or contrast != 1.0 or brightness != 0.0:
-        chain += (f",eq=saturation={sat:.3f}:gamma={gamma:.3f}:contrast={contrast:.3f}"
-                  f":brightness={brightness:.3f}")
+        chain += (
+            f",eq=saturation={sat:.3f}:gamma={gamma:.3f}:contrast={contrast:.3f}"
+            f":brightness={brightness:.3f}"
+        )
     vignette = float(look.get("vignette", 0.0))
     if vignette > 0:
         chain += f",vignette=angle={vignette:.3f}:mode=forward"
@@ -162,7 +188,14 @@ def render_event(index: int, event: dict, cut: dict, clips: Path, work: Path) ->
     head = float(event.get("_head", 0.0))
     tail = float(event.get("_tail", 0.0))
     total = head + duration + tail
-    settings = {"fps": fps, "sub": sub, "shutter": shutter, "scope": scope, "head": head, "tail": tail}
+    settings = {
+        "fps": fps,
+        "sub": sub,
+        "shutter": shutter,
+        "scope": scope,
+        "head": head,
+        "tail": tail,
+    }
 
     if "card" in event:
         clip = None
@@ -175,24 +208,55 @@ def render_event(index: int, event: dict, cut: dict, clips: Path, work: Path) ->
     for stale in work.glob(f"e{index:03d}_*.mov"):
         stale.unlink()
 
-    encode = ["-c:v", "prores_ks", "-profile:v", "3", "-pix_fmt", "yuv422p10le",
-              "-r", str(fps), "-an"]
+    encode = [
+        "-c:v",
+        "prores_ks",
+        "-profile:v",
+        "3",
+        "-pix_fmt",
+        "yuv422p10le",
+        "-r",
+        str(fps),
+        "-an",
+    ]
 
     if clip is None:
         card = event["card"]
         png_dir = work / f"card{index:03d}_{key}"
         background = card.get("background")
-        titles.render_card(card, png_dir, total, fps, WIDTH, HEIGHT, scope_h, head=head,
-                           transparent=bool(background))
+        titles.render_card(
+            card,
+            png_dir,
+            total,
+            fps,
+            WIDTH,
+            HEIGHT,
+            scope_h,
+            head=head,
+            transparent=bool(background),
+        )
         if not background:
-            run(["ffmpeg", "-y", "-v", "error", "-framerate", str(fps), "-i",
-                 str(png_dir / "f%05d.png"), *encode, str(out)])
+            run(
+                [
+                    "ffmpeg",
+                    "-y",
+                    "-v",
+                    "error",
+                    "-framerate",
+                    str(fps),
+                    "-i",
+                    str(png_dir / "f%05d.png"),
+                    *encode,
+                    str(out),
+                ]
+            )
             return out
         bg_clip = find_clip(clips, background)
         bg_look = looks.get(card.get("look", "fire"), {})
         grad = work / "card_gradient.png"
         if not grad.exists():
             from PIL import Image
+
             g = Image.new("RGBA", (WIDTH, HEIGHT))
             px = g.load()
             for yy in range(HEIGHT):
@@ -201,30 +265,57 @@ def render_event(index: int, event: dict, cut: dict, clips: Path, work: Path) ->
                     px[xx, yy] = (0, 0, 0, a)
             g.save(grad)
         fade = float(card.get("bg_fade", 1.0))
-        chain = (f"[0:v]trim=start={float(card.get('in', 0.0)):.3f}:duration={total:.3f},"
-                 f"setpts=PTS-STARTPTS,fps={fps},format=gbrp16le,"
-                 f"scale={WIDTH}:{HEIGHT}:flags=lanczos,{look_filter(bg_look, HEIGHT)},"
-                 f"format=yuv444p16le,fade=t=in:st=0:d={fade:.3f}[bg];"
-                 f"[bg][1:v]overlay=0:0:format=auto[dim];"
-                 f"[dim][2:v]overlay=0:0:format=auto,format=yuv422p10le,"
-                 f"trim=end_frame={int(round(total * fps))}[v]")
-        run(["ffmpeg", "-y", "-v", "error", "-i", str(bg_clip), "-loop", "1", "-i", str(grad),
-             "-framerate", str(fps), "-i", str(png_dir / "f%05d.png"),
-             "-filter_complex", chain, "-map", "[v]", *encode, str(out)])
+        chain = (
+            f"[0:v]trim=start={float(card.get('in', 0.0)):.3f}:duration={total:.3f},"
+            f"setpts=PTS-STARTPTS,fps={fps},format=gbrp16le,"
+            f"scale={WIDTH}:{HEIGHT}:flags=lanczos,{look_filter(bg_look, HEIGHT)},"
+            f"format=yuv444p16le,fade=t=in:st=0:d={fade:.3f}[bg];"
+            f"[bg][1:v]overlay=0:0:format=auto[dim];"
+            f"[dim][2:v]overlay=0:0:format=auto,format=yuv422p10le,"
+            f"trim=end_frame={int(round(total * fps))}[v]"
+        )
+        run(
+            [
+                "ffmpeg",
+                "-y",
+                "-v",
+                "error",
+                "-i",
+                str(bg_clip),
+                "-loop",
+                "1",
+                "-i",
+                str(grad),
+                "-framerate",
+                str(fps),
+                "-i",
+                str(png_dir / "f%05d.png"),
+                "-filter_complex",
+                chain,
+                "-map",
+                "[v]",
+                *encode,
+                str(out),
+            ]
+        )
         return out
 
     frames, clip_fps = probe_frames(clip)
     speed = float(event.get("speed", 1.0))
     start = float(event.get("in", 0.0)) - head * speed
     if start < -1e-3:
-        raise SystemExit(f"event {index} ({event.get('clip')}) starts before its clip "
-                         f"(in {event.get('in', 0)} - head {head})")
+        raise SystemExit(
+            f"event {index} ({event.get('clip')}) starts before its clip "
+            f"(in {event.get('in', 0)} - head {head})"
+        )
     start = max(0.0, start)
     need = start + total * speed
     available = frames / clip_fps
     if need > available + 1e-3:
-        raise SystemExit(f"event {index} ({event['clip']}) needs {need:.2f}s of a "
-                         f"{available:.2f}s clip")
+        raise SystemExit(
+            f"event {index} ({event['clip']}) needs {need:.2f}s of a "
+            f"{available:.2f}s clip"
+        )
     capture_sub = int(round(clip_fps / fps))
     blur = []
     if capture_sub > 1:
@@ -250,23 +341,33 @@ def render_event(index: int, event: dict, cut: dict, clips: Path, work: Path) ->
     base = ",".join(
         pre
         + blur
-        + [f"setpts=N/{fps}/TB", "format=gbrp16le",
-           f"scale={WIDTH}:{HEIGHT}:flags=lanczos"]
+        + [
+            f"setpts=N/{fps}/TB",
+            "format=gbrp16le",
+            f"scale={WIDTH}:{HEIGHT}:flags=lanczos",
+        ]
         + flip
-        + [f"crop={crop_w}:{crop_h}:{x0}:{y0}", f"scale={WIDTH}:{scope_h}:flags=lanczos"]
+        + [
+            f"crop={crop_w}:{crop_h}:{x0}:{y0}",
+            f"scale={WIDTH}:{scope_h}:flags=lanczos",
+        ]
     )
     hits = [float(h) + head for h in event.get("hits", [])]
     if hits:
         amp = float(event.get("shake", 9.0))
         ow = int(round(WIDTH * 1.035 / 2)) * 2
         oh = int(round(scope_h * 1.035 / 2)) * 2
-        env = "+".join(f"if(gte(t\\,{h:.3f})\\,exp(-(t-{h:.3f})/0.22)\\,0)" for h in hits)
+        env = "+".join(
+            f"if(gte(t\\,{h:.3f})\\,exp(-(t-{h:.3f})/0.22)\\,0)" for h in hits
+        )
         xs = f"{(ow - WIDTH) / 2:.1f}+{amp:.1f}*({env})*sin(t*71)"
         ys = f"{(oh - scope_h) / 2:.1f}+{amp * 0.7:.1f}*({env})*sin(t*53+1.3)"
         base += f",scale={ow}:{oh}:flags=lanczos,crop={WIDTH}:{scope_h}:x={xs}:y={ys}"
     base += "," + look_filter(look, scope_h)
     if hits:
-        flash = "+".join(f"if(gte(t\\,{h:.3f})\\,exp(-(t-{h:.3f})/0.06)\\,0)" for h in hits)
+        flash = "+".join(
+            f"if(gte(t\\,{h:.3f})\\,exp(-(t-{h:.3f})/0.06)\\,0)" for h in hits
+        )
         base += f",eq=brightness=0.07*({flash}):eval=frame"
 
     inputs = ["-i", str(clip)]
@@ -286,13 +387,20 @@ def render_event(index: int, event: dict, cut: dict, clips: Path, work: Path) ->
             else:
                 offset = (index * 3.7) % max(0.1, plate_len - total - 0.1)
             inputs += ["-stream_loop", "-1", "-i", str(plate_path)]
-            delay = f",tpad=start_duration={at:.3f}:start_mode=add:color=black" if at > 0 else ""
+            delay = (
+                f",tpad=start_duration={at:.3f}:start_mode=add:color=black"
+                if at > 0
+                else ""
+            )
             chains.append(
                 f"[{k}:v]trim=start={offset:.3f}:duration={total:.3f},setpts=PTS-STARTPTS,"
                 f"fps={fps}{delay},tpad=stop_mode=add:stop_duration={total:.3f}:color=black,"
-                f"trim=duration={total:.3f},format=gbrpf32le[p{k}]")
-            chains.append(f"[{stage}][p{k}]blend=all_mode=screen:"
-                          f"all_opacity={float(spec.get('opacity', 0.5)):.3f}[f{k}]")
+                f"trim=duration={total:.3f},format=gbrpf32le[p{k}]"
+            )
+            chains.append(
+                f"[{stage}][p{k}]blend=all_mode=screen:"
+                f"all_opacity={float(spec.get('opacity', 0.5)):.3f}[f{k}]"
+            )
             stage = f"f{k}"
     tailchain = "format=yuv444p16le"
     fade_in = float(event.get("fade_in", 0.0))
@@ -301,11 +409,26 @@ def render_event(index: int, event: dict, cut: dict, clips: Path, work: Path) ->
         tailchain += f",fade=t=in:st={head:.3f}:d={fade_in:.3f}"
     if fade_out > 0:
         tailchain += f",fade=t=out:st={head + duration - fade_out:.3f}:d={fade_out:.3f}"
-    tailchain += f",pad={WIDTH}:{HEIGHT}:0:{(HEIGHT - scope_h) // 2}:black,format=yuv422p10le"
+    tailchain += (
+        f",pad={WIDTH}:{HEIGHT}:0:{(HEIGHT - scope_h) // 2}:black,format=yuv422p10le"
+    )
     tailchain += f",trim=end_frame={int(round(total * fps))}"
     chains.append(f"[{stage}]{tailchain}[v]")
-    run(["ffmpeg", "-y", "-v", "error", *inputs, "-filter_complex", ";".join(chains),
-         "-map", "[v]", *encode, str(out)])
+    run(
+        [
+            "ffmpeg",
+            "-y",
+            "-v",
+            "error",
+            *inputs,
+            "-filter_complex",
+            ";".join(chains),
+            "-map",
+            "[v]",
+            *encode,
+            str(out),
+        ]
+    )
     return out
 
 
@@ -320,7 +443,9 @@ def plan(cut: dict) -> list[dict]:
                 events[i - 1]["_tail"] = d / 2
                 event["_head"] = d / 2
             else:
-                events[i - 1]["fade_out"] = max(float(events[i - 1].get("fade_out", 0)), d / 2)
+                events[i - 1]["fade_out"] = max(
+                    float(events[i - 1].get("fade_out", 0)), d / 2
+                )
                 event["fade_in"] = max(float(event.get("fade_in", 0)), d / 2)
     return events
 
@@ -341,8 +466,10 @@ def assemble(parts: list[Path], events: list[dict], cut: dict, out: Path) -> flo
         event = events[i]
         if event.get("join", "cut") == "dissolve":
             d = float(event.get("join_dur", 0.5))
-            chains.append(f"[{stage}][p{i}]xfade=transition=fade:duration={d:.4f}:"
-                          f"offset={cut_point - d / 2:.4f}[j{i}]")
+            chains.append(
+                f"[{stage}][p{i}]xfade=transition=fade:duration={d:.4f}:"
+                f"offset={cut_point - d / 2:.4f}[j{i}]"
+            )
         else:
             chains.append(f"[{stage}][p{i}]concat=n=2:v=1:a=0[j{i}]")
         cut_point += float(event["dur"])
@@ -358,22 +485,58 @@ def assemble(parts: list[Path], events: list[dict], cut: dict, out: Path) -> flo
     base_index = len(events)
     for k, caption in enumerate(cut.get("captions", [])):
         at = resolve_time(caption["at"], starts)
-        cdir = out.parent / f"caption_{k:02d}_{hashlib.sha1(json.dumps(caption, sort_keys=True).encode()).hexdigest()[:10]}"
+        cdir = (
+            out.parent
+            / f"caption_{k:02d}_{hashlib.sha1(json.dumps(caption, sort_keys=True).encode()).hexdigest()[:10]}"
+        )
         if not (cdir / "f00001.png").exists():
-            titles.render_caption(caption, cdir, fps, WIDTH, HEIGHT,
-                                  int(round(WIDTH / float(cut.get("scope", 2.39)) / 2)) * 2)
-        caption_inputs += ["-framerate", str(fps), "-itsoffset", f"{at:.4f}", "-i",
-                           str(cdir / "f%05d.png")]
+            titles.render_caption(
+                caption,
+                cdir,
+                fps,
+                WIDTH,
+                HEIGHT,
+                int(round(WIDTH / float(cut.get("scope", 2.39)) / 2)) * 2,
+            )
+        caption_inputs += [
+            "-framerate",
+            str(fps),
+            "-itsoffset",
+            f"{at:.4f}",
+            "-i",
+            str(cdir / "f%05d.png"),
+        ]
         idx = base_index + k
         end = at + float(caption["dur"])
-        chains.append(f"[{stage}][{idx}:v]overlay=0:0:eof_action=pass:"
-                      f"enable='between(t,{at:.3f},{end:.3f})'[c{k}]")
+        chains.append(
+            f"[{stage}][{idx}:v]overlay=0:0:eof_action=pass:"
+            f"enable='between(t,{at:.3f},{end:.3f})'[c{k}]"
+        )
         stage = f"c{k}"
     inputs += caption_inputs
     graph = ";".join(chains)
-    run(["ffmpeg", "-y", "-v", "error", *inputs, "-filter_complex", graph, "-map",
-         f"[{stage}]", "-c:v", "prores_ks", "-profile:v", "3", "-pix_fmt", "yuv422p10le",
-         "-r", str(fps), str(out)])
+    run(
+        [
+            "ffmpeg",
+            "-y",
+            "-v",
+            "error",
+            *inputs,
+            "-filter_complex",
+            graph,
+            "-map",
+            f"[{stage}]",
+            "-c:v",
+            "prores_ks",
+            "-profile:v",
+            "3",
+            "-pix_fmt",
+            "yuv422p10le",
+            "-r",
+            str(fps),
+            str(out),
+        ]
+    )
     return total
 
 
@@ -381,7 +544,10 @@ def resolve_time(value, starts: dict) -> float:
     if isinstance(value, (int, float)):
         return float(value)
     import re
-    match = re.fullmatch(r"\s*([A-Za-z0-9_]+)(@end)?\s*([+-]\s*[0-9.]+)?\s*", str(value))
+
+    match = re.fullmatch(
+        r"\s*([A-Za-z0-9_]+)(@end)?\s*([+-]\s*[0-9.]+)?\s*", str(value)
+    )
     if not match:
         raise SystemExit(f"cannot read time '{value}'")
     name, end, offset = match.groups()
@@ -394,15 +560,21 @@ def timeline(cut: dict) -> list[dict]:
     rows = []
     t = 0.0
     for event in cut["events"]:
-        rows.append({"name": event.get("name") or event.get("clip") or "card",
-                     "start": round(t, 4), "end": round(t + float(event["dur"]), 4)})
+        rows.append(
+            {
+                "name": event.get("name") or event.get("clip") or "card",
+                "start": round(t, 4),
+                "end": round(t + float(event["dur"]), 4),
+            }
+        )
         t += float(event["dur"])
     return rows
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__,
-                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("--cut", type=Path, required=True)
     parser.add_argument("--clips", type=Path, required=True)
     parser.add_argument("--work", type=Path, required=True)
@@ -419,12 +591,17 @@ def main() -> int:
             continue
         part = render_event(index, event, cut, args.clips, args.work)
         parts.append(part)
-        print(f"  {index:02d} {event.get('name') or event.get('clip') or 'card':28s} "
-              f"{float(event['dur']):5.2f}s  {part.name}", flush=True)
+        print(
+            f"  {index:02d} {event.get('name') or event.get('clip') or 'card':28s} "
+            f"{float(event['dur']):5.2f}s  {part.name}",
+            flush=True,
+        )
     if args.only:
         return 0
     total = assemble(parts, events, cut, args.out)
-    (args.out.with_suffix(".timeline.json")).write_text(json.dumps(timeline(cut), indent=1))
+    (args.out.with_suffix(".timeline.json")).write_text(
+        json.dumps(timeline(cut), indent=1)
+    )
     print(f"picture: {args.out} ({total:.2f}s)")
     return 0
 

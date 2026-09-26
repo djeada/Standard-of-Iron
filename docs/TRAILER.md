@@ -48,10 +48,10 @@ Sepulcher's dead rising in the snow, an accelerating montage, and the flame card
   stinger in the mix; the title and call to action (free and open source, the
   GitHub address, Windows / macOS / Linux) over the arena's flame card.
 - **Narration.** None: the captions carry the information.
-- **Sound.** The game's own score cut to drive the edit: *Last Defensive Wall*'s
-  drum ostinato under the open, *Dust of Cannae*'s percussion on the first
+- **Sound.** The game's own score cut to drive the edit: _Last Defensive Wall_'s
+  drum ostinato under the open, _Dust of Cannae_'s percussion on the first
   impact, the main theme's full statement for the city and the burning,
-  *Skeletons Awaken*'s hit on the rising, Cannae's crest into the flame card and
+  _Skeletons Awaken_'s hit on the rising, Cannae's crest into the flame card and
   the main theme's final hits under the title. Effects are placed with
   perspective; the arena's recorded mix sits under each shot; hits, risers and
   swells are synthesised.
@@ -78,14 +78,14 @@ scripts/trailer/build.sh master
 
 `PYTHON` must have the packages in `scripts/trailer/requirements.txt`.
 
-| Stage | Source |
-| --- | --- |
-| Film sets | `tools/arena/arena_cinematic_scenarios.cpp` (`cine_field`, `cine_siege`, `cine_sepulcher`) and `promo_imperial_capital` |
-| Camera and light | `tools/arena/promos/cinematic/capture_*.json` |
-| Edit, looks, sound | `tools/arena/promos/cinematic/cut.json` |
-| Picture | `scripts/trailer/conform.py`, `scripts/trailer/titles.py` |
-| Sound | `scripts/trailer/mix.py`, `scripts/trailer/dsp.py` |
-| Delivery and QC | `scripts/trailer/deliver.py` |
+| Stage              | Source                                                                                                                  |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| Film sets          | `tools/arena/arena_cinematic_scenarios.cpp` (`cine_field`, `cine_siege`, `cine_sepulcher`) and `promo_imperial_capital` |
+| Camera and light   | `tools/arena/promos/cinematic/capture_*.json`                                                                           |
+| Edit, looks, sound | `tools/arena/promos/cinematic/cut.json`                                                                                 |
+| Picture            | `scripts/trailer/conform.py`, `scripts/trailer/titles.py`                                                               |
+| Sound              | `scripts/trailer/mix.py`, `scripts/trailer/dsp.py`                                                                      |
+| Delivery and QC    | `scripts/trailer/deliver.py`                                                                                            |
 
 `deliver.py` refuses a file whose picture and sound lengths disagree, whose
 loudness drifted in the AAC encode, whose true peak passes -1 dBTP, or which has

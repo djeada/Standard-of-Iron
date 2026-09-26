@@ -21,14 +21,36 @@ WIDTH = 1920
 
 def _writer(path: Path, width: int, height: int, fps: int) -> subprocess.Popen:
     return subprocess.Popen(
-        ["ffmpeg", "-y", "-v", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s",
-         f"{width}x{height}", "-r", str(fps), "-i", "-", "-c:v", "prores_ks", "-profile:v",
-         "3", "-pix_fmt", "yuv422p10le", str(path)],
-        stdin=subprocess.PIPE)
+        [
+            "ffmpeg",
+            "-y",
+            "-v",
+            "error",
+            "-f",
+            "rawvideo",
+            "-pix_fmt",
+            "rgb24",
+            "-s",
+            f"{width}x{height}",
+            "-r",
+            str(fps),
+            "-i",
+            "-",
+            "-c:v",
+            "prores_ks",
+            "-profile:v",
+            "3",
+            "-pix_fmt",
+            "yuv422p10le",
+            str(path),
+        ],
+        stdin=subprocess.PIPE,
+    )
 
 
-def embers(path: Path, seconds: float, fps: int, height: int, seed: int = 3,
-           count: int = 230) -> None:
+def embers(
+    path: Path, seconds: float, fps: int, height: int, seed: int = 3, count: int = 230
+) -> None:
     rng = np.random.default_rng(seed)
     n = int(seconds * fps)
     x = rng.uniform(0, WIDTH, count)
@@ -65,17 +87,22 @@ def embers(path: Path, seconds: float, fps: int, height: int, seed: int = 3,
             col = (int(255 * a), int((150 + 60 * depth[i]) * a), int(60 * a))
             r = size[i] * (0.6 + depth[i])
             sx, sy = vx[i] * 0.02 * depth[i], vy[i] * 0.02 * depth[i]
-            d.line([(x[i] - sx, y[i] - sy), (x[i], y[i])], fill=col, width=max(1, int(r)))
+            d.line(
+                [(x[i] - sx, y[i] - sy), (x[i], y[i])], fill=col, width=max(1, int(r))
+            )
             d.ellipse([x[i] - r, y[i] - r, x[i] + r, y[i] + r], fill=col)
         glow = img.filter(ImageFilter.GaussianBlur(5))
-        out = np.minimum(255, np.asarray(img, np.uint16) * 2 + np.asarray(glow, np.uint16) * 4)
+        out = np.minimum(
+            255, np.asarray(img, np.uint16) * 2 + np.asarray(glow, np.uint16) * 4
+        )
         proc.stdin.write(out.astype(np.uint8).tobytes())
     proc.stdin.close()
     proc.wait()
 
 
-def dust(path: Path, seconds: float, fps: int, height: int, seed: int = 9,
-         count: int = 260) -> None:
+def dust(
+    path: Path, seconds: float, fps: int, height: int, seed: int = 9, count: int = 260
+) -> None:
     rng = np.random.default_rng(seed)
     n = int(seconds * fps)
     x = rng.uniform(0, WIDTH, count)
@@ -99,8 +126,12 @@ def dust(path: Path, seconds: float, fps: int, height: int, seed: int = 9,
             a = int(255 * depth[i] * (0.55 + 0.45 * math.sin(t * 1.3 + phase[i])))
             r = size[i] * (0.5 + depth[i] * 1.2)
             d.ellipse([x[i] - r, y[i] - r, x[i] + r, y[i] + r], fill=a)
-        motes = np.asarray(img.filter(ImageFilter.GaussianBlur(1.2)), np.float32) / 255.0
-        light = motes * (0.7 + 1.1 * shaft) + shaft * 0.16 * (0.8 + 0.2 * math.sin(t * 0.4))
+        motes = (
+            np.asarray(img.filter(ImageFilter.GaussianBlur(1.2)), np.float32) / 255.0
+        )
+        light = motes * (0.7 + 1.1 * shaft) + shaft * 0.16 * (
+            0.8 + 0.2 * math.sin(t * 0.4)
+        )
         rgb = np.stack([light, light * 0.86, light * 0.66], axis=-1)
         proc.stdin.write((np.clip(rgb, 0, 1) * 255).astype(np.uint8).tobytes())
     proc.stdin.close()
@@ -118,9 +149,12 @@ def leak(path: Path, seconds: float, fps: int, height: int, seed: int = 5) -> No
         p = f / max(1, n - 1)
         env = math.sin(math.pi * p) ** 1.5
         cx = WIDTH * (-0.2 + 1.4 * p)
-        blob = np.exp(-(((xx - cx) / (WIDTH * 0.22)) ** 2) - (((yy - cy) / (height * 0.55)) ** 2))
+        blob = np.exp(
+            -(((xx - cx) / (WIDTH * 0.22)) ** 2) - (((yy - cy) / (height * 0.55)) ** 2)
+        )
         streak = np.exp(-(((yy - cy) / (height * 0.035)) ** 2)) * np.exp(
-            -(((xx - cx) / (WIDTH * 0.7)) ** 2))
+            -(((xx - cx) / (WIDTH * 0.7)) ** 2)
+        )
         light = (blob * 0.85 + streak * 0.6) * env
         rgb = np.stack([light, light * 0.58, light * 0.26], axis=-1)
         proc.stdin.write((np.clip(rgb, 0, 1) * 255).astype(np.uint8).tobytes())

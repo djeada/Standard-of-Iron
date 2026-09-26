@@ -538,6 +538,10 @@ auto cine_siege() -> ArenaScenarioDefinition {
   };
   s.expectations = {
       exists("wall_swords"), exists("siege_catapults_n"), exists("capital_gate_road")};
+  ArenaExpectation residents_live;
+  residents_live.kind = ArenaExpectationKind::MovementAnimationObserved;
+  residents_live.group = QStringLiteral("capital_east_quarter_folk");
+  s.expectations.push_back(residents_live);
   return s;
 }
 

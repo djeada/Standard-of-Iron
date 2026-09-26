@@ -28,10 +28,10 @@ capture() {
     echo "== capture $name"
     PULSE_SERVER="${PULSE_SERVER:-unix:/nonexistent}" \
       "$ARENA" --promo-spec "$spec" --promo-out "$OUT/clips" || {
-        # the arena dumps core after a completed capture; trust the manifest
-        id="$("$PYTHON" -c 'import json,sys; print(json.load(open(sys.argv[1]))["id"])' "$spec")"
-        test -s "$OUT/clips/$id/shots.json" || exit 1
-      }
+      # the arena dumps core after a completed capture; trust the manifest
+      id="$("$PYTHON" -c 'import json,sys; print(json.load(open(sys.argv[1]))["id"])' "$spec")"
+      test -s "$OUT/clips/$id/shots.json" || exit 1
+    }
   done
 }
 
@@ -55,6 +55,14 @@ case "$STAGE" in
   picture) picture ;;
   sound) sound ;;
   master) master ;;
-  all) capture; picture; sound; master ;;
-  *) echo "unknown stage $STAGE" >&2; exit 2 ;;
+  all)
+    capture
+    picture
+    sound
+    master
+    ;;
+  *)
+    echo "unknown stage $STAGE" >&2
+    exit 2
+    ;;
 esac

@@ -1,833 +1,537 @@
 {
- "id": "cine_field",
- "title": "STANDARD OF IRON",
- "width": 1920,
- "height": 1080,
- "fps": 96,
- "supersample": 2,
- "gameplay_ui": false,
- "audio": true,
- "record_music": false,
- "motion_limits": {
-  "yaw_degrees_per_second": 40,
-  "pitch_degrees_per_second": 20,
-  "fov_degrees_per_second": 20,
-  "minimum_clip_seconds": 1.0,
-  "mean_clip_seconds": 1.0
- },
- "shots": [
-  {
-   "name": "shield_rank",
-   "scenario": "cine_field",
-   "start": 1.0,
-   "duration": 5.0,
-   "rig": "free",
-   "eye_space": "world",
-   "look_space": "world",
-   "focus": {
-    "mode": "point",
-    "point": [
-     0,
-     0,
-     0
-    ]
-   },
-   "lighting": {
-    "hour": 15.4
-   },
-   "camera": [
+  "id": "cine_field",
+  "title": "STANDARD OF IRON",
+  "width": 1920,
+  "height": 1080,
+  "fps": 96,
+  "supersample": 2,
+  "gameplay_ui": false,
+  "audio": true,
+  "record_music": false,
+  "motion_limits": {
+    "yaw_degrees_per_second": 40,
+    "pitch_degrees_per_second": 20,
+    "fov_degrees_per_second": 20,
+    "minimum_clip_seconds": 1.0,
+    "mean_clip_seconds": 1.0
+  },
+  "shots": [
     {
-     "time": 0,
-     "eye": [
-      -37,
-      0.62,
-      62
-     ],
-     "look": [
-      -45,
-      0.62,
-      6
-     ],
-     "fov": 13
+      "name": "shield_rank",
+      "scenario": "cine_field",
+      "start": 1.0,
+      "duration": 5.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "lighting": {
+        "hour": 15.4
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [-37, 0.62, 62],
+          "look": [-45, 0.62, 6],
+          "fov": 13
+        },
+        {
+          "time": 5.0,
+          "eye": [-37, 0.62, 56],
+          "look": [-45, 0.62, 2],
+          "fov": 13
+        }
+      ],
+      "ground_clearance": 0.3
     },
     {
-     "time": 5.0,
-     "eye": [
-      -37,
-      0.62,
-      56
-     ],
-     "look": [
-      -45,
-      0.62,
-      2
-     ],
-     "fov": 13
-    }
-   ],
-   "ground_clearance": 0.3
-  },
-  {
-   "name": "scipio_hero",
-   "scenario": "cine_field",
-   "start": 2.0,
-   "duration": 5.0,
-   "rig": "free",
-   "eye_space": "world",
-   "look_space": "world",
-   "focus": {
-    "mode": "point",
-    "point": [
-     0,
-     0,
-     0
-    ]
-   },
-   "lighting": {
-    "hour": 15.4
-   },
-   "camera": [
-    {
-     "time": 0,
-     "eye": [
-      -36.3,
-      0.32,
-      3.1
-     ],
-     "look": [
-      -40.3,
-      0.92,
-      0.6
-     ],
-     "fov": 26
+      "name": "scipio_hero",
+      "scenario": "cine_field",
+      "start": 2.0,
+      "duration": 5.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "lighting": {
+        "hour": 15.4
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [-36.3, 0.32, 3.1],
+          "look": [-40.3, 0.92, 0.6],
+          "fov": 26
+        },
+        {
+          "time": 5.0,
+          "eye": [-36.7, 0.32, 3.7],
+          "look": [-40.3, 0.92, 0.6],
+          "fov": 25
+        }
+      ],
+      "ground_clearance": 0.3
     },
     {
-     "time": 5.0,
-     "eye": [
-      -36.7,
-      0.32,
-      3.7
-     ],
-     "look": [
-      -40.3,
-      0.92,
-      0.6
-     ],
-     "fov": 25
-    }
-   ],
-   "ground_clearance": 0.3
-  },
-  {
-   "name": "hannibal_hero",
-   "scenario": "cine_field",
-   "start": 2.0,
-   "duration": 5.0,
-   "rig": "free",
-   "eye_space": "world",
-   "look_space": "world",
-   "focus": {
-    "mode": "point",
-    "point": [
-     0,
-     0,
-     0
-    ]
-   },
-   "lighting": {
-    "hour": 15.4
-   },
-   "camera": [
-    {
-     "time": 0,
-     "eye": [
-      36.1,
-      0.34,
-      -3.2
-     ],
-     "look": [
-      40.4,
-      0.92,
-      0.2
-     ],
-     "fov": 26
+      "name": "hannibal_hero",
+      "scenario": "cine_field",
+      "start": 2.0,
+      "duration": 5.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "lighting": {
+        "hour": 15.4
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [36.1, 0.34, -3.2],
+          "look": [40.4, 0.92, 0.2],
+          "fov": 26
+        },
+        {
+          "time": 5.0,
+          "eye": [36.5, 0.34, -3.8],
+          "look": [40.4, 0.92, 0.2],
+          "fov": 25
+        }
+      ],
+      "ground_clearance": 0.3
     },
     {
-     "time": 5.0,
-     "eye": [
-      36.5,
-      0.34,
-      -3.8
-     ],
-     "look": [
-      40.4,
-      0.92,
-      0.2
-     ],
-     "fov": 25
-    }
-   ],
-   "ground_clearance": 0.3
-  },
-  {
-   "name": "elephants_ridge",
-   "scenario": "cine_field",
-   "start": 3.0,
-   "duration": 5.0,
-   "rig": "free",
-   "eye_space": "world",
-   "look_space": "world",
-   "focus": {
-    "mode": "point",
-    "point": [
-     0,
-     0,
-     0
-    ]
-   },
-   "lighting": {
-    "hour": 15.4
-   },
-   "camera": [
-    {
-     "time": 0,
-     "eye": [
-      14,
-      0.8,
-      -12
-     ],
-     "look": [
-      70,
-      2.4,
-      -36
-     ],
-     "fov": 10.5
+      "name": "elephants_ridge",
+      "scenario": "cine_field",
+      "start": 3.0,
+      "duration": 5.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "lighting": {
+        "hour": 15.4
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [14, 0.8, -12],
+          "look": [70, 2.4, -36],
+          "fov": 10.5
+        },
+        {
+          "time": 5.0,
+          "eye": [14, 0.8, -15],
+          "look": [70, 2.4, -36],
+          "fov": 10.5
+        }
+      ],
+      "ground_clearance": 0.3
     },
     {
-     "time": 5.0,
-     "eye": [
-      14,
-      0.8,
-      -15
-     ],
-     "look": [
-      70,
-      2.4,
-      -36
-     ],
-     "fov": 10.5
-    }
-   ],
-   "ground_clearance": 0.3
-  },
-  {
-   "name": "crane_reveal",
-   "scenario": "cine_field",
-   "start": 4.0,
-   "duration": 8.0,
-   "rig": "free",
-   "eye_space": "world",
-   "look_space": "world",
-   "focus": {
-    "mode": "point",
-    "point": [
-     0,
-     0,
-     0
-    ]
-   },
-   "lighting": {
-    "hour": 15.4
-   },
-   "camera": [
-    {
-     "time": 0,
-     "eye": [
-      -74,
-      1.0,
-      -5
-     ],
-     "look": [
-      -46,
-      1.1,
-      0
-     ],
-     "fov": 32
+      "name": "crane_reveal",
+      "scenario": "cine_field",
+      "start": 4.0,
+      "duration": 8.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "lighting": {
+        "hour": 15.4
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [-74, 1.0, -5],
+          "look": [-46, 1.1, 0],
+          "fov": 32
+        },
+        {
+          "time": 8.0,
+          "eye": [-118, 48, 26],
+          "look": [12, 0, 0],
+          "fov": 36
+        }
+      ],
+      "ends": "ease",
+      "ground_clearance": 0.3
     },
     {
-     "time": 8.0,
-     "eye": [
-      -118,
-      48,
-      26
-     ],
-     "look": [
-      12,
-      0,
-      0
-     ],
-     "fov": 36
-    }
-   ],
-   "ends": "ease",
-   "ground_clearance": 0.3
-  },
-  {
-   "name": "advance_tele",
-   "scenario": "cine_field",
-   "start": 18.0,
-   "duration": 6.0,
-   "rig": "free",
-   "eye_space": "world",
-   "look_space": "world",
-   "focus": {
-    "mode": "point",
-    "point": [
-     0,
-     0,
-     0
-    ]
-   },
-   "lighting": {
-    "hour": 15.4
-   },
-   "camera": [
-    {
-     "time": 0,
-     "eye": [
-      -24,
-      1.5,
-      14
-     ],
-     "look": [
-      34,
-      2.2,
-      0
-     ],
-     "fov": 10
-    }
-   ],
-   "ground_clearance": 0.3
-  },
-  {
-   "name": "wedge_tactical",
-   "scenario": "cine_field",
-   "start": 22.0,
-   "duration": 9.0,
-   "rig": "free",
-   "eye_space": "world",
-   "look_space": "world",
-   "focus": {
-    "mode": "point",
-    "point": [
-     0,
-     0,
-     0
-    ]
-   },
-   "lighting": {
-    "hour": 15.4
-   },
-   "camera": [
-    {
-     "time": 0,
-     "eye": [
-      -70,
-      95,
-      -120
-     ],
-     "look": [
-      -4,
-      0,
-      0
-     ],
-     "fov": 34
+      "name": "advance_tele",
+      "scenario": "cine_field",
+      "start": 18.0,
+      "duration": 6.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "lighting": {
+        "hour": 15.4
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [-24, 1.5, 14],
+          "look": [34, 2.2, 0],
+          "fov": 10
+        }
+      ],
+      "ground_clearance": 0.3
     },
     {
-     "time": 9,
-     "eye": [
-      -58,
-      95,
-      -124
-     ],
-     "look": [
-      -4,
-      0,
-      0
-     ],
-     "fov": 34
-    }
-   ]
-  },
-  {
-   "name": "numidian_track",
-   "scenario": "cine_field",
-   "start": 17.0,
-   "duration": 7.0,
-   "rig": "free",
-   "focus": {
-    "mode": "group",
-    "group": "numidians_n",
-    "smoothing": 0.6,
-    "spring": true,
-    "dead_zone": 0.6
-   },
-   "lighting": {
-    "hour": 15.4
-   },
-   "camera": [
-    {
-     "time": 0,
-     "eye": [
-      2,
-      1.7,
-      -24
-     ],
-     "look": [
-      0,
-      0.7,
-      0
-     ],
-     "fov": 30
+      "name": "wedge_tactical",
+      "scenario": "cine_field",
+      "start": 22.0,
+      "duration": 9.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "lighting": {
+        "hour": 15.4
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [-70, 95, -120],
+          "look": [-4, 0, 0],
+          "fov": 34
+        },
+        {
+          "time": 9,
+          "eye": [-58, 95, -124],
+          "look": [-4, 0, 0],
+          "fov": 34
+        }
+      ]
     },
     {
-     "time": 7,
-     "eye": [
-      -2,
-      1.7,
-      -24
-     ],
-     "look": [
-      0,
-      0.7,
-      0
-     ],
-     "fov": 30
-    }
-   ],
-   "ground_clearance": 0.3
-  },
-  {
-   "name": "legion_march_low",
-   "scenario": "cine_field",
-   "start": 22.0,
-   "duration": 8.0,
-   "rig": "free",
-   "eye_space": "world",
-   "look_space": "world",
-   "focus": {
-    "mode": "point",
-    "point": [
-     0,
-     0,
-     0
-    ]
-   },
-   "lighting": {
-    "hour": 15.4
-   },
-   "camera": [
-    {
-     "time": 0,
-     "eye": [
-      -22,
-      0.42,
-      5
-     ],
-     "look": [
-      -40,
-      0.9,
-      1
-     ],
-     "fov": 20
+      "name": "numidian_track",
+      "scenario": "cine_field",
+      "start": 17.0,
+      "duration": 7.0,
+      "rig": "free",
+      "focus": {
+        "mode": "group",
+        "group": "numidians_n",
+        "smoothing": 0.6,
+        "spring": true,
+        "dead_zone": 0.6
+      },
+      "lighting": {
+        "hour": 15.4
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [2, 1.7, -24],
+          "look": [0, 0.7, 0],
+          "fov": 30
+        },
+        {
+          "time": 7,
+          "eye": [-2, 1.7, -24],
+          "look": [0, 0.7, 0],
+          "fov": 30
+        }
+      ],
+      "ground_clearance": 0.3
     },
     {
-     "time": 8.0,
-     "eye": [
-      -21,
-      0.42,
-      6.5
-     ],
-     "look": [
-      -36,
-      0.9,
-      1
-     ],
-     "fov": 20
-    }
-   ],
-   "ground_clearance": 0.3
-  },
-  {
-   "name": "lines_meet_side",
-   "scenario": "cine_field",
-   "start": 43.0,
-   "duration": 8.0,
-   "rig": "free",
-   "eye_space": "world",
-   "look_space": "world",
-   "focus": {
-    "mode": "point",
-    "point": [
-     0,
-     0,
-     0
-    ]
-   },
-   "lighting": {
-    "hour": 15.4
-   },
-   "camera": [
-    {
-     "time": 0,
-     "eye": [
-      -8,
-      0.9,
-      78
-     ],
-     "look": [
-      -12,
-      0.8,
-      0
-     ],
-     "fov": 9.5
+      "name": "legion_march_low",
+      "scenario": "cine_field",
+      "start": 22.0,
+      "duration": 8.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "lighting": {
+        "hour": 15.4
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [-22, 0.42, 5],
+          "look": [-40, 0.9, 1],
+          "fov": 20
+        },
+        {
+          "time": 8.0,
+          "eye": [-21, 0.42, 6.5],
+          "look": [-36, 0.9, 1],
+          "fov": 20
+        }
+      ],
+      "ground_clearance": 0.3
     },
     {
-     "time": 8.0,
-     "eye": [
-      -4,
-      0.9,
-      78
-     ],
-     "look": [
-      -8,
-      0.8,
-      0
-     ],
-     "fov": 9.5
-    }
-   ],
-   "ground_clearance": 0.3
-  },
-  {
-   "name": "scipio_chase",
-   "scenario": "cine_field",
-   "start": 33.0,
-   "duration": 8.0,
-   "gameplay_camera": true,
-   "stabilize_seconds": 0.25,
-   "lighting": {
-    "hour": 15.4
-   }
-  },
-  {
-   "name": "duel_pair",
-   "scenario": "cine_field",
-   "start": 57.0,
-   "duration": 10.0,
-   "rig": "free",
-   "focus": {
-    "mode": "group_pair",
-    "group": "scipio",
-    "second_group": "hannibal",
-    "smoothing": 0.5,
-    "spring": true
-   },
-   "lighting": {
-    "hour": 15.4
-   },
-   "handheld": {
-    "degrees": 0.25,
-    "frequency": 0.4
-   },
-   "camera": [
-    {
-     "time": 0,
-     "eye": [
-      1.2,
-      1.4,
-      6.5
-     ],
-     "look": [
-      0,
-      0.75,
-      0
-     ],
-     "fov": 26
+      "name": "lines_meet_side",
+      "scenario": "cine_field",
+      "start": 43.0,
+      "duration": 8.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "lighting": {
+        "hour": 15.4
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [-8, 0.9, 78],
+          "look": [-12, 0.8, 0],
+          "fov": 9.5
+        },
+        {
+          "time": 8.0,
+          "eye": [-4, 0.9, 78],
+          "look": [-8, 0.8, 0],
+          "fov": 9.5
+        }
+      ],
+      "ground_clearance": 0.3
     },
     {
-     "time": 10,
-     "eye": [
-      -1.2,
-      1.4,
-      6.5
-     ],
-     "look": [
-      0,
-      0.75,
-      0
-     ],
-     "fov": 26
-    }
-   ],
-   "ground_clearance": 0.3
-  },
-  {
-   "name": "scipio_tele",
-   "scenario": "cine_field",
-   "start": 44.0,
-   "duration": 12.0,
-   "rig": "free",
-   "ground_clearance": 0.3,
-   "focus": {
-    "mode": "group",
-    "group": "scipio",
-    "smoothing": 0.7,
-    "spring": true,
-    "dead_zone": 0.8
-   },
-   "lighting": {
-    "hour": 15.4
-   },
-   "handheld": {
-    "degrees": 0.12,
-    "frequency": 0.3
-   },
-   "camera": [
-    {
-     "time": 0,
-     "eye": [
-      9.5,
-      1.9,
-      8.5
-     ],
-     "look": [
-      0,
-      0.7,
-      0
-     ],
-     "fov": 13
+      "name": "scipio_chase",
+      "scenario": "cine_field",
+      "start": 33.0,
+      "duration": 8.0,
+      "gameplay_camera": true,
+      "stabilize_seconds": 0.25,
+      "lighting": {
+        "hour": 15.4
+      }
     },
     {
-     "time": 12.0,
-     "eye": [
-      11.0,
-      1.9,
-      6.5
-     ],
-     "look": [
-      0,
-      0.7,
-      0
-     ],
-     "fov": 13
-    }
-   ]
-  },
-  {
-   "name": "hannibal_tele",
-   "scenario": "cine_field",
-   "start": 50.0,
-   "duration": 12.0,
-   "rig": "free",
-   "ground_clearance": 0.3,
-   "focus": {
-    "mode": "group",
-    "group": "hannibal",
-    "smoothing": 0.7,
-    "spring": true,
-    "dead_zone": 0.8
-   },
-   "lighting": {
-    "hour": 15.4
-   },
-   "handheld": {
-    "degrees": 0.12,
-    "frequency": 0.3
-   },
-   "camera": [
-    {
-     "time": 0,
-     "eye": [
-      -10.5,
-      1.9,
-      -7.5
-     ],
-     "look": [
-      0,
-      0.7,
-      0
-     ],
-     "fov": 13
+      "name": "duel_pair",
+      "scenario": "cine_field",
+      "start": 57.0,
+      "duration": 10.0,
+      "rig": "free",
+      "focus": {
+        "mode": "group_pair",
+        "group": "scipio",
+        "second_group": "hannibal",
+        "smoothing": 0.5,
+        "spring": true
+      },
+      "lighting": {
+        "hour": 15.4
+      },
+      "handheld": {
+        "degrees": 0.25,
+        "frequency": 0.4
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [1.2, 1.4, 6.5],
+          "look": [0, 0.75, 0],
+          "fov": 26
+        },
+        {
+          "time": 10,
+          "eye": [-1.2, 1.4, 6.5],
+          "look": [0, 0.75, 0],
+          "fov": 26
+        }
+      ],
+      "ground_clearance": 0.3
     },
     {
-     "time": 12.0,
-     "eye": [
-      -11.5,
-      1.9,
-      -5.0
-     ],
-     "look": [
-      0,
-      0.7,
-      0
-     ],
-     "fov": 13
-    }
-   ]
-  },
-  {
-   "name": "melee_tele",
-   "scenario": "cine_field",
-   "start": 50.0,
-   "duration": 10.0,
-   "rig": "free",
-   "eye_space": "world",
-   "look_space": "world",
-   "focus": {
-    "mode": "point",
-    "point": [
-     0,
-     0,
-     0
-    ]
-   },
-   "ground_clearance": 0.3,
-   "lighting": {
-    "hour": 15.4
-   },
-   "camera": [
-    {
-     "time": 0,
-     "eye": [
-      -2,
-      1.6,
-      -40
-     ],
-     "look": [
-      -8,
-      0.7,
-      -2
-     ],
-     "fov": 12
+      "name": "scipio_tele",
+      "scenario": "cine_field",
+      "start": 44.0,
+      "duration": 12.0,
+      "rig": "free",
+      "ground_clearance": 0.3,
+      "focus": {
+        "mode": "group",
+        "group": "scipio",
+        "smoothing": 0.7,
+        "spring": true,
+        "dead_zone": 0.8
+      },
+      "lighting": {
+        "hour": 15.4
+      },
+      "handheld": {
+        "degrees": 0.12,
+        "frequency": 0.3
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [9.5, 1.9, 8.5],
+          "look": [0, 0.7, 0],
+          "fov": 13
+        },
+        {
+          "time": 12.0,
+          "eye": [11.0, 1.9, 6.5],
+          "look": [0, 0.7, 0],
+          "fov": 13
+        }
+      ]
     },
     {
-     "time": 10,
-     "eye": [
-      2,
-      1.6,
-      -40
-     ],
-     "look": [
-      -6,
-      0.7,
-      -2
-     ],
-     "fov": 12
-    }
-   ]
-  },
-  {
-   "name": "elephants_wing",
-   "scenario": "cine_field",
-   "start": 41.0,
-   "duration": 11.0,
-   "rig": "free",
-   "eye_space": "world",
-   "look_space": "world",
-   "focus": {
-    "mode": "point",
-    "point": [
-     0,
-     0,
-     0
-    ]
-   },
-   "ground_clearance": 0.3,
-   "lighting": {
-    "hour": 15.4
-   },
-   "camera": [
-    {
-     "time": 0,
-     "eye": [
-      -30,
-      0.6,
-      54
-     ],
-     "look": [
-      8,
-      1.4,
-      37
-     ],
-     "fov": 16
+      "name": "hannibal_tele",
+      "scenario": "cine_field",
+      "start": 50.0,
+      "duration": 12.0,
+      "rig": "free",
+      "ground_clearance": 0.3,
+      "focus": {
+        "mode": "group",
+        "group": "hannibal",
+        "smoothing": 0.7,
+        "spring": true,
+        "dead_zone": 0.8
+      },
+      "lighting": {
+        "hour": 15.4
+      },
+      "handheld": {
+        "degrees": 0.12,
+        "frequency": 0.3
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [-10.5, 1.9, -7.5],
+          "look": [0, 0.7, 0],
+          "fov": 13
+        },
+        {
+          "time": 12.0,
+          "eye": [-11.5, 1.9, -5.0],
+          "look": [0, 0.7, 0],
+          "fov": 13
+        }
+      ]
     },
     {
-     "time": 11.0,
-     "eye": [
-      -30,
-      0.6,
-      51
-     ],
-     "look": [
-      4,
-      1.4,
-      35
-     ],
-     "fov": 16
-    }
-   ]
-  },
-  {
-   "name": "elephants_side",
-   "scenario": "cine_field",
-   "start": 43.0,
-   "duration": 11.0,
-   "rig": "free",
-   "eye_space": "world",
-   "look_space": "world",
-   "focus": {
-    "mode": "point",
-    "point": [
-     0,
-     0,
-     0
-    ]
-   },
-   "ground_clearance": 0.3,
-   "lighting": {
-    "hour": 15.4
-   },
-   "camera": [
-    {
-     "time": 0,
-     "eye": [
-      2,
-      0.9,
-      92
-     ],
-     "look": [
-      6,
-      1.3,
-      36
-     ],
-     "fov": 11
+      "name": "melee_tele",
+      "scenario": "cine_field",
+      "start": 50.0,
+      "duration": 10.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "ground_clearance": 0.3,
+      "lighting": {
+        "hour": 15.4
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [-2, 1.6, -40],
+          "look": [-8, 0.7, -2],
+          "fov": 12
+        },
+        {
+          "time": 10,
+          "eye": [2, 1.6, -40],
+          "look": [-6, 0.7, -2],
+          "fov": 12
+        }
+      ]
     },
     {
-     "time": 11.0,
-     "eye": [
-      -2,
-      0.9,
-      92
-     ],
-     "look": [
-      2,
-      1.3,
-      33
-     ],
-     "fov": 11
+      "name": "elephants_wing",
+      "scenario": "cine_field",
+      "start": 41.0,
+      "duration": 11.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "ground_clearance": 0.3,
+      "lighting": {
+        "hour": 15.4
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [-30, 0.6, 54],
+          "look": [8, 1.4, 37],
+          "fov": 16
+        },
+        {
+          "time": 11.0,
+          "eye": [-30, 0.6, 51],
+          "look": [4, 1.4, 35],
+          "fov": 16
+        }
+      ]
+    },
+    {
+      "name": "elephants_side",
+      "scenario": "cine_field",
+      "start": 43.0,
+      "duration": 11.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "ground_clearance": 0.3,
+      "lighting": {
+        "hour": 15.4
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [2, 0.9, 92],
+          "look": [6, 1.3, 36],
+          "fov": 11
+        },
+        {
+          "time": 11.0,
+          "eye": [-2, 0.9, 92],
+          "look": [2, 1.3, 33],
+          "fov": 11
+        }
+      ]
     }
-   ]
-  }
- ]
+  ]
 }

@@ -1,1580 +1,1393 @@
 {
- "fps": 24,
- "subframes": 4,
- "shutter": 3,
- "scope": 2.39,
- "looks": {
-  "sun": {
-   "balance": {
-    "shadows": [
-     -0.015,
-     0.0,
-     0.025
-    ],
-    "highlights": [
-     0.03,
-     0.012,
-     -0.02
-    ]
-   },
-   "curve": [
-    [
-     0,
-     0.015
-    ],
-    [
-     0.25,
-     0.22
-    ],
-    [
-     0.5,
-     0.51
-    ],
-    [
-     0.75,
-     0.8
-    ],
-    [
-     1,
-     0.985
-    ]
-   ],
-   "saturation": 1.1,
-   "halation": 0.08,
-   "halation_tint": [
-    1.0,
-    0.75,
-    0.5
-   ],
-   "vignette": 0.3,
-   "grain": 4,
-   "sharpen": 0.3
-  },
-  "city": {
-   "balance": {
-    "shadows": [
-     -0.01,
-     0.0,
-     0.02
-    ],
-    "highlights": [
-     0.025,
-     0.012,
-     -0.015
-    ]
-   },
-   "curve": [
-    [
-     0,
-     0.015
-    ],
-    [
-     0.25,
-     0.23
-    ],
-    [
-     0.5,
-     0.52
-    ],
-    [
-     0.75,
-     0.8
-    ],
-    [
-     1,
-     0.985
-    ]
-   ],
-   "saturation": 1.08,
-   "halation": 0.07,
-   "halation_tint": [
-    1.0,
-    0.8,
-    0.55
-   ],
-   "vignette": 0.28,
-   "grain": 4,
-   "sharpen": 0.3
-  },
-  "dusk": {
-   "balance": {
-    "shadows": [
-     -0.02,
-     0.0,
-     0.04
-    ],
-    "highlights": [
-     0.04,
-     0.01,
-     -0.03
-    ]
-   },
-   "curve": [
-    [
-     0,
-     0.0
-    ],
-    [
-     0.25,
-     0.18
-    ],
-    [
-     0.5,
-     0.46
-    ],
-    [
-     0.75,
-     0.76
-    ],
-    [
-     1,
-     0.97
-    ]
-   ],
-   "saturation": 1.0,
-   "halation": 0.08,
-   "halation_tint": [
-    1.0,
-    0.62,
-    0.32
-   ],
-   "vignette": 0.36,
-   "grain": 5,
-   "sharpen": 0.28,
-   "exposure": -0.35,
-   "halation_threshold": 0.85
-  },
-  "night": {
-   "exposure": -0.3,
-   "balance": {
-    "shadows": [
-     -0.02,
-     0.0,
-     0.03
-    ],
-    "highlights": [
-     0.02,
-     0.0,
-     -0.01
-    ]
-   },
-   "curve": [
-    [
-     0,
-     0.02
-    ],
-    [
-     0.25,
-     0.17
-    ],
-    [
-     0.5,
-     0.44
-    ],
-    [
-     0.75,
-     0.72
-    ],
-    [
-     1,
-     0.93
-    ]
-   ],
-   "saturation": 0.85,
-   "halation": 0.07,
-   "halation_threshold": 0.88,
-   "halation_tint": [
-    1.0,
-    0.6,
-    0.3
-   ],
-   "vignette": 0.45,
-   "grain": 5,
-   "sharpen": 0.25,
-   "gamma": 1.0
-  },
-  "fire": {
-   "curve": [
-    [
-     0,
-     0.0
-    ],
-    [
-     0.3,
-     0.2
-    ],
-    [
-     0.6,
-     0.6
-    ],
-    [
-     1,
-     1
-    ]
-   ],
-   "saturation": 1.05,
-   "vignette": 0.5,
-   "grain": 4
-  }
- },
- "events": [
-  {
-   "name": "open_black",
-   "card": {
-    "lines": []
-   },
-   "dur": 0.5
-  },
-  {
-   "name": "hannibal",
-   "clip": "cine_field/hannibal_hero",
-   "in": 0.6,
-   "dur": 2.0,
-   "look": "sun",
-   "game_audio": -14,
-   "fx": {
-    "dust": 0.45
-   }
-  },
-  {
-   "name": "scipio",
-   "clip": "cine_field/scipio_hero",
-   "in": 0.6,
-   "dur": 1.3,
-   "look": "sun",
-   "game_audio": -14,
-   "fx": {
-    "dust": 0.45
-   }
-  },
-  {
-   "name": "shields",
-   "clip": "cine_field/shield_rank",
-   "in": 1.0,
-   "dur": 1.1,
-   "look": "sun",
-   "game_audio": -14
-  },
-  {
-   "name": "numidians",
-   "clip": "cine_field/numidian_track",
-   "in": 0.8,
-   "dur": 1.7,
-   "look": "sun",
-   "game_audio": -14,
-   "fx": {
-    "dust": 0.45
-   }
-  },
-  {
-   "name": "legion",
-   "clip": "cine_field/legion_march_low",
-   "in": 2.4,
-   "dur": 1.3,
-   "look": "sun",
-   "game_audio": -14
-  },
-  {
-   "name": "elephants",
-   "clip": "cine_field/elephants_wing",
-   "in": 3.0,
-   "dur": 1.8,
-   "look": "sun",
-   "game_audio": -14,
-   "fx": {
-    "dust": 0.45
-   },
-   "hits": [
-    0.0
-   ]
-  },
-  {
-   "name": "clash",
-   "clip": "cine_field/lines_meet_side",
-   "in": 2.5,
-   "dur": 2.0,
-   "look": "sun",
-   "game_audio": -14,
-   "fx": {
-    "dust": 0.45
-   },
-   "hits": [
-    0.0,
-    1.1
-   ]
-  },
-  {
-   "name": "elephants2",
-   "clip": "cine_field/elephants_side",
-   "in": 4.0,
-   "dur": 1.5,
-   "look": "sun",
-   "game_audio": -14,
-   "fx": {
-    "dust": 0.45
-   },
-   "hits": [
-    0.5
-   ]
-  },
-  {
-   "name": "melee",
-   "clip": "cine_field/melee_tele",
-   "in": 6.6,
-   "dur": 1.3,
-   "look": "sun",
-   "game_audio": -14,
-   "hits": [
-    0.2
-   ]
-  },
-  {
-   "name": "crane",
-   "clip": "cine_field/crane_reveal",
-   "in": 0.3,
-   "dur": 3.0,
-   "look": "sun",
-   "game_audio": -14,
-   "fx": {
-    "dust": 0.45
-   }
-  },
-  {
-   "name": "tactical",
-   "clip": "cine_field/wedge_tactical",
-   "in": 3.0,
-   "dur": 2.2,
-   "look": "sun",
-   "game_audio": -14
-  },
-  {
-   "name": "advance",
-   "clip": "cine_field/advance_tele",
-   "in": 0.8,
-   "dur": 1.6,
-   "look": "sun",
-   "game_audio": -14,
-   "fx": {
-    "dust": 0.45
-   }
-  },
-  {
-   "name": "chase",
-   "clip": "cine_field/scipio_chase",
-   "in": 2.5,
-   "dur": 2.2,
-   "look": "sun",
-   "game_audio": -14,
-   "hits": [
-    1.6
-   ]
-  },
-  {
-   "name": "scipio_fight",
-   "clip": "cine_field/scipio_tele",
-   "in": 0.5,
-   "dur": 1.8,
-   "look": "sun",
-   "game_audio": -14,
-   "hits": [
-    0.9
-   ]
-  },
-  {
-   "name": "hannibal_fight",
-   "clip": "cine_field/hannibal_tele",
-   "in": 4.0,
-   "dur": 1.6,
-   "look": "sun",
-   "game_audio": -14,
-   "hits": [
-    0.5
-   ]
-  },
-  {
-   "name": "duel",
-   "clip": "cine_field/duel_pair",
-   "in": 2.0,
-   "dur": 1.6,
-   "look": "sun",
-   "game_audio": -14,
-   "hits": [
-    0.4
-   ]
-  },
-  {
-   "name": "citadel",
-   "clip": "cine_city/citadel_panorama",
-   "in": 1.0,
-   "dur": 2.2,
-   "look": "city",
-   "game_audio": -14,
-   "fx": {
-    "leak": {
-     "opacity": 0.8,
-     "at": 0.0
+  "fps": 24,
+  "subframes": 4,
+  "shutter": 3,
+  "scope": 2.39,
+  "looks": {
+    "sun": {
+      "balance": {
+        "shadows": [-0.015, 0.0, 0.025],
+        "highlights": [0.03, 0.012, -0.02]
+      },
+      "curve": [
+        [0, 0.015],
+        [0.25, 0.22],
+        [0.5, 0.51],
+        [0.75, 0.8],
+        [1, 0.985]
+      ],
+      "saturation": 1.1,
+      "halation": 0.08,
+      "halation_tint": [1.0, 0.75, 0.5],
+      "vignette": 0.3,
+      "grain": 4,
+      "sharpen": 0.3
+    },
+    "city": {
+      "balance": {
+        "shadows": [-0.01, 0.0, 0.02],
+        "highlights": [0.025, 0.012, -0.015]
+      },
+      "curve": [
+        [0, 0.015],
+        [0.25, 0.23],
+        [0.5, 0.52],
+        [0.75, 0.8],
+        [1, 0.985]
+      ],
+      "saturation": 1.08,
+      "halation": 0.07,
+      "halation_tint": [1.0, 0.8, 0.55],
+      "vignette": 0.28,
+      "grain": 4,
+      "sharpen": 0.3
+    },
+    "dusk": {
+      "balance": {
+        "shadows": [-0.02, 0.0, 0.04],
+        "highlights": [0.04, 0.01, -0.03]
+      },
+      "curve": [
+        [0, 0.0],
+        [0.25, 0.18],
+        [0.5, 0.46],
+        [0.75, 0.76],
+        [1, 0.97]
+      ],
+      "saturation": 1.0,
+      "halation": 0.08,
+      "halation_tint": [1.0, 0.62, 0.32],
+      "vignette": 0.36,
+      "grain": 5,
+      "sharpen": 0.28,
+      "exposure": -0.35,
+      "halation_threshold": 0.85
+    },
+    "night": {
+      "exposure": -0.3,
+      "balance": {
+        "shadows": [-0.02, 0.0, 0.03],
+        "highlights": [0.02, 0.0, -0.01]
+      },
+      "curve": [
+        [0, 0.02],
+        [0.25, 0.17],
+        [0.5, 0.44],
+        [0.75, 0.72],
+        [1, 0.93]
+      ],
+      "saturation": 0.85,
+      "halation": 0.07,
+      "halation_threshold": 0.88,
+      "halation_tint": [1.0, 0.6, 0.3],
+      "vignette": 0.45,
+      "grain": 5,
+      "sharpen": 0.25,
+      "gamma": 1.0
+    },
+    "fire": {
+      "curve": [
+        [0, 0.0],
+        [0.3, 0.2],
+        [0.6, 0.6],
+        [1, 1]
+      ],
+      "saturation": 1.05,
+      "vignette": 0.5,
+      "grain": 4
     }
-   }
   },
-  {
-   "name": "temple",
-   "clip": "cine_city/temple_rising",
-   "in": 6.4,
-   "dur": 3.2,
-   "look": "city",
-   "game_audio": -14
-  },
-  {
-   "name": "avenue",
-   "clip": "cine_city/avenue_life",
-   "in": 1.0,
-   "dur": 1.5,
-   "look": "city",
-   "game_audio": -14
-  },
-  {
-   "name": "forum",
-   "clip": "cine_city/forum_crowd",
-   "in": 2.0,
-   "dur": 1.3,
-   "look": "city",
-   "game_audio": -14
-  },
-  {
-   "name": "ad_portas",
-   "clip": "cine_siege/hannibal_ad_portas",
-   "in": 2.5,
-   "dur": 1.8,
-   "look": "dusk",
-   "game_audio": -14,
-   "fx": {
-    "embers": 0.6
-   }
-  },
-  {
-   "name": "gate_legion",
-   "clip": "cine_siege/legion_before_gate",
-   "in": 2.0,
-   "dur": 1.5,
-   "look": "dusk",
-   "game_audio": -14,
-   "fx": {
-    "embers": 0.85
-   }
-  },
-  {
-   "name": "tower",
-   "clip": "cine_siege/tower_burns",
-   "in": 6.5,
-   "dur": 2.4,
-   "look": "dusk",
-   "game_audio": -14,
-   "fx": {
-    "embers": 1.0
-   },
-   "hits": [
-    1.9
-   ]
-  },
-  {
-   "name": "gate_elephants",
-   "clip": "cine_siege/elephants_gate",
-   "in": 1.5,
-   "dur": 1.4,
-   "look": "dusk",
-   "game_audio": -14,
-   "fx": {
-    "embers": 0.85
-   }
-  },
-  {
-   "name": "tower2",
-   "clip": "cine_siege/tower_two_burns",
-   "in": 4.0,
-   "dur": 1.4,
-   "look": "dusk",
-   "game_audio": -14,
-   "fx": {
-    "embers": 0.85
-   },
-   "hits": [
-    0.2
-   ]
-  },
-  {
-   "name": "barrow",
-   "clip": "cine_sepulcher/barrow_mist",
-   "in": 1.0,
-   "dur": 1.8,
-   "look": "night",
-   "game_audio": -14
-  },
-  {
-   "name": "column",
-   "clip": "cine_sepulcher/column_fires",
-   "in": 4.0,
-   "dur": 1.4,
-   "look": "night",
-   "game_audio": -14,
-   "fx": {
-    "embers": 0.4
-   }
-  },
-  {
-   "name": "rising",
-   "clip": "cine_sepulcher/the_rising",
-   "in": 2.9,
-   "dur": 2.2,
-   "look": "night",
-   "game_audio": -14,
-   "hits": [
-    0.0
-   ]
-  },
-  {
-   "name": "snow_melee",
-   "clip": "cine_sepulcher/snow_melee",
-   "in": 6.8,
-   "dur": 1.4,
-   "look": "night",
-   "game_audio": -14,
-   "fx": {
-    "embers": 0.6
-   },
-   "hits": [
-    0.3
-   ]
-  },
-  {
-   "name": "consul_fight",
-   "clip": "cine_sepulcher/consul_fights",
-   "in": 1.3,
-   "dur": 1.6,
-   "look": "night",
-   "game_audio": -14,
-   "hits": [
-    0.5
-   ]
-  },
-  {
-   "name": "x1",
-   "clip": "cine_siege/tower_two_burns",
-   "in": 5.2,
-   "dur": 1.0,
-   "look": "dusk",
-   "game_audio": -14,
-   "fx": {
-    "embers": 0.85
-   },
-   "hits": [
-    0.0
-   ]
-  },
-  {
-   "name": "x2",
-   "clip": "cine_field/lines_meet_side",
-   "in": 5.5,
-   "dur": 0.9,
-   "look": "sun",
-   "game_audio": -14,
-   "hits": [
-    0.0
-   ]
-  },
-  {
-   "name": "x3",
-   "clip": "cine_sepulcher/snow_melee",
-   "in": 8.6,
-   "dur": 0.8,
-   "look": "night",
-   "game_audio": -14,
-   "hits": [
-    0.0
-   ]
-  },
-  {
-   "name": "x4",
-   "clip": "cine_field/elephants_side",
-   "in": 6.5,
-   "dur": 0.8,
-   "look": "sun",
-   "game_audio": -14,
-   "hits": [
-    0.0
-   ]
-  },
-  {
-   "name": "x5",
-   "clip": "cine_field/hannibal_tele",
-   "in": 5.6,
-   "dur": 0.7,
-   "look": "sun",
-   "game_audio": -14,
-   "hits": [
-    0.0
-   ]
-  },
-  {
-   "name": "x6",
-   "clip": "cine_sepulcher/consul_fights",
-   "in": 3.4,
-   "dur": 0.7,
-   "look": "night",
-   "game_audio": -14,
-   "hits": [
-    0.0
-   ]
-  },
-  {
-   "name": "x7",
-   "clip": "cine_field/scipio_tele",
-   "in": 2.6,
-   "dur": 0.7,
-   "look": "sun",
-   "game_audio": -14,
-   "hits": [
-    0.0
-   ]
-  },
-  {
-   "name": "x8",
-   "clip": "cine_siege/tower_burns",
-   "in": 8.1,
-   "dur": 1.3,
-   "look": "dusk",
-   "game_audio": -14,
-   "fx": {
-    "embers": 1.0
-   },
-   "hits": [
-    0.3
-   ]
-  },
-  {
-   "name": "endcard",
-   "dur": 13.0,
-   "card": {
-    "background": "cine_flame/flame_card",
-    "look": "fire",
-    "in": 0.5,
-    "bg_fade": 0.8,
-    "fade_out": 1.2,
-    "lines": [
-     {
-      "text": "STANDARD OF IRON",
-      "size": 104,
-      "tracking": 0.3,
-      "at": 0.5,
-      "fade": 1.6,
-      "glow": 0.45,
-      "drift": 0.03,
-      "y": 0.4
-     },
-     {
-      "text": "FREE AND OPEN SOURCE",
-      "size": 34,
-      "tracking": 0.34,
-      "at": 2.6,
-      "fade": 0.9,
-      "y": 0.53
-     },
-     {
-      "text": "GITHUB.COM/DJEADA/STANDARD-OF-IRON",
-      "size": 40,
-      "tracking": 0.16,
-      "at": 3.4,
-      "fade": 0.9,
-      "y": 0.61,
-      "glow": 0.2
-     },
-     {
-      "text": "WINDOWS  \u00b7  MACOS  \u00b7  LINUX",
-      "size": 28,
-      "tracking": 0.3,
-      "at": 4.2,
-      "fade": 0.9,
-      "y": 0.68,
-      "opacity": 0.85
-     }
-    ]
-   }
-  }
- ],
- "captions": [
-  {
-   "text": "ROME AGAINST CARTHAGE",
-   "sub": "THE SECOND PUNIC WAR",
-   "at": "hannibal+0.1",
-   "dur": 2.6,
-   "size": 52
-  },
-  {
-   "text": "COMMAND ARMIES OF THOUSANDS",
-   "at": "crane+0.3",
-   "dur": 2.6,
-   "size": 52
-  },
-  {
-   "text": "THEN FIGHT AT THE FRONT",
-   "sub": "TAKE DIRECT CONTROL OF YOUR COMMANDER",
-   "at": "chase+0.2",
-   "dur": 2.8,
-   "size": 52
-  },
-  {
-   "text": "BUILD THE CITY YOU FIGHT FOR",
-   "at": "citadel+0.3",
-   "dur": 2.6,
-   "size": 52
-  },
-  {
-   "text": "SET THEIR CITIES ABLAZE",
-   "at": "ad_portas+0.2",
-   "dur": 2.4,
-   "size": 52
-  },
-  {
-   "text": "BEWARE THE IRON SEPULCHER",
-   "at": "barrow+0.2",
-   "dur": 2.6,
-   "size": 52
-  }
- ],
- "audio": {
-  "music": [
-   {
-    "file": "assets/audio/music/combat/combat_siege_at_dawn.ogg",
-    "src_in": 0.0,
-    "at": "hannibal-0.23",
-    "until": "hannibal+2.2",
-    "gain": -2,
-    "fade_out": 1.0
-   },
-   {
-    "file": "assets/audio/music/menu/main_theme_iron_kingdom.ogg",
-    "src_in": 13.9,
-    "at": "hannibal",
-    "until": "barrow",
-    "gain": 2,
-    "fade_in": 0.2,
-    "fade_out": 0.4,
-    "gain_curve": [
-     [
-      "hannibal",
-      -4
-     ],
-     [
-      "elephants-0.3",
-      0
-     ],
-     [
-      "barrow-0.5",
-      0
-     ]
-    ]
-   },
-   {
-    "file": "assets/audio/music/events/skeletons_awaken.ogg",
-    "src_in": 19.320000000000004,
-    "at": "barrow",
-    "until": "x1",
-    "gain": 1,
-    "fade_in": 0.3,
-    "fade_out": 0.1,
-    "gain_curve": [
-     [
-      "barrow",
-      -6
-     ],
-     [
-      "rising-0.3",
-      -4
-     ],
-     [
-      "rising",
-      0
-     ]
-    ]
-   },
-   {
-    "file": "assets/audio/music/combat/combat_dust_of_cannae.ogg",
-    "src_in": 48.1,
-    "at": "x1",
-    "until": "endcard+2.5",
-    "gain": 1,
-    "fade_out": 2.2
-   },
-   {
-    "file": "assets/audio/music/menu/main_theme_iron_kingdom.ogg",
-    "src_in": 0.0,
-    "at": "endcard+0.38",
-    "until": "endcard+13.0",
-    "gain": 1,
-    "fade_out": 2.5
-   }
+  "events": [
+    {
+      "name": "open_black",
+      "card": {
+        "lines": []
+      },
+      "dur": 0.5
+    },
+    {
+      "name": "hannibal",
+      "clip": "cine_field/hannibal_hero",
+      "in": 0.6,
+      "dur": 2.0,
+      "look": "sun",
+      "game_audio": -14,
+      "fx": {
+        "dust": 0.45
+      }
+    },
+    {
+      "name": "scipio",
+      "clip": "cine_field/scipio_hero",
+      "in": 0.6,
+      "dur": 1.3,
+      "look": "sun",
+      "game_audio": -14,
+      "fx": {
+        "dust": 0.45
+      }
+    },
+    {
+      "name": "shields",
+      "clip": "cine_field/shield_rank",
+      "in": 1.0,
+      "dur": 1.1,
+      "look": "sun",
+      "game_audio": -14
+    },
+    {
+      "name": "numidians",
+      "clip": "cine_field/numidian_track",
+      "in": 0.8,
+      "dur": 1.7,
+      "look": "sun",
+      "game_audio": -14,
+      "fx": {
+        "dust": 0.45
+      }
+    },
+    {
+      "name": "legion",
+      "clip": "cine_field/legion_march_low",
+      "in": 2.4,
+      "dur": 1.3,
+      "look": "sun",
+      "game_audio": -14
+    },
+    {
+      "name": "elephants",
+      "clip": "cine_field/elephants_wing",
+      "in": 3.0,
+      "dur": 1.8,
+      "look": "sun",
+      "game_audio": -14,
+      "fx": {
+        "dust": 0.45
+      },
+      "hits": [0.0]
+    },
+    {
+      "name": "clash",
+      "clip": "cine_field/lines_meet_side",
+      "in": 2.5,
+      "dur": 2.0,
+      "look": "sun",
+      "game_audio": -14,
+      "fx": {
+        "dust": 0.45
+      },
+      "hits": [0.0, 1.1]
+    },
+    {
+      "name": "elephants2",
+      "clip": "cine_field/elephants_side",
+      "in": 4.0,
+      "dur": 1.5,
+      "look": "sun",
+      "game_audio": -14,
+      "fx": {
+        "dust": 0.45
+      },
+      "hits": [0.5]
+    },
+    {
+      "name": "melee",
+      "clip": "cine_field/melee_tele",
+      "in": 6.6,
+      "dur": 1.3,
+      "look": "sun",
+      "game_audio": -14,
+      "hits": [0.2]
+    },
+    {
+      "name": "crane",
+      "clip": "cine_field/crane_reveal",
+      "in": 0.3,
+      "dur": 3.0,
+      "look": "sun",
+      "game_audio": -14,
+      "fx": {
+        "dust": 0.45
+      }
+    },
+    {
+      "name": "tactical",
+      "clip": "cine_field/wedge_tactical",
+      "in": 3.0,
+      "dur": 2.2,
+      "look": "sun",
+      "game_audio": -14
+    },
+    {
+      "name": "advance",
+      "clip": "cine_field/advance_tele",
+      "in": 0.8,
+      "dur": 1.6,
+      "look": "sun",
+      "game_audio": -14,
+      "fx": {
+        "dust": 0.45
+      }
+    },
+    {
+      "name": "chase",
+      "clip": "cine_field/scipio_chase",
+      "in": 2.5,
+      "dur": 2.2,
+      "look": "sun",
+      "game_audio": -14,
+      "hits": [1.6]
+    },
+    {
+      "name": "scipio_fight",
+      "clip": "cine_field/scipio_tele",
+      "in": 0.5,
+      "dur": 1.8,
+      "look": "sun",
+      "game_audio": -14,
+      "hits": [0.9]
+    },
+    {
+      "name": "hannibal_fight",
+      "clip": "cine_field/hannibal_tele",
+      "in": 4.0,
+      "dur": 1.6,
+      "look": "sun",
+      "game_audio": -14,
+      "hits": [0.5]
+    },
+    {
+      "name": "duel",
+      "clip": "cine_field/duel_pair",
+      "in": 2.0,
+      "dur": 1.6,
+      "look": "sun",
+      "game_audio": -14,
+      "hits": [0.4]
+    },
+    {
+      "name": "citadel",
+      "clip": "cine_city/citadel_panorama",
+      "in": 1.0,
+      "dur": 2.2,
+      "look": "city",
+      "game_audio": -14,
+      "fx": {
+        "leak": {
+          "opacity": 0.8,
+          "at": 0.0
+        }
+      }
+    },
+    {
+      "name": "temple",
+      "clip": "cine_city/temple_rising",
+      "in": 6.4,
+      "dur": 3.2,
+      "look": "city",
+      "game_audio": -14
+    },
+    {
+      "name": "avenue",
+      "clip": "cine_city/avenue_life",
+      "in": 1.0,
+      "dur": 1.5,
+      "look": "city",
+      "game_audio": -14
+    },
+    {
+      "name": "forum",
+      "clip": "cine_city/forum_crowd",
+      "in": 2.0,
+      "dur": 1.3,
+      "look": "city",
+      "game_audio": -14
+    },
+    {
+      "name": "ad_portas",
+      "clip": "cine_siege/hannibal_ad_portas",
+      "in": 2.5,
+      "dur": 1.8,
+      "look": "dusk",
+      "game_audio": -14,
+      "fx": {
+        "embers": 0.6
+      }
+    },
+    {
+      "name": "gate_legion",
+      "clip": "cine_siege/legion_before_gate",
+      "in": 2.0,
+      "dur": 1.5,
+      "look": "dusk",
+      "game_audio": -14,
+      "fx": {
+        "embers": 0.85
+      }
+    },
+    {
+      "name": "tower",
+      "clip": "cine_siege/tower_burns",
+      "in": 6.5,
+      "dur": 2.4,
+      "look": "dusk",
+      "game_audio": -14,
+      "fx": {
+        "embers": 1.0
+      },
+      "hits": [1.9]
+    },
+    {
+      "name": "gate_elephants",
+      "clip": "cine_siege/elephants_gate",
+      "in": 1.5,
+      "dur": 1.4,
+      "look": "dusk",
+      "game_audio": -14,
+      "fx": {
+        "embers": 0.85
+      }
+    },
+    {
+      "name": "tower2",
+      "clip": "cine_siege/tower_two_burns",
+      "in": 4.0,
+      "dur": 1.4,
+      "look": "dusk",
+      "game_audio": -14,
+      "fx": {
+        "embers": 0.85
+      },
+      "hits": [0.2]
+    },
+    {
+      "name": "barrow",
+      "clip": "cine_sepulcher/barrow_mist",
+      "in": 1.0,
+      "dur": 1.8,
+      "look": "night",
+      "game_audio": -14
+    },
+    {
+      "name": "column",
+      "clip": "cine_sepulcher/column_fires",
+      "in": 4.0,
+      "dur": 1.4,
+      "look": "night",
+      "game_audio": -14,
+      "fx": {
+        "embers": 0.4
+      }
+    },
+    {
+      "name": "rising",
+      "clip": "cine_sepulcher/the_rising",
+      "in": 2.9,
+      "dur": 2.2,
+      "look": "night",
+      "game_audio": -14,
+      "hits": [0.0]
+    },
+    {
+      "name": "snow_melee",
+      "clip": "cine_sepulcher/snow_melee",
+      "in": 6.8,
+      "dur": 1.4,
+      "look": "night",
+      "game_audio": -14,
+      "fx": {
+        "embers": 0.6
+      },
+      "hits": [0.3]
+    },
+    {
+      "name": "consul_fight",
+      "clip": "cine_sepulcher/consul_fights",
+      "in": 1.3,
+      "dur": 1.6,
+      "look": "night",
+      "game_audio": -14,
+      "hits": [0.5]
+    },
+    {
+      "name": "x1",
+      "clip": "cine_siege/tower_two_burns",
+      "in": 5.2,
+      "dur": 1.0,
+      "look": "dusk",
+      "game_audio": -14,
+      "fx": {
+        "embers": 0.85
+      },
+      "hits": [0.0]
+    },
+    {
+      "name": "x2",
+      "clip": "cine_field/lines_meet_side",
+      "in": 5.5,
+      "dur": 0.9,
+      "look": "sun",
+      "game_audio": -14,
+      "hits": [0.0]
+    },
+    {
+      "name": "x3",
+      "clip": "cine_sepulcher/snow_melee",
+      "in": 8.6,
+      "dur": 0.8,
+      "look": "night",
+      "game_audio": -14,
+      "hits": [0.0]
+    },
+    {
+      "name": "x4",
+      "clip": "cine_field/elephants_side",
+      "in": 6.5,
+      "dur": 0.8,
+      "look": "sun",
+      "game_audio": -14,
+      "hits": [0.0]
+    },
+    {
+      "name": "x5",
+      "clip": "cine_field/hannibal_tele",
+      "in": 5.6,
+      "dur": 0.7,
+      "look": "sun",
+      "game_audio": -14,
+      "hits": [0.0]
+    },
+    {
+      "name": "x6",
+      "clip": "cine_sepulcher/consul_fights",
+      "in": 3.4,
+      "dur": 0.7,
+      "look": "night",
+      "game_audio": -14,
+      "hits": [0.0]
+    },
+    {
+      "name": "x7",
+      "clip": "cine_field/scipio_tele",
+      "in": 2.6,
+      "dur": 0.7,
+      "look": "sun",
+      "game_audio": -14,
+      "hits": [0.0]
+    },
+    {
+      "name": "x8",
+      "clip": "cine_siege/tower_burns",
+      "in": 8.1,
+      "dur": 1.3,
+      "look": "dusk",
+      "game_audio": -14,
+      "fx": {
+        "embers": 1.0
+      },
+      "hits": [0.3]
+    },
+    {
+      "name": "endcard",
+      "dur": 13.0,
+      "card": {
+        "background": "cine_flame/flame_card",
+        "look": "fire",
+        "in": 0.5,
+        "bg_fade": 0.8,
+        "fade_out": 1.2,
+        "lines": [
+          {
+            "text": "STANDARD OF IRON",
+            "size": 104,
+            "tracking": 0.3,
+            "at": 0.5,
+            "fade": 1.6,
+            "glow": 0.45,
+            "drift": 0.03,
+            "y": 0.4
+          },
+          {
+            "text": "FREE AND OPEN SOURCE",
+            "size": 34,
+            "tracking": 0.34,
+            "at": 2.6,
+            "fade": 0.9,
+            "y": 0.53
+          },
+          {
+            "text": "GITHUB.COM/DJEADA/STANDARD-OF-IRON",
+            "size": 40,
+            "tracking": 0.16,
+            "at": 3.4,
+            "fade": 0.9,
+            "y": 0.61,
+            "glow": 0.2
+          },
+          {
+            "text": "WINDOWS  \u00b7  MACOS  \u00b7  LINUX",
+            "size": 28,
+            "tracking": 0.3,
+            "at": 4.2,
+            "fade": 0.9,
+            "y": 0.68,
+            "opacity": 0.85
+          }
+        ]
+      }
+    }
   ],
-  "fx": [
-   {
-    "at": "hannibal-0.3",
-    "file": "assets/audio/sfx/combat/roman_war_horns_orders.ogg",
-    "gain": -6,
-    "distance": 120,
-    "reverb": 0.6,
-    "decay": 3.5,
-    "pan": -0.2
-   },
-   {
-    "at": "hannibal",
-    "synth": "impact",
-    "gain": -4,
-    "weight": 1.3,
-    "brightness": 0.2,
-    "seed": 2
-   },
-   {
-    "at": "hannibal+0.2",
-    "file": "assets/audio/sfx/combat/carthage_prepare_battle.ogg",
-    "gain": -9,
-    "distance": 30,
-    "reverb": 0.3
-   },
-   {
-    "at": "scipio+0.1",
-    "file": "assets/audio/sfx/orders/hold_shields_plant.ogg",
-    "gain": -5,
-    "reverb": 0.15
-   },
-   {
-    "at": "shields+0.0",
-    "file": "assets/audio/sfx/orders/guard_spear_taps.ogg",
-    "gain": -8,
-    "reverb": 0.15
-   },
-   {
-    "at": "numidians-0.3",
-    "file": "assets/audio/sfx/combat/horse_gallop_close_pass.ogg",
-    "gain": -1,
-    "pan": [
-     [
-      0,
-      -0.9
-     ],
-     [
-      2.0,
-      0.9
-     ]
+  "captions": [
+    {
+      "text": "ROME AGAINST CARTHAGE",
+      "sub": "THE SECOND PUNIC WAR",
+      "at": "hannibal+0.1",
+      "dur": 2.6,
+      "size": 52
+    },
+    {
+      "text": "COMMAND ARMIES OF THOUSANDS",
+      "at": "crane+0.3",
+      "dur": 2.6,
+      "size": 52
+    },
+    {
+      "text": "THEN FIGHT AT THE FRONT",
+      "sub": "TAKE DIRECT CONTROL OF YOUR COMMANDER",
+      "at": "chase+0.2",
+      "dur": 2.8,
+      "size": 52
+    },
+    {
+      "text": "BUILD THE CITY YOU FIGHT FOR",
+      "at": "citadel+0.3",
+      "dur": 2.6,
+      "size": 52
+    },
+    {
+      "text": "SET THEIR CITIES ABLAZE",
+      "at": "ad_portas+0.2",
+      "dur": 2.4,
+      "size": 52
+    },
+    {
+      "text": "BEWARE THE IRON SEPULCHER",
+      "at": "barrow+0.2",
+      "dur": 2.6,
+      "size": 52
+    }
+  ],
+  "audio": {
+    "music": [
+      {
+        "file": "assets/audio/music/combat/combat_siege_at_dawn.ogg",
+        "src_in": 0.0,
+        "at": "hannibal-0.23",
+        "until": "hannibal+2.2",
+        "gain": -2,
+        "fade_out": 1.0
+      },
+      {
+        "file": "assets/audio/music/menu/main_theme_iron_kingdom.ogg",
+        "src_in": 13.9,
+        "at": "hannibal",
+        "until": "barrow",
+        "gain": 2,
+        "fade_in": 0.2,
+        "fade_out": 0.4,
+        "gain_curve": [
+          ["hannibal", -4],
+          ["elephants-0.3", 0],
+          ["barrow-0.5", 0]
+        ]
+      },
+      {
+        "file": "assets/audio/music/events/skeletons_awaken.ogg",
+        "src_in": 19.320000000000004,
+        "at": "barrow",
+        "until": "x1",
+        "gain": 1,
+        "fade_in": 0.3,
+        "fade_out": 0.1,
+        "gain_curve": [
+          ["barrow", -6],
+          ["rising-0.3", -4],
+          ["rising", 0]
+        ]
+      },
+      {
+        "file": "assets/audio/music/combat/combat_dust_of_cannae.ogg",
+        "src_in": 48.1,
+        "at": "x1",
+        "until": "endcard+2.5",
+        "gain": 1,
+        "fade_out": 2.2
+      },
+      {
+        "file": "assets/audio/music/menu/main_theme_iron_kingdom.ogg",
+        "src_in": 0.0,
+        "at": "endcard+0.38",
+        "until": "endcard+13.0",
+        "gain": 1,
+        "fade_out": 2.5
+      }
     ],
-    "reverb": 0.1
-   },
-   {
-    "at": "legion+0.0",
-    "file": "assets/audio/sfx/combat/army_march_dirt_mass.ogg",
-    "gain": -2,
-    "distance": 6
-   },
-   {
-    "at": "legion+0.2",
-    "file": "assets/audio/sfx/combat/charge_roar.ogg",
-    "gain": -6,
-    "reverb": 0.3
-   },
-   {
-    "at": "elephants-2.2",
-    "synth": "riser",
-    "gain": -5,
-    "length": 2.2,
-    "top_hz": 9000
-   },
-   {
-    "at": "elephants-1.6",
-    "synth": "reverse",
-    "gain": -6,
-    "length": 1.6
-   },
-   {
-    "at": "elephants",
-    "synth": "impact",
-    "gain": 0,
-    "weight": 1.4,
-    "brightness": 0.5,
-    "seed": 5
-   },
-   {
-    "at": "elephants+0.0",
-    "file": "assets/audio/sfx/combat/elephant_trumpet_charge.ogg",
-    "gain": -1,
-    "pan": 0.25,
-    "reverb": 0.3
-   },
-   {
-    "at": "elephants+0.3",
-    "file": "assets/audio/sfx/combat/battlefield_crowd_chaos.ogg",
-    "gain": -6,
-    "reverb": 0.2
-   },
-   {
-    "at": "clash",
-    "synth": "impact",
-    "gain": -2,
-    "weight": 1.1,
-    "brightness": 0.8,
-    "seed": 9
-   },
-   {
-    "at": "clash+0.0",
-    "file": "assets/audio/sfx/combat/roman_shield_wall_impact.ogg",
-    "gain": 0,
-    "reverb": 0.2
-   },
-   {
-    "at": "clash+0.5",
-    "file": "assets/audio/sfx/combat/blade_clash_02.ogg",
-    "gain": -6,
-    "pan": -0.4
-   },
-   {
-    "at": "clash+1.1",
-    "file": "assets/audio/sfx/combat/gladius_shield_impacts_close.ogg",
-    "gain": -3,
-    "pan": 0.3
-   },
-   {
-    "at": "elephants2+0.4",
-    "file": "assets/audio/sfx/combat/elephant_charge_carthage.ogg",
-    "gain": -3,
-    "pan": -0.2,
-    "reverb": 0.25
-   },
-   {
-    "at": "elephants2+0.5",
-    "file": "assets/audio/sfx/combat/stagger.ogg",
-    "gain": -6
-   },
-   {
-    "at": "melee+0.15",
-    "file": "assets/audio/sfx/combat/sword_hit_02.ogg",
-    "gain": -3,
-    "pan": 0.2
-   },
-   {
-    "at": "melee+0.6",
-    "file": "assets/audio/sfx/combat/armour_hit_01.ogg",
-    "gain": -5,
-    "pan": -0.3
-   },
-   {
-    "at": "crane-0.5",
-    "synth": "whoosh",
-    "gain": -8,
-    "length": 1.2
-   },
-   {
-    "at": "crane+0.2",
-    "file": "assets/audio/sfx/combat/battlefield_distant_mass_01.ogg",
-    "gain": -6,
-    "distance": 40,
-    "reverb": 0.4
-   },
-   {
-    "at": "crane+0.8",
-    "file": "assets/audio/sfx/combat/roman_war_horns_orders.ogg",
-    "gain": -7,
-    "distance": 100,
-    "reverb": 0.6
-   },
-   {
-    "at": "tactical+0.3",
-    "file": "assets/audio/sfx/orders/formation_pole_shift.ogg",
-    "gain": -10,
-    "reverb": 0.3
-   },
-   {
-    "at": "advance+0.0",
-    "file": "assets/audio/sfx/combat/spearmen_formation_advance.ogg",
-    "gain": -4,
-    "distance": 15
-   },
-   {
-    "at": "chase+0.0",
-    "file": "assets/audio/sfx/combat/vanguard_rush.ogg",
-    "gain": -3
-   },
-   {
-    "at": "chase+0.25",
-    "file": "assets/audio/sfx/movement/footstep_run_01.ogg",
-    "gain": -7,
-    "pan": 0.1
-   },
-   {
-    "at": "chase+0.55",
-    "file": "assets/audio/sfx/movement/footstep_run_02.ogg",
-    "gain": -7,
-    "pan": -0.1
-   },
-   {
-    "at": "chase+0.85",
-    "file": "assets/audio/sfx/movement/footstep_run_03.ogg",
-    "gain": -7,
-    "pan": 0.1
-   },
-   {
-    "at": "chase+1.15",
-    "file": "assets/audio/sfx/movement/footstep_run_04.ogg",
-    "gain": -7,
-    "pan": -0.1
-   },
-   {
-    "at": "chase+1.45",
-    "file": "assets/audio/sfx/movement/footstep_run_01.ogg",
-    "gain": -7,
-    "pan": 0.1
-   },
-   {
-    "at": "chase+1.6",
-    "file": "assets/audio/sfx/combat/charge_roar.ogg",
-    "gain": -5,
-    "reverb": 0.3
-   },
-   {
-    "at": "scipio_fight+0.1",
-    "file": "assets/audio/sfx/combat/blade_clash_01.ogg",
-    "gain": -2
-   },
-   {
-    "at": "scipio_fight+0.9",
-    "file": "assets/audio/sfx/combat/shield_bash.ogg",
-    "gain": -2,
-    "pan": -0.2
-   },
-   {
-    "at": "hannibal_fight+0.1",
-    "file": "assets/audio/sfx/combat/blade_clash_03.ogg",
-    "gain": -2,
-    "pan": 0.2
-   },
-   {
-    "at": "hannibal_fight+0.5",
-    "file": "assets/audio/sfx/combat/armour_hit_02.ogg",
-    "gain": -3
-   },
-   {
-    "at": "duel+0.1",
-    "file": "assets/audio/sfx/combat/perfect_guard.ogg",
-    "gain": -2
-   },
-   {
-    "at": "duel+0.4",
-    "file": "assets/audio/sfx/combat/guard_break.ogg",
-    "gain": -1
-   },
-   {
-    "at": "citadel",
-    "synth": "impact",
-    "gain": -3,
-    "weight": 1.2,
-    "brightness": 0.3,
-    "seed": 12
-   },
-   {
-    "at": "citadel+0.2",
-    "file": "assets/audio/ambience/mediterranean_city_market.ogg",
-    "gain": -10,
-    "fade_in": 0.5,
-    "dur": 5.5,
-    "fade_out": 1.0
-   },
-   {
-    "at": "temple+0.2",
-    "file": "assets/audio/sfx/build/construction_started.ogg",
-    "gain": -8,
-    "distance": 12,
-    "reverb": 0.2
-   },
-   {
-    "at": "forum+0.2",
-    "file": "assets/audio/sfx/build/unit_ready_bell.ogg",
-    "gain": -16,
-    "distance": 40,
-    "reverb": 0.5
-   },
-   {
-    "at": "ad_portas",
-    "synth": "impact",
-    "gain": -3,
-    "weight": 1.1,
-    "brightness": 0.3,
-    "seed": 14
-   },
-   {
-    "at": "ad_portas+0.3",
-    "file": "assets/audio/sfx/combat/siege_launch.ogg",
-    "gain": -4,
-    "distance": 40,
-    "reverb": 0.4
-   },
-   {
-    "at": "gate_legion+0.2",
-    "file": "assets/audio/sfx/orders/hold_shields_plant.ogg",
-    "gain": -6
-   },
-   {
-    "at": "gate_legion+0.8",
-    "file": "assets/audio/sfx/combat/siege_launch.ogg",
-    "gain": -6,
-    "pan": 0.4,
-    "distance": 30,
-    "reverb": 0.3
-   },
-   {
-    "at": "tower+1.9",
-    "synth": "impact",
-    "gain": -1,
-    "weight": 1.2,
-    "brightness": 0.5,
-    "seed": 21
-   },
-   {
-    "at": "tower+1.9",
-    "file": "assets/audio/sfx/combat/stone_impact_02.ogg",
-    "gain": -1,
-    "distance": 20,
-    "reverb": 0.35
-   },
-   {
-    "at": "tower+1.95",
-    "file": "assets/audio/sfx/combat/fireball_impact.ogg",
-    "gain": -3,
-    "reverb": 0.35
-   },
-   {
-    "at": "tower+2.0",
-    "file": "assets/audio/sfx/build/building_burning.ogg",
-    "gain": -6,
-    "fade_out": 0.8,
-    "dur": 3.0
-   },
-   {
-    "at": "gate_elephants+0.1",
-    "file": "assets/audio/sfx/combat/elephant_trumpet_charge.ogg",
-    "gain": -3,
-    "reverb": 0.3
-   },
-   {
-    "at": "tower2+0.2",
-    "file": "assets/audio/sfx/combat/stone_impact_03.ogg",
-    "gain": -2,
-    "reverb": 0.3
-   },
-   {
-    "at": "barrow",
-    "synth": "impact",
-    "gain": -3,
-    "weight": 1.4,
-    "brightness": 0.1,
-    "seed": 31
-   },
-   {
-    "at": "barrow+0.3",
-    "file": "assets/audio/sfx/combat/magic_arc_discharge.ogg",
-    "gain": -16,
-    "distance": 60,
-    "reverb": 0.9,
-    "decay": 5
-   },
-   {
-    "at": "column+0.0",
-    "file": "assets/audio/sfx/combat/army_march_dirt_mass.ogg",
-    "gain": -8,
-    "lowpass": 3500,
-    "distance": 10
-   },
-   {
-    "at": "rising-0.8",
-    "file": "assets/audio/sfx/undead/skeletons_rise.ogg",
-    "gain": 0,
-    "reverb": 0.4
-   },
-   {
-    "at": "rising",
-    "synth": "impact",
-    "gain": -1,
-    "weight": 1.5,
-    "brightness": 0.3,
-    "seed": 33
-   },
-   {
-    "at": "snow_melee+0.3",
-    "file": "assets/audio/sfx/combat/fireball_impact.ogg",
-    "gain": -1,
-    "reverb": 0.3
-   },
-   {
-    "at": "consul_fight+0.1",
-    "file": "assets/audio/sfx/combat/blade_clash_02.ogg",
-    "gain": -2
-   },
-   {
-    "at": "consul_fight+0.5",
-    "file": "assets/audio/sfx/combat/fireball_impact.ogg",
-    "gain": -3,
-    "pan": -0.3,
-    "reverb": 0.3
-   },
-   {
-    "at": "x1-1.4",
-    "synth": "riser",
-    "gain": -7,
-    "length": 1.4,
-    "top_hz": 9000
-   },
-   {
-    "at": "x1+0.0",
-    "file": "assets/audio/sfx/combat/stone_impact_01.ogg",
-    "gain": -2,
-    "reverb": 0.25
-   },
-   {
-    "at": "x1",
-    "synth": "impact",
-    "gain": -6,
-    "weight": 0.9,
-    "brightness": 0.6,
-    "seed": 40,
-    "length": 2.5
-   },
-   {
-    "at": "x1-0.35",
-    "synth": "whoosh",
-    "gain": -12,
-    "length": 0.5,
-    "seed": 60
-   },
-   {
-    "at": "x2+0.0",
-    "file": "assets/audio/sfx/combat/roman_shield_wall_impact.ogg",
-    "gain": -2,
-    "reverb": 0.25
-   },
-   {
-    "at": "x2",
-    "synth": "impact",
-    "gain": -6,
-    "weight": 0.9500000000000001,
-    "brightness": 0.6,
-    "seed": 41,
-    "length": 2.5
-   },
-   {
-    "at": "x2-0.35",
-    "synth": "whoosh",
-    "gain": -12,
-    "length": 0.5,
-    "seed": 61
-   },
-   {
-    "at": "x3+0.0",
-    "file": "assets/audio/sfx/combat/fireball_impact.ogg",
-    "gain": -2,
-    "reverb": 0.25
-   },
-   {
-    "at": "x3",
-    "synth": "impact",
-    "gain": -6,
-    "weight": 1.0,
-    "brightness": 0.6,
-    "seed": 42,
-    "length": 2.5
-   },
-   {
-    "at": "x3-0.35",
-    "synth": "whoosh",
-    "gain": -12,
-    "length": 0.5,
-    "seed": 62
-   },
-   {
-    "at": "x4+0.0",
-    "file": "assets/audio/sfx/combat/elephant_trumpet_charge.ogg",
-    "gain": -2,
-    "reverb": 0.25
-   },
-   {
-    "at": "x4",
-    "synth": "impact",
-    "gain": -6,
-    "weight": 1.05,
-    "brightness": 0.6,
-    "seed": 43,
-    "length": 2.5
-   },
-   {
-    "at": "x4-0.35",
-    "synth": "whoosh",
-    "gain": -12,
-    "length": 0.5,
-    "seed": 63
-   },
-   {
-    "at": "x5+0.0",
-    "file": "assets/audio/sfx/combat/blade_clash_01.ogg",
-    "gain": -2,
-    "reverb": 0.25
-   },
-   {
-    "at": "x5",
-    "synth": "impact",
-    "gain": -6,
-    "weight": 1.1,
-    "brightness": 0.6,
-    "seed": 44,
-    "length": 2.5
-   },
-   {
-    "at": "x5-0.35",
-    "synth": "whoosh",
-    "gain": -12,
-    "length": 0.5,
-    "seed": 64
-   },
-   {
-    "at": "x6+0.0",
-    "file": "assets/audio/sfx/combat/fireball_impact.ogg",
-    "gain": -2,
-    "reverb": 0.25
-   },
-   {
-    "at": "x6",
-    "synth": "impact",
-    "gain": -6,
-    "weight": 1.15,
-    "brightness": 0.6,
-    "seed": 45,
-    "length": 2.5
-   },
-   {
-    "at": "x6-0.35",
-    "synth": "whoosh",
-    "gain": -12,
-    "length": 0.5,
-    "seed": 65
-   },
-   {
-    "at": "x7+0.0",
-    "file": "assets/audio/sfx/combat/guard_break.ogg",
-    "gain": -2,
-    "reverb": 0.25
-   },
-   {
-    "at": "x7",
-    "synth": "impact",
-    "gain": -6,
-    "weight": 1.2000000000000002,
-    "brightness": 0.6,
-    "seed": 46,
-    "length": 2.5
-   },
-   {
-    "at": "x7-0.35",
-    "synth": "whoosh",
-    "gain": -12,
-    "length": 0.5,
-    "seed": 66
-   },
-   {
-    "at": "x8+0.0",
-    "file": "assets/audio/sfx/combat/stone_impact_03.ogg",
-    "gain": -2,
-    "reverb": 0.25
-   },
-   {
-    "at": "x8",
-    "synth": "impact",
-    "gain": -6,
-    "weight": 1.25,
-    "brightness": 0.6,
-    "seed": 47,
-    "length": 2.5
-   },
-   {
-    "at": "x8-0.35",
-    "synth": "whoosh",
-    "gain": -12,
-    "length": 0.5,
-    "seed": 67
-   },
-   {
-    "at": "x8+0.3",
-    "synth": "impact",
-    "gain": 0,
-    "weight": 1.5,
-    "brightness": 0.4,
-    "seed": 49
-   },
-   {
-    "at": "endcard+0.45",
-    "synth": "impact",
-    "gain": -1,
-    "weight": 1.6,
-    "brightness": 0.2,
-    "seed": 77,
-    "length": 6.0
-   },
-   {
-    "at": "endcard+0.45",
-    "synth": "boom",
-    "gain": -4,
-    "seed": 78
-   },
-   {
-    "at": "endcard+0.3",
-    "file": "assets/audio/ambience/burning_village_aftermath.ogg",
-    "gain": -12,
-    "fade_in": 1.0,
-    "dur": 12.5,
-    "fade_out": 2.0
-   },
-   {
-    "at": "hannibal-0.80",
-    "synth": "reverse",
-    "gain": -14,
-    "length": 0.9
-   },
-   {
-    "at": "hannibal+0.1",
-    "synth": "impact",
-    "gain": -11,
-    "weight": 0.7,
-    "brightness": 0.15,
-    "seed": 90,
-    "length": 3.0
-   },
-   {
-    "at": "crane-0.60",
-    "synth": "reverse",
-    "gain": -14,
-    "length": 0.9
-   },
-   {
-    "at": "crane+0.3",
-    "synth": "impact",
-    "gain": -11,
-    "weight": 0.7,
-    "brightness": 0.15,
-    "seed": 90,
-    "length": 3.0
-   },
-   {
-    "at": "chase-0.70",
-    "synth": "reverse",
-    "gain": -14,
-    "length": 0.9
-   },
-   {
-    "at": "chase+0.2",
-    "synth": "impact",
-    "gain": -11,
-    "weight": 0.7,
-    "brightness": 0.15,
-    "seed": 90,
-    "length": 3.0
-   },
-   {
-    "at": "citadel-0.60",
-    "synth": "reverse",
-    "gain": -14,
-    "length": 0.9
-   },
-   {
-    "at": "citadel+0.3",
-    "synth": "impact",
-    "gain": -11,
-    "weight": 0.7,
-    "brightness": 0.15,
-    "seed": 90,
-    "length": 3.0
-   },
-   {
-    "at": "ad_portas-0.70",
-    "synth": "reverse",
-    "gain": -14,
-    "length": 0.9
-   },
-   {
-    "at": "ad_portas+0.2",
-    "synth": "impact",
-    "gain": -11,
-    "weight": 0.7,
-    "brightness": 0.15,
-    "seed": 90,
-    "length": 3.0
-   },
-   {
-    "at": "barrow-0.70",
-    "synth": "reverse",
-    "gain": -14,
-    "length": 0.9
-   },
-   {
-    "at": "barrow+0.2",
-    "synth": "impact",
-    "gain": -11,
-    "weight": 0.7,
-    "brightness": 0.15,
-    "seed": 90,
-    "length": 3.0
-   }
-  ],
-  "beds": [
-   {
-    "file": "assets/audio/ambience/battlefield_dry_wind_distant_march_01.ogg",
-    "at": 0.0,
-    "until": "elephants",
-    "gain": -12,
-    "fade_out": 0.3
-   },
-   {
-    "file": "assets/audio/sfx/combat/battlefield_crowd_chaos.ogg",
-    "at": "elephants",
-    "until": "citadel",
-    "gain": -10,
-    "fade_out": 0.1
-   },
-   {
-    "file": "assets/audio/ambience/siege_camp.ogg",
-    "at": "ad_portas",
-    "until": "barrow",
-    "gain": -12,
-    "fade_out": 0.3
-   },
-   {
-    "file": "assets/audio/ambience/weather_snow.ogg",
-    "at": "barrow",
-    "until": "x1",
-    "gain": -6,
-    "fade_out": 0.3
-   },
-   {
-    "file": "assets/audio/sfx/combat/battlefield_crowd_chaos.ogg",
-    "at": "x1",
-    "until": "endcard",
-    "gain": -10,
-    "fade_out": 0.05
-   }
-  ],
-  "duck": {
-   "depth": -3.0,
-   "threshold": -24
-  },
-  "bus_gain": {
-   "music": -1,
-   "fx": 0,
-   "beds": 0,
-   "game": 0
-  },
-  "master": {
-   "lufs": -14.0,
-   "ceiling": -1.6
+    "fx": [
+      {
+        "at": "hannibal-0.3",
+        "file": "assets/audio/sfx/combat/roman_war_horns_orders.ogg",
+        "gain": -6,
+        "distance": 120,
+        "reverb": 0.6,
+        "decay": 3.5,
+        "pan": -0.2
+      },
+      {
+        "at": "hannibal",
+        "synth": "impact",
+        "gain": -4,
+        "weight": 1.3,
+        "brightness": 0.2,
+        "seed": 2
+      },
+      {
+        "at": "hannibal+0.2",
+        "file": "assets/audio/sfx/combat/carthage_prepare_battle.ogg",
+        "gain": -9,
+        "distance": 30,
+        "reverb": 0.3
+      },
+      {
+        "at": "scipio+0.1",
+        "file": "assets/audio/sfx/orders/hold_shields_plant.ogg",
+        "gain": -5,
+        "reverb": 0.15
+      },
+      {
+        "at": "shields+0.0",
+        "file": "assets/audio/sfx/orders/guard_spear_taps.ogg",
+        "gain": -8,
+        "reverb": 0.15
+      },
+      {
+        "at": "numidians-0.3",
+        "file": "assets/audio/sfx/combat/horse_gallop_close_pass.ogg",
+        "gain": -1,
+        "pan": [
+          [0, -0.9],
+          [2.0, 0.9]
+        ],
+        "reverb": 0.1
+      },
+      {
+        "at": "legion+0.0",
+        "file": "assets/audio/sfx/combat/army_march_dirt_mass.ogg",
+        "gain": -2,
+        "distance": 6
+      },
+      {
+        "at": "legion+0.2",
+        "file": "assets/audio/sfx/combat/charge_roar.ogg",
+        "gain": -6,
+        "reverb": 0.3
+      },
+      {
+        "at": "elephants-2.2",
+        "synth": "riser",
+        "gain": -5,
+        "length": 2.2,
+        "top_hz": 9000
+      },
+      {
+        "at": "elephants-1.6",
+        "synth": "reverse",
+        "gain": -6,
+        "length": 1.6
+      },
+      {
+        "at": "elephants",
+        "synth": "impact",
+        "gain": 0,
+        "weight": 1.4,
+        "brightness": 0.5,
+        "seed": 5
+      },
+      {
+        "at": "elephants+0.0",
+        "file": "assets/audio/sfx/combat/elephant_trumpet_charge.ogg",
+        "gain": -1,
+        "pan": 0.25,
+        "reverb": 0.3
+      },
+      {
+        "at": "elephants+0.3",
+        "file": "assets/audio/sfx/combat/battlefield_crowd_chaos.ogg",
+        "gain": -6,
+        "reverb": 0.2
+      },
+      {
+        "at": "clash",
+        "synth": "impact",
+        "gain": -2,
+        "weight": 1.1,
+        "brightness": 0.8,
+        "seed": 9
+      },
+      {
+        "at": "clash+0.0",
+        "file": "assets/audio/sfx/combat/roman_shield_wall_impact.ogg",
+        "gain": 0,
+        "reverb": 0.2
+      },
+      {
+        "at": "clash+0.5",
+        "file": "assets/audio/sfx/combat/blade_clash_02.ogg",
+        "gain": -6,
+        "pan": -0.4
+      },
+      {
+        "at": "clash+1.1",
+        "file": "assets/audio/sfx/combat/gladius_shield_impacts_close.ogg",
+        "gain": -3,
+        "pan": 0.3
+      },
+      {
+        "at": "elephants2+0.4",
+        "file": "assets/audio/sfx/combat/elephant_charge_carthage.ogg",
+        "gain": -3,
+        "pan": -0.2,
+        "reverb": 0.25
+      },
+      {
+        "at": "elephants2+0.5",
+        "file": "assets/audio/sfx/combat/stagger.ogg",
+        "gain": -6
+      },
+      {
+        "at": "melee+0.15",
+        "file": "assets/audio/sfx/combat/sword_hit_02.ogg",
+        "gain": -3,
+        "pan": 0.2
+      },
+      {
+        "at": "melee+0.6",
+        "file": "assets/audio/sfx/combat/armour_hit_01.ogg",
+        "gain": -5,
+        "pan": -0.3
+      },
+      {
+        "at": "crane-0.5",
+        "synth": "whoosh",
+        "gain": -8,
+        "length": 1.2
+      },
+      {
+        "at": "crane+0.2",
+        "file": "assets/audio/sfx/combat/battlefield_distant_mass_01.ogg",
+        "gain": -6,
+        "distance": 40,
+        "reverb": 0.4
+      },
+      {
+        "at": "crane+0.8",
+        "file": "assets/audio/sfx/combat/roman_war_horns_orders.ogg",
+        "gain": -7,
+        "distance": 100,
+        "reverb": 0.6
+      },
+      {
+        "at": "tactical+0.3",
+        "file": "assets/audio/sfx/orders/formation_pole_shift.ogg",
+        "gain": -10,
+        "reverb": 0.3
+      },
+      {
+        "at": "advance+0.0",
+        "file": "assets/audio/sfx/combat/spearmen_formation_advance.ogg",
+        "gain": -4,
+        "distance": 15
+      },
+      {
+        "at": "chase+0.0",
+        "file": "assets/audio/sfx/combat/vanguard_rush.ogg",
+        "gain": -3
+      },
+      {
+        "at": "chase+0.25",
+        "file": "assets/audio/sfx/movement/footstep_run_01.ogg",
+        "gain": -7,
+        "pan": 0.1
+      },
+      {
+        "at": "chase+0.55",
+        "file": "assets/audio/sfx/movement/footstep_run_02.ogg",
+        "gain": -7,
+        "pan": -0.1
+      },
+      {
+        "at": "chase+0.85",
+        "file": "assets/audio/sfx/movement/footstep_run_03.ogg",
+        "gain": -7,
+        "pan": 0.1
+      },
+      {
+        "at": "chase+1.15",
+        "file": "assets/audio/sfx/movement/footstep_run_04.ogg",
+        "gain": -7,
+        "pan": -0.1
+      },
+      {
+        "at": "chase+1.45",
+        "file": "assets/audio/sfx/movement/footstep_run_01.ogg",
+        "gain": -7,
+        "pan": 0.1
+      },
+      {
+        "at": "chase+1.6",
+        "file": "assets/audio/sfx/combat/charge_roar.ogg",
+        "gain": -5,
+        "reverb": 0.3
+      },
+      {
+        "at": "scipio_fight+0.1",
+        "file": "assets/audio/sfx/combat/blade_clash_01.ogg",
+        "gain": -2
+      },
+      {
+        "at": "scipio_fight+0.9",
+        "file": "assets/audio/sfx/combat/shield_bash.ogg",
+        "gain": -2,
+        "pan": -0.2
+      },
+      {
+        "at": "hannibal_fight+0.1",
+        "file": "assets/audio/sfx/combat/blade_clash_03.ogg",
+        "gain": -2,
+        "pan": 0.2
+      },
+      {
+        "at": "hannibal_fight+0.5",
+        "file": "assets/audio/sfx/combat/armour_hit_02.ogg",
+        "gain": -3
+      },
+      {
+        "at": "duel+0.1",
+        "file": "assets/audio/sfx/combat/perfect_guard.ogg",
+        "gain": -2
+      },
+      {
+        "at": "duel+0.4",
+        "file": "assets/audio/sfx/combat/guard_break.ogg",
+        "gain": -1
+      },
+      {
+        "at": "citadel",
+        "synth": "impact",
+        "gain": -3,
+        "weight": 1.2,
+        "brightness": 0.3,
+        "seed": 12
+      },
+      {
+        "at": "citadel+0.2",
+        "file": "assets/audio/ambience/mediterranean_city_market.ogg",
+        "gain": -10,
+        "fade_in": 0.5,
+        "dur": 5.5,
+        "fade_out": 1.0
+      },
+      {
+        "at": "temple+0.2",
+        "file": "assets/audio/sfx/build/construction_started.ogg",
+        "gain": -8,
+        "distance": 12,
+        "reverb": 0.2
+      },
+      {
+        "at": "forum+0.2",
+        "file": "assets/audio/sfx/build/unit_ready_bell.ogg",
+        "gain": -16,
+        "distance": 40,
+        "reverb": 0.5
+      },
+      {
+        "at": "ad_portas",
+        "synth": "impact",
+        "gain": -3,
+        "weight": 1.1,
+        "brightness": 0.3,
+        "seed": 14
+      },
+      {
+        "at": "ad_portas+0.3",
+        "file": "assets/audio/sfx/combat/siege_launch.ogg",
+        "gain": -4,
+        "distance": 40,
+        "reverb": 0.4
+      },
+      {
+        "at": "gate_legion+0.2",
+        "file": "assets/audio/sfx/orders/hold_shields_plant.ogg",
+        "gain": -6
+      },
+      {
+        "at": "gate_legion+0.8",
+        "file": "assets/audio/sfx/combat/siege_launch.ogg",
+        "gain": -6,
+        "pan": 0.4,
+        "distance": 30,
+        "reverb": 0.3
+      },
+      {
+        "at": "tower+1.9",
+        "synth": "impact",
+        "gain": -1,
+        "weight": 1.2,
+        "brightness": 0.5,
+        "seed": 21
+      },
+      {
+        "at": "tower+1.9",
+        "file": "assets/audio/sfx/combat/stone_impact_02.ogg",
+        "gain": -1,
+        "distance": 20,
+        "reverb": 0.35
+      },
+      {
+        "at": "tower+1.95",
+        "file": "assets/audio/sfx/combat/fireball_impact.ogg",
+        "gain": -3,
+        "reverb": 0.35
+      },
+      {
+        "at": "tower+2.0",
+        "file": "assets/audio/sfx/build/building_burning.ogg",
+        "gain": -6,
+        "fade_out": 0.8,
+        "dur": 3.0
+      },
+      {
+        "at": "gate_elephants+0.1",
+        "file": "assets/audio/sfx/combat/elephant_trumpet_charge.ogg",
+        "gain": -3,
+        "reverb": 0.3
+      },
+      {
+        "at": "tower2+0.2",
+        "file": "assets/audio/sfx/combat/stone_impact_03.ogg",
+        "gain": -2,
+        "reverb": 0.3
+      },
+      {
+        "at": "barrow",
+        "synth": "impact",
+        "gain": -3,
+        "weight": 1.4,
+        "brightness": 0.1,
+        "seed": 31
+      },
+      {
+        "at": "barrow+0.3",
+        "file": "assets/audio/sfx/combat/magic_arc_discharge.ogg",
+        "gain": -16,
+        "distance": 60,
+        "reverb": 0.9,
+        "decay": 5
+      },
+      {
+        "at": "column+0.0",
+        "file": "assets/audio/sfx/combat/army_march_dirt_mass.ogg",
+        "gain": -8,
+        "lowpass": 3500,
+        "distance": 10
+      },
+      {
+        "at": "rising-0.8",
+        "file": "assets/audio/sfx/undead/skeletons_rise.ogg",
+        "gain": 0,
+        "reverb": 0.4
+      },
+      {
+        "at": "rising",
+        "synth": "impact",
+        "gain": -1,
+        "weight": 1.5,
+        "brightness": 0.3,
+        "seed": 33
+      },
+      {
+        "at": "snow_melee+0.3",
+        "file": "assets/audio/sfx/combat/fireball_impact.ogg",
+        "gain": -1,
+        "reverb": 0.3
+      },
+      {
+        "at": "consul_fight+0.1",
+        "file": "assets/audio/sfx/combat/blade_clash_02.ogg",
+        "gain": -2
+      },
+      {
+        "at": "consul_fight+0.5",
+        "file": "assets/audio/sfx/combat/fireball_impact.ogg",
+        "gain": -3,
+        "pan": -0.3,
+        "reverb": 0.3
+      },
+      {
+        "at": "x1-1.4",
+        "synth": "riser",
+        "gain": -7,
+        "length": 1.4,
+        "top_hz": 9000
+      },
+      {
+        "at": "x1+0.0",
+        "file": "assets/audio/sfx/combat/stone_impact_01.ogg",
+        "gain": -2,
+        "reverb": 0.25
+      },
+      {
+        "at": "x1",
+        "synth": "impact",
+        "gain": -6,
+        "weight": 0.9,
+        "brightness": 0.6,
+        "seed": 40,
+        "length": 2.5
+      },
+      {
+        "at": "x1-0.35",
+        "synth": "whoosh",
+        "gain": -12,
+        "length": 0.5,
+        "seed": 60
+      },
+      {
+        "at": "x2+0.0",
+        "file": "assets/audio/sfx/combat/roman_shield_wall_impact.ogg",
+        "gain": -2,
+        "reverb": 0.25
+      },
+      {
+        "at": "x2",
+        "synth": "impact",
+        "gain": -6,
+        "weight": 0.9500000000000001,
+        "brightness": 0.6,
+        "seed": 41,
+        "length": 2.5
+      },
+      {
+        "at": "x2-0.35",
+        "synth": "whoosh",
+        "gain": -12,
+        "length": 0.5,
+        "seed": 61
+      },
+      {
+        "at": "x3+0.0",
+        "file": "assets/audio/sfx/combat/fireball_impact.ogg",
+        "gain": -2,
+        "reverb": 0.25
+      },
+      {
+        "at": "x3",
+        "synth": "impact",
+        "gain": -6,
+        "weight": 1.0,
+        "brightness": 0.6,
+        "seed": 42,
+        "length": 2.5
+      },
+      {
+        "at": "x3-0.35",
+        "synth": "whoosh",
+        "gain": -12,
+        "length": 0.5,
+        "seed": 62
+      },
+      {
+        "at": "x4+0.0",
+        "file": "assets/audio/sfx/combat/elephant_trumpet_charge.ogg",
+        "gain": -2,
+        "reverb": 0.25
+      },
+      {
+        "at": "x4",
+        "synth": "impact",
+        "gain": -6,
+        "weight": 1.05,
+        "brightness": 0.6,
+        "seed": 43,
+        "length": 2.5
+      },
+      {
+        "at": "x4-0.35",
+        "synth": "whoosh",
+        "gain": -12,
+        "length": 0.5,
+        "seed": 63
+      },
+      {
+        "at": "x5+0.0",
+        "file": "assets/audio/sfx/combat/blade_clash_01.ogg",
+        "gain": -2,
+        "reverb": 0.25
+      },
+      {
+        "at": "x5",
+        "synth": "impact",
+        "gain": -6,
+        "weight": 1.1,
+        "brightness": 0.6,
+        "seed": 44,
+        "length": 2.5
+      },
+      {
+        "at": "x5-0.35",
+        "synth": "whoosh",
+        "gain": -12,
+        "length": 0.5,
+        "seed": 64
+      },
+      {
+        "at": "x6+0.0",
+        "file": "assets/audio/sfx/combat/fireball_impact.ogg",
+        "gain": -2,
+        "reverb": 0.25
+      },
+      {
+        "at": "x6",
+        "synth": "impact",
+        "gain": -6,
+        "weight": 1.15,
+        "brightness": 0.6,
+        "seed": 45,
+        "length": 2.5
+      },
+      {
+        "at": "x6-0.35",
+        "synth": "whoosh",
+        "gain": -12,
+        "length": 0.5,
+        "seed": 65
+      },
+      {
+        "at": "x7+0.0",
+        "file": "assets/audio/sfx/combat/guard_break.ogg",
+        "gain": -2,
+        "reverb": 0.25
+      },
+      {
+        "at": "x7",
+        "synth": "impact",
+        "gain": -6,
+        "weight": 1.2000000000000002,
+        "brightness": 0.6,
+        "seed": 46,
+        "length": 2.5
+      },
+      {
+        "at": "x7-0.35",
+        "synth": "whoosh",
+        "gain": -12,
+        "length": 0.5,
+        "seed": 66
+      },
+      {
+        "at": "x8+0.0",
+        "file": "assets/audio/sfx/combat/stone_impact_03.ogg",
+        "gain": -2,
+        "reverb": 0.25
+      },
+      {
+        "at": "x8",
+        "synth": "impact",
+        "gain": -6,
+        "weight": 1.25,
+        "brightness": 0.6,
+        "seed": 47,
+        "length": 2.5
+      },
+      {
+        "at": "x8-0.35",
+        "synth": "whoosh",
+        "gain": -12,
+        "length": 0.5,
+        "seed": 67
+      },
+      {
+        "at": "x8+0.3",
+        "synth": "impact",
+        "gain": 0,
+        "weight": 1.5,
+        "brightness": 0.4,
+        "seed": 49
+      },
+      {
+        "at": "endcard+0.45",
+        "synth": "impact",
+        "gain": -1,
+        "weight": 1.6,
+        "brightness": 0.2,
+        "seed": 77,
+        "length": 6.0
+      },
+      {
+        "at": "endcard+0.45",
+        "synth": "boom",
+        "gain": -4,
+        "seed": 78
+      },
+      {
+        "at": "endcard+0.3",
+        "file": "assets/audio/ambience/burning_village_aftermath.ogg",
+        "gain": -12,
+        "fade_in": 1.0,
+        "dur": 12.5,
+        "fade_out": 2.0
+      },
+      {
+        "at": "hannibal-0.80",
+        "synth": "reverse",
+        "gain": -14,
+        "length": 0.9
+      },
+      {
+        "at": "hannibal+0.1",
+        "synth": "impact",
+        "gain": -11,
+        "weight": 0.7,
+        "brightness": 0.15,
+        "seed": 90,
+        "length": 3.0
+      },
+      {
+        "at": "crane-0.60",
+        "synth": "reverse",
+        "gain": -14,
+        "length": 0.9
+      },
+      {
+        "at": "crane+0.3",
+        "synth": "impact",
+        "gain": -11,
+        "weight": 0.7,
+        "brightness": 0.15,
+        "seed": 90,
+        "length": 3.0
+      },
+      {
+        "at": "chase-0.70",
+        "synth": "reverse",
+        "gain": -14,
+        "length": 0.9
+      },
+      {
+        "at": "chase+0.2",
+        "synth": "impact",
+        "gain": -11,
+        "weight": 0.7,
+        "brightness": 0.15,
+        "seed": 90,
+        "length": 3.0
+      },
+      {
+        "at": "citadel-0.60",
+        "synth": "reverse",
+        "gain": -14,
+        "length": 0.9
+      },
+      {
+        "at": "citadel+0.3",
+        "synth": "impact",
+        "gain": -11,
+        "weight": 0.7,
+        "brightness": 0.15,
+        "seed": 90,
+        "length": 3.0
+      },
+      {
+        "at": "ad_portas-0.70",
+        "synth": "reverse",
+        "gain": -14,
+        "length": 0.9
+      },
+      {
+        "at": "ad_portas+0.2",
+        "synth": "impact",
+        "gain": -11,
+        "weight": 0.7,
+        "brightness": 0.15,
+        "seed": 90,
+        "length": 3.0
+      },
+      {
+        "at": "barrow-0.70",
+        "synth": "reverse",
+        "gain": -14,
+        "length": 0.9
+      },
+      {
+        "at": "barrow+0.2",
+        "synth": "impact",
+        "gain": -11,
+        "weight": 0.7,
+        "brightness": 0.15,
+        "seed": 90,
+        "length": 3.0
+      }
+    ],
+    "beds": [
+      {
+        "file": "assets/audio/ambience/battlefield_dry_wind_distant_march_01.ogg",
+        "at": 0.0,
+        "until": "elephants",
+        "gain": -12,
+        "fade_out": 0.3
+      },
+      {
+        "file": "assets/audio/sfx/combat/battlefield_crowd_chaos.ogg",
+        "at": "elephants",
+        "until": "citadel",
+        "gain": -10,
+        "fade_out": 0.1
+      },
+      {
+        "file": "assets/audio/ambience/siege_camp.ogg",
+        "at": "ad_portas",
+        "until": "barrow",
+        "gain": -12,
+        "fade_out": 0.3
+      },
+      {
+        "file": "assets/audio/ambience/weather_snow.ogg",
+        "at": "barrow",
+        "until": "x1",
+        "gain": -6,
+        "fade_out": 0.3
+      },
+      {
+        "file": "assets/audio/sfx/combat/battlefield_crowd_chaos.ogg",
+        "at": "x1",
+        "until": "endcard",
+        "gain": -10,
+        "fade_out": 0.05
+      }
+    ],
+    "duck": {
+      "depth": -3.0,
+      "threshold": -24
+    },
+    "bus_gain": {
+      "music": -1,
+      "fx": 0,
+      "beds": 0,
+      "game": 0
+    },
+    "master": {
+      "lufs": -14.0,
+      "ceiling": -1.6
+    }
   }
- }
 }

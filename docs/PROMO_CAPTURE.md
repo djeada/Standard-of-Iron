@@ -478,16 +478,31 @@ pair, not a path.
 ## Cinematic camera rig
 
 The orbit keys above describe a camera circling a focus. Trailer work also
-needs cameras that are *placed*: a lens at shin height inside a shield wall, a
+needs cameras that are _placed_: a lens at shin height inside a shield wall, a
 dolly along a marching column, a crane that rises out of the rear ranks. A shot
 opts into that with `"rig": "free"`:
 
 ```json
-{"name": "shield_rank", "scenario": "cine_field", "start": 1.0, "duration": 5.0,
- "rig": "free", "eye_space": "world", "look_space": "world",
- "focus": {"mode": "point", "point": [0, 0, 0]}, "ground_clearance": 0.3,
- "camera": [{"time": 0, "eye": [-37, 0.62, 62], "look": [-45, 0.62, 6], "fov": 13},
-            {"time": 5, "eye": [-37, 0.62, 56], "look": [-45, 0.62, 2], "fov": 13}]}
+{
+    "name": "shield_rank",
+    "scenario": "cine_field",
+    "start": 1.0,
+    "duration": 5.0,
+    "rig": "free",
+    "eye_space": "world",
+    "look_space": "world",
+    "focus": { "mode": "point", "point": [0, 0, 0] },
+    "ground_clearance": 0.3,
+    "camera": [
+        {
+            "time": 0,
+            "eye": [-37, 0.62, 62],
+            "look": [-45, 0.62, 6],
+            "fov": 13
+        },
+        { "time": 5, "eye": [-37, 0.62, 56], "look": [-45, 0.62, 2], "fov": 13 }
+    ]
+}
 ```
 
 - `eye` and `look` are positions. With `eye_space`/`look_space` `"focus"` (the
@@ -496,7 +511,7 @@ opts into that with `"rig": "free"`:
   camera can pan to follow a subject. World heights are above the terrain unless
   `"terrain_relative": false`.
 - Free keys, and orbit keys with `"interp": "spline"`, are interpolated with
-  time-parametrised cubic Hermite splines, so a camera moves *through* a middle
+  time-parametrised cubic Hermite splines, so a camera moves _through_ a middle
   key instead of stopping on it. `"ends": "moving"` (the default) keeps the
   camera travelling at the cut, which is what makes a move feel photographed;
   `"ends": "ease"` starts and finishes at rest.

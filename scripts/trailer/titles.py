@@ -36,8 +36,14 @@ def tracked_width(text: str, font: ImageFont.FreeTypeFont, tracking: float) -> f
     return sum(font.getlength(ch) for ch in text) + gap * max(0, len(text) - 1)
 
 
-def draw_tracked(draw: ImageDraw.ImageDraw, centre: tuple[float, float], text: str,
-                 font: ImageFont.FreeTypeFont, tracking: float, fill) -> None:
+def draw_tracked(
+    draw: ImageDraw.ImageDraw,
+    centre: tuple[float, float],
+    text: str,
+    font: ImageFont.FreeTypeFont,
+    tracking: float,
+    fill,
+) -> None:
     gap = tracking * font.size
     x = centre[0] - tracked_width(text, font, tracking) / 2
     ascent, descent = font.getmetrics()
@@ -52,8 +58,17 @@ def _ease(t: float) -> float:
     return t * t * (3 - 2 * t)
 
 
-def render_card(card: dict, out_dir: Path, total: float, fps: int, width: int, height: int,
-                scope_h: int, head: float = 0.0, transparent: bool = False) -> None:
+def render_card(
+    card: dict,
+    out_dir: Path,
+    total: float,
+    fps: int,
+    width: int,
+    height: int,
+    scope_h: int,
+    head: float = 0.0,
+    transparent: bool = False,
+) -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
     frames = int(round(total * fps))
     lines = card.get("lines", [])
@@ -83,30 +98,62 @@ def render_card(card: dict, out_dir: Path, total: float, fps: int, width: int, h
             y = float(line.get("y", 0.5)) * height * ss
             tracking = float(line.get("tracking", 0.25))
             if line.get("track_open"):
-                tracking += float(line["track_open"]) * (1 - math.exp(-max(0.0, t - at) / 3.0))
+                tracking += float(line["track_open"]) * (
+                    1 - math.exp(-max(0.0, t - at) / 3.0)
+                )
             value = int(255 * alpha * float(line.get("opacity", 1.0)))
-            draw_tracked(ImageDraw.Draw(canvas), (width * ss / 2, y), line["text"], font,
-                         tracking, value)
+            draw_tracked(
+                ImageDraw.Draw(canvas),
+                (width * ss / 2, y),
+                line["text"],
+                font,
+                tracking,
+                value,
+            )
             glow = float(line.get("glow", 0.0))
             if glow > 0:
-                draw_tracked(ImageDraw.Draw(glow_layer), (width * ss / 2, y), line["text"],
-                             font, tracking, int(value * glow))
+                draw_tracked(
+                    ImageDraw.Draw(glow_layer),
+                    (width * ss / 2, y),
+                    line["text"],
+                    font,
+                    tracking,
+                    int(value * glow),
+                )
         text = canvas.resize((width, height), Image.LANCZOS)
         glow_img = glow_layer.resize((width, height), Image.LANCZOS).filter(
-            ImageFilter.GaussianBlur(14))
+            ImageFilter.GaussianBlur(14)
+        )
         if transparent:
-            shadow = text.filter(ImageFilter.GaussianBlur(10)).point(lambda v: min(255, v * 2))
+            shadow = text.filter(ImageFilter.GaussianBlur(10)).point(
+                lambda v: min(255, v * 2)
+            )
             frame = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-            frame.paste(Image.new("RGBA", (width, height), (0, 0, 0, 215)), (0, 0), shadow)
-            warm = Image.new("RGBA", (width, height), tuple(card.get("glow_ink", (255, 170, 90))) + (255,))
+            frame.paste(
+                Image.new("RGBA", (width, height), (0, 0, 0, 215)), (0, 0), shadow
+            )
+            warm = Image.new(
+                "RGBA",
+                (width, height),
+                tuple(card.get("glow_ink", (255, 170, 90))) + (255,),
+            )
             frame.paste(warm, (0, 0), glow_img)
-            frame.paste(Image.new("RGBA", (width, height), tuple(card.get("ink", INK)) + (255,)),
-                        (0, 0), text)
+            frame.paste(
+                Image.new(
+                    "RGBA", (width, height), tuple(card.get("ink", INK)) + (255,)
+                ),
+                (0, 0),
+                text,
+            )
             frame.save(out_dir / f"f{n + 1:05d}.png")
             continue
         frame = Image.new("RGB", (width, height), (0, 0, 0))
         tint = card.get("ink", INK)
-        warm = Image.new("RGB", (width, height), tuple(int(c * 0.9) for c in card.get("glow_ink", (255, 170, 90))))
+        warm = Image.new(
+            "RGB",
+            (width, height),
+            tuple(int(c * 0.9) for c in card.get("glow_ink", (255, 170, 90))),
+        )
         frame.paste(warm, (0, 0), glow_img)
         frame.paste(Image.new("RGB", (width, height), tuple(tint)), (0, 0), text)
         top = (height - scope_h) // 2
@@ -118,8 +165,9 @@ def render_card(card: dict, out_dir: Path, total: float, fps: int, width: int, h
 GOLD = (212, 176, 104)
 
 
-def render_caption(caption: dict, out_dir: Path, fps: int, width: int, height: int,
-                   scope_h: int) -> int:
+def render_caption(
+    caption: dict, out_dir: Path, fps: int, width: int, height: int, scope_h: int
+) -> int:
     """A caption over footage: tracked capitals that open as they fade in, a gold
     rule drawing out beneath, a soft shadow for legibility. Returns frame count."""
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -140,21 +188,38 @@ def render_caption(caption: dict, out_dir: Path, fps: int, width: int, height: i
         d = ImageDraw.Draw(canvas)
         font = _font("display", size * ss)
         tracking = 0.22 + 0.10 * (1 - math.exp(-t / 0.9))
-        draw_tracked(d, (width * ss / 2, y * ss), caption["text"], font, tracking,
-                     int(255 * alpha))
+        draw_tracked(
+            d,
+            (width * ss / 2, y * ss),
+            caption["text"],
+            font,
+            tracking,
+            int(255 * alpha),
+        )
         w = tracked_width(caption["text"], font, tracking)
         grow = _ease((t - 0.15) / 0.7)
         half = w * 0.36 * grow
         ry = (y + size * 0.78) * ss
-        ImageDraw.Draw(rule).line([(width * ss / 2 - half, ry), (width * ss / 2 + half, ry)],
-                                  fill=int(220 * alpha), width=2 * ss)
+        ImageDraw.Draw(rule).line(
+            [(width * ss / 2 - half, ry), (width * ss / 2 + half, ry)],
+            fill=int(220 * alpha),
+            width=2 * ss,
+        )
         if sub:
             sf = _font("text", int(size * 0.5) * ss)
-            draw_tracked(d, (width * ss / 2, (y + size * 1.45) * ss), sub, sf, 0.18,
-                         int(215 * alpha * _ease((t - 0.35) / 0.5)))
+            draw_tracked(
+                d,
+                (width * ss / 2, (y + size * 1.45) * ss),
+                sub,
+                sf,
+                0.18,
+                int(215 * alpha * _ease((t - 0.35) / 0.5)),
+            )
         text = canvas.resize((width, height), Image.LANCZOS)
         line = rule.resize((width, height), Image.LANCZOS)
-        shadow = text.filter(ImageFilter.GaussianBlur(9)).point(lambda v: min(255, int(v * 1.6)))
+        shadow = text.filter(ImageFilter.GaussianBlur(9)).point(
+            lambda v: min(255, int(v * 1.6))
+        )
         frame = Image.new("RGBA", (width, height), (0, 0, 0, 0))
         frame.paste(Image.new("RGBA", (width, height), (0, 0, 0, 190)), (0, 0), shadow)
         frame.paste(Image.new("RGBA", (width, height), GOLD + (255,)), (0, 0), line)

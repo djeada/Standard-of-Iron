@@ -57,7 +57,9 @@ def event_times(cut: dict) -> dict[str, tuple[float, float]]:
 def when(value, times: dict[str, tuple[float, float]]) -> float:
     if isinstance(value, (int, float)):
         return float(value)
-    match = re.fullmatch(r"\s*([A-Za-z0-9_]+)(@end)?\s*([+-]\s*[0-9.]+)?\s*", str(value))
+    match = re.fullmatch(
+        r"\s*([A-Za-z0-9_]+)(@end)?\s*([+-]\s*[0-9.]+)?\s*", str(value)
+    )
     if not match:
         raise SystemExit(f"cannot read cue time '{value}'")
     name, end, offset = match.groups()
@@ -82,14 +84,20 @@ def shape(clip: np.ndarray, cue: dict, times) -> np.ndarray:
     if cue.get("speed"):
         clip = dsp.varispeed(clip, float(cue["speed"]))
     if cue.get("src_in") or cue.get("dur"):
-        clip = dsp.trim(clip, float(cue.get("src_in", 0.0)),
-                        float(cue["dur"]) if cue.get("dur") else None)
+        clip = dsp.trim(
+            clip,
+            float(cue.get("src_in", 0.0)),
+            float(cue["dur"]) if cue.get("dur") else None,
+        )
     if cue.get("highpass"):
         clip = dsp.highpass(clip, float(cue["highpass"]))
     if cue.get("lowpass"):
         lp = cue["lowpass"]
-        clip = dsp.sweep_lowpass(clip, [tuple(p) for p in lp]) if isinstance(lp, list) \
+        clip = (
+            dsp.sweep_lowpass(clip, [tuple(p) for p in lp])
+            if isinstance(lp, list)
             else dsp.lowpass(clip, float(lp))
+        )
     if cue.get("low_shelf"):
         clip = dsp.shelf(clip, 120.0, float(cue["low_shelf"]), "low")
     if cue.get("high_shelf"):
@@ -97,16 +105,28 @@ def shape(clip: np.ndarray, cue: dict, times) -> np.ndarray:
     if cue.get("distance"):
         clip = dsp.distance(clip, float(cue["distance"]))
     if "pan" in cue:
-        clip = dsp.pan(clip, cue["pan"] if not isinstance(cue["pan"], list)
-                       else [tuple(p) for p in cue["pan"]])
+        clip = dsp.pan(
+            clip,
+            (
+                cue["pan"]
+                if not isinstance(cue["pan"], list)
+                else [tuple(p) for p in cue["pan"]]
+            ),
+        )
     if cue.get("width") is not None:
         clip = dsp.width(clip, float(cue["width"]))
     if cue.get("reverb"):
-        clip = dsp.reverb(clip, float(cue["reverb"]), decay=float(cue.get("decay", 2.4)),
-                          damping=float(cue.get("damping", 6000)))
+        clip = dsp.reverb(
+            clip,
+            float(cue["reverb"]),
+            decay=float(cue.get("decay", 2.4)),
+            damping=float(cue.get("damping", 6000)),
+        )
     if cue.get("reverse"):
         clip = clip[::-1].copy()
-    clip = dsp.fade(clip, float(cue.get("fade_in", 0.0)), float(cue.get("fade_out", 0.0)))
+    clip = dsp.fade(
+        clip, float(cue.get("fade_in", 0.0)), float(cue.get("fade_out", 0.0))
+    )
     if cue.get("gain_curve"):
         clip = dsp.automate(clip, [tuple(p) for p in cue["gain_curve"]])
     return clip * dsp.db(float(cue.get("gain", 0.0)))
@@ -116,22 +136,41 @@ def synth(cue: dict) -> np.ndarray:
     kind = cue["synth"]
     seed = int(cue.get("seed", 3))
     if kind == "impact":
-        return dsp.impact(float(cue.get("length", 4.0)), float(cue.get("weight", 1.0)),
-                          float(cue.get("brightness", 0.5)), seed)
+        return dsp.impact(
+            float(cue.get("length", 4.0)),
+            float(cue.get("weight", 1.0)),
+            float(cue.get("brightness", 0.5)),
+            seed,
+        )
     if kind == "boom":
         return dsp.boom(float(cue.get("length", 5.0)), seed)
     if kind == "sub_drop":
-        return dsp.sub_drop(float(cue.get("length", 3.5)), float(cue.get("from_hz", 62)),
-                            float(cue.get("to_hz", 27)))
+        return dsp.sub_drop(
+            float(cue.get("length", 3.5)),
+            float(cue.get("from_hz", 62)),
+            float(cue.get("to_hz", 27)),
+        )
     if kind == "riser":
-        return dsp.riser(float(cue.get("length", 4.0)), seed, float(cue.get("top_hz", 9000)))
+        return dsp.riser(
+            float(cue.get("length", 4.0)), seed, float(cue.get("top_hz", 9000))
+        )
     if kind == "whoosh":
-        return dsp.whoosh(float(cue.get("length", 1.2)), seed, float(cue.get("centre", 0.55)))
+        return dsp.whoosh(
+            float(cue.get("length", 1.2)), seed, float(cue.get("centre", 0.55))
+        )
     if kind == "drone":
-        return dsp.drone(float(cue["length"]), float(cue.get("root_hz", 36.7)), seed,
-                         float(cue.get("darkness", 900)))
+        return dsp.drone(
+            float(cue["length"]),
+            float(cue.get("root_hz", 36.7)),
+            seed,
+            float(cue.get("darkness", 900)),
+        )
     if kind == "reverse":
-        source = dsp.load(resolve(cue["source"])) if cue.get("source") else dsp.impact(3.0, 1.0, 0.8, seed)
+        source = (
+            dsp.load(resolve(cue["source"]))
+            if cue.get("source")
+            else dsp.impact(3.0, 1.0, 0.8, seed)
+        )
         return dsp.reverse_swell(source, float(cue.get("length", 2.0)))
     if kind == "silence":
         return dsp.silence(float(cue.get("length", 1.0)))
@@ -165,7 +204,11 @@ def place_bed(bus: np.ndarray, bed: dict, times) -> None:
         t += dsp.seconds(seg.shape[0]) - cross
         offset = 0.0
     out = out[: dsp.samples(length)]
-    out = shape(out, {k: v for k, v in bed.items() if k not in ("src_in", "dur", "speed")}, times)
+    out = shape(
+        out,
+        {k: v for k, v in bed.items() if k not in ("src_in", "dur", "speed")},
+        times,
+    )
     dsp.place(bus, out, start)
 
 
@@ -178,12 +221,23 @@ def place_music(bus: np.ndarray, cue: dict, times) -> None:
         dur = float(cue["dur"])
     clip = dsp.trim(source, float(cue.get("src_in", 0.0)), dur)
     if cue.get("gain_curve"):
-        clip = dsp.automate(clip, [(when(t, times) - start if isinstance(t, str) else t, g)
-                                   for t, g in cue["gain_curve"]])
-    local = {k: v for k, v in cue.items() if k not in ("src_in", "dur", "gain_curve", "speed")}
+        clip = dsp.automate(
+            clip,
+            [
+                (when(t, times) - start if isinstance(t, str) else t, g)
+                for t, g in cue["gain_curve"]
+            ],
+        )
+    local = {
+        k: v
+        for k, v in cue.items()
+        if k not in ("src_in", "dur", "gain_curve", "speed")
+    }
     if isinstance(local.get("lowpass"), list):
-        local["lowpass"] = [(when(t, times) - start if isinstance(t, str) else t, hz)
-                            for t, hz in local["lowpass"]]
+        local["lowpass"] = [
+            (when(t, times) - start if isinstance(t, str) else t, hz)
+            for t, hz in local["lowpass"]
+        ]
     clip = shape(clip, local, times)
     dsp.place(bus, clip, start)
 
@@ -198,9 +252,23 @@ def clip_audio(folder: Path, name: str) -> np.ndarray | None:
         return None
     cache = clips[0].with_suffix(".game.wav")
     if not cache.exists() or cache.stat().st_mtime < clips[0].stat().st_mtime:
-        result = subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(clips[0]), "-vn",
-                                 "-ac", "2", "-ar", str(dsp.RATE), str(cache)],
-                                capture_output=True)
+        result = subprocess.run(
+            [
+                "ffmpeg",
+                "-y",
+                "-v",
+                "error",
+                "-i",
+                str(clips[0]),
+                "-vn",
+                "-ac",
+                "2",
+                "-ar",
+                str(dsp.RATE),
+                str(cache),
+            ],
+            capture_output=True,
+        )
         if result.returncode != 0:
             return None
     return dsp.load(cache)
@@ -216,7 +284,9 @@ def game_audio(bus: np.ndarray, cut: dict, clips: Path, times) -> None:
             src = clip_audio(clips / folder, name)
             if src is not None:
                 speed = float(event.get("speed", 1.0))
-                seg = dsp.trim(src, float(event.get("in", 0.0)), float(event["dur"]) * speed)
+                seg = dsp.trim(
+                    src, float(event.get("in", 0.0)), float(event["dur"]) * speed
+                )
                 if abs(speed - 1.0) > 1e-3:
                     seg = dsp.varispeed(seg, speed)
                 seg = dsp.fade(seg, 0.04, 0.06)
@@ -229,8 +299,13 @@ def game_audio(bus: np.ndarray, cut: dict, clips: Path, times) -> None:
 def master(mixbus: np.ndarray, spec: dict) -> np.ndarray:
     target = float(spec.get("lufs", -14.0))
     ceiling = float(spec.get("ceiling", -1.0))
-    glued = dsp.compress(mixbus, threshold_db=float(spec.get("glue_threshold", -16.0)),
-                         ratio=1.8, attack=0.03, release=0.35)
+    glued = dsp.compress(
+        mixbus,
+        threshold_db=float(spec.get("glue_threshold", -16.0)),
+        ratio=1.8,
+        attack=0.03,
+        release=0.35,
+    )
     glued = dsp.highpass(glued, 24.0, 2)
     loud = dsp.integrated_lufs(glued)
     glued = glued * dsp.db(target - loud)
@@ -244,8 +319,9 @@ def master(mixbus: np.ndarray, spec: dict) -> np.ndarray:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__,
-                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("--cut", type=Path, required=True)
     parser.add_argument("--clips", type=Path, required=True)
     parser.add_argument("--out", type=Path, required=True)
@@ -257,7 +333,9 @@ def main() -> int:
     times = event_times(cut)
     total = times["__end__"][0] + float(audio.get("tail", 0.0))
     n = dsp.samples(total)
-    buses = {name: np.zeros((n, 2), np.float32) for name in ("music", "fx", "beds", "game")}
+    buses = {
+        name: np.zeros((n, 2), np.float32) for name in ("music", "fx", "beds", "game")
+    }
 
     for cue in audio.get("music", []):
         place_music(buses["music"], cue, times)
@@ -273,8 +351,12 @@ def main() -> int:
     duck = audio.get("duck")
     if duck:
         key = buses["fx"] + buses["game"]
-        buses["music"] = dsp.duck(buses["music"], key, float(duck.get("depth", -4.0)),
-                                  float(duck.get("threshold", -24.0)))
+        buses["music"] = dsp.duck(
+            buses["music"],
+            key,
+            float(duck.get("depth", -4.0)),
+            float(duck.get("threshold", -24.0)),
+        )
     mixbus = sum(buses.values())
     final = master(mixbus, audio.get("master", {}))
     final = dsp.fade(final, 0.0, float(audio.get("end_fade", 0.02)))

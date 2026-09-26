@@ -1,29 +1,29 @@
 {
- "id": "cine_flame",
- "title": "STANDARD OF IRON",
- "width": 1920,
- "height": 1080,
- "fps": 24,
- "supersample": 2,
- "gameplay_ui": false,
- "audio": false,
- "record_music": false,
- "motion_limits": {
-  "yaw_degrees_per_second": 40,
-  "pitch_degrees_per_second": 20,
-  "fov_degrees_per_second": 20,
-  "minimum_clip_seconds": 1.0,
-  "mean_clip_seconds": 1.0
- },
- "shots": [
-  {
-   "name": "flame_card",
-   "scenario": "trailer_flame_card",
-   "start": 0.5,
-   "duration": 14.0,
-   "flame_card": true,
-   "flame_speed": 0.8,
-   "flame_intensity": 1.0
-  }
- ]
+  "id": "cine_flame",
+  "title": "STANDARD OF IRON",
+  "width": 1920,
+  "height": 1080,
+  "fps": 24,
+  "supersample": 2,
+  "gameplay_ui": false,
+  "audio": false,
+  "record_music": false,
+  "motion_limits": {
+    "yaw_degrees_per_second": 40,
+    "pitch_degrees_per_second": 20,
+    "fov_degrees_per_second": 20,
+    "minimum_clip_seconds": 1.0,
+    "mean_clip_seconds": 1.0
+  },
+  "shots": [
+    {
+      "name": "flame_card",
+      "scenario": "trailer_flame_card",
+      "start": 0.5,
+      "duration": 14.0,
+      "flame_card": true,
+      "flame_speed": 0.8,
+      "flame_intensity": 1.0
+    }
+  ]
 }
