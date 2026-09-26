@@ -383,6 +383,34 @@ auto ProductionViewModel::call_allies(qulonglong entity) -> bool {
   return true;
 }
 
+auto ProductionViewModel::answer_ally_appeal(quint32 appeal_id, bool accept) -> bool {
+  m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
+  if (m_context.world == nullptr || m_context.session == nullptr) {
+    return false;
+  }
+  const auto* appeal = m_context.session->alliance().open_appeal(appeal_id);
+  if (appeal == nullptr || appeal->to_owner != m_context.local_owner_id) {
+    emit refused(tr("That request has already been withdrawn."));
+    return false;
+  }
+  if (accept && appeal->kind == Game::Systems::AllyAppealKind::Resources &&
+      m_context.session->economy().get(m_context.local_owner_id, appeal->resource) <
+          appeal->amount) {
+    emit refused(tr("Not enough %1 to give.")
+                     .arg(trade_resource_label(QString::fromLatin1(
+                         Game::Systems::resource_type_key(appeal->resource)))));
+    return false;
+  }
+  Game::Command::submit(
+      *m_context.world,
+      Game::Command::Source::LocalPlayer,
+      m_context.local_owner_id,
+      Game::Command::AllyAppealAnswer{.appeal_id = appeal_id, .accept = accept});
+  emit player_state_stale();
+  return true;
+}
+
 void ProductionViewModel::set_rally_at_screen(qreal sx, qreal sy) {
   m_host.ensure_initialized();
   const auto frame_lock = m_host.lock_frame();

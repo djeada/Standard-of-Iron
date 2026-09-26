@@ -205,6 +205,33 @@
     </message>
 </context>
 <context>
+    <name>AllyAppealPanel</name>
+    <message>
+        <source>Accept</source>
+        <translation>Accept</translation>
+    </message>
+    <message>
+        <source>Refuse</source>
+        <translation>Refuse</translation>
+    </message>
+    <message>
+        <source>%1 asks for supplies</source>
+        <translation>%1 asks for supplies</translation>
+    </message>
+    <message>
+        <source>%1 calls for help</source>
+        <translation>%1 calls for help</translation>
+    </message>
+    <message>
+        <source>%1 calls you to arms</source>
+        <translation>%1 calls you to arms</translation>
+    </message>
+    <message>
+        <source>Show</source>
+        <translation>Show</translation>
+    </message>
+</context>
+<context>
     <name>ArmyFormationController</name>
     <message>
         <source>Automatic</source>
@@ -3920,6 +3947,94 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>%1 asks you for %2 %3.</source>
         <translation>%1 asks you for %2 %3.</translation>
+    </message>
+    <message>
+        <source>%1 asked %2 for %3 %4 and received %5.</source>
+        <translation>%1 asked %2 for %3 %4 and received %5.</translation>
+    </message>
+    <message>
+        <source>%1 asked %2 for %3 %4; %2 refused.</source>
+        <translation>%1 asked %2 for %3 %4; %2 refused.</translation>
+    </message>
+    <message>
+        <source>%1 called %2 to the attack; %2 marches.</source>
+        <translation>%1 called %2 to the attack; %2 marches.</translation>
+    </message>
+    <message>
+        <source>%1 called %2 to the attack; %2 stays.</source>
+        <translation>%1 called %2 to the attack; %2 stays.</translation>
+    </message>
+    <message>
+        <source>%1 called for help; %2 sends men.</source>
+        <translation>%1 called for help; %2 sends men.</translation>
+    </message>
+    <message>
+        <source>%1 called for help; %2 cannot come.</source>
+        <translation>%1 called for help; %2 cannot come.</translation>
+    </message>
+    <message>
+        <source>Give %1</source>
+        <translation>Give %1</translation>
+    </message>
+    <message>
+        <source>Refuse</source>
+        <translation>Refuse</translation>
+    </message>
+    <message>
+        <source>%1&apos;s camp is under attack. Will you send men to hold it?</source>
+        <translation>%1&apos;s camp is under attack. Will you send men to hold it?</translation>
+    </message>
+    <message>
+        <source>Send men</source>
+        <translation>Send men</translation>
+    </message>
+    <message>
+        <source>%1 is marching on the enemy. Will you join the attack?</source>
+        <translation>%1 is marching on the enemy. Will you join the attack?</translation>
+    </message>
+    <message>
+        <source>Join</source>
+        <translation>Join</translation>
+    </message>
+    <message>
+        <source>%1 thanks you for the %2 %3.</source>
+        <translation>%1 thanks you for the %2 %3.</translation>
+    </message>
+    <message>
+        <source>%1 will hold until your men arrive.</source>
+        <translation>%1 will hold until your men arrive.</translation>
+    </message>
+    <message>
+        <source>%1 expects your men at the enemy&apos;s gate.</source>
+        <translation>%1 expects your men at the enemy&apos;s gate.</translation>
+    </message>
+    <message>
+        <source>%1 will hold the camp alone.</source>
+        <translation>%1 will hold the camp alone.</translation>
+    </message>
+    <message>
+        <source>%1 marches alone.</source>
+        <translation>%1 marches alone.</translation>
+    </message>
+    <message>
+        <source>%1 will manage without your help.</source>
+        <translation>%1 will manage without your help.</translation>
+    </message>
+    <message>
+        <source>%1: your men have reached the camp. Well met.</source>
+        <translation>%1: your men have reached the camp. Well met.</translation>
+    </message>
+    <message>
+        <source>%1: your men have joined the attack.</source>
+        <translation>%1: your men have joined the attack.</translation>
+    </message>
+    <message>
+        <source>%1: the men you promised never came. That will be remembered.</source>
+        <translation>%1: the men you promised never came. That will be remembered.</translation>
+    </message>
+    <message>
+        <source>%1 heard no answer and withdraws the request.</source>
+        <translation>%1 heard no answer and withdraws the request.</translation>
     </message>
 </context>
 <context>
@@ -10424,6 +10539,14 @@ Builders reap it for the food that recruits civilians</translation>
     <message>
         <source>Ask your allied commanders to send men to hold this building. A cautious commander with men to spare agrees, one whose own camp is threatened refuses.</source>
         <translation>Ask your allied commanders to send men to hold this building. A cautious commander with men to spare agrees, one whose own camp is threatened refuses.</translation>
+    </message>
+    <message>
+        <source>That request has already been withdrawn.</source>
+        <translation>That request has already been withdrawn.</translation>
+    </message>
+    <message>
+        <source>Not enough %1 to give.</source>
+        <translation>Not enough %1 to give.</translation>
     </message>
 </context>
 <context>

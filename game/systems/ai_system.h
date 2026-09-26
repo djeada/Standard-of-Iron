@@ -106,6 +106,9 @@ public:
 
   [[nodiscard]] auto plan_for(int player_id) const -> const AI::AIContext*;
 
+  // How the human `owner` has treated this AI ally's appeals, -1..1.
+  [[nodiscard]] auto ally_goodwill(int ai_owner, int owner) const -> float;
+
   [[nodiscard]] auto serialize_state() const -> QJsonObject;
   void restore_state(const QJsonObject& state);
 
@@ -126,6 +129,23 @@ private:
 
     std::vector<AI::AllyPledge> pledges;
     float last_plea_at = -1.0e9F;
+
+    struct InstanceAppeal {
+      std::uint32_t appeal_id = 0;
+      int to_owner = 0;
+      Game::Systems::AllyAppealKind kind = Game::Systems::AllyAppealKind::Resources;
+      Game::Systems::ResourceType resource = Game::Systems::ResourceType::Gold;
+      float target_x = 0.0F;
+      float target_z = 0.0F;
+      float asked_at = 0.0F;
+      bool accepted = false;
+      float accepted_at = 0.0F;
+    };
+    std::vector<InstanceAppeal> appeals;
+    std::unordered_map<int, float> goodwill;
+    float last_defend_appeal_at = -1.0e9F;
+    float last_attack_appeal_at = -1.0e9F;
+    float appealed_wave_committed_at = -1.0e9F;
   };
 
   static constexpr std::uint64_t k_decision_latency_updates = 6;
@@ -169,6 +189,9 @@ private:
                                      AIInstance& ai,
                                      const AllyCallRequest& call);
   void plead_with_allies(Engine::Core::World& world);
+  void appeal_for_military_aid(Engine::Core::World& world);
+  void read_appeal_answers(Engine::Core::World& world);
+  void follow_up_appeals(Engine::Core::World& world);
   float m_last_any_plea_at = -1.0e9F;
 
   static void merge_building_attacks(const AIInstance& ai, AI::AIContext& context);

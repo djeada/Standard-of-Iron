@@ -5061,6 +5061,37 @@ TEST_F(AISystemTest, AnAllyWithNothingToSpareRefusesAndOneUnderAttackGivesLess) 
       << "a commander defending his own walls keeps more of his iron";
 }
 
+TEST_F(AISystemTest, AnAllyRemembersHowItsOwnAppealsWereAnswered) {
+  using Game::Systems::AllyCallKind;
+  using Game::Systems::AllyCallVerdict;
+  using Game::Systems::AI::AIStrategy;
+  const auto hanno = commander_config(AIStrategy::Balanced, 0.5F, 0.5F);
+  const Game::Systems::AllyTributeRequest ask{.requester = 1,
+                                              .giver = 3,
+                                              .resource =
+                                                  Game::Systems::ResourceType::Wood,
+                                              .amount = 200};
+  const auto rich = stock_of(Game::Systems::ResourceType::Wood, 700);
+  const auto friendly =
+      Game::Systems::AI::answer_ally_request(hanno, rich, ask, false, 1.0F);
+  const auto slighted =
+      Game::Systems::AI::answer_ally_request(hanno, rich, ask, false, -1.0F);
+  EXPECT_GT(friendly.granted, slighted.granted)
+      << "an ally who was refused and let down gives less than one who was helped";
+
+  auto cautious = commander_config(AIStrategy::Balanced, 0.5F, 0.5F);
+  cautious.aggression_modifier = 1.0F;
+  const Game::Systems::AI::AllyCallStanding ready{.under_threat = false,
+                                                  .spare_units = 10};
+  EXPECT_EQ(
+      Game::Systems::AI::answer_ally_call(cautious, ready, AllyCallKind::Attack, 0.0F),
+      AllyCallVerdict::Accepted);
+  EXPECT_EQ(
+      Game::Systems::AI::answer_ally_call(cautious, ready, AllyCallKind::Attack, -1.0F),
+      AllyCallVerdict::RefusedUnwilling)
+      << "promises broken to this commander make him stay home";
+}
+
 TEST_F(AISystemTest, SpareTroopsMarchToAnAllyWhoseBarracksIsUnderAttack) {
   Game::Systems::AI::AllyAidBehavior behavior;
   Game::Systems::AI::AISnapshot snapshot;

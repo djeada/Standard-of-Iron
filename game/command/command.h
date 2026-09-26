@@ -111,6 +111,11 @@ struct AllyCall {
   Game::Systems::AllyCallKind kind = Game::Systems::AllyCallKind::Defend;
 };
 
+struct AllyAppealAnswer {
+  std::uint32_t appeal_id = 0;
+  bool accept = false;
+};
+
 enum class CommanderAbility : std::uint8_t {
   Aura,
   Rally,
@@ -222,7 +227,8 @@ using Payload = std::variant<Move,
                              PlaceWallPlan,
                              PlaceBuilding,
                              AllyTribute,
-                             AllyCall>;
+                             AllyCall,
+                             AllyAppealAnswer>;
 
 struct Command {
   Source source = Source::LocalPlayer;

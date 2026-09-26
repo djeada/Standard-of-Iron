@@ -8,6 +8,7 @@
 #include <chrono>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <utility>
 
 #include "../core/ambient_session.h"
@@ -368,7 +369,10 @@ void AISystem::update(Engine::Core::World* world, float delta_time) {
   process_results(*world);
   answer_ally_requests(*world);
   answer_ally_calls(*world);
+  read_appeal_answers(*world);
+  follow_up_appeals(*world);
   plead_with_allies(*world);
+  appeal_for_military_aid(*world);
 
   for (auto& ai : m_ai_instances) {
 
@@ -401,7 +405,8 @@ void AISystem::answer_ally_requests(Engine::Core::World& world) {
       auto answer = AI::answer_ally_request(ai.context.strategy_config,
                                             session.economy().get_all(giver),
                                             request,
-                                            ai.context.barracks_under_threat);
+                                            ai.context.barracks_under_threat,
+                                            ai.goodwill[request.requester]);
       if (answer.granted > 0) {
         answer.granted = marketplace.send_to_ally(
             world, giver, request.requester, request.resource, answer.granted);
@@ -425,8 +430,8 @@ void AISystem::answer_ally_calls(Engine::Core::World& world) {
           .spare_units = call.kind == AllyCallKind::Attack
                              ? ai.context.combat_units - garrison
                              : ai.context.combat_units - garrison - in_wave};
-      const auto verdict =
-          AI::answer_ally_call(ai.context.strategy_config, standing, call.kind);
+      const auto verdict = AI::answer_ally_call(
+          ai.context.strategy_config, standing, call.kind, ai.goodwill[call.requester]);
       if (verdict == AllyCallVerdict::Accepted) {
         std::erase_if(ai.pledges, [&call](const AI::AllyPledge& pledge) {
           return pledge.kind == call.kind;
@@ -474,10 +479,13 @@ void AISystem::plead_with_allies(Engine::Core::World& world) {
   constexpr float k_first_plea_at = 240.0F;
   constexpr float k_plea_interval = 300.0F;
   constexpr float k_any_plea_interval = 120.0F;
-  if (m_total_game_time < k_first_plea_at ||
-      m_total_game_time - m_last_any_plea_at < k_any_plea_interval) {
+  if (m_total_game_time < k_first_plea_at) {
     return;
   }
+  // Only pleas to a human share the global spacing; commanders asking each
+  // other are paced per commander.
+  const bool human_may_hear =
+      m_total_game_time - m_last_any_plea_at >= k_any_plea_interval;
   auto& session = Game::Session::session_for(world);
   const auto& owners = session.owners();
   for (auto& ai : m_ai_instances) {
@@ -487,23 +495,301 @@ void AISystem::plead_with_allies(Engine::Core::World& world) {
         ai.context.total_units == 0) {
       continue;
     }
+    // Ask whichever ally holds most of what this camp lacks, human or
+    // commander alike.
+    int giver = 0;
+    std::optional<AI::AllyPleaNeed> need;
+    int best_stock = -1;
     for (const int ally : owners.get_allies_of(owner)) {
-      if (!owners.is_player(ally)) {
+      const bool human = owners.is_player(ally);
+      if ((human && !human_may_hear) || (!human && !owners.is_ai(ally))) {
         continue;
       }
-      const auto need = AI::pick_ally_plea(session.economy().get_all(owner),
-                                           session.economy().get_all(ally));
-      if (!need.has_value()) {
+      const auto& ally_stock = session.economy().get_all(ally);
+      const auto candidate =
+          AI::pick_ally_plea(session.economy().get_all(owner), ally_stock);
+      if (!candidate.has_value()) {
         continue;
       }
-      session.alliance().record_plea({.from_ally = owner,
-                                      .to_owner = ally,
-                                      .resource = need->resource,
-                                      .amount = need->amount});
-      ai.last_plea_at = m_total_game_time;
-      m_last_any_plea_at = m_total_game_time;
-      return;
+      const int stock = ally_stock.get(candidate->resource);
+      if (stock > best_stock || (stock == best_stock && human)) {
+        best_stock = stock;
+        giver = ally;
+        need = candidate;
+      }
     }
+    if (!need.has_value()) {
+      continue;
+    }
+    ai.last_plea_at = m_total_game_time;
+    if (!owners.is_player(giver)) {
+      // Another commander answers through the same rule it uses for the
+      // player's requests, and the goods move on the spot.
+      session.marketplace().queue_ally_request({.requester = owner,
+                                                .giver = giver,
+                                                .resource = need->resource,
+                                                .amount = need->amount});
+      continue;
+    }
+    auto& board = session.alliance();
+    const auto appeal_id = board.next_appeal_id();
+    board.record_appeal({.appeal_id = appeal_id,
+                         .from_ally = owner,
+                         .to_owner = giver,
+                         .kind = Game::Systems::AllyAppealKind::Resources,
+                         .resource = need->resource,
+                         .amount = need->amount});
+    ai.appeals.push_back({.appeal_id = appeal_id,
+                          .to_owner = giver,
+                          .kind = Game::Systems::AllyAppealKind::Resources,
+                          .resource = need->resource,
+                          .asked_at = m_total_game_time});
+    m_last_any_plea_at = m_total_game_time;
+    return;
+  }
+}
+
+namespace {
+
+constexpr float k_defend_appeal_interval = 90.0F;
+constexpr float k_attack_appeal_interval = 150.0F;
+constexpr int k_defend_appeal_min_threats = 2;
+constexpr int k_attack_appeal_min_wave = 4;
+constexpr float k_defend_aid_window = 75.0F;
+constexpr float k_attack_aid_window = 150.0F;
+constexpr float k_defend_aid_radius = 20.0F;
+constexpr float k_attack_aid_radius = 25.0F;
+constexpr int k_aid_min_soldiers = 1;
+
+auto human_soldiers_near(
+    Engine::Core::World& world, int owner, float x, float z, float radius) -> int {
+  const float radius_sq = radius * radius;
+  int count = 0;
+  for (auto [entity_id, unit, transform] :
+       world.view<Engine::Core::UnitComponent, Engine::Core::TransformComponent>()) {
+    (void)entity_id;
+    if (unit.owner_id != owner || unit.health <= 0 ||
+        !Game::Units::is_troop_spawn(unit.spawn_type)) {
+      continue;
+    }
+    const float dx = transform.position.x - x;
+    const float dz = transform.position.z - z;
+    if (dx * dx + dz * dz <= radius_sq) {
+      ++count;
+    }
+  }
+  return count;
+}
+
+void nudge_goodwill(std::unordered_map<int, float>& goodwill, int owner, float delta) {
+  float& value = goodwill[owner];
+  value = std::clamp(value + delta,
+                     Game::Systems::AI::k_min_ally_goodwill,
+                     Game::Systems::AI::k_max_ally_goodwill);
+}
+
+} // namespace
+
+auto AISystem::ally_goodwill(int ai_owner, int owner) const -> float {
+  for (const auto& ai : m_ai_instances) {
+    if (ai.context.player_id == ai_owner) {
+      const auto it = ai.goodwill.find(owner);
+      return it != ai.goodwill.end() ? it->second : 0.0F;
+    }
+  }
+  return 0.0F;
+}
+
+void AISystem::appeal_for_military_aid(Engine::Core::World& world) {
+  auto& session = Game::Session::session_for(world);
+  const auto& owners = session.owners();
+  auto& board = session.alliance();
+  for (auto& ai : m_ai_instances) {
+    const int owner = ai.context.player_id;
+    std::vector<int> humans;
+    std::vector<int> commanders;
+    for (const int ally : owners.get_allies_of(owner)) {
+      if (owners.is_player(ally)) {
+        humans.push_back(ally);
+      } else if (owners.is_ai(ally)) {
+        commanders.push_back(ally);
+      }
+    }
+    if ((humans.empty() && commanders.empty()) || ai.context.total_units == 0) {
+      continue;
+    }
+    const auto has_open = [&ai](Game::Systems::AllyAppealKind kind) {
+      return std::any_of(ai.appeals.begin(), ai.appeals.end(), [kind](const auto& a) {
+        return a.kind == kind;
+      });
+    };
+
+    struct Ask {
+      Game::Systems::AllyAppealKind kind;
+      Engine::Core::EntityID target;
+      float x;
+      float z;
+    };
+    std::optional<Ask> ask;
+    if (ai.context.barracks_under_threat &&
+        ai.context.nearby_threat_count >= k_defend_appeal_min_threats &&
+        m_total_game_time - ai.last_defend_appeal_at >= k_defend_appeal_interval &&
+        !has_open(Game::Systems::AllyAppealKind::Defend)) {
+      ai.last_defend_appeal_at = m_total_game_time;
+      ask = Ask{Game::Systems::AllyAppealKind::Defend,
+                Engine::Core::NULL_ENTITY,
+                ai.context.base_pos_x,
+                ai.context.base_pos_z};
+    } else if (const auto& wave = ai.context.wave;
+               wave.committed && wave.target_id != 0 &&
+               wave.committed_at > ai.appealed_wave_committed_at &&
+               wave.initial_size >= k_attack_appeal_min_wave &&
+               m_total_game_time - ai.last_attack_appeal_at >=
+                   k_attack_appeal_interval &&
+               !has_open(Game::Systems::AllyAppealKind::Attack)) {
+      ai.appealed_wave_committed_at = wave.committed_at;
+      ai.last_attack_appeal_at = m_total_game_time;
+      ask = Ask{Game::Systems::AllyAppealKind::Attack,
+                wave.target_id,
+                wave.target_x,
+                wave.target_z};
+    }
+    if (!ask.has_value()) {
+      continue;
+    }
+    // Allied commanders get the same request as a call; each answers it with
+    // the rule it uses for the player's calls and acts on its pledge.
+    if (!commanders.empty()) {
+      const auto* target_unit =
+          ask->target != Engine::Core::NULL_ENTITY
+              ? world.try_get<Engine::Core::UnitComponent>(ask->target)
+              : nullptr;
+      const int target_owner = target_unit != nullptr ? target_unit->owner_id : owner;
+      const auto call_id = board.next_call_id();
+      for (const int commander : commanders) {
+        board.queue_call({.call_id = call_id,
+                          .requester = owner,
+                          .ally = commander,
+                          .kind = ask->kind == Game::Systems::AllyAppealKind::Attack
+                                      ? Game::Systems::AllyCallKind::Attack
+                                      : Game::Systems::AllyCallKind::Defend,
+                          .target = ask->target,
+                          .target_owner = target_owner,
+                          .target_x = ask->x,
+                          .target_z = ask->z});
+      }
+    }
+    for (const int human : humans) {
+      const auto appeal_id = board.next_appeal_id();
+      board.record_appeal({.appeal_id = appeal_id,
+                           .from_ally = owner,
+                           .to_owner = human,
+                           .kind = ask->kind,
+                           .target = ask->target,
+                           .target_x = ask->x,
+                           .target_z = ask->z});
+      ai.appeals.push_back({.appeal_id = appeal_id,
+                            .to_owner = human,
+                            .kind = ask->kind,
+                            .target_x = ask->x,
+                            .target_z = ask->z,
+                            .asked_at = m_total_game_time});
+    }
+  }
+}
+
+void AISystem::read_appeal_answers(Engine::Core::World& world) {
+  using Game::Systems::AllyAppealFollowUp;
+  using Game::Systems::AllyAppealKind;
+  auto& board = Game::Session::session_for(world).alliance();
+  for (auto& ai : m_ai_instances) {
+    const int owner = ai.context.player_id;
+    for (const auto& answer : board.take_appeal_answers_for(owner)) {
+      auto open =
+          std::find_if(ai.appeals.begin(), ai.appeals.end(), [&](const auto& a) {
+            return a.appeal_id == answer.appeal_id;
+          });
+      if (open == ai.appeals.end()) {
+        continue;
+      }
+      Game::Systems::AllyAppealReply reply{.appeal_id = answer.appeal_id,
+                                           .from_ally = owner,
+                                           .to_owner = answer.answerer,
+                                           .kind = open->kind,
+                                           .resource = open->resource};
+      if (open->kind == AllyAppealKind::Resources) {
+        if (answer.accepted && answer.given > 0) {
+          reply.follow_up = AllyAppealFollowUp::Grateful;
+          reply.amount = answer.given;
+          nudge_goodwill(ai.goodwill,
+                         answer.answerer,
+                         0.1F + static_cast<float>(answer.given) / 1000.0F);
+        } else {
+          reply.follow_up = AllyAppealFollowUp::ManageWithout;
+          nudge_goodwill(ai.goodwill, answer.answerer, -0.1F);
+        }
+        ai.appeals.erase(open);
+      } else if (answer.accepted) {
+        reply.follow_up = AllyAppealFollowUp::AwaitingAid;
+        open->accepted = true;
+        open->accepted_at = m_total_game_time;
+      } else {
+        reply.follow_up = open->kind == AllyAppealKind::Defend
+                              ? AllyAppealFollowUp::HoldAlone
+                              : AllyAppealFollowUp::MarchAlone;
+        nudge_goodwill(ai.goodwill,
+                       answer.answerer,
+                       open->kind == AllyAppealKind::Defend ? -0.1F : -0.05F);
+        ai.appeals.erase(open);
+      }
+      board.record_appeal_reply(reply);
+    }
+  }
+}
+
+void AISystem::follow_up_appeals(Engine::Core::World& world) {
+  using Game::Systems::AllyAppealFollowUp;
+  using Game::Systems::AllyAppealKind;
+  auto& board = Game::Session::session_for(world).alliance();
+  for (auto& ai : m_ai_instances) {
+    const int owner = ai.context.player_id;
+    std::erase_if(ai.appeals, [&](const auto& appeal) {
+      Game::Systems::AllyAppealReply reply{.appeal_id = appeal.appeal_id,
+                                           .from_ally = owner,
+                                           .to_owner = appeal.to_owner,
+                                           .kind = appeal.kind};
+      if (!appeal.accepted) {
+        if (m_total_game_time - appeal.asked_at <
+            Game::Systems::k_ally_appeal_answer_seconds) {
+          return false;
+        }
+        board.close_appeal(appeal.appeal_id);
+        reply.follow_up = AllyAppealFollowUp::Withdrawn;
+        nudge_goodwill(ai.goodwill, appeal.to_owner, -0.05F);
+        board.record_appeal_reply(reply);
+        return true;
+      }
+      const bool defend = appeal.kind == AllyAppealKind::Defend;
+      if (human_soldiers_near(world,
+                              appeal.to_owner,
+                              appeal.target_x,
+                              appeal.target_z,
+                              defend ? k_defend_aid_radius : k_attack_aid_radius) >=
+          k_aid_min_soldiers) {
+        reply.follow_up = AllyAppealFollowUp::AidArrived;
+        nudge_goodwill(ai.goodwill, appeal.to_owner, 0.2F);
+        board.record_appeal_reply(reply);
+        return true;
+      }
+      if (m_total_game_time - appeal.accepted_at <
+          (defend ? k_defend_aid_window : k_attack_aid_window)) {
+        return false;
+      }
+      reply.follow_up = AllyAppealFollowUp::AidNeverCame;
+      nudge_goodwill(ai.goodwill, appeal.to_owner, -0.25F);
+      board.record_appeal_reply(reply);
+      return true;
+    });
   }
 }
 
@@ -532,7 +818,12 @@ void AISystem::process_results(Engine::Core::World& world) {
     while (!results.empty()) {
       auto& result = results.front();
 
+      // Workers never see the nation registry, so their context comes back
+      // without it. Keep ours: with it gone, every check that reads the nation
+      // (resource pleas among them) went quiet after the first decision.
+      const auto* nation = ai.context.nation;
       ai.context = result.context;
+      ai.context.nation = nation;
       merge_building_attacks(ai, ai.context);
       ai.unmerged_building_attacks.clear();
 

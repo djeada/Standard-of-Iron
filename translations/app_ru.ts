@@ -205,6 +205,33 @@
     </message>
 </context>
 <context>
+    <name>AllyAppealPanel</name>
+    <message>
+        <source>Accept</source>
+        <translation>Принять</translation>
+    </message>
+    <message>
+        <source>Refuse</source>
+        <translation>Отказать</translation>
+    </message>
+    <message>
+        <source>%1 asks for supplies</source>
+        <translation>%1 просит припасов</translation>
+    </message>
+    <message>
+        <source>%1 calls for help</source>
+        <translation>%1 зовёт на помощь</translation>
+    </message>
+    <message>
+        <source>%1 calls you to arms</source>
+        <translation>%1 призывает вас к оружию</translation>
+    </message>
+    <message>
+        <source>Show</source>
+        <translation>Показать</translation>
+    </message>
+</context>
+<context>
     <name>ArmyFormationController</name>
     <message>
         <source>Automatic</source>
@@ -3920,6 +3947,94 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>%1 asks you for %2 %3.</source>
         <translation>%1 просит у вас %2 %3.</translation>
+    </message>
+    <message>
+        <source>%1 asked %2 for %3 %4 and received %5.</source>
+        <translation>%1 попросил у %2 %3 (%4) и получил %5.</translation>
+    </message>
+    <message>
+        <source>%1 asked %2 for %3 %4; %2 refused.</source>
+        <translation>%1 попросил у %2 %3 (%4); %2 отказал.</translation>
+    </message>
+    <message>
+        <source>%1 called %2 to the attack; %2 marches.</source>
+        <translation>%1 позвал %2 в атаку; %2 выступает.</translation>
+    </message>
+    <message>
+        <source>%1 called %2 to the attack; %2 stays.</source>
+        <translation>%1 позвал %2 в атаку; %2 остаётся.</translation>
+    </message>
+    <message>
+        <source>%1 called for help; %2 sends men.</source>
+        <translation>%1 позвал на помощь; %2 посылает людей.</translation>
+    </message>
+    <message>
+        <source>%1 called for help; %2 cannot come.</source>
+        <translation>%1 позвал на помощь; %2 не может прийти.</translation>
+    </message>
+    <message>
+        <source>Give %1</source>
+        <translation>Дать %1</translation>
+    </message>
+    <message>
+        <source>Refuse</source>
+        <translation>Отказать</translation>
+    </message>
+    <message>
+        <source>%1&apos;s camp is under attack. Will you send men to hold it?</source>
+        <translation>Лагерь %1 атакован. Пошлёте людей удержать его?</translation>
+    </message>
+    <message>
+        <source>Send men</source>
+        <translation>Послать людей</translation>
+    </message>
+    <message>
+        <source>%1 is marching on the enemy. Will you join the attack?</source>
+        <translation>%1 идёт на врага. Присоединитесь к атаке?</translation>
+    </message>
+    <message>
+        <source>Join</source>
+        <translation>Присоединиться</translation>
+    </message>
+    <message>
+        <source>%1 thanks you for the %2 %3.</source>
+        <translation>%1 благодарит вас за %2 (%3).</translation>
+    </message>
+    <message>
+        <source>%1 will hold until your men arrive.</source>
+        <translation>%1 продержится до прихода ваших людей.</translation>
+    </message>
+    <message>
+        <source>%1 expects your men at the enemy&apos;s gate.</source>
+        <translation>%1 ждёт ваших людей у ворот врага.</translation>
+    </message>
+    <message>
+        <source>%1 will hold the camp alone.</source>
+        <translation>%1 удержит лагерь в одиночку.</translation>
+    </message>
+    <message>
+        <source>%1 marches alone.</source>
+        <translation>%1 выступает один.</translation>
+    </message>
+    <message>
+        <source>%1 will manage without your help.</source>
+        <translation>%1 обойдётся без вашей помощи.</translation>
+    </message>
+    <message>
+        <source>%1: your men have reached the camp. Well met.</source>
+        <translation>%1: ваши люди дошли до лагеря. Добро пожаловать.</translation>
+    </message>
+    <message>
+        <source>%1: your men have joined the attack.</source>
+        <translation>%1: ваши люди присоединились к атаке.</translation>
+    </message>
+    <message>
+        <source>%1: the men you promised never came. That will be remembered.</source>
+        <translation>%1: обещанные люди так и не пришли. Это запомнят.</translation>
+    </message>
+    <message>
+        <source>%1 heard no answer and withdraws the request.</source>
+        <translation>%1 не получил ответа и отзывает просьбу.</translation>
     </message>
 </context>
 <context>
@@ -10427,6 +10542,14 @@ Wide vision and a durable settlement anchor</source>
     <message>
         <source>Ask your allied commanders to send men to hold this building. A cautious commander with men to spare agrees, one whose own camp is threatened refuses.</source>
         <translation>Просите своих союзных командиров прислать людей удержать эту постройку. Осторожный командир с лишними людьми согласится, а тот, чей лагерь под угрозой, откажет.</translation>
+    </message>
+    <message>
+        <source>That request has already been withdrawn.</source>
+        <translation>Эта просьба уже отозвана.</translation>
+    </message>
+    <message>
+        <source>Not enough %1 to give.</source>
+        <translation>Недостаточно ресурса «%1», чтобы дать.</translation>
     </message>
 </context>
 <context>

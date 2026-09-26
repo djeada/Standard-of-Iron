@@ -15,6 +15,7 @@
 #include "../systems/troop_profile_service.h"
 #include "../units/troop_config.h"
 #include "building_collision_registry.h"
+#include "owner_registry.h"
 #include "units/spawn_type.h"
 #include "units/troop_type.h"
 
@@ -124,6 +125,7 @@ void CaptureSystem::process_barrack_capture(Engine::Core::World* world,
   }
 
   std::vector<OwnerTroopTally> tallies;
+  const auto* owners = Game::Session::services_for(*world).owners;
 
   for (auto [barrack_ref, building, unit_ref, transform_ref] :
        world->entity_view<Engine::Core::BuildingComponent,
@@ -153,11 +155,16 @@ void CaptureSystem::process_barrack_capture(Engine::Core::World* world,
 
     tally_nearby_troops(*world, barrack_x, barrack_z, capture_radius, tallies);
 
+    // Allied troops stand with the owner: an ally sent to hold a barracks
+    // used to out-number its garrison and take it, which defeated the owner.
     int defender_troops = 0;
     for (const auto& tally : tallies) {
-      if (tally.owner_id == barrack_owner_id) {
-        if (!Game::Core::is_neutral_owner(barrack_owner_id)) {
-          defender_troops = tally.troops;
+      bool const barrack_is_neutral = Game::Core::is_neutral_owner(barrack_owner_id);
+      if (tally.owner_id == barrack_owner_id ||
+          (!barrack_is_neutral && owners != nullptr &&
+           owners->are_allies(tally.owner_id, barrack_owner_id))) {
+        if (!barrack_is_neutral) {
+          defender_troops += tally.troops;
         }
         continue;
       }

@@ -855,7 +855,7 @@ void GameEngine::update_presentation(float dt) {
   announce_player_defeats(real_dt);
   announce_ally_exchanges();
   announce_ally_calls();
-  announce_ally_pleas();
+  announce_ally_appeals();
   m_activity_view_model->advance_feedback(dt);
 
   const float simulation_time_scale =
@@ -953,6 +953,12 @@ auto GameEngine::owner_display_name(int owner_id) const -> QString {
   return tr("your ally");
 }
 
+auto GameEngine::is_friendly_commander(int owner_id) const -> bool {
+  return m_session != nullptr && owner_id != m_runtime.local_owner_id &&
+         m_session->owners().is_ai(owner_id) &&
+         m_session->owners().are_allies(m_runtime.local_owner_id, owner_id);
+}
+
 auto GameEngine::ally_resource_word(const QString& resource_key) -> QString {
   Game::Systems::ResourceType type{};
   if (!Game::Systems::resource_type_from_key(resource_key, type)) {
@@ -1007,6 +1013,25 @@ void GameEngine::announce_ally_exchanges() {
       continue;
     }
     if (answer.requester != local) {
+      // Allied commanders trading among themselves: the player hears it so
+      // the alliance reads as one camp, but gets no voice line for it.
+      if (is_friendly_commander(answer.requester) &&
+          is_friendly_commander(answer.giver)) {
+        const QString asker = owner_display_name(answer.requester);
+        const QString giver = owner_display_name(answer.giver);
+        const bool granted = answer.verdict == AllyTributeVerdict::Granted ||
+                             answer.verdict == AllyTributeVerdict::Partial;
+        emit ally_exchange(granted ? tr("%1 asked %2 for %3 %4 and received %5.")
+                                         .arg(asker, giver)
+                                         .arg(answer.requested)
+                                         .arg(what)
+                                         .arg(answer.granted)
+                                   : tr("%1 asked %2 for %3 %4; %2 refused.")
+                                         .arg(asker, giver)
+                                         .arg(answer.requested)
+                                         .arg(what),
+                           granted);
+      }
       continue;
     }
     const QString ally = owner_display_name(answer.giver);
@@ -1064,6 +1089,23 @@ void GameEngine::announce_ally_calls() {
   for (const auto& answer : answers) {
     if (answer.requester == local) {
       by_call[answer.call_id].push_back(answer);
+    } else if (is_friendly_commander(answer.requester) &&
+               is_friendly_commander(answer.ally)) {
+      const QString asker = owner_display_name(answer.requester);
+      const QString ally = owner_display_name(answer.ally);
+      const bool attack = answer.kind == Game::Systems::AllyCallKind::Attack;
+      const bool accepted = answer.verdict == AllyCallVerdict::Accepted;
+      if (attack) {
+        emit ally_exchange(
+            accepted ? tr("%1 called %2 to the attack; %2 marches.").arg(asker, ally)
+                     : tr("%1 called %2 to the attack; %2 stays.").arg(asker, ally),
+            accepted);
+      } else {
+        emit ally_exchange(
+            accepted ? tr("%1 called for help; %2 sends men.").arg(asker, ally)
+                     : tr("%1 called for help; %2 cannot come.").arg(asker, ally),
+            accepted);
+      }
     }
   }
   for (auto& [call_id, replies] : by_call) {
@@ -1121,27 +1163,112 @@ void GameEngine::announce_ally_calls() {
   }
 }
 
-void GameEngine::announce_ally_pleas() {
+void GameEngine::announce_ally_appeals() {
   if (m_session == nullptr) {
     return;
   }
+  using Game::Systems::AllyAppealFollowUp;
+  using Game::Systems::AllyAppealKind;
   const int local = m_runtime.local_owner_id;
-  for (const auto& plea : m_session->alliance().take_pleas()) {
-    if (plea.to_owner != local) {
+  auto& board = m_session->alliance();
+  for (const auto& appeal : board.take_new_appeals()) {
+    if (appeal.to_owner != local) {
       continue;
     }
-    const QString key = QLatin1String(Game::Systems::resource_type_key(plea.resource));
-    emit ally_exchange(tr("%1 asks you for %2 %3.")
-                           .arg(owner_display_name(plea.from_ally))
-                           .arg(plea.amount)
-                           .arg(ally_resource_word(key)),
-                       true);
-    m_commander_message_director.notify_fact(
-        {.trigger = Game::Mission::CommanderMessageTrigger::AllyNeedsResources,
-         .subject_owner_id = local,
-         .actor_owner_id = plea.from_ally,
-         .amount = plea.amount,
-         .resource = key});
+    const QString name = owner_display_name(appeal.from_ally);
+    const QString key =
+        QLatin1String(Game::Systems::resource_type_key(appeal.resource));
+    QVariantMap card;
+    card["id"] = appeal.appeal_id;
+    card["from"] = appeal.from_ally;
+    card["name"] = name;
+    card["kind"] = QLatin1String(Game::Systems::ally_appeal_kind_key(appeal.kind));
+    card["x"] = appeal.target_x;
+    card["z"] = appeal.target_z;
+    card["seconds"] = Game::Systems::k_ally_appeal_answer_seconds;
+    switch (appeal.kind) {
+    case AllyAppealKind::Resources:
+      card["resource"] = key;
+      card["amount"] = appeal.amount;
+      card["text"] = tr("%1 asks you for %2 %3.")
+                         .arg(name)
+                         .arg(appeal.amount)
+                         .arg(ally_resource_word(key));
+      card["accept"] = tr("Give %1").arg(appeal.amount);
+      card["decline"] = tr("Refuse");
+      m_commander_message_director.notify_fact(
+          {.trigger = Game::Mission::CommanderMessageTrigger::AllyNeedsResources,
+           .subject_owner_id = local,
+           .actor_owner_id = appeal.from_ally,
+           .amount = appeal.amount,
+           .resource = key});
+      break;
+    case AllyAppealKind::Defend:
+      card["text"] =
+          tr("%1's camp is under attack. Will you send men to hold it?").arg(name);
+      card["accept"] = tr("Send men");
+      card["decline"] = tr("Refuse");
+      break;
+    case AllyAppealKind::Attack:
+      card["text"] =
+          tr("%1 is marching on the enemy. Will you join the attack?").arg(name);
+      card["accept"] = tr("Join");
+      card["decline"] = tr("Refuse");
+      break;
+    }
+    emit ally_appeal_opened(card);
+  }
+
+  for (const auto& reply : board.take_appeal_replies()) {
+    if (reply.to_owner != local) {
+      continue;
+    }
+    if (reply.follow_up != AllyAppealFollowUp::AidArrived &&
+        reply.follow_up != AllyAppealFollowUp::AidNeverCame) {
+      emit ally_appeal_closed(reply.appeal_id);
+    }
+    const QString name = owner_display_name(reply.from_ally);
+    const bool defend = reply.kind == AllyAppealKind::Defend;
+    const QString key = QLatin1String(Game::Systems::resource_type_key(reply.resource));
+    switch (reply.follow_up) {
+    case AllyAppealFollowUp::Grateful:
+      emit ally_exchange(tr("%1 thanks you for the %2 %3.")
+                             .arg(name)
+                             .arg(reply.amount)
+                             .arg(ally_resource_word(key)),
+                         true);
+      break;
+    case AllyAppealFollowUp::AwaitingAid:
+      emit ally_exchange(defend
+                             ? tr("%1 will hold until your men arrive.").arg(name)
+                             : tr("%1 expects your men at the enemy's gate.").arg(name),
+                         true);
+      break;
+    case AllyAppealFollowUp::HoldAlone:
+      emit ally_exchange(tr("%1 will hold the camp alone.").arg(name), false);
+      break;
+    case AllyAppealFollowUp::MarchAlone:
+      emit ally_exchange(tr("%1 marches alone.").arg(name), false);
+      break;
+    case AllyAppealFollowUp::ManageWithout:
+      emit ally_exchange(tr("%1 will manage without your help.").arg(name), false);
+      break;
+    case AllyAppealFollowUp::AidArrived:
+      emit ally_exchange(
+          defend ? tr("%1: your men have reached the camp. Well met.").arg(name)
+                 : tr("%1: your men have joined the attack.").arg(name),
+          true);
+      break;
+    case AllyAppealFollowUp::AidNeverCame:
+      emit ally_exchange(
+          tr("%1: the men you promised never came. That will be remembered.").arg(name),
+          false);
+      break;
+    case AllyAppealFollowUp::Withdrawn:
+      emit ally_exchange(tr("%1 heard no answer and withdraws the request.").arg(name),
+                         false);
+      break;
+    }
   }
 }
 

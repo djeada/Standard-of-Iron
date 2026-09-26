@@ -328,6 +328,28 @@ void apply_ally_call(World& world, int owner_id, const AllyCall& call) {
   }
 }
 
+void apply_ally_appeal_answer(World& world,
+                              int owner_id,
+                              const AllyAppealAnswer& answer) {
+  auto& session = Game::Session::session_for(world);
+  auto& board = session.alliance();
+  const auto* appeal = board.open_appeal(answer.appeal_id);
+  if (appeal == nullptr || appeal->to_owner != owner_id) {
+    return;
+  }
+  int given = 0;
+  if (answer.accept && appeal->kind == Game::Systems::AllyAppealKind::Resources) {
+    given = session.marketplace().send_to_ally(
+        world, owner_id, appeal->from_ally, appeal->resource, appeal->amount);
+  }
+  board.record_appeal_answer({.appeal_id = appeal->appeal_id,
+                              .from_ally = appeal->from_ally,
+                              .answerer = owner_id,
+                              .accepted = answer.accept,
+                              .given = given});
+  board.close_appeal(answer.appeal_id);
+}
+
 void apply_commander_ability(World& world, const UseCommanderAbility& order) {
   auto* entity = world.get_entity(order.commander);
   auto* commander = entity != nullptr
@@ -917,6 +939,8 @@ void dispatch(World& world, const Command& command) {
           apply_ally_tribute(world, command.owner_id, payload);
         } else if constexpr (std::is_same_v<T, AllyCall>) {
           apply_ally_call(world, command.owner_id, payload);
+        } else if constexpr (std::is_same_v<T, AllyAppealAnswer>) {
+          apply_ally_appeal_answer(world, command.owner_id, payload);
         } else if constexpr (std::is_same_v<T, UseCommanderAbility>) {
           apply_commander_ability(world, payload);
         } else if constexpr (std::is_same_v<T, SetFormationMode>) {

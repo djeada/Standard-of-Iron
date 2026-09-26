@@ -765,7 +765,7 @@ Item {
             configs.push({
                     "player_id": p.player_id,
                     "colorHex": p.colorHex,
-                    "team_id": p.team_id,
+                    "team_id": p.team_id + 1,
                     "nationId": p.nationId,
                     "commanderTroop": p.commanderTroop,
                     "isHuman": p.isHuman,

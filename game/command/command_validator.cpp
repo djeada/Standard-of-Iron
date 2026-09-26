@@ -249,6 +249,12 @@ auto validate(Engine::Core::World& world, const Command& command) -> Validation 
             break;
           }
           return Rejection::NoSubjects;
+        } else if constexpr (std::is_same_v<T, AllyAppealAnswer>) {
+          const auto* appeal = Game::Session::session_for(world).alliance().open_appeal(
+              payload.appeal_id);
+          return appeal != nullptr && appeal->to_owner == owner_id
+                     ? Rejection::None
+                     : Rejection::NoSubjects;
         } else if constexpr (std::is_same_v<T, UseCommanderAbility>) {
           if (!is_commandable(world, payload.commander, owner_id)) {
             return Rejection::NoSubjects;

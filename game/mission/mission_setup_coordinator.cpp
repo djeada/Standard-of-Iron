@@ -40,9 +40,11 @@
 #include "game/systems/owner_registry.h"
 #include "game/systems/walkability.h"
 #include "game/systems/world_restore.h"
+#include "game/units/commander_catalog.h"
 #include "game/units/factory.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
+#include "game/util/asset_text.h"
 #include "utils/resource_utils.h"
 
 namespace Game::Mission {
@@ -813,6 +815,21 @@ auto MissionSetupCoordinator::apply_skirmish_commander_setup(
 
     for (const auto& existing : existing_commanders) {
       ctx.world.destroy_entity(existing.id);
+    }
+
+    // Seats were registered as "AI Player N"; name each army after the
+    // commander leading it, which is how the setup screen presented it.
+    if (const auto* definition = Game::Units::commander_definition(*troop_type);
+        definition != nullptr && !definition->display_name.empty()) {
+      std::string name = Game::Util::tr_asset_std(Game::Util::k_commanders_context,
+                                                  definition->display_name);
+      for (const auto& other : owner_registry.get_all_owners()) {
+        if (other.owner_id != owner_id && other.name == name) {
+          name += " (" + std::to_string(owner_id) + ")";
+          break;
+        }
+      }
+      owner_registry.set_owner_name(owner_id, name);
     }
   }
 

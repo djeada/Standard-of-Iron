@@ -151,6 +151,24 @@ Item {
         }
     }
 
+    // Takes hover and clicks over the dimmed screen so HUD buttons underneath
+    // cannot raise their tooltips on top of the verdict. Only live while the
+    // banner or report covers the screen; the collapsed strip leaves the HUD
+    // alone.
+    MouseArea {
+        objectName: "outcomeInputShield"
+        anchors.fill: parent
+        z: -1
+        enabled: root.visible && (bannerLoader.active || root.showingSummary)
+        visible: enabled
+        hoverEnabled: true
+        acceptedButtons: Qt.AllButtons
+        preventStealing: true
+        onWheel: function (wheel) {
+            wheel.accepted = true;
+        }
+    }
+
     Loader {
         id: bannerLoader
 

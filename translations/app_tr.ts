@@ -205,6 +205,33 @@
     </message>
 </context>
 <context>
+    <name>AllyAppealPanel</name>
+    <message>
+        <source>Accept</source>
+        <translation>Kabul et</translation>
+    </message>
+    <message>
+        <source>Refuse</source>
+        <translation>Reddet</translation>
+    </message>
+    <message>
+        <source>%1 asks for supplies</source>
+        <translation>%1 erzak istiyor</translation>
+    </message>
+    <message>
+        <source>%1 calls for help</source>
+        <translation>%1 yardım çağırıyor</translation>
+    </message>
+    <message>
+        <source>%1 calls you to arms</source>
+        <translation>%1 seni silah başına çağırıyor</translation>
+    </message>
+    <message>
+        <source>Show</source>
+        <translation>Göster</translation>
+    </message>
+</context>
+<context>
     <name>ArmyFormationController</name>
     <message>
         <source>Automatic</source>
@@ -3920,6 +3947,94 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     <message>
         <source>%1 asks you for %2 %3.</source>
         <translation>%1 senden %2 %3 istiyor.</translation>
+    </message>
+    <message>
+        <source>%1 asked %2 for %3 %4 and received %5.</source>
+        <translation>%1, %2 tarafından %3 %4 istedi ve %5 aldı.</translation>
+    </message>
+    <message>
+        <source>%1 asked %2 for %3 %4; %2 refused.</source>
+        <translation>%1, %2 tarafından %3 %4 istedi; %2 reddetti.</translation>
+    </message>
+    <message>
+        <source>%1 called %2 to the attack; %2 marches.</source>
+        <translation>%1, %2 komutanını saldırıya çağırdı; %2 yürüyor.</translation>
+    </message>
+    <message>
+        <source>%1 called %2 to the attack; %2 stays.</source>
+        <translation>%1, %2 komutanını saldırıya çağırdı; %2 kalıyor.</translation>
+    </message>
+    <message>
+        <source>%1 called for help; %2 sends men.</source>
+        <translation>%1 yardım çağırdı; %2 asker gönderiyor.</translation>
+    </message>
+    <message>
+        <source>%1 called for help; %2 cannot come.</source>
+        <translation>%1 yardım çağırdı; %2 gelemiyor.</translation>
+    </message>
+    <message>
+        <source>Give %1</source>
+        <translation>%1 ver</translation>
+    </message>
+    <message>
+        <source>Refuse</source>
+        <translation>Reddet</translation>
+    </message>
+    <message>
+        <source>%1&apos;s camp is under attack. Will you send men to hold it?</source>
+        <translation>%1 komutanının kampı saldırı altında. Tutmak için asker gönderecek misin?</translation>
+    </message>
+    <message>
+        <source>Send men</source>
+        <translation>Asker gönder</translation>
+    </message>
+    <message>
+        <source>%1 is marching on the enemy. Will you join the attack?</source>
+        <translation>%1 düşmana yürüyor. Saldırıya katılacak mısın?</translation>
+    </message>
+    <message>
+        <source>Join</source>
+        <translation>Katıl</translation>
+    </message>
+    <message>
+        <source>%1 thanks you for the %2 %3.</source>
+        <translation>%1, %2 %3 için sana teşekkür ediyor.</translation>
+    </message>
+    <message>
+        <source>%1 will hold until your men arrive.</source>
+        <translation>%1 askerlerin gelene kadar dayanacak.</translation>
+    </message>
+    <message>
+        <source>%1 expects your men at the enemy&apos;s gate.</source>
+        <translation>%1 askerlerini düşmanın kapısında bekliyor.</translation>
+    </message>
+    <message>
+        <source>%1 will hold the camp alone.</source>
+        <translation>%1 kampı tek başına tutacak.</translation>
+    </message>
+    <message>
+        <source>%1 marches alone.</source>
+        <translation>%1 tek başına yürüyor.</translation>
+    </message>
+    <message>
+        <source>%1 will manage without your help.</source>
+        <translation>%1 yardımın olmadan idare edecek.</translation>
+    </message>
+    <message>
+        <source>%1: your men have reached the camp. Well met.</source>
+        <translation>%1: askerlerin kampa ulaştı. Hoş geldiler.</translation>
+    </message>
+    <message>
+        <source>%1: your men have joined the attack.</source>
+        <translation>%1: askerlerin saldırıya katıldı.</translation>
+    </message>
+    <message>
+        <source>%1: the men you promised never came. That will be remembered.</source>
+        <translation>%1: söz verdiğin askerler hiç gelmedi. Bu unutulmayacak.</translation>
+    </message>
+    <message>
+        <source>%1 heard no answer and withdraws the request.</source>
+        <translation>%1 yanıt alamadı ve isteğini geri çekiyor.</translation>
     </message>
 </context>
 <context>
@@ -10421,6 +10536,14 @@ Geniş görüş ve dayanıklı bir yerleşim çapası</translation>
     <message>
         <source>Ask your allied commanders to send men to hold this building. A cautious commander with men to spare agrees, one whose own camp is threatened refuses.</source>
         <translation>Müttefik komutanlarından bu yapıyı tutmak için adam göndermelerini iste. Ayıracak adamı olan tedbirli bir komutan kabul eder, kendi ordugâhı tehdit altındaki ise reddeder.</translation>
+    </message>
+    <message>
+        <source>That request has already been withdrawn.</source>
+        <translation>Bu istek zaten geri çekildi.</translation>
+    </message>
+    <message>
+        <source>Not enough %1 to give.</source>
+        <translation>Verecek kadar %1 yok.</translation>
     </message>
 </context>
 <context>

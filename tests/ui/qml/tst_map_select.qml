@@ -71,6 +71,18 @@ TestCase {
         screen.destroy();
     }
 
+    function test_the_match_receives_real_team_numbers_so_team_one_is_a_side() {
+        var screen = make_screen(two_slot_map);
+        var configs = screen.get_player_configs();
+        compare(configs[0].team_id, 1, "Team I must reach the match as team 1; team 0 means no side at all");
+        compare(configs[1].team_id, 2);
+        screen.cycle_player_team(1);
+        configs = screen.get_player_configs();
+        compare(configs[0].team_id, configs[1].team_id, "seats on the same chip share a side");
+        verify(configs[1].team_id > 0, "an allied seat must never be sent as team 0");
+        screen.destroy();
+    }
+
     function test_dropping_the_opponent_blocks_the_start_on_a_versus_map() {
         var screen = make_screen(two_slot_map);
         screen.toggle_player_enabled(1);
