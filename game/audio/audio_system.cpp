@@ -1,6 +1,9 @@
 #include "audio_system.h"
 
+#include <QCoreApplication>
 #include <QDebug>
+#include <QEvent>
+#include <QThread>
 #include <qglobal.h>
 
 #include <algorithm>
@@ -10,6 +13,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -77,6 +81,7 @@ auto AudioSystem::initialize() -> bool {
   m_music_player->get_backend()->set_listening_preset(
       Game::Audio::preset_from_int(listening_preset.load()));
   is_running = true;
+  m_audio_thread_done.store(false, std::memory_order_release);
   audio_thread = std::thread(&AudioSystem::audio_thread_func, this);
 
   return true;
@@ -99,11 +104,21 @@ void AudioSystem::shutdown() {
 
   {
     std::lock_guard<std::mutex> const lock(queue_mutex);
+    std::queue<AudioEvent>().swap(event_queue);
     event_queue.emplace(AudioEventType::SHUTDOWN);
   }
   queue_condition.notify_one();
 
   if (audio_thread.joinable()) {
+    auto* const app = QCoreApplication::instance();
+    if (app != nullptr && QThread::currentThread() == app->thread()) {
+      while (!m_audio_thread_done.load(std::memory_order_acquire)) {
+        if (m_music_player != nullptr) {
+          QCoreApplication::sendPostedEvents(m_music_player, QEvent::MetaCall);
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      }
+    }
     audio_thread.join();
   }
 
@@ -441,12 +456,14 @@ void AudioSystem::audio_thread_func() {
 
       if (event.type == AudioEventType::SHUTDOWN) {
         is_running = false;
+        m_audio_thread_done.store(true, std::memory_order_release);
         return;
       }
 
       lock.lock();
     }
   }
+  m_audio_thread_done.store(true, std::memory_order_release);
 }
 
 void AudioSystem::process_event(const AudioEvent& event) {

@@ -190,13 +190,11 @@ TEST_F(StuckRecoveryTest, AUnitSealedInAPenWalksOutToOpenGround) {
 }
 
 TEST_F(StuckRecoveryTest, AnOrderIntoASealedPenIsGivenUpOnWithinTheRecoveryBudget) {
-  constexpr int k_pen_x = 12;
+  constexpr int k_beside_goal_x = 37;
   constexpr int k_pen_z = 24;
-  seal_a_pen(k_pen_x, k_pen_z, 3);
-
   seal_a_pen(40, k_pen_z, 1);
 
-  const EntityID id = spawn(world_of(k_pen_x, k_pen_z));
+  const EntityID id = spawn(world_of(k_beside_goal_x, k_pen_z));
   ASSERT_NE(id, 0U);
   CommandService::move_unit(m_session->world(), id, world_of(40, k_pen_z));
 
@@ -209,7 +207,7 @@ TEST_F(StuckRecoveryTest, AnOrderIntoASealedPenIsGivenUpOnWithinTheRecoveryBudge
   const auto* facts = facts_of(id);
   ASSERT_NE(facts, nullptr);
   EXPECT_TRUE(facts->progress.stall.objective_abandoned)
-      << "a unit walled in on every side still believed it was going somewhere";
+      << "a unit with no route to its goal still believed it was going somewhere";
   EXPECT_EQ(facts->progress.stall.rung, MovementRecoveryRung::Abandoned);
   EXPECT_EQ(facts->progress.state, MovementOrderState::Unreachable);
   EXPECT_FALSE(movement_of(id)->get_has_target())
@@ -218,13 +216,11 @@ TEST_F(StuckRecoveryTest, AnOrderIntoASealedPenIsGivenUpOnWithinTheRecoveryBudge
 
 TEST_F(StuckRecoveryTest, ANoRouteOrderWaitsWithoutShufflingThenEndsOnce) {
 
-  constexpr int k_pen_x = 12;
+  constexpr int k_beside_goal_x = 37;
   constexpr int k_pen_z = 24;
-  seal_a_pen(k_pen_x, k_pen_z, 3);
-
   seal_a_pen(40, k_pen_z, 1);
 
-  const EntityID id = spawn(world_of(k_pen_x, k_pen_z));
+  const EntityID id = spawn(world_of(k_beside_goal_x, k_pen_z));
   ASSERT_NE(id, 0U);
   CommandService::move_unit(m_session->world(), id, world_of(40, k_pen_z));
 
@@ -256,11 +252,11 @@ TEST_F(StuckRecoveryTest, ANoRouteOrderWaitsWithoutShufflingThenEndsOnce) {
                 rung == MovementRecoveryRung::Abandoned)
         << "a waiting unit climbed recovery rung " << static_cast<int>(rung);
   }
-  EXPECT_LT((position_of(id) - world_of(k_pen_x, k_pen_z)).length(), 2.0F)
-      << "the unit shuffled about inside the pen";
+  EXPECT_LT((position_of(id) - world_of(k_beside_goal_x, k_pen_z)).length(), 2.0F)
+      << "the unit shuffled about beside the sealed goal";
 }
 
-TEST_F(StuckRecoveryTest, AnOrderFromACellWithNoWayOutIsGivenUpNotHeldForever) {
+TEST_F(StuckRecoveryTest, AUnitWalledIntoOneCellWalksOutEvenWhenItsGoalIsSealed) {
 
   constexpr int k_pen_x = 12;
   constexpr int k_pen_z = 24;
@@ -272,29 +268,70 @@ TEST_F(StuckRecoveryTest, AnOrderFromACellWithNoWayOutIsGivenUpNotHeldForever) {
   ASSERT_NE(id, 0U);
   CommandService::move_unit(m_session->world(), id, world_of(40, k_pen_z));
   ASSERT_NE(movement_of(id), nullptr);
-  ASSERT_TRUE(movement_of(id)->get_has_target())
-      << "the order was refused outright, so there is nothing to give up";
+  ASSERT_TRUE(movement_of(id)->get_has_target()) << "the order was refused outright";
 
-  run_for(k_recovery_budget_seconds + 4.0);
+  run_for(60.0);
 
   const auto* facts = facts_of(id);
   ASSERT_NE(facts, nullptr);
+  EXPECT_GT(position_of(id).x(), world_of(k_pen_x + 2, k_pen_z).x())
+      << "the unit is still walled into its cell at (" << position_of(id).x() << ", "
+      << position_of(id).z() << ")";
   EXPECT_FALSE(movement_of(id)->get_has_target())
       << "the unit was still holding an order it can never carry out; state "
-      << Engine::Core::movement_state_name(facts->progress.state) << " holding "
-      << facts->progress.holding_at_obstruction;
-  EXPECT_TRUE(facts->progress.stall.objective_abandoned);
+      << Engine::Core::movement_state_name(facts->progress.state);
   EXPECT_FALSE(facts->progress.holding_at_obstruction);
 }
 
-TEST_F(StuckRecoveryTest, GivingUpDoesNotTurnIntoARepathLoop) {
-  constexpr int k_pen_x = 12;
-  constexpr int k_pen_z = 24;
-  seal_a_pen(k_pen_x, k_pen_z, 3);
+TEST_F(StuckRecoveryTest, AUnitInALargeWalledPocketStillWalksOut) {
 
+  constexpr int k_centre = 24;
+  constexpr int k_half = 16;
+  seal_a_pen(k_centre, k_centre, k_half);
+
+  const EntityID id = spawn(world_of(k_centre, k_centre));
+  ASSERT_NE(id, 0U);
+  const auto destination = world_of(k_map - 3, k_centre);
+  CommandService::move_unit(m_session->world(), id, destination);
+
+  run_for(60.0);
+
+  EXPECT_LT((position_of(id) - destination).length(), 2.5F)
+      << "a pocket of " << (2 * k_half - 1) * (2 * k_half - 1)
+      << " cells held the unit at (" << position_of(id).x() << ", "
+      << position_of(id).z() << ")";
+}
+
+TEST_F(StuckRecoveryTest, AUnitBuriedInASolidBlockWalksOutToItsOrder) {
+
+  constexpr int k_x = 16;
+  constexpr int k_z = 24;
+  constexpr int k_half = 4;
+  for (int grid_x = k_x - k_half; grid_x <= k_x + k_half; ++grid_x) {
+    for (int grid_z = k_z - k_half; grid_z <= k_z + k_half; ++grid_z) {
+      block_cell(grid_x, grid_z);
+    }
+  }
+  refresh_grid();
+
+  const EntityID id = spawn(world_of(k_x, k_z));
+  ASSERT_NE(id, 0U);
+  const auto destination = world_of(40, k_z);
+  CommandService::move_unit(m_session->world(), id, destination);
+
+  run_for(40.0);
+
+  EXPECT_LT((position_of(id) - destination).length(), 2.5F)
+      << "the unit buried in the block ended at (" << position_of(id).x() << ", "
+      << position_of(id).z() << ")";
+}
+
+TEST_F(StuckRecoveryTest, GivingUpDoesNotTurnIntoARepathLoop) {
+  constexpr int k_beside_goal_x = 37;
+  constexpr int k_pen_z = 24;
   seal_a_pen(40, k_pen_z, 1);
 
-  const EntityID id = spawn(world_of(k_pen_x, k_pen_z));
+  const EntityID id = spawn(world_of(k_beside_goal_x, k_pen_z));
   ASSERT_NE(id, 0U);
   CommandService::move_unit(m_session->world(), id, world_of(40, k_pen_z));
 
@@ -434,13 +471,11 @@ TEST_F(StuckRecoveryTest, AUnitSetDownOnAFootprintStepsOffOnceAndStandsThere) {
 
 TEST_F(StuckRecoveryTest, RecoveryIsIssuedByOneLadder) {
 
-  constexpr int k_pen_x = 12;
+  constexpr int k_beside_goal_x = 37;
   constexpr int k_pen_z = 24;
-  seal_a_pen(k_pen_x, k_pen_z, 3);
-
   seal_a_pen(40, k_pen_z, 1);
 
-  const EntityID id = spawn(world_of(k_pen_x, k_pen_z));
+  const EntityID id = spawn(world_of(k_beside_goal_x, k_pen_z));
   ASSERT_NE(id, 0U);
   CommandService::move_unit(m_session->world(), id, world_of(40, k_pen_z));
 

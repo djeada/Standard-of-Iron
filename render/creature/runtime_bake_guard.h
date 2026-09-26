@@ -24,9 +24,6 @@ public:
   ~RuntimeBakeAllowScope();
   RuntimeBakeAllowScope(const RuntimeBakeAllowScope&) = delete;
   auto operator=(const RuntimeBakeAllowScope&) -> RuntimeBakeAllowScope& = delete;
-
-private:
-  bool m_previous{false};
 };
 
 void report_runtime_bake_violation(RuntimeBakeOperation operation,

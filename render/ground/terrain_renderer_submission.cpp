@@ -382,11 +382,10 @@ void TerrainRenderer::bake_terrain_noise_atlas() {
       m_chunks.empty() ? QVector2D(0.0F, 0.0F) : m_chunks.front().params.noise_offset;
 
   m_noise_bake_shader->use();
-  m_noise_bake_shader->set_uniform("u_bake_world_min", QVector2D(0.0F, 0.0F));
-  m_noise_bake_shader->set_uniform(
-      "u_bake_world_size",
-      QVector2D(static_cast<float>(m_width) * m_tile_size,
-                static_cast<float>(m_height) * m_tile_size));
+  const QVector2D bake_world_size(static_cast<float>(m_width) * m_tile_size,
+                                  static_cast<float>(m_height) * m_tile_size);
+  m_noise_bake_shader->set_uniform("u_bake_world_min", bake_world_size * -0.5F);
+  m_noise_bake_shader->set_uniform("u_bake_world_size", bake_world_size);
   m_noise_bake_shader->set_uniform("u_noise_offset", noise_offset);
   m_noise_bake_shader->set_uniform("u_tile_size", m_tile_size);
   m_noise_bake_shader->set_uniform("u_macro_noise_scale",

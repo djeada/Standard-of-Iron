@@ -621,6 +621,19 @@ RowLayout {
         target: bottomRoot.game_ready() ? game : null
     }
 
+    Connections {
+        function onModelReset() {
+            bottomRoot.refresh_selection();
+        }
+
+        function onDataChanged() {
+            bottomRoot.refresh_selection();
+        }
+
+        ignoreUnknownSignals: true
+        target: bottomRoot.game_ready() ? game.selected_units_model : null
+    }
+
     Timer {
         interval: 500
         repeat: true

@@ -15,7 +15,8 @@ namespace Render::Creature {
 
 namespace {
 std::atomic_bool g_runtime_bake_forbidden{false};
-}
+thread_local int t_runtime_bake_allow_depth = 0;
+} // namespace
 
 void set_runtime_bake_forbidden(bool forbidden) noexcept {
   const bool previous =
@@ -31,15 +32,16 @@ void set_runtime_bake_forbidden(bool forbidden) noexcept {
 }
 
 auto runtime_bake_forbidden() noexcept -> bool {
-  return g_runtime_bake_forbidden.load(std::memory_order_acquire);
+  return t_runtime_bake_allow_depth == 0 &&
+         g_runtime_bake_forbidden.load(std::memory_order_acquire);
 }
 
-RuntimeBakeAllowScope::RuntimeBakeAllowScope() noexcept
-    : m_previous(g_runtime_bake_forbidden.exchange(false, std::memory_order_acq_rel)) {
+RuntimeBakeAllowScope::RuntimeBakeAllowScope() noexcept {
+  ++t_runtime_bake_allow_depth;
 }
 
 RuntimeBakeAllowScope::~RuntimeBakeAllowScope() {
-  g_runtime_bake_forbidden.store(m_previous, std::memory_order_release);
+  --t_runtime_bake_allow_depth;
 }
 
 auto runtime_bake_operation_name(RuntimeBakeOperation operation) -> std::string_view {

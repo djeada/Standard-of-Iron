@@ -1,6 +1,9 @@
 #include <QCoreApplication>
 
+#include <atomic>
 #include <chrono>
+#include <cstdio>
+#include <cstdlib>
 #include <future>
 #include <gtest/gtest.h>
 #include <thread>
@@ -75,6 +78,32 @@ TEST_F(AudioSystemMusicDispatchTest,
   EXPECT_TRUE(has_resource_future.get());
   EXPECT_EQ(play_future.wait_for(std::chrono::milliseconds(0)),
             std::future_status::ready);
+}
+
+TEST_F(AudioSystemMusicDispatchTest, ShutdownDuringAMusicChangeReturns) {
+  auto& audio = AudioSystem::get_instance();
+  std::atomic<bool> finished{false};
+  std::thread watchdog([&finished]() {
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(5);
+    while (!finished.load() && std::chrono::steady_clock::now() < deadline) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+    if (!finished.load()) {
+      std::fprintf(stderr,
+                   "AudioSystem::shutdown deadlocked on an in-flight music change\n");
+      std::_Exit(1);
+    }
+  });
+
+  for (int change = 0; change < 8; ++change) {
+    audio.play_music(kMusicId);
+  }
+  std::this_thread::sleep_for(std::chrono::milliseconds(50));
+  audio.shutdown();
+  finished.store(true);
+  watchdog.join();
+
+  EXPECT_FALSE(audio.is_running.load());
 }
 
 } // namespace

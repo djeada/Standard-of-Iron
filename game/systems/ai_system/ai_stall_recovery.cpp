@@ -181,24 +181,18 @@ void update_stall_recovery(const AISnapshot& snapshot,
 
     const auto [waypoint_x, waypoint_z] =
         alternate_approach(entity, snapshot, record.nudges);
-    const auto detour = reachable_detour(entity, waypoint_x, waypoint_z);
-    if (!detour.has_value()) {
-
-      ++record.nudges;
-      record.last_nudge = snapshot.game_time;
-      if (record.nudges >= k_max_stall_nudges) {
-        stand_down(entity.id, context, record, snapshot.game_time);
-      }
-      continue;
-    }
+    const auto detour =
+        reachable_detour(entity, waypoint_x, waypoint_z)
+            .value_or(QVector3D(
+                entity.movement.objective_x, 0.0F, entity.movement.objective_z));
 
     AICommand command;
     command.type = AICommandType::MoveUnits;
     command.owner = BehaviorPriority::High;
     command.units = {entity.id};
-    command.move_target_x = {detour->x()};
+    command.move_target_x = {detour.x()};
     command.move_target_y = {0.0F};
-    command.move_target_z = {detour->z()};
+    command.move_target_z = {detour.z()};
     out_commands.push_back(std::move(command));
 
     ++record.nudges;

@@ -83,6 +83,45 @@ TestCase {
         below.destroy();
     }
 
+    function command_list(item) {
+        if (!item)
+            return null;
+        if (item.model !== undefined && item.count !== undefined && item.contentHeight !== undefined)
+            return item;
+        for (var i = 0; i < item.children.length; ++i) {
+            var found = command_list(item.children[i]);
+            if (found)
+                return found;
+        }
+        return null;
+    }
+
+    function test_every_command_fits_on_common_laptop_screens() {
+        var sizes = [[1280, 720], [1366, 768]];
+        for (var k = 0; k < sizes.length; ++k) {
+            var host = sizedMenuComponent.createObject(testCase, {
+                    "width": sizes[k][0],
+                    "height": sizes[k][1]
+                });
+            wait(50);
+            var list = command_list(host);
+            verify(list !== null, "the command list was not found");
+            verify(list.contentHeight <= list.height + 1, sizes[k][0] + "x" + sizes[k][1] + " hides commands below the fold: " + list.contentHeight + " > " + list.height);
+            host.destroy();
+        }
+    }
+
+    Component {
+        id: sizedMenuComponent
+
+        Item {
+            MainMenu {
+                anchors.fill: parent
+                game_started: true
+            }
+        }
+    }
+
     Component {
         id: menuComponent
 
