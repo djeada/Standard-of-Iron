@@ -23,33 +23,38 @@ Sepulcher, the title), but it presented it as a feature list:
 
 ## Direction
 
-One day of war. Dawn over a field where two armies wait; the morning battle;
-the capital at peace; the same capital burning at dusk; a winter night where
-the dead rise; and a final escalation that ends on the name.
+The fight arrives fast. A horn and one hit over the elephants on the ridge, the
+two commanders, the Numidians riding past, and at nine seconds the elephants
+drive into the Roman line. From there: scale and command, the commander in the
+melee, the city being built, the same kind of city set alight, the Iron
+Sepulcher's dead rising in the snow, an accelerating montage, and the flame card.
 
-- **Picture.** 1920x1080 at 24 fps, extracted 2.39:1. Arena renders 2x
-  supersampled at 96 fps; the conform integrates three of every four
-  sub-frames (a 270-degree shutter) for real motion blur. Long lenses do most of
-  the work: the art style reads as toy-like in wide close-ups, and as an army
-  when compressed. Units are about a metre tall, so "eye level" is 0.6-1.0 m.
-- **Light.** Each shot sets its own sun and haze (`lighting` in the capture
-  specs). The sun stays above 18 degrees on battle shots so shadows stay under
-  the soldiers. Fog colour is matched to the sky so haze reads as air.
-- **Grade.** Per sequence, in `cut.json` `looks`: `dawn` (warm haze, lifted
-  blacks), `battle` (desaturated, firmer), `city` (clean warm morning), `dusk`
-  (orange highlights, deep shadows) and `night` (half saturation, cool shadows,
-  fire keeps its warmth). Halation, vignette and grain are part of each look.
-- **Typography.** One card: the title, in the game's display face.
-- **Narration.** None. The game has no recorded narrator, no machine voice here
-  would meet the bar, and the images carry the story.
-- **Sound.** Music is cut from the game's own score (ElevenLabs, commercial
-  licence; see `THIRD_PARTY_LICENSES.md`) and drives the edit: the main theme
-  under the dawn, *Dust of Cannae*'s percussion entrance on the first impact,
-  *Sunlight on the Olive Groves* for the city, *Siege at Dawn*'s heartbeat as it
-  burns, *Skeletons Awaken* with its hit on the rising, and Cannae's crest on the
-  cut to the title. Effects are placed with perspective (pan, air absorption,
-  reverb); the arena's own recorded mix sits under each battle shot; the trailer
-  hits, sub drops, risers and swells are synthesised.
+- **Picture.** 1920x1080 at 24 fps, extracted 2.39:1 (the end card opens to the
+  full frame). Arena renders 2x supersampled at 96 fps; the conform integrates
+  three of every four sub-frames for real motion blur. Long lenses carry the
+  close action; units are about a metre tall, so "eye level" is 0.6-1.0 m.
+- **Light.** The game's own lighting profiles (a warm Mediterranean afternoon,
+  dusk over Aurelia Magna, the Iron Sepulcher's night), not trailer haze: an
+  A/B against the game's own screenshots showed overrides turning it grey.
+- **Grade.** Enhances rather than drains the game's colour: `sun`, `city`,
+  `dusk`, `night` and `fire` looks in `cut.json`, each with a gentle S-curve,
+  split toning, halation, vignette and grain.
+- **Overlays.** `scripts/trailer/fx.py` renders embers, backlit dust and warm
+  light-leak plates, screened over the footage per shot; impacts get a decaying
+  shake and a short exposure flash (`hits`).
+- **Typography.** Six short captions that say what the game is (Rome against
+  Carthage, command armies of thousands, fight at the front as your commander,
+  build the city, set cities ablaze, the Iron Sepulcher), each with a text
+  stinger in the mix; the title and call to action (free and open source, the
+  GitHub address, Windows / macOS / Linux) over the arena's flame card.
+- **Narration.** None: the captions carry the information.
+- **Sound.** The game's own score cut to drive the edit: *Last Defensive Wall*'s
+  drum ostinato under the open, *Dust of Cannae*'s percussion on the first
+  impact, the main theme's full statement for the city and the burning,
+  *Skeletons Awaken*'s hit on the rising, Cannae's crest into the flame card and
+  the main theme's final hits under the title. Effects are placed with
+  perspective; the arena's recorded mix sits under each shot; hits, risers and
+  swells are synthesised.
 
 ## Accuracy
 
@@ -64,7 +69,7 @@ towers, no storms and no voiced dialogue.
 
 ```sh
 # 1. Build arena_app, then capture every film set on the real GPU (:0).
-scripts/trailer/build.sh capture       # ~2.5 h on an RTX 5060
+scripts/trailer/build.sh capture       # ~2 h on an RTX 5060
 # 2. Conform, mix and deliver.
 scripts/trailer/build.sh picture
 scripts/trailer/build.sh sound

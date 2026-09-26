@@ -101,38 +101,38 @@
     "shadows": [
      -0.02,
      0.0,
-     0.03
+     0.04
     ],
     "highlights": [
-     0.05,
-     0.018,
+     0.04,
+     0.01,
      -0.03
     ]
    },
    "curve": [
     [
      0,
-     0.01
+     0.0
     ],
     [
      0.25,
-     0.2
+     0.18
     ],
     [
      0.5,
-     0.5
+     0.46
     ],
     [
      0.75,
-     0.81
+     0.76
     ],
     [
      1,
-     0.99
+     0.97
     ]
    ],
-   "saturation": 1.12,
-   "halation": 0.14,
+   "saturation": 1.0,
+   "halation": 0.08,
    "halation_tint": [
     1.0,
     0.62,
@@ -140,10 +140,12 @@
    ],
    "vignette": 0.36,
    "grain": 5,
-   "sharpen": 0.28
+   "sharpen": 0.28,
+   "exposure": -0.35,
+   "halation_threshold": 0.85
   },
   "night": {
-   "exposure": 0.25,
+   "exposure": -0.45,
    "balance": {
     "shadows": [
      -0.02,
@@ -159,28 +161,28 @@
    "curve": [
     [
      0,
-     0.01
+     0.0
     ],
     [
-     0.22,
-     0.17
+     0.25,
+     0.15
     ],
     [
      0.5,
-     0.52
+     0.42
     ],
     [
-     0.8,
-     0.85
+     0.75,
+     0.74
     ],
     [
      1,
-     0.98
+     0.96
     ]
    ],
-   "saturation": 0.85,
-   "halation": 0.09,
-   "halation_threshold": 0.82,
+   "saturation": 0.8,
+   "halation": 0.06,
+   "halation_threshold": 0.9,
    "halation_tint": [
     1.0,
     0.6,
@@ -223,21 +225,10 @@
    "dur": 0.5
   },
   {
-   "name": "ridge",
-   "clip": "cine_field/elephants_ridge",
-   "in": 1.0,
-   "dur": 1.8,
-   "look": "sun",
-   "game_audio": -14,
-   "fx": {
-    "dust": 0.45
-   }
-  },
-  {
    "name": "hannibal",
    "clip": "cine_field/hannibal_hero",
-   "in": 0.8,
-   "dur": 1.5,
+   "in": 0.6,
+   "dur": 2.0,
    "look": "sun",
    "game_audio": -14,
    "fx": {
@@ -751,41 +742,39 @@
  "audio": {
   "music": [
    {
-    "file": "assets/audio/music/combat/combat_last_defensive_wall.ogg",
-    "src_in": 0.0,
-    "at": "ridge-0.1",
-    "until": "elephants-0.35",
-    "gain": 1,
-    "fade_in": 0.3,
-    "fade_out": 0.25
-   },
-   {
     "file": "assets/audio/music/combat/combat_siege_at_dawn.ogg",
     "src_in": 0.0,
-    "at": "ridge-0.23",
-    "until": "ridge+2.4",
+    "at": "hannibal-0.23",
+    "until": "hannibal+2.2",
     "gain": -2,
     "fade_out": 1.0
    },
    {
-    "file": "assets/audio/music/combat/combat_dust_of_cannae.ogg",
-    "src_in": 23.3,
-    "at": "elephants-0.08",
-    "until": "citadel",
-    "gain": 1,
-    "fade_out": 0.05
-   },
-   {
-    "file": "assets/audio/music/menu/main_theme_standard_of_iron_alt.ogg",
-    "src_in": 24.0,
-    "at": "citadel-0.06",
+    "file": "assets/audio/music/menu/main_theme_iron_kingdom.ogg",
+    "src_in": 13.9,
+    "at": "hannibal",
     "until": "barrow",
     "gain": 2,
-    "fade_out": 0.3
+    "fade_in": 0.2,
+    "fade_out": 0.4,
+    "gain_curve": [
+     [
+      "hannibal",
+      -4
+     ],
+     [
+      "elephants-0.3",
+      0
+     ],
+     [
+      "barrow-0.5",
+      0
+     ]
+    ]
    },
    {
     "file": "assets/audio/music/events/skeletons_awaken.ogg",
-    "src_in": 19.32,
+    "src_in": 19.320000000000004,
     "at": "barrow",
     "until": "x1",
     "gain": 1,
@@ -810,22 +799,22 @@
     "file": "assets/audio/music/combat/combat_dust_of_cannae.ogg",
     "src_in": 48.1,
     "at": "x1",
-    "until": "endcard+3.0",
+    "until": "endcard+2.5",
     "gain": 1,
-    "fade_out": 2.5
+    "fade_out": 2.2
    },
    {
-    "file": "assets/audio/music/menu/main_theme_standard_of_iron.ogg",
-    "src_in": 40.5,
+    "file": "assets/audio/music/menu/main_theme_iron_kingdom.ogg",
+    "src_in": 0.0,
     "at": "endcard+0.38",
     "until": "endcard+13.0",
-    "gain": 0,
+    "gain": 1,
     "fade_out": 2.5
    }
   ],
   "fx": [
    {
-    "at": "ridge-0.3",
+    "at": "hannibal-0.3",
     "file": "assets/audio/sfx/combat/roman_war_horns_orders.ogg",
     "gain": -6,
     "distance": 120,
@@ -834,20 +823,12 @@
     "pan": -0.2
    },
    {
-    "at": "ridge",
+    "at": "hannibal",
     "synth": "impact",
     "gain": -4,
     "weight": 1.3,
     "brightness": 0.2,
     "seed": 2
-   },
-   {
-    "at": "ridge+0.4",
-    "file": "assets/audio/sfx/combat/elephant_trumpet_charge.ogg",
-    "gain": -8,
-    "distance": 90,
-    "reverb": 0.6,
-    "pan": 0.3
    },
    {
     "at": "hannibal+0.2",
