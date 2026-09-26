@@ -19,7 +19,10 @@ namespace {
 
 constexpr float k_pi = std::numbers::pi_v<float>;
 constexpr float k_walk_speed = 0.95F;
+constexpr float k_run_speed = 2.6F;
 constexpr float k_walk_metres_per_cycle = 0.69F;
+constexpr float k_run_metres_per_cycle = 1.55F;
+constexpr float k_hurry_metres = 0.45F;
 constexpr float k_push_metres_per_cycle = 0.60F;
 constexpr float k_arrive_metres = 0.035F;
 constexpr float k_blend_seconds = 0.32F;
@@ -51,6 +54,8 @@ using Animation::k_humanoid_crew_push_clip;
 using Animation::k_humanoid_idle_clip;
 using Animation::k_humanoid_idle_squat_clip;
 using Animation::k_humanoid_idle_weave_clip;
+using Animation::k_humanoid_run_clip;
+using Animation::k_humanoid_walk_clip;
 
 constexpr std::array<Station, 4> k_catapult_push{{
     {-0.20F, -0.35F, 0.0F, -0.21F, k_face_forward, k_humanoid_crew_push_clip, 0.0F},
@@ -202,13 +207,19 @@ void advance_siege_crew(SiegeCrewState& state,
     const float distance = std::sqrt(dx * dx + dz * dz);
     float desired_yaw = station.facing;
     if (distance > k_arrive_metres) {
-      const float step = std::min(distance, k_walk_speed * dt);
+      // Stations ride with the engine, which outpaces a walk (a ballista
+      // rolls at 1.5 m/s): crew far from their place, or joining a moving
+      // engine, jog to it instead of trailing behind for the whole march.
+      const bool hurry = distance > k_hurry_metres || state.mode == SiegeCrewMode::Push;
+      const float step = std::min(distance, (hurry ? k_run_speed : k_walk_speed) * dt);
       member.x += dx / distance * step;
       member.z += dz / distance * step;
       member.walked += step;
       desired_yaw = std::atan2(dx, dz);
-      const float walk_phase = fract(member.walked / k_walk_metres_per_cycle);
-      set_clip(member, Animation::k_humanoid_walk_clip, walk_phase);
+      const float stride = hurry ? k_run_metres_per_cycle : k_walk_metres_per_cycle;
+      set_clip(member,
+               hurry ? k_humanoid_run_clip : k_humanoid_walk_clip,
+               fract(member.walked / stride));
     } else {
       member.x = target_x;
       member.z = target_z;

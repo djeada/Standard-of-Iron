@@ -108,3 +108,21 @@ TEST(SiegeCrewTest, ChangingJobsBlendsTheClipAndTurnsGradually) {
   const float turned = std::abs(std::remainder(member.yaw - yaw_before, 6.2831853F));
   EXPECT_LT(turned, 0.5F) << "one frame must not snap the crewman round";
 }
+
+TEST(SiegeCrewTest, CrewJogToTheirPlacesWhenTheEngineSetsOff) {
+  SiegeCrewState state;
+  float time = run(state, parked(true), 0.0F, 1.0F);
+  SiegeCrewFrame moving = parked(true);
+  moving.movement = 0.9F;
+  time = run(state, moving, time, 0.1F, 1.5F);
+  bool jogging = false;
+  for (std::size_t i = 0; i < Render::GL::siege_crew_size(true); ++i) {
+    jogging = jogging || state.members[i].clip == Animation::k_humanoid_run_clip;
+  }
+  EXPECT_TRUE(jogging) << "a crew walking to a rolling ballista never reaches it";
+  run(state, moving, time, 1.5F, 1.5F);
+  for (std::size_t i = 0; i < Render::GL::siege_crew_size(true); ++i) {
+    EXPECT_EQ(state.members[i].clip, Animation::k_humanoid_crew_push_clip)
+        << "member " << i << " should be at the push station within 1.5 s";
+  }
+}
