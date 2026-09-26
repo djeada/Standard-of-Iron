@@ -479,6 +479,7 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
       const std::unordered_set<Engine::Core::EntityID> marching(wave.members.begin(),
                                                                 wave.members.end());
       const bool calls_up_home =
+          context.strategy_config.doctrine == nullptr &&
           snapshot.game_time - wave.committed_at > k_wave_call_up_seconds;
       const int wave_capacity = calls_up_home ? static_cast<int>(candidates.size())
                                               : wave_capacity_for(context, required);

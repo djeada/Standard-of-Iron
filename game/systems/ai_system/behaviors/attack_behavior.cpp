@@ -397,11 +397,13 @@ void AttackBehavior::execute(const AISnapshot& snapshot,
   auto claimed_units = claim_units(
       unit_ids, get_priority(), "attacking", context, snapshot.game_time, 2.5F);
 
-  std::erase_if(claimed_units, [&](Engine::Core::EntityID id) {
-    return std::any_of(ready_units.begin(), ready_units.end(), [&](const auto* unit) {
-      return unit->id == id && unit->attack_target_id == target_info.target_id;
+  if (target_snapshot->is_building) {
+    std::erase_if(claimed_units, [&](Engine::Core::EntityID id) {
+      return std::any_of(ready_units.begin(), ready_units.end(), [&](const auto* unit) {
+        return unit->id == id && unit->attack_target_id == target_info.target_id;
+      });
     });
-  });
+  }
   if (claimed_units.empty()) {
     return;
   }
