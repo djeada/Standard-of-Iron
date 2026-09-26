@@ -1,0 +1,206 @@
+{
+  "width": 1920,
+  "height": 1080,
+  "fps": 96,
+  "supersample": 2,
+  "gameplay_ui": false,
+  "audio": true,
+  "record_music": false,
+  "motion_limits": {
+    "yaw_degrees_per_second": 40,
+    "pitch_degrees_per_second": 20,
+    "fov_degrees_per_second": 20,
+    "minimum_clip_seconds": 1.0,
+    "mean_clip_seconds": 1.0
+  },
+  "id": "cine_siege",
+  "title": "STANDARD OF IRON",
+  "shots": [
+    {
+      "name": "tower_burns",
+      "scenario": "cine_siege",
+      "start": 6.0,
+      "duration": 10.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [228, 0.9, -86],
+          "look": [170, 4.5, -62],
+          "fov": 15
+        },
+        {
+          "time": 10.0,
+          "eye": [228, 0.9, -83],
+          "look": [170, 4.5, -62],
+          "fov": 15
+        }
+      ],
+      "ground_clearance": 0.3,
+      "lighting": {
+        "hour": 16.9
+      }
+    },
+    {
+      "name": "hannibal_ad_portas",
+      "scenario": "cine_siege",
+      "start": 14.0,
+      "duration": 9.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [291, 0.75, -20.5],
+          "look": [170, 3.5, -40],
+          "fov": 21
+        },
+        {
+          "time": 9.0,
+          "eye": [290, 0.75, -21.5],
+          "look": [170, 3.5, -40],
+          "fov": 20
+        }
+      ],
+      "ground_clearance": 0.3,
+      "lighting": {
+        "hour": 16.9
+      }
+    },
+    {
+      "name": "legion_before_gate",
+      "scenario": "cine_siege",
+      "start": 10.0,
+      "duration": 8.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [238, 0.5, -22],
+          "look": [210, 0.8, -34],
+          "fov": 22
+        },
+        {
+          "time": 8.0,
+          "eye": [237, 0.5, -20.5],
+          "look": [210, 0.8, -34],
+          "fov": 22
+        }
+      ],
+      "ground_clearance": 0.3,
+      "lighting": {
+        "hour": 16.9
+      }
+    },
+    {
+      "name": "elephants_gate",
+      "scenario": "cine_siege",
+      "start": 16.0,
+      "duration": 9.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [232, 0.55, -6],
+          "look": [272, 1.4, -30],
+          "fov": 22
+        },
+        {
+          "time": 9.0,
+          "eye": [233, 0.55, -7],
+          "look": [262, 1.4, -30],
+          "fov": 22
+        }
+      ],
+      "ground_clearance": 0.3,
+      "lighting": {
+        "hour": 16.9
+      }
+    },
+    {
+      "name": "clash_gate",
+      "scenario": "cine_siege",
+      "start": 34.0,
+      "duration": 10.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [205, 0.9, 24],
+          "look": [218, 0.8, -32],
+          "fov": 11
+        },
+        {
+          "time": 10.0,
+          "eye": [209, 0.9, 24],
+          "look": [222, 0.8, -32],
+          "fov": 11
+        }
+      ],
+      "ground_clearance": 0.3,
+      "lighting": {
+        "hour": 16.9
+      }
+    },
+    {
+      "name": "tower_two_burns",
+      "scenario": "cine_siege",
+      "start": 24.0,
+      "duration": 10.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "ground_clearance": 0.3,
+      "lighting": {
+        "hour": 16.9
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [216, 0.8, 6],
+          "look": [170, 4.5, -16],
+          "fov": 16
+        },
+        {
+          "time": 10,
+          "eye": [216, 0.8, 3],
+          "look": [170, 4.5, -16],
+          "fov": 16
+        }
+      ]
+    }
+  ]
+}

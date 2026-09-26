@@ -1992,14 +1992,55 @@ auto ArenaViewport::active_lighting() const -> Game::Map::EnvironmentLightingSta
     weather.rain = active;
     weather.snow = 0.0F;
   }
-  auto lighting =
-      Game::Map::lighting_for_hour(m_environment_hour, m_lighting_profile, weather);
+  const float hour = m_promo_lighting.hour.value_or(m_environment_hour);
+  auto lighting = Game::Map::lighting_for_hour(hour, m_lighting_profile, weather);
 
   if (m_environment_definition.fog_density_override >= 0.0F) {
     lighting.fog_density = m_environment_definition.fog_density_override;
   }
   if (m_environment_definition.exposure_override >= 0.0F) {
     lighting.exposure = m_environment_definition.exposure_override;
+  }
+  const auto& look = m_promo_lighting;
+  if (look.sun_azimuth.has_value() || look.sun_elevation.has_value()) {
+    const QVector3D current = lighting.primary_direction.normalized();
+    const float current_elevation =
+        qRadiansToDegrees(std::asin(std::clamp(current.y(), -1.0F, 1.0F)));
+    const float current_azimuth =
+        qRadiansToDegrees(std::atan2(current.x(), current.z()));
+    const float azimuth = qDegreesToRadians(look.sun_azimuth.value_or(current_azimuth));
+    const float elevation =
+        qDegreesToRadians(look.sun_elevation.value_or(current_elevation));
+    lighting.primary_direction = QVector3D(std::cos(elevation) * std::sin(azimuth),
+                                           std::sin(elevation),
+                                           std::cos(elevation) * std::cos(azimuth));
+  }
+  if (look.sun_scale) {
+    lighting.primary_intensity *= *look.sun_scale;
+  }
+  if (look.sun_color) {
+    lighting.primary_color = *look.sun_color;
+  }
+  if (look.ambient_scale) {
+    lighting.ambient_intensity *= *look.ambient_scale;
+  }
+  if (look.sky_color) {
+    lighting.sky_color = *look.sky_color;
+  }
+  if (look.fog_color) {
+    lighting.fog_color = *look.fog_color;
+  }
+  if (look.fog_density) {
+    lighting.fog_density = *look.fog_density;
+  }
+  if (look.exposure) {
+    lighting.exposure = *look.exposure;
+  }
+  if (look.shadow_strength) {
+    lighting.shadow_strength = *look.shadow_strength;
+  }
+  if (look.shadow_softness) {
+    lighting.shadow_softness = *look.shadow_softness;
   }
   return lighting.sanitized();
 }
@@ -3141,11 +3182,55 @@ void ArenaViewport::set_cinematic_view(const QVector3D& target,
   m_cinematic_yaw = yaw_degrees;
   m_cinematic_fov = std::clamp(fov_degrees, 5.0F, 120.0F);
   m_cinematic_roll = roll_degrees;
+  m_cinematic_eye_valid = false;
   m_cinematic_view_valid = true;
 }
 
 void ArenaViewport::clear_cinematic_view() {
   m_cinematic_view_valid = false;
+  m_cinematic_eye_valid = false;
+}
+
+void ArenaViewport::set_cinematic_eye(const QVector3D& eye,
+                                      const QVector3D& target,
+                                      float fov_degrees,
+                                      float roll_degrees) {
+  m_cinematic_eye = eye;
+  m_cinematic_target = target;
+  m_cinematic_fov = std::clamp(fov_degrees, 5.0F, 120.0F);
+  m_cinematic_roll = roll_degrees;
+  m_cinematic_eye_valid = true;
+  m_cinematic_view_valid = true;
+}
+
+void ArenaViewport::set_cinematic_lens(float near_plane, float ground_clearance) {
+  if (m_camera != nullptr) {
+    if (m_cinematic_near <= 0.0F && near_plane > 0.0F) {
+      m_saved_near = m_camera->get_near();
+    } else if (m_cinematic_near > 0.0F && near_plane <= 0.0F && m_saved_near > 0.0F) {
+      m_camera->set_perspective(m_camera->get_fov(),
+                                m_camera->get_aspect(),
+                                m_saved_near,
+                                m_camera->get_far());
+    }
+  }
+  m_cinematic_near = near_plane;
+  m_cinematic_ground_clearance = ground_clearance;
+}
+
+void ArenaViewport::set_promo_lighting(const Arena::Promo::LightingOverride& lighting) {
+  m_promo_lighting = lighting;
+  if (m_renderer != nullptr) {
+    m_renderer->set_environment_lighting(active_lighting());
+  }
+}
+
+auto ArenaViewport::terrain_height_at(float x, float z) const -> float {
+  const auto& terrain = m_session.terrain();
+  if (terrain.terrain_field().empty()) {
+    return 0.0F;
+  }
+  return terrain.get_terrain_height(x, z);
 }
 
 void ArenaViewport::set_capture_stabilization(float seconds) {
@@ -3193,7 +3278,9 @@ constexpr int k_cinematic_ray_samples = 10;
 
 auto lift_camera_over_terrain(QVector3D position,
                               QVector3D const& target,
-                              const Game::Map::TerrainService& terrain) -> QVector3D {
+                              const Game::Map::TerrainService& terrain,
+                              float ground_clearance = k_cinematic_ground_clearance)
+    -> QVector3D {
   if (terrain.terrain_field().empty()) {
     return position;
   }
@@ -3203,7 +3290,7 @@ auto lift_camera_over_terrain(QVector3D position,
                     static_cast<float>(k_cinematic_ray_samples);
     QVector3D const at = position * (1.0F - t) + target * t;
     float const clearance =
-        terrain.get_terrain_height(at.x(), at.z()) + k_cinematic_ground_clearance;
+        terrain.get_terrain_height(at.x(), at.z()) + ground_clearance;
     required = std::max(required, (clearance - t * target.y()) / (1.0F - t));
   }
   position.setY(std::min(required, position.y() + k_cinematic_max_lift));
@@ -3216,14 +3303,25 @@ void ArenaViewport::apply_cinematic_view() {
   if (!m_cinematic_view_valid || m_camera == nullptr) {
     return;
   }
-  float const pitch = qDegreesToRadians(m_cinematic_pitch);
-  float const yaw = qDegreesToRadians(m_cinematic_yaw);
-  float const horizontal = m_cinematic_distance * std::cos(pitch);
-  QVector3D const offset(std::sin(yaw) * horizontal,
-                         m_cinematic_distance * std::sin(pitch),
-                         std::cos(yaw) * horizontal);
-  QVector3D const position = lift_camera_over_terrain(
-      m_cinematic_target + offset, m_cinematic_target, m_session.terrain());
+  float const clearance = m_cinematic_ground_clearance >= 0.0F
+                              ? m_cinematic_ground_clearance
+                              : k_cinematic_ground_clearance;
+  QVector3D position;
+  if (m_cinematic_eye_valid) {
+    position = lift_camera_over_terrain(
+        m_cinematic_eye, m_cinematic_target, m_session.terrain(), clearance);
+  } else {
+    float const pitch = qDegreesToRadians(m_cinematic_pitch);
+    float const yaw = qDegreesToRadians(m_cinematic_yaw);
+    float const horizontal = m_cinematic_distance * std::cos(pitch);
+    QVector3D const offset(std::sin(yaw) * horizontal,
+                           m_cinematic_distance * std::sin(pitch),
+                           std::cos(yaw) * horizontal);
+    position = lift_camera_over_terrain(m_cinematic_target + offset,
+                                        m_cinematic_target,
+                                        m_session.terrain(),
+                                        clearance);
+  }
 
   QVector3D up(0.0F, 1.0F, 0.0F);
   if (std::abs(m_cinematic_roll) > 0.01F) {
@@ -3236,7 +3334,8 @@ void ArenaViewport::apply_cinematic_view() {
   m_camera->look_at(position, m_cinematic_target, up);
   m_camera->set_perspective(m_cinematic_fov,
                             m_camera->get_aspect(),
-                            m_camera->get_near(),
+                            m_cinematic_near > 0.0F ? m_cinematic_near
+                                                    : m_camera->get_near(),
                             m_camera->get_far());
 }
 

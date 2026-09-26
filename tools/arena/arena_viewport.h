@@ -29,6 +29,7 @@
 #include "game/systems/nation_id.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
+#include "promo_spec.h"
 
 class QOpenGLShaderProgram;
 class QOpenGLVertexArrayObject;
@@ -105,6 +106,10 @@ public:
   void set_scenario_yaw_offset(float degrees) { m_scenario_yaw_offset = degrees; }
   void set_graphics_quality_override(Render::GraphicsQuality quality) {
     m_graphics_quality_override = quality;
+  }
+  [[nodiscard]] auto
+  graphics_quality_override() const -> std::optional<Render::GraphicsQuality> {
+    return m_graphics_quality_override;
   }
   [[nodiscard]] auto has_graphics_quality_override() const -> bool {
     return m_graphics_quality_override.has_value();
@@ -245,6 +250,13 @@ public:
                           float fov_degrees,
                           float roll_degrees);
   void clear_cinematic_view();
+  void set_cinematic_eye(const QVector3D& eye,
+                         const QVector3D& target,
+                         float fov_degrees,
+                         float roll_degrees);
+  void set_cinematic_lens(float near_plane, float ground_clearance);
+  void set_promo_lighting(const Arena::Promo::LightingOverride& lighting);
+  [[nodiscard]] auto terrain_height_at(float x, float z) const -> float;
 
   void set_capture_stabilization(float seconds);
 
@@ -540,6 +552,12 @@ private:
   float m_cinematic_yaw = 40.0F;
   float m_cinematic_fov = 40.0F;
   float m_cinematic_roll = 0.0F;
+  bool m_cinematic_eye_valid = false;
+  QVector3D m_cinematic_eye;
+  float m_cinematic_near = 0.0F;
+  float m_saved_near = 0.0F;
+  float m_cinematic_ground_clearance = -1.0F;
+  Arena::Promo::LightingOverride m_promo_lighting;
   bool m_flame_card_active = false;
   float m_flame_card_speed = 1.0F;
   float m_flame_card_intensity = 1.0F;

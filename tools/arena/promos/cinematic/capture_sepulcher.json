@@ -1,0 +1,224 @@
+{
+  "width": 1920,
+  "height": 1080,
+  "fps": 96,
+  "supersample": 2,
+  "gameplay_ui": false,
+  "audio": true,
+  "record_music": false,
+  "motion_limits": {
+    "yaw_degrees_per_second": 40,
+    "pitch_degrees_per_second": 20,
+    "fov_degrees_per_second": 20,
+    "minimum_clip_seconds": 1.0,
+    "mean_clip_seconds": 1.0
+  },
+  "id": "cine_sepulcher",
+  "title": "STANDARD OF IRON",
+  "shots": [
+    {
+      "name": "barrow_mist",
+      "scenario": "cine_sepulcher",
+      "start": 1.0,
+      "duration": 8.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [9, 0.9, 20],
+          "look": [0, 1.2, -18],
+          "fov": 28
+        },
+        {
+          "time": 8.0,
+          "eye": [8, 0.9, 18.5],
+          "look": [0, 1.2, -18],
+          "fov": 27
+        }
+      ],
+      "ground_clearance": 0.3,
+      "lighting": {
+        "ambient_scale": 2.2,
+        "sun_scale": 1.8,
+        "exposure": 1.35
+      }
+    },
+    {
+      "name": "column_fires",
+      "scenario": "cine_sepulcher",
+      "start": 4.0,
+      "duration": 8.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [-11, 0.55, 24],
+          "look": [1, 0.8, 36],
+          "fov": 24
+        },
+        {
+          "time": 8.0,
+          "eye": [-11, 0.55, 22.5],
+          "look": [1, 0.8, 31],
+          "fov": 24
+        }
+      ],
+      "ground_clearance": 0.3,
+      "lighting": {
+        "ambient_scale": 2.2,
+        "sun_scale": 1.8,
+        "exposure": 1.35
+      }
+    },
+    {
+      "name": "consul_ascends",
+      "scenario": "cine_sepulcher",
+      "start": 6.0,
+      "duration": 9.0,
+      "rig": "free",
+      "ground_clearance": 0.3,
+      "focus": {
+        "mode": "group",
+        "group": "consul",
+        "smoothing": 0.4,
+        "spring": true,
+        "dead_zone": 0.4
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [1.8, 0.75, -6.5],
+          "look": [0, 0.7, 0],
+          "fov": 24
+        },
+        {
+          "time": 9,
+          "eye": [2.4, 0.75, -6.0],
+          "look": [0, 0.7, 0],
+          "fov": 24
+        }
+      ],
+      "lighting": {
+        "ambient_scale": 2.2,
+        "sun_scale": 1.8,
+        "exposure": 1.35
+      }
+    },
+    {
+      "name": "the_rising",
+      "scenario": "cine_sepulcher",
+      "start": 19.0,
+      "duration": 10.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [5, 0.45, 4],
+          "look": [0, 0.7, -15],
+          "fov": 26
+        },
+        {
+          "time": 10.0,
+          "eye": [4.5, 0.45, 3],
+          "look": [0, 0.7, -15],
+          "fov": 25
+        }
+      ],
+      "ground_clearance": 0.3,
+      "lighting": {
+        "ambient_scale": 2.2,
+        "sun_scale": 1.8,
+        "exposure": 1.35
+      }
+    },
+    {
+      "name": "consul_fights",
+      "scenario": "cine_sepulcher",
+      "start": 25.0,
+      "duration": 12.0,
+      "rig": "free",
+      "ground_clearance": 0.3,
+      "focus": {
+        "mode": "group",
+        "group": "consul",
+        "smoothing": 0.35,
+        "spring": true,
+        "dead_zone": 0.4
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [2.9, 1.1, 2.7],
+          "look": [0, 0.65, 0],
+          "fov": 25
+        },
+        {
+          "time": 12.0,
+          "eye": [3.3, 1.1, 2.0],
+          "look": [0, 0.65, 0],
+          "fov": 25
+        }
+      ],
+      "handheld": {
+        "degrees": 0.3,
+        "frequency": 0.45
+      },
+      "lighting": {
+        "ambient_scale": 2.2,
+        "sun_scale": 1.8,
+        "exposure": 1.35
+      }
+    },
+    {
+      "name": "snow_melee",
+      "scenario": "cine_sepulcher",
+      "start": 30.0,
+      "duration": 10.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [14, 1.0, -2],
+          "look": [0, 0.7, -10],
+          "fov": 22
+        },
+        {
+          "time": 10.0,
+          "eye": [13, 1.0, -3],
+          "look": [0, 0.7, -10],
+          "fov": 22
+        }
+      ],
+      "ground_clearance": 0.3,
+      "lighting": {
+        "ambient_scale": 2.2,
+        "sun_scale": 1.8,
+        "exposure": 1.35
+      }
+    }
+  ]
+}
