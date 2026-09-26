@@ -64,84 +64,7 @@
    ],
    "ground_clearance": 0.3,
    "lighting": {
-    "hour": 8.8,
-    "sun_azimuth": 120,
-    "sun_elevation": 28,
-    "fog_density": 0.0012,
-    "fog_color": [
-     0.84,
-     0.78,
-     0.68
-    ],
-    "sky_color": [
-     0.62,
-     0.7,
-     0.8
-    ]
-   }
-  },
-  {
-   "name": "forum_masons",
-   "scenario": "promo_imperial_capital",
-   "start": 22.0,
-   "duration": 9.0,
-   "rig": "free",
-   "eye_space": "world",
-   "look_space": "world",
-   "focus": {
-    "mode": "point",
-    "point": [
-     0,
-     0,
-     0
-    ]
-   },
-   "camera": [
-    {
-     "time": 0,
-     "eye": [
-      -56,
-      0.8,
-      -60
-     ],
-     "look": [
-      -42,
-      1.2,
-      -78
-     ],
-     "fov": 26
-    },
-    {
-     "time": 9,
-     "eye": [
-      -55,
-      0.8,
-      -59
-     ],
-     "look": [
-      -42,
-      1.2,
-      -78
-     ],
-     "fov": 26
-    }
-   ],
-   "ground_clearance": 0.3,
-   "lighting": {
-    "hour": 8.8,
-    "sun_azimuth": 120,
-    "sun_elevation": 28,
-    "fog_density": 0.0012,
-    "fog_color": [
-     0.84,
-     0.78,
-     0.68
-    ],
-    "sky_color": [
-     0.62,
-     0.7,
-     0.8
-    ]
+    "hour": 10.5
    }
   },
   {
@@ -192,20 +115,7 @@
    ],
    "ground_clearance": 0.3,
    "lighting": {
-    "hour": 8.8,
-    "sun_azimuth": 120,
-    "sun_elevation": 28,
-    "fog_density": 0.0012,
-    "fog_color": [
-     0.84,
-     0.78,
-     0.68
-    ],
-    "sky_color": [
-     0.62,
-     0.7,
-     0.8
-    ]
+    "hour": 10.5
    }
   },
   {
@@ -256,84 +166,7 @@
    ],
    "ground_clearance": 0.3,
    "lighting": {
-    "hour": 8.8,
-    "sun_azimuth": 120,
-    "sun_elevation": 28,
-    "fog_density": 0.0012,
-    "fog_color": [
-     0.84,
-     0.78,
-     0.68
-    ],
-    "sky_color": [
-     0.62,
-     0.7,
-     0.8
-    ]
-   }
-  },
-  {
-   "name": "harvest",
-   "scenario": "promo_imperial_capital",
-   "start": 30.0,
-   "duration": 9.0,
-   "rig": "free",
-   "eye_space": "world",
-   "look_space": "world",
-   "focus": {
-    "mode": "point",
-    "point": [
-     0,
-     0,
-     0
-    ]
-   },
-   "camera": [
-    {
-     "time": 0,
-     "eye": [
-      -184,
-      1.0,
-      222
-     ],
-     "look": [
-      -204,
-      0.7,
-      240
-     ],
-     "fov": 26
-    },
-    {
-     "time": 9.0,
-     "eye": [
-      -185,
-      1.0,
-      223
-     ],
-     "look": [
-      -205,
-      0.7,
-      240
-     ],
-     "fov": 26
-    }
-   ],
-   "ground_clearance": 0.3,
-   "lighting": {
-    "hour": 8.8,
-    "sun_azimuth": 120,
-    "sun_elevation": 28,
-    "fog_density": 0.0012,
-    "fog_color": [
-     0.84,
-     0.78,
-     0.68
-    ],
-    "sky_color": [
-     0.62,
-     0.7,
-     0.8
-    ]
+    "hour": 10.5
    }
   },
   {
@@ -384,20 +217,7 @@
    ],
    "ground_clearance": 0.3,
    "lighting": {
-    "hour": 8.8,
-    "sun_azimuth": 120,
-    "sun_elevation": 28,
-    "fog_density": 0.0012,
-    "fog_color": [
-     0.84,
-     0.78,
-     0.68
-    ],
-    "sky_color": [
-     0.62,
-     0.7,
-     0.8
-    ]
+    "hour": 10.5
    }
   },
   {
@@ -448,20 +268,7 @@
    ],
    "ground_clearance": 0.3,
    "lighting": {
-    "hour": 8.8,
-    "sun_azimuth": 120,
-    "sun_elevation": 28,
-    "fog_density": 0.0012,
-    "fog_color": [
-     0.84,
-     0.78,
-     0.68
-    ],
-    "sky_color": [
-     0.62,
-     0.7,
-     0.8
-    ]
+    "hour": 10.5
    }
   }
  ]

@@ -53,7 +53,7 @@ def _ease(t: float) -> float:
 
 
 def render_card(card: dict, out_dir: Path, total: float, fps: int, width: int, height: int,
-                scope_h: int, head: float = 0.0) -> None:
+                scope_h: int, head: float = 0.0, transparent: bool = False) -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
     frames = int(round(total * fps))
     lines = card.get("lines", [])
@@ -94,6 +94,16 @@ def render_card(card: dict, out_dir: Path, total: float, fps: int, width: int, h
         text = canvas.resize((width, height), Image.LANCZOS)
         glow_img = glow_layer.resize((width, height), Image.LANCZOS).filter(
             ImageFilter.GaussianBlur(14))
+        if transparent:
+            shadow = text.filter(ImageFilter.GaussianBlur(10)).point(lambda v: min(255, v * 2))
+            frame = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+            frame.paste(Image.new("RGBA", (width, height), (0, 0, 0, 215)), (0, 0), shadow)
+            warm = Image.new("RGBA", (width, height), tuple(card.get("glow_ink", (255, 170, 90))) + (255,))
+            frame.paste(warm, (0, 0), glow_img)
+            frame.paste(Image.new("RGBA", (width, height), tuple(card.get("ink", INK)) + (255,)),
+                        (0, 0), text)
+            frame.save(out_dir / f"f{n + 1:05d}.png")
+            continue
         frame = Image.new("RGB", (width, height), (0, 0, 0))
         tint = card.get("ink", INK)
         warm = Image.new("RGB", (width, height), tuple(int(c * 0.9) for c in card.get("glow_ink", (255, 170, 90))))
@@ -103,3 +113,51 @@ def render_card(card: dict, out_dir: Path, total: float, fps: int, width: int, h
         ImageDraw.Draw(frame).rectangle([0, 0, width, top - 1], fill=0)
         ImageDraw.Draw(frame).rectangle([0, top + scope_h, width, height], fill=0)
         frame.save(out_dir / f"f{n + 1:05d}.png")
+
+
+GOLD = (212, 176, 104)
+
+
+def render_caption(caption: dict, out_dir: Path, fps: int, width: int, height: int,
+                   scope_h: int) -> int:
+    """A caption over footage: tracked capitals that open as they fade in, a gold
+    rule drawing out beneath, a soft shadow for legibility. Returns frame count."""
+    out_dir.mkdir(parents=True, exist_ok=True)
+    dur = float(caption["dur"])
+    frames = int(round(dur * fps))
+    ss = 2
+    size = int(caption.get("size", 46))
+    sub = caption.get("sub")
+    top = (height - scope_h) // 2
+    y = top + scope_h * float(caption.get("y", 0.80))
+    for n in range(frames):
+        t = n / fps
+        a_in = _ease(t / 0.45)
+        a_out = _ease((dur - t) / 0.4)
+        alpha = a_in * a_out
+        canvas = Image.new("L", (width * ss, height * ss), 0)
+        rule = Image.new("L", (width * ss, height * ss), 0)
+        d = ImageDraw.Draw(canvas)
+        font = _font("display", size * ss)
+        tracking = 0.22 + 0.10 * (1 - math.exp(-t / 0.9))
+        draw_tracked(d, (width * ss / 2, y * ss), caption["text"], font, tracking,
+                     int(255 * alpha))
+        w = tracked_width(caption["text"], font, tracking)
+        grow = _ease((t - 0.15) / 0.7)
+        half = w * 0.36 * grow
+        ry = (y + size * 0.78) * ss
+        ImageDraw.Draw(rule).line([(width * ss / 2 - half, ry), (width * ss / 2 + half, ry)],
+                                  fill=int(220 * alpha), width=2 * ss)
+        if sub:
+            sf = _font("text", int(size * 0.5) * ss)
+            draw_tracked(d, (width * ss / 2, (y + size * 1.45) * ss), sub, sf, 0.18,
+                         int(215 * alpha * _ease((t - 0.35) / 0.5)))
+        text = canvas.resize((width, height), Image.LANCZOS)
+        line = rule.resize((width, height), Image.LANCZOS)
+        shadow = text.filter(ImageFilter.GaussianBlur(9)).point(lambda v: min(255, int(v * 1.6)))
+        frame = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        frame.paste(Image.new("RGBA", (width, height), (0, 0, 0, 190)), (0, 0), shadow)
+        frame.paste(Image.new("RGBA", (width, height), GOLD + (255,)), (0, 0), line)
+        frame.paste(Image.new("RGBA", (width, height), INK + (255,)), (0, 0), text)
+        frame.save(out_dir / f"f{n + 1:05d}.png")
+    return frames

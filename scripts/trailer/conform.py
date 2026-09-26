@@ -36,6 +36,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import fx as fxmod  # noqa: E402
 import titles  # noqa: E402
 
 WIDTH = 1920
@@ -178,11 +179,38 @@ def render_event(index: int, event: dict, cut: dict, clips: Path, work: Path) ->
               "-r", str(fps), "-an"]
 
     if clip is None:
+        card = event["card"]
         png_dir = work / f"card{index:03d}_{key}"
-        titles.render_card(event["card"], png_dir, total, fps, WIDTH, HEIGHT, scope_h,
-                           head=head)
-        run(["ffmpeg", "-y", "-v", "error", "-framerate", str(fps), "-i",
-             str(png_dir / "f%05d.png"), *encode, str(out)])
+        background = card.get("background")
+        titles.render_card(card, png_dir, total, fps, WIDTH, HEIGHT, scope_h, head=head,
+                           transparent=bool(background))
+        if not background:
+            run(["ffmpeg", "-y", "-v", "error", "-framerate", str(fps), "-i",
+                 str(png_dir / "f%05d.png"), *encode, str(out)])
+            return out
+        bg_clip = find_clip(clips, background)
+        bg_look = looks.get(card.get("look", "fire"), {})
+        grad = work / "card_gradient.png"
+        if not grad.exists():
+            from PIL import Image
+            g = Image.new("RGBA", (WIDTH, HEIGHT))
+            px = g.load()
+            for yy in range(HEIGHT):
+                a = int(255 * min(0.92, 0.30 + 0.62 * (1 - yy / HEIGHT) ** 1.3))
+                for xx in range(WIDTH):
+                    px[xx, yy] = (0, 0, 0, a)
+            g.save(grad)
+        fade = float(card.get("bg_fade", 1.0))
+        chain = (f"[0:v]trim=start={float(card.get('in', 0.0)):.3f}:duration={total:.3f},"
+                 f"setpts=PTS-STARTPTS,fps={fps},format=gbrp16le,"
+                 f"scale={WIDTH}:{HEIGHT}:flags=lanczos,{look_filter(bg_look, HEIGHT)},"
+                 f"format=yuv444p16le,fade=t=in:st=0:d={fade:.3f}[bg];"
+                 f"[bg][1:v]overlay=0:0:format=auto[dim];"
+                 f"[dim][2:v]overlay=0:0:format=auto,format=yuv422p10le,"
+                 f"trim=end_frame={int(round(total * fps))}[v]")
+        run(["ffmpeg", "-y", "-v", "error", "-i", str(bg_clip), "-loop", "1", "-i", str(grad),
+             "-framerate", str(fps), "-i", str(png_dir / "f%05d.png"),
+             "-filter_complex", chain, "-map", "[v]", *encode, str(out)])
         return out
 
     frames, clip_fps = probe_frames(clip)
@@ -219,7 +247,7 @@ def render_event(index: int, event: dict, cut: dict, clips: Path, work: Path) ->
     ]
     if abs(speed - 1.0) > 1e-3:
         pre.append(f"setpts=PTS/{speed:.4f}")
-    graph = ",".join(
+    base = ",".join(
         pre
         + blur
         + [f"setpts=N/{fps}/TB", "format=gbrp16le",
@@ -227,17 +255,57 @@ def render_event(index: int, event: dict, cut: dict, clips: Path, work: Path) ->
         + flip
         + [f"crop={crop_w}:{crop_h}:{x0}:{y0}", f"scale={WIDTH}:{scope_h}:flags=lanczos"]
     )
-    graph += "," + look_filter(look, scope_h)
+    hits = [float(h) + head for h in event.get("hits", [])]
+    if hits:
+        amp = float(event.get("shake", 9.0))
+        ow = int(round(WIDTH * 1.035 / 2)) * 2
+        oh = int(round(scope_h * 1.035 / 2)) * 2
+        env = "+".join(f"if(gte(t\\,{h:.3f})\\,exp(-(t-{h:.3f})/0.22)\\,0)" for h in hits)
+        xs = f"{(ow - WIDTH) / 2:.1f}+{amp:.1f}*({env})*sin(t*71)"
+        ys = f"{(oh - scope_h) / 2:.1f}+{amp * 0.7:.1f}*({env})*sin(t*53+1.3)"
+        base += f",scale={ow}:{oh}:flags=lanczos,crop={WIDTH}:{scope_h}:x={xs}:y={ys}"
+    base += "," + look_filter(look, scope_h)
+    if hits:
+        flash = "+".join(f"if(gte(t\\,{h:.3f})\\,exp(-(t-{h:.3f})/0.06)\\,0)" for h in hits)
+        base += f",eq=brightness=0.07*({flash}):eval=frame"
+
+    inputs = ["-i", str(clip)]
+    chains = [f"[0:v]{base}[b0]"]
+    stage = "b0"
+    fx = event.get("fx", {})
+    if fx:
+        chains.append(f"[{stage}]format=gbrpf32le[f0]")
+        stage = "f0"
+        for k, (kind, spec) in enumerate(sorted(fx.items()), start=1):
+            spec = spec if isinstance(spec, dict) else {"opacity": spec}
+            plate_path = fxmod.plate(kind, work, fps, scope_h)
+            plate_len = fxmod.PLATES[kind][1]
+            at = float(spec.get("at", 0.0)) + head
+            if kind == "leak":
+                offset = 0.0
+            else:
+                offset = (index * 3.7) % max(0.1, plate_len - total - 0.1)
+            inputs += ["-stream_loop", "-1", "-i", str(plate_path)]
+            delay = f",tpad=start_duration={at:.3f}:start_mode=add:color=black" if at > 0 else ""
+            chains.append(
+                f"[{k}:v]trim=start={offset:.3f}:duration={total:.3f},setpts=PTS-STARTPTS,"
+                f"fps={fps}{delay},tpad=stop_mode=add:stop_duration={total:.3f}:color=black,"
+                f"trim=duration={total:.3f},format=gbrpf32le[p{k}]")
+            chains.append(f"[{stage}][p{k}]blend=all_mode=screen:"
+                          f"all_opacity={float(spec.get('opacity', 0.5)):.3f}[f{k}]")
+            stage = f"f{k}"
+    tailchain = "format=yuv444p16le"
     fade_in = float(event.get("fade_in", 0.0))
     fade_out = float(event.get("fade_out", 0.0))
     if fade_in > 0:
-        graph += f",fade=t=in:st={head:.3f}:d={fade_in:.3f}"
+        tailchain += f",fade=t=in:st={head:.3f}:d={fade_in:.3f}"
     if fade_out > 0:
-        graph += f",fade=t=out:st={head + duration - fade_out:.3f}:d={fade_out:.3f}"
-    graph += f",pad={WIDTH}:{HEIGHT}:0:{(HEIGHT - scope_h) // 2}:black,format=yuv422p10le"
-    graph += f",trim=end_frame={int(round(total * fps))}"
-    run(["ffmpeg", "-y", "-v", "error", "-i", str(clip), "-filter_complex",
-         f"[0:v]{graph}[v]", "-map", "[v]", *encode, str(out)])
+        tailchain += f",fade=t=out:st={head + duration - fade_out:.3f}:d={fade_out:.3f}"
+    tailchain += f",pad={WIDTH}:{HEIGHT}:0:{(HEIGHT - scope_h) // 2}:black,format=yuv422p10le"
+    tailchain += f",trim=end_frame={int(round(total * fps))}"
+    chains.append(f"[{stage}]{tailchain}[v]")
+    run(["ffmpeg", "-y", "-v", "error", *inputs, "-filter_complex", ";".join(chains),
+         "-map", "[v]", *encode, str(out)])
     return out
 
 
@@ -280,11 +348,45 @@ def assemble(parts: list[Path], events: list[dict], cut: dict, out: Path) -> flo
         cut_point += float(event["dur"])
         stage = f"j{i}"
     total = cut_point
+    caption_inputs: list[str] = []
+    starts = {}
+    t = 0.0
+    for event in events:
+        if event.get("name"):
+            starts[event["name"]] = (t, t + float(event["dur"]))
+        t += float(event["dur"])
+    base_index = len(events)
+    for k, caption in enumerate(cut.get("captions", [])):
+        at = resolve_time(caption["at"], starts)
+        cdir = out.parent / f"caption_{k:02d}_{hashlib.sha1(json.dumps(caption, sort_keys=True).encode()).hexdigest()[:10]}"
+        if not (cdir / "f00001.png").exists():
+            titles.render_caption(caption, cdir, fps, WIDTH, HEIGHT,
+                                  int(round(WIDTH / float(cut.get("scope", 2.39)) / 2)) * 2)
+        caption_inputs += ["-framerate", str(fps), "-itsoffset", f"{at:.4f}", "-i",
+                           str(cdir / "f%05d.png")]
+        idx = base_index + k
+        end = at + float(caption["dur"])
+        chains.append(f"[{stage}][{idx}:v]overlay=0:0:eof_action=pass:"
+                      f"enable='between(t,{at:.3f},{end:.3f})'[c{k}]")
+        stage = f"c{k}"
+    inputs += caption_inputs
     graph = ";".join(chains)
     run(["ffmpeg", "-y", "-v", "error", *inputs, "-filter_complex", graph, "-map",
          f"[{stage}]", "-c:v", "prores_ks", "-profile:v", "3", "-pix_fmt", "yuv422p10le",
          "-r", str(fps), str(out)])
     return total
+
+
+def resolve_time(value, starts: dict) -> float:
+    if isinstance(value, (int, float)):
+        return float(value)
+    import re
+    match = re.fullmatch(r"\s*([A-Za-z0-9_]+)(@end)?\s*([+-]\s*[0-9.]+)?\s*", str(value))
+    if not match:
+        raise SystemExit(f"cannot read time '{value}'")
+    name, end, offset = match.groups()
+    base = starts[name][1] if end else starts[name][0]
+    return base + (float(offset.replace(" ", "")) if offset else 0.0)
 
 
 def timeline(cut: dict) -> list[dict]:

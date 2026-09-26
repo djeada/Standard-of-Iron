@@ -17,62 +17,6 @@
  "title": "STANDARD OF IRON",
  "shots": [
   {
-   "name": "catapult_loose",
-   "scenario": "cine_siege",
-   "start": 2.0,
-   "duration": 9.0,
-   "rig": "free",
-   "ground_clearance": 0.3,
-   "focus": {
-    "mode": "group",
-    "group": "siege_catapults_n",
-    "smoothing": 0.5,
-    "spring": true,
-    "dead_zone": 1.0
-   },
-   "lighting": {
-    "hour": 18.1,
-    "sun_azimuth": 265,
-    "sun_elevation": 17,
-    "fog_density": 0.004,
-    "fog_color": [
-     0.8,
-     0.62,
-     0.48
-    ]
-   },
-   "camera": [
-    {
-     "time": 0,
-     "eye": [
-      9,
-      0.7,
-      3.0
-     ],
-     "look": [
-      -40,
-      3.0,
-      -1
-     ],
-     "fov": 32
-    },
-    {
-     "time": 9,
-     "eye": [
-      8.5,
-      0.7,
-      3.8
-     ],
-     "look": [
-      -40,
-      3.2,
-      -1
-     ],
-     "fov": 32
-    }
-   ]
-  },
-  {
    "name": "tower_burns",
    "scenario": "cine_siege",
    "start": 6.0,
@@ -120,15 +64,7 @@
    ],
    "ground_clearance": 0.3,
    "lighting": {
-    "hour": 18.1,
-    "sun_azimuth": 265,
-    "sun_elevation": 17,
-    "fog_density": 0.004,
-    "fog_color": [
-     0.8,
-     0.62,
-     0.48
-    ]
+    "hour": 16.9
    }
   },
   {
@@ -179,15 +115,7 @@
    ],
    "ground_clearance": 0.3,
    "lighting": {
-    "hour": 18.1,
-    "sun_azimuth": 265,
-    "sun_elevation": 17,
-    "fog_density": 0.004,
-    "fog_color": [
-     0.8,
-     0.62,
-     0.48
-    ]
+    "hour": 16.9
    }
   },
   {
@@ -238,15 +166,7 @@
    ],
    "ground_clearance": 0.3,
    "lighting": {
-    "hour": 18.1,
-    "sun_azimuth": 265,
-    "sun_elevation": 17,
-    "fog_density": 0.004,
-    "fog_color": [
-     0.8,
-     0.62,
-     0.48
-    ]
+    "hour": 16.9
    }
   },
   {
@@ -297,15 +217,7 @@
    ],
    "ground_clearance": 0.3,
    "lighting": {
-    "hour": 18.1,
-    "sun_azimuth": 265,
-    "sun_elevation": 17,
-    "fog_density": 0.004,
-    "fog_color": [
-     0.8,
-     0.62,
-     0.48
-    ]
+    "hour": 16.9
    }
   },
   {
@@ -356,74 +268,7 @@
    ],
    "ground_clearance": 0.3,
    "lighting": {
-    "hour": 18.1,
-    "sun_azimuth": 265,
-    "sun_elevation": 17,
-    "fog_density": 0.004,
-    "fog_color": [
-     0.8,
-     0.62,
-     0.48
-    ]
-   }
-  },
-  {
-   "name": "city_burning_wide",
-   "scenario": "cine_siege",
-   "start": 38.0,
-   "duration": 10.0,
-   "rig": "free",
-   "eye_space": "world",
-   "look_space": "world",
-   "focus": {
-    "mode": "point",
-    "point": [
-     0,
-     0,
-     0
-    ]
-   },
-   "camera": [
-    {
-     "time": 0,
-     "eye": [
-      304,
-      44,
-      24
-     ],
-     "look": [
-      185,
-      0,
-      -40
-     ],
-     "fov": 30
-    },
-    {
-     "time": 10.0,
-     "eye": [
-      300,
-      46,
-      18
-     ],
-     "look": [
-      183,
-      0,
-      -40
-     ],
-     "fov": 30
-    }
-   ],
-   "ground_clearance": 0.3,
-   "lighting": {
-    "hour": 18.1,
-    "sun_azimuth": 265,
-    "sun_elevation": 22,
-    "fog_density": 0.0015,
-    "fog_color": [
-     0.8,
-     0.62,
-     0.48
-    ]
+    "hour": 16.9
    }
   },
   {
@@ -444,15 +289,7 @@
    },
    "ground_clearance": 0.3,
    "lighting": {
-    "hour": 18.1,
-    "sun_azimuth": 265,
-    "sun_elevation": 17,
-    "fog_density": 0.004,
-    "fog_color": [
-     0.8,
-     0.62,
-     0.48
-    ]
+    "hour": 16.9
    },
    "camera": [
     {

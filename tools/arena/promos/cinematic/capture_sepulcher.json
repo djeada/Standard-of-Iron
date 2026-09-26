@@ -62,24 +62,7 @@
      "fov": 27
     }
    ],
-   "ground_clearance": 0.3,
-   "lighting": {
-    "hour": 22.4,
-    "sun_azimuth": 210,
-    "sun_elevation": 38,
-    "ambient_scale": 0.55,
-    "fog_density": 0.02,
-    "fog_color": [
-     0.16,
-     0.19,
-     0.24
-    ],
-    "sky_color": [
-     0.1,
-     0.12,
-     0.16
-    ]
-   }
+   "ground_clearance": 0.3
   },
   {
    "name": "column_fires",
@@ -127,24 +110,7 @@
      "fov": 24
     }
    ],
-   "ground_clearance": 0.3,
-   "lighting": {
-    "hour": 22.4,
-    "sun_azimuth": 210,
-    "sun_elevation": 38,
-    "ambient_scale": 0.55,
-    "fog_density": 0.02,
-    "fog_color": [
-     0.16,
-     0.19,
-     0.24
-    ],
-    "sky_color": [
-     0.1,
-     0.12,
-     0.16
-    ]
-   }
+   "ground_clearance": 0.3
   },
   {
    "name": "consul_ascends",
@@ -189,24 +155,7 @@
      ],
      "fov": 24
     }
-   ],
-   "lighting": {
-    "hour": 22.4,
-    "sun_azimuth": 210,
-    "sun_elevation": 38,
-    "ambient_scale": 0.55,
-    "fog_density": 0.02,
-    "fog_color": [
-     0.16,
-     0.19,
-     0.24
-    ],
-    "sky_color": [
-     0.1,
-     0.12,
-     0.16
-    ]
-   }
+   ]
   },
   {
    "name": "the_rising",
@@ -254,89 +203,7 @@
      "fov": 25
     }
    ],
-   "ground_clearance": 0.3,
-   "lighting": {
-    "hour": 22.4,
-    "sun_azimuth": 210,
-    "sun_elevation": 38,
-    "ambient_scale": 0.55,
-    "fog_density": 0.02,
-    "fog_color": [
-     0.16,
-     0.19,
-     0.24
-    ],
-    "sky_color": [
-     0.1,
-     0.12,
-     0.16
-    ]
-   }
-  },
-  {
-   "name": "priest_fire",
-   "scenario": "cine_sepulcher",
-   "start": 23.0,
-   "duration": 10.0,
-   "rig": "free",
-   "eye_space": "world",
-   "look_space": "world",
-   "focus": {
-    "mode": "point",
-    "point": [
-     0,
-     0,
-     0
-    ]
-   },
-   "camera": [
-    {
-     "time": 0,
-     "eye": [
-      -7,
-      0.55,
-      -32
-     ],
-     "look": [
-      0,
-      0.8,
-      -6
-     ],
-     "fov": 30
-    },
-    {
-     "time": 10.0,
-     "eye": [
-      -6,
-      0.55,
-      -31
-     ],
-     "look": [
-      0,
-      0.8,
-      -6
-     ],
-     "fov": 30
-    }
-   ],
-   "ground_clearance": 0.3,
-   "lighting": {
-    "hour": 22.4,
-    "sun_azimuth": 210,
-    "sun_elevation": 38,
-    "ambient_scale": 0.55,
-    "fog_density": 0.02,
-    "fog_color": [
-     0.16,
-     0.19,
-     0.24
-    ],
-    "sky_color": [
-     0.1,
-     0.12,
-     0.16
-    ]
-   }
+   "ground_clearance": 0.3
   },
   {
    "name": "consul_fights",
@@ -382,23 +249,6 @@
      "fov": 25
     }
    ],
-   "lighting": {
-    "hour": 22.4,
-    "sun_azimuth": 210,
-    "sun_elevation": 38,
-    "ambient_scale": 0.55,
-    "fog_density": 0.02,
-    "fog_color": [
-     0.16,
-     0.19,
-     0.24
-    ],
-    "sky_color": [
-     0.1,
-     0.12,
-     0.16
-    ]
-   },
    "handheld": {
     "degrees": 0.3,
     "frequency": 0.45
@@ -450,89 +300,7 @@
      "fov": 22
     }
    ],
-   "ground_clearance": 0.3,
-   "lighting": {
-    "hour": 22.4,
-    "sun_azimuth": 210,
-    "sun_elevation": 38,
-    "ambient_scale": 0.55,
-    "fog_density": 0.02,
-    "fog_color": [
-     0.16,
-     0.19,
-     0.24
-    ],
-    "sky_color": [
-     0.1,
-     0.12,
-     0.16
-    ]
-   }
-  },
-  {
-   "name": "barrow_high",
-   "scenario": "cine_sepulcher",
-   "start": 34.0,
-   "duration": 8.0,
-   "rig": "free",
-   "eye_space": "world",
-   "look_space": "world",
-   "focus": {
-    "mode": "point",
-    "point": [
-     0,
-     0,
-     0
-    ]
-   },
-   "camera": [
-    {
-     "time": 0,
-     "eye": [
-      30,
-      22,
-      30
-     ],
-     "look": [
-      0,
-      0,
-      -12
-     ],
-     "fov": 28
-    },
-    {
-     "time": 8.0,
-     "eye": [
-      26,
-      22,
-      32
-     ],
-     "look": [
-      0,
-      0,
-      -12
-     ],
-     "fov": 28
-    }
-   ],
-   "ground_clearance": 0.3,
-   "lighting": {
-    "hour": 22.4,
-    "sun_azimuth": 210,
-    "sun_elevation": 38,
-    "ambient_scale": 0.55,
-    "fog_density": 0.012,
-    "fog_color": [
-     0.16,
-     0.19,
-     0.24
-    ],
-    "sky_color": [
-     0.1,
-     0.12,
-     0.16
-    ]
-   }
+   "ground_clearance": 0.3
   }
  ]
 }

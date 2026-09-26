@@ -17,65 +17,6 @@
  },
  "shots": [
   {
-   "name": "dawn_sun",
-   "scenario": "cine_field",
-   "start": 1.0,
-   "duration": 6.0,
-   "rig": "free",
-   "eye_space": "world",
-   "look_space": "world",
-   "focus": {
-    "mode": "point",
-    "point": [
-     0,
-     0,
-     0
-    ]
-   },
-   "lighting": {
-    "hour": 7.0,
-    "sun_azimuth": 92,
-    "sun_elevation": 18.0,
-    "fog_density": 0.014,
-    "fog_color": [
-     0.86,
-     0.72,
-     0.58
-    ]
-   },
-   "camera": [
-    {
-     "time": 0,
-     "eye": [
-      -150,
-      1.2,
-      -4
-     ],
-     "look": [
-      68,
-      3.2,
-      -36
-     ],
-     "fov": 7.5
-    },
-    {
-     "time": 6.0,
-     "eye": [
-      -150,
-      1.2,
-      -7
-     ],
-     "look": [
-      68,
-      3.2,
-      -36
-     ],
-     "fov": 7.2
-    }
-   ],
-   "ground_clearance": 0.3
-  },
-  {
    "name": "shield_rank",
    "scenario": "cine_field",
    "start": 1.0,
@@ -92,15 +33,7 @@
     ]
    },
    "lighting": {
-    "hour": 7.0,
-    "sun_azimuth": 92,
-    "sun_elevation": 18.0,
-    "fog_density": 0.014,
-    "fog_color": [
-     0.86,
-     0.72,
-     0.58
-    ]
+    "hour": 15.4
    },
    "camera": [
     {
@@ -135,65 +68,6 @@
    "ground_clearance": 0.3
   },
   {
-   "name": "over_shoulders",
-   "scenario": "cine_field",
-   "start": 1.5,
-   "duration": 6.0,
-   "rig": "free",
-   "eye_space": "world",
-   "look_space": "world",
-   "focus": {
-    "mode": "point",
-    "point": [
-     0,
-     0,
-     0
-    ]
-   },
-   "lighting": {
-    "hour": 7.0,
-    "sun_azimuth": 92,
-    "sun_elevation": 18.0,
-    "fog_density": 0.014,
-    "fog_color": [
-     0.86,
-     0.72,
-     0.58
-    ]
-   },
-   "camera": [
-    {
-     "time": 0,
-     "eye": [
-      -47.6,
-      1.02,
-      2.6
-     ],
-     "look": [
-      46,
-      1.5,
-      -1
-     ],
-     "fov": 17
-    },
-    {
-     "time": 6.0,
-     "eye": [
-      -46.6,
-      1.02,
-      2.4
-     ],
-     "look": [
-      46,
-      1.5,
-      -1
-     ],
-     "fov": 16
-    }
-   ],
-   "ground_clearance": 0.3
-  },
-  {
    "name": "scipio_hero",
    "scenario": "cine_field",
    "start": 2.0,
@@ -210,15 +84,7 @@
     ]
    },
    "lighting": {
-    "hour": 7.0,
-    "sun_azimuth": 140,
-    "sun_elevation": 18.0,
-    "fog_density": 0.014,
-    "fog_color": [
-     0.86,
-     0.72,
-     0.58
-    ]
+    "hour": 15.4
    },
    "camera": [
     {
@@ -269,15 +135,7 @@
     ]
    },
    "lighting": {
-    "hour": 7.0,
-    "sun_azimuth": 92,
-    "sun_elevation": 18.0,
-    "fog_density": 0.014,
-    "fog_color": [
-     0.86,
-     0.72,
-     0.58
-    ]
+    "hour": 15.4
    },
    "camera": [
     {
@@ -328,15 +186,7 @@
     ]
    },
    "lighting": {
-    "hour": 7.0,
-    "sun_azimuth": 92,
-    "sun_elevation": 18.0,
-    "fog_density": 0.014,
-    "fog_color": [
-     0.86,
-     0.72,
-     0.58
-    ]
+    "hour": 15.4
    },
    "camera": [
     {
@@ -387,15 +237,7 @@
     ]
    },
    "lighting": {
-    "hour": 7.0,
-    "sun_azimuth": 92,
-    "sun_elevation": 30.0,
-    "fog_density": 0.005,
-    "fog_color": [
-     0.86,
-     0.72,
-     0.58
-    ]
+    "hour": 15.4
    },
    "camera": [
     {
@@ -431,64 +273,6 @@
    "ground_clearance": 0.3
   },
   {
-   "name": "both_armies_high",
-   "scenario": "cine_field",
-   "start": 6.0,
-   "duration": 6.0,
-   "rig": "free",
-   "eye_space": "world",
-   "look_space": "world",
-   "focus": {
-    "mode": "point",
-    "point": [
-     0,
-     0,
-     0
-    ]
-   },
-   "lighting": {
-    "hour": 7.2,
-    "sun_azimuth": 92,
-    "sun_elevation": 30.0,
-    "fog_density": 0.0028,
-    "fog_color": [
-     0.82,
-     0.74,
-     0.64
-    ]
-   },
-   "camera": [
-    {
-     "time": 0,
-     "eye": [
-      -34,
-      26,
-      -150
-     ],
-     "look": [
-      0,
-      2,
-      0
-     ],
-     "fov": 19
-    },
-    {
-     "time": 6,
-     "eye": [
-      -28,
-      26,
-      -150
-     ],
-     "look": [
-      2,
-      2,
-      0
-     ],
-     "fov": 19
-    }
-   ]
-  },
-  {
    "name": "advance_tele",
    "scenario": "cine_field",
    "start": 18.0,
@@ -505,15 +289,7 @@
     ]
    },
    "lighting": {
-    "hour": 7.7,
-    "sun_azimuth": 92,
-    "sun_elevation": 26.0,
-    "fog_density": 0.007,
-    "fog_color": [
-     0.82,
-     0.74,
-     0.64
-    ]
+    "hour": 15.4
    },
    "camera": [
     {
@@ -550,15 +326,7 @@
     ]
    },
    "lighting": {
-    "hour": 7.2,
-    "sun_azimuth": 92,
-    "sun_elevation": 30.0,
-    "fog_density": 0.0028,
-    "fog_color": [
-     0.82,
-     0.74,
-     0.64
-    ]
+    "hour": 15.4
    },
    "camera": [
     {
@@ -605,15 +373,7 @@
     "dead_zone": 0.6
    },
    "lighting": {
-    "hour": 7.7,
-    "sun_azimuth": 92,
-    "sun_elevation": 26.0,
-    "fog_density": 0.007,
-    "fog_color": [
-     0.82,
-     0.74,
-     0.64
-    ]
+    "hour": 15.4
    },
    "camera": [
     {
@@ -664,15 +424,7 @@
     ]
    },
    "lighting": {
-    "hour": 7.7,
-    "sun_azimuth": 92,
-    "sun_elevation": 26.0,
-    "fog_density": 0.007,
-    "fog_color": [
-     0.82,
-     0.74,
-     0.64
-    ]
+    "hour": 15.4
    },
    "camera": [
     {
@@ -707,124 +459,6 @@
    "ground_clearance": 0.3
   },
   {
-   "name": "archers_loose",
-   "scenario": "cine_field",
-   "start": 33.0,
-   "duration": 5.0,
-   "rig": "free",
-   "eye_space": "world",
-   "look_space": "world",
-   "focus": {
-    "mode": "point",
-    "point": [
-     0,
-     0,
-     0
-    ]
-   },
-   "lighting": {
-    "hour": 7.7,
-    "sun_azimuth": 110,
-    "sun_elevation": 26.0,
-    "fog_density": 0.007,
-    "fog_color": [
-     0.82,
-     0.74,
-     0.64
-    ]
-   },
-   "camera": [
-    {
-     "time": 0,
-     "eye": [
-      -47,
-      0.45,
-      -7
-     ],
-     "look": [
-      -36,
-      4.5,
-      10
-     ],
-     "fov": 38
-    },
-    {
-     "time": 5.0,
-     "eye": [
-      -46.5,
-      0.45,
-      -6
-     ],
-     "look": [
-      -36,
-      5.5,
-      10
-     ],
-     "fov": 38
-    }
-   ],
-   "ground_clearance": 0.3
-  },
-  {
-   "name": "elephant_charge",
-   "scenario": "cine_field",
-   "start": 33.0,
-   "duration": 8.0,
-   "rig": "free",
-   "eye_space": "world",
-   "look_space": "world",
-   "focus": {
-    "mode": "point",
-    "point": [
-     0,
-     0,
-     0
-    ]
-   },
-   "lighting": {
-    "hour": 7.7,
-    "sun_azimuth": 92,
-    "sun_elevation": 26.0,
-    "fog_density": 0.007,
-    "fog_color": [
-     0.82,
-     0.74,
-     0.64
-    ]
-   },
-   "camera": [
-    {
-     "time": 0,
-     "eye": [
-      -46,
-      0.55,
-      31
-     ],
-     "look": [
-      -10,
-      1.6,
-      39
-     ],
-     "fov": 24
-    },
-    {
-     "time": 8.0,
-     "eye": [
-      -47,
-      0.55,
-      31.5
-     ],
-     "look": [
-      -18,
-      1.4,
-      39
-     ],
-     "fov": 24
-    }
-   ],
-   "ground_clearance": 0.3
-  },
-  {
    "name": "lines_meet_side",
    "scenario": "cine_field",
    "start": 43.0,
@@ -841,15 +475,7 @@
     ]
    },
    "lighting": {
-    "hour": 7.7,
-    "sun_azimuth": 92,
-    "sun_elevation": 26.0,
-    "fog_density": 0.007,
-    "fog_color": [
-     0.82,
-     0.74,
-     0.64
-    ]
+    "hour": 15.4
    },
    "camera": [
     {
@@ -884,132 +510,6 @@
    "ground_clearance": 0.3
   },
   {
-   "name": "cavalry_clash",
-   "scenario": "cine_field",
-   "start": 41.0,
-   "duration": 7.0,
-   "rig": "free",
-   "eye_space": "world",
-   "look_space": "world",
-   "focus": {
-    "mode": "point",
-    "point": [
-     0,
-     0,
-     0
-    ]
-   },
-   "lighting": {
-    "hour": 7.7,
-    "sun_azimuth": 92,
-    "sun_elevation": 26.0,
-    "fog_density": 0.007,
-    "fog_color": [
-     0.82,
-     0.74,
-     0.64
-    ]
-   },
-   "camera": [
-    {
-     "time": 0,
-     "eye": [
-      -17,
-      0.8,
-      -27
-     ],
-     "look": [
-      -29,
-      1.0,
-      -14
-     ],
-     "fov": 28
-    },
-    {
-     "time": 7.0,
-     "eye": [
-      -18,
-      0.8,
-      -27.5
-     ],
-     "look": [
-      -29,
-      1.0,
-      -13
-     ],
-     "fov": 28
-    }
-   ],
-   "handheld": {
-    "degrees": 0.25,
-    "frequency": 0.4
-   },
-   "ground_clearance": 0.3
-  },
-  {
-   "name": "melee_close",
-   "scenario": "cine_field",
-   "start": 52.0,
-   "duration": 8.0,
-   "rig": "free",
-   "focus": {
-    "mode": "point",
-    "point": [
-     0,
-     0,
-     0
-    ]
-   },
-   "lighting": {
-    "hour": 7.7,
-    "sun_azimuth": 92,
-    "sun_elevation": 26.0,
-    "fog_density": 0.007,
-    "fog_color": [
-     0.82,
-     0.74,
-     0.64
-    ]
-   },
-   "handheld": {
-    "degrees": 0.35,
-    "frequency": 0.45
-   },
-   "camera": [
-    {
-     "time": 0,
-     "eye": [
-      -2,
-      1.3,
-      -14
-     ],
-     "look": [
-      -10,
-      0.7,
-      -4
-     ],
-     "fov": 26
-    },
-    {
-     "time": 8,
-     "eye": [
-      -4,
-      1.3,
-      -15
-     ],
-     "look": [
-      -11,
-      0.7,
-      -4
-     ],
-     "fov": 26
-    }
-   ],
-   "ground_clearance": 0.3,
-   "eye_space": "world",
-   "look_space": "world"
-  },
-  {
    "name": "scipio_chase",
    "scenario": "cine_field",
    "start": 33.0,
@@ -1017,136 +517,8 @@
    "gameplay_camera": true,
    "stabilize_seconds": 0.25,
    "lighting": {
-    "hour": 7.7,
-    "sun_azimuth": 92,
-    "sun_elevation": 26.0,
-    "fog_density": 0.007,
-    "fog_color": [
-     0.82,
-     0.74,
-     0.64
-    ]
+    "hour": 15.4
    }
-  },
-  {
-   "name": "scipio_fight",
-   "scenario": "cine_field",
-   "start": 46.0,
-   "duration": 10.0,
-   "rig": "free",
-   "focus": {
-    "mode": "group",
-    "group": "scipio",
-    "smoothing": 0.35,
-    "spring": true,
-    "dead_zone": 0.6
-   },
-   "lighting": {
-    "hour": 7.7,
-    "sun_azimuth": 92,
-    "sun_elevation": 26.0,
-    "fog_density": 0.007,
-    "fog_color": [
-     0.82,
-     0.74,
-     0.64
-    ]
-   },
-   "camera": [
-    {
-     "time": 0,
-     "eye": [
-      3.4,
-      1.35,
-      3.6
-     ],
-     "look": [
-      0,
-      0.7,
-      0
-     ],
-     "fov": 24
-    },
-    {
-     "time": 10,
-     "eye": [
-      3.9,
-      1.35,
-      2.8
-     ],
-     "look": [
-      0,
-      0.7,
-      0
-     ],
-     "fov": 24
-    }
-   ],
-   "handheld": {
-    "degrees": 0.3,
-    "frequency": 0.5
-   },
-   "ground_clearance": 0.3
-  },
-  {
-   "name": "hannibal_fight",
-   "scenario": "cine_field",
-   "start": 54.0,
-   "duration": 10.0,
-   "rig": "free",
-   "focus": {
-    "mode": "group",
-    "group": "hannibal",
-    "smoothing": 0.35,
-    "spring": true,
-    "dead_zone": 0.6
-   },
-   "lighting": {
-    "hour": 7.7,
-    "sun_azimuth": 260,
-    "sun_elevation": 26.0,
-    "fog_density": 0.007,
-    "fog_color": [
-     0.82,
-     0.74,
-     0.64
-    ]
-   },
-   "camera": [
-    {
-     "time": 0,
-     "eye": [
-      -3.4,
-      1.35,
-      -3.6
-     ],
-     "look": [
-      0,
-      0.7,
-      0
-     ],
-     "fov": 24
-    },
-    {
-     "time": 10,
-     "eye": [
-      -3.9,
-      1.35,
-      -2.8
-     ],
-     "look": [
-      0,
-      0.7,
-      0
-     ],
-     "fov": 24
-    }
-   ],
-   "handheld": {
-    "degrees": 0.3,
-    "frequency": 0.5
-   },
-   "ground_clearance": 0.3
   },
   {
    "name": "duel_pair",
@@ -1162,15 +534,7 @@
     "spring": true
    },
    "lighting": {
-    "hour": 7.7,
-    "sun_azimuth": 92,
-    "sun_elevation": 26.0,
-    "fog_density": 0.007,
-    "fog_color": [
-     0.82,
-     0.74,
-     0.64
-    ]
+    "hour": 15.4
    },
    "handheld": {
     "degrees": 0.25,
@@ -1209,10 +573,114 @@
    "ground_clearance": 0.3
   },
   {
-   "name": "aftermath_wide",
+   "name": "scipio_tele",
    "scenario": "cine_field",
-   "start": 66.0,
-   "duration": 6.0,
+   "start": 44.0,
+   "duration": 12.0,
+   "rig": "free",
+   "ground_clearance": 0.3,
+   "focus": {
+    "mode": "group",
+    "group": "scipio",
+    "smoothing": 0.7,
+    "spring": true,
+    "dead_zone": 0.8
+   },
+   "lighting": {
+    "hour": 15.4
+   },
+   "handheld": {
+    "degrees": 0.12,
+    "frequency": 0.3
+   },
+   "camera": [
+    {
+     "time": 0,
+     "eye": [
+      9.5,
+      1.9,
+      8.5
+     ],
+     "look": [
+      0,
+      0.7,
+      0
+     ],
+     "fov": 13
+    },
+    {
+     "time": 12.0,
+     "eye": [
+      11.0,
+      1.9,
+      6.5
+     ],
+     "look": [
+      0,
+      0.7,
+      0
+     ],
+     "fov": 13
+    }
+   ]
+  },
+  {
+   "name": "hannibal_tele",
+   "scenario": "cine_field",
+   "start": 50.0,
+   "duration": 12.0,
+   "rig": "free",
+   "ground_clearance": 0.3,
+   "focus": {
+    "mode": "group",
+    "group": "hannibal",
+    "smoothing": 0.7,
+    "spring": true,
+    "dead_zone": 0.8
+   },
+   "lighting": {
+    "hour": 15.4
+   },
+   "handheld": {
+    "degrees": 0.12,
+    "frequency": 0.3
+   },
+   "camera": [
+    {
+     "time": 0,
+     "eye": [
+      -10.5,
+      1.9,
+      -7.5
+     ],
+     "look": [
+      0,
+      0.7,
+      0
+     ],
+     "fov": 13
+    },
+    {
+     "time": 12.0,
+     "eye": [
+      -11.5,
+      1.9,
+      -5.0
+     ],
+     "look": [
+      0,
+      0.7,
+      0
+     ],
+     "fov": 13
+    }
+   ]
+  },
+  {
+   "name": "melee_tele",
+   "scenario": "cine_field",
+   "start": 50.0,
+   "duration": 10.0,
    "rig": "free",
    "eye_space": "world",
    "look_space": "world",
@@ -1224,45 +692,140 @@
      0
     ]
    },
+   "ground_clearance": 0.3,
    "lighting": {
-    "hour": 7.9,
-    "sun_azimuth": 92,
-    "sun_elevation": 30.0,
-    "fog_density": 0.0028,
-    "fog_color": [
-     0.82,
-     0.74,
-     0.64
-    ]
+    "hour": 15.4
    },
    "camera": [
     {
      "time": 0,
      "eye": [
-      -60,
-      9,
-      52
+      -2,
+      1.6,
+      -40
      ],
      "look": [
-      0,
-      0,
-      0
+      -8,
+      0.7,
+      -2
      ],
-     "fov": 30
+     "fov": 12
     },
     {
-     "time": 6.0,
+     "time": 10,
      "eye": [
-      -56,
-      9,
-      50
+      2,
+      1.6,
+      -40
      ],
      "look": [
-      0,
-      0,
-      0
+      -6,
+      0.7,
+      -2
      ],
-     "fov": 30
+     "fov": 12
+    }
+   ]
+  },
+  {
+   "name": "elephants_wing",
+   "scenario": "cine_field",
+   "start": 41.0,
+   "duration": 11.0,
+   "rig": "free",
+   "eye_space": "world",
+   "look_space": "world",
+   "focus": {
+    "mode": "point",
+    "point": [
+     0,
+     0,
+     0
+    ]
+   },
+   "ground_clearance": 0.3,
+   "lighting": {
+    "hour": 15.4
+   },
+   "camera": [
+    {
+     "time": 0,
+     "eye": [
+      -30,
+      0.6,
+      54
+     ],
+     "look": [
+      8,
+      1.4,
+      37
+     ],
+     "fov": 16
+    },
+    {
+     "time": 11.0,
+     "eye": [
+      -30,
+      0.6,
+      51
+     ],
+     "look": [
+      4,
+      1.4,
+      35
+     ],
+     "fov": 16
+    }
+   ]
+  },
+  {
+   "name": "elephants_side",
+   "scenario": "cine_field",
+   "start": 43.0,
+   "duration": 11.0,
+   "rig": "free",
+   "eye_space": "world",
+   "look_space": "world",
+   "focus": {
+    "mode": "point",
+    "point": [
+     0,
+     0,
+     0
+    ]
+   },
+   "ground_clearance": 0.3,
+   "lighting": {
+    "hour": 15.4
+   },
+   "camera": [
+    {
+     "time": 0,
+     "eye": [
+      2,
+      0.9,
+      92
+     ],
+     "look": [
+      6,
+      1.3,
+      36
+     ],
+     "fov": 11
+    },
+    {
+     "time": 11.0,
+     "eye": [
+      -2,
+      0.9,
+      92
+     ],
+     "look": [
+      2,
+      1.3,
+      33
+     ],
+     "fov": 11
     }
    ]
   }
