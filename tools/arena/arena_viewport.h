@@ -22,6 +22,7 @@
 #include "arena_casting.h"
 #include "arena_feedback.h"
 #include "arena_scenario.h"
+#include "promo_spec.h"
 #include "game/core/component_combat.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain.h"
@@ -245,6 +246,13 @@ public:
                           float fov_degrees,
                           float roll_degrees);
   void clear_cinematic_view();
+  void set_cinematic_eye(const QVector3D& eye,
+                         const QVector3D& target,
+                         float fov_degrees,
+                         float roll_degrees);
+  void set_cinematic_lens(float near_plane, float ground_clearance);
+  void set_promo_lighting(const Arena::Promo::LightingOverride& lighting);
+  [[nodiscard]] auto terrain_height_at(float x, float z) const -> float;
 
   void set_capture_stabilization(float seconds);
 
@@ -540,6 +548,12 @@ private:
   float m_cinematic_yaw = 40.0F;
   float m_cinematic_fov = 40.0F;
   float m_cinematic_roll = 0.0F;
+  bool m_cinematic_eye_valid = false;
+  QVector3D m_cinematic_eye;
+  float m_cinematic_near = 0.0F;
+  float m_saved_near = 0.0F;
+  float m_cinematic_ground_clearance = -1.0F;
+  Arena::Promo::LightingOverride m_promo_lighting;
   bool m_flame_card_active = false;
   float m_flame_card_speed = 1.0F;
   float m_flame_card_intensity = 1.0F;

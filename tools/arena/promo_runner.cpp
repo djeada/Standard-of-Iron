@@ -11,8 +11,10 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QPainter>
+#include <QMatrix4x4>
 #include <QPen>
 #include <QTimer>
+#include <QtMath>
 
 #include <algorithm>
 #include <cmath>
@@ -939,6 +941,8 @@ private:
                                                               : 0.0F);
     m_viewport.set_capture_gameplay_ui(shot.gameplay_ui && !shot.flame_card,
                                        shot.gameplay_ui_all_owners);
+    m_viewport.set_cinematic_lens(shot.near_plane, shot.ground_clearance);
+    m_viewport.set_promo_lighting(shot.lighting);
 
     qInfo().noquote() << QStringLiteral("  shot %1: %2 (%3 frames at %4x%5, from "
                                         "%6 s)")
@@ -992,15 +996,46 @@ private:
     if (shot.gameplay_camera || shot.flame_card) {
 
       m_viewport.clear_cinematic_view();
+    } else if (shot.rig == Rig::Free) {
+      const QVector3D anchor = resolve_focus(shot) + shot.focus.offset;
+      const FreePose free = evaluate_free(shot.free_keys, shot_time, shot.ends);
+      auto place = [&](const QVector3D& local, Space space) {
+        if (space == Space::Focus) {
+          return anchor + local;
+        }
+        QVector3D world = local;
+        if (shot.terrain_relative) {
+          world.setY(world.y() + smoothed_ground(world.x(), world.z()));
+        }
+        return world;
+      };
+      const QVector3D eye = place(free.eye, shot.eye_space);
+      target = place(free.look, shot.look_space);
+      if (shot.shake > 0.0F) {
+        target += shake_offset(m_frames_written, shot.shake);
+      }
+      aim(shot, shot_time, eye, target, free.fov, free.roll);
     } else {
       const QVector3D focus = resolve_focus(shot);
-      Pose pose = evaluate(shot.keys, shot_time);
+      Pose pose = shot.interp == Interp::Spline
+                      ? evaluate_spline(shot.keys, shot_time, shot.ends)
+                      : evaluate(shot.keys, shot_time);
       target = focus + shot.focus.offset + QVector3D(0.0F, pose.height, 0.0F);
       if (shot.shake > 0.0F) {
         target += shake_offset(m_frames_written, shot.shake);
       }
-      m_viewport.set_cinematic_view(
-          target, pose.distance, pose.pitch, pose.yaw, pose.fov, pose.roll);
+      if (shot.handheld.degrees > 0.0F || !shot.jolts.empty()) {
+        const float pitch = qDegreesToRadians(pose.pitch);
+        const float yaw = qDegreesToRadians(pose.yaw);
+        const float horizontal = pose.distance * std::cos(pitch);
+        const QVector3D eye = target + QVector3D(std::sin(yaw) * horizontal,
+                                                 pose.distance * std::sin(pitch),
+                                                 std::cos(yaw) * horizontal);
+        aim(shot, shot_time, eye, target, pose.fov, pose.roll);
+      } else {
+        m_viewport.set_cinematic_view(
+            target, pose.distance, pose.pitch, pose.yaw, pose.fov, pose.roll);
+      }
       footprint =
           view_ground_footprint(pose,
                                 focus + shot.focus.offset,
@@ -1243,6 +1278,38 @@ private:
     m_last_frame = output;
   }
 
+  [[nodiscard]] auto smoothed_ground(float x, float z) const -> float {
+    constexpr float k_reach = 2.5F;
+    float total = 0.0F;
+    for (int dx = -1; dx <= 1; ++dx) {
+      for (int dz = -1; dz <= 1; ++dz) {
+        total += m_viewport.terrain_height_at(x + (static_cast<float>(dx) * k_reach),
+                                              z + (static_cast<float>(dz) * k_reach));
+      }
+    }
+    return total / 9.0F;
+  }
+
+  void aim(const Shot& shot,
+           float shot_time,
+           const QVector3D& eye,
+           const QVector3D& target,
+           float fov,
+           float roll) {
+    const Wobble wobble = handheld_wobble(shot.handheld, shot.jolts, shot_time);
+    QVector3D direction = target - eye;
+    const float reach = std::max(0.05F, direction.length());
+    direction /= reach;
+    QMatrix4x4 turn;
+    turn.rotate(wobble.yaw, QVector3D(0.0F, 1.0F, 0.0F));
+    QVector3D right = QVector3D::crossProduct(direction, QVector3D(0.0F, 1.0F, 0.0F));
+    if (right.lengthSquared() > 1e-6F) {
+      turn.rotate(wobble.pitch, right.normalized());
+    }
+    direction = turn.map(direction).normalized();
+    m_viewport.set_cinematic_eye(eye, eye + (direction * reach), fov, roll + wobble.roll);
+  }
+
   auto resolve_focus(const Shot& shot) -> QVector3D {
     std::optional<QVector3D> raw;
     switch (shot.focus.mode) {
@@ -1287,7 +1354,42 @@ private:
     }
     if (!m_focus_valid || shot.focus.smoothing <= 0.0F) {
       m_smoothed_focus = *raw;
+      m_last_raw_focus = *raw;
+      m_raw_focus_velocity = {};
+      m_focus_velocity = {};
       m_focus_valid = true;
+      return m_smoothed_focus;
+    }
+    const bool steady = shot.focus.spring || shot.focus.dead_zone > 0.0F ||
+                        shot.focus.lead_seconds > 0.0F;
+    if (steady) {
+      const float dt = std::max(1e-4F, m_step_seconds);
+      const QVector3D measured = (*raw - m_last_raw_focus) / dt;
+      m_last_raw_focus = *raw;
+      const float settle = 1.0F - std::exp(-dt / 0.6F);
+      m_raw_focus_velocity += (measured - m_raw_focus_velocity) * settle;
+      QVector3D desired = *raw + (m_raw_focus_velocity * shot.focus.lead_seconds);
+      if (shot.focus.dead_zone > 0.0F) {
+        QVector3D delta = desired - m_smoothed_focus;
+        delta.setY(0.0F);
+        const float length = delta.length();
+        if (length <= shot.focus.dead_zone) {
+          desired = QVector3D(m_smoothed_focus.x(), desired.y(), m_smoothed_focus.z());
+        } else {
+          const QVector3D pulled =
+              m_smoothed_focus + (delta * ((length - shot.focus.dead_zone) / length));
+          desired = QVector3D(pulled.x(), desired.y(), pulled.z());
+        }
+      }
+      const float omega = 2.0F / std::max(0.01F, shot.focus.smoothing);
+      const float f = 1.0F + (2.0F * dt * omega);
+      const float oo = omega * omega;
+      const float hoo = dt * oo;
+      const float hhoo = dt * hoo;
+      const float det = 1.0F / (f + hhoo);
+      const QVector3D previous = m_smoothed_focus;
+      m_smoothed_focus = ((previous * f) + (m_focus_velocity * dt) + (desired * hhoo)) * det;
+      m_focus_velocity = (m_focus_velocity + ((desired - previous) * hoo)) * det;
       return m_smoothed_focus;
     }
     const float blend =
@@ -1528,6 +1630,9 @@ private:
   bool m_card_active{false};
   QString m_clip_path;
   QVector3D m_smoothed_focus;
+  QVector3D m_last_raw_focus;
+  QVector3D m_raw_focus_velocity;
+  QVector3D m_focus_velocity;
   std::size_t m_pass_index{0};
   std::size_t m_slot_index{0};
   int m_target_frames{0};
