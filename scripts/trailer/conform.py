@@ -99,8 +99,6 @@ def look_filter(look: dict, scope_h: int) -> str:
     gamma = float(look.get("gamma", 1.0))
     contrast = float(look.get("contrast", 1.0))
     brightness = float(look.get("brightness", 0.0))
-    if sat != 1.0 or gamma != 1.0 or contrast != 1.0 or brightness != 0.0:
-        stages.append(f"eq=saturation={sat:.3f}:gamma={gamma:.3f}:contrast={contrast:.3f}:brightness={brightness:.3f}")
     chain = ",".join(stages) if stages else "null"
 
     halation = float(look.get("halation", 0.0))
@@ -110,12 +108,19 @@ def look_filter(look: dict, scope_h: int) -> str:
         glow = (
             f"curves=master='0/0 {threshold:.2f}/0 1/1',"
             f"colorchannelmixer=rr={tint[0]}:gg={tint[1]}:bb={tint[2]},"
-            f"gblur=sigma={look.get('halation_radius', 18)}"
+            f"gblur=sigma={look.get('halation_radius', 18)},format=gbrpf32le"
         )
+        # blend posterises 16-bit planar RGB; screen the glow in float.
         chain = (
-            f"{chain},split[hbase][hsrc];[hsrc]{glow}[hglow];"
-            f"[hbase][hglow]blend=all_mode=screen:all_opacity={halation:.3f}"
+            f"{chain},split[hbase][hsrc];[hsrc]{glow}[hglow];[hbase]format=gbrpf32le[hfloat];"
+            f"[hfloat][hglow]blend=all_mode=screen:all_opacity={halation:.3f},format=gbrp16le"
         )
+    # eq, vignette, unsharp and noise act on plane 0 as luma, which in planar RGB
+    # is green; everything after this point runs in YUV.
+    chain += ",format=yuv444p16le"
+    if sat != 1.0 or gamma != 1.0 or contrast != 1.0 or brightness != 0.0:
+        chain += (f",eq=saturation={sat:.3f}:gamma={gamma:.3f}:contrast={contrast:.3f}"
+                  f":brightness={brightness:.3f}")
     vignette = float(look.get("vignette", 0.0))
     if vignette > 0:
         chain += f",vignette=angle={vignette:.3f}:mode=forward"
