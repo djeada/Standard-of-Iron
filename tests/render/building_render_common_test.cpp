@@ -7,9 +7,11 @@
 
 #include "game/core/component_core.h"
 #include "game/core/entity.h"
+#include "render/entity/building_collapse.h"
 #include "render/entity/building_render_common.h"
 #include "render/entity/registry.h"
 #include "render/entity/wall_renderer_common.h"
+#include "render/gl/mesh.h"
 #include "render/submitter.h"
 
 namespace {
@@ -244,3 +246,25 @@ TEST(BuildingRenderCommon, RegisterBuildingRendererUsesCanonicalKeyOnly) {
 }
 
 } // namespace
+
+TEST(BuildingRenderCommon, SettledCollapseFragmentsRestOnTheirLowestCorner) {
+  using namespace Render::GL;
+  BuildingCollapse collapse;
+  collapse.active = true;
+  collapse.fall = 1.0F;
+  collapse.elapsed = 10.0F;
+  collapse.base = {2.0F, 0.3F, -4.0F};
+  collapse.seed = 719U;
+  RecordingSubmitter out;
+  submit_building_collapse_rubble(out, collapse);
+  ASSERT_FALSE(out.meshes.empty());
+  for (auto const& draw : out.meshes) {
+    float lowest = 1000.0F;
+    for (auto const& vertex : draw.mesh->get_vertices()) {
+      QVector3D const point = draw.model.map(
+          QVector3D(vertex.position[0], vertex.position[1], vertex.position[2]));
+      lowest = std::min(lowest, point.y());
+    }
+    EXPECT_NEAR(lowest, collapse.base.y(), 1.0e-5F);
+  }
+}

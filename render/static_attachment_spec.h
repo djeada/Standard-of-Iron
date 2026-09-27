@@ -16,12 +16,6 @@ struct RenderArchetype;
 
 namespace Render::Creature {
 
-// Optional soft skinning for hanging cloth. A rigid attachment follows its
-// socket bone only, so a cloak fixed to the chest pitches and twists with the
-// torso and reads as a board. With a drape blend, vertices below `top_y`
-// (bind-pose model space) hand their weight from the socket bone to the
-// pelvis and the thighs, reaching the full hand-off at `bottom_y`: the hem
-// then hangs from the hips and swings with the stride.
 struct AttachmentDrapeBlend {
   bool enabled{false};
   std::uint16_t pelvis_bone{0};
@@ -29,9 +23,7 @@ struct AttachmentDrapeBlend {
   std::uint16_t leg_r_bone{0};
   float top_y{0.0F};
   float bottom_y{0.0F};
-  // Share of the handed-off weight that goes to the thighs rather than the
-  // pelvis, and the half width over which it fades from one thigh to the
-  // other across the body's midline.
+
   float leg_share{0.0F};
   float leg_crossfade_half_width{0.1F};
 };

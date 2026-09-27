@@ -927,7 +927,6 @@ Item {
         readonly property color exploredSwatch: "#ff524f4c"
         readonly property color unseenSwatch: "#ff2d261e"
 
-        // A spectator sees the whole field, so there is no fog to explain.
         visible: minimap.visible && !(topRoot.game_ready() && game.is_spectator_mode)
         anchors.right: minimap.right
         anchors.top: minimap.bottom

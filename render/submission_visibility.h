@@ -49,10 +49,6 @@ struct LensGapExclusion {
   static constexpr float k_end_fade_metres = 0.6F;
   static constexpr float k_start_fade_metres = 0.4F;
 
-  // 1 outside the gap, 0 on the sight line, and a smooth ramp in between.
-  // The outer edge is where the gap used to cut bodies outright; a body now
-  // thins out from there and is gone only once it stands in the inner core,
-  // so walking past a soldier dissolves him instead of popping him away.
   [[nodiscard]] auto visibility(const QVector3D& point,
                                 float body_radius) const noexcept -> float {
     if (!enabled || length <= 0.0F) {

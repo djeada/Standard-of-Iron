@@ -3,9 +3,6 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import StandardOfIron.Design 1.0 as Design
 
-// Appeals an AI ally sends the player: resources, men to hold its camp, or men
-// to join its attack. Each card is answered with yes or no; the ally withdraws
-// an appeal nobody answers.
 Column {
     id: root
 

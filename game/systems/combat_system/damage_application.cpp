@@ -95,8 +95,6 @@ auto infantry_death_variant(Engine::Core::Entity* target,
   return variant_for(HumanoidDeathCollapse::SideCrumple);
 }
 
-// A structure's variant is the compass heading its ruin falls toward, in
-// 1/256ths of a turn: away from whoever landed the blow.
 auto structure_fall_heading(Engine::Core::Entity* target,
                             Engine::Core::Entity* attacker) -> std::uint8_t {
   auto const* target_tf =

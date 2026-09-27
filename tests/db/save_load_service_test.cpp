@@ -431,11 +431,6 @@ TEST_F(SaveLoadServiceTest, ASaveThatRestoresNoUnitsIsRefusedWithTheMatchIntact)
       << service->get_last_error().toStdString();
 }
 
-// Steam Auto-Cloud syncs saves.sqlite alone (steam/README.md): not the -wal or
-// -shm sidecars, which only exist while the game runs. That is only safe if
-// quitting folds every committed save into the main file. So: save, shut down
-// the way GameEngine does, then open a copy of saves.sqlite alone somewhere
-// else, as the next machine would after a cloud download.
 TEST_F(SaveLoadServiceTest, ShutdownLeavesEverySaveInTheMainDatabaseFile) {
   ASSERT_NE(service->begin_save(make_request("cloud_slot")), 0U);
   wait_for_saves(*service);

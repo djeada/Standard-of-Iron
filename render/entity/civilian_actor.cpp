@@ -107,9 +107,6 @@ void add_civilian_actor(const DrawContext& ctx,
   }
   Pipeline::CreatureGraphOutput output{};
 
-  // A small actor drops to Minimal only where the preset uses creature LOD at
-  // all. High and Ultra draw every creature in full, and Minimal there has no
-  // prebaked snapshot to fall back on, so it would bake meshes per frame.
   output.lod = actor.distant && civilian_actor_minimal_lod_allowed()
                    ? CreatureLOD::Minimal
                    : CreatureLOD::Full;

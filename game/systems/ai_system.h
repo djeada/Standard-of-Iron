@@ -106,7 +106,6 @@ public:
 
   [[nodiscard]] auto plan_for(int player_id) const -> const AI::AIContext*;
 
-  // How the human `owner` has treated this AI ally's appeals, -1..1.
   [[nodiscard]] auto ally_goodwill(int ai_owner, int owner) const -> float;
 
   [[nodiscard]] auto serialize_state() const -> QJsonObject;

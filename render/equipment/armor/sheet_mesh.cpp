@@ -67,7 +67,6 @@ auto make_thick_sheet_mesh(const SheetGrid& grid,
                   unsigned int c,
                   unsigned int d,
                   bool outward) {
-    // a-b along u, a-c along v; d opposite a.
     if (outward) {
       indices.insert(indices.end(), {a, b, c, b, d, c});
     } else {
@@ -86,9 +85,6 @@ auto make_thick_sheet_mesh(const SheetGrid& grid,
     }
   }
 
-  // Rim strips: each edge of the grid gets its own vertices with a normal
-  // pointing out of the sheet's edge, so the rim is lit as a bevel instead of
-  // borrowing the face normal.
   auto add_rim = [&](const std::vector<std::size_t>& edge,
                      const QVector3D& fallback_out) {
     if (edge.size() < 2U) {

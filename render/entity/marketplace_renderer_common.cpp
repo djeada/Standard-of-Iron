@@ -471,10 +471,11 @@ void submit_market_awnings(const DrawContext& ctx,
     if (normal.y() < 0.0F) {
       normal = -normal;
     }
+    normal.normalize();
     const int stripes = std::max(1, awning.stripes);
     const float stripe_w = awning.half_width * 2.0F / static_cast<float>(stripes);
     const float seg_len = length / static_cast<float>(k_segments);
-    const float width_sag = 0.045F * awning.half_width * (0.8F + 0.4F * gust);
+    const float width_sag = 0.045F * awning.half_width;
     for (int s = 0; s < stripes; ++s) {
       if (tattered && (s + static_cast<int>(index)) % 3 == 0) {
         continue;
@@ -495,7 +496,9 @@ void submit_market_awnings(const DrawContext& ctx,
         const float billow =
             std::sin(t * std::numbers::pi_v<float>) * 0.035F * length * (0.6F + gust);
         const float ripple_phase = time * 2.3F - t * 4.2F + phase + offset * 3.0F;
-        const float ripple = std::sin(ripple_phase) * 0.012F * t * (0.4F + gust);
+
+        const float envelope = 4.0F * t * (1.0F - t);
+        const float ripple = std::sin(ripple_phase) * 0.012F * envelope * (0.4F + gust);
         const QVector3D point = awning.back + across * offset + along * (t * length) -
                                 normal * (billow - ripple + sag * (1.0F - 0.35F * t));
         const QVector3D mid = (previous + point) * 0.5F;
@@ -532,8 +535,8 @@ void submit_market_awnings(const DrawContext& ctx,
                  k_cloth_material);
         previous = point;
       }
-      const float flap = std::sin(time * 3.1F + phase + static_cast<float>(s) * 1.3F) *
-                         (0.20F + 0.25F * gust);
+      const float flap =
+          std::sin(time * 2.6F + phase + offset * 1.4F) * (0.20F + 0.25F * gust);
       const QVector3D hang_dir =
           (QVector3D(0.0F, -1.0F, 0.0F) + along * flap).normalized();
       const QVector3D z_axis = QVector3D::crossProduct(across, hang_dir).normalized();
@@ -582,7 +585,9 @@ void submit_market_awnings(const DrawContext& ctx,
   for (const MarketHanging& hanging : hangings) {
     ++index;
     const float phase = unit_hash(owner * 613U + index) * k_tau;
-    const float swing = std::sin(time * 1.7F + phase) * 0.16F * (0.35F + gust);
+    const float frequency =
+        std::clamp(std::sqrt(0.75F / std::max(hanging.length, 0.04F)), 1.2F, 3.0F);
+    const float swing = std::sin(time * frequency + phase) * 0.11F * (0.35F + gust);
     const float twist = std::cos(time * 1.3F + phase * 1.7F) * 0.08F * (0.35F + gust);
     const QVector3D dir = QVector3D(swing, -1.0F, twist).normalized();
     const QVector3D end = hanging.pivot + dir * hanging.length;

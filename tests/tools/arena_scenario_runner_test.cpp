@@ -1419,9 +1419,7 @@ TEST(ArenaScenarioRunnerTest, RenderProbeRejectsAPelvisThatSnapsRound) {
 }
 
 TEST(ArenaScenarioRunnerTest, ReloadSweepsEntitiesTheGameCreatedOnItsOwn) {
-  // A promo capture reloads the same world between passes. Structures that
-  // builder crews raised and wall sites they laid were created by game
-  // systems, not by the arena, and used to survive into the next pass.
+
   Engine::Core::World world;
   auto* raised_home = world.create_entity();
   auto* home_unit = raised_home->add_component<Engine::Core::UnitComponent>();

@@ -2593,10 +2593,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
            QStringLiteral("hannibal"),
            QStringLiteral("rpg_commander")),
         at(0.60F, Command::RpgCycleLockOn, QStringLiteral("rpg_commander")),
-        // One second ahead of the Steam duel fixture (duel.action.json),
-        // press for press, so this scenario proves the film's combo lands.
-        // The pause is stamina (200 to start, 30 a light, 50 a heavy): the
-        // launcher, air cut and dive need about 170 in one breath.
+
         at(1.00F, Command::RpgHeavyAttack, QStringLiteral("rpg_commander")),
         at(1.85F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
         at(6.00F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
@@ -2606,8 +2603,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
         at(11.20F, Command::RpgSpecial, QStringLiteral("rpg_commander")),
     };
     {
-      // A sword's reach apart, measured centre to centre: never inside
-      // each other, however hard the combo drives Scipio forward.
+
       auto apart = expectation(Expect::GroupPairKeepsApart,
                                QStringLiteral("rpg_commander"),
                                QStringLiteral("hannibal"),

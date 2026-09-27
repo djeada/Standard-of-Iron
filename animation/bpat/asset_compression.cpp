@@ -10,11 +10,8 @@ namespace Render::Creature::Bpat {
 
 namespace {
 
-// ZSTD_MAGICNUMBER, little-endian on disk.
 constexpr std::array<std::uint8_t, 4> k_zstd_magic = {0x28, 0xB5, 0x2F, 0xFD};
 
-// No baked cache comes near this; a larger declared size means a corrupt or
-// hostile header, not an asset.
 constexpr unsigned long long k_max_decoded_bytes = 1ULL << 31U;
 
 } // namespace

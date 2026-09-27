@@ -619,9 +619,7 @@ void draw_barracks_stockpile(const DrawContext& ctx,
   }
 
   Yard yard;
-  // The yard is laid out in world units, so it takes the building's placement
-  // without its scale. Taking it from ctx.model rather than the transform lets
-  // the yard go down with the building when it collapses or is dismantled.
+
   auto const& scale = transform->scale;
   if (scale.x != 0.0F && scale.y != 0.0F && scale.z != 0.0F) {
     yard.frame = ctx.model;

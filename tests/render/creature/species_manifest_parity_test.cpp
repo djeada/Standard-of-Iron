@@ -1,6 +1,9 @@
 #include <QMatrix4x4>
 
+#include <algorithm>
+#include <cmath>
 #include <gtest/gtest.h>
+#include <limits>
 #include <set>
 #include <string>
 #include <vector>
@@ -12,6 +15,10 @@
 #include "render/horse/horse_bake_recipe.h"
 #include "render/horse/horse_manifest.h"
 #include "render/humanoid/asset/humanoid_manifest.h"
+#include "render/rigged_mesh_bake.h"
+#include "render/snapshot_mesh_bake.h"
+#include "render/wildlife/sheep_manifest.h"
+#include "render/wildlife/wolf_manifest.h"
 
 namespace {
 
@@ -99,3 +106,69 @@ TEST(SpeciesManifestParityTest, OnlySpeciesNamingASnapshotShipOne) {
 }
 
 } // namespace
+
+TEST(SpeciesManifestParityTest, AnimalDeathEndsExactlyAtTheCorpsePose) {
+  for (auto const* recipe : {&Render::Horse::horse_bake_recipe(),
+                             &Render::Elephant::elephant_bake_recipe(),
+                             &Render::Wildlife::wolf_bake_recipe(),
+                             &Render::Wildlife::sheep_bake_recipe()}) {
+    SCOPED_TRACE(std::string(recipe->runtime->species_name));
+    std::vector<QMatrix4x4> dying;
+    std::vector<QMatrix4x4> dead;
+    for (std::size_t clip = 0; clip < recipe->clips.size(); ++clip) {
+      auto const& desc = recipe->clips[clip];
+      if (desc.name == "die") {
+        recipe->bake_clip_frame(clip, desc.frame_count - 1U, dying, nullptr);
+      } else if (desc.name == "dead") {
+        recipe->bake_clip_frame(clip, 0U, dead, nullptr);
+      }
+    }
+    ASSERT_FALSE(dying.empty());
+    ASSERT_EQ(dying.size(), dead.size());
+    for (std::size_t bone = 0; bone < dying.size(); ++bone) {
+      for (int entry = 0; entry < 16; ++entry) {
+        EXPECT_NEAR(
+            dying[bone].constData()[entry], dead[bone].constData()[entry], 1.0e-5F)
+            << "bone " << bone << " matrix entry " << entry;
+      }
+    }
+  }
+}
+
+TEST(SpeciesManifestParityTest, ElephantFallsOntoGroundInsteadOfRemainingSeated) {
+  auto const& recipe = Render::Elephant::elephant_bake_recipe();
+  auto const bind = recipe.runtime->bind_palette();
+  auto const& spec = recipe.runtime->creature_spec();
+  auto const mesh = Render::Creature::bake_rigged_mesh_cpu({&spec.lod_full, bind});
+  ASSERT_FALSE(mesh.vertices.empty());
+  auto const clip = std::find_if(recipe.clips.begin(),
+                                 recipe.clips.end(),
+                                 [](auto const& desc) { return desc.name == "die"; });
+  ASSERT_NE(clip, recipe.clips.end());
+  float standing_height = 0.0F;
+  float corpse_height = 0.0F;
+  for (std::uint32_t frame = 0; frame < clip->frame_count; ++frame) {
+    std::vector<QMatrix4x4> palette;
+    recipe.bake_clip_frame(
+        static_cast<std::size_t>(clip - recipe.clips.begin()), frame, palette, nullptr);
+    for (std::size_t bone = 0; bone < palette.size(); ++bone) {
+      palette[bone] *= bind[bone].inverted();
+    }
+    auto const vertices = Render::GL::bake_snapshot_vertices(mesh.vertices, palette);
+    float lowest = std::numeric_limits<float>::max();
+    float highest = std::numeric_limits<float>::lowest();
+    for (auto const& vertex : vertices) {
+      float const y = vertex.position_bone_local[1];
+      ASSERT_TRUE(std::isfinite(y));
+      lowest = std::min(lowest, y);
+      highest = std::max(highest, y);
+    }
+    EXPECT_NEAR(lowest, 0.0F, 1.0e-4F) << "frame " << frame;
+    if (frame == 0U) {
+      standing_height = highest;
+    }
+    corpse_height = highest;
+  }
+
+  EXPECT_LT(corpse_height, standing_height * 0.80F);
+}

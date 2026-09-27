@@ -12,9 +12,6 @@ Button {
     property bool blocked: false
     readonly property bool interactive: enabled && !blocked
 
-    // What the button says when pressed: "click", "back" (cancel, close,
-    // leave), "confirm" (a committed decision), "toggle", or "none" when the
-    // action it triggers already makes its own sound.
     property string uiSound: checkable ? "toggle" : "click"
     property bool hoverSound: true
 

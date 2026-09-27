@@ -55,8 +55,6 @@ ComboBox {
         }
 
         function onClosed() {
-            // Picking an entry closes the popup too; that pick has already
-            // clicked, so only a dismissal is heard as a close.
             Qt.callLater(function () {
                     if (!control.pickedWhileOpen)
                         Design.UiSound.panelClose();

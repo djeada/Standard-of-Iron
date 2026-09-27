@@ -32,7 +32,7 @@ HERE = Path(__file__).resolve().parent
 FILM = HERE.parent
 MEADOW = json.loads((FILM / "meadow.map.json").read_text())
 MISSION = json.loads((FILM / "commander.mission.json").read_text())
-# Grid size of the map currently being generated; set by base_map().
+
 GRID = 96
 
 
@@ -81,8 +81,7 @@ def mission(
     data["id"] = ident
     data["title"] = title
     data["map_path"] = map_name
-    # The victory description is the objective banner at the top of the HUD,
-    # which every screenshot shows.
+
     data["victory_conditions"][0]["description"] = objective
     ai = data["ai_setups"][0]
     ai["strategy"] = ai_strategy
@@ -120,7 +119,7 @@ def battle() -> None:
                         nation,
                     )
                 )
-    # Behind each line: healers walking the ranks, then the siege train.
+
     for side, sign in ((1, 1), (2, -1)):
         nation = "roman_republic" if side == 1 else "carthage"
         for col in range(10):
@@ -143,7 +142,7 @@ def battle() -> None:
                     nation,
                 )
             )
-    # Hannibal's war elephants on both Carthaginian wings.
+
     for wing in (-1, 1):
         for col in range(5):
             x = wing * (78 + col * 7)
@@ -263,8 +262,7 @@ def winter() -> None:
     mountain = json.loads(
         (FILM.parents[3] / "assets/maps/map_mountain.json").read_text()
     )
-    # The whole alpine biome, not just its snow: the meadow's dense grass blades
-    # would stand on top of the snow cover, which only the alpine ground draws.
+
     data["biome"] = copy.deepcopy(mountain["biome"])
     data["biome"]["snow_coverage"] = 0.95
     data["rain"] = {
@@ -331,7 +329,7 @@ def winter() -> None:
                     "roman_republic",
                 )
             )
-    # The camp the AI side needs so the match does not end on turn one.
+
     spawns.append(spawn("far_camp", "carthage_sword_commander", 70, 70, 2, "carthage"))
     write(
         "winter",
@@ -535,14 +533,10 @@ class Town:
         self.roads.append(entry)
 
 
-# The oasis: a 200-tile desert map with a palm-ringed lake at its heart. Grid
-# coordinates; world = grid - 99.5. The hero camera looks north-east across the
-# lake at the temple, with the fields on the near shore and the new quarter the
-# builders are raising on the east bank.
 OASIS_SIZE = 200
 OASIS_LAKE = (96.0, 104.0)
 OASIS_LAKE_W, OASIS_LAKE_D, OASIS_LAKE_ROT = 42.0, 30.0, 25.0
-# Construction sites for the builders, in world coordinates: (kind, x, z).
+
 OASIS_SITES = [
     ("defense_tower", 32.0, -6.0),
     ("home", 48.0, -6.0),
@@ -552,16 +546,16 @@ OASIS_SITES = [
     ("home", 50.0, 28.0),
     ("temple", 44.0, -24.0),
 ]
-# Field-hand crews, relative to the lake centre (grid tiles).
+
 OASIS_FIELD_HANDS = [(-30.0, 18.0), (-2.0, 41.0), (-48.0, -2.0)]
 OASIS_ORDER_VIEW = "40,2"
-# Hero framing once the orders are out: look-at, zoom, orbit yaw and pitch.
+
 OASIS_HERO = ("26,-2", 2.7, 0.0, 40.0)
-# Hero camera: world target x, z, distance, tilt, yaw (yaw 45 sits south-east).
+
 OASIS_CAMERA = (22.0, 2.0, 95.0, 42.0, 45.0)
-# The film opens at 31.7 m; each -1 of camera_zoom widens it by 15 %.
+
 OASIS_ZOOM = -12
-# Where each crew stands at the start, relative to its site (world metres).
+
 OASIS_CREW = (0.0, 7.5)
 
 
@@ -579,7 +573,6 @@ def oasis() -> None:
         v = -dx * math.sin(a) + dz * math.cos(a)
         return math.hypot(u / (OASIS_LAKE_W / 2), v / (OASIS_LAKE_D / 2))
 
-    # Keep the water, and a shore walk around it, free of buildings.
     for i in range(72):
         t = i / 72 * math.tau
         a = math.radians(OASIS_LAKE_ROT)
@@ -593,12 +586,9 @@ def oasis() -> None:
         )
     town.occupied.append((lx, lz, 12.0))
 
-    # Keep the builders' ground clear: every site and its crew.
     for kind, wx, wz in OASIS_SITES:
         town.occupied.append((wx + off, wz + off, 9.0 if kind == "temple" else 6.5))
 
-    # Palms: loose groves on the shore with gaps between them, so the water
-    # shows through, then single trees wandering off into the sand.
     def shore_point(t, r):
         a = math.radians(OASIS_LAKE_ROT)
         u = math.cos(t) * OASIS_LAKE_W / 2 * r
@@ -637,13 +627,11 @@ def oasis() -> None:
                 }
             )
 
-    # The temple on the north shore, looking over the water.
     town.structure("temple", lx + 4, lz - 30, 0, footprint=8.0)
     for dx in (-8, 8):
         town.fire(lx + 4 + dx, lz - 22, 1.05, 3.2)
         town.prop("statue", lx + 4 + dx * 1.3, lz - 36, 180.0, 1.0)
 
-    # Irrigated fields on the south and west shores.
     for fx, fz, rot in (
         (lx - 42, lz + 8, 90),
         (lx - 42, lz + 26, 90),
@@ -656,11 +644,10 @@ def oasis() -> None:
         (lx + 12, lz + 50, 0),
     ):
         town.structure("farm", fx, fz, rot, footprint=8.5)
-    # Field hands: builder crews harvesting, and villagers on the paths.
+
     for fx, fz in OASIS_FIELD_HANDS:
         town.spawn("builder", lx + fx, lz + fz)
 
-    # The old town: courtyard homes on a street grid west and north of the lake.
     town.road([(lx - 70, lz - 44), (lx + 70, lz - 44)], 5.0)
     town.road([(lx - 60, lz - 70), (lx - 60, lz + 60)], 4.0)
     town.road([(lx + 60, lz - 70), (lx + 60, lz + 60)], 4.0)
@@ -685,12 +672,10 @@ def oasis() -> None:
                 if town.free(x, z, 2.1):
                     town.structure("home", x, z, facing, footprint=2.1)
 
-    # Markets at the crossroads by the temple.
     for dx, rot in ((-20, 90), (26, 270)):
         town.structure("marketplace", lx + dx, lz - 46, rot, footprint=4.6)
         town.prop("supply_cart", lx + dx + 4, lz - 40, rot)
 
-    # East bank: a finished street the new quarter continues.
     for z in range(-52, 54, 7):
         x = lx + 66
         if town.free(x, lz + z, 2.1):
@@ -698,16 +683,14 @@ def oasis() -> None:
         if town.free(x + 7, lz + z, 2.1):
             town.structure("home", x + 7, lz + z, 90, footprint=2.1)
 
-    # Barracks and towers: the key structure and the edges of the town.
     town.structure("barracks", lx + 70, lz + 60, 270, footprint=6.0, max_population=200)
     town.fire(lx + 64, lz + 67, 1.0, 3.0)
     for tx, tz in ((lx - 86, lz - 70), (lx + 84, lz - 72), (lx - 84, lz + 60)):
         town.structure("defense_tower", tx, tz, 0, footprint=3.0)
 
-    # The new quarter's builders, each crew beside its site.
     for _kind, wx, wz in OASIS_SITES:
         town.spawn("builder", wx + off + OASIS_CREW[0], wz + off + OASIS_CREW[1])
-    # Stone and timber stacked for them.
+
     for dx, dz in ((58, -22), (60, 30), (18, -22)):
         town.prop("supply_cart", dx + off, dz + off, None)
     for i in range(6):
@@ -719,7 +702,6 @@ def oasis() -> None:
             0.8,
         )
 
-    # Villagers along the shore and in the streets.
     for i in range(22):
         t = i / 22 * math.tau
         a = math.radians(OASIS_LAKE_ROT)
@@ -770,8 +752,6 @@ def oasis() -> None:
         "coord_system": "grid",
         "grid": {"width": size, "height": size, "tile_size": 1.0},
         "max_troops_per_player": 900,
-        # From the south-east: the new quarter in front, the lake beyond it,
-        # the temple and the old town on the far shore.
         "camera": {
             "center": [OASIS_CAMERA[0] + off, 0, OASIS_CAMERA[1] + off],
             "distance": OASIS_CAMERA[2],
@@ -878,7 +858,7 @@ def oasis() -> None:
     )
     story["terrain_type"] = "desert"
     write("oasis", document, story, undead=True)
-    # The field hands start on the harvest, seen from over the lake.
+
     actions = [
         act(0.05, "camera_look_at", f"{lx - off},{lz - off}"),
         act(0.06, "camera_zoom", str(OASIS_ZOOM)),
@@ -900,9 +880,6 @@ def oasis() -> None:
     )
 
 
-# The construction boom: the forest-town city with the two northern blocks of
-# the west side cleared for a new quarter. World coordinates (forest town is
-# 220 tiles; world = grid - 109.5). Twelve sites, each with its own crew.
 BOOM_CLEAR = (-60.0, -60.0, -2.0, -32.0)
 BOOM_SITES = [
     ("temple", -50.0, -51.0),
@@ -922,7 +899,7 @@ BOOM_CAMERA = (-26.0, -32.0, 80.0, 42.0, 225.0)
 BOOM_ZOOM = -10
 BOOM_ORDER_VIEW = "-32,-38"
 BOOM_HERO = ("-30,-34", 2.0, 0.0, 40.0)
-# Each crew waits beside its site: north rows below it, the south row above.
+
 BOOM_CREWS = [(0.0, 5.5)] * 8 + [(0.0, -5.0)] * 4
 
 
@@ -966,7 +943,7 @@ def construction() -> None:
                 "scale": 1.0,
             }
         )
-    # From the north-west: the new quarter in front, the city behind it.
+
     data["camera"] = {
         "center": [BOOM_CAMERA[0] + off, 0, BOOM_CAMERA[1] + off],
         "distance": BOOM_CAMERA[2],
@@ -1013,7 +990,7 @@ def combined_arms() -> None:
                 spawn(f"rome_{rank}_{col}", kind, x, depth, 1, "roman_republic")
             )
             spawns.append(spawn(f"punic_{rank}_{col}", kind, x, -depth, 2, "carthage"))
-    # Healers walk just behind the Roman archers; the siege train sits behind them.
+
     for col in range(8):
         spawns.append(
             spawn(f"healer_{col}", "healer", -24.5 + col * 7, 31, 1, "roman_republic")
@@ -1029,7 +1006,7 @@ def combined_arms() -> None:
                 f"catapult_{col}", "catapult", -20 + col * 20, 43, 1, "roman_republic"
             )
         )
-    # Carthage leads with its elephants, straight at the Roman centre.
+
     for col in range(8):
         spawns.append(
             spawn(f"elephant_{col}", "elephant", -24.5 + col * 7, -3, 2, "carthage")

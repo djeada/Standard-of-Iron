@@ -14,7 +14,7 @@ SPEC = importlib.util.spec_from_file_location(
     "steam_release", Path(__file__).resolve().parents[2] / "scripts/steam-release.py"
 )
 steam = importlib.util.module_from_spec(SPEC)
-# dataclasses resolve the module's annotations through sys.modules.
+
 sys.modules[SPEC.name] = steam
 SPEC.loader.exec_module(steam)
 

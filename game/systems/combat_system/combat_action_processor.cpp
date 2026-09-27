@@ -1105,8 +1105,7 @@ void apply_rts_commander_root_motion(
           std::max(nearest->body_radius + own_radius + 0.16F,
                    drawn_scales * k_rts_commander_lunge_clearance_per_scale);
       if (Game::Systems::DuelSpacing::is_duel_body(*target)) {
-        // A lone opponent is met at a sword's reach, the same standoff the
-        // direct-control lunge and duel footwork keep.
+
         stop_distance = std::max(
             stop_distance,
             Game::Systems::DuelSpacing::standoff_between(entity, *target).preferred);

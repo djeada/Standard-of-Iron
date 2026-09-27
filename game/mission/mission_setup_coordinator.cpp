@@ -817,8 +817,6 @@ auto MissionSetupCoordinator::apply_skirmish_commander_setup(
       ctx.world.destroy_entity(existing.id);
     }
 
-    // Seats were registered as "AI Player N"; name each army after the
-    // commander leading it, which is how the setup screen presented it.
     if (const auto* definition = Game::Units::commander_definition(*troop_type);
         definition != nullptr && !definition->display_name.empty()) {
       std::string name = Game::Util::tr_asset_std(Game::Util::k_commanders_context,

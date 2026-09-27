@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib
 import json
 import subprocess
 import sys
@@ -36,8 +37,8 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-import fx as fxmod  # noqa: E402
-import titles  # noqa: E402
+fxmod = importlib.import_module("fx")
+titles = importlib.import_module("titles")
 
 WIDTH = 1920
 HEIGHT = 1080
@@ -140,13 +141,12 @@ def look_filter(look: dict, scope_h: int) -> str:
             f"colorchannelmixer=rr={tint[0]}:gg={tint[1]}:bb={tint[2]},"
             f"gblur=sigma={look.get('halation_radius', 18)},format=gbrpf32le"
         )
-        # blend posterises 16-bit planar RGB; screen the glow in float.
+
         chain = (
             f"{chain},split[hbase][hsrc];[hsrc]{glow}[hglow];[hbase]format=gbrpf32le[hfloat];"
             f"[hfloat][hglow]blend=all_mode=screen:all_opacity={halation:.3f},format=gbrp16le"
         )
-    # eq, vignette, unsharp and noise act on plane 0 as luma, which in planar RGB
-    # is green; everything after this point runs in YUV.
+
     chain += ",format=yuv444p16le"
     if sat != 1.0 or gamma != 1.0 or contrast != 1.0 or brightness != 0.0:
         chain += (

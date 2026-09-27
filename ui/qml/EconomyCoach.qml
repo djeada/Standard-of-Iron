@@ -31,8 +31,6 @@ HintCard {
             root.economy.coach_enabled = Core.UiHints.enabled[root.hintId] === true;
     }
 
-    // Only arm when the coach becomes ready. Re-arming on every UiHints change
-    // re-opened the card inside the same click that dismissed it.
     function arm_if_ready() {
         root.sync_enabled();
         if (root.coach_ready)

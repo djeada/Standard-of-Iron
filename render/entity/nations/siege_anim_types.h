@@ -14,7 +14,7 @@ struct BallistaAnimContext {
   float loading_progress{0.0F};
   float firing_progress{0.0F};
   bool show_bolt{false};
-  // Rolling knock from the carriage while it travels (SiegeMotion::jolt).
+
   float sway{0.0F};
 };
 
@@ -31,7 +31,7 @@ struct CatapultAnimContext {
   float firing_progress{0.0F};
   bool show_stone{false};
   bool incendiary_round{false};
-  // Rolling knock from the carriage while it travels (SiegeMotion::jolt).
+
   float sway{0.0F};
 };
 

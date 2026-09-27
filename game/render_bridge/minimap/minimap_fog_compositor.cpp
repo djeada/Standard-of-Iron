@@ -256,8 +256,6 @@ void MinimapFogCompositor::rebuild_lookup(int vis_width,
 
   m_lookup_entries.resize(static_cast<std::size_t>(img_width * img_height));
 
-  // Image pixels span the rotated extent of the visibility grid, the same
-  // projection the baked terrain uses.
   const auto [extent_width, extent_height] = rotated_world_bounds(
       static_cast<float>(vis_width), static_cast<float>(vis_height));
   const float scale_x = extent_width / static_cast<float>(img_width);

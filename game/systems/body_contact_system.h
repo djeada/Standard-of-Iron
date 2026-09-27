@@ -33,8 +33,6 @@ public:
   static constexpr float k_separation_speed = 2.0F;
   static constexpr float k_max_separation_step = 0.15F;
 
-  // How far a commander looks for a lone opponent standing inside his duel
-  // standoff; comfortably past DuelSpacing's widest minimum.
   static constexpr float k_duel_scan_radius = 2.0F;
 
 private:

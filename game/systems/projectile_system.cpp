@@ -46,10 +46,6 @@ auto launch_cue_for_kind(ProjectileKind kind,
   }
 }
 
-// A projectile that wounds something is already heard through its
-// CombatHitEvent, so a siege shot that lands on a target adds nothing here. An
-// aimed arrow always marks its hit, and ordinary arrows mark where a burst of
-// them comes down.
 auto impact_cue_for(ProjectileKind kind,
                     bool is_ballista_bolt,
                     bool aimed_shot,
@@ -324,8 +320,7 @@ void ProjectileSystem::flush_launch_cues(Engine::Core::World* world) {
             ? world->try_get<Engine::Core::UnitComponent>(pending.attacker_id)
             : nullptr;
     int const owner_id = attacker != nullptr ? attacker->owner_id : 0;
-    // A commander's own aimed shot is feedback for the player drawing the bow;
-    // every other release is a sound in the world, heard by whoever is near it.
+
     bool const personal = std::string_view(pending.cue_id) == "combat.bow_loose_heavy";
     Engine::Core::AudioCueEvent cue =
         personal ? Engine::Core::AudioCueEvent::for_owner(owner_id, pending.cue_id)

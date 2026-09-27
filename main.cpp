@@ -435,9 +435,6 @@ static bool g_opengl_crashed = false;
 static LONG WINAPI crashHandler(EXCEPTION_POINTERS* exceptionInfo) {
   if (exceptionInfo->ExceptionRecord->ExceptionCode == EXCEPTION_ACCESS_VIOLATION) {
 
-    // %TEMP%, never the working directory: under Steam that is the install
-    // folder, which may be read-only, and which Steam's file verification
-    // treats as its own.
     char crash_log_path[MAX_PATH + 32] = {};
     const DWORD temp_length = GetTempPathA(MAX_PATH, crash_log_path);
     if (temp_length == 0 || temp_length > MAX_PATH) {
@@ -481,10 +478,6 @@ auto data_paths_requested_from_argv(int argc, char* argv[]) -> bool {
   return false;
 }
 
-// Prints where this build keeps player data, then exits without creating a
-// window. Steam Auto-Cloud root overrides and the release checklist are
-// written against these paths. Each platform's packaged build must therefore
-// be able to answer "where are my saves" without a display or a GL context.
 auto print_data_paths(int argc, char* argv[]) -> int {
   QCoreApplication const app(argc, argv);
   App::Core::apply_application_identity();

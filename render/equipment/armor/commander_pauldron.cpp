@@ -17,10 +17,6 @@ constexpr std::uint8_t k_strap_slot = 1U;
 
 constexpr float k_deg = std::numbers::pi_v<float> / 180.0F;
 
-// One lame of the guard, in the shoulder frame (x out along the shoulder
-// line, y up, z across the shoulder). `from_deg`/`to_deg` sweep over the
-// shoulder from the neck side (negative) down the outside of the arm; the
-// lame wraps front and back of the shoulder by `wrap_deg`.
 struct Lame {
   float from_deg;
   float to_deg;
@@ -29,12 +25,6 @@ struct Lame {
   float wrap_deg;
 };
 
-// The body's deltoid is an ellipsoid of about 0.079 x 0.066 x 0.076 m radii
-// on the shoulder bone. The top lame clears it, and each lame below sits a
-// little further out so it laps over the next like shingles.
-// Metal lames alternate with a narrow dark leather band where they overlap,
-// which is what makes the guard read as segmented plate at game distance
-// instead of one pale cap.
 struct LameSpec {
   Lame lame;
   std::uint8_t slot;
@@ -59,7 +49,7 @@ auto make_lame_mesh(const Lame& lame) -> std::unique_ptr<Mesh> {
   for (int row = 0; row < k_rows; ++row) {
     float const v = static_cast<float>(row) / static_cast<float>(k_rows - 1);
     float const phi = (lame.from_deg + (lame.to_deg - lame.from_deg) * v) * k_deg;
-    // A rolled lower edge on each lame.
+
     float const r = lame.radius + lame.flare * v * v;
     for (int col = 0; col < k_columns; ++col) {
       float const u = static_cast<float>(col) / static_cast<float>(k_columns - 1);
@@ -71,8 +61,7 @@ auto make_lame_mesh(const Lame& lame) -> std::unique_ptr<Mesh> {
       grid.uvs.emplace_back(u, v);
     }
   }
-  // Columns run -z to +z and rows sweep from the top of the shoulder out
-  // along +x, so cross(du, dv) already points away from the shoulder.
+
   return make_thick_sheet_mesh(grid, false, k_lame_thickness);
 }
 

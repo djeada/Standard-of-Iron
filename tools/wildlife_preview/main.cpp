@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstdint>
 #include <cstdlib>
 #include <filesystem>
@@ -20,6 +21,8 @@
 #include "render/creature/bake/creature_bake_recipe.h"
 #include "render/creature/pipeline/creature_prepared_state.h"
 #include "render/creature/schema/creature_runtime_manifest.h"
+#include "render/elephant/elephant_bake_recipe.h"
+#include "render/horse/horse_bake_recipe.h"
 #include "render/rigged_mesh_bake.h"
 #include "render/snapshot_mesh_bake.h"
 #include "render/software/software_rasterizer.h"
@@ -99,13 +102,18 @@ auto make_view_projection(const Bounds& bounds,
 
   float const aspect =
       static_cast<float>(image_width) / static_cast<float>(std::max(image_height, 1));
-  float ortho_h = radius * 0.78F;
-  float ortho_w = ortho_h * aspect;
-  float const needed_w = span.x() * 1.15F;
-  if (ortho_w < needed_w) {
-    ortho_w = needed_w;
-    ortho_h = ortho_w / std::max(aspect, 1.0e-6F);
+  float half_width = 0.0F;
+  float half_height = 0.0F;
+  for (int corner = 0; corner < 8; ++corner) {
+    QVector3D const point((corner & 1) ? bounds.max.x() : bounds.min.x(),
+                          (corner & 2) ? bounds.max.y() : bounds.min.y(),
+                          (corner & 4) ? bounds.max.z() : bounds.min.z());
+    QVector3D const projected = view_mat.map(point);
+    half_width = std::max(half_width, std::abs(projected.x()));
+    half_height = std::max(half_height, std::abs(projected.y()));
   }
+  float const ortho_h = std::max(half_height, half_width / aspect) * 2.16F;
+  float const ortho_w = ortho_h * aspect;
 
   QMatrix4x4 proj;
   proj.ortho(-ortho_w * 0.5F,
@@ -208,8 +216,9 @@ auto render_clip(const Render::Creature::CreatureBakeRecipe& recipe,
   frames.reserve(static_cast<std::size_t>(samples));
   for (int sample = 0; sample < samples; ++sample) {
     auto const frame_index = static_cast<std::uint32_t>(
-        (static_cast<float>(sample) / static_cast<float>(samples)) *
-        static_cast<float>(frame_count));
+        (static_cast<float>(sample) /
+         static_cast<float>(desc.loops ? samples : std::max(samples - 1, 1))) *
+        static_cast<float>(desc.loops ? frame_count : frame_count - 1U));
     std::vector<QMatrix4x4> palette;
     recipe.bake_clip_frame(
         clip_index, std::min(frame_index, frame_count - 1U), palette, nullptr);
@@ -231,8 +240,11 @@ auto render_clip(const Render::Creature::CreatureBakeRecipe& recipe,
     rasterizer.set_view_projection(view_proj);
     submit(baked, frames[static_cast<std::size_t>(sample)], role_colors, rasterizer);
     out_tiles.push_back(rasterizer.render());
-    out_labels.push_back(std::string(desc.name) + " " +
-                         std::to_string(sample * 100 / samples) + "%");
+    out_labels.push_back(
+        std::string(desc.name) + " " +
+        std::to_string(sample * 100 /
+                       (desc.loops ? samples : std::max(samples - 1, 1))) +
+        "%");
   }
   return true;
 }
@@ -251,19 +263,42 @@ auto main(int argc, char** argv) -> int {
   int samples = argc > 4 ? std::atoi(argv[4]) : 8;
   std::string view_name = argc > 5 ? argv[5] : "quarter";
 
-  if (species != "wolf" && species != "sheep") {
-    std::cerr << "usage: wildlife_preview <wolf|sheep> [out_dir] [clip] [samples] "
+  samples = std::clamp(samples, 1, 32);
+
+  if (species != "wolf" && species != "sheep" && species != "horse" &&
+      species != "elephant") {
+    std::cerr << "usage: wildlife_preview <wolf|sheep|horse|elephant> [out_dir] [clip] "
+                 "[samples] "
                  "[side|quarter|front]\n";
     return 1;
   }
 
-  auto const& recipe = species == "wolf" ? Render::Wildlife::wolf_bake_recipe()
-                                         : Render::Wildlife::sheep_bake_recipe();
+  auto const& recipe = species == "wolf"    ? Render::Wildlife::wolf_bake_recipe()
+                       : species == "sheep" ? Render::Wildlife::sheep_bake_recipe()
+                       : species == "horse" ? Render::Horse::horse_bake_recipe()
+                                            : Render::Elephant::elephant_bake_recipe();
   if (!recipe.complete()) {
     std::cerr << "bake recipe for '" << species << "' is incomplete\n";
     return 1;
   }
-  auto const colors = species == "wolf" ? wolf_role_colors() : sheep_role_colors();
+  auto const colors = species == "wolf"    ? wolf_role_colors()
+                      : species == "sheep" ? sheep_role_colors()
+                      : species == "horse"
+                          ? std::vector<QVector3D>{{0.62F, 0.39F, 0.22F},
+                                                   {0.42F, 0.25F, 0.14F},
+                                                   {0.75F, 0.57F, 0.36F},
+                                                   {0.13F, 0.12F, 0.11F},
+                                                   {0.18F, 0.13F, 0.10F},
+                                                   {0.18F, 0.13F, 0.10F},
+                                                   {0.29F, 0.22F, 0.18F},
+                                                   {0.04F, 0.035F, 0.03F}}
+                          : std::vector<QVector3D>{{0.52F, 0.51F, 0.47F},
+                                                   {0.43F, 0.42F, 0.38F},
+                                                   {0.38F, 0.37F, 0.33F},
+                                                   {0.38F, 0.37F, 0.33F},
+                                                   {0.38F, 0.37F, 0.33F},
+                                                   {0.88F, 0.83F, 0.68F},
+                                                   {0.06F, 0.055F, 0.05F}};
 
   ViewSpec view{"quarter", QVector3D(0.85F, 0.42F, 0.75F)};
   if (view_name == "side") {

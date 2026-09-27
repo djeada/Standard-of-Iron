@@ -75,8 +75,7 @@ inline auto arm_swing_rad(const CatapultAnimContext& anim_ctx) -> float {
   case CatapultAnimState::Resetting:
     break;
   }
-  // The resting arm lifts off its padded buffer and knocks back down as the
-  // carriage rolls; only upward, since the buffer stops it going lower.
+
   return k_arm_rest_rad + 0.07F * std::max(0.0F, anim_ctx.sway);
 }
 

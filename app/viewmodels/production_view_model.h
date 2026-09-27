@@ -48,7 +48,7 @@ public:
   Q_INVOKABLE [[nodiscard]] qulonglong selected_building_id() const;
   Q_INVOKABLE [[nodiscard]] QVariantMap ally_call_state(qulonglong entity) const;
   Q_INVOKABLE bool call_allies(qulonglong entity);
-  // Answers an AI ally's appeal (resources, defence or attack) with yes or no.
+
   Q_INVOKABLE bool answer_ally_appeal(quint32 appeal_id, bool accept);
 
   Q_INVOKABLE void set_rally_at_screen(qreal sx, qreal sy);

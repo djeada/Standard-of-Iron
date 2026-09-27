@@ -251,6 +251,7 @@ inline void add_eagle_silhouette(BuildingArchetypeDesc& desc,
                                  const QVector3D& bronze,
                                  const QVector3D& shade,
                                  BuildingStateMask states) {
+  BuildingPartMaterial const metal(desc, k_building_material_metal);
   const auto point = [&](float horizontal, float vertical, float normal) {
     return facade_point(center, plane, horizontal * scale, vertical * scale, normal);
   };
@@ -333,6 +334,7 @@ inline void add_laurel_wreath(BuildingArchetypeDesc& desc,
                               float radius,
                               const QVector3D& color,
                               BuildingStateMask states) {
+  BuildingPartMaterial const metal(desc, k_building_material_metal);
   constexpr int k_leaves = 14;
   for (int index = 0; index < k_leaves; ++index) {
     float const t = static_cast<float>(index) / static_cast<float>(k_leaves);
@@ -362,6 +364,7 @@ inline void add_tanit_sign(BuildingArchetypeDesc& desc,
                            const QVector3D& shade,
                            BuildingStateMask states,
                            float outward) {
+  BuildingPartMaterial const metal(desc, k_building_material_metal);
   const auto [symbol_offset, symbol_half] = relief_layer_depth(symbol_step);
   const auto [shade_offset, shade_half] = relief_layer_depth(shade_step);
 

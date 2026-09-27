@@ -115,10 +115,7 @@ TEST(RenderPublicationTest, PublicationIsSkippedRatherThanAllocatingAnotherWorld
 }
 
 TEST(RenderPublicationTest, CommanderStrikeCuesReachTheRenderer) {
-  // The swing arcs and impact bursts of a commander's authored strikes live on
-  // CommanderSignaturePresentationComponent. The game draws from the render
-  // snapshot, so a cue that is not copied there shows in the arena, which
-  // draws the live world, and never in a match.
+
   Game::Session::SessionContext session;
   const Game::Session::ScopedSession scope(session);
   World& world = session.world();
@@ -147,9 +144,7 @@ TEST(RenderPublicationTest, CommanderStrikeCuesReachTheRenderer) {
 }
 
 TEST(RenderPublicationTest, AStillBuildingsCompletionFlareFadesAndEnds) {
-  // A finished building never moves, so its render signature stays the same. If
-  // the flare does not count as transient, the snapshot keeps its first copy,
-  // and the new farm or marketplace strobes gold long after the 2.2 s flare.
+
   Game::Session::SessionContext session;
   const Game::Session::ScopedSession scope(session);
   World& world = session.world();
@@ -177,8 +172,6 @@ TEST(RenderPublicationTest, AStillBuildingsCompletionFlareFadesAndEnds) {
     return copied_flare->remaining;
   };
 
-  // Every snapshot buffer must be visited enough times to start reusing
-  // entities, or the test passes without the fix.
   for (int frame = 0; frame < 12; ++frame) {
     flare->remaining -= 0.1F;
     world.update(1.0F / 60.0F);

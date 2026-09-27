@@ -905,9 +905,7 @@ struct StrikeTarget {
   float dir_x{0.0F};
   float dir_z{0.0F};
   float distance{0.0F};
-  // Centre distance the lunge stops at. A soldier out of a formation is met
-  // body to body; a lone fighter -- above all another commander -- is met at
-  // a sword's reach so the two figures never stand inside one another.
+
   float stop_distance{0.0F};
 };
 

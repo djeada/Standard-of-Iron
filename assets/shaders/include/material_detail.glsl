@@ -3,7 +3,7 @@ uniform sampler2D u_material_detail;
 uniform bool u_has_material_detail;
 uniform vec3 u_camera_pos;
 
-const int k_material_mineral = 0;
+const int k_material_mineral = 5;
 const int k_material_metal = 1;
 const int k_material_wood = 2;
 const int k_material_cloth = 3;
@@ -136,8 +136,8 @@ vec3 soi_material_variation(vec3 base_color,
                             int material_id) {
   float tactical = ground_tactical_distance(length(u_camera_pos - world_pos));
 
-  if (material_id == k_material_mineral || material_id == k_material_wood ||
-      material_id == k_material_ceramic) {
+  if (material_id == k_material_mineral || material_id == 0 ||
+      material_id == k_material_wood || material_id == k_material_ceramic) {
     float luma = dot(base_color, vec3(0.299, 0.587, 0.114));
     float saturation = material_id == k_material_wood ? 0.92 : 0.86;
     base_color = mix(vec3(luma), base_color, mix(1.0, saturation, tactical));
@@ -148,7 +148,7 @@ vec3 soi_material_variation(vec3 base_color,
   vec2 uv = soi_surface_lattice(world_pos, normal) * 4.0;
   vec3 view_dir = normalize(u_camera_pos - world_pos);
   vec3 variation = base_color;
-  if (material_id == k_material_mineral) {
+  if (material_id == k_material_mineral || material_id == 0) {
     variation = soi_mineral_variation(base_color, uv, normal);
   } else if (material_id == k_material_wood) {
     variation = soi_wood_variation(base_color, uv, normal, view_dir, world_pos.y);

@@ -11,8 +11,6 @@ namespace Game::Systems::AI {
 
 [[nodiscard]] auto ally_generosity(const AIStrategyConfig& config) -> float;
 
-// Goodwill runs from -1 to 1: how the human ally has answered this AI's own
-// appeals. It tilts every later answer the AI gives that ally.
 inline constexpr float k_min_ally_goodwill = -1.0F;
 inline constexpr float k_max_ally_goodwill = 1.0F;
 

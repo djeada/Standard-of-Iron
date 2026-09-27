@@ -654,6 +654,7 @@ auto parse_source(SourceConfig const& config) -> SourceAsset {
     CustomMeshNode mesh;
     mesh.vertices.reserve(positions.count);
     mesh.indices.reserve(indices.count);
+    QMatrix4x4 const local_normal_matrix = mesh_from_world.inverted().transposed();
     for (std::size_t vertex_index = 0U; vertex_index < positions.count;
          ++vertex_index) {
       QVector3D const source_position(accessor_float(positions, vertex_index, 0),
@@ -667,7 +668,11 @@ auto parse_source(SourceConfig const& config) -> SourceAsset {
       QVector3D const source_normal(accessor_float(normals, vertex_index, 0),
                                     accessor_float(normals, vertex_index, 1),
                                     accessor_float(normals, vertex_index, 2));
-      QVector3D local_normal = mesh_from_world.mapVector(source_normal);
+
+      QVector3D const scaled_normal(source_normal.x() / config.scale_x,
+                                    source_normal.y() / config.scale_y,
+                                    source_normal.z() / config.scale_z);
+      QVector3D local_normal = local_normal_matrix.mapVector(scaled_normal);
       local_normal.normalize();
 
       Vertex vertex{};
@@ -992,6 +997,7 @@ auto synthesise_elephant_locomotion(SourceAsset const& asset,
   std::copy(asset.bind_palette.begin(), asset.bind_palette.end(), out.begin());
   constexpr std::array<std::size_t, 4> upper{{9U, 12U, 15U, 18U}};
   constexpr std::array<std::size_t, 4> lower{{10U, 13U, 16U, 19U}};
+  constexpr std::array<std::size_t, 4> feet{{11U, 14U, 17U, 20U}};
 
   constexpr std::array<float, 4> offset{{0.25F, 0.75F, 0.0F, 0.50F}};
   float const stride_degrees = fast ? 13.0F : 10.5F;
@@ -1005,6 +1011,8 @@ auto synthesise_elephant_locomotion(SourceAsset const& asset,
                        (std::max(wave, 0.0F) * knee_degrees);
     rotate_elephant_subtree(out, asset.bone_defs, upper[leg], thigh);
     rotate_elephant_subtree(out, asset.bone_defs, lower[leg], shin);
+
+    rotate_elephant_subtree(out, asset.bone_defs, feet[leg], -(thigh + shin));
   }
   float const bob = std::sin(phase * two_pi * 2.0F) * (fast ? 0.0225F : 0.0125F);
   float const sway = std::sin(phase * two_pi) * (fast ? 1.8F : 1.0F);

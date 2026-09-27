@@ -2901,8 +2901,6 @@ Rectangle {
                                         productionPanel.production.send_to_ally(allyExchange.ally.owner_id, allyExchange.resource_key, allyExchange.amount);
                                 }
 
-                                // Above the whole ally block: the attached tooltip
-                                // covered the amount chips and the other button.
                                 Design.IronTooltip {
                                     parent: allyExchange
                                     x: Math.round((allyExchange.width - width) / 2)
@@ -2924,8 +2922,6 @@ Rectangle {
                                         productionPanel.production.request_from_ally(allyExchange.ally.owner_id, allyExchange.resource_key, allyExchange.amount);
                                 }
 
-                                // Above the whole ally block: the attached tooltip
-                                // covered the amount chips and the other button.
                                 Design.IronTooltip {
                                     parent: allyExchange
                                     x: Math.round((allyExchange.width - width) / 2)

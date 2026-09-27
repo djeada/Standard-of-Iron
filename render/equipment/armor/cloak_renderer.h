@@ -31,10 +31,6 @@ struct CloakConfig {
   int shoulder_material_id = 6;
 };
 
-// One continuous cloth sheet: it rises over both shoulders from brooches at
-// the front of the collar, lies on the upper back and falls to the hem. It is
-// built per cloak shape because length, width and hang change the geometry,
-// not only its scale.
 struct CloakMeshes {
   Mesh* cloak = nullptr;
 };

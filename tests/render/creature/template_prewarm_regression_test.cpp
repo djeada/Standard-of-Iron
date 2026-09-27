@@ -1282,7 +1282,6 @@ TEST(TemplatePrewarmRegression, WorldPrewarmBakesBuilderToolsAndActorBodies) {
   using Game::Systems::NationID;
   using Game::Units::SpawnType;
 
-  // The shipped nations, so each builder profile names its own nation's renderer.
   auto& nation_registry = Game::Systems::NationRegistry::instance();
   nation_registry.clear();
   nation_registry.register_default_nations();
@@ -1290,8 +1289,6 @@ TEST(TemplatePrewarmRegression, WorldPrewarmBakesBuilderToolsAndActorBodies) {
   Render::GL::Renderer renderer(Render::ShaderQuality::None);
   ASSERT_TRUE(renderer.initialize());
 
-  // Only archers stand on the map: no builder or civilian is in the roster, yet
-  // siege crews, farm hands and trained work gangs are drawn from their bodies.
   Engine::Core::World world;
   Engine::Core::Entity* roman = world.create_entity();
   ASSERT_NE(roman, nullptr);
@@ -1319,9 +1316,7 @@ TEST(TemplatePrewarmRegression, WorldPrewarmBakesBuilderToolsAndActorBodies) {
     ASSERT_NE(spec.animation_manifest.variant_table, nullptr);
 
     auto const targets = Render::GL::variant_table_prewarm_targets(spec);
-    // Every tool a construction job or a seed can hand the builder: build
-    // (hammer, saw, chisel), timber (hammer), stone and butchery (kneeling
-    // chisel) and the harvest (sickle).
+
     for (auto const job : {Animation::HumanoidWorkJob::Build,
                            Animation::HumanoidWorkJob::Chop,
                            Animation::HumanoidWorkJob::Quarry,
@@ -1348,8 +1343,7 @@ TEST(TemplatePrewarmRegression, WorldPrewarmBakesBuilderToolsAndActorBodies) {
           targets.end(),
           [&](const auto& target) { return target.archetype == archetype; }))
           << "variant " << static_cast<int>(index);
-      // A bearded builder keeps his beard when he takes up a tool: the tool body
-      // alone was baked, and a bearded Carthaginian reaping drew nothing.
+
       auto const bearded = Render::Humanoid::facial_hair_body_archetype(
           archetype, Render::GL::FacialHairStyle::FullBeard);
       EXPECT_TRUE(
@@ -1365,8 +1359,7 @@ TEST(TemplatePrewarmRegression, WorldPrewarmBakesBuilderToolsAndActorBodies) {
   }
 
   auto const actors = Render::GL::civilian_actor_prewarm_targets();
-  // Crew, townsfolk and priest rigs of both nations, the farm hands and the
-  // resident with the bowl.
+
   EXPECT_GE(actors.size(), 12U);
   for (bool const carthage : {false, true}) {
     auto const& crew = Render::GL::nation_crew_rig(carthage);
@@ -1401,7 +1394,6 @@ TEST(TemplatePrewarmRegression, WorldPrewarmBakesRosterTroopsNotYetOnTheMap) {
   Render::GL::Renderer renderer(Render::ShaderQuality::None);
   ASSERT_TRUE(renderer.initialize());
 
-  // Archers alone stand on the map at load; everything below is trained later.
   Engine::Core::World world;
   Engine::Core::Entity* roman = world.create_entity();
   ASSERT_NE(roman, nullptr);

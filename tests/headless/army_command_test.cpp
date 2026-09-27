@@ -171,10 +171,6 @@ TEST_F(ArmyCommandTest, AnOrderedAttackPinsASquadThatIsMarchingPast) {
     float lateral;
   };
 
-  // Equal speeds: a pure pursuit never reaches the target's centre, so before
-  // the moving-target contact rule the enemy walked 42 m through my ranks.
-  // Cavalry against spears: the pinned spears used to keep facing their march
-  // and never struck back at the flank.
   std::vector<Case> const cases{
       {"swords against marching swords",
        SpawnType::Swordsman,

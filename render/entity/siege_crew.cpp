@@ -207,9 +207,7 @@ void advance_siege_crew(SiegeCrewState& state,
     const float distance = std::sqrt(dx * dx + dz * dz);
     float desired_yaw = station.facing;
     if (distance > k_arrive_metres) {
-      // Stations ride with the engine, which outpaces a walk (a ballista
-      // rolls at 1.5 m/s): crew far from their place, or joining a moving
-      // engine, jog to it instead of trailing behind for the whole march.
+
       const bool hurry = distance > k_hurry_metres || state.mode == SiegeCrewMode::Push;
       const float step = std::min(distance, (hurry ? k_run_speed : k_walk_speed) * dt);
       member.x += dx / distance * step;

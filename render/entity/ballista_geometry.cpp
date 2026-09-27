@@ -31,7 +31,7 @@ constexpr float k_nock_rest_z = -0.07F;
 constexpr float k_slide_travel = 0.38F;
 
 inline auto k_arm_tip(float side, float tension, float sway) -> QVector3D {
-  // The bow arms are long levers: on rough ground their tips bob out of step.
+
   const float bob = 0.016F * sway * (side > 0.0F ? 1.0F : -0.8F);
   return {side * (0.66F - 0.065F * tension), 0.348F + bob, -0.395F + 0.17F * tension};
 }
@@ -50,7 +50,7 @@ inline auto slide_travel(const BallistaAnimContext& anim_ctx) -> float {
   case BallistaAnimState::Resetting:
     break;
   }
-  // An unloaded slider knocks back and forth in its track while travelling.
+
   return 0.012F * anim_ctx.sway;
 }
 

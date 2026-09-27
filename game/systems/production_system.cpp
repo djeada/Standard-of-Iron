@@ -1417,8 +1417,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
       builder_prod->in_progress = false;
       builder_prod->time_remaining = 0.0F;
       builder_prod->construction_complete = true;
-      // Felling a tree or lifting a harvest also ends a builder task; only a
-      // structure actually raised earns the completion sound.
+
       if (raised_structure) {
         Engine::Core::EventManager::instance().publish(
             Engine::Core::AudioCueEvent::for_owner(builder_owner_id,

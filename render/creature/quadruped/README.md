@@ -24,3 +24,21 @@ Runtime quadruped prep must not rebuild species meshes or evaluate per-bone pose
 3. Provide clip descriptors and a bake callback for BPAT generation.
 4. Expose the manifest through the species spec/asset registry.
 5. Wire the species runtime prep to emit a shared quadruped request instead of a species-specific render batch path.
+
+## Reviewing animal animation changes
+
+Build `wildlife_preview` and run it with `QT_QPA_PLATFORM=offscreen` to render
+contact sheets from the actual mesh and bake recipe:
+
+```sh
+cmake --build build --target wildlife_preview
+QT_QPA_PLATFORM=offscreen build/bin/wildlife_preview wolf /tmp/animals bite 8 side
+QT_QPA_PLATFORM=offscreen build/bin/wildlife_preview sheep /tmp/animals run 8 quarter
+QT_QPA_PLATFORM=offscreen build/bin/wildlife_preview horse /tmp/animals fight 8 quarter
+QT_QPA_PLATFORM=offscreen build/bin/wildlife_preview elephant /tmp/animals die 8 quarter
+```
+
+An empty clip argument renders every clip. Views are `side`, `quarter`, and
+`front`. One-shot sheets include the final frame, so compare `die` at 100% with
+`dead` to catch corpse transition jumps. Build `bake_creature_assets` after
+editing a recipe or mesh; runtime reads these generated caches.

@@ -50,7 +50,7 @@ auto humanoid_hip_l_bone() -> std::uint16_t {
 }
 
 auto humanoid_metal_role_byte() -> std::uint8_t {
-  // Colour roles of the base humanoid body, 1-based: the sixth is its metal.
+
   return 6U;
 }
 

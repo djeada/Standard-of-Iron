@@ -27,8 +27,6 @@ void CameraViewportLayer::init(int width,
   m_world_width = world_width;
   m_world_height = world_height;
 
-  // The baked terrain fits the whole rotated map into the image, so every
-  // layer drawn over it has to project through the same rotated extent.
   const auto [extent_width, extent_height] =
       rotated_world_bounds(world_width, world_height);
   m_scale_x = static_cast<float>(width) / extent_width;
@@ -130,8 +128,6 @@ void CameraViewportLayer::draw_viewport_rect(QPainter& painter,
   brackets.lineTo(rect.right(), rect.bottom());
   brackets.lineTo(rect.right(), rect.bottom() - actual_corner);
 
-  // A thin full outline makes the frame readable at a glance; the brackets
-  // on top keep its corners crisp over busy terrain.
   QPen outline(QColor(m_border_r, m_border_g, m_border_b, k_outline_alpha));
   outline.setWidthF(1.0);
   painter.setPen(outline);

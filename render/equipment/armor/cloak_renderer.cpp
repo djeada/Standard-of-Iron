@@ -49,23 +49,11 @@ auto safe_normalized(const QVector3D& value, const QVector3D& fallback) -> QVect
   return value.normalized();
 }
 
-// The cloak is authored against the reference body the static attachment is
-// baked on (humanoid_bind_body_frames): shoulders 0.252 m either side of the
-// torso origin, torso radius 0.1867 m. Coordinates below are metres in the
-// torso-local frame (x right, y up, z forward) with the origin at the middle
-// of the shoulder line. The placement rescales x by the actual shoulder span
-// and y/z by the actual torso radius, so other bodies still get a fitted
-// cloak.
 constexpr float k_reference_shoulder_half_span = 0.252F;
 constexpr float k_reference_torso_radius = 0.1867F;
 constexpr float k_cloth_thickness = 0.0055F;
 constexpr float k_brooch_radius = 0.0165F;
 
-// One horizontal cross-section of the cloth. The section is an elliptical arc
-// wrapped round the back of the body: `back_z` is where it crosses the spine,
-// (`side_x`, `side_z`) where its front edge sits, `half_arc` how far round the
-// body it reaches, and the cloth is `back_y` high on the spine and `side_y`
-// high at the edge.
 struct CloakSection {
   float back_y;
   float side_y;
@@ -102,8 +90,7 @@ auto blend_sections(const CloakSection& a,
 
 struct CloakShape {
   std::array<CloakSection, 6> keys{};
-  // Rows generated between consecutive keys; the shoulder keys are close
-  // together and curve hard, the drape keys are far apart and nearly straight.
+
   std::array<int, 5> rows_between{};
   int drape_key = 3;
 };
@@ -120,19 +107,15 @@ auto make_cloak_shape(const CloakConfig& config) -> CloakShape {
   float const mid_y = lerp(-0.040F, hem_y, 0.30F);
 
   CloakShape shape;
-  // The cloak is gathered narrow where it is pinned, tucked under the
-  // shoulder guards, and falls in a widening cone to the hem. Its back slopes
-  // away from the body on the way down, as heavy wool does when it hangs
-  // from the shoulder blades rather than lying on the spine.
+
   shape.keys = {{
-      // Collar: lies round the base of the neck and comes forward over the
-      // trapezius to the brooches at the front of each shoulder.
+
       {0.094F + collar_lift, 0.068F + collar_lift, -0.086F, 0.078F, 0.044F, 1.95F},
-      // Over the trapezius, following the slope out from the neck.
+
       {0.070F + collar_lift, 0.050F + collar_lift, -0.128F, 0.160F, 0.018F, 1.80F},
-      // Across the top of the shoulder blades, inside the shoulder guards.
+
       {0.024F, 0.004F, -0.162F, 0.212F, -0.040F, 1.52F},
-      // Below the shoulder blades: from here the cloth only hangs.
+
       {-0.070F + drape_lift, -0.100F + drape_lift, -0.180F, 0.246F, -0.105F, 1.30F},
       {mid_y,
        mid_y - 0.030F,
@@ -194,10 +177,6 @@ auto make_cloak_grid(const CloakConfig& config) -> SheetGrid {
     float const a = sec.side_x / std::max(1e-4F, sin_max);
     accumulated_v = (sections.front().back_y - sec.back_y) / total_drop;
 
-    // Folds start as a faint rumple where the cloth is gathered at the
-    // shoulders and open into deep pleats towards the hem. Because the pleats
-    // are spaced across the cloak's width they fan out as it widens, so they
-    // radiate from the pins the way cloth does.
     float const fold_depth = 0.0035F + 0.0440F * std::pow(t, 1.3F);
     float const hem_wave = 0.020F * t * t * t;
 
@@ -212,22 +191,17 @@ auto make_cloak_grid(const CloakConfig& config) -> SheetGrid {
       float z = zc - b * std::cos(theta);
       float y = lerp(sec.back_y, sec.side_y, side_weight / side_norm);
 
-      // Outward normal of the section ellipse, used to push folds out of the
-      // surface without changing where the cloth rests on the body.
       QVector3D outward(
           x / std::max(1e-4F, a * a), 0.0F, (z - zc) / std::max(1e-4F, b * b));
       outward = safe_normalized(outward, QVector3D(0.0F, 0.0F, -1.0F));
 
-      // Three broad pleats with a ridge down the spine, and a finer ripple
-      // riding on them so the folds do not read as a regular corrugation.
       float const pleat = 0.74F * std::cos(across * k_pi * 3.0F) +
                           0.26F * std::cos(across * k_pi * 7.0F + 0.6F * across);
       float const edge_fade = 1.0F - std::pow(std::abs(across), 5.0F) * 0.55F;
       float const fold = fold_depth * pleat * edge_fade;
       x += outward.x() * fold;
       z += outward.z() * fold;
-      // The hem scallops with the pleats and curves up towards the front
-      // edges, where the cloth wraps round the body.
+
       y += hem_wave * (pleat - 1.0F) * 0.5F;
       y += 0.060F * t * t * across * across;
 
@@ -253,8 +227,6 @@ auto cloak_mesh_key(const CloakConfig& config) -> std::uint64_t {
 auto cloak_mesh_for(const CloakConfig& config) -> Mesh* {
   return SharedGeometryCache::instance().get_or_build(
       geometry_key("equipment/cloak/fitted", cloak_mesh_key(config)), [config] {
-        // Columns run left to right round the back and rows run down, so
-        // cross(du, dv) already points away from the body.
         return make_thick_sheet_mesh(make_cloak_grid(config), false, k_cloth_thickness);
       });
 }
@@ -285,7 +257,7 @@ auto make_cloak_placement(const CloakConfig& config,
   placement.cloak_model.scale(sx, syz, syz);
 
   if (config.show_clasp) {
-    // Brooches pin the cloak at the front of the collar on both shoulders.
+
     CloakSection const collar = make_cloak_shape(config).keys.front();
     for (int side = 0; side < 2; ++side) {
       float const s = side == 0 ? -1.0F : 1.0F;
@@ -452,9 +424,7 @@ auto cloak_make_static_attachment(const CloakConfig& config,
       .socket_bone_index = torso_socket_bone_index,
       .unit_local_pose_at_bind = torso_local.world,
   });
-  // Below the shoulder blades the cloth hands its weight from the chest to
-  // the hips and thighs, so the lower cloak hangs instead of pitching with
-  // every lean and twist of the torso.
+
   using Render::Humanoid::HumanoidBone;
   float const shoulder_y =
       0.5F * (bind_frames.shoulder_l.origin.y() + bind_frames.shoulder_r.origin.y());

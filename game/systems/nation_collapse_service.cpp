@@ -25,8 +25,6 @@ void tear_down_structure(Engine::Core::World& world, Engine::Core::Entity& entit
   const bool was_wall =
       entity.get_component<Engine::Core::WallSegmentComponent>() != nullptr;
 
-  // The structure comes down like one destroyed in battle: a collapse, then
-  // rubble that CleanupSystem removes once it has sunk.
   Engine::Core::begin_death_sequence(entity, 0U);
   if (const auto* transform =
           entity.get_component<Engine::Core::TransformComponent>()) {

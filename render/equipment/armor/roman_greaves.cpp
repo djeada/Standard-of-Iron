@@ -26,13 +26,6 @@ enum RomanGreavesPaletteSlot : std::uint8_t {
   k_greaves_slot = 0U,
 };
 
-// The greave is a curved bronze shell that follows the calf it covers. The
-// body's lower leg is two tapered cylinders hung off the knee bone: 1.30R at
-// the knee, swelling to 1.46R a third of the way down, then narrowing to
-// 0.78R at the ankle (R = LOWER_LEG_R). A greave built at one constant radius
-// is buried in the calf swell and floats off the ankle, so the leg read as
-// skin and plate edges fighting each other. The shell below takes the calf
-// radius at every height and stands just proud of it.
 constexpr float k_calf_knee_r = 1.30F;
 constexpr float k_calf_swell_r = 1.46F;
 constexpr float k_calf_ankle_r = 0.78F;
@@ -69,8 +62,6 @@ auto calf_radius_at(float along) -> float {
   return HP::LOWER_LEG_R * (k_calf_swell_r + (k_calf_ankle_r - k_calf_swell_r) * t);
 }
 
-// Shin-frame shell: origin at the ankle, +Y up the shin to the knee, +Z to
-// the front of the leg. Built for the reference LOWER_LEG_R.
 auto make_greave_shell_mesh() -> std::unique_ptr<Mesh> {
   using HP = HumanProportions;
   SheetGrid grid;
@@ -83,22 +74,21 @@ auto make_greave_shell_mesh() -> std::unique_ptr<Mesh> {
     float const along =
         HP::LOWER_LEG_LEN * (k_greave_top + (k_greave_bottom - k_greave_top) * v);
     float const height = HP::LOWER_LEG_LEN - along;
-    // Rolled lip at the top and a slight flare over the instep.
+
     float const top_lip = 0.0035F * std::exp(-v * v / 0.006F);
     float const ankle_flare = 0.0030F * std::pow(v, 6.0F);
     float const base_r = calf_radius_at(along) * k_greave_clearance + k_greave_gap;
     for (int col = 0; col < grid.columns; ++col) {
       float const u = static_cast<float>(col) / static_cast<float>(grid.columns - 1);
       float const angle = (u * 2.0F - 1.0F) * k_greave_half_arc;
-      // Anatomical greaves carry a shallow ridge down the shin bone.
+
       float const ridge = 0.0030F * std::exp(-(angle * angle) / 0.10F);
       float const r = base_r + top_lip + ankle_flare + ridge;
       grid.positions.emplace_back(r * std::sin(angle), height, r * std::cos(angle));
       grid.uvs.emplace_back(u, v);
     }
   }
-  // Columns sweep from the leg's left to right around the front and rows run
-  // down the shin, so cross(du, dv) points into the leg: flip it outward.
+
   return make_thick_sheet_mesh(grid, true, k_greave_thickness);
 }
 

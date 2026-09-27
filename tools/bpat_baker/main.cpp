@@ -44,7 +44,6 @@
 
 namespace {
 
-// Every baked cache ships as one zstd frame; see animation/bpat/asset_compression.h.
 auto write_asset(const std::filesystem::path& path, const std::string& bytes) -> bool {
   std::string error;
   if (!Render::Creature::Bpat::write_compressed_asset(path, bytes, error)) {

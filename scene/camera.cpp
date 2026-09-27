@@ -1117,9 +1117,7 @@ void Camera::apply_soft_boundaries(bool is_panning) {
   }
 
   if (!position_adjustment.isNull()) {
-    // Carry the target with the eye so the correction is a translation. Moving
-    // only the eye turned every push against the map edge into a yaw change,
-    // and edge scroll held there slowly orbited the camera.
+
     QVector3D const shift =
         position_adjustment *
         (is_panning ? k_boundary_panning_smoothness : k_boundary_smoothness);

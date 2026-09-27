@@ -733,10 +733,6 @@ public:
   std::vector<ImpactRecord> impacts;
 };
 
-// Present while a builder crew repairs a structure. Drives the scaffolding the
-// renderer raises around it and the dust of each restored course. `scaffold`
-// eases towards 1 while the crew works and back to 0 once it stops, so the
-// scaffolding goes up and comes down rather than popping.
 class StructureRepairPresentationComponent {
 public:
   static constexpr float k_scaffold_seconds = 0.8F;

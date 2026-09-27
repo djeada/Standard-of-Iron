@@ -2,6 +2,7 @@
 #include <cmath>
 #include <gtest/gtest.h>
 
+#include "render/wildlife/wildlife_gait.h"
 #include "render/wildlife/wildlife_rig.h"
 #include "render/wildlife/wolf_spec.h"
 
@@ -110,5 +111,28 @@ TEST(WolfRigIntegrityTest, BonesHoldAcrossCollapseAndStride) {
       drive.speed_ratio = 0.8F;
       expect_rig_holds(drive, "collapse while running");
     }
+  }
+}
+
+TEST(WolfRigIntegrityTest, SwingMeetsStanceWithoutAStopOrVelocitySnap) {
+  using namespace Render::Wildlife;
+  auto const rest = make_leg_rest({0.0F, 0.8F, 0.0F},
+                                  {0.0F, 0.4F, 0.3F},
+                                  {0.0F, 0.05F, 0.0F},
+                                  {0.0F, 0.0F, 0.0F},
+                                  0.0F);
+  GaitPlan const plan{0.2F, 0.62F, 0.06F, 0.0F};
+  auto toe = [&](float phase) {
+    LegJoints leg;
+    solve_leg(rest, plan, phase, 1.0F, leg);
+    return leg.toe;
+  };
+  constexpr float step = 0.0001F;
+  for (float boundary : {0.0F, plan.stance_duty}) {
+    auto const incoming = (toe(boundary) - toe(boundary - step)) / step;
+    auto const outgoing = (toe(boundary + step) - toe(boundary)) / step;
+    EXPECT_LT((incoming - outgoing).length(), 0.01F);
+    EXPECT_LT(incoming.z(), -0.2F);
+    EXPECT_NEAR(toe(boundary).y(), 0.0F, 1.0e-5F);
   }
 }

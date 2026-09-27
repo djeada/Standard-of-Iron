@@ -59,8 +59,6 @@ struct CivilianActor {
 [[nodiscard]] auto civilian_render_scale(const DrawContext& ctx,
                                          const NationCivilianRig& rig) -> float;
 
-// Whether actors that are small on screen may drop to Minimal detail. The
-// template prewarm bakes their Minimal bodies exactly when this holds.
 [[nodiscard]] auto civilian_actor_minimal_lod_allowed() -> bool;
 
 void begin_civilian_actors();

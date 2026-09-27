@@ -587,9 +587,7 @@ TEST_F(StuckRecoveryTest, AMarchAcrossOpenGroundNeverLooksStuck) {
 }
 
 TEST_F(StuckRecoveryTest, AGroupSealedInAPenWalksOutTogether) {
-  // A player's ground move plans each member its own route. Those routes are
-  // clamped to the pen, so without the sealed-in check the group walked the
-  // pen's wall forever while a single unit given the same order escaped.
+
   constexpr int k_pen_x = 12;
   constexpr int k_pen_z = 24;
   seal_a_pen(k_pen_x, k_pen_z, 3);
@@ -613,10 +611,7 @@ TEST_F(StuckRecoveryTest, AGroupSealedInAPenWalksOutTogether) {
 }
 
 TEST_F(StuckRecoveryTest, AUnitThatSteppedIntoAPocketWalksOutOnItsNextOrder) {
-  // A building raised on a unit leaves it standing on blocked cells, and the
-  // nearest open cell can be a pocket sealed inside the block. Stepping there
-  // is fine: which side a body belongs on cannot be told from where it
-  // stands. The next order decides it, sealed in rather than unreachable.
+
   constexpr int k_x = 16;
   constexpr int k_z = 24;
   constexpr int k_half = 5;

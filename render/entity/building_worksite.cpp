@@ -53,8 +53,6 @@ auto smooth(float edge0, float edge1, float x) noexcept -> float {
   return t * t * (3.0F - (2.0F * t));
 }
 
-// A point on the footprint in world space: `x` and `z` are metres from the
-// centre along the building's own axes.
 auto site_point(const BuildingWorksite& site,
                 float x,
                 float z,
@@ -79,7 +77,6 @@ auto site_box(const BuildingWorksite& site,
   return model;
 }
 
-// Posts along one side of the footprint, evenly spaced, corners included.
 auto side_posts(float half_length) -> int {
   return std::max(
       2, static_cast<int>(std::ceil((2.0F * half_length) / k_scaffold_bay)) + 1);
@@ -113,8 +110,7 @@ auto building_worksite_for(const Engine::Core::World& world,
 }
 
 auto construction_built_fraction(float progress) noexcept -> float {
-  // The foundation course is laid first; the walls rise through the middle of
-  // the job; the last tenth is roofing and finishing at full height.
+
   return std::max(0.04F, smooth(0.08F, 0.90F, progress));
 }
 
@@ -123,7 +119,7 @@ auto construction_scaffold_fraction(float progress) noexcept -> float {
 }
 
 auto dismantle_standing_fraction(float progress) noexcept -> float {
-  // Nearly flat by the last stroke, so leaving the world is not a pop.
+
   return 1.0F - (0.96F * smooth(0.0F, 1.0F, progress));
 }
 
@@ -228,7 +224,6 @@ void submit_scaffolding(ISubmitter& out, const BuildingWorksite& site, float rai
                                        lift);
         out.cylinder(a, b, k_ledger_radius, k_scaffold_timber * 0.92F, 1.0F);
 
-        // One brace per bay, alternating, below the working level.
         if (((i + side_index) % 2) == 0 && lift - k_scaffold_lift >= 0.0F) {
           QVector3D const low = site_point(site,
                                            side.ax + ((side.bx - side.ax) * t0),
@@ -238,7 +233,6 @@ void submit_scaffolding(ISubmitter& out, const BuildingWorksite& site, float rai
         }
       }
 
-      // A plank walkway along the side at every second lift.
       if (cube != nullptr &&
           static_cast<int>(std::lround(lift / k_scaffold_lift)) % 2 == 1) {
         float const mid_x = 0.5F * (side.ax + side.bx) - (side.out_x * 0.18F);
@@ -263,13 +257,11 @@ void submit_salvage_stacks(ISubmitter& out,
   if (cube == nullptr || progress <= 0.02F) {
     return;
   }
-  // Stacks sit off the building's +x side, clear of the footprint, and gain a
-  // course for every quarter of the work.
+
   int const courses = std::clamp(static_cast<int>(std::ceil(progress * 4.0F)), 1, 4);
   float const x = site.footprint.half_width + 1.0F;
   float const spread = std::min(site.footprint.half_depth * 0.55F, 1.4F);
 
-  // Timber: beams laid in alternate directions, like a log crib.
   for (int course = 0; course < courses; ++course) {
     bool const crosswise = (course % 2) == 1;
     for (int beam = 0; beam < 3; ++beam) {
@@ -285,7 +277,6 @@ void submit_salvage_stacks(ISubmitter& out,
     }
   }
 
-  // Dressed stone: a squared block pile, one layer smaller than the last.
   for (int course = 0; course < courses; ++course) {
     int const per_side = std::max(1, 3 - course);
     float const y = 0.13F + (static_cast<float>(course) * 0.26F);
@@ -357,8 +348,6 @@ void submit_structure_work_dressing(ISubmitter& out,
     }
   }
 
-  // A swap between damage states happens under a burst of dust and grit, so
-  // the new mesh arrives the way masonry actually gives way.
   if (transition >= 0.0F && transition <= k_transition_puff_seconds) {
     float const radius =
         std::sqrt(site.footprint.half_width * site.footprint.half_depth);

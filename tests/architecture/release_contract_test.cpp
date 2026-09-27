@@ -131,9 +131,7 @@ TEST(ReleaseContract, FreshProfileDefaultAndPackagedCreatureLookupAreExplicit) {
 }
 
 TEST(ReleaseContract, SaveDirectoryIdentityIsPinned) {
-  // Steam Auto-Cloud root overrides point at <data root>/standard_of_iron/saves
-  // on every OS, and every existing save already lives there. Changing this
-  // name, or giving the game an organisation name, strands both.
+
   EXPECT_STREQ(App::Core::k_application_id, "standard_of_iron");
 
   const QString saved_name = QCoreApplication::applicationName();
