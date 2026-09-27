@@ -562,11 +562,12 @@ TEST(RenderArchetypeSiege, RotatingSnapshotWorldsDoNotResetTheWheels) {
                          Engine::Core::World* world,
                          float time,
                          float z) {
+    // A bare ResourceManager has no unit mesh and the siege renderer would
+    // draw nothing; without one it falls back to its own unit cube.
     DrawContext ctx;
-    ResourceManager resources;
     ctx.entity = &entity;
     ctx.world = world;
-    ctx.resources = &resources;
+    ctx.resources = nullptr;
     ctx.animation_time = time;
     ctx.model.translate(0.0F, 0.0F, z);
     RecordingSubmitter submitter;
@@ -594,6 +595,7 @@ TEST(RenderArchetypeSiege, RotatingSnapshotWorldsDoNotResetTheWheels) {
   const auto first_sight =
       render_frame(fresh.get("troops/roman/catapult"), entity, &buffer_b, 1.25F, 0.3F);
 
+  ASSERT_FALSE(second.empty()) << "the catapult drew nothing, so nothing was compared";
   ASSERT_EQ(second.size(), first_sight.size());
   bool rolled = false;
   for (std::size_t i = 0; i < second.size() && !rolled; ++i) {
