@@ -267,6 +267,22 @@ tools/font/build_standard_iron.py`, then `tools/font/proof.py` to look at it).
 
 ### Fixed
 
+- **Enemies no longer walk past troops ordered to attack them.** A squad marching
+  past, or away from, its attacker is pinned once the two squads' soldiers touch.
+  Before, contact needed the attacker to push into the middle of the enemy block,
+  which a walking target never allows at equal speed, so the enemy walked 40 m
+  through the attacker's ranks and escaped. A squad caught on the flank now also
+  fights back. Its frozen facing used to veto every blow it swung.
+- **Group moves keep one steady pace.** A formation order used to stretch each
+  troop's speed so everyone arrived together. Troops starting near their slot
+  crawled at 30% for up to a minute, and every order gave each troop a different
+  speed. Every troop now marches at the group's pace, the speed of its slowest
+  member.
+- **Formations stay formed.** A troop sent away with its own move order now leaves
+  its formation. Idle troops that end up off their slot, after a casualty or a
+  shove, walk back to it. Before, one casualty or one detached troop left the army
+  "Forming up" or "Disrupted" for the rest of the battle. It lost the formed damage
+  bonus, and a whole army moved from the minimap took 8% extra damage.
 - **The macOS DMG held the ad-hoc app, not the signed one.** The image was
   created before Developer ID signing ran, and the notarization ticket was
   stapled to that earlier image. The new order:

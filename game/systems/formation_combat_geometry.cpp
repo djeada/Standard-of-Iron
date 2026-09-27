@@ -1662,8 +1662,40 @@ auto contact_is_active(const Engine::Core::Entity& attacker,
         geometry.center_distance <=
             geometry.body_contact_center_distance + k_contact_numeric_epsilon;
 
+    auto const* registry = target.registry();
+    auto const* target_movement =
+        registry->try_get<Engine::Core::MovementComponent>(target.get_id());
+    auto const* target_attack =
+        registry->try_get<Engine::Core::AttackComponent>(target.get_id());
+    auto const* attacker_transform =
+        registry->try_get<Engine::Core::TransformComponent>(attacker.get_id());
+    auto const* target_transform =
+        registry->try_get<Engine::Core::TransformComponent>(target.get_id());
+    bool target_walks_past_or_away = false;
+    if (target_movement != nullptr && target_movement->get_has_target() &&
+        (target_attack == nullptr || !target_attack->in_melee_lock) &&
+        attacker_transform != nullptr && target_transform != nullptr) {
+      constexpr float k_walking_speed = 0.2F;
+      constexpr float k_closing_cosine = 0.5F;
+      float const vx = target_movement->get_vx();
+      float const vz = target_movement->get_vz();
+      float const speed = std::hypot(vx, vz);
+      float const to_attacker_x =
+          attacker_transform->position.x - target_transform->position.x;
+      float const to_attacker_z =
+          attacker_transform->position.z - target_transform->position.z;
+      float const distance = std::hypot(to_attacker_x, to_attacker_z);
+      target_walks_past_or_away = speed > k_walking_speed &&
+                                  distance > k_contact_numeric_epsilon &&
+                                  (vx * to_attacker_x + vz * to_attacker_z) <
+                                      k_closing_cosine * speed * distance;
+    }
+    bool const soldiers_touch_a_moving_target =
+        target_walks_past_or_away && geometry.surface_gap <= k_contact_numeric_epsilon;
+
     return deep_front_rank_overlap || locked_visible_overlap ||
-           degenerate_slot_contact || bodies_are_in_contact;
+           degenerate_slot_contact || bodies_are_in_contact ||
+           soldiers_touch_a_moving_target;
   }
   if (attacker.has_component<Engine::Core::ElephantComponent>() &&
       has_formation_slots(target)) {

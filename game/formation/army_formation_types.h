@@ -237,6 +237,9 @@ struct ArmyFormation {
 
   bool moves_pending{false};
 
+  std::vector<EntityID> stragglers;
+  float straggler_cooldown{0.0F};
+
   [[nodiscard]] auto maintains_formation() const -> bool {
     return options.movement_policy == MovementPolicy::MaintainFormation;
   }

@@ -379,7 +379,7 @@ TEST_F(FormationMovementTest, FormationDispatchUsesOneSharedMemberLaneCorridor) 
       intents,
       {.kind = Game::Systems::MoveOrderKind::FormationMove,
        .preserve_formation_mode = true,
-       .synchronize_arrival = true});
+       .prefer_own_routes = true});
   Game::Systems::RouteFollowSystem route_follower;
   route_follower.update(&world, 0.1F);
 

@@ -234,28 +234,6 @@ struct PreparedMove {
   bool preserve_velocity{false};
 };
 
-auto synchronized_paces(const std::vector<float>& route_length,
-                        const std::vector<float>& speed) -> std::vector<float> {
-  constexpr float k_min_pace_share = 0.3F;
-  std::vector<float> paces(route_length.size(), 0.0F);
-  float arrival_seconds = 0.0F;
-  for (std::size_t i = 0; i < route_length.size(); ++i) {
-    if (speed[i] > 0.0F) {
-      arrival_seconds = std::max(arrival_seconds, route_length[i] / speed[i]);
-    }
-  }
-  if (arrival_seconds <= 1.0e-3F) {
-    return paces;
-  }
-  for (std::size_t i = 0; i < route_length.size(); ++i) {
-    if (speed[i] > 0.0F) {
-      paces[i] = std::clamp(
-          route_length[i] / arrival_seconds, speed[i] * k_min_pace_share, speed[i]);
-    }
-  }
-  return paces;
-}
-
 [[nodiscard]] auto issuer_retargets(MoveOrderKind kind) -> bool {
   return kind == MoveOrderKind::AttackChase || kind == MoveOrderKind::ScriptedMove ||
          kind == MoveOrderKind::GuardReturn || kind == MoveOrderKind::RecoveryMove;
@@ -842,7 +820,7 @@ void MovementSystem::issue_move_units(Engine::Core::World& world,
       assigned = true;
     }
 
-    if (!assigned && (options.synchronize_arrival || options.prefer_own_routes)) {
+    if (!assigned && options.prefer_own_routes) {
       constexpr float k_own_route_detour = 1.35F;
       constexpr float k_own_route_slack_metres = 2.0F;
       auto const own =
@@ -948,39 +926,6 @@ void MovementSystem::issue_move_units(Engine::Core::World& world,
     if (move.preserve_velocity && move.movement->get_has_target()) {
       move.movement->vx = move.previous_vx;
       move.movement->vz = move.previous_vz;
-    }
-  }
-
-  if (options.synchronize_arrival) {
-    std::vector<float> route_length(prepared.size(), 0.0F);
-    std::vector<float> speed(prepared.size(), 0.0F);
-    for (std::size_t i = 0; i < prepared.size(); ++i) {
-      auto const& move = prepared[i];
-      if (move.entity == nullptr || move.transform == nullptr ||
-          move.movement == nullptr) {
-        continue;
-      }
-      const auto* unit =
-          world.try_get<Engine::Core::UnitComponent>(move.entity->get_id());
-      speed[i] = unit != nullptr ? unit->speed : 0.0F;
-      float x = move.transform->position.x;
-      float z = move.transform->position.z;
-      float length = 0.0F;
-      for (std::size_t w = move.movement->path_index; w < move.movement->path.size();
-           ++w) {
-        length += std::hypot(move.movement->path[w].first - x,
-                             move.movement->path[w].second - z);
-        x = move.movement->path[w].first;
-        z = move.movement->path[w].second;
-      }
-      length += std::hypot(targets[i].x() - x, targets[i].z() - z);
-      route_length[i] = length;
-    }
-    auto const paces = synchronized_paces(route_length, speed);
-    for (std::size_t i = 0; i < prepared.size(); ++i) {
-      if (prepared[i].movement != nullptr && paces[i] > 0.0F) {
-        prepared[i].movement->declared_group_pace = paces[i];
-      }
     }
   }
 }
