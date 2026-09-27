@@ -444,6 +444,52 @@ TEST_F(FoodEconomyTest, TheButchersWalkOntoTheSheepTheyTake) {
   EXPECT_NEAR(transform->position.z, grazing->position.z, 0.15F);
 }
 
+TEST_F(FoodEconomyTest, TheReapersWorkInTheMiddleOfTheField) {
+
+  Engine::Core::World world;
+  auto* farm = add_farm(world, 4.0F, 0.0F, 1.0F);
+  auto* reaper = add_builder(world, -8.0F, 0.0F);
+  auto* transform = reaper->get_component<Engine::Core::TransformComponent>();
+  reaper->get_component<Engine::Core::UnitComponent>()->speed = 2.0F;
+
+  Game::Command::dispatch(
+      world,
+      Game::Command::Command{.source = Game::Command::Source::LocalPlayer,
+                             .owner_id = k_owner,
+                             .payload = Game::Command::StartHarvest{
+                                 .units = {reaper->get_id()},
+                                 .construction_type = std::string(
+                                     Game::Systems::k_builder_product_harvest_grain),
+                                 .resource_target = farm->get_id(),
+                                 .site = QVector3D(4.0F, 0.0F, 0.0F)}});
+
+  auto* builder = reaper->get_component<Engine::Core::BuilderProductionComponent>();
+  ASSERT_NE(builder, nullptr);
+  ASSERT_TRUE(builder->has_construction_site);
+  builder->build_time = 1000.0F;
+  builder->time_remaining = builder->build_time;
+
+  Game::Systems::MovementPipeline movement;
+  Game::Systems::ProductionSystem production;
+  bool arrived = false;
+  for (int step = 0; step < 600 && !arrived; ++step) {
+    movement.update(&world, 0.05F);
+    production.update(&world, 0.05F);
+    arrived = builder->at_construction_site;
+  }
+  ASSERT_TRUE(arrived) << "the reapers never reached the field";
+
+  EXPECT_NEAR(transform->position.x, 4.0F, 0.15F)
+      << "the reapers stood beside the field instead of in the crop";
+  EXPECT_NEAR(transform->position.z, 0.0F, 0.15F);
+  for (int step = 0; step < 40; ++step) {
+    movement.update(&world, 0.05F);
+    production.update(&world, 0.05F);
+  }
+  EXPECT_TRUE(builder->at_construction_site && builder->in_progress)
+      << "standing in the field must not count as leaving the job";
+}
+
 TEST_F(FoodEconomyTest, AnUnripeFarmRefusesTheHarvestOrder) {
   Engine::Core::World world;
   auto* farm_entity = add_farm(world, 12.0F, 12.0F, 0.5F);

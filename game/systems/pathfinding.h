@@ -92,6 +92,9 @@ public:
   auto cell_value(int x, int y) const -> CellValue;
 
   [[nodiscard]] auto is_terrain_walkable(int x, int y) const -> bool;
+
+  [[nodiscard]] auto is_terrain_segment_walkable(const QVector3D& from,
+                                                 const QVector3D& to) const -> bool;
   auto is_world_position_walkable(const QVector3D& world_position,
                                   Passability passability = Passability::Light,
                                   float clearance_radius = 0.0F) const -> bool;

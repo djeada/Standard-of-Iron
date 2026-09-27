@@ -204,6 +204,38 @@ the building, with every crew on the site counted as its own so they cannot bloc
 are released and walk out of the footprint. Before this, each crew ran its own timer and raised or
 refunded its own copy of the building. Walls keep their own site entities and are not pooled.
 
+### Gathering pace and crew size
+
+A gather job (`cut_tree`, `collect`, `collect_stone`, `collect_iron_ore`,
+`harvest_grain`, `slaughter_sheep`) takes twice its old `build_time` in
+`assets/data/construction/catalog.json` (12 s for a load of wood, stone or ore, 10 s for grain,
+8 s for a sheep), and a crew works it at `crew_gather_pace = squad_fraction^1.5`
+(`production_system.cpp`, floored at 0.02). A full crew gathers at the catalogue time. A half
+crew takes 2.8 times as long, so its load arrives at 35% of the full crew's rate, and a quarter
+crew takes 8 times as long. Splitting a crew into many small ones used to multiply a player's
+gathering, because every crew ran the full-speed timer; now splitting always loses output. Only
+gather products are paced: construction, repair and dismantling already advance by each crew's
+`squad_fraction` on the shared site.
+
+### Crews sent to one resource take their own
+
+A `StartHarvest` order that names several crews sends the first crew to the named node. The
+others become auto-gatherers for the same product, so each takes its own reserved node nearby
+instead of queueing on one tree. On arrival a crew stands on its job: the centre of a building
+it raises, the node it gathers, or the middle of the field it reaps. A reaping crew walks up
+to the field's edge (`structure_work_position`), and `ProductionSystem` then moves it and its
+site to the field's centre.
+
+### Builders stay off hill slopes
+
+A crew's approach to its job never crosses a hill slope. The bypass walk that takes a crew the
+last metres to a site (`BuilderBypass` in `movement_system.cpp`) and the arrival snap in
+`ProductionSystem` both check `Pathfinding::is_terrain_segment_walkable`. When the straight line
+crosses a slope, the crew stops and works from where the route brought it: a crew within
+`site_bypass_radius` of the job counts as arrived. The gather exemptions in `route_follow_system`
+apply only on walkable terrain. A node on a slope, such as a boulder on a hillside, is worked
+from the foot of the hill. `tests/headless/hill_containment_test.cpp` pins this.
+
 ## Vocabulary
 
 The player-facing UI uses two terms:

@@ -2,6 +2,8 @@
 
 Horses and elephants use authored, skinned low-poly geometry compiled into deterministic creature packages. The production pipeline preserves mesh topology, skinning weights, joint hierarchy, authored animation channels, attachment landmarks, and reviewed production proportions from asset generation through BPAT baking and rendering.
 
+Both source models are third-party CC0 work: the horse is the `Horse` from Quaternius's [Ultimate Animated Animal Pack](https://quaternius.com/packs/ultimateanimatedanimals.html), and the elephant is syncopika's [low poly elephant model](https://opengameart.org/content/low-poly-elephant-model) on OpenGameArt. See `THIRD_PARTY_LICENSES.md`, "3D Models". The compiler strips the original names, so the animation clip names (`Attack_Headbutt`, `Gallop_Jump`, … for the horse; `Angry`, `GettingUp`, `Sitting` for the elephant) are what ties a package back to its source.
+
 The important architectural rule is that production geometry comes from the compiled creature package. Runtime rendering, shape verification, locomotion inspection, and attachment placement all consume that same asset rather than maintaining independent hand-entered body dimensions.
 
 ## Pipeline overview

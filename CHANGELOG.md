@@ -267,6 +267,29 @@ tools/font/build_standard_iron.py`, then `tools/font/proof.py` to look at it).
 
 ### Fixed
 
+- **Builder crews no longer walk over hill slopes.** A crew on automatic gathering
+  used to take the last few metres to its tree or boulder in a straight line, over
+  the slope of the hill between. The final approach and the arrival snap now refuse
+  any line that crosses a slope, cliff or water. A crew stops where its route
+  brought it and works from there, so a boulder on a hillside is worked from the
+  foot of the hill. Props no longer push soldiers onto a slope.
+
+- **Soldiers no longer get stranded far from their squad.** A soldier stopped dead
+  by a hill or rock, or more than 12 m from his place, now rejoins his squad. Riders
+  on Cannae were left 50 to 300 m away from their troop. A 480 s AI census of every
+  skirmish map now finds no unit or stranded soldier on a slope.
+
+- **Any two enemies that touch are locked in melee.** Builders, civilians, archers
+  and marching troops walked through enemy blocks unless someone had ordered an
+  attack on them. Now every hostile pair whose bodies touch is locked and fights.
+  Elephants and wildlife are exempt. A formation locked to another formation can
+  strike it whichever way it faces, including a crew of builders.
+
+- **Crews sent to one resource take their own.** When a gather order names several
+  crews, the first takes the clicked resource and the rest take the nearest free
+  ones of the same kind, instead of queueing idle on one tree. Crews building a
+  house or reaping a field stand on it, not beside it.
+
 - **Armies sent at an enemy stay together.** Attack, attack-move, stop and patrol
   orders now take troops out of their formation, as plain moves already did. The
   formation used to walk them back to their old slots once the fight ended, so the
@@ -587,6 +610,18 @@ tools/font/build_standard_iron.py`, then `tools/font/proof.py` to look at it).
   explains in a tooltip why it is refusing when the setup is not startable.
 
 ### Changed
+
+- **Gathering is slower, and much slower for small crews.** A load of wood, stone
+  or ore takes 12 s instead of 6 s, grain 10 s and a sheep 8 s. A crew works at
+  (men / full crew)^1.5 of the full pace, so a half crew takes 2.8 times as long.
+  Splitting crews into many small ones no longer multiplies gathering.
+
+- **The AI trades its surplus.** A market visit now sells up to 20 lots of the
+  resource furthest above what the town needs and spends the gold on what it
+  lacks in the same visit. Before, it sold one lot per 4 s and only when it
+  bought nothing, so an AI town sat on thousands of timber while short of stone.
+  The Rusher doctrine keeps 4 builder crews instead of 2, since at the slower
+  gathering pace 2 crews could not feed its army.
 
 - **Large battles cost a fraction of what they did, and the engine can now say
   why.** A thousand-unit battle line spent about half a second of CPU on every

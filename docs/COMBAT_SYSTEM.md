@@ -285,6 +285,8 @@ Single-body one-on-one combat can use duel footwork around the lock. Formation m
 
 **Locked squads strike whatever they are locked to.** A multi-body squad's root yaw is frozen in a lock (`lock_combatant_facing`), and its soldiers turn individually towards the contact. The 80° facing check in `deal_rts_melee_contact_damage` looks at the root yaw. A squad caught on the flank while marching kept facing its march direction, swung, and landed nothing. That check is waived when both sides are formations and the striker is locked to this target.
 
+**Any two enemies that touch are locked.** `lock_touching_enemies`, at the start of `process_attacks`, locks every pair of hostile units whose bodies touch, whatever orders they carry. Builders, civilians, archers and marching troops used to walk through an enemy block unless someone had attacked them explicitly. For formation slots, touching means `surface_gap <= 0.001`, the same threshold a locked squad needs to land a blow. For single bodies, it means the centre distance is within the contact or body-contact distance plus 5 cm. Both units take the other as a `MeleeLock` target and stop their movement. The rule leaves out elephants (they trample through), wildlife (it never holds a lock, see [AMBIENT_WILDLIFE.md](AMBIENT_WILDLIFE.md)), buildings, the dead, non-participants and units without an `AttackComponent`. `ArmyCommandTest.AnyTwoEnemiesThatTouchAreLockedInMelee` pins a builder crew walking into swordsmen, swordsmen walking into builders, and spearmen marching into archers.
+
 ## Formation contact
 
 `update_formation_contacts()` publishes contact/front information used by formation combat and presentation.

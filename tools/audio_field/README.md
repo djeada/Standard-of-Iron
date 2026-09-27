@@ -22,8 +22,7 @@ and a cavalry charge is three separate gallop performances laid over each other.
 
 ## Ambience beds
 
-Thirteen of the game's twenty-one looping ambience beds are cut from
-recordings rather than generated. `sources.py` is the recipe — which recording,
+All twenty-one of the game's looping ambience beds are cut from recordings. `sources.py` is the recipe — which recording,
 which window inside it, and what shaping — and `build_beds.py` turns that into
 the `.ogg` files in `assets/audio/ambience`.
 
@@ -41,20 +40,30 @@ the `.ogg` files in `assets/audio/ambience`.
 | `battlefield_dry_wind_distant_march_01` / `_02` | Dry wind with a column off to one side |
 | `desert_army_march`                             | Carthage moving, under a sandstorm     |
 | `roman_road`                                    | A column on paving, wind pulled back   |
+| `roman_army_camp_01` / `_02`                    | Smiths at work over a camp fire        |
+| `carthage_war_camp_01` / `_02`                  | The Fes medina, a fire, stone carvers  |
+| `siege_camp`                                    | Carpenter, smith and carvers at work   |
+| `burning_village_aftermath`                     | A bonfire burning out, crows, wind     |
+| `mediterranean_harbor`                          | Gulls, old men, halyards on masts      |
+| `mediterranean_city_market`                     | A weekly market in front of a medina   |
 
 ## Why these are not generated
 
-The other eight beds are camps, markets and a harbour, and
-[tools/audio_synth](../audio_synth/README.md) generates them convincingly: a
-crowd really is a filtered murmur and a hammer really is a struck body. Outdoors
-that stops being true. Wind is not a noise band with a slow envelope on it, and
-a bird is not a sine burst — the generated versions read as _hiss with events
-in it_, and no amount of recipe tuning fixed that, because the thing being
-imitated has structure the recipe does not model.
+Every bed was generated once, by `tools/audio_synth`. Outdoors that never
+worked: wind is not a noise band with a slow envelope on it, and a bird is not a
+sine burst — the generated versions read as _hiss with events in it_, and no
+amount of recipe tuning fixed that, because the thing being imitated has
+structure the recipe does not model. The camps, markets and harbour held out
+longer on the theory that a crowd really is a filtered murmur, and were
+recorded too once they were heard next to the rest.
 
 The trade is deliberate and it costs something: these carry provenance (recorded in
 [THIRD_PARTY_LICENSES.md](../../THIRD_PARTY_LICENSES.md)), they are committed
 rather than rebuilt, and rebuilding them needs a network.
+
+For a street or a market, pick a recording made where engines cannot go. The
+Fes medina is closed to cars, which is why it carries no low rumble at all;
+most city recordings have a scooter or a bus somewhere in every window.
 
 ## Rebuilding
 

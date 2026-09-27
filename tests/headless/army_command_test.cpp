@@ -406,4 +406,41 @@ TEST_F(ArmyCommandTest, ARedeployedArmySettlesInsteadOfShuttlingBetweenGroups) {
   }
 }
 
+TEST_F(ArmyCommandTest, AnyTwoEnemiesThatTouchAreLockedInMelee) {
+  struct Case {
+    const char* label;
+    SpawnType walker;
+    SpawnType standing;
+  };
+
+  std::vector<Case> const cases{
+      {"a builder crew walking through enemy swords",
+       SpawnType::Builder,
+       SpawnType::Swordsman},
+      {"swords walking through an enemy builder crew",
+       SpawnType::Swordsman,
+       SpawnType::Builder},
+      {"spears marching through enemy archers", SpawnType::Spearman, SpawnType::Archer},
+  };
+  for (auto const& c : cases) {
+    SCOPED_TRACE(c.label);
+    open_field();
+    EntityID const walker = spawn(c.walker, k_player, -20.0F, 0.0F, 90.0F);
+    EntityID const standing = spawn(c.standing, k_enemy, 0.0F, 0.0F, 270.0F);
+    ASSERT_NE(walker, 0U);
+    ASSERT_NE(standing, 0U);
+    Game::Command::Move move;
+    move.units = {walker};
+    move.targets = {QVector3D(20.0F, 0.0F, 0.0F)};
+    move.kind = Game::Systems::MoveOrderKind::PlayerMove;
+    Game::Command::submit(
+        m_session->world(), Game::Command::Source::LocalPlayer, k_player, move);
+    bool both_locked = false;
+    run(20.0,
+        [&] { both_locked = both_locked || (locked(walker) && locked(standing)); });
+    EXPECT_TRUE(both_locked) << "two enemies touched and neither was held in melee";
+    EXPECT_LT(position(walker).x(), 8.0F) << "the walker passed straight through";
+  }
+}
+
 } // namespace

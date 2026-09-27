@@ -15,16 +15,14 @@ the recipes in this directory by `make audio-assets`.
 
 ## Layout
 
-| File                     | Role                                                                                  |
-| ------------------------ | ------------------------------------------------------------------------------------- |
-| `dsp.py`                 | Buffers, envelopes, filters and effects. Standard library only.                       |
-| `instruments.py`         | Physical bodies: struck wood and bronze, thuds, cloth, gravel, creaks, horns, breath. |
-| `cues.py`                | One recipe per cue, plus where the file lands and how loud it may peak.               |
-| `synthesize_cues.py`     | Renders recipes to `assets/audio` and encodes with ffmpeg.                            |
-| `register_cues.py`       | Adds the manifest tracks and points each cue at its resource.                         |
-| `analyse.py`             | Measures rendered files so they can be judged without listening.                      |
-| `ambience.py`            | One recipe per looping ambience bed, plus the layers they are built from.             |
-| `synthesize_ambience.py` | Renders the beds into `assets/audio/ambience` at the mixer's sample rate.             |
+| File                 | Role                                                                           |
+| -------------------- | ------------------------------------------------------------------------------ |
+| `dsp.py`             | Buffers, envelopes, filters and effects. Standard library only.                |
+| `instruments.py`     | Physical bodies: struck wood and bronze, mail, paper, creaks, scrapes, breath. |
+| `cues.py`            | One recipe per cue, plus where the file lands and how loud it may peak.        |
+| `synthesize_cues.py` | Renders recipes to `assets/audio` and encodes with ffmpeg.                     |
+| `register_cues.py`   | Adds the manifest tracks and points each cue at its resource.                  |
+| `analyse.py`         | Measures rendered files so they can be judged without listening.               |
 
 ## Regenerating
 
@@ -89,50 +87,13 @@ whole point of those two cues.
 They are convincing abstract and foley sounds, not a replacement for a
 recordist on the cues that carry real drama. Those have moved to recordings and
 imports, and their recipes were deleted with them. What remains here is
-abstract interface, order and state feedback, which is what this technique is
+abstract interface and state feedback, which is what this technique is
 best at.
 
 ## The ambience beds
 
-Eight of the twenty-one looping beds in `assets/audio/ambience` are generated
-here, by `make audio-ambience`. They replaced 16 kHz ten-second clips that the
-mixer had to resample at load — which manufactured a mirror of their own noise
-across 8-16 kHz — and whose energy sat in the 2-6 kHz band the ear finds most
-fatiguing. See [AUDIO_SYSTEM.md](../../docs/AUDIO_SYSTEM.md) for the
-decode-time resampler and mastering.
-
-The beds are rendered at 48 kHz so nothing resamples them, run 18.8 s so the
-repeat is less obvious, and are folded tail-into-head so the file loops without
-a seam. `ambience.py` holds one recipe per bed over a small set of layers:
-`wind`, `water`, `leaves`, `murmur`, `knocks`, `march`, `fire`, `gulls`.
-
-```sh
-python3 tools/audio_synth/synthesize_ambience.py                 # every bed
-python3 tools/audio_synth/synthesize_ambience.py camp            # matching beds
-python3 tools/audio_synth/synthesize_ambience.py --out /tmp/try  # audition first
-```
-
-The twelve left here are camps, roads, markets and marching columns — places
-defined by people, where a generated murmur reads as a crowd well enough.
-
-### The seven that are not generated
-
-The nature beds — mountain, plains, forest, river, night camp, and the two
-weather skies — are cut from public-domain field recordings instead, and live
-in [tools/audio_field](../audio_field/README.md). Filtered noise makes a
-convincing crowd and an unconvincing hillside: wind is not a noise band, and a
-bird is not a sine burst. Those seven are committed rather than rendered, so do
-not add recipes for them here — `make audio-ambience` would then overwrite the
-recordings on the next build.
-
-### Invariants
-
-Two are held by `AmbienceAssetsTest`, over every bed regardless of which
-pipeline made it: each is stored at the mixer's sample rate, and none is louder
-in 2-6 kHz than in its 100-800 Hz body. A recipe that breaks either fails the
-suite.
-
-Two of the beds are not places but skies. `weather_rain` and `weather_snow` are
-layered over whatever bed the biome chose, so they carry only the weather and
-never the ground under it -- see
-[AUDIO_SYSTEM.md](../../docs/AUDIO_SYSTEM.md).
+No ambience is generated here any more. The last eight beds — camps, siege
+works, markets, the harbour and the burnt village — were replaced by field
+recordings and live in [tools/audio_field](../audio_field/README.md) with the
+rest. A generated murmur passed for a crowd on its own and stopped passing
+next to the recorded nature beds.

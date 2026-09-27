@@ -110,7 +110,7 @@ void VegetationPipeline::initialize_supply_cart_pipeline() {
   append_parts(verts, idx, std::span{k_supply_cart_beams});
   append_parts(verts, idx, std::span{k_supply_cart_tapers});
 
-  constexpr int k_wheel_sides = 20;
+  constexpr int k_wheel_sides = 32;
   constexpr float k_front_wheel_r = 0.26F;
   constexpr float k_rear_wheel_r = 0.34F;
   constexpr float k_front_wheel_t = 0.070F;
@@ -169,36 +169,44 @@ void VegetationPipeline::initialize_supply_cart_pipeline() {
 
   auto add_barrel = [&](float cx, float cz, float r, float height) {
     float const y0 = 0.556F;
-    append_prop_taper(verts, idx, cx, y0, cz, r * 0.86F, r, height * 0.34F, 12);
-    append_prop_taper(
-        verts, idx, cx, y0 + height * 0.34F, cz, r, r, height * 0.32F, 12);
-    append_prop_taper(
-        verts, idx, cx, y0 + height * 0.66F, cz, r, r * 0.86F, height * 0.34F, 12);
-    for (float const t : {0.10F, 0.50F, 0.90F}) {
-      float const hoop_r = r * (t > 0.05F && t < 0.95F ? 1.045F : 0.90F);
+    constexpr int k_profile_steps = 8;
+    for (int step = 0; step < k_profile_steps; ++step) {
+      float const t0 = static_cast<float>(step) / k_profile_steps;
+      float const t1 = static_cast<float>(step + 1) / k_profile_steps;
+      float const r0 = r * (0.86F + 0.14F * std::sin(t0 * 3.14159265F));
+      float const r1 = r * (0.86F + 0.14F * std::sin(t1 * 3.14159265F));
       append_prop_taper(
-          verts, idx, cx, y0 + height * t, cz, hoop_r, hoop_r, height * 0.055F, 12);
+          verts, idx, cx, y0 + height * t0, cz, r0, r1, height * (t1 - t0), 16);
+    }
+    for (float const t : {0.10F, 0.50F, 0.90F}) {
+      float const hoop_r = r * (0.86F + 0.14F * std::sin(t * 3.14159265F)) + 0.004F;
+      float const hoop_top_r =
+          r * (0.86F + 0.14F * std::sin((t + 0.055F) * 3.14159265F)) + 0.004F;
+      append_prop_taper(
+          verts, idx, cx, y0 + height * t, cz, hoop_r, hoop_top_r, height * 0.055F, 16);
     }
     append_prop_taper(
-        verts, idx, cx, y0 + height, cz, r * 0.86F, r * 0.80F, 0.020F, 12);
+        verts, idx, cx, y0 + height, cz, r * 0.86F, r * 0.80F, 0.020F, 16);
   };
 
   add_barrel(-0.28F, -0.14F, 0.185F, 0.62F);
   add_barrel(0.22F, 0.06F, 0.170F, 0.56F);
 
   auto add_sack = [&](float cx, float cy, float cz, float r, float height) {
-    append_prop_taper(verts, idx, cx, cy, cz, r * 0.80F, r, height * 0.42F, 10);
-    append_prop_taper(
-        verts, idx, cx, cy + height * 0.42F, cz, r, r * 0.62F, height * 0.44F, 10);
-    append_prop_taper(verts,
-                      idx,
-                      cx,
-                      cy + height * 0.86F,
-                      cz,
-                      r * 0.62F,
-                      r * 0.30F,
-                      height * 0.14F,
-                      10);
+    constexpr std::array<float, 7> profile{
+        0.72F, 0.94F, 1.0F, 0.91F, 0.70F, 0.34F, 0.22F};
+    for (std::size_t i = 0; i + 1 < profile.size(); ++i) {
+      float const t = static_cast<float>(i) / static_cast<float>(profile.size() - 1);
+      append_prop_taper(verts,
+                        idx,
+                        cx,
+                        cy + height * t,
+                        cz,
+                        r * profile[i],
+                        r * profile[i + 1],
+                        height / static_cast<float>(profile.size() - 1),
+                        16);
+    }
     append_prop_beam(verts,
                      idx,
                      {cx - r * 0.34F, cy + height * 1.02F, cz},
@@ -228,7 +236,7 @@ void VegetationPipeline::initialize_supply_cart_pipeline() {
 
   for (int hoop = 0; hoop < 2; ++hoop) {
     float const z = 0.10F + 0.34F * static_cast<float>(hoop);
-    constexpr int k_arc = 5;
+    constexpr int k_arc = 10;
     for (int seg = 0; seg < k_arc; ++seg) {
       float const a0 =
           3.14159265F * static_cast<float>(seg) / static_cast<float>(k_arc);
@@ -370,7 +378,17 @@ void VegetationPipeline::initialize_magic_shrine_pipeline() {
   using namespace Render::GL::BackendPipelines::MagicShrineParts;
 
   append_parts(verts, idx, std::span{k_magic_shrine_boxes});
-  append_parts(verts, idx, std::span{k_magic_shrine_prisms});
+  for (auto const& part : k_magic_shrine_prisms) {
+    append_prop_taper(verts,
+                      idx,
+                      part.cx,
+                      part.y0,
+                      part.cz,
+                      part.r,
+                      part.y0 > 1.7F ? 0.008F : part.r * 0.65F,
+                      part.height,
+                      part.segments);
+  }
   append_parts(verts, idx, std::span{k_magic_shrine_oriented_boxes});
 
   auto add_rune_stone = [&](const QVector3D& center, float rotation) {
@@ -394,8 +412,8 @@ void VegetationPipeline::initialize_magic_shrine_pipeline() {
         verts, idx, {x - 0.18F, 0.08F, z - 0.18F}, {x + 0.18F, 0.18F, z + 0.18F});
     append_box(
         verts, idx, {x - 0.14F, 0.18F, z - 0.14F}, {x + 0.14F, 0.26F, z + 0.14F});
-    append_vert_prism(verts, idx, x, 0.26F, z, 0.085F, 0.78F, 6);
-    append_vert_prism(verts, idx, x, 1.04F, z, 0.060F, 0.16F, 6);
+    append_prop_taper(verts, idx, x, 0.26F, z, 0.105F, 0.070F, 0.78F, 6);
+    append_prop_taper(verts, idx, x, 1.04F, z, 0.070F, 0.045F, 0.16F, 6);
     append_box(
         verts, idx, {x - 0.10F, 1.20F, z - 0.10F}, {x + 0.10F, 1.28F, z + 0.10F});
   };

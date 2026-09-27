@@ -16,7 +16,6 @@ from dsp import (
     apply,
     at_db,
     env_perc,
-    env_swell,
     gain_of,
     highpass,
     lowpass,
@@ -93,97 +92,6 @@ def ui_select_group():
     return lowpass(out, 6500.0)
 
 
-def order_move():
-    out = silence(seconds(0.38))
-    out = mix(out, gain_of(inst.mail(0.34, 201, density=85), 0.75))
-    out = mix(out, gain_of(inst.cloth(0.22, 202, centre=1400.0, curve=1.8), 0.5))
-    scuff = mix(
-        gain_of(inst.gravel(0.13, 203, density=45), 0.8),
-        gain_of(inst.thud(150.0, 0.07, 204), 0.4),
-    )
-    return place(out, scuff, 0.17)
-
-
-def order_run():
-    rattle = gain_of(inst.mail(0.26, 216, density=120), 0.85)
-    puff = gain_of(inst.breath(0.3, 217, pitch=1.15), 0.5)
-    return place(_pad(rattle, 0.36), puff, 0.06)
-
-
-def order_formation():
-    pole = at_db(inst.creak(0.17, 218, 300.0, 700.0, rate=15.0), -4.0)
-    snap = at_db(inst.cloth(0.09, 219, centre=2400.0, curve=3.4), -2.0)
-    return place(_pad(pole, 0.3), snap, 0.1)
-
-
-def order_gate_mode():
-    slide = at_db(inst.scrape(0.17, 224, 1250.0, 2150.0), -5.0)
-    clack = at_db(inst.bronze(760.0, 0.06, 225), -1.0)
-    return place(_pad(slide, 0.28), clack, 0.15)
-
-
-def order_rally_set():
-    flap = at_db(
-        mix(
-            inst.whoosh(0.13, 226, 900.0, 2200.0, q=0.9),
-            gain_of(inst.cloth(0.15, 227, centre=1700.0, curve=2.0), 0.8),
-        ),
-        -4.0,
-    )
-    peg = at_db(
-        mix(
-            inst.wood(400.0, 0.06, 228), gain_of(inst.gravel(0.1, 229, density=30), 0.6)
-        ),
-        -1.0,
-    )
-    return place(_pad(flap, 0.36), peg, 0.18)
-
-
-def build_placement_begin():
-    cord = at_db(inst.cloth(0.08, 301, centre=3100.0, curve=3.0), -3.0)
-    stake = at_db(
-        mix(
-            inst.wood(360.0, 0.07, 302), gain_of(inst.gravel(0.1, 303, density=26), 0.5)
-        ),
-        -1.0,
-    )
-    return place(_pad(cord, 0.4), stake, 0.18)
-
-
-def build_unit_queued():
-    return highpass(gain_of(inst.paper(0.09, 320, density=42), 1.0), 1300.0)
-
-
-def build_gate_open():
-    hinge = at_db(inst.creak(1.15, 328, 320.0, 880.0, rate=17.0), -2.0)
-    rumble = at_db(
-        apply(
-            lowpass(dsp.noise(seconds(1.2), 329), 190.0),
-            env_swell(seconds(1.2), 0.4, 1.3),
-        ),
-        -9.0,
-    )
-    out = mix(_pad(hinge, 1.5), _pad(rumble, 1.5))
-    out = place(out, at_db(inst.thud(105.0, 0.2, 330), -3.0), 1.2)
-    return lowpass(out, 6000.0)
-
-
-def build_gate_close():
-    hinge = at_db(inst.creak(0.85, 331, 880.0, 330.0, rate=16.0), -5.0)
-    out = _pad(hinge, 1.5)
-    slam = at_db(
-        mix(inst.thud(88.0, 0.26, 332), gain_of(inst.wood(210.0, 0.14, 333), 0.6)),
-        -0.5,
-    )
-    out = place(out, slam, 0.86)
-    bar = at_db(
-        mix(inst.bronze(520.0, 0.14, 334), inst.wood(260.0, 0.1, 335)),
-        -6.0,
-    )
-    out = place(out, bar, 1.16)
-    return lowpass(out, 6500.0)
-
-
 def state_speed_change():
     first = gain_of(inst.wood(1150.0, 0.028, 503), 0.9)
     second = gain_of(inst.wood(1420.0, 0.024, 504), 0.7)
@@ -237,27 +145,6 @@ RECIPES: dict[str, Recipe] = {
     "ui.select_group": Recipe(
         "sfx/ui/select_group.ogg", -14.0, ui_select_group, 2, takes=3
     ),
-    "order.move": Recipe(
-        "sfx/orders/move_kit_shuffle.ogg", -13.0, order_move, 2, takes=3
-    ),
-    "order.run": Recipe("sfx/orders/run_kit_rattle.ogg", -13.0, order_run, 2, takes=2),
-    "order.formation": Recipe(
-        "sfx/orders/formation_pole_shift.ogg", -14.0, order_formation, 2, takes=2
-    ),
-    "order.gate_mode": Recipe(
-        "sfx/orders/gate_bolt_slide.ogg", -13.0, order_gate_mode, 2
-    ),
-    "order.rally_set": Recipe(
-        "sfx/orders/rally_banner_peg.ogg", -12.0, order_rally_set, 2
-    ),
-    "build.placement_begin": Recipe(
-        "sfx/build/placement_begin.ogg", -14.0, build_placement_begin, 2
-    ),
-    "build.unit_queued": Recipe(
-        "sfx/build/unit_queued.ogg", -20.0, build_unit_queued, 1, takes=2
-    ),
-    "build.gate_open": Recipe("sfx/build/gate_open.ogg", -11.0, build_gate_open, 3),
-    "build.gate_close": Recipe("sfx/build/gate_close.ogg", -10.0, build_gate_close, 3),
     "state.speed_change": Recipe(
         "sfx/state/speed_notch.ogg", -18.0, state_speed_change, 1
     ),

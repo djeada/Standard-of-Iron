@@ -353,16 +353,8 @@ audio-assets:
 	@echo "$(BOLD)$(BLUE)Synthesising cue sounds...$(RESET)"
 	@$(PYTHON) tools/audio_synth/synthesize_cues.py
 	@$(PYTHON) tools/audio_synth/register_cues.py
-	@$(MAKE) --no-print-directory audio-ambience
 	@$(MAKE) --no-print-directory audio-report
 	@echo "$(GREEN)✓ Cue sounds rendered and registered$(RESET)"
-
-## Re-render the synthesised ambience beds at the mixer's sample rate.
-.PHONY: audio-ambience
-audio-ambience:
-	@echo "$(BOLD)$(BLUE)Synthesising ambience beds...$(RESET)"
-	@$(PYTHON) tools/audio_synth/synthesize_ambience.py
-	@echo "$(GREEN)✓ Ambience beds rendered$(RESET)"
 
 # The nature beds are cut from public-domain recordings rather than generated,
 # so they are committed and this is not part of audio-assets: it needs a network

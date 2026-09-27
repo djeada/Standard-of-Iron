@@ -47,9 +47,6 @@ auto cluster_around(const std::vector<QVector3D>& positions,
   return count;
 }
 
-// A scattered selection's centroid is empty ground between the groups. Follow
-// the largest cluster instead, and stay on the one already framed while it still
-// holds most of the troops, so the camera does not hop between groups.
 auto follow_point(const std::vector<QVector3D>& positions,
                   const QVector3D& current) -> QVector3D {
   QVector3D best = positions.front();

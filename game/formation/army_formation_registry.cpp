@@ -844,8 +844,6 @@ enum class SlotStanding : std::uint8_t {
   IdleOffSlot
 };
 
-// Only a troop that is plainly standing about away from its place walks back:
-// no order, no target, no lock, not holding or guarding the ground it is on.
 auto slot_standing(Engine::Core::World& world,
                    const FormationSlot& slot,
                    float radius_sq) -> SlotStanding {

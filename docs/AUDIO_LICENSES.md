@@ -12,7 +12,7 @@ The blocks were written from the record that produced each file:
 
 | Files                                    | Record                                                                                         |
 | ---------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Synthesised cues and beds                | `RECIPES` in `tools/audio_synth/cues.py`, and `tools/audio_synth/ambience.py`                  |
+| Synthesised cues                         | `RECIPES` in `tools/audio_synth/cues.py`                                                       |
 | Recorded beds                            | `BEDS` in `tools/audio_field/sources.py` (`build_beds.py --list`)                              |
 | Sliced one-shots                         | `TAKES` in `tools/audio_field/oneshots.py` (`build_oneshots.py --list`)                        |
 | Composed battle cues                     | `CUES` in `tools/audio_field/battle.py` (`build_battle.py --list`)                             |
@@ -51,16 +51,17 @@ The ElevenLabs renders were generated under a licence held by the project author
 
 | Licence | Files |
 | --- | ---: |
+| CC0 1.0 | 84 |
 | ElevenLabs licence held by the project author; commercial use permitted | 78 |
-| CC0 1.0 | 70 |
-| Own work (MIT) | 67 |
+| Own work (MIT) | 45 |
+| Public Domain Mark 1.0 | 12 |
 | Proprietary -- supplied by the project owner | 4 |
-| Public Domain Mark 1.0 | 4 |
 | Public Domain Mark 1.0 + CC0 1.0 | 4 |
 | Public domain | 3 |
 | CC BY 2.5 (attribution required) | 2 |
 | CC0 1.0 + Public Domain Mark 1.0 | 1 |
 | Public Domain Mark 1.0 + Public domain | 1 |
+| Supplied by the project owner | 1 |
 
 ### `ambience/`
 
@@ -69,21 +70,21 @@ The ElevenLabs renders were generated under a licence held by the project author
 | `alpine_mountain_pass.ogg` | Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, Pic du Canigou, France, 'Sound of Wind on top of the Canigou Mountain' | Public Domain Mark 1.0 |
 | `battlefield_dry_wind_distant_march_01.ogg` | Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, 'dry hillside, parched wind'; TDC FOOTSTEPS, '…MCU_Running, Rocky Road' | Public Domain Mark 1.0 + CC0 1.0 |
 | `battlefield_dry_wind_distant_march_02.ogg` | Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, 'dry hillside, parched wind'; TDC FOOTSTEPS, '…CU_Footsteps, Rocky Surface' | Public Domain Mark 1.0 + CC0 1.0 |
-| `burning_village_aftermath.ogg` | Synthesised by `tools/audio_synth/ambience.py` | Own work (MIT) |
+| `burning_village_aftermath.ogg` | Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, Machar municipal landfill, Canada, 'Refuse pile burning'; radio aporee ::: maps, Tyneham, UK, 'Jackdaws, Rooks and Crows'; radio aporee ::: maps, Pic du Canigou, France, 'Sound of Wind on top of the Canigou Mountain' | Public Domain Mark 1.0 |
 | `camp_fire_night.ogg` | Cut by `tools/audio_field/build_beds.py` from Wikimedia Commons, File:Dry grass burning in open fireplace.ogg, by ezwa | Public domain |
-| `carthage_war_camp_01.ogg` | Synthesised by `tools/audio_synth/ambience.py` | Own work (MIT) |
-| `carthage_war_camp_02.ogg` | Synthesised by `tools/audio_synth/ambience.py` | Own work (MIT) |
+| `carthage_war_camp_01.ogg` | Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, Fès, Morocco, 'Médina de Fes Déambulation - Ambiance'; radio aporee ::: maps, Buryanek State Recreation Area, 'Camp Fire'; radio aporee ::: maps, Fès, Morocco, 'les tailleurs sur marbre' | Public Domain Mark 1.0 |
+| `carthage_war_camp_02.ogg` | Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, Fès, Morocco, 'Médina de Fes Déambulation - Ambiance'; radio aporee ::: maps, Dartington, Devon, UK, 'soundcamp2015dartington crackling fire'; radio aporee ::: maps, Siegburg, Germany, 'Blacksmith on the medieval Christmas market' | Public Domain Mark 1.0 |
 | `desert_army_march.ogg` | Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, Cafe Tissardmine, Morocco, 'Desert Wind'; TDC FOOTSTEPS, '…MCU_Running, Rocky Road' | Public Domain Mark 1.0 + CC0 1.0 |
 | `forest_ambush.ogg` | Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, Planina Razor, Tolmin, Slovenia, 'Birds in forest'; TDC WIND, 'CU_Thru Trees, Rustling, Faint Crickets' | Public Domain Mark 1.0 + CC0 1.0 |
-| `mediterranean_city_market.ogg` | Synthesised by `tools/audio_synth/ambience.py` | Own work (MIT) |
-| `mediterranean_harbor.ogg` | Synthesised by `tools/audio_synth/ambience.py` | Own work (MIT) |
+| `mediterranean_city_market.ogg` | Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, Dalyan, Muğla Province, Turkey, 'Dalyan market chatter'; radio aporee ::: maps, Fès, Morocco, 'Médina de Fes Déambulation - Ambiance'; radio aporee ::: maps, Fès, Morocco, 'les tailleurs sur marbre' | Public Domain Mark 1.0 |
+| `mediterranean_harbor.ogg` | Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, Rovinj, Croatia, 'seagulls and old people'; radio aporee ::: maps, Piazza del Porto, La Caletta, Italy, 'noon port ambience'; radio aporee ::: maps, Oileán Chléire, Ireland, 'North Harbour, Cape Clear Island' | Public Domain Mark 1.0 |
 | `mediterranean_plains.ogg` | Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, Dörflis, Naturpark Haßberge, Germany, 'Wild Meadow Summer'; radio aporee ::: maps, Pic du Canigou, France, 'Sound of Wind on top of the Canigou Mountain' | Public Domain Mark 1.0 |
 | `mountain_camp_night.ogg` | Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, Pod Lipą, Borsuki, Poland, '(835a AB) midnight crickets'; Wikimedia Commons, File:Dry grass burning in open fireplace.ogg, by ezwa | Public Domain Mark 1.0 + Public domain |
 | `river_crossing.ogg` | Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, Joneliškės, Lithuania, 'river Viesa' | Public Domain Mark 1.0 |
-| `roman_army_camp_01.ogg` | Synthesised by `tools/audio_synth/ambience.py` | Own work (MIT) |
-| `roman_army_camp_02.ogg` | Synthesised by `tools/audio_synth/ambience.py` | Own work (MIT) |
+| `roman_army_camp_01.ogg` | Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, Hosingen, Luxembourg, 'summer fair, forging stand'; radio aporee ::: maps, Rolley Lake Trail, Mission, BC, Canada, 'Campfire at dusk'; radio aporee ::: maps, Dalyan, Muğla Province, Turkey, 'Dalyan market chatter' | Public Domain Mark 1.0 |
+| `roman_army_camp_02.ogg` | Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, Siegburg, Germany, 'Blacksmith on the medieval Christmas market'; radio aporee ::: maps, Buryanek State Recreation Area, 'Camp Fire'; radio aporee ::: maps, Hosingen, Luxembourg, 'summer fair, forging stand' | Public Domain Mark 1.0 |
 | `roman_road.ogg` | Cut by `tools/audio_field/build_beds.py` from TDC FOOTSTEPS, '…CU_Footsteps, Rocky Surface'; radio aporee ::: maps, 'dry hillside, parched wind' | CC0 1.0 + Public Domain Mark 1.0 |
-| `siege_camp.ogg` | Synthesised by `tools/audio_synth/ambience.py` | Own work (MIT) |
+| `siege_camp.ogg` | Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, Koforidua, Ghana, 'Birds and a hammering Carpenter'; radio aporee ::: maps, Hosingen, Luxembourg, 'summer fair, forging stand'; radio aporee ::: maps, Fès, Morocco, 'les tailleurs sur marbre' | Public Domain Mark 1.0 |
 | `storm.ogg` | Cut by `tools/audio_field/build_beds.py` from Own recording, Karlsruhe, 16 July 2026 | Own work (MIT) |
 | `weather_rain.ogg` | Cut by `tools/audio_field/build_beds.py` from TDC RAIN, 'CU_Raining' | CC0 1.0 |
 | `weather_snow.ogg` | Cut by `tools/audio_field/build_beds.py` from TDC WIND, 'CU_Blizzard, Old Recording' | CC0 1.0 |
@@ -170,13 +171,13 @@ The ElevenLabs renders were generated under a licence held by the project author
 | `building_destroyed.ogg` | ElevenLabs render `Turns_to_Rubble`, imported by `tools/audio_import/import_cues.py` | ElevenLabs licence held by the project author; commercial use permitted |
 | `construction_complete.ogg` | ElevenLabs render imported in #1366; its name was not kept (`UNNAMED_IMPORTS`) | ElevenLabs licence held by the project author; commercial use permitted |
 | `construction_started.ogg` | ElevenLabs render imported in #1366; its name was not kept (`UNNAMED_IMPORTS`) | ElevenLabs licence held by the project author; commercial use permitted |
-| `gate_close.ogg` | Synthesised by `tools/audio_synth/cues.py`, recipe `build.gate_close` | Own work (MIT) |
-| `gate_open.ogg` | Synthesised by `tools/audio_synth/cues.py`, recipe `build.gate_open` | Own work (MIT) |
-| `placement_begin.ogg` | Synthesised by `tools/audio_synth/cues.py`, recipe `build.placement_begin` | Own work (MIT) |
+| `gate_close.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC DOORS, 'CU_Two, Long'; TDC DOORS, 'CU_Shed, Open, Close'; TDC DOORS, 'CU_Door Lock, Locking, Unlocking' | CC0 1.0 |
+| `gate_open.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC DOORS, 'CU_Two, Long'; TDC DOORS, 'CU_Shed, Open, Close' | CC0 1.0 |
+| `placement_begin.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC CLOTH, 'CU_Flag, Large, Flapping'; TDC WOOD, 'CU_Board Drop 03' | CC0 1.0 |
 | `placement_confirmed.ogg` | ElevenLabs render `Hammers_and_Nails`, imported by `tools/audio_import/import_cues.py` | ElevenLabs licence held by the project author; commercial use permitted |
 | `placement_rejected.ogg` | ElevenLabs render imported in #1366; its name was not kept (`UNNAMED_IMPORTS`) | ElevenLabs licence held by the project author; commercial use permitted |
-| `unit_queued.ogg` | Synthesised by `tools/audio_synth/cues.py`, recipe `build.unit_queued` | Own work (MIT) |
-| `unit_queued_v2.ogg` | Synthesised by `tools/audio_synth/cues.py`, recipe `build.unit_queued` | Own work (MIT) |
+| `unit_queued.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC PAPER, 'CU_Paper, Punch, Rip' | CC0 1.0 |
+| `unit_queued_v2.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC PAPER, 'CU_Card' | CC0 1.0 |
 | `unit_ready_bell.ogg` | ElevenLabs render `Resonance_in_the_Courtyard`, imported by `tools/audio_import/import_cues.py` | ElevenLabs licence held by the project author; commercial use permitted |
 
 ### `sfx/combat/`
@@ -281,19 +282,19 @@ The ElevenLabs renders were generated under a licence held by the project author
 | --- | --- | --- |
 | `attack_horn_stab.ogg` | ElevenLabs render `Roman_War_Horn_Blast`, imported by `tools/audio_import/import_cues.py` | ElevenLabs licence held by the project author; commercial use permitted |
 | `commander_rally.ogg` | ElevenLabs render `The_Commanders_Rally`, imported by `tools/audio_import/import_cues.py` | ElevenLabs licence held by the project author; commercial use permitted |
-| `formation_pole_shift.ogg` | Synthesised by `tools/audio_synth/cues.py`, recipe `order.formation` | Own work (MIT) |
-| `formation_pole_shift_v2.ogg` | Synthesised by `tools/audio_synth/cues.py`, recipe `order.formation` | Own work (MIT) |
+| `formation_pole_shift.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC WOOD, 'CU_Floorboard, Creak'; TDC CLOTH, 'CU_Flag, Large, Flapping' | CC0 1.0 |
+| `formation_pole_shift_v2.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC WOOD, 'CU_Floorboard, Creak'; TDC CLOTH, 'CU_Flag, Large, Flapping' | CC0 1.0 |
 | `formation_standard_planted.ogg` | ElevenLabs render `Standard_Pole_Placement`, imported by `tools/audio_import/import_cues.py` | ElevenLabs licence held by the project author; commercial use permitted |
-| `gate_bolt_slide.ogg` | Synthesised by `tools/audio_synth/cues.py`, recipe `order.gate_mode` | Own work (MIT) |
+| `gate_bolt_slide.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC DOORS, 'CU_Door Lock, Locking, Unlocking' | CC0 1.0 |
 | `guard_spear_taps.ogg` | ElevenLabs render `Guard_Spear_Taps`, imported by `tools/audio_import/import_cues.py` | ElevenLabs licence held by the project author; commercial use permitted |
 | `hold_shields_plant.ogg` | ElevenLabs render `Shields_Planted`, imported by `tools/audio_import/import_cues.py` | ElevenLabs licence held by the project author; commercial use permitted |
-| `move_kit_shuffle.ogg` | Synthesised by `tools/audio_synth/cues.py`, recipe `order.move` | Own work (MIT) |
-| `move_kit_shuffle_v2.ogg` | Synthesised by `tools/audio_synth/cues.py`, recipe `order.move` | Own work (MIT) |
-| `move_kit_shuffle_v3.ogg` | Synthesised by `tools/audio_synth/cues.py`, recipe `order.move` | Own work (MIT) |
+| `move_kit_shuffle.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC CHAINS, 'MCU_Chains, Rattling, Rustling'; TDC FOOTSTEPS, 'CU_Footsteps, Rocky Surface'; TDC CLOTH, 'CU_Swish, Impact, Fight' | CC0 1.0 |
+| `move_kit_shuffle_v2.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC CHAINS, 'MCU_Chains, Rattling, Rustling'; TDC FOOTSTEPS, 'CU_Footsteps, Rocky Surface'; TDC CLOTH, 'CU_Swish, Impact, Fight' | CC0 1.0 |
+| `move_kit_shuffle_v3.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC CHAINS, 'MCU_Chains, Rattling, Rustling'; TDC FOOTSTEPS, 'CU_Footsteps, Rocky Surface'; TDC CLOTH, 'CU_Swish, Impact, Fight' | CC0 1.0 |
 | `patrol_horn_two_note.ogg` | ElevenLabs render `The_Patrol_Horn`, imported by `tools/audio_import/import_cues.py` | ElevenLabs licence held by the project author; commercial use permitted |
-| `rally_banner_peg.ogg` | Synthesised by `tools/audio_synth/cues.py`, recipe `order.rally_set` | Own work (MIT) |
-| `run_kit_rattle.ogg` | Synthesised by `tools/audio_synth/cues.py`, recipe `order.run` | Own work (MIT) |
-| `run_kit_rattle_v2.ogg` | Synthesised by `tools/audio_synth/cues.py`, recipe `order.run` | Own work (MIT) |
+| `rally_banner_peg.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC CLOTH, 'CU_Flag, Large, Flapping'; TDC METAL, 'MCU_Stake, Hammer, Hit, Tent, Vampire' | CC0 1.0 |
+| `run_kit_rattle.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC CHAINS, 'MCU_Chains, Rattling, Rustling'; TDC HUMAN, 'Panting, Fast' | CC0 1.0 |
+| `run_kit_rattle_v2.ogg` | Composed by `tools/audio_field/build_battle.py` from TDC CHAINS, 'MCU_Chains, Rattling, Rustling'; TDC HUMAN, 'Panting, Fast' | CC0 1.0 |
 | `stop_drum.ogg` | ElevenLabs render `Damped_War_Drum_Stroke`, imported by `tools/audio_import/import_cues.py` | ElevenLabs licence held by the project author; commercial use permitted |
 
 ### `sfx/state/`
@@ -379,13 +380,19 @@ The ElevenLabs renders were generated under a licence held by the project author
 | `publius_cornelius_scipio.ogg` | Recorded by the project author | Own work (MIT) |
 | `quintus_fabius_maximus.ogg` | Recorded by the project author | Own work (MIT) |
 
+### `voices/common/`
+
+| File | Origin | Licence |
+| --- | --- | --- |
+| `builder.ogg` | Recorded by the project author | Own work (MIT) |
+| `civilian.ogg` | Supplied by the project owner on 2026-09-27 as civillain.mp3 | Supplied by the project owner |
+
 ### `voices/roman/`
 
 | File | Origin | Licence |
 | --- | --- | --- |
 | `archer.ogg` | Recorded by the project author | Own work (MIT) |
 | `ballista.ogg` | Recorded by the project author | Own work (MIT) |
-| `builder.ogg` | Recorded by the project author | Own work (MIT) |
 | `catapult.ogg` | Recorded by the project author | Own work (MIT) |
 | `fire_legionary.ogg` | Recorded by the project author | Own work (MIT) |
 | `healer.ogg` | Recorded by the project author | Own work (MIT) |

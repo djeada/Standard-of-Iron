@@ -552,6 +552,18 @@ auto crew_hands(const Engine::Core::World& world, Engine::Core::EntityID id) -> 
   return unit != nullptr ? std::max(0.05F, Game::Units::squad_fraction(*unit)) : 1.0F;
 }
 
+auto crew_gather_pace(const Engine::Core::World& world,
+                      Engine::Core::EntityID id) -> float {
+  constexpr float k_gather_crew_exponent = 1.5F;
+  constexpr float k_min_gather_pace = 0.02F;
+  const auto* unit = world.try_get<Engine::Core::UnitComponent>(id);
+  if (unit == nullptr) {
+    return 1.0F;
+  }
+  float const fraction = std::clamp(Game::Units::squad_fraction(*unit), 0.0F, 1.0F);
+  return std::max(k_min_gather_pace, std::pow(fraction, k_gather_crew_exponent));
+}
+
 auto site_progress(const Engine::Core::BuilderProductionComponent& builder) -> float {
   if (!builder.in_progress || builder.build_time <= 0.0F) {
     return 0.0F;
@@ -1037,7 +1049,19 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
         float const edge = distance_to_site_edge(
             *builder_prod, transform->position.x, transform->position.z);
         bool const reached_footprint = !work_spot && (edge * edge) < arrival_sq;
-        if (dist_sq < arrival_sq || reached_footprint) {
+
+        auto const* ground = NavGrid::get_pathfinder();
+        bool const straight_on_terrain =
+            ground == nullptr ||
+            ground->is_terrain_segment_walkable(
+                QVector3D(transform->position.x, 0.0F, transform->position.z),
+                QVector3D(builder_prod->construction_site_x,
+                          0.0F,
+                          builder_prod->construction_site_z));
+        bool const works_from_here =
+            !straight_on_terrain &&
+            dist_sq <= site_bypass_radius_sq(*builder_prod, movement);
+        if (dist_sq < arrival_sq || reached_footprint || works_from_here) {
 
           builder_prod->at_construction_site = true;
           builder_prod->in_progress = true;
@@ -1056,12 +1080,25 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
             Engine::Core::EventManager::instance().publish(started);
           }
 
-          transform->position.x = builder_prod->construction_site_x;
-          transform->position.z = builder_prod->construction_site_z;
+          if (builder_prod->product_type == k_builder_product_harvest_grain) {
+            if (auto const* field = world->try_get<Engine::Core::TransformComponent>(
+                    builder_prod->structure_task_entity_id);
+                field != nullptr &&
+                (ground == nullptr ||
+                 ground->is_terrain_segment_walkable(
+                     QVector3D(transform->position.x, 0.0F, transform->position.z),
+                     QVector3D(field->position.x, 0.0F, field->position.z)))) {
+              builder_prod->construction_site_x = field->position.x;
+              builder_prod->construction_site_z = field->position.z;
+            }
+          }
+          if (straight_on_terrain) {
+            transform->position.x = builder_prod->construction_site_x;
+            transform->position.z = builder_prod->construction_site_z;
+          }
 
           if (movement != nullptr) {
-            movement->set_rest_position(builder_prod->construction_site_x,
-                                        builder_prod->construction_site_z);
+            movement->set_rest_position(transform->position.x, transform->position.z);
             movement->stop();
           }
 
@@ -1136,9 +1173,9 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
     }
 
     if (builder_prod->at_construction_site && transform != nullptr) {
-      float const dx = builder_prod->construction_site_x - transform->position.x;
-      float const dz = builder_prod->construction_site_z - transform->position.z;
-      float const dist_sq = dx * dx + dz * dz;
+      float const edge = distance_to_site_edge(
+          *builder_prod, transform->position.x, transform->position.z);
+      float const dist_sq = edge * edge;
 
       if (dist_sq > MAX_CONSTRUCTION_DISTANCE_SQ) {
         builder_prod->has_construction_site = false;
@@ -1153,7 +1190,10 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
     }
 
     if (!raises_shared_site(*builder_prod)) {
-      builder_prod->time_remaining -= delta_time;
+      builder_prod->time_remaining -=
+          is_gather_builder_product(builder_prod->product_type)
+              ? delta_time * crew_gather_pace(*world, e->get_id())
+              : delta_time;
     }
     if (builder_prod->product_type == k_builder_product_repair &&
         builder_prod->at_construction_site) {

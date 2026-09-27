@@ -105,7 +105,7 @@ void apply_knockback_step(Engine::Core::Entity& unit,
   float const next_x = transform->position.x + total_x / total * step;
   float const next_z = transform->position.z + total_z / total * step;
   if (auto const* pathfinder = Game::Systems::NavGrid::get_pathfinder()) {
-    // A shove never carries a body onto a hill slope, a cliff or water.
+
     auto const here = Game::Systems::NavGrid::world_to_grid(transform->position.x,
                                                             transform->position.z);
     auto const there = Game::Systems::NavGrid::world_to_grid(next_x, next_z);

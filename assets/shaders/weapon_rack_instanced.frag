@@ -31,6 +31,7 @@ const int k_mat_shield_paint = 8;
 const int k_mat_shield_back = 9;
 const int k_mat_bone = 10;
 const int k_mat_feather = 11;
+const int k_mat_oak_end = 12;
 
 const float k_tau = 6.2831853;
 const float k_superellipse = 2.4;
@@ -61,16 +62,28 @@ float ground_grime() {
   return 1.0 - smoothstep(0.0, 0.30, v_local_pos.y);
 }
 
+float detail_weight(vec2 coordinates) {
+  vec2 footprint = fwidth(coordinates);
+  return 1.0 - smoothstep(0.35, 1.25, max(footprint.x, footprint.y));
+}
+
+float filtered_noise(vec2 coordinates) {
+  return mix(0.5, soi_noise2(coordinates), detail_weight(coordinates));
+}
+
 RackSurface
 timber(vec3 base, vec2 uv, float seed, float ring_density, float warp_gain) {
   float warp = soi_fbm_23e5ab(vec2(uv.x * 4.0, uv.y * 0.9) + seed * 11.0);
-  float rings = fract(uv.x * ring_density + warp * warp_gain + seed * 3.0);
-  float latewood = smoothstep(0.58, 0.94, rings);
-  float fibre = soi_noise2(vec2(uv.x * 220.0, uv.y * 9.0) + seed * 31.0);
-  float rays =
-      smoothstep(0.90, 0.985, soi_noise2(vec2(uv.x * 70.0, uv.y * 16.0) + seed * 7.0));
-  float check =
-      smoothstep(0.972, 0.995, soi_noise2(vec2(uv.x * 95.0 + seed * 5.0, uv.y * 1.6)));
+  float ring_phase = uv.x * ring_density + warp * warp_gain + seed * 3.0;
+  float rings = fract(ring_phase);
+  float latewood = mix(0.24,
+                       smoothstep(0.58, 0.94, rings),
+                       1.0 - smoothstep(0.15, 0.65, fwidth(ring_phase)));
+  float fibre = filtered_noise(vec2(uv.x * 220.0, uv.y * 9.0) + seed * 31.0);
+  float rays = smoothstep(
+      0.90, 0.985, filtered_noise(vec2(uv.x * 70.0, uv.y * 16.0) + seed * 7.0));
+  float check = smoothstep(
+      0.972, 0.995, filtered_noise(vec2(uv.x * 95.0 + seed * 5.0, uv.y * 1.6)));
 
   vec3 early = base * vec3(1.20, 1.09, 0.94);
   vec3 late = base * vec3(0.60, 0.52, 0.45);
@@ -98,10 +111,29 @@ timber(vec3 base, vec2 uv, float seed, float ring_density, float warp_gain) {
   return s;
 }
 
+RackSurface oak_end(vec2 uv, float seed) {
+  vec2 p = uv + vec2(0.024, -0.017) * (seed + 0.5);
+  float radius = length(p * vec2(1.0, 1.16));
+  float phase = radius * 180.0 + soi_noise2(p * 28.0 + seed * 9.0) * 0.35;
+  float rings = mix(
+      0.5, 0.5 + 0.5 * sin(phase * k_tau), 1.0 - smoothstep(0.15, 0.65, fwidth(phase)));
+  float pores = filtered_noise(uv * 360.0 + seed * 17.0);
+  RackSurface s;
+  s.albedo = v_color * mix(vec3(0.72, 0.65, 0.56), vec3(1.18, 1.12, 1.02), rings);
+  s.albedo *= mix(0.85, 1.05, pores);
+  s.albedo *= mix(1.0, 0.62, ground_grime());
+  s.metallic = 0.0;
+  s.roughness = 0.86;
+  s.height = rings * 0.0003 + pores * 0.0002;
+  s.bump = 0.7;
+  s.cavity = 1.0;
+  return s;
+}
+
 RackSurface steel(vec2 uv, float seed) {
   float across = cos(uv.x * k_tau);
   float edge = smoothstep(0.62, 0.97, abs(across));
-  float streak = soi_noise2(vec2(uv.x * 36.0 + seed * 9.0, uv.y * 260.0));
+  float streak = filtered_noise(vec2(uv.x * 36.0 + seed * 9.0, uv.y * 260.0));
   float pit = soi_fbm_23e5ab(vec2(uv.x * 9.0, uv.y * 34.0) + seed * 5.0);
   float rust = smoothstep(0.64, 0.80, pit) * (1.0 - edge * 0.7);
 
@@ -122,7 +154,7 @@ RackSurface steel(vec2 uv, float seed) {
 }
 
 RackSurface iron(vec2 uv, float seed) {
-  float hammer = soi_noise2(uv * 55.0 + seed * 13.0);
+  float hammer = filtered_noise(uv * 55.0 + seed * 13.0);
   float scale = soi_fbm_23e5ab(uv * 7.0 + seed * 3.0);
   float rust = smoothstep(
       0.56,
@@ -150,7 +182,8 @@ RackSurface bronze(float seed) {
   float underside = clamp(-v_local_normal.y * 0.6 + 0.3, 0.0, 1.0);
   float verdigris = smoothstep(0.55, 0.78, patina_noise + underside * 0.25);
 
-  vec3 polished = vec3(0.86, 0.62, 0.30);
+  float hammer = filtered_noise(p.xy * 145.0 + p.zz * 83.0 + seed * 13.0);
+  vec3 polished = vec3(0.72, 0.53, 0.29);
   vec3 dull = vec3(0.50, 0.32, 0.14);
   vec3 c = mix(polished, dull, smoothstep(0.35, 0.75, tarnish));
   c = mix(c, vec3(0.25, 0.50, 0.40), verdigris * 0.85);
@@ -159,14 +192,14 @@ RackSurface bronze(float seed) {
   s.albedo = c;
   s.metallic = mix(1.0, 0.0, verdigris);
   s.roughness = mix(mix(0.22, 0.48, tarnish), 0.86, verdigris);
-  s.height = verdigris * 0.0005 - tarnish * 0.0002;
+  s.height = verdigris * 0.0005 - tarnish * 0.0002 + (hammer - 0.5) * 0.00015;
   s.bump = 1.0;
   s.cavity = 1.0 - verdigris * 0.25;
   return s;
 }
 
 RackSurface leather(vec2 uv, float seed) {
-  float pebble = soi_noise2(uv * vec2(95.0, 140.0) + seed * 29.0);
+  float pebble = filtered_noise(uv * vec2(95.0, 140.0) + seed * 29.0);
   float scuff =
       smoothstep(0.62, 0.86, soi_fbm_23e5ab(uv * vec2(5.0, 9.0) + seed * 3.0));
   vec3 base = mix(vec3(0.24, 0.12, 0.055), vec3(0.44, 0.24, 0.10), fract(seed * 7.13));
@@ -268,7 +301,7 @@ RackSurface scutum_face(vec2 uv, float seed) {
 
   float chip;
   vec3 c = weather_paint(paint, uv, seed, smoothstep(0.62, 1.0, e), chip);
-  float dirt = smoothstep(-0.40, -1.0, t);
+  float dirt = (1.0 - smoothstep(-1.0, -0.40, t));
   c = mix(c, vec3(0.30, 0.24, 0.17), dirt * 0.55);
 
   RackSurface r;
@@ -300,7 +333,7 @@ RackSurface parma_face(vec2 uv, float seed) {
 
   float chip;
   vec3 c = weather_paint(paint, uv, seed, smoothstep(0.6, 1.0, r), chip);
-  c = mix(c, vec3(0.30, 0.24, 0.17), smoothstep(-0.30, -1.0, uv.y) * 0.45);
+  c = mix(c, vec3(0.30, 0.24, 0.17), (1.0 - smoothstep(-1.0, -0.30, uv.y)) * 0.45);
 
   RackSurface s;
   s.albedo = c;
@@ -362,6 +395,9 @@ RackSurface feather(vec2 uv, float seed) {
 }
 
 RackSurface rack_surface(int material) {
+  if (material == k_mat_oak_end) {
+    return oak_end(v_uv, v_seed);
+  }
   if (material == k_mat_ash) {
     vec3 ash = mix(vec3(0.62, 0.48, 0.31), vec3(0.52, 0.38, 0.22), fract(v_seed * 5.1));
     RackSurface s = timber(ash, v_uv * vec2(0.20, 1.0), v_seed, 18.0, 0.6);
@@ -414,6 +450,9 @@ vec3 perturb_normal(vec3 n, vec3 p, float h, float strength) {
   vec3 r1 = cross(dpdy, n);
   vec3 r2 = cross(n, dpdx);
   float det = dot(dpdx, r1);
+  if (abs(det) < 1.0e-12) {
+    return n;
+  }
   vec3 grad = sign(det) * (dhdx * r1 + dhdy * r2);
   return normalize(abs(det) * n - strength * grad);
 }
@@ -463,7 +502,13 @@ void main() {
   float n_dot_v = max(dot(N, V), 1.0e-3);
   float n_dot_h = max(dot(N, H), 0.0);
   float v_dot_h = max(dot(V, H), 0.0);
-  float roughness = clamp(surf.roughness, 0.06, 1.0);
+  vec3 normal_dx = dFdx(N);
+  vec3 normal_dy = dFdy(N);
+  float normal_variance = dot(normal_dx, normal_dx) + dot(normal_dy, normal_dy);
+  float roughness =
+      clamp(sqrt(surf.roughness * surf.roughness + min(normal_variance * 0.25, 0.18)),
+            0.06,
+            1.0);
 
   float ground_ao = mix(0.52, 1.0, smoothstep(0.0, 0.42, v_local_pos.y));
   float depth_ao = mix(0.78, 1.0, smoothstep(-0.22, 0.08, v_local_pos.z));
@@ -475,7 +520,8 @@ void main() {
 
   vec3 exposure_sun = environment_primary_color() * environment_primary_intensity() *
                       environment_exposure();
-  vec3 key_diffuse = diffuse_albedo * soi_key_light(N) * environment_exposure();
+  vec3 key_diffuse =
+      diffuse_albedo * (1.0 - fresnel) * soi_key_light(N) * environment_exposure();
   vec3 ambient =
       diffuse_albedo * environment_ambient_light(N) * environment_exposure() * ao;
 

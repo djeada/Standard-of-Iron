@@ -101,6 +101,21 @@ class Source:
     long as its shortest layer.
     """
 
+    delay: float = 0.0
+    """Seconds into a composed cue before this layer enters.
+
+    Only `build_battle.py` reads it. A bed is a loop and has no "into"; a cue
+    is a short sequence -- a hinge creak and then the slam -- and the second
+    event has to land where the first one leaves off.
+    """
+
+    length: float = 0.0
+    """Seconds of the source to use in a composed cue, or 0.0 for all of it.
+
+    Also `build_battle.py` only. A recording rarely stops where the cue needs
+    it to: a door creak that runs on under the slam reads as two doors.
+    """
+
 
 @dataclass(frozen=True)
 class Bed:
@@ -166,6 +181,72 @@ COLUMN_OFFSETS = (0.37, 0.91, 1.63, 2.29)
 Deliberately not multiples of one another: equal spacing would land the copies
 in step and produce one very loud walker rather than several quiet ones.
 """
+
+HOSINGEN_FORGE = (
+    f"{ARCHIVE}/aporee_14355_16708/HosingenNaturparkhausFamilienfestSchmiedNageln.mp3"
+)
+HOSINGEN_FORGE_ORIGIN = (
+    "radio aporee ::: maps, Hosingen, Luxembourg, 'summer fair, forging stand'"
+)
+SIEGBURG_SMITH = (
+    f"{ARCHIVE}/aporee_26643_30744/"
+    "WeihnachtsmarktSiegburgDerSchmiedheiztseinFeuerundSchmiedet.mp3"
+)
+SIEGBURG_SMITH_ORIGIN = (
+    "radio aporee ::: maps, Siegburg, Germany, "
+    "'Blacksmith on the medieval Christmas market'"
+)
+CAMPFIRE_ROLLEY = f"{ARCHIVE}/aporee_51228_58465/20201004RolleyLakePark.mp3"
+CAMPFIRE_ROLLEY_ORIGIN = (
+    "radio aporee ::: maps, Rolley Lake Trail, Mission, BC, Canada, 'Campfire at dusk'"
+)
+CAMPFIRE_BURYANEK = (
+    f"{ARCHIVE}/aporee_57170_65434/CampFireBuryanekStateRecreationArea202206052045.mp3"
+)
+CAMPFIRE_BURYANEK_ORIGIN = (
+    "radio aporee ::: maps, Buryanek State Recreation Area, 'Camp Fire'"
+)
+CRACKLING_FIRE = (
+    f"{ARCHIVE}/aporee_27776_32009/soundcamp2015dartingtoncracklingfire.mp3"
+)
+CRACKLING_FIRE_ORIGIN = (
+    "radio aporee ::: maps, Dartington, Devon, UK, "
+    "'soundcamp2015dartington crackling fire'"
+)
+FES_MEDINA = f"{ARCHIVE}/aporee_69516_80936/FESdeambulation13h05.wav"
+FES_MEDINA_ORIGIN = (
+    "radio aporee ::: maps, Fès, Morocco, 'Médina de Fes Déambulation - Ambiance'"
+)
+FES_MARBLE = f"{ARCHIVE}/aporee_69606_81036/FESMarbremomes.wav"
+FES_MARBLE_ORIGIN = "radio aporee ::: maps, Fès, Morocco, 'les tailleurs sur marbre'"
+GHANA_CARPENTER = f"{ARCHIVE}/aporee_61721_71007/BirdsandaCarpenterGhana.wav"
+GHANA_CARPENTER_ORIGIN = (
+    "radio aporee ::: maps, Koforidua, Ghana, 'Birds and a hammering Carpenter'"
+)
+DALYAN_MARKET = f"{ARCHIVE}/aporee_32850_37750/Marketchatter.mp3"
+DALYAN_MARKET_ORIGIN = (
+    "radio aporee ::: maps, Dalyan, Muğla Province, Turkey, 'Dalyan market chatter'"
+)
+MACHAR_BONFIRE = (
+    f"{ARCHIVE}/aporee_32724_37608/MacharDumpJuly232016bonfiregullscrows.mp3"
+)
+MACHAR_BONFIRE_ORIGIN = (
+    "radio aporee ::: maps, Machar municipal landfill, Canada, 'Refuse pile burning'"
+)
+TYNEHAM_CROWS = f"{ARCHIVE}/aporee_34467_39627/JackdawsRooksandCrows.WAV"
+TYNEHAM_CROWS_ORIGIN = "radio aporee ::: maps, Tyneham, UK, 'Jackdaws, Rooks and Crows'"
+ROVINJ_GULLS = f"{ARCHIVE}/aporee_16431_19043/galebiinstarci1.wav"
+ROVINJ_GULLS_ORIGIN = (
+    "radio aporee ::: maps, Rovinj, Croatia, 'seagulls and old people'"
+)
+CALETTA_MASTS = f"{ARCHIVE}/aporee_63402_72940/mastalines.mp3"
+CALETTA_MASTS_ORIGIN = (
+    "radio aporee ::: maps, Piazza del Porto, La Caletta, Italy, 'noon port ambience'"
+)
+CAPE_CLEAR_HARBOUR = f"{ARCHIVE}/aporee_50821_57980/CapeCleareditedraw.wav"
+CAPE_CLEAR_HARBOUR_ORIGIN = (
+    "radio aporee ::: maps, Oileán Chléire, Ireland, 'North Harbour, Cape Clear Island'"
+)
 
 PD_MARK = "CC Public Domain Mark 1.0"
 CC0 = "CC0 1.0"
@@ -469,6 +550,284 @@ BEDS: dict[str, Bed] = {
                 lowpass=5000.0,
                 shelf_db=-15.0,
             )
+        ],
+    ),
+    "roman_army_camp_01": Bed(
+        seconds=22.0,
+        notes="A smith working small plates in a tent with people talking round "
+        "him, a camp fire, and a market's chatter pulled far back as the rest "
+        "of the camp.",
+        layers=[
+            Source(
+                url=HOSINGEN_FORGE,
+                origin=HOSINGEN_FORGE_ORIGIN,
+                licence=PD_MARK,
+                start=45.0,
+                highpass=80.0,
+                shelf_db=-6.0,
+            ),
+            Source(
+                url=CAMPFIRE_ROLLEY,
+                origin=CAMPFIRE_ROLLEY_ORIGIN,
+                licence=PD_MARK,
+                start=36.0,
+                gain=0.8,
+                highpass=60.0,
+                shelf_db=-4.0,
+            ),
+            Source(
+                url=DALYAN_MARKET,
+                origin=DALYAN_MARKET_ORIGIN,
+                licence=PD_MARK,
+                start=26.0,
+                gain=0.5,
+                highpass=120.0,
+                lowpass=900.0,
+            ),
+        ],
+    ),
+    "roman_army_camp_02": Bed(
+        seconds=22.0,
+        notes="The second camp is a smith heating his forge with a foot bellows "
+        "at a medieval market, over a second fire and the first bed's smith "
+        "pulled back. Different recordings from _01 throughout, so the two "
+        "variants never share an event.",
+        layers=[
+            Source(
+                url=SIEGBURG_SMITH,
+                origin=SIEGBURG_SMITH_ORIGIN,
+                licence=PD_MARK,
+                start=21.0,
+                highpass=80.0,
+                shelf_db=-6.0,
+            ),
+            Source(
+                url=CAMPFIRE_BURYANEK,
+                origin=CAMPFIRE_BURYANEK_ORIGIN,
+                licence=PD_MARK,
+                start=181.0,
+                gain=1.2,
+                highpass=60.0,
+                shelf_db=-4.0,
+            ),
+            Source(
+                url=HOSINGEN_FORGE,
+                origin=HOSINGEN_FORGE_ORIGIN,
+                licence=PD_MARK,
+                start=69.0,
+                gain=0.5,
+                highpass=80.0,
+                lowpass=1500.0,
+            ),
+        ],
+    ),
+    "carthage_war_camp_01": Bed(
+        seconds=22.0,
+        notes="A North African street with no engine in it -- the Fes medina "
+        "is closed to cars -- over a fire, with stone carvers tapping further "
+        "off. The medina carries no low rumble at all, which is rare in a "
+        "street recording and why it was chosen.",
+        layers=[
+            Source(
+                url=FES_MEDINA,
+                origin=FES_MEDINA_ORIGIN,
+                licence=PD_MARK,
+                start=63.0,
+                highpass=80.0,
+                lowpass=2500.0,
+                shelf_db=-4.0,
+            ),
+            Source(
+                url=CAMPFIRE_BURYANEK,
+                origin=CAMPFIRE_BURYANEK_ORIGIN,
+                licence=PD_MARK,
+                start=204.0,
+                gain=1.5,
+                highpass=60.0,
+                shelf_db=-4.0,
+            ),
+            Source(
+                url=FES_MARBLE,
+                origin=FES_MARBLE_ORIGIN,
+                licence=PD_MARK,
+                start=80.0,
+                gain=0.4,
+                highpass=100.0,
+                lowpass=3000.0,
+                shelf_db=-6.0,
+            ),
+        ],
+    ),
+    "carthage_war_camp_02": Bed(
+        seconds=22.0,
+        notes="The medina again at a later window, a closer crackling fire, "
+        "and the bellows smith far back.",
+        layers=[
+            Source(
+                url=FES_MEDINA,
+                origin=FES_MEDINA_ORIGIN,
+                licence=PD_MARK,
+                start=110.0,
+                highpass=80.0,
+                lowpass=2500.0,
+                shelf_db=-4.0,
+            ),
+            Source(
+                url=CRACKLING_FIRE,
+                origin=CRACKLING_FIRE_ORIGIN,
+                licence=PD_MARK,
+                start=18.0,
+                gain=0.8,
+                highpass=60.0,
+                shelf_db=-6.0,
+            ),
+            Source(
+                url=SIEGBURG_SMITH,
+                origin=SIEGBURG_SMITH_ORIGIN,
+                licence=PD_MARK,
+                start=33.0,
+                gain=0.4,
+                highpass=80.0,
+                lowpass=1500.0,
+            ),
+        ],
+    ),
+    "siege_camp": Bed(
+        seconds=22.0,
+        notes="Works going on: a carpenter hammering, a smith, stone being cut. "
+        "The carpenter was recorded under singing birds, so that layer is "
+        "shelved hard -- the birds own 2-6 kHz.",
+        layers=[
+            Source(
+                url=GHANA_CARPENTER,
+                origin=GHANA_CARPENTER_ORIGIN,
+                licence=PD_MARK,
+                start=23.0,
+                highpass=100.0,
+                shelf_db=-9.0,
+            ),
+            Source(
+                url=HOSINGEN_FORGE,
+                origin=HOSINGEN_FORGE_ORIGIN,
+                licence=PD_MARK,
+                start=57.0,
+                gain=0.7,
+                highpass=80.0,
+                shelf_db=-6.0,
+            ),
+            Source(
+                url=FES_MARBLE,
+                origin=FES_MARBLE_ORIGIN,
+                licence=PD_MARK,
+                start=105.0,
+                gain=0.5,
+                highpass=100.0,
+                lowpass=3000.0,
+                shelf_db=-6.0,
+            ),
+        ],
+    ),
+    "burning_village_aftermath": Bed(
+        seconds=22.0,
+        notes="A large bonfire of wood and brush burning out in the open, crows "
+        "and rooks over it, and wind. The bonfire is the steadiest recording "
+        "in the set -- under 1 dB of variation per second -- so the loop "
+        "carries no event to give it away.",
+        layers=[
+            Source(
+                url=MACHAR_BONFIRE,
+                origin=MACHAR_BONFIRE_ORIGIN,
+                licence=PD_MARK,
+                start=32.0,
+                highpass=60.0,
+                shelf_db=-6.0,
+            ),
+            Source(
+                url=TYNEHAM_CROWS,
+                origin=TYNEHAM_CROWS_ORIGIN,
+                licence=PD_MARK,
+                start=155.0,
+                gain=0.5,
+                highpass=150.0,
+                shelf_db=-6.0,
+            ),
+            Source(
+                url=CANIGOU,
+                origin=CANIGOU_ORIGIN,
+                licence=PD_MARK,
+                start=20.0,
+                gain=0.6,
+                highpass=70.0,
+                lowpass=1200.0,
+            ),
+        ],
+    ),
+    "mediterranean_harbor": Bed(
+        seconds=22.0,
+        notes="Gulls over a fish market's leftovers with old men talking and "
+        "small waves, halyards rattling against masts, and a quieter harbour "
+        "at dusk behind. The masts were recorded in strong wind, so that "
+        "layer keeps only what is above 300 Hz.",
+        layers=[
+            Source(
+                url=ROVINJ_GULLS,
+                origin=ROVINJ_GULLS_ORIGIN,
+                licence=PD_MARK,
+                start=145.0,
+                highpass=70.0,
+                shelf_db=-6.0,
+            ),
+            Source(
+                url=CALETTA_MASTS,
+                origin=CALETTA_MASTS_ORIGIN,
+                licence=PD_MARK,
+                start=37.0,
+                gain=0.6,
+                highpass=300.0,
+                shelf_db=-6.0,
+            ),
+            Source(
+                url=CAPE_CLEAR_HARBOUR,
+                origin=CAPE_CLEAR_HARBOUR_ORIGIN,
+                licence=PD_MARK,
+                start=128.0,
+                gain=0.6,
+                highpass=100.0,
+            ),
+        ],
+    ),
+    "mediterranean_city_market": Bed(
+        seconds=22.0,
+        notes="A Turkish weekly market's chatter and commerce in front, the Fes "
+        "medina behind it, and stone carvers at work somewhere off the square.",
+        layers=[
+            Source(
+                url=DALYAN_MARKET,
+                origin=DALYAN_MARKET_ORIGIN,
+                licence=PD_MARK,
+                start=7.0,
+                highpass=80.0,
+                shelf_db=-6.0,
+            ),
+            Source(
+                url=FES_MEDINA,
+                origin=FES_MEDINA_ORIGIN,
+                licence=PD_MARK,
+                start=150.0,
+                gain=0.6,
+                highpass=80.0,
+                lowpass=2500.0,
+            ),
+            Source(
+                url=FES_MARBLE,
+                origin=FES_MARBLE_ORIGIN,
+                licence=PD_MARK,
+                start=48.0,
+                gain=0.3,
+                highpass=100.0,
+                lowpass=3000.0,
+                shelf_db=-6.0,
+            ),
         ],
     ),
 }

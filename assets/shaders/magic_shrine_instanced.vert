@@ -14,6 +14,7 @@ out vec3 v_world_pos;
 out vec3 v_normal;
 out vec3 v_color;
 out vec3 v_local_pos;
+out vec3 v_local_normal;
 flat out float v_seed;
 
 void main() {
@@ -34,7 +35,8 @@ void main() {
   v_normal = normalize(vec3(rotated_normal_xz.x, a_normal.y, rotated_normal_xz.y));
 
   v_color = a_color_rot.rgb;
-  v_local_pos = a_pos * scale;
+  v_local_pos = a_pos;
+  v_local_normal = normalize(a_normal);
 
   v_seed = soi_hash13_1c8396(world_origin * 0.173 + vec3(rotation, scale, 0.91));
 

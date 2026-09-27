@@ -1085,10 +1085,6 @@ if(TARGET bake_creature_assets)
     add_dependencies(standard_of_iron bake_creature_assets)
 endif()
 
-if(TARGET synthesize_ambience_assets)
-    add_dependencies(standard_of_iron synthesize_ambience_assets)
-endif()
-
 # Stage assets next to the binary for dev runs.
 #
 # The runtime resolves ":/assets/..." against the filesystem before the Qt
@@ -1132,9 +1128,6 @@ if(TARGET bake_creature_assets)
     # first or a package edited since the last full build fails its
     # integrity check and the bake aborts.
     add_dependencies(bake_creature_assets stage_runtime_assets)
-endif()
-if(TARGET synthesize_ambience_assets)
-    add_dependencies(stage_runtime_assets synthesize_ambience_assets)
 endif()
 
 # ---- clang-format helpers (optional but convenient) ----

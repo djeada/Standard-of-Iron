@@ -770,8 +770,7 @@ void deal_rts_melee_contact_damage(
   bool const soldiers_face_their_lock =
       attack != nullptr && attack->melee_locked_on(target->get_id()) &&
       FormationCombat::has_formation_slots(attacker) &&
-      FormationCombat::has_formation_slots(*target) &&
-      auto_acquires_targets(&attacker) && auto_acquires_targets(target);
+      FormationCombat::has_formation_slots(*target);
   if (!in_range || (!soldiers_face_the_animal && !soldiers_face_their_lock &&
                     facing < std::cos(80.0F * std::numbers::pi_v<float> / 180.0F))) {
     action.action_running = false;

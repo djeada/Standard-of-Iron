@@ -51,14 +51,25 @@ def layer_samples(layer: sources.Source, seconds: float, work: Path) -> list[flo
     """
     total = int(seconds * RATE)
     out = [0.0] * total
+    delay = int(layer.delay * RATE)
+    span = layer.length or seconds
 
     def add(samples: list[float], offset: int, gain: float) -> None:
         limit = min(len(samples), total - offset)
         for i in range(max(0, limit)):
             out[offset + i] += samples[i] * gain
 
-    base = cut_layer(layer, download(layer.url, CACHE), seconds, work)
-    add(base, 0, 1.0)
+    def trimmed(samples: list[float]) -> list[float]:
+        """A layer cut short stops mid-waveform; fade it so it does not click."""
+        if not layer.length:
+            return samples
+        fade = min(int(LENGTH_FADE * RATE), len(samples))
+        for i in range(fade):
+            samples[len(samples) - 1 - i] *= i / fade
+        return samples
+
+    base = trimmed(cut_layer(layer, download(layer.url, CACHE), span, work))
+    add(base, delay, 1.0)
 
     gain = 1.0
     cutoff = layer.lowpass or 0.0
@@ -74,10 +85,14 @@ def layer_samples(layer: sources.Source, seconds: float, work: Path) -> list[flo
             ranked = sources.Source(**{**layer.__dict__, "ranks": ()})
         rank_dir = work / f"rank{rank_index}"
         rank_dir.mkdir(parents=True, exist_ok=True)
-        samples = cut_layer(ranked, download(layer.url, CACHE), seconds, rank_dir)
-        add(samples, int(offset_seconds * RATE), gain)
+        samples = trimmed(cut_layer(ranked, download(layer.url, CACHE), span, rank_dir))
+        add(samples, delay + int(offset_seconds * RATE), gain)
 
     return out
+
+
+LENGTH_FADE = 0.03
+"""Seconds of fade on a layer cut short by `length`."""
 
 
 def envelope(buf: list[float], attack: float, release: float) -> list[float]:
@@ -134,7 +149,6 @@ def fit_level(
 
     scaled = to_peak(buf, ceiling)
     if rms_of(scaled) >= target:
-
         return [s * (target / rms_of(scaled)) for s in scaled], 0.0, rms_db
 
     best = scaled

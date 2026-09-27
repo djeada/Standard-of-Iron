@@ -18,6 +18,8 @@ constexpr float k_trade_interval = 4.0F;
 
 constexpr int k_lots_per_visit = 6;
 
+constexpr int k_sales_per_visit = 20;
+
 constexpr int k_gold_reserve = 60;
 
 constexpr int k_gold_comfortable = 200;
@@ -136,8 +138,46 @@ void EconomyBehavior::execute(const AISnapshot& snapshot,
     stock.set(type, snapshot.resources.get(type));
   }
 
+  ResourceAmounts recruiting = war_chest(context);
+  for (const auto type : k_all_resource_types) {
+    recruiting.set(type,
+                   std::max(recruiting.get(type), context.construction_need.get(type)));
+  }
+  auto wants = larder();
+
+  const bool building_stalled = std::any_of(
+      k_all_resource_types.begin(), k_all_resource_types.end(), [&](ResourceType type) {
+        return context.construction_need.get(type) > stock.get(type);
+      });
+  const int glut_line = building_stalled ? k_stalled_glut : k_glut;
+  std::array<bool, static_cast<std::size_t>(ResourceType::Count)> sold{};
+  for (int sales = 0; sales < k_sales_per_visit; ++sales) {
+    ResourceType glut = ResourceType::Count;
+    int biggest_surplus = 0;
+    for (const auto& want : wants) {
+      const int keep =
+          std::max(glut_line,
+                   recruiting.get(want.type) + (building_stalled ? k_stalled_glut : 0));
+      const int surplus = stock.get(want.type) - keep;
+      if (surplus > biggest_surplus && sell_price(rates, want.type) > 0) {
+        biggest_surplus = surplus;
+        glut = want.type;
+      }
+    }
+    if (glut == ResourceType::Count) {
+      break;
+    }
+    order_trade(glut, false, out_commands);
+    stock.set(glut, stock.get(glut) - rates.trade_quantity);
+    purse += sell_price(rates, glut);
+    sold[static_cast<std::size_t>(glut)] = true;
+  }
+
   const auto buy_toward = [&](ResourceType type, int target, int floor_gold) {
     const int price = buy_price(rates, type);
+    if (sold[static_cast<std::size_t>(type)]) {
+      return;
+    }
     while (lots < k_lots_per_visit && price > 0 && stock.get(type) < target &&
            purse - price >= floor_gold) {
       order_trade(type, true, out_commands);
@@ -147,11 +187,6 @@ void EconomyBehavior::execute(const AISnapshot& snapshot,
     }
   };
 
-  ResourceAmounts recruiting = war_chest(context);
-  for (const auto type : k_all_resource_types) {
-    recruiting.set(type,
-                   std::max(recruiting.get(type), context.construction_need.get(type)));
-  }
   std::array<ResourceType, 4> by_urgency{
       ResourceType::Iron, ResourceType::Wood, ResourceType::Food, ResourceType::Stone};
   std::stable_sort(by_urgency.begin(),
@@ -162,13 +197,10 @@ void EconomyBehavior::execute(const AISnapshot& snapshot,
                      };
                      return shortfall(lhs) > shortfall(rhs);
                    });
-
   for (const auto type : by_urgency) {
-
     buy_toward(type, recruiting.get(type), k_gold_reserve);
   }
 
-  auto wants = larder();
   std::stable_sort(
       wants.begin(), wants.end(), [&stock](const Appetite& lhs, const Appetite& rhs) {
         const float left = static_cast<float>(stock.get(lhs.type)) /
@@ -178,36 +210,11 @@ void EconomyBehavior::execute(const AISnapshot& snapshot,
         return left < right;
       });
   for (const auto& want : wants) {
-
     buy_toward(want.type, want.comfortable, k_gold_comfortable);
     if (lots >= k_lots_per_visit) {
       break;
     }
   }
-
-  if (lots > 0) {
-    return;
-  }
-
-  const bool building_stalled = std::any_of(
-      k_all_resource_types.begin(), k_all_resource_types.end(), [&](ResourceType type) {
-        return context.construction_need.get(type) > stock.get(type);
-      });
-  ResourceType glut = ResourceType::Count;
-  int glut_stock = building_stalled ? k_stalled_glut : k_glut;
-  for (const auto& want : wants) {
-    const int held = stock.get(want.type);
-    const int keep =
-        recruiting.get(want.type) + (building_stalled ? k_stalled_glut : 0);
-    if (held > glut_stock && held > keep && sell_price(rates, want.type) > 0) {
-      glut_stock = held;
-      glut = want.type;
-    }
-  }
-  if (glut == ResourceType::Count) {
-    return;
-  }
-  order_trade(glut, false, out_commands);
 }
 
 auto EconomyBehavior::should_execute(const AISnapshot& snapshot,

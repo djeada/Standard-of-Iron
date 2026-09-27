@@ -351,6 +351,8 @@
         <file>assets/audio/sfx/wildlife/wolf_howl_near.ogg</file>
         <file>assets/audio/sfx/wildlife/wolf_pack_attack.ogg</file>
         <file>assets/audio/sfx/wildlife/wolf_snarl_bark.ogg</file>
+        <file>assets/audio/voices/common/builder.ogg</file>
+        <file>assets/audio/voices/common/civilian.ogg</file>
         <file>assets/audio/voices/carthage/archer.ogg</file>
         <file>assets/audio/voices/carthage/baal_cultist.ogg</file>
         <file>assets/audio/voices/carthage/ballista.ogg</file>
@@ -372,7 +374,6 @@
         <file>assets/audio/voices/commanders/quintus_fabius_maximus.ogg</file>
         <file>assets/audio/voices/roman/archer.ogg</file>
         <file>assets/audio/voices/roman/ballista.ogg</file>
-        <file>assets/audio/voices/roman/builder.ogg</file>
         <file>assets/audio/voices/roman/catapult.ogg</file>
         <file>assets/audio/voices/roman/fire_legionary.ogg</file>
         <file>assets/audio/voices/roman/healer.ogg</file>

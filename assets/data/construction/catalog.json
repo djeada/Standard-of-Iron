@@ -103,22 +103,22 @@
       }
     },
     "cut_tree": {
-      "build_time": 6
+      "build_time": 12
     },
     "collect": {
-      "build_time": 6
+      "build_time": 12
     },
     "collect_stone": {
-      "build_time": 6
+      "build_time": 12
     },
     "collect_iron_ore": {
-      "build_time": 6
+      "build_time": 12
     },
     "harvest_grain": {
-      "build_time": 5
+      "build_time": 10
     },
     "slaughter_sheep": {
-      "build_time": 4
+      "build_time": 8
     }
   }
 }
