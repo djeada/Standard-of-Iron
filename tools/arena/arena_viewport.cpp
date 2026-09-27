@@ -2911,6 +2911,9 @@ void ArenaViewport::reset_arena() {
   clear_undead_zones();
   clear_wildlife();
   clear_units();
+  if (m_world != nullptr) {
+    Arena::destroy_remaining_gameplay_entities(*m_world);
+  }
   const bool had_custom_terrain =
       !m_arena_rivers.empty() || !m_arena_lakes.empty() || !m_arena_bridges.empty() ||
       !m_arena_roads.empty() || !m_arena_elevation_patches.empty() ||
