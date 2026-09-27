@@ -446,6 +446,27 @@ auto scenario_needs_animation_diagnostics(const ArenaScenarioDefinition& definit
                      });
 }
 
+auto destroy_remaining_gameplay_entities(Engine::Core::World& world) -> std::size_t {
+  std::vector<Engine::Core::EntityID> doomed;
+  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
+    if (entity != nullptr) {
+      doomed.push_back(entity->get_id());
+    }
+  }
+  for (auto* entity :
+       world.collect_entities_with<Engine::Core::WallConstructionSiteComponent>()) {
+    if (entity != nullptr) {
+      doomed.push_back(entity->get_id());
+    }
+  }
+  std::sort(doomed.begin(), doomed.end());
+  doomed.erase(std::unique(doomed.begin(), doomed.end()), doomed.end());
+  for (auto const entity_id : doomed) {
+    world.destroy_entity(entity_id);
+  }
+  return doomed.size();
+}
+
 auto validate_scenario(const ArenaScenarioDefinition& definition)
     -> std::vector<ArenaScenarioValidationError> {
   std::vector<ArenaScenarioValidationError> errors;

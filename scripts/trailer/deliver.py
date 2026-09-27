@@ -14,7 +14,10 @@ Checks run on the *encoded* file (a failed check leaves the file at
 * no frame inside the picture (outside intentional fades to black, listed in
   ``--allow-black``) is black, and no run of more than ``--max-freeze`` frames is
   frozen;
-* no luminance flash series that would trip WCAG 2.3.1 (three flashes/second).
+* no luminance flash series that would trip WCAG 2.3.1 (three flashes/second);
+* frame zero, and every frame in the first half second, is a lit image, never
+  a fade from black: platforms use frame zero as the cover and thumbnail, so no
+  ``--allow-black`` span can excuse it.
 """
 
 from __future__ import annotations
@@ -25,6 +28,9 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+
+OPENING_SECONDS = 0.5
+OPENING_MIN_LUMA = 30.0
 
 
 def run(cmd: list[str]) -> str:
@@ -283,6 +289,14 @@ def main() -> int:
         return False
 
     luma = luma_series(tmp)
+    opening = luma[: max(1, int(round(fps * OPENING_SECONDS)))]
+    if not opening or min(opening) < OPENING_MIN_LUMA:
+        dark = min(range(len(opening)), key=lambda i: opening[i]) if opening else 0
+        problems.append(
+            f"opening frame {dark} has mean luma "
+            f"{opening[dark] if opening else 0:.1f} (< {OPENING_MIN_LUMA}): frame zero "
+            "is the thumbnail on every platform, so the film must open on a lit image"
+        )
     blacks = [i / fps for i, y in enumerate(luma) if y < 17.5]
     stray = [t for t in blacks if not inside(t, args.allow_black)]
     if stray:

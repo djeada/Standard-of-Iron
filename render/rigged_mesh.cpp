@@ -78,6 +78,14 @@ void RiggedMesh::setup_buffers() {
     return;
   }
   initializeOpenGLFunctions();
+  bool reported_stale = false;
+  for (GLenum stale = glGetError(); stale != GL_NO_ERROR; stale = glGetError()) {
+    if (!reported_stale) {
+      reported_stale = true;
+      qWarning() << "RiggedMesh::setup_buffers inherited GL error" << stale
+                 << "from an earlier call";
+    }
+  }
 
   m_vao = std::make_unique<VertexArray>();
   m_vbo = std::make_unique<Buffer>(Buffer::Type::Vertex);

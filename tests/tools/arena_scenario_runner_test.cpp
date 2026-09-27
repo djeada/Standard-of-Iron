@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <gtest/gtest.h>
 
+#include "game/core/component.h"
 #include "game/core/component_economy.h"
 #include "game/core/component_gameplay.h"
 #include "game/core/world.h"
@@ -1415,4 +1416,30 @@ TEST(ArenaScenarioRunnerTest, RenderProbeRejectsAPelvisThatSnapsRound) {
   ASSERT_FALSE(runner.report().passed());
   EXPECT_EQ(runner.report().issues.front().code, QStringLiteral("pelvis_snap"));
   diagnostics.set_enabled(false);
+}
+
+TEST(ArenaScenarioRunnerTest, ReloadSweepsEntitiesTheGameCreatedOnItsOwn) {
+  // A promo capture reloads the same world between passes. Structures that
+  // builder crews raised and wall sites they laid were created by game
+  // systems, not by the arena, and used to survive into the next pass.
+  Engine::Core::World world;
+  auto* raised_home = world.create_entity();
+  auto* home_unit = raised_home->add_component<Engine::Core::UnitComponent>();
+  home_unit->spawn_type = Game::Units::SpawnType::Home;
+  raised_home->add_component<Engine::Core::BuildingComponent>();
+  auto* wall_site = world.create_entity();
+  wall_site->add_component<Engine::Core::WallConstructionSiteComponent>();
+  auto* scenery = world.create_entity();
+  const Engine::Core::EntityID raised_id = raised_home->get_id();
+  const Engine::Core::EntityID site_id = wall_site->get_id();
+  const Engine::Core::EntityID scenery_id = scenery->get_id();
+
+  EXPECT_EQ(Arena::destroy_remaining_gameplay_entities(world), 2U);
+
+  EXPECT_EQ(world.get_entity(raised_id), nullptr);
+  EXPECT_EQ(world.get_entity(site_id), nullptr);
+  EXPECT_NE(world.get_entity(scenery_id), nullptr)
+      << "entities that are neither units nor sites belong to the world, not the "
+         "scenario";
+  EXPECT_EQ(Arena::destroy_remaining_gameplay_entities(world), 0U);
 }
