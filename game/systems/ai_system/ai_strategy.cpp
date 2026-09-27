@@ -329,7 +329,7 @@ auto AIStrategyFactory::create_config(AIStrategy strategy) -> AIStrategyConfig {
     config.min_attack_force = 0.3F;
     config.retreat_threshold = 0.10F;
     config.harassment_range = 0.0F;
-    config.target_builder_count = 2;
+    config.target_builder_count = 4;
     config.base_home_target = 4;
     config.desired_barracks_count = 2;
     config.desired_defense_tower_count = 0;

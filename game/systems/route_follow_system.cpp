@@ -196,9 +196,13 @@ constexpr float k_work_anchor_reach = 1.75F;
 auto is_movement_point_allowed(const QVector3D& pos,
                                const Engine::Core::Entity& entity) -> bool {
 
+  auto const* ground = NavGrid::get_pathfinder();
+  Point const ground_cell = NavGrid::world_to_grid(pos.x(), pos.z());
+  bool const on_terrain =
+      ground == nullptr || ground->is_terrain_walkable(ground_cell.x, ground_cell.y);
   if (auto const* builder_prod =
           entity.get_component<Engine::Core::BuilderProductionComponent>();
-      builder_prod != nullptr &&
+      on_terrain && builder_prod != nullptr &&
       (builder_prod->has_construction_site || builder_prod->in_progress) &&
       is_gather_builder_product(builder_prod->product_type)) {
     auto const stands_at = [&pos](float x, float z) {

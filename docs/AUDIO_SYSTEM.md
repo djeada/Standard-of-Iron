@@ -294,14 +294,12 @@ What this means when authoring a file:
 - `assets.qrc` embeds every `sfx/` and `voices/` file plus both JSON catalogues.
 - Music and ambience are **not** embedded. `install(DIRECTORY assets/)` installs them beside the binary, and a player's package always carries them.
 - The loader looks for `assets/audio/` at `<app>/assets/audio`, `<app>/../Resources/assets/audio` (macOS bundle) and `<app>/../../assets/audio`, then falls back to `:/assets/audio/`. A file on disk wins over the embedded copy.
-- The eight synthesised ambience beds are not committed (`.gitignore`). The `synthesize_ambience_assets` target renders them into both `assets/audio/ambience` and the staged build copy. Without Python or an ffmpeg that writes Vorbis the build warns and those beds are missing at runtime; the game runs without them.
 
 ## Asset pipelines
 
 | Material                               | Recipe or record                                  | Rebuild                                                 | Committed |
 | -------------------------------------- | ------------------------------------------------- | ------------------------------------------------------- | --------- |
 | Synthesised cues (`source: synth`)     | `tools/audio_synth/cues.py`                       | `make audio-assets` or `synthesize_cues.py <cue>`       | yes       |
-| Synthesised beds                       | `tools/audio_synth/ambience.py`                   | `make audio-ambience`, and every build                  | no        |
 | Recorded beds                          | `tools/audio_field/sources.py`                    | `make audio-field-ambience` (network)                   | yes       |
 | Recorded one-shots (hits, footsteps)   | `tools/audio_field/oneshots.py`                   | `python3 tools/audio_field/build_oneshots.py` (network) | yes       |
 | Composed battle cues (`source: field`) | `tools/audio_field/battle.py`                     | `make audio-battle` (network)                           | yes       |

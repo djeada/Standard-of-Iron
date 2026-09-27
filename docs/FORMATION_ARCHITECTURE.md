@@ -700,6 +700,21 @@ used to snap to their slot past any walkability check, which is how a column
 marched straight through rocks and trees (`FormationPropClearance` measures it:
 79 soldier-seconds inside props before, none after).
 
+A prop's push-out never moves a soldier onto a hill slope, a cliff or water: that
+correction is dropped when it would land on terrain the pathfinder refuses. Before
+this, the push-out round a boulder on a hillside shoved a gathering crew's men
+up the slope.
+
+**Stranded soldiers rejoin their squad.** A soldier cannot find his own way round a
+hill or a rock; only his troop's centre is routed. When a terrain or prop constraint
+stops his step dead more than 2 m short of his place, or he is more than 12 m from
+it for any reason, `walk_formation_slot` puts him on his place, which
+`pull_onto_terrain` always keeps on walkable ground. The jump is not turned into
+velocity. A mounted rider keeps his momentum, so a jump taken as velocity once set
+a horseman galloping away from his squad at 150 m/s. A census on Cannae over
+480 s of AI play found riders standing 50–300 m from their squads before this
+change, and none after.
+
 Anything a soldier could visibly walk through must be known to the simulation.
 Trees, boulders and dead trees are generated only as world props by
 `TerrainService`; the scatter renderers draw exactly the simulation's props and

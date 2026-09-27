@@ -21,6 +21,7 @@ inline constexpr float k_shield_paint = 8.0F;
 inline constexpr float k_shield_back = 9.0F;
 inline constexpr float k_bone = 10.0F;
 inline constexpr float k_feather = 11.0F;
+inline constexpr float k_oak_end = 12.0F;
 } // namespace WeaponRackMaterial
 
 struct WeaponRackMeshData {

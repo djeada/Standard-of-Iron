@@ -91,16 +91,75 @@ public:
   }
 
   void box(const V3& lo, const V3& hi, float material, float seed) {
-    std::size_t const first = mark();
-    append_box(m_mesh.vertices, m_mesh.indices, lo, hi);
     V3 const extent = hi - lo;
-    V3 axis(1.0F, 0.0F, 0.0F);
+    int along = 0;
     if (extent.y() >= extent.x() && extent.y() >= extent.z()) {
-      axis = V3(0.0F, 1.0F, 0.0F);
+      along = 1;
     } else if (extent.z() >= extent.x()) {
-      axis = V3(0.0F, 0.0F, 1.0F);
+      along = 2;
     }
-    tag_projected(first, material, seed, lo, axis);
+    int const across = (along + 1) % 3;
+    int const deep = (along + 2) % 3;
+    V3 axis;
+    axis[along] = 1.0F;
+    V3 const center = (lo + hi) * 0.5F;
+    V3 const half = extent * 0.5F;
+    float const bevel = std::min(material == M::k_oak ? 0.0035F : 0.0012F,
+                                 std::min(half[across], half[deep]) * 0.18F);
+    std::array<V3, 8> section;
+    std::array<std::array<float, 2>, 8> const corners{
+        {{half[across] - bevel, half[deep]},
+         {-half[across] + bevel, half[deep]},
+         {-half[across], half[deep] - bevel},
+         {-half[across], -half[deep] + bevel},
+         {-half[across] + bevel, -half[deep]},
+         {half[across] - bevel, -half[deep]},
+         {half[across], -half[deep] + bevel},
+         {half[across], half[deep] - bevel}}};
+    for (std::size_t i = 0; i < section.size(); ++i) {
+      section[i][across] = corners[i][0];
+      section[i][deep] = corners[i][1];
+    }
+    std::size_t const first = mark();
+    for (std::size_t i = 0; i < section.size(); ++i) {
+      V3 const a = center + section[i] - axis * half[along];
+      V3 const b = center + section[(i + 1) % section.size()] - axis * half[along];
+      V3 const c = b + axis * extent[along];
+      V3 const d = a + axis * extent[along];
+      V3 const normal = unit(V3::crossProduct(b - a, d - a), axis);
+      auto const base = static_cast<std::uint16_t>(mark());
+      for (V3 const& point : {a, b, c, d}) {
+        m_mesh.vertices.emplace_back(point, normal);
+      }
+      m_mesh.indices.insert(m_mesh.indices.end(),
+                            {base,
+                             static_cast<std::uint16_t>(base + 1),
+                             static_cast<std::uint16_t>(base + 2),
+                             base,
+                             static_cast<std::uint16_t>(base + 2),
+                             static_cast<std::uint16_t>(base + 3)});
+    }
+    tag_projected(first, material, seed, center, axis);
+    for (int end : {-1, 1}) {
+      V3 const cap_center = center + axis * (half[along] * end);
+      auto const hub = static_cast<std::uint16_t>(mark());
+      float const cap_material = material == M::k_oak ? M::k_oak_end : material;
+      m_mesh.vertices.emplace_back(cap_center, axis * end);
+      m_mesh.surface.emplace_back(cap_material, 0.0F, 0.0F, seed);
+      for (V3 const& offset : section) {
+        m_mesh.vertices.emplace_back(cap_center + offset, axis * end);
+        m_mesh.surface.emplace_back(cap_material, offset[across], offset[deep], seed);
+      }
+      for (std::size_t i = 0; i < section.size(); ++i) {
+        auto const a = static_cast<std::uint16_t>(hub + 1 + i);
+        auto const b = static_cast<std::uint16_t>(hub + 1 + (i + 1) % section.size());
+        if (end > 0) {
+          m_mesh.indices.insert(m_mesh.indices.end(), {hub, a, b});
+        } else {
+          m_mesh.indices.insert(m_mesh.indices.end(), {hub, b, a});
+        }
+      }
+    }
   }
 
   void beam(const V3& a, const V3& b, float hw, float hd, float material, float seed) {
@@ -169,19 +228,18 @@ public:
       return rings[i].center + side[i] * (rings[i].rx * std::cos(a)) +
              depth[i] * (rings[i].ry * std::sin(a));
     };
-    auto slope_at = [&](std::size_t i) {
+    auto smooth_normal = [&](std::size_t i, float a) {
       std::size_t const p = i > 0 ? i - 1 : 0;
       std::size_t const q = std::min(i + 1, n - 1);
-      float const dr = (rings[q].rx + rings[q].ry - rings[p].rx - rings[p].ry) * 0.5F;
       float const ds = std::max(arc[q] - arc[p], 1.0e-5F);
-      return dr / ds;
-    };
-    auto smooth_normal = [&](std::size_t i, float a) {
-      V3 const radial =
-          unit(side[i] * (std::cos(a) / std::max(rings[i].rx, 1.0e-4F)) +
-                   depth[i] * (std::sin(a) / std::max(rings[i].ry, 1.0e-4F)),
-               side[i]);
-      return unit(radial - tangent[i] * slope_at(i), radial);
+      float const rx = std::max(rings[i].rx, 1.0e-4F);
+      float const ry = std::max(rings[i].ry, 1.0e-4F);
+      float const ca = std::cos(a);
+      float const sa = std::sin(a);
+      float const slope = ca * ca * (rings[q].rx - rings[p].rx) / (rx * ds) +
+                          sa * sa * (rings[q].ry - rings[p].ry) / (ry * ds);
+      return unit(side[i] * (ca / rx) + depth[i] * (sa / ry) - tangent[i] * slope,
+                  side[i]);
     };
 
     auto push = [&](const V3& p, const V3& nrm, float u, float v) {
@@ -262,10 +320,13 @@ public:
              v_at(i));
       }
       for (int s = 0; s < segs; ++s) {
-        m_mesh.indices.insert(m_mesh.indices.end(),
-                              {hub,
-                               static_cast<std::uint16_t>(hub + 1 + s),
-                               static_cast<std::uint16_t>(hub + 2 + s)});
+        auto const a = static_cast<std::uint16_t>(hub + 1 + s);
+        auto const b = static_cast<std::uint16_t>(hub + 2 + s);
+        if (V3::dotProduct(outward, tangent[i]) < 0.0F) {
+          m_mesh.indices.insert(m_mesh.indices.end(), {hub, b, a});
+        } else {
+          m_mesh.indices.insert(m_mesh.indices.end(), {hub, a, b});
+        }
       }
     };
     cap(0, -tangent.front());
@@ -349,7 +410,11 @@ public:
           auto const b1 = static_cast<std::uint16_t>(b0 + 1);
           auto const c0 = static_cast<std::uint16_t>(b0 + k_cols + 1);
           auto const c1 = static_cast<std::uint16_t>(c0 + 1);
-          m_mesh.indices.insert(m_mesh.indices.end(), {b0, b1, c1, b0, c1, c0});
+          if (is_front) {
+            m_mesh.indices.insert(m_mesh.indices.end(), {b0, b1, c1, b0, c1, c0});
+          } else {
+            m_mesh.indices.insert(m_mesh.indices.end(), {b0, c1, b1, b0, c0, c1});
+          }
         }
       }
     }
@@ -439,7 +504,11 @@ public:
           auto const b1 = static_cast<std::uint16_t>(b0 + 1);
           auto const c0 = static_cast<std::uint16_t>(b0 + k_segs + 1);
           auto const c1 = static_cast<std::uint16_t>(c0 + 1);
-          m_mesh.indices.insert(m_mesh.indices.end(), {b0, b1, c1, b0, c1, c0});
+          if (!is_front) {
+            m_mesh.indices.insert(m_mesh.indices.end(), {b0, b1, c1, b0, c1, c0});
+          } else {
+            m_mesh.indices.insert(m_mesh.indices.end(), {b0, c1, b1, b0, c0, c1});
+          }
         }
       }
     }
@@ -530,12 +599,12 @@ public:
     float const length = axis.length();
     lathe(guard,
           axis,
-          {{0.00F * length, 0.050F, 0.010F},
-           {0.08F * length, 0.049F, 0.011F},
-           {0.36F * length, 0.044F, 0.010F},
-           {0.62F * length, 0.050F, 0.010F},
-           {0.78F * length, 0.042F, 0.009F},
-           {0.92F * length, 0.018F, 0.006F},
+          {{0.00F * length, 0.050F, 0.0035F},
+           {0.08F * length, 0.049F, 0.0038F},
+           {0.36F * length, 0.044F, 0.0032F},
+           {0.62F * length, 0.050F, 0.0035F},
+           {0.78F * length, 0.042F, 0.0028F},
+           {0.92F * length, 0.018F, 0.0018F},
            {1.00F * length, 0.000F, 0.000F}},
           4,
           true,
@@ -601,11 +670,11 @@ public:
           seed + 0.07F);
     lathe(butt + dir * (length - 0.196F),
           dir,
-          {{0.000F, 0.011F, 0.009F},
-           {0.030F, 0.040F, 0.010F},
-           {0.070F, 0.053F, 0.009F},
-           {0.115F, 0.042F, 0.008F},
-           {0.165F, 0.016F, 0.005F},
+          {{0.000F, 0.011F, 0.0050F},
+           {0.030F, 0.040F, 0.0045F},
+           {0.070F, 0.053F, 0.0040F},
+           {0.115F, 0.042F, 0.0030F},
+           {0.165F, 0.016F, 0.0018F},
            {0.196F, 0.000F, 0.000F}},
           4,
           true,

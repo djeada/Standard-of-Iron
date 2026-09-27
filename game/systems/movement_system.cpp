@@ -779,8 +779,6 @@ public:
   }
 
 private:
-  // An escaping body may pass through buildings but not onto a hill slope, a
-  // cliff or water. Leaving such a cell is always allowed.
   [[nodiscard]] auto terrain_allows(float wx, float wz) const -> bool {
     auto const* pathfinder = NavGrid::get_pathfinder();
     if (pathfinder == nullptr || !m_origin_on_terrain) {
@@ -1099,7 +1097,14 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     float const bypass_step =
         std::max(max_navigation_speed(*unit, nullptr) * delta_time, 0.01F);
 
-    if (dist <= bypass_step) {
+    auto const* bypass_ground = NavGrid::get_pathfinder();
+    if (dist <= bypass_step &&
+        (bypass_ground == nullptr ||
+         bypass_ground->is_terrain_segment_walkable(
+             QVector3D(transform->position.x, 0.0F, transform->position.z),
+             QVector3D(builder_prod->bypass_target_x,
+                       0.0F,
+                       builder_prod->bypass_target_z)))) {
       transform->position.x = builder_prod->bypass_target_x;
       transform->position.z = builder_prod->bypass_target_z;
       builder_prod->bypass_movement_active = false;
@@ -1115,6 +1120,22 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
       float const base_speed = max_navigation_speed(*unit, nullptr);
       movement->vx = nx * base_speed;
       movement->vz = nz * base_speed;
+
+      QVector3D const here(transform->position.x, 0.0F, transform->position.z);
+      QVector3D const next(transform->position.x + movement->vx * delta_time,
+                           0.0F,
+                           transform->position.z + movement->vz * delta_time);
+      if (auto const* ground = NavGrid::get_pathfinder();
+          ground != nullptr && !ground->is_terrain_segment_walkable(here, next)) {
+        builder_prod->bypass_movement_active = false;
+        movement->vx = 0.0F;
+        movement->vz = 0.0F;
+        movement->has_target = false;
+        movement->clear_path();
+        facts->progress.state = Engine::Core::MovementOrderState::Arrived;
+        publish_displacement(*facts, *transform, previous_x, previous_z, delta_time);
+        return;
+      }
 
       transform->position.x += movement->vx * delta_time;
       transform->position.z += movement->vz * delta_time;

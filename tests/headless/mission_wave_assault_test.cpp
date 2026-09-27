@@ -428,6 +428,8 @@ TEST_F(MissionWaveAssaultTest, GarrisonAnswersAScoutWithAFewUnitsAndHoldsTheRest
   ASSERT_NE(scout_unit, nullptr);
   scout_unit->health = scout_unit->max_health = 100000;
 
+  session.world().get_entity(scout)->remove_component<Engine::Core::AttackComponent>();
+
   run_for(session, 30.0);
 
   int responders = 0;

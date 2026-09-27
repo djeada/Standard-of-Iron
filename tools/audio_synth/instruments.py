@@ -13,7 +13,6 @@ import random
 from dsp import (
     apply,
     bandpass,
-    env_ad,
     env_perc,
     env_swell,
     gain_of,
@@ -29,8 +28,6 @@ from dsp import (
     salt,
     seconds,
     silence,
-    sine,
-    softclip,
     sweep,
     tremolo,
 )
@@ -76,27 +73,6 @@ def shield(freq: float, decay: float, seed: int):
     return lowpass(apply(mix(body, knock), env_perc(n, 0.001, 1.6)), 4200.0)
 
 
-def thud(freq: float, decay: float, seed: int, drop: float = 0.55):
-    """Low impact with a pitch drop: boots, stakes, shields into dirt."""
-    n = seconds(decay * 1.5)
-    body = apply(sweep(freq, freq * drop, n, 0.35), env_perc(n, 0.0015, 2.2))
-    thump = apply(lowpass(noise(n, seed), freq * 3.0), env_perc(n, 0.001, 3.4))
-    return mix(gain_of(body, 0.9), gain_of(thump, 0.35))
-
-
-def drum(freq: float, decay: float, seed: int, damped: bool = False):
-    n = seconds(decay * 1.4)
-    head = apply(sweep(freq * 1.8, freq, n, 0.5), env_perc(n, 0.001, 2.6))
-    skin = apply(bandpass(noise(n, seed), freq * 4.0, 1.1), env_perc(n, 0.0008, 5.0))
-    out = mix(gain_of(head, 0.85), gain_of(skin, 0.3))
-    return lowpass(out, 2200.0 if damped else 5200.0)
-
-
-def cloth(duration: float, seed: int, centre: float = 2100.0, curve: float = 2.4):
-    n = seconds(duration)
-    return apply(bandpass(pink(n, seed), centre, 0.9), env_perc(n, 0.004, curve))
-
-
 def whoosh(duration: float, seed: int, f0: float, f1: float, q: float = 1.1):
     n = seconds(duration)
     body = moving_bandpass(pink(n, seed), f0, f1, q)
@@ -111,46 +87,12 @@ def mail(duration: float, seed: int, density: int = 90):
     )
 
 
-def gravel(duration: float, seed: int, density: int = 70, decay_curve: float = 2.4):
-    n = seconds(duration)
-    return gain_of(
-        grains(n, seed, density, 0.95, (5.0, 18.0), (700.0, 2800.0), decay_curve), 0.7
-    )
-
-
-def rubble(duration: float, seed: int, density: int = 220, curve: float = 1.3):
-    """Masonry coming down. `curve` near 1.0 keeps stones falling for the whole
-    tail; higher values pile them into the first moment."""
-    n = seconds(duration)
-    heavy = grains(n, seed, density // 2, 1.0, (14.0, 46.0), (180.0, 900.0), curve)
-    light = grains(n, seed + 7, density, 1.0, (5.0, 16.0), (900.0, 3400.0), curve * 1.2)
-    return mix(gain_of(heavy, 0.9), gain_of(light, 0.45))
-
-
 def creak(duration: float, seed: int, f0: float, f1: float, rate: float = 19.0):
     """Stick-slip on rope, leather or an iron hinge."""
     n = seconds(duration)
     body = moving_bandpass(noise(n, seed), f0, f1, 11.0)
     body = tremolo(body, rate, 0.85, seed)
     return apply(body, env_swell(n, 0.45, 1.2))
-
-
-def horn(freq: float, duration: float, seed: int, brightness: float = 1.0):
-    """Additive brass: harmonic stack, attack scoop, a little drive."""
-    n = seconds(duration)
-    out = silence(n)
-    for harmonic in range(1, 11):
-        amp = (1.0 / (harmonic**1.35)) * (brightness if harmonic > 3 else 1.0)
-        if harmonic == 1:
-            partial = sweep(freq * 0.955, freq, n, 0.12)
-        else:
-            partial = sine(freq * harmonic, n, phase=harmonic * 0.7)
-
-        delay = env_ad(n, 0.012 + harmonic * 0.004, duration, 1.1)
-        out = mix(out, apply(gain_of(partial, amp), delay))
-    out = softclip(out, 1.6)
-    air = apply(bandpass(noise(n, seed), freq * 6.0, 0.8), env_perc(n, 0.01, 5.0))
-    return apply(mix(out, gain_of(air, 0.06)), env_ad(n, 0.02, duration * 0.95, 1.5))
 
 
 def breath(duration: float, seed: int, inhale: bool = False, pitch: float = 1.0):
@@ -162,28 +104,6 @@ def breath(duration: float, seed: int, inhale: bool = False, pitch: float = 1.0)
     body = mix(body, gain_of(bandpass(src, 2450.0 * pitch, 2.2), 0.22))
     envelope = env_swell(n, 0.7 if inhale else 0.22, 1.7)
     return apply(body, envelope)
-
-
-def shout(duration: float, seed: int, freq: float = 190.0):
-    """A crowd effort shout: voiced buzz through vowel formants, never a word."""
-    n = seconds(duration)
-    rng = random.Random(salt(seed))
-    voiced = silence(n)
-    for harmonic in range(1, 14):
-        detune = rng.uniform(0.985, 1.015)
-        voiced = mix(
-            voiced,
-            gain_of(
-                sine(freq * harmonic * detune, n, rng.uniform(0, 6.2)),
-                0.8 / (harmonic**1.15),
-            ),
-        )
-    formed = gain_of(bandpass(voiced, 700.0, 2.4), 1.0)
-    formed = mix(formed, gain_of(bandpass(voiced, 1220.0, 3.0), 0.7))
-    formed = mix(formed, gain_of(bandpass(voiced, 2600.0, 3.5), 0.3))
-    rasp = apply(bandpass(noise(n, seed + 3), 1500.0, 0.7), env_swell(n, 0.3, 1.4))
-    out = mix(formed, gain_of(rasp, 0.28))
-    return apply(softclip(out, 1.8), env_swell(n, 0.28, 1.5))
 
 
 def water(duration: float, seed: int):

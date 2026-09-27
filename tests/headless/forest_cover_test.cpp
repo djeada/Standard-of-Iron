@@ -220,8 +220,10 @@ TEST_F(ForestCoverTest, TreesStopAShareOfTheArrowsLoosedIntoTheWood) {
               k_hider);
     const EntityID shooter =
         spawn(Game::Units::SpawnType::Archer,
-              world_of(k_wood_x + standoff_from_wood_centre + 4, k_wood_z),
+              world_of(k_wood_x + standoff_from_wood_centre + 5, k_wood_z),
               k_watcher);
+
+    m_session->world().get_entity(target)->remove_component<AttackComponent>();
     auto* unit = m_session->world()
                      .get_entity(target)
                      ->get_component<Engine::Core::UnitComponent>();

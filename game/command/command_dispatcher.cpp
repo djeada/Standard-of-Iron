@@ -625,9 +625,11 @@ void apply_start_harvest(World& world, int owner_id, const StartHarvest& order) 
     }
     if (assigned) {
 
-      builder->has_construction_site = false;
-      builder->product_type.clear();
+      Game::Systems::OrderService::clear_builder_task(world, entity);
+      Game::Systems::OrderService::clear_builder_gather_order(entity);
       release_task_target(terrain, *builder);
+      builder->auto_gather = true;
+      builder->auto_gather_priority = order.construction_type;
       continue;
     }
     Game::Systems::OrderService::clear_builder_task(world, entity);

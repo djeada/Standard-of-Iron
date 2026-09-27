@@ -222,6 +222,20 @@ TARGET_RMS_DB: dict[str, float] = {
     "elephant_panic": -10.3,
     "wolf_bite_snap": -14.0,
     "wolf_snarl_bark": -16.9,
+    "order_move": -30.0,
+    "order_move_v2": -29.2,
+    "order_move_v3": -28.8,
+    "order_run": -28.9,
+    "order_run_v2": -30.4,
+    "order_formation": -29.5,
+    "order_formation_v2": -31.4,
+    "order_gate_mode": -30.0,
+    "order_rally_set": -28.9,
+    "build_placement_begin": -30.6,
+    "build_unit_queued": -36.1,
+    "build_unit_queued_v2": -34.8,
+    "build_gate_open": -25.7,
+    "build_gate_close": -28.7,
 }
 """Measured RMS of the generated file each cue replaces, in dBFS.
 
@@ -413,6 +427,243 @@ ROPE_SWISH = tdc(
     "CU_Rope, Twirling Swishes_Nicholas Judy_TDC.wav",
 )
 """Rope under speed, for the sling arm of an engine coming round."""
+
+
+CHAIN_RATTLE = tdc(
+    "Chains",
+    "CHAINS/MOVEMENT/CHAINMvmt-Blue Snowball Microphone, "
+    "MCU_Chains, Rattling, Rustling_The Designer's Choice_GNRL2.wav",
+)
+"""A light chain shaken in the hand: a continuous rustle with harder shakes
+every few seconds. The shakes are what mail does when the man wearing it moves
+off, which is the whole of an order acknowledgement."""
+
+WALK_ROCKY = tdc(
+    "Footsteps",
+    "FOOTSTEPS/HUMAN/FEETHmn-Samsung Galaxy Smartphone, "
+    "CU_Footsteps, Rocky Surface_Nicholas Judy_TDC.wav",
+)
+"""Close footsteps on loose stone, one every 0.55-0.6 s from 0:00.00."""
+
+PANTING = tdc(
+    "Human",
+    "HUMAN/BREATH/HMNBrth-Blue Snowball Microphone_Panting, Fast_Nicholas Judy_TDC.wav",
+)
+
+FLAG = tdc(
+    "Cloth",
+    "CLOTH/FLAP/CLOTHFlp-Blue Snowball Microphone, "
+    "CU_Flag, Large, Flapping_Nicholas Judy_TDC.wav",
+)
+"""A large flag in wind. The snaps, where the cloth goes taut, sit at 0:04.15,
+0:06.85 and 0:09.10; the 6.85 one is the hardest in the recording."""
+
+DOOR_LOCK = tdc(
+    "Doors",
+    "DOORS/HARDWARE/DOORHdwr-Samsung Galaxy Smartphone, "
+    "CU_Door Lock, Locking, Unlocking_Nicholas Judy_TDC.wav",
+)
+"""A bolt thrown and drawn ten times, each a slide and a clack about 0.25 s
+long, against a near-silent floor."""
+
+TENT_STAKE = tdc(
+    "Metal",
+    "METAL/IMPACT/METLImpt-Samsung Galaxy Smartphone, "
+    "MCU_Stake, Hammer, Hit, Tent, Vampire_Nicholas Judy_TDC.wav",
+)
+"""A stake hammered into ground outdoors. The 0:03.76 blow is the cleanest;
+the floor is wind at -42 dB, so it needs a highpass rather than more gain."""
+
+DOOR_CREAK_LONG = tdc(
+    "Doors",
+    "DOORS/CREAK/DOORCreak-Samsung Galaxy Smartphone, "
+    "CU_Two, Long_The Designer's Choice_GNRL1.wav",
+)
+"""Two long hinge groans, 0:00-2:10 and 0:03.4-5.7. Slowed, a house door
+becomes a gate."""
+
+SHED_DOOR = tdc(
+    "Doors",
+    "DOORS/WOOD/DOORWood-Samsung Galaxy Smartphone, "
+    "CU_Shed, Open, Close_Nicholas Judy_TDC.wav",
+)
+"""A heavy wooden door: the swing open over 0:00-0.75, then the slam at 0:03.25,
+which is almost all below 500 Hz."""
+
+BOARD_DROP = tdc(
+    "Wood",
+    "WOOD/IMPACT/WOODImpt-Samsung Galaxy Smartphone, CU_Board Drop 03_Nicholas Judy_TDC.wav",
+)
+
+PAPER_PUNCH = tdc(
+    "Paper",
+    "PAPER/IMPACT/PAPRImpt-Blue Snowball Microphone, CU_Paper, Punch, Rip_Nicholas Judy_TDC.wav",
+)
+
+CARD_RIP = tdc(
+    "Paper",
+    "PAPER/RIP/PAPRRip-Blue Snowball Microphone, CU_Card_Nicholas Judy_TDC.wav",
+)
+
+
+def cc0(source: tuple[str, str], start: float, **shaping: float) -> Layer:
+    """One layer of a CC0 recording, for the short order and build cues."""
+    return Layer(url=source[0], origin=source[1], licence=CC0, start=start, **shaping)
+
+
+def order_move(chain: float, step: float, cloth: float) -> list[Layer]:
+    """Mail shaken, one boot on stone, a garment swinging: a man moving off.
+
+    The three takes share the recipe and move each window to a different event
+    in its recording, so the variants are three performances, not one sound
+    pitched about.
+    """
+    return [
+        cc0(CHAIN_RATTLE, chain, highpass=300.0, lowpass=7000.0),
+        cc0(WALK_ROCKY, step, delay=0.12, gain=0.2, highpass=80.0, lowpass=5000.0),
+        cc0(CLOTH_FIGHT, cloth, gain=0.03, highpass=150.0, lowpass=3000.0),
+    ]
+
+
+def order_run(chain: float, breath: float) -> list[Layer]:
+    """A harder shake of the mail and one quick breath: the pace goes up."""
+    return [
+        cc0(CHAIN_RATTLE, chain, highpass=300.0, lowpass=7500.0),
+        cc0(PANTING, breath, delay=0.05, gain=0.5, highpass=300.0, lowpass=5000.0),
+    ]
+
+
+def order_formation(creak: float, snap: float) -> list[Layer]:
+    """Timber taking weight, then a standard's cloth snapping taut."""
+    return [
+        cc0(CREAK_FLOOR, creak, gain=0.6, highpass=150.0, lowpass=4000.0),
+        cc0(FLAG, snap, delay=0.08, highpass=120.0, lowpass=6000.0),
+    ]
+
+
+ORDER_CUES: dict[str, Cue] = {
+    "order_move": Cue(
+        path="sfx/orders/move_kit_shuffle",
+        seconds=0.4,
+        layers=order_move(3.66, 1.12, 5.43),
+        attack=0.005,
+        release=0.12,
+        notes="Acknowledges a move order, so it fires constantly and must stay "
+        "small: one shake of mail, one step, no voice.",
+    ),
+    "order_move_v2": Cue(
+        path="sfx/orders/move_kit_shuffle_v2",
+        seconds=0.4,
+        layers=order_move(8.62, 2.28, 6.98),
+        attack=0.005,
+        release=0.12,
+    ),
+    "order_move_v3": Cue(
+        path="sfx/orders/move_kit_shuffle_v3",
+        seconds=0.4,
+        layers=order_move(5.52, 0.57, 10.12),
+        attack=0.005,
+        release=0.12,
+    ),
+    "order_run": Cue(
+        path="sfx/orders/run_kit_rattle",
+        seconds=0.36,
+        layers=order_run(8.63, 0.22),
+        attack=0.005,
+        release=0.1,
+    ),
+    "order_run_v2": Cue(
+        path="sfx/orders/run_kit_rattle_v2",
+        seconds=0.36,
+        layers=order_run(9.45, 1.33),
+        attack=0.005,
+        release=0.1,
+    ),
+    "order_formation": Cue(
+        path="sfx/orders/formation_pole_shift",
+        seconds=0.3,
+        layers=order_formation(0.0, 6.78),
+        attack=0.005,
+        release=0.1,
+    ),
+    "order_formation_v2": Cue(
+        path="sfx/orders/formation_pole_shift_v2",
+        seconds=0.3,
+        layers=order_formation(0.3, 9.05),
+        attack=0.005,
+        release=0.1,
+    ),
+    "order_gate_mode": Cue(
+        path="sfx/orders/gate_bolt_slide",
+        seconds=0.4,
+        layers=[cc0(DOOR_LOCK, 3.36, highpass=120.0)],
+        attack=0.005,
+        release=0.1,
+        notes="A real bolt thrown: slide and clack. Nothing needs adding.",
+    ),
+    "order_rally_set": Cue(
+        path="sfx/orders/rally_banner_peg",
+        seconds=0.4,
+        layers=[
+            cc0(FLAG, 4.10, highpass=120.0, lowpass=5000.0),
+            cc0(TENT_STAKE, 3.73, delay=0.18, gain=1.2, highpass=150.0),
+        ],
+        attack=0.005,
+        release=0.1,
+        notes="The banner flaps and its peg goes into the ground.",
+    ),
+    "build_placement_begin": Cue(
+        path="sfx/build/placement_begin",
+        seconds=0.4,
+        layers=[
+            cc0(FLAG, 2.20, gain=0.7, highpass=150.0, lowpass=5000.0),
+            cc0(BOARD_DROP, 0.0, delay=0.16, gain=0.7, highpass=100.0),
+        ],
+        attack=0.005,
+        release=0.1,
+        notes="A marking cord flicked out and a stake laid on the ground.",
+    ),
+    "build_unit_queued": Cue(
+        path="sfx/build/unit_queued",
+        seconds=0.1,
+        layers=[cc0(PAPER_PUNCH, 0.0, highpass=1300.0)],
+        attack=0.002,
+        release=0.05,
+        notes="A name struck onto the muster roll. It fires once per click on a "
+        "recruit button, so it is a tick and nothing more.",
+    ),
+    "build_unit_queued_v2": Cue(
+        path="sfx/build/unit_queued_v2",
+        seconds=0.1,
+        layers=[cc0(CARD_RIP, 0.10, highpass=1300.0)],
+        attack=0.002,
+        release=0.05,
+    ),
+    "build_gate_open": Cue(
+        path="sfx/build/gate_open",
+        seconds=1.5,
+        layers=[
+            cc0(DOOR_CREAK_LONG, 0.0, speed=0.8, length=1.25, lowpass=3500.0),
+            cc0(SHED_DOOR, 0.0, delay=0.2, length=0.8, gain=0.8, highpass=50.0),
+            cc0(SHED_DOOR, 3.25, delay=1.2, gain=0.45, highpass=50.0, lowpass=1500.0),
+        ],
+        attack=0.02,
+        release=0.25,
+        notes="The hinge groans, the leaf swings, and it stops against its post.",
+    ),
+    "build_gate_close": Cue(
+        path="sfx/build/gate_close",
+        seconds=1.5,
+        layers=[
+            cc0(DOOR_CREAK_LONG, 3.4, speed=0.8, length=0.9, gain=0.7, lowpass=3000.0),
+            cc0(SHED_DOOR, 3.22, delay=0.82, highpass=50.0),
+            cc0(DOOR_LOCK, 1.22, delay=1.12, gain=0.6, highpass=120.0, lowpass=3000.0),
+        ],
+        attack=0.02,
+        release=0.25,
+        notes="Hinge, slam, and the bar dropped across behind it.",
+    ),
+}
 
 
 CUES: dict[str, Cue] = {
@@ -1439,4 +1690,5 @@ CUES: dict[str, Cue] = {
         notes="Linen drawn off a roll and pulled tight. A slow fibrous tear is what "
         "binding a wound actually sounds like.",
     ),
+    **ORDER_CUES,
 }

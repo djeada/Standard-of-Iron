@@ -734,9 +734,6 @@ auto constrain_step_to_ground(const Pathfinding& pathfinder,
   return true;
 }
 
-// Soldiers stand on the same ground as their squad: never on a hill slope, a
-// cliff or water. A slot that falls on such a cell (a flank file hanging over a
-// rim, a crowd shove at the edge of a plateau) is pulled in toward the squad.
 auto terrain_walkable_at(const Pathfinding& pathfinder, float x, float z) -> bool {
   auto const cell = pathfinder.world_to_grid(x, z);
   return pathfinder.is_terrain_walkable(cell.x, cell.y);
@@ -1194,6 +1191,7 @@ void walk_formation_slot(const SlotWalk& walk,
     step_x = dx;
     step_z = dz;
   }
+  float const wanted_step = std::hypot(step_x, step_z);
   if (!walk.position_is_authored && pathfinder != nullptr &&
       constrain_step_to_ground(
           *pathfinder,
@@ -1218,16 +1216,39 @@ void walk_formation_slot(const SlotWalk& walk,
     float const keep = correction > correction_limit && correction > 0.0001F
                            ? correction_limit / correction
                            : 1.0F;
-    step_x += correction_x * keep;
-    step_z += correction_z * keep;
+
+    bool const onto_slope =
+        pathfinder != nullptr &&
+        !terrain_walkable_at(*pathfinder,
+                             soldier.world_x + step_x + correction_x * keep,
+                             soldier.world_z + step_z + correction_z * keep);
+    if (!onto_slope) {
+      step_x += correction_x * keep;
+      step_z += correction_z * keep;
+    }
     soldier.relocation_blocked = true;
   }
 
+  constexpr float k_stranded_distance = 2.0F;
+  constexpr float k_lost_distance = 12.0F;
+  bool const stopped_dead =
+      wanted_step > 1.0e-4F && std::hypot(step_x, step_z) < 1.0e-4F;
+  bool const stranded =
+      (stopped_dead && distance > k_stranded_distance) || distance > k_lost_distance;
+  bool snapped = false;
+  if (dt > 0.0F && stranded &&
+      (pathfinder == nullptr ||
+       terrain_walkable_at(*pathfinder, destination.x(), destination.z()))) {
+    step_x = dx;
+    step_z = dz;
+    snapped = true;
+  }
   soldier.world_x += step_x;
   soldier.world_z += step_z;
   if (dt > 0.0F) {
-    soldier.world_velocity_x = step_x / dt;
-    soldier.world_velocity_z = step_z / dt;
+
+    soldier.world_velocity_x = snapped ? 0.0F : step_x / dt;
+    soldier.world_velocity_z = snapped ? 0.0F : step_z / dt;
     if (walk.position_is_authored) {
 
       float const blend = std::min(1.0F, dt / k_authored_velocity_smoothing_seconds);

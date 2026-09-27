@@ -22,6 +22,7 @@
 #include "game/systems/runtime_system_registry.h"
 #include "game/units/factory.h"
 #include "game/units/spawn_type.h"
+#include "game/units/squad.h"
 
 namespace {
 
@@ -98,6 +99,35 @@ protected:
     return count;
   }
 
+  auto position_of(EntityID id) -> QVector3D {
+    const auto* t = m_session->world().try_get<Engine::Core::TransformComponent>(id);
+    return t == nullptr ? QVector3D() : QVector3D(t->position.x, 0.0F, t->position.z);
+  }
+
+  auto closest_pair(const std::vector<EntityID>& crews) -> float {
+    float closest = 1.0e9F;
+    for (std::size_t i = 0; i < crews.size(); ++i) {
+      for (std::size_t j = i + 1; j < crews.size(); ++j) {
+        closest =
+            std::min(closest, (position_of(crews[i]) - position_of(crews[j])).length());
+      }
+    }
+    return closest;
+  }
+
+  auto tree_at(float x, float z) -> std::uint64_t {
+    Game::Map::WorldProp tree;
+    tree.type = Game::Map::WorldProp::Type::PineTree;
+    return m_session->terrain().add_world_prop_at_world(tree, x, z);
+  }
+
+  void run(double seconds) {
+    const double tick = m_session->clock().tick_seconds();
+    for (double elapsed = 0.0; elapsed < seconds; elapsed += tick) {
+      step();
+    }
+  }
+
   void step() {
     const double tick = m_session->clock().tick_seconds();
     m_session->clock().advance(tick);
@@ -133,6 +163,7 @@ TEST_F(BuilderCrewsTest, EveryCrewInTheOrderWorksTheSiteAndOneHouseRises) {
   const float one_crew_seconds = Game::Systems::construction_build_time("home");
   const double tick = m_session->clock().tick_seconds();
   int most_at_work = 0;
+  float farthest_from_site = 0.0F;
   double built_after = -1.0;
   int wood_after_order = -1;
   for (double elapsed = 0.0; elapsed < 180.0; elapsed += tick) {
@@ -148,6 +179,14 @@ TEST_F(BuilderCrewsTest, EveryCrewInTheOrderWorksTheSiteAndOneHouseRises) {
       }
     }
     most_at_work = std::max(most_at_work, at_work);
+    for (const auto id : crews) {
+      const auto* builder = builder_of(id);
+      if (builder != nullptr && builder->at_construction_site && builder->in_progress) {
+        const QVector3D at = position_of(id);
+        farthest_from_site = std::max(farthest_from_site,
+                                      std::hypot(at.x() - site.x(), at.z() - site.z()));
+      }
+    }
     if (built_after < 0.0 && count_of(Game::Units::SpawnType::Home) > 0) {
       built_after = elapsed;
     }
@@ -158,6 +197,8 @@ TEST_F(BuilderCrewsTest, EveryCrewInTheOrderWorksTheSiteAndOneHouseRises) {
 
   EXPECT_EQ(most_at_work, static_cast<int>(crews.size()))
       << "every crew named in the order must reach the site and work it";
+  EXPECT_LT(farthest_from_site, 0.5F)
+      << "a crew worked the house from beside it instead of standing on it";
   EXPECT_EQ(count_of(Game::Units::SpawnType::Home), 1);
   ASSERT_GE(built_after, 0.0) << "the house was never finished";
   EXPECT_LT(built_after, one_crew_seconds + 30.0);
@@ -201,6 +242,82 @@ TEST_F(BuilderCrewsTest, AHouseCannotBeOrderedOnTopOfStandingTroops) {
   EXPECT_FALSE(Game::Systems::troops_stand_on(
       m_session->world(), "home", clear.x(), clear.z(), 0.0F, {&crew, 1}))
       << "open ground away from the squad must stay buildable";
+}
+
+TEST_F(BuilderCrewsTest, CrewsSentToOneTreeSpreadOverTheGroveApart) {
+  const std::vector<EntityID> crews{
+      spawn_builder(40, 46), spawn_builder(40, 48), spawn_builder(40, 50)};
+  std::vector<std::uint64_t> grove;
+  for (int i = 0; i < 6; ++i) {
+    const QVector3D spot =
+        Game::Systems::NavGrid::grid_to_world({52 + (i % 3) * 2, 46 + (i / 3) * 2});
+    grove.push_back(tree_at(spot.x(), spot.z()));
+  }
+  const QVector3D first = Game::Systems::NavGrid::grid_to_world({52, 46});
+  ASSERT_TRUE(Game::Command::submit(
+      m_session->world(),
+      Game::Command::Source::LocalPlayer,
+      k_player,
+      Game::Command::StartHarvest{.units = crews,
+                                  .construction_type = "cut_tree",
+                                  .resource_target = grove.front(),
+                                  .site = first}));
+
+  float closest = 1.0e9F;
+  int most_working = 0;
+  const double tick = m_session->clock().tick_seconds();
+  for (double elapsed = 0.0; elapsed < 40.0; elapsed += tick) {
+    step();
+    int working = 0;
+    for (const auto id : crews) {
+      const auto* builder = builder_of(id);
+      working += builder != nullptr && builder->at_construction_site ? 1 : 0;
+    }
+    most_working = std::max(most_working, working);
+    if (working == static_cast<int>(crews.size())) {
+      closest = std::min(closest, closest_pair(crews));
+    }
+  }
+  EXPECT_EQ(most_working, static_cast<int>(crews.size()))
+      << "crews in one gather order stood idle while free trees stood beside the one "
+         "clicked";
+  EXPECT_GE(closest, 1.5F) << "two crews gathered standing on the same tree";
+}
+
+TEST_F(BuilderCrewsTest, AHalfCrewGathersFarSlowerThanAWholeOne) {
+  auto pace_of = [this](int men_divisor, int grid_z) {
+    const EntityID crew = spawn_builder(40, grid_z);
+    auto* unit = m_session->world().try_get<Engine::Core::UnitComponent>(crew);
+    unit->squad_strength =
+        Game::Units::squad_establishment(unit->spawn_type) / men_divisor;
+    const QVector3D spot = Game::Systems::NavGrid::grid_to_world({44, grid_z});
+    const auto tree = tree_at(spot.x(), spot.z());
+    Game::Command::submit(m_session->world(),
+                          Game::Command::Source::LocalPlayer,
+                          k_player,
+                          Game::Command::StartHarvest{.units = {crew},
+                                                      .construction_type = "cut_tree",
+                                                      .resource_target = tree,
+                                                      .site = spot});
+    auto* builder = builder_of(crew);
+    for (int i = 0;
+         i < 1200 && !(builder->at_construction_site && builder->in_progress);
+         ++i) {
+      step();
+    }
+    const float before = builder->time_remaining;
+    run(2.0);
+    return (before - builder->time_remaining) / 2.0F;
+  };
+  const float whole = pace_of(1, 30);
+  const float half = pace_of(2, 60);
+  ASSERT_GT(whole, 0.0F) << "the whole crew never started gathering";
+  EXPECT_NEAR(whole, 1.0F, 0.05F);
+  EXPECT_LT(half, whole * 0.40F)
+      << "half a crew gathered at " << half << " of a whole crew's " << whole
+      << "; splitting a crew must not multiply what it gathers";
+  EXPECT_GT(Game::Systems::construction_build_time("cut_tree"), 11.0F)
+      << "gathering takes twice as long as it did";
 }
 
 } // namespace

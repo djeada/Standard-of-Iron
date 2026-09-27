@@ -2469,10 +2469,55 @@ TEST_F(AISystemTest, ATownThatCannotBuildForWantOfStoneSellsTimberForIt) {
   std::vector<Game::Systems::AI::AICommand> commands;
   behavior.execute(snapshot, context, 10.0F, commands);
 
-  ASSERT_EQ(commands.size(), 1U)
+  ASSERT_FALSE(commands.empty())
       << "a town stripped of stone sat on its timber and never raised another home";
   EXPECT_EQ(commands.front().trade_resource, Game::Systems::ResourceType::Wood);
   EXPECT_FALSE(commands.front().trade_is_purchase);
+  for (const auto& command : commands) {
+    EXPECT_FALSE(command.trade_resource == Game::Systems::ResourceType::Wood &&
+                 command.trade_is_purchase)
+        << "bought back the timber it had just sold";
+  }
+}
+
+TEST_F(AISystemTest, ATownSittingOnAPileOfTimberSellsItForTheStoneItLacks) {
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+  snapshot.friendly_units = {
+      make_barracks(50, 40.0F, 40.0F),
+      make_building(70, 44.0F, 42.0F, Game::Units::SpawnType::Marketplace),
+  };
+  snapshot.has_resource_snapshot = true;
+  snapshot.resources.set(Game::Systems::ResourceType::Gold, 60);
+  snapshot.resources.set(Game::Systems::ResourceType::Wood, 3000);
+  snapshot.resources.set(Game::Systems::ResourceType::Food, 300);
+  snapshot.resources.set(Game::Systems::ResourceType::Iron, 300);
+  snapshot.resources.set(Game::Systems::ResourceType::Stone, 0);
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+  context.construction_need.set(Game::Systems::ResourceType::Stone, 15);
+
+  Game::Systems::AI::EconomyBehavior behavior;
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 10.0F, commands);
+
+  int timber_sold = 0;
+  int stone_bought = 0;
+  for (const auto& command : commands) {
+    if (command.trade_resource == Game::Systems::ResourceType::Wood &&
+        !command.trade_is_purchase) {
+      ++timber_sold;
+    }
+    if (command.trade_resource == Game::Systems::ResourceType::Stone &&
+        command.trade_is_purchase) {
+      ++stone_bought;
+    }
+  }
+  EXPECT_GT(timber_sold, 1) << "one lot a visit never dents a pile of 3000";
+  EXPECT_GE(stone_bought, 1) << "the timber's gold never bought the stone it lacked";
 }
 
 TEST_F(AISystemTest, AnIdlePairIsSentToClaimTheNearestGoldVein) {

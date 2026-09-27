@@ -28,12 +28,6 @@
 #include "game/units/factory.h"
 #include "game/units/spawn_type.h"
 
-// A hill is reached through its entrances and nowhere else. Every scenario here
-// runs the whole presentation (the soldiers the player sees) and samples every
-// squad centre and every soldier each tick: none may stand on a slope cell. The
-// same bug resurfaced many times because the older hill tests only checked
-// squad centres, or only reported soldiers on the slope.
-
 namespace {
 
 using Engine::Core::EntityID;
@@ -189,8 +183,6 @@ protected:
     return samples;
   }
 
-  // The first open lowland point walking outward from the hill's centre along a
-  // direction: the foot of the slope, where troops walking past brush the rim.
   [[nodiscard]] auto
   foot_of(const QVector3D& centre, float dir_x, float dir_z) const -> QVector3D {
     for (float r = 1.0F; r < 60.0F; r += 0.5F) {
@@ -206,7 +198,6 @@ protected:
     return centre;
   }
 
-  // The last open crown point walking outward from the hill's centre.
   [[nodiscard]] auto
   rim_of(const QVector3D& centre, float dir_x, float dir_z) const -> QVector3D {
     QVector3D last = centre;
@@ -313,16 +304,13 @@ TEST_F(HillContainmentTest, ATroopOnAPlateauLeavesItByTheRampNotTheSlope) {
 }
 
 TEST_F(HillContainmentTest, ABuildingBetweenTwoHillsLeavesTheLanePassable) {
-  // An enemy building fills the corridor between two hills but for a lane of one
-  // to two open cells against the western slope. Its navigation padding used to
-  // swallow that lane, so nobody could pass between the hills.
+
   for (float const lane : {2.0F, 2.5F, 3.0F}) {
     SCOPED_TRACE("lane " + std::to_string(lane) + " m");
     Game::Systems::BuildingCollisionRegistry::instance().clear();
     field({hill(-24.0F, 0.0F, 16.0F, -50.0F, 0.0F),
            hill(24.0F, 0.0F, 16.0F, 50.0F, 0.0F)});
 
-    // The corridor's narrowest edges over every row the building will cover.
     float gap_west = -40.0F;
     float gap_east = 40.0F;
     for (float z = -3.0F; z <= 3.0F; z += 0.5F) {
@@ -351,8 +339,7 @@ TEST_F(HillContainmentTest, ABuildingBetweenTwoHillsLeavesTheLanePassable) {
 
     float const lane_x = gap_west + 0.25F;
     auto* pathfinder = NavGrid::get_pathfinder();
-    // Seal everything on this line but the corridor, so the lane is the only way
-    // from south to north.
+
     int const row = NavGrid::world_to_grid(0.0F, 0.0F).y;
     for (int x = 0; x < k_grid; ++x) {
       for (int z = row - 1; z <= row + 1; ++z) {
@@ -386,11 +373,39 @@ TEST_F(HillContainmentTest, ATroopSealedOnAPlateauNeverLeapsTheSlope) {
   QVector3D const below = foot_of({}, 0.0F, 1.0F);
   EntityID const troop =
       spawn(SpawnType::Spearman, k_player, {0.0F, 0.0F, rim.z() - 2.0F});
-  // Plug the only ramp.
+
   building(-30.0F, 0.0F, 12.0F, 16.0F);
   Game::Systems::CommandService::move_unit(
       m_session->world(), troop, {0.0F, 0.0F, below.z() + 4.0F});
   expect_no_slope(run_watching({troop}, 30.0), "sealed plateau");
+}
+
+TEST_F(HillContainmentTest, ABuilderCrewGatheringStoneOnASlopeWorksFromTheFoot) {
+
+  field({hill(0.0F, 0.0F, 18.0F, -30.0F, 0.0F)});
+  QVector3D const foot = foot_of({}, 0.0F, 1.0F);
+  QVector3D stone_at(0.0F, 0.0F, foot.z() - 1.5F);
+  ASSERT_TRUE(on_slope(stone_at.x(), stone_at.z()))
+      << "the test stone should lie on the slope";
+  Game::Map::WorldProp stone;
+  stone.type = Game::Map::WorldProp::Type::Boulder;
+  auto const stone_id =
+      m_session->terrain().add_world_prop_at_world(stone, stone_at.x(), stone_at.z());
+  NavGrid::get_pathfinder()->mark_navigation_grid_dirty();
+  NavGrid::get_pathfinder()->update_navigation_grid();
+
+  EntityID const crew =
+      spawn(SpawnType::Builder, k_player, {0.0F, 0.0F, foot.z() + 6.0F});
+  ASSERT_NE(crew, 0U);
+  Game::Command::submit(
+      m_session->world(),
+      Game::Command::Source::LocalPlayer,
+      k_player,
+      Game::Command::StartHarvest{.units = {crew},
+                                  .construction_type = "collect_stone",
+                                  .resource_target = stone_id,
+                                  .site = stone_at});
+  expect_no_slope(run_watching({crew}, 40.0), "gathering a stone on the slope");
 }
 
 } // namespace

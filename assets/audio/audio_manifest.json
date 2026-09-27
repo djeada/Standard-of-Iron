@@ -157,20 +157,29 @@
       }
     },
     {
-      "id": "voice.roman.builder",
-      "aliases": [
-        "roman.builder"
-      ],
-      "path": "voices/roman/builder.ogg",
+      "id": "voice.common.builder",
+      "path": "voices/common/builder.ogg",
       "category": "voice",
       "load_policy": "mission",
       "tags": {
-        "faction": "roman",
         "unit": "builder"
       },
       "provenance": {
         "origin": "Recorded by the project author",
         "licence": "Own work (MIT)"
+      }
+    },
+    {
+      "id": "voice.common.civilian",
+      "path": "voices/common/civilian.ogg",
+      "category": "voice",
+      "load_policy": "mission",
+      "tags": {
+        "unit": "civilian"
+      },
+      "provenance": {
+        "origin": "Supplied by the project owner on 2026-09-27 as civillain.mp3",
+        "licence": "Supplied by the project owner"
       }
     },
     {
@@ -1012,8 +1021,8 @@
         "variant": "primary"
       },
       "provenance": {
-        "origin": "Synthesised by `tools/audio_synth/ambience.py`",
-        "licence": "Own work (MIT)"
+        "origin": "Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, Hosingen, Luxembourg, 'summer fair, forging stand'; radio aporee ::: maps, Rolley Lake Trail, Mission, BC, Canada, 'Campfire at dusk'; radio aporee ::: maps, Dalyan, Mu\u011fla Province, Turkey, 'Dalyan market chatter'",
+        "licence": "Public Domain Mark 1.0"
       }
     },
     {
@@ -1030,8 +1039,8 @@
         "variant": "alternate"
       },
       "provenance": {
-        "origin": "Synthesised by `tools/audio_synth/ambience.py`",
-        "licence": "Own work (MIT)"
+        "origin": "Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, Siegburg, Germany, 'Blacksmith on the medieval Christmas market'; radio aporee ::: maps, Buryanek State Recreation Area, 'Camp Fire'; radio aporee ::: maps, Hosingen, Luxembourg, 'summer fair, forging stand'",
+        "licence": "Public Domain Mark 1.0"
       }
     },
     {
@@ -1116,8 +1125,8 @@
         "variant": "primary"
       },
       "provenance": {
-        "origin": "Synthesised by `tools/audio_synth/ambience.py`",
-        "licence": "Own work (MIT)"
+        "origin": "Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, F\u00e8s, Morocco, 'M\u00e9dina de Fes D\u00e9ambulation - Ambiance'; radio aporee ::: maps, Buryanek State Recreation Area, 'Camp Fire'; radio aporee ::: maps, F\u00e8s, Morocco, 'les tailleurs sur marbre'",
+        "licence": "Public Domain Mark 1.0"
       }
     },
     {
@@ -1134,8 +1143,8 @@
         "variant": "alternate"
       },
       "provenance": {
-        "origin": "Synthesised by `tools/audio_synth/ambience.py`",
-        "licence": "Own work (MIT)"
+        "origin": "Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, F\u00e8s, Morocco, 'M\u00e9dina de Fes D\u00e9ambulation - Ambiance'; radio aporee ::: maps, Dartington, Devon, UK, 'soundcamp2015dartington crackling fire'; radio aporee ::: maps, Siegburg, Germany, 'Blacksmith on the medieval Christmas market'",
+        "licence": "Public Domain Mark 1.0"
       }
     },
     {
@@ -1189,8 +1198,8 @@
         "variant": "siege"
       },
       "provenance": {
-        "origin": "Synthesised by `tools/audio_synth/ambience.py`",
-        "licence": "Own work (MIT)"
+        "origin": "Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, Koforidua, Ghana, 'Birds and a hammering Carpenter'; radio aporee ::: maps, Hosingen, Luxembourg, 'summer fair, forging stand'; radio aporee ::: maps, F\u00e8s, Morocco, 'les tailleurs sur marbre'",
+        "licence": "Public Domain Mark 1.0"
       }
     },
     {
@@ -1206,8 +1215,8 @@
         "variant": "aftermath"
       },
       "provenance": {
-        "origin": "Synthesised by `tools/audio_synth/ambience.py`",
-        "licence": "Own work (MIT)"
+        "origin": "Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, Machar municipal landfill, Canada, 'Refuse pile burning'; radio aporee ::: maps, Tyneham, UK, 'Jackdaws, Rooks and Crows'; radio aporee ::: maps, Pic du Canigou, France, 'Sound of Wind on top of the Canigou Mountain'",
+        "licence": "Public Domain Mark 1.0"
       }
     },
     {
@@ -1223,8 +1232,8 @@
         "variant": "primary"
       },
       "provenance": {
-        "origin": "Synthesised by `tools/audio_synth/ambience.py`",
-        "licence": "Own work (MIT)"
+        "origin": "Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, Rovinj, Croatia, 'seagulls and old people'; radio aporee ::: maps, Piazza del Porto, La Caletta, Italy, 'noon port ambience'; radio aporee ::: maps, Oile\u00e1n Chl\u00e9ire, Ireland, 'North Harbour, Cape Clear Island'",
+        "licence": "Public Domain Mark 1.0"
       }
     },
     {
@@ -1240,8 +1249,8 @@
         "variant": "market"
       },
       "provenance": {
-        "origin": "Synthesised by `tools/audio_synth/ambience.py`",
-        "licence": "Own work (MIT)"
+        "origin": "Cut by `tools/audio_field/build_beds.py` from radio aporee ::: maps, Dalyan, Mu\u011fla Province, Turkey, 'Dalyan market chatter'; radio aporee ::: maps, F\u00e8s, Morocco, 'M\u00e9dina de Fes D\u00e9ambulation - Ambiance'; radio aporee ::: maps, F\u00e8s, Morocco, 'les tailleurs sur marbre'",
+        "licence": "Public Domain Mark 1.0"
       }
     },
     {
@@ -1979,11 +1988,11 @@
       "cooldown_ms": 200,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "field"
       },
       "provenance": {
-        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `order.move`",
-        "licence": "Own work (MIT)"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC CHAINS, 'MCU_Chains, Rattling, Rustling'; TDC FOOTSTEPS, 'CU_Footsteps, Rocky Surface'; TDC CLOTH, 'CU_Swish, Impact, Fight'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2069,11 +2078,11 @@
       "cooldown_ms": 200,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "field"
       },
       "provenance": {
-        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `order.run`",
-        "licence": "Own work (MIT)"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC CHAINS, 'MCU_Chains, Rattling, Rustling'; TDC HUMAN, 'Panting, Fast'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2084,11 +2093,11 @@
       "cooldown_ms": 200,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "field"
       },
       "provenance": {
-        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `order.formation`",
-        "licence": "Own work (MIT)"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC WOOD, 'CU_Floorboard, Creak'; TDC CLOTH, 'CU_Flag, Large, Flapping'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2114,11 +2123,11 @@
       "cooldown_ms": 200,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "field"
       },
       "provenance": {
-        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `order.gate_mode`",
-        "licence": "Own work (MIT)"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC DOORS, 'CU_Door Lock, Locking, Unlocking'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2129,11 +2138,11 @@
       "cooldown_ms": 200,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "field"
       },
       "provenance": {
-        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `order.rally_set`",
-        "licence": "Own work (MIT)"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC CLOTH, 'CU_Flag, Large, Flapping'; TDC METAL, 'MCU_Stake, Hammer, Hit, Tent, Vampire'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2160,11 +2169,11 @@
       "cooldown_ms": 200,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "field"
       },
       "provenance": {
-        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `build.placement_begin`",
-        "licence": "Own work (MIT)"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC CLOTH, 'CU_Flag, Large, Flapping'; TDC WOOD, 'CU_Board Drop 03'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2235,11 +2244,11 @@
       "cooldown_ms": 200,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "field"
       },
       "provenance": {
-        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `build.unit_queued`",
-        "licence": "Own work (MIT)"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC PAPER, 'CU_Paper, Punch, Rip'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2280,11 +2289,11 @@
       "cooldown_ms": 500,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "field"
       },
       "provenance": {
-        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `build.gate_open`",
-        "licence": "Own work (MIT)"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC DOORS, 'CU_Two, Long'; TDC DOORS, 'CU_Shed, Open, Close'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2295,11 +2304,11 @@
       "cooldown_ms": 500,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "field"
       },
       "provenance": {
-        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `build.gate_close`",
-        "licence": "Own work (MIT)"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC DOORS, 'CU_Two, Long'; TDC DOORS, 'CU_Shed, Open, Close'; TDC DOORS, 'CU_Door Lock, Locking, Unlocking'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2778,11 +2787,11 @@
       "cooldown_ms": 200,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "field"
       },
       "provenance": {
-        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `order.move`",
-        "licence": "Own work (MIT)"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC CHAINS, 'MCU_Chains, Rattling, Rustling'; TDC FOOTSTEPS, 'CU_Footsteps, Rocky Surface'; TDC CLOTH, 'CU_Swish, Impact, Fight'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2793,11 +2802,11 @@
       "cooldown_ms": 200,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "field"
       },
       "provenance": {
-        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `order.move`",
-        "licence": "Own work (MIT)"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC CHAINS, 'MCU_Chains, Rattling, Rustling'; TDC FOOTSTEPS, 'CU_Footsteps, Rocky Surface'; TDC CLOTH, 'CU_Swish, Impact, Fight'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2808,11 +2817,11 @@
       "cooldown_ms": 200,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "field"
       },
       "provenance": {
-        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `order.run`",
-        "licence": "Own work (MIT)"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC CHAINS, 'MCU_Chains, Rattling, Rustling'; TDC HUMAN, 'Panting, Fast'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2823,11 +2832,11 @@
       "cooldown_ms": 200,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "field"
       },
       "provenance": {
-        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `order.formation`",
-        "licence": "Own work (MIT)"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC WOOD, 'CU_Floorboard, Creak'; TDC CLOTH, 'CU_Flag, Large, Flapping'",
+        "licence": "CC0 1.0"
       }
     },
     {
@@ -2838,11 +2847,11 @@
       "cooldown_ms": 200,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "field"
       },
       "provenance": {
-        "origin": "Synthesised by `tools/audio_synth/cues.py`, recipe `build.unit_queued`",
-        "licence": "Own work (MIT)"
+        "origin": "Composed by `tools/audio_field/build_battle.py` from TDC PAPER, 'CU_Card'",
+        "licence": "CC0 1.0"
       }
     },
     {

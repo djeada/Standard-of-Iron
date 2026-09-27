@@ -275,6 +275,7 @@ void AudioCoordinator::configure_audio_voice_mappings() {
       "catapult",
       "ballista",
       "builder",
+      "civilian",
       "elephant",
   };
 
@@ -298,6 +299,15 @@ void AudioCoordinator::configure_audio_voice_mappings() {
             std::string(faction_name) + "." + std::string(unit_name);
         m_event_handler->load_unit_voice_mapping(key, track_id.toStdString());
       }
+    }
+  }
+
+  for (const char* unit_name : k_common_units) {
+    const QString shared_id =
+        QStringLiteral("voice.common.") + QString::fromLatin1(unit_name);
+    if (AudioResourceLoader::has_manifest_entry(shared_id)) {
+      AudioResourceLoader::ensure_audio_resource_loaded(shared_id);
+      m_event_handler->load_unit_voice_mapping(unit_name, shared_id.toStdString());
     }
   }
 

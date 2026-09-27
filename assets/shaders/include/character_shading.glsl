@@ -278,11 +278,6 @@ vec3 soi_finish_character(vec3 color,
   return color;
 }
 
-// Which side a soldier is on must read at night. Moonlight turns red cloth
-// purple-black and blue cloth into the blue scene, so a soldier's edges pick up
-// a light in his side's colour: nothing by day, clear at night, stronger while
-// he fights. The team colour is the squad's cloth colour, lifted to full
-// brightness so red and blue stay apart against the moonlit ground.
 vec3 apply_team_accent(vec3 color,
                        vec3 team,
                        vec3 surface_normal,

@@ -236,6 +236,23 @@ auto Pathfinding::is_terrain_walkable(int x, int y) const -> bool {
          CellValue::Walkable;
 }
 
+auto Pathfinding::is_terrain_segment_walkable(const QVector3D& from,
+                                              const QVector3D& to) const -> bool {
+  Point const start = world_to_grid(from.x(), from.z());
+  float const length = std::hypot(to.x() - from.x(), to.z() - from.z());
+  int const steps = std::max(1, static_cast<int>(std::ceil(length / 0.25F)));
+  for (int i = 1; i <= steps; ++i) {
+    float const t = static_cast<float>(i) / static_cast<float>(steps);
+    Point const cell = world_to_grid(from.x() + (to.x() - from.x()) * t,
+                                     from.z() + (to.z() - from.z()) * t);
+    if ((cell.x != start.x || cell.y != start.y) &&
+        !is_terrain_walkable(cell.x, cell.y)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 auto Pathfinding::is_world_position_walkable(const QVector3D& world_position,
                                              Passability passability,
                                              float clearance_radius) const -> bool {
@@ -518,9 +535,7 @@ void Pathfinding::update_region(int min_x, int max_x, int min_z, int max_z) {
                static_cast<std::size_t>(max_z - min_z + 3));
   for (int z = min_z - 1; z <= max_z + 1; ++z) {
     for (int x = min_x - 1; x <= max_x + 1; ++x) {
-      // Only a hill slope keeps a building's padding open: the lane between a
-      // building and a slope must stay passable. Water, cliffs and the map edge
-      // keep the padding, which AI base layouts depend on.
+
       bool const slope =
           x >= 0 && z >= 0 && x < m_width && z < m_height &&
           terrain_service.is_initialized() &&
@@ -1349,8 +1364,6 @@ auto Pathfinding::find_escape_point(const Point& point,
     return std::nullopt;
   }
 
-  // An escape walks through buildings, never through terrain: a straight line to
-  // the exit may not cross a hill slope, cliff or water the unit could not stand on.
   auto const terrain_line_clear = [this, &point](const Point& cell) {
     int const steps =
         std::max(std::abs(cell.x - point.x), std::abs(cell.y - point.y)) * 2;

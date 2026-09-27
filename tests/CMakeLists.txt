@@ -869,12 +869,6 @@ if(TARGET design_system_qml_tests)
     add_dependencies(soi_test_binaries design_system_qml_tests)
 endif()
 
-# AmbienceAssetsTest reads the shipped beds, which the build renders rather than
-# git storing. Without this the suite would skip them on a clean tree.
-if(TARGET synthesize_ambience_assets)
-    add_dependencies(soi_test_binaries synthesize_ambience_assets)
-endif()
-
 # The gameplay acceptance gate. scripts/run-tests.sh treats a missing binary as
 # an error rather than a skip, so it has to be built alongside the unit suites.
 if(TARGET battlefield_gameplay_verifier)

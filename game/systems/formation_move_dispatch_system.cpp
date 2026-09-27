@@ -10,8 +10,6 @@ namespace Game::Systems {
 
 namespace {
 
-// A formation keeps its shape around the men who are fighting: the march or the
-// reform never tears a troop out of a fight it was given or picked.
 auto is_fighting(Engine::Core::World& world, Engine::Core::EntityID id) -> bool {
   const auto* target = world.try_get<Engine::Core::AttackTargetComponent>(id);
   const auto* attack = world.try_get<Engine::Core::AttackComponent>(id);

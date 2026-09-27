@@ -1566,6 +1566,82 @@ bool release_rts_arrow_volley(Engine::Core::World& world,
   return true;
 }
 
+namespace {
+
+auto can_be_locked(const Engine::Core::World& world,
+                   Engine::Core::Entity* entity) -> bool {
+
+  if (entity == nullptr) {
+    return false;
+  }
+  auto const id = entity->get_id();
+  if (world.has<Engine::Core::PendingRemovalComponent>(id) ||
+      world.has<Engine::Core::ElephantComponent>(id) ||
+      world.has<Engine::Core::WildlifeComponent>(id) || is_building(entity) ||
+      !Game::Systems::CombatRules::participates_in_rts_melee_lock(entity)) {
+    return false;
+  }
+  auto const* unit = world.try_get<Engine::Core::UnitComponent>(id);
+  return unit != nullptr && unit->health > 0 &&
+         world.has<Engine::Core::AttackComponent>(id);
+}
+
+void lock_touching_enemies(Engine::Core::World* world,
+                           const CombatQueryContext& query_context,
+                           float delta_time,
+                           FacingLedger& ledger) {
+  constexpr float k_touch_search_radius = 8.0F;
+  constexpr float k_touch_slack = 0.05F;
+  for (auto* unit : query_context.units) {
+    if (!can_be_locked(*world, unit)) {
+      continue;
+    }
+    auto* attack = world->try_get<Engine::Core::AttackComponent>(unit->get_id());
+    if (attack->in_melee_lock) {
+      continue;
+    }
+    auto const* own = world->try_get<Engine::Core::UnitComponent>(unit->get_id());
+    auto* transform = world->try_get<Engine::Core::TransformComponent>(unit->get_id());
+    if (transform == nullptr) {
+      continue;
+    }
+    collect_unit_ids_near(*world,
+                          transform->position.x,
+                          transform->position.z,
+                          k_touch_search_radius,
+                          query_context.nearby_unit_ids);
+    for (auto const other_id : query_context.nearby_unit_ids) {
+      auto* other = query_context.find_entity(other_id);
+      if (other == nullptr || other == unit || !can_be_locked(*world, other)) {
+        continue;
+      }
+      auto const* theirs = world->try_get<Engine::Core::UnitComponent>(other_id);
+      if (!query_context.hostile(own->owner_id, theirs->owner_id)) {
+        continue;
+      }
+      auto const geometry = FormationCombat::contact_geometry(*unit, *other);
+
+      constexpr float k_touching_gap = 0.001F;
+      bool const touching = geometry.uses_formation_slots
+                                ? geometry.surface_gap <= k_touching_gap
+                                : geometry.center_distance <=
+                                      std::max(geometry.contact_center_distance,
+                                               geometry.body_contact_center_distance) +
+                                          k_touch_slack;
+      if (!touching) {
+        continue;
+      }
+      if (enter_melee_lock(unit, other, attack, world, delta_time, ledger)) {
+        assign_attack_target(unit, other->get_id(), TargetSource::MeleeLock);
+        stop_unit_movement(unit, transform);
+        break;
+      }
+    }
+  }
+}
+
+} // namespace
+
 void process_attacks(Engine::Core::World* world,
                      const CombatQueryContext& query_context,
                      float delta_time) {
@@ -1575,6 +1651,7 @@ void process_attacks(Engine::Core::World* world,
   chase_move_intents.reserve(units.size());
   FacingLedger facing_ledger;
   const FormationRanks formation_ranks(*world);
+  lock_touching_enemies(world, query_context, delta_time, facing_ledger);
 
   for (auto* attacker : units) {
     if (attacker->has_component<Engine::Core::PendingRemovalComponent>()) {
