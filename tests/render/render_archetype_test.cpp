@@ -1,6 +1,7 @@
 #include <QMatrix4x4>
 #include <QVector3D>
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <gtest/gtest.h>
@@ -508,6 +509,98 @@ TEST(SiegeMotion, ReplayRewindAndTeleportDoNotSpinTheWheels) {
   const auto rewind = Render::GL::siege_motion(ctx, state, 0.2F, 0.4F);
   EXPECT_EQ(rewind.left_roll, 0.0F);
   EXPECT_EQ(rewind.movement, 0.0F);
+}
+
+TEST(SiegeMotion, AFrameWhoseClockStoodStillKeepsTheDistanceForTheNextStep) {
+  Render::GL::DrawContext ctx;
+  Render::GL::SiegeTravelState state;
+  (void)Render::GL::siege_motion(ctx, state, 0.2F, 0.4F);
+  ctx.model.translate(0, 0, 0.2F);
+  (void)Render::GL::siege_motion(ctx, state, 0.2F, 0.4F);
+  ctx.animation_time = 0.25F;
+  const auto moved = Render::GL::siege_motion(ctx, state, 0.2F, 0.4F);
+  EXPECT_NEAR(moved.left_roll, 1.0F, 0.0001F)
+      << "a throttled frame swallowed the distance the engine covered";
+  EXPECT_GT(state.travelled, 0.19F);
+}
+
+TEST(SiegeMotion, PivotingInPlaceCountsAsWorkForTheCrew) {
+  Render::GL::DrawContext ctx;
+  Render::GL::SiegeTravelState state;
+  (void)Render::GL::siege_motion(ctx, state, 0.2F, 0.57F);
+  for (int frame = 1; frame <= 20; ++frame) {
+    ctx.animation_time = static_cast<float>(frame) * 0.05F;
+    ctx.model.rotate(4.0F, 0, 1, 0);
+    (void)Render::GL::siege_motion(ctx, state, 0.2F, 0.57F);
+  }
+  EXPECT_GT(state.movement, 0.22F) << "turning on the spot must bring the crew to push";
+}
+
+TEST(SiegeMotion, TheRollingKnockIsSilentWhenParked) {
+  Render::GL::DrawContext ctx;
+  Render::GL::SiegeTravelState state;
+  (void)Render::GL::siege_motion(ctx, state, 0.2F, 0.4F);
+  float loudest = 0.0F;
+  for (int frame = 1; frame <= 30; ++frame) {
+    ctx.animation_time = static_cast<float>(frame) * 0.05F;
+    ctx.model.translate(0, 0, 0.05F);
+    loudest = std::max(loudest,
+                       std::abs(Render::GL::siege_motion(ctx, state, 0.2F, 0.4F).jolt));
+  }
+  EXPECT_GT(loudest, 0.2F) << "a rolling carriage knocks its loose parts";
+  for (int frame = 31; frame <= 70; ++frame) {
+    ctx.animation_time = static_cast<float>(frame) * 0.05F;
+    (void)Render::GL::siege_motion(ctx, state, 0.2F, 0.4F);
+  }
+  EXPECT_LT(std::abs(Render::GL::siege_motion(ctx, state, 0.2F, 0.4F).jolt), 0.01F);
+}
+
+TEST(RenderArchetypeSiege, RotatingSnapshotWorldsDoNotResetTheWheels) {
+  using namespace Render::GL;
+  auto render_frame = [](const RenderFunc& renderer,
+                         Engine::Core::Entity& entity,
+                         Engine::Core::World* world,
+                         float time,
+                         float z) {
+    DrawContext ctx;
+    ResourceManager resources;
+    ctx.entity = &entity;
+    ctx.world = world;
+    ctx.resources = &resources;
+    ctx.animation_time = time;
+    ctx.model.translate(0.0F, 0.0F, z);
+    RecordingSubmitter submitter;
+    renderer(ctx, submitter);
+    return submitter.meshes;
+  };
+
+  Engine::Core::StandaloneEntity scratch(41);
+  Engine::Core::Entity& entity = scratch.entity();
+  entity.add_component<Engine::Core::RenderableComponent>();
+  entity.add_component<Engine::Core::UnitComponent>(
+      k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
+  Engine::Core::World buffer_a;
+  Engine::Core::World buffer_b;
+
+  EntityRendererRegistry travelling;
+  Roman::register_catapult_renderer(travelling);
+  const auto rolling = travelling.get("troops/roman/catapult");
+  ASSERT_TRUE(static_cast<bool>(rolling));
+  (void)render_frame(rolling, entity, &buffer_a, 1.0F, 0.0F);
+  const auto second = render_frame(rolling, entity, &buffer_b, 1.25F, 0.3F);
+
+  EntityRendererRegistry fresh;
+  Roman::register_catapult_renderer(fresh);
+  const auto first_sight =
+      render_frame(fresh.get("troops/roman/catapult"), entity, &buffer_b, 1.25F, 0.3F);
+
+  ASSERT_EQ(second.size(), first_sight.size());
+  bool rolled = false;
+  for (std::size_t i = 0; i < second.size() && !rolled; ++i) {
+    rolled = !qFuzzyCompare(second[i].model, first_sight[i].model);
+  }
+  EXPECT_TRUE(rolled)
+      << "the next snapshot buffer made the renderer forget the engine had moved";
 }
 
 TEST(SiegeMotion, ReleaseIsFastAndRecoilSettlesBeforeTheNextCycle) {
