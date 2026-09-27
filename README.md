@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/djeada/Standard-of-Iron/releases"><img src="https://img.shields.io/badge/version-v0.1.0-b45336" alt="Version 0.1.0"></a>
+  <a href="https://github.com/djeada/Standard-of-Iron/releases"><img src="https://img.shields.io/badge/version-v0.2.0-b45336" alt="Version 0.2.0"></a>
   <a href="https://github.com/djeada/Standard-of-Iron/actions/workflows/pr.yml"><img src="https://github.com/djeada/Standard-of-Iron/actions/workflows/pr.yml/badge.svg" alt="Build status"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/code-MIT-8c6a3e" alt="MIT license"></a>
   <img src="https://img.shields.io/badge/C%2B%2B-20-5c6b73" alt="C++20">

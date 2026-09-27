@@ -9,6 +9,8 @@ may change in any release — see [Save compatibility](#save-compatibility).
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-09-27
+
 ### Added
 
 - **Forests hide men and turn arrows, and look like forests.** A unit standing in
@@ -1337,5 +1339,6 @@ While the project is at 0.x this is the intended behaviour, and any release may
 trigger it. Before 1.0 the policy needs to become one of: migrate forward, or
 warn the player before the wipe rather than only writing to the log.
 
-[unreleased]: https://github.com/djeada/Standard-of-Iron/compare/v0.1.0...HEAD
+[unreleased]: https://github.com/djeada/Standard-of-Iron/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/djeada/Standard-of-Iron/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/djeada/Standard-of-Iron/releases/tag/v0.1.0
