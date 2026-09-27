@@ -730,6 +730,10 @@ public:
       , m_respect_body_radius(respect_body_radius)
       , m_escaping(escaping) {
     QVector3D const origin(origin_x, 0.0F, origin_z);
+    if (auto const* pathfinder = NavGrid::get_pathfinder(); pathfinder != nullptr) {
+      Point const cell = NavGrid::world_to_grid(origin_x, origin_z);
+      m_origin_on_terrain = pathfinder->is_terrain_walkable(cell.x, cell.y);
+    }
     m_valid_tile = allowed_here(origin);
     if (!m_valid_tile) {
       m_trapped_depth = Walkability::penetration(origin, body_profile(entity));
@@ -740,7 +744,7 @@ public:
 
   [[nodiscard]] auto point_allowed(float wx, float wz) const -> bool {
     if (m_escaping) {
-      return true;
+      return terrain_allows(wx, wz);
     }
     QVector3D const point(wx, 0.0F, wz);
     if (m_valid_tile) {
@@ -775,6 +779,17 @@ public:
   }
 
 private:
+  // An escaping body may pass through buildings but not onto a hill slope, a
+  // cliff or water. Leaving such a cell is always allowed.
+  [[nodiscard]] auto terrain_allows(float wx, float wz) const -> bool {
+    auto const* pathfinder = NavGrid::get_pathfinder();
+    if (pathfinder == nullptr || !m_origin_on_terrain) {
+      return true;
+    }
+    Point const cell = NavGrid::world_to_grid(wx, wz);
+    return pathfinder->is_terrain_walkable(cell.x, cell.y);
+  }
+
   [[nodiscard]] auto allowed_here(const QVector3D& point) const -> bool {
     if (m_respect_body_radius) {
       return Walkability::can_stand(point, body_profile(*m_entity));
@@ -785,6 +800,7 @@ private:
   const Engine::Core::Entity* m_entity;
   bool m_respect_body_radius{false};
   bool m_escaping{false};
+  bool m_origin_on_terrain{true};
   bool m_valid_tile{true};
   float m_trapped_depth{0.0F};
 };

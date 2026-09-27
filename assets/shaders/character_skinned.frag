@@ -19,6 +19,7 @@ uniform float u_alpha;
 uniform int u_material_id;
 uniform vec3 u_role_colors[32];
 uniform int u_role_color_count;
+uniform float u_team_emphasis;
 
 out vec4 frag_color;
 
@@ -63,5 +64,14 @@ void main() {
                                u_material_id,
                                v_color_role,
                                zoom);
+  if (u_material_id == 0 && u_role_color_count >= k_humanoid_role_cloth) {
+    color = apply_team_accent(color,
+                              u_role_colors[k_humanoid_role_cloth - 1],
+                              surface_normal,
+                              v_pos_ws,
+                              u_camera_position,
+                              v_color_role,
+                              u_team_emphasis);
+  }
   frag_color = vec4(color, 1.0);
 }

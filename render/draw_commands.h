@@ -303,6 +303,7 @@ struct RiggedCreatureCmd {
   std::uint32_t role_color_count = 0;
   QVector3D color{1.0F, 1.0F, 1.0F};
   QVector4D wear_params{0.0F, 0.0F, 0.0F, 0.0F};
+  float team_emphasis = 0.0F;
   float alpha = 1.0F;
   Texture* texture = nullptr;
   std::int32_t material_id = 0;

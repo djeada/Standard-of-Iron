@@ -267,6 +267,30 @@ tools/font/build_standard_iron.py`, then `tools/font/proof.py` to look at it).
 
 ### Fixed
 
+- **Armies sent at an enemy stay together.** Attack, attack-move, stop and patrol
+  orders now take troops out of their formation, as plain moves already did. The
+  formation used to walk them back to their old slots once the fight ended, so the
+  army split and troops shuttled back and forth. Idle stragglers are timed per
+  troop, get two tries, and are never pulled out of a fight. A troop taken into a
+  new formation is cleared from the old one, so two groups can no longer shuttle
+  it between them.
+- **Hills are entered by their ramps only, by soldiers too.** Individual soldiers
+  (flank files at a rim, crowd pushes in a melee at the foot of a hill), units
+  escaping a sealed pocket, and knockback no longer cross hill slopes, cliffs or
+  water. A new test suite samples every soldier during marches and battles around
+  hills.
+- **A building next to a hill no longer seals the way past it.** Building
+  navigation padding reopens where it touches a hill slope, so the lane between a
+  building and a hill stays passable.
+- **Sides read apart at night.** Soldiers' edges catch a light in their side's
+  colour, strong at night and while fighting and nearly invisible by day. Team
+  cloth no longer goes black under moonlight.
+- **Follow-selection frames the army, not the empty ground between its groups.**
+  It now follows the largest cluster of the selection.
+- **Select-all takes the army only.** Builders and civilians no longer come along
+  and slow the army to their pace.
+- **The spectator badge no longer clips** on narrow top bars. It falls back to its
+  icon.
 - **Enemies no longer walk past troops ordered to attack them.** A squad marching
   past, or away from, its attacker is pinned once the two squads' soldiers touch.
   Before, contact needed the attacker to push into the middle of the enemy block,

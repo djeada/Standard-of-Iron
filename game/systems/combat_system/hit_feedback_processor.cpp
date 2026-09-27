@@ -7,6 +7,8 @@
 #include "../../core/world.h"
 #include "../combat_rules.h"
 #include "../formation_combat_geometry.h"
+#include "../nav_grid.h"
+#include "../pathfinding.h"
 #include "target_rules.h"
 
 namespace Game::Systems::Combat {
@@ -102,8 +104,21 @@ void apply_knockback_step(Engine::Core::Entity& unit,
   if (step <= 0.0F) {
     return;
   }
-  transform->position.x += total_x / total * step;
-  transform->position.z += total_z / total * step;
+  float const next_x = transform->position.x + total_x / total * step;
+  float const next_z = transform->position.z + total_z / total * step;
+  if (auto const* pathfinder = Game::Systems::NavGrid::get_pathfinder()) {
+    // A shove never carries a body onto a hill slope, a cliff or water.
+    auto const here = Game::Systems::NavGrid::world_to_grid(transform->position.x,
+                                                            transform->position.z);
+    auto const there = Game::Systems::NavGrid::world_to_grid(next_x, next_z);
+    if (pathfinder->is_terrain_walkable(here.x, here.y) &&
+        !pathfinder->is_terrain_walkable(there.x, there.y)) {
+      feedback.knockback_applied = std::max(feedback.knockback_applied, desired);
+      return;
+    }
+  }
+  transform->position.x = next_x;
+  transform->position.z = next_z;
   feedback.knockback_applied = desired;
 }
 

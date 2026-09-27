@@ -473,6 +473,7 @@ auto RiggedCullPipeline::upload_instances(const RiggedCreatureCmd* const* cmds,
     dst[27] = cmd.wear_params.w();
     dst[28] = static_cast<float>(cmd.role_color_count);
     dst[29] = static_cast<float>(role_color_palette_index(cmd));
+    dst[30] = cmd.team_emphasis;
   }
 
   m_instance_base = 0U;

@@ -16,6 +16,7 @@ flat in int v_color_role;
 flat in int v_instance_id;
 flat in int v_role_color_count;
 flat in vec4 v_wear_params;
+flat in float v_team_emphasis;
 
 uniform samplerBuffer u_role_color_tbo;
 uniform int u_role_color_base;
@@ -62,5 +63,18 @@ void main() {
                                v_material_id,
                                v_color_role,
                                zoom);
+  if (v_material_id == 0 && v_role_color_count >= k_humanoid_role_cloth) {
+    vec3 team =
+        texelFetch(u_role_color_tbo,
+                   u_role_color_base + v_instance_id * 32 + k_humanoid_role_cloth - 1)
+            .rgb;
+    color = apply_team_accent(color,
+                              team,
+                              surface_normal,
+                              v_pos_ws,
+                              u_camera_position,
+                              v_color_role,
+                              v_team_emphasis);
+  }
   frag_color = vec4(color, 1.0);
 }

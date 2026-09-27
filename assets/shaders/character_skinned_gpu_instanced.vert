@@ -13,6 +13,7 @@ flat out int v_color_role;
 flat out int v_instance_id;
 flat out int v_role_color_count;
 flat out vec4 v_wear_params;
+flat out float v_team_emphasis;
 
 uniform int u_rigid_skinning;
 
@@ -42,4 +43,5 @@ void main() {
   v_instance_id = int(data.role_meta.y);
   v_role_color_count = int(data.role_meta.x);
   v_wear_params = data.wear_params;
+  v_team_emphasis = data.role_meta.z;
 }

@@ -278,6 +278,36 @@ vec3 soi_finish_character(vec3 color,
   return color;
 }
 
+// Which side a soldier is on must read at night. Moonlight turns red cloth
+// purple-black and blue cloth into the blue scene, so a soldier's edges pick up
+// a light in his side's colour: nothing by day, clear at night, stronger while
+// he fights. The team colour is the squad's cloth colour, lifted to full
+// brightness so red and blue stay apart against the moonlit ground.
+vec3 apply_team_accent(vec3 color,
+                       vec3 team,
+                       vec3 surface_normal,
+                       vec3 world_position,
+                       vec3 camera_position,
+                       int color_role,
+                       float fighting) {
+  float night = environment_night_amount();
+  float strength = 0.20 * night + fighting * mix(0.05, 0.20, night);
+  if (strength <= 0.0) {
+    return color;
+  }
+  float peak = max(max(team.r, team.g), max(team.b, 1.0e-3));
+  vec3 accent = mix(team / peak, vec3(1.0), 0.12);
+  bool cloth =
+      color_role == k_humanoid_role_cloth || color_role == k_humanoid_role_cloth_dark;
+  if (cloth) {
+    color = max(color, accent * 0.14 * night);
+  }
+  vec3 view_dir = normalize(camera_position - world_position);
+  float edge = pow(1.0 - max(dot(surface_normal, view_dir), 0.0), 2.2);
+  color += accent * edge * strength * (cloth ? 1.0 : 0.55);
+  return clamp(color, 0.0, 1.0);
+}
+
 const int k_humanoid_hair_role = 8;
 
 vec3 apply_hair_tone(vec3 base, int material_id, int color_role, vec2 tex) {

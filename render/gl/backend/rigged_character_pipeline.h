@@ -54,6 +54,7 @@ public:
     GL::Shader::UniformHandle variation_scale{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle color{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle wear_params{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle team_emphasis{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle alpha{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle use_texture{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle texture{GL::Shader::InvalidUniform};

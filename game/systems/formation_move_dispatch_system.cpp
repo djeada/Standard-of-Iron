@@ -1,10 +1,25 @@
 #include "formation_move_dispatch_system.h"
 
+#include "../core/component_combat.h"
 #include "../core/component_gameplay.h"
+#include "../core/world.h"
 #include "../formation/army_formation_registry.h"
 #include "command_service.h"
 
 namespace Game::Systems {
+
+namespace {
+
+// A formation keeps its shape around the men who are fighting: the march or the
+// reform never tears a troop out of a fight it was given or picked.
+auto is_fighting(Engine::Core::World& world, Engine::Core::EntityID id) -> bool {
+  const auto* target = world.try_get<Engine::Core::AttackTargetComponent>(id);
+  const auto* attack = world.try_get<Engine::Core::AttackComponent>(id);
+  return (target != nullptr && target->target_id != 0U) ||
+         (attack != nullptr && attack->in_melee_lock);
+}
+
+} // namespace
 
 void FormationMoveDispatchSystem::update(Engine::Core::World* world, float) {
   if (world == nullptr) {
@@ -38,7 +53,8 @@ void FormationMoveDispatchSystem::update(Engine::Core::World* world, float) {
     std::vector<CommandService::MoveIntent> intents;
     intents.reserve(formation->slot_list.size());
     for (const auto& slot : formation->slot_list) {
-      if (slot.occupant == 0U || slot.status == Game::Formation::SlotStatus::Blocked) {
+      if (slot.occupant == 0U || slot.status == Game::Formation::SlotStatus::Blocked ||
+          !formation->has_member(slot.occupant) || is_fighting(*world, slot.occupant)) {
         continue;
       }
       auto const target = Game::Formation::ArmyFormationRuntime::morph_target(
@@ -59,7 +75,10 @@ void FormationMoveDispatchSystem::update(Engine::Core::World* world, float) {
 auto FormationMoveDispatchSystem::access() const -> Engine::Core::SystemAccess {
   using namespace Engine::Core;
   return SystemAccess::declare(
-      Reads<UnitComponent, BuildingComponent, PendingRemovalComponent>{},
+      Reads<UnitComponent,
+            BuildingComponent,
+            PendingRemovalComponent,
+            AttackTargetComponent>{},
       Writes<MovementComponent, TransformComponent, AttackComponent>{});
 }
 

@@ -525,21 +525,30 @@ The current constants in `army_formation_registry.cpp` include:
 
 Cohesion is therefore a measured group property rather than an assumption that the formation is “formed” because a move command completed.
 
-Two rules keep that measurement honest in play:
+These rules keep that measurement honest in play without taking control away from the player:
 
-- **A plain move takes troops out of their formation.** `apply_move` releases every
-  troop in a `PlayerMove` from its group before moving it. Before this, a troop the
-  player sent elsewhere stayed a member. Its empty slot held the rest of the group
-  below "formed" indefinitely. A whole army moved from the minimap read "Disrupted"
-  and took the disrupted damage penalty until the next formation order.
+- **Any order other than a formation order takes troops out of their formation.**
+  `apply_move` (plain and attack moves), attack orders, stop and patrol release
+  every troop they command from its group. A formation is kept only by hold, guard,
+  and a new formation order. Before this, a troop given another order stayed a
+  member, and the group eventually walked it back to its old slot. An army sent at
+  an enemy split: some troops kept fighting and the rest marched back to where the
+  army had stood.
 - **Idle troops walk back to their slots.** A casualty makes the group replan its
-  slots, and a troop can be shoved off its slot after it has arrived. Nothing used to
-  send it back, so one loss left the formation "Reforming", without its damage
-  bonus, for the rest of the battle. Every cohesion refresh (0.35 s) now collects the
-  members that have stood idle off their slot for a second or more. That means no
-  order, no attack target and no melee lock. `FormationMoveDispatchSystem` sends
-  just those members back. Each group retries at most every three seconds, so a
-  blocked slot cannot flood the router.
+  slots, and a troop can be shoved off its slot after it arrives. Every cohesion
+  refresh (0.35 s) times each member that stands off its slot while plainly idle:
+  no order, no attack target, no melee lock, not holding or guarding. After two
+  seconds `FormationMoveDispatchSystem` sends just those members back. Each member
+  gets two tries (a blocked slot is given up, not retried forever), and each group
+  dispatches at most every three seconds. The idle clock is kept per member, because
+  the movement facts' state timer stops when a unit stops, and read as "idle"
+  immediately.
+- **A troop belongs to one group.** Taking a member into a new group clears its
+  slot in the old one and deletes a group left empty. Otherwise the old group kept
+  sending the troop back to its old slot, and two groups shuttled it back and forth.
+- **A formation never tears a fighter out of its fight.** The group's own dispatch
+  (march, reform after a replan) skips members that have an attack target or a
+  melee lock.
 
 ## Cohesion and damage
 

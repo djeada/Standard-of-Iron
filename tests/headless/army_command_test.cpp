@@ -344,4 +344,70 @@ TEST_F(ArmyCommandTest, AFormationClosesRanksAfterACasualty) {
       << formation->cohesion << ")";
 }
 
+TEST_F(ArmyCommandTest, AnAttackMoveCarriesTheWholeFormationToItsDestination) {
+  auto const army = deploy_line(6);
+  QVector3D const destination(40.0F, 0.0F, 40.0F);
+
+  Game::Command::Move order;
+  order.units = army;
+  order.targets.assign(army.size(), destination);
+  order.kind = Game::Systems::MoveOrderKind::AttackMove;
+  Game::Command::submit(
+      m_session->world(), Game::Command::Source::LocalPlayer, k_player, order);
+  run(45.0);
+
+  for (auto const troop : army) {
+    EXPECT_LT((position(troop) - destination).length(), 12.0F)
+        << "a troop left the attack-move and walked back to its old formation slot";
+  }
+}
+
+TEST_F(ArmyCommandTest, AnArmySentAtAnEnemyDoesNotWalkBackAfterTheFight) {
+  auto const army = deploy_line(6);
+  std::vector<QVector3D> start_spots;
+  for (auto const troop : army) {
+    start_spots.push_back(position(troop));
+  }
+  EntityID const enemy = spawn(SpawnType::Archer, k_enemy, 30.0F, 30.0F);
+  m_session->world().try_get<Engine::Core::UnitComponent>(enemy)->health = 60;
+
+  Game::Command::AttackTarget attack;
+  attack.units = army;
+  attack.target = enemy;
+  Game::Command::submit(
+      m_session->world(), Game::Command::Source::LocalPlayer, k_player, attack);
+  run(40.0);
+  ASSERT_LE(health(enemy), 0) << "the army never reached its target";
+
+  for (std::size_t i = 0; i < army.size(); ++i) {
+    EXPECT_GT((position(army[i]) - start_spots[i]).length(), 15.0F)
+        << "a troop walked back to where the army stood before the attack";
+  }
+}
+
+TEST_F(ArmyCommandTest, ARedeployedArmySettlesInsteadOfShuttlingBetweenGroups) {
+  auto const army = deploy_line(6);
+  EntityID const recruit = spawn(SpawnType::Swordsman, k_player, 0.0F, -30.0F);
+  std::vector<EntityID> everyone{recruit};
+  everyone.insert(everyone.end(), army.begin(), army.end());
+
+  Game::Command::DeployFormation deploy;
+  deploy.units = everyone;
+  deploy.anchor = QVector3D(40.0F, 0.0F, 0.0F);
+  deploy.spacing = Game::GameConfig::instance().gameplay().formation_spacing_default;
+  Game::Command::submit(
+      m_session->world(), Game::Command::Source::LocalPlayer, k_player, deploy);
+  run(30.0);
+
+  std::vector<QVector3D> settled;
+  for (auto const troop : everyone) {
+    settled.push_back(position(troop));
+  }
+  run(15.0);
+  for (std::size_t i = 0; i < everyone.size(); ++i) {
+    EXPECT_LT((position(everyone[i]) - settled[i]).length(), 1.0F)
+        << "a troop kept shuttling after the army had formed up";
+  }
+}
+
 } // namespace

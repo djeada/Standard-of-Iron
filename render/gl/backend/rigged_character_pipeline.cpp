@@ -175,6 +175,7 @@ void RiggedCharacterPipeline::cache_uniforms() {
     uniforms.variation_scale = shader->optional_uniform_handle("u_variation_scale");
     uniforms.color = shader->uniform_handle("u_color");
     uniforms.wear_params = shader->optional_uniform_handle("u_wear_params");
+    uniforms.team_emphasis = shader->optional_uniform_handle("u_team_emphasis");
     uniforms.alpha = shader->uniform_handle("u_alpha");
     uniforms.use_texture = shader->optional_uniform_handle("u_use_texture");
     uniforms.texture = shader->optional_uniform_handle("u_texture");
@@ -226,6 +227,9 @@ auto RiggedCharacterPipeline::draw(const RiggedCreatureCmd& cmd,
     shader->set_uniform(uniforms.variation_scale, cmd.variation_scale);
   }
   shader->set_uniform(uniforms.color, cmd.color);
+  if (uniforms.team_emphasis != GL::Shader::InvalidUniform) {
+    shader->set_uniform(uniforms.team_emphasis, cmd.team_emphasis);
+  }
   if (uniforms.wear_params != GL::Shader::InvalidUniform) {
     shader->set_uniform(uniforms.wear_params, cmd.wear_params);
   }

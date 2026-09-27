@@ -622,6 +622,16 @@ X = blocked
 
 Diagonal movement is allowed only when it does not cut through blocked corners. A* does not expand cells by unit radius. This is deliberate: a single-cell bridge, hill entrance, or tight building gap is passable if the cell itself is walkable. Unit radius is used for final arrival tolerance and visual footprint concerns, not for deciding whether a route exists.
 
+**Building padding never closes a lane beside a hill.** A building blocks its navigation footprint and its body, plus `grid_padding` (1 m) around them so formations keep clear of the walls. After every building in a dirty region is rasterised, `Pathfinding::open_padding_lanes` reopens each padding cell that touches a hill slope cell (8-neighbourhood). The footprint and body stay blocked. Before this, a building placed up to about 3 m from a hill slope sealed the passage between them, so an enemy could cut two hills apart with one house. The rule deliberately stops at slopes. Opening padding beside water, the map edge or another building reshuffled AI bases enough to change whole AI-vs-AI matches (`AiDuelMatchTest`, `CommanderVoiceSkirmishTest`). The padding of walls and wall towers stays hard. `HillContainmentTest.ABuildingBetweenTwoHillsLeavesTheLanePassable` pins the lane.
+
+**Hills are entered by their entrances only, by squads and by soldiers.** Slope cells are unwalkable terrain. The squad centre already obeyed that, but three other paths moved people across slopes:
+
+- **Soldiers.** Infantry soldiers are placed at their authored slot plus a crowd offset, and that step skipped the ground check. Flank files hanging over a rim, and enemy crowd pushes in a melee at the foot of a hill, put soldiers on the slope. `walk_formation_slot` now pulls a slot that lands on unwalkable terrain in toward the squad (`pull_onto_terrain`), and refuses any soldier step onto unwalkable terrain (`constrain_step_to_terrain`). This applies whatever the slot's source.
+- **Escapes.** A unit sealed in a pocket may walk out through buildings (`begin_escape`). It no longer walks through terrain. `find_escape_point` accepts only an exit whose straight line crosses no unwalkable terrain, and an escaping `MotorCollision` refuses steps onto it.
+- **Knockback.** A shove that would land a body on unwalkable terrain is forfeit.
+
+`tests/headless/hill_containment_test.cpp` runs the full presentation and samples every squad centre and every soldier each tick. The scenarios are a march along the foot, a battle at the foot, a battle on the plateau edge, leaving by the ramp, a sealed plateau, and a building in the gap. None may put anyone on a slope. The older hill tests checked centres only, and reported soldiers on the slope without failing, which is why the bug kept coming back.
+
 A wall laid on the diagonal, one segment thick, is the shape that tests this: every
 pair of open cells across it meets corner to corner with a blocked cell on each
 flank, so the wall holds only for as long as nothing is willing to squeeze through

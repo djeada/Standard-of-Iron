@@ -478,6 +478,8 @@ void CreatureRenderBatch::add_humanoid(
   }
   req.wear_params = QVector4D(
       variant.weathering, variant.grime, variant.bloodiness, variant.pattern_seed);
+  req.team_emphasis =
+      anim.inputs.is_in_melee_lock || anim.inputs.is_attacking ? 1.0F : 0.0F;
   req.full_body_blend.archetype = selection.full_body_blend.archetype;
   req.full_body_blend.state = selection.full_body_blend.state;
   req.full_body_blend.phase = selection.full_body_blend.phase;
