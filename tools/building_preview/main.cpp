@@ -232,7 +232,9 @@ auto render_building(EntityRendererRegistry& registry,
   }
 
   if (type == "gate") {
-    entity.add_component<Engine::Core::GateComponent>()->open_amount = g_gate_open;
+    entity.registry()
+        ->emplace<Engine::Core::GateComponent>(entity.get_id())
+        ->open_amount = g_gate_open;
   }
 
   DrawContext ctx;
