@@ -513,6 +513,23 @@ void Pathfinding::update_region(int min_x, int max_x, int min_z, int max_z) {
   apply_forest_cells(min_x, max_x, min_z, max_z);
   apply_resource_prop_cells(min_x, max_x, min_z, max_z);
 
+  std::vector<CellValue> base;
+  base.reserve(static_cast<std::size_t>(max_x - min_x + 3) *
+               static_cast<std::size_t>(max_z - min_z + 3));
+  for (int z = min_z - 1; z <= max_z + 1; ++z) {
+    for (int x = min_x - 1; x <= max_x + 1; ++x) {
+      // Only a hill slope keeps a building's padding open: the lane between a
+      // building and a slope must stay passable. Water, cliffs and the map edge
+      // keep the padding, which AI base layouts depend on.
+      bool const slope =
+          x >= 0 && z >= 0 && x < m_width && z < m_height &&
+          terrain_service.is_initialized() &&
+          terrain_service.get_terrain_type(x, z) == Game::Map::TerrainType::Hill &&
+          terrain_cell_value(terrain_service, height_map, x, z) == CellValue::Blocked;
+      base.push_back(slope ? CellValue::Blocked : CellValue::Walkable);
+    }
+  }
+
   auto& registry = buildings();
   registry.for_each_building_in_region(
       static_cast<float>(min_x) + m_grid_offset_x,
@@ -523,6 +540,7 @@ void Pathfinding::update_region(int min_x, int max_x, int min_z, int max_z) {
         apply_building_cells(building, min_x, max_x, min_z, max_z);
       });
 
+  open_padding_lanes(base, min_x, max_x, min_z, max_z);
   force_navigation_passages_walkable(min_x, max_x, min_z, max_z);
   force_map_passage_cells_walkable(min_x, max_x, min_z, max_z);
   apply_gate_blocker_cells(min_x, max_x, min_z, max_z);
@@ -600,32 +618,45 @@ void Pathfinding::force_navigation_passages_walkable(int min_x,
   }
 }
 
+auto Pathfinding::building_cell_ranges(const BuildingFootprint& building) const
+    -> BuildingCellRanges {
+  float const half_x = building.width * 0.5F;
+  float const half_z = building.depth * 0.5F;
+  float hard_min_x = building.center_x - half_x;
+  float hard_max_x = building.center_x + half_x;
+  float hard_min_z = building.center_z - half_z;
+  float hard_max_z = building.center_z + half_z;
+  if (building.body_width > 0.0F && building.body_depth > 0.0F) {
+    hard_min_x =
+        std::min(hard_min_x, building.body_center_x - (building.body_width * 0.5F));
+    hard_max_x =
+        std::max(hard_max_x, building.body_center_x + (building.body_width * 0.5F));
+    hard_min_z =
+        std::min(hard_min_z, building.body_center_z - (building.body_depth * 0.5F));
+    hard_max_z =
+        std::max(hard_max_z, building.body_center_z + (building.body_depth * 0.5F));
+  }
+  float const pad = building.grid_padding;
+  auto const range_of = [this](float lo_x, float hi_x, float lo_z, float hi_z) {
+    return cells_covering((lo_x + hi_x) * 0.5F,
+                          (lo_z + hi_z) * 0.5F,
+                          (hi_x - lo_x) * 0.5F,
+                          (hi_z - lo_z) * 0.5F);
+  };
+  return {.hard = range_of(hard_min_x, hard_max_x, hard_min_z, hard_max_z),
+          .padded = range_of(std::min(hard_min_x, building.center_x - half_x - pad),
+                             std::max(hard_max_x, building.center_x + half_x + pad),
+                             std::min(hard_min_z, building.center_z - half_z - pad),
+                             std::max(hard_max_z, building.center_z + half_z + pad))};
+}
+
 void Pathfinding::apply_building_cells(
     const BuildingFootprint& building, int min_x, int max_x, int min_z, int max_z) {
   if (!building.blocks_navigation) {
     return;
   }
 
-  float const routing_half_x = (building.width * 0.5F) + building.grid_padding;
-  float const routing_half_z = (building.depth * 0.5F) + building.grid_padding;
-  float min_x_world = building.center_x - routing_half_x;
-  float max_x_world = building.center_x + routing_half_x;
-  float min_z_world = building.center_z - routing_half_z;
-  float max_z_world = building.center_z + routing_half_z;
-  if (building.body_width > 0.0F && building.body_depth > 0.0F) {
-    min_x_world =
-        std::min(min_x_world, building.body_center_x - (building.body_width * 0.5F));
-    max_x_world =
-        std::max(max_x_world, building.body_center_x + (building.body_width * 0.5F));
-    min_z_world =
-        std::min(min_z_world, building.body_center_z - (building.body_depth * 0.5F));
-    max_z_world =
-        std::max(max_z_world, building.body_center_z + (building.body_depth * 0.5F));
-  }
-  auto const range = cells_covering((min_x_world + max_x_world) * 0.5F,
-                                    (min_z_world + max_z_world) * 0.5F,
-                                    (max_x_world - min_x_world) * 0.5F,
-                                    (max_z_world - min_z_world) * 0.5F);
+  auto const range = building_cell_ranges(building).padded;
   int const from_x = std::max({range.min_x, min_x, 0});
   int const to_x = std::min({range.max_x, max_x, m_width - 1});
   int const from_z = std::max({range.min_z, min_z, 0});
@@ -634,6 +665,86 @@ void Pathfinding::apply_building_cells(
     for (int grid_x = from_x; grid_x <= to_x; ++grid_x) {
       m_navigation_grid.set(grid_x, grid_z, CellValue::Blocked);
     }
+  }
+}
+
+namespace {
+
+auto range_contains(const CellRange& range, int x, int z) -> bool {
+  return x >= range.min_x && x <= range.max_x && z >= range.min_z && z <= range.max_z;
+}
+
+} // namespace
+
+void Pathfinding::open_padding_lanes(
+    const std::vector<CellValue>& base, int min_x, int max_x, int min_z, int max_z) {
+  struct Blocker {
+    CellRange hard;
+    CellRange padded;
+    bool soft_padding;
+  };
+  std::vector<Blocker> blockers;
+  buildings().for_each_building_in_region(
+      static_cast<float>(min_x - 2) + m_grid_offset_x,
+      static_cast<float>(max_x + 2) + m_grid_offset_x,
+      static_cast<float>(min_z - 2) + m_grid_offset_z,
+      static_cast<float>(max_z + 2) + m_grid_offset_z,
+      [this, &blockers](const BuildingFootprint& building) {
+        if (!building.blocks_navigation) {
+          return;
+        }
+        auto const ranges = building_cell_ranges(building);
+        blockers.push_back(
+            {.hard = ranges.hard,
+             .padded = ranges.padded,
+             .soft_padding = !building.wall_link && !building.wall_tower});
+      });
+  if (blockers.empty()) {
+    return;
+  }
+
+  int const span_x = max_x - min_x + 3;
+  auto const base_blocked = [&](int x, int z) {
+    if (x < 0 || z < 0 || x >= m_width || z >= m_height) {
+      return false;
+    }
+    int const index = (z - (min_z - 1)) * span_x + (x - (min_x - 1));
+    return base[static_cast<std::size_t>(index)] == CellValue::Blocked;
+  };
+
+  std::vector<Point> lanes;
+  for (int z = min_z; z <= max_z; ++z) {
+    for (int x = min_x; x <= max_x; ++x) {
+      if (m_navigation_grid.get(x, z) != CellValue::Blocked ||
+          !is_terrain_walkable(x, z)) {
+        continue;
+      }
+      int owners = 0;
+      bool hard = false;
+      for (const auto& blocker : blockers) {
+        if (range_contains(blocker.hard, x, z) || !blocker.soft_padding) {
+          hard = hard || range_contains(blocker.padded, x, z);
+        }
+        if (range_contains(blocker.padded, x, z)) {
+          ++owners;
+        }
+      }
+      if (hard || owners == 0) {
+        continue;
+      }
+      bool opens = false;
+      for (int dz = -1; dz <= 1 && !opens; ++dz) {
+        for (int dx = -1; dx <= 1 && !opens; ++dx) {
+          opens = (dx != 0 || dz != 0) && base_blocked(x + dx, z + dz);
+        }
+      }
+      if (opens) {
+        lanes.push_back({x, z});
+      }
+    }
+  }
+  for (const auto& cell : lanes) {
+    m_navigation_grid.set(cell.x, cell.y, CellValue::Walkable);
   }
 }
 
@@ -1238,12 +1349,41 @@ auto Pathfinding::find_escape_point(const Point& point,
     return std::nullopt;
   }
 
-  auto exit = nearest_cell_in_region(
-      map, destination, point, point, k_rescue_search_cells, passability, 0.0F);
-  if (!exit.has_value() || (exit->x == point.x && exit->y == point.y)) {
-    return std::nullopt;
+  // An escape walks through buildings, never through terrain: a straight line to
+  // the exit may not cross a hill slope, cliff or water the unit could not stand on.
+  auto const terrain_line_clear = [this, &point](const Point& cell) {
+    int const steps =
+        std::max(std::abs(cell.x - point.x), std::abs(cell.y - point.y)) * 2;
+    for (int i = 1; i <= steps; ++i) {
+      float const t = static_cast<float>(i) / static_cast<float>(steps);
+      int const x = static_cast<int>(
+          std::lround(static_cast<float>(point.x) + (cell.x - point.x) * t));
+      int const y = static_cast<int>(
+          std::lround(static_cast<float>(point.y) + (cell.y - point.y) * t));
+      if (!is_terrain_walkable(x, y) && is_terrain_walkable(point.x, point.y)) {
+        return false;
+      }
+    }
+    return true;
+  };
+  for (int radius = 1; radius <= k_rescue_search_cells; ++radius) {
+    std::optional<Point> best;
+    int best_distance = std::numeric_limits<int>::max();
+    for_each_ring_cell(radius, [&](int dx, int dy) {
+      Point const cell{point.x + dx, point.y + dy};
+      int const distance = (dx * dx) + (dy * dy);
+      if (distance < best_distance && label_at(map, cell) == destination &&
+          is_world_position_walkable(grid_to_world(cell), passability, 0.0F) &&
+          terrain_line_clear(cell)) {
+        best = cell;
+        best_distance = distance;
+      }
+    });
+    if (best.has_value()) {
+      return best;
+    }
   }
-  return exit;
+  return std::nullopt;
 }
 
 void Pathfinding::ensure_region_sizes(RegionMap& map) {

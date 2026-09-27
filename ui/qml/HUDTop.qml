@@ -475,10 +475,23 @@ Item {
                 }
 
                 Design.IronBadge {
+                    id: spectatorBadge
+
+                    readonly property string fullText: Design.Icons.spectator + " " + qsTr("SPECTATOR")
+
                     anchors.centerIn: parent
                     visible: topRoot.game_ready() && game.is_spectator_mode
                     tone: Design.Theme.warning
-                    text: Design.Icons.spectator + " " + qsTr("SPECTATOR")
+                    text: spectatorFullMetrics.advanceWidth + Design.Metrics.space12 <= objectiveZone.width ? fullText : Design.Icons.spectator
+
+                    TextMetrics {
+                        id: spectatorFullMetrics
+
+                        font.family: Design.Typography.family
+                        font.pixelSize: Design.Typography.caption
+                        font.weight: Design.Typography.medium
+                        text: spectatorBadge.fullText
+                    }
 
                     Design.IronTooltip {
                         visible: spectatorHover.hovered

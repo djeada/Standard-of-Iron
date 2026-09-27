@@ -87,6 +87,7 @@ struct CreatureRenderRequest {
   QVector3D base_color{0.5F, 0.5F, 0.5F};
   QVector4D wear_params{0.0F, 0.0F, 0.0F, 0.0F};
   float alpha{1.0F};
+  float team_emphasis{0.0F};
   PlaybackLayerRequest full_body_blend{};
   PlaybackLayerRequest upper_body_overlay{};
 

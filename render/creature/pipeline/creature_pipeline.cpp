@@ -158,7 +158,8 @@ auto make_rigged_cmd(Render::GL::RiggedMesh* mesh,
                      const QVector3D& base_color,
                      const QVector4D& wear_params,
                      std::int32_t material_id,
-                     float alpha) -> Render::GL::RiggedCreatureCmd {
+                     float alpha,
+                     float team_emphasis) -> Render::GL::RiggedCreatureCmd {
   Render::GL::RiggedCreatureCmd cmd{};
   cmd.mesh = mesh;
   cmd.world = world_from_unit;
@@ -170,6 +171,7 @@ auto make_rigged_cmd(Render::GL::RiggedMesh* mesh,
   cmd.wear_params = wear_params;
   cmd.material_id = material_id;
   cmd.alpha = alpha;
+  cmd.team_emphasis = team_emphasis;
   return cmd;
 }
 
@@ -711,6 +713,7 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
                             std::uint32_t entity_id,
                             std::uint16_t instance_index,
                             float alpha,
+                            float team_emphasis,
                             Render::GL::ISubmitter& out,
                             Render::GL::Renderer* renderer) {
   const CreatureAsset* asset = handle.asset;
@@ -767,7 +770,8 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
                              base_color,
                              wear_params,
                              material_id_for_species(handle.archetype->species),
-                             alpha);
+                             alpha,
+                             team_emphasis);
 
   const bool skin_ubo_covers_frame = skin_atlas->palette_ubo != 0U &&
                                      skin_atlas->frame_total != 0U &&
@@ -929,6 +933,7 @@ auto submit_snapshot_creature(
     std::uint32_t entity_id,
     std::uint16_t instance_index,
     float alpha,
+    float team_emphasis,
     Render::GL::ISubmitter& out,
     Render::GL::Renderer* renderer,
     bool allow_bake_fallback = true) -> bool {
@@ -990,7 +995,8 @@ auto submit_snapshot_creature(
                                      base_color,
                                      wear_params,
                                      material_id_for_species(handle.archetype->species),
-                                     alpha);
+                                     alpha,
+                                     team_emphasis);
           cmd.palette_ubo = 0U;
           cmd.palette_offset = 0U;
 
@@ -1066,7 +1072,8 @@ auto submit_snapshot_creature(
                              base_color,
                              wear_params,
                              material_id_for_species(handle.archetype->species),
-                             alpha);
+                             alpha,
+                             team_emphasis);
   cmd.palette_ubo = 0U;
   cmd.palette_offset = 0U;
 
@@ -1243,6 +1250,7 @@ auto CreaturePipeline::submit_requests(
                                    req.entity_id,
                                    req.instance_index,
                                    req.alpha,
+                                   req.team_emphasis,
                                    out,
                                    renderer,
                                    !prebaked_lowpoly_required);
@@ -1302,6 +1310,7 @@ auto CreaturePipeline::submit_requests(
                            req.entity_id,
                            req.instance_index,
                            req.alpha,
+                           req.team_emphasis,
                            out,
                            renderer);
   };

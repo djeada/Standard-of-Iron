@@ -208,6 +208,13 @@ void SelectionController::select_all_player_troops(int local_owner_id) {
       continue;
     }
 
+    // "All troops" is the army. Workers would drag its group pace down to
+    // theirs and pull builders off their sites into the next battle.
+    if (unit->spawn_type == Game::Units::SpawnType::Builder ||
+        unit->spawn_type == Game::Units::SpawnType::Civilian) {
+      continue;
+    }
+
     m_selection_system->select_unit(e->get_id());
   }
 

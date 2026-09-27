@@ -55,6 +55,7 @@ public:
   void from_json(const QJsonObject& root);
 
 private:
+  void take_from_other_group(EntityID member, FormationGroupID new_group);
   void reindex_membership(const ArmyFormation& formation);
 
   std::unordered_map<FormationGroupID, ArmyFormation> m_groups;

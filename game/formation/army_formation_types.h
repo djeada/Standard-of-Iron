@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <optional>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "formation_roles.h"
@@ -238,6 +239,8 @@ struct ArmyFormation {
   bool moves_pending{false};
 
   std::vector<EntityID> stragglers;
+  std::unordered_map<EntityID, float> straggler_idle;
+  std::unordered_map<EntityID, int> straggler_attempts;
   float straggler_cooldown{0.0F};
 
   [[nodiscard]] auto maintains_formation() const -> bool {

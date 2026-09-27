@@ -106,7 +106,8 @@ constexpr float k_formed_cohesion = 0.8F;
 constexpr float k_disrupted_cohesion = 0.45F;
 constexpr float k_opening_progress_spacing_scale = 1.5F;
 
-constexpr float k_straggler_idle_seconds = 1.0F;
+constexpr float k_straggler_idle_seconds = 2.0F;
+constexpr int k_straggler_max_attempts = 2;
 constexpr float k_straggler_retry_seconds = 3.0F;
 
 constexpr float k_formed_damage_floor = 0.88F;
@@ -217,6 +218,33 @@ auto ArmyFormationRegistry::for_world(const Engine::Core::World& world)
   return *Game::Session::services_for(world).army_formations;
 }
 
+void ArmyFormationRegistry::take_from_other_group(EntityID member,
+                                                  FormationGroupID new_group) {
+  auto existing = m_membership.find(member);
+  if (existing == m_membership.end() || existing->second == new_group) {
+    return;
+  }
+  auto group = m_groups.find(existing->second);
+  if (group == m_groups.end()) {
+    return;
+  }
+  auto& old = group->second;
+  old.members.erase(std::remove(old.members.begin(), old.members.end(), member),
+                    old.members.end());
+  for (auto& slot : old.slot_list) {
+    if (slot.occupant == member) {
+      slot.occupant = 0U;
+    }
+  }
+  old.stragglers.erase(
+      std::remove(old.stragglers.begin(), old.stragglers.end(), member),
+      old.stragglers.end());
+  old.needs_replan = true;
+  if (old.members.empty()) {
+    m_groups.erase(group);
+  }
+}
+
 auto ArmyFormationRegistry::create_group(FormationDoctrineId doctrine,
                                          ArmyFormationIntent intent,
                                          std::vector<EntityID> members)
@@ -229,15 +257,7 @@ auto ArmyFormationRegistry::create_group(FormationDoctrineId doctrine,
   formation.needs_replan = true;
 
   for (auto const member : formation.members) {
-    auto existing = m_membership.find(member);
-    if (existing != m_membership.end() && existing->second != formation.id) {
-      auto group = m_groups.find(existing->second);
-      if (group != m_groups.end()) {
-        auto& list = group->second.members;
-        list.erase(std::remove(list.begin(), list.end(), member), list.end());
-        group->second.needs_replan = true;
-      }
-    }
+    take_from_other_group(member, formation.id);
     m_membership[member] = formation.id;
   }
 
@@ -297,15 +317,7 @@ auto ArmyFormationRegistry::replace_members(
   }
 
   for (auto const member : members) {
-    auto existing = m_membership.find(member);
-    if (existing != m_membership.end() && existing->second != id) {
-      auto group = m_groups.find(existing->second);
-      if (group != m_groups.end()) {
-        auto& list = group->second.members;
-        list.erase(std::remove(list.begin(), list.end(), member), list.end());
-        group->second.needs_replan = true;
-      }
-    }
+    take_from_other_group(member, id);
     m_membership[member] = id;
   }
 
@@ -826,47 +838,82 @@ void hold_group_facing(Engine::Core::World& world, ArmyFormation& formation) {
 
 namespace {
 
-auto idles_off_its_slot(Engine::Core::World& world,
-                        const FormationSlot& slot,
-                        float radius_sq) -> bool {
+enum class SlotStanding : std::uint8_t {
+  InSlot,
+  Busy,
+  IdleOffSlot
+};
+
+// Only a troop that is plainly standing about away from its place walks back:
+// no order, no target, no lock, not holding or guarding the ground it is on.
+auto slot_standing(Engine::Core::World& world,
+                   const FormationSlot& slot,
+                   float radius_sq) -> SlotStanding {
   const auto* transform =
       world.try_get<Engine::Core::TransformComponent>(slot.occupant);
   const auto* movement = world.try_get<Engine::Core::MovementComponent>(slot.occupant);
-  const auto* facts =
-      world.try_get<Engine::Core::MovementFactsComponent>(slot.occupant);
-  if (transform == nullptr || movement == nullptr || facts == nullptr ||
-      movement->get_has_target() ||
-      facts->progress.state_seconds < k_straggler_idle_seconds) {
-    return false;
+  if (transform == nullptr || movement == nullptr) {
+    return SlotStanding::Busy;
+  }
+  float const off_x = transform->position.x - slot.world_position.x();
+  float const off_z = transform->position.z - slot.world_position.z();
+  if ((off_x * off_x) + (off_z * off_z) <= radius_sq) {
+    return SlotStanding::InSlot;
   }
   const auto* target =
       world.try_get<Engine::Core::AttackTargetComponent>(slot.occupant);
   const auto* attack = world.try_get<Engine::Core::AttackComponent>(slot.occupant);
-  if ((target != nullptr && target->target_id != 0U) ||
-      (attack != nullptr && attack->in_melee_lock)) {
-    return false;
+  const auto* hold = world.try_get<Engine::Core::HoldModeComponent>(slot.occupant);
+  const auto* guard = world.try_get<Engine::Core::GuardModeComponent>(slot.occupant);
+  if (movement->get_has_target() || (target != nullptr && target->target_id != 0U) ||
+      (attack != nullptr && attack->in_melee_lock) ||
+      (hold != nullptr && hold->active) || (guard != nullptr && guard->active)) {
+    return SlotStanding::Busy;
   }
-  float const off_x = transform->position.x - slot.world_position.x();
-  float const off_z = transform->position.z - slot.world_position.z();
-  return (off_x * off_x) + (off_z * off_z) > radius_sq;
+  return SlotStanding::IdleOffSlot;
 }
 
 void collect_stragglers(Engine::Core::World& world,
                         ArmyFormation& formation,
                         float elapsed) {
   formation.straggler_cooldown = std::max(0.0F, formation.straggler_cooldown - elapsed);
-  if (formation.straggler_cooldown > 0.0F || formation.morph.active ||
-      formation.move_plan.has_corridor() || !formation.stragglers.empty()) {
+  if (formation.morph.active || formation.move_plan.has_corridor()) {
+    formation.straggler_idle.clear();
     return;
   }
   float const radius = formation.spacing * k_in_slot_radius_scale;
   for (const auto& slot : formation.slot_list) {
-    if (slot.occupant != 0U && slot.status != SlotStatus::Blocked &&
-        idles_off_its_slot(world, slot, radius * radius)) {
-      formation.stragglers.push_back(slot.occupant);
+    if (slot.occupant == 0U || slot.status == SlotStatus::Blocked ||
+        !formation.has_member(slot.occupant)) {
+      continue;
+    }
+    switch (slot_standing(world, slot, radius * radius)) {
+    case SlotStanding::InSlot:
+      formation.straggler_idle.erase(slot.occupant);
+      formation.straggler_attempts.erase(slot.occupant);
+      break;
+    case SlotStanding::Busy:
+      formation.straggler_idle.erase(slot.occupant);
+      break;
+    case SlotStanding::IdleOffSlot:
+      formation.straggler_idle[slot.occupant] += elapsed;
+      break;
+    }
+  }
+  if (formation.straggler_cooldown > 0.0F || !formation.stragglers.empty()) {
+    return;
+  }
+  for (auto const& [member, idle] : formation.straggler_idle) {
+    int& attempts = formation.straggler_attempts[member];
+    if (idle >= k_straggler_idle_seconds && attempts < k_straggler_max_attempts) {
+      ++attempts;
+      formation.stragglers.push_back(member);
     }
   }
   if (!formation.stragglers.empty()) {
+    for (auto const member : formation.stragglers) {
+      formation.straggler_idle.erase(member);
+    }
     formation.straggler_cooldown = k_straggler_retry_seconds;
   }
 }
@@ -1563,8 +1610,9 @@ auto ArmyFormationRuntime::access() const -> Engine::Core::SystemAccess {
   return SystemAccess::declare(
       Reads<UnitComponent,
             TransformComponent,
-            MovementFactsComponent,
-            AttackTargetComponent>{},
+            AttackTargetComponent,
+            HoldModeComponent,
+            GuardModeComponent>{},
       Writes<ArmyFormationMembershipComponent, MovementComponent, AttackComponent>{});
 }
 

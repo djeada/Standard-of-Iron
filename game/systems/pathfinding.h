@@ -374,8 +374,16 @@ private:
   auto process_dirty_regions() -> DirtyRegion;
 
   void update_region(int min_x, int max_x, int min_z, int max_z);
+  struct BuildingCellRanges {
+    CellRange hard;
+    CellRange padded;
+  };
+  [[nodiscard]] auto
+  building_cell_ranges(const BuildingFootprint& building) const -> BuildingCellRanges;
   void apply_building_cells(
       const BuildingFootprint& building, int min_x, int max_x, int min_z, int max_z);
+  void open_padding_lanes(
+      const std::vector<CellValue>& base, int min_x, int max_x, int min_z, int max_z);
   void apply_resource_prop_cells(int min_x, int max_x, int min_z, int max_z);
   void rebuild_world_prop_index();
 

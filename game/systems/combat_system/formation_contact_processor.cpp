@@ -734,6 +734,59 @@ auto constrain_step_to_ground(const Pathfinding& pathfinder,
   return true;
 }
 
+// Soldiers stand on the same ground as their squad: never on a hill slope, a
+// cliff or water. A slot that falls on such a cell (a flank file hanging over a
+// rim, a crowd shove at the edge of a plateau) is pulled in toward the squad.
+auto terrain_walkable_at(const Pathfinding& pathfinder, float x, float z) -> bool {
+  auto const cell = pathfinder.world_to_grid(x, z);
+  return pathfinder.is_terrain_walkable(cell.x, cell.y);
+}
+
+void pull_onto_terrain(const Pathfinding& pathfinder,
+                       float anchor_x,
+                       float anchor_z,
+                       QVector3D& destination) {
+  if (terrain_walkable_at(pathfinder, destination.x(), destination.z()) ||
+      !terrain_walkable_at(pathfinder, anchor_x, anchor_z)) {
+    return;
+  }
+  float const dx = anchor_x - destination.x();
+  float const dz = anchor_z - destination.z();
+  float const distance = std::hypot(dx, dz);
+  constexpr float k_pull_step = 0.25F;
+  for (float pulled = k_pull_step; pulled < distance; pulled += k_pull_step) {
+    float const x = destination.x() + dx / distance * pulled;
+    float const z = destination.z() + dz / distance * pulled;
+    if (terrain_walkable_at(pathfinder, x, z)) {
+      destination.setX(x);
+      destination.setZ(z);
+      return;
+    }
+  }
+  destination.setX(anchor_x);
+  destination.setZ(anchor_z);
+}
+
+auto constrain_step_to_terrain(const Pathfinding& pathfinder,
+                               float from_x,
+                               float from_z,
+                               float& step_x,
+                               float& step_z) -> bool {
+  if (!terrain_walkable_at(pathfinder, from_x, from_z) ||
+      terrain_walkable_at(pathfinder, from_x + step_x, from_z + step_z)) {
+    return false;
+  }
+  if (terrain_walkable_at(pathfinder, from_x + step_x, from_z)) {
+    step_z = 0.0F;
+  } else if (terrain_walkable_at(pathfinder, from_x, from_z + step_z)) {
+    step_x = 0.0F;
+  } else {
+    step_x = 0.0F;
+    step_z = 0.0F;
+  }
+  return true;
+}
+
 struct SlotWalk {
   const Engine::Core::TransformComponent& actor;
   const Engine::Core::FormationPresentationComponent& formation;
@@ -807,6 +860,11 @@ void walk_formation_slot(const SlotWalk& walk,
                          Engine::Core::FormationSoldierPresentation& soldier) {
   const float dt = std::max(0.0F, walk.delta_time);
   QVector3D destination = local_to_world(walk.actor, soldier.local_x, soldier.local_z);
+  auto const* ground = NavGrid::get_pathfinder();
+  if (ground != nullptr) {
+    pull_onto_terrain(
+        *ground, walk.actor.position.x, walk.actor.position.z, destination);
+  }
   const float desired_facing = walk.actor.rotation.y + soldier.local_yaw;
   const float variation = hash_unit_float(walk.seed, soldier.slot_index * 97U + 43U);
   const float max_speed =
@@ -924,6 +982,10 @@ void walk_formation_slot(const SlotWalk& walk,
     }
   }
   auto const* pathfinder = NavGrid::get_pathfinder();
+  if (pathfinder != nullptr) {
+    pull_onto_terrain(
+        *pathfinder, walk.actor.position.x, walk.actor.position.z, destination);
+  }
   bool const obstructed =
       destination != slot_destination || previous->relocation_blocked;
   const float heading_change =
@@ -1139,6 +1201,11 @@ void walk_formation_slot(const SlotWalk& walk,
           step_x,
           step_z,
           walk.passability)) {
+    soldier.relocation_blocked = true;
+  }
+  if (pathfinder != nullptr &&
+      constrain_step_to_terrain(
+          *pathfinder, soldier.world_x, soldier.world_z, step_x, step_z)) {
     soldier.relocation_blocked = true;
   }
   float landing_x = soldier.world_x + step_x;

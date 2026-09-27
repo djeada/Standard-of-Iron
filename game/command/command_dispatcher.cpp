@@ -71,7 +71,8 @@ void apply_move(World& world, const Move& move) {
     });
   }
 
-  if (move.kind == Game::Systems::MoveOrderKind::PlayerMove) {
+  if (move.kind == Game::Systems::MoveOrderKind::PlayerMove ||
+      move.kind == Game::Systems::MoveOrderKind::AttackMove) {
     Game::Formation::ArmyFormationService::release(world, move.units);
   }
 
@@ -84,6 +85,7 @@ void apply_move(World& world, const Move& move) {
 }
 
 void apply_stop(World& world, const Stop& stop) {
+  Game::Formation::ArmyFormationService::release(world, stop.units);
   for_each_subject(world, stop.units, [&world](Entity& entity) {
     Game::Systems::OrderService::clear_builder_gather_job(world, &entity);
     Game::Systems::OrderService::apply_stop(&entity);
@@ -260,6 +262,7 @@ void apply_auto_gather(World& world, const SetAutoGather& order) {
 }
 
 void apply_patrol(World& world, const Patrol& patrol) {
+  Game::Formation::ArmyFormationService::release(world, patrol.units);
   for_each_subject(world, patrol.units, [&patrol](Entity& entity) {
     auto* component = entity.get_component<Engine::Core::PatrolComponent>();
     if (component == nullptr) {
@@ -921,6 +924,7 @@ void dispatch(World& world, const Command& command) {
         if constexpr (std::is_same_v<T, Move>) {
           apply_move(world, payload);
         } else if constexpr (std::is_same_v<T, AttackTarget>) {
+          Game::Formation::ArmyFormationService::release(world, payload.units);
           Game::Systems::CommandService::attack_target(
               world, payload.units, payload.target, payload.should_chase);
         } else if constexpr (std::is_same_v<T, Stop>) {
