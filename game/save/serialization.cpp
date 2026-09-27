@@ -2387,8 +2387,7 @@ auto Serialization::serialize_world(const World* world) -> QJsonDocument {
     if (entity.get_component<ConstructionPreviewComponent>() != nullptr) {
       return;
     }
-    // A collapsing structure is already gone for gameplay, and its death
-    // sequence is presentation-only, so a restored copy would never be removed.
+
     if (is_collapsing_structure(entity)) {
       return;
     }

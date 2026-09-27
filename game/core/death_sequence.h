@@ -11,8 +11,6 @@
 
 namespace Engine::Core {
 
-// A structure's collapse is timed to the `build.building_destroyed` cue (2.2 s);
-// the rubble then lingers before settling into the ground.
 inline constexpr float k_structure_collapse_duration = 2.2F;
 inline constexpr float k_structure_rubble_hold_duration = 12.0F;
 inline constexpr float k_structure_rubble_sink_duration = 3.5F;
@@ -164,8 +162,6 @@ resolve_death_timing(DeathSequenceProfile profile,
   return timing;
 }
 
-// Alive in the gameplay sense. Dead units and collapsing structures stay in the
-// world for their death sequence, so existence alone is not enough.
 [[nodiscard]] inline auto is_live_entity(const Entity& entity) noexcept -> bool {
   auto const* unit = entity.get_component<UnitComponent>();
   return unit != nullptr && unit->health > 0 &&

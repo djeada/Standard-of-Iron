@@ -37,11 +37,7 @@ void prewarm_match_render_templates(Engine::Core::World& world,
     return;
   }
   const Engine::Core::ScopedStartupPhase prewarm_phase("render.template_prewarm");
-  // The prewarm reads the match roster (nations, owners, troop profiles)
-  // through the renderer's world view, and it ends by forbidding render-time
-  // bakes. The first frame, which would otherwise bind the view, only comes
-  // after the load, so without this a unit type that is not already standing
-  // on the map is never baked and is invisible when it is trained later.
+
   auto& session =
       scene.session != nullptr ? *scene.session : Game::Session::session_for(world);
   scene.renderer->set_world_view(Render::WorldView::of(session));

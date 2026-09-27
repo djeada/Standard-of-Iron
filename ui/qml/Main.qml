@@ -1099,8 +1099,6 @@ ApplicationWindow {
 
     Connections {
         function onPresented(entry) {
-            // Ambient notes arrive silently, and a refusal has already been
-            // answered by its own error or refuse cue.
             if (!entry || entry.priority === "ambient")
                 return;
             if (entry.channel && String(entry.channel).indexOf("refusal-") === 0)

@@ -282,9 +282,6 @@ def rms_db(audio: np.ndarray) -> float:
     return float(20 * np.log10(np.sqrt(np.mean(audio**2)) + 1e-9))
 
 
-# --- synthesis -------------------------------------------------------------
-
-
 def _t(duration: float) -> np.ndarray:
     return np.arange(samples(duration)) / RATE
 
@@ -389,9 +386,6 @@ def drone(
         sig[:, (k + 1) % 2] += tone * 0.6
     air = lowpass(noise(duration, seed), darkness) * 0.25
     return (sig * 0.5 + air).astype(np.float32)
-
-
-# --- dynamics ---------------------------------------------------------------
 
 
 def compress(

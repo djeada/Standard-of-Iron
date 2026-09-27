@@ -48,8 +48,6 @@ auto smooth(float t) noexcept -> float {
   return t * t * (3.0F - (2.0F * t));
 }
 
-// Where a point on the footprint sits in the world: `local` is in footprint
-// units (-1..1 on each axis), turned by the building's yaw.
 auto footprint_point(const BuildingCollapse& collapse,
                      float local_x,
                      float local_z) -> QVector3D {
@@ -67,8 +65,6 @@ auto heading_direction(const BuildingCollapse& collapse) -> QVector3D {
   return {std::sin(collapse.heading), 0.0F, std::cos(collapse.heading)};
 }
 
-// Seconds after death at which the ruin has come `through` of the way down
-// (0 = still standing, 1 = landed); inverts the fall curve below.
 auto seconds_at_fall_through(const BuildingCollapse& collapse,
                              float through) noexcept -> float {
   float const progress =
@@ -142,8 +138,7 @@ auto resolve_building_collapse(const Engine::Core::World& world,
           ? std::clamp(
                 death->state_time / std::max(death->state_duration, 0.001F), 0.0F, 1.0F)
           : 1.0F;
-  // The structure first shudders on its failing supports, then gives way and
-  // accelerates down like anything falling, landing at the end of Dying.
+
   float const shudder_end = k_collapse_shudder_fraction;
   collapse.shudder =
       progress < shudder_end
@@ -234,7 +229,13 @@ void submit_building_collapse_rubble(ISubmitter& out,
     float const height = size * (0.45F + (hash01(seed, 9U) * 0.45F));
     float const drop_from =
         collapse.footprint.height * (0.35F + (hash01(seed, 10U) * 0.55F));
-    float const lift = drop_from * (1.0F - (drop_t * drop_t));
+    float const impact_age =
+        std::max(0.0F, fall_time - released_at - k_chunk_drop_seconds);
+    float const rebound_t = std::clamp(impact_age / 0.24F, 0.0F, 1.0F);
+
+    float const rebound =
+        size * 0.12F * std::sin(rebound_t * k_pi) * (1.0F - rebound_t);
+    float const lift = drop_from * (1.0F - (drop_t * drop_t)) + rebound;
     float const tumble = (1.0F - drop_t) * 160.0F * signed_hash(seed, 11U);
 
     bool const timber = hash01(seed, 12U) < 0.3F;
@@ -247,7 +248,6 @@ void submit_building_collapse_rubble(ISubmitter& out,
         shade;
 
     QMatrix4x4 model;
-    model.translate(rest.x(), rest.y() + (height * 0.55F) + lift - sink, rest.z());
     model.rotate(hash01(seed, 15U) * 180.0F, 0.0F, 1.0F, 0.0F);
     model.rotate((signed_hash(seed, 16U) * 24.0F) + tumble, 1.0F, 0.0F, 0.0F);
     model.rotate(signed_hash(seed, 17U) * 18.0F, 0.0F, 0.0F, 1.0F);
@@ -256,7 +256,12 @@ void submit_building_collapse_rubble(ISubmitter& out,
     } else {
       model.scale(size, height, size * (0.7F + (hash01(seed, 18U) * 0.3F)));
     }
-    out.mesh(cube, model, color, nullptr, 1.0F, 10);
+
+    float const support =
+        std::abs(model(1, 0)) + std::abs(model(1, 1)) + std::abs(model(1, 2));
+    model.setColumn(
+        3, QVector4D(rest.x(), rest.y() + support + lift - sink, rest.z(), 1.0F));
+    out.mesh(cube, model, color, nullptr, 1.0F, timber ? 12 : 15);
   }
 }
 
@@ -269,7 +274,6 @@ void submit_building_collapse_effects(ISubmitter& out,
   float const radius = footprint_radius(collapse);
   QVector3D const dust_color(0.60F, 0.55F, 0.47F);
 
-  // The shudder shakes loose a little grit before anything falls.
   if (collapse.state == Engine::Core::DeathSequenceState::Dying &&
       collapse.shudder > 0.0F) {
     out.combat_dust(collapse.base,
@@ -279,8 +283,6 @@ void submit_building_collapse_effects(ISubmitter& out,
                     animation_time);
   }
 
-  // Masonry hitting the ground throws out a ring of debris bursts. Each one is
-  // an impact whose age runs from the moment the ruin lands.
   float const since_impact =
       collapse.elapsed - seconds_at_fall_through(collapse, 0.55F);
   if (since_impact >= 0.0F && since_impact < 6.0F) {
@@ -303,7 +305,6 @@ void submit_building_collapse_effects(ISubmitter& out,
     }
   }
 
-  // A dust cloud rolls out from the ruin and settles over a few seconds.
   float const cloud =
       collapse.fall > 0.2F
           ? std::clamp(
@@ -330,7 +331,6 @@ void submit_building_collapse_effects(ISubmitter& out,
     }
   }
 
-  // Smoke keeps rising from the rubble after the dust has gone.
   if (collapse.state != Engine::Core::DeathSequenceState::Dying) {
     float const smoke =
         std::clamp(1.0F - (collapse.settled_for / k_smoke_seconds), 0.0F, 1.0F) *

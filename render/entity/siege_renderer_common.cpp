@@ -61,15 +61,13 @@ auto siege_motion(const DrawContext& ctx,
         std::remainder(state.left_roll + (travel + turn * half_track) / radius, tau);
     state.right_roll =
         std::remainder(state.right_roll + (travel - turn * half_track) / radius, tau);
-    // Pivoting in place rolls the wheels against each other; that is work
-    // for the crew too, so it counts toward how hard the engine is moving.
+
     const float pivot = std::abs(turn) * half_track * scale;
     state.travelled += delta.length() + pivot;
     const float speed = std::clamp((delta.length() + pivot) / dt, 0.0F, 1.0F);
     state.movement += (speed - state.movement) * (1.0F - std::exp(-dt * 7.0F));
   } else {
-    // The animation clock stood still this frame (throttled or a second
-    // pass): keep the old pose and leave the distance for the next real step.
+
     advance = false;
   }
   if (advance) {
@@ -263,11 +261,6 @@ void register_siege_renderer_variant(EntityRendererRegistry& registry,
           }
         }
 
-        // Render snapshots rotate through several World buffers, so the
-        // pointer changes every published tick. Clearing on that wiped the
-        // wheel roll and crew state each tick and froze both. Only a clock
-        // that runs backwards (a new match) clears everything; per-entity
-        // gaps and teleports are reset inside siege_motion.
         if (ctx.animation_time < last_sweep) {
           travel.clear();
           last_sweep = ctx.animation_time;

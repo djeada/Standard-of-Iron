@@ -493,10 +493,6 @@ struct ArenaScenarioValidationError {
 [[nodiscard]] auto validate_scenario(const ArenaScenarioDefinition& definition)
     -> std::vector<ArenaScenarioValidationError>;
 
-// Destroys every unit, structure and wall construction site still in the
-// world, including the ones game systems created on their own (buildings
-// raised by builder crews, units trained in barracks) that the arena never
-// spawned or tracked. Returns how many entities it destroyed.
 auto destroy_remaining_gameplay_entities(Engine::Core::World& world) -> std::size_t;
 
 [[nodiscard]] auto

@@ -231,9 +231,6 @@ TEST_F(PatrolSystemTest, AWaypointOnBlockedGroundIsPassedFromTheNearestReachable
   patrol->patrolling = true;
   patrol->current_waypoint = 0;
 
-  // The first waypoint lies in a wall: the order resolved to the nearest ground,
-  // (6, 2), and the rider stands there. On the Rhone a patrol rider stood so for a
-  // whole mission with the order still open.
   MovementTestAccess::set_has_target(*movement, true);
   MovementTestAccess::set_requested_goal(*movement, 10.0F, 0.0F);
   MovementTestAccess::set_goal_x(*movement, 6.0F);

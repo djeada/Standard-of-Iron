@@ -3,6 +3,7 @@
 
 #include <array>
 #include <gtest/gtest.h>
+#include <vector>
 
 #include "game/core/component_core.h"
 #include "game/core/entity.h"
@@ -18,6 +19,7 @@ public:
   int cloth_parts{0};
   int other_parts{0};
   float signature{0.0F};
+  std::vector<QMatrix4x4> cloth_models;
 
   void mesh(Render::GL::Mesh* mesh,
             const QMatrix4x4& model,
@@ -29,6 +31,9 @@ public:
       return;
     }
     (material_id == 3 ? cloth_parts : other_parts) += 1;
+    if (material_id == 3) {
+      cloth_models.push_back(model);
+    }
     const QVector3D centre = model.map(QVector3D(0.0F, 0.0F, 0.0F));
     signature += centre.x() * 1.3F + centre.y() * 7.1F + centre.z() * 3.7F;
   }
@@ -91,4 +96,25 @@ TEST(MarketAwningTest, DistantMarketsSkipTheClothEntirely) {
   const auto far = record(3.0F, 200.0F * 200.0F);
   EXPECT_EQ(far.cloth_parts, 0);
   EXPECT_EQ(far.other_parts, 0);
+}
+
+TEST(MarketAwningTest, WindLeavesSupportedHemsFixedAndPreservesPartCount) {
+  auto const rest = record(0.0F);
+  ASSERT_GE(rest.cloth_models.size(), 32U);
+  for (float time : {0.7F, 2.4F, 5.1F, 11.0F}) {
+    auto const windy = record(time);
+    ASSERT_EQ(rest.cloth_models.size(), windy.cloth_models.size());
+    EXPECT_EQ(rest.other_parts, windy.other_parts);
+    for (std::size_t stripe = 0; stripe < 4; ++stripe) {
+
+      for (auto const [panel, endpoint] :
+           {std::pair{stripe * 8, -1.0F}, std::pair{stripe * 8 + 5, 1.0F}}) {
+        QVector3D const local(0.0F, 0.0F, endpoint / 1.04F);
+        EXPECT_LT(
+            (rest.cloth_models[panel].map(local) - windy.cloth_models[panel].map(local))
+                .length(),
+            1.0e-5F);
+      }
+    }
+  }
 }

@@ -1028,7 +1028,7 @@ void Renderer::submit_unit_entry(
               world_view().terrain_or_empty(), entry.unit->spawn_type, model_matrix);
           cache.foundation_valid = true;
         }
-        // The plinth stays under the rubble and settles with it.
+
         QMatrix4x4 foundation_model = model_matrix;
         if (entry.collapse.active) {
           QMatrix4x4 settle;
@@ -1535,8 +1535,6 @@ void Renderer::render_construction_previews(Engine::Core::World* world,
     model_matrix.rotate(transform->rotation.z, 0.0F, 0.0F, 1.0F);
     model_matrix.scale(transform->scale.x, transform->scale.y, transform->scale.z);
 
-    // A site under way reads as a building going up: a stone curb, the walls
-    // rising inside scaffolding, the scaffolding coming down to finish.
     if (under_construction) {
       auto const site = Render::GL::building_worksite_for(*world, entity->get_id());
       Render::GL::submit_foundation_curb(*this, site);

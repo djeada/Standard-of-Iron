@@ -103,8 +103,6 @@ auto MinimapViewModel::world_at(qreal mx,
   const float py =
       (static_cast<float>(my) / static_cast<float>(minimap_height)) * image_height;
 
-  // The image spans the rotated extent of the map, the same projection the
-  // terrain and every overlay use.
   const auto [extent_width, extent_height] = Game::Map::Minimap::rotated_world_bounds(
       minimap->get_world_width(), minimap->get_world_height());
   const auto [world_x, world_z] =

@@ -318,9 +318,6 @@ auto SaveLoadCoordinator::load_from_slot(const LoadFromSlotContext& context) con
     context.restore_battle_stats(metadata.value("battle_stats").toObject());
   }
 
-  // Loading dropped every baked creature body with the render caches above.
-  // Bake them again for the restored roster; without this the barrier left by
-  // the previous match's prewarm keeps anything not yet baked off screen.
   prewarm_match_render_templates(context.world, context.scene);
 
   AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Mission);

@@ -76,8 +76,6 @@ void UnitLayer::init(
   m_world_height = world_height;
   m_inv_tile_size = 1.0F / std::max(tile_size, Constants::k_min_tile_size);
 
-  // The baked terrain fits the whole rotated map into the image, so every
-  // layer drawn over it has to project through the same rotated extent.
   const auto [extent_width, extent_height] =
       rotated_world_bounds(world_width, world_height);
   m_scale_x = static_cast<float>(width) / extent_width;

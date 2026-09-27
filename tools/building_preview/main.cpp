@@ -8,6 +8,7 @@
 #include <QOpenGLContext>
 #include <QPainter>
 #include <QString>
+#include <QSurfaceFormat>
 #include <QVector3D>
 #include <QVector4D>
 
@@ -185,6 +186,8 @@ auto make_view_projection(const Bounds& bounds,
 }
 
 float g_farm_growth = 1.0F;
+float g_animation_time = 0.0F;
+float g_gate_open = 0.0F;
 
 auto render_building(EntityRendererRegistry& registry,
                      Render::GL::ResourceManager* resources,
@@ -228,7 +231,14 @@ auto render_building(EntityRendererRegistry& registry,
     farm->growth = g_farm_growth;
   }
 
+  if (type == "gate") {
+    entity.registry()
+        ->emplace<Engine::Core::GateComponent>(entity.get_id())
+        ->open_amount = g_gate_open;
+  }
+
   DrawContext ctx;
+  ctx.animation_time = g_animation_time;
   ctx.entity = &entity;
   ctx.resources = resources;
   ctx.model = QMatrix4x4{};
@@ -270,12 +280,17 @@ auto main(int argc, char** argv) -> int {
   Game::Session::SessionContext session;
   Game::Session::ScopedSession const active_session(session);
 
+  QSurfaceFormat format;
+  format.setVersion(3, 3);
+  format.setProfile(QSurfaceFormat::CoreProfile);
   QOpenGLContext gl;
+  gl.setFormat(format);
   if (!gl.create()) {
     std::cerr << "Failed to create GL context\n";
     return 2;
   }
   QOffscreenSurface surface;
+  surface.setFormat(gl.format());
   surface.create();
   if (!gl.makeCurrent(&surface)) {
     std::cerr << "Failed to make GL context current\n";
@@ -302,6 +317,10 @@ auto main(int argc, char** argv) -> int {
       float const fz = QString::fromLatin1(argv[++i]).toFloat();
       g_focus = QVector3D(fx, fy, fz);
       g_has_focus = true;
+    } else if (arg == "--time" && i + 1 < argc) {
+      g_animation_time = QString::fromLatin1(argv[++i]).toFloat();
+    } else if (arg == "--gate-open" && i + 1 < argc) {
+      g_gate_open = std::clamp(QString::fromLatin1(argv[++i]).toFloat(), 0.0F, 1.0F);
     } else if (arg == "--growth" && i + 1 < argc) {
       g_farm_growth = QString::fromLatin1(argv[++i]).toFloat();
     } else {
@@ -314,6 +333,10 @@ auto main(int argc, char** argv) -> int {
   Render::GL::register_built_in_entity_renderers(registry);
 
   Render::GL::ResourceManager resources;
+  if (!resources.initialize()) {
+    std::cerr << "Failed to initialize building preview resources\n";
+    return 4;
+  }
 
   std::vector<std::string> types = {"home",
                                     "farm",

@@ -232,9 +232,6 @@ auto CueRegistry::play(const std::string& cue_id,
 
     binding = it->second;
 
-    // A spatial cue out of earshot is dropped before it can spend the cue
-    // cooldown; otherwise fighting at the far edge of the map would silence
-    // the same sound right under the camera.
     if (binding.spatial && position != nullptr &&
         spatialize(AudioSystem::get_instance().listener(), *position).volume_scale <=
             0.0F) {

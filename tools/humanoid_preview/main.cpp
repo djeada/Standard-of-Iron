@@ -506,10 +506,9 @@ void render_frame(const BpatBlob& blob,
 
 struct LegPose {
   float flex{0.0F};
-  // Knee offset from the hip-to-foot line along the pelvis forward axis:
-  // positive is the knee in front of the leg line, as a knee bends.
+
   float knee_forward{0.0F};
-  // Knee offset along the pelvis right axis, signed outward for this leg.
+
   float knee_outward{0.0F};
 };
 
@@ -534,9 +533,6 @@ auto leg_pose(std::span<const QMatrix4x4> palette,
           .knee_outward = QVector3D::dotProduct(off, outward)};
 }
 
-// Scans every frame of every clip for legs a human knee cannot make: a knee
-// bent backwards, a knee swung far off to the side of its leg, or feet
-// crossed through each other.
 auto scan_legs(const BpatBlob& blob, const std::string& only) -> int {
   int flagged = 0;
   for (std::uint32_t c = 0; c < blob.clip_count(); ++c) {
@@ -552,8 +548,7 @@ auto scan_legs(const BpatBlob& blob, const std::string& only) -> int {
     std::uint32_t cross_frame = 0;
     for (std::uint32_t f = 0; f < clip.frame_count; ++f) {
       auto const palette = global_palette(blob, clip.frame_offset + f);
-      // Clips are baked facing +Z; the skeleton's hip line yaws with the
-      // knees, so it is no frame to judge them in.
+
       QVector3D const right(1.0F, 0.0F, 0.0F);
       QVector3D const forward(0.0F, 0.0F, 1.0F);
       for (int side = 0; side < 2; ++side) {

@@ -31,10 +31,12 @@ void main() {
   float free_edge = attached * pow(u, 0.72);
   float free_edge_sq = free_edge * free_edge;
   float gust = 0.66 + 0.34 * sin(u_time * 0.43 + spatial_phase * 0.73);
-  gust +=
-      (soi_hash12_9f6e8e(vec2(floor(u_time * 0.37 + banner_seed * 11.0), banner_seed)) -
-       0.5) *
-      0.16;
+  float gust_clock = u_time * 0.37 + banner_seed * 11.0;
+  float gust_cell = floor(gust_clock);
+  float gust_blend = smoothstep(0.0, 1.0, fract(gust_clock));
+  float gust_a = soi_hash12_9f6e8e(vec2(gust_cell, banner_seed));
+  float gust_b = soi_hash12_9f6e8e(vec2(gust_cell + 1.0, banner_seed));
+  gust += (mix(gust_a, gust_b, gust_blend) - 0.5) * 0.16;
 
   float primary_phase = u_time * 1.85 + u * 5.4 + v * 1.25 + spatial_phase;
   float cross_phase = u_time * 3.65 + u * 10.8 - v * 4.1 + spatial_phase * 1.7;

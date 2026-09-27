@@ -2195,15 +2195,7 @@ void restore_leg_lengths(Render::GL::HumanoidPose& pose, bool knees_over_toes) {
     if (lengths_hold() && (!knees_over_toes || hinges_forward())) {
       return;
     }
-    // A knee only hinges forward, tracking over the toes. Once the pelvis
-    // drops into a lunge the authored knee sits almost on the hip-to-foot
-    // line, and its offset from that line is a few centimetres pointing
-    // anywhere -- often sideways or backwards. Normalised, that noise flung
-    // the knee a third of a metre out to the side (the commander's slash,
-    // thrust, finisher and dive all squatted frog-legged) or folded it
-    // backwards. So the authored offset only chooses how the knee leans
-    // within the leg's own forward plane: it may not point backwards, and it
-    // may turn out no further than a knee over the toes does.
+
     constexpr float k_min_forward_bend = 0.04F;
     constexpr float k_max_outward_per_forward = 0.25F;
     QVector3D const authored_knee = knee;
@@ -2651,9 +2643,7 @@ void bake_humanoid_clip_frame(BakeProfile profile,
   if (clip.death_collapse == Animation::HumanoidDeathCollapse::None &&
       clip.riding_type == BakerRidingType::None &&
       clip.showcase_type == BakerShowcaseType::None) {
-    // Only the commander moves are held to it: the skeleton builds its hip
-    // line from the knees, so pulling in a walk's or a run's knees swings
-    // the pelvis round by up to 90 degrees between frames.
+
     restore_leg_lengths(pose, is_rpg_sword_clip(clip) || is_rpg_spear_clip(clip));
   }
 

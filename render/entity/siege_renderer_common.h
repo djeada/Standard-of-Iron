@@ -28,8 +28,7 @@ struct SiegeMotion {
   float right_roll{0.0F};
   float movement{0.0F};
   float recoil{0.0F};
-  // Signed knock from the wheels meeting the ground while rolling, -1..1.
-  // Loose parts (a resting arm, bow arms, the bolt slider) follow it.
+
   float jolt{0.0F};
 };
 

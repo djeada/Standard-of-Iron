@@ -160,8 +160,6 @@ void CaptureSystem::process_barrack_capture(Engine::Core::World* world,
     }
     tally_nearby_troops(troops, barrack_x, barrack_z, capture_radius, tallies);
 
-    // Allied troops stand with the owner: an ally sent to hold a barracks
-    // used to out-number its garrison and take it, which defeated the owner.
     int defender_troops = 0;
     for (const auto& tally : tallies) {
       bool const barrack_is_neutral = Game::Core::is_neutral_owner(barrack_owner_id);

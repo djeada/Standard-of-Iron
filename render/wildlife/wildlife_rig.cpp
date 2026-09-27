@@ -195,7 +195,8 @@ auto death_motion(float phase) noexcept -> DeathMotion {
 
   if (p > k_impact) {
     float const since = (p - k_impact) / (1.0F - k_impact);
-    motion.settle = std::exp(-5.0F * since) * std::sin(since * 12.0F);
+    motion.settle = std::exp(-5.0F * since) * std::sin(since * 12.0F) *
+                    (1.0F - smoothstep01(since));
   }
 
   motion.thrash =

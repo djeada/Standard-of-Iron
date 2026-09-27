@@ -1,11 +1,15 @@
 #include "building_archetype_desc.h"
 
+#include <algorithm>
+#include <cmath>
 #include <limits>
 #include <type_traits>
 #include <utility>
 
 #include "building_decay.h"
 #include "render/gl/primitives.h"
+#include "render/gl/shared_geometry_cache.h"
+#include "render/material_classification.h"
 
 namespace Render::GL {
 namespace {
@@ -40,27 +44,139 @@ auto supports_state(BuildingStateMask mask, BuildingState state) -> bool {
   return (mask & state_mask_for(state)) != BuildingStateMask::None;
 }
 
+auto building_box_mesh(const QVector3D& half, int material) -> Mesh* {
+  float const shortest = std::min({half.x(), half.y(), half.z()});
+  if (shortest < 0.025F ||
+      (material != k_building_material_stone && material != k_building_material_wood &&
+       material != k_building_material_ceramic)) {
+    return get_unit_cube();
+  }
+
+  float const bevel = std::min(0.012F, shortest * 0.10F);
+  constexpr std::array<float, 7> levels{
+      0.0F, 0.00390625F, 0.0078125F, 0.015625F, 0.03125F, 0.0625F, 0.125F};
+  QVector3D inset;
+  std::uint64_t variant = 0;
+  for (int axis = 0; axis < 3; ++axis) {
+    float const wanted = bevel / half[axis];
+    std::size_t closest = 0;
+    for (std::size_t level = 1; level < levels.size(); ++level) {
+      if (std::abs(levels[level] - wanted) < std::abs(levels[closest] - wanted)) {
+        closest = level;
+      }
+    }
+    inset[axis] = levels[closest];
+    variant = variant * levels.size() + closest;
+  }
+
+  if (inset.x() == 0.0F || inset.y() == 0.0F || inset.z() == 0.0F) {
+    return get_unit_cube();
+  }
+  return SharedGeometryCache::instance().get_or_build(
+      geometry_key("building/beveled_box", variant), [inset] {
+        std::vector<Vertex> vertices;
+        std::vector<unsigned int> indices;
+        auto face = [&](std::initializer_list<QVector3D> points) {
+          std::vector<QVector3D> polygon(points);
+          QVector3D normal =
+              QVector3D::crossProduct(polygon[1] - polygon[0], polygon[2] - polygon[0])
+                  .normalized();
+          QVector3D center;
+          for (auto const& point : polygon) {
+            center += point;
+          }
+          if (QVector3D::dotProduct(normal, center) < 0.0F) {
+            std::reverse(polygon.begin(), polygon.end());
+            normal = -normal;
+          }
+          auto const base = static_cast<unsigned int>(vertices.size());
+          for (auto const& point : polygon) {
+            vertices.push_back(
+                {{point.x(), point.y(), point.z()},
+                 {normal.x(), normal.y(), normal.z()},
+                 {(point.x() + 1.0F) * 0.5F, (point.z() + 1.0F) * 0.5F}});
+          }
+          for (unsigned int i = 1; i + 1 < polygon.size(); ++i) {
+            indices.insert(indices.end(), {base, base + i, base + i + 1});
+          }
+        };
+        QVector3D const inner = QVector3D(1.0F, 1.0F, 1.0F) - inset;
+        for (int axis = 0; axis < 3; ++axis) {
+          int const u = (axis + 1) % 3;
+          int const v = (axis + 2) % 3;
+          for (float sign : {-1.0F, 1.0F}) {
+            auto point = [&](float a, float b) {
+              QVector3D p;
+              p[axis] = sign;
+              p[u] = a * inner[u];
+              p[v] = b * inner[v];
+              return p;
+            };
+            face({point(-1, -1), point(1, -1), point(1, 1), point(-1, 1)});
+          }
+
+          for (float su : {-1.0F, 1.0F}) {
+            for (float sv : {-1.0F, 1.0F}) {
+              QVector3D a, b;
+              a[axis] = b[axis] = -inner[axis];
+              a[u] = su;
+              a[v] = sv * inner[v];
+              b[u] = su * inner[u];
+              b[v] = sv;
+              QVector3D c = b, d = a;
+              c[axis] = d[axis] = inner[axis];
+              face({a, b, c, d});
+            }
+          }
+        }
+        for (float x : {-1.0F, 1.0F}) {
+          for (float y : {-1.0F, 1.0F}) {
+            for (float z : {-1.0F, 1.0F}) {
+              face({{x, y * inner.y(), z * inner.z()},
+                    {x * inner.x(), y, z * inner.z()},
+                    {x * inner.x(), y * inner.y(), z}});
+            }
+          }
+        }
+        return std::make_unique<Mesh>(vertices, indices);
+      });
+}
+
+auto building_material(const BuildingPartDesc& part) -> int {
+  if (part.material_id != 0) {
+    return part.material_id;
+  }
+  if (part.palette_slot != k_render_archetype_fixed_color_slot) {
+
+    return 0;
+  }
+
+  return Render::classify_material_id(part.color) == Render::k_material_wood
+             ? k_building_material_wood
+             : k_building_material_stone;
+}
+
 void add_part_to_builder(RenderArchetypeBuilder& builder,
                          const BuildingPartDesc& part,
                          const QVector3D& color) {
   switch (part.kind) {
   case BuildingPartKind::Box:
-    builder.add_box(part.point_a,
-                    part.point_b,
-                    color,
-                    part.texture,
-                    part.alpha,
-                    part.material_id,
-                    part.material);
+    builder.add_mesh(building_box_mesh(part.point_b, part.material_id),
+                     box_local_model(part.point_a, part.point_b),
+                     color,
+                     part.texture,
+                     part.alpha,
+                     part.material_id,
+                     part.material);
     break;
   case BuildingPartKind::PaletteBox:
-    builder.add_palette_box(part.point_a,
-                            part.point_b,
-                            part.palette_slot,
-                            part.texture,
-                            part.alpha,
-                            part.material_id,
-                            part.material);
+    builder.add_palette_mesh(building_box_mesh(part.point_b, part.material_id),
+                             box_local_model(part.point_a, part.point_b),
+                             part.palette_slot,
+                             part.texture,
+                             part.alpha,
+                             part.material_id,
+                             part.material);
     break;
   case BuildingPartKind::RotatedBox:
   case BuildingPartKind::PaletteRotatedBox: {
@@ -71,7 +187,7 @@ void add_part_to_builder(RenderArchetypeBuilder& builder,
     model.rotate(part.euler_deg.x(), 1.0F, 0.0F, 0.0F);
     model.scale(part.point_b);
     if (part.kind == BuildingPartKind::PaletteRotatedBox) {
-      builder.add_palette_mesh(get_unit_cube(),
+      builder.add_palette_mesh(building_box_mesh(part.point_b, part.material_id),
                                model,
                                part.palette_slot,
                                part.texture,
@@ -79,7 +195,7 @@ void add_part_to_builder(RenderArchetypeBuilder& builder,
                                part.material_id,
                                part.material);
     } else {
-      builder.add_mesh(get_unit_cube(),
+      builder.add_mesh(building_box_mesh(part.point_b, part.material_id),
                        model,
                        color,
                        part.texture,
@@ -290,7 +406,9 @@ auto build_building_archetype(const BuildingArchetypeDesc& desc,
       if (!supports_state(part.states, state)) {
         continue;
       }
-      add_part_to_builder(builder, part, decayed_color(part.color, state, seed));
+      auto surfaced = part;
+      surfaced.material_id = building_material(part);
+      add_part_to_builder(builder, surfaced, decayed_color(part.color, state, seed));
     }
   };
 

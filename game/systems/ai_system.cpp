@@ -482,8 +482,7 @@ void AISystem::plead_with_allies(Engine::Core::World& world) {
   if (m_total_game_time < k_first_plea_at) {
     return;
   }
-  // Only pleas to a human share the global spacing; commanders asking each
-  // other are paced per commander.
+
   const bool human_may_hear =
       m_total_game_time - m_last_any_plea_at >= k_any_plea_interval;
   auto& session = Game::Session::session_for(world);
@@ -495,8 +494,7 @@ void AISystem::plead_with_allies(Engine::Core::World& world) {
         ai.context.total_units == 0) {
       continue;
     }
-    // Ask whichever ally holds most of what this camp lacks, human or
-    // commander alike.
+
     int giver = 0;
     std::optional<AI::AllyPleaNeed> need;
     int best_stock = -1;
@@ -523,8 +521,7 @@ void AISystem::plead_with_allies(Engine::Core::World& world) {
     }
     ai.last_plea_at = m_total_game_time;
     if (!owners.is_player(giver)) {
-      // Another commander answers through the same rule it uses for the
-      // player's requests, and the goods move on the spot.
+
       session.marketplace().queue_ally_request({.requester = owner,
                                                 .giver = giver,
                                                 .resource = need->resource,
@@ -657,8 +654,7 @@ void AISystem::appeal_for_military_aid(Engine::Core::World& world) {
     if (!ask.has_value()) {
       continue;
     }
-    // Allied commanders get the same request as a call; each answers it with
-    // the rule it uses for the player's calls and acts on its pledge.
+
     if (!commanders.empty()) {
       const auto* target_unit =
           ask->target != Engine::Core::NULL_ENTITY
@@ -818,9 +814,6 @@ void AISystem::process_results(Engine::Core::World& world) {
     while (!results.empty()) {
       auto& result = results.front();
 
-      // Workers never see the nation registry, so their context comes back
-      // without it. Keep ours: with it gone, every check that reads the nation
-      // (resource pleas among them) went quiet after the first decision.
       const auto* nation = ai.context.nation;
       ai.context = result.context;
       ai.context.nation = nation;

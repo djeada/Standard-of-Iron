@@ -49,6 +49,55 @@ RTX 5060.
 | render play / present phases          | 28 / 38 ms                     | 5.7 / 9.6 ms     |
 | creatures failing to load every frame | ~17 (40,896 refused bakes/min) | 0                |
 
+## September 2026 follow-up measurement
+
+The follow-up used `perf record` on the real Aurelia mission, then alternating
+baseline/candidate runs at Ultra, 1280×720, uncapped presentation, with the 20-second
+camera pan/zoom cycle and simulation profiling enabled. Each Aurelia measurement
+lasted 45 seconds after the application's warm-up. The saved binaries were built
+on September 26 and compared on September 27; the working tree advanced between
+those sessions. These are measurements of that saved pair, not a certification of
+every subsequent source change.
+
+The first comparison ran without a competing game or build:
+
+| Aurelia metric                                 | Baseline | Candidate | Change |
+| ---------------------------------------------- | -------: | --------: | -----: |
+| Capture system, average per tick               | 257.5 µs |   64.2 µs |   −75% |
+| Combat system, average per tick                | 1.623 ms |  1.498 ms |    −8% |
+| Simulation tick, final 600-tick window average | 7.074 ms |  6.522 ms |    −8% |
+| Render-thread CPU, average                     | 4.657 ms |  4.374 ms |    −6% |
+| Render-thread CPU, p95                         | 7.732 ms |  6.275 ms |   −19% |
+| Presented FPS                                  |    69.26 |     71.38 |    +3% |
+
+A separate 14-worker build started during the second pair. Those repeats and the
+30-second Cannae comparison are retained as diagnostic runs and excluded from the
+table. Cannae completed on both binaries, but its contended timings do not establish
+a performance regression or improvement. This is one clean live-play comparison,
+not a deterministic replay study or a frame-pacing gate pass: presentation p95
+remained around 32 ms and visible hitches still need work.
+
+An isolated 769×769 fog-encoding microbenchmark initially measured 2.53 → 1.35 ms
+per encode with identical checksums. A subsequent three-repeat `perf stat` run
+pinned to CPU 2 counted 29.746 → 15.407 billion instructions for 500 encodes
+(−48%); pinning avoids incomplete counter coverage when migrating between this
+CPU's performance and efficiency cores. The image regression tests compare every
+encoded channel against the original tent filter, including edges and dirty regions.
+
+The follow-up `perf` capture still highlights NVIDIA driver work, directional
+shadows, render-snapshot publication and per-soldier formation walking. Its sample
+percentages are not an A/B timing comparison because that capture overlapped the
+competing build.
+
+Raw JSON, logs, `perf` captures/reports, binary hashes, commands and microbenchmark
+sources are in the ignored local directory `artifacts/perf/aurelia-20260926/`.
+`comparison-manifest.json` describes the saved-binary comparison. The repeatable
+suite in `scripts/run-perf-suite.sh` now includes Aurelia as a mission-file fixture.
+
+Focused validation passed 6 capture tests, 38 formation-geometry tests, 2 access
+recorder tests and 21 fog/visibility tests. The remaining access-verification test
+is explicitly skipped because component access recording is compiled out in Release.
+
 ## Simulation
 
 **Unreachable goals.** A* used to flood the whole reachable region whenever the goal

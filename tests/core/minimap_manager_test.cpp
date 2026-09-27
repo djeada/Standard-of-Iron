@@ -996,9 +996,7 @@ TEST(MinimapManagerTest, LocalMarkersIgnoreFogVisibilityFiltering) {
 }
 
 TEST(MinimapManagerTest, LiveMarkersLandOnTheBakedTerrainTheyStandOn) {
-  // The baked terrain fits the whole rotated map into the image; units, fog,
-  // pins and clicks must project through the same extent or they drift away
-  // from the ground they stand on by up to the rotation's sqrt(2).
+
   for (const float yaw : {0.0F, 225.0F}) {
     MapDefinition map = make_test_map(64, 64, yaw);
     Lake lake;

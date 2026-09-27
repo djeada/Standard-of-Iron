@@ -243,7 +243,7 @@ TEST_F(ArmorRendererTest, CloakHangsFromShouldersAndFlaresToTheHem) {
   float top_half_width = 0.0F;
   float bottom_half_width = 0.0F;
   const auto& verts = meshes.cloak->get_vertices();
-  // The first grid row is the collar edge that wraps the neck.
+
   for (std::size_t i = 0; i < 25U; ++i) {
     top_half_width = std::max(top_half_width, std::abs(verts[i].position[0]));
   }
@@ -253,10 +253,9 @@ TEST_F(ArmorRendererTest, CloakHangsFromShouldersAndFlaresToTheHem) {
     }
   }
 
-  // Collar sits just above the shoulder line and the hem near the knees.
   EXPECT_LT(max_y, 0.14F);
   EXPECT_GT(max_y - min_y, 0.6F);
-  // The collar wraps the neck; the hem hangs wider than the shoulders.
+
   EXPECT_LT(top_half_width, 0.15F);
   EXPECT_GT(bottom_half_width, 0.30F);
 }
@@ -520,7 +519,7 @@ TEST_F(ArmorRendererTest, CloakTopEdgeStaysNearShoulders) {
   AABB const box = archetype_aabb(batch);
   float const shoulder_mid_y =
       (frames.shoulder_l.origin.y() + frames.shoulder_r.origin.y()) * 0.5F;
-  // The collar lies over the base of the neck, just above the shoulder line.
+
   EXPECT_LT(box.mx.y(), shoulder_mid_y + frames.torso.radius * 0.55F);
   EXPECT_LT(box.mn.y(), shoulder_mid_y - frames.torso.radius * 2.5F);
 }

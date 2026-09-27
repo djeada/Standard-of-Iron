@@ -95,9 +95,6 @@ auto staged_scene(QString id,
   return result;
 }
 
-// Healthy until 3 s, damaged until 7 s, critical until 11 s, then every
-// structure is brought down at once and followed through its collapse, the
-// rubble resting, and the rubble settling into the ground.
 auto damage_stages() -> ArenaScenarioDefinition {
   auto s = staged_scene(QString::fromLatin1(k_structure_damage_stages_id),
                         QStringLiteral("Structure Damage Stages"),

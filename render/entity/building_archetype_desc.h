@@ -124,7 +124,7 @@ private:
   std::vector<BuildingPartDesc> m_parts;
 };
 
-inline constexpr int k_building_material_stone = 0;
+inline constexpr int k_building_material_stone = 5;
 inline constexpr int k_building_material_metal = 1;
 inline constexpr int k_building_material_wood = 2;
 inline constexpr int k_building_material_cloth = 3;

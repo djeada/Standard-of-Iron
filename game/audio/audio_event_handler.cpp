@@ -481,9 +481,7 @@ auto AudioEventHandler::rotate_ambient_music(Engine::Core::AmbientState state) -
   }
 
   const std::string group_key = ambient_music_group_key(state);
-  // Coming back into a state shortly after leaving it resumes that state's
-  // track instead of starting a new one, so a lull in a battle does not turn
-  // the score over twice.
+
   const auto now = std::chrono::steady_clock::now();
   const std::string& previous_for_state = m_last_sound_group_id[group_key];
   const auto left_at = m_music_state_left_at.find(group_key);
@@ -516,9 +514,6 @@ void AudioEventHandler::on_ambient_state_changed(
     const Engine::Core::AmbientStateChangedEvent& event) {
   rotate_ambient_music(event.new_state);
 
-  // Victory and defeat have their own cues; the state stingers are for the
-  // battle turning, and a battle that ebbs and flows should not blow the horn
-  // every time it flares up again.
   if (event.new_state == Engine::Core::AmbientState::VICTORY) {
     play_cue(Cue::k_state_victory);
     return;

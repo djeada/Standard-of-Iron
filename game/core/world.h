@@ -36,8 +36,6 @@ class CreaturePresentationComponent;
 auto publish_creature_presentation(Entity* entity,
                                    World* world) -> CreaturePresentationComponent*;
 
-// Publishes every unit's presentation snapshot, as the end of a simulation
-// tick does. For callers that render without having ticked.
 void publish_creature_presentations(World& world);
 
 struct RenderPublicationStats {

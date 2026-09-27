@@ -240,6 +240,7 @@ void add_votive_altar(BuildingArchetypeDesc& desc,
 void add_roof_field(BuildingArchetypeDesc& desc,
                     const RomanTemplePalette& c,
                     float eave_y) {
+  BuildingPartMaterial const roof_material(desc, k_building_material_ceramic);
   add_gable_roof_x(
       [&](const QVector3D& center,
           const QVector3D& scale,
@@ -280,7 +281,7 @@ void add_roof_field(BuildingArchetypeDesc& desc,
       desc.add_rotated_box(QVector3D(px, pan_y, centre_z),
                            QVector3D(0.058F, 0.009F, slope_half_len),
                            QVector3D(side * theta_deg, 0.0F, 0.0F),
-                           c.terracotta,
+                           weathered(c.terracotta, pan + 31, 0.045F),
                            k_building_state_mask_intact);
     }
     for (int cover = 0; cover <= k_pans; ++cover) {
@@ -316,6 +317,7 @@ void add_roof_field(BuildingArchetypeDesc& desc,
                    QVector3D(0.038F, 0.044F, 0.014F),
                    c.terracotta_light,
                    k_building_state_mask_intact);
+      BuildingPartMaterial const gold_material(desc, k_building_material_metal);
       desc.add_box(QVector3D(px, eave_y + 0.062F, eave_z),
                    QVector3D(0.020F, 0.020F, 0.012F),
                    c.gold,

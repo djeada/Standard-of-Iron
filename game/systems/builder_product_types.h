@@ -16,10 +16,6 @@ inline constexpr std::string_view k_builder_product_dismantle = "dismantle_struc
 
 inline constexpr float k_builder_repair_tick_seconds = 1.2F;
 
-// Inside this reach a builder walks straight onto its work spot (bypass). A
-// gatherer's spot is the node itself, inside the node's blocked cells, so the
-// ground check lets it stand on resource cells within the same reach; with two
-// reaches a builder between them was stepped in by bypass and dragged back out.
 inline constexpr float k_site_bypass_reach = 2.5F;
 
 [[nodiscard]] inline auto gather_bypass_reach(float navigation_clearance) -> float {

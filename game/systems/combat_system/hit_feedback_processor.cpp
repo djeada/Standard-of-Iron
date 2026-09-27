@@ -92,9 +92,7 @@ void apply_knockback_step(Engine::Core::Entity& unit,
   float const desired = eased * total;
   auto* transform = unit.get_component<Engine::Core::TransformComponent>();
   if (transform == nullptr || !knockback_moves_body(unit, feedback)) {
-    // The part of the shove that could not move the body -- it was walking,
-    // or held its ground -- is forfeit. Carried over, it landed all at once
-    // the tick the body stopped: a 0.27 m jump in a single frame.
+
     feedback.knockback_applied = std::max(feedback.knockback_applied, desired);
     return;
   }

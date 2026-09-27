@@ -4,13 +4,6 @@ import StandardOfIron.Core 1.0 as Core
 import StandardOfIron.Design 1.0
 import "../../../ui/qml"
 
-// HUDBottom reads the selection from game.selected_units_model. In the game
-// that model refreshes in a C++ slot on GameEngine::selected_units_changed,
-// and Qt runs QML handlers on a signal before C++ slots on the same signal, so
-// the HUD's own onSelected_units_changed always reads the previous selection.
-// The fake below replays that order: the engine signal first, then the model
-// updates and announces it. The SELECTION zone must follow the model, not the
-// stale read.
 TestCase {
     id: testCase
 

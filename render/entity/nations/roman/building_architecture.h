@@ -16,6 +16,7 @@ inline void add_tiled_roof(BuildingArchetypeDesc& desc,
                            bool ridge_along_z,
                            BuildingStateMask states = k_building_state_mask_intact,
                            bool close_gables = false) {
+  BuildingPartMaterial const roof_material(desc, k_building_material_ceramic);
   const float theta = std::atan2(rise, half_depth);
   const float angle = theta * 180.0F / 3.14159265F;
   const float slope = std::sqrt(half_depth * half_depth + rise * rise);
@@ -35,15 +36,15 @@ inline void add_tiled_roof(BuildingArchetypeDesc& desc,
                          BuildingPalette::k_terracotta,
                          states);
     const int rolls = std::max(3, static_cast<int>(half_length * 2.0F / 0.22F));
-    const float lift = thickness / std::cos(theta) + 0.012F;
+    const float lift = thickness / std::cos(theta) + 0.004F;
     for (int i = 0; i <= rolls; ++i) {
       const float along = -half_length + 0.04F +
                           (2.0F * half_length - 0.08F) * static_cast<float>(i) /
                               static_cast<float>(rolls);
       desc.add_cylinder(point(along, lift, side * half_depth),
                         point(along, rise + lift, 0.0F),
-                        thickness * 0.40F,
-                        BuildingPalette::k_terracotta_light,
+                        thickness * 0.65F,
+                        weathered(BuildingPalette::k_terracotta_light, i + 17, 0.035F),
                         states);
     }
     desc.add_box(point(0.0F, -0.01F, side * half_depth),
@@ -68,6 +69,7 @@ inline void add_tiled_roof(BuildingArchetypeDesc& desc,
   }
 
   if (close_gables) {
+    BuildingPartMaterial const gable_material(desc, k_building_material_stone);
 
     constexpr int k_courses = 16;
     const float course_h = rise / static_cast<float>(k_courses);

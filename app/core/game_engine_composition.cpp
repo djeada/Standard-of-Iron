@@ -411,8 +411,7 @@ void GameEngine::build_services_and_controllers() {
     if (snapshot == nullptr || !snapshot->initialized) {
       return true;
     }
-    // Structures stay drawn where the ground was scouted once, so they stay
-    // inspectable there too; that is where "Ask allies to attack" lives.
+
     if (m_world->has<Engine::Core::BuildingComponent>(id)) {
       return Game::Map::classify_world_visibility(
                  *snapshot, transform->position.x, transform->position.z) !=
@@ -599,8 +598,6 @@ void GameEngine::build_services_and_controllers() {
           &App::Controllers::CommandController::run_mode_changed,
           this,
           [](bool active) {
-            // Breaking into a run is announced by the charge cue; this one is
-            // the order to fall back to a walk.
             if (!active) {
               Game::Audio::play_cue(Game::Audio::Cue::k_order_run);
             }

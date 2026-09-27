@@ -151,7 +151,7 @@ void CleanupSystem::update(Engine::Core::World* world, float delta_time) {
       world->emplace<Engine::Core::PendingRemovalComponent>(entity_id);
       continue;
     }
-    // Ruins keep their own timing; the budget exists to cap soldier corpses.
+
     if (death.profile != Engine::Core::DeathSequenceProfile::Structure) {
       note_settled_corpse(death, settled);
     }

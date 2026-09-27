@@ -36,42 +36,42 @@ const std::array<HorseClipSpec, 8> k_horse_clips{{
      false,
      false,
      0.0F},
-    {{"walk", 24U, 24.0F, true},
+    {{"walk", 48U, 48.0F, true},
      Render::GL::GaitType::WALK,
      true,
      false,
      false,
      false,
      0.50F},
-    {{"trot", 16U, 24.0F, true},
+    {{"trot", 32U, 48.0F, true},
      Render::GL::GaitType::TROT,
      true,
      false,
      false,
      false,
      0.85F},
-    {{"canter", 16U, 24.0F, true},
+    {{"canter", 32U, 48.0F, true},
      Render::GL::GaitType::CANTER,
      true,
      false,
      false,
      false,
      1.00F},
-    {{"gallop", 12U, 24.0F, true},
+    {{"gallop", 24U, 48.0F, true},
      Render::GL::GaitType::GALLOP,
      true,
      false,
      false,
      false,
      1.12F},
-    {{"fight", 24U, 24.0F, true},
+    {{"fight", 48U, 48.0F, true},
      Render::GL::GaitType::IDLE,
      false,
      true,
      false,
      false,
      0.0F},
-    {{"die", 20U, 24.0F, false},
+    {{"die", 40U, 48.0F, false},
      Render::GL::GaitType::IDLE,
      false,
      false,
@@ -105,9 +105,12 @@ void bake_horse_manifest_clip_frame(std::size_t clip_index,
                                     std::vector<QMatrix4x4>* out_socket_transforms) {
   (void)out_socket_transforms;
   auto const& clip = k_horse_clips[clip_index];
+
+  std::uint32_t const divisor =
+      clip.desc.loops ? clip.desc.frame_count
+                      : std::max<std::uint32_t>(clip.desc.frame_count, 2U) - 1U;
   float const phase =
-      static_cast<float>(frame_index) /
-      static_cast<float>(std::max<std::uint32_t>(clip.desc.frame_count, 1U));
+      static_cast<float>(frame_index) / static_cast<float>(std::max(divisor, 1U));
   std::string_view source_clip = "Idle";
   switch (clip.gait) {
   case Render::GL::GaitType::WALK:
@@ -122,7 +125,7 @@ void bake_horse_manifest_clip_frame(std::size_t clip_index,
     break;
   }
   if (clip.is_fighting) {
-    source_clip = "Attack_Kick";
+    source_clip = "Attack_Headbutt";
   } else if (clip.is_death) {
     source_clip = "Death";
   }

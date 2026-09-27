@@ -163,7 +163,7 @@ void HealingSystem::process_healing(Engine::Core::SystemContext& context) {
     }
 
     if (healed_any) {
-      // One sound per healing pulse, at the healer, however many men it reached.
+
       Engine::Core::AudioCueEvent cue(healer_unit->nation_id == NationID::RomanRepublic
                                           ? "combat.heal_bind"
                                           : "combat.heal");

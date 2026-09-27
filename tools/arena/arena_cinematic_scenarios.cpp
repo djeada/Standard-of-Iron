@@ -142,10 +142,6 @@ auto undead_wave(QString trigger, std::vector<Game::Map::UndeadWaveUnitSpawn> un
   return wave;
 }
 
-// The Field: a pitched battle on dry Apulian grass. Two complete armies stand
-// a long bowshot apart until 22 s, so the opening can be photographed in
-// stillness; then Carthage comes on, the legion answers in assault order, the
-// flanks ride and the elephants go in. Hannibal seeks out Scipio at the centre.
 auto cine_field() -> ArenaScenarioDefinition {
   auto s =
       definition(k_cine_field_id,
@@ -404,10 +400,6 @@ auto cine_field() -> ArenaScenarioDefinition {
   return s;
 }
 
-// The Siege: Hannibal's host before the east gate of Aurelia Magna at the end
-// of the day. Carthaginian engines fire on the towers and the quarter behind
-// the wall (flaming stones on structures), the elephants and infantry come on
-// and the legion holds the gate. Rome fields no elephants.
 auto cine_siege() -> ArenaScenarioDefinition {
   auto s =
       definition(k_cine_siege_id,
@@ -545,9 +537,6 @@ auto cine_siege() -> ArenaScenarioDefinition {
   return s;
 }
 
-// The Sepulcher: a snowbound barrow at night. A legion column comes up the
-// slope by the light of its fires; the barrow's dead rise to meet it, grave
-// priests throw fire, and the consul fights among them.
 auto cine_sepulcher() -> ArenaScenarioDefinition {
   auto s = definition(k_cine_sepulcher_id,
                       QStringLiteral("Cinematic: The Sepulcher"),

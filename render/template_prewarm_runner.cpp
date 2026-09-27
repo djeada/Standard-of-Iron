@@ -306,9 +306,6 @@ void prewarm_humanoid_assets_for_profile(Renderer& renderer,
   }
 }
 
-// Bakes the humanoid bodies nothing in the template pass reaches: the tools a
-// unit's variant table swaps in while it works, and the bodies the building-side
-// actors draw straight from an archetype. Returns how many bodies were baked.
 auto prewarm_humanoid_body_variants(Renderer& renderer,
                                     const EntityRendererRegistry* entity_registry,
                                     const std::vector<PrewarmProfile>& profiles,
@@ -347,14 +344,13 @@ auto prewarm_humanoid_body_variants(Renderer& renderer,
     }
   };
 
-  // Units follow the preset: without creature LOD they are only drawn in full.
   for (const auto& target : unit_targets) {
     bake(target, CreatureLOD::Full);
     if (!full_lod_only) {
       bake(target, CreatureLOD::Minimal);
     }
   }
-  // Actors pick Minimal by their size on screen wherever the preset allows it.
+
   bool const actors_use_minimal = civilian_actor_minimal_lod_allowed();
   for (const auto& target : civilian_actor_prewarm_targets()) {
     bake(target, CreatureLOD::Full);
@@ -458,8 +454,7 @@ void Renderer::process_async_template_prewarm() {
 void Renderer::prewarm_unit_templates(
     Engine::Core::World* world, TemplatePrewarmProgressCallback progress_callback) {
   Render::Profiling::count_asset(Render::Profiling::AssetCounter::PrewarmInvocations);
-  // One line per load says how long the blocking part of the prewarm took, so a
-  // change to what it bakes can be weighed against the loading screen it costs.
+
   struct PrewarmTimer {
     std::chrono::steady_clock::time_point started{std::chrono::steady_clock::now()};
     std::size_t profiles{0};
@@ -730,11 +725,7 @@ void Renderer::prewarm_unit_templates(
           nation.available_troops.empty()) {
         continue;
       }
-      // A nation that lists its roster fields only those troops, plus whatever
-      // already stands on the map (added above) and the builders, civilians
-      // and undead added below. Walking the whole catalog for it instead bakes
-      // every other nation's commanders, elephants and skeletons under its
-      // colours, which more than doubles the prewarm for bodies never drawn.
+
       if (!nation.available_troops.empty()) {
         for (const auto& troop : nation.available_troops) {
           add_troop_profile(nation, troop.unit_type);
@@ -773,11 +764,6 @@ void Renderer::prewarm_unit_templates(
     }
   }
 
-  // The Iron Sepulcher is never in the roster at load. Its owner is registered
-  // only when an awakening zone wakes or the dead rise ambiently, and it is not
-  // one of the registry's playable nations, so the loop above never reaches it.
-  // Prewarm ends by forbidding render-time bakes, so an undead host that was
-  // not baked here rises invisible. Its three troop types are baked every time.
   for (auto const type : {Game::Units::TroopType::SkeletonSwordsman,
                           Game::Units::TroopType::SkeletonArcher,
                           Game::Units::TroopType::GravePriest}) {
@@ -791,11 +777,6 @@ void Renderer::prewarm_unit_templates(
     }
   }
 
-  // Builders and civilians work for every nation in the match even when none of
-  // them stands on the map at load: a siege engine's crew, a farm's hands and a
-  // trained work gang are all builder or civilian bodies. The roster above only
-  // knows the unit types it can see when the session's nations are not bound
-  // yet, so these two are added for every nation that fields units.
   for (auto const nation_id : active_nation_ids) {
     if (nation_id == Game::Systems::NationID::IronSepulcher) {
       continue;

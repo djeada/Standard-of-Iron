@@ -562,8 +562,6 @@ TEST(RenderArchetypeSiege, RotatingSnapshotWorldsDoNotResetTheWheels) {
                          Engine::Core::World* world,
                          float time,
                          float z) {
-    // A bare ResourceManager has no unit mesh and the siege renderer would
-    // draw nothing; without one it falls back to its own unit cube.
     DrawContext ctx;
     ctx.entity = &entity;
     ctx.world = world;

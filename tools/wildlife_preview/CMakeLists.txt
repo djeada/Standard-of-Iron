@@ -3,6 +3,7 @@ add_executable(wildlife_preview main.cpp)
 target_link_libraries(
     wildlife_preview
     PRIVATE
+        creature_bake
         render_gl
         engine_core
         game_systems

@@ -12,6 +12,7 @@
 #include "render/entity/building_decay.h"
 #include "render/entity/building_ornaments.h"
 #include "render/gl/primitives.h"
+#include "render/material_classification.h"
 #include "render/render_archetype.h"
 #include "render/submitter.h"
 
@@ -273,3 +274,57 @@ TEST(BuildingCulturalOrnaments, RoofSignaturesCarryTheirFullDetail) {
 }
 
 } // namespace
+
+TEST(BuildingArchetypeDesc, DressedBlocksKeepTheirPartCountAndAuthoredBounds) {
+  using namespace Render::GL;
+  BuildingArchetypeDesc desc("dressed_stone");
+  QVector3D const center(0.3F, 0.8F, -0.2F);
+  QVector3D const half(0.4F, 0.6F, 0.25F);
+  desc.add_box(center, half, {0.84F, 0.82F, 0.74F});
+  auto const archetype = build_building_archetype(desc, BuildingState::Normal);
+  ASSERT_EQ(archetype.lods[0].draws.size(), 1U);
+  auto const& draw = archetype.lods[0].draws[0];
+  ASSERT_NE(draw.mesh, nullptr);
+  EXPECT_NE(draw.mesh, get_unit_cube());
+  EXPECT_EQ(draw.material_id, k_building_material_stone);
+  QVector3D low(100, 100, 100), high(-100, -100, -100);
+  for (auto const& vertex : draw.mesh->get_vertices()) {
+    auto const p = draw.local_model.map(
+        QVector3D(vertex.position[0], vertex.position[1], vertex.position[2]));
+    for (int axis = 0; axis < 3; ++axis) {
+      low[axis] = std::min(low[axis], p[axis]);
+      high[axis] = std::max(high[axis], p[axis]);
+    }
+  }
+  EXPECT_LT((low - (center - half)).length(), 1.0e-5F);
+  EXPECT_LT((high - (center + half)).length(), 1.0e-5F);
+  auto const& vertices = draw.mesh->get_vertices();
+  auto const& indices = draw.mesh->get_indices();
+  for (std::size_t i = 0; i < indices.size(); i += 3) {
+    auto point = [&](std::size_t index) {
+      auto const& v = vertices[indices[index]];
+      return QVector3D(v.position[0], v.position[1], v.position[2]);
+    };
+    auto const cross =
+        QVector3D::crossProduct(point(i + 1) - point(i), point(i + 2) - point(i));
+    EXPECT_GT(cross.lengthSquared(), 1.0e-10F);
+    auto const& n = vertices[indices[i]].normal;
+    EXPECT_GT(QVector3D::dotProduct(cross, QVector3D(n[0], n[1], n[2])), 0.0F);
+  }
+}
+
+TEST(BuildingArchetypeDesc, DamageDoesNotTurnMasonryIntoMetalOrCloth) {
+  using namespace Render::GL;
+  BuildingArchetypeDesc desc("material_identity");
+  desc.add_box({}, {0.5F, 0.5F, 0.5F}, {0.84F, 0.82F, 0.74F});
+  for (auto state :
+       {BuildingState::Normal, BuildingState::Damaged, BuildingState::Destroyed}) {
+    auto const archetype = build_building_archetype(desc, state);
+    auto const& draw = archetype.lods[0].draws[0];
+    EXPECT_EQ(Render::resolve_material_id(draw.material_id, draw.color),
+              k_building_material_stone);
+    EXPECT_EQ(Render::resolve_material_id(damage_material_id(draw.material_id, 20),
+                                          draw.color),
+              25);
+  }
+}

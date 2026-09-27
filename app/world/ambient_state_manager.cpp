@@ -109,8 +109,7 @@ auto AmbientStateManager::is_player_in_combat(Engine::Core::World* world,
 
   auto units = world->collect_entities_with<Engine::Core::UnitComponent>();
   const float combat_check_radius = 15.0F;
-  // Allies, neutral wildlife and enemy buildings standing near the player's
-  // troops are not a fight; only enemy troops within reach are.
+
   const auto* session = Game::Session::SessionContext::for_world(*world);
   const auto is_enemy = [&](int owner_id) {
     if (owner_id == local_owner_id || Game::Core::is_neutral_owner(owner_id)) {

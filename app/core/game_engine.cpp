@@ -401,9 +401,6 @@ void GameEngine::sync_render_camera() {
   }
   m_render_camera = *m_camera;
 
-  // The RTS camera hangs tens of metres above the field, so hearing from the
-  // lens would push everything on screen into the distance fade. The player
-  // listens from the ground point the camera looks at.
   const QVector3D listener_position = m_camera->get_target();
   Game::Audio::CueTrace::instance().set_listener(
       {.x = listener_position.x(),
@@ -801,11 +798,7 @@ void GameEngine::film_step(float dt) {
     return;
   }
   simulate(dt);
-  // The simulation tick publishes every unit's presentation snapshot, but a
-  // film step that advances no tick -- the loading overlay's frames, or a
-  // paused step -- would otherwise hand units without one to the renderer.
-  // Its prepare workers then publish it themselves and block on the registry
-  // lock this thread holds for the whole render, so the film hangs.
+
   if (m_world != nullptr && !m_runtime.loading) {
     Engine::Core::publish_creature_presentations(*m_world);
   }
@@ -1013,8 +1006,7 @@ void GameEngine::announce_ally_exchanges() {
       continue;
     }
     if (answer.requester != local) {
-      // Allied commanders trading among themselves: the player hears it so
-      // the alliance reads as one camp, but gets no voice line for it.
+
       if (is_friendly_commander(answer.requester) &&
           is_friendly_commander(answer.giver)) {
         const QString asker = owner_display_name(answer.requester);
@@ -1721,7 +1713,7 @@ void GameEngine::handle_order_feedback(const App::Core::OrderOutcome& outcome) {
     if (const char* cue = accepted_order_cue(outcome.kind, mounts)) {
       Game::Audio::play_cue(cue);
     } else if (outcome.kind != App::Core::OrderKind::Recruit) {
-      // A recruit is answered by build.unit_queued from the production queue.
+
       Game::Audio::play_cue(Game::Audio::Cue::k_command_accept);
     }
     if (outcome.kind == App::Core::OrderKind::Attack && outcome.target != 0) {
@@ -2983,9 +2975,6 @@ void GameEngine::note_minimap_combat_hit(const Engine::Core::CombatHitEvent& eve
     return;
   }
 
-  // Hits on or by the player are always considered (the per-cell cooldown
-  // keeps them from flooding); only other players' fighting is rate limited,
-  // so a distant brawl cannot spend the budget an attack on the player needs.
   const int local = m_runtime.local_owner_id;
   const bool involves_local =
       unit->owner_id == local || event.attacker_owner_id == local;
@@ -3019,8 +3008,7 @@ void GameEngine::note_minimap_unit_died(const Engine::Core::UnitDiedEvent& event
   const bool is_building = Game::Units::is_building_spawn(event.spawn_type);
   const bool lost_by_local = event.owner_id == local;
   const bool taken_by_local = event.killer_owner_id == local;
-  // A fallen troop is marked only when it was the player's; a building is
-  // marked when the player lost it or brought it down.
+
   if (!lost_by_local && !(is_building && taken_by_local)) {
     return;
   }
@@ -3911,12 +3899,6 @@ void GameEngine::sync_scatter_world_props() {
     return;
   }
 
-  // The scatter passes place world props through their bound world view, which
-  // the renderer only binds when it first submits the terrain. The match's
-  // first refresh runs before that, and without the terrain it would lay every
-  // authored tree, cart and statue at its grid coordinates -- off in the far
-  // corner of the map -- until the next prop change (a felled tree) re-placed
-  // them.
   m_scatter->set_world_view(Render::WorldView::of(*m_session));
   m_scatter->refresh_runtime_world_props(terrain_service.world_props());
   m_last_world_props_revision = revision;

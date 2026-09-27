@@ -48,10 +48,6 @@ struct AllyCallAnswer {
 
 inline constexpr float k_ally_pledge_seconds = 90.0F;
 
-// An AI ally asking a human ally for something: resources, men to hold its
-// camp, or men to join the attack it is launching. The human answers yes or
-// no; the AI then says what it makes of the answer, and for the military asks
-// watches whether the promised men actually turn up.
 enum class AllyAppealKind : std::uint8_t {
   Resources,
   Defend,

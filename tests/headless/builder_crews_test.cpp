@@ -172,8 +172,7 @@ TEST_F(BuilderCrewsTest, EveryCrewInTheOrderWorksTheSiteAndOneHouseRises) {
 }
 
 TEST_F(BuilderCrewsTest, AHouseCannotBeOrderedOnTopOfStandingTroops) {
-  // Raising a house on troops seals them into its footprint. The order is
-  // refused while they stand there; the crew itself never counts.
+
   const EntityID crew = spawn_builder(48, 48);
   const EntityID squad = spawn_squad(50, 48);
   ASSERT_NE(crew, 0U);

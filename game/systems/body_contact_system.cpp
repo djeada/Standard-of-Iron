@@ -160,10 +160,7 @@ void resolve_duel_standoffs(
     std::vector<ContactBody>& bodies,
     const std::vector<std::size_t>& commander_slots,
     BodyContactDiagnostics& diagnostics) {
-  // A commander and the lone fighter he duels -- above all the other side's
-  // commander -- are pushed back out to a sword's reach. Ordinary contact
-  // leaves any pair with melee intent alone so formation melee can overlap
-  // on purpose; this pass never touches a formation.
+
   const auto& index = world.spatial_index();
   const Engine::Core::WorldSpatialIndex::Entry* const first = entries.data();
   for (std::size_t const slot : commander_slots) {

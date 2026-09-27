@@ -577,7 +577,7 @@ auto apply_authored_horse_mount_pose(const HorseMotionSample& motion,
     break;
   }
   if (motion.is_fighting) {
-    source_clip = "Attack_Kick";
+    source_clip = "Attack_Headbutt";
   }
   return Render::Horse::horse_source_pose_mount_frame(source_clip, motion.phase, frame);
 }

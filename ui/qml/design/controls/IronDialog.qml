@@ -16,8 +16,6 @@ Dialog {
     signal primaryActivated
     signal secondaryActivated
 
-    // Set when a footer button closed the dialog; that button has already
-    // answered with confirm or back, so the close itself stays quiet.
     property bool answeredByButton: false
 
     modal: true

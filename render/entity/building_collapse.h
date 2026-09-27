@@ -17,18 +17,12 @@ namespace Render::GL {
 
 class ISubmitter;
 
-// World-space size of what comes down when a structure dies. Only drives the
-// debris and dust around the ruin; the ruin itself is the renderer's own
-// Destroyed-state mesh, pressed flat by building_collapse_model.
 struct BuildingCollapseFootprint {
   float half_width{2.0F};
   float half_depth{2.0F};
   float height{2.6F};
 };
 
-// A structure at 0 HP plays the Structure death sequence (see
-// game/core/death_sequence.h): Dying is the collapse, DeadHold the rubble
-// resting, Sinking the rubble settling into the ground before removal.
 struct BuildingCollapse {
   bool active{false};
   Engine::Core::DeathSequenceState state{Engine::Core::DeathSequenceState::Dying};

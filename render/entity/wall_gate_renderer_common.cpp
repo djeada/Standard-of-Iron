@@ -387,7 +387,9 @@ void submit_wall_gate(ISubmitter& out,
                            : nullptr;
     const float open_amount =
         (gate != nullptr) ? std::clamp(gate->open_amount, 0.0F, 1.0F) : 0.0F;
-    const float swing_degrees = open_amount * k_leaf_swing_degrees;
+
+    const float eased_open = open_amount * open_amount * (3.0F - 2.0F * open_amount);
+    const float swing_degrees = eased_open * k_leaf_swing_degrees;
 
     const float leaf_scale = (state == BuildingState::Damaged)     ? 0.86F
                              : (state == BuildingState::Destroyed) ? 0.55F

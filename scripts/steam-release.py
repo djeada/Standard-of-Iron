@@ -54,19 +54,13 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 STEAM_DIR = REPO_ROOT / "steam"
 PLATFORMS = ("windows", "linux", "macos")
 
-# Branches a release candidate may never be set live on. Promotion to the
-# public branch is a deliberate, manual step in Steamworks. It applies to a
-# BuildID that has already been installed and tested from the beta branch.
+
 PUBLIC_BRANCHES = {"default", "public"}
 
-# The smallest a depot can plausibly be. A payload that lost its assets or its
-# Qt runtime is tens of megabytes lighter. This is how a truncated extraction
-# shows up before anyone installs it.
+
 MINIMUM_DEPOT_BYTES = 40_000_000
 
-# Paths are relative to the stage root; launch targets come from
-# steam/steam.json. These are the files the game cannot start, render, or
-# legally ship without.
+
 REQUIRED = {
     "windows": [
         "standard_of_iron.exe",
@@ -114,27 +108,20 @@ REQUIRED = {
     ],
 }
 
-# This file exists only in a Developer-ID-signed, notarized and stapled
-# bundle, because `xcrun stapler staple` writes the ticket here. An ad-hoc CI
-# build has none.
+
 MACOS_STAPLED_TICKET = "standard_of_iron.app/Contents/CodeResources"
 
-# Libraries the Linux payload must carry itself rather than borrow from the
-# host, or from the Steam Linux Runtime, which does not ship Qt.
+
 LINUX_REQUIRED_GLOBS = ["usr/lib/libQt6Core.so*", "usr/lib/libQt6Quick.so*"]
 
-# The only executable a Windows depot may carry. Anything else (bpat_baker.exe,
-# test binaries) is a build tool that leaked out of build/bin.
+
 WINDOWS_EXECUTABLES = {"standard_of_iron.exe"}
 
-# In the GitHub ZIP, left out of the Steam depot. Steam installs the MSVC
-# runtime itself (Steamworks, Installation > Redistributables), so the 18 MB
-# installer windeployqt adds would only sit unused in every player's install.
+
 WINDOWS_STEAM_OMITTED = {"vc_redist.x64.exe"}
 
-# Never in a customer depot. Matched against every path component's name.
+
 FORBIDDEN_NAMES = [
-    # signing material and credentials
     "*.p12",
     "*.pfx",
     "*.pem",
@@ -148,16 +135,12 @@ FORBIDDEN_NAMES = [
     "ssfn*",
     ".env",
     "*.env",
-    # Qt's Direct3D 12 shader compiler: the game renders only through OpenGL
     "dxcompiler.dll",
     "dxil.dll",
-    # debug symbols -- kept as private CI artifacts instead
     "*.pdb",
     "*.dSYM",
     "*.debug",
     "*.ilk",
-    # build trees and developer detritus. Not *.obj: the campaign map ships
-    # Wavefront meshes under that extension.
     "CMakeCache.txt",
     "CMakeFiles",
     "cmake_install.cmake",
@@ -173,8 +156,6 @@ FORBIDDEN_NAMES = [
     ".DS_Store",
     "__MACOSX",
     "._*",
-    # Player data. A save database in the install directory would be served
-    # to every customer and flagged by Steam's file verification.
     "*.sqlite",
     "*.sqlite-wal",
     "*.sqlite-shm",
@@ -196,9 +177,6 @@ class Report:
 def load_config(path: Path | None = None) -> dict:
     with open(path or STEAM_DIR / "steam.json", encoding="utf-8") as handle:
         return json.load(handle)
-
-
-# --------------------------------------------------------------------- stage
 
 
 def stage(platform: str, package: Path, out: Path) -> None:
@@ -234,9 +212,7 @@ def stage_windows(package: Path, out: Path) -> None:
 
 
 def stage_linux(package: Path, out: Path) -> None:
-    # --appimage-extract runs the AppImage's own runtime. It needs neither FUSE
-    # nor root, and reproduces the AppDir byte for byte, including symlinks
-    # and executable bits.
+
     package = package.resolve()
     package.chmod(package.stat().st_mode | stat.S_IXUSR)
     with tempfile.TemporaryDirectory() as scratch:
@@ -252,13 +228,8 @@ def stage_linux(package: Path, out: Path) -> None:
 
 
 def stage_macos(package: Path, out: Path) -> None:
-    # tar, not Python's tarfile. Framework bundles are full of symlinks
-    # (Versions/Current, Headers, Resources), and codesign treats a
-    # dereferenced one as a modified bundle.
+
     subprocess.run(["tar", "-xzf", str(package.resolve()), "-C", str(out)], check=True)
-
-
-# -------------------------------------------------------------------- verify
 
 
 def forbidden(name: str) -> str | None:
@@ -394,8 +365,7 @@ def verify_launch(platform: str, stage_dir: Path, depot: dict, report: Report) -
             report.error(f"working directory does not exist: {depot['working_dir']}")
 
     if platform == "linux":
-        # SteamPipe carries the executable bit through from a Linux upload,
-        # but it cannot restore one the stage already lost.
+
         if launch.is_symlink() or not launch.is_file():
             report.error(
                 f"Linux launch target is not a regular file: {depot['launch']}"
@@ -414,8 +384,7 @@ def verify_launch(platform: str, stage_dir: Path, depot: dict, report: Report) -
                     f"Windows launch target is not a PE binary: {depot['launch']}"
                 )
     elif platform == "macos":
-        # Steam must launch the bundle, so LaunchServices applies its
-        # Info.plist. Launching the inner Mach-O directly loses that.
+
         if not depot["launch"].endswith(".app") or not launch.is_dir():
             report.error(
                 f"macOS launch target must be an .app bundle: {depot['launch']}"
@@ -459,9 +428,6 @@ def verify_macos_bundle(
             report.note(f"allowed: {message}")
         else:
             report.error(message)
-
-
-# ----------------------------------------------------------------------- vdf
 
 
 def vdf_escape(value: str) -> str:
@@ -532,8 +498,6 @@ def render_vdf(
     return app_script
 
 
-# ------------------------------------------------------------------ build-id
-
 BUILD_ID_PATTERN = re.compile(
     r"Successfully finished AppID \d+ build \(BuildID (\d+)\)"
 )
@@ -542,9 +506,6 @@ BUILD_ID_PATTERN = re.compile(
 def parse_build_id(log_text: str) -> str | None:
     matches = BUILD_ID_PATTERN.findall(log_text)
     return matches[-1] if matches else None
-
-
-# ----------------------------------------------------------------------- cli
 
 
 def parse_platforms(value: str) -> list[str]:

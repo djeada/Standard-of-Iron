@@ -285,8 +285,7 @@ TEST(RendererVisibilityPolicyTest, LensGapBelongsToTheChaseLensNotACinematicCame
 }
 
 TEST(RendererVisibilityPolicyTest, LensGapDissolvesABodyInsteadOfPoppingIt) {
-  // Walking past a soldier sweeps the gap across him. He must thin out over
-  // the band between the gap's edge and its core, not vanish in one frame.
+
   Render::GL::SubmissionVisibilityPolicy policy;
   policy.reset(nullptr, nullptr);
   policy.set_lens_gap(make_chase_lens_gap());

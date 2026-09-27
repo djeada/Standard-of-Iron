@@ -47,9 +47,7 @@ Item {
     }
     property int selection_tick: 0
     property bool has_production_selection: false
-    // The production readout is republished once per frame, so a selection
-    // change is first seen against the previous frame's copy. Keep polling for
-    // a few ticks after every change so the panel catches up.
+
     property int selection_settle_polls: 0
     property bool has_movable_units: false
     property bool commander_rpg_mode: typeof game !== 'undefined' && game.commander.mode_state === "active"

@@ -450,7 +450,7 @@ void apply_drape_blend(const AttachmentDrapeBlend& drape,
   }
   float const leg_share = std::clamp(drape.leg_share, 0.0F, 1.0F);
   float const half = std::max(1e-4F, drape.leg_crossfade_half_width);
-  // The body's left is -x in bind space.
+
   float side = std::clamp(0.5F + 0.5F * bind_pos.x() / half, 0.0F, 1.0F);
   side = side * side * (3.0F - 2.0F * side);
   float const to_legs = t * leg_share;

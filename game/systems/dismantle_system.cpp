@@ -115,12 +115,10 @@ void DismantleSystem::update(Engine::Core::World* world, float delta_time) {
       done.at(transform->position.x, transform->position.y, transform->position.z);
     }
     Engine::Core::EventManager::instance().publish(done);
-    // The site component stays on until the structure has died, so the audio
-    // handler can tell a dismantle from a collapse and stay quiet.
+
     Combat::apply_unit_damage(world, structure, unit->max_health);
     world->remove<Engine::Core::DismantleSiteComponent>(structure_id);
-    // A dismantled building has already been taken apart piece by piece, so
-    // it leaves without the collapse a destroyed one plays.
+
     world->remove<Engine::Core::DeathAnimationComponent>(structure_id);
     if (auto* renderable =
             world->try_get<Engine::Core::RenderableComponent>(structure_id)) {
