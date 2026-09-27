@@ -281,6 +281,10 @@ Once units are engaged, the lock expresses that they are fighting rather than st
 
 Single-body one-on-one combat can use duel footwork around the lock. Formation members remain constrained by their formation/contact presentation instead of turning every army engagement into independent per-soldier circling.
 
+**Catching a squad on the move.** Squad-against-squad contact normally waits for the attacker to push deep into the target's block (`engagement_center_distance`). A target that is walking away keeps its centre out of reach forever, so an ordered attacker trailed a marching squad at equal speed while its soldiers walked straight through the attacker's own ranks. `contact_is_active()` therefore also counts contact as soon as the two squads' soldiers touch (`surface_gap <= 0`) while the target is still on the move and not locked. The lock then pins the target where it was caught. A standing target still gets the deep overlap.
+
+**Locked squads strike whatever they are locked to.** A multi-body squad's root yaw is frozen in a lock (`lock_combatant_facing`), and its soldiers turn individually towards the contact. The 80° facing check in `deal_rts_melee_contact_damage` looks at the root yaw. A squad caught on the flank while marching kept facing its march direction, swung, and landed nothing. That check is waived when both sides are formations and the striker is locked to this target.
+
 ## Formation contact
 
 `update_formation_contacts()` publishes contact/front information used by formation combat and presentation.

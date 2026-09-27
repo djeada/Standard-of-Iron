@@ -62,7 +62,6 @@ public:
     bool preserve_formation_mode = false;
 
     bool follow_formation_slots = false;
-    bool synchronize_arrival = false;
     bool prefer_own_routes = false;
   };
 

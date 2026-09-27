@@ -13,7 +13,25 @@ void FormationMoveDispatchSystem::update(Engine::Core::World* world, float) {
   auto& registry = Game::Formation::ArmyFormationRegistry::for_world(*world);
   for (auto const id : registry.group_ids()) {
     auto* formation = registry.find(id);
-    if (formation == nullptr || !formation->moves_pending) {
+    if (formation == nullptr) {
+      continue;
+    }
+    if (!formation->stragglers.empty()) {
+      std::vector<CommandService::MoveIntent> returns;
+      for (auto const member : formation->stragglers) {
+        if (const auto* slot = formation->find_slot_for(member)) {
+          returns.push_back({.unit_id = member,
+                             .target = slot->world_position,
+                             .facing_angle = slot->facing});
+        }
+      }
+      formation->stragglers.clear();
+      CommandService::move_units(
+          *world,
+          returns,
+          {.kind = MoveOrderKind::FormationMove, .preserve_formation_mode = true});
+    }
+    if (!formation->moves_pending) {
       continue;
     }
     formation->moves_pending = false;

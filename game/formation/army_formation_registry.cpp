@@ -106,6 +106,9 @@ constexpr float k_formed_cohesion = 0.8F;
 constexpr float k_disrupted_cohesion = 0.45F;
 constexpr float k_opening_progress_spacing_scale = 1.5F;
 
+constexpr float k_straggler_idle_seconds = 1.0F;
+constexpr float k_straggler_retry_seconds = 3.0F;
+
 constexpr float k_formed_damage_floor = 0.88F;
 constexpr float k_disrupted_damage_penalty = 1.08F;
 
@@ -821,6 +824,55 @@ void hold_group_facing(Engine::Core::World& world, ArmyFormation& formation) {
 
 } // namespace
 
+namespace {
+
+auto idles_off_its_slot(Engine::Core::World& world,
+                        const FormationSlot& slot,
+                        float radius_sq) -> bool {
+  const auto* transform =
+      world.try_get<Engine::Core::TransformComponent>(slot.occupant);
+  const auto* movement = world.try_get<Engine::Core::MovementComponent>(slot.occupant);
+  const auto* facts =
+      world.try_get<Engine::Core::MovementFactsComponent>(slot.occupant);
+  if (transform == nullptr || movement == nullptr || facts == nullptr ||
+      movement->get_has_target() ||
+      facts->progress.state_seconds < k_straggler_idle_seconds) {
+    return false;
+  }
+  const auto* target =
+      world.try_get<Engine::Core::AttackTargetComponent>(slot.occupant);
+  const auto* attack = world.try_get<Engine::Core::AttackComponent>(slot.occupant);
+  if ((target != nullptr && target->target_id != 0U) ||
+      (attack != nullptr && attack->in_melee_lock)) {
+    return false;
+  }
+  float const off_x = transform->position.x - slot.world_position.x();
+  float const off_z = transform->position.z - slot.world_position.z();
+  return (off_x * off_x) + (off_z * off_z) > radius_sq;
+}
+
+void collect_stragglers(Engine::Core::World& world,
+                        ArmyFormation& formation,
+                        float elapsed) {
+  formation.straggler_cooldown = std::max(0.0F, formation.straggler_cooldown - elapsed);
+  if (formation.straggler_cooldown > 0.0F || formation.morph.active ||
+      formation.move_plan.has_corridor() || !formation.stragglers.empty()) {
+    return;
+  }
+  float const radius = formation.spacing * k_in_slot_radius_scale;
+  for (const auto& slot : formation.slot_list) {
+    if (slot.occupant != 0U && slot.status != SlotStatus::Blocked &&
+        idles_off_its_slot(world, slot, radius * radius)) {
+      formation.stragglers.push_back(slot.occupant);
+    }
+  }
+  if (!formation.stragglers.empty()) {
+    formation.straggler_cooldown = k_straggler_retry_seconds;
+  }
+}
+
+} // namespace
+
 void ArmyFormationRuntime::refresh_shape_state(Engine::Core::World& world,
                                                ArmyFormation& formation) {
   float const radius = formation.spacing * k_in_slot_radius_scale;
@@ -1487,6 +1539,7 @@ void ArmyFormationRuntime::update(Engine::Core::World* world, float delta_time) 
         continue;
       }
       refresh_shape_state(*world, *formation);
+      collect_stragglers(*world, *formation, k_cohesion_interval_seconds);
     }
   }
 
@@ -1508,7 +1561,10 @@ void ArmyFormationRuntime::update(Engine::Core::World* world, float delta_time) 
 auto ArmyFormationRuntime::access() const -> Engine::Core::SystemAccess {
   using namespace Engine::Core;
   return SystemAccess::declare(
-      Reads<UnitComponent, TransformComponent>{},
+      Reads<UnitComponent,
+            TransformComponent,
+            MovementFactsComponent,
+            AttackTargetComponent>{},
       Writes<ArmyFormationMembershipComponent, MovementComponent, AttackComponent>{});
 }
 

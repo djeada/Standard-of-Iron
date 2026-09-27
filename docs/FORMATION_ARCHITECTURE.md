@@ -525,6 +525,22 @@ The current constants in `army_formation_registry.cpp` include:
 
 Cohesion is therefore a measured group property rather than an assumption that the formation is “formed” because a move command completed.
 
+Two rules keep that measurement honest in play:
+
+- **A plain move takes troops out of their formation.** `apply_move` releases every
+  troop in a `PlayerMove` from its group before moving it. Before this, a troop the
+  player sent elsewhere stayed a member. Its empty slot held the rest of the group
+  below "formed" indefinitely. A whole army moved from the minimap read "Disrupted"
+  and took the disrupted damage penalty until the next formation order.
+- **Idle troops walk back to their slots.** A casualty makes the group replan its
+  slots, and a troop can be shoved off its slot after it has arrived. Nothing used to
+  send it back, so one loss left the formation "Reforming", without its damage
+  bonus, for the rest of the battle. Every cohesion refresh (0.35 s) now collects the
+  members that have stood idle off their slot for a second or more. That means no
+  order, no attack target and no melee lock. `FormationMoveDispatchSystem` sends
+  just those members back. Each group retries at most every three seconds, so a
+  blocked slot cannot flood the router.
+
 ## Cohesion and damage
 
 `ArmyFormationRuntime::damage_taken_multiplier()` is applied in the combat damage pipeline.
@@ -545,11 +561,17 @@ preview showed, facing the ordered way. They differ in how the group gets there.
 
 ### Reform at destination (fastest)
 
-Each troop goes straight to its final slot. The order is _synchronised_: every
-troop walks its own route at the pace that makes it arrive together with the
-slowest-arriving troop (`MoveOptions::synchronize_arrival`; paces come from the
-routes' real lengths once they are assigned, and never drop below 30% of a
-troop's speed). On open ground this reads as the army flowing into the shape.
+Each troop goes straight to its final slot along its own route
+(`MoveOptions::prefer_own_routes`). Every troop marches at the group's one shared
+pace, the speed of its slowest member, exactly like a plain group move, and keeps
+that pace for the whole order. Troops with a short way to go arrive first and wait
+in their slots.
+
+Arrival used to be _synchronised_: each troop's pace was stretched so it arrived
+with the slowest-arriving troop, down to 30% of its speed. In play that meant every
+right-click gave each troop a different speed, and troops that started near their
+slot crawled for a minute. Players read it as the army slowing down for no reason,
+so it was removed.
 
 ### Maintain formation ("Hold the shape")
 
@@ -569,7 +591,7 @@ shape round: the troops about-face in place instead.
 
 Before a morph starts, every troop's path is sampled; if any would cross ground it
 cannot stand on (a river, a wall, a settlement), the ground will not carry the
-shape as one body, and the group falls back to the synchronised per-troop move of
+shape as one body, and the group falls back to the per-troop move of
 _Reform at destination_, assembling on arrival. The old anchor march (a moving
 anchor dragging replanned slots behind it, compressing at bridges) stalled on real
 maps and is no longer started.

@@ -436,7 +436,7 @@ void CommandService::march_into_formation(
              intents,
              {.kind = MoveOrderKind::FormationMove,
               .preserve_formation_mode = result.used_army_formation,
-              .synchronize_arrival = true});
+              .prefer_own_routes = true});
 }
 
 void CommandService::issue_ground_move(Engine::Core::World& world,

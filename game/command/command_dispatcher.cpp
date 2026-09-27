@@ -71,6 +71,10 @@ void apply_move(World& world, const Move& move) {
     });
   }
 
+  if (move.kind == Game::Systems::MoveOrderKind::PlayerMove) {
+    Game::Formation::ArmyFormationService::release(world, move.units);
+  }
+
   Game::Systems::CommandService::MoveOptions options;
   options.kind = move.kind;
   options.preserve_formation_mode = move.preserve_formation_mode;
