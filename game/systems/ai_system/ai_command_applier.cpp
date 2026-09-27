@@ -215,7 +215,13 @@ auto AICommandApplier::apply(Engine::Core::World& world,
           command.construction_rotation_y,
           command.units,
           command.construction_keep_out);
-      if (!site.has_value()) {
+      if (!site.has_value() ||
+          Game::Systems::troops_stand_on(world,
+                                         command.construction_type,
+                                         site->x(),
+                                         site->z(),
+                                         command.construction_rotation_y,
+                                         command.units)) {
 
         ++report.refused_construction;
         break;

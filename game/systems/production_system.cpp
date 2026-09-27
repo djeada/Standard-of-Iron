@@ -27,7 +27,6 @@
 #include "../units/building_spawn_setup.h"
 #include "../units/factory.h"
 #include "../units/squad.h"
-#include "../units/troop_config.h"
 #include "build_site.h"
 #include "builder_product_types.h"
 #include "building_collision_registry.h"
@@ -46,6 +45,7 @@
 #include "troop_profile_service.h"
 #include "units/spawn_type.h"
 #include "units/unit.h"
+#include "walkability.h"
 #include "wall_network_service.h"
 
 namespace Game::Systems {
@@ -132,100 +132,14 @@ auto distance_to_site_edge(const Engine::Core::BuilderProductionComponent& build
   return std::hypot(outside_x, outside_z);
 }
 
-auto find_guaranteed_valid_exit(float exit_x,
-                                float exit_z,
-                                float unit_radius) -> QVector3D {
-  Point const exit_grid = NavGrid::world_to_grid(exit_x, exit_z);
-
-  (void)unit_radius;
-  if (NavGrid::is_grid_walkable(exit_grid)) {
-    return {exit_x, 0.0F, exit_z};
-  }
-
-  constexpr int k_max_search_radius = 50;
-  auto const safe_grid =
-      NavGrid::find_nearest_walkable_grid(exit_grid, k_max_search_radius);
-  if (safe_grid.has_value()) {
-    return NavGrid::grid_to_world(*safe_grid);
-  }
-
-  return NavGrid::grid_to_world(exit_grid);
-}
-
-auto builder_exit_position(const Engine::Core::BuilderProductionComponent& builder,
-                           const Engine::Core::MovementComponent& movement,
-                           float unit_radius) -> QVector3D {
-  float const center_x = builder.construction_site_x;
-  float const center_z = builder.construction_site_z;
-  auto const size = BuildingCollisionRegistry::get_building_size(builder.product_type);
-  float const half_width = size.width * 0.5F;
-  float const half_depth = size.depth * 0.5F;
-  float const clearance = unit_radius + 0.25F;
-
-  auto const exit_along = [&](float dir_x, float dir_z) {
-    float const abs_x = std::fabs(dir_x);
-    float const abs_z = std::fabs(dir_z);
-    float const sx = abs_x > 0.0001F ? (half_width + clearance) / abs_x
-                                     : std::numeric_limits<float>::infinity();
-    float const sz = abs_z > 0.0001F ? (half_depth + clearance) / abs_z
-                                     : std::numeric_limits<float>::infinity();
-    float const scale = std::min(sx, sz);
-    return QVector3D(center_x + dir_x * scale, 0.0F, center_z + dir_z * scale);
-  };
-
-  std::vector<QVector3D> candidates;
-  if (builder.has_site_approach) {
-    float dir_x = builder.site_approach_x - center_x;
-    float dir_z = builder.site_approach_z - center_z;
-    float const len = std::hypot(dir_x, dir_z);
-    if (len > 0.0001F) {
-      candidates.push_back(exit_along(dir_x / len, dir_z / len));
-    }
-  }
-  for (auto const [dir_x, dir_z] : {std::pair{1.0F, 0.0F},
-                                    std::pair{-1.0F, 0.0F},
-                                    std::pair{0.0F, 1.0F},
-                                    std::pair{0.0F, -1.0F}}) {
-    candidates.push_back(exit_along(dir_x, dir_z));
-  }
-
-  auto* pathfinder = NavGrid::get_pathfinder();
-  auto const passability = movement.get_can_enter_forest()
-                               ? Pathfinding::Passability::Light
-                               : Pathfinding::Passability::Heavy;
-  std::uint32_t const home_region =
-      pathfinder != nullptr && builder.has_site_approach
-          ? pathfinder->region_of(NavGrid::world_to_grid(builder.site_approach_x,
-                                                         builder.site_approach_z),
-                                  passability)
-          : Pathfinding::k_unreachable_region;
-  if (home_region != Pathfinding::k_unreachable_region) {
-    for (auto const& candidate : candidates) {
-      Point const cell = NavGrid::world_to_grid(candidate.x(), candidate.z());
-      if (pathfinder->region_of(cell, passability) == home_region) {
-        return candidate;
-      }
-    }
-  }
-  for (auto const& candidate : candidates) {
-    if (NavGrid::is_grid_walkable(
-            NavGrid::world_to_grid(candidate.x(), candidate.z()))) {
-      return candidate;
-    }
-  }
-  return find_guaranteed_valid_exit(
-      candidates.front().x(), candidates.front().z(), unit_radius);
-}
-
-constexpr float k_site_bypass_reach = 2.5F;
 constexpr float k_site_route_goal_tolerance_sq = 0.25F;
 
 auto site_bypass_radius_sq(const Engine::Core::BuilderProductionComponent& builder,
                            const Engine::Core::MovementComponent* movement) -> float {
-  float radius = k_site_bypass_reach;
-  if (movement != nullptr && is_gather_builder_product(builder.product_type)) {
-    radius += std::max(0.0F, movement->get_navigation_clearance());
-  }
+  float const radius =
+      movement != nullptr && is_gather_builder_product(builder.product_type)
+          ? gather_bypass_reach(movement->get_navigation_clearance())
+          : k_site_bypass_reach;
   return radius * radius;
 }
 
@@ -681,10 +595,7 @@ void release_helper_crew(Engine::Core::World& world, Engine::Core::EntityID crew
     return;
   }
   if (movement != nullptr && builder->at_construction_site) {
-    const QVector3D exit = builder_exit_position(
-        *builder, *movement, CommandService::get_unit_radius(world, crew));
-    activate_bypass_movement(builder, exit.x(), exit.z());
-    movement->set_rest_position(exit.x(), exit.z());
+    movement->stop();
   } else if (movement != nullptr) {
     abandon_site_route(*builder, movement);
   }
@@ -979,12 +890,10 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
           sp.nation_id = nation_id;
           sp.is_initial_spawn = false;
 
-          float const unit_radius =
-              Game::Units::TroopConfig::instance().get_selection_ring_size(
-                  sp.spawn_type);
-          QVector3D const safe_exit = find_guaranteed_valid_exit(
-              raw_exit_pos.x(), raw_exit_pos.z(), unit_radius);
-          sp.position = safe_exit;
+          constexpr float k_recruit_exit_search = 50.0F;
+          sp.position = Walkability::nearest_standable(
+                            raw_exit_pos, BodyProfile{}, k_recruit_exit_search)
+                            .value_or(raw_exit_pos);
 
           auto unit = reg->create(sp.spawn_type, *world, sp);
 
@@ -1498,16 +1407,8 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
               WallNetworkService::refresh_world(*world);
             }
 
-            if (builder_prod->has_construction_site && movement != nullptr &&
-                t != nullptr) {
-              QVector3D const safe_exit = builder_exit_position(
-                  *builder_prod,
-                  *movement,
-                  CommandService::get_unit_radius(*world, e->get_id()));
-
-              activate_bypass_movement(builder_prod, safe_exit.x(), safe_exit.z());
-
-              movement->set_rest_position(safe_exit.x(), safe_exit.z());
+            if (builder_prod->has_construction_site && movement != nullptr) {
+              movement->stop();
             }
           }
         }

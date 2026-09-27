@@ -1066,6 +1066,7 @@ auto render_entity_is_stable(const Entity& entity) -> bool {
       entity.has_component<DismantleSiteComponent>() ||
       entity.has_component<StructureDamagePresentationComponent>() ||
       entity.has_component<StructureRepairPresentationComponent>() ||
+      entity.has_component<ProductionCompletionComponent>() ||
       entity.has_component<RpgContactPresentationComponent>() ||
       entity.has_component<CommanderSignaturePresentationComponent>() ||
       entity.has_component<BloodStainComponent>() ||

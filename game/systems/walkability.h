@@ -15,8 +15,13 @@ struct BodyProfile {
 
   bool stops_at_building_facade{false};
 
+  // A person-scale body keeps its distance from buildings through the facade
+  // test; against the navigation grid it stands on the cell under it, the way
+  // A* routes, so a one-cell lane an RTS order walks is never refused to it.
   [[nodiscard]] auto clearance() const -> float {
-    return radius <= 0.0F ? 0.0F : Pathfinding::traversal_clearance_for_body(radius);
+    return radius <= 0.0F || stops_at_building_facade
+               ? 0.0F
+               : Pathfinding::traversal_clearance_for_body(radius);
   }
 };
 

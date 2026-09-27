@@ -1,9 +1,11 @@
 #include <gtest/gtest.h>
 #include <memory>
+#include <optional>
 #include <vector>
 
 #include "game/core/component_combat.h"
 #include "game/core/component_presentation.h"
+#include "game/core/component_structures.h"
 #include "game/core/world.h"
 #include "game/session/session_context.h"
 
@@ -142,4 +144,52 @@ TEST(RenderPublicationTest, CommanderStrikeCuesReachTheRenderer) {
       << "commander strike cues never reach the renderer in the real game";
   ASSERT_EQ(copied_cues->entries.size(), 1U);
   EXPECT_EQ(copied_cues->entries.front().cue, Engine::Core::CommanderStrikeCue::Swing);
+}
+
+TEST(RenderPublicationTest, AStillBuildingsCompletionFlareFadesAndEnds) {
+  // A finished building never moves, so its render signature stays the same. If
+  // the flare does not count as transient, the snapshot keeps its first copy,
+  // and the new farm or marketplace strobes gold long after the 2.2 s flare.
+  Game::Session::SessionContext session;
+  const Game::Session::ScopedSession scope(session);
+  World& world = session.world();
+  world.request_render_snapshots(true);
+
+  auto* entity = world.create_entity();
+  entity->add_component<TransformComponent>();
+  entity->add_component<UnitComponent>();
+  entity->add_component<RenderableComponent>();
+  entity->add_component<Engine::Core::BuildingComponent>();
+  auto* flare = entity->add_component<Engine::Core::ProductionCompletionComponent>();
+  const auto id = entity->get_id();
+  world.update(1.0F / 60.0F);
+
+  auto copied_remaining = [&]() -> std::optional<float> {
+    auto snapshot = world.acquire_render_snapshot();
+    auto* copied = snapshot != nullptr ? snapshot->get_entity(id) : nullptr;
+    const auto* copied_flare =
+        copied != nullptr
+            ? copied->get_component<Engine::Core::ProductionCompletionComponent>()
+            : nullptr;
+    if (copied_flare == nullptr) {
+      return std::nullopt;
+    }
+    return copied_flare->remaining;
+  };
+
+  // Every snapshot buffer must be visited enough times to start reusing
+  // entities, or the test passes without the fix.
+  for (int frame = 0; frame < 12; ++frame) {
+    flare->remaining -= 0.1F;
+    world.update(1.0F / 60.0F);
+  }
+  const auto ticking = copied_remaining();
+  ASSERT_TRUE(ticking.has_value());
+  EXPECT_FLOAT_EQ(*ticking, flare->remaining)
+      << "the flare must fade in the snapshot, not freeze at its first copy";
+
+  entity->remove_component<Engine::Core::ProductionCompletionComponent>();
+  world.update(1.0F / 60.0F);
+  EXPECT_FALSE(copied_remaining().has_value())
+      << "a finished flare must leave the snapshot";
 }

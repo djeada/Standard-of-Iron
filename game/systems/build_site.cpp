@@ -7,7 +7,9 @@
 #include <vector>
 
 #include "../core/ambient_session.h"
+#include "../core/component_core.h"
 #include "../core/component_gameplay.h"
+#include "../core/ownership_constants.h"
 #include "../core/world.h"
 #include "../map/terrain.h"
 #include "../map/terrain_service.h"
@@ -415,6 +417,47 @@ auto find_clear_site(const Engine::Core::World& world,
     }
   }
   return std::nullopt;
+}
+
+auto troops_stand_on(const Engine::Core::World& world,
+                     const std::string& building_type,
+                     float x,
+                     float z,
+                     float facing_degrees,
+                     std::span<const Engine::Core::EntityID> crew) -> bool {
+  if (is_wall_link_building_type(building_type)) {
+    return false;
+  }
+  const auto& collision = *Game::Session::services_for(world).building_collision;
+  const auto size = BuildingCollisionRegistry::axis_aligned_size(
+      BuildingCollisionRegistry::get_building_size(building_type), facing_degrees);
+  const float padding =
+      BuildingCollisionRegistry::get_building_grid_padding(building_type);
+  const float half_width = (size.width * 0.5F) + padding;
+  const float half_depth = (size.depth * 0.5F) + padding;
+  for (const auto id : world.entities_with<Engine::Core::UnitComponent>()) {
+    if (std::find(crew.begin(), crew.end(), id) != crew.end() ||
+        collision.find_building(id) != nullptr) {
+      continue;
+    }
+    const auto* unit = world.try_get<Engine::Core::UnitComponent>(id);
+    const auto* transform = world.try_get<Engine::Core::TransformComponent>(id);
+    if (unit == nullptr || transform == nullptr || unit->health <= 0 ||
+        Game::Core::is_neutral_owner(unit->owner_id)) {
+      continue;
+    }
+    const auto* movement = world.try_get<Engine::Core::MovementComponent>(id);
+    const float reach =
+        movement != nullptr ? movement->get_navigation_clearance() : 0.0F;
+    const float outside_x =
+        std::max(0.0F, std::abs(transform->position.x - x) - half_width);
+    const float outside_z =
+        std::max(0.0F, std::abs(transform->position.z - z) - half_depth);
+    if (std::hypot(outside_x, outside_z) <= reach) {
+      return true;
+    }
+  }
+  return false;
 }
 
 auto wall_ground_probe(const Engine::Core::World& world) -> GroundProbe {

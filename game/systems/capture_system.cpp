@@ -25,7 +25,7 @@ void CaptureSystem::update(Engine::Core::World* world, float delta_time) {
   process_barrack_capture(world, delta_time);
 }
 
-void CaptureSystem::tally_nearby_troops(Engine::Core::World& world,
+void CaptureSystem::tally_nearby_troops(std::span<const CaptureTroop> troops,
                                         float barrack_x,
                                         float barrack_z,
                                         float radius,
@@ -33,34 +33,22 @@ void CaptureSystem::tally_nearby_troops(Engine::Core::World& world,
   out.clear();
   float const radius_sq = radius * radius;
 
-  for (auto [entity_id, unit_ref, transform_ref] :
-       world.view<Engine::Core::UnitComponent, Engine::Core::TransformComponent>()) {
-    (void)entity_id;
-    const auto* unit = &unit_ref;
-    const auto* transform = &transform_ref;
-
-    if (unit->health <= 0) {
-      continue;
-    }
-    if (unit->spawn_type == Game::Units::SpawnType::Barracks) {
-      continue;
-    }
-
-    float const dx = transform->position.x - barrack_x;
-    float const dz = transform->position.z - barrack_z;
+  for (const auto& troop : troops) {
+    float const dx = troop.x - barrack_x;
+    float const dz = troop.z - barrack_z;
     if ((dx * dx) + (dz * dz) > radius_sq) {
       continue;
     }
 
     int const production_cost =
-        Game::Units::TroopConfig::instance().get_production_cost(unit->spawn_type);
+        Game::Units::TroopConfig::instance().get_production_cost(troop.spawn_type);
 
     auto tally = std::find_if(
-        out.begin(), out.end(), [owner_id = unit->owner_id](const OwnerTroopTally& t) {
+        out.begin(), out.end(), [owner_id = troop.owner_id](const OwnerTroopTally& t) {
           return t.owner_id == owner_id;
         });
     if (tally == out.end()) {
-      out.push_back({unit->owner_id, production_cost});
+      out.push_back({troop.owner_id, production_cost});
       continue;
     }
     tally->troops += production_cost;
@@ -125,6 +113,8 @@ void CaptureSystem::process_barrack_capture(Engine::Core::World* world,
   }
 
   std::vector<OwnerTroopTally> tallies;
+  std::vector<CaptureTroop> troops;
+  bool troops_collected = false;
   const auto* owners = Game::Session::services_for(*world).owners;
 
   for (auto [barrack_ref, building, unit_ref, transform_ref] :
@@ -153,7 +143,22 @@ void CaptureSystem::process_barrack_capture(Engine::Core::World* world,
     int max_enemy_troops = 0;
     int capturing_player_id = -1;
 
-    tally_nearby_troops(*world, barrack_x, barrack_z, capture_radius, tallies);
+    if (!troops_collected) {
+      troops.reserve(world->entities_with<Engine::Core::UnitComponent>().size());
+      for (auto [id, troop, position] :
+           world->view<Engine::Core::UnitComponent,
+                       Engine::Core::TransformComponent>()) {
+        (void)id;
+        if (troop.health > 0 && troop.spawn_type != Game::Units::SpawnType::Barracks) {
+          troops.push_back({position.position.x,
+                            position.position.z,
+                            troop.owner_id,
+                            troop.spawn_type});
+        }
+      }
+      troops_collected = true;
+    }
+    tally_nearby_troops(troops, barrack_x, barrack_z, capture_radius, tallies);
 
     // Allied troops stand with the owner: an ally sent to hold a barracks
     // used to out-number its garrison and take it, which defeated the owner.

@@ -150,7 +150,8 @@ inline void encode_fog_mask_region(const std::vector<float>& fog_amount,
                                    int width,
                                    int height,
                                    const MaskRegion& region,
-                                   std::vector<unsigned char>& out_rgba) {
+                                   std::vector<unsigned char>& out_rgba,
+                                   std::vector<float>& filter_rows) {
   const auto cell_count = static_cast<std::size_t>(std::max(0, width)) *
                           static_cast<std::size_t>(std::max(0, height));
   const MaskRegion clamped = detail::clamp_region(region, width, height);
@@ -160,35 +161,64 @@ inline void encode_fog_mask_region(const std::vector<float>& fog_amount,
     return;
   }
 
-  out_rgba.assign(static_cast<std::size_t>(clamped.width) *
-                      static_cast<std::size_t>(clamped.height) *
-                      VisibilityMaskChannels::k_stride,
-                  0U);
+  const auto row_width = static_cast<std::size_t>(clamped.width);
+  const auto row_stride = row_width * 2U;
+  filter_rows.resize(row_stride * 3U);
+  out_rgba.resize(row_width * static_cast<std::size_t>(clamped.height) *
+                  VisibilityMaskChannels::k_stride);
 
-  const auto fog_at = [&fog_amount, width](int x, int z) -> float {
-    return fog_amount[static_cast<std::size_t>(z) * static_cast<std::size_t>(width) +
-                      static_cast<std::size_t>(x)];
-  };
-  const auto seen_at = [&seen_amount, width](int x, int z) -> float {
-    return seen_amount[static_cast<std::size_t>(z) * static_cast<std::size_t>(width) +
-                       static_cast<std::size_t>(x)];
-  };
-
-  for (int row = 0; row < clamped.height; ++row) {
-    const int z = clamped.z + row;
+  auto filter_row = [&](int z, std::size_t slot) {
+    const auto offset = static_cast<std::size_t>(std::clamp(z, 0, height - 1)) *
+                        static_cast<std::size_t>(width);
+    const float* fog = fog_amount.data() + offset;
+    const float* seen = seen_amount.data() + offset;
+    float* filtered_fog = filter_rows.data() + slot * row_stride;
+    float* filtered_seen = filtered_fog + row_width;
     for (int column = 0; column < clamped.width; ++column) {
       const int x = clamped.x + column;
-      const std::size_t base =
-          (static_cast<std::size_t>(row) * static_cast<std::size_t>(clamped.width) +
-           static_cast<std::size_t>(column)) *
-          VisibilityMaskChannels::k_stride;
-      out_rgba[base] =
-          detail::to_byte(detail::tent_sample(fog_at, width, height, x, z));
-      out_rgba[base + 1] =
-          detail::to_byte(detail::tent_sample(seen_at, width, height, x, z));
-      out_rgba[base + 3] = 255U;
+      const int left = std::max(0, x - 1);
+      const int right = std::min(width - 1, x + 1);
+      filtered_fog[column] = fog[left] + 2.0F * fog[x] + fog[right];
+      filtered_seen[column] = seen[left] + 2.0F * seen[x] + seen[right];
     }
+  };
+  filter_row(clamped.z - 1, 0U);
+  filter_row(clamped.z, 1U);
+  std::size_t previous = 0U;
+  std::size_t current = 1U;
+  std::size_t next = 2U;
+  for (int row = 0; row < clamped.height; ++row) {
+    filter_row(clamped.z + row + 1, next);
+    const float* row0 = filter_rows.data() + previous * row_stride;
+    const float* row1 = filter_rows.data() + current * row_stride;
+    const float* row2 = filter_rows.data() + next * row_stride;
+    auto* output = out_rgba.data() + static_cast<std::size_t>(row) * row_width *
+                                         VisibilityMaskChannels::k_stride;
+    for (std::size_t column = 0; column < row_width; ++column) {
+      output[column * 4U] = detail::to_byte(
+          (row0[column] + 2.0F * row1[column] + row2[column]) * 0.0625F);
+      const auto seen = column + row_width;
+      output[column * 4U + 1U] =
+          detail::to_byte((row0[seen] + 2.0F * row1[seen] + row2[seen]) * 0.0625F);
+      output[column * 4U + 2U] = 0U;
+      output[column * 4U + 3U] = 255U;
+    }
+    const auto reuse = previous;
+    previous = current;
+    current = next;
+    next = reuse;
   }
+}
+
+inline void encode_fog_mask_region(const std::vector<float>& fog_amount,
+                                   const std::vector<float>& seen_amount,
+                                   int width,
+                                   int height,
+                                   const MaskRegion& region,
+                                   std::vector<unsigned char>& out_rgba) {
+  std::vector<float> filter_rows;
+  encode_fog_mask_region(
+      fog_amount, seen_amount, width, height, region, out_rgba, filter_rows);
 }
 
 } // namespace Render::Ground

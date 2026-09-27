@@ -151,43 +151,39 @@ TEST(IconArtTest, ShapesStayInsideTheirTile) {
   }
 }
 
-TEST(IconArtTest, TheQmlFacadeHandsBackNormalisedPolylines) {
-  const QVariantList strokes = IconArtLibrary::strokes(QStringLiteral("guard"));
-  ASSERT_FALSE(strokes.isEmpty());
+TEST(IconArtTest, TheQmlItemPaintsTheArtWithTheCallersPalette) {
+  constexpr int k_size = 48;
+  auto render = [](const QString& id, const QColor& accent) {
+    IconArtItem item;
+    item.setSize(QSizeF(k_size, k_size));
+    item.set_icon_id(id);
+    item.setProperty("tint", QColor(Qt::white));
+    item.setProperty("accent", accent);
+    QImage canvas(k_size, k_size, QImage::Format_ARGB32);
+    canvas.fill(Qt::transparent);
+    QPainter painter(&canvas);
+    item.paint(&painter);
+    painter.end();
+    return canvas;
+  };
 
-  QSet<QString> tones;
-  for (const QVariant& entry : strokes) {
-    const QVariantMap stroke = entry.toMap();
-    tones.insert(stroke.value(QStringLiteral("tone")).toString());
-    const QVariantList subpaths = stroke.value(QStringLiteral("subpaths")).toList();
-    ASSERT_FALSE(subpaths.isEmpty());
-    for (const QVariant& subpath : subpaths) {
-      const QVariantList points = subpath.toList();
-      ASSERT_GE(points.size(), 4);
-      ASSERT_EQ(points.size() % 2, 0);
-      for (const QVariant& value : points) {
-        const double coordinate = value.toDouble();
-        EXPECT_GE(coordinate, -0.05);
-        EXPECT_LE(coordinate, 1.05);
-      }
+  const QImage red = render(QStringLiteral("difficulty_hard"), QColor(Qt::red));
+  const QImage blue = render(QStringLiteral("difficulty_hard"), QColor(Qt::blue));
+  int painted = 0;
+  bool accent_reached_the_art = false;
+  for (int y = 0; y < k_size; ++y) {
+    for (int x = 0; x < k_size; ++x) {
+      painted += qAlpha(red.pixel(x, y)) > 24 ? 1 : 0;
+      accent_reached_the_art =
+          accent_reached_the_art || red.pixel(x, y) != blue.pixel(x, y);
     }
   }
-  EXPECT_TRUE(tones.contains(QStringLiteral("metal")));
-}
+  EXPECT_GT(painted, k_size * k_size / 20) << "the item painted nothing";
+  EXPECT_TRUE(accent_reached_the_art) << "the accent colour never reached the drawing";
 
-TEST(IconArtTest, ClosedOutlinesComeBackClosed) {
-
-  const QVariantList strokes = IconArtLibrary::strokes(QStringLiteral("blocked"));
-  ASSERT_FALSE(strokes.isEmpty());
-  const QVariantList points = strokes.front()
-                                  .toMap()
-                                  .value(QStringLiteral("subpaths"))
-                                  .toList()
-                                  .front()
-                                  .toList();
-  ASSERT_GE(points.size(), 6);
-  EXPECT_NEAR(points.front().toDouble(), points[points.size() - 2].toDouble(), 1e-4);
-  EXPECT_NEAR(points[1].toDouble(), points.back().toDouble(), 1e-4);
+  IconArtItem unknown;
+  unknown.set_icon_id(QStringLiteral("teleport"));
+  EXPECT_FALSE(unknown.available());
 }
 
 TEST(IconArtTest, GatheringIconsCarryTheirResourceTone) {

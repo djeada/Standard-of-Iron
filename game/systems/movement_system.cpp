@@ -806,8 +806,7 @@ void unstick_body(const Engine::Core::Entity& entity,
     return;
   }
 
-  BodyProfile profile = MotorCollision::body_profile(entity);
-  profile.radius = 0.0F;
+  BodyProfile const profile = motor_profile_for(entity);
   if (Walkability::penetration(here, profile) <= 0.0F) {
     return;
   }

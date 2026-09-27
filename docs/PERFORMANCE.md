@@ -79,6 +79,19 @@ of scanning the whole army per tower per tick. A healer's "hold fire to heal" ch
 looks only at allies inside its healing radius and tests distance before the expensive
 recoverable-health rule.
 
+**Formation count queries.** `has_formation_slots` needs only the number of bodies,
+but used to resolve an entire formation definition, including doctrine strings and
+authored layout lookups, every time it was called. It now uses the count-only
+resolver shared with the layout signature. Explicit visual counts and single-body
+squads return immediately; nation profiles and squad-strength limits still determine
+the count when needed.
+
+**Capture rings.** Capture checks collect living non-barracks units into a compact
+position/owner/type array once per update, on the first eligible barracks. Each ring
+scans that array instead of repeating ECS joins for every building. The original
+unit order, distance boundary, production-cost weighting and tie behavior are
+preserved. The array is rebuilt next update so movement and deaths are reflected.
+
 **Wildlife and settlements.** Wildlife tiering asks "anything within the near radius,
 else the far radius" and stops at the first hit. Settlement residents find danger
 through the spatial index, and a resident whose walk ends short of its errand rests
@@ -156,6 +169,13 @@ shadow pass — gather, sort and re-upload them once per cascade. Now
 
 **Minimap.** Troop dots are copied from a per-owner antialiased sprite instead of
 rasterising an ellipse per unit; the layer image is premultiplied ARGB32.
+
+**Fog mask filtering.** The fog mask's 3×3 tent blur is separable. Three reusable
+rows hold horizontal fog/sight sums; the vertical pass consumes those rows and
+rotates the oldest row for reuse. This avoids recalculating the same horizontal
+samples for three successive output rows. Dirty-region bounds, edge clamping,
+channel encoding and visual detail stay the same. The renderer retains the row
+scratch storage across uploads.
 
 **No LOD.** Detail reduction is not an acceptable fix: Ultra draws everything at full
 detail. Remove per-draw, per-frame and per-upload waste instead.

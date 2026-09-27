@@ -283,3 +283,48 @@ TEST(RendererVisibilityPolicyTest, LensGapBelongsToTheChaseLensNotACinematicCame
   renderer.set_rpg_lens_detached(false);
   EXPECT_TRUE(renderer.rpg_lens_gap_applies());
 }
+
+TEST(RendererVisibilityPolicyTest, LensGapDissolvesABodyInsteadOfPoppingIt) {
+  // Walking past a soldier sweeps the gap across him. He must thin out over
+  // the band between the gap's edge and its core, not vanish in one frame.
+  Render::GL::SubmissionVisibilityPolicy policy;
+  policy.reset(nullptr, nullptr);
+  policy.set_lens_gap(make_chase_lens_gap());
+
+  float previous = 0.0F;
+  int partial = 0;
+  for (int step = 0; step <= 40; ++step) {
+    const float x = static_cast<float>(step) * 0.025F;
+    const float visibility = policy.lens_gap_visibility(QVector3D(x, 0.0F, -1.5F));
+    EXPECT_GE(visibility, previous) << "visibility must rise away from the sight line";
+    EXPECT_LE(visibility - previous, 0.2F) << "a 2.5 cm step must not pop the body";
+    if (visibility > 0.0F && visibility < 1.0F) {
+      ++partial;
+    }
+    previous = visibility;
+  }
+  EXPECT_EQ(policy.lens_gap_visibility(QVector3D(0.0F, 0.0F, -1.5F)), 0.0F);
+  EXPECT_EQ(previous, 1.0F);
+  EXPECT_GE(partial, 10);
+}
+
+TEST(RendererVisibilityPolicyTest, LensGapFadesInAtTheCommanderEnd) {
+  Render::GL::SubmissionVisibilityPolicy policy;
+  policy.reset(nullptr, nullptr);
+  policy.set_lens_gap(make_chase_lens_gap());
+
+  const float deep = policy.lens_gap_visibility(QVector3D(0.0F, 0.0F, -1.2F));
+  const float near_commander = policy.lens_gap_visibility(QVector3D(0.0F, 0.0F, -0.5F));
+  EXPECT_EQ(deep, 0.0F);
+  EXPECT_GT(near_commander, 0.0F);
+  EXPECT_LT(near_commander, 1.0F);
+}
+
+TEST(RendererVisibilityPolicyTest, LensGapLeavesTheFlankFullyVisible) {
+  Render::GL::SubmissionVisibilityPolicy policy;
+  policy.reset(nullptr, nullptr);
+  policy.set_lens_gap(make_chase_lens_gap());
+
+  EXPECT_EQ(policy.lens_gap_visibility(QVector3D(0.9F, 0.0F, -1.4F)), 1.0F);
+  EXPECT_EQ(policy.lens_gap_visibility(QVector3D(-0.9F, 0.0F, -1.4F)), 1.0F);
+}

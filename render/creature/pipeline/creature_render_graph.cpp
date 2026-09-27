@@ -391,6 +391,15 @@ void populate_role_colors(Render::Creature::CreatureRenderRequest& req,
 
 } // namespace
 
+void CreatureRenderBatch::fade_requests_from(std::size_t first, float alpha) noexcept {
+  if (alpha >= 1.0F) {
+    return;
+  }
+  for (std::size_t index = first; index < requests_.size(); ++index) {
+    requests_[index].alpha *= alpha;
+  }
+}
+
 void CreatureRenderBatch::add_humanoid(
     const CreatureGraphOutput& output,
     const Render::GL::HumanoidPose& pose,

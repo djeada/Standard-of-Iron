@@ -836,6 +836,20 @@ Builder work search:
 
 The resource cell remains blocked while the resource exists. If no radius-valid work cell exists near the resource, the preview is invalid and the order is rejected. Invalid-start recovery is the only flow allowed to use a zero-radius escape fallback.
 
+## One Ground Rule, One Sealed-In Decision
+
+Two questions look alike, and each has one answer.
+
+**Where may a body's centre go?** The navigation cell under it must be open, the rule A* routes by. `motor_profile_for(entity)` is that question as a profile, and both the RTS motor (`is_movement_point_allowed`) and the directly controlled commander (`CommanderMotor`) ask it. Control mode therefore never changes what ground a commander can cross. A person-scale body (`stops_at_building_facade`) keeps its 0.34 m from buildings through the facade test. Against the grid it stands on the cell under it: `BodyProfile::clearance()` is zero for it. Direct control used to sweep the 0.34 m circle over the grid, and refused one-cell gaps between hills that the commander's own RTS orders walked through.
+
+**How close may bodies get to each other and to thin obstacles?** That is the body circle, `body_profile_for(entity)`. It is used by body contact, local avoidance and duel footwork. It keeps troops on opposite faces of a one-cell wall out of each other's reach. It is spacing, not a second ground rule, so it is not the motor test.
+
+**Is a unit sealed in, or is its goal unreachable?** That is decided when an order is issued, by `MovementSystem::assign_escape_if_sealed` (`Pathfinding::find_escape_point`). A single order and every member of a group order ask it before any route is planned. A group's own routes and corridor lanes are clamped to the start region. Before this rule they kept a sealed group walking its pocket's wall forever, while a single unit given the same order walked out. A new order ends any old escape (`MovementComponent::begin_order`).
+
+An idle body left on blocked ground only steps to the nearest standable place (`unstick_body`). Which side of a wall it belongs on cannot be told from where it stands. Preferring the larger region pulled troops pressed into a wall through it, to the enemy side. If that nearest place is a sealed pocket, the unit's next order walks it out. Finished construction crews simply stop and follow the same rule; there is no builder exit geometry of their own.
+
+A building is never ordered onto standing troops. `troops_stand_on` refuses the order while a non-crew, non-neutral unit's formation reaches the padded footprint. It is asked at order time: in `apply_start_construction` (every player and AI construction order), in the placement preview, and in the AI's site search. `assess_ground` stays a question about the ground. Completion re-checks the ground but never the troops, so troops wandering onto a site are stepped off it rather than moving the building. Wall runs are exempt.
+
 ## Invalid Position Recovery
 
 Units should not stand in invalid cells, but it can happen after map edits, save/load changes, construction finishing on top of a unit, terrain changes, or older bugs. Recovery is intentionally narrow.

@@ -586,4 +586,65 @@ TEST_F(StuckRecoveryTest, AMarchAcrossOpenGroundNeverLooksStuck) {
       << " s";
 }
 
+TEST_F(StuckRecoveryTest, AGroupSealedInAPenWalksOutTogether) {
+  // A player's ground move plans each member its own route. Those routes are
+  // clamped to the pen, so without the sealed-in check the group walked the
+  // pen's wall forever while a single unit given the same order escaped.
+  constexpr int k_pen_x = 12;
+  constexpr int k_pen_z = 24;
+  seal_a_pen(k_pen_x, k_pen_z, 3);
+
+  const std::vector<EntityID> group{spawn(world_of(k_pen_x, k_pen_z - 1)),
+                                    spawn(world_of(k_pen_x, k_pen_z + 1))};
+  ASSERT_NE(group[0], 0U);
+  ASSERT_NE(group[1], 0U);
+  const auto destination = world_of(40, k_pen_z);
+  const auto plan =
+      CommandService::plan_ground_move(m_session->world(), group, destination);
+  ASSERT_TRUE(plan.anyone_can_move());
+  CommandService::issue_ground_move(m_session->world(), group, plan);
+  run_for(k_recovery_budget_seconds + 20.0);
+
+  for (const EntityID id : group) {
+    EXPECT_LT((position_of(id) - destination).length(), 6.0F)
+        << "unit " << id << " ended at (" << position_of(id).x() << ", "
+        << position_of(id).z() << ")";
+  }
+}
+
+TEST_F(StuckRecoveryTest, AUnitThatSteppedIntoAPocketWalksOutOnItsNextOrder) {
+  // A building raised on a unit leaves it standing on blocked cells, and the
+  // nearest open cell can be a pocket sealed inside the block. Stepping there
+  // is fine: which side a body belongs on cannot be told from where it
+  // stands. The next order decides it, sealed in rather than unreachable.
+  constexpr int k_x = 16;
+  constexpr int k_z = 24;
+  constexpr int k_half = 5;
+  const Point pocket{k_x - 2, k_z};
+  for (int grid_x = k_x - k_half; grid_x <= k_x + k_half; ++grid_x) {
+    for (int grid_z = k_z - k_half; grid_z <= k_z + k_half; ++grid_z) {
+      if (grid_x != pocket.x || grid_z != pocket.y) {
+        block_cell(grid_x, grid_z);
+      }
+    }
+  }
+  refresh_grid();
+
+  const EntityID id = spawn(world_of(k_x, k_z));
+  ASSERT_NE(id, 0U);
+  run_for(12.0);
+
+  const std::vector<EntityID> unit{id};
+  const auto destination = world_of(40, k_z);
+  const auto plan =
+      CommandService::plan_ground_move(m_session->world(), unit, destination);
+  ASSERT_TRUE(plan.anyone_can_move()) << "the order was refused as unreachable";
+  CommandService::issue_ground_move(m_session->world(), unit, plan);
+  run_for(k_recovery_budget_seconds + 20.0);
+
+  EXPECT_LT((position_of(id) - destination).length(), 2.5F)
+      << "the unit ended at (" << position_of(id).x() << ", " << position_of(id).z()
+      << ")";
+}
+
 } // namespace

@@ -955,9 +955,11 @@ TEST(CommanderControlRegressionTest, DirectControlOwnsSteeringIntentAndNothingEl
   ASSERT_FALSE(motor_source.empty());
   ASSERT_FALSE(route_follow_source.empty());
 
-  EXPECT_TRUE(contains(motor_source, "Game::Systems::body_profile_for(commander)"))
+  EXPECT_TRUE(contains(motor_source, "Game::Systems::motor_profile_for(commander)"))
       << "the commander motor has to take its body profile from the same place "
          "MovementSystem does, or entering RPG mode changes what is traversable";
+  EXPECT_TRUE(contains(route_follow_source, "motor_profile_for(entity)"))
+      << "the RTS motor has to ask the same ground question as direct control";
   EXPECT_TRUE(contains(motor_source, "Walkability::can_traverse"));
   EXPECT_TRUE(contains(motor_source, "Walkability::can_stand"));
   EXPECT_FALSE(contains(motor_source, "Passability::Light"))

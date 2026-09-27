@@ -80,6 +80,7 @@ private:
 
   std::unique_ptr<Texture> m_mask_texture;
   std::vector<unsigned char> m_mask_texels;
+  std::vector<float> m_mask_filter_rows;
   int m_mask_texture_width = 0;
   int m_mask_texture_height = 0;
 };

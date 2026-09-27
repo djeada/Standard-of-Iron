@@ -109,6 +109,29 @@ TEST_F(FormationCombatGeometry, NationTroopProfileOwnsFormationShape) {
   EXPECT_EQ(carthage_definition.doctrine, "carthage");
 }
 
+TEST_F(FormationCombatGeometry, SlotPresenceRespectsCountOverridesAndSquadStrength) {
+  Engine::Core::World world;
+  auto* entity = add_spearmen(world, 1, 0.0F, 0.0F);
+  auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+  for (bool nation_profile : {false, true}) {
+    unit->uses_nation_formation_profile = nation_profile;
+    for (int override_count : {0, 1, 12}) {
+      unit->render_individuals_per_unit_override = override_count;
+      for (int strength : {0, 1, 4}) {
+        unit->squad_strength = strength;
+        EXPECT_EQ(
+            Game::Systems::FormationCombat::has_formation_slots(*entity),
+            Game::Systems::FormationCombat::resolve_definition(*unit).total_count > 1);
+      }
+    }
+  }
+  entity->add_component<Engine::Core::BuildingComponent>();
+  EXPECT_FALSE(Game::Systems::FormationCombat::has_formation_slots(*entity));
+  entity->remove_component<Engine::Core::BuildingComponent>();
+  entity->add_component<Engine::Core::ElephantComponent>();
+  EXPECT_FALSE(Game::Systems::FormationCombat::has_formation_slots(*entity));
+}
+
 TEST_F(FormationCombatGeometry, NavigationUsesTheCompressedAuthoredWidth) {
   Engine::Core::World world;
   auto* entity = add_spearmen(world, 1, 0.0F, 0.0F);

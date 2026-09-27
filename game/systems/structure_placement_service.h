@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <optional>
+#include <span>
 #include <string>
 
 #include "../core/entity.h"
@@ -37,11 +38,13 @@ class StructurePlacementService {
 public:
   static auto ruling_for(GroundVerdict verdict) -> PlacementRuling;
 
-  static auto ground_ruling(const Engine::Core::World& world,
-                            const std::string& building_type,
-                            float x,
-                            float z,
-                            float rotation_y = 0.0F) -> PlacementRuling;
+  static auto
+  ground_ruling(const Engine::Core::World& world,
+                const std::string& building_type,
+                float x,
+                float z,
+                float rotation_y = 0.0F,
+                std::span<const Engine::Core::EntityID> crew = {}) -> PlacementRuling;
 
   static auto ruling(Engine::Core::World& world,
                      int owner_id,

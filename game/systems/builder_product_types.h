@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <string_view>
 
 namespace Game::Systems {
@@ -14,6 +15,16 @@ inline constexpr std::string_view k_builder_product_repair = "repair_structure";
 inline constexpr std::string_view k_builder_product_dismantle = "dismantle_structure";
 
 inline constexpr float k_builder_repair_tick_seconds = 1.2F;
+
+// Inside this reach a builder walks straight onto its work spot (bypass). A
+// gatherer's spot is the node itself, inside the node's blocked cells, so the
+// ground check lets it stand on resource cells within the same reach; with two
+// reaches a builder between them was stepped in by bypass and dragged back out.
+inline constexpr float k_site_bypass_reach = 2.5F;
+
+[[nodiscard]] inline auto gather_bypass_reach(float navigation_clearance) -> float {
+  return k_site_bypass_reach + std::max(0.0F, navigation_clearance);
+}
 
 inline constexpr std::string_view k_builder_product_wall_segment = "wall_segment";
 inline constexpr std::string_view k_builder_product_wall_gate = "wall_gate";
