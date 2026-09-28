@@ -50,6 +50,10 @@ WallSiegeTest.*
 WildlifeFightMotionTest.*
 FormationPlannerCacheTest.ReportsPlanCostAcrossArmySizes
 FormationPropClearance.SoldiersMarchAroundSolidProps
+# Fourteen units reversed twice through a town and then walked to arrival:
+# about 80 s of simulated time, 11 s on a pull-request runner in Debug. The
+# single-block pace tests in the same suite keep the street cases on PRs.
+MovementPaceTest.AnArmyReorderedThroughATownHoldsPace
 
 # app_tests
 AudioBattleLoadTest.*

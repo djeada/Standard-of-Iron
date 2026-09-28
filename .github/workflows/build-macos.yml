@@ -141,6 +141,9 @@ jobs:
         with:
           key: macos-${{ inputs.build-type }}-${{ env.SOI_ARCH_TAG }}
           max-size: 500M
+          # A tag's cache can only be restored by that tag, so saving one just
+          # evicts main's from the repository's 10 GB. Tags restore main's.
+          save: ${{ github.ref_type != 'tag' }}
 
       - name: Cache CMake FetchContent dependencies
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0

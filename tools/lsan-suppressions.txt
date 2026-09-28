@@ -29,3 +29,11 @@ leak:libGLX_mesa.so
 # entirely inside libQt6Qml with no project frame beneath them; project-owned
 # QML singletons are not covered by this and must manage their own lifetime.
 leak:libQt6Qml.so
+
+# PulseAudio keeps its client configuration, memory pool and free lists for the
+# life of the process after the first context is created, even once miniaudio
+# has unreferenced the context and freed its main loop. Every frame of all 56
+# app_tests leak reports on 28 Sep 2026 bottomed out in pa_xmalloc inside these
+# two libraries; MiniaudioBackend::shutdown does call ma_device_uninit.
+leak:libpulse.so
+leak:libpulsecommon

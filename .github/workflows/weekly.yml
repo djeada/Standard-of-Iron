@@ -51,7 +51,9 @@ jobs:
   # commits invalidates it), and the reparse itself is 1342 first-party
   # translation units at 3.5 s each on average and 7.4 s for the largest, which
   # is 80-165 CPU-minutes and 20-45 minutes on a four-core runner. 150 leaves
-  # room for both without leaving a hung pass running for hours.
+  # room for both without leaving a hung pass running for hours. The build now
+  # restores the pull-request lane's cache (see the ccache step below), so the
+  # 35 cold minutes should mostly go.
   portability:
     name: Portability (Clang + libc++)
     runs-on: ubuntu-24.04
@@ -79,14 +81,21 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            ninja-build libgl1-mesa-dev libegl1 ffmpeg \
+            ninja-build libgl1-mesa-dev libegl1 ffmpeg mold \
             clang libc++-dev libc++abi-dev
 
       - name: ccache
         uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
         with:
-          key: weekly-portability
-          max-size: 1G
+          # The compile database is built with the pull-request lane's GCC
+          # Debug configuration, so main's cache for that lane is warm for it:
+          # the build step was 38 of this job's 122 minutes cold. Clang reparses
+          # outside ccache. Never save: GitHub drops a cache unread for seven
+          # days, so a weekly save is gone before the next week and only
+          # evicts main's in the meantime.
+          key: pr-fast-ubuntu-24.04-Debug
+          max-size: 2G
+          save: false
 
       - name: Configure
         run: |
@@ -94,8 +103,12 @@ jobs:
             -DCMAKE_BUILD_TYPE=Debug \
             -DDEFAULT_LANG=en \
             -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+            -DSOI_DEBUG_INFO=lines \
+            -DSOI_LINKER=mold \
             -DENABLE_GENERATED_CAMPAIGN_MAP_ASSETS=OFF
 
+      # Built exactly as the pull-request lane builds, so its cache is warm;
+      # the build only has to leave the generated headers behind.
       - name: Build the compile database's targets
         run: cmake --build build --parallel --target soi_test_binaries
 
@@ -139,19 +152,24 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            ninja-build libgl1-mesa-dev libegl1 mesa-utils ffmpeg
+            ninja-build libgl1-mesa-dev libegl1 mesa-utils ffmpeg mold
 
       - name: ccache
         uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
         with:
           key: weekly-san-${{ matrix.sanitizer }}
           max-size: 500M
+          # Unread for seven days, a weekly save is dropped before the next
+          # run (0 hits in 1474 on 28 Sep 2026); it only evicts main's cache.
+          save: false
 
       - name: Configure
         run: |
           cmake -S . -B build -G Ninja \
             -DCMAKE_BUILD_TYPE=Debug \
             -DDEFAULT_LANG=en \
+            -DSOI_DEBUG_INFO=lines \
+            -DSOI_LINKER=mold \
             -DENABLE_SANITIZER=${{ matrix.sanitizer }}
 
       # Only what run-tests.sh runs. soi_test_binaries already pulls in the
@@ -216,13 +234,22 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            ninja-build libgl1-mesa-dev libegl1 gcovr ffmpeg
+            ninja-build libgl1-mesa-dev libegl1 ffmpeg mold
+
+      # Not Ubuntu's gcovr 7.0: it cannot parse gcov's block lines once a file
+      # passes line 9999 (`1:10001-block 0`, no space after the colon) and
+      # exits 64. tools/arena/arena_scenario_catalog.cpp crossed that on
+      # 28 Sep 2026 and the report step died with every test green.
+      - name: Install gcovr
+        run: python -m pip install gcovr==8.6
 
       - name: Configure
         run: |
           cmake -S . -B build -G Ninja \
             -DCMAKE_BUILD_TYPE=Debug \
             -DDEFAULT_LANG=en \
+            -DSOI_DEBUG_INFO=lines \
+            -DSOI_LINKER=mold \
             -DENABLE_COVERAGE=ON
 
       # Coverage is measured over what the tests execute, so the untested

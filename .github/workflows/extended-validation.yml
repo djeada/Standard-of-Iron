@@ -57,6 +57,9 @@ jobs:
         with:
           key: extended-sim-release
           max-size: 1G
+          # GitHub drops a cache nobody reads for seven days, so a save from a
+          # weekly run is gone before the next one; it only evicts main's.
+          save: false
 
       - name: Cache CMake FetchContent dependencies
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -114,13 +117,16 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            ninja-build libgl1-mesa-dev libegl1
+            ninja-build libgl1-mesa-dev libegl1 mold
 
       - name: ccache
         uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
         with:
-          key: extended-terrain-debug
-          max-size: 500M
+          # Same compiler and flags as the pull-request lane, whose cache main
+          # keeps warm. Restore it; never save (see the simulation job).
+          key: pr-fast-ubuntu-24.04-Debug
+          max-size: 2G
+          save: false
 
       - name: Cache CMake FetchContent dependencies
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -134,6 +140,8 @@ jobs:
           cmake -S . -B build -G Ninja \
             -DCMAKE_BUILD_TYPE=Debug \
             -DDEFAULT_LANG=en \
+            -DSOI_DEBUG_INFO=lines \
+            -DSOI_LINKER=mold \
             -DENABLE_GENERATED_CAMPAIGN_MAP_ASSETS=OFF
 
       - name: Build terrain probe
@@ -200,13 +208,16 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            ninja-build libgl1-mesa-dev libegl1 ffmpeg
+            ninja-build libgl1-mesa-dev libegl1 ffmpeg mold
 
       - name: ccache
         uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
         with:
-          key: extended-tests-debug
-          max-size: 1G
+          # Same compiler and flags as the pull-request lane, whose cache main
+          # keeps warm. Restore it; never save (see the simulation job).
+          key: pr-fast-ubuntu-24.04-Debug
+          max-size: 2G
+          save: false
 
       - name: Cache CMake FetchContent dependencies
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -220,6 +231,8 @@ jobs:
           cmake -S . -B build -G Ninja \
             -DCMAKE_BUILD_TYPE=Debug \
             -DDEFAULT_LANG=en \
+            -DSOI_DEBUG_INFO=lines \
+            -DSOI_LINKER=mold \
             -DENABLE_GENERATED_CAMPAIGN_MAP_ASSETS=OFF
 
       - name: Build the test binaries

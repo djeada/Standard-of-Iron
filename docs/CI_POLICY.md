@@ -33,6 +33,17 @@ SOI_TEST_PROFILE=pr scripts/run-tests.sh
 
 All nine test binaries are built and executed. The pull-request profile excludes only the individual tests listed in `tests/extended_tests.txt`.
 
+### Compiler cache
+
+"A few minutes with a warm cache" only holds while the cache survives, and on 27–28 September 2026 it did not: every pull-request build compiled all ~1480 objects from scratch, about 40 minutes. The repository gets 10 GB of Actions cache and GitHub evicts the least recently used entries past that. Weekly, extended and release-tag runs each saved 0.5–1.3 GB, the total reached 11.4 GB, and the pull-request cache was the one that went. The rules that keep it alive:
+
+- **Only a push to `main` saves `pr-fast-ubuntu-24.04-Debug`.** Pull requests restore it; a per-PR save is readable by no other ref.
+- **Nothing scheduled saves.** GitHub drops a cache nobody reads for seven days, so a Monday save is gone before the next Monday and only evicts `main`'s meanwhile. The Debug lanes that share the pull-request configuration (portability, the extended full-test and terrain jobs) restore its key instead, and must configure with exactly the same flags to hit it.
+- **Release tags do not save.** A tag's cache can only be read by that tag.
+- **`max-size` must hold a whole build.** At 1G ccache evicted the build's own objects mid-build (1256 cleanups), so the saved cache never matched what the next run compiled.
+
+CI configures Debug with `-DSOI_DEBUG_INFO=lines -DSOI_LINKER=mold` (`cmake/BuildSpeed.cmake`): line-table debug info keeps backtraces and sanitizer reports and makes the objects smaller to link and cache. When builds get slow, start from `gh api repos/{owner}/{repo}/actions/cache/usage`, `gh cache list`, and the ccache statistics block the job prints in its post-job cleanup.
+
 ## Why the fast profile excludes some tests
 
 Linking the test binaries is not the expensive part. With a warm compiler cache, the build itself completes in a few minutes. The cost comes from a small set of runtime-heavy tests.

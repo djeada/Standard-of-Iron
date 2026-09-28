@@ -250,3 +250,26 @@ precompiled header (`cmake/soi_pch.h`, applied to every project target by
   which the CI workflows set.
 - Release links use LTO; re-linking one small tool costs ~160 CPU-seconds because
   whole-program optimisation reruns over every static library.
+
+### The CI Debug build from scratch
+
+Measured 28 Sep 2026 on the pull-request lane's configuration (Debug, every test
+binary plus `content_validator`, 1610 steps, `-j4`, no ccache, both before the
+creature bake below stopped running twice):
+
+|                                           | wall  | compile CPU | 14 test links | objects |
+| ----------------------------------------- | ----- | ----------- | ------------- | ------- |
+| `-g3 -ggdb3`, GNU ld                      | 839 s | 2236 s      | 67 s          | 5.0 GB  |
+| `SOI_DEBUG_INFO=lines`, `SOI_LINKER=mold` | 732 s | 1789 s      | 4 s           | 1.3 GB  |
+
+The objects are also what ccache stores and what CI uploads, so a quarter of the
+size is what lets one cache hold a whole build. Both knobs live in
+`cmake/BuildSpeed.cmake`, default off; CI turns them on.
+
+- At `-O0`, parsing is the small part: GCC's `-ftime-report` on `world.cpp` puts 14% in
+  parsing, 27% in template instantiation and 57% in code generation.
+- Unity builds would attack that 57% and do not work here. See the note in
+  `cmake/BuildSpeed.cmake`: 129 of 234 batches failed on clashing anonymous-namespace helpers.
+- The creature bake (`bake_creature_assets`) is the longest single step: 168 s of
+  `-O0` baker. It used to run twice, once per output directory; it now bakes into
+  the build tree and copies into `assets/creatures`.
