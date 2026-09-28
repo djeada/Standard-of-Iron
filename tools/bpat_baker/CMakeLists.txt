@@ -58,8 +58,14 @@ set(_soi_creature_asset_names
     wolf_minimal.bprm
 )
 
+# Bake once into the build tree and copy the result into the source tree, which
+# tests run from the repository root read. The baker used to run once per
+# directory: in a Debug build that is 171 s of a four-way build's CPU spent
+# producing an identical second copy.
 set(_soi_creature_asset_outputs)
+set(_soi_creature_asset_baked)
 foreach(_asset_name IN LISTS _soi_creature_asset_names)
+    list(APPEND _soi_creature_asset_baked "${_soi_creature_assets_build_dir}/${_asset_name}")
     list(
         APPEND _soi_creature_asset_outputs
         "${_soi_creature_assets_source_dir}/${_asset_name}"
@@ -71,8 +77,9 @@ add_custom_command(
     OUTPUT ${_soi_creature_asset_outputs}
     COMMAND "${CMAKE_COMMAND}" -E make_directory "${_soi_creature_assets_source_dir}"
     COMMAND "${CMAKE_COMMAND}" -E make_directory "${_soi_creature_assets_build_dir}"
-    COMMAND "$<TARGET_FILE:bpat_baker>" "${_soi_creature_assets_source_dir}"
     COMMAND "$<TARGET_FILE:bpat_baker>" "${_soi_creature_assets_build_dir}"
+    COMMAND
+        "${CMAKE_COMMAND}" -E copy ${_soi_creature_asset_baked} "${_soi_creature_assets_source_dir}"
     DEPENDS bpat_baker
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
     COMMENT "Baking creature animation assets"

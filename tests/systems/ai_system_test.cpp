@@ -2543,7 +2543,7 @@ TEST_F(AISystemTest, AnIdlePairIsSentToClaimTheNearestGoldVein) {
   std::vector<Game::Systems::AI::AICommand> commands;
   behavior.execute(snapshot, context, 2.0F, commands);
   ASSERT_EQ(commands.size(), 1U) << "the veins lay unclaimed all match";
-  const auto& move = commands.front();
+  const auto move = commands.front();
   ASSERT_EQ(move.units.size(), 2U) << "two soldiers claim a vein; the rest stay home";
   for (float x : move.move_target_x) {
     EXPECT_NEAR(x, 76.0F, 3.0F) << "the nearer vein is claimed first";

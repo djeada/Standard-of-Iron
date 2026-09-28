@@ -25,6 +25,25 @@ else()
     message(STATUS "clang-tidy disabled (ENABLE_CLANG_TIDY=OFF)")
 endif()
 
+# ---- Build speed (CI sets these; the defaults are what a developer wants) ----
+# See cmake/BuildSpeed.cmake for what each costs and saves.
+set(SOI_DEBUG_INFO
+    "full"
+    CACHE STRING
+    "Debug information in Debug builds: full (-g3, macros for GDB) or lines (-g1)"
+)
+set_property(CACHE SOI_DEBUG_INFO PROPERTY STRINGS full lines)
+if(SOI_DEBUG_INFO STREQUAL "lines")
+    set(SOI_DEBUG_FLAG -g1)
+elseif(SOI_DEBUG_INFO STREQUAL "full")
+    set(SOI_DEBUG_FLAG -g)
+else()
+    message(FATAL_ERROR "SOI_DEBUG_INFO must be full or lines, not '${SOI_DEBUG_INFO}'")
+endif()
+set(SOI_LINKER "" CACHE STRING "Linker for -fuse-ld (e.g. mold, lld); empty keeps the default")
+include(cmake/BuildSpeed.cmake)
+soi_select_linker()
+
 # ---- Sanitizer and coverage lanes (used by the weekly CI workflow) ----
 # ENABLE_SANITIZER accepts a comma-separated -fsanitize list, e.g.
 #   cmake -DENABLE_SANITIZER=address,undefined ..
@@ -44,7 +63,7 @@ if(ENABLE_SANITIZER)
             -fsanitize=${ENABLE_SANITIZER}
             -fno-omit-frame-pointer
             -fno-optimize-sibling-calls
-            -g
+            ${SOI_DEBUG_FLAG}
         )
         add_link_options(-fsanitize=${ENABLE_SANITIZER})
         set(SOI_INSTRUMENTED_BUILD ON)
@@ -56,7 +75,7 @@ if(ENABLE_COVERAGE)
         message(WARNING "ENABLE_COVERAGE is not supported with MSVC; ignoring")
     else()
         message(STATUS "Coverage instrumentation enabled")
-        add_compile_options(--coverage -g -O0 -fprofile-update=atomic)
+        add_compile_options(--coverage ${SOI_DEBUG_FLAG} -O0 -fprofile-update=atomic)
         add_link_options(--coverage)
         set(SOI_INSTRUMENTED_BUILD ON)
     endif()
@@ -105,10 +124,18 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         set(CMAKE_C_FLAGS_DEBUG "/Od /Zi /DDEBUG")
     else()
         # GCC/Clang Debug flags
-        set(CMAKE_CXX_FLAGS_DEBUG "-g3 -O0 -DDEBUG")
-        set(CMAKE_C_FLAGS_DEBUG "-g3 -O0 -DDEBUG")
-        # Additional GDB-friendly flags
-        add_compile_options(-ggdb3) # Maximum debug info for GDB
+        if(SOI_DEBUG_INFO STREQUAL "lines")
+            # File and line tables only: enough for backtraces and sanitizer
+            # reports, a third smaller per object than -g3 (no macro records,
+            # no variable locations), which is what CI links and caches.
+            set(CMAKE_CXX_FLAGS_DEBUG "-g1 -O0 -DDEBUG")
+            set(CMAKE_C_FLAGS_DEBUG "-g1 -O0 -DDEBUG")
+        else()
+            set(CMAKE_CXX_FLAGS_DEBUG "-g3 -O0 -DDEBUG")
+            set(CMAKE_C_FLAGS_DEBUG "-g3 -O0 -DDEBUG")
+            # Additional GDB-friendly flags
+            add_compile_options(-ggdb3) # Maximum debug info for GDB
+        endif()
         add_compile_options(-fno-omit-frame-pointer) # Keep frame pointers for better backtraces
         add_compile_options(-fno-inline) # Don't inline functions for easier debugging
         # Disable optimizations that make debugging harder

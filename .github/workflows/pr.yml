@@ -70,15 +70,26 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            ninja-build libgl1-mesa-dev libegl1 ffmpeg
+            ninja-build libgl1-mesa-dev libegl1 ffmpeg mold
 
       - name: ccache
         uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
         with:
           # The identical key on main and PRs is essential: PRs can restore
           # default-branch caches, but cannot read caches from other PRs.
+          # Weekly, portability and extended Debug lanes restore this key too.
           key: pr-fast-ubuntu-24.04-${{ env.BUILD_TYPE }}
-          max-size: 1G
+          # At -g3 a Debug build of every test binary was ~1480 objects and
+          # ~1.3 GB compressed, and at 1G ccache evicted the build's own objects
+          # while compiling (1256 cleanups, 1 hit in 1479 on 27 Sep 2026), so
+          # the saved cache never held what the next run asked for. -g1 cut the
+          # raw objects from 5.0 to 1.3 GB; 2G keeps room for churn.
+          max-size: 2G
+          # Only main writes it. The repository has 10 GB of Actions cache and
+          # GitHub evicts the least recently used entry past that: a 1-2 GB
+          # save per pull request or release tag, none of which any other ref
+          # can restore, pushed the main cache out and every build went cold.
+          save: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
           # ccache-action resets statistics before building and publishes them
           # after the job; verbose stats make cache misses/eviction visible.
           verbose: 1
@@ -90,11 +101,16 @@ jobs:
           key: deps-ubuntu-24.04-${{ hashFiles('CMakeLists.txt', '**/CMakeLists.txt') }}
           restore-keys: deps-ubuntu-24.04-
 
+      # Line-table debug info and mold: see cmake/BuildSpeed.cmake.
+      # The lanes that restore this job's cache configure identically; a flag
+      # added here and not there turns their builds cold.
       - name: Configure
         run: |
           cmake -S . -B build -G Ninja \
             -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
             -DDEFAULT_LANG=en \
+            -DSOI_DEBUG_INFO=lines \
+            -DSOI_LINKER=mold \
             -DENABLE_GENERATED_CAMPAIGN_MAP_ASSETS=OFF
 
       # Every test binary, because linking them is not what made this lane

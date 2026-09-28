@@ -2,12 +2,14 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <gtest/gtest.h>
 #include <limits>
 #include <map>
 #include <memory>
+#include <ranges>
 #include <string>
 #include <vector>
 
@@ -46,6 +48,9 @@ constexpr int k_owner = 1;
 constexpr int k_map = 120;
 
 constexpr float k_touching = 0.05F;
+
+constexpr float k_settled = 0.1F;
+constexpr double k_settled_hold_seconds = 1.0;
 
 struct MarchRecord {
   std::map<EntityID, int> slot_of;
@@ -232,11 +237,41 @@ protected:
     return worst;
   }
 
-  void
-  run_for(double seconds, const std::vector<EntityID>& units, MarchRecord& record) {
+  auto settled_on_slots(const std::vector<EntityID>& units) -> bool {
+    const auto* formation = formation_of(units.front());
+    if (formation == nullptr || !formation->is_formed() ||
+        (formation->anchor - formation->destination).length() > k_settled) {
+      return false;
+    }
+    return std::ranges::all_of(units, [&](EntityID id) {
+      const auto* slot = formation->find_slot_for(id);
+      if (slot == nullptr) {
+        return false;
+      }
+      QVector3D const offset = position_of(id) - slot->world_position;
+      return std::hypot(offset.x(), offset.z()) <= k_settled;
+    });
+  }
+
+  enum class Stop : std::uint8_t {
+    AfterDuration,
+    OnceSettled
+  };
+
+  void run_for(double seconds,
+               const std::vector<EntityID>& units,
+               MarchRecord& record,
+               Stop stop = Stop::AfterDuration) {
     auto* pathfinder = NavGrid::get_pathfinder();
     double const step = m_session->clock().tick_seconds();
+    int settled_ticks = 0;
     for (double elapsed = 0.0; elapsed < seconds - 1e-9; elapsed += step) {
+      if (stop == Stop::OnceSettled) {
+        settled_ticks = settled_on_slots(units) ? settled_ticks + 1 : 0;
+        if (static_cast<double>(settled_ticks) * step >= k_settled_hold_seconds) {
+          return;
+        }
+      }
       m_session->clock().advance(step);
       while (m_session->clock().consume_tick()) {
         m_session->world().update(static_cast<float>(step));
@@ -402,7 +437,7 @@ TEST_F(ArmyFormationMarchTest, AColumnMarchesAndWheelsWithoutSwappingOrStacking)
 
   deploy(units, QVector3D(0.0F, 0.0F, 0.0F), 0.0F, ArmyFormationIntent::Column);
   MarchRecord north;
-  run_for(70.0, units, north);
+  run_for(70.0, units, north, Stop::OnceSettled);
 
   const auto* formation = formation_of(units.front());
   ASSERT_NE(formation, nullptr);
@@ -425,7 +460,7 @@ TEST_F(ArmyFormationMarchTest, AColumnMarchesAndWheelsWithoutSwappingOrStacking)
   MarchRecord east = north;
   east.worst_penetration = 0.0F;
   east.worst_formed_penetration = 0.0F;
-  run_for(100.0, units, east);
+  run_for(100.0, units, east, Stop::OnceSettled);
 
   EXPECT_EQ(east.slot_changes, 0) << "the wheel reshuffled the column";
   EXPECT_EQ(east.off_ground_samples, 0);
@@ -447,12 +482,12 @@ TEST_F(ArmyFormationMarchTest, AFormedColumnKeepsItsShapeThroughoutAWheel) {
   auto const units = army(QVector3D(0.0F, 0.0F, -30.0F));
   deploy(units, QVector3D(0.0F, 0.0F, 0.0F), 0.0F, ArmyFormationIntent::Column);
   MarchRecord setup;
-  run_for(70.0, units, setup);
+  run_for(70.0, units, setup, Stop::OnceSettled);
   ASSERT_TRUE(formation_of(units.front())->is_formed());
 
   deploy(units, QVector3D(25.0F, 0.0F, 0.0F), 90.0F, ArmyFormationIntent::Column);
   MarchRecord wheel;
-  run_for(100.0, units, wheel);
+  run_for(100.0, units, wheel, Stop::OnceSettled);
   EXPECT_EQ(wheel.slot_changes, 0);
   EXPECT_EQ(wheel.off_ground_samples, 0);
   EXPECT_LE(wheel.worst_penetration, k_touching);
@@ -472,7 +507,7 @@ TEST_F(ArmyFormationMarchTest, AStraightMarchDoesNotBacktrackOrTurnBetweenSlotUp
   auto const units = army(QVector3D(0.0F, 0.0F, -30.0F));
   deploy(units, QVector3D(), 0.0F, ArmyFormationIntent::Column);
   MarchRecord setup;
-  run_for(70.0, units, setup);
+  run_for(70.0, units, setup, Stop::OnceSettled);
   ASSERT_TRUE(formation_of(units.front())->is_formed());
 
   deploy(units, QVector3D(0.0F, 0.0F, 15.0F), 0.0F, ArmyFormationIntent::Column);
