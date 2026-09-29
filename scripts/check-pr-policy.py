@@ -44,12 +44,6 @@ CHECKS: tuple[Check, ...] = (
         "scripts/check-command-boundary.py",
     ),
     Check(
-        "refactoring-inventory",
-        "Refactoring inventory covers every 1,000-line file",
-        "scripts/refactor-inventory.py",
-        args=("--check", "."),
-    ),
-    Check(
         "qt-keyword-identifiers",
         "Qt keyword macros as identifiers",
         "scripts/check-qt-keyword-identifiers.py",

@@ -1,6 +1,6 @@
 # app/ navigation guide
 
-`app/` is the Qt/QML application shell. It translates user intent into commands, coordinates presentation, owns the match lifecycle on the client, and hosts the frame loop. It does not own gameplay rules: authoritative state lives in `game/` (see [game/README.md](../game/README.md)), and gameplay mutations go through `game/command/`. The dependency picture is in [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md); the hotspot inventory and refactoring plan are in [docs/REFACTORING_INVENTORY.md](../docs/REFACTORING_INVENTORY.md).
+`app/` is the Qt/QML application shell. It translates user intent into commands, coordinates presentation, owns the match lifecycle on the client, and hosts the frame loop. It does not own gameplay rules: authoritative state lives in `game/` (see [game/README.md](../game/README.md)), and gameplay mutations go through `game/command/`. The dependency picture is in [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md).
 
 ## Where things live
 

@@ -317,10 +317,9 @@ These are current implementation constraints. They are not a list of proposed fe
 | UI/application          | `app/`, `ui/`                                                 |
 | Validation/policy       | `scripts/`, `tests/architecture/`                             |
 
-## Navigation guides and refactoring plan
+## Navigation guides
 
 - [app/README.md](../app/README.md) and [game/README.md](../game/README.md) say what each directory owns and trace four production call paths (issuing an order, advancing a frame, loading a match, saving and restoring). `scripts/check-navigation-guides.py` fails when a step names a file or symbol that no longer exists.
-- [REFACTORING_INVENTORY.md](REFACTORING_INVENTORY.md) tracks every file of 1,000 lines or more, the responsibilities mixed in it, and its planned decomposition. `scripts/refactor-inventory.py --check` keeps it complete.
 
 ## Related architecture references
 

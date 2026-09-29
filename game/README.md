@@ -1,6 +1,6 @@
 # game/ navigation guide
 
-`game/` is the simulation and its domain services: ECS, session state, commands, movement, combat, formations, economy, AI, missions, maps, persistence formats. It compiles without Qt Quick or the renderer so that headless tools reuse the production paths. The dependency map is `scripts/module_rules.json` (enforced by `scripts/check-modules.py`) together with the target graph in `game/CMakeLists.txt`; the narrative is in [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md), and the hotspot plan is in [docs/REFACTORING_INVENTORY.md](../docs/REFACTORING_INVENTORY.md).
+`game/` is the simulation and its domain services: ECS, session state, commands, movement, combat, formations, economy, AI, missions, maps, persistence formats. It compiles without Qt Quick or the renderer so that headless tools reuse the production paths. The dependency map is `scripts/module_rules.json` (enforced by `scripts/check-modules.py`) together with the target graph in `game/CMakeLists.txt`; the narrative is in [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md).
 
 ## Where things live
 
