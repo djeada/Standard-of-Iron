@@ -298,8 +298,11 @@ TEST(HumanoidSpecTest, MinimalLodIsCheaperThanTheFullBody) {
   EXPECT_LT(s.lod_minimal.primitives.size(), s.lod_full.primitives.size());
 
   auto const* chest = find_primitive(s.lod_minimal.primitives, "humanoid_full_chest");
+  auto const* full_chest = find_primitive(s.lod_full.primitives, "humanoid_full_chest");
   ASSERT_NE(chest, nullptr);
-  auto* full_mesh = Render::Creature::primitive_unit_mesh(*chest, CreatureLOD::Full);
+  ASSERT_NE(full_chest, nullptr);
+  auto* full_mesh =
+      Render::Creature::primitive_unit_mesh(*full_chest, CreatureLOD::Full);
   auto* minimal_mesh =
       Render::Creature::primitive_unit_mesh(*chest, CreatureLOD::Minimal);
   ASSERT_NE(full_mesh, nullptr);
@@ -424,6 +427,82 @@ TEST(HumanoidSpecTest, FullSpecKeepsArmsAndLegsTaperedTowardExtremities) {
   EXPECT_GT(distal_radius(thigh_bot), distal_radius(calf_bot));
   EXPECT_GT(knee->params.radius, ankle->params.radius);
   EXPECT_GT(foot->params.half_extents.z(), foot->params.half_extents.x());
+}
+
+TEST(HumanoidSpecTest, CurvedLimbSectionsMeetWithContinuousSurfaceNormals) {
+  auto const& spec = humanoid_creature_spec();
+  auto const bind = Render::Humanoid::humanoid_bind_palette();
+  for (auto const& proximal : spec.lod_full.primitives) {
+    if (proximal.shape != Render::Creature::PrimitiveShape::TaperedCylinder ||
+        proximal.params.anchor_bone != proximal.params.tail_bone) {
+      continue;
+    }
+    SCOPED_TRACE(proximal.debug_name);
+    auto const distal =
+        std::find_if(spec.lod_full.primitives.begin(),
+                     spec.lod_full.primitives.end(),
+                     [&](auto const& part) {
+                       return part.shape == proximal.shape &&
+                              part.params.anchor_bone == proximal.params.anchor_bone &&
+                              part.params.tail_bone != proximal.params.tail_bone;
+                     });
+    ASSERT_NE(distal, spec.lod_full.primitives.end());
+    ASSERT_NE(proximal.custom_mesh, nullptr);
+    ASSERT_NE(distal->custom_mesh, nullptr);
+    auto model = [&](auto const& part) {
+      QMatrix4x4 matrix;
+      EXPECT_TRUE(Render::Creature::primitive_unit_model(
+          part, bind[part.params.anchor_bone], bind[part.params.tail_bone], matrix));
+      return matrix;
+    };
+    auto const proximal_model = model(proximal);
+    auto const distal_model = model(*distal);
+    auto normal = [](auto const& matrix, auto const& vertex) {
+      auto const m = matrix.normalMatrix();
+      QVector3D result;
+      for (int row = 0; row < 3; ++row) {
+        result[row] = m(row, 0) * vertex.normal[0] + m(row, 1) * vertex.normal[1] +
+                      m(row, 2) * vertex.normal[2];
+      }
+      return result.normalized();
+    };
+    auto position = [](auto const& matrix, auto const& vertex) {
+      return matrix.map(
+          QVector3D(vertex.position[0], vertex.position[1], vertex.position[2]));
+    };
+    for (auto const& a : proximal.custom_mesh->get_vertices()) {
+      if (std::abs(a.position[1] - 0.5F) > 1.0e-5F) {
+        continue;
+      }
+      bool matched = false;
+      for (auto const& b : distal->custom_mesh->get_vertices()) {
+        if (std::abs(b.position[1] + 0.5F) < 1.0e-5F &&
+            (position(proximal_model, a) - position(distal_model, b)).length() <
+                1.0e-5F) {
+          EXPECT_GT(
+              QVector3D::dotProduct(normal(proximal_model, a), normal(distal_model, b)),
+              0.9999F);
+          matched = true;
+          break;
+        }
+      }
+      EXPECT_TRUE(matched);
+    }
+    for (auto const* part : {&proximal, &*distal}) {
+      auto const matrix = model(*part);
+      auto const& vertices = part->custom_mesh->get_vertices();
+      auto const& indices = part->custom_mesh->get_indices();
+      for (std::size_t i = 0; i < indices.size(); i += 3) {
+        auto const& a = vertices[indices[i]];
+        auto const& b = vertices[indices[i + 1]];
+        auto const& c = vertices[indices[i + 2]];
+        auto const face =
+            QVector3D::crossProduct(position(matrix, b) - position(matrix, a),
+                                    position(matrix, c) - position(matrix, a));
+        EXPECT_GT(QVector3D::dotProduct(face, normal(matrix, a)), 0.0F);
+      }
+    }
+  }
 }
 
 TEST(HumanoidSpecTest, SkeletonSpecReusesHumanoidTopologyWithBoneGraph) {

@@ -4,8 +4,10 @@
 #include <QVector3D>
 
 #include <array>
+#include <cmath>
 #include <memory>
 #include <mutex>
+#include <numbers>
 #include <span>
 #include <string>
 #include <vector>
@@ -15,6 +17,7 @@
 #include "render/creature/spec.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/gl/mesh.h"
+#include "render/gl/primitives.h"
 #include "render/humanoid/asset/humanoid_beard_mesh.h"
 #include "render/humanoid/runtime/body_frame_resolver.h"
 #include "render/humanoid/runtime/humanoid_renderer.h"
@@ -559,6 +562,156 @@ constexpr std::array<Creature::PrimitiveInstance, 41> k_full_parts = {
     make_full_foot(false),
 };
 
+auto smooth_limb_mesh(float tail_radius,
+                      float head_slope,
+                      float tail_slope,
+                      bool cap_head,
+                      bool cap_tail) -> std::unique_ptr<Render::GL::Mesh> {
+  constexpr unsigned int k_slices = 32;
+  constexpr unsigned int k_stacks = 4;
+  constexpr unsigned int k_row = k_slices + 1;
+  std::vector<Render::GL::Vertex> vertices;
+  std::vector<unsigned int> indices;
+  vertices.reserve((k_stacks + 3) * k_row + 2);
+  indices.reserve((k_stacks * 2 + 2) * k_slices * 3);
+
+  float const a = 2.0F - 2.0F * tail_radius + head_slope + tail_slope;
+  float const b = -3.0F + 3.0F * tail_radius - 2.0F * head_slope - tail_slope;
+  for (unsigned int stack = 0; stack <= k_stacks; ++stack) {
+    float const t = static_cast<float>(stack) / k_stacks;
+    float const radius = ((a * t + b) * t + head_slope) * t + 1.0F;
+    float const slope = (3.0F * a * t + 2.0F * b) * t + head_slope;
+    for (unsigned int slice = 0; slice <= k_slices; ++slice) {
+      float const u = static_cast<float>(slice) / k_slices;
+      float const angle =
+          slice == k_slices ? 0.0F : 2.0F * std::numbers::pi_v<float> * u;
+      float const x = std::cos(angle);
+      float const z = std::sin(angle);
+      QVector3D const normal = QVector3D(x, -slope, z).normalized();
+      vertices.push_back({{radius * x, t - 0.5F, radius * z},
+                          {normal.x(), normal.y(), normal.z()},
+                          {u, t}});
+    }
+  }
+  for (unsigned int stack = 0; stack < k_stacks; ++stack) {
+    for (unsigned int slice = 0; slice < k_slices; ++slice) {
+      auto const a0 = stack * k_row + slice;
+      indices.insert(indices.end(),
+                     {a0, a0 + k_row, a0 + 1, a0 + 1, a0 + k_row, a0 + k_row + 1});
+    }
+  }
+
+  auto append_cap = [&](bool tail) {
+    auto const center = static_cast<unsigned int>(vertices.size());
+    float const y = tail ? 0.5F : -0.5F;
+    float const ny = tail ? 1.0F : -1.0F;
+    vertices.push_back({{0.0F, y, 0.0F}, {0.0F, ny, 0.0F}, {0.5F, 0.5F}});
+    for (unsigned int slice = 0; slice <= k_slices; ++slice) {
+      auto const& side = vertices[(tail ? k_stacks * k_row : 0) + slice];
+      vertices.push_back({side.position, {0.0F, ny, 0.0F}, side.tex_coord});
+    }
+    for (unsigned int slice = 0; slice < k_slices; ++slice) {
+      auto const first = center + slice + 1;
+      indices.insert(indices.end(),
+                     {center, tail ? first + 1 : first, tail ? first : first + 1});
+    }
+  };
+  if (cap_head) {
+    append_cap(false);
+  }
+  if (cap_tail) {
+    append_cap(true);
+  }
+
+  for (std::size_t i = 0; i < indices.size(); i += 3) {
+    std::swap(indices[i + 1], indices[i + 2]);
+  }
+  return std::make_unique<Render::GL::Mesh>(vertices, indices);
+}
+
+struct SmoothBodyParts {
+  std::array<Creature::PrimitiveInstance, k_full_parts.size()> parts = k_full_parts;
+  std::vector<std::unique_ptr<Render::GL::Mesh>> meshes;
+
+  SmoothBodyParts() {
+    for (auto& proximal : parts) {
+      if (proximal.shape != Creature::PrimitiveShape::TaperedCylinder ||
+          proximal.params.anchor_bone != proximal.params.tail_bone) {
+        continue;
+      }
+      for (auto& distal : parts) {
+        if (distal.shape != Creature::PrimitiveShape::TaperedCylinder ||
+            distal.params.anchor_bone != proximal.params.anchor_bone ||
+            distal.params.anchor_bone == distal.params.tail_bone) {
+          continue;
+        }
+        auto const anchor = static_cast<HumanoidBone>(proximal.params.anchor_bone);
+        float const length =
+            anchor == HumanoidBone::UpperArmL || anchor == HumanoidBone::UpperArmR
+                ? HP::UPPER_ARM_LEN
+            : anchor == HumanoidBone::ForearmL || anchor == HumanoidBone::ForearmR
+                ? HP::FORE_ARM_LEN
+            : anchor == HumanoidBone::HipL || anchor == HumanoidBone::HipR
+                ? HP::UPPER_LEG_LEN
+                : HP::LOWER_LEG_LEN;
+        float const first_length = proximal.params.tail_offset.y();
+        float const second_length = length - first_length;
+        float const first_slope =
+            (proximal.params.tail_radius - proximal.params.radius) / first_length;
+        float const second_slope =
+            (distal.params.tail_radius - distal.params.radius) / second_length;
+
+        float const join_slope =
+            first_slope * second_slope > 0.0F
+                ? 2.0F * first_slope * second_slope / (first_slope + second_slope)
+                : 0.0F;
+        auto attach = [&](Creature::PrimitiveInstance& part,
+                          float span,
+                          float start_slope,
+                          float end_slope,
+                          bool first) {
+          float const radius = part.params.radius;
+          meshes.push_back(smooth_limb_mesh(part.params.tail_radius / radius,
+                                            start_slope * span / radius,
+                                            end_slope * span / radius,
+                                            first,
+                                            !first));
+          part.custom_mesh = meshes.back().get();
+        };
+        attach(proximal, first_length, first_slope, join_slope, true);
+        attach(distal, second_length, join_slope, second_slope, false);
+        break;
+      }
+    }
+  }
+};
+
+auto smooth_minimal_parts() {
+  auto parts = k_minimal_parts;
+
+  constexpr int k_radial_segments = 12;
+  constexpr int k_latitude_segments = 8;
+  for (auto& part : parts) {
+    switch (part.shape) {
+    case Creature::PrimitiveShape::OrientedSphere:
+      part.custom_mesh =
+          Render::GL::get_unit_sphere(k_latitude_segments, k_radial_segments);
+      break;
+    case Creature::PrimitiveShape::Cylinder:
+    case Creature::PrimitiveShape::OrientedCylinder:
+      part.custom_mesh = Render::GL::get_unit_cylinder(k_radial_segments);
+      break;
+    case Creature::PrimitiveShape::TaperedCylinder:
+      part.custom_mesh = Render::GL::get_unit_tapered_cylinder(
+          1.0F, part.params.tail_radius / part.params.radius, k_radial_segments);
+      break;
+    default:
+      break;
+    }
+  }
+  return parts;
+}
+
 constexpr auto
 make_skeleton_minimal_bone(const char* name,
                            HumanoidBone anchor,
@@ -1085,17 +1238,17 @@ void apply_skeleton_proportion_pose(Render::GL::HumanoidPose& io_pose) noexcept 
 }
 
 auto humanoid_creature_spec() noexcept -> const Creature::CreatureSpec& {
+  static const SmoothBodyParts full;
+  static const auto minimal = smooth_minimal_parts();
   static const Creature::CreatureSpec spec = [] {
     Creature::CreatureSpec s;
     s.species_name = "humanoid";
     s.topology = humanoid_topology();
     s.lod_minimal = Creature::PartGraph{
-        std::span<const Creature::PrimitiveInstance>(k_minimal_parts.data(),
-                                                     k_minimal_parts.size()),
+        std::span<const Creature::PrimitiveInstance>(minimal),
     };
     s.lod_full = Creature::PartGraph{
-        std::span<const Creature::PrimitiveInstance>(k_full_parts.data(),
-                                                     k_full_parts.size()),
+        std::span<const Creature::PrimitiveInstance>(full.parts),
     };
 
     return s;
