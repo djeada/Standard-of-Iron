@@ -9,8 +9,8 @@
 #include "../map/terrain_service.h"
 #include "../units/spawn_type.h"
 #include "builder_product_types.h"
-#include "food_targets.h"
-#include "nav_grid.h"
+#include "systems/economy/food_targets.h"
+#include "systems/navigation/nav_grid.h"
 
 namespace Game::Systems {
 

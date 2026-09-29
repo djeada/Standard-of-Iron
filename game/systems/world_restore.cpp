@@ -5,12 +5,12 @@
 #include "../core/world.h"
 #include "../systems/building_collision_registry.h"
 #include "../systems/global_stats_registry.h"
-#include "../systems/nav_grid.h"
 #include "../systems/owner_registry.h"
-#include "../systems/pathfinding.h"
 #include "../systems/troop_count_registry.h"
-#include "../systems/wall_network_service.h"
 #include "../units/troop_type.h"
+#include "systems/navigation/nav_grid.h"
+#include "systems/navigation/pathfinding.h"
+#include "systems/navigation/wall_network_service.h"
 
 namespace Game::Persistence {
 

@@ -5,7 +5,7 @@
 #include "game/core/system_access_recorder.h"
 #include "game/core/world.h"
 #include "game/session/session_context.h"
-#include "game/systems/nav_grid.h"
+#include "game/systems/navigation/nav_grid.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/runtime_system_registry.h"
 

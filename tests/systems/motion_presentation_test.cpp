@@ -5,7 +5,7 @@
 #include "core/system.h"
 #include "core/world.h"
 #include "game/core/component_gameplay.h"
-#include "game/systems/route_follow_system.h"
+#include "game/systems/movement/route_follow_system.h"
 #include "game/units/spawn_type.h"
 #include "tests/support/movement_test_access.h"
 

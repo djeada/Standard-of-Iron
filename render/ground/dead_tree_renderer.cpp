@@ -10,6 +10,7 @@
 #include "game/map/scatter/scatter_composition.h"
 #include "game/map/scatter/spawn_validator.h"
 #include "gl/render_constants.h"
+#include "map/biome_settings.h"
 #include "map/terrain.h"
 #include "map/terrain_service.h"
 #include "render/scene_renderer.h"

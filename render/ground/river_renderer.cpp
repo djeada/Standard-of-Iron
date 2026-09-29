@@ -16,6 +16,7 @@
 #include "game/map/visibility_service.h"
 #include "linear_feature_geometry.h"
 #include "linear_feature_visibility.h"
+#include "map/biome_settings.h"
 #include "map/terrain.h"
 #include "render/draw_commands.h"
 #include "render/gl/mesh.h"

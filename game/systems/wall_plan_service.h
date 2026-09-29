@@ -8,7 +8,7 @@
 
 #include "../core/entity.h"
 #include "nation_id.h"
-#include "wall_network_service.h"
+#include "systems/navigation/wall_network_service.h"
 
 namespace Engine::Core {
 class World;

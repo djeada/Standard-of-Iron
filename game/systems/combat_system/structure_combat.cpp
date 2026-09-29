@@ -10,8 +10,8 @@
 #include "../../core/component_core.h"
 #include "../../units/spawn_type.h"
 #include "../building_collision_registry.h"
-#include "../nav_grid.h"
-#include "../pathfinding.h"
+#include "../navigation/nav_grid.h"
+#include "../navigation/pathfinding.h"
 
 namespace Game::Systems::Combat {
 namespace {

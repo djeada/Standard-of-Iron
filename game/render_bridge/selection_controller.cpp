@@ -15,7 +15,7 @@
 #include "../core/world.h"
 #include "../render_bridge/picking_service.h"
 #include "../session/selection_utils.h"
-#include "../systems/command_service.h"
+#include "../systems/movement/command_service.h"
 #include "../units/spawn_type.h"
 #include "scene/camera.h"
 

@@ -11,10 +11,10 @@
 #include "../core/component_gameplay.h"
 #include "../core/component_structures.h"
 #include "../core/world.h"
-#include "nav_grid.h"
-#include "order_service.h"
 #include "owner_registry.h"
-#include "pathfinding.h"
+#include "systems/movement/order_service.h"
+#include "systems/navigation/nav_grid.h"
+#include "systems/navigation/pathfinding.h"
 
 namespace Game::Systems {
 

@@ -9,6 +9,7 @@
 #include "../../game/map/scatter/scatter_composition.h"
 #include "../../game/map/scatter/spawn_validator.h"
 #include "../../game/map/scatter/tree_scatter_walk.h"
+#include "biome_settings.h"
 #include "terrain.h"
 
 namespace Game::Map {

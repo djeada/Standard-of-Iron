@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "game/save/snapshot_contract.h"
-#include "game/systems/save_format.h"
+#include "game/systems/persistence/save_format.h"
 
 namespace {
 
@@ -64,8 +64,15 @@ auto declared_components() -> std::set<std::string> {
 }
 
 auto serialized_components() -> std::set<std::string> {
-  const auto source =
-      read_text(find_repo_root() / "game" / "save" / "serialization.cpp");
+  std::string source;
+  for (const auto& entry :
+       std::filesystem::directory_iterator(find_repo_root() / "game" / "save")) {
+    const auto name = entry.path().filename().string();
+    if (name == "serialization.cpp" ||
+        (name.starts_with("component_") && name.ends_with("_codec.cpp"))) {
+      source += read_text(entry.path());
+    }
+  }
   const std::regex pattern(R"((?:get_component|add_component)<([A-Za-z0-9_]+)>)");
 
   std::set<std::string> names;
@@ -197,7 +204,8 @@ TEST(SnapshotContractTest, EveryEntryExplainsItself) {
 namespace {
 
 auto snapshot_copy_list(const std::string& function_name) -> std::vector<std::string> {
-  const auto source = read_text(find_repo_root() / "game" / "core" / "world.cpp");
+  const auto source =
+      read_text(find_repo_root() / "game" / "core" / "world_render_snapshot.cpp");
   auto start = source.find("void " + function_name + "(");
   if (start == std::string::npos) {
     start = source.find("auto " + function_name + "(");

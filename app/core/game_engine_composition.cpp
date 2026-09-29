@@ -1,198 +1,63 @@
-
-
-#include <QBuffer>
-#include <QCoreApplication>
-#include <QCursor>
-#include <QDebug>
-#include <QDir>
-#include <QElapsedTimer>
-#include <QEventLoop>
-#include <QFile>
-#include <QFileInfo>
-#include <QImage>
-#include <QJsonArray>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QOpenGLContext>
-#include <QPainter>
-#include <QPointer>
-#include <QQuickWindow>
-#include <QSet>
-#include <QSize>
-#include <QStringList>
-#include <QThread>
-#include <QTimer>
-#include <QVariant>
-#include <QVariantMap>
-#include <qbuffer.h>
-#include <qcoreapplication.h>
-#include <qdir.h>
-#include <qevent.h>
-#include <qglobal.h>
-#include <qimage.h>
-#include <qjsonobject.h>
-#include <qnamespace.h>
-#include <qobject.h>
-#include <qobjectdefs.h>
-#include <qpoint.h>
-#include <qsize.h>
-#include <qstringliteral.h>
-#include <qstringview.h>
-#include <qtmetamacros.h>
-#include <qvectornd.h>
-
-#include <algorithm>
-#include <cmath>
-#include <map>
-#include <memory>
-#include <mutex>
-#include <optional>
-#include <set>
-#include <string>
-#include <unordered_set>
-#include <utility>
-#include <vector>
-
 #include "app/audio/audio_coordinator.h"
-#include "app/audio/audio_resource_loader.h"
-#include "app/audio/audio_system_proxy.h"
-#include "app/audio/weather_audio.h"
-#include "app/commander/commander_mode_coordinator.h"
-#include "app/commander/commander_status_builder.h"
-#include "app/core/frame_ui_coordinator.h"
+#include "app/core/audio_services.h"
 #include "app/core/game_engine.h"
-#include "app/core/game_speed.h"
-#include "app/core/user_settings.h"
-#include "app/economy/production_manager.h"
-#include "app/input/cursor_manager.h"
-#include "app/input/cursor_mode.h"
-#include "app/input/hover_tracker.h"
-#include "app/input/input_command_handler.h"
+#include "app/economy/economy_read_model.h"
 #include "app/input/rts_camera_controller.h"
-#include "app/models/selected_units_model.h"
-#include "app/orders/action_vfx.h"
-#include "app/orders/command_controller.h"
-#include "app/orders/movement_utils.h"
-#include "app/orders/order_feedback.h"
-#include "app/orders/order_submission.h"
-#include "app/orders/rts_action_model.h"
-#include "app/persistence/game_state_restorer.h"
-#include "app/persistence/save_load_coordinator.h"
-#include "app/session/environment.h"
-#include "app/session/level_loader.h"
-#include "app/session/loading_progress_tracker.h"
+#include "app/mission/commander_message_runtime.h"
+#include "app/mission/mission_runtime.h"
+#include "app/mission/tutorial_runtime.h"
+#include "app/session/environment_runtime.h"
 #include "app/session/renderer_bootstrap.h"
-#include "app/session/skirmish_loader.h"
-#include "app/session/skirmish_runtime_coordinator.h"
-#include "app/session/world_bootstrap.h"
-#include "app/utils/engine_view_helpers.h"
+#include "app/session/replay_coordinator.h"
+#include "app/viewmodels/activity_view_model.h"
+#include "app/viewmodels/camera_view_model.h"
 #include "app/viewmodels/commander_message_view_model.h"
+#include "app/viewmodels/commander_view_model.h"
+#include "app/viewmodels/economy_view_model.h"
+#include "app/viewmodels/match_setup_view_model.h"
+#include "app/viewmodels/minimap_view_model.h"
+#include "app/viewmodels/mission_view_model.h"
+#include "app/viewmodels/orders_view_model.h"
+#include "app/viewmodels/placement_view_model.h"
+#include "app/viewmodels/production_view_model.h"
 #include "app/viewmodels/save_slots_view_model.h"
-#include "app/world/ambient_state_manager.h"
-#include "app/world/minimap_manager.h"
-#include "app/world/selection_query_service.h"
-#include "app/world/unit_queries.h"
-#include "app/world/visibility_coordinator.h"
-#include "game/audio/audio_cues.h"
-#include "game/audio/audio_event_handler.h"
-#include "game/audio/audio_system.h"
+#include "app/viewmodels/wave_view_model.h"
+#include "app/world/ally_announcements.h"
+#include "app/world/battle_stats.h"
+#include "app/world/focus_tracker.h"
+#include "app/world/targeting_presentation.h"
 #include "game/command/command_queue.h"
-#include "game/core/component_core.h"
-#include "game/core/event_manager.h"
-#include "game/core/local_audience.h"
-#include "game/core/system.h"
 #include "game/core/world.h"
-#include "game/formation/army_formation_registry.h"
-#include "game/game_config.h"
-#include "game/map/campaign_loader.h"
 #include "game/map/map_catalog.h"
-#include "game/map/map_loader.h"
-#include "game/map/map_transformer.h"
-#include "game/map/mission_context.h"
-#include "game/map/mission_loader.h"
-#include "game/map/render_visibility_rules.h"
-#include "game/map/terrain_service.h"
-#include "game/map/visibility_service.h"
-#include "game/mission/campaign_manager.h"
-#include "game/mission/mission_commander_setup.h"
-#include "game/mission/mission_definition_view.h"
-#include "game/mission/mission_setup_coordinator.h"
-#include "game/mission/mission_waves.h"
 #include "game/render_bridge/camera_service.h"
-#include "game/render_bridge/minimap/map_preview_generator.h"
-#include "game/render_bridge/minimap/minimap_generator.h"
-#include "game/render_bridge/minimap/minimap_utils.h"
-#include "game/render_bridge/minimap/unit_layer.h"
 #include "game/render_bridge/picking_service.h"
-#include "game/render_bridge/selection_controller.h"
-#include "game/session/selection_service.h"
-#include "game/session/selection_utils.h"
 #include "game/session/session_context.h"
-#include "game/session/session_snapshot.h"
-#include "game/session/simulation_clock.h"
-#include "game/systems/ai_system.h"
-#include "game/systems/ai_system/ai_strategy.h"
-#include "game/systems/attack_range.h"
-#include "game/systems/attack_targeting.h"
-#include "game/systems/building_collision_registry.h"
-#include "game/systems/capture_system.h"
-#include "game/systems/cleanup_system.h"
-#include "game/systems/combat_rules.h"
-#include "game/systems/combat_system.h"
 #include "game/systems/default_content.h"
 #include "game/systems/global_stats_registry.h"
-#include "game/systems/guard_system.h"
-#include "game/systems/healing_system.h"
-#include "game/systems/marketplace_system.h"
-#include "game/systems/match_snapshot.h"
-#include "game/systems/movement_system.h"
-#include "game/systems/nation_id.h"
-#include "game/systems/nation_registry.h"
-#include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
-#include "game/systems/pathfinding.h"
-#include "game/systems/patrol_system.h"
-#include "game/systems/player_resource_registry.h"
-#include "game/systems/production_service.h"
-#include "game/systems/production_system.h"
-#include "game/systems/rain_manager.h"
-#include "game/systems/rpg_combat_system/rpg_combat_processor.h"
-#include "game/systems/save_load_service.h"
-#include "game/systems/terrain_alignment_system.h"
-#include "game/systems/troop_count_registry.h"
-#include "game/systems/troop_profile_service.h"
-#include "game/systems/undead_awakening_system.h"
-#include "game/systems/victory_service.h"
-#include "game/units/commander_catalog.h"
-#include "game/units/factory.h"
-#include "game/units/spawn_type.h"
-#include "game/units/troop_config.h"
-#include "game/units/troop_type.h"
-#include "game/util/asset_text.h"
-#include "game/visuals/team_colors.h"
-#include "render/camera_visibility.h"
-#include "render/geom/stone.h"
-#include "render/gl/bootstrap.h"
+#include "game/systems/persistence/save_load_service.h"
 #include "render/ground/ambient_fog_renderer.h"
-#include "render/ground/biome_renderer.h"
-#include "render/ground/firecamp_renderer.h"
 #include "render/ground/fog_renderer.h"
-#include "render/ground/ground_renderer.h"
-#include "render/ground/plant_renderer.h"
+#include "render/ground/map_boundary_fog_renderer.h"
 #include "render/ground/rain_renderer.h"
-#include "render/ground/stone_renderer.h"
 #include "render/ground/terrain_feature_manager.h"
-#include "render/ground/terrain_renderer.h"
 #include "render/ground/terrain_scatter_manager.h"
 #include "render/ground/terrain_surface_manager.h"
-#include "render/ground/tree_renderer.h"
 #include "render/scene_renderer.h"
 #include "render/terrain_scene_proxy.h"
 #include "scene/camera.h"
-#include "utils/resource_utils.h"
 
 void GameEngine::build_client_and_view_models() {
+  create_session();
+  create_view_models();
+  create_feature_runtimes();
+  wire_view_models();
 
+  Game::Systems::initialize_default_content(m_session->nations());
+  m_session->stats().initialize();
+}
+
+void GameEngine::create_session() {
   m_session = std::make_unique<Game::Session::SessionContext>();
   m_session_scope = std::make_unique<Game::Session::ScopedSession>(*m_session);
   m_world = &m_session->world();
@@ -202,9 +67,11 @@ void GameEngine::build_client_and_view_models() {
         report_late_command_rejection(command, reason);
       });
 
-  App::Core::ClientHost& host = *this;
   publish_client_context();
+}
 
+void GameEngine::create_view_models() {
+  App::Core::ClientHost& host = *this;
   m_camera_view_model =
       std::make_unique<App::ViewModels::CameraViewModel>(m_client, host, this);
   m_match_setup_view_model =
@@ -223,7 +90,43 @@ void GameEngine::build_client_and_view_models() {
       m_client, host, *m_camera_view_model, *m_placement_view_model, this);
   m_orders_view_model = std::make_unique<App::ViewModels::OrdersViewModel>(
       m_client, host, *m_placement_view_model, *m_commander_view_model, this);
+  m_save_slots_view_model =
+      std::make_unique<App::ViewModels::SaveSlotsViewModel>(m_save_load_service, this);
+  m_wave_view_model = std::make_unique<App::ViewModels::WaveViewModel>(this);
+  m_commander_message_view_model =
+      std::make_unique<App::ViewModels::CommanderMessageViewModel>(this);
+  m_economy_view_model = std::make_unique<App::ViewModels::EconomyViewModel>(this);
+}
 
+void GameEngine::create_feature_runtimes() {
+  m_economy = std::make_unique<App::Core::EconomyReadModel>(m_economy_view_model.get());
+  m_tutorial = std::make_unique<App::Mission::TutorialRuntime>(this);
+  m_mission = std::make_unique<App::Mission::MissionRuntime>(
+      m_mission_view_model.get(), m_wave_view_model.get(), [this](const QString& text) {
+        emit mission_announcement(text);
+      });
+  m_commander_messages = std::make_unique<App::Mission::CommanderMessageRuntime>(
+      m_commander_message_view_model.get());
+  m_battle_stats = std::make_unique<App::World::BattleStats>();
+  m_targeting = std::make_unique<App::World::TargetingPresentation>();
+  m_focus = std::make_unique<App::World::FocusTracker>();
+  m_replay = std::make_unique<App::Session::ReplayCoordinator>();
+  m_environment = std::make_unique<App::Session::EnvironmentRuntime>();
+  m_ally_announcements = std::make_unique<App::World::AllyAnnouncementPresenter>(
+      App::World::AllyAnnouncementSink{
+          .exchange = [this](const QString& text,
+                             bool positive) { emit ally_exchange(text, positive); },
+          .appeal_opened =
+              [this](const QVariantMap& card) { emit ally_appeal_opened(card); },
+          .appeal_closed =
+              [this](quint32 appeal_id) { emit ally_appeal_closed(appeal_id); },
+          .commander_fact =
+              [this](const Game::Mission::CommanderMessageFact& fact) {
+                m_commander_messages->director().notify_fact(fact);
+              }});
+}
+
+void GameEngine::wire_view_models() {
   connect(m_production_view_model.get(),
           &App::ViewModels::ProductionViewModel::refused,
           this,
@@ -246,7 +149,7 @@ void GameEngine::build_client_and_view_models() {
   connect(m_camera_view_model.get(),
           &App::ViewModels::CameraViewModel::moved,
           this,
-          [this] { m_tutorial_notes.camera_used = true; });
+          [this] { m_tutorial->notes().camera_used = true; });
   connect(m_commander_view_model.get(),
           &App::ViewModels::CommanderViewModel::game_mode_changed,
           this,
@@ -267,65 +170,34 @@ void GameEngine::build_client_and_view_models() {
           this,
           [this] {
             emit selected_units_changed();
-            sync_focus_targets();
+            m_focus->sync_focus_targets(focus_inputs());
           });
-
-  m_save_slots_view_model =
-      std::make_unique<App::ViewModels::SaveSlotsViewModel>(m_save_load_service, this);
-  connect(m_save_slots_view_model.get(),
-          &App::ViewModels::SaveSlotsViewModel::error_occurred,
-          this,
-          [this](const QString& message) { set_error(message); });
-  connect(m_save_slots_view_model.get(),
-          &App::ViewModels::SaveSlotsViewModel::autosave_interval_changed,
-          this,
-          [this] { restart_autosave_timer(); });
-  connect(m_save_slots_view_model.get(),
-          &App::ViewModels::SaveSlotsViewModel::save_requested,
-          this,
-          &GameEngine::save_game_to_slot);
-  connect(m_save_slots_view_model.get(),
-          &App::ViewModels::SaveSlotsViewModel::quicksave_requested,
-          this,
-          &GameEngine::quicksave);
-  connect(m_save_slots_view_model.get(),
-          &App::ViewModels::SaveSlotsViewModel::autosave_requested,
-          this,
-          &GameEngine::autosave);
-  connect(m_save_slots_view_model.get(),
-          &App::ViewModels::SaveSlotsViewModel::cancel_save_requested,
-          this,
-          &GameEngine::cancel_active_save);
-  connect(m_save_slots_view_model.get(),
-          &App::ViewModels::SaveSlotsViewModel::load_requested,
-          this,
-          &GameEngine::load_game_from_slot);
-
-  m_wave_view_model = std::make_unique<App::ViewModels::WaveViewModel>(this);
-  m_commander_message_view_model =
-      std::make_unique<App::ViewModels::CommanderMessageViewModel>(this);
   connect(m_commander_message_view_model.get(),
           &App::ViewModels::CommanderMessageViewModel::dismiss_requested,
           this,
-          [this]() {
-            if (m_commander_message_director.dismiss_active()) {
-              publish_commander_message();
-            }
-          });
-  m_economy_view_model = std::make_unique<App::ViewModels::EconomyViewModel>(this);
-  m_economy_refresh_timer.start();
-  m_tutorial_director = std::make_unique<Game::Mission::TutorialDirector>(this);
-  connect(m_tutorial_director.get(),
+          [this]() { m_commander_messages->dismiss_active(commander_binding()); });
+  connect(m_tutorial->director(),
           &Game::Mission::TutorialDirector::start_requested,
           m_match_setup_view_model.get(),
           &App::ViewModels::MatchSetupViewModel::start_tutorial);
-
-  Game::Systems::initialize_default_content(m_session->nations());
-  m_session->stats().initialize();
 }
 
 void GameEngine::build_services_and_controllers() {
+  create_render_services();
+  wire_victory_service();
+  wire_loading_and_saves();
+  wire_world_services();
+  wire_map_catalog();
+  wire_audio();
+  wire_production_and_placement();
+  wire_command_controller();
+  wire_selection_and_cursor();
+  wire_event_subscriptions();
 
+  publish_client_context();
+}
+
+void GameEngine::create_render_services() {
   auto rendering = RendererBootstrap::initialize_rendering();
   m_renderer = std::move(rendering.renderer);
   m_rts_camera = std::move(rendering.camera);
@@ -345,389 +217,4 @@ void GameEngine::build_services_and_controllers() {
   RendererBootstrap::initialize_world_systems(*m_world);
 
   m_picking_service = std::make_unique<Game::Systems::PickingService>();
-  auto& session = *m_session;
-  m_victory_service = std::make_unique<Game::Systems::VictoryService>(
-      Game::Systems::VictoryService::Services{.stats = session.stats(),
-                                              .owners = session.owners(),
-                                              .nations = session.nations(),
-                                              .economy = session.economy()});
-
-  Game::Session::SessionSnapshot::register_contributor(
-      {.key = "victory",
-       .capture = [service = m_victory_service.get()](
-                      const Game::Session::SnapshotScope&) -> QJsonValue {
-         return service != nullptr ? QJsonValue(service->serialize_state())
-                                   : QJsonValue();
-       },
-       .restore =
-           [service = m_victory_service.get()](const Game::Session::SnapshotScope&,
-                                               const QJsonValue& value) {
-             if (service != nullptr) {
-               service->restore_state(value.toObject());
-             }
-           }});
-  wire_victory_service();
-
-  connect_save_service_signals();
-  m_camera_service = std::make_unique<Game::Systems::CameraService>(
-      m_session->visibility(), m_session->terrain());
-  m_rain_manager = std::make_unique<Game::Systems::RainManager>();
-  m_weather_audio = std::make_unique<App::Core::WeatherAudio>();
-  m_environment_clock = std::make_unique<Game::Map::EnvironmentClock>();
-
-  m_loading_progress_tracker = std::make_unique<LoadingProgressTracker>(this);
-  connect(m_loading_progress_tracker.get(),
-          &LoadingProgressTracker::progress_changed,
-          this,
-          [this](float progress) { emit loading_progress_changed(progress); });
-  connect(m_loading_progress_tracker.get(),
-          &LoadingProgressTracker::stage_changed,
-          this,
-          [this](LoadingProgressTracker::LoadingStage, QString detail) {
-            emit loading_stage_changed(std::move(detail));
-          });
-
-  auto* selection_system = &Game::Session::session_for(*m_world).selection();
-  m_selection_controller = std::make_unique<Game::Systems::SelectionController>(
-      m_world, selection_system, m_picking_service.get());
-  m_selection_controller->set_inspect_filter([this](Engine::Core::EntityID id) {
-    if (m_world == nullptr || m_visibility_coordinator == nullptr) {
-      return true;
-    }
-    auto* entity = m_world->get_entity(id);
-    const auto* transform =
-        entity != nullptr ? entity->get_component<Engine::Core::TransformComponent>()
-                          : nullptr;
-    if (transform == nullptr) {
-      return false;
-    }
-    if (const auto* cover = entity->get_component<Engine::Core::ForestCoverComponent>();
-        cover != nullptr &&
-        cover->hidden_from(
-            Game::Session::session_for(*m_world).owners().get_local_player_id())) {
-      return false;
-    }
-    const auto snapshot = m_visibility_coordinator->current_snapshot();
-    if (snapshot == nullptr || !snapshot->initialized) {
-      return true;
-    }
-
-    if (m_world->has<Engine::Core::BuildingComponent>(id)) {
-      return Game::Map::classify_world_visibility(
-                 *snapshot, transform->position.x, transform->position.z) !=
-             Game::Map::RenderVisibilityState::Hidden;
-    }
-    return Game::Map::should_render_non_local_unit(
-        *snapshot, transform->position.x, transform->position.z);
-  });
-  m_command_controller = std::make_unique<App::Controllers::CommandController>(
-      m_world, selection_system, m_picking_service.get());
-
-  m_cursor_manager = std::make_unique<CursorManager>();
-  m_hover_tracker = std::make_unique<HoverTracker>(m_picking_service.get());
-
-  m_map_catalog = std::make_unique<Game::Map::MapCatalog>(this);
-  connect(m_map_catalog.get(),
-          &Game::Map::MapCatalog::map_loaded,
-          this,
-          [this](const QVariantMap& map_data) {
-            m_match_setup_view_model->append_map(map_data);
-          });
-  connect(
-      m_map_catalog.get(),
-      &Game::Map::MapCatalog::loading_changed,
-      this,
-      [this](bool loading) { m_match_setup_view_model->set_maps_loading(loading); });
-
-  if (AudioSystem::get_instance().initialize()) {
-    AudioResourceLoader::load_audio_resources();
-    AudioResourceLoader::load_audio_cues();
-  } else {
-    qWarning() << "Failed to initialize AudioSystem";
-  }
-
-  m_audio_systemProxy = std::make_unique<App::Models::AudioSystemProxy>(this);
-
-  m_minimap_manager = std::make_unique<MinimapManager>();
-  m_visibility_coordinator =
-      std::make_unique<VisibilityCoordinator>(m_session->visibility());
-  m_visibility_coordinator->set_presenters(m_fog.get(), m_minimap_manager.get());
-  m_ambient_state_manager = std::make_unique<AmbientStateManager>();
-
-  m_input_handler = std::make_unique<InputCommandHandler>(m_world,
-                                                          m_selection_controller.get(),
-                                                          m_command_controller.get(),
-                                                          m_cursor_manager.get(),
-                                                          m_hover_tracker.get(),
-                                                          m_picking_service.get(),
-                                                          m_rts_camera.get());
-
-  m_camera_controller = std::make_unique<RtsCameraController>(
-      m_rts_camera.get(), m_camera_service.get(), m_world);
-
-  m_production_manager = std::make_unique<ProductionManager>(
-      m_world, m_picking_service.get(), m_rts_camera.get(), this);
-  connect(m_production_manager.get(),
-          &ProductionManager::placing_construction_changed,
-          m_placement_view_model.get(),
-          &App::ViewModels::PlacementViewModel::placing_construction_changed);
-  connect(m_production_manager.get(),
-          &ProductionManager::construction_preview_active_changed,
-          m_placement_view_model.get(),
-          &App::ViewModels::PlacementViewModel::construction_preview_active_changed);
-  connect(m_production_manager.get(),
-          &ProductionManager::construction_preview_valid_changed,
-          m_placement_view_model.get(),
-          &App::ViewModels::PlacementViewModel::construction_preview_valid_changed);
-  connect(m_production_manager.get(),
-          &ProductionManager::construction_preview_reason_changed,
-          m_placement_view_model.get(),
-          &App::ViewModels::PlacementViewModel::construction_preview_reason_changed);
-  connect(m_production_manager.get(),
-          &ProductionManager::construction_preview_summary_changed,
-          m_placement_view_model.get(),
-          &App::ViewModels::PlacementViewModel::construction_preview_summary_changed);
-  connect(m_production_manager.get(),
-          &ProductionManager::construction_placement_rejected,
-          this,
-          [this](const QString& reason) {
-            announce_player_warning(Game::Audio::Cue::k_build_placement_rejected);
-            if (reason.isEmpty()) {
-              return;
-            }
-            const bool gathering =
-                m_production_manager->pending_builder_construction_type() ==
-                QStringLiteral("collect");
-            auto outcome = App::Core::rejected_order(
-                gathering ? App::Core::OrderKind::Gather : App::Core::OrderKind::Build,
-                App::Core::OrderRefusal{App::Core::OrderFailure::CommandUnavailable,
-                                        reason});
-            if (const auto clicked = m_production_manager->release_position()) {
-              outcome.has_destination = true;
-              outcome.destination = *clicked;
-            }
-            handle_order_feedback(outcome);
-          });
-  connect(m_production_manager.get(),
-          &ProductionManager::order_feedback,
-          this,
-          &GameEngine::handle_order_feedback);
-
-  m_campaign_manager = std::make_unique<CampaignManager>(this);
-  connect(m_campaign_manager.get(),
-          &CampaignManager::available_campaigns_changed,
-          m_match_setup_view_model.get(),
-          &App::ViewModels::MatchSetupViewModel::notify_campaigns_changed);
-
-  m_selection_query_service = std::make_unique<SelectionQueryService>(m_world, this);
-
-  m_audio_event_handler = std::make_unique<Game::Audio::AudioEventHandler>(m_world);
-  m_audio_coordinator = std::make_unique<AudioCoordinator>(m_audio_event_handler.get(),
-                                                           m_session->nations());
-  m_mission_setup = std::make_unique<Game::Mission::MissionSetupCoordinator>();
-  m_save_load_coordinator = std::make_unique<App::Core::SaveLoadCoordinator>();
-  m_save_orchestrator = std::make_unique<App::Core::SaveOrchestrator>(
-      App::Core::SaveOrchestrator::Callbacks{
-          .simulation_running =
-              [this]() {
-                return m_simulation_thread_running.load(std::memory_order_acquire);
-              },
-          .capture =
-              [this](const QString& slot,
-                     Game::Systems::Save::SlotKind kind,
-                     int autosave_retention) {
-                return capture_save_to_slot(slot, kind, autosave_retention);
-              },
-          .deliver =
-              [this](const QString& slot, const App::Core::SaveToSlotEffects& effects) {
-                QMetaObject::invokeMethod(
-                    this,
-                    [this, slot, effects]() { finish_save_request(slot, effects); },
-                    Qt::QueuedConnection);
-              }});
-  m_skirmish_runtime = std::make_unique<App::Core::SkirmishRuntimeCoordinator>();
-  if (m_audio_event_handler->initialize()) {
-    AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Screen);
-    m_audio_coordinator->configure_audio_manifest_mappings(m_runtime.local_owner_id);
-
-    qInfo() << "Audio mappings configured";
-  } else {
-    qWarning() << "Failed to initialize AudioEventHandler";
-  }
-
-  connect(m_cursor_manager.get(),
-          &CursorManager::mode_changed,
-          this,
-          &GameEngine::cursor_mode_changed);
-  connect(m_cursor_manager.get(),
-          &CursorManager::global_cursor_changed,
-          this,
-          &GameEngine::global_cursor_changed);
-
-  connect(m_selection_controller.get(),
-          &Game::Systems::SelectionController::selection_changed,
-          this,
-          &GameEngine::selected_units_changed);
-  connect(m_selection_controller.get(),
-          &Game::Systems::SelectionController::selection_changed,
-          this,
-          &GameEngine::sync_selection_flags);
-  connect(m_selection_controller.get(),
-          &Game::Systems::SelectionController::selection_model_refresh_requested,
-          this,
-          &GameEngine::selected_units_data_changed);
-  connect(m_command_controller.get(),
-          &App::Controllers::CommandController::order_feedback,
-          this,
-          &GameEngine::handle_order_feedback);
-
-  connect(m_command_controller.get(),
-          &App::Controllers::CommandController::formation_placement_rejected,
-          this,
-          [this](const QString& reason) {
-            announce_player_warning(Game::Audio::Cue::k_ui_error);
-            if (!reason.isEmpty()) {
-              set_error(reason);
-            }
-          });
-  connect(m_command_controller.get(),
-          &App::Controllers::CommandController::gate_mode_changed,
-          this,
-          []() { Game::Audio::play_cue(Game::Audio::Cue::k_order_gate_mode); });
-  connect(m_command_controller.get(),
-          &App::Controllers::CommandController::run_mode_changed,
-          this,
-          [](bool active) {
-            if (!active) {
-              Game::Audio::play_cue(Game::Audio::Cue::k_order_run);
-            }
-          });
-  connect(m_command_controller.get(),
-          &App::Controllers::CommandController::formation_placement_started,
-          this,
-          []() { Game::Audio::play_cue(Game::Audio::Cue::k_order_formation); });
-  connect(m_command_controller.get(),
-          &App::Controllers::CommandController::formation_placement_started,
-          m_placement_view_model.get(),
-          &App::ViewModels::PlacementViewModel::placing_formation_changed);
-  connect(m_command_controller.get(),
-          &App::Controllers::CommandController::formation_placement_ended,
-          m_placement_view_model.get(),
-          &App::ViewModels::PlacementViewModel::placing_formation_changed);
-  connect(m_command_controller.get(),
-          &App::Controllers::CommandController::formation_preview_changed,
-          m_placement_view_model.get(),
-          &App::ViewModels::PlacementViewModel::formation_options_changed);
-  connect(m_command_controller.get(),
-          &App::Controllers::CommandController::formation_deployed,
-          m_placement_view_model.get(),
-          &App::ViewModels::PlacementViewModel::formation_deployed);
-
-  connect(
-      this, SIGNAL(selected_units_changed()), m_selected_units_model, SLOT(refresh()));
-  connect(this,
-          SIGNAL(selected_units_data_changed()),
-          m_selected_units_model,
-          SLOT(refresh()));
-
-  emit selected_units_changed();
-
-  m_unit_died_subscription =
-      Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>(
-          [this](const Engine::Core::UnitDiedEvent& e) {
-            on_unit_died(e);
-
-            if (Game::Units::is_troop_spawn(e.spawn_type) &&
-                e.owner_id != m_runtime.local_owner_id &&
-                e.killer_owner_id == m_runtime.local_owner_id) {
-
-              const auto* unit =
-                  m_world != nullptr
-                      ? m_world->try_get<Engine::Core::UnitComponent>(e.unit_id)
-                      : nullptr;
-              m_enemy_troops_defeated +=
-                  unit != nullptr ? std::max(1, Game::Systems::squad_men(*unit))
-                                  : std::max(1,
-                                             Game::Systems::troop_type_men(
-                                                 Game::Systems::NationID::RomanRepublic,
-                                                 e.spawn_type));
-              ++m_enemy_units_defeated;
-              emit enemy_troops_defeated_changed();
-            }
-          });
-
-  m_unit_spawned_subscription =
-      Engine::Core::ScopedEventSubscription<Engine::Core::UnitSpawnedEvent>(
-          [this](const Engine::Core::UnitSpawnedEvent& e) { on_unit_spawned(e); });
-
-  m_mission_announcement_subscription =
-      Engine::Core::ScopedEventSubscription<Engine::Core::MissionAnnouncementEvent>(
-          [this](const Engine::Core::MissionAnnouncementEvent& e) {
-            if (e.text.isEmpty() ||
-                !Engine::Core::LocalAudience{m_runtime.local_owner_id}.includes(
-                    e.owner_id)) {
-              return;
-            }
-            queue_mission_announcement(e.text);
-          });
-
-  m_undead_zone_awakened_subscription =
-      Engine::Core::ScopedEventSubscription<Engine::Core::UndeadZoneAwakenedEvent>(
-          [this](const Engine::Core::UndeadZoneAwakenedEvent& e) {
-            note_minimap_shrine_stirred(e);
-          });
-
-  m_combat_hit_subscription =
-      Engine::Core::ScopedEventSubscription<Engine::Core::CombatHitEvent>(
-          [this](const Engine::Core::CombatHitEvent& e) {
-            if (m_world == nullptr) {
-              return;
-            }
-            using HitRouting = App::ViewModels::CommanderViewModel::HitRouting;
-            switch (m_commander_view_model->classify_hit(e)) {
-            case HitRouting::Rts:
-              m_activity_view_model->record_hit(e, App::Core::FeedbackStyle::Tick);
-              break;
-            case HitRouting::CommanderBurst:
-              m_activity_view_model->record_hit(e, App::Core::FeedbackStyle::Burst);
-              break;
-            case HitRouting::Suppressed:
-              break;
-            }
-            note_minimap_combat_hit(e);
-          });
-
-  m_world_feedback_subscription =
-      Engine::Core::ScopedEventSubscription<Engine::Core::WorldFeedbackEvent>(
-          [this](const Engine::Core::WorldFeedbackEvent& e) {
-            if (m_world == nullptr) {
-              return;
-            }
-            m_activity_view_model->record_world_feedback(e);
-          });
-
-  m_minimap_unit_died_subscription =
-      Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>(
-          [this](const Engine::Core::UnitDiedEvent& e) { note_minimap_unit_died(e); });
-
-  m_barrack_captured_subscription =
-      Engine::Core::ScopedEventSubscription<Engine::Core::BarrackCapturedEvent>(
-          [this](const Engine::Core::BarrackCapturedEvent& e) {
-            if (!m_minimap_view_model || m_world == nullptr) {
-              return;
-            }
-            const auto* transform =
-                m_world->try_get<Engine::Core::TransformComponent>(e.barrack_id);
-            if (transform == nullptr) {
-              return;
-            }
-            m_minimap_view_model->note_alert(
-                App::ViewModels::MinimapAlert::CaptureFinished,
-                transform->position.x,
-                transform->position.z,
-                e.previous_owner_id,
-                e.new_owner_id);
-          });
-
-  publish_client_context();
 }

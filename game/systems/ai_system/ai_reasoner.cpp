@@ -1,45 +1,24 @@
 #include "ai_reasoner.h"
 
 #include <algorithm>
-#include <cmath>
 #include <limits>
 #include <optional>
+#include <vector>
 
-#include "../../core/ownership_constants.h"
-#include "../../game_config.h"
-#include "../../units/troop_config.h"
-#include "../nation_registry.h"
-#include "../production_service.h"
 #include "ai_attack_wave.h"
 #include "ai_base_manager.h"
-#include "ai_doctrine_catalog.h"
+#include "ai_context_census.h"
+#include "ai_doctrine_rules.h"
+#include "ai_expansion_planner.h"
+#include "ai_force_assignment.h"
+#include "ai_macro_targets.h"
 #include "ai_settlement_frame.h"
 #include "ai_stall_recovery.h"
 #include "ai_utils.h"
-#include "systems/ai_system/ai_types.h"
-#include "units/spawn_type.h"
-#include "units/troop_type.h"
+
+namespace Game::Systems::AI {
 
 namespace {
-
-[[nodiscard]] auto
-cheapest_recruit_cost(const Game::Systems::AI::AIContext& ctx) -> int {
-  if (ctx.nation == nullptr) {
-    return 1;
-  }
-  int cheapest = std::numeric_limits<int>::max();
-  for (const auto& troop : ctx.nation->available_troops) {
-    if (!Game::Systems::AI::is_foot_line_recruit(troop.unit_type)) {
-      continue;
-    }
-    if (Game::Systems::recruiting_building_for(troop.unit_type) !=
-        Game::Units::SpawnType::Barracks) {
-      continue;
-    }
-    cheapest = std::min(cheapest, troop.cost);
-  }
-  return cheapest == std::numeric_limits<int>::max() ? 1 : cheapest;
-}
 
 struct AnchorCandidate {
   float x = 0.0F;
@@ -47,13 +26,6 @@ struct AnchorCandidate {
 };
 
 constexpr float k_anchor_cluster_radius = 12.0F;
-constexpr float k_attack_initiation_aggression_threshold = 0.70F;
-constexpr float k_local_threat_memory_duration = 6.0F;
-constexpr float k_outpost_site_min_objective_distance = 36.0F;
-constexpr float k_outpost_structure_radius = 16.0F;
-constexpr float k_outpost_pending_radius = 10.0F;
-constexpr float k_outpost_site_lateral_step = 16.0F;
-constexpr int k_outpost_site_attempts = 5;
 
 auto densest_anchor_cluster(const std::vector<AnchorCandidate>& candidates)
     -> std::optional<AnchorCandidate> {
@@ -105,366 +77,7 @@ auto densest_anchor_cluster(const std::vector<AnchorCandidate>& candidates)
   return best_center;
 }
 
-auto holds_garrison(const Game::Systems::AI::AIStrategyConfig& strategy) -> bool {
-  return strategy.posture == Game::Systems::AI::AIPosture::Garrison;
-}
-
-auto can_initiate_attack(const Game::Systems::AI::AIStrategyConfig& strategy) -> bool {
-  return !holds_garrison(strategy) &&
-         strategy.aggression_modifier >= k_attack_initiation_aggression_threshold;
-}
-
-auto is_no_economy_nation(const Game::Systems::AI::AIContext& ctx) -> bool {
-  return ctx.nation != nullptr && !ctx.nation->has_economy;
-}
-
-auto reactive_attack_size(const Game::Systems::AI::AIStrategyConfig& strategy) -> int {
-  return std::max(1, strategy.reactive_attack_size);
-}
-
-auto proactive_attack_size(const Game::Systems::AI::AIStrategyConfig& strategy) -> int {
-  return std::max(strategy.reactive_attack_size, strategy.proactive_attack_size);
-}
-
-auto ready_attack_force(const Game::Systems::AI::AIContext& ctx) -> int;
-auto committable_attack_force(const Game::Systems::AI::AIContext& ctx) -> int;
-
-auto desired_outpost_barracks_count(const Game::Systems::AI::AIStrategyConfig& strategy)
-    -> int {
-  return std::max(0, strategy.desired_outpost_barracks_count);
-}
-
-auto expansion_force_threshold(const Game::Systems::AI::AIContext& ctx) -> int {
-  const int priority_threshold = static_cast<int>(
-      std::ceil(4.0F / std::max(0.25F, ctx.strategy_config.expansion_priority)));
-  return std::max({2, reactive_attack_size(ctx.strategy_config), priority_threshold});
-}
-
-auto needs_outpost_construction(const Game::Systems::AI::AIContext& ctx) -> bool {
-  if (is_no_economy_nation(ctx)) {
-    return false;
-  }
-  if (!ctx.has_expansion_site) {
-    return false;
-  }
-
-  if (ctx.outpost_barracks_count <
-      desired_outpost_barracks_count(ctx.strategy_config)) {
-    return true;
-  }
-
-  return ctx.outpost_barracks_count >=
-             desired_outpost_barracks_count(ctx.strategy_config) &&
-         ctx.outpost_home_count < ctx.strategy_config.outpost_home_target;
-}
-
-auto select_enemy_expansion_objective(const Game::Systems::AI::AISnapshot& snapshot,
-                                      const Game::Systems::AI::AIContext& ctx)
-    -> const Game::Systems::AI::ContactSnapshot* {
-  const Game::Systems::AI::ContactSnapshot* best = nullptr;
-  float best_distance_sq = std::numeric_limits<float>::infinity();
-
-  for (const auto& objective : snapshot.strategic_objectives) {
-    if (Game::Core::is_neutral_owner(objective.owner_id)) {
-      continue;
-    }
-
-    const float distance_sq = Game::Systems::AI::distance_squared(objective.pos_x,
-                                                                  objective.pos_y,
-                                                                  objective.pos_z,
-                                                                  ctx.base_pos_x,
-                                                                  ctx.base_pos_y,
-                                                                  ctx.base_pos_z);
-    if (distance_sq < best_distance_sq) {
-      best_distance_sq = distance_sq;
-      best = &objective;
-    }
-  }
-
-  return best;
-}
-
-void update_expansion_site(const Game::Systems::AI::AISnapshot& snapshot,
-                           Game::Systems::AI::AIContext& ctx,
-                           bool had_previous_site,
-                           float previous_site_x,
-                           float previous_site_z) {
-  ctx.has_expansion_site = false;
-  ctx.outpost_barracks_count = 0;
-  ctx.outpost_home_count = 0;
-  ctx.expansion_construction_pending = false;
-  ctx.forward_plan.has_site = false;
-
-  if (!ctx.anchor_is_structural || holds_garrison(ctx.strategy_config) ||
-      desired_outpost_barracks_count(ctx.strategy_config) <= 0) {
-    return;
-  }
-
-  const bool previous_site_usable =
-      had_previous_site &&
-      !Game::Systems::AI::AIBaseManager::site_is_abandoned(
-          ctx, previous_site_x, previous_site_z, snapshot.game_time);
-
-  if (previous_site_usable) {
-    ctx.has_expansion_site = true;
-    ctx.expansion_site_x = previous_site_x;
-    ctx.expansion_site_z = previous_site_z;
-  } else {
-    const auto* objective = select_enemy_expansion_objective(snapshot, ctx);
-    if (objective == nullptr) {
-      return;
-    }
-
-    const float dx = objective->pos_x - ctx.base_pos_x;
-    const float dz = objective->pos_z - ctx.base_pos_z;
-    const float objective_distance = std::sqrt(std::max(0.0F, dx * dx + dz * dz));
-    if (objective_distance < k_outpost_site_min_objective_distance) {
-      return;
-    }
-
-    const float site_distance = std::min(ctx.strategy_config.expansion_site_distance,
-                                         objective_distance * 0.5F);
-    const float forward_x = ctx.base_pos_x + (dx / objective_distance) * site_distance;
-    const float forward_z = ctx.base_pos_z + (dz / objective_distance) * site_distance;
-    const float lateral_x = -dz / objective_distance;
-    const float lateral_z = dx / objective_distance;
-
-    bool found_site = false;
-    for (int attempt = 0; attempt < k_outpost_site_attempts; ++attempt) {
-      const float lateral_offset = k_outpost_site_lateral_step *
-                                   static_cast<float>((attempt + 1) / 2) *
-                                   ((attempt % 2 == 0) ? 1.0F : -1.0F);
-      const float candidate_x = forward_x + lateral_x * lateral_offset;
-      const float candidate_z = forward_z + lateral_z * lateral_offset;
-
-      if (Game::Systems::AI::AIBaseManager::site_is_abandoned(
-              ctx, candidate_x, candidate_z, snapshot.game_time)) {
-        continue;
-      }
-
-      ctx.expansion_site_x = candidate_x;
-      ctx.expansion_site_z = candidate_z;
-      found_site = true;
-      break;
-    }
-
-    if (!found_site) {
-      return;
-    }
-    ctx.has_expansion_site = true;
-  }
-
-  ctx.forward_plan.has_site = true;
-  ctx.forward_plan.site_x = ctx.expansion_site_x;
-  ctx.forward_plan.site_z = ctx.expansion_site_z;
-
-  const float outpost_radius_sq =
-      k_outpost_structure_radius * k_outpost_structure_radius;
-  const float pending_radius_sq = k_outpost_pending_radius * k_outpost_pending_radius;
-
-  for (const auto& entity : snapshot.friendly_units) {
-    const float site_distance_sq =
-        Game::Systems::AI::distance_squared(entity.pos_x,
-                                            entity.pos_y,
-                                            entity.pos_z,
-                                            ctx.expansion_site_x,
-                                            0.0F,
-                                            ctx.expansion_site_z);
-
-    if (entity.is_building && site_distance_sq <= outpost_radius_sq) {
-      if (entity.spawn_type == Game::Units::SpawnType::Barracks) {
-        ctx.outpost_barracks_count++;
-      } else if (entity.spawn_type == Game::Units::SpawnType::Home) {
-        ctx.outpost_home_count++;
-      }
-    }
-
-    if (entity.spawn_type == Game::Units::SpawnType::Builder &&
-        entity.builder_production.has_component &&
-        entity.builder_production.has_construction_site) {
-      const float pending_distance_sq = Game::Systems::AI::distance_squared(
-          entity.builder_production.construction_site_x,
-          0.0F,
-          entity.builder_production.construction_site_z,
-          ctx.expansion_site_x,
-          0.0F,
-          ctx.expansion_site_z);
-      if (pending_distance_sq <= pending_radius_sq) {
-        ctx.expansion_construction_pending = true;
-      }
-    }
-  }
-}
-
-auto can_capture_neutral_expansion(const Game::Systems::AI::AIContext& ctx) -> bool {
-  if (is_no_economy_nation(ctx)) {
-    return false;
-  }
-  return ctx.strategy_config.expansion_priority > 0.8F &&
-         ctx.neutral_barracks_count > 0 &&
-         committable_attack_force(ctx) >= expansion_force_threshold(ctx);
-}
-
-auto can_build_outpost_expansion(const Game::Systems::AI::AIContext& ctx) -> bool {
-  if (is_no_economy_nation(ctx)) {
-    return false;
-  }
-  if (ctx.strategy_config.expansion_priority <= 0.8F || !ctx.has_expansion_site ||
-      ctx.home_count < ctx.strategy_config.base_home_target ||
-      ctx.barracks_count == 0 || ctx.builder_count == 0) {
-    return false;
-  }
-
-  if (!(needs_outpost_construction(ctx) || ctx.expansion_construction_pending)) {
-    return false;
-  }
-
-  return committable_attack_force(ctx) >= expansion_force_threshold(ctx);
-}
-
-auto wants_expansion(const Game::Systems::AI::AIContext& ctx) -> bool {
-  if (holds_garrison(ctx.strategy_config)) {
-    return false;
-  }
-  return can_capture_neutral_expansion(ctx) || can_build_outpost_expansion(ctx);
-}
-
-constexpr int k_food_reserve = 60;
-
-constexpr float k_worker_pop_share = 0.28F;
-
-auto doctrine_engine_target(const Game::Systems::AI::AIDoctrine& doctrine,
-                            int army_the_doctrine_wants) -> int {
-  const int planned =
-      doctrine.town_plan != nullptr ? doctrine.town_plan->engine_step_count() : 0;
-  const float share = std::clamp(doctrine.recruitment.siege_share, 0.0F, 1.0F);
-  if (share <= 0.0F && planned == 0) {
-    return 0;
-  }
-  const int by_share =
-      static_cast<int>((share * static_cast<float>(army_the_doctrine_wants)) + 0.999F);
-  return std::max(planned, by_share);
-}
-
-auto compute_macro_targets(const Game::Systems::AI::AISnapshot& snapshot,
-                           const Game::Systems::AI::AIContext& ctx,
-                           int catapult_count)
-    -> Game::Systems::AI::AIContext::MacroTargets {
-  Game::Systems::AI::AIContext::MacroTargets targets;
-  if (is_no_economy_nation(ctx)) {
-    targets.builder_count = 0;
-    targets.home_count = 0;
-    targets.barracks_count = 0;
-    targets.marketplace_count = 0;
-    targets.defense_tower_count = 0;
-    targets.wall_segment_count = 0;
-    targets.catapult_count = 0;
-    targets.assembly_size = std::max(2, ctx.strategy_config.reactive_attack_size);
-    targets.assembly_radius = ctx.strategy_config.assembly_radius;
-    targets.gather_spacing = ctx.strategy_config.gather_spacing;
-    return targets;
-  }
-
-  targets.builder_count = ctx.strategy_config.target_builder_count;
-  if (const auto* doctrine = ctx.strategy_config.doctrine;
-      doctrine != nullptr && doctrine->town_plan != nullptr) {
-    constexpr int k_links_per_extra_builder = 24;
-    targets.builder_count +=
-        doctrine->town_plan->wall_step_count() / k_links_per_extra_builder;
-  }
-
-  if (ctx.population_cap > 0) {
-    const int builder_population =
-        std::max(1,
-                 Game::Units::TroopConfig::instance().get_population_cost(
-                     Game::Units::TroopType::Builder));
-    const int worker_budget =
-        static_cast<int>(static_cast<float>(ctx.population_cap) * k_worker_pop_share);
-    targets.builder_count = std::clamp(
-        targets.builder_count, 1, std::max(1, worker_budget / builder_population));
-  }
-  targets.barracks_count = ctx.strategy_config.desired_barracks_count;
-  targets.marketplace_count = 1;
-
-  targets.farm_count = std::clamp(1 + (ctx.home_count / 2), 1, 8);
-  targets.defense_tower_count = ctx.strategy_config.desired_defense_tower_count;
-  targets.wall_segment_count = ctx.strategy_config.desired_wall_segment_count;
-  targets.catapult_count = ctx.strategy_config.desired_catapult_count;
-  targets.assembly_size = std::max(ctx.strategy_config.desired_assembly_size,
-                                   proactive_attack_size(ctx.strategy_config));
-  targets.assembly_radius = ctx.strategy_config.assembly_radius;
-  targets.gather_spacing = ctx.strategy_config.gather_spacing;
-
-  const int troop_pressure = std::max(0, ctx.total_units - targets.builder_count);
-  const int home_growth = troop_pressure / 6;
-  const int extra_barracks = troop_pressure / 10;
-  const int extra_catapults = std::max(0, ctx.barracks_count - 1) / 2;
-
-  targets.home_count = std::max(ctx.strategy_config.base_home_target,
-                                2 + home_growth + std::min(2, extra_barracks));
-
-  const auto* doctrine = ctx.strategy_config.doctrine;
-  const int army_the_doctrine_wants =
-      doctrine != nullptr ? doctrine->wave.size + doctrine->garrison.minimum_units
-                          : proactive_attack_size(ctx.strategy_config) +
-                                std::max(0, ctx.strategy_config.reserve_units);
-  targets.home_count = std::max(targets.home_count, 2 + army_the_doctrine_wants);
-
-  if (const auto* plan = doctrine != nullptr ? doctrine->town_plan : nullptr;
-      plan != nullptr) {
-
-    targets.home_count = std::max(targets.home_count, plan->step_count("home"));
-    targets.barracks_count =
-        std::max(targets.barracks_count, plan->step_count("barracks"));
-    targets.defense_tower_count =
-        std::max(targets.defense_tower_count, plan->step_count("defense_tower"));
-    targets.wall_segment_count =
-        std::max(targets.wall_segment_count, plan->wall_step_count());
-    targets.marketplace_count =
-        std::max(targets.marketplace_count, plan->step_count("marketplace"));
-    targets.farm_count = std::max(targets.farm_count, plan->step_count("farm"));
-    targets.catapult_count =
-        std::max(targets.catapult_count, plan->engine_step_count());
-  }
-
-  if (snapshot.has_resource_snapshot &&
-      snapshot.resources.get(Game::Systems::ResourceType::Food) < k_food_reserve) {
-    targets.farm_count = std::max(targets.farm_count, ctx.farm_count + 1);
-  }
-
-  if (ctx.home_civilians_remaining == 0) {
-
-    targets.home_count = std::max(targets.home_count, ctx.home_count + 2);
-
-    if (ctx.recruitment_manpower_available < cheapest_recruit_cost(ctx)) {
-      targets.raise_homes_first = true;
-    }
-  }
-  targets.barracks_count = std::max(targets.barracks_count, 1 + extra_barracks);
-  targets.defense_tower_count =
-      std::max(targets.defense_tower_count,
-               (ctx.home_count >= 4 || ctx.barracks_under_threat ||
-                !ctx.buildings_under_attack.empty())
-                   ? 2
-                   : targets.defense_tower_count);
-  if (doctrine != nullptr) {
-    targets.catapult_count = doctrine_engine_target(*doctrine, army_the_doctrine_wants);
-  } else {
-    targets.catapult_count =
-        std::max(targets.catapult_count, std::min(3, extra_catapults));
-  }
-
-  if (ctx.primary_barracks == 0 && ctx.home_count < 2) {
-    targets.barracks_count = std::max(targets.barracks_count, 1);
-  }
-  if (catapult_count >= targets.catapult_count) {
-    targets.catapult_count = catapult_count;
-  }
-
-  return targets;
-}
-
-auto select_defense_anchor(const Game::Systems::AI::AISnapshot& snapshot)
+auto select_defense_anchor(const AISnapshot& snapshot)
     -> std::optional<AnchorCandidate> {
   if (snapshot.defense_anchors.empty()) {
     return std::nullopt;
@@ -483,7 +96,7 @@ auto select_defense_anchor(const Game::Systems::AI::AISnapshot& snapshot)
       if (entity.is_building || entity.spawn_type == Game::Units::SpawnType::Builder) {
         continue;
       }
-      const float dist_sq = Game::Systems::AI::distance_squared(
+      const float dist_sq = distance_squared(
           entity.pos_x, entity.pos_y, entity.pos_z, anchor.pos_x, 0.0F, anchor.pos_z);
       if (dist_sq <= k_anchor_unit_radius_sq) {
         ++score;
@@ -502,286 +115,257 @@ auto select_defense_anchor(const Game::Systems::AI::AISnapshot& snapshot)
   return best_anchor;
 }
 
-auto available_combat_role_count(const Game::Systems::AI::AISnapshot& snapshot) -> int {
-  int count = 0;
-  for (const auto& entity : snapshot.friendly_units) {
-    if (Game::Systems::AI::is_combat_role_unit(entity)) {
-      count++;
-    }
-  }
-  return count;
+void adopt_primary_barracks(AIContext& ctx, const EntitySnapshot& barracks) {
+  ctx.primary_barracks = barracks.id;
+  ctx.anchor_station.offered = true;
+  ctx.anchor_station.x = barracks.pos_x - 5.0F;
+  ctx.anchor_station.z = barracks.pos_z;
+  ctx.base_pos_x = barracks.pos_x;
+  ctx.base_pos_y = barracks.pos_y;
+  ctx.base_pos_z = barracks.pos_z;
+  ctx.has_base_anchor = true;
+  ctx.anchor_is_structural = true;
 }
 
-auto compute_effective_reserve_units(const Game::Systems::AI::AISnapshot& snapshot,
-                                     const Game::Systems::AI::AIContext& ctx) -> int {
-  if (!ctx.anchor_is_structural) {
-    return 0;
-  }
-
-  const int combat_units = available_combat_role_count(snapshot);
-  const int max_reserve =
-      std::max(0, combat_units - reactive_attack_size(ctx.strategy_config));
-  return std::min(ctx.strategy_config.reserve_units, max_reserve);
+void adopt_defense_anchor(AIContext& ctx, const AnchorCandidate& anchor) {
+  ctx.base_pos_x = anchor.x;
+  ctx.base_pos_y = 0.0F;
+  ctx.base_pos_z = anchor.z;
+  ctx.anchor_station.offered = true;
+  ctx.anchor_station.x = anchor.x;
+  ctx.anchor_station.z = anchor.z;
+  ctx.has_base_anchor = true;
+  ctx.anchor_is_structural = true;
 }
 
-auto compute_effective_harass_units(const Game::Systems::AI::AISnapshot& snapshot,
-                                    const Game::Systems::AI::AIContext& ctx) -> int {
-  if (ctx.strategy_config.harass_units <= 0 ||
-      ctx.strategy_config.harassment_range <= 0.0F ||
-      holds_garrison(ctx.strategy_config)) {
-    return 0;
-  }
-
-  const int combat_units = available_combat_role_count(snapshot);
-  const int max_harass = std::max(0,
-                                  combat_units - ctx.effective_reserve_units -
-                                      reactive_attack_size(ctx.strategy_config));
-  return std::min(ctx.strategy_config.harass_units, max_harass);
-}
-
-void update_assault_unit_ids(const Game::Systems::AI::AISnapshot& snapshot,
-                             Game::Systems::AI::AIContext& ctx) {
-  ctx.assault_unit_ids.clear();
-  for (const auto& entity : snapshot.friendly_units) {
-    if (entity.is_assault && Game::Systems::AI::is_combat_role_unit(entity)) {
-      ctx.assault_unit_ids.push_back(entity.id);
-    }
-  }
-  ctx.assault_unit_count = static_cast<int>(ctx.assault_unit_ids.size());
-}
-
-void update_reserve_unit_ids(const Game::Systems::AI::AISnapshot& snapshot,
-                             Game::Systems::AI::AIContext& ctx) {
-  ctx.effective_reserve_units = compute_effective_reserve_units(snapshot, ctx);
-  if (ctx.effective_reserve_units <= 0) {
-    ctx.reserve_unit_ids.clear();
-    return;
-  }
-
-  std::vector<Engine::Core::EntityID> surviving_reserve;
-  surviving_reserve.reserve(static_cast<std::size_t>(ctx.effective_reserve_units));
-  for (auto unit_id : ctx.reserve_unit_ids) {
-    auto it = std::find_if(snapshot.friendly_units.begin(),
-                           snapshot.friendly_units.end(),
-                           [unit_id](const Game::Systems::AI::EntitySnapshot& entity) {
-                             return entity.id == unit_id &&
-                                    Game::Systems::AI::is_combat_role_unit(entity);
-                           });
-    if (it != snapshot.friendly_units.end()) {
-      surviving_reserve.push_back(unit_id);
-    }
-    if (static_cast<int>(surviving_reserve.size()) >= ctx.effective_reserve_units) {
-      break;
-    }
-  }
-
-  std::vector<const Game::Systems::AI::EntitySnapshot*> candidates;
-  candidates.reserve(snapshot.friendly_units.size());
-  for (const auto& entity : snapshot.friendly_units) {
-    if (!Game::Systems::AI::is_combat_role_unit(entity)) {
-      continue;
-    }
-    if (std::find(surviving_reserve.begin(), surviving_reserve.end(), entity.id) !=
-        surviving_reserve.end()) {
-      continue;
-    }
-    candidates.push_back(&entity);
-  }
-
-  std::sort(candidates.begin(),
-            candidates.end(),
-            [&ctx](const Game::Systems::AI::EntitySnapshot* a,
-                   const Game::Systems::AI::EntitySnapshot* b) {
-              const float distance_a =
-                  Game::Systems::AI::distance_squared(a->pos_x,
-                                                      a->pos_y,
-                                                      a->pos_z,
-                                                      ctx.base_pos_x,
-                                                      ctx.base_pos_y,
-                                                      ctx.base_pos_z);
-              const float distance_b =
-                  Game::Systems::AI::distance_squared(b->pos_x,
-                                                      b->pos_y,
-                                                      b->pos_z,
-                                                      ctx.base_pos_x,
-                                                      ctx.base_pos_y,
-                                                      ctx.base_pos_z);
-              if (distance_a != distance_b) {
-                return distance_a < distance_b;
-              }
-              return a->id < b->id;
-            });
-
-  for (const auto* entity : candidates) {
-    if (static_cast<int>(surviving_reserve.size()) >= ctx.effective_reserve_units) {
-      break;
-    }
-    surviving_reserve.push_back(entity->id);
-  }
-
-  ctx.reserve_unit_ids = std::move(surviving_reserve);
-}
-
-void update_harass_unit_ids(const Game::Systems::AI::AISnapshot& snapshot,
-                            Game::Systems::AI::AIContext& ctx) {
-  ctx.effective_harass_units = compute_effective_harass_units(snapshot, ctx);
-  if (ctx.effective_harass_units <= 0) {
-    ctx.harass_unit_ids.clear();
-    return;
-  }
-
-  std::vector<Engine::Core::EntityID> surviving_harass;
-  surviving_harass.reserve(static_cast<std::size_t>(ctx.effective_harass_units));
-  for (auto unit_id : ctx.harass_unit_ids) {
-    auto it =
-        std::find_if(snapshot.friendly_units.begin(),
-                     snapshot.friendly_units.end(),
-                     [&](const Game::Systems::AI::EntitySnapshot& entity) {
-                       return entity.id == unit_id &&
-                              Game::Systems::AI::marches_with_the_army(entity) &&
-                              !Game::Systems::AI::is_reserved_unit(entity.id, ctx);
-                     });
-    if (it != snapshot.friendly_units.end()) {
-      surviving_harass.push_back(unit_id);
-    }
-    if (static_cast<int>(surviving_harass.size()) >= ctx.effective_harass_units) {
-      break;
-    }
-  }
-
-  std::vector<const Game::Systems::AI::EntitySnapshot*> candidates;
-  candidates.reserve(snapshot.friendly_units.size());
-  for (const auto& entity : snapshot.friendly_units) {
-    if (!Game::Systems::AI::marches_with_the_army(entity) ||
-        Game::Systems::AI::is_reserved_unit(entity.id, ctx)) {
-      continue;
-    }
-    if (std::find(surviving_harass.begin(), surviving_harass.end(), entity.id) !=
-        surviving_harass.end()) {
-      continue;
-    }
-    candidates.push_back(&entity);
-  }
-
-  const float assembly_radius_sq =
-      ctx.macro_targets.assembly_radius * ctx.macro_targets.assembly_radius;
-  std::sort(candidates.begin(),
-            candidates.end(),
-            [&ctx, assembly_radius_sq](const Game::Systems::AI::EntitySnapshot* a,
-                                       const Game::Systems::AI::EntitySnapshot* b) {
-              const float rally_distance_a = Game::Systems::AI::distance_squared(
-                  a->pos_x, a->pos_y, a->pos_z, ctx.station.x, 0.0F, ctx.station.z);
-              const float rally_distance_b = Game::Systems::AI::distance_squared(
-                  b->pos_x, b->pos_y, b->pos_z, ctx.station.x, 0.0F, ctx.station.z);
-              const bool a_outside_assembly = rally_distance_a > assembly_radius_sq;
-              const bool b_outside_assembly = rally_distance_b > assembly_radius_sq;
-              if (a_outside_assembly != b_outside_assembly) {
-                return static_cast<int>(a_outside_assembly) >
-                       static_cast<int>(b_outside_assembly);
-              }
-
-              const float distance_a =
-                  Game::Systems::AI::distance_squared(a->pos_x,
-                                                      a->pos_y,
-                                                      a->pos_z,
-                                                      ctx.base_pos_x,
-                                                      ctx.base_pos_y,
-                                                      ctx.base_pos_z);
-              const float distance_b =
-                  Game::Systems::AI::distance_squared(b->pos_x,
-                                                      b->pos_y,
-                                                      b->pos_z,
-                                                      ctx.base_pos_x,
-                                                      ctx.base_pos_y,
-                                                      ctx.base_pos_z);
-              if (distance_a != distance_b) {
-                return distance_a > distance_b;
-              }
-              return a->id < b->id;
-            });
-
-  for (const auto* entity : candidates) {
-    if (static_cast<int>(surviving_harass.size()) >= ctx.effective_harass_units) {
-      break;
-    }
-    surviving_harass.push_back(entity->id);
-  }
-
-  ctx.harass_unit_ids = std::move(surviving_harass);
-}
-
-auto committed_army_count(const Game::Systems::AI::AISnapshot& snapshot,
-                          const Game::Systems::AI::AIContext& ctx) -> int {
-  if (!ctx.has_base_anchor) {
-    return 0;
-  }
-
-  if (!ctx.anchor_is_structural) {
-    return std::max(0, ctx.total_units - ctx.builder_count);
-  }
-
-  const float assembly_radius_sq =
-      ctx.macro_targets.assembly_radius * ctx.macro_targets.assembly_radius;
-  int committed_units = 0;
+void adopt_army_anchor(const AISnapshot& snapshot, AIContext& ctx) {
+  std::vector<AnchorCandidate> unit_positions;
+  unit_positions.reserve(snapshot.friendly_units.size());
   for (const auto& entity : snapshot.friendly_units) {
     if (entity.is_building || entity.spawn_type == Game::Units::SpawnType::Builder) {
       continue;
     }
-    if (Game::Systems::AI::is_harass_unit(entity.id, ctx)) {
-      continue;
-    }
+    unit_positions.push_back({entity.pos_x, entity.pos_z});
+  }
 
-    const float dx = entity.pos_x - ctx.station.x;
-    const float dz = entity.pos_z - ctx.station.z;
-    const float dist_sq = dx * dx + dz * dz;
-    if (dist_sq <= assembly_radius_sq ||
-        Game::Systems::AI::is_entity_engaged(entity, snapshot.visible_enemies)) {
-      committed_units++;
+  if (const auto anchor = densest_anchor_cluster(unit_positions); anchor.has_value()) {
+    ctx.base_pos_x = anchor->x;
+    ctx.base_pos_y = 0.0F;
+    ctx.base_pos_z = anchor->z;
+    ctx.anchor_station.offered = true;
+    ctx.anchor_station.x = anchor->x - 5.0F;
+    ctx.anchor_station.z = anchor->z;
+    ctx.has_base_anchor = true;
+  }
+}
+
+void resolve_base_anchor(const AISnapshot& snapshot,
+                         AIContext& ctx,
+                         const EntitySnapshot* primary_barracks) {
+  if (primary_barracks != nullptr) {
+    adopt_primary_barracks(ctx, *primary_barracks);
+  }
+
+  if (!ctx.has_base_anchor && is_no_economy_nation(ctx)) {
+    if (const auto anchor = select_defense_anchor(snapshot); anchor.has_value()) {
+      adopt_defense_anchor(ctx, *anchor);
     }
   }
 
-  return committed_units;
+  if (!ctx.has_base_anchor) {
+    adopt_army_anchor(snapshot, ctx);
+  }
 }
 
-auto ready_attack_force(const Game::Systems::AI::AIContext& ctx) -> int {
-  return ctx.anchor_is_structural
-             ? ctx.assembled_unit_count
-             : std::max(
-                   0, ctx.total_units - ctx.builder_count - ctx.effective_harass_units);
+void plan_force(const AISnapshot& snapshot, AIContext& ctx) {
+  ctx.macro_targets =
+      compute_macro_targets(snapshot, ctx, count_siege_engines(snapshot));
+  update_assault_unit_ids(snapshot, ctx);
+  update_reserve_unit_ids(snapshot, ctx);
+  update_harass_unit_ids(snapshot, ctx);
+
+  update_attack_wave(snapshot, ctx);
+  ctx.assembled_unit_count = committed_army_count(snapshot, ctx);
 }
 
-auto committable_attack_force(const Game::Systems::AI::AIContext& ctx) -> int {
-  return std::max(0, ready_attack_force(ctx) - ctx.effective_reserve_units);
+void track_progress(const AISnapshot& snapshot,
+                    AIContext& ctx,
+                    int previous_unit_count) {
+  if (has_active_local_threat(ctx)) {
+    ctx.last_local_threat_time = snapshot.game_time;
+  }
+
+  if (ctx.total_units != previous_unit_count || ctx.combat_units > 0) {
+    ctx.consecutive_no_progress_cycles = 0;
+    ctx.last_meaningful_action_time = snapshot.game_time;
+  } else if (ctx.idle_units > 0 || ctx.visible_enemy_count > 0) {
+    ctx.consecutive_no_progress_cycles++;
+  }
+
+  if (ctx.last_meaningful_action_time == 0.0F) {
+    ctx.last_meaningful_action_time = snapshot.game_time;
+  }
 }
 
-auto resume_attack_health_threshold(const Game::Systems::AI::AIStrategyConfig& strategy)
-    -> float {
-  return std::clamp(0.65F + 0.10F * (strategy.defense_modifier - 1.0F), 0.60F, 0.90F);
+void step_idle(AIContext& ctx, bool no_economy_nation) {
+  if (ctx.idle_units >= 1) {
+    ctx.state = AIState::Gathering;
+  } else if (ctx.average_health < (0.40F * ctx.strategy_config.defense_modifier) &&
+             ctx.total_units > 0) {
+    ctx.state = AIState::Defending;
+  } else if (!no_economy_nation && wants_expansion(ctx)) {
+    ctx.state = AIState::Expanding;
+  } else if (ctx.total_units >= 1 && ctx.visible_enemy_count > 0) {
+    if (!no_economy_nation && can_initiate_attack(ctx.strategy_config) &&
+        committable_attack_force(ctx) >= reactive_attack_size(ctx.strategy_config)) {
+      ctx.state = AIState::Attacking;
+    }
+  }
 }
 
-auto return_to_idle_health_threshold(
-    const Game::Systems::AI::AIStrategyConfig& strategy) -> float {
-  return std::clamp(0.80F + 0.05F * (strategy.defense_modifier - 1.0F), 0.75F, 0.95F);
+void step_gathering(AIContext& ctx, bool no_economy_nation) {
+  const auto& strategy = ctx.strategy_config;
+
+  const int min_units_for_reactive_attack = reactive_attack_size(strategy);
+  const int min_units_for_proactive_attack = proactive_attack_size(strategy);
+  if (ctx.total_units < 1) {
+    ctx.state = AIState::Idle;
+  } else if (ctx.average_health < (0.40F * strategy.defense_modifier)) {
+    ctx.state = AIState::Defending;
+  } else if (!no_economy_nation && wants_expansion(ctx)) {
+    ctx.state = AIState::Expanding;
+  } else if (!no_economy_nation && ctx.visible_enemy_count > 0 &&
+             can_initiate_attack(strategy) &&
+             committable_attack_force(ctx) >= min_units_for_reactive_attack) {
+    ctx.state = AIState::Attacking;
+  } else if (!no_economy_nation &&
+             committable_attack_force(ctx) >=
+                 std::max(min_units_for_proactive_attack,
+                          ctx.macro_targets.assembly_size) &&
+             can_initiate_attack(strategy)) {
+    ctx.state = AIState::Attacking;
+  }
 }
 
-auto has_active_local_threat(const Game::Systems::AI::AIContext& ctx) -> bool {
-  return ctx.barracks_under_threat || ctx.any_base_under_threat ||
-         !ctx.buildings_under_attack.empty() || (ctx.nearby_threat_count > 0);
+void step_attacking(AIContext& ctx, bool no_economy_nation) {
+  if (no_economy_nation) {
+    ctx.state = has_active_local_threat(ctx) ? AIState::Defending : AIState::Gathering;
+    return;
+  }
+  if (ctx.average_health < ctx.strategy_config.retreat_threshold) {
+    ctx.state = AIState::Retreating;
+  } else if (ctx.total_units == 0) {
+    ctx.state = AIState::Idle;
+  } else if (ctx.visible_enemy_count == 0 && ctx.state_timer > 15.0F) {
+    ctx.state = AIState::Idle;
+  } else if (ctx.average_health < (0.50F * ctx.strategy_config.defense_modifier) &&
+             ctx.damaged_units_count * 2 > ctx.total_units) {
+    if (!ctx.barracks_under_threat) {
+      ctx.state = AIState::Defending;
+    }
+  }
 }
 
-auto has_recent_local_threat(const Game::Systems::AI::AIContext& ctx,
-                             float game_time) -> bool {
-  return has_active_local_threat(ctx) ||
-         ((ctx.last_local_threat_time > 0.0F) &&
-          ((game_time - ctx.last_local_threat_time) <= k_local_threat_memory_duration));
+void step_defending(const AISnapshot& snapshot,
+                    AIContext& ctx,
+                    bool no_economy_nation) {
+  if (has_recent_local_threat(ctx, snapshot.game_time)) {
+    return;
+  }
+  if (!no_economy_nation && can_initiate_attack(ctx.strategy_config) &&
+      committable_attack_force(ctx) >=
+          std::max(proactive_attack_size(ctx.strategy_config),
+                   ctx.macro_targets.assembly_size) &&
+      ctx.average_health > resume_attack_health_threshold(ctx.strategy_config)) {
+    ctx.state = AIState::Attacking;
+  } else if (ctx.total_units < 2) {
+    ctx.state = AIState::Idle;
+  } else if (!no_economy_nation && ctx.visible_enemy_count > 0) {
+    ctx.state = AIState::Gathering;
+  } else if (ctx.average_health >
+             return_to_idle_health_threshold(ctx.strategy_config)) {
+    ctx.state = no_economy_nation ? AIState::Gathering : AIState::Idle;
+  } else {
+    ctx.state = AIState::Gathering;
+  }
+}
+
+void step_retreating(const AISnapshot& snapshot,
+                     AIContext& ctx,
+                     bool no_economy_nation) {
+  if (no_economy_nation && !has_recent_local_threat(ctx, snapshot.game_time)) {
+    ctx.state = AIState::Gathering;
+    return;
+  }
+
+  if (ctx.state_timer > 6.0F && ctx.average_health > 0.55F) {
+    ctx.state = AIState::Defending;
+  } else if (ctx.state_timer > 12.0F) {
+    ctx.state = AIState::Idle;
+    ctx.assigned_units.clear();
+  } else if (ctx.average_health > 0.70F && ctx.state_timer > 3.0F) {
+    ctx.state = AIState::Defending;
+  }
+}
+
+void step_expanding(AIContext& ctx, bool no_economy_nation) {
+  if (no_economy_nation) {
+    ctx.state = has_active_local_threat(ctx) ? AIState::Defending : AIState::Gathering;
+    return;
+  }
+
+  if (!wants_expansion(ctx)) {
+    ctx.state = ctx.visible_enemy_count > 0 ? AIState::Attacking : AIState::Gathering;
+  } else if (ctx.total_units < 2) {
+    ctx.state = AIState::Gathering;
+  } else if (ctx.barracks_under_threat || !ctx.buildings_under_attack.empty()) {
+    ctx.state = AIState::Defending;
+  } else if (ctx.average_health < 0.40F) {
+    ctx.state = AIState::Defending;
+  }
+}
+
+void react_to_threat(AIContext& ctx) {
+  if (has_active_local_threat(ctx) && ctx.state != AIState::Defending) {
+    ctx.state = AIState::Defending;
+  } else if ((ctx.nearby_threat_count > 0) &&
+             (ctx.state == AIState::Gathering || ctx.state == AIState::Idle)) {
+    ctx.state = AIState::Defending;
+  }
+}
+
+void break_deadlock(AIContext& ctx, bool no_economy_nation) {
+  if (ctx.state == AIState::Idle && ctx.total_units > 0) {
+    ctx.state = AIState::Gathering;
+  } else if (ctx.state == AIState::Gathering) {
+    if (ctx.visible_enemy_count > 0 && can_initiate_attack(ctx.strategy_config) &&
+        !no_economy_nation &&
+        committable_attack_force(ctx) >= reactive_attack_size(ctx.strategy_config)) {
+      ctx.state = AIState::Attacking;
+    } else if (ctx.visible_enemy_count == 0) {
+      ctx.state = AIState::Idle;
+    }
+  } else if (ctx.state == AIState::Attacking) {
+    ctx.assigned_units.clear();
+    ctx.state = ctx.average_health < 0.5F ? AIState::Defending : AIState::Idle;
+  }
+  ctx.consecutive_no_progress_cycles = 0;
+}
+
+void note_state_change(AIContext& ctx, AIState previous_state) {
+  ctx.state_timer = 0.0F;
+  if (previous_state == AIState::Defending && ctx.state != AIState::Defending) {
+    ctx.assigned_units.clear();
+  }
+  if (ctx.state == AIState::Defending || ctx.state == AIState::Retreating) {
+    release_units(ctx.harass_unit_ids, ctx);
+  }
+  ctx.consecutive_no_progress_cycles = 0;
 }
 
 } // namespace
 
-namespace Game::Systems::AI {
-
 void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
-
   ctx.nation = snapshot.nation.get();
 
   const auto alive_ids = cleanup_dead_units(snapshot, ctx, snapshot.game_time);
@@ -792,214 +376,12 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
   const float previous_site_x = ctx.expansion_site_x;
   const float previous_site_z = ctx.expansion_site_z;
 
-  ctx.buildings.clear();
-  ctx.commander_ids.clear();
-  ctx.primary_barracks = 0;
-  ctx.total_units = 0;
-  ctx.idle_units = 0;
-  ctx.combat_units = 0;
-  ctx.melee_count = 0;
-  ctx.ranged_count = 0;
-  ctx.cavalry_count = 0;
-  ctx.siege_count = 0;
-  ctx.builder_count = 0;
-  ctx.civilian_count = 0;
-  ctx.damaged_units_count = 0;
-  ctx.average_health = 1.0F;
-  ctx.anchor_station.offered = false;
-  ctx.anchor_station.x = 0.0F;
-  ctx.anchor_station.z = 0.0F;
-  ctx.barracks_under_threat = false;
-  ctx.nearby_threat_count = 0;
-  ctx.base_pos_x = 0.0F;
-  ctx.base_pos_y = 0.0F;
-  ctx.base_pos_z = 0.0F;
-  ctx.has_base_anchor = false;
-  ctx.anchor_is_structural = false;
-  ctx.has_expansion_site = false;
-  ctx.expansion_site_x = 0.0F;
-  ctx.expansion_site_z = 0.0F;
-  ctx.visible_enemy_count = 0;
-  ctx.neutral_barracks_count = 0;
-  ctx.home_count = 0;
-  ctx.farm_count = 0;
-  ctx.defense_tower_count = 0;
-  ctx.wall_segment_count = 0;
-  ctx.barracks_count = 0;
-  ctx.marketplace_count = 0;
-  ctx.assembled_unit_count = 0;
-  ctx.recruitment_manpower_available = 0;
-  ctx.home_civilians_remaining = 0;
-  ctx.effective_reserve_units = 0;
-  ctx.effective_harass_units = 0;
-  ctx.assault_unit_count = 0;
-  ctx.any_base_under_threat = false;
-  ctx.outpost_barracks_count = 0;
-  ctx.outpost_home_count = 0;
-  ctx.expansion_construction_pending = false;
-  ctx.population_used = 0;
-  ctx.population_cap = snapshot.max_troops_per_player;
-  if (snapshot.max_troops_per_player > 0) {
-    ctx.max_troops_per_player = snapshot.max_troops_per_player;
-  }
+  reset_context_counters(snapshot, ctx);
+  expire_attack_records(snapshot, ctx, alive_ids);
+  const FriendlyTally tally =
+      tally_friendly_units(snapshot, ctx, previous_primary_barracks);
 
-  constexpr float attack_record_timeout = 10.0F;
-  auto it = ctx.buildings_under_attack.begin();
-  while (it != ctx.buildings_under_attack.end()) {
-    if (alive_ids.find(it->first) == alive_ids.end() ||
-        (snapshot.game_time - it->second) > attack_record_timeout) {
-      it = ctx.buildings_under_attack.erase(it);
-    } else {
-      ++it;
-    }
-  }
-
-  float total_health_ratio = 0.0F;
-  const EntitySnapshot* sticky_primary_barracks = nullptr;
-  const EntitySnapshot* fallback_primary_barracks = nullptr;
-
-  for (const auto& entity : snapshot.friendly_units) {
-    if (entity.is_building) {
-      ctx.buildings.push_back(entity.id);
-
-      if (entity.spawn_type == Game::Units::SpawnType::Home) {
-        ctx.home_count++;
-        if (entity.production.has_component) {
-          ctx.home_civilians_remaining +=
-              std::max(0,
-                       entity.production.max_units - entity.production.produced_count -
-                           entity.production.queue_size -
-                           (entity.production.in_progress ? 1 : 0));
-        }
-      } else if (entity.spawn_type == Game::Units::SpawnType::DefenseTower) {
-        ctx.defense_tower_count++;
-      } else if (entity.spawn_type == Game::Units::SpawnType::WallSegment) {
-        ctx.wall_segment_count++;
-      } else if (entity.spawn_type == Game::Units::SpawnType::Barracks) {
-        ctx.barracks_count++;
-      } else if (entity.spawn_type == Game::Units::SpawnType::Marketplace) {
-        ctx.marketplace_count++;
-      } else if (entity.spawn_type == Game::Units::SpawnType::Farm) {
-        ctx.farm_count++;
-      }
-
-      if (entity.spawn_type == Game::Units::SpawnType::Barracks) {
-        if (entity.production.has_component) {
-          ctx.recruitment_manpower_available += entity.production.manpower_available;
-        }
-        if (entity.id == previous_primary_barracks) {
-          sticky_primary_barracks = &entity;
-        }
-        if (fallback_primary_barracks == nullptr ||
-            entity.id < fallback_primary_barracks->id) {
-          fallback_primary_barracks = &entity;
-        }
-      }
-      continue;
-    }
-
-    ctx.total_units++;
-    ctx.population_used +=
-        Game::Units::TroopConfig::instance().get_population_cost(entity.spawn_type);
-
-    if (entity.is_commander) {
-      ctx.commander_ids.push_back(entity.id);
-    }
-
-    if (entity.spawn_type == Game::Units::SpawnType::Builder) {
-      ctx.builder_count++;
-    }
-
-    if (entity.spawn_type == Game::Units::SpawnType::Civilian) {
-      ctx.civilian_count++;
-    }
-
-    if (ctx.nation != nullptr) {
-      auto troop_type_opt = Game::Units::spawn_typeToTroopType(entity.spawn_type);
-      if (troop_type_opt) {
-        auto troop_type = *troop_type_opt;
-        if (troop_type == Game::Units::TroopType::Builder) {
-        } else if (Game::Units::is_cavalry(entity.spawn_type)) {
-          ctx.cavalry_count++;
-        } else if (entity.spawn_type == Game::Units::SpawnType::Catapult ||
-                   entity.spawn_type == Game::Units::SpawnType::Ballista) {
-          ctx.siege_count++;
-        } else if (ctx.nation->is_ranged_unit(troop_type)) {
-          ctx.ranged_count++;
-        } else if (ctx.nation->is_melee_unit(troop_type)) {
-          ctx.melee_count++;
-        }
-      }
-    }
-
-    if (!entity.movement.has_component || !entity.movement.has_target ||
-        is_going_nowhere(entity) || is_stood_down(entity.id, ctx, snapshot.game_time)) {
-      ctx.idle_units++;
-    } else {
-      ctx.combat_units++;
-    }
-
-    if (entity.max_health > 0) {
-      float const health_ratio =
-          static_cast<float>(entity.health) / static_cast<float>(entity.max_health);
-      total_health_ratio += health_ratio;
-
-      if (health_ratio < 0.5F) {
-        ctx.damaged_units_count++;
-      }
-    }
-  }
-
-  const EntitySnapshot* primary_barracks_snapshot = (sticky_primary_barracks != nullptr)
-                                                        ? sticky_primary_barracks
-                                                        : fallback_primary_barracks;
-  if (primary_barracks_snapshot != nullptr) {
-    ctx.primary_barracks = primary_barracks_snapshot->id;
-    ctx.anchor_station.offered = true;
-    ctx.anchor_station.x = primary_barracks_snapshot->pos_x - 5.0F;
-    ctx.anchor_station.z = primary_barracks_snapshot->pos_z;
-    ctx.base_pos_x = primary_barracks_snapshot->pos_x;
-    ctx.base_pos_y = primary_barracks_snapshot->pos_y;
-    ctx.base_pos_z = primary_barracks_snapshot->pos_z;
-    ctx.has_base_anchor = true;
-    ctx.anchor_is_structural = true;
-  }
-
-  if (!ctx.has_base_anchor && is_no_economy_nation(ctx)) {
-    if (const auto anchor = select_defense_anchor(snapshot); anchor.has_value()) {
-      ctx.base_pos_x = anchor->x;
-      ctx.base_pos_y = 0.0F;
-      ctx.base_pos_z = anchor->z;
-      ctx.anchor_station.offered = true;
-      ctx.anchor_station.x = anchor->x;
-      ctx.anchor_station.z = anchor->z;
-      ctx.has_base_anchor = true;
-      ctx.anchor_is_structural = true;
-    }
-  }
-
-  if (!ctx.has_base_anchor) {
-    std::vector<AnchorCandidate> unit_positions;
-    unit_positions.reserve(snapshot.friendly_units.size());
-    for (const auto& entity : snapshot.friendly_units) {
-      if (entity.is_building || entity.spawn_type == Game::Units::SpawnType::Builder) {
-        continue;
-      }
-      unit_positions.push_back({entity.pos_x, entity.pos_z});
-    }
-
-    if (const auto anchor = densest_anchor_cluster(unit_positions);
-        anchor.has_value()) {
-      ctx.base_pos_x = anchor->x;
-      ctx.base_pos_y = 0.0F;
-      ctx.base_pos_z = anchor->z;
-      ctx.anchor_station.offered = true;
-      ctx.anchor_station.x = anchor->x - 5.0F;
-      ctx.anchor_station.z = anchor->z;
-      ctx.has_base_anchor = true;
-    }
-  }
-
+  resolve_base_anchor(snapshot, ctx, tally.primary_barracks);
   update_expansion_site(
       snapshot, ctx, had_previous_site, previous_site_x, previous_site_z);
 
@@ -1008,84 +390,16 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
   resolve_station(snapshot, ctx);
   update_station_report(snapshot, ctx);
 
-  int catapult_count = 0;
-  for (const auto& entity : snapshot.friendly_units) {
-    if (!entity.is_building && Game::Units::is_siege_engine_spawn(entity.spawn_type)) {
-      catapult_count++;
-    }
-    if (entity.builder_production.raising_a_building &&
-        Game::Units::is_siege_engine_spawn(
-            entity.builder_production.building_under_way)) {
-      catapult_count++;
-    }
-  }
+  plan_force(snapshot, ctx);
 
-  ctx.macro_targets = compute_macro_targets(snapshot, ctx, catapult_count);
-  update_assault_unit_ids(snapshot, ctx);
-  update_reserve_unit_ids(snapshot, ctx);
-  update_harass_unit_ids(snapshot, ctx);
-
-  update_attack_wave(snapshot, ctx);
-  ctx.assembled_unit_count = committed_army_count(snapshot, ctx);
-
-  ctx.average_health = (ctx.total_units > 0)
-                           ? (total_health_ratio / static_cast<float>(ctx.total_units))
-                           : 1.0F;
-
+  ctx.average_health =
+      (ctx.total_units > 0)
+          ? (tally.total_health_ratio / static_cast<float>(ctx.total_units))
+          : 1.0F;
   ctx.visible_enemy_count = static_cast<int>(snapshot.visible_enemies.size());
-
-  for (const auto& enemy : snapshot.visible_enemies) {
-    if (enemy.is_building && enemy.spawn_type == Game::Units::SpawnType::Barracks &&
-        Game::Core::is_neutral_owner(enemy.owner_id) &&
-        !is_gold_vein_anchor(snapshot, enemy.id)) {
-      ctx.neutral_barracks_count++;
-    }
-  }
-
-  if (ctx.has_base_anchor) {
-
-    constexpr float k_base_defend_radius = 30.0F;
-    const float defend_radius =
-        k_base_defend_radius +
-        10.0F * std::min(2.0F, ctx.strategy_config.defense_modifier);
-    const float defend_radius_sq = defend_radius * defend_radius;
-
-    for (const auto& enemy : snapshot.visible_enemies) {
-      if (!is_threatening_contact(enemy)) {
-        continue;
-      }
-      float const dist_sq = distance_squared(enemy.pos_x,
-                                             enemy.pos_y,
-                                             enemy.pos_z,
-                                             ctx.base_pos_x,
-                                             ctx.base_pos_y,
-                                             ctx.base_pos_z);
-
-      if (dist_sq <= defend_radius_sq) {
-        ctx.nearby_threat_count++;
-        if (ctx.primary_barracks != 0) {
-          ctx.barracks_under_threat = true;
-        }
-      }
-    }
-  }
-
-  if (has_active_local_threat(ctx)) {
-    ctx.last_local_threat_time = snapshot.game_time;
-  }
-
-  if (ctx.total_units != previous_unit_count || ctx.combat_units > 0) {
-
-    ctx.consecutive_no_progress_cycles = 0;
-    ctx.last_meaningful_action_time = snapshot.game_time;
-  } else if (ctx.idle_units > 0 || ctx.visible_enemy_count > 0) {
-
-    ctx.consecutive_no_progress_cycles++;
-  }
-
-  if (ctx.last_meaningful_action_time == 0.0F) {
-    ctx.last_meaningful_action_time = snapshot.game_time;
-  }
+  count_neutral_barracks(snapshot, ctx);
+  count_nearby_threats(snapshot, ctx);
+  track_progress(snapshot, ctx, previous_unit_count);
 }
 
 void AIReasoner::update_state_machine(const AISnapshot& snapshot,
@@ -1097,13 +411,9 @@ void AIReasoner::update_state_machine(const AISnapshot& snapshot,
   constexpr float min_state_duration = 3.0F;
   constexpr float max_no_progress_duration = 3.0F;
 
-  bool deadlock_detected = false;
   const bool no_economy_nation = is_no_economy_nation(ctx);
 
-  if (ctx.state_timer > ctx.max_state_duration) {
-    deadlock_detected = true;
-  }
-
+  bool deadlock_detected = ctx.state_timer > ctx.max_state_duration;
   float const time_since_progress =
       snapshot.game_time - ctx.last_meaningful_action_time;
   if (time_since_progress >= max_no_progress_duration && ctx.idle_units > 0) {
@@ -1112,38 +422,10 @@ void AIReasoner::update_state_machine(const AISnapshot& snapshot,
 
   AIState previous_state = ctx.state;
 
-  if (has_active_local_threat(ctx) && ctx.state != AIState::Defending) {
-
-    ctx.state = AIState::Defending;
-  }
-
-  else if ((ctx.nearby_threat_count > 0) &&
-           (ctx.state == AIState::Gathering || ctx.state == AIState::Idle)) {
-    ctx.state = AIState::Defending;
-  }
+  react_to_threat(ctx);
 
   if (deadlock_detected && ctx.state != AIState::Defending) {
-
-    if (ctx.state == AIState::Idle && ctx.total_units > 0) {
-      ctx.state = AIState::Gathering;
-    } else if (ctx.state == AIState::Gathering) {
-      if (ctx.visible_enemy_count > 0 && can_initiate_attack(ctx.strategy_config) &&
-          !no_economy_nation &&
-          committable_attack_force(ctx) >= reactive_attack_size(ctx.strategy_config)) {
-        ctx.state = AIState::Attacking;
-      } else if (ctx.visible_enemy_count == 0) {
-        ctx.state = AIState::Idle;
-      }
-    } else if (ctx.state == AIState::Attacking) {
-
-      ctx.assigned_units.clear();
-      if (ctx.average_health < 0.5F) {
-        ctx.state = AIState::Defending;
-      } else {
-        ctx.state = AIState::Idle;
-      }
-    }
-    ctx.consecutive_no_progress_cycles = 0;
+    break_deadlock(ctx, no_economy_nation);
   }
 
   if (ctx.decision_timer < 2.0F) {
@@ -1163,159 +445,27 @@ void AIReasoner::update_state_machine(const AISnapshot& snapshot,
 
   switch (ctx.state) {
   case AIState::Idle:
-    if (ctx.idle_units >= 1) {
-
-      ctx.state = AIState::Gathering;
-    } else if (ctx.average_health < (0.40F * ctx.strategy_config.defense_modifier) &&
-               ctx.total_units > 0) {
-
-      ctx.state = AIState::Defending;
-    } else if (!no_economy_nation && wants_expansion(ctx)) {
-
-      ctx.state = AIState::Expanding;
-    } else if (ctx.total_units >= 1 && ctx.visible_enemy_count > 0) {
-
-      if (!no_economy_nation && can_initiate_attack(ctx.strategy_config) &&
-          committable_attack_force(ctx) >= reactive_attack_size(ctx.strategy_config)) {
-        ctx.state = AIState::Attacking;
-      }
-    }
+    step_idle(ctx, no_economy_nation);
     break;
-
-  case AIState::Gathering: {
-
-    const auto& strategy = ctx.strategy_config;
-
-    const int MIN_UNITS_FOR_REACTIVE_ATTACK = reactive_attack_size(strategy);
-    const int MIN_UNITS_FOR_PROACTIVE_ATTACK = proactive_attack_size(strategy);
-    if (ctx.total_units < 1) {
-      ctx.state = AIState::Idle;
-    } else if (ctx.average_health < (0.40F * strategy.defense_modifier)) {
-
-      ctx.state = AIState::Defending;
-    } else if (!no_economy_nation && wants_expansion(ctx)) {
-
-      ctx.state = AIState::Expanding;
-    } else if (!no_economy_nation && ctx.visible_enemy_count > 0 &&
-               can_initiate_attack(strategy) &&
-               committable_attack_force(ctx) >= MIN_UNITS_FOR_REACTIVE_ATTACK) {
-
-      ctx.state = AIState::Attacking;
-    } else if (!no_economy_nation &&
-               committable_attack_force(ctx) >=
-                   std::max(MIN_UNITS_FOR_PROACTIVE_ATTACK,
-                            ctx.macro_targets.assembly_size) &&
-               can_initiate_attack(strategy)) {
-
-      ctx.state = AIState::Attacking;
-    }
-  } break;
-
+  case AIState::Gathering:
+    step_gathering(ctx, no_economy_nation);
+    break;
   case AIState::Attacking:
-    if (no_economy_nation) {
-      ctx.state =
-          has_active_local_threat(ctx) ? AIState::Defending : AIState::Gathering;
-      break;
-    }
-    if (ctx.average_health < ctx.strategy_config.retreat_threshold) {
-
-      ctx.state = AIState::Retreating;
-    } else if (ctx.total_units == 0) {
-
-      ctx.state = AIState::Idle;
-    } else if (ctx.visible_enemy_count == 0 && ctx.state_timer > 15.0F) {
-
-      ctx.state = AIState::Idle;
-    } else if (ctx.average_health < (0.50F * ctx.strategy_config.defense_modifier) &&
-               ctx.damaged_units_count * 2 > ctx.total_units) {
-
-      if (!ctx.barracks_under_threat) {
-        ctx.state = AIState::Defending;
-      }
-    }
-
+    step_attacking(ctx, no_economy_nation);
     break;
-
   case AIState::Defending:
-
-    if (has_recent_local_threat(ctx, snapshot.game_time)) {
-
-    } else if (!no_economy_nation && can_initiate_attack(ctx.strategy_config) &&
-               committable_attack_force(ctx) >=
-                   std::max(proactive_attack_size(ctx.strategy_config),
-                            ctx.macro_targets.assembly_size) &&
-               ctx.average_health >
-                   resume_attack_health_threshold(ctx.strategy_config)) {
-
-      ctx.state = AIState::Attacking;
-    } else if (ctx.total_units < 2) {
-
-      ctx.state = AIState::Idle;
-    } else if (!no_economy_nation && ctx.visible_enemy_count > 0) {
-      ctx.state = AIState::Gathering;
-    } else if (ctx.average_health >
-               return_to_idle_health_threshold(ctx.strategy_config)) {
-      ctx.state = no_economy_nation ? AIState::Gathering : AIState::Idle;
-    } else {
-      ctx.state = AIState::Gathering;
-    }
+    step_defending(snapshot, ctx, no_economy_nation);
     break;
-
   case AIState::Retreating:
-    if (no_economy_nation && !has_recent_local_threat(ctx, snapshot.game_time)) {
-      ctx.state = AIState::Gathering;
-      break;
-    }
-
-    if (ctx.state_timer > 6.0F && ctx.average_health > 0.55F) {
-
-      ctx.state = AIState::Defending;
-    } else if (ctx.state_timer > 12.0F) {
-
-      ctx.state = AIState::Idle;
-      ctx.assigned_units.clear();
-    } else if (ctx.average_health > 0.70F && ctx.state_timer > 3.0F) {
-
-      ctx.state = AIState::Defending;
-    }
+    step_retreating(snapshot, ctx, no_economy_nation);
     break;
-
   case AIState::Expanding:
-    if (no_economy_nation) {
-      ctx.state =
-          has_active_local_threat(ctx) ? AIState::Defending : AIState::Gathering;
-      break;
-    }
-
-    if (!wants_expansion(ctx)) {
-
-      if (ctx.visible_enemy_count > 0) {
-        ctx.state = AIState::Attacking;
-      } else {
-        ctx.state = AIState::Gathering;
-      }
-    } else if (ctx.total_units < 2) {
-
-      ctx.state = AIState::Gathering;
-    } else if (ctx.barracks_under_threat || !ctx.buildings_under_attack.empty()) {
-
-      ctx.state = AIState::Defending;
-    } else if (ctx.average_health < 0.40F) {
-
-      ctx.state = AIState::Defending;
-    }
+    step_expanding(ctx, no_economy_nation);
     break;
   }
 
   if (ctx.state != previous_state) {
-    ctx.state_timer = 0.0F;
-    if (previous_state == AIState::Defending && ctx.state != AIState::Defending) {
-      ctx.assigned_units.clear();
-    }
-    if (ctx.state == AIState::Defending || ctx.state == AIState::Retreating) {
-      release_units(ctx.harass_unit_ids, ctx);
-    }
-    ctx.consecutive_no_progress_cycles = 0;
+    note_state_change(ctx, previous_state);
   }
 }
 

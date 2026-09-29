@@ -11,7 +11,7 @@
 #include "../core/entity.h"
 #include "../formation/army_formation_types.h"
 #include "../systems/alliance_board.h"
-#include "../systems/order_service.h"
+#include "../systems/movement/order_service.h"
 #include "../systems/resource_types.h"
 #include "../units/troop_type.h"
 

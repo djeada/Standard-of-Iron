@@ -64,6 +64,27 @@ auto app_source(const std::filesystem::path& root,
   return {};
 }
 
+auto commander_control_source(const std::filesystem::path& root) -> std::string {
+  std::string combined;
+  for (const std::string_view name : {"commander_control_controller.cpp",
+                                      "commander_defence.cpp",
+                                      "commander_entity_access.cpp",
+                                      "commander_body_facing.cpp",
+                                      "commander_input_port.cpp",
+                                      "commander_locomotion.cpp",
+                                      "commander_look.cpp",
+                                      "commander_lunge.cpp",
+                                      "commander_presentation.cpp",
+                                      "commander_primary_scan.cpp",
+                                      "commander_strike.cpp",
+                                      "commander_targeting.cpp",
+                                      "commander_tick_trace.cpp"}) {
+    combined += app_source(root, name);
+    combined += '\n';
+  }
+  return combined;
+}
+
 auto contains(const std::string& text, const std::string& needle) -> bool {
   return text.find(needle) != std::string::npos;
 }
@@ -84,7 +105,7 @@ auto occurrences(const std::string& text, const std::string& needle) -> int {
 
 TEST(CommanderControlRegressionTest, CommanderStrafeUsesRightHandedBasis) {
   const auto root = find_repo_root();
-  const auto source = app_source(root, "commander_control_controller.cpp");
+  const auto source = commander_control_source(root);
   ASSERT_FALSE(source.empty());
 
   EXPECT_TRUE(
@@ -94,7 +115,7 @@ TEST(CommanderControlRegressionTest, CommanderStrafeUsesRightHandedBasis) {
 TEST(CommanderControlRegressionTest, CommanderMouseLookIsPolledEveryRenderedFrame) {
   const auto root = find_repo_root();
   const auto engine_source = app_source(root, "commander_view_model.cpp");
-  const auto controller_source = app_source(root, "commander_control_controller.cpp");
+  const auto controller_source = commander_control_source(root);
   const auto game_engine_source = app_source(root, "game_engine.cpp");
   ASSERT_FALSE(engine_source.empty());
   ASSERT_FALSE(controller_source.empty());
@@ -109,7 +130,8 @@ TEST(CommanderControlRegressionTest, CommanderMouseLookIsPolledEveryRenderedFram
       contains(game_engine_source, "m_commander_view_model->sample_frame_intent();"));
   EXPECT_TRUE(
       contains(controller_source, "void CommanderControlController::poll_mouse_look"));
-  EXPECT_TRUE(contains(controller_source, "mouse_move(delta.x(), delta.y());"));
+  EXPECT_TRUE(contains(controller_source,
+                       "apply_mouse_delta(delta.x(), delta.y(), sensitivity_scale);"));
 }
 
 TEST(CommanderControlRegressionTest,
@@ -426,11 +448,18 @@ TEST(CommanderControlRegressionTest, SaveAndLoadForceCommanderModeBackToRts) {
                        "    m_commander_view_model->exit_mode();\n"
                        "  }\n\n"
                        "  reset_preload_interaction_state();"));
-  EXPECT_TRUE(contains(engine_source,
+  const auto save_controller_source =
+      read_text(root / "app" / "persistence" / "save_slot_controller.cpp");
+  const auto wiring_source = app_source(root, "game_engine_wiring.cpp");
+  ASSERT_FALSE(save_controller_source.empty());
+  ASSERT_FALSE(wiring_source.empty());
+  EXPECT_TRUE(contains(save_controller_source,
+                       "m_hooks.leave_commander_mode();\n\n"
+                       "  m_progress_slot = slot_name;"));
+  EXPECT_TRUE(contains(wiring_source,
                        "if (m_commander_view_model->active()) {\n"
-                       "    m_commander_view_model->exit_mode();\n"
-                       "  }\n\n"
-                       "  m_save_progress_slot = slot_name;"));
+                       "                  m_commander_view_model->exit_mode();\n"
+                       "                }"));
 }
 
 TEST(CommanderControlRegressionTest,
@@ -637,7 +666,7 @@ TEST(CommanderControlRegressionTest, MainWindowHidesCursorDuringFpvCommanderGame
 
 TEST(CommanderControlRegressionTest, FpvMovementSetsHasTargetForAnimationSystem) {
   const auto root = find_repo_root();
-  const auto source = app_source(root, "commander_control_controller.cpp");
+  const auto source = commander_control_source(root);
   ASSERT_FALSE(source.empty());
 
   EXPECT_TRUE(contains(source, "movement->engage_manual_move("));
@@ -648,14 +677,15 @@ TEST(CommanderControlRegressionTest, FpvMovementSetsHasTargetForAnimationSystem)
 
 TEST(CommanderControlRegressionTest, FpvAttackAlwaysTriggersAnimationEvenWithNoTarget) {
   const auto root = find_repo_root();
-  const auto source = app_source(root, "commander_control_controller.cpp");
+  const auto source = commander_control_source(root);
   const auto action_service = read_text(root / "game" / "systems" / "combat_actions" /
                                         "combat_action_service.cpp");
   ASSERT_FALSE(source.empty());
   ASSERT_FALSE(action_service.empty());
 
-  EXPECT_TRUE(
-      contains(source, "find_primary_target(world, commander_id, local_owner_id);"));
+  EXPECT_TRUE(contains(
+      source,
+      "find_primary_target(world, commander_id, local_owner_id, view_yaw, 0.0F);"));
   EXPECT_TRUE(contains(source, "CombatActionService::request_attack("));
   EXPECT_TRUE(contains(source, ".target_hint_id = target_id,"));
 
@@ -679,14 +709,14 @@ TEST(CommanderControlRegressionTest, FpvCombatUsesSharedCombatRulesHelper) {
   const auto attack_processor =
       read_text(root / "game" / "systems" / "combat_system" / "attack_processor.cpp");
   const auto movement_system =
-      read_text(root / "game" / "systems" / "movement_system.cpp");
+      read_text(root / "game" / "systems" / "movement" / "movement_system.cpp");
 
-  const auto route_follow_system =
-      read_text(root / "game" / "systems" / "route_follow_system.cpp");
+  const auto route_follow_system = read_text(root / "game" / "systems" / "movement" /
+                                             "route_follow_system_gate.cpp");
   const auto movement_orders =
-      read_text(root / "game" / "systems" / "movement_orders.cpp");
+      read_text(root / "game" / "systems" / "movement" / "movement_orders.cpp");
   const auto command_service =
-      read_text(root / "game" / "systems" / "command_service.cpp");
+      read_text(root / "game" / "systems" / "movement" / "command_service.cpp");
   const auto scene_walk = read_text(root / "render" / "scene_walk.cpp");
   const auto animation_inputs = read_text(root / "render" / "gl" / "humanoid" /
                                           "animation" / "animation_inputs.cpp");
@@ -696,9 +726,9 @@ TEST(CommanderControlRegressionTest, FpvCombatUsesSharedCombatRulesHelper) {
       read_text(root / "render" / "entity" / "combat_dust_renderer.cpp");
 
   const auto command_dispatcher =
-      read_text(root / "game" / "command" / "command_dispatcher.cpp");
+      read_text(root / "game" / "command" / "command_unit_orders.cpp");
   const auto game_engine = app_source(root, "game_engine.cpp");
-  const auto controller = app_source(root, "commander_control_controller.cpp");
+  const auto controller = commander_control_source(root);
   const auto commander_mode = app_source(root, "commander_mode_coordinator.cpp");
   ASSERT_FALSE(combat_rules.empty());
   ASSERT_FALSE(attack_processor.empty());
@@ -768,7 +798,7 @@ TEST(CommanderControlRegressionTest, CommanderJumpKeyReachesTheController) {
   const auto view_model_header = app_source(root, "commander_view_model.h");
   const auto view_model_source = app_source(root, "commander_view_model.cpp");
   const auto controller_header = app_source(root, "commander_control_controller.h");
-  const auto controller_source = app_source(root, "commander_control_controller.cpp");
+  const auto controller_source = commander_control_source(root);
   ASSERT_FALSE(layer_source.empty());
   ASSERT_FALSE(game_view_source.empty());
   ASSERT_FALSE(view_model_header.empty());
@@ -794,7 +824,7 @@ TEST(CommanderControlRegressionTest, CommanderCameraToggleReachesTheController) 
   const auto view_model_header = app_source(root, "commander_view_model.h");
   const auto view_model_source = app_source(root, "commander_view_model.cpp");
   const auto controller_header = app_source(root, "commander_control_controller.h");
-  const auto controller_source = app_source(root, "commander_control_controller.cpp");
+  const auto controller_source = commander_control_source(root);
   ASSERT_FALSE(layer_source.empty());
   ASSERT_FALSE(game_view_source.empty());
   ASSERT_FALSE(view_model_header.empty());
@@ -860,7 +890,7 @@ TEST(CommanderControlRegressionTest, CommanderJumpAddsVisualLiftToRenderAndCamer
   const auto component_source =
       read_text(root / "game" / "core" / "component_commander.h") +
       read_text(root / "game" / "core" / "component_presentation.h");
-  const auto controller_source = app_source(root, "commander_control_controller.cpp");
+  const auto controller_source = commander_control_source(root);
   const auto commander_mode_source = app_source(root, "commander_mode_coordinator.cpp");
   const auto prepare_submission_source =
       read_text(root / "render" / "humanoid" / "runtime" / "instance_prepare.cpp");
@@ -905,7 +935,7 @@ TEST(CommanderControlRegressionTest, CommanderJumpAddsVisualLiftToRenderAndCamer
 
 TEST(CommanderControlRegressionTest, OnlyTheMotorTranslatesTheCommander) {
   const auto root = find_repo_root();
-  const auto controller_source = app_source(root, "commander_control_controller.cpp");
+  const auto controller_source = commander_control_source(root);
   const auto motor_source = app_source(root, "commander_motor.cpp");
   ASSERT_FALSE(controller_source.empty());
   ASSERT_FALSE(motor_source.empty());
@@ -950,8 +980,10 @@ TEST(CommanderControlRegressionTest, OnlyTheMotorTranslatesTheCommander) {
 TEST(CommanderControlRegressionTest, DirectControlOwnsSteeringIntentAndNothingElse) {
   const auto root = find_repo_root();
   const auto motor_source = app_source(root, "commander_motor.cpp");
-  const auto route_follow_source =
-      read_text(root / "game" / "systems" / "route_follow_system.cpp");
+  const auto route_follow_source = read_text(root / "game" / "systems" / "movement" /
+                                             "route_follow_system_gate.cpp") +
+                                   read_text(root / "game" / "systems" / "movement" /
+                                             "route_follow_system_steering.cpp");
   ASSERT_FALSE(motor_source.empty());
   ASSERT_FALSE(route_follow_source.empty());
 
@@ -973,15 +1005,15 @@ TEST(CommanderControlRegressionTest, DirectControlOwnsSteeringIntentAndNothingEl
 TEST(CommanderControlRegressionTest,
      CommanderJumpAllowsAirborneTraversalAcrossGroundObstacles) {
   const auto root = find_repo_root();
-  const auto controller_source = app_source(root, "commander_control_controller.cpp");
+  const auto controller_source = commander_control_source(root);
   const auto motor_source = app_source(root, "commander_motor.cpp");
   const auto movement_source =
-      read_text(root / "game" / "systems" / "movement_system.cpp");
+      read_text(root / "game" / "systems" / "movement" / "movement_system_gates.cpp");
   ASSERT_FALSE(controller_source.empty());
   ASSERT_FALSE(motor_source.empty());
   ASSERT_FALSE(movement_source.empty());
 
-  EXPECT_TRUE(contains(controller_source, ".airborne = jump_active,"));
+  EXPECT_TRUE(contains(controller_source, ".airborne = input.jump_active,"));
   EXPECT_TRUE(contains(motor_source, "airborne_step(request.to.x(), request.to.z())"));
   EXPECT_TRUE(contains(controller_source, "jump_active"));
   EXPECT_TRUE(contains(controller_source, "m_jump_safe_position_valid"));

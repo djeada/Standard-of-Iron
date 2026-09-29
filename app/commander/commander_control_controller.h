@@ -5,16 +5,24 @@
 #include <Qt>
 
 #include <cstdint>
-#include <limits>
-#include <mutex>
+#include <optional>
 
 #include "app/commander/commander_abilities.h"
+#include "app/commander/commander_body_facing.h"
 #include "app/commander/commander_camera_rig.h"
+#include "app/commander/commander_defence.h"
 #include "app/commander/commander_frame_intent.h"
+#include "app/commander/commander_input_port.h"
 #include "app/commander/commander_input_snapshot.h"
 #include "app/commander/commander_latency_probe.h"
+#include "app/commander/commander_locomotion.h"
+#include "app/commander/commander_look.h"
+#include "app/commander/commander_lunge.h"
 #include "app/commander/commander_motor.h"
+#include "app/commander/commander_presentation.h"
 #include "app/commander/commander_presentation_trace.h"
+#include "app/commander/commander_strike.h"
+#include "app/commander/commander_targeting.h"
 #include "app/core/player_feedback.h"
 #include "game/core/component.h"
 
@@ -32,37 +40,11 @@ namespace Render::GL {
 class Camera;
 }
 
-enum class DodgeState {
-  None,
-  Rolling,
-  Recovering
-};
-
 inline constexpr float k_commander_rest_view_pitch_degrees = -6.0F;
-
-inline constexpr float k_commander_ground_acceleration_mps2 = 30.0F;
-inline constexpr float k_commander_ground_deceleration_mps2 = 36.0F;
 
 class CommanderControlController {
 public:
-  struct InputState {
-    bool forward = false;
-    bool backward = false;
-    bool left = false;
-    bool right = false;
-    bool turn_left = false;
-    bool turn_right = false;
-    bool run = false;
-    bool primary_action = false;
-    bool heavy_action_requested = false;
-    bool secondary_action = false;
-    bool dodge_requested = false;
-    bool jump_requested = false;
-    bool special_action_requested = false;
-    bool shield_bash_requested = false;
-    bool vanguard_rush_requested = false;
-    bool second_wind_requested = false;
-  };
+  using InputState = App::Core::CommanderHeldInput;
 
   void reset();
   void release_all_input();
@@ -88,13 +70,11 @@ public:
       qreal sx, qreal sy, qreal center_sx, qreal center_sy, QQuickWindow* window);
   void center_mouse(qreal center_sx, qreal center_sy, QQuickWindow* window);
   void poll_mouse_look(QQuickWindow* window);
-  void set_latency_probe(App::Core::CommanderLatencyProbe* probe) {
-    m_latency_probe = probe;
-  }
+  void set_latency_probe(App::Core::CommanderLatencyProbe* probe);
   void set_feedback_bus(App::Core::PlayerFeedbackBus* bus) { m_feedback = bus; }
   auto sample_frame_intent(QQuickWindow* window) -> CommanderFrameIntent;
   [[nodiscard]] auto frame_intent() const -> const CommanderFrameIntent& {
-    return m_frame_intent;
+    return m_look.frame_intent();
   }
   void request_dodge();
   void request_dodge(const QVector3D& world_direction);
@@ -114,7 +94,7 @@ public:
   [[nodiscard]] Engine::Core::EntityID locked_target_id() const;
   [[nodiscard]] Engine::Core::EntityID focus_target_id() const;
   [[nodiscard]] bool is_dodge_rolling() const {
-    return m_dodge_state == DodgeState::Rolling;
+    return m_locomotion.dodge_state() == DodgeState::Rolling;
   }
   [[nodiscard]] Engine::Core::Entity*
   controlled_commander(Engine::Core::World& world,
@@ -142,7 +122,7 @@ public:
   void snap_presentation_pose();
   [[nodiscard]] auto
   presentation_pose() const -> const Engine::Core::PresentationPose& {
-    return m_presentation_pose;
+    return m_presentation.pose();
   }
 
   void set_presentation_trace_enabled(bool enabled) {
@@ -159,132 +139,139 @@ public:
     return m_trace;
   }
   [[nodiscard]] auto input_edges() const -> const App::Core::CommanderInputTrace& {
-    return m_edges;
+    return m_input_port.edges();
   }
   [[nodiscard]] auto camera_trace() const -> const App::Core::CommanderCameraTrace& {
     return m_camera_rig.trace();
   }
 
 private:
-  void exchange_recorded_input(Engine::Core::World& world,
-                               Engine::Core::EntityID commander_id);
+  struct TickFacts {
+    const Engine::Core::RpgCommanderActionComponent* active_action{nullptr};
+    bool attack_animation_active{false};
+    bool drawing_bow{false};
+  };
 
-  [[nodiscard]] auto take_input_snapshot() -> CommanderInputSnapshot;
-  void discard_input_edges(CommanderInputSnapshot& snapshot);
-  void publish_presentation_sample(Engine::Core::Entity& commander,
-                                   const Engine::Core::TransformComponent& transform,
-                                   float dt);
+  struct MotionOutcome {
+    App::Core::MotorReport report;
+    QVector3D previous_position;
+    bool jump_active{false};
+    int forward_axis{0};
+    int right_axis{0};
+  };
+
+  struct DirectControlSync {
+    Engine::Core::RpgCommanderAimComponent* aim{nullptr};
+    float traced_stamina{-1.0F};
+  };
+
+  struct QueueOutcome {
+    Engine::Core::CombatIntentQueueComponent* intents{nullptr};
+    float dodge_grace_remaining{0.0F};
+  };
+
+  void capture_input(Engine::Core::World& world, Engine::Core::EntityID commander_id);
+  [[nodiscard]] auto hold_for_rally(Engine::Core::World& world,
+                                    const App::Core::CommanderHandles& body,
+                                    Render::GL::Camera* camera,
+                                    float dt) -> bool;
+  void
+  steer_view(Engine::Core::World& world, Engine::Core::Entity& commander, float dt);
+  [[nodiscard]] static auto
+  resolve_handles(Engine::Core::Entity& commander,
+                  Engine::Core::TransformComponent& transform,
+                  Engine::Core::UnitComponent& unit) -> App::Core::CommanderHandles;
+  [[nodiscard]] static auto
+  read_tick_facts(const Engine::Core::Entity& commander) -> TickFacts;
+  [[nodiscard]] auto advance_jump_stage(const App::Core::CommanderHandles& body,
+                                        float dt) -> bool;
   [[nodiscard]] auto
-  advance_presentation_pose(Engine::Core::Entity& commander,
-                            const Engine::Core::TransformComponent& transform,
-                            float dt) -> Engine::Core::PresentationPose;
-  [[nodiscard]] bool primary_action(Engine::Core::World& world,
+  start_dodge_stage(Engine::Core::World& world,
+                    const App::Core::CommanderHandles& body,
+                    const MotionOutcome& motion) -> App::Core::MoveBasis;
+  void present_tick(Engine::Core::World& world,
+                    const App::Core::CommanderHandles& body,
+                    Render::GL::Camera* camera,
+                    float dt);
+  [[nodiscard]] auto advance_combat(Engine::Core::World& world,
+                                    const App::Core::CommanderHandles& body,
+                                    const TickFacts& facts,
+                                    const MotionOutcome& motion,
                                     Engine::Core::EntityID commander_id,
-                                    int local_owner_id);
+                                    int local_owner_id,
+                                    float dt) -> bool;
+  void queue_pressed_intents(const App::Core::CommanderHandles& body,
+                             Engine::Core::CombatIntentQueueComponent& intents,
+                             const Engine::Core::RpgCommanderAimComponent* aim);
+  [[nodiscard]] auto
+  dispatch_front_intent(Engine::Core::World& world,
+                        const App::Core::CommanderHandles& body,
+                        Engine::Core::CombatIntentQueueComponent& intents,
+                        Engine::Core::EntityID commander_id,
+                        int local_owner_id) -> bool;
+  void advance_swing(const App::Core::CommanderHandles& body, float dt);
+  [[nodiscard]] auto advance_motion(Engine::Core::World& world,
+                                    const App::Core::CommanderHandles& body,
+                                    const TickFacts& facts,
+                                    float dt) -> MotionOutcome;
+  void face_body(const App::Core::CommanderHandles& body,
+                 const TickFacts& facts,
+                 const MotionOutcome& motion,
+                 float dt);
+  [[nodiscard]] auto
+  sync_direct_control(const App::Core::CommanderHandles& body,
+                      const MotionOutcome& motion) -> DirectControlSync;
+  void activate_abilities(Engine::Core::World& world,
+                          const App::Core::CommanderHandles& body,
+                          Engine::Core::EntityID commander_id,
+                          int local_owner_id,
+                          float dt);
+  [[nodiscard]] auto advance_strike(Engine::Core::World& world,
+                                    const App::Core::CommanderHandles& body,
+                                    const TickFacts& facts,
+                                    Engine::Core::RpgCommanderAimComponent* aim,
+                                    Engine::Core::EntityID commander_id,
+                                    int local_owner_id,
+                                    float dt) -> std::optional<QueueOutcome>;
+  void advance_targeting(Engine::Core::World& world,
+                         const App::Core::CommanderHandles& body,
+                         Engine::Core::RpgCommanderAimComponent* aim,
+                         Engine::Core::EntityID commander_id,
+                         int local_owner_id,
+                         float dt);
+  void record_trace(const App::Core::CommanderHandles& body,
+                    const TickFacts& facts,
+                    const MotionOutcome& motion,
+                    const QueueOutcome& queue,
+                    float traced_stamina,
+                    float dt);
   [[nodiscard]] bool update_impl(Engine::Core::World& world,
                                  Engine::Core::EntityID commander_id,
                                  int local_owner_id,
                                  Render::GL::Camera* camera,
                                  float dt);
-  void
-  publish_resolved_defense_feedback(Engine::Core::Entity& commander,
-                                    Engine::Core::EntityID commander_id,
-                                    const Engine::Core::TransformComponent& transform);
   void update_camera(Engine::Core::World& world,
                      Engine::Core::Entity& commander,
                      Render::GL::Camera& camera,
                      float dt);
-  void play_footstep_if_stride_landed(const Engine::Core::Entity& commander,
-                                      float previous_bob_phase);
   [[nodiscard]] auto look_sensitivity_scale() const -> float;
-  void update_lock_on_yaw(Engine::Core::World& world,
-                          Engine::Core::Entity& commander,
-                          float dt);
-  void apply_strike_lunge(Engine::Core::World& world,
-                          Engine::Core::Entity& commander,
-                          Engine::Core::TransformComponent& transform,
-                          float dt);
+
   App::Core::CommanderLatencyProbe* m_latency_probe = nullptr;
   App::Core::PlayerFeedbackBus* m_feedback = nullptr;
-  InputState m_input;
-  CommanderFrameIntent m_frame_intent;
-  float m_intent_sample_yaw = 0.0F;
-  float m_intent_sample_pitch = 0.0F;
-  bool m_intent_sample_valid = false;
-  float m_view_yaw = 0.0F;
-  float m_view_pitch = 0.0F;
 
-  float m_previous_view_yaw = 0.0F;
-  float m_previous_view_pitch = 0.0F;
-  QPoint m_mouse_center;
-  bool m_mouse_center_valid = false;
-  QPoint m_last_mouse_global;
-  bool m_last_mouse_valid = false;
-  bool m_mouse_warp_supported = false;
-  bool m_mouse_recentering = false;
-
+  App::Core::CommanderInputPort m_input_port;
+  App::Core::CommanderLook m_look;
   App::Core::CommanderCameraRig m_camera_rig;
   App::Core::CommanderMotor m_motor;
-
-  float m_move_speed = 0.0F;
-  QVector3D m_planar_velocity{0.0F, 0.0F, 0.0F};
-  float m_accepted_speed_smooth = 0.0F;
-  QVector3D m_last_move_direction{0.0F, 0.0F, 1.0F};
-  int m_move_right_axis = 0;
-  int m_move_forward_axis = 0;
-  bool m_move_running = false;
-
-  DodgeState m_dodge_state = DodgeState::None;
-  float m_dodge_timer = 0.0F;
-  QVector3D m_dodge_direction{0.0F, 0.0F, 1.0F};
-  QVector3D m_requested_dodge_direction{0.0F, 0.0F, 0.0F};
-  bool m_has_requested_dodge_direction = false;
-  float m_dodge_fov_kick = 0.0F;
-
-  std::uint32_t m_observed_hit_confirm_sequence = 0;
-  std::uint32_t m_observed_blocked_contacts = 0;
-  std::uint32_t m_observed_perfect_guard_contacts = 0;
-  std::uint32_t m_observed_dodged_contacts = 0;
-  std::uint32_t m_observed_guard_broken_contacts = 0;
-  std::uint8_t m_observed_action_hit_count = 0;
-  float m_jump_timer = 0.0F;
-  bool m_jump_safe_position_valid = false;
-  bool m_jump_followup_pending = false;
-  QVector3D m_jump_last_walkable_position{0.0F, 0.0F, 0.0F};
-
-  float m_combo_miss_timer = 0.0F;
-  float m_primary_held_duration = 0.0F;
-  float m_held_restart_delay = 0.0F;
-
-  std::uint8_t m_strike_carry_sequence = 0xFFU;
-  float m_strike_carry_requested = 0.0F;
-  float m_strike_carry_delivered = 0.0F;
-  bool m_primary_press_pending = false;
-  float m_primary_scan_cooldown = 0.0F;
-  bool m_carried_primary_press = false;
-  float m_body_yaw = 0.0F;
-  bool m_body_yaw_valid = false;
-  bool m_turning_in_place = false;
-  Engine::Core::PresentationPose m_presentation_pose;
-  bool m_presentation_snap_requested = true;
-  Engine::Core::PresentationClock m_presentation_clock;
-  CommanderInputSnapshot m_tick_input;
-  std::uint64_t m_input_snapshot_sequence = 0;
-  mutable std::mutex m_input_mutex;
+  App::Core::CommanderLocomotion m_locomotion;
+  App::Core::CommanderBodyFacing m_body_facing;
+  App::Core::CommanderLunge m_lunge;
+  App::Core::CommanderStrike m_strike;
+  App::Core::CommanderTargeting m_targeting;
+  App::Core::CommanderDefence m_defence;
+  App::Core::CommanderPresentation m_presentation;
   App::Core::CommanderAbilities m_abilities;
-
-  Engine::Core::EntityID m_locked_target_id = 0;
-  std::uint16_t m_locked_target_slot{std::numeric_limits<std::uint16_t>::max()};
-  Engine::Core::EntityID m_soft_target_id = 0;
-  std::uint16_t m_soft_target_slot{std::numeric_limits<std::uint16_t>::max()};
-  std::uint16_t m_primary_target_slot{std::numeric_limits<std::uint16_t>::max()};
-  float m_lock_lost_timer = 0.0F;
-  float m_lock_spring_yaw = 0.0F;
-  bool m_lock_spring_yaw_valid = false;
-  float m_lock_manual_override_timer = 0.0F;
-  bool m_guard_was_active = false;
 
   bool m_trace_enabled = false;
   App::Core::CommanderPresentationTrace m_trace;
-  App::Core::CommanderInputTrace m_edges;
 };

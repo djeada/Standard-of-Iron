@@ -297,7 +297,7 @@ The limitations in this section are repository-backed rather than roadmap estima
 
 **55 call sites still reach per-match state through the ambient access path:** `app/world` 2, `game/core` 1, `game/formation` 4, `game/map` 13, `game/systems` 22, `game/units` 9, `game/visuals` 1, `game/wildlife` 3. `scripts/ambient_instance_budget.json` is the source of truth, and `scripts/check-architecture-doc.py` fails when this sentence disagrees with it.
 
-**74 full-world entity scans remain, of which 0 are allow-listed as loop-nested scans.** `scripts/world_scan_budget.json` and `scripts/world_scan_nested_allow.json` are the source of truth for those counts, and the same documentation check verifies them.
+**72 full-world entity scans remain, of which 0 are allow-listed as loop-nested scans.** `scripts/world_scan_budget.json` and `scripts/world_scan_nested_allow.json` are the source of truth for those counts, and the same documentation check verifies them.
 
 **Unbound worlds still have a compatibility fallback to the ambient session.** `services_for(world)` reports the unbound lookup and returns ambient services unless strict world binding is enabled. The strict environment/configuration paths above turn the same condition into a fatal error.
 
@@ -305,17 +305,22 @@ These are current implementation constraints. They are not a list of proposed fe
 
 ## Reading the code by concern
 
-| Concern                 | Primary locations                                       |
-| ----------------------- | ------------------------------------------------------- |
-| ECS and entity identity | `game/core/`, `engine_core` target                      |
-| Session ownership       | `game/session/`                                         |
-| Typed commands          | `game/command/`                                         |
-| AI                      | `game/systems/ai_system/`                               |
-| Missions/campaign       | `game/map/`, mission/campaign assets                    |
-| Persistence             | `game/save/`, `game/systems/save_*`, `app/persistence/` |
-| Rendering               | `render/`, `scene/`, `animation/`                       |
-| UI/application          | `app/`, `ui/`                                           |
-| Validation/policy       | `scripts/`, `tests/architecture/`                       |
+| Concern                 | Primary locations                                             |
+| ----------------------- | ------------------------------------------------------------- |
+| ECS and entity identity | `game/core/`, `engine_core` target                            |
+| Session ownership       | `game/session/`                                               |
+| Typed commands          | `game/command/`                                               |
+| AI                      | `game/systems/ai_system/`                                     |
+| Missions/campaign       | `game/map/`, mission/campaign assets                          |
+| Persistence             | `game/save/`, `game/systems/persistence/`, `app/persistence/` |
+| Rendering               | `render/`, `scene/`, `animation/`                             |
+| UI/application          | `app/`, `ui/`                                                 |
+| Validation/policy       | `scripts/`, `tests/architecture/`                             |
+
+## Navigation guides and refactoring plan
+
+- [app/README.md](../app/README.md) and [game/README.md](../game/README.md) say what each directory owns and trace four production call paths (issuing an order, advancing a frame, loading a match, saving and restoring). `scripts/check-navigation-guides.py` fails when a step names a file or symbol that no longer exists.
+- [REFACTORING_INVENTORY.md](REFACTORING_INVENTORY.md) tracks every file of 1,000 lines or more, the responsibilities mixed in it, and its planned decomposition. `scripts/refactor-inventory.py --check` keeps it complete.
 
 ## Related architecture references
 

@@ -9,7 +9,7 @@
 #include "game/session/session_context.h"
 #include "game/systems/cleanup_system.h"
 #include "game/systems/combat_system/damage_application.h"
-#include "game/systems/production_system.h"
+#include "game/systems/economy/production_system.h"
 
 namespace {
 

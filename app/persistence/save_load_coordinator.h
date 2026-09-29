@@ -13,7 +13,7 @@
 #include "game/map/mission_context.h"
 #include "game/mission/difficulty_profile.h"
 #include "game/systems/match_snapshot.h"
-#include "game/systems/save_format.h"
+#include "game/systems/persistence/save_format.h"
 
 class AudioCoordinator;
 class CampaignManager;

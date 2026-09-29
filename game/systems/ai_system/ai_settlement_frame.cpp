@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <utility>
 
-#include "../nav_grid.h"
+#include "../navigation/nav_grid.h"
 #include "ai_base_manager.h"
 #include "ai_formation.h"
 #include "ai_utils.h"

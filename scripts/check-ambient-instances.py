@@ -48,7 +48,7 @@ DEFINITION_FILES = {
     "game/systems/global_stats_registry.cpp",
     "game/systems/troop_count_registry.cpp",
     "game/systems/building_collision_registry.cpp",
-    "game/systems/marketplace_system.cpp",
+    "game/systems/economy/marketplace_system.cpp",
     "game/formation/army_formation_registry.cpp",
     "game/session/session_context.cpp",
 }

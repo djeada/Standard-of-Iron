@@ -14,6 +14,7 @@
 #include "game/map/scatter/tree_scatter_walk.h"
 #include "gl/render_constants.h"
 #include "gl/resources.h"
+#include "map/biome_settings.h"
 #include "map/terrain.h"
 #include "map/terrain_service.h"
 #include "render/scene_renderer.h"

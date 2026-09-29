@@ -8,8 +8,8 @@
 #include "systems/building_collision_registry.h"
 #include "systems/combat_system/damage_application.h"
 #include "systems/combat_system/structure_combat.h"
-#include "systems/nav_grid.h"
-#include "systems/pathfinding.h"
+#include "systems/navigation/nav_grid.h"
+#include "systems/navigation/pathfinding.h"
 #include "units/spawn_type.h"
 
 namespace {

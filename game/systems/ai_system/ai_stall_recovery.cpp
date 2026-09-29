@@ -8,8 +8,8 @@
 #include <unordered_set>
 #include <utility>
 
-#include "../nav_grid.h"
-#include "../pathfinding.h"
+#include "../navigation/nav_grid.h"
+#include "../navigation/pathfinding.h"
 #include "ai_utils.h"
 
 namespace Game::Systems::AI {

@@ -6,7 +6,8 @@
 #include <vector>
 
 #include "arena_scenarios.h"
-#include "game/map/terrain.h"
+#include "game/map/ground_type.h"
+#include "game/map/terrain_features.h"
 #include "game/systems/nation_registry.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"

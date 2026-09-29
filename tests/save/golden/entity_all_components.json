@@ -1,0 +1,1423 @@
+{
+    "defaults": {
+        "aiControlled": true,
+        "army_formation_membership": {
+            "group_id": 0,
+            "slot_id": -1
+        },
+        "assault_wave": {
+            "active": true,
+            "has_march_target": false,
+            "march_target_x": 0,
+            "march_target_z": 0,
+            "wave_phase": 0
+        },
+        "attack": {
+            "can_melee": true,
+            "can_ranged": false,
+            "cooldown": 1,
+            "current_mode": "ranged",
+            "damage": 10,
+            "in_melee_lock": false,
+            "max_height_difference": 2,
+            "melee_cooldown": 1,
+            "melee_damage": 10,
+            "melee_lock_target_id": 0,
+            "melee_range": 1.5,
+            "preferred_mode": "auto",
+            "range": 2,
+            "time_since_last": 0
+        },
+        "attack_target": {
+            "is_player_command": false,
+            "should_chase": false,
+            "target_id": 0
+        },
+        "builder_production": {
+            "at_construction_site": false,
+            "auto_gather": false,
+            "auto_gather_priority": "",
+            "build_time": 10,
+            "bypass_movement_active": false,
+            "bypass_target_x": 0,
+            "bypass_target_z": 0,
+            "construction_complete": false,
+            "construction_site_entity_id": 0,
+            "construction_site_rotation_y": 0,
+            "construction_site_x": 0,
+            "construction_site_z": 0,
+            "gather_anchor_x": 0,
+            "gather_anchor_z": 0,
+            "gather_product_type": "",
+            "has_construction_site": false,
+            "has_gather_order": false,
+            "has_task_target": false,
+            "in_progress": false,
+            "product_type": "",
+            "queued_construction_site_ids": [
+            ],
+            "structure_task_entity_id": 0,
+            "task_target_id": 0,
+            "task_target_reserved": false,
+            "task_target_x": 0,
+            "task_target_z": 0,
+            "time_remaining": 0
+        },
+        "building": {
+            "original_nation_id": "roman_republic"
+        },
+        "burning_status": {
+            "attacker_id": 0,
+            "damage_per_tick": 2,
+            "duration": 2.5,
+            "fire_bonus_multiplier": 1,
+            "ignition_elapsed": 0,
+            "remaining_duration": 2.5,
+            "tick_accumulator": 0,
+            "tick_interval": 0.5
+        },
+        "capture": {
+            "capture_progress": 0,
+            "capturing_player_id": -1,
+            "is_being_captured": false,
+            "required_time": 15
+        },
+        "catapult_loading": {
+            "firing_duration": 0.5,
+            "firing_time": 0,
+            "loaded_projectile_kind": 3,
+            "loading_duration": 2,
+            "loading_time": 0,
+            "state": 0,
+            "target_id": 0,
+            "target_locked_x": 0,
+            "target_locked_y": 0,
+            "target_locked_z": 0,
+            "target_position_locked": false
+        },
+        "civilian_delivery": {
+            "target_barracks_id": 0
+        },
+        "combat_state": {
+            "animation_state": 0,
+            "attack_family": 0,
+            "attack_offset": 0,
+            "attack_variant": 0,
+            "finisher_attack": false,
+            "hit_pause_remaining": 0,
+            "is_hit_paused": false,
+            "state_duration": 0,
+            "state_time": 0,
+            "swing_charge": 0,
+            "swing_elevation": 0,
+            "swing_follow_through": 0.5,
+            "swing_speed": 1,
+            "swing_strike_x": -0.800000011920929,
+            "swing_strike_y": -0.6000000238418579,
+            "swing_thrust": 0
+        },
+        "commander": {
+            "aura_ability_active": false,
+            "aura_ability_cooldown": 60,
+            "aura_ability_cooldown_remaining": 0,
+            "aura_ability_duration": 15,
+            "aura_ability_remaining": 0,
+            "aura_ability_requested": false,
+            "aura_active": true,
+            "aura_affinity_spawn_type": "swordsman",
+            "aura_bonus_value": 0,
+            "aura_morale_bonus": 5,
+            "aura_radius": 12,
+            "bodyguard_count": 0,
+            "bonus_summary": "",
+            "bonus_type": "",
+            "commander_id": "",
+            "death_consequence": "",
+            "death_morale_shock": 25,
+            "death_shock_radius": 14,
+            "display_name": "",
+            "flag_rally_animation_timer": 0,
+            "flag_rally_at_position": false,
+            "flag_rally_cost": 3,
+            "flag_rally_flag_active": false,
+            "flag_rally_flag_x": 0,
+            "flag_rally_flag_z": 0,
+            "flag_rally_in_progress": false,
+            "flag_rally_issue_commands": false,
+            "flag_rally_pending_x": 0,
+            "flag_rally_pending_z": 0,
+            "fpv_controlled": false,
+            "passive_aura": "",
+            "rally_ability": "",
+            "rally_cooldown": 45,
+            "rally_cooldown_remaining": 0,
+            "rally_feedback_time": 0,
+            "rally_morale_restore": 25,
+            "rally_range": 10,
+            "rally_requested": false,
+            "rally_requires_manual_trigger": true,
+            "strategic_identity": "",
+            "wounded": false
+        },
+        "commander_guard": {
+            "active": false,
+            "damage_multiplier": 0,
+            "frontal_arc_dot": 0.15000000596046448
+        },
+        "cursed_status": {
+            "duration": 6,
+            "morale_penalty_per_hit": 8,
+            "remaining_duration": 6,
+            "stacks": 1
+        },
+        "dismantle_site": {
+            "duration": 1,
+            "progress": 0
+        },
+        "elephant": {
+            "charge_cooldown": 0,
+            "charge_duration": 0,
+            "charge_speed_multiplier": 1.7999999523162842,
+            "charge_state": 0,
+            "trample_damage": 40,
+            "trample_damage_accumulator": 0,
+            "trample_radius": 2.5
+        },
+        "elephant_panic": {
+            "duration": 0
+        },
+        "elephant_stomp_impacts": [
+        ],
+        "farm": {
+            "cycle_seconds": 60,
+            "growth": 0,
+            "harvests": 0
+        },
+        "fire_patch": {
+            "attacker_id": 0,
+            "attacker_owner_id": 0,
+            "burn_damage_per_tick": 2,
+            "burn_duration": 1.5,
+            "burn_tick_interval": 0.5,
+            "duration": 4,
+            "fire_bonus_multiplier": 1,
+            "friendly_fire": false,
+            "radius": 1.7999999523162842,
+            "remaining_duration": 4
+        },
+        "formation_mode": {
+            "active": false,
+            "formation_center_x": 0,
+            "formation_center_z": 0,
+            "formation_id": 0,
+            "stable_file": -1,
+            "stable_rank": -1,
+            "stable_slot_id": -1,
+            "stable_slot_x": 0,
+            "stable_slot_z": 0
+        },
+        "gate": {
+            "hold_open_seconds": 2.5,
+            "hold_timer": 0,
+            "manual_mode": 0,
+            "open_amount": 0,
+            "open_speed": 2.4000000953674316,
+            "state": 0,
+            "trigger_radius": 5
+        },
+        "guard_mode": {
+            "active": true,
+            "guard_position_x": 0,
+            "guard_position_z": 0,
+            "guard_radius": 10,
+            "guarded_entity_id": 0,
+            "has_guard_target": false,
+            "returning_to_guard_position": false
+        },
+        "healer": {
+            "healing_amount": 5,
+            "healing_cooldown": 2,
+            "healing_range": 8,
+            "healing_target_x": 0,
+            "healing_target_z": 0,
+            "is_healing_active": false,
+            "suppress_attack_while_healing": true,
+            "target_affinity": "living_allies",
+            "time_since_last_heal": 0
+        },
+        "hit_feedback": {
+            "is_reacting": false,
+            "knockback_x": 0,
+            "knockback_z": 0,
+            "reaction_duration": 0.25,
+            "reaction_intensity": 0,
+            "reaction_kind": 0,
+            "reaction_time": 0,
+            "source_attacker_id": 0
+        },
+        "hold_mode": {
+            "active": true,
+            "exit_cooldown": 0,
+            "kneel_duration": 1.5,
+            "kneel_entry_progress": 0,
+            "stand_up_duration": 2
+        },
+        "home": {
+            "family_generation_cooldown": 0,
+            "family_generation_interval": 12,
+            "family_manpower_value": 8,
+            "nearest_barracks_id": 0,
+            "population_contribution": 18,
+            "update_cooldown": 0
+        },
+        "id": 1,
+        "morale": {
+            "commander_aura_bonus": 0,
+            "morale": 70,
+            "routing": false,
+            "shock_timer": 0,
+            "wavering": false
+        },
+        "movement": {
+            "goal_x": 0,
+            "goal_y": 0,
+            "has_target": false,
+            "navigation_clearance": 0.5,
+            "path": [
+            ],
+            "path_index": 0,
+            "precise_arrival": false,
+            "target_x": 0,
+            "target_y": 0,
+            "vx": 0,
+            "vz": 0
+        },
+        "patrol": {
+            "current_waypoint": 0,
+            "patrolling": false,
+            "waypoints": [
+            ]
+        },
+        "player_order_intent": {
+            "kind": 0,
+            "suppress_opportunistic_combat": false
+        },
+        "production": {
+            "build_time": 4,
+            "in_progress": false,
+            "manpower_available": 0,
+            "manpower_ceiling": 0,
+            "max_units": 10000,
+            "produced_count": 0,
+            "product_type": "archer",
+            "queue": [
+            ],
+            "rally_set": false,
+            "rally_x": 0,
+            "rally_z": 0,
+            "time_remaining": 0,
+            "villager_cost": 1
+        },
+        "renderable": {
+            "visible": true
+        },
+        "resource_carry": {
+            "amounts": {
+            },
+            "depot_entity_id": 0,
+            "food_form": 0,
+            "has_depot": false
+        },
+        "rpg_health": {
+            "armor": 0,
+            "crit_chance": 0.05000000074505806,
+            "crit_multiplier": 1.7999999523162842,
+            "incoming_damage_scale": 1
+        },
+        "settlement_resident": {
+            "errand": 0,
+            "errand_remaining": 0,
+            "errand_x": 0,
+            "errand_z": 0,
+            "focus_id": 0,
+            "focus_x": 0,
+            "focus_z": 0,
+            "hearth_assigned": false,
+            "hearth_x": 0,
+            "hearth_z": 0,
+            "planned_dwell": 3,
+            "released": false,
+            "rng_state": 0,
+            "roam_radius": 16,
+            "role": 0,
+            "think_cooldown": 0,
+            "work_elapsed": 0
+        },
+        "special_attack": {
+            "bonus_damage_multiplier_vs_fire_vulnerable": 1,
+            "burn_damage_per_tick": 0,
+            "burn_duration": 0,
+            "burn_tick_interval": 0.5,
+            "cursed_duration": 0,
+            "cursed_morale_penalty_per_hit": 0,
+            "cursed_stacks_per_hit": 0,
+            "fire_patch_duration": 0,
+            "fire_patch_radius": 0,
+            "friendly_fire": false,
+            "projectile_kind": "arrow",
+            "splash_damage_multiplier": 0.6000000238418579,
+            "splash_radius": 0,
+            "use_projectile_system": false
+        },
+        "stamina": {
+            "depletion_rate": 20,
+            "is_running": false,
+            "max_stamina": 200,
+            "regen_rate": 10,
+            "run_requested": false,
+            "stamina": 200
+        },
+        "structure_fire": {
+            "attacker_id": 0,
+            "damage_per_tick": 0,
+            "duration": 0,
+            "ignition_elapsed": 0,
+            "ignition_progress": 0,
+            "ignition_threshold": 1,
+            "remaining_duration": 0,
+            "tick_accumulator": 0,
+            "tick_interval": 0.75
+        },
+        "terrain_context": {
+            "audio_cooldown": 0,
+            "is_at_hill_entrance": false,
+            "is_on_bridge": false
+        },
+        "transform": {
+            "desired_yaw": 0,
+            "has_desired_yaw": false,
+            "pos_x": 0,
+            "pos_y": 0,
+            "pos_z": 0,
+            "rot_x": 0,
+            "rot_y": 0,
+            "rot_z": 0,
+            "scale_x": 1,
+            "scale_y": 1,
+            "scale_z": 1
+        },
+        "undead": {
+            "cavalry_charge_damage_multiplier": 1.25,
+            "counts_for_economy": false,
+            "fire_damage_multiplier": 1.5,
+            "morale_immune": true,
+            "priest_damage_multiplier": 1.399999976158142
+        },
+        "unit": {
+            "death_sequence_override": 255,
+            "health": 100,
+            "max_health": 100,
+            "nation_id": "roman_republic",
+            "owner_id": 0,
+            "render_individuals_per_unit_override": 0,
+            "render_rider": true,
+            "speed": 1,
+            "squad_strength": 0,
+            "unit_type": "archer",
+            "uses_nation_formation_profile": false,
+            "vision_range": 12
+        },
+        "unit_layout_state": {
+            "layout_id": 65535,
+            "phase": 1,
+            "previous_layout_id": 65535,
+            "requested_layout_id": 65535,
+            "state": 0,
+            "transition_progress": 1,
+            "transition_seconds": 0
+        },
+        "wall_construction_site": {
+            "build_time": 0,
+            "nation_id": 0,
+            "owner_id": 0,
+            "product_type": "wall_segment",
+            "progress": 0
+        },
+        "wall_segment": {
+            "freeform": false,
+            "grid_x": 0,
+            "grid_z": 0
+        },
+        "wildlife": {
+            "aggressor_id": 0,
+            "alarm_timer": 0,
+            "anchor_assigned": false,
+            "behavior": "graze",
+            "bite_impact_pending": false,
+            "bite_target_id": 0,
+            "bite_timer": 0,
+            "focus_id": 0,
+            "group_id": 0,
+            "home_x": 0,
+            "home_z": 0,
+            "hostile_timer": 0,
+            "rng_state": 0,
+            "roam_radius": 14,
+            "species": "sheep",
+            "state_timer": 0,
+            "target_x": 0,
+            "target_z": 0,
+            "think_cooldown": 0
+        }
+    },
+    "mutated_in": {
+        "aiControlled": false,
+        "army_formation_membership": {
+            "group_id": 1.5,
+            "slot_id": 2
+        },
+        "assault_wave": {
+            "active": false,
+            "has_march_target": true,
+            "march_target_x": 2.5,
+            "march_target_z": 3,
+            "wave_phase": 1
+        },
+        "attack": {
+            "can_melee": false,
+            "can_ranged": true,
+            "cooldown": 1.5,
+            "current_mode": "ranged",
+            "damage": 2,
+            "in_melee_lock": true,
+            "max_height_difference": 2.5,
+            "melee_cooldown": 3,
+            "melee_damage": 1,
+            "melee_lock_target_id": 1.5,
+            "melee_range": 2,
+            "preferred_mode": "auto",
+            "range": 2.5,
+            "time_since_last": 3
+        },
+        "attack_target": {
+            "is_player_command": true,
+            "should_chase": true,
+            "target_id": 1
+        },
+        "builder_production": {
+            "at_construction_site": true,
+            "auto_gather": true,
+            "auto_gather_priority": "",
+            "build_time": 1.5,
+            "bypass_movement_active": true,
+            "bypass_target_x": 2,
+            "bypass_target_z": 2.5,
+            "construction_complete": true,
+            "construction_site_entity_id": 3,
+            "construction_site_rotation_y": 1,
+            "construction_site_x": 1.5,
+            "construction_site_z": 2,
+            "gather_anchor_x": 2.5,
+            "gather_anchor_z": 3,
+            "gather_product_type": "",
+            "has_construction_site": true,
+            "has_gather_order": true,
+            "has_task_target": true,
+            "in_progress": true,
+            "product_type": "",
+            "queued_construction_site_ids": [
+            ],
+            "structure_task_entity_id": 1,
+            "task_target_id": 1.5,
+            "task_target_reserved": true,
+            "task_target_x": 2,
+            "task_target_z": 2.5,
+            "time_remaining": 3
+        },
+        "building": {
+            "original_nation_id": "roman_republic"
+        },
+        "burning_status": {
+            "attacker_id": 1,
+            "damage_per_tick": 1.5,
+            "duration": 2,
+            "fire_bonus_multiplier": 2.5,
+            "ignition_elapsed": 3,
+            "remaining_duration": 1,
+            "tick_accumulator": 1.5,
+            "tick_interval": 2
+        },
+        "capture": {
+            "capture_progress": 2.5,
+            "capturing_player_id": 3,
+            "is_being_captured": true,
+            "required_time": 1
+        },
+        "catapult_loading": {
+            "firing_duration": 1.5,
+            "firing_time": 2,
+            "loaded_projectile_kind": 2.5,
+            "loading_duration": 3,
+            "loading_time": 1,
+            "state": 1.5,
+            "target_id": 2,
+            "target_locked_x": 2.5,
+            "target_locked_y": 3,
+            "target_locked_z": 1,
+            "target_position_locked": true
+        },
+        "civilian_delivery": {
+            "target_barracks_id": 1.5
+        },
+        "combat_state": {
+            "animation_state": 2,
+            "attack_family": 2.5,
+            "attack_offset": 3,
+            "attack_variant": 1,
+            "finisher_attack": true,
+            "hit_pause_remaining": 1.5,
+            "is_hit_paused": true,
+            "state_duration": 2,
+            "state_time": 2.5,
+            "swing_charge": 3,
+            "swing_elevation": 1,
+            "swing_follow_through": 1.5,
+            "swing_speed": 2,
+            "swing_strike_x": 2.5,
+            "swing_strike_y": 3,
+            "swing_thrust": 1
+        },
+        "commander": {
+            "aura_ability_active": true,
+            "aura_ability_cooldown": 1.5,
+            "aura_ability_cooldown_remaining": 2,
+            "aura_ability_duration": 2.5,
+            "aura_ability_remaining": 3,
+            "aura_ability_requested": true,
+            "aura_active": false,
+            "aura_affinity_spawn_type": "swordsman",
+            "aura_bonus_value": 1,
+            "aura_morale_bonus": 1.5,
+            "aura_radius": 2,
+            "bodyguard_count": 2.5,
+            "bonus_summary": "",
+            "bonus_type": "",
+            "commander_id": "",
+            "death_consequence": "",
+            "death_morale_shock": 3,
+            "death_shock_radius": 1,
+            "display_name": "",
+            "flag_rally_animation_timer": 1.5,
+            "flag_rally_at_position": true,
+            "flag_rally_cost": 2,
+            "flag_rally_flag_active": true,
+            "flag_rally_flag_x": 2.5,
+            "flag_rally_flag_z": 3,
+            "flag_rally_in_progress": true,
+            "flag_rally_issue_commands": true,
+            "flag_rally_pending_x": 1,
+            "flag_rally_pending_z": 1.5,
+            "fpv_controlled": true,
+            "passive_aura": "",
+            "rally_ability": "",
+            "rally_cooldown": 2,
+            "rally_cooldown_remaining": 2.5,
+            "rally_feedback_time": 3,
+            "rally_morale_restore": 1,
+            "rally_range": 1.5,
+            "rally_requested": true,
+            "rally_requires_manual_trigger": false,
+            "strategic_identity": "",
+            "wounded": true
+        },
+        "commander_guard": {
+            "active": true,
+            "damage_multiplier": 2,
+            "frontal_arc_dot": 2.5
+        },
+        "cursed_status": {
+            "duration": 3,
+            "morale_penalty_per_hit": 1,
+            "remaining_duration": 1.5,
+            "stacks": 2
+        },
+        "dismantle_site": {
+            "duration": 2.5,
+            "progress": 3
+        },
+        "elephant": {
+            "charge_cooldown": 1,
+            "charge_duration": 1.5,
+            "charge_speed_multiplier": 2,
+            "charge_state": 2.5,
+            "trample_damage": 3,
+            "trample_damage_accumulator": 1,
+            "trample_radius": 1.5
+        },
+        "elephant_panic": {
+            "duration": 2
+        },
+        "elephant_stomp_impacts": [
+        ],
+        "farm": {
+            "cycle_seconds": 2.5,
+            "growth": 3,
+            "harvests": 1
+        },
+        "fire_patch": {
+            "attacker_id": 1.5,
+            "attacker_owner_id": 2,
+            "burn_damage_per_tick": 2.5,
+            "burn_duration": 3,
+            "burn_tick_interval": 1,
+            "duration": 1.5,
+            "fire_bonus_multiplier": 2,
+            "friendly_fire": true,
+            "radius": 2.5,
+            "remaining_duration": 3
+        },
+        "formation_mode": {
+            "active": true,
+            "formation_center_x": 1,
+            "formation_center_z": 1.5,
+            "formation_id": 2,
+            "stable_file": 2.5,
+            "stable_rank": 3,
+            "stable_slot_id": 1,
+            "stable_slot_x": 1.5,
+            "stable_slot_z": 2
+        },
+        "gate": {
+            "hold_open_seconds": 2.5,
+            "hold_timer": 3,
+            "manual_mode": 1,
+            "open_amount": 1.5,
+            "open_speed": 2,
+            "state": 2.5,
+            "trigger_radius": 3
+        },
+        "guard_mode": {
+            "active": false,
+            "guard_position_x": 1,
+            "guard_position_z": 1.5,
+            "guard_radius": 2,
+            "guarded_entity_id": 2.5,
+            "has_guard_target": true,
+            "returning_to_guard_position": true
+        },
+        "healer": {
+            "healing_amount": 3,
+            "healing_cooldown": 1,
+            "healing_range": 1.5,
+            "healing_target_x": 2,
+            "healing_target_z": 2.5,
+            "is_healing_active": true,
+            "suppress_attack_while_healing": false,
+            "target_affinity": "living_allies",
+            "time_since_last_heal": 3
+        },
+        "hit_feedback": {
+            "is_reacting": true,
+            "knockback_x": 1,
+            "knockback_z": 1.5,
+            "reaction_duration": 2,
+            "reaction_intensity": 2.5,
+            "reaction_kind": 3,
+            "reaction_time": 1,
+            "source_attacker_id": 1.5
+        },
+        "hold_mode": {
+            "active": false,
+            "exit_cooldown": 2,
+            "kneel_duration": 2.5,
+            "kneel_entry_progress": 3,
+            "stand_up_duration": 1
+        },
+        "home": {
+            "family_generation_cooldown": 1.5,
+            "family_generation_interval": 2,
+            "family_manpower_value": 2.5,
+            "nearest_barracks_id": 3,
+            "population_contribution": 1,
+            "update_cooldown": 1.5
+        },
+        "id": 1,
+        "morale": {
+            "commander_aura_bonus": 2,
+            "morale": 2.5,
+            "routing": true,
+            "shock_timer": 3,
+            "wavering": true
+        },
+        "movement": {
+            "goal_x": 1,
+            "goal_y": 1.5,
+            "has_target": true,
+            "navigation_clearance": 2,
+            "path": [
+            ],
+            "path_index": 2.5,
+            "precise_arrival": true,
+            "target_x": 3,
+            "target_y": 1,
+            "vx": 1.5,
+            "vz": 2
+        },
+        "patrol": {
+            "current_waypoint": 2.5,
+            "patrolling": true,
+            "waypoints": [
+            ]
+        },
+        "player_order_intent": {
+            "kind": 3,
+            "suppress_opportunistic_combat": true
+        },
+        "production": {
+            "build_time": 1,
+            "in_progress": true,
+            "manpower_available": 1.5,
+            "manpower_ceiling": 2,
+            "max_units": 2.5,
+            "produced_count": 3,
+            "product_type": "archer",
+            "queue": [
+            ],
+            "rally_set": true,
+            "rally_x": 1,
+            "rally_z": 1.5,
+            "time_remaining": 2,
+            "villager_cost": 2.5
+        },
+        "renderable": {
+            "visible": false
+        },
+        "resource_carry": {
+            "amounts": {
+            },
+            "depot_entity_id": 3,
+            "food_form": 1,
+            "has_depot": true
+        },
+        "rpg_health": {
+            "armor": 1.5,
+            "crit_chance": 2,
+            "crit_multiplier": 2.5,
+            "incoming_damage_scale": 3
+        },
+        "settlement_resident": {
+            "errand": 1,
+            "errand_remaining": 1.5,
+            "errand_x": 2,
+            "errand_z": 2.5,
+            "focus_id": 3,
+            "focus_x": 1,
+            "focus_z": 1.5,
+            "hearth_assigned": true,
+            "hearth_x": 2,
+            "hearth_z": 2.5,
+            "planned_dwell": 3,
+            "released": true,
+            "rng_state": 1,
+            "roam_radius": 1.5,
+            "role": 2,
+            "think_cooldown": 2.5,
+            "work_elapsed": 3
+        },
+        "special_attack": {
+            "bonus_damage_multiplier_vs_fire_vulnerable": 1,
+            "burn_damage_per_tick": 1.5,
+            "burn_duration": 2,
+            "burn_tick_interval": 2.5,
+            "cursed_duration": 3,
+            "cursed_morale_penalty_per_hit": 1,
+            "cursed_stacks_per_hit": 1.5,
+            "fire_patch_duration": 2,
+            "fire_patch_radius": 2.5,
+            "friendly_fire": true,
+            "projectile_kind": "arrow",
+            "splash_damage_multiplier": 3,
+            "splash_radius": 1,
+            "use_projectile_system": true
+        },
+        "stamina": {
+            "depletion_rate": 1.5,
+            "is_running": true,
+            "max_stamina": 2,
+            "regen_rate": 2.5,
+            "run_requested": true,
+            "stamina": 3
+        },
+        "structure_fire": {
+            "attacker_id": 1,
+            "damage_per_tick": 1.5,
+            "duration": 2,
+            "ignition_elapsed": 2.5,
+            "ignition_progress": 3,
+            "ignition_threshold": 1,
+            "remaining_duration": 1.5,
+            "tick_accumulator": 2,
+            "tick_interval": 2.5
+        },
+        "terrain_context": {
+            "audio_cooldown": 3,
+            "is_at_hill_entrance": true,
+            "is_on_bridge": true
+        },
+        "transform": {
+            "desired_yaw": 1,
+            "has_desired_yaw": true,
+            "pos_x": 1.5,
+            "pos_y": 2,
+            "pos_z": 2.5,
+            "rot_x": 3,
+            "rot_y": 1,
+            "rot_z": 1.5,
+            "scale_x": 2,
+            "scale_y": 2.5,
+            "scale_z": 3
+        },
+        "undead": {
+            "cavalry_charge_damage_multiplier": 1,
+            "counts_for_economy": true,
+            "fire_damage_multiplier": 1.5,
+            "morale_immune": false,
+            "priest_damage_multiplier": 2
+        },
+        "unit": {
+            "death_sequence_override": 2.5,
+            "health": 3,
+            "max_health": 1,
+            "nation_id": "roman_republic",
+            "owner_id": 1.5,
+            "render_individuals_per_unit_override": 2,
+            "render_rider": false,
+            "speed": 2.5,
+            "squad_strength": 3,
+            "unit_type": "archer",
+            "uses_nation_formation_profile": true,
+            "vision_range": 1
+        },
+        "unit_layout_state": {
+            "layout_id": 1.5,
+            "phase": 2,
+            "previous_layout_id": 2.5,
+            "requested_layout_id": 3,
+            "state": 1,
+            "transition_progress": 1.5,
+            "transition_seconds": 2
+        },
+        "wall_construction_site": {
+            "build_time": 2.5,
+            "nation_id": 3,
+            "owner_id": 1,
+            "product_type": "wall_segment",
+            "progress": 1.5
+        },
+        "wall_segment": {
+            "freeform": true,
+            "grid_x": 2,
+            "grid_z": 2.5
+        },
+        "wildlife": {
+            "aggressor_id": 3,
+            "alarm_timer": 1,
+            "anchor_assigned": true,
+            "behavior": "graze",
+            "bite_impact_pending": true,
+            "bite_target_id": 1.5,
+            "bite_timer": 2,
+            "focus_id": 2.5,
+            "group_id": 3,
+            "home_x": 1,
+            "home_z": 1.5,
+            "hostile_timer": 2,
+            "rng_state": 2.5,
+            "roam_radius": 3,
+            "species": "sheep",
+            "state_timer": 1,
+            "target_x": 1.5,
+            "target_z": 2,
+            "think_cooldown": 2.5
+        }
+    },
+    "mutated_out": {
+        "army_formation_membership": {
+            "group_id": 2,
+            "slot_id": 2
+        },
+        "assault_wave": {
+            "active": false,
+            "has_march_target": true,
+            "march_target_x": 2.5,
+            "march_target_z": 3,
+            "wave_phase": 1
+        },
+        "attack": {
+            "can_melee": false,
+            "can_ranged": true,
+            "cooldown": 1.5,
+            "current_mode": "ranged",
+            "damage": 2,
+            "in_melee_lock": true,
+            "max_height_difference": 2.5,
+            "melee_cooldown": 3,
+            "melee_damage": 1,
+            "melee_lock_target_id": 2,
+            "melee_range": 2,
+            "preferred_mode": "auto",
+            "range": 2.5,
+            "time_since_last": 3
+        },
+        "attack_target": {
+            "is_player_command": true,
+            "should_chase": true,
+            "target_id": 1
+        },
+        "builder_production": {
+            "at_construction_site": true,
+            "auto_gather": true,
+            "auto_gather_priority": "",
+            "build_time": 1.5,
+            "bypass_movement_active": true,
+            "bypass_target_x": 2,
+            "bypass_target_z": 2.5,
+            "construction_complete": true,
+            "construction_site_entity_id": 3,
+            "construction_site_rotation_y": 1,
+            "construction_site_x": 1.5,
+            "construction_site_z": 2,
+            "gather_anchor_x": 2.5,
+            "gather_anchor_z": 3,
+            "gather_product_type": "",
+            "has_construction_site": true,
+            "has_gather_order": true,
+            "has_task_target": true,
+            "in_progress": true,
+            "product_type": "",
+            "queued_construction_site_ids": [
+            ],
+            "structure_task_entity_id": 1,
+            "task_target_id": 2,
+            "task_target_reserved": true,
+            "task_target_x": 2,
+            "task_target_z": 2.5,
+            "time_remaining": 3
+        },
+        "building": {
+            "original_nation_id": "roman_republic"
+        },
+        "burning_status": {
+            "attacker_id": 1,
+            "damage_per_tick": 2,
+            "duration": 2,
+            "fire_bonus_multiplier": 2.5,
+            "ignition_elapsed": 3,
+            "remaining_duration": 1,
+            "tick_accumulator": 1.5,
+            "tick_interval": 2
+        },
+        "capture": {
+            "capture_progress": 2.5,
+            "capturing_player_id": 3,
+            "is_being_captured": true,
+            "required_time": 1
+        },
+        "catapult_loading": {
+            "firing_duration": 1.5,
+            "firing_time": 2,
+            "loaded_projectile_kind": 3,
+            "loading_duration": 3,
+            "loading_time": 1,
+            "state": 0,
+            "target_id": 2,
+            "target_locked_x": 2.5,
+            "target_locked_y": 3,
+            "target_locked_z": 1,
+            "target_position_locked": true
+        },
+        "civilian_delivery": {
+            "target_barracks_id": 2
+        },
+        "combat_state": {
+            "animation_state": 2,
+            "attack_family": 0,
+            "attack_offset": 3,
+            "attack_variant": 1,
+            "finisher_attack": true,
+            "hit_pause_remaining": 1.5,
+            "is_hit_paused": true,
+            "state_duration": 2,
+            "state_time": 2.5,
+            "swing_charge": 1,
+            "swing_elevation": 1,
+            "swing_follow_through": 1,
+            "swing_speed": 2,
+            "swing_strike_x": 0.6401844024658203,
+            "swing_strike_y": 0.7682212591171265,
+            "swing_thrust": 1
+        },
+        "commander": {
+            "aura_ability_active": true,
+            "aura_ability_cooldown": 1.5,
+            "aura_ability_cooldown_remaining": 2,
+            "aura_ability_duration": 2.5,
+            "aura_ability_remaining": 3,
+            "aura_ability_requested": true,
+            "aura_active": false,
+            "aura_affinity_spawn_type": "swordsman",
+            "aura_bonus_value": 1,
+            "aura_morale_bonus": 1.5,
+            "aura_radius": 2,
+            "bodyguard_count": 0,
+            "bonus_summary": "",
+            "bonus_type": "",
+            "commander_id": "",
+            "death_consequence": "",
+            "death_morale_shock": 3,
+            "death_shock_radius": 1,
+            "display_name": "",
+            "flag_rally_animation_timer": 1.5,
+            "flag_rally_at_position": true,
+            "flag_rally_cost": 2,
+            "flag_rally_flag_active": true,
+            "flag_rally_flag_x": 2.5,
+            "flag_rally_flag_z": 3,
+            "flag_rally_in_progress": true,
+            "flag_rally_issue_commands": true,
+            "flag_rally_pending_x": 1,
+            "flag_rally_pending_z": 1.5,
+            "fpv_controlled": true,
+            "passive_aura": "",
+            "rally_ability": "",
+            "rally_cooldown": 2,
+            "rally_cooldown_remaining": 2.5,
+            "rally_feedback_time": 3,
+            "rally_morale_restore": 1,
+            "rally_range": 1.5,
+            "rally_requested": true,
+            "rally_requires_manual_trigger": false,
+            "strategic_identity": "",
+            "wounded": true
+        },
+        "commander_guard": {
+            "active": true,
+            "damage_multiplier": 2,
+            "frontal_arc_dot": 2.5
+        },
+        "cursed_status": {
+            "duration": 3,
+            "morale_penalty_per_hit": 1,
+            "remaining_duration": 1.5,
+            "stacks": 2
+        },
+        "dismantle_site": {
+            "duration": 2.5,
+            "progress": 3
+        },
+        "elephant": {
+            "charge_cooldown": 1,
+            "charge_duration": 1.5,
+            "charge_speed_multiplier": 2,
+            "charge_state": 0,
+            "trample_damage": 3,
+            "trample_damage_accumulator": 1,
+            "trample_radius": 1.5
+        },
+        "elephant_panic": {
+            "duration": 2
+        },
+        "elephant_stomp_impacts": [
+        ],
+        "farm": {
+            "cycle_seconds": 2.5,
+            "growth": 3,
+            "harvests": 1
+        },
+        "fire_patch": {
+            "attacker_id": 2,
+            "attacker_owner_id": 2,
+            "burn_damage_per_tick": 2,
+            "burn_duration": 3,
+            "burn_tick_interval": 1,
+            "duration": 1.5,
+            "fire_bonus_multiplier": 2,
+            "friendly_fire": true,
+            "radius": 2.5,
+            "remaining_duration": 3
+        },
+        "formation_mode": {
+            "active": true,
+            "formation_center_x": 1,
+            "formation_center_z": 1.5,
+            "formation_id": 2,
+            "stable_file": -1,
+            "stable_rank": 3,
+            "stable_slot_id": 1,
+            "stable_slot_x": 1.5,
+            "stable_slot_z": 2
+        },
+        "gate": {
+            "hold_open_seconds": 2.5,
+            "hold_timer": 3,
+            "manual_mode": 1,
+            "open_amount": 1.5,
+            "open_speed": 2,
+            "state": 0,
+            "trigger_radius": 3
+        },
+        "guard_mode": {
+            "active": false,
+            "guard_position_x": 1,
+            "guard_position_z": 1.5,
+            "guard_radius": 2,
+            "guarded_entity_id": 3,
+            "has_guard_target": true,
+            "returning_to_guard_position": true
+        },
+        "healer": {
+            "healing_amount": 3,
+            "healing_cooldown": 1,
+            "healing_range": 1.5,
+            "healing_target_x": 2,
+            "healing_target_z": 2.5,
+            "is_healing_active": true,
+            "suppress_attack_while_healing": false,
+            "target_affinity": "living_allies",
+            "time_since_last_heal": 3
+        },
+        "hit_feedback": {
+            "is_reacting": true,
+            "knockback_x": 1,
+            "knockback_z": 1.5,
+            "reaction_duration": 2,
+            "reaction_intensity": 2.5,
+            "reaction_kind": 3,
+            "reaction_time": 1,
+            "source_attacker_id": 0
+        },
+        "hold_mode": {
+            "active": false,
+            "exit_cooldown": 2,
+            "kneel_duration": 2.5,
+            "kneel_entry_progress": 3,
+            "stand_up_duration": 1
+        },
+        "home": {
+            "family_generation_cooldown": 1.5,
+            "family_generation_interval": 2,
+            "family_manpower_value": 8,
+            "nearest_barracks_id": 3,
+            "population_contribution": 1,
+            "update_cooldown": 1.5
+        },
+        "id": 1,
+        "morale": {
+            "commander_aura_bonus": 2,
+            "morale": 2.5,
+            "routing": true,
+            "shock_timer": 3,
+            "wavering": true
+        },
+        "movement": {
+            "goal_x": 1,
+            "goal_y": 1.5,
+            "has_target": true,
+            "navigation_clearance": 2,
+            "path": [
+            ],
+            "path_index": 0,
+            "precise_arrival": true,
+            "target_x": 3,
+            "target_y": 1,
+            "vx": 1.5,
+            "vz": 2
+        },
+        "patrol": {
+            "current_waypoint": 0,
+            "patrolling": true,
+            "waypoints": [
+            ]
+        },
+        "player_order_intent": {
+            "kind": 3,
+            "suppress_opportunistic_combat": true
+        },
+        "production": {
+            "build_time": 1,
+            "in_progress": true,
+            "manpower_available": 0,
+            "manpower_ceiling": 2,
+            "max_units": 0,
+            "produced_count": 3,
+            "product_type": "archer",
+            "queue": [
+            ],
+            "rally_set": true,
+            "rally_x": 1,
+            "rally_z": 1.5,
+            "time_remaining": 2,
+            "villager_cost": 1
+        },
+        "renderable": {
+            "visible": false
+        },
+        "resource_carry": {
+            "amounts": {
+            },
+            "depot_entity_id": 3,
+            "food_form": 1,
+            "has_depot": true
+        },
+        "rpg_health": {
+            "armor": 1.5,
+            "crit_chance": 2,
+            "crit_multiplier": 2.5,
+            "incoming_damage_scale": 3
+        },
+        "settlement_resident": {
+            "errand": 1,
+            "errand_remaining": 1.5,
+            "errand_x": 2,
+            "errand_z": 2.5,
+            "focus_id": 3,
+            "focus_x": 1,
+            "focus_z": 1.5,
+            "hearth_assigned": true,
+            "hearth_x": 2,
+            "hearth_z": 2.5,
+            "planned_dwell": 3,
+            "released": true,
+            "rng_state": 1,
+            "roam_radius": 1.5,
+            "role": 2,
+            "think_cooldown": 2.5,
+            "work_elapsed": 3
+        },
+        "special_attack": {
+            "bonus_damage_multiplier_vs_fire_vulnerable": 1,
+            "burn_damage_per_tick": 0,
+            "burn_duration": 2,
+            "burn_tick_interval": 2.5,
+            "cursed_duration": 3,
+            "cursed_morale_penalty_per_hit": 1,
+            "cursed_stacks_per_hit": 0,
+            "fire_patch_duration": 2,
+            "fire_patch_radius": 2.5,
+            "friendly_fire": true,
+            "projectile_kind": "arrow",
+            "splash_damage_multiplier": 3,
+            "splash_radius": 1,
+            "use_projectile_system": true
+        },
+        "stamina": {
+            "depletion_rate": 1.5,
+            "is_running": true,
+            "max_stamina": 2,
+            "regen_rate": 2.5,
+            "run_requested": true,
+            "stamina": 3
+        },
+        "structure_fire": {
+            "attacker_id": 1,
+            "damage_per_tick": 0,
+            "duration": 2,
+            "ignition_elapsed": 2.5,
+            "ignition_progress": 3,
+            "ignition_threshold": 1,
+            "remaining_duration": 1.5,
+            "tick_accumulator": 2,
+            "tick_interval": 2.5
+        },
+        "terrain_context": {
+            "audio_cooldown": 3,
+            "is_at_hill_entrance": true,
+            "is_on_bridge": true
+        },
+        "transform": {
+            "desired_yaw": 1,
+            "has_desired_yaw": true,
+            "pos_x": 1.5,
+            "pos_y": 2,
+            "pos_z": 2.5,
+            "rot_x": 3,
+            "rot_y": 1,
+            "rot_z": 1.5,
+            "scale_x": 2,
+            "scale_y": 2.5,
+            "scale_z": 3
+        },
+        "undead": {
+            "cavalry_charge_damage_multiplier": 1,
+            "counts_for_economy": true,
+            "fire_damage_multiplier": 1.5,
+            "morale_immune": false,
+            "priest_damage_multiplier": 2
+        },
+        "unit": {
+            "death_sequence_override": 255,
+            "health": 3,
+            "max_health": 1,
+            "nation_id": "roman_republic",
+            "owner_id": 0,
+            "render_individuals_per_unit_override": 2,
+            "render_rider": false,
+            "speed": 2.5,
+            "squad_strength": 3,
+            "unit_type": "archer",
+            "uses_nation_formation_profile": true,
+            "vision_range": 1
+        },
+        "unit_layout_state": {
+            "layout_id": 65535,
+            "phase": 2,
+            "previous_layout_id": 65535,
+            "requested_layout_id": 3,
+            "state": 1,
+            "transition_progress": 1.5,
+            "transition_seconds": 2
+        },
+        "wall_construction_site": {
+            "build_time": 2.5,
+            "nation_id": 3,
+            "owner_id": 1,
+            "product_type": "wall_segment",
+            "progress": 1.5
+        },
+        "wall_segment": {
+            "freeform": true,
+            "grid_x": 2,
+            "grid_z": 0
+        },
+        "wildlife": {
+            "aggressor_id": 3,
+            "alarm_timer": 1,
+            "anchor_assigned": true,
+            "behavior": "graze",
+            "bite_impact_pending": true,
+            "bite_target_id": 2,
+            "bite_timer": 2,
+            "focus_id": 3,
+            "group_id": 3,
+            "home_x": 1,
+            "home_z": 1.5,
+            "hostile_timer": 2,
+            "rng_state": 3,
+            "roam_radius": 3,
+            "species": "sheep",
+            "state_timer": 1,
+            "target_x": 1.5,
+            "target_z": 2,
+            "think_cooldown": 2.5
+        }
+    },
+    "world_envelope_keys": [
+        "army_formations",
+        "captureRngDraws",
+        "captureTick",
+        "entities",
+        "nextEntityId",
+        "owner_registry",
+        "schemaVersion"
+    ]
+}

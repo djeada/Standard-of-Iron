@@ -12,7 +12,11 @@
 
 #include "game/core/system.h"
 #include "game/map/undead_shrine_placement.h"
+#include "game/systems/undead_guardians.h"
+#include "game/systems/undead_shrine.h"
+#include "game/systems/undead_zone_music.h"
 #include "game/systems/undead_zone_query.h"
+#include "game/systems/undead_zone_runtime.h"
 #include "map/map_definition.h"
 
 namespace Engine::Core {
@@ -86,80 +90,40 @@ public:
   [[nodiscard]] auto shrine_markers() const -> std::vector<ShrineMarker>;
 
 private:
-  struct RuntimeZone {
-    Game::Map::UndeadZone definition;
-    std::vector<Game::Map::UndeadWave> authored_waves;
-    QVector3D center_world;
-    QVector3D anchor_world;
-    QVector3D shrine_world;
-    std::uint64_t anchor_world_prop_id = 0;
-    std::uint64_t shrine_world_prop_id = 0;
-    bool shrine_placed = false;
-    Engine::Core::EntityID anchor_entity_id = 0;
-    bool anchor_pending = false;
-    bool awakened = false;
-    int awakened_by_owner_id = 0;
-    bool garrison_broken = false;
-    bool announced_awakening = false;
-    bool announced_defeat = false;
-    int next_wave_index = 0;
-    int completed_waves = 0;
-    float respawn_delay_remaining = 0.0F;
-    float current_wave_elapsed = 0.0F;
-    float post_ring_phase_degrees = 0.0F;
-    std::vector<Engine::Core::EntityID> active_spawn_ids;
-  };
-
   void ensure_factory_registry();
-  void ensure_zone_owner_registered(const RuntimeZone& zone) const;
-  void place_zone_shrine(const Game::Map::MapDefinition& map_definition,
-                         RuntimeZone& zone,
-                         Game::Map::UndeadShrineExclusions& exclusions) const;
-  void ensure_anchor_structure(Engine::Core::World& world, RuntimeZone& zone);
-  void refresh_active_spawns(Engine::Core::World& world, RuntimeZone& zone) const;
-  void refresh_anchor_structure(Engine::Core::World& world, RuntimeZone& zone);
-  void break_garrison(Engine::Core::World& world, RuntimeZone& zone, bool captured);
-  void pay_clear_reward(Engine::Core::World& world,
-                        const RuntimeZone& zone,
-                        bool captured) const;
-  void refresh_capture_lock(Engine::Core::World& world, const RuntimeZone& zone) const;
-  void awaken_zone(Engine::Core::World& world, RuntimeZone& zone, int woken_by);
-  void update_zone_music(Engine::Core::World& world, float delta_time);
-  [[nodiscard]] auto local_player_inside(Engine::Core::World& world,
-                                         const RuntimeZone& zone) const -> bool;
-  void try_spawn_next_wave(Engine::Core::World& world, RuntimeZone& zone);
-  void enforce_leash(Engine::Core::World& world, RuntimeZone& zone) const;
-  void station_guardian(Engine::Core::World& world,
-                        const RuntimeZone& zone,
-                        Engine::Core::EntityID guardian_id,
-                        int post_index,
-                        int post_count,
-                        bool recall) const;
-  [[nodiscard]] auto guard_post_for_index(const RuntimeZone& zone,
-                                          int post_index,
-                                          int post_count) const -> QVector3D;
-  [[nodiscard]] auto zone_origin(const RuntimeZone& zone) const -> QVector3D;
-  void announce_wave(const RuntimeZone& zone) const;
-  void begin_wave_interval(RuntimeZone& zone) const;
-  void apply_wave_multiplier(RuntimeZone& zone) const;
+  [[nodiscard]] auto
+  build_zone(const Game::Map::MapDefinition& map_definition,
+             const Game::Map::UndeadZone& zone_definition,
+             Game::Map::UndeadShrineExclusions& shrine_exclusions) -> UndeadRuntimeZone;
+  void match_anchor_prop(UndeadRuntimeZone& zone) const;
+  void
+  update_zone(Engine::Core::World& world, UndeadRuntimeZone& zone, float delta_time);
+  void announce_zone_cleared(UndeadRuntimeZone& zone) const;
+  void refresh_active_spawns(Engine::Core::World& world, UndeadRuntimeZone& zone) const;
+  void awaken_zone(Engine::Core::World& world, UndeadRuntimeZone& zone, int woken_by);
+  void spawn_wave_units(Engine::Core::World& world,
+                        UndeadRuntimeZone& zone,
+                        const Game::Map::UndeadWave& wave);
+  void try_spawn_next_wave(Engine::Core::World& world, UndeadRuntimeZone& zone);
+  void announce_wave(const UndeadRuntimeZone& zone) const;
+  void begin_wave_interval(UndeadRuntimeZone& zone) const;
+  void apply_wave_multiplier(UndeadRuntimeZone& zone) const;
   [[nodiscard]] auto
   should_awaken_zone(Engine::Core::World& world,
-                     const RuntimeZone& zone) const -> std::optional<int>;
-  [[nodiscard]] auto can_spawn_wave(const RuntimeZone& zone) const -> bool;
-  [[nodiscard]] auto spawn_position_for_index(const RuntimeZone& zone,
-                                              int spawn_index,
-                                              int spawn_count) const -> QVector3D;
-  [[nodiscard]] auto find_zone(const QString& zone_id) const -> const RuntimeZone*;
-  [[nodiscard]] auto find_zone_mutable(const QString& zone_id) -> RuntimeZone*;
+                     const UndeadRuntimeZone& zone) const -> std::optional<int>;
+  [[nodiscard]] auto can_spawn_wave(const UndeadRuntimeZone& zone) const -> bool;
+  [[nodiscard]] auto
+  find_zone(const QString& zone_id) const -> const UndeadRuntimeZone*;
+  [[nodiscard]] auto find_zone_mutable(const QString& zone_id) -> UndeadRuntimeZone*;
 
   Services m_services;
-  std::vector<RuntimeZone> m_zones;
+  UndeadShrine m_shrine;
+  UndeadGuardians m_guardians;
+  UndeadZoneMusic m_music;
+  std::vector<UndeadRuntimeZone> m_zones;
   QHash<QString, int> m_zone_index;
   std::shared_ptr<Game::Units::UnitFactoryRegistry> m_factory_registry;
 
-  bool m_zone_music_playing = false;
-  float m_zone_music_poll = 0.0F;
-  float m_leash_poll = 0.0F;
   bool m_allow_mission_start_trigger = false;
   float m_wave_multiplier = 1.0F;
 };

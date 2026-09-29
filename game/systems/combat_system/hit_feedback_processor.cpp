@@ -2,13 +2,17 @@
 
 #include <algorithm>
 #include <cmath>
+#include <numbers>
 
 #include "../../core/component_gameplay.h"
+#include "../../core/event_manager.h"
 #include "../../core/world.h"
 #include "../combat_rules.h"
 #include "../formation_combat_geometry.h"
-#include "../nav_grid.h"
-#include "../pathfinding.h"
+#include "../navigation/nav_grid.h"
+#include "../navigation/pathfinding.h"
+#include "damage_application.h"
+#include "formation_casualties.h"
 #include "target_rules.h"
 
 namespace Game::Systems::Combat {
@@ -154,6 +158,249 @@ void process_hit_feedback(Engine::Core::World* world, float delta_time) {
       feedback.knockback_applied = 0.0F;
     }
   }
+}
+
+namespace {
+
+[[nodiscard]] auto
+reaction_knockback_scale(Engine::Core::HitReactionKind kind) noexcept -> float {
+  switch (kind) {
+  case Engine::Core::HitReactionKind::Flinch:
+    return 1.0F;
+  case Engine::Core::HitReactionKind::Block:
+    return 0.55F;
+  case Engine::Core::HitReactionKind::Evade:
+    return 1.7F;
+  case Engine::Core::HitReactionKind::Stagger:
+    return 2.4F;
+  case Engine::Core::HitReactionKind::Recoil:
+    return 0.7F;
+  }
+  return 1.0F;
+}
+
+[[nodiscard]] auto
+reaction_pauses_swing(Engine::Core::HitReactionKind kind) noexcept -> bool {
+  return kind == Engine::Core::HitReactionKind::Flinch ||
+         kind == Engine::Core::HitReactionKind::Stagger;
+}
+
+void begin_reaction(Engine::Core::HitFeedbackComponent& feedback,
+                    Engine::Core::EntityID attacker_id,
+                    Engine::Core::HitReactionKind kind) {
+  feedback.is_reacting = true;
+  feedback.recent_damage_remaining =
+      Engine::Core::HitFeedbackComponent::k_recent_damage_window;
+  feedback.source_attacker_id = attacker_id;
+  feedback.reaction_time = 0.0F;
+  feedback.reaction_duration = Engine::Core::hit_reaction_duration(kind);
+  feedback.reaction_kind = kind;
+  feedback.knockback_applied = 0.0F;
+  feedback.knockback_x = 0.0F;
+  feedback.knockback_z = 0.0F;
+  feedback.reaction_intensity = 0.85F;
+}
+
+struct ImpactStrength {
+  float knockback_scale{1.0F};
+  float intensity{0.85F};
+};
+
+[[nodiscard]] auto impact_strength(const Engine::Core::Entity& attacker,
+                                   Engine::Core::HitReactionKind kind,
+                                   float weapon_weight) -> ImpactStrength {
+  auto const* attack = attacker.get_component<Engine::Core::AttackComponent>();
+  auto const* unit = attacker.get_component<Engine::Core::UnitComponent>();
+  ImpactStrength strength;
+  if (attack != nullptr &&
+      attack->current_mode == Engine::Core::AttackComponent::CombatMode::Melee) {
+    strength = {1.25F, 1.0F};
+  } else {
+    strength = {0.8F, 0.70F};
+  }
+  if (unit != nullptr && unit->spawn_type == Game::Units::SpawnType::Elephant) {
+    strength = {2.2F, 1.35F};
+  }
+  strength.knockback_scale *= reaction_knockback_scale(kind) * weapon_weight;
+  strength.intensity *= weapon_weight;
+  if (kind == Engine::Core::HitReactionKind::Stagger) {
+    strength.intensity = std::max(strength.intensity, 1.25F);
+  } else if (kind == Engine::Core::HitReactionKind::Recoil) {
+    strength.intensity = 0.6F;
+  }
+  return strength;
+}
+
+void turn_toward_attacker(Engine::Core::Entity& target,
+                          Engine::Core::TransformComponent& target_transform,
+                          const Engine::Core::TransformComponent& attacker_transform) {
+  bool const hit_controls_root_facing =
+      !target.registry()->has<Engine::Core::WildlifeComponent>(target.get_id()) &&
+      (Game::Systems::CombatRules::uses_rpg_combat_rules(&target) ||
+       !Game::Systems::FormationCombat::has_formation_slots(target));
+  if (!hit_controls_root_facing) {
+    return;
+  }
+  float const face_dx = attacker_transform.position.x - target_transform.position.x;
+  float const face_dz = attacker_transform.position.z - target_transform.position.z;
+  float const face_dist = std::sqrt(face_dx * face_dx + face_dz * face_dz);
+  if (face_dist > 0.001F) {
+    target_transform.desired_yaw =
+        std::atan2(face_dx, face_dz) * 180.0F / std::numbers::pi_v<float>;
+    target_transform.has_desired_yaw = true;
+  }
+}
+
+void apply_attacker_impulse(Engine::Core::Entity& target,
+                            Engine::Core::TransformComponent& target_transform,
+                            const Engine::Core::Entity& attacker,
+                            const Engine::Core::TransformComponent& attacker_transform,
+                            Engine::Core::HitFeedbackComponent& feedback,
+                            Engine::Core::HitReactionKind kind,
+                            const HitImpulse& impulse,
+                            float weapon_weight) {
+  auto const strength = impact_strength(attacker, kind, weapon_weight);
+  feedback.reaction_intensity = strength.intensity;
+
+  bool const from_weapon_contact =
+      impulse.contact_point.has_value() && impulse.weapon_speed > 0.0F;
+  float const from_x =
+      from_weapon_contact ? impulse.contact_point->x() : attacker_transform.position.x;
+  float const from_z =
+      from_weapon_contact ? impulse.contact_point->z() : attacker_transform.position.z;
+  float const dx = target_transform.position.x - from_x;
+  float const dz = target_transform.position.z - from_z;
+  float const dist = std::sqrt(dx * dx + dz * dz);
+  if (dist <= 0.001F) {
+    return;
+  }
+  feedback.hit_direction_x = dx / dist;
+  feedback.hit_direction_z = dz / dist;
+  float const knockback = std::clamp(
+      Engine::Core::HitFeedbackComponent::k_max_knockback * strength.knockback_scale,
+      0.0F,
+      Engine::Core::HitFeedbackComponent::k_max_knockback * 2.8F);
+  feedback.knockback_x = (dx / dist) * knockback;
+  feedback.knockback_z = (dz / dist) * knockback;
+  turn_toward_attacker(target, target_transform, attacker_transform);
+}
+
+void announce_new_stagger(const Engine::Core::Entity* entity, bool was_staggered) {
+  if (entity == nullptr || was_staggered) {
+    return;
+  }
+  Engine::Core::AudioCueEvent cue("combat.stagger");
+  if (const auto* transform =
+          entity->get_component<Engine::Core::TransformComponent>()) {
+    cue.at(transform->position.x, transform->position.y, transform->position.z);
+  }
+  Engine::Core::EventManager::instance().publish(cue);
+}
+
+} // namespace
+
+void add_or_extend_stagger(Engine::Core::Entity* entity, float duration) {
+  if (entity == nullptr || duration <= 0.0F) {
+    return;
+  }
+  bool const was_staggered = entity->has_component<Engine::Core::StaggerComponent>();
+  auto* stagger = Engine::Core::get_or_add_component<Engine::Core::StaggerComponent>(
+      entity, duration);
+  if (stagger != nullptr) {
+    stagger->remaining = std::max(stagger->remaining, duration);
+    announce_new_stagger(entity, was_staggered);
+  }
+}
+
+void add_or_extend_stagger(Engine::Core::Entity* entity,
+                           float duration,
+                           Engine::Core::StaggerTier tier) {
+  if (entity == nullptr || duration <= 0.0F) {
+    return;
+  }
+  bool const was_staggered = entity->has_component<Engine::Core::StaggerComponent>();
+  auto* stagger = Engine::Core::get_or_add_component<Engine::Core::StaggerComponent>(
+      entity, duration);
+  if (stagger != nullptr) {
+    stagger->remaining = std::max(stagger->remaining, duration);
+    if (static_cast<std::uint8_t>(tier) > static_cast<std::uint8_t>(stagger->tier)) {
+      stagger->tier = tier;
+    }
+    announce_new_stagger(entity, was_staggered);
+  }
+}
+
+void apply_hit_feedback(Engine::Core::Entity* target,
+                        Engine::Core::EntityID attacker_id,
+                        Engine::Core::World* world) {
+  apply_hit_feedback(target, attacker_id, world, Engine::Core::HitReactionKind::Flinch);
+}
+
+void apply_hit_feedback(Engine::Core::Entity* target,
+                        Engine::Core::EntityID attacker_id,
+                        Engine::Core::World* world,
+                        Engine::Core::HitReactionKind kind,
+                        const HitImpulse& impulse) {
+  if (target == nullptr) {
+    return;
+  }
+  float const weapon_weight =
+      impulse.weapon_speed > 0.0F
+          ? std::clamp(impulse.weapon_speed / k_reference_weapon_speed, 0.55F, 2.1F)
+          : 1.0F;
+  auto* feedback =
+      Engine::Core::get_or_add_component<Engine::Core::HitFeedbackComponent>(target);
+  if (feedback == nullptr) {
+    return;
+  }
+  begin_reaction(*feedback, attacker_id, kind);
+
+  auto* target_transform = target->get_component<Engine::Core::TransformComponent>();
+  if (target_transform != nullptr && attacker_id != 0 && world != nullptr) {
+    auto* attacker = world->get_entity(attacker_id);
+    auto* attacker_transform =
+        attacker != nullptr
+            ? attacker->get_component<Engine::Core::TransformComponent>()
+            : nullptr;
+    if (attacker_transform != nullptr) {
+      apply_attacker_impulse(*target,
+                             *target_transform,
+                             *attacker,
+                             *attacker_transform,
+                             *feedback,
+                             kind,
+                             impulse,
+                             weapon_weight);
+    }
+  }
+
+  auto* combat_state = target->get_component<Engine::Core::CombatStateComponent>();
+  if (combat_state != nullptr && reaction_pauses_swing(kind)) {
+    combat_state->is_hit_paused = true;
+    combat_state->hit_pause_remaining =
+        Engine::Core::CombatStateComponent::k_combat_animation_hit_pause_duration;
+  }
+}
+
+void apply_melee_reaction_feedback(Engine::Core::World* world,
+                                   Engine::Core::Entity* target,
+                                   Engine::Core::EntityID attacker_id,
+                                   Engine::Core::HitReactionKind kind) {
+  if (target == nullptr) {
+    return;
+  }
+  auto const* unit = target->get_component<Engine::Core::UnitComponent>();
+  if (unit == nullptr || unit->health <= 0) {
+    return;
+  }
+  apply_hit_feedback(target, attacker_id, world, kind);
+  Engine::Core::Entity* attacker =
+      (world != nullptr && attacker_id != 0) ? world->get_entity(attacker_id) : nullptr;
+  publish_formation_hit(*target,
+                        attacker_id,
+                        preferred_formation_hit_slot(target, attacker),
+                        kind,
+                        world);
 }
 
 } // namespace Game::Systems::Combat

@@ -4,7 +4,7 @@
 
 #include <gtest/gtest.h>
 
-#include "systems/save_format.h"
+#include "systems/persistence/save_format.h"
 
 using namespace Game::Systems::Save;
 

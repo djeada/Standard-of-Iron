@@ -1,8 +1,7 @@
 #include "wildlife_terrain_probe.h"
 
-#include "../map/terrain.h"
 #include "../map/terrain_service.h"
-#include "../systems/walkability.h"
+#include "../systems/navigation/walkability.h"
 
 namespace Game::Wildlife {
 

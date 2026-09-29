@@ -178,7 +178,7 @@ The architecture is extension-friendly because those dependencies are explicit, 
 
 ## Map and skirmish translation
 
-Maps author victory through `VictoryConfig` in `game/map/map_definition.h`. `build_rule_set_from_config()` in `game/systems/victory_service.cpp` translates that data into a runtime `VictoryRuleSet`.
+Maps author victory through `VictoryConfig` in `game/map/map_definition.h`. `build_rule_set_from_config()` in `game/systems/victory_rule_builder.cpp` translates that data into a runtime `VictoryRuleSet`.
 
 Supported map victory types include:
 

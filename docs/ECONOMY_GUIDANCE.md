@@ -229,10 +229,10 @@ site to the field's centre.
 ### Builders stay off hill slopes
 
 A crew's approach to its job never crosses a hill slope. The bypass walk that takes a crew the
-last metres to a site (`BuilderBypass` in `movement_system.cpp`) and the arrival snap in
+last metres to a site (`BuilderBypass` in `movement_system_gates.cpp`) and the arrival snap in
 `ProductionSystem` both check `Pathfinding::is_terrain_segment_walkable`. When the straight line
 crosses a slope, the crew stops and works from where the route brought it: a crew within
-`site_bypass_radius` of the job counts as arrived. The gather exemptions in `route_follow_system`
+`site_bypass_radius` of the job counts as arrived. The gather exemptions in `route_follow_system_gate.cpp`
 apply only on walkable terrain. A node on a slope, such as a boulder on a hillside, is worked
 from the foot of the hill. `tests/headless/hill_containment_test.cpp` pins this.
 

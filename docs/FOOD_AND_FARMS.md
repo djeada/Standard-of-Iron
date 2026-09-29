@@ -69,7 +69,7 @@ Unlike trees, boulders, and ore seams, farms and sheep are **entities**, not wor
 
 The current job target is stored in `BuilderProductionComponent::structure_task_entity_id`, the same slot used for repair and dismantling. A food target counts as claimed while any builder holds its entity ID together with a food product; `Game::Systems::food_target_claimed` implements that check.
 
-`game/systems/food_targets.{h,cpp}` centralizes food-target behavior. It decides what is harvestable, finds the nearest unclaimed target, and computes the work position: the edge of a farm footprint or a standoff point beside a sheep.
+`game/systems/economy/food_targets.{h,cpp}` centralizes food-target behavior. It decides what is harvestable, finds the nearest unclaimed target, and computes the work position: the edge of a farm footprint or a standoff point beside a sheep.
 
 ### Issuing food jobs
 
@@ -142,7 +142,7 @@ The AI does not recruit civilians, so food does not gate AI expansion and the AI
 
 ## Economy balance
 
-The following values come from `assets/data/troops/base.json` and `assets/data/construction/catalog.json`, with compiled fallbacks in `game/units/troop_catalog.cpp` and `game/systems/construction_cost_catalog.cpp`. `CompiledDefaultsMatchTheShippedTroopData` verifies that the compiled defaults match the shipped data.
+The following values come from `assets/data/troops/base.json` and `assets/data/construction/catalog.json`, with compiled fallbacks in `game/units/troop_catalog.cpp` and `game/systems/economy/construction_cost_catalog.cpp`. `CompiledDefaultsMatchTheShippedTroopData` verifies that the compiled defaults match the shipped data.
 
 ### What one builder trip returns
 
@@ -190,11 +190,11 @@ The farm and food loop is distributed across the following components:
 
 - `game/units/spawn_type.h`, `building_type.h` — `Farm`, appended after `Wolf`;
 - `game/units/farm.{h,cpp}`, `factory.cpp` — farm entity creation;
-- `FarmComponent` in `game/core/component.h`, serialized by `game/save/serialization.cpp`;
-- `game/systems/farm_system.{h,cpp}` — crop growth, registered through `runtime_system_registry`;
-- `game/systems/food_targets.{h,cpp}` — shared targeting rules used by dispatch, production, standing gather, interactions, and the application layer;
-- `game/systems/production_system.cpp` — completion of `harvest_grain` and `slaughter_sheep`, including sheep following and holding;
-- `game/command/command_dispatcher.cpp` — `StartHarvest` with an entity target;
+- `FarmComponent` in `game/core/component.h`, serialized by `game/save/component_economy_codec.cpp`;
+- `game/systems/economy/farm_system.{h,cpp}` — crop growth, registered through `runtime_system_registry`;
+- `game/systems/economy/food_targets.{h,cpp}` — shared targeting rules used by dispatch, production, standing gather, interactions, and the application layer;
+- `game/systems/economy/production_system.cpp` — completion of `harvest_grain` and `slaughter_sheep`, including sheep following and holding;
+- `game/command/command_worker_orders.cpp` — `StartHarvest` with an entity target;
 - `app/economy/production_manager.cpp` and `harvest_targeting` — **Collect** on a farm or sheep;
 - `ui/qml/ProductionPanel.qml` — the Farm card and selected-farm crop state through `ProductionViewModel::selected_farm_state`; and
 - `tools/map_editor`, `tools/arena`, and `tools/building_preview` — authoring and inspection support, including `SetFarmGrowth`, `HarvestResource grain|sheep`, and `--growth`.

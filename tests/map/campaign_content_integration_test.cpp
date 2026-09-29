@@ -27,8 +27,8 @@
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/default_content.h"
 #include "game/systems/nation_registry.h"
+#include "game/systems/navigation/pathfinding.h"
 #include "game/systems/owner_registry.h"
-#include "game/systems/pathfinding.h"
 #include "game/systems/undead_awakening_system.h"
 #include "game/wildlife/wildlife_system.h"
 

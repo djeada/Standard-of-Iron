@@ -1,12 +1,13 @@
 #pragma once
 
-#include <cstdint>
-#include <map>
-#include <unordered_map>
-#include <unordered_set>
 #include <vector>
 
 #include "../ai_behavior.h"
+#include "builder_gather_crew.h"
+#include "builder_intent.h"
+#include "builder_ledger.h"
+#include "builder_pool.h"
+#include "builder_stall_watch.h"
 
 namespace Game::Systems::AI {
 
@@ -27,52 +28,41 @@ public:
   [[nodiscard]] auto can_run_concurrently() const -> bool override { return true; }
 
 private:
+  struct PendingSite {
+    const char* building = nullptr;
+    float x = 0.0F;
+    float z = 0.0F;
+    float rotation_y = 0.0F;
+    int plan_slot = -1;
+    bool expansion = false;
+    bool resolved = false;
+  };
+
+  auto run_construction_cycle(const AISnapshot& snapshot,
+                              AIContext& context,
+                              BuilderPool& pool,
+                              std::vector<AICommand>& out_commands) -> bool;
+
+  auto resolve_site(const AISnapshot& snapshot,
+                    const AIContext& context,
+                    const ConstructionIntent* chosen) -> PendingSite;
+
+  auto issue_construction(const AISnapshot& snapshot,
+                          AIContext& context,
+                          BuilderPool& pool,
+                          const PendingSite& site,
+                          std::vector<AICommand>& out_commands) -> bool;
+
   void divide_work_parties(const AISnapshot& snapshot,
                            const AIContext& context,
                            std::vector<AICommand>& out_commands) const;
 
-  void manage_gather_crew(const AISnapshot& snapshot,
-                          const AIContext& context,
-                          bool reclaim_one,
-                          std::vector<Engine::Core::EntityID>& available_builders,
-                          std::vector<AICommand>& out_commands);
-
-  void review_stalled_workers(const AISnapshot& snapshot, float now);
-
-  [[nodiscard]] auto is_deferred(const char* building_type,
-                                 float game_time) const -> bool;
-
-  void note_construction_order(const char* building_type,
-                               int building_total,
-                               float game_time,
-                               int plan_slot = -1);
-
   float m_construction_timer = 0.0F;
   int m_construction_counter = 0;
 
-  const char* m_last_order_type = nullptr;
-  int m_last_order_repeats = 0;
-  int m_last_building_total = -1;
-  const char* m_deferred_type = nullptr;
-  float m_deferred_until = -1000.0F;
-  const char* m_gather_priority = nullptr;
-  float m_gather_priority_time = -1000.0F;
-
-  std::map<int, int> m_plan_slot_orders;
-  std::vector<int> m_blocked_plan_slots;
-
-  struct WorkerWatch {
-    std::uint64_t task_target_id = 0;
-    float site_x = 0.0F;
-    float site_z = 0.0F;
-    float since = 0.0F;
-  };
-
-  std::unordered_map<Engine::Core::EntityID, WorkerWatch> m_worker_watch;
-
-  std::unordered_map<std::uint64_t, float> m_sour_nodes;
-
-  std::unordered_set<Engine::Core::EntityID> m_stalled_builders;
+  ConstructionLedger m_ledger;
+  WorkerStallWatch m_stalls;
+  GatherCrew m_gather;
 };
 
 } // namespace Game::Systems::AI

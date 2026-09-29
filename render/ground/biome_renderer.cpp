@@ -20,6 +20,7 @@
 #include "game/map/scatter/ground_utils.h"
 #include "game/map/scatter/spawn_validator.h"
 #include "gl/resources.h"
+#include "map/biome_settings.h"
 #include "map/terrain.h"
 #include "render/gl/buffer.h"
 #include "render/gl/render_constants.h"

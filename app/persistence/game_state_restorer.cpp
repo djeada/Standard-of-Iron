@@ -13,7 +13,7 @@
 #include "game/map/visibility_service.h"
 #include "game/session/session_context.h"
 #include "game/systems/match_snapshot.h"
-#include "game/systems/nav_grid.h"
+#include "game/systems/navigation/nav_grid.h"
 #include "game/systems/owner_registry.h"
 #include "game/units/troop_config.h"
 #include "game/units/troop_type.h"

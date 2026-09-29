@@ -10,11 +10,11 @@
 #include "../core/component_gameplay.h"
 #include "../core/event_manager.h"
 #include "../core/world.h"
-#include "command_service.h"
 #include "healing_rules.h"
-#include "nation_collapse_service.h"
 #include "owner_registry.h"
 #include "player_feedback.h"
+#include "systems/economy/nation_collapse_service.h"
+#include "systems/movement/command_service.h"
 #include "troop_profile_service.h"
 #include "units/spawn_type.h"
 

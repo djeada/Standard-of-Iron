@@ -13,7 +13,7 @@
 #include "game/render_bridge/picking_service.h"
 #include "game/session/selection_service.h"
 #include "game/session/session_context.h"
-#include "game/systems/order_service.h"
+#include "game/systems/movement/order_service.h"
 
 namespace App::Core {
 namespace {

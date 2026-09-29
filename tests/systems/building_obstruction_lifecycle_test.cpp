@@ -14,12 +14,12 @@
 #include "session/session_context.h"
 #include "systems/building_collision_registry.h"
 #include "systems/combat_system/damage_processor.h"
-#include "systems/command_service.h"
-#include "systems/movement_pipeline.h"
+#include "systems/movement/command_service.h"
+#include "systems/movement/movement_pipeline.h"
 #include "systems/nation_id.h"
-#include "systems/nav_grid.h"
-#include "systems/pathfinding.h"
-#include "systems/wall_network_service.h"
+#include "systems/navigation/nav_grid.h"
+#include "systems/navigation/pathfinding.h"
+#include "systems/navigation/wall_network_service.h"
 
 using namespace Engine::Core;
 using namespace Game::Systems;

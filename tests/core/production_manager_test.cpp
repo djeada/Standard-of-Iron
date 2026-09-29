@@ -8,7 +8,7 @@
 #include "app/input/input_command_handler.h"
 #include "game/command/command_queue.h"
 #include "game/session/session_context.h"
-#include "game/systems/nav_grid.h"
+#include "game/systems/navigation/nav_grid.h"
 #define private public
 #include "app/economy/production_manager.h"
 #include "app/economy/production_readouts.h"
@@ -20,11 +20,11 @@
 #include "game/render_bridge/picking_service.h"
 #include "game/session/selection_service.h"
 #include "game/systems/building_collision_registry.h"
-#include "game/systems/marketplace_system.h"
-#include "game/systems/pathfinding.h"
+#include "game/systems/economy/marketplace_system.h"
+#include "game/systems/navigation/pathfinding.h"
+#include "game/systems/navigation/wall_network_service.h"
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/resource_types.h"
-#include "game/systems/wall_network_service.h"
 #include "game/units/factory.h"
 #include "game/units/spawn_type.h"
 #include "scene/camera.h"
@@ -570,6 +570,80 @@ TEST_F(ProductionManagerTest, BuilderConstructionPreviewRotationCarriesIntoQueue
   EXPECT_EQ(handed_over->product_type, "defense_tower");
 }
 
+TEST_F(ProductionManagerTest,
+       ResourcesSpentAfterThePreviewRefuseTheConfirmAndKeepPlacing) {
+  add_selected_builder();
+  ProductionManager manager(&world, &picking_service, &camera);
+  std::vector<QString> rejections;
+  int feedback_count = 0;
+  QObject::connect(
+      &manager,
+      &ProductionManager::construction_placement_rejected,
+      [&rejections](const QString& reason) { rejections.push_back(reason); });
+  QObject::connect(
+      &manager,
+      &ProductionManager::order_feedback,
+      [&feedback_count](const App::Core::OrderOutcome&) { ++feedback_count; });
+
+  manager.start_builder_construction(QStringLiteral("defense_tower"));
+  const QPointF screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
+  manager.on_construction_mouse_move(screen.x(), screen.y(), viewport);
+  ASSERT_TRUE(manager.construction_preview_valid());
+
+  auto& resources = Game::Systems::PlayerResourceRegistry::instance();
+  resources.set(1, Game::Systems::ResourceType::Wood, 0);
+  resources.set(1, Game::Systems::ResourceType::Stone, 0);
+  resources.set(1, Game::Systems::ResourceType::Iron, 0);
+  manager.on_construction_confirm();
+
+  ASSERT_EQ(rejections.size(), 1U);
+  EXPECT_FALSE(rejections.front().isEmpty());
+  EXPECT_EQ(feedback_count, 0) << "nothing was submitted, so no order outcome exists";
+  EXPECT_TRUE(manager.is_placing_construction());
+  EXPECT_EQ(manager.placement_phase(), App::Economy::PlacementPhase::Previewing);
+}
+
+TEST_F(ProductionManagerTest, ABuilderLostAfterThePreviewStillEndsThePlacementCleanly) {
+  auto* builder = add_selected_builder();
+  ProductionManager manager(&world, &picking_service, &camera);
+  int feedback_count = 0;
+  QObject::connect(
+      &manager,
+      &ProductionManager::order_feedback,
+      [&feedback_count](const App::Core::OrderOutcome&) { ++feedback_count; });
+
+  manager.start_builder_construction(QStringLiteral("defense_tower"));
+  const QPointF screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
+  manager.on_construction_mouse_move(screen.x(), screen.y(), viewport);
+  ASSERT_TRUE(manager.construction_preview_active());
+
+  world.destroy_entity(builder->get_id());
+  manager.on_construction_confirm();
+
+  EXPECT_EQ(feedback_count, 1) << "the refused order is reported through the one path";
+  EXPECT_FALSE(manager.is_placing_construction());
+  EXPECT_EQ(manager.placement_phase(), App::Economy::PlacementPhase::Idle);
+  EXPECT_FALSE(manager.construction_preview_active());
+}
+
+TEST_F(ProductionManagerTest, ResettingMidPlacementClearsEveryPreviewEntity) {
+  add_selected_builder();
+  ProductionManager manager(&world, &picking_service, &camera);
+  manager.start_builder_construction(QStringLiteral("wall_segment"));
+  const QPointF screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
+  manager.on_construction_mouse_move(screen.x(), screen.y(), viewport);
+  manager.on_construction_pointer_pressed(screen.x(), screen.y(), viewport);
+  ASSERT_FALSE(preview_entities().empty());
+  EXPECT_EQ(manager.placement_phase(), App::Economy::PlacementPhase::Previewing);
+
+  manager.reset_transient_state();
+
+  EXPECT_TRUE(preview_entities().empty());
+  EXPECT_FALSE(manager.is_placing_construction());
+  EXPECT_EQ(manager.construction_preview_segment_count(), 0);
+  EXPECT_FALSE(manager.construction_preview_active());
+}
+
 TEST_F(ProductionManagerTest, DirectBuildingPlacementRejectsConfirmWithoutResources) {
   ProductionManager manager(&world, &picking_service, &camera);
   auto& resources = Game::Systems::PlayerResourceRegistry::instance();
@@ -670,8 +744,8 @@ TEST_F(ProductionManagerTest, CollectPreviewSnapsToResourceCenterWhenNearby) {
   EXPECT_TRUE(manager.is_placing_construction());
   EXPECT_TRUE(manager.construction_preview_active());
   EXPECT_TRUE(manager.construction_preview_valid());
-  EXPECT_NEAR(manager.m_construction_placement_position.x(), target->x, 0.0001F);
-  EXPECT_NEAR(manager.m_construction_placement_position.z(), target->z, 0.0001F);
+  EXPECT_NEAR(manager.m_session.position().x(), target->x, 0.0001F);
+  EXPECT_NEAR(manager.m_session.position().z(), target->z, 0.0001F);
 }
 
 TEST_F(ProductionManagerTest,
@@ -740,9 +814,9 @@ TEST_F(ProductionManagerTest, GenericCollectPreviewStaysValidOnRaisedTerrain) {
   manager.on_construction_mouse_move(screen.x(), screen.y(), viewport);
 
   EXPECT_TRUE(manager.construction_preview_active());
-  EXPECT_EQ(manager.m_pending_harvest_target_id, target->id);
-  EXPECT_NEAR(manager.m_construction_placement_position.x(), target->x, 0.0001F);
-  EXPECT_NEAR(manager.m_construction_placement_position.z(), target->z, 0.0001F);
+  EXPECT_EQ(manager.m_session.harvest_target_id(), target->id);
+  EXPECT_NEAR(manager.m_session.position().x(), target->x, 0.0001F);
+  EXPECT_NEAR(manager.m_session.position().z(), target->z, 0.0001F);
   EXPECT_TRUE(manager.construction_preview_valid());
 
   manager.on_construction_pointer_released(screen.x(), screen.y(), viewport);

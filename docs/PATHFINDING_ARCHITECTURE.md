@@ -313,10 +313,10 @@ If we later need stronger crowd avoidance, add a separate transient occupancy or
 Since the grid knows nothing about units, something beside it has to. Two stages
 do, and they are deliberately kept apart:
 
-| Stage                  | File                                      | Job                                                                                         |
-| ---------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `LocalAvoidanceSystem` | `game/systems/local_avoidance_system.cpp` | Traffic. Decides how fast a body may go and whether it leans aside. Moves nothing.          |
-| `BodyContactSystem`    | `game/systems/body_contact_system.cpp`    | Contact. Pulls bodies that ended up inside each other apart. The only authority on overlap. |
+| Stage                  | File                                               | Job                                                                                         |
+| ---------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `LocalAvoidanceSystem` | `game/systems/movement/local_avoidance_system.cpp` | Traffic. Decides how fast a body may go and whether it leans aside. Moves nothing.          |
+| `BodyContactSystem`    | `game/systems/movement/body_contact_system.cpp`    | Contact. Pulls bodies that ended up inside each other apart. The only authority on overlap. |
 
 `MovementPipeline` runs route following, then avoidance, then the motor, then
 contact, then the traversal layout — contact after the motor, because only then
@@ -393,7 +393,7 @@ follower and nothing else:
 | may it stand here? may it step there?    | `Walkability::can_stand` / `can_traverse`    |
 | what happens when bodies overlap?        | `BodyContactSystem`                          |
 
-`body_profile_for()` (`game/systems/body_profile.cpp`) is the only place a body's
+`body_profile_for()` (`game/systems/movement/body_profile.cpp`) is the only place a body's
 radius, passability and facade rule are derived from its entity. `MovementSystem`,
 `BodyContactSystem` and `App::Core::CommanderMotor` all call it, so an RPG
 commander and an RTS-ordered commander are the same body against the same
@@ -468,7 +468,7 @@ Rivers are blocked except for authored bridge traversal cells. Bridge cells and 
 
 ### The blocked river is wider than the authored river
 
-`TerrainType::River` is stamped out to `width * 0.5`, but the ribbon in `render/ground/linear_feature_geometry.cpp` draws the water wider than that: `width_scale` times `(1 + width_variation_scale)` across, plus a meander that shifts the centreline by up to `meander_amplitude * width`. Blocking only the authored half therefore left a walkable strip under open water on both banks — on a 26 m river the blocked band was ±12.5 m while the water was drawn out to ±21 m, so units routed along the bank stood in the river. `river_drawn_half_width()` in `game/map/terrain.h` folds both allowances into the budget the renderer static-asserts against, and `river_bank_standing_half_width()` adds `k_water_bank_clearance` so a unit standing at the boundary does not overhang the water either.
+`TerrainType::River` is stamped out to `width * 0.5`, but the ribbon in `render/ground/linear_feature_geometry.cpp` draws the water wider than that: `width_scale` times `(1 + width_variation_scale)` across, plus a meander that shifts the centreline by up to `meander_amplitude * width`. Blocking only the authored half therefore left a walkable strip under open water on both banks — on a 26 m river the blocked band was ±12.5 m while the water was drawn out to ±21 m, so units routed along the bank stood in the river. `river_drawn_half_width()` in `game/map/bridge_geometry.h` folds both allowances into the budget the renderer static-asserts against, and `river_bank_standing_half_width()` adds `k_water_bank_clearance` so a unit standing at the boundary does not overhang the water either.
 
 That band is carried by `m_water_blocked`, a mask consulted by `TerrainHeightMap::is_walkable`. It deliberately does **not** change terrain type or the carved bed: the channel silhouette, the ground material and every shipped map's height profile stay exactly as authored, and only walkability moves. `m_bridge_walkable` is its counterpart on the deck — `m_on_bridge` still covers the full deck for height and traversal queries, while `m_bridge_walkable` insets it by the same clearance so nobody stands on the parapet. Both are rebuilt in `restore_from_data`, so a loaded save agrees with a fresh load. `tests/map/river_bank_walkability_test.cpp` pins all three properties.
 
@@ -685,7 +685,7 @@ the corridor actually has.
 
 Every yes/no walkability test that decides whether a single body needs a route
 uses `routing_clearance()`: the direct-line test in
-`MovementSystem::assign_navigation_target` (`is_direct_path_walkable`), the
+`MovementSystem::Assignment::assign_navigation_target` (`is_direct_path_walkable`), the
 formation-move and slot-follow direct tests, and the taut-pull. The corridor
 planner is the deliberate exception: `RouteCorridorPlanner::fit_lane` places a
 lane for a whole formation and folds it toward the centreline when the street
@@ -750,7 +750,7 @@ A second, finer hunt survived that: a unit chasing a moving target re-issues
 its move every few simulation ticks, and each fresh route from a slightly
 different start cell could pick the other side of the same tree, so the first
 leg's heading flipped by 5-7 degrees several times a second and the formation
-turned toward each in turn. `assign_navigation_target` now keeps the route it
+turned toward each in turn. `Assignment::assign_navigation_target` now keeps the route it
 has when the re-requested goal has moved less than `k_route_keep_goal_shift`
 (1.5 m, about one cell) and the new goal is walkable — it slides the final
 waypoint and goal onto the new position instead of re-pathing. A goal that has
@@ -1033,17 +1033,17 @@ That is the main performance contract: changes are sparse, so updates should be 
 
 ## File Responsibilities
 
-`game/systems/pathfinding.h`
+`game/systems/navigation/pathfinding.h`
 : Defines `Point`, `DirtyRegion`, `Pathfinding::CellValue`, `Pathfinding::NavigationGrid`, A* search, and dirty-region state.
 
-`game/systems/pathfinding.cpp`
+`game/systems/navigation/pathfinding.cpp`
 : Builds and updates the navigation grid, applies terrain/building/resource layers, forces mandatory traversal cells walkable, and runs A*.
 
-`game/systems/command_service.cpp`
+`game/systems/movement/command_service.cpp`
 : Owns the pathfinder instance, converts world/grid coordinates, exposes shared navigation queries, resolves move targets, and issues per-unit movement.
 
-`game/systems/movement_system.cpp`
-: Follows waypoints, integrates velocity, suppresses movement during melee lock/hold/direct-control overrides, reverts blocked steps, and assigns immediate local recovery when a unit is in an invalid cell.
+`game/systems/movement/movement_system.cpp`
+: Runs the motor for each mover: `move_unit` dispatches on the movement gate to `movement_system_gates.cpp` (melee lock, hold, direct control, builder bypass) or `movement_system_motor.cpp` (integrates velocity, sweeps through obstacles, reverts blocked steps). Route and target assignment, including immediate local recovery for a unit in an invalid cell, is `MovementSystem::Assignment` in `movement_orders_assignment.cpp`; group orders are `movement_orders_group.cpp`.
 
 `game/core/world.cpp`
 : Builds motion presentation snapshots from active movement/combat state. It does not own pathfinding and must not derive walk animation from stale path request bookkeeping or stale goals.

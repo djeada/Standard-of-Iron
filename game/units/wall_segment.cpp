@@ -7,7 +7,7 @@
 #include "../core/ownership_constants.h"
 #include "../core/world.h"
 #include "../systems/building_collision_registry.h"
-#include "../systems/wall_network_service.h"
+#include "../systems/navigation/wall_network_service.h"
 #include "building_spawn_setup.h"
 #include "units/unit.h"
 

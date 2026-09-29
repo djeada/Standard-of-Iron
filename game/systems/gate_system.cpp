@@ -9,7 +9,7 @@
 #include "../core/event_manager.h"
 #include "../core/world.h"
 #include "../units/spawn_type.h"
-#include "gate_service.h"
+#include "systems/navigation/gate_service.h"
 
 namespace Game::Systems {
 

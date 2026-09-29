@@ -10,7 +10,7 @@
 
 #include "game/map/map_definition.h"
 #include "game/map/terrain.h"
-#include "game/systems/wall_network_service.h"
+#include "game/systems/navigation/wall_network_service.h"
 #include "game/units/spawn_type.h"
 #include "tools/arena/arena_scenario.h"
 #include "tools/arena/arena_scenarios.h"

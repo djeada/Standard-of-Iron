@@ -2,7 +2,7 @@
 
 #include <QCoreApplication>
 
-#include "game/systems/construction_cost_catalog.h"
+#include "game/systems/economy/construction_cost_catalog.h"
 #include "game/systems/player_resource_registry.h"
 
 namespace App::Economy {

@@ -6,8 +6,8 @@
 #include "../core/event_manager.h"
 #include "../core/world.h"
 #include "../systems/building_collision_registry.h"
-#include "../systems/gate_service.h"
-#include "../systems/wall_network_service.h"
+#include "../systems/navigation/gate_service.h"
+#include "../systems/navigation/wall_network_service.h"
 #include "building_spawn_setup.h"
 #include "units/unit.h"
 

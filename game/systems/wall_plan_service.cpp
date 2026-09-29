@@ -7,14 +7,14 @@
 #include "../core/world.h"
 #include "../map/terrain_service.h"
 #include "../units/spawn_type.h"
-#include "build_site.h"
-#include "construction_cost_catalog.h"
 #include "nation_registry.h"
-#include "nav_grid.h"
-#include "order_service.h"
 #include "player_feedback.h"
 #include "player_resource_registry.h"
 #include "resource_types.h"
+#include "systems/economy/build_site.h"
+#include "systems/economy/construction_cost_catalog.h"
+#include "systems/movement/order_service.h"
+#include "systems/navigation/nav_grid.h"
 
 namespace Game::Systems {
 

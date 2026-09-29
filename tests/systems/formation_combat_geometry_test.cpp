@@ -12,9 +12,9 @@
 #include "systems/combat_system/formation_contact_processor.h"
 #include "systems/default_content.h"
 #include "systems/formation_combat_geometry.h"
-#include "systems/movement_pipeline.h"
+#include "systems/movement/movement_pipeline.h"
 #include "systems/nation_registry.h"
-#include "systems/nav_grid.h"
+#include "systems/navigation/nav_grid.h"
 #include "systems/troop_profile_service.h"
 
 namespace {

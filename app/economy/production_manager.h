@@ -2,18 +2,17 @@
 
 #include <QObject>
 #include <QString>
-#include <QVariantMap>
 #include <QVector3D>
 
 #include <cstdint>
 #include <optional>
-#include <string>
 #include <vector>
 
+#include "app/economy/construction_preview.h"
+#include "app/economy/placement_refusal.h"
+#include "app/economy/placement_session.h"
+#include "app/economy/wall_placement_session.h"
 #include "app/orders/order_feedback.h"
-#include "game/systems/nation_id.h"
-#include "game/systems/structure_placement_service.h"
-#include "game/systems/wall_plan_service.h"
 
 namespace Engine::Core {
 class World;
@@ -29,6 +28,14 @@ class PickingService;
 }
 
 struct ViewportState;
+
+namespace App::Core {
+struct OrderRequest;
+}
+
+namespace App::Economy {
+struct ConstructionPointerHit;
+}
 
 class ProductionManager : public QObject {
   Q_OBJECT
@@ -47,43 +54,39 @@ public:
   void cancel_building_placement();
   void reset_transient_state();
   [[nodiscard]] QString pending_building_type() const {
-    return m_pending_building_type;
+    return m_session.pending_building_type();
   }
   [[nodiscard]] QString pending_builder_construction_type() const {
-    return m_pending_construction_type;
+    return m_session.construction_type();
   }
 
-  [[nodiscard]] bool is_placing_construction() const {
-    return m_is_placing_construction;
-  }
-  [[nodiscard]] bool construction_preview_valid() const {
-    return m_construction_preview_valid;
-  }
+  [[nodiscard]] bool is_placing_construction() const { return m_session.active(); }
+  [[nodiscard]] bool construction_preview_valid() const { return m_preview.valid(); }
   [[nodiscard]] QString construction_preview_reason() const {
-    return m_construction_preview_reason;
+    return m_preview.reason();
   }
-  [[nodiscard]] bool construction_preview_active() const {
-    return m_construction_preview_active;
-  }
+  [[nodiscard]] bool construction_preview_active() const { return m_preview.active(); }
   [[nodiscard]] bool construction_preview_rotatable() const;
   [[nodiscard]] int construction_preview_segment_count() const {
-    return m_construction_preview_segment_count;
+    return m_preview.segment_count();
   }
   [[nodiscard]] int construction_preview_valid_segment_count() const {
-    return m_construction_preview_valid_segment_count;
+    return m_preview.valid_segment_count();
   }
   [[nodiscard]] int construction_preview_total_cost() const {
-    return m_construction_preview_total_cost;
+    return m_preview.total_cost();
   }
   [[nodiscard]] std::uint64_t pending_harvest_target_id() const {
-    return m_construction_preview_valid ? m_pending_harvest_target_id : 0;
+    return m_preview.valid() ? m_session.harvest_target_id() : 0;
   }
   [[nodiscard]] Engine::Core::EntityID pending_food_target_id() const {
-    return m_construction_preview_valid ? m_pending_food_target_id : 0;
+    return m_preview.valid() ? m_session.food_target_id() : 0;
   }
   [[nodiscard]] std::optional<QVector3D> release_position() const {
     return m_release_position;
   }
+  [[nodiscard]] auto placement_phase() const -> App::Economy::PlacementPhase;
+
   void on_construction_mouse_move(qreal sx, qreal sy, const ViewportState& viewport);
   void
   on_construction_pointer_pressed(qreal sx, qreal sy, const ViewportState& viewport);
@@ -109,78 +112,52 @@ signals:
   void order_feedback(const App::Core::OrderOutcome& outcome);
 
 private:
-  std::vector<Engine::Core::EntityID> collect_available_builders(bool include_busy);
-  QVector3D calculate_builder_center_position(
-      const std::vector<Engine::Core::EntityID>& builder_ids);
-  void set_construction_preview_active(bool active);
-  [[nodiscard]] auto wall_plan_refusal(
-      const std::vector<Game::Systems::PlannedWallSegment>& segments) const -> QString;
-  [[nodiscard]] auto
-  placement_refusal(Game::Systems::PlacementRuling ruling) const -> QString;
-  [[nodiscard]] auto ground_refusal(const QString& building_type,
-                                    float world_x,
-                                    float world_z) const -> QString;
+  enum class Handoff : std::uint8_t {
+    Discard,
+    BecomeSiteGhost
+  };
+
+  [[nodiscard]] auto ready_for_pointer() const -> bool;
+  [[nodiscard]] auto refusal_context() const -> App::Economy::RefusalContext;
+  [[nodiscard]] auto ground_refusal(const QVector3D& site) const -> QString;
   [[nodiscard]] auto nearest_legal_site(const QVector3D& wanted) const -> QVector3D;
+  [[nodiscard]] auto hover_refusal(const QVector3D& site) -> QString;
+  [[nodiscard]] auto pointer_hit(qreal sx, qreal sy, const ViewportState& viewport)
+      -> std::optional<App::Economy::ConstructionPointerHit>;
 
-  void set_construction_preview_valid(bool valid);
-  void set_construction_preview_ruling(bool valid, const QString& reason);
-  void set_construction_preview_reason(const QString& reason);
+  void hover_wall(const QVector3D& world_position);
+  void hover_structure(const App::Economy::ConstructionPointerHit& hit);
+  void hover_nothing();
+  void release_structure(qreal sx, qreal sy, const ViewportState& viewport);
+  void release_wall(qreal sx, qreal sy, const ViewportState& viewport);
+  void replan_wall(const QVector3D& pointer_world);
+  void show_structure_preview(const QVector3D& world_position);
+  void show_structure_hover(const QVector3D& world_position);
+  void drop_structure_preview();
+
+  void confirm_wall();
+  void confirm_direct_building();
+  void confirm_food_harvest();
+  void confirm_harvest();
+  void confirm_builder_structure();
+
+  void reject(const QString& reason);
+  void reject_and_invalidate(const QString& reason);
+  void submit_order(int owner_id, App::Core::OrderRequest request);
+  void end_placement(Handoff handoff = Handoff::Discard);
+
   [[nodiscard]] auto
-  non_wall_preview_ruling(const QVector3D& world_position) -> QString;
-  void clear_construction_preview_summary();
-  void set_construction_preview_summary(int segment_count,
-                                        int valid_segment_count,
-                                        int total_cost);
-  void clear_preview_entities();
-
-  void hand_preview_to_construction_site(const QString& item_type);
-  void update_non_wall_construction_preview(const QVector3D& world_position);
-  void clear_non_wall_construction_preview();
-  void rebuild_non_wall_preview_entity(const QVector3D& world_position);
-  void rebuild_wall_preview_entities();
-  void rebuild_wall_preview_plan(const QVector3D& current_world_position);
-  void append_preview_entity(const QString& item_type,
-                             const QVector3D& world_position,
-                             bool valid,
-                             float rotation_y,
-                             const std::string* renderer_override = nullptr);
-  void confirm_wall_construction_plan();
-  void confirm_direct_building_placement();
-  [[nodiscard]] auto pending_construction_owner_id() const -> int;
-  [[nodiscard]] auto pending_construction_nation_id() const -> Game::Systems::NationID;
-  [[nodiscard]] auto is_wall_construction_mode() const -> bool;
-  [[nodiscard]] auto is_gate_construction_mode() const -> bool;
+  collect_available_builders(bool include_busy) -> std::vector<Engine::Core::EntityID>;
+  [[nodiscard]] auto
+  builder_center(const std::vector<Engine::Core::EntityID>& builder_ids) -> QVector3D;
+  [[nodiscard]] auto preview_owner() const -> App::Economy::PreviewOwner;
 
   Engine::Core::World* m_world;
   Game::Systems::PickingService* m_picking_service;
   Render::GL::Camera* m_camera;
 
-  QString m_pending_building_type;
-  QString m_pending_construction_type;
-  std::vector<Engine::Core::EntityID> m_pending_construction_builders;
-  QVector3D m_construction_placement_position;
-  bool m_is_placing_construction = false;
-  bool m_is_direct_building_placement = false;
-  int m_active_placement_owner_id = 0;
-  Game::Systems::NationID m_active_placement_nation_id{
-      Game::Systems::NationID::RomanRepublic};
-  float m_construction_preview_rotation_y = 0.0F;
-  float m_wall_preview_rotation_y = 0.0F;
-  bool m_wall_preview_rotation_explicit = false;
-  bool m_construction_preview_active = false;
-  bool m_construction_preview_valid = false;
-  QString m_construction_preview_reason;
-  int m_construction_preview_segment_count = 0;
-  int m_construction_preview_valid_segment_count = 0;
-  int m_construction_preview_total_cost = 0;
-  std::uint64_t m_pending_harvest_target_id = 0;
-  Engine::Core::EntityID m_pending_food_target_id = 0;
+  App::Economy::PlacementSession m_session;
+  App::Economy::WallPlacementSession m_wall;
+  App::Economy::ConstructionPreview m_preview;
   std::optional<QVector3D> m_release_position;
-
-  bool m_wall_drag_active = false;
-  bool m_wall_drag_anchor_set = false;
-  QVector3D m_wall_drag_anchor_world;
-  Game::Systems::WallPlanRequest m_wall_plan_request;
-  std::vector<Game::Systems::PlannedWallSegment> m_wall_preview_segments;
-  std::vector<Engine::Core::EntityID> m_preview_entity_ids;
 };

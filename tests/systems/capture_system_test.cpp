@@ -4,7 +4,7 @@
 #include "game/core/component_gameplay.h"
 #include "game/core/world.h"
 #include "game/session/session_context.h"
-#include "game/systems/capture_system.h"
+#include "game/systems/economy/capture_system.h"
 #include "game/systems/owner_registry.h"
 
 namespace {

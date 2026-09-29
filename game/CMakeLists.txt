@@ -40,6 +40,9 @@ add_library(
     core/component.cpp
     core/system.cpp
     core/world.cpp
+    core/world_motion_presentation.cpp
+    core/world_creature_presentation.cpp
+    core/world_render_snapshot.cpp
     core/world_spatial_index.cpp
     core/system_profiler.cpp
     core/startup_profiler.cpp
@@ -54,6 +57,12 @@ add_library(
     core/presentation_coverage.cpp
     core/movement_trace.cpp
     core/movement_trace_analysis.cpp
+    core/movement_trace_troop_analysis.cpp
+    core/movement_trace_soldier_analysis.cpp
+    core/movement_trace_progress_detectors.cpp
+    core/movement_trace_presentation_detectors.cpp
+    core/movement_trace_format.cpp
+    core/movement_trace_digest.cpp
     session/simulation_clock.cpp
     systems/unit_activity.cpp
     util/asset_text.cpp
@@ -121,13 +130,25 @@ add_library(
     map/explored_mask_codec.cpp
     map/map_context.cpp
     map/map_loader.cpp
+    map/map_loader_entities.cpp
+    map/map_loader_env.cpp
+    map/map_loader_terrain.cpp
     map/procedural_tree_generation.cpp
     map/scatter/spawn_validator.cpp
     map/scatter/tree_scatter_walk.cpp
     map/scatter/world_prop_clearance_index.cpp
     map/terrain.cpp
+    map/terrain_biome.cpp
+    map/terrain_build.cpp
+    map/terrain_hill_build.cpp
+    map/terrain_hill_ramp.cpp
+    map/terrain_hill_nav.cpp
+    map/terrain_water_bridges.cpp
     map/terrain_landform.cpp
     map/terrain_service.cpp
+    map/terrain_road_index.cpp
+    map/terrain_surface_queries.cpp
+    map/terrain_world_props.cpp
     map/terrain_topology_audit.cpp
     map/undead_shrine_placement.cpp
     map/visibility_service.cpp
@@ -153,14 +174,19 @@ target_link_libraries(
 add_library(
     soi_navigation
     STATIC
-    systems/nav_grid.cpp
-    systems/navigation_service.cpp
-    systems/pathfinding.cpp
-    systems/walkability.cpp
-    systems/route_corridor_planner.cpp
-    systems/gate_service.cpp
-    systems/wall_network_service.cpp
-    systems/terrain_alignment_system.cpp
+    systems/navigation/nav_grid.cpp
+    systems/navigation/navigation_service.cpp
+    systems/navigation/pathfinding.cpp
+    systems/navigation/pathfinding_astar.cpp
+    systems/navigation/pathfinding_clearance.cpp
+    systems/navigation/pathfinding_dirty.cpp
+    systems/navigation/pathfinding_grid_build.cpp
+    systems/navigation/pathfinding_regions.cpp
+    systems/navigation/walkability.cpp
+    systems/navigation/route_corridor_planner.cpp
+    systems/navigation/gate_service.cpp
+    systems/navigation/wall_network_service.cpp
+    systems/navigation/terrain_alignment_system.cpp
 )
 target_include_directories(soi_navigation PUBLIC .)
 # The rung below is PRIVATE and engine_core is PUBLIC: no header in
@@ -229,16 +255,42 @@ add_library(
     formation/troop_role_registry.cpp
     formation/formation_doctrine.cpp
     formation/unit_layout.cpp
+    formation/unit_layout_styles_generic.cpp
+    formation/unit_layout_styles_rome.cpp
+    formation/unit_layout_styles_carthage.cpp
+    formation/unit_layout_styles_sepulcher.cpp
     formation/unit_layout_resolver.cpp
     formation/army_formation_planner.cpp
+    formation/army_formation_plan.cpp
+    formation/army_formation_members.cpp
+    formation/formation_frame.cpp
+    formation/formation_row_split.cpp
+    formation/formation_footprint_claims.cpp
+    formation/formation_slot_fitter.cpp
+    formation/formation_slot_adjust.cpp
+    formation/formation_line_layout.cpp
+    formation/formation_silhouette_shapes.cpp
+    formation/formation_silhouette.cpp
+    formation/formation_assignment.cpp
     formation/army_formation_registry.cpp
+    formation/army_formation_codec.cpp
+    formation/army_formation_morph.cpp
+    formation/army_formation_march.cpp
+    formation/army_formation_cohesion.cpp
+    formation/army_formation_runtime.cpp
     formation/army_formation_service.cpp
     formation/formation_data_loader.cpp
     formation/unit_layout_state_system.cpp
     systems/cohort_system.cpp
     systems/defensive_unit_layout_service.cpp
     systems/duel_spacing.cpp
-    systems/formation_combat_geometry.cpp
+    systems/formation_geometry_cache.cpp
+    systems/formation_layout_definition.cpp
+    systems/formation_layout_cache.cpp
+    systems/formation_work_site.cpp
+    systems/formation_spatial_anchors.cpp
+    systems/formation_contact.cpp
+    systems/formation_engagement.cpp
     systems/combat_system/structure_combat.cpp
 )
 target_include_directories(soi_formations PUBLIC .)
@@ -248,18 +300,32 @@ target_link_libraries(soi_formations PUBLIC soi_units)
 add_library(
     soi_movement
     STATIC
-    systems/order_service.cpp
-    systems/body_profile.cpp
-    systems/command_service.cpp
-    systems/movement_route.cpp
-    systems/route_follow_system.cpp
-    systems/movement_system.cpp
-    systems/unit_traversal_layout_system.cpp
-    systems/movement_pipeline.cpp
-    systems/movement_orders.cpp
-    systems/local_avoidance_system.cpp
-    systems/body_contact_system.cpp
-    systems/formation_move_dispatch_system.cpp
+    systems/movement/order_service.cpp
+    systems/movement/body_profile.cpp
+    systems/movement/command_service.cpp
+    systems/movement/movement_route.cpp
+    systems/movement/route_follow_system.cpp
+    systems/movement/route_follow_system_arrival.cpp
+    systems/movement/route_follow_system_gate.cpp
+    systems/movement/route_follow_system_progress.cpp
+    systems/movement/route_follow_system_stall.cpp
+    systems/movement/route_follow_system_steering.cpp
+    systems/movement/movement_system.cpp
+    systems/movement/movement_system_collision.cpp
+    systems/movement/movement_system_duel_footwork.cpp
+    systems/movement/movement_system_gates.cpp
+    systems/movement/movement_system_heading.cpp
+    systems/movement/movement_system_motor.cpp
+    systems/movement/movement_system_path_requests.cpp
+    systems/movement/unit_traversal_layout_system.cpp
+    systems/movement/movement_pipeline.cpp
+    systems/movement/movement_orders.cpp
+    systems/movement/movement_orders_assignment.cpp
+    systems/movement/movement_orders_group.cpp
+    systems/movement/movement_orders_targets.cpp
+    systems/movement/local_avoidance_system.cpp
+    systems/movement/body_contact_system.cpp
+    systems/movement/formation_move_dispatch_system.cpp
 )
 target_include_directories(soi_movement PUBLIC .)
 target_link_libraries(soi_movement PUBLIC soi_formations)
@@ -268,18 +334,28 @@ target_link_libraries(soi_movement PUBLIC soi_formations)
 add_library(
     soi_economy
     STATIC
-    systems/build_site.cpp
-    systems/construction_cost_catalog.cpp
-    systems/production_service.cpp
-    systems/production_system.cpp
-    systems/civilian_delivery_system.cpp
-    systems/resource_delivery_system.cpp
-    systems/gather_loop_system.cpp
-    systems/farm_system.cpp
-    systems/food_targets.cpp
-    systems/capture_system.cpp
-    systems/marketplace_system.cpp
-    systems/nation_collapse_service.cpp
+    systems/economy/build_site.cpp
+    systems/economy/construction_cost_catalog.cpp
+    systems/economy/production_service.cpp
+    systems/economy/production_system.cpp
+    systems/economy/production_system_approach.cpp
+    systems/economy/production_system_builder.cpp
+    systems/economy/production_system_builder_task.cpp
+    systems/economy/production_system_construction.cpp
+    systems/economy/production_system_food.cpp
+    systems/economy/production_system_repair.cpp
+    systems/economy/production_system_shared_site.cpp
+    systems/economy/production_system_site_ghosts.cpp
+    systems/economy/production_system_training.cpp
+    systems/economy/production_system_wall.cpp
+    systems/economy/civilian_delivery_system.cpp
+    systems/economy/resource_delivery_system.cpp
+    systems/economy/gather_loop_system.cpp
+    systems/economy/farm_system.cpp
+    systems/economy/food_targets.cpp
+    systems/economy/capture_system.cpp
+    systems/economy/marketplace_system.cpp
+    systems/economy/nation_collapse_service.cpp
 )
 target_include_directories(soi_economy PUBLIC .)
 target_link_libraries(soi_economy PUBLIC engine_core PRIVATE soi_movement)
@@ -294,20 +370,46 @@ add_library(
     systems/combat_system/target_rules.cpp
     systems/combat_system/structure_fire.cpp
     systems/combat_system/damage_application.cpp
+    systems/combat_system/death_variant.cpp
+    systems/combat_system/formation_casualties.cpp
+    systems/combat_system/blood_stains.cpp
     systems/combat_system/damage_processor.cpp
     systems/combat_system/combat_mode_processor.cpp
     systems/combat_system/formation_contact_processor.cpp
+    systems/combat_system/formation_contact_fronts.cpp
+    systems/combat_system/formation_combat_roles.cpp
+    systems/combat_system/formation_soldier_walk.cpp
+    systems/combat_system/formation_foreign_grid.cpp
+    systems/combat_system/formation_soldier_gait.cpp
+    systems/combat_system/formation_reform_walk.cpp
+    systems/combat_system/formation_slot_directive.cpp
+    systems/combat_system/formation_terrain_constraint.cpp
+    systems/combat_system/formation_structure_facade.cpp
+    systems/combat_system/formation_presentation_publisher.cpp
     systems/combat_system/auto_engagement.cpp
     systems/combat_system/engagement_trace.cpp
     systems/combat_system/threat_alert.cpp
     systems/combat_system/hit_feedback_processor.cpp
     systems/combat_system/combat_hit_resolver.cpp
     systems/combat_system/combat_action_processor.cpp
+    systems/combat_system/combat_action_predicates.cpp
+    systems/combat_system/commander_signature_effects.cpp
+    systems/combat_system/commander_root_motion.cpp
+    systems/combat_system/authored_action_reaction.cpp
+    systems/combat_system/action_contact_damage.cpp
+    systems/combat_system/rts_melee_contact.cpp
     systems/combat_system/spear_brace_processor.cpp
     systems/combat_system/mounted_charge_processor.cpp
     systems/combat_system/combat_status_effect_processor.cpp
     systems/combat_system/combat_state_processor.cpp
     systems/combat_system/attack_processor.cpp
+    systems/combat_system/attack_control.cpp
+    systems/combat_system/attack_chase.cpp
+    systems/combat_system/attack_eligibility.cpp
+    systems/combat_system/attack_stat_modifiers.cpp
+    systems/combat_system/arrow_volley.cpp
+    systems/combat_system/melee_lock.cpp
+    systems/combat_system/rts_commander_attack.cpp
     systems/combat_system/melee_exchange.cpp
     systems/combat_system/elephant_special_processor.cpp
     systems/combat_system/siege_special_processor.cpp
@@ -318,6 +420,8 @@ add_library(
     systems/combat_actions/melee_intent_solver.cpp
     systems/combat_actions/projectile_release.cpp
     systems/combat_actions/weapon_trace.cpp
+    systems/combat_actions/weapon_trace_baked.cpp
+    systems/combat_actions/weapon_trace_sampling.cpp
     systems/rpg_combat_system/rpg_bow_aim.cpp
     systems/rpg_combat_system/rpg_bow_draw.cpp
     systems/rpg_combat_system/rpg_bow_shot.cpp
@@ -357,6 +461,11 @@ add_library(
     wildlife/wildlife_threats.cpp
     wildlife/bird_flock.cpp
     wildlife/wildlife_system.cpp
+    wildlife/wildlife_census.cpp
+    wildlife/wildlife_nature_actions.cpp
+    wildlife/wildlife_persistence.cpp
+    wildlife/wildlife_predation.cpp
+    wildlife/wildlife_spawner.cpp
     wildlife/nature_ai.cpp
 )
 target_include_directories(soi_wildlife PUBLIC .)
@@ -381,6 +490,9 @@ add_library(
     command/command_codec.cpp
     command/commander_input.cpp
     command/command_dispatcher.cpp
+    command/command_unit_orders.cpp
+    command/command_worker_orders.cpp
+    command/command_alliance_orders.cpp
     command/command_queue.cpp
     command/command_system.cpp
     command/command_validator.cpp
@@ -407,7 +519,13 @@ add_library(
     systems/showcase_routine_system.cpp
     systems/cursed_gold_vein_system.cpp
     systems/undead_awakening_system.cpp
+    systems/undead_guardians.cpp
+    systems/undead_shrine.cpp
+    systems/undead_zone_music.cpp
+    systems/undead_zone_persistence.cpp
     systems/victory_service.cpp
+    systems/victory_rule_builder.cpp
+    systems/victory_rule_traits.cpp
     # Rebuilding the registries that are derived from world contents rather than
     # stored with them. It was in app/persistence, which meant the mission code
     # that needs it depended on the client -- the one edge that kept
@@ -510,6 +628,8 @@ add_library(
     mission/mission_commander_setup.cpp
     mission/mission_definition_view.cpp
     mission/tutorial_director.cpp
+    mission/tutorial_step_text.cpp
+    mission/tutorial_step_coaching.cpp
 )
 target_include_directories(soi_missions PUBLIC .)
 target_link_libraries(soi_missions PUBLIC game_sim soi_campaign)
@@ -531,9 +651,22 @@ add_library(
     # what made engine_core and game_sim a declared static-library cycle. It was
     # never the ECS's job: nothing in game/core/ calls it.
     save/serialization.cpp
-    systems/save_format.cpp
-    systems/save_load_service.cpp
-    systems/save_storage.cpp
+    save/component_core_codec.cpp
+    save/component_combat_codec.cpp
+    save/component_ability_codec.cpp
+    save/component_status_codec.cpp
+    save/component_commander_codec.cpp
+    save/component_economy_codec.cpp
+    save/component_structures_codec.cpp
+    save/terrain_codec.cpp
+    save/terrain_biome_codec.cpp
+    systems/persistence/save_format.cpp
+    systems/persistence/save_load_service.cpp
+    systems/persistence/save_storage.cpp
+    systems/persistence/save_schema.cpp
+    systems/persistence/save_slots.cpp
+    systems/persistence/save_campaign_progress.cpp
+    systems/persistence/save_campaign_catalog.cpp
 )
 target_include_directories(soi_persistence PUBLIC .)
 # The save database is the only thing in the simulation stack that speaks SQL.
@@ -551,6 +684,11 @@ add_library(
     systems/ai_system/ai_base_manager.cpp
     systems/ai_system/ai_snapshot_builder.cpp
     systems/ai_system/ai_reasoner.cpp
+    systems/ai_system/ai_context_census.cpp
+    systems/ai_system/ai_doctrine_rules.cpp
+    systems/ai_system/ai_expansion_planner.cpp
+    systems/ai_system/ai_force_assignment.cpp
+    systems/ai_system/ai_macro_targets.cpp
     systems/ai_system/ai_executor.cpp
     systems/ai_system/ai_worker.cpp
     systems/ai_system/ai_formation.cpp
@@ -574,6 +712,17 @@ add_library(
     systems/ai_system/behaviors/expand_behavior.cpp
     systems/ai_system/behaviors/gold_vein_behavior.cpp
     systems/ai_system/behaviors/builder_behavior.cpp
+    systems/ai_system/behaviors/builder_affordability.cpp
+    systems/ai_system/behaviors/builder_catalog.cpp
+    systems/ai_system/behaviors/builder_gather_crew.cpp
+    systems/ai_system/behaviors/builder_intent.cpp
+    systems/ai_system/behaviors/builder_ledger.cpp
+    systems/ai_system/behaviors/builder_orders.cpp
+    systems/ai_system/behaviors/builder_pool.cpp
+    systems/ai_system/behaviors/builder_site_geometry.cpp
+    systems/ai_system/behaviors/builder_site_planner.cpp
+    systems/ai_system/behaviors/builder_stall_watch.cpp
+    systems/ai_system/behaviors/builder_town_plan.cpp
     systems/ai_system/behaviors/economy_behavior.cpp
     systems/ai_system/behaviors/squad_discipline_behavior.cpp
     systems/ai_system/behaviors/commander_behavior.cpp
@@ -648,6 +797,8 @@ add_library(
     render_bridge/picking_service.cpp
     render_bridge/game_state_serializer.cpp
     render_bridge/minimap/minimap_generator.cpp
+    render_bridge/minimap/minimap_water_layer.cpp
+    render_bridge/minimap/minimap_decor.cpp
     render_bridge/minimap/map_preview_generator.cpp
     render_bridge/minimap/minimap_fog_compositor.cpp
     render_bridge/minimap/unit_layer.cpp

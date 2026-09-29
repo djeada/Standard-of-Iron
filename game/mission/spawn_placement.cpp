@@ -7,9 +7,9 @@
 #include "game/core/component_core.h"
 #include "game/core/component_structures.h"
 #include "game/core/world.h"
-#include "game/systems/command_service.h"
+#include "game/systems/movement/command_service.h"
+#include "game/systems/navigation/walkability.h"
 #include "game/systems/undead_awakening_system.h"
-#include "game/systems/walkability.h"
 
 namespace Game::Mission {
 namespace {

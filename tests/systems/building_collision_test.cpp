@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 
 #include "systems/building_collision_registry.h"
-#include "systems/nav_grid.h"
-#include "systems/pathfinding.h"
+#include "systems/navigation/nav_grid.h"
+#include "systems/navigation/pathfinding.h"
 
 using namespace Game::Systems;
 

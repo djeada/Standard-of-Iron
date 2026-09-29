@@ -6,8 +6,8 @@
 #include <cmath>
 #include <cstdint>
 
+#include "game/map/ground_type.h"
 #include "game/map/scatter/value_noise.h"
-#include "game/map/terrain.h"
 
 namespace Render::Ground {
 

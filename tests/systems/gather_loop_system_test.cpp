@@ -8,9 +8,9 @@
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/builder_product_types.h"
-#include "game/systems/gather_loop_system.h"
-#include "game/systems/nav_grid.h"
-#include "game/systems/order_service.h"
+#include "game/systems/economy/gather_loop_system.h"
+#include "game/systems/movement/order_service.h"
+#include "game/systems/navigation/nav_grid.h"
 #include "game/units/spawn_type.h"
 
 namespace {

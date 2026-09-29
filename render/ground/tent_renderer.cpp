@@ -7,6 +7,7 @@
 
 #include "decoration_gpu.h"
 #include "game/map/scatter/ground_utils.h"
+#include "map/biome_settings.h"
 #include "map/terrain.h"
 #include "map/terrain_service.h"
 #include "render/scene_renderer.h"

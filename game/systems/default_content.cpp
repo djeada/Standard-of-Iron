@@ -2,8 +2,8 @@
 
 #include "../formation/formation_data_loader.h"
 #include "../units/troop_catalog_loader.h"
-#include "construction_cost_catalog.h"
 #include "nation_registry.h"
+#include "systems/economy/construction_cost_catalog.h"
 
 namespace Game::Systems {
 

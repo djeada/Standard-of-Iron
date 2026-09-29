@@ -13,9 +13,9 @@
 #include "../map/map_definition.h"
 #include "../map/terrain_service.h"
 #include "building_collision_registry.h"
-#include "command_service.h"
-#include "nav_grid.h"
 #include "owner_registry.h"
+#include "systems/movement/command_service.h"
+#include "systems/navigation/nav_grid.h"
 #include "units/spawn_type.h"
 
 namespace Game::Systems {

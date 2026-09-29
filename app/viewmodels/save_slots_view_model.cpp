@@ -4,8 +4,8 @@
 #include <QFileInfo>
 
 #include "app/core/user_settings.h"
-#include "game/systems/save_format.h"
-#include "game/systems/save_load_service.h"
+#include "game/systems/persistence/save_format.h"
+#include "game/systems/persistence/save_load_service.h"
 
 namespace App::ViewModels {
 

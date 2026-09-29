@@ -4,7 +4,7 @@
 #include "core/component_structures.h"
 #include "core/event_manager.h"
 #include "core/world.h"
-#include "game/systems/marketplace_system.h"
+#include "game/systems/economy/marketplace_system.h"
 #include "game/systems/player_feedback.h"
 #include "game/systems/player_resource_registry.h"
 #include "game/units/spawn_type.h"

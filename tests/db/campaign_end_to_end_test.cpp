@@ -18,7 +18,7 @@
 #include "systems/global_stats_registry.h"
 #include "systems/nation_registry.h"
 #include "systems/owner_registry.h"
-#include "systems/save_storage.h"
+#include "systems/persistence/save_storage.h"
 #include "systems/victory_service.h"
 #include "units/spawn_type.h"
 

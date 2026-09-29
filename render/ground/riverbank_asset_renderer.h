@@ -6,6 +6,7 @@
 #include <memory>
 #include <vector>
 
+#include "game/map/biome_settings.h"
 #include "game/map/terrain.h"
 #include "render/i_render_pass.h"
 #include "riverbank_asset_gpu.h"

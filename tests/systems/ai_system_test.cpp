@@ -46,11 +46,11 @@
 #include "game/systems/ai_system/behaviors/squad_discipline_behavior.h"
 #include "game/systems/default_content.h"
 #include "game/systems/nation_registry.h"
-#include "game/systems/navigation_service.h"
+#include "game/systems/navigation/navigation_service.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/player_resource_registry.h"
-#include "systems/nav_grid.h"
-#include "systems/pathfinding.h"
+#include "systems/navigation/nav_grid.h"
+#include "systems/navigation/pathfinding.h"
 
 namespace {
 
