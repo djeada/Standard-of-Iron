@@ -13,7 +13,7 @@
 #include "game/core/component_structures.h"
 #include "game/core/world.h"
 #include "game/mission/mission_waves.h"
-#include "game/systems/nation_collapse_service.h"
+#include "game/systems/economy/nation_collapse_service.h"
 
 namespace Game::Mission {
 

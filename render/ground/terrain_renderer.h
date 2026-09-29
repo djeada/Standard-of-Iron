@@ -11,6 +11,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "game/map/biome_settings.h"
 #include "game/map/terrain.h"
 #include "render/draw_commands.h"
 #include "render/gl/mesh.h"

@@ -11,8 +11,14 @@
 #include <vector>
 
 #include "app/orders/army_formation_controller.h"
+#include "app/orders/command_result.h"
+#include "app/orders/mode_toggle_commands.h"
+#include "app/orders/movement_commands.h"
 #include "app/orders/order_feedback.h"
 #include "app/orders/order_issuer.h"
+#include "app/orders/patrol_commands.h"
+#include "app/orders/roster_commands.h"
+#include "app/orders/worker_commands.h"
 #include "game/audio/cue_ids.h"
 #include "game/command/command.h"
 #include "game/units/troop_type.h"
@@ -25,17 +31,9 @@ using EntityID = std::uint64_t;
 
 namespace Game::Systems {
 class PickingService;
-enum class ProductionResult;
 } // namespace Game::Systems
 
 namespace App::Controllers {
-
-struct CommandResult {
-  bool input_consumed = false;
-  bool reset_cursor_to_normal = false;
-
-  App::Core::OrderOutcome order;
-};
 
 class CommandController : public QObject {
   Q_OBJECT
@@ -127,21 +125,15 @@ public:
                        int viewport_width,
                        int viewport_height,
                        void* camera) -> CommandResult;
-  auto set_rally_at_screen(qreal sx,
-                           qreal sy,
-                           int viewport_width,
-                           int viewport_height,
-                           void* camera,
-                           int local_owner_id) -> CommandResult;
   void recruit_near_selected(const QString& unit_type, int local_owner_id);
 
   [[nodiscard]] bool has_patrol_first_waypoint() const {
-    return m_has_patrol_first_waypoint;
+    return m_patrol.has_first_waypoint();
   }
   [[nodiscard]] QVector3D get_patrol_first_waypoint() const {
-    return m_patrol_first_waypoint;
+    return m_patrol.first_waypoint();
   }
-  void clear_patrol_first_waypoint() { m_has_patrol_first_waypoint = false; }
+  void clear_patrol_first_waypoint() { m_patrol.clear_first_waypoint(); }
   void reset_transient_state();
 
   auto refuse_unreachable_move(const QVector3D& destination) -> App::Core::OrderOutcome;
@@ -171,25 +163,21 @@ signals:
   void formation_preview_changed();
 
 private:
-  [[nodiscard]] static auto
-  recruit_refusal(Engine::Core::World& world,
-                  Game::Systems::ProductionResult ruling,
-                  Engine::Core::EntityID building,
-                  Game::Units::TroopType product,
-                  int local_owner_id) -> App::Core::OrderRefusal;
-  auto issue_auto_gather(const std::vector<Engine::Core::EntityID>& builders,
-                         bool active,
-                         const QString& priority_product_type) -> CommandResult;
+  [[nodiscard]] static auto target_at(qreal sx,
+                                      qreal sy,
+                                      int viewport_width,
+                                      int viewport_height,
+                                      void* camera) -> PointerTarget;
 
-  Engine::Core::World* m_world;
-  Game::Session::SelectionService* m_selection_system;
   Game::Systems::PickingService* m_picking_service;
-
-  bool m_has_patrol_first_waypoint = false;
-  QVector3D m_patrol_first_waypoint;
 
   App::Orders::OrderIssuer m_orders;
   ArmyFormationController m_formation;
+  ModeToggleCommands m_modes;
+  MovementCommands m_movement;
+  WorkerCommands m_workers;
+  RosterCommands m_roster;
+  PatrolCommands m_patrol;
 };
 
 } // namespace App::Controllers

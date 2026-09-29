@@ -16,10 +16,10 @@
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
 #include "systems/building_collision_registry.h"
-#include "systems/command_service.h"
+#include "systems/movement/command_service.h"
 #include "systems/nation_registry.h"
-#include "systems/nav_grid.h"
-#include "systems/pathfinding.h"
+#include "systems/navigation/nav_grid.h"
+#include "systems/navigation/pathfinding.h"
 #include "systems/troop_profile_service.h"
 
 namespace {

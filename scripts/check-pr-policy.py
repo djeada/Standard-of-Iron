@@ -44,6 +44,16 @@ CHECKS: tuple[Check, ...] = (
         "scripts/check-command-boundary.py",
     ),
     Check(
+        "qt-keyword-identifiers",
+        "Qt keyword macros as identifiers",
+        "scripts/check-qt-keyword-identifiers.py",
+    ),
+    Check(
+        "navigation-guides",
+        "Navigation guide call paths",
+        "scripts/check-navigation-guides.py",
+    ),
+    Check(
         "architecture-doc",
         "Architecture document contract",
         "scripts/check-architecture-doc.py",

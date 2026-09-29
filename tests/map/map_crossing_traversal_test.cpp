@@ -14,14 +14,14 @@
 #include "game/map/map_loader.h"
 #include "game/map/terrain_service.h"
 #include "game/session/session_context.h"
-#include "game/systems/command_service.h"
 #include "game/systems/default_content.h"
+#include "game/systems/movement/command_service.h"
 #include "game/systems/nation_registry.h"
-#include "game/systems/nav_grid.h"
+#include "game/systems/navigation/nav_grid.h"
+#include "game/systems/navigation/pathfinding.h"
+#include "game/systems/navigation/walkability.h"
 #include "game/systems/owner_registry.h"
-#include "game/systems/pathfinding.h"
 #include "game/systems/runtime_system_registry.h"
-#include "game/systems/walkability.h"
 #include "units/spawn_type.h"
 
 namespace {

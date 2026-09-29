@@ -7,6 +7,7 @@
 #include <memory>
 #include <vector>
 
+#include "game/map/biome_settings.h"
 #include "game/map/scatter/spawn_validator.h"
 #include "game/map/terrain.h"
 #include "i_scatter_pass.h"

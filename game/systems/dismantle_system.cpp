@@ -10,9 +10,9 @@
 #include "../units/spawn_type.h"
 #include "builder_product_types.h"
 #include "combat_system/damage_application.h"
-#include "construction_cost_catalog.h"
 #include "player_feedback.h"
 #include "resource_types.h"
+#include "systems/economy/construction_cost_catalog.h"
 
 namespace Game::Systems {
 

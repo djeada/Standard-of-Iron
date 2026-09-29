@@ -8,12 +8,12 @@
 #include "game/core/simulation_timing.h"
 #include "game/map/terrain_service.h"
 #include "game/session/session_context.h"
-#include "game/systems/body_profile.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/building_line_of_sight.h"
-#include "game/systems/nav_grid.h"
-#include "game/systems/pathfinding.h"
-#include "game/systems/walkability.h"
+#include "game/systems/movement/body_profile.h"
+#include "game/systems/navigation/nav_grid.h"
+#include "game/systems/navigation/pathfinding.h"
+#include "game/systems/navigation/walkability.h"
 
 namespace App::Core {
 

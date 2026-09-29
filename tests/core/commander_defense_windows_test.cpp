@@ -12,7 +12,7 @@
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/combat_actions/commander_defense_timeline.h"
-#include "game/systems/nav_grid.h"
+#include "game/systems/navigation/nav_grid.h"
 #include "game/systems/rpg_combat_system/rpg_commander_damage.h"
 #include "game/systems/rpg_combat_system/rpg_targeting.h"
 

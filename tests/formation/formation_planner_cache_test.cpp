@@ -13,8 +13,8 @@
 #include "formation/army_formation_registry.h"
 #include "formation/formation_doctrine.h"
 #include "systems/nation_registry.h"
-#include "systems/nav_grid.h"
-#include "systems/pathfinding.h"
+#include "systems/navigation/nav_grid.h"
+#include "systems/navigation/pathfinding.h"
 #include "systems/troop_profile_service.h"
 
 namespace {

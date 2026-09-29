@@ -490,16 +490,17 @@ That prevents a visual symptom from being mistaken for an authoritative damage b
 
 ## Source map
 
-| Concern                      | Source                                              |
-| ---------------------------- | --------------------------------------------------- |
-| Combat orchestration         | `game/systems/combat_system.cpp`                    |
-| Shared target rules          | `game/systems/combat_system/target_rules.*`         |
-| Normal attacks               | `game/systems/combat_system/attack_processor.cpp`   |
-| Damage application           | `game/systems/combat_system/damage_application.cpp` |
-| Melee exchange               | `game/systems/combat_system/melee_exchange.*`       |
-| Threat/engagement/commitment | `game/systems/combat_system/`                       |
-| Counter constants            | `game/systems/combat_system/combat_types.h`         |
-| Troop combat data            | `assets/data/troops/` and nation data               |
-| Balance fixtures             | `assets/balance/`, `tools/balance_sim/`             |
+| Concern                      | Source                                                                                                                                                                  |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Combat orchestration         | `game/systems/combat_system.cpp`                                                                                                                                        |
+| Shared target rules          | `game/systems/combat_system/target_rules.*`                                                                                                                             |
+| Normal attacks               | `game/systems/combat_system/attack_processor.cpp`                                                                                                                       |
+| Melee locks, chase, volleys  | `melee_lock.*`, `attack_chase.*`, `arrow_volley.*`, `rts_commander_attack.*`, `attack_stat_modifiers.*`, `attack_eligibility.*`, `attack_control.*` in `combat_system/` |
+| Damage application           | `game/systems/combat_system/damage_application.cpp`                                                                                                                     |
+| Melee exchange               | `game/systems/combat_system/melee_exchange.*`                                                                                                                           |
+| Threat/engagement/commitment | `game/systems/combat_system/`                                                                                                                                           |
+| Counter constants            | `game/systems/combat_system/combat_types.h`                                                                                                                             |
+| Troop combat data            | `assets/data/troops/` and nation data                                                                                                                                   |
+| Balance fixtures             | `assets/balance/`, `tools/balance_sim/`                                                                                                                                 |
 
 The processor order in `CombatSystem::update()` and the shared target rules are the authoritative current contract. Historical bug narratives are not required to explain how the combat system works now.

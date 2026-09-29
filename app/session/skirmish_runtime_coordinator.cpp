@@ -1,13 +1,22 @@
 #include "app/session/skirmish_runtime_coordinator.h"
 
+#include <QDebug>
 #include <QVector3D>
 
+#include <chrono>
+#include <cstdint>
+
 #include "app/session/level_orchestrator.h"
+#include "app/session/loading_overlay.h"
 #include "game/core/component_core.h"
+#include "game/core/startup_profiler.h"
 #include "game/core/world.h"
 #include "game/game_config.h"
+#include "game/map/map_context.h"
+#include "game/mission/campaign_manager.h"
 #include "game/mission/difficulty_forces.h"
 #include "game/session/session_context.h"
+#include "game/systems/ai_system.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/player_resource_registry.h"
 #include "game/units/spawn_type.h"
@@ -140,13 +149,88 @@ void SkirmishRuntimeCoordinator::initialize_player_resources(
 auto SkirmishRuntimeCoordinator::finalize_load(
     const FinalizeSkirmishLoadContext& ctx) const -> FinalizeSkirmishLoadEffects {
   ctx.runtime_loading = false;
-  ctx.loading_overlay_wait_for_first_frame.store(true, std::memory_order_release);
-  ctx.loading_overlay_frames_remaining = 5;
-  ctx.loading_overlay_min_duration_ms = 1000;
-  ctx.loading_overlay_timer.restart();
-  ctx.finalize_progress_after_overlay = true;
-  ctx.show_objectives_after_loading = ctx.is_mission_match;
+  ctx.loading_overlay.arm_after_load();
+  ctx.loading_overlay.set_show_objectives_after_loading(ctx.is_mission_match);
   return {};
+}
+
+auto SkirmishRuntimeCoordinator::loading_tip_hints(const CampaignManager* campaign)
+    -> LoadingTipHints {
+  LoadingTipHints hints;
+  if (campaign == nullptr || !campaign->current_mission_definition().has_value()) {
+    return hints;
+  }
+  const auto& mission = *campaign->current_mission_definition();
+  hints.mission_id = mission.id;
+  hints.mission_has_undead = mission.include_ambient_undead;
+  for (const auto& condition : mission.victory_conditions) {
+    if (condition.type.contains(QStringLiteral("undead")) ||
+        condition.type == QStringLiteral("purify_shrine")) {
+      hints.mission_has_undead = true;
+    }
+  }
+  return hints;
+}
+
+void SkirmishRuntimeCoordinator::apply_difficulty_forces(
+    Engine::Core::World& world,
+    const Game::Mission::MatchDifficulty& difficulty,
+    int local_owner_id) {
+  const Engine::Core::ScopedStartupPhase phase("mission.difficulty_forces");
+  const auto forces =
+      Game::Mission::apply_starting_force_difficulty(world, difficulty, local_owner_id);
+  (void)Game::Mission::apply_undead_wave_difficulty(world, difficulty);
+  if (forces.units_added != 0 || forces.units_withdrawn != 0) {
+    qInfo() << "Difficulty:" << difficulty.baseline_id() << "reinforced"
+            << forces.owners_scaled << "opponent(s) by" << forces.units_added
+            << "unit(s) and withdrew" << forces.units_withdrawn;
+  }
+}
+
+void SkirmishRuntimeCoordinator::record_startup_counters(Engine::Core::World& world) {
+  const auto map_statistics = Game::Map::MapContextStore::statistics();
+  auto& profiler = Engine::Core::StartupProfiler::instance();
+  profiler.add_counter("map.requests",
+                       static_cast<std::int64_t>(map_statistics.requests));
+  profiler.add_counter("map.parses", static_cast<std::int64_t>(map_statistics.parses));
+  profiler.add_counter("map.reuses", static_cast<std::int64_t>(map_statistics.reuses));
+  if (Engine::Core::StartupProfiler::reporting_enabled()) {
+    std::int64_t unit_count = 0;
+    for ([[maybe_unused]] auto entry : world.view<Engine::Core::UnitComponent>()) {
+      ++unit_count;
+    }
+    profiler.add_counter("world.units", unit_count);
+  }
+}
+
+void SkirmishRuntimeCoordinator::prepare_ai_state(
+    Engine::Core::World* world, Game::Session::SessionContext* session) {
+  if (world == nullptr || session == nullptr) {
+    return;
+  }
+
+  auto* ai_system = world->get_system<Game::Systems::AISystem>();
+  if (ai_system == nullptr) {
+    return;
+  }
+
+  const Engine::Core::ScopedStartupPhase phase("ai.initial_preparation");
+
+  const auto& ai_owner_ids = session->owners().get_ai_owner_ids();
+  if (ai_system->ai_player_count() != ai_owner_ids.size()) {
+    ai_system->reinitialize();
+  }
+
+  ai_system->prepare_initial_decisions(*world);
+
+  constexpr auto k_initial_decision_budget = std::chrono::milliseconds(1500);
+  if (!ai_system->await_initial_decisions(k_initial_decision_budget)) {
+    qWarning() << "Mission startup: AI initial decisions were still running after"
+               << k_initial_decision_budget.count() << "ms";
+  }
+
+  Engine::Core::StartupProfiler::instance().add_counter(
+      "ai.owners", static_cast<std::int64_t>(ai_system->ai_player_count()));
 }
 
 } // namespace App::Core

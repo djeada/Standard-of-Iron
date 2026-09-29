@@ -7,11 +7,12 @@
 #include <cmath>
 #include <cstdint>
 
+#include "game/map/biome_settings.h"
+#include "game/map/ground_type.h"
 #include "game/map/scatter/ground_utils.h"
 #include "game/map/scatter/scatter_composition_context.h"
 #include "game/map/scatter/scatter_rules.h"
 #include "game/map/scatter/spawn_validator.h"
-#include "game/map/terrain.h"
 
 namespace Render::Ground {
 

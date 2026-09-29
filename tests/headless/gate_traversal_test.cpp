@@ -12,13 +12,13 @@
 #include "game/session/session_context.h"
 #include "game/session/simulation_clock.h"
 #include "game/systems/building_collision_registry.h"
-#include "game/systems/command_service.h"
-#include "game/systems/gate_service.h"
-#include "game/systems/nav_grid.h"
+#include "game/systems/movement/command_service.h"
+#include "game/systems/navigation/gate_service.h"
+#include "game/systems/navigation/nav_grid.h"
+#include "game/systems/navigation/pathfinding.h"
+#include "game/systems/navigation/wall_network_service.h"
 #include "game/systems/owner_registry.h"
-#include "game/systems/pathfinding.h"
 #include "game/systems/runtime_system_registry.h"
-#include "game/systems/wall_network_service.h"
 #include "game/units/spawn_type.h"
 
 namespace {

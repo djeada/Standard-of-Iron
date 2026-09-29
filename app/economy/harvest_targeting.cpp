@@ -12,8 +12,8 @@
 #include "game/render_bridge/picking_service.h"
 #include "game/session/session_context.h"
 #include "game/systems/harvest_yields.h"
-#include "game/systems/nav_grid.h"
-#include "game/systems/pathfinding.h"
+#include "game/systems/navigation/nav_grid.h"
+#include "game/systems/navigation/pathfinding.h"
 #include "scene/camera.h"
 
 namespace App::Economy {

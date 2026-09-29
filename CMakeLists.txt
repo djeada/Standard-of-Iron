@@ -702,40 +702,65 @@ add_library(
     STATIC
     # app/core -- the composition root and the frame it drives.
     app/core/benchmark_action_fixture.cpp
+    app/core/audio_services.cpp
+    app/core/entity_cache.cpp
+    app/core/order_feedback_presenter.cpp
     app/core/film_action_dispatch.cpp
     app/core/film_recorder.cpp
     app/core/frame_ui_coordinator.cpp
     app/core/game_engine.cpp
     app/core/game_engine_composition.cpp
+    app/core/game_engine_wiring.cpp
     app/core/language_manager.cpp
     app/core/match_presentation_sync.cpp
     app/core/player_feedback.cpp
     app/core/frame_snapshot.cpp
     app/core/runtime_frame_orchestrator.cpp
+    app/core/simulation_lifecycle.cpp
     # app/mission -- the client's half of running a mission. The mission logic
     # itself is game/mission (soi_mission_runtime); what is left here is reading
     # the frame the tutorial director is about to be advanced through.
     app/mission/tutorial_observation.cpp
+    app/mission/commander_message_runtime.cpp
+    app/mission/mission_runtime.cpp
+    app/mission/tutorial_runtime.cpp
     # app/session -- bringing one match up: world, renderer, level, skirmish.
     app/session/environment.cpp
+    app/session/environment_runtime.cpp
     app/session/level_loader.cpp
     app/session/level_orchestrator.cpp
+    app/session/loading_overlay.cpp
     app/session/loading_progress_tracker.cpp
     app/session/renderer_bootstrap.cpp
+    app/session/replay_coordinator.cpp
     app/session/skirmish_loader.cpp
     app/session/skirmish_runtime_coordinator.cpp
     app/session/world_bootstrap.cpp
     # app/commander -- the first-person control mode and its camera.
     app/commander/commander_abilities.cpp
+    app/commander/commander_body_facing.cpp
     app/commander/commander_camera_rig.cpp
     app/commander/commander_control_controller.cpp
+    app/commander/commander_defence.cpp
+    app/commander/commander_entity_access.cpp
+    app/commander/commander_input_port.cpp
+    app/commander/commander_locomotion.cpp
+    app/commander/commander_look.cpp
+    app/commander/commander_lunge.cpp
     app/commander/commander_motor.cpp
     app/commander/commander_latency_probe.cpp
     app/commander/commander_mode_coordinator.cpp
+    app/commander/commander_presentation.cpp
+    app/commander/commander_primary_scan.cpp
     app/commander/commander_status_builder.cpp
+    app/commander/commander_strike.cpp
+    app/commander/commander_targeting.cpp
+    app/commander/commander_tick_trace.cpp
     app/commander/rts_camera_bookmark.cpp
     # app/input -- pointer and key gestures, before they become orders.
     app/input/cursor_manager.cpp
+    app/input/context_interaction_resolver.cpp
+    app/input/formation_pointer_adapter.cpp
     app/input/hover_tracker.cpp
     app/input/input_command_handler.cpp
     app/input/rts_camera_controller.cpp
@@ -745,16 +770,35 @@ add_library(
     app/orders/army_formation_controller.cpp
     app/orders/command_controller.cpp
     app/orders/context_intent.cpp
+    app/orders/formation_options_model.cpp
+    app/orders/formation_placement.cpp
+    app/orders/formation_preview_cache.cpp
+    app/orders/formation_readout.cpp
+    app/orders/local_command.cpp
+    app/orders/mode_toggle_commands.cpp
+    app/orders/movement_commands.cpp
     app/orders/movement_utils.cpp
+    app/orders/order_cues.cpp
     app/orders/order_feedback.cpp
     app/orders/order_issuer.cpp
     app/orders/order_markers.cpp
     app/orders/order_submission.cpp
+    app/orders/patrol_commands.cpp
+    app/orders/roster_commands.cpp
     app/orders/rts_action_model.cpp
+    app/orders/worker_commands.cpp
+    app/orders/worker_orders.cpp
     # app/economy -- production, trade and the resource coach.
     app/economy/economy_overview.cpp
+    app/economy/economy_read_model.cpp
     app/economy/harvest_targeting.cpp
+    app/economy/construction_pointer.cpp
+    app/economy/construction_preview.cpp
+    app/economy/placement_orders.cpp
+    app/economy/placement_refusal.cpp
+    app/economy/placement_session.cpp
     app/economy/production_manager.cpp
+    app/economy/wall_placement_session.cpp
     app/economy/production_readouts.cpp
     app/economy/resource_text.cpp
     app/economy/unit_profile.cpp
@@ -762,10 +806,16 @@ add_library(
     app/persistence/game_state_restorer.cpp
     app/persistence/save_load_coordinator.cpp
     app/persistence/save_orchestrator.cpp
+    app/persistence/save_slot_controller.cpp
     # app/world -- world state read back as client presentation state.
     app/world/ambient_state_manager.cpp
+    app/world/ally_announcements.cpp
+    app/world/battle_stats.cpp
     app/world/focus_target.cpp
+    app/world/focus_tracker.cpp
     app/world/minimap_manager.cpp
+    app/world/minimap_events.cpp
+    app/world/targeting_presentation.cpp
     app/world/player_defeat_watcher.cpp
     app/world/selection_query_service.cpp
     app/world/unit_queries.cpp

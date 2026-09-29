@@ -11,8 +11,8 @@
 #include "../core/component_core.h"
 #include "../core/entity.h"
 #include "../core/world.h"
-#include "../systems/nav_grid.h"
-#include "../systems/pathfinding.h"
+#include "../systems/navigation/nav_grid.h"
+#include "../systems/navigation/pathfinding.h"
 #include "army_formation_registry.h"
 #include "formation_doctrine.h"
 

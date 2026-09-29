@@ -24,7 +24,7 @@
 #include "game/session/session_context.h"
 #include "game/systems/nation_id.h"
 #include "game/systems/nation_registry.h"
-#include "game/systems/save_load_service.h"
+#include "game/systems/persistence/save_load_service.h"
 #include "game/units/commander_catalog.h"
 #include "game/units/troop_type.h"
 #include "game/util/asset_text.h"

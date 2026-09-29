@@ -14,7 +14,7 @@
 #include "game/session/session_context.h"
 #include "game/systems/builder_product_types.h"
 #include "game/systems/building_collision_registry.h"
-#include "game/systems/civilian_delivery_system.h"
+#include "game/systems/economy/civilian_delivery_system.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/resource_types.h"

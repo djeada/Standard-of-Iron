@@ -6,7 +6,7 @@
 #include "game/map/terrain_service.h"
 #include "systems/building_collision_registry.h"
 #include "systems/guard_system.h"
-#include "systems/nav_grid.h"
+#include "systems/navigation/nav_grid.h"
 
 using namespace Engine::Core;
 using namespace Game::Systems;

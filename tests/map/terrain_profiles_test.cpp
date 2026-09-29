@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
-#include "game/map/terrain.h"
+#include "game/map/biome_settings.h"
+#include "game/map/ground_type.h"
 
 namespace {
 

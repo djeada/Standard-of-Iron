@@ -9,6 +9,7 @@
 #include <cmath>
 #include <gtest/gtest.h>
 
+#include "game/map/biome_settings.h"
 #include "game/map/map_loader.h"
 #include "game/map/procedural_tree_generation.h"
 #include "game/map/terrain.h"

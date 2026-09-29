@@ -14,9 +14,9 @@
 #include "game/map/map_loader.h"
 #include "game/map/terrain.h"
 #include "game/map/terrain_service.h"
-#include "game/systems/nav_grid.h"
-#include "game/systems/pathfinding.h"
-#include "game/systems/walkability.h"
+#include "game/systems/navigation/nav_grid.h"
+#include "game/systems/navigation/pathfinding.h"
+#include "game/systems/navigation/walkability.h"
 #include "game/units/spawn_type.h"
 
 namespace {

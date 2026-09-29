@@ -10,6 +10,9 @@
 #include <cstdint>
 #include <vector>
 
+#include "app/orders/formation_options_model.h"
+#include "app/orders/formation_placement.h"
+#include "app/orders/formation_preview_cache.h"
 #include "app/orders/order_issuer.h"
 #include "game/formation/army_formation_planner.h"
 #include "game/formation/army_formation_types.h"
@@ -43,30 +46,30 @@ public:
   auto on_formation_command() -> CommandResult;
   void reset_transient_state();
 
-  [[nodiscard]] bool is_placing_formation() const { return m_is_placing_formation; }
+  [[nodiscard]] bool is_placing_formation() const { return m_placement.placing(); }
   [[nodiscard]] bool begin_move_placement_at_position(const QVector3D& position);
   void update_formation_placement(const QVector3D& position);
   void update_formation_rotation(float angle_degrees);
   void confirm_formation_placement();
   void cancel_formation_placement();
   [[nodiscard]] QVector3D get_formation_placement_position() const {
-    return m_formation_placement_position;
+    return m_placement.position();
   }
 
   [[nodiscard]] float get_formation_facing_degrees() const {
-    return m_formation_facing_degrees;
+    return m_placement.facing_degrees();
   }
 
   [[nodiscard]] float get_formation_aim_distance() const {
-    return m_formation_aim_distance;
+    return m_placement.aim_distance();
   }
 
   [[nodiscard]] bool is_right_drag_placement() const {
-    return m_is_placing_formation && m_is_right_drag_formation;
+    return m_placement.placing() && m_placement.right_drag();
   }
 
   [[nodiscard]] bool is_single_unit_placement() const {
-    return m_is_placing_formation && m_formation_units.size() == 1;
+    return m_placement.single_unit();
   }
 
   void aim_formation_at(const QVector3D& aim_point);
@@ -85,9 +88,9 @@ public:
   void begin_formation_drag(const QVector3D& start);
   void update_formation_drag(const QVector3D& current);
   void end_formation_drag();
-  [[nodiscard]] bool is_dragging_formation() const { return m_formation_drag_active; }
+  [[nodiscard]] bool is_dragging_formation() const { return m_placement.dragging(); }
   [[nodiscard]] QVector3D formation_drag_start() const {
-    return m_formation_drag_start;
+    return m_placement.drag_start();
   }
   Q_INVOKABLE void adjust_formation_depth(float wheel_delta);
   Q_INVOKABLE void set_formation_preserve_order(bool preserve);
@@ -108,10 +111,10 @@ public:
 
   [[nodiscard]] auto
   formation_preview() const -> const Game::Formation::ArmyFormationPlan& {
-    return m_formation_preview;
+    return m_preview.plan();
   }
   [[nodiscard]] QString formation_preview_warning() const;
-  [[nodiscard]] float formation_frontage() const { return m_formation_frontage; }
+  [[nodiscard]] float formation_frontage() const { return m_placement.frontage(); }
   void refresh_formation_preview();
 
   Q_INVOKABLE [[nodiscard]] bool any_selected_in_formation_mode() const;
@@ -127,44 +130,29 @@ signals:
 
 private:
   [[nodiscard]] auto auto_formation_facing() const -> float;
-  [[nodiscard]] auto formation_unit_label() const -> QString;
-  void set_formation_facing(float degrees, bool explicit_choice);
   void follow_auto_formation_facing();
   void reset_formation_facing();
+  void start_placement(std::vector<Engine::Core::EntityID> units,
+                       const QVector3D& position,
+                       bool right_drag);
   void end_formation_placement(FormationTeardown teardown);
+  void reject_deployment(QVector3D anchor,
+                         App::Core::OrderRefusal refusal,
+                         App::Core::OrderKind kind);
+  [[nodiscard]] auto
+  deployment_blocked(const Game::Command::DeployFormation& deploy) -> bool;
+  [[nodiscard]] auto current_request() const -> Game::Formation::ArmyFormationRequest;
   [[nodiscard]] static auto anchor_is_reachable(const QVector3D& anchor) -> bool;
+  void announce_placement_update();
   void apply_formation_option_change();
-  void invalidate_formation_layout();
 
   Engine::Core::World* m_world = nullptr;
   Game::Session::SelectionService* m_selection_system = nullptr;
   App::Orders::OrderIssuer m_orders;
 
-  bool m_is_placing_formation = false;
-  bool m_is_right_drag_formation = false;
-  QVector3D m_formation_placement_position;
-
-  float m_formation_facing_degrees = 0.0F;
-  bool m_formation_facing_explicit = false;
-  float m_formation_aim_distance = 0.0F;
-  std::vector<Engine::Core::EntityID> m_formation_units;
-
-  Game::Formation::ArmyFormationIntent m_formation_intent =
-      Game::Formation::ArmyFormationIntent::FactionDefault;
-  Game::Formation::ArmyFormationOptions m_formation_options;
-  float m_formation_frontage = 0.0F;
-
-  bool m_formation_drag_active = false;
-  QVector3D m_formation_drag_start;
-  Game::Formation::ArmyFormationPlan m_formation_preview;
-  Game::Formation::FormationDoctrineId m_formation_doctrine_override;
-
-  std::vector<Game::Formation::ArmyFormationMember> m_formation_members;
-  Game::Formation::ArmyFormationLayout m_formation_layout;
-  bool m_formation_layout_valid = false;
-  bool m_formation_preview_dirty = true;
-  QVector3D m_formation_previewed_anchor;
-  float m_formation_previewed_facing = 0.0F;
+  FormationOptionsModel m_options;
+  FormationPlacement m_placement;
+  FormationPreviewCache m_preview;
 };
 
 } // namespace App::Controllers

@@ -1,0 +1,42 @@
+#pragma once
+
+#include <cstdint>
+
+#include "core/system.h"
+
+namespace Engine::Core {
+class SystemContext;
+} // namespace Engine::Core
+
+namespace Game::Systems {
+
+struct BodyContactDiagnostics {
+  std::uint32_t pairs_resolved{0};
+  std::uint32_t pushes_rejected{0};
+  float deepest_overlap{0.0F};
+  std::uint32_t duel_standoffs_resolved{0};
+};
+
+class BodyContactSystem : public Engine::Core::System {
+public:
+  void run(Engine::Core::SystemContext& context) override;
+
+  [[nodiscard]] auto access() const -> Engine::Core::SystemAccess override;
+
+  [[nodiscard]] auto diagnostics() const -> const BodyContactDiagnostics& {
+    return m_diagnostics;
+  }
+
+  static constexpr float k_stale_position_margin = 0.5F;
+  static constexpr float k_stale_position_speed_allowance = 12.0F;
+
+  static constexpr float k_separation_speed = 2.0F;
+  static constexpr float k_max_separation_step = 0.15F;
+
+  static constexpr float k_duel_scan_radius = 2.0F;
+
+private:
+  BodyContactDiagnostics m_diagnostics;
+};
+
+} // namespace Game::Systems

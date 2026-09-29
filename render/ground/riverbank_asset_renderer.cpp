@@ -15,6 +15,7 @@
 #include "game/map/terrain_surface.h"
 #include "game/map/visibility_service.h"
 #include "gl/resources.h"
+#include "map/biome_settings.h"
 #include "map/terrain.h"
 #include "render/gl/buffer.h"
 #include "render/scene_renderer.h"

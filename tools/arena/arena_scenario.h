@@ -14,8 +14,9 @@
 
 #include "app/commander/commander_presentation_trace.h"
 #include "game/formation/army_formation_types.h"
+#include "game/map/bridge_geometry.h"
 #include "game/map/map_definition.h"
-#include "game/map/terrain.h"
+#include "game/map/terrain_features.h"
 #include "game/systems/nation_id.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"

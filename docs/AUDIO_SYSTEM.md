@@ -6,26 +6,28 @@ Where each file came from and under what licence is in [AUDIO_LICENSES.md](AUDIO
 
 ## Where things live
 
-| Path                                                           | Role                                                                               |
-| -------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `assets/audio/audio_manifest.json`                             | Every shipped file: ID, path, category, load policy, tags, playback limits         |
-| `assets/audio/audio_cues.json`                                 | Every gameplay cue: which resources answer it, volume, priority, cooldown, spatial |
-| `game/audio/audio_cues.*`                                      | `CueRegistry`, `play_cue`, `play_cue_at`                                           |
-| `game/audio/audio_system.*`                                    | `AudioSystem`: event queue, admission (cooldowns, priority, channel caps), volumes |
-| `game/audio/audio_event_handler.*`                             | Turns engine events (selection, spawn, death, ambient state, hits) into cues       |
-| `game/audio/miniaudio_backend.*`                               | Decode worker, track table, device callback mixer                                  |
-| `game/audio/audio_mastering.*`                                 | Decode-time loudness, tilt, resonance and limiter chain (`soi_audio_mastering`)    |
-| `game/audio/gameplay_mix.h`                                    | Mix buses and their ducking                                                        |
-| `game/audio/bus_limiter.h`                                     | Output limiter and listening presets                                               |
-| `game/audio/spatial.h`                                         | Distance attenuation and pan                                                       |
-| `game/audio/cue_trace.*`                                       | Per-request outcome counting, trace log, mission summary export                    |
-| `game/audio/audio_settings.h`                                  | Persisted volume sliders and listening preset                                      |
-| `app/audio/audio_resource_loader.*`                            | Reads both JSON files, loads by policy, answers tag queries                        |
-| `app/audio/audio_coordinator.*`                                | Frontend music, mission ambience, voice and ambient-state mappings                 |
-| `app/audio/weather_audio.*`                                    | Rain and snow layer over the mission bed                                           |
-| `app/audio/audio_system_proxy.*`                               | QML entry point (`audioSystem.play_cue`, volume sliders)                           |
-| `third_party/miniaudio.h`, `stb_vorbis`                        | Device output and Vorbis decoding                                                  |
-| `tools/audio_synth`, `tools/audio_field`, `tools/audio_import` | The three asset pipelines, see [Asset pipelines](#asset-pipelines)                 |
+| Path                                                             | Role                                                                               |
+| ---------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `assets/audio/audio_manifest.json`                               | Every shipped file: ID, path, category, load policy, tags, playback limits         |
+| `assets/audio/audio_cues.json`                                   | Every gameplay cue: which resources answer it, volume, priority, cooldown, spatial |
+| `game/audio/audio_cues.*`                                        | `CueRegistry`, `play_cue`, `play_cue_at`                                           |
+| `game/audio/audio_system.*`                                      | `AudioSystem`: event queue, admission (cooldowns, priority, channel caps), volumes |
+| `game/audio/audio_event_handler.*`                               | Turns engine events (selection, spawn, death, ambient state, hits) into cues       |
+| `game/audio/miniaudio_backend.*`                                 | Device lifecycle, command ring, channel and effect mixer (`on_audio`)              |
+| `game/audio/decode_worker.*`, `track_decoder.*`, `track_store.*` | Decode thread and queues, file to mastered PCM, slot registry and residency        |
+| `game/audio/audio_mastering.*`                                   | Decode-time loudness, tilt, resonance and limiter chain (`soi_audio_mastering`)    |
+| `game/audio/audio_spectrum_analysis.*`                           | FFT, octave smoothing and resonance-notch selection feeding `analyse`              |
+| `game/audio/gameplay_mix.h`                                      | Mix buses and their ducking                                                        |
+| `game/audio/bus_limiter.h`                                       | Output limiter and listening presets                                               |
+| `game/audio/spatial.h`                                           | Distance attenuation and pan                                                       |
+| `game/audio/cue_trace.*`                                         | Per-request outcome counting, trace log, mission summary export                    |
+| `game/audio/audio_settings.h`                                    | Persisted volume sliders and listening preset                                      |
+| `app/audio/audio_resource_loader.*`                              | Reads both JSON files, loads by policy, answers tag queries                        |
+| `app/audio/audio_coordinator.*`                                  | Frontend music, mission ambience, voice and ambient-state mappings                 |
+| `app/audio/weather_audio.*`                                      | Rain and snow layer over the mission bed                                           |
+| `app/audio/audio_system_proxy.*`                                 | QML entry point (`audioSystem.play_cue`, volume sliders)                           |
+| `third_party/miniaudio.h`, `stb_vorbis`                          | Device output and Vorbis decoding                                                  |
+| `tools/audio_synth`, `tools/audio_field`, `tools/audio_import`   | The three asset pipelines, see [Asset pipelines](#asset-pipelines)                 |
 
 ## The path of one cue
 

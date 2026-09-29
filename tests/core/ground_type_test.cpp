@@ -5,8 +5,9 @@
 
 #include <gtest/gtest.h>
 
+#include "map/biome_settings.h"
+#include "map/ground_type.h"
 #include "map/map_loader.h"
-#include "map/terrain.h"
 
 using namespace Game::Map;
 

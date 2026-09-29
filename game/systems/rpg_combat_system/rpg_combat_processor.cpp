@@ -15,8 +15,8 @@
 #include "../combat_system/combat_random.h"
 #include "../combat_system/combat_utils.h"
 #include "../combat_system/target_rules.h"
-#include "../command_service.h"
 #include "../formation_combat_geometry.h"
+#include "../movement/command_service.h"
 #include "../owner_registry.h"
 
 namespace Game::Systems::RpgCombat {

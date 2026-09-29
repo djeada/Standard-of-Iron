@@ -13,7 +13,7 @@
 #include "game/systems/combat_system/melee_exchange.h"
 #include "game/systems/default_content.h"
 #include "game/systems/nation_registry.h"
-#include "game/systems/nav_grid.h"
+#include "game/systems/navigation/nav_grid.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/runtime_system_registry.h"
 #include "units/factory.h"

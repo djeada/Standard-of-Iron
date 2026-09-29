@@ -652,7 +652,7 @@ def make_structure(key: str, structure: dict, path_name: str) -> Placeable:
     """One building, or one wall run held as the rectangle it actually fills.
 
     A wall segment is *line* geometry -- ``start`` and ``end``, expanded by
-    ``read_structures`` in game/map/map_loader.cpp into a run of panels -- and
+    ``read_structures`` in game/map/map_loader_entities.cpp into a run of panels -- and
     reading it as a point body silently parked 212 wall runs at the map origin,
     where they guarded nothing and reported nothing.  There is no safe default
     for a missing position, so a structure with neither shape is an error.

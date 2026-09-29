@@ -319,7 +319,7 @@ Four collapses are authored. Three are reachable by an infantry casualty and are
 | `SideCrumple`   | legs go out sideways, comes to rest twisted onto one side | taken on the flank           |
 | `MountedUnseat` | carried clear of the saddle before gravity gets him       | rider profile, not a variant |
 
-`infantry_death_variant()` (`damage_application.cpp`) takes the dot product of the blow direction against the casualty's facing. It is not a die roll: a man shot in the chest must not land on his face. Slot zero of a volley always takes the fall the blow argues for; the men behind him may be substituted onto the side crumple, which is where identical bodies would otherwise show.
+`infantry_death_variant()` (`death_variant.cpp`) takes the dot product of the blow direction against the casualty's facing. It is not a die roll: a man shot in the chest must not land on his face. Slot zero of a volley always takes the fall the blow argues for; the men behind him may be substituted onto the side crumple, which is where identical bodies would otherwise show.
 
 The trunk roll on the side falls deliberately stops short of 90°. The rig carries its shoulders as two points half a metre apart on a rigid spine, so a body laid exactly on its side puts the lower shoulder underground — and from the game camera a three-quarter roll reads as "dropped" anyway.
 

@@ -15,7 +15,7 @@
 #include "game/systems/default_content.h"
 #include "game/systems/formation_combat_geometry.h"
 #include "game/systems/nation_registry.h"
-#include "game/systems/nav_grid.h"
+#include "game/systems/navigation/nav_grid.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/projectile_system.h"
 #include "game/systems/rpg_combat_system/rpg_targeting.h"

@@ -11,8 +11,8 @@
 #include "game/map/mission_loader.h"
 #include "game/map/mission_victory_rules.h"
 #include "game/mission/difficulty_profile.h"
-#include "game/systems/save_load_service.h"
-#include "game/systems/save_storage.h"
+#include "game/systems/persistence/save_load_service.h"
+#include "game/systems/persistence/save_storage.h"
 #include "game/systems/victory_service.h"
 
 CampaignManager::CampaignManager(QObject* parent)

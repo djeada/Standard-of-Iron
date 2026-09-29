@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <vector>
 
+#include "game/map/biome_settings.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain.h"
 #include "render/decoration_gpu.h"

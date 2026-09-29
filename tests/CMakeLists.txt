@@ -195,6 +195,7 @@ add_executable(
     systems/runtime_phase_order_test.cpp
     systems/movement_stage_ownership_test.cpp
     systems/movement_route_test.cpp
+    systems/movement_orders_test.cpp
     systems/formation_combat_geometry_test.cpp
     systems/formation_march_keepup_test.cpp
     systems/defensive_unit_layout_test.cpp
@@ -217,6 +218,7 @@ add_executable(
     systems/melee_engagement_test.cpp
     systems/melee_exchange_test.cpp
     systems/melee_intent_test.cpp
+    systems/weapon_trace_test.cpp
     systems/archer_bonus_test.cpp
     systems/arrow_system_test.cpp
     systems/spent_projectile_test.cpp
@@ -367,6 +369,7 @@ soi_register_test_binary(campaign_tests)
 add_executable(
     persistence_tests
     save/snapshot_contract_test.cpp
+    save/serialization_golden_test.cpp
     core/serialization_test.cpp
     core/save_capture_coherence_test.cpp
     core/save_load_render_snapshot_test.cpp
@@ -591,7 +594,13 @@ add_executable(
     core/save_runtime_restore_test.cpp
     core/minimap_manager_test.cpp
     core/commander_control_regression_test.cpp
+    core/save_slot_controller_test.cpp
     core/mission_tick_ownership_test.cpp
+    core/simulation_lifecycle_test.cpp
+    core/replay_coordinator_test.cpp
+    core/loading_overlay_test.cpp
+    core/battle_stats_test.cpp
+    core/ally_announcements_test.cpp
     core/commander_camera_rig_test.cpp
     core/commander_control_controller_test.cpp
     core/commander_shared_traversal_test.cpp
@@ -599,6 +608,7 @@ add_executable(
     core/commander_accessibility_test.cpp
     core/commander_lifecycle_soak_test.cpp
     core/commander_lock_on_test.cpp
+    core/commander_stage_owners_test.cpp
     core/commander_presentation_trace_test.cpp
     core/commander_view_model_input_test.cpp
     core/production_view_model_trade_test.cpp
@@ -617,6 +627,7 @@ add_executable(
     core/match_setup_difficulty_test.cpp
     core/mission_startup_test.cpp
     core/production_manager_test.cpp
+    core/placement_state_test.cpp
     core/economy_overview_test.cpp
     core/unit_profile_test.cpp
     core/selection_query_service_test.cpp

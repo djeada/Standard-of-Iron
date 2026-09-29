@@ -6,7 +6,7 @@
 #include "../core/world.h"
 #include "../session/session_context.h"
 #include "../systems/combat_system/target_rules.h"
-#include "../systems/marketplace_system.h"
+#include "../systems/economy/marketplace_system.h"
 #include "../systems/owner_registry.h"
 #include "../units/spawn_type.h"
 

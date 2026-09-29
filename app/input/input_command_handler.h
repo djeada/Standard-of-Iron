@@ -1,10 +1,13 @@
 #pragma once
 
-#include <QPointF>
 #include <QString>
 #include <QVector3D>
 
 #include <cstdint>
+
+#include "app/input/context_interaction_resolver.h"
+#include "app/input/formation_pointer_adapter.h"
+#include "app/input/viewport_state.h"
 
 namespace Engine::Core {
 class World;
@@ -25,42 +28,12 @@ namespace App::Controllers {
 class CommandController;
 }
 
+namespace Game::Session {
+class SelectionService;
+}
+
 class CursorManager;
 class HoverTracker;
-
-struct ContextInteraction {
-
-  QString gather_product_type;
-
-  QString food_product_type;
-
-  Engine::Core::EntityID target = 0;
-
-  [[nodiscard]] auto is_gather() const -> bool {
-    return !gather_product_type.isEmpty();
-  }
-  [[nodiscard]] auto is_food_task() const -> bool {
-    return !food_product_type.isEmpty() && target != 0;
-  }
-  [[nodiscard]] auto is_repair() const -> bool {
-    return gather_product_type.isEmpty() && food_product_type.isEmpty() && target != 0;
-  }
-};
-
-struct ViewportState {
-  int width = 0;
-  int height = 0;
-  qreal input_width = 0.0;
-  qreal input_height = 0.0;
-
-  [[nodiscard]] auto map_input(qreal sx, qreal sy) const -> QPointF {
-    if (width <= 0 || height <= 0 || input_width <= 0.0 || input_height <= 0.0) {
-      return {sx, sy};
-    }
-    return {sx * (static_cast<qreal>(width) / input_width),
-            sy * (static_cast<qreal>(height) / input_height)};
-  }
-};
 
 class InputCommandHandler {
 public:
@@ -158,6 +131,16 @@ public:
 
 private:
   void reset_order_modes();
+  [[nodiscard]] auto cursor_cancels_order_mode() const -> bool;
+  [[nodiscard]] auto selection() const -> Game::Session::SelectionService&;
+  [[nodiscard]] auto issue_context_interaction(qreal sx,
+                                               qreal sy,
+                                               int local_owner_id,
+                                               const ViewportState& viewport) -> bool;
+  template <class Issue>
+  void issue_command(Issue&& issue);
+  template <class Issue>
+  void issue_camera_command(Issue&& issue);
 
   Engine::Core::World* m_world;
   Game::Systems::SelectionController* m_selection_controller;
@@ -166,5 +149,7 @@ private:
   HoverTracker* m_hover_tracker;
   Game::Systems::PickingService* m_picking_service;
   Render::GL::Camera* m_camera;
+  ContextInteractionResolver m_context;
+  FormationPointerAdapter m_formation;
   bool m_is_spectator_mode = false;
 };

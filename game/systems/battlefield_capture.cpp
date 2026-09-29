@@ -24,12 +24,12 @@
 #include "../units/unit.h"
 #include "ai_system.h"
 #include "combat_actions/combat_action_definition.h"
-#include "command_service.h"
 #include "default_content.h"
 #include "nation_registry.h"
-#include "nav_grid.h"
 #include "owner_registry.h"
 #include "runtime_system_registry.h"
+#include "systems/movement/command_service.h"
+#include "systems/navigation/nav_grid.h"
 #include "troop_count_registry.h"
 
 namespace Game::BattlefieldCapture {

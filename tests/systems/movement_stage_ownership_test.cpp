@@ -15,14 +15,14 @@
 #include "game/core/system_schedule.h"
 #include "game/core/world.h"
 #include "game/session/session_context.h"
-#include "game/systems/body_contact_system.h"
-#include "game/systems/local_avoidance_system.h"
-#include "game/systems/movement_pipeline.h"
-#include "game/systems/movement_system.h"
-#include "game/systems/nav_grid.h"
-#include "game/systems/route_follow_system.h"
+#include "game/systems/movement/body_contact_system.h"
+#include "game/systems/movement/local_avoidance_system.h"
+#include "game/systems/movement/movement_pipeline.h"
+#include "game/systems/movement/movement_system.h"
+#include "game/systems/movement/route_follow_system.h"
+#include "game/systems/movement/unit_traversal_layout_system.h"
+#include "game/systems/navigation/nav_grid.h"
 #include "game/systems/runtime_system_registry.h"
-#include "game/systems/unit_traversal_layout_system.h"
 #include "game/util/planar_math.h"
 
 namespace {
@@ -105,7 +105,7 @@ TEST(MovementStageOwnershipTest, OnlyTheMotorWritesTheTransform) {
 }
 
 TEST(MovementStageOwnershipTest, SteeringDoesNotTouchTheIntegratedVelocity) {
-  const auto source = read_source("game/systems/local_avoidance_system.cpp");
+  const auto source = read_source("game/systems/movement/local_avoidance_system.cpp");
   ASSERT_FALSE(source.empty());
   EXPECT_EQ(source.find("set_manual_velocity"), std::string::npos)
       << "the steering stage overwrites the motor's velocity again";
@@ -200,7 +200,7 @@ TEST(MovementStageOwnershipTest, TheRegistryOrdersFollowThenSteerThenMotor) {
 }
 
 TEST(MovementStageOwnershipTest, TheCompositePipelineKeepsTheSameOrder) {
-  const auto source = read_source("game/systems/movement_pipeline.cpp");
+  const auto source = read_source("game/systems/movement/movement_pipeline.cpp");
   ASSERT_FALSE(source.empty());
   const auto follow = source.find("m_route_follow.update");
   const auto steer = source.find("m_avoidance.update");
@@ -216,10 +216,22 @@ TEST(MovementStageOwnershipTest, TheCompositePipelineKeepsTheSameOrder) {
 }
 
 TEST(MovementStageOwnershipTest, OnlyTheOrderPipelineBeginsOrdersAndRoutes) {
-  for (const char* relative : {"game/systems/movement_system.cpp",
-                               "game/systems/route_follow_system.cpp",
-                               "game/systems/local_avoidance_system.cpp",
-                               "game/systems/movement_pipeline.cpp"}) {
+  for (const char* relative :
+       {"game/systems/movement/movement_system.cpp",
+        "game/systems/movement/movement_system_collision.cpp",
+        "game/systems/movement/movement_system_duel_footwork.cpp",
+        "game/systems/movement/movement_system_gates.cpp",
+        "game/systems/movement/movement_system_heading.cpp",
+        "game/systems/movement/movement_system_motor.cpp",
+        "game/systems/movement/movement_system_path_requests.cpp",
+        "game/systems/movement/route_follow_system.cpp",
+        "game/systems/movement/route_follow_system_arrival.cpp",
+        "game/systems/movement/route_follow_system_gate.cpp",
+        "game/systems/movement/route_follow_system_progress.cpp",
+        "game/systems/movement/route_follow_system_stall.cpp",
+        "game/systems/movement/route_follow_system_steering.cpp",
+        "game/systems/movement/local_avoidance_system.cpp",
+        "game/systems/movement/movement_pipeline.cpp"}) {
     const auto source = read_source(relative);
     ASSERT_FALSE(source.empty()) << relative;
     EXPECT_EQ(source.find("begin_order()"), std::string::npos)
@@ -228,10 +240,13 @@ TEST(MovementStageOwnershipTest, OnlyTheOrderPipelineBeginsOrdersAndRoutes) {
         << relative << " bumps the route revision; only the order pipeline may";
   }
 
-  const auto orders = read_source("game/systems/movement_orders.cpp");
+  const auto orders = read_source("game/systems/movement/movement_orders.cpp");
   ASSERT_FALSE(orders.empty());
   EXPECT_NE(orders.find("begin_order()"), std::string::npos);
-  EXPECT_NE(orders.find("begin_route("), std::string::npos);
+  const auto assignment =
+      read_source("game/systems/movement/movement_orders_assignment.cpp");
+  ASSERT_FALSE(assignment.empty());
+  EXPECT_NE(assignment.find("begin_route("), std::string::npos);
 }
 
 TEST(MovementStageOwnershipTest, ANewOrderSupersedesADeferredRoute) {

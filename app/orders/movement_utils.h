@@ -7,7 +7,7 @@
 
 #include "app/orders/order_feedback.h"
 #include "game/core/entity.h"
-#include "game/systems/order_service.h"
+#include "game/systems/movement/order_service.h"
 
 namespace Engine::Core {
 class World;

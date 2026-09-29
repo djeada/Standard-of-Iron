@@ -156,7 +156,7 @@ AI cannot build a correct first snapshot for an owner that has not yet been regi
 
 ## AI initialization
 
-`GameEngine::prepare_mission_ai_state()` prepares the first AI decision work during loading.
+`SkirmishRuntimeCoordinator::prepare_ai_state()` (called from `GameEngine::configure_loaded_match()`) prepares the first AI decision work during loading.
 
 For campaign missions, skirmish-level AI initialization can be deferred through the `defer_ai_initialization` path until mission owners are known.
 

@@ -17,6 +17,8 @@
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/player_resource_registry.h"
+#include "game/systems/victory_rule_builder.h"
+#include "game/systems/victory_rule_traits.h"
 #include "units/spawn_type.h"
 
 namespace Game::Systems {
@@ -33,146 +35,6 @@ struct Overloaded : Ts... {
 };
 template <class... Ts>
 Overloaded(Ts...) -> Overloaded<Ts...>;
-
-auto normalize_structure_types(std::vector<QString> structure_types,
-                               std::vector<QString> fallback = {
-                                   "barracks"}) -> std::vector<QString> {
-  if (structure_types.empty()) {
-    structure_types = std::move(fallback);
-  }
-
-  std::vector<QString> normalized;
-  QSet<QString> seen_types;
-  for (auto& type : structure_types) {
-    QString normalized_type = type.trimmed().toLower();
-    if (normalized_type == "village") {
-      normalized_type = "barracks";
-    }
-    if (normalized_type.isEmpty() || seen_types.contains(normalized_type)) {
-      continue;
-    }
-    seen_types.insert(normalized_type);
-    normalized.push_back(std::move(normalized_type));
-  }
-
-  if (normalized.empty()) {
-    normalized.push_back(QStringLiteral("barracks"));
-  }
-
-  return normalized;
-}
-
-void append_undead_objectives(const Game::Map::VictoryConfig& config,
-                              VictoryRuleSet& rules) {
-  for (const auto& objective : config.undead_objectives) {
-    if (objective.zone_id.isEmpty()) {
-      continue;
-    }
-    const std::size_t before = rules.victory_rules.size();
-    if (objective.type == "clear_undead_zone") {
-      rules.victory_rules.emplace_back(ClearUndeadZoneVictoryRule{objective.zone_id});
-    } else if (objective.type == "purify_shrine") {
-      rules.victory_rules.emplace_back(PurifyShrineVictoryRule{objective.zone_id});
-    } else if (objective.type == "survive_undead_wave") {
-      rules.victory_rules.emplace_back(SurviveUndeadWaveVictoryRule{
-          objective.zone_id, std::max(1, objective.wave_count)});
-    } else {
-      qWarning() << "Unknown undead victory objective" << objective.type
-                 << "- ignoring";
-      continue;
-    }
-    for (std::size_t index = before; index < rules.victory_rules.size(); ++index) {
-      rules.victory_rules[index].id = objective.zone_id;
-    }
-  }
-}
-
-auto build_rule_set_from_config(const Game::Map::VictoryConfig& config)
-    -> VictoryRuleSet {
-  VictoryRuleSet rules;
-
-  QString const victory_type = config.victory_type.trimmed().toLower();
-  if (victory_type == "undead_zones") {
-    append_undead_objectives(config, rules);
-    if (rules.victory_rules.empty()) {
-      qWarning() << "Victory type undead_zones declares no undead_objectives - "
-                    "defaulting to elimination";
-      rules.victory_rules.emplace_back(
-          EliminationVictoryRule{{QStringLiteral("barracks")}});
-    }
-  } else if (victory_type == "elimination") {
-    rules.victory_rules.emplace_back(
-        EliminationVictoryRule{normalize_structure_types(config.key_structures)});
-  } else if (victory_type == "control_structures") {
-    rules.victory_rules.emplace_back(ControlStructuresVictoryRule{
-        StructureRequirement{normalize_structure_types(config.key_structures),
-                             std::max(1, config.required_key_structures)}});
-  } else if (victory_type == "capture_structures") {
-    rules.victory_rules.emplace_back(CaptureStructuresVictoryRule{
-        StructureRequirement{normalize_structure_types(config.key_structures),
-                             std::max(1, config.required_key_structures)}});
-  } else if (victory_type == "survive_time") {
-    rules.victory_rules.emplace_back(
-        SurviveTimeVictoryRule{std::max(0.0F, config.survive_time_duration)});
-  } else {
-    qWarning() << "Unknown victory type" << config.victory_type
-               << "- defaulting to elimination";
-    rules.victory_rules.emplace_back(
-        EliminationVictoryRule{{QStringLiteral("barracks")}});
-  }
-
-  if (victory_type != "undead_zones") {
-    append_undead_objectives(config, rules);
-  }
-
-  std::vector<QString> const default_defeat_structures =
-      normalize_structure_types(config.key_structures);
-  bool has_commander_defeat = false;
-  for (const auto& condition : config.defeat_conditions) {
-    QString const normalized_condition = condition.trimmed().toLower();
-    if (normalized_condition == "no_units") {
-      rules.defeat_rules.emplace_back(NoUnitsDefeatRule{});
-      continue;
-    }
-    if (normalized_condition == "no_key_structures") {
-      rules.defeat_rules.emplace_back(
-          NoKeyStructuresDefeatRule{default_defeat_structures});
-      continue;
-    }
-    if (normalized_condition == "no_commander") {
-      rules.defeat_rules.emplace_back(NoCommanderDefeatRule{});
-      has_commander_defeat = true;
-      continue;
-    }
-    if (normalized_condition == "only_commander_remaining") {
-      rules.defeat_rules.emplace_back(
-          OnlyCommanderRemainingDefeatRule{{QStringLiteral("barracks")}});
-      continue;
-    }
-    qWarning() << "Unknown defeat condition" << condition << "- ignoring";
-  }
-
-  if (rules.defeat_rules.empty()) {
-    rules.defeat_rules.emplace_back(
-        OnlyCommanderRemainingDefeatRule{{QStringLiteral("barracks")}});
-  }
-
-  if (!has_commander_defeat) {
-    rules.defeat_rules.emplace_back(NoCommanderDefeatRule{});
-  }
-
-  bool const already_wins_on_commanders = std::any_of(
-      rules.victory_rules.begin(),
-      rules.victory_rules.end(),
-      [](const VictoryObjective& objective) {
-        return std::holds_alternative<EliminateCommandersVictoryRule>(objective.rule);
-      });
-  if (!already_wins_on_commanders) {
-    rules.victory_rules.emplace_back(EliminateCommandersVictoryRule{});
-  }
-
-  return rules;
-}
 
 auto count_matching_structures(const QHash<QString, int>& structure_counts,
                                const std::vector<QString>& structure_types) -> int {
@@ -204,23 +66,12 @@ VictoryService::~VictoryService() = default;
 
 void VictoryService::reset() {
   m_rule_set = {};
-  m_tracked_enemy_structure_types.clear();
-  m_tracked_local_structure_types.clear();
+  m_traits = {};
   m_tracked_enemy_spawn_types.fill(false);
   m_tracked_local_spawn_types.fill(false);
-  m_only_commander_structure_types.clear();
   m_elapsed_time = 0.0;
   m_startup_delay = 0.0F;
-  m_has_time_based_victory = false;
-  m_has_undead_zone_rules = false;
-  m_has_world_based_rules = false;
-  m_has_resource_victory = false;
-  m_has_wave_victory = false;
-  m_has_time_limit_defeat = false;
-  m_requires_captured_structure_tracking = false;
-  m_has_only_commander_defeat_rule = false;
   m_only_commander_defeat_armed = false;
-  m_has_eliminate_commanders_rule = false;
   m_eliminate_commanders_armed = false;
   m_world_state_dirty = false;
   m_spectator_mode = false;
@@ -246,7 +97,7 @@ void VictoryService::set_spectator_mode(bool enabled) {
   m_spectator_poll_timer = k_spectator_poll_seconds;
   if (enabled) {
 
-    m_has_world_based_rules = true;
+    m_traits.has_world_based_rules = true;
     m_world_state_dirty = true;
   }
 }
@@ -329,8 +180,8 @@ void VictoryService::update(Engine::Core::World& world, float delta_time) {
 
   m_world_ptr = &world;
 
-  if ((m_has_only_commander_defeat_rule && !m_only_commander_defeat_armed) ||
-      (m_has_eliminate_commanders_rule && !m_eliminate_commanders_armed)) {
+  if ((m_traits.has_only_commander_defeat_rule && !m_only_commander_defeat_armed) ||
+      (m_traits.has_eliminate_commanders_rule && !m_eliminate_commanders_armed)) {
     update_rule_arming(summarize_world(world));
   }
 
@@ -359,8 +210,9 @@ void VictoryService::update(Engine::Core::World& world, float delta_time) {
     return;
   }
 
-  if (m_has_time_based_victory || m_has_undead_zone_rules || m_has_resource_victory ||
-      m_has_wave_victory || m_has_time_limit_defeat) {
+  if (m_traits.has_time_based_victory || m_traits.has_undead_zone_rules ||
+      m_traits.has_resource_victory || m_traits.has_wave_victory ||
+      m_traits.has_time_limit_defeat) {
     evaluate_polled_rules();
   }
 }
@@ -385,7 +237,7 @@ void VictoryService::on_barrack_captured(
 }
 
 void VictoryService::mark_world_dirty() {
-  if (m_has_world_based_rules) {
+  if (m_traits.has_world_based_rules) {
     m_world_state_dirty = true;
   }
 }
@@ -397,98 +249,7 @@ void VictoryService::reevaluate_world_state() {
 }
 
 void VictoryService::refresh_rule_metadata() {
-  m_tracked_enemy_structure_types.clear();
-  m_tracked_local_structure_types.clear();
-  m_has_time_based_victory = false;
-  m_has_undead_zone_rules = false;
-  m_has_world_based_rules = false;
-  m_has_resource_victory = false;
-  m_has_wave_victory = false;
-  m_has_time_limit_defeat = false;
-  m_requires_captured_structure_tracking = false;
-  m_has_only_commander_defeat_rule = false;
-  m_has_eliminate_commanders_rule = false;
-  m_only_commander_structure_types.clear();
-
-  std::vector<const VictoryObjective*> tracked;
-  tracked.reserve(m_rule_set.victory_rules.size() + m_rule_set.optional_rules.size());
-  for (const auto& objective : m_rule_set.victory_rules) {
-    tracked.push_back(&objective);
-  }
-  for (const auto& objective : m_rule_set.optional_rules) {
-    tracked.push_back(&objective);
-  }
-  for (const auto* tracked_objective : tracked) {
-    const auto& objective = *tracked_objective;
-    std::visit(
-        Overloaded{
-            [this](const EliminationVictoryRule& elimination_rule) {
-              m_has_world_based_rules = true;
-              for (const auto& structure_type : elimination_rule.structure_types) {
-                m_tracked_enemy_structure_types.insert(structure_type);
-              }
-            },
-            [this](const ControlStructuresVictoryRule& control_rule) {
-              m_has_world_based_rules = true;
-              for (const auto& structure_type : control_rule.target.structure_types) {
-                m_tracked_local_structure_types.insert(structure_type);
-              }
-            },
-            [this](const CaptureStructuresVictoryRule& capture_rule) {
-              m_has_world_based_rules = true;
-              m_requires_captured_structure_tracking = true;
-              for (const auto& structure_type : capture_rule.target.structure_types) {
-                m_tracked_local_structure_types.insert(structure_type);
-              }
-            },
-            [this](const ClearUndeadZoneVictoryRule&) {
-              m_has_undead_zone_rules = true;
-            },
-            [this](const PurifyShrineVictoryRule&) { m_has_undead_zone_rules = true; },
-            [this](const SurviveUndeadWaveVictoryRule&) {
-              m_has_undead_zone_rules = true;
-            },
-            [this](const SurviveTimeVictoryRule&) { m_has_time_based_victory = true; },
-            [this](const SurviveWavesVictoryRule&) { m_has_wave_victory = true; },
-            [this](const AccumulateResourcesVictoryRule&) {
-              m_has_resource_victory = true;
-            },
-            [this](const EliminateCommandersVictoryRule&) {
-              m_has_world_based_rules = true;
-              m_has_eliminate_commanders_rule = true;
-            }},
-        objective.rule);
-  }
-
-  for (const auto& condition : m_rule_set.defeat_rules) {
-    m_has_world_based_rules = true;
-    std::visit(
-        Overloaded{
-            [](const NoUnitsDefeatRule&) {},
-            [](const NoCommanderDefeatRule&) {},
-            [this](const NoKeyStructuresDefeatRule& no_structures_rule) {
-              for (const auto& structure_type : no_structures_rule.structure_types) {
-                m_tracked_local_structure_types.insert(structure_type);
-              }
-            },
-            [this](const OnlyCommanderRemainingDefeatRule& isolated_commander_rule) {
-              m_has_only_commander_defeat_rule = true;
-              for (const auto& structure_type :
-                   isolated_commander_rule.structure_types) {
-                if (std::find(m_only_commander_structure_types.begin(),
-                              m_only_commander_structure_types.end(),
-                              structure_type) ==
-                    m_only_commander_structure_types.end()) {
-                  m_only_commander_structure_types.push_back(structure_type);
-                }
-                m_tracked_local_structure_types.insert(structure_type);
-              }
-            },
-            [this](const TimeLimitDefeatRule&) {
-              m_has_time_limit_defeat = true;
-            }},
-        condition.rule);
-  }
+  m_traits = analyze_rule_traits(m_rule_set);
   refresh_tracked_spawn_types();
 }
 
@@ -496,20 +257,22 @@ void VictoryService::refresh_tracked_spawn_types() {
   for (std::size_t index = 0; index < Game::Units::k_spawn_type_count; ++index) {
     QString const name =
         Game::Units::spawn_typeToQString(static_cast<Game::Units::SpawnType>(index));
-    m_tracked_enemy_spawn_types[index] = m_tracked_enemy_structure_types.contains(name);
-    m_tracked_local_spawn_types[index] = m_tracked_local_structure_types.contains(name);
+    m_tracked_enemy_spawn_types[index] =
+        m_traits.tracked_enemy_structure_types.contains(name);
+    m_tracked_local_spawn_types[index] =
+        m_traits.tracked_local_structure_types.contains(name);
   }
 }
 
 void VictoryService::update_rule_arming(const WorldSummary& summary) {
-  if (m_has_only_commander_defeat_rule && !m_only_commander_defeat_armed &&
+  if (m_traits.has_only_commander_defeat_rule && !m_only_commander_defeat_armed &&
       (summary.local_non_commander_troop_count > 0 ||
        count_matching_structures(summary.local_owned_structure_counts,
-                                 m_only_commander_structure_types) > 0)) {
+                                 m_traits.only_commander_structure_types) > 0)) {
     m_only_commander_defeat_armed = true;
   }
 
-  if (m_has_eliminate_commanders_rule && !m_eliminate_commanders_armed &&
+  if (m_traits.has_eliminate_commanders_rule && !m_eliminate_commanders_armed &&
       summary.enemy_commander_count > 0) {
     m_eliminate_commanders_armed = true;
   }
@@ -662,8 +425,8 @@ auto VictoryService::can_evaluate() const -> bool {
 
 auto VictoryService::summarize_world(Engine::Core::World& world) const -> WorldSummary {
   WorldSummary summary;
-  bool const track_enemy_structures = !m_tracked_enemy_structure_types.isEmpty();
-  bool const track_local_structures = !m_tracked_local_structure_types.isEmpty();
+  bool const track_enemy_structures = !m_traits.tracked_enemy_structure_types.isEmpty();
+  bool const track_local_structures = !m_traits.tracked_local_structure_types.isEmpty();
   bool const track_structures = track_enemy_structures || track_local_structures;
 
   auto& nation_registry = m_nations;
@@ -714,7 +477,7 @@ auto VictoryService::summarize_world(Engine::Core::World& world) const -> WorldS
 
     if (tracked_local) {
       summary.local_owned_structure_counts[unit_type] += 1;
-      if (m_requires_captured_structure_tracking) {
+      if (m_traits.requires_captured_structure_tracking) {
         const auto* building =
             world.try_get<Engine::Core::BuildingComponent>(entity_id);
         if (building != nullptr && building->original_nation_id != local_nation_id) {

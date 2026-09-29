@@ -15,8 +15,10 @@
 #include "../systems/resource_types.h"
 #include "../units/spawn_type.h"
 #include "../wildlife/wildlife_config.h"
+#include "biome_settings.h"
+#include "bridge_geometry.h"
 #include "environment_lighting.h"
-#include "terrain.h"
+#include "terrain_features.h"
 
 namespace Game::Map {
 

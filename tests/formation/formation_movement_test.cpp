@@ -10,12 +10,12 @@
 #include "core/world.h"
 #include "formation/army_formation_registry.h"
 #include "formation/army_formation_service.h"
-#include "systems/command_service.h"
-#include "systems/formation_move_dispatch_system.h"
+#include "systems/movement/command_service.h"
+#include "systems/movement/formation_move_dispatch_system.h"
+#include "systems/movement/route_follow_system.h"
 #include "systems/nation_registry.h"
-#include "systems/nav_grid.h"
-#include "systems/pathfinding.h"
-#include "systems/route_follow_system.h"
+#include "systems/navigation/nav_grid.h"
+#include "systems/navigation/pathfinding.h"
 #include "systems/troop_profile_service.h"
 
 namespace {

@@ -6,12 +6,12 @@
 #include "../units/factory.h"
 #include "../units/spawn_type.h"
 #include "../units/unit.h"
-#include "build_site.h"
-#include "construction_cost_catalog.h"
 #include "nation_registry.h"
 #include "player_feedback.h"
 #include "player_resource_registry.h"
-#include "wall_network_service.h"
+#include "systems/economy/build_site.h"
+#include "systems/economy/construction_cost_catalog.h"
+#include "systems/navigation/wall_network_service.h"
 
 namespace Game::Systems {
 

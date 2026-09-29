@@ -8,7 +8,7 @@
 #include <string>
 
 #include "../core/entity.h"
-#include "build_site.h"
+#include "systems/economy/build_site.h"
 
 namespace Engine::Core {
 class World;

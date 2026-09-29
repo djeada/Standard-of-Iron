@@ -53,6 +53,10 @@ public:
 
   static auto save_to_file(const QString& filename, const QJsonDocument& doc) -> bool;
   static auto load_from_file(const QString& filename) -> QJsonDocument;
+
+private:
+  static void write_movement(const class Entity* entity, QJsonObject& entity_obj);
+  static void read_movement(class Entity* entity, const QJsonObject& json);
 };
 
 } // namespace Engine::Core

@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <unordered_map>
 
+#include "game/map/biome_settings.h"
 #include "game/map/terrain.h"
 #include "game/map/terrain_noise.h"
 #include "game/map/terrain_service.h"

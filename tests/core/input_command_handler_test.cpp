@@ -21,7 +21,7 @@
 #include "game/session/selection_service.h"
 #include "game/session/session_context.h"
 #include "game/systems/building_collision_registry.h"
-#include "game/systems/nav_grid.h"
+#include "game/systems/navigation/nav_grid.h"
 #include "scene/camera.h"
 
 namespace {

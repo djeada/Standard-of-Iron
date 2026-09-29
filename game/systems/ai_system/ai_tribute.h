@@ -3,7 +3,7 @@
 #include <optional>
 
 #include "../alliance_board.h"
-#include "../marketplace_system.h"
+#include "../economy/marketplace_system.h"
 #include "../resource_types.h"
 #include "ai_types.h"
 

@@ -11,7 +11,7 @@
 
 #include "map/campaign_definition.h"
 #include "map/campaign_loader.h"
-#include "systems/save_storage.h"
+#include "systems/persistence/save_storage.h"
 
 namespace {
 

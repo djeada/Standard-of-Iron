@@ -3,7 +3,7 @@
 # preview tool needs exactly this and nothing else: audio_master_preview used to
 # compile audio_mastering.cpp into itself, so the curve a mastering change was
 # auditioned against was not the curve the game played.
-add_library(soi_audio_mastering STATIC audio_mastering.cpp)
+add_library(soi_audio_mastering STATIC audio_mastering.cpp audio_spectrum_analysis.cpp)
 target_include_directories(soi_audio_mastering PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../..)
 
 add_library(
@@ -17,6 +17,9 @@ add_library(
     sound.cpp
     music_player.cpp
     miniaudio_backend.cpp
+    track_store.cpp
+    track_decoder.cpp
+    decode_worker.cpp
     audio_event_handler.cpp
 )
 

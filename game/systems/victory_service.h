@@ -18,6 +18,8 @@
 #include "game/systems/mission_wave_query.h"
 #include "game/systems/resource_types.h"
 #include "game/systems/undead_zone_query.h"
+#include "game/systems/victory_rule_traits.h"
+#include "game/systems/victory_rules.h"
 #include "game/units/spawn_type.h"
 
 namespace Engine::Core {
@@ -34,148 +36,6 @@ class GlobalStatsRegistry;
 class NationRegistry;
 class OwnerRegistry;
 class PlayerResourceRegistry;
-
-struct StructureRequirement {
-  std::vector<QString> structure_types;
-  int required_count = 1;
-};
-
-struct EliminationVictoryRule {
-  std::vector<QString> structure_types;
-};
-
-struct SurviveTimeVictoryRule {
-  float duration = 0.0F;
-};
-
-struct ControlStructuresVictoryRule {
-  StructureRequirement target;
-};
-
-struct CaptureStructuresVictoryRule {
-  StructureRequirement target;
-};
-
-struct ClearUndeadZoneVictoryRule {
-  QString zone_id;
-};
-
-struct PurifyShrineVictoryRule {
-  QString zone_id;
-};
-
-struct SurviveUndeadWaveVictoryRule {
-  QString zone_id;
-  int required_wave_count = 1;
-};
-
-struct SurviveWavesVictoryRule {
-  int required_wave_count = 1;
-};
-
-struct AccumulateResourcesVictoryRule {
-  ResourceAmounts required;
-};
-
-struct EliminateCommandersVictoryRule {};
-
-using VictoryRule = std::variant<EliminationVictoryRule,
-                                 SurviveTimeVictoryRule,
-                                 ControlStructuresVictoryRule,
-                                 CaptureStructuresVictoryRule,
-                                 ClearUndeadZoneVictoryRule,
-                                 PurifyShrineVictoryRule,
-                                 SurviveUndeadWaveVictoryRule,
-                                 SurviveWavesVictoryRule,
-                                 AccumulateResourcesVictoryRule,
-                                 EliminateCommandersVictoryRule>;
-
-struct NoUnitsDefeatRule {};
-
-struct NoKeyStructuresDefeatRule {
-  std::vector<QString> structure_types;
-};
-
-struct NoCommanderDefeatRule {};
-
-struct OnlyCommanderRemainingDefeatRule {
-  std::vector<QString> structure_types;
-};
-
-struct TimeLimitDefeatRule {
-  float duration = 0.0F;
-};
-
-using DefeatRule = std::variant<NoUnitsDefeatRule,
-                                NoKeyStructuresDefeatRule,
-                                NoCommanderDefeatRule,
-                                OnlyCommanderRemainingDefeatRule,
-                                TimeLimitDefeatRule>;
-
-struct VictoryObjective {
-  VictoryObjective() = default;
-
-  template <
-      typename T,
-      typename = std::enable_if_t<std::is_constructible_v<VictoryRule, T&&> &&
-                                  !std::is_same_v<std::decay_t<T>, VictoryObjective>>>
-
-  VictoryObjective(T&& authored_rule)
-      : rule(std::forward<T>(authored_rule)) {}
-
-  VictoryObjective(VictoryRule authored_rule, QString authored_id, QString text)
-      : rule(std::move(authored_rule))
-      , id(std::move(authored_id))
-      , description(std::move(text)) {}
-
-  VictoryRule rule;
-  QString id;
-  QString description;
-
-  int source_index = -1;
-};
-
-struct ObjectiveStatus {
-  QString id;
-  QString description;
-  int source_index = -1;
-
-  QString detail;
-  QString compact_detail;
-
-  double fraction = 0.0;
-  int progress = 0;
-  int required = 1;
-  bool complete = false;
-};
-
-struct DefeatCondition {
-  DefeatCondition() = default;
-
-  template <
-      typename T,
-      typename = std::enable_if_t<std::is_constructible_v<DefeatRule, T&&> &&
-                                  !std::is_same_v<std::decay_t<T>, DefeatCondition>>>
-
-  DefeatCondition(T&& authored_rule)
-      : rule(std::forward<T>(authored_rule)) {}
-
-  DefeatCondition(DefeatRule authored_rule, QString text)
-      : rule(std::move(authored_rule))
-      , description(std::move(text)) {}
-
-  DefeatRule rule;
-  QString description;
-};
-
-struct VictoryRuleSet {
-  std::vector<VictoryObjective> victory_rules;
-
-  std::vector<VictoryObjective> optional_rules;
-  std::vector<DefeatCondition> defeat_rules;
-  bool include_ambient_undead = false;
-  bool require_all_victory_rules = false;
-};
 
 class VictoryService {
 public:
@@ -281,28 +141,17 @@ private:
                                        const WorldSummary& summary) const -> bool;
 
   VictoryRuleSet m_rule_set;
-  QSet<QString> m_tracked_enemy_structure_types;
-  QSet<QString> m_tracked_local_structure_types;
+  VictoryRuleTraits m_traits;
   std::array<bool, Game::Units::k_spawn_type_count> m_tracked_enemy_spawn_types{};
   std::array<bool, Game::Units::k_spawn_type_count> m_tracked_local_spawn_types{};
   double m_elapsed_time = 0.0;
   float m_startup_delay = 0.0F;
-  bool m_has_time_based_victory = false;
-  bool m_has_undead_zone_rules = false;
-  bool m_has_world_based_rules = false;
-  bool m_has_resource_victory = false;
-  bool m_has_wave_victory = false;
-  bool m_has_time_limit_defeat = false;
-  bool m_requires_captured_structure_tracking = false;
-  bool m_has_only_commander_defeat_rule = false;
   bool m_only_commander_defeat_armed = false;
-  bool m_has_eliminate_commanders_rule = false;
   bool m_eliminate_commanders_armed = false;
   bool m_world_state_dirty = false;
   bool m_spectator_mode = false;
   bool m_spectator_saw_rivals = false;
   float m_spectator_poll_timer = 0.0F;
-  std::vector<QString> m_only_commander_structure_types;
 
   int m_local_owner_id = 1;
   QString m_victory_state;

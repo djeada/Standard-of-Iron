@@ -18,7 +18,7 @@
 #include "../units/squad.h"
 #include "../units/unit.h"
 #include "formation_combat_geometry.h"
-#include "nav_grid.h"
+#include "systems/navigation/nav_grid.h"
 
 namespace Game::Systems {
 

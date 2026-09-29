@@ -5,7 +5,8 @@
 #include <cstdint>
 #include <vector>
 
-#include "game/map/terrain.h"
+#include "game/map/bridge_geometry.h"
+#include "game/map/ground_type.h"
 
 namespace Render::Ground {
 

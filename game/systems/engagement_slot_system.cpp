@@ -11,8 +11,8 @@
 #include "../core/entity.h"
 #include "../core/system_context.h"
 #include "../core/world.h"
-#include "command_service.h"
-#include "walkability.h"
+#include "systems/movement/command_service.h"
+#include "systems/navigation/walkability.h"
 
 namespace Game::Systems {
 

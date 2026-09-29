@@ -952,17 +952,17 @@ The current formation system depends on these invariants:
 
 # Source map
 
-| Concern                   | Source                                         |
-| ------------------------- | ---------------------------------------------- |
-| Unit layout types/system  | `game/formation/unit_layout.*`                 |
-| Formation types/options   | `game/formation/army_formation_types.h`        |
-| Army planner              | `game/formation/army_formation_planner.*`      |
-| Registry/runtime/cohesion | `game/formation/army_formation_registry.*`     |
-| Formation service         | `game/formation/army_formation_service.*`      |
-| Formation data loader     | `game/formation/formation_data_loader.*`       |
-| Defensive layout runtime  | `game/systems/defensive_unit_layout_service.*` |
-| Traversal layout          | `game/systems/unit_traversal_layout_system.*`  |
-| Movement facts            | `game/core/movement_facts.h`                   |
-| Authored formation data   | `assets/data/formations/`                      |
+| Concern                   | Source                                                 |
+| ------------------------- | ------------------------------------------------------ |
+| Unit layout types/system  | `game/formation/unit_layout.*`                         |
+| Formation types/options   | `game/formation/army_formation_types.h`                |
+| Army planner              | `game/formation/army_formation_planner.*`              |
+| Registry/runtime/cohesion | `game/formation/army_formation_registry.*`             |
+| Formation service         | `game/formation/army_formation_service.*`              |
+| Formation data loader     | `game/formation/formation_data_loader.*`               |
+| Defensive layout runtime  | `game/systems/defensive_unit_layout_service.*`         |
+| Traversal layout          | `game/systems/movement/unit_traversal_layout_system.*` |
+| Movement facts            | `game/core/movement_facts.h`                           |
+| Authored formation data   | `assets/data/formations/`                              |
 
 The architecture documented here describes the current unit-layout, army-group, traversal, defensive-state, AI, persistence, and UI contracts. Historical implementation stories are not needed to understand those contracts and are deliberately kept out of the reference article.

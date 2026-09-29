@@ -9,9 +9,9 @@
 #include <vector>
 
 #include "../../../core/ownership_constants.h"
-#include "../../civilian_delivery_system.h"
+#include "../../economy/civilian_delivery_system.h"
+#include "../../economy/production_service.h"
 #include "../../nation_registry.h"
-#include "../../production_service.h"
 #include "../ai_base_manager.h"
 #include "../ai_doctrine_catalog.h"
 #include "../ai_utils.h"

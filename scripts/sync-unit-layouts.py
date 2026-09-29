@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Regenerate assets/data/formations/unit_layouts/*.json from the C++ built-ins.
 
-The JSON overlays the built-in styles in game/formation/unit_layout.cpp at
+The JSON overlays the built-in styles in game/formation/unit_layout_styles_*.cpp at
 runtime, so the two copies drift silently unless the JSON is generated from the
 source of truth. Run after touching any make_style(...) block:
 
@@ -19,7 +19,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SOURCE = ROOT / "game" / "formation" / "unit_layout.cpp"
+SOURCES = sorted((ROOT / "game" / "formation").glob("unit_layout_styles_*.cpp"))
 OUT_DIR = ROOT / "assets" / "data" / "formations" / "unit_layouts"
 
 
@@ -85,7 +85,7 @@ def main() -> int:
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args()
 
-    styles = parse_styles(SOURCE.read_text())
+    styles = parse_styles("\n".join(p.read_text() for p in SOURCES))
     faction_styles = {k: v for k, v in styles.items() if "." in k}
 
     stale = []

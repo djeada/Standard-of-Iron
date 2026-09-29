@@ -12,7 +12,7 @@
 #include "combat_system/combat_utils.h"
 #include "combat_system/target_assignment.h"
 #include "combat_system/target_rules.h"
-#include "command_service.h"
+#include "systems/movement/command_service.h"
 
 namespace Game::Systems {
 

@@ -4,9 +4,9 @@
 #include <array>
 #include <utility>
 
-#include "../../marketplace_system.h"
+#include "../../economy/marketplace_system.h"
+#include "../../economy/production_service.h"
 #include "../../nation_registry.h"
-#include "../../production_service.h"
 #include "systems/ai_system/ai_types.h"
 #include "units/troop_type.h"
 

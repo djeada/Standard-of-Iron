@@ -14,8 +14,8 @@
 #include "formation/army_formation_service.h"
 #include "formation/formation_doctrine.h"
 #include "systems/nation_registry.h"
-#include "systems/nav_grid.h"
-#include "systems/pathfinding.h"
+#include "systems/navigation/nav_grid.h"
+#include "systems/navigation/pathfinding.h"
 #include "systems/troop_profile_service.h"
 
 namespace {
@@ -577,4 +577,27 @@ TEST_F(ArmyFormationPlannerTest, ServiceReportsWhyAnIntentIsUnavailable) {
   EXPECT_FALSE(
       ArmyFormationService::availability(world, units, ArmyFormationIntent::SiegeEscort)
           .empty());
+}
+
+TEST_F(ArmyFormationPlannerTest, ColumnWithNoCoreMembersDoesNotDivideByZero) {
+  Engine::Core::World world;
+  std::vector<Engine::Core::EntityID> units;
+  for (int i = 0; i < 2; ++i) {
+    units.push_back(add_unit(world,
+                             Game::Units::SpawnType::Swordsman,
+                             NationID::RomanRepublic,
+                             static_cast<float>(i) * 2.0F));
+  }
+  for (float const scale : {0.3F, 0.5F, 0.7F, 1.0F, 1.5F}) {
+    ArmyFormationRequest request;
+    request.members = units;
+    request.anchor = QVector3D(0.0F, 0.0F, 20.0F);
+    request.intent = ArmyFormationIntent::Column;
+    request.spacing = 1.5F;
+    request.options.frontage_scale = scale;
+    request.preserve_previous_slots = false;
+    auto const plan = ArmyFormationPlanner::plan(world, request);
+    EXPECT_TRUE(plan.valid) << plan.rejection_reason;
+    EXPECT_EQ(plan.slot_list.size(), units.size());
+  }
 }

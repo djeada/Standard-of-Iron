@@ -9,9 +9,9 @@
 #include "game/command/command.h"
 #include "game/command/command_dispatcher.h"
 #include "systems/combat_system/damage_processor.h"
-#include "systems/command_service.h"
-#include "systems/movement_pipeline.h"
-#include "systems/nav_grid.h"
+#include "systems/movement/command_service.h"
+#include "systems/movement/movement_pipeline.h"
+#include "systems/navigation/nav_grid.h"
 #include "systems/owner_registry.h"
 #include "units/spawn_type.h"
 

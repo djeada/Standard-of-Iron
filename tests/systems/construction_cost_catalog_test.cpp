@@ -4,8 +4,8 @@
 #include <filesystem>
 #include <gtest/gtest.h>
 
-#include "game/systems/construction_cost_catalog.h"
-#include "game/systems/wall_network_service.h"
+#include "game/systems/economy/construction_cost_catalog.h"
+#include "game/systems/navigation/wall_network_service.h"
 
 namespace {
 

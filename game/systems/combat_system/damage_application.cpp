@@ -5,12 +5,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include <cstdio>
-#include <cstdlib>
-#include <limits>
-#include <numbers>
 #include <optional>
-#include <vector>
 
 #include "../../core/ambient_session.h"
 #include "../../core/component.h"
@@ -21,16 +16,12 @@
 #include "../../units/spawn_type.h"
 #include "../building_collision_registry.h"
 #include "../combat_rules.h"
-#include "../command_service.h"
 #include "../defensive_unit_layout_service.h"
 #include "../formation_combat_geometry.h"
-#include "../order_service.h"
-#include "../wall_network_service.h"
-#include "animation/death_pose_manifest.h"
-#include "combat_random.h"
-#include "combat_types.h"
+#include "../movement/order_service.h"
+#include "../navigation/wall_network_service.h"
 #include "combat_utils.h"
-#include "engagement_trace.h"
+#include "formation_casualties.h"
 #include "game/core/presentation_coverage.h"
 #include "structure_combat.h"
 #include "threat_alert.h"
@@ -38,431 +29,6 @@
 namespace Game::Systems::Combat {
 
 namespace {
-
-auto infantry_death_variant(Engine::Core::Entity* target,
-                            Engine::Core::Entity* attacker,
-                            std::uint16_t slot) -> std::uint8_t {
-  using Animation::HumanoidDeathCollapse;
-
-  auto const variant_for = [](HumanoidDeathCollapse collapse) -> std::uint8_t {
-    for (std::uint8_t v = 0U; v < Animation::k_humanoid_infantry_death_variant_count;
-         ++v) {
-      if (Animation::humanoid_infantry_death_collapse(v) == collapse) {
-        return v;
-      }
-    }
-    return 0U;
-  };
-
-  auto const jitter = static_cast<std::uint32_t>(
-      (target != nullptr ? target->get_id() * 2654435761U : 0U) + (slot * 40503U));
-  bool const flanked_by_jitter = slot != 0U && (jitter >> 13U) % 3U == 0U;
-
-  auto const* target_transform =
-      target != nullptr ? target->get_component<Engine::Core::TransformComponent>()
-                        : nullptr;
-  auto const* attacker_transform =
-      attacker != nullptr ? attacker->get_component<Engine::Core::TransformComponent>()
-                          : nullptr;
-  if (target_transform == nullptr || attacker_transform == nullptr) {
-    return variant_for(flanked_by_jitter ? HumanoidDeathCollapse::SideCrumple
-                                         : HumanoidDeathCollapse::BackSprawl);
-  }
-
-  float const to_attacker_x =
-      attacker_transform->position.x - target_transform->position.x;
-  float const to_attacker_z =
-      attacker_transform->position.z - target_transform->position.z;
-  float const length_sq =
-      (to_attacker_x * to_attacker_x) + (to_attacker_z * to_attacker_z);
-  if (length_sq < 1.0e-4F) {
-    return variant_for(HumanoidDeathCollapse::BackSprawl);
-  }
-
-  float const yaw = target_transform->rotation.y * std::numbers::pi_v<float> / 180.0F;
-  float const facing_dot =
-      ((std::sin(yaw) * to_attacker_x) + (std::cos(yaw) * to_attacker_z)) /
-      std::sqrt(length_sq);
-
-  if (facing_dot > 0.42F) {
-    return variant_for(flanked_by_jitter ? HumanoidDeathCollapse::SideCrumple
-                                         : HumanoidDeathCollapse::BackSprawl);
-  }
-  if (facing_dot < -0.42F) {
-    return variant_for(flanked_by_jitter ? HumanoidDeathCollapse::SideCrumple
-                                         : HumanoidDeathCollapse::FacePlant);
-  }
-  return variant_for(HumanoidDeathCollapse::SideCrumple);
-}
-
-auto structure_fall_heading(Engine::Core::Entity* target,
-                            Engine::Core::Entity* attacker) -> std::uint8_t {
-  auto const* target_tf =
-      target != nullptr ? target->get_component<Engine::Core::TransformComponent>()
-                        : nullptr;
-  auto const* attacker_tf =
-      attacker != nullptr ? attacker->get_component<Engine::Core::TransformComponent>()
-                          : nullptr;
-  if (target_tf == nullptr || attacker_tf == nullptr) {
-    return static_cast<std::uint8_t>(
-        (target != nullptr ? target->get_id() : 0U) * 2654435761U >> 24U);
-  }
-  float const dx = target_tf->position.x - attacker_tf->position.x;
-  float const dz = target_tf->position.z - attacker_tf->position.z;
-  if (dx * dx + dz * dz < 1.0e-6F) {
-    return static_cast<std::uint8_t>(target->get_id() * 2654435761U >> 24U);
-  }
-  float const turns = std::atan2(dx, dz) / (2.0F * std::numbers::pi_v<float>);
-  return static_cast<std::uint8_t>(
-      static_cast<int>(std::lround((turns + 1.0F) * 256.0F)) & 0xFF);
-}
-
-auto resolve_death_variant(Engine::Core::Entity* target,
-                           Engine::Core::Entity* attacker,
-                           Engine::Core::DeathSequenceProfile profile,
-                           std::uint16_t slot = 0U) -> std::uint8_t {
-  switch (profile) {
-  case Engine::Core::DeathSequenceProfile::Infantry:
-    return infantry_death_variant(target, attacker, slot);
-  case Engine::Core::DeathSequenceProfile::Structure:
-    return structure_fall_heading(target, attacker);
-  case Engine::Core::DeathSequenceProfile::MountedRider:
-  case Engine::Core::DeathSequenceProfile::Elephant:
-  case Engine::Core::DeathSequenceProfile::Horse:
-  default:
-    return 0U;
-  }
-}
-
-auto preferred_formation_hit_slot(Engine::Core::Entity* target,
-                                  Engine::Core::Entity* attacker)
-    -> std::optional<std::uint16_t> {
-  if (target == nullptr || attacker == nullptr) {
-    return std::nullopt;
-  }
-  if (!FormationCombat::has_formation_slots(*target)) {
-    return std::nullopt;
-  }
-
-  auto const* contact =
-      attacker->get_component<Engine::Core::FormationContactComponent>();
-  if (contact != nullptr) {
-    auto const* pairs = &contact->engagement_pairs;
-    auto const front =
-        std::find_if(contact->fronts.begin(),
-                     contact->fronts.end(),
-                     [target](auto const& candidate) {
-                       return candidate.outgoing && candidate.in_contact &&
-                              candidate.opponent_id == target->get_id() &&
-                              !candidate.engagement_pairs.empty();
-                     });
-    if (front != contact->fronts.end()) {
-      pairs = &front->engagement_pairs;
-    }
-    if (auto const selected = FormationCombat::select_damage_engagement_pair(
-            *attacker, target->get_id(), *pairs);
-        selected.has_value()) {
-      return selected->target_slot;
-    }
-  }
-
-  auto const layout = FormationCombat::resolve_layout(*target);
-  auto const* attacker_transform =
-      attacker->get_component<Engine::Core::TransformComponent>();
-  if (layout.live_slots.empty()) {
-    return std::nullopt;
-  }
-  if (attacker_transform == nullptr) {
-    return layout.live_slots.front().index;
-  }
-  auto const closest = std::min_element(
-      layout.live_slots.begin(),
-      layout.live_slots.end(),
-      [attacker_transform](auto const& lhs, auto const& rhs) {
-        float const lhs_dx = lhs.world_x - attacker_transform->position.x;
-        float const lhs_dz = lhs.world_z - attacker_transform->position.z;
-        float const rhs_dx = rhs.world_x - attacker_transform->position.x;
-        float const rhs_dz = rhs.world_z - attacker_transform->position.z;
-        return lhs_dx * lhs_dx + lhs_dz * lhs_dz < rhs_dx * rhs_dx + rhs_dz * rhs_dz;
-      });
-  return closest->index;
-}
-
-auto ensure_formation_roster(Engine::Core::Entity& target,
-                             int total_count,
-                             int expected_live_count)
-    -> Engine::Core::FormationRosterPresentationComponent* {
-  auto* roster = Engine::Core::get_or_add_component<
-      Engine::Core::FormationRosterPresentationComponent>(&target);
-  if (roster == nullptr) {
-    return nullptr;
-  }
-
-  int const current_live_count = static_cast<int>(std::count(
-      roster->alive.begin(), roster->alive.end(), static_cast<std::uint8_t>(1U)));
-  bool const shaped_for_this_unit =
-      roster->total_count == total_count &&
-      roster->alive.size() == static_cast<std::size_t>(total_count);
-  if (shaped_for_this_unit && current_live_count <= expected_live_count) {
-
-    roster->live_count = static_cast<std::uint16_t>(current_live_count);
-    return roster;
-  }
-
-  roster->total_count = static_cast<std::uint16_t>(total_count);
-  roster->live_count = static_cast<std::uint16_t>(expected_live_count);
-  roster->alive.assign(static_cast<std::size_t>(total_count), 0U);
-  int const first_live = std::max(0, total_count - expected_live_count);
-  for (int slot = first_live; slot < total_count; ++slot) {
-    roster->alive[static_cast<std::size_t>(slot)] = 1U;
-  }
-  ++roster->revision;
-  return roster;
-}
-
-void publish_formation_hit(
-    Engine::Core::Entity& target,
-    Engine::Core::EntityID attacker_id,
-    std::optional<std::uint16_t> slot,
-    Engine::Core::HitReactionKind kind = Engine::Core::HitReactionKind::Flinch,
-    Engine::Core::World* world = nullptr) {
-  if (!slot.has_value()) {
-    return;
-  }
-  auto* hit = Engine::Core::get_or_add_component<
-      Engine::Core::FormationHitPresentationComponent>(&target);
-  if (hit == nullptr) {
-    return;
-  }
-  hit->attacker_id = attacker_id;
-  hit->soldier_slot = *slot;
-  hit->duration = Engine::Core::hit_reaction_duration(kind);
-  hit->remaining = hit->duration;
-  hit->intensity = kind == Engine::Core::HitReactionKind::Stagger ? 1.2F : 0.85F;
-  hit->reaction_kind = kind;
-  hit->hit_direction_x = 0.0F;
-  hit->hit_direction_z = 0.0F;
-  if (world != nullptr && attacker_id != 0) {
-    auto const* attacker_transform =
-        world->try_get<Engine::Core::TransformComponent>(attacker_id);
-    auto const* target_transform =
-        target.get_component<Engine::Core::TransformComponent>();
-    if (attacker_transform != nullptr && target_transform != nullptr) {
-      float const dx = target_transform->position.x - attacker_transform->position.x;
-      float const dz = target_transform->position.z - attacker_transform->position.z;
-      float const dist = std::hypot(dx, dz);
-      if (dist > 0.001F) {
-        hit->hit_direction_x = dx / dist;
-        hit->hit_direction_z = dz / dist;
-      }
-    }
-  }
-  ++hit->revision;
-}
-
-auto begin_soldier_casualties(Engine::Core::Entity* target,
-                              Engine::Core::Entity* attacker,
-                              int prev_health,
-                              int new_health,
-                              std::optional<std::uint16_t> preferred_slot,
-                              const FormationCombat::FormationLayout& previous_layout)
-    -> int {
-  if (target == nullptr) {
-    return 0;
-  }
-
-  auto* unit = target->get_component<Engine::Core::UnitComponent>();
-  if (unit == nullptr) {
-    return 0;
-  }
-
-  int const individuals_per_unit =
-      FormationCombat::resolve_definition(*unit).total_count;
-  if (individuals_per_unit <= 1) {
-    return 0;
-  }
-
-  int const prev_survivors = Engine::Core::resolve_surviving_individual_count(
-      prev_health, unit->max_health, individuals_per_unit);
-  int const new_survivors = Engine::Core::resolve_surviving_individual_count(
-      new_health, unit->max_health, individuals_per_unit);
-  int const previous_front_casualties = individuals_per_unit - prev_survivors;
-  int const new_front_casualties = individuals_per_unit - new_survivors;
-  if (new_front_casualties <= previous_front_casualties) {
-    return 0;
-  }
-
-  auto* roster = ensure_formation_roster(*target, individuals_per_unit, prev_survivors);
-  auto const profile = Engine::Core::resolve_death_profile(*target);
-  auto* casualties = Engine::Core::get_or_add_component<
-      Engine::Core::SoldierCasualtyAnimationComponent>(target);
-  if (casualties == nullptr) {
-    return 0;
-  }
-
-  auto const spatial_anchors =
-      FormationCombat::soldier_spatial_anchors(*target, previous_layout);
-  auto spatial_anchor_for_slot =
-      [&spatial_anchors](
-          std::uint16_t slot) -> const FormationCombat::SoldierSpatialAnchor* {
-    auto const found =
-        std::find_if(spatial_anchors.begin(),
-                     spatial_anchors.end(),
-                     [slot](auto const& anchor) { return anchor.slot_index == slot; });
-    return found != spatial_anchors.end() ? &*found : nullptr;
-  };
-  auto next_casualty_slot = [&]() -> std::optional<std::uint16_t> {
-    if (roster == nullptr) {
-      return std::nullopt;
-    }
-    if (preferred_slot.has_value() && *preferred_slot < roster->alive.size() &&
-        roster->alive[*preferred_slot] != 0U) {
-      auto const selected = preferred_slot;
-      preferred_slot.reset();
-      return selected;
-    }
-    for (std::size_t slot = 0; slot < roster->alive.size(); ++slot) {
-      if (roster->alive[slot] != 0U) {
-        return static_cast<std::uint16_t>(slot);
-      }
-    }
-    return std::nullopt;
-  };
-
-  int queued_casualties = 0;
-  for (int casualty_index = previous_front_casualties;
-       casualty_index < new_front_casualties;
-       ++casualty_index) {
-    auto const selected_slot = next_casualty_slot();
-    int const slot =
-        selected_slot.has_value() ? static_cast<int>(*selected_slot) : casualty_index;
-    Engine::Core::SoldierCasualtyAnimationComponent::Entry entry{};
-    entry.slot_index = static_cast<std::uint16_t>(slot);
-    if (auto const* soldier =
-            spatial_anchor_for_slot(static_cast<std::uint16_t>(slot))) {
-      entry.has_local_anchor = true;
-      entry.local_x = soldier->local_x;
-      entry.local_z = soldier->local_z;
-      entry.local_yaw = soldier->local_yaw;
-    }
-    auto const variant = resolve_death_variant(
-        target, attacker, profile, static_cast<std::uint16_t>(slot));
-    entry.profile = profile;
-    Engine::Core::apply_death_sequence_timing(
-        entry, Engine::Core::resolve_death_timing(profile, variant));
-
-    auto existing =
-        std::find_if(casualties->entries.begin(),
-                     casualties->entries.end(),
-                     [slot](const auto& active) { return active.slot_index == slot; });
-    if (existing != casualties->entries.end()) {
-      *existing = entry;
-    } else {
-      casualties->entries.push_back(entry);
-    }
-    if (roster != nullptr && slot >= 0 && slot < individuals_per_unit) {
-      roster->alive[static_cast<std::size_t>(slot)] = 0U;
-      ++roster->revision;
-    }
-    ++queued_casualties;
-  }
-  if (roster != nullptr && queued_casualties > 0) {
-    roster->live_count = static_cast<std::uint16_t>(std::count(
-        roster->alive.begin(), roster->alive.end(), static_cast<std::uint8_t>(1U)));
-  }
-  return queued_casualties;
-}
-
-void fill_formation_front_vacancy(Engine::Core::World* world,
-                                  Engine::Core::Entity* casualty) {
-  if (world == nullptr || casualty == nullptr) {
-    return;
-  }
-  auto const* vacant = casualty->get_component<Engine::Core::FormationModeComponent>();
-  if (vacant == nullptr || !vacant->active || vacant->formation_id == 0 ||
-      vacant->stable_rank < 0 || vacant->stable_file < 0) {
-    return;
-  }
-  Engine::Core::Entity* replacement = nullptr;
-  int best_rank = std::numeric_limits<int>::max();
-  float best_distance_sq = std::numeric_limits<float>::max();
-  for (auto [candidate_ref, mode_ref, unit_ref, transform_ref] :
-       world->entity_view<Engine::Core::FormationModeComponent,
-                          Engine::Core::UnitComponent,
-                          Engine::Core::TransformComponent>()) {
-    Engine::Core::Entity* candidate = &candidate_ref;
-    const auto* mode = &mode_ref;
-    const auto* unit = &unit_ref;
-    const auto* transform = &transform_ref;
-    if (candidate == casualty || unit->health <= 0 ||
-        mode->formation_id != vacant->formation_id ||
-        mode->stable_file != vacant->stable_file ||
-        mode->stable_rank <= vacant->stable_rank) {
-      continue;
-    }
-    float const dx = transform->position.x - vacant->stable_slot_x;
-    float const dz = transform->position.z - vacant->stable_slot_z;
-    float const distance_sq = dx * dx + dz * dz;
-    if (mode->stable_rank < best_rank ||
-        (mode->stable_rank == best_rank && distance_sq < best_distance_sq)) {
-      replacement = candidate;
-      best_rank = mode->stable_rank;
-      best_distance_sq = distance_sq;
-    }
-  }
-  if (replacement == nullptr) {
-    return;
-  }
-  auto* replacement_mode =
-      replacement->get_component<Engine::Core::FormationModeComponent>();
-  replacement_mode->stable_slot_id = vacant->stable_slot_id;
-  replacement_mode->stable_rank = vacant->stable_rank;
-  replacement_mode->stable_file = vacant->stable_file;
-  replacement_mode->stable_slot_x = vacant->stable_slot_x;
-  replacement_mode->stable_slot_z = vacant->stable_slot_z;
-  CommandService::move_unit(
-      *world,
-      replacement->get_id(),
-      QVector3D(vacant->stable_slot_x, 0.0F, vacant->stable_slot_z),
-      {.kind = MoveOrderKind::FormationMove, .preserve_formation_mode = true});
-}
-
-void prune_oldest_blood_stain(Engine::Core::World* world) {
-  if (world == nullptr) {
-    return;
-  }
-
-  while (true) {
-    const auto blood_stains = world->entities_with<Engine::Core::BloodStainComponent>();
-    if (blood_stains.size() <
-        static_cast<std::size_t>(Engine::Core::Defaults::k_blood_stain_max_active)) {
-      return;
-    }
-
-    auto const oldest = std::min_element(blood_stains.begin(), blood_stains.end());
-    if (oldest == blood_stains.end()) {
-      return;
-    }
-
-    world->destroy_entity(*oldest);
-  }
-}
-
-auto blood_stain_scale(const Engine::Core::UnitComponent* unit) -> float {
-  if (unit == nullptr) {
-    return 1.0F;
-  }
-  if (unit->spawn_type == Game::Units::SpawnType::Elephant) {
-    return 1.65F;
-  }
-  if (Game::Units::is_cavalry(unit->spawn_type)) {
-    return 1.25F;
-  }
-  if (Game::Units::is_wildlife_spawn(unit->spawn_type)) {
-    return 0.42F;
-  }
-  return 1.0F;
-}
 
 auto is_valid_retaliation_attacker(Engine::Core::Entity* attacker) -> bool {
   if (attacker == nullptr) {
@@ -591,116 +157,6 @@ void queue_structure_impact(Engine::Core::Entity& target,
   });
 }
 
-} // namespace
-
-void begin_death_sequence(Engine::Core::Entity* target,
-                          Engine::Core::Entity* attacker) {
-  if (target == nullptr) {
-    return;
-  }
-  auto const profile = Engine::Core::resolve_death_profile(*target);
-  Engine::Core::begin_death_sequence(*target,
-                                     resolve_death_variant(target, attacker, profile));
-}
-
-void spawn_blood_stain(Engine::Core::World* world,
-                       const Engine::Core::Entity* target,
-                       float spread,
-                       std::uint32_t variation) {
-  if (world == nullptr || target == nullptr) {
-    return;
-  }
-
-  auto const* transform = target->get_component<Engine::Core::TransformComponent>();
-  if (transform == nullptr) {
-    return;
-  }
-
-  prune_oldest_blood_stain(world);
-
-  auto* blood_stain = world->create_entity();
-  if (blood_stain == nullptr) {
-    return;
-  }
-
-  auto const* unit = target->get_component<Engine::Core::UnitComponent>();
-  auto const id_seed =
-      static_cast<std::uint32_t>(target->get_id()) + (variation * 2654435761U);
-  auto const position_seed =
-      static_cast<std::uint32_t>(std::abs(transform->position.x) * 31.0F +
-                                 std::abs(transform->position.z) * 131.0F);
-  float const scale = blood_stain_scale(unit);
-  float const radius =
-      Engine::Core::Defaults::k_blood_stain_default_radius * scale *
-      (0.78F + hash_to_unit_open(id_seed * 17U + position_seed) * 0.46F);
-  float const rotation = hash_to_unit_open(id_seed * 97U + position_seed * 3U) *
-                         std::numbers::pi_v<float> * 2.0F;
-  float const aspect_ratio =
-      0.58F + hash_to_unit_open(id_seed * 53U + position_seed * 11U) * 0.72F;
-  float const seed = hash_to_unit_open(id_seed * 193U + position_seed * 29U);
-
-  float const offset_angle = hash_to_unit_open(id_seed * 311U + position_seed * 7U) *
-                             std::numbers::pi_v<float> * 2.0F;
-  float const offset_reach =
-      spread * std::sqrt(hash_to_unit_open(id_seed * 419U + position_seed * 13U));
-
-  blood_stain->add_component<Engine::Core::TransformComponent>(
-      transform->position.x + (std::cos(offset_angle) * offset_reach),
-      transform->position.y,
-      transform->position.z + (std::sin(offset_angle) * offset_reach));
-  blood_stain->add_component<Engine::Core::BloodStainComponent>(
-      radius,
-      Engine::Core::Defaults::k_blood_stain_default_lifetime,
-      rotation,
-      aspect_ratio,
-      seed);
-}
-
-void announce_new_stagger(const Engine::Core::Entity* entity, bool was_staggered) {
-  if (entity == nullptr || was_staggered) {
-    return;
-  }
-  Engine::Core::AudioCueEvent cue("combat.stagger");
-  if (const auto* transform =
-          entity->get_component<Engine::Core::TransformComponent>()) {
-    cue.at(transform->position.x, transform->position.y, transform->position.z);
-  }
-  Engine::Core::EventManager::instance().publish(cue);
-}
-
-void add_or_extend_stagger(Engine::Core::Entity* entity, float duration) {
-  if (entity == nullptr || duration <= 0.0F) {
-    return;
-  }
-  bool const was_staggered = entity->has_component<Engine::Core::StaggerComponent>();
-  auto* stagger = Engine::Core::get_or_add_component<Engine::Core::StaggerComponent>(
-      entity, duration);
-  if (stagger != nullptr) {
-    stagger->remaining = std::max(stagger->remaining, duration);
-    announce_new_stagger(entity, was_staggered);
-  }
-}
-
-void add_or_extend_stagger(Engine::Core::Entity* entity,
-                           float duration,
-                           Engine::Core::StaggerTier tier) {
-  if (entity == nullptr || duration <= 0.0F) {
-    return;
-  }
-  bool const was_staggered = entity->has_component<Engine::Core::StaggerComponent>();
-  auto* stagger = Engine::Core::get_or_add_component<Engine::Core::StaggerComponent>(
-      entity, duration);
-  if (stagger != nullptr) {
-    stagger->remaining = std::max(stagger->remaining, duration);
-    if (static_cast<std::uint8_t>(tier) > static_cast<std::uint8_t>(stagger->tier)) {
-      stagger->tier = tier;
-    }
-    announce_new_stagger(entity, was_staggered);
-  }
-}
-
-namespace {
-
 [[nodiscard]] auto apply_defensive_unit_layout_damage_scaling(
     const Engine::Core::Entity& target,
     const Engine::Core::Entity* attacker,
@@ -746,6 +202,188 @@ namespace {
       1, static_cast<int>(std::lround(static_cast<float>(damage) * multiplier)));
 }
 
+struct AttackerInfo {
+  Engine::Core::Entity* entity{nullptr};
+  int owner_id{0};
+  std::optional<Game::Units::SpawnType> spawn_type;
+};
+
+[[nodiscard]] auto
+resolve_attacker(Engine::Core::World* world,
+                 Engine::Core::EntityID attacker_id) -> AttackerInfo {
+  AttackerInfo info;
+  if (attacker_id == 0 || world == nullptr) {
+    return info;
+  }
+  info.entity = world->get_entity(attacker_id);
+  if (const auto* attacker_unit =
+          world->try_get<Engine::Core::UnitComponent>(attacker_id);
+      attacker_unit != nullptr) {
+    info.owner_id = attacker_unit->owner_id;
+    info.spawn_type = attacker_unit->spawn_type;
+  }
+  return info;
+}
+
+void drop_dead_preferred_slot(std::optional<std::uint16_t>& preferred_soldier_slot,
+                              const FormationCombat::FormationLayout& layout) {
+  if (!preferred_soldier_slot.has_value()) {
+    return;
+  }
+  bool const slot_is_live = std::any_of(layout.live_slots.begin(),
+                                        layout.live_slots.end(),
+                                        [preferred_soldier_slot](auto const& slot) {
+                                          return slot.index == *preferred_soldier_slot;
+                                        });
+  if (!slot_is_live) {
+    preferred_soldier_slot.reset();
+  }
+}
+
+void react_wildlife_to_hit(Engine::Core::Entity& target, int health) {
+  auto* const registry = target.registry();
+  auto* wildlife = registry->try_get<Engine::Core::WildlifeComponent>(target.get_id());
+  if (wildlife == nullptr) {
+    return;
+  }
+  if (wildlife->flinch_timer <= 0.0F) {
+    wildlife->flinch_timer =
+        Engine::Core::WildlifeComponent::k_flinch_animation_seconds;
+  }
+  wildlife->watched_health = health;
+  if (wildlife->species == Game::Wildlife::Species::Sheep) {
+    wildlife->held_timer = std::max(wildlife->held_timer, 0.22F);
+    if (auto* movement =
+            registry->try_get<Engine::Core::MovementComponent>(target.get_id())) {
+      movement->stop();
+    }
+  }
+}
+
+void release_melee_lock_partner(Engine::Core::World* world,
+                                Engine::Core::Entity& target,
+                                Engine::Core::AttackComponent* target_atk) {
+  if ((target_atk == nullptr) || !target_atk->in_melee_lock ||
+      target_atk->melee_lock_target_id == 0 || world == nullptr) {
+    return;
+  }
+  auto* lock_partner = world->get_entity(target_atk->melee_lock_target_id);
+  auto* partner_atk =
+      (lock_partner != nullptr &&
+       !lock_partner->has_component<Engine::Core::PendingRemovalComponent>())
+          ? lock_partner->get_component<Engine::Core::AttackComponent>()
+          : nullptr;
+  if ((partner_atk != nullptr) &&
+      partner_atk->melee_lock_target_id == target.get_id()) {
+    partner_atk->release_melee_lock();
+  }
+}
+
+struct HitContext {
+  Engine::Core::World* world{nullptr};
+  Engine::Core::Entity* target{nullptr};
+  Engine::Core::UnitComponent* unit{nullptr};
+  Engine::Core::EntityID attacker_id{0};
+  AttackerInfo attacker;
+  bool structure{false};
+  int effective_damage{0};
+  bool killing_blow{false};
+};
+
+void present_formation_hit(const HitContext& hit,
+                           DamageApplicationResult& result,
+                           std::optional<std::uint16_t> preferred_soldier_slot,
+                           const FormationCombat::FormationLayout& previous_layout) {
+  drop_dead_preferred_slot(preferred_soldier_slot, previous_layout);
+  auto const preferred_hit_slot =
+      preferred_soldier_slot.has_value()
+          ? preferred_soldier_slot
+          : preferred_formation_hit_slot(hit.target, hit.attacker.entity);
+  publish_formation_hit(*hit.target,
+                        hit.attacker_id,
+                        preferred_hit_slot,
+                        Engine::Core::HitReactionKind::Flinch,
+                        hit.world);
+  result.queued_soldier_casualties = begin_soldier_casualties(hit.target,
+                                                              hit.attacker.entity,
+                                                              result.previous_health,
+                                                              result.new_health,
+                                                              preferred_hit_slot,
+                                                              previous_layout);
+  if (result.queued_soldier_casualties > 0 && !hit.killing_blow && !hit.structure) {
+    spawn_blood_stain(hit.world, hit.target);
+  }
+}
+
+void publish_hit_event(const HitContext& hit) {
+  Game::Units::SpawnType const attacker_type =
+      hit.attacker.spawn_type.value_or(Game::Units::SpawnType::Swordsman);
+  Engine::Core::EventManager::instance().publish(
+      Engine::Core::CombatHitEvent(hit.attacker_id,
+                                   hit.target->get_id(),
+                                   hit.effective_damage,
+                                   attacker_type,
+                                   hit.killing_blow,
+                                   hit.attacker.owner_id,
+                                   hit.unit->owner_id,
+                                   hit.structure));
+}
+
+void react_to_survived_hit(const HitContext& hit,
+                           const std::optional<QVector3D>& contact_point,
+                           float impact_speed) {
+  react_wildlife_to_hit(*hit.target, hit.unit->health);
+  apply_hit_feedback(hit.target,
+                     hit.attacker_id,
+                     hit.world,
+                     Engine::Core::HitReactionKind::Flinch,
+                     {.contact_point = contact_point, .weapon_speed = impact_speed});
+  assign_retaliation_target_if_needed(hit.world, hit.target, hit.attacker.entity);
+}
+
+void resolve_death(const HitContext& hit) {
+  auto* target = hit.target;
+  auto* world = hit.world;
+  fill_formation_front_vacancy(world, target);
+  Engine::Core::EventManager::instance().publish(
+      Engine::Core::UnitDiedEvent(target->get_id(),
+                                  hit.unit->owner_id,
+                                  hit.unit->spawn_type,
+                                  hit.attacker_id,
+                                  hit.attacker.owner_id));
+  if (Game::Units::is_building_spawn(hit.unit->spawn_type)) {
+    Engine::Core::note_coverage(Engine::Core::CoverageEvent::StructureDestroyed);
+  }
+
+  auto* target_atk = target->get_component<Engine::Core::AttackComponent>();
+  release_melee_lock_partner(world, *target, target_atk);
+
+  if (world != nullptr && hit.structure) {
+    Game::Session::services_for(*world).building_collision->unregister_building(
+        target->get_id());
+  }
+  if (world != nullptr &&
+      target->get_component<Engine::Core::WallSegmentComponent>() != nullptr) {
+    WallNetworkService::refresh_world(*world);
+  }
+  if (auto* movement = target->get_component<Engine::Core::MovementComponent>()) {
+    movement->stop();
+  }
+  Game::Systems::OrderService::exit_hold_mode(target);
+  if (target_atk != nullptr) {
+    target_atk->release_melee_lock();
+  }
+  auto* target_selector = target->get_component<Engine::Core::AttackTargetComponent>();
+  if (target_selector != nullptr) {
+    target_selector->target_id = 0;
+    target_selector->should_chase = false;
+  }
+  if (!hit.structure && hit.killing_blow) {
+    spawn_blood_stain(world, target);
+  }
+  begin_death_sequence(target, hit.attacker.entity);
+}
+
 } // namespace
 
 DamageApplicationResult
@@ -760,358 +398,56 @@ apply_unit_damage(Engine::Core::World* world,
   if (target == nullptr || damage <= 0) {
     return result;
   }
-
   auto* unit = target->get_component<Engine::Core::UnitComponent>();
   if (unit == nullptr) {
     return result;
   }
 
-  int attacker_owner_id = 0;
-  std::optional<Game::Units::SpawnType> attacker_type_opt;
-  Engine::Core::Entity* attacker = nullptr;
-  if (attacker_id != 0 && world != nullptr) {
-
-    attacker = world->get_entity(attacker_id);
-    if (const auto* attacker_unit =
-            world->try_get<Engine::Core::UnitComponent>(attacker_id);
-        attacker_unit != nullptr) {
-      attacker_owner_id = attacker_unit->owner_id;
-      attacker_type_opt = attacker_unit->spawn_type;
-    }
-  }
-
-  bool const structure = is_building(target);
+  HitContext hit{.world = world,
+                 .target = target,
+                 .unit = unit,
+                 .attacker_id = attacker_id,
+                 .attacker = resolve_attacker(world, attacker_id)};
+  hit.structure = is_building(target);
   int const raw_damage =
-      structure ? resolve_structure_damage(attacker, damage) : damage;
-  int const effective_damage = structure
-                                   ? raw_damage
-                                   : apply_defensive_unit_layout_damage_scaling(
-                                         *target, attacker, contact_point, raw_damage);
+      hit.structure ? resolve_structure_damage(hit.attacker.entity, damage) : damage;
+  hit.effective_damage =
+      hit.structure ? raw_damage
+                    : apply_defensive_unit_layout_damage_scaling(
+                          *target, hit.attacker.entity, contact_point, raw_damage);
   result.previous_health = unit->health;
   result.new_health = result.previous_health;
-  if (effective_damage <= 0 || result.previous_health <= 0) {
+  if (hit.effective_damage <= 0 || result.previous_health <= 0) {
     return result;
   }
-  result.applied_damage = effective_damage;
-  result.new_health = std::max(0, result.previous_health - effective_damage);
-  result.killed = result.previous_health > 0 && result.new_health <= 0;
-  bool const is_killing_blow =
-      result.previous_health > 0 && result.previous_health <= effective_damage;
+  result.applied_damage = hit.effective_damage;
+  result.new_health = std::max(0, result.previous_health - hit.effective_damage);
+  result.killed = result.new_health <= 0;
+  hit.killing_blow = result.previous_health <= hit.effective_damage;
   auto const previous_layout = FormationCombat::resolve_layout(*target);
 
   unit->health = result.new_health;
 
-  if (preferred_soldier_slot.has_value()) {
-    bool const slot_is_live =
-        std::any_of(previous_layout.live_slots.begin(),
-                    previous_layout.live_slots.end(),
-                    [preferred_soldier_slot](auto const& slot) {
-                      return slot.index == *preferred_soldier_slot;
-                    });
-    if (!slot_is_live) {
-      preferred_soldier_slot.reset();
-    }
+  present_formation_hit(hit, result, preferred_soldier_slot, previous_layout);
+  publish_hit_event(hit);
+  if (hit.structure) {
+    queue_structure_impact(*target, hit.attacker.entity, contact_point);
   }
-  auto const preferred_hit_slot = preferred_soldier_slot.has_value()
-                                      ? preferred_soldier_slot
-                                      : preferred_formation_hit_slot(target, attacker);
-  publish_formation_hit(*target,
-                        attacker_id,
-                        preferred_hit_slot,
-                        Engine::Core::HitReactionKind::Flinch,
-                        world);
-  result.queued_soldier_casualties = begin_soldier_casualties(target,
-                                                              attacker,
-                                                              result.previous_health,
-                                                              result.new_health,
-                                                              preferred_hit_slot,
-                                                              previous_layout);
-  if (result.queued_soldier_casualties > 0 && !is_killing_blow && !structure) {
-    spawn_blood_stain(world, target);
-  }
-
-  Game::Units::SpawnType const attacker_type =
-      attacker_type_opt.value_or(Game::Units::SpawnType::Swordsman);
-  Engine::Core::EventManager::instance().publish(
-      Engine::Core::CombatHitEvent(attacker_id,
-                                   target->get_id(),
-                                   effective_damage,
-                                   attacker_type,
-                                   is_killing_blow,
-                                   attacker_owner_id,
-                                   unit->owner_id,
-                                   structure));
-
-  if (structure) {
-    queue_structure_impact(*target, attacker, contact_point);
-  }
-
   if (unit->health > 0) {
-    auto* const registry = target->registry();
-    if (auto* wildlife =
-            registry->try_get<Engine::Core::WildlifeComponent>(target->get_id())) {
-
-      if (wildlife->flinch_timer <= 0.0F) {
-        wildlife->flinch_timer =
-            Engine::Core::WildlifeComponent::k_flinch_animation_seconds;
-      }
-      wildlife->watched_health = unit->health;
-      if (wildlife->species == Game::Wildlife::Species::Sheep) {
-        wildlife->held_timer = std::max(wildlife->held_timer, 0.22F);
-        if (auto* movement =
-                registry->try_get<Engine::Core::MovementComponent>(target->get_id())) {
-          movement->stop();
-        }
-      }
+    react_to_survived_hit(hit, contact_point, impact_speed);
+    if (hit.structure) {
+      Engine::Core::EventManager::instance().publish(
+          Engine::Core::BuildingAttackedEvent(target->get_id(),
+                                              unit->owner_id,
+                                              unit->spawn_type,
+                                              attacker_id,
+                                              hit.attacker.owner_id,
+                                              hit.effective_damage));
     }
-    apply_hit_feedback(target,
-                       attacker_id,
-                       world,
-                       Engine::Core::HitReactionKind::Flinch,
-                       {.contact_point = contact_point, .weapon_speed = impact_speed});
-    assign_retaliation_target_if_needed(world, target, attacker);
+  } else {
+    resolve_death(hit);
   }
-
-  if (structure && unit->health > 0) {
-    Engine::Core::EventManager::instance().publish(
-        Engine::Core::BuildingAttackedEvent(target->get_id(),
-                                            unit->owner_id,
-                                            unit->spawn_type,
-                                            attacker_id,
-                                            attacker_owner_id,
-                                            effective_damage));
-  }
-
-  if (unit->health <= 0) {
-    fill_formation_front_vacancy(world, target);
-    int const killer_owner_id = attacker_owner_id;
-
-    Engine::Core::EventManager::instance().publish(
-        Engine::Core::UnitDiedEvent(target->get_id(),
-                                    unit->owner_id,
-                                    unit->spawn_type,
-                                    attacker_id,
-                                    killer_owner_id));
-    if (Game::Units::is_building_spawn(unit->spawn_type)) {
-      Engine::Core::note_coverage(Engine::Core::CoverageEvent::StructureDestroyed);
-    }
-
-    auto* target_atk = target->get_component<Engine::Core::AttackComponent>();
-    if ((target_atk != nullptr) && target_atk->in_melee_lock &&
-        target_atk->melee_lock_target_id != 0 && world != nullptr) {
-      auto* lock_partner = world->get_entity(target_atk->melee_lock_target_id);
-      auto* partner_atk =
-          (lock_partner != nullptr &&
-           !lock_partner->has_component<Engine::Core::PendingRemovalComponent>())
-              ? lock_partner->get_component<Engine::Core::AttackComponent>()
-              : nullptr;
-      if ((partner_atk != nullptr) &&
-          partner_atk->melee_lock_target_id == target->get_id()) {
-        partner_atk->release_melee_lock();
-      }
-    }
-
-    if (world != nullptr && structure) {
-      Game::Session::services_for(*world).building_collision->unregister_building(
-          target->get_id());
-    }
-    if (world != nullptr &&
-        target->get_component<Engine::Core::WallSegmentComponent>() != nullptr) {
-      WallNetworkService::refresh_world(*world);
-    }
-
-    if (auto* movement = target->get_component<Engine::Core::MovementComponent>()) {
-      movement->stop();
-    }
-
-    Game::Systems::OrderService::exit_hold_mode(target);
-
-    if (target_atk != nullptr) {
-      target_atk->release_melee_lock();
-    }
-    auto* target_selector =
-        target->get_component<Engine::Core::AttackTargetComponent>();
-    if (target_selector != nullptr) {
-      target_selector->target_id = 0;
-      target_selector->should_chase = false;
-    }
-
-    if (!structure && is_killing_blow) {
-      spawn_blood_stain(world, target);
-    }
-    begin_death_sequence(target, attacker);
-  }
-
   return result;
-}
-
-void apply_hit_feedback(Engine::Core::Entity* target,
-                        Engine::Core::EntityID attacker_id,
-                        Engine::Core::World* world) {
-  apply_hit_feedback(target, attacker_id, world, Engine::Core::HitReactionKind::Flinch);
-}
-
-namespace {
-
-[[nodiscard]] auto
-reaction_knockback_scale(Engine::Core::HitReactionKind kind) noexcept -> float {
-  switch (kind) {
-  case Engine::Core::HitReactionKind::Flinch:
-    return 1.0F;
-  case Engine::Core::HitReactionKind::Block:
-    return 0.55F;
-  case Engine::Core::HitReactionKind::Evade:
-    return 1.7F;
-  case Engine::Core::HitReactionKind::Stagger:
-    return 2.4F;
-  case Engine::Core::HitReactionKind::Recoil:
-    return 0.7F;
-  }
-  return 1.0F;
-}
-
-[[nodiscard]] auto
-reaction_pauses_swing(Engine::Core::HitReactionKind kind) noexcept -> bool {
-  return kind == Engine::Core::HitReactionKind::Flinch ||
-         kind == Engine::Core::HitReactionKind::Stagger;
-}
-
-} // namespace
-
-void apply_hit_feedback(Engine::Core::Entity* target,
-                        Engine::Core::EntityID attacker_id,
-                        Engine::Core::World* world,
-                        Engine::Core::HitReactionKind kind,
-                        const HitImpulse& impulse) {
-  if (target == nullptr) {
-    return;
-  }
-
-  float const weapon_weight =
-      impulse.weapon_speed > 0.0F
-          ? std::clamp(impulse.weapon_speed / k_reference_weapon_speed, 0.55F, 2.1F)
-          : 1.0F;
-
-  auto* feedback =
-      Engine::Core::get_or_add_component<Engine::Core::HitFeedbackComponent>(target);
-  if (feedback == nullptr) {
-    return;
-  }
-
-  feedback->is_reacting = true;
-  feedback->recent_damage_remaining =
-      Engine::Core::HitFeedbackComponent::k_recent_damage_window;
-  feedback->source_attacker_id = attacker_id;
-  feedback->reaction_time = 0.0F;
-  feedback->reaction_duration = Engine::Core::hit_reaction_duration(kind);
-  feedback->reaction_kind = kind;
-  feedback->knockback_applied = 0.0F;
-  feedback->knockback_x = 0.0F;
-  feedback->knockback_z = 0.0F;
-  feedback->reaction_intensity = 0.85F;
-
-  auto* target_transform = target->get_component<Engine::Core::TransformComponent>();
-  if (target_transform != nullptr && attacker_id != 0 && world != nullptr) {
-    auto* attacker = world->get_entity(attacker_id);
-    if (attacker != nullptr) {
-      auto* attacker_transform =
-          attacker->get_component<Engine::Core::TransformComponent>();
-      if (attacker_transform != nullptr) {
-        auto* attacker_attack =
-            attacker->get_component<Engine::Core::AttackComponent>();
-        auto* attacker_unit = attacker->get_component<Engine::Core::UnitComponent>();
-        float knockback_scale = 1.0F;
-        if ((attacker_attack != nullptr) &&
-            attacker_attack->current_mode ==
-                Engine::Core::AttackComponent::CombatMode::Melee) {
-          knockback_scale = 1.25F;
-          feedback->reaction_intensity = 1.0F;
-        } else {
-          knockback_scale = 0.8F;
-          feedback->reaction_intensity = 0.70F;
-        }
-        if (attacker_unit != nullptr &&
-            attacker_unit->spawn_type == Game::Units::SpawnType::Elephant) {
-          knockback_scale = 2.2F;
-          feedback->reaction_intensity = 1.35F;
-        }
-        knockback_scale *= reaction_knockback_scale(kind) * weapon_weight;
-        feedback->reaction_intensity *= weapon_weight;
-        if (kind == Engine::Core::HitReactionKind::Stagger) {
-          feedback->reaction_intensity = std::max(feedback->reaction_intensity, 1.25F);
-        } else if (kind == Engine::Core::HitReactionKind::Recoil) {
-          feedback->reaction_intensity = 0.6F;
-        }
-
-        bool const from_weapon_contact =
-            impulse.contact_point.has_value() && impulse.weapon_speed > 0.0F;
-        float const from_x = from_weapon_contact ? impulse.contact_point->x()
-                                                 : attacker_transform->position.x;
-        float const from_z = from_weapon_contact ? impulse.contact_point->z()
-                                                 : attacker_transform->position.z;
-        float const dx = target_transform->position.x - from_x;
-        float const dz = target_transform->position.z - from_z;
-        float const dist = std::sqrt(dx * dx + dz * dz);
-        if (dist > 0.001F) {
-          feedback->hit_direction_x = dx / dist;
-          feedback->hit_direction_z = dz / dist;
-          float const knockback = std::clamp(
-              Engine::Core::HitFeedbackComponent::k_max_knockback * knockback_scale,
-              0.0F,
-              Engine::Core::HitFeedbackComponent::k_max_knockback * 2.8F);
-          feedback->knockback_x = (dx / dist) * knockback;
-          feedback->knockback_z = (dz / dist) * knockback;
-
-          bool const hit_controls_root_facing =
-              !target->registry()->has<Engine::Core::WildlifeComponent>(
-                  target->get_id()) &&
-              (Game::Systems::CombatRules::uses_rpg_combat_rules(target) ||
-               !Game::Systems::FormationCombat::has_formation_slots(*target));
-          if (hit_controls_root_facing) {
-            float const face_dx =
-                attacker_transform->position.x - target_transform->position.x;
-            float const face_dz =
-                attacker_transform->position.z - target_transform->position.z;
-            float const face_dist = std::sqrt(face_dx * face_dx + face_dz * face_dz);
-            if (face_dist > 0.001F) {
-              float const yaw =
-                  std::atan2(face_dx, face_dz) * 180.0F / std::numbers::pi_v<float>;
-              target_transform->desired_yaw = yaw;
-              target_transform->has_desired_yaw = true;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  auto* combat_state = target->get_component<Engine::Core::CombatStateComponent>();
-  if (combat_state != nullptr && reaction_pauses_swing(kind)) {
-    combat_state->is_hit_paused = true;
-    combat_state->hit_pause_remaining =
-        Engine::Core::CombatStateComponent::k_combat_animation_hit_pause_duration;
-  }
-}
-
-void apply_melee_reaction_feedback(Engine::Core::World* world,
-                                   Engine::Core::Entity* target,
-                                   Engine::Core::EntityID attacker_id,
-                                   Engine::Core::HitReactionKind kind) {
-  if (target == nullptr) {
-    return;
-  }
-  auto const* unit = target->get_component<Engine::Core::UnitComponent>();
-  if (unit == nullptr || unit->health <= 0) {
-    return;
-  }
-  apply_hit_feedback(target, attacker_id, world, kind);
-  Engine::Core::Entity* attacker =
-      (world != nullptr && attacker_id != 0) ? world->get_entity(attacker_id) : nullptr;
-  publish_formation_hit(*target,
-                        attacker_id,
-                        preferred_formation_hit_slot(target, attacker),
-                        kind,
-                        world);
 }
 
 } // namespace Game::Systems::Combat

@@ -10,7 +10,6 @@
 #include "../core/entity.h"
 #include "../core/world.h"
 #include "../game_config.h"
-#include "../map/terrain.h"
 #include "../map/terrain_service.h"
 #include "../map/visibility_service.h"
 #include "../session/selection_service.h"

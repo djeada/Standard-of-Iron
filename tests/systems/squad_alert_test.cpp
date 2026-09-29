@@ -11,7 +11,7 @@
 #include "systems/combat_system/combat_utils.h"
 #include "systems/combat_system/damage_processor.h"
 #include "systems/combat_system/threat_alert.h"
-#include "systems/nav_grid.h"
+#include "systems/navigation/nav_grid.h"
 #include "systems/owner_registry.h"
 #include "tests/support/movement_test_access.h"
 #include "units/spawn_type.h"

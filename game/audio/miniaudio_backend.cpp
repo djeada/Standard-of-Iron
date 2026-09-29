@@ -20,14 +20,10 @@
 #include <utility>
 #include <vector>
 
-#include "audio_mastering.h"
-#include "loop_seam.h"
-#include "resampler.h"
 #include "spatial.h"
 
 namespace {
 
-constexpr float k_pcm_scale_up = 32767.0F;
 constexpr float k_pcm_scale_down = 1.0F / 32768.0F;
 
 constexpr int COMMAND_WAIT_ATTEMPTS = 200;
@@ -41,18 +37,9 @@ auto sanitize_backend_volume(float volume) -> float {
 
 } // namespace
 
+#include "miniaudio_config.h"
+
 #define MINIAUDIO_IMPLEMENTATION
-#define MA_NO_ENCODING
-#define MA_ENABLE_ONLY_SPECIFIC_BACKENDS
-
-#define MA_ENABLE_PULSEAUDIO
-#define MA_ENABLE_ALSA
-#define MA_ENABLE_WASAPI
-#define MA_ENABLE_COREAUDIO
-
-#define MA_ENABLE_MP3
-#define MA_ENABLE_FLAC
-#define MA_ENABLE_VORBIS
 #pragma push_macro("TRUE")
 #pragma push_macro("FALSE")
 #pragma push_macro("L")
@@ -113,7 +100,8 @@ auto MiniaudioBackend::initialize(int device_rate,
   m_active_channel_mask.store(0, std::memory_order_relaxed);
   m_bus_limiter.prepare(m_sample_rate, m_output_channels);
   m_gameplay_mix.prepare(m_sample_rate);
-  start_worker();
+  m_decoder.set_sample_rate(m_sample_rate);
+  m_worker.start();
 
   if (!open_device) {
     qInfo() << "MiniaudioBackend: mixer ready without a playback device";
@@ -136,7 +124,7 @@ auto MiniaudioBackend::initialize(int device_rate,
     qWarning() << "  Requested channels:" << m_output_channels;
     qWarning() << "  This may indicate no audio device is available";
     m_device.reset();
-    stop_worker();
+    m_worker.stop();
     return false;
   }
 
@@ -147,7 +135,7 @@ auto MiniaudioBackend::initialize(int device_rate,
     ma_device_uninit(m_device.get());
     m_device.reset();
     m_device_wrapper.reset();
-    stop_worker();
+    m_worker.stop();
     return false;
   }
   m_device_running.store(true, std::memory_order_release);
@@ -161,19 +149,13 @@ auto MiniaudioBackend::initialize(int device_rate,
 
 void MiniaudioBackend::shutdown() {
   stop_device();
-  stop_worker();
+  m_worker.stop();
 
   drain_commands();
   m_channels.clear();
   m_sound_effects.clear();
 
-  QMutexLocker const locker(&m_registry_mutex);
-  m_track_ids.clear();
-  for (int slot = 0; slot < MAX_TRACKS; ++slot) {
-    m_track_table[slot].store(nullptr, std::memory_order_release);
-    m_track_storage[slot].reset();
-    m_slot_taken[slot] = false;
-  }
+  m_tracks.clear();
 }
 
 void MiniaudioBackend::stop_device() {
@@ -187,439 +169,59 @@ void MiniaudioBackend::stop_device() {
   m_device_wrapper.reset();
 }
 
-void MiniaudioBackend::start_worker() {
-  QMutexLocker locker(&m_decode_mutex);
-  if (m_decode_running) {
-    return;
-  }
-  m_decode_running = true;
-  locker.unlock();
-  m_decode_thread = std::thread([this] { decode_worker(); });
-}
-
-void MiniaudioBackend::stop_worker() {
-  {
-    QMutexLocker const locker(&m_decode_mutex);
-    if (!m_decode_running) {
-      return;
-    }
-    m_decode_running = false;
-    m_decode_jobs.clear();
-    m_decode_bulk_jobs.clear();
-    m_decode_ready.wakeAll();
-  }
-  if (m_decode_thread.joinable()) {
-    m_decode_thread.join();
-  }
-}
-
-auto MiniaudioBackend::take_next_job(DecodeJob& job) -> bool {
-  if (!m_decode_jobs.empty()) {
-    job = m_decode_jobs.front();
-    m_decode_jobs.pop_front();
-    return true;
-  }
-  if (!m_decode_bulk_jobs.empty()) {
-    job = m_decode_bulk_jobs.front();
-    m_decode_bulk_jobs.pop_front();
-    return true;
-  }
-  return false;
-}
-
-void MiniaudioBackend::decode_worker() {
-  for (;;) {
-    DecodeJob job;
-    {
-      QMutexLocker locker(&m_decode_mutex);
-      while (m_decode_running && m_decode_jobs.empty() && m_decode_bulk_jobs.empty()) {
-        m_decode_ready.wait(&m_decode_mutex);
-      }
-      if (!m_decode_running) {
-        return;
-      }
-      if (!take_next_job(job)) {
-        continue;
-      }
-      ++m_decode_in_flight;
-    }
-
-    finish_job(job, decode_into_slot(job));
-  }
-}
-
-void MiniaudioBackend::finish_job(const DecodeJob& job, bool decoded) {
-  if (!decoded) {
-    qWarning() << "MiniaudioBackend: dropping" << job.id
-               << "because its audio could not be decoded";
-    Game::Audio::AudioCommand command;
-    command.type = Game::Audio::AudioCommand::Type::ReleaseTrack;
-    command.track = static_cast<std::int16_t>(job.track);
-    submit(command);
-    release_slot(job.track);
-  }
-
-  std::optional<DeferredLoop> deferred;
-  {
-    QMutexLocker const locker(&m_decode_mutex);
-    m_pending_slots.remove(job.track);
-    if (const auto held = m_deferred_loops.constFind(job.track);
-        held != m_deferred_loops.constEnd()) {
-      if (decoded) {
-        deferred = held.value();
-      }
-      m_deferred_loops.remove(job.track);
-    }
-  }
-
-  if (deferred.has_value()) {
-    Game::Audio::AudioCommand command;
-    command.type = Game::Audio::AudioCommand::Type::PlaySound;
-    command.track = static_cast<std::int16_t>(job.track);
-    command.volume = deferred->volume;
-    command.pan =
-        std::isfinite(deferred->pan) ? std::clamp(deferred->pan, -1.0F, 1.0F) : 0.0F;
-    command.mix_bus = deferred->mix_bus;
-    command.priority = deferred->priority;
-    command.loop = true;
-    submit(command);
-  }
-
-  QMutexLocker const locker(&m_decode_mutex);
-  --m_decode_in_flight;
-  m_decode_idle.wakeAll();
-}
-
-void MiniaudioBackend::release_slot(int slot) {
-  if (slot < 0 || slot >= MAX_TRACKS) {
-    return;
-  }
-  QMutexLocker const locker(&m_registry_mutex);
-  for (auto it = m_track_ids.begin(); it != m_track_ids.end(); ++it) {
-    if (it.value() == slot) {
-      m_track_ids.erase(it);
-      break;
-    }
-  }
-  m_track_table[slot].store(nullptr, std::memory_order_release);
-  if (m_track_storage[slot]) {
-    note_track_released(m_track_storage[slot]->pcm.size() * sizeof(std::int16_t));
-  }
-  m_track_storage[slot].reset();
-  m_slot_taken[slot] = false;
-  {
-    QMutexLocker const decode_locker(&m_decode_mutex);
-    m_deferred_loops.remove(slot);
-  }
-}
-
 void MiniaudioBackend::wait_for_track(const QString& id) {
-  const int slot = find_track_slot(id);
+  const int slot = m_tracks.find_slot(id);
   if (slot < 0) {
     return;
   }
-  QMutexLocker locker(&m_decode_mutex);
-  while (m_decode_running && m_pending_slots.contains(slot)) {
-    m_decode_idle.wait(&m_decode_mutex);
-  }
+  m_worker.wait_for_slot(slot);
 }
 
 void MiniaudioBackend::wait_for_decodes() {
-  QMutexLocker locker(&m_decode_mutex);
-  while (m_decode_running && (!m_decode_jobs.empty() || !m_decode_bulk_jobs.empty() ||
-                              m_decode_in_flight > 0)) {
-    m_decode_idle.wait(&m_decode_mutex);
-  }
-}
-
-auto MiniaudioBackend::claim_track_slot(const QString& id) -> int {
-  QMutexLocker const locker(&m_registry_mutex);
-  const auto existing = m_track_ids.constFind(id);
-  if (existing != m_track_ids.constEnd()) {
-    return existing.value();
-  }
-  for (int slot = 0; slot < MAX_TRACKS; ++slot) {
-    if (!m_slot_taken[slot]) {
-      m_slot_taken[slot] = true;
-      m_track_ids.insert(id, slot);
-      return slot;
-    }
-  }
-  return -1;
-}
-
-auto MiniaudioBackend::find_track_slot(const QString& id) const -> int {
-  QMutexLocker const locker(&m_registry_mutex);
-  const auto found = m_track_ids.constFind(id);
-  return found == m_track_ids.constEnd() ? -1 : found.value();
+  m_worker.wait_for_all();
 }
 
 auto MiniaudioBackend::is_track_ready(const QString& id) const -> bool {
-  const int slot = find_track_slot(id);
-  return slot >= 0 && m_track_table[slot].load(std::memory_order_acquire) != nullptr;
+  return m_tracks.is_ready(id);
 }
 
 auto MiniaudioBackend::is_track_decode_pending(const QString& id) const -> bool {
-  const int slot = find_track_slot(id);
+  const int slot = m_tracks.find_slot(id);
   if (slot < 0) {
     return false;
   }
-  QMutexLocker const locker(&m_decode_mutex);
-  return m_pending_slots.contains(slot);
+  return m_worker.is_pending(slot);
 }
 
 auto MiniaudioBackend::has_pending_decodes() const -> bool {
-  QMutexLocker const locker(&m_decode_mutex);
-  return !m_pending_slots.isEmpty();
-}
-
-auto MiniaudioBackend::analysis_for(const QString& id,
-                                    const float* pcm,
-                                    std::size_t frames)
-    -> Game::Audio::Mastering::Analysis {
-  {
-    QMutexLocker const locker(&m_analysis_cache_mutex);
-    if (const auto cached = m_analysis_cache.constFind(id);
-        cached != m_analysis_cache.constEnd() && cached->frames == frames) {
-      return cached->analysis;
-    }
-  }
-
-  const Game::Audio::Mastering::Analysis analysis = Game::Audio::Mastering::analyse(
-      pcm, frames, DEFAULT_OUTPUT_CHANNELS, m_sample_rate);
-  m_analyses_computed.fetch_add(1, std::memory_order_relaxed);
-
-  QMutexLocker const locker(&m_analysis_cache_mutex);
-  m_analysis_cache.insert(id, CachedAnalysis{frames, analysis});
-  return analysis;
-}
-
-auto MiniaudioBackend::default_pcm_budget_bytes() -> std::uint64_t {
-  constexpr std::uint64_t k_default_megabytes = 320;
-  const QByteArray configured = qgetenv("SOI_AUDIO_PCM_BUDGET_MB");
-  bool ok = false;
-  const qulonglong parsed = configured.toULongLong(&ok);
-  const std::uint64_t megabytes =
-      (ok && parsed > 0) ? static_cast<std::uint64_t>(parsed) : k_default_megabytes;
-  return megabytes * 1024ULL * 1024ULL;
-}
-
-void MiniaudioBackend::note_track_resident(std::size_t bytes, const QString& id) {
-  const std::uint64_t resident =
-      m_resident_pcm_bytes.fetch_add(bytes, std::memory_order_acq_rel) + bytes;
-  std::uint64_t peak = m_peak_pcm_bytes.load(std::memory_order_relaxed);
-  while (resident > peak && !m_peak_pcm_bytes.compare_exchange_weak(
-                                peak, resident, std::memory_order_acq_rel)) {
-  }
-  if (m_pcm_budget_bytes > 0 && resident > m_pcm_budget_bytes) {
-    if (m_pcm_budget_overruns.fetch_add(1, std::memory_order_acq_rel) == 0) {
-      qWarning() << "MiniaudioBackend: decoded audio is over its residency budget after"
-                 << id << "-" << (resident / (1024 * 1024)) << "MB resident,"
-                 << (m_pcm_budget_bytes / (1024 * 1024))
-                 << "MB budgeted (SOI_AUDIO_PCM_BUDGET_MB)";
-    }
-  }
-}
-
-void MiniaudioBackend::note_track_released(std::size_t bytes) {
-  if (bytes == 0) {
-    return;
-  }
-  m_resident_pcm_bytes.fetch_sub(bytes, std::memory_order_acq_rel);
-}
-
-auto MiniaudioBackend::decode_into_slot(const DecodeJob& job) -> bool {
-  QFile file(job.path);
-  if (!file.open(QIODevice::ReadOnly)) {
-    qWarning() << "miniaudio: QFile open failed for" << job.path;
-    return false;
-  }
-
-  QByteArray data = file.readAll();
-  file.close();
-  if (data.isEmpty()) {
-    qWarning() << "miniaudio: empty track data" << job.path;
-    return false;
-  }
-
-  const ma_decoder_config decoder_config =
-      ma_decoder_config_init(ma_format_f32, DEFAULT_OUTPUT_CHANNELS, 0);
-  ma_decoder decoder;
-  if (ma_decoder_init_memory(data.constData(),
-                             static_cast<size_t>(data.size()),
-                             &decoder_config,
-                             &decoder) != MA_SUCCESS) {
-    qWarning() << "miniaudio: decoder init failed for" << job.path;
-    return false;
-  }
-
-  std::vector<float> pcm;
-  ma_uint64 expected_frames = 0;
-  if (ma_decoder_get_length_in_pcm_frames(&decoder, &expected_frames) == MA_SUCCESS &&
-      expected_frames > 0) {
-    pcm.reserve(static_cast<std::size_t>(expected_frames) * DEFAULT_OUTPUT_CHANNELS);
-  }
-
-  std::array<float, DECODE_BUFFER_FRAMES * DEFAULT_OUTPUT_CHANNELS> buffer{};
-  for (;;) {
-    ma_uint64 frames_read = 0;
-    ma_result const result = ma_decoder_read_pcm_frames(
-        &decoder, buffer.data(), DECODE_BUFFER_FRAMES, &frames_read);
-    if (frames_read > 0) {
-      const auto samples =
-          static_cast<std::size_t>(frames_read) * DEFAULT_OUTPUT_CHANNELS;
-      pcm.insert(pcm.end(),
-                 buffer.begin(),
-                 buffer.begin() + static_cast<std::ptrdiff_t>(samples));
-    }
-    if (result == MA_AT_END) {
-      break;
-    }
-    if (result != MA_SUCCESS) {
-      ma_decoder_uninit(&decoder);
-      qWarning() << "miniaudio: decode failed for" << job.path << "result:" << result;
-      return false;
-    }
-  }
-  const ma_uint32 source_rate = decoder.outputSampleRate;
-  ma_decoder_uninit(&decoder);
-  data.clear();
-  data.squeeze();
-
-  if (pcm.empty()) {
-    qWarning() << "miniaudio: decode produced no PCM for" << job.path;
-    return false;
-  }
-
-  Game::Audio::resample_to(pcm, DEFAULT_OUTPUT_CHANNELS, source_rate, m_sample_rate);
-
-  auto frame_count = pcm.size() / DEFAULT_OUTPUT_CHANNELS;
-  const Game::Audio::Mastering::Analysis analysis =
-      analysis_for(job.id, pcm.data(), frame_count);
-  Game::Audio::Mastering::apply(pcm.data(),
-                                frame_count,
-                                DEFAULT_OUTPUT_CHANNELS,
-                                m_sample_rate,
-                                Game::Audio::Mastering::profile_for(job.material),
-                                analysis);
-
-  const bool loops = job.material == Game::Audio::Mastering::Material::Music ||
-                     job.material == Game::Audio::Mastering::Material::Ambience;
-  if (loops) {
-    const Game::Audio::LoopSeamReport seam = Game::Audio::seal_loop(
-        pcm.data(), frame_count, DEFAULT_OUTPUT_CHANNELS, m_sample_rate);
-    if (seam.loop_frames > 0) {
-      frame_count = seam.loop_frames;
-      pcm.resize(frame_count * DEFAULT_OUTPUT_CHANNELS);
-    }
-  }
-
-  auto track = std::make_unique<DecodedTrack>();
-  track->frames = static_cast<unsigned>(frame_count);
-  if (analysis.channels_identical) {
-    for (std::size_t frame = 0; frame < frame_count; ++frame) {
-      pcm[frame] = pcm[frame * DEFAULT_OUTPUT_CHANNELS];
-    }
-    pcm.resize(frame_count);
-    pcm.shrink_to_fit();
-    track->channels = 1;
-  } else {
-    track->channels = DEFAULT_OUTPUT_CHANNELS;
-  }
-  track->pcm.resize(pcm.size());
-  for (std::size_t i = 0; i < pcm.size(); ++i) {
-    const float clamped = std::clamp(pcm[i], -1.0F, 1.0F);
-    track->pcm[i] = static_cast<std::int16_t>(std::lrintf(clamped * k_pcm_scale_up));
-  }
-  pcm.clear();
-  pcm.shrink_to_fit();
-
-  QMutexLocker const locker(&m_registry_mutex);
-  if (job.track < 0 || job.track >= MAX_TRACKS ||
-      m_track_ids.value(job.id, -1) != job.track) {
-    return false;
-  }
-  const std::size_t resident_bytes = track->pcm.size() * sizeof(std::int16_t);
-  m_track_storage[job.track] = std::move(track);
-  m_track_table[job.track].store(m_track_storage[job.track].get(),
-                                 std::memory_order_release);
-  note_track_resident(resident_bytes, job.id);
-  return true;
+  return m_worker.has_pending();
 }
 
 auto MiniaudioBackend::request_track(const QString& id,
                                      const QString& path,
                                      Game::Audio::Mastering::Material material)
     -> bool {
-  const int slot = claim_track_slot(id);
+  const int slot = m_tracks.claim_slot(id);
   if (slot < 0) {
     qWarning() << "MiniaudioBackend: no free track slot for" << id;
     return false;
   }
-  if (m_track_table[slot].load(std::memory_order_acquire) != nullptr) {
+  if (m_tracks.track(static_cast<std::size_t>(slot)) != nullptr) {
     return true;
   }
-
-  DecodeJob job;
-  job.id = id;
-  job.path = path;
-  job.track = slot;
-  job.material = material;
-
-  QMutexLocker locker(&m_decode_mutex);
-  if (!m_decode_running) {
-    locker.unlock();
-    return decode_into_slot(job);
-  }
-  m_pending_slots.insert(slot);
-  const bool is_bed = material == Game::Audio::Mastering::Material::Music ||
-                      material == Game::Audio::Mastering::Material::Ambience;
-  if (is_bed) {
-    m_decode_bulk_jobs.push_back(std::move(job));
-  } else {
-    m_decode_jobs.push_back(std::move(job));
-  }
-  m_decode_ready.wakeOne();
-  return true;
-}
-
-void MiniaudioBackend::cancel_queued_decode(const QString& id) {
-  const int slot = find_track_slot(id);
-  if (slot < 0) {
-    return;
-  }
-  QMutexLocker const locker(&m_decode_mutex);
-  const auto for_slot = [slot](const DecodeJob& job) {
-    return job.track == slot;
-  };
-  const auto erase_from = [&for_slot](auto& jobs) {
-    const auto before = jobs.size();
-    jobs.erase(std::remove_if(jobs.begin(), jobs.end(), for_slot), jobs.end());
-    return before != jobs.size();
-  };
-  const bool erased_urgent = erase_from(m_decode_jobs);
-  const bool erased_bulk = erase_from(m_decode_bulk_jobs);
-  if (!erased_urgent && !erased_bulk) {
-    return;
-  }
-  m_pending_slots.remove(slot);
-  m_deferred_loops.remove(slot);
-  m_decode_idle.wakeAll();
+  return m_worker.request(Game::Audio::DecodeJob{id, path, slot, material});
 }
 
 void MiniaudioBackend::unload(const QString& id) {
-  cancel_queued_decode(id);
+  const int queued_slot = m_tracks.find_slot(id);
+  if (queued_slot >= 0) {
+    m_worker.cancel(queued_slot);
+  }
   wait_for_track(id);
 
-  int slot = -1;
-  {
-    QMutexLocker const locker(&m_registry_mutex);
-    const auto found = m_track_ids.constFind(id);
-    if (found == m_track_ids.constEnd()) {
-      return;
-    }
-    slot = found.value();
-    m_track_ids.erase(found);
+  const int slot = m_tracks.detach(id);
+  if (slot < 0) {
+    return;
   }
 
   Game::Audio::AudioCommand command;
@@ -627,13 +229,7 @@ void MiniaudioBackend::unload(const QString& id) {
   command.track = static_cast<std::int16_t>(slot);
   submit_and_wait(command);
 
-  QMutexLocker const locker(&m_registry_mutex);
-  m_track_table[slot].store(nullptr, std::memory_order_release);
-  if (m_track_storage[slot]) {
-    note_track_released(m_track_storage[slot]->pcm.size() * sizeof(std::int16_t));
-  }
-  m_track_storage[slot].reset();
-  m_slot_taken[slot] = false;
+  m_tracks.free_slot(slot);
 }
 
 void MiniaudioBackend::submit(const Game::Audio::AudioCommand& command) {
@@ -676,7 +272,7 @@ auto MiniaudioBackend::fade_samples_for(int fade_ms) const -> unsigned {
 
 void MiniaudioBackend::play(
     int channel, const QString& id, float volume, bool loop, int fade_ms) {
-  const int slot = find_track_slot(id);
+  const int slot = m_tracks.find_slot(id);
   if (slot < 0) {
     qWarning() << "MiniaudioBackend: track not registered:" << id;
     return;
@@ -757,24 +353,21 @@ void MiniaudioBackend::play_sound(const QString& id,
   if (m_offline_render && is_track_decode_pending(id)) {
     wait_for_track(id);
   }
-  const int slot = find_track_slot(id);
+  const int slot = m_tracks.find_slot(id);
   if (slot < 0) {
     qWarning() << "MiniaudioBackend: Sound not ready:" << id;
     return;
   }
-  if (m_track_table[slot].load(std::memory_order_acquire) == nullptr) {
-
-    QMutexLocker const locker(&m_decode_mutex);
-    if (m_pending_slots.contains(slot)) {
-      if (loop) {
-        m_deferred_loops.insert(
-            slot, DeferredLoop{sanitize_backend_volume(volume), pan, bus, priority});
-      } else {
+  if (m_tracks.track(static_cast<std::size_t>(slot)) == nullptr) {
+    const Game::Audio::DeferredLoop deferred{
+        sanitize_backend_volume(volume), pan, bus, priority};
+    if (m_worker.defer_if_pending(slot, loop, deferred)) {
+      if (!loop) {
         qDebug() << "MiniaudioBackend: Sound still decoding, skipping play:" << id;
       }
       return;
     }
-    if (m_track_table[slot].load(std::memory_order_acquire) == nullptr) {
+    if (m_tracks.track(static_cast<std::size_t>(slot)) == nullptr) {
       qWarning() << "MiniaudioBackend: Sound not ready:" << id;
       return;
     }
@@ -791,7 +384,7 @@ void MiniaudioBackend::play_sound(const QString& id,
 }
 
 void MiniaudioBackend::set_sound_volume(const QString& id, float volume, int fade_ms) {
-  const int slot = find_track_slot(id);
+  const int slot = m_tracks.find_slot(id);
   if (slot < 0) {
     return;
   }
@@ -804,15 +397,11 @@ void MiniaudioBackend::set_sound_volume(const QString& id, float volume, int fad
 }
 
 void MiniaudioBackend::stop_sound(const QString& id) {
-  const int slot = find_track_slot(id);
+  const int slot = m_tracks.find_slot(id);
   if (slot < 0) {
     return;
   }
-  {
-
-    QMutexLocker const locker(&m_decode_mutex);
-    m_deferred_loops.remove(slot);
-  }
+  m_worker.discard_deferred(slot);
   Game::Audio::AudioCommand command;
   command.type = Game::Audio::AudioCommand::Type::StopSound;
   command.track = static_cast<std::int16_t>(slot);
@@ -820,7 +409,7 @@ void MiniaudioBackend::stop_sound(const QString& id) {
 }
 
 auto MiniaudioBackend::is_sound_active(const QString& id) const -> bool {
-  const int slot = find_track_slot(id);
+  const int slot = m_tracks.find_slot(id);
   if (slot < 0) {
     return false;
   }
@@ -832,109 +421,142 @@ auto MiniaudioBackend::is_sound_active(const QString& id) const -> bool {
   return false;
 }
 
+namespace {
+
+template <typename Fader>
+void begin_channel_fade(Fader& channel, float target, unsigned fade_samples) {
+  channel.target_volume = target;
+  channel.fade_samples = std::max(1U, fade_samples);
+  channel.volume_step =
+      (channel.target_volume - channel.current_volume) / float(channel.fade_samples);
+}
+
+} // namespace
+
+auto MiniaudioBackend::channel_for(const Game::Audio::AudioCommand& command)
+    -> Channel* {
+  const auto index = static_cast<std::size_t>(command.channel);
+  return command.channel >= 0 && index < m_channels.size() ? &m_channels[index]
+                                                           : nullptr;
+}
+
+void MiniaudioBackend::apply_play(const Game::Audio::AudioCommand& command) {
+  Channel* channel = channel_for(command);
+  if (channel == nullptr) {
+    return;
+  }
+  channel->track = command.track;
+  channel->frame_pos = 0;
+  channel->looping = command.loop;
+  channel->paused = false;
+  channel->active = true;
+  channel->current_volume = MIN_VOLUME;
+  begin_channel_fade(*channel, command.volume, command.fade_samples);
+}
+
+void MiniaudioBackend::apply_stop(const Game::Audio::AudioCommand& command) {
+  Channel* channel = channel_for(command);
+  if (channel == nullptr || !channel->active) {
+    return;
+  }
+  begin_channel_fade(*channel, MIN_VOLUME, command.fade_samples);
+  channel->looping = false;
+}
+
+void MiniaudioBackend::apply_stop_all(const Game::Audio::AudioCommand& command) {
+  for (Channel& channel : m_channels) {
+    if (!channel.active) {
+      continue;
+    }
+    begin_channel_fade(channel, MIN_VOLUME, command.fade_samples);
+    channel.looping = false;
+  }
+}
+
+void MiniaudioBackend::apply_play_sound(const Game::Audio::AudioCommand& command) {
+  for (SoundEffect& effect : m_sound_effects) {
+    if (effect.active) {
+      continue;
+    }
+    effect.mix_bus = command.mix_bus;
+    effect.priority = command.priority;
+    effect.track = command.track;
+    effect.frame_pos = 0;
+    effect.volume = command.volume;
+    effect.target_volume = command.volume;
+    effect.volume_step = 0.0F;
+    const auto gains = Game::Audio::pan_gains(command.pan);
+    effect.gain_left = gains.first;
+    effect.gain_right = gains.second;
+    effect.fade_samples = 0;
+    effect.looping = command.loop;
+    effect.active = true;
+    return;
+  }
+}
+
+void MiniaudioBackend::apply_set_sound_volume(
+    const Game::Audio::AudioCommand& command) {
+  for (SoundEffect& effect : m_sound_effects) {
+    if (!effect.active || effect.track != command.track) {
+      continue;
+    }
+    effect.target_volume = command.volume;
+    effect.fade_samples = std::max(1U, command.fade_samples);
+    effect.volume_step =
+        (effect.target_volume - effect.volume) / float(effect.fade_samples);
+  }
+}
+
+void MiniaudioBackend::apply_release_track(const Game::Audio::AudioCommand& command) {
+  for (Channel& channel : m_channels) {
+    if (channel.track == command.track) {
+      channel = Channel{};
+    }
+  }
+  for (SoundEffect& effect : m_sound_effects) {
+    if (effect.track == command.track) {
+      effect = SoundEffect{};
+    }
+  }
+}
+
 void MiniaudioBackend::apply_command(const Game::Audio::AudioCommand& command) {
   using Type = Game::Audio::AudioCommand::Type;
-  const auto channel_index = static_cast<std::size_t>(command.channel);
-  const bool channel_valid = command.channel >= 0 && channel_index < m_channels.size();
-
   switch (command.type) {
-  case Type::Play: {
-    if (!channel_valid) {
-      return;
-    }
-    Channel& channel = m_channels[channel_index];
-    channel.track = command.track;
-    channel.frame_pos = 0;
-    channel.looping = command.loop;
-    channel.paused = false;
-    channel.active = true;
-    channel.target_volume = command.volume;
-    channel.current_volume = MIN_VOLUME;
-    channel.fade_samples = std::max(1U, command.fade_samples);
-    channel.volume_step =
-        (channel.target_volume - channel.current_volume) / float(channel.fade_samples);
+  case Type::Play:
+    apply_play(command);
     return;
-  }
-  case Type::Stop: {
-    if (!channel_valid || !m_channels[channel_index].active) {
-      return;
-    }
-    Channel& channel = m_channels[channel_index];
-    channel.target_volume = MIN_VOLUME;
-    channel.fade_samples = std::max(1U, command.fade_samples);
-    channel.volume_step =
-        (channel.target_volume - channel.current_volume) / float(channel.fade_samples);
-    channel.looping = false;
+  case Type::Stop:
+    apply_stop(command);
     return;
-  }
   case Type::Pause:
-    if (channel_valid) {
-      m_channels[channel_index].paused = true;
+    if (Channel* channel = channel_for(command)) {
+      channel->paused = true;
     }
     return;
   case Type::Resume:
-    if (channel_valid) {
-      m_channels[channel_index].paused = false;
+    if (Channel* channel = channel_for(command)) {
+      channel->paused = false;
     }
     return;
-  case Type::SetVolume: {
-    if (!channel_valid || !m_channels[channel_index].active) {
-      return;
+  case Type::SetVolume:
+    if (Channel* channel = channel_for(command);
+        channel != nullptr && channel->active) {
+      begin_channel_fade(*channel, command.volume, command.fade_samples);
     }
-    Channel& channel = m_channels[channel_index];
-    channel.target_volume = command.volume;
-    channel.fade_samples = std::max(1U, command.fade_samples);
-    channel.volume_step =
-        (channel.target_volume - channel.current_volume) / float(channel.fade_samples);
     return;
-  }
   case Type::StopAll:
-    for (Channel& channel : m_channels) {
-      if (!channel.active) {
-        continue;
-      }
-      channel.target_volume = MIN_VOLUME;
-      channel.fade_samples = std::max(1U, command.fade_samples);
-      channel.volume_step = (channel.target_volume - channel.current_volume) /
-                            float(channel.fade_samples);
-      channel.looping = false;
-    }
+    apply_stop_all(command);
     return;
   case Type::SetMasterVolume:
     m_master_volume = command.volume;
     return;
-  case Type::PlaySound: {
-    for (SoundEffect& effect : m_sound_effects) {
-      if (effect.active) {
-        continue;
-      }
-      effect.mix_bus = command.mix_bus;
-      effect.priority = command.priority;
-      effect.track = command.track;
-      effect.frame_pos = 0;
-      effect.volume = command.volume;
-      effect.target_volume = command.volume;
-      effect.volume_step = 0.0F;
-      const auto gains = Game::Audio::pan_gains(command.pan);
-      effect.gain_left = gains.first;
-      effect.gain_right = gains.second;
-      effect.fade_samples = 0;
-      effect.looping = command.loop;
-      effect.active = true;
-      return;
-    }
+  case Type::PlaySound:
+    apply_play_sound(command);
     return;
-  }
   case Type::SetSoundVolume:
-    for (SoundEffect& effect : m_sound_effects) {
-      if (!effect.active || effect.track != command.track) {
-        continue;
-      }
-      effect.target_volume = command.volume;
-      effect.fade_samples = std::max(1U, command.fade_samples);
-      effect.volume_step =
-          (effect.target_volume - effect.volume) / float(effect.fade_samples);
-    }
+    apply_set_sound_volume(command);
     return;
   case Type::StopSound:
     for (SoundEffect& effect : m_sound_effects) {
@@ -944,16 +566,7 @@ void MiniaudioBackend::apply_command(const Game::Audio::AudioCommand& command) {
     }
     return;
   case Type::ReleaseTrack:
-    for (Channel& channel : m_channels) {
-      if (channel.track == command.track) {
-        channel = Channel{};
-      }
-    }
-    for (SoundEffect& effect : m_sound_effects) {
-      if (effect.track == command.track) {
-        effect = SoundEffect{};
-      }
-    }
+    apply_release_track(command);
     return;
   case Type::None:
     return;
@@ -983,62 +596,107 @@ void MiniaudioBackend::publish_state() {
   }
 }
 
-void MiniaudioBackend::on_audio(float* output, unsigned frames) {
-  static constexpr int STEREO_CHANNELS = 2;
+namespace {
 
-  constexpr unsigned k_mix_block = 256;
-  if (frames > k_mix_block) {
-    for (unsigned offset = 0; offset < frames; offset += k_mix_block) {
-      on_audio(output + offset * STEREO_CHANNELS,
-               std::min(k_mix_block, frames - offset));
-    }
-    return;
+constexpr int STEREO_CHANNELS = 2;
+constexpr unsigned k_mix_block = 256;
+
+} // namespace
+
+struct MiniaudioBackend::BlockGains {
+  const float* origin = nullptr;
+  std::array<Game::Audio::MixGains, k_mix_block> values;
+
+  [[nodiscard]] auto at(const float* destination,
+                        Game::Audio::MixBus bus) const -> float {
+    return values[static_cast<std::size_t>(destination - origin) / STEREO_CHANNELS]
+                 [Game::Audio::mix_index(bus)];
   }
-  const unsigned samples = frames * STEREO_CHANNELS;
-  std::memset(output, 0, samples * sizeof(float));
+};
 
-  drain_commands();
-
-  const float master = m_master_volume;
+struct MiniaudioBackend::EffectLoad {
   Game::Audio::MixCounts counts{};
   bool voice = false;
   bool critical = false;
+};
+
+auto MiniaudioBackend::measure_effect_load(float master) const -> EffectLoad {
+  EffectLoad load;
   for (const SoundEffect& effect : m_sound_effects) {
     if (!effect.active || effect.volume * master <= 0.001F) {
       continue;
     }
-    const auto* track =
-        effect.track < 0 ? nullptr
-                         : m_track_table[static_cast<std::size_t>(effect.track)].load(
-                               std::memory_order_acquire);
+    const auto* track = effect.track < 0
+                            ? nullptr
+                            : m_tracks.track(static_cast<std::size_t>(effect.track));
     if (track == nullptr || track->frames == 0 ||
         (!effect.looping && effect.frame_pos >= track->frames)) {
       continue;
     }
-    ++counts[Game::Audio::mix_index(effect.mix_bus)];
-    voice = voice || effect.mix_bus == Game::Audio::MixBus::Voice;
-    critical = critical ||
-               (effect.priority >= 7 && (effect.mix_bus == Game::Audio::MixBus::Voice ||
-                                         effect.mix_bus == Game::Audio::MixBus::Alert));
+    ++load.counts[Game::Audio::mix_index(effect.mix_bus)];
+    load.voice = load.voice || effect.mix_bus == Game::Audio::MixBus::Voice;
+    load.critical = load.critical || (effect.priority >= 7 &&
+                                      (effect.mix_bus == Game::Audio::MixBus::Voice ||
+                                       effect.mix_bus == Game::Audio::MixBus::Alert));
   }
-  const auto preset = m_listening_preset.load(std::memory_order_relaxed);
-  m_gameplay_mix.target(counts, voice, critical, preset);
-  std::array<Game::Audio::MixGains, k_mix_block> mix_gains;
-  for (unsigned i = 0; i < frames; ++i) {
-    mix_gains[i] = m_gameplay_mix.next();
-  }
-  const auto gain_at = [&](const float* destination, Game::Audio::MixBus bus) {
-    return mix_gains[static_cast<std::size_t>(destination - output) / STEREO_CHANNELS]
-                    [Game::Audio::mix_index(bus)];
-  };
+  return load;
+}
 
+void MiniaudioBackend::render_music_run(Channel& channel,
+                                        const std::int16_t* source,
+                                        unsigned stride,
+                                        unsigned run,
+                                        float*& destination,
+                                        float master,
+                                        const BlockGains& gains) {
+  const unsigned fading = std::min(run, channel.fade_samples);
+  for (unsigned i = 0; i < fading; ++i) {
+    const float volume = channel.current_volume * master * k_pcm_scale_down *
+                         gains.at(destination, Game::Audio::MixBus::Music);
+    const float left = static_cast<float>(source[0]) * volume;
+    destination[0] += left;
+    destination[1] += (stride == 1) ? left : static_cast<float>(source[1]) * volume;
+    destination += STEREO_CHANNELS;
+    source += stride;
+    channel.current_volume += channel.volume_step;
+    if (--channel.fade_samples == 0) {
+      channel.current_volume = channel.target_volume;
+    }
+  }
+  const unsigned steady = run - fading;
+  if (steady == 0) {
+    return;
+  }
+  if (stride == 1) {
+    for (unsigned i = 0; i < steady; ++i) {
+      const float volume = channel.current_volume * master * k_pcm_scale_down *
+                           gains.at(destination, Game::Audio::MixBus::Music);
+      const float value = static_cast<float>(source[i]) * volume;
+      destination[0] += value;
+      destination[1] += value;
+      destination += STEREO_CHANNELS;
+    }
+    return;
+  }
+  for (unsigned i = 0; i < steady; ++i) {
+    const float volume = channel.current_volume * master * k_pcm_scale_down *
+                         gains.at(destination, Game::Audio::MixBus::Music);
+    destination[0] += static_cast<float>(source[0]) * volume;
+    destination[1] += static_cast<float>(source[1]) * volume;
+    destination += STEREO_CHANNELS;
+    source += STEREO_CHANNELS;
+  }
+}
+
+void MiniaudioBackend::mix_music_channels(float* output,
+                                          unsigned frames,
+                                          float master,
+                                          const BlockGains& gains) {
   for (Channel& channel : m_channels) {
     if (!channel.active || channel.paused || channel.track < 0) {
       continue;
     }
-    const DecodedTrack* track =
-        m_track_table[static_cast<std::size_t>(channel.track)].load(
-            std::memory_order_acquire);
+    const DecodedTrack* track = m_tracks.track(static_cast<std::size_t>(channel.track));
     if (track == nullptr || track->frames == 0) {
       continue;
     }
@@ -1058,44 +716,7 @@ void MiniaudioBackend::on_audio(float* output, unsigned frames) {
       }
       const unsigned run = std::min(frames_left, track->frames - position);
       const std::int16_t* source = pcm + (static_cast<std::size_t>(position) * stride);
-
-      const unsigned fading = std::min(run, channel.fade_samples);
-      for (unsigned i = 0; i < fading; ++i) {
-        const float volume = channel.current_volume * master * k_pcm_scale_down *
-                             gain_at(destination, Game::Audio::MixBus::Music);
-        const float left = static_cast<float>(source[0]) * volume;
-        destination[0] += left;
-        destination[1] += (stride == 1) ? left : static_cast<float>(source[1]) * volume;
-        destination += STEREO_CHANNELS;
-        source += stride;
-        channel.current_volume += channel.volume_step;
-        if (--channel.fade_samples == 0) {
-          channel.current_volume = channel.target_volume;
-        }
-      }
-      const unsigned steady = run - fading;
-      if (steady > 0) {
-        if (stride == 1) {
-          for (unsigned i = 0; i < steady; ++i) {
-            const float volume = channel.current_volume * master * k_pcm_scale_down *
-                                 gain_at(destination, Game::Audio::MixBus::Music);
-            const float value = static_cast<float>(source[i]) * volume;
-            destination[0] += value;
-            destination[1] += value;
-            destination += STEREO_CHANNELS;
-          }
-          source += steady;
-        } else {
-          for (unsigned i = 0; i < steady; ++i) {
-            const float volume = channel.current_volume * master * k_pcm_scale_down *
-                                 gain_at(destination, Game::Audio::MixBus::Music);
-            destination[0] += static_cast<float>(source[0]) * volume;
-            destination[1] += static_cast<float>(source[1]) * volume;
-            destination += STEREO_CHANNELS;
-            source += STEREO_CHANNELS;
-          }
-        }
-      }
+      render_music_run(channel, source, stride, run, destination, master, gains);
       position += run;
       frames_left -= run;
     }
@@ -1111,14 +732,64 @@ void MiniaudioBackend::on_audio(float* output, unsigned frames) {
       channel = Channel{};
     }
   }
+}
 
+void MiniaudioBackend::render_effect_run(SoundEffect& effect,
+                                         const std::int16_t* source,
+                                         unsigned stride,
+                                         unsigned run,
+                                         float*& destination,
+                                         float master,
+                                         const BlockGains& gains) {
+  const unsigned fading = std::min(run, effect.fade_samples);
+  for (unsigned i = 0; i < fading; ++i) {
+    const float volume = effect.volume * master * k_pcm_scale_down *
+                         gains.at(destination, effect.mix_bus);
+    const float left = static_cast<float>(source[0]) * volume;
+    destination[0] += left * effect.gain_left;
+    destination[1] += ((stride == 1) ? left : static_cast<float>(source[1]) * volume) *
+                      effect.gain_right;
+    destination += STEREO_CHANNELS;
+    source += stride;
+    effect.volume += effect.volume_step;
+    if (--effect.fade_samples == 0) {
+      effect.volume = effect.target_volume;
+    }
+  }
+  const unsigned steady = run - fading;
+  if (steady == 0) {
+    return;
+  }
+  if (stride == 1) {
+    for (unsigned i = 0; i < steady; ++i) {
+      const float volume = effect.volume * master * k_pcm_scale_down *
+                           gains.at(destination, effect.mix_bus);
+      const float value = static_cast<float>(source[i]) * volume;
+      destination[0] += value * effect.gain_left;
+      destination[1] += value * effect.gain_right;
+      destination += STEREO_CHANNELS;
+    }
+    return;
+  }
+  for (unsigned i = 0; i < steady; ++i) {
+    const float volume = effect.volume * master * k_pcm_scale_down *
+                         gains.at(destination, effect.mix_bus);
+    destination[0] += static_cast<float>(source[0]) * volume * effect.gain_left;
+    destination[1] += static_cast<float>(source[1]) * volume * effect.gain_right;
+    destination += STEREO_CHANNELS;
+    source += STEREO_CHANNELS;
+  }
+}
+
+void MiniaudioBackend::mix_sound_effects(float* output,
+                                         unsigned frames,
+                                         float master,
+                                         const BlockGains& gains) {
   for (SoundEffect& effect : m_sound_effects) {
     if (!effect.active || effect.track < 0) {
       continue;
     }
-    const DecodedTrack* track =
-        m_track_table[static_cast<std::size_t>(effect.track)].load(
-            std::memory_order_acquire);
+    const DecodedTrack* track = m_tracks.track(static_cast<std::size_t>(effect.track));
     if (track == nullptr || track->frames == 0) {
       effect = SoundEffect{};
       continue;
@@ -1140,46 +811,7 @@ void MiniaudioBackend::on_audio(float* output, unsigned frames) {
       }
       const unsigned run = std::min(frames_left, track->frames - position);
       const std::int16_t* source = pcm + (static_cast<std::size_t>(position) * stride);
-
-      const unsigned fading = std::min(run, effect.fade_samples);
-      for (unsigned i = 0; i < fading; ++i) {
-        const float volume = effect.volume * master * k_pcm_scale_down *
-                             gain_at(destination, effect.mix_bus);
-        const float left = static_cast<float>(source[0]) * volume;
-        destination[0] += left * effect.gain_left;
-        destination[1] +=
-            ((stride == 1) ? left : static_cast<float>(source[1]) * volume) *
-            effect.gain_right;
-        destination += STEREO_CHANNELS;
-        source += stride;
-        effect.volume += effect.volume_step;
-        if (--effect.fade_samples == 0) {
-          effect.volume = effect.target_volume;
-        }
-      }
-      const unsigned steady = run - fading;
-      if (steady > 0) {
-        if (stride == 1) {
-          for (unsigned i = 0; i < steady; ++i) {
-            const float volume = effect.volume * master * k_pcm_scale_down *
-                                 gain_at(destination, effect.mix_bus);
-            const float value = static_cast<float>(source[i]) * volume;
-            destination[0] += value * effect.gain_left;
-            destination[1] += value * effect.gain_right;
-            destination += STEREO_CHANNELS;
-          }
-        } else {
-          for (unsigned i = 0; i < steady; ++i) {
-            const float volume = effect.volume * master * k_pcm_scale_down *
-                                 gain_at(destination, effect.mix_bus);
-            destination[0] += static_cast<float>(source[0]) * volume * effect.gain_left;
-            destination[1] +=
-                static_cast<float>(source[1]) * volume * effect.gain_right;
-            destination += STEREO_CHANNELS;
-            source += STEREO_CHANNELS;
-          }
-        }
-      }
+      render_effect_run(effect, source, stride, run, destination, master, gains);
       position += run;
       frames_left -= run;
     }
@@ -1189,6 +821,33 @@ void MiniaudioBackend::on_audio(float* output, unsigned frames) {
       effect = SoundEffect{};
     }
   }
+}
+
+void MiniaudioBackend::on_audio(float* output, unsigned frames) {
+  if (frames > k_mix_block) {
+    for (unsigned offset = 0; offset < frames; offset += k_mix_block) {
+      on_audio(output + offset * STEREO_CHANNELS,
+               std::min(k_mix_block, frames - offset));
+    }
+    return;
+  }
+  const unsigned samples = frames * STEREO_CHANNELS;
+  std::memset(output, 0, samples * sizeof(float));
+
+  drain_commands();
+
+  const float master = m_master_volume;
+  const EffectLoad load = measure_effect_load(master);
+  const auto preset = m_listening_preset.load(std::memory_order_relaxed);
+  m_gameplay_mix.target(load.counts, load.voice, load.critical, preset);
+  BlockGains gains;
+  gains.origin = output;
+  for (unsigned i = 0; i < frames; ++i) {
+    gains.values[i] = m_gameplay_mix.next();
+  }
+
+  mix_music_channels(output, frames, master, gains);
+  mix_sound_effects(output, frames, master, gains);
 
   publish_state();
 

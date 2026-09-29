@@ -13,9 +13,9 @@
 #include "game/systems/default_content.h"
 #include "game/systems/nation_id.h"
 #include "game/systems/nation_registry.h"
-#include "game/systems/nav_grid.h"
+#include "game/systems/navigation/nav_grid.h"
+#include "game/systems/navigation/wall_network_service.h"
 #include "game/systems/owner_registry.h"
-#include "game/systems/wall_network_service.h"
 #include "units/factory.h"
 #include "units/spawn_type.h"
 

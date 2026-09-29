@@ -57,6 +57,8 @@ public:
 private:
   void take_from_other_group(EntityID member, FormationGroupID new_group);
   void reindex_membership(const ArmyFormation& formation);
+  void link_member(EntityID member, FormationGroupID group);
+  void unlink_member(EntityID member, FormationGroupID group);
 
   std::unordered_map<FormationGroupID, ArmyFormation> m_groups;
   std::unordered_map<EntityID, FormationGroupID> m_membership;

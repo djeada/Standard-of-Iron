@@ -10,7 +10,7 @@
 #include "game/render_bridge/selection_controller.h"
 #include "game/session/selection_service.h"
 #include "game/session/session_context.h"
-#include "game/systems/marketplace_system.h"
+#include "game/systems/economy/marketplace_system.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/resource_types.h"

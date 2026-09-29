@@ -3,18 +3,22 @@
 #include <QJsonObject>
 
 #include <cstdint>
-#include <memory>
 #include <vector>
 
 #include "../core/system.h"
 #include "nature_ai.h"
+#include "wildlife_census.h"
 #include "wildlife_config.h"
+#include "wildlife_group.h"
+#include "wildlife_predation.h"
+#include "wildlife_spawner.h"
 #include "wildlife_species.h"
 #include "wildlife_threats.h"
 
 namespace Engine::Core {
 class Entity;
 class World;
+class WildlifeComponent;
 using EntityID = std::uint64_t;
 } // namespace Engine::Core
 
@@ -22,35 +26,7 @@ namespace Game::Map {
 struct MapDefinition;
 }
 
-namespace Game::Units {
-class UnitFactoryRegistry;
-}
-
 namespace Game::Wildlife {
-
-struct GroupState {
-  std::uint16_t id{0U};
-  Species species{Species::Sheep};
-  float home_x{0.0F};
-  float home_z{0.0F};
-  float roam_radius{14.0F};
-  int desired_size{0};
-  float respawn_timer{0.0F};
-  std::uint32_t rng_state{1U};
-};
-
-struct WildlifeStats {
-  std::uint64_t near_thinks{0U};
-  std::uint64_t far_thinks{0U};
-  std::uint64_t dormant_skips{0U};
-  std::uint64_t flee_events{0U};
-  std::uint64_t hunt_events{0U};
-  std::uint64_t bites{0U};
-  std::uint64_t respawns{0U};
-  std::uint64_t stall_releases{0U};
-
-  void reset() noexcept { *this = WildlifeStats{}; }
-};
 
 class WildlifeSystem : public Engine::Core::System {
 public:
@@ -82,131 +58,42 @@ public:
   }
   [[nodiscard]] auto is_enabled() const noexcept -> bool { return m_enabled; }
   [[nodiscard]] auto groups() const noexcept -> const std::vector<GroupState>& {
-    return m_groups;
+    return m_spawner.groups();
   }
   [[nodiscard]] auto stats() const noexcept -> const WildlifeStats& { return m_stats; }
   [[nodiscard]] auto threats() const noexcept -> const ThreatField& {
-    return m_threats;
+    return m_census.threats();
   }
 
 private:
-  enum class Tier : std::uint8_t {
-    Near = 0,
-    Far = 1,
-    Dormant = 2,
-  };
-
-  struct GroupRuntime {
-    float center_x{0.0F};
-    float center_z{0.0F};
-    float alarm{0.0F};
-    int alive{0};
-  };
-
-  class NatureActionAdapter;
-  friend class NatureActionAdapter;
-
-  struct AnimalRef {
-    Engine::Core::Entity* entity{nullptr};
-    Engine::Core::EntityID id{0};
-    float x{0.0F};
-    float z{0.0F};
-    std::uint16_t group{0U};
-    Species species{Species::Sheep};
-  };
-
-  struct QuarryRef {
-    Engine::Core::EntityID id{0};
-    float x{0.0F};
-    float z{0.0F};
-    bool civilian{false};
-  };
-
-  void ensure_factory_registry();
-  void spawn_initial_population(Engine::Core::World& world);
-  void release_due_packs(Engine::Core::World& world, float delta_time);
-  void plan_groups();
-  auto spawn_member(Engine::Core::World& world,
-                    GroupState& group,
-                    const SpeciesConfig& config) -> Engine::Core::EntityID;
-
-  void rebuild_threats(Engine::Core::World& world);
-  void collect_animals(Engine::Core::World& world);
-  void update_respawns(Engine::Core::World& world, float delta_time);
-
+  void refresh_census(Engine::Core::World& world, float delta_time);
+  void
+  update_animal(Engine::Core::World& world, const AnimalRef& animal, float delta_time);
+  void think_if_due(Engine::Core::World& world,
+                    const AnimalRef& animal,
+                    Engine::Core::WildlifeComponent& wildlife,
+                    Tier tier,
+                    float delta_time);
   void think(Engine::Core::World& world,
              Engine::Core::Entity& entity,
              const GroupRuntime& runtime,
              const SpeciesConfig& config,
              Species species);
-
-  auto begin_bite(Engine::Core::Entity& entity,
-                  Engine::Core::WildlifeComponent& wildlife,
-                  const PreyRef& prey,
-                  float hunter_x,
-                  float hunter_z) -> bool;
-  void try_contact_bite(Engine::Core::World& world,
-                        const AnimalRef& animal,
-                        Engine::Core::WildlifeComponent& wildlife);
-
   void release_if_stalled(const AnimalRef& animal,
                           Engine::Core::WildlifeComponent& wildlife,
                           float delta_time);
 
-  void alert_group(std::uint16_t group_id, float duration);
-  void
-  rally_pack(std::uint16_t group_id, Engine::Core::EntityID foe_id, float duration);
-  void issue_move(Engine::Core::World& world,
-                  Engine::Core::EntityID entity_id,
-                  float world_x,
-                  float world_z);
-  void set_travel_speed(Engine::Core::Entity& entity,
-                        const SpeciesConfig& config,
-                        bool urgent);
-
-  [[nodiscard]] auto tier_for(float world_x, float world_z) const -> Tier;
-  [[nodiscard]] auto find_group(std::uint16_t group_id) -> GroupState*;
-  [[nodiscard]] auto pick_open_point(std::uint32_t& rng,
-                                     float origin_x,
-                                     float origin_z,
-                                     float min_radius,
-                                     float max_radius,
-                                     float& out_x,
-                                     float& out_z) const -> bool;
-  [[nodiscard]] auto nearest_prey(float world_x,
-                                  float world_z,
-                                  float radius,
-                                  Engine::Core::EntityID hunter_id,
-                                  float appetite) const -> const AnimalRef*;
-  [[nodiscard]] auto nearest_quarry(float world_x,
-                                    float world_z,
-                                    float radius,
-                                    Engine::Core::EntityID hunter_id,
-                                    float appetite) const -> const QuarryRef*;
-  [[nodiscard]] auto attackers_on(Engine::Core::EntityID prey_id,
-                                  Engine::Core::EntityID exclude_id) const -> int;
-  [[nodiscard]] auto pack_slot_for(Engine::Core::EntityID prey_id,
-                                   Engine::Core::EntityID hunter_id) const -> PackSlot;
-
   WildlifeSettings m_settings{};
-  std::vector<GroupState> m_groups;
-  std::vector<GroupRuntime> m_group_runtime;
-  std::vector<AnimalRef> m_animals;
-  std::vector<QuarryRef> m_quarry;
-  ThreatField m_threats;
-  ThreatField m_interest;
   WildlifeStats m_stats{};
-  std::shared_ptr<Game::Units::UnitFactoryRegistry> m_factory_registry;
+  WildlifeCensus m_census;
+  WildlifeSpawner m_spawner;
+  WildlifePredation m_predation{m_stats};
   NatureBrain m_sheep_brain{make_sheep_brain()};
   NatureBrain m_wolf_brain{make_wolf_brain()};
-  std::uint32_t m_seed{1U};
-  std::uint16_t m_next_group_id{0U};
   float m_threat_refresh{0.0F};
   bool m_enabled{false};
   bool m_spawn_pending{false};
   bool m_restored{false};
-  double m_elapsed{0.0};
-  std::vector<bool> m_released_waves;
 };
 
 } // namespace Game::Wildlife

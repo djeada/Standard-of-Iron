@@ -1,112 +1,75 @@
 #pragma once
 
-#include <QElapsedTimer>
+#include <QAbstractItemModel>
 #include <QJsonObject>
-#include <QList>
-#include <QMatrix4x4>
 #include <QObject>
-#include <QPoint>
 #include <QPointF>
-#include <QQmlEngine>
 #include <QStringList>
-#include <QThread>
-#include <QTimer>
 #include <QVariant>
 #include <QVector3D>
 
-#include <algorithm>
 #include <atomic>
-#include <chrono>
 #include <cstdint>
 #include <memory>
 #include <mutex>
-#include <optional>
 #include <vector>
 
 #include "app/core/app_scene_context.h"
 #include "app/core/client_context.h"
 #include "app/core/entity_cache.h"
-#include "app/core/frame_barrier.h"
-#include "app/core/match_presentation_sync.h"
-#include "app/core/player_feedback.h"
-#include "app/core/presentation_frame.h"
 #include "app/core/runtime_frame_orchestrator.h"
-#include "app/economy/economy_overview.h"
-#include "app/input/cursor_manager.h"
+#include "app/core/simulation_lifecycle.h"
 #include "app/input/cursor_mode.h"
-#include "app/input/hover_tracker.h"
 #include "app/input/input_command_handler.h"
-#include "app/input/rts_camera_controller.h"
-#include "app/mission/tutorial_observation.h"
-#include "app/models/selected_units_model.h"
-#include "app/orders/movement_utils.h"
-#include "app/orders/order_feedback.h"
-#include "app/orders/order_markers.h"
-#include "app/persistence/save_load_coordinator.h"
-#include "app/persistence/save_orchestrator.h"
-#include "app/session/renderer_bootstrap.h"
-#include "app/utils/engine_view_helpers.h"
-#include "app/viewmodels/activity_view_model.h"
-#include "app/viewmodels/camera_view_model.h"
-#include "app/viewmodels/commander_message_view_model.h"
-#include "app/viewmodels/commander_view_model.h"
-#include "app/viewmodels/economy_view_model.h"
-#include "app/viewmodels/match_setup_view_model.h"
-#include "app/viewmodels/minimap_view_model.h"
-#include "app/viewmodels/mission_view_model.h"
-#include "app/viewmodels/orders_view_model.h"
-#include "app/viewmodels/placement_view_model.h"
-#include "app/viewmodels/production_view_model.h"
-#include "app/viewmodels/wave_view_model.h"
-#include "app/world/ambient_state_manager.h"
-#include "app/world/focus_target.h"
-#include "app/world/minimap_manager.h"
-#include "app/world/player_defeat_watcher.h"
-#include "game/audio/audio_event_handler.h"
-#include "game/command/command.h"
+#include "app/session/loading_overlay.h"
 #include "game/command/command_validator.h"
-#include "game/command/replay.h"
 #include "game/core/event_manager.h"
-#include "game/map/mission_definition.h"
-#include "game/map/mission_stage_tracker.h"
-#include "game/mission/commander_message_director.h"
-#include "game/mission/commander_speaker_roster.h"
-#include "game/mission/commander_voice_bank.h"
-#include "game/mission/commander_voice_observer.h"
-#include "game/mission/mission_setup_coordinator.h"
-#include "game/mission/mission_wave_director.h"
-#include "game/mission/mission_wave_runtime.h"
-#include "game/mission/mission_waves.h"
-#include "game/mission/tutorial_director.h"
-#include "game/render_bridge/selection_controller.h"
-#include "game/session/selection_utils.h"
-#include "game/session/session_context.h"
-#include "game/systems/attack_range.h"
-#include "game/systems/attack_targeting.h"
-#include "game/systems/interaction_targeting.h"
 #include "game/systems/match_snapshot.h"
-#include "game/systems/save_format.h"
-#include "game/systems/target_focus.h"
-#include "game/systems/unit_activity.h"
+#include "game/systems/persistence/save_format.h"
 #include "scene/camera.h"
 
 class ProductionManager;
 class CampaignManager;
 class SelectionQueryService;
 class VisibilityCoordinator;
-class AudioCoordinator;
+class MinimapManager;
+class CursorManager;
+class HoverTracker;
+class RtsCameraController;
+class LoadingProgressTracker;
+class SelectedUnitsModel;
+class QQuickWindow;
 
 namespace Engine::Core {
 class World;
 using EntityID = std::uint64_t;
-class MovementComponent;
-class TransformComponent;
-class RenderableComponent;
 } // namespace Engine::Core
+
+namespace Game {
+namespace Command {
+struct Command;
+}
+namespace Session {
+class SessionContext;
+class ScopedSession;
+} // namespace Session
+namespace Systems {
+class PickingService;
+class VictoryService;
+class CameraService;
+class SaveLoadService;
+class SelectionController;
+} // namespace Systems
+namespace Map {
+class MapCatalog;
+}
+namespace Mission {
+struct MissionDefinition;
+} // namespace Mission
+} // namespace Game
 
 namespace Render::GL {
 class Renderer;
-class Camera;
 class TerrainSceneProxy;
 class TerrainSurfaceManager;
 class TerrainFeatureManager;
@@ -118,44 +81,62 @@ class AmbientFogRenderer;
 class RainRenderer;
 } // namespace Render::GL
 
-namespace Game {
-namespace Map::Minimap {
-class UnitLayer;
-}
-namespace Systems {
-class SelectionController;
-class ArrowSystem;
-class PickingService;
-class VictoryService;
-class CameraService;
-class SaveLoadService;
-class RainManager;
-} // namespace Systems
-namespace Map {
-class EnvironmentClock;
-class MapCatalog;
-struct MapDefinition;
-} // namespace Map
-} // namespace Game
-
 namespace App {
+namespace Core {
+struct PresentationFrame;
+} // namespace Core
 namespace ViewModels {
+class CameraViewModel;
+class MatchSetupViewModel;
+class ProductionViewModel;
+class OrdersViewModel;
+class MinimapViewModel;
+class CommanderViewModel;
 class SaveSlotsViewModel;
-}
+class PlacementViewModel;
+class WaveViewModel;
+class CommanderMessageViewModel;
+class MissionViewModel;
+class ActivityViewModel;
+class EconomyViewModel;
+} // namespace ViewModels
 namespace Controllers {
 class CommandController;
 }
 namespace Core {
+class AudioServices;
+class EconomyReadModel;
+class OrderFeedbackPresenter;
+class SaveSlotController;
+class SaveLoadCoordinator;
 class SkirmishRuntimeCoordinator;
-class WeatherAudio;
+struct LoadFromSlotContext;
+struct LoadFromSlotEffects;
+struct PerformSkirmishLoadEffects;
+struct OrderOutcome;
+struct SaveToSlotEffects;
 } // namespace Core
-namespace Models {
-class AudioSystemProxy;
-}
+namespace Mission {
+class CommanderMessageRuntime;
+class MissionRuntime;
+class TutorialRuntime;
+struct CommanderMessageBinding;
+struct MissionBinding;
+} // namespace Mission
+namespace Session {
+class EnvironmentRuntime;
+class ReplayCoordinator;
+} // namespace Session
+namespace World {
+class AllyAnnouncementPresenter;
+class BattleStats;
+class FocusTracker;
+class MinimapEvents;
+class TargetingPresentation;
+struct FocusInputs;
+struct TargetingInputs;
+} // namespace World
 } // namespace App
-
-class QQuickWindow;
-class LoadingProgressTracker;
 
 class GameEngine : public QObject, private App::Core::ClientHost {
   Q_OBJECT
@@ -254,7 +235,7 @@ public:
   auto start_replay(const QString& path) -> bool;
   [[nodiscard]] auto replay_playing() const -> bool;
 
-  void set_replay_verify_exit(bool enabled) { m_replay_verify_exit = enabled; }
+  void set_replay_verify_exit(bool enabled);
   Q_INVOKABLE void open_settings();
   [[nodiscard]] QObject* camera_view_model() const;
   [[nodiscard]] QObject* match_setup_view_model() const;
@@ -285,7 +266,7 @@ public:
   [[nodiscard]] bool is_spectator_mode() const { return m_level.is_spectator_mode; }
 
   [[nodiscard]] bool is_loading() const {
-    return m_runtime.loading || m_loading_overlay_active;
+    return m_runtime.loading || m_loading_overlay.active();
   }
 
   [[nodiscard]] float loading_progress() const;
@@ -307,50 +288,18 @@ public:
 
   void ensure_initialized() override;
   [[nodiscard]] auto lock_frame() -> std::unique_lock<std::recursive_mutex> override {
-    std::unique_lock<std::recursive_mutex> lock(m_frame_mutex, std::try_to_lock);
-    if (lock.owns_lock()) {
-      m_frame_lock_stats.uncontended.fetch_add(1, std::memory_order_relaxed);
-      return lock;
-    }
-
-    const auto started = std::chrono::steady_clock::now();
-    m_frame_lock_waiters.fetch_add(1, std::memory_order_release);
-    lock.lock();
-    m_frame_lock_waiters.fetch_sub(1, std::memory_order_release);
-    const auto waited_us = static_cast<std::uint64_t>(
-        std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::steady_clock::now() - started)
-            .count());
-    m_frame_lock_stats.contended.fetch_add(1, std::memory_order_relaxed);
-    m_frame_lock_stats.waited_us.fetch_add(waited_us, std::memory_order_relaxed);
-    std::uint64_t longest =
-        m_frame_lock_stats.longest_wait_us.load(std::memory_order_relaxed);
-    while (waited_us > longest &&
-           !m_frame_lock_stats.longest_wait_us.compare_exchange_weak(
-               longest, waited_us, std::memory_order_relaxed)) {
-    }
-    return lock;
+    return m_lifecycle.lock_frame();
   }
 
-  struct FrameLockStats {
-    std::atomic<std::uint64_t> uncontended{0};
-    std::atomic<std::uint64_t> contended{0};
-    std::atomic<std::uint64_t> waited_us{0};
-    std::atomic<std::uint64_t> longest_wait_us{0};
-    std::atomic<std::uint64_t> deferred_presentations{0};
-    std::atomic<std::uint64_t> forced_presentation_waits{0};
-    std::atomic<std::uint64_t> simulation_handoff_yields{0};
-  };
+  using FrameLockStats = App::Core::FrameLockStats;
 
   [[nodiscard]] auto simulation_profile_report() -> QJsonObject;
 
   [[nodiscard]] auto frame_lock_stats() const -> const FrameLockStats& {
-    return m_frame_lock_stats;
+    return m_lifecycle.stats();
   }
   [[nodiscard]] bool renderer_initialized() const { return m_runtime.initialized; }
-  [[nodiscard]] auto commander_message_speakers() const -> const QStringList& {
-    return m_commander_message_director.speaker_ids();
-  }
+  [[nodiscard]] auto commander_message_speakers() const -> const QStringList&;
   void set_release_self_test_mode(bool enabled) noexcept {
     m_release_self_test_mode = enabled;
   }
@@ -360,13 +309,6 @@ public:
   void update_presentation(float dt);
   void publish_presentation_frame();
   void publish_frame_snapshots();
-  void announce_player_defeats(float dt);
-  void announce_ally_exchanges();
-  void announce_ally_calls();
-  void announce_ally_appeals();
-  [[nodiscard]] auto owner_display_name(int owner_id) const -> QString;
-  [[nodiscard]] auto is_friendly_commander(int owner_id) const -> bool;
-  [[nodiscard]] static auto ally_resource_word(const QString& resource_key) -> QString;
   void capture_render_selection();
   void update(float dt);
   void render(int pixel_width, int pixel_height);
@@ -378,10 +320,10 @@ public:
   void start_simulation_thread();
   void stop_simulation_thread();
   [[nodiscard]] auto simulation_thread_running() const -> bool {
-    return m_simulation_thread_running.load(std::memory_order_acquire);
+    return m_lifecycle.running();
   }
   [[nodiscard]] auto take_simulation_tick_us() -> std::uint64_t {
-    return m_simulation_tick_us.exchange(0, std::memory_order_acq_rel);
+    return m_lifecycle.take_tick_us();
   }
   [[nodiscard]] auto try_begin_simulation_tick() -> bool;
   void end_simulation_tick();
@@ -405,14 +347,16 @@ public:
   };
 
   [[nodiscard]] auto world_freeze_refusals() const noexcept -> int {
-    return m_frame_barrier.refusals();
+    return m_lifecycle.barrier().refusals();
   }
 
-private:
-  void run_simulation_thread();
-  void sync_render_camera();
-  [[nodiscard]] static auto world_freeze_refused_message() -> QString;
+  [[nodiscard]] auto player_feedback() -> App::Core::PlayerFeedbackBus& {
+    return m_player_feedback;
+  }
 
+  [[nodiscard]] auto last_save_capture_us() const -> std::uint64_t;
+
+private:
   struct RuntimeState {
     bool initialized = false;
     bool paused = false;
@@ -430,144 +374,129 @@ private:
     int selection_refresh_counter = 0;
     float minimap_unit_update_accumulator = 0.0F;
   };
-  using PendingMissionWave = Game::Mission::PendingMissionWave;
-  using PendingMissionEvent = Game::Mission::PendingMissionEvent;
-  using MissionWaveDirector = Game::Mission::MissionWaveDirector;
-  bool screen_to_ground(const QPointF& screen_pt, QVector3D& out_world);
-  bool world_to_screen(const QVector3D& world, QPointF& out_screen) const;
+
+  void build_client_and_view_models();
+  void build_services_and_controllers();
+
+  void create_session();
+  void create_view_models();
+  void create_feature_runtimes();
+  void create_render_services();
+  void wire_view_models();
+  void wire_victory_service();
+  void on_match_outcome(const QString& state);
+  void route_combat_hit(const Engine::Core::CombatHitEvent& event);
+  void wire_loading_and_saves();
+  void wire_world_services();
+  void wire_map_catalog();
+  void wire_audio();
+  void wire_production_and_placement();
+  void wire_command_controller();
+  void wire_selection_and_cursor();
+  void wire_event_subscriptions();
+  [[nodiscard]] auto can_inspect_entity(Engine::Core::EntityID id) const -> bool;
+
+  void run_simulation_tick(float dt);
   void note_dropped_simulation_ticks(std::uint64_t dropped, float real_dt);
   void update_active_runtime_simulation(float dt);
+  void advance_frame_orchestrator(float dt);
+  void update_control_presentation(float dt);
+  void sync_render_camera();
+  [[nodiscard]] static auto world_freeze_refused_message() -> QString;
+
+  bool screen_to_ground(const QPointF& screen_pt, QVector3D& out_world);
   void sync_selection_flags();
-  void sync_attack_targeting();
-  void sync_interaction_targeting(float delta_time);
-  void sync_attack_range_rings();
-  [[nodiscard]] auto
-  attack_sync_context() const -> App::Core::PresentationSync::SelectionAttackContext;
+  void sync_target_presentation(float dt);
+  [[nodiscard]] auto targeting_inputs() -> App::World::TargetingInputs;
+  [[nodiscard]] auto focus_inputs() -> App::World::FocusInputs;
+
+  void apply_presentation_camera(const App::Core::PresentationFrame& presentation);
+  void prewarm_overlay_gpu_resources();
+  void render_effects_pass(const App::Core::PresentationFrame& presentation);
+
   void handle_order_feedback(const App::Core::OrderOutcome& outcome);
   void report_late_command_rejection(const Game::Command::Command& command,
                                      Game::Command::Rejection reason);
+  void announce_player_defeats(float dt);
 
-  void announce_player_warning(const char* cue_id);
-
-public:
-  [[nodiscard]] auto player_feedback() -> App::Core::PlayerFeedbackBus& {
-    return m_player_feedback;
-  }
-
-private:
   void sync_selected_player_state();
   void sync_economy_state();
-  [[nodiscard]] auto
-  mission_objective_resources() const -> Game::Systems::ResourceAmounts;
-  void reset_economy_coach();
-  void sync_focus_targets();
-  void sync_target_focus_markers();
-  [[nodiscard]] auto
-  describe_focus_entity(Engine::Core::EntityID id) const -> App::Core::FocusTargetInfo;
   void sync_scatter_world_props();
   QAbstractItemModel* selected_units_model();
   void on_unit_spawned(const Engine::Core::UnitSpawnedEvent& event);
   void on_unit_died(const Engine::Core::UnitDiedEvent& event);
 
-  void build_client_and_view_models();
-  void build_services_and_controllers();
-  void update_cursor(Qt::CursorShape new_cursor);
   void set_error(const QString& error_message);
   [[nodiscard]] Game::Systems::RuntimeSnapshot to_runtime_snapshot() const;
   void apply_runtime_snapshot(const Game::Systems::RuntimeSnapshot& snapshot);
   [[nodiscard]] AppSceneContext scene_context() const;
-  struct ReplayLaunch {
-    QString kind;
-    QString reference;
-    QVariantList player_configs;
-    QString difficulty;
-  };
-  void arm_replay_for_started_match();
-  void finish_replay_verification_if_done();
-  bool m_replay_verify_exit = false;
-  ReplayLaunch m_replay_launch;
-  QString m_replay_record_path;
-  std::optional<Game::Command::ReplayFile> m_pending_replay;
 
   void start_skirmish_internal(const QString& map_path,
                                const QVariantList& player_configs,
                                bool set_skirmish_context);
+  void reset_match_outcome();
+  void begin_match_loading(const QString& map_path);
+  void complete_match_load(const QString& map_path, const QVariantList& player_configs);
+  [[nodiscard]] auto load_match_world(const QString& map_path,
+                                      const QVariantList& player_configs)
+      -> App::Core::PerformSkirmishLoadEffects;
+  void configure_loaded_match(const QString& map_path,
+                              const QVariantList& player_configs,
+                              const QVariantList& resolved_player_configs);
+  void finalize_match_load();
+  void fail_loading(const QString& error);
+  void apply_mission_setup();
   void apply_skirmish_commander_setup(const QVariantList& player_configs);
-  [[nodiscard]] auto resolve_match_difficulty(const QVariantList& player_configs) const
-      -> Game::Mission::MatchDifficulty;
-
-  Game::Mission::MatchDifficulty m_match_difficulty;
-  void apply_mission_setup(const Game::Mission::MatchDifficulty& difficulty);
-  void prepare_mission_ai_state();
   [[nodiscard]] auto mission_startup_pending_components() const -> QStringList;
   void configure_mission_victory_conditions();
-  void wire_victory_service();
-  void configure_rain_system();
   void reset_preload_interaction_state();
   void reset_mission_runtime_state();
+  [[nodiscard]] auto
+  current_mission_definition() const -> const Game::Mission::MissionDefinition*;
+  [[nodiscard]] auto
+  authored_mission_definition() const -> const Game::Mission::MissionDefinition*;
+
+  [[nodiscard]] auto mission_binding() -> App::Mission::MissionBinding;
+  [[nodiscard]] auto commander_binding() -> App::Mission::CommanderMessageBinding;
   void update_mission_waves(float dt);
-  [[nodiscard]] auto mission_wave_binding() -> Game::Mission::MissionWaveBinding;
-  void publish_wave_status();
-  void configure_mission_stages();
-  void configure_commander_messages();
-  [[nodiscard]] auto commander_voices() -> const Game::Mission::CommanderVoiceLibrary&;
-  void update_commander_messages(float delta_time);
-  [[nodiscard]] auto commander_message_state() const -> QJsonObject;
-  void restore_commander_message_state(const QJsonObject& state);
-  void release_pending_mission_start_cue();
-  void publish_commander_message();
-  void publish_mission_stages();
-  void publish_optional_objectives();
-  void publish_mission_deadline();
-  void publish_victory_objectives();
-  void publish_minimap_overlays(float dt);
-  void note_minimap_combat_hit(const Engine::Core::CombatHitEvent& event);
-  void note_minimap_unit_died(const Engine::Core::UnitDiedEvent& event);
-  void note_minimap_shrine_stirred(const Engine::Core::UndeadZoneAwakenedEvent& event);
-  void queue_mission_announcement(const QString& text);
-  void flush_mission_announcements(float dt);
   void update_mission_stages(float delta_time);
+  void configure_mission_stages();
+  void publish_wave_status();
+  void update_commander_messages(float delta_time);
+  void update_tutorial(float real_dt);
+
   void restore_mission_stages(const QJsonObject& stage_state);
   void restore_mission_waves(const QJsonObject& wave_state);
-  void update_tutorial(float real_dt);
-  void publish_tutorial_focus_points(const QVariantMap& wave_status);
-  void activate_tutorial_if_configured();
+  void restore_commander_message_state(const QJsonObject& state);
   void restore_tutorial_state(const QJsonObject& state);
-  [[nodiscard]] auto battle_stats_state() const -> QJsonObject;
   void restore_battle_stats(const QJsonObject& state);
+
   void update_loading_overlay();
   void update_cursor_position();
-  void on_frame_image_captured(const QImage& image);
-  void begin_save(const QString& slot_name,
-                  Game::Systems::Save::SlotKind kind,
-                  int autosave_retention);
-  [[nodiscard]] auto pending_save_capture_queued() const -> bool;
-  auto queue_save_capture(const QString& slot_name,
-                          Game::Systems::Save::SlotKind kind,
-                          int autosave_retention) -> bool;
-  void drain_pending_save_capture();
+
   [[nodiscard]] auto
   capture_save_to_slot(const QString& slot_name,
                        Game::Systems::Save::SlotKind kind,
                        int autosave_retention) -> App::Core::SaveToSlotEffects;
-  void finish_save_request(const QString& slot_name,
-                           const App::Core::SaveToSlotEffects& effects);
-
-public:
-  [[nodiscard]] auto last_save_capture_us() const -> std::uint64_t {
-    return m_save_orchestrator != nullptr ? m_save_orchestrator->last_capture_us() : 0U;
-  }
-
-private:
-  void connect_save_service_signals();
-  void save_game_to_slot(const QString& slot_name);
-  void quicksave();
-  void autosave();
-
-  void end_match_after_failed_load();
-  void cancel_active_save();
   void load_game_from_slot(const QString& slot_name);
-  void restart_autosave_timer();
+  [[nodiscard]] auto load_request(const QString& slot_name,
+                                  Game::Systems::RuntimeSnapshot& runtime_snapshot)
+      -> App::Core::LoadFromSlotContext;
+  void begin_load_transition();
+  void finish_successful_load(const QString& slot_name,
+                              const App::Core::LoadFromSlotEffects& effects);
+  void restore_environment_after_load();
+  void release_loading_overlay_after_load();
+  void end_match_after_failed_load();
+
+  void set_cursor_mode(CursorMode mode) override;
+
+  void apply_game_mode_render_policy();
+  void set_active_camera(Render::GL::Camera* camera);
+  void get_selected_unit_ids(std::vector<Engine::Core::EntityID>& out) const;
+
+  void publish_client_context();
+  App::Core::ClientContext m_client;
 
   std::unique_ptr<App::ViewModels::CameraViewModel> m_camera_view_model;
   std::unique_ptr<App::ViewModels::MatchSetupViewModel> m_match_setup_view_model;
@@ -583,16 +512,6 @@ private:
   std::unique_ptr<App::ViewModels::MissionViewModel> m_mission_view_model;
   std::unique_ptr<App::ViewModels::ActivityViewModel> m_activity_view_model;
   std::unique_ptr<App::ViewModels::EconomyViewModel> m_economy_view_model;
-  std::unique_ptr<Game::Mission::TutorialDirector> m_tutorial_director;
-
-  void set_cursor_mode(CursorMode mode) override;
-
-  void apply_game_mode_render_policy();
-  void set_active_camera(Render::GL::Camera* camera);
-  void get_selected_unit_ids(std::vector<Engine::Core::EntityID>& out) const;
-
-  void publish_client_context();
-  App::Core::ClientContext m_client;
 
   std::unique_ptr<Game::Session::SessionContext> m_session;
   std::unique_ptr<Game::Session::ScopedSession> m_session_scope;
@@ -615,100 +534,52 @@ private:
   std::unique_ptr<Render::GL::MapBoundaryFogRenderer> m_boundary_fog;
   std::unique_ptr<Render::GL::AmbientFogRenderer> m_ambient_fog;
   std::unique_ptr<Render::GL::RainRenderer> m_rain;
-  std::unique_ptr<Game::Systems::RainManager> m_rain_manager;
-  std::unique_ptr<App::Core::WeatherAudio> m_weather_audio;
-  std::unique_ptr<Game::Map::EnvironmentClock> m_environment_clock;
+  std::unique_ptr<App::Session::EnvironmentRuntime> m_environment;
   std::unique_ptr<Game::Systems::PickingService> m_picking_service;
   std::unique_ptr<Game::Systems::VictoryService> m_victory_service;
   Game::Systems::SaveLoadService* m_save_load_service = nullptr;
   std::unique_ptr<CursorManager> m_cursor_manager;
   std::unique_ptr<HoverTracker> m_hover_tracker;
-  Game::Systems::AttackTargetingHighlights m_attack_targeting;
-  Game::Systems::InteractionTargetingHighlights m_interaction_targeting;
-  float m_interaction_targeting_accumulator = 0.0F;
-  QVariantMap m_interaction_target_hint;
-  std::vector<Game::Systems::AttackRangeRing> m_attack_range_rings;
-  App::Core::OrderMarkerStore m_order_markers;
-  PlayerDefeatWatcher m_player_defeat_watcher;
   App::Core::PlayerFeedbackBus m_player_feedback;
-  std::vector<Game::Systems::TargetFocusMarker> m_target_focus;
-  QVariantMap m_inspect_target;
-  QVariantMap m_selection_target;
-  QVariantMap m_attack_target_hint;
+  std::unique_ptr<App::Core::OrderFeedbackPresenter> m_order_feedback;
+  std::unique_ptr<App::World::TargetingPresentation> m_targeting;
+  std::unique_ptr<App::World::FocusTracker> m_focus;
   std::unique_ptr<Game::Systems::CameraService> m_camera_service;
   std::unique_ptr<Game::Systems::SelectionController> m_selection_controller;
   std::unique_ptr<App::Controllers::CommandController> m_command_controller;
   std::unique_ptr<Game::Map::MapCatalog> m_map_catalog;
-  std::unique_ptr<Game::Audio::AudioEventHandler> m_audio_event_handler;
-  std::unique_ptr<AudioCoordinator> m_audio_coordinator;
-  std::unique_ptr<Game::Mission::MissionSetupCoordinator> m_mission_setup;
+  std::unique_ptr<App::Core::AudioServices> m_audio;
   std::unique_ptr<App::Core::SaveLoadCoordinator> m_save_load_coordinator;
+  std::unique_ptr<App::Core::SaveSlotController> m_saves;
   std::unique_ptr<App::Core::SkirmishRuntimeCoordinator> m_skirmish_runtime;
-  std::unique_ptr<App::Models::AudioSystemProxy> m_audio_systemProxy;
-  QString m_audio_frontend_context;
   std::unique_ptr<MinimapManager> m_minimap_manager;
+  std::unique_ptr<App::World::MinimapEvents> m_minimap_events;
   std::unique_ptr<VisibilityCoordinator> m_visibility_coordinator;
-  std::unique_ptr<AmbientStateManager> m_ambient_state_manager;
   std::unique_ptr<InputCommandHandler> m_input_handler;
   std::unique_ptr<RtsCameraController> m_camera_controller;
   std::unique_ptr<LoadingProgressTracker> m_loading_progress_tracker;
   std::unique_ptr<ProductionManager> m_production_manager;
   std::unique_ptr<CampaignManager> m_campaign_manager;
   std::unique_ptr<SelectionQueryService> m_selection_query_service;
+  std::unique_ptr<App::Session::ReplayCoordinator> m_replay;
+  std::unique_ptr<App::Mission::MissionRuntime> m_mission;
+  std::unique_ptr<App::Mission::CommanderMessageRuntime> m_commander_messages;
+  std::unique_ptr<App::Mission::TutorialRuntime> m_tutorial;
+  std::unique_ptr<App::Core::EconomyReadModel> m_economy;
+  std::unique_ptr<App::World::BattleStats> m_battle_stats;
+  std::unique_ptr<App::World::AllyAnnouncementPresenter> m_ally_announcements;
   QQuickWindow* m_window = nullptr;
   RuntimeState m_runtime;
   ViewportState m_viewport;
   bool m_release_self_test_mode = false;
   Game::Systems::LevelSnapshot m_level;
   SelectedUnitsModel* m_selected_units_model = nullptr;
-  int m_enemy_troops_defeated = 0;
-  int m_enemy_units_defeated = 0;
   int m_selected_player_id = 1;
-  QVariantMap m_selected_player_state;
-  QVariantList m_economy_resources;
-  QVariantMap m_economy_help;
-  QVariantMap m_economy_coach;
-  App::Core::EconomyCoachBaseline m_economy_coach_baseline;
-  bool m_economy_coach_available = false;
-  QElapsedTimer m_economy_refresh_timer;
-  std::uint64_t m_last_world_props_revision = 0;
-  bool m_loading_overlay_active = false;
-  std::atomic_bool m_loading_overlay_wait_for_first_frame{false};
 
-  App::Core::FrameBarrier m_frame_barrier;
-  std::atomic<bool> m_simulation_thread_running{false};
-  std::atomic<std::uint64_t> m_simulation_tick_us{0};
+  App::Session::LoadingOverlay m_loading_overlay;
+  App::Core::SimulationLifecycle m_lifecycle;
   std::atomic<float> m_simulation_time_scale{0.0F};
-  std::unique_ptr<QThread> m_simulation_thread;
-  mutable std::recursive_mutex m_frame_mutex;
 
-  static constexpr int k_frame_lock_handoff_yields = 64;
-
-  std::atomic<int> m_frame_lock_waiters{0};
-  mutable FrameLockStats m_frame_lock_stats;
-
-  int m_loading_overlay_frames_remaining = 0;
-  qint64 m_loading_overlay_min_duration_ms = 0;
-  QElapsedTimer m_loading_overlay_timer;
-  bool m_finalize_progress_after_overlay = false;
-  bool m_show_objectives_after_loading = false;
-  std::unique_ptr<App::Core::SaveOrchestrator> m_save_orchestrator;
-  quint64 m_active_save_job = 0;
-  std::atomic_bool m_screenshot_requested{false};
-  QString m_screenshot_target_slot;
-  QString m_save_progress_slot;
-  QTimer m_autosave_timer;
-  Game::Mission::MissionStageTracker m_mission_stage_tracker;
-  Game::Mission::CommanderMessageDirector m_commander_message_director;
-  Game::Mission::CommanderVoiceLibrary m_commander_voices;
-  Game::Mission::CommanderVoiceObserver m_commander_voice_observer;
-  bool m_commander_voices_loaded = false;
-  bool m_mission_start_cue_pending = false;
-  float m_mission_stage_poll_accumulator = 0.0F;
-  float m_minimap_landmark_poll_accumulator = 0.0F;
-  Game::Mission::MissionWaveRuntime m_mission_waves;
-  App::Mission::TutorialFrameNotes m_tutorial_notes;
-  float m_tutorial_observe_accumulator = 0.0F;
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>
       m_unit_died_subscription;
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitSpawnedEvent>
@@ -717,17 +588,8 @@ private:
       m_combat_hit_subscription;
   Engine::Core::ScopedEventSubscription<Engine::Core::WorldFeedbackEvent>
       m_world_feedback_subscription;
-  Engine::Core::ScopedEventSubscription<Engine::Core::BarrackCapturedEvent>
-      m_barrack_captured_subscription;
-  Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>
-      m_minimap_unit_died_subscription;
   Engine::Core::ScopedEventSubscription<Engine::Core::MissionAnnouncementEvent>
       m_mission_announcement_subscription;
-  Engine::Core::ScopedEventSubscription<Engine::Core::UndeadZoneAwakenedEvent>
-      m_undead_zone_awakened_subscription;
-  static constexpr float k_mission_announcement_spacing_seconds = 4.5F;
-  QStringList m_pending_mission_announcements;
-  float m_mission_announcement_cooldown{0.0F};
 
   EntityCache m_entity_cache;
   RuntimeFrameOrchestrator m_frame_orchestrator;

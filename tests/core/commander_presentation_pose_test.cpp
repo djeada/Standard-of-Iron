@@ -8,7 +8,7 @@
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
-#include "game/systems/nav_grid.h"
+#include "game/systems/navigation/nav_grid.h"
 #include "scene/camera.h"
 
 namespace {

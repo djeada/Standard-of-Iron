@@ -13,7 +13,7 @@
 #include "game/session/session_context.h"
 #include "game/systems/combat_system/formation_contact_processor.h"
 #include "game/systems/default_content.h"
-#include "game/systems/nav_grid.h"
+#include "game/systems/navigation/nav_grid.h"
 #include "game/systems/squad_service.h"
 #include "game/systems/troop_count_registry.h"
 #include "game/units/factory.h"

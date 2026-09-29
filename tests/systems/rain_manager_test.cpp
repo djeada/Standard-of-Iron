@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <memory>
 
 #include "systems/rain_manager.h"
 
