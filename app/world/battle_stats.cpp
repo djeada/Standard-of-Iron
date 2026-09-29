@@ -19,23 +19,23 @@ namespace {
 
 constexpr int k_stats_version = 1;
 
-auto engine_text(const char* source) -> QString {
-  return QCoreApplication::translate("GameEngine", source);
-}
-
 } // namespace
 
 auto format_defeat_announcement(const PlayerDefeatWatcher::Defeat& defeat) -> QString {
   if (defeat.commander_name.isEmpty()) {
     return defeat.ally
-               ? engine_text("Our ally %1 has been defeated.").arg(defeat.owner_name)
-               : engine_text("%1 has been defeated.").arg(defeat.owner_name);
+               ? QCoreApplication::translate("GameEngine",
+                                             "Our ally %1 has been defeated.")
+                     .arg(defeat.owner_name)
+               : QCoreApplication::translate("GameEngine", "%1 has been defeated.")
+                     .arg(defeat.owner_name);
   }
   if (defeat.ally) {
-    return engine_text("Our ally %1 is finished - %2 has fallen.")
+    return QCoreApplication::translate("GameEngine",
+                                       "Our ally %1 is finished - %2 has fallen.")
         .arg(defeat.owner_name, defeat.commander_name);
   }
-  return engine_text("%1 is finished - %2 has fallen.")
+  return QCoreApplication::translate("GameEngine", "%1 is finished - %2 has fallen.")
       .arg(defeat.owner_name, defeat.commander_name);
 }
 

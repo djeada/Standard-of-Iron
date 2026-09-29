@@ -27,10 +27,6 @@ using Game::Systems::AllyAppealKind;
 using Game::Systems::AllyCallVerdict;
 using Game::Systems::AllyTributeVerdict;
 
-auto engine_text(const char* source) -> QString {
-  return QCoreApplication::translate("GameEngine", source);
-}
-
 struct Context {
   Game::Session::SessionContext& session;
   int local;
@@ -54,16 +50,19 @@ void announce_ally_to_ally_tribute(const Context& ctx,
   const QString giver = ctx.name_of(answer.giver);
   const bool granted = answer.verdict == AllyTributeVerdict::Granted ||
                        answer.verdict == AllyTributeVerdict::Partial;
-  ctx.sink.exchange(granted ? engine_text("%1 asked %2 for %3 %4 and received %5.")
-                                  .arg(asker, giver)
-                                  .arg(answer.requested)
-                                  .arg(what)
-                                  .arg(answer.granted)
-                            : engine_text("%1 asked %2 for %3 %4; %2 refused.")
-                                  .arg(asker, giver)
-                                  .arg(answer.requested)
-                                  .arg(what),
-                    granted);
+  ctx.sink.exchange(
+      granted ? QCoreApplication::translate("GameEngine",
+                                            "%1 asked %2 for %3 %4 and received %5.")
+                    .arg(asker, giver)
+                    .arg(answer.requested)
+                    .arg(what)
+                    .arg(answer.granted)
+              : QCoreApplication::translate("GameEngine",
+                                            "%1 asked %2 for %3 %4; %2 refused.")
+                    .arg(asker, giver)
+                    .arg(answer.requested)
+                    .arg(what),
+      granted);
 }
 
 void announce_reply_to_local_request(const Context& ctx,
@@ -77,31 +76,40 @@ void announce_reply_to_local_request(const Context& ctx,
                              .resource = key};
   switch (answer.verdict) {
   case AllyTributeVerdict::Granted:
-    ctx.sink.exchange(
-        engine_text("%1 sends you %2 %3.").arg(ally).arg(answer.granted).arg(what),
-        true);
+    ctx.sink.exchange(QCoreApplication::translate("GameEngine", "%1 sends you %2 %3.")
+                          .arg(ally)
+                          .arg(answer.granted)
+                          .arg(what),
+                      true);
     reply.trigger = CommanderMessageTrigger::RequestGranted;
     reply.reason = QStringLiteral("full");
     break;
   case AllyTributeVerdict::Partial:
-    ctx.sink.exchange(engine_text("%1 can spare only %2 of the %3 %4 you asked for.")
-                          .arg(ally)
-                          .arg(answer.granted)
-                          .arg(answer.requested)
-                          .arg(what),
-                      true);
+    ctx.sink.exchange(
+        QCoreApplication::translate("GameEngine",
+                                    "%1 can spare only %2 of the %3 %4 you asked for.")
+            .arg(ally)
+            .arg(answer.granted)
+            .arg(answer.requested)
+            .arg(what),
+        true);
     reply.trigger = CommanderMessageTrigger::RequestGranted;
     reply.reason = QStringLiteral("partial");
     break;
   case AllyTributeVerdict::RefusedShort:
-    ctx.sink.exchange(engine_text("%1 has no %2 to spare.").arg(ally, what), false);
+    ctx.sink.exchange(
+        QCoreApplication::translate("GameEngine", "%1 has no %2 to spare.")
+            .arg(ally, what),
+        false);
     reply.trigger = CommanderMessageTrigger::RequestRefused;
     reply.reason = QStringLiteral("short");
     reply.amount = answer.requested;
     break;
   case AllyTributeVerdict::RefusedStingy:
-    ctx.sink.exchange(engine_text("%1 refuses to part with any %2.").arg(ally, what),
-                      false);
+    ctx.sink.exchange(
+        QCoreApplication::translate("GameEngine", "%1 refuses to part with any %2.")
+            .arg(ally, what),
+        false);
     reply.trigger = CommanderMessageTrigger::RequestRefused;
     reply.reason = QStringLiteral("stingy");
     reply.amount = answer.requested;
@@ -120,7 +128,7 @@ void announce_tribute_answer(const Context& ctx,
     if (answer.giver != ctx.local || answer.granted <= 0) {
       return;
     }
-    ctx.sink.exchange(engine_text("Sent %1 %2 to %3.")
+    ctx.sink.exchange(QCoreApplication::translate("GameEngine", "Sent %1 %2 to %3.")
                           .arg(answer.granted)
                           .arg(what, ctx.name_of(answer.requester)),
                       true);
@@ -145,15 +153,22 @@ void announce_ally_to_ally_call(const Context& ctx,
   const bool attack = answer.kind == Game::Systems::AllyCallKind::Attack;
   const bool accepted = answer.verdict == AllyCallVerdict::Accepted;
   if (attack) {
-    ctx.sink.exchange(
-        accepted
-            ? engine_text("%1 called %2 to the attack; %2 marches.").arg(asker, ally)
-            : engine_text("%1 called %2 to the attack; %2 stays.").arg(asker, ally),
-        accepted);
+    ctx.sink.exchange(accepted
+                          ? QCoreApplication::translate(
+                                "GameEngine", "%1 called %2 to the attack; %2 marches.")
+                                .arg(asker, ally)
+                          : QCoreApplication::translate(
+                                "GameEngine", "%1 called %2 to the attack; %2 stays.")
+                                .arg(asker, ally),
+                      accepted);
   } else {
     ctx.sink.exchange(
-        accepted ? engine_text("%1 called for help; %2 sends men.").arg(asker, ally)
-                 : engine_text("%1 called for help; %2 cannot come.").arg(asker, ally),
+        accepted ? QCoreApplication::translate("GameEngine",
+                                               "%1 called for help; %2 sends men.")
+                       .arg(asker, ally)
+                 : QCoreApplication::translate("GameEngine",
+                                               "%1 called for help; %2 cannot come.")
+                       .arg(asker, ally),
         accepted);
   }
 }
@@ -177,13 +192,19 @@ void announce_local_call_outcome(const Context& ctx,
     }
   }
   if (coming.isEmpty()) {
-    ctx.sink.exchange(attack ? engine_text("No ally will join the attack.")
-                             : engine_text("No ally can spare men to defend it."),
+    ctx.sink.exchange(attack ? QCoreApplication::translate(
+                                   "GameEngine", "No ally will join the attack.")
+                             : QCoreApplication::translate(
+                                   "GameEngine", "No ally can spare men to defend it."),
                       false);
   } else {
     const QString names = QLocale().createSeparatedList(coming);
-    ctx.sink.exchange(attack ? engine_text("%1 will march on that position.").arg(names)
-                             : engine_text("%1 will send men to hold it.").arg(names),
+    ctx.sink.exchange(attack ? QCoreApplication::translate(
+                                   "GameEngine", "%1 will march on that position.")
+                                   .arg(names)
+                             : QCoreApplication::translate(
+                                   "GameEngine", "%1 will send men to hold it.")
+                                   .arg(names),
                       true);
   }
   if (speaker == nullptr) {
@@ -228,12 +249,13 @@ auto build_appeal_card(const Context& ctx,
   case AllyAppealKind::Resources:
     card["resource"] = key;
     card["amount"] = appeal.amount;
-    card["text"] = engine_text("%1 asks you for %2 %3.")
+    card["text"] = QCoreApplication::translate("GameEngine", "%1 asks you for %2 %3.")
                        .arg(name)
                        .arg(appeal.amount)
                        .arg(ally_resource_word(key));
-    card["accept"] = engine_text("Give %1").arg(appeal.amount);
-    card["decline"] = engine_text("Refuse");
+    card["accept"] =
+        QCoreApplication::translate("GameEngine", "Give %1").arg(appeal.amount);
+    card["decline"] = QCoreApplication::translate("GameEngine", "Refuse");
     ctx.sink.commander_fact({.trigger = CommanderMessageTrigger::AllyNeedsResources,
                              .subject_owner_id = ctx.local,
                              .actor_owner_id = appeal.from_ally,
@@ -242,16 +264,19 @@ auto build_appeal_card(const Context& ctx,
     break;
   case AllyAppealKind::Defend:
     card["text"] =
-        engine_text("%1's camp is under attack. Will you send men to hold it?")
+        QCoreApplication::translate(
+            "GameEngine", "%1's camp is under attack. Will you send men to hold it?")
             .arg(name);
-    card["accept"] = engine_text("Send men");
-    card["decline"] = engine_text("Refuse");
+    card["accept"] = QCoreApplication::translate("GameEngine", "Send men");
+    card["decline"] = QCoreApplication::translate("GameEngine", "Refuse");
     break;
   case AllyAppealKind::Attack:
     card["text"] =
-        engine_text("%1 is marching on the enemy. Will you join the attack?").arg(name);
-    card["accept"] = engine_text("Join");
-    card["decline"] = engine_text("Refuse");
+        QCoreApplication::translate(
+            "GameEngine", "%1 is marching on the enemy. Will you join the attack?")
+            .arg(name);
+    card["accept"] = QCoreApplication::translate("GameEngine", "Join");
+    card["decline"] = QCoreApplication::translate("GameEngine", "Refuse");
     break;
   }
   return card;
@@ -264,43 +289,63 @@ void announce_appeal_follow_up(const Context& ctx,
   const QString key = QLatin1String(Game::Systems::resource_type_key(reply.resource));
   switch (reply.follow_up) {
   case AllyAppealFollowUp::Grateful:
-    ctx.sink.exchange(engine_text("%1 thanks you for the %2 %3.")
-                          .arg(name)
-                          .arg(reply.amount)
-                          .arg(ally_resource_word(key)),
-                      true);
+    ctx.sink.exchange(
+        QCoreApplication::translate("GameEngine", "%1 thanks you for the %2 %3.")
+            .arg(name)
+            .arg(reply.amount)
+            .arg(ally_resource_word(key)),
+        true);
     break;
   case AllyAppealFollowUp::AwaitingAid:
     ctx.sink.exchange(
-        defend ? engine_text("%1 will hold until your men arrive.").arg(name)
-               : engine_text("%1 expects your men at the enemy's gate.").arg(name),
+        defend ? QCoreApplication::translate("GameEngine",
+                                             "%1 will hold until your men arrive.")
+                     .arg(name)
+               : QCoreApplication::translate("GameEngine",
+                                             "%1 expects your men at the enemy's gate.")
+                     .arg(name),
         true);
     break;
   case AllyAppealFollowUp::HoldAlone:
-    ctx.sink.exchange(engine_text("%1 will hold the camp alone.").arg(name), false);
+    ctx.sink.exchange(
+        QCoreApplication::translate("GameEngine", "%1 will hold the camp alone.")
+            .arg(name),
+        false);
     break;
   case AllyAppealFollowUp::MarchAlone:
-    ctx.sink.exchange(engine_text("%1 marches alone.").arg(name), false);
+    ctx.sink.exchange(
+        QCoreApplication::translate("GameEngine", "%1 marches alone.").arg(name),
+        false);
     break;
   case AllyAppealFollowUp::ManageWithout:
-    ctx.sink.exchange(engine_text("%1 will manage without your help.").arg(name),
-                      false);
+    ctx.sink.exchange(
+        QCoreApplication::translate("GameEngine", "%1 will manage without your help.")
+            .arg(name),
+        false);
     break;
   case AllyAppealFollowUp::AidArrived:
     ctx.sink.exchange(
-        defend ? engine_text("%1: your men have reached the camp. Well met.").arg(name)
-               : engine_text("%1: your men have joined the attack.").arg(name),
+        defend ? QCoreApplication::translate(
+                     "GameEngine", "%1: your men have reached the camp. Well met.")
+                     .arg(name)
+               : QCoreApplication::translate("GameEngine",
+                                             "%1: your men have joined the attack.")
+                     .arg(name),
         true);
     break;
   case AllyAppealFollowUp::AidNeverCame:
     ctx.sink.exchange(
-        engine_text("%1: the men you promised never came. That will be remembered.")
+        QCoreApplication::translate(
+            "GameEngine",
+            "%1: the men you promised never came. That will be remembered.")
             .arg(name),
         false);
     break;
   case AllyAppealFollowUp::Withdrawn:
-    ctx.sink.exchange(
-        engine_text("%1 heard no answer and withdraws the request.").arg(name), false);
+    ctx.sink.exchange(QCoreApplication::translate(
+                          "GameEngine", "%1 heard no answer and withdraws the request.")
+                          .arg(name),
+                      false);
     break;
   }
 }
@@ -316,7 +361,7 @@ auto owner_display_name(const Game::Session::SessionContext* session,
       }
     }
   }
-  return engine_text("your ally");
+  return QCoreApplication::translate("GameEngine", "your ally");
 }
 
 auto is_friendly_commander(const Game::Session::SessionContext* session,
@@ -334,15 +379,15 @@ auto ally_resource_word(const QString& resource_key) -> QString {
   }
   switch (type) {
   case Game::Systems::ResourceType::Gold:
-    return engine_text("gold");
+    return QCoreApplication::translate("GameEngine", "gold");
   case Game::Systems::ResourceType::Food:
-    return engine_text("food");
+    return QCoreApplication::translate("GameEngine", "food");
   case Game::Systems::ResourceType::Wood:
-    return engine_text("wood");
+    return QCoreApplication::translate("GameEngine", "wood");
   case Game::Systems::ResourceType::Stone:
-    return engine_text("stone");
+    return QCoreApplication::translate("GameEngine", "stone");
   case Game::Systems::ResourceType::Iron:
-    return engine_text("iron");
+    return QCoreApplication::translate("GameEngine", "iron");
   default:
     break;
   }

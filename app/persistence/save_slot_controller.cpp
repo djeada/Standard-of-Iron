@@ -14,14 +14,6 @@
 
 namespace App::Core {
 
-namespace {
-
-auto engine_text(const char* source) -> QString {
-  return QCoreApplication::translate("GameEngine", source);
-}
-
-} // namespace
-
 SaveSlotController::SaveSlotController(Game::Systems::SaveLoadService* service,
                                        App::ViewModels::SaveSlotsViewModel* slot_model,
                                        Engine::Core::World* world,
@@ -141,21 +133,25 @@ void SaveSlotController::begin_save(const QString& slot_name,
                                     Game::Systems::Save::SlotKind kind,
                                     int autosave_retention) {
   if ((m_service == nullptr) || m_world == nullptr) {
-    m_hooks.report_error(engine_text("Save: not initialized"));
+    m_hooks.report_error(
+        QCoreApplication::translate("GameEngine", "Save: not initialized"));
     return;
   }
 
   if (m_active_job != 0 || m_orchestrator.queued()) {
 
     emit m_slots->save_completed(
-        slot_name, false, engine_text("A save is already in progress."));
+        slot_name,
+        false,
+        QCoreApplication::translate("GameEngine", "A save is already in progress."));
     return;
   }
 
   m_hooks.leave_commander_mode();
 
   m_progress_slot = slot_name;
-  m_slots->set_save_progress(true, 0, engine_text("Queued"), slot_name);
+  m_slots->set_save_progress(
+      true, 0, QCoreApplication::translate("GameEngine", "Queued"), slot_name);
 
   if (queue_capture(slot_name, kind, autosave_retention)) {
     return;
@@ -189,7 +185,8 @@ void SaveSlotController::finish_request(const QString& slot_name,
 
   m_active_job = effects.job_id;
   m_progress_slot = slot_name;
-  m_slots->set_save_progress(true, 0, engine_text("Queued"), slot_name);
+  m_slots->set_save_progress(
+      true, 0, QCoreApplication::translate("GameEngine", "Queued"), slot_name);
 
   m_screenshot_target_slot = slot_name;
   m_screenshot_requested.store(true, std::memory_order_release);
@@ -227,7 +224,7 @@ void SaveSlotController::cancel_active_save() {
   m_service->cancel_save(m_active_job);
   m_slots->set_save_progress(true,
                              m_slots->save_progress_percent(),
-                             engine_text("Cancelling..."),
+                             QCoreApplication::translate("GameEngine", "Cancelling..."),
                              m_progress_slot);
 }
 
