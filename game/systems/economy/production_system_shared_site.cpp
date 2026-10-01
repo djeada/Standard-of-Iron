@@ -95,14 +95,14 @@ struct SiteWork {
   Engine::Core::EntityID lead{0};
 };
 
-auto measure_site_work(const Engine::Core::World& world,
-                       const SharedSite& site) -> SiteWork {
+auto measure_site_work(Engine::Core::World& world, const SharedSite& site) -> SiteWork {
   SiteWork work;
   for (const auto crew : site.crews) {
     const auto& builder =
         *world.try_get<Engine::Core::BuilderProductionComponent>(crew);
     work.progress = std::max(work.progress, site_progress(builder));
-    if (builder.at_construction_site && builder.in_progress) {
+    if (builder.at_construction_site && builder.in_progress &&
+        crew_at_posts(world, crew, builder)) {
       work.hands += crew_hands(world, crew);
       if (work.lead == 0) {
         work.lead = crew;

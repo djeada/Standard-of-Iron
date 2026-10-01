@@ -394,6 +394,50 @@ TEST_F(AutoGatherTest, APreferredResourceThatRanOutFallsBackToWhatIsLeft) {
             std::string(Game::Systems::k_builder_product_cut_tree));
 }
 
+TEST_F(AutoGatherTest, RepeatingTheOrderLeavesAWorkerWalkingToItsNodeAlone) {
+  lay_out({{.type = WorldProp::Type::PineTree, .x = 6.0F, .z = 0.0F}});
+  Engine::Core::World world;
+  auto* worker = add_builder(world, 0.0F, 0.0F);
+  order_auto_gather(world, worker);
+  think(world);
+  auto* builder = builder_of(worker);
+  ASSERT_TRUE(builder->has_construction_site);
+  auto* movement = worker->get_component<Engine::Core::MovementComponent>();
+  movement->engage_manual_move(builder->construction_site_x,
+                               builder->construction_site_z);
+
+  order_auto_gather(world, worker);
+
+  EXPECT_TRUE(builder->has_construction_site)
+      << "a repeated order turned the worker back off the node it was walking to";
+  EXPECT_TRUE(movement->get_has_target());
+}
+
+TEST_F(AutoGatherTest, ANewPriorityCallsOffTheWalkWithTheNode) {
+  lay_out({{.type = WorldProp::Type::PineTree, .x = 2.0F, .z = 0.0F},
+           {.type = WorldProp::Type::IronOre, .x = -7.0F, .z = 0.0F}});
+  Engine::Core::World world;
+  auto* worker = add_builder(world, 0.0F, 0.0F);
+  order_auto_gather(world, worker);
+  think(world);
+  auto* builder = builder_of(worker);
+  ASSERT_EQ(builder->product_type,
+            std::string(Game::Systems::k_builder_product_cut_tree));
+  auto* movement = worker->get_component<Engine::Core::MovementComponent>();
+  movement->engage_manual_move(builder->construction_site_x,
+                               builder->construction_site_z);
+
+  order_auto_gather(
+      world, worker, std::string(Game::Systems::k_builder_product_collect_iron_ore));
+  EXPECT_FALSE(movement->get_has_target())
+      << "the walk to the dropped node kept going with nobody left to steer it, "
+         "so the worker stalled short of it and could not take new work";
+
+  think(world);
+  EXPECT_EQ(builder->product_type,
+            std::string(Game::Systems::k_builder_product_collect_iron_ore));
+}
+
 TEST_F(AutoGatherTest, ResourcesUnderFogAreLeftAlone) {
   lay_out({{.type = WorldProp::Type::PineTree, .x = 3.0F, .z = 0.0F}});
   Game::Systems::OwnerRegistry::instance().set_local_player_id(1);

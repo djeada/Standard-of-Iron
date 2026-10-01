@@ -111,6 +111,10 @@ auto measure_timing(const SlotWalk& walk,
       previous == nullptr || !previous->alive || !previous->world_motion_valid ||
       !walk.formation.motion_root_valid ||
       timing.root_travel > std::max(12.0F, timing.max_speed * timing.dt * 4.0F);
+  if (walk.walking_to_work_posts) {
+    timing.max_speed =
+        std::min(timing.max_speed, walk.march_speed / k_obstacle_catch_up_ratio);
+  }
   timing.run_speed = gait_run_speed(walk.march_speed);
   return timing;
 }

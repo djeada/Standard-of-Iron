@@ -8,8 +8,10 @@
 #include <vector>
 
 #include "core/ambient_session.h"
+#include "core/component_core.h"
 #include "core/component_economy.h"
 #include "core/event_manager.h"
+#include "core/movement_facts.h"
 #include "core/ownership_constants.h"
 #include "core/world.h"
 #include "systems/movement/command_service.h"
@@ -190,6 +192,19 @@ auto hauler_is_free_to_walk(const Engine::Core::Entity& hauler) -> bool {
   return movement != nullptr && !movement->get_has_target();
 }
 
+auto haul_ended_short(Engine::Core::World* world,
+                      const Engine::Core::Entity& hauler) -> bool {
+  const auto* movement = hauler.get_component<Engine::Core::MovementComponent>();
+  if (movement == nullptr || !movement->get_has_target()) {
+    return true;
+  }
+  const auto* facts =
+      world->try_get<Engine::Core::MovementFactsComponent>(hauler.get_id());
+  return facts != nullptr &&
+         (facts->progress.state == Engine::Core::MovementOrderState::LocallyBlocked ||
+          facts->progress.state == Engine::Core::MovementOrderState::Unreachable);
+}
+
 } // namespace
 
 void ResourceDeliverySystem::update(Engine::Core::World* world, float delta_time) {
@@ -252,8 +267,13 @@ void ResourceDeliverySystem::update(Engine::Core::World* world, float delta_time
     bool const out_of_patience =
         carry->haul_seconds >= k_stockpile_haul_patience_seconds;
 
+    bool const as_close_as_it_gets =
+        haul_ended_short(world, *hauler) &&
+        stand_dist_sq <=
+            k_stockpile_depot_arrival_radius * k_stockpile_depot_arrival_radius;
     if (dist_sq <= k_stockpile_drop_radius * k_stockpile_drop_radius ||
         stand_dist_sq <= k_stockpile_drop_radius * k_stockpile_drop_radius ||
+        as_close_as_it_gets ||
         (out_of_patience && depot_dist_sq <= k_stockpile_depot_arrival_radius *
                                                  k_stockpile_depot_arrival_radius)) {
       credit_load_at_yard(
@@ -307,6 +327,7 @@ auto ResourceDeliverySystem::access() const -> Engine::Core::SystemAccess {
   return SystemAccess::declare(Reads<UnitComponent,
                                      TransformComponent,
                                      AttackTargetComponent,
+                                     MovementFactsComponent,
                                      PendingRemovalComponent>{},
                                Writes<ResourceCarryComponent,
                                       StockpileComponent,

@@ -64,6 +64,26 @@ auto is_movement_point_allowed(const QVector3D& pos,
   return Walkability::can_stand(pos, motor_profile_for(entity));
 }
 
+auto bypass_line_is_clear(const Engine::Core::Entity& entity,
+                          const QVector3D& from,
+                          const QVector3D& to) -> bool {
+  constexpr float k_sample_spacing = 0.25F;
+  auto const* ground = NavGrid::get_pathfinder();
+  if (ground != nullptr && !ground->is_terrain_segment_walkable(from, to)) {
+    return false;
+  }
+  QVector3D const span = to - from;
+  int const samples =
+      std::max(1, static_cast<int>(std::ceil(span.length() / k_sample_spacing)));
+  for (int sample = 1; sample <= samples; ++sample) {
+    float const t = static_cast<float>(sample) / static_cast<float>(samples);
+    if (!is_movement_point_allowed(from + span * t, entity)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 auto max_navigation_speed(const Engine::Core::UnitComponent& unit,
                           const Engine::Core::StaminaComponent* stamina) -> float {
   float speed = std::max(0.1F, unit.speed);

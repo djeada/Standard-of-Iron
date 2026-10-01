@@ -12,10 +12,12 @@
 #include "game/map/terrain_service.h"
 #include "game/session/session_context.h"
 #include "game/session/simulation_clock.h"
+#include "game/systems/building_collision_registry.h"
 #include "game/systems/default_content.h"
 #include "game/systems/economy/build_site.h"
 #include "game/systems/economy/construction_cost_catalog.h"
 #include "game/systems/navigation/nav_grid.h"
+#include "game/systems/navigation/pathfinding.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/resource_types.h"
@@ -212,6 +214,142 @@ TEST_F(BuilderCrewsTest, EveryCrewInTheOrderWorksTheSiteAndOneHouseRises) {
   }
 }
 
+TEST_F(BuilderCrewsTest, ACrewWalksOntoItsSiteAndToItsPostsWithoutJumping) {
+  const EntityID crew = spawn_builder(30, 48);
+  ASSERT_NE(crew, 0U);
+  auto& economy = m_session->economy();
+  economy.add(k_player, Game::Systems::ResourceType::Wood, 500);
+  economy.add(k_player, Game::Systems::ResourceType::Stone, 500);
+  economy.add(k_player, Game::Systems::ResourceType::Gold, 500);
+
+  const QVector3D site = Game::Systems::NavGrid::grid_to_world({48, 48});
+  ASSERT_TRUE(Game::Command::submit(
+      m_session->world(),
+      Game::Command::Source::LocalPlayer,
+      k_player,
+      Game::Command::StartConstruction{
+          .units = {crew}, .construction_type = "home", .site = site}));
+
+  auto& world = m_session->world();
+  const double tick = m_session->clock().tick_seconds();
+  const auto* unit = world.try_get<Engine::Core::UnitComponent>(crew);
+  const float stride = unit->speed * static_cast<float>(tick) * 2.0F + 0.02F;
+  QVector3D last_root = position_of(crew);
+  std::vector<std::pair<float, float>> last_men;
+  float worst_root_jump = 0.0F;
+  float worst_man_jump = 0.0F;
+  float progress_while_walking = 0.0F;
+  float fastest_man = 0.0F;
+  bool worked = false;
+  for (double elapsed = 0.0; elapsed < 60.0; elapsed += tick) {
+    step();
+    const QVector3D root = position_of(crew);
+    worst_root_jump = std::max(worst_root_jump, (root - last_root).length());
+    last_root = root;
+
+    const auto* builder = builder_of(crew);
+    const auto* formation =
+        world.try_get<Engine::Core::FormationPresentationComponent>(crew);
+    bool any_walking = false;
+    if (formation != nullptr) {
+      if (last_men.size() != formation->soldiers.size()) {
+        last_men.clear();
+        for (const auto& man : formation->soldiers) {
+          last_men.emplace_back(man.world_x, man.world_z);
+        }
+      }
+      for (std::size_t i = 0; i < formation->soldiers.size(); ++i) {
+        const auto& man = formation->soldiers[i];
+        if (!man.alive || !man.world_motion_valid) {
+          continue;
+        }
+        const float moved = std::hypot(man.world_x - last_men[i].first,
+                                       man.world_z - last_men[i].second);
+        last_men[i] = {man.world_x, man.world_z};
+        worst_man_jump = std::max(worst_man_jump, moved);
+        const float speed = moved / static_cast<float>(tick);
+        if (builder != nullptr && builder->in_progress) {
+          fastest_man = std::max(fastest_man, speed);
+        }
+        any_walking = any_walking || speed > 0.5F;
+      }
+    }
+    if (builder != nullptr && builder->at_construction_site && builder->in_progress) {
+      worked = true;
+      if (any_walking && builder->build_time > 0.0F) {
+        progress_while_walking =
+            std::max(progress_while_walking,
+                     1.0F - builder->time_remaining / builder->build_time);
+      }
+    }
+    if (count_of(Game::Units::SpawnType::Home) > 0) {
+      break;
+    }
+  }
+
+  ASSERT_TRUE(worked) << "the crew never started on the house";
+  EXPECT_LE(fastest_man, unit->speed * 1.05F)
+      << "a builder ran " << fastest_man << " m/s to his post";
+  EXPECT_LE(worst_root_jump, stride)
+      << "the crew jumped " << worst_root_jump << " m in one tick onto its site";
+  EXPECT_LE(worst_man_jump, stride)
+      << "a builder jumped " << worst_man_jump << " m in one tick to his post";
+  EXPECT_LT(progress_while_walking, 0.01F)
+      << "the house rose while the crew was still walking to its posts";
+}
+
+TEST_F(BuilderCrewsTest, ACrewThatCannotWalkStraightToItsTreeWorksFromWhereItStands) {
+  const EntityID crew = spawn_builder(44, 48);
+  ASSERT_NE(crew, 0U);
+  const QVector3D start = position_of(crew);
+  const QVector3D tree_spot(start.x() + 4.0F, 0.0F, start.z());
+  const auto tree = tree_at(tree_spot.x(), tree_spot.z());
+  m_session->building_collision().register_building(
+      9999U,
+      "shed",
+      start.x() + 2.0F,
+      start.z(),
+      k_player,
+      Game::Systems::BuildingCollisionRegistry::BuildingSize{1.0F, 4.0F});
+  if (auto* pathfinder = Game::Systems::NavGrid::get_pathfinder()) {
+    pathfinder->update_navigation_grid();
+  }
+  ASSERT_TRUE(
+      Game::Command::submit(m_session->world(),
+                            Game::Command::Source::LocalPlayer,
+                            k_player,
+                            Game::Command::StartHarvest{.units = {crew},
+                                                        .construction_type = "cut_tree",
+                                                        .resource_target = tree,
+                                                        .site = tree_spot}));
+
+  const double tick = m_session->clock().tick_seconds();
+  QVector3D last = position_of(crew);
+  QVector3D heading;
+  int reversals = 0;
+  bool worked = false;
+  for (double elapsed = 0.0; elapsed < 20.0; elapsed += tick) {
+    step();
+    const QVector3D at = position_of(crew);
+    const QVector3D moved = at - last;
+    last = at;
+    if (moved.length() > 0.001F) {
+      if (QVector3D::dotProduct(moved.normalized(), heading) < -0.5F) {
+        ++reversals;
+      }
+      heading = moved.normalized();
+    }
+    const auto* builder = builder_of(crew);
+    worked = worked || (builder->at_construction_site && builder->in_progress);
+  }
+
+  EXPECT_TRUE(worked) << "the crew never set to work on a tree within its reach";
+  EXPECT_LE(reversals, 2)
+      << "the crew jittered back and forth " << reversals
+      << " times between its tree and the ground it cannot stand on";
+  EXPECT_NE(builder_of(crew)->fault, Engine::Core::BuilderTaskFault::Unreachable);
+}
+
 TEST_F(BuilderCrewsTest, AHouseCannotBeOrderedOnTopOfStandingTroops) {
 
   const EntityID crew = spawn_builder(48, 48);
@@ -301,7 +439,8 @@ TEST_F(BuilderCrewsTest, AHalfCrewGathersFarSlowerThanAWholeOne) {
                                                       .site = spot});
     auto* builder = builder_of(crew);
     for (int i = 0;
-         i < 1200 && !(builder->at_construction_site && builder->in_progress);
+         i < 1200 && !(builder->at_construction_site && builder->in_progress &&
+                       builder->time_remaining < builder->build_time);
          ++i) {
       step();
     }
