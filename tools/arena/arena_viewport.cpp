@@ -79,6 +79,7 @@
 #include "game/systems/run_stamina.h"
 #include "game/systems/target_focus.h"
 #include "game/systems/troop_count_registry.h"
+#include "game/systems/rockfall_system.h"
 #include "game/systems/undead_awakening_system.h"
 #include "game/systems/unit_activity.h"
 #include "game/units/factory.h"
@@ -2812,6 +2813,31 @@ void ArenaViewport::configure_scenario_undead_zones(
   }
 }
 
+void ArenaViewport::configure_scenario_rockfall_traps(
+    const Arena::ArenaScenarioDefinition& definition,
+    const QVector3D& scenario_origin) {
+  if (m_world == nullptr) {
+    return;
+  }
+  auto* rockfall = m_world->get_system<Game::Systems::RockfallSystem>();
+  if (rockfall == nullptr) {
+    return;
+  }
+  Game::Map::MapDefinition map_definition;
+  map_definition.coordSystem = Game::Map::CoordSystem::World;
+  map_definition.grid.width = m_terrain_grid_extent;
+  map_definition.grid.height = m_terrain_grid_extent;
+  map_definition.grid.tile_size = k_terrain_tile_size;
+  map_definition.rockfall_traps = definition.rockfall_traps;
+  for (auto& trap : map_definition.rockfall_traps) {
+    trap.release_x += scenario_origin.x();
+    trap.release_z += scenario_origin.z();
+    trap.target_x += scenario_origin.x();
+    trap.target_z += scenario_origin.z();
+  }
+  rockfall->configure(map_definition);
+}
+
 void ArenaViewport::retain_zone_shrine_props(
     const Game::Systems::UndeadAwakeningSystem& undead_system) {
   constexpr float k_shrine_match_grid_distance = 1.0F;
@@ -2912,6 +2938,11 @@ void ArenaViewport::reset_arena() {
   m_last_scenario_issue_revision = 0U;
   m_scenario_finished_emitted = false;
   clear_undead_zones();
+  if (m_world != nullptr) {
+    if (auto* rockfall = m_world->get_system<Game::Systems::RockfallSystem>()) {
+      rockfall->configure(Game::Map::MapDefinition{});
+    }
+  }
   clear_wildlife();
   clear_units();
   if (m_world != nullptr) {
@@ -4660,6 +4691,8 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
       Arena::scenario_needs_animation_diagnostics(*definition) ||
       m_force_animation_diagnostics);
 
+  // Steps may release a trap on the first tick, so the traps exist first.
+  configure_scenario_rockfall_traps(*definition, scenario_origin);
   if (!m_scenario_runner->start()) {
     qWarning().noquote() << QStringLiteral(
                                 "Arena scenario '%1' failed validation or startup")

@@ -39,6 +39,10 @@ constexpr float k_rebound_speed = 1.8F;
 // before the boulder leaves the slope.
 constexpr float k_lift_off_clearance = 0.35F;
 constexpr float k_max_speed = 24.0F;
+constexpr float k_speed_kept_in_bends = 0.85F;
+// Casualties are flung at most this fast however hard the boulder hits, so
+// bodies land in the pass rather than on the ridges.
+constexpr float k_max_launch_speed = 6.0F;
 constexpr float k_settle_speed = 0.45F;
 constexpr float k_min_roll_seconds = 1.0F;
 constexpr float k_max_substep = 1.0F / 60.0F;
@@ -361,7 +365,15 @@ void RockfallSystem::step_boulder(Engine::Core::World& world,
     float const support = std::max(normal.y(), 0.0F);
     QVector3D const downhill = (normal * support - up) * (k_gravity * k_rolling_share);
     QVector3D velocity = boulder.velocity + downhill * dt;
+    float const speed_before_turn = velocity.length();
     velocity -= normal * QVector3D::dotProduct(velocity, normal);
+    // Real slopes curve into the valley floor, so a rolling boulder is turned
+    // by the bend rather than stopped by it. Keep most of its speed through a
+    // concave break instead of discarding everything off the new tangent.
+    if (float const turned = velocity.length(); turned > 1.0e-4F) {
+      float const kept = std::max(turned, speed_before_turn * k_speed_kept_in_bends);
+      velocity *= kept / turned;
+    }
     float const speed = velocity.length();
     float const resistance = k_rolling_resistance * k_gravity * support * dt;
     velocity = speed > resistance ? velocity * ((speed - resistance) / speed)
@@ -510,7 +522,11 @@ void RockfallSystem::strike(Engine::Core::World& world,
                                                  speed,
                                                  Game::Units::SpawnType::Catapult);
     Game::Systems::Combat::launch_new_casualties_along(
-        target, travel.x(), travel.z(), application.queued_soldier_casualties, speed);
+        target,
+        travel.x(),
+        travel.z(),
+        application.queued_soldier_casualties,
+        std::min(speed, k_max_launch_speed));
   }
 
   if (unit->health > 0) {
@@ -701,7 +717,7 @@ void RockfallSystem::restore_state(const QJsonObject& state) {
                                         float(q.at(2).toDouble()),
                                         float(q.at(3).toDouble()));
     }
-    boulder.radius = float(obj.value(QStringLiteral("radius")).toDouble(0.85));
+    boulder.radius = float(obj.value(QStringLiteral("radius")).toDouble(0.55));
     boulder.age = float(obj.value(QStringLiteral("age")).toDouble());
     boulder.settled_age = float(obj.value(QStringLiteral("settled_age")).toDouble());
     boulder.airborne = obj.value(QStringLiteral("airborne")).toBool();

@@ -48,6 +48,7 @@
 #include "game/systems/projectile_kind.h"
 #include "game/systems/projectile_system.h"
 #include "game/systems/rpg_combat_system/rpg_targeting.h"
+#include "game/systems/rockfall_system.h"
 #include "game/systems/undead_awakening_system.h"
 #include "game/units/unit.h"
 #include "game/wildlife/bird_flock.h"
@@ -191,6 +192,8 @@ auto command_name(ScenarioCommandKind kind) -> QString {
     return QStringLiteral("RpgCycleLockOn");
   case ScenarioCommandKind::ReloadUndeadZoneState:
     return QStringLiteral("ReloadUndeadZoneState");
+  case ScenarioCommandKind::TriggerRockfall:
+    return QStringLiteral("TriggerRockfall");
   }
   return QStringLiteral("Unknown");
 }
@@ -553,18 +556,41 @@ auto validate_scenario(const ArenaScenarioDefinition& definition)
     }
   }
 
+  QSet<QString> rockfall_ids;
+  for (std::size_t i = 0; i < definition.rockfall_traps.size(); ++i) {
+    auto const& trap = definition.rockfall_traps[i];
+    QString const field = QStringLiteral("rockfall_traps[%1]").arg(i);
+    if (trap.id.trimmed().isEmpty()) {
+      errors.push_back({field, QStringLiteral("rockfall trap id is empty")});
+    } else if (rockfall_ids.contains(trap.id)) {
+      errors.push_back(
+          {field, QStringLiteral("duplicate rockfall trap '%1'").arg(trap.id)});
+    } else {
+      rockfall_ids.insert(trap.id);
+    }
+    if (trap.boulder_count <= 0) {
+      errors.push_back({field, QStringLiteral("rockfall trap needs boulders")});
+    }
+  }
+
   for (std::size_t i = 0; i < definition.steps.size(); ++i) {
     auto const& step = definition.steps[i];
     QString const field = QStringLiteral("steps[%1]").arg(i);
     if (step.trigger.time_seconds < 0.0F) {
       errors.push_back({field, QStringLiteral("trigger time cannot be negative")});
     }
+    bool const rockfall_step = step.command == ScenarioCommandKind::TriggerRockfall;
     bool const command_needs_group =
         step.zone_id.isEmpty() && step.command != ScenarioCommandKind::SetCamera &&
         step.command != ScenarioCommandKind::SetFullCreatureLod &&
-        step.command != ScenarioCommandKind::ReloadUndeadZoneState;
+        step.command != ScenarioCommandKind::ReloadUndeadZoneState && !rockfall_step;
     check_group(step.group, field + QStringLiteral(".group"), command_needs_group);
-    if (!step.zone_id.isEmpty() && !zone_ids.contains(step.zone_id)) {
+    if (rockfall_step && !rockfall_ids.contains(step.zone_id)) {
+      errors.push_back(
+          {field + QStringLiteral(".zone_id"),
+           QStringLiteral("unknown rockfall trap reference '%1'").arg(step.zone_id)});
+    }
+    if (!rockfall_step && !step.zone_id.isEmpty() && !zone_ids.contains(step.zone_id)) {
       errors.push_back(
           {field + QStringLiteral(".zone_id"),
            QStringLiteral("unknown undead zone reference '%1'").arg(step.zone_id)});
@@ -2247,6 +2273,15 @@ struct ArenaScenarioRunner::Impl {
         break;
       }
       undead->restore_state(undead->serialize_state());
+      break;
+    }
+    case ScenarioCommandKind::TriggerRockfall: {
+      auto* rockfall = world.get_system<Game::Systems::RockfallSystem>();
+      if (rockfall == nullptr || !rockfall->trigger(step.zone_id)) {
+        add_issue(QStringLiteral("rockfall_trigger_failed"),
+                  QStringLiteral("rockfall trap '%1' is missing or not armed")
+                      .arg(step.zone_id));
+      }
       break;
     }
     }

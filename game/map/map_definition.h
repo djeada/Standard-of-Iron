@@ -177,7 +177,7 @@ struct RockfallTrap {
   RockfallTriggerMode trigger = RockfallTriggerMode::Zone;
   int owner_id = -1;
   int boulder_count = 5;
-  float boulder_radius = 0.85F;
+  float boulder_radius = 0.55F;
   float release_spread = 6.0F;
   float release_interval = 0.4F;
   int damage = 40;

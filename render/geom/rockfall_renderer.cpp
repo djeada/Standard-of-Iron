@@ -11,7 +11,7 @@ namespace Render::GL {
 
 namespace {
 
-const QVector3D k_boulder_color(0.50F, 0.48F, 0.44F);
+const QVector3D k_boulder_color(0.66F, 0.63F, 0.58F);
 const QVector3D k_rockfall_dust_color(0.70F, 0.64F, 0.55F);
 constexpr float k_rockfall_dust_intensity = 1.5F;
 

@@ -104,7 +104,7 @@ private:
     QVector3D position;
     QVector3D velocity;
     QQuaternion orientation;
-    float radius = 0.85F;
+    float radius = 0.55F;
     float age = 0.0F;
     float settled_age = 0.0F;
     float dust_timer = 0.0F;

@@ -1649,3 +1649,39 @@ TEST(ArenaScenariosTest, DuelCrossingIsWideEnoughForAColumn) {
         << narrowest_at << "m along the deck, so an army has to file over it";
   }
 }
+
+TEST(ArenaScenariosTest, RockfallAmbushScenariosStrikeAColumnInAnAlpinePass) {
+  for (auto const* id : {Arena::Scenarios::k_rockfall_alpine_pass_id,
+                         Arena::Scenarios::k_rockfall_ai_defenders_id}) {
+    EXPECT_NE(Arena::Scenarios::find_option(QString::fromLatin1(id)), nullptr) << id;
+    auto const* scenario = Arena::Scenarios::find_definition(QString::fromLatin1(id));
+    ASSERT_NE(scenario, nullptr) << id;
+    EXPECT_TRUE(Arena::validate_scenario(*scenario).empty()) << id;
+    EXPECT_TRUE(scenario->terrain_snowbound) << id;
+    EXPECT_FALSE(scenario->rockfall_traps.empty()) << id;
+    bool expects_launched_casualties = false;
+    for (auto const& expectation : scenario->expectations) {
+      expects_launched_casualties =
+          expects_launched_casualties ||
+          expectation.kind == Expect::LaunchedCasualtyObserved;
+    }
+    EXPECT_TRUE(expects_launched_casualties) << id;
+  }
+
+  auto const* pass = Arena::Scenarios::find_definition(
+      QString::fromLatin1(Arena::Scenarios::k_rockfall_alpine_pass_id));
+  ASSERT_NE(pass, nullptr);
+  EXPECT_TRUE(std::any_of(pass->steps.begin(), pass->steps.end(), [](auto const& step) {
+    return step.command == Arena::ScenarioCommandKind::TriggerRockfall &&
+           step.zone_id == QStringLiteral("north_heights");
+  })) << "the northern heights are released by script";
+
+  auto broken = *pass;
+  for (auto& step : broken.steps) {
+    if (step.command == Arena::ScenarioCommandKind::TriggerRockfall) {
+      step.zone_id = QStringLiteral("nowhere");
+    }
+  }
+  EXPECT_FALSE(Arena::validate_scenario(broken).empty())
+      << "a step naming an unknown trap is rejected";
+}
