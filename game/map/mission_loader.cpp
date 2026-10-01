@@ -319,6 +319,9 @@ auto MissionLoader::parse_event_action(const QJsonObject& obj) -> EventAction {
   if (obj.contains("text")) {
     action.text = obj["text"].toString();
   }
+  if (obj.contains("trap")) {
+    action.trap = obj["trap"].toString().trimmed();
+  }
 
   return action;
 }

@@ -410,6 +410,15 @@ void OrdersViewModel::gate() {
   m_context.input->on_gate_command();
 }
 
+void OrdersViewModel::roll_stones() {
+  if (m_context.input == nullptr) {
+    return;
+  }
+  m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
+  m_context.input->on_roll_stones_command();
+}
+
 void OrdersViewModel::guard() {
   if (m_context.input == nullptr) {
     return;
@@ -475,7 +484,14 @@ auto OrdersViewModel::action_states() const -> QVariantMap {
 
 void OrdersViewModel::publish_frame() {
   m_readout.publish(
-      {.command_mode = App::Core::get_current_action_mode(action_context(m_context))});
+      {.command_mode = App::Core::get_current_action_mode(action_context(m_context)),
+       .stones_ready =
+           App::Core::count_selected_ready_to_roll_stones(m_context.world)});
+}
+
+auto OrdersViewModel::stones_ready() const -> int {
+  const auto readout = m_readout.read();
+  return readout ? readout->stones_ready : 0;
 }
 
 auto OrdersViewModel::command_mode() const -> QString {

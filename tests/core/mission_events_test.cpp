@@ -81,3 +81,28 @@ TEST(MissionEventsTest, ShippedMissionsOnlyUseSupportedEventShapes) {
   const auto pending = Game::Mission::build_pending_mission_events(mission);
   EXPECT_EQ(pending.size(), mission.events.size());
 }
+
+TEST(MissionEventsTest, RockfallActionsScheduleTheirTrap) {
+  Game::Mission::MissionDefinition mission;
+  mission.id = "alpine_ambush";
+
+  Game::Mission::GameEvent ambush;
+  ambush.trigger.type = QStringLiteral("timer");
+  ambush.trigger.time = 42.0F;
+  Game::Mission::EventAction rockfall;
+  rockfall.type = QStringLiteral("rockfall");
+  rockfall.trap = QStringLiteral("allobroges_heights");
+  rockfall.text = QStringLiteral("Rocks thunder down from the heights!");
+  ambush.actions.push_back(rockfall);
+  Game::Mission::EventAction no_trap;
+  no_trap.type = QStringLiteral("rockfall");
+  ambush.actions.push_back(no_trap);
+  mission.events.push_back(ambush);
+
+  const auto pending = Game::Mission::build_pending_mission_events(mission);
+
+  ASSERT_EQ(pending.size(), 1U) << "a rockfall without a trap id is skipped";
+  EXPECT_EQ(pending[0].trigger_time, 42.0F);
+  EXPECT_EQ(pending[0].rockfall_trap, QStringLiteral("allobroges_heights"));
+  EXPECT_EQ(pending[0].text, QStringLiteral("Rocks thunder down from the heights!"));
+}

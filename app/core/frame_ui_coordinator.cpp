@@ -285,6 +285,7 @@ void render_effects(const RenderEffectsContext& context,
     view.local_owner_id = context.local_owner_id;
     view.reduced_effects = Game::Accessibility::MotionSettings::reduced_motion();
     Render::GL::render_projectiles(context.renderer, res, *context.effects, &view);
+    Render::GL::render_rockfall(context.renderer, *context.effects, &view);
   }
 
   if (context.effects != nullptr) {

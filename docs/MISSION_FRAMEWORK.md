@@ -424,6 +424,24 @@ The exact accepted trigger/action strings are defined by the mission loader and 
 
 That is an important authoring rule: mission data selects implemented event types, it does not dynamically define new runtime behavior by name.
 
+The runtime currently implements one trigger, `timer` (with `time` in seconds), and two actions:
+
+- `show_message` announces `text`; and
+- `rockfall` releases the map's rockfall trap named by `trap`, and announces `text` if one is given. See [ROCKFALL.md](ROCKFALL.md).
+
+```json
+{
+    "trigger": { "type": "timer", "time": 95 },
+    "actions": [
+        {
+            "type": "rockfall",
+            "trap": "allobroges_heights",
+            "text": "Rocks thunder down from the heights!"
+        }
+    ]
+}
+```
+
 ## Commander messages
 
 `commander_messages[]` use `CommanderMessage` records.

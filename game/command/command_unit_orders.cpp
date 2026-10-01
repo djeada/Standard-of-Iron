@@ -10,6 +10,7 @@
 #include "../systems/movement/command_service.h"
 #include "../systems/movement/order_service.h"
 #include "../systems/navigation/gate_service.h"
+#include "../systems/rockfall_system.h"
 #include "../systems/squad_service.h"
 #include "../systems/troop_count_registry.h"
 #include "../systems/troop_profile_service.h"
@@ -85,6 +86,15 @@ void apply_stop(World& world, const Stop& stop) {
       formation->active = false;
     }
   });
+}
+void apply_roll_stones(World& world, const RollStones& order) {
+  auto* rockfall = world.get_system<Game::Systems::RockfallSystem>();
+  if (rockfall == nullptr) {
+    return;
+  }
+  for (auto const unit : order.units) {
+    (void)rockfall->order_release(world, unit);
+  }
 }
 void apply_gate_mode(World& world, const SetGateMode& order) {
   for_each_subject(world, order.units, [&order](Entity& entity) {

@@ -527,6 +527,18 @@ auto build_pending_mission_events(const Game::Mission::MissionDefinition& missio
     }
 
     for (const auto& action : game_event.actions) {
+      if (action.type == QLatin1String("rockfall")) {
+        if (!action.trap.has_value() || action.trap->isEmpty()) {
+          qWarning() << "Mission" << mission.id
+                     << "has a rockfall action without a trap id - skipping";
+          continue;
+        }
+        events.push_back({.trigger_time = *game_event.trigger.time,
+                          .text = action.text.value_or(QString()),
+                          .rockfall_trap = *action.trap,
+                          .fired = false});
+        continue;
+      }
       if (action.type != QLatin1String("show_message")) {
         qWarning() << "Mission" << mission.id << "uses unsupported event action"
                    << action.type << "- skipping";

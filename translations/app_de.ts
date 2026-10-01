@@ -4783,6 +4783,34 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <source>Select squads of the same kind that have lost men</source>
         <translation>Wähle Trupps derselben Art, die Männer verloren haben</translation>
     </message>
+    <message>
+        <source>Roll Stones</source>
+        <translation>Steine rollen</translation>
+    </message>
+    <message>
+        <source>Stones</source>
+        <translation>Steine</translation>
+    </message>
+    <message>
+        <source>The men beside the stone cache heave it over the edge. The boulders crash down the slope and crush whatever is climbing it.</source>
+        <translation>Die Männer am Steinlager stoßen es über die Kante. Die Felsbrocken donnern den Hang hinab und zermalmen alles, was hinaufsteigt.</translation>
+    </message>
+    <message>
+        <source>Stand troops next to stones your side holds at the top of a hill path, then press Roll Stones when the enemy climbs.</source>
+        <translation>Stelle Truppen neben Steine, die deine Seite oben an einem Hügelpfad hält, und drücke Steine rollen, wenn der Feind hinaufsteigt.</translation>
+    </message>
+    <message>
+        <source>The stones roll down the path below the cache. Each cache can be used once.</source>
+        <translation>Die Steine rollen den Pfad unterhalb des Lagers hinab. Jedes Lager kann nur einmal genutzt werden.</translation>
+    </message>
+    <message>
+        <source>The first troops to reach a cache claim it for their side.</source>
+        <translation>Die ersten Truppen, die ein Lager erreichen, sichern es für ihre Seite.</translation>
+    </message>
+    <message>
+        <source>Move troops next to stones your side holds</source>
+        <translation>Bewege Truppen neben Steine, die deine Seite hält</translation>
+    </message>
 </context>
 <context>
     <name>HUDBottomCommander</name>
@@ -10980,6 +11008,21 @@ Bauzeit: %3s</translation>
     <message>
         <source>%1 %2/%3</source>
         <translation>%1 %2/%3</translation>
+    </message>
+</context>
+<context>
+    <name>RockfallSystem</name>
+    <message>
+        <source>Your men hold the stones above the slope. Select troops beside them and order Roll Stones when the enemy climbs.</source>
+        <translation>Deine Männer halten die Steine über dem Hang. Wähle Truppen daneben und befiehl Steine rollen, wenn der Feind hinaufsteigt.</translation>
+    </message>
+    <message>
+        <source>The enemy has taken your stones on the heights.</source>
+        <translation>Der Feind hat deine Steine auf den Höhen genommen.</translation>
+    </message>
+    <message>
+        <source>Enemies are climbing below your stones. Roll them!</source>
+        <translation>Feinde steigen unter deinen Steinen hinauf. Lass sie rollen!</translation>
     </message>
 </context>
 <context>

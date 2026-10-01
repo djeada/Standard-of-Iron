@@ -65,4 +65,10 @@ void render_stone_projectile(Renderer* renderer,
                              const QMatrix4x4& base_model,
                              bool reduced_effects = false);
 
+// Draws rockfall boulders with the catapult stone mesh at boulder scale, plus
+// the dust they kick up when released, landing, striking troops and rolling.
+void render_rockfall(Renderer* renderer,
+                     const Game::Systems::RenderEffectsFrame& effects,
+                     const ProjectileViewContext* view = nullptr);
+
 } // namespace Render::GL

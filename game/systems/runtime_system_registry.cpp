@@ -27,6 +27,7 @@
 #include "home_system.h"
 #include "patrol_system.h"
 #include "projectile_system.h"
+#include "rockfall_system.h"
 #include "rpg_combat_system/rpg_engagement_system.h"
 #include "settlement_life_system.h"
 #include "showcase_routine_system.h"
@@ -127,6 +128,9 @@ void register_runtime_systems(Engine::Core::World& world) {
   world.add_system(std::make_unique<HealingSystem>(),
                    Engine::Core::SystemPhase::Combat);
   world.add_system(std::make_unique<CaptureSystem>(),
+                   Engine::Core::SystemPhase::Combat);
+  world.add_system(std::make_unique<RockfallSystem>(RockfallSystem::Services{
+                       .terrain = session.terrain(), .owners = session.owners()}),
                    Engine::Core::SystemPhase::Combat);
   world.add_system(std::make_unique<AISystem>(AISystem::Services{
                        .owners = session.owners(), .nations = session.nations()}),

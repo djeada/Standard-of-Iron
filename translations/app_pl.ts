@@ -4784,6 +4784,34 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
         <source>Select squads of the same kind that have lost men</source>
         <translation>Zaznacz oddziały tego samego rodzaju, które straciły ludzi</translation>
     </message>
+    <message>
+        <source>Roll Stones</source>
+        <translation>Toczyć głazy</translation>
+    </message>
+    <message>
+        <source>Stones</source>
+        <translation>Głazy</translation>
+    </message>
+    <message>
+        <source>The men beside the stone cache heave it over the edge. The boulders crash down the slope and crush whatever is climbing it.</source>
+        <translation>Ludzie przy stosie kamieni spychają go przez krawędź. Głazy z hukiem staczają się zboczem i miażdżą każdego, kto się wspina.</translation>
+    </message>
+    <message>
+        <source>Stand troops next to stones your side holds at the top of a hill path, then press Roll Stones when the enemy climbs.</source>
+        <translation>Ustaw oddziały obok kamieni, które twoja strona trzyma na szczycie ścieżki na wzgórze, i naciśnij Toczyć głazy, gdy wróg zacznie się wspinać.</translation>
+    </message>
+    <message>
+        <source>The stones roll down the path below the cache. Each cache can be used once.</source>
+        <translation>Kamienie staczają się ścieżką poniżej stosu. Każdego stosu można użyć tylko raz.</translation>
+    </message>
+    <message>
+        <source>The first troops to reach a cache claim it for their side.</source>
+        <translation>Pierwsze oddziały, które dotrą do stosu, przejmują go dla swojej strony.</translation>
+    </message>
+    <message>
+        <source>Move troops next to stones your side holds</source>
+        <translation>Przesuń oddziały obok kamieni twojej strony</translation>
+    </message>
 </context>
 <context>
     <name>HUDBottomCommander</name>
@@ -10983,6 +11011,21 @@ Czas budowy: %3 s</translation>
     <message>
         <source>%1 %2/%3</source>
         <translation>%1 %2/%3</translation>
+    </message>
+</context>
+<context>
+    <name>RockfallSystem</name>
+    <message>
+        <source>Your men hold the stones above the slope. Select troops beside them and order Roll Stones when the enemy climbs.</source>
+        <translation>Twoi ludzie trzymają kamienie nad zboczem. Wybierz oddziały obok nich i wydaj rozkaz Toczyć głazy, gdy wróg się wspina.</translation>
+    </message>
+    <message>
+        <source>The enemy has taken your stones on the heights.</source>
+        <translation>Wróg przejął twoje kamienie na wzgórzach.</translation>
+    </message>
+    <message>
+        <source>Enemies are climbing below your stones. Roll them!</source>
+        <translation>Wrogowie wspinają się pod twoimi kamieniami. Tocz je!</translation>
     </message>
 </context>
 <context>

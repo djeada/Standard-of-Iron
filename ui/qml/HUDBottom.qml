@@ -503,6 +503,28 @@ RowLayout {
                 }
             }
         }, {
+            "id": "roll_stones",
+            "label": qsTr("Roll Stones"),
+            "shortLabel": qsTr("Stones"),
+            "hint": qsTr("The men beside the stone cache heave it over the edge. The boulders crash down the slope and crush whatever is climbing it."),
+            "details": [{
+                    "term": qsTr("Give it"),
+                    "text": qsTr("Stand troops next to stones your side holds at the top of a hill path, then press Roll Stones when the enemy climbs.")
+                }, {
+                    "term": qsTr("Scope"),
+                    "text": qsTr("The stones roll down the path below the cache. Each cache can be used once.")
+                }, {
+                    "term": qsTr("Troops"),
+                    "text": qsTr("The first troops to reach a cache claim it for their side.")
+                }],
+            "unavailable": qsTr("Move troops next to stones your side holds"),
+            "invoke": function () {
+                if (bottomRoot.game_ready() && game.orders.roll_stones) {
+                    game.orders.roll_stones();
+                    bottomRoot.update_action_states();
+                }
+            }
+        }, {
             "id": "aura",
             "label": qsTr("Aura"),
             "hint": qsTr("The commander empowers the troops around him for a while, then must recharge."),
@@ -516,7 +538,7 @@ RowLayout {
         }]
 
     readonly property var primaryCommandIds: ["attack", "guard", "patrol", "hold", "stop"]
-    readonly property var contextualCommandIds: ["build", "collect", "auto_gather", "repair", "dismantle", "divide", "join", "deliver", "rally", "aura", "gate", "heal"]
+    readonly property var contextualCommandIds: ["build", "collect", "auto_gather", "repair", "dismantle", "divide", "join", "deliver", "rally", "aura", "gate", "roll_stones", "heal"]
     readonly property var primaryCommands: bottomRoot.commands_for_ids(bottomRoot.primaryCommandIds)
 
     property var contextualCommands: []
@@ -639,6 +661,23 @@ RowLayout {
         repeat: true
         running: bottomRoot.aura_is_ticking()
         onTriggered: bottomRoot.update_action_states()
+    }
+
+    // Troops walk in and out of reach of a stone cache without the selection
+    // changing. Poll the lock-free count and refresh the buttons when it moves.
+    property int stones_ready: 0
+
+    Timer {
+        interval: 250
+        repeat: true
+        running: bottomRoot.selection_count > 0 && bottomRoot.game_ready()
+        onTriggered: {
+            var ready = game.orders.stones_ready ? game.orders.stones_ready() : 0;
+            if (ready !== bottomRoot.stones_ready) {
+                bottomRoot.stones_ready = ready;
+                bottomRoot.update_action_states();
+            }
+        }
     }
 
     Connections {

@@ -80,6 +80,7 @@ TEST(IconArtTest, EveryHudOrderHasADrawing) {
                              "deliver",
                              "aura",
                              "gate",
+                             "roll_stones",
                              "stop",
                              "run"}) {
     EXPECT_NE(Ui::IconArt::find(QString::fromLatin1(action)), nullptr)

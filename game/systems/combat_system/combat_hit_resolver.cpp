@@ -42,6 +42,18 @@ constexpr float k_catapult_stone_impact_speed = 8.0F;
 
 } // namespace
 
+namespace {
+
+void launch_casualties_along(
+    Engine::Core::SoldierCasualtyAnimationComponent* casualties,
+    const Engine::Core::TransformComponent* casualty_transform,
+    float direction_x,
+    float direction_z,
+    int casualty_count,
+    float impact_speed);
+
+} // namespace
+
 void launch_new_casualties(Engine::Core::Entity& casualty_unit,
                            const Engine::Core::Entity& impact_source,
                            int casualty_count,
@@ -67,6 +79,42 @@ void launch_new_casualties(Engine::Core::Entity& casualty_unit,
     dx = casualty_transform->position.x - source_transform->position.x;
     dz = casualty_transform->position.z - source_transform->position.z;
   }
+  launch_casualties_along(
+      casualties, casualty_transform, dx, dz, casualty_count, impact_speed);
+}
+
+void launch_new_casualties_along(Engine::Core::World& world,
+                                 Engine::Core::EntityID casualty_unit,
+                                 float direction_x,
+                                 float direction_z,
+                                 int casualty_count,
+                                 float impact_speed) {
+  auto* casualties =
+      world.try_get<Engine::Core::SoldierCasualtyAnimationComponent>(casualty_unit);
+  auto const* casualty_transform =
+      world.try_get<Engine::Core::TransformComponent>(casualty_unit);
+  if (casualties == nullptr || casualty_transform == nullptr || casualty_count <= 0) {
+    return;
+  }
+  launch_casualties_along(casualties,
+                          casualty_transform,
+                          direction_x,
+                          direction_z,
+                          casualty_count,
+                          impact_speed);
+}
+
+namespace {
+
+void launch_casualties_along(
+    Engine::Core::SoldierCasualtyAnimationComponent* casualties,
+    const Engine::Core::TransformComponent* casualty_transform,
+    float direction_x,
+    float direction_z,
+    int casualty_count,
+    float impact_speed) {
+  float dx = direction_x;
+  float dz = direction_z;
   float const length = std::hypot(dx, dz);
   if (length > 0.001F) {
     dx /= length;
@@ -101,8 +149,6 @@ void launch_new_casualties(Engine::Core::Entity& casualty_unit,
         side * (95.0F + 17.0F * static_cast<float>(it->slot_index % 4U));
   }
 }
-
-namespace {
 
 [[nodiscard]] auto commander_action_raw_damage(
     Engine::Core::Entity& attacker,

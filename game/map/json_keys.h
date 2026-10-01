@@ -13,6 +13,7 @@ inline constexpr const char* CAMERA = "camera";
 inline constexpr const char* SPAWNS = "spawns";
 inline constexpr const char* STRUCTURES = "structures";
 inline constexpr const char* UNDEAD_ZONES = "undead_zones";
+inline constexpr const char* ROCKFALL_TRAPS = "rockfall_traps";
 inline constexpr const char* FORESTS = "forests";
 inline constexpr const char* FIRECAMPS = "firecamps";
 inline constexpr const char* TERRAIN = "terrain";

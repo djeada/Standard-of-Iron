@@ -1,0 +1,213 @@
+#pragma once
+
+#include <QJsonObject>
+#include <QQuaternion>
+#include <QString>
+#include <QVector3D>
+
+#include <cstddef>
+#include <cstdint>
+#include <optional>
+#include <vector>
+
+#include "game/core/system.h"
+#include "map/map_definition.h"
+
+namespace Engine::Core {
+using EntityID = std::uint64_t;
+class World;
+class Entity;
+} // namespace Engine::Core
+
+namespace Game::Map {
+class TerrainService;
+}
+
+namespace Game::Systems {
+
+class OwnerRegistry;
+
+// A boulder needs this much speed to hurt anyone; slower ones only roll on.
+inline constexpr float k_rockfall_lethal_speed = 2.5F;
+// How far past the boulder's own radius a troop's soldiers are spread.
+inline constexpr float k_rockfall_troop_reach = 1.9F;
+// The AI holds its rocks this long once the first enemy troop is in the zone,
+// hoping more of the column follows it in.
+inline constexpr float k_rockfall_ai_patience_seconds = 3.0F;
+inline constexpr float k_rockfall_settled_linger_seconds = 8.0F;
+inline constexpr float k_rockfall_max_boulder_age_seconds = 30.0F;
+// A troop this close to a stone cache claims it for its owner.
+inline constexpr float k_rockfall_claim_radius = 5.0F;
+// A troop this close to its owner's cache can be ordered to roll the stones.
+inline constexpr float k_rockfall_use_radius = 7.0F;
+// How long the soldiers heave at the pile before the stones go over.
+inline constexpr float k_rockfall_push_seconds = 1.6F;
+
+// Rockfall ambushes: defenders on the heights roll boulders down onto a pass.
+//
+// Stone caches sit at the top of every hill ramp from the start of a match
+// (and wherever a map authors one). A cache is claimed by the first troop to
+// reach it. Its owner can order a troop standing beside it to roll the stones:
+// the soldiers heave at the pile, and the boulders go over the edge and down
+// the ramp, destroying whatever is climbing it. A cache is used once.
+//
+// Boulders are physics-lite: they roll along the terrain gradient, hop off
+// convex breaks, bounce on landing and come to rest on flat ground. Each one
+// strikes a troop at most once, killing soldiers in proportion to its speed,
+// flinging the dead and knocking the survivors down.
+class RockfallSystem : public Engine::Core::System {
+public:
+  struct Services {
+    Game::Map::TerrainService& terrain;
+    OwnerRegistry& owners;
+  };
+
+  struct TrapView {
+    QString id;
+    QVector3D release_world;
+    QVector3D target_world;
+    Game::Map::RockfallTriggerMode trigger = Game::Map::RockfallTriggerMode::Zone;
+    int owner_id = -1;
+    int times_fired = 0;
+    bool armed = true;
+    bool spent = false;
+    bool pushing = false;
+    bool hill_cache = false;
+    int hostile_troops_in_zone = 0;
+  };
+
+  struct BoulderView {
+    QVector3D position;
+    QVector3D velocity;
+    QQuaternion orientation;
+    float radius = 0.0F;
+    bool airborne = false;
+    bool settled = false;
+    int troops_struck = 0;
+  };
+
+  explicit RockfallSystem(Services services);
+  ~RockfallSystem() override;
+
+  void configure(const Game::Map::MapDefinition& map_definition);
+  void restore_state(const QJsonObject& state);
+  [[nodiscard]] auto serialize_state() const -> QJsonObject;
+
+  void update(Engine::Core::World* world, float delta_time) override;
+
+  // Mission scripts and tests release a trap by id, with no troop needed.
+  // Returns false when the trap is unknown, still rearming, or already spent.
+  auto trigger(const QString& trap_id) -> bool;
+
+  // The cache `troop` could roll right now: one its owner holds, armed, within
+  // k_rockfall_use_radius. Returns the trap index.
+  [[nodiscard]] auto
+  cache_in_reach(Engine::Core::World& world,
+                 Engine::Core::EntityID troop) const -> std::optional<std::size_t>;
+
+  // Orders `troop` to roll the cache in reach. The troop stops, heaves at the
+  // pile for k_rockfall_push_seconds and the stones go. Returns false when no
+  // cache is in reach.
+  auto order_release(Engine::Core::World& world, Engine::Core::EntityID troop) -> bool;
+
+  [[nodiscard]] auto trap_count() const -> std::size_t { return m_traps.size(); }
+  [[nodiscard]] auto trap(std::size_t index) const -> TrapView;
+  [[nodiscard]] auto boulders() const -> std::vector<BoulderView>;
+  [[nodiscard]] auto total_troops_struck() const -> int { return m_total_strikes; }
+
+private:
+  struct RuntimeTrap {
+    Game::Map::RockfallTrap definition;
+    QVector3D release_world;
+    QVector3D target_world;
+    // Unit vector along the ground from the cache towards the kill zone.
+    QVector3D downhill;
+    int owner_id = -1;
+    bool hill_cache = false;
+    bool armed = true;
+    bool spent = false;
+    int times_fired = 0;
+    float rearm_remaining = 0.0F;
+    int pending_releases = 0;
+    int released_in_volley = 0;
+    float release_timer = 0.0F;
+    float ai_dwell = 0.0F;
+    Engine::Core::EntityID pusher = 0;
+    float push_remaining = 0.0F;
+    // The pusher is still walking up behind the pile.
+    bool approaching = false;
+    float approach_remaining = 0.0F;
+    int hostile_in_zone = 0;
+    bool warned_owner = false;
+  };
+
+  struct Boulder {
+    QVector3D position;
+    QVector3D velocity;
+    QQuaternion orientation;
+    float radius = 0.55F;
+    float age = 0.0F;
+    float settled_age = 0.0F;
+    float dust_timer = 0.0F;
+    bool airborne = false;
+    bool settled = false;
+    int trap_index = -1;
+    std::uint32_t seed = 0;
+    std::vector<Engine::Core::EntityID> struck;
+  };
+
+  struct Dust {
+    QVector3D position;
+    float scale = 1.0F;
+    float age = 0.0F;
+    float lifetime = 1.3F;
+  };
+
+  [[nodiscard]] auto to_world(const Game::Map::MapDefinition& map_definition,
+                              float x,
+                              float z) const -> QVector3D;
+  void add_trap(const Game::Map::RockfallTrap& definition,
+                const QVector3D& release_world,
+                const QVector3D& target_world,
+                bool hill_cache);
+  void stage_hill_caches();
+  void fire(RuntimeTrap& trap);
+  void begin_push(Engine::Core::World& world,
+                  RuntimeTrap& trap,
+                  Engine::Core::EntityID troop);
+  void advance_push(Engine::Core::World& world, RuntimeTrap& trap, float delta_time);
+  [[nodiscard]] auto push_spot(const RuntimeTrap& trap) const -> QVector3D;
+  void start_heaving(Engine::Core::World& world, RuntimeTrap& trap);
+  void update_claim(Engine::Core::World& world, RuntimeTrap& trap);
+  void evaluate_auto_trigger(Engine::Core::World& world,
+                             RuntimeTrap& trap,
+                             float delta_time);
+  void warn_owner(RuntimeTrap& trap);
+  [[nodiscard]] auto hostile_troops_in_zone(Engine::Core::World& world,
+                                            const RuntimeTrap& trap,
+                                            float reach) const -> int;
+  [[nodiscard]] auto
+  nearest_own_troop(Engine::Core::World& world,
+                    const RuntimeTrap& trap) const -> Engine::Core::EntityID;
+  [[nodiscard]] auto is_hostile(int trap_owner, int other_owner) const -> bool;
+  void release_boulder(RuntimeTrap& trap, int trap_index);
+  void step_boulder(Boulder& boulder, float dt);
+  void strike_troops(Engine::Core::World& world, Boulder& boulder);
+  void strike(Engine::Core::World& world,
+              Boulder& boulder,
+              Engine::Core::Entity& target,
+              float speed);
+  void add_dust(const QVector3D& position, float scale);
+  void publish_render_views(Engine::Core::World& world) const;
+
+  Services m_services;
+  std::vector<RuntimeTrap> m_traps;
+  std::vector<Boulder> m_boulders;
+  std::vector<Dust> m_dust;
+  float m_half_extent_x = 0.0F;
+  float m_half_extent_z = 0.0F;
+  int m_total_strikes = 0;
+  std::uint32_t m_release_sequence = 0;
+};
+
+} // namespace Game::Systems

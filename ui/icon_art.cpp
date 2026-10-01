@@ -243,6 +243,17 @@ auto build_catalog() -> std::vector<Art> {
        fill(QStringLiteral("M8 20.4 L8 12.2 Q12 8.6 16 12.2 L16 20.4 Z"), Tone::Ink),
        line(QStringLiteral("M12 10 L12 20.4"), Tone::Metal, 1.4F)});
 
+  add("roll_stones",
+      {fill(QStringLiteral("M2.4 21.6 L2.4 6.4 L21.6 21.6 Z"), Tone::Metal),
+       fill(QStringLiteral(
+                "M6.2 6.6 L9.6 4.6 L12.6 6.8 L12.2 10.4 L8.6 11.8 L5.6 9.8 Z"),
+            Tone::Stone),
+       fill(QStringLiteral("M13.2 12.8 L16.2 11.2 L18.8 13.2 L18.4 16.2 L15.2 17.4 "
+                           "L12.8 15.6 Z"),
+            Tone::Stone),
+       line(QStringLiteral("M11.4 13.6 Q10.2 15.2 11.6 16.8"), Tone::Ember, 1.2F),
+       line(QStringLiteral("M5 13.4 Q4 15.4 5.2 17.4"), Tone::Ember, 1.2F)});
+
   add("wood",
       {fill(QStringLiteral("M3.4 8.6 L20.6 8.6 L20.6 15.4 L3.4 15.4 Z"), Tone::Timber),
        line(QStringLiteral("M7 12 L17 12"), Tone::Ink, 1.1F)});

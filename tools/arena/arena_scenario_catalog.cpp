@@ -16,6 +16,7 @@
 #include "arena_facade_scenarios.h"
 #include "arena_formation_scenarios.h"
 #include "arena_grounding_scenarios.h"
+#include "arena_hazard_scenarios.h"
 #include "arena_maneuver_scenarios.h"
 #include "arena_navigation_scenarios.h"
 #include "arena_scenarios.h"
@@ -12177,6 +12178,10 @@ auto definitions() -> const std::vector<ArenaScenarioDefinition>& {
     values.insert(values.end(),
                   std::make_move_iterator(traversal.begin()),
                   std::make_move_iterator(traversal.end()));
+    auto hazards = build_hazard_definitions();
+    values.insert(values.end(),
+                  std::make_move_iterator(hazards.begin()),
+                  std::make_move_iterator(hazards.end()));
     auto wildlife = build_wildlife_definitions();
     values.insert(values.end(),
                   std::make_move_iterator(wildlife.begin()),

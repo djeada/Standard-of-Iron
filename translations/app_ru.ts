@@ -4784,6 +4784,34 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>Select squads of the same kind that have lost men</source>
         <translation>Выберите отряды одного типа, потерявшие людей</translation>
     </message>
+    <message>
+        <source>Roll Stones</source>
+        <translation>Скатить камни</translation>
+    </message>
+    <message>
+        <source>Stones</source>
+        <translation>Камни</translation>
+    </message>
+    <message>
+        <source>The men beside the stone cache heave it over the edge. The boulders crash down the slope and crush whatever is climbing it.</source>
+        <translation>Люди у груды камней сталкивают её с края. Валуны с грохотом катятся по склону и давят всех, кто поднимается.</translation>
+    </message>
+    <message>
+        <source>Stand troops next to stones your side holds at the top of a hill path, then press Roll Stones when the enemy climbs.</source>
+        <translation>Поставьте войска рядом с камнями, которые удерживает ваша сторона на вершине тропы на холм, и нажмите «Скатить камни», когда враг пойдёт вверх.</translation>
+    </message>
+    <message>
+        <source>The stones roll down the path below the cache. Each cache can be used once.</source>
+        <translation>Камни скатываются по тропе ниже груды. Каждую груду можно использовать один раз.</translation>
+    </message>
+    <message>
+        <source>The first troops to reach a cache claim it for their side.</source>
+        <translation>Первые войска, дошедшие до груды, захватывают её для своей стороны.</translation>
+    </message>
+    <message>
+        <source>Move troops next to stones your side holds</source>
+        <translation>Подведите войска к камням вашей стороны</translation>
+    </message>
 </context>
 <context>
     <name>HUDBottomCommander</name>
@@ -10983,6 +11011,21 @@ Build time: %3s</source>
     <message>
         <source>%1 %2/%3</source>
         <translation>%1 %2/%3</translation>
+    </message>
+</context>
+<context>
+    <name>RockfallSystem</name>
+    <message>
+        <source>Your men hold the stones above the slope. Select troops beside them and order Roll Stones when the enemy climbs.</source>
+        <translation>Ваши люди удерживают камни над склоном. Выберите войска рядом с ними и прикажите «Скатить камни», когда враг пойдёт вверх.</translation>
+    </message>
+    <message>
+        <source>The enemy has taken your stones on the heights.</source>
+        <translation>Враг захватил ваши камни на высотах.</translation>
+    </message>
+    <message>
+        <source>Enemies are climbing below your stones. Roll them!</source>
+        <translation>Враги поднимаются под вашими камнями. Скатите их!</translation>
     </message>
 </context>
 <context>

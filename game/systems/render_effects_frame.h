@@ -1,4 +1,5 @@
 #pragma once
+#include <QQuaternion>
 #include <QVector3D>
 
 #include <cstdint>
@@ -47,6 +48,40 @@ struct ProjectileView {
   int target_owner{0};
 };
 
+struct RockfallBoulderView {
+  QVector3D position;
+  QQuaternion orientation;
+  float radius{1.0F};
+  // Settled boulders sink into the ground over their last second.
+  float sink{0.0F};
+  std::uint32_t seed{0};
+};
+
+// A stone cache waiting on the heights: boulders piled behind a timber crib.
+struct RockfallCacheView {
+  QVector3D position;
+  // Unit vector along the ground towards the slope the stones will go down.
+  QVector3D downhill;
+  QVector3D zone_target;
+  float zone_radius{0.0F};
+  float boulder_radius{0.55F};
+  int boulders_left{0};
+  int owner_id{-1};
+  // 0..1 while soldiers heave at the pile; negative otherwise.
+  float push_progress{-1.0F};
+  // Hostile troops are on the slope below.
+  bool threatened{false};
+  // Still waiting to be rolled; false once the stones are going.
+  bool armed{true};
+  std::uint32_t seed{0};
+};
+
+struct RockfallDustView {
+  QVector3D position;
+  float scale{1.0F};
+  float age{0.0F};
+};
+
 struct RenderEffectsFrame {
   std::vector<ArrowInstance> arrows;
   std::vector<HealingBeamView> healing_beams;
@@ -55,6 +90,9 @@ struct RenderEffectsFrame {
   std::vector<ProjectileImpactEvent> projectile_impacts;
   std::vector<int> impact_attacker_owners;
   std::vector<int> impact_target_owners;
+  std::vector<RockfallBoulderView> rockfall_boulders;
+  std::vector<RockfallCacheView> rockfall_caches;
+  std::vector<RockfallDustView> rockfall_dust;
 };
 
 } // namespace Game::Systems

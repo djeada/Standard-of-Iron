@@ -4,6 +4,7 @@
 #include "game/mission/campaign_manager.h"
 #include "game/session/session_context.h"
 #include "game/systems/match_snapshot.h"
+#include "game/systems/rockfall_system.h"
 #include "game/systems/victory_service.h"
 #include "game/util/asset_text.h"
 
@@ -76,13 +77,23 @@ void MissionWaveRuntime::restore(const MissionWaveBinding& binding,
   }
 }
 
-auto MissionWaveRuntime::fire_due_events() -> QStringList {
+auto MissionWaveRuntime::fire_due_events(Engine::Core::World& world) -> QStringList {
   QStringList announcements;
   for (auto& event : m_events) {
     if (event.fired || m_elapsed < static_cast<double>(event.trigger_time)) {
       continue;
     }
     event.fired = true;
+    if (!event.rockfall_trap.isEmpty()) {
+      auto* rockfall = world.get_system<Game::Systems::RockfallSystem>();
+      if (rockfall == nullptr || !rockfall->trigger(event.rockfall_trap)) {
+        qWarning() << "Mission rockfall trap" << event.rockfall_trap
+                   << "is unknown or not armed";
+      }
+    }
+    if (event.text.isEmpty()) {
+      continue;
+    }
     announcements.append(
         Game::Util::tr_asset(Game::Util::k_missions_context, event.text));
   }
@@ -99,7 +110,7 @@ auto MissionWaveRuntime::advance(const MissionWaveBinding& binding,
   }
 
   m_elapsed += static_cast<double>(delta_seconds);
-  effects.announcements = fire_due_events();
+  effects.announcements = fire_due_events(*binding.world);
 
   if (m_waves.empty()) {
     return effects;
