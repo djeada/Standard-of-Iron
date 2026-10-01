@@ -18,7 +18,9 @@
 #include "horse_spearman.h"
 #include "horse_swordsman.h"
 #include "marketplace.h"
+#include "ram.h"
 #include "sheep.h"
+#include "siege_tower.h"
 #include "skeleton_archer.h"
 #include "skeleton_swordsman.h"
 #include "spearman.h"
@@ -126,6 +128,16 @@ void register_built_in_units(UnitFactoryRegistry& reg) {
   reg.register_factory(SpawnType::Ballista,
                        [](Engine::Core::World& world, const SpawnParams& params) {
                          return Ballista::Create(world, params);
+                       });
+
+  reg.register_factory(SpawnType::Ram,
+                       [](Engine::Core::World& world, const SpawnParams& params) {
+                         return Ram::Create(world, params);
+                       });
+
+  reg.register_factory(SpawnType::SiegeTower,
+                       [](Engine::Core::World& world, const SpawnParams& params) {
+                         return SiegeTower::Create(world, params);
                        });
 
   reg.register_factory(SpawnType::Elephant,

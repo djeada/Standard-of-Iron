@@ -3047,6 +3047,22 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
         <source>Gathering, building and recruiting are all under way.</source>
         <translation>Toplama, inşa ve devşirme birlikte sürüyor.</translation>
     </message>
+    <message>
+        <source>Battering Ram</source>
+        <translation>Koç Başı</translation>
+    </message>
+    <message>
+        <source>Siege Tower</source>
+        <translation>Kuşatma Kulesi</translation>
+    </message>
+    <message>
+        <source>Roofed siege engine that breaks gates and walls.</source>
+        <translation>Kapıları ve surları yıkan çatılı kuşatma makinesi.</translation>
+    </message>
+    <message>
+        <source>Carries infantry to a wall and lets them off on top.</source>
+        <translation>Piyadeleri surun dibine taşır ve üstüne çıkarır.</translation>
+    </message>
 </context>
 <context>
     <name>EconomyHelpPanel</name>
@@ -10462,6 +10478,46 @@ Geniş görüş ve dayanıklı bir yerleşim çapası</translation>
         <source>Ask %1 for %2 %3. A generous commander with plenty to spare says yes; a warlike or poor one keeps it.</source>
         <translation>%1 komutanından %2 %3 iste. Fazlası olan cömert bir komutan kabul eder; savaşçı ya da yoksul olan vermez.</translation>
     </message>
+    <message>
+        <source>Battering Ram</source>
+        <translation>Koç Başı</translation>
+    </message>
+    <message>
+        <source>Gate-breaking siege engine
+Immune to most arrows</source>
+        <translation>Kapı kıran kuşatma makinesi
+Okların çoğuna karşı dayanıklı</translation>
+    </message>
+    <message>
+        <source>Siege Tower</source>
+        <translation>Kuşatma Kulesi</translation>
+    </message>
+    <message>
+        <source>Carries infantry onto enemy walls
+Docks at a wall</source>
+        <translation>Piyadeleri düşman surlarına taşır
+Bir surun yanına kenetlenir</translation>
+    </message>
+    <message>
+        <source>Build Battering Ram
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>Koç başı inşa et
+%1
+Maliyet: %2
+İnşa süresi: %3 sn</translation>
+    </message>
+    <message>
+        <source>Build Siege Tower
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>Kuşatma kulesi inşa et
+%1
+Maliyet: %2
+İnşa süresi: %3 sn</translation>
+    </message>
 </context>
 <context>
     <name>ProductionViewModel</name>
@@ -12943,6 +12999,62 @@ Geniş görüş ve dayanıklı bir yerleşim çapası</translation>
     <message>
         <source>Wins the straight infantry fight against spears, and overruns unescorted siege in seconds.</source>
         <translation>Mızraklara karşı düz piyade çarpışmasını kazanır ve muhafızsız kuşatmayı saniyeler içinde ezer.</translation>
+    </message>
+    <message>
+        <source>Battering Ram</source>
+        <translation>Koç Başı</translation>
+    </message>
+    <message>
+        <source>Siege Tower</source>
+        <translation>Kuşatma Kulesi</translation>
+    </message>
+    <message>
+        <source>A tower rolled up to the curtain turned a wall from a barrier into a road.</source>
+        <translation>Surun dibine yuvarlanan kule, duvarı bir engelden yola çevirirdi.</translation>
+    </message>
+    <message>
+        <source>Aries</source>
+        <translation>Aries</translation>
+    </message>
+    <message>
+        <source>Assault tower</source>
+        <translation>Hücum kulesi</translation>
+    </message>
+    <message>
+        <source>Carries a section of infantry up to the wall-top and lets them off beside the defenders.</source>
+        <translation>Bir piyade müfrezesini sur tepesine çıkarır ve savunmacıların yanına indirir.</translation>
+    </message>
+    <message>
+        <source>Gate breaker</source>
+        <translation>Kapı kırıcı</translation>
+    </message>
+    <message>
+        <source>Rams were hung from a timber frame and roofed in wet hides so the crew could pound a gate while the defenders burned and shot in vain.</source>
+        <translation>Koç başları bir ahşap çerçeveye asılır ve ıslak postlarla örtülürdü; savunmacılar boşuna ateş edip ok atarken mürettebat kapıyı döverdi.</translation>
+    </message>
+    <message>
+        <source>Shrugs off arrows beneath its roof and splinters gates and walls far faster than any infantry.</source>
+        <translation>Çatısı altında okları savuşturur; kapıları ve surları herhangi bir piyadeden çok daha hızlı parçalar.</translation>
+    </message>
+    <message>
+        <source>Slow, blind to what is beside it, and helpless once swordsmen reach the crew.</source>
+        <translation>Yavaş, yanındakini göremez ve kılıçlılar mürettebata ulaştığında çaresizdir.</translation>
+    </message>
+    <message>
+        <source>The ram&apos;s crew worked under a roof of green hides, deaf to everything but the beat of the beam on the gate.</source>
+        <translation>Koç başı mürettebatı yeşil postlardan bir çatı altında çalışır, kapıya inen kirişin vuruşundan başka bir şey duymazdı.</translation>
+    </message>
+    <message>
+        <source>Towers taller than the wall were pushed against the curtain so a drawbridge could drop onto the parapet.</source>
+        <translation>Surdan yüksek kuleler sura doğru itilir, böylece bir köprü korkuluğun üzerine indirilirdi.</translation>
+    </message>
+    <message>
+        <source>Turris</source>
+        <translation>Turris</translation>
+    </message>
+    <message>
+        <source>Very slow, and a tall target that fire and stone-throwers bring down.</source>
+        <translation>Çok yavaştır; ateş ve taş atanların indirdiği uzun bir hedeftir.</translation>
     </message>
 </context>
 <context>

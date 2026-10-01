@@ -95,8 +95,7 @@ auto BuilderBehavior::resolve_site(const AISnapshot& snapshot,
     return site;
   }
 
-  if (site.building == BUILDING_TYPE_CATAPULT ||
-      site.building == BUILDING_TYPE_BALLISTA) {
+  if (is_siege_engine_building(site.building)) {
     m_ledger.defer(site.building, snapshot.game_time + k_engine_site_retry_seconds);
   }
   site.building = nullptr;

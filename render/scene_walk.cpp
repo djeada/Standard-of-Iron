@@ -132,6 +132,8 @@ auto unit_should_emit_rigged_body(Game::Units::SpawnType spawn_type) noexcept ->
   switch (spawn_type) {
   case Game::Units::SpawnType::Catapult:
   case Game::Units::SpawnType::Ballista:
+  case Game::Units::SpawnType::Ram:
+  case Game::Units::SpawnType::SiegeTower:
     return false;
   default:
     return Game::Units::is_troop_spawn(spawn_type);
@@ -172,7 +174,10 @@ float get_unit_base_cull_radius(Game::Units::SpawnType spawn_type) {
   case Game::Units::SpawnType::HorseSpearman:
   case Game::Units::SpawnType::Catapult:
   case Game::Units::SpawnType::Ballista:
+  case Game::Units::SpawnType::Ram:
     return 4.0F;
+  case Game::Units::SpawnType::SiegeTower:
+    return 7.0F;
   case Game::Units::SpawnType::Elephant:
   case Game::Units::SpawnType::DefenseTower:
     return 5.0F;

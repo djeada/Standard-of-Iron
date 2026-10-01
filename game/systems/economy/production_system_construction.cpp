@@ -43,6 +43,12 @@ auto spawn_type_for_product(const std::string& product_type)
   if (product_type == "ballista") {
     return SpawnType::Ballista;
   }
+  if (product_type == "ram") {
+    return SpawnType::Ram;
+  }
+  if (product_type == "siege_tower") {
+    return SpawnType::SiegeTower;
+  }
   if (product_type == "barracks") {
     return SpawnType::Barracks;
   }

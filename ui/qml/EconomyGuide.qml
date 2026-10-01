@@ -60,6 +60,10 @@ QtObject {
             return qsTr("Catapult");
         case "ballista":
             return qsTr("Ballista");
+        case "ram":
+            return qsTr("Battering Ram");
+        case "siege_tower":
+            return qsTr("Siege Tower");
         case "archer":
             return qsTr("Archer");
         case "swordsman":
@@ -106,6 +110,10 @@ QtObject {
             return qsTr("Long-range siege engine, best against structures.");
         case "ballista":
             return qsTr("Precise siege engine, best against units.");
+        case "ram":
+            return qsTr("Roofed siege engine that breaks gates and walls.");
+        case "siege_tower":
+            return qsTr("Carries infantry to a wall and lets them off on top.");
         }
         return "";
     }

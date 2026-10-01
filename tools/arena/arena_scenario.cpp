@@ -1061,6 +1061,8 @@ struct ArenaScenarioRunner::Impl {
   QHash<QString, bool> bridge_traversal_seen;
   QHash<QString, bool> gate_seen;
   QHash<QString, bool> gate_opened_seen;
+  QHash<QString, bool> tower_docked_seen;
+  bool wall_walker_seen{false};
   QHash<QString, BridgeAlignmentObservation> bridge_alignment;
   QHash<QString, float> initial_elevation;
   QHash<QString, float> maximum_elevation;
@@ -3087,6 +3089,11 @@ struct ArenaScenarioRunner::Impl {
       if (gate->open_amount >= Engine::Core::GateComponent::k_passable_open_amount) {
         gate_opened_seen[group] = true;
       }
+    }
+    if (auto const* tower = world.try_get<Engine::Core::SiegeTowerComponent>(entity_id);
+        tower != nullptr &&
+        tower->state == Engine::Core::SiegeTowerComponent::State::Docked) {
+      tower_docked_seen[group] = true;
     }
     if (auto const* rpg = world.try_get<Engine::Core::RpgHealthComponent>(entity_id);
         rpg != nullptr && rpg->active) {
@@ -6048,6 +6055,19 @@ struct ArenaScenarioRunner::Impl {
                         .arg(expectation.group));
         }
         break;
+      case ArenaExpectationKind::SiegeTowerDocked:
+        if (!tower_docked_seen.value(expectation.group, false)) {
+          add_issue(QStringLiteral("tower_never_docked"),
+                    QStringLiteral("%1 never docked against an enemy wall")
+                        .arg(expectation.group));
+        }
+        break;
+      case ArenaExpectationKind::WallWalkerObserved:
+        if (!wall_walker_seen) {
+          add_issue(QStringLiteral("no_wall_walker"),
+                    QStringLiteral("no troop was ever seen on a wall-top walkway"));
+        }
+        break;
       case ArenaExpectationKind::GateRemainedClosed:
         if (!gate_seen.value(expectation.group, false)) {
           add_issue(
@@ -7042,6 +7062,15 @@ void ArenaScenarioRunner::observe_rendered_frame(
       m_impl->observe_soldiers(entity_id, group.name, frame);
     }
     m_impl->observe_bridge_centerline_alignment(group.name);
+  }
+  if (!m_impl->wall_walker_seen) {
+    for (auto [walker_id, walker] :
+         m_impl->world.view<const Engine::Core::WallWalkerComponent>()) {
+      (void)walker_id;
+      (void)walker;
+      m_impl->wall_walker_seen = true;
+      break;
+    }
   }
   m_impl->observe_rpg_locomotion_presentation(frame);
   m_impl->observe_rpg_swing_cadence(frame);

@@ -249,6 +249,48 @@ void read_gate(Entity* entity, const QJsonObject& json) {
   }
 }
 
+void write_siege_tower(const Entity* entity, QJsonObject& entity_obj) {
+  if (const auto* tower = entity->get_component<SiegeTowerComponent>()) {
+    QJsonObject obj;
+    obj["state"] = static_cast<int>(tower->state);
+    obj["docked_wall_id"] = static_cast<qint64>(tower->docked_wall_id);
+    obj["garrison_aboard"] = tower->garrison_aboard;
+    obj["ramp"] = static_cast<double>(tower->ramp);
+    entity_obj["siege_tower"] = obj;
+  }
+}
+
+void read_siege_tower(Entity* entity, const QJsonObject& json) {
+  if (json.contains("siege_tower")) {
+    const auto obj = json["siege_tower"].toObject();
+    auto* tower = entity->add_component<SiegeTowerComponent>();
+    tower->state = static_cast<SiegeTowerComponent::State>(
+        obj["state"].toInt(static_cast<int>(SiegeTowerComponent::State::Rolling)));
+    tower->docked_wall_id = static_cast<EntityID>(obj["docked_wall_id"].toInteger(0));
+    tower->garrison_aboard = obj["garrison_aboard"].toBool(true);
+    tower->ramp = static_cast<float>(obj["ramp"].toDouble(0.0));
+  }
+}
+
+void write_wall_walker(const Entity* entity, QJsonObject& entity_obj) {
+  if (const auto* walker = entity->get_component<WallWalkerComponent>()) {
+    QJsonObject obj;
+    obj["wall_id"] = static_cast<qint64>(walker->wall_id);
+    obj["elevation"] = static_cast<double>(walker->elevation);
+    entity_obj["wall_walker"] = obj;
+  }
+}
+
+void read_wall_walker(Entity* entity, const QJsonObject& json) {
+  if (json.contains("wall_walker")) {
+    const auto obj = json["wall_walker"].toObject();
+    auto* walker = entity->add_component<WallWalkerComponent>();
+    walker->wall_id = static_cast<EntityID>(obj["wall_id"].toInteger(0));
+    walker->elevation = static_cast<float>(
+        obj["elevation"].toDouble(WallWalkerComponent::k_wall_top_height));
+  }
+}
+
 } // namespace
 
 void write_structures(const Entity* entity, QJsonObject& entity_obj) {
@@ -260,6 +302,8 @@ void write_structures(const Entity* entity, QJsonObject& entity_obj) {
   write_wall_construction_site(entity, entity_obj);
   write_dismantle_site(entity, entity_obj);
   write_gate(entity, entity_obj);
+  write_siege_tower(entity, entity_obj);
+  write_wall_walker(entity, entity_obj);
 }
 
 void read_structures(Entity* entity, const QJsonObject& json) {
@@ -271,6 +315,8 @@ void read_structures(Entity* entity, const QJsonObject& json) {
   read_wall_construction_site(entity, json);
   read_dismantle_site(entity, json);
   read_gate(entity, json);
+  read_siege_tower(entity, json);
+  read_wall_walker(entity, json);
 }
 
 } // namespace Engine::Core::EntityCodec

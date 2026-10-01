@@ -3047,6 +3047,22 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <source>Watches over a wide stretch of ground, holds a settlement together, and takes in healers.</source>
         <translation>Watches over a wide stretch of ground, holds a settlement together, and takes in healers.</translation>
     </message>
+    <message>
+        <source>Battering Ram</source>
+        <translation>Battering Ram</translation>
+    </message>
+    <message>
+        <source>Siege Tower</source>
+        <translation>Siege Tower</translation>
+    </message>
+    <message>
+        <source>Roofed siege engine that breaks gates and walls.</source>
+        <translation>Roofed siege engine that breaks gates and walls.</translation>
+    </message>
+    <message>
+        <source>Carries infantry to a wall and lets them off on top.</source>
+        <translation>Carries infantry to a wall and lets them off on top.</translation>
+    </message>
 </context>
 <context>
     <name>EconomyHelpPanel</name>
@@ -10465,6 +10481,46 @@ Builders reap it for the food that recruits civilians</translation>
         <source>Ask %1 for %2 %3. A generous commander with plenty to spare says yes; a warlike or poor one keeps it.</source>
         <translation>Ask %1 for %2 %3. A generous commander with plenty to spare says yes; a warlike or poor one keeps it.</translation>
     </message>
+    <message>
+        <source>Battering Ram</source>
+        <translation>Battering Ram</translation>
+    </message>
+    <message>
+        <source>Gate-breaking siege engine
+Immune to most arrows</source>
+        <translation>Gate-breaking siege engine
+Immune to most arrows</translation>
+    </message>
+    <message>
+        <source>Siege Tower</source>
+        <translation>Siege Tower</translation>
+    </message>
+    <message>
+        <source>Carries infantry onto enemy walls
+Docks at a wall</source>
+        <translation>Carries infantry onto enemy walls
+Docks at a wall</translation>
+    </message>
+    <message>
+        <source>Build Battering Ram
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>Build Battering Ram
+%1
+Cost: %2
+Build time: %3s</translation>
+    </message>
+    <message>
+        <source>Build Siege Tower
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>Build Siege Tower
+%1
+Cost: %2
+Build time: %3s</translation>
+    </message>
 </context>
 <context>
     <name>ProductionViewModel</name>
@@ -12947,6 +13003,62 @@ Builders reap it for the food that recruits civilians</translation>
     <message>
         <source>Worker</source>
         <translation>Worker</translation>
+    </message>
+    <message>
+        <source>Battering Ram</source>
+        <translation>Battering Ram</translation>
+    </message>
+    <message>
+        <source>Siege Tower</source>
+        <translation>Siege Tower</translation>
+    </message>
+    <message>
+        <source>A tower rolled up to the curtain turned a wall from a barrier into a road.</source>
+        <translation>A tower rolled up to the curtain turned a wall from a barrier into a road.</translation>
+    </message>
+    <message>
+        <source>Aries</source>
+        <translation>Aries</translation>
+    </message>
+    <message>
+        <source>Assault tower</source>
+        <translation>Assault tower</translation>
+    </message>
+    <message>
+        <source>Carries a section of infantry up to the wall-top and lets them off beside the defenders.</source>
+        <translation>Carries a section of infantry up to the wall-top and lets them off beside the defenders.</translation>
+    </message>
+    <message>
+        <source>Gate breaker</source>
+        <translation>Gate breaker</translation>
+    </message>
+    <message>
+        <source>Rams were hung from a timber frame and roofed in wet hides so the crew could pound a gate while the defenders burned and shot in vain.</source>
+        <translation>Rams were hung from a timber frame and roofed in wet hides so the crew could pound a gate while the defenders burned and shot in vain.</translation>
+    </message>
+    <message>
+        <source>Shrugs off arrows beneath its roof and splinters gates and walls far faster than any infantry.</source>
+        <translation>Shrugs off arrows beneath its roof and splinters gates and walls far faster than any infantry.</translation>
+    </message>
+    <message>
+        <source>Slow, blind to what is beside it, and helpless once swordsmen reach the crew.</source>
+        <translation>Slow, blind to what is beside it, and helpless once swordsmen reach the crew.</translation>
+    </message>
+    <message>
+        <source>The ram&apos;s crew worked under a roof of green hides, deaf to everything but the beat of the beam on the gate.</source>
+        <translation>The ram&apos;s crew worked under a roof of green hides, deaf to everything but the beat of the beam on the gate.</translation>
+    </message>
+    <message>
+        <source>Towers taller than the wall were pushed against the curtain so a drawbridge could drop onto the parapet.</source>
+        <translation>Towers taller than the wall were pushed against the curtain so a drawbridge could drop onto the parapet.</translation>
+    </message>
+    <message>
+        <source>Turris</source>
+        <translation>Turris</translation>
+    </message>
+    <message>
+        <source>Very slow, and a tall target that fire and stone-throwers bring down.</source>
+        <translation>Very slow, and a tall target that fire and stone-throwers bring down.</translation>
     </message>
 </context>
 <context>

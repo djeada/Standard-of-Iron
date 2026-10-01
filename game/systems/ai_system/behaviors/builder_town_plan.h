@@ -27,6 +27,8 @@ struct SettlementAssessment {
   SettlementTargets targets;
   int target_catapults = 0;
   int siege_count = 0;
+  int ram_count = 0;
+  int target_rams = 0;
   const char* siege_engine = nullptr;
   const TownPlan* town_plan = nullptr;
 };

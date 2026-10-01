@@ -3047,6 +3047,22 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <source>Watches over a wide stretch of ground, holds a settlement together, and takes in healers.</source>
         <translation>Überblickt weites Gelände, hält eine Siedlung zusammen und nimmt Heiler auf.</translation>
     </message>
+    <message>
+        <source>Battering Ram</source>
+        <translation>Rammbock</translation>
+    </message>
+    <message>
+        <source>Siege Tower</source>
+        <translation>Belagerungsturm</translation>
+    </message>
+    <message>
+        <source>Roofed siege engine that breaks gates and walls.</source>
+        <translation>Überdachte Belagerungsmaschine, die Tore und Mauern bricht.</translation>
+    </message>
+    <message>
+        <source>Carries infantry to a wall and lets them off on top.</source>
+        <translation>Bringt Infanterie an eine Mauer und setzt sie oben ab.</translation>
+    </message>
 </context>
 <context>
     <name>EconomyHelpPanel</name>
@@ -10465,6 +10481,46 @@ Baumeister ernten es als Nahrung, die Zivilisten rekrutiert</translation>
         <source>Ask %1 for %2 %3. A generous commander with plenty to spare says yes; a warlike or poor one keeps it.</source>
         <translation>%1 um %2 %3 bitten. Ein großzügiger Feldherr mit reichlich Vorrat sagt ja; ein kriegerischer oder armer behält es.</translation>
     </message>
+    <message>
+        <source>Battering Ram</source>
+        <translation>Rammbock</translation>
+    </message>
+    <message>
+        <source>Gate-breaking siege engine
+Immune to most arrows</source>
+        <translation>Torbrechende Belagerungsmaschine
+Schützt vor den meisten Pfeilen</translation>
+    </message>
+    <message>
+        <source>Siege Tower</source>
+        <translation>Belagerungsturm</translation>
+    </message>
+    <message>
+        <source>Carries infantry onto enemy walls
+Docks at a wall</source>
+        <translation>Trägt Infanterie auf feindliche Mauern
+Dockt an einer Mauer an</translation>
+    </message>
+    <message>
+        <source>Build Battering Ram
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>Rammbock bauen
+%1
+Kosten: %2
+Bauzeit: %3s</translation>
+    </message>
+    <message>
+        <source>Build Siege Tower
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>Belagerungsturm bauen
+%1
+Kosten: %2
+Bauzeit: %3s</translation>
+    </message>
 </context>
 <context>
     <name>ProductionViewModel</name>
@@ -12947,6 +13003,62 @@ Baumeister ernten es als Nahrung, die Zivilisten rekrutiert</translation>
     <message>
         <source>Worker</source>
         <translation>Arbeiter</translation>
+    </message>
+    <message>
+        <source>Battering Ram</source>
+        <translation>Rammbock</translation>
+    </message>
+    <message>
+        <source>Siege Tower</source>
+        <translation>Belagerungsturm</translation>
+    </message>
+    <message>
+        <source>A tower rolled up to the curtain turned a wall from a barrier into a road.</source>
+        <translation>Ein an die Mauer gerollter Turm machte aus einer Schranke eine Straße.</translation>
+    </message>
+    <message>
+        <source>Aries</source>
+        <translation>Aries</translation>
+    </message>
+    <message>
+        <source>Assault tower</source>
+        <translation>Sturmturm</translation>
+    </message>
+    <message>
+        <source>Carries a section of infantry up to the wall-top and lets them off beside the defenders.</source>
+        <translation>Trägt einen Infanterietrupp auf die Mauerkrone und setzt ihn neben den Verteidigern ab.</translation>
+    </message>
+    <message>
+        <source>Gate breaker</source>
+        <translation>Torbrecher</translation>
+    </message>
+    <message>
+        <source>Rams were hung from a timber frame and roofed in wet hides so the crew could pound a gate while the defenders burned and shot in vain.</source>
+        <translation>Rammböcke hingen in einem Holzgerüst und waren mit nassen Häuten gedeckt, damit die Mannschaft ein Tor bearbeiten konnte, während die Verteidiger vergeblich Feuer und Pfeile einsetzten.</translation>
+    </message>
+    <message>
+        <source>Shrugs off arrows beneath its roof and splinters gates and walls far faster than any infantry.</source>
+        <translation>Hält unter seinem Dach Pfeile ab und zerschmettert Tore und Mauern weit schneller als jede Infanterie.</translation>
+    </message>
+    <message>
+        <source>Slow, blind to what is beside it, and helpless once swordsmen reach the crew.</source>
+        <translation>Langsam, blind für das Geschehen neben sich und hilflos, sobald Schwertkämpfer die Mannschaft erreichen.</translation>
+    </message>
+    <message>
+        <source>The ram&apos;s crew worked under a roof of green hides, deaf to everything but the beat of the beam on the gate.</source>
+        <translation>Die Mannschaft des Rammbocks arbeitete unter einem Dach aus grünen Häuten, taub für alles außer dem Schlag des Balkens gegen das Tor.</translation>
+    </message>
+    <message>
+        <source>Towers taller than the wall were pushed against the curtain so a drawbridge could drop onto the parapet.</source>
+        <translation>Türme, höher als die Mauer, wurden an den Mauerzug geschoben, damit eine Fallbrücke auf die Brüstung herabgelassen werden konnte.</translation>
+    </message>
+    <message>
+        <source>Turris</source>
+        <translation>Turris</translation>
+    </message>
+    <message>
+        <source>Very slow, and a tall target that fire and stone-throwers bring down.</source>
+        <translation>Sehr langsam und ein hohes Ziel, das Feuer und Steinwerfer zu Fall bringen.</translation>
     </message>
 </context>
 <context>

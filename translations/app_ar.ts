@@ -3047,6 +3047,22 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>Watches over a wide stretch of ground, holds a settlement together, and takes in healers.</source>
         <translation>يشرف على مساحة واسعة من الأرض، ويحافظ على تماسك المستوطنة، ويستقبل المعالجين.</translation>
     </message>
+    <message>
+        <source>Battering Ram</source>
+        <translation>كبش الهدم</translation>
+    </message>
+    <message>
+        <source>Siege Tower</source>
+        <translation>برج الحصار</translation>
+    </message>
+    <message>
+        <source>Roofed siege engine that breaks gates and walls.</source>
+        <translation>آلة حصار مسقوفة تحطم الأبواب والأسوار.</translation>
+    </message>
+    <message>
+        <source>Carries infantry to a wall and lets them off on top.</source>
+        <translation>ينقل المشاة إلى سور وينزلهم على قمته.</translation>
+    </message>
 </context>
 <context>
     <name>EconomyHelpPanel</name>
@@ -10477,6 +10493,46 @@ Builders reap it for the food that recruits civilians</source>
         <source>Ask %1 for %2 %3. A generous commander with plenty to spare says yes; a warlike or poor one keeps it.</source>
         <translation>اطلب من %1 ‏%2 %3. القائد الكريم ذو الفائض يوافق؛ والمحارب أو الفقير يحتفظ به.</translation>
     </message>
+    <message>
+        <source>Battering Ram</source>
+        <translation>كبش الهدم</translation>
+    </message>
+    <message>
+        <source>Gate-breaking siege engine
+Immune to most arrows</source>
+        <translation>آلة حصار تحطم الأبواب
+محصنة ضد معظم السهام</translation>
+    </message>
+    <message>
+        <source>Siege Tower</source>
+        <translation>برج الحصار</translation>
+    </message>
+    <message>
+        <source>Carries infantry onto enemy walls
+Docks at a wall</source>
+        <translation>ينقل المشاة إلى أسوار العدو
+يلتحم بالسور</translation>
+    </message>
+    <message>
+        <source>Build Battering Ram
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>بناء كبش الهدم
+%1
+التكلفة: %2
+مدة البناء: %3 ث</translation>
+    </message>
+    <message>
+        <source>Build Siege Tower
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>بناء برج الحصار
+%1
+التكلفة: %2
+مدة البناء: %3 ث</translation>
+    </message>
 </context>
 <context>
     <name>ProductionViewModel</name>
@@ -12963,6 +13019,62 @@ Builders reap it for the food that recruits civilians</source>
     <message>
         <source>Worker</source>
         <translation>عامل</translation>
+    </message>
+    <message>
+        <source>Battering Ram</source>
+        <translation>كبش الهدم</translation>
+    </message>
+    <message>
+        <source>Siege Tower</source>
+        <translation>برج الحصار</translation>
+    </message>
+    <message>
+        <source>A tower rolled up to the curtain turned a wall from a barrier into a road.</source>
+        <translation>برج يُدفع إلى السور حوّل الجدار من حاجز إلى طريق.</translation>
+    </message>
+    <message>
+        <source>Aries</source>
+        <translation>Aries</translation>
+    </message>
+    <message>
+        <source>Assault tower</source>
+        <translation>برج الهجوم</translation>
+    </message>
+    <message>
+        <source>Carries a section of infantry up to the wall-top and lets them off beside the defenders.</source>
+        <translation>ينقل فصيلاً من المشاة إلى قمة السور وينزلهم بجانب المدافعين.</translation>
+    </message>
+    <message>
+        <source>Gate breaker</source>
+        <translation>محطم الأبواب</translation>
+    </message>
+    <message>
+        <source>Rams were hung from a timber frame and roofed in wet hides so the crew could pound a gate while the defenders burned and shot in vain.</source>
+        <translation>كانت الكباش تُعلّق في إطار خشبي وتُسقّف بجلود مبللة ليدق الطاقم البوابة بينما يحرق المدافعون ويرمون عبثاً.</translation>
+    </message>
+    <message>
+        <source>Shrugs off arrows beneath its roof and splinters gates and walls far faster than any infantry.</source>
+        <translation>يتحمل السهام تحت سقفه ويحطم الأبواب والأسوار أسرع بكثير من أي مشاة.</translation>
+    </message>
+    <message>
+        <source>Slow, blind to what is beside it, and helpless once swordsmen reach the crew.</source>
+        <translation>بطيء، أعمى عما بجانبه، وعاجز متى وصل السيافون إلى طاقمه.</translation>
+    </message>
+    <message>
+        <source>The ram&apos;s crew worked under a roof of green hides, deaf to everything but the beat of the beam on the gate.</source>
+        <translation>عمل طاقم الكبش تحت سقف من الجلود الخضراء، لا يسمع شيئاً سوى دقات العارضة على البوابة.</translation>
+    </message>
+    <message>
+        <source>Towers taller than the wall were pushed against the curtain so a drawbridge could drop onto the parapet.</source>
+        <translation>كانت تُدفع أبراج أعلى من السور نحوه لتسقط جسر على الشرفة.</translation>
+    </message>
+    <message>
+        <source>Turris</source>
+        <translation>Turris</translation>
+    </message>
+    <message>
+        <source>Very slow, and a tall target that fire and stone-throwers bring down.</source>
+        <translation>بطيء جداً وهدف عالٍ يسقطه النار وقاذفو الحجارة.</translation>
     </message>
 </context>
 <context>

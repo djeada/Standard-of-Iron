@@ -35,7 +35,7 @@ namespace {
 using Game::Systems::ResourceAmounts;
 using Game::Systems::ResourceType;
 
-constexpr std::array<std::string_view, 9> k_buildable_items = {
+constexpr std::array<std::string_view, 11> k_buildable_items = {
     "home",
     "farm",
     "defense_tower",
@@ -45,6 +45,8 @@ constexpr std::array<std::string_view, 9> k_buildable_items = {
     "wall_gate",
     "catapult",
     "ballista",
+    "ram",
+    "siege_tower",
 };
 
 constexpr int k_home_reserve_bonus =
@@ -208,6 +210,8 @@ auto is_barracks_recruit(Game::Units::TroopType type) -> bool {
   switch (type) {
   case Game::Units::TroopType::Catapult:
   case Game::Units::TroopType::Ballista:
+  case Game::Units::TroopType::Ram:
+  case Game::Units::TroopType::SiegeTower:
   case Game::Units::TroopType::Civilian:
     return false;
   default:

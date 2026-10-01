@@ -223,6 +223,8 @@ add_library(
     units/builder.cpp
     units/catapult.cpp
     units/ballista.cpp
+    units/ram.cpp
+    units/siege_tower.cpp
     units/elephant.cpp
     units/civilian.cpp
     units/building_spawn_setup.cpp
@@ -512,6 +514,7 @@ add_library(
     systems/wall_plan_service.cpp
     systems/cleanup_system.cpp
     systems/gate_system.cpp
+    systems/siege_tower_system.cpp
     systems/home_system.cpp
     systems/rain_manager.cpp
     session/selection_service.cpp

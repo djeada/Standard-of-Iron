@@ -129,8 +129,7 @@ auto planned_settlement_offset(const AIContext& context,
     return QVector3D{
         -10.0F + static_cast<float>(slot) * 2.0F, 0.0F, carthaginian ? -13.0F : -14.0F};
   }
-  if (building_type == BUILDING_TYPE_CATAPULT ||
-      building_type == BUILDING_TYPE_BALLISTA) {
+  if (is_siege_engine_building(building_type)) {
     return expanding_ring_offset(context, construction_index, 8, 12.0F, 5.0F);
   }
   const float angle = static_cast<float>(construction_index) * 0.8F;

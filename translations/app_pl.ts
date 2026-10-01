@@ -3047,6 +3047,22 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
         <source>Gathering, building and recruiting are all under way.</source>
         <translation>Zbieranie, budowanie i rekrutacja idą pełną parą.</translation>
     </message>
+    <message>
+        <source>Battering Ram</source>
+        <translation>Taran</translation>
+    </message>
+    <message>
+        <source>Siege Tower</source>
+        <translation>Wieża oblężnicza</translation>
+    </message>
+    <message>
+        <source>Roofed siege engine that breaks gates and walls.</source>
+        <translation>Osłonięta maszyna oblężnicza łamiąca bramy i mury.</translation>
+    </message>
+    <message>
+        <source>Carries infantry to a wall and lets them off on top.</source>
+        <translation>Dowozi piechotę pod mur i wysadza ją na szczycie.</translation>
+    </message>
 </context>
 <context>
     <name>EconomyHelpPanel</name>
@@ -10468,6 +10484,46 @@ Szerokie pole widzenia i trwała kotwica osady</translation>
         <source>Ask %1 for %2 %3. A generous commander with plenty to spare says yes; a warlike or poor one keeps it.</source>
         <translation>Poproś %1 o %2 %3. Hojny wódz z nadwyżką się zgodzi; wojowniczy lub biedny zatrzyma wszystko.</translation>
     </message>
+    <message>
+        <source>Battering Ram</source>
+        <translation>Taran</translation>
+    </message>
+    <message>
+        <source>Gate-breaking siege engine
+Immune to most arrows</source>
+        <translation>Maszyna oblężnicza do burzenia bram
+Odporna na większość strzał</translation>
+    </message>
+    <message>
+        <source>Siege Tower</source>
+        <translation>Wieża oblężnicza</translation>
+    </message>
+    <message>
+        <source>Carries infantry onto enemy walls
+Docks at a wall</source>
+        <translation>Przenosi piechotę na wrogie mury
+Przystaje przy murze</translation>
+    </message>
+    <message>
+        <source>Build Battering Ram
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>Zbuduj taran
+%1
+Koszt: %2
+Czas budowy: %3 s</translation>
+    </message>
+    <message>
+        <source>Build Siege Tower
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>Zbuduj wieżę oblężniczą
+%1
+Koszt: %2
+Czas budowy: %3 s</translation>
+    </message>
 </context>
 <context>
     <name>ProductionViewModel</name>
@@ -12951,6 +13007,62 @@ Szerokie pole widzenia i trwała kotwica osady</translation>
     <message>
         <source>Wins the straight infantry fight against spears, and overruns unescorted siege in seconds.</source>
         <translation>Wygrywa prostą walkę piechoty z włóczniami i tratuje nieosłonięte machiny oblężnicze w kilka sekund.</translation>
+    </message>
+    <message>
+        <source>Battering Ram</source>
+        <translation>Taran</translation>
+    </message>
+    <message>
+        <source>Siege Tower</source>
+        <translation>Wieża oblężnicza</translation>
+    </message>
+    <message>
+        <source>A tower rolled up to the curtain turned a wall from a barrier into a road.</source>
+        <translation>Wieża dotoczona do muru zamieniała przeszkodę w drogę.</translation>
+    </message>
+    <message>
+        <source>Aries</source>
+        <translation>Aries</translation>
+    </message>
+    <message>
+        <source>Assault tower</source>
+        <translation>Wieża szturmowa</translation>
+    </message>
+    <message>
+        <source>Carries a section of infantry up to the wall-top and lets them off beside the defenders.</source>
+        <translation>Wnosi oddział piechoty na szczyt muru i wysadza go obok obrońców.</translation>
+    </message>
+    <message>
+        <source>Gate breaker</source>
+        <translation>Burzyciel bram</translation>
+    </message>
+    <message>
+        <source>Rams were hung from a timber frame and roofed in wet hides so the crew could pound a gate while the defenders burned and shot in vain.</source>
+        <translation>Tarany wieszano w drewnianej ramie i przykrywano mokrymi skórami, by załoga mogła walić w bramę, gdy obrońcy na próżno palili i strzelali.</translation>
+    </message>
+    <message>
+        <source>Shrugs off arrows beneath its roof and splinters gates and walls far faster than any infantry.</source>
+        <translation>Pod dachem ignoruje strzały i rozłupuje bramy oraz mury znacznie szybciej niż jakakolwiek piechota.</translation>
+    </message>
+    <message>
+        <source>Slow, blind to what is beside it, and helpless once swordsmen reach the crew.</source>
+        <translation>Powolny, ślepy na to, co dzieje się obok, i bezradny, gdy szermierze dopadną załogę.</translation>
+    </message>
+    <message>
+        <source>The ram&apos;s crew worked under a roof of green hides, deaf to everything but the beat of the beam on the gate.</source>
+        <translation>Załoga tarana pracowała pod dachem z zielonych skór, głucha na wszystko poza uderzeniami belki w bramę.</translation>
+    </message>
+    <message>
+        <source>Towers taller than the wall were pushed against the curtain so a drawbridge could drop onto the parapet.</source>
+        <translation>Wieże wyższe od muru podtaczano pod kurtynę, by opuścić pomost na parapet.</translation>
+    </message>
+    <message>
+        <source>Turris</source>
+        <translation>Turris</translation>
+    </message>
+    <message>
+        <source>Very slow, and a tall target that fire and stone-throwers bring down.</source>
+        <translation>Bardzo powolna i wysoki cel, który obalają ogień i miotacze kamieni.</translation>
     </message>
 </context>
 <context>

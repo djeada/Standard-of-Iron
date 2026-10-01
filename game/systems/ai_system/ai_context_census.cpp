@@ -225,14 +225,18 @@ auto tally_friendly_units(const AISnapshot& snapshot,
 }
 
 auto count_siege_engines(const AISnapshot& snapshot) -> int {
+  const auto is_artillery = [](Game::Units::SpawnType type) {
+    return Game::Units::is_siege_engine_spawn(type) &&
+           type != Game::Units::SpawnType::Ram &&
+           type != Game::Units::SpawnType::SiegeTower;
+  };
   int catapult_count = 0;
   for (const auto& entity : snapshot.friendly_units) {
-    if (!entity.is_building && Game::Units::is_siege_engine_spawn(entity.spawn_type)) {
+    if (!entity.is_building && is_artillery(entity.spawn_type)) {
       catapult_count++;
     }
     if (entity.builder_production.raising_a_building &&
-        Game::Units::is_siege_engine_spawn(
-            entity.builder_production.building_under_way)) {
+        is_artillery(entity.builder_production.building_under_way)) {
       catapult_count++;
     }
   }

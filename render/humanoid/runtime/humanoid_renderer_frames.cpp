@@ -5,6 +5,7 @@
 #include <memory>
 
 #include "game/core/component_core.h"
+#include "game/core/component_gameplay.h"
 #include "game/core/entity.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_config.h"
@@ -85,12 +86,18 @@ void HumanoidRendererBase::append_companion_preparation(
 }
 
 auto HumanoidRendererBase::resolve_entity_ground_offset(
-    const DrawContext&,
+    const DrawContext& ctx,
     Engine::Core::UnitComponent* unit_comp,
     Engine::Core::TransformComponent* transform_comp) const -> float {
   (void)unit_comp;
   (void)transform_comp;
 
+  if (ctx.entity != nullptr) {
+    if (const auto* walker =
+            ctx.entity->get_component<Engine::Core::WallWalkerComponent>()) {
+      return -walker->elevation;
+    }
+  }
   return 0.0F;
 }
 

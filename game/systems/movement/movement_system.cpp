@@ -154,7 +154,8 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
       movement->end_escape();
     }
   }
-  if (!movement->get_escape_active()) {
+  if (!movement->get_escape_active() &&
+      !world->has<Engine::Core::WallWalkerComponent>(id)) {
     MovementCollision::unstick_body(*entity, *transform, delta_time);
   }
 
@@ -170,6 +171,8 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     return;
   case MovementGate::BuilderBypass:
     Gates::step_builder_bypass(mover);
+    return;
+  case MovementGate::OnWall:
     return;
   default:
     Motor::drive(mover);
@@ -187,6 +190,7 @@ auto MovementSystem::access() const -> Engine::Core::SystemAccess {
                                      ElephantComponent,
                                      RpgCommanderActionComponent,
                                      BuilderProductionComponent,
+                                     WallWalkerComponent,
                                      RenderableComponent,
                                      PendingRemovalComponent>{},
                                Writes<MovementComponent,
