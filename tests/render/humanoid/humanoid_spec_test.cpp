@@ -350,9 +350,24 @@ TEST(HumanoidSpecTest, FullSpecPreservesShoulderWaistTaperAndHeadHierarchy) {
   ASSERT_NE(jaw, nullptr);
   ASSERT_NE(nose, nullptr);
 
-  EXPECT_EQ(pelvis->shape, Render::Creature::PrimitiveShape::OrientedSphere);
-  EXPECT_GT(chest->params.radius, pelvis->params.half_extents.x());
-  EXPECT_GT(pelvis->params.half_extents.x(), abdomen->params.radius);
+  ASSERT_EQ(pelvis->shape, Render::Creature::PrimitiveShape::Mesh);
+  ASSERT_NE(pelvis->custom_mesh, nullptr);
+  float top = -std::numeric_limits<float>::max();
+  for (auto const& vertex : pelvis->custom_mesh->get_vertices()) {
+    top = std::max(top, vertex.position[1]);
+  }
+  float hips = 0.0F;
+  float waist = 0.0F;
+  for (auto const& vertex : pelvis->custom_mesh->get_vertices()) {
+    float const half_width = std::abs(vertex.position[0]);
+    hips = std::max(hips, half_width);
+    if (vertex.position[1] >= top - 1.0e-4F) {
+      waist = std::max(waist, half_width);
+    }
+  }
+  EXPECT_GT(chest->params.radius, abdomen->params.radius);
+  EXPECT_GT(chest->params.radius, waist);
+  EXPECT_GT(hips, abdomen->params.radius);
   EXPECT_GT(chest->params.depth_radius, abdomen->params.depth_radius);
   EXPECT_LT(neck->params.radius, jaw->params.half_extents.x());
   EXPECT_LT(jaw->params.half_extents.x(), cranium->params.half_extents.x());

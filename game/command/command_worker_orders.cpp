@@ -152,7 +152,8 @@ void apply_auto_gather(World& world, const SetAutoGather& order) {
         builder->auto_gather_priority == builder->product_type;
     if (Game::Systems::is_gather_builder_product(builder->product_type) &&
         !builder->in_progress && !node_still_wanted) {
-      if (auto* movement = entity.get_component<Engine::Core::MovementComponent>();
+      if (auto* movement =
+              world.try_get<Engine::Core::MovementComponent>(entity.get_id());
           movement != nullptr && builder->has_construction_site) {
         movement->stop();
       }

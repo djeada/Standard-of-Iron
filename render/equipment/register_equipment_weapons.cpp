@@ -289,7 +289,7 @@ auto build_roman_sword_attachments(std::uint8_t base_role_byte)
       Render::GL::sword_make_static_attachment(roman_sword_config(), base_role_byte),
       Render::GL::scabbard_make_static_attachment(
           k_scabbard_radius,
-          humanoid_hip_l_bone(),
+          humanoid_pelvis_bone(),
           static_cast<std::uint8_t>(base_role_byte + Render::GL::k_sword_role_count)),
   };
 }
@@ -300,7 +300,7 @@ auto build_scipio_sword_attachments(std::uint8_t base_role_byte)
       Render::GL::sword_make_static_attachment(scipio_sword_config(), base_role_byte),
       Render::GL::scabbard_make_static_attachment(
           k_scabbard_radius * 1.08F,
-          humanoid_hip_l_bone(),
+          humanoid_pelvis_bone(),
           static_cast<std::uint8_t>(base_role_byte + Render::GL::k_sword_role_count)),
   };
 }
@@ -311,7 +311,7 @@ auto build_carthage_sword_attachments(std::uint8_t base_role_byte)
       Render::GL::sword_make_static_attachment(carthage_sword_config(), base_role_byte),
       Render::GL::scabbard_make_static_attachment(
           k_scabbard_radius,
-          humanoid_hip_l_bone(),
+          humanoid_pelvis_bone(),
           static_cast<std::uint8_t>(base_role_byte + Render::GL::k_sword_role_count)),
   };
 }
@@ -322,7 +322,7 @@ auto build_hannibal_sword_attachments(std::uint8_t base_role_byte)
       Render::GL::sword_make_static_attachment(hannibal_sword_config(), base_role_byte),
       Render::GL::scabbard_make_static_attachment(
           k_scabbard_radius * 1.02F,
-          humanoid_hip_l_bone(),
+          humanoid_pelvis_bone(),
           static_cast<std::uint8_t>(base_role_byte + Render::GL::k_sword_role_count)),
   };
 }

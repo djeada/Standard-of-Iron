@@ -126,8 +126,8 @@ void ArmorHeavyCarthageRenderer::submit(const ArmorHeavyCarthageConfig&,
     top = head_guard - up * (torso_r * 0.06F);
   }
 
-  QVector3D bottom = waist.origin - waist_up * (waist_r * 1.60F);
-  QVector3D chainmail_bottom = waist.origin - waist_up * (waist_r * 1.52F);
+  QVector3D bottom = waist.origin - waist_up * (waist_r * 0.30F);
+  QVector3D chainmail_bottom = waist.origin - waist_up * (waist_r * 0.36F);
 
   top += forward * (torso_r * 0.010F);
   bottom += forward * (torso_r * 0.010F);
@@ -152,13 +152,13 @@ void ArmorHeavyCarthageRenderer::submit(const ArmorHeavyCarthageConfig&,
   };
 
   std::array<QMatrix4x4, 3> const torso_layers{
-      build_torso(top, chainmail_bottom, torso_r * 1.10F, 1.07F, 1.04F),
+      build_torso(top, chainmail_bottom, torso_r * 1.10F, 1.07F, 1.38F),
       build_torso(top + forward * (torso_r * 0.02F),
                   bottom + forward * (torso_r * 0.02F),
                   torso_r * 1.16F,
                   1.10F,
-                  1.04F),
-      build_torso(top, bottom, torso_r * 1.10F, 1.05F, 1.00F),
+                  1.38F),
+      build_torso(top, bottom, torso_r * 1.10F, 1.05F, 1.30F),
   };
 
   std::array<QVector3D, 3> const palette_slots{
@@ -213,8 +213,8 @@ auto armor_heavy_carthage_make_static_attachment(std::uint16_t torso_socket_bone
     top = head_guard - up * (torso_r * 0.06F);
   }
 
-  QVector3D bottom = waist.origin - waist_up * (waist_r * 1.60F);
-  QVector3D chainmail_bottom = waist.origin - waist_up * (waist_r * 1.52F);
+  QVector3D bottom = waist.origin - waist_up * (waist_r * 0.30F);
+  QVector3D chainmail_bottom = waist.origin - waist_up * (waist_r * 0.36F);
 
   top += forward * (torso_r * 0.010F);
   bottom += forward * (torso_r * 0.010F);
@@ -235,13 +235,13 @@ auto armor_heavy_carthage_make_static_attachment(std::uint16_t torso_socket_bone
   };
 
   std::array<QMatrix4x4, 3> const torso_layers{
-      build_torso(top, chainmail_bottom, torso_r * 1.10F, 1.07F, 1.04F),
+      build_torso(top, chainmail_bottom, torso_r * 1.10F, 1.07F, 1.38F),
       build_torso(top + forward * (torso_r * 0.02F),
                   bottom + forward * (torso_r * 0.02F),
                   torso_r * 1.16F,
                   1.10F,
-                  1.04F),
-      build_torso(top, bottom, torso_r * 1.10F, 1.05F, 1.00F),
+                  1.38F),
+      build_torso(top, bottom, torso_r * 1.10F, 1.05F, 1.30F),
   };
 
   auto spec = Render::Equipment::build_static_attachment({
@@ -249,6 +249,7 @@ auto armor_heavy_carthage_make_static_attachment(std::uint16_t torso_socket_bone
       .socket_bone_index = torso_socket_bone_index,
       .unit_local_pose_at_bind = torso_local.world,
   });
+  fit_armor_to_waist(spec, waist.origin.y(), bottom.y());
   fill_sequential_role_remap(spec, base_role_byte, k_armor_heavy_carthage_role_count);
   return spec;
 }

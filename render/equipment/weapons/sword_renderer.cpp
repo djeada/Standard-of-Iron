@@ -468,21 +468,39 @@ auto scabbard_archetype(float sheath_r) -> const RenderArchetype& {
       return entry.archetype;
     }
   }
-  QVector3D const tip(-0.05F, -0.22F, -0.12F);
-  QVector3D const metal_tip = tip + QVector3D(-0.02F, -0.02F, -0.02F);
+  // A flattened sheath hangs outside the sword-side hip, angled slightly back.
+  // Keep its fittings on the same belt attachment so walking cannot separate them.
+  QVector3D const mouth(0.0F, 0.0F, 0.0F);
+  QVector3D const tip(0.035F, -0.48F, -0.16F);
+  QVector3D const axis = (tip - mouth).normalized();
+  float const width = sheath_r * 0.72F;
+  float const depth = sheath_r * 0.30F;
   RenderArchetypeBuilder builder{"scabbard_" + std::to_string(key.sheath_r_key)};
-  builder.add_palette_mesh(get_unit_cylinder(),
-                           cylinder_between(QVector3D(0.0F, 0.0F, 0.0F), tip, sheath_r),
-                           k_scabbard_leather_slot,
-                           nullptr,
-                           1.0F,
-                           0);
-  builder.add_palette_mesh(get_unit_cone(),
-                           Render::Geom::cone_from_to(tip, metal_tip, sheath_r),
-                           k_scabbard_metal_slot,
-                           nullptr,
-                           1.0F,
-                           0);
+  auto casing =
+      [&](const QVector3D& a, const QVector3D& b, float w, float d, std::uint8_t role) {
+        builder.add_palette_mesh(
+            get_unit_cube(), oriented_box_between(a, b, w, d), role, nullptr, 1.0F, 0);
+      };
+  casing(mouth, tip, width, depth, k_scabbard_leather_slot);
+  casing(mouth - axis * 0.012F,
+         mouth + axis * 0.025F,
+         width * 1.12F,
+         depth * 1.2F,
+         k_scabbard_metal_slot);
+  casing(tip - axis * 0.035F,
+         tip + axis * 0.008F,
+         width * 1.04F,
+         depth * 1.1F,
+         k_scabbard_metal_slot);
+  // Short leather hangers connect the mouth to the waist instead of floating
+  // against the thigh or passing through the seat of the tunic.
+  for (float z : {-0.018F, 0.018F}) {
+    casing(QVector3D(-0.06F, 0.065F, z),
+           QVector3D(0.0F, 0.0F, z),
+           0.012F,
+           0.007F,
+           k_scabbard_leather_slot);
+  }
   cache.push_back({key, std::move(builder).build()});
   return cache.back().archetype;
 }
@@ -824,7 +842,7 @@ auto scabbard_make_static_attachment(float sheath_r,
     -> Render::Creature::StaticAttachmentSpec {
   using HP = HumanProportions;
   QMatrix4x4 pose;
-  pose.translate(QVector3D(0.10F, HP::WAIST_Y - 0.04F, -0.02F));
+  pose.translate(QVector3D(0.205F, HP::WAIST_Y - 0.035F, -0.015F));
   auto spec = Render::Equipment::build_static_attachment({
       .archetype = &scabbard_archetype(sheath_r),
       .socket_bone_index = socket_bone_index,

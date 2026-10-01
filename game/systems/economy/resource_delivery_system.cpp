@@ -194,7 +194,8 @@ auto hauler_is_free_to_walk(const Engine::Core::Entity& hauler) -> bool {
 
 auto haul_ended_short(Engine::Core::World* world,
                       const Engine::Core::Entity& hauler) -> bool {
-  const auto* movement = hauler.get_component<Engine::Core::MovementComponent>();
+  const auto* movement =
+      world->try_get<Engine::Core::MovementComponent>(hauler.get_id());
   if (movement == nullptr || !movement->get_has_target()) {
     return true;
   }

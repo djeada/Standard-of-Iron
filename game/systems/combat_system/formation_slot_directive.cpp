@@ -447,9 +447,9 @@ void track_relocation(const EntityFrame& frame,
   }
 }
 
-auto works_a_site(const Engine::Core::Entity& entity) -> bool {
-  auto const* builder =
-      entity.get_component<Engine::Core::BuilderProductionComponent>();
+auto works_a_site(const EntityFrame& frame) -> bool {
+  auto const* builder = frame.world.try_get<Engine::Core::BuilderProductionComponent>(
+      frame.entity.get_id());
   return builder != nullptr && builder->in_progress && builder->at_construction_site;
 }
 
@@ -499,7 +499,7 @@ void walk_slot(const EntityFrame& frame,
        .engaged = frame.melee_ordered,
        .external_reform = frame.reform != nullptr,
        .position_is_authored = slot.traversal_slot != nullptr && !frame.mounted,
-       .walking_to_work_posts = works_a_site(frame.entity),
+       .walking_to_work_posts = works_a_site(frame),
        .passability = frame.passability,
        .delta_time = frame.delta_time},
       previous,
