@@ -285,6 +285,8 @@ private:
   void render_directional_shadows(const DrawQueue& queue, const Camera& cam);
   void ensure_directional_shadow_resources(int resolution, int cascades);
   void release_directional_shadow_resources();
+  void bind_directional_shadow_textures();
+  auto directional_shadow_fallback_texture() -> GLuint;
 
   template <typename Visitor>
   void for_each_pipeline_slot(Visitor&& visit) {
@@ -374,6 +376,7 @@ private:
   GLuint m_directional_shadow_far_texture{0};
   GLuint m_directional_shadow_compare_sampler{0};
   GLuint m_directional_shadow_depth_sampler{0};
+  GLuint m_directional_shadow_fallback_texture{0};
   int m_directional_shadow_resolution{0};
   int m_directional_shadow_far_resolution{0};
   int m_directional_shadow_cascades{0};

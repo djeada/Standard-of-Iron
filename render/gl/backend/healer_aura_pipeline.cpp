@@ -3,6 +3,8 @@
 #include <QDebug>
 #include <QMatrix4x4>
 #include <QOpenGLContext>
+#include <QVector3D>
+#include <QVector4D>
 
 #include <cmath>
 #include <numbers>
@@ -68,6 +70,7 @@ void HealerAuraPipeline::cache_uniforms() {
   m_uniforms.aura_radius = m_aura_shader->uniform_handle("u_aura_radius");
   m_uniforms.intensity = m_aura_shader->uniform_handle("u_intensity");
   m_uniforms.aura_color = m_aura_shader->uniform_handle("u_aura_color");
+  m_uniforms.camera_pos = m_aura_shader->optional_uniform_handle("u_camera_pos");
 }
 
 auto HealerAuraPipeline::is_initialized() const -> bool {
@@ -88,8 +91,8 @@ auto HealerAuraPipeline::create_dome_geometry() -> bool {
   std::vector<AuraVertex> vertices;
   std::vector<unsigned int> indices;
 
-  constexpr int stacks = 8;
-  constexpr int slices = 16;
+  constexpr int stacks = 12;
+  constexpr int slices = 40;
   constexpr float pi = std::numbers::pi_v<float>;
 
   vertices.reserve(static_cast<size_t>((stacks + 1) * (slices + 1)));
@@ -159,6 +162,14 @@ void HealerAuraPipeline::render_aura_batch(const AuraInstanceData* instances,
 
   m_aura_shader->use();
   glBindVertexArray(m_mesh.vao);
+
+  QVector4D const eye = view_proj.inverted() * QVector4D(0.0F, 0.0F, 1.0F, 0.0F);
+  QVector3D const camera_pos = std::abs(eye.w()) > 1.0e-6F
+                                   ? eye.toVector3D() / eye.w()
+                                   : QVector3D(0.0F, 0.0F, 0.0F);
+  if (m_uniforms.camera_pos != Shader::InvalidUniform) {
+    m_aura_shader->set_uniform(m_uniforms.camera_pos, camera_pos);
+  }
 
   for (std::size_t idx = 0; idx < count; ++idx) {
     const AuraInstanceData& inst = instances[idx];

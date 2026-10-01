@@ -138,6 +138,15 @@ constexpr std::array k_fields = std::to_array<FieldSpec>({
     {"StaminaComponent", AuthoritativeSerialized, "Stamina pool and run request."},
     {"SpecialAttackComponent", AuthoritativeSerialized, "Special ability cooldowns."},
     {"CatapultLoadingComponent", AuthoritativeSerialized, "Reload progress."},
+    {"SiegeTowerComponent",
+     AuthoritativeSerialized,
+     "Whether a siege tower is still rolling or docked at a wall, which wall, and "
+     "whether its sealed company is still aboard; losing it would let a spent tower "
+     "unload a second garrison."},
+    {"WallWalkerComponent",
+     AuthoritativeSerialized,
+     "Marks a troop standing on a wall-top walkway and which wall it is anchored "
+     "to; losing it would drop the troop through the parapet."},
     {"ElephantComponent", AuthoritativeSerialized, "Elephant state."},
     {"ElephantPanicComponent", AuthoritativeSerialized, "Panic timer."},
     {"ElephantStompImpactComponent", AuthoritativeSerialized, "Pending stomp impact."},

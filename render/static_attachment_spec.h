@@ -16,6 +16,8 @@ struct RenderArchetype;
 
 namespace Render::Creature {
 
+inline constexpr std::uint8_t k_role_blade_glow_flag = 0x80U;
+
 struct AttachmentDrapeBlend {
   bool enabled{false};
   std::uint16_t pelvis_bone{0};

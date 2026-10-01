@@ -13,6 +13,7 @@
 #include "render/gl/primitives.h"
 #include "render/gl/resources.h"
 #include "render/scene_renderer.h"
+#include "render/submission_visibility.h"
 #include "stone.h"
 
 namespace Render::GL {
@@ -98,6 +99,52 @@ const QVector3D k_outgoing_glow(1.0F, 0.92F, 0.70F);
     break;
   }
   return 1.0F;
+}
+
+const QVector3D k_night_glint_steel(0.55F, 0.80F, 1.0F);
+const QVector3D k_night_glint_cursed(0.42F, 0.12F, 0.80F);
+
+[[nodiscard]] auto projectile_night_amount(const Renderer* renderer) -> float {
+  return renderer->environment_lighting().darkness_amount();
+}
+
+[[nodiscard]] auto
+flight_tangent(const Game::Systems::ProjectileView& projectile) -> QVector3D {
+  QVector3D tangent = projectile.end - projectile.start;
+  tangent.setY(tangent.y() +
+               projectile.arc_height * 4.0F * (1.0F - 2.0F * projectile.progress));
+  if (tangent.lengthSquared() <= 1.0e-6F) {
+    return {0.0F, 0.0F, 1.0F};
+  }
+  return tangent.normalized();
+}
+
+void draw_night_glint(Renderer* renderer,
+                      const QVector3D& position,
+                      const QVector3D& direction,
+                      const QVector3D& tint,
+                      float radius,
+                      float intensity,
+                      float phase) {
+  renderer->metal_spark(position, tint, radius, intensity, phase, direction);
+}
+
+void add_night_projectile_light(Renderer* renderer,
+                                const QVector3D& position,
+                                const QVector3D& tint,
+                                float radius,
+                                float intensity) {
+
+  if (!renderer->submission_visibility().accepts_sphere(
+          position, 0.25F, SubmissionFogMode::VisibleOnly, FogExtent::Anchor)) {
+    return;
+  }
+  Render::LocalLight light;
+  light.position = position;
+  light.color = tint;
+  light.radius = radius;
+  light.intensity = intensity;
+  renderer->local_light(light);
 }
 
 constexpr float k_rad_to_deg = 180.0F / std::numbers::pi_v<float>;
@@ -486,7 +533,8 @@ void render_arrow_projectile(Renderer* renderer,
                              const Game::Systems::ProjectileView& projectile,
                              const QVector3D& pos,
                              const QMatrix4x4& base_model,
-                             ProjectileRelation relation) {
+                             ProjectileRelation relation,
+                             bool reduced_effects) {
   if ((renderer == nullptr) || (resources == nullptr)) {
     return;
   }
@@ -643,6 +691,29 @@ void render_arrow_projectile(Renderer* renderer,
                      nullptr,
                      0.34F - (0.12F * static_cast<float>(trail_idx)));
     }
+
+    if (float const night = projectile_night_amount(renderer); night > 0.02F) {
+      QVector3D const tangent = flight_tangent(projectile);
+      draw_night_glint(renderer,
+                       pos,
+                       tangent,
+                       k_night_glint_steel,
+                       0.22F,
+                       3.0F * night,
+                       projectile.progress * 0.3F);
+      for (int streak = 1; streak <= (reduced_effects ? 0 : 3); ++streak) {
+        draw_night_glint(renderer,
+                         pos - tangent * (0.22F * static_cast<float>(streak)),
+                         tangent,
+                         k_night_glint_steel *
+                             (1.0F - 0.25F * static_cast<float>(streak)),
+                         0.12F,
+                         1.3F * night,
+                         0.05F * static_cast<float>(streak));
+      }
+      add_night_projectile_light(
+          renderer, pos, QVector3D(0.55F, 0.78F, 1.0F), 3.4F, 0.55F * night);
+    }
   } else {
     bool const commander_shot =
         projectile.visual_style == Game::Systems::ArrowVisualStyle::Commander;
@@ -797,6 +868,21 @@ void render_arrow_projectile(Renderer* renderer,
                        Geom::Arrow::k_fletch_xy_scale,
                        Geom::Arrow::k_fletch_z_scale);
     renderer->mesh(arrow_fletching_mesh, fletch_model, fletch_color, nullptr, 1.0F);
+
+    if (float const night = projectile_night_amount(renderer);
+        night > 0.02F && !aimed) {
+      bool const cursed = projectile.kind == Game::Systems::ProjectileKind::CursedArrow;
+
+      QVector3D const head_position =
+          model.map(QVector3D(0.0F, 0.0F, Geom::Arrow::k_head_center_z));
+      draw_night_glint(renderer,
+                       head_position,
+                       flight_tangent(projectile),
+                       cursed ? k_night_glint_cursed : QVector3D(0.10F, 0.38F, 0.85F),
+                       0.035F * projectile.scale,
+                       0.48F * night * relation_brightness(relation),
+                       projectile.progress * 0.3F);
+    }
   }
 }
 
@@ -804,7 +890,8 @@ void render_stone_projectile(Renderer* renderer,
                              ResourceManager* resources,
                              const Game::Systems::ProjectileView& projectile,
                              const QVector3D& position,
-                             const QMatrix4x4& base_model) {
+                             const QMatrix4x4& base_model,
+                             bool reduced_effects) {
   if ((renderer == nullptr) || (resources == nullptr)) {
     return;
   }
@@ -830,6 +917,36 @@ void render_stone_projectile(Renderer* renderer,
   renderer->mesh(stone_mesh, model, stone_color, nullptr, 1.0F);
 
   if (!flaming) {
+    if (float const night = projectile_night_amount(renderer); night > 0.02F) {
+      QVector3D const tangent = flight_tangent(projectile);
+      QVector3D const trail_delta = projectile.end - projectile.start;
+      draw_night_glint(renderer,
+                       position,
+                       tangent,
+                       k_night_glint_steel,
+                       0.30F * stone_scale,
+                       1.7F * night,
+                       projectile.progress * 0.3F);
+      for (int streak = 1; streak <= (reduced_effects ? 1 : 4); ++streak) {
+        float const trail_t = projectile.progress - static_cast<float>(streak) * 0.04F;
+        if (trail_t < 0.0F) {
+          continue;
+        }
+        QVector3D trail_pos = projectile.start + trail_delta * trail_t;
+        trail_pos.setY(trail_pos.y() +
+                       projectile.arc_height * 4.0F * trail_t * (1.0F - trail_t));
+        float const fade = 1.0F - static_cast<float>(streak) / 5.0F;
+        draw_night_glint(renderer,
+                         trail_pos,
+                         tangent,
+                         k_night_glint_steel * fade,
+                         0.22F * stone_scale * fade,
+                         1.1F * night * fade,
+                         0.06F * static_cast<float>(streak));
+      }
+      add_night_projectile_light(
+          renderer, position, QVector3D(0.55F, 0.78F, 1.0F), 4.0F, 0.5F * night);
+    }
     return;
   }
 
@@ -905,9 +1022,11 @@ void render_projectiles(Renderer* renderer,
           projectile,
           pos,
           model,
-          relation_of(projectile.attacker_owner, projectile.target_owner));
+          relation_of(projectile.attacker_owner, projectile.target_owner),
+          reduced_effects);
     } else {
-      render_stone_projectile(renderer, resources, projectile, pos, model);
+      render_stone_projectile(
+          renderer, resources, projectile, pos, model, reduced_effects);
     }
   }
 

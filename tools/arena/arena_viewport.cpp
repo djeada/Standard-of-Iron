@@ -12,6 +12,7 @@
 #include <QMatrix4x4>
 #include <QMouseEvent>
 #include <QOpenGLContext>
+#include <QOpenGLDebugLogger>
 #include <QOpenGLExtraFunctions>
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLFunctions>
@@ -458,6 +459,7 @@ ArenaViewport::~ArenaViewport() {
   if (context() != nullptr) {
     makeCurrent();
     m_capture_target.reset();
+    m_capture_preview_resolve.reset();
     m_terrain_scene.reset();
     m_scatter.reset();
     m_features.reset();
@@ -524,6 +526,23 @@ void ArenaViewport::initializeGL() {
   if (!m_gl_initialized) {
     qWarning() << "ArenaViewport:" << error;
     return;
+  }
+
+  if (qEnvironmentVariableIsSet("SOI_GL_DEBUG")) {
+    auto* logger = new QOpenGLDebugLogger(this);
+    if (logger->initialize()) {
+      connect(logger,
+              &QOpenGLDebugLogger::messageLogged,
+              this,
+              [](const QOpenGLDebugMessage& message) {
+                if (message.severity() != QOpenGLDebugMessage::NotificationSeverity) {
+                  qWarning().noquote() << "GL debug:" << message.message();
+                }
+              });
+      logger->startLogging(QOpenGLDebugLogger::SynchronousLogging);
+    } else {
+      qWarning() << "SOI_GL_DEBUG: no GL_KHR_debug on this context";
+    }
   }
 
   configure_rendering_from_terrain();
@@ -3156,9 +3175,11 @@ void ArenaViewport::set_capture_resolution(int width, int height) {
   if (m_capture_target != nullptr && context() != nullptr && context()->isValid()) {
     makeCurrent();
     m_capture_target.reset();
+    m_capture_preview_resolve.reset();
     doneCurrent();
   } else {
     m_capture_target.reset();
+    m_capture_preview_resolve.reset();
   }
 }
 
@@ -3597,7 +3618,20 @@ void ArenaViewport::present_capture_preview() {
   gl->glDisable(GL_SCISSOR_TEST);
   gl->glClearColor(0.02F, 0.02F, 0.03F, 1.0F);
   gl->glClear(GL_COLOR_BUFFER_BIT);
-  gl->glBindFramebuffer(GL_READ_FRAMEBUFFER, m_capture_target->handle());
+
+  GLuint source = m_capture_target->handle();
+  if (m_capture_target->format().samples() > 0) {
+    if (m_capture_preview_resolve == nullptr ||
+        m_capture_preview_resolve->size() != m_capture_target->size()) {
+      m_capture_preview_resolve =
+          std::make_unique<QOpenGLFramebufferObject>(m_capture_target->size());
+    }
+    QOpenGLFramebufferObject::blitFramebuffer(m_capture_preview_resolve.get(),
+                                              m_capture_target.get());
+    source = m_capture_preview_resolve->handle();
+    gl->glBindFramebuffer(GL_DRAW_FRAMEBUFFER, defaultFramebufferObject());
+  }
+  gl->glBindFramebuffer(GL_READ_FRAMEBUFFER, source);
   gl->glBlitFramebuffer(0,
                         0,
                         m_capture_width,

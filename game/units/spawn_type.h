@@ -26,6 +26,8 @@ enum class SpawnType : std::uint8_t {
   Healer,
   Catapult,
   Ballista,
+  Ram,
+  SiegeTower,
   Elephant,
   RomanLegionOrganizer,
   RomanVeteranConsul,
@@ -76,6 +78,10 @@ constexpr auto spawn_type_name(SpawnType type) -> std::string_view {
     return "catapult";
   case SpawnType::Ballista:
     return "ballista";
+  case SpawnType::Ram:
+    return "ram";
+  case SpawnType::SiegeTower:
+    return "siege_tower";
   case SpawnType::Elephant:
     return "elephant";
   case SpawnType::RomanLegionOrganizer:
@@ -144,6 +150,10 @@ inline auto spawn_typeToQString(SpawnType type) -> QString {
     return QStringLiteral("catapult");
   case SpawnType::Ballista:
     return QStringLiteral("ballista");
+  case SpawnType::Ram:
+    return QStringLiteral("ram");
+  case SpawnType::SiegeTower:
+    return QStringLiteral("siege_tower");
   case SpawnType::Elephant:
     return QStringLiteral("elephant");
   case SpawnType::RomanLegionOrganizer:
@@ -238,6 +248,14 @@ inline auto try_parse_spawn_type(const QString& value, SpawnType& out) -> bool {
   }
   if (lowered == QStringLiteral("ballista")) {
     out = SpawnType::Ballista;
+    return true;
+  }
+  if (lowered == QStringLiteral("ram")) {
+    out = SpawnType::Ram;
+    return true;
+  }
+  if (lowered == QStringLiteral("siege_tower")) {
+    out = SpawnType::SiegeTower;
     return true;
   }
   if (lowered == QStringLiteral("elephant")) {
@@ -360,6 +378,12 @@ inline auto spawn_typeFromString(const std::string& str) -> std::optional<SpawnT
   if (str == "ballista") {
     return SpawnType::Ballista;
   }
+  if (str == "ram") {
+    return SpawnType::Ram;
+  }
+  if (str == "siege_tower") {
+    return SpawnType::SiegeTower;
+  }
   if (str == "elephant") {
     return SpawnType::Elephant;
   }
@@ -428,7 +452,8 @@ inline auto spawn_typeFromString(const std::string& str) -> std::optional<SpawnT
 }
 
 [[nodiscard]] inline auto is_siege_engine_spawn(SpawnType type) noexcept -> bool {
-  return type == SpawnType::Catapult || type == SpawnType::Ballista;
+  return type == SpawnType::Catapult || type == SpawnType::Ballista ||
+         type == SpawnType::Ram || type == SpawnType::SiegeTower;
 }
 
 inline auto is_building_spawn(SpawnType type) -> bool {
@@ -485,6 +510,8 @@ inline auto is_wall_network_spawn(SpawnType type) -> bool {
     return 110.0F;
   case SpawnType::Catapult:
   case SpawnType::Ballista:
+  case SpawnType::Ram:
+  case SpawnType::SiegeTower:
     return 100.0F;
   case SpawnType::MountedSwordsman:
   case SpawnType::HorseArcher:
@@ -573,6 +600,8 @@ inline auto can_use_patrol_mode(SpawnType type) -> bool {
   case SpawnType::GravePriest:
   case SpawnType::Catapult:
   case SpawnType::Ballista:
+  case SpawnType::Ram:
+  case SpawnType::SiegeTower:
   case SpawnType::Barracks:
   case SpawnType::DefenseTower:
   case SpawnType::Home:
@@ -615,6 +644,10 @@ inline auto spawn_typeToTroopType(SpawnType type) -> std::optional<TroopType> {
     return TroopType::Catapult;
   case SpawnType::Ballista:
     return TroopType::Ballista;
+  case SpawnType::Ram:
+    return TroopType::Ram;
+  case SpawnType::SiegeTower:
+    return TroopType::SiegeTower;
   case SpawnType::Elephant:
     return TroopType::Elephant;
   case SpawnType::RomanLegionOrganizer:
@@ -683,6 +716,10 @@ inline auto spawn_typeFromTroopType(TroopType type) -> SpawnType {
     return SpawnType::Catapult;
   case TroopType::Ballista:
     return SpawnType::Ballista;
+  case TroopType::Ram:
+    return SpawnType::Ram;
+  case TroopType::SiegeTower:
+    return SpawnType::SiegeTower;
   case TroopType::Elephant:
     return SpawnType::Elephant;
   case TroopType::RomanLegionOrganizer:

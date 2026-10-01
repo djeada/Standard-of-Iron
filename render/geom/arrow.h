@@ -36,11 +36,12 @@ public:
   static constexpr float k_fletch_z_scale = 1.0F;
 
   static constexpr float k_head_center_z = (k_shaft_length + k_total_length) * 0.5F;
-  static constexpr float k_shaft_glow_xy_scale = 1.75F;
-  static constexpr float k_shaft_glow_alpha = 0.13F;
-  static constexpr float k_head_glow_xy_scale = 1.90F;
-  static constexpr float k_head_glow_z_scale = 1.32F;
-  static constexpr float k_head_glow_alpha = 0.30F;
+
+  static constexpr float k_shaft_glow_xy_scale = 1.25F;
+  static constexpr float k_shaft_glow_alpha = 0.025F;
+  static constexpr float k_head_glow_xy_scale = 1.30F;
+  static constexpr float k_head_glow_z_scale = 1.08F;
+  static constexpr float k_head_glow_alpha = 0.10F;
 
   static auto shaft_color(const QVector3D& team_color) -> QVector3D {
     constexpr float k_wood_r = 0.640F;

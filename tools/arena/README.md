@@ -1743,6 +1743,10 @@ Three acceptance kinds back these scenes:
 
 - `GateOpenedObserved` fails when no gate in the group ever opened far enough to
   walk through.
+- `SiegeTowerDocked` fails when no siege tower in the group ever docked at a hostile
+  wall.
+- `WallWalkerObserved` fails when no troop was ever seen standing on a wall-top
+  walkway.
 - `GateRemainedClosed` fails when a gate opened, or when the named group was never
   sampled as a gate at all.
 - `GroupHeldOutsideDestination` is the mirror of `GroupReachedDestination`: it

@@ -174,6 +174,27 @@ public:
   int active_workers{0};
 };
 
+struct SiegeTowerComponent {
+  enum class State : std::uint8_t {
+    Rolling = 0,
+    Docked
+  };
+
+  static constexpr float k_ramp_drop_seconds = 1.2F;
+
+  State state{State::Rolling};
+  EntityID docked_wall_id{0};
+  bool garrison_aboard{true};
+  float ramp{0.0F};
+};
+
+struct WallWalkerComponent {
+  static constexpr float k_wall_top_height = 2.1F;
+
+  EntityID wall_id{0};
+  float elevation{k_wall_top_height};
+};
+
 class GateComponent {
 public:
   enum class State : std::uint8_t {

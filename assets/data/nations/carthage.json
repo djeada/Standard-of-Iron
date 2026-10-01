@@ -387,6 +387,80 @@
       }
     },
     {
+      "id": "ram",
+      "display_name": "Battering Ram",
+      "production": {
+        "cost": 1,
+        "build_time": 14.0,
+        "priority": 7,
+        "is_melee": true
+      },
+      "combat": {
+        "health": 520,
+        "max_health": 520,
+        "speed": 1.1,
+        "vision_range": 14.0,
+        "ranged_range": 1.5,
+        "ranged_damage": 0,
+        "ranged_cooldown": 2.0,
+        "melee_range": 2.2,
+        "melee_damage": 40,
+        "melee_cooldown": 2.5,
+        "can_ranged": false,
+        "can_melee": true
+      },
+      "visuals": {
+        "render_scale": 1.1,
+        "selection_ring_size": 1.2,
+        "selection_ring_ground_offset": 0.0,
+        "renderer_id": "troops/carthage/ram"
+      },
+      "formation": {
+        "individuals_per_unit": 1,
+        "max_units_per_row": 1
+      },
+      "lore": {
+        "history": "The ram's crew worked under a roof of green hides, deaf to everything but the beat of the beam on the gate."
+      }
+    },
+    {
+      "id": "siege_tower",
+      "display_name": "Siege Tower",
+      "production": {
+        "cost": 1,
+        "build_time": 22.0,
+        "priority": 8,
+        "is_melee": true
+      },
+      "combat": {
+        "health": 700,
+        "max_health": 700,
+        "speed": 0.8,
+        "vision_range": 18.0,
+        "ranged_range": 1.5,
+        "ranged_damage": 0,
+        "ranged_cooldown": 2.0,
+        "melee_range": 1.5,
+        "melee_damage": 0,
+        "melee_cooldown": 2.0,
+        "can_ranged": false,
+        "can_melee": false
+      },
+      "visuals": {
+        "render_scale": 1.5,
+        "selection_ring_size": 1.8,
+        "selection_ring_ground_offset": 0.0,
+        "renderer_id": "troops/carthage/siege_tower"
+      },
+      "formation": {
+        "individuals_per_unit": 1,
+        "max_units_per_row": 1
+      },
+      "lore": {
+        "history": "A tower rolled up to the curtain turned a wall from a barrier into a road."
+      }
+    },
+    {
       "id": "builder",
       "display_name": "Phoenician Craftsman",
       "production": {

@@ -21,6 +21,7 @@
 #include "render/humanoid/runtime/humanoid_renderer.h"
 #include "render/humanoid/runtime/skeleton_evaluator.h"
 #include "render/humanoid/runtime/spear_pose_utils.h"
+#include "render/static_attachment_spec.h"
 
 namespace Render::GL {
 
@@ -245,7 +246,15 @@ auto Render::GL::spear_make_static_attachments(const SpearRenderConfig& config,
 
   auto make_spec = [&](const RenderArchetype& arch,
                        const QVector3D& from,
-                       const QVector3D& to) {
+                       const QVector3D& to,
+                       bool glows = false) {
+    std::array<std::uint8_t, 4> spec_remap = remap;
+    if (glows) {
+      for (auto& role : spec_remap) {
+        role =
+            static_cast<std::uint8_t>(role | Render::Creature::k_role_blade_glow_flag);
+      }
+    }
     QMatrix4x4 const unit_pose =
         oriented_segment_transform(QMatrix4x4{}, from, to - from, right_hint);
     return Render::Equipment::build_socket_static_attachment({
@@ -255,14 +264,15 @@ auto Render::GL::spear_make_static_attachments(const SpearRenderConfig& config,
         .bind_socket_transform = bind_socket,
         .mesh_from_socket =
             bind_socket_invertible ? bind_socket_inverse * unit_pose : unit_pose,
-        .palette_role_remap = std::span<const std::uint8_t>(remap.data(), remap.size()),
+        .palette_role_remap =
+            std::span<const std::uint8_t>(spec_remap.data(), spec_remap.size()),
     });
   };
 
   return {
       make_spec(spear_lower_shaft_archetype(config), shaft_base, shaft_mid),
       make_spec(spear_upper_shaft_archetype(config), shaft_mid, shaft_tip),
-      make_spec(spearhead_archetype(config), shaft_tip, spearhead_tip),
+      make_spec(spearhead_archetype(config), shaft_tip, spearhead_tip, true),
       make_spec(spear_grip_archetype(config), grip_pos, grip_end),
   };
 }

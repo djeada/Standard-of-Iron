@@ -537,6 +537,7 @@ private:
   bool m_capture_gameplay_ui = false;
   bool m_capture_gameplay_ui_all_owners = false;
   std::unique_ptr<QOpenGLFramebufferObject> m_capture_target;
+  std::unique_ptr<QOpenGLFramebufferObject> m_capture_preview_resolve;
   std::function<void(const QImage&)> m_capture_sink;
   std::function<void(float)> m_frame_hook;
   int m_capture_width = 0;

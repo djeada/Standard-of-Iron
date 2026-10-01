@@ -54,6 +54,7 @@ private:
     GL::Shader::UniformHandle aura_radius{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle intensity{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle aura_color{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle camera_pos{GL::Shader::InvalidUniform};
   };
 
   AuraUniforms m_uniforms;

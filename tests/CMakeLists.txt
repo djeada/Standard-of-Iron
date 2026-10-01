@@ -226,6 +226,7 @@ add_executable(
     systems/siege_special_processor_test.cpp
     systems/squad_alert_test.cpp
     systems/gate_system_test.cpp
+    systems/siege_tower_system_test.cpp
     systems/battle_movement_refactor_test.cpp
     systems/battlefield_capture_test.cpp
     headless/headless_simulation_test.cpp

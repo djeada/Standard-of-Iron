@@ -65,6 +65,8 @@ void copy_authoritative_snapshot_components(const Entity& source, Entity& destin
   copy_snapshot_component<BuildingComponent>(source, destination);
   copy_snapshot_component<PendingRemovalComponent>(source, destination);
   copy_snapshot_component<AttackComponent>(source, destination);
+  copy_snapshot_component<SiegeTowerComponent>(source, destination);
+  copy_snapshot_component<WallWalkerComponent>(source, destination);
   copy_snapshot_component<AttackTargetComponent>(source, destination);
   copy_snapshot_component<ForestCoverComponent>(source, destination);
   copy_snapshot_component<CombatStateComponent>(source, destination);
@@ -207,6 +209,7 @@ auto render_entity_is_stable(const Entity& entity) -> bool {
       entity.has_component<ConstructionPreviewComponent>() ||
       entity.has_component<WallConstructionSiteComponent>() ||
       entity.has_component<DismantleSiteComponent>() ||
+      entity.has_component<WallWalkerComponent>() ||
       entity.has_component<StructureDamagePresentationComponent>() ||
       entity.has_component<StructureRepairPresentationComponent>() ||
       entity.has_component<ProductionCompletionComponent>() ||
@@ -259,6 +262,13 @@ auto render_entity_signature(const Entity& entity) -> std::uint64_t {
     render_hash_float(signature, stockpile->iron_fill);
     render_hash_float(signature, stockpile->food_fill);
     render_hash_float(signature, stockpile->deposit_flash);
+  }
+  if (auto const* tower = entity.get_component<SiegeTowerComponent>()) {
+    render_hash_float(signature, tower->ramp);
+    render_hash_combine(signature, static_cast<std::uint64_t>(tower->state));
+  }
+  if (auto const* walker = entity.get_component<WallWalkerComponent>()) {
+    render_hash_float(signature, walker->elevation);
   }
   if (auto const* gate = entity.get_component<GateComponent>()) {
 

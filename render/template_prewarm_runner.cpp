@@ -558,8 +558,35 @@ void Renderer::prewarm_unit_templates(
   };
 
   auto is_prewarmable_troop = [](Game::Units::TroopType type) -> bool {
-    return type != Game::Units::TroopType::Catapult &&
-           type != Game::Units::TroopType::Ballista;
+    using Game::Units::TroopType;
+    switch (type) {
+    case TroopType::Archer:
+    case TroopType::Swordsman:
+    case TroopType::Spearman:
+    case TroopType::RomanLegionOrganizer:
+    case TroopType::RomanVeteranConsul:
+    case TroopType::RomanFieldCommander:
+    case TroopType::CarthageSpearCommander:
+    case TroopType::CarthageBowCommander:
+    case TroopType::CarthageSwordCommander:
+    case TroopType::SkeletonSwordsman:
+    case TroopType::SkeletonArcher:
+    case TroopType::GravePriest:
+    case TroopType::MountedSwordsman:
+    case TroopType::HorseArcher:
+    case TroopType::HorseSpearman:
+    case TroopType::Healer:
+    case TroopType::Civilian:
+    case TroopType::Builder:
+    case TroopType::Elephant:
+      return true;
+    case TroopType::Catapult:
+    case TroopType::Ballista:
+    case TroopType::Ram:
+    case TroopType::SiegeTower:
+    default:
+      return false;
+    }
   };
 
   auto is_prewarmable_spawn =
@@ -753,12 +780,27 @@ void Renderer::prewarm_unit_templates(
         continue;
       }
 
-      for (int index = 0; index <= static_cast<int>(Game::Units::TroopType::Wolf);
-           ++index) {
-        auto const type = static_cast<Game::Units::TroopType>(index);
-        if (is_prewarmable_troop(type)) {
-          add_troop_profile(nation, type);
-        }
+      using Game::Units::TroopType;
+      for (auto type : {TroopType::Archer,
+                        TroopType::Swordsman,
+                        TroopType::Spearman,
+                        TroopType::RomanLegionOrganizer,
+                        TroopType::RomanVeteranConsul,
+                        TroopType::RomanFieldCommander,
+                        TroopType::CarthageSpearCommander,
+                        TroopType::CarthageBowCommander,
+                        TroopType::CarthageSwordCommander,
+                        TroopType::SkeletonSwordsman,
+                        TroopType::SkeletonArcher,
+                        TroopType::GravePriest,
+                        TroopType::MountedSwordsman,
+                        TroopType::HorseArcher,
+                        TroopType::HorseSpearman,
+                        TroopType::Healer,
+                        TroopType::Civilian,
+                        TroopType::Builder,
+                        TroopType::Elephant}) {
+        add_troop_profile(nation, type);
       }
     }
   }

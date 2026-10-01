@@ -27,13 +27,15 @@ void main() {
   if (character_fade_discards(v_alpha)) {
     discard;
   }
+  bool blade_glow = v_color_role >= k_role_blade_glow_flag;
+  int color_role = v_color_role & (k_role_blade_glow_flag - 1);
   vec3 base = v_color;
-  if (v_color_role > 0 && v_color_role <= v_role_color_count) {
+  if (color_role > 0 && color_role <= v_role_color_count) {
     base = texelFetch(u_role_color_tbo,
-                      u_role_color_base + v_instance_id * 32 + v_color_role - 1)
+                      u_role_color_base + v_instance_id * 32 + color_role - 1)
                .rgb;
   }
-  base = apply_hair_tone(base, v_material_id, v_color_role, v_tex);
+  base = apply_hair_tone(base, v_material_id, color_role, v_tex);
   float zoom = readable_zoom(v_pos_ws);
 
   vec4 readable_wear = v_wear_params;
@@ -41,17 +43,27 @@ void main() {
   readable_wear.y *= mix(1.0, k_readable_grime_far, zoom);
   readable_wear.z *= mix(1.0, k_readable_blood_far, zoom);
 #if SOI_SURFACE_DETAIL
-  base = apply_wear(base, v_material_id, v_color_role, v_pos_local, readable_wear);
+  base = apply_wear(base, v_material_id, color_role, v_pos_local, readable_wear);
 #endif
 
   vec3 surface_normal = normalize(v_normal_ws);
-  vec3 color = shade_readable_character(
-      base, surface_normal, v_pos_ws, v_material_id, v_color_role, zoom);
+  vec3 color =
+      blade_glow
+          ? soi_blade_steel(base, surface_normal, v_pos_ws, u_camera_position, zoom)
+          : shade_readable_character(
+                base, surface_normal, v_pos_ws, v_material_id, color_role, zoom);
   color = apply_directional_shadow(color, v_pos_ws, surface_normal);
 
   vec3 local_light = local_lighting(v_pos_ws, surface_normal);
   local_light = local_light / (vec3(1.0) + local_light * 0.55);
-  color += base * local_light;
+  color += base * local_light * (blade_glow ? 0.16 : 1.0);
+  if (blade_glow) {
+    vec3 view_dir = normalize(u_camera_position - v_pos_ws);
+    color += base * local_lighting_specular(v_pos_ws, surface_normal, view_dir, 1.0);
+    color += soi_blade_glow(base, surface_normal, view_dir);
+    frag_color = vec4(color, 1.0);
+    return;
+  }
   if (v_material_id == 0) {
     color *= mix(0.80, 1.0, smoothstep(0.0, 0.32, v_pos_local.y));
   }
@@ -61,7 +73,7 @@ void main() {
                                v_pos_ws,
                                u_camera_position,
                                v_material_id,
-                               v_color_role,
+                               color_role,
                                zoom);
   if (v_material_id == 0 && v_role_color_count >= k_humanoid_role_cloth) {
     vec3 team =
@@ -73,7 +85,7 @@ void main() {
                               surface_normal,
                               v_pos_ws,
                               u_camera_position,
-                              v_color_role,
+                              color_role,
                               v_team_emphasis);
   }
   frag_color = vec4(color, 1.0);

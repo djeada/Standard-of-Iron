@@ -110,7 +110,7 @@ inline auto is_foot_line_recruit(Game::Units::TroopType type) -> bool {
   const auto spawn = Game::Units::spawn_typeFromTroopType(type);
   return !Game::Units::is_cavalry(spawn) && spawn != Game::Units::SpawnType::Elephant &&
          spawn != Game::Units::SpawnType::Catapult &&
-         spawn != Game::Units::SpawnType::Ballista;
+         !Game::Units::is_siege_engine_spawn(spawn);
 }
 
 inline auto marches_with_the_army(const EntitySnapshot& entity) -> bool {

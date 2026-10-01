@@ -10,6 +10,7 @@ in float v_radial_dist;
 uniform float u_time;
 uniform float u_intensity;
 uniform vec3 u_aura_color;
+uniform vec3 u_camera_pos;
 
 out vec4 frag_color;
 
@@ -54,6 +55,11 @@ void main() {
   float filament = pow(swirl, 3.0) * mix(0.35, 1.0, ring);
   float aura_alpha = veil * (0.018 + filament * 0.082) * u_intensity;
   aura_alpha += perimeter_mask * base_fade * ring * u_intensity * 0.014;
+
+  vec3 view_dir = normalize(u_camera_pos - v_world_pos);
+  float facing = abs(dot(normalize(v_normal), view_dir));
+  aura_alpha *= smoothstep(0.05, 0.55, facing);
+  aura_alpha *= smoothstep(0.0, 0.12, v_height);
 
   frag_color = vec4(color, clamp(aura_alpha, 0.0, 0.12));
 }

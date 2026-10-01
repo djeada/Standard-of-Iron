@@ -1,0 +1,85 @@
+#include "ram.h"
+
+#include <memory>
+
+#include "../core/component_gameplay.h"
+#include "../core/event_manager.h"
+#include "../core/world.h"
+#include "../systems/troop_profile_service.h"
+#include "units/troop_type.h"
+#include "units/unit.h"
+
+namespace Game::Units {
+
+Ram::Ram(Engine::Core::World& world)
+    : Unit(world, TroopType::Ram) {
+}
+
+auto Ram::Create(Engine::Core::World& world,
+                 const SpawnParams& params) -> std::unique_ptr<Ram> {
+  auto unit = std::unique_ptr<Ram>(new Ram(world));
+  unit->init(params);
+  return unit;
+}
+
+void Ram::init(const SpawnParams& params) {
+
+  auto* e = m_world->create_entity();
+  m_id = e->get_id();
+
+  const auto nation_id = resolve_nation_id(params);
+  auto profile = Game::Systems::TroopProfileService::instance().get_profile(
+      nation_id, TroopType::Ram);
+
+  m_t = e->add_component<Engine::Core::TransformComponent>();
+  m_t->position = {params.position.x(), params.position.y(), params.position.z()};
+  float const scale = profile.visuals.render_scale;
+  m_t->scale = {scale, scale, scale};
+
+  m_r = e->add_component<Engine::Core::RenderableComponent>();
+  m_r->visible = true;
+  m_r->renderer_id = profile.visuals.renderer_id;
+
+  m_u = e->add_component<Engine::Core::UnitComponent>();
+  m_u->uses_nation_formation_profile = true;
+  m_u->spawn_type = params.spawn_type;
+  m_u->health = profile.combat.health;
+  m_u->max_health = profile.combat.max_health;
+  m_u->speed = profile.combat.speed;
+  m_u->owner_id = params.player_id;
+  m_u->vision_range = profile.combat.vision_range;
+  m_u->nation_id = nation_id;
+
+  if (params.ai_controlled) {
+    e->add_component<Engine::Core::AIControlledComponent>();
+  }
+
+  m_mv = e->add_component<Engine::Core::MovementComponent>();
+  if (m_mv != nullptr) {
+    m_mv->set_rest_position(params.position.x(), params.position.z());
+  }
+
+  m_atk = e->add_component<Engine::Core::AttackComponent>();
+
+  m_atk->range = profile.combat.ranged_range;
+  m_atk->damage = profile.combat.ranged_damage;
+  m_atk->cooldown = profile.combat.ranged_cooldown;
+
+  m_atk->melee_range = profile.combat.melee_range;
+  m_atk->melee_damage = profile.combat.melee_damage;
+  m_atk->melee_cooldown = profile.combat.melee_cooldown;
+
+  m_atk->preferred_mode = profile.combat.can_ranged
+                              ? Engine::Core::AttackComponent::CombatMode::Ranged
+                              : Engine::Core::AttackComponent::CombatMode::Melee;
+  m_atk->current_mode = profile.combat.can_ranged
+                            ? Engine::Core::AttackComponent::CombatMode::Ranged
+                            : Engine::Core::AttackComponent::CombatMode::Melee;
+  m_atk->can_ranged = profile.combat.can_ranged;
+  m_atk->can_melee = profile.combat.can_melee;
+
+  Engine::Core::EventManager::instance().publish(Engine::Core::UnitSpawnedEvent(
+      m_id, m_u->owner_id, m_u->spawn_type, params.is_initial_spawn));
+}
+
+} // namespace Game::Units

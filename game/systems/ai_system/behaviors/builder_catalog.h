@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 
 #include "../ai_types.h"
 
@@ -14,6 +15,8 @@ inline constexpr const char* BUILDING_TYPE_BARRACKS = "barracks";
 inline constexpr const char* BUILDING_TYPE_MARKETPLACE = "marketplace";
 inline constexpr const char* BUILDING_TYPE_CATAPULT = "catapult";
 inline constexpr const char* BUILDING_TYPE_BALLISTA = "ballista";
+inline constexpr const char* BUILDING_TYPE_RAM = "ram";
+inline constexpr const char* BUILDING_TYPE_SIEGE_TOWER = "siege_tower";
 inline constexpr const char* BUILDING_TYPE_FARM = "farm";
 inline constexpr const char* HARVEST_TREE = "cut_tree";
 inline constexpr const char* HARVEST_STONE = "collect_stone";
@@ -32,6 +35,10 @@ inline constexpr int MAX_CATAPULTS = 5;
 [[nodiscard]] auto building_type_name(const std::string& name) -> const char*;
 
 [[nodiscard]] auto preferred_siege_engine(const AIContext& context) -> const char*;
+
+[[nodiscard]] auto is_siege_engine_building(const char* building_type) -> bool;
+
+[[nodiscard]] auto is_assault_engine_building(const char* building_type) -> bool;
 
 [[nodiscard]] auto is_fortification(const char* building_type) -> bool;
 [[nodiscard]] auto is_fortification_or_tower(const std::string& building) -> bool;

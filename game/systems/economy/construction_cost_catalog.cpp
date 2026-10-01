@@ -205,6 +205,16 @@ auto builtin_cost_info(std::string_view item_type) -> ConstructionCostInfo {
     info.resource_costs.set(ResourceType::Iron, 30);
     return info;
   }
+  if (item_type == "ram") {
+    info.resource_costs.set(ResourceType::Wood, 70);
+    info.resource_costs.set(ResourceType::Iron, 15);
+    return info;
+  }
+  if (item_type == "siege_tower") {
+    info.resource_costs.set(ResourceType::Wood, 120);
+    info.resource_costs.set(ResourceType::Iron, 30);
+    return info;
+  }
   if (item_type == "defense_tower") {
     info.resource_costs.set(ResourceType::Wood, 60);
     info.resource_costs.set(ResourceType::Stone, 80);
@@ -261,6 +271,12 @@ auto builtin_build_time(std::string_view item_type) -> float {
   }
   if (item_type == "ballista") {
     return 12.0F;
+  }
+  if (item_type == "ram") {
+    return 14.0F;
+  }
+  if (item_type == "siege_tower") {
+    return 22.0F;
   }
   if (item_type == "defense_tower") {
     return 20.0F;

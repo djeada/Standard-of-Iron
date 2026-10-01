@@ -15,7 +15,8 @@ enum class MovementGate : std::uint8_t {
   DirectControl,
   HoldMode,
   MeleeLock,
-  BuilderBypass
+  BuilderBypass,
+  OnWall
 };
 
 [[nodiscard]] auto

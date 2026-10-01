@@ -7063,6 +7063,90 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
 
     {
       auto s = definition(
+          QString::fromLatin1(k_siege_ram_gate_breach_id),
+          QStringLiteral("Siege: Ram Breaches Gate"),
+          QStringLiteral("A battering ram is pushed up to a barred gate and splinters "
+                         "it open at full strength; the infantry behind it march "
+                         "through the breach."),
+
+          60.0F,
+          {30.0F, 52.0F, 18.0F});
+      s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+      s.suppress_terrain_scatter = true;
+      s.suppress_spawn_anchor = true;
+      s.suppress_ui_overlays = true;
+      s.owner_teams = {{.owner_id = 1, .team_id = 1}, {.owner_id = 2, .team_id = 2}};
+      gate_line(s, 1);
+      s.groups.push_back(building(QStringLiteral("gate"),
+                                  Game::Units::SpawnType::WallGate,
+                                  Nation::RomanRepublic,
+                                  1,
+                                  1,
+                                  {0.0F, 0.0F, 0.0F}));
+      s.groups.push_back(
+          group(QStringLiteral("ram"), Troop::Ram, 2, 1, {0.0F, 0.0F, -9.0F}, 1));
+      s.groups.push_back(group(QStringLiteral("followers"),
+                               Troop::Swordsman,
+                               2,
+                               1,
+                               {-0.5F, 0.0F, -14.0F},
+                               8));
+      auto attack =
+          at(0.4F, Command::Attack, QStringLiteral("ram"), QStringLiteral("gate"));
+      auto pass = when_destroyed(QStringLiteral("gate"),
+                                 Command::FormationMove,
+                                 QStringLiteral("followers"),
+                                 {});
+      pass.destination = {-0.5F, 0.0F, 8.0F};
+      s.steps = {attack, pass};
+      s.expectations.push_back(
+          expectation(Expect::GroupDestroyed, QStringLiteral("gate")));
+      s.expectations.push_back(
+          expectation(Expect::GroupExists, QStringLiteral("west_wall")));
+      s.expectations.push_back(
+          expectation(Expect::GroupExists, QStringLiteral("east_wall")));
+      s.expectations.push_back(expectation(Expect::GroupExists, QStringLiteral("ram")));
+      auto reached = expectation(Expect::GroupReachedDestination,
+                                 QStringLiteral("followers"),
+                                 {},
+                                 0.0F,
+                                 0.0F,
+                                 3.5F);
+      reached.position = pass.destination;
+      s.expectations.push_back(reached);
+      result.push_back(std::move(s));
+    }
+
+    {
+      auto s = definition(
+          QString::fromLatin1(k_siege_tower_wall_assault_id),
+          QStringLiteral("Siege: Tower Assaults Wall"),
+          QStringLiteral("A siege tower rolls against an enemy wall, drops its ramp "
+                         "and unloads a company onto the wall-top walkway."),
+
+          40.0F,
+          {30.0F, 52.0F, 18.0F});
+      s.camera_focus = QVector3D(-4.0F, 0.0F, 0.0F);
+      s.suppress_terrain_scatter = true;
+      s.suppress_spawn_anchor = true;
+      s.suppress_ui_overlays = true;
+      s.owner_teams = {{.owner_id = 1, .team_id = 1}, {.owner_id = 2, .team_id = 2}};
+      gate_line(s, 1);
+      s.groups.push_back(group(
+          QStringLiteral("tower"), Troop::SiegeTower, 2, 1, {-4.0F, 0.0F, -9.0F}, 1));
+      s.steps = {at(0.4F, Command::Move, QStringLiteral("tower"))};
+      s.steps.back().destination = {-4.0F, 0.0F, -3.0F};
+      s.expectations.push_back(
+          expectation(Expect::SiegeTowerDocked, QStringLiteral("tower")));
+      s.expectations.push_back(
+          expectation(Expect::WallWalkerObserved, QStringLiteral("tower")));
+      s.expectations.push_back(
+          expectation(Expect::GroupExists, QStringLiteral("west_wall")));
+      result.push_back(std::move(s));
+    }
+
+    {
+      auto s = definition(
           QString::fromLatin1(k_gate_consecutive_transit_id),
           QStringLiteral("Gate: Consecutive Transit"),
           QStringLiteral("Three files cross the same gate back to back; it must "

@@ -152,6 +152,17 @@ auto structure_attack_profile(const Engine::Core::Entity* attacker)
     profile.impact_height = 1.05F;
     profile.impact_style = StructureImpactStyle::Ballista;
     break;
+  case SpawnType::Ram:
+    profile.damage_multiplier = 3.5F;
+    profile.minimum_damage = 1;
+    profile.contact_clearance = 1.2F;
+    profile.impact_height = 0.9F;
+    profile.impact_style = StructureImpactStyle::Elephant;
+    break;
+  case SpawnType::SiegeTower:
+    profile.damage_multiplier = 0.0F;
+    profile.minimum_damage = 0;
+    break;
   case SpawnType::Elephant:
     profile.damage_multiplier = 1.60F;
     profile.minimum_damage = 1;
