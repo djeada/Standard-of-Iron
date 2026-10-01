@@ -9,8 +9,10 @@
 #include <vector>
 
 #include "render/entity/building_archetype_desc.h"
+#include "render/entity/building_archetype_library.h"
 #include "render/entity/building_decay.h"
 #include "render/entity/building_ornaments.h"
+#include "render/entity/nations/roman/home_renderer.h"
 #include "render/gl/primitives.h"
 #include "render/material_classification.h"
 #include "render/render_archetype.h"
@@ -110,28 +112,21 @@ TEST(BuildingArchetypeDesc, BuildsPointedConePartsForTimberSilhouettes) {
   EXPECT_EQ(archetype.lods[0].draws[0].mesh, get_unit_cone());
 }
 
-TEST(BuildingArchetypeDesc, ArchetypeSetSelectsStateVariant) {
+TEST(BuildingArchetypeDesc, LibrarySetServesTheBakedMeshPerState) {
   using namespace Render::GL;
 
-  const BuildingArchetypeSet set =
-      build_stateful_building_archetype_set([](BuildingState state) {
-        BuildingArchetypeDesc desc("state_set_test");
-        desc.add_box(QVector3D(0.0F, 0.0F, 0.0F),
-                     QVector3D(1.0F, 1.0F, 1.0F),
-                     state == BuildingState::Normal
-                         ? QVector3D(1.0F, 0.0F, 0.0F)
-                         : (state == BuildingState::Damaged
-                                ? QVector3D(0.0F, 1.0F, 0.0F)
-                                : QVector3D(0.0F, 0.0F, 1.0F)));
-        return build_building_archetype(desc, state);
-      });
-
-  EXPECT_EQ(set.for_state(BuildingState::Normal).lods[0].draws[0].color,
-            QVector3D(1.0F, 0.0F, 0.0F));
-  EXPECT_EQ(set.for_state(BuildingState::Damaged).lods[0].draws[0].color,
-            decayed_color(QVector3D(0.0F, 1.0F, 0.0F), BuildingState::Damaged, 1));
-  EXPECT_EQ(set.for_state(BuildingState::Destroyed).lods[0].draws[0].color,
-            decayed_color(QVector3D(0.0F, 0.0F, 1.0F), BuildingState::Destroyed, 1));
+  const BuildingArchetypeSet& set = building_archetype_set("roman_home");
+  for (const BuildingState state :
+       {BuildingState::Normal, BuildingState::Damaged, BuildingState::Destroyed}) {
+    const RenderArchetype& archetype = set.for_state(state);
+    EXPECT_EQ(archetype.debug_name, building_mesh_key("roman_home", state));
+    ASSERT_NE(archetype.merged_full, nullptr);
+    EXPECT_TRUE(archetype.lods[0].draws.empty())
+        << "the game keeps the baked mesh, not the parts";
+  }
+  EXPECT_NE(set.for_state(BuildingState::Normal).merged_full->indices.size(),
+            set.for_state(BuildingState::Destroyed).merged_full->indices.size());
+  EXPECT_EQ(&set, &building_archetype_set("roman_home"));
 }
 
 TEST(BuildingArchetypeDesc, HealthyStateKeepsAuthoredColors) {

@@ -6,8 +6,11 @@
 
 #include <cstdint>
 #include <functional>
+#include <map>
 #include <memory>
 #include <span>
+#include <string>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -145,7 +148,8 @@ public:
       const Key& key,
       std::span<const QMatrix4x4> rest_palette,
       std::span<const Render::Creature::StaticAttachmentSpec> attachments,
-      std::uint16_t variant_bucket) -> const RiggedMeshEntry*;
+      std::uint16_t variant_bucket,
+      std::string_view attachment_set_name = {}) -> const RiggedMeshEntry*;
 
   [[nodiscard]] auto
   find_rigged_asset(const Key& key) const noexcept -> const RiggedMeshEntry*;
@@ -167,6 +171,10 @@ public:
 
   [[nodiscard]] auto size() const noexcept -> std::size_t { return m_entries.size(); }
 
+  [[nodiscard]] auto runtime_attachment_bakes() const noexcept -> std::uint64_t {
+    return m_runtime_attachment_bakes;
+  }
+
   void begin_frame();
 
   void set_residency_budget_bytes(std::uint64_t bytes) noexcept {
@@ -178,6 +186,16 @@ public:
   }
 
   auto evict_unused_over_budget() -> std::uint64_t;
+
+  template <typename Fn>
+  void for_each_named_attachment_mesh(Fn&& fn) const {
+    for (const auto& [pack_key, attachment_key] : m_attachment_pack_keys) {
+      const auto it = m_attachment_meshes.find(attachment_key);
+      if (it != m_attachment_meshes.end() && it->second != nullptr) {
+        fn(pack_key, *it->second);
+      }
+    }
+  }
 
 private:
   struct SkinAtlasKey {
@@ -253,8 +271,11 @@ private:
                      AttachmentMeshKeyHash>
       m_attachment_meshes;
 
+  std::map<std::string, AttachmentMeshKey, std::less<>> m_attachment_pack_keys;
+
   mutable FrameStats m_frame_stats;
   bool m_has_pending_skin_ubo_uploads{false};
+  std::uint64_t m_runtime_attachment_bakes{0};
   std::uint64_t m_frame_index{0};
   Residency m_residency;
 };

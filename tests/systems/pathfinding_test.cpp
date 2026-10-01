@@ -182,7 +182,7 @@ TEST_F(PathfindingTest, ClearanceEarlyOutAgreesWithTheFullCellScan) {
   EXPECT_EQ(checked, 20000);
 }
 
-TEST_F(PathfindingTest, FormationClearanceRoutesAroundBlockedFootprints) {
+TEST_F(PathfindingTest, FormationRoutesKeepAnIndividualsClearanceFromBlockedCells) {
   Game::Systems::Pathfinding pathfinding(9, 9);
   pathfinding.set_grid_offset(-4.0F, -4.0F);
   pathfinding.update_navigation_grid();
@@ -197,7 +197,37 @@ TEST_F(PathfindingTest, FormationClearanceRoutesAroundBlockedFootprints) {
     EXPECT_TRUE(pathfinding.is_world_position_walkable(
         pathfinding.grid_to_world(cell),
         Game::Systems::Pathfinding::Passability::Light,
-        k_clearance));
+        Game::Systems::Pathfinding::routing_clearance(k_clearance)));
+  }
+}
+
+TEST_F(PathfindingTest, FormationWidthDoesNotDivertRoutesAroundANarrowPassage) {
+  using Game::Systems::Pathfinding;
+  using Game::Systems::Point;
+  Pathfinding pathfinding(48, 48);
+  pathfinding.update_navigation_grid();
+
+  for (int x = 18; x <= 28; ++x) {
+    for (int z = 10; z <= 38; ++z) {
+      if (z != 24) {
+        pathfinding.set_obstacle(x, z, true);
+      }
+    }
+  }
+
+  for (auto const passability :
+       {Pathfinding::Passability::Light, Pathfinding::Passability::Heavy}) {
+    auto const individual = pathfinding.find_path({10, 20}, {38, 24}, passability);
+    ASSERT_FALSE(individual.empty());
+    ASSERT_EQ(individual.back(), Point(38, 24));
+    ASSERT_NE(std::find(individual.begin(), individual.end(), Point(24, 24)),
+              individual.end());
+    for (float const width : {0.6F, 1.5F, 3.0F, 6.0F}) {
+      SCOPED_TRACE(width);
+      auto const formation =
+          pathfinding.find_path({10, 20}, {38, 24}, passability, width);
+      EXPECT_EQ(formation, individual);
+    }
   }
 }
 

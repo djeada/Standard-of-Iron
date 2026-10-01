@@ -22,7 +22,17 @@ The shared grid geometry those queries are built from lives in
 `game/systems/nav_grid_types.h`: `body_cell_range` and `cell_gap` give the cell box and
 edge distance for a body circle (`Walkability::can_stand` and
 `Pathfinding::is_world_position_walkable` had separate copies of that arithmetic), and
-`for_each_ring_cell` walks the perimeter of a square ring. Both expanding searches --
+`for_each_ring_cell` walks the perimeter of a square ring.
+
+Standability (`Walkability::can_stand`) also measures a body against building
+footprints and bodies. Those queries go through
+`BuildingCollisionRegistry::for_each_blocker_near`, an 8 m cell index of every
+navigation-blocking building and authored obstacle, filed under every cell its padded
+footprint or body covers and rebuilt when the registry changes. Before it, each
+standability test walked every building on the map, which on a city map like
+Aurelia Magna made the most frequent movement query linear in the size of the town.
+Both callers fold the visits with an order-free reduction (any, max), so the index
+returns exactly what the full scan did; the sim digests are unchanged. Both expanding searches --
 `Walkability::nearest_standable` and `Pathfinding::resolve_walkable_endpoint` -- used to
 scan the whole `(2r+1)^2` square per ring and discard the interior, which made an
 r-ring search O(r^3) instead of O(r^2). `for_each_ring_cell` visits the perimeter in the
@@ -676,12 +686,16 @@ of an obstacle and hands out a shortcut through a wall that has no gap in it.
 ### One clearance for every hard walkability test
 
 A formation carries two radii. `formation_navigation_clearance()` is the lateral
-half-extent of the whole body (3 m or more for a wide line) and is what A* _costs_
-against: cells within that distance of an obstacle get an overlap penalty so a wide
-body prefers the middle of a street. `Pathfinding::routing_clearance()` (the same
-value capped at `k_person_body_radius`, 0.34 m) is what A* _blocks_ against: a cell is
-open when one man fits, and the lane fitter folds the formation into whatever width
-the corridor actually has.
+half-extent of the whole body (3 m or more for a wide line), used to fit lanes and
+close ranks locally. `Pathfinding::routing_clearance()` (the same value capped at
+`k_person_body_radius`, 0.34 m) is what A* blocks against: a cell is open when one
+man fits. Route costs must not depend on formation width. A small, shared edge
+penalty encourages every unit to keep clear of obstacles, while formations take
+the same open gaps as individuals and compress as they cross. Charging for overlap
+with the full formation footprint made even one-cell gaps practically impassable
+whenever a long detour existed. The pathfinding and tight-gap navigation tests
+cover both a short gap and a long passage with open detours, plus movement that
+compresses through the gap and restores its spacing afterwards.
 
 Every yes/no walkability test that decides whether a single body needs a route
 uses `routing_clearance()`: the direct-line test in
@@ -706,13 +720,8 @@ per tick, all of them from units whose target genuinely has no straight line.
 
 The remaining searches on that benchmark are mostly `melee_walk_around_length`,
 the detour-length query the opportunity scan asks before it lets an idle unit
-engage an enemy whose straight line crosses an obstacle. That query is a
-"how far" question, not a "which corridor" question, so it searches with the
-routing clearance rather than the formation clearance: with the formation
-clearance the overlap costing (`k_rigid_overlap_cost` over a
-`k_max_cost_clearance` band) treats a 3 m strip along every obstacle and the map
-edge as nearly impassable and expands about 150 cells per search; with the
-one-man radius the same detours take about 80. It also asks `can_reach()` first,
+engage an enemy whose straight line crosses an obstacle. It searches with the
+routing clearance and asks `can_reach()` first,
 so a target in another connected region, or off the grid, is "walled off"
 without exhausting the attacker's whole region in A*; the only behaviour that
 changes is an enemy standing on an unwalkable cell, which now counts as walled

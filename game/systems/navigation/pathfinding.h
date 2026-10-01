@@ -215,9 +215,6 @@ private:
   static constexpr int k_edge_step_penalty = 1;
 
   static constexpr int k_clearance_radius = 3;
-  static constexpr float k_clearance_overlap_cost = 10.0F;
-  static constexpr float k_max_cost_clearance = 3.0F;
-  static constexpr float k_rigid_overlap_cost = 100.0F;
   static constexpr int k_turn_penalty = 1;
 
   static constexpr float k_climb_noise_floor_metres = 0.05F;
@@ -298,8 +295,6 @@ private:
     Passability passability{Passability::Light};
     float one_man{0.0F};
     bool centre_clear_of_neighbours{false};
-    float costed_clearance{0.0F};
-    float cell_size{1.0F};
   };
 
   struct SearchOutcome {
@@ -315,8 +310,7 @@ private:
                                          float clearance_radius) const -> SearchRequest;
   [[nodiscard]] auto
   search_cell_walkable(const SearchRequest& request, int x, int y) const -> bool;
-  [[nodiscard]] auto
-  search_clearance_cost(const SearchRequest& request, int x, int y) const -> int;
+  [[nodiscard]] auto search_clearance_cost(int x, int y) const -> int;
   auto goal_in_start_region(const Point& start,
                             const Point& end,
                             Passability passability,

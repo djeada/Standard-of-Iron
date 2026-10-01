@@ -136,9 +136,6 @@ void submit_building_instance(ISubmitter& out,
   if (ctx.entity != nullptr) {
     ++s_building_submit_tick;
     prune_building_state_memory(s_building_submit_tick);
-    if (!ctx.template_prewarm) {
-      instance.static_id = static_cast<std::uint32_t>(ctx.entity->get_id());
-    }
     switch (resolve_building_state(ctx)) {
     case BuildingState::Damaged:
       instance.damage_material_id = 10;

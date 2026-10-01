@@ -14,6 +14,7 @@
 #include "game/core/component.h"
 #include "game/visuals/team_colors.h"
 #include "render/entity/building_archetype_desc.h"
+#include "render/entity/building_archetype_library.h"
 #include "render/entity/building_decay.h"
 #include "render/entity/building_ornaments.h"
 #include "render/entity/building_render_common.h"
@@ -740,13 +741,9 @@ auto build_marketplace_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
   return desc;
 }
 
-auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
-  return build_building_archetype(build_marketplace_desc_impl(state), state);
-}
-
 auto marketplace_archetype(BuildingState state) -> const RenderArchetype& {
-  static const BuildingArchetypeSet k_set =
-      build_stateful_building_archetype_set(build_marketplace_archetype);
+  static const BuildingArchetypeSet& k_set =
+      building_archetype_set("roman_marketplace");
   return k_set.for_state(state);
 }
 

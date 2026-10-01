@@ -127,10 +127,9 @@ void draw_ram_body(const DrawContext& p,
 
   const Painter g{out, unit, white, ctx.model};
 
-  // Chassis: two runners and cross-beams.
   for (float side : {-1.0F, 1.0F}) {
     g.box({side * 0.30F, 0.26F, 0.0F}, {0.04F, 0.04F, 0.72F}, c.wood_frame);
-    // Four posts.
+
     for (float z : {-0.60F, 0.60F}) {
       g.box({side * 0.30F, 0.56F, z}, {0.035F, 0.30F, 0.035F}, c.wood_dark);
     }
@@ -140,7 +139,6 @@ void draw_ram_body(const DrawContext& p,
     g.box({0.0F, 0.26F, z}, {0.30F, 0.035F, 0.035F}, c.wood_frame);
   }
 
-  // Pitched hide roof, two sloping panels meeting at a ridge.
   for (float side : {-1.0F, 1.0F}) {
     QMatrix4x4 m = ctx.model;
     m.translate(side * 0.19F, 1.00F, 0.0F);
@@ -149,12 +147,11 @@ void draw_ram_body(const DrawContext& p,
     out.mesh(unit, m, c.hide, white, 1.0F);
   }
   g.box({0.0F, 1.10F, 0.0F}, {0.03F, 0.03F, 0.76F}, c.wood_dark);
-  // Team-coloured pennant stripe along the roof ridge side.
+
   for (float side : {-1.0F, 1.0F}) {
     g.box({side * 0.34F, 0.92F, 0.0F}, {0.006F, 0.05F, 0.46F}, c.team * 0.8F);
   }
 
-  // Suspended beam. It rocks while rolling and thrusts when locked on a target.
   const bool striking = in_melee(p);
   float swing = 0.0F;
   if (striking) {
@@ -169,7 +166,7 @@ void draw_ram_body(const DrawContext& p,
   g.cyl(tail, head, 0.075F, c.wood_light);
   g.cyl(head, head + QVector3D(0.0F, 0.0F, 0.12F), 0.10F, c.iron);
   g.box(head + QVector3D(0.0F, 0.0F, 0.14F), {0.07F, 0.07F, 0.03F}, c.iron * 1.15F);
-  // Chains hanging the beam from the ridge.
+
   for (float z : {-0.30F, 0.30F}) {
     g.cyl({0.0F, 1.08F, z}, {0.0F, 0.58F, z + draw_back * 0.35F}, 0.012F, c.iron);
   }
@@ -190,7 +187,7 @@ void draw_tower_body(const DrawContext& p,
 
   constexpr float half = 0.42F;
   constexpr float top = 2.05F;
-  // Corner posts and rails on four levels.
+
   for (float x : {-half, half}) {
     for (float z : {-half, half}) {
       g.box({x, top * 0.5F + 0.18F, z}, {0.045F, top * 0.5F, 0.045F}, c.wood_dark);
@@ -202,15 +199,15 @@ void draw_tower_body(const DrawContext& p,
       g.box({s * half, y, 0.0F}, {0.035F, 0.035F, half}, c.wood_frame);
     }
   }
-  // Hide-clad walls on both sides and the back; the front stays open to the ramp.
+
   for (float s : {-1.0F, 1.0F}) {
     g.box({s * (half + 0.01F), 1.05F, 0.0F}, {0.012F, 0.95F, half - 0.03F}, c.hide);
   }
   g.box({0.0F, 1.05F, -half - 0.01F}, {half - 0.03F, 0.95F, 0.012F}, c.hide);
-  // Diagonal braces.
+
   g.cyl({-half, 0.4F, half}, {half, 1.5F, half}, 0.02F, c.wood_dark);
   g.cyl({half, 0.4F, half}, {-half, 1.5F, half}, 0.02F, c.wood_dark);
-  // Fighting platform and parapet at the top.
+
   g.box({0.0F, top + 0.18F, 0.0F}, {half + 0.04F, 0.02F, half + 0.04F}, c.wood_frame);
   for (float s : {-1.0F, 1.0F}) {
     g.box(
@@ -218,7 +215,7 @@ void draw_tower_body(const DrawContext& p,
     g.box(
         {0.0F, top + 0.30F, -s * (half + 0.04F)}, {half + 0.04F, 0.12F, 0.02F}, c.hide);
   }
-  // Boarding ramp folded against the front face; it drops when the tower is docked.
+
   float ramp = 0.0F;
   if (p.entity != nullptr && p.world != nullptr) {
     if (const auto* tower =
@@ -234,7 +231,7 @@ void draw_tower_body(const DrawContext& p,
     m.scale(0.34F, 0.018F, 0.33F);
     out.mesh(unit, m, c.wood_light, white, 1.0F);
   }
-  // Banner.
+
   g.cyl({-half, top + 0.18F, -half}, {-half, top + 0.78F, -half}, 0.012F, c.accent);
   g.box({-half, top + 0.66F, -half + 0.09F}, {0.006F, 0.08F, 0.09F}, c.team);
 

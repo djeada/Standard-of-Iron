@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <limits>
 #include <optional>
 
 #include "render/creature/part_graph.h"
@@ -8,7 +9,7 @@
 namespace Render::Creature::Pipeline {
 
 struct LodDistanceThresholds {
-  float full{12.0F};
+  float full{std::numeric_limits<float>::max() / 4.0F};
   float cull{200.0F};
 };
 

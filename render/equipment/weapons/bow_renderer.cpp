@@ -17,6 +17,7 @@
 #include "render/entity/registry.h"
 #include "render/entity/renderer_constants.h"
 #include "render/equipment/attachment_builder.h"
+#include "render/equipment/equipment_cache_key.h"
 #include "render/equipment/equipment_submit.h"
 #include "render/equipment/generated_equipment.h"
 #include "render/equipment/oriented_archetype_utils.h"
@@ -102,7 +103,7 @@ auto operator==(const BowBodyKey& lhs, const BowBodyKey& rhs) -> bool {
 }
 
 auto quantize_bow_value(float value) -> int {
-  return std::lround(value * 1000.0F);
+  return equipment_key(value);
 }
 
 auto resolve_bow_geometry(const BowRenderConfig& config) -> BowResolvedGeometry {

@@ -6,6 +6,7 @@
 
 #include <array>
 #include <cmath>
+#include <map>
 #include <vector>
 
 #include "frame_profile.h"
@@ -72,6 +73,11 @@ public:
     std::size_t untimed_presentation_frames = 0;
     double cluster_max = 0;
     QJsonObject worst_evidence;
+    struct HitchTally {
+      std::size_t frames{0};
+      double worst_ms{0};
+    };
+    std::map<QString, HitchTally> hitch_attribution;
     auto finish_cluster = [&] {
       if (cluster_size == 0) {
         return;
@@ -116,34 +122,43 @@ public:
         if (cluster_size++ == 0) {
           cluster_start = i;
         }
+        std::size_t dominant = static_cast<std::size_t>(Phase::Frame);
+        for (std::size_t p = 0; p < sample.phase_us.size(); ++p) {
+          if (p == static_cast<std::size_t>(Phase::Simulation) ||
+              p == static_cast<std::size_t>(Phase::Present)) {
+            continue;
+          }
+          if (sample.phase_us[p] > sample.phase_us[dominant]) {
+            dominant = p;
+          }
+        }
+        const auto dominant_name =
+            sample.phase_us[dominant] == 0
+                ? QStringLiteral("unattributed")
+                : QString::fromLatin1(phase_name(static_cast<Phase>(dominant)));
+        auto& tally = hitch_attribution[dominant_name];
+        tally.frames += 1;
+        tally.worst_ms = std::max(tally.worst_ms, sample.interval_ms);
         if (sample.interval_ms > cluster_max) {
           cluster_max = sample.interval_ms;
           QJsonObject phases;
-          std::size_t dominant = static_cast<std::size_t>(Phase::Frame);
           for (std::size_t p = 0; p < sample.phase_us.size(); ++p) {
-
             if (p == static_cast<std::size_t>(Phase::Simulation) ||
                 p == static_cast<std::size_t>(Phase::Present)) {
               continue;
             }
             phases.insert(QString::fromLatin1(phase_name(static_cast<Phase>(p))),
                           static_cast<double>(sample.phase_us[p]) / 1000.0);
-            if (sample.phase_us[p] > sample.phase_us[dominant]) {
-              dominant = p;
-            }
           }
-          worst_evidence = QJsonObject{
-              {"frame", static_cast<qint64>(i)},
-              {"cpu_ms", sample.cpu_ms},
-              {"render_elapsed_ms", sample.render_elapsed_ms},
-              {"gpu_ms_delayed", sample.gpu_ms},
-              {"upload_bytes", sample.upload_bytes},
-              {"asset_work", static_cast<qint64>(sample.asset_work)},
-              {"phase_ms", phases},
-              {"largest_cpu_phase",
-               sample.phase_us[dominant] == 0
-                   ? QStringLiteral("unattributed")
-                   : QString::fromLatin1(phase_name(static_cast<Phase>(dominant)))}};
+          worst_evidence =
+              QJsonObject{{"frame", static_cast<qint64>(i)},
+                          {"cpu_ms", sample.cpu_ms},
+                          {"render_elapsed_ms", sample.render_elapsed_ms},
+                          {"gpu_ms_delayed", sample.gpu_ms},
+                          {"upload_bytes", sample.upload_bytes},
+                          {"asset_work", static_cast<qint64>(sample.asset_work)},
+                          {"phase_ms", phases},
+                          {"largest_cpu_phase", dominant_name}};
         }
       } else {
         finish_cluster();
@@ -189,6 +204,13 @@ public:
         preset != "ultra") {
       failures.append(QStringLiteral("unknown graphics preset"));
     }
+    QJsonObject attribution_json;
+    for (const auto& [name, tally] : hitch_attribution) {
+      attribution_json.insert(
+          name,
+          QJsonObject{{"hitch_frames", static_cast<qint64>(tally.frames)},
+                      {"worst_ms", tally.worst_ms}});
+    }
     QJsonArray window_json;
     for (std::size_t i = 0; i < windows.size(); ++i) {
       window_json.append(
@@ -207,6 +229,7 @@ public:
                        {"hitch_threshold_ms", budget.hitch_ms},
                        {"hitch_frames", static_cast<qint64>(hitches)},
                        {"clusters", clusters},
+                       {"hitch_attribution", attribution_json},
                        {"checks", checks},
                        {"failures", failures}};
   }

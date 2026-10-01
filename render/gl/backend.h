@@ -169,6 +169,9 @@ public:
 
   [[nodiscard]] auto supports_static_batch() const noexcept -> bool;
 
+  auto prewarm_static_meshes(
+      std::span<const std::shared_ptr<const MergedBuildingMesh>> meshes) -> bool;
+
   void enable_depth_test(bool enable) {
     if (enable) {
       glEnable(GL_DEPTH_TEST);

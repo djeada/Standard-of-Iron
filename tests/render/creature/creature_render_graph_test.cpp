@@ -172,6 +172,31 @@ TEST(CreatureRenderGraph, QuadrupedLodUsesElephantDistances) {
   settings.set_quality(Render::k_default_graphics_quality);
 }
 
+TEST(CreatureRenderGraph, EveryCreatureKindFollowsThePresetLodSwitch) {
+  auto& settings = Render::GraphicsSettings::instance();
+  CreatureGraphInputs inputs;
+  inputs.camera_distance = 60.0F;
+  inputs.has_camera = true;
+  for (const CreatureKind kind : {CreatureKind::Humanoid,
+                                  CreatureKind::Horse,
+                                  CreatureKind::Elephant,
+                                  CreatureKind::Mounted,
+                                  CreatureKind::Sheep,
+                                  CreatureKind::Wolf}) {
+    settings.set_quality(Render::GraphicsQuality::High);
+    EXPECT_EQ(evaluate_creature_lod(inputs, creature_lod_config(kind)).lod,
+              CreatureLOD::Full)
+        << static_cast<int>(kind);
+    settings.set_quality(Render::GraphicsQuality::Low);
+    EXPECT_EQ(evaluate_creature_lod(inputs, creature_lod_config(kind)).lod,
+              CreatureLOD::Minimal)
+        << static_cast<int>(kind);
+  }
+  EXPECT_EQ(evaluate_creature_lod(inputs, CreatureLodConfig{}).lod, CreatureLOD::Full)
+      << "a default config must never lower detail";
+  settings.set_quality(Render::k_default_graphics_quality);
+}
+
 TEST(CreatureRenderGraph, HighAndUltraKeepTroopLodFullAtLongDistance) {
   auto& settings = Render::GraphicsSettings::instance();
   settings.set_quality(Render::GraphicsQuality::High);

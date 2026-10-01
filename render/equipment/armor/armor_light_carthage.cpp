@@ -51,12 +51,12 @@ auto armor_light_carthage_archetype(const QMatrix4x4& cuirass,
 
   static std::deque<CachedArchetype> cache;
   std::string key = "carthage_light_armor_";
-  append_quantized_key(key, cuirass);
+  append_exact_key(key, cuirass);
   for (const auto& m : straps) {
-    append_quantized_key(key, m);
+    append_exact_key(key, m);
   }
-  append_quantized_key(key, front_panel);
-  append_quantized_key(key, back_panel);
+  append_exact_key(key, front_panel);
+  append_exact_key(key, back_panel);
 
   for (const auto& entry : cache) {
     if (entry.key == key) {

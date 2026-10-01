@@ -178,8 +178,11 @@ auto Renderer::initialize() -> bool {
   register_built_in_equipment();
   (void)RenderArchetypeRegistry::instance().warm_all();
 
+  const std::string creature_asset_directory =
+      find_baked_mesh_directory("assets/creatures").string();
   const std::size_t loaded_bpat =
-      Render::Creature::Bpat::BpatRegistry::instance().load_all("assets/creatures");
+      Render::Creature::Bpat::BpatRegistry::instance().load_all(
+          creature_asset_directory);
   if (loaded_bpat != Render::Creature::Bpat::k_species_count) {
     qWarning() << "Renderer: loaded" << loaded_bpat << "of"
                << Render::Creature::Bpat::k_species_count << "BPAT creature assets:"
@@ -187,9 +190,10 @@ auto Renderer::initialize() -> bool {
                       Render::Creature::Bpat::BpatRegistry::instance().last_error()));
   }
   (void)Render::Creature::Snapshot::SnapshotMeshRegistry::instance().load_all(
-      "assets/creatures");
+      creature_asset_directory);
   (void)Render::Creature::Rigged::RiggedMeshRegistry::instance().load_all(
-      "assets/creatures");
+      creature_asset_directory);
+  (void)StaticMeshLibrary::instance().size();
   m_unit_cylinder_mesh = get_unit_cylinder();
   return true;
 }
@@ -494,18 +498,13 @@ void Renderer::part(Mesh* mesh,
 }
 
 void Renderer::render_instance(const RenderInstance& instance) {
-  const bool static_eligible =
-      m_gl_backend != nullptr && m_gl_backend->supports_static_batch() &&
-      instance.alpha_multiplier == 1.0F && instance.default_texture != nullptr &&
-      m_ghost_coverage <= 0.0F && m_current_shader == nullptr;
-  const auto* dynamic_draws =
-      static_eligible ? m_static_buildings.place(instance) : nullptr;
-  if (dynamic_draws == nullptr) {
+
+  const float coverage = m_ghost_coverage > 0.0F ? m_ghost_coverage
+                         : instance.alpha_multiplier < 1.0F
+                             ? std::max(instance.alpha_multiplier, 0.0F)
+                             : 0.0F;
+  if (!m_static_buildings.place(instance, coverage)) {
     submit_render_instance(*this, instance);
-    return;
-  }
-  for (const RenderArchetypeDraw* draw : *dynamic_draws) {
-    submit_render_draw(*this, instance, *draw);
   }
 }
 

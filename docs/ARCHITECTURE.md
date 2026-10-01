@@ -331,3 +331,4 @@ These are current implementation constraints. They are not a list of proposed fe
 - [MISSION_FRAMEWORK.md](MISSION_FRAMEWORK.md) — mission schema, AI setup, waves, objectives, and campaign membership.
 - [MISSION_STARTUP.md](MISSION_STARTUP.md) — map-context reuse, startup readiness, and initial AI preparation.
 - [FRAME_PACING.md](FRAME_PACING.md) — presentation performance budgets and qualification workflow.
+- [BAKED_MESHES.md](BAKED_MESHES.md) — procedural meshes merged at build time: building and equipment packs, tessellation, adding content.

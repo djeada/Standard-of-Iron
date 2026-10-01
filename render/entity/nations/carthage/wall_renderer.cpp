@@ -35,14 +35,14 @@ const WallGeometry k_wall_geometry{.earthwork_base = true,
                                    .berm_half_width = 0.28F,
                                    .berm_height = 0.20F};
 auto wall_archetypes() -> const WallArchetypeSet& {
-  static const WallArchetypeSet archetypes = build_wall_archetype_set(
-      "carthage_wall_variant", k_wall_palette, k_wall_geometry);
+  static const WallArchetypeSet archetypes =
+      wall_archetype_set("carthage_wall_variant");
   return archetypes;
 }
 
 auto gate_archetype() -> const BuildingArchetypeSet& {
-  static const BuildingArchetypeSet archetype = build_wall_gate_archetype(
-      "carthage_wall_variant", k_wall_palette, k_wall_geometry);
+  static const BuildingArchetypeSet& archetype =
+      wall_gate_archetype("carthage_wall_variant");
   return archetype;
 }
 

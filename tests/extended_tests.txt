@@ -90,6 +90,14 @@ MissionAssetRulesTest.GatherObjectivesFitTheHarvestActuallyOnTheMap
 
 # render_tests
 BpatRegistry.*
+# Rebake every building and every troop's equipment and compare with the shipped
+# packs; the pull-request lane keeps the cheap name-coverage checks.
+StaticMeshPack.ShippedBuildingPackMatchesTheCatalog
+# Starts the renderer and loads the shipped creature assets. Its one-nation input
+# leaves the roster unknown, so prewarm expands across every shipped nation; this
+# pack-coverage check measured 11.1 s in the pull-request Debug profile.
+AttachmentMeshPack.ShippedPackCoversOneNationsTroops
+AttachmentMeshPack.ShippedPackCoversEveryTroopOfEveryNation
 DrawQueueSortCost.*
 TemplatePrewarmRegression.*
 ScatterRuntimeTest.CampaniaCampaignMaintainsRichNaturalScatter

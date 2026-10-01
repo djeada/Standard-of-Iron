@@ -5,6 +5,7 @@
 #include <cmath>
 #include <cstddef>
 
+#include "building_archetype_library.h"
 #include "building_decay.h"
 #include "farm_activity.h"
 #include "farm_worker_props.h"
@@ -569,12 +570,14 @@ void add_farm_scarecrow(BuildingArchetypeDesc& desc,
                     BuildingStateMask::Destroyed);
 }
 
-auto farm_archetype_from_table(
-    const std::array<std::array<RenderArchetype, 3>, k_farm_render_stage_count>& table,
-    BuildingState state,
-    int stage) -> const RenderArchetype& {
+auto farm_stage_archetype(std::string_view nation_slug,
+                          BuildingState state,
+                          int stage) -> const RenderArchetype& {
   const int clamped_stage = std::clamp(stage, 0, k_farm_render_stage_count - 1);
-  return table[static_cast<std::size_t>(clamped_stage)][state_index(state)];
+  std::string name(nation_slug);
+  name += "_farm_stage_";
+  name += std::to_string(clamped_stage);
+  return building_archetype_set(name).for_state(state);
 }
 
 void register_farm_renderer_variant(EntityRendererRegistry& registry,

@@ -8,6 +8,7 @@
 
 #include "building_palette.h"
 #include "render/entity/building_archetype_desc.h"
+#include "render/entity/building_archetype_library.h"
 #include "render/entity/building_decay.h"
 #include "render/entity/building_ornaments.h"
 #include "render/entity/building_render_common.h"
@@ -864,13 +865,8 @@ auto build_temple_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
   return desc;
 }
 
-auto build_temple_archetype(BuildingState state) -> RenderArchetype {
-  return build_building_archetype(build_temple_desc_impl(state), state);
-}
-
 auto temple_archetype(BuildingState state) -> const RenderArchetype& {
-  static const BuildingArchetypeSet k_set =
-      build_stateful_building_archetype_set(build_temple_archetype);
+  static const BuildingArchetypeSet& k_set = building_archetype_set("carthage_temple");
   return k_set.for_state(state);
 }
 

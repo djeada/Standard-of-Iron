@@ -4,6 +4,7 @@
 #include <array>
 #include <cstdint>
 #include <gtest/gtest.h>
+#include <memory>
 #include <span>
 #include <vector>
 
@@ -12,14 +13,18 @@
 #include "render/material_classification.h"
 #include "render/render_archetype.h"
 #include "render/static_building_batch.h"
+#include "render/static_mesh_pack.h"
 
 namespace {
 
+using Render::GL::build_merged_building_mesh;
 using Render::GL::BuildingInstanceGpu;
 using Render::GL::MergedBuildingMesh;
 using Render::GL::MergedBuildingVertex;
+using Render::GL::next_merged_mesh_id;
 using Render::GL::RenderArchetype;
 using Render::GL::RenderArchetypeBuilder;
+using Render::GL::RenderArchetypeLod;
 using Render::GL::RenderInstance;
 using Render::GL::StaticBatchDraw;
 using Render::GL::StaticBuildingBatch;
@@ -44,7 +49,6 @@ auto two_part_archetype() -> RenderArchetype {
 }
 
 auto instance_at(const RenderArchetype& archetype,
-                 std::uint32_t id,
                  float x,
                  const std::array<QVector3D, 1>& palette) -> RenderInstance {
   RenderInstance instance;
@@ -52,7 +56,6 @@ auto instance_at(const RenderArchetype& archetype,
   instance.world.translate(x, 0.0F, 0.0F);
   instance.palette = palette;
   instance.default_texture = fake_texture();
-  instance.static_id = id;
   return instance;
 }
 
@@ -237,7 +240,7 @@ TEST(MergedBuildingMesh, DecodedVerticesMatchTheDynamicPathForEveryInstanceState
 TEST(StaticBuildingBatch, InstancePacksWorldPaletteUnseenAndDamage) {
   const RenderArchetype archetype = two_part_archetype();
   const std::array<QVector3D, 1> palette{QVector3D(0.8F, 0.1F, 0.1F)};
-  RenderInstance instance = instance_at(archetype, 7U, 10.0F, palette);
+  RenderInstance instance = instance_at(archetype, 10.0F, palette);
 
   BuildingInstanceGpu seen = Render::GL::pack_building_instance(instance);
   EXPECT_FLOAT_EQ(seen.model_col0[3], 10.0F);
@@ -259,19 +262,37 @@ TEST(StaticBuildingBatch, InstancePacksWorldPaletteUnseenAndDamage) {
   EXPECT_FLOAT_EQ(unseen.state[1], 1.0F);
 }
 
-TEST(StaticBuildingBatch, BuildingsJoinOnTheirFirstFrameAndGroupByArchetype) {
-  const RenderArchetype first = two_part_archetype();
-  const RenderArchetype second = two_part_archetype();
+auto baked_two_part_archetype() -> RenderArchetype {
+  RenderArchetype archetype = two_part_archetype();
+  MergedBuildingMesh merged = build_merged_building_mesh(
+      archetype.lods[static_cast<std::size_t>(RenderArchetypeLod::Full)]);
+  merged.id = next_merged_mesh_id();
+  archetype.merged_full = std::make_shared<const MergedBuildingMesh>(std::move(merged));
+  return archetype;
+}
+
+TEST(StaticBuildingBatch, UnbakedBuildingsAreNeverMergedWhileRendering) {
+  const RenderArchetype archetype = two_part_archetype();
+  const std::array<QVector3D, 1> palette{QVector3D(0.8F, 0.1F, 0.1F)};
+  StaticBuildingBatch batch;
+  batch.begin_frame();
+  EXPECT_FALSE(batch.place(instance_at(archetype, 0.0F, palette)));
+  batch.finish_frame();
+  EXPECT_EQ(archetype.merged_full, nullptr);
+  EXPECT_TRUE(batch.draws().empty());
+}
+
+TEST(StaticBuildingBatch, BakedBuildingsJoinOnTheirFirstFrameAndGroupByArchetype) {
+  const RenderArchetype first = baked_two_part_archetype();
+  const RenderArchetype second = baked_two_part_archetype();
   const std::array<QVector3D, 1> palette{QVector3D(0.8F, 0.1F, 0.1F)};
   StaticBuildingBatch batch;
 
   batch.begin_frame();
   for (std::uint32_t id = 1; id <= 4; ++id) {
     const RenderArchetype& archetype = (id % 2U == 0U) ? first : second;
-    const auto* dynamic = batch.place(
-        instance_at(archetype, id, static_cast<float>(id) * 20.0F, palette));
-    ASSERT_NE(dynamic, nullptr);
-    EXPECT_EQ(dynamic->size(), 1U);
+    EXPECT_TRUE(
+        batch.place(instance_at(archetype, static_cast<float>(id) * 20.0F, palette)));
   }
   batch.finish_frame();
 
@@ -293,19 +314,24 @@ TEST(StaticBuildingBatch, BuildingsJoinOnTheirFirstFrameAndGroupByArchetype) {
   EXPECT_TRUE(batch.instances().empty());
 }
 
-TEST(StaticBuildingBatch, PreviewsAndLargePalettesStayDynamic) {
-  const RenderArchetype archetype = two_part_archetype();
+TEST(StaticBuildingBatch, PreviewsAndGhostsDrawTheBakedMesh) {
+  const RenderArchetype archetype = baked_two_part_archetype();
   const std::array<QVector3D, 1> palette{QVector3D(0.8F, 0.1F, 0.1F)};
   StaticBuildingBatch batch;
   batch.begin_frame();
-  EXPECT_EQ(batch.place(instance_at(archetype, 0U, 0.0F, palette)), nullptr);
-
-  const std::array<QVector3D, 3> wide{QVector3D(), QVector3D(), QVector3D()};
-  RenderInstance instance = instance_at(archetype, 7U, 0.0F, palette);
-  instance.palette = wide;
-  EXPECT_EQ(batch.place(instance), nullptr);
+  RenderInstance preview = instance_at(archetype, 0.0F, palette);
+  preview.default_texture = nullptr;
+  EXPECT_TRUE(batch.place(preview));
+  EXPECT_TRUE(batch.place(instance_at(archetype, 10.0F, palette), 0.5F));
   batch.finish_frame();
-  EXPECT_TRUE(batch.instances().empty());
+  ASSERT_EQ(batch.instances().size(), 2U);
+  float opaque = -1.0F;
+  float ghost = -1.0F;
+  for (const BuildingInstanceGpu& record : batch.instances()) {
+    (record.model_col0[3] > 5.0F ? ghost : opaque) = record.state[2];
+  }
+  EXPECT_FLOAT_EQ(opaque, 0.0F);
+  EXPECT_FLOAT_EQ(ghost, 0.5F);
 }
 
 TEST(StaticBuildingBatch, UnseenSubmitterMarksForwardedInstances) {
@@ -342,11 +368,11 @@ TEST(StaticBuildingBatch, UnseenSubmitterMarksForwardedInstances) {
   Capture capture;
   Render::GL::UnseenSubmitter unseen(capture);
   RenderInstance instance;
-  instance.static_id = 3U;
+  instance.damage_material_id = 10;
   unseen.render_instance(instance);
 
   EXPECT_TRUE(capture.last.unseen);
-  EXPECT_EQ(capture.last.static_id, 3U);
+  EXPECT_EQ(capture.last.damage_material_id, 10);
 }
 
 } // namespace

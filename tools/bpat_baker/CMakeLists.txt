@@ -58,6 +58,11 @@ set(_soi_creature_asset_names
     wolf_minimal.bprm
 )
 
+# Static meshes merged from the procedural building catalog, one pack per family.
+set(_soi_mesh_assets_source_dir "${CMAKE_SOURCE_DIR}/assets/meshes")
+set(_soi_mesh_assets_build_dir "${CMAKE_BINARY_DIR}/bin/assets/meshes")
+set(_soi_mesh_asset_names buildings.smpk attachments.rmpk)
+
 # Bake once into the build tree and copy the result into the source tree, which
 # tests run from the repository root read. The baker used to run once per
 # directory: in a Debug build that is 171 s of a four-way build's CPU spent
@@ -72,17 +77,31 @@ foreach(_asset_name IN LISTS _soi_creature_asset_names)
         "${_soi_creature_assets_build_dir}/${_asset_name}"
     )
 endforeach()
+set(_soi_mesh_asset_baked)
+foreach(_asset_name IN LISTS _soi_mesh_asset_names)
+    list(APPEND _soi_mesh_asset_baked "${_soi_mesh_assets_build_dir}/${_asset_name}")
+    list(
+        APPEND _soi_creature_asset_outputs
+        "${_soi_mesh_assets_source_dir}/${_asset_name}"
+        "${_soi_mesh_assets_build_dir}/${_asset_name}"
+    )
+endforeach()
 
 add_custom_command(
     OUTPUT ${_soi_creature_asset_outputs}
     COMMAND "${CMAKE_COMMAND}" -E make_directory "${_soi_creature_assets_source_dir}"
     COMMAND "${CMAKE_COMMAND}" -E make_directory "${_soi_creature_assets_build_dir}"
-    COMMAND "$<TARGET_FILE:bpat_baker>" "${_soi_creature_assets_build_dir}"
+    COMMAND "${CMAKE_COMMAND}" -E make_directory "${_soi_mesh_assets_source_dir}"
+    COMMAND "${CMAKE_COMMAND}" -E make_directory "${_soi_mesh_assets_build_dir}"
+    COMMAND
+        "$<TARGET_FILE:bpat_baker>" "${_soi_creature_assets_build_dir}"
+        "${_soi_mesh_assets_build_dir}"
     COMMAND
         "${CMAKE_COMMAND}" -E copy ${_soi_creature_asset_baked} "${_soi_creature_assets_source_dir}"
+    COMMAND "${CMAKE_COMMAND}" -E copy ${_soi_mesh_asset_baked} "${_soi_mesh_assets_source_dir}"
     DEPENDS bpat_baker
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-    COMMENT "Baking creature animation assets"
+    COMMENT "Baking creature animation and static mesh assets"
     VERBATIM
 )
 

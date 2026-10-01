@@ -55,7 +55,7 @@ struct RenderArchetype {
   std::string debug_name;
   std::array<RenderArchetypeSlice, static_cast<std::size_t>(RenderArchetypeLod::Count)>
       lods{};
-  mutable std::shared_ptr<const MergedBuildingMesh> merged_full;
+  std::shared_ptr<const MergedBuildingMesh> merged_full;
 };
 
 struct RenderInstance {
@@ -65,7 +65,6 @@ struct RenderInstance {
   Texture* default_texture = nullptr;
   float alpha_multiplier = 1.0F;
   RenderArchetypeLod lod = RenderArchetypeLod::Full;
-  std::uint32_t static_id = 0U;
   int damage_material_id = 0;
   bool unseen = false;
 };
@@ -128,6 +127,8 @@ void submit_render_draw(ISubmitter& out,
                         const RenderInstance& instance,
                         const RenderArchetypeDraw& draw);
 void submit_render_instance(ISubmitter& out, const RenderInstance& instance);
+
+auto submit_baked_source_parts(ISubmitter& out, const RenderInstance& instance) -> bool;
 
 class RenderArchetypeBuilder {
 public:

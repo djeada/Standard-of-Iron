@@ -35,7 +35,12 @@ auto create_creature_render_asset(Render::GL::RiggedMeshCache& cache,
 
   const auto key = rigged_asset_key(handle, lod, blob.species_id());
   const auto* entry = cache.create_rigged_asset(
-      key, handle.bind_palette, handle.attachments, variant_bucket);
+      key,
+      handle.bind_palette,
+      handle.attachments,
+      variant_bucket,
+      handle.archetype != nullptr ? std::string_view(handle.archetype->debug_name)
+                                  : std::string_view{});
   if (entry == nullptr) {
     return nullptr;
   }

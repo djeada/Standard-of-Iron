@@ -105,6 +105,7 @@
 #include "game/units/troop_config.h"
 #include "game/units/troop_type.h"
 #include "render/camera_visibility.h"
+#include "render/entity/building_archetype_library.h"
 #include "render/geom/projectile_renderer.h"
 #include "render/gl/shared_geometry_cache.h"
 #include "render/ground/ambient_fog_renderer.h"
@@ -789,6 +790,9 @@ void GameEngine::apply_presentation_camera(
 
 void GameEngine::prewarm_overlay_gpu_resources() {
   (void)m_renderer->rigged_mesh_cache().prewarm_gpu_resources();
+  if (auto* backend = m_renderer->backend(); backend != nullptr) {
+    (void)backend->prewarm_static_meshes(Render::GL::requested_building_meshes());
+  }
   (void)Render::GL::prewarm_projectile_geometry();
   (void)Render::GL::SharedGeometryCache::instance().prewarm_gpu_resources();
   if (m_fog != nullptr) {

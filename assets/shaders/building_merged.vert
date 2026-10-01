@@ -68,7 +68,10 @@ void main() {
     material += int(a_instance_state.x);
   }
   v_material_id = material;
-  v_instance_alpha = a_part_color_alpha.a;
+
+  v_instance_alpha = a_instance_state.z > 0.0
+                         ? 1.0 + clamp(a_instance_state.z, 0.05, 0.95)
+                         : a_part_color_alpha.a;
 
   vec4 world_pos4 = model * vec4(a_position, 1.0);
   v_world_pos = world_pos4.xyz;

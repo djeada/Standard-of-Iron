@@ -41,6 +41,7 @@
 #include "scene/environment_lighting.h"
 #include "snapshot_mesh_cache.h"
 #include "static_building_batch.h"
+#include "static_mesh_pack.h"
 #include "submission_visibility.h"
 #include "submitter.h"
 #include "template_prewarm_catalog.h"

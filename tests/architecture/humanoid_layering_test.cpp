@@ -220,6 +220,28 @@ TEST(CreatureBakeBoundary, RuntimeCodeDoesNotIncludeBakeRecipes) {
   }
 }
 
+TEST(StaticMeshBakeBoundary, OnlyTheBuildingLibraryBuildsBuildingArchetypes) {
+  const auto root = find_repo_root();
+  static const std::vector<std::string> allowed{
+      "building_archetype_desc.cpp",
+      "building_archetype_desc.h",
+      "building_archetype_library.cpp",
+      "static_building_batch.cpp",
+      "static_building_batch.h",
+  };
+  for (const auto& file : sources_under(root / "render")) {
+    const auto name = file.filename().string();
+    if (std::find(allowed.begin(), allowed.end(), name) != allowed.end()) {
+      continue;
+    }
+    const auto source = read_text(file);
+    EXPECT_FALSE(contains(source, "build_building_archetype("))
+        << file.string() << " builds a building archetype outside the library";
+    EXPECT_FALSE(contains(source, "build_merged_building_mesh("))
+        << file.string() << " merges a static mesh outside the bake";
+  }
+}
+
 TEST(CreatureBakeBoundary, RuntimeManifestCarriesNoBakeFields) {
   const auto root = find_repo_root();
   const auto header =

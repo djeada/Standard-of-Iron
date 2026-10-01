@@ -24,6 +24,8 @@
 #include "battle_render_optimizer.h"
 #include "creature/archetype_registry.h"
 #include "creature/assets/creature_asset_prewarmer.h"
+#include "creature/pipeline/creature_asset.h"
+#include "creature/pipeline/creature_asset_init.h"
 #include "creature/pose_intent.h"
 #include "creature/quadruped/render_stats.h"
 #include "creature/runtime_bake_guard.h"
@@ -32,6 +34,7 @@
 #include "draw_queue.h"
 #include "elephant/dimensions.h"
 #include "elephant/elephant_renderer_base.h"
+#include "entity/building_archetype_library.h"
 #include "entity/building_render_common.h"
 #include "entity/civilian_actor.h"
 #include "entity/civilian_actor_prewarm.h"
@@ -52,6 +55,7 @@
 #include "game/units/spawn_type.h"
 #include "game/units/troop_catalog.h"
 #include "game/units/troop_config.h"
+#include "game/visuals/building_asset_key.h"
 #include "geom/mode_indicator.h"
 #include "gl/backend.h"
 #include "gl/buffer.h"
@@ -359,6 +363,41 @@ auto prewarm_humanoid_body_variants(Renderer& renderer,
     }
   }
   return baked;
+}
+
+void prewarm_creature_species(Renderer& renderer, bool full_lod_only) {
+  using Render::Creature::CreatureLOD;
+  auto const& archetypes = Render::Creature::ArchetypeRegistry::instance();
+  auto& handles =
+      Render::Creature::Pipeline::CreatureRenderAssetHandleRegistry::instance();
+  for (std::size_t index = 0; index < archetypes.size(); ++index) {
+    const auto* archetype =
+        archetypes.get(static_cast<Render::Creature::ArchetypeId>(index));
+    if (archetype == nullptr || archetype->bake_attachment_count != 0U) {
+      continue;
+    }
+    const auto* handle = handles.get(handles.get_or_create(
+        Render::Creature::Pipeline::k_invalid_creature_asset, archetype->id));
+    if (handle == nullptr || !handle->valid()) {
+      continue;
+    }
+    const Render::Creature::Bpat::BpatBlob* blob = nullptr;
+    for (const auto& playback : handle->playback) {
+      if (playback.blob != nullptr && playback.frame_count > 0U) {
+        blob = playback.blob;
+        break;
+      }
+    }
+    if (blob == nullptr) {
+      continue;
+    }
+    for (const CreatureLOD lod : {CreatureLOD::Full, CreatureLOD::Minimal}) {
+      if (!full_lod_only || lod == CreatureLOD::Full) {
+        (void)Render::Creature::Pipeline::create_creature_render_asset(
+            renderer.rigged_mesh_cache(), *handle, lod, *blob, 0U, true);
+      }
+    }
+  }
 }
 
 } // namespace
@@ -795,9 +834,14 @@ void Renderer::prewarm_unit_templates(
     }
   }
 
+  for (const auto nation_id : active_nation_ids) {
+    request_nation_buildings(Game::Visuals::nation_asset_slug(nation_id));
+  }
+
   prewarm_timer.profiles = profiles.size();
   {
     auto const started = std::chrono::steady_clock::now();
+    prewarm_creature_species(*this, full_lod_only);
     std::size_t const baked = prewarm_humanoid_body_variants(
         *this, m_entity_registry.get(), profiles, full_lod_only);
     qInfo().noquote() << "Template prewarm: baked" << baked

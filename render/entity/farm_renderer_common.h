@@ -74,23 +74,8 @@ void add_farm_scarecrow(BuildingArchetypeDesc& desc,
                         const QVector3D& cloth,
                         const QVector3D& straw);
 
-template <typename Builder>
-auto build_farm_archetype_table(Builder&& builder)
-    -> std::array<std::array<RenderArchetype, 3>, k_farm_render_stage_count> {
-  std::array<std::array<RenderArchetype, 3>, k_farm_render_stage_count> table{};
-  for (int stage = 0; stage < k_farm_render_stage_count; ++stage) {
-    table[static_cast<std::size_t>(stage)] = {
-        builder(BuildingState::Normal, stage),
-        builder(BuildingState::Damaged, stage),
-        builder(BuildingState::Destroyed, stage),
-    };
-  }
-  return table;
-}
-
-auto farm_archetype_from_table(
-    const std::array<std::array<RenderArchetype, 3>, k_farm_render_stage_count>& table,
-    BuildingState state,
-    int stage) -> const RenderArchetype&;
+auto farm_stage_archetype(std::string_view nation_slug,
+                          BuildingState state,
+                          int stage) -> const RenderArchetype&;
 
 } // namespace Render::GL

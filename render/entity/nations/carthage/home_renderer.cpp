@@ -9,6 +9,7 @@
 #include "game/core/component.h"
 #include "math/math_utils.h"
 #include "render/entity/building_archetype_desc.h"
+#include "render/entity/building_archetype_library.h"
 #include "render/entity/building_decay.h"
 #include "render/entity/building_facade_depth.h"
 #include "render/entity/building_ornaments.h"
@@ -316,13 +317,8 @@ auto build_home_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
   return desc;
 }
 
-auto build_home_archetype(BuildingState state) -> RenderArchetype {
-  return build_building_archetype(build_home_desc_impl(state), state);
-}
-
 auto home_archetype(BuildingState state) -> const RenderArchetype& {
-  static const BuildingArchetypeSet k_set =
-      build_stateful_building_archetype_set(build_home_archetype);
+  static const BuildingArchetypeSet& k_set = building_archetype_set("carthage_home");
   return k_set.for_state(state);
 }
 

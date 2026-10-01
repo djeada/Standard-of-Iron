@@ -1,8 +1,10 @@
 #pragma once
 
+#include <atomic>
 #include <cstdint>
 #include <functional>
 #include <map>
+#include <mutex>
 #include <set>
 #include <string>
 #include <string_view>
@@ -224,6 +226,27 @@ public:
     }
   }
 
+  template <typename Fn>
+  void for_each_blocker_near(float x, float z, float reach, Fn&& fn) const {
+    ensure_blocker_index();
+    int const min_x = blocker_cell(x - reach);
+    int const max_x = blocker_cell(x + reach);
+    int const min_z = blocker_cell(z - reach);
+    int const max_z = blocker_cell(z + reach);
+    for (int cell_z = min_z; cell_z <= max_z; ++cell_z) {
+      for (int cell_x = min_x; cell_x <= max_x; ++cell_x) {
+        auto const bucket = m_blocker_cells.find(bucket_key(cell_x, cell_z));
+        if (bucket == m_blocker_cells.end()) {
+          continue;
+        }
+        for (std::uint32_t const ref : bucket->second) {
+          fn((ref & k_authored_ref) != 0U ? m_authored_obstacles[ref & ~k_authored_ref]
+                                          : m_buildings[ref]);
+        }
+      }
+    }
+  }
+
   [[nodiscard]] auto is_point_in_building(
       float x, float z, Engine::Core::EntityID ignore_entity_id = 0) const -> bool;
 
@@ -283,6 +306,17 @@ private:
   std::unordered_map<std::int64_t, std::vector<Engine::Core::EntityID>>
       m_spatial_buckets;
   float m_max_half_extent{0.0F};
+
+  static constexpr float k_blocker_cell_size = 8.0F;
+  static constexpr std::uint32_t k_authored_ref = 1U << 31U;
+  static auto blocker_cell(float coordinate) -> int;
+  void invalidate_blockers() { m_blocker_index_stale = true; }
+  void ensure_blocker_index() const;
+
+  mutable std::mutex m_blocker_mutex;
+  mutable std::atomic<bool> m_blocker_index_stale{true};
+  mutable float m_blocker_padding{-1.0F};
+  mutable std::unordered_map<std::int64_t, std::vector<std::uint32_t>> m_blocker_cells;
 
   static const std::map<std::string, BuildingSize, std::less<>> s_building_sizes;
 

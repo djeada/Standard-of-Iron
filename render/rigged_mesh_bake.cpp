@@ -475,21 +475,22 @@ void append_static_attachment(const StaticAttachmentSpec& spec,
   const bool coarse = lod == CreatureLOD::Minimal;
 
   for (const Render::GL::RenderArchetypeDraw& draw : slice.draws) {
-    Mesh* src = coarse ? Render::GL::coarse_unit_mesh_for(draw.mesh) : draw.mesh;
-    if (src == nullptr) {
-      continue;
-    }
-    auto const& src_verts = src->get_vertices();
-    auto const& src_idx = src->get_indices();
-    if (src_verts.empty() || src_idx.empty()) {
-      continue;
-    }
-
     QMatrix4x4 scale_mat;
     if (spec.uniform_scale != 1.0F) {
       scale_mat.scale(spec.uniform_scale);
     }
     const QMatrix4x4 attach_model = spec.local_offset * scale_mat * draw.local_model;
+
+    Mesh* src = coarse ? Render::GL::coarse_unit_mesh_for(draw.mesh) : draw.mesh;
+    if (src == nullptr) {
+      continue;
+    }
+    src = Render::GL::bake_tessellated_mesh(src, attach_model);
+    auto const& src_verts = src->get_vertices();
+    auto const& src_idx = src->get_indices();
+    if (src_verts.empty() || src_idx.empty()) {
+      continue;
+    }
 
     if (coarse &&
         draw_world_extent(src_verts, attach_model) < k_minimal_detail_cutoff) {
@@ -568,7 +569,12 @@ auto bake_rigged_mesh_cpu(const BakeInput& in) -> BakedRiggedMeshCpu {
       if (!primitive_unit_model(prim, anchor_m, tail_m, unit_model)) {
         continue;
       }
-      append_primitive_vertices(prim, *unit_mesh, unit_model, in.bind_pose, out);
+      append_primitive_vertices(
+          prim,
+          *Render::GL::bake_tessellated_mesh(unit_mesh, unit_model),
+          unit_model,
+          in.bind_pose,
+          out);
     }
   }
 

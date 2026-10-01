@@ -13,9 +13,7 @@ auto build_wall_gate_desc(std::string_view name_prefix,
                           const WallPalette& palette,
                           const WallGeometry& geometry) -> BuildingArchetypeDesc;
 
-auto build_wall_gate_archetype(std::string_view name_prefix,
-                               const WallPalette& palette,
-                               const WallGeometry& geometry) -> BuildingArchetypeSet;
+auto wall_gate_archetype(std::string_view name_prefix) -> const BuildingArchetypeSet&;
 
 void submit_wall_gate(ISubmitter& out,
                       const DrawContext& ctx,

@@ -8,6 +8,7 @@
 #include <string>
 
 #include "building_archetype_desc.h"
+#include "building_archetype_library.h"
 #include "building_decay.h"
 #include "building_render_common.h"
 #include "game/core/component_gameplay.h"
@@ -362,13 +363,8 @@ auto build_wall_gate_desc(std::string_view name_prefix,
   return desc;
 }
 
-auto build_wall_gate_archetype(std::string_view name_prefix,
-                               const WallPalette& palette,
-                               const WallGeometry& geometry) -> BuildingArchetypeSet {
-  const BuildingArchetypeDesc desc =
-      build_wall_gate_desc(name_prefix, palette, geometry);
-  return build_stateful_building_archetype_set(
-      [&](BuildingState state) { return build_building_archetype(desc, state); });
+auto wall_gate_archetype(std::string_view name_prefix) -> const BuildingArchetypeSet& {
+  return building_archetype_set(std::string(name_prefix) + "_gate");
 }
 
 void submit_wall_gate(ISubmitter& out,
