@@ -15,6 +15,7 @@
 
 #include "animation/bpat/bpat_format.h"
 #include "animation/bpat/bpat_reader.h"
+#include "attachment_mesh_library.h"
 #include "bone_palette_arena.h"
 #include "creature/rigged_mesh_registry.h"
 #include "creature/runtime_bake_guard.h"
@@ -175,7 +176,8 @@ auto RiggedMeshCache::create_rigged_asset(
     const Key& key,
     std::span<const QMatrix4x4> rest_palette,
     std::span<const Render::Creature::StaticAttachmentSpec> attachments,
-    std::uint16_t) -> const RiggedMeshEntry* {
+    std::uint16_t,
+    std::string_view attachment_set_name) -> const RiggedMeshEntry* {
   const Render::Creature::CreatureSpec& spec = *key.spec;
   const Render::Creature::CreatureLOD lod = key.lod;
   const std::uint32_t skin_species_id = key.skin_species_id;
@@ -195,8 +197,18 @@ auto RiggedMeshCache::create_rigged_asset(
   const BaseMeshKey base_key{&spec, lod, skin_species_id};
   const AttachmentMeshKey attachment_key{&spec, lod, skin_species_id, attachments_hash};
   const bool base_is_cached = m_base_meshes.find(base_key) != m_base_meshes.end();
-  const bool attachments_are_cached =
-      attachments.empty() || m_attachment_meshes.contains(attachment_key);
+  std::shared_ptr<const AttachmentMeshEntry> baked_attachments;
+  std::string pack_key;
+  if (!attachments.empty() && !attachment_set_name.empty()) {
+    pack_key = attachment_mesh_key(spec, lod, skin_species_id, attachment_set_name);
+    m_attachment_pack_keys.try_emplace(pack_key, attachment_key);
+    if (!m_attachment_meshes.contains(attachment_key)) {
+      baked_attachments = AttachmentMeshLibrary::instance().find(pack_key);
+    }
+  }
+  const bool attachments_are_cached = attachments.empty() ||
+                                      baked_attachments != nullptr ||
+                                      m_attachment_meshes.contains(attachment_key);
   if (Render::Creature::runtime_bake_forbidden() &&
       ((!base_is_cached && prebaked == nullptr) || !attachments_are_cached)) {
     ++m_frame_stats.misses;
@@ -228,7 +240,11 @@ auto RiggedMeshCache::create_rigged_asset(
     if (!attachments.empty()) {
       auto [attachment_it, attachment_inserted] =
           m_attachment_meshes.try_emplace(attachment_key);
-      if (attachment_inserted || attachment_it->second == nullptr) {
+      if (baked_attachments != nullptr) {
+        attachment_it->second = std::make_shared<RiggedMesh>(
+            baked_attachments->vertices, baked_attachments->indices);
+      } else if (attachment_inserted || attachment_it->second == nullptr) {
+        ++m_runtime_attachment_bakes;
         Render::Creature::BakeInput input{};
         input.bind_pose = rest_palette;
         input.attachments = attachments;

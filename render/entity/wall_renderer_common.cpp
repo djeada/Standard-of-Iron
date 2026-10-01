@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <string>
 
+#include "building_archetype_library.h"
 #include "building_decay.h"
 
 namespace Render::GL {
@@ -688,17 +689,12 @@ auto build_wall_variant_desc(std::string_view name_prefix,
   return desc;
 }
 
-auto build_wall_archetype_set(std::string_view name_prefix,
-                              const WallPalette& palette,
-                              const WallGeometry& geometry) -> WallArchetypeSet {
+auto wall_archetype_set(std::string_view name_prefix) -> WallArchetypeSet {
   WallArchetypeSet out{};
 
   for (int i = 0; i < static_cast<int>(out.variants.size()); ++i) {
-    const BuildingArchetypeDesc desc = build_wall_variant_desc(
-        name_prefix, palette, geometry, static_cast<WallVariant>(i));
-
-    out.variants[static_cast<std::size_t>(i)] = build_stateful_building_archetype_set(
-        [&](BuildingState state) { return build_building_archetype(desc, state); });
+    out.variants[static_cast<std::size_t>(i)] =
+        &building_archetype_set(std::string(name_prefix) + "_" + std::to_string(i));
   }
 
   return out;
@@ -722,10 +718,11 @@ void submit_wall_segment_variant(ISubmitter& out,
                                  const DrawContext& ctx,
                                  const WallArchetypeSet& archetypes,
                                  WallVariant variant) {
-  submit_building_instance(out,
-                           ctx,
-                           archetypes.variants[wall_archetype_index(variant)].for_state(
-                               resolve_building_state(ctx)));
+  submit_building_instance(
+      out,
+      ctx,
+      archetypes.variants[wall_archetype_index(variant)]->for_state(
+          resolve_building_state(ctx)));
   draw_building_selection_overlay(out, ctx, BuildingSelectionStyle{2.0F, 2.0F});
 }
 

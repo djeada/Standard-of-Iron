@@ -9,6 +9,7 @@
 #include "math/math_utils.h"
 #include "render/entity/registry.h"
 #include "render/equipment/attachment_builder.h"
+#include "render/equipment/equipment_cache_key.h"
 #include "render/equipment/equipment_submit.h"
 #include "render/equipment/generated_equipment.h"
 #include "render/equipment/oriented_archetype_utils.h"
@@ -54,7 +55,7 @@ auto quiver_body_archetype(const QuiverRenderConfig& config) -> const RenderArch
   };
 
   static std::deque<CachedArchetype> cache;
-  int const radius_key = std::lround(config.quiver_radius * 1000.0F);
+  int const radius_key = equipment_key(config.quiver_radius);
   for (const auto& entry : cache) {
     if (entry.radius_key == radius_key && entry.material_id == config.material_id) {
       return entry.archetype;

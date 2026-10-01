@@ -9,6 +9,7 @@
 #include "render/entity/registry.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/equipment_archetype_helpers.h"
+#include "render/equipment/equipment_cache_key.h"
 #include "render/equipment/equipment_submit.h"
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
@@ -55,8 +56,8 @@ auto arm_guards_archetype(const ArmGuardsConfig& config,
   };
 
   static std::deque<CachedArchetype> cache;
-  int const arm_length_key = std::lround(arm_length * 1000.0F);
-  int const guard_length_key = std::lround(config.guard_length * 1000.0F);
+  int const arm_length_key = equipment_key(arm_length);
+  int const guard_length_key = equipment_key(config.guard_length);
   for (const auto& entry : cache) {
     if (entry.arm_length_key == arm_length_key &&
         entry.guard_length_key == guard_length_key &&

@@ -12,6 +12,7 @@
 #include "math/math_utils.h"
 #include "render/entity/barracks_flag_renderer.h"
 #include "render/entity/building_archetype_desc.h"
+#include "render/entity/building_archetype_library.h"
 #include "render/entity/building_decay.h"
 #include "render/entity/building_ornaments.h"
 #include "render/entity/building_render_common.h"
@@ -304,13 +305,9 @@ auto build_tower_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
   return desc;
 }
 
-auto build_tower_archetype(BuildingState state) -> RenderArchetype {
-  return build_building_archetype(build_tower_desc_impl(state), state);
-}
-
 auto tower_archetype(BuildingState state) -> const RenderArchetype& {
-  static const BuildingArchetypeSet k_set =
-      build_stateful_building_archetype_set(build_tower_archetype);
+  static const BuildingArchetypeSet& k_set =
+      building_archetype_set("carthage_defense_tower");
   return k_set.for_state(state);
 }
 

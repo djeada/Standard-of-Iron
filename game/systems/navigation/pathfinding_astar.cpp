@@ -101,8 +101,6 @@ auto Pathfinding::make_search_request(const Point& start,
   request.one_man = routing_clearance(clearance_radius);
   request.centre_clear_of_neighbours =
       request.one_man < 1.0F - (m_grid_cell_size * 0.5F) - 1.0e-4F;
-  request.costed_clearance = std::min(clearance_radius, k_max_cost_clearance);
-  request.cell_size = std::max(1.0e-3F, m_grid_cell_size);
   return request;
 }
 
@@ -116,25 +114,10 @@ auto Pathfinding::search_cell_walkable(const SearchRequest& request,
       grid_to_world({x, y}), request.passability, request.one_man);
 }
 
-auto Pathfinding::search_clearance_cost(const SearchRequest& request,
-                                        int x,
-                                        int y) const -> int {
+auto Pathfinding::search_clearance_cost(int x, int y) const -> int {
   int const reach = clearance_penalty(x, y);
-  if (reach == 0) {
-    return 0;
-  }
-  float const free_metres = (static_cast<float>(reach) - 0.5F) * request.cell_size;
-  float const overlap = request.costed_clearance - free_metres;
-  int cost = 0;
-  if (overlap > 0.0F) {
-    cost =
-        static_cast<int>(std::lround((overlap * k_rigid_overlap_cost) +
-                                     (overlap * overlap * k_clearance_overlap_cost)));
-  }
-  if (reach <= 1) {
-    cost = std::max(cost, k_edge_step_penalty);
-  }
-  return cost;
+
+  return reach == 1 ? k_edge_step_penalty : 0;
 }
 
 auto Pathfinding::goal_in_start_region(const Point& start,
@@ -247,7 +230,7 @@ void Pathfinding::relax_neighbors(SearchBuffers& buffers,
     const int tentative_gcost =
         current.g_cost +
         ((step_x != 0 && step_z != 0) ? k_diagonal_step_cost : k_straight_step_cost) +
-        search_clearance_cost(request, neighbor.x, neighbor.y) +
+        search_clearance_cost(neighbor.x, neighbor.y) +
         climb_penalty(current.index, neighbor_idx) + (turns ? k_turn_penalty : 0);
     if (tentative_gcost >= get_g_cost(buffers, neighbor_idx, generation)) {
       continue;

@@ -355,6 +355,28 @@ TEST(FramePacingTest, WindowsDistinguishFirstUseWorkFromRecurringWork) {
   EXPECT_EQ(windows[1].toObject()["asset_work"].toInt(), 1);
 }
 
+TEST(FramePacingTest, EveryHitchFrameIsAttributedToItsOwnSubsystem) {
+  Render::Profiling::FramePacing pacing;
+  Render::Profiling::PacingSample submit{40, 30, 8, 0, {}};
+  submit.phase_us[static_cast<std::size_t>(Phase::Submit)] = 30000;
+  Render::Profiling::PacingSample wait{60, 5, 8, 0, {}};
+  wait.phase_us[static_cast<std::size_t>(Phase::PresentationLockWait)] = 50000;
+  Render::Profiling::PacingSample blank{45, 5, 8, 0, {}};
+  pacing.observe(submit);
+  pacing.observe({16.67, 8, 8, 0, {}});
+  pacing.observe(wait);
+  pacing.observe({16.67, 8, 8, 0, {}});
+  pacing.observe(submit);
+  pacing.observe({16.67, 8, 8, 0, {}});
+  pacing.observe(blank);
+  const auto attribution = pacing.report("high")["hitch_attribution"].toObject();
+  EXPECT_EQ(attribution["submit"].toObject()["hitch_frames"].toInt(), 2);
+  EXPECT_DOUBLE_EQ(attribution["submit"].toObject()["worst_ms"].toDouble(), 40);
+  EXPECT_EQ(attribution["presentation_lock_wait"].toObject()["hitch_frames"].toInt(),
+            1);
+  EXPECT_EQ(attribution["unattributed"].toObject()["hitch_frames"].toInt(), 1);
+}
+
 TEST(FramePacingTest, PresentationWaitIsAttributedSeparatelyFromCpuWork) {
   Render::Profiling::FramePacing pacing;
   Render::Profiling::PacingSample hitch{270, 7, 8, 0, {}};

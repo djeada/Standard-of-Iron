@@ -47,7 +47,7 @@ auto armor_heavy_carthage_archetype(const std::array<QMatrix4x4, 3>& torsos)
     -> const RenderArchetype& {
   ArmorHeavyCarthageKey key{"carthage_heavy_armor_"};
   for (const auto& m : torsos) {
-    append_quantized_key(key.value, m);
+    append_exact_key(key.value, m);
   }
 
   Mesh* torso_mesh = Render::Humanoid::humanoid_mesh_part(

@@ -169,17 +169,66 @@ auto BuildingCollisionRegistry::bucket_key(int bucket_x, int bucket_z) -> std::i
   return static_cast<std::int64_t>((high << 32U) | low);
 }
 
+auto BuildingCollisionRegistry::blocker_cell(float coordinate) -> int {
+  return static_cast<int>(std::floor(coordinate / k_blocker_cell_size));
+}
+
+void BuildingCollisionRegistry::ensure_blocker_index() const {
+  if (!m_blocker_index_stale.load(std::memory_order_acquire) &&
+      m_blocker_padding == s_grid_padding) {
+    return;
+  }
+  const std::lock_guard<std::mutex> lock(m_blocker_mutex);
+  if (!m_blocker_index_stale.load(std::memory_order_relaxed) &&
+      m_blocker_padding == s_grid_padding) {
+    return;
+  }
+  m_blocker_cells.clear();
+  auto const insert = [this](const BuildingFootprint& footprint, std::uint32_t ref) {
+    if (!footprint.blocks_navigation) {
+      return;
+    }
+
+    float const pad = std::max(footprint.grid_padding, s_grid_padding);
+    float const fp_half_x = (footprint.width * 0.5F) + pad;
+    float const fp_half_z = (footprint.depth * 0.5F) + pad;
+    float const min_x = std::min(footprint.center_x - fp_half_x,
+                                 footprint.body_center_x - footprint.body_width * 0.5F);
+    float const max_x = std::max(footprint.center_x + fp_half_x,
+                                 footprint.body_center_x + footprint.body_width * 0.5F);
+    float const min_z = std::min(footprint.center_z - fp_half_z,
+                                 footprint.body_center_z - footprint.body_depth * 0.5F);
+    float const max_z = std::max(footprint.center_z + fp_half_z,
+                                 footprint.body_center_z + footprint.body_depth * 0.5F);
+    for (int cell_z = blocker_cell(min_z); cell_z <= blocker_cell(max_z); ++cell_z) {
+      for (int cell_x = blocker_cell(min_x); cell_x <= blocker_cell(max_x); ++cell_x) {
+        m_blocker_cells[bucket_key(cell_x, cell_z)].push_back(ref);
+      }
+    }
+  };
+  for (std::uint32_t i = 0; i < m_buildings.size(); ++i) {
+    insert(m_buildings[i], i);
+  }
+  for (std::uint32_t i = 0; i < m_authored_obstacles.size(); ++i) {
+    insert(m_authored_obstacles[i], i | k_authored_ref);
+  }
+  m_blocker_padding = s_grid_padding;
+  m_blocker_index_stale.store(false, std::memory_order_release);
+}
+
 void BuildingCollisionRegistry::add_to_spatial_index(
     const BuildingFootprint& footprint) {
   int const bucket_x = bucket_coord(footprint.center_x);
   int const bucket_z = bucket_coord(footprint.center_z);
   m_spatial_buckets[bucket_key(bucket_x, bucket_z)].push_back(footprint.entity_id);
+  invalidate_blockers();
   m_max_half_extent =
       std::max(m_max_half_extent, std::max(footprint.width, footprint.depth) * 0.5F);
 }
 
 void BuildingCollisionRegistry::remove_from_spatial_index(
     const BuildingFootprint& footprint) {
+  invalidate_blockers();
   auto const key =
       bucket_key(bucket_coord(footprint.center_x), bucket_coord(footprint.center_z));
   auto bucket = m_spatial_buckets.find(key);
@@ -266,6 +315,7 @@ void BuildingCollisionRegistry::apply_building_body(Engine::Core::EntityID entit
   footprint.body_depth = body.depth;
   footprint.body_center_x = footprint.center_x + body.offset_x;
   footprint.body_center_z = footprint.center_z + body.offset_z;
+  invalidate_blockers();
 }
 
 void BuildingCollisionRegistry::unregister_building(Engine::Core::EntityID entity_id) {
@@ -306,6 +356,7 @@ void BuildingCollisionRegistry::release_authored_obstacles_within(float center_x
   float const half_width = width / 2.0F;
   float const half_depth = depth / 2.0F;
 
+  invalidate_blockers();
   std::erase_if(m_authored_obstacles, [&](const BuildingFootprint& obstacle) {
     return std::fabs(obstacle.center_x - center_x) <= half_width &&
            std::fabs(obstacle.center_z - center_z) <= half_depth;
@@ -390,6 +441,7 @@ void BuildingCollisionRegistry::set_building_navigation_blocking(
     return;
   }
   footprint.blocks_navigation = blocks_navigation;
+  invalidate_blockers();
 
   announce_region_dirty(
       *this, footprint.center_x, footprint.center_z, footprint.width, footprint.depth);
@@ -607,10 +659,12 @@ auto BuildingCollisionRegistry::segment_crosses_blocking_building(
 void BuildingCollisionRegistry::set_authored_obstacles(
     std::vector<BuildingFootprint> obstacles) {
   m_authored_obstacles = std::move(obstacles);
+  invalidate_blockers();
 }
 
 void BuildingCollisionRegistry::clear_authored_obstacles() {
   m_authored_obstacles.clear();
+  invalidate_blockers();
 }
 
 namespace {
@@ -710,6 +764,7 @@ void BuildingCollisionRegistry::clear() {
   m_authored_obstacles.clear();
   m_spatial_buckets.clear();
   m_max_half_extent = 0.0F;
+  invalidate_blockers();
 
   announce_grid_dirty(*this);
   announce_obstruction_released_everywhere(*this);

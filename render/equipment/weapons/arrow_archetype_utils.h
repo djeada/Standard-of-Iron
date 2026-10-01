@@ -5,6 +5,7 @@
 #include <deque>
 #include <string>
 
+#include "render/equipment/equipment_cache_key.h"
 #include "render/equipment/generated_equipment.h"
 
 namespace Render::GL {
@@ -16,7 +17,7 @@ enum ArrowPaletteSlot : std::uint8_t {
 };
 
 inline auto quantize_arrow_value(float value) -> int {
-  return std::lround(value * 1000.0F);
+  return equipment_key(value);
 }
 
 inline auto arrow_shaft_archetype(float radius,

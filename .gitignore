@@ -100,6 +100,10 @@ assets/creatures/*.bpat
 assets/creatures/*.bpsm
 assets/creatures/*.bprm
 
+# Generated static mesh packs (tools/bpat_baker)
+assets/meshes/*.smpk
+assets/meshes/*.rmpk
+
 # Local virtualenvs
 venv/
 

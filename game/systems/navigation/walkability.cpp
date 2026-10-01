@@ -28,33 +28,23 @@ auto padding_covers_cell(const Pathfinding& pathfinder,
   constexpr float k_cell_slack = 1.0F;
   float const cell_x = static_cast<float>(grid_x) + pathfinder.get_grid_offset_x();
   float const cell_z = static_cast<float>(grid_z) + pathfinder.get_grid_offset_z();
-  auto const& buildings = registry();
-  auto covers = [cell_x, cell_z](const BuildingFootprint& footprint) {
-    if (!footprint.blocks_navigation) {
-      return false;
-    }
-    float const half_width =
-        (footprint.width * 0.5F) + footprint.grid_padding + k_cell_slack;
-    float const half_depth =
-        (footprint.depth * 0.5F) + footprint.grid_padding + k_cell_slack;
-    return std::abs(cell_x - footprint.center_x) <= half_width &&
-           std::abs(cell_z - footprint.center_z) <= half_depth;
-  };
-  for (auto const& building : buildings.get_all_buildings()) {
-    if (covers(building)) {
-      return true;
-    }
-  }
-  for (auto const& obstacle : buildings.authored_obstacles()) {
-    if (covers(obstacle)) {
-      return true;
-    }
-  }
-  return false;
+  bool covered = false;
+  registry().for_each_blocker_near(
+      cell_x, cell_z, k_cell_slack, [&](const BuildingFootprint& footprint) {
+        if (covered || !footprint.blocks_navigation) {
+          return;
+        }
+        float const half_width =
+            (footprint.width * 0.5F) + footprint.grid_padding + k_cell_slack;
+        float const half_depth =
+            (footprint.depth * 0.5F) + footprint.grid_padding + k_cell_slack;
+        covered = std::abs(cell_x - footprint.center_x) <= half_width &&
+                  std::abs(cell_z - footprint.center_z) <= half_depth;
+      });
+  return covered;
 }
 
 auto building_body_penetration(float x, float z, float radius) -> float {
-  auto const& buildings = registry();
   float deepest = 0.0F;
   auto measure = [x, z, radius, &deepest](const BuildingFootprint& footprint) {
     if (!footprint.blocks_navigation) {
@@ -71,12 +61,7 @@ auto building_body_penetration(float x, float z, float radius) -> float {
     float const distance = std::hypot(dx, dz);
     deepest = std::max(deepest, radius - distance);
   };
-  for (auto const& building : buildings.get_all_buildings()) {
-    measure(building);
-  }
-  for (auto const& obstacle : buildings.authored_obstacles()) {
-    measure(obstacle);
-  }
+  registry().for_each_blocker_near(x, z, std::max(radius, 0.0F), measure);
   return std::max(0.0F, deepest);
 }
 

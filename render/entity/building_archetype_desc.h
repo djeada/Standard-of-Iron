@@ -185,13 +185,4 @@ struct BuildingArchetypeSet {
   [[nodiscard]] auto for_state(BuildingState state) const -> const RenderArchetype&;
 };
 
-template <typename Builder>
-auto build_stateful_building_archetype_set(Builder&& builder) -> BuildingArchetypeSet {
-  return {{
-      builder(BuildingState::Normal),
-      builder(BuildingState::Damaged),
-      builder(BuildingState::Destroyed),
-  }};
-}
-
 } // namespace Render::GL

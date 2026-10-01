@@ -7,6 +7,7 @@
 #include <string>
 
 #include "render/equipment/attachment_builder.h"
+#include "render/equipment/equipment_cache_key.h"
 #include "render/equipment/generated_equipment.h"
 #include "render/equipment/humanoid_attachment_archetype.h"
 #include "render/humanoid/asset/humanoid_spec.h"
@@ -56,10 +57,10 @@ auto work_apron_body_archetype(const WorkApronConfig& config,
   float const waist_r = waist.radius * config.apron_width;
   float const waist_d =
       (waist.depth > 0.0F) ? waist.depth * 0.85F : waist.radius * 0.75F;
-  int const radius_key = std::lround(waist_r * 1000.0F);
-  int const depth_key = std::lround(waist_d * 1000.0F);
-  int const length_key = std::lround(config.apron_length * 1000.0F);
-  int const width_key = std::lround(config.apron_width * 1000.0F);
+  int const radius_key = equipment_key(waist_r);
+  int const depth_key = equipment_key(waist_d);
+  int const length_key = equipment_key(config.apron_length);
+  int const width_key = equipment_key(config.apron_width);
   for (const auto& entry : cache) {
     if (entry.radius_key == radius_key && entry.depth_key == depth_key &&
         entry.length_key == length_key && entry.width_key == width_key) {
@@ -115,7 +116,7 @@ auto work_apron_straps_archetype(const AttachmentFrame& torso)
   };
 
   static std::deque<CachedArchetype> cache;
-  int const radius_key = std::lround(torso.radius * 1000.0F);
+  int const radius_key = equipment_key(torso.radius);
   for (const auto& entry : cache) {
     if (entry.radius_key == radius_key) {
       return entry.archetype;
@@ -145,7 +146,7 @@ auto work_apron_pockets_archetype(const AttachmentFrame& waist)
   };
 
   static std::deque<CachedArchetype> cache;
-  int const radius_key = std::lround(waist.radius * 1000.0F);
+  int const radius_key = equipment_key(waist.radius);
   for (const auto& entry : cache) {
     if (entry.radius_key == radius_key) {
       return entry.archetype;

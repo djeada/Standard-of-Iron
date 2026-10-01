@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QMatrix4x4>
+
 #include <memory>
 
 #include "mesh.h"
@@ -35,5 +37,10 @@ inline constexpr int k_coarse_radial_segments = 8;
 inline constexpr int k_coarse_latitude_segments = 5;
 
 [[nodiscard]] auto coarse_unit_mesh_for(Mesh* mesh) -> Mesh*;
+
+inline constexpr float k_bake_chord_tolerance = 0.0015F;
+inline constexpr int k_min_bake_radial_segments = 8;
+
+[[nodiscard]] auto bake_tessellated_mesh(Mesh* mesh, const QMatrix4x4& model) -> Mesh*;
 
 } // namespace Render::GL

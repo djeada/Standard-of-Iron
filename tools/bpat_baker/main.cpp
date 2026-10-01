@@ -1,5 +1,6 @@
 
 
+#include <QCoreApplication>
 #include <QMatrix4x4>
 #include <QVector3D>
 #include <QVector4D>
@@ -22,7 +23,14 @@
 #include "animation/bpat/bpat_format.h"
 #include "animation/bpat/bpat_writer.h"
 #include "animation/clip_manifest.h"
+#include "game/core/component_core.h"
+#include "game/core/world.h"
 #include "game/session/session_context.h"
+#include "game/systems/default_content.h"
+#include "game/systems/nation_registry.h"
+#include "game/systems/troop_profile_service.h"
+#include "game/units/spawn_type.h"
+#include "render/attachment_mesh_library.h"
 #include "render/creature/bake/creature_bake_recipe.h"
 #include "render/creature/humanoid_clip_ids.h"
 #include "render/creature/part_graph.h"
@@ -33,20 +41,26 @@
 #include "render/creature/skeleton.h"
 #include "render/creature/snapshot_mesh_asset.h"
 #include "render/elephant/elephant_bake_recipe.h"
+#include "render/entity/building_archetype_library.h"
 #include "render/horse/horse_bake_recipe.h"
 #include "render/humanoid/asset/humanoid_beard_mesh.h"
 #include "render/humanoid/asset/humanoid_manifest.h"
 #include "render/humanoid/asset/humanoid_spec.h"
 #include "render/rigged_mesh_bake.h"
+#include "render/scene_renderer.h"
 #include "render/snapshot_mesh_bake.h"
 #include "render/wildlife/sheep_manifest.h"
 #include "render/wildlife/wolf_manifest.h"
+#include "render/world_view.h"
 
 namespace {
 
-auto write_asset(const std::filesystem::path& path, const std::string& bytes) -> bool {
+auto write_asset(const std::filesystem::path& path,
+                 const std::string& bytes,
+                 int level = Render::Creature::Bpat::k_asset_compression_level)
+    -> bool {
   std::string error;
-  if (!Render::Creature::Bpat::write_compressed_asset(path, bytes, error)) {
+  if (!Render::Creature::Bpat::write_compressed_asset(path, bytes, error, level)) {
     std::cerr << "[bpat_baker] " << error << "\n";
     return false;
   }
@@ -54,6 +68,8 @@ auto write_asset(const std::filesystem::path& path, const std::string& bytes) ->
 }
 
 namespace bpat = Render::Creature::Bpat;
+
+constexpr int k_mesh_pack_compression_level = 6;
 namespace snapshot = Render::Creature::Snapshot;
 namespace rigged = Render::Creature::Rigged;
 
@@ -325,10 +341,103 @@ bool bake_species_manifest(const std::filesystem::path& out_dir,
   return true;
 }
 
+auto write_building_meshes(const std::filesystem::path& out_dir) -> bool {
+  std::vector<Render::GL::StaticMeshPackEntry> entries =
+      Render::GL::bake_building_meshes();
+  bool ok = true;
+  for (const auto& entry : entries) {
+
+    if (!entry.mesh.dynamic_draws.empty() || entry.mesh.indices.empty()) {
+      std::cerr << "[bpat_baker] building " << entry.name << " has "
+                << entry.mesh.dynamic_draws.size() << " unmergeable parts and "
+                << entry.mesh.indices.size() << " merged indices\n";
+      ok = false;
+    }
+    for (const auto& range : entry.mesh.ranges) {
+      if (range.texture != nullptr) {
+        std::cerr << "[bpat_baker] building " << entry.name
+                  << " has a textured part; baked buildings use the instance texture\n";
+        ok = false;
+      }
+    }
+  }
+  std::error_code ec;
+  std::filesystem::create_directories(out_dir, ec);
+  return write_asset(out_dir / std::string(Render::GL::k_building_mesh_pack),
+                     Render::GL::serialize_static_mesh_pack(entries),
+                     k_mesh_pack_compression_level) &&
+         ok;
+}
+
+auto write_attachment_meshes(Game::Session::SessionContext& session,
+                             const std::filesystem::path& out_dir) -> bool {
+  auto& nations = session.nations();
+  Game::Systems::initialize_default_content(nations);
+  Game::Systems::TroopProfileService::instance().clear();
+  Game::Systems::TroopProfileService::instance().prime();
+  Render::GL::AttachmentMeshLibrary::instance().start_empty();
+
+  Render::GL::Renderer renderer(Render::ShaderQuality::None);
+  if (!renderer.initialize()) {
+    std::cerr << "[bpat_baker] attachment bake: renderer failed to initialise\n";
+    return false;
+  }
+  Engine::Core::World world;
+  int owner_id = 1;
+  for (const auto& nation : nations.get_all_nations()) {
+    for (int type = 0; type <= static_cast<int>(Game::Units::TroopType::Wolf); ++type) {
+      const auto troop = static_cast<Game::Units::TroopType>(type);
+      const auto profile =
+          Game::Systems::TroopProfileService::instance().get_profile(nation.id, troop);
+      if (profile.visuals.renderer_id.empty()) {
+        continue;
+      }
+      const Engine::Core::EntityID id = world.create_entity()->get_id();
+      auto* unit = world.emplace<Engine::Core::UnitComponent>(id);
+      unit->spawn_type = Game::Units::spawn_typeFromTroopType(troop);
+      unit->nation_id = nation.id;
+      unit->owner_id = owner_id;
+      unit->health = 100;
+      unit->max_health = 100;
+      world.emplace<Engine::Core::TransformComponent>(id);
+      auto* renderable = world.emplace<Engine::Core::RenderableComponent>(id);
+      renderable->renderer_id = profile.visuals.renderer_id;
+      renderable->visible = true;
+    }
+    ++owner_id;
+  }
+  renderer.set_world_view(Render::WorldView::of(session));
+  renderer.prewarm_unit_templates(&world);
+
+  std::vector<Render::GL::AttachmentMeshEntry> entries;
+  renderer.rigged_mesh_cache().for_each_named_attachment_mesh(
+      [&](const std::string& key, const Render::GL::RiggedMesh& mesh) {
+        entries.push_back(
+            Render::GL::AttachmentMeshEntry{.key = key,
+                                            .vertices = mesh.get_vertices(),
+                                            .indices = mesh.get_indices()});
+      });
+  std::sort(entries.begin(), entries.end(), [](const auto& lhs, const auto& rhs) {
+    return lhs.key < rhs.key;
+  });
+  std::size_t triangles = 0;
+  for (const auto& entry : entries) {
+    triangles += entry.indices.size() / 3U;
+  }
+  std::cerr << "[bpat_baker] attachment sets: " << entries.size() << " (" << triangles
+            << " tris)\n";
+  std::error_code ec;
+  std::filesystem::create_directories(out_dir, ec);
+  return !entries.empty() &&
+         write_asset(out_dir / std::string(Render::GL::k_attachment_mesh_pack),
+                     Render::GL::serialize_attachment_mesh_pack(entries),
+                     k_mesh_pack_compression_level);
+}
+
 } // namespace
 
 int main(int argc, char** argv) {
-
+  QCoreApplication application(argc, argv);
   Game::Session::SessionContext session;
   Game::Session::ScopedSession const active_session(session);
   static_assert(Render::Creature::k_humanoid_idle_clip == 0U);
@@ -368,6 +477,10 @@ int main(int argc, char** argv) {
   if (argc >= 2) {
     out_dir = argv[1];
   }
+  std::filesystem::path mesh_dir = "assets/meshes";
+  if (argc >= 3) {
+    mesh_dir = argv[2];
+  }
 
   bool ok = true;
   for (auto const profile : Render::Humanoid::humanoid_bake_profiles()) {
@@ -388,5 +501,7 @@ int main(int argc, char** argv) {
   ok = bake_species_manifest(out_dir, Render::Elephant::elephant_bake_recipe()) && ok;
   ok = bake_species_manifest(out_dir, Render::Wildlife::sheep_bake_recipe()) && ok;
   ok = bake_species_manifest(out_dir, Render::Wildlife::wolf_bake_recipe()) && ok;
+  ok = write_building_meshes(mesh_dir) && ok;
+  ok = write_attachment_meshes(session, mesh_dir) && ok;
   return ok ? EXIT_SUCCESS : EXIT_FAILURE;
 }

@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "render/equipment/attachment_builder.h"
+#include "render/equipment/equipment_cache_key.h"
 #include "render/equipment/equipment_submit.h"
 #include "render/gl/primitives.h"
 #include "render/gl/shared_geometry_cache.h"
@@ -213,14 +214,14 @@ auto make_cloak_grid(const CloakConfig& config) -> SheetGrid {
 }
 
 auto cloak_mesh_key(const CloakConfig& config) -> std::uint64_t {
-  auto q = [](float v) {
-    return static_cast<std::uint64_t>(std::lround(v * 200.0F) & 0x3FF);
-  };
-  std::uint64_t key = q(config.length_scale);
-  key = (key << 10U) | q(config.width_scale);
-  key = (key << 10U) | q(config.shoulder_anchor_up + 1.0F);
-  key = (key << 10U) | q(config.drape_anchor_up + 1.0F);
-  key = (key << 10U) | q(config.drape_anchor_back);
+  std::uint64_t key = 0xcbf29ce484222325ULL;
+  for (float const value : {config.length_scale,
+                            config.width_scale,
+                            config.shoulder_anchor_up,
+                            config.drape_anchor_up,
+                            config.drape_anchor_back}) {
+    key = (key ^ static_cast<std::uint32_t>(equipment_key(value))) * 0x100000001B3ULL;
+  }
   return key;
 }
 
@@ -294,14 +295,14 @@ auto cloak_archetype(const CloakConfig& config,
 
   static std::deque<CachedArchetype> cache;
   std::string key = "cloak_";
-  key += std::to_string(reinterpret_cast<std::uintptr_t>(meshes.cloak));
+  key += std::to_string(cloak_mesh_key(config));
   key.push_back('_');
-  append_quantized_key(key, config.back_material_id);
-  append_quantized_key(key, placement.cloak_model);
-  append_quantized_key(key, placement.has_clasp ? 1 : 0);
+  append_exact_key(key, config.back_material_id);
+  append_exact_key(key, placement.cloak_model);
+  append_exact_key(key, placement.has_clasp ? 1 : 0);
   if (placement.has_clasp) {
     for (const auto& clasp : placement.clasp_models) {
-      append_quantized_key(key, clasp);
+      append_exact_key(key, clasp);
     }
   }
 

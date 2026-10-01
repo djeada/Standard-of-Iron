@@ -10,6 +10,9 @@ namespace Game::Visuals {
 inline constexpr std::string_view k_cursed_gold_vein_flag_asset_key =
     "troops/cursed_gold_vein/barracks";
 
+[[nodiscard]] auto
+nation_asset_slug(Game::Systems::NationID nation_id) -> std::string_view;
+
 [[nodiscard]] auto building_asset_key(std::string_view nation_slug,
                                       std::string_view building_type) -> std::string;
 

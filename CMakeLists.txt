@@ -1180,6 +1180,7 @@ file(
 # them into bin/assets directly. Keeping them out of the staging glob avoids a
 # dependency cycle (staging -> stamp -> baked output -> baking -> staging).
 list(FILTER SOI_RUNTIME_ASSET_SOURCES EXCLUDE REGEX "assets/creatures/.*\\.(bpat|bpsm|bprm)$")
+list(FILTER SOI_RUNTIME_ASSET_SOURCES EXCLUDE REGEX "assets/meshes/.*\\.(smpk|rmpk)$")
 add_custom_command(
     OUTPUT "${CMAKE_BINARY_DIR}/bin/assets/.stamp"
     COMMAND

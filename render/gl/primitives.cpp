@@ -1,9 +1,11 @@
 #include "primitives.h"
 
+#include <QMatrix4x4>
 #include <QVector3D>
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <memory>
 #include <mutex>
 #include <numbers>
@@ -797,13 +799,78 @@ auto create_orientation_arrow_mesh() -> std::unique_ptr<Mesh> {
   return std::make_unique<Mesh>(v, idx);
 }
 
+enum class UnitPrimitiveKind : std::uint8_t {
+  Sphere,
+  Cylinder,
+  TaperedCylinder,
+  Cone,
+  Capsule,
+};
+
+struct UnitPrimitive {
+  UnitPrimitiveKind kind{UnitPrimitiveKind::Sphere};
+  int radial_segments{0};
+  int lat_segments{0};
+  int height_segments{0};
+  float anchor_radius_scale{1.0F};
+  float tail_radius_scale{1.0F};
+};
+
+struct UnitPrimitiveRegistry {
+  std::mutex mutex;
+  std::unordered_map<const Mesh*, UnitPrimitive> primitives;
+};
+
+auto unit_primitive_registry() -> UnitPrimitiveRegistry& {
+  static UnitPrimitiveRegistry registry;
+  return registry;
+}
+
+auto registered(std::unique_ptr<Mesh> mesh,
+                const UnitPrimitive& primitive) -> std::unique_ptr<Mesh> {
+  auto& registry = unit_primitive_registry();
+  const std::lock_guard<std::mutex> lock(registry.mutex);
+  registry.primitives[mesh.get()] = primitive;
+  return mesh;
+}
+
+auto unit_primitive_of(const Mesh* mesh) -> const UnitPrimitive* {
+  auto& registry = unit_primitive_registry();
+  const std::lock_guard<std::mutex> lock(registry.mutex);
+  const auto it = registry.primitives.find(mesh);
+  return it != registry.primitives.end() ? &it->second : nullptr;
+}
+
+auto segments_for_radius(float radius, int authored, int minimum) -> int {
+  if (!(radius > k_bake_chord_tolerance)) {
+    return std::min(authored, minimum);
+  }
+  const double half_angle =
+      std::acos(1.0 - static_cast<double>(k_bake_chord_tolerance) / radius);
+  const int needed = static_cast<int>(std::ceil(std::numbers::pi / half_angle));
+  return std::clamp(needed, std::min(minimum, authored), authored);
+}
+
+auto keep_axis_extremes(int segments, int authored) -> int {
+  const int rounded = ((segments + 3) / 4) * 4;
+  return rounded <= authored ? rounded : authored;
+}
+
+auto axis_length(const QMatrix4x4& model, int column) -> float {
+  return model.column(column).toVector3D().length();
+}
+
 } // namespace
 
 auto get_unit_cylinder(int radial_segments) -> Mesh* {
   radial_segments = std::max(radial_segments, 3);
   return SharedGeometryCache::instance().get_or_build(
       geometry_key("gl/unit_cylinder", static_cast<std::uint64_t>(radial_segments)),
-      [radial_segments] { return create_unit_cylinder_mesh(radial_segments); });
+      [radial_segments] {
+        return registered(
+            create_unit_cylinder_mesh(radial_segments),
+            {.kind = UnitPrimitiveKind::Cylinder, .radial_segments = radial_segments});
+      });
 }
 
 auto get_unit_tapered_cylinder(float anchor_radius_scale,
@@ -823,8 +890,12 @@ auto get_unit_tapered_cylinder(float anchor_radius_scale,
   return SharedGeometryCache::instance().get_or_build(
       geometry_key("gl/unit_tapered_cylinder", variant),
       [anchor_radius_scale, tail_radius_scale, radial_segments] {
-        return create_unit_tapered_cylinder_mesh(
-            anchor_radius_scale, tail_radius_scale, radial_segments);
+        return registered(create_unit_tapered_cylinder_mesh(
+                              anchor_radius_scale, tail_radius_scale, radial_segments),
+                          {.kind = UnitPrimitiveKind::TaperedCylinder,
+                           .radial_segments = radial_segments,
+                           .anchor_radius_scale = anchor_radius_scale,
+                           .tail_radius_scale = tail_radius_scale});
       });
 }
 
@@ -840,7 +911,10 @@ auto get_unit_sphere(int lat_segments, int lon_segments) -> Mesh* {
                                 static_cast<std::uint64_t>(lon_segments);
   return SharedGeometryCache::instance().get_or_build(
       geometry_key("gl/unit_sphere", variant), [lat_segments, lon_segments] {
-        return create_unit_sphere_mesh(lat_segments, lon_segments);
+        return registered(create_unit_sphere_mesh(lat_segments, lon_segments),
+                          {.kind = UnitPrimitiveKind::Sphere,
+                           .radial_segments = lon_segments,
+                           .lat_segments = lat_segments});
       });
 }
 
@@ -848,7 +922,11 @@ auto get_unit_cone(int radial_segments) -> Mesh* {
   radial_segments = std::max(radial_segments, 3);
   return SharedGeometryCache::instance().get_or_build(
       geometry_key("gl/unit_cone", static_cast<std::uint64_t>(radial_segments)),
-      [radial_segments] { return create_unit_cone_mesh(radial_segments); });
+      [radial_segments] {
+        return registered(
+            create_unit_cone_mesh(radial_segments),
+            {.kind = UnitPrimitiveKind::Cone, .radial_segments = radial_segments});
+      });
 }
 
 auto get_unit_capsule(int radial_segments, int height_segments) -> Mesh* {
@@ -858,7 +936,10 @@ auto get_unit_capsule(int radial_segments, int height_segments) -> Mesh* {
                                 static_cast<std::uint64_t>(height_segments);
   return SharedGeometryCache::instance().get_or_build(
       geometry_key("gl/unit_capsule", variant), [radial_segments, height_segments] {
-        return create_capsule_mesh(radial_segments, height_segments);
+        return registered(create_capsule_mesh(radial_segments, height_segments),
+                          {.kind = UnitPrimitiveKind::Capsule,
+                           .radial_segments = radial_segments,
+                           .height_segments = height_segments});
       });
 }
 
@@ -888,6 +969,55 @@ auto coarse_unit_mesh_for(Mesh* mesh) -> Mesh* {
   }
   if (mesh == get_unit_capsule()) {
     return get_unit_capsule(k_coarse_radial_segments);
+  }
+  return mesh;
+}
+
+auto bake_tessellated_mesh(Mesh* mesh, const QMatrix4x4& model) -> Mesh* {
+  const UnitPrimitive* primitive = unit_primitive_of(mesh);
+  if (primitive == nullptr) {
+    return mesh;
+  }
+
+  const float radial = std::max(axis_length(model, 0), axis_length(model, 2));
+  switch (primitive->kind) {
+  case UnitPrimitiveKind::Sphere: {
+    const float radius = std::max(radial, axis_length(model, 1));
+    const int lon = keep_axis_extremes(segments_for_radius(radius,
+                                                           primitive->radial_segments,
+                                                           k_min_bake_radial_segments),
+                                       primitive->radial_segments);
+
+    const int lat = std::min(((lon / 2) + 1) / 2 * 2, primitive->lat_segments);
+    return get_unit_sphere(std::max(lat, std::min(4, primitive->lat_segments)), lon);
+  }
+  case UnitPrimitiveKind::Cylinder:
+    return get_unit_cylinder(keep_axis_extremes(
+        segments_for_radius(
+            radial, primitive->radial_segments, k_min_bake_radial_segments),
+        primitive->radial_segments));
+  case UnitPrimitiveKind::Cone:
+    return get_unit_cone(keep_axis_extremes(
+        segments_for_radius(
+            radial, primitive->radial_segments, k_min_bake_radial_segments),
+        primitive->radial_segments));
+  case UnitPrimitiveKind::Capsule:
+    return get_unit_capsule(
+        keep_axis_extremes(segments_for_radius(radial,
+                                               primitive->radial_segments,
+                                               k_min_bake_radial_segments),
+                           primitive->radial_segments),
+        primitive->height_segments);
+  case UnitPrimitiveKind::TaperedCylinder:
+    return get_unit_tapered_cylinder(
+        primitive->anchor_radius_scale,
+        primitive->tail_radius_scale,
+        keep_axis_extremes(
+            segments_for_radius(radial * std::max(primitive->anchor_radius_scale,
+                                                  primitive->tail_radius_scale),
+                                primitive->radial_segments,
+                                k_min_bake_radial_segments),
+            primitive->radial_segments));
   }
   return mesh;
 }

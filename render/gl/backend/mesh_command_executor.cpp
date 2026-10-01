@@ -209,6 +209,20 @@ auto Backend::supports_static_batch() const noexcept -> bool {
          m_directional_shadow_depth_instanced_shader != nullptr;
 }
 
+auto Backend::prewarm_static_meshes(
+    std::span<const std::shared_ptr<const MergedBuildingMesh>> meshes) -> bool {
+  if (!supports_static_batch()) {
+    return false;
+  }
+  bool ready = true;
+  for (const auto& mesh : meshes) {
+    if (mesh != nullptr && !mesh->indices.empty()) {
+      ready = m_mesh_instancing_pipeline->ensure_merged_uploaded(*mesh) && ready;
+    }
+  }
+  return ready;
+}
+
 void Backend::execute_static_batch(const StaticBuildingBatch& batch,
                                    CommandExecutionContext& context) {
   const auto& instances = batch.instances();
@@ -251,7 +265,9 @@ void Backend::draw_static_batch_shadow(const StaticBuildingBatch& batch,
     auto const first = static_cast<std::uint32_t>(m_static_shadow_instances.size());
     for (std::uint32_t index = draw.first; index < draw.first + draw.count; ++index) {
       const StaticBatchBounds& bounds = batch.bounds()[index];
-      if (bounds.radius >= cull.min_caster_radius &&
+
+      if (batch.instances()[index].state[2] <= 0.0F &&
+          bounds.radius >= cull.min_caster_radius &&
           cull.accepts(bounds.center, bounds.radius)) {
         m_static_shadow_instances.push_back(batch.instances()[index]);
       }

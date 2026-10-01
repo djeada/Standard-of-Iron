@@ -384,13 +384,8 @@ auto build_farm_desc_impl(BuildingState state, int stage) -> BuildingArchetypeDe
   return desc;
 }
 
-auto build_farm_archetype(BuildingState state, int stage) -> RenderArchetype {
-  return build_building_archetype(build_farm_desc_impl(state, stage), state);
-}
-
 auto farm_archetype(BuildingState state, int stage) -> const RenderArchetype& {
-  static const auto k_table = build_farm_archetype_table(build_farm_archetype);
-  return farm_archetype_from_table(k_table, state, stage);
+  return farm_stage_archetype("carthage", state, stage);
 }
 
 const std::array<TorchMount, 3> k_torches{{

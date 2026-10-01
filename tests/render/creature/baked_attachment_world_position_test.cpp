@@ -28,6 +28,7 @@
 #include "render/equipment/weapons/shield_renderer.h"
 #include "render/equipment/weapons/sword_renderer.h"
 #include "render/gl/humanoid/humanoid_types.h"
+#include "render/gl/primitives.h"
 #include "render/humanoid/asset/humanoid_spec.h"
 #include "render/render_archetype.h"
 #include "render/rigged_mesh_bake.h"
@@ -113,6 +114,8 @@ auto baked_skinned_aabb(const Render::Creature::BakedRiggedMeshCpu& baked,
   }
   return box;
 }
+
+constexpr float k_bake_eps = 1e-3F + Render::GL::k_bake_chord_tolerance;
 
 void expect_aabb_close(const AABB& a, const AABB& b, float eps) {
   ASSERT_TRUE(a.valid()) << "legacy AABB is empty";
@@ -205,7 +208,7 @@ TEST(BakedAttachmentWorldPosition, CarthageLightHelmetMatchesLegacySubmit) {
 
   const AABB bake = baked_aabb(baked);
 
-  expect_aabb_close(legacy, bake, 1e-3F);
+  expect_aabb_close(legacy, bake, k_bake_eps);
 }
 
 TEST(BakedAttachmentWorldPosition, CarthageHeavyHelmetMatchesLegacySubmit) {
@@ -278,7 +281,7 @@ TEST(BakedAttachmentWorldPosition, CarthageHeavyHelmetMatchesLegacySubmit) {
 
   const AABB bake = baked_aabb(baked);
 
-  expect_aabb_close(legacy, bake, 1e-3F);
+  expect_aabb_close(legacy, bake, k_bake_eps);
 }
 
 TEST(BakedAttachmentWorldPosition, RomanHeavyHelmetMatchesLegacySubmit) {
@@ -318,7 +321,7 @@ TEST(BakedAttachmentWorldPosition, RomanHeavyHelmetMatchesLegacySubmit) {
 
   const AABB bake = baked_aabb(baked);
 
-  expect_aabb_close(legacy, bake, 1e-3F);
+  expect_aabb_close(legacy, bake, k_bake_eps);
 }
 
 TEST(BakedAttachmentWorldPosition, RomanLightHelmetMatchesLegacySubmit) {
@@ -358,7 +361,7 @@ TEST(BakedAttachmentWorldPosition, RomanLightHelmetMatchesLegacySubmit) {
 
   const AABB bake = baked_aabb(baked);
 
-  expect_aabb_close(legacy, bake, 1e-3F);
+  expect_aabb_close(legacy, bake, k_bake_eps);
 }
 
 TEST(BakedAttachmentWorldPosition, HeadwrapMatchesLegacySubmit) {
@@ -397,7 +400,7 @@ TEST(BakedAttachmentWorldPosition, HeadwrapMatchesLegacySubmit) {
 
   const AABB bake = baked_aabb(baked);
 
-  expect_aabb_close(legacy, bake, 1e-3F);
+  expect_aabb_close(legacy, bake, k_bake_eps);
 }
 
 TEST(BakedAttachmentWorldPosition, RomanGreavesMatchesLegacySubmit) {
@@ -437,7 +440,7 @@ TEST(BakedAttachmentWorldPosition, RomanGreavesMatchesLegacySubmit) {
   ASSERT_FALSE(baked.vertices.empty());
 
   const AABB bake = baked_aabb(baked);
-  expect_aabb_close(legacy, bake, 1e-3F);
+  expect_aabb_close(legacy, bake, k_bake_eps);
 }
 
 TEST(BakedAttachmentWorldPosition, RomanShoulderCoverMatchesLegacySubmit) {
@@ -482,7 +485,7 @@ TEST(BakedAttachmentWorldPosition, RomanShoulderCoverMatchesLegacySubmit) {
   ASSERT_FALSE(baked.vertices.empty());
 
   const AABB bake = baked_aabb(baked);
-  expect_aabb_close(legacy, bake, 1e-3F);
+  expect_aabb_close(legacy, bake, k_bake_eps);
 }
 
 TEST(BakedAttachmentWorldPosition, RomanCloakMatchesLegacySubmit) {
@@ -529,7 +532,7 @@ TEST(BakedAttachmentWorldPosition, RomanCloakMatchesLegacySubmit) {
   ASSERT_FALSE(baked.vertices.empty());
 
   const AABB bake = baked_aabb(baked);
-  expect_aabb_close(legacy, bake, 1e-3F);
+  expect_aabb_close(legacy, bake, k_bake_eps);
 }
 
 TEST(BakedAttachmentWorldPosition, GenericShieldUsesShieldSocketPose) {
@@ -567,7 +570,7 @@ TEST(BakedAttachmentWorldPosition, GenericShieldUsesShieldSocketPose) {
   ASSERT_FALSE(baked.vertices.empty());
 
   const AABB bake = baked_aabb(baked);
-  expect_aabb_close(legacy, bake, 1e-3F);
+  expect_aabb_close(legacy, bake, k_bake_eps);
 }
 
 TEST(BakedAttachmentWorldPosition, RomanScutumUsesShieldSocketPose) {
@@ -599,7 +602,7 @@ TEST(BakedAttachmentWorldPosition, RomanScutumUsesShieldSocketPose) {
   ASSERT_FALSE(baked.vertices.empty());
 
   const AABB bake = baked_aabb(baked);
-  expect_aabb_close(legacy, bake, 1e-3F);
+  expect_aabb_close(legacy, bake, k_bake_eps);
 }
 
 TEST(BakedAttachmentWorldPosition, CarthageShieldUsesShieldSocketPose) {
@@ -633,7 +636,7 @@ TEST(BakedAttachmentWorldPosition, CarthageShieldUsesShieldSocketPose) {
   ASSERT_FALSE(baked.vertices.empty());
 
   const AABB bake = baked_aabb(baked);
-  expect_aabb_close(legacy, bake, 1e-3F);
+  expect_aabb_close(legacy, bake, k_bake_eps);
 }
 
 TEST(BakedAttachmentWorldPosition, GenericSwordUsesGripSocketPose) {
@@ -703,7 +706,7 @@ TEST(BakedAttachmentWorldPosition, BowUsesGripSocketPose) {
   ASSERT_FALSE(baked_bow.vertices.empty());
 
   const AABB bake = baked_aabb(baked_bow);
-  expect_aabb_close(legacy, bake, 1e-3F);
+  expect_aabb_close(legacy, bake, k_bake_eps);
 
   Render::Creature::BakeInput arrow_input{};
   arrow_input.bind_pose = bind;

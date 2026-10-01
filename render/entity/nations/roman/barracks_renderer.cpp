@@ -16,6 +16,7 @@
 #include "render/entity/barracks_renderer_common.h"
 #include "render/entity/barracks_stockpile.h"
 #include "render/entity/building_archetype_desc.h"
+#include "render/entity/building_archetype_library.h"
 #include "render/entity/building_decay.h"
 #include "render/entity/building_ornaments.h"
 #include "render/entity/building_render_common.h"
@@ -1002,15 +1003,10 @@ auto build_barracks_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
   return desc;
 }
 
-auto build_barracks_archetype(BuildingState state) -> RenderArchetype {
-  return build_building_archetype(build_barracks_desc_impl(state), state);
-}
-
 auto barracks_archetype(BuildingState state,
                         Mesh*,
                         Texture*) -> const RenderArchetype& {
-  static const BuildingArchetypeSet k_set =
-      build_stateful_building_archetype_set(build_barracks_archetype);
+  static const BuildingArchetypeSet& k_set = building_archetype_set("roman_barracks");
   return k_set.for_state(state);
 }
 

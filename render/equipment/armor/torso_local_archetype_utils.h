@@ -7,6 +7,7 @@
 #include <cmath>
 #include <string>
 
+#include "render/equipment/equipment_cache_key.h"
 #include "render/humanoid/runtime/humanoid_renderer.h"
 
 namespace Render::GL {
@@ -62,26 +63,26 @@ inline auto local_scale_model(const QVector3D& local_pos,
   return m;
 }
 
-inline void append_quantized_key(std::string& out, float value) {
-  out += std::to_string(std::lround(value * 1000.0F));
+inline void append_exact_key(std::string& out, float value) {
+  out += std::to_string(equipment_key(value));
   out.push_back('_');
 }
 
-inline void append_quantized_key(std::string& out, int value) {
+inline void append_exact_key(std::string& out, int value) {
   out += std::to_string(value);
   out.push_back('_');
 }
 
-inline void append_quantized_key(std::string& out, const QVector3D& value) {
-  append_quantized_key(out, value.x());
-  append_quantized_key(out, value.y());
-  append_quantized_key(out, value.z());
+inline void append_exact_key(std::string& out, const QVector3D& value) {
+  append_exact_key(out, value.x());
+  append_exact_key(out, value.y());
+  append_exact_key(out, value.z());
 }
 
-inline void append_quantized_key(std::string& out, const QMatrix4x4& value) {
+inline void append_exact_key(std::string& out, const QMatrix4x4& value) {
   const float* data = value.constData();
   for (int i = 0; i < 16; ++i) {
-    append_quantized_key(out, data[i]);
+    append_exact_key(out, data[i]);
   }
 }
 

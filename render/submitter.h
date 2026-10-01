@@ -59,7 +59,9 @@ public:
   }
 
   virtual void render_instance(const RenderInstance& instance) {
-    submit_render_instance(*this, instance);
+    if (!submit_baked_source_parts(*this, instance)) {
+      submit_render_instance(*this, instance);
+    }
   }
 
   virtual void rigged(const RiggedCreatureCmd& cmd) { (void)cmd; }

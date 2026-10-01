@@ -63,15 +63,15 @@ inline constexpr std::size_t k_merged_building_palette_capacity = 2;
 
 [[nodiscard]] auto
 build_merged_building_mesh(const RenderArchetypeSlice& slice) -> MergedBuildingMesh;
-[[nodiscard]] auto
-pack_building_instance(const RenderInstance& instance) -> BuildingInstanceGpu;
+
+[[nodiscard]] auto pack_building_instance(const RenderInstance& instance,
+                                          float coverage = 0.0F) -> BuildingInstanceGpu;
 
 class StaticBuildingBatch {
 public:
   void begin_frame();
 
-  [[nodiscard]] auto place(const RenderInstance& instance)
-      -> const std::vector<const RenderArchetypeDraw*>*;
+  auto place(const RenderInstance& instance, float coverage = 0.0F) -> bool;
 
   void finish_frame();
 

@@ -50,6 +50,10 @@ public:
 
   auto upload(const void* data, std::size_t bytes, std::size_t& byte_offset) -> bool;
 
+  auto ensure_merged_uploaded(const MergedBuildingMesh& mesh) -> bool {
+    return m_initialized && merged_vao(mesh) != 0;
+  }
+
   void draw_merged(const MergedBuildingMesh& mesh,
                    std::size_t instance_byte_offset,
                    std::size_t instance_count,

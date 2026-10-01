@@ -7,6 +7,7 @@
 #include <string_view>
 
 #include "generated_equipment.h"
+#include "render/equipment/equipment_cache_key.h"
 
 namespace Render::GL {
 
@@ -22,7 +23,7 @@ inline auto single_cylinder_archetype(
   };
 
   static std::deque<CachedArchetype> cache;
-  int const radius_key = std::lround(radius * 1000.0F);
+  int const radius_key = equipment_key(radius);
   for (const auto& entry : cache) {
     if (entry.debug_prefix == debug_prefix && entry.radius_key == radius_key &&
         entry.material_id == material_id) {
@@ -60,7 +61,7 @@ inline auto single_cone_archetype(float base_radius,
   };
 
   static std::deque<CachedArchetype> cache;
-  int const radius_key = std::lround(base_radius * 1000.0F);
+  int const radius_key = equipment_key(base_radius);
   for (const auto& entry : cache) {
     if (entry.debug_prefix == debug_prefix && entry.radius_key == radius_key &&
         entry.material_id == material_id) {

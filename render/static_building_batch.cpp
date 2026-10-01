@@ -1,22 +1,18 @@
 #include "static_building_batch.h"
 
 #include <algorithm>
-#include <atomic>
 #include <limits>
 
 #include "draw_commands.h"
 #include "entity/unseen_submitter.h"
 #include "gl/mesh.h"
+#include "gl/primitives.h"
 #include "material.h"
 #include "material_classification.h"
+#include "static_mesh_pack.h"
 
 namespace Render::GL {
 namespace {
-
-auto next_merged_mesh_id() -> std::uint64_t {
-  static std::atomic<std::uint64_t> counter{0};
-  return ++counter;
-}
 
 auto draws_with_basic_shader(const Material* material) -> bool {
   return material == nullptr || material->shader == nullptr ||
@@ -56,7 +52,8 @@ void append_part(MergedBuildingMesh& merged, const RenderArchetypeDraw& draw) {
       static_cast<float>(Render::resolve_material_id(draw.material_id,
                                                      unseen_surface_color(draw.color))),
       static_cast<float>(draw.material_id)};
-  for (const Vertex& vertex : draw.mesh->get_vertices()) {
+  const Mesh* mesh = bake_tessellated_mesh(draw.mesh, draw.local_model);
+  for (const Vertex& vertex : mesh->get_vertices()) {
     QVector3D const position = draw.local_model.map(
         QVector3D(vertex.position[0], vertex.position[1], vertex.position[2]));
     QVector3D const normal = transform_normal(
@@ -70,7 +67,7 @@ void append_part(MergedBuildingMesh& merged, const RenderArchetypeDraw& draw) {
         .material = material,
     });
   }
-  for (unsigned int const index : draw.mesh->get_indices()) {
+  for (unsigned int const index : mesh->get_indices()) {
     merged.indices.push_back(base + index);
   }
 }
@@ -126,7 +123,8 @@ auto build_merged_building_mesh(const RenderArchetypeSlice& slice)
   return merged;
 }
 
-auto pack_building_instance(const RenderInstance& instance) -> BuildingInstanceGpu {
+auto pack_building_instance(const RenderInstance& instance,
+                            float coverage) -> BuildingInstanceGpu {
   const float* data = instance.world.constData();
   BuildingInstanceGpu record{
       .model_col0 = {data[0], data[1], data[2], data[12]},
@@ -134,7 +132,7 @@ auto pack_building_instance(const RenderInstance& instance) -> BuildingInstanceG
       .model_col2 = {data[8], data[9], data[10], data[14]},
       .state = {static_cast<float>(instance.damage_material_id),
                 instance.unseen ? 1.0F : 0.0F,
-                0.0F,
+                coverage,
                 0.0F},
   };
   std::array<float*, k_merged_building_palette_capacity> const entries{record.palette0,
@@ -156,30 +154,22 @@ void StaticBuildingBatch::begin_frame() {
   m_placed.clear();
 }
 
-auto StaticBuildingBatch::place(const RenderInstance& instance)
-    -> const std::vector<const RenderArchetypeDraw*>* {
-  if (instance.static_id == 0U || instance.archetype == nullptr ||
-      instance.lod != RenderArchetypeLod::Full ||
-      instance.palette.size() > k_merged_building_palette_capacity) {
-    return nullptr;
+auto StaticBuildingBatch::place(const RenderInstance& instance,
+                                float coverage) -> bool {
+  if (instance.archetype == nullptr || instance.archetype->merged_full == nullptr) {
+    return false;
   }
-  const RenderArchetype& archetype = *instance.archetype;
-  if (archetype.merged_full == nullptr) {
-    archetype.merged_full =
-        std::make_shared<const MergedBuildingMesh>(build_merged_building_mesh(
-            archetype.lods[static_cast<std::size_t>(RenderArchetypeLod::Full)]));
-  }
-  const MergedBuildingMesh& mesh = *archetype.merged_full;
+  const MergedBuildingMesh& mesh = *instance.archetype->merged_full;
   if (!mesh.indices.empty()) {
     m_placed.push_back(Placed{
         .mesh = &mesh,
         .default_texture = instance.default_texture,
-        .record = pack_building_instance(instance),
+        .record = pack_building_instance(instance, coverage),
         .bounds = {instance.world.map(mesh.bounds_center),
                    mesh.bounds_radius * max_axis_scale(instance.world)},
     });
   }
-  return &mesh.dynamic_draws;
+  return true;
 }
 
 void StaticBuildingBatch::finish_frame() {

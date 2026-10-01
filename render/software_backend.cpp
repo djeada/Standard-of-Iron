@@ -5,6 +5,7 @@
 #include "draw_part.h"
 #include "draw_queue.h"
 #include "scene/camera.h"
+#include "static_building_batch.h"
 
 namespace Render::GL {
 
@@ -49,6 +50,37 @@ void SoftwareBackend::execute(const DrawQueue& queue, const Camera& cam) {
       break;
     }
   };
+
+  if (const StaticBuildingBatch* batch = queue.static_batch(); batch != nullptr) {
+    for (const StaticBatchDraw& draw : batch->draws()) {
+      for (std::uint32_t i = draw.first; i < draw.first + draw.count; ++i) {
+        const BuildingInstanceGpu& record = batch->instances()[i];
+        QMatrix4x4 model(record.model_col0[0],
+                         record.model_col1[0],
+                         record.model_col2[0],
+                         record.model_col0[3],
+                         record.model_col0[1],
+                         record.model_col1[1],
+                         record.model_col2[1],
+                         record.model_col1[3],
+                         record.model_col0[2],
+                         record.model_col1[2],
+                         record.model_col2[2],
+                         record.model_col2[3],
+                         0.0F,
+                         0.0F,
+                         0.0F,
+                         1.0F);
+        model.translate(draw.mesh->bounds_center);
+        model.scale(draw.mesh->bounds_radius);
+        const QVector3D color =
+            record.palette0[3] >= 0.0F
+                ? QVector3D(record.palette0[0], record.palette0[1], record.palette0[2])
+                : QVector3D(0.6F, 0.55F, 0.5F);
+        submit_as_cube(m_rasterizer, model, color, 1.0F);
+      }
+    }
+  }
 
   if (!queue.prepared_batches().empty()) {
     for (const PreparedBatch& batch : queue.prepared_batches()) {

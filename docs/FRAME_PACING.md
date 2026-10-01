@@ -195,6 +195,10 @@ The report keeps evidence for the worst pacing sample, including information suc
 
 This is important because the gate is meant to be actionable. A red verdict without evidence would only say that the run was bad, not which subsystem dominated the bad frame.
 
+## Hitch attribution
+
+The worst frame of each cluster explains that cluster; `hitch_attribution` explains all of them. Every frame over the hitch threshold is charged to its largest render-thread phase (`submit`, `shadow`, `play`, `presentation_lock_wait`, ...; `unattributed` when no phase recorded time), and the report lists, per phase, how many hitch frames it owned and the worst interval among them. A run whose 90 hitches are 83 `submit` frames and a run with 8 `play` frames over 400 ms need different work, and the totals alone cannot tell them apart.
+
 ## Ten-second windows
 
 Reports also summarize ten-second windows.

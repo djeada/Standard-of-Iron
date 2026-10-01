@@ -119,20 +119,17 @@ TEST(BuildingRenderCommon, DamageMaterialTierPreservesSurfaceMaterial) {
 TEST(BuildingRenderCommon, WallArchetypeSetDiffersPerState) {
   using namespace Render::GL;
 
-  const WallArchetypeSet set =
-      build_wall_archetype_set("test_wall", WallPalette{}, WallGeometry{});
+  const WallArchetypeSet set = wall_archetype_set("roman_wall_variant");
 
-  for (const auto& variant : set.variants) {
-    const std::size_t normal =
-        variant.for_state(BuildingState::Normal).lods[0].draws.size();
-    const std::size_t damaged =
-        variant.for_state(BuildingState::Damaged).lods[0].draws.size();
-    const std::size_t destroyed =
-        variant.for_state(BuildingState::Destroyed).lods[0].draws.size();
-
-    EXPECT_GT(normal, 0U);
-    EXPECT_NE(normal, damaged);
-    EXPECT_NE(damaged, destroyed);
+  for (const BuildingArchetypeSet* set_for_variant : set.variants) {
+    ASSERT_NE(set_for_variant, nullptr);
+    const auto indices = [&](BuildingState state) {
+      const auto& mesh = set_for_variant->for_state(state).merged_full;
+      return mesh != nullptr ? mesh->indices.size() : 0U;
+    };
+    EXPECT_GT(indices(BuildingState::Normal), 0U);
+    EXPECT_NE(indices(BuildingState::Normal), indices(BuildingState::Damaged));
+    EXPECT_NE(indices(BuildingState::Damaged), indices(BuildingState::Destroyed));
   }
 }
 
@@ -201,37 +198,6 @@ TEST(BuildingRenderCommon, BuildingInstanceCarriesEntityAndDamageState) {
   EXPECT_EQ(submitter.meshes[1].mesh, fake_mesh(2));
   EXPECT_FLOAT_EQ(submitter.meshes[0].model(0, 3), 3.0F);
   EXPECT_EQ(submitter.meshes[0].material_id, 20);
-}
-
-TEST(BuildingRenderCommon, PreviewBuildingInstanceHasNoStaticIdentity) {
-  using namespace Render::GL;
-
-  class InstanceRecorder final : public ForwardingSubmitter {
-  public:
-    using ForwardingSubmitter::ForwardingSubmitter;
-    std::vector<RenderInstance> instances;
-    void render_instance(const RenderInstance& instance) override {
-      instances.push_back(instance);
-    }
-  };
-
-  RenderArchetypeBuilder builder("building_preview_identity");
-  builder.add_mesh(fake_mesh(1), QMatrix4x4{}, QVector3D(1.0F, 0.0F, 0.0F));
-  RenderArchetype archetype = std::move(builder).build();
-
-  RecordingSubmitter sink;
-  InstanceRecorder recorder(sink);
-  DrawContext preview_ctx;
-  submit_building_instance(recorder, preview_ctx, archetype);
-
-  Engine::Core::StandaloneEntity entity_scratch(91);
-  DrawContext entity_ctx;
-  entity_ctx.entity = &entity_scratch.entity();
-  submit_building_instance(recorder, entity_ctx, archetype);
-
-  ASSERT_EQ(recorder.instances.size(), 2U);
-  EXPECT_EQ(recorder.instances[0].static_id, 0U);
-  EXPECT_EQ(recorder.instances[1].static_id, 91U);
 }
 
 TEST(BuildingRenderCommon, RegisterBuildingRendererUsesCanonicalKeyOnly) {

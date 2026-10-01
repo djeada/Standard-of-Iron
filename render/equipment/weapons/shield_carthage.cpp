@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "render/equipment/attachment_builder.h"
+#include "render/equipment/equipment_cache_key.h"
 #include "render/equipment/equipment_submit.h"
 #include "render/geom/transforms.h"
 #include "render/gl/mesh.h"
@@ -98,7 +99,7 @@ auto carthage_shield_archetype(float scale_multiplier) -> const RenderArchetype&
   };
 
   static std::deque<CachedArchetype> cache;
-  int const scale_key = std::lround(scale_multiplier * 1000.0F);
+  int const scale_key = equipment_key(scale_multiplier);
   for (const auto& entry : cache) {
     if (entry.scale_key == scale_key) {
       return entry.archetype;

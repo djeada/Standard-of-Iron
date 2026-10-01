@@ -15,6 +15,7 @@
 #include "math/math_utils.h"
 #include "render/entity/renderer_constants.h"
 #include "render/equipment/attachment_builder.h"
+#include "render/equipment/equipment_cache_key.h"
 #include "render/equipment/equipment_submit.h"
 #include "render/equipment/oriented_archetype_utils.h"
 #include "render/equipment/primitive_archetype_utils.h"
@@ -88,7 +89,7 @@ auto operator==(const SwordArchetypeKey& lhs, const SwordArchetypeKey& rhs) -> b
 }
 
 auto quantize_sword_value(float value) -> int {
-  return std::lround(value * 1000.0F);
+  return equipment_key(value);
 }
 
 auto oriented_box_between(const QVector3D& start,
@@ -461,7 +462,7 @@ auto scabbard_archetype(float sheath_r) -> const RenderArchetype& {
     RenderArchetype archetype;
   };
   static std::deque<CachedArchetype> cache;
-  ScabbardKey const key{static_cast<int>(std::lround(sheath_r * 1000.0F))};
+  ScabbardKey const key{equipment_key(sheath_r)};
   for (const auto& entry : cache) {
     if (entry.key == key) {
       return entry.archetype;

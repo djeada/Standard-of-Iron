@@ -408,7 +408,7 @@ TEST_F(TightGapNavigationTest, RouteTakesTheMiddleOfAWideCorridor) {
   }
 }
 
-TEST_F(TightGapNavigationTest, ClearanceCostPrefersAWideDetourButKeepsTheGapReachable) {
+TEST_F(TightGapNavigationTest, FormationUsesTheSameShortGapAsAnIndividual) {
   open_field();
   constexpr int k_wall_x = 24;
   constexpr int k_gap_z = 24;
@@ -433,9 +433,48 @@ TEST_F(TightGapNavigationTest, ClearanceCostPrefersAWideDetourButKeepsTheGapReac
   ASSERT_FALSE(wide_route.empty());
   EXPECT_NE(std::find(short_route.begin(), short_route.end(), Point{k_wall_x, k_gap_z}),
             short_route.end());
-  EXPECT_EQ(std::find(wide_route.begin(), wide_route.end(), Point{k_wall_x, k_gap_z}),
+  EXPECT_NE(std::find(wide_route.begin(), wide_route.end(), Point{k_wall_x, k_gap_z}),
             wide_route.end());
   EXPECT_EQ(wide_route.back(), Point(34, k_gap_z));
+  EXPECT_EQ(wide_route, short_route);
+}
+
+TEST_F(FormationMovementRegressionTest,
+       FormationCompressesThroughAGapInsteadOfTakingTheOpenDetour) {
+  open_field();
+  m_session->world().set_presentation_enabled(true);
+  constexpr int k_wall_x = 24;
+  constexpr int k_gap_z = 24;
+  for (int z = 14; z <= 34; ++z) {
+    if (z != k_gap_z) {
+      block_cell(k_wall_x, z);
+    }
+  }
+  refresh_grid();
+
+  auto const id = spawn(Game::Units::SpawnType::Spearman, world_of(14, 20), 90.0F);
+  auto* entity = m_session->world().get_entity(id);
+  ASSERT_NE(entity, nullptr);
+  CommandService::move_unit(m_session->world(), id, world_of(38, 24));
+
+  bool crossed_gap = false;
+  bool compressed = false;
+  double const step = m_session->clock().tick_seconds();
+  for (double elapsed = 0.0; elapsed < 30.0; elapsed += step) {
+    run_for(step);
+    auto const cell = cell_of(position_of(id));
+    crossed_gap = crossed_gap || cell == Point(k_wall_x, k_gap_z);
+    auto const* state =
+        entity->get_component<Engine::Core::UnitTraversalLayoutStateComponent>();
+    compressed = compressed || (state != nullptr && state->lateral_scale < 1.0F);
+  }
+  EXPECT_TRUE(crossed_gap);
+  EXPECT_TRUE(compressed);
+  EXPECT_GT(position_of(id).x(), world_of(34, 24).x());
+  auto const* state =
+      entity->get_component<Engine::Core::UnitTraversalLayoutStateComponent>();
+  ASSERT_NE(state, nullptr);
+  EXPECT_FLOAT_EQ(state->lateral_scale, 1.0F);
 }
 
 TEST_F(TightGapNavigationTest, RouteKeepsClearOfAWallItRunsAlong) {

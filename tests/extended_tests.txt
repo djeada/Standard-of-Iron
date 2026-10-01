@@ -90,6 +90,10 @@ MissionAssetRulesTest.GatherObjectivesFitTheHarvestActuallyOnTheMap
 
 # render_tests
 BpatRegistry.*
+# Rebake every building and every troop's equipment and compare with the shipped
+# packs; the pull-request lane keeps the cheap name-coverage checks.
+StaticMeshPack.ShippedBuildingPackMatchesTheCatalog
+AttachmentMeshPack.ShippedPackCoversEveryTroopOfEveryNation
 DrawQueueSortCost.*
 TemplatePrewarmRegression.*
 ScatterRuntimeTest.CampaniaCampaignMaintainsRichNaturalScatter

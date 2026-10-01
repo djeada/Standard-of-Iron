@@ -57,16 +57,15 @@ struct WallGeometry {
 };
 
 struct WallArchetypeSet {
-  std::array<BuildingArchetypeSet, 6> variants;
+  std::array<const BuildingArchetypeSet*, 6> variants{};
 };
 
 auto build_wall_variant_desc(std::string_view name_prefix,
                              const WallPalette& palette,
                              const WallGeometry& geometry,
                              WallVariant variant) -> BuildingArchetypeDesc;
-auto build_wall_archetype_set(std::string_view name_prefix,
-                              const WallPalette& palette,
-                              const WallGeometry& geometry) -> WallArchetypeSet;
+
+auto wall_archetype_set(std::string_view name_prefix) -> WallArchetypeSet;
 auto wall_renderer_variants()
     -> const std::array<std::pair<std::string_view, WallVariant>, 7>&;
 void submit_wall_segment_variant(ISubmitter& out,

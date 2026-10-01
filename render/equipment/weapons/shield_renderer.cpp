@@ -12,6 +12,7 @@
 #include <string>
 
 #include "render/equipment/attachment_builder.h"
+#include "render/equipment/equipment_cache_key.h"
 #include "render/equipment/equipment_submit.h"
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
@@ -53,7 +54,7 @@ auto operator==(const ShieldArchetypeKey& lhs, const ShieldArchetypeKey& rhs) ->
 }
 
 auto quantize_shield_value(float value) -> int {
-  return std::lround(value * 1000.0F);
+  return equipment_key(value);
 }
 
 auto shield_center_local(const ShieldRenderConfig& config) -> QVector3D {

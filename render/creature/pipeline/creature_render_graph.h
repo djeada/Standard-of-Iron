@@ -103,6 +103,8 @@ struct CreatureLodConfig {
 
 [[nodiscard]] auto elephant_lod_config_from_settings() noexcept -> CreatureLodConfig;
 
+[[nodiscard]] auto creature_lod_config(CreatureKind kind) noexcept -> CreatureLodConfig;
+
 [[nodiscard]] auto
 quadruped_lod_from_settings(CreatureKind kind,
                             float distance) noexcept -> Render::Creature::CreatureLOD;

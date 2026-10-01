@@ -55,7 +55,7 @@ void submit_wildlife(const Render::GL::DrawContext& ctx,
   }
 
   RCP::CreatureLodDecision lod_decision =
-      RCP::evaluate_creature_lod(graph_inputs, RCP::CreatureLodConfig{});
+      RCP::evaluate_creature_lod(graph_inputs, RCP::creature_lod_config(inputs.kind));
   auto graph_output = RCP::build_base_graph_output(graph_inputs, lod_decision);
   graph_output.spec = visual_spec_for(inputs.kind);
 

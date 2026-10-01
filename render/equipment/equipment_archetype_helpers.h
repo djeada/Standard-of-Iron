@@ -10,12 +10,13 @@
 #include <string>
 
 #include "generated_equipment.h"
+#include "render/equipment/equipment_cache_key.h"
 #include "render/static_attachment_spec.h"
 
 namespace Render::GL {
 
 inline auto quantize_equipment_value(float value) -> int {
-  return std::lround(value * 1000.0F);
+  return equipment_key(value);
 }
 
 template <typename Tag, typename Key>

@@ -7,17 +7,21 @@ auto building_asset_key(std::string_view nation_slug,
   return "troops/" + std::string(nation_slug) + "/" + std::string(building_type);
 }
 
-auto building_asset_key(Game::Systems::NationID nation_id,
-                        std::string_view building_type) -> std::string {
+auto nation_asset_slug(Game::Systems::NationID nation_id) -> std::string_view {
   switch (nation_id) {
   case Game::Systems::NationID::Carthage:
-    return building_asset_key("carthage", building_type);
+    return "carthage";
   case Game::Systems::NationID::IronSepulcher:
-    return building_asset_key("iron_sepulcher", building_type);
+    return "iron_sepulcher";
   case Game::Systems::NationID::RomanRepublic:
   default:
-    return building_asset_key("roman", building_type);
+    return "roman";
   }
+}
+
+auto building_asset_key(Game::Systems::NationID nation_id,
+                        std::string_view building_type) -> std::string {
+  return building_asset_key(nation_asset_slug(nation_id), building_type);
 }
 
 auto canonicalize_building_asset_key(std::string_view asset_key) -> std::string_view {

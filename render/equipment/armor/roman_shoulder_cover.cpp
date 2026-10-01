@@ -7,6 +7,7 @@
 
 #include "animation/rig/humanoid_proportions.h"
 #include "render/equipment/attachment_builder.h"
+#include "render/equipment/equipment_cache_key.h"
 #include "shoulder_cover_archetype.h"
 
 namespace Render::GL {
@@ -26,7 +27,7 @@ auto roman_shoulder_cover_archetype(float outward_scale) -> const RenderArchetyp
   };
 
   static std::deque<CachedArchetype> cache;
-  int const key = std::lround(outward_scale * 1000.0F);
+  int const key = equipment_key(outward_scale);
   for (const auto& entry : cache) {
     if (entry.key == key) {
       return entry.archetype;

@@ -10,6 +10,7 @@
 #include "animation/rig/humanoid_proportions.h"
 #include "render/entity/registry.h"
 #include "render/equipment/attachment_builder.h"
+#include "render/equipment/equipment_cache_key.h"
 #include "render/equipment/equipment_submit.h"
 #include "render/gl/shared_geometry_cache.h"
 #include "render/humanoid/runtime/style_palette.h"
@@ -106,7 +107,7 @@ auto roman_greaves_archetype(float shin_radius) -> const RenderArchetype& {
   };
 
   static std::deque<CachedArchetype> cache;
-  int const key = std::lround(shin_radius * 1000.0F);
+  int const key = equipment_key(shin_radius);
   for (const auto& entry : cache) {
     if (entry.key == key) {
       return entry.archetype;
