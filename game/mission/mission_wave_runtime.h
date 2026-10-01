@@ -66,7 +66,7 @@ public:
                              bool hold_clock) -> MissionFrameEffects;
 
 private:
-  [[nodiscard]] auto fire_due_events() -> QStringList;
+  [[nodiscard]] auto fire_due_events(Engine::Core::World& world) -> QStringList;
 
   double m_elapsed = 0.0;
   std::vector<Game::Mission::PendingMissionWave> m_waves;

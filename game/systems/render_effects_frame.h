@@ -1,4 +1,5 @@
 #pragma once
+#include <QQuaternion>
 #include <QVector3D>
 
 #include <cstdint>
@@ -47,6 +48,20 @@ struct ProjectileView {
   int target_owner{0};
 };
 
+struct RockfallBoulderView {
+  QVector3D position;
+  QQuaternion orientation;
+  float radius{1.0F};
+  // Settled boulders sink into the ground over their last second.
+  float sink{0.0F};
+};
+
+struct RockfallDustView {
+  QVector3D position;
+  float scale{1.0F};
+  float age{0.0F};
+};
+
 struct RenderEffectsFrame {
   std::vector<ArrowInstance> arrows;
   std::vector<HealingBeamView> healing_beams;
@@ -55,6 +70,8 @@ struct RenderEffectsFrame {
   std::vector<ProjectileImpactEvent> projectile_impacts;
   std::vector<int> impact_attacker_owners;
   std::vector<int> impact_target_owners;
+  std::vector<RockfallBoulderView> rockfall_boulders;
+  std::vector<RockfallDustView> rockfall_dust;
 };
 
 } // namespace Game::Systems

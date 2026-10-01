@@ -7,6 +7,7 @@
 
 #include "../core/world.h"
 #include "../systems/cursed_gold_vein_system.h"
+#include "../systems/rockfall_system.h"
 #include "../systems/undead_awakening_system.h"
 #include "../wildlife/wildlife_system.h"
 
@@ -210,6 +211,25 @@ void register_built_in_snapshot_contributors() {
            },
        .digest = [](const SnapshotScope& scope) -> QJsonValue {
          auto* system = system_of<Game::Systems::CursedGoldVeinSystem>(scope);
+         return system != nullptr ? QJsonValue(system->serialize_state())
+                                  : QJsonValue();
+       }});
+
+  SessionSnapshot::register_contributor(
+      {.key = "rockfall",
+       .capture = [](const SnapshotScope& scope) -> QJsonValue {
+         auto* system = system_of<Game::Systems::RockfallSystem>(scope);
+         return system != nullptr ? QJsonValue(system->serialize_state())
+                                  : QJsonValue();
+       },
+       .restore =
+           [](const SnapshotScope& scope, const QJsonValue& value) {
+             if (auto* system = system_of<Game::Systems::RockfallSystem>(scope)) {
+               system->restore_state(value.toObject());
+             }
+           },
+       .digest = [](const SnapshotScope& scope) -> QJsonValue {
+         auto* system = system_of<Game::Systems::RockfallSystem>(scope);
          return system != nullptr ? QJsonValue(system->serialize_state())
                                   : QJsonValue();
        }});

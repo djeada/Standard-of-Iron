@@ -155,6 +155,37 @@ struct UndeadZone {
   Game::Systems::ResourceAmounts clear_reward;
 };
 
+enum class RockfallTriggerMode : std::uint8_t {
+  // Fires as soon as a hostile troop walks into the kill zone.
+  Zone,
+  // Fires only when an AI owns the heights and judges the column worth it.
+  AiDefender,
+  // Fires only when a mission event or a test asks for it.
+  Scripted,
+};
+
+// Boulders staged on high ground above a pass. `release` sits on the heights;
+// `target` is the middle of the kill zone in the pass below. Both use the map's
+// coordinate system, like undead zones.
+struct RockfallTrap {
+  QString id;
+  float release_x = 0.0F;
+  float release_z = 0.0F;
+  float target_x = 0.0F;
+  float target_z = 0.0F;
+  float zone_radius = 8.0F;
+  RockfallTriggerMode trigger = RockfallTriggerMode::Zone;
+  int owner_id = -1;
+  int boulder_count = 5;
+  float boulder_radius = 0.85F;
+  float release_spread = 6.0F;
+  float release_interval = 0.4F;
+  int damage = 40;
+  float casualty_fraction = 0.22F;
+  float rearm_seconds = 0.0F;
+  int ai_min_targets = 2;
+};
+
 [[nodiscard]] inline auto default_undead_waves() -> std::vector<UndeadWave> {
   UndeadWave wave;
   wave.trigger = QStringLiteral("initial");
@@ -661,6 +692,7 @@ struct MapDefinition {
   std::vector<StructureEntry> structures;
   std::vector<WorldProp> world_props;
   std::vector<UndeadZone> undead_zones;
+  std::vector<RockfallTrap> rockfall_traps;
   std::vector<Forest> forests;
   std::vector<FogZone> fog_zones;
   BiomeSettings biome;

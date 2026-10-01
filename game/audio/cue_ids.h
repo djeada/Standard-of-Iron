@@ -80,6 +80,7 @@ inline constexpr const char* k_combat_arrow_flyby = "combat.arrow_flyby";
 inline constexpr const char* k_combat_arrow_volley = "combat.arrow_volley";
 inline constexpr const char* k_combat_siege_launch = "combat.siege_launch";
 inline constexpr const char* k_combat_siege_impact = "combat.siege_impact";
+inline constexpr const char* k_hazard_rockfall = "hazard.rockfall";
 inline constexpr const char* k_combat_spell_cast = "combat.spell_cast";
 inline constexpr const char* k_combat_fireball_impact = "combat.fireball_impact";
 inline constexpr const char* k_combat_javelin_throw = "combat.javelin_throw";
@@ -125,7 +126,7 @@ inline constexpr const char* k_state_load_complete = "state.load_complete";
 inline constexpr const char* k_state_commander_enter = "state.commander_enter";
 inline constexpr const char* k_state_commander_exit = "state.commander_exit";
 
-inline constexpr std::array<const char*, 106> k_all = {
+inline constexpr std::array<const char*, 107> k_all = {
     k_ui_hover,
     k_ui_click,
     k_ui_back,
@@ -192,6 +193,7 @@ inline constexpr std::array<const char*, 106> k_all = {
     k_combat_arrow_volley,
     k_combat_siege_launch,
     k_combat_siege_impact,
+    k_hazard_rockfall,
     k_combat_spell_cast,
     k_combat_fireball_impact,
     k_combat_javelin_throw,

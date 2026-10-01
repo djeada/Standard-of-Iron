@@ -910,6 +910,20 @@
       "spatial": true
     },
     {
+      "id": "hazard.rockfall",
+      "description": "Defenders on the heights release a rockfall onto a pass below.",
+      "category": "sfx",
+      "importance": "optional",
+      "volume": 1.0,
+      "priority": 8,
+      "cooldown_ms": 1500,
+      "resources": [
+        "sfx.build.building_destroyed"
+      ],
+      "wanted": "Grinding rockslide: boulders breaking loose and tumbling downhill with a long rumbling scree tail, ~3 s.",
+      "spatial": true
+    },
+    {
       "id": "combat.spell_cast",
       "description": "A grave priest hurls a fireball.",
       "category": "sfx",

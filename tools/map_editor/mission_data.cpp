@@ -344,8 +344,11 @@ QStringList MissionData::validate() const {
     }
     for (const QJsonValue action_value : actions) {
       const QJsonObject action = action_value.toObject();
-      if (action.value("type").toString() != "show_message" ||
-          action.value("text").toString().trimmed().isEmpty()) {
+      bool const message = action.value("type").toString() == "show_message" &&
+                           !action.value("text").toString().trimmed().isEmpty();
+      bool const rockfall = action.value("type").toString() == "rockfall" &&
+                            !action.value("trap").toString().trimmed().isEmpty();
+      if (!message && !rockfall) {
         errors.append(QStringLiteral("Battlefield phase %1 has an unsupported action.")
                           .arg(i + 1));
       }

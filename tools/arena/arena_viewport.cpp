@@ -98,6 +98,7 @@
 #include "render/entity/production_completion_renderer.h"
 #include "render/geom/arrow.h"
 #include "render/geom/projectile_renderer.h"
+#include "render/geom/rockfall_renderer.h"
 #include "render/geom/range_rings.h"
 #include "render/geom/target_focus_rings.h"
 #include "render/ground/ambient_fog_renderer.h"
@@ -710,6 +711,7 @@ void ArenaViewport::paintGL() {
       view.reduced_effects = Game::Accessibility::MotionSettings::reduced_motion();
       Render::GL::render_projectiles(
           m_renderer.get(), res, m_world->render_effects_frame(), &view);
+      Render::GL::render_rockfall(m_renderer.get(), m_world->render_effects_frame());
     }
     {
       const auto& beams = m_world->render_effects_frame().healing_beams;

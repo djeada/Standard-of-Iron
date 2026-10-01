@@ -31,6 +31,7 @@
 #include "render/geom/interaction_target_markers.h"
 #include "render/geom/patrol_flags.h"
 #include "render/geom/projectile_renderer.h"
+#include "render/geom/rockfall_renderer.h"
 #include "render/geom/range_rings.h"
 #include "render/geom/target_focus_rings.h"
 #include "render/scene_renderer.h"
@@ -285,6 +286,7 @@ void render_effects(const RenderEffectsContext& context,
     view.local_owner_id = context.local_owner_id;
     view.reduced_effects = Game::Accessibility::MotionSettings::reduced_motion();
     Render::GL::render_projectiles(context.renderer, res, *context.effects, &view);
+    Render::GL::render_rockfall(context.renderer, *context.effects);
   }
 
   if (context.effects != nullptr) {

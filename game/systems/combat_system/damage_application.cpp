@@ -285,6 +285,7 @@ struct HitContext {
   Engine::Core::UnitComponent* unit{nullptr};
   Engine::Core::EntityID attacker_id{0};
   AttackerInfo attacker;
+  std::optional<Game::Units::SpawnType> sourceless_hit_sound_as;
   bool structure{false};
   int effective_damage{0};
   bool killing_blow{false};
@@ -317,7 +318,8 @@ void present_formation_hit(const HitContext& hit,
 
 void publish_hit_event(const HitContext& hit) {
   Game::Units::SpawnType const attacker_type =
-      hit.attacker.spawn_type.value_or(Game::Units::SpawnType::Swordsman);
+      hit.attacker.spawn_type.value_or(
+          hit.sourceless_hit_sound_as.value_or(Game::Units::SpawnType::Swordsman));
   Engine::Core::EventManager::instance().publish(
       Engine::Core::CombatHitEvent(hit.attacker_id,
                                    hit.target->get_id(),
@@ -393,7 +395,8 @@ apply_unit_damage(Engine::Core::World* world,
                   Engine::Core::EntityID attacker_id,
                   std::optional<QVector3D> contact_point,
                   std::optional<std::uint16_t> preferred_soldier_slot,
-                  float impact_speed) {
+                  float impact_speed,
+                  std::optional<Game::Units::SpawnType> sourceless_hit_sound_as) {
   DamageApplicationResult result;
   if (target == nullptr || damage <= 0) {
     return result;
@@ -407,7 +410,8 @@ apply_unit_damage(Engine::Core::World* world,
                  .target = target,
                  .unit = unit,
                  .attacker_id = attacker_id,
-                 .attacker = resolve_attacker(world, attacker_id)};
+                 .attacker = resolve_attacker(world, attacker_id),
+                 .sourceless_hit_sound_as = sourceless_hit_sound_as};
   hit.structure = is_building(target);
   int const raw_damage =
       hit.structure ? resolve_structure_damage(hit.attacker.entity, damage) : damage;

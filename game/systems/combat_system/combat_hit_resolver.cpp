@@ -46,14 +46,12 @@ void launch_new_casualties(Engine::Core::Entity& casualty_unit,
                            const Engine::Core::Entity& impact_source,
                            int casualty_count,
                            float impact_speed) {
-  auto* casualties =
-      casualty_unit.get_component<Engine::Core::SoldierCasualtyAnimationComponent>();
   auto const* casualty_transform =
       casualty_unit.get_component<Engine::Core::TransformComponent>();
   auto const* source_transform =
       impact_source.get_component<Engine::Core::TransformComponent>();
-  if (casualties == nullptr || casualty_transform == nullptr ||
-      source_transform == nullptr || casualty_count <= 0) {
+  if (casualty_transform == nullptr || source_transform == nullptr ||
+      casualty_count <= 0) {
     return;
   }
   float dx = 0.0F;
@@ -67,6 +65,23 @@ void launch_new_casualties(Engine::Core::Entity& casualty_unit,
     dx = casualty_transform->position.x - source_transform->position.x;
     dz = casualty_transform->position.z - source_transform->position.z;
   }
+  launch_new_casualties_along(casualty_unit, dx, dz, casualty_count, impact_speed);
+}
+
+void launch_new_casualties_along(Engine::Core::Entity& casualty_unit,
+                                 float direction_x,
+                                 float direction_z,
+                                 int casualty_count,
+                                 float impact_speed) {
+  auto* casualties =
+      casualty_unit.get_component<Engine::Core::SoldierCasualtyAnimationComponent>();
+  auto const* casualty_transform =
+      casualty_unit.get_component<Engine::Core::TransformComponent>();
+  if (casualties == nullptr || casualty_transform == nullptr || casualty_count <= 0) {
+    return;
+  }
+  float dx = direction_x;
+  float dz = direction_z;
   float const length = std::hypot(dx, dz);
   if (length > 0.001F) {
     dx /= length;

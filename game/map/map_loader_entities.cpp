@@ -340,6 +340,86 @@ void read_undead_zones(const QJsonArray& arr, std::vector<UndeadZone>& out) {
   }
 }
 
+auto rockfall_trigger_from_string(const QString& raw) -> RockfallTriggerMode {
+  QString const trigger = raw.trimmed().toLower();
+  if (trigger == QStringLiteral("ai") || trigger == QStringLiteral("ai_defender")) {
+    return RockfallTriggerMode::AiDefender;
+  }
+  if (trigger == QStringLiteral("scripted")) {
+    return RockfallTriggerMode::Scripted;
+  }
+  if (!trigger.isEmpty() && trigger != QStringLiteral("zone")) {
+    qWarning() << "Unknown rockfall trigger" << raw << "- using zone";
+  }
+  return RockfallTriggerMode::Zone;
+}
+
+auto read_xz(const QJsonValue& value, float& x, float& z) -> bool {
+  if (value.isArray()) {
+    auto const arr = value.toArray();
+    if (arr.size() < 2) {
+      return false;
+    }
+    x = float(arr.at(0).toDouble(x));
+    z = float(arr.at(arr.size() >= 3 ? 2 : 1).toDouble(z));
+    return true;
+  }
+  if (value.isObject()) {
+    auto const obj = value.toObject();
+    x = float(obj.value(X).toDouble(x));
+    z = float(obj.value(Z).toDouble(z));
+    return true;
+  }
+  return false;
+}
+
+void read_rockfall_traps(const QJsonArray& arr, std::vector<RockfallTrap>& out) {
+  out.clear();
+  out.reserve(arr.size());
+  int next_trap_index = 1;
+  for (const auto val : arr) {
+    auto obj = val.toObject();
+    RockfallTrap trap;
+    trap.id = obj.value(ID).toString().trimmed();
+    if (trap.id.isEmpty()) {
+      trap.id = QStringLiteral("rockfall_%1").arg(next_trap_index);
+    }
+    ++next_trap_index;
+    if (!read_xz(obj.value(QStringLiteral("release")), trap.release_x, trap.release_z) ||
+        !read_xz(obj.value(QStringLiteral("target")), trap.target_x, trap.target_z)) {
+      qWarning() << "Rockfall trap" << trap.id
+                 << "needs both a release and a target point - skipping";
+      continue;
+    }
+    trap.zone_radius =
+        std::max(1.0F, float(obj.value(RADIUS).toDouble(trap.zone_radius)));
+    trap.trigger = rockfall_trigger_from_string(obj.value(TRIGGER).toString());
+    trap.owner_id = obj.value(OWNER_ID).toInt(trap.owner_id);
+    trap.boulder_count = std::clamp(
+        obj.value(QStringLiteral("boulders")).toInt(trap.boulder_count), 1, 24);
+    trap.boulder_radius = std::clamp(
+        float(obj.value(QStringLiteral("boulder_radius")).toDouble(trap.boulder_radius)),
+        0.3F,
+        2.5F);
+    trap.release_spread = std::max(
+        0.0F, float(obj.value(QStringLiteral("spread")).toDouble(trap.release_spread)));
+    trap.release_interval = std::max(
+        0.0F,
+        float(obj.value(QStringLiteral("interval")).toDouble(trap.release_interval)));
+    trap.damage = std::max(0, obj.value(QStringLiteral("damage")).toInt(trap.damage));
+    trap.casualty_fraction = std::clamp(
+        float(obj.value(QStringLiteral("casualty_fraction"))
+                  .toDouble(trap.casualty_fraction)),
+        0.0F,
+        1.0F);
+    trap.rearm_seconds = std::max(
+        0.0F, float(obj.value(QStringLiteral("rearm")).toDouble(trap.rearm_seconds)));
+    trap.ai_min_targets = std::max(
+        1, obj.value(QStringLiteral("ai_min_targets")).toInt(trap.ai_min_targets));
+    out.push_back(std::move(trap));
+  }
+}
+
 void append_undead_zone_fog(MapDefinition& out_map) {
   constexpr float grid_center_offset = 0.5F;
   constexpr float min_tile_size = 0.0001F;
@@ -538,6 +618,12 @@ void read_map_scenery(const QJsonObject& root, MapDefinition& out_map) {
     read_undead_zones(root.value(UNDEAD_ZONES).toArray(), out_map.undead_zones);
   } else {
     out_map.undead_zones.clear();
+  }
+
+  if (root.contains(ROCKFALL_TRAPS) && root.value(ROCKFALL_TRAPS).isArray()) {
+    read_rockfall_traps(root.value(ROCKFALL_TRAPS).toArray(), out_map.rockfall_traps);
+  } else {
+    out_map.rockfall_traps.clear();
   }
 
   if (root.contains(FORESTS) && root.value(FORESTS).isArray()) {
