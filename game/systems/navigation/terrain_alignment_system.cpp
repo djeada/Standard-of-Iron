@@ -4,6 +4,7 @@
 
 #include "core/ambient_session.h"
 #include "core/component_core.h"
+#include "core/component_gameplay.h"
 #include "core/entity.h"
 #include "core/system_context.h"
 #include "core/world.h"
@@ -19,8 +20,11 @@ void TerrainAlignmentSystem::run(Engine::Core::SystemContext& context) {
   }
 
   for (auto [entity_id, transform] : context.view<Engine::Core::TransformComponent>()) {
-    (void)entity_id;
     align_transform_to_terrain(transform, terrain_service);
+    if (const auto* walker =
+            context.try_get<Engine::Core::WallWalkerComponent>(entity_id)) {
+      transform.position.y += walker->elevation;
+    }
   }
 }
 
@@ -34,7 +38,8 @@ void TerrainAlignmentSystem::align_transform_to_terrain(
 
 auto TerrainAlignmentSystem::access() const -> Engine::Core::SystemAccess {
   using namespace Engine::Core;
-  return SystemAccess::declare(Writes<TransformComponent>{});
+  return SystemAccess::declare(Reads<WallWalkerComponent>{},
+                               Writes<TransformComponent>{});
 }
 
 } // namespace Game::Systems

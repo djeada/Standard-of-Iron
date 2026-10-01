@@ -31,10 +31,33 @@ auto building_type_name(const std::string& name) -> const char* {
   if (name == BUILDING_TYPE_BALLISTA) {
     return BUILDING_TYPE_BALLISTA;
   }
+  if (name == BUILDING_TYPE_RAM) {
+    return BUILDING_TYPE_RAM;
+  }
+  if (name == BUILDING_TYPE_SIEGE_TOWER) {
+    return BUILDING_TYPE_SIEGE_TOWER;
+  }
   if (name == BUILDING_TYPE_FARM) {
     return BUILDING_TYPE_FARM;
   }
   return nullptr;
+}
+
+auto is_assault_engine_building(const char* building_type) -> bool {
+  if (building_type == nullptr) {
+    return false;
+  }
+  const std::string_view type(building_type);
+  return type == BUILDING_TYPE_RAM || type == BUILDING_TYPE_SIEGE_TOWER;
+}
+
+auto is_siege_engine_building(const char* building_type) -> bool {
+  if (building_type == nullptr) {
+    return false;
+  }
+  const std::string_view type(building_type);
+  return type == BUILDING_TYPE_CATAPULT || type == BUILDING_TYPE_BALLISTA ||
+         is_assault_engine_building(building_type);
 }
 
 auto preferred_siege_engine(const AIContext& context) -> const char* {

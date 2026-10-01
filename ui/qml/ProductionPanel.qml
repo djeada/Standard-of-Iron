@@ -101,6 +101,16 @@ Rectangle {
             "description": qsTr("Precision siege weapon\nEffective against units"),
             "fallback_emoji": ""
         }, {
+            "item_type": "ram",
+            "label": qsTr("Battering Ram"),
+            "description": qsTr("Gate-breaking siege engine\nImmune to most arrows"),
+            "fallback_emoji": ""
+        }, {
+            "item_type": "siege_tower",
+            "label": qsTr("Siege Tower"),
+            "description": qsTr("Carries infantry onto enemy walls\nDocks at a wall"),
+            "fallback_emoji": ""
+        }, {
             "item_type": "defense_tower",
             "label": qsTr("Defense Tower"),
             "description": qsTr("Stationary defense structure\nShoots arrows at enemies"),
@@ -1389,6 +1399,336 @@ Rectangle {
                                 anchors.fill: parent
                                 color: "#F4E7C8"
                                 opacity: builderBallistaMouseArea.pressed ? 0.2 : 0
+                                radius: parent.radius
+                            }
+
+                            Behavior on color  {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+                            }
+
+                            Behavior on border.color  {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+                            }
+
+                            Behavior on scale  {
+                                NumberAnimation {
+                                    duration: 100
+                                }
+                            }
+                        }
+
+                        Rectangle {
+                            id: builderRamCard
+
+                            property var construction_info: productionPanel.get_construction_info("ram")
+                            property var card_state: productionPanel.construction_card_state(builderProductionContent.builder_prod, construction_info)
+                            property bool is_enabled: card_state.enabled
+                            property bool is_hovered: builderRamMouseArea.containsMouse
+
+                            width: builderCardGrid.cardWidth
+                            height: 80
+                            radius: 6
+                            color: productionPanel.recruit_card_color(is_enabled, is_hovered)
+                            border.color: productionPanel.recruit_card_border(is_enabled, is_hovered)
+                            border.width: is_hovered && is_enabled ? 2 : 1
+                            opacity: is_enabled ? 1 : 0.5
+                            scale: is_hovered && is_enabled ? 1.025 : 1
+
+                            Image {
+                                id: builderRamIcon
+
+                                anchors.fill: parent
+                                anchors.margins: 6
+                                fillMode: Image.PreserveAspectCrop
+                                smooth: true
+                                source: productionPanel.unit_icon_source("ram")
+                                visible: source !== ""
+                                opacity: parent.is_enabled ? 1 : 0.35
+                            }
+
+                            Text {
+                                anchors.centerIn: parent
+                                visible: !builderRamIcon.visible
+                                text: productionPanel.unit_icon_emoji("ram")
+                                color: parent.is_enabled ? "#F4E7C8" : "#6B5231"
+                                font.pixelSize: Design.Typography.glyph
+                                opacity: parent.is_enabled ? 0.9 : 0.4
+                            }
+
+                            Rectangle {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.bottom: parent.bottom
+                                anchors.margins: 1
+                                height: parent.height * 0.7
+                                radius: 6
+                                gradient: Gradient {
+                                    GradientStop {
+                                        position: 0.0
+                                        color: "#00120A05"
+                                    }
+                                    GradientStop {
+                                        position: 0.45
+                                        color: "#CC120A05"
+                                    }
+                                    GradientStop {
+                                        position: 1.0
+                                        color: "#F2120A05"
+                                    }
+                                }
+                            }
+
+                            Text {
+                                anchors.bottom: structureCostFlowRam.top
+                                anchors.bottomMargin: 2
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.leftMargin: 4
+                                anchors.rightMargin: 4
+                                horizontalAlignment: Text.AlignHCenter
+                                elide: Text.ElideRight
+                                text: qsTr("Battering Ram")
+                                color: parent.is_enabled ? "#D4B57C" : "#6B5231"
+                                font.pixelSize: Design.Typography.caption
+                                font.bold: true
+                            }
+
+                            Flow {
+                                id: structureCostFlowRam
+
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.bottom: parent.bottom
+                                anchors.margins: 4
+                                spacing: 4
+
+                                Repeater {
+                                    model: productionPanel.cost_entries(0, builderRamCard.construction_info.resource_costs || {}, false)
+
+                                    delegate: Rectangle {
+                                        width: ramCostRow.implicitWidth + 8
+                                        height: ramCostRow.implicitHeight + 6
+                                        radius: 8
+                                        color: builderRamCard.is_enabled ? "#cc2a1d12" : "#991f150d"
+                                        border.color: builderRamCard.is_enabled ? hs.bronze : "#8C6A3E"
+                                        border.width: 1
+
+                                        Row {
+                                            id: ramCostRow
+
+                                            anchors.centerIn: parent
+                                            spacing: 3
+
+                                            Image {
+                                                width: Design.A11y.scaled(9)
+                                                height: Design.A11y.scaled(9)
+                                                fillMode: Image.PreserveAspectFit
+                                                smooth: true
+                                                source: productionPanel.cost_icon_source(modelData.key)
+                                            }
+
+                                            Text {
+                                                text: modelData.amount
+                                                color: builderRamCard.is_enabled ? Theme.textMain : Theme.textDim
+                                                font.pixelSize: Design.Typography.caption
+                                                font.bold: true
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            MouseArea {
+                                id: builderRamMouseArea
+
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onClicked: {
+                                    if (parent.is_enabled) {
+                                        productionPanel.builder_construction("ram");
+                                    } else {
+                                        Design.UiSound.warning();
+                                    }
+                                }
+                                cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
+                                ToolTip.visible: containsMouse
+                                ToolTip.text: parent.is_enabled ? qsTr("Build Battering Ram\n%1\nCost: %2\nBuild time: %3s").arg(qsTr("Gate-breaking siege engine\nImmune to most arrows")).arg(productionPanel.format_cost_summary(0, builderRamCard.construction_info.resource_costs || {}, qsTr("reserve"))).arg((builderRamCard.construction_info.build_time || 14).toFixed(0)) : builderRamCard.card_state.reason
+                                ToolTip.delay: 300
+                            }
+
+                            Rectangle {
+                                anchors.fill: parent
+                                color: "#F4E7C8"
+                                opacity: builderRamMouseArea.pressed ? 0.2 : 0
+                                radius: parent.radius
+                            }
+
+                            Behavior on color  {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+                            }
+
+                            Behavior on border.color  {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+                            }
+
+                            Behavior on scale  {
+                                NumberAnimation {
+                                    duration: 100
+                                }
+                            }
+                        }
+
+                        Rectangle {
+                            id: builderSiegeTowerCard
+
+                            property var construction_info: productionPanel.get_construction_info("siege_tower")
+                            property var card_state: productionPanel.construction_card_state(builderProductionContent.builder_prod, construction_info)
+                            property bool is_enabled: card_state.enabled
+                            property bool is_hovered: builderSiegeTowerMouseArea.containsMouse
+
+                            width: builderCardGrid.cardWidth
+                            height: 80
+                            radius: 6
+                            color: productionPanel.recruit_card_color(is_enabled, is_hovered)
+                            border.color: productionPanel.recruit_card_border(is_enabled, is_hovered)
+                            border.width: is_hovered && is_enabled ? 2 : 1
+                            opacity: is_enabled ? 1 : 0.5
+                            scale: is_hovered && is_enabled ? 1.025 : 1
+
+                            Image {
+                                id: builderSiegeTowerIcon
+
+                                anchors.fill: parent
+                                anchors.margins: 6
+                                fillMode: Image.PreserveAspectCrop
+                                smooth: true
+                                source: productionPanel.unit_icon_source("siege_tower")
+                                visible: source !== ""
+                                opacity: parent.is_enabled ? 1 : 0.35
+                            }
+
+                            Text {
+                                anchors.centerIn: parent
+                                visible: !builderSiegeTowerIcon.visible
+                                text: productionPanel.unit_icon_emoji("siege_tower")
+                                color: parent.is_enabled ? "#F4E7C8" : "#6B5231"
+                                font.pixelSize: Design.Typography.glyph
+                                opacity: parent.is_enabled ? 0.9 : 0.4
+                            }
+
+                            Rectangle {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.bottom: parent.bottom
+                                anchors.margins: 1
+                                height: parent.height * 0.7
+                                radius: 6
+                                gradient: Gradient {
+                                    GradientStop {
+                                        position: 0.0
+                                        color: "#00120A05"
+                                    }
+                                    GradientStop {
+                                        position: 0.45
+                                        color: "#CC120A05"
+                                    }
+                                    GradientStop {
+                                        position: 1.0
+                                        color: "#F2120A05"
+                                    }
+                                }
+                            }
+
+                            Text {
+                                anchors.bottom: structureCostFlowTower.top
+                                anchors.bottomMargin: 2
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.leftMargin: 4
+                                anchors.rightMargin: 4
+                                horizontalAlignment: Text.AlignHCenter
+                                elide: Text.ElideRight
+                                text: qsTr("Siege Tower")
+                                color: parent.is_enabled ? "#D4B57C" : "#6B5231"
+                                font.pixelSize: Design.Typography.caption
+                                font.bold: true
+                            }
+
+                            Flow {
+                                id: structureCostFlowTower
+
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.bottom: parent.bottom
+                                anchors.margins: 4
+                                spacing: 4
+
+                                Repeater {
+                                    model: productionPanel.cost_entries(0, builderSiegeTowerCard.construction_info.resource_costs || {}, false)
+
+                                    delegate: Rectangle {
+                                        width: siege_towerCostRow.implicitWidth + 8
+                                        height: siege_towerCostRow.implicitHeight + 6
+                                        radius: 8
+                                        color: builderSiegeTowerCard.is_enabled ? "#cc2a1d12" : "#991f150d"
+                                        border.color: builderSiegeTowerCard.is_enabled ? hs.bronze : "#8C6A3E"
+                                        border.width: 1
+
+                                        Row {
+                                            id: siege_towerCostRow
+
+                                            anchors.centerIn: parent
+                                            spacing: 3
+
+                                            Image {
+                                                width: Design.A11y.scaled(9)
+                                                height: Design.A11y.scaled(9)
+                                                fillMode: Image.PreserveAspectFit
+                                                smooth: true
+                                                source: productionPanel.cost_icon_source(modelData.key)
+                                            }
+
+                                            Text {
+                                                text: modelData.amount
+                                                color: builderSiegeTowerCard.is_enabled ? Theme.textMain : Theme.textDim
+                                                font.pixelSize: Design.Typography.caption
+                                                font.bold: true
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            MouseArea {
+                                id: builderSiegeTowerMouseArea
+
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onClicked: {
+                                    if (parent.is_enabled) {
+                                        productionPanel.builder_construction("siege_tower");
+                                    } else {
+                                        Design.UiSound.warning();
+                                    }
+                                }
+                                cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
+                                ToolTip.visible: containsMouse
+                                ToolTip.text: parent.is_enabled ? qsTr("Build Siege Tower\n%1\nCost: %2\nBuild time: %3s").arg(qsTr("Carries infantry onto enemy walls\nDocks at a wall")).arg(productionPanel.format_cost_summary(0, builderSiegeTowerCard.construction_info.resource_costs || {}, qsTr("reserve"))).arg((builderSiegeTowerCard.construction_info.build_time || 22).toFixed(0)) : builderSiegeTowerCard.card_state.reason
+                                ToolTip.delay: 300
+                            }
+
+                            Rectangle {
+                                anchors.fill: parent
+                                color: "#F4E7C8"
+                                opacity: builderSiegeTowerMouseArea.pressed ? 0.2 : 0
                                 radius: parent.radius
                             }
 

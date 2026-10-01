@@ -32,6 +32,8 @@ enum class CombatRole : std::uint8_t {
   case SpawnType::HorseSpearman:
   case SpawnType::Catapult:
   case SpawnType::Ballista:
+  case SpawnType::Ram:
+  case SpawnType::SiegeTower:
   case SpawnType::Elephant:
   case SpawnType::RomanLegionOrganizer:
   case SpawnType::RomanVeteranConsul:

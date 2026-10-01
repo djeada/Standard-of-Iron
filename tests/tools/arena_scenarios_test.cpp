@@ -217,7 +217,9 @@ TEST(ArenaScenariosTest, ListsAllPhaseOneScenarioIds) {
                               Arena::Scenarios::k_gate_allied_access_id,
                               Arena::Scenarios::k_gate_enemy_blocked_id,
                               Arena::Scenarios::k_gate_destroyed_breach_id,
-                              Arena::Scenarios::k_gate_consecutive_transit_id}) {
+                              Arena::Scenarios::k_gate_consecutive_transit_id,
+                              Arena::Scenarios::k_siege_ram_gate_breach_id,
+                              Arena::Scenarios::k_siege_tower_wall_assault_id}) {
     EXPECT_NE(std::find(ids.begin(), ids.end(), QString::fromLatin1(gate_id)),
               ids.end());
   }

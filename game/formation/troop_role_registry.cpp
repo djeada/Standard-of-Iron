@@ -111,6 +111,15 @@ auto default_troop_formation_profile(TroopType troop) -> TroopFormationProfile {
     profile.marching_layout = "beast_spread";
     break;
 
+  case TroopType::Ram:
+  case TroopType::SiegeTower:
+    profile.roles = mask({RoleTag::Siege, RoleTag::HeavyInfantry});
+    profile.army_roles = {ArmyRole::Siege, ArmyRole::Vanguard};
+    profile.unit_layout = "siege_crew";
+    profile.defensive_layout = "siege_crew";
+    profile.marching_layout = "siege_crew";
+    break;
+
   case TroopType::Catapult:
   case TroopType::Ballista:
     profile.roles = mask({RoleTag::Siege, RoleTag::Ranged});

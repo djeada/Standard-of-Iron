@@ -21,6 +21,26 @@
         "refund": 0.5
       }
     },
+    "ram": {
+      "costs": {
+        "wood": 70,
+        "iron": 15
+      },
+      "build_time": 14,
+      "dismantle": {
+        "refund": 0.5
+      }
+    },
+    "siege_tower": {
+      "costs": {
+        "wood": 120,
+        "iron": 30
+      },
+      "build_time": 22,
+      "dismantle": {
+        "refund": 0.5
+      }
+    },
     "defense_tower": {
       "costs": {
         "wood": 60,

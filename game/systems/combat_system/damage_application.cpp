@@ -225,6 +225,27 @@ resolve_attacker(Engine::Core::World* world,
   return info;
 }
 
+constexpr float k_ram_roof_ranged_damage_scale = 0.25F;
+
+auto apply_roof_cover(const Engine::Core::UnitComponent& target,
+                      const Engine::Core::Entity* attacker,
+                      int damage) -> int {
+  if (target.spawn_type != Game::Units::SpawnType::Ram || attacker == nullptr ||
+      damage <= 0) {
+    return damage;
+  }
+  const auto* atk = attacker->get_component<Engine::Core::AttackComponent>();
+  const auto* unit = attacker->get_component<Engine::Core::UnitComponent>();
+  const bool siege =
+      unit != nullptr && Game::Units::is_siege_engine_spawn(unit->spawn_type);
+  if (atk == nullptr || siege ||
+      atk->current_mode != Engine::Core::AttackComponent::CombatMode::Ranged) {
+    return damage;
+  }
+  return std::max(
+      1, static_cast<int>(static_cast<float>(damage) * k_ram_roof_ranged_damage_scale));
+}
+
 void drop_dead_preferred_slot(std::optional<std::uint16_t>& preferred_soldier_slot,
                               const FormationCombat::FormationLayout& layout) {
   if (!preferred_soldier_slot.has_value()) {
@@ -415,6 +436,8 @@ apply_unit_damage(Engine::Core::World* world,
       hit.structure ? raw_damage
                     : apply_defensive_unit_layout_damage_scaling(
                           *target, hit.attacker.entity, contact_point, raw_damage);
+  hit.effective_damage =
+      apply_roof_cover(*unit, hit.attacker.entity, hit.effective_damage);
   result.previous_health = unit->health;
   result.new_health = result.previous_health;
   if (hit.effective_damage <= 0 || result.previous_health <= 0) {

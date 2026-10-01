@@ -88,6 +88,35 @@ TEST_F(StructureCombatTest, AttackClassesHaveExplicitStructureEffectiveness) {
   EXPECT_EQ(Game::Systems::Combat::resolve_structure_damage(
                 add_attacker(world, Game::Units::SpawnType::Catapult), 100),
             175);
+  EXPECT_EQ(Game::Systems::Combat::resolve_structure_damage(
+                add_attacker(world, Game::Units::SpawnType::Ram), 100),
+            350);
+  EXPECT_EQ(Game::Systems::Combat::resolve_structure_damage(
+                add_attacker(world, Game::Units::SpawnType::SiegeTower), 100),
+            0);
+}
+
+TEST_F(StructureCombatTest, RamRoofTurnsMostArrowsButNotStones) {
+  Engine::Core::World world;
+  auto* ram = add_attacker(world, Game::Units::SpawnType::Ram);
+  ram->get_component<Engine::Core::UnitComponent>()->owner_id = 2;
+  auto* archer = add_attacker(world, Game::Units::SpawnType::Archer);
+  archer->get_component<Engine::Core::AttackComponent>()->current_mode =
+      Engine::Core::AttackComponent::CombatMode::Ranged;
+  auto* catapult = add_attacker(world, Game::Units::SpawnType::Catapult);
+  catapult->get_component<Engine::Core::AttackComponent>()->current_mode =
+      Engine::Core::AttackComponent::CombatMode::Ranged;
+  auto* sword = add_attacker(world, Game::Units::SpawnType::Swordsman);
+
+  auto const arrow =
+      Game::Systems::Combat::apply_unit_damage(&world, ram, 40, archer->get_id());
+  EXPECT_EQ(arrow.applied_damage, 10);
+  auto const stone =
+      Game::Systems::Combat::apply_unit_damage(&world, ram, 40, catapult->get_id());
+  EXPECT_EQ(stone.applied_damage, 40);
+  auto const blade =
+      Game::Systems::Combat::apply_unit_damage(&world, ram, 40, sword->get_id());
+  EXPECT_EQ(blade.applied_damage, 40);
 }
 
 TEST_F(StructureCombatTest, AppliedDamageAndEventsUseEffectiveStructureDamage) {

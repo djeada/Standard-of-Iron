@@ -3047,6 +3047,22 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>Gathering, building and recruiting are all under way.</source>
         <translation>Сбор, стройка и набор идут полным ходом.</translation>
     </message>
+    <message>
+        <source>Battering Ram</source>
+        <translation>Таран</translation>
+    </message>
+    <message>
+        <source>Siege Tower</source>
+        <translation>Осадная башня</translation>
+    </message>
+    <message>
+        <source>Roofed siege engine that breaks gates and walls.</source>
+        <translation>Крытая осадная машина, разбивающая ворота и стены.</translation>
+    </message>
+    <message>
+        <source>Carries infantry to a wall and lets them off on top.</source>
+        <translation>Подвозит пехоту к стене и высаживает её наверху.</translation>
+    </message>
 </context>
 <context>
     <name>EconomyHelpPanel</name>
@@ -10468,6 +10484,46 @@ Wide vision and a durable settlement anchor</source>
         <source>Ask %1 for %2 %3. A generous commander with plenty to spare says yes; a warlike or poor one keeps it.</source>
         <translation>Попросить у %1 %2 %3. Щедрый полководец с запасами согласится; воинственный или бедный оставит себе.</translation>
     </message>
+    <message>
+        <source>Battering Ram</source>
+        <translation>Таран</translation>
+    </message>
+    <message>
+        <source>Gate-breaking siege engine
+Immune to most arrows</source>
+        <translation>Осадная машина для разбивания ворот
+Неуязвима для большинства стрел</translation>
+    </message>
+    <message>
+        <source>Siege Tower</source>
+        <translation>Осадная башня</translation>
+    </message>
+    <message>
+        <source>Carries infantry onto enemy walls
+Docks at a wall</source>
+        <translation>Доставляет пехоту на стены врага
+Пристыковывается к стене</translation>
+    </message>
+    <message>
+        <source>Build Battering Ram
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>Построить таран
+%1
+Стоимость: %2
+Время постройки: %3 с</translation>
+    </message>
+    <message>
+        <source>Build Siege Tower
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>Построить осадную башню
+%1
+Стоимость: %2
+Время постройки: %3 с</translation>
+    </message>
 </context>
 <context>
     <name>ProductionViewModel</name>
@@ -12951,6 +13007,62 @@ Wide vision and a durable settlement anchor</source>
     <message>
         <source>Wins the straight infantry fight against spears, and overruns unescorted siege in seconds.</source>
         <translation>Выигрывает прямой пехотный бой у копий и топчет неприкрытые осадные машины за секунды.</translation>
+    </message>
+    <message>
+        <source>Battering Ram</source>
+        <translation>Таран</translation>
+    </message>
+    <message>
+        <source>Siege Tower</source>
+        <translation>Осадная башня</translation>
+    </message>
+    <message>
+        <source>A tower rolled up to the curtain turned a wall from a barrier into a road.</source>
+        <translation>Башня, подкатённая к куртине, превращала стену из преграды в дорогу.</translation>
+    </message>
+    <message>
+        <source>Aries</source>
+        <translation>Aries</translation>
+    </message>
+    <message>
+        <source>Assault tower</source>
+        <translation>Штурмовая башня</translation>
+    </message>
+    <message>
+        <source>Carries a section of infantry up to the wall-top and lets them off beside the defenders.</source>
+        <translation>Поднимает отряд пехоты на гребень стены и высаживает рядом с защитниками.</translation>
+    </message>
+    <message>
+        <source>Gate breaker</source>
+        <translation>Таран для ворот</translation>
+    </message>
+    <message>
+        <source>Rams were hung from a timber frame and roofed in wet hides so the crew could pound a gate while the defenders burned and shot in vain.</source>
+        <translation>Тараны подвешивали в деревянной раме и покрывали мокрыми шкурами, чтобы расчёт бил в ворота, пока защитники напрасно жгли и стреляли.</translation>
+    </message>
+    <message>
+        <source>Shrugs off arrows beneath its roof and splinters gates and walls far faster than any infantry.</source>
+        <translation>Под крышей отражает стрелы и разбивает ворота и стены намного быстрее любой пехоты.</translation>
+    </message>
+    <message>
+        <source>Slow, blind to what is beside it, and helpless once swordsmen reach the crew.</source>
+        <translation>Медлителен, не видит, что рядом, и беспомощен, когда мечники добираются до расчёта.</translation>
+    </message>
+    <message>
+        <source>The ram&apos;s crew worked under a roof of green hides, deaf to everything but the beat of the beam on the gate.</source>
+        <translation>Расчёт тарана работал под крышей из сырых шкур, глухой ко всему, кроме ударов бревна в ворота.</translation>
+    </message>
+    <message>
+        <source>Towers taller than the wall were pushed against the curtain so a drawbridge could drop onto the parapet.</source>
+        <translation>Башни выше стены подкатывали к куртине, чтобы опустить мостик на парапет.</translation>
+    </message>
+    <message>
+        <source>Turris</source>
+        <translation>Turris</translation>
+    </message>
+    <message>
+        <source>Very slow, and a tall target that fire and stone-throwers bring down.</source>
+        <translation>Очень медленна и высока: огонь и камнемёты быстро её сносят.</translation>
     </message>
 </context>
 <context>

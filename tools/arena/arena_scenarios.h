@@ -144,6 +144,8 @@ inline constexpr char k_gate_allied_access_id[] = "gate_allied_access";
 inline constexpr char k_gate_enemy_blocked_id[] = "gate_enemy_blocked";
 inline constexpr char k_gate_destroyed_breach_id[] = "gate_destroyed_breach";
 inline constexpr char k_gate_consecutive_transit_id[] = "gate_consecutive_transit";
+inline constexpr char k_siege_ram_gate_breach_id[] = "siege_ram_gate_breach";
+inline constexpr char k_siege_tower_wall_assault_id[] = "siege_tower_wall_assault";
 
 inline constexpr char k_three_swords_vs_two_spears_id[] = "three_swords_vs_two_spears";
 inline constexpr char k_multi_front_melee_id[] = "multi_front_melee";

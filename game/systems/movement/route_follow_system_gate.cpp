@@ -123,6 +123,10 @@ auto classify_movement_gate(const Engine::Core::Entity& entity) -> MovementGate 
     return MovementGate::BuilderBypass;
   }
 
+  if (entity.has_component<Engine::Core::WallWalkerComponent>()) {
+    return MovementGate::OnWall;
+  }
+
   return MovementGate::RouteFollowing;
 }
 

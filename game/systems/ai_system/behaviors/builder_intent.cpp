@@ -267,6 +267,12 @@ auto gather_construction_intents(const AISnapshot& snapshot,
   if (town_can_spare_an_engine && town.siege_count < town.target_catapults) {
     wish(intents, town.siege_engine);
   }
+  constexpr int k_homes_before_a_ram = 6;
+  if (town_can_spare_an_engine && standing.homes >= k_homes_before_a_ram &&
+      standing.farms >= 2 && town.siege_count >= 1 &&
+      town.ram_count < town.target_rams) {
+    wish(intents, BUILDING_TYPE_RAM);
+  }
 
   add_plan_step_intent(context, plan, intents);
 
@@ -312,8 +318,7 @@ auto choose_construction_intent(const AISnapshot& snapshot,
       const bool worth_saving_for =
           (intent.plan_slot >= 0 && (intent.type == BUILDING_TYPE_WALL_GATE ||
                                      intent.type == BUILDING_TYPE_DEFENSE_TOWER)) ||
-          intent.type == BUILDING_TYPE_CATAPULT ||
-          intent.type == BUILDING_TYPE_BALLISTA;
+          is_siege_engine_building(intent.type);
       if (worth_saving_for && saving_for == ResourceType::Count) {
         saving_for = verdict.missing;
       }

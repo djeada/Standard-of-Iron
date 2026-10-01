@@ -149,8 +149,7 @@ auto ambient_sfx_group_key(Engine::Core::AmbientState state) -> std::string {
 constexpr const char* k_spawn_voice_group = "voice.unit_spawned";
 
 auto is_siege_engine(Game::Units::SpawnType type) -> bool {
-  return type == Game::Units::SpawnType::Catapult ||
-         type == Game::Units::SpawnType::Ballista;
+  return Game::Units::is_siege_engine_spawn(type);
 }
 
 auto hit_cue_for_attacker(Game::Units::SpawnType type) -> const char* {
@@ -171,6 +170,8 @@ auto hit_cue_for_attacker(Game::Units::SpawnType type) -> const char* {
     return Cue::k_combat_hit_elephant;
   case Game::Units::SpawnType::Catapult:
   case Game::Units::SpawnType::Ballista:
+  case Game::Units::SpawnType::Ram:
+  case Game::Units::SpawnType::SiegeTower:
     return Cue::k_combat_hit_siege;
   default:
     return Cue::k_combat_hit_generic;

@@ -308,6 +308,8 @@ enum class ArenaExpectationKind : std::uint8_t {
   GroupHeldOutsideDestination,
   GateOpenedObserved,
   GateRemainedClosed,
+  SiegeTowerDocked,
+  WallWalkerObserved,
   BridgeTraversalObserved,
   BridgeCenterlineAligned,
   ElevationGainObserved,

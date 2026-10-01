@@ -163,11 +163,20 @@ auto assess_settlement(const AISnapshot& snapshot,
   SettlementAssessment town;
 
   for (const auto& entity : snapshot.friendly_units) {
-    if (Game::Units::is_siege_engine_spawn(entity.spawn_type) ||
+    const auto is_artillery = [](Game::Units::SpawnType type) {
+      return Game::Units::is_siege_engine_spawn(type) &&
+             type != Game::Units::SpawnType::Ram &&
+             type != Game::Units::SpawnType::SiegeTower;
+    };
+    if (is_artillery(entity.spawn_type) ||
         (entity.builder_production.raising_a_building &&
-         Game::Units::is_siege_engine_spawn(
-             entity.builder_production.building_under_way))) {
+         is_artillery(entity.builder_production.building_under_way))) {
       town.siege_count++;
+    }
+    if (entity.spawn_type == Game::Units::SpawnType::Ram ||
+        (entity.builder_production.raising_a_building &&
+         entity.builder_production.building_under_way == Game::Units::SpawnType::Ram)) {
+      town.ram_count++;
     }
   }
   town.siege_engine = preferred_siege_engine(context);
@@ -223,6 +232,8 @@ auto assess_settlement(const AISnapshot& snapshot,
       .markets = std::clamp(macro.marketplace_count, 0, MAX_MARKETPLACES),
       .farms = std::clamp(macro.farm_count, 0, MAX_FARMS)};
   town.target_catapults = std::clamp(macro.catapult_count, 0, MAX_CATAPULTS);
+  town.target_rams =
+      town.target_catapults >= 4 ? 2 : (town.target_catapults > 0 ? 1 : 0);
   return town;
 }
 
@@ -254,7 +265,7 @@ auto authored_plan_step(const AIContext& context,
         blocked_slots.end()) {
       continue;
     }
-    if (resolved == BUILDING_TYPE_CATAPULT || resolved == BUILDING_TYPE_BALLISTA) {
+    if (is_siege_engine_building(resolved)) {
       continue;
     }
     if (plan_step_is_already_met(town.standing, town.targets, resolved)) {
@@ -301,7 +312,7 @@ auto plan_still_sites_this_itself(const AIContext& context,
   if (doctrine == nullptr || doctrine->town_plan == nullptr || building == nullptr) {
     return false;
   }
-  if (building == BUILDING_TYPE_CATAPULT || building == BUILDING_TYPE_BALLISTA) {
+  if (is_siege_engine_building(building)) {
     return false;
   }
   if (plan_step_is_already_met(town.standing, town.targets, building)) {
@@ -344,8 +355,7 @@ auto plan_reserves_ground(const AIContext& context,
   const QVector2D facing = locked_settlement_facing(context, snapshot);
   for (const auto& step : doctrine->town_plan->steps) {
     const char* resolved = building_type_name(step.building);
-    if (resolved == nullptr || resolved == BUILDING_TYPE_CATAPULT ||
-        resolved == BUILDING_TYPE_BALLISTA) {
+    if (resolved == nullptr || is_siege_engine_building(resolved)) {
       continue;
     }
     if (fortifications_only && !is_fortification_or_tower(step.building)) {

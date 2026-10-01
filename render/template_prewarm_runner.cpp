@@ -543,6 +543,8 @@ void Renderer::prewarm_unit_templates(
       return true;
     case TroopType::Catapult:
     case TroopType::Ballista:
+    case TroopType::Ram:
+    case TroopType::SiegeTower:
     default:
       return false;
     }

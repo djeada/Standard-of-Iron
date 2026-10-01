@@ -3047,6 +3047,22 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <source>Watches over a wide stretch of ground, holds a settlement together, and takes in healers.</source>
         <translation>Vigila una amplia extensión de terreno, mantiene unido un asentamiento y acoge a los sanadores.</translation>
     </message>
+    <message>
+        <source>Battering Ram</source>
+        <translation>Ariete</translation>
+    </message>
+    <message>
+        <source>Siege Tower</source>
+        <translation>Torre de asedio</translation>
+    </message>
+    <message>
+        <source>Roofed siege engine that breaks gates and walls.</source>
+        <translation>Máquina de asedio techada que derriba puertas y muros.</translation>
+    </message>
+    <message>
+        <source>Carries infantry to a wall and lets them off on top.</source>
+        <translation>Lleva infantería hasta un muro y la deja en lo alto.</translation>
+    </message>
 </context>
 <context>
     <name>EconomyHelpPanel</name>
@@ -10465,6 +10481,46 @@ Los constructores lo siegan para la comida que recluta civiles</translation>
         <source>Ask %1 for %2 %3. A generous commander with plenty to spare says yes; a warlike or poor one keeps it.</source>
         <translation>Pedir a %1 %2 de %3. Un comandante generoso con excedentes dirá que sí; uno belicoso o pobre se lo quedará.</translation>
     </message>
+    <message>
+        <source>Battering Ram</source>
+        <translation>Ariete</translation>
+    </message>
+    <message>
+        <source>Gate-breaking siege engine
+Immune to most arrows</source>
+        <translation>Máquina de asedio rompepuertas
+Inmune a la mayoría de flechas</translation>
+    </message>
+    <message>
+        <source>Siege Tower</source>
+        <translation>Torre de asedio</translation>
+    </message>
+    <message>
+        <source>Carries infantry onto enemy walls
+Docks at a wall</source>
+        <translation>Lleva infantería a los muros enemigos
+Se acopla a un muro</translation>
+    </message>
+    <message>
+        <source>Build Battering Ram
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>Construir ariete
+%1
+Coste: %2
+Tiempo de construcción: %3s</translation>
+    </message>
+    <message>
+        <source>Build Siege Tower
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>Construir torre de asedio
+%1
+Coste: %2
+Tiempo de construcción: %3s</translation>
+    </message>
 </context>
 <context>
     <name>ProductionViewModel</name>
@@ -12947,6 +13003,62 @@ Los constructores lo siegan para la comida que recluta civiles</translation>
     <message>
         <source>Worker</source>
         <translation>Trabajador</translation>
+    </message>
+    <message>
+        <source>Battering Ram</source>
+        <translation>Ariete</translation>
+    </message>
+    <message>
+        <source>Siege Tower</source>
+        <translation>Torre de asedio</translation>
+    </message>
+    <message>
+        <source>A tower rolled up to the curtain turned a wall from a barrier into a road.</source>
+        <translation>Una torre rodada hasta la cortina convertía un muro de barrera en camino.</translation>
+    </message>
+    <message>
+        <source>Aries</source>
+        <translation>Aries</translation>
+    </message>
+    <message>
+        <source>Assault tower</source>
+        <translation>Torre de asalto</translation>
+    </message>
+    <message>
+        <source>Carries a section of infantry up to the wall-top and lets them off beside the defenders.</source>
+        <translation>Lleva una sección de infantería a lo alto del muro y la deja junto a los defensores.</translation>
+    </message>
+    <message>
+        <source>Gate breaker</source>
+        <translation>Rompepuertas</translation>
+    </message>
+    <message>
+        <source>Rams were hung from a timber frame and roofed in wet hides so the crew could pound a gate while the defenders burned and shot in vain.</source>
+        <translation>Los arietes colgaban de un armazón de madera y se techaban con pieles mojadas para que la dotación golpeara una puerta mientras los defensores ardían y disparaban en vano.</translation>
+    </message>
+    <message>
+        <source>Shrugs off arrows beneath its roof and splinters gates and walls far faster than any infantry.</source>
+        <translation>Aguanta las flechas bajo su techo y astilla puertas y muros mucho más rápido que cualquier infantería.</translation>
+    </message>
+    <message>
+        <source>Slow, blind to what is beside it, and helpless once swordsmen reach the crew.</source>
+        <translation>Lento, ciego a lo que tiene al lado e indefenso cuando los espadachines llegan a la dotación.</translation>
+    </message>
+    <message>
+        <source>The ram&apos;s crew worked under a roof of green hides, deaf to everything but the beat of the beam on the gate.</source>
+        <translation>La dotación del ariete trabajaba bajo un techo de pieles verdes, sorda a todo salvo al golpe de la viga contra la puerta.</translation>
+    </message>
+    <message>
+        <source>Towers taller than the wall were pushed against the curtain so a drawbridge could drop onto the parapet.</source>
+        <translation>Se empujaban torres más altas que el muro contra la cortina para dejar caer un puente levadizo sobre el parapeto.</translation>
+    </message>
+    <message>
+        <source>Turris</source>
+        <translation>Turris</translation>
+    </message>
+    <message>
+        <source>Very slow, and a tall target that fire and stone-throwers bring down.</source>
+        <translation>Muy lenta y un blanco alto que el fuego y los lanzapiedras derriban.</translation>
     </message>
 </context>
 <context>

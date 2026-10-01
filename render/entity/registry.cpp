@@ -38,6 +38,7 @@
 #include "render/scene_renderer.h"
 #include "render/wildlife/sheep_spec.h"
 #include "render/wildlife/wolf_spec.h"
+#include "siege_assault_renderer.h"
 #include "temple_renderer.h"
 #include "wall_renderer.h"
 #include "wildlife/sheep_renderer.h"
@@ -131,6 +132,7 @@ void register_built_in_entity_renderers(EntityRendererRegistry& registry) {
   register_elephant_renderer(registry);
 
   register_ballista_renderer(registry);
+  register_siege_assault_renderers(registry);
 
   register_barracks_renderer(registry);
   register_cursed_gold_vein_flag_renderer(registry);
