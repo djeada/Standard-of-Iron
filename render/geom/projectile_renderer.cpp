@@ -942,8 +942,8 @@ void render_projectiles(Renderer* renderer,
 
 namespace {
 
-const QVector3D k_granite(0.70F, 0.67F, 0.62F);
-const QVector3D k_dark_granite(0.52F, 0.50F, 0.47F);
+const QVector3D k_granite(0.88F, 0.85F, 0.79F);
+const QVector3D k_dark_granite(0.68F, 0.65F, 0.60F);
 const QVector3D k_lichen(0.56F, 0.60F, 0.44F);
 const QVector3D k_timber(0.38F, 0.27F, 0.16F);
 const QVector3D k_timber_light(0.52F, 0.39F, 0.24F);

@@ -112,6 +112,23 @@ TestCase {
         verify(named("commandModeBanner").height >= Metrics.controlHeight, "the current mode banner is still a caption strip");
     }
 
+    function test_roll_stones_appears_only_beside_a_held_cache() {
+        panel.action_states = {
+            "roll_stones": state(0)
+        };
+        wait(1);
+        compare(collect(panel, function (item) {
+                    return item.objectName === "contextCommand_roll_stones";
+                }).length, 0, "Roll Stones showed with no troops beside a cache");
+        panel.action_states = {
+            "roll_stones": state(1)
+        };
+        wait(1);
+        var button = named("contextCommand_roll_stones");
+        verify(button.visible, "Roll Stones is hidden beside a held cache");
+        compare(button.compact, false, "Roll Stones lost its label");
+    }
+
     function test_builder_actions_fill_the_context_row_without_hiding_primary_orders() {
         panel.action_states = {
             "build": state(1),

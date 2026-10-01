@@ -24,6 +24,7 @@
 #include "game/systems/combat_system/combat_hit_resolver.h"
 #include "game/systems/combat_system/damage_application.h"
 #include "game/systems/combat_system/damage_processor.h"
+#include "game/systems/movement/command_service.h"
 #include "game/systems/owner_registry.h"
 #include "units/spawn_type.h"
 
@@ -72,6 +73,10 @@ constexpr float k_cache_setback = 1.2F;
 // The ramp's crest is where it has made this share of its full climb.
 constexpr float k_crest_fraction = 0.92F;
 constexpr int k_crest_samples = 48;
+// Pushers heave from this close to the spot behind the pile.
+constexpr float k_push_reach = 2.5F;
+// How long a troop may take to walk up behind the pile.
+constexpr float k_approach_timeout = 6.0F;
 // Half the width of the ramp corridor a hill cache covers.
 constexpr float k_ramp_half_width = 4.5F;
 // An AI rolls a hill cache once climbers are within this share of the ramp
@@ -364,16 +369,42 @@ auto RockfallSystem::order_release(Engine::Core::World& world,
   return true;
 }
 
+auto RockfallSystem::push_spot(const RuntimeTrap& trap) const -> QVector3D {
+  QVector3D spot =
+      trap.release_world - trap.downhill * (trap.definition.boulder_radius * 2.6F);
+  spot.setY(m_services.terrain.get_terrain_height(spot.x(), spot.z()));
+  return spot;
+}
+
 void RockfallSystem::begin_push(Engine::Core::World& world,
                                 RuntimeTrap& trap,
                                 Engine::Core::EntityID troop) {
   trap.pusher = troop;
   trap.push_remaining = k_rockfall_push_seconds;
-  if (auto* movement = world.try_get<Engine::Core::MovementComponent>(troop)) {
+  auto const* transform = world.try_get<Engine::Core::TransformComponent>(troop);
+  QVector3D const spot = push_spot(trap);
+  bool const far_off =
+      transform != nullptr &&
+      flat(QVector3D(transform->position.x, 0.0F, transform->position.z) - spot)
+              .length() > k_push_reach;
+  if (far_off) {
+    // Walk up behind the pile first; the heave starts once they are there.
+    trap.approaching = true;
+    trap.approach_remaining = k_approach_timeout;
+    Game::Systems::CommandService::move_unit(world, troop, spot);
+    return;
+  }
+  start_heaving(world, trap);
+}
+
+void RockfallSystem::start_heaving(Engine::Core::World& world, RuntimeTrap& trap) {
+  trap.approaching = false;
+  trap.approach_remaining = 0.0F;
+  if (auto* movement = world.try_get<Engine::Core::MovementComponent>(trap.pusher)) {
     movement->stop();
   }
-  if (world.try_get<Engine::Core::RockfallPushComponent>(troop) == nullptr) {
-    world.emplace<Engine::Core::RockfallPushComponent>(troop);
+  if (world.try_get<Engine::Core::RockfallPushComponent>(trap.pusher) == nullptr) {
+    world.emplace<Engine::Core::RockfallPushComponent>(trap.pusher);
   }
 }
 
@@ -388,8 +419,24 @@ void RockfallSystem::advance_push(Engine::Core::World& world,
     // The men at the pile were cut down or driven off before it went.
     trap.pusher = 0;
     trap.push_remaining = 0.0F;
+    trap.approaching = false;
     world.remove<Engine::Core::RockfallPushComponent>(pusher);
     return;
+  }
+  if (trap.approaching) {
+    QVector3D const at(transform->position.x, 0.0F, transform->position.z);
+    trap.approach_remaining -= delta_time;
+    bool const arrived = flat(at - push_spot(trap)).length() <= k_push_reach;
+    if (!arrived && trap.approach_remaining > 0.0F) {
+      return;
+    }
+    if (!arrived && flat(at - trap.release_world).length() > k_rockfall_use_radius) {
+      // Blocked or drawn away; the order lapses and the stones stay put.
+      trap.pusher = 0;
+      trap.approaching = false;
+      return;
+    }
+    start_heaving(world, trap);
   }
   transform->desired_yaw = std::atan2(trap.downhill.x(), trap.downhill.z()) * 180.0F /
                            std::numbers::pi_v<float>;
@@ -1000,7 +1047,7 @@ void RockfallSystem::publish_render_views(Engine::Core::World& world) const {
          .boulders_left = left,
          .owner_id = trap.owner_id,
          .push_progress =
-             trap.pusher != 0
+             trap.pusher != 0 && !trap.approaching
                  ? std::clamp(
                        1.0F - trap.push_remaining / k_rockfall_push_seconds, 0.0F, 1.0F)
                  : -1.0F,
@@ -1034,6 +1081,8 @@ auto RockfallSystem::serialize_state() const -> QJsonObject {
     obj.insert(QStringLiteral("ai_dwell"), trap.ai_dwell);
     obj.insert(QStringLiteral("pusher"), static_cast<qint64>(trap.pusher));
     obj.insert(QStringLiteral("push_remaining"), trap.push_remaining);
+    obj.insert(QStringLiteral("approaching"), trap.approaching);
+    obj.insert(QStringLiteral("approach_remaining"), trap.approach_remaining);
     obj.insert(QStringLiteral("warned_owner"), trap.warned_owner);
     traps.append(obj);
   }
@@ -1096,6 +1145,9 @@ void RockfallSystem::restore_state(const QJsonObject& state) {
     it->pusher = static_cast<Engine::Core::EntityID>(
         obj.value(QStringLiteral("pusher")).toInteger());
     it->push_remaining = float(obj.value(QStringLiteral("push_remaining")).toDouble());
+    it->approaching = obj.value(QStringLiteral("approaching")).toBool();
+    it->approach_remaining =
+        float(obj.value(QStringLiteral("approach_remaining")).toDouble());
     it->warned_owner = obj.value(QStringLiteral("warned_owner")).toBool();
   }
 

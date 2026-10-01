@@ -134,6 +134,9 @@ private:
     float ai_dwell = 0.0F;
     Engine::Core::EntityID pusher = 0;
     float push_remaining = 0.0F;
+    // The pusher is still walking up behind the pile.
+    bool approaching = false;
+    float approach_remaining = 0.0F;
     int hostile_in_zone = 0;
     bool warned_owner = false;
   };
@@ -173,6 +176,8 @@ private:
                   RuntimeTrap& trap,
                   Engine::Core::EntityID troop);
   void advance_push(Engine::Core::World& world, RuntimeTrap& trap, float delta_time);
+  [[nodiscard]] auto push_spot(const RuntimeTrap& trap) const -> QVector3D;
+  void start_heaving(Engine::Core::World& world, RuntimeTrap& trap);
   void update_claim(Engine::Core::World& world, RuntimeTrap& trap);
   void evaluate_auto_trigger(Engine::Core::World& world,
                              RuntimeTrap& trap,

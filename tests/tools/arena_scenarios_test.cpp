@@ -1685,3 +1685,29 @@ TEST(ArenaScenariosTest, RockfallAmbushScenariosStrikeAColumnInAnAlpinePass) {
   EXPECT_FALSE(Arena::validate_scenario(broken).empty())
       << "a step naming an unknown trap is rejected";
 }
+
+TEST(ArenaScenariosTest, HillRampScenariosRollTheStagedStoneCache) {
+  for (auto const* id : {Arena::Scenarios::k_rockfall_hill_ramp_id,
+                         Arena::Scenarios::k_rockfall_hill_ai_id}) {
+    auto const* scenario = Arena::Scenarios::find_definition(QString::fromLatin1(id));
+    ASSERT_NE(scenario, nullptr) << id;
+    EXPECT_TRUE(Arena::validate_scenario(*scenario).empty()) << id;
+    EXPECT_TRUE(std::any_of(scenario->terrain_features.begin(),
+                            scenario->terrain_features.end(),
+                            [](auto const& feature) {
+                              return feature.type == Game::Map::TerrainType::Hill &&
+                                     !feature.entrances.empty();
+                            }))
+        << id << " needs a hill ramp for the map to stage a cache on";
+    EXPECT_TRUE(scenario->rockfall_traps.empty())
+        << id << " relies on the cache every hill ramp gets";
+  }
+
+  auto const* ramp = Arena::Scenarios::find_definition(
+      QString::fromLatin1(Arena::Scenarios::k_rockfall_hill_ramp_id));
+  ASSERT_NE(ramp, nullptr);
+  EXPECT_TRUE(std::any_of(ramp->steps.begin(), ramp->steps.end(), [](auto const& step) {
+    return step.command == Arena::ScenarioCommandKind::RollStones &&
+           step.group == QStringLiteral("defenders");
+  })) << "the defenders are ordered to roll, as the HUD order does";
+}

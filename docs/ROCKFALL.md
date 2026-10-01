@@ -1,12 +1,21 @@
 # Rockfall Ambush
 
-Defenders holding high ground can roll boulders onto a column in a pass below. This is how the Allobroges struck Hannibal's army on the climb into the Alps, and the Alps episode of _The Barcid Road_ is built on it.
+Defenders holding high ground can roll boulders onto troops climbing towards them. This is how the Allobroges struck Hannibal's army on the climb into the Alps, and the Alps episode of _The Barcid Road_ is built on it.
 
-A rockfall is a **trap**: a cache of boulders staged on the heights, aimed at a kill zone in the pass. Each trap is released once by a trigger. It can also rearm after a delay.
+## Stone caches on hill paths
+
+Every hill ramp gets a **stone cache** when the map loads: a pile of boulders behind a timber crib, at the crest where the ramp meets the plateau. A ramp has to climb at least 1.5 m to get one, and ramps whose crests are within 5 m of each other share a cache. A map can turn this off with `"hill_rockfall_caches": false`.
+
+- **Claiming.** A cache starts unclaimed and flies an undyed banner. The first side to get a troop within `k_rockfall_claim_radius` (5 m) of it claims it, and the standard claim banner turns to that side's colours. If the holder leaves and an enemy troop arrives, the enemy takes it over. A human player who claims a cache is told how to use it.
+- **Rolling.** Select troops standing within `k_rockfall_use_radius` (7 m) of a cache your side holds, and **Roll Stones** appears in the action menu. Press it and the troop stops, turns downhill and heaves for `k_rockfall_push_seconds` (1.6 s), playing the crew-push work pose. The pile rocks and tips over the crib while they push. Then the boulders go over the edge one after another and down the ramp.
+- **Effect.** The boulders are heavy: each strike takes half of a troop's health, scaled by speed. Two strikes on a troop climbing the ramp wipe out most of it. Dead soldiers are flung down the slope, and survivors are knocked down.
+- **Once only.** A cache is used once. When its last boulder goes, it is gone.
+- **Telegraph.** Your own caches mark the ramp they cover with chevrons in your colour. While enemies are on the ramp, the chevrons pulse red and you get the alert "Enemies are climbing below your stones".
+- **AI.** An AI that holds a cache rolls it by itself, using its nearest troop. It waits until a climber is in the upper 70% of the ramp, where the stones will catch them.
 
 ## Authoring a trap
 
-Traps live in the map file, beside `undead_zones`:
+Maps can also stage their own caches and traps beside `undead_zones`. Authored entries use the same physics. They can be claimable like hill caches, or they can fire on their own.
 
 ```json
 "rockfall_traps": [
@@ -49,6 +58,7 @@ Choose a release point on the slope itself, not on a peak. Boulders follow the t
 
 ## Triggers
 
+- **`claim`**: a stone cache like the hill ones. It is taken by presence and rolled by order, or automatically by an AI holder.
 - **`zone`**: fires as soon as a hostile troop is inside the kill zone.
 - **`ai`**: the trap's owner has to be AI-controlled. The AI waits for the column: it releases once `ai_min_targets` hostile troops are in the zone, or after `k_rockfall_ai_patience_seconds` (3 s) with at least one there. Under a human owner the trap only fires by script.
 - **`scripted`**: fires only from a mission event or an arena step.
@@ -72,11 +82,25 @@ A boulder moving faster than `k_rockfall_lethal_speed` strikes every hostile tro
 - knocks the surviving troop down (`StaggerTier::Knockdown`); and
 - costs the boulder 18% of its speed, so a column shields its rear ranks a little.
 
-Releasing a trap plays the positioned `hazard.rockfall` cue. Dust puffs are drawn with the `stone_impact` effect, and boulders are drawn with the catapult stone mesh at boulder scale (`render_rockfall` in `render/geom/projectile_renderer.cpp`).
+Releasing a trap plays the positioned `hazard.rockfall` cue. `render_rockfall` in `render/geom/projectile_renderer.cpp` draws:
+
+- the caches, with their timber crib and the standard hanging claim banner (`BarracksFlagRenderer::draw_hanging_banner`);
+- the ramp chevrons;
+- the boulders, as the stone mesh squashed per boulder into lumpier, colour-varied granite; and
+- the dust, with the `stone_impact` effect.
+
+The **Roll Stones** order is the `RollStones` command payload. Behind it:
+
+- the HUD action `roll_stones`, which appears only when a selected troop has a cache in reach;
+- `OrdersReadout::stones_ready`, which the HUD polls without taking the frame lock; and
+- `RockfallPushComponent`, which drives the push pose.
 
 Trap state and boulders in flight are saved under the `rockfall` snapshot key.
 
 ## Arena
+
+- `rockfall_hill_ramp` stages spearmen beside the cache on a mesa's ramp. They roll it onto a column of swordsmen climbing the ramp.
+- `rockfall_hill_ai` gives the cache to the AI, which rolls it on its own when the player's column climbs.
 
 - `rockfall_alpine_pass` is a snowbound gorge. A three-troop column marches through it; a scripted trap on the northern heights fires when the column is halfway in, and a zone trap on the southern slope fires on its own.
 - `rockfall_ai_defenders` has the same gorge, with the heights held by the AI owner.
