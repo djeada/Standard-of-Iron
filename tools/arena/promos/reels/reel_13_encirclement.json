@@ -1,0 +1,135 @@
+{
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "supersample": 1,
+  "gameplay_ui": false,
+  "audio": true,
+  "record_music": false,
+  "transition": {
+    "type": "cut"
+  },
+  "grade": {
+    "contrast": 1.12,
+    "saturation": 1.16,
+    "brightness": 0.05,
+    "gamma": 1.14,
+    "grain": 0,
+    "vignette": 0.12,
+    "sharpen": 0.4
+  },
+  "motion_limits": {
+    "yaw_degrees_per_second": 30,
+    "pitch_degrees_per_second": 16,
+    "fov_degrees_per_second": 10,
+    "minimum_clip_seconds": 1.2,
+    "mean_clip_seconds": 1.6
+  },
+  "title": "STANDARD OF IRON",
+  "subtitle": "FREE ROME VS CARTHAGE RTS",
+  "end_card_seconds": 1.8,
+  "end_card_background": "dim",
+  "end_card_destination": "GITHUB.COM/DJEADA/STANDARD-OF-IRON",
+  "end_card_lines": ["FREE AND OPEN SOURCE  -  WINDOWS  -  MACOS  -  LINUX"],
+  "id": "reel_13_encirclement",
+  "music": "assets/audio/music/combat/combat_dust_of_cannae.ogg",
+  "music_start": 20.0,
+  "shots": [
+    {
+      "name": "the_blob",
+      "scenario": "reel_closing_circle",
+      "seed": 7,
+      "start": 1.5,
+      "duration": 6.0,
+      "focus": {
+        "mode": "group",
+        "group": "rome_block",
+        "smoothing": 1.5
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 72,
+          "pitch": 82,
+          "yaw": 180,
+          "fov": 44,
+          "height": 1.6
+        },
+        {
+          "time": 6.0,
+          "distance": 70,
+          "pitch": 82,
+          "yaw": 181,
+          "fov": 44,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ],
+      "time_lapse": 2.0,
+      "caption": "YOU KNOW IT'S OVER WHEN THE CIRCLE CLOSES."
+    },
+    {
+      "name": "closing",
+      "scenario": "reel_closing_circle",
+      "seed": 7,
+      "start": 7.5,
+      "duration": 9.0,
+      "focus": {
+        "mode": "group",
+        "group": "rome_block",
+        "smoothing": 1.5
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 70,
+          "pitch": 82,
+          "yaw": 181,
+          "fov": 44,
+          "height": 1.6
+        },
+        {
+          "time": 9.0,
+          "distance": 62,
+          "pitch": 82,
+          "yaw": 182,
+          "fov": 44,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ],
+      "time_lapse": 2.5
+    },
+    {
+      "name": "closed",
+      "scenario": "reel_closing_circle",
+      "seed": 7,
+      "start": 17.0,
+      "duration": 3.2,
+      "focus": {
+        "mode": "group",
+        "group": "rome_block",
+        "smoothing": 1.5
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 62,
+          "pitch": 82,
+          "yaw": 182,
+          "fov": 44,
+          "height": 1.6
+        },
+        {
+          "time": 3.2,
+          "distance": 58,
+          "pitch": 83,
+          "yaw": 183,
+          "fov": 44,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ]
+    }
+  ]
+}

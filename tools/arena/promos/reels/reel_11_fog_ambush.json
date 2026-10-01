@@ -1,0 +1,199 @@
+{
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "supersample": 1,
+  "gameplay_ui": false,
+  "audio": true,
+  "record_music": false,
+  "transition": {
+    "type": "cut"
+  },
+  "grade": {
+    "contrast": 1.12,
+    "saturation": 1.16,
+    "brightness": 0.05,
+    "gamma": 1.14,
+    "grain": 0,
+    "vignette": 0.12,
+    "sharpen": 0.4
+  },
+  "motion_limits": {
+    "yaw_degrees_per_second": 30,
+    "pitch_degrees_per_second": 16,
+    "fov_degrees_per_second": 10,
+    "minimum_clip_seconds": 1.2,
+    "mean_clip_seconds": 1.6
+  },
+  "title": "STANDARD OF IRON",
+  "subtitle": "FREE ROME VS CARTHAGE RTS",
+  "end_card_seconds": 1.8,
+  "end_card_background": "dim",
+  "end_card_destination": "GITHUB.COM/DJEADA/STANDARD-OF-IRON",
+  "end_card_lines": ["FREE AND OPEN SOURCE  -  WINDOWS  -  MACOS  -  LINUX"],
+  "id": "reel_11_fog_ambush",
+  "music": "assets/audio/music/combat/combat_dust_of_trasimene.ogg",
+  "music_start": 0.0,
+  "shots": [
+    {
+      "name": "in_the_mist",
+      "scenario": "reel_fog_ambush",
+      "seed": 7,
+      "start": 3.0,
+      "duration": 2.4,
+      "focus": {
+        "mode": "group",
+        "group": "carthage_left",
+        "smoothing": 0.1
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 30,
+          "pitch": 4,
+          "yaw": 100,
+          "fov": 26,
+          "height": 1.6
+        },
+        {
+          "time": 2.4,
+          "distance": 28,
+          "pitch": 4,
+          "yaw": 98,
+          "fov": 26,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "ROME WALKED INTO THE FOG."
+    },
+    {
+      "name": "the_column",
+      "scenario": "reel_fog_ambush",
+      "seed": 7,
+      "start": 5.6,
+      "duration": 2.4,
+      "focus": {
+        "mode": "group",
+        "group": "rome_column",
+        "smoothing": 0.8
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 14,
+          "pitch": 10,
+          "yaw": 200,
+          "fov": 46,
+          "height": 1.6
+        },
+        {
+          "time": 2.4,
+          "distance": 12,
+          "pitch": 11,
+          "yaw": 192,
+          "fov": 46,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "they_emerge",
+      "scenario": "reel_fog_ambush",
+      "seed": 7,
+      "start": 11.0,
+      "duration": 2.0,
+      "focus": {
+        "mode": "group",
+        "group": "carthage_left",
+        "smoothing": 0.5,
+        "offset": [4.0, 0.0, 0.0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 6,
+          "pitch": 7,
+          "yaw": 262,
+          "fov": 50,
+          "height": 1.6
+        },
+        {
+          "time": 2.0,
+          "distance": 5.5,
+          "pitch": 8,
+          "yaw": 268,
+          "fov": 50,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "the_attack",
+      "scenario": "reel_fog_ambush",
+      "seed": 7,
+      "start": 16.5,
+      "duration": 2.2,
+      "focus": {
+        "mode": "group_pair",
+        "group": "carthage_left",
+        "second_group": "rome_column",
+        "smoothing": 0.4
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 10,
+          "pitch": 12,
+          "yaw": 140,
+          "fov": 50,
+          "height": 1.6
+        },
+        {
+          "time": 2.2,
+          "distance": 9,
+          "pitch": 13,
+          "yaw": 128,
+          "fov": 50,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ],
+      "slow_motion": 1.3,
+      "shake": 0.03
+    },
+    {
+      "name": "surrounded",
+      "scenario": "reel_fog_ambush",
+      "seed": 7,
+      "start": 24.0,
+      "duration": 2.2,
+      "focus": {
+        "mode": "battle",
+        "engagement_radius": 25,
+        "smoothing": 1.0
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 22,
+          "pitch": 36,
+          "yaw": 200,
+          "fov": 44,
+          "height": 1.6
+        },
+        {
+          "time": 2.2,
+          "distance": 26,
+          "pitch": 42,
+          "yaw": 196,
+          "fov": 44,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ]
+    }
+  ]
+}

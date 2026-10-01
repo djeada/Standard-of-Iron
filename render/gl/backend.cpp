@@ -533,10 +533,58 @@ void Backend::release_directional_shadow_resources() {
     glDeleteSamplers(1, &m_directional_shadow_depth_sampler);
     m_directional_shadow_depth_sampler = 0;
   }
+  if (m_directional_shadow_fallback_texture != 0) {
+    glDeleteTextures(1, &m_directional_shadow_fallback_texture);
+    m_directional_shadow_fallback_texture = 0;
+  }
   m_directional_shadow_resolution = 0;
   m_directional_shadow_far_resolution = 0;
   m_directional_shadow_cascades = 0;
   m_directional_shadow_near_cascades = 0;
+}
+
+auto Backend::directional_shadow_fallback_texture() -> GLuint {
+  if (m_directional_shadow_fallback_texture != 0) {
+    return m_directional_shadow_fallback_texture;
+  }
+  glGenTextures(1, &m_directional_shadow_fallback_texture);
+  note_textures_created(1);
+  glBindTexture(GL_TEXTURE_2D_ARRAY, m_directional_shadow_fallback_texture);
+  const GLfloat lit_depth = 1.0F;
+  glTexImage3D(GL_TEXTURE_2D_ARRAY,
+               0,
+               GL_DEPTH_COMPONENT24,
+               1,
+               1,
+               1,
+               0,
+               GL_DEPTH_COMPONENT,
+               GL_FLOAT,
+               &lit_depth);
+  note_texture_storage(texture_transfer_bytes(1U, 1U, 4U), false);
+  glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(
+      GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+  glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+  glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+  return m_directional_shadow_fallback_texture;
+}
+
+void Backend::bind_directional_shadow_textures() {
+  const GLuint near_texture = m_directional_shadow_texture != 0
+                                  ? m_directional_shadow_texture
+                                  : directional_shadow_fallback_texture();
+  const GLuint far_texture = m_directional_shadow_far_texture != 0
+                                 ? m_directional_shadow_far_texture
+                                 : near_texture;
+  glActiveTexture(GL_TEXTURE0 + TextureUnit::directional_shadow_map);
+  glBindTexture(GL_TEXTURE_2D_ARRAY, near_texture);
+  glActiveTexture(GL_TEXTURE0 + TextureUnit::directional_shadow_map_far);
+  glBindTexture(GL_TEXTURE_2D_ARRAY, far_texture);
+  glActiveTexture(GL_TEXTURE0 + TextureUnit::directional_shadow_depth);
+  glBindTexture(GL_TEXTURE_2D_ARRAY, near_texture);
+  glActiveTexture(GL_TEXTURE0);
 }
 
 namespace {
@@ -707,6 +755,7 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
 
   if (!enabled) {
     upload_shadow_block(DirectionalShadowBlock{});
+    bind_directional_shadow_textures();
     return;
   }
 
@@ -714,6 +763,7 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
       std::clamp(settings.cascade_count, 1, k_max_shadow_cascades);
   ensure_directional_shadow_resources(settings.resolution, cascade_count);
   if (m_directional_shadow_fbo == 0 || m_directional_shadow_texture == 0) {
+    bind_directional_shadow_textures();
     return;
   }
 
@@ -723,6 +773,7 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
   const QMatrix4x4 view_projection = cam.get_view_projection_matrix();
   const QMatrix4x4 inverse_view_projection = view_projection.inverted(&invertible);
   if (!invertible) {
+    bind_directional_shadow_textures();
     return;
   }
 
@@ -869,10 +920,13 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
   };
 
+  const GLuint parked = directional_shadow_fallback_texture();
   glActiveTexture(GL_TEXTURE0 + TextureUnit::directional_shadow_map);
-  glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+  glBindTexture(GL_TEXTURE_2D_ARRAY, parked);
+  glActiveTexture(GL_TEXTURE0 + TextureUnit::directional_shadow_map_far);
+  glBindTexture(GL_TEXTURE_2D_ARRAY, parked);
   glActiveTexture(GL_TEXTURE0 + TextureUnit::directional_shadow_depth);
-  glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+  glBindTexture(GL_TEXTURE_2D_ARRAY, parked);
   glActiveTexture(GL_TEXTURE0);
 
   std::array<float, k_max_shadow_cascades> cascade_texel_world{};
@@ -1145,15 +1199,7 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
   glBindBufferBase(
       GL_UNIFORM_BUFFER, k_directional_shadow_binding_point, m_directional_shadow_ubo);
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
-  glActiveTexture(GL_TEXTURE0 + TextureUnit::directional_shadow_map);
-  glBindTexture(GL_TEXTURE_2D_ARRAY, m_directional_shadow_texture);
-  glActiveTexture(GL_TEXTURE0 + TextureUnit::directional_shadow_map_far);
-  glBindTexture(GL_TEXTURE_2D_ARRAY,
-                m_directional_shadow_far_texture != 0 ? m_directional_shadow_far_texture
-                                                      : m_directional_shadow_texture);
-  glActiveTexture(GL_TEXTURE0 + TextureUnit::directional_shadow_depth);
-  glBindTexture(GL_TEXTURE_2D_ARRAY, m_directional_shadow_texture);
-  glActiveTexture(GL_TEXTURE0);
+  bind_directional_shadow_textures();
 }
 
 void Backend::upload_frame_uniform_buffers(const QMatrix4x4& view_proj,

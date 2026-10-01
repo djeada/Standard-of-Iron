@@ -261,7 +261,7 @@ TEST(ShaderSource, GpuInstancedRiggedShaderGuardsRoleColorFetches) {
   EXPECT_NE(vert.find("v_instance_id = int(data.role_meta.y);"), std::string::npos);
   EXPECT_NE(vert.find("flat out int v_role_color_count;"), std::string::npos);
   EXPECT_NE(frag.find("flat in int v_role_color_count;"), std::string::npos);
-  EXPECT_NE(frag.find("v_color_role > 0 && v_color_role <= v_role_color_count"),
+  EXPECT_NE(frag.find("color_role > 0 && color_role <= v_role_color_count"),
             std::string::npos);
 }
 

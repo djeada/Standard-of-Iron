@@ -1,0 +1,167 @@
+{
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "supersample": 1,
+  "gameplay_ui": false,
+  "audio": true,
+  "record_music": false,
+  "transition": {
+    "type": "cut"
+  },
+  "grade": {
+    "contrast": 1.12,
+    "saturation": 1.16,
+    "brightness": 0.05,
+    "gamma": 1.14,
+    "grain": 0,
+    "vignette": 0.12,
+    "sharpen": 0.4
+  },
+  "motion_limits": {
+    "yaw_degrees_per_second": 30,
+    "pitch_degrees_per_second": 16,
+    "fov_degrees_per_second": 10,
+    "minimum_clip_seconds": 1.2,
+    "mean_clip_seconds": 1.6
+  },
+  "title": "STANDARD OF IRON",
+  "subtitle": "FREE ROME VS CARTHAGE RTS",
+  "end_card_seconds": 1.8,
+  "end_card_background": "dim",
+  "end_card_destination": "GITHUB.COM/DJEADA/STANDARD-OF-IRON",
+  "end_card_lines": ["FREE AND OPEN SOURCE  -  WINDOWS  -  MACOS  -  LINUX"],
+  "id": "reel_15_sepulcher",
+  "music": "assets/audio/music/events/skeletons_awaken.ogg",
+  "music_start": 0.0,
+  "shots": [
+    {
+      "name": "just_a_battle",
+      "scenario": "reel_sepulcher_reveal",
+      "seed": 7,
+      "start": 0.8,
+      "duration": 2.1,
+      "focus": {
+        "mode": "group",
+        "group": "rome_line",
+        "smoothing": 0.1,
+        "offset": [0.0, 0.0, 5.0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 8,
+          "pitch": 8,
+          "yaw": 180,
+          "fov": 40,
+          "height": 1.6
+        },
+        {
+          "time": 2.1,
+          "distance": 7.5,
+          "pitch": 8,
+          "yaw": 180,
+          "fov": 40,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "THIS WAS SUPPOSED TO BE A HISTORICAL RTS."
+    },
+    {
+      "name": "the_ground_wakes",
+      "scenario": "reel_sepulcher_reveal",
+      "seed": 7,
+      "start": 2.9,
+      "duration": 2.0,
+      "focus": {
+        "mode": "point",
+        "point": [-10.0, 0.0, 0.0],
+        "smoothing": 0.8
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 20,
+          "pitch": 16,
+          "yaw": 100,
+          "fov": 48,
+          "height": 1.6
+        },
+        {
+          "time": 2.0,
+          "distance": 19,
+          "pitch": 17,
+          "yaw": 98,
+          "fov": 48,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ],
+      "slow_motion": 1.5,
+      "shake": 0.03
+    },
+    {
+      "name": "they_rise",
+      "scenario": "reel_sepulcher_reveal",
+      "seed": 7,
+      "start": 5.2,
+      "duration": 2.4,
+      "focus": {
+        "mode": "point",
+        "point": [-12.0, 1.0, 0.0],
+        "smoothing": 0.8
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 12,
+          "pitch": 8,
+          "yaw": 120,
+          "fov": 50,
+          "height": 1.6
+        },
+        {
+          "time": 2.4,
+          "distance": 11.5,
+          "pitch": 8,
+          "yaw": 117,
+          "fov": 50,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "everyone_turns",
+      "scenario": "reel_sepulcher_reveal",
+      "seed": 7,
+      "start": 8.6,
+      "duration": 2.4,
+      "focus": {
+        "mode": "point",
+        "point": [-8.0, 0.0, 0.0],
+        "smoothing": 0.8
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 30,
+          "pitch": 34,
+          "yaw": 110,
+          "fov": 44,
+          "height": 1.6
+        },
+        {
+          "time": 2.4,
+          "distance": 32,
+          "pitch": 37,
+          "yaw": 108,
+          "fov": 44,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ]
+    }
+  ]
+}

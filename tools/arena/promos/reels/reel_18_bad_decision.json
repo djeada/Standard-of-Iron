@@ -1,0 +1,198 @@
+{
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "supersample": 1,
+  "gameplay_ui": false,
+  "audio": true,
+  "record_music": false,
+  "transition": {
+    "type": "cut"
+  },
+  "grade": {
+    "contrast": 1.12,
+    "saturation": 1.16,
+    "brightness": 0.05,
+    "gamma": 1.14,
+    "grain": 0,
+    "vignette": 0.12,
+    "sharpen": 0.4
+  },
+  "motion_limits": {
+    "yaw_degrees_per_second": 30,
+    "pitch_degrees_per_second": 16,
+    "fov_degrees_per_second": 10,
+    "minimum_clip_seconds": 1.2,
+    "mean_clip_seconds": 1.6
+  },
+  "title": "STANDARD OF IRON",
+  "subtitle": "FREE ROME VS CARTHAGE RTS",
+  "end_card_seconds": 1.8,
+  "end_card_background": "dim",
+  "end_card_destination": "GITHUB.COM/DJEADA/STANDARD-OF-IRON",
+  "end_card_lines": ["FREE AND OPEN SOURCE  -  WINDOWS  -  MACOS  -  LINUX"],
+  "id": "reel_18_bad_decision",
+  "music": "assets/audio/music/combat/combat_shield_wall_at_dusk.ogg",
+  "music_start": 10.0,
+  "shots": [
+    {
+      "name": "even",
+      "scenario": "reel_bad_decision",
+      "seed": 7,
+      "start": 3.0,
+      "duration": 2.2,
+      "focus": {
+        "mode": "point",
+        "point": [-8.0, 0.0, 0.0],
+        "smoothing": 0.8
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 36,
+          "pitch": 42,
+          "yaw": 180,
+          "fov": 44,
+          "height": 1.6
+        },
+        {
+          "time": 2.2,
+          "distance": 34,
+          "pitch": 44,
+          "yaw": 184,
+          "fov": 44,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "ONE COMMAND LOST THE BATTLE."
+    },
+    {
+      "name": "the_order",
+      "scenario": "reel_bad_decision",
+      "seed": 7,
+      "start": 5.8,
+      "duration": 2.6,
+      "focus": {
+        "mode": "point",
+        "point": [-6.0, 0.0, -8.0],
+        "smoothing": 0.8
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 34,
+          "pitch": 46,
+          "yaw": 180,
+          "fov": 44,
+          "height": 1.6
+        },
+        {
+          "time": 2.6,
+          "distance": 33,
+          "pitch": 47,
+          "yaw": 181,
+          "fov": 44,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "THIS ONE."
+    },
+    {
+      "name": "the_gap",
+      "scenario": "reel_bad_decision",
+      "seed": 7,
+      "start": 10.2,
+      "duration": 2.4,
+      "focus": {
+        "mode": "point",
+        "point": [-22.0, 0.0, 6.0],
+        "smoothing": 0.8
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 24,
+          "pitch": 30,
+          "yaw": 250,
+          "fov": 46,
+          "height": 1.6
+        },
+        {
+          "time": 2.4,
+          "distance": 23,
+          "pitch": 30,
+          "yaw": 250,
+          "fov": 46,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "the_flank_goes",
+      "scenario": "reel_bad_decision",
+      "seed": 7,
+      "start": 14.0,
+      "duration": 2.2,
+      "focus": {
+        "mode": "point",
+        "point": [-10.0, 0.0, -2.0],
+        "smoothing": 0.8
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 16,
+          "pitch": 20,
+          "yaw": 250,
+          "fov": 48,
+          "height": 1.6
+        },
+        {
+          "time": 2.2,
+          "distance": 15.5,
+          "pitch": 20,
+          "yaw": 249,
+          "fov": 48,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ],
+      "slow_motion": 1.3
+    },
+    {
+      "name": "defeat",
+      "scenario": "reel_bad_decision",
+      "seed": 7,
+      "start": 24.0,
+      "duration": 6.0,
+      "focus": {
+        "mode": "point",
+        "point": [-6.0, 0.0, 0.0],
+        "smoothing": 0.8
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 26,
+          "pitch": 48,
+          "yaw": 180,
+          "fov": 44,
+          "height": 1.6
+        },
+        {
+          "time": 6.0,
+          "distance": 30,
+          "pitch": 54,
+          "yaw": 184,
+          "fov": 44,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ],
+      "time_lapse": 2.0
+    }
+  ]
+}

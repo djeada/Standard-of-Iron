@@ -31,6 +31,16 @@ struct EnvironmentLightingState {
   float cloud_cover = 0.0F;
   float wetness = 0.0F;
 
+  [[nodiscard]] auto darkness_amount() const noexcept -> float {
+    auto smooth = [](float edge0, float edge1, float value) {
+      float const t = std::clamp((value - edge0) / (edge1 - edge0), 0.0F, 1.0F);
+      return t * t * (3.0F - 2.0F * t);
+    };
+    float const night = smooth(0.05F, 0.40F, primary_color.z() - primary_color.x());
+    float const dim = 1.0F - smooth(0.30F, 0.62F, primary_intensity);
+    return std::max(night, dim);
+  }
+
   [[nodiscard]] auto sanitized() const noexcept -> EnvironmentLightingState {
     EnvironmentLightingState result = *this;
     result.primary_direction = primary_direction.isNull()

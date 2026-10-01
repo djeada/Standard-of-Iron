@@ -1,0 +1,164 @@
+{
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "supersample": 1,
+  "gameplay_ui": false,
+  "audio": true,
+  "record_music": false,
+  "transition": {
+    "type": "cut"
+  },
+  "grade": {
+    "contrast": 1.12,
+    "saturation": 1.16,
+    "brightness": 0.05,
+    "gamma": 1.14,
+    "grain": 0,
+    "vignette": 0.12,
+    "sharpen": 0.4
+  },
+  "motion_limits": {
+    "yaw_degrees_per_second": 30,
+    "pitch_degrees_per_second": 16,
+    "fov_degrees_per_second": 10,
+    "minimum_clip_seconds": 1.2,
+    "mean_clip_seconds": 1.6
+  },
+  "title": "STANDARD OF IRON",
+  "subtitle": "FREE ROME VS CARTHAGE RTS",
+  "end_card_seconds": 1.8,
+  "end_card_background": "dim",
+  "end_card_destination": "GITHUB.COM/DJEADA/STANDARD-OF-IRON",
+  "end_card_lines": ["FREE AND OPEN SOURCE  -  WINDOWS  -  MACOS  -  LINUX"],
+  "id": "reel_04_before_after",
+  "music": "assets/audio/music/combat/combat_shield_wall_at_dusk.ogg",
+  "music_start": 0.0,
+  "shots": [
+    {
+      "name": "ordered",
+      "scenario": "reel_front_rank",
+      "seed": 7,
+      "start": 0.8,
+      "duration": 1.9,
+      "focus": {
+        "mode": "point",
+        "point": [0.0, 0.0, 0.0],
+        "smoothing": 0.8
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 46,
+          "pitch": 32,
+          "yaw": 200,
+          "fov": 44,
+          "height": 1.6
+        },
+        {
+          "time": 1.9,
+          "distance": 45,
+          "pitch": 32,
+          "yaw": 200,
+          "fov": 44,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "thirty_seconds_later",
+      "scenario": "reel_front_rank",
+      "seed": 7,
+      "start": 30.0,
+      "duration": 2.6,
+      "focus": {
+        "mode": "point",
+        "point": [0.0, 0.0, 0.0],
+        "smoothing": 0.8
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 45,
+          "pitch": 32,
+          "yaw": 200,
+          "fov": 44,
+          "height": 1.6
+        },
+        {
+          "time": 2.6,
+          "distance": 44,
+          "pitch": 32,
+          "yaw": 200,
+          "fov": 44,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "30 SECONDS LATER..."
+    },
+    {
+      "name": "inside",
+      "scenario": "reel_front_rank",
+      "seed": 7,
+      "start": 32.8,
+      "duration": 1.8,
+      "focus": {
+        "mode": "battle",
+        "engagement_radius": 25,
+        "smoothing": 0.8
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 9,
+          "pitch": 12,
+          "yaw": 150,
+          "fov": 50,
+          "height": 1.6
+        },
+        {
+          "time": 1.8,
+          "distance": 8,
+          "pitch": 13,
+          "yaw": 138,
+          "fov": 50,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "wreckage",
+      "scenario": "reel_front_rank",
+      "seed": 7,
+      "start": 40.0,
+      "duration": 2.2,
+      "focus": {
+        "mode": "battle",
+        "engagement_radius": 45,
+        "smoothing": 1.2
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 14,
+          "pitch": 14,
+          "yaw": 200,
+          "fov": 46,
+          "height": 1.6
+        },
+        {
+          "time": 2.2,
+          "distance": 13.5,
+          "pitch": 14,
+          "yaw": 201,
+          "fov": 46,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ]
+    }
+  ]
+}

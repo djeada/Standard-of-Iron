@@ -1,0 +1,2153 @@
+{
+  "version": 1,
+  "name": "reel_command_500",
+  "loop_seconds": 0.0,
+  "required_coverage": ["formation_move"],
+  "actions": [
+    {
+      "at": 0.0,
+      "action": "resume"
+    },
+    {
+      "at": 0.05,
+      "action": "camera_look_at",
+      "argument": "6,-6"
+    },
+    {
+      "at": 0.1,
+      "action": "camera_zoom",
+      "argument": "0.75"
+    },
+    {
+      "at": 0.2,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 0.233,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 0.267,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 0.3,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 0.333,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 0.367,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 0.4,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 0.433,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 0.467,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 0.5,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 0.533,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 0.567,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 0.6,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 0.633,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 0.667,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 0.7,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 0.733,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 0.767,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 0.8,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 0.833,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 0.867,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 0.9,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 0.933,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 0.967,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 1.0,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 1.033,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 1.067,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 1.1,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 1.133,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 1.167,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 1.2,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 1.2,
+      "action": "select_all"
+    },
+    {
+      "at": 1.233,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 1.267,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 1.3,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 1.333,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 1.367,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 1.4,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 1.433,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 1.467,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 1.5,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 1.533,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 1.567,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 1.6,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 1.633,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 1.667,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 1.7,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 1.733,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 1.767,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 1.8,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 1.833,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 1.867,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 1.9,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 1.933,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 1.967,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 2.0,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 2.033,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 2.067,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 2.1,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 2.133,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 2.167,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 2.2,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 2.2,
+      "action": "formation_begin_world",
+      "argument": "36,-40"
+    },
+    {
+      "at": 2.233,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 2.267,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 2.3,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 2.333,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 2.367,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 2.4,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 2.433,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 2.467,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 2.5,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 2.533,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 2.567,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 2.6,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 2.6,
+      "action": "formation_intent",
+      "argument": "line"
+    },
+    {
+      "at": 2.633,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 2.667,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 2.7,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 2.733,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 2.767,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 2.8,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 2.833,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 2.867,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 2.9,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 2.933,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 2.967,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 3.0,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 3.0,
+      "action": "formation_drag_world",
+      "argument": "24,-30"
+    },
+    {
+      "at": 3.033,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 3.067,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 3.1,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 3.133,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 3.167,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 3.2,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 3.233,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 3.267,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 3.3,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 3.333,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 3.367,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 3.4,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 3.433,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 3.45,
+      "action": "formation_drag_world",
+      "argument": "12,-20"
+    },
+    {
+      "at": 3.467,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 3.5,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 3.533,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 3.567,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 3.6,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 3.633,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 3.667,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 3.7,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 3.733,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 3.767,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 3.8,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 3.833,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 3.867,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 3.9,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 3.9,
+      "action": "formation_drag_world",
+      "argument": "0,-10"
+    },
+    {
+      "at": 3.933,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 3.967,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 4.0,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 4.033,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 4.067,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 4.1,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 4.133,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 4.167,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 4.2,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 4.233,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 4.267,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 4.3,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 4.333,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 4.35,
+      "action": "formation_drag_world",
+      "argument": "-12,0"
+    },
+    {
+      "at": 4.367,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 4.4,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 4.433,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 4.467,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 4.5,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 4.533,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 4.567,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 4.6,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 4.633,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 4.667,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 4.7,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 4.733,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 4.767,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 4.8,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 4.8,
+      "action": "formation_drag_world",
+      "argument": "-24,10"
+    },
+    {
+      "at": 4.833,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 4.867,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 4.9,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 4.933,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 4.967,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 5.0,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 5.033,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 5.067,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 5.1,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 5.133,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 5.167,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 5.2,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 5.233,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 5.267,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 5.3,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 5.333,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 5.367,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 5.4,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 5.4,
+      "action": "formation_end"
+    },
+    {
+      "at": 5.433,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 5.467,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 5.5,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 5.533,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 5.567,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 5.6,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 5.633,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 5.667,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 5.7,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 5.733,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 5.767,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 5.8,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 5.8,
+      "action": "formation_confirm"
+    },
+    {
+      "at": 5.833,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 5.867,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 5.9,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 5.933,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 5.967,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 6.0,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 6.033,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 6.067,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 6.1,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 6.133,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 6.167,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 6.2,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 6.233,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 6.267,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 6.3,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 6.333,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 6.367,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 6.4,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 6.433,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 6.467,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 6.5,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 6.533,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 6.567,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 6.6,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 6.633,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 6.667,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 6.7,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 6.733,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 6.767,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 6.8,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 6.833,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 6.867,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 6.9,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 6.933,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 6.967,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 7.0,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 7.033,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 7.067,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 7.1,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 7.133,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 7.167,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 7.2,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 7.233,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 7.267,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 7.3,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 7.333,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 7.367,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 7.4,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 7.433,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 7.467,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 7.5,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 7.533,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 7.567,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 7.6,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 7.633,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 7.667,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 7.7,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 7.733,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 7.767,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 7.8,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 7.833,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 7.867,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 7.9,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 7.933,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 7.967,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 8.0,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 8.033,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 8.067,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 8.1,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 8.133,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 8.167,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 8.2,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 8.2,
+      "action": "attack_at_world",
+      "argument": "62,-70"
+    },
+    {
+      "at": 8.233,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 8.267,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 8.3,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 8.333,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 8.367,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 8.4,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 8.433,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 8.467,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 8.5,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 8.533,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 8.567,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 8.6,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 8.633,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 8.667,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 8.7,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 8.733,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 8.767,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 8.8,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 8.833,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 8.867,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 8.9,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 8.933,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 8.967,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 9.0,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 9.033,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 9.067,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 9.1,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 9.133,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 9.167,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 9.2,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 9.233,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 9.267,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 9.3,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 9.333,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 9.367,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 9.4,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 9.433,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 9.467,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 9.5,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 9.533,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 9.567,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 9.6,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 9.6,
+      "action": "resume"
+    },
+    {
+      "at": 9.633,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 9.667,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 9.7,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 9.733,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 9.767,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 9.8,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 9.833,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 9.867,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 9.9,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 9.933,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 9.967,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 10.0,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 10.033,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 10.067,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 10.1,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 10.133,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 10.167,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 10.2,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 10.233,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 10.267,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 10.3,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 10.333,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 10.367,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 10.4,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 10.433,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 10.467,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 10.5,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 10.533,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 10.567,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 10.6,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 10.633,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 10.667,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 10.7,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 10.733,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 10.767,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 10.8,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 10.833,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 10.867,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 10.9,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 10.933,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 10.967,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 11.0,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 11.033,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 11.067,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 11.1,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 11.133,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 11.167,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 11.2,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 11.233,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 11.267,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 11.3,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 11.333,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 11.367,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 11.4,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 11.433,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 11.467,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 11.5,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 11.533,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 11.567,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 11.6,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 11.633,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 11.667,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 11.7,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 11.733,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 11.767,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 11.8,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 11.833,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 11.867,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 11.9,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 11.933,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 11.967,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 12.0,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 12.033,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 12.067,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 12.1,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 12.133,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 12.167,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 12.2,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 12.233,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 12.267,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 12.3,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 12.333,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 12.367,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 12.4,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 12.433,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 12.467,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 12.5,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 12.533,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 12.567,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 12.6,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 12.633,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 12.667,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 12.7,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 12.733,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 12.767,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 12.8,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 12.833,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 12.867,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 12.9,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 12.933,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 12.967,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 13.0,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 13.033,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 13.067,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 13.1,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 13.133,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 13.167,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 13.2,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 13.233,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 13.267,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 13.3,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 13.333,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 13.367,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 13.4,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 13.433,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 13.467,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 13.5,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 13.533,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 13.567,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 13.6,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 13.633,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 13.667,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 13.7,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 13.733,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 13.767,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 13.8,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 13.833,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 13.867,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 13.9,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 13.933,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 13.967,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    },
+    {
+      "at": 14.0,
+      "action": "camera_orbit",
+      "argument": "0.12,0"
+    }
+  ]
+}

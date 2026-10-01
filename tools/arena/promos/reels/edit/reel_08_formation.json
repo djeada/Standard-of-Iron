@@ -1,0 +1,57 @@
+{
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "supersample": 1,
+  "gameplay_ui": false,
+  "audio": true,
+  "record_music": false,
+  "transition": {
+    "type": "cut"
+  },
+  "grade": {
+    "contrast": 1.12,
+    "saturation": 1.16,
+    "brightness": 0.05,
+    "gamma": 1.14,
+    "grain": 0,
+    "vignette": 0.12,
+    "sharpen": 0.4
+  },
+  "motion_limits": {
+    "yaw_degrees_per_second": 30,
+    "pitch_degrees_per_second": 16,
+    "fov_degrees_per_second": 10,
+    "minimum_clip_seconds": 1.2,
+    "mean_clip_seconds": 1.6
+  },
+  "title": "STANDARD OF IRON",
+  "subtitle": "FREE ROME VS CARTHAGE RTS",
+  "end_card_seconds": 1.8,
+  "end_card_background": "dim",
+  "end_card_destination": "GITHUB.COM/DJEADA/STANDARD-OF-IRON",
+  "end_card_lines": ["FREE AND OPEN SOURCE  -  WINDOWS  -  MACOS  -  LINUX"],
+  "id": "reel_08_formation",
+  "music": "assets/audio/music/combat/combat_dust_of_trasimene.ogg",
+  "music_start": 0.0,
+  "shots": [
+    {
+      "name": "split",
+      "scenario": "reel_formation_piecemeal",
+      "duration": 2.602,
+      "caption": "SAME ARMY. DIFFERENT FORMATION."
+    },
+    {
+      "name": "one_at_a_time",
+      "scenario": "reel_formation_piecemeal",
+      "duration": 4.0,
+      "caption": "A: ONE AT A TIME. THE LINE HOLDS."
+    },
+    {
+      "name": "one_plan",
+      "scenario": "reel_formation_combined",
+      "duration": 4.0,
+      "caption": "B: ONE PLAN. THE LINE BREAKS."
+    }
+  ]
+}

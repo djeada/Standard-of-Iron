@@ -259,6 +259,9 @@ auto main(int argc, char** argv) -> int {
   fmt.setProfile(QSurfaceFormat::CoreProfile);
   fmt.setDepthBufferSize(24);
   fmt.setStencilBufferSize(8);
+  if (qEnvironmentVariableIsSet("SOI_GL_DEBUG")) {
+    fmt.setOption(QSurfaceFormat::DebugContext);
+  }
   QSurfaceFormat::setDefaultFormat(fmt);
 
   QApplication app(argc, argv);
@@ -528,7 +531,7 @@ auto main(int argc, char** argv) -> int {
   window.viewport()->set_time_of_day(*parsed_time_of_day);
   window.viewport()->set_lighting_profile(lighting_profile);
 
-  if (environment_hour_forced) {
+  if (environment_hour_forced || time_of_day_forced) {
     window.viewport()->set_environment_hour_override(environment_hour);
   } else {
     window.viewport()->set_environment_time(environment_hour);

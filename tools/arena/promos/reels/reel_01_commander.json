@@ -1,0 +1,148 @@
+{
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "supersample": 1,
+  "gameplay_ui": false,
+  "audio": true,
+  "record_music": false,
+  "transition": {
+    "type": "cut"
+  },
+  "grade": {
+    "contrast": 1.12,
+    "saturation": 1.16,
+    "brightness": 0.05,
+    "gamma": 1.14,
+    "grain": 0,
+    "vignette": 0.12,
+    "sharpen": 0.4
+  },
+  "motion_limits": {
+    "yaw_degrees_per_second": 30,
+    "pitch_degrees_per_second": 16,
+    "fov_degrees_per_second": 18,
+    "minimum_clip_seconds": 1.2,
+    "mean_clip_seconds": 1.6
+  },
+  "title": "STANDARD OF IRON",
+  "subtitle": "FREE ROME VS CARTHAGE RTS",
+  "end_card_seconds": 1.8,
+  "end_card_background": "dim",
+  "end_card_destination": "GITHUB.COM/DJEADA/STANDARD-OF-IRON",
+  "end_card_lines": ["FREE AND OPEN SOURCE  -  WINDOWS  -  MACOS  -  LINUX"],
+  "id": "reel_01_commander",
+  "music": "assets/audio/music/menu/main_theme_standard_of_iron.ogg",
+  "music_start": 0.0,
+  "shots": [
+    {
+      "name": "the_army",
+      "scenario": "trailer_open",
+      "seed": 7,
+      "start": 2.0,
+      "duration": 3.0,
+      "focus": {
+        "mode": "point",
+        "point": [-14.0, 0.0, 23.5],
+        "smoothing": 0.8
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 46,
+          "pitch": 52,
+          "yaw": 350,
+          "fov": 42,
+          "height": 1.6
+        },
+        {
+          "time": 3.0,
+          "distance": 38,
+          "pitch": 46,
+          "yaw": 354,
+          "fov": 42,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ],
+      "gameplay_ui": true,
+      "caption": "WHAT IF YOUR RTS COMMANDER COULD ENTER THE BATTLE?"
+    },
+    {
+      "name": "into_the_saddle",
+      "scenario": "trailer_open",
+      "seed": 7,
+      "start": 5.0,
+      "duration": 1.6,
+      "focus": {
+        "mode": "group",
+        "group": "scipio",
+        "smoothing": 0.1,
+        "offset": [0.64, 0.71, -2.9]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 30,
+          "pitch": 40,
+          "yaw": 354,
+          "fov": 42,
+          "height": 1.0
+        },
+        {
+          "time": 1.6,
+          "distance": 6.23,
+          "pitch": 17.7,
+          "yaw": 5.2,
+          "fov": 68,
+          "height": 0.0,
+          "ease": "smooth"
+        }
+      ],
+      "gameplay_ui": true
+    },
+    {
+      "name": "commander_view",
+      "scenario": "trailer_open",
+      "seed": 7,
+      "start": 6.6,
+      "duration": 1.9,
+      "gameplay_camera": true,
+      "gameplay_ui": true
+    },
+    {
+      "name": "the_line_answers",
+      "scenario": "trailer_open",
+      "seed": 7,
+      "start": 8.5,
+      "duration": 2.2,
+      "focus": {
+        "mode": "group",
+        "group": "scipio",
+        "smoothing": 0.1,
+        "offset": [0.64, 0.71, -2.9]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 6.23,
+          "pitch": 17.7,
+          "yaw": 5.2,
+          "fov": 68,
+          "height": 0.0
+        },
+        {
+          "time": 2.2,
+          "distance": 24.0,
+          "pitch": 28,
+          "yaw": 12,
+          "fov": 48,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ],
+      "gameplay_ui": true,
+      "slow_motion": 1.2
+    }
+  ]
+}

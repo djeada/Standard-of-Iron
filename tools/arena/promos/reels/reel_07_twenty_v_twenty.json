@@ -1,0 +1,200 @@
+{
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "supersample": 1,
+  "gameplay_ui": false,
+  "audio": true,
+  "record_music": false,
+  "transition": {
+    "type": "cut"
+  },
+  "grade": {
+    "contrast": 1.12,
+    "saturation": 1.16,
+    "brightness": 0.05,
+    "gamma": 1.14,
+    "grain": 0,
+    "vignette": 0.12,
+    "sharpen": 0.4
+  },
+  "motion_limits": {
+    "yaw_degrees_per_second": 30,
+    "pitch_degrees_per_second": 16,
+    "fov_degrees_per_second": 10,
+    "minimum_clip_seconds": 1.2,
+    "mean_clip_seconds": 1.6
+  },
+  "title": "STANDARD OF IRON",
+  "subtitle": "FREE ROME VS CARTHAGE RTS",
+  "end_card_seconds": 1.8,
+  "end_card_background": "dim",
+  "end_card_destination": "GITHUB.COM/DJEADA/STANDARD-OF-IRON",
+  "end_card_lines": ["FREE AND OPEN SOURCE  -  WINDOWS  -  MACOS  -  LINUX"],
+  "id": "reel_07_twenty_v_twenty",
+  "music": "assets/audio/music/combat/combat_cavalry_of_carthage.ogg",
+  "music_start": 4.0,
+  "shots": [
+    {
+      "name": "face_off",
+      "scenario": "reel_twenty_a_side",
+      "seed": 7,
+      "start": 0.3,
+      "duration": 2.2,
+      "focus": {
+        "mode": "group_pair",
+        "group": "legionaries",
+        "second_group": "swordsmen",
+        "smoothing": 0.1
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 20,
+          "pitch": 14,
+          "yaw": 200,
+          "fov": 44,
+          "height": 1.6
+        },
+        {
+          "time": 2.2,
+          "distance": 19,
+          "pitch": 14,
+          "yaw": 200,
+          "fov": 44,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "20 LEGIONARIES VS 20 SWORDSMEN. WHO WINS?"
+    },
+    {
+      "name": "clash",
+      "scenario": "reel_twenty_a_side",
+      "seed": 7,
+      "start": 5.5,
+      "duration": 1.8,
+      "focus": {
+        "mode": "group_pair",
+        "group": "legionaries",
+        "second_group": "swordsmen",
+        "smoothing": 0.6
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 9,
+          "pitch": 11,
+          "yaw": 200,
+          "fov": 48,
+          "height": 1.6
+        },
+        {
+          "time": 1.8,
+          "distance": 8.5,
+          "pitch": 11,
+          "yaw": 206,
+          "fov": 48,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ],
+      "slow_motion": 1.4
+    },
+    {
+      "name": "cut_a",
+      "scenario": "reel_twenty_a_side",
+      "seed": 7,
+      "start": 8.5,
+      "duration": 1.4,
+      "focus": {
+        "mode": "battle",
+        "engagement_radius": 15,
+        "smoothing": 0.6
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 6.5,
+          "pitch": 10,
+          "yaw": 120,
+          "fov": 50,
+          "height": 1.6
+        },
+        {
+          "time": 1.4,
+          "distance": 6.3,
+          "pitch": 10,
+          "yaw": 116,
+          "fov": 50,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "cut_b",
+      "scenario": "reel_twenty_a_side",
+      "seed": 7,
+      "start": 13.5,
+      "duration": 1.4,
+      "focus": {
+        "mode": "battle",
+        "engagement_radius": 15,
+        "smoothing": 0.6
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 7,
+          "pitch": 13,
+          "yaw": 300,
+          "fov": 50,
+          "height": 1.6
+        },
+        {
+          "time": 1.4,
+          "distance": 6.8,
+          "pitch": 13,
+          "yaw": 304,
+          "fov": 50,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "result",
+      "scenario": "reel_twenty_a_side",
+      "seed": 7,
+      "start": 31.8,
+      "duration": 3.0,
+      "focus": {
+        "mode": "battle",
+        "engagement_radius": 15,
+        "smoothing": 1.2
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 14,
+          "pitch": 30,
+          "yaw": 250,
+          "fov": 44,
+          "height": 1.6
+        },
+        {
+          "time": 3.0,
+          "distance": 13,
+          "pitch": 32,
+          "yaw": 254,
+          "fov": 44,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ],
+      "freeze": 1.4,
+      "freeze_text": "THE LEGIONARIES WIN."
+    }
+  ]
+}
