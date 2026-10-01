@@ -300,6 +300,10 @@ void InputCommandHandler::on_gate_command() {
   issue_command([](auto& commands) { return commands.on_gate_command(); });
 }
 
+void InputCommandHandler::on_roll_stones_command() {
+  issue_command([](auto& commands) { return commands.on_roll_stones_command(); });
+}
+
 void InputCommandHandler::on_guard_command() {
   issue_command([](auto& commands) { return commands.on_guard_command(); });
 }

@@ -4771,6 +4771,34 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>Select squads of the same kind that have lost men</source>
         <translation>حدّد فرقًا من النوع نفسه فقدت رجالًا</translation>
     </message>
+    <message>
+        <source>Roll Stones</source>
+        <translation>دحرجة الصخور</translation>
+    </message>
+    <message>
+        <source>Stones</source>
+        <translation>صخور</translation>
+    </message>
+    <message>
+        <source>The men beside the stone cache heave it over the edge. The boulders crash down the slope and crush whatever is climbing it.</source>
+        <translation>يدفع الرجال الواقفون بجانب كومة الحجارة بها فوق الحافة، فتهوي الصخور على المنحدر وتسحق كل من يصعده.</translation>
+    </message>
+    <message>
+        <source>Stand troops next to stones your side holds at the top of a hill path, then press Roll Stones when the enemy climbs.</source>
+        <translation>ضع قوات بجانب حجارة يسيطر عليها جانبك عند أعلى ممر التل، ثم اضغط دحرجة الصخور حين يصعد العدو.</translation>
+    </message>
+    <message>
+        <source>The stones roll down the path below the cache. Each cache can be used once.</source>
+        <translation>تتدحرج الحجارة على الممر أسفل الكومة. لا يمكن استخدام كل كومة إلا مرة واحدة.</translation>
+    </message>
+    <message>
+        <source>The first troops to reach a cache claim it for their side.</source>
+        <translation>أول قوات تصل إلى الكومة تستولي عليها لصالح جانبها.</translation>
+    </message>
+    <message>
+        <source>Move troops next to stones your side holds</source>
+        <translation>حرّك قوات إلى جانب حجارة يسيطر عليها جانبك</translation>
+    </message>
 </context>
 <context>
     <name>HUDBottomCommander</name>
@@ -10936,6 +10964,21 @@ Builders reap it for the food that recruits civilians</source>
     <message>
         <source>%1 %2/%3</source>
         <translation>%1 %2/%3</translation>
+    </message>
+</context>
+<context>
+    <name>RockfallSystem</name>
+    <message>
+        <source>Your men hold the stones above the slope. Select troops beside them and order Roll Stones when the enemy climbs.</source>
+        <translation>رجالك يسيطرون على الحجارة فوق المنحدر. اختر قوات بجانبها وأصدر أمر دحرجة الصخور حين يصعد العدو.</translation>
+    </message>
+    <message>
+        <source>The enemy has taken your stones on the heights.</source>
+        <translation>استولى العدو على حجارتك فوق المرتفعات.</translation>
+    </message>
+    <message>
+        <source>Enemies are climbing below your stones. Roll them!</source>
+        <translation>الأعداء يصعدون أسفل حجارتك. دحرجها!</translation>
     </message>
 </context>
 <context>

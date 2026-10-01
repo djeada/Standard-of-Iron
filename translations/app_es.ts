@@ -4767,6 +4767,34 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <source>Select squads of the same kind that have lost men</source>
         <translation>Selecciona escuadras del mismo tipo que hayan perdido hombres</translation>
     </message>
+    <message>
+        <source>Roll Stones</source>
+        <translation>Rodar piedras</translation>
+    </message>
+    <message>
+        <source>Stones</source>
+        <translation>Piedras</translation>
+    </message>
+    <message>
+        <source>The men beside the stone cache heave it over the edge. The boulders crash down the slope and crush whatever is climbing it.</source>
+        <translation>Los hombres junto al acopio de piedras lo empujan por el borde. Las rocas se precipitan ladera abajo y aplastan a quien esté subiendo.</translation>
+    </message>
+    <message>
+        <source>Stand troops next to stones your side holds at the top of a hill path, then press Roll Stones when the enemy climbs.</source>
+        <translation>Coloca tropas junto a las piedras que tu bando controla en lo alto de un camino de colina y pulsa Rodar piedras cuando suba el enemigo.</translation>
+    </message>
+    <message>
+        <source>The stones roll down the path below the cache. Each cache can be used once.</source>
+        <translation>Las piedras ruedan por el camino que hay bajo el acopio. Cada acopio solo puede usarse una vez.</translation>
+    </message>
+    <message>
+        <source>The first troops to reach a cache claim it for their side.</source>
+        <translation>Las primeras tropas que llegan a un acopio lo reclaman para su bando.</translation>
+    </message>
+    <message>
+        <source>Move troops next to stones your side holds</source>
+        <translation>Mueve tropas junto a piedras que controle tu bando</translation>
+    </message>
 </context>
 <context>
     <name>HUDBottomCommander</name>
@@ -10924,6 +10952,21 @@ Los constructores lo siegan para la comida que recluta civiles</translation>
     <message>
         <source>%1 %2/%3</source>
         <translation>%1 %2/%3</translation>
+    </message>
+</context>
+<context>
+    <name>RockfallSystem</name>
+    <message>
+        <source>Your men hold the stones above the slope. Select troops beside them and order Roll Stones when the enemy climbs.</source>
+        <translation>Tus hombres controlan las piedras sobre la ladera. Selecciona tropas a su lado y ordena Rodar piedras cuando el enemigo suba.</translation>
+    </message>
+    <message>
+        <source>The enemy has taken your stones on the heights.</source>
+        <translation>El enemigo ha tomado tus piedras en las alturas.</translation>
+    </message>
+    <message>
+        <source>Enemies are climbing below your stones. Roll them!</source>
+        <translation>Hay enemigos subiendo bajo tus piedras. ¡Hazlas rodar!</translation>
     </message>
 </context>
 <context>

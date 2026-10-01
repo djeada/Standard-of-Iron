@@ -105,6 +105,9 @@ enum class ScenarioCommandKind : std::uint8_t {
   ReloadUndeadZoneState,
   // Releases the rockfall trap named by `zone_id`.
   TriggerRockfall,
+  // The group's troops roll the stone cache they stand beside, as the HUD
+  // Roll Stones order does.
+  RollStones,
 };
 
 struct ArenaScenarioGroup {

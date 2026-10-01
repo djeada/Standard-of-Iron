@@ -745,4 +745,12 @@ public:
   float scaffold{0.0F};
 };
 
+// A troop heaving a rockfall cache over the edge. RockfallSystem keeps it on
+// the pusher for as long as the push lasts; the presentation reads it to play
+// the crew-push work pose.
+class RockfallPushComponent {
+public:
+  float elapsed{0.0F};
+};
+
 } // namespace Engine::Core

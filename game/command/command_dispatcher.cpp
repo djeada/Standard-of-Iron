@@ -53,6 +53,8 @@ void dispatch(World& world, const Command& command) {
           apply_ally_call(world, command.owner_id, payload);
         } else if constexpr (std::is_same_v<T, AllyAppealAnswer>) {
           apply_ally_appeal_answer(world, command.owner_id, payload);
+        } else if constexpr (std::is_same_v<T, RollStones>) {
+          apply_roll_stones(world, payload);
         } else if constexpr (std::is_same_v<T, UseCommanderAbility>) {
           apply_commander_ability(world, payload);
         } else if constexpr (std::is_same_v<T, SetFormationMode>) {

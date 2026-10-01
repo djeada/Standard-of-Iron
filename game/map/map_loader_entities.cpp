@@ -348,6 +348,9 @@ auto rockfall_trigger_from_string(const QString& raw) -> RockfallTriggerMode {
   if (trigger == QStringLiteral("scripted")) {
     return RockfallTriggerMode::Scripted;
   }
+  if (trigger == QStringLiteral("claim") || trigger == QStringLiteral("claimable")) {
+    return RockfallTriggerMode::Claimable;
+  }
   if (!trigger.isEmpty() && trigger != QStringLiteral("zone")) {
     qWarning() << "Unknown rockfall trigger" << raw << "- using zone";
   }
@@ -622,6 +625,8 @@ void read_map_scenery(const QJsonObject& root, MapDefinition& out_map) {
     out_map.undead_zones.clear();
   }
 
+  out_map.hill_rockfall_caches =
+      root.value(QStringLiteral("hill_rockfall_caches")).toBool(true);
   if (root.contains(ROCKFALL_TRAPS) && root.value(ROCKFALL_TRAPS).isArray()) {
     read_rockfall_traps(root.value(ROCKFALL_TRAPS).toArray(), out_map.rockfall_traps);
   } else {

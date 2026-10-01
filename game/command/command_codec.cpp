@@ -247,6 +247,9 @@ void encode(QJsonObject& o, const AllyAppealAnswer& p) {
   o["appeal"] = static_cast<qint64>(p.appeal_id);
   o["accept"] = p.accept;
 }
+void encode(QJsonObject& o, const RollStones& p) {
+  o["units"] = ids_to_json(p.units);
+}
 void encode(QJsonObject& o, const UseCommanderAbility& p) {
   o["commander"] = id_to_json(p.commander);
   o["ability"] = enum_value(p.ability);
@@ -422,6 +425,10 @@ template <>
 auto decode<AllyAppealAnswer>(Reader& r) -> AllyAppealAnswer {
   return {.appeal_id = static_cast<std::uint32_t>(r.number("appeal")),
           .accept = r.boolean("accept")};
+}
+template <>
+auto decode<RollStones>(Reader& r) -> RollStones {
+  return {.units = r.ids("units")};
 }
 template <>
 auto decode<UseCommanderAbility>(Reader& r) -> UseCommanderAbility {

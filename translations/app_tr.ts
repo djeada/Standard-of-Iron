@@ -4766,6 +4766,34 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
         <source>Select squads of the same kind that have lost men</source>
         <translation>Adam kaybetmiş aynı türden birlikleri seç</translation>
     </message>
+    <message>
+        <source>Roll Stones</source>
+        <translation>Taş yuvarla</translation>
+    </message>
+    <message>
+        <source>Stones</source>
+        <translation>Taşlar</translation>
+    </message>
+    <message>
+        <source>The men beside the stone cache heave it over the edge. The boulders crash down the slope and crush whatever is climbing it.</source>
+        <translation>Taş yığınının yanındaki adamlar onu kenardan iter. Kayalar yamaçtan aşağı gürleyerek iner ve tırmanan her şeyi ezer.</translation>
+    </message>
+    <message>
+        <source>Stand troops next to stones your side holds at the top of a hill path, then press Roll Stones when the enemy climbs.</source>
+        <translation>Bir tepe yolunun tepesinde tarafının tuttuğu taşların yanına birlik yerleştir, düşman tırmanınca Taş yuvarla&apos;ya bas.</translation>
+    </message>
+    <message>
+        <source>The stones roll down the path below the cache. Each cache can be used once.</source>
+        <translation>Taşlar yığının altındaki yoldan aşağı yuvarlanır. Her yığın yalnızca bir kez kullanılabilir.</translation>
+    </message>
+    <message>
+        <source>The first troops to reach a cache claim it for their side.</source>
+        <translation>Bir yığına ilk ulaşan birlikler onu kendi tarafı için ele geçirir.</translation>
+    </message>
+    <message>
+        <source>Move troops next to stones your side holds</source>
+        <translation>Birlikleri tarafının tuttuğu taşların yanına götür</translation>
+    </message>
 </context>
 <context>
     <name>HUDBottomCommander</name>
@@ -10921,6 +10949,21 @@ Geniş görüş ve dayanıklı bir yerleşim çapası</translation>
     <message>
         <source>%1 %2/%3</source>
         <translation>%1 %2/%3</translation>
+    </message>
+</context>
+<context>
+    <name>RockfallSystem</name>
+    <message>
+        <source>Your men hold the stones above the slope. Select troops beside them and order Roll Stones when the enemy climbs.</source>
+        <translation>Adamların yamacın üstündeki taşları tutuyor. Yanlarındaki birlikleri seç ve düşman tırmanınca Taş yuvarla emrini ver.</translation>
+    </message>
+    <message>
+        <source>The enemy has taken your stones on the heights.</source>
+        <translation>Düşman tepelerdeki taşlarını ele geçirdi.</translation>
+    </message>
+    <message>
+        <source>Enemies are climbing below your stones. Roll them!</source>
+        <translation>Düşmanlar taşlarının altından tırmanıyor. Yuvarla onları!</translation>
     </message>
 </context>
 <context>

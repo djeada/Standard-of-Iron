@@ -162,6 +162,10 @@ enum class RockfallTriggerMode : std::uint8_t {
   AiDefender,
   // Fires only when a mission event or a test asks for it.
   Scripted,
+  // A stone cache anyone can take: the first troop to reach it claims it for
+  // its owner, whose troops then roll the stones by order (or, for an AI, on
+  // their own when enemies climb the slope below).
+  Claimable,
 };
 
 // Boulders staged on high ground above a pass. `release` sits on the heights;
@@ -693,6 +697,8 @@ struct MapDefinition {
   std::vector<WorldProp> world_props;
   std::vector<UndeadZone> undead_zones;
   std::vector<RockfallTrap> rockfall_traps;
+  // Stage a claimable stone cache at the top of every hill ramp.
+  bool hill_rockfall_caches = true;
   std::vector<Forest> forests;
   std::vector<FogZone> fog_zones;
   BiomeSettings biome;

@@ -52,6 +52,8 @@ auto payload_name(const Payload& payload) -> const char* {
           return "ally-call";
         } else if constexpr (std::is_same_v<T, AllyAppealAnswer>) {
           return "ally-appeal-answer";
+        } else if constexpr (std::is_same_v<T, RollStones>) {
+          return "roll-stones";
         } else if constexpr (std::is_same_v<T, UseCommanderAbility>) {
           return "use-commander-ability";
         } else if constexpr (std::is_same_v<T, SetFormationMode>) {

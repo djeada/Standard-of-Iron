@@ -63,6 +63,7 @@ enum class HumanoidConstructionRole : std::uint8_t {
   Chisel,
   KneelingChisel,
   Reap,
+  Push,
 };
 
 enum class HumanoidWorkJob : std::uint8_t {
@@ -71,6 +72,7 @@ enum class HumanoidWorkJob : std::uint8_t {
   Quarry,
   Reap,
   Butcher,
+  Push,
 };
 
 [[nodiscard]] auto humanoid_construction_clip_for_role(

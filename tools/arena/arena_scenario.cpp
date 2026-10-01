@@ -194,6 +194,8 @@ auto command_name(ScenarioCommandKind kind) -> QString {
     return QStringLiteral("ReloadUndeadZoneState");
   case ScenarioCommandKind::TriggerRockfall:
     return QStringLiteral("TriggerRockfall");
+  case ScenarioCommandKind::RollStones:
+    return QStringLiteral("RollStones");
   }
   return QStringLiteral("Unknown");
 }
@@ -2273,6 +2275,19 @@ struct ArenaScenarioRunner::Impl {
         break;
       }
       undead->restore_state(undead->serialize_state());
+      break;
+    }
+    case ScenarioCommandKind::RollStones: {
+      auto* rockfall = world.get_system<Game::Systems::RockfallSystem>();
+      bool rolled = false;
+      for (auto const id : ids(step.group)) {
+        rolled = (rockfall != nullptr && rockfall->order_release(world, id)) || rolled;
+      }
+      if (!rolled) {
+        add_issue(
+            QStringLiteral("roll_stones_failed"),
+            QStringLiteral("%1 stands beside no stone cache it holds").arg(step.group));
+      }
       break;
     }
     case ScenarioCommandKind::TriggerRockfall: {

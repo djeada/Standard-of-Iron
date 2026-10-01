@@ -90,6 +90,7 @@ QtObject {
             "deliver": root.deliver,
             "aura": root.aura,
             "gate": root.gate,
+            "roll_stones": "\u25D2",
             "stop": root.stop
         })
 

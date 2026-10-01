@@ -57,6 +57,9 @@ struct PlacementReadout {
 struct OrdersReadout {
   QString command_mode = QStringLiteral("normal");
   bool has_commandable_selection = false;
+  // Selected troops beside a stone cache their owner holds. Troops walk in and
+  // out of reach, so the HUD polls this rather than the locked action states.
+  int stones_ready = 0;
 };
 
 } // namespace App::Core

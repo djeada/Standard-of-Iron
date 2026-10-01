@@ -122,6 +122,15 @@ add_construction_inputs(Animation::HumanoidActionSampleInputs& inputs,
         .time_remaining = builder->time_remaining,
     };
     construction_job = builder_work_job(builder->product_type);
+  } else if (auto const* push = entity.get_component<RockfallPushComponent>();
+             death == nullptr && push != nullptr) {
+    inputs.construction = {
+        .active = true,
+        .build_time = push->elapsed,
+        .time_remaining = 0.0F,
+        .cycles_per_second = 1.0F / Animation::k_humanoid_crew_push_cycle_time,
+    };
+    construction_job = static_cast<std::uint8_t>(Animation::HumanoidWorkJob::Push);
   } else if (auto const* resident = entity.get_component<SettlementResidentComponent>();
 
              death == nullptr && resident != nullptr && resident->is_labouring()) {

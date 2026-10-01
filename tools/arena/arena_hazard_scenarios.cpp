@@ -111,6 +111,75 @@ auto expectation(Expect kind, float threshold = 0.0F) -> ArenaExpectation {
   return result;
 }
 
+// A mesa with one ramp up its western side. The map stages a stone cache at
+// the top of the ramp on its own; the scenario only decides who gets there.
+constexpr float k_hill_x = 6.0F;
+const QVector3D k_cache_post(3.0F, 0.0F, 1.5F);
+const QVector3D k_ramp_middle(-8.5F, 0.0F, 0.5F);
+
+auto hill_ramp(const char* id,
+               const char* label,
+               const char* description,
+               float duration) -> ArenaScenarioDefinition {
+  ArenaScenarioDefinition result;
+  result.id = QString::fromLatin1(id);
+  result.label = QString::fromLatin1(label);
+  result.description = QString::fromLatin1(description);
+  result.duration_seconds = duration;
+  result.camera = {44.0F, 46.0F, 300.0F};
+  result.camera_focus = QVector3D(-6.0F, 0.0F, 0.0F);
+  result.terrain_grid_extent = 100;
+  result.arena_floor_half_extent = 36.0F;
+  result.ground_type = QStringLiteral("soil_rocky");
+  result.suppress_terrain_scatter = true;
+  result.suppress_spawn_anchor = true;
+  result.suppress_ui_overlays = true;
+  result.suppress_boundary_mountains = true;
+
+  Game::Map::TerrainFeature hill;
+  hill.type = Game::Map::TerrainType::Hill;
+  hill.center_x = k_hill_x;
+  hill.center_z = 0.0F;
+  hill.radius = 12.0F;
+  hill.height = 9.0F;
+  hill.entrances.push_back(QVector3D(k_hill_x - 13.0F, 0.0F, 0.0F));
+  result.terrain_features.push_back(hill);
+  return result;
+}
+
+auto troop(const char* name,
+           Game::Units::TroopType type,
+           int owner_id,
+           int count,
+           QVector3D origin,
+           float facing) -> ArenaScenarioGroup {
+  ArenaScenarioGroup result;
+  result.name = QString::fromLatin1(name);
+  result.troop_type = type;
+  result.nation_id = owner_id == 1 ? Game::Systems::NationID::Carthage
+                                   : Game::Systems::NationID::RomanRepublic;
+  result.owner_id = owner_id;
+  result.count = count;
+  result.individuals_per_unit = 12;
+  result.origin = origin;
+  result.spacing = QVector3D(-6.0F, 0.0F, 0.0F);
+  result.facing_degrees = facing;
+  return result;
+}
+
+auto order_move(const char* name,
+                const char* group,
+                float at,
+                QVector3D to) -> ArenaScenarioStep {
+  ArenaScenarioStep step;
+  step.name = QString::fromLatin1(name);
+  step.trigger = {Trigger::AtTime, at, {}, {}, 0.0F};
+  step.command = Command::Move;
+  step.group = QString::fromLatin1(group);
+  step.destination = to;
+  return step;
+}
+
 void expect_readable_casualties(ArenaScenarioDefinition& scenario) {
   scenario.expectations.push_back(expectation(Expect::AllGroupsRespondWithin, 2.5F));
   scenario.expectations.push_back(expectation(Expect::GroupHealthReduced, 1.0F));
@@ -180,6 +249,61 @@ auto build_hazard_definitions() -> std::vector<ArenaScenarioDefinition> {
     scenario.rockfall_traps = {defenders};
     scenario.steps = {march()};
     expect_readable_casualties(scenario);
+    result.push_back(std::move(scenario));
+  }
+
+  {
+    auto scenario =
+        hill_ramp(k_rockfall_hill_ramp_id,
+                  "Rockfall: Roll the Stones Down the Ramp",
+                  "Spearmen hold the top of a hill path, beside the stone cache staged "
+                  "there. A column climbs the ramp, and the defenders roll the stones "
+                  "onto it.",
+                  30.0F);
+    scenario.groups = {
+        troop(
+            "defenders", Game::Units::TroopType::Spearman, 1, 1, k_cache_post, 270.0F),
+        troop("column",
+              Game::Units::TroopType::Swordsman,
+              2,
+              2,
+              QVector3D(-30.0F, 0.0F, 0.0F),
+              90.0F)};
+    ArenaScenarioStep roll;
+    roll.name = QStringLiteral("roll");
+    roll.trigger = {
+        Trigger::GroupEnteredArea, 0.0F, QStringLiteral("column"), {}, 5.0F};
+    roll.trigger.position = k_ramp_middle;
+    roll.command = Command::RollStones;
+    roll.group = QStringLiteral("defenders");
+    scenario.steps = {
+        order_move("climb", "column", 1.0F, QVector3D(k_hill_x, 0.0F, 0.0F)), roll};
+    scenario.expectations.push_back(expectation(Expect::GroupHealthReduced, 1.0F));
+    scenario.expectations.push_back(expectation(Expect::DeathAnimationObserved));
+    scenario.expectations.push_back(expectation(Expect::LaunchedCasualtyObserved));
+    result.push_back(std::move(scenario));
+  }
+
+  {
+    auto scenario = hill_ramp(
+        k_rockfall_hill_ai_id,
+        "Rockfall: The AI Rolls Its Stones",
+        "The AI's troops reach the stones at the top of the hill path first. "
+        "When the player's column climbs the ramp, the AI rolls them on its own.",
+        30.0F);
+    scenario.groups = {
+        troop(
+            "defenders", Game::Units::TroopType::Spearman, 2, 1, k_cache_post, 270.0F),
+        troop("column",
+              Game::Units::TroopType::Swordsman,
+              1,
+              2,
+              QVector3D(-30.0F, 0.0F, 0.0F),
+              90.0F)};
+    scenario.steps = {
+        order_move("climb", "column", 1.0F, QVector3D(k_hill_x, 0.0F, 0.0F))};
+    scenario.expectations.push_back(expectation(Expect::GroupHealthReduced, 1.0F));
+    scenario.expectations.push_back(expectation(Expect::LaunchedCasualtyObserved));
     result.push_back(std::move(scenario));
   }
 

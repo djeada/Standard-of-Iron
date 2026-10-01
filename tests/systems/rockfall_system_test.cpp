@@ -3,9 +3,11 @@
 #include <QTemporaryDir>
 
 #include <gtest/gtest.h>
+#include <optional>
 
 #include "core/component_commander.h"
 #include "core/component_core.h"
+#include "core/component_gameplay.h"
 #include "core/world.h"
 #include "game/map/map_definition.h"
 #include "game/map/map_loader.h"
@@ -319,4 +321,146 @@ TEST_F(RockfallSystemTest, MapJsonDeclaresRockfallTraps) {
   EXPECT_EQ(trap.ai_min_targets, 3);
   EXPECT_EQ(map.rockfall_traps[1].id, QStringLiteral("rockfall_2"));
   EXPECT_EQ(map.rockfall_traps[1].trigger, RockfallTriggerMode::Zone);
+}
+
+namespace {
+
+// A mesa with one ramp up its western side; the ramp gets a stone cache.
+auto make_hill_map(bool caches = true) -> Game::Map::MapDefinition {
+  Game::Map::MapDefinition map;
+  map.coordSystem = Game::Map::CoordSystem::World;
+  map.grid.width = 72;
+  map.grid.height = 72;
+  map.grid.tile_size = 1.0F;
+  map.hill_rockfall_caches = caches;
+
+  Game::Map::TerrainFeature hill;
+  hill.type = Game::Map::TerrainType::Hill;
+  hill.center_x = 6.0F;
+  hill.center_z = 0.0F;
+  hill.radius = 12.0F;
+  hill.height = 9.0F;
+  hill.entrances.push_back(QVector3D(-7.0F, 0.0F, 0.0F));
+  map.terrain.push_back(hill);
+  return map;
+}
+
+auto first_hill_cache(const RockfallSystem& system) -> std::optional<std::size_t> {
+  for (std::size_t i = 0; i < system.trap_count(); ++i) {
+    if (system.trap(i).hill_cache) {
+      return i;
+    }
+  }
+  return std::nullopt;
+}
+
+} // namespace
+
+TEST_F(RockfallSystemTest, EveryHillRampGetsAnUnclaimedStoneCache) {
+  RockfallSystem system(services());
+  auto const map = make_hill_map();
+  Game::Map::TerrainService::instance().initialize(map);
+  system.configure(map);
+
+  auto const index = first_hill_cache(system);
+  ASSERT_TRUE(index.has_value()) << "the ramp up the hill got no stone cache";
+  auto const cache = system.trap(*index);
+  EXPECT_EQ(cache.trigger, RockfallTriggerMode::Claimable);
+  EXPECT_EQ(cache.owner_id, -1);
+  EXPECT_TRUE(cache.armed);
+  EXPECT_GT(cache.release_world.y(), cache.target_world.y() + 1.5F)
+      << "the cache sits at the top of the ramp, above its foot";
+
+  RockfallSystem none(services());
+  none.configure(make_hill_map(false));
+  EXPECT_FALSE(first_hill_cache(none).has_value()) << "a map can opt out";
+}
+
+TEST_F(RockfallSystemTest, FirstTroopUpTheHillClaimsTheStonesAndRollsThemOnce) {
+  Engine::Core::World world;
+  RockfallSystem system(services());
+  auto const map = make_hill_map();
+  Game::Map::TerrainService::instance().initialize(map);
+  system.configure(map);
+  auto const index = first_hill_cache(system);
+  ASSERT_TRUE(index.has_value());
+  auto const cache = system.trap(*index);
+
+  auto* far = add_troop(world, 1, cache.target_world - QVector3D(20.0F, 0.0F, 0.0F));
+  system.update(&world, k_tick);
+  EXPECT_FALSE(system.cache_in_reach(world, far->get_id()).has_value())
+      << "only troops beside the stones can roll them";
+
+  auto* defenders = add_troop(world, 1, cache.release_world + QVector3D(0, 0, 1.5F));
+  system.update(&world, k_tick);
+  EXPECT_EQ(system.trap(*index).owner_id, 1) << "the first troop there claims it";
+  ASSERT_TRUE(system.cache_in_reach(world, defenders->get_id()).has_value());
+
+  auto* climbers =
+      add_troop(world, 2, (cache.release_world + cache.target_world) * 0.5F);
+  system.update(&world, k_tick);
+  EXPECT_EQ(system.trap(*index).hostile_troops_in_zone, 1);
+  EXPECT_EQ(system.trap(*index).times_fired, 0) << "a player's stones wait for orders";
+
+  ASSERT_TRUE(system.order_release(world, defenders->get_id()));
+  EXPECT_TRUE(system.trap(*index).pushing);
+  EXPECT_NE(world.try_get<Engine::Core::RockfallPushComponent>(defenders->get_id()),
+            nullptr)
+      << "the troop plays the push while it heaves";
+  EXPECT_FALSE(system.order_release(world, defenders->get_id()));
+
+  run(world, system, Game::Systems::k_rockfall_push_seconds * 0.5F);
+  EXPECT_TRUE(system.boulders().empty()) << "the stones wait for the heave to finish";
+  run(world, system, Game::Systems::k_rockfall_push_seconds);
+  EXPECT_FALSE(system.boulders().empty());
+  EXPECT_EQ(world.try_get<Engine::Core::RockfallPushComponent>(defenders->get_id()),
+            nullptr);
+
+  run(world, system, 6.0F);
+  EXPECT_LT(health_of(climbers), 600) << "the stones crush the troop on the ramp";
+  EXPECT_EQ(health_of(defenders), 1000);
+  EXPECT_TRUE(system.trap(*index).spent) << "a cache is used once";
+  EXPECT_FALSE(system.cache_in_reach(world, defenders->get_id()).has_value());
+}
+
+TEST_F(RockfallSystemTest, AnAiHoldingTheStonesRollsThemWhenTheEnemyClimbs) {
+  Engine::Core::World world;
+  RockfallSystem system(services());
+  auto const map = make_hill_map();
+  Game::Map::TerrainService::instance().initialize(map);
+  system.configure(map);
+  auto const index = first_hill_cache(system);
+  ASSERT_TRUE(index.has_value());
+  auto const cache = system.trap(*index);
+
+  add_troop(world, 2, cache.release_world + QVector3D(0, 0, 1.5F));
+  run(world, system, 1.0F);
+  EXPECT_EQ(system.trap(*index).owner_id, 2);
+  EXPECT_EQ(system.trap(*index).times_fired, 0) << "nobody is climbing yet";
+
+  auto* climbers =
+      add_troop(world, 1, (cache.release_world + cache.target_world) * 0.5F);
+  run(world, system, Game::Systems::k_rockfall_push_seconds + 4.0F);
+  EXPECT_EQ(system.trap(*index).times_fired, 1);
+  EXPECT_LT(health_of(climbers), 1000);
+}
+
+TEST_F(RockfallSystemTest, AnEnemyTakesStonesTheirOwnerLeftBehind) {
+  Engine::Core::World world;
+  RockfallSystem system(services());
+  auto const map = make_hill_map();
+  Game::Map::TerrainService::instance().initialize(map);
+  system.configure(map);
+  auto const index = first_hill_cache(system);
+  ASSERT_TRUE(index.has_value());
+  auto const cache = system.trap(*index);
+
+  auto* first = add_troop(world, 1, cache.release_world + QVector3D(0, 0, 1.0F));
+  system.update(&world, k_tick);
+  ASSERT_EQ(system.trap(*index).owner_id, 1);
+
+  first->get_component<Engine::Core::TransformComponent>()->position.x += 30.0F;
+  add_troop(world, 2, cache.release_world + QVector3D(0, 0, -1.0F));
+  system.update(&world, k_tick);
+  EXPECT_EQ(system.trap(*index).owner_id, 2);
 }

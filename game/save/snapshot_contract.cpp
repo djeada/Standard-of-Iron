@@ -270,6 +270,9 @@ constexpr std::array k_fields = std::to_array<FieldSpec>({
      DerivedRebuilt,
      "Marks an entity the cleanup system removes this tick."},
     {"StaggerComponent", DerivedRebuilt, "Stagger reaction resolved within the tick."},
+    {"RockfallPushComponent",
+     DerivedRebuilt,
+     "RockfallSystem saves the push and puts this back on the pusher every tick."},
     {"PoiseComponent",
      DerivedRebuilt,
      "Stagger resistance. It regenerates to its maximum after "

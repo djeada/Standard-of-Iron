@@ -711,7 +711,8 @@ void ArenaViewport::paintGL() {
       view.reduced_effects = Game::Accessibility::MotionSettings::reduced_motion();
       Render::GL::render_projectiles(
           m_renderer.get(), res, m_world->render_effects_frame(), &view);
-      Render::GL::render_rockfall(m_renderer.get(), m_world->render_effects_frame());
+      Render::GL::render_rockfall(
+          m_renderer.get(), m_world->render_effects_frame(), &view);
     }
     {
       const auto& beams = m_world->render_effects_frame().healing_beams;

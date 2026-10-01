@@ -317,6 +317,8 @@ auto humanoid_construction_role_for_job(HumanoidWorkJob job) noexcept
     return HumanoidConstructionRole::Reap;
   case HumanoidWorkJob::Butcher:
     return HumanoidConstructionRole::KneelingChisel;
+  case HumanoidWorkJob::Push:
+    return HumanoidConstructionRole::Push;
   case HumanoidWorkJob::Build:
     break;
   }
@@ -334,6 +336,7 @@ auto humanoid_construction_variant_for_role(HumanoidConstructionRole role) noexc
     return 3U;
   case HumanoidConstructionRole::Reap:
     return 4U;
+  case HumanoidConstructionRole::Push:
   case HumanoidConstructionRole::Hammer:
   case HumanoidConstructionRole::None:
     break;
@@ -352,6 +355,8 @@ auto humanoid_construction_clip_for_role(HumanoidConstructionRole role) noexcept
     return k_humanoid_construct_kneel_chisel_clip;
   case HumanoidConstructionRole::Reap:
     return k_humanoid_construct_reap_clip;
+  case HumanoidConstructionRole::Push:
+    return k_humanoid_crew_push_clip;
   case HumanoidConstructionRole::Hammer:
   case HumanoidConstructionRole::None:
     break;
@@ -383,6 +388,7 @@ auto requested_humanoid_clip_variant(const HumanoidClipVariantInputs& inputs) no
   if (inputs.is_constructing && inputs.state == StateId::AttackSword) {
     switch (inputs.construction_role) {
     case HumanoidConstructionRole::Hammer:
+    case HumanoidConstructionRole::Push:
       return 0U;
     case HumanoidConstructionRole::Saw:
       return 1U;

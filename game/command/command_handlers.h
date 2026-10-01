@@ -68,5 +68,6 @@ void apply_ally_call(Engine::Core::World& world, int owner_id, const AllyCall& c
 void apply_ally_appeal_answer(Engine::Core::World& world,
                               int owner_id,
                               const AllyAppealAnswer& answer);
+void apply_roll_stones(Engine::Core::World& world, const RollStones& order);
 
 } // namespace Game::Command::handlers

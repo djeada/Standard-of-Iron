@@ -13,6 +13,7 @@
 #include "game/systems/builder_product_types.h"
 #include "game/systems/combat_system/combat_types.h"
 #include "game/systems/owner_registry.h"
+#include "game/systems/rockfall_system.h"
 #include "game/units/spawn_type.h"
 #include "game/units/squad.h"
 #include "game/util/asset_text.h"
@@ -39,6 +40,7 @@ enum class ActionId {
   Rally,
   Gate,
   Aura,
+  RollStones,
   Unknown
 };
 
@@ -55,25 +57,12 @@ struct ActionStatus {
   QVariantMap detail;
 };
 
-constexpr ActionId k_all_actions[] = {ActionId::Attack,
-                                      ActionId::Guard,
-                                      ActionId::Hold,
-                                      ActionId::Patrol,
-                                      ActionId::Heal,
-                                      ActionId::Stop,
-                                      ActionId::Deliver,
-                                      ActionId::Collect,
-                                      ActionId::AutoGather,
-                                      ActionId::Build,
-                                      ActionId::Repair,
-                                      ActionId::Dismantle,
-                                      ActionId::Formation,
-                                      ActionId::Divide,
-                                      ActionId::Join,
-                                      ActionId::Run,
-                                      ActionId::Rally,
-                                      ActionId::Gate,
-                                      ActionId::Aura};
+constexpr ActionId k_all_actions[] = {
+    ActionId::Attack,     ActionId::Guard,  ActionId::Hold,    ActionId::Patrol,
+    ActionId::Heal,       ActionId::Stop,   ActionId::Deliver, ActionId::Collect,
+    ActionId::AutoGather, ActionId::Build,  ActionId::Repair,  ActionId::Dismantle,
+    ActionId::Formation,  ActionId::Divide, ActionId::Join,    ActionId::Run,
+    ActionId::Rally,      ActionId::Gate,   ActionId::Aura,    ActionId::RollStones};
 
 auto action_to_string(ActionId action) -> QString {
   switch (action) {
@@ -115,6 +104,8 @@ auto action_to_string(ActionId action) -> QString {
     return QStringLiteral("gate");
   case ActionId::Aura:
     return QStringLiteral("aura");
+  case ActionId::RollStones:
+    return QStringLiteral("roll_stones");
   case ActionId::Unknown:
     break;
   }
@@ -179,6 +170,9 @@ auto action_from_string(const QString& action_id) -> ActionId {
   if (action_id == QStringLiteral("aura")) {
     return ActionId::Aura;
   }
+  if (action_id == QStringLiteral("roll_stones")) {
+    return ActionId::RollStones;
+  }
   return ActionId::Unknown;
 }
 
@@ -200,7 +194,24 @@ auto unit_component(const Engine::Core::Entity* entity)
                            : nullptr;
 }
 
-auto unit_is_eligible_for_action(const Engine::Core::Entity& entity,
+// Troops can roll stones only while standing beside a cache their owner holds,
+// so the button only shows up where it does something.
+auto can_roll_stones(Engine::Core::World* world,
+                     const Engine::Core::Entity& entity,
+                     const Engine::Core::UnitComponent* unit,
+                     const Game::Systems::OwnerRegistry& owners) -> bool {
+  if (world == nullptr || unit == nullptr ||
+      unit->owner_id != owners.get_local_player_id() ||
+      !Game::Units::is_troop_spawn(unit->spawn_type)) {
+    return false;
+  }
+  auto const* rockfall = world->get_system<Game::Systems::RockfallSystem>();
+  return rockfall != nullptr &&
+         rockfall->cache_in_reach(*world, entity.get_id()).has_value();
+}
+
+auto unit_is_eligible_for_action(Engine::Core::World* world,
+                                 const Engine::Core::Entity& entity,
                                  ActionId action,
                                  const Game::Systems::OwnerRegistry& owners) -> bool {
   const auto* unit = unit_component(&entity);
@@ -242,6 +253,8 @@ auto unit_is_eligible_for_action(const Engine::Core::Entity& entity,
 
     return entity.get_component<Engine::Core::GateComponent>() != nullptr &&
            unit != nullptr && unit->owner_id == owners.get_local_player_id();
+  case ActionId::RollStones:
+    return can_roll_stones(world, entity, unit, owners);
   case ActionId::Unknown:
     break;
   }
@@ -310,6 +323,7 @@ auto unit_is_active_for_action(const Engine::Core::Entity& entity,
   case ActionId::Rally:
   case ActionId::Divide:
   case ActionId::Join:
+  case ActionId::RollStones:
   case ActionId::Unknown:
     break;
   }
@@ -432,7 +446,8 @@ auto get_status(const App::Core::ActionContext& context,
   const auto& owners = Game::Session::session_for(*context.world).owners();
   for (const auto entity_id : *selected) {
     auto* entity = context.world->get_entity(entity_id);
-    if ((entity == nullptr) || !unit_is_eligible_for_action(*entity, action, owners)) {
+    if ((entity == nullptr) ||
+        !unit_is_eligible_for_action(context.world, *entity, action, owners)) {
       continue;
     }
 
@@ -633,6 +648,8 @@ auto get_mode_availability(Engine::Core::World* world) -> QVariantMap {
   result[QStringLiteral("canRally")] = get_status(context, ActionId::Rally).enabled;
   result[QStringLiteral("canGate")] = get_status(context, ActionId::Gate).enabled;
   result[QStringLiteral("canAura")] = get_status(context, ActionId::Aura).enabled;
+  result[QStringLiteral("canRollStones")] =
+      get_status(context, ActionId::RollStones).enabled;
   result[QStringLiteral("canDivide")] = get_status(context, ActionId::Divide).enabled;
   result[QStringLiteral("canJoin")] =
       get_status(context, ActionId::Join).eligible_count >= 2;
@@ -659,7 +676,8 @@ auto filter_selected_units_for_action(
   const auto& owners = Game::Session::session_for(*world).owners();
   for (const auto entity_id : selected) {
     auto* entity = world->get_entity(entity_id);
-    if ((entity != nullptr) && unit_is_eligible_for_action(*entity, action, owners)) {
+    if ((entity != nullptr) &&
+        unit_is_eligible_for_action(world, *entity, action, owners)) {
       filtered.push_back(entity_id);
     }
   }
@@ -695,6 +713,16 @@ auto action_id_for_cursor_mode(CursorMode mode) -> QString {
     break;
   }
   return {};
+}
+
+auto count_selected_ready_to_roll_stones(Engine::Core::World* world) -> int {
+  const auto* selected = selected_units(world);
+  if (selected == nullptr) {
+    return 0;
+  }
+  return static_cast<int>(
+      filter_selected_units_for_action(world, *selected, QStringLiteral("roll_stones"))
+          .size());
 }
 
 } // namespace App::Core

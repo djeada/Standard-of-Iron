@@ -1,10 +1,12 @@
 #include "rockfall_system.h"
 
+#include <QCoreApplication>
 #include <QJsonArray>
 #include <QJsonObject>
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <numbers>
 
 #include "../audio/cue_ids.h"
@@ -16,6 +18,7 @@
 #include "core/world.h"
 #include "core/world_spatial_index.h"
 #include "game/core/ownership_constants.h"
+#include "game/map/terrain.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/combat_rules.h"
 #include "game/systems/combat_system/combat_hit_resolver.h"
@@ -27,6 +30,8 @@
 namespace Game::Systems {
 
 namespace {
+
+using Index = Engine::Core::WorldSpatialIndex;
 
 constexpr float k_gravity = 14.0F;
 // A rolling solid sphere converts 2/7 of its potential energy into spin.
@@ -41,7 +46,7 @@ constexpr float k_lift_off_clearance = 0.35F;
 constexpr float k_max_speed = 24.0F;
 constexpr float k_speed_kept_in_bends = 0.85F;
 // Casualties are flung at most this fast however hard the boulder hits, so
-// bodies land in the pass rather than on the ridges.
+// bodies land on the slope rather than across the valley.
 constexpr float k_max_launch_speed = 6.0F;
 constexpr float k_settle_speed = 0.45F;
 constexpr float k_min_roll_seconds = 1.0F;
@@ -53,12 +58,27 @@ constexpr float k_momentum_kept_per_strike = 0.82F;
 // A boulder this far above a troop's ground bounds over its heads.
 constexpr float k_overhead_clearance = 1.6F;
 constexpr float k_dust_lifetime = 1.3F;
-constexpr float k_trail_dust_interval = 0.22F;
-constexpr float k_trail_dust_speed = 4.0F;
+constexpr float k_trail_dust_interval = 0.18F;
+constexpr float k_trail_dust_speed = 3.5F;
 constexpr float k_audible_landing_speed = 5.0F;
 constexpr float k_dusty_landing_speed = 3.0F;
-constexpr std::size_t k_max_dust = 96;
+constexpr std::size_t k_max_dust = 128;
 constexpr float k_settled_sink_seconds = 1.2F;
+
+// Hill caches: a ramp has to climb at least this much to be worth guarding.
+constexpr float k_min_ramp_rise = 1.5F;
+// The pile sits this far past the top of the ramp, on the plateau edge.
+constexpr float k_cache_setback = 1.2F;
+// The ramp's crest is where it has made this share of its full climb.
+constexpr float k_crest_fraction = 0.92F;
+constexpr int k_crest_samples = 48;
+// Half the width of the ramp corridor a hill cache covers.
+constexpr float k_ramp_half_width = 4.5F;
+// An AI rolls a hill cache once climbers are within this share of the ramp
+// from its crest.
+constexpr float k_ai_release_reach = 0.7F;
+// Two ramps whose tops are this close share one cache.
+constexpr float k_cache_merge_distance = 5.0F;
 
 [[nodiscard]] auto hash01(std::uint64_t seed) -> float {
   std::uint64_t value = seed * 0x9e3779b97f4a7c15ULL;
@@ -86,6 +106,8 @@ authored_to_world(float coord, int grid_size, float tile_size) -> float {
     return "ai";
   case Game::Map::RockfallTriggerMode::Scripted:
     return "scripted";
+  case Game::Map::RockfallTriggerMode::Claimable:
+    return "claim";
   }
   return "zone";
 }
@@ -108,6 +130,23 @@ void publish_cue_at(const char* cue_id, const QVector3D& where) {
   Engine::Core::AudioCueEvent cue(cue_id);
   cue.at(where.x(), where.y(), where.z());
   Engine::Core::EventManager::instance().publish(cue);
+}
+
+void announce_to(int owner_id, const QString& text, const char* cue_id) {
+  if (Game::Core::is_neutral_owner(owner_id)) {
+    return;
+  }
+  Engine::Core::EventManager::instance().publish(
+      Engine::Core::MissionAnnouncementEvent::for_owner(owner_id, text));
+  if (cue_id != nullptr) {
+    Engine::Core::EventManager::instance().publish(
+        Engine::Core::AudioCueEvent::for_owner(owner_id, cue_id));
+  }
+}
+
+[[nodiscard]] auto is_usable_troop(const Index::Entry& entry) -> bool {
+  return entry.health > 0 && !entry.is(Index::k_building) &&
+         !entry.is(Index::k_wildlife) && !entry.is(Index::k_pending_removal);
 }
 
 } // namespace
@@ -134,6 +173,89 @@ auto RockfallSystem::to_world(const Game::Map::MapDefinition& map_definition,
   return result;
 }
 
+void RockfallSystem::add_trap(const Game::Map::RockfallTrap& definition,
+                              const QVector3D& release_world,
+                              const QVector3D& target_world,
+                              bool hill_cache) {
+  RuntimeTrap trap;
+  trap.definition = definition;
+  trap.release_world = release_world;
+  trap.target_world = target_world;
+  QVector3D const downhill = flat(target_world - release_world);
+  trap.downhill = downhill.lengthSquared() > 1.0e-4F ? downhill.normalized()
+                                                     : QVector3D(1.0F, 0.0F, 0.0F);
+  trap.owner_id = definition.owner_id;
+  trap.hill_cache = hill_cache;
+  m_traps.push_back(std::move(trap));
+}
+
+void RockfallSystem::stage_hill_caches() {
+  auto const* height_map = m_services.terrain.get_height_map();
+  if (height_map == nullptr) {
+    return;
+  }
+  auto const& terrain = m_services.terrain;
+  int index = 0;
+  for (auto const& line : height_map->hill_navigation().entrance_centerlines) {
+    QVector3D top = line.end;
+    QVector3D foot = line.start;
+    top.setY(terrain.get_terrain_height(top.x(), top.z()));
+    foot.setY(terrain.get_terrain_height(foot.x(), foot.z()));
+    if (foot.y() > top.y()) {
+      std::swap(top, foot);
+    }
+    if (top.y() - foot.y() < k_min_ramp_rise) {
+      continue;
+    }
+    // The centreline runs on across the plateau; the stones belong where the
+    // ramp meets its edge, so walk up the ramp until it stops climbing.
+    QVector3D const uphill = flat(top - foot).normalized();
+    float const crest_height = foot.y() + (top.y() - foot.y()) * k_crest_fraction;
+    QVector3D crest = top;
+    for (int step = 1; step <= k_crest_samples; ++step) {
+      QVector3D const probe =
+          foot + (top - foot) * (static_cast<float>(step) / k_crest_samples);
+      if (terrain.get_terrain_height(probe.x(), probe.z()) >= crest_height) {
+        crest = probe;
+        break;
+      }
+    }
+    crest.setY(terrain.get_terrain_height(crest.x(), crest.z()));
+    top = crest;
+    QVector3D cache = top + uphill * k_cache_setback;
+    cache.setY(terrain.get_terrain_height(cache.x(), cache.z()));
+    bool const duplicate =
+        std::any_of(m_traps.begin(), m_traps.end(), [&](const RuntimeTrap& other) {
+          return other.hill_cache &&
+                 flat(other.release_world - cache).length() < k_cache_merge_distance;
+        });
+    if (duplicate) {
+      continue;
+    }
+
+    // The kill zone is the ramp itself; the stones are aimed at its foot.
+    QVector3D const zone_centre = (top + foot) * 0.5F;
+    float const ramp_length = flat(top - foot).length();
+    Game::Map::RockfallTrap definition;
+    definition.id = QStringLiteral("hill_cache_%1").arg(++index);
+    definition.trigger = Game::Map::RockfallTriggerMode::Claimable;
+    definition.owner_id = Game::Core::NEUTRAL_OWNER_ID;
+    definition.release_x = cache.x();
+    definition.release_z = cache.z();
+    definition.target_x = zone_centre.x();
+    definition.target_z = zone_centre.z();
+    definition.zone_radius = std::max(4.0F, ramp_length * 0.5F + 1.5F);
+    definition.boulder_count = 5;
+    definition.boulder_radius = 0.6F;
+    definition.release_spread = 1.6F;
+    definition.release_interval = 0.22F;
+    definition.damage = 60;
+    definition.casualty_fraction = 0.5F;
+    definition.ai_min_targets = 1;
+    add_trap(definition, cache, foot, true);
+  }
+}
+
 void RockfallSystem::configure(const Game::Map::MapDefinition& map_definition) {
   m_traps.clear();
   m_boulders.clear();
@@ -146,13 +268,13 @@ void RockfallSystem::configure(const Game::Map::MapDefinition& map_definition) {
 
   m_traps.reserve(map_definition.rockfall_traps.size());
   for (const auto& definition : map_definition.rockfall_traps) {
-    RuntimeTrap trap;
-    trap.definition = definition;
-    trap.release_world =
-        to_world(map_definition, definition.release_x, definition.release_z);
-    trap.target_world =
-        to_world(map_definition, definition.target_x, definition.target_z);
-    m_traps.push_back(std::move(trap));
+    add_trap(definition,
+             to_world(map_definition, definition.release_x, definition.release_z),
+             to_world(map_definition, definition.target_x, definition.target_z),
+             false);
+  }
+  if (map_definition.hill_rockfall_caches) {
+    stage_hill_caches();
   }
 }
 
@@ -165,9 +287,14 @@ auto RockfallSystem::trap(std::size_t index) const -> TrapView {
           .release_world = runtime.release_world,
           .target_world = runtime.target_world,
           .trigger = runtime.definition.trigger,
-          .owner_id = runtime.definition.owner_id,
+          .owner_id = runtime.owner_id,
           .times_fired = runtime.times_fired,
-          .armed = runtime.armed && runtime.pending_releases == 0};
+          .armed =
+              runtime.armed && runtime.pending_releases == 0 && runtime.pusher == 0,
+          .spent = runtime.spent,
+          .pushing = runtime.pusher != 0,
+          .hill_cache = runtime.hill_cache,
+          .hostile_troops_in_zone = runtime.hostile_in_zone};
 }
 
 auto RockfallSystem::boulders() const -> std::vector<BoulderView> {
@@ -190,13 +317,101 @@ auto RockfallSystem::trigger(const QString& trap_id) -> bool {
     if (trap.definition.id != trap_id) {
       continue;
     }
-    if (!trap.armed || trap.pending_releases > 0) {
+    if (!trap.armed || trap.pending_releases > 0 || trap.pusher != 0) {
       return false;
     }
     fire(trap);
     return true;
   }
   return false;
+}
+
+auto RockfallSystem::cache_in_reach(Engine::Core::World& world,
+                                    Engine::Core::EntityID troop) const
+    -> std::optional<std::size_t> {
+  auto const* unit = world.try_get<Engine::Core::UnitComponent>(troop);
+  auto const* transform = world.try_get<Engine::Core::TransformComponent>(troop);
+  if (unit == nullptr || transform == nullptr || unit->health <= 0 ||
+      !Game::Units::is_troop_spawn(unit->spawn_type)) {
+    return std::nullopt;
+  }
+  QVector3D const at(transform->position.x, 0.0F, transform->position.z);
+  std::optional<std::size_t> best;
+  float best_distance = k_rockfall_use_radius;
+  for (std::size_t index = 0; index < m_traps.size(); ++index) {
+    auto const& trap = m_traps[index];
+    if (!trap.armed || trap.spent || trap.pending_releases > 0 || trap.pusher != 0 ||
+        trap.owner_id != unit->owner_id ||
+        trap.definition.trigger == Game::Map::RockfallTriggerMode::Scripted) {
+      continue;
+    }
+    float const distance = flat(trap.release_world - at).length();
+    if (distance <= best_distance) {
+      best_distance = distance;
+      best = index;
+    }
+  }
+  return best;
+}
+
+auto RockfallSystem::order_release(Engine::Core::World& world,
+                                   Engine::Core::EntityID troop) -> bool {
+  auto const index = cache_in_reach(world, troop);
+  if (!index.has_value()) {
+    return false;
+  }
+  begin_push(world, m_traps[*index], troop);
+  return true;
+}
+
+void RockfallSystem::begin_push(Engine::Core::World& world,
+                                RuntimeTrap& trap,
+                                Engine::Core::EntityID troop) {
+  trap.pusher = troop;
+  trap.push_remaining = k_rockfall_push_seconds;
+  if (auto* movement = world.try_get<Engine::Core::MovementComponent>(troop)) {
+    movement->stop();
+  }
+  if (world.try_get<Engine::Core::RockfallPushComponent>(troop) == nullptr) {
+    world.emplace<Engine::Core::RockfallPushComponent>(troop);
+  }
+}
+
+void RockfallSystem::advance_push(Engine::Core::World& world,
+                                  RuntimeTrap& trap,
+                                  float delta_time) {
+  auto const pusher = trap.pusher;
+  auto const* unit = world.try_get<Engine::Core::UnitComponent>(pusher);
+  auto* transform = world.try_get<Engine::Core::TransformComponent>(pusher);
+  if (unit == nullptr || transform == nullptr || unit->health <= 0 ||
+      unit->owner_id != trap.owner_id) {
+    // The men at the pile were cut down or driven off before it went.
+    trap.pusher = 0;
+    trap.push_remaining = 0.0F;
+    world.remove<Engine::Core::RockfallPushComponent>(pusher);
+    return;
+  }
+  transform->desired_yaw = std::atan2(trap.downhill.x(), trap.downhill.z()) * 180.0F /
+                           std::numbers::pi_v<float>;
+  transform->has_desired_yaw = true;
+  if (auto* movement = world.try_get<Engine::Core::MovementComponent>(pusher)) {
+    movement->stop();
+  }
+  auto* push = world.try_get<Engine::Core::RockfallPushComponent>(pusher);
+  if (push == nullptr) {
+    push = world.emplace<Engine::Core::RockfallPushComponent>(pusher);
+  }
+  if (push != nullptr) {
+    push->elapsed = k_rockfall_push_seconds - trap.push_remaining;
+  }
+
+  trap.push_remaining -= delta_time;
+  if (trap.push_remaining <= 0.0F) {
+    trap.pusher = 0;
+    trap.push_remaining = 0.0F;
+    world.remove<Engine::Core::RockfallPushComponent>(pusher);
+    fire(trap);
+  }
 }
 
 void RockfallSystem::fire(RuntimeTrap& trap) {
@@ -221,19 +436,31 @@ auto RockfallSystem::is_hostile(int trap_owner, int other_owner) const -> bool {
 }
 
 auto RockfallSystem::hostile_troops_in_zone(Engine::Core::World& world,
-                                            const RuntimeTrap& trap) const -> int {
-  using Index = Engine::Core::WorldSpatialIndex;
-  using Entry = Index::Entry;
+                                            const RuntimeTrap& trap,
+                                            float reach) const -> int {
   int count = 0;
+  float const zone_x =
+      trap.hill_cache ? trap.definition.target_x : trap.target_world.x();
+  float const zone_z =
+      trap.hill_cache ? trap.definition.target_z : trap.target_world.z();
+  // A hill cache covers its ramp: a corridor from the crest down to the foot.
+  // `reach` is how far down that corridor counts, from the crest.
+  QVector3D const crest = flat(trap.release_world);
+  QVector3D const ramp = flat(trap.target_world) - crest;
+  float const ramp_length_sq = std::max(ramp.lengthSquared(), 1.0e-4F);
   world.spatial_index().for_each_in_radius(
-      trap.target_world.x(),
-      trap.target_world.z(),
-      trap.definition.zone_radius,
-      [&](const Entry& entry) {
-        if (entry.health <= 0 || entry.is(Index::k_building) ||
-            entry.is(Index::k_wildlife) || entry.is(Index::k_pending_removal) ||
-            !is_hostile(trap.definition.owner_id, entry.owner_id)) {
+      zone_x, zone_z, trap.definition.zone_radius, [&](const Index::Entry& entry) {
+        if (!is_usable_troop(entry) || !is_hostile(trap.owner_id, entry.owner_id)) {
           return;
+        }
+        if (trap.hill_cache) {
+          QVector3D const at(entry.x, 0.0F, entry.z);
+          float const along = QVector3D::dotProduct(at - crest, ramp) / ramp_length_sq;
+          QVector3D const nearest = crest + ramp * std::clamp(along, 0.0F, 1.0F);
+          if (along < 0.0F || along > reach ||
+              (at - nearest).length() > k_ramp_half_width) {
+            return;
+          }
         }
         const auto* unit = world.try_get<Engine::Core::UnitComponent>(entry.id);
         if (unit == nullptr || !Game::Units::is_troop_spawn(unit->spawn_type)) {
@@ -244,6 +471,107 @@ auto RockfallSystem::hostile_troops_in_zone(Engine::Core::World& world,
   return count;
 }
 
+auto RockfallSystem::nearest_own_troop(Engine::Core::World& world,
+                                       const RuntimeTrap& trap) const
+    -> Engine::Core::EntityID {
+  Engine::Core::EntityID best = 0;
+  float best_distance = std::numeric_limits<float>::max();
+  world.spatial_index().for_each_in_radius(
+      trap.release_world.x(),
+      trap.release_world.z(),
+      k_rockfall_use_radius,
+      [&](const Index::Entry& entry) {
+        if (!is_usable_troop(entry) || entry.owner_id != trap.owner_id) {
+          return;
+        }
+        const auto* unit = world.try_get<Engine::Core::UnitComponent>(entry.id);
+        if (unit == nullptr || !Game::Units::is_troop_spawn(unit->spawn_type)) {
+          return;
+        }
+        float const dx = entry.x - trap.release_world.x();
+        float const dz = entry.z - trap.release_world.z();
+        float const distance = dx * dx + dz * dz;
+        if (distance < best_distance) {
+          best_distance = distance;
+          best = entry.id;
+        }
+      });
+  return best;
+}
+
+void RockfallSystem::update_claim(Engine::Core::World& world, RuntimeTrap& trap) {
+  if (trap.definition.trigger != Game::Map::RockfallTriggerMode::Claimable ||
+      !trap.armed || trap.pusher != 0) {
+    return;
+  }
+  bool owner_present = false;
+  int challenger = Game::Core::NEUTRAL_OWNER_ID;
+  float challenger_distance = std::numeric_limits<float>::max();
+  world.spatial_index().for_each_in_radius(
+      trap.release_world.x(),
+      trap.release_world.z(),
+      k_rockfall_claim_radius,
+      [&](const Index::Entry& entry) {
+        if (!is_usable_troop(entry) || entry.is(Index::k_undead) ||
+            Game::Core::is_neutral_owner(entry.owner_id)) {
+          return;
+        }
+        const auto* unit = world.try_get<Engine::Core::UnitComponent>(entry.id);
+        if (unit == nullptr || !Game::Units::is_troop_spawn(unit->spawn_type)) {
+          return;
+        }
+        if (entry.owner_id == trap.owner_id) {
+          owner_present = true;
+          return;
+        }
+        float const dx = entry.x - trap.release_world.x();
+        float const dz = entry.z - trap.release_world.z();
+        float const distance = dx * dx + dz * dz;
+        if (distance < challenger_distance) {
+          challenger_distance = distance;
+          challenger = entry.owner_id;
+        }
+      });
+  if (owner_present || Game::Core::is_neutral_owner(challenger)) {
+    return;
+  }
+  int const previous = trap.owner_id;
+  trap.owner_id = challenger;
+  trap.ai_dwell = 0.0F;
+  trap.warned_owner = false;
+  if (!m_services.owners.is_ai(challenger)) {
+    announce_to(challenger,
+                QCoreApplication::translate(
+                    "RockfallSystem",
+                    "Your men hold the stones above the slope. Select troops beside "
+                    "them and order Roll Stones when the enemy climbs."),
+                Game::Audio::Cue::k_alert_objective_complete);
+  }
+  if (!Game::Core::is_neutral_owner(previous) && !m_services.owners.is_ai(previous)) {
+    announce_to(
+        previous,
+        QCoreApplication::translate("RockfallSystem",
+                                    "The enemy has taken your stones on the heights."),
+        nullptr);
+  }
+}
+
+void RockfallSystem::warn_owner(RuntimeTrap& trap) {
+  if (trap.warned_owner ||
+      trap.definition.trigger != Game::Map::RockfallTriggerMode::Claimable) {
+    return;
+  }
+  trap.warned_owner = true;
+  if (m_services.owners.is_ai(trap.owner_id)) {
+    return;
+  }
+  announce_to(
+      trap.owner_id,
+      QCoreApplication::translate("RockfallSystem",
+                                  "Enemies are climbing below your stones. Roll them!"),
+      nullptr);
+}
+
 void RockfallSystem::evaluate_auto_trigger(Engine::Core::World& world,
                                            RuntimeTrap& trap,
                                            float delta_time) {
@@ -252,23 +580,43 @@ void RockfallSystem::evaluate_auto_trigger(Engine::Core::World& world,
   case Mode::Scripted:
     return;
   case Mode::Zone:
-    if (hostile_troops_in_zone(world, trap) > 0) {
+    if (trap.hostile_in_zone > 0) {
       fire(trap);
     }
     return;
-  case Mode::AiDefender: {
-    if (!m_services.owners.is_ai(trap.definition.owner_id)) {
+  case Mode::AiDefender:
+  case Mode::Claimable: {
+    if (trap.hostile_in_zone == 0) {
+      trap.ai_dwell = 0.0F;
+      trap.warned_owner = false;
       return;
     }
-    int const targets = hostile_troops_in_zone(world, trap);
-    if (targets == 0) {
-      trap.ai_dwell = 0.0F;
+    if (Game::Core::is_neutral_owner(trap.owner_id)) {
+      return;
+    }
+    warn_owner(trap);
+    if (!m_services.owners.is_ai(trap.owner_id)) {
+      return;
+    }
+    // The stones take a while to heave and to roll; an AI lets them go once
+    // the climbers are far enough up the ramp to be caught on it.
+    int const in_reach = trap.hill_cache
+                             ? hostile_troops_in_zone(world, trap, k_ai_release_reach)
+                             : trap.hostile_in_zone;
+    if (in_reach == 0) {
       return;
     }
     trap.ai_dwell += delta_time;
-    if (targets >= trap.definition.ai_min_targets ||
-        trap.ai_dwell >= k_rockfall_ai_patience_seconds) {
+    if (in_reach < trap.definition.ai_min_targets &&
+        trap.ai_dwell < k_rockfall_ai_patience_seconds) {
+      return;
+    }
+    if (trap.definition.trigger == Mode::AiDefender) {
       fire(trap);
+      return;
+    }
+    if (auto const troop = nearest_own_troop(world, trap); troop != 0) {
+      begin_push(world, trap, troop);
     }
     return;
   }
@@ -280,11 +628,7 @@ void RockfallSystem::release_boulder(RuntimeTrap& trap, int trap_index) {
   std::uint64_t const seed =
       (static_cast<std::uint64_t>(trap_index + 1) << 32U) ^ ++m_release_sequence;
 
-  QVector3D aim = flat(trap.target_world - trap.release_world);
-  if (aim.lengthSquared() < 1.0e-4F) {
-    aim = QVector3D(1.0F, 0.0F, 0.0F);
-  }
-  aim.normalize();
+  QVector3D const aim = trap.downhill;
   QVector3D const lateral(-aim.z(), 0.0F, aim.x());
 
   int const count = std::max(1, definition.boulder_count);
@@ -293,11 +637,12 @@ void RockfallSystem::release_boulder(RuntimeTrap& trap, int trap_index) {
       count > 1 ? static_cast<float>(index) / static_cast<float>(count - 1) - 0.5F
                 : 0.0F;
   float const lateral_offset =
-      definition.release_spread * fan + (hash01(seed ^ 0x51ULL) - 0.5F) * 0.8F;
-  float const depth_offset = (hash01(seed ^ 0xa3ULL) - 0.5F) * 1.2F;
+      definition.release_spread * fan + (hash01(seed ^ 0x51ULL) - 0.5F) * 0.6F;
+  float const depth_offset = (hash01(seed ^ 0xa3ULL) - 0.5F) * 0.8F;
 
   Boulder boulder;
   boulder.trap_index = trap_index;
+  boulder.seed = static_cast<std::uint32_t>(seed ^ (seed >> 32U));
   boulder.radius = definition.boulder_radius * (0.8F + 0.4F * hash01(seed ^ 0x7fULL));
   QVector3D position =
       trap.release_world + lateral * lateral_offset + aim * depth_offset;
@@ -305,7 +650,7 @@ void RockfallSystem::release_boulder(RuntimeTrap& trap, int trap_index) {
                 boulder.radius);
   boulder.position = position;
   boulder.velocity = aim * (k_push_speed + 1.5F * hash01(seed ^ 0x3cULL)) +
-                     lateral * (hash01(seed ^ 0x99ULL) - 0.5F) * 0.8F;
+                     lateral * (hash01(seed ^ 0x99ULL) - 0.5F) * 0.6F;
   QVector3D const tumble_axis(hash01(seed ^ 0x11ULL) - 0.5F,
                               hash01(seed ^ 0x22ULL) - 0.5F,
                               hash01(seed ^ 0x33ULL) - 0.5F);
@@ -314,14 +659,11 @@ void RockfallSystem::release_boulder(RuntimeTrap& trap, int trap_index) {
                                             : QVector3D(0.0F, 1.0F, 0.0F),
       360.0F * hash01(seed ^ 0x44ULL));
   add_dust(position - QVector3D(0.0F, boulder.radius * 0.6F, 0.0F),
-           boulder.radius * 1.2F);
+           boulder.radius * 1.4F);
   m_boulders.push_back(std::move(boulder));
 }
 
-void RockfallSystem::step_boulder(Engine::Core::World& world,
-                                  Boulder& boulder,
-                                  float dt) {
-  (void)world;
+void RockfallSystem::step_boulder(Boulder& boulder, float dt) {
   if (boulder.settled) {
     return;
   }
@@ -348,7 +690,7 @@ void RockfallSystem::step_boulder(Engine::Core::World& world,
         boulder.airborne = impact * k_restitution > k_rebound_speed;
         if (impact > k_dusty_landing_speed) {
           add_dust(boulder.position - QVector3D(0.0F, radius * 0.8F, 0.0F),
-                   radius * std::clamp(impact / 8.0F, 0.6F, 1.8F));
+                   radius * std::clamp(impact / 7.0F, 0.8F, 2.2F));
         }
         if (impact > k_audible_landing_speed) {
           publish_cue_at(Game::Audio::Cue::k_combat_siege_impact, boulder.position);
@@ -395,7 +737,7 @@ void RockfallSystem::step_boulder(Engine::Core::World& world,
       if (boulder.dust_timer >= k_trail_dust_interval) {
         boulder.dust_timer = 0.0F;
         add_dust(boulder.position - QVector3D(0.0F, radius * 0.85F, 0.0F),
-                 radius * 0.55F);
+                 radius * std::clamp(velocity.length() / 9.0F, 0.5F, 1.1F));
       }
     }
   }
@@ -443,20 +785,16 @@ void RockfallSystem::strike_troops(Engine::Core::World& world, Boulder& boulder)
   }
   int const trap_owner =
       boulder.trap_index >= 0 && boulder.trap_index < static_cast<int>(m_traps.size())
-          ? m_traps[static_cast<std::size_t>(boulder.trap_index)].definition.owner_id
+          ? m_traps[static_cast<std::size_t>(boulder.trap_index)].owner_id
           : Game::Core::NEUTRAL_OWNER_ID;
 
-  using Index = Engine::Core::WorldSpatialIndex;
-  using Entry = Index::Entry;
   std::vector<Engine::Core::EntityID> victims;
   world.spatial_index().for_each_in_radius(
       boulder.position.x(),
       boulder.position.z(),
       boulder.radius + k_rockfall_troop_reach,
-      [&](const Entry& entry) {
-        if (entry.health <= 0 || entry.is(Index::k_building) ||
-            entry.is(Index::k_wildlife) || entry.is(Index::k_pending_removal) ||
-            !is_hostile(trap_owner, entry.owner_id) ||
+      [&](const Index::Entry& entry) {
+        if (!is_usable_troop(entry) || !is_hostile(trap_owner, entry.owner_id) ||
             std::find(boulder.struck.begin(), boulder.struck.end(), entry.id) !=
                 boulder.struck.end()) {
           return;
@@ -538,7 +876,7 @@ void RockfallSystem::strike(Engine::Core::World& world,
   }
 
   boulder.velocity *= k_momentum_kept_per_strike;
-  add_dust(contact, boulder.radius * 1.3F);
+  add_dust(contact, boulder.radius * 1.6F);
 }
 
 void RockfallSystem::add_dust(const QVector3D& position, float scale) {
@@ -559,16 +897,28 @@ void RockfallSystem::update(Engine::Core::World* world, float delta_time) {
 
     for (std::size_t index = 0; index < m_traps.size(); ++index) {
       auto& trap = m_traps[index];
-      if (!trap.armed && trap.pending_releases == 0 &&
-          trap.definition.rearm_seconds > 0.0F) {
-        trap.rearm_remaining -= dt;
-        if (trap.rearm_remaining <= 0.0F) {
-          trap.rearm_remaining = 0.0F;
-          trap.armed = true;
+      if (!trap.armed && !trap.spent && trap.pending_releases == 0 &&
+          trap.pusher == 0) {
+        if (trap.definition.rearm_seconds > 0.0F) {
+          trap.rearm_remaining -= dt;
+          if (trap.rearm_remaining <= 0.0F) {
+            trap.rearm_remaining = 0.0F;
+            trap.armed = true;
+          }
+        } else {
+          trap.spent = true;
         }
       }
-      if (trap.armed) {
-        evaluate_auto_trigger(*world, trap, dt);
+      if (trap.armed && !trap.spent) {
+        update_claim(*world, trap);
+        trap.hostile_in_zone = hostile_troops_in_zone(*world, trap, 1.0F);
+        if (trap.pusher != 0) {
+          advance_push(*world, trap, dt);
+        } else {
+          evaluate_auto_trigger(*world, trap, dt);
+        }
+      } else {
+        trap.hostile_in_zone = 0;
       }
       if (trap.pending_releases > 0) {
         trap.release_timer -= dt;
@@ -588,7 +938,7 @@ void RockfallSystem::update(Engine::Core::World* world, float delta_time) {
     float const h = dt / static_cast<float>(substeps);
     for (auto& boulder : m_boulders) {
       for (int step = 0; step < substeps && !boulder.settled; ++step) {
-        step_boulder(*world, boulder, h);
+        step_boulder(boulder, h);
         strike_troops(*world, boulder);
       }
       if (boulder.settled) {
@@ -625,8 +975,40 @@ void RockfallSystem::publish_render_views(Engine::Core::World& world) const {
     frame.rockfall_boulders.push_back({.position = boulder.position,
                                        .orientation = boulder.orientation,
                                        .radius = boulder.radius,
-                                       .sink = sink});
+                                       .sink = sink,
+                                       .seed = boulder.seed});
   }
+
+  frame.rockfall_caches.clear();
+  for (std::size_t index = 0; index < m_traps.size(); ++index) {
+    auto const& trap = m_traps[index];
+    int const left = trap.armed ? trap.definition.boulder_count : trap.pending_releases;
+    if (trap.spent || left <= 0) {
+      continue;
+    }
+    float const zone_x =
+        trap.hill_cache ? trap.definition.target_x : trap.target_world.x();
+    float const zone_z =
+        trap.hill_cache ? trap.definition.target_z : trap.target_world.z();
+    frame.rockfall_caches.push_back(
+        {.position = trap.release_world,
+         .downhill = trap.downhill,
+         .zone_target = QVector3D(
+             zone_x, m_services.terrain.get_terrain_height(zone_x, zone_z), zone_z),
+         .zone_radius = trap.definition.zone_radius,
+         .boulder_radius = trap.definition.boulder_radius,
+         .boulders_left = left,
+         .owner_id = trap.owner_id,
+         .push_progress =
+             trap.pusher != 0
+                 ? std::clamp(
+                       1.0F - trap.push_remaining / k_rockfall_push_seconds, 0.0F, 1.0F)
+                 : -1.0F,
+         .threatened = trap.hostile_in_zone > 0,
+         .armed = trap.armed,
+         .seed = static_cast<std::uint32_t>((index + 1U) * 2654435761U)});
+  }
+
   frame.rockfall_dust.clear();
   frame.rockfall_dust.reserve(m_dust.size());
   for (const auto& dust : m_dust) {
@@ -641,13 +1023,18 @@ auto RockfallSystem::serialize_state() const -> QJsonObject {
     QJsonObject obj;
     obj.insert(QStringLiteral("id"), trap.definition.id);
     obj.insert(QStringLiteral("trigger"), trigger_name(trap.definition.trigger));
+    obj.insert(QStringLiteral("owner"), trap.owner_id);
     obj.insert(QStringLiteral("armed"), trap.armed);
+    obj.insert(QStringLiteral("spent"), trap.spent);
     obj.insert(QStringLiteral("times_fired"), trap.times_fired);
     obj.insert(QStringLiteral("rearm_remaining"), trap.rearm_remaining);
     obj.insert(QStringLiteral("pending_releases"), trap.pending_releases);
     obj.insert(QStringLiteral("released_in_volley"), trap.released_in_volley);
     obj.insert(QStringLiteral("release_timer"), trap.release_timer);
     obj.insert(QStringLiteral("ai_dwell"), trap.ai_dwell);
+    obj.insert(QStringLiteral("pusher"), static_cast<qint64>(trap.pusher));
+    obj.insert(QStringLiteral("push_remaining"), trap.push_remaining);
+    obj.insert(QStringLiteral("warned_owner"), trap.warned_owner);
     traps.append(obj);
   }
 
@@ -667,6 +1054,7 @@ auto RockfallSystem::serialize_state() const -> QJsonObject {
     obj.insert(QStringLiteral("airborne"), boulder.airborne);
     obj.insert(QStringLiteral("settled"), boulder.settled);
     obj.insert(QStringLiteral("trap"), boulder.trap_index);
+    obj.insert(QStringLiteral("seed"), static_cast<qint64>(boulder.seed));
     QJsonArray struck;
     for (auto const id : boulder.struck) {
       struck.append(static_cast<qint64>(id));
@@ -695,7 +1083,9 @@ void RockfallSystem::restore_state(const QJsonObject& state) {
     if (it == m_traps.end()) {
       continue;
     }
+    it->owner_id = obj.value(QStringLiteral("owner")).toInt(it->owner_id);
     it->armed = obj.value(QStringLiteral("armed")).toBool(true);
+    it->spent = obj.value(QStringLiteral("spent")).toBool(false);
     it->times_fired = obj.value(QStringLiteral("times_fired")).toInt();
     it->rearm_remaining =
         float(obj.value(QStringLiteral("rearm_remaining")).toDouble());
@@ -703,6 +1093,10 @@ void RockfallSystem::restore_state(const QJsonObject& state) {
     it->released_in_volley = obj.value(QStringLiteral("released_in_volley")).toInt();
     it->release_timer = float(obj.value(QStringLiteral("release_timer")).toDouble());
     it->ai_dwell = float(obj.value(QStringLiteral("ai_dwell")).toDouble());
+    it->pusher = static_cast<Engine::Core::EntityID>(
+        obj.value(QStringLiteral("pusher")).toInteger());
+    it->push_remaining = float(obj.value(QStringLiteral("push_remaining")).toDouble());
+    it->warned_owner = obj.value(QStringLiteral("warned_owner")).toBool();
   }
 
   m_boulders.clear();
@@ -725,6 +1119,8 @@ void RockfallSystem::restore_state(const QJsonObject& state) {
     boulder.airborne = obj.value(QStringLiteral("airborne")).toBool();
     boulder.settled = obj.value(QStringLiteral("settled")).toBool();
     boulder.trap_index = obj.value(QStringLiteral("trap")).toInt(-1);
+    boulder.seed =
+        static_cast<std::uint32_t>(obj.value(QStringLiteral("seed")).toInteger());
     for (const auto id : obj.value(QStringLiteral("struck")).toArray()) {
       boulder.struck.push_back(static_cast<Engine::Core::EntityID>(id.toInteger()));
     }

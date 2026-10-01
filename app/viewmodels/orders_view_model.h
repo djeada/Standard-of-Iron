@@ -53,6 +53,7 @@ public:
   Q_INVOKABLE void stop();
   Q_INVOKABLE void hold();
   Q_INVOKABLE void gate();
+  Q_INVOKABLE void roll_stones();
   Q_INVOKABLE void guard();
   Q_INVOKABLE void run();
   Q_INVOKABLE void heal();
@@ -60,6 +61,7 @@ public:
 
   Q_INVOKABLE [[nodiscard]] QVariantMap action_states() const;
   Q_INVOKABLE [[nodiscard]] QString command_mode() const;
+  Q_INVOKABLE [[nodiscard]] int stones_ready() const;
   Q_INVOKABLE [[nodiscard]] QString toggle_state(const QString& mode) const;
   Q_INVOKABLE [[nodiscard]] QVariantMap mode_availability() const;
   Q_INVOKABLE [[nodiscard]] bool has_commandable_selection() const;
