@@ -1756,6 +1756,27 @@ Three acceptance kinds back these scenes:
 Scenarios that need two owners on one team declare it with `owner_teams`, which
 the Arena applies to the owner registry before spawning.
 
+### Wall walk and siege engines
+
+A palisade carries a timber balcony on its town face, with a stair every fourth
+straight segment (`game/core/wall_walk_geometry.h` holds the
+measurements both the simulation and the renderer use). Four scenes cover it:
+
+- `wall_walk_garrison` orders a town's infantry onto its own wall: the troop walks
+  to the nearest stair, climbs, files along the balcony in single file, then is
+  ordered back into the street and comes down the nearest stair to it.
+- `siege_tower_balcony_assault` pushes a tower against the same town while its
+  garrison mans the balcony. The tower stops between two posts, lowers its
+  bridge onto the stake tips and its company crosses one man at a time onto the
+  balcony, where the two companies fight.
+- `siege_tower_wall_assault` is the short original: a tower against a bare run.
+- `siege_ram_gate_breach` pushes a ram, crewed inside its hide roof, against a
+  gate until it breaks.
+
+Frame the balcony from the town side (`--scenario-yaw` around 20) and the
+engines from the field side (around 160-200); the stakes hide the balcony from
+outside.
+
 ## Structure lifecycle
 
 Every state a structure passes through has to read on its own at gameplay zoom,

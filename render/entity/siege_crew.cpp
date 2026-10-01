@@ -95,7 +95,66 @@ constexpr std::array<Station, 4> k_ballista_rest{{
     {},
 }};
 
-auto stations_for(bool ballista, SiegeCrewMode mode) -> const std::array<Station, 4>& {
+// The ram's crew works inside under the roof: two each side of the beam,
+// shoving the frame along or swinging the beam on its chains.
+constexpr std::array<Station, 4> k_ram_push{{
+    {-0.24F, -0.40F, 0.0F, 0.0F, k_face_forward, k_humanoid_crew_push_clip, 0.0F},
+    {0.24F, -0.40F, 0.0F, 0.0F, k_face_forward, k_humanoid_crew_push_clip, 0.0F},
+    {-0.24F, 0.22F, 0.0F, 0.0F, k_face_forward, k_humanoid_crew_push_clip, 0.0F},
+    {0.24F, 0.22F, 0.0F, 0.0F, k_face_forward, k_humanoid_crew_push_clip, 0.0F},
+}};
+constexpr std::array<Station, 4> k_ram_swing{{
+    {-0.21F, -0.45F, 0.0F, 0.0F, 0.5F * k_pi, k_humanoid_crew_heave_clip, 0.0F},
+    {0.21F, -0.20F, 0.0F, 0.0F, -0.5F * k_pi, k_humanoid_crew_heave_clip, 0.0F},
+    {-0.21F, 0.12F, 0.0F, 0.0F, 0.5F * k_pi, k_humanoid_crew_heave_clip, 0.0F},
+    {0.21F, 0.38F, 0.0F, 0.0F, -0.5F * k_pi, k_humanoid_crew_heave_clip, 0.0F},
+}};
+constexpr std::array<Station, 4> k_ram_rest{{
+    {-0.24F, -0.42F, 0.0F, 0.0F, 0.15F * k_pi, k_humanoid_idle_squat_clip, 3.0F},
+    {0.24F, -0.30F, 0.0F, 0.0F, -0.20F * k_pi, k_humanoid_idle_clip, 8.0F},
+    {-0.24F, 0.20F, 0.0F, 0.0F, 0.10F * k_pi, k_humanoid_idle_weave_clip, 3.0F},
+    {0.24F, 0.34F, 0.0F, 0.0F, -0.10F * k_pi, k_humanoid_idle_clip, 8.0F},
+}};
+
+// A tower is pushed from behind; once it is against a wall its crew stands off
+// its tail, out of the bridge's way.
+constexpr std::array<Station, 4> k_tower_push{{
+    {-0.40F, -0.56F, 0.0F, -0.20F, k_face_forward, k_humanoid_crew_push_clip, 0.0F},
+    {-0.13F, -0.56F, 0.0F, -0.20F, k_face_forward, k_humanoid_crew_push_clip, 0.0F},
+    {0.13F, -0.56F, 0.0F, -0.20F, k_face_forward, k_humanoid_crew_push_clip, 0.0F},
+    {0.40F, -0.56F, 0.0F, -0.20F, k_face_forward, k_humanoid_crew_push_clip, 0.0F},
+}};
+constexpr std::array<Station, 4> k_tower_rest{{
+    {-0.45F, -0.60F, -0.20F, -0.40F, 0.30F * k_pi, k_humanoid_idle_weave_clip, 3.0F},
+    {-0.10F, -0.60F, 0.0F, -0.55F, 0.05F * k_pi, k_humanoid_idle_clip, 8.0F},
+    {0.15F, -0.60F, 0.10F, -0.35F, -0.15F * k_pi, k_humanoid_idle_squat_clip, 3.0F},
+    {0.45F, -0.60F, 0.25F, -0.45F, -0.40F * k_pi, k_humanoid_idle_clip, 8.0F},
+}};
+
+auto resolved_kind(const SiegeCrewFrame& frame) -> int {
+  switch (frame.kind) {
+  case SiegeCrewKind::Ram:
+    return 2;
+  case SiegeCrewKind::Tower:
+    return 3;
+  case SiegeCrewKind::Engine:
+    break;
+  }
+  return frame.ballista ? 1 : 0;
+}
+
+auto stations_for(const SiegeCrewFrame& frame,
+                  SiegeCrewMode mode) -> const std::array<Station, 4>& {
+  int const kind = resolved_kind(frame);
+  if (kind == 2) {
+    return mode == SiegeCrewMode::Push   ? k_ram_push
+           : mode == SiegeCrewMode::Load ? k_ram_swing
+                                         : k_ram_rest;
+  }
+  if (kind == 3) {
+    return mode == SiegeCrewMode::Push ? k_tower_push : k_tower_rest;
+  }
+  bool const ballista = kind == 1;
   switch (mode) {
   case SiegeCrewMode::Push:
     return ballista ? k_ballista_push : k_catapult_push;
@@ -157,6 +216,9 @@ auto working_clip_phase(const Station& station,
     return fract(frame.loading_time / (frame.ballista ? 0.70F : 1.00F) +
                  (index % 2U == 0U ? 0.0F : 0.5F));
   case k_humanoid_crew_heave_clip:
+    if (frame.kind == SiegeCrewKind::Ram) {
+      return fract(frame.loading_progress + (index % 2U == 0U ? 0.0F : 0.04F));
+    }
     return std::clamp(frame.loading_progress, 0.0F, 1.0F);
   default:
     break;
@@ -169,6 +231,10 @@ auto working_clip_phase(const Station& station,
 
 auto siege_crew_size(bool ballista) noexcept -> std::size_t {
   return ballista ? 3U : 4U;
+}
+
+auto siege_crew_size(const SiegeCrewFrame& frame) noexcept -> std::size_t {
+  return frame.kind == SiegeCrewKind::Engine ? siege_crew_size(frame.ballista) : 4U;
 }
 
 void advance_siege_crew(SiegeCrewState& state,
@@ -186,11 +252,11 @@ void advance_siege_crew(SiegeCrewState& state,
   }
   state.mode = next_mode(state, frame, time);
 
-  const auto& stations = stations_for(frame.ballista, state.mode);
+  const auto& stations = stations_for(frame, state.mode);
   const float scale = std::max(frame.engine_scale, 0.01F);
   const float blend_step = dt / k_blend_seconds;
   const float turn = 1.0F - std::exp(-dt * k_turn_rate);
-  for (std::size_t i = 0; i < siege_crew_size(frame.ballista); ++i) {
+  for (std::size_t i = 0; i < siege_crew_size(frame); ++i) {
     auto& member = state.members[i];
     const Station& station = stations[i];
     const float target_x = station.anchor_x * scale + station.offset_x;
@@ -271,7 +337,7 @@ void submit_siege_crew(const DrawContext& ctx,
 
   const auto& terrain = ctx.world_view.terrain_or_empty();
   begin_civilian_actors();
-  for (std::size_t i = 0; i < siege_crew_size(frame.ballista); ++i) {
+  for (std::size_t i = 0; i < siege_crew_size(frame); ++i) {
     const auto& member = state.members[i];
     if (!member.placed) {
       continue;

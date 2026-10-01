@@ -27,6 +27,10 @@ constexpr float k_site_arrival_distance_sq = 1.0F * 1.0F;
 constexpr float k_site_approach_limit_seconds = 30.0F;
 constexpr float k_site_route_goal_tolerance_sq = 0.25F;
 constexpr float k_site_progress_epsilon = 0.75F;
+// A gatherer held off its exact work spot (by a crewmate, a fence post) works
+// from where it stands once it is this close and has stopped gaining ground.
+constexpr float k_stalled_work_reach_sq = 1.6F * 1.6F;
+constexpr float k_stalled_work_seconds = 2.5F;
 
 void face_work_target(Engine::Core::TransformComponent& transform,
                       const Engine::Core::BuilderProductionComponent& builder) {
@@ -262,8 +266,17 @@ void advance_site_approach(Engine::Core::World& world,
       ground, transform, builder.construction_site_x, builder.construction_site_z);
   bool const works_from_here =
       !straight_on_terrain && dist_sq <= site_bypass_radius_sq(builder, actor.movement);
-  if (dist_sq < arrival_sq || reached_footprint || works_from_here) {
-    arrive_at_site(world, actor, builder, ground, work_spot, straight_on_terrain);
+  bool const stalled_within_reach =
+      work_spot && dist_sq <= k_stalled_work_reach_sq &&
+      builder.site_approach_seconds > k_stalled_work_seconds;
+  if (dist_sq < arrival_sq || reached_footprint || works_from_here ||
+      stalled_within_reach) {
+    arrive_at_site(world,
+                   actor,
+                   builder,
+                   ground,
+                   work_spot,
+                   straight_on_terrain && !stalled_within_reach);
     return;
   }
 

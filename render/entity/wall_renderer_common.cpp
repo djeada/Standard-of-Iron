@@ -5,10 +5,14 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <numbers>
 #include <string>
 
 #include "building_archetype_library.h"
 #include "building_decay.h"
+#include "game/core/component_gameplay.h"
+#include "game/core/wall_walk_geometry.h"
+#include "game/core/world.h"
 
 namespace Render::GL {
 namespace {
@@ -497,11 +501,6 @@ void add_junction_post(BuildingArchetypeDesc& desc,
                       binding_color(palette, geometry),
                       k_mask_intact);
   }
-  desc.add_box(
-      QVector3D(0.0F, top - 0.10F, 0.0F),
-      QVector3D(geometry.post_radius * 1.20F, 0.055F, geometry.post_radius * 1.20F),
-      palette.masonry_accent,
-      k_mask_intact);
 }
 
 void add_earth_berm(BuildingArchetypeDesc& desc,
@@ -672,6 +671,147 @@ void add_palisade(BuildingArchetypeDesc& desc,
 
 } // namespace
 
+namespace WW = Game::Systems::WallWalk;
+
+auto build_wall_walk_span_desc(std::string_view name_prefix,
+                               const WallPalette& palette) -> BuildingArchetypeDesc {
+  BuildingArchetypeDesc desc(std::string(name_prefix) + "_walk_span");
+  desc.set_material(k_building_material_wood);
+  constexpr auto k_standing = static_cast<BuildingStateMask>(
+      static_cast<std::uint8_t>(BuildingStateMask::Normal) |
+      static_cast<std::uint8_t>(BuildingStateMask::Damaged));
+  const float top = WW::k_deck_height;
+  const float inner = WW::k_deck_inner_edge;
+  const float outer = WW::k_deck_outer_edge;
+  constexpr int k_boards = 4;
+  const float board = (outer - inner) / static_cast<float>(k_boards);
+  for (int i = 0; i < k_boards; ++i) {
+    const float z = inner + board * (static_cast<float>(i) + 0.5F);
+    const QVector3D tone = (i % 2 == 0) ? palette.wood_light : palette.wood_mid * 1.08F;
+    desc.add_box(QVector3D(0.0F, top - WW::k_deck_thickness * 0.5F, z),
+                 QVector3D(0.5F, WW::k_deck_thickness * 0.5F, board * 0.47F),
+                 tone,
+                 k_standing);
+  }
+  desc.add_box(QVector3D(0.0F, top - 0.11F, outer - 0.03F),
+               QVector3D(0.5F, 0.05F, 0.035F),
+               palette.wood_dark,
+               k_standing);
+  desc.add_box(QVector3D(0.0F, top - 0.10F, inner + 0.02F),
+               QVector3D(0.5F, 0.045F, 0.03F),
+               palette.wood_dark,
+               k_standing);
+  desc.add_box(QVector3D(0.0F, top - 0.10F, (inner + outer) * 0.5F),
+               QVector3D(0.04F, 0.045F, (outer - inner) * 0.5F + 0.02F),
+               palette.wood_mid,
+               k_standing);
+  desc.add_cylinder(QVector3D(0.0F, 0.0F, outer - 0.05F),
+                    QVector3D(0.0F, top - 0.10F, outer - 0.05F),
+                    0.055F,
+                    palette.wood_dark,
+                    k_standing);
+  desc.add_cylinder(QVector3D(0.0F, top * 0.52F, outer - 0.05F),
+                    QVector3D(0.0F, top - 0.14F, inner + 0.10F),
+                    0.026F,
+                    palette.wood_mid,
+                    k_standing);
+  desc.add_box(QVector3D(0.0F, top * 0.30F, outer - 0.05F),
+               QVector3D(0.07F, 0.018F, 0.07F),
+               palette.rope,
+               k_standing);
+  desc.add_rotated_box(QVector3D(0.05F, 0.04F, 0.55F),
+                       QVector3D(0.42F, 0.025F, 0.06F),
+                       QVector3D(0.0F, 17.0F, 6.0F),
+                       palette.wood_dark,
+                       BuildingStateMask::Destroyed);
+  return desc;
+}
+
+auto build_wall_walk_landing_desc(std::string_view name_prefix,
+                                  const WallPalette& palette) -> BuildingArchetypeDesc {
+  BuildingArchetypeDesc desc(std::string(name_prefix) + "_walk_landing");
+  desc.set_material(k_building_material_wood);
+  constexpr auto k_standing = static_cast<BuildingStateMask>(
+      static_cast<std::uint8_t>(BuildingStateMask::Normal) |
+      static_cast<std::uint8_t>(BuildingStateMask::Damaged));
+  const float top = WW::k_deck_height;
+  const float half = (WW::k_deck_outer_edge - WW::k_deck_inner_edge) * 0.5F;
+  desc.add_box(QVector3D(0.0F, top - WW::k_deck_thickness * 0.5F, 0.0F),
+               QVector3D(half, WW::k_deck_thickness * 0.5F, half),
+               palette.wood_light * 0.96F,
+               k_standing);
+  desc.add_cylinder(QVector3D(half - 0.05F, 0.0F, half - 0.05F),
+                    QVector3D(half - 0.05F, top - 0.08F, half - 0.05F),
+                    0.06F,
+                    palette.wood_dark,
+                    k_standing);
+  desc.add_rotated_box(QVector3D(0.05F, 0.04F, 0.55F),
+                       QVector3D(0.42F, 0.025F, 0.06F),
+                       QVector3D(0.0F, 17.0F, 6.0F),
+                       palette.wood_dark,
+                       BuildingStateMask::Destroyed);
+  return desc;
+}
+
+auto build_wall_walk_stair_desc(std::string_view name_prefix,
+                                const WallPalette& palette) -> BuildingArchetypeDesc {
+  BuildingArchetypeDesc desc(std::string(name_prefix) + "_walk_stair");
+  desc.set_material(k_building_material_wood);
+  constexpr auto k_standing = static_cast<BuildingStateMask>(
+      static_cast<std::uint8_t>(BuildingStateMask::Normal) |
+      static_cast<std::uint8_t>(BuildingStateMask::Damaged));
+  const float top = WW::k_deck_height;
+  const float head = WW::k_deck_outer_edge;
+  const float foot = head + WW::k_stair_run;
+  const float half_width = WW::k_stair_half_width;
+  const int steps = WW::k_stair_steps;
+  const float rise = top / static_cast<float>(steps);
+  const float run = WW::k_stair_run / static_cast<float>(steps);
+
+  for (float side : {-1.0F, 1.0F}) {
+    const float x = side * (half_width + 0.01F);
+    desc.add_cylinder(QVector3D(x, 0.02F, foot + 0.04F),
+                      QVector3D(x, top - 0.04F, head - 0.02F),
+                      0.045F,
+                      palette.wood_dark,
+                      k_standing);
+    desc.add_cylinder(QVector3D(x * 1.06F, 0.0F, foot),
+                      QVector3D(x * 1.06F, 0.95F, foot),
+                      0.045F,
+                      palette.wood_dark,
+                      k_standing);
+    desc.add_cylinder(QVector3D(x * 1.06F, 0.93F, foot),
+                      QVector3D(x * 1.06F, top + 0.62F, head + 0.20F),
+                      0.022F,
+                      palette.wood_mid,
+                      k_standing);
+    desc.add_cylinder(QVector3D(x * 1.06F, top - 0.10F, head + 0.20F),
+                      QVector3D(x * 1.06F, top + 0.64F, head + 0.20F),
+                      0.035F,
+                      palette.wood_dark,
+                      k_standing);
+  }
+  for (int i = 0; i < steps; ++i) {
+    const float y = rise * static_cast<float>(i + 1) - 0.025F;
+    const float z = foot - run * (static_cast<float>(i) + 0.5F);
+    const QVector3D tone = (i % 2 == 0) ? palette.wood_light : palette.wood_mid * 1.06F;
+    desc.add_box(QVector3D(0.0F, y, z),
+                 QVector3D(half_width, 0.025F, run * 0.62F),
+                 tone,
+                 k_standing);
+  }
+  desc.add_box(QVector3D(0.0F, 0.02F, foot + 0.12F),
+               QVector3D(half_width + 0.06F, 0.02F, 0.16F),
+               palette.earth_dark,
+               k_standing);
+  desc.add_rotated_box(QVector3D(0.05F, 0.04F, 0.55F),
+                       QVector3D(0.42F, 0.025F, 0.06F),
+                       QVector3D(0.0F, 17.0F, 6.0F),
+                       palette.wood_dark,
+                       BuildingStateMask::Destroyed);
+  return desc;
+}
+
 auto build_wall_variant_desc(std::string_view name_prefix,
                              const WallPalette& palette,
                              const WallGeometry& geometry,
@@ -696,6 +836,10 @@ auto wall_archetype_set(std::string_view name_prefix) -> WallArchetypeSet {
     out.variants[static_cast<std::size_t>(i)] =
         &building_archetype_set(std::string(name_prefix) + "_" + std::to_string(i));
   }
+  out.walk_span = &building_archetype_set(std::string(name_prefix) + "_walk_span");
+  out.walk_landing =
+      &building_archetype_set(std::string(name_prefix) + "_walk_landing");
+  out.walk_stair = &building_archetype_set(std::string(name_prefix) + "_walk_stair");
 
   return out;
 }
@@ -714,6 +858,92 @@ auto wall_renderer_variants()
   return k_variants;
 }
 
+namespace {
+
+void submit_walk_piece(ISubmitter& out,
+                       const DrawContext& ctx,
+                       const BuildingArchetypeSet* piece,
+                       const QVector3D& origin,
+                       float nx,
+                       float nz,
+                       const QVector3D& offset) {
+  if (piece == nullptr) {
+    return;
+  }
+  DrawContext placed = ctx;
+  QMatrix4x4 model;
+  model.translate(origin + offset);
+  model.rotate(
+      std::atan2(nx, nz) * 180.0F / std::numbers::pi_v<float>, 0.0F, 1.0F, 0.0F);
+  placed.model = model;
+  submit_building_instance(out, placed, piece->for_state(resolve_building_state(ctx)));
+}
+
+// Hangs the wall walk on the town face of a segment: a balcony span towards
+// each wall it runs into, a landing where the run turns, and a stair where the
+// network put one.
+void submit_wall_walk(ISubmitter& out,
+                      const DrawContext& ctx,
+                      const WallArchetypeSet& archetypes) {
+  if (ctx.entity == nullptr || ctx.world == nullptr ||
+      resolve_building_state(ctx) == BuildingState::Destroyed) {
+    return;
+  }
+  const auto id = ctx.entity->get_id();
+  const auto* wall = ctx.world->try_get<Engine::Core::WallSegmentComponent>(id);
+  if (wall == nullptr || (wall->inner_x == 0 && wall->inner_z == 0) ||
+      ctx.world->has<Engine::Core::WallConstructionSiteComponent>(id)) {
+    return;
+  }
+  const QVector3D origin = ctx.model.column(3).toVector3D();
+  const auto ix = static_cast<float>(wall->inner_x);
+  const auto iz = static_cast<float>(wall->inner_z);
+  const std::uint8_t mask = wall->connection_mask;
+  const int connections = ((mask & k_connection_north) != 0U ? 1 : 0) +
+                          ((mask & k_connection_east) != 0U ? 1 : 0) +
+                          ((mask & k_connection_south) != 0U ? 1 : 0) +
+                          ((mask & k_connection_west) != 0U ? 1 : 0);
+  for (std::size_t dir = 0; dir < k_dir_count; ++dir) {
+    const auto& d = k_directions[dir];
+    const std::size_t opposite = (dir + 2U) % k_dir_count;
+    const bool connected = (mask & k_direction_bits[dir]) != 0U;
+    const bool open_end = connections == 1 && (mask & k_direction_bits[opposite]) != 0U;
+    const bool isolated_run =
+        connections == 0 && (d.x != 0.0F ? wall->inner_z != 0 : wall->inner_x != 0);
+    if (!connected && !open_end && !isolated_run) {
+      continue;
+    }
+    const float nx = d.x != 0.0F ? 0.0F : ix;
+    const float nz = d.x != 0.0F ? iz : 0.0F;
+    if (nx == 0.0F && nz == 0.0F) {
+      continue;
+    }
+    submit_walk_piece(out,
+                      ctx,
+                      archetypes.walk_span,
+                      origin,
+                      nx,
+                      nz,
+                      QVector3D(d.x * 0.5F, 0.0F, d.z * 0.5F));
+  }
+  if (wall->inner_x != 0 && wall->inner_z != 0) {
+    const float lane = (WW::k_deck_inner_edge + WW::k_deck_outer_edge) * 0.5F;
+    submit_walk_piece(out,
+                      ctx,
+                      archetypes.walk_landing,
+                      origin,
+                      ix,
+                      iz,
+                      QVector3D(ix * lane, 0.0F, iz * lane));
+  }
+  if (wall->has_stair) {
+    submit_walk_piece(
+        out, ctx, archetypes.walk_stair, origin, ix, iz, QVector3D(0.0F, 0.0F, 0.0F));
+  }
+}
+
+} // namespace
+
 void submit_wall_segment_variant(ISubmitter& out,
                                  const DrawContext& ctx,
                                  const WallArchetypeSet& archetypes,
@@ -723,6 +953,7 @@ void submit_wall_segment_variant(ISubmitter& out,
       ctx,
       archetypes.variants[wall_archetype_index(variant)]->for_state(
           resolve_building_state(ctx)));
+  submit_wall_walk(out, ctx, archetypes);
   draw_building_selection_overlay(out, ctx, BuildingSelectionStyle{2.0F, 2.0F});
 }
 

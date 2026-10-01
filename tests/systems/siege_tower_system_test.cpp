@@ -4,11 +4,14 @@
 
 #include "core/component_gameplay.h"
 #include "core/entity.h"
+#include "core/wall_walk_geometry.h"
 #include "core/world.h"
 #include "map/map_transformer.h"
 #include "map/terrain_service.h"
 #include "systems/building_collision_registry.h"
+#include "systems/movement/command_service.h"
 #include "systems/navigation/nav_grid.h"
+#include "systems/navigation/wall_walk_path.h"
 #include "systems/owner_registry.h"
 #include "systems/siege_tower_system.h"
 #include "units/factory.h"
@@ -45,7 +48,10 @@ protected:
     BuildingCollisionRegistry::instance().clear();
   }
 
-  static auto make_wall(World& world, float x, float z, int owner) -> Entity* {
+  // A palisade running east-west with the town to +z, the way
+  // WallNetworkService::refresh_world leaves a straight run.
+  static auto
+  make_wall(World& world, float x, float z, int owner, bool stair = false) -> Entity* {
     auto* entity = world.create_entity();
     entity->add_component<TransformComponent>(x, 0.0F, z);
     entity->add_component<RenderableComponent>();
@@ -53,8 +59,22 @@ protected:
     unit->owner_id = owner;
     unit->spawn_type = Game::Units::SpawnType::WallSegment;
     entity->add_component<BuildingComponent>();
-    entity->add_component<WallSegmentComponent>();
+    auto* wall = entity->add_component<WallSegmentComponent>();
+    wall->connection_mask = 0b1010U;
+    wall->inner_z = 1;
+    wall->has_stair = stair;
     return entity;
+  }
+
+  auto make_swordsman(World& world, float x, float z, int owner) -> Entity* {
+    Game::Units::SpawnParams params;
+    params.position = QVector3D(x, 0.0F, z);
+    params.player_id = owner;
+    params.spawn_type = Game::Units::SpawnType::Swordsman;
+    params.nation_id = Game::Systems::NationID::RomanRepublic;
+    params.is_initial_spawn = false;
+    auto unit = m_factory->create(params.spawn_type, world, params);
+    return unit ? world.get_entity(unit->id()) : nullptr;
   }
 
   auto make_tower(World& world, float x, float z) -> Entity* {
@@ -81,28 +101,49 @@ protected:
 
 } // namespace
 
-TEST_F(SiegeTowerSystemTest, TowerDocksAtHostileWallAndUnloadsOntoIt) {
+namespace WW = Game::Systems::WallWalk;
+
+TEST_F(SiegeTowerSystemTest, TowerDrivesUpBetweenTwoPostsAndDropsItsBridge) {
   World world;
   for (int i = 0; i < 6; ++i) {
     make_wall(world, -6.0F + 2.0F * static_cast<float>(i), 0.0F, k_defender);
   }
-  auto* tower = make_tower(world, -3.0F, -2.6F);
+  auto* tower = make_tower(world, -3.2F, -4.0F);
   ASSERT_NE(tower, nullptr);
 
   SiegeTowerSystem system;
   system.update(&world, 0.1F);
 
-  auto const* state = tower->get_component<SiegeTowerComponent>();
+  auto* state = tower->get_component<SiegeTowerComponent>();
   ASSERT_NE(state, nullptr);
+  EXPECT_EQ(state->state, SiegeTowerComponent::State::Approaching);
+  EXPECT_NEAR(state->dock_x, -3.0F, 1.0e-4F);
+  EXPECT_NEAR(state->dock_z, -1.8F, 1.0e-4F);
+  EXPECT_TRUE(state->garrison_aboard);
+  EXPECT_EQ(find_walker(world), nullptr);
+
+  auto* transform = tower->get_component<TransformComponent>();
+  transform->position.x = state->dock_x;
+  transform->position.z = state->dock_z;
+  system.update(&world, 0.1F);
   EXPECT_EQ(state->state, SiegeTowerComponent::State::Docked);
+
+  for (int i = 0; i < 40; ++i) {
+    system.update(&world, 0.1F);
+  }
+  EXPECT_FLOAT_EQ(state->ramp, 1.0F);
   EXPECT_FALSE(state->garrison_aboard);
 
   auto* walker = find_walker(world);
   ASSERT_NE(walker, nullptr);
   EXPECT_EQ(walker->get_component<UnitComponent>()->owner_id, k_attacker);
+  auto const* wall_walk = walker->get_component<WallWalkerComponent>();
+  EXPECT_EQ(wall_walk->phase, WallWalkerComponent::Phase::Boarding);
+  EXPECT_NEAR(wall_walk->crest_x, -3.0F, 1.0e-3F);
+  EXPECT_NEAR(wall_walk->crest_z, 0.0F, 1.0e-3F);
+  auto const* lands = walker->get_component<TransformComponent>();
+  EXPECT_NEAR(lands->position.z, WW::k_deck_lane, 1.0e-3F);
 
-  system.update(&world, 2.0F);
-  EXPECT_FLOAT_EQ(state->ramp, 1.0F);
   system.update(&world, 0.1F);
   int walkers = 0;
   for (auto [id, w] : world.view<WallWalkerComponent>()) {
@@ -127,35 +168,119 @@ TEST_F(SiegeTowerSystemTest, TowerIgnoresItsOwnWalls) {
   EXPECT_EQ(find_walker(world), nullptr);
 }
 
-TEST_F(SiegeTowerSystemTest, WallWalkerFollowsTheRunAndDropsOffWhenSentAway) {
+TEST_F(SiegeTowerSystemTest, TowerInsideTheTownDoesNotDock) {
+  World world;
+  for (int i = 0; i < 4; ++i) {
+    make_wall(world, -4.0F + 2.0F * static_cast<float>(i), 0.0F, k_defender);
+  }
+  auto* tower = make_tower(world, -3.0F, 2.6F);
+  ASSERT_NE(tower, nullptr);
+  SiegeTowerSystem system;
+  system.update(&world, 0.1F);
+  EXPECT_EQ(tower->get_component<SiegeTowerComponent>()->state,
+            SiegeTowerComponent::State::Rolling);
+}
+
+TEST_F(SiegeTowerSystemTest, WallWalkerFollowsTheBalconyAndLeavesByTheStair) {
   World world;
   for (int i = 0; i < 8; ++i) {
-    make_wall(world, -8.0F + 2.0F * static_cast<float>(i), 0.0F, k_defender);
+    make_wall(world, -8.0F + 2.0F * static_cast<float>(i), 0.0F, k_defender, i == 6);
   }
-  auto* tower = make_tower(world, -7.0F, -2.6F);
-  ASSERT_NE(tower, nullptr);
-  SiegeTowerSystem towers;
+  auto* troop = make_swordsman(world, -6.0F, WW::k_deck_lane, k_defender);
+  ASSERT_NE(troop, nullptr);
+  auto* walker = troop->add_component<WallWalkerComponent>();
+  walker->wall_id = 0;
+  for (auto [id, unit] : world.view<UnitComponent>()) {
+    if (unit.spawn_type == Game::Units::SpawnType::WallSegment &&
+        std::abs(world.try_get<TransformComponent>(id)->position.x + 6.0F) < 0.01F) {
+      walker->wall_id = id;
+    }
+  }
+  ASSERT_NE(walker->wall_id, 0U);
+
   WallWalkSystem walkers;
-  towers.update(&world, 0.1F);
-  auto* walker = find_walker(world);
+  auto* movement = troop->get_component<MovementComponent>();
+  auto* transform = troop->get_component<TransformComponent>();
+  movement->engage_manual_move(2.0F, WW::k_deck_lane);
+  for (int i = 0; i < 200; ++i) {
+    walkers.update(&world, 0.1F);
+  }
+  EXPECT_NEAR(transform->position.x, 2.0F, 0.05F);
+  EXPECT_NEAR(transform->position.z, WW::k_deck_lane, 0.01F);
+  EXPECT_FLOAT_EQ(troop->get_component<WallWalkerComponent>()->elevation,
+                  WW::k_deck_height);
+  EXPECT_EQ(troop->get_component<UnitComponent>()->formation_files_override, 0)
+      << "a walker that never climbed keeps whatever files it was given";
+
+  Game::Systems::CommandService::move_unit(world, troop->get_id(), {4.0F, 0.0F, 14.0F});
+  bool descended = false;
+  float lowest = WW::k_deck_height;
+  for (int i = 0; i < 400 && troop->has_component<WallWalkerComponent>(); ++i) {
+    walkers.update(&world, 0.1F);
+    if (auto const* w = troop->get_component<WallWalkerComponent>()) {
+      descended = descended || w->phase == WallWalkerComponent::Phase::Descending;
+      lowest = std::min(lowest, w->elevation);
+    }
+  }
+  EXPECT_TRUE(descended);
+  EXPECT_FALSE(troop->has_component<WallWalkerComponent>());
+  EXPECT_LT(lowest, 0.2F);
+  auto const foot = WW::stair_foot(4.0F, 0.0F, 0, 1);
+  EXPECT_NEAR(transform->position.x, foot.x, 0.05F);
+  EXPECT_NEAR(transform->position.z, foot.z, 0.05F);
+}
+
+TEST_F(SiegeTowerSystemTest, TroopOrderedOntoItsOwnWallClimbsTheStair) {
+  World world;
+  for (int i = 0; i < 8; ++i) {
+    make_wall(world, -8.0F + 2.0F * static_cast<float>(i), 0.0F, k_defender, i == 2);
+  }
+  auto* troop = make_swordsman(world, 3.0F, 6.0F, k_defender);
+  ASSERT_NE(troop, nullptr);
+  Game::Systems::CommandService::move_unit(
+      world, troop->get_id(), {3.0F, 0.0F, WW::k_deck_lane});
+
+  WallWalkSystem walkers;
+  walkers.update(&world, 0.1F);
+  auto* walker = troop->get_component<WallWalkerComponent>();
   ASSERT_NE(walker, nullptr);
+  EXPECT_EQ(walker->phase, WallWalkerComponent::Phase::Approaching);
 
-  auto* movement = walker->get_component<MovementComponent>();
-  ASSERT_NE(movement, nullptr);
-  auto* transform = walker->get_component<TransformComponent>();
-  float const start_x = transform->position.x;
+  auto const foot = WW::stair_foot(-4.0F, 0.0F, 0, 1);
+  auto* transform = troop->get_component<TransformComponent>();
+  transform->position.x = foot.x;
+  transform->position.z = foot.z;
+  walkers.update(&world, 0.1F);
+  EXPECT_EQ(walker->phase, WallWalkerComponent::Phase::Climbing);
+  EXPECT_EQ(troop->get_component<UnitComponent>()->formation_files_override, 1);
 
-  movement->engage_manual_move(4.0F, 0.5F);
-  for (int i = 0; i < 400; ++i) {
+  for (int i = 0; i < 300; ++i) {
     walkers.update(&world, 0.1F);
   }
-  EXPECT_GT(transform->position.x, start_x + 4.0F);
-  EXPECT_NEAR(transform->position.z, 0.0F, 0.01F);
-  EXPECT_TRUE(walker->has_component<WallWalkerComponent>());
+  walker = troop->get_component<WallWalkerComponent>();
+  ASSERT_NE(walker, nullptr);
+  EXPECT_EQ(walker->phase, WallWalkerComponent::Phase::OnDeck);
+  EXPECT_FLOAT_EQ(walker->elevation, WW::k_deck_height);
+  EXPECT_NEAR(transform->position.x, 2.0F, 0.15F);
+  EXPECT_NEAR(transform->position.z, WW::k_deck_lane, 0.01F);
+}
 
-  movement->engage_manual_move(4.0F, 14.0F);
-  for (int i = 0; i < 400; ++i) {
-    walkers.update(&world, 0.1F);
-  }
-  EXPECT_FALSE(walker->has_component<WallWalkerComponent>());
+TEST(WallWalkGeometryTest, BalconyOrdersCoverTheRunButNotTheFieldOutside) {
+  EXPECT_TRUE(WW::is_wall_walk_order(0.0F, 0.0F, 0, 1, 0.9F, WW::k_deck_lane));
+  EXPECT_TRUE(WW::is_wall_walk_order(0.0F, 0.0F, 0, 1, -0.3F, 0.1F));
+  EXPECT_FALSE(WW::is_wall_walk_order(0.0F, 0.0F, 0, 1, 0.0F, -1.2F));
+  EXPECT_FALSE(WW::is_wall_walk_order(0.0F, 0.0F, 0, 1, 0.0F, 2.0F));
+  EXPECT_FALSE(WW::is_wall_walk_order(0.0F, 0.0F, 0, 1, 1.6F, WW::k_deck_lane));
+}
+
+TEST(WallWalkGeometryTest, ProjectionCarriesTheWalkingHeight) {
+  std::vector<WallWalkSegment> path{{0.0F, 0.0F, 0.0F, 0.0F, 2.0F, 2.0F},
+                                    {0.0F, 2.0F, 2.0F, 4.0F, 2.0F, 2.0F}};
+  auto const mid = WW::project_onto_path(path, 0.4F, 1.0F);
+  ASSERT_TRUE(mid.valid);
+  EXPECT_NEAR(mid.x, 0.0F, 1.0e-5F);
+  EXPECT_NEAR(mid.y, 1.0F, 1.0e-5F);
+  auto const deck = WW::project_onto_path(path, 3.0F, 2.6F);
+  EXPECT_NEAR(deck.z, 2.0F, 1.0e-5F);
+  EXPECT_NEAR(deck.y, 2.0F, 1.0e-5F);
 }

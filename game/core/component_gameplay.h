@@ -143,6 +143,13 @@ public:
 
   bool freeform{false};
 
+  // Which way the town lies across this segment, per lateral axis (-1, 0, +1).
+  // The wall-walk balcony and stairs hang on that face. Derived by
+  // WallNetworkService::refresh_world, never saved.
+  std::int8_t inner_x{0};
+  std::int8_t inner_z{0};
+  bool has_stair{false};
+
   [[nodiscard]] static auto is_freeform_rotation(float rotation_y) -> bool {
     float angle = std::fmod(rotation_y, 90.0F);
     if (angle < 0.0F) {
@@ -177,7 +184,8 @@ public:
 struct SiegeTowerComponent {
   enum class State : std::uint8_t {
     Rolling = 0,
-    Docked
+    Docked,
+    Approaching
   };
 
   static constexpr float k_ramp_drop_seconds = 1.2F;
@@ -186,13 +194,63 @@ struct SiegeTowerComponent {
   EntityID docked_wall_id{0};
   bool garrison_aboard{true};
   float ramp{0.0F};
+  float dock_x{0.0F};
+  float dock_z{0.0F};
+  float dock_yaw{0.0F};
+  float approach_seconds{0.0F};
+};
+
+struct WallWalkSegment {
+  float ax{0.0F};
+  float az{0.0F};
+  float ay{0.0F};
+  float bx{0.0F};
+  float bz{0.0F};
+  float by{0.0F};
+
+  auto operator==(const WallWalkSegment&) const -> bool = default;
 };
 
 struct WallWalkerComponent {
-  static constexpr float k_wall_top_height = 2.1F;
+  enum class Phase : std::uint8_t {
+    OnDeck = 0,
+    Boarding,
+    Approaching,
+    Climbing,
+    Descending
+  };
+
+  static constexpr float k_wall_top_height = 1.80F;
+  // A tower's company crosses the bridge one man at a time, this far apart.
+  static constexpr float k_file_out_interval = 0.45F;
 
   EntityID wall_id{0};
   float elevation{k_wall_top_height};
+  Phase phase{Phase::OnDeck};
+
+  float boarding_seconds{0.0F};
+  float door_x{0.0F};
+  float door_z{0.0F};
+  float door_y{0.0F};
+  float lip_x{0.0F};
+  float lip_z{0.0F};
+  float crest_x{0.0F};
+  float crest_z{0.0F};
+  float landing_x{0.0F};
+  float landing_z{0.0F};
+
+  EntityID stair_wall_id{0};
+  float goal_x{0.0F};
+  float goal_z{0.0F};
+  bool has_goal{false};
+  float stair_progress{0.0F};
+  int saved_files_override{0};
+
+  // Derived each tick: where an idle soldier on the balcony looks (degrees) -
+  // out over the stakes for the wall's owner, into the town for a boarder.
+  bool watching{false};
+  float watch_yaw{0.0F};
+  std::vector<WallWalkSegment> path;
 };
 
 class GateComponent {

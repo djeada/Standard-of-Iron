@@ -29,6 +29,14 @@ struct SiegeCrewMember {
 
 inline constexpr std::size_t k_max_siege_crew = 4;
 
+// Which engine a crew serves. `Engine` leaves the choice to
+// SiegeCrewFrame::ballista (catapult or bolt thrower).
+enum class SiegeCrewKind : std::uint8_t {
+  Engine,
+  Ram,
+  Tower,
+};
+
 struct SiegeCrewState {
   std::array<SiegeCrewMember, k_max_siege_crew> members{};
   SiegeCrewMode mode{SiegeCrewMode::Rest};
@@ -39,6 +47,7 @@ struct SiegeCrewState {
 
 struct SiegeCrewFrame {
   bool ballista{false};
+  SiegeCrewKind kind{SiegeCrewKind::Engine};
   float engine_scale{1.0F};
   float travelled{0.0F};
   float movement{0.0F};
@@ -49,6 +58,7 @@ struct SiegeCrewFrame {
 };
 
 [[nodiscard]] auto siege_crew_size(bool ballista) noexcept -> std::size_t;
+[[nodiscard]] auto siege_crew_size(const SiegeCrewFrame& frame) noexcept -> std::size_t;
 
 void advance_siege_crew(SiegeCrewState& state, const SiegeCrewFrame& frame, float time);
 

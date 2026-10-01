@@ -64,6 +64,7 @@ struct EntityFrame {
   const Engine::Core::FormationContactComponent* contact{nullptr};
   const Engine::Core::UnitTraversalLayoutStateComponent* traversal{nullptr};
   Engine::Core::SquadReformComponent* reform{nullptr};
+  const Engine::Core::WallWalkerComponent* wall_walker{nullptr};
   Engine::Core::Entity* display_opponent{nullptr};
   Engine::Core::EntityID display_target{0U};
   bool target_alive{false};

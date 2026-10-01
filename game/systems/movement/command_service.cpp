@@ -9,6 +9,7 @@
 #include <memory>
 #include <vector>
 
+#include "../navigation/wall_walk_orders.h"
 #include "core/component_gameplay.h"
 #include "core/world.h"
 #include "formation/army_formation_planner.h"
@@ -370,6 +371,26 @@ auto CommandService::plan_ground_move(Engine::Core::World& world,
     return plan;
   }
 
+  if (auto const* first = world.try_get<Engine::Core::UnitComponent>(units.front())) {
+    // A click on the balcony of the troops' own wall is an order to man it: keep
+    // the point (it is not walkable ground) and string the troops along the
+    // wall; WallWalkSystem walks each to a stair and up.
+    if (auto const order = WallWalk::wall_walk_order_at(
+            world, first->owner_id, target.x(), target.z())) {
+      constexpr float k_wall_post_spacing = 6.0F;
+      plan.resolved_target = QVector3D(order->x, target.y(), order->z);
+      float const centre = (static_cast<float>(units.size()) - 1.0F) * 0.5F;
+      for (std::size_t i = 0; i < units.size(); ++i) {
+        float const offset = (static_cast<float>(i) - centre) * k_wall_post_spacing;
+        GroupSlot slot;
+        slot.member = units[i];
+        slot.position = plan.resolved_target +
+                        QVector3D(order->along_x, 0.0F, order->along_z) * offset;
+        plan.member_slots.push_back(slot);
+      }
+      return plan;
+    }
+  }
   plan.resolved_target = resolve_walkable_target(target);
   plan.member_slots =
       resolve_group_slots(world, units, plan.resolved_target, preserve_current_shape);

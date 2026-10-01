@@ -154,8 +154,10 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
       movement->end_escape();
     }
   }
+  auto const* wall_walker = world->try_get<Engine::Core::WallWalkerComponent>(id);
   if (!movement->get_escape_active() &&
-      !world->has<Engine::Core::WallWalkerComponent>(id)) {
+      (wall_walker == nullptr ||
+       wall_walker->phase == Engine::Core::WallWalkerComponent::Phase::Approaching)) {
     MovementCollision::unstick_body(*entity, *transform, delta_time);
   }
 

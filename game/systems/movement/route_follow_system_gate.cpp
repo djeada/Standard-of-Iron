@@ -111,6 +111,12 @@ auto classify_movement_gate(const Engine::Core::Entity& entity) -> MovementGate 
     return MovementGate::HoldMode;
   }
 
+  if (auto const* walker = entity.get_component<Engine::Core::WallWalkerComponent>();
+      walker != nullptr &&
+      walker->phase != Engine::Core::WallWalkerComponent::Phase::Approaching) {
+    return MovementGate::OnWall;
+  }
+
   auto const* attack = entity.get_component<Engine::Core::AttackComponent>();
   if (attack != nullptr && attack->in_melee_lock &&
       CombatRules::participates_in_rts_melee_lock(&entity)) {
@@ -121,10 +127,6 @@ auto classify_movement_gate(const Engine::Core::Entity& entity) -> MovementGate 
       entity.get_component<Engine::Core::BuilderProductionComponent>();
   if (builder_prod != nullptr && builder_prod->bypass_movement_active) {
     return MovementGate::BuilderBypass;
-  }
-
-  if (entity.has_component<Engine::Core::WallWalkerComponent>()) {
-    return MovementGate::OnWall;
   }
 
   return MovementGate::RouteFollowing;

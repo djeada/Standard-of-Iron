@@ -7,6 +7,7 @@
 #include <optional>
 
 #include "../../core/component_economy.h"
+#include "../../core/component_gameplay.h"
 #include "../../core/world.h"
 #include "../../core/world_spatial_index.h"
 #include "../../units/spawn_type.h"
@@ -495,6 +496,20 @@ auto melee_walk_around_length(Engine::Core::Entity* attacker,
   return length + shortfall;
 }
 
+namespace {
+
+auto stands_on_wall(const Engine::Core::Entity* entity) -> bool {
+  auto const* registry = entity != nullptr ? entity->registry() : nullptr;
+  auto const* walker =
+      registry != nullptr
+          ? registry->try_get<Engine::Core::WallWalkerComponent>(entity->get_id())
+          : nullptr;
+  return walker != nullptr &&
+         walker->phase != Engine::Core::WallWalkerComponent::Phase::Approaching;
+}
+
+} // namespace
+
 auto melee_walled_off_from(Engine::Core::Entity* attacker,
                            Engine::Core::Entity* target,
                            float allowed_detour) -> bool {
@@ -506,6 +521,13 @@ auto melee_walled_off_from(Engine::Core::Entity* attacker,
       attack != nullptr &&
       (!attack->can_ranged ||
        attack->preferred_mode == Engine::Core::AttackComponent::CombatMode::Melee);
+  // The wall walk is its own floor: troops on a balcony reach each other along
+  // the planks, and blades do not reach between the balcony and the street.
+  bool const attacker_on_wall = stands_on_wall(attacker);
+  bool const target_on_wall = stands_on_wall(target);
+  if (attacker_on_wall || target_on_wall) {
+    return melee_only && attacker_on_wall != target_on_wall;
+  }
   if (!melee_only || !structure_separates_combatants(attacker, target)) {
     return false;
   }
