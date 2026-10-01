@@ -1,6 +1,6 @@
+#include <QFile>
 #include <QJsonObject>
 #include <QTemporaryDir>
-#include <QFile>
 
 #include <gtest/gtest.h>
 
@@ -24,7 +24,8 @@ constexpr float k_tick = 0.05F;
 
 // A mountain peak (about 11 high at z = -6) on the north side of a flat pass.
 // Boulders start high on its southern flank and roll south into the pass.
-auto make_pass_map(RockfallTriggerMode trigger, int owner_id) -> Game::Map::MapDefinition {
+auto make_pass_map(RockfallTriggerMode trigger,
+                   int owner_id) -> Game::Map::MapDefinition {
   Game::Map::MapDefinition map;
   map.coordSystem = Game::Map::CoordSystem::World;
   map.grid.width = 72;
@@ -179,7 +180,8 @@ TEST_F(RockfallSystemTest, ZoneTrapFiresOnAHostileColumnAndKnocksItDown) {
   run(world, system, 1.0F);
   EXPECT_EQ(system.trap(0).times_fired, 0) << "nobody is in the pass yet";
 
-  QVector3D const foot = trap.release_world + (trap.target_world - trap.release_world) * 0.7F;
+  QVector3D const foot =
+      trap.release_world + (trap.target_world - trap.release_world) * 0.7F;
   auto* friendly = add_troop(world, 2, QVector3D(foot.x() + 5.0F, 0.0F, foot.z()));
   run(world, system, 0.5F);
   EXPECT_EQ(system.trap(0).times_fired, 0) << "the trap's own troops never set it off";

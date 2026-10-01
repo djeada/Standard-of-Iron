@@ -14,7 +14,8 @@ void launch_new_casualties(Engine::Core::Entity& casualty_unit,
                            int casualty_count,
                            float impact_speed);
 
-void launch_new_casualties_along(Engine::Core::Entity& casualty_unit,
+void launch_new_casualties_along(Engine::Core::World& world,
+                                 Engine::Core::EntityID casualty_unit,
                                  float direction_x,
                                  float direction_z,
                                  int casualty_count,

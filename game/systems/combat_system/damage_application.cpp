@@ -317,9 +317,8 @@ void present_formation_hit(const HitContext& hit,
 }
 
 void publish_hit_event(const HitContext& hit) {
-  Game::Units::SpawnType const attacker_type =
-      hit.attacker.spawn_type.value_or(
-          hit.sourceless_hit_sound_as.value_or(Game::Units::SpawnType::Swordsman));
+  Game::Units::SpawnType const attacker_type = hit.attacker.spawn_type.value_or(
+      hit.sourceless_hit_sound_as.value_or(Game::Units::SpawnType::Swordsman));
   Engine::Core::EventManager::instance().publish(
       Engine::Core::CombatHitEvent(hit.attacker_id,
                                    hit.target->get_id(),

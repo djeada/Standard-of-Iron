@@ -431,10 +431,13 @@ The runtime currently implements one trigger, `timer` (with `time` in seconds), 
 
 ```json
 {
-    "trigger": {"type": "timer", "time": 95},
+    "trigger": { "type": "timer", "time": 95 },
     "actions": [
-        {"type": "rockfall", "trap": "allobroges_heights",
-         "text": "Rocks thunder down from the heights!"}
+        {
+            "type": "rockfall",
+            "trap": "allobroges_heights",
+            "text": "Rocks thunder down from the heights!"
+        }
     ]
 }
 ```

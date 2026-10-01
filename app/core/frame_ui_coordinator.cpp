@@ -31,7 +31,6 @@
 #include "render/geom/interaction_target_markers.h"
 #include "render/geom/patrol_flags.h"
 #include "render/geom/projectile_renderer.h"
-#include "render/geom/rockfall_renderer.h"
 #include "render/geom/range_rings.h"
 #include "render/geom/target_focus_rings.h"
 #include "render/scene_renderer.h"

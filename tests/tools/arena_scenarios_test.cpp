@@ -1663,7 +1663,7 @@ TEST(ArenaScenariosTest, RockfallAmbushScenariosStrikeAColumnInAnAlpinePass) {
     for (auto const& expectation : scenario->expectations) {
       expects_launched_casualties =
           expects_launched_casualties ||
-          expectation.kind == Expect::LaunchedCasualtyObserved;
+          expectation.kind == Arena::ArenaExpectationKind::LaunchedCasualtyObserved;
     }
     EXPECT_TRUE(expects_launched_casualties) << id;
   }

@@ -33,16 +33,15 @@ struct HitImpulse {
 
 inline constexpr float k_reference_weapon_speed = 9.0F;
 
-DamageApplicationResult
-apply_unit_damage(Engine::Core::World* world,
-                  Engine::Core::Entity* target,
-                  int damage,
-                  Engine::Core::EntityID attacker_id = 0,
-                  std::optional<QVector3D> contact_point = std::nullopt,
-                  std::optional<std::uint16_t> preferred_soldier_slot = std::nullopt,
-                  float impact_speed = 0.0F,
-                  std::optional<Game::Units::SpawnType> sourceless_hit_sound_as =
-                      std::nullopt);
+DamageApplicationResult apply_unit_damage(
+    Engine::Core::World* world,
+    Engine::Core::Entity* target,
+    int damage,
+    Engine::Core::EntityID attacker_id = 0,
+    std::optional<QVector3D> contact_point = std::nullopt,
+    std::optional<std::uint16_t> preferred_soldier_slot = std::nullopt,
+    float impact_speed = 0.0F,
+    std::optional<Game::Units::SpawnType> sourceless_hit_sound_as = std::nullopt);
 
 void begin_death_sequence(Engine::Core::Entity* target, Engine::Core::Entity* attacker);
 

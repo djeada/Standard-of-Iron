@@ -124,6 +124,9 @@ void register_runtime_systems(Engine::Core::World& world) {
                    Engine::Core::SystemPhase::Combat);
   world.add_system(std::make_unique<CaptureSystem>(),
                    Engine::Core::SystemPhase::Combat);
+  world.add_system(std::make_unique<RockfallSystem>(RockfallSystem::Services{
+                       .terrain = session.terrain(), .owners = session.owners()}),
+                   Engine::Core::SystemPhase::Combat);
   world.add_system(std::make_unique<AISystem>(AISystem::Services{
                        .owners = session.owners(), .nations = session.nations()}),
                    Engine::Core::SystemPhase::Strategy);
@@ -139,9 +142,6 @@ void register_runtime_systems(Engine::Core::World& world) {
                                                       .owners = session.owners(),
                                                       .economy = session.economy()}),
                    Engine::Core::SystemPhase::Strategy);
-  world.add_system(std::make_unique<RockfallSystem>(RockfallSystem::Services{
-                       .terrain = session.terrain(), .owners = session.owners()}),
-                   Engine::Core::SystemPhase::Combat);
   world.add_system(std::make_unique<ProductionSystem>(),
                    Engine::Core::SystemPhase::Economy);
   world.add_system(std::make_unique<DismantleSystem>(),

@@ -385,7 +385,8 @@ void read_rockfall_traps(const QJsonArray& arr, std::vector<RockfallTrap>& out) 
       trap.id = QStringLiteral("rockfall_%1").arg(next_trap_index);
     }
     ++next_trap_index;
-    if (!read_xz(obj.value(QStringLiteral("release")), trap.release_x, trap.release_z) ||
+    if (!read_xz(
+            obj.value(QStringLiteral("release")), trap.release_x, trap.release_z) ||
         !read_xz(obj.value(QStringLiteral("target")), trap.target_x, trap.target_z)) {
       qWarning() << "Rockfall trap" << trap.id
                  << "needs both a release and a target point - skipping";
@@ -398,7 +399,8 @@ void read_rockfall_traps(const QJsonArray& arr, std::vector<RockfallTrap>& out) 
     trap.boulder_count = std::clamp(
         obj.value(QStringLiteral("boulders")).toInt(trap.boulder_count), 1, 24);
     trap.boulder_radius = std::clamp(
-        float(obj.value(QStringLiteral("boulder_radius")).toDouble(trap.boulder_radius)),
+        float(
+            obj.value(QStringLiteral("boulder_radius")).toDouble(trap.boulder_radius)),
         0.3F,
         2.5F);
     trap.release_spread = std::max(
@@ -407,11 +409,11 @@ void read_rockfall_traps(const QJsonArray& arr, std::vector<RockfallTrap>& out) 
         0.0F,
         float(obj.value(QStringLiteral("interval")).toDouble(trap.release_interval)));
     trap.damage = std::max(0, obj.value(QStringLiteral("damage")).toInt(trap.damage));
-    trap.casualty_fraction = std::clamp(
-        float(obj.value(QStringLiteral("casualty_fraction"))
-                  .toDouble(trap.casualty_fraction)),
-        0.0F,
-        1.0F);
+    trap.casualty_fraction =
+        std::clamp(float(obj.value(QStringLiteral("casualty_fraction"))
+                             .toDouble(trap.casualty_fraction)),
+                   0.0F,
+                   1.0F);
     trap.rearm_seconds = std::max(
         0.0F, float(obj.value(QStringLiteral("rearm")).toDouble(trap.rearm_seconds)));
     trap.ai_min_targets = std::max(

@@ -1,6 +1,6 @@
 # Rockfall Ambush
 
-Defenders holding high ground can roll boulders onto a column in a pass below. This is how the Allobroges struck Hannibal's army on the climb into the Alps, and the Alps episode of *The Barcid Road* is built on it.
+Defenders holding high ground can roll boulders onto a column in a pass below. This is how the Allobroges struck Hannibal's army on the climb into the Alps, and the Alps episode of _The Barcid Road_ is built on it.
 
 A rockfall is a **trap**: a cache of boulders staged on the heights, aimed at a kill zone in the pass. Each trap is released once by a trigger. It can also rearm after a delay.
 
@@ -29,19 +29,19 @@ Traps live in the map file, beside `undead_zones`:
 ]
 ```
 
-| Field | Default | Meaning |
-| --- | --- | --- |
-| `id` | `rockfall_<n>` | Name used by mission events and arena steps. |
-| `release` | required | Where the boulders start, on the slope above the pass. Takes `[x, z]`, `[x, y, z]` or `{"x", "z"}`. |
-| `target` | required | Centre of the kill zone. Boulders are pushed towards it. |
-| `radius` | 8 | Kill-zone radius around `target`, used by the automatic triggers. |
-| `trigger` | `zone` | `zone`, `ai` or `scripted`; see below. |
-| `owner_id` | -1 (neutral) | Who holds the heights. A trap never hurts its owner or their allies. A neutral trap counts every troop as hostile. |
-| `boulders` | 5 | Boulders per release (1-24). They are fanned across `spread` metres and let go `interval` seconds apart. |
-| `boulder_radius` | 0.55 | Boulder radius in world units. Each boulder is randomised by ±20%. |
-| `damage`, `casualty_fraction` | 40, 0.22 | A strike deals the larger of `damage` and `casualty_fraction × max_health`, scaled by the boulder's speed. |
-| `rearm` | 0 | Seconds before a spent trap can fire again. 0 means single use. |
-| `ai_min_targets` | 2 | Number of hostile troops in the zone at which an AI defender releases at once. |
+| Field                         | Default        | Meaning                                                                                                            |
+| ----------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `id`                          | `rockfall_<n>` | Name used by mission events and arena steps.                                                                       |
+| `release`                     | required       | Where the boulders start, on the slope above the pass. Takes `[x, z]`, `[x, y, z]` or `{"x", "z"}`.                |
+| `target`                      | required       | Centre of the kill zone. Boulders are pushed towards it.                                                           |
+| `radius`                      | 8              | Kill-zone radius around `target`, used by the automatic triggers.                                                  |
+| `trigger`                     | `zone`         | `zone`, `ai` or `scripted`; see below.                                                                             |
+| `owner_id`                    | -1 (neutral)   | Who holds the heights. A trap never hurts its owner or their allies. A neutral trap counts every troop as hostile. |
+| `boulders`                    | 5              | Boulders per release (1-24). They are fanned across `spread` metres and let go `interval` seconds apart.           |
+| `boulder_radius`              | 0.55           | Boulder radius in world units. Each boulder is randomised by ±20%.                                                 |
+| `damage`, `casualty_fraction` | 40, 0.22       | A strike deals the larger of `damage` and `casualty_fraction × max_health`, scaled by the boulder's speed.         |
+| `rearm`                       | 0              | Seconds before a spent trap can fire again. 0 means single use.                                                    |
+| `ai_min_targets`              | 2              | Number of hostile troops in the zone at which an AI defender releases at once.                                     |
 
 Coordinates follow the map's `coord_system`, exactly like undead zones.
 
@@ -53,7 +53,7 @@ Choose a release point on the slope itself, not on a peak. Boulders follow the t
 - **`ai`**: the trap's owner has to be AI-controlled. The AI waits for the column: it releases once `ai_min_targets` hostile troops are in the zone, or after `k_rockfall_ai_patience_seconds` (3 s) with at least one there. Under a human owner the trap only fires by script.
 - **`scripted`**: fires only from a mission event or an arena step.
 
-Mission events release a trap by id with a `rockfall` action. See *Mission events* in [MISSION_FRAMEWORK.md](MISSION_FRAMEWORK.md). Arena scenarios use the `TriggerRockfall` step command with `zone_id` set to the trap id.
+Mission events release a trap by id with a `rockfall` action. See _Mission events_ in [MISSION_FRAMEWORK.md](MISSION_FRAMEWORK.md). Arena scenarios use the `TriggerRockfall` step command with `zone_id` set to the trap id.
 
 ## Runtime behaviour
 
@@ -72,7 +72,7 @@ A boulder moving faster than `k_rockfall_lethal_speed` strikes every hostile tro
 - knocks the surviving troop down (`StaggerTier::Knockdown`); and
 - costs the boulder 18% of its speed, so a column shields its rear ranks a little.
 
-Releasing a trap plays the positioned `hazard.rockfall` cue. Dust puffs are drawn with the `stone_impact` effect, and boulders are drawn with the catapult stone mesh at boulder scale (`render/geom/rockfall_renderer.cpp`).
+Releasing a trap plays the positioned `hazard.rockfall` cue. Dust puffs are drawn with the `stone_impact` effect, and boulders are drawn with the catapult stone mesh at boulder scale (`render_rockfall` in `render/geom/projectile_renderer.cpp`).
 
 Trap state and boulders in flight are saved under the `rockfall` snapshot key.
 

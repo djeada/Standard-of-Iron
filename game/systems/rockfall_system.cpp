@@ -20,8 +20,8 @@
 #include "game/systems/combat_rules.h"
 #include "game/systems/combat_system/combat_hit_resolver.h"
 #include "game/systems/combat_system/damage_application.h"
+#include "game/systems/combat_system/damage_processor.h"
 #include "game/systems/owner_registry.h"
-#include "game/systems/rpg_combat_system/rpg_commander_damage.h"
 #include "units/spawn_type.h"
 
 namespace Game::Systems {
@@ -72,7 +72,8 @@ constexpr float k_settled_sink_seconds = 1.2F;
   return {v.x(), 0.0F, v.z()};
 }
 
-[[nodiscard]] auto authored_to_world(float coord, int grid_size, float tile_size) -> float {
+[[nodiscard]] auto
+authored_to_world(float coord, int grid_size, float tile_size) -> float {
   float const safe_tile = std::max(tile_size, 1.0e-4F);
   return (coord - (static_cast<float>(grid_size) * 0.5F - 0.5F)) * safe_tile;
 }
@@ -120,15 +121,15 @@ RockfallSystem::~RockfallSystem() = default;
 auto RockfallSystem::to_world(const Game::Map::MapDefinition& map_definition,
                               float x,
                               float z) const -> QVector3D {
-  QVector3D result = map_definition.coordSystem == Game::Map::CoordSystem::World
-                         ? QVector3D(x, 0.0F, z)
-                         : QVector3D(authored_to_world(x,
-                                                       map_definition.grid.width,
-                                                       map_definition.grid.tile_size),
-                                     0.0F,
-                                     authored_to_world(z,
-                                                       map_definition.grid.height,
-                                                       map_definition.grid.tile_size));
+  QVector3D result =
+      map_definition.coordSystem == Game::Map::CoordSystem::World
+          ? QVector3D(x, 0.0F, z)
+          : QVector3D(authored_to_world(
+                          x, map_definition.grid.width, map_definition.grid.tile_size),
+                      0.0F,
+                      authored_to_world(z,
+                                        map_definition.grid.height,
+                                        map_definition.grid.tile_size));
   result.setY(m_services.terrain.get_terrain_height(result.x(), result.z()));
   return result;
 }
@@ -149,7 +150,8 @@ void RockfallSystem::configure(const Game::Map::MapDefinition& map_definition) {
     trap.definition = definition;
     trap.release_world =
         to_world(map_definition, definition.release_x, definition.release_z);
-    trap.target_world = to_world(map_definition, definition.target_x, definition.target_z);
+    trap.target_world =
+        to_world(map_definition, definition.target_x, definition.target_z);
     m_traps.push_back(std::move(trap));
   }
 }
@@ -307,11 +309,10 @@ void RockfallSystem::release_boulder(RuntimeTrap& trap, int trap_index) {
   QVector3D const tumble_axis(hash01(seed ^ 0x11ULL) - 0.5F,
                               hash01(seed ^ 0x22ULL) - 0.5F,
                               hash01(seed ^ 0x33ULL) - 0.5F);
-  boulder.orientation =
-      QQuaternion::fromAxisAndAngle(tumble_axis.lengthSquared() > 1.0e-4F
-                                        ? tumble_axis.normalized()
-                                        : QVector3D(0.0F, 1.0F, 0.0F),
-                                    360.0F * hash01(seed ^ 0x44ULL));
+  boulder.orientation = QQuaternion::fromAxisAndAngle(
+      tumble_axis.lengthSquared() > 1.0e-4F ? tumble_axis.normalized()
+                                            : QVector3D(0.0F, 1.0F, 0.0F),
+      360.0F * hash01(seed ^ 0x44ULL));
   add_dust(position - QVector3D(0.0F, boulder.radius * 0.6F, 0.0F),
            boulder.radius * 1.2F);
   m_boulders.push_back(std::move(boulder));
@@ -376,8 +377,8 @@ void RockfallSystem::step_boulder(Engine::Core::World& world,
     }
     float const speed = velocity.length();
     float const resistance = k_rolling_resistance * k_gravity * support * dt;
-    velocity = speed > resistance ? velocity * ((speed - resistance) / speed)
-                                  : QVector3D();
+    velocity =
+        speed > resistance ? velocity * ((speed - resistance) / speed) : QVector3D();
     boulder.velocity = velocity;
 
     QVector3D const predicted = boulder.position + velocity * dt;
@@ -422,10 +423,9 @@ void RockfallSystem::step_boulder(Engine::Core::World& world,
     add_dust(boulder.position - QVector3D(0.0F, radius * 0.7F, 0.0F), radius);
   }
 
-  bool const outside =
-      m_half_extent_x > 0.0F && m_half_extent_z > 0.0F &&
-      (std::abs(boulder.position.x()) > m_half_extent_x - 0.5F ||
-       std::abs(boulder.position.z()) > m_half_extent_z - 0.5F);
+  bool const outside = m_half_extent_x > 0.0F && m_half_extent_z > 0.0F &&
+                       (std::abs(boulder.position.x()) > m_half_extent_x - 0.5F ||
+                        std::abs(boulder.position.z()) > m_half_extent_z - 0.5F);
   if (outside || boulder.age > k_rockfall_max_boulder_age_seconds) {
     boulder.settled = true;
     boulder.velocity = QVector3D();
@@ -470,8 +470,7 @@ void RockfallSystem::strike_troops(Engine::Core::World& world, Boulder& boulder)
 
   for (auto const id : victims) {
     auto* target = world.get_entity(id);
-    if (target == nullptr ||
-        target->has_component<Engine::Core::PendingRemovalComponent>()) {
+    if (target == nullptr || world.has<Engine::Core::PendingRemovalComponent>(id)) {
       continue;
     }
     strike(world, boulder, *target, boulder.velocity.length());
@@ -482,8 +481,9 @@ void RockfallSystem::strike(Engine::Core::World& world,
                             Boulder& boulder,
                             Engine::Core::Entity& target,
                             float speed) {
-  auto* unit = target.get_component<Engine::Core::UnitComponent>();
-  auto const* transform = target.get_component<Engine::Core::TransformComponent>();
+  auto const* unit = world.try_get<Engine::Core::UnitComponent>(target.get_id());
+  auto const* transform =
+      world.try_get<Engine::Core::TransformComponent>(target.get_id());
   if (unit == nullptr || transform == nullptr || unit->health <= 0) {
     return;
   }
@@ -509,8 +509,7 @@ void RockfallSystem::strike(Engine::Core::World& world,
   QVector3D const travel = flat(boulder.velocity);
 
   if (Game::Systems::CombatRules::uses_rpg_combat_rules(&target)) {
-    (void)Game::Systems::RpgCombat::deal_damage_to_rpg_commander(
-        &world, &target, damage, 0, {}, contact, speed);
+    Game::Systems::Combat::deal_damage(&world, &target, damage);
   } else {
     auto const application =
         Game::Systems::Combat::apply_unit_damage(&world,
@@ -522,7 +521,8 @@ void RockfallSystem::strike(Engine::Core::World& world,
                                                  speed,
                                                  Game::Units::SpawnType::Catapult);
     Game::Systems::Combat::launch_new_casualties_along(
-        target,
+        world,
+        target.get_id(),
         travel.x(),
         travel.z(),
         application.queued_soldier_casualties,
@@ -688,15 +688,17 @@ void RockfallSystem::restore_state(const QJsonObject& state) {
   for (const auto value : state.value(QStringLiteral("traps")).toArray()) {
     auto const obj = value.toObject();
     QString const id = obj.value(QStringLiteral("id")).toString();
-    auto it = std::find_if(m_traps.begin(), m_traps.end(), [&](const RuntimeTrap& trap) {
-      return trap.definition.id == id;
-    });
+    auto it =
+        std::find_if(m_traps.begin(), m_traps.end(), [&](const RuntimeTrap& trap) {
+          return trap.definition.id == id;
+        });
     if (it == m_traps.end()) {
       continue;
     }
     it->armed = obj.value(QStringLiteral("armed")).toBool(true);
     it->times_fired = obj.value(QStringLiteral("times_fired")).toInt();
-    it->rearm_remaining = float(obj.value(QStringLiteral("rearm_remaining")).toDouble());
+    it->rearm_remaining =
+        float(obj.value(QStringLiteral("rearm_remaining")).toDouble());
     it->pending_releases = obj.value(QStringLiteral("pending_releases")).toInt();
     it->released_in_volley = obj.value(QStringLiteral("released_in_volley")).toInt();
     it->release_timer = float(obj.value(QStringLiteral("release_timer")).toDouble());
@@ -728,8 +730,8 @@ void RockfallSystem::restore_state(const QJsonObject& state) {
     }
     m_boulders.push_back(std::move(boulder));
   }
-  m_release_sequence =
-      static_cast<std::uint32_t>(state.value(QStringLiteral("release_sequence")).toInteger());
+  m_release_sequence = static_cast<std::uint32_t>(
+      state.value(QStringLiteral("release_sequence")).toInteger());
   m_total_strikes = state.value(QStringLiteral("strikes")).toInt();
 }
 
