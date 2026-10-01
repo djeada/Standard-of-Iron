@@ -391,7 +391,7 @@ auto cine_field() -> ArenaScenarioDefinition {
     return step;
   };
   s.steps.push_back(rpg_move(0.2F, {0.0F, 0.0F, 0.0F}));
-  s.steps.push_back(rpg_move(19.0F, {0.0F, 0.0F, 0.45F}));
+  s.steps.push_back(rpg_move(19.0F, {0.0F, 0.0F, 0.0F}));
   s.steps.push_back(rpg_move(31.0F, {0.0F, 0.0F, 1.0F}));
   s.steps.push_back(rpg_move(39.0F, {0.0F, 0.0F, 0.0F}));
   s.steps.push_back(hold_attack(39.1F, true));
@@ -690,6 +690,186 @@ auto cine_sepulcher() -> ArenaScenarioDefinition {
   return s;
 }
 
+auto cine_ambush() -> ArenaScenarioDefinition {
+  auto s = definition(k_cine_ambush_id,
+                      QStringLiteral("Cinematic: The Night Road"),
+                      QStringLiteral("Film set for the night ambush short. A legion "
+                                     "column takes a torchlit pass after dark; the "
+                                     "barrows beside the road wake, the dead close "
+                                     "in from both slopes and from behind, and the "
+                                     "line has to hold."),
+                      62.0F);
+  s.ground_type = QStringLiteral("forest_mud");
+  s.terrain_seed_override = 4417;
+  s.arena_floor_half_extent = 180.0F;
+  s.terrain_grid_extent = 400;
+  s.suppress_boundary_mountains = true;
+  s.environment.start_time = 23.0F;
+  s.environment.lighting_profile = QStringLiteral("iron_sepulcher");
+  s.environment.fog_density_override = 0.016F;
+  s.owner_teams = {{.owner_id = 1, .team_id = 1}, {.owner_id = 99, .team_id = 99}};
+  s.rpg_mode = true;
+  s.rpg_commander_group = QStringLiteral("consul");
+  s.elevation_patches = {
+      {.center = {-34.0F, 0.0F, 4.0F},
+       .radius = 18.0F,
+       .height = 3.2F,
+       .plateau = 6.0F},
+      {.center = {-36.0F, 0.0F, 34.0F},
+       .radius = 18.0F,
+       .height = 3.6F,
+       .plateau = 6.0F},
+      {.center = {34.0F, 0.0F, -2.0F},
+       .radius = 18.0F,
+       .height = 3.4F,
+       .plateau = 6.0F},
+      {.center = {36.0F, 0.0F, 30.0F},
+       .radius = 18.0F,
+       .height = 3.0F,
+       .plateau = 6.0F},
+  };
+
+  struct Barrow {
+    const char* id;
+    float x;
+    float z;
+  };
+  for (auto const& barrow :
+       {Barrow{"barrow_west", -14.0F, -2.0F}, Barrow{"barrow_east", 14.0F, -6.0F}}) {
+    Game::Map::UndeadZone zone;
+    zone.id = QString::fromLatin1(barrow.id);
+    zone.anchor_type = Game::Map::WorldProp::Type::MagicShrine;
+    zone.x = barrow.x;
+    zone.z = barrow.z;
+    zone.radius = 16.0F;
+    zone.leash_radius = 40.0F;
+    zone.owner_id = 99;
+    zone.team_id = 99;
+    zone.awaken_on = {QStringLiteral("unit_enters_radius")};
+    zone.wave_delay_seconds = 6.0F;
+    zone.waves = {undead_wave(QStringLiteral("initial"),
+                              {{Game::Units::SpawnType::SkeletonSwordsman, 9},
+                               {Game::Units::SpawnType::SkeletonArcher, 3},
+                               {Game::Units::SpawnType::GravePriest, 2}}),
+                  undead_wave(QStringLiteral("timed"),
+                              {{Game::Units::SpawnType::SkeletonSwordsman, 6}})};
+    s.undead_zones.push_back(zone);
+  }
+
+  auto risen =
+      [](const char* name, Troop troop, int count, QVector3D origin, float facing) {
+        auto group =
+            file(QString::fromLatin1(name), troop, 99, count, origin, 10, 0.0F);
+        group.nation_id = Nation::IronSepulcher;
+        group.spacing = {0.0F, 0.0F, 5.0F};
+        group.facing_degrees = facing;
+        group.spawn_at_start = false;
+        return group;
+      };
+
+  s.resource_patches = {
+      prop(
+          "dead_tree", 7, {-22.0F, 0.0F, -20.0F}, {0.0F, 0.0F, 9.0F}, 1.3F, 3.5F, 0.4F),
+      prop("dead_tree", 7, {22.0F, 0.0F, -22.0F}, {0.0F, 0.0F, 9.5F}, 1.3F, 3.5F, 0.4F),
+      prop("pine_tree",
+           9,
+           {-30.0F, 0.0F, -30.0F},
+           {0.0F, 0.0F, 10.0F},
+           1.4F,
+           5.0F,
+           0.3F),
+      prop(
+          "pine_tree", 9, {30.0F, 0.0F, -30.0F}, {0.0F, 0.0F, 10.0F}, 1.4F, 5.0F, 0.3F),
+      prop("ruins", 2, {-19.0F, 0.0F, -9.0F}, {0.0F, 0.0F, 10.0F}, 1.4F, 2.0F, 0.4F),
+      prop("ruins", 2, {19.0F, 0.0F, -13.0F}, {0.0F, 0.0F, 10.0F}, 1.4F, 2.0F, 0.4F),
+      prop("statue", 1, {-9.0F, 0.0F, -7.0F}, {}, 1.2F, 0.5F, 0.1F),
+      prop("boulder", 6, {-12.0F, 0.0F, 18.0F}, {0.0F, 0.0F, 8.0F}, 1.2F, 3.0F, 0.5F),
+      prop("boulder", 6, {12.0F, 0.0F, 14.0F}, {0.0F, 0.0F, 8.0F}, 1.2F, 3.0F, 0.5F),
+      prop("fire_camp",
+           6,
+           {-5.5F, 0.0F, -18.0F},
+           {0.0F, 0.0F, 12.0F},
+           0.45F,
+           0.6F,
+           0.1F),
+      prop(
+          "fire_camp", 6, {5.5F, 0.0F, -12.0F}, {0.0F, 0.0F, 12.0F}, 0.45F, 0.6F, 0.1F),
+  };
+
+  auto column = [](const char* name, Troop troop, int count, float z, int men) {
+    auto group =
+        file(QString::fromLatin1(name), troop, 1, count, {0.0F, 0.0F, z}, men, 0.0F);
+    group.spacing = {0.0F, 0.0F, 5.5F};
+    group.facing_degrees = 180.0F;
+    return sturdy(group, troop == Troop::Archer ? 3000 : 7000);
+  };
+  s.groups = {
+      column("road_swords", Troop::Swordsman, 4, 28.0F, 12),
+      column("road_spears", Troop::Spearman, 3, 52.0F, 12),
+      column("road_bows", Troop::Archer, 3, 70.0F, 10),
+      risen("slope_bows", Troop::SkeletonArcher, 3, {-24.0F, 0.0F, 14.0F}, 90.0F),
+      risen("rear_risen", Troop::SkeletonSwordsman, 3, {4.0F, 0.0F, 76.0F}, 180.0F),
+      risen("east_risen", Troop::SkeletonSwordsman, 3, {24.0F, 0.0F, 24.0F}, 270.0F)};
+  auto consul = sturdy(file(QStringLiteral("consul"),
+                            Troop::RomanVeteranConsul,
+                            1,
+                            1,
+                            {0.0F, 0.0F, 23.0F},
+                            1,
+                            0.0F),
+                       14000);
+  consul.facing_degrees = 180.0F;
+  s.groups.push_back(consul);
+
+  const auto rpg_move = [](float time, QVector3D axes, float yaw = 180.0F) {
+    auto step = at(time, Command::RpgMove, QStringLiteral("consul"));
+    step.destination = axes;
+    step.rpg_view_yaw_degrees = yaw;
+    return step;
+  };
+  const auto hold_attack = [](float time, bool held) {
+    auto step = at(time, Command::RpgAttackHold, QStringLiteral("consul"));
+    step.enabled = held;
+    return step;
+  };
+  const QStringList march_groups{QStringLiteral("road_swords"),
+                                 QStringLiteral("road_spears"),
+                                 QStringLiteral("road_bows")};
+  s.steps = {
+      rpg_move(0.2F, {0.0F, 0.0F, 0.0F}),
+      form(0.6F, march_groups, Intent::Column, {0.0F, 0.0F, 26.0F}, 180.0F, 6.0F),
+      form(2.0F, march_groups, Intent::Column, {0.0F, 0.0F, -2.0F}, 180.0F, 6.0F),
+      rpg_move(3.0F, {0.0F, 0.0F, 0.0F}),
+      rpg_move(9.5F, {0.0F, 0.0F, 0.0F}),
+      at(16.0F,
+         Command::SpawnAmbush,
+         QStringLiteral("slope_bows"),
+         QStringLiteral("road_swords")),
+      at(17.0F, Command::Stop, QStringLiteral("road_swords")),
+      at(17.0F, Command::Stop, QStringLiteral("road_spears")),
+      at(17.0F, Command::Stop, QStringLiteral("road_bows")),
+      at(18.5F,
+         Command::Attack,
+         QStringLiteral("road_bows"),
+         QStringLiteral("slope_bows")),
+      at(21.0F,
+         Command::SpawnAmbush,
+         QStringLiteral("east_risen"),
+         QStringLiteral("road_spears")),
+      at(26.0F,
+         Command::SpawnAmbush,
+         QStringLiteral("rear_risen"),
+         QStringLiteral("road_bows")),
+      rpg_move(19.0F, {-0.6F, 0.0F, 0.6F}),
+      hold_attack(19.2F, true),
+      rpg_move(26.0F, {0.0F, 0.0F, 0.0F}),
+
+      hold_attack(58.0F, false),
+  };
+  s.expectations = {exists("consul"), exists("road_swords")};
+  return s;
+}
+
 } // namespace
 
 auto build_cinematic_definitions() -> std::vector<ArenaScenarioDefinition> {
@@ -697,6 +877,7 @@ auto build_cinematic_definitions() -> std::vector<ArenaScenarioDefinition> {
   result.push_back(cine_field());
   result.push_back(cine_siege());
   result.push_back(cine_sepulcher());
+  result.push_back(cine_ambush());
   return result;
 }
 

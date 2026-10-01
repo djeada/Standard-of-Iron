@@ -63,6 +63,8 @@ const float RAIN_MIN_HALF_PIXELS = 0.55;
 
 const float RAIN_EDGE_ON_FLOOR = 0.55;
 
+const float RAIN_MAX_HALF_PIXELS = 3.0;
+
 const float INV_TWO_PI = 0.15915494;
 const float SHADE_FLOOR = 0.75;
 const float SHADE_RANGE = 0.25;
@@ -158,6 +160,14 @@ void main() {
     float legible_half_width = max(half_width, pixel_world * RAIN_MIN_HALF_PIXELS);
 
     legibility_fade = half_width / legible_half_width;
+
+    if (pixel_world > 0.0) {
+      float half_width_pixels = half_width / pixel_world;
+      legibility_fade *=
+          clamp((2.0 * RAIN_MAX_HALF_PIXELS - half_width_pixels) / RAIN_MAX_HALF_PIXELS,
+                0.0,
+                1.0);
+    }
 
     legibility_fade *= mix(RAIN_EDGE_ON_FLOOR, 1.0, across_length);
 

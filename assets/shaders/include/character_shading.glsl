@@ -174,6 +174,45 @@ vec3 shade_readable_character(vec3 base,
   return clamp(color, 0.0, 1.0);
 }
 
+const int k_role_blade_glow_flag = 128;
+const vec3 k_blade_glow_color = vec3(0.10, 0.38, 0.85);
+
+vec3 soi_blade_steel(vec3 base,
+                     vec3 surface_normal,
+                     vec3 world_position,
+                     vec3 camera_position,
+                     float zoom) {
+  vec3 view_dir = normalize(camera_position - world_position);
+  vec3 light_dir = environment_primary_direction();
+  vec3 half_sum = light_dir + view_dir;
+  vec3 half_vector = half_sum / max(length(half_sum), 0.001);
+  float n_dot_v = clamp(abs(dot(surface_normal, view_dir)), 0.0, 1.0);
+  float n_dot_l = max(dot(surface_normal, light_dir), 0.0);
+  float n_dot_h = max(dot(surface_normal, half_vector), 0.0);
+  float fresnel = pow(1.0 - n_dot_v, 5.0);
+  vec3 reflection = reflect(-view_dir, surface_normal);
+  float sky = smoothstep(-0.25, 0.65, reflection.y);
+  vec3 reflected_environment =
+      mix(environment_ground_bounce_color() * 0.30, environment_sky_color(), sky);
+  vec3 steel_tint = mix(base, sqrt(max(base, vec3(0.0))), 0.25);
+
+  vec3 metal = base * environment_ambient_light(surface_normal) * 0.24;
+  metal += reflected_environment * steel_tint * (0.10 + fresnel * 0.24);
+  metal += environment_primary_color() * environment_primary_intensity() *
+           (base * n_dot_l * 0.18 + steel_tint * n_dot_l *
+                                        (pow(n_dot_h, mix(96.0, 56.0, zoom)) * 1.10 +
+                                         pow(n_dot_h, 18.0) * 0.08));
+  return metal * environment_exposure();
+}
+
+vec3 soi_blade_glow(vec3 base, vec3 surface_normal, vec3 view_dir) {
+  float night = smoothstep(0.12, 0.85, environment_darkness_amount());
+  float n_dot_v = clamp(abs(dot(surface_normal, view_dir)), 0.0, 1.0);
+  float edge = pow(1.0 - n_dot_v, 7.0);
+  float steel = smoothstep(0.06, 0.50, dot(base, vec3(0.2126, 0.7152, 0.0722)));
+  return k_blade_glow_color * night * steel * (0.008 + 1.25 * edge);
+}
+
 vec3 soi_finish_character(vec3 color,
                           vec3 base,
                           vec3 surface_normal,

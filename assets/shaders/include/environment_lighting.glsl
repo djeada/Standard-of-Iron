@@ -74,6 +74,11 @@ float environment_night_amount() {
   return smoothstep(0.05, 0.40, primary.b - primary.r);
 }
 
+float environment_darkness_amount() {
+  float dim = 1.0 - smoothstep(0.30, 0.62, environment_primary_intensity());
+  return max(environment_night_amount(), dim);
+}
+
 float environment_low_sun_amount() {
   return (1.0 - smoothstep(0.08, 0.50, environment_primary_direction().y)) *
          (1.0 - environment_night_amount());

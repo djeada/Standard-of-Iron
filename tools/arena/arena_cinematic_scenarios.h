@@ -9,6 +9,7 @@ namespace Arena::Scenarios {
 inline constexpr char k_cine_field_id[] = "cine_field";
 inline constexpr char k_cine_siege_id[] = "cine_siege";
 inline constexpr char k_cine_sepulcher_id[] = "cine_sepulcher";
+inline constexpr char k_cine_ambush_id[] = "cine_ambush";
 
 [[nodiscard]] auto
 build_cinematic_definitions() -> std::vector<ArenaScenarioDefinition>;

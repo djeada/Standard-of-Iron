@@ -55,12 +55,14 @@ void render_arrow_projectile(Renderer* renderer,
                              const Game::Systems::ProjectileView& projectile,
                              const QVector3D& pos,
                              const QMatrix4x4& base_model,
-                             ProjectileRelation relation = ProjectileRelation::Neutral);
+                             ProjectileRelation relation = ProjectileRelation::Neutral,
+                             bool reduced_effects = false);
 
 void render_stone_projectile(Renderer* renderer,
                              ResourceManager* resources,
                              const Game::Systems::ProjectileView& projectile,
                              const QVector3D& pos,
-                             const QMatrix4x4& base_model);
+                             const QMatrix4x4& base_model,
+                             bool reduced_effects = false);
 
 } // namespace Render::GL

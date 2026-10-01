@@ -795,7 +795,8 @@ auto sword_make_static_attachment(const SwordRenderConfig& config,
       .bind_socket_transform = bind_socket,
       .mesh_from_socket = sword_local_pose(blade_dir_local),
   });
-  spec.palette_role_remap[k_metal_slot] = base_role_byte;
+  spec.palette_role_remap[k_metal_slot] = static_cast<std::uint8_t>(
+      base_role_byte | Render::Creature::k_role_blade_glow_flag);
   spec.palette_role_remap[k_metal_dark_slot] =
       static_cast<std::uint8_t>(base_role_byte + 1U);
   spec.palette_role_remap[k_fuller_slot] =

@@ -2237,6 +2237,17 @@ struct ArenaScenarioRunner::Impl {
         if (step.rpg_view_yaw_degrees.has_value() && host.set_rpg_view_yaw) {
           host.set_rpg_view_yaw(entity_id, *step.rpg_view_yaw_degrees);
         }
+
+        for (float const axis : {step.destination.x(), step.destination.z()}) {
+          if (std::abs(axis) > 0.01F && std::abs(axis) <= 0.5F) {
+            add_issue(QStringLiteral("rpg_move_axis_ignored"),
+                      QStringLiteral("%1 RpgMove axis %2 is below the 0.5 key "
+                                     "threshold and does nothing")
+                          .arg(step.group)
+                          .arg(axis),
+                      entity_id);
+          }
+        }
         host.set_rpg_move_input(entity_id, step.destination, step.value != 0);
       }
       break;

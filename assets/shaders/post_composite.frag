@@ -32,6 +32,7 @@ const float k_vignette_outer = 1.35;
 const vec3 k_vignette_tint = vec3(0.97, 0.97, 0.98);
 const float k_grain_strength = 0.006;
 const float k_night_exposure_lift = 1.55;
+const float k_night_bloom_boost = 2.4;
 const float k_dusk_exposure_lift = 1.45;
 const float k_grain_shadow_bias = 0.65;
 const int k_ao_tap_count = 8;
@@ -269,7 +270,8 @@ void main() {
   vec3 scene = far_softened_scene(fog);
   vec3 combined = scene;
   if (u_bloom_intensity > 0.0) {
-    combined += texture(u_bloom, v_uv).rgb * u_bloom_intensity;
+    combined += texture(u_bloom, v_uv).rgb * u_bloom_intensity *
+                mix(1.0, k_night_bloom_boost, environment_darkness_amount());
   }
   if (u_godray_strength > 0.0) {
     float rays = texture(u_rays, v_uv).r;
