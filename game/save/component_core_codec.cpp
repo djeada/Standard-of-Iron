@@ -69,6 +69,9 @@ void write_renderable(const Entity* entity, QJsonObject& entity_obj) {
       renderable_obj["renderer_id"] = QString::fromStdString(renderable->renderer_id);
     }
     renderable_obj["visible"] = renderable->visible;
+    if (!renderable->structure_foundation_visible) {
+      renderable_obj["structure_foundation_visible"] = false;
+    }
     entity_obj["renderable"] = renderable_obj;
   }
 }
@@ -80,6 +83,8 @@ void read_renderable(Entity* entity, const QJsonObject& json) {
 
     renderable->renderer_id = renderable_obj["renderer_id"].toString().toStdString();
     renderable->visible = renderable_obj["visible"].toBool(true);
+    renderable->structure_foundation_visible =
+        renderable_obj["structure_foundation_visible"].toBool(true);
   }
 }
 

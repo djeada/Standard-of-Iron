@@ -26,6 +26,10 @@ classify_movement_gate(const Engine::Core::Entity& entity) -> MovementGate;
 is_movement_point_allowed(const QVector3D& pos,
                           const Engine::Core::Entity& entity) -> bool;
 
+[[nodiscard]] auto bypass_line_is_clear(const Engine::Core::Entity& entity,
+                                        const QVector3D& from,
+                                        const QVector3D& to) -> bool;
+
 [[nodiscard]] auto
 max_navigation_speed(const Engine::Core::UnitComponent& unit,
                      const Engine::Core::StaminaComponent* stamina) -> float;

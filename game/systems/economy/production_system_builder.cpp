@@ -22,6 +22,7 @@ namespace {
 
 constexpr float k_orphaned_task_limit_seconds = 8.0F;
 constexpr float k_max_construction_distance_sq = 9.0F;
+constexpr float k_work_spot_leeway = 1.0F;
 
 struct BuilderTick {
   Engine::Core::World& world;
@@ -61,6 +62,14 @@ void track_orphaned_task(BuilderTick& tick) {
 auto wandered_off_site(const BuilderTick& tick) -> bool {
   if (!tick.builder.at_construction_site || tick.transform == nullptr) {
     return false;
+  }
+  if (is_gather_builder_product(tick.builder.product_type) &&
+      tick.movement != nullptr) {
+    float const dx = tick.builder.construction_site_x - tick.transform->position.x;
+    float const dz = tick.builder.construction_site_z - tick.transform->position.z;
+    float const reach = gather_bypass_reach(tick.movement->get_navigation_clearance()) +
+                        k_work_spot_leeway;
+    return (dx * dx) + (dz * dz) > reach * reach;
   }
   float const edge = distance_to_site_edge(
       tick.builder, tick.transform->position.x, tick.transform->position.z);
@@ -170,6 +179,10 @@ void advance_working_builder(BuilderTick& tick) {
     return;
   }
 
+  settle_crew_at_posts(tick.world, tick.entity.get_id(), builder, tick.delta_time);
+  if (!crew_at_posts(tick.world, tick.entity.get_id(), builder)) {
+    return;
+  }
   tick_work_timer(tick);
   if (builder.product_type == k_builder_product_repair &&
       builder.at_construction_site) {

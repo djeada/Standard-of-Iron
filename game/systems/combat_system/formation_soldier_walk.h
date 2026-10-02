@@ -28,6 +28,7 @@ struct SlotWalk {
   bool engaged{false};
   bool external_reform{false};
   bool position_is_authored{false};
+  bool walking_to_work_posts{false};
   Pathfinding::Passability passability{Pathfinding::Passability::Light};
   float delta_time{0.0F};
 };

@@ -191,6 +191,8 @@ inline constexpr char k_grounding_riverbank_id[] = "grounding_riverbank";
 inline constexpr char k_grounding_road_id[] = "grounding_road";
 inline constexpr char k_grounding_scatter_id[] = "grounding_scatter";
 inline constexpr char k_humanoid_gait_review_id[] = "humanoid_gait_review";
+inline constexpr char k_humanoid_gait_review_carthage_id[] =
+    "humanoid_gait_review_carthage";
 inline constexpr char k_humanoid_gait_review_leaders_id[] =
     "humanoid_gait_review_leaders";
 inline constexpr char k_idle_weapon_grip_review_id[] = "idle_weapon_grip_review";

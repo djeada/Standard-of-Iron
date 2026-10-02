@@ -91,6 +91,7 @@ class RenderableComponent {
 public:
   std::string renderer_id;
   bool visible{true};
+  bool structure_foundation_visible{true};
 };
 
 class UnitComponent {

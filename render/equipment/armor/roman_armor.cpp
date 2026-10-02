@@ -452,6 +452,7 @@ auto roman_heavy_armor_make_static_attachment(std::uint16_t torso_socket_bone_in
       .socket_bone_index = torso_socket_bone_index,
       .unit_local_pose_at_bind = torso_local.world,
   });
+  fit_armor_to_waist(spec, waist.origin.y(), bottom.y());
   spec.palette_role_remap[0] = base_role_byte;
   spec.palette_role_remap[1] = static_cast<std::uint8_t>(base_role_byte + 1U);
   spec.palette_role_remap[2] = static_cast<std::uint8_t>(base_role_byte + 2U);
@@ -562,6 +563,7 @@ auto roman_light_armor_make_static_attachment(std::uint16_t torso_socket_bone_in
       .socket_bone_index = torso_socket_bone_index,
       .unit_local_pose_at_bind = torso_local.world,
   });
+  fit_armor_to_waist(spec, waist.origin.y(), bottom.y());
   spec.palette_role_remap[0] = base_role_byte;
   spec.palette_role_remap[1] = static_cast<std::uint8_t>(base_role_byte + 1U);
   spec.palette_role_remap[2] = static_cast<std::uint8_t>(base_role_byte + 2U);

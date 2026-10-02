@@ -373,13 +373,15 @@ Everything that stands on the ground samples one surface, and it is the surface 
   `k_road_surface_envelope_tiles` of each vertex. `TerrainService` samples the same
   envelope for points on a road, so units walk on the paving rather than on the ground
   under it.
-- **Structures stay upright and get a foundation.** Buildings, walls, towers, construction
+- **Structures stay upright and get a footing.** Buildings, walls, towers, construction
   sites and placement ghosts are seated at the height under their centre.
   `render/entity/structure_foundation` measures the drop across the drawn body (the
   `BuildingCollisionRegistry` body table × transform scale) and adds a fieldstone
-  foundation down to the lowest ground. Completed buildings cache it in `CachedUnitData`
-  and recompute it only when the model matrix changes. Ghosts resolve it on the spot, using
-  the same rule the finished structure will use.
+  perimeter support down to the lowest ground, leaving the center open instead of filling
+  the footprint with a slab. Map-object anchors suppress these supports. Completed
+  buildings cache the support in `CachedUnitData` and recompute it only when the model
+  matrix changes. Ghosts resolve it on the spot, using the same rule the finished
+  structure will use.
 - **Upright props are bedded, not tilted.** Trees, iron ore and plants sink by
   `slope_bed_depth` (contact radius × tan slope) so the downhill side of the trunk or base
   meets the ground. Rocks keep their tilt-and-sink ground fit (`stone_ground_fit.h`).

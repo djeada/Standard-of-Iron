@@ -1071,6 +1071,10 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
       soldier_render_anim.movement_state = Animation::MovementState::Walk;
     }
   }
+  if (has_shared_footsteps && soldier_render_anim.is_constructing &&
+      shared_footing->gait != Engine::Core::FormationSoldierGait::Idle) {
+    soldier_render_anim.is_constructing = false;
+  }
   if (has_shared_footsteps && !soldier_render_anim.is_attacking &&
       !soldier_render_anim.is_in_melee_lock && !soldier_render_anim.is_constructing) {
     switch (shared_footing->gait) {

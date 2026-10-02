@@ -102,6 +102,8 @@ public:
 
   float site_closest_approach{0.0F};
 
+  float site_settle_seconds{0.0F};
+
   bool has_site_approach{false};
   float site_approach_x{0.0F};
   float site_approach_z{0.0F};

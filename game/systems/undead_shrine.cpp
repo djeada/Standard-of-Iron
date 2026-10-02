@@ -106,6 +106,12 @@ void UndeadShrine::ensure_anchor_structure(
     UndeadRuntimeZone& zone,
     Game::Units::UnitFactoryRegistry* factories) const {
   if (!zone.anchor_pending || factories == nullptr) {
+    if (zone.anchor_entity_id != 0) {
+      if (auto* renderable =
+              world.try_get<Engine::Core::RenderableComponent>(zone.anchor_entity_id)) {
+        renderable->structure_foundation_visible = false;
+      }
+    }
     return;
   }
   zone.anchor_pending = false;
@@ -128,6 +134,10 @@ void UndeadShrine::ensure_anchor_structure(
     return;
   }
   zone.anchor_entity_id = anchor->id();
+  if (auto* renderable =
+          world.try_get<Engine::Core::RenderableComponent>(zone.anchor_entity_id)) {
+    renderable->structure_foundation_visible = false;
+  }
 }
 
 void UndeadShrine::refresh_anchor_structure(Engine::Core::World& world,

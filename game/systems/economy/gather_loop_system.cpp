@@ -189,7 +189,8 @@ auto rank_nearby_nodes(Engine::Core::World& world,
 
 auto node_is_workable(const Game::Map::WorldPropTarget& node,
                       float worker_x,
-                      float worker_z) -> bool {
+                      float worker_z,
+                      const Engine::Core::MovementComponent& movement) -> bool {
 
   Point const node_grid = NavGrid::world_to_grid(node.x, node.z);
   auto const standing_cell =
@@ -212,9 +213,19 @@ auto node_is_workable(const Game::Map::WorldPropTarget& node,
     return true;
   }
 
-  auto const path = pathfinder->find_path(start, *standing_cell);
-  return !path.empty() && path.back().x == standing_cell->x &&
-         path.back().y == standing_cell->y;
+  auto const passability = movement.get_can_enter_forest()
+                               ? Pathfinding::Passability::Light
+                               : Pathfinding::Passability::Heavy;
+  auto const path = pathfinder->find_path(
+      start, *standing_cell, passability, movement.get_navigation_clearance());
+  if (path.empty()) {
+    return false;
+  }
+  QVector3D const end = NavGrid::grid_to_world(path.back());
+  float const reach = gather_bypass_reach(movement.get_navigation_clearance());
+  float const dx = end.x() - node.x;
+  float const dz = end.z() - node.z;
+  return (dx * dx) + (dz * dz) <= reach * reach;
 }
 
 void assign_node(Engine::Core::BuilderProductionComponent& builder,
@@ -267,7 +278,7 @@ auto claim_from(Engine::Core::World& world,
     }
 
     if (!node_is_workable(
-            candidate.target, transform.position.x, transform.position.z)) {
+            candidate.target, transform.position.x, transform.position.z, movement)) {
       continue;
     }
 

@@ -7,6 +7,7 @@
 #include <numbers>
 #include <span>
 
+#include "animation/rig/humanoid_proportions.h"
 #include "animation/rig/side.h"
 #include "render/creature/skeleton.h"
 
@@ -216,10 +217,13 @@ void evaluate_skeleton(const Render::GL::HumanoidPose& pose,
     ctx.body_up.normalize();
   }
 
-  QVector3D const to_knee_l = pose.knee_l - ctx.pelvis;
-  QVector3D const to_knee_r = pose.knee_r - ctx.pelvis;
-  ctx.hip_l = ctx.pelvis + QVector3D(to_knee_l.x(), 0.0F, to_knee_l.z()) * 0.3F;
-  ctx.hip_r = ctx.pelvis + QVector3D(to_knee_r.x(), 0.0F, to_knee_r.z()) * 0.3F;
+  // Match the hip anchors used by the leg IK. Deriving these from the knees
+  // moves the thigh roots forward/backward during a stride and tears the waist.
+  using HP = Render::GL::HumanProportions;
+  ctx.hip_l =
+      ctx.pelvis + QVector3D(-HP::HIP_LATERAL_OFFSET, HP::HIP_VERTICAL_OFFSET, 0.0F);
+  ctx.hip_r =
+      ctx.pelvis + QVector3D(HP::HIP_LATERAL_OFFSET, HP::HIP_VERTICAL_OFFSET, 0.0F);
 
   Creature::evaluate_skeleton(
       humanoid_topology(),

@@ -8,6 +8,7 @@
 #include "movement_system_motor.h"
 #include "order_service.h"
 #include "route_follow_system.h"
+#include "route_follow_system_gate.h"
 #include "systems/navigation/nav_grid.h"
 #include "systems/navigation/pathfinding.h"
 #include "units/spawn_type.h"
@@ -120,13 +121,13 @@ void MovementSystem::Gates::step_builder_bypass(Mover& mover) {
   float const bypass_step =
       std::max(max_navigation_speed(mover.unit, nullptr) * delta_time, 0.01F);
 
-  auto const* bypass_ground = NavGrid::get_pathfinder();
+  QVector3D const here(transform.position.x, 0.0F, transform.position.z);
   if (dist <= bypass_step &&
-      (bypass_ground == nullptr ||
-       bypass_ground->is_terrain_segment_walkable(
-           QVector3D(transform.position.x, 0.0F, transform.position.z),
-           QVector3D(
-               builder_prod->bypass_target_x, 0.0F, builder_prod->bypass_target_z)))) {
+      bypass_line_is_clear(mover.entity,
+                           here,
+                           QVector3D(builder_prod->bypass_target_x,
+                                     0.0F,
+                                     builder_prod->bypass_target_z))) {
     transform.position.x = builder_prod->bypass_target_x;
     transform.position.z = builder_prod->bypass_target_z;
     builder_prod->bypass_movement_active = false;
@@ -143,12 +144,10 @@ void MovementSystem::Gates::step_builder_bypass(Mover& mover) {
     movement.vx = nx * base_speed;
     movement.vz = nz * base_speed;
 
-    QVector3D const here(transform.position.x, 0.0F, transform.position.z);
     QVector3D const next(transform.position.x + movement.vx * delta_time,
                          0.0F,
                          transform.position.z + movement.vz * delta_time);
-    if (auto const* ground = NavGrid::get_pathfinder();
-        ground != nullptr && !ground->is_terrain_segment_walkable(here, next)) {
+    if (!bypass_line_is_clear(mover.entity, here, next)) {
       builder_prod->bypass_movement_active = false;
       movement.vx = 0.0F;
       movement.vz = 0.0F;

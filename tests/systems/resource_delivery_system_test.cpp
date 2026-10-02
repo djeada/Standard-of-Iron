@@ -9,6 +9,7 @@
 
 #include "core/component_economy.h"
 #include "core/event_manager.h"
+#include "core/movement_facts.h"
 #include "core/world.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
@@ -257,6 +258,30 @@ TEST_F(ResourceDeliverySystemTest, AHaulerWalksTheWholeWayHomeBeforeTheCountersM
       << "the load should only be handed over on the yard itself";
 
   Game::Map::TerrainService::instance().clear();
+}
+
+TEST_F(ResourceDeliverySystemTest,
+       AHaulerHeldOffACrowdedYardUnloadsFromWhereItStopped) {
+  auto const drop = Game::Systems::stockpile_drop_point(0.0F, 0.0F, 0.0F);
+  auto run = [&drop](Engine::Core::MovementOrderState state) {
+    Game::Systems::PlayerResourceRegistry::instance().clear();
+    Engine::Core::World world;
+    add_barracks(world, 1, 0.0F, 0.0F);
+    auto* hauler = add_hauler(world, 1, drop.x + 3.5F, drop.z, ResourceType::Wood, 40);
+    hauler->get_component<Engine::Core::MovementComponent>()->engage_manual_move(
+        drop.x, drop.z);
+    hauler->add_component<Engine::Core::MovementFactsComponent>()->progress.state =
+        state;
+    Game::Systems::ResourceDeliverySystem system;
+    system.update(&world, 0.1F);
+    return Game::Systems::PlayerResourceRegistry::instance().get(1, ResourceType::Wood);
+  };
+
+  EXPECT_EQ(run(Engine::Core::MovementOrderState::Following), 0)
+      << "a hauler still walking in must not unload short of the yard";
+  EXPECT_EQ(run(Engine::Core::MovementOrderState::LocallyBlocked), 40)
+      << "a hauler whose route stopped short beside a crowded yard waited for a "
+         "spot that never cleared";
 }
 
 TEST_F(ResourceDeliverySystemTest, PileHeightsFollowTheOwnersStores) {

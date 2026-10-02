@@ -8047,6 +8047,13 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
       s.expectations.push_back(expectation(Expect::NoLimbOverextension, name));
       s.expectations.push_back(expectation(Expect::MovementAnimationObserved, name));
     }
+    auto carthage = s;
+    carthage.id = QString::fromLatin1(k_humanoid_gait_review_carthage_id);
+    carthage.label = QStringLiteral("Humanoid Gait Review: Carthage");
+    for (auto& unit : carthage.groups) {
+      unit.nation_id = Nation::Carthage;
+    }
+    result.push_back(std::move(carthage));
     result.push_back(std::move(s));
   }
 

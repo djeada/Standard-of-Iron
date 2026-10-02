@@ -76,7 +76,7 @@ constexpr std::array k_fields = std::to_array<FieldSpec>({
     {"TransformComponent", AuthoritativeSerialized, "Position and orientation."},
     {"RenderableComponent",
      AuthoritativeSerialized,
-     "Names the visual asset; the choice is authored, not derived."},
+     "Names the visual asset and stores authored rendering options."},
     {"UnitComponent", AuthoritativeSerialized, "Health, owner, type."},
     {"MovementComponent", AuthoritativeSerialized, "Path and destination."},
     {"MovementFactsComponent",
