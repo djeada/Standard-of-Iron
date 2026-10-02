@@ -1,7 +1,10 @@
+#include <algorithm>
+#include <cmath>
 #include <gtest/gtest.h>
 
 #include "game/wildlife/wildlife_species.h"
 #include "render/entity/wildlife/sheep_renderer.h"
+#include "render/entity/wildlife/sheep_slapstick.h"
 #include "render/entity/wildlife/wildlife_draw_state.h"
 #include "render/entity/wildlife/wolf_renderer.h"
 
@@ -145,6 +148,73 @@ TEST(WildlifeClipSelection, ReplayingAScenarioDoesNotBlendFromItsPreviousDeath) 
   state.time = 0.0F;
   EXPECT_FLOAT_EQ(resolve_clip_transition(state, AnimationStateId::Run, 0.0F).weight,
                   0.0F);
+}
+
+} // namespace
+
+namespace {
+
+using Render::GL::Wildlife::plan_sheep_slapstick;
+using Render::GL::Wildlife::sheep_wool_tuft;
+
+TEST(SheepSlapstick, AGrazingSheepIsLeftAlone) {
+  DrawState state;
+  state.time = 3.0F;
+  auto const gag = plan_sheep_slapstick(state);
+  EXPECT_EQ(gag.stars, 0.0F);
+  EXPECT_EQ(gag.sway_roll, 0.0F);
+  EXPECT_LT(gag.poof_time, 0.0F);
+}
+
+TEST(SheepSlapstick, ASheepUnderTheMalletSwaysAndSeesStars) {
+  DrawState state;
+  state.dazed = 0.7F;
+  float widest = 0.0F;
+  for (int frame = 0; frame < 60; ++frame) {
+    state.time = static_cast<float>(frame) / 30.0F;
+    auto const gag = plan_sheep_slapstick(state);
+    EXPECT_GT(gag.stars, 0.99F);
+    widest = std::max(widest, std::abs(gag.sway_roll));
+  }
+  EXPECT_GT(widest, 5.0F) << "a dazed sheep should wobble visibly";
+}
+
+TEST(SheepSlapstick, TheStarsOutstayTheFallThenFade) {
+  DrawState state;
+  state.death_progress = 1.0F;
+  state.dead = true;
+  state.death_elapsed = 2.0F;
+  auto const lying = plan_sheep_slapstick(state);
+  EXPECT_GT(lying.stars, 0.99F);
+  EXPECT_LT(lying.star_centre.y(), 0.5F) << "the halo follows the head down";
+
+  state.death_elapsed = Render::GL::Wildlife::k_sheep_star_linger_seconds +
+                        Render::GL::Wildlife::k_sheep_star_fade_seconds + 0.1F;
+  EXPECT_EQ(plan_sheep_slapstick(state).stars, 0.0F);
+
+  state.death_elapsed = 2.0F;
+  state.sink_progress = 0.3F;
+  EXPECT_EQ(plan_sheep_slapstick(state).stars, 0.0F) << "nothing over a sinking corpse";
+}
+
+TEST(SheepSlapstick, TheWoolBurstsOutAndFloatsAway) {
+  DrawState state;
+  state.death_progress = 0.1F;
+  state.death_elapsed = 0.12F;
+  auto const gag = plan_sheep_slapstick(state);
+  ASSERT_GE(gag.poof_time, 0.0F);
+
+  float spread = 0.0F;
+  for (int i = 0; i < Render::GL::Wildlife::k_sheep_wool_tuft_count; ++i) {
+    auto const early = sheep_wool_tuft(17U, i, 0.1F);
+    auto const later = sheep_wool_tuft(17U, i, 0.8F);
+    EXPECT_GT(later.radius, 0.0F);
+    spread = std::max(spread, (later.position - early.position).length());
+    EXPECT_EQ(
+        sheep_wool_tuft(17U, i, Render::GL::Wildlife::k_sheep_wool_poof_seconds).radius,
+        0.0F);
+  }
+  EXPECT_GT(spread, 0.15F);
 }
 
 } // namespace

@@ -192,8 +192,15 @@ auto render_entity_is_stable(const Entity& entity) -> bool {
       (combat != nullptr && combat->animation_state != CombatAnimationState::Idle) ||
       (contact != nullptr && (contact->in_contact || !contact->fronts.empty())) ||
       (casualties != nullptr && !casualties->entries.empty());
+  // A held animal stands still, but its reaction timers still drive its clip
+  // and the butchering gag, so it must keep reaching the renderer.
+  auto const* wildlife = entity.get_component<WildlifeComponent>();
+  bool const wildlife_reacting =
+      wildlife != nullptr &&
+      (wildlife->dazed_timer > 0.0F || wildlife->flinch_timer > 0.0F ||
+       wildlife->bite_timer > 0.0F);
   bool const transient =
-      entity.has_component<PendingRemovalComponent>() ||
+      wildlife_reacting || entity.has_component<PendingRemovalComponent>() ||
       entity.has_component<DeathAnimationComponent>() ||
       entity.has_component<BuilderProductionComponent>() ||
       entity.has_component<ProductionComponent>() ||
@@ -251,6 +258,12 @@ auto render_entity_signature(const Entity& entity) -> std::uint64_t {
   }
   if (auto const* farm = entity.get_component<FarmComponent>()) {
     render_hash_combine(signature, static_cast<std::uint64_t>(farm->growth_stage()));
+  }
+  if (auto const* wildlife = entity.get_component<WildlifeComponent>()) {
+    render_hash_combine(signature,
+                        (wildlife->dazed_timer > 0.0F ? 1U : 0U) |
+                            (wildlife->flinch_timer > 0.0F ? 2U : 0U) |
+                            (wildlife->bite_timer > 0.0F ? 4U : 0U));
   }
   if (auto const* cover = entity.get_component<ForestCoverComponent>()) {
     render_hash_combine(signature, cover->concealed ? 1U : 0U);

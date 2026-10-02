@@ -119,6 +119,7 @@ auto resolve_draw_state(const DrawContext& ctx, float top_speed) -> DrawState {
       state.bite_progress =
           std::clamp(1.0F - (wildlife->bite_timer / k_bite_seconds), 0.0F, 1.0F);
     }
+    state.dazed = wildlife->dazed_timer;
     if (wildlife->flinch_timer > 0.0F) {
       constexpr float k_flinch_seconds =
           Engine::Core::WildlifeComponent::k_flinch_animation_seconds;
@@ -129,6 +130,7 @@ auto resolve_draw_state(const DrawContext& ctx, float top_speed) -> DrawState {
 
   if (const auto* death =
           ctx.entity->get_component<Engine::Core::DeathAnimationComponent>()) {
+    state.death_elapsed = Engine::Core::death_sequence_elapsed(*death);
     if (death->state != Engine::Core::DeathSequenceState::Dying) {
       state.dead = true;
       state.death_progress = 1.0F;

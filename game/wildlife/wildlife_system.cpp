@@ -179,6 +179,7 @@ void WildlifeSystem::update_animal(Engine::Core::World& world,
   wildlife->state_timer = std::max(0.0F, wildlife->state_timer - delta_time);
   wildlife->alarm_timer = std::max(0.0F, wildlife->alarm_timer - delta_time);
   wildlife->flinch_timer = std::max(0.0F, wildlife->flinch_timer - delta_time);
+  wildlife->dazed_timer = std::max(0.0F, wildlife->dazed_timer - delta_time);
   if (const auto* unit = animal.entity->get_component<Engine::Core::UnitComponent>()) {
     if (wildlife->watched_health >= 0 && unit->health < wildlife->watched_health) {
       wildlife->flinch_timer =

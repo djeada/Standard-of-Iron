@@ -9,6 +9,7 @@
 #include "core/ownership_constants.h"
 #include "core/world.h"
 #include "game/command/command_dispatcher.h"
+#include "game/core/world_render_snapshot.h"
 #include "game/map/map_definition.h"
 #include "game/map/map_transformer.h"
 #include "game/map/terrain_service.h"
@@ -297,7 +298,27 @@ TEST_F(FoodEconomyTest, ASheepBeingButcheredIsHeldStill) {
   system.update(&world, 0.1F);
 
   EXPECT_GT(sheep->get_component<Engine::Core::WildlifeComponent>()->held_timer, 0.0F);
+  EXPECT_GT(sheep->get_component<Engine::Core::WildlifeComponent>()->dazed_timer, 0.0F)
+      << "a sheep under the mallet sees stars until it keels over";
   EXPECT_GT(sheep->get_component<Engine::Core::UnitComponent>()->health, 0);
+}
+
+TEST_F(FoodEconomyTest, AHeldDazedSheepKeepsReachingTheRenderer) {
+  Engine::Core::World world;
+  auto* sheep = add_sheep(world, 8.0F, 8.0F);
+  auto* wildlife = sheep->get_component<Engine::Core::WildlifeComponent>();
+  ASSERT_TRUE(Engine::Core::render_entity_is_stable(*sheep))
+      << "a calm grazing sheep may be skipped by the snapshot";
+  std::uint64_t const calm = Engine::Core::render_entity_signature(*sheep);
+
+  wildlife->dazed_timer = Engine::Core::WildlifeComponent::k_dazed_hold_seconds;
+  EXPECT_FALSE(Engine::Core::render_entity_is_stable(*sheep))
+      << "a sheep under the mallet stands still, but the stars must still be drawn";
+  EXPECT_NE(Engine::Core::render_entity_signature(*sheep), calm);
+
+  wildlife->dazed_timer = 0.0F;
+  EXPECT_EQ(Engine::Core::render_entity_signature(*sheep), calm)
+      << "the end of the daze must be published too";
 }
 
 TEST_F(FoodEconomyTest, TheStandingFarmRoundWaitsForTheNextCropInsteadOfRetiring) {

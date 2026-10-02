@@ -75,11 +75,13 @@ The current job target is stored in `BuilderProductionComponent::structure_task_
 
 The **Collect** command accepts ripe farms and sheep under the cursor in addition to ordinary resource nodes. When builders are selected, interaction markers highlight ripe farms as `harvest` targets and sheep as `slaughter` targets. Right-click hints name the action before it is issued.
 
+The pointer looks for a sheep on its own before it falls back to the generic unit pick (`pick_sheep_on_screen` in `app/economy/construction_pointer.cpp`). The builder you are sending usually stands right beside the animal, and the generic pick would otherwise take the builder and drop the order.
+
 ### Sheep are moving targets
 
 A sheep can move while a builder approaches. The job follows the animal until the builder is within working range. At that point the sheep is held through `WildlifeComponent::held_timer`, keeping it in place during the slaughter action.
 
-When the job completes, the sheep uses the same death sequence as a sheep killed by a wolf. The herd later respawns according to the map's wildlife timer. Mutton is therefore renewable but slow; farms remain the reliable source of food.
+While the mallet comes down the sheep is *dazed* (`WildlifeComponent::dazed_timer`, presentation only): it sways on its feet with a halo of stars circling its head. When the job completes, the sheep uses the same death sequence as a sheep killed by a wolf, and every sheep death is a cartoon one (see [Slaughter is slapstick](#slaughter-is-slapstick)). The herd later respawns according to the map's wildlife timer. Mutton is therefore renewable but slow; farms remain the reliable source of food.
 
 ## Standing orders and Auto Gather
 
@@ -87,7 +89,7 @@ Reaping or slaughtering creates a **standing round**, just like felling a tree.
 
 A worker assigned a `harvest_grain` round returns to the nearest ripe farm around the round's anchor. Unlike a depleted tree stand, the round is not retired merely because no farm is currently ripe. If a friendly farm remains within reach, the worker waits near it for the next crop.
 
-**Auto Gather** treats ripe farms as normal resource targets. Its priority cycle includes **Food first**, which can also direct the worker toward sheep.
+**Auto Gather** treats ripe farms and live sheep as normal resource targets, next to trees, boulders and ore. A sheep closer than any other node is hunted even without a food priority; a chosen priority still wins over a closer sheep. Sheep under fog are left alone, like props. **Food first** puts farms and sheep ahead of everything else.
 
 ## Making builder work readable
 
@@ -110,7 +112,17 @@ This gives each task a distinct read:
 - felling a tree uses the mallet action;
 - quarrying stone or ore uses a kneeling chisel;
 - reaping uses the sickle; and
-- slaughtering uses a kneeling blade action.
+- slaughtering is a mallet bonk on the head, never a blade.
+
+### Slaughter is slapstick
+
+Standard of Iron is a light-hearted game, so killing a sheep is played as a cartoon:
+
+1. **Bonk.** The builder works the sheep with the overhead mallet clip. The sheep sways dizzily and five stars orbit its head (`render/entity/wildlife/sheep_slapstick.cpp`).
+2. **Poof.** On the last blow the fleece goes *poof*: a burst of wool tufts flies out, stalls and floats down over 2.4 s.
+3. **Keel over.** The sheep's `die` clip (`apply_collapse` in `render/wildlife/sheep_spec.cpp`) has it go rigid, hop on the spot, tip right over onto its back and land with all four legs in the air, where they boing a few times before settling. The stars move down to circle the upturned head and linger about four seconds. There is no blood and nothing bends the wrong way.
+
+The die and dead clips are baked into `assets/creatures/sheep.bpat`; run `make bake-bpat` after changing the pose.
 
 Building construction retains the seeded mixture of hammer, saw, and chisel workers that makes a crew look varied. The sickle is excluded from that seed roll through `ArchetypeVariantTable::seed_variant_limit`.
 

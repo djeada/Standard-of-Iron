@@ -97,6 +97,22 @@ protected:
     return worker;
   }
 
+  static auto
+  add_sheep(Engine::Core::World& world, float x, float z) -> Engine::Core::Entity* {
+    auto* entity = world.create_entity();
+    auto* transform = entity->add_component<Engine::Core::TransformComponent>();
+    transform->position = {x, 0.0F, z};
+    auto* unit = entity->add_component<Engine::Core::UnitComponent>();
+    unit->spawn_type = Game::Units::SpawnType::Sheep;
+    unit->owner_id = 0;
+    unit->health = 60;
+    unit->max_health = 60;
+    entity->add_component<Engine::Core::MovementComponent>();
+    auto* wildlife = entity->add_component<Engine::Core::WildlifeComponent>();
+    wildlife->species = Game::Wildlife::Species::Sheep;
+    return entity;
+  }
+
   static void order_auto_gather(Engine::Core::World& world,
                                 Engine::Core::Entity* worker,
                                 const std::string& priority = {}) {
@@ -456,6 +472,56 @@ TEST_F(AutoGatherTest, ResourcesUnderFogAreLeftAlone) {
   think(world);
 
   EXPECT_TRUE(builder_of(worker)->has_task_target);
+}
+
+TEST_F(AutoGatherTest, ASheepCloserThanAnyNodeIsHuntedWithoutAFoodPriority) {
+  lay_out({{.type = WorldProp::Type::PineTree, .x = 9.0F, .z = 0.0F}});
+  Engine::Core::World world;
+  auto* worker = add_builder(world, 0.0F, 0.0F);
+  auto* sheep = add_sheep(world, 3.0F, 0.0F);
+  order_auto_gather(world, worker);
+
+  think(world);
+
+  EXPECT_EQ(builder_of(worker)->product_type,
+            Game::Systems::k_builder_product_slaughter_sheep);
+  EXPECT_EQ(builder_of(worker)->structure_task_entity_id, sheep->get_id());
+}
+
+TEST_F(AutoGatherTest, APreferredNodeStillBeatsACloserSheep) {
+  lay_out({{.type = WorldProp::Type::PineTree, .x = 9.0F, .z = 0.0F}});
+  Engine::Core::World world;
+  auto* worker = add_builder(world, 0.0F, 0.0F);
+  add_sheep(world, 3.0F, 0.0F);
+  order_auto_gather(
+      world, worker, std::string(Game::Systems::k_builder_product_cut_tree));
+
+  think(world);
+
+  EXPECT_EQ(builder_of(worker)->product_type,
+            Game::Systems::k_builder_product_cut_tree);
+  EXPECT_EQ(builder_of(worker)->structure_task_entity_id, 0U);
+}
+
+TEST_F(AutoGatherTest, ASheepUnderFogIsLeftAlone) {
+  lay_out({});
+  Game::Systems::OwnerRegistry::instance().set_local_player_id(1);
+  Game::Map::VisibilityService::instance().initialize(
+      k_grid_extent, k_grid_extent, 1.0F);
+
+  Engine::Core::World world;
+  auto* worker = add_builder(world, 0.0F, 0.0F);
+  add_sheep(world, 3.0F, 0.0F);
+  order_auto_gather(world, worker);
+
+  think(world);
+
+  EXPECT_EQ(builder_of(worker)->structure_task_entity_id, 0U);
+
+  Game::Map::VisibilityService::instance().reveal_all();
+  think(world);
+
+  EXPECT_NE(builder_of(worker)->structure_task_entity_id, 0U);
 }
 
 TEST_F(AutoGatherTest, WithNoDropOffLeftTheWorkerBanksTheLoadAndCarriesOn) {
