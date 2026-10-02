@@ -31,7 +31,8 @@ public:
   [[nodiscard]] auto plan(Engine::Core::World& world,
                           const QVector3D& pointer_world,
                           int owner_id,
-                          bool gate) -> WallPlanSummary;
+                          bool gate,
+                          bool ladder = false) -> WallPlanSummary;
 
   [[nodiscard]] auto drag_active() const -> bool { return m_drag_active; }
   [[nodiscard]] auto anchor_set() const -> bool { return m_anchor_set; }

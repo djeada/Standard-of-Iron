@@ -1,0 +1,499 @@
+{
+  "id": "storming_of_victumulae",
+  "menu_order": 50,
+  "title": "The Storming of Victumulae",
+  "summary": "A walled market town on a double hill, two rings of wall and one ramp between them. Raise a ram and a siege tower, break into the lower ward, storm the citadel, and kill the praefect who holds it before the relief columns from Placentia arrive.",
+  "teaching_goal": "A wall is not stormed by walking at it. Builders raise the engines: a ram knocks a gate down, a siege tower puts men on the wall walk. Bring both, break one ring at a time, and keep something back for the column that comes to lift the siege.",
+  "narrative_intent": "A set-piece siege: a quiet build-up in the Punic camp, an assault up the south ramp under arrow fire from two rings of wall, and a relief column that arrives on the flank roads while the army is committed against the citadel.",
+  "historical_context": "Winter 218 BC: after the victory on the Trebia, Hannibal attacked the depot near Placentia and then stormed Victumulae, a fortified market of the Insubrian plain where the people of the district had gathered for safety. Livy records that it fell to assault and was sacked. This altered history gives the town a Roman praefect, a citadel garrison and a relief force on the Placentia road.",
+  "terrain_type": "hill_fortress",
+  "theme": "A wall is a question. The ram and the tower are the two answers.",
+  "map_path": ":/assets/maps/map_victumulae.json",
+  "player_setup": {
+    "nation": "carthage",
+    "faction": "carthaginian",
+    "color": "brown",
+    "starting_units": [
+      {
+        "type": "spearman",
+        "count": 4,
+        "position": {
+          "x": 72.0,
+          "z": 130.0
+        }
+      },
+      {
+        "type": "swordsman",
+        "count": 4,
+        "position": {
+          "x": 88.0,
+          "z": 130.0
+        }
+      },
+      {
+        "type": "archer",
+        "count": 3,
+        "position": {
+          "x": 72.0,
+          "z": 138.0
+        }
+      },
+      {
+        "type": "healer",
+        "count": 1,
+        "position": {
+          "x": 84.0,
+          "z": 138.0
+        }
+      },
+      {
+        "type": "builder",
+        "count": 3,
+        "position": {
+          "x": 98.0,
+          "z": 149.0
+        }
+      }
+    ],
+    "starting_buildings": [],
+    "starting_resources": {
+      "gold": 350,
+      "food": 300,
+      "wood": 320,
+      "stone": 60,
+      "iron": 90
+    }
+  },
+  "ai_setups": [
+    {
+      "id": "victumulae_garrison",
+      "nation": "roman_republic",
+      "faction": "roman",
+      "color": "red",
+      "team_id": 1,
+      "difficulty": "medium",
+      "strategy": "defensive",
+      "posture": "garrison",
+      "personality": {
+        "aggression": 0.25,
+        "defense": 0.95,
+        "harassment": 0.1
+      },
+      "starting_units": [],
+      "starting_buildings": [],
+      "wave_escalation": 0.1,
+      "waves": [
+        {
+          "timing": 540.0,
+          "phase": 1,
+          "label": "The relief from Placentia",
+          "warning_seconds": 25.0,
+          "composition": [
+            {
+              "type": "spearman",
+              "count": 4
+            },
+            {
+              "type": "swordsman",
+              "count": 3
+            },
+            {
+              "type": "horse_swordsman",
+              "count": 2
+            }
+          ],
+          "entry_point": {
+            "x": 140.0,
+            "z": 3.0
+          },
+          "clear_reward": {
+            "wood": 120,
+            "iron": 40,
+            "food": 100
+          }
+        },
+        {
+          "timing": 0.0,
+          "trigger": "after_previous_cleared",
+          "grace_seconds": 240.0,
+          "phase": 2,
+          "label": "The last column from the river",
+          "warning_seconds": 25.0,
+          "composition": [
+            {
+              "type": "swordsman",
+              "count": 4
+            },
+            {
+              "type": "spearman",
+              "count": 4
+            },
+            {
+              "type": "archer",
+              "count": 3
+            },
+            {
+              "type": "horse_spearman",
+              "count": 2
+            }
+          ],
+          "entry_points": [
+            {
+              "x": 20.0,
+              "z": 3.0
+            },
+            {
+              "x": 3.0,
+              "z": 112.0
+            }
+          ],
+          "clear_reward": {
+            "wood": 150,
+            "iron": 50,
+            "gold": 150
+          }
+        }
+      ]
+    }
+  ],
+  "victory_mode": "all",
+  "victory_conditions": [
+    {
+      "type": "capture_structures",
+      "structure_types": [
+        "barracks"
+      ],
+      "min_count": 1,
+      "description": "Take the citadel. Stand in the garrison hall's yard on the upper crown until the town is Carthage's."
+    },
+    {
+      "type": "eliminate_commanders",
+      "description": "Kill the praefect. While he lives the garrison fights for every street."
+    }
+  ],
+  "optional_objectives": [
+    {
+      "type": "survive_waves",
+      "wave_count": 2,
+      "description": "Break both relief columns. A siege that cannot hold its own camp is only a long way of losing."
+    }
+  ],
+  "defeat_conditions": [
+    {
+      "type": "lose_commander",
+      "description": "Hannibal falls under the walls, and the army goes back over the Trebia without him."
+    },
+    {
+      "type": "only_commander_remaining",
+      "description": "A general alone at the foot of a wall is a target, not a siege."
+    },
+    {
+      "type": "lose_all_units",
+      "description": "The assault is spent and there is nobody left to carry a ladder."
+    }
+  ],
+  "stages": [
+    {
+      "id": "raise_the_engines",
+      "type": "control_structures",
+      "structure_types": [
+        "ram",
+        "siege_tower"
+      ],
+      "required_count": 2,
+      "title": "Raise the siege engines",
+      "description": "Builders raise the engines in the field. A ram costs 70 wood and 15 iron and breaks gates; a siege tower costs 120 wood and 30 iron and puts men on the wall walk. Build one of each.",
+      "hint": "Select a builder and pick the ram or the siege tower from its build orders. The alder woods either side of the camp give more timber, and the iron outcrop lies just east of it.",
+      "target": {
+        "x": 92.0,
+        "z": 142.0
+      },
+      "target_radius": 24.0
+    },
+    {
+      "id": "breach_the_lower_ward",
+      "type": "reach_position",
+      "title": "Break into the lower ward",
+      "description": "Take the south ramp under the towers, then put the ram to the south gate or roll the tower against the curtain and send men over it. Get a company inside the outer ring.",
+      "hint": "Gates open only for their owners. Keep the archers behind the engines to answer the men on the wall.",
+      "target": {
+        "x": 80.0,
+        "z": 71.0
+      },
+      "target_radius": 4.0
+    },
+    {
+      "id": "storm_the_citadel",
+      "type": "capture_structures",
+      "structure_types": [
+        "barracks"
+      ],
+      "required_count": 1,
+      "title": "Storm the citadel",
+      "description": "One narrow ramp climbs from the lower ward to the citadel gate. Break that gate as well, and hold the garrison hall's yard until it falls to Carthage.",
+      "hint": "The citadel wall is a second ring: bring the ram up the inner ramp, or tower the wall beside the gate.",
+      "target": {
+        "x": 80.0,
+        "z": 50.0
+      },
+      "target_radius": 12.0
+    },
+    {
+      "id": "kill_the_praefect",
+      "type": "eliminate_commanders",
+      "title": "Kill the praefect",
+      "description": "The Roman commander holds the citadel to the last. Without him the garrison stops being one.",
+      "hint": "He keeps behind the garrison hall, on the north side of the upper crown."
+    }
+  ],
+  "events": [
+    {
+      "trigger": {
+        "type": "timer",
+        "time": 25.0
+      },
+      "actions": [
+        {
+          "type": "show_message",
+          "text": "Victumulae stands on a double hill: a lower ward ringed by a curtain and four towers, and a walled citadel on the upper crown. Both gates face the camp road."
+        }
+      ]
+    },
+    {
+      "trigger": {
+        "type": "timer",
+        "time": 70.0
+      },
+      "actions": [
+        {
+          "type": "show_message",
+          "text": "Builders raise siege engines. A ram for the gate, a siege tower for the wall walk - one of each gives the assault two ways in."
+        }
+      ]
+    },
+    {
+      "trigger": {
+        "type": "timer",
+        "time": 420.0
+      },
+      "actions": [
+        {
+          "type": "show_message",
+          "text": "Scouts on the Placentia road report dust to the north. A relief column is coming down the flank roads."
+        }
+      ]
+    }
+  ],
+  "commander_messages": [
+    {
+      "id": "victumulae_hannibal_open",
+      "speaker": "carthage_sword_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "mission_start",
+        "delay": 2.5
+      },
+      "text": "Every family between here and the Po has carried its grain up that hill, and a praefect from Placentia is sitting on it. We will not starve them out in winter. Builders to the woods - I want a ram and a tower standing in front of this camp before the men get cold.",
+      "voice_cue": "alert.commander_message",
+      "duration": 12.0,
+      "priority": 100
+    },
+    {
+      "id": "victumulae_praefect_open",
+      "speaker": "roman_field_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "mission_start",
+        "delay": 18.0
+      },
+      "text": "Two walls, one ramp, and a granary full enough for a year. Come up the hill whenever you like, Carthaginian. My archers have been counting the steps.",
+      "voice_cue": "alert.commander_message",
+      "duration": 10.0,
+      "priority": 90
+    },
+    {
+      "id": "victumulae_first_contact",
+      "speaker": "roman_field_commander",
+      "pose": "cynical",
+      "trigger": {
+        "type": "first_contact",
+        "owner_id": 2,
+        "by_owner_id": "player",
+        "delay": 1.0
+      },
+      "text": "There they are, on the ramp. Bows to the south curtain. Nobody shoots at the timber; shoot the men pushing it.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 60
+    },
+    {
+      "id": "victumulae_walls_under_attack",
+      "speaker": "roman_field_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "under_attack",
+        "owner_id": 2,
+        "by_owner_id": "player",
+        "cooldown": 150,
+        "delay": 1.0
+      },
+      "once": false,
+      "text": "They are at the wall. Spears to the breach, and someone pour something hot on that engine.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 50
+    },
+    {
+      "id": "victumulae_relief_incoming",
+      "speaker": "roman_field_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "wave_incoming",
+        "owner_id": 2,
+        "delay": 0.5,
+        "final_wave": false
+      },
+      "text": "Horns on the Placentia road. The relief is here. Turn around, Carthaginian - your camp is about to have visitors.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 65
+    },
+    {
+      "id": "victumulae_last_relief",
+      "speaker": "roman_field_commander",
+      "pose": "cynical",
+      "trigger": {
+        "type": "wave_incoming",
+        "owner_id": 2,
+        "delay": 0.5,
+        "final_wave": true
+      },
+      "text": "The river garrison is on the road. That is every man Placentia can spare, and a few it cannot.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 65
+    },
+    {
+      "id": "victumulae_relief_broken",
+      "speaker": "carthage_sword_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "wave_cleared",
+        "owner_id": 2,
+        "delay": 2.0
+      },
+      "once": false,
+      "text": "The relief is broken on the road. Back to the hill - the wall has not moved while we were gone.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 55
+    },
+    {
+      "id": "victumulae_citadel_taken",
+      "speaker": "roman_field_commander",
+      "pose": "cynical",
+      "trigger": {
+        "type": "structure_captured",
+        "owner_id": 2,
+        "by_owner_id": "player",
+        "at": {
+          "x": 80.0,
+          "z": 50.0
+        },
+        "radius": 14.0,
+        "delay": 1.5
+      },
+      "text": "The hall is gone. Keep the granary - eat well, Carthaginian. It is the last full meal you will find between here and Rome.",
+      "voice_cue": "alert.commander_message",
+      "duration": 10.0,
+      "priority": 80
+    },
+    {
+      "id": "victumulae_praefect_last_stand",
+      "speaker": "roman_field_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "near_defeat",
+        "owner_id": 2
+      },
+      "text": "Close the citadel gate behind me. If they want the praefect of Victumulae they can climb for him.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 80
+    },
+    {
+      "id": "victumulae_praefect_fallen",
+      "speaker": "carthage_sword_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "commander_defeated",
+        "owner_id": 2,
+        "by_owner_id": "player",
+        "delay": 2.0
+      },
+      "text": "The praefect is dead. Tell the townspeople they may keep their lives. The grain they may not keep.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 90
+    },
+    {
+      "id": "victumulae_hannibal_fallen",
+      "speaker": "roman_field_commander",
+      "pose": "cynical",
+      "trigger": {
+        "type": "commander_defeated",
+        "owner_id": "player",
+        "delay": 2.0
+      },
+      "text": "Hannibal, under my wall. Somebody fetch a scribe - Placentia will want this written down twice.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 90
+    },
+    {
+      "id": "victumulae_heavy_losses",
+      "speaker": "carthage_sword_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "heavy_losses",
+        "owner_id": "player",
+        "cooldown": 140
+      },
+      "once": false,
+      "text": "We are feeding men to that ramp. Pull back out of bowshot and wait for the engines; walls do not get tired, but they do not get closer either.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 45
+    },
+    {
+      "id": "victumulae_victory",
+      "speaker": "carthage_sword_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "mission_victory",
+        "delay": 1.0
+      },
+      "text": "Victumulae is ours, and its granary with it. The army eats this winter. Let the Gauls see what happens to a town that shuts its gate on Carthage.",
+      "voice_cue": "alert.commander_message",
+      "duration": 11.0,
+      "priority": 120
+    },
+    {
+      "id": "victumulae_defeat",
+      "speaker": "roman_field_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "mission_defeat",
+        "delay": 1.0
+      },
+      "text": "Burn the engines at the foot of the ramp and leave the bodies where they lie. The next army that comes up this road should see what the hill costs.",
+      "voice_cue": "alert.commander_message",
+      "duration": 11.0,
+      "priority": 120
+    }
+  ],
+  "commander_voices": {
+    "generic": false
+  },
+  "include_ambient_undead": false
+}

@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <numbers>
 
 #include "animation/ambient_pose_manifest.h"
 #include "animation/attack_pose_manifest.h"
@@ -653,6 +654,45 @@ void HumanoidPoseController::construction_reap(float work_phase) {
   apply_construction_body_deltas(m_pose, sample);
   place_hand_at(Side::Left, to_qvec(sample.left_hand));
   place_hand_at(Side::Right, to_qvec(sample.right_hand));
+}
+
+void HumanoidPoseController::climb_ladder(float cycle_phase) {
+  using HP = HumanProportions;
+  float const two_pi = 2.0F * std::numbers::pi_v<float>;
+  float const s = std::sin(cycle_phase * two_pi);
+  // One foot steps up a rung while the opposite hand reaches for the next one;
+  // half a cycle later the sides swap.
+  float const left_step = std::max(0.0F, s);
+  float const right_step = std::max(0.0F, -s);
+  float const ground = HP::GROUND_Y + m_pose.foot_y_offset;
+  constexpr float k_rung_lift = 0.30F;
+  constexpr float k_ladder_reach = 0.16F;
+
+  // Hug the ladder: hips tucked in under the shoulders, chest over the rungs.
+  m_pose.pelvis_pos += QVector3D(0.0F, -0.04F - 0.03F * std::abs(s), 0.05F);
+  lean(QVector3D(0.0F, 0.0F, 1.0F), 1.0F);
+
+  m_pose.foot_l = QVector3D(-0.11F,
+                            ground + k_rung_lift * left_step,
+                            k_ladder_reach + 0.10F * left_step);
+  m_pose.foot_r = QVector3D(0.11F,
+                            ground + k_rung_lift * right_step,
+                            k_ladder_reach + 0.10F * right_step);
+  m_pose.foot_pitch_l = -0.35F * left_step;
+  m_pose.foot_pitch_r = -0.35F * right_step;
+  QVector3D const hip_l =
+      m_pose.pelvis_pos + QVector3D(-HP::HIP_LATERAL_OFFSET, HP::HIP_VERTICAL_OFFSET, 0.0F);
+  QVector3D const hip_r =
+      m_pose.pelvis_pos + QVector3D(HP::HIP_LATERAL_OFFSET, HP::HIP_VERTICAL_OFFSET, 0.0F);
+  m_pose.knee_l = solve_knee_ik(Side::Left, hip_l, m_pose.foot_l, 1.0F);
+  m_pose.knee_r = solve_knee_ik(Side::Right, hip_r, m_pose.foot_r, 1.0F);
+
+  float const grip_y = HP::SHOULDER_Y + 0.06F;
+  constexpr float k_hand_lift = 0.26F;
+  place_hand_at(Side::Left,
+                QVector3D(-0.19F, grip_y + k_hand_lift * right_step, 0.44F));
+  place_hand_at(Side::Right,
+                QVector3D(0.19F, grip_y + k_hand_lift * left_step, 0.44F));
 }
 
 void HumanoidPoseController::construction_chisel(float work_phase, bool kneeling) {

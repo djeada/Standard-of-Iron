@@ -64,6 +64,7 @@ enum class HumanoidConstructionRole : std::uint8_t {
   KneelingChisel,
   Reap,
   Push,
+  Climb,
 };
 
 enum class HumanoidWorkJob : std::uint8_t {
@@ -73,6 +74,7 @@ enum class HumanoidWorkJob : std::uint8_t {
   Reap,
   Butcher,
   Push,
+  Climb,
 };
 
 [[nodiscard]] auto humanoid_construction_clip_for_role(
@@ -252,7 +254,13 @@ inline constexpr float k_humanoid_crew_push_cycle_time = 1.1F;
 inline constexpr float k_humanoid_crew_crank_cycle_time = 1.4F;
 inline constexpr float k_humanoid_crew_heave_cycle_time = 2.0F;
 
-inline constexpr std::uint16_t k_humanoid_clip_count = 86U;
+// Hand over hand up a ladder; its phase follows the climber's height, two rungs
+// a cycle, so the hands and feet stay on the rungs at any climbing speed.
+inline constexpr std::uint16_t k_humanoid_climb_clip = 86U;
+inline constexpr float k_humanoid_climb_cycle_time = 1.0F;
+inline constexpr float k_humanoid_climb_rise_per_cycle = 0.52F;
+
+inline constexpr std::uint16_t k_humanoid_clip_count = 87U;
 
 inline constexpr float k_humanoid_combat_ready_cycle_time = 2.2F;
 inline constexpr std::uint32_t k_humanoid_combat_ready_frames = 48U;

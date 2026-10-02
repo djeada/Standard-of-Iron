@@ -12,6 +12,9 @@ auto placement_kind_for(const QString& item_type) -> PlacementKind {
   if (item_type == QStringLiteral("wall_gate")) {
     return PlacementKind::Gate;
   }
+  if (item_type == QStringLiteral("wall_ladder")) {
+    return PlacementKind::Ladder;
+  }
   if (item_type == QStringLiteral("wall_segment")) {
     return PlacementKind::Wall;
   }
@@ -49,7 +52,8 @@ auto placement_allows(PlacementPhase phase,
                       PlacementKind kind,
                       PlacementEvent event) -> bool {
   const bool placing = phase != PlacementPhase::Idle;
-  const bool wall = kind == PlacementKind::Wall || kind == PlacementKind::Gate;
+  const bool wall = kind == PlacementKind::Wall || kind == PlacementKind::Gate ||
+                    kind == PlacementKind::Ladder;
   switch (event) {
   case PlacementEvent::Start:
   case PlacementEvent::MatchReset:
@@ -108,11 +112,16 @@ void PlacementSession::end() {
 
 auto PlacementSession::is_wall() const -> bool {
   const auto placement_kind = kind();
-  return placement_kind == PlacementKind::Wall || placement_kind == PlacementKind::Gate;
+  return placement_kind == PlacementKind::Wall || placement_kind == PlacementKind::Gate ||
+         placement_kind == PlacementKind::Ladder;
 }
 
 auto PlacementSession::is_gate() const -> bool {
   return kind() == PlacementKind::Gate;
+}
+
+auto PlacementSession::is_ladder() const -> bool {
+  return kind() == PlacementKind::Ladder;
 }
 
 auto PlacementSession::effective_rotation_y() const -> float {

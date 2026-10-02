@@ -119,6 +119,12 @@ public:
   auto real(const char* key) -> float { return static_cast<float>(number(key)); }
   auto integer(const char* key) -> int { return static_cast<int>(number(key)); }
 
+  // Fields added after a command shipped read as their default when absent,
+  // so older recordings still decode.
+  auto has(const char* key) const -> bool {
+    return m_object.contains(QLatin1String(key));
+  }
+
   auto boolean(const char* key) -> bool {
     const auto value = m_object.value(QLatin1String(key));
     if (!value.isBool()) {
@@ -321,6 +327,9 @@ void encode(QJsonObject& o, const PlaceWallPlan& p) {
   o["target_x"] = p.target_x;
   o["target_z"] = p.target_z;
   o["rotation_y"] = static_cast<double>(p.rotation_y);
+  o["ladder"] = p.ladder;
+  o["pointer_x"] = static_cast<double>(p.pointer_x);
+  o["pointer_z"] = static_cast<double>(p.pointer_z);
 }
 void encode(QJsonObject& o, const PlaceBuilding& p) {
   o["building_type"] = QString::fromStdString(p.building_type);
@@ -499,7 +508,10 @@ auto decode<PlaceWallPlan>(Reader& r) -> PlaceWallPlan {
           .anchor_z = r.integer("anchor_z"),
           .target_x = r.integer("target_x"),
           .target_z = r.integer("target_z"),
-          .rotation_y = r.real("rotation_y")};
+          .rotation_y = r.real("rotation_y"),
+          .ladder = r.has("ladder") && r.boolean("ladder"),
+          .pointer_x = r.has("pointer_x") ? r.real("pointer_x") : 0.0F,
+          .pointer_z = r.has("pointer_z") ? r.real("pointer_z") : 0.0F};
 }
 template <>
 auto decode<PlaceBuilding>(Reader& r) -> PlaceBuilding {

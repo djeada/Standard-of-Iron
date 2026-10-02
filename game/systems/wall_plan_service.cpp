@@ -15,6 +15,7 @@
 #include "systems/economy/construction_cost_catalog.h"
 #include "systems/movement/order_service.h"
 #include "systems/navigation/nav_grid.h"
+#include "visuals/building_asset_key.h"
 
 namespace Game::Systems {
 
@@ -37,7 +38,44 @@ auto is_vertical(float rotation_y) -> bool {
 }
 
 auto item_type(const WallPlanRequest& request) -> const char* {
+  if (request.ladder) {
+    return "wall_ladder";
+  }
   return request.gate ? "wall_gate" : "wall_segment";
+}
+
+auto plan_ladder(Engine::Core::World& world, const WallPlanRequest& request) -> WallPlan {
+  WallPlan plan;
+  plan.wood_per_segment =
+      construction_cost_info(item_type(request)).resource_costs.get(ResourceType::Wood);
+  auto const placement = WallNetworkService::find_ladder_placement(
+      world, request.owner_id, request.pointer.x(), request.pointer.z());
+  PlannedWallSegment segment;
+  segment.grid_x = request.target.x;
+  segment.grid_z = request.target.z;
+  segment.world_position = request.pointer;
+  if (placement.valid) {
+    segment.world_position = QVector3D(placement.x, request.pointer.y(), placement.z);
+    segment.rotation_y = placement.rotation_y;
+    auto& terrain = *Game::Session::services_for(world).terrain;
+    if (terrain.is_initialized()) {
+      segment.world_position = terrain.resolve_surface_world_position(
+          placement.x, placement.z, 0.0F, 0.0F);
+    }
+    int const wood =
+        Game::Session::services_for(world).economy->get(request.owner_id, ResourceType::Wood);
+    if (wood < plan.wood_per_segment) {
+      segment.fault = WallSegmentFault::NotEnoughWood;
+    } else {
+      segment.valid = true;
+      plan.valid_count = 1;
+    }
+  } else {
+    segment.fault = WallSegmentFault::Invalid;
+    segment.failure_reason = placement.failure_reason;
+  }
+  plan.segments.push_back(segment);
+  return plan;
 }
 
 auto nation_of(const Engine::Core::World& world, int owner_id) -> NationID {
@@ -52,6 +90,9 @@ auto nation_of(const Engine::Core::World& world, int owner_id) -> NationID {
 
 auto WallPlanService::plan(Engine::Core::World& world,
                            const WallPlanRequest& request) -> WallPlan {
+  if (request.ladder) {
+    return plan_ladder(world, request);
+  }
   WallPlan plan;
   plan.wood_per_segment =
       construction_cost_info(item_type(request)).resource_costs.get(ResourceType::Wood);
@@ -172,6 +213,30 @@ auto WallPlanService::commit(Engine::Core::World& world,
     }
     auto* transform = entity->add_component<Engine::Core::TransformComponent>();
     auto* renderable = entity->add_component<Engine::Core::RenderableComponent>();
+    if (request.ladder) {
+      // A ladder site is not a wall cell: its wall draws the timbers lying at
+      // the foot until a builder stands them up.
+      auto* site = entity->add_component<Engine::Core::WallConstructionSiteComponent>();
+      if (transform == nullptr || renderable == nullptr || site == nullptr) {
+        world.destroy_entity(entity->get_id());
+        continue;
+      }
+      transform->position = {segment.world_position.x(),
+                             segment.world_position.y(),
+                             segment.world_position.z()};
+      transform->rotation = {0.0F, segment.rotation_y, 0.0F};
+      transform->scale = {1.0F, 1.0F, 1.0F};
+      renderable->visible = false;
+      renderable->renderer_id =
+          Game::Visuals::building_asset_key(nation_id, "wall_ladder");
+      site->owner_id = request.owner_id;
+      site->nation_id = nation_id;
+      site->build_time = build_time;
+      site->progress = 0.0F;
+      site->product_type = Game::Units::SpawnType::WallLadder;
+      site_ids.push_back(entity->get_id());
+      continue;
+    }
     auto* wall = entity->add_component<Engine::Core::WallSegmentComponent>();
     auto* site = entity->add_component<Engine::Core::WallConstructionSiteComponent>();
     if (transform == nullptr || renderable == nullptr || wall == nullptr ||

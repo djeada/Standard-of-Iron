@@ -24,6 +24,7 @@ inline constexpr float k_site_bypass_reach = 2.5F;
 
 inline constexpr std::string_view k_builder_product_wall_segment = "wall_segment";
 inline constexpr std::string_view k_builder_product_wall_gate = "wall_gate";
+inline constexpr std::string_view k_builder_product_wall_ladder = "wall_ladder";
 
 [[nodiscard]] inline auto
 is_harvest_builder_product(std::string_view product_type) -> bool {
@@ -47,7 +48,8 @@ is_gather_builder_product(std::string_view product_type) -> bool {
 [[nodiscard]] inline auto
 is_wall_builder_product(std::string_view product_type) -> bool {
   return product_type == k_builder_product_wall_segment ||
-         product_type == k_builder_product_wall_gate;
+         product_type == k_builder_product_wall_gate ||
+         product_type == k_builder_product_wall_ladder;
 }
 
 } // namespace Game::Systems

@@ -11,6 +11,7 @@
 #include "game/session/selection_service.h"
 #include "game/session/session_context.h"
 #include "game/systems/navigation/nav_grid.h"
+#include "game/systems/navigation/wall_walk_orders.h"
 #include "scene/camera.h"
 
 InputCommandHandler::InputCommandHandler(
@@ -255,8 +256,14 @@ auto InputCommandHandler::on_right_press(qreal sx,
   }
 
   const QVector3D clicked = hit;
-  hit = App::Utils::snap_to_walkable_ground(hit);
-  if (!Game::Systems::NavGrid::is_world_position_walkable(clicked) &&
+  // A click on a wall walk is an order onto the planks, not a point to snap off
+  // the wall onto the ground beside it.
+  bool const onto_wall =
+      Game::Systems::WallWalk::wall_walk_order_at(
+          *m_world, local_owner_id, clicked.x(), clicked.z())
+          .has_value();
+  hit = onto_wall ? clicked : App::Utils::snap_to_walkable_ground(hit);
+  if (!onto_wall && !Game::Systems::NavGrid::is_world_position_walkable(clicked) &&
       (!Game::Systems::NavGrid::is_world_position_walkable(hit) ||
        (hit - clicked).length() > k_max_click_nudge)) {
     (void)m_command_controller->refuse_unreachable_move(clicked);

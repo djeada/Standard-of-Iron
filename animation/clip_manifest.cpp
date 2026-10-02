@@ -319,6 +319,8 @@ auto humanoid_construction_role_for_job(HumanoidWorkJob job) noexcept
     return HumanoidConstructionRole::KneelingChisel;
   case HumanoidWorkJob::Push:
     return HumanoidConstructionRole::Push;
+  case HumanoidWorkJob::Climb:
+    return HumanoidConstructionRole::Climb;
   case HumanoidWorkJob::Build:
     break;
   }
@@ -337,6 +339,7 @@ auto humanoid_construction_variant_for_role(HumanoidConstructionRole role) noexc
   case HumanoidConstructionRole::Reap:
     return 4U;
   case HumanoidConstructionRole::Push:
+  case HumanoidConstructionRole::Climb:
   case HumanoidConstructionRole::Hammer:
   case HumanoidConstructionRole::None:
     break;
@@ -357,6 +360,8 @@ auto humanoid_construction_clip_for_role(HumanoidConstructionRole role) noexcept
     return k_humanoid_construct_reap_clip;
   case HumanoidConstructionRole::Push:
     return k_humanoid_crew_push_clip;
+  case HumanoidConstructionRole::Climb:
+    return k_humanoid_climb_clip;
   case HumanoidConstructionRole::Hammer:
   case HumanoidConstructionRole::None:
     break;
@@ -389,6 +394,7 @@ auto requested_humanoid_clip_variant(const HumanoidClipVariantInputs& inputs) no
     switch (inputs.construction_role) {
     case HumanoidConstructionRole::Hammer:
     case HumanoidConstructionRole::Push:
+    case HumanoidConstructionRole::Climb:
       return 0U;
     case HumanoidConstructionRole::Saw:
       return 1U;
@@ -470,6 +476,7 @@ auto authored_humanoid_clip_markers(
   case k_humanoid_crew_push_clip:
   case k_humanoid_crew_crank_clip:
   case k_humanoid_crew_heave_clip:
+  case k_humanoid_climb_clip:
     return locomotion_markers();
   case k_humanoid_attack_sword_a_clip:
   case k_humanoid_attack_sword_b_clip:

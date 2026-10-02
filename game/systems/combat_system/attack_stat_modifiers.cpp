@@ -30,14 +30,30 @@ auto get_base_max_health(const Engine::Core::UnitComponent* unit)
   return profile.combat.max_health;
 }
 
-auto is_high_ground_advantage(const Engine::Core::TransformComponent* high_transform,
-                              const Engine::Core::TransformComponent* low_transform)
-    -> bool {
-  if ((high_transform == nullptr) || (low_transform == nullptr)) {
+// Height a fighter stands at: the ground under it, plus the balcony, stair or
+// tower bridge it is standing on.
+auto standing_height(const Engine::Core::Entity* entity) -> std::optional<float> {
+  auto const* transform =
+      entity != nullptr ? entity->get_component<Engine::Core::TransformComponent>()
+                        : nullptr;
+  if (transform == nullptr) {
+    return std::nullopt;
+  }
+  float height = transform->position.y;
+  if (auto const* walker = entity->get_component<Engine::Core::WallWalkerComponent>()) {
+    height += walker->elevation;
+  }
+  return height;
+}
+
+auto is_high_ground_advantage(const Engine::Core::Entity* high,
+                              const Engine::Core::Entity* low) -> bool {
+  auto const high_y = standing_height(high);
+  auto const low_y = standing_height(low);
+  if (!high_y.has_value() || !low_y.has_value()) {
     return false;
   }
-  float const height_diff = high_transform->position.y - low_transform->position.y;
-  return height_diff > Constants::k_high_ground_height_threshold;
+  return *high_y - *low_y > Constants::k_high_ground_height_threshold;
 }
 
 void raise_max_health_keeping_ratio(Engine::Core::UnitComponent& unit,
@@ -100,10 +116,7 @@ void apply_high_ground_defense_bonuses(Engine::Core::Entity* attacker,
     return;
   }
 
-  auto* attacker_transform =
-      attacker->get_component<Engine::Core::TransformComponent>();
-  auto* target_transform = target->get_component<Engine::Core::TransformComponent>();
-  if (!is_high_ground_advantage(target_transform, attacker_transform)) {
+  if (!is_high_ground_advantage(target, attacker)) {
     return;
   }
 
@@ -149,11 +162,7 @@ auto calculate_tactical_damage_multiplier(Engine::Core::Entity* attacker,
   }
 
   if (archer || attacker_type == SpawnType::Spearman) {
-    auto const* attacker_transform =
-        attacker->get_component<Engine::Core::TransformComponent>();
-    auto const* target_transform =
-        target->get_component<Engine::Core::TransformComponent>();
-    if (is_high_ground_advantage(attacker_transform, target_transform)) {
+    if (is_high_ground_advantage(attacker, target)) {
       multiplier *= archer ? Constants::k_archer_high_ground_multiplier
                            : Constants::k_spearman_high_ground_multiplier;
     }
@@ -163,6 +172,15 @@ auto calculate_tactical_damage_multiplier(Engine::Core::Entity* attacker,
     if (auto const* cover = target->get_component<Engine::Core::ForestCoverComponent>();
         cover != nullptr && cover->in_forest) {
       multiplier *= Constants::k_forest_ranged_cover_multiplier;
+    }
+    auto const* target_walker = target->get_component<Engine::Core::WallWalkerComponent>();
+    auto const* attacker_walker =
+        attacker->get_component<Engine::Core::WallWalkerComponent>();
+    if (target_walker != nullptr &&
+        target_walker->phase == Engine::Core::WallWalkerComponent::Phase::OnDeck &&
+        (attacker_walker == nullptr ||
+         attacker_walker->phase == Engine::Core::WallWalkerComponent::Phase::Approaching)) {
+      multiplier *= Constants::k_wall_walk_ranged_cover_multiplier;
     }
   }
 

@@ -477,6 +477,8 @@ void apply_place_wall_plan(World& world, int owner_id, const PlaceWallPlan& orde
   const Game::Systems::WallPlanRequest request{
       .owner_id = owner_id,
       .gate = order.gate,
+      .ladder = order.ladder,
+      .pointer = QVector3D(order.pointer_x, 0.0F, order.pointer_z),
       .anchor = {order.anchor_x, order.anchor_z},
       .target = {order.target_x, order.target_z},
       .rotation_y = order.rotation_y};

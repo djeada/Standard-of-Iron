@@ -325,7 +325,8 @@ auto build_selection_for_pose(const UnitVisualSpec& spec,
     bool const job_forces_tool =
         anim.inputs.is_constructing &&
         job_role != Animation::HumanoidConstructionRole::None &&
-        job_role != Animation::HumanoidConstructionRole::Push;
+        job_role != Animation::HumanoidConstructionRole::Push &&
+        job_role != Animation::HumanoidConstructionRole::Climb;
     auto const override = Animation::resolve_archetype_variant_override({
         .table = spec.animation_manifest.variant_table,
         .pose_intent = selection.pose.intent,

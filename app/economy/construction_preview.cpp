@@ -6,6 +6,7 @@
 #include "game/session/session_context.h"
 #include "game/systems/navigation/wall_network_service.h"
 #include "game/units/building_spawn_setup.h"
+#include "game/visuals/building_asset_key.h"
 
 namespace App::Economy {
 
@@ -118,14 +119,15 @@ void ConstructionPreview::show_structure(const QString& item_type,
 void ConstructionPreview::show_wall_plan(
     const std::vector<Game::Systems::PlannedWallSegment>& segments,
     bool gate,
-    const PreviewOwner& owner) {
+    const PreviewOwner& owner,
+    bool ladder) {
   using Game::Systems::WallNetworkService;
   clear_entities();
   if (m_world == nullptr || segments.empty()) {
     return;
   }
 
-  const char* product_type = gate ? "wall_gate" : "wall_segment";
+  const char* product_type = ladder ? "wall_ladder" : gate ? "wall_gate" : "wall_segment";
   const QVector3D scale = Game::Units::building_transform_scale(product_type);
 
   for (const auto& segment : segments) {
@@ -149,11 +151,12 @@ void ConstructionPreview::show_wall_plan(
 
     renderable->visible = false;
     renderable->renderer_id =
-        (gate ? WallNetworkService::resolve_gate_appearance(
-                    owner.nation_id, segment.connection_mask, segment.rotation_y)
-              : WallNetworkService::resolve_appearance(owner.nation_id,
-                                                       segment.connection_mask))
-            .renderer_id;
+        ladder ? Game::Visuals::building_asset_key(owner.nation_id, "wall_ladder")
+               : (gate ? WallNetworkService::resolve_gate_appearance(
+                             owner.nation_id, segment.connection_mask, segment.rotation_y)
+                       : WallNetworkService::resolve_appearance(owner.nation_id,
+                                                                segment.connection_mask))
+                     .renderer_id;
 
     preview->owner_id = owner.owner_id;
     preview->nation_id = owner.nation_id;

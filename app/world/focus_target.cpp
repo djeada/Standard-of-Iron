@@ -153,6 +153,8 @@ auto building_display_name(Game::Units::SpawnType type) -> QString {
     return QCoreApplication::translate("FocusTarget", "Wall");
   case Game::Units::SpawnType::WallGate:
     return QCoreApplication::translate("FocusTarget", "Gate");
+  case Game::Units::SpawnType::WallLadder:
+    return QCoreApplication::translate("FocusTarget", "Ladder");
   case Game::Units::SpawnType::Marketplace:
     return QCoreApplication::translate("FocusTarget", "Marketplace");
   case Game::Units::SpawnType::Temple:

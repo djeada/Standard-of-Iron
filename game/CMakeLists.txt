@@ -238,6 +238,7 @@ add_library(
     units/farm.cpp
     units/wall_segment.cpp
     units/wall_gate.cpp
+    units/wall_ladder.cpp
     units/sheep.cpp
     units/wolf.cpp
     units/wildlife_unit_common.cpp

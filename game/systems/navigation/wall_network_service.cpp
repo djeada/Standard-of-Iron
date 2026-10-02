@@ -6,7 +6,9 @@
 #include <array>
 #include <cmath>
 #include <limits>
+#include <optional>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 #include "core/ambient_session.h"
@@ -18,6 +20,7 @@
 #include "nav_grid.h"
 #include "systems/building_collision_registry.h"
 #include "units/spawn_type.h"
+#include "util/planar_math.h"
 #include "visuals/building_asset_key.h"
 
 namespace Game::Systems {
@@ -707,7 +710,8 @@ void assign_wall_walk_sides(Engine::Core::World& world) {
       continue;
     }
     const bool wall_piece = Game::Units::is_wall_network_spawn(unit.spawn_type);
-    if (!wall_piece && !world.has<BuildingComponent>(id)) {
+    if (unit.spawn_type == Game::Units::SpawnType::WallLadder ||
+        (!wall_piece && !world.has<BuildingComponent>(id))) {
       continue;
     }
     auto& bucket = wall_piece ? walls[unit.owner_id] : buildings[unit.owner_id];
@@ -721,6 +725,8 @@ void assign_wall_walk_sides(Engine::Core::World& world) {
     wall.inner_x = 0;
     wall.inner_z = 0;
     wall.has_stair = false;
+    wall.ladder = WallSegmentComponent::Ladder::None;
+    wall.ladder_id = 0;
     std::optional<int> owner_id;
     if (const auto* unit = world.try_get<UnitComponent>(id)) {
       owner_id = unit->owner_id;
@@ -768,7 +774,177 @@ void assign_wall_walk_sides(Engine::Core::World& world) {
   }
 }
 
+auto ladder_owner(Engine::Core::World& world,
+                  Engine::Core::EntityID id,
+                  bool& standing) -> std::optional<int> {
+  if (world.has<PendingRemovalComponent>(id) ||
+      world.has<ConstructionPreviewComponent>(id)) {
+    return std::nullopt;
+  }
+  if (const auto* unit = world.try_get<UnitComponent>(id)) {
+    if (unit->spawn_type != Game::Units::SpawnType::WallLadder || unit->health <= 0) {
+      return std::nullopt;
+    }
+    standing = true;
+    return unit->owner_id;
+  }
+  if (const auto* site = world.try_get<WallConstructionSiteComponent>(id);
+      site != nullptr && site->product_type == Game::Units::SpawnType::WallLadder) {
+    standing = false;
+    return site->owner_id;
+  }
+  return std::nullopt;
+}
+
+struct LadderHostCandidate {
+  Engine::Core::EntityID id{0};
+  float node_x{0.0F};
+  float node_z{0.0F};
+  std::int8_t inner_x{0};
+  std::int8_t inner_z{0};
+  float along{0.0F};
+  float across{0.0F};
+  bool has_stair{false};
+  WallSegmentComponent::Ladder ladder{WallSegmentComponent::Ladder::None};
+  Engine::Core::EntityID ladder_id{0};
+};
+
+// The owner's balcony segment nearest (x, z), measured along and across its
+// run (across is positive into the town).
+auto nearest_ladder_host(Engine::Core::World& world,
+                         int owner_id,
+                         float x,
+                         float z) -> std::optional<LadderHostCandidate> {
+  std::optional<LadderHostCandidate> best;
+  float best_score = std::numeric_limits<float>::max();
+  for (auto [id, unit, transform, wall] :
+       world.view<const UnitComponent, const TransformComponent, WallSegmentComponent>()) {
+    if (unit.owner_id != owner_id || unit.health <= 0 ||
+        unit.spawn_type != Game::Units::SpawnType::WallSegment ||
+        world.has<PendingRemovalComponent>(id) ||
+        world.has<WallConstructionSiteComponent>(id) || wall.freeform) {
+      continue;
+    }
+    bool const runs_x = wall.inner_z != 0 && wall.inner_x == 0;
+    bool const runs_z = wall.inner_x != 0 && wall.inner_z == 0;
+    if (!runs_x && !runs_z) {
+      continue;
+    }
+    float const dx = x - transform.position.x;
+    float const dz = z - transform.position.z;
+    float const along = runs_x ? dx : dz;
+    float const across =
+        runs_x ? dz * static_cast<float>(wall.inner_z) : dx * static_cast<float>(wall.inner_x);
+    if (std::abs(along) > WallWalk::k_ladder_host_reach || across < -3.0F ||
+        across > 3.5F) {
+      continue;
+    }
+    float const score = std::abs(along) + std::abs(across - 1.2F) * 0.5F;
+    if (score < best_score) {
+      best_score = score;
+      best = LadderHostCandidate{id,
+                                 transform.position.x,
+                                 transform.position.z,
+                                 wall.inner_x,
+                                 wall.inner_z,
+                                 along,
+                                 across,
+                                 wall.has_stair,
+                                 wall.ladder,
+                                 wall.ladder_id};
+    }
+  }
+  return best;
+}
+
+auto ladder_spot(const LadderHostCandidate& host) -> std::pair<float, float> {
+  float const reach = WallWalk::k_deck_outer_edge + WallWalk::k_ladder_run * 0.5F;
+  return {host.node_x + static_cast<float>(host.inner_x) * reach,
+          host.node_z + static_cast<float>(host.inner_z) * reach};
+}
+
+// Hangs every ladder and ladder site on the segment it leans against.
+void hang_ladders(Engine::Core::World& world) {
+  std::vector<Engine::Core::EntityID> ladders;
+  for (auto [id, transform] : world.view<const TransformComponent>()) {
+    (void)transform;
+    bool standing = false;
+    if (ladder_owner(world, id, standing).has_value()) {
+      ladders.push_back(id);
+    }
+  }
+  for (auto const id : ladders) {
+    bool standing = false;
+    auto const owner = ladder_owner(world, id, standing);
+    auto const* transform = world.try_get<TransformComponent>(id);
+    if (!owner.has_value() || transform == nullptr) {
+      continue;
+    }
+    auto const host =
+        nearest_ladder_host(world, *owner, transform->position.x, transform->position.z);
+    if (!host.has_value() || host->across < 0.2F) {
+      continue;
+    }
+    auto* wall = world.try_get<WallSegmentComponent>(host->id);
+    if (wall == nullptr ||
+        (wall->ladder == WallSegmentComponent::Ladder::Standing && !standing)) {
+      continue;
+    }
+    wall->ladder = standing ? WallSegmentComponent::Ladder::Standing
+                            : WallSegmentComponent::Ladder::Site;
+    wall->ladder_id = id;
+  }
+}
+
 } // namespace
+
+auto WallNetworkService::find_ladder_placement(Engine::Core::World& world,
+                                               int owner_id,
+                                               float world_x,
+                                               float world_z,
+                                               Engine::Core::EntityID ignore_entity_id)
+    -> LadderPlacement {
+  LadderPlacement out;
+  auto const host = nearest_ladder_host(world, owner_id, world_x, world_z);
+  if (!host.has_value()) {
+    out.failure_reason =
+        QCoreApplication::translate("WallNetworkService",
+                                    "A ladder leans on the town side of your own wall.")
+            .toStdString();
+    return out;
+  }
+  if (host->across < -0.3F) {
+    out.failure_reason =
+        QCoreApplication::translate("WallNetworkService",
+                                    "Ladders go on the town side of the wall, not outside it.")
+            .toStdString();
+    return out;
+  }
+  if (host->has_stair) {
+    out.failure_reason =
+        QCoreApplication::translate("WallNetworkService",
+                                    "This stretch of wall already has a stair.")
+            .toStdString();
+    return out;
+  }
+  if (host->ladder != WallSegmentComponent::Ladder::None &&
+      host->ladder_id != ignore_entity_id) {
+    out.failure_reason =
+        QCoreApplication::translate("WallNetworkService",
+                                    "This stretch of wall already has a ladder.")
+            .toStdString();
+    return out;
+  }
+  auto const [x, z] = ladder_spot(*host);
+  out.valid = true;
+  out.host_id = host->id;
+  out.x = x;
+  out.z = z;
+  // The ladder faces the wall it climbs.
+  out.rotation_y = yaw_degrees_from_direction(-static_cast<float>(host->inner_x),
+                                              -static_cast<float>(host->inner_z));
+  return out;
+}
 
 void WallNetworkService::refresh_world(Engine::Core::World& world) {
   OwnerOccupancyMap connection_occupancy;
@@ -799,6 +975,7 @@ void WallNetworkService::refresh_world(Engine::Core::World& world) {
     update_wall_entity_visuals(world, &entity, wall, mask);
   }
   assign_wall_walk_sides(world);
+  hang_ladders(world);
 
   Game::Session::services_for(world).building_collision->set_navigation_passages(
       collect_navigation_passages(world, connection_occupancy));

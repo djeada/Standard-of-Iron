@@ -11,24 +11,37 @@
 namespace Game::Systems::WallWalk {
 
 // Top of the balcony planks above the terrain.
-inline constexpr float k_deck_height = 1.80F;
+inline constexpr float k_deck_height = 2.00F;
 // Lateral reach of the balcony from the wall's centre line.
-inline constexpr float k_deck_inner_edge = 0.17F;
-inline constexpr float k_deck_outer_edge = 0.70F;
+inline constexpr float k_deck_inner_edge = 0.26F;
+inline constexpr float k_deck_outer_edge = 1.30F;
 // Line soldiers walk along, between the two deck edges.
-inline constexpr float k_deck_lane = 0.45F;
+inline constexpr float k_deck_lane = 0.78F;
 inline constexpr float k_deck_thickness = 0.06F;
 
 // Stairs run straight down from the balcony edge into the town.
-inline constexpr float k_stair_run = 1.85F;
-inline constexpr float k_stair_half_width = 0.28F;
-inline constexpr int k_stair_steps = 9;
+inline constexpr float k_stair_run = 2.05F;
+inline constexpr float k_stair_half_width = 0.34F;
+inline constexpr int k_stair_steps = 10;
 // A stair stands on every k_stair_period-th straight segment of a run.
 inline constexpr int k_stair_period = 4;
 inline constexpr int k_stair_phase = 1;
 
 // Where a siege tower's bridge rests: on the stake tips, between two posts.
 inline constexpr float k_crest_height = 2.95F;
+
+// A builder-raised ladder leans on the balcony's town edge: its rails rest on
+// the deck lip and its feet stand this far further into the town, so it climbs
+// at roughly sixty degrees. Only the town face of a wall takes one.
+inline constexpr float k_ladder_run = 1.05F;
+inline constexpr float k_ladder_half_width = 0.24F;
+inline constexpr int k_ladder_rungs = 7;
+// How far a ladder's centre may stand from the segment it serves along the run.
+inline constexpr float k_ladder_host_reach = 1.10F;
+// Climbing a ladder is slower than a stair, rung over rung.
+inline constexpr float k_ladder_climb_speed = 0.55F;
+// Inside a siege tower the company climbs its internal ladder this fast.
+inline constexpr float k_tower_climb_speed = 0.9F;
 
 struct Point {
   float x{0.0F};
@@ -55,6 +68,26 @@ struct Point {
                                         std::int8_t inner_x,
                                         std::int8_t inner_z) noexcept -> Point {
   constexpr float reach = k_deck_outer_edge + k_stair_run + 0.25F;
+  return {node_x + static_cast<float>(inner_x) * reach,
+          node_z + static_cast<float>(inner_z) * reach};
+}
+
+// Where a ladder's feet stand and where its rails meet the balcony lip.
+[[nodiscard]] constexpr auto ladder_foot(float node_x,
+                                         float node_z,
+                                         std::int8_t inner_x,
+                                         std::int8_t inner_z) noexcept -> Point {
+  constexpr float reach = k_deck_outer_edge + k_ladder_run;
+  return {node_x + static_cast<float>(inner_x) * reach,
+          node_z + static_cast<float>(inner_z) * reach};
+}
+
+// Where a troop stands to start up a ladder, a pace back from its feet.
+[[nodiscard]] constexpr auto ladder_approach(float node_x,
+                                             float node_z,
+                                             std::int8_t inner_x,
+                                             std::int8_t inner_z) noexcept -> Point {
+  constexpr float reach = k_deck_outer_edge + k_ladder_run + 0.35F;
   return {node_x + static_cast<float>(inner_x) * reach,
           node_z + static_cast<float>(inner_z) * reach};
 }

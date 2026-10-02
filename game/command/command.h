@@ -169,6 +169,9 @@ struct PlaceWallPlan {
   int target_x = 0;
   int target_z = 0;
   float rotation_y = 0.0F;
+  bool ladder = false;
+  float pointer_x = 0.0F;
+  float pointer_z = 0.0F;
 };
 
 struct PlaceBuilding {

@@ -58,6 +58,9 @@ auto spawn_type_for_product(const std::string& product_type)
   if (product_type == "wall_gate") {
     return SpawnType::WallGate;
   }
+  if (product_type == "wall_ladder") {
+    return SpawnType::WallLadder;
+  }
   if (is_wall_network_product(product_type)) {
     return SpawnType::WallSegment;
   }

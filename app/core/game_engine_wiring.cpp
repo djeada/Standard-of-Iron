@@ -167,6 +167,7 @@ void GameEngine::wire_loading_and_saves() {
 }
 
 void GameEngine::wire_world_services() {
+  Game::Systems::PickingService::bind_surface(&m_session->terrain(), m_world);
   m_camera_service = std::make_unique<Game::Systems::CameraService>(
       m_session->visibility(), m_session->terrain());
 

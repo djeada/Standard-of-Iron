@@ -54,7 +54,8 @@ auto WallPlacementSession::valid_segment_count() const -> int {
 auto WallPlacementSession::plan(Engine::Core::World& world,
                                 const QVector3D& pointer_world,
                                 int owner_id,
-                                bool gate) -> WallPlanSummary {
+                                bool gate,
+                                bool ladder) -> WallPlanSummary {
   using Game::Systems::WallNetworkService;
   m_segments.clear();
 
@@ -82,6 +83,12 @@ auto WallPlacementSession::plan(Engine::Core::World& world,
                                              .anchor = anchor,
                                              .target = target,
                                              .rotation_y = m_rotation_y};
+  if (ladder) {
+    // A ladder is aimed, not dragged: it follows the pointer onto the nearest
+    // town face of the owner's wall.
+    m_request.ladder = true;
+    m_request.pointer = pointer_world;
+  }
   const auto plan = Game::Systems::WallPlanService::plan(world, m_request);
   m_segments = plan.segments;
   return {.segment_count = static_cast<int>(m_segments.size()),

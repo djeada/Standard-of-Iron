@@ -107,6 +107,8 @@ structure_footprint(const Engine::Core::Entity& structure) -> StructureFootprint
     return 1.05F;
   case SpawnType::WallSegment:
     return 0.82F;
+  case SpawnType::WallLadder:
+    return 0.6F;
   default:
     return 0.9F;
   }
@@ -207,6 +209,7 @@ auto structure_attack_profile(const Engine::Core::Entity* attacker)
   case SpawnType::Home:
   case SpawnType::WallSegment:
   case SpawnType::WallGate:
+  case SpawnType::WallLadder:
   case SpawnType::Marketplace:
   case SpawnType::Temple:
   case SpawnType::Farm:

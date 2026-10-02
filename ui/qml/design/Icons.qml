@@ -195,6 +195,7 @@ QtObject {
             "wall": "\u25AC",
             "wall_segment": "\u25AC",
             "wall_gate": "\u25A2",
+            "wall_ladder": "\u2261",
             "home": "\u2302",
             "house": "\u2302",
             "marketplace": "\u25C7",

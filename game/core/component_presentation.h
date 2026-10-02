@@ -189,6 +189,9 @@ struct FormationSoldierPresentation {
   // Height above the terrain, for soldiers standing on a wall walk, a stair
   // or a siege-tower bridge; zero on open ground.
   float elevation{0.0F};
+  // On a ladder or a siege tower's inner ladder: drawn hand over hand, facing
+  // the rungs, its stride set by `elevation`.
+  bool climbing{false};
 
   auto operator==(const FormationSoldierPresentation&) const -> bool = default;
 };

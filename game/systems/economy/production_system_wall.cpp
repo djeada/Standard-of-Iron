@@ -97,19 +97,31 @@ auto skip_invalid_wall_site(Engine::Core::World* world,
     return false;
   }
 
-  Game::Systems::WallGridPosition const position =
-      wall != nullptr ? Game::Systems::WallGridPosition{wall->grid_x, wall->grid_z}
-                      : Game::Systems::WallNetworkService::snap_world_position(
-                            transform->position.x, transform->position.z);
-  const auto validation =
-      Game::Systems::WallNetworkService::validate_wall_segment_placement(
-          *world,
-          position,
-          Game::Systems::wall_ground_probe(*world),
-          true,
-          site_entity->get_id());
-  if (validation.valid) {
-    return false;
+  if (site->product_type == Game::Units::SpawnType::WallLadder) {
+    // A ladder stays valid while the wall it leans on still stands.
+    if (Game::Systems::WallNetworkService::find_ladder_placement(*world,
+                                                                site->owner_id,
+                                                                transform->position.x,
+                                                                transform->position.z,
+                                                                site_entity->get_id())
+            .valid) {
+      return false;
+    }
+  } else {
+    Game::Systems::WallGridPosition const position =
+        wall != nullptr ? Game::Systems::WallGridPosition{wall->grid_x, wall->grid_z}
+                        : Game::Systems::WallNetworkService::snap_world_position(
+                              transform->position.x, transform->position.z);
+    const auto validation =
+        Game::Systems::WallNetworkService::validate_wall_segment_placement(
+            *world,
+            position,
+            Game::Systems::wall_ground_probe(*world),
+            true,
+            site_entity->get_id());
+    if (validation.valid) {
+      return false;
+    }
   }
 
   const auto refund =

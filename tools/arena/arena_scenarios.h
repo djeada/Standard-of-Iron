@@ -153,6 +153,7 @@ inline constexpr char k_siege_tower_wall_assault_id[] = "siege_tower_wall_assaul
 inline constexpr char k_siege_tower_balcony_assault_id[] =
     "siege_tower_balcony_assault";
 inline constexpr char k_wall_walk_garrison_id[] = "wall_walk_garrison";
+inline constexpr char k_wall_walk_ladder_climb_id[] = "wall_walk_ladder_climb";
 
 inline constexpr char k_three_swords_vs_two_spears_id[] = "three_swords_vs_two_spears";
 inline constexpr char k_multi_front_melee_id[] = "multi_front_melee";

@@ -151,6 +151,19 @@ public:
   std::int8_t inner_x{0};
   std::int8_t inner_z{0};
   bool has_stair{false};
+  // A builder's ladder leaning on this segment's balcony: none, still a site
+  // (its timbers lie at the foot), or standing. Derived like the stair.
+  enum class Ladder : std::uint8_t {
+    None = 0,
+    Site,
+    Standing
+  };
+  Ladder ladder{Ladder::None};
+  Engine::Core::EntityID ladder_id{0};
+
+  [[nodiscard]] auto has_access() const -> bool {
+    return has_stair || ladder == Ladder::Standing;
+  }
 
   [[nodiscard]] static auto is_freeform_rotation(float rotation_y) -> bool {
     float angle = std::fmod(rotation_y, 90.0F);
@@ -194,6 +207,8 @@ struct SiegeTowerComponent {
 
   State state{State::Rolling};
   EntityID docked_wall_id{0};
+  // Until the bridge first comes down: then the infantry escorting the tower
+  // is called up its ladder. The tower carries no company of its own.
   bool garrison_aboard{true};
   float ramp{0.0F};
   float dock_x{0.0F};
@@ -222,7 +237,7 @@ struct WallWalkerComponent {
     Descending
   };
 
-  static constexpr float k_wall_top_height = 1.80F;
+  static constexpr float k_wall_top_height = 2.00F;
   // A tower's company crosses the bridge one man at a time, this far apart.
   static constexpr float k_file_out_interval = 0.45F;
 
@@ -240,6 +255,11 @@ struct WallWalkerComponent {
   float crest_z{0.0F};
   float landing_x{0.0F};
   float landing_z{0.0F};
+  // A company boarding through a siege tower: the tower, and the foot of its
+  // inner ladder where each man starts the climb to the door.
+  EntityID tower_id{0};
+  float base_x{0.0F};
+  float base_z{0.0F};
 
   EntityID stair_wall_id{0};
   float goal_x{0.0F};

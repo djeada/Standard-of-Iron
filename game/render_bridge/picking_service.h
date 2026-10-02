@@ -27,6 +27,15 @@ class PickingService {
 public:
   PickingService() = default;
 
+  // Orders, hovers and drags all resolve the cursor through screen_to_ground.
+  // Once a match binds its terrain and world here, that pick follows the real
+  // surface - hills, slopes and the planks of a wall walk - instead of a flat
+  // plane at y = 0, so the order lands under the cursor. Unbound (tools,
+  // tests), it stays the flat-plane pick.
+  static void bind_surface(const Game::Map::TerrainService* terrain,
+                           const Engine::Core::World* world);
+  static void unbind_surface(const Engine::Core::World* world);
+
   auto update_hover(float sx,
                     float sy,
                     Engine::Core::World& world,
@@ -39,6 +48,19 @@ public:
                                int view_h,
                                const QPointF& screen_pt,
                                QVector3D& out_world) -> bool;
+  // The flat y = 0 plane pick, whatever is bound.
+  static auto screen_to_plane(const Render::GL::Camera& camera,
+                              int view_w,
+                              int view_h,
+                              const QPointF& screen_pt,
+                              QVector3D& out_world) -> bool;
+  // Where a ray first meets the top of a wall walk (balcony planks or stake
+  // tips) in `world`, as a distance along the ray; negative when it misses.
+  static auto ray_hits_wall_walk(const Engine::Core::World& world,
+                                 const Game::Map::TerrainService* terrain,
+                                 const QVector3D& origin,
+                                 const QVector3D& direction,
+                                 float max_t) -> float;
   static auto screen_to_ground(const QPointF& screen_pt,
                                const Render::GL::Camera& camera,
                                int view_w,
