@@ -81,7 +81,7 @@ The pointer looks for a sheep on its own before it falls back to the generic uni
 
 A sheep can move while a builder approaches. The job follows the animal until the builder is within working range. At that point the sheep is held through `WildlifeComponent::held_timer`, keeping it in place during the slaughter action.
 
-While the mallet comes down the sheep is *dazed* (`WildlifeComponent::dazed_timer`, presentation only): it sways on its feet with a halo of stars circling its head. When the job completes, the sheep uses the same death sequence as a sheep killed by a wolf, and every sheep death is a cartoon one (see [Slaughter is slapstick](#slaughter-is-slapstick)). The herd later respawns according to the map's wildlife timer. Mutton is therefore renewable but slow; farms remain the reliable source of food.
+While the mallet comes down the sheep is _dazed_ (`WildlifeComponent::dazed_timer`, presentation only): it sways on its feet with a halo of stars circling its head. When the job completes, the sheep uses the same death sequence as a sheep killed by a wolf, and every sheep death is a cartoon one (see [Slaughter is slapstick](#slaughter-is-slapstick)). The herd later respawns according to the map's wildlife timer. Mutton is therefore renewable but slow; farms remain the reliable source of food.
 
 ## Standing orders and Auto Gather
 
@@ -119,7 +119,7 @@ This gives each task a distinct read:
 Standard of Iron is a light-hearted game, so killing a sheep is played as a cartoon:
 
 1. **Bonk.** The builder works the sheep with the overhead mallet clip. The sheep sways dizzily and five stars orbit its head (`render/entity/wildlife/sheep_slapstick.cpp`).
-2. **Poof.** On the last blow the fleece goes *poof*: a burst of wool tufts flies out, stalls and floats down over 2.4 s.
+2. **Poof.** On the last blow the fleece goes _poof_: a burst of wool tufts flies out, stalls and floats down over 2.4 s.
 3. **Keel over.** The sheep's `die` clip (`apply_collapse` in `render/wildlife/sheep_spec.cpp`) has it go rigid, hop on the spot, tip right over onto its back and land with all four legs in the air, where they boing a few times before settling. The stars move down to circle the upturned head and linger about four seconds. There is no blood and nothing bends the wrong way.
 
 The die and dead clips are baked into `assets/creatures/sheep.bpat`; run `make bake-bpat` after changing the pose.
