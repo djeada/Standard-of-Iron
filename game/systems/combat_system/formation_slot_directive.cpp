@@ -512,6 +512,76 @@ void walk_slot(const EntityFrame& frame,
       directive);
 }
 
+// Where a man stands along a chain of wall-walk links (tower ladder and
+// bridge, or the way down a stair or ladder), measured in metres from its
+// start; nullopt when he is not on it.
+auto arc_along(const Engine::Core::WallWalkSegment* chain,
+               std::size_t links,
+               float x,
+               float z,
+               float y) -> std::optional<float> {
+  constexpr float k_on_chain = 0.3F;
+  float travelled = 0.0F;
+  float best_d2 = k_on_chain * k_on_chain;
+  std::optional<float> arc;
+  for (std::size_t i = 0; i < links; ++i) {
+    auto const& link = chain[i];
+    float const dx = link.bx - link.ax;
+    float const dz = link.bz - link.az;
+    float const dy = link.by - link.ay;
+    float const length = std::sqrt(dx * dx + dz * dz + dy * dy);
+    float t = 0.0F;
+    if (length > 1.0e-4F) {
+      t = std::clamp(
+          ((x - link.ax) * dx + (z - link.az) * dz + (y - link.ay) * dy) / (length * length),
+          0.0F,
+          1.0F);
+    }
+    float const px = link.ax + dx * t - x;
+    float const pz = link.az + dz * t - z;
+    float const py = link.ay + dy * t - y;
+    float const d2 = px * px + pz * pz + py * py;
+    if (d2 <= best_d2) {
+      best_d2 = d2;
+      arc = travelled + length * t;
+    }
+    travelled += length;
+  }
+  return arc;
+}
+
+// How far a man may go along a chain before he would tread on the heels of
+// the man ahead of him on it.
+auto room_ahead(const Engine::Core::WallWalkSegment* chain,
+                std::size_t links,
+                float my_arc,
+                std::uint16_t my_index,
+                const std::vector<Soldier>& others) -> float {
+  constexpr float k_file_gap = 0.75F;
+  float room = std::numeric_limits<float>::max();
+  for (auto const& other : others) {
+    // A man standing on the planks is not on the chain yet (or any longer):
+    // only men exactly at deck height are, and nobody on a chain ever is.
+    // Men back on the ground have stepped off it as well.
+    if (other.slot_index == my_index || !other.alive || !other.world_motion_valid ||
+        std::abs(other.elevation - Game::Systems::WallWalk::k_deck_height) < 1.0e-4F ||
+        other.elevation <= 5.0e-4F) {
+      continue;
+    }
+    auto const arc =
+        arc_along(chain, links, other.world_x, other.world_z, other.elevation);
+    if (!arc.has_value()) {
+      continue;
+    }
+    bool const ahead =
+        *arc > my_arc || (*arc == my_arc && other.slot_index < my_index);
+    if (ahead) {
+      room = std::min(room, *arc - my_arc - k_file_gap);
+    }
+  }
+  return std::max(0.0F, room);
+}
+
 // Soldiers of a troop on a wall stay on its walk: the balcony, the stair they
 // are using, or the bridge of the tower they are leaving. Each heads for the
 // spot its slot asks for, at a run, and is held to the nearest point of the
@@ -519,6 +589,7 @@ void walk_slot(const EntityFrame& frame,
 // after another, nearest the landing first.
 void pin_to_wall_walk(const EntityFrame& frame,
                       const SlotContext& slot,
+                      const std::vector<Soldier>& others,
                       Soldier& directive) {
   auto const* walker = frame.wall_walker;
   directive.climbing = false;
@@ -598,6 +669,101 @@ void pin_to_wall_walk(const EntityFrame& frame,
     directive.world_motion_valid = true;
   };
 
+  bool const coming_down =
+      (walker->phase == Engine::Core::WallWalkerComponent::Phase::Descending ||
+       walker->phase == Engine::Core::WallWalkerComponent::Phase::Leaving) &&
+      !walker->exit_chain.empty() && !fresh && previous->elevation > 0.0005F;
+  if (coming_down) {
+    // Off the wall the way the troop came: along the planks to the top of the
+    // stair or ladder, then down it. Projection alone cannot tell the street
+    // under the balcony from the planks over it.
+    auto const& down = walker->exit_chain;
+    auto const& top = down.front();
+    float const to_top = std::hypot(top.ax - previous->world_x, top.az - previous->world_z);
+    bool const on_planks = std::abs(previous->elevation - WW::k_deck_height) < 1.0e-4F;
+    if (on_planks && to_top > 0.12F) {
+      float allowed = k_wall_run_speed * std::max(0.0F, frame.delta_time);
+      // Wait at the top while the man before him is still on the first rungs.
+      if (to_top < 0.9F &&
+          room_ahead(down.data(), down.size(), -to_top, slot.original.index, others) <
+              to_top) {
+        allowed = 0.0F;
+      }
+      float const t = std::min(1.0F, allowed / to_top);
+      float const x = previous->world_x + (top.ax - previous->world_x) * t;
+      float const z = previous->world_z + (top.az - previous->world_z) * t;
+      settle(x, z, WW::k_deck_height);
+      directive.world_yaw = Game::Systems::yaw_degrees_from_direction(
+          top.ax - previous->world_x, top.az - previous->world_z);
+      return;
+    }
+    float travelled = 0.0F;
+    float best_d2 = std::numeric_limits<float>::max();
+    float arc = 0.0F;
+    std::size_t on_link = 0;
+    for (std::size_t i = 0; i < down.size(); ++i) {
+      auto const& link = down[i];
+      float const dx = link.bx - link.ax;
+      float const dz = link.bz - link.az;
+      float const dy = link.by - link.ay;
+      float const length = std::sqrt(dx * dx + dz * dz + dy * dy);
+      float t = 0.0F;
+      if (length > 1.0e-4F) {
+        t = std::clamp(((previous->world_x - link.ax) * dx +
+                        (previous->world_z - link.az) * dz +
+                        (previous->elevation - link.ay) * dy) /
+                           (length * length),
+                       0.0F,
+                       1.0F);
+      }
+      float const px = link.ax + dx * t - previous->world_x;
+      float const pz = link.az + dz * t - previous->world_z;
+      float const py = link.ay + dy * t - previous->elevation;
+      float const d2 = px * px + pz * pz + py * py;
+      if (d2 < best_d2) {
+        best_d2 = d2;
+        arc = travelled + length * t;
+        on_link = i;
+      }
+      travelled += length;
+    }
+    bool const ladder = WW::segment_is_steep(down[on_link]);
+    float const speed = ladder ? WW::k_ladder_climb_speed : 1.4F;
+    float const room = room_ahead(down.data(), down.size(), arc, slot.original.index, others);
+    arc = std::min({travelled,
+                    arc + speed * std::max(0.0F, frame.delta_time),
+                    arc + room});
+    float remaining = arc;
+    for (std::size_t i = 0; i < down.size(); ++i) {
+      auto const& link = down[i];
+      float const dx = link.bx - link.ax;
+      float const dz = link.bz - link.az;
+      float const dy = link.by - link.ay;
+      float const length = std::sqrt(dx * dx + dz * dz + dy * dy);
+      if (remaining <= length || i + 1 == down.size()) {
+        float const t = length > 1.0e-4F ? std::clamp(remaining / length, 0.0F, 1.0F) : 1.0F;
+        float y = link.ay + dy * t;
+        if (std::abs(y - WW::k_deck_height) < 1.0e-3F) {
+          // Leaving the planks: never again exactly at deck height.
+          y = WW::k_deck_height - 1.0e-3F;
+        }
+        bool const steep = WW::segment_is_steep(link);
+        settle(link.ax + dx * t, link.az + dz * t, std::max(y, 0.0F));
+        directive.climbing = steep && y > 0.0F;
+        directive.world_yaw =
+            steep ? Game::Systems::yaw_degrees_from_direction(-dx, -dz)
+                  : Game::Systems::yaw_degrees_from_direction(dx, dz);
+        return;
+      }
+      remaining -= length;
+    }
+  }
+  if (walker->phase == Engine::Core::WallWalkerComponent::Phase::Leaving) {
+    // Down on the street with the rest of the troop.
+    directive.elevation = 0.0F;
+    return;
+  }
+
   if (boarding) {
     // Off the chain once a man stands on the planks; until then his height
     // is never exactly the deck's.
@@ -625,6 +791,11 @@ void pin_to_wall_walk(const EntityFrame& frame,
       if (gap > allowed) {
         settle(from_x + dx / gap * allowed, from_z + dz / gap * allowed, 0.0F);
         directive.world_yaw = Game::Systems::yaw_degrees_from_direction(dx, dz);
+        return;
+      }
+      if (room_ahead(chain.data(), links, 0.0F, slot.original.index, others) <= 0.0F) {
+        // Someone is still on the bottom rungs: wait at the foot.
+        settle(start.x, start.z, 0.0F);
         return;
       }
       settle(start.x, start.z, 0.001F);
@@ -667,7 +838,11 @@ void pin_to_wall_walk(const EntityFrame& frame,
       }
       bool const climbing_link = WW::segment_is_steep(chain[on_link]);
       float const speed = climbing_link ? WW::k_tower_climb_speed : k_bridge_speed;
-      arc = std::min(travelled, arc + speed * std::max(0.0F, frame.delta_time));
+      float const room =
+          room_ahead(chain.data(), links, arc, slot.original.index, others);
+      arc = std::min({travelled,
+                      arc + speed * std::max(0.0F, frame.delta_time),
+                      arc + room});
       float remaining = arc;
       for (std::size_t i = 0; i < links; ++i) {
         auto const& link = chain[i];
@@ -775,7 +950,7 @@ auto build_slot_directive(const EntityFrame& frame,
   track_relocation(frame, slot, directive);
   keep_directive_off_facade(frame, directive);
   walk_slot(frame, slot, previous_soldiers, directive);
-  pin_to_wall_walk(frame, slot, directive);
+  pin_to_wall_walk(frame, slot, previous_soldiers, directive);
   return directive;
 }
 

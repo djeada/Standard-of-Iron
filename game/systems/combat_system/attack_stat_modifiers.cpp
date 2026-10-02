@@ -30,8 +30,8 @@ auto get_base_max_health(const Engine::Core::UnitComponent* unit)
   return profile.combat.max_health;
 }
 
-// Height a fighter stands at: the ground under it, plus the balcony, stair or
-// tower bridge it is standing on.
+// Height a fighter stands at. Terrain alignment already lifts a soldier on a
+// balcony, stair or tower bridge by its walking height.
 auto standing_height(const Engine::Core::Entity* entity) -> std::optional<float> {
   auto const* transform =
       entity != nullptr ? entity->get_component<Engine::Core::TransformComponent>()
@@ -39,11 +39,7 @@ auto standing_height(const Engine::Core::Entity* entity) -> std::optional<float>
   if (transform == nullptr) {
     return std::nullopt;
   }
-  float height = transform->position.y;
-  if (auto const* walker = entity->get_component<Engine::Core::WallWalkerComponent>()) {
-    height += walker->elevation;
-  }
-  return height;
+  return transform->position.y;
 }
 
 auto is_high_ground_advantage(const Engine::Core::Entity* high,
@@ -178,8 +174,7 @@ auto calculate_tactical_damage_multiplier(Engine::Core::Entity* attacker,
         attacker->get_component<Engine::Core::WallWalkerComponent>();
     if (target_walker != nullptr &&
         target_walker->phase == Engine::Core::WallWalkerComponent::Phase::OnDeck &&
-        (attacker_walker == nullptr ||
-         attacker_walker->phase == Engine::Core::WallWalkerComponent::Phase::Approaching)) {
+        (attacker_walker == nullptr || !attacker_walker->aloft())) {
       multiplier *= Constants::k_wall_walk_ranged_cover_multiplier;
     }
   }

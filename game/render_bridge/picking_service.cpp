@@ -341,12 +341,7 @@ auto PickingService::pick_single(float sx,
     }
 
     QPointF sp;
-    float const lift =
-        e->has_component<Engine::Core::WallWalkerComponent>()
-            ? e->get_component<Engine::Core::WallWalkerComponent>()->elevation
-            : 0.0F;
-    if (!camera.world_to_screen(
-            QVector3D(t->position.x, t->position.y + lift, t->position.z),
+    if (!camera.world_to_screen(QVector3D(t->position.x, t->position.y, t->position.z),
                                 view_w,
                                 view_h,
                                 sp)) {
@@ -492,12 +487,7 @@ auto PickingService::pick_in_rect(float x1,
     }
     auto* t = e->get_component<Engine::Core::TransformComponent>();
     QPointF sp;
-    float const lift =
-        e->has_component<Engine::Core::WallWalkerComponent>()
-            ? e->get_component<Engine::Core::WallWalkerComponent>()->elevation
-            : 0.0F;
-    if (!camera.world_to_screen(
-            QVector3D(t->position.x, t->position.y + lift, t->position.z),
+    if (!camera.world_to_screen(QVector3D(t->position.x, t->position.y, t->position.z),
                                 view_w,
                                 view_h,
                                 sp)) {

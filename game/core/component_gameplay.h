@@ -234,8 +234,17 @@ struct WallWalkerComponent {
     Boarding,
     Approaching,
     Climbing,
-    Descending
+    Descending,
+    // Back on the ground: the leader has stepped off the stair or ladder and
+    // the rest of the file is still coming down it.
+    Leaving
   };
+
+  // Up on the wall (the balcony, a stair, a ladder or a tower bridge), as
+  // opposed to walking to it or away from it on the ground.
+  [[nodiscard]] auto aloft() const -> bool {
+    return phase != Phase::Approaching && phase != Phase::Leaving;
+  }
 
   static constexpr float k_wall_top_height = 2.00F;
   // A tower's company crosses the bridge one man at a time, this far apart.
@@ -267,12 +276,19 @@ struct WallWalkerComponent {
   bool has_goal{false};
   float stair_progress{0.0F};
   int saved_files_override{0};
+  // The stair or ladder a troop has just come up, kept on its walk a moment so
+  // the men behind the leader finish the climb. Not saved.
+  EntityID recent_stair_id{0};
+  float recent_stair_seconds{0.0F};
 
   // Derived each tick: where an idle soldier on the balcony looks (degrees) -
   // out over the stakes for the wall's owner, into the town for a boarder.
   bool watching{false};
   float watch_yaw{0.0F};
   std::vector<WallWalkSegment> path;
+  // The way down while the troop is coming off the wall: from the top of its
+  // stair or ladder to the foot, in order.
+  std::vector<WallWalkSegment> exit_chain;
 };
 
 class GateComponent {

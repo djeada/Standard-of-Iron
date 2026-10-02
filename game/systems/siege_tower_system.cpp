@@ -14,6 +14,7 @@
 #include "../core/ambient_session.h"
 #include "../core/component_core.h"
 #include "../core/component_gameplay.h"
+#include "../core/component_presentation.h"
 #include "../core/entity.h"
 #include "../core/world.h"
 #include "../map/map_transformer.h"
@@ -64,10 +65,17 @@ constexpr float k_tower_arrival_idle = 2.6F;
 constexpr float k_wall_link_reach = 2.7F;
 constexpr float k_node_arrival = 0.12F;
 constexpr float k_path_radius = 18.0F;
-// Long enough for the largest company to climb the tower, file across the
-// bridge and settle.
-constexpr float k_board_seconds =
-    WallWalkerComponent::k_file_out_interval * 24.0F + 9.0F;
+// The tower's inner ladder takes one man at a time, a body length apart.
+constexpr float k_board_seconds_per_man = 0.85F;
+constexpr float k_board_seconds_slack = 8.0F;
+constexpr int k_board_default_company = 24;
+// After the leader steps off a stair or ladder the troop keeps to it this long
+// (or until it has walked this far) so the men behind him finish the descent.
+constexpr float k_leave_seconds_per_man = 1.6F;
+constexpr float k_leave_seconds_slack = 5.0F;
+constexpr float k_leave_distance = 16.0F;
+// ...and on the way up, the men below the leader keep the stair on their walk.
+constexpr float k_recent_stair_seconds = 8.0F;
 // Picking a ladder over a stair costs this much more, in metres walked.
 constexpr float k_ladder_detour = 4.0F;
 constexpr float k_stair_speed = 0.9F;
@@ -75,6 +83,18 @@ constexpr float k_deck_speed_scale = 0.75F;
 constexpr float k_stair_arrival = 0.9F;
 constexpr float k_stair_arrival_idle = 2.2F;
 constexpr float k_approach_order_slack = 0.6F;
+
+// Long enough for the whole company to climb the tower, file across the bridge
+// and settle.
+auto board_seconds(Engine::Core::World& world, EntityID id) -> float {
+  int men = k_board_default_company;
+  if (auto const* roster =
+          world.try_get<Engine::Core::FormationRosterPresentationComponent>(id);
+      roster != nullptr && roster->total_count > 0) {
+    men = roster->total_count;
+  }
+  return static_cast<float>(men) * k_board_seconds_per_man + k_board_seconds_slack;
+}
 
 struct WallNode {
   EntityID id{0};
@@ -389,11 +409,17 @@ void publish_path(WallWalkerComponent& walker,
       walker.path.push_back({a.x, a.z, deck, a.x, a.z, deck});
     }
   }
+  walker.exit_chain.clear();
   if (stair_node >= 0) {
     auto const s = stair_line(nodes[static_cast<std::size_t>(stair_node)]);
     walker.path.push_back({s.foot.x, s.foot.z, 0.0F, s.ground.x, s.ground.z, 0.0F});
     walker.path.push_back({s.ground.x, s.ground.z, 0.0F, s.edge.x, s.edge.z, deck});
     walker.path.push_back({s.edge.x, s.edge.z, deck, s.top.x, s.top.z, deck});
+    if (walker.phase == Phase::Descending || walker.phase == Phase::Leaving) {
+      walker.exit_chain = {{s.top.x, s.top.z, deck, s.edge.x, s.edge.z, deck},
+                           {s.edge.x, s.edge.z, deck, s.ground.x, s.ground.z, 0.0F},
+                           {s.ground.x, s.ground.z, 0.0F, s.foot.x, s.foot.z, 0.0F}};
+    }
   }
   if (walker.phase == Phase::Boarding) {
     if (walker.tower_id != 0) {
@@ -419,6 +445,23 @@ void publish_path(WallWalkerComponent& walker,
                            walker.landing_z,
                            deck});
   }
+}
+
+// Coming off the wall: the balcony, the stair or ladder used, and the ground
+// from its foot to wherever the leader has walked since.
+void publish_leaving_path(WallWalkerComponent& walker,
+                          const std::vector<WallNode>& nodes,
+                          int stair,
+                          const TransformComponent& transform) {
+  if (stair < 0) {
+    walker.path.clear();
+    return;
+  }
+  auto const& node = nodes[static_cast<std::size_t>(stair)];
+  publish_path(walker, nodes, node.x, node.z, stair);
+  auto const foot = stair_line(node).foot;
+  walker.path.push_back(
+      {foot.x, foot.z, 0.0F, transform.position.x, transform.position.z, 0.0F});
 }
 
 void enter_wall(UnitComponent& unit, WallWalkerComponent& walker) {
@@ -1132,17 +1175,43 @@ void WallWalkSystem::update(Engine::Core::World* world, float delta_time) {
       if (up && walker->stair_progress >= 1.0F) {
         walker->phase = Phase::OnDeck;
         walker->wall_id = walker->stair_wall_id;
+        walker->recent_stair_id = walker->stair_wall_id;
+        walker->recent_stair_seconds = k_recent_stair_seconds;
         walker->stair_wall_id = 0;
         transform->rotation.y = along_wall_yaw(nodes, stair);
       } else if (!up && walker->stair_progress <= 0.0F) {
-        bool const onward = walker->has_goal;
-        float const gx = walker->goal_x;
-        float const gz = walker->goal_z;
-        leave_wall(*world, id, unit);
-        if (onward) {
-          CommandService::move_unit(*world, id, QVector3D(gx, 0.0F, gz));
+        // The leader is down; the rest of the file still has to come off the
+        // wall behind him before the troop is back on open ground.
+        walker->phase = Phase::Leaving;
+        walker->elevation = 0.0F;
+        walker->boarding_seconds = 0.0F;
+        if (walker->has_goal) {
+          CommandService::move_unit(
+              *world, id, QVector3D(walker->goal_x, 0.0F, walker->goal_z));
         }
+        walker->has_goal = false;
+        publish_leaving_path(*walker, nodes, stair, *transform);
       }
+      continue;
+    }
+
+    if (walker->phase == Phase::Leaving) {
+      walker->boarding_seconds += delta_time;
+      auto const foot =
+          stair >= 0 ? stair_line(nodes[static_cast<std::size_t>(stair)]).foot
+                     : WW::Point{transform->position.x, transform->position.z};
+      float const away = std::hypot(transform->position.x - foot.x,
+                                    transform->position.z - foot.z);
+      float const leave_seconds =
+          (board_seconds(*world, id) - k_board_seconds_slack) / k_board_seconds_per_man *
+              k_leave_seconds_per_man +
+          k_leave_seconds_slack;
+      if (stair < 0 || walker->boarding_seconds > leave_seconds ||
+          away > k_leave_distance) {
+        leave_wall(*world, id, unit);
+        continue;
+      }
+      publish_leaving_path(*walker, nodes, stair, *transform);
       continue;
     }
 
@@ -1160,7 +1229,7 @@ void WallWalkSystem::update(Engine::Core::World* world, float delta_time) {
 
     if (walker->phase == Phase::Boarding) {
       walker->boarding_seconds += delta_time;
-      if (walker->boarding_seconds >= k_board_seconds) {
+      if (walker->boarding_seconds >= board_seconds(*world, id)) {
         walker->phase = Phase::OnDeck;
         walker->tower_id = 0;
       }
@@ -1242,7 +1311,7 @@ void WallWalkSystem::update(Engine::Core::World* world, float delta_time) {
     } else if (walker->phase == Phase::OnDeck && walker->has_goal) {
       transform->position.x = lane.x;
       transform->position.z = lane.z;
-      if (leaving && nodes[static_cast<std::size_t>(here)].stair &&
+      if (leaving && nodes[static_cast<std::size_t>(here)].access() &&
           nodes[static_cast<std::size_t>(here)].id == walker->stair_wall_id) {
         walker->phase = Phase::Descending;
         walker->stair_progress = 1.0F;
@@ -1265,13 +1334,16 @@ void WallWalkSystem::update(Engine::Core::World* world, float delta_time) {
           approach_angle(transform->rotation.y, settled, 240.0F * delta_time);
     }
 
+    walker->recent_stair_seconds = std::max(0.0F, walker->recent_stair_seconds - delta_time);
+    int const recent =
+        walker->recent_stair_seconds > 0.0F ? index_of(nodes, walker->recent_stair_id) : -1;
     publish_path(*walker,
                  nodes,
                  transform->position.x,
                  transform->position.z,
                  walker->phase == Phase::Descending
                      ? index_of(nodes, walker->stair_wall_id)
-                     : -1);
+                     : recent);
   }
 }
 

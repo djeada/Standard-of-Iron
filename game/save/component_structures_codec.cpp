@@ -321,7 +321,7 @@ void read_wall_walker(Entity* entity, const QJsonObject& json) {
     walker->phase = static_cast<WallWalkerComponent::Phase>(
         std::clamp(obj["phase"].toInt(0),
                    0,
-                   static_cast<int>(WallWalkerComponent::Phase::Descending)));
+                   static_cast<int>(WallWalkerComponent::Phase::Leaving)));
     walker->boarding_seconds = real("boarding_seconds");
     walker->door_x = real("door_x");
     walker->door_z = real("door_z");

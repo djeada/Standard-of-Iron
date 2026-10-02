@@ -504,8 +504,7 @@ auto stands_on_wall(const Engine::Core::Entity* entity) -> bool {
       registry != nullptr
           ? registry->try_get<Engine::Core::WallWalkerComponent>(entity->get_id())
           : nullptr;
-  return walker != nullptr &&
-         walker->phase != Engine::Core::WallWalkerComponent::Phase::Approaching;
+  return walker != nullptr && walker->aloft();
 }
 
 } // namespace
