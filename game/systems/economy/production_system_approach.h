@@ -31,4 +31,14 @@ void advance_site_approach(Engine::Core::World& world,
                            Engine::Core::BuilderProductionComponent& builder,
                            float delta_time);
 
+[[nodiscard]] auto
+crew_at_posts(Engine::Core::World& world,
+              Engine::Core::EntityID id,
+              const Engine::Core::BuilderProductionComponent& builder) -> bool;
+
+void settle_crew_at_posts(Engine::Core::World& world,
+                          Engine::Core::EntityID id,
+                          Engine::Core::BuilderProductionComponent& builder,
+                          float delta_time);
+
 } // namespace Game::Systems::ProductionTasks

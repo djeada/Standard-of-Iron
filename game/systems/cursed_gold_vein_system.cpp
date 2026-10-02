@@ -95,6 +95,12 @@ auto CursedGoldVeinSystem::serialize_state() const -> QJsonArray {
 void CursedGoldVeinSystem::ensure_anchor(Engine::Core::World& world,
                                          RuntimeVein& vein) {
   if (!vein.anchor_pending || m_factory_registry == nullptr) {
+    if (vein.anchor_entity_id != 0) {
+      if (auto* renderable =
+              world.try_get<Engine::Core::RenderableComponent>(vein.anchor_entity_id)) {
+        renderable->structure_foundation_visible = false;
+      }
+    }
     return;
   }
   vein.anchor_pending = false;
@@ -118,6 +124,7 @@ void CursedGoldVeinSystem::ensure_anchor(Engine::Core::World& world,
   auto* renderable =
       world.try_get<Engine::Core::RenderableComponent>(vein.anchor_entity_id);
   if (renderable != nullptr) {
+    renderable->structure_foundation_visible = false;
     renderable->renderer_id =
         std::string(Game::Visuals::k_cursed_gold_vein_flag_asset_key);
   }

@@ -1025,7 +1025,8 @@ void Renderer::submit_unit_entry(
       } else {
         (*plan.fn)(plan.draw_ctx, probe);
       }
-      if (entry.unit != nullptr &&
+      if (entry.unit != nullptr && entry.renderable != nullptr &&
+          entry.renderable->structure_foundation_visible &&
           Game::Units::is_building_spawn(entry.unit->spawn_type)) {
         auto& cache = *entry.cache;
         if (!cache.foundation_valid) {

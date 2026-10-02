@@ -20,6 +20,7 @@ constexpr float k_foundation_inset = 0.96F;
 
 constexpr float k_foundation_top_lift = 0.012F;
 constexpr float k_foundation_bottom_margin = 0.08F;
+constexpr float k_foundation_wall_thickness = 0.16F;
 
 const QVector3D k_foundation_color(0.47F, 0.43F, 0.37F);
 
@@ -90,12 +91,42 @@ void submit_structure_foundation(const StructureFoundation& foundation,
   float const top = k_foundation_top_lift / up_scale;
   float const bottom = -(foundation.depth + k_foundation_bottom_margin) / up_scale;
 
-  QMatrix4x4 local;
-  local.translate(foundation.center_x, (top + bottom) * 0.5F, foundation.center_z);
-  local.scale(foundation.half_width * k_foundation_inset,
-              (top - bottom) * 0.5F,
-              foundation.half_depth * k_foundation_inset);
-  out.mesh(cube, model * local, k_foundation_color, white, alpha);
+  float const half_width = foundation.half_width * k_foundation_inset;
+  float const half_depth = foundation.half_depth * k_foundation_inset;
+  float const horizontal_scale =
+      std::max(model.column(0).toVector3D().length(), 1.0e-4F);
+  float const depth_scale = std::max(model.column(2).toVector3D().length(), 1.0e-4F);
+  float const half_wall_x = (k_foundation_wall_thickness * 0.5F) / horizontal_scale;
+  float const half_wall_z = (k_foundation_wall_thickness * 0.5F) / depth_scale;
+  auto submit_wall = [&](float center_x,
+                         float center_z,
+                         float wall_half_width,
+                         float wall_half_depth) {
+    QMatrix4x4 local;
+    local.translate(center_x, (top + bottom) * 0.5F, center_z);
+    local.scale(wall_half_width, (top - bottom) * 0.5F, wall_half_depth);
+    out.mesh(cube, model * local, k_foundation_color, white, alpha);
+  };
+
+  // Keep the downhill support under the walls, but leave the terrain visible
+  // through the building's footprint instead of capping it with a square slab.
+  submit_wall(foundation.center_x,
+              foundation.center_z + half_depth - half_wall_z,
+              half_width,
+              half_wall_z);
+  submit_wall(foundation.center_x,
+              foundation.center_z - half_depth + half_wall_z,
+              half_width,
+              half_wall_z);
+  float const side_half_depth = std::max(half_depth - half_wall_z, 0.0F);
+  submit_wall(foundation.center_x + half_width - half_wall_x,
+              foundation.center_z,
+              half_wall_x,
+              side_half_depth);
+  submit_wall(foundation.center_x - half_width + half_wall_x,
+              foundation.center_z,
+              half_wall_x,
+              side_half_depth);
 }
 
 } // namespace Render::GL

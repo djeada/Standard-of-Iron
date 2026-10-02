@@ -3,6 +3,7 @@
 #include <QMatrix4x4>
 #include <QVector3D>
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <memory>
@@ -10,11 +11,13 @@
 #include <numbers>
 #include <span>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "animation/rig/humanoid_proportions.h"
 #include "render/bone_palette_arena.h"
 #include "render/creature/spec.h"
+#include "render/equipment/armor/garment_shell.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/gl/mesh.h"
 #include "render/gl/primitives.h"
@@ -629,11 +632,57 @@ auto smooth_limb_mesh(float tail_radius,
   return std::make_unique<Render::GL::Mesh>(vertices, indices);
 }
 
+// Overlap the cuirass and cover the thigh roots with one continuous tunic.
+// The hem follows each leg gently; the waist stays attached to the pelvis.
+// Sharing this mesh between LODs avoids exposing the old pelvis/leg seams when
+// the camera moves away.
+auto tunic_hem_mesh() -> Render::GL::Mesh* {
+  static auto mesh = []() {
+    auto shell = Render::GL::make_garment_shell({
+        {-0.20F, 0.215F, 0.150F},
+        {-0.07F, 0.202F, 0.115F},
+        {0.02F, 0.140F, 0.075F},
+        {0.12F, 0.108F, 0.055F},
+    });
+    auto vertices = shell->get_vertices();
+    for (auto& vertex : vertices) {
+      float const y = vertex.position[1];
+      float t = std::clamp(-y / 0.20F, 0.0F, 1.0F);
+      t = t * t * (3.0F - 2.0F * t);
+      float const legs = t * 0.45F;
+      float const right = std::clamp(0.5F + vertex.position[0] / 0.08F, 0.0F, 1.0F);
+      float const spine = std::clamp(y / 0.12F, 0.0F, 1.0F) * 0.65F;
+      vertex.bone_indices = {static_cast<std::uint8_t>(HumanoidBone::Pelvis),
+                             static_cast<std::uint8_t>(HumanoidBone::Spine),
+                             static_cast<std::uint8_t>(HumanoidBone::HipL),
+                             static_cast<std::uint8_t>(HumanoidBone::HipR)};
+      vertex.bone_weights = {
+          1.0F - legs - spine, spine, legs * (1.0F - right), legs * right};
+    }
+    return std::make_unique<Render::GL::Mesh>(vertices, shell->get_indices());
+  }();
+  return mesh.get();
+}
+
+void fit_tunic_hem(Creature::PrimitiveInstance& part) {
+  part.shape = Creature::PrimitiveShape::Mesh;
+  part.params.head_offset = QVector3D();
+  part.params.half_extents = QVector3D(1.0F, 1.0F, 1.0F);
+  part.custom_mesh = tunic_hem_mesh();
+  part.mesh_skinning = Creature::MeshSkinning::Authored;
+}
+
 struct SmoothBodyParts {
   std::array<Creature::PrimitiveInstance, k_full_parts.size()> parts = k_full_parts;
   std::vector<std::unique_ptr<Render::GL::Mesh>> meshes;
 
   SmoothBodyParts() {
+    for (auto& part : parts) {
+      if (part.params.anchor_bone == bone(HumanoidBone::Pelvis) &&
+          std::string_view(part.debug_name) == "humanoid_full_pelvis_block") {
+        fit_tunic_hem(part);
+      }
+    }
     for (auto& proximal : parts) {
       if (proximal.shape != Creature::PrimitiveShape::TaperedCylinder ||
           proximal.params.anchor_bone != proximal.params.tail_bone) {
@@ -692,6 +741,10 @@ auto smooth_minimal_parts() {
   constexpr int k_radial_segments = 12;
   constexpr int k_latitude_segments = 8;
   for (auto& part : parts) {
+    if (std::string_view(part.debug_name) == "humanoid_full_pelvis_block") {
+      fit_tunic_hem(part);
+      continue;
+    }
     switch (part.shape) {
     case Creature::PrimitiveShape::OrientedSphere:
       part.custom_mesh =

@@ -9,8 +9,22 @@
 
 #include "render/equipment/equipment_cache_key.h"
 #include "render/humanoid/runtime/humanoid_renderer.h"
+#include "render/humanoid/runtime/skeleton_evaluator.h"
+#include "render/static_attachment_spec.h"
 
 namespace Render::GL {
+
+// Let the lower cuirass follow the waist while the shoulders follow the chest.
+// This preserves the overlap with the tunic through torso twist and stride.
+inline void fit_armor_to_waist(Render::Creature::StaticAttachmentSpec& spec,
+                               float waist_y,
+                               float bottom_y) {
+  spec.drape.enabled = true;
+  spec.drape.pelvis_bone =
+      static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Pelvis);
+  spec.drape.top_y = waist_y + 0.16F;
+  spec.drape.bottom_y = bottom_y;
+}
 
 inline auto safe_attachment_axis(const QVector3D& axis,
                                  const QVector3D& fallback) -> QVector3D {
