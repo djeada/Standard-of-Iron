@@ -80,6 +80,10 @@ void hold_sheep_still(Engine::Core::World* world,
   if (auto* wildlife =
           world->try_get<Engine::Core::WildlifeComponent>(sheep->get_id())) {
     wildlife->held_timer = std::max(wildlife->held_timer, 0.75F);
+    if (builder->in_progress) {
+      wildlife->dazed_timer = std::max(
+          wildlife->dazed_timer, Engine::Core::WildlifeComponent::k_dazed_hold_seconds);
+    }
   }
   if (auto* movement =
           world->try_get<Engine::Core::MovementComponent>(sheep->get_id())) {

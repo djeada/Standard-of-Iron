@@ -7,6 +7,8 @@
 #include "app/economy/harvest_targeting.h"
 #include "app/economy/placement_session.h"
 #include "app/input/viewport_state.h"
+#include "game/core/component_core.h"
+#include "game/core/component_economy.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
 #include "game/render_bridge/picking_service.h"
@@ -22,6 +24,45 @@ namespace App::Economy {
 
 namespace {
 
+constexpr float k_sheep_pick_radius_px = 30.0F;
+constexpr float k_sheep_pick_body_height = 0.35F;
+
+// The builder sent after a sheep usually stands right beside it, so a generic
+// unit pick can land on the builder. Sheep are looked for on their own first.
+auto pick_sheep_on_screen(Engine::Core::World& world,
+                          const Render::GL::Camera& camera,
+                          const ViewportState& viewport,
+                          const QPointF& screen_point) -> Engine::Core::EntityID {
+  Engine::Core::EntityID best_id = 0;
+  float best_distance_sq = k_sheep_pick_radius_px * k_sheep_pick_radius_px;
+  for (auto [entity, wildlife, transform] :
+       world.entity_view<Engine::Core::WildlifeComponent,
+                         Engine::Core::TransformComponent>()) {
+    (void)wildlife;
+    if (!Game::Systems::sheep_is_slaughterable(entity) ||
+        Game::Systems::food_target_claimed(world, entity.get_id())) {
+      continue;
+    }
+    QPointF screen;
+    QVector3D const body(transform.position.x,
+                         transform.position.y +
+                             (k_sheep_pick_body_height * transform.scale.y),
+                         transform.position.z);
+    if (!Game::Systems::PickingService::world_to_screen(
+            camera, viewport.width, viewport.height, body, screen)) {
+      continue;
+    }
+    auto const dx = static_cast<float>(screen.x() - screen_point.x());
+    auto const dy = static_cast<float>(screen.y() - screen_point.y());
+    float const distance_sq = (dx * dx) + (dy * dy);
+    if (distance_sq <= best_distance_sq) {
+      best_distance_sq = distance_sq;
+      best_id = entity.get_id();
+    }
+  }
+  return best_id;
+}
+
 auto resolve_food_target_hit(Engine::Core::World* world,
                              int owner_id,
                              const Render::GL::Camera& camera,
@@ -32,14 +73,18 @@ auto resolve_food_target_hit(Engine::Core::World* world,
   if (world == nullptr || viewport.width <= 0 || viewport.height <= 0) {
     return std::nullopt;
   }
-  const Engine::Core::EntityID picked = Game::Systems::PickingService::pick_unit_first(
-      static_cast<float>(screen_point.x()),
-      static_cast<float>(screen_point.y()),
-      *world,
-      camera,
-      viewport.width,
-      viewport.height,
-      0);
+  Engine::Core::EntityID picked =
+      pick_sheep_on_screen(*world, camera, viewport, screen_point);
+  if (picked == 0) {
+    picked = Game::Systems::PickingService::pick_unit_first(
+        static_cast<float>(screen_point.x()),
+        static_cast<float>(screen_point.y()),
+        *world,
+        camera,
+        viewport.width,
+        viewport.height,
+        0);
+  }
   if (picked == 0) {
     return std::nullopt;
   }

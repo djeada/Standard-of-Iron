@@ -6832,7 +6832,8 @@ TEST(HumanoidPrepare, TheWorkJobPicksTheToolAndTheClip) {
       Animation::HumanoidConstructionRole::KneelingChisel);
   EXPECT_EQ(Animation::humanoid_construction_role_for_job(
                 Animation::HumanoidWorkJob::Butcher),
-            Animation::HumanoidConstructionRole::KneelingChisel);
+            Animation::HumanoidConstructionRole::Hammer)
+      << "a sheep is bonked with the mallet, never knifed";
   EXPECT_EQ(
       Animation::humanoid_construction_role_for_job(Animation::HumanoidWorkJob::Build),
       Animation::HumanoidConstructionRole::None)

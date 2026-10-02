@@ -177,7 +177,7 @@ TEST(WildlifeActionPose, WolfCollapseIsProgressive) {
   EXPECT_LT(highest_point(finished), highest_point(midway));
 }
 
-TEST(WildlifeActionPose, SheepCollapsePutsTheAnimalOnTheGround) {
+TEST(WildlifeActionPose, ADeadSheepLiesOnItsBackWithItsLegsInTheAir) {
   SheepDrive standing;
   standing.gait = SheepGait::Stand;
   SheepDrive fallen = standing;
@@ -186,12 +186,62 @@ TEST(WildlifeActionPose, SheepCollapsePutsTheAnimalOnTheGround) {
   const auto up = Render::Wildlife::sheep_pose(standing);
   const auto down = Render::Wildlife::sheep_pose(fallen);
 
-  EXPECT_LT(highest_point(down), highest_point(up) * 0.45F);
-  EXPECT_LT(down.muzzle.y(), up.muzzle.y() * 0.40F);
-  EXPECT_GT(std::abs(mean_foot_offset(down)), 0.25F);
-  EXPECT_LT(std::abs(mean_foot_offset(up)), 0.05F);
-  EXPECT_LT(body_to_foot_drop(down), body_to_foot_drop(up) * 0.5F);
+  float const body_up = (up.body_front.y() + up.body_rear.y()) * 0.5F;
+  float const body_down = (down.body_front.y() + down.body_rear.y()) * 0.5F;
+  EXPECT_LT(body_down, body_up * 0.75F) << "the body should be down on the grass";
+  EXPECT_LT(down.poll.y(), up.poll.y() * 0.35F) << "the head should be down too";
+  for (const auto& leg : down.legs) {
+    EXPECT_GT(leg.toe.y(), leg.shoulder.y() + 0.20F)
+        << "every hoof should point at the sky, cartoon style";
+    EXPECT_GT(leg.toe.y(), body_down);
+  }
+  for (const auto& leg : up.legs) {
+    EXPECT_LT(leg.toe.y(), leg.shoulder.y());
+  }
   EXPECT_GE(lowest_point(down), -0.05F);
+}
+
+TEST(WildlifeActionPose, ASheepHopsStiffBeforeItTipsOver) {
+  SheepDrive standing;
+  standing.gait = SheepGait::Stand;
+  SheepDrive hop = standing;
+  hop.collapse = 0.15F;
+
+  const auto up = Render::Wildlife::sheep_pose(standing);
+  const auto airborne = Render::Wildlife::sheep_pose(hop);
+
+  EXPECT_GT(airborne.body_front.y(), up.body_front.y() + 0.04F)
+      << "a cartoon sheep jumps up rigid before it keels over";
+  EXPECT_NEAR(airborne.legs[0].toe.y() - airborne.legs[0].shoulder.y(),
+              up.legs[0].toe.y() - up.legs[0].shoulder.y(),
+              0.05F)
+      << "still upright at the top of the hop";
+}
+
+TEST(WildlifeActionPose, TheLegsBoingAfterTheLandingAndThenSettle) {
+  SheepDrive settled;
+  settled.gait = SheepGait::Stand;
+  settled.collapse = 1.0F;
+  const auto still = Render::Wildlife::sheep_pose(settled);
+
+  float moved = 0.0F;
+  for (int step = 0; step <= 20; ++step) {
+    SheepDrive landing = settled;
+    landing.collapse = 0.60F + (0.25F * static_cast<float>(step) / 20.0F);
+    const auto bouncing = Render::Wildlife::sheep_pose(landing);
+    for (std::size_t i = 0; i < bouncing.legs.size(); ++i) {
+      moved = std::max(moved, (bouncing.legs[i].toe - still.legs[i].toe).length());
+    }
+  }
+  EXPECT_GT(moved, 0.03F) << "the legs should spring after the sheep lands";
+
+  SheepDrive almost = settled;
+  almost.collapse = 0.995F;
+  const auto nearly = Render::Wildlife::sheep_pose(almost);
+  for (std::size_t i = 0; i < still.legs.size(); ++i) {
+    EXPECT_LT((nearly.legs[i].toe - still.legs[i].toe).length(), 0.01F)
+        << "the die clip should hand over to the dead pose without a pop";
+  }
 }
 
 TEST(WildlifeDeathMotion, LegsGiveWayBeforeTheBodyHasFallen) {

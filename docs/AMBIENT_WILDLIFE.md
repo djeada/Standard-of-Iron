@@ -479,6 +479,7 @@ arena_app --batch --scenario <id>
 | `wildlife_wolf_pack`         | Undisturbed prowl, wolf silhouette, coat, gait           |
 | `wildlife_wolf_ambush`       | Pack pressure against a lone patrol                      |
 | `wildlife_pack_takedown`     | Close pack kill: bite, flinch, orbit, death              |
+| `wildlife_sheep_slaughter`   | Builder bonks a sheep: stars, wool poof, legs-up keel    |
 | `wildlife_bird_scatter`      | Resident flock movement and scatter                      |
 | `wildlife_bird_flyover`      | Flyover entry, crossing, and departure                   |
 | `wildlife_mixed_pasture`     | Sheep, wolves, and birds together                        |

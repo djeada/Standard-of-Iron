@@ -147,7 +147,7 @@ auto rank_nearby_nodes(Engine::Core::World& world,
   auto consider_food = [&](std::string_view product) {
     if (auto const food = find_food_target_near(
             world, product, owner_of(worker), from_x, from_z, radius, worker.get_id());
-        food.has_value()) {
+        food.has_value() && !node_is_hidden_by_fog(world, worker, food->x, food->z)) {
       float const dx = food->x - from_x;
       float const dz = food->z - from_z;
       candidates.push_back(
@@ -161,9 +161,7 @@ auto rank_nearby_nodes(Engine::Core::World& world,
     }
   };
   consider_food(k_builder_product_harvest_grain);
-  if (food_priority) {
-    consider_food(k_builder_product_slaughter_sheep);
-  }
+  consider_food(k_builder_product_slaughter_sheep);
 
   auto const closest_first = [](const Candidate& a, const Candidate& b) {
     if (a.matches_priority != b.matches_priority) {

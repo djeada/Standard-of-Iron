@@ -13,6 +13,7 @@
 #include "app/economy/production_manager.h"
 #include "app/economy/production_readouts.h"
 #undef private
+#include "game/core/component_economy.h"
 #include "game/core/component_gameplay.h"
 #include "game/core/world.h"
 #include "game/map/map_transformer.h"
@@ -1001,6 +1002,46 @@ TEST_F(ProductionManagerTest, AMissedCollectClickSaysWhereItLandedAndStaysArmed)
   EXPECT_NEAR(landed->z(), -3.0F, 0.5F);
   EXPECT_TRUE(manager.is_placing_construction()) << "a miss must keep Collect armed";
   EXPECT_FALSE(manager.release_position().has_value());
+}
+
+TEST_F(ProductionManagerTest, CollectOnASheepBesideItsButcherStillTakesTheSheep) {
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = 64;
+  map_def.grid.height = 64;
+  map_def.grid.tile_size = 1.0F;
+  map_def.biome.procedural_trees_enabled = false;
+  map_def.biome.procedural_boulders_enabled = false;
+  map_def.biome.procedural_iron_ore_enabled = false;
+  Game::Map::TerrainService::instance().initialize(map_def);
+  Game::Systems::NavGrid::initialize(map_def.grid.width, map_def.grid.height);
+
+  auto* sheep = world.create_entity();
+  sheep->add_component<Engine::Core::TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* sheep_unit =
+      sheep->add_component<Engine::Core::UnitComponent>(40, 40, 1.0F, 10.0F);
+  sheep_unit->spawn_type = Game::Units::SpawnType::Sheep;
+  sheep_unit->owner_id = 0;
+  sheep->add_component<Engine::Core::WildlifeComponent>()->species =
+      Game::Wildlife::Species::Sheep;
+
+  // The builder stands nearer the cursor on screen than the sheep's feet do.
+  auto* builder = add_selected_builder(0.6F, 0.0F);
+  ProductionManager manager(&world, &picking_service, &camera);
+  manager.start_builder_construction(QStringLiteral("collect"));
+  ASSERT_TRUE(manager.is_placing_construction());
+
+  QPointF const screen = world_to_screen(QVector3D(0.4F, 0.35F, 0.0F));
+  manager.on_construction_mouse_move(screen.x(), screen.y(), viewport);
+  ASSERT_TRUE(manager.construction_preview_valid())
+      << manager.construction_preview_reason().toStdString();
+  manager.on_construction_pointer_released(screen.x(), screen.y(), viewport);
+
+  const auto* builder_prod =
+      builder->get_component<Engine::Core::BuilderProductionComponent>();
+  ASSERT_NE(builder_prod, nullptr);
+  EXPECT_FALSE(manager.is_placing_construction());
+  EXPECT_EQ(builder_prod->product_type, "slaughter_sheep");
+  EXPECT_EQ(builder_prod->structure_task_entity_id, sheep->get_id());
 }
 
 TEST_F(ProductionManagerTest, SetRallyAtScreenTargetsOnlySelectedBarracks) {
