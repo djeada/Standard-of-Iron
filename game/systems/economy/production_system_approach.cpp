@@ -266,8 +266,11 @@ void advance_site_approach(Engine::Core::World& world,
       ground, transform, builder.construction_site_x, builder.construction_site_z);
   bool const works_from_here =
       !straight_on_terrain && dist_sq <= site_bypass_radius_sq(builder, actor.movement);
+  // Food tasks must reach the sheep or field; only resource gatherers can
+  // work from a nearby spot when their approach stalls.
   bool const stalled_within_reach =
-      work_spot && dist_sq <= k_stalled_work_reach_sq &&
+      is_harvest_builder_product(builder.product_type) &&
+      dist_sq <= k_stalled_work_reach_sq &&
       builder.site_approach_seconds > k_stalled_work_seconds;
   if (dist_sq < arrival_sq || reached_footprint || works_from_here ||
       stalled_within_reach) {
