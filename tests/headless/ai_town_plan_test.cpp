@@ -500,8 +500,7 @@ protected:
       if (troop.has_value() && Game::Units::is_commander_troop(*troop)) {
         continue;
       }
-      if (unit.spawn_type == Game::Units::SpawnType::Catapult ||
-          unit.spawn_type == Game::Units::SpawnType::Ballista) {
+      if (Game::Units::is_siege_engine_spawn(unit.spawn_type)) {
         ++army.engines;
       } else if (Game::Units::is_cavalry(unit.spawn_type)) {
         ++army.horse;

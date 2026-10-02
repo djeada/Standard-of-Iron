@@ -521,6 +521,7 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
       data.production.rally_z = production->rally_z;
       data.production.queue_size =
           static_cast<int>(production->production_queue.size());
+      data.production.queued = production->production_queue;
     }
 
     if (auto* builder_prod =

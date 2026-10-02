@@ -186,6 +186,7 @@ add_library(
     systems/navigation/route_corridor_planner.cpp
     systems/navigation/gate_service.cpp
     systems/navigation/wall_network_service.cpp
+    systems/navigation/wall_walk_orders.cpp
     systems/navigation/terrain_alignment_system.cpp
 )
 target_include_directories(soi_navigation PUBLIC .)

@@ -175,21 +175,82 @@ default_recruitment(const AIContext& context) -> DoctrineRecruitment {
          recruitment.preferred.end();
 }
 
-[[nodiscard]] auto units_under_arms(const AIContext& context, DoctrineArm arm) -> int {
-  switch (arm) {
-  case DoctrineArm::Infantry:
-    return context.melee_count;
-  case DoctrineArm::Missile:
-    return context.ranged_count;
-  case DoctrineArm::Cavalry:
-    return context.cavalry_count;
-  case DoctrineArm::Siege:
-    return context.siege_count;
+// The army as the recruiter should weigh it: what is fielded plus what the
+// barracks are already training. Counting only the fielded troops let every
+// barracks queue the same short arm before any of it arrived, and the army
+// overshot its doctrine by a whole wave.
+struct ArmStrength {
+  int infantry = 0;
+  int missile = 0;
+  int cavalry = 0;
+  int siege = 0;
+
+  [[nodiscard]] auto total() const -> int {
+    return infantry + missile + cavalry + siege;
   }
-  return 0;
+  [[nodiscard]] auto of(DoctrineArm arm) const -> int {
+    switch (arm) {
+    case DoctrineArm::Infantry:
+      return infantry;
+    case DoctrineArm::Missile:
+      return missile;
+    case DoctrineArm::Cavalry:
+      return cavalry;
+    case DoctrineArm::Siege:
+      return siege;
+    }
+    return 0;
+  }
+  void add(DoctrineArm arm) {
+    switch (arm) {
+    case DoctrineArm::Infantry:
+      ++infantry;
+      break;
+    case DoctrineArm::Missile:
+      ++missile;
+      break;
+    case DoctrineArm::Cavalry:
+      ++cavalry;
+      break;
+    case DoctrineArm::Siege:
+      ++siege;
+      break;
+    }
+  }
+};
+
+[[nodiscard]] auto strength_in_training(const Game::Systems::Nation& nation,
+                                        const AIContext& context,
+                                        const AISnapshot& snapshot) -> ArmStrength {
+  ArmStrength strength{context.melee_count,
+                       context.ranged_count,
+                       context.cavalry_count,
+                       context.siege_count};
+  auto count = [&](Game::Units::TroopType type) {
+    if (type == Game::Units::TroopType::Builder ||
+        type == Game::Units::TroopType::Civilian) {
+      return;
+    }
+    if (const auto* troop = nation.get_troop(type)) {
+      strength.add(arm_of(nation, *troop));
+    }
+  };
+  for (const auto& entity : snapshot.friendly_units) {
+    if (!entity.is_building || entity.spawn_type != Game::Units::SpawnType::Barracks ||
+        !entity.production.has_component) {
+      continue;
+    }
+    if (entity.production.in_progress) {
+      count(entity.production.product_type);
+    }
+    for (const auto type : entity.production.queued) {
+      count(type);
+    }
+  }
+  return strength;
 }
 
-[[nodiscard]] auto arm_is_at_establishment(const AIContext& context,
+[[nodiscard]] auto arm_is_at_establishment(const ArmStrength& strength,
                                            const DoctrineRecruitment& recruitment,
                                            DoctrineArm arm) -> bool {
   const float target = share_of(recruitment, arm);
@@ -197,16 +258,39 @@ default_recruitment(const AIContext& context) -> DoctrineRecruitment {
 
     return true;
   }
-  const int total = context.melee_count + context.ranged_count + context.cavalry_count +
-                    context.siege_count;
+  const int total = strength.total();
 
   constexpr int k_too_small_to_shape = 4;
   if (total < k_too_small_to_shape) {
     return false;
   }
-  return static_cast<float>(units_under_arms(context, arm)) /
-             static_cast<float>(total) >=
-         target;
+  return static_cast<float>(strength.of(arm)) / static_cast<float>(total) >= target;
+}
+
+// The arm furthest below its share of the order of battle.
+[[nodiscard]] auto neediest_arm(const DoctrineRecruitment& recruitment,
+                                const ArmStrength& strength) -> DoctrineArm {
+  const int total = strength.total();
+  DoctrineArm wanted = DoctrineArm::Infantry;
+  float worst_gap = -1.0F;
+  for (const auto arm : {DoctrineArm::Infantry,
+                         DoctrineArm::Missile,
+                         DoctrineArm::Cavalry,
+                         DoctrineArm::Siege}) {
+    const float target = share_of(recruitment, arm);
+    if (target <= 0.0F || arm == DoctrineArm::Siege) {
+      continue;
+    }
+    const float have =
+        total > 0 ? static_cast<float>(strength.of(arm)) / static_cast<float>(total)
+                  : 0.0F;
+    const float gap = target - have;
+    if (gap > worst_gap) {
+      worst_gap = gap;
+      wanted = arm;
+    }
+  }
+  return wanted;
 }
 
 [[nodiscard]] auto in_no_position_to_be_choosy(const AIContext& context) -> bool {
@@ -228,38 +312,15 @@ default_recruitment(const AIContext& context) -> DoctrineRecruitment {
 
 [[nodiscard]] auto
 choose_recruit(const Game::Systems::Nation& nation,
-               const AIContext& context) -> const Game::Systems::TroopType* {
+               const AIContext& context,
+               const ArmStrength& strength) -> const Game::Systems::TroopType* {
   const DoctrineRecruitment recruitment = order_of_battle(context);
-
-  const auto fielded = [&context](DoctrineArm arm) {
-    return units_under_arms(context, arm);
-  };
-  const int total = context.melee_count + context.ranged_count + context.cavalry_count +
-                    context.siege_count;
-
-  DoctrineArm wanted = DoctrineArm::Infantry;
-  float worst_gap = -1.0F;
-  for (const auto arm : {DoctrineArm::Infantry,
-                         DoctrineArm::Missile,
-                         DoctrineArm::Cavalry,
-                         DoctrineArm::Siege}) {
-    const float target = share_of(recruitment, arm);
-    if (target <= 0.0F || arm == DoctrineArm::Siege) {
-      continue;
-    }
-    const float have =
-        total > 0 ? static_cast<float>(fielded(arm)) / static_cast<float>(total) : 0.0F;
-    const float gap = target - have;
-    if (gap > worst_gap) {
-      worst_gap = gap;
-      wanted = arm;
-    }
-  }
+  DoctrineArm wanted = neediest_arm(recruitment, strength);
 
   if (context.barracks_under_threat || context.state == AIState::Defending) {
 
-    wanted = context.melee_count > context.ranged_count ? DoctrineArm::Missile
-                                                        : DoctrineArm::Infantry;
+    wanted = strength.infantry > strength.missile ? DoctrineArm::Missile
+                                                  : DoctrineArm::Infantry;
   }
 
   const Game::Systems::TroopType* best = nullptr;
@@ -343,8 +404,18 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
     troop_type = nation->get_troop(Game::Units::TroopType::Builder);
   }
 
+  // Which arm to raise next weighs what the barracks are already training, so
+  // a short arm is not queued again by every barracks before any of it
+  // arrives. Whether an arm may still be bought at all goes by what is
+  // fielded: the recruiter keeps spending when its first choice is
+  // unaffordable instead of sitting on idle manpower.
+  const ArmStrength strength = strength_in_training(*nation, context, snapshot);
+  const ArmStrength fielded{context.melee_count,
+                            context.ranged_count,
+                            context.cavalry_count,
+                            context.siege_count};
   if (troop_type == nullptr) {
-    troop_type = choose_recruit(*nation, context);
+    troop_type = choose_recruit(*nation, context, strength);
   }
 
   constexpr int k_troop_cap_margin = 12;
@@ -464,7 +535,7 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
 
     const Game::Systems::TroopType* buying = nullptr;
     for (const auto* candidate : candidates) {
-      if (arm_is_at_establishment(context, recruitment, arm_of(*nation, *candidate))) {
+      if (arm_is_at_establishment(fielded, recruitment, arm_of(*nation, *candidate))) {
         continue;
       }
       if (affordable(*candidate, prod, snapshot.resources)) {

@@ -160,6 +160,7 @@ struct ProductionSnapshot {
   float rally_x = 0.0F;
   float rally_z = 0.0F;
   int queue_size = 0;
+  std::vector<Game::Units::TroopType> queued;
 };
 
 struct BuilderProductionSnapshot {

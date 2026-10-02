@@ -80,7 +80,7 @@
         "ranged_damage": 6,
         "ranged_cooldown": 1.9,
         "melee_range": 1.6,
-        "melee_damage": 24,
+        "melee_damage": 27,
         "melee_cooldown": 0.55,
         "can_ranged": false,
         "can_melee": true

@@ -11,6 +11,7 @@
 
 #include "core/ambient_session.h"
 #include "core/component_gameplay.h"
+#include "core/wall_walk_geometry.h"
 #include "core/world.h"
 #include "gate_service.h"
 #include "map/terrain_service.h"
@@ -677,6 +678,96 @@ auto collect_navigation_passages(
   return passages;
 }
 
+struct TownCentre {
+  double x{0.0};
+  double z{0.0};
+  int count{0};
+};
+
+auto lateral_sign(float town, float wall) -> std::int8_t {
+  constexpr float k_on_line = 0.05F;
+  if (town > wall + k_on_line) {
+    return 1;
+  }
+  if (town < wall - k_on_line) {
+    return -1;
+  }
+  return 1;
+}
+
+// Each wall's balcony hangs on the face towards its owner's town: the centroid
+// of the owner's other buildings, or of its walls when it has nothing else.
+void assign_wall_walk_sides(Engine::Core::World& world) {
+  std::unordered_map<int, TownCentre> buildings;
+  std::unordered_map<int, TownCentre> walls;
+  for (auto [id, unit, transform] :
+       world.view<const UnitComponent, const TransformComponent>()) {
+    if (unit.health <= 0 || world.has<PendingRemovalComponent>(id) ||
+        world.has<ConstructionPreviewComponent>(id)) {
+      continue;
+    }
+    const bool wall_piece = Game::Units::is_wall_network_spawn(unit.spawn_type);
+    if (!wall_piece && !world.has<BuildingComponent>(id)) {
+      continue;
+    }
+    auto& bucket = wall_piece ? walls[unit.owner_id] : buildings[unit.owner_id];
+    bucket.x += transform.position.x;
+    bucket.z += transform.position.z;
+    ++bucket.count;
+  }
+
+  for (auto [id, wall, transform] :
+       world.view<WallSegmentComponent, const TransformComponent>()) {
+    wall.inner_x = 0;
+    wall.inner_z = 0;
+    wall.has_stair = false;
+    std::optional<int> owner_id;
+    if (const auto* unit = world.try_get<UnitComponent>(id)) {
+      owner_id = unit->owner_id;
+    } else if (const auto* site = world.try_get<WallConstructionSiteComponent>(id)) {
+      owner_id = site->owner_id;
+    }
+    if (!owner_id.has_value() || world.has<GateComponent>(id)) {
+      continue;
+    }
+    const auto building = buildings.find(*owner_id);
+    const auto& centre = building != buildings.end() && building->second.count > 0
+                             ? building->second
+                             : walls[*owner_id];
+    if (centre.count <= 0) {
+      continue;
+    }
+    const auto town_x = static_cast<float>(centre.x / centre.count);
+    const auto town_z = static_cast<float>(centre.z / centre.count);
+
+    const std::uint8_t mask = wall.connection_mask;
+    bool runs_east_west = (mask & (WallNetworkService::k_connection_east |
+                                   WallNetworkService::k_connection_west)) != 0U;
+    bool runs_north_south = (mask & (WallNetworkService::k_connection_north |
+                                     WallNetworkService::k_connection_south)) != 0U;
+    if (!runs_east_west && !runs_north_south) {
+      const bool quarter =
+          static_cast<int>(std::lround(transform.rotation.y / 90.0F)) % 2 != 0;
+      runs_east_west = !quarter;
+      runs_north_south = quarter;
+    }
+    if (runs_east_west) {
+      wall.inner_z = lateral_sign(town_z, transform.position.z);
+    }
+    if (runs_north_south) {
+      wall.inner_x = lateral_sign(town_x, transform.position.x);
+    }
+
+    const bool straight_east_west = mask == (WallNetworkService::k_connection_east |
+                                             WallNetworkService::k_connection_west);
+    const bool straight_north_south = mask == (WallNetworkService::k_connection_north |
+                                               WallNetworkService::k_connection_south);
+    wall.has_stair =
+        !wall.freeform && ((straight_east_west && WallWalk::stair_slot(wall.grid_x)) ||
+                           (straight_north_south && WallWalk::stair_slot(wall.grid_z)));
+  }
+}
+
 } // namespace
 
 void WallNetworkService::refresh_world(Engine::Core::World& world) {
@@ -707,6 +798,7 @@ void WallNetworkService::refresh_world(Engine::Core::World& world) {
         compute_connection_mask(occupancy, wall->grid_x, wall->grid_z, self_cells);
     update_wall_entity_visuals(world, &entity, wall, mask);
   }
+  assign_wall_walk_sides(world);
 
   Game::Session::services_for(world).building_collision->set_navigation_passages(
       collect_navigation_passages(world, connection_occupancy));

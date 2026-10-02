@@ -7146,6 +7146,85 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
       result.push_back(std::move(s));
     }
 
+    auto walled_town = [](ArenaScenarioDefinition& scenario) {
+      scenario.groups.push_back(building(QStringLiteral("town_wall"),
+                                         Game::Units::SpawnType::WallSegment,
+                                         Nation::RomanRepublic,
+                                         1,
+                                         11,
+                                         {0.0F, 0.0F, 0.0F},
+                                         {2.0F, 0.0F, 0.0F}));
+      scenario.groups.push_back(building(QStringLiteral("town_barracks"),
+                                         Game::Units::SpawnType::Barracks,
+                                         Nation::RomanRepublic,
+                                         1,
+                                         1,
+                                         {2.0F, 0.0F, 11.0F}));
+    };
+
+    {
+      auto s = definition(
+          QString::fromLatin1(k_wall_walk_garrison_id),
+          QStringLiteral("Wall Walk: Garrison Mounts the Balcony"),
+          QStringLiteral("A town's infantry is ordered onto its palisade: it walks to "
+                         "the nearest stair, climbs to the balcony on the town face "
+                         "and files along it, then comes back down to the street."),
+          38.0F,
+          {15.0F, 34.0F, 20.0F});
+      s.camera_focus = QVector3D(1.0F, 0.0F, 1.5F);
+      s.suppress_terrain_scatter = true;
+      s.suppress_spawn_anchor = true;
+      s.suppress_ui_overlays = true;
+      s.owner_teams = {{.owner_id = 1, .team_id = 1}, {.owner_id = 2, .team_id = 2}};
+      walled_town(s);
+      s.groups.push_back(group(
+          QStringLiteral("garrison"), Troop::Swordsman, 1, 1, {-3.0F, 0.0F, 7.0F}, 10));
+      auto climb = at(0.5F, Command::Move, QStringLiteral("garrison"));
+      climb.destination = {3.0F, 0.0F, 0.45F};
+      auto descend = at(26.0F, Command::Move, QStringLiteral("garrison"));
+      descend.destination = {-4.0F, 0.0F, 7.0F};
+      s.steps = {climb, descend};
+      s.expectations.push_back(
+          expectation(Expect::WallWalkerObserved, QStringLiteral("garrison")));
+      s.expectations.push_back(
+          expectation(Expect::GroupExists, QStringLiteral("town_wall")));
+      result.push_back(std::move(s));
+    }
+
+    {
+      auto s = definition(
+          QString::fromLatin1(k_siege_tower_balcony_assault_id),
+          QStringLiteral("Siege: Tower Storms the Balcony"),
+          QStringLiteral("A siege tower is pushed against a town palisade, drops its "
+                         "bridge onto the stakes and its company files over the "
+                         "crest onto the defenders' balcony, where the garrison that "
+                         "climbed up to meet it is waiting."),
+          50.0F,
+          {26.0F, 34.0F, -20.0F});
+      s.camera_focus = QVector3D(-2.0F, 0.0F, 0.0F);
+      s.suppress_terrain_scatter = true;
+      s.suppress_spawn_anchor = true;
+      s.suppress_ui_overlays = true;
+      s.owner_teams = {{.owner_id = 1, .team_id = 1}, {.owner_id = 2, .team_id = 2}};
+      walled_town(s);
+      s.groups.push_back(group(
+          QStringLiteral("garrison"), Troop::Swordsman, 1, 1, {4.0F, 0.0F, 7.0F}, 8));
+      s.groups.push_back(group(
+          QStringLiteral("tower"), Troop::SiegeTower, 2, 1, {-4.0F, 0.0F, -12.0F}, 1));
+      auto man = at(0.5F, Command::Move, QStringLiteral("garrison"));
+      man.destination = {2.0F, 0.0F, 0.45F};
+      auto push = at(0.5F, Command::Move, QStringLiteral("tower"));
+      push.destination = {-4.0F, 0.0F, -3.0F};
+      s.steps = {man, push};
+      s.expectations.push_back(
+          expectation(Expect::SiegeTowerDocked, QStringLiteral("tower")));
+      s.expectations.push_back(
+          expectation(Expect::WallWalkerObserved, QStringLiteral("tower")));
+      s.expectations.push_back(
+          expectation(Expect::GroupExists, QStringLiteral("town_wall")));
+      result.push_back(std::move(s));
+    }
+
     {
       auto s = definition(
           QString::fromLatin1(k_gate_consecutive_transit_id),

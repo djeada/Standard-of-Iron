@@ -256,6 +256,10 @@ void write_siege_tower(const Entity* entity, QJsonObject& entity_obj) {
     obj["docked_wall_id"] = static_cast<qint64>(tower->docked_wall_id);
     obj["garrison_aboard"] = tower->garrison_aboard;
     obj["ramp"] = static_cast<double>(tower->ramp);
+    obj["dock_x"] = static_cast<double>(tower->dock_x);
+    obj["dock_z"] = static_cast<double>(tower->dock_z);
+    obj["dock_yaw"] = static_cast<double>(tower->dock_yaw);
+    obj["approach_seconds"] = static_cast<double>(tower->approach_seconds);
     entity_obj["siege_tower"] = obj;
   }
 }
@@ -269,6 +273,10 @@ void read_siege_tower(Entity* entity, const QJsonObject& json) {
     tower->docked_wall_id = static_cast<EntityID>(obj["docked_wall_id"].toInteger(0));
     tower->garrison_aboard = obj["garrison_aboard"].toBool(true);
     tower->ramp = static_cast<float>(obj["ramp"].toDouble(0.0));
+    tower->dock_x = static_cast<float>(obj["dock_x"].toDouble(0.0));
+    tower->dock_z = static_cast<float>(obj["dock_z"].toDouble(0.0));
+    tower->dock_yaw = static_cast<float>(obj["dock_yaw"].toDouble(0.0));
+    tower->approach_seconds = static_cast<float>(obj["approach_seconds"].toDouble(0.0));
   }
 }
 
@@ -277,6 +285,23 @@ void write_wall_walker(const Entity* entity, QJsonObject& entity_obj) {
     QJsonObject obj;
     obj["wall_id"] = static_cast<qint64>(walker->wall_id);
     obj["elevation"] = static_cast<double>(walker->elevation);
+    obj["phase"] = static_cast<int>(walker->phase);
+    obj["boarding_seconds"] = static_cast<double>(walker->boarding_seconds);
+    obj["door_x"] = static_cast<double>(walker->door_x);
+    obj["door_z"] = static_cast<double>(walker->door_z);
+    obj["door_y"] = static_cast<double>(walker->door_y);
+    obj["lip_x"] = static_cast<double>(walker->lip_x);
+    obj["lip_z"] = static_cast<double>(walker->lip_z);
+    obj["crest_x"] = static_cast<double>(walker->crest_x);
+    obj["crest_z"] = static_cast<double>(walker->crest_z);
+    obj["landing_x"] = static_cast<double>(walker->landing_x);
+    obj["landing_z"] = static_cast<double>(walker->landing_z);
+    obj["stair_wall_id"] = static_cast<qint64>(walker->stair_wall_id);
+    obj["goal_x"] = static_cast<double>(walker->goal_x);
+    obj["goal_z"] = static_cast<double>(walker->goal_z);
+    obj["has_goal"] = walker->has_goal;
+    obj["stair_progress"] = static_cast<double>(walker->stair_progress);
+    obj["saved_files_override"] = walker->saved_files_override;
     entity_obj["wall_walker"] = obj;
   }
 }
@@ -285,9 +310,31 @@ void read_wall_walker(Entity* entity, const QJsonObject& json) {
   if (json.contains("wall_walker")) {
     const auto obj = json["wall_walker"].toObject();
     auto* walker = entity->add_component<WallWalkerComponent>();
+    auto real = [&obj](const char* key, double fallback = 0.0) {
+      return static_cast<float>(obj[key].toDouble(fallback));
+    };
     walker->wall_id = static_cast<EntityID>(obj["wall_id"].toInteger(0));
-    walker->elevation = static_cast<float>(
-        obj["elevation"].toDouble(WallWalkerComponent::k_wall_top_height));
+    walker->elevation = real("elevation", WallWalkerComponent::k_wall_top_height);
+    walker->phase = static_cast<WallWalkerComponent::Phase>(
+        std::clamp(obj["phase"].toInt(0),
+                   0,
+                   static_cast<int>(WallWalkerComponent::Phase::Descending)));
+    walker->boarding_seconds = real("boarding_seconds");
+    walker->door_x = real("door_x");
+    walker->door_z = real("door_z");
+    walker->door_y = real("door_y");
+    walker->lip_x = real("lip_x");
+    walker->lip_z = real("lip_z");
+    walker->crest_x = real("crest_x");
+    walker->crest_z = real("crest_z");
+    walker->landing_x = real("landing_x", walker->crest_x);
+    walker->landing_z = real("landing_z", walker->crest_z);
+    walker->stair_wall_id = static_cast<EntityID>(obj["stair_wall_id"].toInteger(0));
+    walker->goal_x = real("goal_x");
+    walker->goal_z = real("goal_z");
+    walker->has_goal = obj["has_goal"].toBool(false);
+    walker->stair_progress = real("stair_progress");
+    walker->saved_files_override = obj["saved_files_override"].toInt(0);
   }
 }
 

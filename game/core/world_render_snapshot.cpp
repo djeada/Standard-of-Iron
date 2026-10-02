@@ -67,6 +67,7 @@ void copy_authoritative_snapshot_components(const Entity& source, Entity& destin
   copy_snapshot_component<AttackComponent>(source, destination);
   copy_snapshot_component<SiegeTowerComponent>(source, destination);
   copy_snapshot_component<WallWalkerComponent>(source, destination);
+  copy_snapshot_component<WallSegmentComponent>(source, destination);
   copy_snapshot_component<AttackTargetComponent>(source, destination);
   copy_snapshot_component<ForestCoverComponent>(source, destination);
   copy_snapshot_component<CombatStateComponent>(source, destination);
@@ -269,6 +270,14 @@ auto render_entity_signature(const Entity& entity) -> std::uint64_t {
   }
   if (auto const* walker = entity.get_component<WallWalkerComponent>()) {
     render_hash_float(signature, walker->elevation);
+    render_hash_combine(signature, static_cast<std::uint64_t>(walker->phase));
+  }
+  if (auto const* wall = entity.get_component<WallSegmentComponent>()) {
+    render_hash_combine(signature,
+                        static_cast<std::uint64_t>(wall->connection_mask) |
+                            (static_cast<std::uint64_t>(wall->inner_x + 1) << 8U) |
+                            (static_cast<std::uint64_t>(wall->inner_z + 1) << 12U) |
+                            (wall->has_stair ? (1ULL << 16U) : 0ULL));
   }
   if (auto const* gate = entity.get_component<GateComponent>()) {
 

@@ -821,7 +821,7 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
   const auto& visual_spec = s.visual_spec;
   const float height_scale = s.height_scale;
   const bool needs_height_scaling = s.needs_height_scaling;
-  const float entity_ground_offset = s.entity_ground_offset;
+  float entity_ground_offset = s.entity_ground_offset;
 
   auto* layout_cache_comp = f.layout_cache_comp;
   const auto& lod_config = f.lod_config;
@@ -1011,6 +1011,11 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
       has_shared_formation_layout
           ? &formation_presentation->soldiers[static_cast<std::size_t>(idx)]
           : nullptr;
+  bool const soldier_elevated =
+      shared_footing != nullptr && shared_footing->elevation > 0.0F;
+  if (soldier_elevated) {
+    entity_ground_offset = -shared_footing->elevation;
+  }
   const bool has_shared_footsteps =
       shared_footing != nullptr && shared_footing->world_motion_valid &&
       !soldier_is_casualty_body && !soldier_render_anim.simulation_owns_root_motion;
@@ -1627,7 +1632,7 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
       ground_sample = &layout_cache_comp->ground_samples[visibility_index];
     }
     QVector3D const pre_ground_origin = RCP::model_world_origin(inst_ctx.model);
-    if (ground_sample != nullptr && ground_sample->valid &&
+    if (ground_sample != nullptr && ground_sample->valid && !soldier_elevated &&
         std::abs(ground_sample->x - pre_ground_origin.x()) < k_ground_cache_epsilon &&
         std::abs(ground_sample->z - pre_ground_origin.z()) < k_ground_cache_epsilon) {
       RCP::set_model_world_y(inst_ctx.model, ground_sample->model_y);

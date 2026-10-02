@@ -61,6 +61,15 @@ void add_nation_walls(std::vector<BuildingArchetypeCatalogEntry>& out,
   out.push_back({prefix + "_gate", [prefix, &palette, &geometry](BuildingState) {
                    return build_wall_gate_desc(prefix, palette, geometry);
                  }});
+  out.push_back({prefix + "_walk_span", [prefix, &palette](BuildingState) {
+                   return build_wall_walk_span_desc(prefix, palette);
+                 }});
+  out.push_back({prefix + "_walk_landing", [prefix, &palette](BuildingState) {
+                   return build_wall_walk_landing_desc(prefix, palette);
+                 }});
+  out.push_back({prefix + "_walk_stair", [prefix, &palette](BuildingState) {
+                   return build_wall_walk_stair_desc(prefix, palette);
+                 }});
 }
 
 auto build_catalog() -> std::vector<BuildingArchetypeCatalogEntry> {
