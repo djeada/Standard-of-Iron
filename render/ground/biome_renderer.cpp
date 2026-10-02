@@ -35,6 +35,23 @@ using std::uint32_t;
 using namespace Render::Ground;
 using namespace Render::GL::Geometry;
 
+constexpr float k_grass_patch_frequency = 0.055F;
+constexpr float k_grass_patch_detail_frequency = 0.16F;
+constexpr float k_grass_patch_floor = 0.25F;
+constexpr float k_grass_patch_gain = 1.65F;
+constexpr float k_grass_patch_peak = k_grass_patch_floor + k_grass_patch_gain;
+
+auto grass_patch_density(float gx, float gz, uint32_t seed) -> float {
+  float const broad = value_noise(
+      gx * k_grass_patch_frequency, gz * k_grass_patch_frequency, seed ^ 0x3C6EF372U);
+  float const detail = value_noise(gx * k_grass_patch_detail_frequency,
+                                   gz * k_grass_patch_detail_frequency,
+                                   seed ^ 0xA54FF53AU);
+  float const field = broad * 0.65F + detail * 0.35F;
+  float const t = std::clamp((field - 0.30F) / 0.42F, 0.0F, 1.0F);
+  return k_grass_patch_floor + k_grass_patch_gain * t * t * (3.0F - 2.0F * t);
+}
+
 constexpr float k_grass_height_scale = 0.56F;
 constexpr float k_grass_width_scale = 1.55F;
 
@@ -278,6 +295,10 @@ void BiomeRenderer::scatter_grass_clusters(const GrassScatterContext& ctx) {
             if (center_slope > 0.92F) {
               continue;
             }
+            if (rand_01(rng) * k_grass_patch_peak >
+                grass_patch_density(candidate_gx, candidate_gz, m_noise_seed)) {
+              continue;
+            }
 
             return QVector2D(candidate_gx, candidate_gz);
           }
@@ -338,8 +359,11 @@ void BiomeRenderer::scatter_background_grass(const GrassScatterContext& ctx) {
         int const idx = z * m_width + x;
         uint32_t state =
             hash_coords(x, z, m_noise_seed ^ 0x51bda7U ^ static_cast<uint32_t>(idx));
-        int base_count = static_cast<int>(std::floor(background_density));
-        float const frac = background_density - float(base_count);
+        float const local_density =
+            background_density *
+            grass_patch_density(float(x) + 0.5F, float(z) + 0.5F, m_noise_seed);
+        int base_count = static_cast<int>(std::floor(local_density));
+        float const frac = local_density - float(base_count);
         if (rand_01(state) < frac) {
           base_count += 1;
         }

@@ -47,7 +47,8 @@ void main() {
   float angle = a_tex_coord.x * TWO_PI;
 
   float aspect_w = mix(0.78, 1.22, needle_seed);
-  float aspect_h = mix(1.08, 0.92, needle_seed);
+  float aspect_h = mix(1.08, 0.92, needle_seed) *
+                   mix(0.86, 1.16, fract(bark_seed * 7.31 + silhouette_seed * 3.17));
   model_pos.xz *= mix(1.0, aspect_w, foliage_mask);
   model_pos.y *= mix(1.0, aspect_h, foliage_mask);
 

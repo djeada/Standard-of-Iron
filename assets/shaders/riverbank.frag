@@ -30,6 +30,9 @@ uniform float u_snow_coverage;
 uniform float u_ambient_boost;
 uniform vec3 u_camera_pos;
 
+const float k_wet_band_reach = 0.36;
+const float k_wet_band_darkening = 0.30;
+
 float saturate(float value) {
   return clamp(value, 0.0, 1.0);
 }
@@ -319,6 +322,8 @@ void main() {
   vec3 contact_color = color * vec3(0.68, 0.73, 0.70);
 
   color = mix(color, contact_color, contact * 0.28);
+  float wet_soil = 1.0 - smoothstep(0.05, k_wet_band_reach, shore_t);
+  color *= 1.0 - wet_soil * k_wet_band_darkening;
 
   float segment_visibility = saturate(u_segment_visibility);
 
@@ -330,9 +335,8 @@ void main() {
   }
 
   float core_alpha =
-      (1.0 -
-       smoothstep(0.045 + mud_weight * 0.025, 0.14 + mud_weight * 0.045, shore_t)) *
-      smoothstep(0.40, 0.67, exposed_bank + transition_coverage * 0.12);
+      (1.0 - smoothstep(0.10 + mud_weight * 0.03, 0.30 + mud_weight * 0.06, shore_t)) *
+      mix(0.70, 1.0, smoothstep(0.40, 0.67, exposed_bank + transition_coverage * 0.12));
   float transition_envelope = 1.0 - smoothstep(0.12, shore_extent, shore_t);
   float broken_transition =
       transition_envelope * transition_coverage * (0.30 + exposed_bank * 0.70);

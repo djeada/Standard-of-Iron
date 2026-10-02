@@ -442,6 +442,23 @@ Mission startup can keep the loading overlay visible while terrain scatter exist
 
 The startup system therefore distinguishes “simulation world exists” from “the main visual environment is ready enough to reveal the battle.”
 
+## Scatter variation
+
+Every cell scatter already jitters each instance anywhere in its cell, so repetition never came from a grid. It came from the following:
+
+- **Even density.** `ScatterCompositionSample::cluster_bias` is value noise, and its lattice is seeded with the caller's `salt`. The render-only scatters (plants, stones) used to pass `state ^ K`, the per-cell RNG state. That reseeded the lattice on every sample and made the "cluster" field white noise. They now pass one constant salt per species, so cell density and per-instance traits read one coherent patch field. `scatter_patch_multiplier()` turns it into clumps and clearings (0.24 + 3·bias²; the mean stays near the old 1.1). Grass gets its own field, `grass_patch_density()` in `biome_renderer.cpp`, which scales background blades and rejects cluster centres in sparse patches.
+- **Gameplay props keep their placement.** Trees, boulders, ore and dead trees are `WorldProp`s that the simulation and save files own, and they still pass `state ^ K`. Giving them the same coherent salt was tried, together with smooth value noise in place of the tree walk's 8/4-tile hash blocks. It turned the densest patches into impassable copses and failed three simulation scenes: `FormationPropClearance.SoldiersMarchAroundSolidProps` (a unit stranded 96 m out), `AiEstateEconomyTest.ItsBuildersAreNeverLeftWithNothingToDo` and `MissionWaveAssaultTest.WaveCannotWalkThroughAnIntactRampart`. All three pass with HEAD placement. Clustering gameplay props has to be tuned against those scenes, not just against the look.
+- **One mesh, one shape.** Dead trees and iron ore get seeded non-uniform stretch, cant and (dead trees) twist in their vertex shaders, with normals corrected by the inverse stretch. Pine and cypress decouple height from width. Scatter props have no shadow pass, so the deformation cannot desync a shadow.
+- **Identical neighbours.** Tree looks (tint, silhouette, sway phase) used to be hashed from the position rounded to 1 m, so two trees in the same metre were twins. They now hash at ⅛ m through a mixer (`mix_tree_look_hash`).
+- **Rows along rivers.** Riverbank dressing used to spawn every 0.8 m at a flat 30% chance. The chance now follows a value-noise field along each bank (`k_bank_clump_frequency`), along-river jitter covers the full step, and props crowd the waterline (`pow(rand, 1.6)`).
+
+## Water
+
+- **River UVs.** `river.vert` read `a_tex_coord` from location 1. `Render::GL::Vertex` puts the normal there, so every river got `tex_coord = (0, 1)`. Shore distance was 0 everywhere, so the depth gradient, shore band and foam never worked and the whole river shaded as shore. It now reads location 2, pinned by `ShaderSource.WaterShadersReadTexCoordsFromTheMeshVertexLayout`.
+- **Shallow bed.** Near the shore (`k_shallow_bed_reach`) the water shows the biome's wet sediment through it, and the deep channel is darker. Reflection weight is `0.05 + fresnel·0.34`.
+- **Junction caps.** Caps fill the gaps between river segments at bends. Their radial UV makes the whole rim read as shore, so drawn over the ribbon they showed as rings and shards mid-river. River caps now sit `junction_sink` (3 cm) below the ribbon, so the ribbon wins wherever both exist.
+- **Wet bank.** `riverbank.frag` darkens a wet band (`k_wet_band_reach`, `k_wet_band_darkening`) and keeps the core opaque over a wider strip, so water meets darker soil instead of dry grass.
+
 ## Environment lighting
 
 `scene/environment_lighting.h` defines the shared outdoor environment-lighting state.
@@ -483,6 +500,16 @@ Any change to these constants needs the night and dusk check: the `lighting_moon
 ### Meadow drift
 
 At gameplay zoom (40–90 m) the terrain's fine detail is damped for readability (`ground_tactical_distance()`), and the regional and patch fields vary over hundreds of metres, so a battlefield read as one flat green. `terrain_chunk.frag` blends the grass between a sun-cured and a deep-sward tone using two extra microdetail samples at about 33 m and 12 m wavelengths (`k_soi_meadow_frequency`), warped by the existing `domain_warp`. It changes colour only, never relief, so troops stay as readable as before.
+
+### Rock projection, snow and ground patchwork
+
+- **Triplanar rock.** Rock used to sample its noise at `mix(world_coord, wall_coord, wall_blend)`. Lerping *coordinates* between two projections smears every pattern into swirls on mid-steep faces. The altitude-keyed strata also drew topographic contour lines across smooth mountain slopes. `sample_rock_pattern()` now samples each projection (top, x-side, z-side) separately and blends the *results* by `pow(|n|, 8)`. Projections under `k_soi_projection_epsilon` (0.12) are dropped and the rest renormalised, so most pixels pay for one projection. Relief normals use the same weights through `relief_field()`. Strata are warped and only weight steep faces. Weathering streaks run down the fall line. The Voronoi fracture network is damped on gentle rock, where it read as paving.
+- **Snow follows the terrain, not the noise.** Mountain snow sheds off slopes steeper than about 0.3–0.5 (`steep_shed`), so faces show rock and ledges hold snow. Alpine ground snow is driven by aspect: lee slopes hold it, sun slopes melt, with hollows and gullies favoured. Noise only ragged-edges it. A thin, dirtier fringe lets grass tufts poke through. Relief normals are damped under snow (`snow_cover`).
+- **Ground patchwork at RTS zoom.** About 1.5 m tufts (`k_soi_tuft_*`), whose contrast varies between cropped and tussocky ground, about 6 m sod tone patches (`k_soi_sod_amount`) and bare-earth flecks in tuft gaps (`k_soi_earth_fleck_amount`). All are mipmapped microdetail samples, so they hold at 40–90 m without shimmer. The distance damping of grain and relief was relaxed for the same reason.
+- **Mountain uplands.** Mountain-typed surfaces dry toward cured turf with altitude and grow rock outcrops on crests. This is gated by `mountain_surface`, not absolute height, because some maps raise flat-typed ground (Aurelia's dome) or towns.
+- **Vegetation chroma ceiling.** `ground_vegetation_chroma()` in `ground_readability.glsl` softly compresses saturation above 0.44, for green-dominant colours only (soils and Copper Canyon's red rock are untouched). Both `terrain_chunk.frag` and `grass_instanced.frag` apply it, so blades still match the ground. It tames the lime presets (`SoilFertile`, `ForestMud`) and map palettes like Ticino's.
+
+Cost, offscreen Crossing the Alps at 720p on the RTX 5060, three interleaved pairs: GPU colour pass p50 went from 3.37 ms to 3.51–3.55 ms. Review these with `arena_app --batch --terrain-map <scratch copy with a close camera>`. Rock, snow and patchwork read clearly at 40–100 m camera distance.
 
 ### Curvature without a height or field texture
 

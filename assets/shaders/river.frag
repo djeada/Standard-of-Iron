@@ -16,6 +16,8 @@ uniform float u_moisture_level;
 uniform float u_snow_coverage;
 
 const float PI = 3.14159265359;
+const float k_shallow_bed_reach = 0.13;
+const float k_shallow_bed_amount = 0.48;
 
 float saturate(float value) {
   return clamp(value, 0.0, 1.0);
@@ -139,7 +141,7 @@ void main() {
       mix(vec3(0.165, 0.250, 0.185), max(u_soil_color, vec3(0.025)) * 0.58, 0.65);
   vec3 shallow_water = mix(vec3(0.095, 0.255, 0.240), vec3(0.115, 0.285, 0.310), snow);
   shallow_water = mix(shallow_water, suspended_silt, sediment * 0.45);
-  vec3 deep_water = mix(vec3(0.062, 0.205, 0.220), vec3(0.055, 0.180, 0.235), snow);
+  vec3 deep_water = mix(vec3(0.046, 0.158, 0.165), vec3(0.050, 0.160, 0.210), snow);
 
   float shore_distance =
       u_water_surface_kind == 1 ? tex_coord.y : min(tex_coord.x, 1.0 - tex_coord.x);
@@ -150,6 +152,11 @@ void main() {
   float silt = (1.0 - normalized_depth) *
                smoothstep(0.45, 0.78, fbm(world_pos.xz * 0.075 + 31.0));
   body_color = mix(body_color, suspended_silt, silt * 0.28);
+  vec3 shallow_bed = mix(
+      max(u_soil_color, vec3(0.025)) * vec3(0.66, 0.70, 0.62), suspended_silt, 0.30);
+  float bed_visibility = 1.0 - smoothstep(0.0, k_shallow_bed_reach, shore_distance);
+  bed_visibility *= 0.80 + 0.20 * fbm(world_pos.xz * 0.21 + vec2(-13.0, 5.0));
+  body_color = mix(body_color, shallow_bed, bed_visibility * k_shallow_bed_amount);
 
   vec3 sun_light = environment_primary_color() * environment_primary_intensity();
   vec3 water_lighting =
@@ -159,7 +166,7 @@ void main() {
   vec3 reflected_dir = reflect(-view_dir, normal);
   vec3 reflection = procedural_sky(reflected_dir, light_dir) * environment_exposure();
   float fresnel = fresnel_schlick(ndv, 0.020);
-  float reflection_weight = 0.035 + fresnel * 0.22;
+  float reflection_weight = 0.050 + fresnel * 0.34;
   vec3 color = mix(body_color * water_lighting, reflection, reflection_weight);
 
   float roughness = mix(0.34, 0.46, saturate(length(gradient) * 1.5));

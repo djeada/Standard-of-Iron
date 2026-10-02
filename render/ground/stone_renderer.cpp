@@ -104,7 +104,7 @@ void StoneRenderer::generate_stone_instances() {
       return false;
     }
 
-    auto const scene = composition.sample_grid(gx, gz, state ^ 0x5D17F2A1U);
+    auto const scene = composition.sample_grid(gx, gz, 0x3AA5B08BU);
     if (scene.obstacle_influence >= 1.0F) {
       return false;
     }
@@ -171,15 +171,14 @@ void StoneRenderer::generate_stone_instances() {
           hash_coords(x, z, m_noise_seed ^ 0xABCDEF12U ^ static_cast<uint32_t>(idx));
       int const sample_x = std::min(x + cell_span / 2, m_width - 1);
       int const sample_z = std::min(z + cell_span / 2, m_height - 1);
-      auto const cell_scene = composition.sample_grid(static_cast<float>(sample_x),
-                                                      static_cast<float>(sample_z),
-                                                      state ^ 0x3AA5B08BU);
+      auto const cell_scene = composition.sample_grid(
+          static_cast<float>(sample_x), static_cast<float>(sample_z), 0x3AA5B08BU);
       float density_mult =
           scatter_density_multiplier(ScatterRuleSpecies::Stone, cell_scene);
       if (terrain_type == Game::Map::TerrainType::Hill) {
         density_mult *= 1.22F;
       }
-      float const cluster_mult = 0.55F + cell_scene.cluster_bias * 1.15F;
+      float const cluster_mult = scatter_patch_multiplier(cell_scene.cluster_bias);
       float const effective_density =
           stone_density * density_mult * cluster_mult * 1.20F;
       if (effective_density < 0.05F) {
@@ -200,7 +199,7 @@ void StoneRenderer::generate_stone_instances() {
           continue;
         }
 
-        auto const leader_scene = composition.sample_grid(gx, gz, state ^ 0x01A53C2FU);
+        auto const leader_scene = composition.sample_grid(gx, gz, 0x3AA5B08BU);
         int const satellite_count = scatter_cluster_satellite_count(
             ScatterRuleSpecies::Stone, leader_scene, state);
         for (int satellite = 0; satellite < satellite_count; ++satellite) {

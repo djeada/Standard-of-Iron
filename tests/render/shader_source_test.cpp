@@ -753,6 +753,17 @@ TEST(ShaderSource, QualityTierIsCompiledNotBranched) {
   EXPECT_NE(grass.find("#if SOI_ULTRA_EFFECTS"), std::string::npos);
 }
 
+TEST(ShaderSource, WaterShadersReadTexCoordsFromTheMeshVertexLayout) {
+  const auto root = find_repo_root();
+  for (const char* name : {"river.vert", "riverbank.vert"}) {
+    const auto source = read_text(root / "assets" / "shaders" / name);
+    ASSERT_FALSE(source.empty()) << name;
+    EXPECT_NE(source.find("layout(location = 2) in vec2 a_tex_coord;"),
+              std::string::npos)
+        << name << " must read tex_coord where Render::GL::Vertex puts it";
+  }
+}
+
 TEST(ShaderSource, RiverbankCarriesBiomeMaterialsToTheWaterEdge) {
   const auto root = find_repo_root();
   const auto frag = read_text(root / "assets" / "shaders" / "riverbank.frag");
