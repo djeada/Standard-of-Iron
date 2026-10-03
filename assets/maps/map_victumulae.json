@@ -463,7 +463,7 @@
             "facing": "south",
             "grow_hill": false,
             "id": "victumulae",
-            "max_population": 120,
+            "max_population": 40,
             "nation": "roman_republic",
             "on_hill": true,
             "plan": "terraced",
@@ -503,42 +503,10 @@
             "max_population": -1
         },
         {
-            "id": "citadel_guard_west",
+            "id": "citadel_guard",
             "type": "swordsman",
             "x": 73.65,
             "z": 54.16,
-            "player_id": 2,
-            "nation": "roman_republic",
-            "max_population": -1,
-            "behavior": "guard",
-            "guard_radius": 8.0
-        },
-        {
-            "id": "citadel_guard_east",
-            "type": "swordsman",
-            "x": 86.33,
-            "z": 54,
-            "player_id": 2,
-            "nation": "roman_republic",
-            "max_population": -1,
-            "behavior": "guard",
-            "guard_radius": 8.0
-        },
-        {
-            "id": "citadel_archers_west",
-            "type": "archer",
-            "x": 74.67,
-            "z": 44.96,
-            "player_id": 2,
-            "nation": "roman_republic",
-            "max_population": -1,
-            "behavior": "hold"
-        },
-        {
-            "id": "citadel_archers_east",
-            "type": "archer",
-            "x": 85.33,
-            "z": 45.02,
             "player_id": 2,
             "nation": "roman_republic",
             "max_population": -1,
@@ -552,8 +520,7 @@
             "player_id": 2,
             "nation": "roman_republic",
             "max_population": -1,
-            "behavior": "guard",
-            "guard_radius": 6.0
+            "behavior": "hold"
         },
         {
             "id": "south_gate_spears_west",
@@ -570,16 +537,6 @@
             "type": "spearman",
             "x": 85.0,
             "z": 71.0,
-            "player_id": 2,
-            "nation": "roman_republic",
-            "max_population": -1,
-            "behavior": "hold"
-        },
-        {
-            "id": "east_gate_spears",
-            "type": "spearman",
-            "x": 108.0,
-            "z": 47.0,
             "player_id": 2,
             "nation": "roman_republic",
             "max_population": -1,
@@ -608,15 +565,6 @@
             "type": "archer",
             "x": 100.0,
             "z": 60.0,
-            "player_id": 2,
-            "nation": "roman_republic",
-            "max_population": -1
-        },
-        {
-            "id": "west_wall_archers",
-            "type": "archer",
-            "x": 50.0,
-            "z": 56.0,
             "player_id": 2,
             "nation": "roman_republic",
             "max_population": -1
@@ -662,7 +610,7 @@
         },
         {
             "authored": true,
-            "max_population": 120,
+            "max_population": 40,
             "nation": "roman_republic",
             "player_id": 2,
             "settlement": "victumulae",
@@ -2182,5 +2130,6 @@
             "rotation": 0.0,
             "dressing": "victumulae_gate_east"
         }
-    ]
+    ],
+    "hill_rockfall_caches": false
 }

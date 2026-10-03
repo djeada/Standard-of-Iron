@@ -28,12 +28,12 @@ void WallLadder::init(const SpawnParams& params) {
 
   const auto nation_id = resolve_nation_id(params);
 
-  m_t = e->add_component<Engine::Core::TransformComponent>();
+  m_t = m_world->emplace<Engine::Core::TransformComponent>(m_id);
   m_t->position = {params.position.x(), params.position.y(), params.position.z()};
   m_t->rotation = {0.0F, params.rotation_y, 0.0F};
   m_t->scale = {1.0F, 1.0F, 1.0F};
 
-  m_u = e->add_component<Engine::Core::UnitComponent>();
+  m_u = m_world->emplace<Engine::Core::UnitComponent>(m_id);
   m_u->spawn_type = SpawnType::WallLadder;
   m_u->health = 160;
   m_u->max_health = 160;
@@ -43,7 +43,7 @@ void WallLadder::init(const SpawnParams& params) {
   m_u->nation_id = nation_id;
 
   if (params.ai_controlled) {
-    e->add_component<Engine::Core::AIControlledComponent>();
+    m_world->emplace<Engine::Core::AIControlledComponent>(m_id);
   }
 
   m_r = add_building_renderable(*e, nation_id, m_type_string);

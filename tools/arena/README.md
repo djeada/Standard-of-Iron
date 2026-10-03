@@ -1759,17 +1759,24 @@ the Arena applies to the owner registry before spawning.
 ### Wall walk and siege engines
 
 A palisade carries a timber balcony on its town face, with a stair every fourth
-straight segment (`game/core/wall_walk_geometry.h` holds the
-measurements both the simulation and the renderer use). Four scenes cover it:
+straight segment and wherever a builder has raised a ladder
+(`game/core/wall_walk_geometry.h` holds the measurements both the simulation and
+the renderer use). Five scenes cover it:
 
 - `wall_walk_garrison` orders a town's infantry onto its own wall: the troop walks
   to the nearest stair, climbs, files along the balcony in single file, then is
   ordered back into the street and comes down the nearest stair to it.
+- `wall_walk_ladder_climb` leans a builder's ladder on the town face between two
+  stairs. A company ordered onto that stretch climbs it hand over hand, one man
+  at a time a body length apart, and later comes back down it facing the rungs.
 - `siege_tower_balcony_assault` pushes a tower against the same town while its
-  garrison mans the balcony. The tower stops between two posts, lowers its
-  bridge onto the stake tips and its company crosses one man at a time onto the
-  balcony, where the two companies fight.
-- `siege_tower_wall_assault` is the short original: a tower against a bare run.
+  garrison mans the balcony, with a company of swordsmen walking up behind it.
+  The tower stops between two posts and lowers its bridge onto the stake tips;
+  the escort is called up, walks round to the back, climbs the inner ladder and
+  crosses one man at a time onto the balcony, where the two companies fight.
+  The tower carries no company of its own.
+- `siege_tower_wall_assault` is the short original: a tower and its escort
+  against a bare run.
 - `siege_ram_gate_breach` pushes a ram, crewed inside its hide roof, against a
   gate until it breaks.
 

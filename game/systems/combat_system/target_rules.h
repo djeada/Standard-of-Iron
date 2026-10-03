@@ -74,8 +74,8 @@ owners_are_hostile(const OwnerRegistry& owners, int owner_a, int owner_b) -> boo
 [[nodiscard]] auto is_building(const Engine::Core::Entity* entity) -> bool;
 
 // Rams and siege towers engage structures only.
-[[nodiscard]] auto attacks_structures_only(const Engine::Core::UnitComponent& attacker)
-    -> bool;
+[[nodiscard]] auto
+attacks_structures_only(const Engine::Core::UnitComponent& attacker) -> bool;
 // `query` adjusted for what this attacker may strike at all.
 [[nodiscard]] auto query_for(const Engine::Core::UnitComponent* attacker,
                              TargetQuery query) -> TargetQuery;

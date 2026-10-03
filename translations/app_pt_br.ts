@@ -3060,8 +3060,16 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <translation>Máquina de cerco coberta que arrebenta portões e muralhas.</translation>
     </message>
     <message>
-        <source>Carries infantry to a wall and lets them off on top.</source>
-        <translation>Leva infantaria até uma muralha e a desembarca no topo.</translation>
+        <source>Ladder</source>
+        <translation>Escada</translation>
+    </message>
+    <message>
+        <source>Leans on the town side of your own wall so troops can climb onto the wall walk.</source>
+        <translation>Apoia-se no lado interno da sua própria muralha para que as tropas subam ao adarve.</translation>
+    </message>
+    <message>
+        <source>Docks against an enemy wall; the infantry beside it climb its ladder and cross onto the wall walk.</source>
+        <translation>Encosta numa muralha inimiga; a infantaria ao lado sobe pela escada dela e passa para o adarve.</translation>
     </message>
 </context>
 <context>
@@ -3245,6 +3253,10 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
     <message>
         <source>Sepulcher Shrine</source>
         <translation>Santuário do Sepulcro</translation>
+    </message>
+    <message>
+        <source>Ladder</source>
+        <translation>Escada</translation>
     </message>
 </context>
 <context>
@@ -7357,6 +7369,14 @@ para ver a prévia</translation>
         <source>A Roman watch camp on the old road, the night it finds out why the shepherds stopped using it. Timber, stone and a flock are close to the camp; the barrow ruins hold the middle ground; the cursed shrine stands alone on the north-east ground. A low knoll between the camp and the barrow is the only high ground worth having, and the road runs past the dead the whole way.</source>
         <translation>Um acampamento de vigia romano na velha estrada, na noite em que descobre por que os pastores deixaram de usá-la. Madeira, pedra e um rebanho ficam perto do acampamento; as ruínas do sepulcro ocupam o terreno central; o santuário amaldiçoado ergue-se sozinho no terreno a nordeste. Um outeiro baixo entre o acampamento e o sepulcro é a única elevação que vale a pena, e a estrada passa pelos mortos o caminho inteiro.</translation>
     </message>
+    <message>
+        <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. The lower ward rings the outer crown with a timber curtain and towers; the citadel stands on the upper crown behind its own wall, with the granary and the garrison hall inside it. Three roads climb to the lower ward - from the Punic camp in the south, and from the Placentia road on either flank - and only one ramp climbs from the lower ward to the citadel gate.</source>
+        <translation>Uma vila-mercado murada da planície ínsubre, erguida sobre uma colina dupla acima dos campos de inverno. A cidade baixa cerca o cume exterior com uma cortina de madeira e torres; a cidadela fica no cume superior atrás de sua própria muralha, com o celeiro e o salão da guarnição dentro dela. Três estradas sobem até a cidade baixa - do acampamento púnico ao sul e da estrada de Placência pelos dois flancos - e só uma rampa sobe da cidade baixa até o portão da cidadela.</translation>
+    </message>
+    <message>
+        <source>Victumulae</source>
+        <translation>Victumulae</translation>
+    </message>
 </context>
 <context>
     <name>MatchSetupViewModel</name>
@@ -9390,6 +9410,174 @@ para ver a prévia</translation>
         <source>Those are men. Were men. Jupiter keep us. ...Steady. Bones break like anything else. Archers, hold where you stand and let them come to the shields.</source>
         <translation>São homens. Eram homens. Júpiter nos guarde. ...Firmes. Ossos quebram como qualquer outra coisa. Arqueiros, fiquem onde estão e deixem que venham até os escudos.</translation>
     </message>
+    <message>
+        <source>A general alone at the foot of a wall is a target, not a siege.</source>
+        <translation>Um general sozinho ao pé de uma muralha é um alvo, não um cerco.</translation>
+    </message>
+    <message>
+        <source>A set-piece siege: a quiet build-up in the Punic camp, an assault up the south ramp under arrow fire from two rings of wall, and a relief column that arrives on the flank roads while the army is committed against the citadel.</source>
+        <translation>Um cerco clássico: uma preparação tranquila no acampamento púnico, um assalto pela rampa sul sob flechas de dois anéis de muralha e uma coluna de socorro que chega pelas estradas dos flancos enquanto o exército está empenhado contra a cidadela.</translation>
+    </message>
+    <message>
+        <source>A wall is not stormed by walking at it. Builders raise the engines: a ram knocks a gate down, a siege tower puts men on the wall walk. Bring both, break one ring at a time, and keep something back for the column that comes to lift the siege.</source>
+        <translation>Não se toma uma muralha caminhando até ela. Os construtores erguem as máquinas: um aríete derruba um portão, uma torre de cerco põe homens no adarve. Traga os dois, rompa um anel de cada vez e guarde algo na reserva para a coluna que vem levantar o cerco.</translation>
+    </message>
+    <message>
+        <source>A walled market town on a double hill, two rings of wall and one ramp between them. Raise a ram and a siege tower, break into the lower ward, storm the citadel, and kill the praefect who holds it before the relief columns from Placentia arrive.</source>
+        <translation>Uma vila-mercado murada sobre uma colina dupla, dois anéis de muralha e uma só rampa entre eles. Erga um aríete e uma torre de cerco, invada a cidade baixa, tome a cidadela de assalto e mate o prefeito que a defende antes que cheguem as colunas de socorro de Placência.</translation>
+    </message>
+    <message>
+        <source>Break both relief columns. A siege that cannot hold its own camp is only a long way of losing.</source>
+        <translation>Destrua as duas colunas de socorro. Um cerco que não consegue defender o próprio acampamento é só um jeito demorado de perder.</translation>
+    </message>
+    <message>
+        <source>Break into the lower ward</source>
+        <translation>Invada a cidade baixa</translation>
+    </message>
+    <message>
+        <source>Builders raise siege engines. A ram for the gate, a siege tower for the wall walk - one of each gives the assault two ways in.</source>
+        <translation>Os construtores erguem máquinas de cerco. Um aríete para o portão, uma torre de cerco para o adarve - uma de cada dá ao assalto dois caminhos para entrar.</translation>
+    </message>
+    <message>
+        <source>Builders raise the engines in the field. A ram costs 70 wood and 15 iron and breaks gates; a siege tower costs 120 wood and 30 iron and puts men on the wall walk. Build one of each.</source>
+        <translation>Os construtores erguem as máquinas em campo. Um aríete custa 70 de madeira e 15 de ferro e derruba portões; uma torre de cerco custa 120 de madeira e 30 de ferro e põe homens no adarve. Construa um de cada.</translation>
+    </message>
+    <message>
+        <source>Burn the engines at the foot of the ramp and leave the bodies where they lie. The next army that comes up this road should see what the hill costs.</source>
+        <translation>Queimem as máquinas ao pé da rampa e deixem os corpos onde caíram. O próximo exército que subir esta estrada deve ver quanto custa a colina.</translation>
+    </message>
+    <message>
+        <source>Close the citadel gate behind me. If they want the praefect of Victumulae they can climb for him.</source>
+        <translation>Fechem o portão da cidadela atrás de mim. Se querem o prefeito de Victumulae, que subam para buscá-lo.</translation>
+    </message>
+    <message>
+        <source>Every family between here and the Po has carried its grain up that hill, and a praefect from Placentia is sitting on it. We will not starve them out in winter. Builders to the woods - I want a ram and a tower standing in front of this camp before the men get cold.</source>
+        <translation>Toda família daqui até o Pó carregou seu grão colina acima, e um prefeito de Placência está sentado em cima dele. Não vamos vencê-los pela fome no inverno. Construtores para a mata - quero um aríete e uma torre de pé diante deste acampamento antes que os homens esfriem.</translation>
+    </message>
+    <message>
+        <source>Gates open only for their owners. Keep the archers behind the engines to answer the men on the wall.</source>
+        <translation>Os portões só se abrem para seus donos. Mantenha os arqueiros atrás das máquinas para responder aos homens na muralha.</translation>
+    </message>
+    <message>
+        <source>Hannibal falls under the walls, and the army goes back over the Trebia without him.</source>
+        <translation>Aníbal cai sob as muralhas, e o exército volta a cruzar o Trébia sem ele.</translation>
+    </message>
+    <message>
+        <source>Hannibal, under my wall. Somebody fetch a scribe - Placentia will want this written down twice.</source>
+        <translation>Aníbal, sob a minha muralha. Alguém traga um escriba - Placência vai querer isto escrito duas vezes.</translation>
+    </message>
+    <message>
+        <source>He keeps behind the garrison hall, on the north side of the upper crown.</source>
+        <translation>Ele fica atrás do salão da guarnição, no lado norte do cume superior.</translation>
+    </message>
+    <message>
+        <source>Horns on the Placentia road. The relief is here. Turn around, Carthaginian - your camp is about to have visitors.</source>
+        <translation>Trompas na estrada de Placência. O socorro chegou. Vire-se, cartaginês - seu acampamento está prestes a receber visitas.</translation>
+    </message>
+    <message>
+        <source>Kill the praefect</source>
+        <translation>Mate o prefeito</translation>
+    </message>
+    <message>
+        <source>Kill the praefect. While he lives the garrison fights for every street.</source>
+        <translation>Mate o prefeito. Enquanto ele viver, a guarnição luta por cada rua.</translation>
+    </message>
+    <message>
+        <source>One narrow ramp climbs from the lower ward to the citadel gate. Break that gate as well, and hold the garrison hall&apos;s yard until it falls to Carthage.</source>
+        <translation>Uma rampa estreita sobe da cidade baixa até o portão da cidadela. Rompa também esse portão e segure o pátio do salão da guarnição até ele cair nas mãos de Cartago.</translation>
+    </message>
+    <message>
+        <source>Raise the siege engines</source>
+        <translation>Erga as máquinas de cerco</translation>
+    </message>
+    <message>
+        <source>Scouts on the Placentia road report dust to the north. A relief column is coming down the flank roads.</source>
+        <translation>Batedores na estrada de Placência relatam poeira ao norte. Uma coluna de socorro desce pelas estradas dos flancos.</translation>
+    </message>
+    <message>
+        <source>Select a builder and pick the ram or the siege tower from its build orders. The alder woods either side of the camp give more timber, and the iron outcrop lies just east of it.</source>
+        <translation>Selecione um construtor e escolha o aríete ou a torre de cerco nas ordens de construção dele. Os amieiros dos dois lados do acampamento dão mais madeira, e o afloramento de ferro fica logo a leste.</translation>
+    </message>
+    <message>
+        <source>Storm the citadel</source>
+        <translation>Tome a cidadela de assalto</translation>
+    </message>
+    <message>
+        <source>Take the citadel. Stand in the garrison hall&apos;s yard on the upper crown until the town is Carthage&apos;s.</source>
+        <translation>Tome a cidadela. Fique no pátio do salão da guarnição, no cume superior, até a vila ser de Cartago.</translation>
+    </message>
+    <message>
+        <source>Take the south ramp under the towers, then put the ram to the south gate or roll the tower against the curtain and send men over it. Get a company inside the outer ring.</source>
+        <translation>Tome a rampa sul sob as torres; depois leve o aríete ao portão sul ou encoste a torre na cortina e mande homens por cima. Ponha uma companhia dentro do anel exterior.</translation>
+    </message>
+    <message>
+        <source>The Roman commander holds the citadel to the last. Without him the garrison stops being one.</source>
+        <translation>O comandante romano defende a cidadela até o fim. Sem ele, a guarnição deixa de ser uma.</translation>
+    </message>
+    <message>
+        <source>The Storming of Victumulae</source>
+        <translation>O Assalto a Victumulae</translation>
+    </message>
+    <message>
+        <source>The assault is spent and there is nobody left to carry a ladder.</source>
+        <translation>O assalto se esgotou e não sobrou ninguém para carregar uma escada.</translation>
+    </message>
+    <message>
+        <source>The citadel wall is a second ring: bring the ram up the inner ramp, or tower the wall beside the gate.</source>
+        <translation>A muralha da cidadela é um segundo anel: leve o aríete pela rampa interna ou encoste a torre na muralha ao lado do portão.</translation>
+    </message>
+    <message>
+        <source>The hall is gone. Keep the granary - eat well, Carthaginian. It is the last full meal you will find between here and Rome.</source>
+        <translation>O salão caiu. Fique com o celeiro - coma bem, cartaginês. É a última refeição farta que você vai encontrar daqui até Roma.</translation>
+    </message>
+    <message>
+        <source>The last column from the river</source>
+        <translation>A última coluna do rio</translation>
+    </message>
+    <message>
+        <source>The praefect is dead. Tell the townspeople they may keep their lives. The grain they may not keep.</source>
+        <translation>O prefeito está morto. Digam aos moradores que podem ficar com a vida. O grão, não.</translation>
+    </message>
+    <message>
+        <source>The relief from Placentia</source>
+        <translation>O socorro de Placência</translation>
+    </message>
+    <message>
+        <source>The relief is broken on the road. Back to the hill - the wall has not moved while we were gone.</source>
+        <translation>O socorro foi desbaratado na estrada. De volta à colina - a muralha não saiu do lugar enquanto estávamos fora.</translation>
+    </message>
+    <message>
+        <source>The river garrison is on the road. That is every man Placentia can spare, and a few it cannot.</source>
+        <translation>A guarnição do rio está na estrada. São todos os homens que Placência pode dispensar, e alguns que não pode.</translation>
+    </message>
+    <message>
+        <source>There they are, on the ramp. Bows to the south curtain. Nobody shoots at the timber; shoot the men pushing it.</source>
+        <translation>Lá estão eles, na rampa. Arcos na cortina sul. Ninguém atira na madeira; atirem nos homens que a empurram.</translation>
+    </message>
+    <message>
+        <source>They are at the wall. Spears to the breach, and someone pour something hot on that engine.</source>
+        <translation>Eles chegaram à muralha. Lanças na brecha, e alguém despeje algo fervendo naquela máquina.</translation>
+    </message>
+    <message>
+        <source>Two walls, one ramp, and a granary full enough for a year. Come up the hill whenever you like, Carthaginian. My archers have been counting the steps.</source>
+        <translation>Duas muralhas, uma rampa e um celeiro cheio para um ano. Suba a colina quando quiser, cartaginês. Meus arqueiros andam contando os degraus.</translation>
+    </message>
+    <message>
+        <source>Victumulae is ours, and its granary with it. The army eats this winter. Let the Gauls see what happens to a town that shuts its gate on Carthage.</source>
+        <translation>Victumulae é nossa, e o celeiro com ela. O exército come neste inverno. Que os gauleses vejam o que acontece com uma vila que fecha o portão para Cartago.</translation>
+    </message>
+    <message>
+        <source>Victumulae stands on a double hill: a lower ward ringed by a curtain and four towers, and a walled citadel on the upper crown. Both gates face the camp road.</source>
+        <translation>Victumulae fica sobre uma colina dupla: uma cidade baixa cercada por uma cortina e quatro torres, e uma cidadela murada no cume superior. Os dois portões dão para a estrada do acampamento.</translation>
+    </message>
+    <message>
+        <source>We are feeding men to that ramp. Pull back out of bowshot and wait for the engines; walls do not get tired, but they do not get closer either.</source>
+        <translation>Estamos alimentando aquela rampa com homens. Recuem para fora do alcance das flechas e esperem as máquinas; muralhas não se cansam, mas também não chegam mais perto.</translation>
+    </message>
+    <message>
+        <source>Winter 218 BC: after the victory on the Trebia, Hannibal attacked the depot near Placentia and then stormed Victumulae, a fortified market of the Insubrian plain where the people of the district had gathered for safety. Livy records that it fell to assault and was sacked. This altered history gives the town a Roman praefect, a citadel garrison and a relief force on the Placentia road.</source>
+        <translation>Inverno de 218 a.C.: depois da vitória no Trébia, Aníbal atacou o depósito perto de Placência e depois tomou de assalto Victumulae, um mercado fortificado da planície ínsubre onde o povo da região havia se reunido em busca de segurança. Tito Lívio registra que ela caiu por assalto e foi saqueada. Esta história alterada dá à vila um prefeito romano, uma guarnição na cidadela e uma força de socorro na estrada de Placência.</translation>
+    </message>
 </context>
 <context>
     <name>MissionsScreen</name>
@@ -10524,12 +10712,6 @@ Imune à maioria das flechas</translation>
         <translation>Torre de cerco</translation>
     </message>
     <message>
-        <source>Carries infantry onto enemy walls
-Docks at a wall</source>
-        <translation>Leva infantaria às muralhas inimigas
-Encosta numa muralha</translation>
-    </message>
-    <message>
         <source>Build Battering Ram
 %1
 Cost: %2
@@ -10545,6 +10727,32 @@ Tempo de construção: %3s</translation>
 Cost: %2
 Build time: %3s</source>
         <translation>Construir torre de cerco
+%1
+Custo: %2
+Tempo de construção: %3s</translation>
+    </message>
+    <message>
+        <source>Docks against an enemy wall
+Infantry beside it climb up and cross</source>
+        <translation>Encosta numa muralha inimiga
+A infantaria ao lado sobe e atravessa</translation>
+    </message>
+    <message>
+        <source>Ladder</source>
+        <translation>Escada</translation>
+    </message>
+    <message>
+        <source>Leans on the town side of your wall
+Another way up onto the wall walk</source>
+        <translation>Apoia-se no lado interno da sua muralha
+Outro acesso ao adarve</translation>
+    </message>
+    <message>
+        <source>Build Ladder
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>Construir escada
 %1
 Custo: %2
 Tempo de construção: %3s</translation>
@@ -13113,6 +13321,22 @@ Tempo de construção: %3s</translation>
     <message>
         <source>Cannot build there.</source>
         <translation>Não é possível construir aí.</translation>
+    </message>
+    <message>
+        <source>A ladder leans on the town side of your own wall.</source>
+        <translation>Uma escada se apoia no lado interno da sua própria muralha.</translation>
+    </message>
+    <message>
+        <source>Ladders go on the town side of the wall, not outside it.</source>
+        <translation>Escadas ficam no lado interno da muralha, não do lado de fora.</translation>
+    </message>
+    <message>
+        <source>This stretch of wall already has a stair.</source>
+        <translation>Este trecho de muralha já tem uma escadaria.</translation>
+    </message>
+    <message>
+        <source>This stretch of wall already has a ladder.</source>
+        <translation>Este trecho de muralha já tem uma escada.</translation>
     </message>
 </context>
 <context>

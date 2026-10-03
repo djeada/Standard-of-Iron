@@ -100,10 +100,10 @@ auto skip_invalid_wall_site(Engine::Core::World* world,
   if (site->product_type == Game::Units::SpawnType::WallLadder) {
     // A ladder stays valid while the wall it leans on still stands.
     if (Game::Systems::WallNetworkService::find_ladder_placement(*world,
-                                                                site->owner_id,
-                                                                transform->position.x,
-                                                                transform->position.z,
-                                                                site_entity->get_id())
+                                                                 site->owner_id,
+                                                                 transform->position.x,
+                                                                 transform->position.z,
+                                                                 site_entity->get_id())
             .valid) {
       return false;
     }

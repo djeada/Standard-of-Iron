@@ -3060,8 +3060,16 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <translation>Überdachte Belagerungsmaschine, die Tore und Mauern bricht.</translation>
     </message>
     <message>
-        <source>Carries infantry to a wall and lets them off on top.</source>
-        <translation>Bringt Infanterie an eine Mauer und setzt sie oben ab.</translation>
+        <source>Ladder</source>
+        <translation>Leiter</translation>
+    </message>
+    <message>
+        <source>Leans on the town side of your own wall so troops can climb onto the wall walk.</source>
+        <translation>Lehnt an der Stadtseite deiner eigenen Mauer, damit Truppen auf den Wehrgang steigen können.</translation>
+    </message>
+    <message>
+        <source>Docks against an enemy wall; the infantry beside it climb its ladder and cross onto the wall walk.</source>
+        <translation>Legt an einer feindlichen Mauer an; die Fußtruppen daneben steigen seine Leiter hinauf und gehen auf den Wehrgang über.</translation>
     </message>
 </context>
 <context>
@@ -3245,6 +3253,10 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     <message>
         <source>Sepulcher Shrine</source>
         <translation>Grabmal-Schrein</translation>
+    </message>
+    <message>
+        <source>Ladder</source>
+        <translation>Leiter</translation>
     </message>
 </context>
 <context>
@@ -7357,6 +7369,14 @@ um die Vorschau zu sehen</translation>
         <source>A Roman watch camp on the old road, the night it finds out why the shepherds stopped using it. Timber, stone and a flock are close to the camp; the barrow ruins hold the middle ground; the cursed shrine stands alone on the north-east ground. A low knoll between the camp and the barrow is the only high ground worth having, and the road runs past the dead the whole way.</source>
         <translation>Ein römisches Wachlager an der alten Straße, in der Nacht, in der es erfährt, warum die Hirten sie nicht mehr benutzen. Holz, Stein und eine Herde liegen nahe am Lager; die Grabmal-Ruinen halten die Mitte; der verfluchte Schrein steht allein auf dem Gelände im Nordosten. Eine flache Kuppe zwischen Lager und Grabmal ist die einzige Anhöhe, die sich lohnt, und die Straße führt den ganzen Weg an den Toten vorbei.</translation>
     </message>
+    <message>
+        <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. The lower ward rings the outer crown with a timber curtain and towers; the citadel stands on the upper crown behind its own wall, with the granary and the garrison hall inside it. Three roads climb to the lower ward - from the Punic camp in the south, and from the Placentia road on either flank - and only one ramp climbs from the lower ward to the citadel gate.</source>
+        <translation>Eine ummauerte Marktstadt der insubrischen Ebene, auf einem Doppelhügel über den winterlichen Feldern errichtet. Die Unterstadt umgibt die äußere Kuppe mit einem hölzernen Mauerzug und Türmen; die Zitadelle steht auf der oberen Kuppe hinter ihrer eigenen Mauer, mit dem Kornspeicher und der Garnisonshalle darin. Drei Straßen steigen zur Unterstadt hinauf - vom punischen Lager im Süden und von der Straße nach Placentia an beiden Flanken -, und nur eine einzige Rampe führt von der Unterstadt zum Zitadellentor.</translation>
+    </message>
+    <message>
+        <source>Victumulae</source>
+        <translation>Victumulae</translation>
+    </message>
 </context>
 <context>
     <name>MatchSetupViewModel</name>
@@ -9390,6 +9410,174 @@ um die Vorschau zu sehen</translation>
         <source>Those are men. Were men. Jupiter keep us. ...Steady. Bones break like anything else. Archers, hold where you stand and let them come to the shields.</source>
         <translation>Das sind Menschen. Waren Menschen. Jupiter steh uns bei. ...Ruhig. Knochen brechen wie alles andere. Bogenschützen, bleibt, wo ihr steht, und lasst sie an die Schilde kommen.</translation>
     </message>
+    <message>
+        <source>A general alone at the foot of a wall is a target, not a siege.</source>
+        <translation>Ein Feldherr allein am Fuß einer Mauer ist ein Ziel, keine Belagerung.</translation>
+    </message>
+    <message>
+        <source>A set-piece siege: a quiet build-up in the Punic camp, an assault up the south ramp under arrow fire from two rings of wall, and a relief column that arrives on the flank roads while the army is committed against the citadel.</source>
+        <translation>Eine Belagerung wie aus dem Lehrbuch: ein ruhiger Aufbau im punischen Lager, ein Sturm die Südrampe hinauf unter Pfeilbeschuss von zwei Mauerringen und eine Entsatzkolonne, die auf den Flankenstraßen eintrifft, während das Heer gegen die Zitadelle gebunden ist.</translation>
+    </message>
+    <message>
+        <source>A wall is not stormed by walking at it. Builders raise the engines: a ram knocks a gate down, a siege tower puts men on the wall walk. Bring both, break one ring at a time, and keep something back for the column that comes to lift the siege.</source>
+        <translation>Eine Mauer erstürmt man nicht, indem man auf sie zuläuft. Baumeister errichten die Maschinen: Ein Rammbock bricht ein Tor, ein Belagerungsturm bringt Männer auf den Wehrgang. Bring beides mit, brich einen Ring nach dem anderen und halte etwas zurück für die Kolonne, die die Belagerung aufheben will.</translation>
+    </message>
+    <message>
+        <source>A walled market town on a double hill, two rings of wall and one ramp between them. Raise a ram and a siege tower, break into the lower ward, storm the citadel, and kill the praefect who holds it before the relief columns from Placentia arrive.</source>
+        <translation>Eine ummauerte Marktstadt auf einem Doppelhügel, zwei Mauerringe und eine Rampe dazwischen. Errichte einen Rammbock und einen Belagerungsturm, brich in die Unterstadt ein, erstürme die Zitadelle und töte den Präfekten, der sie hält, bevor die Entsatzkolonnen aus Placentia eintreffen.</translation>
+    </message>
+    <message>
+        <source>Break both relief columns. A siege that cannot hold its own camp is only a long way of losing.</source>
+        <translation>Zerschlage beide Entsatzkolonnen. Eine Belagerung, die ihr eigenes Lager nicht halten kann, ist nur ein langer Weg zur Niederlage.</translation>
+    </message>
+    <message>
+        <source>Break into the lower ward</source>
+        <translation>In die Unterstadt einbrechen</translation>
+    </message>
+    <message>
+        <source>Builders raise siege engines. A ram for the gate, a siege tower for the wall walk - one of each gives the assault two ways in.</source>
+        <translation>Baumeister errichten Belagerungsmaschinen. Ein Rammbock für das Tor, ein Belagerungsturm für den Wehrgang - je einer gibt dem Sturm zwei Wege hinein.</translation>
+    </message>
+    <message>
+        <source>Builders raise the engines in the field. A ram costs 70 wood and 15 iron and breaks gates; a siege tower costs 120 wood and 30 iron and puts men on the wall walk. Build one of each.</source>
+        <translation>Baumeister errichten die Maschinen im Feld. Ein Rammbock kostet 70 Holz und 15 Eisen und bricht Tore; ein Belagerungsturm kostet 120 Holz und 30 Eisen und bringt Männer auf den Wehrgang. Baue je einen.</translation>
+    </message>
+    <message>
+        <source>Burn the engines at the foot of the ramp and leave the bodies where they lie. The next army that comes up this road should see what the hill costs.</source>
+        <translation>Verbrennt die Maschinen am Fuß der Rampe und lasst die Leichen liegen, wo sie sind. Das nächste Heer, das diese Straße heraufkommt, soll sehen, was der Hügel kostet.</translation>
+    </message>
+    <message>
+        <source>Close the citadel gate behind me. If they want the praefect of Victumulae they can climb for him.</source>
+        <translation>Schließt das Zitadellentor hinter mir. Wenn sie den Präfekten von Victumulae wollen, sollen sie zu ihm hinaufklettern.</translation>
+    </message>
+    <message>
+        <source>Every family between here and the Po has carried its grain up that hill, and a praefect from Placentia is sitting on it. We will not starve them out in winter. Builders to the woods - I want a ram and a tower standing in front of this camp before the men get cold.</source>
+        <translation>Jede Familie zwischen hier und dem Po hat ihr Korn diesen Hügel hinaufgetragen, und ein Präfekt aus Placentia sitzt darauf. Im Winter hungern wir sie nicht aus. Baumeister in die Wälder - ich will einen Rammbock und einen Turm vor diesem Lager stehen sehen, bevor den Männern kalt wird.</translation>
+    </message>
+    <message>
+        <source>Gates open only for their owners. Keep the archers behind the engines to answer the men on the wall.</source>
+        <translation>Tore öffnen sich nur ihren Besitzern. Halte die Bogenschützen hinter den Maschinen, damit sie den Männern auf der Mauer antworten.</translation>
+    </message>
+    <message>
+        <source>Hannibal falls under the walls, and the army goes back over the Trebia without him.</source>
+        <translation>Hannibal fällt unter den Mauern, und das Heer zieht ohne ihn über die Trebia zurück.</translation>
+    </message>
+    <message>
+        <source>Hannibal, under my wall. Somebody fetch a scribe - Placentia will want this written down twice.</source>
+        <translation>Hannibal, unter meiner Mauer. Holt einen Schreiber - Placentia wird das zweimal schriftlich haben wollen.</translation>
+    </message>
+    <message>
+        <source>He keeps behind the garrison hall, on the north side of the upper crown.</source>
+        <translation>Er hält sich hinter der Garnisonshalle auf, an der Nordseite der oberen Kuppe.</translation>
+    </message>
+    <message>
+        <source>Horns on the Placentia road. The relief is here. Turn around, Carthaginian - your camp is about to have visitors.</source>
+        <translation>Hörner auf der Straße nach Placentia. Der Entsatz ist da. Dreh dich um, Karthager - dein Lager bekommt gleich Besuch.</translation>
+    </message>
+    <message>
+        <source>Kill the praefect</source>
+        <translation>Töte den Präfekten</translation>
+    </message>
+    <message>
+        <source>Kill the praefect. While he lives the garrison fights for every street.</source>
+        <translation>Töte den Präfekten. Solange er lebt, kämpft die Garnison um jede Straße.</translation>
+    </message>
+    <message>
+        <source>One narrow ramp climbs from the lower ward to the citadel gate. Break that gate as well, and hold the garrison hall&apos;s yard until it falls to Carthage.</source>
+        <translation>Eine schmale Rampe führt von der Unterstadt zum Zitadellentor. Brich auch dieses Tor und halte den Hof der Garnisonshalle, bis sie an Karthago fällt.</translation>
+    </message>
+    <message>
+        <source>Raise the siege engines</source>
+        <translation>Belagerungsmaschinen errichten</translation>
+    </message>
+    <message>
+        <source>Scouts on the Placentia road report dust to the north. A relief column is coming down the flank roads.</source>
+        <translation>Späher auf der Straße nach Placentia melden Staub im Norden. Eine Entsatzkolonne kommt die Flankenstraßen herab.</translation>
+    </message>
+    <message>
+        <source>Select a builder and pick the ram or the siege tower from its build orders. The alder woods either side of the camp give more timber, and the iron outcrop lies just east of it.</source>
+        <translation>Wähle einen Baumeister und such dir den Rammbock oder den Belagerungsturm aus seinen Bauaufträgen aus. Die Erlenwälder zu beiden Seiten des Lagers liefern mehr Holz, und das Eisenvorkommen liegt gleich östlich davon.</translation>
+    </message>
+    <message>
+        <source>Storm the citadel</source>
+        <translation>Die Zitadelle erstürmen</translation>
+    </message>
+    <message>
+        <source>Take the citadel. Stand in the garrison hall&apos;s yard on the upper crown until the town is Carthage&apos;s.</source>
+        <translation>Nimm die Zitadelle. Halte dich im Hof der Garnisonshalle auf der oberen Kuppe, bis die Stadt Karthago gehört.</translation>
+    </message>
+    <message>
+        <source>Take the south ramp under the towers, then put the ram to the south gate or roll the tower against the curtain and send men over it. Get a company inside the outer ring.</source>
+        <translation>Nimm die Südrampe unter den Türmen, dann setze den Rammbock ans Südtor oder rolle den Turm an den Mauerzug und schick Männer hinüber. Bring eine Kompanie in den äußeren Ring.</translation>
+    </message>
+    <message>
+        <source>The Roman commander holds the citadel to the last. Without him the garrison stops being one.</source>
+        <translation>Der römische Befehlshaber hält die Zitadelle bis zuletzt. Ohne ihn ist die Garnison keine mehr.</translation>
+    </message>
+    <message>
+        <source>The Storming of Victumulae</source>
+        <translation>Die Erstürmung von Victumulae</translation>
+    </message>
+    <message>
+        <source>The assault is spent and there is nobody left to carry a ladder.</source>
+        <translation>Der Sturm ist erschöpft, und niemand ist mehr übrig, der eine Leiter tragen könnte.</translation>
+    </message>
+    <message>
+        <source>The citadel wall is a second ring: bring the ram up the inner ramp, or tower the wall beside the gate.</source>
+        <translation>Die Zitadellenmauer ist ein zweiter Ring: Bring den Rammbock die innere Rampe hinauf oder stell den Turm an die Mauer neben dem Tor.</translation>
+    </message>
+    <message>
+        <source>The hall is gone. Keep the granary - eat well, Carthaginian. It is the last full meal you will find between here and Rome.</source>
+        <translation>Die Halle ist gefallen. Behalte den Kornspeicher - iss gut, Karthager. Es ist die letzte volle Mahlzeit, die du zwischen hier und Rom finden wirst.</translation>
+    </message>
+    <message>
+        <source>The last column from the river</source>
+        <translation>Die letzte Kolonne vom Fluss</translation>
+    </message>
+    <message>
+        <source>The praefect is dead. Tell the townspeople they may keep their lives. The grain they may not keep.</source>
+        <translation>Der Präfekt ist tot. Sagt den Städtern, sie dürfen ihr Leben behalten. Das Korn dürfen sie nicht behalten.</translation>
+    </message>
+    <message>
+        <source>The relief from Placentia</source>
+        <translation>Der Entsatz aus Placentia</translation>
+    </message>
+    <message>
+        <source>The relief is broken on the road. Back to the hill - the wall has not moved while we were gone.</source>
+        <translation>Der Entsatz ist auf der Straße zerschlagen. Zurück zum Hügel - die Mauer hat sich nicht bewegt, während wir fort waren.</translation>
+    </message>
+    <message>
+        <source>The river garrison is on the road. That is every man Placentia can spare, and a few it cannot.</source>
+        <translation>Die Flussgarnison ist unterwegs. Das ist jeder Mann, den Placentia entbehren kann, und ein paar, die es nicht kann.</translation>
+    </message>
+    <message>
+        <source>There they are, on the ramp. Bows to the south curtain. Nobody shoots at the timber; shoot the men pushing it.</source>
+        <translation>Da sind sie, auf der Rampe. Bogen auf den südlichen Mauerzug. Niemand schießt auf das Holz; schießt auf die Männer, die es schieben.</translation>
+    </message>
+    <message>
+        <source>They are at the wall. Spears to the breach, and someone pour something hot on that engine.</source>
+        <translation>Sie sind an der Mauer. Speere an die Bresche, und jemand gieße etwas Heißes auf diese Maschine.</translation>
+    </message>
+    <message>
+        <source>Two walls, one ramp, and a granary full enough for a year. Come up the hill whenever you like, Carthaginian. My archers have been counting the steps.</source>
+        <translation>Zwei Mauern, eine Rampe und ein Kornspeicher, voll genug für ein Jahr. Komm den Hügel herauf, wann immer du willst, Karthager. Meine Bogenschützen haben die Stufen gezählt.</translation>
+    </message>
+    <message>
+        <source>Victumulae is ours, and its granary with it. The army eats this winter. Let the Gauls see what happens to a town that shuts its gate on Carthage.</source>
+        <translation>Victumulae ist unser, und sein Kornspeicher dazu. Das Heer isst in diesem Winter. Sollen die Gallier sehen, was einer Stadt geschieht, die Karthago ihr Tor verschließt.</translation>
+    </message>
+    <message>
+        <source>Victumulae stands on a double hill: a lower ward ringed by a curtain and four towers, and a walled citadel on the upper crown. Both gates face the camp road.</source>
+        <translation>Victumulae steht auf einem Doppelhügel: eine Unterstadt, umgeben von einem Mauerzug und vier Türmen, und eine ummauerte Zitadelle auf der oberen Kuppe. Beide Tore weisen zur Lagerstraße.</translation>
+    </message>
+    <message>
+        <source>We are feeding men to that ramp. Pull back out of bowshot and wait for the engines; walls do not get tired, but they do not get closer either.</source>
+        <translation>Wir verfüttern Männer an diese Rampe. Zieht euch aus Bogenschussweite zurück und wartet auf die Maschinen; Mauern werden nicht müde, aber sie kommen auch nicht näher.</translation>
+    </message>
+    <message>
+        <source>Winter 218 BC: after the victory on the Trebia, Hannibal attacked the depot near Placentia and then stormed Victumulae, a fortified market of the Insubrian plain where the people of the district had gathered for safety. Livy records that it fell to assault and was sacked. This altered history gives the town a Roman praefect, a citadel garrison and a relief force on the Placentia road.</source>
+        <translation>Winter 218 v. Chr.: Nach dem Sieg an der Trebia griff Hannibal das Depot bei Placentia an und erstürmte dann Victumulae, einen befestigten Markt der insubrischen Ebene, in dem sich die Bewohner der Gegend in Sicherheit gebracht hatten. Livius berichtet, dass es im Sturm fiel und geplündert wurde. Diese veränderte Geschichte gibt der Stadt einen römischen Präfekten, eine Zitadellengarnison und ein Entsatzheer auf der Straße nach Placentia.</translation>
+    </message>
 </context>
 <context>
     <name>MissionsScreen</name>
@@ -10524,12 +10712,6 @@ Schützt vor den meisten Pfeilen</translation>
         <translation>Belagerungsturm</translation>
     </message>
     <message>
-        <source>Carries infantry onto enemy walls
-Docks at a wall</source>
-        <translation>Trägt Infanterie auf feindliche Mauern
-Dockt an einer Mauer an</translation>
-    </message>
-    <message>
         <source>Build Battering Ram
 %1
 Cost: %2
@@ -10548,6 +10730,32 @@ Build time: %3s</source>
 %1
 Kosten: %2
 Bauzeit: %3s</translation>
+    </message>
+    <message>
+        <source>Docks against an enemy wall
+Infantry beside it climb up and cross</source>
+        <translation>Legt an einer Feindmauer an
+Fußtruppen daneben steigen hinüber</translation>
+    </message>
+    <message>
+        <source>Ladder</source>
+        <translation>Leiter</translation>
+    </message>
+    <message>
+        <source>Leans on the town side of your wall
+Another way up onto the wall walk</source>
+        <translation>Lehnt an der Stadtseite deiner Mauer
+Ein weiterer Aufgang zum Wehrgang</translation>
+    </message>
+    <message>
+        <source>Build Ladder
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>Leiter bauen
+%1
+Kosten: %2
+Bauzeit: %3 s</translation>
     </message>
 </context>
 <context>
@@ -13113,6 +13321,22 @@ Bauzeit: %3s</translation>
     <message>
         <source>Cannot build there.</source>
         <translation>Dort kann nicht gebaut werden.</translation>
+    </message>
+    <message>
+        <source>A ladder leans on the town side of your own wall.</source>
+        <translation>Eine Leiter lehnt an der Stadtseite deiner eigenen Mauer.</translation>
+    </message>
+    <message>
+        <source>Ladders go on the town side of the wall, not outside it.</source>
+        <translation>Leitern gehören an die Stadtseite der Mauer, nicht nach außen.</translation>
+    </message>
+    <message>
+        <source>This stretch of wall already has a stair.</source>
+        <translation>Dieser Mauerabschnitt hat bereits eine Treppe.</translation>
+    </message>
+    <message>
+        <source>This stretch of wall already has a ladder.</source>
+        <translation>Dieser Mauerabschnitt hat bereits eine Leiter.</translation>
     </message>
 </context>
 <context>

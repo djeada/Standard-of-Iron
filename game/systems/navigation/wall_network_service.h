@@ -113,12 +113,12 @@ public:
   // Ladders only go on the town side of the owner's own wall: a straight
   // segment with a balcony, no stair and no other ladder. `ignore_entity_id`
   // is a ladder (or ladder site) whose own claim does not count.
-  static auto find_ladder_placement(Engine::Core::World& world,
-                                    int owner_id,
-                                    float world_x,
-                                    float world_z,
-                                    Engine::Core::EntityID ignore_entity_id = 0)
-      -> LadderPlacement;
+  static auto
+  find_ladder_placement(Engine::Core::World& world,
+                        int owner_id,
+                        float world_x,
+                        float world_z,
+                        Engine::Core::EntityID ignore_entity_id = 0) -> LadderPlacement;
 
   static void refresh_world(Engine::Core::World& world);
 };

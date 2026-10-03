@@ -44,7 +44,8 @@ auto item_type(const WallPlanRequest& request) -> const char* {
   return request.gate ? "wall_gate" : "wall_segment";
 }
 
-auto plan_ladder(Engine::Core::World& world, const WallPlanRequest& request) -> WallPlan {
+auto plan_ladder(Engine::Core::World& world,
+                 const WallPlanRequest& request) -> WallPlan {
   WallPlan plan;
   plan.wood_per_segment =
       construction_cost_info(item_type(request)).resource_costs.get(ResourceType::Wood);
@@ -59,11 +60,11 @@ auto plan_ladder(Engine::Core::World& world, const WallPlanRequest& request) -> 
     segment.rotation_y = placement.rotation_y;
     auto& terrain = *Game::Session::services_for(world).terrain;
     if (terrain.is_initialized()) {
-      segment.world_position = terrain.resolve_surface_world_position(
-          placement.x, placement.z, 0.0F, 0.0F);
+      segment.world_position =
+          terrain.resolve_surface_world_position(placement.x, placement.z, 0.0F, 0.0F);
     }
-    int const wood =
-        Game::Session::services_for(world).economy->get(request.owner_id, ResourceType::Wood);
+    int const wood = Game::Session::services_for(world).economy->get(
+        request.owner_id, ResourceType::Wood);
     if (wood < plan.wood_per_segment) {
       segment.fault = WallSegmentFault::NotEnoughWood;
     } else {
@@ -216,7 +217,8 @@ auto WallPlanService::commit(Engine::Core::World& world,
     if (request.ladder) {
       // A ladder site is not a wall cell: its wall draws the timbers lying at
       // the foot until a builder stands them up.
-      auto* site = entity->add_component<Engine::Core::WallConstructionSiteComponent>();
+      auto* site =
+          world.emplace<Engine::Core::WallConstructionSiteComponent>(entity->get_id());
       if (transform == nullptr || renderable == nullptr || site == nullptr) {
         world.destroy_entity(entity->get_id());
         continue;

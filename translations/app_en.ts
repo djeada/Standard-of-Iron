@@ -3060,8 +3060,16 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Roofed siege engine that breaks gates and walls.</translation>
     </message>
     <message>
-        <source>Carries infantry to a wall and lets them off on top.</source>
-        <translation>Carries infantry to a wall and lets them off on top.</translation>
+        <source>Ladder</source>
+        <translation>Ladder</translation>
+    </message>
+    <message>
+        <source>Leans on the town side of your own wall so troops can climb onto the wall walk.</source>
+        <translation>Leans on the town side of your own wall so troops can climb onto the wall walk.</translation>
+    </message>
+    <message>
+        <source>Docks against an enemy wall; the infantry beside it climb its ladder and cross onto the wall walk.</source>
+        <translation>Docks against an enemy wall; the infantry beside it climb its ladder and cross onto the wall walk.</translation>
     </message>
 </context>
 <context>
@@ -3245,6 +3253,10 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>Sepulcher Shrine</source>
         <translation>Sepulcher Shrine</translation>
+    </message>
+    <message>
+        <source>Ladder</source>
+        <translation>Ladder</translation>
     </message>
 </context>
 <context>
@@ -7357,6 +7369,14 @@ to see preview</translation>
         <source>A Roman watch camp on the old road, the night it finds out why the shepherds stopped using it. Timber, stone and a flock are close to the camp; the barrow ruins hold the middle ground; the cursed shrine stands alone on the north-east ground. A low knoll between the camp and the barrow is the only high ground worth having, and the road runs past the dead the whole way.</source>
         <translation>A Roman watch camp on the old road, the night it finds out why the shepherds stopped using it. Timber, stone and a flock are close to the camp; the barrow ruins hold the middle ground; the cursed shrine stands alone on the north-east ground. A low knoll between the camp and the barrow is the only high ground worth having, and the road runs past the dead the whole way.</translation>
     </message>
+    <message>
+        <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. The lower ward rings the outer crown with a timber curtain and towers; the citadel stands on the upper crown behind its own wall, with the granary and the garrison hall inside it. Three roads climb to the lower ward - from the Punic camp in the south, and from the Placentia road on either flank - and only one ramp climbs from the lower ward to the citadel gate.</source>
+        <translation>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. The lower ward rings the outer crown with a timber curtain and towers; the citadel stands on the upper crown behind its own wall, with the granary and the garrison hall inside it. Three roads climb to the lower ward - from the Punic camp in the south, and from the Placentia road on either flank - and only one ramp climbs from the lower ward to the citadel gate.</translation>
+    </message>
+    <message>
+        <source>Victumulae</source>
+        <translation>Victumulae</translation>
+    </message>
 </context>
 <context>
     <name>MatchSetupViewModel</name>
@@ -9390,6 +9410,174 @@ to see preview</translation>
         <source>Those are men. Were men. Jupiter keep us. ...Steady. Bones break like anything else. Archers, hold where you stand and let them come to the shields.</source>
         <translation>Those are men. Were men. Jupiter keep us. ...Steady. Bones break like anything else. Archers, hold where you stand and let them come to the shields.</translation>
     </message>
+    <message>
+        <source>A general alone at the foot of a wall is a target, not a siege.</source>
+        <translation>A general alone at the foot of a wall is a target, not a siege.</translation>
+    </message>
+    <message>
+        <source>A set-piece siege: a quiet build-up in the Punic camp, an assault up the south ramp under arrow fire from two rings of wall, and a relief column that arrives on the flank roads while the army is committed against the citadel.</source>
+        <translation>A set-piece siege: a quiet build-up in the Punic camp, an assault up the south ramp under arrow fire from two rings of wall, and a relief column that arrives on the flank roads while the army is committed against the citadel.</translation>
+    </message>
+    <message>
+        <source>A wall is not stormed by walking at it. Builders raise the engines: a ram knocks a gate down, a siege tower puts men on the wall walk. Bring both, break one ring at a time, and keep something back for the column that comes to lift the siege.</source>
+        <translation>A wall is not stormed by walking at it. Builders raise the engines: a ram knocks a gate down, a siege tower puts men on the wall walk. Bring both, break one ring at a time, and keep something back for the column that comes to lift the siege.</translation>
+    </message>
+    <message>
+        <source>A walled market town on a double hill, two rings of wall and one ramp between them. Raise a ram and a siege tower, break into the lower ward, storm the citadel, and kill the praefect who holds it before the relief columns from Placentia arrive.</source>
+        <translation>A walled market town on a double hill, two rings of wall and one ramp between them. Raise a ram and a siege tower, break into the lower ward, storm the citadel, and kill the praefect who holds it before the relief columns from Placentia arrive.</translation>
+    </message>
+    <message>
+        <source>Break both relief columns. A siege that cannot hold its own camp is only a long way of losing.</source>
+        <translation>Break both relief columns. A siege that cannot hold its own camp is only a long way of losing.</translation>
+    </message>
+    <message>
+        <source>Break into the lower ward</source>
+        <translation>Break into the lower ward</translation>
+    </message>
+    <message>
+        <source>Builders raise siege engines. A ram for the gate, a siege tower for the wall walk - one of each gives the assault two ways in.</source>
+        <translation>Builders raise siege engines. A ram for the gate, a siege tower for the wall walk - one of each gives the assault two ways in.</translation>
+    </message>
+    <message>
+        <source>Builders raise the engines in the field. A ram costs 70 wood and 15 iron and breaks gates; a siege tower costs 120 wood and 30 iron and puts men on the wall walk. Build one of each.</source>
+        <translation>Builders raise the engines in the field. A ram costs 70 wood and 15 iron and breaks gates; a siege tower costs 120 wood and 30 iron and puts men on the wall walk. Build one of each.</translation>
+    </message>
+    <message>
+        <source>Burn the engines at the foot of the ramp and leave the bodies where they lie. The next army that comes up this road should see what the hill costs.</source>
+        <translation>Burn the engines at the foot of the ramp and leave the bodies where they lie. The next army that comes up this road should see what the hill costs.</translation>
+    </message>
+    <message>
+        <source>Close the citadel gate behind me. If they want the praefect of Victumulae they can climb for him.</source>
+        <translation>Close the citadel gate behind me. If they want the praefect of Victumulae they can climb for him.</translation>
+    </message>
+    <message>
+        <source>Every family between here and the Po has carried its grain up that hill, and a praefect from Placentia is sitting on it. We will not starve them out in winter. Builders to the woods - I want a ram and a tower standing in front of this camp before the men get cold.</source>
+        <translation>Every family between here and the Po has carried its grain up that hill, and a praefect from Placentia is sitting on it. We will not starve them out in winter. Builders to the woods - I want a ram and a tower standing in front of this camp before the men get cold.</translation>
+    </message>
+    <message>
+        <source>Gates open only for their owners. Keep the archers behind the engines to answer the men on the wall.</source>
+        <translation>Gates open only for their owners. Keep the archers behind the engines to answer the men on the wall.</translation>
+    </message>
+    <message>
+        <source>Hannibal falls under the walls, and the army goes back over the Trebia without him.</source>
+        <translation>Hannibal falls under the walls, and the army goes back over the Trebia without him.</translation>
+    </message>
+    <message>
+        <source>Hannibal, under my wall. Somebody fetch a scribe - Placentia will want this written down twice.</source>
+        <translation>Hannibal, under my wall. Somebody fetch a scribe - Placentia will want this written down twice.</translation>
+    </message>
+    <message>
+        <source>He keeps behind the garrison hall, on the north side of the upper crown.</source>
+        <translation>He keeps behind the garrison hall, on the north side of the upper crown.</translation>
+    </message>
+    <message>
+        <source>Horns on the Placentia road. The relief is here. Turn around, Carthaginian - your camp is about to have visitors.</source>
+        <translation>Horns on the Placentia road. The relief is here. Turn around, Carthaginian - your camp is about to have visitors.</translation>
+    </message>
+    <message>
+        <source>Kill the praefect</source>
+        <translation>Kill the praefect</translation>
+    </message>
+    <message>
+        <source>Kill the praefect. While he lives the garrison fights for every street.</source>
+        <translation>Kill the praefect. While he lives the garrison fights for every street.</translation>
+    </message>
+    <message>
+        <source>One narrow ramp climbs from the lower ward to the citadel gate. Break that gate as well, and hold the garrison hall&apos;s yard until it falls to Carthage.</source>
+        <translation>One narrow ramp climbs from the lower ward to the citadel gate. Break that gate as well, and hold the garrison hall&apos;s yard until it falls to Carthage.</translation>
+    </message>
+    <message>
+        <source>Raise the siege engines</source>
+        <translation>Raise the siege engines</translation>
+    </message>
+    <message>
+        <source>Scouts on the Placentia road report dust to the north. A relief column is coming down the flank roads.</source>
+        <translation>Scouts on the Placentia road report dust to the north. A relief column is coming down the flank roads.</translation>
+    </message>
+    <message>
+        <source>Select a builder and pick the ram or the siege tower from its build orders. The alder woods either side of the camp give more timber, and the iron outcrop lies just east of it.</source>
+        <translation>Select a builder and pick the ram or the siege tower from its build orders. The alder woods either side of the camp give more timber, and the iron outcrop lies just east of it.</translation>
+    </message>
+    <message>
+        <source>Storm the citadel</source>
+        <translation>Storm the citadel</translation>
+    </message>
+    <message>
+        <source>Take the citadel. Stand in the garrison hall&apos;s yard on the upper crown until the town is Carthage&apos;s.</source>
+        <translation>Take the citadel. Stand in the garrison hall&apos;s yard on the upper crown until the town is Carthage&apos;s.</translation>
+    </message>
+    <message>
+        <source>Take the south ramp under the towers, then put the ram to the south gate or roll the tower against the curtain and send men over it. Get a company inside the outer ring.</source>
+        <translation>Take the south ramp under the towers, then put the ram to the south gate or roll the tower against the curtain and send men over it. Get a company inside the outer ring.</translation>
+    </message>
+    <message>
+        <source>The Roman commander holds the citadel to the last. Without him the garrison stops being one.</source>
+        <translation>The Roman commander holds the citadel to the last. Without him the garrison stops being one.</translation>
+    </message>
+    <message>
+        <source>The Storming of Victumulae</source>
+        <translation>The Storming of Victumulae</translation>
+    </message>
+    <message>
+        <source>The assault is spent and there is nobody left to carry a ladder.</source>
+        <translation>The assault is spent and there is nobody left to carry a ladder.</translation>
+    </message>
+    <message>
+        <source>The citadel wall is a second ring: bring the ram up the inner ramp, or tower the wall beside the gate.</source>
+        <translation>The citadel wall is a second ring: bring the ram up the inner ramp, or tower the wall beside the gate.</translation>
+    </message>
+    <message>
+        <source>The hall is gone. Keep the granary - eat well, Carthaginian. It is the last full meal you will find between here and Rome.</source>
+        <translation>The hall is gone. Keep the granary - eat well, Carthaginian. It is the last full meal you will find between here and Rome.</translation>
+    </message>
+    <message>
+        <source>The last column from the river</source>
+        <translation>The last column from the river</translation>
+    </message>
+    <message>
+        <source>The praefect is dead. Tell the townspeople they may keep their lives. The grain they may not keep.</source>
+        <translation>The praefect is dead. Tell the townspeople they may keep their lives. The grain they may not keep.</translation>
+    </message>
+    <message>
+        <source>The relief from Placentia</source>
+        <translation>The relief from Placentia</translation>
+    </message>
+    <message>
+        <source>The relief is broken on the road. Back to the hill - the wall has not moved while we were gone.</source>
+        <translation>The relief is broken on the road. Back to the hill - the wall has not moved while we were gone.</translation>
+    </message>
+    <message>
+        <source>The river garrison is on the road. That is every man Placentia can spare, and a few it cannot.</source>
+        <translation>The river garrison is on the road. That is every man Placentia can spare, and a few it cannot.</translation>
+    </message>
+    <message>
+        <source>There they are, on the ramp. Bows to the south curtain. Nobody shoots at the timber; shoot the men pushing it.</source>
+        <translation>There they are, on the ramp. Bows to the south curtain. Nobody shoots at the timber; shoot the men pushing it.</translation>
+    </message>
+    <message>
+        <source>They are at the wall. Spears to the breach, and someone pour something hot on that engine.</source>
+        <translation>They are at the wall. Spears to the breach, and someone pour something hot on that engine.</translation>
+    </message>
+    <message>
+        <source>Two walls, one ramp, and a granary full enough for a year. Come up the hill whenever you like, Carthaginian. My archers have been counting the steps.</source>
+        <translation>Two walls, one ramp, and a granary full enough for a year. Come up the hill whenever you like, Carthaginian. My archers have been counting the steps.</translation>
+    </message>
+    <message>
+        <source>Victumulae is ours, and its granary with it. The army eats this winter. Let the Gauls see what happens to a town that shuts its gate on Carthage.</source>
+        <translation>Victumulae is ours, and its granary with it. The army eats this winter. Let the Gauls see what happens to a town that shuts its gate on Carthage.</translation>
+    </message>
+    <message>
+        <source>Victumulae stands on a double hill: a lower ward ringed by a curtain and four towers, and a walled citadel on the upper crown. Both gates face the camp road.</source>
+        <translation>Victumulae stands on a double hill: a lower ward ringed by a curtain and four towers, and a walled citadel on the upper crown. Both gates face the camp road.</translation>
+    </message>
+    <message>
+        <source>We are feeding men to that ramp. Pull back out of bowshot and wait for the engines; walls do not get tired, but they do not get closer either.</source>
+        <translation>We are feeding men to that ramp. Pull back out of bowshot and wait for the engines; walls do not get tired, but they do not get closer either.</translation>
+    </message>
+    <message>
+        <source>Winter 218 BC: after the victory on the Trebia, Hannibal attacked the depot near Placentia and then stormed Victumulae, a fortified market of the Insubrian plain where the people of the district had gathered for safety. Livy records that it fell to assault and was sacked. This altered history gives the town a Roman praefect, a citadel garrison and a relief force on the Placentia road.</source>
+        <translation>Winter 218 BC: after the victory on the Trebia, Hannibal attacked the depot near Placentia and then stormed Victumulae, a fortified market of the Insubrian plain where the people of the district had gathered for safety. Livy records that it fell to assault and was sacked. This altered history gives the town a Roman praefect, a citadel garrison and a relief force on the Placentia road.</translation>
+    </message>
 </context>
 <context>
     <name>MissionsScreen</name>
@@ -10524,12 +10712,6 @@ Immune to most arrows</translation>
         <translation>Siege Tower</translation>
     </message>
     <message>
-        <source>Carries infantry onto enemy walls
-Docks at a wall</source>
-        <translation>Carries infantry onto enemy walls
-Docks at a wall</translation>
-    </message>
-    <message>
         <source>Build Battering Ram
 %1
 Cost: %2
@@ -10545,6 +10727,32 @@ Build time: %3s</translation>
 Cost: %2
 Build time: %3s</source>
         <translation>Build Siege Tower
+%1
+Cost: %2
+Build time: %3s</translation>
+    </message>
+    <message>
+        <source>Docks against an enemy wall
+Infantry beside it climb up and cross</source>
+        <translation>Docks against an enemy wall
+Infantry beside it climb up and cross</translation>
+    </message>
+    <message>
+        <source>Ladder</source>
+        <translation>Ladder</translation>
+    </message>
+    <message>
+        <source>Leans on the town side of your wall
+Another way up onto the wall walk</source>
+        <translation>Leans on the town side of your wall
+Another way up onto the wall walk</translation>
+    </message>
+    <message>
+        <source>Build Ladder
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>Build Ladder
 %1
 Cost: %2
 Build time: %3s</translation>
@@ -13113,6 +13321,22 @@ Build time: %3s</translation>
     <message>
         <source>Cannot build there.</source>
         <translation>Cannot build there.</translation>
+    </message>
+    <message>
+        <source>A ladder leans on the town side of your own wall.</source>
+        <translation>A ladder leans on the town side of your own wall.</translation>
+    </message>
+    <message>
+        <source>Ladders go on the town side of the wall, not outside it.</source>
+        <translation>Ladders go on the town side of the wall, not outside it.</translation>
+    </message>
+    <message>
+        <source>This stretch of wall already has a stair.</source>
+        <translation>This stretch of wall already has a stair.</translation>
+    </message>
+    <message>
+        <source>This stretch of wall already has a ladder.</source>
+        <translation>This stretch of wall already has a ladder.</translation>
     </message>
 </context>
 <context>

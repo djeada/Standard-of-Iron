@@ -45,7 +45,8 @@ auto bridge_heads(Engine::Core::World& world, int owner_id) -> std::vector<Bridg
         tower.ramp < 1.0F) {
       continue;
     }
-    auto const* wall_unit = world.try_get<Engine::Core::UnitComponent>(tower.docked_wall_id);
+    auto const* wall_unit =
+        world.try_get<Engine::Core::UnitComponent>(tower.docked_wall_id);
     if (wall_unit == nullptr || wall_unit->health <= 0 ||
         allied(wall_unit->owner_id, owner_id)) {
       continue;
@@ -81,9 +82,9 @@ auto wall_walk_order_at(Engine::Core::World& world,
     } else {
       bool reached = false;
       for (auto const& head : heads) {
-        reached = reached ||
-                  (head.wall_owner == unit.owner_id &&
-                   std::hypot(head.x - node_x, head.z - node_z) <= k_tower_bridge_reach);
+        reached = reached || (head.wall_owner == unit.owner_id &&
+                              std::hypot(head.x - node_x, head.z - node_z) <=
+                                  k_tower_bridge_reach);
       }
       if (!reached) {
         continue;

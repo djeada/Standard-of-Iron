@@ -202,7 +202,8 @@ TEST_F(SiegeTowerSystemTest, TroopClimbsALadderWhereTheWallHasNoStair) {
   auto* ladder_unit = ladder->add_component<UnitComponent>(160, 160, 0.0F, 0.0F);
   ladder_unit->owner_id = k_defender;
   ladder_unit->spawn_type = Game::Units::SpawnType::WallLadder;
-  for (auto [id, wall, wt] : world.view<WallSegmentComponent, const TransformComponent>()) {
+  for (auto [id, wall, wt] :
+       world.view<WallSegmentComponent, const TransformComponent>()) {
     (void)id;
     if (std::abs(wt.position.x + 2.0F) < 0.1F) {
       wall.ladder = WallSegmentComponent::Ladder::Standing;
@@ -234,7 +235,8 @@ TEST_F(SiegeTowerSystemTest, TroopClimbsALadderWhereTheWallHasNoStair) {
     auto const* w = troop->get_component<WallWalkerComponent>();
     ASSERT_NE(w, nullptr);
     highest = std::max(highest, w->elevation);
-    auto const point = WW::project_onto_path(w->path, transform->position.x, transform->position.z);
+    auto const point =
+        WW::project_onto_path(w->path, transform->position.x, transform->position.z);
     steep_seen = steep_seen || point.steep;
   }
   EXPECT_TRUE(steep_seen);

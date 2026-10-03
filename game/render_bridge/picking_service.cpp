@@ -153,14 +153,7 @@ auto PickingService::ray_hits_wall_walk(const Engine::Core::World& world,
                   .world_y
             : transform.position.y;
     float const inward = static_cast<float>(runs_x ? wall.inner_z : wall.inner_x);
-    try_slab(node_x,
-             node_z,
-             base_y,
-             runs_x,
-             inward,
-             -0.22F,
-             0.22F,
-             WW::k_crest_height);
+    try_slab(node_x, node_z, base_y, runs_x, inward, -0.22F, 0.22F, WW::k_crest_height);
     try_slab(node_x,
              node_z,
              base_y,
@@ -224,7 +217,8 @@ auto PickingService::screen_to_ground(const Render::GL::Camera& cam,
     return true;
   }
   float const ground_t = (out_world - ray_origin).length();
-  float const wall_t = ray_hits_wall_walk(*world, terrain, ray_origin, ray_dir, ground_t);
+  float const wall_t =
+      ray_hits_wall_walk(*world, terrain, ray_origin, ray_dir, ground_t);
   if (wall_t >= 0.0F && wall_t < ground_t) {
     out_world = ray_origin + ray_dir * wall_t;
   }

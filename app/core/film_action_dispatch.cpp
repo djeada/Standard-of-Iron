@@ -113,7 +113,8 @@ auto resolve_action_pointer(GameEngine* engine,
     if (camera == nullptr || corners.size() < 4) {
       return std::nullopt;
     }
-    const QVariantMap far = camera->project_world(corners[2], ground_y(corners[2], corners[3]), corners[3]);
+    const QVariantMap far =
+        camera->project_world(corners[2], ground_y(corners[2], corners[3]), corners[3]);
     if (!far.value(QStringLiteral("valid")).toBool()) {
       return std::nullopt;
     }
@@ -129,7 +130,8 @@ auto resolve_action_pointer(GameEngine* engine,
   if (camera == nullptr || numbers.size() < 2) {
     return std::nullopt;
   }
-  const QVariantMap projected = camera->project_world(numbers[0], ground_y(numbers[0], numbers[1]), numbers[1]);
+  const QVariantMap projected =
+      camera->project_world(numbers[0], ground_y(numbers[0], numbers[1]), numbers[1]);
   if (!projected.value(QStringLiteral("valid")).toBool()) {
     return std::nullopt;
   }
@@ -150,7 +152,8 @@ auto resolve_drag_origin(GameEngine* engine,
   if (camera == nullptr || corners.size() < 4) {
     return std::nullopt;
   }
-  const QVariantMap near = camera->project_world(corners[0], ground_y(corners[0], corners[1]), corners[1]);
+  const QVariantMap near =
+      camera->project_world(corners[0], ground_y(corners[0], corners[1]), corners[1]);
   if (!near.value(QStringLiteral("valid")).toBool()) {
     return std::nullopt;
   }
@@ -203,7 +206,8 @@ void apply_benchmark_action(GameEngine* engine,
     if (camera == nullptr || numbers.size() < 2) {
       return;
     }
-    const QVariantMap projected = camera->project_world(numbers[0], ground_y(numbers[0], numbers[1]), numbers[1]);
+    const QVariantMap projected =
+        camera->project_world(numbers[0], ground_y(numbers[0], numbers[1]), numbers[1]);
     if (!projected.value(QStringLiteral("valid")).toBool()) {
       return;
     }

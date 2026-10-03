@@ -30,12 +30,22 @@ auto get_base_max_health(const Engine::Core::UnitComponent* unit)
   return profile.combat.max_health;
 }
 
+auto wall_walker_of(const Engine::Core::Entity* entity)
+    -> const Engine::Core::WallWalkerComponent* {
+  auto const* registry = entity != nullptr ? entity->registry() : nullptr;
+  return registry != nullptr
+             ? registry->try_get<Engine::Core::WallWalkerComponent>(entity->get_id())
+             : nullptr;
+}
+
 // Height a fighter stands at. Terrain alignment already lifts a soldier on a
 // balcony, stair or tower bridge by its walking height.
 auto standing_height(const Engine::Core::Entity* entity) -> std::optional<float> {
+  auto const* registry = entity != nullptr ? entity->registry() : nullptr;
   auto const* transform =
-      entity != nullptr ? entity->get_component<Engine::Core::TransformComponent>()
-                        : nullptr;
+      registry != nullptr
+          ? registry->try_get<Engine::Core::TransformComponent>(entity->get_id())
+          : nullptr;
   if (transform == nullptr) {
     return std::nullopt;
   }
@@ -159,8 +169,11 @@ auto calculate_tactical_damage_multiplier(Engine::Core::Entity* attacker,
 
   if (archer || attacker_type == SpawnType::Spearman) {
     if (is_high_ground_advantage(attacker, target)) {
-      multiplier *= archer ? Constants::k_archer_high_ground_multiplier
-                           : Constants::k_spearman_high_ground_multiplier;
+      auto const* walker = wall_walker_of(attacker);
+      bool const from_wall = walker != nullptr && walker->aloft();
+      multiplier *= from_wall ? Constants::k_wall_walk_high_ground_multiplier
+                    : archer  ? Constants::k_archer_high_ground_multiplier
+                              : Constants::k_spearman_high_ground_multiplier;
     }
   }
 
@@ -169,9 +182,8 @@ auto calculate_tactical_damage_multiplier(Engine::Core::Entity* attacker,
         cover != nullptr && cover->in_forest) {
       multiplier *= Constants::k_forest_ranged_cover_multiplier;
     }
-    auto const* target_walker = target->get_component<Engine::Core::WallWalkerComponent>();
-    auto const* attacker_walker =
-        attacker->get_component<Engine::Core::WallWalkerComponent>();
+    auto const* target_walker = wall_walker_of(target);
+    auto const* attacker_walker = wall_walker_of(attacker);
     if (target_walker != nullptr &&
         target_walker->phase == Engine::Core::WallWalkerComponent::Phase::OnDeck &&
         (attacker_walker == nullptr || !attacker_walker->aloft())) {

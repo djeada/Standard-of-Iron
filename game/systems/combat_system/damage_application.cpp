@@ -226,12 +226,16 @@ resolve_attacker(Engine::Core::World* world,
 }
 
 constexpr float k_ram_roof_ranged_damage_scale = 0.25F;
+// A siege tower's wet hides turn most arrows too; it is pushed up under the
+// wall archers' bows, and it has to arrive.
+constexpr float k_tower_hide_ranged_damage_scale = 0.3F;
 
 auto apply_roof_cover(const Engine::Core::UnitComponent& target,
                       const Engine::Core::Entity* attacker,
                       int damage) -> int {
-  if (target.spawn_type != Game::Units::SpawnType::Ram || attacker == nullptr ||
-      damage <= 0) {
+  bool const ram = target.spawn_type == Game::Units::SpawnType::Ram;
+  bool const tower = target.spawn_type == Game::Units::SpawnType::SiegeTower;
+  if ((!ram && !tower) || attacker == nullptr || damage <= 0) {
     return damage;
   }
   const auto* atk = attacker->get_component<Engine::Core::AttackComponent>();
@@ -242,8 +246,9 @@ auto apply_roof_cover(const Engine::Core::UnitComponent& target,
       atk->current_mode != Engine::Core::AttackComponent::CombatMode::Ranged) {
     return damage;
   }
-  return std::max(
-      1, static_cast<int>(static_cast<float>(damage) * k_ram_roof_ranged_damage_scale));
+  float const scale =
+      ram ? k_ram_roof_ranged_damage_scale : k_tower_hide_ranged_damage_scale;
+  return std::max(1, static_cast<int>(static_cast<float>(damage) * scale));
 }
 
 void drop_dead_preferred_slot(std::optional<std::uint16_t>& preferred_soldier_slot,

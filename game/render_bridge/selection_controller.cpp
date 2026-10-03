@@ -192,15 +192,14 @@ void SelectionController::select_all_player_units_of_type(const QString& unit_ty
     return;
   }
   m_selection_system->clear_selection();
-  for (auto* e : m_world->collect_entities_with<Engine::Core::UnitComponent>()) {
-    auto* unit = e->get_component<Engine::Core::UnitComponent>();
-    if (unit == nullptr || unit->owner_id != local_owner_id || unit->health <= 0 ||
-        e->has_component<Engine::Core::BuildingComponent>()) {
+  for (auto [id, unit] : m_world->view<const Engine::Core::UnitComponent>()) {
+    if (unit.owner_id != local_owner_id || unit.health <= 0 ||
+        m_world->has<Engine::Core::BuildingComponent>(id)) {
       continue;
     }
-    if (QString::fromStdString(Game::Units::spawn_typeToString(unit->spawn_type)) ==
+    if (QString::fromStdString(Game::Units::spawn_typeToString(unit.spawn_type)) ==
         unit_type) {
-      m_selection_system->select_unit(e->get_id());
+      m_selection_system->select_unit(id);
     }
   }
   sync_selection_flags();

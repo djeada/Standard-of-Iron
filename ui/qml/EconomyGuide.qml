@@ -117,7 +117,7 @@ QtObject {
         case "ram":
             return qsTr("Roofed siege engine that breaks gates and walls.");
         case "siege_tower":
-            return qsTr("Carries infantry to a wall and lets them off on top.");
+            return qsTr("Docks against an enemy wall; the infantry beside it climb its ladder and cross onto the wall walk.");
         }
         return "";
     }

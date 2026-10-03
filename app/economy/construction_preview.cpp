@@ -127,7 +127,9 @@ void ConstructionPreview::show_wall_plan(
     return;
   }
 
-  const char* product_type = ladder ? "wall_ladder" : gate ? "wall_gate" : "wall_segment";
+  const char* product_type = ladder ? "wall_ladder"
+                             : gate ? "wall_gate"
+                                    : "wall_segment";
   const QVector3D scale = Game::Units::building_transform_scale(product_type);
 
   for (const auto& segment : segments) {
@@ -151,12 +153,13 @@ void ConstructionPreview::show_wall_plan(
 
     renderable->visible = false;
     renderable->renderer_id =
-        ladder ? Game::Visuals::building_asset_key(owner.nation_id, "wall_ladder")
-               : (gate ? WallNetworkService::resolve_gate_appearance(
-                             owner.nation_id, segment.connection_mask, segment.rotation_y)
-                       : WallNetworkService::resolve_appearance(owner.nation_id,
-                                                                segment.connection_mask))
-                     .renderer_id;
+        ladder
+            ? Game::Visuals::building_asset_key(owner.nation_id, "wall_ladder")
+            : (gate ? WallNetworkService::resolve_gate_appearance(
+                          owner.nation_id, segment.connection_mask, segment.rotation_y)
+                    : WallNetworkService::resolve_appearance(owner.nation_id,
+                                                             segment.connection_mask))
+                  .renderer_id;
 
     preview->owner_id = owner.owner_id;
     preview->nation_id = owner.nation_id;

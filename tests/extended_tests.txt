@@ -41,6 +41,7 @@ BattleSpeedLoadTest.*
 BattlefieldCaptureTest.*
 GateTraversalTest.*
 HillTraversalTest.*
+FortressSiegeTraversalTest.*
 MapCrossingTraversalTest.*
 MovementMotorTest.*
 PlayableGroundTest.*

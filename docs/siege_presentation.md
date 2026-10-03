@@ -74,3 +74,33 @@ build-home/bin/arena_app --scenario siege_carthage_showcase
 The `SiegeMotion.*` tests cover travel, parking, pivot turns, scaled wheel
 circumference, replay/teleport resets, release timing and recoil settling. The
 showcase scenarios also check projectile impact synchronization.
+
+## Walls, ladders and siege towers
+
+The palisade's wall walk is a timber balcony on the town face; its measurements
+live in `game/core/wall_walk_geometry.h` so troops' feet meet the planks. A
+company reaches it by a stair (every fourth straight segment) or by a ladder a
+builder raises. A ladder is a wall piece built like a gate: the builder card
+places it against the town face of one of your own straight wall segments and
+nowhere else (not outside, not on a stretch with a stair or a ladder already).
+Climbers go up a ladder hand over hand in the `climb_ladder` clip, whose phase
+follows each man's height, two rungs a cycle, so hands and feet stay on the
+rungs; they come down facing the rungs and queue a body length apart. After the
+leader steps off, the troop stays in the `Leaving` phase until the rest of the
+file is down.
+
+A siege tower carries no troops of its own. Sent at an enemy wall (a move next
+to it, or an attack order on the wall or gate) it rolls up between two posts,
+squares up and lowers its bridge. Infantry escorting it within 14 m is then
+called up; any idle infantry that later walks up behind a docked tower climbs it
+too, and a docked tower stays a bridge for as long as it stands. Each man walks
+round to the back, climbs the inner ladder, crosses the bridge onto the enemy
+balcony and from there can go down the enemy's stairs into the town. Wet hides
+turn most arrows (ranged damage ×0.3) and rams and towers only ever engage
+structures.
+
+Defenders on a wall walk shoot from height (×1.35 for archers and spearmen
+instead of a hill's ×1.8) and the stakes cover them from arrows shot up from the
+ground (×0.65). A computer-held town posts its idle archers onto the stretch of
+balcony nearest an assault, and once there its commander leaves them as the
+wall's garrison.

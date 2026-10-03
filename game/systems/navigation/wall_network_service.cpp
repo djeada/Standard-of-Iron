@@ -817,8 +817,9 @@ auto nearest_ladder_host(Engine::Core::World& world,
                          float z) -> std::optional<LadderHostCandidate> {
   std::optional<LadderHostCandidate> best;
   float best_score = std::numeric_limits<float>::max();
-  for (auto [id, unit, transform, wall] :
-       world.view<const UnitComponent, const TransformComponent, WallSegmentComponent>()) {
+  for (auto [id, unit, transform, wall] : world.view<const UnitComponent,
+                                                     const TransformComponent,
+                                                     WallSegmentComponent>()) {
     if (unit.owner_id != owner_id || unit.health <= 0 ||
         unit.spawn_type != Game::Units::SpawnType::WallSegment ||
         world.has<PendingRemovalComponent>(id) ||
@@ -833,8 +834,8 @@ auto nearest_ladder_host(Engine::Core::World& world,
     float const dx = x - transform.position.x;
     float const dz = z - transform.position.z;
     float const along = runs_x ? dx : dz;
-    float const across =
-        runs_x ? dz * static_cast<float>(wall.inner_z) : dx * static_cast<float>(wall.inner_x);
+    float const across = runs_x ? dz * static_cast<float>(wall.inner_z)
+                                : dx * static_cast<float>(wall.inner_x);
     if (std::abs(along) > WallWalk::k_ladder_host_reach || across < -3.0F ||
         across > 3.5F) {
       continue;
@@ -880,8 +881,8 @@ void hang_ladders(Engine::Core::World& world) {
     if (!owner.has_value() || transform == nullptr) {
       continue;
     }
-    auto const host =
-        nearest_ladder_host(world, *owner, transform->position.x, transform->position.z);
+    auto const host = nearest_ladder_host(
+        world, *owner, transform->position.x, transform->position.z);
     if (!host.has_value() || host->across < 0.2F) {
       continue;
     }
@@ -914,10 +915,10 @@ auto WallNetworkService::find_ladder_placement(Engine::Core::World& world,
     return out;
   }
   if (host->across < -0.3F) {
-    out.failure_reason =
-        QCoreApplication::translate("WallNetworkService",
-                                    "Ladders go on the town side of the wall, not outside it.")
-            .toStdString();
+    out.failure_reason = QCoreApplication::translate(
+                             "WallNetworkService",
+                             "Ladders go on the town side of the wall, not outside it.")
+                             .toStdString();
     return out;
   }
   if (host->has_stair) {

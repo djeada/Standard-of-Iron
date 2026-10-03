@@ -672,18 +672,18 @@ void HumanoidPoseController::climb_ladder(float cycle_phase) {
   m_pose.pelvis_pos += QVector3D(0.0F, -0.04F - 0.03F * std::abs(s), 0.05F);
   lean(QVector3D(0.0F, 0.0F, 1.0F), 1.0F);
 
-  m_pose.foot_l = QVector3D(-0.11F,
-                            ground + k_rung_lift * left_step,
-                            k_ladder_reach + 0.10F * left_step);
-  m_pose.foot_r = QVector3D(0.11F,
-                            ground + k_rung_lift * right_step,
-                            k_ladder_reach + 0.10F * right_step);
+  m_pose.foot_l = QVector3D(
+      -0.11F, ground + k_rung_lift * left_step, k_ladder_reach + 0.10F * left_step);
+  m_pose.foot_r = QVector3D(
+      0.11F, ground + k_rung_lift * right_step, k_ladder_reach + 0.10F * right_step);
   m_pose.foot_pitch_l = -0.35F * left_step;
   m_pose.foot_pitch_r = -0.35F * right_step;
   QVector3D const hip_l =
-      m_pose.pelvis_pos + QVector3D(-HP::HIP_LATERAL_OFFSET, HP::HIP_VERTICAL_OFFSET, 0.0F);
+      m_pose.pelvis_pos +
+      QVector3D(-HP::HIP_LATERAL_OFFSET, HP::HIP_VERTICAL_OFFSET, 0.0F);
   QVector3D const hip_r =
-      m_pose.pelvis_pos + QVector3D(HP::HIP_LATERAL_OFFSET, HP::HIP_VERTICAL_OFFSET, 0.0F);
+      m_pose.pelvis_pos +
+      QVector3D(HP::HIP_LATERAL_OFFSET, HP::HIP_VERTICAL_OFFSET, 0.0F);
   m_pose.knee_l = solve_knee_ik(Side::Left, hip_l, m_pose.foot_l, 1.0F);
   m_pose.knee_r = solve_knee_ik(Side::Right, hip_r, m_pose.foot_r, 1.0F);
 
@@ -691,8 +691,7 @@ void HumanoidPoseController::climb_ladder(float cycle_phase) {
   constexpr float k_hand_lift = 0.26F;
   place_hand_at(Side::Left,
                 QVector3D(-0.19F, grip_y + k_hand_lift * right_step, 0.44F));
-  place_hand_at(Side::Right,
-                QVector3D(0.19F, grip_y + k_hand_lift * left_step, 0.44F));
+  place_hand_at(Side::Right, QVector3D(0.19F, grip_y + k_hand_lift * left_step, 0.44F));
 }
 
 void HumanoidPoseController::construction_chisel(float work_phase, bool kneeling) {

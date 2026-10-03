@@ -7,8 +7,8 @@
 #include "../../core/component_structures.h"
 #include "../../core/entity.h"
 #include "../../core/world.h"
-#include "../owner_registry.h"
 #include "../../units/spawn_type.h"
+#include "../owner_registry.h"
 
 namespace Game::Systems::Combat {
 

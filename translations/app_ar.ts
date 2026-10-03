@@ -3060,8 +3060,16 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>آلة حصار مسقوفة تحطم الأبواب والأسوار.</translation>
     </message>
     <message>
-        <source>Carries infantry to a wall and lets them off on top.</source>
-        <translation>ينقل المشاة إلى سور وينزلهم على قمته.</translation>
+        <source>Ladder</source>
+        <translation>سلّم</translation>
+    </message>
+    <message>
+        <source>Leans on the town side of your own wall so troops can climb onto the wall walk.</source>
+        <translation>يُسند إلى الجهة الداخلية من سورك ليصعد الجنود إلى ممشى السور.</translation>
+    </message>
+    <message>
+        <source>Docks against an enemy wall; the infantry beside it climb its ladder and cross onto the wall walk.</source>
+        <translation>يلتحم بسور العدو؛ فيتسلّق المشاة المجاورون له سلّمه ويعبرون إلى ممشى السور.</translation>
     </message>
 </context>
 <context>
@@ -3245,6 +3253,10 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>Sepulcher Shrine</source>
         <translation>مزار المدفن</translation>
+    </message>
+    <message>
+        <source>Ladder</source>
+        <translation>سلّم</translation>
     </message>
 </context>
 <context>
@@ -7369,6 +7381,14 @@ to see preview</source>
         <source>A Roman watch camp on the old road, the night it finds out why the shepherds stopped using it. Timber, stone and a flock are close to the camp; the barrow ruins hold the middle ground; the cursed shrine stands alone on the north-east ground. A low knoll between the camp and the barrow is the only high ground worth having, and the road runs past the dead the whole way.</source>
         <translation>معسكر حراسة روماني على الطريق القديم، في الليلة التي يكتشف فيها لماذا كفّ الرعاة عن سلوكه. الخشب والحجر وقطيع من الماشية قريبة من المعسكر؛ وأطلال المدفن تتوسّط الأرض؛ والمزار الملعون يقف وحيدًا في الأرض الشمالية الشرقية. رابية منخفضة بين المعسكر والمدفن هي الأرض المرتفعة الوحيدة التي تستحق الامتلاك، والطريق يمرّ بمحاذاة الموتى طوال الوقت.</translation>
     </message>
+    <message>
+        <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. The lower ward rings the outer crown with a timber curtain and towers; the citadel stands on the upper crown behind its own wall, with the granary and the garrison hall inside it. Three roads climb to the lower ward - from the Punic camp in the south, and from the Placentia road on either flank - and only one ramp climbs from the lower ward to the citadel gate.</source>
+        <translation>بلدة سوق مسوّرة في سهل الإنسوبريين، قائمة على تلّ مزدوج فوق حقول الشتاء. تطوّق المدينة السفلى القمة الخارجية بسور ستارة من الخشب وأبراج؛ وتقوم القلعة على القمة العليا خلف سورها الخاص، وفي داخلها مخزن الحبوب وقاعة الحامية. ثلاث طرق تصعد إلى المدينة السفلى - من المعسكر البوني في الجنوب، ومن طريق بلاسنتيا على الجانبين - ومنحدر واحد فقط يصعد من المدينة السفلى إلى بوابة القلعة.</translation>
+    </message>
+    <message>
+        <source>Victumulae</source>
+        <translation>فيكتومولاي</translation>
+    </message>
 </context>
 <context>
     <name>MatchSetupViewModel</name>
@@ -9402,6 +9422,174 @@ to see preview</source>
         <source>Those are men. Were men. Jupiter keep us. ...Steady. Bones break like anything else. Archers, hold where you stand and let them come to the shields.</source>
         <translation>هؤلاء رجال. كانوا رجالًا. جوبيتر يحفظنا. ...اثبتوا. العظام تنكسر كأيّ شيء آخر. أيها الرماة، الزموا أماكنكم ودعوهم يأتون إلى الدروع.</translation>
     </message>
+    <message>
+        <source>A general alone at the foot of a wall is a target, not a siege.</source>
+        <translation>القائد وحده عند سفح السور هدف، لا حصار.</translation>
+    </message>
+    <message>
+        <source>A set-piece siege: a quiet build-up in the Punic camp, an assault up the south ramp under arrow fire from two rings of wall, and a relief column that arrives on the flank roads while the army is committed against the citadel.</source>
+        <translation>حصار نموذجي: تحضير هادئ في المعسكر البوني، ثم هجوم صاعد على المنحدر الجنوبي تحت سهام حلقتين من الأسوار، ورتل نجدة يصل عبر طرق الجانبين بينما الجيش منشغل بالقلعة.</translation>
+    </message>
+    <message>
+        <source>A wall is not stormed by walking at it. Builders raise the engines: a ram knocks a gate down, a siege tower puts men on the wall walk. Bring both, break one ring at a time, and keep something back for the column that comes to lift the siege.</source>
+        <translation>لا يُقتحم السور بالمشي إليه. يشيّد البنّاؤون الآلات: كبش الهدم يحطّم البوابة، وبرج الحصار يضع الرجال على ممشى السور. أحضر الاثنين، واكسر حلقة بعد حلقة، واحتفظ بشيء احتياطاً للرتل القادم لفكّ الحصار.</translation>
+    </message>
+    <message>
+        <source>A walled market town on a double hill, two rings of wall and one ramp between them. Raise a ram and a siege tower, break into the lower ward, storm the citadel, and kill the praefect who holds it before the relief columns from Placentia arrive.</source>
+        <translation>بلدة سوق مسوّرة على تلّ مزدوج، حلقتان من الأسوار ومنحدر واحد بينهما. شيّد كبش هدم وبرج حصار، واقتحم المدينة السفلى، واستولِ على القلعة، واقتل الوالي الذي يحميها قبل أن تصل أرتال النجدة من بلاسنتيا.</translation>
+    </message>
+    <message>
+        <source>Break both relief columns. A siege that cannot hold its own camp is only a long way of losing.</source>
+        <translation>حطّم رتلي النجدة كليهما. الحصار الذي لا يستطيع حماية معسكره ليس إلا طريقاً طويلاً إلى الهزيمة.</translation>
+    </message>
+    <message>
+        <source>Break into the lower ward</source>
+        <translation>اقتحم المدينة السفلى</translation>
+    </message>
+    <message>
+        <source>Builders raise siege engines. A ram for the gate, a siege tower for the wall walk - one of each gives the assault two ways in.</source>
+        <translation>يشيّد البنّاؤون آلات الحصار. كبش للبوابة وبرج حصار لممشى السور - واحد من كلٍّ منهما يمنح الهجوم طريقين للدخول.</translation>
+    </message>
+    <message>
+        <source>Builders raise the engines in the field. A ram costs 70 wood and 15 iron and breaks gates; a siege tower costs 120 wood and 30 iron and puts men on the wall walk. Build one of each.</source>
+        <translation>يشيّد البنّاؤون الآلات في الميدان. يكلّف كبش الهدم 70 خشباً و15 حديداً ويحطّم البوابات؛ ويكلّف برج الحصار 120 خشباً و30 حديداً ويضع الرجال على ممشى السور. ابنِ واحداً من كلٍّ منهما.</translation>
+    </message>
+    <message>
+        <source>Burn the engines at the foot of the ramp and leave the bodies where they lie. The next army that comes up this road should see what the hill costs.</source>
+        <translation>أحرقوا الآلات عند سفح المنحدر واتركوا الجثث حيث سقطت. ليرَ الجيش التالي الذي يصعد هذا الطريق كم يكلّف هذا التلّ.</translation>
+    </message>
+    <message>
+        <source>Close the citadel gate behind me. If they want the praefect of Victumulae they can climb for him.</source>
+        <translation>أغلقوا بوابة القلعة خلفي. إن أرادوا والي فيكتومولاي فليتسلّقوا إليه.</translation>
+    </message>
+    <message>
+        <source>Every family between here and the Po has carried its grain up that hill, and a praefect from Placentia is sitting on it. We will not starve them out in winter. Builders to the woods - I want a ram and a tower standing in front of this camp before the men get cold.</source>
+        <translation>كل عائلة من هنا حتى نهر البو حملت حبوبها إلى أعلى ذلك التلّ، ووالٍ من بلاسنتيا جالس فوقها. لن نجوّعهم في الشتاء. البنّاؤون إلى الغابات - أريد كبشاً وبرجاً منتصبين أمام هذا المعسكر قبل أن يبرد الرجال.</translation>
+    </message>
+    <message>
+        <source>Gates open only for their owners. Keep the archers behind the engines to answer the men on the wall.</source>
+        <translation>لا تُفتح البوابات إلا لأصحابها. أبقِ الرماة خلف الآلات ليردّوا على الرجال فوق السور.</translation>
+    </message>
+    <message>
+        <source>Hannibal falls under the walls, and the army goes back over the Trebia without him.</source>
+        <translation>يسقط حنبعل تحت الأسوار، ويعود الجيش عبر نهر تريبيا من دونه.</translation>
+    </message>
+    <message>
+        <source>Hannibal, under my wall. Somebody fetch a scribe - Placentia will want this written down twice.</source>
+        <translation>حنبعل تحت سوري. فليُحضر أحدكم كاتباً - ستريد بلاسنتيا أن يُدوَّن هذا مرتين.</translation>
+    </message>
+    <message>
+        <source>He keeps behind the garrison hall, on the north side of the upper crown.</source>
+        <translation>يقيم خلف قاعة الحامية، في الجهة الشمالية من القمة العليا.</translation>
+    </message>
+    <message>
+        <source>Horns on the Placentia road. The relief is here. Turn around, Carthaginian - your camp is about to have visitors.</source>
+        <translation>أبواق على طريق بلاسنتيا. وصلت النجدة. استدر أيها القرطاجي - معسكرك على وشك أن يستقبل زوّاراً.</translation>
+    </message>
+    <message>
+        <source>Kill the praefect</source>
+        <translation>اقتل الوالي</translation>
+    </message>
+    <message>
+        <source>Kill the praefect. While he lives the garrison fights for every street.</source>
+        <translation>اقتل الوالي. ما دام حياً ستقاتل الحامية على كل شارع.</translation>
+    </message>
+    <message>
+        <source>One narrow ramp climbs from the lower ward to the citadel gate. Break that gate as well, and hold the garrison hall&apos;s yard until it falls to Carthage.</source>
+        <translation>منحدر ضيّق واحد يصعد من المدينة السفلى إلى بوابة القلعة. حطّم تلك البوابة أيضاً، وتمسّك بفناء قاعة الحامية حتى تسقط في يد قرطاج.</translation>
+    </message>
+    <message>
+        <source>Raise the siege engines</source>
+        <translation>شيّد آلات الحصار</translation>
+    </message>
+    <message>
+        <source>Scouts on the Placentia road report dust to the north. A relief column is coming down the flank roads.</source>
+        <translation>يبلّغ الكشّافة على طريق بلاسنتيا عن غبار في الشمال. رتل نجدة ينحدر عبر طرق الجانبين.</translation>
+    </message>
+    <message>
+        <source>Select a builder and pick the ram or the siege tower from its build orders. The alder woods either side of the camp give more timber, and the iron outcrop lies just east of it.</source>
+        <translation>اختر بنّاءً واختر كبش الهدم أو برج الحصار من أوامر البناء الخاصة به. تمنح أيكات جار الماء على جانبي المعسكر مزيداً من الخشب، ونتوء الحديد يقع شرقه مباشرة.</translation>
+    </message>
+    <message>
+        <source>Storm the citadel</source>
+        <translation>اقتحم القلعة</translation>
+    </message>
+    <message>
+        <source>Take the citadel. Stand in the garrison hall&apos;s yard on the upper crown until the town is Carthage&apos;s.</source>
+        <translation>استولِ على القلعة. قف في فناء قاعة الحامية على القمة العليا حتى تصبح البلدة لقرطاج.</translation>
+    </message>
+    <message>
+        <source>Take the south ramp under the towers, then put the ram to the south gate or roll the tower against the curtain and send men over it. Get a company inside the outer ring.</source>
+        <translation>استولِ على المنحدر الجنوبي تحت الأبراج، ثم وجّه الكبش إلى البوابة الجنوبية أو ادفع البرج نحو سور الستارة وأرسل الرجال من فوقه. أدخل سرية إلى داخل الحلقة الخارجية.</translation>
+    </message>
+    <message>
+        <source>The Roman commander holds the citadel to the last. Without him the garrison stops being one.</source>
+        <translation>القائد الروماني يتمسّك بالقلعة حتى النهاية. ومن دونه تكفّ الحامية عن أن تكون حامية.</translation>
+    </message>
+    <message>
+        <source>The Storming of Victumulae</source>
+        <translation>اقتحام فيكتومولاي</translation>
+    </message>
+    <message>
+        <source>The assault is spent and there is nobody left to carry a ladder.</source>
+        <translation>استُنفد الهجوم، ولم يبقَ أحد يحمل سلّماً.</translation>
+    </message>
+    <message>
+        <source>The citadel wall is a second ring: bring the ram up the inner ramp, or tower the wall beside the gate.</source>
+        <translation>سور القلعة حلقة ثانية: اصعد بالكبش على المنحدر الداخلي، أو ألصق البرج بالسور بجانب البوابة.</translation>
+    </message>
+    <message>
+        <source>The hall is gone. Keep the granary - eat well, Carthaginian. It is the last full meal you will find between here and Rome.</source>
+        <translation>سقطت القاعة. خذ مخزن الحبوب - كُل جيداً أيها القرطاجي. إنها آخر وجبة مشبعة ستجدها من هنا حتى روما.</translation>
+    </message>
+    <message>
+        <source>The last column from the river</source>
+        <translation>الرتل الأخير من النهر</translation>
+    </message>
+    <message>
+        <source>The praefect is dead. Tell the townspeople they may keep their lives. The grain they may not keep.</source>
+        <translation>مات الوالي. قولوا لأهل البلدة إن لهم أن يحتفظوا بأرواحهم. أما الحبوب فلا.</translation>
+    </message>
+    <message>
+        <source>The relief from Placentia</source>
+        <translation>النجدة من بلاسنتيا</translation>
+    </message>
+    <message>
+        <source>The relief is broken on the road. Back to the hill - the wall has not moved while we were gone.</source>
+        <translation>تحطّمت النجدة على الطريق. عودوا إلى التلّ - لم يتحرك السور ونحن غائبون.</translation>
+    </message>
+    <message>
+        <source>The river garrison is on the road. That is every man Placentia can spare, and a few it cannot.</source>
+        <translation>حامية النهر على الطريق. هؤلاء كل رجل تستطيع بلاسنتيا الاستغناء عنه، وبضعة لا تستطيع.</translation>
+    </message>
+    <message>
+        <source>There they are, on the ramp. Bows to the south curtain. Nobody shoots at the timber; shoot the men pushing it.</source>
+        <translation>ها هم على المنحدر. الأقواس إلى سور الستارة الجنوبي. لا يرمِ أحد الخشب؛ ارموا الرجال الذين يدفعونه.</translation>
+    </message>
+    <message>
+        <source>They are at the wall. Spears to the breach, and someone pour something hot on that engine.</source>
+        <translation>إنهم عند السور. الرماح إلى الثغرة، وليسكب أحدكم شيئاً حارقاً على تلك الآلة.</translation>
+    </message>
+    <message>
+        <source>Two walls, one ramp, and a granary full enough for a year. Come up the hill whenever you like, Carthaginian. My archers have been counting the steps.</source>
+        <translation>سوران ومنحدر واحد ومخزن حبوب يكفي سنة. اصعد التلّ متى شئت أيها القرطاجي. رماتي يعدّون الدرجات.</translation>
+    </message>
+    <message>
+        <source>Victumulae is ours, and its granary with it. The army eats this winter. Let the Gauls see what happens to a town that shuts its gate on Carthage.</source>
+        <translation>فيكتومولاي لنا، ومخزن حبوبها معها. سيأكل الجيش هذا الشتاء. ليرَ الغاليون ما يحلّ ببلدة تغلق بوابتها في وجه قرطاج.</translation>
+    </message>
+    <message>
+        <source>Victumulae stands on a double hill: a lower ward ringed by a curtain and four towers, and a walled citadel on the upper crown. Both gates face the camp road.</source>
+        <translation>تقوم فيكتومولاي على تلّ مزدوج: مدينة سفلى يطوّقها سور ستارة وأربعة أبراج، وقلعة مسوّرة على القمة العليا. وكلتا البوابتين تواجهان طريق المعسكر.</translation>
+    </message>
+    <message>
+        <source>We are feeding men to that ramp. Pull back out of bowshot and wait for the engines; walls do not get tired, but they do not get closer either.</source>
+        <translation>إننا نُطعم ذلك المنحدر رجالاً. تراجعوا إلى ما وراء مرمى السهام وانتظروا الآلات؛ الأسوار لا تتعب، لكنها لا تقترب أيضاً.</translation>
+    </message>
+    <message>
+        <source>Winter 218 BC: after the victory on the Trebia, Hannibal attacked the depot near Placentia and then stormed Victumulae, a fortified market of the Insubrian plain where the people of the district had gathered for safety. Livy records that it fell to assault and was sacked. This altered history gives the town a Roman praefect, a citadel garrison and a relief force on the Placentia road.</source>
+        <translation>شتاء 218 ق.م: بعد النصر على نهر تريبيا، هاجم حنبعل المستودع قرب بلاسنتيا ثم اقتحم فيكتومولاي، وهي سوق محصّنة في سهل الإنسوبريين احتمى بها أهل الناحية. ويروي ليفيوس أنها سقطت عنوةً ونُهبت. وهذا التاريخ المعدَّل يمنح البلدة والياً رومانياً وحامية في القلعة وقوة نجدة على طريق بلاسنتيا.</translation>
+    </message>
 </context>
 <context>
     <name>MissionsScreen</name>
@@ -10536,12 +10724,6 @@ Immune to most arrows</source>
         <translation>برج الحصار</translation>
     </message>
     <message>
-        <source>Carries infantry onto enemy walls
-Docks at a wall</source>
-        <translation>ينقل المشاة إلى أسوار العدو
-يلتحم بالسور</translation>
-    </message>
-    <message>
         <source>Build Battering Ram
 %1
 Cost: %2
@@ -10560,6 +10742,32 @@ Build time: %3s</source>
 %1
 التكلفة: %2
 مدة البناء: %3 ث</translation>
+    </message>
+    <message>
+        <source>Docks against an enemy wall
+Infantry beside it climb up and cross</source>
+        <translation>يلتحم بسور العدو
+يتسلّقه المشاة المجاورون ويعبرون</translation>
+    </message>
+    <message>
+        <source>Ladder</source>
+        <translation>سلّم</translation>
+    </message>
+    <message>
+        <source>Leans on the town side of your wall
+Another way up onto the wall walk</source>
+        <translation>يُسند إلى الجهة الداخلية من سورك
+طريق آخر إلى ممشى السور</translation>
+    </message>
+    <message>
+        <source>Build Ladder
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>ابنِ سلّماً
+%1
+الكلفة: %2
+زمن البناء: %3 ث</translation>
     </message>
 </context>
 <context>
@@ -13129,6 +13337,22 @@ Build time: %3s</source>
     <message>
         <source>Cannot build there.</source>
         <translation>لا يمكن البناء هناك.</translation>
+    </message>
+    <message>
+        <source>A ladder leans on the town side of your own wall.</source>
+        <translation>سلّم مُسند إلى الجهة الداخلية من سورك.</translation>
+    </message>
+    <message>
+        <source>Ladders go on the town side of the wall, not outside it.</source>
+        <translation>توضع السلالم على الجهة الداخلية من السور، لا خارجه.</translation>
+    </message>
+    <message>
+        <source>This stretch of wall already has a stair.</source>
+        <translation>هذا الجزء من السور فيه درج بالفعل.</translation>
+    </message>
+    <message>
+        <source>This stretch of wall already has a ladder.</source>
+        <translation>هذا الجزء من السور فيه سلّم بالفعل.</translation>
     </message>
 </context>
 <context>

@@ -24,9 +24,9 @@
 #include "game/systems/combat_system/combat_hit_resolver.h"
 #include "game/systems/combat_system/damage_application.h"
 #include "game/systems/combat_system/damage_processor.h"
-#include "game/units/squad.h"
 #include "game/systems/movement/command_service.h"
 #include "game/systems/owner_registry.h"
+#include "game/units/squad.h"
 #include "units/spawn_type.h"
 
 namespace Game::Systems {
@@ -888,8 +888,9 @@ void RockfallSystem::strike(Engine::Core::World& world,
   // A boulder only crushes the men in its lane: a couple of soldiers of a
   // company, however many companies stand in its way, and never more than the
   // trap's share of one.
-  float const per_man = static_cast<float>(unit->max_health) /
-                        static_cast<float>(Game::Units::squad_establishment(unit->spawn_type));
+  float const per_man =
+      static_cast<float>(unit->max_health) /
+      static_cast<float>(Game::Units::squad_establishment(unit->spawn_type));
   int const proportional = static_cast<int>(std::ceil(
       std::min(static_cast<float>(unit->max_health) * definition.casualty_fraction,
                per_man * k_men_in_boulder_lane)));

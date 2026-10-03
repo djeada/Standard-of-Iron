@@ -24,7 +24,8 @@ struct PathPoint {
 // A run rises this much per metre walked or more only on a ladder.
 inline constexpr float k_steep_rise = 1.3F;
 
-[[nodiscard]] inline auto segment_is_steep(const Engine::Core::WallWalkSegment& s) -> bool {
+[[nodiscard]] inline auto
+segment_is_steep(const Engine::Core::WallWalkSegment& s) -> bool {
   float const run = std::hypot(s.bx - s.ax, s.bz - s.az);
   return std::abs(s.by - s.ay) > k_steep_rise * run && std::abs(s.by - s.ay) > 0.2F;
 }

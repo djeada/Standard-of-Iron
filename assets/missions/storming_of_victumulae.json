@@ -16,7 +16,7 @@
     "starting_units": [
       {
         "type": "spearman",
-        "count": 4,
+        "count": 6,
         "position": {
           "x": 72.0,
           "z": 130.0
@@ -24,7 +24,7 @@
       },
       {
         "type": "swordsman",
-        "count": 4,
+        "count": 6,
         "position": {
           "x": 88.0,
           "z": 130.0

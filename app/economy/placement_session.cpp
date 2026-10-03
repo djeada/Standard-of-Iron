@@ -112,7 +112,8 @@ void PlacementSession::end() {
 
 auto PlacementSession::is_wall() const -> bool {
   const auto placement_kind = kind();
-  return placement_kind == PlacementKind::Wall || placement_kind == PlacementKind::Gate ||
+  return placement_kind == PlacementKind::Wall ||
+         placement_kind == PlacementKind::Gate ||
          placement_kind == PlacementKind::Ladder;
 }
 

@@ -108,7 +108,7 @@ Rectangle {
         }, {
             "item_type": "siege_tower",
             "label": qsTr("Siege Tower"),
-            "description": qsTr("Carries infantry onto enemy walls\nDocks at a wall"),
+            "description": qsTr("Docks against an enemy wall\nInfantry beside it climb up and cross"),
             "fallback_emoji": ""
         }, {
             "item_type": "defense_tower",
@@ -1728,7 +1728,7 @@ Rectangle {
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Build Siege Tower\n%1\nCost: %2\nBuild time: %3s").arg(qsTr("Carries infantry onto enemy walls\nDocks at a wall")).arg(productionPanel.format_cost_summary(0, builderSiegeTowerCard.construction_info.resource_costs || {}, qsTr("reserve"))).arg((builderSiegeTowerCard.construction_info.build_time || 22).toFixed(0)) : builderSiegeTowerCard.card_state.reason
+                                ToolTip.text: parent.is_enabled ? qsTr("Build Siege Tower\n%1\nCost: %2\nBuild time: %3s").arg(qsTr("Docks against an enemy wall\nInfantry beside it climb up and cross")).arg(productionPanel.format_cost_summary(0, builderSiegeTowerCard.construction_info.resource_costs || {}, qsTr("reserve"))).arg((builderSiegeTowerCard.construction_info.build_time || 22).toFixed(0)) : builderSiegeTowerCard.card_state.reason
                                 ToolTip.delay: 300
                             }
 

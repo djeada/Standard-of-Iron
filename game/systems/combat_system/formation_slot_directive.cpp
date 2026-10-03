@@ -532,10 +532,10 @@ auto arc_along(const Engine::Core::WallWalkSegment* chain,
     float const length = std::sqrt(dx * dx + dz * dz + dy * dy);
     float t = 0.0F;
     if (length > 1.0e-4F) {
-      t = std::clamp(
-          ((x - link.ax) * dx + (z - link.az) * dz + (y - link.ay) * dy) / (length * length),
-          0.0F,
-          1.0F);
+      t = std::clamp(((x - link.ax) * dx + (z - link.az) * dz + (y - link.ay) * dy) /
+                         (length * length),
+                     0.0F,
+                     1.0F);
     }
     float const px = link.ax + dx * t - x;
     float const pz = link.az + dz * t - z;
@@ -573,8 +573,7 @@ auto room_ahead(const Engine::Core::WallWalkSegment* chain,
     if (!arc.has_value()) {
       continue;
     }
-    bool const ahead =
-        *arc > my_arc || (*arc == my_arc && other.slot_index < my_index);
+    bool const ahead = *arc > my_arc || (*arc == my_arc && other.slot_index < my_index);
     if (ahead) {
       room = std::min(room, *arc - my_arc - k_file_gap);
     }
@@ -626,8 +625,12 @@ void pin_to_wall_walk(const EntityFrame& frame,
   std::array<Engine::Core::WallWalkSegment, 4> chain{};
   std::size_t links = 0;
   if (tower_climb) {
-    chain[links++] = {
-        walker->base_x, walker->base_z, 0.0F, walker->door_x, walker->door_z, walker->door_y};
+    chain[links++] = {walker->base_x,
+                      walker->base_z,
+                      0.0F,
+                      walker->door_x,
+                      walker->door_z,
+                      walker->door_y};
   }
   chain[links++] = {walker->door_x,
                     walker->door_z,
@@ -679,7 +682,8 @@ void pin_to_wall_walk(const EntityFrame& frame,
     // under the balcony from the planks over it.
     auto const& down = walker->exit_chain;
     auto const& top = down.front();
-    float const to_top = std::hypot(top.ax - previous->world_x, top.az - previous->world_z);
+    float const to_top =
+        std::hypot(top.ax - previous->world_x, top.az - previous->world_z);
     bool const on_planks = std::abs(previous->elevation - WW::k_deck_height) < 1.0e-4F;
     if (on_planks && to_top > 0.12F) {
       float allowed = k_wall_run_speed * std::max(0.0F, frame.delta_time);
@@ -729,10 +733,10 @@ void pin_to_wall_walk(const EntityFrame& frame,
     }
     bool const ladder = WW::segment_is_steep(down[on_link]);
     float const speed = ladder ? WW::k_ladder_climb_speed : 1.4F;
-    float const room = room_ahead(down.data(), down.size(), arc, slot.original.index, others);
-    arc = std::min({travelled,
-                    arc + speed * std::max(0.0F, frame.delta_time),
-                    arc + room});
+    float const room =
+        room_ahead(down.data(), down.size(), arc, slot.original.index, others);
+    arc = std::min(
+        {travelled, arc + speed * std::max(0.0F, frame.delta_time), arc + room});
     float remaining = arc;
     for (std::size_t i = 0; i < down.size(); ++i) {
       auto const& link = down[i];
@@ -741,7 +745,8 @@ void pin_to_wall_walk(const EntityFrame& frame,
       float const dy = link.by - link.ay;
       float const length = std::sqrt(dx * dx + dz * dz + dy * dy);
       if (remaining <= length || i + 1 == down.size()) {
-        float const t = length > 1.0e-4F ? std::clamp(remaining / length, 0.0F, 1.0F) : 1.0F;
+        float const t =
+            length > 1.0e-4F ? std::clamp(remaining / length, 0.0F, 1.0F) : 1.0F;
         float y = link.ay + dy * t;
         if (std::abs(y - WW::k_deck_height) < 1.0e-3F) {
           // Leaving the planks: never again exactly at deck height.
@@ -750,9 +755,9 @@ void pin_to_wall_walk(const EntityFrame& frame,
         bool const steep = WW::segment_is_steep(link);
         settle(link.ax + dx * t, link.az + dz * t, std::max(y, 0.0F));
         directive.climbing = steep && y > 0.0F;
-        directive.world_yaw =
-            steep ? Game::Systems::yaw_degrees_from_direction(-dx, -dz)
-                  : Game::Systems::yaw_degrees_from_direction(dx, dz);
+        directive.world_yaw = steep
+                                  ? Game::Systems::yaw_degrees_from_direction(-dx, -dz)
+                                  : Game::Systems::yaw_degrees_from_direction(dx, dz);
         return;
       }
       remaining -= length;
@@ -767,8 +772,8 @@ void pin_to_wall_walk(const EntityFrame& frame,
   if (boarding) {
     // Off the chain once a man stands on the planks; until then his height
     // is never exactly the deck's.
-    bool const on_chain =
-        !fresh && std::abs(previous->elevation - WW::k_deck_height) > k_deck_band * 0.5F;
+    bool const on_chain = !fresh && std::abs(previous->elevation - WW::k_deck_height) >
+                                        k_deck_band * 0.5F;
     if (!released || (fresh && !tower_climb)) {
       // Waiting his turn: in the tower door, or where the company halted.
       if (tower_climb && !fresh) {
@@ -840,9 +845,8 @@ void pin_to_wall_walk(const EntityFrame& frame,
       float const speed = climbing_link ? WW::k_tower_climb_speed : k_bridge_speed;
       float const room =
           room_ahead(chain.data(), links, arc, slot.original.index, others);
-      arc = std::min({travelled,
-                      arc + speed * std::max(0.0F, frame.delta_time),
-                      arc + room});
+      arc = std::min(
+          {travelled, arc + speed * std::max(0.0F, frame.delta_time), arc + room});
       float remaining = arc;
       for (std::size_t i = 0; i < links; ++i) {
         auto const& link = chain[i];
@@ -865,9 +869,10 @@ void pin_to_wall_walk(const EntityFrame& frame,
           bool const steep = WW::segment_is_steep(link);
           directive.climbing = steep && !landed;
           directive.world_yaw =
-              steep ? Game::Systems::yaw_degrees_from_direction(
-                          walker->lip_x - walker->base_x, walker->lip_z - walker->base_z)
-                    : Game::Systems::yaw_degrees_from_direction(dx, dz);
+              steep
+                  ? Game::Systems::yaw_degrees_from_direction(
+                        walker->lip_x - walker->base_x, walker->lip_z - walker->base_z)
+                  : Game::Systems::yaw_degrees_from_direction(dx, dz);
           return;
         }
         remaining -= length;
