@@ -434,11 +434,14 @@ TEST(CommanderControlRegressionTest, BarracksRallyPlacementUsesDedicatedCursorMo
   const auto hud_source = read_text(root / "ui" / "qml" / "HUDBottom.qml");
   const auto production_panel_source =
       read_text(root / "ui" / "qml" / "ProductionPanel.qml");
+  const auto rally_section_source =
+      read_text(root / "ui" / "qml" / "ProductionRallySection.qml");
   ASSERT_FALSE(view_model_header.empty());
   ASSERT_FALSE(cursor_mode_header.empty());
   ASSERT_FALSE(game_view_source.empty());
   ASSERT_FALSE(hud_source.empty());
   ASSERT_FALSE(production_panel_source.empty());
+  ASSERT_FALSE(rally_section_source.empty());
 
   EXPECT_TRUE(contains(view_model_header, "Q_INVOKABLE void begin_barracks_rally();"));
   EXPECT_TRUE(contains(view_model_header,
@@ -450,7 +453,7 @@ TEST(CommanderControlRegressionTest, BarracksRallyPlacementUsesDedicatedCursorMo
   EXPECT_TRUE(contains(game_view_source,
                        "game.commander.confirm_barracks_rally(mouse.x, mouse.y);"));
   EXPECT_TRUE(contains(game_view_source, "game.commander.cancel_barracks_rally();"));
-  EXPECT_TRUE(contains(production_panel_source,
+  EXPECT_TRUE(contains(rally_section_source,
                        "gameView.cursor_mode === \"place_barracks_rally\""));
   EXPECT_TRUE(contains(hud_source, "game.commander.begin_barracks_rally();"));
 }

@@ -10203,61 +10203,33 @@ bir harita seç</translation>
     </message>
 </context>
 <context>
-    <name>ProductionPanel</name>
+    <name>ProductionBarracksQueue</name>
     <message>
-        <source>Mounted Knight</source>
-        <translation>Atlı Şövalye</translation>
+        <source>QUEUE</source>
+        <translation>SIRA</translation>
     </message>
     <message>
-        <source>Horse Archer</source>
-        <translation>Atlı Okçu</translation>
+        <source>Barracks reserve: %1 / %2</source>
+        <translation>Kışla yedeği: %1 / %2</translation>
     </message>
     <message>
-        <source>Horse Spearman</source>
-        <translation>Atlı Mızrakçı</translation>
+        <source>%1s</source>
+        <translation>%1sn</translation>
     </message>
     <message>
-        <source>War Elephant</source>
-        <translation>Savaş Fili</translation>
+        <source>Idle</source>
+        <translation>Beklemede</translation>
     </message>
+</context>
+<context>
+    <name>ProductionBarracksRoster</name>
     <message>
-        <source>reserve</source>
-        <translation>yedek</translation>
+        <source>RECRUIT UNITS</source>
+        <translation>BİRİM DEVŞİR</translation>
     </message>
-    <message>
-        <source>Recruit %1
-Cost: %2
-Build time: %3s
-Carthage exclusive</source>
-        <translation>%1 devşir
-Bedel: %2
-İnşa süresi: %3sn
-Kartaca&apos;ya özel</translation>
-    </message>
-    <message>
-        <source>Recruit %1
-Cost: %2
-Build time: %3s</source>
-        <translation>%1 devşir
-Bedel: %2
-İnşa süresi: %3sn</translation>
-    </message>
-    <message>
-        <source>Food</source>
-        <translation>Yiyecek</translation>
-    </message>
-    <message>
-        <source>Wood</source>
-        <translation>Odun</translation>
-    </message>
-    <message>
-        <source>Stone</source>
-        <translation>Taş</translation>
-    </message>
-    <message>
-        <source>Iron</source>
-        <translation>Demir</translation>
-    </message>
+</context>
+<context>
+    <name>ProductionBuilderSection</name>
     <message>
         <source>Catapult</source>
         <translation>Mancınık</translation>
@@ -10329,96 +10301,12 @@ Opens for your troops and allies</source>
 Birliklerine ve müttefiklerine açılır</translation>
     </message>
     <message>
-        <source>Need %1</source>
-        <translation>%1 gerekiyor</translation>
-    </message>
-    <message>
-        <source>%1 %2</source>
-        <translation>%1 %2</translation>
-    </message>
-    <message>
-        <source>Cannot recruit</source>
-        <translation>Devşirilemiyor</translation>
-    </message>
-    <message>
-        <source>Queue is full (5/5)</source>
-        <translation>Sıra dolu (5/5)</translation>
-    </message>
-    <message>
-        <source>Not enough reserve</source>
-        <translation>Yeterli yedek yok</translation>
-    </message>
-    <message>
-        <source>Already building...</source>
-        <translation>Zaten inşa ediliyor...</translation>
-    </message>
-    <message>
-        <source>QUEUE</source>
-        <translation>SIRA</translation>
-    </message>
-    <message>
-        <source>Barracks reserve: %1 / %2</source>
-        <translation>Kışla yedeği: %1 / %2</translation>
-    </message>
-    <message>
         <source>%1s</source>
         <translation>%1sn</translation>
     </message>
     <message>
         <source>Idle</source>
         <translation>Beklemede</translation>
-    </message>
-    <message>
-        <source>RECRUIT UNITS</source>
-        <translation>BİRİM DEVŞİR</translation>
-    </message>
-    <message>
-        <source>HOME RECRUITMENT</source>
-        <translation>EVDE DEVŞİRME</translation>
-    </message>
-    <message>
-        <source>Available civilians: %1 / %2</source>
-        <translation>Elverişli siviller: %1 / %2</translation>
-    </message>
-    <message>
-        <source>Recruit %1
-Cost: %2
-Build time: %3s
-Use Deliver mode, then click a friendly barracks to add to its reserve.</source>
-        <translation>%1 devşir
-Bedel: %2
-İnşa süresi: %3sn
-Teslim et kipini kullan, sonra yedeğine eklemek için dost bir kışlaya tıkla.</translation>
-    </message>
-    <message>
-        <source>families</source>
-        <translation>aile</translation>
-    </message>
-    <message>
-        <source>This home already committed its 3 civilians</source>
-        <translation>Bu ev 3 sivilini çoktan verdi</translation>
-    </message>
-    <message>
-        <source>Click Map to Set Rally</source>
-        <translation>Toplanmayı Belirlemek İçin Haritaya Tıkla</translation>
-    </message>
-    <message>
-        <source>Set Rally Point</source>
-        <translation>Toplanma Noktasını Belirle</translation>
-    </message>
-    <message>
-        <source>Set where newly recruited units will gather.
-Right-click to cancel.</source>
-        <translation>Yeni devşirilen birimlerin toplanacağı yeri belirle.
-İptal için sağ tıkla.</translation>
-    </message>
-    <message>
-        <source>Select a barracks or temple before setting a rally point.</source>
-        <translation>Toplanma noktası belirlemeden önce bir kışla ya da tapınak seç.</translation>
-    </message>
-    <message>
-        <source>Right-click to cancel</source>
-        <translation>İptal için sağ tık</translation>
     </message>
     <message>
         <source>BUILDER CONSTRUCTION</source>
@@ -10571,130 +10459,6 @@ Wide vision and a durable settlement anchor</source>
 Geniş görüş ve dayanıklı bir yerleşim çapası</translation>
     </message>
     <message>
-        <source>MARKETPLACE</source>
-        <translation>PAZAR</translation>
-    </message>
-    <message>
-        <source>Sell %1 %2 for %3 gold</source>
-        <translation>%1 %2 karşılığında %3 altın al</translation>
-    </message>
-    <message>
-        <source>TEMPLE</source>
-        <translation>TAPINAK</translation>
-    </message>
-    <message>
-        <source>The sanctuary of your nation, raised in its own architectural style</source>
-        <translation>Ulusunun kendi mimari üslubunda yükseltilmiş kutsal yeri</translation>
-    </message>
-    <message>
-        <source>Watches over a wide stretch of ground and holds a settlement together</source>
-        <translation>Geniş bir araziyi gözetler ve yerleşimi bir arada tutar</translation>
-    </message>
-    <message>
-        <source>TAKE VOWS</source>
-        <translation>YEMİN ETTİR</translation>
-    </message>
-    <message>
-        <source>Temple reserve: %1 / %2</source>
-        <translation>Tapınak yedeği: %1 / %2</translation>
-    </message>
-    <message>
-        <source>Deliver civilians here to raise the temple&apos;s reserve</source>
-        <translation>Tapınağın yedeğini artırmak için buraya sivil teslim et</translation>
-    </message>
-    <message>
-        <source>FARM</source>
-        <translation>TARLA</translation>
-    </message>
-    <message>
-        <source>Grain ripens every %1s and a builder reaps %2 food from it</source>
-        <translation>Tahıl her %1sn&apos;de bir olgunlaşır ve bir inşaatçı ondan %2 yiyecek biçer</translation>
-    </message>
-    <message>
-        <source>Ripe</source>
-        <translation>Olgun</translation>
-    </message>
-    <message>
-        <source>%1% grown · %2s</source>
-        <translation>%%1 büyüdü · %2sn</translation>
-    </message>
-    <message>
-        <source>Select your farm to see its crop.</source>
-        <translation>Ekinini görmek için tarlanı seç.</translation>
-    </message>
-    <message>
-        <source>A builder is on its way to harvest.</source>
-        <translation>Bir inşaatçı hasat için yolda.</translation>
-    </message>
-    <message>
-        <source>Send a builder with Collect, or leave Auto Gather running.</source>
-        <translation>Topla ile bir inşaatçı yolla ya da Otomatik Topla&apos;yı açık bırak.</translation>
-    </message>
-    <message>
-        <source>Harvested %1 times so far.</source>
-        <translation>Şimdiye dek %1 kez hasat edildi.</translation>
-    </message>
-    <message>
-        <source>No Barracks</source>
-        <translation>Kışla Yok</translation>
-    </message>
-    <message>
-        <source>Select a barracks to recruit units</source>
-        <translation>Birim devşirmek için bir kışla seç</translation>
-    </message>
-    <message>
-        <source>· lots of %1</source>
-        <translation>· %1&apos;lik partiler</translation>
-    </message>
-    <message>
-        <source>Only your own marketplace can trade. Select it to buy or sell.</source>
-        <translation>Yalnızca kendi pazarın ticaret yapabilir. Almak ya da satmak için onu seç.</translation>
-    </message>
-    <message>
-        <source>Buy %1 · %2g</source>
-        <translation>%1 al · %2 a</translation>
-    </message>
-    <message>
-        <source>Sell %1 · +%2g</source>
-        <translation>%1 sat · +%2 a</translation>
-    </message>
-    <message>
-        <source>Spend %1 gold for %2 %3</source>
-        <translation>%2 %3 için %1 altın harca</translation>
-    </message>
-    <message>
-        <source>Not enough gold: %1 needed</source>
-        <translation>Yetersiz altın: %1 gerekli</translation>
-    </message>
-    <message>
-        <source>Not enough %1: %2 needed</source>
-        <translation>Yetersiz %1: %2 gerekli</translation>
-    </message>
-    <message>
-        <source>ALLIES</source>
-        <translation>MÜTTEFİKLER</translation>
-    </message>
-    <message>
-        <source>No allies to trade with in this battle.</source>
-        <translation>Bu savaşta ticaret yapılacak müttefik yok.</translation>
-    </message>
-    <message>
-        <source>Send</source>
-        <translation>Gönder</translation>
-    </message>
-    <message>
-        <source>Give %1 %2 to %3</source>
-        <translation>%3 için %1 %2 ver</translation>
-    </message>
-    <message>
-        <source>Request</source>
-        <translation>İste</translation>
-    </message>
-    <message>
-        <source>Ask %1 for %2 %3. A generous commander with plenty to spare says yes; a warlike or poor one keeps it.</source>
-        <translation>%1 komutanından %2 %3 iste. Fazlası olan cömert bir komutan kabul eder; savaşçı ya da yoksul olan vermez.</translation>
-    </message>
-    <message>
         <source>Battering Ram</source>
         <translation>Koç Başı</translation>
     </message>
@@ -10753,6 +10517,392 @@ Build time: %3s</source>
 %1
 Bedel: %2
 İnşa süresi: %3sn</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionConstructionCard</name>
+    <message>
+        <source>reserve</source>
+        <translation>yedek</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionEmptyHint</name>
+    <message>
+        <source>No Barracks</source>
+        <translation>Kışla Yok</translation>
+    </message>
+    <message>
+        <source>Select a barracks to recruit units</source>
+        <translation>Birim devşirmek için bir kışla seç</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionFarmSection</name>
+    <message>
+        <source>FARM</source>
+        <translation>TARLA</translation>
+    </message>
+    <message>
+        <source>Grain ripens every %1s and a builder reaps %2 food from it</source>
+        <translation>Tahıl her %1sn&apos;de bir olgunlaşır ve bir inşaatçı ondan %2 yiyecek biçer</translation>
+    </message>
+    <message>
+        <source>Ripe</source>
+        <translation>Olgun</translation>
+    </message>
+    <message>
+        <source>%1% grown · %2s</source>
+        <translation>%%1 büyüdü · %2sn</translation>
+    </message>
+    <message>
+        <source>Select your farm to see its crop.</source>
+        <translation>Ekinini görmek için tarlanı seç.</translation>
+    </message>
+    <message>
+        <source>A builder is on its way to harvest.</source>
+        <translation>Bir inşaatçı hasat için yolda.</translation>
+    </message>
+    <message>
+        <source>Send a builder with Collect, or leave Auto Gather running.</source>
+        <translation>Topla ile bir inşaatçı yolla ya da Otomatik Topla&apos;yı açık bırak.</translation>
+    </message>
+    <message>
+        <source>Harvested %1 times so far.</source>
+        <translation>Şimdiye dek %1 kez hasat edildi.</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionHomeSection</name>
+    <message>
+        <source>HOME RECRUITMENT</source>
+        <translation>EVDE DEVŞİRME</translation>
+    </message>
+    <message>
+        <source>Available civilians: %1 / %2</source>
+        <translation>Elverişli siviller: %1 / %2</translation>
+    </message>
+    <message>
+        <source>Recruit %1
+Cost: %2
+Build time: %3s
+Use Deliver mode, then click a friendly barracks to add to its reserve.</source>
+        <translation>%1 devşir
+Bedel: %2
+İnşa süresi: %3sn
+Teslim et kipini kullan, sonra yedeğine eklemek için dost bir kışlaya tıkla.</translation>
+    </message>
+    <message>
+        <source>families</source>
+        <translation>aile</translation>
+    </message>
+    <message>
+        <source>This home already committed its 3 civilians</source>
+        <translation>Bu ev 3 sivilini çoktan verdi</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionMarketplaceSection</name>
+    <message>
+        <source>%1 %2</source>
+        <translation>%1 %2</translation>
+    </message>
+    <message>
+        <source>MARKETPLACE</source>
+        <translation>PAZAR</translation>
+    </message>
+    <message>
+        <source>Sell %1 %2 for %3 gold</source>
+        <translation>%1 %2 karşılığında %3 altın al</translation>
+    </message>
+    <message>
+        <source>· lots of %1</source>
+        <translation>· %1&apos;lik partiler</translation>
+    </message>
+    <message>
+        <source>Only your own marketplace can trade. Select it to buy or sell.</source>
+        <translation>Yalnızca kendi pazarın ticaret yapabilir. Almak ya da satmak için onu seç.</translation>
+    </message>
+    <message>
+        <source>Buy %1 · %2g</source>
+        <translation>%1 al · %2 a</translation>
+    </message>
+    <message>
+        <source>Sell %1 · +%2g</source>
+        <translation>%1 sat · +%2 a</translation>
+    </message>
+    <message>
+        <source>Spend %1 gold for %2 %3</source>
+        <translation>%2 %3 için %1 altın harca</translation>
+    </message>
+    <message>
+        <source>Not enough gold: %1 needed</source>
+        <translation>Yetersiz altın: %1 gerekli</translation>
+    </message>
+    <message>
+        <source>Not enough %1: %2 needed</source>
+        <translation>Yetersiz %1: %2 gerekli</translation>
+    </message>
+    <message>
+        <source>ALLIES</source>
+        <translation>MÜTTEFİKLER</translation>
+    </message>
+    <message>
+        <source>No allies to trade with in this battle.</source>
+        <translation>Bu savaşta ticaret yapılacak müttefik yok.</translation>
+    </message>
+    <message>
+        <source>Send</source>
+        <translation>Gönder</translation>
+    </message>
+    <message>
+        <source>Give %1 %2 to %3</source>
+        <translation>%3 için %1 %2 ver</translation>
+    </message>
+    <message>
+        <source>Request</source>
+        <translation>İste</translation>
+    </message>
+    <message>
+        <source>Ask %1 for %2 %3. A generous commander with plenty to spare says yes; a warlike or poor one keeps it.</source>
+        <translation>%1 komutanından %2 %3 iste. Fazlası olan cömert bir komutan kabul eder; savaşçı ya da yoksul olan vermez.</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionPanel</name>
+    <message>
+        <source>Mounted Knight</source>
+        <translation>Atlı Şövalye</translation>
+    </message>
+    <message>
+        <source>Horse Archer</source>
+        <translation>Atlı Okçu</translation>
+    </message>
+    <message>
+        <source>Horse Spearman</source>
+        <translation>Atlı Mızrakçı</translation>
+    </message>
+    <message>
+        <source>War Elephant</source>
+        <translation>Savaş Fili</translation>
+    </message>
+    <message>
+        <source>reserve</source>
+        <translation>yedek</translation>
+    </message>
+    <message>
+        <source>Recruit %1
+Cost: %2
+Build time: %3s
+Carthage exclusive</source>
+        <translation>%1 devşir
+Bedel: %2
+İnşa süresi: %3sn
+Kartaca&apos;ya özel</translation>
+    </message>
+    <message>
+        <source>Recruit %1
+Cost: %2
+Build time: %3s</source>
+        <translation>%1 devşir
+Bedel: %2
+İnşa süresi: %3sn</translation>
+    </message>
+    <message>
+        <source>Food</source>
+        <translation>Yiyecek</translation>
+    </message>
+    <message>
+        <source>Wood</source>
+        <translation>Odun</translation>
+    </message>
+    <message>
+        <source>Stone</source>
+        <translation>Taş</translation>
+    </message>
+    <message>
+        <source>Iron</source>
+        <translation>Demir</translation>
+    </message>
+    <message>
+        <source>Catapult</source>
+        <translation>Mancınık</translation>
+    </message>
+    <message>
+        <source>Long-range siege weapon
+Effective against structures</source>
+        <translation>Uzun menzilli kuşatma silahı
+Yapılara karşı etkili</translation>
+    </message>
+    <message>
+        <source>Ballista</source>
+        <translation>Balista</translation>
+    </message>
+    <message>
+        <source>Precision siege weapon
+Effective against units</source>
+        <translation>İsabetli kuşatma silahı
+Birimlere karşı etkili</translation>
+    </message>
+    <message>
+        <source>Defense Tower</source>
+        <translation>Savunma Kulesi</translation>
+    </message>
+    <message>
+        <source>Stationary defense structure
+Shoots arrows at enemies</source>
+        <translation>Sabit savunma yapısı
+Düşmanlara ok atar</translation>
+    </message>
+    <message>
+        <source>Home</source>
+        <translation>Ev</translation>
+    </message>
+    <message>
+        <source>Residential building
+Adds +50 reserve to the nearest barracks</source>
+        <translation>Konut yapısı
+En yakın kışlaya +50 yedek ekler</translation>
+    </message>
+    <message>
+        <source>Marketplace</source>
+        <translation>Pazar</translation>
+    </message>
+    <message>
+        <source>Trade building
+Buy or sell resources for gold</source>
+        <translation>Ticaret yapısı
+Altın karşılığı kaynak al ya da sat</translation>
+    </message>
+    <message>
+        <source>Wall Segment</source>
+        <translation>Sur Parçası</translation>
+    </message>
+    <message>
+        <source>Wooden defensive wall
+Blocks enemy movement</source>
+        <translation>Ahşap savunma duvarı
+Düşman hareketini engeller</translation>
+    </message>
+    <message>
+        <source>Wall Gate</source>
+        <translation>Sur Kapısı</translation>
+    </message>
+    <message>
+        <source>Gated opening in a wall
+Opens for your troops and allies</source>
+        <translation>Bir surdaki kapılı açıklık
+Birliklerine ve müttefiklerine açılır</translation>
+    </message>
+    <message>
+        <source>Need %1</source>
+        <translation>%1 gerekiyor</translation>
+    </message>
+    <message>
+        <source>%1 %2</source>
+        <translation>%1 %2</translation>
+    </message>
+    <message>
+        <source>Cannot recruit</source>
+        <translation>Devşirilemiyor</translation>
+    </message>
+    <message>
+        <source>Queue is full (5/5)</source>
+        <translation>Sıra dolu (5/5)</translation>
+    </message>
+    <message>
+        <source>Not enough reserve</source>
+        <translation>Yeterli yedek yok</translation>
+    </message>
+    <message>
+        <source>Already building...</source>
+        <translation>Zaten inşa ediliyor...</translation>
+    </message>
+    <message>
+        <source>Battering Ram</source>
+        <translation>Koç Başı</translation>
+    </message>
+    <message>
+        <source>Gate-breaking siege engine
+Immune to most arrows</source>
+        <translation>Kapı kıran kuşatma makinesi
+Okların çoğuna karşı dayanıklı</translation>
+    </message>
+    <message>
+        <source>Siege Tower</source>
+        <translation>Kuşatma Kulesi</translation>
+    </message>
+    <message>
+        <source>Docks against an enemy wall
+Infantry beside it climb up and cross</source>
+        <translation>Düşman suruna yanaşır
+Yanındaki piyade tırmanıp geçer</translation>
+    </message>
+    <message>
+        <source>Ladder</source>
+        <translation>Merdiven</translation>
+    </message>
+    <message>
+        <source>Leans on the town side of your wall
+Another way up onto the wall walk</source>
+        <translation>Surunun şehir tarafına dayanır
+Sur yoluna bir başka çıkış</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionRallySection</name>
+    <message>
+        <source>Click Map to Set Rally</source>
+        <translation>Toplanmayı Belirlemek İçin Haritaya Tıkla</translation>
+    </message>
+    <message>
+        <source>Set Rally Point</source>
+        <translation>Toplanma Noktasını Belirle</translation>
+    </message>
+    <message>
+        <source>Set where newly recruited units will gather.
+Right-click to cancel.</source>
+        <translation>Yeni devşirilen birimlerin toplanacağı yeri belirle.
+İptal için sağ tıkla.</translation>
+    </message>
+    <message>
+        <source>Select a barracks or temple before setting a rally point.</source>
+        <translation>Toplanma noktası belirlemeden önce bir kışla ya da tapınak seç.</translation>
+    </message>
+    <message>
+        <source>Right-click to cancel</source>
+        <translation>İptal için sağ tık</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionTempleSection</name>
+    <message>
+        <source>%1s</source>
+        <translation>%1sn</translation>
+    </message>
+    <message>
+        <source>TEMPLE</source>
+        <translation>TAPINAK</translation>
+    </message>
+    <message>
+        <source>The sanctuary of your nation, raised in its own architectural style</source>
+        <translation>Ulusunun kendi mimari üslubunda yükseltilmiş kutsal yeri</translation>
+    </message>
+    <message>
+        <source>Watches over a wide stretch of ground and holds a settlement together</source>
+        <translation>Geniş bir araziyi gözetler ve yerleşimi bir arada tutar</translation>
+    </message>
+    <message>
+        <source>TAKE VOWS</source>
+        <translation>YEMİN ETTİR</translation>
+    </message>
+    <message>
+        <source>Temple reserve: %1 / %2</source>
+        <translation>Tapınak yedeği: %1 / %2</translation>
+    </message>
+    <message>
+        <source>Deliver civilians here to raise the temple&apos;s reserve</source>
+        <translation>Tapınağın yedeğini artırmak için buraya sivil teslim et</translation>
     </message>
 </context>
 <context>

@@ -10218,49 +10218,33 @@ to see preview</source>
     </message>
 </context>
 <context>
-    <name>ProductionPanel</name>
+    <name>ProductionBarracksQueue</name>
+    <message>
+        <source>%1s</source>
+        <translation>%1 ث</translation>
+    </message>
+    <message>
+        <source>Idle</source>
+        <translation>خامل</translation>
+    </message>
+    <message>
+        <source>Barracks reserve: %1 / %2</source>
+        <translation>احتياطي الثكنة: %1 / %2</translation>
+    </message>
+    <message>
+        <source>QUEUE</source>
+        <translation>الطابور</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionBarracksRoster</name>
     <message>
         <source>RECRUIT UNITS</source>
         <translation>تجنيد الوحدات</translation>
     </message>
-    <message>
-        <source>Queue is full (5/5)</source>
-        <translation>الطابور ممتلئ (5/5)</translation>
-    </message>
-    <message>
-        <source>Cannot recruit</source>
-        <translation>تعذّر التجنيد</translation>
-    </message>
-    <message>
-        <source>Set where newly recruited units will gather.
-Right-click to cancel.</source>
-        <translation>حدّد أين تتجمع الوحدات المجنّدة حديثاً.
-النقر الأيمن للإلغاء.</translation>
-    </message>
-    <message>
-        <source>Right-click to cancel</source>
-        <translation>النقر الأيمن للإلغاء</translation>
-    </message>
-    <message>
-        <source>No Barracks</source>
-        <translation>لا توجد ثكنة</translation>
-    </message>
-    <message>
-        <source>Select a barracks to recruit units</source>
-        <translation>اختر ثكنة لتجنيد الوحدات</translation>
-    </message>
-    <message>
-        <source>Wood</source>
-        <translation>خشب</translation>
-    </message>
-    <message>
-        <source>Stone</source>
-        <translation>حجر</translation>
-    </message>
-    <message>
-        <source>Iron</source>
-        <translation>حديد</translation>
-    </message>
+</context>
+<context>
+    <name>ProductionBuilderSection</name>
     <message>
         <source>Catapult</source>
         <translation>منجنيق</translation>
@@ -10332,80 +10316,12 @@ Opens for your troops and allies</source>
 تُفتح لقواتك وحلفائك</translation>
     </message>
     <message>
-        <source>%1 %2</source>
-        <translation>%1 %2</translation>
-    </message>
-    <message>
-        <source>Not enough reserve</source>
-        <translation>الاحتياطي لا يكفي</translation>
-    </message>
-    <message>
-        <source>Already building...</source>
-        <translation>قيد البناء بالفعل...</translation>
-    </message>
-    <message>
         <source>%1s</source>
         <translation>%1 ث</translation>
     </message>
     <message>
         <source>Idle</source>
         <translation>خامل</translation>
-    </message>
-    <message>
-        <source>Recruit %1
-Cost: %2
-Build time: %3s</source>
-        <translation>جنّد %1
-الكلفة: %2
-زمن الإنتاج: %3 ث</translation>
-    </message>
-    <message>
-        <source>reserve</source>
-        <translation>الاحتياطي</translation>
-    </message>
-    <message>
-        <source>Recruit %1
-Cost: %2
-Build time: %3s
-Carthage exclusive</source>
-        <translation>جنّد %1
-الكلفة: %2
-زمن الإنتاج: %3 ث
-حصري لقرطاج</translation>
-    </message>
-    <message>
-        <source>HOME RECRUITMENT</source>
-        <translation>التجنيد من المساكن</translation>
-    </message>
-    <message>
-        <source>Available civilians: %1 / %2</source>
-        <translation>المدنيون المتاحون: %1 / %2</translation>
-    </message>
-    <message>
-        <source>Recruit %1
-Cost: %2
-Build time: %3s
-Use Deliver mode, then click a friendly barracks to add to its reserve.</source>
-        <translation>جنّد %1
-الكلفة: %2
-زمن الإنتاج: %3 ث
-استخدم وضع التوصيل ثم انقر على ثكنة صديقة لزيادة احتياطيها.</translation>
-    </message>
-    <message>
-        <source>families</source>
-        <translation>عائلات</translation>
-    </message>
-    <message>
-        <source>This home already committed its 3 civilians</source>
-        <translation>هذا المسكن قدّم مدنييه الثلاثة بالفعل</translation>
-    </message>
-    <message>
-        <source>Click Map to Set Rally</source>
-        <translation>انقر على الخريطة لتحديد نقطة التجميع</translation>
-    </message>
-    <message>
-        <source>Set Rally Point</source>
-        <translation>تحديد نقطة التجميع</translation>
     </message>
     <message>
         <source>BUILDER CONSTRUCTION</source>
@@ -10506,30 +10422,6 @@ Build time: %3s</source>
 زمن البناء: %3 ث</translation>
     </message>
     <message>
-        <source>MARKETPLACE</source>
-        <translation>السوق</translation>
-    </message>
-    <message>
-        <source>Sell %1 %2 for %3 gold</source>
-        <translation>بِع %1 %2 مقابل %3 من الذهب</translation>
-    </message>
-    <message>
-        <source>Mounted Knight</source>
-        <translation>فارس مدرَّع</translation>
-    </message>
-    <message>
-        <source>Horse Archer</source>
-        <translation>رامٍ فارس</translation>
-    </message>
-    <message>
-        <source>Horse Spearman</source>
-        <translation>رامح فارس</translation>
-    </message>
-    <message>
-        <source>War Elephant</source>
-        <translation>فيل حرب</translation>
-    </message>
-    <message>
         <source>Temple</source>
         <translation>معبد</translation>
     </message>
@@ -10548,26 +10440,6 @@ Build time: %3s</source>
 Wide vision and a durable settlement anchor</source>
         <translation>حرم الأمة
 رؤية واسعة ومرتكز متين للمستوطنة</translation>
-    </message>
-    <message>
-        <source>TEMPLE</source>
-        <translation>المعبد</translation>
-    </message>
-    <message>
-        <source>The sanctuary of your nation, raised in its own architectural style</source>
-        <translation>حرم أمتك، مشيَّد على طرازها المعماري</translation>
-    </message>
-    <message>
-        <source>Watches over a wide stretch of ground and holds a settlement together</source>
-        <translation>يشرف على رقعة واسعة من الأرض ويشدّ المستوطنة إلى بعضها</translation>
-    </message>
-    <message>
-        <source>Food</source>
-        <translation>طعام</translation>
-    </message>
-    <message>
-        <source>Need %1</source>
-        <translation>تحتاج: %1</translation>
     </message>
     <message>
         <source>Build siege weapons, structures, and gather wood, stone, iron, and food</source>
@@ -10600,114 +10472,6 @@ Build time: %3s</source>
 Builders reap it for the food that recruits civilians</source>
         <translation>تزرع الحبوب في دورات
 يحصدها البنّاؤون طعامًا لتجنيد المدنيين</translation>
-    </message>
-    <message>
-        <source>FARM</source>
-        <translation>مزرعة</translation>
-    </message>
-    <message>
-        <source>Grain ripens every %1s and a builder reaps %2 food from it</source>
-        <translation>تنضج الحبوب كل %1 ثانية ويحصد البنّاء منها %2 طعام</translation>
-    </message>
-    <message>
-        <source>Ripe</source>
-        <translation>ناضج</translation>
-    </message>
-    <message>
-        <source>%1% grown · %2s</source>
-        <translation>نما %1٪ · %2 ث</translation>
-    </message>
-    <message>
-        <source>Select your farm to see its crop.</source>
-        <translation>اختر مزرعتك لرؤية محصولها.</translation>
-    </message>
-    <message>
-        <source>A builder is on its way to harvest.</source>
-        <translation>بنّاء في طريقه للحصاد.</translation>
-    </message>
-    <message>
-        <source>Send a builder with Collect, or leave Auto Gather running.</source>
-        <translation>أرسل بنّاءً بأمر جمع، أو اترك الجمع التلقائي يعمل.</translation>
-    </message>
-    <message>
-        <source>Harvested %1 times so far.</source>
-        <translation>حُصدت %1 مرة حتى الآن.</translation>
-    </message>
-    <message>
-        <source>Select a barracks or temple before setting a rally point.</source>
-        <translation>اختر ثكنة أو معبدًا قبل تعيين نقطة تجمّع.</translation>
-    </message>
-    <message>
-        <source>TAKE VOWS</source>
-        <translation>نذر العهد</translation>
-    </message>
-    <message>
-        <source>Deliver civilians here to raise the temple&apos;s reserve</source>
-        <translation>سلّم المدنيين هنا لزيادة الاحتياطي للمعبد</translation>
-    </message>
-    <message>
-        <source>Barracks reserve: %1 / %2</source>
-        <translation>احتياطي الثكنة: %1 / %2</translation>
-    </message>
-    <message>
-        <source>Temple reserve: %1 / %2</source>
-        <translation>احتياطي المعبد: %1 / %2</translation>
-    </message>
-    <message>
-        <source>QUEUE</source>
-        <translation>الطابور</translation>
-    </message>
-    <message>
-        <source>· lots of %1</source>
-        <translation>· دفعات من %1</translation>
-    </message>
-    <message>
-        <source>Only your own marketplace can trade. Select it to buy or sell.</source>
-        <translation>لا يتاجر إلا سوقك أنت. حدّده للشراء أو البيع.</translation>
-    </message>
-    <message>
-        <source>Buy %1 · %2g</source>
-        <translation>شراء %1 · %2 ذ</translation>
-    </message>
-    <message>
-        <source>Sell %1 · +%2g</source>
-        <translation>بيع %1 · +%2 ذ</translation>
-    </message>
-    <message>
-        <source>Spend %1 gold for %2 %3</source>
-        <translation>أنفق %1 ذهبًا مقابل %2 من %3</translation>
-    </message>
-    <message>
-        <source>Not enough gold: %1 needed</source>
-        <translation>ذهب غير كافٍ: يلزم %1</translation>
-    </message>
-    <message>
-        <source>Not enough %1: %2 needed</source>
-        <translation>%1 غير كافٍ: يلزم %2</translation>
-    </message>
-    <message>
-        <source>ALLIES</source>
-        <translation>الحلفاء</translation>
-    </message>
-    <message>
-        <source>No allies to trade with in this battle.</source>
-        <translation>لا حلفاء للتبادل معهم في هذه المعركة.</translation>
-    </message>
-    <message>
-        <source>Send</source>
-        <translation>أرسل</translation>
-    </message>
-    <message>
-        <source>Give %1 %2 to %3</source>
-        <translation>امنح %3 ‏%1 %2</translation>
-    </message>
-    <message>
-        <source>Request</source>
-        <translation>اطلب</translation>
-    </message>
-    <message>
-        <source>Ask %1 for %2 %3. A generous commander with plenty to spare says yes; a warlike or poor one keeps it.</source>
-        <translation>اطلب من %1 ‏%2 %3. القائد الكريم ذو الفائض يوافق؛ والمحارب أو الفقير يحتفظ به.</translation>
     </message>
     <message>
         <source>Battering Ram</source>
@@ -10768,6 +10532,392 @@ Build time: %3s</source>
 %1
 الكلفة: %2
 زمن البناء: %3 ث</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionConstructionCard</name>
+    <message>
+        <source>reserve</source>
+        <translation>الاحتياطي</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionEmptyHint</name>
+    <message>
+        <source>No Barracks</source>
+        <translation>لا توجد ثكنة</translation>
+    </message>
+    <message>
+        <source>Select a barracks to recruit units</source>
+        <translation>اختر ثكنة لتجنيد الوحدات</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionFarmSection</name>
+    <message>
+        <source>FARM</source>
+        <translation>مزرعة</translation>
+    </message>
+    <message>
+        <source>Grain ripens every %1s and a builder reaps %2 food from it</source>
+        <translation>تنضج الحبوب كل %1 ثانية ويحصد البنّاء منها %2 طعام</translation>
+    </message>
+    <message>
+        <source>Ripe</source>
+        <translation>ناضج</translation>
+    </message>
+    <message>
+        <source>%1% grown · %2s</source>
+        <translation>نما %1٪ · %2 ث</translation>
+    </message>
+    <message>
+        <source>Select your farm to see its crop.</source>
+        <translation>اختر مزرعتك لرؤية محصولها.</translation>
+    </message>
+    <message>
+        <source>A builder is on its way to harvest.</source>
+        <translation>بنّاء في طريقه للحصاد.</translation>
+    </message>
+    <message>
+        <source>Send a builder with Collect, or leave Auto Gather running.</source>
+        <translation>أرسل بنّاءً بأمر جمع، أو اترك الجمع التلقائي يعمل.</translation>
+    </message>
+    <message>
+        <source>Harvested %1 times so far.</source>
+        <translation>حُصدت %1 مرة حتى الآن.</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionHomeSection</name>
+    <message>
+        <source>HOME RECRUITMENT</source>
+        <translation>التجنيد من المساكن</translation>
+    </message>
+    <message>
+        <source>Available civilians: %1 / %2</source>
+        <translation>المدنيون المتاحون: %1 / %2</translation>
+    </message>
+    <message>
+        <source>Recruit %1
+Cost: %2
+Build time: %3s
+Use Deliver mode, then click a friendly barracks to add to its reserve.</source>
+        <translation>جنّد %1
+الكلفة: %2
+زمن الإنتاج: %3 ث
+استخدم وضع التوصيل ثم انقر على ثكنة صديقة لزيادة احتياطيها.</translation>
+    </message>
+    <message>
+        <source>families</source>
+        <translation>عائلات</translation>
+    </message>
+    <message>
+        <source>This home already committed its 3 civilians</source>
+        <translation>هذا المسكن قدّم مدنييه الثلاثة بالفعل</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionMarketplaceSection</name>
+    <message>
+        <source>%1 %2</source>
+        <translation>%1 %2</translation>
+    </message>
+    <message>
+        <source>MARKETPLACE</source>
+        <translation>السوق</translation>
+    </message>
+    <message>
+        <source>Sell %1 %2 for %3 gold</source>
+        <translation>بِع %1 %2 مقابل %3 من الذهب</translation>
+    </message>
+    <message>
+        <source>· lots of %1</source>
+        <translation>· دفعات من %1</translation>
+    </message>
+    <message>
+        <source>Only your own marketplace can trade. Select it to buy or sell.</source>
+        <translation>لا يتاجر إلا سوقك أنت. حدّده للشراء أو البيع.</translation>
+    </message>
+    <message>
+        <source>Buy %1 · %2g</source>
+        <translation>شراء %1 · %2 ذ</translation>
+    </message>
+    <message>
+        <source>Sell %1 · +%2g</source>
+        <translation>بيع %1 · +%2 ذ</translation>
+    </message>
+    <message>
+        <source>Spend %1 gold for %2 %3</source>
+        <translation>أنفق %1 ذهبًا مقابل %2 من %3</translation>
+    </message>
+    <message>
+        <source>Not enough gold: %1 needed</source>
+        <translation>ذهب غير كافٍ: يلزم %1</translation>
+    </message>
+    <message>
+        <source>Not enough %1: %2 needed</source>
+        <translation>%1 غير كافٍ: يلزم %2</translation>
+    </message>
+    <message>
+        <source>ALLIES</source>
+        <translation>الحلفاء</translation>
+    </message>
+    <message>
+        <source>No allies to trade with in this battle.</source>
+        <translation>لا حلفاء للتبادل معهم في هذه المعركة.</translation>
+    </message>
+    <message>
+        <source>Send</source>
+        <translation>أرسل</translation>
+    </message>
+    <message>
+        <source>Give %1 %2 to %3</source>
+        <translation>امنح %3 ‏%1 %2</translation>
+    </message>
+    <message>
+        <source>Request</source>
+        <translation>اطلب</translation>
+    </message>
+    <message>
+        <source>Ask %1 for %2 %3. A generous commander with plenty to spare says yes; a warlike or poor one keeps it.</source>
+        <translation>اطلب من %1 ‏%2 %3. القائد الكريم ذو الفائض يوافق؛ والمحارب أو الفقير يحتفظ به.</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionPanel</name>
+    <message>
+        <source>Queue is full (5/5)</source>
+        <translation>الطابور ممتلئ (5/5)</translation>
+    </message>
+    <message>
+        <source>Cannot recruit</source>
+        <translation>تعذّر التجنيد</translation>
+    </message>
+    <message>
+        <source>Wood</source>
+        <translation>خشب</translation>
+    </message>
+    <message>
+        <source>Stone</source>
+        <translation>حجر</translation>
+    </message>
+    <message>
+        <source>Iron</source>
+        <translation>حديد</translation>
+    </message>
+    <message>
+        <source>Catapult</source>
+        <translation>منجنيق</translation>
+    </message>
+    <message>
+        <source>Long-range siege weapon
+Effective against structures</source>
+        <translation>سلاح حصار بعيد المدى
+فعّال ضد المباني</translation>
+    </message>
+    <message>
+        <source>Ballista</source>
+        <translation>بالِستا</translation>
+    </message>
+    <message>
+        <source>Precision siege weapon
+Effective against units</source>
+        <translation>سلاح حصار دقيق
+فعّال ضد الوحدات</translation>
+    </message>
+    <message>
+        <source>Defense Tower</source>
+        <translation>برج دفاعي</translation>
+    </message>
+    <message>
+        <source>Stationary defense structure
+Shoots arrows at enemies</source>
+        <translation>بناء دفاعي ثابت
+يرمي السهام على الأعداء</translation>
+    </message>
+    <message>
+        <source>Home</source>
+        <translation>مسكن</translation>
+    </message>
+    <message>
+        <source>Residential building
+Adds +50 reserve to the nearest barracks</source>
+        <translation>مبنى سكني
+يضيف 50+ إلى احتياطي أقرب ثكنة</translation>
+    </message>
+    <message>
+        <source>Marketplace</source>
+        <translation>سوق</translation>
+    </message>
+    <message>
+        <source>Trade building
+Buy or sell resources for gold</source>
+        <translation>مبنى تجاري
+اشترِ الموارد أو بعها مقابل الذهب</translation>
+    </message>
+    <message>
+        <source>Wall Segment</source>
+        <translation>مقطع سور</translation>
+    </message>
+    <message>
+        <source>Wooden defensive wall
+Blocks enemy movement</source>
+        <translation>سور دفاعي خشبي
+يمنع حركة العدو</translation>
+    </message>
+    <message>
+        <source>Wall Gate</source>
+        <translation>بوابة سور</translation>
+    </message>
+    <message>
+        <source>Gated opening in a wall
+Opens for your troops and allies</source>
+        <translation>فتحة مبوَّبة في السور
+تُفتح لقواتك وحلفائك</translation>
+    </message>
+    <message>
+        <source>%1 %2</source>
+        <translation>%1 %2</translation>
+    </message>
+    <message>
+        <source>Not enough reserve</source>
+        <translation>الاحتياطي لا يكفي</translation>
+    </message>
+    <message>
+        <source>Already building...</source>
+        <translation>قيد البناء بالفعل...</translation>
+    </message>
+    <message>
+        <source>Recruit %1
+Cost: %2
+Build time: %3s</source>
+        <translation>جنّد %1
+الكلفة: %2
+زمن الإنتاج: %3 ث</translation>
+    </message>
+    <message>
+        <source>reserve</source>
+        <translation>الاحتياطي</translation>
+    </message>
+    <message>
+        <source>Recruit %1
+Cost: %2
+Build time: %3s
+Carthage exclusive</source>
+        <translation>جنّد %1
+الكلفة: %2
+زمن الإنتاج: %3 ث
+حصري لقرطاج</translation>
+    </message>
+    <message>
+        <source>Mounted Knight</source>
+        <translation>فارس مدرَّع</translation>
+    </message>
+    <message>
+        <source>Horse Archer</source>
+        <translation>رامٍ فارس</translation>
+    </message>
+    <message>
+        <source>Horse Spearman</source>
+        <translation>رامح فارس</translation>
+    </message>
+    <message>
+        <source>War Elephant</source>
+        <translation>فيل حرب</translation>
+    </message>
+    <message>
+        <source>Food</source>
+        <translation>طعام</translation>
+    </message>
+    <message>
+        <source>Need %1</source>
+        <translation>تحتاج: %1</translation>
+    </message>
+    <message>
+        <source>Battering Ram</source>
+        <translation>كبش الهدم</translation>
+    </message>
+    <message>
+        <source>Gate-breaking siege engine
+Immune to most arrows</source>
+        <translation>آلة حصار تحطم الأبواب
+محصنة ضد معظم السهام</translation>
+    </message>
+    <message>
+        <source>Siege Tower</source>
+        <translation>برج الحصار</translation>
+    </message>
+    <message>
+        <source>Docks against an enemy wall
+Infantry beside it climb up and cross</source>
+        <translation>يلتحم بسور العدو
+يتسلّقه المشاة المجاورون ويعبرون</translation>
+    </message>
+    <message>
+        <source>Ladder</source>
+        <translation>سلّم</translation>
+    </message>
+    <message>
+        <source>Leans on the town side of your wall
+Another way up onto the wall walk</source>
+        <translation>يُسند إلى الجهة الداخلية من سورك
+طريق آخر إلى ممشى السور</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionRallySection</name>
+    <message>
+        <source>Set where newly recruited units will gather.
+Right-click to cancel.</source>
+        <translation>حدّد أين تتجمع الوحدات المجنّدة حديثاً.
+النقر الأيمن للإلغاء.</translation>
+    </message>
+    <message>
+        <source>Right-click to cancel</source>
+        <translation>النقر الأيمن للإلغاء</translation>
+    </message>
+    <message>
+        <source>Click Map to Set Rally</source>
+        <translation>انقر على الخريطة لتحديد نقطة التجميع</translation>
+    </message>
+    <message>
+        <source>Set Rally Point</source>
+        <translation>تحديد نقطة التجميع</translation>
+    </message>
+    <message>
+        <source>Select a barracks or temple before setting a rally point.</source>
+        <translation>اختر ثكنة أو معبدًا قبل تعيين نقطة تجمّع.</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionTempleSection</name>
+    <message>
+        <source>%1s</source>
+        <translation>%1 ث</translation>
+    </message>
+    <message>
+        <source>TEMPLE</source>
+        <translation>المعبد</translation>
+    </message>
+    <message>
+        <source>The sanctuary of your nation, raised in its own architectural style</source>
+        <translation>حرم أمتك، مشيَّد على طرازها المعماري</translation>
+    </message>
+    <message>
+        <source>Watches over a wide stretch of ground and holds a settlement together</source>
+        <translation>يشرف على رقعة واسعة من الأرض ويشدّ المستوطنة إلى بعضها</translation>
+    </message>
+    <message>
+        <source>TAKE VOWS</source>
+        <translation>نذر العهد</translation>
+    </message>
+    <message>
+        <source>Deliver civilians here to raise the temple&apos;s reserve</source>
+        <translation>سلّم المدنيين هنا لزيادة الاحتياطي للمعبد</translation>
+    </message>
+    <message>
+        <source>Temple reserve: %1 / %2</source>
+        <translation>احتياطي المعبد: %1 / %2</translation>
     </message>
 </context>
 <context>

@@ -95,6 +95,16 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/FormationStatusBadge.qml
             ui/qml/HintCard.qml
             ui/qml/ProductionPanel.qml
+            ui/qml/ProductionBarracksQueue.qml
+            ui/qml/ProductionBarracksRoster.qml
+            ui/qml/ProductionHomeSection.qml
+            ui/qml/ProductionRallySection.qml
+            ui/qml/ProductionBuilderSection.qml
+            ui/qml/ProductionConstructionCard.qml
+            ui/qml/ProductionMarketplaceSection.qml
+            ui/qml/ProductionTempleSection.qml
+            ui/qml/ProductionFarmSection.qml
+            ui/qml/ProductionEmptyHint.qml
             ui/qml/SaveGamePanel.qml
             ui/qml/LoadGamePanel.qml
             ui/qml/SaveSlotRow.qml
