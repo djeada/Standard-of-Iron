@@ -5,6 +5,9 @@ add_executable(
     app_tests
     ${SOI_TRANSLATIONS_QRC}
     app/benchmark_action_fixture_test.cpp
+    app/achievement_tracker_test.cpp
+    app/match_stats_reporter_test.cpp
+    app/session_timeline_test.cpp
     core/audio_system_test.cpp
     world/ambient_state_hysteresis_test.cpp
     core/audio_cues_test.cpp
