@@ -7373,12 +7373,12 @@ by zobaczyć podgląd</translation>
         <translation>Rzymski obóz strażniczy przy starej drodze, w noc, gdy dowiaduje się, czemu pasterze przestali nią chodzić. Drewno, kamień i stado są blisko obozu; ruiny grobowca zajmują środek; przeklęta kapliczka stoi samotnie na północnym wschodzie. Niski pagórek między obozem a grobowcem to jedyne wzniesienie warte zajęcia, a droga przez całą długość biegnie obok umarłych.</translation>
     </message>
     <message>
-        <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. The lower ward rings the outer crown with a timber curtain and towers; the citadel stands on the upper crown behind its own wall, with the granary and the garrison hall inside it. Three roads climb to the lower ward - from the Punic camp in the south, and from the Placentia road on either flank - and only one ramp climbs from the lower ward to the citadel gate.</source>
-        <translation>Obwarowane miasto targowe na równinie Insubrów, wzniesione na podwójnym wzgórzu ponad zimowymi polami. Dolne miasto otacza zewnętrzny szczyt drewnianą kurtyną i wieżami; cytadela stoi na górnym szczycie za własnym murem, a w jej obrębie spichlerz i dom załogi. Trzy drogi pną się do dolnego miasta - z obozu punickiego na południu i z drogi do Placentii po obu flankach - i tylko jedna rampa prowadzi z dolnego miasta do bramy cytadeli.</translation>
-    </message>
-    <message>
         <source>Victumulae</source>
         <translation>Victumulae</translation>
+    </message>
+    <message>
+        <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. A timber curtain with a tower at every corner rings the lower ward; the citadel stands on the upper crown behind its own wall, with the garrison hall inside it. One graded ramp climbs from the camp road to the south gate, and one narrow ramp climbs from the lower ward to the citadel gate. The relief columns come down the flank roads and never touch the hill.</source>
+        <translation>Obwarowane miasto targowe na równinie Insubrów, wzniesione na podwójnym wzgórzu ponad zimowymi polami. Drewniana kurtyna z wieżą w każdym narożniku opasuje dolny gród; cytadela stoi na górnym szczycie za własnym murem, a w jej wnętrzu mieści się sala garnizonu. Jedna wyrównana rampa wspina się od drogi obozowej do bramy południowej, a jedna wąska rampa wiedzie z dolnego grodu do bramy cytadeli. Kolumny odsieczy schodzą bocznymi drogami i nigdy nie dotykają wzgórza.</translation>
     </message>
 </context>
 <context>

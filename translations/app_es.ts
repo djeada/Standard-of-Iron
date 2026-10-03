@@ -7370,12 +7370,12 @@ para ver la vista previa</translation>
         <translation>Un campamento de guardia romano en el viejo camino, la noche en que descubre por qué los pastores dejaron de usarlo. Madera, piedra y un rebaño quedan cerca del campamento; las ruinas del sepulcro ocupan el terreno central; el santuario maldito se alza solo en el terreno del noreste. Un otero bajo entre el campamento y el sepulcro es la única altura que vale la pena, y el camino pasa junto a los muertos todo el trayecto.</translation>
     </message>
     <message>
-        <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. The lower ward rings the outer crown with a timber curtain and towers; the citadel stands on the upper crown behind its own wall, with the granary and the garrison hall inside it. Three roads climb to the lower ward - from the Punic camp in the south, and from the Placentia road on either flank - and only one ramp climbs from the lower ward to the citadel gate.</source>
-        <translation>Una villa mercado amurallada de la llanura ínsubre, alzada sobre una doble colina por encima de los campos invernales. El recinto bajo rodea la cima exterior con una cortina de madera y torres; la ciudadela se alza en la cima superior tras su propia muralla, con el granero y la sala de la guarnición dentro. Tres caminos suben al recinto bajo - desde el campamento púnico al sur y desde el camino de Placencia por ambos flancos - y una sola rampa sube del recinto bajo a la puerta de la ciudadela.</translation>
-    </message>
-    <message>
         <source>Victumulae</source>
         <translation>Victumulae</translation>
+    </message>
+    <message>
+        <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. A timber curtain with a tower at every corner rings the lower ward; the citadel stands on the upper crown behind its own wall, with the garrison hall inside it. One graded ramp climbs from the camp road to the south gate, and one narrow ramp climbs from the lower ward to the citadel gate. The relief columns come down the flank roads and never touch the hill.</source>
+        <translation>Una ciudad mercado amurallada de la llanura insubra, alzada sobre una doble colina por encima de los campos de invierno. Una cortina de madera con una torre en cada esquina rodea el recinto inferior; la ciudadela se alza en la cima superior tras su propia muralla, con el salón de la guarnición en su interior. Una sola rampa trazada sube desde el camino del campamento hasta la puerta sur, y una rampa estrecha sube desde el recinto inferior hasta la puerta de la ciudadela. Las columnas de socorro bajan por los caminos de los flancos y nunca tocan la colina.</translation>
     </message>
 </context>
 <context>

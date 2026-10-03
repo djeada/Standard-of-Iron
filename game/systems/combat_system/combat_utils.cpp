@@ -217,6 +217,14 @@ auto guard_post_of(const Engine::Core::Entity* entity) -> std::optional<QVector3
 auto guard_reach_of(const Engine::Core::Entity* entity) -> std::optional<GuardReach> {
   auto const post = guard_post_of(entity);
   if (!post.has_value()) {
+    if (auto const* ai =
+            entity == nullptr
+                ? nullptr
+                : entity->get_component<Engine::Core::AIControlledComponent>();
+        ai != nullptr && ai->leashed()) {
+      return GuardReach{
+          ai->leash_x, ai->leash_z, 0.0F, true, ai->leash_half_x, ai->leash_half_z};
+    }
     return std::nullopt;
   }
   auto const* guard =
@@ -238,6 +246,11 @@ auto within_guard_reach(const Engine::Core::Entity* entity,
   }
   float const dx = x - reach->center_x;
   float const dz = z - reach->center_z;
+  if (reach->boxed) {
+    float const slack = std::max(0.0F, margin);
+    return std::abs(dx) <= reach->half_x + slack &&
+           std::abs(dz) <= reach->half_z + slack;
+  }
   float const radius = reach->radius + std::max(0.0F, margin);
   return (dx * dx) + (dz * dz) <= radius * radius;
 }

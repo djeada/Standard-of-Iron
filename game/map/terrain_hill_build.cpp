@@ -54,8 +54,12 @@ void HillStamp::place_footprint() {
   cos_a = std::cos(angle_rad);
   sin_a = std::sin(angle_rad);
 
-  crown_profile = Game::Map::hill_crown_profile(
-      footprint, feature.height, L.tile_size, campaign_landform_scale, feature.crown);
+  crown_profile = Game::Map::hill_crown_profile(footprint,
+                                                feature.height,
+                                                L.tile_size,
+                                                campaign_landform_scale,
+                                                feature.crown,
+                                                feature.exact_height);
   hill_height = crown_profile.height;
 }
 

@@ -190,6 +190,11 @@ auto find_free_site(const AISnapshot& snapshot,
       if (!site_is_free(snapshot, building_type, candidate_x, candidate_z)) {
         continue;
       }
+      if (context.strategy_config.posture == AIPosture::Garrison && snapshot.has_ward &&
+          (std::abs(candidate_x - snapshot.ward_x) > snapshot.ward_half_x ||
+           std::abs(candidate_z - snapshot.ward_z) > snapshot.ward_half_z)) {
+        continue;
+      }
       if (plan_reserves_ground(context,
                                snapshot,
                                building_type,

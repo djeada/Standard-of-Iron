@@ -9,6 +9,25 @@ may change in any release — see [Save compatibility](#save-compatibility).
 
 ## [Unreleased]
 
+### Changed
+
+- **The Storming of Victumulae is a fortress you besiege.** The town is a square
+  timber curtain with a tower at every corner and one gate, a walled citadel on an
+  inner crown, and a garrison of archers on the wall walk, spears and swords behind
+  the gate, and reserves in the plaza. The hill has a single graded ramp to the
+  south gate instead of four ramps cut straight through its cliffs (three of them
+  ending at a blank wall), and a new `exact_height` hill field lets a campaign map
+  author a ramp that is about 24 degrees instead of 50. The ground, light and
+  haze are clearer.
+- **A garrison AI stays behind its walls.** Its soldiers stop pursuing at the strip
+  outside the gate instead of chasing survivors down the ramp, its builders no
+  longer walk out to chop timber or lay farms on the plain, its defence no longer
+  marches out to the nearest enemy on the map, and its archers climb to the wall
+  walk and hold it.
+- **The commander's speech card no longer covers the minimap.** On a short window
+  it shrinks the spoken line to the room between the minimap and the bottom bar
+  instead of sliding up over the map, and a wide window gives it a wider column.
+
 ## [0.2.0] — 2026-09-27
 
 ### Added

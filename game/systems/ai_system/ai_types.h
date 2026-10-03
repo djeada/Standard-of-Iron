@@ -198,6 +198,8 @@ struct EntitySnapshot {
   bool engaged = false;
 
   bool fighting_troops = false;
+  // On its way up to (or down from) a wall walk.
+  bool on_wall_stair = false;
 
   float pos_x = 0.0F;
   float pos_y = 0.0F;
@@ -231,6 +233,11 @@ struct ContactSnapshot {
   int health = 0;
   int max_health = 0;
   Game::Units::SpawnType spawn_type = Game::Units::SpawnType::Archer;
+};
+
+struct WallPostSnapshot {
+  float pos_x = 0.0F;
+  float pos_z = 0.0F;
 };
 
 struct GoldVeinSnapshot {
@@ -274,6 +281,17 @@ struct AISnapshot {
   std::vector<ContactSnapshot> defense_anchors;
   std::vector<GoldVeinSnapshot> gold_veins;
   std::vector<ResourceNodeSnapshot> resource_nodes;
+  // Where a company can stand on the AI's own wall walk, and where its troops
+  // already do. The garrison of a walled town is posted from these.
+  std::vector<WallPostSnapshot> wall_posts;
+  std::vector<WallPostSnapshot> wall_garrison;
+  // The ground inside the AI's own walls, with the strip outside them that its
+  // garrison will fight on.
+  bool has_ward = false;
+  float ward_x = 0.0F;
+  float ward_z = 0.0F;
+  float ward_half_x = 0.0F;
+  float ward_half_z = 0.0F;
   ResourceAmounts resources;
   bool has_resource_snapshot = false;
 

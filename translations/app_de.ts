@@ -7370,12 +7370,12 @@ um die Vorschau zu sehen</translation>
         <translation>Ein römisches Wachlager an der alten Straße, in der Nacht, in der es erfährt, warum die Hirten sie nicht mehr benutzen. Holz, Stein und eine Herde liegen nahe am Lager; die Grabmal-Ruinen halten die Mitte; der verfluchte Schrein steht allein auf dem Gelände im Nordosten. Eine flache Kuppe zwischen Lager und Grabmal ist die einzige Anhöhe, die sich lohnt, und die Straße führt den ganzen Weg an den Toten vorbei.</translation>
     </message>
     <message>
-        <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. The lower ward rings the outer crown with a timber curtain and towers; the citadel stands on the upper crown behind its own wall, with the granary and the garrison hall inside it. Three roads climb to the lower ward - from the Punic camp in the south, and from the Placentia road on either flank - and only one ramp climbs from the lower ward to the citadel gate.</source>
-        <translation>Eine ummauerte Marktstadt der insubrischen Ebene, auf einem Doppelhügel über den winterlichen Feldern errichtet. Die Unterstadt umgibt die äußere Kuppe mit einem hölzernen Mauerzug und Türmen; die Zitadelle steht auf der oberen Kuppe hinter ihrer eigenen Mauer, mit dem Kornspeicher und der Garnisonshalle darin. Drei Straßen steigen zur Unterstadt hinauf - vom punischen Lager im Süden und von der Straße nach Placentia an beiden Flanken -, und nur eine einzige Rampe führt von der Unterstadt zum Zitadellentor.</translation>
-    </message>
-    <message>
         <source>Victumulae</source>
         <translation>Victumulae</translation>
+    </message>
+    <message>
+        <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. A timber curtain with a tower at every corner rings the lower ward; the citadel stands on the upper crown behind its own wall, with the garrison hall inside it. One graded ramp climbs from the camp road to the south gate, and one narrow ramp climbs from the lower ward to the citadel gate. The relief columns come down the flank roads and never touch the hill.</source>
+        <translation>Eine ummauerte Marktstadt der insubrischen Ebene, auf einem Doppelhügel über den winterlichen Feldern errichtet. Ein hölzerner Mauerzug mit einem Turm an jeder Ecke umgibt die Unterstadt; die Zitadelle steht auf der oberen Kuppe hinter ihrer eigenen Mauer, mit der Garnisonshalle darin. Eine einzige angelegte Rampe führt von der Lagerstraße zum Südtor, und eine schmale Rampe führt von der Unterstadt zum Zitadellentor. Die Entsatzkolonnen kommen über die Flankenstraßen und berühren den Hügel nie.</translation>
     </message>
 </context>
 <context>

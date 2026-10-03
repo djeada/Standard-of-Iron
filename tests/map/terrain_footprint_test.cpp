@@ -122,3 +122,19 @@ TEST(TerrainFootprintTest, CampaignRadiusHillsStretchAndSpinDeterministically) {
   EXPECT_GE(first.rotation_deg, 0.0F);
   EXPECT_LE(first.rotation_deg, 180.0F);
 }
+
+TEST(TerrainFootprintTest, ExactHeightLetsACampaignHillStayLowEnoughToClimb) {
+  const Game::Map::FootprintCells footprint = Game::Map::hill_footprint_cells(
+      {.width = 110.0F, .depth = 84.0F, .tile_size = 1.0F, .campaign_scale = true});
+
+  const auto floored =
+      Game::Map::hill_crown_profile(footprint, 2.6F, 1.0F, true, 0.85F, false);
+  const auto exact =
+      Game::Map::hill_crown_profile(footprint, 2.6F, 1.0F, true, 0.85F, true);
+
+  EXPECT_FLOAT_EQ(floored.height, 84.0F * 0.18F)
+      << "a campaign hill rises at least a fixed fraction of its width";
+  EXPECT_FLOAT_EQ(exact.height, 2.6F * Game::Map::k_campaign_hill_height_scale)
+      << "an authored exact height was floored by the footprint rule";
+  EXPECT_LT(exact.height, floored.height);
+}
