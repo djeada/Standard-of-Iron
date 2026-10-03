@@ -1523,8 +1523,9 @@ TEST(RenderArchetypeBuildings, RomanWallCornerBuildsArmsOnlyTowardsNeighbours) {
 
   EXPECT_NEAR(bounds.max.x(), k_wall_cell_half, k_wall_seam_epsilon);
   EXPECT_NEAR(bounds.min.z(), -k_wall_cell_half, k_wall_seam_epsilon);
-  EXPECT_GT(bounds.min.x(), -0.4F);
-  EXPECT_LT(bounds.max.z(), 0.4F);
+  // Only the earthwork bank spreads the other way, never a full arm.
+  EXPECT_GT(bounds.min.x(), -0.6F);
+  EXPECT_LT(bounds.max.z(), 0.6F);
 }
 
 TEST(RenderArchetypeBuildings, RomanWallCornerMeetsStraightNeighboursAtCellSeams) {

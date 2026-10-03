@@ -35,6 +35,10 @@ public:
   static void bind_surface(const Game::Map::TerrainService* terrain,
                            const Engine::Core::World* world);
   static void unbind_surface(const Engine::Core::World* world);
+  // Height of the bound surface at (x, z): the terrain, or the planks of a wall
+  // walk standing there; 0 when nothing is bound. The inverse of
+  // screen_to_ground, for projecting a world point the way the pick sees it.
+  static auto surface_height_at(float world_x, float world_z) -> float;
 
   auto update_hover(float sx,
                     float sy,

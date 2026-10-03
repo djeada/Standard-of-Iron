@@ -110,6 +110,7 @@ auto classify_attack_target(Engine::Core::World* world,
   case Combat::TargetRefusal::Passive:
   case Combat::TargetRefusal::Structure:
   case Combat::TargetRefusal::Warded:
+  case Combat::TargetRefusal::NotAStructure:
     return AttackTargetVerdict::Neutral;
   case Combat::TargetRefusal::None:
     break;

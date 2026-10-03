@@ -78,6 +78,26 @@ void PickingService::unbind_surface(const Engine::Core::World* world) {
   }
 }
 
+auto PickingService::surface_height_at(float world_x, float world_z) -> float {
+  auto const* terrain = g_bound_terrain.load();
+  auto const* world = g_bound_world.load();
+  float height = 0.0F;
+  if (terrain != nullptr && terrain->is_initialized()) {
+    height = terrain->sample_surface_height(world_x, world_z).world_y;
+  }
+  if (world != nullptr) {
+    // A vertical ray from above finds the planks if there are any.
+    constexpr float k_above = 50.0F;
+    QVector3D const origin(world_x, height + k_above, world_z);
+    float const t = ray_hits_wall_walk(
+        *world, terrain, origin, QVector3D(0.0F, -1.0F, 0.0F), k_above);
+    if (t >= 0.0F) {
+      height = std::max(height, origin.y() - t);
+    }
+  }
+  return height;
+}
+
 auto PickingService::ray_hits_wall_walk(const Engine::Core::World& world,
                                         const Game::Map::TerrainService* terrain,
                                         const QVector3D& origin,

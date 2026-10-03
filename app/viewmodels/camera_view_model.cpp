@@ -8,6 +8,7 @@
 #include "app/input/input_command_handler.h"
 #include "app/input/rts_camera_controller.h"
 #include "app/utils/engine_view_helpers.h"
+#include "game/render_bridge/picking_service.h"
 #include "scene/camera.h"
 
 namespace App::ViewModels {
@@ -195,7 +196,9 @@ void CameraViewModel::look_at_world(float x, float z) {
   if (camera == nullptr) {
     return;
   }
-  const QVector3D target(x, 0.0F, z);
+  // Aim at the ground actually there - a hill crown or a wall walk - so the
+  // camera frames it instead of a point buried under it.
+  const QVector3D target(x, Game::Systems::PickingService::surface_height_at(x, z), z);
   const QVector3D offset = camera->get_position() - camera->get_target();
   camera->look_at(target + offset, target, camera->get_up_vector());
   set_following_selection(false);

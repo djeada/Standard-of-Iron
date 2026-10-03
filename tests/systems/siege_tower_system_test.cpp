@@ -303,15 +303,20 @@ TEST_F(SiegeTowerSystemTest, WallWalkerFollowsTheBalconyAndLeavesByTheStair) {
 
   Game::Systems::CommandService::move_unit(world, troop->get_id(), {4.0F, 0.0F, 14.0F});
   bool descended = false;
+  bool leaving = false;
   float lowest = WW::k_deck_height;
-  for (int i = 0; i < 400 && troop->has_component<WallWalkerComponent>(); ++i) {
+  // Once the leader is down the troop keeps to the stair while the rest of the
+  // file comes off the wall; nothing walks it away here, so it waits that out.
+  for (int i = 0; i < 800 && troop->has_component<WallWalkerComponent>(); ++i) {
     walkers.update(&world, 0.1F);
     if (auto const* w = troop->get_component<WallWalkerComponent>()) {
       descended = descended || w->phase == WallWalkerComponent::Phase::Descending;
+      leaving = leaving || w->phase == WallWalkerComponent::Phase::Leaving;
       lowest = std::min(lowest, w->elevation);
     }
   }
   EXPECT_TRUE(descended);
+  EXPECT_TRUE(leaving);
   EXPECT_FALSE(troop->has_component<WallWalkerComponent>());
   EXPECT_LT(lowest, 0.2F);
   auto const foot = WW::stair_foot(4.0F, 0.0F, 0, 1);

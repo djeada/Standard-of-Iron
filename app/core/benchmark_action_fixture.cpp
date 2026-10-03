@@ -21,6 +21,7 @@ auto action_names() -> QStringList {
   return {QStringLiteral("select_all"),
           QStringLiteral("select_at"),
           QStringLiteral("select_by_type"),
+          QStringLiteral("select_owned_type"),
           QStringLiteral("move_to"),
           QStringLiteral("attack_at"),
           QStringLiteral("guard_at"),

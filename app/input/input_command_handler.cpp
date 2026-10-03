@@ -508,6 +508,14 @@ void InputCommandHandler::select_all_troops(int local_owner_id) {
   }
 }
 
+void InputCommandHandler::select_all_units_of_type(const QString& unit_type,
+                                                   int local_owner_id) {
+  if (m_is_spectator_mode || m_selection_controller == nullptr) {
+    return;
+  }
+  m_selection_controller->select_all_player_units_of_type(unit_type, local_owner_id);
+}
+
 void InputCommandHandler::select_unit_by_id(Engine::Core::EntityID unit_id,
                                             int local_owner_id) {
   if (m_is_spectator_mode) {

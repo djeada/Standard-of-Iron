@@ -24,6 +24,7 @@
 #include "game/systems/combat_system/combat_hit_resolver.h"
 #include "game/systems/combat_system/damage_application.h"
 #include "game/systems/combat_system/damage_processor.h"
+#include "game/units/squad.h"
 #include "game/systems/movement/command_service.h"
 #include "game/systems/owner_registry.h"
 #include "units/spawn_type.h"
@@ -56,6 +57,7 @@ constexpr float k_push_speed = 2.5F;
 // Speed at which a boulder deals exactly its trap's damage.
 constexpr float k_reference_speed = 9.0F;
 constexpr float k_momentum_kept_per_strike = 0.82F;
+constexpr float k_men_in_boulder_lane = 2.5F;
 // A boulder this far above a troop's ground bounds over its heads.
 constexpr float k_overhead_clearance = 1.6F;
 constexpr float k_dust_lifetime = 1.3F;
@@ -255,7 +257,9 @@ void RockfallSystem::stage_hill_caches() {
     definition.release_spread = 1.6F;
     definition.release_interval = 0.22F;
     definition.damage = 60;
-    definition.casualty_fraction = 0.5F;
+    // As deadly as an authored trap: a volley down a crowded ramp should cost
+    // an assault dearly, not erase the army climbing it.
+    definition.casualty_fraction = Game::Map::RockfallTrap{}.casualty_fraction;
     definition.ai_min_targets = 1;
     add_trap(definition, cache, foot, true);
   }
@@ -880,9 +884,15 @@ void RockfallSystem::strike(Engine::Core::World& world,
       boulder.trap_index >= 0 && boulder.trap_index < static_cast<int>(m_traps.size())
           ? m_traps[static_cast<std::size_t>(boulder.trap_index)].definition
           : fallback;
-  float const momentum = std::clamp(speed / k_reference_speed, 0.45F, 1.5F);
-  int const proportional = static_cast<int>(
-      std::ceil(static_cast<float>(unit->max_health) * definition.casualty_fraction));
+  float const momentum = std::clamp(speed / k_reference_speed, 0.45F, 1.25F);
+  // A boulder only crushes the men in its lane: a couple of soldiers of a
+  // company, however many companies stand in its way, and never more than the
+  // trap's share of one.
+  float const per_man = static_cast<float>(unit->max_health) /
+                        static_cast<float>(Game::Units::squad_establishment(unit->spawn_type));
+  int const proportional = static_cast<int>(std::ceil(
+      std::min(static_cast<float>(unit->max_health) * definition.casualty_fraction,
+               per_man * k_men_in_boulder_lane)));
   int const damage = std::max(
       1,
       static_cast<int>(std::round(

@@ -695,6 +695,46 @@ void Camera::update(float dt) {
   integrate_pan(dt);
   integrate_zoom(dt);
   integrate_orbit(dt);
+  integrate_ground_follow(dt);
+}
+
+// The RTS camera looks at the ground under its target: over a hill or a mound
+// the whole rig eases up onto the crown, so the view stays as far from what it
+// shows as the zoom says, and the centre of the screen is the ground there
+// rather than a point buried inside the hill.
+void Camera::integrate_ground_follow(float dt) {
+  if (!m_rts_constraints || !m_ground_height_sampler || dt <= 0.0F) {
+    return;
+  }
+  constexpr float k_sample_spacing = 3.0F;
+  constexpr float k_follow_rate = 5.0F;
+  float sum = 0.0F;
+  int samples = 0;
+  for (int dx = -1; dx <= 1; ++dx) {
+    for (int dz = -1; dz <= 1; ++dz) {
+      float const h = m_ground_height_sampler(
+          m_target.x() + static_cast<float>(dx) * k_sample_spacing,
+          m_target.z() + static_cast<float>(dz) * k_sample_spacing);
+      if (qIsFinite(h)) {
+        sum += h;
+        ++samples;
+      }
+    }
+  }
+  if (samples == 0) {
+    return;
+  }
+  float const goal = sum / static_cast<float>(samples);
+  float const delta = goal - m_target.y();
+  if (std::abs(delta) < 1.0e-3F) {
+    return;
+  }
+  float const step = delta * (1.0F - std::exp(-k_follow_rate * dt));
+  m_target.setY(m_target.y() + step);
+  m_position.setY(m_position.y() + step);
+  m_last_position = m_position;
+  invalidate_cached_geometry();
+  clamp_eye_above_terrain();
 }
 
 void Camera::integrate_orbit(float dt) {

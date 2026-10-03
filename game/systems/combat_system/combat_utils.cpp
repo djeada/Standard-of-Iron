@@ -799,6 +799,7 @@ auto find_nearest_enemy(Engine::Core::Entity* unit,
   }
 
   const int attacker_owner_id = unit_comp->owner_id;
+  query = query_for(unit_comp, query);
 
   for (auto target_id : nearby_ids) {
     if (scan_iterations != nullptr) {

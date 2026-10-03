@@ -563,8 +563,7 @@
             "player_id": 2,
             "nation": "roman_republic",
             "max_population": -1,
-            "behavior": "guard",
-            "guard_radius": 12.0
+            "behavior": "hold"
         },
         {
             "id": "south_gate_spears_east",
@@ -574,8 +573,7 @@
             "player_id": 2,
             "nation": "roman_republic",
             "max_population": -1,
-            "behavior": "guard",
-            "guard_radius": 12.0
+            "behavior": "hold"
         },
         {
             "id": "east_gate_spears",
@@ -585,8 +583,7 @@
             "player_id": 2,
             "nation": "roman_republic",
             "max_population": -1,
-            "behavior": "guard",
-            "guard_radius": 12.0
+            "behavior": "hold"
         },
         {
             "id": "south_wall_archers_west",
@@ -595,8 +592,7 @@
             "z": 72.0,
             "player_id": 2,
             "nation": "roman_republic",
-            "max_population": -1,
-            "behavior": "hold"
+            "max_population": -1
         },
         {
             "id": "south_wall_archers_east",
@@ -605,8 +601,7 @@
             "z": 72.0,
             "player_id": 2,
             "nation": "roman_republic",
-            "max_population": -1,
-            "behavior": "hold"
+            "max_population": -1
         },
         {
             "id": "east_wall_archers",
@@ -615,8 +610,7 @@
             "z": 60.0,
             "player_id": 2,
             "nation": "roman_republic",
-            "max_population": -1,
-            "behavior": "hold"
+            "max_population": -1
         },
         {
             "id": "west_wall_archers",
@@ -625,8 +619,7 @@
             "z": 56.0,
             "player_id": 2,
             "nation": "roman_republic",
-            "max_population": -1,
-            "behavior": "hold"
+            "max_population": -1
         }
     ],
     "starting_resources": {

@@ -25,14 +25,14 @@ const WallGeometry k_wall_geometry{.earthwork_base = true,
                                    .irregular_stakes = false,
                                    .open_span_length = 1.00F,
                                    .stake_height = 2.48F,
-                                   .stake_radius = 0.145F,
+                                   .stake_radius = 0.120F,
                                    .tip_height = 0.40F,
-                                   .post_radius = 0.270F,
+                                   .post_radius = 0.220F,
                                    .post_extra_height = 0.14F,
                                    .lower_rail_y = 0.78F,
                                    .upper_rail_y = 1.58F,
                                    .rail_radius = 0.070F,
-                                   .berm_half_width = 0.46F,
+                                   .berm_half_width = 0.40F,
                                    .berm_height = 0.26F};
 auto wall_archetypes() -> const WallArchetypeSet& {
   static const WallArchetypeSet archetypes = wall_archetype_set("roman_wall_variant");

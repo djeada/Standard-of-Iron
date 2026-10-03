@@ -186,6 +186,26 @@ void SelectionController::on_right_click_clear_selection() {
   emit selection_changed();
 }
 
+void SelectionController::select_all_player_units_of_type(const QString& unit_type,
+                                                          int local_owner_id) {
+  if (m_selection_system == nullptr || m_world == nullptr || unit_type.isEmpty()) {
+    return;
+  }
+  m_selection_system->clear_selection();
+  for (auto* e : m_world->collect_entities_with<Engine::Core::UnitComponent>()) {
+    auto* unit = e->get_component<Engine::Core::UnitComponent>();
+    if (unit == nullptr || unit->owner_id != local_owner_id || unit->health <= 0 ||
+        e->has_component<Engine::Core::BuildingComponent>()) {
+      continue;
+    }
+    if (QString::fromStdString(Game::Units::spawn_typeToString(unit->spawn_type)) ==
+        unit_type) {
+      m_selection_system->select_unit(e->get_id());
+    }
+  }
+  sync_selection_flags();
+}
+
 void SelectionController::select_all_player_troops(int local_owner_id) {
   if ((m_selection_system == nullptr) || (m_world == nullptr)) {
     return;

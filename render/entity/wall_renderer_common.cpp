@@ -38,7 +38,7 @@ constexpr std::size_t k_dir_west = 3U;
 constexpr std::size_t k_dir_count = 4U;
 
 constexpr float k_connected_span_length = 1.0F;
-constexpr float k_stake_spacing = 0.27F;
+constexpr float k_stake_spacing = 0.25F;
 
 constexpr float k_span_end_berm = 0.000F;
 constexpr float k_span_end_bank = -0.024F;
@@ -701,7 +701,9 @@ auto build_wall_walk_span_desc(std::string_view name_prefix,
                QVector3D(0.5F, 0.045F, 0.03F),
                palette.wood_dark,
                k_standing);
-  desc.add_box(QVector3D(0.0F, top - 0.10F, (inner + outer) * 0.5F),
+  // The joist under the planks sits a hair below the rails it carries, so their
+  // tops never tie.
+  desc.add_box(QVector3D(0.0F, top - 0.11F, (inner + outer) * 0.5F),
                QVector3D(0.04F, 0.045F, (outer - inner) * 0.5F + 0.02F),
                palette.wood_mid,
                k_standing);
