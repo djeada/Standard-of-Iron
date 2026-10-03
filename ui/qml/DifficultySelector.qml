@@ -14,7 +14,13 @@ FocusScope {
     signal chosen(string difficulty_id)
 
     readonly property var entries: DifficultyCatalog.entries
-    readonly property int card_width: root.compact ? Math.max(260, Math.floor((column.width - 8) / 2)) : 168
+    readonly property int compact_card_minimum_width: 260
+    readonly property int standard_card_width: 168
+    readonly property int card_spacing: 8
+    readonly property int preferred_columns: root.compact ? 2 : root.entries.length
+    readonly property int preferred_card_width: root.compact ? root.compact_card_minimum_width : root.standard_card_width
+    readonly property int preferred_width: root.preferred_columns * root.preferred_card_width + root.card_spacing * (root.preferred_columns - 1)
+    readonly property int card_width: root.compact ? Math.max(root.compact_card_minimum_width, Math.floor((column.width - root.card_spacing) / 2)) : root.standard_card_width
     readonly property int card_height: root.compact ? 46 : 158
 
     function index_of(difficultyId) {
@@ -39,7 +45,10 @@ FocusScope {
         root.select_index(root.index_of(root.selected_id) + delta);
     }
 
-    implicitWidth: column.implicitWidth
+    // Keep the preferred width independent of the width assigned by a parent
+    // layout. The heading below is responsive, so exposing column.implicitWidth
+    // here would feed the assigned width back into the parent's size hint.
+    implicitWidth: root.preferred_width
     implicitHeight: column.implicitHeight
 
     Keys.onLeftPressed: root.step(-1)
@@ -54,10 +63,15 @@ FocusScope {
         spacing: 8
 
         Row {
+            id: heading_row
+
+            width: column.width
             visible: root.show_heading
             spacing: 8
 
             Text {
+                id: difficulty_label
+
                 anchors.verticalCenter: parent.verticalCenter
                 text: DifficultyCatalog.label
                 color: Design.Theme.textPrimary
@@ -70,7 +84,7 @@ FocusScope {
                 text: DifficultyCatalog.scopeNote
                 color: Design.Theme.textSecondary
                 font.pixelSize: Design.Typography.caption
-                width: Math.max(0, column.width - 120)
+                width: Math.max(0, heading_row.width - difficulty_label.implicitWidth - heading_row.spacing)
                 wrapMode: Text.WordWrap
                 elide: Text.ElideRight
             }
@@ -78,7 +92,7 @@ FocusScope {
 
         Flow {
             width: parent.width
-            spacing: 8
+            spacing: root.card_spacing
 
             Repeater {
                 model: root.entries

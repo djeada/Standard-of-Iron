@@ -120,7 +120,10 @@ jobs:
       - name: Build the test binaries
         run: |
           cmake --build build --parallel \
-            --target soi_test_binaries content_validator
+            --target soi_test_binaries content_validator standard_of_iron
+
+      - name: Polish startup regression
+        run: bash scripts/verify-polish-startup.sh build/bin/standard_of_iron
 
       # SOI_TEST_PROFILE=pr subtracts tests/extended_tests.txt; every binary in
       # the suite list still runs. SOI_TEST_REPORT_DIR collects the GoogleTest
