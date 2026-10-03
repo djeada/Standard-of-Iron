@@ -146,6 +146,12 @@ The overlay timer is likewise controlled by a live condition rather than started
 
 ## The camera and the cursor follow the ground
 
+RTS map limits constrain the look-at point to the playable map rectangle. The eye
+and the distant edge of the viewport may extend beyond it, so every playable point
+can be centered at any yaw or zoom. Panning along an edge keeps moving along the
+unblocked axis; rotating or zooming at an edge keeps the same focus. Pitch limits
+keep the view looking down, and terrain clearance keeps the eye above hills.
+
 The RTS camera's target eases onto the terrain under it (`Camera::integrate_ground_follow`,
 an average of nine height samples 3 m apart), so over a hill crown or a citadel mound the
 view stays as far from the ground it shows as the zoom says. Jumps to a world point
