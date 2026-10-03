@@ -402,6 +402,43 @@ auto build_wildlife_definitions() -> std::vector<ArenaScenarioDefinition> {
 
   {
     auto s = definition(
+        QString::fromLatin1(k_wildlife_sheep_slaughter_id),
+        QStringLiteral("Wildlife: Sheep Slaughter"),
+        QStringLiteral("A builder is sent after a sheep under a close camera: the "
+                       "mallet bonks, the sheep sways and sees stars, its wool goes "
+                       "poof and it keels over legs-up with the stars still circling."),
+        20.0F,
+        {5.0F, 38.0F, 35.0F});
+    s.wildlife = sheep_only(1, 3, 2.0F);
+    s.wildlife.seed = 8128U;
+    s.wildlife.sheep.spawn_areas = {{0.0F, 0.0F, 1.0F}};
+    s.wildlife.sheep.respawn = false;
+    ArenaScenarioGroup butcher;
+    butcher.name = QStringLiteral("butcher");
+    butcher.troop_type = Troop::Builder;
+    butcher.nation_id = Nation::RomanRepublic;
+    butcher.owner_id = 1;
+    butcher.count = 1;
+    butcher.individuals_per_unit = 1;
+    butcher.origin = {2.5F, 0.0F, 1.5F};
+    butcher.spacing = {0.0F, 0.0F, 0.0F};
+    butcher.facing_degrees = 240.0F;
+    s.groups = {std::move(butcher)};
+    ArenaScenarioStep slaughter;
+    slaughter.name = QStringLiteral("butcher_slaughters_sheep");
+    slaughter.trigger = {Trigger::AtTime, 1.0F, {}, {}, 0.0F};
+    slaughter.command = Command::HarvestResource;
+    slaughter.group = QStringLiteral("butcher");
+    slaughter.resource_kind = QStringLiteral("sheep");
+    s.steps = {std::move(slaughter)};
+    s.expectations = {
+        expectation(Expect::WildlifeCasualtyObserved),
+    };
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
         QString::fromLatin1(k_wildlife_bird_scatter_id),
         QStringLiteral("Wildlife: Bird Scatter"),
         QStringLiteral("Flocks cruise and perch until a column marches underneath, "

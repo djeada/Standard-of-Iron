@@ -63,9 +63,6 @@ struct WallArchetypeSet {
   const BuildingArchetypeSet* walk_stair{nullptr};
 };
 
-// The wall walk: a timber balcony on the town face of a palisade and the stair
-// that climbs to it. Each piece is authored with +z pointing into the town and
-// is symmetric along x, so one yaw places it on any side of any segment.
 auto build_wall_walk_span_desc(std::string_view name_prefix,
                                const WallPalette& palette) -> BuildingArchetypeDesc;
 auto build_wall_walk_landing_desc(std::string_view name_prefix,

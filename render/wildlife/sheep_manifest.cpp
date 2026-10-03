@@ -66,7 +66,7 @@ constexpr std::array<SheepClipSpec, 8> k_sheep_clips{{
      false,
      SheepGait::Walk},
     {{"run", 24U, 40.0F, true}, 0.0F, 1.0F, 1.0F, false, false, false, SheepGait::Run},
-    {{"die", 32U, 26.0F, false},
+    {{"die", 48U, 40.0F, false},
      0.0F,
      0.0F,
      1.0F,

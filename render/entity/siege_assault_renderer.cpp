@@ -97,7 +97,6 @@ struct Painter {
   }
 };
 
-// Hides vary panel to panel, the way a covering stitched from many skins does.
 auto hide_tone(const Palette& c, int index) -> QVector3D {
   static constexpr std::array<float, 5> k_shade{0.0F, 0.55F, 0.22F, 0.85F, 0.38F};
   float const t = k_shade[static_cast<std::size_t>(index) % k_shade.size()];
@@ -115,8 +114,6 @@ auto in_melee(const DrawContext& ctx) -> bool {
 
 constexpr float k_ram_stroke_seconds = 1.0F;
 
-// The beam's travel through one stroke: drawn back slowly on the chains, then
-// let fly at the gate and caught on the rebound.
 auto ram_stroke(float phase) -> float {
   constexpr float k_draw_end = 0.62F;
   constexpr float k_strike_end = 0.76F;
@@ -187,10 +184,6 @@ void draw_pennant(const Painter& g,
   }
 }
 
-// --------------------------------------------------------------------------
-// Battering ram: a hide-roofed shed on four wheels with the beam slung from its
-// ridge on chains; the crew works inside.
-
 constexpr float k_ram_half_length = 1.05F;
 constexpr float k_ram_half_width = 0.46F;
 constexpr float k_ram_eave = 0.78F;
@@ -234,7 +227,6 @@ void draw_ram_body(const DrawContext& p,
         0.04F,
         c.wood_dark);
 
-  // Roof: overlapping hides lashed down over the rafters.
   float const slope_run = W + 0.06F;
   float const slope_rise = k_ram_ridge - k_ram_eave + 0.04F;
   float const slope_len = std::hypot(slope_run, slope_rise);
@@ -263,7 +255,7 @@ void draw_ram_body(const DrawContext& p,
                    -side * slope_deg,
                    c.rope);
     }
-    // Skirts: hides hung from the eaves, short enough to show the crew's feet.
+
     for (int bay = 0; bay < 3; ++bay) {
       float const za = k_bays[static_cast<std::size_t>(bay)];
       float const zb = k_bays[static_cast<std::size_t>(bay + 1)];
@@ -273,7 +265,6 @@ void draw_ram_body(const DrawContext& p,
     }
   }
 
-  // The beam, slung on chains from the ridge.
   float const z_shift = stroke;
   QVector3D const tail{0.0F, k_ram_beam_y, -0.92F + z_shift};
   QVector3D const neck{0.0F, k_ram_beam_y, 1.10F + z_shift};
@@ -309,10 +300,6 @@ void draw_ram_body(const DrawContext& p,
       g, c, {-W + 0.04F, k_ram_eave, -L + 0.05F}, 0.80F, p.animation_time, seed);
 }
 
-// --------------------------------------------------------------------------
-// Siege tower: three storeys of timber clad in hides, a drawbridge at the
-// height of the enemy's stake tips and a fighting top above it.
-
 constexpr float k_tower_base_half = 0.52F;
 constexpr float k_tower_top_half = 0.44F;
 constexpr float k_tower_chassis = 0.32F;
@@ -329,8 +316,6 @@ auto tower_half(float y) -> float {
   return k_tower_base_half + (k_tower_top_half - k_tower_base_half) * t;
 }
 
-// A clad face between two heights; `face` picks the side (0 front +z, 1 back
-// -z, 2 left -x, 3 right +x). `gap` leaves a door-wide opening in the middle.
 void clad_band(const Painter& g,
                const Palette& c,
                int face,
@@ -373,7 +358,7 @@ void clad_band(const Painter& g,
     place(-gap - side_half, side_half, tone);
     place(gap + side_half, side_half, tone + 1);
   }
-  // Stitched seams between the skins.
+
   for (float a : {-half * 0.5F, 0.0F, half * 0.5F}) {
     if (gap > 0.0F && std::abs(a) < gap) {
       continue;
@@ -415,7 +400,6 @@ void draw_tower_body(const DrawContext& p,
 
   constexpr float B = k_tower_base_half;
 
-  // Chassis, wheels and the skirt boards that hide them.
   for (float side : {-1.0F, 1.0F}) {
     g.box({side * B, 0.28F, 0.0F}, {0.06F, 0.06F, B + 0.06F}, c.wood_frame);
     g.box({side * (B + 0.075F), 0.30F, 0.0F}, {0.012F, 0.07F, B + 0.04F}, c.wood_dark);
@@ -425,7 +409,6 @@ void draw_tower_body(const DrawContext& p,
   }
   draw_wheels(ctx, out, white, c, motion, B + 0.11F, 0.22F, {-0.36F, 0.0F, 0.36F});
 
-  // Frame: tapering corner posts and the girts at each floor.
   for (float sx : {-1.0F, 1.0F}) {
     for (float sz : {-1.0F, 1.0F}) {
       g.cyl({sx * B, k_tower_chassis - 0.02F, sz * B},
@@ -446,8 +429,6 @@ void draw_tower_body(const DrawContext& p,
     g.box({0.0F, y - 0.02F, 0.0F}, {h - 0.03F, 0.015F, h - 0.03F}, c.wood_light * 0.9F);
   }
 
-  // Hides on the front and flanks all the way up; the back is clad above the
-  // bottom storey, which stays open for the crew pushing from inside it.
   clad_band(g, c, 0, k_tower_chassis + 0.05F, k_tower_floor_one, 0.0F, 0);
   clad_band(g, c, 0, k_tower_floor_one, k_tower_bridge_floor, 0.0F, 2);
   clad_band(g, c, 0, k_tower_bridge_floor, k_tower_top, k_tower_door_half, 4);
@@ -459,7 +440,6 @@ void draw_tower_body(const DrawContext& p,
   clad_band(g, c, 1, k_tower_floor_one, k_tower_bridge_floor, 0.0F, 1);
   clad_band(g, c, 1, k_tower_bridge_floor, k_tower_top, 0.0F, 3);
 
-  // Ladder up the open back storey.
   float const ladder_z = -B + 0.10F;
   for (float x : {0.12F, 0.32F}) {
     g.cyl({x, k_tower_chassis, ladder_z},
@@ -476,7 +456,6 @@ void draw_tower_body(const DrawContext& p,
           c.wood_light);
   }
 
-  // Fighting top: a wicker breastwork with three merlons a side.
   float const th = tower_half(k_tower_top) + 0.04F;
   g.box({0.0F, k_tower_top + 0.01F, 0.0F}, {th, 0.025F, th}, c.wood_frame);
   for (int side = 0; side < 4; ++side) {
@@ -521,8 +500,6 @@ void draw_tower_body(const DrawContext& p,
                p.animation_time,
                seed);
 
-  // Drawbridge, hinged at the door sill: upright over the door while rolling,
-  // laid across the enemy stakes once docked.
   float const hinge_z = tower_half(k_tower_bridge_floor) + 0.02F;
   float const angle = -90.0F * (1.0F - std::clamp(ramp, 0.0F, 1.0F));
   QMatrix4x4 bridge = ctx.model;
@@ -557,7 +534,7 @@ void draw_tower_body(const DrawContext& p,
              white,
              1.0F);
   }
-  // Door frame around the opening.
+
   for (float x : {-k_tower_door_half, k_tower_door_half}) {
     g.box({x, (k_tower_bridge_floor + k_tower_top) * 0.5F, hinge_z},
           {0.025F, (k_tower_top - k_tower_bridge_floor) * 0.5F, 0.025F},

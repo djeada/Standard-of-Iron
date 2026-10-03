@@ -24,7 +24,8 @@ void main() {
   float fold = 1.0 - across * across;
   float tactical = ground_tactical_distance(length(u_camera_pos - v_world_pos));
   float detail_weight = mix(1.0, 0.30, tactical);
-  vec3 color = v_color * mix(1.0, mix(0.82, 1.12, fold), detail_weight);
+  vec3 color = ground_vegetation_chroma(v_color) *
+               mix(1.0, mix(0.82, 1.12, fold), detail_weight);
 
 #if SOI_ULTRA_EFFECTS
 

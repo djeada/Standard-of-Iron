@@ -27,7 +27,11 @@ uniform float u_soil_blend_height, u_soil_blend_sharpness;
 uniform float u_height_noise_strength, u_height_noise_frequency;
 uniform float u_ambient_boost, u_rock_detail_strength;
 
-const float k_soi_terrain_detail_damping = 0.58;
+const float k_soi_terrain_detail_damping = 0.80;
+const float k_soi_tuft_shadow = 0.84;
+const float k_soi_tuft_light = 1.10;
+const float k_soi_sod_amount = 0.30;
+const float k_soi_earth_fleck_amount = 0.55;
 const float k_soi_terrain_relief_damping = 0.68;
 const float k_soi_meadow_drift_strength = 0.8;
 const float k_soi_meadow_frequency = 0.030;
@@ -295,6 +299,112 @@ vec3 unseen_terrain_color() {
                               (u_ambient_boost * cavity));
 }
 
+struct RockProjection {
+  vec2 coord;
+  vec2 ddx;
+  vec2 ddy;
+  vec2 across;
+  vec2 down;
+};
+
+struct RockPattern {
+  float fracture;
+  float chipping;
+  float detail;
+  float grain;
+  float bedding;
+  float streak;
+  float scrub;
+};
+
+const float k_soi_projection_epsilon = 0.12;
+
+vec3 relief_field(vec2 coord) {
+  float footprint = max(length(fwidth(coord)), 1e-5);
+  vec3 coarse = relief_octave(coord + vec2(-17.0, 8.0), footprint, 1.40, 0.10);
+#if SOI_SURFACE_DETAIL
+  vec3 mid = relief_octave(coord + vec2(31.0, -19.0), footprint, 4.30, 0.033);
+  vec3 fine = relief_octave(coord + vec2(-9.0, 44.0), footprint, 12.50, 0.011);
+#else
+  vec3 mid = vec3(0.0);
+  vec3 fine = vec3(0.0);
+#endif
+  return vec3(coarse.xy * (0.30 * coarse.z) + mid.xy * (0.20 * mid.z) +
+                  fine.xy * (0.11 * fine.z),
+              0.30 * coarse.z + 0.20 * mid.z + 0.11 * fine.z);
+}
+
+RockProjection rock_projection(vec2 coord, vec2 across, vec2 down) {
+  return RockProjection(coord, dFdx(coord), dFdy(coord), across, down);
+}
+
+RockPattern rock_pattern_zero() {
+  return RockPattern(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+}
+
+RockPattern rock_pattern_add(RockPattern sum, RockPattern sample, float weight) {
+  sum.fracture += sample.fracture * weight;
+  sum.chipping += sample.chipping * weight;
+  sum.detail += sample.detail * weight;
+  sum.grain += sample.grain * weight;
+  sum.bedding += sample.bedding * weight;
+  sum.streak += sample.streak * weight;
+  sum.scrub += sample.scrub * weight;
+  return sum;
+}
+
+RockPattern sample_rock_pattern(RockProjection projection) {
+  vec2 coord = projection.coord;
+  vec2 rock_ddx = projection.ddx;
+  vec2 rock_ddy = projection.ddy;
+  float rock_footprint = max(length(abs(rock_ddx) + abs(rock_ddy)), 1e-5);
+  RockPattern pattern = rock_pattern_zero();
+
+  vec2 rock_cells = cellular_distances(coord * 0.34 + vec2(8.0, -5.0));
+  pattern.fracture = 1.0 - smoothstep(0.025, 0.12, rock_cells.y - rock_cells.x);
+
+  vec2 detail_coord = coord * 0.62 + vec2(3.3, -11.0);
+  pattern.detail =
+      (HAS_MICRODETAIL)
+          ? micro_sample_grad(detail_coord, rock_ddx * 0.62, rock_ddy * 0.62).g
+          : gradient_fbm_with_footprint(detail_coord, rock_footprint * 0.62);
+  pattern.scrub = 0.5;
+#if SOI_SURFACE_DETAIL
+  float chip_fade = band_limit(rock_footprint, 1.9);
+  if (chip_fade > k_soi_band_epsilon) {
+    vec2 rock_chips = cellular_distances(coord * 1.9 + vec2(-27.0, 14.0));
+    pattern.chipping =
+        (1.0 - smoothstep(0.03, 0.16, rock_chips.y - rock_chips.x)) * chip_fade;
+  }
+  float grain_band = band_limit(rock_footprint, 2.4);
+  if (HAS_MICRODETAIL) {
+    pattern.grain = micro_sample_grad(
+                        coord * 2.4 + vec2(-17.0, 8.0), rock_ddx * 2.4, rock_ddy * 2.4)
+                        .r *
+                    grain_band;
+  } else if (grain_band > k_soi_band_epsilon) {
+    pattern.grain = gradient_noise(coord * 2.4 + vec2(-17.0, 8.0)) * grain_band;
+  }
+
+  float strata_warp = micro_sample(coord * 0.07 + vec2(-41.0, 7.0)).g;
+  float strata_height =
+      v_world_pos.y + strata_warp * 2.6 + dot(coord, vec2(0.11, -0.07));
+  pattern.bedding = micro_sample(vec2(coord.x * 0.05, strata_height * 0.55)).r;
+  vec2 streak_coord =
+      vec2(dot(coord, projection.across) * 1.7, dot(coord, projection.down) * 0.10);
+  pattern.streak = micro_sample(streak_coord + vec2(17.0, -53.0)).g;
+
+  vec2 scrub_coord = coord * 1.15 + vec2(-52.0, 17.0);
+  pattern.scrub =
+      ((HAS_MICRODETAIL)
+           ? micro_sample_grad(scrub_coord, rock_ddx * 1.15, rock_ddy * 1.15).g
+           : gradient_fbm_with_footprint(scrub_coord, rock_footprint * 1.15)) *
+          0.5 +
+      0.5;
+#endif
+  return pattern;
+}
+
 void main() {
 
   vec3 facet_normal = geom_normal();
@@ -407,11 +517,6 @@ void main() {
 
   float coord_footprint = max(length(fwidth(world_coord)), 1e-5);
 
-  float wall_axis = step(abs(normal.x), abs(normal.z));
-  vec2 wall_coord = vec2(mix(v_world_pos.z, v_world_pos.x, wall_axis) / tile_scale,
-                         v_world_pos.y / tile_scale);
-  wall_coord += u_noise_offset.yx;
-
   float macro_scale = max(u_macro_noise_scale, 0.010);
   float detail_scale = max(u_detail_noise_scale, 0.045);
   vec2 domain_warp = (HAS_MICRODETAIL)
@@ -504,9 +609,9 @@ void main() {
   }
 #endif
 
-  surface_grain *= mix(1.0, 0.25, tactical);
-  granular *= mix(1.0, 0.30, tactical);
-  speckle *= mix(1.0, 0.20, tactical);
+  surface_grain *= mix(1.0, 0.65, tactical);
+  granular *= mix(1.0, 0.60, tactical);
+  speckle *= mix(1.0, 0.35, tactical);
 
   surface_grain *= k_soi_terrain_detail_damping;
   granular *= k_soi_terrain_detail_damping;
@@ -639,6 +744,10 @@ void main() {
   dry_patch = clamp(dry_patch + exposed_ground * 0.20, 0.0, 1.0);
   dry_patch *= (1.0 - gully_mask * 0.40);
   grass_color = mix(grass_color, u_grass_dry, dry_patch * 0.64);
+  float mountain_upland =
+      mountain_surface * smoothstep(3.0, 18.0, v_world_pos.y) * (1.0 - u_snow_coverage);
+  vec3 upland_turf = mix(u_grass_dry, u_soil_color, 0.25) * vec3(0.98, 0.96, 0.92);
+  grass_color = mix(grass_color, upland_turf, mountain_upland * 0.45);
   grass_color = mix(grass_color, u_grass_dry, sparse_cover * (0.10 + biome_dry * 0.10));
   float lush_patch = smoothstep(0.58, 0.82, drainage_field + u_moisture_level * 0.08);
   lush_patch *= 1.0 - smoothstep(0.16, 0.46, slope);
@@ -730,6 +839,30 @@ void main() {
   grass_color = mix(grass_color, deep_sward, mosaic_lush * 0.30);
   grass_color *= 1.0 - mosaic_dry * 0.065 + mosaic_lush * 0.050;
 
+  vec2 tuft_coord = world_coord * 0.62 + domain_warp * 0.25 + vec2(-13.0, 29.0);
+  vec2 sod_coord = world_coord * 0.17 + domain_warp * 0.40 + vec2(44.0, 8.0);
+#if SOI_SURFACE_DETAIL
+  float tuft =
+      (HAS_MICRODETAIL) ? micro_sample(tuft_coord).g : gradient_fbm(tuft_coord);
+#else
+  float tuft = 0.0;
+#endif
+  float sod = (HAS_MICRODETAIL) ? micro_sample(sod_coord).g : gradient_fbm(sod_coord);
+  float tuft_light = smoothstep(-0.30, 0.30, tuft);
+  float tussock_ground = smoothstep(-0.20, 0.35, -sod + exposure_field * 0.30 - 0.15);
+  float tuft_contrast = mix(0.35, 1.0, tussock_ground);
+  grass_color *=
+      mix(1.0, mix(k_soi_tuft_shadow, k_soi_tuft_light, tuft_light), tuft_contrast);
+  vec3 sod_lush = mix(u_grass_secondary, u_grass_primary, 0.45) * 0.90;
+  vec3 sod_cured = mix(u_grass_primary, u_grass_dry, 0.62) * 1.04;
+  grass_color =
+      mix(grass_color,
+          mix(sod_lush, sod_cured, smoothstep(-0.28, 0.28, sod + dry_patch * 0.20)),
+          k_soi_sod_amount);
+  float earth_fleck = smoothstep(-0.20, -0.40, tuft) * (0.30 + 0.70 * exposure_field) *
+                      (1.0 - smoothstep(0.20, 0.50, slope)) *
+                      (1.0 - 0.60 * u_moisture_level);
+
   float damp_patch = smoothstep(0.68, 0.86, drainage_field + u_moisture_level * 0.10);
   damp_patch *= 1.0 - smoothstep(0.16, 0.48, slope);
   float bare_patch = smoothstep(0.46,
@@ -760,6 +893,7 @@ void main() {
   soil_mix = max(soil_mix, deposited_soil);
   soil_mix = max(soil_mix, rill_incision * 0.34);
   soil_mix = max(soil_mix, ground_scuff * 0.32);
+  soil_mix = max(soil_mix, earth_fleck * k_soi_earth_fleck_amount);
   soil_mix = max(soil_mix, hill_shoulder * sunward_aspect * ground_scuff * 0.18);
   soil_mix = max(soil_mix, foot_shelter * (0.15 + u_soil_foot_height));
   float level_ground = 1.0 - smoothstep(0.018, 0.075, slope);
@@ -839,82 +973,68 @@ void main() {
   rock_mask *= mix(weathered_exposure, 1.0, smoothstep(0.10, 0.34, slope));
   rock_mask *= (1.0 - 0.55 * entry_shelter) * (1.0 - 0.30 * foot_shelter);
   rock_mask *= smoothstep(0.010, 0.050, slope);
+  float mountain_outcrop =
+      mountain_surface * smoothstep(1.5, 7.0, v_world_pos.y) *
+      smoothstep(0.62, 0.76, rock_breakup + ridge_mask * 0.18 + mountain_upland * 0.12);
+  rock_mask = max(rock_mask, mountain_outcrop * 0.75);
   rock_mask *= 1.0 - soil_mix * 0.55;
 
   float wall_blend = smoothstep(0.28, 0.72, slope);
-  vec2 rock_coord = mix(world_coord, wall_coord, wall_blend);
+  vec3 projection_weights = pow(abs(normal), vec3(8.0));
+  projection_weights /= max(dot(projection_weights, vec3(1.0)), 1e-5);
+  projection_weights *= step(vec3(k_soi_projection_epsilon), projection_weights);
+  projection_weights /= max(dot(projection_weights, vec3(1.0)), 1e-5);
+  vec2 side_x_coord =
+      vec2(v_world_pos.z, v_world_pos.y) / tile_scale + u_noise_offset.yx;
+  vec2 side_z_coord = vec2(v_world_pos.x, v_world_pos.y) / tile_scale + u_noise_offset;
 
-  vec2 rock_ddx = dFdx(rock_coord);
-  vec2 rock_ddy = dFdy(rock_coord);
-  float rock_footprint = max(length(abs(rock_ddx) + abs(rock_ddy)), 1e-5);
-  vec2 rock_detail_coord = rock_coord * 0.62 + vec2(3.3, -11.0);
-  vec2 rock_detail_ddx = rock_ddx * 0.62;
-  vec2 rock_detail_ddy = rock_ddy * 0.62;
-  float rock_detail_footprint = length(abs(rock_detail_ddx) + abs(rock_detail_ddy));
-  vec2 scrub_coord = rock_coord * 1.15 + vec2(-52.0, 17.0);
-  vec2 scrub_ddx = rock_ddx * 1.15;
-  vec2 scrub_ddy = rock_ddy * 1.15;
-  float scrub_footprint = length(abs(scrub_ddx) + abs(scrub_ddy));
+  RockProjection top_projection = rock_projection(world_coord, flow_across, flow_down);
+  RockProjection side_x_projection =
+      rock_projection(side_x_coord, vec2(1.0, 0.0), vec2(0.0, 1.0));
+  RockProjection side_z_projection =
+      rock_projection(side_z_coord, vec2(1.0, 0.0), vec2(0.0, 1.0));
   vec3 rock_color = soil_blend;
 
   if (rock_mask > k_soi_rock_epsilon) {
-    vec2 rock_cells = cellular_distances(rock_coord * 0.34 + vec2(8.0, -5.0));
-    float fracture = 1.0 - smoothstep(0.025, 0.12, rock_cells.y - rock_cells.x);
-#if SOI_SURFACE_DETAIL
-    float chip_fade = band_limit(rock_footprint, 1.9);
-    float chipping = 0.0;
-    if (chip_fade > k_soi_band_epsilon) {
-      vec2 rock_chips = cellular_distances(rock_coord * 1.9 + vec2(-27.0, 14.0));
-      chipping =
-          (1.0 - smoothstep(0.03, 0.16, rock_chips.y - rock_chips.x)) * chip_fade;
+    RockPattern pattern = rock_pattern_zero();
+    if (projection_weights.y > 0.0) {
+      pattern = rock_pattern_add(
+          pattern, sample_rock_pattern(top_projection), projection_weights.y);
     }
-    float rock_detail =
-        (HAS_MICRODETAIL)
-            ? micro_sample_grad(rock_detail_coord, rock_detail_ddx, rock_detail_ddy).g
-            : gradient_fbm_with_footprint(rock_detail_coord, rock_detail_footprint);
-    float grain_band = band_limit(rock_footprint, 2.4);
-    float rock_grain = 0.0;
-    if (HAS_MICRODETAIL) {
-      rock_grain = micro_sample_grad(rock_coord * 2.4 + vec2(-17.0, 8.0),
-                                     rock_ddx * 2.4,
-                                     rock_ddy * 2.4)
-                       .r *
-                   grain_band;
-    } else if (grain_band > k_soi_band_epsilon) {
-      rock_grain = gradient_noise(rock_coord * 2.4 + vec2(-17.0, 8.0)) * grain_band;
+    if (projection_weights.x > 0.0) {
+      pattern = rock_pattern_add(
+          pattern, sample_rock_pattern(side_x_projection), projection_weights.x);
     }
-#else
-    float chipping = 0.0;
-    float rock_detail =
-        (HAS_MICRODETAIL)
-            ? micro_sample_grad(rock_detail_coord, rock_detail_ddx, rock_detail_ddy).g
-            : gradient_fbm_with_footprint(rock_detail_coord, rock_detail_footprint);
-    float rock_grain = 0.0;
-#endif
-    float rock_value = clamp(0.44 + rock_detail * 0.44 + rock_grain * 0.20, 0.0, 1.0);
+    if (projection_weights.z > 0.0) {
+      pattern = rock_pattern_add(
+          pattern, sample_rock_pattern(side_z_projection), projection_weights.z);
+    }
+    float fracture = pattern.fracture;
+    float chipping = pattern.chipping;
+    float rock_detail = pattern.detail;
+    float rock_grain = pattern.grain;
+    float rock_value = clamp(0.44 + rock_detail * 0.48 + rock_grain * 0.12, 0.0, 1.0);
     rock_color = mix(u_rock_low, u_rock_high, rock_value);
     vec3 mountain_rock =
         mix(u_rock_low * 0.76, u_rock_high * 0.91, smoothstep(0.20, 0.86, rock_value));
     float mountain_material =
         clamp(mountain_face * 0.86 + mountain_shoulders * 0.48, 0.0, 0.94);
     rock_color = mix(rock_color, mountain_rock, mountain_material);
-    vec3 hill_earth = mix(u_soil_color * 0.88,
+    vec3 hill_earth = mix(u_soil_color * 0.96,
                           mix(u_rock_low, u_rock_high, rock_value) * 1.04,
-                          0.62 + weathered_exposure * 0.24);
-    rock_color = mix(rock_color, hill_earth, hill_face * 0.48);
-#if SOI_SURFACE_DETAIL
-    float rock_strata =
-        gradient_noise(vec2(rock_coord.x * 0.11 + v_world_pos.y * 0.32,
-                            mix(world_coord.y, wall_coord.y, wall_blend) * 0.035));
-    float bedding = gradient_noise(vec2(rock_coord.x * 0.06, v_world_pos.y * 0.85));
-#else
-    float rock_strata = 0.0;
-    float bedding = 0.0;
-#endif
-    rock_color *= 1.0 + rock_strata * (0.145 + 0.075 * mountain_surface) +
-                  bedding * (0.120 + 0.085 * mountain_surface) * wall_blend;
-    rock_color *= 1.0 - fracture * (0.115 + 0.150 * u_rock_detail_strength);
-    rock_color *= 1.0 - chipping * (0.070 + 0.090 * u_rock_detail_strength);
+                          0.38 + weathered_exposure * 0.30);
+    rock_color = mix(rock_color, hill_earth, hill_face * 0.72);
+    float face_weight = smoothstep(0.22, 0.62, slope);
+    rock_color *=
+        1.0 + pattern.bedding * (0.10 + 0.08 * mountain_surface) * face_weight;
+    float weather_streak = smoothstep(0.05, 0.45, pattern.streak) * face_weight;
+    rock_color *= 1.0 - weather_streak * 0.22;
+    rock_color = mix(rock_color,
+                     rock_color * vec3(1.06, 1.0, 0.90),
+                     smoothstep(-0.30, -0.05, -pattern.streak) * face_weight * 0.35);
+    rock_color *= 1.0 - fracture * (0.115 + 0.150 * u_rock_detail_strength) *
+                            mix(0.35, 1.0, face_weight);
+    rock_color *= 1.0 - chipping * (0.045 + 0.050 * u_rock_detail_strength);
     rock_color *= 1.0 + rock_grain * 0.075;
     vec3 scree_color = mix(u_rock_low, u_soil_color, 0.24) * (0.90 + 0.14 * rock_value);
     rock_color = mix(rock_color, scree_color, mountain_scree * 0.42);
@@ -922,19 +1042,9 @@ void main() {
     rock_color *= 1.0 - crag_shadow * 0.14;
 
     float ledge = 1.0 - smoothstep(0.30, 0.68, slope);
-#if SOI_SURFACE_DETAIL
-    float scrub_field =
-        ((HAS_MICRODETAIL)
-             ? micro_sample_grad(scrub_coord, scrub_ddx, scrub_ddy).g
-             : gradient_fbm_with_footprint(scrub_coord, scrub_footprint)) *
-            0.5 +
-        0.5;
-#else
-    float scrub_field = 0.5;
-#endif
     float scrub = smoothstep(0.52,
                              0.86,
-                             scrub_field * 0.62 + fracture * 0.26 + ledge * 0.28 -
+                             pattern.scrub * 0.62 + fracture * 0.26 + ledge * 0.28 -
                                  high_ground * 0.18);
     vec3 lichen = mix(u_grass_dry, u_grass_secondary, 0.55) * 0.62;
     rock_color = mix(rock_color, lichen, scrub * 0.34 * (1.0 - u_snow_coverage * 0.6));
@@ -955,6 +1065,7 @@ void main() {
     terrain_color *= crack_darkening;
   }
 
+  float snow_cover = 0.0;
   if (u_ground_type == 3 && u_snow_coverage > 0.01) {
     vec2 alpine_large_coord =
         world_coord * 0.10 + domain_warp * 0.35 + vec2(123.0, 456.0);
@@ -972,19 +1083,24 @@ void main() {
                         0.58,
               0.0,
               1.0);
-    float alpine_snow_field = alpine_snow_large * 0.36 + alpine_snow_small * 0.64;
     float alpine_height_bias = smoothstep(0.4, 7.5, v_world_pos.y);
-    alpine_snow_field += high_ground * 0.08 + alpine_height_bias * 0.12 -
-                         low_ground * 0.08 + terrain_cavity * 0.06 -
-                         sunward_aspect * slope * 0.05;
-    float alpine_snow_accumulation = smoothstep(0.57, 0.74, alpine_snow_field);
-    float alpine_snow_edge = smoothstep(0.48, 0.62, alpine_snow_field) *
-                             (1.0 - smoothstep(0.70, 0.82, alpine_snow_field));
-    alpine_snow_accumulation = max(alpine_snow_accumulation, alpine_snow_edge * 0.18);
+    vec2 alpine_fine_coord = world_coord * 1.15 + vec2(37.0, -12.0);
+    float alpine_fine = (HAS_MICRODETAIL) ? micro_sample(alpine_fine_coord).g
+                                          : gradient_fbm(alpine_fine_coord);
+    float alpine_aspect =
+        (leeward_aspect - sunward_aspect) * smoothstep(0.015, 0.12, slope);
+    float alpine_snow_field = 0.5 + (alpine_snow_large - 0.5) * 0.34 +
+                              (alpine_snow_small - 0.5) * 0.26 + alpine_fine * 0.08 +
+                              alpine_aspect * 0.24 + terrain_cavity * 0.14 +
+                              gully_mask * 0.08 + alpine_height_bias * 0.05 -
+                              low_ground * 0.06 - ridge_mask * 0.06;
+    float alpine_snow_core = smoothstep(0.66, 0.72, alpine_snow_field);
+    float alpine_snow_thin = smoothstep(0.57, 0.67, alpine_snow_field);
+    float alpine_snow_accumulation =
+        max(alpine_snow_core, alpine_snow_thin * 0.38 * (1.15 - tuft_light * 0.70));
 
-    float alpine_snow_slope_retention = 1.0 - smoothstep(0.10, 0.38, slope);
-    float alpine_snow_shelter =
-        0.78 + terrain_cavity * 0.26 + leeward_aspect * slope * 0.12;
+    float alpine_snow_slope_retention = 1.0 - smoothstep(0.16, 0.42, slope);
+    float alpine_snow_shelter = 0.86 + terrain_cavity * 0.20;
     float alpine_snow_mask =
         clamp(alpine_snow_accumulation * u_snow_coverage *
                   mix(0.68, 1.38, alpine_height_bias) * alpine_snow_slope_retention *
@@ -993,7 +1109,11 @@ void main() {
               0.88);
     vec3 alpine_snow_color = u_snow_color * vec3(0.94, 0.97, 1.01) *
                              (0.96 + surface_detail * 0.030 + surface_grain * 0.018);
+    alpine_snow_color = mix(alpine_snow_color * vec3(0.86, 0.85, 0.82),
+                            alpine_snow_color,
+                            alpine_snow_core);
     terrain_color = mix(terrain_color, alpine_snow_color, alpine_snow_mask);
+    snow_cover = max(snow_cover, alpine_snow_mask);
   }
 
   if (u_snow_coverage > 0.01) {
@@ -1017,14 +1137,20 @@ void main() {
         0.22 * smoothstep(0.34, 0.72, moisture_field * 0.55 + material_patch * 0.45);
     wind_deposit *= 0.92 + terrain_cavity * 0.38;
     wind_deposit *= 0.90 + leeward_aspect * slope * 0.18;
-    float snow_mask = clamp(mountain_surface * altitude_snow * snow_retention *
-                                wind_deposit * u_snow_coverage * 1.85,
-                            0.0,
-                            0.95);
+    vec2 snow_break_coord = world_coord * 0.42 + vec2(-19.0, 61.0);
+    float snow_break = (HAS_MICRODETAIL) ? micro_sample(snow_break_coord).g
+                                         : gradient_fbm(snow_break_coord);
+    float steep_shed =
+        1.0 - smoothstep(0.30 + snow_break * 0.16, 0.52 + snow_break * 0.16, slope);
+    snow_retention *= steep_shed;
+    float snow_mask = mountain_surface * altitude_snow * snow_retention * wind_deposit *
+                      u_snow_coverage * 1.85;
+    snow_mask = smoothstep(0.18, 0.62, snow_mask + snow_break * 0.22) * 0.97;
 
     vec3 snow_tinted =
         u_snow_color * (0.97 + surface_detail * 0.045 + surface_grain * 0.025);
     terrain_color = mix(terrain_color, snow_tinted, snow_mask);
+    snow_cover = max(snow_cover, snow_mask);
   }
 
 #if SOI_SURFACE_DETAIL
@@ -1095,6 +1221,7 @@ void main() {
       clamp(u_grass_saturation * k_soi_terrain_saturation, 0.0, 1.16);
   terrain_color = mix(gray_level, terrain_color, grounded_saturation);
   terrain_color *= vec3(1.012, 0.992, 0.965);
+  terrain_color = ground_vegetation_chroma(terrain_color);
 
   float terrain_luma = dot(terrain_color, vec3(0.299, 0.587, 0.114));
   terrain_color =
@@ -1108,26 +1235,22 @@ void main() {
 
   vec3 L = environment_primary_direction();
 
-  vec2 relief_coord = mix(world_coord, wall_coord, wall_blend);
-  float relief_footprint = max(length(fwidth(relief_coord)), 1e-5);
-
-  vec3 coarse_relief =
-      relief_octave(relief_coord + vec2(-17.0, 8.0), relief_footprint, 1.40, 0.10);
-#if SOI_SURFACE_DETAIL
-  vec3 mid_relief =
-      relief_octave(relief_coord + vec2(31.0, -19.0), relief_footprint, 4.30, 0.033);
-  vec3 fine_relief =
-      relief_octave(relief_coord + vec2(-9.0, 44.0), relief_footprint, 12.50, 0.011);
-#else
-  vec3 mid_relief = vec3(0.0);
-  vec3 fine_relief = vec3(0.0);
-#endif
-
-  vec2 relief_gradient = coarse_relief.xy * (0.30 * coarse_relief.z) +
-                         mid_relief.xy * (0.20 * mid_relief.z) +
-                         fine_relief.xy * (0.11 * fine_relief.z);
-  float relief_resolved =
-      0.30 * coarse_relief.z + 0.20 * mid_relief.z + 0.11 * fine_relief.z;
+  vec3 top_relief = relief_field(world_coord);
+  vec2 relief_gradient = top_relief.xy;
+  vec3 relief_side_offset = vec3(0.0);
+  float relief_resolved = top_relief.z * projection_weights.y;
+  if (projection_weights.x > 0.0) {
+    vec3 side_relief = relief_field(side_x_coord);
+    relief_side_offset +=
+        vec3(0.0, side_relief.y, side_relief.x) * projection_weights.x;
+    relief_resolved += side_relief.z * projection_weights.x;
+  }
+  if (projection_weights.z > 0.0) {
+    vec3 side_relief = relief_field(side_z_coord);
+    relief_side_offset +=
+        vec3(side_relief.x, side_relief.y, 0.0) * projection_weights.z;
+    relief_resolved += side_relief.z * projection_weights.z;
+  }
   float relief_lost = clamp(1.0 - relief_resolved / 0.61, 0.0, 1.0);
 
   const float k_rill_step = 0.05;
@@ -1150,13 +1273,12 @@ void main() {
             0.96);
   float relief_amp = 0.055 + (0.055 + 0.060 * u_soil_roughness) * soil_mix +
                      0.07 * rock_mask + 0.025 * exposed_ground + 0.040 * bare_patch;
-  relief_amp *= mix(1.0, 0.45, tactical);
+  relief_amp *= mix(1.0, 0.75, tactical);
   relief_amp *= k_soi_terrain_relief_damping;
+  relief_amp *= 1.0 - snow_cover * 0.70;
   vec3 relief_offset =
-      mix(vec3(relief_gradient.x, 0.0, relief_gradient.y),
-          vec3(relief_gradient.x, relief_gradient.y, 0.0) * wall_axis +
-              vec3(0.0, relief_gradient.y, relief_gradient.x) * (1.0 - wall_axis),
-          wall_blend);
+      vec3(relief_gradient.x, 0.0, relief_gradient.y) * projection_weights.y +
+      relief_side_offset;
   vec3 detail_normal = normalize(normal - relief_offset * relief_amp);
 
   float ndl = soi_wrapped_diffuse(detail_normal);

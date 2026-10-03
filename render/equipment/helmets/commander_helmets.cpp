@@ -117,80 +117,56 @@ void add_base_helmet(std::vector<Primitive>& primitives, bool face_guard) {
 void add_roman_base_helmet(std::vector<Primitive>& primitives) {
   append_specs(primitives, std::span{k_roman_base_helmet_primitives});
 
-  for (int side = 0; side < 2; ++side) {
-    float const s = (side == 0) ? -1.0F : 1.0F;
-    primitives.push_back(generated_ellipsoid(QVector3D(s * 0.72F, -0.28F, 1.28F),
-                                             QVector3D(0.42F, 0.09F, 0.19F),
-                                             k_accent_slot,
-                                             1.0F,
-                                             2));
-    primitives.push_back(generated_cylinder(QVector3D(s * 0.78F, -0.28F, 1.20F),
-                                            QVector3D(s * 1.20F, -0.44F, 0.30F),
-                                            0.11F,
+  for (int side : {-1, 1}) {
+    float const sign = static_cast<float>(side);
+
+    primitives.push_back(generated_ellipsoid(
+        {sign * 1.20F, -0.69F, 0.46F}, {0.13F, 0.75F, 0.46F}, k_metal_slot, 1.0F, 2));
+    primitives.push_back(generated_cylinder({sign * 1.27F, -0.32F, 0.84F},
+                                            {sign * 1.19F, -1.22F, 0.68F},
+                                            0.052F,
                                             k_accent_slot,
                                             1.0F,
                                             2));
-    primitives.push_back(generated_ellipsoid(QVector3D(s * 0.32F, 0.46F, 1.42F),
-                                             QVector3D(0.34F, 0.11F, 0.19F),
-                                             k_accent_slot,
-                                             1.0F,
-                                             2));
-    primitives.push_back(generated_ellipsoid(QVector3D(s * 0.84F, 0.32F, 1.22F),
-                                             QVector3D(0.30F, 0.10F, 0.18F),
-                                             k_accent_slot,
-                                             1.0F,
-                                             2));
-  }
+    primitives.push_back(
+        generated_sphere({sign * 1.35F, -0.15F, 0.40F}, 0.10F, k_accent_slot, 1.0F, 2));
 
-  for (int side = 0; side < 2; ++side) {
-    float const s = (side == 0) ? -1.0F : 1.0F;
-    primitives.push_back(generated_cylinder(QVector3D(s * 1.14F, -0.32F, 0.34F),
-                                            QVector3D(s * 1.32F, -0.37F, 0.29F),
-                                            0.62F,
-                                            k_metal_slot,
-                                            1.0F,
-                                            2));
-    primitives.push_back(generated_cylinder(QVector3D(s * 1.00F, -0.94F, 0.50F),
-                                            QVector3D(s * 1.18F, -0.99F, 0.45F),
-                                            0.48F,
-                                            k_metal_slot,
-                                            1.0F,
-                                            2));
-    primitives.push_back(generated_cylinder(QVector3D(s * 0.78F, -1.40F, 0.60F),
-                                            QVector3D(s * 0.94F, -1.45F, 0.55F),
-                                            0.29F,
-                                            k_metal_slot,
-                                            1.0F,
-                                            2));
-    primitives.push_back(generated_sphere(
-        QVector3D(s * 1.38F, -0.20F, 0.28F), 0.15F, k_dark_slot, 1.0F, 2));
-    primitives.push_back(generated_sphere(
-        QVector3D(s * 1.26F, -0.76F, 0.48F), 0.12F, k_dark_slot, 1.0F, 2));
+    for (int leaf = 0; leaf < 5; ++leaf) {
+      float const t = static_cast<float>(leaf) / 4.0F;
+      primitives.push_back(generated_ellipsoid(
+          {sign * (0.22F + 0.98F * t), 0.25F + 0.28F * t, 1.48F - 0.57F * t},
+          {0.17F, 0.095F, 0.065F},
+          k_accent_slot,
+          1.0F,
+          2));
+    }
+  }
+  primitives.push_back(generated_ellipsoid(
+      {0.0F, -0.16F, 1.43F}, {1.06F, 0.07F, 0.12F}, k_accent_slot, 1.0F, 2));
+}
+
+void add_crest_hair(std::vector<Primitive>& primitives, bool transverse) {
+  for (int strand = 0; strand < 27; ++strand) {
+    float const t = static_cast<float>(strand) / 26.0F;
+    float const along = (2.0F * t - 1.0F) * 1.48F;
+    float const height = 1.75F + 1.04F * std::sin(t * 3.14159265F);
+    QVector3D root = transverse ? QVector3D(along * 0.91F, height - 0.34F, -0.04F)
+                                : QVector3D(0.0F, height - 0.34F, along - 0.05F);
+    QVector3D tip = transverse ? QVector3D(along, height + 0.09F, -0.04F)
+                               : QVector3D(0.0F, height + 0.09F, along - 0.05F);
+    primitives.push_back(generated_cone(root, tip, 0.082F, k_plume_slot, 1.0F, 0));
   }
 }
 
 void add_fabius_crest(std::vector<Primitive>& primitives) {
   append_specs(primitives, std::span{k_fabius_crest_primitives});
+  add_crest_hair(primitives, false);
 }
 
 void add_scipio_crest(std::vector<Primitive>& primitives) {
   append_specs(primitives, std::span{k_scipio_crest_primitives});
 
-  for (int side : {-1, 1}) {
-    float const s = static_cast<float>(side);
-    primitives.push_back(generated_cylinder(QVector3D(s * 0.22F, 0.92F, 1.02F),
-                                            QVector3D(s * 0.78F, 1.20F, 0.92F),
-                                            0.055F,
-                                            k_accent_slot,
-                                            1.0F,
-                                            2));
-    primitives.push_back(generated_cone(QVector3D(s * 0.50F, 1.05F, 0.96F),
-                                        QVector3D(s * 0.88F, 1.44F, 0.90F),
-                                        0.10F,
-                                        k_accent_slot,
-                                        1.0F,
-                                        2));
-  }
+  add_crest_hair(primitives, true);
 }
 
 void add_marcellus_crest(std::vector<Primitive>& primitives) {
@@ -317,30 +293,30 @@ auto commander_colors(CommanderHelmetStyle style, const HumanoidPalette& palette
   (void)palette;
   switch (style) {
   case CommanderHelmetStyle::Fabius:
-    return {QVector3D(0.48F, 0.51F, 0.55F),
+    return {QVector3D(0.36F, 0.38F, 0.40F),
             QVector3D(0.17F, 0.18F, 0.21F),
-            QVector3D(0.72F, 0.69F, 0.58F),
-            QVector3D(0.58F, 0.035F, 0.025F)};
+            QVector3D(0.78F, 0.60F, 0.31F),
+            QVector3D(0.40F, 0.025F, 0.035F)};
   case CommanderHelmetStyle::Scipio:
     return {QVector3D(0.58F, 0.49F, 0.31F),
             QVector3D(0.20F, 0.16F, 0.105F),
             QVector3D(0.90F, 0.66F, 0.22F),
-            QVector3D(0.76F, 0.035F, 0.02F)};
+            QVector3D(0.54F, 0.025F, 0.05F)};
   case CommanderHelmetStyle::Marcellus:
-    return {QVector3D(0.40F, 0.43F, 0.47F),
+    return {QVector3D(0.29F, 0.31F, 0.34F),
             QVector3D(0.14F, 0.15F, 0.18F),
-            QVector3D(0.63F, 0.31F, 0.12F),
+            QVector3D(0.70F, 0.50F, 0.24F),
             QVector3D(0.62F, 0.045F, 0.025F)};
   case CommanderHelmetStyle::Hanno:
     return {QVector3D(0.48F, 0.39F, 0.24F),
             QVector3D(0.16F, 0.13F, 0.095F),
             QVector3D(0.84F, 0.58F, 0.20F),
-            QVector3D(0.40F, 0.055F, 0.46F)};
+            QVector3D(0.29F, 0.045F, 0.31F)};
   case CommanderHelmetStyle::Hasdrubal:
     return {QVector3D(0.36F, 0.31F, 0.22F),
             QVector3D(0.10F, 0.16F, 0.17F),
-            QVector3D(0.18F, 0.62F, 0.60F),
-            QVector3D(0.37F, 0.06F, 0.44F)};
+            QVector3D(0.32F, 0.52F, 0.44F),
+            QVector3D(0.19F, 0.04F, 0.24F)};
   case CommanderHelmetStyle::Hannibal:
     return {QVector3D(0.38F, 0.31F, 0.22F),
             QVector3D(0.075F, 0.08F, 0.095F),

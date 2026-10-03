@@ -14,8 +14,6 @@
 
 namespace Render::GL {
 
-// Let the lower cuirass follow the waist while the shoulders follow the chest.
-// This preserves the overlap with the tunic through torso twist and stride.
 inline void fit_armor_to_waist(Render::Creature::StaticAttachmentSpec& spec,
                                float waist_y,
                                float bottom_y) {

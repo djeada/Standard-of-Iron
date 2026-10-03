@@ -321,7 +321,7 @@ auto build_selection_for_pose(const UnitVisualSpec& spec,
   if (spec.animation_manifest.variant_table != nullptr) {
     auto const job_role = Animation::humanoid_construction_role_for_job(
         static_cast<Animation::HumanoidWorkJob>(anim.inputs.construction_job));
-    // Soldiers heaving rocks keep their own kit; only real work hands a tool.
+
     bool const job_forces_tool =
         anim.inputs.is_constructing &&
         job_role != Animation::HumanoidConstructionRole::None &&

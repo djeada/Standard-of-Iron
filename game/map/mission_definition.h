@@ -315,7 +315,7 @@ struct EventTrigger {
 struct EventAction {
   QString type;
   std::optional<QString> text;
-  // `rockfall` actions name the map's rockfall trap to release.
+
   std::optional<QString> trap;
 };
 

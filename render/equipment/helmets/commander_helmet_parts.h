@@ -105,7 +105,7 @@ inline constexpr std::array<GeneratedPrimitiveSpec, 11> k_base_helmet_primitives
      2},
 }};
 
-inline constexpr std::array<GeneratedPrimitiveSpec, 8> k_roman_base_helmet_primitives{{
+inline constexpr std::array<GeneratedPrimitiveSpec, 7> k_roman_base_helmet_primitives{{
     {GeneratedPrimitiveSpec::Shape::Ellipsoid,
      {0.0F, 0.40F, -0.06F},
      {0.0F, 0.0F, 0.0F},
@@ -128,14 +128,6 @@ inline constexpr std::array<GeneratedPrimitiveSpec, 8> k_roman_base_helmet_primi
      {1.14F, 0.13F, 0.38F},
      0.0F,
      k_metal_slot,
-     1.0F,
-     2},
-    {GeneratedPrimitiveSpec::Shape::Cylinder,
-     {0.0F, -0.10F, 1.62F},
-     {0.0F, -0.74F, 1.46F},
-     {0.0F, 0.0F, 0.0F},
-     0.13F,
-     k_accent_slot,
      1.0F,
      2},
     {GeneratedPrimitiveSpec::Shape::Ellipsoid,
@@ -172,7 +164,7 @@ inline constexpr std::array<GeneratedPrimitiveSpec, 8> k_roman_base_helmet_primi
      2},
 }};
 
-inline constexpr std::array<GeneratedPrimitiveSpec, 14> k_fabius_crest_primitives{{
+inline constexpr std::array<GeneratedPrimitiveSpec, 12> k_fabius_crest_primitives{{
     {GeneratedPrimitiveSpec::Shape::Box,
      {0.0F, 1.52F, -0.05F},
      {0.0F, 0.0F, 0.0F},
@@ -269,22 +261,6 @@ inline constexpr std::array<GeneratedPrimitiveSpec, 14> k_fabius_crest_primitive
      k_plume_slot,
      1.0F,
      0},
-    {GeneratedPrimitiveSpec::Shape::Cone,
-     {-0.94F, 0.96F, -0.18F},
-     {-1.54F, 1.36F, -0.42F},
-     {0.0F, 0.0F, 0.0F},
-     0.16F,
-     k_dark_slot,
-     1.0F,
-     2},
-    {GeneratedPrimitiveSpec::Shape::Cone,
-     {0.94F, 0.96F, -0.18F},
-     {1.54F, 1.36F, -0.42F},
-     {0.0F, 0.0F, 0.0F},
-     0.16F,
-     k_dark_slot,
-     1.0F,
-     2},
 }};
 
 inline constexpr std::array<GeneratedPrimitiveSpec, 10> k_scipio_crest_primitives{{

@@ -103,10 +103,9 @@ enum class ScenarioCommandKind : std::uint8_t {
   SetFarmGrowth,
 
   ReloadUndeadZoneState,
-  // Releases the rockfall trap named by `zone_id`.
+
   TriggerRockfall,
-  // The group's troops roll the stone cache they stand beside, as the HUD
-  // Roll Stones order does.
+
   RollStones,
 };
 
@@ -483,7 +482,7 @@ struct ArenaScenarioDefinition {
   std::vector<Game::Map::TerrainFeature> terrain_features;
 
   std::vector<Game::Map::UndeadZone> undead_zones;
-  // World coordinates relative to the scenario origin.
+
   std::vector<Game::Map::RockfallTrap> rockfall_traps;
   std::vector<ArenaScenarioOwnerTeam> owner_teams;
   std::vector<ArenaScenarioAIProfile> ai_profiles;

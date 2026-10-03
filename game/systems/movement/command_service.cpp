@@ -372,9 +372,7 @@ auto CommandService::plan_ground_move(Engine::Core::World& world,
   }
 
   if (auto const* first = world.try_get<Engine::Core::UnitComponent>(units.front())) {
-    // A click on the balcony of the troops' own wall is an order to man it: keep
-    // the point (it is not walkable ground) and string the troops along the
-    // wall; WallWalkSystem walks each to a stair and up.
+
     if (auto const order = WallWalk::wall_walk_order_at(
             world, first->owner_id, target.x(), target.z())) {
       constexpr float k_wall_post_spacing = 6.0F;

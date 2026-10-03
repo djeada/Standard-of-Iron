@@ -1081,8 +1081,6 @@ constexpr float k_rad_to_deg_f = 180.0F / std::numbers::pi_v<float>;
   return static_cast<float>(value & 0xffffU) / 65535.0F;
 }
 
-// Weathered granite with a little variation between stones, and the odd
-// lichen-stained one.
 [[nodiscard]] auto rock_color(std::uint32_t seed) -> QVector3D {
   float const shade = rock_hash(seed, 1U);
   QVector3D color = k_dark_granite + (k_granite - k_dark_granite) * shade;
@@ -1092,7 +1090,6 @@ constexpr float k_rad_to_deg_f = 180.0F / std::numbers::pi_v<float>;
   return color;
 }
 
-// Squashes the round stone mesh into a lumpier boulder in its own frame.
 [[nodiscard]] auto rock_shape(std::uint32_t seed) -> QVector3D {
   return {0.92F + 0.20F * rock_hash(seed, 3U),
           0.78F + 0.18F * rock_hash(seed, 4U),
@@ -1119,7 +1116,6 @@ void draw_log(Renderer* renderer,
   renderer->mesh(cylinder, Geom::cylinder_between(a, b, radius), color, nullptr, 1.0F);
 }
 
-// A chevron lying on the slope, pointing downhill.
 void draw_chevron(Renderer* renderer,
                   Mesh* cube,
                   const QVector3D& tip,
@@ -1127,8 +1123,7 @@ void draw_chevron(Renderer* renderer,
                   const QVector3D& color,
                   float size,
                   float alpha) {
-  // Two short arms meeting at the tip, swept back up the slope: a "v"
-  // pointing the way the stones will go.
+
   float const yaw = std::atan2(downhill.x(), downhill.z()) * k_rad_to_deg_f;
   float const arm = 0.62F * size;
   for (float side : {-1.0F, 1.0F}) {
@@ -1156,8 +1151,7 @@ void draw_cache_banner(Renderer* renderer,
   context.resources = resources;
   context.backend = renderer->backend();
   context.animation_time = renderer->get_animation_time();
-  // The banner hangs off the pole's +x side; turn it to face down the slope
-  // and hang out to the side of the pile.
+
   context.model.translate(pole_base);
   context.model.rotate(yaw + 180.0F, 0.0F, 1.0F, 0.0F);
 
@@ -1211,8 +1205,6 @@ void draw_cache(Renderer* renderer,
   float const yaw = std::atan2(forward.x(), forward.z()) * k_rad_to_deg_f;
   float const push = std::max(cache.push_progress, 0.0F);
 
-  // While the soldiers heave, the whole pile rocks and tips over its front
-  // edge, faster and further as the push builds.
   QMatrix4x4 pile;
   QVector3D const pivot = cache.position + forward * (r * 1.1F);
   pile.translate(pivot);
@@ -1222,7 +1214,6 @@ void draw_cache(Renderer* renderer,
   }
   pile.translate(-pivot);
 
-  // Two rows of boulders behind the crib, the top row resting in the gaps.
   int const left = std::max(0, cache.boulders_left);
   int const bottom = std::min(left, 3);
   int const top = std::max(0, left - bottom);
@@ -1245,8 +1236,6 @@ void draw_cache(Renderer* renderer,
         renderer, stone, placement, r * (0.85F + 0.25F * rock_hash(seed, 8U)), seed);
   }
 
-  // The timber crib holding the pile back: two stakes and a cross log on the
-  // downhill side. The stakes lean out as the men push.
   float const half_width = r * 2.6F;
   float const lean = push * 0.55F * r;
   for (float side : {-1.0F, 1.0F}) {
@@ -1266,8 +1255,6 @@ void draw_cache(Renderer* renderer,
            0.09F,
            k_timber_light);
 
-  // The standard claim banner behind the pile shows who holds it: undyed
-  // while nobody does, then the holder's colours.
   bool const claimed = cache.owner_id >= 0;
   QVector3D const cloth =
       claimed ? Render::team_color(cache.owner_id) : k_unclaimed_cloth;
@@ -1277,8 +1264,6 @@ void draw_cache(Renderer* renderer,
                     yaw,
                     cloth);
 
-  // Your own caches mark the slope they cover. The marks glow red and pulse
-  // while enemies are on it: that is the moment to roll.
   bool const own = view != nullptr && claimed && cache.owner_id == view->local_owner_id;
   if (!own || !cache.armed || cache.push_progress >= 0.0F) {
     return;

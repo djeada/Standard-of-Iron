@@ -20,7 +20,8 @@ auto commander_regalia_archetype(CommanderRegaliaStyle style) -> const RenderArc
 
 auto commander_regalia_make_static_attachment(CommanderRegaliaStyle style,
                                               std::uint16_t torso_socket_bone_index,
-                                              std::uint8_t base_role_byte)
+                                              std::uint8_t leather_role_byte,
+                                              std::uint8_t metal_role_byte)
     -> Render::Creature::StaticAttachmentSpec;
 
 } // namespace Render::GL

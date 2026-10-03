@@ -316,7 +316,8 @@ auto humanoid_construction_role_for_job(HumanoidWorkJob job) noexcept
   case HumanoidWorkJob::Reap:
     return HumanoidConstructionRole::Reap;
   case HumanoidWorkJob::Butcher:
-    return HumanoidConstructionRole::KneelingChisel;
+
+    return HumanoidConstructionRole::Hammer;
   case HumanoidWorkJob::Push:
     return HumanoidConstructionRole::Push;
   case HumanoidWorkJob::Climb:

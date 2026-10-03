@@ -175,10 +175,6 @@ default_recruitment(const AIContext& context) -> DoctrineRecruitment {
          recruitment.preferred.end();
 }
 
-// The army as the recruiter should weigh it: what is fielded plus what the
-// barracks are already training. Counting only the fielded troops let every
-// barracks queue the same short arm before any of it arrived, and the army
-// overshot its doctrine by a whole wave.
 struct ArmStrength {
   int infantry = 0;
   int missile = 0;
@@ -267,7 +263,6 @@ struct ArmStrength {
   return static_cast<float>(strength.of(arm)) / static_cast<float>(total) >= target;
 }
 
-// The arm furthest below its share of the order of battle.
 [[nodiscard]] auto neediest_arm(const DoctrineRecruitment& recruitment,
                                 const ArmStrength& strength) -> DoctrineArm {
   const int total = strength.total();
@@ -404,11 +399,6 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
     troop_type = nation->get_troop(Game::Units::TroopType::Builder);
   }
 
-  // Which arm to raise next weighs what the barracks are already training, so
-  // a short arm is not queued again by every barracks before any of it
-  // arrives. Whether an arm may still be bought at all goes by what is
-  // fielded: the recruiter keeps spending when its first choice is
-  // unaffordable instead of sitting on idle manpower.
   const ArmStrength strength = strength_in_training(*nation, context, snapshot);
   const ArmStrength fielded{context.melee_count,
                             context.ranged_count,

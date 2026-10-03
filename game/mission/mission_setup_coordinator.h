@@ -72,7 +72,7 @@ mission_position_to_world(const Game::Mission::Position& position,
 struct PendingMissionEvent {
   float trigger_time = 0.0F;
   QString text;
-  // Set for `rockfall` actions: the trap released when the event fires.
+
   QString rockfall_trap;
   bool fired = false;
 };

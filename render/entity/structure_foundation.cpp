@@ -108,8 +108,6 @@ void submit_structure_foundation(const StructureFoundation& foundation,
     out.mesh(cube, model * local, k_foundation_color, white, alpha);
   };
 
-  // Keep the downhill support under the walls, but leave the terrain visible
-  // through the building's footprint instead of capping it with a square slab.
   submit_wall(foundation.center_x,
               foundation.center_z + half_depth - half_wall_z,
               half_width,

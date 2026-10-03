@@ -4,6 +4,7 @@
 #include "armor/carthage_shoulder_cover.h"
 #include "armor/cloak_renderer.h"
 #include "armor/commander_pauldron.h"
+#include "armor/commander_regalia.h"
 #include "armor/roman_armor.h"
 #include "armor/roman_greaves.h"
 #include "armor/roman_shoulder_cover.h"
@@ -28,7 +29,7 @@ auto commander_cloak_config(CommanderCloakStyle style) -> const CloakConfig& {
     CloakConfig cfg;
 
     cfg.primary_color = {0.34F, 0.055F, 0.045F};
-    cfg.trim_color = {0.72F, 0.74F, 0.70F};
+    cfg.trim_color = {0.72F, 0.56F, 0.30F};
     cfg.length_scale = 1.04F;
     cfg.width_scale = 0.92F;
     cfg.shoulder_anchor_up = 0.06F;
@@ -41,9 +42,9 @@ auto commander_cloak_config(CommanderCloakStyle style) -> const CloakConfig& {
   static const CloakConfig scipio = [] {
     CloakConfig cfg;
 
-    cfg.primary_color = {0.58F, 0.075F, 0.045F};
+    cfg.primary_color = {0.43F, 0.025F, 0.06F};
     cfg.trim_color = {0.94F, 0.68F, 0.24F};
-    cfg.length_scale = 1.02F;
+    cfg.length_scale = 1.10F;
     cfg.width_scale = 0.92F;
     cfg.shoulder_anchor_up = 0.07F;
     cfg.team_blend = 0.18F;
@@ -54,8 +55,8 @@ auto commander_cloak_config(CommanderCloakStyle style) -> const CloakConfig& {
   }();
   static const CloakConfig marcellus = [] {
     CloakConfig cfg;
-    cfg.primary_color = {0.46F, 0.105F, 0.055F};
-    cfg.trim_color = {0.30F, 0.28F, 0.26F};
+    cfg.primary_color = {0.32F, 0.04F, 0.055F};
+    cfg.trim_color = {0.62F, 0.44F, 0.23F};
     cfg.length_scale = 0.68F;
     cfg.width_scale = 0.78F;
     cfg.shoulder_anchor_up = 0.12F;
@@ -80,7 +81,7 @@ auto commander_cloak_config(CommanderCloakStyle style) -> const CloakConfig& {
   static const CloakConfig hasdrubal = [] {
     CloakConfig cfg;
     cfg.primary_color = {0.055F, 0.245F, 0.26F};
-    cfg.trim_color = {0.58F, 0.30F, 0.62F};
+    cfg.trim_color = {0.54F, 0.57F, 0.41F};
     cfg.length_scale = 0.76F;
     cfg.width_scale = 0.86F;
     cfg.shoulder_anchor_up = 0.12F;
@@ -297,6 +298,42 @@ auto commander_pauldron_role_colors(const void* variant_void,
   (void)out;
   (void)max_count;
   return base_count;
+}
+
+namespace {
+
+template <CommanderRegaliaStyle Style>
+auto build_commander_dress(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  auto attachments = build_commander_pauldron_attachments(base_role_byte);
+  attachments.push_back(
+      commander_regalia_make_static_attachment(Style,
+                                               humanoid_chest_bone(),
+                                               humanoid_leather_dark_role_byte(),
+                                               humanoid_metal_role_byte()));
+  return attachments;
+}
+
+template <CommanderRegaliaStyle Style>
+void register_commander_dress(const char* id) {
+  auto& registry = EquipmentRegistry::instance();
+  registry.register_equipment_id(EquipmentCategory::Armor, id);
+  register_humanoid_equipment_contribution(
+      registry.resolve_handle(EquipmentCategory::Armor, id),
+      {.build_attachments = &build_commander_dress<Style>,
+       .append_role_colors = &commander_pauldron_role_colors,
+       .role_count = 0U});
+}
+
+} // namespace
+
+void register_commander_regalia_descriptors() {
+  register_commander_dress<CommanderRegaliaStyle::Fabius>("regalia_fabius");
+  register_commander_dress<CommanderRegaliaStyle::Scipio>("regalia_scipio");
+  register_commander_dress<CommanderRegaliaStyle::Marcellus>("regalia_marcellus");
+  register_commander_dress<CommanderRegaliaStyle::Hanno>("regalia_hanno");
+  register_commander_dress<CommanderRegaliaStyle::Hasdrubal>("regalia_hasdrubal");
+  register_commander_dress<CommanderRegaliaStyle::Hannibal>("regalia_hannibal");
 }
 
 auto build_carthage_shoulder_attachments(std::uint8_t base_role_byte)

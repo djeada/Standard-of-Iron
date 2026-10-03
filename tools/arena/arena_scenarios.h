@@ -331,6 +331,7 @@ inline constexpr char k_engagement_order_overrides_id[] = "engagement_order_over
 inline constexpr char k_wildlife_wolf_pack_id[] = "wildlife_wolf_pack";
 inline constexpr char k_wildlife_wolf_ambush_id[] = "wildlife_wolf_ambush";
 inline constexpr char k_wildlife_pack_takedown_id[] = "wildlife_pack_takedown";
+inline constexpr char k_wildlife_sheep_slaughter_id[] = "wildlife_sheep_slaughter";
 inline constexpr char k_wildlife_bird_scatter_id[] = "wildlife_bird_scatter";
 inline constexpr char k_wildlife_bird_flyover_id[] = "wildlife_bird_flyover";
 inline constexpr char k_wildlife_mixed_pasture_id[] = "wildlife_mixed_pasture";

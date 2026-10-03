@@ -162,7 +162,7 @@ void PlantRenderer::generate_plant_instances() {
       return false;
     }
 
-    auto const scene = composition.sample_grid(gx, gz, state ^ 0xA41F2CD1U);
+    auto const scene = composition.sample_grid(gx, gz, 0x4BE531F0U);
     if (rand_01(state) > scatter_spawn_chance(ScatterRuleSpecies::Plant, scene)) {
       return false;
     }
@@ -249,16 +249,15 @@ void PlantRenderer::generate_plant_instances() {
 
       uint32_t state =
           hash_coords(x, z, m_noise_seed ^ 0x8F3C5A7EU ^ static_cast<uint32_t>(idx));
-      auto const cell_scene = composition.sample_grid(static_cast<float>(sample_x),
-                                                      static_cast<float>(sample_z),
-                                                      state ^ 0x4BE531F0U);
+      auto const cell_scene = composition.sample_grid(
+          static_cast<float>(sample_x), static_cast<float>(sample_z), 0x4BE531F0U);
 
       float density_mult = 1.0F;
       if (terrain_type == Game::Map::TerrainType::Hill) {
         density_mult = 0.6F;
       }
       density_mult *= scatter_density_multiplier(ScatterRuleSpecies::Plant, cell_scene);
-      float const cluster_mult = 0.55F + cell_scene.cluster_bias * 1.10F;
+      float const cluster_mult = scatter_patch_multiplier(cell_scene.cluster_bias);
 
       float const effective_density = plant_density * density_mult * cluster_mult *
                                       0.47F * k_plant_density_area_scale;
@@ -279,7 +278,7 @@ void PlantRenderer::generate_plant_instances() {
           continue;
         }
 
-        auto const leader_scene = composition.sample_grid(gx, gz, state ^ 0x0B35E7D4U);
+        auto const leader_scene = composition.sample_grid(gx, gz, 0x4BE531F0U);
         int const satellite_count = scatter_cluster_satellite_count(
             ScatterRuleSpecies::Plant, leader_scene, state);
         for (int satellite = 0; satellite < satellite_count; ++satellite) {

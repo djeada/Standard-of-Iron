@@ -194,6 +194,9 @@ public:
   float bite_timer{0.0F};
   float flinch_timer{0.0F};
   float held_timer{0.0F};
+
+  static constexpr float k_dazed_hold_seconds = 0.75F;
+  float dazed_timer{0.0F};
   int watched_health{-1};
 
   static constexpr float k_stall_release_seconds = 1.5F;

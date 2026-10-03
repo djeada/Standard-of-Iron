@@ -4725,7 +4725,6 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
       Arena::scenario_needs_animation_diagnostics(*definition) ||
       m_force_animation_diagnostics);
 
-  // Steps may release a trap on the first tick, so the traps exist first.
   configure_scenario_rockfall_traps(*definition, scenario_origin);
   if (!m_scenario_runner->start()) {
     qWarning().noquote() << QStringLiteral(

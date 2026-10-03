@@ -11,6 +11,7 @@
 #include "render/entity/registry.h"
 #include "render/wildlife/sheep_spec.h"
 #include "render/wildlife/wildlife_prepare.h"
+#include "sheep_slapstick.h"
 #include "wildlife_draw_state.h"
 
 namespace Render::GL::Wildlife {
@@ -192,7 +193,18 @@ void draw_sheep(const DrawContext& ctx, ISubmitter& out) {
     Render::Wildlife::submit_wildlife(sunk, inputs, out);
     return;
   }
-  Render::Wildlife::submit_wildlife(ctx, inputs, out);
+
+  SheepSlapstick const gag = plan_sheep_slapstick(state);
+  DrawContext dizzy = ctx;
+  dizzy.model = ctx.model * sheep_sway_matrix(gag);
+  Render::Wildlife::submit_wildlife(dizzy, inputs, out);
+  submit_sheep_slapstick(
+      ctx.model,
+      gag,
+      state.time,
+      state.seed,
+      inputs.variant.roles[Render::Wildlife::k_sheep_role_wool_light - 1U],
+      out);
 }
 
 } // namespace

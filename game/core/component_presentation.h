@@ -186,8 +186,6 @@ struct FormationSoldierPresentation {
   float crowd_offset_x{0.0F};
   float crowd_offset_z{0.0F};
 
-  // Height above the terrain, for soldiers standing on a wall walk, a stair
-  // or a siege-tower bridge; zero on open ground.
   float elevation{0.0F};
   // On a ladder or a siege tower's inner ladder: drawn hand over hand, facing
   // the rungs, its stride set by `elevation`.

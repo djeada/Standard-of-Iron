@@ -26,6 +26,17 @@ namespace {
 using std::uint32_t;
 using namespace Render::Ground;
 
+constexpr float k_tree_look_cells_per_tile = 8.0F;
+
+auto mix_tree_look_hash(uint32_t value) -> uint32_t {
+  value ^= value >> 16U;
+  value *= 0x7FEB352DU;
+  value ^= value >> 15U;
+  value *= 0x846CA68BU;
+  value ^= value >> 16U;
+  return value;
+}
+
 auto trunk_contact_radius(Game::Map::TreeSpecies species) -> float {
   switch (species) {
   case Game::Map::TreeSpecies::Pine:
@@ -137,9 +148,10 @@ void TreeRenderer::append_world_prop_trees() {
                         bed_tree_base(terrain_service, m_species, surface, scale),
                         surface.z());
 
-    uint32_t var_state = hash_coords(static_cast<int>(std::round(prop.x)),
-                                     static_cast<int>(std::round(prop.z)),
-                                     m_noise_seed ^ profile.prop_salt);
+    uint32_t var_state = mix_tree_look_hash(
+        hash_coords(static_cast<int>(std::round(prop.x * k_tree_look_cells_per_tile)),
+                    static_cast<int>(std::round(prop.z * k_tree_look_cells_per_tile)),
+                    m_noise_seed ^ profile.prop_salt));
     const auto look = tree_world_prop_look(profile, var_state);
 
     TreeInstanceGpu inst;

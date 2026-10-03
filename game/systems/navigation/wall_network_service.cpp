@@ -698,8 +698,6 @@ auto lateral_sign(float town, float wall) -> std::int8_t {
   return 1;
 }
 
-// Each wall's balcony hangs on the face towards its owner's town: the centroid
-// of the owner's other buildings, or of its walls when it has nothing else.
 void assign_wall_walk_sides(Engine::Core::World& world) {
   std::unordered_map<int, TownCentre> buildings;
   std::unordered_map<int, TownCentre> walls;

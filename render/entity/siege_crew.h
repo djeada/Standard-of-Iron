@@ -29,8 +29,6 @@ struct SiegeCrewMember {
 
 inline constexpr std::size_t k_max_siege_crew = 4;
 
-// Which engine a crew serves. `Engine` leaves the choice to
-// SiegeCrewFrame::ballista (catapult or bolt thrower).
 enum class SiegeCrewKind : std::uint8_t {
   Engine,
   Ram,

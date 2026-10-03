@@ -217,8 +217,6 @@ void evaluate_skeleton(const Render::GL::HumanoidPose& pose,
     ctx.body_up.normalize();
   }
 
-  // Match the hip anchors used by the leg IK. Deriving these from the knees
-  // moves the thigh roots forward/backward during a stride and tears the waist.
   using HP = Render::GL::HumanProportions;
   ctx.hip_l =
       ctx.pelvis + QVector3D(-HP::HIP_LATERAL_OFFSET, HP::HIP_VERTICAL_OFFSET, 0.0F);

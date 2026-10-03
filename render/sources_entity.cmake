@@ -7,6 +7,7 @@ set(RENDER_ENTITY_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/humanoid_pose_policies.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/wildlife/wildlife_draw_state.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/wildlife/sheep_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/wildlife/sheep_slapstick.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/wildlife/wolf_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/archer_renderer_common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/archer_renderer.cpp
