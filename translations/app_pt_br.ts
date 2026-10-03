@@ -10091,121 +10091,6 @@ para ver a prévia</translation>
     </message>
 </context>
 <context>
-    <name>ProductionManager</name>
-    <message>
-        <source>Select a tree, boulder, ore deposit, ripe farm or sheep.</source>
-        <translation>Selecione uma árvore, uma rocha, um depósito de minério, uma fazenda madura ou uma ovelha.</translation>
-    </message>
-    <message>
-        <source>Select a tree to chop.</source>
-        <translation>Selecione uma árvore para cortar.</translation>
-    </message>
-    <message>
-        <source>Select a boulder to collect.</source>
-        <translation>Selecione um pedregulho para coletar.</translation>
-    </message>
-    <message>
-        <source>Select iron ore to collect.</source>
-        <translation>Selecione minério de ferro para coletar.</translation>
-    </message>
-    <message>
-        <source>No available builder can chop that tree.</source>
-        <translation>Nenhum construtor disponível pode cortar essa árvore.</translation>
-    </message>
-    <message>
-        <source>No available builder can collect that boulder.</source>
-        <translation>Nenhum construtor disponível pode coletar esse pedregulho.</translation>
-    </message>
-    <message>
-        <source>No available builder can collect that iron ore.</source>
-        <translation>Nenhum construtor disponível pode coletar esse minério de ferro.</translation>
-    </message>
-    <message>
-        <source>No available builder can collect that resource.</source>
-        <translation>Nenhum construtor disponível pode coletar esse recurso.</translation>
-    </message>
-    <message>
-        <source>No walkable spot near that tree.</source>
-        <translation>Nenhum ponto acessível perto dessa árvore.</translation>
-    </message>
-    <message>
-        <source>No walkable spot near that boulder.</source>
-        <translation>Nenhum ponto acessível perto desse pedregulho.</translation>
-    </message>
-    <message>
-        <source>No walkable spot near that iron ore.</source>
-        <translation>Nenhum ponto acessível perto desse minério de ferro.</translation>
-    </message>
-    <message>
-        <source>No walkable spot near that resource.</source>
-        <translation>Nenhum ponto acessível perto desse recurso.</translation>
-    </message>
-    <message>
-        <source>Drag out a wall line first.</source>
-        <translation>Primeiro arraste uma linha de muro.</translation>
-    </message>
-    <message>
-        <source>Choose a build location.</source>
-        <translation>Escolha um local de construção.</translation>
-    </message>
-    <message>
-        <source>That resource is already assigned.</source>
-        <translation>Esse recurso já está atribuído.</translation>
-    </message>
-    <message>
-        <source>No valid wall segments in that drag.</source>
-        <translation>Nenhum segmento de muro válido nesse arrasto.</translation>
-    </message>
-    <message>
-        <source>No available builder.</source>
-        <translation>Nenhum construtor disponível.</translation>
-    </message>
-    <message>
-        <source>That structure cannot be placed.</source>
-        <translation>Essa estrutura não pode ser posicionada.</translation>
-    </message>
-    <message>
-        <source>Building factory unavailable.</source>
-        <translation>Fábrica de construções indisponível.</translation>
-    </message>
-    <message>
-        <source>Nothing here is worth harvesting.</source>
-        <translation>Aqui não há nada que valha a pena colher.</translation>
-    </message>
-    <message>
-        <source>No resource here to work.</source>
-        <translation>Não há aqui recurso algum para trabalhar.</translation>
-    </message>
-    <message>
-        <source>Something is already standing here.</source>
-        <translation>Já há algo de pé aqui.</translation>
-    </message>
-    <message>
-        <source>No part of this wall can stand there.</source>
-        <translation>Nenhuma parte desta muralha pode se erguer aí.</translation>
-    </message>
-    <message>
-        <source>This ground cannot be cleared to build on.</source>
-        <translation>Este terreno não pode ser limpo para construir.</translation>
-    </message>
-    <message>
-        <source>Nothing can be built on the water.</source>
-        <translation>Nada pode ser construído sobre a água.</translation>
-    </message>
-    <message>
-        <source>The ground here is too steep to build on.</source>
-        <translation>O terreno aqui é íngreme demais para construir.</translation>
-    </message>
-    <message>
-        <source>That is beyond the edge of the battlefield.</source>
-        <translation>Isso está além da borda do campo de batalha.</translation>
-    </message>
-    <message>
-        <source>A wall already stands here.</source>
-        <translation>Já há uma muralha aqui.</translation>
-    </message>
-</context>
-<context>
     <name>ProductionBarracksQueue</name>
     <message>
         <source>%1s</source>
@@ -10602,6 +10487,121 @@ Use o modo Entregar e clique em um quartel aliado para aumentar a reserva dele.<
     <message>
         <source>This home already committed its 3 civilians</source>
         <translation>Esta casa já destinou seus 3 civis</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionManager</name>
+    <message>
+        <source>Select a tree, boulder, ore deposit, ripe farm or sheep.</source>
+        <translation>Selecione uma árvore, uma rocha, um depósito de minério, uma fazenda madura ou uma ovelha.</translation>
+    </message>
+    <message>
+        <source>Select a tree to chop.</source>
+        <translation>Selecione uma árvore para cortar.</translation>
+    </message>
+    <message>
+        <source>Select a boulder to collect.</source>
+        <translation>Selecione um pedregulho para coletar.</translation>
+    </message>
+    <message>
+        <source>Select iron ore to collect.</source>
+        <translation>Selecione minério de ferro para coletar.</translation>
+    </message>
+    <message>
+        <source>No available builder can chop that tree.</source>
+        <translation>Nenhum construtor disponível pode cortar essa árvore.</translation>
+    </message>
+    <message>
+        <source>No available builder can collect that boulder.</source>
+        <translation>Nenhum construtor disponível pode coletar esse pedregulho.</translation>
+    </message>
+    <message>
+        <source>No available builder can collect that iron ore.</source>
+        <translation>Nenhum construtor disponível pode coletar esse minério de ferro.</translation>
+    </message>
+    <message>
+        <source>No available builder can collect that resource.</source>
+        <translation>Nenhum construtor disponível pode coletar esse recurso.</translation>
+    </message>
+    <message>
+        <source>No walkable spot near that tree.</source>
+        <translation>Nenhum ponto acessível perto dessa árvore.</translation>
+    </message>
+    <message>
+        <source>No walkable spot near that boulder.</source>
+        <translation>Nenhum ponto acessível perto desse pedregulho.</translation>
+    </message>
+    <message>
+        <source>No walkable spot near that iron ore.</source>
+        <translation>Nenhum ponto acessível perto desse minério de ferro.</translation>
+    </message>
+    <message>
+        <source>No walkable spot near that resource.</source>
+        <translation>Nenhum ponto acessível perto desse recurso.</translation>
+    </message>
+    <message>
+        <source>Drag out a wall line first.</source>
+        <translation>Primeiro arraste uma linha de muro.</translation>
+    </message>
+    <message>
+        <source>Choose a build location.</source>
+        <translation>Escolha um local de construção.</translation>
+    </message>
+    <message>
+        <source>That resource is already assigned.</source>
+        <translation>Esse recurso já está atribuído.</translation>
+    </message>
+    <message>
+        <source>No valid wall segments in that drag.</source>
+        <translation>Nenhum segmento de muro válido nesse arrasto.</translation>
+    </message>
+    <message>
+        <source>No available builder.</source>
+        <translation>Nenhum construtor disponível.</translation>
+    </message>
+    <message>
+        <source>That structure cannot be placed.</source>
+        <translation>Essa estrutura não pode ser posicionada.</translation>
+    </message>
+    <message>
+        <source>Building factory unavailable.</source>
+        <translation>Fábrica de construções indisponível.</translation>
+    </message>
+    <message>
+        <source>Nothing here is worth harvesting.</source>
+        <translation>Aqui não há nada que valha a pena colher.</translation>
+    </message>
+    <message>
+        <source>No resource here to work.</source>
+        <translation>Não há aqui recurso algum para trabalhar.</translation>
+    </message>
+    <message>
+        <source>Something is already standing here.</source>
+        <translation>Já há algo de pé aqui.</translation>
+    </message>
+    <message>
+        <source>No part of this wall can stand there.</source>
+        <translation>Nenhuma parte desta muralha pode se erguer aí.</translation>
+    </message>
+    <message>
+        <source>This ground cannot be cleared to build on.</source>
+        <translation>Este terreno não pode ser limpo para construir.</translation>
+    </message>
+    <message>
+        <source>Nothing can be built on the water.</source>
+        <translation>Nada pode ser construído sobre a água.</translation>
+    </message>
+    <message>
+        <source>The ground here is too steep to build on.</source>
+        <translation>O terreno aqui é íngreme demais para construir.</translation>
+    </message>
+    <message>
+        <source>That is beyond the edge of the battlefield.</source>
+        <translation>Isso está além da borda do campo de batalha.</translation>
+    </message>
+    <message>
+        <source>A wall already stands here.</source>
+        <translation>Já há uma muralha aqui.</translation>
     </message>
 </context>
 <context>

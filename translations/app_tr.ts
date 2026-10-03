@@ -10088,121 +10088,6 @@ bir harita seç</translation>
     </message>
 </context>
 <context>
-    <name>ProductionManager</name>
-    <message>
-        <source>Select a tree to chop.</source>
-        <translation>Kesmek için bir ağaç seç.</translation>
-    </message>
-    <message>
-        <source>Select a boulder to collect.</source>
-        <translation>Toplamak için bir kaya seç.</translation>
-    </message>
-    <message>
-        <source>Select iron ore to collect.</source>
-        <translation>Toplamak için demir cevheri seç.</translation>
-    </message>
-    <message>
-        <source>No available builder can chop that tree.</source>
-        <translation>O ağacı kesebilecek boş bir inşaatçı yok.</translation>
-    </message>
-    <message>
-        <source>No available builder can collect that boulder.</source>
-        <translation>O kayayı toplayabilecek boş bir inşaatçı yok.</translation>
-    </message>
-    <message>
-        <source>No available builder can collect that iron ore.</source>
-        <translation>O demir cevherini toplayabilecek boş bir inşaatçı yok.</translation>
-    </message>
-    <message>
-        <source>No available builder can collect that resource.</source>
-        <translation>O kaynağı toplayabilecek boş bir inşaatçı yok.</translation>
-    </message>
-    <message>
-        <source>No walkable spot near that tree.</source>
-        <translation>O ağacın yakınında yürünebilir yer yok.</translation>
-    </message>
-    <message>
-        <source>No walkable spot near that boulder.</source>
-        <translation>O kayanın yakınında yürünebilir yer yok.</translation>
-    </message>
-    <message>
-        <source>No walkable spot near that iron ore.</source>
-        <translation>O demir cevherinin yakınında yürünebilir yer yok.</translation>
-    </message>
-    <message>
-        <source>No walkable spot near that resource.</source>
-        <translation>O kaynağın yakınında yürünebilir yer yok.</translation>
-    </message>
-    <message>
-        <source>Select a tree, boulder, ore deposit, ripe farm or sheep.</source>
-        <translation>Bir ağaç, kaya, cevher yatağı, olgun tarla ya da koyun seç.</translation>
-    </message>
-    <message>
-        <source>Something is already standing here.</source>
-        <translation>Burada zaten bir şey duruyor.</translation>
-    </message>
-    <message>
-        <source>This ground cannot be cleared to build on.</source>
-        <translation>Bu zemin inşa için temizlenemez.</translation>
-    </message>
-    <message>
-        <source>Nothing can be built on the water.</source>
-        <translation>Suyun üstüne hiçbir şey inşa edilemez.</translation>
-    </message>
-    <message>
-        <source>The ground here is too steep to build on.</source>
-        <translation>Buradaki zemin inşa için fazla dik.</translation>
-    </message>
-    <message>
-        <source>That is beyond the edge of the battlefield.</source>
-        <translation>Orası savaş alanının sınırının ötesinde.</translation>
-    </message>
-    <message>
-        <source>That structure cannot be placed.</source>
-        <translation>O yapı yerleştirilemez.</translation>
-    </message>
-    <message>
-        <source>Building factory unavailable.</source>
-        <translation>Yapı üretimi kullanılamıyor.</translation>
-    </message>
-    <message>
-        <source>A wall already stands here.</source>
-        <translation>Burada zaten bir sur duruyor.</translation>
-    </message>
-    <message>
-        <source>No part of this wall can stand there.</source>
-        <translation>Bu surun hiçbir parçası oraya sığmıyor.</translation>
-    </message>
-    <message>
-        <source>Drag out a wall line first.</source>
-        <translation>Önce bir sur hattı sürükle.</translation>
-    </message>
-    <message>
-        <source>Choose a build location.</source>
-        <translation>Bir inşa yeri seç.</translation>
-    </message>
-    <message>
-        <source>That resource is already assigned.</source>
-        <translation>O kaynak zaten atanmış.</translation>
-    </message>
-    <message>
-        <source>Nothing here is worth harvesting.</source>
-        <translation>Burada toplanmaya değer bir şey yok.</translation>
-    </message>
-    <message>
-        <source>No resource here to work.</source>
-        <translation>Burada işlenecek kaynak yok.</translation>
-    </message>
-    <message>
-        <source>No valid wall segments in that drag.</source>
-        <translation>O sürüklemede geçerli sur parçası yok.</translation>
-    </message>
-    <message>
-        <source>No available builder.</source>
-        <translation>Boş inşaatçı yok.</translation>
-    </message>
-</context>
-<context>
     <name>ProductionBarracksQueue</name>
     <message>
         <source>QUEUE</source>
@@ -10599,6 +10484,121 @@ Teslim et kipini kullan, sonra yedeğine eklemek için dost bir kışlaya tıkla
     <message>
         <source>This home already committed its 3 civilians</source>
         <translation>Bu ev 3 sivilini çoktan verdi</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionManager</name>
+    <message>
+        <source>Select a tree to chop.</source>
+        <translation>Kesmek için bir ağaç seç.</translation>
+    </message>
+    <message>
+        <source>Select a boulder to collect.</source>
+        <translation>Toplamak için bir kaya seç.</translation>
+    </message>
+    <message>
+        <source>Select iron ore to collect.</source>
+        <translation>Toplamak için demir cevheri seç.</translation>
+    </message>
+    <message>
+        <source>No available builder can chop that tree.</source>
+        <translation>O ağacı kesebilecek boş bir inşaatçı yok.</translation>
+    </message>
+    <message>
+        <source>No available builder can collect that boulder.</source>
+        <translation>O kayayı toplayabilecek boş bir inşaatçı yok.</translation>
+    </message>
+    <message>
+        <source>No available builder can collect that iron ore.</source>
+        <translation>O demir cevherini toplayabilecek boş bir inşaatçı yok.</translation>
+    </message>
+    <message>
+        <source>No available builder can collect that resource.</source>
+        <translation>O kaynağı toplayabilecek boş bir inşaatçı yok.</translation>
+    </message>
+    <message>
+        <source>No walkable spot near that tree.</source>
+        <translation>O ağacın yakınında yürünebilir yer yok.</translation>
+    </message>
+    <message>
+        <source>No walkable spot near that boulder.</source>
+        <translation>O kayanın yakınında yürünebilir yer yok.</translation>
+    </message>
+    <message>
+        <source>No walkable spot near that iron ore.</source>
+        <translation>O demir cevherinin yakınında yürünebilir yer yok.</translation>
+    </message>
+    <message>
+        <source>No walkable spot near that resource.</source>
+        <translation>O kaynağın yakınında yürünebilir yer yok.</translation>
+    </message>
+    <message>
+        <source>Select a tree, boulder, ore deposit, ripe farm or sheep.</source>
+        <translation>Bir ağaç, kaya, cevher yatağı, olgun tarla ya da koyun seç.</translation>
+    </message>
+    <message>
+        <source>Something is already standing here.</source>
+        <translation>Burada zaten bir şey duruyor.</translation>
+    </message>
+    <message>
+        <source>This ground cannot be cleared to build on.</source>
+        <translation>Bu zemin inşa için temizlenemez.</translation>
+    </message>
+    <message>
+        <source>Nothing can be built on the water.</source>
+        <translation>Suyun üstüne hiçbir şey inşa edilemez.</translation>
+    </message>
+    <message>
+        <source>The ground here is too steep to build on.</source>
+        <translation>Buradaki zemin inşa için fazla dik.</translation>
+    </message>
+    <message>
+        <source>That is beyond the edge of the battlefield.</source>
+        <translation>Orası savaş alanının sınırının ötesinde.</translation>
+    </message>
+    <message>
+        <source>That structure cannot be placed.</source>
+        <translation>O yapı yerleştirilemez.</translation>
+    </message>
+    <message>
+        <source>Building factory unavailable.</source>
+        <translation>Yapı üretimi kullanılamıyor.</translation>
+    </message>
+    <message>
+        <source>A wall already stands here.</source>
+        <translation>Burada zaten bir sur duruyor.</translation>
+    </message>
+    <message>
+        <source>No part of this wall can stand there.</source>
+        <translation>Bu surun hiçbir parçası oraya sığmıyor.</translation>
+    </message>
+    <message>
+        <source>Drag out a wall line first.</source>
+        <translation>Önce bir sur hattı sürükle.</translation>
+    </message>
+    <message>
+        <source>Choose a build location.</source>
+        <translation>Bir inşa yeri seç.</translation>
+    </message>
+    <message>
+        <source>That resource is already assigned.</source>
+        <translation>O kaynak zaten atanmış.</translation>
+    </message>
+    <message>
+        <source>Nothing here is worth harvesting.</source>
+        <translation>Burada toplanmaya değer bir şey yok.</translation>
+    </message>
+    <message>
+        <source>No resource here to work.</source>
+        <translation>Burada işlenecek kaynak yok.</translation>
+    </message>
+    <message>
+        <source>No valid wall segments in that drag.</source>
+        <translation>O sürüklemede geçerli sur parçası yok.</translation>
+    </message>
+    <message>
+        <source>No available builder.</source>
+        <translation>Boş inşaatçı yok.</translation>
     </message>
 </context>
 <context>
