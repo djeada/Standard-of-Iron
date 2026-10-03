@@ -2,7 +2,18 @@ add_library(
     arena_scenario_harness
     STATIC
     arena_scenario.cpp
+    arena_scenario_validation.cpp
+    arena_scenario_report.cpp
+    arena_scenario_setup.cpp
+    arena_scenario_world_observation.cpp
+    arena_scenario_entity_observation.cpp
+    arena_scenario_expectations.cpp
+    arena_scenario_expectations_combat.cpp
+    arena_scenario_expectations_commander.cpp
+    arena_scenario_expectations_world.cpp
+    arena_scenario_support.cpp
     arena_scenario_catalog.cpp
+    arena_scenario_builders.cpp
     arena_ai_duel_scenarios.cpp
     arena_economy_scenarios.cpp
     arena_ambience_scenarios.cpp
@@ -22,6 +33,23 @@ add_library(
     arena_trailer_scenarios.cpp
     arena_cinematic_scenarios.cpp
     arena_wildlife_scenarios.cpp
+    arena_rpg_control_scenarios.cpp
+    arena_rpg_combat_scenarios.cpp
+    arena_rpg_friendly_scenarios.cpp
+    arena_identity_scenarios.cpp
+    arena_commander_duel_scenarios.cpp
+    arena_weapon_scenarios.cpp
+    arena_animation_matrix_scenarios.cpp
+    arena_combat_scenarios.cpp
+    arena_pathing_scenarios.cpp
+    arena_gate_scenarios.cpp
+    arena_battle_scale_scenarios.cpp
+    arena_world_review_scenarios.cpp
+    arena_settlement_life_scenarios.cpp
+    arena_sepulcher_scenarios.cpp
+    arena_lighting_scenarios.cpp
+    arena_promo_scenarios.cpp
+    arena_range_indicator_scenarios.cpp
     terrain_alignment.cpp
     # The promo camera and capture schedule. It needs no GL, so it belongs in
     # the harness rather than only inside arena_app -- which is what forced
