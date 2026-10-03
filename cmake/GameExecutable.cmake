@@ -5,6 +5,7 @@ qt6_add_executable(standard_of_iron
     app/bootstrap/data_paths.cpp
     app/bootstrap/log_handler.cpp
     app/bootstrap/screenshot_capture.cpp
+    app/bootstrap/self_test_driver.cpp
     app/bootstrap/startup_self_test.cpp
     app/bootstrap/windows_gl_probe.cpp
     ${SOI_ASSET_STRINGS_CPP}
