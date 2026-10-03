@@ -193,6 +193,9 @@ const QVector3D k_before_west_curtain(-7.5F, 0.0F, -1.2F);
 
 TEST_F(FortressSiegeTraversalTest, SiegeTowerClimbsTheRampAndDocksOnTheCurtain) {
   load_fortress();
+  // Traversal, not combat: the wall archers would otherwise shoot the tower
+  // to pieces on the way.
+  disarm_garrison();
   auto const tower = spawn(Game::Units::SpawnType::SiegeTower, k_camp_yard);
   ASSERT_NE(tower, 0U);
   run(0.5);
@@ -222,6 +225,9 @@ TEST_F(FortressSiegeTraversalTest, SiegeTowerGetsPastItsOwnCompanies) {
 
 TEST_F(FortressSiegeTraversalTest, AttackOrderOnAWallSendsTheTowerToDockAgainstIt) {
   load_fortress();
+  // Traversal, not combat: the wall archers would otherwise shoot the tower
+  // to pieces on the way.
+  disarm_garrison();
   auto const tower = spawn(Game::Units::SpawnType::SiegeTower, k_camp_yard);
   ASSERT_NE(tower, 0U);
   auto const wall = first_garrison_wall_near(-7.5F, -3.5F);
@@ -257,6 +263,9 @@ TEST_F(FortressSiegeTraversalTest, RamClimbsTheRampToTheSouthGate) {
 
 TEST_F(FortressSiegeTraversalTest, PlayerMoveOrderTakesTheTowerToTheCurtain) {
   load_fortress();
+  // Traversal, not combat: the wall archers would otherwise shoot the tower
+  // to pieces on the way.
+  disarm_garrison();
   auto const tower = spawn(Game::Units::SpawnType::SiegeTower, k_camp_yard);
   ASSERT_NE(tower, 0U);
   run(0.5);
