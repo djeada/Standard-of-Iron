@@ -194,8 +194,6 @@ auto unit_component(const Engine::Core::Entity* entity)
                            : nullptr;
 }
 
-// Troops can roll stones only while standing beside a cache their owner holds,
-// so the button only shows up where it does something.
 auto can_roll_stones(Engine::Core::World* world,
                      const Engine::Core::Entity& entity,
                      const Engine::Core::UnitComponent* unit,

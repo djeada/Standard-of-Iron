@@ -382,10 +382,6 @@ void apply_startle(RigPose& pose, const SheepDrive& drive) {
   pose.tail_tip.setY(pose.tail_tip.y() + (rise * 0.7F) + (0.048F * flinch));
 }
 
-// Sheep die like cartoon sheep: the animal goes rigid, hops on the spot, tips
-// over onto its back and lands with all four legs in the air, where they boing
-// a few times before they settle. Nothing bends the wrong way and nothing
-// bleeds; it is a sight gag, not a kill.
 struct CartoonKeel {
   float hop{0.0F};
   float roll{0.0F};
@@ -408,10 +404,10 @@ auto cartoon_keel(float phase) -> CartoonKeel {
 
   float const p = saturate(phase);
   CartoonKeel keel;
-  // Straight up and stiff, like a dropped table.
+
   keel.hop = std::sin(k_pi * saturate(p / 0.30F)) * (1.0F - smooth((p - 0.20F) / 0.2F));
   keel.shiver = std::sin(p * 90.0F) * (1.0F - smooth(p / 0.16F)) * saturate(p / 0.03F);
-  // Over it goes, a touch past its side and onto its back.
+
   float const tip = saturate((p - 0.14F) / (k_landing - 0.14F));
   keel.roll = tip * tip * tip;
   keel.splay = smooth((p - 0.40F) / 0.30F);
@@ -424,7 +420,6 @@ auto cartoon_keel(float phase) -> CartoonKeel {
   return keel;
 }
 
-// Returns how far the body has rolled, so the head can be turned with it.
 auto apply_collapse(RigPose& pose, const SheepDrive& drive) -> float {
   float const phase = std::clamp(drive.collapse, 0.0F, 1.0F);
   if (phase <= 0.0F) {
@@ -433,7 +428,6 @@ auto apply_collapse(RigPose& pose, const SheepDrive& drive) -> float {
 
   CartoonKeel const keel = cartoon_keel(phase);
 
-  // On its back the fleece rests on the grass; the turn is about this line.
   constexpr float k_spine_pivot_y = 0.318F;
   constexpr float k_roll_radians = -3.02F;
   constexpr float k_hop_height = 0.085F;
@@ -453,7 +447,7 @@ auto apply_collapse(RigPose& pose, const SheepDrive& drive) -> float {
 
   for (std::size_t i = 0; i < k_leg_count; ++i) {
     auto& leg = pose.legs[i];
-    // Legs stick out stiffly and spring like door stops once it lands.
+
     float const out = leg.shoulder.x() < 0.0F ? -1.0F : 1.0F;
     float const front = k_leg_plans[i].z < 0.0F ? -1.0F : 1.0F;
     float const spring = keel.boing * (i % 2U == 0U ? 1.0F : -0.8F) * front;

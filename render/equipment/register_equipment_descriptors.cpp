@@ -575,6 +575,7 @@ void register_equipment_descriptors() {
   register_horse_descriptors();
   register_helmet_descriptors();
   register_body_armor_descriptors();
+  register_commander_regalia_descriptors();
   register_weapon_descriptors();
   register_cloak_descriptors();
 }

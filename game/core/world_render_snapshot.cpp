@@ -192,8 +192,7 @@ auto render_entity_is_stable(const Entity& entity) -> bool {
       (combat != nullptr && combat->animation_state != CombatAnimationState::Idle) ||
       (contact != nullptr && (contact->in_contact || !contact->fronts.empty())) ||
       (casualties != nullptr && !casualties->entries.empty());
-  // A held animal stands still, but its reaction timers still drive its clip
-  // and the butchering gag, so it must keep reaching the renderer.
+
   auto const* wildlife = entity.get_component<WildlifeComponent>();
   bool const wildlife_reacting =
       wildlife != nullptr &&

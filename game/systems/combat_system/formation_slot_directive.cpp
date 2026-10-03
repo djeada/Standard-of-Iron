@@ -510,11 +510,6 @@ void walk_slot(const EntityFrame& frame,
       directive);
 }
 
-// Soldiers of a troop on a wall stay on its walk: the balcony, the stair they
-// are using, or the bridge of the tower they are leaving. Each heads for the
-// spot its slot asks for, at a run, and is held to the nearest point of the
-// walk with that point's height. A tower's company files out of the door one
-// after another, nearest the landing first.
 void pin_to_wall_walk(const EntityFrame& frame,
                       const SlotContext& slot,
                       Soldier& directive) {
@@ -526,7 +521,7 @@ void pin_to_wall_walk(const EntityFrame& frame,
     return;
   }
   if (!directive.alive) {
-    // The fallen lie where they fell, on the planks.
+
     if (slot.previous != nullptr && slot.previous->world_motion_valid) {
       directive.world_x = slot.previous->world_x;
       directive.world_z = slot.previous->world_z;
@@ -562,7 +557,7 @@ void pin_to_wall_walk(const EntityFrame& frame,
   }
   if (boarding &&
       previous->elevation > Game::Systems::WallWalk::k_deck_height + 0.005F) {
-    // Still on the bridge: cross it in file, door to lip to crest to balcony.
+
     std::array<Engine::Core::WallWalkSegment, 3> const chain{{
         {walker->door_x,
          walker->door_z,

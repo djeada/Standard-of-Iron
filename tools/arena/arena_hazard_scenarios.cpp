@@ -42,8 +42,6 @@ auto alpine_pass(const char* id,
   result.suppress_ui_overlays = true;
   result.suppress_boundary_mountains = true;
 
-  // Two walls of peaks with a flat pass between them, like a gorge on the
-  // road over the Alps.
   for (float side : {-1.0F, 1.0F}) {
     for (float x = -28.0F; x <= 28.0F; x += 7.0F) {
       Game::Map::TerrainFeature ridge;
@@ -111,8 +109,6 @@ auto expectation(Expect kind, float threshold = 0.0F) -> ArenaExpectation {
   return result;
 }
 
-// A mesa with one ramp up its western side. The map stages a stone cache at
-// the top of the ramp on its own; the scenario only decides who gets there.
 constexpr float k_hill_x = 6.0F;
 const QVector3D k_cache_post(3.0F, 0.0F, 1.5F);
 const QVector3D k_ramp_middle(-8.5F, 0.0F, 0.5F);
@@ -219,8 +215,7 @@ auto build_hazard_definitions() -> std::vector<ArenaScenarioDefinition> {
 
     ArenaScenarioStep ambush;
     ambush.name = QStringLiteral("ambush");
-    // Spawned groups are centred on their origin; the ambush waits until the
-    // middle of the column has walked eight metres into the gorge.
+
     ambush.trigger = {
         Trigger::GroupEnteredArea, 0.0F, QStringLiteral("column"), {}, 2.0F};
     ambush.trigger.position = QVector3D(-2.0F, 0.0F, 0.0F);

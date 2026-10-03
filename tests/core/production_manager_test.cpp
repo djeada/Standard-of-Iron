@@ -1024,7 +1024,6 @@ TEST_F(ProductionManagerTest, CollectOnASheepBesideItsButcherStillTakesTheSheep)
   sheep->add_component<Engine::Core::WildlifeComponent>()->species =
       Game::Wildlife::Species::Sheep;
 
-  // The builder stands nearer the cursor on screen than the sheep's feet do.
   auto* builder = add_selected_builder(0.6F, 0.0F);
   ProductionManager manager(&world, &picking_service, &camera);
   manager.start_builder_construction(QStringLiteral("collect"));

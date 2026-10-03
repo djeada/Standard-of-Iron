@@ -156,21 +156,16 @@ struct UndeadZone {
 };
 
 enum class RockfallTriggerMode : std::uint8_t {
-  // Fires as soon as a hostile troop walks into the kill zone.
+
   Zone,
-  // Fires only when an AI owns the heights and judges the column worth it.
+
   AiDefender,
-  // Fires only when a mission event or a test asks for it.
+
   Scripted,
-  // A stone cache anyone can take: the first troop to reach it claims it for
-  // its owner, whose troops then roll the stones by order (or, for an AI, on
-  // their own when enemies climb the slope below).
+
   Claimable,
 };
 
-// Boulders staged on high ground above a pass. `release` sits on the heights;
-// `target` is the middle of the kill zone in the pass below. Both use the map's
-// coordinate system, like undead zones.
 struct RockfallTrap {
   QString id;
   float release_x = 0.0F;
@@ -697,7 +692,7 @@ struct MapDefinition {
   std::vector<WorldProp> world_props;
   std::vector<UndeadZone> undead_zones;
   std::vector<RockfallTrap> rockfall_traps;
-  // Stage a claimable stone cache at the top of every hill ramp.
+
   bool hill_rockfall_caches = true;
   std::vector<Forest> forests;
   std::vector<FogZone> fog_zones;

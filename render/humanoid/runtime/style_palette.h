@@ -3,8 +3,15 @@
 #include <QVector3D>
 
 #include <optional>
+#include <string_view>
+
+#include "render/palette.h"
 
 namespace Render::GL::Humanoid {
+
+void apply_commander_palette(std::string_view renderer_key,
+                             const QVector3D& team_tint,
+                             HumanoidPalette& palette);
 
 auto saturate_color(const QVector3D& value) -> QVector3D;
 

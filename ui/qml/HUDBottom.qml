@@ -663,8 +663,6 @@ RowLayout {
         onTriggered: bottomRoot.update_action_states()
     }
 
-    // Troops walk in and out of reach of a stone cache without the selection
-    // changing. Poll the lock-free count and refresh the buttons when it moves.
     property int stones_ready: 0
 
     Timer {

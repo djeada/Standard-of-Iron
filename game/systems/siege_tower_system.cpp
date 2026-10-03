@@ -54,7 +54,7 @@ constexpr float k_tower_lip_depth = 0.80F;
 constexpr float k_wall_link_reach = 2.7F;
 constexpr float k_node_arrival = 0.12F;
 constexpr float k_path_radius = 18.0F;
-// Long enough for the largest company to file across the bridge and settle.
+
 constexpr float k_board_seconds =
     WallWalkerComponent::k_file_out_interval * 24.0F + 4.0F;
 constexpr float k_stair_speed = 0.9F;
@@ -151,8 +151,6 @@ auto is_wall_order(const WallNode& node, float x, float z) -> bool {
   return WW::is_wall_walk_order(node.x, node.z, node.inner_x, node.inner_z, x, z);
 }
 
-// Wall nodes sit on a 2 m lattice; looking up the cells around a point finds
-// the walls near it without scanning every wall.
 class WallIndex {
 public:
   explicit WallIndex(std::vector<WallNode> nodes)
@@ -189,8 +187,6 @@ private:
   std::unordered_multimap<std::int64_t, int> m_cells;
 };
 
-// Breadth-first distances (in hops) from `from` across linked wall nodes; -1 for
-// nodes on another run.
 auto hop_distances(const std::vector<WallNode>& nodes, int from) -> std::vector<int> {
   std::vector<int> hops(nodes.size(), -1);
   if (from < 0) {
@@ -229,8 +225,6 @@ auto next_hop(const std::vector<WallNode>& nodes, int from, int to) -> int {
   return from;
 }
 
-// The stair whose foot is cheapest to use: walking from (x, z) on the ground to
-// it, or along the balcony from `on_deck` to it.
 auto best_stair(const std::vector<WallNode>& nodes,
                 int on_deck,
                 float x,
@@ -299,7 +293,6 @@ struct StairPose {
   float y{0.0F};
 };
 
-// Position on a stair, 0 at its foot on the ground and 1 on the balcony lane.
 auto stair_pose(const StairLine& s, float progress) -> StairPose {
   float const a = std::hypot(s.foot.x - s.ground.x, s.foot.z - s.ground.z);
   float const b = std::hypot(std::hypot(s.ground.x - s.edge.x, s.ground.z - s.edge.z),
@@ -401,8 +394,6 @@ void leave_wall(Engine::Core::World& world, EntityID id, UnitComponent* unit) {
   world.remove<WallWalkerComponent>(id);
 }
 
-// Faces a troop along the balcony towards the longer stretch of wall, so its
-// file lies on the planks.
 auto along_wall_yaw(const std::vector<WallNode>& nodes, int here) -> float {
   if (here < 0) {
     return 0.0F;
@@ -423,8 +414,6 @@ auto along_wall_yaw(const std::vector<WallNode>& nodes, int here) -> float {
   return runs_x ? yaw_towards(sign, 0.0F) : yaw_towards(0.0F, sign);
 }
 
-// Turns an idle troop on the balcony to whichever way along the wall is nearer
-// its current facing, so its file lies along the planks rather than across them.
 auto settle_along_wall(const WallNode& node, float yaw) -> float {
   bool const runs_x = node.inner_z != 0;
   float const forward = runs_x ? 90.0F : 0.0F;
@@ -502,7 +491,6 @@ auto is_wall_climber(Engine::Core::World& world,
          !world.has<Engine::Core::BuildingComponent>(id);
 }
 
-// A troop ordered onto its own wall walks to the nearest stair first.
 void start_climbs(Engine::Core::World& world) {
   std::unordered_map<int, WallIndex> walls;
   std::vector<EntityID> candidates;
@@ -653,7 +641,6 @@ void SiegeTowerSystem::update(Engine::Core::World* world, float delta_time) {
       continue;
     }
 
-    // Dock against the stakes between two posts, where the bridge clears them.
     std::vector<std::pair<int, WallNode>> hostile;
     for (auto [wall_id, wall_unit, wall_transform] :
          world->view<const UnitComponent, const TransformComponent>()) {
@@ -849,8 +836,6 @@ void WallWalkSystem::update(Engine::Core::World* world, float delta_time) {
       }
     }
 
-    // New orders arrive through the movement component: a point on this wall
-    // walks the balcony, anything else walks to a stair and down.
     if (walker->phase == Phase::OnDeck && movement != nullptr &&
         movement->get_has_target()) {
       bool const ordered = movement->get_has_requested_goal();

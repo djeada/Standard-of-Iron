@@ -16,8 +16,6 @@ struct PathPoint {
   bool valid{false};
 };
 
-// Nearest point on a walker's published path (balcony runs, stairs, a tower
-// bridge), with the walking height there.
 [[nodiscard]] inline auto
 project_onto_path(const std::vector<Engine::Core::WallWalkSegment>& path,
                   float x,

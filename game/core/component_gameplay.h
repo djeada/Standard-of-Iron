@@ -145,9 +145,6 @@ public:
 
   bool freeform{false};
 
-  // Which way the town lies across this segment, per lateral axis (-1, 0, +1).
-  // The wall-walk balcony and stairs hang on that face. Derived by
-  // WallNetworkService::refresh_world, never saved.
   std::int8_t inner_x{0};
   std::int8_t inner_z{0};
   bool has_stair{false};
@@ -223,7 +220,7 @@ struct WallWalkerComponent {
   };
 
   static constexpr float k_wall_top_height = 1.80F;
-  // A tower's company crosses the bridge one man at a time, this far apart.
+
   static constexpr float k_file_out_interval = 0.45F;
 
   EntityID wall_id{0};
@@ -248,8 +245,6 @@ struct WallWalkerComponent {
   float stair_progress{0.0F};
   int saved_files_override{0};
 
-  // Derived each tick: where an idle soldier on the balcony looks (degrees) -
-  // out over the stakes for the wall's owner, into the town for a boarder.
   bool watching{false};
   float watch_yaw{0.0F};
   std::vector<WallWalkSegment> path;
@@ -826,9 +821,6 @@ public:
   float scaffold{0.0F};
 };
 
-// A troop heaving a rockfall cache over the edge. RockfallSystem keeps it on
-// the pusher for as long as the push lasts; the presentation reads it to play
-// the crew-push work pose.
 class RockfallPushComponent {
 public:
   float elapsed{0.0F};

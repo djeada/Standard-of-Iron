@@ -251,6 +251,14 @@ scatter_density_multiplier(ScatterRuleSpecies species,
   return std::clamp(scene_multiplier, 0.0F, 2.6F);
 }
 
+inline constexpr float k_scatter_patch_floor = 0.24F;
+inline constexpr float k_scatter_patch_gain = 3.0F;
+
+[[nodiscard]] inline auto scatter_patch_multiplier(float cluster_bias) -> float {
+  float const bias = std::clamp(cluster_bias, 0.0F, 1.0F);
+  return k_scatter_patch_floor + bias * bias * k_scatter_patch_gain;
+}
+
 [[nodiscard]] inline auto
 scatter_spawn_chance(ScatterRuleSpecies species,
                      const ScatterCompositionSample& sample) -> float {

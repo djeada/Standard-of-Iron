@@ -27,34 +27,20 @@ namespace Game::Systems {
 
 class OwnerRegistry;
 
-// A boulder needs this much speed to hurt anyone; slower ones only roll on.
 inline constexpr float k_rockfall_lethal_speed = 2.5F;
-// How far past the boulder's own radius a troop's soldiers are spread.
+
 inline constexpr float k_rockfall_troop_reach = 1.9F;
-// The AI holds its rocks this long once the first enemy troop is in the zone,
-// hoping more of the column follows it in.
+
 inline constexpr float k_rockfall_ai_patience_seconds = 3.0F;
 inline constexpr float k_rockfall_settled_linger_seconds = 8.0F;
 inline constexpr float k_rockfall_max_boulder_age_seconds = 30.0F;
-// A troop this close to a stone cache claims it for its owner.
+
 inline constexpr float k_rockfall_claim_radius = 5.0F;
-// A troop this close to its owner's cache can be ordered to roll the stones.
+
 inline constexpr float k_rockfall_use_radius = 7.0F;
-// How long the soldiers heave at the pile before the stones go over.
+
 inline constexpr float k_rockfall_push_seconds = 1.6F;
 
-// Rockfall ambushes: defenders on the heights roll boulders down onto a pass.
-//
-// Stone caches sit at the top of every hill ramp from the start of a match
-// (and wherever a map authors one). A cache is claimed by the first troop to
-// reach it. Its owner can order a troop standing beside it to roll the stones:
-// the soldiers heave at the pile, and the boulders go over the edge and down
-// the ramp, destroying whatever is climbing it. A cache is used once.
-//
-// Boulders are physics-lite: they roll along the terrain gradient, hop off
-// convex breaks, bounce on landing and come to rest on flat ground. Each one
-// strikes a troop at most once, killing soldiers in proportion to its speed,
-// flinging the dead and knocking the survivors down.
 class RockfallSystem : public Engine::Core::System {
 public:
   struct Services {
@@ -95,19 +81,12 @@ public:
 
   void update(Engine::Core::World* world, float delta_time) override;
 
-  // Mission scripts and tests release a trap by id, with no troop needed.
-  // Returns false when the trap is unknown, still rearming, or already spent.
   auto trigger(const QString& trap_id) -> bool;
 
-  // The cache `troop` could roll right now: one its owner holds, armed, within
-  // k_rockfall_use_radius. Returns the trap index.
   [[nodiscard]] auto
   cache_in_reach(Engine::Core::World& world,
                  Engine::Core::EntityID troop) const -> std::optional<std::size_t>;
 
-  // Orders `troop` to roll the cache in reach. The troop stops, heaves at the
-  // pile for k_rockfall_push_seconds and the stones go. Returns false when no
-  // cache is in reach.
   auto order_release(Engine::Core::World& world, Engine::Core::EntityID troop) -> bool;
 
   [[nodiscard]] auto trap_count() const -> std::size_t { return m_traps.size(); }
@@ -120,7 +99,7 @@ private:
     Game::Map::RockfallTrap definition;
     QVector3D release_world;
     QVector3D target_world;
-    // Unit vector along the ground from the cache towards the kill zone.
+
     QVector3D downhill;
     int owner_id = -1;
     bool hill_cache = false;
@@ -134,7 +113,7 @@ private:
     float ai_dwell = 0.0F;
     Engine::Core::EntityID pusher = 0;
     float push_remaining = 0.0F;
-    // The pusher is still walking up behind the pile.
+
     bool approaching = false;
     float approach_remaining = 0.0F;
     int hostile_in_zone = 0;

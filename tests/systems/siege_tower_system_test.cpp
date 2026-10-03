@@ -48,8 +48,6 @@ protected:
     BuildingCollisionRegistry::instance().clear();
   }
 
-  // A palisade running east-west with the town to +z, the way
-  // WallNetworkService::refresh_world leaves a straight run.
   static auto
   make_wall(World& world, float x, float z, int owner, bool stair = false) -> Entity* {
     auto* entity = world.create_entity();

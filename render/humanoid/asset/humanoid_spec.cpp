@@ -632,10 +632,6 @@ auto smooth_limb_mesh(float tail_radius,
   return std::make_unique<Render::GL::Mesh>(vertices, indices);
 }
 
-// Overlap the cuirass and cover the thigh roots with one continuous tunic.
-// The hem follows each leg gently; the waist stays attached to the pelvis.
-// Sharing this mesh between LODs avoids exposing the old pelvis/leg seams when
-// the camera moves away.
 auto tunic_hem_mesh() -> Render::GL::Mesh* {
   static auto mesh = []() {
     auto shell = Render::GL::make_garment_shell({

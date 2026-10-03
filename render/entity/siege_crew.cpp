@@ -95,8 +95,6 @@ constexpr std::array<Station, 4> k_ballista_rest{{
     {},
 }};
 
-// The ram's crew works inside under the roof: two each side of the beam,
-// shoving the frame along or swinging the beam on its chains.
 constexpr std::array<Station, 4> k_ram_push{{
     {-0.24F, -0.40F, 0.0F, 0.0F, k_face_forward, k_humanoid_crew_push_clip, 0.0F},
     {0.24F, -0.40F, 0.0F, 0.0F, k_face_forward, k_humanoid_crew_push_clip, 0.0F},
@@ -116,8 +114,6 @@ constexpr std::array<Station, 4> k_ram_rest{{
     {0.24F, 0.34F, 0.0F, 0.0F, -0.10F * k_pi, k_humanoid_idle_clip, 8.0F},
 }};
 
-// A tower is pushed from behind; once it is against a wall its crew stands off
-// its tail, out of the bridge's way.
 constexpr std::array<Station, 4> k_tower_push{{
     {-0.40F, -0.56F, 0.0F, -0.20F, k_face_forward, k_humanoid_crew_push_clip, 0.0F},
     {-0.13F, -0.56F, 0.0F, -0.20F, k_face_forward, k_humanoid_crew_push_clip, 0.0F},

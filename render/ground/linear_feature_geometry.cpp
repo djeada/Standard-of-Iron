@@ -137,6 +137,8 @@ auto make_river_ribbon_settings() -> LinearFeatureRibbonSettings {
   settings.meander_length_scale = shape.meander_length_scale;
   settings.meander_amplitude = shape.meander_amplitude;
   settings.y_offset = 0.12F;
+  settings.junction_sink = 0.03F;
+  settings.segment_layer_step = 0.004F;
   return settings;
 }
 
@@ -280,8 +282,13 @@ auto build_linear_ribbon_meshes(const std::vector<LinearFeatureRibbonSegment>& s
     -> std::vector<std::unique_ptr<Render::GL::Mesh>> {
   std::vector<std::unique_ptr<Render::GL::Mesh>> meshes;
   meshes.reserve(segments.size());
-  for (const auto& segment : segments) {
-    meshes.push_back(build_linear_ribbon_mesh(segment, tile_size, settings));
+  constexpr std::size_t k_segment_layers = 4;
+  LinearFeatureRibbonSettings layered = settings;
+  for (std::size_t index = 0; index < segments.size(); ++index) {
+    layered.y_offset =
+        settings.y_offset +
+        settings.segment_layer_step * static_cast<float>(index % k_segment_layers);
+    meshes.push_back(build_linear_ribbon_mesh(segments[index], tile_size, layered));
   }
   return meshes;
 }
@@ -352,7 +359,8 @@ auto build_linear_feature_junction_meshes(
       }
       Render::GL::Vertex vertex{};
       vertex.position = {surface_position.x(),
-                         surface_position.y() + settings.y_offset,
+                         surface_position.y() + settings.y_offset -
+                             settings.junction_sink,
                          surface_position.z()};
       vertex.normal = {0.0F, 1.0F, 0.0F};
       vertex.tex_coord = {

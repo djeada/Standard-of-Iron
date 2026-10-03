@@ -24,6 +24,8 @@
 
 namespace {
 
+constexpr float k_bank_clump_frequency = 0.16F;
+
 using std::uint32_t;
 using namespace Render::Ground;
 
@@ -102,7 +104,7 @@ void RiverbankAssetRenderer::generate_asset_instances() {
     dir.normalize();
     QVector3D const perpendicular(-dir.z(), 0.0F, dir.x());
     float const half_river_width = segment.width * 0.5F;
-    float const bank_zone_width = 1.5F;
+    float const bank_zone_width = 1.8F;
 
     int const num_steps = static_cast<int>(length / 0.8F) + 1;
 
@@ -118,12 +120,19 @@ void RiverbankAssetRenderer::generate_asset_instances() {
       for (int side = 0; side < 2; ++side) {
         float const side_sign = (side == 0) ? -1.0F : 1.0F;
 
-        if (rand_01(rng) > 0.3F) {
+        float const clump =
+            value_noise(center_pos.x() * k_bank_clump_frequency,
+                        center_pos.z() * k_bank_clump_frequency,
+                        m_noise_seed ^ (side == 0 ? 0x6C1B2F43U : 0x2E95A7D1U));
+        float const spawn_chance =
+            0.04F + 0.62F * std::clamp((clump - 0.35F) / 0.40F, 0.0F, 1.0F);
+        if (rand_01(rng) > spawn_chance) {
           continue;
         }
 
-        float const dist_from_water = half_river_width + rand_01(rng) * bank_zone_width;
-        float const along_river = (rand_01(rng) - 0.5F) * 0.6F;
+        float const dist_from_water =
+            half_river_width + std::pow(rand_01(rng), 1.6F) * bank_zone_width;
+        float const along_river = (rand_01(rng) - 0.5F) * 0.8F;
 
         QVector3D const asset_pos = center_pos +
                                     perpendicular * (side_sign * dist_from_water) +
