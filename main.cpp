@@ -43,115 +43,17 @@
 #include <optional>
 #include <string_view>
 
+#include "app/audio/audio_resource_loader.h"
+#include "app/audio/audio_status_hud.h"
+#include "app/bootstrap/data_paths.h"
+#include "app/bootstrap/log_handler.h"
+#include "app/bootstrap/screenshot_capture.h"
+#include "app/bootstrap/startup_self_test.h"
+#include "app/bootstrap/windows_gl_probe.h"
 #include "app/core/app_identity.h"
 #include "app/core/benchmark_action_fixture.h"
 #include "app/core/film_action_dispatch.h"
 #include "app/core/film_recorder.h"
-#include "app/core/user_settings.h"
-#include "app/viewmodels/orders_view_model.h"
-#include "app/viewmodels/production_view_model.h"
-#include "game/core/presentation_coverage.h"
-#include "game/systems/persistence/save_load_service.h"
-#include "render/gl/context_requirements.h"
-#include "render/profiling/frame_swap_clock.h"
-#include "render/profiling/presentation_cycle.h"
-
-#ifdef Q_OS_WIN
-#include <gl/gl.h>
-#include <windows.h>
-#pragma comment(lib, "opengl32.lib")
-
-#ifndef WGL_CONTEXT_MAJOR_VERSION_ARB
-#define WGL_CONTEXT_MAJOR_VERSION_ARB 0x2091
-#endif
-
-#ifndef WGL_CONTEXT_MINOR_VERSION_ARB
-#define WGL_CONTEXT_MINOR_VERSION_ARB 0x2092
-#endif
-
-#ifndef WGL_CONTEXT_PROFILE_MASK_ARB
-#define WGL_CONTEXT_PROFILE_MASK_ARB 0x9126
-#endif
-
-#ifndef WGL_CONTEXT_CORE_PROFILE_BIT_ARB
-#define WGL_CONTEXT_CORE_PROFILE_BIT_ARB 0x00000001
-#endif
-
-using PFNWGLCREATECONTEXTATTRIBSARBPROC = HGLRC(WINAPI*)(HDC hDC,
-                                                         HGLRC hShareContext,
-                                                         const int* attribList);
-
-namespace {
-
-constexpr int k_required_gl_major = Render::GL::ContextRequirements::required.major;
-constexpr int k_required_gl_minor = Render::GL::ContextRequirements::required.minor;
-
-struct NativeOpenGLProbeResult {
-  bool supported = false;
-  bool generic_software = false;
-  bool used_core_context = false;
-  int requested_major = 0;
-  int requested_minor = 0;
-  int major = 0;
-  int minor = 0;
-  QString vendor = QStringLiteral("<unknown>");
-  QString renderer = QStringLiteral("<unknown>");
-  QString version = QStringLiteral("<unknown>");
-};
-
-auto windows_software_requested_from_argv(int argc, char* argv[]) -> bool {
-  for (int index = 1; index < argc; ++index) {
-    const std::string_view arg =
-        argv[index] != nullptr ? std::string_view(argv[index]) : std::string_view();
-    if (arg == "-s" || arg == "--force-software" || arg == "--quality=none" ||
-        arg == "--quality=software") {
-      return true;
-    }
-    if (arg == "--quality" && index + 1 < argc) {
-      const std::string_view value = argv[index + 1] != nullptr
-                                         ? std::string_view(argv[index + 1])
-                                         : std::string_view();
-      if (value == "none" || value == "software") {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
-auto parse_opengl_version(const char* version, int* major, int* minor) -> bool {
-  return version != nullptr && major != nullptr && minor != nullptr &&
-         std::sscanf(version, "%d.%d", major, minor) == 2;
-}
-
-void capture_current_gl_info(NativeOpenGLProbeResult& result) {
-  const auto* vendor = reinterpret_cast<const char*>(glGetString(GL_VENDOR));
-  const auto* renderer = reinterpret_cast<const char*>(glGetString(GL_RENDERER));
-  const auto* version = reinterpret_cast<const char*>(glGetString(GL_VERSION));
-
-  result.vendor =
-      vendor != nullptr ? QString::fromLatin1(vendor) : QStringLiteral("<unknown>");
-  result.renderer =
-      renderer != nullptr ? QString::fromLatin1(renderer) : QStringLiteral("<unknown>");
-  result.version =
-      version != nullptr ? QString::fromLatin1(version) : QStringLiteral("<unknown>");
-  result.major = 0;
-  result.minor = 0;
-  if (version != nullptr) {
-    (void)parse_opengl_version(version, &result.major, &result.minor);
-  }
-}
-
-auto opengl_version_supported(int major, int minor) -> bool {
-  return major > k_required_gl_major ||
-         (major == k_required_gl_major && minor >= k_required_gl_minor);
-}
-
-} // namespace
-#endif
-
-#include "app/audio/audio_resource_loader.h"
-#include "app/audio/audio_status_hud.h"
 #include "app/core/game_engine.h"
 #include "app/core/game_speed.h"
 #include "app/core/language_manager.h"
@@ -163,9 +65,16 @@ auto opengl_version_supported(int major, int minor) -> bool {
 #include "app/viewmodels/camera_view_model.h"
 #include "app/viewmodels/match_setup_view_model.h"
 #include "app/viewmodels/minimap_view_model.h"
+#include "app/viewmodels/orders_view_model.h"
+#include "app/viewmodels/production_view_model.h"
+#include "game/core/presentation_coverage.h"
+#include "game/systems/persistence/save_load_service.h"
+#include "render/gl/context_requirements.h"
 #include "render/graphics_settings.h"
 #include "render/horse/horse_source_asset.h"
 #include "render/i_render_backend.h"
+#include "render/profiling/frame_swap_clock.h"
+#include "render/profiling/presentation_cycle.h"
 #include "render/profiling/profiling_hud.h"
 #include "ui/brand_fonts.h"
 #include "ui/campaign_map_view.h"
@@ -179,326 +88,13 @@ auto opengl_version_supported(int major, int minor) -> bool {
 #include "ui/preferences.h"
 #include "ui/theme.h"
 
-namespace {
-
-auto validate_release_campaign_map_resources() -> bool {
-  constexpr std::array<const char*, 7> resources{
-      ":/assets/campaign_map/campaign_base_color.png",
-      ":/assets/campaign_map/campaign_water.png",
-      ":/assets/campaign_map/coastlines_uv.json",
-      ":/assets/campaign_map/rivers_uv.json",
-      ":/assets/campaign_map/land_mesh.bin",
-      ":/assets/campaign_map/provinces.json",
-      ":/assets/campaign_map/terrain_height.png",
-  };
-
-  for (const char* path : resources) {
-    QFile file(QString::fromLatin1(path));
-    if (!file.open(QIODevice::ReadOnly) || file.size() < 32) {
-      qCritical() << "SOI_CAMPAIGN_MAP_SELF_TEST: FAIL - missing or empty" << path;
-      return false;
-    }
-  }
-  qInfo() << "SOI_CAMPAIGN_MAP_SELF_TEST: PASS - all campaign map resources are "
-             "embedded";
-  return true;
-}
-
-void capture_screenshot_and_exit(QQuickWindow* window,
-                                 const QString& path,
-                                 const QString& view,
-                                 int delay_ms,
-                                 QSize size) {
-
-  window->setWindowState(Qt::WindowNoState);
-  window->setWidth(size.width());
-  window->setHeight(size.height());
-
-  auto grab_and_exit = [window, path]() {
-    const QImage frame = window->grabWindow();
-    if (frame.isNull()) {
-      qCritical() << "SOI_SCREENSHOT: FAIL - the window produced no frame";
-      QGuiApplication::exit(11);
-      return;
-    }
-    if (!frame.save(path)) {
-      qCritical() << "SOI_SCREENSHOT: FAIL - could not write" << path;
-      QGuiApplication::exit(12);
-      return;
-    }
-    qInfo() << "SOI_SCREENSHOT: PASS -" << path << frame.width() << "x"
-            << frame.height();
-    QGuiApplication::exit(0);
-  };
-
-  if (view.isEmpty()) {
-    QTimer::singleShot(delay_ms, window, grab_and_exit);
-    return;
-  }
-
-  auto* settle = new QTimer(window);
-  settle->setInterval(400);
-  QObject::connect(
-      settle, &QTimer::timeout, window, [window, view, settle, delay_ms]() {
-        QMetaObject::invokeMethod(window, "show_view", Q_ARG(QVariant, QVariant(view)));
-        if (window->property("capture_view_ready").toBool()) {
-          settle->stop();
-          QTimer::singleShot(delay_ms / 8, window, [window]() {
-            window->setProperty("capture_view_settled", true);
-          });
-        }
-      });
-  settle->start();
-
-  auto* deadline = new QTimer(window);
-  deadline->setInterval(200);
-  QObject::connect(
-      deadline, &QTimer::timeout, window, [window, settle, deadline, grab_and_exit]() {
-        if (!window->property("capture_view_settled").toBool()) {
-          return;
-        }
-        settle->stop();
-        deadline->stop();
-        grab_and_exit();
-      });
-  deadline->start();
-
-  QTimer::singleShot(delay_ms, window, [settle, deadline, grab_and_exit]() {
-    if (!deadline->isActive()) {
-      return;
-    }
-    settle->stop();
-    deadline->stop();
-    grab_and_exit();
-  });
-}
-
-} // namespace
-
 constexpr int k_depth_buffer_bits = 24;
 constexpr int k_stencil_buffer_bits = 8;
 
-#ifdef Q_OS_WIN
-
-static auto testNativeOpenGL() -> NativeOpenGLProbeResult {
-  NativeOpenGLProbeResult result;
-
-  WNDCLASSA wc = {};
-  wc.lpfnWndProc = DefWindowProcA;
-  wc.hInstance = GetModuleHandle(nullptr);
-  wc.lpszClassName = "OpenGLTest";
-
-  if (!RegisterClassA(&wc)) {
-    return result;
-  }
-
-  HWND hwnd = CreateWindowExA(0,
-                              "OpenGLTest",
-                              "",
-                              WS_OVERLAPPEDWINDOW,
-                              0,
-                              0,
-                              1,
-                              1,
-                              nullptr,
-                              nullptr,
-                              wc.hInstance,
-                              nullptr);
-  if (!hwnd) {
-    UnregisterClassA("OpenGLTest", wc.hInstance);
-    return result;
-  }
-
-  HDC hdc = GetDC(hwnd);
-  if (!hdc) {
-    DestroyWindow(hwnd);
-    UnregisterClassA("OpenGLTest", wc.hInstance);
-    return result;
-  }
-
-  PIXELFORMATDESCRIPTOR pfd = {};
-  pfd.nSize = sizeof(pfd);
-  pfd.nVersion = 1;
-  pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
-  pfd.iPixelType = PFD_TYPE_RGBA;
-  pfd.cColorBits = 24;
-  pfd.cDepthBits = 24;
-  pfd.cStencilBits = 8;
-  pfd.iLayerType = PFD_MAIN_PLANE;
-
-  int pixel_format = ChoosePixelFormat(hdc, &pfd);
-  if (pixel_format != 0 && SetPixelFormat(hdc, pixel_format, &pfd)) {
-    PIXELFORMATDESCRIPTOR chosen_pfd = {};
-    if (DescribePixelFormat(hdc, pixel_format, sizeof(chosen_pfd), &chosen_pfd) != 0) {
-      result.generic_software = (chosen_pfd.dwFlags & PFD_GENERIC_FORMAT) != 0 &&
-                                (chosen_pfd.dwFlags & PFD_GENERIC_ACCELERATED) == 0;
-    }
-
-    HGLRC hglrc = wglCreateContext(hdc);
-    if (hglrc) {
-      if (wglMakeCurrent(hdc, hglrc)) {
-        capture_current_gl_info(result);
-
-        auto* create_core_context = reinterpret_cast<PFNWGLCREATECONTEXTATTRIBSARBPROC>(
-            wglGetProcAddress("wglCreateContextAttribsARB"));
-        if (create_core_context != nullptr) {
-          constexpr std::array probe_versions{
-              Render::GL::ContextRequirements::preferred,
-              Render::GL::ContextRequirements::Version{4, 4},
-              Render::GL::ContextRequirements::Version{4, 3},
-              Render::GL::ContextRequirements::apple_maximum,
-              Render::GL::ContextRequirements::required,
-          };
-          for (const auto candidate : probe_versions) {
-            const int attribs[] = {WGL_CONTEXT_MAJOR_VERSION_ARB,
-                                   candidate.major,
-                                   WGL_CONTEXT_MINOR_VERSION_ARB,
-                                   candidate.minor,
-                                   WGL_CONTEXT_PROFILE_MASK_ARB,
-                                   WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
-                                   0};
-            HGLRC core_ctx = create_core_context(hdc, nullptr, attribs);
-            if (core_ctx == nullptr) {
-              continue;
-            }
-            wglMakeCurrent(nullptr, nullptr);
-            if (wglMakeCurrent(hdc, core_ctx)) {
-              result.used_core_context = true;
-              result.requested_major = candidate.major;
-              result.requested_minor = candidate.minor;
-              capture_current_gl_info(result);
-            }
-            wglMakeCurrent(nullptr, nullptr);
-            wglDeleteContext(core_ctx);
-            (void)wglMakeCurrent(hdc, hglrc);
-            if (result.used_core_context) {
-              break;
-            }
-          }
-        }
-
-        QByteArray vendor_bytes = result.vendor.toLocal8Bit();
-        QByteArray renderer_bytes = result.renderer.toLocal8Bit();
-        QByteArray version_bytes = result.version.toLocal8Bit();
-        fprintf(stderr, "[OpenGL Test] Native context created successfully\n");
-        fprintf(stderr, "[OpenGL Test] Vendor: %s\n", vendor_bytes.constData());
-        fprintf(stderr, "[OpenGL Test] Renderer: %s\n", renderer_bytes.constData());
-        fprintf(stderr, "[OpenGL Test] Version: %s\n", version_bytes.constData());
-        if (result.used_core_context) {
-          fprintf(stderr,
-                  "[OpenGL Test] Probe context: %d.%d core\n",
-                  result.requested_major,
-                  result.requested_minor);
-        } else {
-          fprintf(stderr, "[OpenGL Test] Probe context: legacy\n");
-        }
-        if (result.generic_software) {
-          fprintf(stderr, "[OpenGL Test] Pixel format is generic software rendering\n");
-        }
-
-        const bool microsoft_gdi =
-            result.vendor.contains("Microsoft", Qt::CaseInsensitive) ||
-            result.renderer.contains("GDI Generic", Qt::CaseInsensitive);
-        const bool version_ok = result.used_core_context &&
-                                opengl_version_supported(result.major, result.minor);
-        result.supported = version_ok && !result.generic_software && !microsoft_gdi;
-        if (!version_ok) {
-          fprintf(stderr,
-                  "[OpenGL Test] Rejected: requires OpenGL %d.%d Core, found %d.%d "
-                  "%s\n",
-                  k_required_gl_major,
-                  k_required_gl_minor,
-                  result.major,
-                  result.minor,
-                  result.used_core_context ? "Core" : "without a Core profile");
-        }
-        if (microsoft_gdi) {
-          fprintf(
-              stderr,
-              "[OpenGL Test] Rejected: Microsoft GDI generic renderer is not usable "
-              "for the 3D renderer\n");
-        }
-
-        wglMakeCurrent(nullptr, nullptr);
-      }
-      wglDeleteContext(hglrc);
-    }
-  }
-
-  ReleaseDC(hwnd, hdc);
-  DestroyWindow(hwnd);
-  UnregisterClassA("OpenGLTest", wc.hInstance);
-
-  return result;
-}
-
-static bool g_opengl_crashed = false;
-static LONG WINAPI crashHandler(EXCEPTION_POINTERS* exceptionInfo) {
-  if (exceptionInfo->ExceptionRecord->ExceptionCode == EXCEPTION_ACCESS_VIOLATION) {
-
-    char crash_log_path[MAX_PATH + 32] = {};
-    const DWORD temp_length = GetTempPathA(MAX_PATH, crash_log_path);
-    if (temp_length == 0 || temp_length > MAX_PATH) {
-      crash_log_path[0] = '\0';
-    }
-    strcat_s(
-        crash_log_path, sizeof(crash_log_path), "standard_of_iron_opengl_crash.txt");
-    FILE* crash_log = nullptr;
-    if (fopen_s(&crash_log, crash_log_path, "w") != 0) {
-      crash_log = nullptr;
-    }
-    if (crash_log) {
-      fprintf(crash_log, "OpenGL/Qt rendering crash detected (Access Violation)\n");
-      fprintf(crash_log, "Try running with: run_debug_softwaregl.cmd\n");
-      fprintf(crash_log, "Or set environment variable: QT_OPENGL=software\n");
-      fclose(crash_log);
-    }
-
-    qCritical() << "=== CRASH DETECTED ===";
-    qCritical() << "OpenGL rendering failed. This usually means:";
-    qCritical() << "1. Graphics drivers are outdated";
-    qCritical() << "2. Running in a VM with incomplete OpenGL support";
-    qCritical() << "3. GPU doesn't support required OpenGL version";
-    qCritical() << "";
-    qCritical() << "To fix: Run run_debug_softwaregl.cmd instead";
-    qCritical() << "Or set: set QT_OPENGL=software";
-
-    g_opengl_crashed = true;
-  }
-  return EXCEPTION_CONTINUE_SEARCH;
-}
-#endif
-
-auto data_paths_requested_from_argv(int argc, char* argv[]) -> bool {
-  for (int index = 1; index < argc; ++index) {
-    if (argv[index] != nullptr &&
-        std::string_view(argv[index]) == "--print-data-paths") {
-      return true;
-    }
-  }
-  return false;
-}
-
-auto print_data_paths(int argc, char* argv[]) -> int {
-  QCoreApplication const app(argc, argv);
-  App::Core::apply_application_identity();
-
-  QSettings const settings = App::Core::UserSettings::open();
-  QTextStream out(stdout);
-  out << "SOI_APPLICATION_ID=" << QCoreApplication::applicationName() << '\n'
-      << "SOI_SAVES_DIR=" << Game::Systems::SaveLoadService::saves_directory() << '\n'
-      << "SOI_SAVE_DATABASE=" << Game::Systems::SaveLoadService::database_path() << '\n'
-      << "SOI_EXPORTS_DIR=" << Game::Systems::SaveLoadService::exports_directory()
-      << '\n'
-      << "SOI_SETTINGS_FILE=" << settings.fileName() << '\n';
-  out.flush();
-  return 0;
-}
-
 auto main(int argc, char* argv[]) -> int {
 
-  if (data_paths_requested_from_argv(argc, argv)) {
-    return print_data_paths(argc, argv);
+  if (App::Bootstrap::data_paths_requested_from_argv(argc, argv)) {
+    return App::Bootstrap::print_data_paths(argc, argv);
   }
 
 #if defined(Q_OS_MACOS)
@@ -522,9 +118,9 @@ auto main(int argc, char* argv[]) -> int {
 
 #ifdef Q_OS_WIN
 
-  SetUnhandledExceptionFilter(crashHandler);
+  App::Bootstrap::install_opengl_crash_handler();
 
-  if (windows_software_requested_from_argv(argc, argv)) {
+  if (App::Bootstrap::software_requested_from_argv(argc, argv)) {
     fprintf(stderr, "[Pre-Init] Command line requested software OpenGL fallback\n");
     qputenv("QT_OPENGL", "software");
   }
@@ -535,7 +131,7 @@ auto main(int argc, char* argv[]) -> int {
 
   if (!explicit_qt_opengl) {
     fprintf(stderr, "[Pre-Init] Testing native OpenGL availability...\n");
-    const auto probe = testNativeOpenGL();
+    const auto probe = App::Bootstrap::test_native_opengl();
     if (!probe.supported) {
       fprintf(stderr, "[Pre-Init] WARNING: hardware OpenGL probe failed\n");
       fprintf(stderr,
@@ -562,74 +158,7 @@ auto main(int argc, char* argv[]) -> int {
   }
 #endif
 
-  qInstallMessageHandler(
-      [](QtMsgType type, const QMessageLogContext& context, const QString& msg) {
-        QByteArray const local_msg = msg.toLocal8Bit();
-        const char* file = (context.file != nullptr) ? context.file : "";
-        const char* function = (context.function != nullptr) ? context.function : "";
-
-        FILE* out = stderr;
-        switch (type) {
-        case QtDebugMsg:
-          fprintf(out,
-                  "[DEBUG] %s (%s:%u, %s)\n",
-                  local_msg.constData(),
-                  file,
-                  context.line,
-                  function);
-          break;
-        case QtInfoMsg:
-          fprintf(out, "[INFO] %s\n", local_msg.constData());
-          break;
-        case QtWarningMsg:
-          fprintf(out,
-                  "[WARNING] %s (%s:%u, %s)\n",
-                  local_msg.constData(),
-                  file,
-                  context.line,
-                  function);
-
-          if (msg.contains("OpenGL", Qt::CaseInsensitive) ||
-              msg.contains("scene graph", Qt::CaseInsensitive) ||
-              msg.contains("RHI", Qt::CaseInsensitive)) {
-            fprintf(out,
-                    "[HINT] If you see crashes, try software rendering: set "
-                    "QT_OPENGL=software\n");
-          }
-          break;
-        case QtCriticalMsg:
-          fprintf(out,
-                  "[CRITICAL] %s (%s:%u, %s)\n",
-                  local_msg.constData(),
-                  file,
-                  context.line,
-                  function);
-          if (msg.contains("scene graph is not using OpenGL", Qt::CaseInsensitive)) {
-            fprintf(out,
-                    "[CRITICAL] Do not use QT_QUICK_BACKEND=software; the game "
-                    "requires Qt Quick's OpenGL backend\n");
-          } else if (msg.contains("OpenGL", Qt::CaseInsensitive) ||
-                     msg.contains("scene graph", Qt::CaseInsensitive) ||
-                     msg.contains("RHI", Qt::CaseInsensitive) ||
-                     msg.contains("graphics", Qt::CaseInsensitive)) {
-            fprintf(out,
-                    "[CRITICAL] Try running with software OpenGL if this persists\n");
-          }
-          break;
-        case QtFatalMsg:
-          fprintf(out,
-                  "[FATAL] %s (%s:%u, %s)\n",
-                  local_msg.constData(),
-                  file,
-                  context.line,
-                  function);
-          fprintf(out, "[FATAL] === RECOVERY SUGGESTION ===\n");
-          fprintf(out, "[FATAL] Run: run_debug_softwaregl.cmd\n");
-          fprintf(out, "[FATAL] Or set: QT_OPENGL=software\n");
-          abort();
-        }
-        fflush(out);
-      });
+  App::Bootstrap::install_log_message_handler();
 
   qInfo() << "=== Standard of Iron - Starting ===";
   qInfo() << "Qt version:" << QT_VERSION_STR;
@@ -734,7 +263,7 @@ auto main(int argc, char* argv[]) -> int {
     }
     qInfo() << "SOI_GRAPHICS_DEFAULT_SELF_TEST: PASS - fresh profile uses the "
                "default preset";
-    if (!validate_release_campaign_map_resources()) {
+    if (!App::Bootstrap::validate_release_campaign_map_resources()) {
       return 15;
     }
     const auto& horse_status = Render::Horse::horse_source_asset_status();
@@ -1218,7 +747,7 @@ auto main(int argc, char* argv[]) -> int {
   if (component_gallery_requested) {
 
     if (!screenshot_path.isEmpty()) {
-      capture_screenshot_and_exit(
+      App::Bootstrap::capture_screenshot_and_exit(
           window, screenshot_path, QString(), screenshot_delay_ms, screenshot_size);
     }
     qInfo() << "Starting event loop (component gallery)...";
@@ -1516,7 +1045,7 @@ auto main(int argc, char* argv[]) -> int {
   }
 
   if (!screenshot_path.isEmpty()) {
-    capture_screenshot_and_exit(
+    App::Bootstrap::capture_screenshot_and_exit(
         window, screenshot_path, screenshot_view, screenshot_delay_ms, screenshot_size);
   }
 
@@ -1621,7 +1150,7 @@ auto main(int argc, char* argv[]) -> int {
 
 #ifdef Q_OS_WIN
 
-  if (g_opengl_crashed) {
+  if (App::Bootstrap::opengl_crash_detected()) {
     qCritical() << "";
     qCritical() << "========================================";
     qCritical() << "OPENGL CRASH RECOVERY";
