@@ -6,6 +6,7 @@
 #include <QDebug>
 #include <QString>
 
+#include <array>
 #include <cstdio>
 #include <cstring>
 #include <gl/gl.h>

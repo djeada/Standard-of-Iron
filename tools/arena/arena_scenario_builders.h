@@ -3,6 +3,7 @@
 #include <QString>
 #include <QVector3D>
 
+#include <initializer_list>
 #include <vector>
 
 #include "arena_scenario.h"

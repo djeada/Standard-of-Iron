@@ -1,5 +1,6 @@
 #include "arena_scenario_builders.h"
 
+#include <initializer_list>
 #include <utility>
 
 #include "arena_scenarios.h"
