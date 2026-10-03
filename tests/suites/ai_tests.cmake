@@ -1,0 +1,38 @@
+# ---- ai_tests ----------------------------------------------------------
+# The computer opponent, and the two scenarios that need one to be meaningful:
+# a wall assault it has to path around, and a mission wave it has to press.
+add_executable(
+    ai_tests
+    systems/ai_system_test.cpp
+    systems/ai_scouted_intel_test.cpp
+    systems/ai_stall_recovery_test.cpp
+    systems/ai_worker_pool_test.cpp
+    systems/ai_commander_doctrine_test.cpp
+    systems/ai_doctrine_catalog_test.cpp
+    systems/squad_service_test.cpp
+    systems/wall_system_test.cpp
+    headless/mission_wave_assault_test.cpp
+    headless/sepulcher_guard_response_test.cpp
+    headless/auto_engagement_response_test.cpp
+    headless/defender_engagement_test.cpp
+    headless/ai_skirmish_opening_test.cpp
+    headless/ai_duel_match_test.cpp
+    headless/commander_voice_skirmish_test.cpp
+    headless/ai_town_plan_test.cpp
+    headless/ai_estate_economy_test.cpp
+    headless/movement_quality_gate_test.cpp
+    simulation_main.cpp
+)
+target_link_libraries(
+    ai_tests
+    PRIVATE
+        GTest::gtest
+        GTest::gmock
+        Qt${QT_VERSION_MAJOR}::Core
+        engine_core
+        game_sim
+        soi_ai
+        soi_runtime
+        soi_mission_runtime
+)
+soi_register_test_binary(ai_tests)

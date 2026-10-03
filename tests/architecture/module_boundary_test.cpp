@@ -14,6 +14,7 @@
 #include <gtest/gtest.h>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -186,22 +187,40 @@ TEST(ModuleBoundaries, NoWrongWayEdgeIsToleratedAnyMore) {
 
 TEST(ModuleBoundaries, TestBinariesLinkProductionCodeRatherThanRecompilingIt) {
   const auto root = find_repo_root();
-  const auto lists = read_text(root / "tests" / "CMakeLists.txt");
-  ASSERT_FALSE(lists.isEmpty());
+  // The suites live in tests/suites/*.cmake, included into tests/CMakeLists.txt.
+  std::vector<std::pair<std::string, QString>> files;
+  files.emplace_back("tests/CMakeLists.txt",
+                     read_text(root / "tests" / "CMakeLists.txt"));
+  ASSERT_FALSE(files.front().second.isEmpty());
+  std::vector<std::filesystem::path> suites;
+  for (const auto& entry :
+       std::filesystem::directory_iterator(root / "tests" / "suites")) {
+    if (entry.path().extension() == ".cmake") {
+      suites.push_back(entry.path());
+    }
+  }
+  std::sort(suites.begin(), suites.end());
+  ASSERT_FALSE(suites.empty()) << "tests/suites/*.cmake not found from " << root;
+  for (const auto& suite : suites) {
+    files.emplace_back("tests/suites/" + suite.filename().string(), read_text(suite));
+  }
 
   std::vector<std::string> offenders;
-  const auto lines = lists.split('\n');
-  for (int index = 0; index < lines.size(); ++index) {
-    auto line = lines.at(index).trimmed();
-    if (line.startsWith('#') || !line.endsWith(".cpp")) {
-      continue;
-    }
+  for (const auto& [file_name, lists] : files) {
+    const auto lines = lists.split('\n');
+    for (int index = 0; index < lines.size(); ++index) {
+      auto line = lines.at(index).trimmed();
+      if (line.startsWith('#') || !line.endsWith(".cpp")) {
+        continue;
+      }
 
-    if (line.contains("${CMAKE_SOURCE_DIR}") || line.startsWith("../")) {
-      offenders.push_back(QString("tests/CMakeLists.txt:%1: %2")
-                              .arg(index + 1)
-                              .arg(line)
-                              .toStdString());
+      if (line.contains("${CMAKE_SOURCE_DIR}") || line.startsWith("../")) {
+        offenders.push_back(QString("%1:%2: %3")
+                                .arg(QString::fromStdString(file_name))
+                                .arg(index + 1)
+                                .arg(line)
+                                .toStdString());
+      }
     }
   }
 

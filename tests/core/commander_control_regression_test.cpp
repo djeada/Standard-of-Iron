@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstddef>
 #include <filesystem>
 #include <fstream>
@@ -5,6 +6,7 @@
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace {
 
@@ -48,6 +50,21 @@ auto read_text(const std::filesystem::path& path) -> std::string {
   std::ostringstream buffer;
   buffer << input.rdbuf();
   return buffer.str();
+}
+
+auto root_build_definitions(const std::filesystem::path& root) -> std::string {
+  std::string combined = read_text(root / "CMakeLists.txt");
+  std::vector<std::filesystem::path> modules;
+  for (const auto& entry : std::filesystem::directory_iterator(root / "cmake")) {
+    if (entry.path().extension() == ".cmake") {
+      modules.push_back(entry.path());
+    }
+  }
+  std::sort(modules.begin(), modules.end());
+  for (const auto& module : modules) {
+    combined += "\n" + read_text(module);
+  }
+  return combined;
 }
 
 auto app_source(const std::filesystem::path& root,
@@ -469,7 +486,7 @@ TEST(CommanderControlRegressionTest,
   const auto commander_hud_source =
       read_text(root / "ui" / "qml" / "HUDBottomCommander.qml");
 
-  const auto cmake_source = read_text(root / "CMakeLists.txt");
+  const auto cmake_source = root_build_definitions(root);
   const auto view_model_header = app_source(root, "commander_view_model.h");
   ASSERT_FALSE(hud_source.empty());
   ASSERT_FALSE(commander_hud_source.empty());

@@ -27,6 +27,16 @@ auto read_text(const QString& relative_path) -> QString {
   return QString::fromUtf8(file.readAll());
 }
 
+auto root_build_definitions() -> QString {
+  QString combined = read_text(QStringLiteral("CMakeLists.txt"));
+  const QDir cmake_dir(repo_root().filePath(QStringLiteral("cmake")));
+  for (const QString& name :
+       cmake_dir.entryList({QStringLiteral("*.cmake")}, QDir::Files, QDir::Name)) {
+    combined += QLatin1Char('\n') + read_text(QStringLiteral("cmake/") + name);
+  }
+  return combined;
+}
+
 auto registry_filenames() -> QStringList {
   const QString source = read_text(QStringLiteral("ui/qml/design/Icons.qml"));
   QStringList names;
@@ -111,10 +121,11 @@ TEST(IconResourcesTest, EveryFilenameTheRegistryNamesExistsOnDisk) {
 
 TEST(IconResourcesTest, EveryShippedIconIsEmbeddedInTheQmlModule) {
 
-  const QString cmake = read_text(QStringLiteral("CMakeLists.txt"));
+  const QString cmake = root_build_definitions();
   ASSERT_FALSE(cmake.isEmpty());
   EXPECT_TRUE(cmake.contains(QStringLiteral("assets/visuals/icons/*.png")))
-      << "the icon glob disappeared from CMakeLists.txt; icons may silently stop "
+      << "the icon glob disappeared from the root build definitions; icons may "
+         "silently stop "
          "shipping";
   EXPECT_TRUE(cmake.contains(QStringLiteral("${SOI_UNIT_ICON_RESOURCES}")))
       << "the globbed icon list is no longer referenced by the QML module";

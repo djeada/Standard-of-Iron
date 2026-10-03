@@ -41,7 +41,7 @@ Three rules keep the split meaningful:
 
 All three are checked, not just asserted:
 `tests/architecture/module_boundary_test.cpp` fails if a production `.cpp`
-appears in this directory's source lists, and if `scripts/run-tests.sh` and
+appears in this directory's source lists (`CMakeLists.txt` and `suites/*.cmake`), and if `scripts/run-tests.sh` and
 `soi_test_binaries` disagree about which suites exist.
 
 `simulation_tests` is the one to watch. It links the kernel and nothing else —

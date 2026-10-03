@@ -1,10 +1,12 @@
 #include <QStandardPaths>
 
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
 #include <gtest/gtest.h>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include "app/core/app_identity.h"
 
@@ -34,6 +36,23 @@ auto read_text(const fs::path& path) -> std::string {
   return contents.str();
 }
 
+// The root CMakeLists.txt composes cmake/*.cmake includes that share its scope,
+// so what it defines is the root file plus every include.
+auto read_root_build_definitions(const fs::path& root) -> std::string {
+  std::string combined = read_text(root / "CMakeLists.txt");
+  std::vector<fs::path> modules;
+  for (const auto& entry : fs::directory_iterator(root / "cmake")) {
+    if (entry.path().extension() == ".cmake") {
+      modules.push_back(entry.path());
+    }
+  }
+  std::sort(modules.begin(), modules.end());
+  for (const auto& module : modules) {
+    combined += "\n" + read_text(module);
+  }
+  return combined;
+}
+
 TEST(ReleaseContract, PublishKeepsDownloadedPackagesInTheWorkspace) {
   const auto workflow =
       read_text(find_repo_root() / ".github" / "workflows" / "release.yml");
@@ -59,7 +78,7 @@ TEST(ReleaseContract, PublishKeepsDownloadedPackagesInTheWorkspace) {
 
 TEST(ReleaseContract, ProjectVersionIsVisibleInTheRunningGame) {
   const auto root = find_repo_root();
-  const auto cmake = read_text(root / "CMakeLists.txt");
+  const auto cmake = read_root_build_definitions(root);
   const auto main_cpp = read_text(root / "main.cpp");
   const auto main_menu = read_text(root / "ui" / "qml" / "MainMenu.qml");
   const auto settings = read_text(root / "ui" / "qml" / "SettingsPanel.qml");
@@ -107,7 +126,7 @@ TEST(ReleaseContract, EveryPackagedGameRunsTheFullReleaseSelfTest) {
 }
 
 TEST(ReleaseContract, CampaignMapRuntimeAssetsAreMandatory) {
-  const auto cmake = read_text(find_repo_root() / "CMakeLists.txt");
+  const auto cmake = read_root_build_definitions(find_repo_root());
 
   EXPECT_NE(cmake.find("ENABLE_GENERATED_CAMPAIGN_MAP_ASSETS\n"
                        "    \"Embed the campaign map assets required by the shipped "
