@@ -16,7 +16,7 @@ Item {
 
     readonly property int left_stack_bottom: waveTracker.visible ? waveTracker.y + waveTracker.height : topPanel.height
 
-    readonly property int right_stack_bottom: topPanel.height + Design.Metrics.space8 + (Design.Metrics.space24 * 8) + Design.Metrics.space8 + hudTop.minimapLegendHeight
+    readonly property int right_stack_bottom: hudTop.minimapZone.height > 0 ? Math.round(hudTop.minimapZone.y + hudTop.minimapZone.height + Design.Metrics.space8) : topPanel.height + Design.Metrics.space8
 
     readonly property bool minimap_drag_active: hudTop.minimapDragActive
 
@@ -609,6 +609,7 @@ Item {
         anchors.rightMargin: Design.Metrics.hudZoneMargin
         anchors.top: topPanel.bottom
         anchors.topMargin: hud.right_stack_margin(commanderMessage.height)
+        maxHeight: Math.max(Design.Metrics.space24 * 6, hud.height - hud.bottom_panel_height - hud.right_stack_bottom - Design.Metrics.space16)
 
         z: 200
     }
