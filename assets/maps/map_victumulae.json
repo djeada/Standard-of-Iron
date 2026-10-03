@@ -66,7 +66,7 @@
         "yaw": 225.0
     },
     "coord_system": "grid",
-    "description": "A walled market town of the Insubrian plain, raised on a double hill above the winter fields. The lower ward rings the outer crown with a timber curtain and towers; the citadel stands on the upper crown behind its own wall, with the granary and the garrison hall inside it. Three roads climb to the lower ward - from the Punic camp in the south, and from the Placentia road on either flank - and only one ramp climbs from the lower ward to the citadel gate.",
+    "description": "A walled market town of the Insubrian plain, raised on a double hill above the winter fields. A timber curtain with a tower at every corner rings the lower ward; the citadel stands on the upper crown behind its own wall, with the garrison hall inside it. One graded ramp climbs from the camp road to the south gate, and one narrow ramp climbs from the lower ward to the citadel gate. The relief columns come down the flank roads and never touch the hill.",
     "dressing": [
         {
             "id": "punic_camp_tent_lines",
@@ -118,19 +118,13 @@
             "z": 112,
             "style": "milestone",
             "snap": 6
-        },
-        {
-            "id": "victumulae_gate_east",
-            "kind": "gate_approach",
-            "x": 114.0,
-            "z": 54.0
         }
     ],
     "environment": {
         "day_length_seconds": 1800,
-        "fog_density": 0.015,
-        "lighting_profile": "river_mist",
-        "start_time": 9.0,
+        "fog_density": 0.008,
+        "lighting_profile": "alpine_clear",
+        "start_time": 10.0,
         "time_mode": "locked"
     },
     "firecamps": [
@@ -443,6 +437,130 @@
                 ]
             ],
             "width": 3.4
+        },
+        {
+            "id": "gate_ramp_road",
+            "start": [
+                80,
+                97
+            ],
+            "end": [
+                80,
+                80
+            ],
+            "style": "default",
+            "width": 4.0,
+            "waypoints": [
+                [
+                    80,
+                    97
+                ],
+                [
+                    80,
+                    92
+                ],
+                [
+                    80,
+                    86
+                ],
+                [
+                    80,
+                    80
+                ]
+            ]
+        },
+        {
+            "id": "gate_ramp_road",
+            "start": [
+                80,
+                97
+            ],
+            "end": [
+                80,
+                80
+            ],
+            "style": "default",
+            "width": 4.0,
+            "waypoints": [
+                [
+                    80,
+                    97
+                ],
+                [
+                    80,
+                    92
+                ],
+                [
+                    80,
+                    86
+                ],
+                [
+                    80,
+                    80
+                ]
+            ]
+        },
+        {
+            "id": "gate_ramp_road",
+            "start": [
+                80,
+                97
+            ],
+            "end": [
+                80,
+                80
+            ],
+            "style": "default",
+            "width": 4.0,
+            "waypoints": [
+                [
+                    80,
+                    97
+                ],
+                [
+                    80,
+                    92
+                ],
+                [
+                    80,
+                    86
+                ],
+                [
+                    80,
+                    80
+                ]
+            ]
+        },
+        {
+            "id": "gate_ramp_road",
+            "start": [
+                80,
+                97
+            ],
+            "end": [
+                80,
+                80
+            ],
+            "style": "default",
+            "width": 4.0,
+            "waypoints": [
+                [
+                    80,
+                    97
+                ],
+                [
+                    80,
+                    92
+                ],
+                [
+                    80,
+                    86
+                ],
+                [
+                    80,
+                    80
+                ]
+            ]
         }
     ],
     "settlements": [
@@ -510,7 +628,8 @@
             "player_id": 2,
             "nation": "roman_republic",
             "max_population": -1,
-            "behavior": "hold"
+            "behavior": "guard",
+            "guard_radius": 12
         },
         {
             "id": "citadel_physician",
@@ -523,10 +642,21 @@
             "behavior": "hold"
         },
         {
+            "id": "citadel_guard_east",
+            "type": "swordsman",
+            "x": 86.0,
+            "z": 54.0,
+            "player_id": 2,
+            "nation": "roman_republic",
+            "max_population": -1,
+            "behavior": "guard",
+            "guard_radius": 12
+        },
+        {
             "id": "south_gate_spears_west",
             "type": "spearman",
             "x": 75.0,
-            "z": 71.0,
+            "z": 72.0,
             "player_id": 2,
             "nation": "roman_republic",
             "max_population": -1,
@@ -536,35 +666,117 @@
             "id": "south_gate_spears_east",
             "type": "spearman",
             "x": 85.0,
-            "z": 71.0,
+            "z": 72.0,
             "player_id": 2,
             "nation": "roman_republic",
             "max_population": -1,
             "behavior": "hold"
         },
         {
-            "id": "south_wall_archers_west",
+            "id": "south_gate_swords_west",
+            "type": "swordsman",
+            "x": 72.0,
+            "z": 70.0,
+            "player_id": 2,
+            "nation": "roman_republic",
+            "max_population": -1,
+            "behavior": "guard",
+            "guard_radius": 10
+        },
+        {
+            "id": "south_gate_swords_east",
+            "type": "swordsman",
+            "x": 88.0,
+            "z": 70.0,
+            "player_id": 2,
+            "nation": "roman_republic",
+            "max_population": -1,
+            "behavior": "guard",
+            "guard_radius": 10
+        },
+        {
+            "id": "plaza_reserve_west",
+            "type": "spearman",
+            "x": 66.0,
+            "z": 62.0,
+            "player_id": 2,
+            "nation": "roman_republic",
+            "max_population": -1,
+            "behavior": "guard",
+            "guard_radius": 20
+        },
+        {
+            "id": "plaza_reserve_east",
+            "type": "spearman",
+            "x": 94.0,
+            "z": 62.0,
+            "player_id": 2,
+            "nation": "roman_republic",
+            "max_population": -1,
+            "behavior": "guard",
+            "guard_radius": 20
+        },
+        {
+            "id": "north_reserve",
+            "type": "swordsman",
+            "x": 80.0,
+            "z": 34.0,
+            "player_id": 2,
+            "nation": "roman_republic",
+            "max_population": -1,
+            "behavior": "guard",
+            "guard_radius": 20
+        },
+        {
+            "id": "wall_archers_1",
             "type": "archer",
-            "x": 68.0,
-            "z": 72.0,
+            "x": 66.0,
+            "z": 70.0,
             "player_id": 2,
             "nation": "roman_republic",
             "max_population": -1
         },
         {
-            "id": "south_wall_archers_east",
+            "id": "wall_archers_2",
             "type": "archer",
-            "x": 92.0,
-            "z": 72.0,
+            "x": 94.0,
+            "z": 70.0,
             "player_id": 2,
             "nation": "roman_republic",
             "max_population": -1
         },
         {
-            "id": "east_wall_archers",
+            "id": "wall_archers_3",
+            "type": "archer",
+            "x": 59.0,
+            "z": 52.0,
+            "player_id": 2,
+            "nation": "roman_republic",
+            "max_population": -1
+        },
+        {
+            "id": "wall_archers_4",
+            "type": "archer",
+            "x": 59.0,
+            "z": 40.0,
+            "player_id": 2,
+            "nation": "roman_republic",
+            "max_population": -1
+        },
+        {
+            "id": "wall_archers_5",
+            "type": "archer",
+            "x": 101.0,
+            "z": 40.0,
+            "player_id": 2,
+            "nation": "roman_republic",
+            "max_population": -1
+        },
+        {
+            "id": "wall_archers_6",
             "type": "archer",
             "x": 100.0,
-            "z": 60.0,
+            "z": 34.0,
             "player_id": 2,
             "nation": "roman_republic",
             "max_population": -1
@@ -582,9 +794,9 @@
             "authored": true,
             "nation": "roman_republic",
             "player_id": 2,
-            "rotation": 0.0,
             "settlement": "victumulae",
             "type": "wall_gate",
+            "rotation": 0.0,
             "x": 80.0,
             "z": 76.0
         },
@@ -592,40 +804,21 @@
             "authored": true,
             "nation": "roman_republic",
             "player_id": 2,
-            "rotation": 90.0,
             "settlement": "victumulae",
             "type": "wall_gate",
-            "x": 114.0,
-            "z": 54.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
             "rotation": 0.0,
-            "settlement": "victumulae",
-            "type": "wall_gate",
             "x": 80.0,
             "z": 58.0
         },
         {
             "authored": true,
-            "max_population": 40,
             "nation": "roman_republic",
             "player_id": 2,
             "settlement": "victumulae",
             "type": "barracks",
             "x": 80.0,
-            "z": 50.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "type": "marketplace",
-            "x": 107.0,
-            "z": 56.0
+            "z": 50.0,
+            "max_population": 40
         },
         {
             "authored": true,
@@ -633,48 +826,78 @@
             "player_id": 2,
             "settlement": "victumulae",
             "type": "temple",
-            "x": 54.76,
-            "z": 48.24
+            "x": 67.0,
+            "z": 31.0,
+            "rotation": 0.0
         },
         {
             "authored": true,
             "nation": "roman_republic",
             "player_id": 2,
-            "rotation": 180.0,
             "settlement": "victumulae",
-            "type": "home",
-            "x": 62.0,
-            "z": 32.0
+            "type": "marketplace",
+            "x": 102.0,
+            "z": 50.0
         },
         {
             "authored": true,
             "nation": "roman_republic",
             "player_id": 2,
-            "rotation": 180.0,
             "settlement": "victumulae",
             "type": "home",
-            "x": 98.0,
-            "z": 32.0
+            "x": 83.0,
+            "z": 31.0,
+            "rotation": 180.0
         },
         {
             "authored": true,
             "nation": "roman_republic",
             "player_id": 2,
-            "rotation": 0.0,
             "settlement": "victumulae",
             "type": "home",
-            "x": 62.0,
-            "z": 68.0
+            "x": 95.0,
+            "z": 31.0,
+            "rotation": 180.0
         },
         {
             "authored": true,
             "nation": "roman_republic",
             "player_id": 2,
-            "rotation": 0.0,
             "settlement": "victumulae",
             "type": "home",
-            "x": 98.0,
-            "z": 68.0
+            "x": 59.0,
+            "z": 46.0,
+            "rotation": 90.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "type": "home",
+            "x": 59.0,
+            "z": 58.0,
+            "rotation": 90.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "type": "home",
+            "x": 63.0,
+            "z": 69.0,
+            "rotation": 0.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "type": "home",
+            "x": 97.0,
+            "z": 69.0,
+            "rotation": 0.0
         },
         {
             "authored": true,
@@ -682,8 +905,8 @@
             "player_id": 2,
             "settlement": "victumulae",
             "type": "defense_tower",
-            "x": 104.04,
-            "z": 64.14
+            "x": 59.0,
+            "z": 31.0
         },
         {
             "authored": true,
@@ -691,8 +914,8 @@
             "player_id": 2,
             "settlement": "victumulae",
             "type": "defense_tower",
-            "x": 55.96,
-            "z": 64.14
+            "x": 103.0,
+            "z": 31.0
         },
         {
             "authored": true,
@@ -700,8 +923,8 @@
             "player_id": 2,
             "settlement": "victumulae",
             "type": "defense_tower",
-            "x": 55.96,
-            "z": 35.86
+            "x": 59.0,
+            "z": 71.0
         },
         {
             "authored": true,
@@ -709,8 +932,8 @@
             "player_id": 2,
             "settlement": "victumulae",
             "type": "defense_tower",
-            "x": 104.04,
-            "z": 35.86
+            "x": 103.0,
+            "z": 71.0
         },
         {
             "authored": true,
@@ -724,850 +947,162 @@
         },
         {
             "authored": true,
-            "end": [
-                92.0,
-                24.0
-            ],
             "nation": "roman_republic",
             "player_id": 2,
             "settlement": "victumulae",
-            "start": [
-                68.0,
-                24.0
-            ],
             "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                68.0,
-                26.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                62.0,
-                26.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                98.0,
-                26.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                92.0,
-                26.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                62.0,
-                28.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                58.0,
-                28.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                102.0,
-                28.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                98.0,
-                28.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                58.0,
-                30.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                56.0,
-                30.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                104.0,
-                30.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                102.0,
-                30.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                56.0,
-                32.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
             "start": [
                 54.0,
-                32.0
+                26.0
             ],
-            "type": "wall_segment",
+            "end": [
+                108.0,
+                26.0
+            ],
             "width": 2.0
         },
         {
             "authored": true,
-            "end": [
-                106.0,
-                32.0
-            ],
             "nation": "roman_republic",
             "player_id": 2,
             "settlement": "victumulae",
-            "start": [
-                104.0,
-                32.0
-            ],
             "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
+            "start": [
+                54.0,
+                26.0
+            ],
             "end": [
                 54.0,
-                34.0
+                76.0
             ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                52.0,
-                34.0
-            ],
-            "type": "wall_segment",
             "width": 2.0
         },
         {
             "authored": true,
-            "end": [
-                108.0,
-                34.0
-            ],
             "nation": "roman_republic",
             "player_id": 2,
             "settlement": "victumulae",
-            "start": [
-                106.0,
-                34.0
-            ],
             "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                52.0,
-                36.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                50.0,
-                36.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                110.0,
-                36.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
             "start": [
                 108.0,
-                36.0
+                26.0
             ],
-            "type": "wall_segment",
+            "end": [
+                108.0,
+                76.0
+            ],
             "width": 2.0
         },
         {
             "authored": true,
-            "end": [
-                48.0,
-                42.0
-            ],
             "nation": "roman_republic",
             "player_id": 2,
             "settlement": "victumulae",
-            "start": [
-                48.0,
-                38.0
-            ],
             "type": "wall_segment",
+            "start": [
+                54.0,
+                76.0
+            ],
+            "end": [
+                76.0,
+                76.0
+            ],
             "width": 2.0
         },
         {
             "authored": true,
-            "end": [
-                50.0,
-                38.0
-            ],
             "nation": "roman_republic",
             "player_id": 2,
             "settlement": "victumulae",
-            "start": [
-                50.0,
-                38.0
-            ],
             "type": "wall_segment",
+            "start": [
+                84.0,
+                76.0
+            ],
+            "end": [
+                108.0,
+                76.0
+            ],
             "width": 2.0
         },
         {
             "authored": true,
-            "end": [
-                112.0,
-                38.0
-            ],
             "nation": "roman_republic",
             "player_id": 2,
             "settlement": "victumulae",
-            "start": [
-                110.0,
-                38.0
-            ],
             "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                112.0,
-                42.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
             "start": [
-                112.0,
+                70.0,
                 40.0
             ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                46.0,
-                58.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                46.0,
-                42.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                44.0,
-                50.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                44.0,
-                50.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                48.0,
-                62.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                48.0,
-                58.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                112.0,
-                62.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                112.0,
-                58.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                50.0,
-                64.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                50.0,
-                62.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                110.0,
-                64.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                110.0,
-                62.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                52.0,
-                66.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                52.0,
-                64.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                108.0,
-                66.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                108.0,
-                64.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                54.0,
-                68.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                54.0,
-                66.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                106.0,
-                68.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                106.0,
-                66.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                56.0,
-                70.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                56.0,
-                68.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                104.0,
-                70.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                104.0,
-                68.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                58.0,
-                72.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                58.0,
-                70.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                102.0,
-                72.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                102.0,
-                70.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                62.0,
-                72.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                60.0,
-                72.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                100.0,
-                72.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                98.0,
-                72.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                68.0,
-                74.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                62.0,
-                74.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                98.0,
-                74.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                92.0,
-                74.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                76.0,
-                76.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                68.0,
-                76.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
             "end": [
                 92.0,
-                76.0
+                40.0
             ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                84.0,
-                76.0
-            ],
-            "type": "wall_segment",
             "width": 2.0
         },
         {
             "authored": true,
-            "end": [
-                114.0,
-                50.0
-            ],
             "nation": "roman_republic",
             "player_id": 2,
             "settlement": "victumulae",
-            "start": [
-                114.0,
-                42.0
-            ],
             "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                114.0,
-                58.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                114.0,
-                58.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                86.0,
-                42.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                74.0,
-                42.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                74.0,
-                44.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                72.0,
-                44.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                88.0,
-                44.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                86.0,
-                44.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                70.0,
-                54.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
             "start": [
                 70.0,
-                46.0
+                40.0
             ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
             "end": [
-                72.0,
-                46.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                72.0,
-                46.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                90.0,
-                46.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                88.0,
-                46.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                90.0,
-                54.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                90.0,
-                48.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                68.0,
-                50.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                68.0,
-                50.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                72.0,
-                56.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                72.0,
-                54.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                88.0,
-                56.0
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                88.0,
-                54.0
-            ],
-            "type": "wall_segment",
-            "width": 2.0
-        },
-        {
-            "authored": true,
-            "end": [
-                74.0,
+                70.0,
                 58.0
             ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                74.0,
-                56.0
-            ],
-            "type": "wall_segment",
             "width": 2.0
         },
         {
             "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "type": "wall_segment",
+            "start": [
+                92.0,
+                40.0
+            ],
             "end": [
-                86.0,
+                92.0,
                 58.0
             ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                86.0,
-                56.0
-            ],
-            "type": "wall_segment",
             "width": 2.0
         },
         {
             "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "type": "wall_segment",
+            "start": [
+                70.0,
+                58.0
+            ],
             "end": [
                 76.0,
                 58.0
             ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "start": [
-                76.0,
-                58.0
-            ],
-            "type": "wall_segment",
             "width": 2.0
         },
         {
             "authored": true,
-            "end": [
-                84.0,
-                58.0
-            ],
             "nation": "roman_republic",
             "player_id": 2,
             "settlement": "victumulae",
+            "type": "wall_segment",
             "start": [
                 84.0,
                 58.0
             ],
-            "type": "wall_segment",
+            "end": [
+                92.0,
+                58.0
+            ],
             "width": 2.0
         }
     ],
@@ -1575,27 +1110,12 @@
         {
             "crown": 0.85,
             "depth": 84.0,
-            "description": "The broad lower crown that carries the town ward.",
+            "description": "The broad lower crown that carries the town ward; one graded ramp climbs it from the camp road.",
             "entrances": [
                 {
                     "radius": 2.0,
                     "x": 80.0,
                     "z": 92.0
-                },
-                {
-                    "radius": 2.0,
-                    "x": 25.0,
-                    "z": 50.0
-                },
-                {
-                    "radius": 2.0,
-                    "x": 135.0,
-                    "z": 50.0
-                },
-                {
-                    "radius": 2.0,
-                    "x": 80.0,
-                    "z": 8.0
                 }
             ],
             "height": 2.6,
@@ -1603,7 +1123,8 @@
             "type": "hill",
             "width": 110.0,
             "x": 80.0,
-            "z": 50.0
+            "z": 50.0,
+            "exact_height": true
         },
         {
             "crown": 0.6,
@@ -1616,12 +1137,13 @@
                     "z": 70.0
                 }
             ],
-            "height": 9.0,
+            "height": 3.8,
             "id": "victumulae_citadel_crown",
             "type": "hill",
             "width": 48.0,
             "x": 80.0,
-            "z": 50.0
+            "z": 50.0,
+            "exact_height": true
         },
         {
             "depth": 22.0,
@@ -2102,33 +1624,105 @@
         },
         {
             "type": "firecamp",
-            "x": 121.47,
-            "z": 50.52,
+            "x": 67.0,
+            "z": 73.5,
             "scale": 1.0,
             "rotation": 0.0,
-            "dressing": "victumulae_gate_east",
-            "radius": 3.2,
-            "intensity": 1.15,
+            "radius": 3.0,
+            "intensity": 1.1,
             "persistent": true
         },
         {
             "type": "firecamp",
-            "x": 121.47,
-            "z": 60.92,
+            "x": 93.0,
+            "z": 73.5,
             "scale": 1.0,
             "rotation": 0.0,
-            "dressing": "victumulae_gate_east",
-            "radius": 3.2,
-            "intensity": 1.15,
+            "radius": 3.0,
+            "intensity": 1.1,
             "persistent": true
         },
         {
             "type": "weapon_rack",
-            "x": 126.25,
-            "z": 61.14,
+            "x": 100.5,
+            "z": 42.0,
+            "scale": 1.0,
+            "rotation": 90.0
+        },
+        {
+            "type": "weapon_rack",
+            "x": 59.5,
+            "z": 62.0,
+            "scale": 1.0,
+            "rotation": 90.0
+        },
+        {
+            "type": "firecamp",
+            "x": 67.0,
+            "z": 73.5,
             "scale": 1.0,
             "rotation": 0.0,
-            "dressing": "victumulae_gate_east"
+            "radius": 3.0,
+            "intensity": 1.1,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 93.0,
+            "z": 73.5,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "radius": 3.0,
+            "intensity": 1.1,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 100.5,
+            "z": 42.0,
+            "scale": 1.0,
+            "rotation": 90.0
+        },
+        {
+            "type": "weapon_rack",
+            "x": 59.5,
+            "z": 62.0,
+            "scale": 1.0,
+            "rotation": 90.0
+        },
+        {
+            "type": "firecamp",
+            "x": 67.0,
+            "z": 73.5,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "radius": 3.0,
+            "intensity": 1.1,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 93.0,
+            "z": 73.5,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "radius": 3.0,
+            "intensity": 1.1,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 100.5,
+            "z": 42.0,
+            "scale": 1.0,
+            "rotation": 90.0
+        },
+        {
+            "type": "weapon_rack",
+            "x": 59.5,
+            "z": 62.0,
+            "scale": 1.0,
+            "rotation": 90.0
         }
     ],
     "hill_rockfall_caches": false

@@ -7367,12 +7367,12 @@ bir harita seç</translation>
         <translation>Eski yol üzerinde bir Roma gözcü kampı, çobanların o yolu neden bıraktığını öğrendiği gece. Kereste, taş ve bir sürü kampa yakındır; mezar harabeleri ortadaki araziyi tutar; lanetli tapınak kuzeydoğudaki arazide tek başına durur. Kampla mezar arasındaki alçak bir tümsek, sahip olmaya değer tek yüksek yerdir ve yol baştan sona ölülerin yanından geçer.</translation>
     </message>
     <message>
-        <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. The lower ward rings the outer crown with a timber curtain and towers; the citadel stands on the upper crown behind its own wall, with the granary and the garrison hall inside it. Three roads climb to the lower ward - from the Punic camp in the south, and from the Placentia road on either flank - and only one ramp climbs from the lower ward to the citadel gate.</source>
-        <translation>İnsubr ovasında, kış tarlalarının üzerinde çifte bir tepeye kurulmuş surlu bir pazar kasabası. Aşağı şehir, dış tepeyi ahşap bir perde duvarı ve kulelerle çevreler; iç kale üst tepede kendi surunun ardında durur, tahıl ambarı ve garnizon binası da onun içindedir. Aşağı şehre üç yol tırmanır - güneydeki Pön kampından ve iki yandan Placentia yolundan - ve aşağı şehirden iç kale kapısına yalnızca tek bir rampa çıkar.</translation>
-    </message>
-    <message>
         <source>Victumulae</source>
         <translation>Victumulae</translation>
+    </message>
+    <message>
+        <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. A timber curtain with a tower at every corner rings the lower ward; the citadel stands on the upper crown behind its own wall, with the garrison hall inside it. One graded ramp climbs from the camp road to the south gate, and one narrow ramp climbs from the lower ward to the citadel gate. The relief columns come down the flank roads and never touch the hill.</source>
+        <translation>İnsubria ovasında, kış tarlalarının üzerinde çifte bir tepeye kurulmuş surlu bir pazar kasabası. Her köşesinde bir kule bulunan ahşap bir sur, alt avluyu çevreler; kale, kendi suruyla çevrili üst tepede durur, garnizon salonu da içindedir. Kamp yolundan güney kapısına tek bir eğimli rampa çıkar, alt avludan kale kapısına ise dar bir rampa. Yardım sütunları yan yollardan iner ve tepeye hiç dokunmaz.</translation>
     </message>
 </context>
 <context>
