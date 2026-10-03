@@ -6,6 +6,16 @@ singleton CameraGuide 1.0 CameraGuide.qml
 StyledButton 1.0 StyledButton.qml
 StyledComboBox 1.0 StyledComboBox.qml
 ProductionPanel 1.0 ProductionPanel.qml
+ProductionBarracksQueue 1.0 ProductionBarracksQueue.qml
+ProductionBarracksRoster 1.0 ProductionBarracksRoster.qml
+ProductionHomeSection 1.0 ProductionHomeSection.qml
+ProductionRallySection 1.0 ProductionRallySection.qml
+ProductionBuilderSection 1.0 ProductionBuilderSection.qml
+ProductionConstructionCard 1.0 ProductionConstructionCard.qml
+ProductionMarketplaceSection 1.0 ProductionMarketplaceSection.qml
+ProductionTempleSection 1.0 ProductionTempleSection.qml
+ProductionFarmSection 1.0 ProductionFarmSection.qml
+ProductionEmptyHint 1.0 ProductionEmptyHint.qml
 SaveGamePanel 1.0 SaveGamePanel.qml
 LoadGamePanel 1.0 LoadGamePanel.qml
 SaveSlotRow 1.0 SaveSlotRow.qml

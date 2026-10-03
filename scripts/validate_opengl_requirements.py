@@ -227,7 +227,9 @@ def check_embedded_shaders(root: Path, shader_dir: Path) -> list[str]:
 
 def check_release_renderer_self_tests(root: Path) -> list[str]:
     errors: list[str] = []
-    main_content = (root / "main.cpp").read_text(encoding="utf-8")
+    main_content = (root / "main.cpp").read_text(encoding="utf-8") + (
+        root / "app" / "bootstrap" / "self_test_driver.cpp"
+    ).read_text(encoding="utf-8")
     for marker in ("--renderer-self-test", "SOI_RENDERER_SELF_TEST: PASS"):
         if marker not in main_content:
             errors.append(f"main.cpp: missing renderer self-test marker {marker!r}")

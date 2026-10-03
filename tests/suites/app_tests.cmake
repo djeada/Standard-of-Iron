@@ -1,0 +1,124 @@
+# ---- app_tests ---------------------------------------------------------
+# View models, controllers, the widget shell, and the gameplay services that
+# only mean something with a camera or the application around them.
+add_executable(
+    app_tests
+    ${SOI_TRANSLATIONS_QRC}
+    app/benchmark_action_fixture_test.cpp
+    core/audio_system_test.cpp
+    world/ambient_state_hysteresis_test.cpp
+    core/audio_cues_test.cpp
+    core/cue_trace_test.cpp
+    core/audio_gameplay_scenarios_test.cpp
+    core/audio_battle_load_test.cpp
+    core/audio_mastering_test.cpp
+    core/gameplay_mix_test.cpp
+    core/loop_seam_test.cpp
+    core/resampler_test.cpp
+    core/ambience_assets_test.cpp
+    core/weather_audio_test.cpp
+    core/audio_command_ring_test.cpp
+    core/audio_backend_test.cpp
+    db/save_preview_test.cpp
+    core/settings_persistence_test.cpp
+    core/save_runtime_restore_test.cpp
+    core/minimap_manager_test.cpp
+    core/commander_control_regression_test.cpp
+    core/save_slot_controller_test.cpp
+    core/mission_tick_ownership_test.cpp
+    core/simulation_lifecycle_test.cpp
+    core/replay_coordinator_test.cpp
+    core/loading_overlay_test.cpp
+    core/battle_stats_test.cpp
+    core/ally_announcements_test.cpp
+    core/commander_camera_rig_test.cpp
+    core/commander_control_controller_test.cpp
+    core/commander_shared_traversal_test.cpp
+    core/commander_defense_windows_test.cpp
+    core/commander_accessibility_test.cpp
+    core/commander_lifecycle_soak_test.cpp
+    core/commander_lock_on_test.cpp
+    core/commander_stage_owners_test.cpp
+    core/commander_presentation_trace_test.cpp
+    core/commander_view_model_input_test.cpp
+    core/production_view_model_trade_test.cpp
+    core/commander_presentation_pose_test.cpp
+    core/commander_motor_test.cpp
+    core/commander_direct_control_latency_test.cpp
+    core/commander_mode_transition_test.cpp
+    core/context_intent_test.cpp
+    core/harvest_targeting_test.cpp
+    core/player_feedback_test.cpp
+    core/input_command_handler_test.cpp
+    core/tutorial_mission_test.cpp
+    core/campaign_wave_assault_test.cpp
+    core/difficulty_presets_test.cpp
+    core/iron_sepulcher_watch_mission_test.cpp
+    core/match_setup_difficulty_test.cpp
+    core/mission_startup_test.cpp
+    core/production_manager_test.cpp
+    core/placement_state_test.cpp
+    core/economy_overview_test.cpp
+    core/unit_profile_test.cpp
+    core/selection_query_service_test.cpp
+    core/world_feedback_test.cpp
+    core/player_defeat_watcher_test.cpp
+    core/order_feedback_test.cpp
+    core/rts_action_model_test.cpp
+    core/runtime_frame_orchestrator_test.cpp
+    core/frame_barrier_test.cpp
+    core/game_speed_test.cpp
+    core/match_setup_maps_test.cpp
+    core/camera_framing_test.cpp
+    core/camera_bounds_test.cpp
+    core/mission_objective_markers_test.cpp
+    controllers/command_controller_test.cpp
+    controllers/formation_panel_wiring_test.cpp
+    ui/preferences_test.cpp
+    ui/hints_test.cpp
+    ui/input_bindings_test.cpp
+    ui/edge_scroll_test.cpp
+    ui/team_identity_test.cpp
+    ui/selection_grouping_test.cpp
+    ui/selected_units_model_test.cpp
+    ui/icon_art_test.cpp
+    ui/loading_tips_test.cpp
+    ui/icon_resources_test.cpp
+    ui/widget_theme_test.cpp
+    ui/brand_fonts_test.cpp
+    map/base_options_test.cpp
+    map/minimap_generator_test.cpp
+    map/minimap_utils_test.cpp
+    map/terrain_service_test.cpp
+    map/iron_sepulcher_skirmish_test.cpp
+    map/iron_sepulcher_watch_defence_test.cpp
+    map/skirmish_base_choice_test.cpp
+    map/skirmish_farmland_test.cpp
+    systems/civilian_delivery_system_test.cpp
+    systems/building_obstruction_lifecycle_test.cpp
+    systems/command_service_test.cpp
+    test_main.cpp
+)
+target_link_libraries(
+    app_tests
+    PRIVATE
+        GTest::gtest
+        GTest::gmock
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Quick
+        Qt${QT_VERSION_MAJOR}::Sql
+        Qt${QT_VERSION_MAJOR}::Widgets
+        engine_core
+        render_gl
+        game_systems
+        app_core
+        ui_shell
+        audio_system
+)
+set_target_properties(app_tests PROPERTIES AUTORCC ON)
+soi_register_test_binary(app_tests)
+add_dependencies(app_tests translations_qm)
+if(TARGET bake_creature_assets)
+    add_dependencies(app_tests bake_creature_assets)
+endif()

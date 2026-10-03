@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstddef>
 #include <filesystem>
 #include <fstream>
@@ -5,6 +6,7 @@
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace {
 
@@ -48,6 +50,21 @@ auto read_text(const std::filesystem::path& path) -> std::string {
   std::ostringstream buffer;
   buffer << input.rdbuf();
   return buffer.str();
+}
+
+auto root_build_definitions(const std::filesystem::path& root) -> std::string {
+  std::string combined = read_text(root / "CMakeLists.txt");
+  std::vector<std::filesystem::path> modules;
+  for (const auto& entry : std::filesystem::directory_iterator(root / "cmake")) {
+    if (entry.path().extension() == ".cmake") {
+      modules.push_back(entry.path());
+    }
+  }
+  std::sort(modules.begin(), modules.end());
+  for (const auto& module : modules) {
+    combined += "\n" + read_text(module);
+  }
+  return combined;
 }
 
 auto app_source(const std::filesystem::path& root,
@@ -417,11 +434,14 @@ TEST(CommanderControlRegressionTest, BarracksRallyPlacementUsesDedicatedCursorMo
   const auto hud_source = read_text(root / "ui" / "qml" / "HUDBottom.qml");
   const auto production_panel_source =
       read_text(root / "ui" / "qml" / "ProductionPanel.qml");
+  const auto rally_section_source =
+      read_text(root / "ui" / "qml" / "ProductionRallySection.qml");
   ASSERT_FALSE(view_model_header.empty());
   ASSERT_FALSE(cursor_mode_header.empty());
   ASSERT_FALSE(game_view_source.empty());
   ASSERT_FALSE(hud_source.empty());
   ASSERT_FALSE(production_panel_source.empty());
+  ASSERT_FALSE(rally_section_source.empty());
 
   EXPECT_TRUE(contains(view_model_header, "Q_INVOKABLE void begin_barracks_rally();"));
   EXPECT_TRUE(contains(view_model_header,
@@ -433,7 +453,7 @@ TEST(CommanderControlRegressionTest, BarracksRallyPlacementUsesDedicatedCursorMo
   EXPECT_TRUE(contains(game_view_source,
                        "game.commander.confirm_barracks_rally(mouse.x, mouse.y);"));
   EXPECT_TRUE(contains(game_view_source, "game.commander.cancel_barracks_rally();"));
-  EXPECT_TRUE(contains(production_panel_source,
+  EXPECT_TRUE(contains(rally_section_source,
                        "gameView.cursor_mode === \"place_barracks_rally\""));
   EXPECT_TRUE(contains(hud_source, "game.commander.begin_barracks_rally();"));
 }
@@ -469,7 +489,7 @@ TEST(CommanderControlRegressionTest,
   const auto commander_hud_source =
       read_text(root / "ui" / "qml" / "HUDBottomCommander.qml");
 
-  const auto cmake_source = read_text(root / "CMakeLists.txt");
+  const auto cmake_source = root_build_definitions(root);
   const auto view_model_header = app_source(root, "commander_view_model.h");
   ASSERT_FALSE(hud_source.empty());
   ASSERT_FALSE(commander_hud_source.empty());

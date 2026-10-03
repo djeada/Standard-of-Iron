@@ -1,5 +1,25 @@
 # Standard of Iron - Makefile
 # Provides standard targets for building, running, and managing the project
+#
+# Layout (top to bottom). Cohesive groups with their own variables live in
+# make/*.mk and are include()d at the point where they used to be written, so
+# `make <target>` and `make help` behave as before. Run make from the repo root.
+#
+#   Configuration         variables and knobs shared by every group
+#   Help                  `make help`
+#   Dependencies          install, check-deps
+#   Build                 configure, build, build-app, mesh, ...
+#   Run                   run, run-headless, editor, arena
+#   Housekeeping          clean, rebuild, dev
+#   Tests                 test-build, test, test-only
+#   Audio                 make/audio.mk        audio-* targets
+#   Content validation    validate-content, test-validator, rpg-gate, ...
+#   Formatting / linting  format*, lint*, strip-comments
+#   Translations          make/translations.mk translations, translations-check
+#   Portability           make/portability.mk  portability, -lint, -build
+#   Aggregate gates       quality, validate, hooks-install
+#   clang-tidy fixer      tidy, tidy-all
+#   Build variants        debug, release, info, quickstart
 
 # Default target
 .DEFAULT_GOAL := help
@@ -120,6 +140,7 @@ help:
 	@echo "  FORMAT_BASE=origin/develop make format-check-changed"
 	@echo "  make strip-comments DRY_RUN=1 # Preview the destructive rewrite"
 
+# ---- Dependencies ----
 # Install dependencies
 .PHONY: install
 install:
@@ -133,6 +154,7 @@ check-deps:
 	@echo "$(BOLD)$(BLUE)Checking dependencies...$(RESET)"
 	@bash scripts/setup-deps.sh --dry-run
 
+# ---- Build ----
 # Create build directory
 build-dir:
 	@mkdir -p $(BUILD_DIR)
@@ -220,6 +242,7 @@ run-map-pipeline:
 	@bash scripts/run-map-pipeline.sh $(if $(map_pipeline_rebuild),--rebuild,)
 	@echo "$(GREEN)✓ Map pipeline complete$(RESET)"
 
+# ---- Run ----
 # Run the main application
 .PHONY: run
 run: build-app
@@ -304,6 +327,7 @@ arena: run-map-pipeline configure
 		"$${BIN_PATH}"; \
 	fi
 
+# ---- Housekeeping ----
 # Clean build directory
 .PHONY: clean
 clean:
@@ -324,6 +348,7 @@ dev: install build
 	@echo "  make arena    # Run the arena playground"
 	@echo "  make editor   # Run the map editor"
 
+# ---- Tests ----
 # Build only the binaries required by the test suite.
 .PHONY: test-build
 test-build: configure
@@ -345,76 +370,10 @@ test-only:
 	@echo "$(BOLD)$(BLUE)Running tests...$(RESET)"
 	@bash scripts/run-tests.sh $(BUILD_DIR) --gtest_brief=1 $(TEST_ARGS)
 
-# Re-render the synthesised cue sounds and re-register them. The recipes in
-# tools/audio_synth are the source of truth for these files, so edit a recipe
-# and run this rather than hand-editing an .ogg. Needs ffmpeg with libvorbis.
-.PHONY: audio-assets
-audio-assets:
-	@echo "$(BOLD)$(BLUE)Synthesising cue sounds...$(RESET)"
-	@$(PYTHON) tools/audio_synth/synthesize_cues.py
-	@$(PYTHON) tools/audio_synth/register_cues.py
-	@$(MAKE) --no-print-directory audio-report
-	@echo "$(GREEN)✓ Cue sounds rendered and registered$(RESET)"
+# ---- Audio (make/audio.mk) ----
+include make/audio.mk
 
-# The nature beds are cut from public-domain recordings rather than generated,
-# so they are committed and this is not part of audio-assets: it needs a network
-# and it re-downloads tens of megabytes. Run it when a source or a window in
-# tools/audio_field/sources.py changes.
-## Rebuild the recorded ambience beds from their public-domain sources.
-.PHONY: audio-field-ambience
-audio-field-ambience:
-	@echo "$(BOLD)$(BLUE)Rebuilding recorded ambience beds...$(RESET)"
-	@$(PYTHON) tools/audio_field/build_beds.py
-	@echo "$(GREEN)✓ Recorded ambience beds rebuilt$(RESET)"
-
-# Same deal as the beds above: committed output, network needed, run it when a
-# recipe in tools/audio_field/battle.py changes. These replaced the AudioCraft
-# cues whose model licence forbade selling the game.
-## Rebuild the composed battle cues from their CC0 sources.
-.PHONY: audio-battle
-audio-battle:
-	@echo "$(BOLD)$(BLUE)Rebuilding composed battle cues...$(RESET)"
-	@$(PYTHON) tools/audio_field/build_battle.py
-	@echo "$(GREEN)✓ Composed battle cues rebuilt$(RESET)"
-
-.PHONY: audio-preview
-audio-preview:
-	@echo "$(BOLD)$(BLUE)Rendering audio mastering preview...$(RESET)"
-	@cmake --build $(BUILD_DIR) -j$$(nproc) --target audio_master_preview
-	@$(BUILD_DIR)/bin/audio_master_preview --out artifacts/audio_preview $(AUDIO_PREVIEW_ARGS)
-
-## Audit the cue catalogue, the manifest and the files on disk.
-# Writes artifacts/audio/AUDIO_WISHLIST.md; run it any time you want the current
-# list of missing sounds.
-.PHONY: audio-report
-audio-report:
-	@echo "$(BOLD)$(BLUE)Auditing game audio...$(RESET)"
-	@$(PYTHON) scripts/audio_report.py
-	@echo "$(GREEN)✓ Audio report written to artifacts/audio/AUDIO_WISHLIST.md$(RESET)"
-
-# Same audit as a gate: fails when a cue, a manifest entry and a file disagree.
-.PHONY: audio-check
-audio-check:
-	@echo "$(BOLD)$(BLUE)Checking game audio wiring...$(RESET)"
-	@$(PYTHON) scripts/audio_report.py --stdout --check > /dev/null
-	@$(PYTHON) scripts/audio_validate.py
-	@$(PYTHON) scripts/audio_provenance.py --check
-	@echo "$(GREEN)✓ Audio cue, manifest and asset links are consistent$(RESET)"
-
-## Propose an import for anything dropped in "new sfx/". Writes nothing.
-# Pass AUDIO_IMPORT_ARGS=--apply once the printed proposal is what you want.
-.PHONY: audio-import
-audio-import:
-	@echo "$(BOLD)$(BLUE)Reading new sound effects...$(RESET)"
-	@$(PYTHON) scripts/audio_import.py $(AUDIO_IMPORT_ARGS)
-
-## Decode every shipped clip and report leading silence and boundary clicks.
-# Reports only: an asset is never rewritten by a script.
-.PHONY: audio-scan
-audio-scan:
-	@echo "$(BOLD)$(BLUE)Scanning shipped audio for silence and clicks...$(RESET)"
-	@$(PYTHON) scripts/audio_validate.py --scan
-
+# ---- Content validation and gates ----
 # Validate mission and campaign content
 .PHONY: validate-content
 validate-content: build
@@ -537,102 +496,11 @@ strip-comments:
 # Backwards-compatible alias for the old target name.
 format-strip-comments: strip-comments
 
-# ---- Translations ----
-# lupdate rescans every qsTr()/tr()/QT_TR_NOOP in the UI and engine sources and
-# rewrites the .ts catalogues. `-locations none` keeps the diffs free of the line
-# numbers that churn on every unrelated edit.
-#
-# Compiling .ts to .qm is not done here: CMake runs lrelease into the build tree
-# on every build, so the embedded catalogue can never lag the .ts it came from.
-.PHONY: translations translations-check
+# ---- Translations (make/translations.mk) ----
+include make/translations.mk
 
-LUPDATE ?= $(shell command -v lupdate 2>/dev/null || echo /usr/lib/qt6/bin/lupdate)
-TS_FILES := translations/app_en.ts translations/app_de.ts translations/app_es.ts \
-	translations/app_pt_br.ts translations/app_ar.ts translations/app_tr.ts \
-	translations/app_pl.ts translations/app_ru.ts
-TS_SOURCE_DIRS := ui app game scene render main.cpp
-# lupdate only parses code, so player-visible text authored in assets/ (mission
-# briefings, objective lines, map and unit names) is mirrored into a generated
-# stub it can read. Without this the catalogues silently miss a few hundred
-# strings and the coverage gate below still reports success.
-TS_ASSET_STUB := translations/asset_strings_generated.cpp
-# The number heuristic fills patterns like %1/%2 with junk ("%1% {1/%2?}")
-# instead of leaving them empty, and that junk blocks the source-language
-# seeder, so the entry stays unfinished and trips translations-check forever.
-#
-# Qt dropped that heuristic after 6.4: on a newer lupdate the same flag is
-# rejected outright ("Invalid heuristic name passed to -disable-heuristic"),
-# which failed the gate on any machine with a current Qt while passing on an
-# older one. Ask lupdate what it accepts rather than assuming.
-LUPDATE_NUMBER_HEURISTIC := $(shell $(LUPDATE) -help 2>&1 \
-	| grep -q -- 'disable-heuristic.*number' && echo '-disable-heuristic number')
-LUPDATE_FLAGS := -no-obsolete -locations none $(LUPDATE_NUMBER_HEURISTIC)
-
-## Rescan sources for translatable strings and refresh the .ts catalogues.
-translations:
-	@echo "$(BOLD)$(BLUE)Extracting player-visible strings from assets...$(RESET)"
-	@$(PYTHON) scripts/extract-asset-strings.py
-	@echo "$(BOLD)$(BLUE)Updating translation catalogues...$(RESET)"
-	@$(LUPDATE) $(TS_SOURCE_DIRS) $(TS_ASSET_STUB) $(LUPDATE_FLAGS) -ts $(TS_FILES)
-	@$(PYTHON) scripts/seed-source-translations.py
-	@bash scripts/ts2csv.sh > /dev/null
-	@echo "$(GREEN)✓ Catalogues and translator CSVs updated (.qm build on next compile)$(RESET)"
-
-## Fail if any UI string is missing from the catalogues or left untranslated.
-## Rescans into a scratch copy so it never rewrites the tracked catalogues.
-translations-check:
-	@echo "$(BOLD)$(BLUE)Checking translation coverage...$(RESET)"
-	@$(PYTHON) scripts/extract-asset-strings.py --check
-	@tmp=$$(mktemp -d) && trap 'rm -rf "$$tmp"' EXIT && \
-	cp $(TS_FILES) "$$tmp/" && \
-	probe=""; for ts in $(TS_FILES); do probe="$$probe $$tmp/$$(basename $$ts)"; done && \
-	$(LUPDATE) $(TS_SOURCE_DIRS) $(TS_ASSET_STUB) $(LUPDATE_FLAGS) -ts $$probe >/dev/null && \
-	for ts in $(TS_FILES); do \
-		if ! diff -q "$$ts" "$$tmp/$$(basename $$ts)" >/dev/null; then \
-			echo "$(RED)$$ts is stale. Run 'make translations'.$(RESET)"; \
-			diff -u "$$ts" "$$tmp/$$(basename $$ts)" | head -40; \
-			exit 1; \
-		fi; \
-	done
-	@if grep -q 'type="unfinished"' $(TS_FILES); then \
-		echo "$(RED)Untranslated strings remain:$(RESET)"; \
-		grep -l 'type="unfinished"' $(TS_FILES); \
-		exit 1; \
-	fi
-	@echo "$(GREEN)✓ Every UI string is translated$(RESET)"
-
-# ---- Cross-platform portability ----
-#
-# The game is developed on Linux/GCC/Mesa and shipped on macOS/AppleClang and
-# Windows/MSVC. These two targets look, from Linux, for the constructs that
-# only the other two toolchains reject.
-#
-# portability-lint needs clang, libc++-dev and glslang-tools. Without them the
-# passes skip; CI passes --require-all so a missing tool fails there instead.
-#
-# portability-build is the same warning set applied to a real compile, which is
-# the only way to reach code behind #ifdefs and templates that the lint's
-# syntax-only pass still covers but a reader might doubt. It builds into
-# BUILD_STRICT_DIR so it never disturbs the incremental build in build/.
-.PHONY: portability portability-lint portability-build
-
-BUILD_STRICT_DIR := build-strict
-
-## Run the macOS (clang + libc++), GLSL, Windows and include-graph passes.
-portability-lint:
-	@echo "$(BOLD)$(BLUE)Checking cross-platform portability...$(RESET)"
-	@$(PYTHON) scripts/check-portability.py --build-dir $(BUILD_DIR)
-
-## Compile the whole project with the portability warning set promoted to errors.
-portability-build:
-	@echo "$(BOLD)$(BLUE)Building with SOI_STRICT_WARNINGS...$(RESET)"
-	@cmake -S . -B $(BUILD_STRICT_DIR) -G Ninja -DCMAKE_BUILD_TYPE=Release \
-		-DSOI_STRICT_WARNINGS=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-	@cmake --build $(BUILD_STRICT_DIR) -j$$(nproc)
-	@echo "$(GREEN)✓ Strict build clean$(RESET)"
-
-## Both portability gates.
-portability: portability-lint portability-build
+# ---- Portability (make/portability.mk) ----
+include make/portability.mk
 
 # ---- Aggregate gates ----
 .PHONY: quality validate hooks-install
@@ -696,6 +564,7 @@ tidy-all:
 		$(if $(CLANG_TIDY_FIX_PATHS),--paths="$(CLANG_TIDY_FIX_PATHS)") \
 		$(if $(CLANG_TIDY_AUTO_FIX_CHECKS),--checks="$(CLANG_TIDY_AUTO_FIX_CHECKS)")
 
+# ---- Build variants and developer shortcuts ----
 # Debug build
 .PHONY: debug
 debug:

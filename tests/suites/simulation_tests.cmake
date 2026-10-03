@@ -1,0 +1,100 @@
+# ---- simulation_tests --------------------------------------------------
+# The kernel under test with nothing on screen. `simulation_main.cpp` gives it a
+# QCoreApplication and the baked animation clips, and no more: a test that
+# reaches for a window fails here.
+add_executable(
+    simulation_tests
+    session/map_session_restore_test.cpp
+    session/session_context_test.cpp
+    command/command_pipeline_test.cpp
+    command/command_codec_test.cpp
+    core/entity_handle_test.cpp
+    core/world_view_test.cpp
+    core/component_storage_test.cpp
+    core/world_spatial_index_test.cpp
+    core/system_schedule_test.cpp
+    core/world_teardown_ownership_test.cpp
+    core/percentile_test.cpp
+    core/nav_profile_test.cpp
+    core/movement_trace_test.cpp
+    core/ground_type_test.cpp
+    core/building_spawn_setup_test.cpp
+    map/terrain_profiles_test.cpp
+    map/map_loader_test.cpp
+    map/explored_mask_codec_test.cpp
+    map/visibility_restore_test.cpp
+    map/visibility_invalidation_test.cpp
+    map/map_bridge_coverage_test.cpp
+    map/map_supernatural_presence_test.cpp
+    map/river_bank_walkability_test.cpp
+    map/map_hill_entrance_smoothness_test.cpp
+    map/map_skirmish_reachability_test.cpp
+    map/map_weather_coverage_test.cpp
+    map/map_wildlife_config_test.cpp
+    map/terrain_topology_audit_test.cpp
+    map/map_transformer_test.cpp
+    map/hill_crown_geometry_test.cpp
+    map/hill_navigation_test.cpp
+    map/hill_shape_test.cpp
+    map/terrain_footprint_test.cpp
+    map/undead_shrine_placement_test.cpp
+    map/time_of_day_test.cpp
+    systems/nav_grid_geometry_test.cpp
+    systems/rain_manager_test.cpp
+    wildlife/wildlife_system_test.cpp
+    wildlife/bird_flock_test.cpp
+    systems/patrol_system_test.cpp
+    systems/nation_loader_test.cpp
+    systems/troop_catalog_loader_test.cpp
+    systems/showcase_routine_system_test.cpp
+    systems/home_manpower_system_test.cpp
+    systems/building_collision_test.cpp
+    systems/pathfinding_test.cpp
+    core/render_publication_test.cpp
+    headless/shared_match_setup_test.cpp
+    systems/session_service_ownership_test.cpp
+    systems/world_prop_navigation_test.cpp
+    systems/production_system_test.cpp
+    systems/construction_cost_catalog_test.cpp
+    systems/player_feedback_test.cpp
+    systems/resource_delivery_system_test.cpp
+    systems/gather_loop_system_test.cpp
+    systems/food_economy_test.cpp
+    systems/auto_gather_test.cpp
+    systems/dismantle_test.cpp
+    systems/interaction_targeting_test.cpp
+    systems/motion_presentation_test.cpp
+    systems/settlement_life_system_test.cpp
+    systems/unit_activity_test.cpp
+    systems/victory_service_test.cpp
+    systems/capture_system_test.cpp
+    systems/structure_collapse_test.cpp
+    systems/undead_awakening_system_test.cpp
+    systems/cursed_gold_vein_system_test.cpp
+    systems/rockfall_system_test.cpp
+    architecture/layering_test.cpp
+    architecture/humanoid_layering_test.cpp
+    architecture/creature_procedural_pose_test.cpp
+    architecture/module_boundary_test.cpp
+    architecture/qml_surface_test.cpp
+    architecture/release_contract_test.cpp
+    architecture/documentation_accuracy_test.cpp
+    architecture/component_data_test.cpp
+    simulation_main.cpp
+)
+target_link_libraries(
+    simulation_tests
+    PRIVATE
+        GTest::gtest
+        GTest::gmock
+        Qt${QT_VERSION_MAJOR}::Core
+        engine_core
+        game_sim
+        # One test here round-trips a standing order through a save. That does
+        # not weaken the kernel-only claim: soi_persistence sits *above*
+        # game_sim, and a kernel file reaching down into it is caught by
+        # scripts/check-modules.py, which fails the build on any
+        # simulation -> persistence include.
+        soi_persistence
+)
+soi_register_test_binary(simulation_tests)

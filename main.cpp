@@ -43,115 +43,19 @@
 #include <optional>
 #include <string_view>
 
+#include "app/audio/audio_resource_loader.h"
+#include "app/audio/audio_status_hud.h"
+#include "app/bootstrap/command_line.h"
+#include "app/bootstrap/data_paths.h"
+#include "app/bootstrap/log_handler.h"
+#include "app/bootstrap/screenshot_capture.h"
+#include "app/bootstrap/self_test_driver.h"
+#include "app/bootstrap/startup_self_test.h"
+#include "app/bootstrap/windows_gl_probe.h"
 #include "app/core/app_identity.h"
 #include "app/core/benchmark_action_fixture.h"
 #include "app/core/film_action_dispatch.h"
 #include "app/core/film_recorder.h"
-#include "app/core/user_settings.h"
-#include "app/viewmodels/orders_view_model.h"
-#include "app/viewmodels/production_view_model.h"
-#include "game/core/presentation_coverage.h"
-#include "game/systems/persistence/save_load_service.h"
-#include "render/gl/context_requirements.h"
-#include "render/profiling/frame_swap_clock.h"
-#include "render/profiling/presentation_cycle.h"
-
-#ifdef Q_OS_WIN
-#include <gl/gl.h>
-#include <windows.h>
-#pragma comment(lib, "opengl32.lib")
-
-#ifndef WGL_CONTEXT_MAJOR_VERSION_ARB
-#define WGL_CONTEXT_MAJOR_VERSION_ARB 0x2091
-#endif
-
-#ifndef WGL_CONTEXT_MINOR_VERSION_ARB
-#define WGL_CONTEXT_MINOR_VERSION_ARB 0x2092
-#endif
-
-#ifndef WGL_CONTEXT_PROFILE_MASK_ARB
-#define WGL_CONTEXT_PROFILE_MASK_ARB 0x9126
-#endif
-
-#ifndef WGL_CONTEXT_CORE_PROFILE_BIT_ARB
-#define WGL_CONTEXT_CORE_PROFILE_BIT_ARB 0x00000001
-#endif
-
-using PFNWGLCREATECONTEXTATTRIBSARBPROC = HGLRC(WINAPI*)(HDC hDC,
-                                                         HGLRC hShareContext,
-                                                         const int* attribList);
-
-namespace {
-
-constexpr int k_required_gl_major = Render::GL::ContextRequirements::required.major;
-constexpr int k_required_gl_minor = Render::GL::ContextRequirements::required.minor;
-
-struct NativeOpenGLProbeResult {
-  bool supported = false;
-  bool generic_software = false;
-  bool used_core_context = false;
-  int requested_major = 0;
-  int requested_minor = 0;
-  int major = 0;
-  int minor = 0;
-  QString vendor = QStringLiteral("<unknown>");
-  QString renderer = QStringLiteral("<unknown>");
-  QString version = QStringLiteral("<unknown>");
-};
-
-auto windows_software_requested_from_argv(int argc, char* argv[]) -> bool {
-  for (int index = 1; index < argc; ++index) {
-    const std::string_view arg =
-        argv[index] != nullptr ? std::string_view(argv[index]) : std::string_view();
-    if (arg == "-s" || arg == "--force-software" || arg == "--quality=none" ||
-        arg == "--quality=software") {
-      return true;
-    }
-    if (arg == "--quality" && index + 1 < argc) {
-      const std::string_view value = argv[index + 1] != nullptr
-                                         ? std::string_view(argv[index + 1])
-                                         : std::string_view();
-      if (value == "none" || value == "software") {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
-auto parse_opengl_version(const char* version, int* major, int* minor) -> bool {
-  return version != nullptr && major != nullptr && minor != nullptr &&
-         std::sscanf(version, "%d.%d", major, minor) == 2;
-}
-
-void capture_current_gl_info(NativeOpenGLProbeResult& result) {
-  const auto* vendor = reinterpret_cast<const char*>(glGetString(GL_VENDOR));
-  const auto* renderer = reinterpret_cast<const char*>(glGetString(GL_RENDERER));
-  const auto* version = reinterpret_cast<const char*>(glGetString(GL_VERSION));
-
-  result.vendor =
-      vendor != nullptr ? QString::fromLatin1(vendor) : QStringLiteral("<unknown>");
-  result.renderer =
-      renderer != nullptr ? QString::fromLatin1(renderer) : QStringLiteral("<unknown>");
-  result.version =
-      version != nullptr ? QString::fromLatin1(version) : QStringLiteral("<unknown>");
-  result.major = 0;
-  result.minor = 0;
-  if (version != nullptr) {
-    (void)parse_opengl_version(version, &result.major, &result.minor);
-  }
-}
-
-auto opengl_version_supported(int major, int minor) -> bool {
-  return major > k_required_gl_major ||
-         (major == k_required_gl_major && minor >= k_required_gl_minor);
-}
-
-} // namespace
-#endif
-
-#include "app/audio/audio_resource_loader.h"
-#include "app/audio/audio_status_hud.h"
 #include "app/core/game_engine.h"
 #include "app/core/game_speed.h"
 #include "app/core/language_manager.h"
@@ -163,9 +67,16 @@ auto opengl_version_supported(int major, int minor) -> bool {
 #include "app/viewmodels/camera_view_model.h"
 #include "app/viewmodels/match_setup_view_model.h"
 #include "app/viewmodels/minimap_view_model.h"
+#include "app/viewmodels/orders_view_model.h"
+#include "app/viewmodels/production_view_model.h"
+#include "game/core/presentation_coverage.h"
+#include "game/systems/persistence/save_load_service.h"
+#include "render/gl/context_requirements.h"
 #include "render/graphics_settings.h"
 #include "render/horse/horse_source_asset.h"
 #include "render/i_render_backend.h"
+#include "render/profiling/frame_swap_clock.h"
+#include "render/profiling/presentation_cycle.h"
 #include "render/profiling/profiling_hud.h"
 #include "ui/brand_fonts.h"
 #include "ui/campaign_map_view.h"
@@ -179,326 +90,13 @@ auto opengl_version_supported(int major, int minor) -> bool {
 #include "ui/preferences.h"
 #include "ui/theme.h"
 
-namespace {
-
-auto validate_release_campaign_map_resources() -> bool {
-  constexpr std::array<const char*, 7> resources{
-      ":/assets/campaign_map/campaign_base_color.png",
-      ":/assets/campaign_map/campaign_water.png",
-      ":/assets/campaign_map/coastlines_uv.json",
-      ":/assets/campaign_map/rivers_uv.json",
-      ":/assets/campaign_map/land_mesh.bin",
-      ":/assets/campaign_map/provinces.json",
-      ":/assets/campaign_map/terrain_height.png",
-  };
-
-  for (const char* path : resources) {
-    QFile file(QString::fromLatin1(path));
-    if (!file.open(QIODevice::ReadOnly) || file.size() < 32) {
-      qCritical() << "SOI_CAMPAIGN_MAP_SELF_TEST: FAIL - missing or empty" << path;
-      return false;
-    }
-  }
-  qInfo() << "SOI_CAMPAIGN_MAP_SELF_TEST: PASS - all campaign map resources are "
-             "embedded";
-  return true;
-}
-
-void capture_screenshot_and_exit(QQuickWindow* window,
-                                 const QString& path,
-                                 const QString& view,
-                                 int delay_ms,
-                                 QSize size) {
-
-  window->setWindowState(Qt::WindowNoState);
-  window->setWidth(size.width());
-  window->setHeight(size.height());
-
-  auto grab_and_exit = [window, path]() {
-    const QImage frame = window->grabWindow();
-    if (frame.isNull()) {
-      qCritical() << "SOI_SCREENSHOT: FAIL - the window produced no frame";
-      QGuiApplication::exit(11);
-      return;
-    }
-    if (!frame.save(path)) {
-      qCritical() << "SOI_SCREENSHOT: FAIL - could not write" << path;
-      QGuiApplication::exit(12);
-      return;
-    }
-    qInfo() << "SOI_SCREENSHOT: PASS -" << path << frame.width() << "x"
-            << frame.height();
-    QGuiApplication::exit(0);
-  };
-
-  if (view.isEmpty()) {
-    QTimer::singleShot(delay_ms, window, grab_and_exit);
-    return;
-  }
-
-  auto* settle = new QTimer(window);
-  settle->setInterval(400);
-  QObject::connect(
-      settle, &QTimer::timeout, window, [window, view, settle, delay_ms]() {
-        QMetaObject::invokeMethod(window, "show_view", Q_ARG(QVariant, QVariant(view)));
-        if (window->property("capture_view_ready").toBool()) {
-          settle->stop();
-          QTimer::singleShot(delay_ms / 8, window, [window]() {
-            window->setProperty("capture_view_settled", true);
-          });
-        }
-      });
-  settle->start();
-
-  auto* deadline = new QTimer(window);
-  deadline->setInterval(200);
-  QObject::connect(
-      deadline, &QTimer::timeout, window, [window, settle, deadline, grab_and_exit]() {
-        if (!window->property("capture_view_settled").toBool()) {
-          return;
-        }
-        settle->stop();
-        deadline->stop();
-        grab_and_exit();
-      });
-  deadline->start();
-
-  QTimer::singleShot(delay_ms, window, [settle, deadline, grab_and_exit]() {
-    if (!deadline->isActive()) {
-      return;
-    }
-    settle->stop();
-    deadline->stop();
-    grab_and_exit();
-  });
-}
-
-} // namespace
-
 constexpr int k_depth_buffer_bits = 24;
 constexpr int k_stencil_buffer_bits = 8;
 
-#ifdef Q_OS_WIN
-
-static auto testNativeOpenGL() -> NativeOpenGLProbeResult {
-  NativeOpenGLProbeResult result;
-
-  WNDCLASSA wc = {};
-  wc.lpfnWndProc = DefWindowProcA;
-  wc.hInstance = GetModuleHandle(nullptr);
-  wc.lpszClassName = "OpenGLTest";
-
-  if (!RegisterClassA(&wc)) {
-    return result;
-  }
-
-  HWND hwnd = CreateWindowExA(0,
-                              "OpenGLTest",
-                              "",
-                              WS_OVERLAPPEDWINDOW,
-                              0,
-                              0,
-                              1,
-                              1,
-                              nullptr,
-                              nullptr,
-                              wc.hInstance,
-                              nullptr);
-  if (!hwnd) {
-    UnregisterClassA("OpenGLTest", wc.hInstance);
-    return result;
-  }
-
-  HDC hdc = GetDC(hwnd);
-  if (!hdc) {
-    DestroyWindow(hwnd);
-    UnregisterClassA("OpenGLTest", wc.hInstance);
-    return result;
-  }
-
-  PIXELFORMATDESCRIPTOR pfd = {};
-  pfd.nSize = sizeof(pfd);
-  pfd.nVersion = 1;
-  pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
-  pfd.iPixelType = PFD_TYPE_RGBA;
-  pfd.cColorBits = 24;
-  pfd.cDepthBits = 24;
-  pfd.cStencilBits = 8;
-  pfd.iLayerType = PFD_MAIN_PLANE;
-
-  int pixel_format = ChoosePixelFormat(hdc, &pfd);
-  if (pixel_format != 0 && SetPixelFormat(hdc, pixel_format, &pfd)) {
-    PIXELFORMATDESCRIPTOR chosen_pfd = {};
-    if (DescribePixelFormat(hdc, pixel_format, sizeof(chosen_pfd), &chosen_pfd) != 0) {
-      result.generic_software = (chosen_pfd.dwFlags & PFD_GENERIC_FORMAT) != 0 &&
-                                (chosen_pfd.dwFlags & PFD_GENERIC_ACCELERATED) == 0;
-    }
-
-    HGLRC hglrc = wglCreateContext(hdc);
-    if (hglrc) {
-      if (wglMakeCurrent(hdc, hglrc)) {
-        capture_current_gl_info(result);
-
-        auto* create_core_context = reinterpret_cast<PFNWGLCREATECONTEXTATTRIBSARBPROC>(
-            wglGetProcAddress("wglCreateContextAttribsARB"));
-        if (create_core_context != nullptr) {
-          constexpr std::array probe_versions{
-              Render::GL::ContextRequirements::preferred,
-              Render::GL::ContextRequirements::Version{4, 4},
-              Render::GL::ContextRequirements::Version{4, 3},
-              Render::GL::ContextRequirements::apple_maximum,
-              Render::GL::ContextRequirements::required,
-          };
-          for (const auto candidate : probe_versions) {
-            const int attribs[] = {WGL_CONTEXT_MAJOR_VERSION_ARB,
-                                   candidate.major,
-                                   WGL_CONTEXT_MINOR_VERSION_ARB,
-                                   candidate.minor,
-                                   WGL_CONTEXT_PROFILE_MASK_ARB,
-                                   WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
-                                   0};
-            HGLRC core_ctx = create_core_context(hdc, nullptr, attribs);
-            if (core_ctx == nullptr) {
-              continue;
-            }
-            wglMakeCurrent(nullptr, nullptr);
-            if (wglMakeCurrent(hdc, core_ctx)) {
-              result.used_core_context = true;
-              result.requested_major = candidate.major;
-              result.requested_minor = candidate.minor;
-              capture_current_gl_info(result);
-            }
-            wglMakeCurrent(nullptr, nullptr);
-            wglDeleteContext(core_ctx);
-            (void)wglMakeCurrent(hdc, hglrc);
-            if (result.used_core_context) {
-              break;
-            }
-          }
-        }
-
-        QByteArray vendor_bytes = result.vendor.toLocal8Bit();
-        QByteArray renderer_bytes = result.renderer.toLocal8Bit();
-        QByteArray version_bytes = result.version.toLocal8Bit();
-        fprintf(stderr, "[OpenGL Test] Native context created successfully\n");
-        fprintf(stderr, "[OpenGL Test] Vendor: %s\n", vendor_bytes.constData());
-        fprintf(stderr, "[OpenGL Test] Renderer: %s\n", renderer_bytes.constData());
-        fprintf(stderr, "[OpenGL Test] Version: %s\n", version_bytes.constData());
-        if (result.used_core_context) {
-          fprintf(stderr,
-                  "[OpenGL Test] Probe context: %d.%d core\n",
-                  result.requested_major,
-                  result.requested_minor);
-        } else {
-          fprintf(stderr, "[OpenGL Test] Probe context: legacy\n");
-        }
-        if (result.generic_software) {
-          fprintf(stderr, "[OpenGL Test] Pixel format is generic software rendering\n");
-        }
-
-        const bool microsoft_gdi =
-            result.vendor.contains("Microsoft", Qt::CaseInsensitive) ||
-            result.renderer.contains("GDI Generic", Qt::CaseInsensitive);
-        const bool version_ok = result.used_core_context &&
-                                opengl_version_supported(result.major, result.minor);
-        result.supported = version_ok && !result.generic_software && !microsoft_gdi;
-        if (!version_ok) {
-          fprintf(stderr,
-                  "[OpenGL Test] Rejected: requires OpenGL %d.%d Core, found %d.%d "
-                  "%s\n",
-                  k_required_gl_major,
-                  k_required_gl_minor,
-                  result.major,
-                  result.minor,
-                  result.used_core_context ? "Core" : "without a Core profile");
-        }
-        if (microsoft_gdi) {
-          fprintf(
-              stderr,
-              "[OpenGL Test] Rejected: Microsoft GDI generic renderer is not usable "
-              "for the 3D renderer\n");
-        }
-
-        wglMakeCurrent(nullptr, nullptr);
-      }
-      wglDeleteContext(hglrc);
-    }
-  }
-
-  ReleaseDC(hwnd, hdc);
-  DestroyWindow(hwnd);
-  UnregisterClassA("OpenGLTest", wc.hInstance);
-
-  return result;
-}
-
-static bool g_opengl_crashed = false;
-static LONG WINAPI crashHandler(EXCEPTION_POINTERS* exceptionInfo) {
-  if (exceptionInfo->ExceptionRecord->ExceptionCode == EXCEPTION_ACCESS_VIOLATION) {
-
-    char crash_log_path[MAX_PATH + 32] = {};
-    const DWORD temp_length = GetTempPathA(MAX_PATH, crash_log_path);
-    if (temp_length == 0 || temp_length > MAX_PATH) {
-      crash_log_path[0] = '\0';
-    }
-    strcat_s(
-        crash_log_path, sizeof(crash_log_path), "standard_of_iron_opengl_crash.txt");
-    FILE* crash_log = nullptr;
-    if (fopen_s(&crash_log, crash_log_path, "w") != 0) {
-      crash_log = nullptr;
-    }
-    if (crash_log) {
-      fprintf(crash_log, "OpenGL/Qt rendering crash detected (Access Violation)\n");
-      fprintf(crash_log, "Try running with: run_debug_softwaregl.cmd\n");
-      fprintf(crash_log, "Or set environment variable: QT_OPENGL=software\n");
-      fclose(crash_log);
-    }
-
-    qCritical() << "=== CRASH DETECTED ===";
-    qCritical() << "OpenGL rendering failed. This usually means:";
-    qCritical() << "1. Graphics drivers are outdated";
-    qCritical() << "2. Running in a VM with incomplete OpenGL support";
-    qCritical() << "3. GPU doesn't support required OpenGL version";
-    qCritical() << "";
-    qCritical() << "To fix: Run run_debug_softwaregl.cmd instead";
-    qCritical() << "Or set: set QT_OPENGL=software";
-
-    g_opengl_crashed = true;
-  }
-  return EXCEPTION_CONTINUE_SEARCH;
-}
-#endif
-
-auto data_paths_requested_from_argv(int argc, char* argv[]) -> bool {
-  for (int index = 1; index < argc; ++index) {
-    if (argv[index] != nullptr &&
-        std::string_view(argv[index]) == "--print-data-paths") {
-      return true;
-    }
-  }
-  return false;
-}
-
-auto print_data_paths(int argc, char* argv[]) -> int {
-  QCoreApplication const app(argc, argv);
-  App::Core::apply_application_identity();
-
-  QSettings const settings = App::Core::UserSettings::open();
-  QTextStream out(stdout);
-  out << "SOI_APPLICATION_ID=" << QCoreApplication::applicationName() << '\n'
-      << "SOI_SAVES_DIR=" << Game::Systems::SaveLoadService::saves_directory() << '\n'
-      << "SOI_SAVE_DATABASE=" << Game::Systems::SaveLoadService::database_path() << '\n'
-      << "SOI_EXPORTS_DIR=" << Game::Systems::SaveLoadService::exports_directory()
-      << '\n'
-      << "SOI_SETTINGS_FILE=" << settings.fileName() << '\n';
-  out.flush();
-  return 0;
-}
-
 auto main(int argc, char* argv[]) -> int {
 
-  if (data_paths_requested_from_argv(argc, argv)) {
-    return print_data_paths(argc, argv);
+  if (App::Bootstrap::data_paths_requested_from_argv(argc, argv)) {
+    return App::Bootstrap::print_data_paths(argc, argv);
   }
 
 #if defined(Q_OS_MACOS)
@@ -522,9 +120,9 @@ auto main(int argc, char* argv[]) -> int {
 
 #ifdef Q_OS_WIN
 
-  SetUnhandledExceptionFilter(crashHandler);
+  App::Bootstrap::install_opengl_crash_handler();
 
-  if (windows_software_requested_from_argv(argc, argv)) {
+  if (App::Bootstrap::software_requested_from_argv(argc, argv)) {
     fprintf(stderr, "[Pre-Init] Command line requested software OpenGL fallback\n");
     qputenv("QT_OPENGL", "software");
   }
@@ -535,7 +133,7 @@ auto main(int argc, char* argv[]) -> int {
 
   if (!explicit_qt_opengl) {
     fprintf(stderr, "[Pre-Init] Testing native OpenGL availability...\n");
-    const auto probe = testNativeOpenGL();
+    const auto probe = App::Bootstrap::test_native_opengl();
     if (!probe.supported) {
       fprintf(stderr, "[Pre-Init] WARNING: hardware OpenGL probe failed\n");
       fprintf(stderr,
@@ -562,74 +160,7 @@ auto main(int argc, char* argv[]) -> int {
   }
 #endif
 
-  qInstallMessageHandler(
-      [](QtMsgType type, const QMessageLogContext& context, const QString& msg) {
-        QByteArray const local_msg = msg.toLocal8Bit();
-        const char* file = (context.file != nullptr) ? context.file : "";
-        const char* function = (context.function != nullptr) ? context.function : "";
-
-        FILE* out = stderr;
-        switch (type) {
-        case QtDebugMsg:
-          fprintf(out,
-                  "[DEBUG] %s (%s:%u, %s)\n",
-                  local_msg.constData(),
-                  file,
-                  context.line,
-                  function);
-          break;
-        case QtInfoMsg:
-          fprintf(out, "[INFO] %s\n", local_msg.constData());
-          break;
-        case QtWarningMsg:
-          fprintf(out,
-                  "[WARNING] %s (%s:%u, %s)\n",
-                  local_msg.constData(),
-                  file,
-                  context.line,
-                  function);
-
-          if (msg.contains("OpenGL", Qt::CaseInsensitive) ||
-              msg.contains("scene graph", Qt::CaseInsensitive) ||
-              msg.contains("RHI", Qt::CaseInsensitive)) {
-            fprintf(out,
-                    "[HINT] If you see crashes, try software rendering: set "
-                    "QT_OPENGL=software\n");
-          }
-          break;
-        case QtCriticalMsg:
-          fprintf(out,
-                  "[CRITICAL] %s (%s:%u, %s)\n",
-                  local_msg.constData(),
-                  file,
-                  context.line,
-                  function);
-          if (msg.contains("scene graph is not using OpenGL", Qt::CaseInsensitive)) {
-            fprintf(out,
-                    "[CRITICAL] Do not use QT_QUICK_BACKEND=software; the game "
-                    "requires Qt Quick's OpenGL backend\n");
-          } else if (msg.contains("OpenGL", Qt::CaseInsensitive) ||
-                     msg.contains("scene graph", Qt::CaseInsensitive) ||
-                     msg.contains("RHI", Qt::CaseInsensitive) ||
-                     msg.contains("graphics", Qt::CaseInsensitive)) {
-            fprintf(out,
-                    "[CRITICAL] Try running with software OpenGL if this persists\n");
-          }
-          break;
-        case QtFatalMsg:
-          fprintf(out,
-                  "[FATAL] %s (%s:%u, %s)\n",
-                  local_msg.constData(),
-                  file,
-                  context.line,
-                  function);
-          fprintf(out, "[FATAL] === RECOVERY SUGGESTION ===\n");
-          fprintf(out, "[FATAL] Run: run_debug_softwaregl.cmd\n");
-          fprintf(out, "[FATAL] Or set: QT_OPENGL=software\n");
-          abort();
-        }
-        fflush(out);
-      });
+  App::Bootstrap::install_log_message_handler();
 
   qInfo() << "=== Standard of Iron - Starting ===";
   qInfo() << "Qt version:" << QT_VERSION_STR;
@@ -713,363 +244,24 @@ auto main(int argc, char* argv[]) -> int {
   }
 
   if (renderer_self_test || release_self_test) {
-    const QStringList missing_audio = AudioResourceLoader::missing_asset_ids();
-    if (!missing_audio.isEmpty()) {
-      qCritical() << "SOI_AUDIO_SELF_TEST: FAIL -" << missing_audio.size()
-                  << "manifest entries have no file on disk, first:"
-                  << missing_audio.first();
-      return 11;
+    if (const int code = App::Bootstrap::check_audio_manifest(); code >= 0) {
+      return code;
     }
-    qInfo() << "SOI_AUDIO_SELF_TEST: PASS - every audio manifest entry resolves";
   }
 
   App::Core::UserSettings::apply_saved_graphics_quality();
 
   if (release_self_test) {
-    if (Render::GraphicsSettings::instance().quality() !=
-        Render::k_default_graphics_quality) {
-      qCritical() << "SOI_GRAPHICS_DEFAULT_SELF_TEST: FAIL - fresh profile is not "
-                     "the default preset";
-      return 14;
+    if (const int code = App::Bootstrap::check_release_defaults(); code >= 0) {
+      return code;
     }
-    qInfo() << "SOI_GRAPHICS_DEFAULT_SELF_TEST: PASS - fresh profile uses the "
-               "default preset";
-    if (!validate_release_campaign_map_resources()) {
-      return 15;
-    }
-    const auto& horse_status = Render::Horse::horse_source_asset_status();
-    if (!horse_status.loaded) {
-      qCritical() << "SOI_CREATURE_ASSET_SELF_TEST: FAIL - horse asset:"
-                  << horse_status.error.c_str();
-      return 16;
-    }
-    qInfo() << "SOI_CREATURE_ASSET_SELF_TEST: PASS - packaged horse asset loaded";
   }
 
-  QString direct_campaign_mission;
-  QString direct_mission_file;
-  QString observe_map_file;
-  QString record_replay_path;
-  QString replay_path;
-  bool replay_verify = false;
-  bool skip_briefing = false;
-  float direct_game_speed = App::Core::GameSpeed::k_default;
-  bool component_gallery_requested = false;
-  QString screenshot_path;
-  QString screenshot_view;
-  int screenshot_delay_ms = 0;
-  QSize screenshot_size(1600, 900);
-  double runtime_benchmark_seconds = 0.0;
-  QString runtime_benchmark_output;
-  QString runtime_action_fixture_path;
-  std::optional<App::Core::BenchmarkActionFixture> runtime_action_fixture;
-  std::optional<App::Core::FilmConfig> film_config;
-
-  {
-    QCommandLineParser parser;
-    parser.setApplicationDescription("Standard of Iron");
-    parser.addHelpOption();
-    QCommandLineOption const force_software_opt(
-        QStringList{"s", "force-software"},
-        "Force the CPU software rendering backend (ShaderQuality::None).");
-    QCommandLineOption const quality_opt(
-        "quality",
-        "Override shader quality: full | reduced | minimal | none.",
-        "level");
-    QCommandLineOption const renderer_self_test_opt(
-        "renderer-self-test",
-        "Show the gameplay view, render and present one frame, then exit.");
-    QCommandLineOption const release_self_test_opt(
-        "release-self-test",
-        "Validate a fresh profile and campaign assets, start a real campaign "
-        "mission, present frames, then exit.");
-    QCommandLineOption const print_data_paths_opt(
-        "print-data-paths", "Print where saves and settings are stored, then exit.");
-    QCommandLineOption const graphics_preset_opt(
-        "graphics-preset",
-        "Override the complete graphics preset: low | medium | high | ultra.",
-        "preset");
-    QCommandLineOption const campaign_mission_opt(
-        "campaign-mission",
-        "Start a campaign mission directly (campaign_id/mission_id).",
-        "path");
-    QCommandLineOption const mission_file_opt(
-        "mission-file",
-        "Start a mission definition file directly for editor testing.",
-        "path");
-    QCommandLineOption const observe_opt(
-        "observe",
-        "Start this skirmish map with every slot under computer control and watch it "
-        "as a spectator.",
-        "map-path");
-    QCommandLineOption const record_replay_opt(
-        "record-replay",
-        "Write every command the match accepts to this file, so the match can be "
-        "played back with --replay.",
-        "path");
-    QCommandLineOption const replay_opt(
-        "replay",
-        "Launch the match a replay file describes and let the file drive it; local "
-        "input and the computer opponent are shut out.",
-        "path");
-    QCommandLineOption const replay_verify_opt(
-        "replay-verify",
-        "With --replay: exit when the replay has played through, 0 if the "
-        "simulation matched every recorded digest, 12 if it diverged.");
-    QCommandLineOption const skip_briefing_opt(
-        "skip-briefing",
-        "Start a directly launched mission unpaused, without the objectives "
-        "briefing (for scripted runs).");
-    QCommandLineOption const component_gallery_opt(
-        "component-gallery",
-        "Open the Iron and Ember component gallery instead of the game.");
-    QCommandLineOption const screenshot_opt(
-        "screenshot", "Render one frame, write a PNG to this path, then exit.", "path");
-    QCommandLineOption const screenshot_view_opt(
-        "screenshot-view",
-        "Surface to capture: menu | skirmish | missions | campaign | settings | load "
-        "| save | briefing | hud | rpg | commander | tutorial.",
-        "view",
-        "menu");
-    QCommandLineOption const screenshot_delay_opt(
-        "screenshot-delay",
-        "Milliseconds to let the surface settle before capturing.",
-        "ms",
-        "1200");
-    QCommandLineOption const screenshot_size_opt(
-        "screenshot-size",
-        "Window size for --screenshot, e.g. 1280x800 (Steam Deck) or 1920x1080.",
-        "WxH",
-        "1600x900");
-    QCommandLineOption const game_speed_opt(
-        "game-speed",
-        "Start a directly launched mission at this battle speed (0.5, 1, 2, 3 or 4).",
-        "multiplier");
-    QCommandLineOption const benchmark_seconds_opt(
-        "benchmark-seconds",
-        "Measure the directly started mission after a two-second warm-up, then exit.",
-        "seconds");
-    QCommandLineOption const benchmark_output_opt(
-        "benchmark-output",
-        "Write the runtime benchmark JSON report to this path.",
-        "path");
-    QCommandLineOption const action_fixture_opt(
-        "action-fixture",
-        "Drive a versioned battle/UI action fixture during the benchmark or the film.",
-        "path");
-    QCommandLineOption const film_opt(
-        "film",
-        "Film the directly launched mission one simulation step per frame into "
-        "numbered PNGs in this directory, then exit. Wall-clock speed does not "
-        "matter, so a software GL display still yields full-rate footage.",
-        "dir");
-    QCommandLineOption const film_fps_opt(
-        "film-fps", "Frames (and simulation steps) per second of film.", "fps", "60");
-    QCommandLineOption const film_seconds_opt(
-        "film-seconds", "Seconds of footage to write.", "seconds", "8");
-    QCommandLineOption const film_start_opt(
-        "film-start",
-        "Simulate this many seconds (running the fixture) before the first frame "
-        "is written.",
-        "seconds",
-        "0");
-    QCommandLineOption const film_size_opt(
-        "film-size", "Frame size as WIDTHxHEIGHT.", "size", "1920x1080");
-    QCommandLineOption const film_visible_opt(
-        "film-visible",
-        "Film in a normal window (default: a frameless window pinned to the "
-        "bottom of the stack that never takes focus).");
-    parser.addOption(force_software_opt);
-    parser.addOption(quality_opt);
-    parser.addOption(renderer_self_test_opt);
-    parser.addOption(release_self_test_opt);
-    parser.addOption(print_data_paths_opt);
-    parser.addOption(graphics_preset_opt);
-    parser.addOption(campaign_mission_opt);
-    parser.addOption(mission_file_opt);
-    parser.addOption(observe_opt);
-    parser.addOption(record_replay_opt);
-    parser.addOption(replay_opt);
-    parser.addOption(replay_verify_opt);
-    parser.addOption(skip_briefing_opt);
-    parser.addOption(game_speed_opt);
-    parser.addOption(component_gallery_opt);
-    parser.addOption(screenshot_opt);
-    parser.addOption(screenshot_view_opt);
-    parser.addOption(screenshot_delay_opt);
-    parser.addOption(screenshot_size_opt);
-    parser.addOption(benchmark_seconds_opt);
-    parser.addOption(benchmark_output_opt);
-    parser.addOption(action_fixture_opt);
-    parser.addOption(film_opt);
-    parser.addOption(film_fps_opt);
-    parser.addOption(film_seconds_opt);
-    parser.addOption(film_start_opt);
-    parser.addOption(film_size_opt);
-    parser.addOption(film_visible_opt);
-    QCommandLineOption const film_cursor_opt(
-        "film-cursor",
-        "Draw a mouse pointer that travels to each scripted click in the footage.");
-    parser.addOption(film_cursor_opt);
-    parser.process(app);
-
-    component_gallery_requested = parser.isSet(component_gallery_opt);
-    if (parser.isSet(screenshot_opt)) {
-      screenshot_path = parser.value(screenshot_opt).trimmed();
-      screenshot_view = parser.value(screenshot_view_opt).trimmed().toLower();
-      bool delay_ok = false;
-      const int parsed_delay = parser.value(screenshot_delay_opt).toInt(&delay_ok);
-      screenshot_delay_ms = (delay_ok && parsed_delay >= 0) ? parsed_delay : 1200;
-      const QStringList size =
-          parser.value(screenshot_size_opt).split(QLatin1Char('x'));
-      if (size.size() == 2) {
-        screenshot_size = QSize(std::clamp(size[0].toInt(), 320, 7680),
-                                std::clamp(size[1].toInt(), 240, 4320));
-      }
-    }
-
-    if (parser.isSet(graphics_preset_opt)) {
-      const QString preset = parser.value(graphics_preset_opt).trimmed().toLower();
-      auto& gfx = Render::GraphicsSettings::instance();
-      if (preset == QStringLiteral("low")) {
-        gfx.set_quality(Render::GraphicsQuality::Low);
-      } else if (preset == QStringLiteral("medium")) {
-        gfx.set_quality(Render::GraphicsQuality::Medium);
-      } else if (preset == QStringLiteral("high")) {
-        gfx.set_quality(Render::GraphicsQuality::High);
-      } else if (preset == QStringLiteral("ultra")) {
-        gfx.set_quality(Render::GraphicsQuality::Ultra);
-      } else {
-        qWarning() << "Unknown --graphics-preset value:" << preset;
-      }
-    }
-
-    direct_campaign_mission = parser.value(campaign_mission_opt).trimmed();
-    direct_mission_file = parser.value(mission_file_opt).trimmed();
-    observe_map_file = parser.value(observe_opt).trimmed();
-    record_replay_path = parser.value(record_replay_opt).trimmed();
-    replay_path = parser.value(replay_opt).trimmed();
-    replay_verify = parser.isSet(replay_verify_opt);
-    skip_briefing =
-        parser.isSet(skip_briefing_opt) || replay_verify || !observe_map_file.isEmpty();
-    if (parser.isSet(game_speed_opt)) {
-      bool speed_ok = false;
-      const float requested = parser.value(game_speed_opt).toFloat(&speed_ok);
-      if (!speed_ok) {
-        qWarning() << "Ignoring unreadable --game-speed value:"
-                   << parser.value(game_speed_opt);
-      } else {
-        direct_game_speed = App::Core::GameSpeed::sanitize(requested);
-        if (!qFuzzyCompare(direct_game_speed, requested)) {
-          qWarning() << "--game-speed" << requested << "is not offered; using"
-                     << direct_game_speed;
-        }
-      }
-    }
-    if (release_self_test) {
-
-      direct_campaign_mission.clear();
-      direct_mission_file =
-          QStringLiteral(":/assets/missions/iron_sepulcher_watch.json");
-    }
-
-    bool benchmark_seconds_valid = false;
-    runtime_benchmark_seconds =
-        parser.value(benchmark_seconds_opt).toDouble(&benchmark_seconds_valid);
-    if (!benchmark_seconds_valid || runtime_benchmark_seconds < 0.0) {
-      runtime_benchmark_seconds = 0.0;
-    }
-    runtime_benchmark_output = parser.value(benchmark_output_opt).trimmed();
-    if (parser.isSet(film_opt)) {
-      App::Core::FilmConfig config;
-      config.directory = parser.value(film_opt).trimmed();
-      config.fps = std::clamp(parser.value(film_fps_opt).toInt(), 1, 240);
-      config.seconds = std::max(0.1, parser.value(film_seconds_opt).toDouble());
-      config.start_seconds = std::max(0.0, parser.value(film_start_opt).toDouble());
-      const QStringList size = parser.value(film_size_opt).split(QLatin1Char('x'));
-      if (size.size() == 2) {
-        config.width = std::clamp(size[0].toInt(), 320, 7680);
-        config.height = std::clamp(size[1].toInt(), 240, 4320);
-      }
-      config.background = !parser.isSet(film_visible_opt);
-      config.draw_cursor = parser.isSet(film_cursor_opt);
-      if (config.directory.isEmpty()) {
-        qCritical() << "--film needs a directory";
-        return 2;
-      }
-      qputenv("SOI_FILM_FPS", QByteArray::number(config.fps));
-
-      qputenv("QSG_RENDER_LOOP", "basic");
-
-      qputenv("QSG_FIXED_ANIMATION_STEP", "1");
-      film_config = config;
-    }
-    if (runtime_benchmark_seconds > 0.0) {
-      qputenv("SOI_RUNTIME_BENCHMARK_SECONDS",
-              QByteArray::number(runtime_benchmark_seconds, 'f', 3));
-      if (!runtime_benchmark_output.isEmpty()) {
-        qputenv("SOI_RUNTIME_BENCHMARK_OUTPUT", runtime_benchmark_output.toUtf8());
-      }
-    }
-
-    runtime_action_fixture_path = parser.value(action_fixture_opt).trimmed();
-    if (!runtime_action_fixture_path.isEmpty()) {
-      QString fixture_error;
-      runtime_action_fixture = App::Core::load_benchmark_action_fixture(
-          runtime_action_fixture_path, &fixture_error);
-      if (!runtime_action_fixture.has_value()) {
-        qCritical().noquote() << "Invalid --action-fixture:" << fixture_error;
-        return 2;
-      }
-      qputenv("SOI_ACTION_FIXTURE_NAME", runtime_action_fixture->name.toUtf8());
-      qputenv("SOI_ACTION_FIXTURE_PATH", runtime_action_fixture_path.toUtf8());
-      qputenv(
-          "SOI_ACTION_FIXTURE_REQUIRED",
-          runtime_action_fixture->required_coverage.join(QLatin1Char(',')).toUtf8());
-    }
-
-    std::optional<Render::ShaderQuality> requested;
-    if (parser.isSet(quality_opt)) {
-      const QString v = parser.value(quality_opt).trimmed().toLower();
-      if (v == "full") {
-        requested = Render::ShaderQuality::Full;
-      } else if (v == "reduced") {
-        requested = Render::ShaderQuality::Reduced;
-      } else if (v == "minimal") {
-        requested = Render::ShaderQuality::Minimal;
-      } else if (v == "none" || v == "software") {
-        requested = Render::ShaderQuality::None;
-      } else {
-        qWarning() << "Unknown --quality value:" << v
-                   << "(expected full|reduced|minimal|none)";
-      }
-    }
-    if (parser.isSet(force_software_opt)) {
-      requested = Render::ShaderQuality::None;
-    }
-    if (requested.has_value()) {
-      auto& gfx = Render::GraphicsSettings::instance();
-
-      switch (*requested) {
-      case Render::ShaderQuality::None:
-        qInfo() << "[CLI] shader_quality = None (software backend)";
-        break;
-      case Render::ShaderQuality::Minimal:
-        gfx.set_quality(Render::GraphicsQuality::Low);
-        qInfo() << "[CLI] shader_quality = Minimal";
-        break;
-      case Render::ShaderQuality::Reduced:
-        gfx.set_quality(Render::GraphicsQuality::Medium);
-        qInfo() << "[CLI] shader_quality = Reduced";
-        break;
-      case Render::ShaderQuality::Full:
-        gfx.set_quality(Render::GraphicsQuality::High);
-        qInfo() << "[CLI] shader_quality = Full";
-        break;
-      }
-
-      gfx.set_backend_kind(*requested);
-    }
+  App::Bootstrap::CommandLineOptions opts;
+  if (const int exit_code =
+          App::Bootstrap::parse_command_line(app, release_self_test, opts);
+      exit_code >= 0) {
+    return exit_code;
   }
 
   std::unique_ptr<LanguageManager> language_manager;
@@ -1164,7 +356,7 @@ auto main(int argc, char* argv[]) -> int {
                            "ScenarioChallenge");
 
   const QUrl root_qml =
-      component_gallery_requested
+      opts.component_gallery_requested
           ? QUrl(QStringLiteral("qrc:/StandardOfIron/Design/GalleryWindow.qml"))
           : QUrl(QStringLiteral("qrc:/StandardOfIron/ui/qml/Main.qml"));
   qInfo() << "Loading" << root_qml;
@@ -1215,11 +407,14 @@ auto main(int argc, char* argv[]) -> int {
         Qt::DirectConnection);
   }
 
-  if (component_gallery_requested) {
+  if (opts.component_gallery_requested) {
 
-    if (!screenshot_path.isEmpty()) {
-      capture_screenshot_and_exit(
-          window, screenshot_path, QString(), screenshot_delay_ms, screenshot_size);
+    if (!opts.screenshot_path.isEmpty()) {
+      App::Bootstrap::capture_screenshot_and_exit(window,
+                                                  opts.screenshot_path,
+                                                  QString(),
+                                                  opts.screenshot_delay_ms,
+                                                  opts.screenshot_size);
     }
     qInfo() << "Starting event loop (component gallery)...";
     const int gallery_result = QGuiApplication::exec();
@@ -1233,28 +428,18 @@ auto main(int argc, char* argv[]) -> int {
   game_engine->setWindow(window);
   qInfo() << "Window set successfully";
 
-  if (!record_replay_path.isEmpty()) {
-    game_engine->set_replay_record_path(record_replay_path);
+  if (!opts.record_replay_path.isEmpty()) {
+    game_engine->set_replay_record_path(opts.record_replay_path);
   }
-  if (replay_verify) {
+  if (opts.replay_verify) {
     game_engine->set_replay_verify_exit(true);
   }
 
-  if (!direct_campaign_mission.isEmpty() || !direct_mission_file.isEmpty() ||
-      !observe_map_file.isEmpty() || !replay_path.isEmpty()) {
+  if (!opts.direct_campaign_mission.isEmpty() || !opts.direct_mission_file.isEmpty() ||
+      !opts.observe_map_file.isEmpty() || !opts.replay_path.isEmpty()) {
 
     QTimer::singleShot(
-        0,
-        &app,
-        [root_obj,
-         &app,
-         game_engine_ptr = game_engine.get(),
-         direct_campaign_mission,
-         direct_mission_file,
-         observe_map_file,
-         replay_path,
-         skip_briefing,
-         direct_game_speed] {
+        0, &app, [root_obj, &app, game_engine_ptr = game_engine.get(), opts] {
           auto* gl_view = root_obj->findChild<GLView*>();
           if (gl_view == nullptr) {
             qCritical() << "Could not find gameplay GLView for direct campaign mission";
@@ -1262,41 +447,37 @@ auto main(int argc, char* argv[]) -> int {
             return;
           }
           auto mission_started = std::make_shared<bool>(false);
-          auto start_direct_mission = [game_engine_ptr,
-                                       direct_campaign_mission,
-                                       direct_mission_file,
-                                       observe_map_file,
-                                       replay_path,
-                                       mission_started,
-                                       direct_game_speed]() {
+          auto start_direct_mission = [game_engine_ptr, opts, mission_started]() {
             if (*mission_started) {
               return;
             }
             *mission_started = true;
-            if (!replay_path.isEmpty()) {
-              qInfo() << "Playing replay:" << replay_path;
-              if (!game_engine_ptr->start_replay(replay_path)) {
-                qCritical() << "Replay could not be started:" << replay_path;
+            if (!opts.replay_path.isEmpty()) {
+              qInfo() << "Playing replay:" << opts.replay_path;
+              if (!game_engine_ptr->start_replay(opts.replay_path)) {
+                qCritical() << "Replay could not be started:" << opts.replay_path;
                 QCoreApplication::exit(11);
               }
-            } else if (!observe_map_file.isEmpty()) {
-              qInfo() << "Observing a computer-only skirmish on:" << observe_map_file;
+            } else if (!opts.observe_map_file.isEmpty()) {
+              qInfo() << "Observing a computer-only skirmish on:"
+                      << opts.observe_map_file;
               if (!game_engine_ptr->match_setup()->start_observed_skirmish(
-                      observe_map_file)) {
+                      opts.observe_map_file)) {
                 qCritical() << "Observed skirmish could not be started:"
-                            << observe_map_file;
+                            << opts.observe_map_file;
                 QCoreApplication::exit(13);
               }
-            } else if (!direct_mission_file.isEmpty()) {
-              qInfo() << "Starting mission file directly:" << direct_mission_file;
-              game_engine_ptr->match_setup()->start_mission_file(direct_mission_file);
+            } else if (!opts.direct_mission_file.isEmpty()) {
+              qInfo() << "Starting mission file directly:" << opts.direct_mission_file;
+              game_engine_ptr->match_setup()->start_mission_file(
+                  opts.direct_mission_file);
             } else {
               qInfo() << "Starting campaign mission directly:"
-                      << direct_campaign_mission;
+                      << opts.direct_campaign_mission;
               game_engine_ptr->match_setup()->start_campaign_mission(
-                  direct_campaign_mission);
+                  opts.direct_campaign_mission);
             }
-            game_engine_ptr->set_game_speed(direct_game_speed);
+            game_engine_ptr->set_game_speed(opts.direct_game_speed);
           };
 
           QObject::connect(game_engine_ptr,
@@ -1309,7 +490,7 @@ auto main(int argc, char* argv[]) -> int {
                            &app,
                            start_direct_mission,
                            Qt::QueuedConnection);
-          if (skip_briefing) {
+          if (opts.skip_briefing) {
 
             root_obj->setProperty("suppress_modals", true);
           }
@@ -1378,149 +559,26 @@ auto main(int argc, char* argv[]) -> int {
                    });
 
   if (renderer_self_test) {
-    auto* gl_view = root_obj->findChild<GLView*>();
-    if (gl_view == nullptr) {
-      qCritical() << "SOI_RENDERER_SELF_TEST: FAIL - GLView was not created";
-      return 10;
+    if (const int code =
+            App::Bootstrap::start_renderer_self_test(app, root_obj, window);
+        code >= 0) {
+      return code;
     }
-
-    auto renderer_ready = std::make_shared<bool>(false);
-
-    auto self_test_settled = std::make_shared<bool>(false);
-    QObject::connect(
-        gl_view, &GLView::renderer_ready, &app, [window, renderer_ready]() {
-          *renderer_ready = true;
-          window->update();
-        });
-    QObject::connect(window,
-                     &QQuickWindow::frameSwapped,
-                     &app,
-                     [renderer_ready, self_test_settled]() {
-                       if (!*renderer_ready || *self_test_settled) {
-                         return;
-                       }
-                       *self_test_settled = true;
-                       qInfo() << "SOI_RENDERER_SELF_TEST: PASS - gameplay OpenGL "
-                                  "frame rendered and presented";
-                       QGuiApplication::exit(0);
-                     });
-
-    if (!root_obj->setProperty("game_started", true) ||
-        !root_obj->setProperty("menu_visible", false)) {
-      qCritical() << "SOI_RENDERER_SELF_TEST: FAIL - could not expose GameView";
-      return 10;
-    }
-    window->show();
-    window->update();
-
-    QTimer::singleShot(30000, &app, [self_test_settled]() {
-      if (*self_test_settled) {
-        return;
-      }
-      *self_test_settled = true;
-      qCritical() << "SOI_RENDERER_SELF_TEST: FAIL - no gameplay frame was "
-                     "presented within 30 seconds";
-      QGuiApplication::exit(10);
-    });
   }
 
   if (release_self_test) {
-    auto mission_ready = std::make_shared<bool>(false);
-    auto presented_frames = std::make_shared<int>(0);
-
-    auto release_test_settled = std::make_shared<bool>(false);
-    auto polls = std::make_shared<int>(0);
-    auto* readiness_poll = new QTimer(&app);
-    readiness_poll->setInterval(250);
-    QObject::connect(readiness_poll,
-                     &QTimer::timeout,
-                     &app,
-                     [game_engine_ptr = game_engine.get(),
-                      mission_ready,
-                      polls,
-                      window,
-                      readiness_poll,
-                      release_test_settled]() {
-                       if (!game_engine_ptr->last_error().isEmpty()) {
-                         qCritical() << "SOI_MISSION_SELF_TEST: FAIL -"
-                                     << game_engine_ptr->last_error();
-                         readiness_poll->stop();
-                         *release_test_settled = true;
-                         QGuiApplication::exit(17);
-                         return;
-                       }
-
-                       window->update();
-                       if (!game_engine_ptr->release_self_test_mission_ready()) {
-
-                         if (++*polls % 40 == 0) {
-                           qInfo().noquote()
-                               << "SOI_MISSION_SELF_TEST: waiting -"
-                               << game_engine_ptr->release_self_test_pending_reason();
-                         }
-                         return;
-                       }
-                       if (!*mission_ready) {
-                         *mission_ready = true;
-                         qInfo() << "SOI_MISSION_SELF_TEST: mission loaded; verifying "
-                                    "presented gameplay frames";
-                       }
-                     });
-    readiness_poll->start();
-
-    QObject::connect(window,
-                     &QQuickWindow::frameSwapped,
-                     &app,
-                     [mission_ready, presented_frames, window, release_test_settled]() {
-                       if (!*mission_ready) {
-                         return;
-                       }
-                       ++*presented_frames;
-                       if (*presented_frames < 3) {
-                         window->update();
-                         return;
-                       }
-
-                       if (*presented_frames > 3) {
-                         return;
-                       }
-                       *release_test_settled = true;
-                       qInfo() << "SOI_MISSION_SELF_TEST: PASS - authored packaged "
-                                  "mission loaded with entities";
-                       qInfo()
-                           << "SOI_RENDERER_SELF_TEST: PASS - three gameplay frames "
-                              "rendered and presented after mission load";
-                       QGuiApplication::exit(0);
-                     });
-
-    QTimer::singleShot(
-        1500000,
-        &app,
-        [game_engine_ptr = game_engine.get(),
-         mission_ready,
-         presented_frames,
-         release_test_settled]() {
-          if (*release_test_settled) {
-            return;
-          }
-          *release_test_settled = true;
-          qCritical().noquote()
-              << "SOI_MISSION_SELF_TEST: FAIL - mission did not load and present "
-                 "frames within 1500 seconds; pending:"
-              << (*mission_ready
-                      ? QStringLiteral("mission ready, only %1 of 3 frames presented")
-                            .arg(*presented_frames)
-                      : game_engine_ptr->release_self_test_pending_reason());
-          QGuiApplication::exit(17);
-        });
+    App::Bootstrap::start_release_self_test(app, window, game_engine.get());
   }
 
-  if (!screenshot_path.isEmpty()) {
-    capture_screenshot_and_exit(
-        window, screenshot_path, screenshot_view, screenshot_delay_ms, screenshot_size);
+  if (!opts.screenshot_path.isEmpty()) {
+    App::Bootstrap::capture_screenshot_and_exit(window,
+                                                opts.screenshot_path,
+                                                opts.screenshot_view,
+                                                opts.screenshot_delay_ms,
+                                                opts.screenshot_size);
   }
 
-  if (runtime_benchmark_seconds > 0.0 &&
+  if (opts.runtime_benchmark_seconds > 0.0 &&
       qEnvironmentVariableIntValue("SOI_BENCHMARK_CAMERA_CYCLE") != 0) {
     auto* cycle_timer = new QTimer(game_engine.get());
     auto elapsed = std::make_shared<QElapsedTimer>();
@@ -1557,12 +615,12 @@ auto main(int argc, char* argv[]) -> int {
     cycle_timer->start(16);
   }
 
-  if (runtime_benchmark_seconds > 0.0 && runtime_action_fixture.has_value()) {
+  if (opts.runtime_benchmark_seconds > 0.0 && opts.runtime_action_fixture.has_value()) {
     auto* action_timer = new QTimer(game_engine.get());
     auto elapsed = std::make_shared<QElapsedTimer>();
     auto previous_seconds = std::make_shared<double>(0.0);
-    auto fixture =
-        std::make_shared<App::Core::BenchmarkActionFixture>(*runtime_action_fixture);
+    auto fixture = std::make_shared<App::Core::BenchmarkActionFixture>(
+        *opts.runtime_action_fixture);
     QObject::connect(
         action_timer,
         &QTimer::timeout,
@@ -1592,15 +650,15 @@ auto main(int argc, char* argv[]) -> int {
   }
 
   std::unique_ptr<App::Core::FilmRecorder> film_recorder;
-  if (film_config.has_value()) {
-    if (direct_campaign_mission.isEmpty() && direct_mission_file.isEmpty() &&
-        observe_map_file.isEmpty() && replay_path.isEmpty()) {
+  if (opts.film_config.has_value()) {
+    if (opts.direct_campaign_mission.isEmpty() && opts.direct_mission_file.isEmpty() &&
+        opts.observe_map_file.isEmpty() && opts.replay_path.isEmpty()) {
       qCritical() << "--film needs a directly launched match (--mission-file, "
                      "--campaign-mission, --observe or --replay)";
       return 2;
     }
     film_recorder = std::make_unique<App::Core::FilmRecorder>(
-        game_engine.get(), window, *film_config, runtime_action_fixture);
+        game_engine.get(), window, *opts.film_config, opts.runtime_action_fixture);
     film_recorder->start();
   }
 
@@ -1621,7 +679,7 @@ auto main(int argc, char* argv[]) -> int {
 
 #ifdef Q_OS_WIN
 
-  if (g_opengl_crashed) {
+  if (App::Bootstrap::opengl_crash_detected()) {
     qCritical() << "";
     qCritical() << "========================================";
     qCritical() << "OPENGL CRASH RECOVERY";

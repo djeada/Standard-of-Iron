@@ -10209,61 +10209,33 @@ to see preview</source>
     </message>
 </context>
 <context>
-    <name>ProductionPanel</name>
+    <name>ProductionBarracksQueue</name>
     <message>
-        <source>Mounted Knight</source>
-        <translation>Конный рыцарь</translation>
+        <source>QUEUE</source>
+        <translation>ОЧЕРЕДЬ</translation>
     </message>
     <message>
-        <source>Horse Archer</source>
-        <translation>Конный лучник</translation>
+        <source>Barracks reserve: %1 / %2</source>
+        <translation>Резерв казарм: %1 / %2</translation>
     </message>
     <message>
-        <source>Horse Spearman</source>
-        <translation>Конный копейщик</translation>
+        <source>%1s</source>
+        <translation>%1 с</translation>
     </message>
     <message>
-        <source>War Elephant</source>
-        <translation>Боевой слон</translation>
+        <source>Idle</source>
+        <translation>Простой</translation>
     </message>
+</context>
+<context>
+    <name>ProductionBarracksRoster</name>
     <message>
-        <source>reserve</source>
-        <translation>резерва</translation>
+        <source>RECRUIT UNITS</source>
+        <translation>НАБОР ВОЙСК</translation>
     </message>
-    <message>
-        <source>Recruit %1
-Cost: %2
-Build time: %3s
-Carthage exclusive</source>
-        <translation>Нанять: %1
-Цена: %2
-Время: %3 с
-Только для Карфагена</translation>
-    </message>
-    <message>
-        <source>Recruit %1
-Cost: %2
-Build time: %3s</source>
-        <translation>Нанять: %1
-Цена: %2
-Время: %3 с</translation>
-    </message>
-    <message>
-        <source>Food</source>
-        <translation>Еда</translation>
-    </message>
-    <message>
-        <source>Wood</source>
-        <translation>Древесина</translation>
-    </message>
-    <message>
-        <source>Stone</source>
-        <translation>Камень</translation>
-    </message>
-    <message>
-        <source>Iron</source>
-        <translation>Железо</translation>
-    </message>
+</context>
+<context>
+    <name>ProductionBuilderSection</name>
     <message>
         <source>Catapult</source>
         <translation>Катапульта</translation>
@@ -10335,96 +10307,12 @@ Opens for your troops and allies</source>
 Открывается вашим отрядам и союзникам</translation>
     </message>
     <message>
-        <source>Need %1</source>
-        <translation>Не хватает: %1</translation>
-    </message>
-    <message>
-        <source>%1 %2</source>
-        <translation>%1 %2</translation>
-    </message>
-    <message>
-        <source>Cannot recruit</source>
-        <translation>Нанять нельзя</translation>
-    </message>
-    <message>
-        <source>Queue is full (5/5)</source>
-        <translation>Очередь заполнена (5/5)</translation>
-    </message>
-    <message>
-        <source>Not enough reserve</source>
-        <translation>Не хватает резерва</translation>
-    </message>
-    <message>
-        <source>Already building...</source>
-        <translation>Уже строит...</translation>
-    </message>
-    <message>
-        <source>QUEUE</source>
-        <translation>ОЧЕРЕДЬ</translation>
-    </message>
-    <message>
-        <source>Barracks reserve: %1 / %2</source>
-        <translation>Резерв казарм: %1 / %2</translation>
-    </message>
-    <message>
         <source>%1s</source>
         <translation>%1 с</translation>
     </message>
     <message>
         <source>Idle</source>
         <translation>Простой</translation>
-    </message>
-    <message>
-        <source>RECRUIT UNITS</source>
-        <translation>НАБОР ВОЙСК</translation>
-    </message>
-    <message>
-        <source>HOME RECRUITMENT</source>
-        <translation>НАБОР В ДОМЕ</translation>
-    </message>
-    <message>
-        <source>Available civilians: %1 / %2</source>
-        <translation>Доступно гражданских: %1 / %2</translation>
-    </message>
-    <message>
-        <source>Recruit %1
-Cost: %2
-Build time: %3s
-Use Deliver mode, then click a friendly barracks to add to its reserve.</source>
-        <translation>Нанять: %1
-Цена: %2
-Время: %3 с
-Включите режим «Доставить», затем щёлкните свои казармы, чтобы пополнить их резерв.</translation>
-    </message>
-    <message>
-        <source>families</source>
-        <translation>семьи</translation>
-    </message>
-    <message>
-        <source>This home already committed its 3 civilians</source>
-        <translation>Этот дом уже отдал своих 3 гражданских</translation>
-    </message>
-    <message>
-        <source>Click Map to Set Rally</source>
-        <translation>Щёлкните карту, чтобы задать сбор</translation>
-    </message>
-    <message>
-        <source>Set Rally Point</source>
-        <translation>Задать точку сбора</translation>
-    </message>
-    <message>
-        <source>Set where newly recruited units will gather.
-Right-click to cancel.</source>
-        <translation>Укажите, где будут собираться новобранцы.
-Правая кнопка отменяет.</translation>
-    </message>
-    <message>
-        <source>Select a barracks or temple before setting a rally point.</source>
-        <translation>Выделите казармы или храм, прежде чем задавать точку сбора.</translation>
-    </message>
-    <message>
-        <source>Right-click to cancel</source>
-        <translation>Правая кнопка отменяет</translation>
     </message>
     <message>
         <source>BUILDER CONSTRUCTION</source>
@@ -10577,130 +10465,6 @@ Wide vision and a durable settlement anchor</source>
 Широкий обзор и прочная опора поселения</translation>
     </message>
     <message>
-        <source>MARKETPLACE</source>
-        <translation>РЫНОК</translation>
-    </message>
-    <message>
-        <source>Sell %1 %2 for %3 gold</source>
-        <translation>Продайте %1 %2 за %3 золота</translation>
-    </message>
-    <message>
-        <source>TEMPLE</source>
-        <translation>ХРАМ</translation>
-    </message>
-    <message>
-        <source>The sanctuary of your nation, raised in its own architectural style</source>
-        <translation>Святыня вашего народа, возведённая в его собственном стиле</translation>
-    </message>
-    <message>
-        <source>Watches over a wide stretch of ground and holds a settlement together</source>
-        <translation>Смотрит за широкой полосой земли и скрепляет поселение</translation>
-    </message>
-    <message>
-        <source>TAKE VOWS</source>
-        <translation>ПРИНЯТЬ ОБЕТ</translation>
-    </message>
-    <message>
-        <source>Temple reserve: %1 / %2</source>
-        <translation>Резерв храма: %1 / %2</translation>
-    </message>
-    <message>
-        <source>Deliver civilians here to raise the temple&apos;s reserve</source>
-        <translation>Доставляйте сюда гражданских, чтобы поднять резерв храма</translation>
-    </message>
-    <message>
-        <source>FARM</source>
-        <translation>ФЕРМА</translation>
-    </message>
-    <message>
-        <source>Grain ripens every %1s and a builder reaps %2 food from it</source>
-        <translation>Зерно созревает каждые %1 с, и строитель снимает с него %2 еды</translation>
-    </message>
-    <message>
-        <source>Ripe</source>
-        <translation>Созрело</translation>
-    </message>
-    <message>
-        <source>%1% grown · %2s</source>
-        <translation>рост %1% · %2 с</translation>
-    </message>
-    <message>
-        <source>Select your farm to see its crop.</source>
-        <translation>Выделите свою ферму, чтобы увидеть её урожай.</translation>
-    </message>
-    <message>
-        <source>A builder is on its way to harvest.</source>
-        <translation>Строитель уже идёт на жатву.</translation>
-    </message>
-    <message>
-        <source>Send a builder with Collect, or leave Auto Gather running.</source>
-        <translation>Отправьте строителя приказом «Собрать» либо оставьте автосбор включённым.</translation>
-    </message>
-    <message>
-        <source>Harvested %1 times so far.</source>
-        <translation>Собрано урожаев: %1.</translation>
-    </message>
-    <message>
-        <source>No Barracks</source>
-        <translation>Казарм нет</translation>
-    </message>
-    <message>
-        <source>Select a barracks to recruit units</source>
-        <translation>Выделите казармы, чтобы нанимать отряды</translation>
-    </message>
-    <message>
-        <source>· lots of %1</source>
-        <translation>· партиями по %1</translation>
-    </message>
-    <message>
-        <source>Only your own marketplace can trade. Select it to buy or sell.</source>
-        <translation>Торговать может только ваш собственный рынок. Выберите его, чтобы покупать или продавать.</translation>
-    </message>
-    <message>
-        <source>Buy %1 · %2g</source>
-        <translation>Купить %1 · %2 з.</translation>
-    </message>
-    <message>
-        <source>Sell %1 · +%2g</source>
-        <translation>Продать %1 · +%2 з.</translation>
-    </message>
-    <message>
-        <source>Spend %1 gold for %2 %3</source>
-        <translation>Потратить %1 золота на %2 ед. (%3)</translation>
-    </message>
-    <message>
-        <source>Not enough gold: %1 needed</source>
-        <translation>Недостаточно золота: нужно %1</translation>
-    </message>
-    <message>
-        <source>Not enough %1: %2 needed</source>
-        <translation>Недостаточно ресурса «%1»: нужно %2</translation>
-    </message>
-    <message>
-        <source>ALLIES</source>
-        <translation>СОЮЗНИКИ</translation>
-    </message>
-    <message>
-        <source>No allies to trade with in this battle.</source>
-        <translation>В этой битве нет союзников для обмена.</translation>
-    </message>
-    <message>
-        <source>Send</source>
-        <translation>Отправить</translation>
-    </message>
-    <message>
-        <source>Give %1 %2 to %3</source>
-        <translation>Передать %1 %2: %3</translation>
-    </message>
-    <message>
-        <source>Request</source>
-        <translation>Попросить</translation>
-    </message>
-    <message>
-        <source>Ask %1 for %2 %3. A generous commander with plenty to spare says yes; a warlike or poor one keeps it.</source>
-        <translation>Попросить у %1 %2 %3. Щедрый полководец с запасами согласится; воинственный или бедный оставит себе.</translation>
-    </message>
-    <message>
         <source>Battering Ram</source>
         <translation>Таран</translation>
     </message>
@@ -10759,6 +10523,392 @@ Build time: %3s</source>
 %1
 Цена: %2
 Время: %3 с</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionConstructionCard</name>
+    <message>
+        <source>reserve</source>
+        <translation>резерва</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionEmptyHint</name>
+    <message>
+        <source>No Barracks</source>
+        <translation>Казарм нет</translation>
+    </message>
+    <message>
+        <source>Select a barracks to recruit units</source>
+        <translation>Выделите казармы, чтобы нанимать отряды</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionFarmSection</name>
+    <message>
+        <source>FARM</source>
+        <translation>ФЕРМА</translation>
+    </message>
+    <message>
+        <source>Grain ripens every %1s and a builder reaps %2 food from it</source>
+        <translation>Зерно созревает каждые %1 с, и строитель снимает с него %2 еды</translation>
+    </message>
+    <message>
+        <source>Ripe</source>
+        <translation>Созрело</translation>
+    </message>
+    <message>
+        <source>%1% grown · %2s</source>
+        <translation>рост %1% · %2 с</translation>
+    </message>
+    <message>
+        <source>Select your farm to see its crop.</source>
+        <translation>Выделите свою ферму, чтобы увидеть её урожай.</translation>
+    </message>
+    <message>
+        <source>A builder is on its way to harvest.</source>
+        <translation>Строитель уже идёт на жатву.</translation>
+    </message>
+    <message>
+        <source>Send a builder with Collect, or leave Auto Gather running.</source>
+        <translation>Отправьте строителя приказом «Собрать» либо оставьте автосбор включённым.</translation>
+    </message>
+    <message>
+        <source>Harvested %1 times so far.</source>
+        <translation>Собрано урожаев: %1.</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionHomeSection</name>
+    <message>
+        <source>HOME RECRUITMENT</source>
+        <translation>НАБОР В ДОМЕ</translation>
+    </message>
+    <message>
+        <source>Available civilians: %1 / %2</source>
+        <translation>Доступно гражданских: %1 / %2</translation>
+    </message>
+    <message>
+        <source>Recruit %1
+Cost: %2
+Build time: %3s
+Use Deliver mode, then click a friendly barracks to add to its reserve.</source>
+        <translation>Нанять: %1
+Цена: %2
+Время: %3 с
+Включите режим «Доставить», затем щёлкните свои казармы, чтобы пополнить их резерв.</translation>
+    </message>
+    <message>
+        <source>families</source>
+        <translation>семьи</translation>
+    </message>
+    <message>
+        <source>This home already committed its 3 civilians</source>
+        <translation>Этот дом уже отдал своих 3 гражданских</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionMarketplaceSection</name>
+    <message>
+        <source>%1 %2</source>
+        <translation>%1 %2</translation>
+    </message>
+    <message>
+        <source>MARKETPLACE</source>
+        <translation>РЫНОК</translation>
+    </message>
+    <message>
+        <source>Sell %1 %2 for %3 gold</source>
+        <translation>Продайте %1 %2 за %3 золота</translation>
+    </message>
+    <message>
+        <source>· lots of %1</source>
+        <translation>· партиями по %1</translation>
+    </message>
+    <message>
+        <source>Only your own marketplace can trade. Select it to buy or sell.</source>
+        <translation>Торговать может только ваш собственный рынок. Выберите его, чтобы покупать или продавать.</translation>
+    </message>
+    <message>
+        <source>Buy %1 · %2g</source>
+        <translation>Купить %1 · %2 з.</translation>
+    </message>
+    <message>
+        <source>Sell %1 · +%2g</source>
+        <translation>Продать %1 · +%2 з.</translation>
+    </message>
+    <message>
+        <source>Spend %1 gold for %2 %3</source>
+        <translation>Потратить %1 золота на %2 ед. (%3)</translation>
+    </message>
+    <message>
+        <source>Not enough gold: %1 needed</source>
+        <translation>Недостаточно золота: нужно %1</translation>
+    </message>
+    <message>
+        <source>Not enough %1: %2 needed</source>
+        <translation>Недостаточно ресурса «%1»: нужно %2</translation>
+    </message>
+    <message>
+        <source>ALLIES</source>
+        <translation>СОЮЗНИКИ</translation>
+    </message>
+    <message>
+        <source>No allies to trade with in this battle.</source>
+        <translation>В этой битве нет союзников для обмена.</translation>
+    </message>
+    <message>
+        <source>Send</source>
+        <translation>Отправить</translation>
+    </message>
+    <message>
+        <source>Give %1 %2 to %3</source>
+        <translation>Передать %1 %2: %3</translation>
+    </message>
+    <message>
+        <source>Request</source>
+        <translation>Попросить</translation>
+    </message>
+    <message>
+        <source>Ask %1 for %2 %3. A generous commander with plenty to spare says yes; a warlike or poor one keeps it.</source>
+        <translation>Попросить у %1 %2 %3. Щедрый полководец с запасами согласится; воинственный или бедный оставит себе.</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionPanel</name>
+    <message>
+        <source>Mounted Knight</source>
+        <translation>Конный рыцарь</translation>
+    </message>
+    <message>
+        <source>Horse Archer</source>
+        <translation>Конный лучник</translation>
+    </message>
+    <message>
+        <source>Horse Spearman</source>
+        <translation>Конный копейщик</translation>
+    </message>
+    <message>
+        <source>War Elephant</source>
+        <translation>Боевой слон</translation>
+    </message>
+    <message>
+        <source>reserve</source>
+        <translation>резерва</translation>
+    </message>
+    <message>
+        <source>Recruit %1
+Cost: %2
+Build time: %3s
+Carthage exclusive</source>
+        <translation>Нанять: %1
+Цена: %2
+Время: %3 с
+Только для Карфагена</translation>
+    </message>
+    <message>
+        <source>Recruit %1
+Cost: %2
+Build time: %3s</source>
+        <translation>Нанять: %1
+Цена: %2
+Время: %3 с</translation>
+    </message>
+    <message>
+        <source>Food</source>
+        <translation>Еда</translation>
+    </message>
+    <message>
+        <source>Wood</source>
+        <translation>Древесина</translation>
+    </message>
+    <message>
+        <source>Stone</source>
+        <translation>Камень</translation>
+    </message>
+    <message>
+        <source>Iron</source>
+        <translation>Железо</translation>
+    </message>
+    <message>
+        <source>Catapult</source>
+        <translation>Катапульта</translation>
+    </message>
+    <message>
+        <source>Long-range siege weapon
+Effective against structures</source>
+        <translation>Дальнобойная осадная машина
+Действенна против построек</translation>
+    </message>
+    <message>
+        <source>Ballista</source>
+        <translation>Баллиста</translation>
+    </message>
+    <message>
+        <source>Precision siege weapon
+Effective against units</source>
+        <translation>Точная осадная машина
+Действенна против отрядов</translation>
+    </message>
+    <message>
+        <source>Defense Tower</source>
+        <translation>Оборонительная башня</translation>
+    </message>
+    <message>
+        <source>Stationary defense structure
+Shoots arrows at enemies</source>
+        <translation>Неподвижная оборонительная постройка
+Стреляет по врагам из лука</translation>
+    </message>
+    <message>
+        <source>Home</source>
+        <translation>Дом</translation>
+    </message>
+    <message>
+        <source>Residential building
+Adds +50 reserve to the nearest barracks</source>
+        <translation>Жилая постройка
+Добавляет +50 резерва ближайшим казармам</translation>
+    </message>
+    <message>
+        <source>Marketplace</source>
+        <translation>Рынок</translation>
+    </message>
+    <message>
+        <source>Trade building
+Buy or sell resources for gold</source>
+        <translation>Торговая постройка
+Покупайте и продавайте ресурсы за золото</translation>
+    </message>
+    <message>
+        <source>Wall Segment</source>
+        <translation>Участок стены</translation>
+    </message>
+    <message>
+        <source>Wooden defensive wall
+Blocks enemy movement</source>
+        <translation>Деревянная оборонительная стена
+Перекрывает движение врага</translation>
+    </message>
+    <message>
+        <source>Wall Gate</source>
+        <translation>Ворота в стене</translation>
+    </message>
+    <message>
+        <source>Gated opening in a wall
+Opens for your troops and allies</source>
+        <translation>Проём с воротами в стене
+Открывается вашим отрядам и союзникам</translation>
+    </message>
+    <message>
+        <source>Need %1</source>
+        <translation>Не хватает: %1</translation>
+    </message>
+    <message>
+        <source>%1 %2</source>
+        <translation>%1 %2</translation>
+    </message>
+    <message>
+        <source>Cannot recruit</source>
+        <translation>Нанять нельзя</translation>
+    </message>
+    <message>
+        <source>Queue is full (5/5)</source>
+        <translation>Очередь заполнена (5/5)</translation>
+    </message>
+    <message>
+        <source>Not enough reserve</source>
+        <translation>Не хватает резерва</translation>
+    </message>
+    <message>
+        <source>Already building...</source>
+        <translation>Уже строит...</translation>
+    </message>
+    <message>
+        <source>Battering Ram</source>
+        <translation>Таран</translation>
+    </message>
+    <message>
+        <source>Gate-breaking siege engine
+Immune to most arrows</source>
+        <translation>Осадная машина для разбивания ворот
+Неуязвима для большинства стрел</translation>
+    </message>
+    <message>
+        <source>Siege Tower</source>
+        <translation>Осадная башня</translation>
+    </message>
+    <message>
+        <source>Docks against an enemy wall
+Infantry beside it climb up and cross</source>
+        <translation>Подходит к вражеской стене
+Пехота рядом взбирается и переходит</translation>
+    </message>
+    <message>
+        <source>Ladder</source>
+        <translation>Лестница</translation>
+    </message>
+    <message>
+        <source>Leans on the town side of your wall
+Another way up onto the wall walk</source>
+        <translation>Ставится с городской стороны стены
+Ещё один подъём на боевой ход</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionRallySection</name>
+    <message>
+        <source>Click Map to Set Rally</source>
+        <translation>Щёлкните карту, чтобы задать сбор</translation>
+    </message>
+    <message>
+        <source>Set Rally Point</source>
+        <translation>Задать точку сбора</translation>
+    </message>
+    <message>
+        <source>Set where newly recruited units will gather.
+Right-click to cancel.</source>
+        <translation>Укажите, где будут собираться новобранцы.
+Правая кнопка отменяет.</translation>
+    </message>
+    <message>
+        <source>Select a barracks or temple before setting a rally point.</source>
+        <translation>Выделите казармы или храм, прежде чем задавать точку сбора.</translation>
+    </message>
+    <message>
+        <source>Right-click to cancel</source>
+        <translation>Правая кнопка отменяет</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionTempleSection</name>
+    <message>
+        <source>%1s</source>
+        <translation>%1 с</translation>
+    </message>
+    <message>
+        <source>TEMPLE</source>
+        <translation>ХРАМ</translation>
+    </message>
+    <message>
+        <source>The sanctuary of your nation, raised in its own architectural style</source>
+        <translation>Святыня вашего народа, возведённая в его собственном стиле</translation>
+    </message>
+    <message>
+        <source>Watches over a wide stretch of ground and holds a settlement together</source>
+        <translation>Смотрит за широкой полосой земли и скрепляет поселение</translation>
+    </message>
+    <message>
+        <source>TAKE VOWS</source>
+        <translation>ПРИНЯТЬ ОБЕТ</translation>
+    </message>
+    <message>
+        <source>Temple reserve: %1 / %2</source>
+        <translation>Резерв храма: %1 / %2</translation>
+    </message>
+    <message>
+        <source>Deliver civilians here to raise the temple&apos;s reserve</source>
+        <translation>Доставляйте сюда гражданских, чтобы поднять резерв храма</translation>
     </message>
 </context>
 <context>

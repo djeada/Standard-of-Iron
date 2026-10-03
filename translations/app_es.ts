@@ -10206,49 +10206,33 @@ para ver la vista previa</translation>
     </message>
 </context>
 <context>
-    <name>ProductionPanel</name>
+    <name>ProductionBarracksQueue</name>
+    <message>
+        <source>%1s</source>
+        <translation>%1 s</translation>
+    </message>
+    <message>
+        <source>Idle</source>
+        <translation>Inactivo</translation>
+    </message>
+    <message>
+        <source>Barracks reserve: %1 / %2</source>
+        <translation>Reserva del cuartel: %1 / %2</translation>
+    </message>
+    <message>
+        <source>QUEUE</source>
+        <translation>COLA</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionBarracksRoster</name>
     <message>
         <source>RECRUIT UNITS</source>
         <translation>RECLUTAR UNIDADES</translation>
     </message>
-    <message>
-        <source>Queue is full (5/5)</source>
-        <translation>La cola está llena (5/5)</translation>
-    </message>
-    <message>
-        <source>Cannot recruit</source>
-        <translation>No se puede reclutar</translation>
-    </message>
-    <message>
-        <source>Set where newly recruited units will gather.
-Right-click to cancel.</source>
-        <translation>Fija dónde se reunirán las unidades recién reclutadas.
-Clic derecho para cancelar.</translation>
-    </message>
-    <message>
-        <source>Right-click to cancel</source>
-        <translation>Clic derecho para cancelar</translation>
-    </message>
-    <message>
-        <source>No Barracks</source>
-        <translation>Sin cuartel</translation>
-    </message>
-    <message>
-        <source>Select a barracks to recruit units</source>
-        <translation>Selecciona un cuartel para reclutar unidades</translation>
-    </message>
-    <message>
-        <source>Wood</source>
-        <translation>Madera</translation>
-    </message>
-    <message>
-        <source>Stone</source>
-        <translation>Piedra</translation>
-    </message>
-    <message>
-        <source>Iron</source>
-        <translation>Hierro</translation>
-    </message>
+</context>
+<context>
+    <name>ProductionBuilderSection</name>
     <message>
         <source>Catapult</source>
         <translation>Catapulta</translation>
@@ -10320,80 +10304,12 @@ Opens for your troops and allies</source>
 Se abre para tus tropas y aliados</translation>
     </message>
     <message>
-        <source>%1 %2</source>
-        <translation>%1 %2</translation>
-    </message>
-    <message>
-        <source>Not enough reserve</source>
-        <translation>No hay suficiente reserva</translation>
-    </message>
-    <message>
-        <source>Already building...</source>
-        <translation>Ya está construyendo...</translation>
-    </message>
-    <message>
         <source>%1s</source>
         <translation>%1 s</translation>
     </message>
     <message>
         <source>Idle</source>
         <translation>Inactivo</translation>
-    </message>
-    <message>
-        <source>Recruit %1
-Cost: %2
-Build time: %3s</source>
-        <translation>Reclutar %1
-Coste: %2
-Tiempo de producción: %3 s</translation>
-    </message>
-    <message>
-        <source>reserve</source>
-        <translation>reserva</translation>
-    </message>
-    <message>
-        <source>Recruit %1
-Cost: %2
-Build time: %3s
-Carthage exclusive</source>
-        <translation>Reclutar %1
-Coste: %2
-Tiempo de producción: %3 s
-Exclusivo de Cartago</translation>
-    </message>
-    <message>
-        <source>HOME RECRUITMENT</source>
-        <translation>RECLUTAMIENTO EN VIVIENDAS</translation>
-    </message>
-    <message>
-        <source>Available civilians: %1 / %2</source>
-        <translation>Civiles disponibles: %1 / %2</translation>
-    </message>
-    <message>
-        <source>Recruit %1
-Cost: %2
-Build time: %3s
-Use Deliver mode, then click a friendly barracks to add to its reserve.</source>
-        <translation>Reclutar %1
-Coste: %2
-Tiempo de producción: %3 s
-Usa el modo Entregar y luego haz clic en un cuartel aliado para aumentar su reserva.</translation>
-    </message>
-    <message>
-        <source>families</source>
-        <translation>familias</translation>
-    </message>
-    <message>
-        <source>This home already committed its 3 civilians</source>
-        <translation>Esta vivienda ya ha aportado sus 3 civiles</translation>
-    </message>
-    <message>
-        <source>Click Map to Set Rally</source>
-        <translation>Haz clic en el mapa para fijar la reunión</translation>
-    </message>
-    <message>
-        <source>Set Rally Point</source>
-        <translation>Fijar punto de reunión</translation>
     </message>
     <message>
         <source>BUILDER CONSTRUCTION</source>
@@ -10494,30 +10410,6 @@ Coste: %2
 Tiempo de construcción: %3 s</translation>
     </message>
     <message>
-        <source>MARKETPLACE</source>
-        <translation>MERCADO</translation>
-    </message>
-    <message>
-        <source>Sell %1 %2 for %3 gold</source>
-        <translation>Vende %1 %2 por %3 de oro</translation>
-    </message>
-    <message>
-        <source>Mounted Knight</source>
-        <translation>Caballero montado</translation>
-    </message>
-    <message>
-        <source>Horse Archer</source>
-        <translation>Arquero a caballo</translation>
-    </message>
-    <message>
-        <source>Horse Spearman</source>
-        <translation>Lancero a caballo</translation>
-    </message>
-    <message>
-        <source>War Elephant</source>
-        <translation>Elefante de guerra</translation>
-    </message>
-    <message>
         <source>Temple</source>
         <translation>Templo</translation>
     </message>
@@ -10536,26 +10428,6 @@ Tiempo de construcción: %3 s</translation>
 Wide vision and a durable settlement anchor</source>
         <translation>Santuario de la nación
 Amplia visión y un ancla duradera para el asentamiento</translation>
-    </message>
-    <message>
-        <source>TEMPLE</source>
-        <translation>TEMPLO</translation>
-    </message>
-    <message>
-        <source>The sanctuary of your nation, raised in its own architectural style</source>
-        <translation>El santuario de tu nación, levantado en su propio estilo arquitectónico</translation>
-    </message>
-    <message>
-        <source>Watches over a wide stretch of ground and holds a settlement together</source>
-        <translation>Vigila una amplia extensión de terreno y mantiene unido un asentamiento</translation>
-    </message>
-    <message>
-        <source>Food</source>
-        <translation>Comida</translation>
-    </message>
-    <message>
-        <source>Need %1</source>
-        <translation>Necesitas: %1</translation>
     </message>
     <message>
         <source>Build siege weapons, structures, and gather wood, stone, iron, and food</source>
@@ -10588,114 +10460,6 @@ Tiempo de construcción: %3 s</translation>
 Builders reap it for the food that recruits civilians</source>
         <translation>Cultiva grano por ciclos
 Los constructores lo siegan para la comida que recluta civiles</translation>
-    </message>
-    <message>
-        <source>FARM</source>
-        <translation>GRANJA</translation>
-    </message>
-    <message>
-        <source>Grain ripens every %1s and a builder reaps %2 food from it</source>
-        <translation>El grano madura cada %1 s y un constructor cosecha %2 de comida</translation>
-    </message>
-    <message>
-        <source>Ripe</source>
-        <translation>Maduro</translation>
-    </message>
-    <message>
-        <source>%1% grown · %2s</source>
-        <translation>%1 % crecido · %2 s</translation>
-    </message>
-    <message>
-        <source>Select your farm to see its crop.</source>
-        <translation>Selecciona tu granja para ver su cosecha.</translation>
-    </message>
-    <message>
-        <source>A builder is on its way to harvest.</source>
-        <translation>Un constructor va de camino a cosechar.</translation>
-    </message>
-    <message>
-        <source>Send a builder with Collect, or leave Auto Gather running.</source>
-        <translation>Envía un constructor con Recolectar o deja activa la Recolección automática.</translation>
-    </message>
-    <message>
-        <source>Harvested %1 times so far.</source>
-        <translation>Cosechada %1 veces hasta ahora.</translation>
-    </message>
-    <message>
-        <source>Select a barracks or temple before setting a rally point.</source>
-        <translation>Selecciona un cuartel o un templo antes de fijar un punto de reunión.</translation>
-    </message>
-    <message>
-        <source>TAKE VOWS</source>
-        <translation>TOMAR VOTOS</translation>
-    </message>
-    <message>
-        <source>Deliver civilians here to raise the temple&apos;s reserve</source>
-        <translation>Entrega civiles aquí para aumentar la reserva del templo</translation>
-    </message>
-    <message>
-        <source>Barracks reserve: %1 / %2</source>
-        <translation>Reserva del cuartel: %1 / %2</translation>
-    </message>
-    <message>
-        <source>Temple reserve: %1 / %2</source>
-        <translation>Reserva del templo: %1 / %2</translation>
-    </message>
-    <message>
-        <source>QUEUE</source>
-        <translation>COLA</translation>
-    </message>
-    <message>
-        <source>· lots of %1</source>
-        <translation>· lotes de %1</translation>
-    </message>
-    <message>
-        <source>Only your own marketplace can trade. Select it to buy or sell.</source>
-        <translation>Solo tu propio mercado puede comerciar. Selecciónalo para comprar o vender.</translation>
-    </message>
-    <message>
-        <source>Buy %1 · %2g</source>
-        <translation>Comprar %1 · %2 o</translation>
-    </message>
-    <message>
-        <source>Sell %1 · +%2g</source>
-        <translation>Vender %1 · +%2 o</translation>
-    </message>
-    <message>
-        <source>Spend %1 gold for %2 %3</source>
-        <translation>Gastar %1 de oro por %2 de %3</translation>
-    </message>
-    <message>
-        <source>Not enough gold: %1 needed</source>
-        <translation>Oro insuficiente: se necesitan %1</translation>
-    </message>
-    <message>
-        <source>Not enough %1: %2 needed</source>
-        <translation>%1 insuficiente: se necesitan %2</translation>
-    </message>
-    <message>
-        <source>ALLIES</source>
-        <translation>ALIADOS</translation>
-    </message>
-    <message>
-        <source>No allies to trade with in this battle.</source>
-        <translation>No hay aliados con los que comerciar en esta batalla.</translation>
-    </message>
-    <message>
-        <source>Send</source>
-        <translation>Enviar</translation>
-    </message>
-    <message>
-        <source>Give %1 %2 to %3</source>
-        <translation>Dar %1 de %2 a %3</translation>
-    </message>
-    <message>
-        <source>Request</source>
-        <translation>Pedir</translation>
-    </message>
-    <message>
-        <source>Ask %1 for %2 %3. A generous commander with plenty to spare says yes; a warlike or poor one keeps it.</source>
-        <translation>Pedir a %1 %2 de %3. Un comandante generoso con excedentes dirá que sí; uno belicoso o pobre se lo quedará.</translation>
     </message>
     <message>
         <source>Battering Ram</source>
@@ -10756,6 +10520,392 @@ Build time: %3s</source>
 %1
 Coste: %2
 Tiempo de construcción: %3 s</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionConstructionCard</name>
+    <message>
+        <source>reserve</source>
+        <translation>reserva</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionEmptyHint</name>
+    <message>
+        <source>No Barracks</source>
+        <translation>Sin cuartel</translation>
+    </message>
+    <message>
+        <source>Select a barracks to recruit units</source>
+        <translation>Selecciona un cuartel para reclutar unidades</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionFarmSection</name>
+    <message>
+        <source>FARM</source>
+        <translation>GRANJA</translation>
+    </message>
+    <message>
+        <source>Grain ripens every %1s and a builder reaps %2 food from it</source>
+        <translation>El grano madura cada %1 s y un constructor cosecha %2 de comida</translation>
+    </message>
+    <message>
+        <source>Ripe</source>
+        <translation>Maduro</translation>
+    </message>
+    <message>
+        <source>%1% grown · %2s</source>
+        <translation>%1 % crecido · %2 s</translation>
+    </message>
+    <message>
+        <source>Select your farm to see its crop.</source>
+        <translation>Selecciona tu granja para ver su cosecha.</translation>
+    </message>
+    <message>
+        <source>A builder is on its way to harvest.</source>
+        <translation>Un constructor va de camino a cosechar.</translation>
+    </message>
+    <message>
+        <source>Send a builder with Collect, or leave Auto Gather running.</source>
+        <translation>Envía un constructor con Recolectar o deja activa la Recolección automática.</translation>
+    </message>
+    <message>
+        <source>Harvested %1 times so far.</source>
+        <translation>Cosechada %1 veces hasta ahora.</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionHomeSection</name>
+    <message>
+        <source>HOME RECRUITMENT</source>
+        <translation>RECLUTAMIENTO EN VIVIENDAS</translation>
+    </message>
+    <message>
+        <source>Available civilians: %1 / %2</source>
+        <translation>Civiles disponibles: %1 / %2</translation>
+    </message>
+    <message>
+        <source>Recruit %1
+Cost: %2
+Build time: %3s
+Use Deliver mode, then click a friendly barracks to add to its reserve.</source>
+        <translation>Reclutar %1
+Coste: %2
+Tiempo de producción: %3 s
+Usa el modo Entregar y luego haz clic en un cuartel aliado para aumentar su reserva.</translation>
+    </message>
+    <message>
+        <source>families</source>
+        <translation>familias</translation>
+    </message>
+    <message>
+        <source>This home already committed its 3 civilians</source>
+        <translation>Esta vivienda ya ha aportado sus 3 civiles</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionMarketplaceSection</name>
+    <message>
+        <source>%1 %2</source>
+        <translation>%1 %2</translation>
+    </message>
+    <message>
+        <source>MARKETPLACE</source>
+        <translation>MERCADO</translation>
+    </message>
+    <message>
+        <source>Sell %1 %2 for %3 gold</source>
+        <translation>Vende %1 %2 por %3 de oro</translation>
+    </message>
+    <message>
+        <source>· lots of %1</source>
+        <translation>· lotes de %1</translation>
+    </message>
+    <message>
+        <source>Only your own marketplace can trade. Select it to buy or sell.</source>
+        <translation>Solo tu propio mercado puede comerciar. Selecciónalo para comprar o vender.</translation>
+    </message>
+    <message>
+        <source>Buy %1 · %2g</source>
+        <translation>Comprar %1 · %2 o</translation>
+    </message>
+    <message>
+        <source>Sell %1 · +%2g</source>
+        <translation>Vender %1 · +%2 o</translation>
+    </message>
+    <message>
+        <source>Spend %1 gold for %2 %3</source>
+        <translation>Gastar %1 de oro por %2 de %3</translation>
+    </message>
+    <message>
+        <source>Not enough gold: %1 needed</source>
+        <translation>Oro insuficiente: se necesitan %1</translation>
+    </message>
+    <message>
+        <source>Not enough %1: %2 needed</source>
+        <translation>%1 insuficiente: se necesitan %2</translation>
+    </message>
+    <message>
+        <source>ALLIES</source>
+        <translation>ALIADOS</translation>
+    </message>
+    <message>
+        <source>No allies to trade with in this battle.</source>
+        <translation>No hay aliados con los que comerciar en esta batalla.</translation>
+    </message>
+    <message>
+        <source>Send</source>
+        <translation>Enviar</translation>
+    </message>
+    <message>
+        <source>Give %1 %2 to %3</source>
+        <translation>Dar %1 de %2 a %3</translation>
+    </message>
+    <message>
+        <source>Request</source>
+        <translation>Pedir</translation>
+    </message>
+    <message>
+        <source>Ask %1 for %2 %3. A generous commander with plenty to spare says yes; a warlike or poor one keeps it.</source>
+        <translation>Pedir a %1 %2 de %3. Un comandante generoso con excedentes dirá que sí; uno belicoso o pobre se lo quedará.</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionPanel</name>
+    <message>
+        <source>Queue is full (5/5)</source>
+        <translation>La cola está llena (5/5)</translation>
+    </message>
+    <message>
+        <source>Cannot recruit</source>
+        <translation>No se puede reclutar</translation>
+    </message>
+    <message>
+        <source>Wood</source>
+        <translation>Madera</translation>
+    </message>
+    <message>
+        <source>Stone</source>
+        <translation>Piedra</translation>
+    </message>
+    <message>
+        <source>Iron</source>
+        <translation>Hierro</translation>
+    </message>
+    <message>
+        <source>Catapult</source>
+        <translation>Catapulta</translation>
+    </message>
+    <message>
+        <source>Long-range siege weapon
+Effective against structures</source>
+        <translation>Arma de asedio de largo alcance
+Eficaz contra estructuras</translation>
+    </message>
+    <message>
+        <source>Ballista</source>
+        <translation>Balista</translation>
+    </message>
+    <message>
+        <source>Precision siege weapon
+Effective against units</source>
+        <translation>Arma de asedio de precisión
+Eficaz contra unidades</translation>
+    </message>
+    <message>
+        <source>Defense Tower</source>
+        <translation>Torre defensiva</translation>
+    </message>
+    <message>
+        <source>Stationary defense structure
+Shoots arrows at enemies</source>
+        <translation>Estructura defensiva fija
+Dispara flechas a los enemigos</translation>
+    </message>
+    <message>
+        <source>Home</source>
+        <translation>Vivienda</translation>
+    </message>
+    <message>
+        <source>Residential building
+Adds +50 reserve to the nearest barracks</source>
+        <translation>Edificio residencial
+Añade +50 de reserva al cuartel más cercano</translation>
+    </message>
+    <message>
+        <source>Marketplace</source>
+        <translation>Mercado</translation>
+    </message>
+    <message>
+        <source>Trade building
+Buy or sell resources for gold</source>
+        <translation>Edificio de comercio
+Compra o vende recursos a cambio de oro</translation>
+    </message>
+    <message>
+        <source>Wall Segment</source>
+        <translation>Tramo de muralla</translation>
+    </message>
+    <message>
+        <source>Wooden defensive wall
+Blocks enemy movement</source>
+        <translation>Muralla defensiva de madera
+Bloquea el movimiento enemigo</translation>
+    </message>
+    <message>
+        <source>Wall Gate</source>
+        <translation>Puerta de muralla</translation>
+    </message>
+    <message>
+        <source>Gated opening in a wall
+Opens for your troops and allies</source>
+        <translation>Abertura con puerta en una muralla
+Se abre para tus tropas y aliados</translation>
+    </message>
+    <message>
+        <source>%1 %2</source>
+        <translation>%1 %2</translation>
+    </message>
+    <message>
+        <source>Not enough reserve</source>
+        <translation>No hay suficiente reserva</translation>
+    </message>
+    <message>
+        <source>Already building...</source>
+        <translation>Ya está construyendo...</translation>
+    </message>
+    <message>
+        <source>Recruit %1
+Cost: %2
+Build time: %3s</source>
+        <translation>Reclutar %1
+Coste: %2
+Tiempo de producción: %3 s</translation>
+    </message>
+    <message>
+        <source>reserve</source>
+        <translation>reserva</translation>
+    </message>
+    <message>
+        <source>Recruit %1
+Cost: %2
+Build time: %3s
+Carthage exclusive</source>
+        <translation>Reclutar %1
+Coste: %2
+Tiempo de producción: %3 s
+Exclusivo de Cartago</translation>
+    </message>
+    <message>
+        <source>Mounted Knight</source>
+        <translation>Caballero montado</translation>
+    </message>
+    <message>
+        <source>Horse Archer</source>
+        <translation>Arquero a caballo</translation>
+    </message>
+    <message>
+        <source>Horse Spearman</source>
+        <translation>Lancero a caballo</translation>
+    </message>
+    <message>
+        <source>War Elephant</source>
+        <translation>Elefante de guerra</translation>
+    </message>
+    <message>
+        <source>Food</source>
+        <translation>Comida</translation>
+    </message>
+    <message>
+        <source>Need %1</source>
+        <translation>Necesitas: %1</translation>
+    </message>
+    <message>
+        <source>Battering Ram</source>
+        <translation>Ariete</translation>
+    </message>
+    <message>
+        <source>Gate-breaking siege engine
+Immune to most arrows</source>
+        <translation>Máquina de asedio rompepuertas
+Inmune a la mayoría de flechas</translation>
+    </message>
+    <message>
+        <source>Siege Tower</source>
+        <translation>Torre de asedio</translation>
+    </message>
+    <message>
+        <source>Docks against an enemy wall
+Infantry beside it climb up and cross</source>
+        <translation>Se arrima a una muralla enemiga
+La infantería a su lado sube y pasa</translation>
+    </message>
+    <message>
+        <source>Ladder</source>
+        <translation>Escala</translation>
+    </message>
+    <message>
+        <source>Leans on the town side of your wall
+Another way up onto the wall walk</source>
+        <translation>Se apoya en el lado interior de tu muralla
+Otro acceso al adarve</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionRallySection</name>
+    <message>
+        <source>Set where newly recruited units will gather.
+Right-click to cancel.</source>
+        <translation>Fija dónde se reunirán las unidades recién reclutadas.
+Clic derecho para cancelar.</translation>
+    </message>
+    <message>
+        <source>Right-click to cancel</source>
+        <translation>Clic derecho para cancelar</translation>
+    </message>
+    <message>
+        <source>Click Map to Set Rally</source>
+        <translation>Haz clic en el mapa para fijar la reunión</translation>
+    </message>
+    <message>
+        <source>Set Rally Point</source>
+        <translation>Fijar punto de reunión</translation>
+    </message>
+    <message>
+        <source>Select a barracks or temple before setting a rally point.</source>
+        <translation>Selecciona un cuartel o un templo antes de fijar un punto de reunión.</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionTempleSection</name>
+    <message>
+        <source>%1s</source>
+        <translation>%1 s</translation>
+    </message>
+    <message>
+        <source>TEMPLE</source>
+        <translation>TEMPLO</translation>
+    </message>
+    <message>
+        <source>The sanctuary of your nation, raised in its own architectural style</source>
+        <translation>El santuario de tu nación, levantado en su propio estilo arquitectónico</translation>
+    </message>
+    <message>
+        <source>Watches over a wide stretch of ground and holds a settlement together</source>
+        <translation>Vigila una amplia extensión de terreno y mantiene unido un asentamiento</translation>
+    </message>
+    <message>
+        <source>TAKE VOWS</source>
+        <translation>TOMAR VOTOS</translation>
+    </message>
+    <message>
+        <source>Deliver civilians here to raise the temple&apos;s reserve</source>
+        <translation>Entrega civiles aquí para aumentar la reserva del templo</translation>
+    </message>
+    <message>
+        <source>Temple reserve: %1 / %2</source>
+        <translation>Reserva del templo: %1 / %2</translation>
     </message>
 </context>
 <context>
