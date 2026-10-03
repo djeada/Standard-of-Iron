@@ -22,11 +22,6 @@ auto rts_camera() -> Camera {
   return camera;
 }
 
-auto view_limit() -> float {
-  return (static_cast<float>(k_map_size) * 0.5F - 0.5F) * k_tile +
-         Defaults::k_rts_edge_view_margin_tiles * k_tile;
-}
-
 auto map_half() -> float {
   return (static_cast<float>(k_map_size) * 0.5F - 0.5F) * k_tile;
 }
@@ -35,13 +30,10 @@ void settle(Camera& camera) {
   camera.update(10.0F);
 }
 
-void expect_view_on_map(const Camera& camera, const char* context) {
+void expect_focus_on_map(const Camera& camera, const char* context) {
   QVector3D top;
   ASSERT_TRUE(camera.top_of_screen_ground_point(top))
       << context << ": the top of the screen looks at the sky";
-  float const limit = view_limit() + 0.05F;
-  EXPECT_LE(std::abs(top.x()), limit) << context << " top x " << top.x();
-  EXPECT_LE(std::abs(top.z()), limit) << context << " top z " << top.z();
   float const half = map_half() + 0.05F;
   EXPECT_LE(std::abs(camera.get_target().x()), half) << context;
   EXPECT_LE(std::abs(camera.get_target().z()), half) << context;
@@ -88,7 +80,7 @@ TEST(CameraBounds, ZoomingOutTiltsTheViewTowardTopDown) {
   EXPECT_LE(camera.get_pitch_deg(), Defaults::k_rts_pitch_max_far + 0.5F);
 }
 
-TEST(CameraBounds, PanningToEveryEdgeKeepsTheTopOfTheScreenOnTheMap) {
+TEST(CameraBounds, PanningToEveryEdgeKeepsTheFocusOnTheMap) {
   for (float const yaw : {0.0F, 45.0F, 90.0F, 180.0F, 225.0F, 270.0F}) {
     for (float const distance : {Defaults::k_min_rts_distance, 20.0F, 400.0F}) {
       struct Direction {
@@ -104,23 +96,60 @@ TEST(CameraBounds, PanningToEveryEdgeKeepsTheTopOfTheScreenOnTheMap) {
         Camera camera = rts_camera();
         camera.set_rts_view(QVector3D(0, 0, 0), distance, 45.0F, yaw);
         settle(camera);
-        expect_view_on_map(camera, "after reset");
+        expect_focus_on_map(camera, "after reset");
         for (int step = 0; step < 150; ++step) {
           camera.pan(dir.right * 2.0F, dir.forward * 2.0F);
         }
         settle(camera);
-        expect_view_on_map(camera, "after panning to the edge");
+        expect_focus_on_map(camera, "after panning to the edge");
       }
     }
   }
 }
 
-TEST(CameraBounds, AnAuthoredFramingAtTheCornerIsPulledOntoTheMap) {
+TEST(CameraBounds, AnAuthoredFramingOutsideTheMapIsClampedToTheCorner) {
   Camera camera = rts_camera();
-  camera.set_rts_view(QVector3D(map_half(), 0, map_half()), 300.0F, 45.0F, 225.0F);
+  camera.set_rts_view(QVector3D(300, 0, 300), 300.0F, 45.0F, 225.0F);
   settle(camera);
   EXPECT_LE(camera.get_distance(), camera.max_distance() + 0.01F);
-  expect_view_on_map(camera, "authored corner framing");
+  expect_focus_on_map(camera, "authored corner framing");
+  EXPECT_NEAR(camera.get_target().x(), map_half(), 0.01F);
+  EXPECT_NEAR(camera.get_target().z(), map_half(), 0.01F);
+}
+
+TEST(CameraBounds, EveryPlayablePointCanBeCenteredAtEveryYawAndZoom) {
+  for (float const yaw : {0.0F, 45.0F, 90.0F, 180.0F, 225.0F, 270.0F}) {
+    for (float const distance : {4.0F, 20.0F, 85.0F}) {
+      for (float const x : {-map_half(), 0.0F, map_half()}) {
+        for (float const z : {-map_half(), 0.0F, map_half()}) {
+          SCOPED_TRACE(::testing::Message() << "yaw=" << yaw << " distance=" << distance
+                                            << " target=" << x << "," << z);
+          Camera camera = rts_camera();
+          camera.set_rts_view(QVector3D(0, 0, 0), distance, 55.0F, yaw);
+          const QVector3D offset = camera.get_position() - camera.get_target();
+          camera.translate(QVector3D(x, 0, z));
+          settle(camera);
+          EXPECT_NEAR(camera.get_target().x(), x, 0.01F);
+          EXPECT_NEAR(camera.get_target().z(), z, 0.01F);
+          EXPECT_LT((camera.get_position() - camera.get_target() - offset).length(),
+                    0.01F);
+        }
+      }
+    }
+  }
+}
+
+TEST(CameraBounds, OrbitAndZoomAtTheEdgeKeepTheSameFocus) {
+  Camera camera = rts_camera();
+  camera.set_rts_view(QVector3D(25, 0, -25), 20.0F, 55.0F, 225.0F);
+  const QVector3D focus(25, 0, -25);
+  for (int i = 0; i < 8; ++i) {
+    camera.orbit(45.0F, 0.0F);
+    settle(camera);
+    EXPECT_LT((camera.get_target() - focus).length(), 0.01F);
+    camera.zoom_distance(-1.0F);
+    EXPECT_LT((camera.get_target() - focus).length(), 0.01F);
+  }
 }
 
 TEST(CameraBounds, FreeCamerasKeepTheLegacyBand) {
@@ -160,16 +189,28 @@ TEST(CameraBounds, TheEyeStaysClearOfRaisedTerrain) {
   EXPECT_GE(clearance(), Defaults::k_rts_terrain_clearance - 0.01F);
 }
 
-TEST(CameraBounds, TheEyeNeverLeavesTheMapMargin) {
+TEST(CameraBounds, PanningAlongAnEdgeAndBackInRespondsImmediately) {
   Camera camera = rts_camera();
-  camera.set_rts_view(QVector3D(0, 0, 0), 40.0F, 45.0F, 0.0F);
+  camera.set_rts_view(QVector3D(0, 0, 0), 40.0F, 55.0F, 0.0F);
   for (int step = 0; step < 150; ++step) {
     camera.pan(0.0F, -2.0F);
   }
   settle(camera);
-  float const limit = view_limit() + 0.05F;
-  EXPECT_LE(std::abs(camera.get_position().z()), limit);
-  EXPECT_LE(std::abs(camera.get_position().x()), limit);
+  EXPECT_NEAR(camera.get_target().z(), map_half(), 0.01F);
+  camera.pan(2.0F, -2.0F);
+  EXPECT_NEAR(camera.get_target().x(), 2.0F, 0.01F);
+  EXPECT_NEAR(camera.get_target().z(), map_half(), 0.01F);
+  camera.pan(0.0F, 2.0F);
+  EXPECT_NEAR(camera.get_target().z(), map_half() - 2.0F, 0.01F);
+}
+
+TEST(CameraBounds, RectangularMapsUseTheirOwnTileScaledLimits) {
+  Camera camera = rts_camera();
+  camera.set_map_bounds({.tile_size = 2.0F, .width = 40, .height = 80});
+  camera.set_rts_view(QVector3D(0, 0, 0), 40.0F, 55.0F, 45.0F);
+  camera.translate(QVector3D(500, 0, -500));
+  EXPECT_NEAR(camera.get_target().x(), 39.0F, 0.01F);
+  EXPECT_NEAR(camera.get_target().z(), -79.0F, 0.01F);
 }
 
 } // namespace

@@ -349,50 +349,20 @@ auto Camera::top_of_screen_ground_point(QVector3D& out_world) const -> bool {
   return finite(out_world);
 }
 
-void Camera::clamp_view_to_map() {
-  if (!m_rts_constraints || !m_map_bounds.valid()) {
+void Camera::clamp_target_to_map() {
+  if (!m_map_bounds.valid()) {
     return;
   }
-  const float tile = m_map_bounds.tile_size;
-  const float half_w = (static_cast<float>(m_map_bounds.width) * 0.5F) - 0.5F;
-  const float half_h = (static_cast<float>(m_map_bounds.height) * 0.5F) - 0.5F;
-  if (half_w < 0.0F || half_h < 0.0F) {
-    return;
-  }
-  const float margin = CameraDefaults::k_rts_edge_view_margin_tiles * tile;
-  const float limit_x = half_w * tile + margin;
-  const float limit_z = half_h * tile + margin;
+  const float half_x =
+      (static_cast<float>(m_map_bounds.width) - 1.0F) * 0.5F * m_map_bounds.tile_size;
+  const float half_z =
+      (static_cast<float>(m_map_bounds.height) - 1.0F) * 0.5F * m_map_bounds.tile_size;
 
-  QVector3D top;
-  if (!top_of_screen_ground_point(top)) {
-
-    QVector3D flat = m_front;
-    flat.setY(0.0F);
-    flat = safe_normalize(flat, QVector3D(0, 0, -1));
-    top = m_position + flat * m_far_plane;
-  }
-
-  QVector3D shift(0, 0, 0);
-
-  auto const overshoot = [](float value, float limit) -> float {
-    if (value > limit) {
-      return limit - value;
-    }
-    if (value < -limit) {
-      return -limit - value;
-    }
-    return 0.0F;
-  };
-  auto const larger = [](float a, float b) -> float {
-    return std::abs(a) >= std::abs(b) ? a : b;
-  };
-  shift.setX(larger(overshoot(top.x(), limit_x), overshoot(m_position.x(), limit_x)));
-  shift.setZ(larger(overshoot(top.z(), limit_z), overshoot(m_position.z(), limit_z)));
-  if (shift.isNull() || !finite(shift)) {
-    return;
-  }
-  m_position += shift;
+  const QVector3D shift(std::clamp(m_target.x(), -half_x, half_x) - m_target.x(),
+                        0.0F,
+                        std::clamp(m_target.z(), -half_z, half_z) - m_target.z());
   m_target += shift;
+  m_position += shift;
   m_last_position = m_position;
   invalidate_cached_geometry();
 }
@@ -698,10 +668,6 @@ void Camera::update(float dt) {
   integrate_ground_follow(dt);
 }
 
-// The RTS camera looks at the ground under its target: over a hill or a mound
-// the whole rig eases up onto the crown, so the view stays as far from what it
-// shows as the zoom says, and the centre of the screen is the ground there
-// rather than a point buried inside the hill.
 void Camera::integrate_ground_follow(float dt) {
   if (!m_rts_constraints || !m_ground_height_sampler || dt <= 0.0F) {
     return;
@@ -1072,6 +1038,13 @@ void Camera::apply_soft_boundaries(bool is_panning) {
     m_position.setY(m_ground_y + m_min_height);
   }
 
+  if (m_rts_constraints) {
+    clamp_target_to_map();
+    enforce_pitch_limits();
+    clamp_eye_above_terrain();
+    return;
+  }
+
   if (!m_map_bounds.valid()) {
     return;
   }
@@ -1167,9 +1140,7 @@ void Camera::apply_soft_boundaries(bool is_panning) {
 
   if (!target_adjustment.isNull()) {
     float const target_smoothness =
-        m_rts_constraints
-            ? 1.0F
-            : (is_panning ? k_boundary_panning_smoothness : k_boundary_smoothness);
+        is_panning ? k_boundary_panning_smoothness : k_boundary_smoothness;
     m_target += target_adjustment * target_smoothness;
 
     if (target_to_pos_dist > k_tiny) {
@@ -1181,8 +1152,6 @@ void Camera::apply_soft_boundaries(bool is_panning) {
   m_last_position = m_position;
 
   enforce_pitch_limits();
-  clamp_view_to_map();
-  clamp_eye_above_terrain();
 }
 
 void Camera::enforce_pitch_limits() {

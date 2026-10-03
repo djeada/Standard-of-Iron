@@ -4,6 +4,8 @@
 
 #include "game/camera_framing.h"
 #include "game/game_config.h"
+#include "game/map/map_loader.h"
+#include "game/map/terrain_service.h"
 #include "game/render_bridge/camera_service.h"
 #include "game/session/session_context.h"
 #include "scene/camera.h"
@@ -195,5 +197,79 @@ TEST_F(CameraFramingTest, FollowingAJumpingSelectionKeepsTheViewingAngle) {
     EXPECT_NEAR(camera.get_pitch_deg(), pitch_before, 0.5F)
         << "frame " << frame << ": the camera swung towards the horizon mid-follow";
     EXPECT_NEAR(height_above_target(camera), height_before, 1.0F);
+  }
+}
+
+TEST_F(CameraFramingTest, SiegeTownCanBeReachedFromCampWithoutRotating) {
+  Game::Map::MapDefinition map;
+  QString error;
+  ASSERT_TRUE(Game::Map::MapLoader::load_from_json_file(
+      QStringLiteral("assets/maps/map_victumulae.json"), map, &error))
+      << error.toStdString();
+  Game::Map::TerrainService terrain;
+  terrain.initialize(map);
+  auto const world_point = [&](float x, float z) -> QVector3D {
+    return {(x - (map.grid.width - 1) * 0.5F) * map.grid.tile_size,
+            0.0F,
+            (z - (map.grid.height - 1) * 0.5F) * map.grid.tile_size};
+  };
+
+  for (float const distance : {map.camera.distance, 85.0F}) {
+    for (float const yaw : {map.camera.yaw_deg, 0.0F, 90.0F, 180.0F, 270.0F}) {
+      SCOPED_TRACE(::testing::Message() << "distance=" << distance << " yaw=" << yaw);
+      Render::GL::Camera camera;
+      camera.set_map_bounds({.tile_size = map.grid.tile_size,
+                             .width = map.grid.width,
+                             .height = map.grid.height});
+      camera.set_rts_constraints(true);
+      camera.set_ground_height_sampler([&](float x, float z) {
+        return terrain.get_height_map()->get_height_at(x, z);
+      });
+      camera.set_perspective(
+          map.camera.fov_y, 16.0F / 9.0F, map.camera.near_plane, map.camera.far_plane);
+      camera.set_rts_view(world_point(80, 130), distance, map.camera.tilt_deg, yaw);
+      const float pitch = camera.get_pitch_deg();
+      const QVector3D heading = camera.get_forward_vector();
+
+      for (const QVector3D goal : {world_point(80, 82),
+                                   world_point(80, 50),
+                                   world_point(80, 25),
+                                   world_point(40, 50),
+                                   world_point(120, 50)}) {
+        SCOPED_TRACE(::testing::Message() << "goal=" << goal.x() << "," << goal.z());
+        for (int frame = 0; frame < 360; ++frame) {
+          QVector3D delta = goal - camera.get_target();
+          delta.setY(0.0F);
+          if (delta.length() > 0.5F) {
+            delta = delta.normalized() * 0.5F;
+          }
+          QVector3D forward = camera.get_forward_vector();
+          forward.setY(0.0F);
+          forward.normalize();
+          camera.pan_eased(QVector3D::dotProduct(delta, camera.get_right_vector()),
+                           QVector3D::dotProduct(delta, forward));
+          camera.update(1.0F / 60.0F);
+        }
+        EXPECT_NEAR(camera.get_target().x(), goal.x(), 0.1F);
+        EXPECT_NEAR(camera.get_target().z(), goal.z(), 0.1F);
+        EXPECT_NEAR(camera.get_pitch_deg(), pitch, 0.1F);
+        EXPECT_LT((camera.get_forward_vector() - heading).length(), 0.01F);
+        const QVector3D eye = camera.get_position();
+        EXPECT_GE(eye.y() - terrain.get_height_map()->get_height_at(eye.x(), eye.z()),
+                  Render::GL::CameraDefaults::k_rts_terrain_clearance - 0.01F);
+        if (goal == world_point(80, 50)) {
+          const float height =
+              terrain.get_height_map()->get_height_at(goal.x(), goal.z());
+          ASSERT_GT(height, 5.0F) << "the route must reach the raised citadel";
+          EXPECT_NEAR(camera.get_target().y(), height, 0.2F);
+          QPointF screen;
+          ASSERT_TRUE(camera.world_to_screen(
+              QVector3D(goal.x(), height, goal.z()), 1920, 1080, screen));
+          EXPECT_NEAR(screen.x(), 960.0, 2.0);
+
+          EXPECT_NEAR(screen.y(), 540.0, 4.0);
+        }
+      }
+    }
   }
 }

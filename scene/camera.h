@@ -30,8 +30,6 @@ inline constexpr float k_rts_pitch_max_far = -52.0F;
 inline constexpr float k_rts_max_distance_diagonal_ratio = 0.55F;
 inline constexpr float k_rts_min_max_distance = 30.0F;
 
-inline constexpr float k_rts_edge_view_margin_tiles = 4.0F;
-
 inline constexpr float k_rts_terrain_clearance = 2.5F;
 } // namespace CameraDefaults
 
@@ -256,7 +254,7 @@ private:
   void rebuild_cached_geometry() const;
 
   void clamp_above_ground();
-  void clamp_view_to_map();
+  void clamp_target_to_map();
   void integrate_pan(float dt);
   void integrate_zoom(float dt);
   void integrate_orbit(float dt);
