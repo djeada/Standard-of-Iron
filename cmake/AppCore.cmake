@@ -172,11 +172,15 @@ target_include_directories(app_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 # without it the platform seam is a no-op and nothing else changes.
 set(STEAMWORKS_SDK_DIR "" CACHE PATH "Unpacked Steamworks SDK (enables the Steam backend)")
 if(STEAMWORKS_SDK_DIR)
-    find_library(STEAM_API_LIB steam_api
-        PATHS ${STEAMWORKS_SDK_DIR}/redistributable_bin/linux64
-              ${STEAMWORKS_SDK_DIR}/redistributable_bin/win64
-              ${STEAMWORKS_SDK_DIR}/redistributable_bin/osx
-        NO_DEFAULT_PATH)
+    find_library(
+        STEAM_API_LIB
+        steam_api
+        PATHS
+            ${STEAMWORKS_SDK_DIR}/redistributable_bin/linux64
+            ${STEAMWORKS_SDK_DIR}/redistributable_bin/win64
+            ${STEAMWORKS_SDK_DIR}/redistributable_bin/osx
+        NO_DEFAULT_PATH
+    )
     if(NOT STEAM_API_LIB)
         message(FATAL_ERROR "STEAMWORKS_SDK_DIR is set but libsteam_api was not found")
     endif()

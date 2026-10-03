@@ -225,15 +225,15 @@ Icon names are Steam's built-in timeline icons; check them on an RC build.
 **Stats** (`MatchStatsReporter`, one `StoreStats` per match). Create these in
 Steamworks as INT stats; the API names are permanent:
 
-| API name                 | Kind    | Meaning                                  |
-| ------------------------ | ------- | ---------------------------------------- |
-| `soi_battles_won`        | total   | matches won                              |
-| `soi_missions_completed` | total   | campaign missions won                    |
-| `soi_enemies_defeated`   | total   | enemies killed (per-owner sim counters)  |
-| `soi_units_recruited`    | total   | troops recruited                         |
-| `soi_waves_cleared`      | total   | mission waves cleared                    |
-| `soi_best_match_kills`   | maximum | most kills in one match                  |
-| `soi_highest_army_size`  | maximum | largest army (men) at one time           |
+| API name                 | Kind    | Meaning                                 |
+| ------------------------ | ------- | --------------------------------------- |
+| `soi_battles_won`        | total   | matches won                             |
+| `soi_missions_completed` | total   | campaign missions won                   |
+| `soi_enemies_defeated`   | total   | enemies killed (per-owner sim counters) |
+| `soi_units_recruited`    | total   | troops recruited                        |
+| `soi_waves_cleared`      | total   | mission waves cleared                   |
+| `soi_best_match_kills`   | maximum | most kills in one match                 |
+| `soi_highest_army_size`  | maximum | largest army (men) at one time          |
 
 Not tracked: buildings constructed and commander defeats. The simulation has
 no authoritative counter for them yet; adding one means a new sim event and a
