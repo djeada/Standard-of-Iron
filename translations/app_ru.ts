@@ -10094,121 +10094,6 @@ to see preview</source>
     </message>
 </context>
 <context>
-    <name>ProductionManager</name>
-    <message>
-        <source>Select a tree to chop.</source>
-        <translation>Укажите дерево для рубки.</translation>
-    </message>
-    <message>
-        <source>Select a boulder to collect.</source>
-        <translation>Укажите валун для сбора.</translation>
-    </message>
-    <message>
-        <source>Select iron ore to collect.</source>
-        <translation>Укажите железную руду для сбора.</translation>
-    </message>
-    <message>
-        <source>No available builder can chop that tree.</source>
-        <translation>Ни один свободный строитель это дерево срубить не может.</translation>
-    </message>
-    <message>
-        <source>No available builder can collect that boulder.</source>
-        <translation>Ни один свободный строитель этот валун собрать не может.</translation>
-    </message>
-    <message>
-        <source>No available builder can collect that iron ore.</source>
-        <translation>Ни один свободный строитель эту железную руду собрать не может.</translation>
-    </message>
-    <message>
-        <source>No available builder can collect that resource.</source>
-        <translation>Ни один свободный строитель этот ресурс собрать не может.</translation>
-    </message>
-    <message>
-        <source>No walkable spot near that tree.</source>
-        <translation>У этого дерева нет проходимого места.</translation>
-    </message>
-    <message>
-        <source>No walkable spot near that boulder.</source>
-        <translation>У этого валуна нет проходимого места.</translation>
-    </message>
-    <message>
-        <source>No walkable spot near that iron ore.</source>
-        <translation>У этой железной руды нет проходимого места.</translation>
-    </message>
-    <message>
-        <source>No walkable spot near that resource.</source>
-        <translation>У этого ресурса нет проходимого места.</translation>
-    </message>
-    <message>
-        <source>Select a tree, boulder, ore deposit, ripe farm or sheep.</source>
-        <translation>Укажите дерево, валун, залежь руды, созревшее поле или овцу.</translation>
-    </message>
-    <message>
-        <source>Something is already standing here.</source>
-        <translation>Здесь уже что-то стоит.</translation>
-    </message>
-    <message>
-        <source>This ground cannot be cleared to build on.</source>
-        <translation>Эту землю под стройку не расчистить.</translation>
-    </message>
-    <message>
-        <source>Nothing can be built on the water.</source>
-        <translation>На воде строить нельзя.</translation>
-    </message>
-    <message>
-        <source>The ground here is too steep to build on.</source>
-        <translation>Земля здесь слишком крута для стройки.</translation>
-    </message>
-    <message>
-        <source>That is beyond the edge of the battlefield.</source>
-        <translation>Это за краем поля боя.</translation>
-    </message>
-    <message>
-        <source>That structure cannot be placed.</source>
-        <translation>Эту постройку сюда не поставить.</translation>
-    </message>
-    <message>
-        <source>Building factory unavailable.</source>
-        <translation>Фабрика построек недоступна.</translation>
-    </message>
-    <message>
-        <source>A wall already stands here.</source>
-        <translation>Здесь уже стоит стена.</translation>
-    </message>
-    <message>
-        <source>No part of this wall can stand there.</source>
-        <translation>Ни одна часть этой стены там встать не может.</translation>
-    </message>
-    <message>
-        <source>Drag out a wall line first.</source>
-        <translation>Сначала протяните линию стены.</translation>
-    </message>
-    <message>
-        <source>Choose a build location.</source>
-        <translation>Выберите место стройки.</translation>
-    </message>
-    <message>
-        <source>That resource is already assigned.</source>
-        <translation>Этот ресурс уже занят.</translation>
-    </message>
-    <message>
-        <source>Nothing here is worth harvesting.</source>
-        <translation>Здесь нечего собирать.</translation>
-    </message>
-    <message>
-        <source>No resource here to work.</source>
-        <translation>Здесь нет ресурса для работы.</translation>
-    </message>
-    <message>
-        <source>No valid wall segments in that drag.</source>
-        <translation>В этом протягивании нет годных участков стены.</translation>
-    </message>
-    <message>
-        <source>No available builder.</source>
-        <translation>Свободного строителя нет.</translation>
-    </message>
-</context>
-<context>
     <name>ProductionBarracksQueue</name>
     <message>
         <source>QUEUE</source>
@@ -10605,6 +10490,121 @@ Use Deliver mode, then click a friendly barracks to add to its reserve.</source>
     <message>
         <source>This home already committed its 3 civilians</source>
         <translation>Этот дом уже отдал своих 3 гражданских</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionManager</name>
+    <message>
+        <source>Select a tree to chop.</source>
+        <translation>Укажите дерево для рубки.</translation>
+    </message>
+    <message>
+        <source>Select a boulder to collect.</source>
+        <translation>Укажите валун для сбора.</translation>
+    </message>
+    <message>
+        <source>Select iron ore to collect.</source>
+        <translation>Укажите железную руду для сбора.</translation>
+    </message>
+    <message>
+        <source>No available builder can chop that tree.</source>
+        <translation>Ни один свободный строитель это дерево срубить не может.</translation>
+    </message>
+    <message>
+        <source>No available builder can collect that boulder.</source>
+        <translation>Ни один свободный строитель этот валун собрать не может.</translation>
+    </message>
+    <message>
+        <source>No available builder can collect that iron ore.</source>
+        <translation>Ни один свободный строитель эту железную руду собрать не может.</translation>
+    </message>
+    <message>
+        <source>No available builder can collect that resource.</source>
+        <translation>Ни один свободный строитель этот ресурс собрать не может.</translation>
+    </message>
+    <message>
+        <source>No walkable spot near that tree.</source>
+        <translation>У этого дерева нет проходимого места.</translation>
+    </message>
+    <message>
+        <source>No walkable spot near that boulder.</source>
+        <translation>У этого валуна нет проходимого места.</translation>
+    </message>
+    <message>
+        <source>No walkable spot near that iron ore.</source>
+        <translation>У этой железной руды нет проходимого места.</translation>
+    </message>
+    <message>
+        <source>No walkable spot near that resource.</source>
+        <translation>У этого ресурса нет проходимого места.</translation>
+    </message>
+    <message>
+        <source>Select a tree, boulder, ore deposit, ripe farm or sheep.</source>
+        <translation>Укажите дерево, валун, залежь руды, созревшее поле или овцу.</translation>
+    </message>
+    <message>
+        <source>Something is already standing here.</source>
+        <translation>Здесь уже что-то стоит.</translation>
+    </message>
+    <message>
+        <source>This ground cannot be cleared to build on.</source>
+        <translation>Эту землю под стройку не расчистить.</translation>
+    </message>
+    <message>
+        <source>Nothing can be built on the water.</source>
+        <translation>На воде строить нельзя.</translation>
+    </message>
+    <message>
+        <source>The ground here is too steep to build on.</source>
+        <translation>Земля здесь слишком крута для стройки.</translation>
+    </message>
+    <message>
+        <source>That is beyond the edge of the battlefield.</source>
+        <translation>Это за краем поля боя.</translation>
+    </message>
+    <message>
+        <source>That structure cannot be placed.</source>
+        <translation>Эту постройку сюда не поставить.</translation>
+    </message>
+    <message>
+        <source>Building factory unavailable.</source>
+        <translation>Фабрика построек недоступна.</translation>
+    </message>
+    <message>
+        <source>A wall already stands here.</source>
+        <translation>Здесь уже стоит стена.</translation>
+    </message>
+    <message>
+        <source>No part of this wall can stand there.</source>
+        <translation>Ни одна часть этой стены там встать не может.</translation>
+    </message>
+    <message>
+        <source>Drag out a wall line first.</source>
+        <translation>Сначала протяните линию стены.</translation>
+    </message>
+    <message>
+        <source>Choose a build location.</source>
+        <translation>Выберите место стройки.</translation>
+    </message>
+    <message>
+        <source>That resource is already assigned.</source>
+        <translation>Этот ресурс уже занят.</translation>
+    </message>
+    <message>
+        <source>Nothing here is worth harvesting.</source>
+        <translation>Здесь нечего собирать.</translation>
+    </message>
+    <message>
+        <source>No resource here to work.</source>
+        <translation>Здесь нет ресурса для работы.</translation>
+    </message>
+    <message>
+        <source>No valid wall segments in that drag.</source>
+        <translation>В этом протягивании нет годных участков стены.</translation>
+    </message>
+    <message>
+        <source>No available builder.</source>
+        <translation>Свободного строителя нет.</translation>
     </message>
 </context>
 <context>
