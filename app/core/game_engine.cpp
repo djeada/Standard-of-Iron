@@ -707,6 +707,8 @@ void GameEngine::update(float dt) {
   const std::lock_guard<std::recursive_mutex> frame_lock(m_lifecycle.frame_mutex());
   simulate(dt);
   update_presentation(dt);
+  m_match_stats.note_army_size(m_entity_cache.player_troop_count);
+  m_achievements.army_size(m_entity_cache.player_troop_count);
 }
 
 void GameEngine::render(int pixel_width, int pixel_height) {
@@ -1325,6 +1327,7 @@ void GameEngine::apply_mission_setup() {
     return;
   }
   configure_mission_stages();
+  m_timeline.mission_started(m_campaign_manager->current_mission_id().toStdString());
 
   publish_wave_status();
   m_commander_messages->arm_start_cue();
@@ -1608,6 +1611,8 @@ void GameEngine::end_match_after_failed_load() {
   m_saves->stop_autosave_timer();
   emit troop_count_changed();
   emit selected_units_changed();
+  m_timeline.match_ended();
+  m_match_stats.match_ended();
   emit match_ended();
 }
 

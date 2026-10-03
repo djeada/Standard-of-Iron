@@ -208,6 +208,46 @@ What syncs, and why:
 The path has not moved since v0.1.0. Pre-Steam saves are therefore already in
 the synced location, and need no migration.
 
+## Steamworks features (Timeline, Stats, Achievements)
+
+The game talks to Steam through `app/platform/`: a sink interface per feature,
+a null sink, and a Steam sink compiled only when CMake is given
+`-DSTEAMWORKS_SDK_DIR=<unpacked SDK>`. The SDK cannot be redistributed, so
+CI and ordinary builds use the null sinks and behave exactly as before.
+
+Gameplay never calls Steam. `GameEngine::on_match_outcome` hands the match
+result to three adapters, and each one tolerates Steam being absent.
+
+**Timeline markers** (`SessionTimeline`): mission start, mission victory,
+mission loss, campaign complete, skirmish victory/defeat. Never per unit.
+Icon names are Steam's built-in timeline icons; check them on an RC build.
+
+**Stats** (`MatchStatsReporter`, one `StoreStats` per match). Create these in
+Steamworks as INT stats; the API names are permanent:
+
+| API name                 | Kind    | Meaning                                  |
+| ------------------------ | ------- | ---------------------------------------- |
+| `soi_battles_won`        | total   | matches won                              |
+| `soi_missions_completed` | total   | campaign missions won                    |
+| `soi_enemies_defeated`   | total   | enemies killed (per-owner sim counters)  |
+| `soi_units_recruited`    | total   | troops recruited                         |
+| `soi_waves_cleared`      | total   | mission waves cleared                    |
+| `soi_best_match_kills`   | maximum | most kills in one match                  |
+| `soi_highest_army_size`  | maximum | largest army (men) at one time           |
+
+Not tracked: buildings constructed and commander defeats. The simulation has
+no authoritative counter for them yet; adding one means a new sim event and a
+snapshot-contract entry.
+
+**Achievements** (`AchievementTracker`): configure these API names:
+`soi_first_victory`, `soi_first_mission`, `soi_campaign_complete`,
+`soi_battle_cannae`, `soi_battle_zama`, `soi_iron_sepulcher`,
+`soi_army_of_100`. Each is sent once per process; Steam ignores repeats.
+
+Before ticking the store features, validate each on an `rc` build: markers
+appear, stats persist across two sessions, achievements unlock, and the game
+plays normally with Steam closed.
+
 ## Acceptance checklist (install from the `rc` branch)
 
 On each advertised OS, on a machine with no development tools installed:

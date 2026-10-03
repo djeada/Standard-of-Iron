@@ -14,6 +14,9 @@
 #include <mutex>
 #include <vector>
 
+#include "app/platform/achievement_tracker.h"
+#include "app/platform/match_stats_reporter.h"
+#include "app/platform/session_timeline.h"
 #include "app/core/app_scene_context.h"
 #include "app/core/client_context.h"
 #include "app/core/entity_cache.h"
@@ -564,6 +567,12 @@ private:
   std::unique_ptr<App::Session::ReplayCoordinator> m_replay;
   std::unique_ptr<App::Mission::MissionRuntime> m_mission;
   std::unique_ptr<App::Mission::CommanderMessageRuntime> m_commander_messages;
+  App::Platform::AchievementTracker m_achievements{std::shared_ptr<App::Platform::AchievementSink>(
+      App::Platform::make_platform_achievement_sink())};
+  App::Platform::MatchStatsReporter m_match_stats{
+      std::shared_ptr<App::Platform::StatsSink>(App::Platform::make_platform_stats_sink())};
+  App::Platform::SessionTimeline m_timeline{
+      std::shared_ptr<App::Platform::TimelineSink>(App::Platform::make_platform_timeline_sink())};
   std::unique_ptr<App::Mission::TutorialRuntime> m_tutorial;
   std::unique_ptr<App::Core::EconomyReadModel> m_economy;
   std::unique_ptr<App::World::BattleStats> m_battle_stats;

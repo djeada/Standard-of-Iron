@@ -24,6 +24,13 @@ add_library(
     app/core/frame_snapshot.cpp
     app/core/runtime_frame_orchestrator.cpp
     app/core/simulation_lifecycle.cpp
+    # app/platform -- the storefront seam (Steam Timeline); null without the SDK.
+    app/platform/achievement_tracker.cpp
+    app/platform/match_stats_reporter.cpp
+    app/platform/platform_achievements.cpp
+    app/platform/platform_stats.cpp
+    app/platform/platform_timeline.cpp
+    app/platform/session_timeline.cpp
     # app/mission -- the client's half of running a mission. The mission logic
     # itself is game/mission (soi_mission_runtime); what is left here is reading
     # the frame the tutorial director is about to be advanced through.
@@ -159,6 +166,24 @@ add_library(
 )
 
 target_include_directories(app_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+# Steamworks is optional: the SDK cannot be redistributed, so it is never in the
+# tree. Point STEAMWORKS_SDK_DIR at an unpacked SDK to build the Steam backend;
+# without it the platform seam is a no-op and nothing else changes.
+set(STEAMWORKS_SDK_DIR "" CACHE PATH "Unpacked Steamworks SDK (enables the Steam backend)")
+if(STEAMWORKS_SDK_DIR)
+    find_library(STEAM_API_LIB steam_api
+        PATHS ${STEAMWORKS_SDK_DIR}/redistributable_bin/linux64
+              ${STEAMWORKS_SDK_DIR}/redistributable_bin/win64
+              ${STEAMWORKS_SDK_DIR}/redistributable_bin/osx
+        NO_DEFAULT_PATH)
+    if(NOT STEAM_API_LIB)
+        message(FATAL_ERROR "STEAMWORKS_SDK_DIR is set but libsteam_api was not found")
+    endif()
+    target_compile_definitions(app_core PUBLIC SOI_STEAMWORKS)
+    target_include_directories(app_core PUBLIC ${STEAMWORKS_SDK_DIR}/public)
+    target_link_libraries(app_core PUBLIC ${STEAM_API_LIB})
+endif()
 target_link_libraries(
     app_core
     PUBLIC
