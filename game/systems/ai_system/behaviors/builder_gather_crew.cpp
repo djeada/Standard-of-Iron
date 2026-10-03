@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <utility>
 
+#include "../ai_utils.h"
 #include "builder_affordability.h"
 #include "units/spawn_type.h"
 
@@ -29,8 +30,16 @@ void GatherCrew::manage(const AISnapshot& snapshot,
   }
 
   const int construction_crew = std::clamp(2 + (builder_total / 6), 2, 5);
+  const bool forage_in_reach =
+      std::any_of(snapshot.resource_nodes.begin(),
+                  snapshot.resource_nodes.end(),
+                  [&context](const ResourceNodeSnapshot& node) {
+                    return forage_is_within_reach(context, node.pos_x, node.pos_z);
+                  });
   const int desired_gatherers =
-      std::max(0, builder_total - construction_crew - (reclaim_one ? 1 : 0));
+      forage_in_reach
+          ? std::max(0, builder_total - construction_crew - (reclaim_one ? 1 : 0))
+          : 0;
   const char* priority = neediest_stockpile(
       snapshot, static_cast<int>(context.buildings.size()), planned_wall_wood(context));
 

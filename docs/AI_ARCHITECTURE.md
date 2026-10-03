@@ -167,6 +167,15 @@ A garrison AI keeps ordinary strategic behavior centered on its holdings. It can
 
 What it does not do is treat ordinary strategic attack/expansion as if it were a field opponent.
 
+#### A walled garrison stays behind its walls
+
+When a garrison AI owns at least eight wall segments, the snapshot describes its **ward**: the box around those walls plus a six metre strip outside them (`AISnapshot::has_ward`, `ward_x/z`, `ward_half_x/z`). Four rules follow from it, all keyed on `AIPosture::Garrison`:
+
+- **Soldiers are leashed to the ward.** Each decision round `AISystem` writes the ward into every troop's `AIControlledComponent` (`leash_x/z`, `leash_half_x/z`; never saved, re-derived each round). `guard_reach_of` reads it when the unit has no authored guard post, so `within_guard_reach` and everything built on it - target acquisition, `keeps_pursuing`, answering fire - stops a soldier at the strip below the gate. Before this a garrison chased the last survivors of a failed assault down the ramp and across the plain, and the leash is a box rather than a circle because the ramp below a gate is nearer the middle of the town than the town's own corners are. Mission assault waves are exempt.
+- **`DefendBehavior` does not intercept.** With no enemy inside its defence radius it used to march the defenders to the nearest enemy anywhere on the map; a garrison now holds its formation instead.
+- **Builders stay inside.** `forage_is_within_reach` limits the resource nodes a garrison's builders will harvest to 40 m from the base, and `GatherCrew` sets no auto-gather when none lies that near, so they repair and build instead of walking out to chop timber under the besiegers' eyes. `find_free_site` refuses construction sites outside the ward, so a garrison no longer lays farms on the plain below its ramp.
+- **Archers man the wall walk.** `RampartBehavior` posts idle archers on the balcony of the garrison's own wall. The snapshot offers every stretch of balcony once a stair or ladder reaches some stretch of it (`wall_posts`) and reports the troops already up there (`wall_garrison`, which the snapshot builder keeps out of `friendly_units` so the commander leaves them where they stand). Posts nearest the closest threat are filled first, or the ground in front of the settlement when none is in sight; posts are at least six metres apart; an archer that has not reached its post in 45 s has the post shunned for two minutes and is sent to another. The order is an ordinary `MoveUnits` to the balcony lane point: the siege-tower system starts the climb when a troop's requested goal lies on a balcony of its own wall.
+
 ### Field
 
 A field AI can use the full ordinary attack and expansion behaviors in addition to defence and economy.
@@ -541,6 +550,7 @@ These invariants are more important than any individual strategy number because 
 | AI snapshot/context/reasoning           | `game/systems/ai_system/`                         |
 | Strategy/posture/personality/difficulty | `game/systems/ai_system/ai_strategy.cpp`          |
 | Strategic committed waves               | `game/systems/ai_system/ai_attack_wave.cpp`       |
+| Garrison wall posting and leash         | `behaviors/rampart_behavior.cpp`, `ai_system.cpp` |
 | Commander doctrines                     | `assets/data/ai/doctrines.json`                   |
 | Town plans                              | `assets/data/ai/town_plans.json`                  |
 | Mission AI setup/waves                  | `game/map/mission_definition.h`, mission assets   |

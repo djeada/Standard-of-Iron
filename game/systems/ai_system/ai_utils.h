@@ -301,6 +301,17 @@ distance(float x1, float y1, float z1, float x2, float y2, float z2) -> float {
   return std::sqrt(distance_squared(x1, y1, z1, x2, y2, z2));
 }
 
+inline constexpr float k_fortress_forage_radius = 40.0F;
+
+inline auto forage_is_within_reach(const AIContext& context, float x, float z) -> bool {
+  if (context.strategy_config.posture != AIPosture::Garrison ||
+      !context.has_base_anchor) {
+    return true;
+  }
+  return distance_squared(x, 0.0F, z, context.base_pos_x, 0.0F, context.base_pos_z) <=
+         k_fortress_forage_radius * k_fortress_forage_radius;
+}
+
 inline auto claim_units(const std::vector<Engine::Core::EntityID>& requested_units,
                         BehaviorPriority priority,
                         const char* task_name,

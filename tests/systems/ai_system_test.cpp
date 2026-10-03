@@ -43,7 +43,9 @@
 #include "game/systems/ai_system/behaviors/harass_behavior.h"
 #include "game/systems/ai_system/behaviors/local_engagement_behavior.h"
 #include "game/systems/ai_system/behaviors/production_behavior.h"
+#include "game/systems/ai_system/behaviors/rampart_behavior.h"
 #include "game/systems/ai_system/behaviors/squad_discipline_behavior.h"
+#include "game/systems/combat_system/combat_utils.h"
 #include "game/systems/default_content.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/navigation/navigation_service.h"
@@ -2558,6 +2560,154 @@ TEST_F(AISystemTest, AnIdlePairIsSentToClaimTheNearestGoldVein) {
     EXPECT_EQ(context.assigned_units.find(id), context.assigned_units.end())
         << "a won vein's cursed ground was left occupied";
   }
+}
+
+TEST_F(AISystemTest, AGarrisonPostsItsArchersOnTheNearestWallWalkAndStopsThere) {
+  Game::Systems::AI::RampartBehavior behavior;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 100.0F;
+  auto archer_a = make_unit(1, 60.0F, 70.0F);
+  auto archer_b = make_unit(2, 61.0F, 70.0F);
+  archer_a.spawn_type = Game::Units::SpawnType::Archer;
+  archer_b.spawn_type = Game::Units::SpawnType::Archer;
+  snapshot.friendly_units = {archer_a, archer_b, make_unit(3, 62.0F, 70.0F)};
+  for (int i = 0; i < 8; ++i) {
+    snapshot.wall_posts.push_back({54.0F + (static_cast<float>(i) * 3.0F), 76.0F});
+  }
+  auto enemy = make_enemy(301, 80.0F, 100.0F);
+  snapshot.visible_enemies = {enemy};
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.strategy_config = Game::Systems::AI::AIStrategyFactory::create_config(
+      Game::Systems::AI::AIStrategy::Defensive);
+  context.strategy_config.posture = Game::Systems::AI::AIPosture::Garrison;
+  context.has_base_anchor = true;
+  context.base_pos_x = 80.0F;
+  context.base_pos_z = 50.0F;
+
+  ASSERT_TRUE(behavior.should_execute(snapshot, context));
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 5.0F, commands);
+  ASSERT_EQ(commands.size(), 1U);
+  const auto& post = commands.front();
+  ASSERT_EQ(post.units.size(), 2U)
+      << "only the archers go up; spearmen hold the ground";
+  ASSERT_EQ(post.move_target_x.size(), 2U);
+  EXPECT_GE(std::abs(post.move_target_x[0] - post.move_target_x[1]),
+            Game::Systems::AI::RampartBehavior::k_post_spacing - 0.01F)
+      << "two companies were posted on one stretch of balcony";
+
+  commands.clear();
+  snapshot.game_time = 110.0F;
+  behavior.execute(snapshot, context, 5.0F, commands);
+  EXPECT_TRUE(commands.empty()) << "archers already on their way were ordered again";
+
+  Game::Systems::AI::AIContext field_context = context;
+  field_context.strategy_config.posture = Game::Systems::AI::AIPosture::Field;
+  EXPECT_FALSE(behavior.should_execute(snapshot, field_context))
+      << "a field army does not man a wall";
+}
+
+TEST_F(AISystemTest, AGarrisonShunsAWallPostItsArchersCannotReach) {
+  Game::Systems::AI::RampartBehavior behavior;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+  auto archer = make_unit(1, 60.0F, 70.0F);
+  archer.spawn_type = Game::Units::SpawnType::Archer;
+  snapshot.friendly_units = {archer};
+  snapshot.wall_posts = {{60.0F, 76.0F}, {90.0F, 76.0F}};
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.strategy_config.posture = Game::Systems::AI::AIPosture::Garrison;
+  context.has_base_anchor = true;
+  context.base_pos_x = 60.0F;
+  context.base_pos_z = 50.0F;
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 5.0F, commands);
+  ASSERT_EQ(commands.size(), 1U);
+  const float first_x = commands.front().move_target_x.front();
+
+  commands.clear();
+  snapshot.game_time =
+      10.0F + Game::Systems::AI::RampartBehavior::k_climb_patience_seconds + 5.0F;
+  behavior.execute(snapshot, context, 5.0F, commands);
+  ASSERT_EQ(commands.size(), 1U) << "an archer that never reached its post stayed idle";
+  EXPECT_GT(std::abs(commands.front().move_target_x.front() - first_x), 5.0F)
+      << "the archer was sent to the post it had just failed to reach";
+}
+
+TEST_F(AISystemTest, AGarrisonsBuildersForageOnlyWithinReachOfTheWalls) {
+  Game::Systems::AI::AIContext garrison;
+  garrison.strategy_config.posture = Game::Systems::AI::AIPosture::Garrison;
+  garrison.has_base_anchor = true;
+  garrison.base_pos_x = 80.0F;
+  garrison.base_pos_z = 50.0F;
+  EXPECT_TRUE(Game::Systems::AI::forage_is_within_reach(garrison, 90.0F, 60.0F));
+  EXPECT_FALSE(Game::Systems::AI::forage_is_within_reach(garrison, 24.0F, 140.0F))
+      << "builders walked out of the gate to chop timber under the enemy's eyes";
+
+  Game::Systems::AI::AIContext field = garrison;
+  field.strategy_config.posture = Game::Systems::AI::AIPosture::Field;
+  EXPECT_TRUE(Game::Systems::AI::forage_is_within_reach(field, 24.0F, 140.0F));
+}
+
+TEST_F(AISystemTest, AWalledGarrisonSoldierIsLeashedToItsWard) {
+  Engine::Core::World world;
+  auto* soldier = add_world_unit(world, 3, 80.0F, 60.0F, 20.0F, true);
+  ASSERT_NE(soldier, nullptr);
+
+  EXPECT_TRUE(Game::Systems::Combat::within_guard_reach(soldier, 80.0F, 130.0F))
+      << "a soldier with no leash and no post answers anywhere";
+
+  auto* controlled = soldier->get_component<Engine::Core::AIControlledComponent>();
+  ASSERT_NE(controlled, nullptr);
+  controlled->leash_x = 80.0F;
+  controlled->leash_z = 50.0F;
+  controlled->leash_half_x = 33.0F;
+  controlled->leash_half_z = 31.0F;
+
+  EXPECT_TRUE(Game::Systems::Combat::within_guard_reach(soldier, 80.0F, 78.0F))
+      << "the gateway belongs to the garrison";
+  EXPECT_FALSE(Game::Systems::Combat::within_guard_reach(soldier, 80.0F, 95.0F))
+      << "the garrison came down the ramp to fight below the gate";
+  EXPECT_FALSE(Game::Systems::Combat::within_guard_reach(soldier, 80.0F, 130.0F))
+      << "the garrison chased a lone man down the ramp and onto the plain";
+}
+
+TEST_F(AISystemTest, SnapshotOffersTheWallWalkAndWardOfAWalledTown) {
+  Engine::Core::World world;
+  for (int step = 0; step < 12; ++step) {
+    auto* wall = add_world_unit(
+        world, 3, 50.0F + (2.0F * static_cast<float>(step)), 40.0F, 20.0F, true);
+    ASSERT_NE(wall, nullptr);
+    wall->get_component<Engine::Core::UnitComponent>()->spawn_type =
+        Game::Units::SpawnType::WallSegment;
+    auto* segment = wall->add_component<Engine::Core::WallSegmentComponent>();
+    segment->inner_z = 1;
+    segment->has_stair = step == 4;
+  }
+
+  const auto snapshot = Game::Systems::AI::AISnapshotBuilder::build(world, 3);
+  EXPECT_EQ(snapshot.wall_posts.size(), 12U)
+      << "every stretch of balcony is a place to stand once one stair reaches it";
+  ASSERT_TRUE(snapshot.has_ward);
+  EXPECT_NEAR(snapshot.ward_x, 61.0F, 0.1F);
+  EXPECT_NEAR(snapshot.ward_half_x, 17.0F, 0.1F);
+  EXPECT_GT(snapshot.ward_half_z, 0.0F);
+
+  Engine::Core::World bare;
+  auto* lone = add_world_unit(bare, 3, 10.0F, 10.0F, 20.0F, true);
+  ASSERT_NE(lone, nullptr);
+  const auto bare_snapshot = Game::Systems::AI::AISnapshotBuilder::build(bare, 3);
+  EXPECT_FALSE(bare_snapshot.has_ward);
+  EXPECT_TRUE(bare_snapshot.wall_posts.empty());
 }
 
 TEST_F(AISystemTest, ForwardPlanAbandonsOutpostSiteAfterRepeatedFailures) {

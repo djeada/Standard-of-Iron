@@ -717,6 +717,7 @@ add_library(
     systems/ai_system/behaviors/retreat_behavior.cpp
     systems/ai_system/behaviors/expand_behavior.cpp
     systems/ai_system/behaviors/gold_vein_behavior.cpp
+    systems/ai_system/behaviors/rampart_behavior.cpp
     systems/ai_system/behaviors/builder_behavior.cpp
     systems/ai_system/behaviors/builder_affordability.cpp
     systems/ai_system/behaviors/builder_catalog.cpp
