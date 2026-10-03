@@ -38,19 +38,19 @@ Maps can also stage their own caches and traps beside `undead_zones`. Authored e
 ]
 ```
 
-| Field                         | Default        | Meaning                                                                                                            |
-| ----------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `id`                          | `rockfall_<n>` | Name used by mission events and arena steps.                                                                       |
-| `release`                     | required       | Where the boulders start, on the slope above the pass. Takes `[x, z]`, `[x, y, z]` or `{"x", "z"}`.                |
-| `target`                      | required       | Centre of the kill zone. Boulders are pushed towards it.                                                           |
-| `radius`                      | 8              | Kill-zone radius around `target`, used by the automatic triggers.                                                  |
-| `trigger`                     | `zone`         | `zone`, `ai` or `scripted`; see below.                                                                             |
-| `owner_id`                    | -1 (neutral)   | Who holds the heights. A trap never hurts its owner or their allies. A neutral trap counts every troop as hostile. |
-| `boulders`                    | 5              | Boulders per release (1-24). They are fanned across `spread` metres and let go `interval` seconds apart.           |
-| `boulder_radius`              | 0.55           | Boulder radius in world units. Each boulder is randomised by ±20%.                                                 |
+| Field                         | Default        | Meaning                                                                                                                                                                                                                         |
+| ----------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                          | `rockfall_<n>` | Name used by mission events and arena steps.                                                                                                                                                                                    |
+| `release`                     | required       | Where the boulders start, on the slope above the pass. Takes `[x, z]`, `[x, y, z]` or `{"x", "z"}`.                                                                                                                             |
+| `target`                      | required       | Centre of the kill zone. Boulders are pushed towards it.                                                                                                                                                                        |
+| `radius`                      | 8              | Kill-zone radius around `target`, used by the automatic triggers.                                                                                                                                                               |
+| `trigger`                     | `zone`         | `zone`, `ai` or `scripted`; see below.                                                                                                                                                                                          |
+| `owner_id`                    | -1 (neutral)   | Who holds the heights. A trap never hurts its owner or their allies. A neutral trap counts every troop as hostile.                                                                                                              |
+| `boulders`                    | 5              | Boulders per release (1-24). They are fanned across `spread` metres and let go `interval` seconds apart.                                                                                                                        |
+| `boulder_radius`              | 0.55           | Boulder radius in world units. Each boulder is randomised by ±20%.                                                                                                                                                              |
 | `damage`, `casualty_fraction` | 40, 0.22       | A strike crushes the men in the boulder's lane: about 2.5 soldiers' worth of the troop's health, never more than `casualty_fraction × max_health` and never less than `damage`, scaled by the boulder's speed (×0.45 to ×1.25). |
-| `rearm`                       | 0              | Seconds before a spent trap can fire again. 0 means single use.                                                    |
-| `ai_min_targets`              | 2              | Number of hostile troops in the zone at which an AI defender releases at once.                                     |
+| `rearm`                       | 0              | Seconds before a spent trap can fire again. 0 means single use.                                                                                                                                                                 |
+| `ai_min_targets`              | 2              | Number of hostile troops in the zone at which an AI defender releases at once.                                                                                                                                                  |
 
 Coordinates follow the map's `coord_system`, exactly like undead zones.
 
