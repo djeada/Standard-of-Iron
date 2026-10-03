@@ -30,6 +30,8 @@ struct LinearFeatureRibbonSettings {
   float meander_length_scale = 0.1F;
   float meander_amplitude = 0.0F;
   float y_offset = 0.0F;
+  float junction_sink = 0.0F;
+  float segment_layer_step = 0.0F;
   bool sample_terrain_envelope = false;
   bool follow_terrain_centerline = false;
   bool use_segment_elevation_profile = false;

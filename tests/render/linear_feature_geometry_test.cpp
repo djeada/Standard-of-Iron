@@ -410,6 +410,33 @@ TEST(LinearFeatureGeometryTest, BuildsSharedCapsForRiverJunctionsAndEndpoints) {
   EXPECT_FALSE(shared->mesh->get_indices().empty());
 }
 
+TEST(LinearFeatureGeometryTest, RiverJunctionCapsSitBelowTheRibbonSurface) {
+  std::vector<float> const heights(25U, 2.0F);
+  std::vector<Game::Map::TerrainType> const terrain_types(heights.size(),
+                                                          Game::Map::TerrainType::Flat);
+  Game::Map::TerrainHeightMap height_map(5, 5, 1.0F);
+  height_map.restore_from_data(heights, terrain_types, {}, {});
+
+  const std::vector<Render::Ground::LinearFeatureRibbonSegment> segments{
+      {{-1.5F, 0.0F, 0.0F}, {0.0F, 0.0F, 0.0F}, 0.8F},
+      {{0.0F, 0.0F, 0.0F}, {1.5F, 0.0F, 1.0F}, 0.8F},
+  };
+  auto settings = Render::Ground::make_river_ribbon_settings();
+  settings.height_map = &height_map;
+  ASSERT_GT(settings.junction_sink, 0.0F);
+
+  auto junctions =
+      Render::Ground::build_linear_feature_junction_meshes(segments, 1.0F, settings);
+  ASSERT_FALSE(junctions.empty());
+  for (const auto& junction : junctions) {
+    ASSERT_NE(junction.mesh, nullptr);
+    for (const auto& vertex : junction.mesh->get_vertices()) {
+      EXPECT_FLOAT_EQ(vertex.position[1],
+                      2.0F + settings.y_offset - settings.junction_sink);
+    }
+  }
+}
+
 TEST(LinearFeatureGeometryTest, PlacesRoadJunctionCapsOnTerrain) {
   std::vector<float> const heights(25U, 2.0F);
   std::vector<Game::Map::TerrainType> const terrain_types(heights.size(),
