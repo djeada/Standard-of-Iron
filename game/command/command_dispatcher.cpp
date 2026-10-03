@@ -2,11 +2,15 @@
 
 #include <type_traits>
 #include <variant>
+#include <vector>
 
+#include "../core/component_core.h"
 #include "../core/world.h"
 #include "../formation/army_formation_service.h"
 #include "../systems/economy/production_service.h"
 #include "../systems/movement/command_service.h"
+#include "../systems/siege_tower_system.h"
+#include "../units/spawn_type.h"
 #include "command_handlers.h"
 
 namespace Game::Command {
@@ -23,8 +27,26 @@ void dispatch(World& world, const Command& command) {
           apply_move(world, payload);
         } else if constexpr (std::is_same_v<T, AttackTarget>) {
           Game::Formation::ArmyFormationService::release(world, payload.units);
-          Game::Systems::CommandService::attack_target(
-              world, payload.units, payload.target, payload.should_chase);
+          // A siege tower sent at an enemy wall rolls up to dock against it;
+          // everything else attacks.
+          std::vector<Engine::Core::EntityID> attackers;
+          attackers.reserve(payload.units.size());
+          for (auto const id : payload.units) {
+            auto const* unit = world.try_get<Engine::Core::UnitComponent>(id);
+            if (unit != nullptr &&
+                unit->spawn_type == Game::Units::SpawnType::SiegeTower) {
+              if (auto const spot = Game::Systems::siege_tower_dock_approach(
+                      world, id, payload.target)) {
+                Game::Systems::CommandService::move_unit(world, id, *spot);
+              }
+              continue;
+            }
+            attackers.push_back(id);
+          }
+          if (!attackers.empty()) {
+            Game::Systems::CommandService::attack_target(
+                world, attackers, payload.target, payload.should_chase);
+          }
         } else if constexpr (std::is_same_v<T, Stop>) {
           apply_stop(world, payload);
         } else if constexpr (std::is_same_v<T, SetHold>) {

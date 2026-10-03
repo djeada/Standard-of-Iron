@@ -246,6 +246,10 @@ auto builtin_cost_info(std::string_view item_type) -> ConstructionCostInfo {
     info.resource_costs.set(ResourceType::Stone, 20);
     return info;
   }
+  if (item_type == "wall_ladder") {
+    info.resource_costs.set(ResourceType::Wood, 15);
+    return info;
+  }
   if (item_type == "temple") {
     info.resource_costs.set(ResourceType::Wood, 40);
     info.resource_costs.set(ResourceType::Stone, 90);
@@ -286,6 +290,9 @@ auto builtin_build_time(std::string_view item_type) -> float {
   }
   if (item_type == "wall_gate") {
     return 12.0F;
+  }
+  if (item_type == "wall_ladder") {
+    return 6.0F;
   }
   if (item_type == "cut_tree" || item_type == "collect" ||
       item_type == "collect_stone" || item_type == "collect_iron_ore") {

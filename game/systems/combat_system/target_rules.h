@@ -27,12 +27,15 @@ enum class TargetRefusal : std::uint8_t {
   SelfOrAllied,
   Passive,
   Structure,
-  Warded
+  Warded,
+  // A battering ram or a siege tower: it breaks walls and gates, not men.
+  NotAStructure
 };
 
 struct TargetQuery {
   EngagementIntent intent = EngagementIntent::AutoAcquired;
   bool allow_buildings = true;
+  bool allow_troops = true;
 
   bool in_reach = false;
 };
@@ -69,6 +72,13 @@ owners_are_hostile(const OwnerRegistry& owners, int owner_a, int owner_b) -> boo
 [[nodiscard]] auto target_refusal_key(TargetRefusal refusal) -> std::string_view;
 
 [[nodiscard]] auto is_building(const Engine::Core::Entity* entity) -> bool;
+
+// Rams and siege towers engage structures only.
+[[nodiscard]] auto
+attacks_structures_only(const Engine::Core::UnitComponent& attacker) -> bool;
+// `query` adjusted for what this attacker may strike at all.
+[[nodiscard]] auto query_for(const Engine::Core::UnitComponent* attacker,
+                             TargetQuery query) -> TargetQuery;
 
 [[nodiscard]] auto is_passive_wildlife_target(Engine::Core::Entity* target) -> bool;
 

@@ -1,0 +1,2135 @@
+{
+    "biome": {
+        "grass_dry": [
+            0.58,
+            0.55,
+            0.43
+        ],
+        "grass_primary": [
+            0.3,
+            0.38,
+            0.26
+        ],
+        "grass_secondary": [
+            0.4,
+            0.45,
+            0.31
+        ],
+        "ground_irregularity_enabled": true,
+        "ground_type": "forest_mud",
+        "height_noise": [
+            0.18,
+            0.06
+        ],
+        "irregularity_amplitude": 0.07,
+        "irregularity_scale": 0.14,
+        "patch_density": 3.2,
+        "patch_jitter": 0.88,
+        "plant_density": 0.55,
+        "rock_high": [
+            0.68,
+            0.68,
+            0.66
+        ],
+        "rock_low": [
+            0.4,
+            0.39,
+            0.37
+        ],
+        "seed": 21857,
+        "soil_color": [
+            0.25,
+            0.22,
+            0.18
+        ],
+        "sway_speed": 0.7,
+        "sway_strength": 0.1,
+        "tree_mix": {
+            "cypress": 0.2,
+            "olive": 0.0,
+            "palm": 0.0,
+            "pine": 1.2
+        }
+    },
+    "bridges": [],
+    "camera": {
+        "center": [
+            80.0,
+            0.0,
+            120.0
+        ],
+        "distance": 60.0,
+        "far": 420.0,
+        "fov_y": 45.0,
+        "near": 1.0,
+        "tilt_deg": 48.0,
+        "yaw": 225.0
+    },
+    "coord_system": "grid",
+    "description": "A walled market town of the Insubrian plain, raised on a double hill above the winter fields. The lower ward rings the outer crown with a timber curtain and towers; the citadel stands on the upper crown behind its own wall, with the granary and the garrison hall inside it. Three roads climb to the lower ward - from the Punic camp in the south, and from the Placentia road on either flank - and only one ramp climbs from the lower ward to the citadel gate.",
+    "dressing": [
+        {
+            "id": "punic_camp_tent_lines",
+            "kind": "camp_lines",
+            "x": 64,
+            "z": 146,
+            "rows": 2,
+            "cols": 2,
+            "rotation": 0
+        },
+        {
+            "id": "west_alder_copse",
+            "kind": "copse",
+            "x": 24,
+            "z": 140,
+            "radius": 11,
+            "count": 16,
+            "trees": [
+                "pine_tree",
+                "pine_tree",
+                "cypress_tree"
+            ]
+        },
+        {
+            "id": "east_alder_copse",
+            "kind": "copse",
+            "x": 138,
+            "z": 140,
+            "radius": 11,
+            "count": 16,
+            "trees": [
+                "pine_tree",
+                "pine_tree",
+                "cypress_tree"
+            ]
+        },
+        {
+            "id": "victumulae_south_ramp",
+            "kind": "ramp_mouth",
+            "x": 80,
+            "z": 92,
+            "statue": true,
+            "fire": true
+        },
+        {
+            "id": "victumulae_crossroads",
+            "kind": "junction",
+            "x": 80,
+            "z": 112,
+            "style": "milestone",
+            "snap": 6
+        },
+        {
+            "id": "victumulae_gate_east",
+            "kind": "gate_approach",
+            "x": 114.0,
+            "z": 54.0
+        }
+    ],
+    "environment": {
+        "day_length_seconds": 1800,
+        "fog_density": 0.015,
+        "lighting_profile": "river_mist",
+        "start_time": 9.0,
+        "time_mode": "locked"
+    },
+    "firecamps": [
+        {
+            "id": "punic_camp_fire",
+            "x": 86.0,
+            "z": 146.0,
+            "intensity": 1.1,
+            "radius": 3.4
+        }
+    ],
+    "forests": [
+        {
+            "id": "west_alder_wood",
+            "radius": 12.0,
+            "x": 24.0,
+            "z": 140.0
+        },
+        {
+            "id": "east_alder_wood",
+            "radius": 12.0,
+            "x": 138.0,
+            "z": 140.0
+        },
+        {
+            "id": "north_east_thicket",
+            "radius": 7.0,
+            "x": 148.0,
+            "z": 104.0
+        }
+    ],
+    "grid": {
+        "height": 160,
+        "tile_size": 1.0,
+        "width": 160
+    },
+    "lakes": [],
+    "landmarks": [],
+    "max_troops_per_player": 900,
+    "name": "Victumulae",
+    "rain": {
+        "active_duration": 120,
+        "cycle_duration": 360,
+        "enabled": true,
+        "fade_duration": 10,
+        "intensity": "light",
+        "type": "snow",
+        "wind_direction": 20,
+        "wind_strength": 0.35
+    },
+    "rivers": [],
+    "roads": [
+        {
+            "end": [
+                80,
+                112
+            ],
+            "id": "camp_road",
+            "start": [
+                80,
+                158
+            ],
+            "style": "default",
+            "waypoints": [
+                [
+                    80,
+                    158
+                ],
+                [
+                    80,
+                    142.6667
+                ],
+                [
+                    80,
+                    127.3333
+                ],
+                [
+                    80,
+                    112
+                ]
+            ],
+            "width": 4.0
+        },
+        {
+            "end": [
+                80,
+                112
+            ],
+            "id": "west_placentia_road",
+            "start": [
+                1,
+                112
+            ],
+            "style": "default",
+            "waypoints": [
+                [
+                    1,
+                    112
+                ],
+                [
+                    10.5,
+                    112
+                ],
+                [
+                    20,
+                    112
+                ],
+                [
+                    35.3333,
+                    112
+                ],
+                [
+                    50.6667,
+                    112
+                ],
+                [
+                    66,
+                    112
+                ],
+                [
+                    80,
+                    112
+                ]
+            ],
+            "width": 4.0
+        },
+        {
+            "end": [
+                158,
+                112
+            ],
+            "id": "east_placentia_road",
+            "start": [
+                80,
+                112
+            ],
+            "style": "default",
+            "waypoints": [
+                [
+                    80,
+                    112
+                ],
+                [
+                    94,
+                    112
+                ],
+                [
+                    109.3333,
+                    112
+                ],
+                [
+                    124.6667,
+                    112
+                ],
+                [
+                    140,
+                    112
+                ],
+                [
+                    158,
+                    112
+                ]
+            ],
+            "width": 4.0
+        },
+        {
+            "end": [
+                80,
+                97
+            ],
+            "id": "south_gate_road_west",
+            "start": [
+                66,
+                112
+            ],
+            "style": "default",
+            "waypoints": [
+                [
+                    66,
+                    112
+                ],
+                [
+                    73,
+                    104.5
+                ],
+                [
+                    80,
+                    97
+                ]
+            ],
+            "width": 4.0
+        },
+        {
+            "end": [
+                94,
+                112
+            ],
+            "id": "south_gate_road_east",
+            "start": [
+                80,
+                97
+            ],
+            "style": "default",
+            "waypoints": [
+                [
+                    80,
+                    97
+                ],
+                [
+                    87,
+                    104.5
+                ],
+                [
+                    94,
+                    112
+                ]
+            ],
+            "width": 4.0
+        },
+        {
+            "end": [
+                20,
+                112
+            ],
+            "id": "west_flank_road",
+            "start": [
+                20,
+                1
+            ],
+            "style": "default",
+            "waypoints": [
+                [
+                    20,
+                    1
+                ],
+                [
+                    20,
+                    16.8571
+                ],
+                [
+                    20,
+                    32.7143
+                ],
+                [
+                    20,
+                    48.5714
+                ],
+                [
+                    20,
+                    64.4286
+                ],
+                [
+                    20,
+                    80.2857
+                ],
+                [
+                    20,
+                    96.1429
+                ],
+                [
+                    20,
+                    112
+                ]
+            ],
+            "width": 3.4
+        },
+        {
+            "end": [
+                140,
+                112
+            ],
+            "id": "east_flank_road",
+            "start": [
+                140,
+                1
+            ],
+            "style": "default",
+            "waypoints": [
+                [
+                    140,
+                    1
+                ],
+                [
+                    140,
+                    16.8571
+                ],
+                [
+                    140,
+                    32.7143
+                ],
+                [
+                    140,
+                    48.5714
+                ],
+                [
+                    140,
+                    64.4286
+                ],
+                [
+                    140,
+                    80.2857
+                ],
+                [
+                    140,
+                    96.1429
+                ],
+                [
+                    140,
+                    112
+                ]
+            ],
+            "width": 3.4
+        }
+    ],
+    "settlements": [
+        {
+            "authored": true,
+            "facing": "north",
+            "homes": 0,
+            "id": "punic_siege_camp",
+            "max_population": 80,
+            "nation": "carthage",
+            "palisade": false,
+            "player_id": 1,
+            "tier": "marching_camp",
+            "x": 92.0,
+            "z": 140.0
+        },
+        {
+            "facing": "south",
+            "grow_hill": false,
+            "id": "victumulae",
+            "max_population": 40,
+            "nation": "roman_republic",
+            "on_hill": true,
+            "plan": "terraced",
+            "plan_options": {
+                "inner": [
+                    12,
+                    10
+                ],
+                "size": [
+                    36,
+                    28
+                ]
+            },
+            "player_id": 2,
+            "tier": "town",
+            "x": 80.0,
+            "z": 50.0
+        }
+    ],
+    "spawns": [
+        {
+            "id": "hannibal",
+            "type": "carthage_sword_commander",
+            "x": 80.0,
+            "z": 136.0,
+            "player_id": 1,
+            "nation": "carthage",
+            "max_population": -1
+        },
+        {
+            "id": "victumulae_praefect",
+            "type": "roman_field_commander",
+            "x": 80.0,
+            "z": 44.0,
+            "player_id": 2,
+            "nation": "roman_republic",
+            "max_population": -1
+        },
+        {
+            "id": "citadel_guard",
+            "type": "swordsman",
+            "x": 73.65,
+            "z": 54.16,
+            "player_id": 2,
+            "nation": "roman_republic",
+            "max_population": -1,
+            "behavior": "hold"
+        },
+        {
+            "id": "citadel_physician",
+            "type": "healer",
+            "x": 80.0,
+            "z": 55.0,
+            "player_id": 2,
+            "nation": "roman_republic",
+            "max_population": -1,
+            "behavior": "hold"
+        },
+        {
+            "id": "south_gate_spears_west",
+            "type": "spearman",
+            "x": 75.0,
+            "z": 71.0,
+            "player_id": 2,
+            "nation": "roman_republic",
+            "max_population": -1,
+            "behavior": "hold"
+        },
+        {
+            "id": "south_gate_spears_east",
+            "type": "spearman",
+            "x": 85.0,
+            "z": 71.0,
+            "player_id": 2,
+            "nation": "roman_republic",
+            "max_population": -1,
+            "behavior": "hold"
+        },
+        {
+            "id": "south_wall_archers_west",
+            "type": "archer",
+            "x": 68.0,
+            "z": 72.0,
+            "player_id": 2,
+            "nation": "roman_republic",
+            "max_population": -1
+        },
+        {
+            "id": "south_wall_archers_east",
+            "type": "archer",
+            "x": 92.0,
+            "z": 72.0,
+            "player_id": 2,
+            "nation": "roman_republic",
+            "max_population": -1
+        },
+        {
+            "id": "east_wall_archers",
+            "type": "archer",
+            "x": 100.0,
+            "z": 60.0,
+            "player_id": 2,
+            "nation": "roman_republic",
+            "max_population": -1
+        }
+    ],
+    "starting_resources": {
+        "food": 300,
+        "gold": 300,
+        "iron": 60,
+        "stone": 60,
+        "wood": 150
+    },
+    "structures": [
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 0.0,
+            "settlement": "victumulae",
+            "type": "wall_gate",
+            "x": 80.0,
+            "z": 76.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 90.0,
+            "settlement": "victumulae",
+            "type": "wall_gate",
+            "x": 114.0,
+            "z": 54.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 0.0,
+            "settlement": "victumulae",
+            "type": "wall_gate",
+            "x": 80.0,
+            "z": 58.0
+        },
+        {
+            "authored": true,
+            "max_population": 40,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "type": "barracks",
+            "x": 80.0,
+            "z": 50.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "type": "marketplace",
+            "x": 107.0,
+            "z": 56.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "type": "temple",
+            "x": 54.76,
+            "z": 48.24
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 180.0,
+            "settlement": "victumulae",
+            "type": "home",
+            "x": 62.0,
+            "z": 32.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 180.0,
+            "settlement": "victumulae",
+            "type": "home",
+            "x": 98.0,
+            "z": 32.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 0.0,
+            "settlement": "victumulae",
+            "type": "home",
+            "x": 62.0,
+            "z": 68.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 0.0,
+            "settlement": "victumulae",
+            "type": "home",
+            "x": 98.0,
+            "z": 68.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "type": "defense_tower",
+            "x": 104.04,
+            "z": 64.14
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "type": "defense_tower",
+            "x": 55.96,
+            "z": 64.14
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "type": "defense_tower",
+            "x": 55.96,
+            "z": 35.86
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "type": "defense_tower",
+            "x": 104.04,
+            "z": 35.86
+        },
+        {
+            "authored": true,
+            "max_population": 80,
+            "nation": "carthage",
+            "player_id": 1,
+            "settlement": "punic_siege_camp",
+            "type": "barracks",
+            "x": 92.0,
+            "z": 142.0
+        },
+        {
+            "authored": true,
+            "end": [
+                92.0,
+                24.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                68.0,
+                24.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                68.0,
+                26.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                62.0,
+                26.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                98.0,
+                26.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                92.0,
+                26.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                62.0,
+                28.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                58.0,
+                28.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                102.0,
+                28.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                98.0,
+                28.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                58.0,
+                30.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                56.0,
+                30.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                104.0,
+                30.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                102.0,
+                30.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                56.0,
+                32.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                54.0,
+                32.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                106.0,
+                32.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                104.0,
+                32.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                54.0,
+                34.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                52.0,
+                34.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                108.0,
+                34.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                106.0,
+                34.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                52.0,
+                36.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                50.0,
+                36.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                110.0,
+                36.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                108.0,
+                36.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                48.0,
+                42.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                48.0,
+                38.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                50.0,
+                38.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                50.0,
+                38.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                112.0,
+                38.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                110.0,
+                38.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                112.0,
+                42.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                112.0,
+                40.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                46.0,
+                58.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                46.0,
+                42.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                44.0,
+                50.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                44.0,
+                50.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                48.0,
+                62.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                48.0,
+                58.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                112.0,
+                62.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                112.0,
+                58.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                50.0,
+                64.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                50.0,
+                62.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                110.0,
+                64.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                110.0,
+                62.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                52.0,
+                66.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                52.0,
+                64.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                108.0,
+                66.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                108.0,
+                64.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                54.0,
+                68.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                54.0,
+                66.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                106.0,
+                68.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                106.0,
+                66.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                56.0,
+                70.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                56.0,
+                68.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                104.0,
+                70.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                104.0,
+                68.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                58.0,
+                72.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                58.0,
+                70.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                102.0,
+                72.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                102.0,
+                70.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                62.0,
+                72.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                60.0,
+                72.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                100.0,
+                72.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                98.0,
+                72.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                68.0,
+                74.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                62.0,
+                74.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                98.0,
+                74.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                92.0,
+                74.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                76.0,
+                76.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                68.0,
+                76.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                92.0,
+                76.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                84.0,
+                76.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                114.0,
+                50.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                114.0,
+                42.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                114.0,
+                58.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                114.0,
+                58.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                86.0,
+                42.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                74.0,
+                42.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                74.0,
+                44.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                72.0,
+                44.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                88.0,
+                44.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                86.0,
+                44.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                70.0,
+                54.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                70.0,
+                46.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                72.0,
+                46.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                72.0,
+                46.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                90.0,
+                46.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                88.0,
+                46.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                90.0,
+                54.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                90.0,
+                48.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                68.0,
+                50.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                68.0,
+                50.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                72.0,
+                56.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                72.0,
+                54.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                88.0,
+                56.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                88.0,
+                54.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                74.0,
+                58.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                74.0,
+                56.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                86.0,
+                58.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                86.0,
+                56.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                76.0,
+                58.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                76.0,
+                58.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                84.0,
+                58.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "start": [
+                84.0,
+                58.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        }
+    ],
+    "terrain": [
+        {
+            "crown": 0.85,
+            "depth": 84.0,
+            "description": "The broad lower crown that carries the town ward.",
+            "entrances": [
+                {
+                    "radius": 2.0,
+                    "x": 80.0,
+                    "z": 92.0
+                },
+                {
+                    "radius": 2.0,
+                    "x": 25.0,
+                    "z": 50.0
+                },
+                {
+                    "radius": 2.0,
+                    "x": 135.0,
+                    "z": 50.0
+                },
+                {
+                    "radius": 2.0,
+                    "x": 80.0,
+                    "z": 8.0
+                }
+            ],
+            "height": 2.6,
+            "id": "victumulae_lower_crown",
+            "type": "hill",
+            "width": 110.0,
+            "x": 80.0,
+            "z": 50.0
+        },
+        {
+            "crown": 0.6,
+            "depth": 40.0,
+            "description": "The upper crown: the citadel and its single ramp.",
+            "entrances": [
+                {
+                    "radius": 2.0,
+                    "x": 80.0,
+                    "z": 70.0
+                }
+            ],
+            "height": 9.0,
+            "id": "victumulae_citadel_crown",
+            "type": "hill",
+            "width": 48.0,
+            "x": 80.0,
+            "z": 50.0
+        },
+        {
+            "depth": 22.0,
+            "description": "The ground Hannibal's army camped on.",
+            "id": "punic_camp_floor",
+            "type": "flat",
+            "width": 40.0,
+            "x": 80.0,
+            "z": 140.0
+        }
+    ],
+    "theme": "A wall is a question. The ram and the tower are the two answers.",
+    "undead_zones": [],
+    "victory": {
+        "defeat_conditions": [
+            "no_commander",
+            "only_commander_remaining"
+        ],
+        "key_structures": [
+            "barracks"
+        ],
+        "min_count": 1,
+        "type": "capture_structures"
+    },
+    "wildlife": {
+        "birds": {
+            "enabled": true,
+            "flight_height": 12.0,
+            "flyover_interval_max": 120.0,
+            "flyover_interval_min": 40.0,
+            "group_size_max": 8,
+            "group_size_min": 4,
+            "groups": 2
+        },
+        "enabled": true,
+        "far_simulation_radius": 110.0,
+        "near_simulation_radius": 50.0,
+        "seed": 21857,
+        "sheep": {
+            "alert_radius": 11.0,
+            "enabled": true,
+            "group_size_max": 7,
+            "group_size_min": 4,
+            "groups": 1,
+            "respawn": true,
+            "respawn_delay": 150.0,
+            "roam_radius": 10.0,
+            "spawn_areas": [
+                {
+                    "radius": 8.0,
+                    "x": 130.0,
+                    "z": 150.0
+                }
+            ]
+        },
+        "wolves": {
+            "enabled": false,
+            "groups": 0
+        }
+    },
+    "world_props": [
+        {
+            "type": "iron_ore",
+            "x": 106,
+            "z": 152,
+            "scale": 1.1,
+            "rotation": 0.0
+        },
+        {
+            "type": "iron_ore",
+            "x": 109,
+            "z": 154,
+            "scale": 1.1,
+            "rotation": 0.7
+        },
+        {
+            "type": "iron_ore",
+            "x": 104,
+            "z": 155,
+            "scale": 1.1,
+            "rotation": 1.4
+        },
+        {
+            "type": "iron_ore",
+            "x": 111,
+            "z": 151,
+            "scale": 1.1,
+            "rotation": 2.1
+        },
+        {
+            "type": "iron_ore",
+            "x": 107,
+            "z": 157,
+            "scale": 1.1,
+            "rotation": 2.8
+        },
+        {
+            "type": "iron_ore",
+            "x": 113,
+            "z": 155,
+            "scale": 1.1,
+            "rotation": 3.5
+        },
+        {
+            "type": "boulder",
+            "x": 46,
+            "z": 152,
+            "scale": 1.1,
+            "rotation": 0.0
+        },
+        {
+            "type": "boulder",
+            "x": 49,
+            "z": 155,
+            "scale": 1.1,
+            "rotation": 1.1
+        },
+        {
+            "type": "boulder",
+            "x": 44,
+            "z": 156,
+            "scale": 1.1,
+            "rotation": 2.2
+        },
+        {
+            "type": "boulder",
+            "x": 51,
+            "z": 151,
+            "scale": 1.1,
+            "rotation": 3.3
+        },
+        {
+            "type": "tent",
+            "x": 60.2,
+            "z": 142.0,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "punic_camp_tent_lines"
+        },
+        {
+            "type": "tent",
+            "x": 67.8,
+            "z": 142.0,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "punic_camp_tent_lines"
+        },
+        {
+            "type": "weapon_rack",
+            "x": 51.84,
+            "z": 142.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "punic_camp_tent_lines"
+        },
+        {
+            "type": "firecamp",
+            "x": 74.64,
+            "z": 146.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "punic_camp_tent_lines",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "tent",
+            "x": 60.2,
+            "z": 150.0,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "punic_camp_tent_lines"
+        },
+        {
+            "type": "tent",
+            "x": 67.8,
+            "z": 150.0,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "punic_camp_tent_lines"
+        },
+        {
+            "type": "weapon_rack",
+            "x": 52.59,
+            "z": 149.06,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "punic_camp_tent_lines"
+        },
+        {
+            "type": "pine_tree",
+            "x": 18.13,
+            "z": 146.78,
+            "scale": 1.22,
+            "rotation": 1.424,
+            "dressing": "west_alder_copse"
+        },
+        {
+            "type": "pine_tree",
+            "x": 23.73,
+            "z": 132.48,
+            "scale": 1.21,
+            "rotation": 0.645,
+            "dressing": "west_alder_copse"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 24.8,
+            "z": 149.28,
+            "scale": 0.98,
+            "rotation": 5.974,
+            "dressing": "west_alder_copse"
+        },
+        {
+            "type": "pine_tree",
+            "x": 19.41,
+            "z": 142.79,
+            "scale": 1.14,
+            "rotation": 6.181,
+            "dressing": "west_alder_copse"
+        },
+        {
+            "type": "pine_tree",
+            "x": 19.93,
+            "z": 132.49,
+            "scale": 1.03,
+            "rotation": 0.56,
+            "dressing": "west_alder_copse"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 21.62,
+            "z": 149.51,
+            "scale": 1.22,
+            "rotation": 3.576,
+            "dressing": "west_alder_copse"
+        },
+        {
+            "type": "pine_tree",
+            "x": 27.75,
+            "z": 143.38,
+            "scale": 1.06,
+            "rotation": 0.722,
+            "dressing": "west_alder_copse"
+        },
+        {
+            "type": "pine_tree",
+            "x": 19.77,
+            "z": 136.36,
+            "scale": 1.11,
+            "rotation": 5.452,
+            "dressing": "west_alder_copse"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 28.37,
+            "z": 139.77,
+            "scale": 1.14,
+            "rotation": 0.129,
+            "dressing": "west_alder_copse"
+        },
+        {
+            "type": "pine_tree",
+            "x": 26.55,
+            "z": 135.89,
+            "scale": 1.15,
+            "rotation": 4.21,
+            "dressing": "west_alder_copse"
+        },
+        {
+            "type": "pine_tree",
+            "x": 22.84,
+            "z": 146.31,
+            "scale": 0.84,
+            "rotation": 1.922,
+            "dressing": "west_alder_copse"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 15.92,
+            "z": 136.5,
+            "scale": 1.17,
+            "rotation": 2.725,
+            "dressing": "west_alder_copse"
+        },
+        {
+            "type": "pine_tree",
+            "x": 30.27,
+            "z": 136.22,
+            "scale": 0.85,
+            "rotation": 1.41,
+            "dressing": "west_alder_copse"
+        },
+        {
+            "type": "pine_tree",
+            "x": 24.46,
+            "z": 140.66,
+            "scale": 1.17,
+            "rotation": 3.99,
+            "dressing": "west_alder_copse"
+        },
+        {
+            "type": "pine_tree",
+            "x": 133.19,
+            "z": 145.56,
+            "scale": 0.92,
+            "rotation": 5.083,
+            "dressing": "east_alder_copse"
+        },
+        {
+            "type": "pine_tree",
+            "x": 142.06,
+            "z": 139.36,
+            "scale": 0.94,
+            "rotation": 5.295,
+            "dressing": "east_alder_copse"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 140.77,
+            "z": 134.55,
+            "scale": 1.14,
+            "rotation": 3.522,
+            "dressing": "east_alder_copse"
+        },
+        {
+            "type": "pine_tree",
+            "x": 146.0,
+            "z": 135.12,
+            "scale": 0.96,
+            "rotation": 0.514,
+            "dressing": "east_alder_copse"
+        },
+        {
+            "type": "pine_tree",
+            "x": 147.97,
+            "z": 140.56,
+            "scale": 0.88,
+            "rotation": 5.334,
+            "dressing": "east_alder_copse"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 130.89,
+            "z": 143.4,
+            "scale": 1.05,
+            "rotation": 5.178,
+            "dressing": "east_alder_copse"
+        },
+        {
+            "type": "pine_tree",
+            "x": 138.37,
+            "z": 140.34,
+            "scale": 1.06,
+            "rotation": 0.369,
+            "dressing": "east_alder_copse"
+        },
+        {
+            "type": "pine_tree",
+            "x": 131.65,
+            "z": 138.69,
+            "scale": 0.82,
+            "rotation": 2.451,
+            "dressing": "east_alder_copse"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 139.71,
+            "z": 143.71,
+            "scale": 0.86,
+            "rotation": 0.215,
+            "dressing": "east_alder_copse"
+        },
+        {
+            "type": "pine_tree",
+            "x": 140.18,
+            "z": 147.84,
+            "scale": 0.9,
+            "rotation": 4.254,
+            "dressing": "east_alder_copse"
+        },
+        {
+            "type": "pine_tree",
+            "x": 137.7,
+            "z": 133.64,
+            "scale": 0.9,
+            "rotation": 1.675,
+            "dressing": "east_alder_copse"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 143.4,
+            "z": 131.29,
+            "scale": 0.93,
+            "rotation": 2.123,
+            "dressing": "east_alder_copse"
+        },
+        {
+            "type": "pine_tree",
+            "x": 135.26,
+            "z": 138.0,
+            "scale": 1.23,
+            "rotation": 3.254,
+            "dressing": "east_alder_copse"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 133.84,
+            "z": 142.14,
+            "scale": 1.22,
+            "rotation": 1.548,
+            "dressing": "east_alder_copse"
+        },
+        {
+            "type": "pine_tree",
+            "x": 128.46,
+            "z": 140.86,
+            "scale": 0.84,
+            "rotation": 6.133,
+            "dressing": "east_alder_copse"
+        },
+        {
+            "type": "boulder",
+            "x": 128.93,
+            "z": 149.95,
+            "scale": 0.64,
+            "rotation": 4.173,
+            "dressing": "east_alder_copse"
+        },
+        {
+            "type": "boulder",
+            "x": 96.5,
+            "z": 98.0,
+            "scale": 1.11,
+            "rotation": 4.54,
+            "dressing": "victumulae_south_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 98.5,
+            "z": 104.0,
+            "scale": 1.18,
+            "rotation": 5.052,
+            "dressing": "victumulae_south_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 63.5,
+            "z": 98.0,
+            "scale": 1.38,
+            "rotation": 2.305,
+            "dressing": "victumulae_south_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 61.5,
+            "z": 104.0,
+            "scale": 1.3,
+            "rotation": 3.313,
+            "dressing": "victumulae_south_ramp"
+        },
+        {
+            "type": "statue",
+            "x": 61.31,
+            "z": 107.82,
+            "scale": 1.0,
+            "rotation": -1.571,
+            "dressing": "victumulae_south_ramp"
+        },
+        {
+            "type": "statue",
+            "x": 86.95,
+            "z": 116.4,
+            "scale": 1.0,
+            "rotation": -3.142,
+            "dressing": "victumulae_crossroads"
+        },
+        {
+            "type": "firecamp",
+            "x": 121.47,
+            "z": 50.52,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "victumulae_gate_east",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 121.47,
+            "z": 60.92,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "victumulae_gate_east",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 126.25,
+            "z": 61.14,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "victumulae_gate_east"
+        }
+    ],
+    "hill_rockfall_caches": false
+}

@@ -108,7 +108,7 @@ Rectangle {
         }, {
             "item_type": "siege_tower",
             "label": qsTr("Siege Tower"),
-            "description": qsTr("Carries infantry onto enemy walls\nDocks at a wall"),
+            "description": qsTr("Docks against an enemy wall\nInfantry beside it climb up and cross"),
             "fallback_emoji": ""
         }, {
             "item_type": "defense_tower",
@@ -135,6 +135,11 @@ Rectangle {
             "label": qsTr("Wall Gate"),
             "description": qsTr("Gated opening in a wall\nOpens for your troops and allies"),
             "fallback_emoji": Design.Icons.gate
+        }, {
+            "item_type": "wall_ladder",
+            "label": qsTr("Ladder"),
+            "description": qsTr("Leans on the town side of your wall\nAnother way up onto the wall walk"),
+            "fallback_emoji": Design.Icons.unitGlyph("wall_ladder")
         }]
 
     function default_production_state() {
@@ -1069,6 +1074,8 @@ Rectangle {
                                 label = qsTr("Wall Segment");
                             } else if (label === "wall_gate") {
                                 label = qsTr("Wall Gate");
+                            } else if (label === "wall_ladder") {
+                                label = qsTr("Ladder");
                             }
                             return (is_collection_task ? qsTr("Task: %1") : qsTr("Building: %1")).arg(label);
                         }
@@ -1721,7 +1728,7 @@ Rectangle {
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Build Siege Tower\n%1\nCost: %2\nBuild time: %3s").arg(qsTr("Carries infantry onto enemy walls\nDocks at a wall")).arg(productionPanel.format_cost_summary(0, builderSiegeTowerCard.construction_info.resource_costs || {}, qsTr("reserve"))).arg((builderSiegeTowerCard.construction_info.build_time || 22).toFixed(0)) : builderSiegeTowerCard.card_state.reason
+                                ToolTip.text: parent.is_enabled ? qsTr("Build Siege Tower\n%1\nCost: %2\nBuild time: %3s").arg(qsTr("Docks against an enemy wall\nInfantry beside it climb up and cross")).arg(productionPanel.format_cost_summary(0, builderSiegeTowerCard.construction_info.resource_costs || {}, qsTr("reserve"))).arg((builderSiegeTowerCard.construction_info.build_time || 22).toFixed(0)) : builderSiegeTowerCard.card_state.reason
                                 ToolTip.delay: 300
                             }
 
@@ -2554,6 +2561,171 @@ Rectangle {
                                 anchors.fill: parent
                                 color: "#F4E7C8"
                                 opacity: builderWallGateMouseArea.pressed ? 0.2 : 0
+                                radius: parent.radius
+                            }
+
+                            Behavior on color  {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+                            }
+
+                            Behavior on border.color  {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+                            }
+
+                            Behavior on scale  {
+                                NumberAnimation {
+                                    duration: 100
+                                }
+                            }
+                        }
+
+                        Rectangle {
+                            id: builderWallLadderCard
+
+                            property var construction_info: productionPanel.get_construction_info("wall_ladder")
+                            property var card_state: productionPanel.construction_card_state(builderProductionContent.builder_prod, construction_info)
+                            property bool is_enabled: card_state.enabled
+                            property bool is_hovered: builderWallLadderMouseArea.containsMouse
+
+                            width: builderCardGrid.cardWidth
+                            height: 80
+                            radius: 6
+                            color: productionPanel.recruit_card_color(is_enabled, is_hovered)
+                            border.color: productionPanel.recruit_card_border(is_enabled, is_hovered)
+                            border.width: is_hovered && is_enabled ? 2 : 1
+                            opacity: is_enabled ? 1 : 0.5
+                            scale: is_hovered && is_enabled ? 1.025 : 1
+
+                            Image {
+                                id: builderWallLadderIcon
+
+                                anchors.fill: parent
+                                anchors.margins: 6
+                                fillMode: Image.PreserveAspectCrop
+                                smooth: true
+                                source: productionPanel.unit_icon_source("wall_ladder")
+                                visible: source !== ""
+                                opacity: parent.is_enabled ? 1 : 0.35
+                            }
+
+                            Text {
+                                anchors.centerIn: parent
+                                visible: !builderWallLadderIcon.visible
+                                text: Design.Icons.unitGlyph("wall_ladder")
+                                color: parent.is_enabled ? "#F4E7C8" : "#6B5231"
+                                font.pixelSize: Design.Typography.glyph
+                                opacity: parent.is_enabled ? 0.9 : 0.4
+                            }
+
+                            Rectangle {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.bottom: parent.bottom
+                                anchors.margins: 1
+                                height: parent.height * 0.7
+                                radius: 6
+                                gradient: Gradient {
+                                    GradientStop {
+                                        position: 0.0
+                                        color: "#00120A05"
+                                    }
+                                    GradientStop {
+                                        position: 0.45
+                                        color: "#CC120A05"
+                                    }
+                                    GradientStop {
+                                        position: 1.0
+                                        color: "#F2120A05"
+                                    }
+                                }
+                            }
+
+                            Text {
+                                anchors.bottom: structureCostFlowLadder.top
+                                anchors.bottomMargin: 2
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.leftMargin: 4
+                                anchors.rightMargin: 4
+                                horizontalAlignment: Text.AlignHCenter
+                                elide: Text.ElideRight
+                                text: qsTr("Ladder")
+                                color: parent.is_enabled ? "#D4B57C" : "#6B5231"
+                                font.pixelSize: Design.Typography.caption
+                                font.bold: true
+                            }
+
+                            Flow {
+                                id: structureCostFlowLadder
+
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.bottom: parent.bottom
+                                anchors.margins: 4
+                                spacing: 4
+
+                                Repeater {
+                                    model: productionPanel.cost_entries(0, builderWallLadderCard.construction_info.resource_costs || {}, false)
+
+                                    delegate: Rectangle {
+                                        width: wallLadderCostRow.implicitWidth + 8
+                                        height: wallLadderCostRow.implicitHeight + 6
+                                        radius: 8
+                                        color: builderWallLadderCard.is_enabled ? "#cc2a1d12" : "#991f150d"
+                                        border.color: builderWallLadderCard.is_enabled ? hs.bronze : "#8C6A3E"
+                                        border.width: 1
+
+                                        Row {
+                                            id: wallLadderCostRow
+
+                                            anchors.centerIn: parent
+                                            spacing: 3
+
+                                            Image {
+                                                width: Design.A11y.scaled(9)
+                                                height: Design.A11y.scaled(9)
+                                                fillMode: Image.PreserveAspectFit
+                                                smooth: true
+                                                source: productionPanel.cost_icon_source(modelData.key)
+                                            }
+
+                                            Text {
+                                                text: modelData.amount
+                                                color: builderWallLadderCard.is_enabled ? Theme.textMain : Theme.textDim
+                                                font.pixelSize: Design.Typography.caption
+                                                font.bold: true
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            MouseArea {
+                                id: builderWallLadderMouseArea
+
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onClicked: {
+                                    if (parent.is_enabled) {
+                                        productionPanel.builder_construction("wall_ladder");
+                                    } else {
+                                        Design.UiSound.warning();
+                                    }
+                                }
+                                cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
+                                ToolTip.visible: containsMouse
+                                ToolTip.text: parent.is_enabled ? qsTr("Build Ladder\n%1\nCost: %2\nBuild time: %3s").arg(qsTr("Leans on the town side of your wall\nAnother way up onto the wall walk")).arg(productionPanel.format_cost_summary(0, builderWallLadderCard.construction_info.resource_costs || {}, qsTr("reserve"))).arg((builderWallLadderCard.construction_info.build_time || 6).toFixed(0)) : builderWallLadderCard.card_state.reason
+                                ToolTip.delay: 300
+                            }
+
+                            Rectangle {
+                                anchors.fill: parent
+                                color: "#F4E7C8"
+                                opacity: builderWallLadderMouseArea.pressed ? 0.2 : 0
                                 radius: parent.radius
                             }
 

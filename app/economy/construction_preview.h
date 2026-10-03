@@ -36,7 +36,8 @@ public:
                       const PreviewOwner& owner);
   void show_wall_plan(const std::vector<Game::Systems::PlannedWallSegment>& segments,
                       bool gate,
-                      const PreviewOwner& owner);
+                      const PreviewOwner& owner,
+                      bool ladder = false);
 
   void set_active(bool active);
   void set_valid(bool valid);

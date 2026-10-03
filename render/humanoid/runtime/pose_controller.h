@@ -52,6 +52,8 @@ public:
   void construction_chisel(float work_phase, bool kneeling);
   void construction_hammer(float work_phase);
   void construction_reap(float work_phase);
+  // Hand over hand up a ladder that leans away in front of the climber.
+  void climb_ladder(float cycle_phase);
   void sword_slash(float attack_phase);
   void combat_sword_slash_variant(float attack_phase,
                                   std::uint8_t variant,

@@ -8,6 +8,7 @@
 #include "app/orders/rts_action_model.h"
 #include "game/command/command.h"
 #include "game/core/ambient_session.h"
+#include "game/core/component_core.h"
 #include "game/core/component_economy.h"
 #include "game/core/world.h"
 #include "game/render_bridge/picking_service.h"
@@ -331,8 +332,21 @@ auto issue_attack_command(Engine::Core::World* world,
     return App::Core::rejected_order_on(
         OrderKind::Attack, App::Core::no_selection_reason(), target_id);
   }
-  auto const attackers = App::Core::filter_selected_units_for_action(
+  auto attackers = App::Core::filter_selected_units_for_action(
       world, selected, QStringLiteral("attack"));
+  // A siege tower cannot strike a wall, but sent at one it rolls up and docks.
+  if (auto const* target_unit = world->try_get<Engine::Core::UnitComponent>(target_id);
+      target_unit != nullptr &&
+      Game::Units::is_wall_network_spawn(target_unit->spawn_type)) {
+    for (auto const id : selected) {
+      auto const* unit = world->try_get<Engine::Core::UnitComponent>(id);
+      if (unit != nullptr && unit->owner_id == local_owner_id &&
+          unit->spawn_type == Game::Units::SpawnType::SiegeTower &&
+          std::find(attackers.begin(), attackers.end(), id) == attackers.end()) {
+        attackers.push_back(id);
+      }
+    }
+  }
   if (attackers.empty()) {
     return App::Core::rejected_order_on(
         OrderKind::Attack,

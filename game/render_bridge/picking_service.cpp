@@ -5,67 +5,37 @@
 #include <qvectornd.h>
 
 #include <algorithm>
+#include <atomic>
 #include <cmath>
 #include <limits>
 #include <vector>
 
+#include "../core/component_gameplay.h"
 #include "../core/component_structures.h"
+#include "../core/wall_walk_geometry.h"
 #include "../core/world.h"
 #include "../map/terrain_service.h"
+#include "../units/spawn_type.h"
 #include "scene/camera.h"
 
 namespace Game::Systems {
 
-auto PickingService::world_to_screen(const Render::GL::Camera& cam,
-                                     int view_w,
-                                     int view_h,
-                                     const QVector3D& world,
-                                     QPointF& out) -> bool {
-  return cam.world_to_screen(world, qreal(view_w), qreal(view_h), out);
-}
+namespace {
 
-auto PickingService::screen_to_ground(const Render::GL::Camera& cam,
-                                      int view_w,
-                                      int view_h,
-                                      const QPointF& screen_pt,
-                                      QVector3D& out_world) -> bool {
-  if (view_w <= 0 || view_h <= 0) {
-    return false;
-  }
-  return cam.screen_to_ground(
-      screen_pt.x(), screen_pt.y(), qreal(view_w), qreal(view_h), out_world);
-}
+std::atomic<const Game::Map::TerrainService*> g_bound_terrain{nullptr};
+std::atomic<const Engine::Core::World*> g_bound_world{nullptr};
 
-auto PickingService::screen_to_surface(const Game::Map::TerrainService& terrain_service,
-                                       const Render::GL::Camera& cam,
-                                       int view_w,
-                                       int view_h,
-                                       const QPointF& screen_pt,
-                                       QVector3D& out_world) -> bool {
-  if (view_w <= 0 || view_h <= 0 || !terrain_service.is_initialized() ||
-      terrain_service.get_height_map() == nullptr) {
-    return screen_to_ground(cam, view_w, view_h, screen_pt, out_world);
-  }
-
-  QVector3D ray_origin;
-  QVector3D ray_dir;
-  if (!cam.screen_to_world_ray(screen_pt.x(),
-                               screen_pt.y(),
-                               qreal(view_w),
-                               qreal(view_h),
-                               ray_origin,
-                               ray_dir)) {
-    return false;
-  }
-
-  auto height_delta = [&terrain_service, &ray_origin, &ray_dir](float t) {
+// First crossing of the terrain surface along the ray, or negative.
+auto ray_hits_terrain(const Game::Map::TerrainService& terrain_service,
+                      const QVector3D& ray_origin,
+                      const QVector3D& ray_dir,
+                      float max_t) -> float {
+  auto height_delta = [&](float t) {
     QVector3D const point = ray_origin + ray_dir * t;
     return point.y() -
            terrain_service.sample_surface_height(point.x(), point.z()).world_y;
   };
-
   constexpr float k_step = 1.0F;
-  float const max_t = std::max(cam.get_far(), k_step);
   float prev_t = 0.0F;
   float prev_delta = height_delta(prev_t);
   for (float t = k_step; t <= max_t; t += k_step) {
@@ -85,17 +55,207 @@ auto PickingService::screen_to_surface(const Game::Map::TerrainService& terrain_
           hi = mid;
         }
       }
-
-      out_world = ray_origin + ray_dir * ((lo + hi) * 0.5F);
-      out_world.setY(
-          terrain_service.sample_surface_height(out_world.x(), out_world.z()).world_y);
-      return true;
+      return (lo + hi) * 0.5F;
     }
     prev_t = t;
     prev_delta = delta;
   }
+  return -1.0F;
+}
 
-  return screen_to_ground(cam, view_w, view_h, screen_pt, out_world);
+} // namespace
+
+void PickingService::bind_surface(const Game::Map::TerrainService* terrain,
+                                  const Engine::Core::World* world) {
+  g_bound_terrain.store(terrain);
+  g_bound_world.store(world);
+}
+
+void PickingService::unbind_surface(const Engine::Core::World* world) {
+  const Engine::Core::World* expected = world;
+  if (g_bound_world.compare_exchange_strong(expected, nullptr)) {
+    g_bound_terrain.store(nullptr);
+  }
+}
+
+auto PickingService::surface_height_at(float world_x, float world_z) -> float {
+  auto const* terrain = g_bound_terrain.load();
+  auto const* world = g_bound_world.load();
+  float height = 0.0F;
+  if (terrain != nullptr && terrain->is_initialized()) {
+    height = terrain->sample_surface_height(world_x, world_z).world_y;
+  }
+  if (world != nullptr) {
+    // A vertical ray from above finds the planks if there are any.
+    constexpr float k_above = 50.0F;
+    QVector3D const origin(world_x, height + k_above, world_z);
+    float const t = ray_hits_wall_walk(
+        *world, terrain, origin, QVector3D(0.0F, -1.0F, 0.0F), k_above);
+    if (t >= 0.0F) {
+      height = std::max(height, origin.y() - t);
+    }
+  }
+  return height;
+}
+
+auto PickingService::ray_hits_wall_walk(const Engine::Core::World& world,
+                                        const Game::Map::TerrainService* terrain,
+                                        const QVector3D& origin,
+                                        const QVector3D& direction,
+                                        float max_t) -> float {
+  namespace WW = Game::Systems::WallWalk;
+  if (direction.y() > -1.0e-4F) {
+    return -1.0F;
+  }
+  float best = -1.0F;
+  // Each segment's walk is a 2 m slab along its run: the balcony planks on the
+  // town face at deck height, and the stake tips over the centre line at
+  // crest height, which is what a click on the palisade itself meets.
+  auto try_slab = [&](float node_x,
+                      float node_z,
+                      float base_y,
+                      bool runs_x,
+                      float inward_sign,
+                      float across_lo,
+                      float across_hi,
+                      float height) {
+    float const top = base_y + height;
+    float const t = (top - origin.y()) / direction.y();
+    if (t <= 0.0F || t > max_t || (best >= 0.0F && t >= best)) {
+      return;
+    }
+    QVector3D const hit = origin + direction * t;
+    float const along = runs_x ? hit.x() - node_x : hit.z() - node_z;
+    float const across = (runs_x ? hit.z() - node_z : hit.x() - node_x) * inward_sign;
+    if (std::abs(along) <= 1.0F && across >= across_lo && across <= across_hi) {
+      best = t;
+    }
+  };
+  for (auto [id, unit, transform, wall] :
+       const_cast<Engine::Core::World&>(world)
+           .view<const Engine::Core::UnitComponent,
+                 const Engine::Core::TransformComponent,
+                 const Engine::Core::WallSegmentComponent>()) {
+    (void)id;
+    if (unit.health <= 0 || unit.spawn_type != Game::Units::SpawnType::WallSegment) {
+      continue;
+    }
+    bool const runs_x = wall.inner_z != 0 && wall.inner_x == 0;
+    bool const runs_z = wall.inner_x != 0 && wall.inner_z == 0;
+    if (!runs_x && !runs_z) {
+      continue;
+    }
+    float const node_x = transform.position.x;
+    float const node_z = transform.position.z;
+    float const base_y =
+        terrain != nullptr && terrain->is_initialized()
+            ? terrain->sample_surface_height(node_x, node_z, transform.position.y)
+                  .world_y
+            : transform.position.y;
+    float const inward = static_cast<float>(runs_x ? wall.inner_z : wall.inner_x);
+    try_slab(node_x, node_z, base_y, runs_x, inward, -0.22F, 0.22F, WW::k_crest_height);
+    try_slab(node_x,
+             node_z,
+             base_y,
+             runs_x,
+             inward,
+             WW::k_deck_inner_edge - 0.05F,
+             WW::k_deck_outer_edge + 0.05F,
+             WW::k_deck_height);
+  }
+  return best;
+}
+
+auto PickingService::world_to_screen(const Render::GL::Camera& cam,
+                                     int view_w,
+                                     int view_h,
+                                     const QVector3D& world,
+                                     QPointF& out) -> bool {
+  return cam.world_to_screen(world, qreal(view_w), qreal(view_h), out);
+}
+
+auto PickingService::screen_to_plane(const Render::GL::Camera& cam,
+                                     int view_w,
+                                     int view_h,
+                                     const QPointF& screen_pt,
+                                     QVector3D& out_world) -> bool {
+  if (view_w <= 0 || view_h <= 0) {
+    return false;
+  }
+  return cam.screen_to_ground(
+      screen_pt.x(), screen_pt.y(), qreal(view_w), qreal(view_h), out_world);
+}
+
+auto PickingService::screen_to_ground(const Render::GL::Camera& cam,
+                                      int view_w,
+                                      int view_h,
+                                      const QPointF& screen_pt,
+                                      QVector3D& out_world) -> bool {
+  auto const* terrain = g_bound_terrain.load();
+  auto const* world = g_bound_world.load();
+  if (terrain == nullptr && world == nullptr) {
+    return screen_to_plane(cam, view_w, view_h, screen_pt, out_world);
+  }
+  if (terrain != nullptr) {
+    if (!screen_to_surface(*terrain, cam, view_w, view_h, screen_pt, out_world)) {
+      return false;
+    }
+  } else if (!screen_to_plane(cam, view_w, view_h, screen_pt, out_world)) {
+    return false;
+  }
+  if (world == nullptr) {
+    return true;
+  }
+  QVector3D ray_origin;
+  QVector3D ray_dir;
+  if (!cam.screen_to_world_ray(screen_pt.x(),
+                               screen_pt.y(),
+                               qreal(view_w),
+                               qreal(view_h),
+                               ray_origin,
+                               ray_dir)) {
+    return true;
+  }
+  float const ground_t = (out_world - ray_origin).length();
+  float const wall_t =
+      ray_hits_wall_walk(*world, terrain, ray_origin, ray_dir, ground_t);
+  if (wall_t >= 0.0F && wall_t < ground_t) {
+    out_world = ray_origin + ray_dir * wall_t;
+  }
+  return true;
+}
+
+auto PickingService::screen_to_surface(const Game::Map::TerrainService& terrain_service,
+                                       const Render::GL::Camera& cam,
+                                       int view_w,
+                                       int view_h,
+                                       const QPointF& screen_pt,
+                                       QVector3D& out_world) -> bool {
+  if (view_w <= 0 || view_h <= 0 || !terrain_service.is_initialized() ||
+      terrain_service.get_height_map() == nullptr) {
+    return screen_to_plane(cam, view_w, view_h, screen_pt, out_world);
+  }
+
+  QVector3D ray_origin;
+  QVector3D ray_dir;
+  if (!cam.screen_to_world_ray(screen_pt.x(),
+                               screen_pt.y(),
+                               qreal(view_w),
+                               qreal(view_h),
+                               ray_origin,
+                               ray_dir)) {
+    return false;
+  }
+
+  float const max_t = std::max(cam.get_far(), 1.0F);
+  float const t = ray_hits_terrain(terrain_service, ray_origin, ray_dir, max_t);
+  if (t >= 0.0F) {
+    out_world = ray_origin + ray_dir * t;
+    out_world.setY(
+        terrain_service.sample_surface_height(out_world.x(), out_world.z()).world_y);
+    return true;
+  }
+  return screen_to_plane(cam, view_w, view_h, screen_pt, out_world);
 }
 
 auto PickingService::project_bounds(const Render::GL::Camera& cam,

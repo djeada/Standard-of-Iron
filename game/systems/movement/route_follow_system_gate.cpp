@@ -132,8 +132,7 @@ auto classify_movement_gate(const Engine::Core::Entity& entity) -> MovementGate 
   }
 
   if (auto const* walker = entity.get_component<Engine::Core::WallWalkerComponent>();
-      walker != nullptr &&
-      walker->phase != Engine::Core::WallWalkerComponent::Phase::Approaching) {
+      walker != nullptr && walker->aloft()) {
     return MovementGate::OnWall;
   }
 

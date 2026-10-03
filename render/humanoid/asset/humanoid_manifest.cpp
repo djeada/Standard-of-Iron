@@ -62,6 +62,7 @@ enum class BakerWorkType : std::uint8_t {
   CrewPush,
   CrewCrank,
   CrewHeave,
+  Climb,
 };
 enum class BakerCombatPoseType : std::uint8_t {
   None,
@@ -1411,6 +1412,20 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      2.0F,
      true,
      BakerWorkType::CrewHeave},
+    {"climb_ladder",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     32U,
+     24.0F,
+     Animation::k_humanoid_climb_cycle_time,
+     true,
+     BakerWorkType::Climb},
 }};
 
 struct HumanoidSocketSpec {
@@ -2576,6 +2591,9 @@ void bake_humanoid_clip_frame(BakeProfile profile,
       case BakerWorkType::CrewHeave:
         ctrl.construction_pose(Animation::HumanoidConstructionPoseKind::CrewHeave,
                                phase);
+        break;
+      case BakerWorkType::Climb:
+        ctrl.climb_ladder(phase);
         break;
       case BakerWorkType::CrewPush:
       case BakerWorkType::None:

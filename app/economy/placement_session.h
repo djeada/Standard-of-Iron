@@ -19,6 +19,7 @@ enum class PlacementKind : std::uint8_t {
   Structure,
   Wall,
   Gate,
+  Ladder,
   Harvest
 };
 
@@ -76,6 +77,7 @@ public:
   }
   [[nodiscard]] auto is_wall() const -> bool;
   [[nodiscard]] auto is_gate() const -> bool;
+  [[nodiscard]] auto is_ladder() const -> bool;
   [[nodiscard]] auto builders() const -> const std::vector<Engine::Core::EntityID>& {
     return m_builders;
   }

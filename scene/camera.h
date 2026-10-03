@@ -260,6 +260,7 @@ private:
   void integrate_pan(float dt);
   void integrate_zoom(float dt);
   void integrate_orbit(float dt);
+  void integrate_ground_follow(float dt);
   void clamp_eye_above_terrain();
   static void
   compute_yaw_pitch_from_offset(const QVector3D& off, float& yaw_deg, float& pitch_deg);

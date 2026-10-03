@@ -78,6 +78,15 @@ void OrdersViewModel::select_all_troops() {
   }
 }
 
+void OrdersViewModel::select_all_of_type(const QString& unit_type) {
+  Engine::Core::note_coverage(Engine::Core::CoverageEvent::SelectionChange);
+  m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
+  if (m_context.input != nullptr) {
+    m_context.input->select_all_units_of_type(unit_type, m_context.local_owner_id);
+  }
+}
+
 void OrdersViewModel::select_unit_by_id(qulonglong unit_id) {
   m_host.ensure_initialized();
   const auto frame_lock = m_host.lock_frame();

@@ -27,6 +27,11 @@ inline constexpr float k_high_ground_height_threshold = 0.5F;
 inline constexpr float k_forest_spot_distance = 5.5F;
 inline constexpr float k_forest_reveal_after_strike = 4.0F;
 inline constexpr float k_forest_ranged_cover_multiplier = 0.6F;
+// Shot from the ground at a soldier on a wall walk: the stakes take most of it.
+inline constexpr float k_wall_walk_ranged_cover_multiplier = 0.65F;
+// Shooting down from a wall walk: a balcony is a couple of metres up, not a
+// hill, and its stakes already shelter the archers on it.
+inline constexpr float k_wall_walk_high_ground_multiplier = 1.35F;
 inline constexpr float k_optimal_range_factor = 0.85F;
 inline constexpr float k_optimal_range_buffer = 0.5F;
 inline constexpr float k_new_command_threshold = 0.25F;

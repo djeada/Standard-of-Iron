@@ -55,6 +55,7 @@ enum class CombatRole : std::uint8_t {
   case SpawnType::Home:
   case SpawnType::WallSegment:
   case SpawnType::WallGate:
+  case SpawnType::WallLadder:
   case SpawnType::Marketplace:
   case SpawnType::Temple:
   case SpawnType::Farm:

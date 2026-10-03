@@ -144,6 +144,20 @@ Polling the platform cursor means the overlay no longer learns suppression indir
 
 The overlay timer is likewise controlled by a live condition rather than started only by an enter event. If a panel closes while the cursor is already resting at an edge, scrolling should resume without requiring the pointer to leave and re-enter.
 
+## The camera and the cursor follow the ground
+
+The RTS camera's target eases onto the terrain under it (`Camera::integrate_ground_follow`,
+an average of nine height samples 3 m apart), so over a hill crown or a citadel mound the
+view stays as far from the ground it shows as the zoom says. Jumps to a world point
+(`look_at_world`) aim at the surface there as well.
+
+Orders, hovers and drags resolve the cursor through `PickingService::screen_to_ground`. Once
+a match binds its terrain and world (`PickingService::bind_surface`), that pick follows the
+real surface: hills and slopes, and the planks and stake tips of a wall walk. Unbound (tools,
+tests) it is the flat y = 0 pick. A click on a balcony your troops can reach is kept as an
+order onto the planks rather than snapped to the ground beside the wall, and unit picking
+uses each unit's lifted height, so a company on a wall is clicked where it is drawn.
+
 ## HUD zones and pointer ownership
 
 Two similar-sounding rules serve different purposes and should not be merged.

@@ -50,7 +50,8 @@ auto building_transform_scale(std::string_view building_type) -> QVector3D {
     return {1.4F * k_farm_factor, 1.0F * k_farm_factor, 1.4F * k_farm_factor};
   }
   if (building_type == "defense_tower") {
-    return {1.0F, 2.0F, 1.0F};
+    // Stout enough to anchor the thicker palisade runs that meet at it.
+    return {1.25F, 2.0F, 1.25F};
   }
   if (building_type == "wall_gate") {
     return {1.5F, 1.5F, 1.5F};

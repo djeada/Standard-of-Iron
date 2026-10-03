@@ -52,6 +52,7 @@ namespace {
   case Game::Units::SpawnType::Farm:
   case Game::Units::SpawnType::WallSegment:
   case Game::Units::SpawnType::WallGate:
+  case Game::Units::SpawnType::WallLadder:
     return MarkerClass::MinorStructure;
   default:
     return MarkerClass::Troop;

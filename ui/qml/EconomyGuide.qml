@@ -56,6 +56,8 @@ QtObject {
             return qsTr("Wall Segment");
         case "wall_gate":
             return qsTr("Wall Gate");
+        case "wall_ladder":
+            return qsTr("Ladder");
         case "catapult":
             return qsTr("Catapult");
         case "ballista":
@@ -106,6 +108,8 @@ QtObject {
             return qsTr("Blocks enemy movement.");
         case "wall_gate":
             return qsTr("Opens for your troops and allies, shut to everyone else.");
+        case "wall_ladder":
+            return qsTr("Leans on the town side of your own wall so troops can climb onto the wall walk.");
         case "catapult":
             return qsTr("Long-range siege engine, best against structures.");
         case "ballista":
@@ -113,7 +117,7 @@ QtObject {
         case "ram":
             return qsTr("Roofed siege engine that breaks gates and walls.");
         case "siege_tower":
-            return qsTr("Carries infantry to a wall and lets them off on top.");
+            return qsTr("Docks against an enemy wall; the infantry beside it climb its ladder and cross onto the wall walk.");
         }
         return "";
     }

@@ -7122,8 +7122,9 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
       auto s = definition(
           QString::fromLatin1(k_siege_tower_wall_assault_id),
           QStringLiteral("Siege: Tower Assaults Wall"),
-          QStringLiteral("A siege tower rolls against an enemy wall, drops its ramp "
-                         "and unloads a company onto the wall-top walkway."),
+          QStringLiteral("A siege tower rolls against an enemy wall with a company "
+                         "walking behind it; when the ramp drops the company climbs "
+                         "the tower and crosses onto the wall-top walkway."),
 
           40.0F,
           {30.0F, 52.0F, 18.0F});
@@ -7135,8 +7136,13 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
       gate_line(s, 1);
       s.groups.push_back(group(
           QStringLiteral("tower"), Troop::SiegeTower, 2, 1, {-4.0F, 0.0F, -9.0F}, 1));
+      s.groups.push_back(group(
+          QStringLiteral("escort"), Troop::Swordsman, 2, 1, {-4.0F, 0.0F, -14.0F}, 10));
       s.steps = {at(0.4F, Command::Move, QStringLiteral("tower"))};
       s.steps.back().destination = {-4.0F, 0.0F, -3.0F};
+      auto follow = at(0.4F, Command::Move, QStringLiteral("escort"));
+      follow.destination = {-4.0F, 0.0F, -8.0F};
+      s.steps.push_back(follow);
       s.expectations.push_back(
           expectation(Expect::SiegeTowerDocked, QStringLiteral("tower")));
       s.expectations.push_back(
@@ -7193,6 +7199,44 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
 
     {
       auto s = definition(
+          QString::fromLatin1(k_wall_walk_ladder_climb_id),
+          QStringLiteral("Wall Walk: Ladder Climb"),
+          QStringLiteral("A builder's ladder leans on the town face of the palisade "
+                         "between two stairs. A company ordered onto that stretch "
+                         "climbs it hand over hand, one man after another, and later "
+                         "comes back down the same way."),
+          36.0F,
+          {14.0F, 30.0F, 16.0F});
+      s.camera_focus = QVector3D(6.0F, 1.0F, 1.5F);
+      s.suppress_terrain_scatter = true;
+      s.suppress_spawn_anchor = true;
+      s.suppress_ui_overlays = true;
+      s.owner_teams = {{.owner_id = 1, .team_id = 1}, {.owner_id = 2, .team_id = 2}};
+      walled_town(s);
+      s.groups.push_back(building(QStringLiteral("ladder"),
+                                  Game::Units::SpawnType::WallLadder,
+                                  Nation::RomanRepublic,
+                                  1,
+                                  1,
+                                  {6.0F, 0.0F, 1.175F},
+                                  {0.0F, 0.0F, 0.0F},
+                                  180.0F));
+      s.groups.push_back(group(
+          QStringLiteral("climbers"), Troop::Swordsman, 1, 1, {6.0F, 0.0F, 6.5F}, 8));
+      auto climb = at(0.5F, Command::Move, QStringLiteral("climbers"));
+      climb.destination = {6.0F, 0.0F, 0.45F};
+      auto descend = at(24.0F, Command::Move, QStringLiteral("climbers"));
+      descend.destination = {6.0F, 0.0F, 6.5F};
+      s.steps = {climb, descend};
+      s.expectations.push_back(
+          expectation(Expect::WallWalkerObserved, QStringLiteral("climbers")));
+      s.expectations.push_back(
+          expectation(Expect::GroupExists, QStringLiteral("ladder")));
+      result.push_back(std::move(s));
+    }
+
+    {
+      auto s = definition(
           QString::fromLatin1(k_siege_tower_balcony_assault_id),
           QStringLiteral("Siege: Tower Storms the Balcony"),
           QStringLiteral("A siege tower is pushed against a town palisade, drops its "
@@ -7211,11 +7255,15 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
           QStringLiteral("garrison"), Troop::Swordsman, 1, 1, {4.0F, 0.0F, 7.0F}, 8));
       s.groups.push_back(group(
           QStringLiteral("tower"), Troop::SiegeTower, 2, 1, {-4.0F, 0.0F, -12.0F}, 1));
+      s.groups.push_back(group(
+          QStringLiteral("escort"), Troop::Swordsman, 2, 1, {-4.0F, 0.0F, -17.0F}, 10));
       auto man = at(0.5F, Command::Move, QStringLiteral("garrison"));
       man.destination = {2.0F, 0.0F, 0.45F};
       auto push = at(0.5F, Command::Move, QStringLiteral("tower"));
       push.destination = {-4.0F, 0.0F, -3.0F};
-      s.steps = {man, push};
+      auto follow = at(0.5F, Command::Move, QStringLiteral("escort"));
+      follow.destination = {-4.0F, 0.0F, -8.0F};
+      s.steps = {man, push, follow};
       s.expectations.push_back(
           expectation(Expect::SiegeTowerDocked, QStringLiteral("tower")));
       s.expectations.push_back(

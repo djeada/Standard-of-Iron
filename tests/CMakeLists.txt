@@ -243,6 +243,7 @@ add_executable(
     headless/hill_containment_test.cpp
     headless/formation_prop_clearance_test.cpp
     headless/hill_traversal_test.cpp
+    headless/fortress_siege_traversal_test.cpp
     headless/playable_ground_test.cpp
     headless/forest_cover_test.cpp
     headless/wildlife_fight_motion_test.cpp

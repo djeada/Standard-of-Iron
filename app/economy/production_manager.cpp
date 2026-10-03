@@ -374,8 +374,9 @@ void ProductionManager::replan_wall(const QVector3D& pointer_world) {
   }
 
   const bool gate = m_session.is_gate();
+  const bool ladder = m_session.is_ladder();
   const auto summary =
-      m_wall.plan(*m_world, pointer_world, m_session.owner_id(m_world), gate);
+      m_wall.plan(*m_world, pointer_world, m_session.owner_id(m_world), gate, ladder);
   const bool any_valid = summary.valid_segment_count > 0;
 
   m_preview.set_active(!m_wall.segments().empty());
@@ -385,7 +386,7 @@ void ProductionManager::replan_wall(const QVector3D& pointer_world) {
                 : wall_plan_refusal_text(m_wall.segments(), refusal_context()));
   m_preview.set_summary(
       summary.segment_count, summary.valid_segment_count, summary.total_cost);
-  m_preview.show_wall_plan(m_wall.segments(), gate, preview_owner());
+  m_preview.show_wall_plan(m_wall.segments(), gate, preview_owner(), ladder);
 }
 
 void ProductionManager::on_construction_pointer_pressed(qreal sx,

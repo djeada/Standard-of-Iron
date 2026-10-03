@@ -35,7 +35,7 @@ namespace {
 using Game::Systems::ResourceAmounts;
 using Game::Systems::ResourceType;
 
-constexpr std::array<std::string_view, 11> k_buildable_items = {
+constexpr std::array<std::string_view, 12> k_buildable_items = {
     "home",
     "farm",
     "defense_tower",
@@ -43,6 +43,7 @@ constexpr std::array<std::string_view, 11> k_buildable_items = {
     "temple",
     "wall_segment",
     "wall_gate",
+    "wall_ladder",
     "catapult",
     "ballista",
     "ram",

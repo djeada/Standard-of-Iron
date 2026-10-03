@@ -31,7 +31,10 @@ auto wall_plan_order(const std::vector<std::uint64_t>& builders,
                                                  .anchor_z = plan.anchor.z,
                                                  .target_x = plan.target.x,
                                                  .target_z = plan.target.z,
-                                                 .rotation_y = plan.rotation_y};
+                                                 .rotation_y = plan.rotation_y,
+                                                 .ladder = plan.ladder,
+                                                 .pointer_x = plan.pointer.x(),
+                                                 .pointer_z = plan.pointer.z()};
   request.has_destination = true;
   request.destination = destination;
   return request;

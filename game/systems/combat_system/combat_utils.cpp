@@ -504,8 +504,7 @@ auto stands_on_wall(const Engine::Core::Entity* entity) -> bool {
       registry != nullptr
           ? registry->try_get<Engine::Core::WallWalkerComponent>(entity->get_id())
           : nullptr;
-  return walker != nullptr &&
-         walker->phase != Engine::Core::WallWalkerComponent::Phase::Approaching;
+  return walker != nullptr && walker->aloft();
 }
 
 } // namespace
@@ -799,6 +798,7 @@ auto find_nearest_enemy(Engine::Core::Entity* unit,
   }
 
   const int attacker_owner_id = unit_comp->owner_id;
+  query = query_for(unit_comp, query);
 
   for (auto target_id : nearby_ids) {
     if (scan_iterations != nullptr) {

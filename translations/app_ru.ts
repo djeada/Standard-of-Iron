@@ -3060,8 +3060,16 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>Крытая осадная машина, разбивающая ворота и стены.</translation>
     </message>
     <message>
-        <source>Carries infantry to a wall and lets them off on top.</source>
-        <translation>Подвозит пехоту к стене и высаживает её наверху.</translation>
+        <source>Ladder</source>
+        <translation>Лестница</translation>
+    </message>
+    <message>
+        <source>Leans on the town side of your own wall so troops can climb onto the wall walk.</source>
+        <translation>Приставляется к городской стороне вашей собственной стены, чтобы войска могли подняться на боевой ход.</translation>
+    </message>
+    <message>
+        <source>Docks against an enemy wall; the infantry beside it climb its ladder and cross onto the wall walk.</source>
+        <translation>Подходит вплотную к вражеской стене; пехота рядом поднимается по её лестнице и переходит на боевой ход.</translation>
     </message>
 </context>
 <context>
@@ -3245,6 +3253,10 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>Sepulcher Shrine</source>
         <translation>Святилище Гробницы</translation>
+    </message>
+    <message>
+        <source>Ladder</source>
+        <translation>Лестница</translation>
     </message>
 </context>
 <context>
@@ -7360,6 +7372,14 @@ to see preview</source>
         <source>A Roman watch camp on the old road, the night it finds out why the shepherds stopped using it. Timber, stone and a flock are close to the camp; the barrow ruins hold the middle ground; the cursed shrine stands alone on the north-east ground. A low knoll between the camp and the barrow is the only high ground worth having, and the road runs past the dead the whole way.</source>
         <translation>Римский сторожевой лагерь на старой дороге в ту ночь, когда он узнаёт, почему пастухи перестали по ней ходить. Лес, камень и стадо — рядом с лагерем; руины гробницы занимают середину; проклятое святилище одиноко стоит на северо-востоке. Низкий бугор между лагерем и гробницей — единственная высота, которую стоит занять, а дорога всю дорогу идёт мимо мёртвых.</translation>
     </message>
+    <message>
+        <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. The lower ward rings the outer crown with a timber curtain and towers; the citadel stands on the upper crown behind its own wall, with the granary and the garrison hall inside it. Three roads climb to the lower ward - from the Punic camp in the south, and from the Placentia road on either flank - and only one ramp climbs from the lower ward to the citadel gate.</source>
+        <translation>Обнесённый стеной торговый городок на Инсубрской равнине, поднятый на двойной холм над зимними полями. Нижний город опоясывает внешнюю вершину деревянной куртиной с башнями; цитадель стоит на верхней вершине за собственной стеной, и в ней житница и зал гарнизона. Три дороги поднимаются к нижнему городу - от пунийского лагеря на юге и с дороги на Плаценцию по обоим флангам, - и лишь один подъём ведёт из нижнего города к воротам цитадели.</translation>
+    </message>
+    <message>
+        <source>Victumulae</source>
+        <translation>Виктумулы</translation>
+    </message>
 </context>
 <context>
     <name>MatchSetupViewModel</name>
@@ -9393,6 +9413,174 @@ to see preview</source>
         <source>Those are men. Were men. Jupiter keep us. ...Steady. Bones break like anything else. Archers, hold where you stand and let them come to the shields.</source>
         <translation>Это люди. Были людьми. Юпитер, сохрани нас. ...Спокойно. Кости ломаются, как и всё остальное. Лучники, стоять на месте, пусть идут на щиты.</translation>
     </message>
+    <message>
+        <source>A general alone at the foot of a wall is a target, not a siege.</source>
+        <translation>Полководец в одиночку у подножия стены — мишень, а не осада.</translation>
+    </message>
+    <message>
+        <source>A set-piece siege: a quiet build-up in the Punic camp, an assault up the south ramp under arrow fire from two rings of wall, and a relief column that arrives on the flank roads while the army is committed against the citadel.</source>
+        <translation>Осада по всем правилам: спокойная подготовка в пунийском лагере, штурм южного подъёма под стрелами с двух колец стен и колонна подмоги, что выходит на фланговые дороги, пока армия увязла у цитадели.</translation>
+    </message>
+    <message>
+        <source>A wall is not stormed by walking at it. Builders raise the engines: a ram knocks a gate down, a siege tower puts men on the wall walk. Bring both, break one ring at a time, and keep something back for the column that comes to lift the siege.</source>
+        <translation>Стену не берут, просто шагая на неё. Строители возводят машины: таран выбивает ворота, осадная башня выводит людей на боевой ход. Приведите и то и другое, ломайте кольца по одному и держите что-то в резерве для колонны, что придёт снять осаду.</translation>
+    </message>
+    <message>
+        <source>A walled market town on a double hill, two rings of wall and one ramp between them. Raise a ram and a siege tower, break into the lower ward, storm the citadel, and kill the praefect who holds it before the relief columns from Placentia arrive.</source>
+        <translation>Обнесённый стеной торговый городок на двойном холме, два кольца стен и один подъём между ними. Постройте таран и осадную башню, ворвитесь в нижний город, возьмите цитадель штурмом и убейте префекта, что её держит, прежде чем подойдут колонны подмоги из Плаценции.</translation>
+    </message>
+    <message>
+        <source>Break both relief columns. A siege that cannot hold its own camp is only a long way of losing.</source>
+        <translation>Разбейте обе колонны подмоги. Осада, которая не может удержать собственный лагерь, — лишь долгий способ проиграть.</translation>
+    </message>
+    <message>
+        <source>Break into the lower ward</source>
+        <translation>Ворваться в нижний город</translation>
+    </message>
+    <message>
+        <source>Builders raise siege engines. A ram for the gate, a siege tower for the wall walk - one of each gives the assault two ways in.</source>
+        <translation>Строители возводят осадные машины. Таран для ворот, осадная башня для боевого хода — по одной каждого дадут штурму два пути внутрь.</translation>
+    </message>
+    <message>
+        <source>Builders raise the engines in the field. A ram costs 70 wood and 15 iron and breaks gates; a siege tower costs 120 wood and 30 iron and puts men on the wall walk. Build one of each.</source>
+        <translation>Строители возводят машины в поле. Таран стоит 70 дерева и 15 железа и ломает ворота; осадная башня стоит 120 дерева и 30 железа и выводит людей на боевой ход. Постройте по одной каждого.</translation>
+    </message>
+    <message>
+        <source>Burn the engines at the foot of the ramp and leave the bodies where they lie. The next army that comes up this road should see what the hill costs.</source>
+        <translation>Сожгите машины у подножия подъёма и оставьте тела там, где лежат. Следующая армия, что пойдёт по этой дороге, должна увидеть, чего стоит этот холм.</translation>
+    </message>
+    <message>
+        <source>Close the citadel gate behind me. If they want the praefect of Victumulae they can climb for him.</source>
+        <translation>Закройте за мной ворота цитадели. Если им нужен префект Виктумул, пусть лезут за ним наверх.</translation>
+    </message>
+    <message>
+        <source>Every family between here and the Po has carried its grain up that hill, and a praefect from Placentia is sitting on it. We will not starve them out in winter. Builders to the woods - I want a ram and a tower standing in front of this camp before the men get cold.</source>
+        <translation>Каждая семья отсюда до самого По внесла своё зерно на этот холм, а на нём сидит префект из Плаценции. Зимой мы их голодом не возьмём. Строители — в лес. Хочу видеть таран и башню перед этим лагерем, пока люди не замёрзли.</translation>
+    </message>
+    <message>
+        <source>Gates open only for their owners. Keep the archers behind the engines to answer the men on the wall.</source>
+        <translation>Ворота открываются только хозяевам. Держите лучников за машинами, чтобы отвечать людям на стене.</translation>
+    </message>
+    <message>
+        <source>Hannibal falls under the walls, and the army goes back over the Trebia without him.</source>
+        <translation>Ганнибал падает под стенами, и армия уходит обратно за Требию без него.</translation>
+    </message>
+    <message>
+        <source>Hannibal, under my wall. Somebody fetch a scribe - Placentia will want this written down twice.</source>
+        <translation>Ганнибал под моей стеной. Позовите писца — Плаценция захочет, чтобы это записали дважды.</translation>
+    </message>
+    <message>
+        <source>He keeps behind the garrison hall, on the north side of the upper crown.</source>
+        <translation>Он держится за залом гарнизона, на северной стороне верхней вершины.</translation>
+    </message>
+    <message>
+        <source>Horns on the Placentia road. The relief is here. Turn around, Carthaginian - your camp is about to have visitors.</source>
+        <translation>Рога на дороге из Плаценции. Подмога здесь. Оборачивайся, карфагенянин, — к твоему лагерю идут гости.</translation>
+    </message>
+    <message>
+        <source>Kill the praefect</source>
+        <translation>Убить префекта</translation>
+    </message>
+    <message>
+        <source>Kill the praefect. While he lives the garrison fights for every street.</source>
+        <translation>Убейте префекта. Пока он жив, гарнизон бьётся за каждую улицу.</translation>
+    </message>
+    <message>
+        <source>One narrow ramp climbs from the lower ward to the citadel gate. Break that gate as well, and hold the garrison hall&apos;s yard until it falls to Carthage.</source>
+        <translation>Один узкий подъём ведёт из нижнего города к воротам цитадели. Сломайте и эти ворота и удерживайте двор зала гарнизона, пока он не отойдёт Карфагену.</translation>
+    </message>
+    <message>
+        <source>Raise the siege engines</source>
+        <translation>Построить осадные машины</translation>
+    </message>
+    <message>
+        <source>Scouts on the Placentia road report dust to the north. A relief column is coming down the flank roads.</source>
+        <translation>Разведчики на дороге из Плаценции сообщают о пыли на севере. По фланговым дорогам спускается колонна подмоги.</translation>
+    </message>
+    <message>
+        <source>Select a builder and pick the ram or the siege tower from its build orders. The alder woods either side of the camp give more timber, and the iron outcrop lies just east of it.</source>
+        <translation>Выделите строителя и выберите таран или осадную башню в его приказах на постройку. Ольховые рощи по обе стороны лагеря дадут больше леса, а выход железной руды лежит сразу к востоку от него.</translation>
+    </message>
+    <message>
+        <source>Storm the citadel</source>
+        <translation>Штурмовать цитадель</translation>
+    </message>
+    <message>
+        <source>Take the citadel. Stand in the garrison hall&apos;s yard on the upper crown until the town is Carthage&apos;s.</source>
+        <translation>Возьмите цитадель. Стойте во дворе зала гарнизона на верхней вершине, пока город не станет карфагенским.</translation>
+    </message>
+    <message>
+        <source>Take the south ramp under the towers, then put the ram to the south gate or roll the tower against the curtain and send men over it. Get a company inside the outer ring.</source>
+        <translation>Возьмите южный подъём под башнями, затем подведите таран к южным воротам или подкатите башню к куртине и пошлите людей поверху. Введите роту за внешнее кольцо.</translation>
+    </message>
+    <message>
+        <source>The Roman commander holds the citadel to the last. Without him the garrison stops being one.</source>
+        <translation>Римский командир держит цитадель до последнего. Без него гарнизон перестаёт быть гарнизоном.</translation>
+    </message>
+    <message>
+        <source>The Storming of Victumulae</source>
+        <translation>Штурм Виктумул</translation>
+    </message>
+    <message>
+        <source>The assault is spent and there is nobody left to carry a ladder.</source>
+        <translation>Штурм выдохся, и не осталось никого, кто понёс бы лестницу.</translation>
+    </message>
+    <message>
+        <source>The citadel wall is a second ring: bring the ram up the inner ramp, or tower the wall beside the gate.</source>
+        <translation>Стена цитадели — второе кольцо: поднимите таран по внутреннему подъёму или подкатите башню к стене рядом с воротами.</translation>
+    </message>
+    <message>
+        <source>The hall is gone. Keep the granary - eat well, Carthaginian. It is the last full meal you will find between here and Rome.</source>
+        <translation>Зал пал. Забирай житницу — ешь досыта, карфагенянин. Это последняя сытная трапеза, что ждёт тебя отсюда до самого Рима.</translation>
+    </message>
+    <message>
+        <source>The last column from the river</source>
+        <translation>Последняя колонна с реки</translation>
+    </message>
+    <message>
+        <source>The praefect is dead. Tell the townspeople they may keep their lives. The grain they may not keep.</source>
+        <translation>Префект мёртв. Скажите горожанам, что жизни они могут оставить себе. Зерно — нет.</translation>
+    </message>
+    <message>
+        <source>The relief from Placentia</source>
+        <translation>Подмога из Плаценции</translation>
+    </message>
+    <message>
+        <source>The relief is broken on the road. Back to the hill - the wall has not moved while we were gone.</source>
+        <translation>Подмога разбита на дороге. Назад к холму — стена не сдвинулась, пока нас не было.</translation>
+    </message>
+    <message>
+        <source>The river garrison is on the road. That is every man Placentia can spare, and a few it cannot.</source>
+        <translation>Речной гарнизон на марше. Это все люди, каких может выделить Плаценция, и ещё несколько, каких не может.</translation>
+    </message>
+    <message>
+        <source>There they are, on the ramp. Bows to the south curtain. Nobody shoots at the timber; shoot the men pushing it.</source>
+        <translation>Вот они, на подъёме. Луки на южную куртину. По дереву не стрелять; стреляйте в тех, кто его толкает.</translation>
+    </message>
+    <message>
+        <source>They are at the wall. Spears to the breach, and someone pour something hot on that engine.</source>
+        <translation>Они у стены. Копья к пролому, и пусть кто-нибудь польёт эту машину чем-нибудь горячим.</translation>
+    </message>
+    <message>
+        <source>Two walls, one ramp, and a granary full enough for a year. Come up the hill whenever you like, Carthaginian. My archers have been counting the steps.</source>
+        <translation>Две стены, один подъём и житница, полная на год вперёд. Поднимайся на холм, когда пожелаешь, карфагенянин. Мои лучники уже пересчитали ступени.</translation>
+    </message>
+    <message>
+        <source>Victumulae is ours, and its granary with it. The army eats this winter. Let the Gauls see what happens to a town that shuts its gate on Carthage.</source>
+        <translation>Виктумулы наши, а с ними и житница. Этой зимой армия будет сыта. Пусть галлы видят, что бывает с городом, который запирает ворота перед Карфагеном.</translation>
+    </message>
+    <message>
+        <source>Victumulae stands on a double hill: a lower ward ringed by a curtain and four towers, and a walled citadel on the upper crown. Both gates face the camp road.</source>
+        <translation>Виктумулы стоят на двойном холме: нижний город, опоясанный куртиной с четырьмя башнями, и обнесённая стеной цитадель на верхней вершине. Обои ворота обращены к лагерной дороге.</translation>
+    </message>
+    <message>
+        <source>We are feeding men to that ramp. Pull back out of bowshot and wait for the engines; walls do not get tired, but they do not get closer either.</source>
+        <translation>Мы скармливаем людей этому подъёму. Отходите за пределы полёта стрелы и ждите машин; стены не устают, но и ближе не становятся.</translation>
+    </message>
+    <message>
+        <source>Winter 218 BC: after the victory on the Trebia, Hannibal attacked the depot near Placentia and then stormed Victumulae, a fortified market of the Insubrian plain where the people of the district had gathered for safety. Livy records that it fell to assault and was sacked. This altered history gives the town a Roman praefect, a citadel garrison and a relief force on the Placentia road.</source>
+        <translation>Зима 218 г. до н. э.: после победы на Требии Ганнибал напал на склад близ Плаценции, а затем взял штурмом Виктумулы, укреплённый торговый городок Инсубрской равнины, где укрылись жители округи. Ливий сообщает, что город пал при штурме и был разграблен. В этой изменённой истории у города есть римский префект, гарнизон в цитадели и войско подмоги на дороге из Плаценции.</translation>
+    </message>
 </context>
 <context>
     <name>MissionsScreen</name>
@@ -10527,12 +10715,6 @@ Immune to most arrows</source>
         <translation>Осадная башня</translation>
     </message>
     <message>
-        <source>Carries infantry onto enemy walls
-Docks at a wall</source>
-        <translation>Доставляет пехоту на стены врага
-Пристыковывается к стене</translation>
-    </message>
-    <message>
         <source>Build Battering Ram
 %1
 Cost: %2
@@ -10551,6 +10733,32 @@ Build time: %3s</source>
 %1
 Стоимость: %2
 Время постройки: %3 с</translation>
+    </message>
+    <message>
+        <source>Docks against an enemy wall
+Infantry beside it climb up and cross</source>
+        <translation>Подходит к вражеской стене
+Пехота рядом взбирается и переходит</translation>
+    </message>
+    <message>
+        <source>Ladder</source>
+        <translation>Лестница</translation>
+    </message>
+    <message>
+        <source>Leans on the town side of your wall
+Another way up onto the wall walk</source>
+        <translation>Ставится с городской стороны стены
+Ещё один подъём на боевой ход</translation>
+    </message>
+    <message>
+        <source>Build Ladder
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>Построить лестницу
+%1
+Цена: %2
+Время: %3 с</translation>
     </message>
 </context>
 <context>
@@ -13117,6 +13325,22 @@ Build time: %3s</source>
     <message>
         <source>Cannot build there.</source>
         <translation>Там строить нельзя.</translation>
+    </message>
+    <message>
+        <source>A ladder leans on the town side of your own wall.</source>
+        <translation>Лестница приставлена к городской стороне вашей собственной стены.</translation>
+    </message>
+    <message>
+        <source>Ladders go on the town side of the wall, not outside it.</source>
+        <translation>Лестницы ставят с городской стороны стены, а не снаружи.</translation>
+    </message>
+    <message>
+        <source>This stretch of wall already has a stair.</source>
+        <translation>На этом участке стены уже есть всход.</translation>
+    </message>
+    <message>
+        <source>This stretch of wall already has a ladder.</source>
+        <translation>На этом участке стены уже есть лестница.</translation>
     </message>
 </context>
 <context>

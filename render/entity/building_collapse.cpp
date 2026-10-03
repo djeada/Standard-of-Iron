@@ -96,6 +96,8 @@ auto building_collapse_footprint(Game::Units::SpawnType type) noexcept
     return {.half_width = 1.5F, .half_depth = 1.5F, .height = 4.8F};
   case SpawnType::WallSegment:
     return {.half_width = 1.1F, .half_depth = 1.0F, .height = 2.4F};
+  case SpawnType::WallLadder:
+    return {.half_width = 0.4F, .half_depth = 0.6F, .height = 1.6F};
   case SpawnType::WallGate:
     return {.half_width = Engine::Core::GateComponent::k_structure_half_span,
             .half_depth = Engine::Core::GateComponent::k_cross_half_extent,

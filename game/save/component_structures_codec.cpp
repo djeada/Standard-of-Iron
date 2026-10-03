@@ -296,6 +296,9 @@ void write_wall_walker(const Entity* entity, QJsonObject& entity_obj) {
     obj["crest_z"] = static_cast<double>(walker->crest_z);
     obj["landing_x"] = static_cast<double>(walker->landing_x);
     obj["landing_z"] = static_cast<double>(walker->landing_z);
+    obj["tower_id"] = static_cast<qint64>(walker->tower_id);
+    obj["base_x"] = static_cast<double>(walker->base_x);
+    obj["base_z"] = static_cast<double>(walker->base_z);
     obj["stair_wall_id"] = static_cast<qint64>(walker->stair_wall_id);
     obj["goal_x"] = static_cast<double>(walker->goal_x);
     obj["goal_z"] = static_cast<double>(walker->goal_z);
@@ -318,7 +321,7 @@ void read_wall_walker(Entity* entity, const QJsonObject& json) {
     walker->phase = static_cast<WallWalkerComponent::Phase>(
         std::clamp(obj["phase"].toInt(0),
                    0,
-                   static_cast<int>(WallWalkerComponent::Phase::Descending)));
+                   static_cast<int>(WallWalkerComponent::Phase::Leaving)));
     walker->boarding_seconds = real("boarding_seconds");
     walker->door_x = real("door_x");
     walker->door_z = real("door_z");
@@ -329,6 +332,9 @@ void read_wall_walker(Entity* entity, const QJsonObject& json) {
     walker->crest_z = real("crest_z");
     walker->landing_x = real("landing_x", walker->crest_x);
     walker->landing_z = real("landing_z", walker->crest_z);
+    walker->tower_id = static_cast<EntityID>(obj["tower_id"].toInteger(0));
+    walker->base_x = real("base_x");
+    walker->base_z = real("base_z");
     walker->stair_wall_id = static_cast<EntityID>(obj["stair_wall_id"].toInteger(0));
     walker->goal_x = real("goal_x");
     walker->goal_z = real("goal_z");

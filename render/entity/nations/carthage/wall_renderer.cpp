@@ -1,6 +1,7 @@
 #include "wall_renderer.h"
 
 #include "building_palette.h"
+#include "render/entity/building_archetype_library.h"
 #include "render/entity/building_render_common.h"
 #include "render/entity/registry.h"
 #include "render/entity/wall_gate_renderer_common.h"
@@ -25,19 +26,25 @@ const WallGeometry k_wall_geometry{.earthwork_base = true,
                                    .irregular_stakes = true,
                                    .open_span_length = 1.00F,
                                    .stake_height = 2.44F,
-                                   .stake_radius = 0.102F,
+                                   .stake_radius = 0.120F,
                                    .tip_height = 0.38F,
-                                   .post_radius = 0.190F,
+                                   .post_radius = 0.220F,
                                    .post_extra_height = 0.22F,
                                    .lower_rail_y = 0.70F,
                                    .upper_rail_y = 1.52F,
-                                   .rail_radius = 0.055F,
-                                   .berm_half_width = 0.28F,
-                                   .berm_height = 0.20F};
+                                   .rail_radius = 0.070F,
+                                   .berm_half_width = 0.40F,
+                                   .berm_height = 0.26F};
 auto wall_archetypes() -> const WallArchetypeSet& {
   static const WallArchetypeSet archetypes =
       wall_archetype_set("carthage_wall_variant");
   return archetypes;
+}
+
+auto ladder_archetype() -> const BuildingArchetypeSet& {
+  static const BuildingArchetypeSet& archetype =
+      building_archetype_set("carthage_wall_variant_ladder");
+  return archetype;
 }
 
 auto gate_archetype() -> const BuildingArchetypeSet& {
@@ -63,6 +70,11 @@ void register_wall_renderer(Render::GL::EntityRendererRegistry& registry) {
           submit_wall_segment_variant(out, p, wall_archetypes(), variant);
         });
   }
+
+  register_building_renderer(
+      registry, "carthage", "wall_ladder", [](const DrawContext& p, ISubmitter& out) {
+        submit_wall_ladder(out, p, ladder_archetype());
+      });
 
   register_building_renderer(
       registry, "carthage", "wall_gate", [](const DrawContext& p, ISubmitter& out) {

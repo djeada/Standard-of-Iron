@@ -100,6 +100,15 @@
         "refund": 0.6
       }
     },
+    "wall_ladder": {
+      "costs": {
+        "wood": 15
+      },
+      "build_time": 6,
+      "dismantle": {
+        "refund": 0.7
+      }
+    },
     "temple": {
       "costs": {
         "wood": 40,

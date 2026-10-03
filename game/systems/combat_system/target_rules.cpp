@@ -7,12 +7,26 @@
 #include "../../core/component_structures.h"
 #include "../../core/entity.h"
 #include "../../core/world.h"
+#include "../../units/spawn_type.h"
 #include "../owner_registry.h"
 
 namespace Game::Systems::Combat {
 
 auto is_building(const Engine::Core::Entity* entity) -> bool {
   return entity != nullptr && entity->has_component<Engine::Core::BuildingComponent>();
+}
+
+auto attacks_structures_only(const Engine::Core::UnitComponent& attacker) -> bool {
+  return attacker.spawn_type == Game::Units::SpawnType::Ram ||
+         attacker.spawn_type == Game::Units::SpawnType::SiegeTower;
+}
+
+auto query_for(const Engine::Core::UnitComponent* attacker,
+               TargetQuery query) -> TargetQuery {
+  if (attacker != nullptr && attacks_structures_only(*attacker)) {
+    query.allow_troops = false;
+  }
+  return query;
 }
 
 auto is_passive_wildlife_target(Engine::Core::Entity* target) -> bool {
@@ -48,6 +62,9 @@ auto evaluate_target(Engine::Core::Entity* target,
 
   if (!query.allow_buildings && is_building(target)) {
     return TargetRefusal::Structure;
+  }
+  if (!query.allow_troops && !is_building(target)) {
+    return TargetRefusal::NotAStructure;
   }
 
   if (query.intent == EngagementIntent::AutoAcquired && !query.in_reach &&
@@ -105,7 +122,8 @@ auto may_attack(int attacker_owner_id,
 auto may_attack(const Engine::Core::UnitComponent* attacker,
                 Engine::Core::Entity* target,
                 TargetQuery query) -> bool {
-  return attacker != nullptr && may_attack(attacker->owner_id, target, query);
+  return attacker != nullptr &&
+         may_attack(attacker->owner_id, target, query_for(attacker, query));
 }
 
 auto collect_hostile_contacts(const Engine::Core::World& world,
@@ -139,6 +157,8 @@ auto target_refusal_key(TargetRefusal refusal) -> std::string_view {
     return "structure";
   case TargetRefusal::Warded:
     return "warded";
+  case TargetRefusal::NotAStructure:
+    return "not_a_structure";
   }
   return "no_target";
 }

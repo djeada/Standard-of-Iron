@@ -17,6 +17,7 @@
 #include "app/viewmodels/orders_view_model.h"
 #include "app/viewmodels/placement_view_model.h"
 #include "app/viewmodels/production_view_model.h"
+#include "game/render_bridge/picking_service.h"
 
 namespace App::Core {
 
@@ -71,6 +72,12 @@ auto base_name(const BenchmarkAction& action) -> QString {
   return name;
 }
 
+// World points in a fixture lie on the surface the pick will meet: the
+// terrain, or a wall walk's planks.
+auto ground_y(float x, float z) -> float {
+  return Game::Systems::PickingService::surface_height_at(x, z);
+}
+
 } // namespace
 
 auto resolve_action_pointer(GameEngine* engine,
@@ -106,7 +113,8 @@ auto resolve_action_pointer(GameEngine* engine,
     if (camera == nullptr || corners.size() < 4) {
       return std::nullopt;
     }
-    const QVariantMap far = camera->project_world(corners[2], 0.0F, corners[3]);
+    const QVariantMap far =
+        camera->project_world(corners[2], ground_y(corners[2], corners[3]), corners[3]);
     if (!far.value(QStringLiteral("valid")).toBool()) {
       return std::nullopt;
     }
@@ -122,7 +130,8 @@ auto resolve_action_pointer(GameEngine* engine,
   if (camera == nullptr || numbers.size() < 2) {
     return std::nullopt;
   }
-  const QVariantMap projected = camera->project_world(numbers[0], 0.0F, numbers[1]);
+  const QVariantMap projected =
+      camera->project_world(numbers[0], ground_y(numbers[0], numbers[1]), numbers[1]);
   if (!projected.value(QStringLiteral("valid")).toBool()) {
     return std::nullopt;
   }
@@ -143,7 +152,8 @@ auto resolve_drag_origin(GameEngine* engine,
   if (camera == nullptr || corners.size() < 4) {
     return std::nullopt;
   }
-  const QVariantMap near = camera->project_world(corners[0], 0.0F, corners[1]);
+  const QVariantMap near =
+      camera->project_world(corners[0], ground_y(corners[0], corners[1]), corners[1]);
   if (!near.value(QStringLiteral("valid")).toBool()) {
     return std::nullopt;
   }
@@ -196,7 +206,8 @@ void apply_benchmark_action(GameEngine* engine,
     if (camera == nullptr || numbers.size() < 2) {
       return;
     }
-    const QVariantMap projected = camera->project_world(numbers[0], 0.0F, numbers[1]);
+    const QVariantMap projected =
+        camera->project_world(numbers[0], ground_y(numbers[0], numbers[1]), numbers[1]);
     if (!projected.value(QStringLiteral("valid")).toBool()) {
       return;
     }
@@ -214,6 +225,8 @@ void apply_benchmark_action(GameEngine* engine,
     if (!numbers.isEmpty()) {
       orders->select_unit_by_id(static_cast<qulonglong>(numbers[0]));
     }
+  } else if (name == QLatin1String("select_owned_type")) {
+    orders->select_all_of_type(action.argument.trimmed());
   } else if (name == QLatin1String("select_by_type")) {
 
     orders->select_all_troops();

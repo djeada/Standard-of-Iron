@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "animation/bpat/bpat_format.h"
+#include "animation/clip_manifest.h"
 #include "animation/combat_root_motion_manifest.h"
 #include "animation/layout_manifest.h"
 #include "animation/locomotion_manifest.h"
@@ -1013,7 +1014,9 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
           : nullptr;
   bool const soldier_elevated =
       shared_footing != nullptr && shared_footing->elevation > 0.0F;
-  if (soldier_elevated) {
+  if (shared_footing != nullptr) {
+    // Each man's own walking height: a troop counted on the balcony still has
+    // men on the ground queueing for the ladder or the tower.
     entity_ground_offset = -shared_footing->elevation;
   }
   const bool has_shared_footsteps =
@@ -1088,6 +1091,16 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
       soldier_render_anim.movement_state = Animation::MovementState::Run;
       break;
     }
+  }
+
+  if (has_shared_footsteps && shared_footing->climbing) {
+    soldier_render_anim.is_constructing = true;
+    soldier_render_anim.construction_job =
+        static_cast<std::uint8_t>(Animation::HumanoidWorkJob::Climb);
+    soldier_render_anim.construction_progress =
+        shared_footing->elevation / Animation::k_humanoid_climb_rise_per_cycle;
+    soldier_render_anim.is_attacking = false;
+    soldier_render_anim.movement_state = Animation::MovementState::Idle;
   }
 
   bool const soldier_has_locomotion =

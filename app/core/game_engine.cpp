@@ -138,6 +138,7 @@ GameEngine::GameEngine(QObject* parent)
 GameEngine::~GameEngine() {
   Game::Session::SessionSnapshot::forget_contributor("victory");
   stop_simulation_thread();
+  Game::Systems::PickingService::unbind_surface(m_world);
 
   if (m_saves) {
     m_saves->shutdown();

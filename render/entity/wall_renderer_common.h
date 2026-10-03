@@ -69,6 +69,13 @@ auto build_wall_walk_landing_desc(std::string_view name_prefix,
                                   const WallPalette& palette) -> BuildingArchetypeDesc;
 auto build_wall_walk_stair_desc(std::string_view name_prefix,
                                 const WallPalette& palette) -> BuildingArchetypeDesc;
+// A builder's ladder, authored about its own centre with +z pointing at the
+// wall it leans on: feet in the street, rails resting on the balcony lip.
+auto build_wall_ladder_desc(std::string_view name_prefix,
+                            const WallPalette& palette) -> BuildingArchetypeDesc;
+void submit_wall_ladder(ISubmitter& out,
+                        const DrawContext& ctx,
+                        const BuildingArchetypeSet& archetype);
 
 auto build_wall_variant_desc(std::string_view name_prefix,
                              const WallPalette& palette,

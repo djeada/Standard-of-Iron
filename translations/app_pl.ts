@@ -3060,8 +3060,16 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
         <translation>Osłonięta maszyna oblężnicza łamiąca bramy i mury.</translation>
     </message>
     <message>
-        <source>Carries infantry to a wall and lets them off on top.</source>
-        <translation>Dowozi piechotę pod mur i wysadza ją na szczycie.</translation>
+        <source>Ladder</source>
+        <translation>Drabina</translation>
+    </message>
+    <message>
+        <source>Leans on the town side of your own wall so troops can climb onto the wall walk.</source>
+        <translation>Opiera się o miejską stronę twojego muru, żeby oddziały mogły wejść na ganek obronny.</translation>
+    </message>
+    <message>
+        <source>Docks against an enemy wall; the infantry beside it climb its ladder and cross onto the wall walk.</source>
+        <translation>Dobija do wrogiego muru; piechota obok wspina się po jej drabinie i przechodzi na ganek obronny.</translation>
     </message>
 </context>
 <context>
@@ -3245,6 +3253,10 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
     <message>
         <source>Sepulcher Shrine</source>
         <translation>Kapliczka Grobowca</translation>
+    </message>
+    <message>
+        <source>Ladder</source>
+        <translation>Drabina</translation>
     </message>
 </context>
 <context>
@@ -7360,6 +7372,14 @@ by zobaczyć podgląd</translation>
         <source>A Roman watch camp on the old road, the night it finds out why the shepherds stopped using it. Timber, stone and a flock are close to the camp; the barrow ruins hold the middle ground; the cursed shrine stands alone on the north-east ground. A low knoll between the camp and the barrow is the only high ground worth having, and the road runs past the dead the whole way.</source>
         <translation>Rzymski obóz strażniczy przy starej drodze, w noc, gdy dowiaduje się, czemu pasterze przestali nią chodzić. Drewno, kamień i stado są blisko obozu; ruiny grobowca zajmują środek; przeklęta kapliczka stoi samotnie na północnym wschodzie. Niski pagórek między obozem a grobowcem to jedyne wzniesienie warte zajęcia, a droga przez całą długość biegnie obok umarłych.</translation>
     </message>
+    <message>
+        <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. The lower ward rings the outer crown with a timber curtain and towers; the citadel stands on the upper crown behind its own wall, with the granary and the garrison hall inside it. Three roads climb to the lower ward - from the Punic camp in the south, and from the Placentia road on either flank - and only one ramp climbs from the lower ward to the citadel gate.</source>
+        <translation>Obwarowane miasto targowe na równinie Insubrów, wzniesione na podwójnym wzgórzu ponad zimowymi polami. Dolne miasto otacza zewnętrzny szczyt drewnianą kurtyną i wieżami; cytadela stoi na górnym szczycie za własnym murem, a w jej obrębie spichlerz i dom załogi. Trzy drogi pną się do dolnego miasta - z obozu punickiego na południu i z drogi do Placentii po obu flankach - i tylko jedna rampa prowadzi z dolnego miasta do bramy cytadeli.</translation>
+    </message>
+    <message>
+        <source>Victumulae</source>
+        <translation>Victumulae</translation>
+    </message>
 </context>
 <context>
     <name>MatchSetupViewModel</name>
@@ -9393,6 +9413,174 @@ by zobaczyć podgląd</translation>
         <source>Those are men. Were men. Jupiter keep us. ...Steady. Bones break like anything else. Archers, hold where you stand and let them come to the shields.</source>
         <translation>To ludzie. Byli ludźmi. Jowiszu, miej nas w opiece. ...Spokojnie. Kości łamią się jak wszystko inne. Łucznicy, stać, gdzie stoicie, niech podejdą pod tarcze.</translation>
     </message>
+    <message>
+        <source>A general alone at the foot of a wall is a target, not a siege.</source>
+        <translation>Wódz sam pod murem to cel, nie oblężenie.</translation>
+    </message>
+    <message>
+        <source>A set-piece siege: a quiet build-up in the Punic camp, an assault up the south ramp under arrow fire from two rings of wall, and a relief column that arrives on the flank roads while the army is committed against the citadel.</source>
+        <translation>Oblężenie jak z podręcznika: spokojne przygotowania w obozie punickim, szturm na południową rampę pod strzałami z dwóch pierścieni murów i odsiecz, która nadciąga drogami flankowymi, gdy armia jest uwikłana pod cytadelą.</translation>
+    </message>
+    <message>
+        <source>A wall is not stormed by walking at it. Builders raise the engines: a ram knocks a gate down, a siege tower puts men on the wall walk. Bring both, break one ring at a time, and keep something back for the column that comes to lift the siege.</source>
+        <translation>Muru nie zdobywa się, idąc na niego. Budowniczowie stawiają machiny: taran wyważa bramę, wieża oblężnicza wprowadza ludzi na ganek obronny. Weź jedno i drugie, łam jeden pierścień naraz i zachowaj coś w odwodzie na kolumnę, która przyjdzie znieść oblężenie.</translation>
+    </message>
+    <message>
+        <source>A walled market town on a double hill, two rings of wall and one ramp between them. Raise a ram and a siege tower, break into the lower ward, storm the citadel, and kill the praefect who holds it before the relief columns from Placentia arrive.</source>
+        <translation>Obwarowane miasto targowe na podwójnym wzgórzu, dwa pierścienie murów i jedna rampa między nimi. Zbuduj taran i wieżę oblężniczą, wedrzyj się do dolnego miasta, zdobądź szturmem cytadelę i zabij prefekta, który jej broni, zanim nadciągną odsiecze z Placentii.</translation>
+    </message>
+    <message>
+        <source>Break both relief columns. A siege that cannot hold its own camp is only a long way of losing.</source>
+        <translation>Rozbij obie kolumny odsieczy. Oblężenie, które nie potrafi utrzymać własnego obozu, to tylko długa droga do porażki.</translation>
+    </message>
+    <message>
+        <source>Break into the lower ward</source>
+        <translation>Wedrzyj się do dolnego miasta</translation>
+    </message>
+    <message>
+        <source>Builders raise siege engines. A ram for the gate, a siege tower for the wall walk - one of each gives the assault two ways in.</source>
+        <translation>Budowniczowie stawiają machiny oblężnicze. Taran na bramę, wieża oblężnicza na ganek obronny - po jednym z każdego daje szturmowi dwie drogi do środka.</translation>
+    </message>
+    <message>
+        <source>Builders raise the engines in the field. A ram costs 70 wood and 15 iron and breaks gates; a siege tower costs 120 wood and 30 iron and puts men on the wall walk. Build one of each.</source>
+        <translation>Budowniczowie stawiają machiny w polu. Taran kosztuje 70 drewna i 15 żelaza i rozbija bramy; wieża oblężnicza kosztuje 120 drewna i 30 żelaza i wprowadza ludzi na ganek obronny. Zbuduj po jednym z każdego.</translation>
+    </message>
+    <message>
+        <source>Burn the engines at the foot of the ramp and leave the bodies where they lie. The next army that comes up this road should see what the hill costs.</source>
+        <translation>Spalcie machiny u stóp rampy i zostawcie ciała tam, gdzie leżą. Następna armia, która przyjdzie tą drogą, niech zobaczy, ile kosztuje to wzgórze.</translation>
+    </message>
+    <message>
+        <source>Close the citadel gate behind me. If they want the praefect of Victumulae they can climb for him.</source>
+        <translation>Zamknijcie za mną bramę cytadeli. Jeśli chcą prefekta Victumulae, niech się po niego wspinają.</translation>
+    </message>
+    <message>
+        <source>Every family between here and the Po has carried its grain up that hill, and a praefect from Placentia is sitting on it. We will not starve them out in winter. Builders to the woods - I want a ram and a tower standing in front of this camp before the men get cold.</source>
+        <translation>Każda rodzina stąd aż po Pad wniosła swoje zboże na to wzgórze, a siedzi na nim prefekt z Placentii. Zimą ich nie zagłodzimy. Budowniczowie do lasu - chcę, żeby taran i wieża stały przed tym obozem, zanim ludzie zmarzną.</translation>
+    </message>
+    <message>
+        <source>Gates open only for their owners. Keep the archers behind the engines to answer the men on the wall.</source>
+        <translation>Bramy otwierają się tylko przed właścicielami. Trzymaj łuczników za machinami, żeby odpowiadali ludziom na murze.</translation>
+    </message>
+    <message>
+        <source>Hannibal falls under the walls, and the army goes back over the Trebia without him.</source>
+        <translation>Hannibal pada pod murami, a armia wraca za Trebię bez niego.</translation>
+    </message>
+    <message>
+        <source>Hannibal, under my wall. Somebody fetch a scribe - Placentia will want this written down twice.</source>
+        <translation>Hannibal pod moim murem. Niech ktoś sprowadzi skrybę - Placentia zechce mieć to na piśmie dwa razy.</translation>
+    </message>
+    <message>
+        <source>He keeps behind the garrison hall, on the north side of the upper crown.</source>
+        <translation>Trzyma się za domem załogi, po północnej stronie górnego szczytu.</translation>
+    </message>
+    <message>
+        <source>Horns on the Placentia road. The relief is here. Turn around, Carthaginian - your camp is about to have visitors.</source>
+        <translation>Rogi na drodze do Placentii. Odsiecz nadeszła. Odwróć się, Kartagińczyku - twój obóz zaraz będzie miał gości.</translation>
+    </message>
+    <message>
+        <source>Kill the praefect</source>
+        <translation>Zabij prefekta</translation>
+    </message>
+    <message>
+        <source>Kill the praefect. While he lives the garrison fights for every street.</source>
+        <translation>Zabij prefekta. Póki żyje, załoga walczy o każdą ulicę.</translation>
+    </message>
+    <message>
+        <source>One narrow ramp climbs from the lower ward to the citadel gate. Break that gate as well, and hold the garrison hall&apos;s yard until it falls to Carthage.</source>
+        <translation>Jedna wąska rampa prowadzi z dolnego miasta do bramy cytadeli. Rozbij i tę bramę, a potem utrzymaj dziedziniec domu załogi, aż padnie łupem Kartaginy.</translation>
+    </message>
+    <message>
+        <source>Raise the siege engines</source>
+        <translation>Zbuduj machiny oblężnicze</translation>
+    </message>
+    <message>
+        <source>Scouts on the Placentia road report dust to the north. A relief column is coming down the flank roads.</source>
+        <translation>Zwiadowcy na drodze do Placentii donoszą o kurzu na północy. Kolumna odsieczy schodzi drogami flankowymi.</translation>
+    </message>
+    <message>
+        <source>Select a builder and pick the ram or the siege tower from its build orders. The alder woods either side of the camp give more timber, and the iron outcrop lies just east of it.</source>
+        <translation>Zaznacz budowniczego i wybierz taran albo wieżę oblężniczą z jego rozkazów budowy. Olszyny po obu stronach obozu dają więcej drewna, a wychodnia żelaza leży tuż na wschód od niego.</translation>
+    </message>
+    <message>
+        <source>Storm the citadel</source>
+        <translation>Zdobądź cytadelę szturmem</translation>
+    </message>
+    <message>
+        <source>Take the citadel. Stand in the garrison hall&apos;s yard on the upper crown until the town is Carthage&apos;s.</source>
+        <translation>Zajmij cytadelę. Stój na dziedzińcu domu załogi na górnym szczycie, aż miasto będzie należeć do Kartaginy.</translation>
+    </message>
+    <message>
+        <source>Take the south ramp under the towers, then put the ram to the south gate or roll the tower against the curtain and send men over it. Get a company inside the outer ring.</source>
+        <translation>Zdobądź południową rampę pod wieżami, a potem przystaw taran do południowej bramy albo dotocz wieżę do kurtyny i poślij ludzi górą. Wprowadź kompanię za zewnętrzny pierścień.</translation>
+    </message>
+    <message>
+        <source>The Roman commander holds the citadel to the last. Without him the garrison stops being one.</source>
+        <translation>Rzymski dowódca broni cytadeli do końca. Bez niego załoga przestaje być załogą.</translation>
+    </message>
+    <message>
+        <source>The Storming of Victumulae</source>
+        <translation>Szturm na Victumulae</translation>
+    </message>
+    <message>
+        <source>The assault is spent and there is nobody left to carry a ladder.</source>
+        <translation>Szturm się wyczerpał i nie ma już nikogo, kto mógłby nieść drabinę.</translation>
+    </message>
+    <message>
+        <source>The citadel wall is a second ring: bring the ram up the inner ramp, or tower the wall beside the gate.</source>
+        <translation>Mur cytadeli to drugi pierścień: wprowadź taran na wewnętrzną rampę albo przystaw wieżę do muru obok bramy.</translation>
+    </message>
+    <message>
+        <source>The hall is gone. Keep the granary - eat well, Carthaginian. It is the last full meal you will find between here and Rome.</source>
+        <translation>Dom załogi padł. Zatrzymaj spichlerz - najedz się dobrze, Kartagińczyku. To ostatni pełny posiłek, jaki znajdziesz stąd do Rzymu.</translation>
+    </message>
+    <message>
+        <source>The last column from the river</source>
+        <translation>Ostatnia kolumna znad rzeki</translation>
+    </message>
+    <message>
+        <source>The praefect is dead. Tell the townspeople they may keep their lives. The grain they may not keep.</source>
+        <translation>Prefekt nie żyje. Powiedzcie mieszkańcom, że mogą zachować życie. Zboża zachować nie mogą.</translation>
+    </message>
+    <message>
+        <source>The relief from Placentia</source>
+        <translation>Odsiecz z Placentii</translation>
+    </message>
+    <message>
+        <source>The relief is broken on the road. Back to the hill - the wall has not moved while we were gone.</source>
+        <translation>Odsiecz rozbita na drodze. Z powrotem na wzgórze - mur się nie ruszył, gdy nas nie było.</translation>
+    </message>
+    <message>
+        <source>The river garrison is on the road. That is every man Placentia can spare, and a few it cannot.</source>
+        <translation>Załoga znad rzeki jest w drodze. To każdy człowiek, którego Placentia może oddać, i kilku, których nie może.</translation>
+    </message>
+    <message>
+        <source>There they are, on the ramp. Bows to the south curtain. Nobody shoots at the timber; shoot the men pushing it.</source>
+        <translation>Są, na rampie. Łuki na południową kurtynę. Nikt nie strzela w drewno; strzelajcie w ludzi, którzy je pchają.</translation>
+    </message>
+    <message>
+        <source>They are at the wall. Spears to the breach, and someone pour something hot on that engine.</source>
+        <translation>Są pod murem. Włócznie do wyłomu, a niech ktoś wyleje coś gorącego na tę machinę.</translation>
+    </message>
+    <message>
+        <source>Two walls, one ramp, and a granary full enough for a year. Come up the hill whenever you like, Carthaginian. My archers have been counting the steps.</source>
+        <translation>Dwa mury, jedna rampa i spichlerz pełny na cały rok. Wejdź na wzgórze, kiedy zechcesz, Kartagińczyku. Moi łucznicy liczą stopnie.</translation>
+    </message>
+    <message>
+        <source>Victumulae is ours, and its granary with it. The army eats this winter. Let the Gauls see what happens to a town that shuts its gate on Carthage.</source>
+        <translation>Victumulae jest nasze, a z nim jego spichlerz. Armia ma co jeść tej zimy. Niech Gallowie zobaczą, co spotyka miasto, które zamyka bramę przed Kartaginą.</translation>
+    </message>
+    <message>
+        <source>Victumulae stands on a double hill: a lower ward ringed by a curtain and four towers, and a walled citadel on the upper crown. Both gates face the camp road.</source>
+        <translation>Victumulae stoi na podwójnym wzgórzu: dolne miasto otoczone kurtyną i czterema wieżami oraz obwarowana cytadela na górnym szczycie. Obie bramy wychodzą na drogę obozową.</translation>
+    </message>
+    <message>
+        <source>We are feeding men to that ramp. Pull back out of bowshot and wait for the engines; walls do not get tired, but they do not get closer either.</source>
+        <translation>Karmimy tę rampę ludźmi. Wycofajcie się poza zasięg łuku i czekajcie na machiny; mury się nie męczą, ale też się nie przybliżają.</translation>
+    </message>
+    <message>
+        <source>Winter 218 BC: after the victory on the Trebia, Hannibal attacked the depot near Placentia and then stormed Victumulae, a fortified market of the Insubrian plain where the people of the district had gathered for safety. Livy records that it fell to assault and was sacked. This altered history gives the town a Roman praefect, a citadel garrison and a relief force on the Placentia road.</source>
+        <translation>Zima 218 p.n.e.: po zwycięstwie nad Trebią Hannibal zaatakował skład pod Placentią, a potem zdobył szturmem Victumulae, warowny targ na równinie Insubrów, gdzie schronili się mieszkańcy okolicy. Liwiusz zapisuje, że miasto padło w szturmie i zostało złupione. Ta zmieniona historia daje miastu rzymskiego prefekta, załogę cytadeli i odsiecz na drodze do Placentii.</translation>
+    </message>
 </context>
 <context>
     <name>MissionsScreen</name>
@@ -10527,12 +10715,6 @@ Odporna na większość strzał</translation>
         <translation>Wieża oblężnicza</translation>
     </message>
     <message>
-        <source>Carries infantry onto enemy walls
-Docks at a wall</source>
-        <translation>Przenosi piechotę na wrogie mury
-Przystaje przy murze</translation>
-    </message>
-    <message>
         <source>Build Battering Ram
 %1
 Cost: %2
@@ -10548,6 +10730,32 @@ Czas budowy: %3 s</translation>
 Cost: %2
 Build time: %3s</source>
         <translation>Zbuduj wieżę oblężniczą
+%1
+Koszt: %2
+Czas budowy: %3 s</translation>
+    </message>
+    <message>
+        <source>Docks against an enemy wall
+Infantry beside it climb up and cross</source>
+        <translation>Dobija do wrogiego muru
+Piechota obok wspina się i przechodzi</translation>
+    </message>
+    <message>
+        <source>Ladder</source>
+        <translation>Drabina</translation>
+    </message>
+    <message>
+        <source>Leans on the town side of your wall
+Another way up onto the wall walk</source>
+        <translation>Opiera się o miejską stronę muru
+Kolejne wejście na ganek obronny</translation>
+    </message>
+    <message>
+        <source>Build Ladder
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>Zbuduj drabinę
 %1
 Koszt: %2
 Czas budowy: %3 s</translation>
@@ -13117,6 +13325,22 @@ Czas budowy: %3 s</translation>
     <message>
         <source>Cannot build there.</source>
         <translation>Nie można tam budować.</translation>
+    </message>
+    <message>
+        <source>A ladder leans on the town side of your own wall.</source>
+        <translation>Drabina opiera się o miejską stronę twojego muru.</translation>
+    </message>
+    <message>
+        <source>Ladders go on the town side of the wall, not outside it.</source>
+        <translation>Drabiny stawia się po miejskiej stronie muru, nie na zewnątrz.</translation>
+    </message>
+    <message>
+        <source>This stretch of wall already has a stair.</source>
+        <translation>Ten odcinek muru ma już schody.</translation>
+    </message>
+    <message>
+        <source>This stretch of wall already has a ladder.</source>
+        <translation>Ten odcinek muru ma już drabinę.</translation>
     </message>
 </context>
 <context>

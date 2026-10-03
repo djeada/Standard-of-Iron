@@ -44,6 +44,8 @@ public:
                         int local_owner_id);
   void on_right_click_clear_selection();
   void select_all_player_troops(int local_owner_id);
+  // Every live unit of the owner's with this spawn type, builders included.
+  void select_all_player_units_of_type(const QString& unit_type, int local_owner_id);
   void select_single_unit(Engine::Core::EntityID id, int local_owner_id);
   [[nodiscard]] auto can_inspect(Engine::Core::EntityID entity_id,
                                  int local_owner_id) const -> bool;

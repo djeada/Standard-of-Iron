@@ -108,6 +108,7 @@ auto validate_attack(Engine::Core::World& world,
   case TargetRefusal::Passive:
   case TargetRefusal::Structure:
   case TargetRefusal::Warded:
+  case TargetRefusal::NotAStructure:
     return Rejection::ProtectedTarget;
   }
 
