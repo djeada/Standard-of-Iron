@@ -468,8 +468,7 @@ auto scabbard_archetype(float sheath_r) -> const RenderArchetype& {
       return entry.archetype;
     }
   }
-  // A flattened sheath hangs outside the sword-side hip, angled slightly back.
-  // Keep its fittings on the same belt attachment so walking cannot separate them.
+
   QVector3D const mouth(0.0F, 0.0F, 0.0F);
   QVector3D const tip(0.035F, -0.48F, -0.16F);
   QVector3D const axis = (tip - mouth).normalized();
@@ -492,8 +491,7 @@ auto scabbard_archetype(float sheath_r) -> const RenderArchetype& {
          width * 1.04F,
          depth * 1.1F,
          k_scabbard_metal_slot);
-  // Short leather hangers connect the mouth to the waist instead of floating
-  // against the thigh or passing through the seat of the tunic.
+
   for (float z : {-0.018F, 0.018F}) {
     casing(QVector3D(-0.06F, 0.065F, z),
            QVector3D(0.0F, 0.0F, z),

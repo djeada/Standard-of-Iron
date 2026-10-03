@@ -25,11 +25,11 @@ struct DrawState {
   float bite_progress{-1.0F};
   float flinch_progress{-1.0F};
   float death_progress{-1.0F};
-  // Seconds since the death sequence began; negative while alive.
+
   float death_elapsed{-1.0F};
   bool dead{false};
   float sink_progress{0.0F};
-  // Seconds of dizziness left under a butcher's mallet.
+
   float dazed{0.0F};
 };
 

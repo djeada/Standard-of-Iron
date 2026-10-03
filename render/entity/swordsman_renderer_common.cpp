@@ -132,6 +132,7 @@ public:
     QVector3D const team_tint = resolve_team_tint(ctx);
     variant.palette = make_humanoid_palette(team_tint, seed);
     apply_palette_overrides(resolve_style(ctx), team_tint, variant);
+    Humanoid::apply_commander_palette(m_renderer_key, team_tint, variant.palette);
     if (m_facial_hair.has_value()) {
       variant.facial_hair = *m_facial_hair;
     }

@@ -173,6 +173,7 @@ public:
       variant.scarring = next_rand(beard_seed) * 0.30F;
       variant.weathering = 0.40F + next_rand(beard_seed) * 0.40F;
     }
+    Humanoid::apply_commander_palette(m_renderer_key, team_tint, variant.palette);
     if (m_facial_hair.has_value()) {
       variant.facial_hair = *m_facial_hair;
     }

@@ -12,6 +12,46 @@ inline auto clamp01(float value) -> float {
 
 } // namespace
 
+void apply_commander_palette(std::string_view renderer_key,
+                             const QVector3D& team_tint,
+                             HumanoidPalette& palette) {
+  struct Dress {
+    std::string_view key;
+    QVector3D cloth;
+    QVector3D metal;
+  };
+  const Dress dresses[] = {
+      {"troops/roman/commanders/fabius_maximus",
+       {0.30F, 0.065F, 0.055F},
+       {0.46F, 0.43F, 0.35F}},
+      {"troops/roman/commanders/scipio_africanus",
+       {0.46F, 0.045F, 0.065F},
+       {0.66F, 0.51F, 0.28F}},
+      {"troops/roman/commanders/marcellus",
+       {0.27F, 0.045F, 0.05F},
+       {0.35F, 0.36F, 0.37F}},
+      {"troops/carthage/commanders/hanno_the_great",
+       {0.25F, 0.105F, 0.25F},
+       {0.59F, 0.46F, 0.27F}},
+      {"troops/carthage/commanders/hasdrubal_barca",
+       {0.055F, 0.19F, 0.18F},
+       {0.39F, 0.38F, 0.29F}},
+      {"troops/carthage/commanders/hannibal_barca",
+       {0.11F, 0.085F, 0.13F},
+       {0.44F, 0.36F, 0.24F}},
+  };
+  for (const auto& dress : dresses) {
+    if (renderer_key != dress.key) {
+      continue;
+    }
+    palette.cloth = blend_with_team(dress.cloth, team_tint, 0.08F);
+    palette.metal = dress.metal;
+    palette.leather = {0.23F, 0.14F, 0.095F};
+    palette.leather_dark = {0.105F, 0.07F, 0.055F};
+    return;
+  }
+}
+
 auto saturate_color(const QVector3D& value) -> QVector3D {
   return {clamp01(value.x()), clamp01(value.y()), clamp01(value.z())};
 }

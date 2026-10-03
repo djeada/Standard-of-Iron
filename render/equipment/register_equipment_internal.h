@@ -146,6 +146,7 @@ auto with_horse_variant(const void* variant_void,
 
 void register_equipment_ids(EquipmentRegistry& registry);
 void register_equipment_descriptors();
+void register_commander_regalia_descriptors();
 void register_equipment_archetypes();
 
 auto build_carthage_light_helmet_attachments(std::uint8_t base_role_byte)

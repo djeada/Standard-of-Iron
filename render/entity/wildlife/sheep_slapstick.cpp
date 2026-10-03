@@ -20,7 +20,6 @@ auto smooth(float t) -> float {
 const QVector3D k_star_colour{1.0F, 0.84F, 0.20F};
 const QVector3D k_star_core_colour{1.0F, 0.97F, 0.78F};
 
-// Where the halo sits once the sheep lies on its back: over the upturned head.
 const QVector3D k_fallen_star_centre{0.0F, 0.34F, 0.42F};
 const QVector3D k_wool_burst_origin{0.0F, 0.50F, 0.0F};
 
@@ -105,7 +104,6 @@ auto sheep_wool_tuft(std::uint32_t seed, int index, float poof_time) -> WoolTuft
   QVector3D const direction =
       QVector3D(std::cos(angle), climb, std::sin(angle)).normalized();
 
-  // Wool is light: it bursts out, stalls in the air and floats down rocking.
   constexpr float k_drag = 4.0F;
   float const travel = speed * (1.0F - std::exp(-k_drag * poof_time)) / k_drag;
   float const sink = 0.13F * poof_time * poof_time;

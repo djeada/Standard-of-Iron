@@ -521,8 +521,7 @@ auto melee_walled_off_from(Engine::Core::Entity* attacker,
       attack != nullptr &&
       (!attack->can_ranged ||
        attack->preferred_mode == Engine::Core::AttackComponent::CombatMode::Melee);
-  // The wall walk is its own floor: troops on a balcony reach each other along
-  // the planks, and blades do not reach between the balcony and the street.
+
   bool const attacker_on_wall = stands_on_wall(attacker);
   bool const target_on_wall = stands_on_wall(target);
   if (attacker_on_wall || target_on_wall) {

@@ -116,8 +116,6 @@ struct AllyAppealAnswer {
   bool accept = false;
 };
 
-// Troops standing beside a stone cache their owner holds heave it over the
-// edge (see RockfallSystem).
 struct RollStones {
   std::vector<Engine::Core::EntityID> units;
 };

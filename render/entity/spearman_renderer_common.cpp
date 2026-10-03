@@ -363,6 +363,7 @@ public:
     if (m_profile.apply_carthage_beard_traits) {
       apply_carthage_beard_traits(ctx, seed, style, variant);
     }
+    Humanoid::apply_commander_palette(m_renderer_key, team_tint, variant.palette);
     if (m_facial_hair.has_value()) {
       variant.facial_hair = *m_facial_hair;
     }

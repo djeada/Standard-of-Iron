@@ -27,8 +27,6 @@ namespace {
 constexpr float k_sheep_pick_radius_px = 30.0F;
 constexpr float k_sheep_pick_body_height = 0.35F;
 
-// The builder sent after a sheep usually stands right beside it, so a generic
-// unit pick can land on the builder. Sheep are looked for on their own first.
 auto pick_sheep_on_screen(Engine::Core::World& world,
                           const Render::GL::Camera& camera,
                           const ViewportState& viewport,

@@ -879,9 +879,6 @@ void submit_walk_piece(ISubmitter& out,
   submit_building_instance(out, placed, piece->for_state(resolve_building_state(ctx)));
 }
 
-// Hangs the wall walk on the town face of a segment: a balcony span towards
-// each wall it runs into, a landing where the run turns, and a stair where the
-// network put one.
 void submit_wall_walk(ISubmitter& out,
                       const DrawContext& ctx,
                       const WallArchetypeSet& archetypes) {

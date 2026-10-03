@@ -316,7 +316,7 @@ auto humanoid_construction_role_for_job(HumanoidWorkJob job) noexcept
   case HumanoidWorkJob::Reap:
     return HumanoidConstructionRole::Reap;
   case HumanoidWorkJob::Butcher:
-    // A cartoon bonk on the head with the mallet, not a knife.
+
     return HumanoidConstructionRole::Hammer;
   case HumanoidWorkJob::Push:
     return HumanoidConstructionRole::Push;

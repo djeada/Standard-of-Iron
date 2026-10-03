@@ -24,8 +24,6 @@ using Game::Systems::RockfallSystem;
 
 constexpr float k_tick = 0.05F;
 
-// A mountain peak (about 11 high at z = -6) on the north side of a flat pass.
-// Boulders start high on its southern flank and roll south into the pass.
 auto make_pass_map(RockfallTriggerMode trigger,
                    int owner_id) -> Game::Map::MapDefinition {
   Game::Map::MapDefinition map;
@@ -325,7 +323,6 @@ TEST_F(RockfallSystemTest, MapJsonDeclaresRockfallTraps) {
 
 namespace {
 
-// A mesa with one ramp up its western side; the ramp gets a stone cache.
 auto make_hill_map(bool caches = true) -> Game::Map::MapDefinition {
   Game::Map::MapDefinition map;
   map.coordSystem = Game::Map::CoordSystem::World;

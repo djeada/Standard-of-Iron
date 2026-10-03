@@ -3,31 +3,23 @@
 #include <cmath>
 #include <cstdint>
 
-// Shared measurements of the palisade wall walk: the timber balcony that hangs
-// on the town face of a wall, the stairs that reach it, and the crest a siege
-// tower's bridge lands on. The simulation walks troops along these lines and
-// the renderer builds the balcony from the same numbers, so a soldier's feet
-// meet the planks.
 namespace Game::Systems::WallWalk {
 
-// Top of the balcony planks above the terrain.
 inline constexpr float k_deck_height = 1.80F;
-// Lateral reach of the balcony from the wall's centre line.
+
 inline constexpr float k_deck_inner_edge = 0.17F;
 inline constexpr float k_deck_outer_edge = 0.70F;
-// Line soldiers walk along, between the two deck edges.
+
 inline constexpr float k_deck_lane = 0.45F;
 inline constexpr float k_deck_thickness = 0.06F;
 
-// Stairs run straight down from the balcony edge into the town.
 inline constexpr float k_stair_run = 1.85F;
 inline constexpr float k_stair_half_width = 0.28F;
 inline constexpr int k_stair_steps = 9;
-// A stair stands on every k_stair_period-th straight segment of a run.
+
 inline constexpr int k_stair_period = 4;
 inline constexpr int k_stair_phase = 1;
 
-// Where a siege tower's bridge rests: on the stake tips, between two posts.
 inline constexpr float k_crest_height = 2.95F;
 
 struct Point {
@@ -65,8 +57,6 @@ struct Point {
   return phase == k_stair_phase;
 }
 
-// Whether a point ordered on the ground means "onto this segment's balcony":
-// on the balcony itself, or on the stakes, within half a segment along the run.
 [[nodiscard]] inline auto is_wall_walk_order(float node_x,
                                              float node_z,
                                              std::int8_t inner_x,

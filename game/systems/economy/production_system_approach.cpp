@@ -29,8 +29,7 @@ constexpr float k_footprint_reach_sq = 1.0F * 1.0F;
 constexpr float k_site_approach_limit_seconds = 30.0F;
 constexpr float k_site_route_goal_tolerance_sq = 0.25F;
 constexpr float k_site_progress_epsilon = 0.75F;
-// A gatherer held off its exact work spot (by a crewmate, a fence post) works
-// from where it stands once it is this close and has stopped gaining ground.
+
 constexpr float k_stalled_work_reach_sq = 1.6F * 1.6F;
 constexpr float k_stalled_work_seconds = 2.5F;
 constexpr float k_crew_settle_limit_seconds = 5.0F;
@@ -344,8 +343,7 @@ void advance_site_approach(Engine::Core::World& world,
                                                          builder.construction_site_z);
   bool const has_work_target =
       !work_spot || builder.has_task_target || builder.structure_task_entity_id != 0;
-  // Food tasks must reach the sheep or field; only resource gatherers can
-  // work from a nearby spot when their approach stalls.
+
   bool const stalled_within_reach =
       is_harvest_builder_product(builder.product_type) && has_work_target &&
       dist_sq <= k_stalled_work_reach_sq &&
