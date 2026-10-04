@@ -108,8 +108,21 @@ void OrdersViewModel::set_hover_at_screen(qreal sx, qreal sy) {
   if (m_context.window == nullptr) {
     return;
   }
+  const bool clearing = sx < 0.0 || sy < 0.0;
+  const auto now = std::chrono::steady_clock::now();
+  if (!clearing && m_last_hover.valid && m_last_hover.sx == sx &&
+      m_last_hover.sy == sy && now - m_last_hover.at < k_stationary_hover_refresh) {
+    ++m_hover_stats.throttled;
+    return;
+  }
   m_host.ensure_initialized();
-  const auto frame_lock = m_host.lock_frame();
+  const auto frame_lock = clearing ? m_host.lock_frame() : m_host.try_lock_frame();
+  if (!frame_lock.owns_lock()) {
+    ++m_hover_stats.lock_busy;
+    return;
+  }
+  ++m_hover_stats.evaluated;
+  m_last_hover = HoverEvaluation{.sx = sx, .sy = sy, .at = now, .valid = !clearing};
   if (m_context.input != nullptr) {
     m_context.input->set_hover_at_screen(sx, sy, *m_context.viewport);
   }
@@ -487,8 +500,16 @@ auto action_context(const App::Core::ClientContext& context)
 } // namespace
 
 auto OrdersViewModel::action_states() const -> QVariantMap {
-  const auto frame_lock = m_host.lock_frame();
-  return App::Core::get_action_states(action_context(m_context));
+  auto frame_lock = m_host.try_lock_frame();
+  if (!frame_lock.owns_lock()) {
+    if (m_has_action_states) {
+      return m_last_action_states;
+    }
+    frame_lock = m_host.lock_frame();
+  }
+  m_last_action_states = App::Core::get_action_states(action_context(m_context));
+  m_has_action_states = true;
+  return m_last_action_states;
 }
 
 void OrdersViewModel::publish_frame() {

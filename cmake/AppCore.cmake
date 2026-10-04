@@ -24,6 +24,7 @@ add_library(
     app/core/frame_snapshot.cpp
     app/core/runtime_frame_orchestrator.cpp
     app/core/simulation_lifecycle.cpp
+    app/core/deferred_presentation_queue.cpp
     # app/platform -- the storefront seam (Steam Timeline); null without the SDK.
     app/platform/achievement_tracker.cpp
     app/platform/match_stats_reporter.cpp

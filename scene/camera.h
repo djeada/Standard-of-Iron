@@ -33,6 +33,21 @@ inline constexpr float k_rts_min_max_distance = 30.0F;
 inline constexpr float k_rts_terrain_clearance = 2.5F;
 } // namespace CameraDefaults
 
+class ScreenProjector {
+public:
+  ScreenProjector(const QMatrix4x4& view_projection, qreal screen_w, qreal screen_h)
+      : m_view_projection(view_projection)
+      , m_screen_w(screen_w)
+      , m_screen_h(screen_h) {}
+
+  auto project(const QVector3D& world, QPointF& out_screen) const -> bool;
+
+private:
+  QMatrix4x4 m_view_projection;
+  qreal m_screen_w;
+  qreal m_screen_h;
+};
+
 class Camera {
   friend void solve_constraints(Render::GL::Camera* self, bool allow_target_shift);
 
@@ -126,6 +141,8 @@ public:
                        qreal screen_w,
                        qreal screen_h,
                        QPointF& out_screen) const -> bool;
+  [[nodiscard]] auto screen_projector(qreal screen_w,
+                                      qreal screen_h) const -> ScreenProjector;
 
   void set_follow_enabled(bool enable) { m_follow_enabled = enable; }
   [[nodiscard]] auto is_follow_enabled() const -> bool { return m_follow_enabled; }

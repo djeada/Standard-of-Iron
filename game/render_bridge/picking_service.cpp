@@ -336,6 +336,8 @@ auto PickingService::pick_nearest(float sx,
   float best_building_dist2 = std::numeric_limits<float>::max();
   Engine::Core::EntityID best_unit_id = 0;
   Engine::Core::EntityID best_building_id = 0;
+  const Render::GL::ScreenProjector projector =
+      camera.screen_projector(qreal(view_w), qreal(view_h));
   auto ents = world.collect_entities_with<Engine::Core::TransformComponent>();
   for (auto* e : ents) {
     if (!e->has_component<Engine::Core::UnitComponent>()) {
@@ -353,10 +355,8 @@ auto PickingService::pick_nearest(float sx,
     }
 
     QPointF sp;
-    if (!camera.world_to_screen(QVector3D(t->position.x, t->position.y, t->position.z),
-                                view_w,
-                                view_h,
-                                sp)) {
+    if (!projector.project(QVector3D(t->position.x, t->position.y, t->position.z),
+                           sp)) {
       continue;
     }
     auto const dx = float(sx - sp.x());
@@ -378,7 +378,7 @@ auto PickingService::pick_nearest(float sx,
       QPointF pts[8];
       int ok_count = 0;
       auto project = [&](const QVector3D& w, QPointF& out) {
-        return camera.world_to_screen(w, view_w, view_h, out);
+        return projector.project(w, out);
       };
       ok_count += static_cast<int>(project(
           QVector3D(t->position.x - hx, t->position.y + 0.0F, t->position.z - hz),
@@ -515,6 +515,8 @@ auto PickingService::pick_in_rect(float x1,
   float const min_y = std::min(y1, y2);
   float const max_y = std::max(y1, y2);
   std::vector<Engine::Core::EntityID> picked;
+  const Render::GL::ScreenProjector projector =
+      camera.screen_projector(qreal(view_w), qreal(view_h));
   auto ents = world.collect_entities_with<Engine::Core::TransformComponent>();
   for (auto* e : ents) {
     if (!e->has_component<Engine::Core::UnitComponent>()) {
@@ -529,10 +531,8 @@ auto PickingService::pick_in_rect(float x1,
     }
     auto* t = e->get_component<Engine::Core::TransformComponent>();
     QPointF sp;
-    if (!camera.world_to_screen(QVector3D(t->position.x, t->position.y, t->position.z),
-                                view_w,
-                                view_h,
-                                sp)) {
+    if (!projector.project(QVector3D(t->position.x, t->position.y, t->position.z),
+                           sp)) {
       continue;
     }
     if (sp.x() >= min_x && sp.x() <= max_x && sp.y() >= min_y && sp.y() <= max_y) {

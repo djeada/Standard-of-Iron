@@ -16,6 +16,7 @@
 
 #include "app/core/app_scene_context.h"
 #include "app/core/client_context.h"
+#include "app/core/deferred_presentation_queue.h"
 #include "app/core/entity_cache.h"
 #include "app/core/runtime_frame_orchestrator.h"
 #include "app/core/simulation_lifecycle.h"
@@ -292,6 +293,13 @@ public:
   void ensure_initialized() override;
   [[nodiscard]] auto lock_frame() -> std::unique_lock<std::recursive_mutex> override {
     return m_lifecycle.lock_frame();
+  }
+  [[nodiscard]] auto
+  try_lock_frame() -> std::unique_lock<std::recursive_mutex> override {
+    return m_lifecycle.try_lock_frame();
+  }
+  [[nodiscard]] auto deferred_presentation_jobs() const -> std::uint64_t {
+    return m_deferred_presentation.drained_jobs();
   }
 
   using FrameLockStats = App::Core::FrameLockStats;
@@ -590,6 +598,7 @@ private:
 
   App::Session::LoadingOverlay m_loading_overlay;
   App::Core::SimulationLifecycle m_lifecycle;
+  mutable App::Core::DeferredPresentationQueue m_deferred_presentation;
   std::atomic<float> m_simulation_time_scale{0.0F};
 
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>

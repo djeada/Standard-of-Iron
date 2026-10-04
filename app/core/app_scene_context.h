@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 namespace Engine::Core {
 class World;
 }
@@ -57,4 +59,6 @@ struct AppSceneContext {
   Game::Systems::RainManager* rain_manager = nullptr;
   App::Core::WeatherAudio* weather_audio = nullptr;
   Game::Map::EnvironmentClock* environment_clock = nullptr;
+
+  std::function<void(std::function<void()>)> defer_presentation;
 };

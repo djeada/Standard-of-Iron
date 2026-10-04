@@ -9,6 +9,8 @@
 #include <QVariantMap>
 #include <QVector3D>
 
+#include <cstdint>
+
 #include "app/core/published.h"
 
 namespace App::Core {
@@ -24,6 +26,7 @@ struct CameraProjection {
 
 struct SelectionReadout {
   QSet<QString> selected_types;
+  std::uint64_t selected_building_id = 0;
   QVariantMap barracks;
   QVariantMap home;
   QVariantMap temple;

@@ -51,6 +51,7 @@ add_executable(
     render/sky_box_transition_test.cpp
     render/renderer_visibility_policy_test.cpp
     render/unit_render_cache_test.cpp
+    render/frame_cadence_test.cpp
     render/render_archetype_test.cpp
     render/draw_queue_sort_order_test.cpp
     render/draw_queue_sort_cost_test.cpp

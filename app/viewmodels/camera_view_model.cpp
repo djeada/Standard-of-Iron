@@ -3,6 +3,8 @@
 #include <QVector3D>
 
 #include <cmath>
+#include <mutex>
+#include <utility>
 
 #include "app/core/client_context.h"
 #include "app/input/input_command_handler.h"
@@ -23,8 +25,29 @@ CameraViewModel::CameraViewModel(const App::Core::ClientContext& context,
 
 void CameraViewModel::move(float dx, float dz) {
   m_host.ensure_initialized();
-  const auto frame_lock = m_host.lock_frame();
+  {
+    const std::lock_guard<std::mutex> pending_lock(m_pending_move_mutex);
+    m_pending_move_x += dx;
+    m_pending_move_z += dz;
+  }
   emit moved();
+  const auto frame_lock = m_host.try_lock_frame();
+  if (frame_lock.owns_lock()) {
+    apply_pending_move();
+  }
+}
+
+void CameraViewModel::apply_pending_move() {
+  float dx = 0.0F;
+  float dz = 0.0F;
+  {
+    const std::lock_guard<std::mutex> pending_lock(m_pending_move_mutex);
+    dx = std::exchange(m_pending_move_x, 0.0F);
+    dz = std::exchange(m_pending_move_z, 0.0F);
+  }
+  if (dx == 0.0F && dz == 0.0F) {
+    return;
+  }
   if (auto* camera = m_context.camera_controller) {
     camera->move(dx, dz);
   }
@@ -219,6 +242,7 @@ void CameraViewModel::set_follow_lerp(float alpha) {
 }
 
 void CameraViewModel::publish_frame() {
+  apply_pending_move();
   const auto* camera = m_context.active_camera;
   if (camera == nullptr || m_context.viewport == nullptr ||
       m_context.viewport->width <= 0 || m_context.viewport->height <= 0) {

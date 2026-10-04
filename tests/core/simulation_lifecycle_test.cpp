@@ -119,4 +119,58 @@ TEST(SimulationLifecycleTest, ContendedLockAcquisitionsAreCounted) {
   EXPECT_GT(lifecycle.stats().longest_wait_us.load(), 0U);
 }
 
+TEST(SimulationLifecycleTest, TheUnlockedStageRunsAfterEveryTickWithoutTheFrameLock) {
+  SimulationLifecycle lifecycle;
+  std::atomic<int> ticks{0};
+  std::atomic<int> stages{0};
+  std::atomic<bool> stage_held_lock{false};
+  std::atomic<bool> stage_followed_tick{true};
+
+  lifecycle.start([&](float) { ticks.fetch_add(1); },
+                  [&] {
+                    std::thread probe([&] {
+                      std::unique_lock<std::recursive_mutex> lock(
+                          lifecycle.frame_mutex(), std::try_to_lock);
+                      if (!lock.owns_lock()) {
+                        stage_held_lock = true;
+                      }
+                    });
+                    probe.join();
+                    if (stages.load() >= ticks.load()) {
+                      stage_followed_tick = false;
+                    }
+                    stages.fetch_add(1);
+                  });
+  ASSERT_TRUE(wait_for([&] { return stages.load() >= 3; }));
+  lifecycle.stop();
+
+  EXPECT_FALSE(stage_held_lock.load())
+      << "presentation work deferred past the tick must not hold the frame lock";
+  EXPECT_TRUE(stage_followed_tick.load()) << "the stage runs once after each tick";
+}
+
+TEST(SimulationLifecycleTest, TryLockSkipsInsteadOfWaitingForATickInFlight) {
+  SimulationLifecycle lifecycle;
+  std::recursive_mutex& mutex = lifecycle.frame_mutex();
+  std::atomic<bool> owned{true};
+  std::atomic<bool> returned{false};
+  mutex.lock();
+  std::thread gui([&] {
+    auto lock = lifecycle.try_lock_frame();
+    owned = lock.owns_lock();
+    returned = true;
+  });
+  ASSERT_TRUE(wait_for([&] { return returned.load(); }, 500ms))
+      << "try_lock_frame returns at once while the simulation holds the lock";
+  gui.join();
+  mutex.unlock();
+  EXPECT_FALSE(owned.load());
+  EXPECT_EQ(lifecycle.stats().try_lock_skips.load(), 1U);
+  EXPECT_EQ(lifecycle.stats().contended.load(), 0U)
+      << "a skipped try-lock is not a wait";
+
+  auto lock = lifecycle.try_lock_frame();
+  EXPECT_TRUE(lock.owns_lock());
+}
+
 } // namespace

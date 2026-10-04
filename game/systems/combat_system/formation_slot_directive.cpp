@@ -955,7 +955,8 @@ auto publish_soldiers(const EntityFrame& frame) -> bool {
   auto& directives = frame.presentation.soldiers;
   auto const& layout = frame.layout;
 
-  const auto previous_soldiers = directives;
+  thread_local std::vector<Soldier> previous_soldiers;
+  previous_soldiers.assign(directives.begin(), directives.end());
   std::size_t const previous_directive_count = directives.size();
   bool soldiers_changed = previous_directive_count != layout.all_slots.size();
   directives.resize(layout.all_slots.size());

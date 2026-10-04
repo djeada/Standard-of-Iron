@@ -89,6 +89,10 @@ void ProductionViewModel::publish_frame() {
       }
       readout.selected_types.insert(
           QString::fromStdString(Game::Units::spawn_typeToString(unit->spawn_type)));
+      if (readout.selected_building_id == 0 &&
+          Game::Units::is_building_spawn(unit->spawn_type)) {
+        readout.selected_building_id = id;
+      }
     }
   }
 
@@ -289,18 +293,8 @@ constexpr qint64 k_ally_call_cooldown_ms = 12000;
 } // namespace
 
 auto ProductionViewModel::selected_building_id() const -> qulonglong {
-  m_host.ensure_initialized();
-  const auto frame_lock = m_host.lock_frame();
-  if (m_context.world == nullptr || m_context.session == nullptr) {
-    return 0;
-  }
-  for (const auto id : m_context.session->selection().get_selected_units()) {
-    const auto* unit = m_context.world->try_get<Engine::Core::UnitComponent>(id);
-    if (unit != nullptr && Game::Units::is_building_spawn(unit->spawn_type)) {
-      return id;
-    }
-  }
-  return 0;
+  const auto readout = m_readout.read();
+  return readout ? static_cast<qulonglong>(readout->selected_building_id) : 0;
 }
 
 auto ProductionViewModel::ally_call_state(qulonglong entity) const -> QVariantMap {

@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 
 #include "minimap_utils.h"
 
@@ -59,6 +60,28 @@ void render_dot_sprite(QImage& sprite,
   painter.drawEllipse(QPointF(half + 0.5, half + 0.5), radius, radius);
 }
 
+void render_ring_sprite(QImage& sprite, float radius, const QPen& pen) {
+  const int half = static_cast<int>(std::ceil(radius + pen.widthF()));
+  sprite = QImage(2 * half + 1, 2 * half + 1, QImage::Format_ARGB32_Premultiplied);
+  sprite.fill(Qt::transparent);
+  QPainter painter(&sprite);
+  painter.setRenderHint(QPainter::Antialiasing, true);
+  painter.setBrush(Qt::NoBrush);
+  painter.setPen(pen);
+  painter.drawEllipse(QPointF(half + 0.5, half + 0.5), radius, radius);
+}
+
+[[nodiscard]] auto mix_signature(std::uint64_t seed,
+                                 std::uint64_t value) -> std::uint64_t {
+  seed ^= value + 0x9E3779B97F4A7C15ULL + (seed << 6U) + (seed >> 2U);
+  return seed;
+}
+
+[[nodiscard]] auto quantize_pixel(float value) -> std::uint64_t {
+  return static_cast<std::uint64_t>(
+      static_cast<std::int64_t>(std::lround(value * 16.0F)));
+}
+
 void blit_dot_sprite(QPainter& painter, const QImage& sprite, float px, float py) {
   const int half = sprite.width() / 2;
   painter.drawImage(QPoint(static_cast<int>(std::floor(px)) - half,
@@ -86,6 +109,9 @@ void UnitLayer::init(
   m_image = QImage(width, height, QImage::Format_ARGB32_Premultiplied);
   m_image.fill(Qt::transparent);
   m_content_rect = QRect();
+  m_structures_below = {};
+  m_structures_above = {};
+  m_structure_signature_valid = false;
 }
 
 auto UnitLayer::world_to_pixel(float world_x,
@@ -125,6 +151,7 @@ void UnitLayer::update(const std::vector<UnitMarker>& markers,
   m_content_rect = QRect();
 
   if (markers.empty()) {
+    m_structure_signature_valid = false;
     if (!previous_content.isEmpty()) {
       QPainter clear_painter(&m_image);
       clear_painter.setCompositionMode(QPainter::CompositionMode_Source);
@@ -132,14 +159,6 @@ void UnitLayer::update(const std::vector<UnitMarker>& markers,
     }
     return;
   }
-
-  QPainter painter(&m_image);
-  if (!previous_content.isEmpty()) {
-    painter.setCompositionMode(QPainter::CompositionMode_Source);
-    painter.fillRect(previous_content, Qt::transparent);
-    painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
-  }
-  painter.setRenderHint(QPainter::Antialiasing, true);
 
   m_minor_structures.clear();
   m_structures.clear();
@@ -205,10 +224,30 @@ void UnitLayer::update(const std::vector<UnitMarker>& markers,
     }
   }
 
-  draw_minor_structures(painter, player_color_fn);
+  const std::uint64_t signature = structure_signature(player_color_fn);
+  if (!m_structure_signature_valid || signature != m_structure_signature) {
+    redraw_structure_layers(player_color_fn);
+    m_structure_signature = signature;
+    m_structure_signature_valid = true;
+  }
+
+  QPainter painter(&m_image);
+  if (!previous_content.isEmpty()) {
+    painter.setCompositionMode(QPainter::CompositionMode_Source);
+    painter.fillRect(previous_content, Qt::transparent);
+    painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+  }
+  painter.setRenderHint(QPainter::Antialiasing, true);
+
+  if (!m_structures_below.rect.isEmpty()) {
+    painter.drawImage(
+        m_structures_below.rect, m_structures_below.image, m_structures_below.rect);
+  }
   draw_troops(painter, player_color_fn);
-  draw_structures(painter, player_color_fn);
-  draw_strongholds(painter, player_color_fn);
+  if (!m_structures_above.rect.isEmpty()) {
+    painter.drawImage(
+        m_structures_above.rect, m_structures_above.image, m_structures_above.rect);
+  }
   draw_selected(painter, player_color_fn);
 
   if (bounds_right >= bounds_left && bounds_bottom >= bounds_top) {
@@ -218,6 +257,98 @@ void UnitLayer::update(const std::vector<UnitMarker>& markers,
                              static_cast<int>(std::ceil(bounds_bottom))));
     m_content_rect = drawn.intersected(m_image.rect());
   }
+}
+
+auto UnitLayer::marker_bounds(const PlacedMarker& placed) const -> QRect {
+  const float reach =
+      std::max(m_unit_radius,
+               stronghold_half_size() + k_capture_ring_gap + k_capture_ring_width) +
+      3.0F;
+  return QRect(QPoint(static_cast<int>(std::floor(placed.px - reach)),
+                      static_cast<int>(std::floor(placed.py - reach))),
+               QPoint(static_cast<int>(std::ceil(placed.px + reach)),
+                      static_cast<int>(std::ceil(placed.py + reach))));
+}
+
+auto UnitLayer::structure_signature(const PlayerColorFn& player_color_fn)
+    -> std::uint64_t {
+  std::uint64_t signature = 0;
+  int last_owner = 0;
+  bool have_owner = false;
+  const auto mix_placed = [&](const std::vector<PlacedMarker>& group) {
+    signature = mix_signature(signature, group.size());
+    for (const auto& placed : group) {
+      const UnitMarker& marker = *placed.marker;
+      signature = mix_signature(signature, quantize_pixel(placed.px));
+      signature = mix_signature(signature, quantize_pixel(placed.py));
+      signature = mix_signature(signature, static_cast<std::uint64_t>(placed.owner_id));
+      signature =
+          mix_signature(signature, static_cast<std::uint64_t>(marker.marker_class));
+      signature = mix_signature(signature,
+                                static_cast<std::uint64_t>(marker.capture_step) |
+                                    (marker.contested ? 0x100ULL : 0ULL));
+      signature =
+          mix_signature(signature, static_cast<std::uint64_t>(marker.capture_owner_id));
+      for (const int owner : {placed.owner_id, marker.capture_owner_id}) {
+        if (have_owner && owner == last_owner) {
+          continue;
+        }
+        const auto colors = get_color_for_owner(owner, player_color_fn);
+        signature =
+            mix_signature(signature,
+                          (static_cast<std::uint64_t>(colors.r) << 16U) |
+                              (static_cast<std::uint64_t>(colors.g) << 8U) | colors.b);
+        last_owner = owner;
+        have_owner = true;
+      }
+    }
+  };
+  mix_placed(m_minor_structures);
+  mix_placed(m_structures);
+  mix_placed(m_strongholds);
+  return signature;
+}
+
+void UnitLayer::redraw_structure_layer(StructureLayer& layer,
+                                       const std::vector<PlacedMarker>& placed,
+                                       const std::function<void(QPainter&)>& draw) {
+  if (layer.image.isNull()) {
+    layer.image = QImage(m_width, m_height, QImage::Format_ARGB32_Premultiplied);
+    layer.image.fill(Qt::transparent);
+    layer.rect = QRect();
+  }
+  QPainter painter(&layer.image);
+  if (!layer.rect.isEmpty()) {
+    painter.setCompositionMode(QPainter::CompositionMode_Source);
+    painter.fillRect(layer.rect, Qt::transparent);
+    painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+  }
+  QRect bounds;
+  for (const auto& marker : placed) {
+    bounds = bounds.united(marker_bounds(marker));
+  }
+  layer.rect = bounds.intersected(layer.image.rect());
+  if (layer.rect.isEmpty()) {
+    return;
+  }
+  painter.setRenderHint(QPainter::Antialiasing, true);
+  draw(painter);
+}
+
+void UnitLayer::redraw_structure_layers(const PlayerColorFn& player_color_fn) {
+  ++m_structure_redraws;
+  redraw_structure_layer(
+      m_structures_below, m_minor_structures, [&](QPainter& painter) {
+        draw_minor_structures(painter, player_color_fn);
+      });
+  std::vector<PlacedMarker> above;
+  above.reserve(m_structures.size() + m_strongholds.size());
+  above.insert(above.end(), m_structures.begin(), m_structures.end());
+  above.insert(above.end(), m_strongholds.begin(), m_strongholds.end());
+  redraw_structure_layer(m_structures_above, above, [&](QPainter& painter) {
+    draw_structures(painter, player_color_fn);
+    draw_strongholds(painter, player_color_fn);
+  });
 }
 
 void UnitLayer::draw_minor_structures(QPainter& painter,
@@ -296,7 +427,32 @@ void UnitLayer::draw_strongholds(QPainter& painter,
 }
 
 void UnitLayer::draw_selected(QPainter& painter, const PlayerColorFn& player_color_fn) {
+  QImage halo_sprite;
+  QImage dot_sprite;
+  int dot_owner = 0;
   for (const auto& placed : m_selected) {
+    if (placed.marker->marker_class == MarkerClass::Troop) {
+      if (halo_sprite.isNull()) {
+        QPen glow_pen(QColor(
+            TeamColors::SELECT_R, TeamColors::SELECT_G, TeamColors::SELECT_B, 220));
+        glow_pen.setWidthF(1.4);
+        render_ring_sprite(halo_sprite, m_unit_radius + 1.8F, glow_pen);
+      }
+      if (dot_sprite.isNull() || placed.owner_id != dot_owner) {
+        dot_owner = placed.owner_id;
+        const auto colors = get_color_for_owner(dot_owner, player_color_fn);
+        render_dot_sprite(
+            dot_sprite,
+            m_unit_radius,
+            QColor(colors.r, colors.g, colors.b),
+            QPen(QColor(colors.border_r, colors.border_g, colors.border_b),
+                 k_troop_pen_width));
+      }
+      blit_dot_sprite(painter, halo_sprite, placed.px, placed.py);
+      blit_dot_sprite(painter, dot_sprite, placed.px, placed.py);
+      continue;
+    }
+
     draw_selection_halo(painter, placed);
 
     const auto colors = get_color_for_owner(placed.owner_id, player_color_fn);
@@ -321,12 +477,6 @@ void UnitLayer::draw_selected(QPainter& painter, const PlayerColorFn& player_col
       draw_temple_shape(painter, placed.px, placed.py);
       break;
     case MarkerClass::Troop:
-      painter.setBrush(fill);
-      painter.setPen(QPen(border, k_troop_pen_width));
-      painter.drawEllipse(
-          QPointF(static_cast<qreal>(placed.px), static_cast<qreal>(placed.py)),
-          static_cast<qreal>(m_unit_radius),
-          static_cast<qreal>(m_unit_radius));
       break;
     }
   }
