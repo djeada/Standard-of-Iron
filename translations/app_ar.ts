@@ -3208,6 +3208,22 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>The watch does not sleep</source>
         <translation>الحرس لا ينام</translation>
     </message>
+    <message>
+        <source>Gallic Allies</source>
+        <translation>الحلفاء الغاليون</translation>
+    </message>
+    <message>
+        <source>Allies of Carthage from beyond the Po</source>
+        <translation>حلفاء قرطاج من وراء نهر البو</translation>
+    </message>
+    <message>
+        <source>Iberian Allies</source>
+        <translation>الحلفاء الأيبيريون</translation>
+    </message>
+    <message>
+        <source>Allies of Carthage from Hispania</source>
+        <translation>حلفاء قرطاج من هسبانيا</translation>
+    </message>
 </context>
 <context>
     <name>FloatingNumbers</name>
@@ -9752,6 +9768,14 @@ to see preview</source>
         <source>Testudo</source>
         <translation>السلحفاة</translation>
     </message>
+    <message>
+        <source>Gallic Allies</source>
+        <translation>الحلفاء الغاليون</translation>
+    </message>
+    <message>
+        <source>Iberian Allies</source>
+        <translation>الحلفاء الأيبيريون</translation>
+    </message>
 </context>
 <context>
     <name>Numerals</name>
@@ -10100,121 +10124,6 @@ to see preview</source>
     <message>
         <source>Remove player</source>
         <translation>إزالة اللاعب</translation>
-    </message>
-</context>
-<context>
-    <name>ProductionManager</name>
-    <message>
-        <source>Select a tree, boulder, ore deposit, ripe farm or sheep.</source>
-        <translation>اختر شجرة أو صخرة أو منجم خام أو مزرعة ناضجة أو خروفًا.</translation>
-    </message>
-    <message>
-        <source>Select a tree to chop.</source>
-        <translation>اختر شجرة لقطعها.</translation>
-    </message>
-    <message>
-        <source>Select a boulder to collect.</source>
-        <translation>اختر صخرة لجمعها.</translation>
-    </message>
-    <message>
-        <source>Select iron ore to collect.</source>
-        <translation>اختر خام حديد لجمعه.</translation>
-    </message>
-    <message>
-        <source>No available builder can chop that tree.</source>
-        <translation>لا يوجد بنّاء متاح يستطيع قطع تلك الشجرة.</translation>
-    </message>
-    <message>
-        <source>No available builder can collect that boulder.</source>
-        <translation>لا يوجد بنّاء متاح يستطيع جمع تلك الصخرة.</translation>
-    </message>
-    <message>
-        <source>No available builder can collect that iron ore.</source>
-        <translation>لا يوجد بنّاء متاح يستطيع جمع خام الحديد ذاك.</translation>
-    </message>
-    <message>
-        <source>No available builder can collect that resource.</source>
-        <translation>لا يوجد بنّاء متاح يستطيع جمع ذلك المورد.</translation>
-    </message>
-    <message>
-        <source>No walkable spot near that tree.</source>
-        <translation>لا موضع صالح للمشي قرب تلك الشجرة.</translation>
-    </message>
-    <message>
-        <source>No walkable spot near that boulder.</source>
-        <translation>لا موضع صالح للمشي قرب تلك الصخرة.</translation>
-    </message>
-    <message>
-        <source>No walkable spot near that iron ore.</source>
-        <translation>لا موضع صالح للمشي قرب خام الحديد ذاك.</translation>
-    </message>
-    <message>
-        <source>No walkable spot near that resource.</source>
-        <translation>لا موضع صالح للمشي قرب ذلك المورد.</translation>
-    </message>
-    <message>
-        <source>Drag out a wall line first.</source>
-        <translation>ارسم خط سور أولاً بالسحب.</translation>
-    </message>
-    <message>
-        <source>Choose a build location.</source>
-        <translation>اختر موقع البناء.</translation>
-    </message>
-    <message>
-        <source>That resource is already assigned.</source>
-        <translation>ذلك المورد مخصَّص بالفعل.</translation>
-    </message>
-    <message>
-        <source>No valid wall segments in that drag.</source>
-        <translation>لا مقاطع سور صالحة في ذلك السحب.</translation>
-    </message>
-    <message>
-        <source>No available builder.</source>
-        <translation>لا يوجد بنّاء متاح.</translation>
-    </message>
-    <message>
-        <source>That structure cannot be placed.</source>
-        <translation>لا يمكن وضع ذلك البناء.</translation>
-    </message>
-    <message>
-        <source>Building factory unavailable.</source>
-        <translation>مصنع المباني غير متاح.</translation>
-    </message>
-    <message>
-        <source>Nothing here is worth harvesting.</source>
-        <translation>لا شيء هنا يستحق الحصاد.</translation>
-    </message>
-    <message>
-        <source>No resource here to work.</source>
-        <translation>لا مورد هنا للعمل عليه.</translation>
-    </message>
-    <message>
-        <source>Something is already standing here.</source>
-        <translation>ثمة شيء قائم هنا بالفعل.</translation>
-    </message>
-    <message>
-        <source>No part of this wall can stand there.</source>
-        <translation>لا يمكن لأي جزء من هذا السور أن يقوم هناك.</translation>
-    </message>
-    <message>
-        <source>This ground cannot be cleared to build on.</source>
-        <translation>لا يمكن تمهيد هذه الأرض للبناء.</translation>
-    </message>
-    <message>
-        <source>Nothing can be built on the water.</source>
-        <translation>لا يمكن بناء شيء على الماء.</translation>
-    </message>
-    <message>
-        <source>The ground here is too steep to build on.</source>
-        <translation>الأرض هنا شديدة الانحدار على البناء.</translation>
-    </message>
-    <message>
-        <source>That is beyond the edge of the battlefield.</source>
-        <translation>هذا خارج حدود ساحة المعركة.</translation>
-    </message>
-    <message>
-        <source>A wall already stands here.</source>
-        <translation>يوجد سور هنا بالفعل.</translation>
     </message>
 </context>
 <context>
@@ -10614,6 +10523,121 @@ Use Deliver mode, then click a friendly barracks to add to its reserve.</source>
     <message>
         <source>This home already committed its 3 civilians</source>
         <translation>هذا المسكن قدّم مدنييه الثلاثة بالفعل</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionManager</name>
+    <message>
+        <source>Select a tree, boulder, ore deposit, ripe farm or sheep.</source>
+        <translation>اختر شجرة أو صخرة أو منجم خام أو مزرعة ناضجة أو خروفًا.</translation>
+    </message>
+    <message>
+        <source>Select a tree to chop.</source>
+        <translation>اختر شجرة لقطعها.</translation>
+    </message>
+    <message>
+        <source>Select a boulder to collect.</source>
+        <translation>اختر صخرة لجمعها.</translation>
+    </message>
+    <message>
+        <source>Select iron ore to collect.</source>
+        <translation>اختر خام حديد لجمعه.</translation>
+    </message>
+    <message>
+        <source>No available builder can chop that tree.</source>
+        <translation>لا يوجد بنّاء متاح يستطيع قطع تلك الشجرة.</translation>
+    </message>
+    <message>
+        <source>No available builder can collect that boulder.</source>
+        <translation>لا يوجد بنّاء متاح يستطيع جمع تلك الصخرة.</translation>
+    </message>
+    <message>
+        <source>No available builder can collect that iron ore.</source>
+        <translation>لا يوجد بنّاء متاح يستطيع جمع خام الحديد ذاك.</translation>
+    </message>
+    <message>
+        <source>No available builder can collect that resource.</source>
+        <translation>لا يوجد بنّاء متاح يستطيع جمع ذلك المورد.</translation>
+    </message>
+    <message>
+        <source>No walkable spot near that tree.</source>
+        <translation>لا موضع صالح للمشي قرب تلك الشجرة.</translation>
+    </message>
+    <message>
+        <source>No walkable spot near that boulder.</source>
+        <translation>لا موضع صالح للمشي قرب تلك الصخرة.</translation>
+    </message>
+    <message>
+        <source>No walkable spot near that iron ore.</source>
+        <translation>لا موضع صالح للمشي قرب خام الحديد ذاك.</translation>
+    </message>
+    <message>
+        <source>No walkable spot near that resource.</source>
+        <translation>لا موضع صالح للمشي قرب ذلك المورد.</translation>
+    </message>
+    <message>
+        <source>Drag out a wall line first.</source>
+        <translation>ارسم خط سور أولاً بالسحب.</translation>
+    </message>
+    <message>
+        <source>Choose a build location.</source>
+        <translation>اختر موقع البناء.</translation>
+    </message>
+    <message>
+        <source>That resource is already assigned.</source>
+        <translation>ذلك المورد مخصَّص بالفعل.</translation>
+    </message>
+    <message>
+        <source>No valid wall segments in that drag.</source>
+        <translation>لا مقاطع سور صالحة في ذلك السحب.</translation>
+    </message>
+    <message>
+        <source>No available builder.</source>
+        <translation>لا يوجد بنّاء متاح.</translation>
+    </message>
+    <message>
+        <source>That structure cannot be placed.</source>
+        <translation>لا يمكن وضع ذلك البناء.</translation>
+    </message>
+    <message>
+        <source>Building factory unavailable.</source>
+        <translation>مصنع المباني غير متاح.</translation>
+    </message>
+    <message>
+        <source>Nothing here is worth harvesting.</source>
+        <translation>لا شيء هنا يستحق الحصاد.</translation>
+    </message>
+    <message>
+        <source>No resource here to work.</source>
+        <translation>لا مورد هنا للعمل عليه.</translation>
+    </message>
+    <message>
+        <source>Something is already standing here.</source>
+        <translation>ثمة شيء قائم هنا بالفعل.</translation>
+    </message>
+    <message>
+        <source>No part of this wall can stand there.</source>
+        <translation>لا يمكن لأي جزء من هذا السور أن يقوم هناك.</translation>
+    </message>
+    <message>
+        <source>This ground cannot be cleared to build on.</source>
+        <translation>لا يمكن تمهيد هذه الأرض للبناء.</translation>
+    </message>
+    <message>
+        <source>Nothing can be built on the water.</source>
+        <translation>لا يمكن بناء شيء على الماء.</translation>
+    </message>
+    <message>
+        <source>The ground here is too steep to build on.</source>
+        <translation>الأرض هنا شديدة الانحدار على البناء.</translation>
+    </message>
+    <message>
+        <source>That is beyond the edge of the battlefield.</source>
+        <translation>هذا خارج حدود ساحة المعركة.</translation>
+    </message>
+    <message>
+        <source>A wall already stands here.</source>
+        <translation>يوجد سور هنا بالفعل.</translation>
     </message>
 </context>
 <context>
@@ -13476,6 +13500,38 @@ Right-click to cancel.</source>
     <message>
         <source>Very slow, and a tall target that fire and stone-throwers bring down.</source>
         <translation>بطيء جداً وهدف عالٍ يسقطه النار وقاذفو الحجارة.</translation>
+    </message>
+    <message>
+        <source>Gallic Cavalry</source>
+        <translation>فرسان غاليون</translation>
+    </message>
+    <message>
+        <source>Gallic Swordsmen</source>
+        <translation>سيّافون غاليون</translation>
+    </message>
+    <message>
+        <source>Gallic nobles fought on horseback with long swords. Under Hasdrubal at Cannae they broke the Roman horse on the river flank and rode round to close the trap.</source>
+        <translation>قاتل نبلاء الغاليين على ظهور الخيل بسيوف طويلة. وتحت قيادة صدربعل في كاناي حطّموا الفرسان الرومان عند جناح النهر والتفّوا حولهم لإغلاق الفخ.</translation>
+    </message>
+    <message>
+        <source>Gauls of the Po valley joined Hannibal once he was over the Alps. At Cannae they held the centre of the crescent and fell back on purpose, drawing the legions in.</source>
+        <translation>انضم غاليو وادي البو إلى حنبعل حالما عبر جبال الألب. وفي كاناي ثبتوا في وسط الهلال وتراجعوا عمدًا ليستدرجوا الفيالق إلى الداخل.</translation>
+    </message>
+    <message>
+        <source>Iberian Cavalry</source>
+        <translation>فرسان أيبيريون</translation>
+    </message>
+    <message>
+        <source>Iberian Swordsmen</source>
+        <translation>سيّافون أيبيريون</translation>
+    </message>
+    <message>
+        <source>Iberian horsemen carried the small round caetra and the falcata. At Cannae they rode beside the Gauls on the left wing and helped ride down the Roman cavalry.</source>
+        <translation>حمل الفرسان الأيبيريون الترس الدائري الصغير والفالكاتا. وفي كاناي ركبوا إلى جانب الغاليين على الجناح الأيسر وساعدوا في سحق الفرسان الرومان.</translation>
+    </message>
+    <message>
+        <source>The Barcids raised their best foot in Spain. Iberian swordsmen wore white tunics edged in crimson and fought with the curved falcata.</source>
+        <translation>جنّد البرقيون أفضل مشاتهم في هسبانيا. وارتدى السيّافون الأيبيريون سترات بيضاء ذات حواف قرمزية وقاتلوا بالفالكاتا المنحنية.</translation>
     </message>
 </context>
 <context>

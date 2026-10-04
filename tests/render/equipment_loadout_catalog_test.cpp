@@ -282,7 +282,7 @@ TEST_F(EquipmentLoadoutCatalogTest, CarthageAlliesResolveEveryAuthoredSlot) {
 }
 
 TEST_F(EquipmentLoadoutCatalogTest, CarthageAlliesCarryTheirOwnArmsNotCarthageOrRome) {
-  const LoadoutHandleMember slots[] = {
+  const LoadoutHandleMember handle_slots[] = {
       &Render::GL::Nation::ResolvedEquipmentLoadout::sword_handle,
       &Render::GL::Nation::ResolvedEquipmentLoadout::shield_handle,
       &Render::GL::Nation::ResolvedEquipmentLoadout::helmet_handle,
@@ -291,7 +291,7 @@ TEST_F(EquipmentLoadoutCatalogTest, CarthageAlliesCarryTheirOwnArmsNotCarthageOr
   const char* const others[] = {"troops/carthage/swordsman", "troops/roman/swordsman"};
   const auto gauls = Render::GL::Nation::resolve_equipment_loadout(allies[0]);
   const auto iberians = Render::GL::Nation::resolve_equipment_loadout(allies[1]);
-  for (auto const slot : slots) {
+  for (auto const slot : handle_slots) {
     EXPECT_NE(gauls.*slot, iberians.*slot);
     for (const char* other_key : others) {
       const auto other = Render::GL::Nation::resolve_equipment_loadout(other_key);

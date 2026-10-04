@@ -3208,6 +3208,22 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <source>The watch does not sleep</source>
         <translation>La guardia no duerme</translation>
     </message>
+    <message>
+        <source>Gallic Allies</source>
+        <translation>Aliados galos</translation>
+    </message>
+    <message>
+        <source>Allies of Carthage from beyond the Po</source>
+        <translation>Aliados de Cartago de más allá del Po</translation>
+    </message>
+    <message>
+        <source>Iberian Allies</source>
+        <translation>Aliados íberos</translation>
+    </message>
+    <message>
+        <source>Allies of Carthage from Hispania</source>
+        <translation>Aliados de Cartago desde Hispania</translation>
+    </message>
 </context>
 <context>
     <name>FloatingNumbers</name>
@@ -9740,6 +9756,14 @@ para ver la vista previa</translation>
         <source>Testudo</source>
         <translation>Testudo</translation>
     </message>
+    <message>
+        <source>Gallic Allies</source>
+        <translation>Aliados galos</translation>
+    </message>
+    <message>
+        <source>Iberian Allies</source>
+        <translation>Aliados íberos</translation>
+    </message>
 </context>
 <context>
     <name>Numerals</name>
@@ -10088,121 +10112,6 @@ para ver la vista previa</translation>
     <message>
         <source>Remove player</source>
         <translation>Quitar jugador</translation>
-    </message>
-</context>
-<context>
-    <name>ProductionManager</name>
-    <message>
-        <source>Select a tree, boulder, ore deposit, ripe farm or sheep.</source>
-        <translation>Selecciona un árbol, una roca, un yacimiento, una granja madura o una oveja.</translation>
-    </message>
-    <message>
-        <source>Select a tree to chop.</source>
-        <translation>Selecciona un árbol para talarlo.</translation>
-    </message>
-    <message>
-        <source>Select a boulder to collect.</source>
-        <translation>Selecciona una roca para recogerla.</translation>
-    </message>
-    <message>
-        <source>Select iron ore to collect.</source>
-        <translation>Selecciona mineral de hierro para recogerlo.</translation>
-    </message>
-    <message>
-        <source>No available builder can chop that tree.</source>
-        <translation>Ningún constructor disponible puede talar ese árbol.</translation>
-    </message>
-    <message>
-        <source>No available builder can collect that boulder.</source>
-        <translation>Ningún constructor disponible puede recoger esa roca.</translation>
-    </message>
-    <message>
-        <source>No available builder can collect that iron ore.</source>
-        <translation>Ningún constructor disponible puede recoger ese mineral de hierro.</translation>
-    </message>
-    <message>
-        <source>No available builder can collect that resource.</source>
-        <translation>Ningún constructor disponible puede recoger ese recurso.</translation>
-    </message>
-    <message>
-        <source>No walkable spot near that tree.</source>
-        <translation>No hay un lugar transitable cerca de ese árbol.</translation>
-    </message>
-    <message>
-        <source>No walkable spot near that boulder.</source>
-        <translation>No hay un lugar transitable cerca de esa roca.</translation>
-    </message>
-    <message>
-        <source>No walkable spot near that iron ore.</source>
-        <translation>No hay un lugar transitable cerca de ese mineral de hierro.</translation>
-    </message>
-    <message>
-        <source>No walkable spot near that resource.</source>
-        <translation>No hay un lugar transitable cerca de ese recurso.</translation>
-    </message>
-    <message>
-        <source>Drag out a wall line first.</source>
-        <translation>Traza primero una línea de muralla.</translation>
-    </message>
-    <message>
-        <source>Choose a build location.</source>
-        <translation>Elige un lugar de construcción.</translation>
-    </message>
-    <message>
-        <source>That resource is already assigned.</source>
-        <translation>Ese recurso ya está asignado.</translation>
-    </message>
-    <message>
-        <source>No valid wall segments in that drag.</source>
-        <translation>No hay tramos de muralla válidos en ese trazado.</translation>
-    </message>
-    <message>
-        <source>No available builder.</source>
-        <translation>No hay ningún constructor disponible.</translation>
-    </message>
-    <message>
-        <source>That structure cannot be placed.</source>
-        <translation>Esa estructura no se puede colocar.</translation>
-    </message>
-    <message>
-        <source>Building factory unavailable.</source>
-        <translation>La fábrica de edificios no está disponible.</translation>
-    </message>
-    <message>
-        <source>Nothing here is worth harvesting.</source>
-        <translation>Aquí no hay nada que cosechar.</translation>
-    </message>
-    <message>
-        <source>No resource here to work.</source>
-        <translation>Aquí no hay ningún recurso que trabajar.</translation>
-    </message>
-    <message>
-        <source>Something is already standing here.</source>
-        <translation>Aquí ya hay algo en pie.</translation>
-    </message>
-    <message>
-        <source>No part of this wall can stand there.</source>
-        <translation>Ninguna parte de esta muralla puede alzarse ahí.</translation>
-    </message>
-    <message>
-        <source>This ground cannot be cleared to build on.</source>
-        <translation>Este terreno no se puede despejar para construir.</translation>
-    </message>
-    <message>
-        <source>Nothing can be built on the water.</source>
-        <translation>No se puede construir nada sobre el agua.</translation>
-    </message>
-    <message>
-        <source>The ground here is too steep to build on.</source>
-        <translation>El terreno es demasiado empinado para construir aquí.</translation>
-    </message>
-    <message>
-        <source>That is beyond the edge of the battlefield.</source>
-        <translation>Eso queda más allá del borde del campo de batalla.</translation>
-    </message>
-    <message>
-        <source>A wall already stands here.</source>
-        <translation>Aquí ya se alza una muralla.</translation>
     </message>
 </context>
 <context>
@@ -10602,6 +10511,121 @@ Usa el modo Entregar y luego haz clic en un cuartel aliado para aumentar su rese
     <message>
         <source>This home already committed its 3 civilians</source>
         <translation>Esta vivienda ya ha aportado sus 3 civiles</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionManager</name>
+    <message>
+        <source>Select a tree, boulder, ore deposit, ripe farm or sheep.</source>
+        <translation>Selecciona un árbol, una roca, un yacimiento, una granja madura o una oveja.</translation>
+    </message>
+    <message>
+        <source>Select a tree to chop.</source>
+        <translation>Selecciona un árbol para talarlo.</translation>
+    </message>
+    <message>
+        <source>Select a boulder to collect.</source>
+        <translation>Selecciona una roca para recogerla.</translation>
+    </message>
+    <message>
+        <source>Select iron ore to collect.</source>
+        <translation>Selecciona mineral de hierro para recogerlo.</translation>
+    </message>
+    <message>
+        <source>No available builder can chop that tree.</source>
+        <translation>Ningún constructor disponible puede talar ese árbol.</translation>
+    </message>
+    <message>
+        <source>No available builder can collect that boulder.</source>
+        <translation>Ningún constructor disponible puede recoger esa roca.</translation>
+    </message>
+    <message>
+        <source>No available builder can collect that iron ore.</source>
+        <translation>Ningún constructor disponible puede recoger ese mineral de hierro.</translation>
+    </message>
+    <message>
+        <source>No available builder can collect that resource.</source>
+        <translation>Ningún constructor disponible puede recoger ese recurso.</translation>
+    </message>
+    <message>
+        <source>No walkable spot near that tree.</source>
+        <translation>No hay un lugar transitable cerca de ese árbol.</translation>
+    </message>
+    <message>
+        <source>No walkable spot near that boulder.</source>
+        <translation>No hay un lugar transitable cerca de esa roca.</translation>
+    </message>
+    <message>
+        <source>No walkable spot near that iron ore.</source>
+        <translation>No hay un lugar transitable cerca de ese mineral de hierro.</translation>
+    </message>
+    <message>
+        <source>No walkable spot near that resource.</source>
+        <translation>No hay un lugar transitable cerca de ese recurso.</translation>
+    </message>
+    <message>
+        <source>Drag out a wall line first.</source>
+        <translation>Traza primero una línea de muralla.</translation>
+    </message>
+    <message>
+        <source>Choose a build location.</source>
+        <translation>Elige un lugar de construcción.</translation>
+    </message>
+    <message>
+        <source>That resource is already assigned.</source>
+        <translation>Ese recurso ya está asignado.</translation>
+    </message>
+    <message>
+        <source>No valid wall segments in that drag.</source>
+        <translation>No hay tramos de muralla válidos en ese trazado.</translation>
+    </message>
+    <message>
+        <source>No available builder.</source>
+        <translation>No hay ningún constructor disponible.</translation>
+    </message>
+    <message>
+        <source>That structure cannot be placed.</source>
+        <translation>Esa estructura no se puede colocar.</translation>
+    </message>
+    <message>
+        <source>Building factory unavailable.</source>
+        <translation>La fábrica de edificios no está disponible.</translation>
+    </message>
+    <message>
+        <source>Nothing here is worth harvesting.</source>
+        <translation>Aquí no hay nada que cosechar.</translation>
+    </message>
+    <message>
+        <source>No resource here to work.</source>
+        <translation>Aquí no hay ningún recurso que trabajar.</translation>
+    </message>
+    <message>
+        <source>Something is already standing here.</source>
+        <translation>Aquí ya hay algo en pie.</translation>
+    </message>
+    <message>
+        <source>No part of this wall can stand there.</source>
+        <translation>Ninguna parte de esta muralla puede alzarse ahí.</translation>
+    </message>
+    <message>
+        <source>This ground cannot be cleared to build on.</source>
+        <translation>Este terreno no se puede despejar para construir.</translation>
+    </message>
+    <message>
+        <source>Nothing can be built on the water.</source>
+        <translation>No se puede construir nada sobre el agua.</translation>
+    </message>
+    <message>
+        <source>The ground here is too steep to build on.</source>
+        <translation>El terreno es demasiado empinado para construir aquí.</translation>
+    </message>
+    <message>
+        <source>That is beyond the edge of the battlefield.</source>
+        <translation>Eso queda más allá del borde del campo de batalla.</translation>
+    </message>
+    <message>
+        <source>A wall already stands here.</source>
+        <translation>Aquí ya se alza una muralla.</translation>
     </message>
 </context>
 <context>
@@ -13460,6 +13484,38 @@ Clic derecho para cancelar.</translation>
     <message>
         <source>Very slow, and a tall target that fire and stone-throwers bring down.</source>
         <translation>Muy lenta y un blanco alto que el fuego y los lanzapiedras derriban.</translation>
+    </message>
+    <message>
+        <source>Gallic Cavalry</source>
+        <translation>Caballería gala</translation>
+    </message>
+    <message>
+        <source>Gallic Swordsmen</source>
+        <translation>Espaderos galos</translation>
+    </message>
+    <message>
+        <source>Gallic nobles fought on horseback with long swords. Under Hasdrubal at Cannae they broke the Roman horse on the river flank and rode round to close the trap.</source>
+        <translation>Los nobles galos luchaban a caballo con espadas largas. A las órdenes de Asdrúbal en Cannas, rompieron la caballería romana en el flanco del río y la rodearon para cerrar la trampa.</translation>
+    </message>
+    <message>
+        <source>Gauls of the Po valley joined Hannibal once he was over the Alps. At Cannae they held the centre of the crescent and fell back on purpose, drawing the legions in.</source>
+        <translation>Los galos del valle del Po se unieron a Aníbal en cuanto cruzó los Alpes. En Cannas sostuvieron el centro de la media luna y retrocedieron a propósito, atrayendo a las legiones.</translation>
+    </message>
+    <message>
+        <source>Iberian Cavalry</source>
+        <translation>Caballería íbera</translation>
+    </message>
+    <message>
+        <source>Iberian Swordsmen</source>
+        <translation>Espaderos íberos</translation>
+    </message>
+    <message>
+        <source>Iberian horsemen carried the small round caetra and the falcata. At Cannae they rode beside the Gauls on the left wing and helped ride down the Roman cavalry.</source>
+        <translation>Los jinetes íberos llevaban la pequeña caetra redonda y la falcata. En Cannas cabalgaron junto a los galos en el ala izquierda y ayudaron a arrollar a la caballería romana.</translation>
+    </message>
+    <message>
+        <source>The Barcids raised their best foot in Spain. Iberian swordsmen wore white tunics edged in crimson and fought with the curved falcata.</source>
+        <translation>Los Bárcidas reclutaron su mejor infantería en Hispania. Los espaderos íberos vestían túnicas blancas ribeteadas de carmesí y luchaban con la falcata curva.</translation>
     </message>
 </context>
 <context>

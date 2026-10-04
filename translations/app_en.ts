@@ -3208,6 +3208,22 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <source>The watch does not sleep</source>
         <translation>The watch does not sleep</translation>
     </message>
+    <message>
+        <source>Gallic Allies</source>
+        <translation>Gallic Allies</translation>
+    </message>
+    <message>
+        <source>Allies of Carthage from beyond the Po</source>
+        <translation>Allies of Carthage from beyond the Po</translation>
+    </message>
+    <message>
+        <source>Iberian Allies</source>
+        <translation>Iberian Allies</translation>
+    </message>
+    <message>
+        <source>Allies of Carthage from Hispania</source>
+        <translation>Allies of Carthage from Hispania</translation>
+    </message>
 </context>
 <context>
     <name>FloatingNumbers</name>
@@ -9740,6 +9756,14 @@ to see preview</translation>
         <source>Testudo</source>
         <translation>Testudo</translation>
     </message>
+    <message>
+        <source>Gallic Allies</source>
+        <translation>Gallic Allies</translation>
+    </message>
+    <message>
+        <source>Iberian Allies</source>
+        <translation>Iberian Allies</translation>
+    </message>
 </context>
 <context>
     <name>Numerals</name>
@@ -10088,121 +10112,6 @@ to see preview</translation>
     <message>
         <source>Remove player</source>
         <translation>Remove player</translation>
-    </message>
-</context>
-<context>
-    <name>ProductionManager</name>
-    <message>
-        <source>Select a tree, boulder, ore deposit, ripe farm or sheep.</source>
-        <translation>Select a tree, boulder, ore deposit, ripe farm or sheep.</translation>
-    </message>
-    <message>
-        <source>Select a tree to chop.</source>
-        <translation>Select a tree to chop.</translation>
-    </message>
-    <message>
-        <source>Select a boulder to collect.</source>
-        <translation>Select a boulder to collect.</translation>
-    </message>
-    <message>
-        <source>Select iron ore to collect.</source>
-        <translation>Select iron ore to collect.</translation>
-    </message>
-    <message>
-        <source>No available builder can chop that tree.</source>
-        <translation>No available builder can chop that tree.</translation>
-    </message>
-    <message>
-        <source>No available builder can collect that boulder.</source>
-        <translation>No available builder can collect that boulder.</translation>
-    </message>
-    <message>
-        <source>No available builder can collect that iron ore.</source>
-        <translation>No available builder can collect that iron ore.</translation>
-    </message>
-    <message>
-        <source>No available builder can collect that resource.</source>
-        <translation>No available builder can collect that resource.</translation>
-    </message>
-    <message>
-        <source>No walkable spot near that tree.</source>
-        <translation>No walkable spot near that tree.</translation>
-    </message>
-    <message>
-        <source>No walkable spot near that boulder.</source>
-        <translation>No walkable spot near that boulder.</translation>
-    </message>
-    <message>
-        <source>No walkable spot near that iron ore.</source>
-        <translation>No walkable spot near that iron ore.</translation>
-    </message>
-    <message>
-        <source>No walkable spot near that resource.</source>
-        <translation>No walkable spot near that resource.</translation>
-    </message>
-    <message>
-        <source>Drag out a wall line first.</source>
-        <translation>Drag out a wall line first.</translation>
-    </message>
-    <message>
-        <source>Choose a build location.</source>
-        <translation>Choose a build location.</translation>
-    </message>
-    <message>
-        <source>That resource is already assigned.</source>
-        <translation>That resource is already assigned.</translation>
-    </message>
-    <message>
-        <source>No valid wall segments in that drag.</source>
-        <translation>No valid wall segments in that drag.</translation>
-    </message>
-    <message>
-        <source>No available builder.</source>
-        <translation>No available builder.</translation>
-    </message>
-    <message>
-        <source>That structure cannot be placed.</source>
-        <translation>That structure cannot be placed.</translation>
-    </message>
-    <message>
-        <source>Building factory unavailable.</source>
-        <translation>Building factory unavailable.</translation>
-    </message>
-    <message>
-        <source>Nothing here is worth harvesting.</source>
-        <translation>Nothing here is worth harvesting.</translation>
-    </message>
-    <message>
-        <source>No resource here to work.</source>
-        <translation>No resource here to work.</translation>
-    </message>
-    <message>
-        <source>Something is already standing here.</source>
-        <translation>Something is already standing here.</translation>
-    </message>
-    <message>
-        <source>No part of this wall can stand there.</source>
-        <translation>No part of this wall can stand there.</translation>
-    </message>
-    <message>
-        <source>This ground cannot be cleared to build on.</source>
-        <translation>This ground cannot be cleared to build on.</translation>
-    </message>
-    <message>
-        <source>Nothing can be built on the water.</source>
-        <translation>Nothing can be built on the water.</translation>
-    </message>
-    <message>
-        <source>The ground here is too steep to build on.</source>
-        <translation>The ground here is too steep to build on.</translation>
-    </message>
-    <message>
-        <source>That is beyond the edge of the battlefield.</source>
-        <translation>That is beyond the edge of the battlefield.</translation>
-    </message>
-    <message>
-        <source>A wall already stands here.</source>
-        <translation>A wall already stands here.</translation>
     </message>
 </context>
 <context>
@@ -10602,6 +10511,121 @@ Use Deliver mode, then click a friendly barracks to add to its reserve.</transla
     <message>
         <source>This home already committed its 3 civilians</source>
         <translation>This home already committed its 3 civilians</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionManager</name>
+    <message>
+        <source>Select a tree, boulder, ore deposit, ripe farm or sheep.</source>
+        <translation>Select a tree, boulder, ore deposit, ripe farm or sheep.</translation>
+    </message>
+    <message>
+        <source>Select a tree to chop.</source>
+        <translation>Select a tree to chop.</translation>
+    </message>
+    <message>
+        <source>Select a boulder to collect.</source>
+        <translation>Select a boulder to collect.</translation>
+    </message>
+    <message>
+        <source>Select iron ore to collect.</source>
+        <translation>Select iron ore to collect.</translation>
+    </message>
+    <message>
+        <source>No available builder can chop that tree.</source>
+        <translation>No available builder can chop that tree.</translation>
+    </message>
+    <message>
+        <source>No available builder can collect that boulder.</source>
+        <translation>No available builder can collect that boulder.</translation>
+    </message>
+    <message>
+        <source>No available builder can collect that iron ore.</source>
+        <translation>No available builder can collect that iron ore.</translation>
+    </message>
+    <message>
+        <source>No available builder can collect that resource.</source>
+        <translation>No available builder can collect that resource.</translation>
+    </message>
+    <message>
+        <source>No walkable spot near that tree.</source>
+        <translation>No walkable spot near that tree.</translation>
+    </message>
+    <message>
+        <source>No walkable spot near that boulder.</source>
+        <translation>No walkable spot near that boulder.</translation>
+    </message>
+    <message>
+        <source>No walkable spot near that iron ore.</source>
+        <translation>No walkable spot near that iron ore.</translation>
+    </message>
+    <message>
+        <source>No walkable spot near that resource.</source>
+        <translation>No walkable spot near that resource.</translation>
+    </message>
+    <message>
+        <source>Drag out a wall line first.</source>
+        <translation>Drag out a wall line first.</translation>
+    </message>
+    <message>
+        <source>Choose a build location.</source>
+        <translation>Choose a build location.</translation>
+    </message>
+    <message>
+        <source>That resource is already assigned.</source>
+        <translation>That resource is already assigned.</translation>
+    </message>
+    <message>
+        <source>No valid wall segments in that drag.</source>
+        <translation>No valid wall segments in that drag.</translation>
+    </message>
+    <message>
+        <source>No available builder.</source>
+        <translation>No available builder.</translation>
+    </message>
+    <message>
+        <source>That structure cannot be placed.</source>
+        <translation>That structure cannot be placed.</translation>
+    </message>
+    <message>
+        <source>Building factory unavailable.</source>
+        <translation>Building factory unavailable.</translation>
+    </message>
+    <message>
+        <source>Nothing here is worth harvesting.</source>
+        <translation>Nothing here is worth harvesting.</translation>
+    </message>
+    <message>
+        <source>No resource here to work.</source>
+        <translation>No resource here to work.</translation>
+    </message>
+    <message>
+        <source>Something is already standing here.</source>
+        <translation>Something is already standing here.</translation>
+    </message>
+    <message>
+        <source>No part of this wall can stand there.</source>
+        <translation>No part of this wall can stand there.</translation>
+    </message>
+    <message>
+        <source>This ground cannot be cleared to build on.</source>
+        <translation>This ground cannot be cleared to build on.</translation>
+    </message>
+    <message>
+        <source>Nothing can be built on the water.</source>
+        <translation>Nothing can be built on the water.</translation>
+    </message>
+    <message>
+        <source>The ground here is too steep to build on.</source>
+        <translation>The ground here is too steep to build on.</translation>
+    </message>
+    <message>
+        <source>That is beyond the edge of the battlefield.</source>
+        <translation>That is beyond the edge of the battlefield.</translation>
+    </message>
+    <message>
+        <source>A wall already stands here.</source>
+        <translation>A wall already stands here.</translation>
     </message>
 </context>
 <context>
@@ -13460,6 +13484,38 @@ Right-click to cancel.</translation>
     <message>
         <source>Very slow, and a tall target that fire and stone-throwers bring down.</source>
         <translation>Very slow, and a tall target that fire and stone-throwers bring down.</translation>
+    </message>
+    <message>
+        <source>Gallic Cavalry</source>
+        <translation>Gallic Cavalry</translation>
+    </message>
+    <message>
+        <source>Gallic Swordsmen</source>
+        <translation>Gallic Swordsmen</translation>
+    </message>
+    <message>
+        <source>Gallic nobles fought on horseback with long swords. Under Hasdrubal at Cannae they broke the Roman horse on the river flank and rode round to close the trap.</source>
+        <translation>Gallic nobles fought on horseback with long swords. Under Hasdrubal at Cannae they broke the Roman horse on the river flank and rode round to close the trap.</translation>
+    </message>
+    <message>
+        <source>Gauls of the Po valley joined Hannibal once he was over the Alps. At Cannae they held the centre of the crescent and fell back on purpose, drawing the legions in.</source>
+        <translation>Gauls of the Po valley joined Hannibal once he was over the Alps. At Cannae they held the centre of the crescent and fell back on purpose, drawing the legions in.</translation>
+    </message>
+    <message>
+        <source>Iberian Cavalry</source>
+        <translation>Iberian Cavalry</translation>
+    </message>
+    <message>
+        <source>Iberian Swordsmen</source>
+        <translation>Iberian Swordsmen</translation>
+    </message>
+    <message>
+        <source>Iberian horsemen carried the small round caetra and the falcata. At Cannae they rode beside the Gauls on the left wing and helped ride down the Roman cavalry.</source>
+        <translation>Iberian horsemen carried the small round caetra and the falcata. At Cannae they rode beside the Gauls on the left wing and helped ride down the Roman cavalry.</translation>
+    </message>
+    <message>
+        <source>The Barcids raised their best foot in Spain. Iberian swordsmen wore white tunics edged in crimson and fought with the curved falcata.</source>
+        <translation>The Barcids raised their best foot in Spain. Iberian swordsmen wore white tunics edged in crimson and fought with the curved falcata.</translation>
     </message>
 </context>
 <context>

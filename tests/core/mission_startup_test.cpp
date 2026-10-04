@@ -1,3 +1,9 @@
+#include <QFile>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QTemporaryDir>
+
 #include <chrono>
 #include <gtest/gtest.h>
 #include <vector>
@@ -192,6 +198,69 @@ TEST_F(MissionStartupTest, StartingUnitsStandApartOnOpenGround) {
                              << " m";
     }
   }
+}
+
+TEST_F(MissionStartupTest, StartingUnitsCanFieldCarthagesAllies) {
+  QFile source(QStringLiteral("assets/missions/battle_of_cannae.json"));
+  ASSERT_TRUE(source.open(QIODevice::ReadOnly));
+  QJsonObject root = QJsonDocument::fromJson(source.readAll()).object();
+  QJsonObject player = root.value(QStringLiteral("player_setup")).toObject();
+  ASSERT_EQ(player.value(QStringLiteral("nation")).toString(), QStringLiteral("carthage"));
+  QJsonArray units = player.value(QStringLiteral("starting_units")).toArray();
+  units.append(QJsonObject{{"type", "swordsman"},
+                           {"count", 1},
+                           {"nation", "gauls"},
+                           {"position", QJsonObject{{"x", 182.0}, {"z", 232.0}}}});
+  units.append(QJsonObject{{"type", "horse_swordsman"},
+                           {"count", 1},
+                           {"nation", "iberians"},
+                           {"position", QJsonObject{{"x", 176.0}, {"z", 238.0}}}});
+  player[QStringLiteral("starting_units")] = units;
+  root[QStringLiteral("player_setup")] = player;
+
+  QTemporaryDir dir;
+  ASSERT_TRUE(dir.isValid());
+  const QString path = dir.filePath(QStringLiteral("cannae_with_allies.json"));
+  QFile out(path);
+  ASSERT_TRUE(out.open(QIODevice::WriteOnly));
+  out.write(QJsonDocument(root).toJson());
+  out.close();
+
+  ASSERT_TRUE(prepare_mission(path.toUtf8().constData())) << m_error.toStdString();
+
+  int gallic_swordsmen = 0;
+  int iberian_riders = 0;
+  int carthaginians = 0;
+  for (auto* entity : m_world.collect_entities_with<Engine::Core::UnitComponent>()) {
+    const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+    const auto* renderable = entity->get_component<Engine::Core::RenderableComponent>();
+    if (unit == nullptr || unit->owner_id != k_local_owner ||
+        entity->has_component<Engine::Core::BuildingComponent>()) {
+      continue;
+    }
+    switch (unit->nation_id) {
+    case Game::Systems::NationID::Gauls:
+      EXPECT_EQ(unit->spawn_type, Game::Units::SpawnType::Swordsman);
+      ASSERT_NE(renderable, nullptr);
+      EXPECT_EQ(renderable->renderer_id, "troops/gauls/swordsman");
+      ++gallic_swordsmen;
+      break;
+    case Game::Systems::NationID::Iberians:
+      EXPECT_EQ(unit->spawn_type, Game::Units::SpawnType::MountedSwordsman);
+      ASSERT_NE(renderable, nullptr);
+      EXPECT_EQ(renderable->renderer_id, "troops/iberians/horse_swordsman");
+      ++iberian_riders;
+      break;
+    case Game::Systems::NationID::Carthage:
+      ++carthaginians;
+      break;
+    default:
+      break;
+    }
+  }
+  EXPECT_EQ(gallic_swordsmen, 1);
+  EXPECT_EQ(iberian_riders, 1);
+  EXPECT_GT(carthaginians, 0) << "the rest of the army keeps the owner's nation";
 }
 
 } // namespace

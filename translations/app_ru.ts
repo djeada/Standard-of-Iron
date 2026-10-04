@@ -3208,6 +3208,22 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>The watch does not sleep</source>
         <translation>Стража не спит</translation>
     </message>
+    <message>
+        <source>Gallic Allies</source>
+        <translation>Галльские союзники</translation>
+    </message>
+    <message>
+        <source>Allies of Carthage from beyond the Po</source>
+        <translation>Союзники Карфагена из-за реки По</translation>
+    </message>
+    <message>
+        <source>Iberian Allies</source>
+        <translation>Иберийские союзники</translation>
+    </message>
+    <message>
+        <source>Allies of Carthage from Hispania</source>
+        <translation>Союзники Карфагена из Испании</translation>
+    </message>
 </context>
 <context>
     <name>FloatingNumbers</name>
@@ -9743,6 +9759,14 @@ to see preview</source>
         <source>The Iron Sepulcher</source>
         <translation>Железная Гробница</translation>
     </message>
+    <message>
+        <source>Gallic Allies</source>
+        <translation>Галльские союзники</translation>
+    </message>
+    <message>
+        <source>Iberian Allies</source>
+        <translation>Иберийские союзники</translation>
+    </message>
 </context>
 <context>
     <name>Numerals</name>
@@ -10091,121 +10115,6 @@ to see preview</source>
     <message>
         <source>Remove player</source>
         <translation>Убрать игрока</translation>
-    </message>
-</context>
-<context>
-    <name>ProductionManager</name>
-    <message>
-        <source>Select a tree to chop.</source>
-        <translation>Укажите дерево для рубки.</translation>
-    </message>
-    <message>
-        <source>Select a boulder to collect.</source>
-        <translation>Укажите валун для сбора.</translation>
-    </message>
-    <message>
-        <source>Select iron ore to collect.</source>
-        <translation>Укажите железную руду для сбора.</translation>
-    </message>
-    <message>
-        <source>No available builder can chop that tree.</source>
-        <translation>Ни один свободный строитель это дерево срубить не может.</translation>
-    </message>
-    <message>
-        <source>No available builder can collect that boulder.</source>
-        <translation>Ни один свободный строитель этот валун собрать не может.</translation>
-    </message>
-    <message>
-        <source>No available builder can collect that iron ore.</source>
-        <translation>Ни один свободный строитель эту железную руду собрать не может.</translation>
-    </message>
-    <message>
-        <source>No available builder can collect that resource.</source>
-        <translation>Ни один свободный строитель этот ресурс собрать не может.</translation>
-    </message>
-    <message>
-        <source>No walkable spot near that tree.</source>
-        <translation>У этого дерева нет проходимого места.</translation>
-    </message>
-    <message>
-        <source>No walkable spot near that boulder.</source>
-        <translation>У этого валуна нет проходимого места.</translation>
-    </message>
-    <message>
-        <source>No walkable spot near that iron ore.</source>
-        <translation>У этой железной руды нет проходимого места.</translation>
-    </message>
-    <message>
-        <source>No walkable spot near that resource.</source>
-        <translation>У этого ресурса нет проходимого места.</translation>
-    </message>
-    <message>
-        <source>Select a tree, boulder, ore deposit, ripe farm or sheep.</source>
-        <translation>Укажите дерево, валун, залежь руды, созревшее поле или овцу.</translation>
-    </message>
-    <message>
-        <source>Something is already standing here.</source>
-        <translation>Здесь уже что-то стоит.</translation>
-    </message>
-    <message>
-        <source>This ground cannot be cleared to build on.</source>
-        <translation>Эту землю под стройку не расчистить.</translation>
-    </message>
-    <message>
-        <source>Nothing can be built on the water.</source>
-        <translation>На воде строить нельзя.</translation>
-    </message>
-    <message>
-        <source>The ground here is too steep to build on.</source>
-        <translation>Земля здесь слишком крута для стройки.</translation>
-    </message>
-    <message>
-        <source>That is beyond the edge of the battlefield.</source>
-        <translation>Это за краем поля боя.</translation>
-    </message>
-    <message>
-        <source>That structure cannot be placed.</source>
-        <translation>Эту постройку сюда не поставить.</translation>
-    </message>
-    <message>
-        <source>Building factory unavailable.</source>
-        <translation>Фабрика построек недоступна.</translation>
-    </message>
-    <message>
-        <source>A wall already stands here.</source>
-        <translation>Здесь уже стоит стена.</translation>
-    </message>
-    <message>
-        <source>No part of this wall can stand there.</source>
-        <translation>Ни одна часть этой стены там встать не может.</translation>
-    </message>
-    <message>
-        <source>Drag out a wall line first.</source>
-        <translation>Сначала протяните линию стены.</translation>
-    </message>
-    <message>
-        <source>Choose a build location.</source>
-        <translation>Выберите место стройки.</translation>
-    </message>
-    <message>
-        <source>That resource is already assigned.</source>
-        <translation>Этот ресурс уже занят.</translation>
-    </message>
-    <message>
-        <source>Nothing here is worth harvesting.</source>
-        <translation>Здесь нечего собирать.</translation>
-    </message>
-    <message>
-        <source>No resource here to work.</source>
-        <translation>Здесь нет ресурса для работы.</translation>
-    </message>
-    <message>
-        <source>No valid wall segments in that drag.</source>
-        <translation>В этом протягивании нет годных участков стены.</translation>
-    </message>
-    <message>
-        <source>No available builder.</source>
-        <translation>Свободного строителя нет.</translation>
     </message>
 </context>
 <context>
@@ -10605,6 +10514,121 @@ Use Deliver mode, then click a friendly barracks to add to its reserve.</source>
     <message>
         <source>This home already committed its 3 civilians</source>
         <translation>Этот дом уже отдал своих 3 гражданских</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionManager</name>
+    <message>
+        <source>Select a tree to chop.</source>
+        <translation>Укажите дерево для рубки.</translation>
+    </message>
+    <message>
+        <source>Select a boulder to collect.</source>
+        <translation>Укажите валун для сбора.</translation>
+    </message>
+    <message>
+        <source>Select iron ore to collect.</source>
+        <translation>Укажите железную руду для сбора.</translation>
+    </message>
+    <message>
+        <source>No available builder can chop that tree.</source>
+        <translation>Ни один свободный строитель это дерево срубить не может.</translation>
+    </message>
+    <message>
+        <source>No available builder can collect that boulder.</source>
+        <translation>Ни один свободный строитель этот валун собрать не может.</translation>
+    </message>
+    <message>
+        <source>No available builder can collect that iron ore.</source>
+        <translation>Ни один свободный строитель эту железную руду собрать не может.</translation>
+    </message>
+    <message>
+        <source>No available builder can collect that resource.</source>
+        <translation>Ни один свободный строитель этот ресурс собрать не может.</translation>
+    </message>
+    <message>
+        <source>No walkable spot near that tree.</source>
+        <translation>У этого дерева нет проходимого места.</translation>
+    </message>
+    <message>
+        <source>No walkable spot near that boulder.</source>
+        <translation>У этого валуна нет проходимого места.</translation>
+    </message>
+    <message>
+        <source>No walkable spot near that iron ore.</source>
+        <translation>У этой железной руды нет проходимого места.</translation>
+    </message>
+    <message>
+        <source>No walkable spot near that resource.</source>
+        <translation>У этого ресурса нет проходимого места.</translation>
+    </message>
+    <message>
+        <source>Select a tree, boulder, ore deposit, ripe farm or sheep.</source>
+        <translation>Укажите дерево, валун, залежь руды, созревшее поле или овцу.</translation>
+    </message>
+    <message>
+        <source>Something is already standing here.</source>
+        <translation>Здесь уже что-то стоит.</translation>
+    </message>
+    <message>
+        <source>This ground cannot be cleared to build on.</source>
+        <translation>Эту землю под стройку не расчистить.</translation>
+    </message>
+    <message>
+        <source>Nothing can be built on the water.</source>
+        <translation>На воде строить нельзя.</translation>
+    </message>
+    <message>
+        <source>The ground here is too steep to build on.</source>
+        <translation>Земля здесь слишком крута для стройки.</translation>
+    </message>
+    <message>
+        <source>That is beyond the edge of the battlefield.</source>
+        <translation>Это за краем поля боя.</translation>
+    </message>
+    <message>
+        <source>That structure cannot be placed.</source>
+        <translation>Эту постройку сюда не поставить.</translation>
+    </message>
+    <message>
+        <source>Building factory unavailable.</source>
+        <translation>Фабрика построек недоступна.</translation>
+    </message>
+    <message>
+        <source>A wall already stands here.</source>
+        <translation>Здесь уже стоит стена.</translation>
+    </message>
+    <message>
+        <source>No part of this wall can stand there.</source>
+        <translation>Ни одна часть этой стены там встать не может.</translation>
+    </message>
+    <message>
+        <source>Drag out a wall line first.</source>
+        <translation>Сначала протяните линию стены.</translation>
+    </message>
+    <message>
+        <source>Choose a build location.</source>
+        <translation>Выберите место стройки.</translation>
+    </message>
+    <message>
+        <source>That resource is already assigned.</source>
+        <translation>Этот ресурс уже занят.</translation>
+    </message>
+    <message>
+        <source>Nothing here is worth harvesting.</source>
+        <translation>Здесь нечего собирать.</translation>
+    </message>
+    <message>
+        <source>No resource here to work.</source>
+        <translation>Здесь нет ресурса для работы.</translation>
+    </message>
+    <message>
+        <source>No valid wall segments in that drag.</source>
+        <translation>В этом протягивании нет годных участков стены.</translation>
+    </message>
+    <message>
+        <source>No available builder.</source>
+        <translation>Свободного строителя нет.</translation>
     </message>
 </context>
 <context>
@@ -13464,6 +13488,38 @@ Right-click to cancel.</source>
     <message>
         <source>Very slow, and a tall target that fire and stone-throwers bring down.</source>
         <translation>Очень медленна и высока: огонь и камнемёты быстро её сносят.</translation>
+    </message>
+    <message>
+        <source>Gallic Cavalry</source>
+        <translation>Галльская конница</translation>
+    </message>
+    <message>
+        <source>Gallic Swordsmen</source>
+        <translation>Галльские мечники</translation>
+    </message>
+    <message>
+        <source>Gallic nobles fought on horseback with long swords. Under Hasdrubal at Cannae they broke the Roman horse on the river flank and rode round to close the trap.</source>
+        <translation>Галльская знать сражалась верхом с длинными мечами. Под началом Гасдрубала при Каннах они опрокинули римскую конницу на речном фланге и обошли её, чтобы захлопнуть ловушку.</translation>
+    </message>
+    <message>
+        <source>Gauls of the Po valley joined Hannibal once he was over the Alps. At Cannae they held the centre of the crescent and fell back on purpose, drawing the legions in.</source>
+        <translation>Галлы из долины По присоединились к Ганнибалу, как только он перешёл Альпы. При Каннах они держали центр полумесяца и намеренно отступали, втягивая легионы.</translation>
+    </message>
+    <message>
+        <source>Iberian Cavalry</source>
+        <translation>Иберийская конница</translation>
+    </message>
+    <message>
+        <source>Iberian Swordsmen</source>
+        <translation>Иберийские мечники</translation>
+    </message>
+    <message>
+        <source>Iberian horsemen carried the small round caetra and the falcata. At Cannae they rode beside the Gauls on the left wing and helped ride down the Roman cavalry.</source>
+        <translation>Иберийские всадники носили маленькую круглую цетру и фалькату. При Каннах они скакали рядом с галлами на левом фланге и помогли смять римскую конницу.</translation>
+    </message>
+    <message>
+        <source>The Barcids raised their best foot in Spain. Iberian swordsmen wore white tunics edged in crimson and fought with the curved falcata.</source>
+        <translation>Баркиды набирали лучшую пехоту в Испании. Иберийские мечники носили белые туники с багряной каймой и сражались изогнутой фалькатой.</translation>
     </message>
 </context>
 <context>

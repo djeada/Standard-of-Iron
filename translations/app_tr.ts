@@ -3208,6 +3208,22 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
         <source>The watch does not sleep</source>
         <translation>Nöbet uyumaz</translation>
     </message>
+    <message>
+        <source>Gallic Allies</source>
+        <translation>Galyalı Müttefikler</translation>
+    </message>
+    <message>
+        <source>Allies of Carthage from beyond the Po</source>
+        <translation>Po&apos;nun ötesinden Kartaca&apos;nın müttefikleri</translation>
+    </message>
+    <message>
+        <source>Iberian Allies</source>
+        <translation>İberyalı Müttefikler</translation>
+    </message>
+    <message>
+        <source>Allies of Carthage from Hispania</source>
+        <translation>Hispania&apos;dan Kartaca&apos;nın müttefikleri</translation>
+    </message>
 </context>
 <context>
     <name>FloatingNumbers</name>
@@ -9737,6 +9753,14 @@ bir harita seç</translation>
         <source>The Iron Sepulcher</source>
         <translation>Demir Kabir</translation>
     </message>
+    <message>
+        <source>Gallic Allies</source>
+        <translation>Galyalı Müttefikler</translation>
+    </message>
+    <message>
+        <source>Iberian Allies</source>
+        <translation>İberyalı Müttefikler</translation>
+    </message>
 </context>
 <context>
     <name>Numerals</name>
@@ -10085,121 +10109,6 @@ bir harita seç</translation>
     <message>
         <source>Remove player</source>
         <translation>Oyuncuyu çıkar</translation>
-    </message>
-</context>
-<context>
-    <name>ProductionManager</name>
-    <message>
-        <source>Select a tree to chop.</source>
-        <translation>Kesmek için bir ağaç seç.</translation>
-    </message>
-    <message>
-        <source>Select a boulder to collect.</source>
-        <translation>Toplamak için bir kaya seç.</translation>
-    </message>
-    <message>
-        <source>Select iron ore to collect.</source>
-        <translation>Toplamak için demir cevheri seç.</translation>
-    </message>
-    <message>
-        <source>No available builder can chop that tree.</source>
-        <translation>O ağacı kesebilecek boş bir inşaatçı yok.</translation>
-    </message>
-    <message>
-        <source>No available builder can collect that boulder.</source>
-        <translation>O kayayı toplayabilecek boş bir inşaatçı yok.</translation>
-    </message>
-    <message>
-        <source>No available builder can collect that iron ore.</source>
-        <translation>O demir cevherini toplayabilecek boş bir inşaatçı yok.</translation>
-    </message>
-    <message>
-        <source>No available builder can collect that resource.</source>
-        <translation>O kaynağı toplayabilecek boş bir inşaatçı yok.</translation>
-    </message>
-    <message>
-        <source>No walkable spot near that tree.</source>
-        <translation>O ağacın yakınında yürünebilir yer yok.</translation>
-    </message>
-    <message>
-        <source>No walkable spot near that boulder.</source>
-        <translation>O kayanın yakınında yürünebilir yer yok.</translation>
-    </message>
-    <message>
-        <source>No walkable spot near that iron ore.</source>
-        <translation>O demir cevherinin yakınında yürünebilir yer yok.</translation>
-    </message>
-    <message>
-        <source>No walkable spot near that resource.</source>
-        <translation>O kaynağın yakınında yürünebilir yer yok.</translation>
-    </message>
-    <message>
-        <source>Select a tree, boulder, ore deposit, ripe farm or sheep.</source>
-        <translation>Bir ağaç, kaya, cevher yatağı, olgun tarla ya da koyun seç.</translation>
-    </message>
-    <message>
-        <source>Something is already standing here.</source>
-        <translation>Burada zaten bir şey duruyor.</translation>
-    </message>
-    <message>
-        <source>This ground cannot be cleared to build on.</source>
-        <translation>Bu zemin inşa için temizlenemez.</translation>
-    </message>
-    <message>
-        <source>Nothing can be built on the water.</source>
-        <translation>Suyun üstüne hiçbir şey inşa edilemez.</translation>
-    </message>
-    <message>
-        <source>The ground here is too steep to build on.</source>
-        <translation>Buradaki zemin inşa için fazla dik.</translation>
-    </message>
-    <message>
-        <source>That is beyond the edge of the battlefield.</source>
-        <translation>Orası savaş alanının sınırının ötesinde.</translation>
-    </message>
-    <message>
-        <source>That structure cannot be placed.</source>
-        <translation>O yapı yerleştirilemez.</translation>
-    </message>
-    <message>
-        <source>Building factory unavailable.</source>
-        <translation>Yapı üretimi kullanılamıyor.</translation>
-    </message>
-    <message>
-        <source>A wall already stands here.</source>
-        <translation>Burada zaten bir sur duruyor.</translation>
-    </message>
-    <message>
-        <source>No part of this wall can stand there.</source>
-        <translation>Bu surun hiçbir parçası oraya sığmıyor.</translation>
-    </message>
-    <message>
-        <source>Drag out a wall line first.</source>
-        <translation>Önce bir sur hattı sürükle.</translation>
-    </message>
-    <message>
-        <source>Choose a build location.</source>
-        <translation>Bir inşa yeri seç.</translation>
-    </message>
-    <message>
-        <source>That resource is already assigned.</source>
-        <translation>O kaynak zaten atanmış.</translation>
-    </message>
-    <message>
-        <source>Nothing here is worth harvesting.</source>
-        <translation>Burada toplanmaya değer bir şey yok.</translation>
-    </message>
-    <message>
-        <source>No resource here to work.</source>
-        <translation>Burada işlenecek kaynak yok.</translation>
-    </message>
-    <message>
-        <source>No valid wall segments in that drag.</source>
-        <translation>O sürüklemede geçerli sur parçası yok.</translation>
-    </message>
-    <message>
-        <source>No available builder.</source>
-        <translation>Boş inşaatçı yok.</translation>
     </message>
 </context>
 <context>
@@ -10599,6 +10508,121 @@ Teslim et kipini kullan, sonra yedeğine eklemek için dost bir kışlaya tıkla
     <message>
         <source>This home already committed its 3 civilians</source>
         <translation>Bu ev 3 sivilini çoktan verdi</translation>
+    </message>
+</context>
+<context>
+    <name>ProductionManager</name>
+    <message>
+        <source>Select a tree to chop.</source>
+        <translation>Kesmek için bir ağaç seç.</translation>
+    </message>
+    <message>
+        <source>Select a boulder to collect.</source>
+        <translation>Toplamak için bir kaya seç.</translation>
+    </message>
+    <message>
+        <source>Select iron ore to collect.</source>
+        <translation>Toplamak için demir cevheri seç.</translation>
+    </message>
+    <message>
+        <source>No available builder can chop that tree.</source>
+        <translation>O ağacı kesebilecek boş bir inşaatçı yok.</translation>
+    </message>
+    <message>
+        <source>No available builder can collect that boulder.</source>
+        <translation>O kayayı toplayabilecek boş bir inşaatçı yok.</translation>
+    </message>
+    <message>
+        <source>No available builder can collect that iron ore.</source>
+        <translation>O demir cevherini toplayabilecek boş bir inşaatçı yok.</translation>
+    </message>
+    <message>
+        <source>No available builder can collect that resource.</source>
+        <translation>O kaynağı toplayabilecek boş bir inşaatçı yok.</translation>
+    </message>
+    <message>
+        <source>No walkable spot near that tree.</source>
+        <translation>O ağacın yakınında yürünebilir yer yok.</translation>
+    </message>
+    <message>
+        <source>No walkable spot near that boulder.</source>
+        <translation>O kayanın yakınında yürünebilir yer yok.</translation>
+    </message>
+    <message>
+        <source>No walkable spot near that iron ore.</source>
+        <translation>O demir cevherinin yakınında yürünebilir yer yok.</translation>
+    </message>
+    <message>
+        <source>No walkable spot near that resource.</source>
+        <translation>O kaynağın yakınında yürünebilir yer yok.</translation>
+    </message>
+    <message>
+        <source>Select a tree, boulder, ore deposit, ripe farm or sheep.</source>
+        <translation>Bir ağaç, kaya, cevher yatağı, olgun tarla ya da koyun seç.</translation>
+    </message>
+    <message>
+        <source>Something is already standing here.</source>
+        <translation>Burada zaten bir şey duruyor.</translation>
+    </message>
+    <message>
+        <source>This ground cannot be cleared to build on.</source>
+        <translation>Bu zemin inşa için temizlenemez.</translation>
+    </message>
+    <message>
+        <source>Nothing can be built on the water.</source>
+        <translation>Suyun üstüne hiçbir şey inşa edilemez.</translation>
+    </message>
+    <message>
+        <source>The ground here is too steep to build on.</source>
+        <translation>Buradaki zemin inşa için fazla dik.</translation>
+    </message>
+    <message>
+        <source>That is beyond the edge of the battlefield.</source>
+        <translation>Orası savaş alanının sınırının ötesinde.</translation>
+    </message>
+    <message>
+        <source>That structure cannot be placed.</source>
+        <translation>O yapı yerleştirilemez.</translation>
+    </message>
+    <message>
+        <source>Building factory unavailable.</source>
+        <translation>Yapı üretimi kullanılamıyor.</translation>
+    </message>
+    <message>
+        <source>A wall already stands here.</source>
+        <translation>Burada zaten bir sur duruyor.</translation>
+    </message>
+    <message>
+        <source>No part of this wall can stand there.</source>
+        <translation>Bu surun hiçbir parçası oraya sığmıyor.</translation>
+    </message>
+    <message>
+        <source>Drag out a wall line first.</source>
+        <translation>Önce bir sur hattı sürükle.</translation>
+    </message>
+    <message>
+        <source>Choose a build location.</source>
+        <translation>Bir inşa yeri seç.</translation>
+    </message>
+    <message>
+        <source>That resource is already assigned.</source>
+        <translation>O kaynak zaten atanmış.</translation>
+    </message>
+    <message>
+        <source>Nothing here is worth harvesting.</source>
+        <translation>Burada toplanmaya değer bir şey yok.</translation>
+    </message>
+    <message>
+        <source>No resource here to work.</source>
+        <translation>Burada işlenecek kaynak yok.</translation>
+    </message>
+    <message>
+        <source>No valid wall segments in that drag.</source>
+        <translation>O sürüklemede geçerli sur parçası yok.</translation>
+    </message>
+    <message>
+        <source>No available builder.</source>
+        <translation>Boş inşaatçı yok.</translation>
     </message>
 </context>
 <context>
@@ -13456,6 +13480,38 @@ Right-click to cancel.</source>
     <message>
         <source>Very slow, and a tall target that fire and stone-throwers bring down.</source>
         <translation>Çok yavaştır; ateş ve taş atanların indirdiği uzun bir hedeftir.</translation>
+    </message>
+    <message>
+        <source>Gallic Cavalry</source>
+        <translation>Galya Süvarisi</translation>
+    </message>
+    <message>
+        <source>Gallic Swordsmen</source>
+        <translation>Galya Kılıççıları</translation>
+    </message>
+    <message>
+        <source>Gallic nobles fought on horseback with long swords. Under Hasdrubal at Cannae they broke the Roman horse on the river flank and rode round to close the trap.</source>
+        <translation>Galyalı soylular uzun kılıçlarla at sırtında savaşırdı. Cannae&apos;de Hasdrubal&apos;ın komutasında nehir kanadındaki Roma süvarilerini dağıttılar ve tuzağı kapatmak için arkadan dolandılar.</translation>
+    </message>
+    <message>
+        <source>Gauls of the Po valley joined Hannibal once he was over the Alps. At Cannae they held the centre of the crescent and fell back on purpose, drawing the legions in.</source>
+        <translation>Po vadisinin Galyalıları, Hannibal Alpleri aşar aşmaz ona katıldı. Cannae&apos;de hilalin merkezini tuttular ve lejyonları içeri çekmek için bilerek geri çekildiler.</translation>
+    </message>
+    <message>
+        <source>Iberian Cavalry</source>
+        <translation>İberya Süvarisi</translation>
+    </message>
+    <message>
+        <source>Iberian Swordsmen</source>
+        <translation>İberya Kılıççıları</translation>
+    </message>
+    <message>
+        <source>Iberian horsemen carried the small round caetra and the falcata. At Cannae they rode beside the Gauls on the left wing and helped ride down the Roman cavalry.</source>
+        <translation>İberyalı süvariler küçük yuvarlak caetra kalkanını ve falcatayı taşırdı. Cannae&apos;de sol kanatta Galyalıların yanında at sürdüler ve Roma süvarilerini ezmeye yardım ettiler.</translation>
+    </message>
+    <message>
+        <source>The Barcids raised their best foot in Spain. Iberian swordsmen wore white tunics edged in crimson and fought with the curved falcata.</source>
+        <translation>Barkalılar en iyi piyadelerini Hispania&apos;da topladı. İberyalı kılıççılar kızıl kenarlı beyaz tunikler giyer ve kavisli falcata ile savaşırdı.</translation>
     </message>
 </context>
 <context>
