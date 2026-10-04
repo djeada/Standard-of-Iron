@@ -53,7 +53,11 @@ struct MissileProfile {
 
 auto missile_profile(const Engine::Core::Entity& attacker,
                      ArrowVisualStyle style) -> MissileProfile {
-  auto const* unit = attacker.get_component<Engine::Core::UnitComponent>();
+  auto const* registry = attacker.registry();
+  auto const* unit =
+      registry == nullptr
+          ? nullptr
+          : registry->try_get<Engine::Core::UnitComponent>(attacker.get_id());
   if (unit != nullptr && unit->spawn_type == Game::Units::SpawnType::Slinger) {
     return {ProjectileKind::SlingStone, ArrowVisualStyle::Focused, 18.0F, 0.18F};
   }
