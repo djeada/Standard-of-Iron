@@ -168,6 +168,7 @@ void read_hill_fields(const QJsonObject& terrain_obj,
                       const GridDefinition& grid,
                       CoordSystem coord_sys) {
   feature.crown = float(terrain_obj.value("crown").toDouble(0.0));
+  feature.exact_height = terrain_obj.value("exact_height").toBool(false);
   const QString shape_str = terrain_obj.value("shape").toString();
   if (!shape_str.isEmpty() &&
       !parse_hill_shape(shape_str.toStdString(), feature.shape)) {

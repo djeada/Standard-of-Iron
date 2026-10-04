@@ -161,6 +161,11 @@ auto parse_command_line(QCoreApplication& app,
       "film-cursor",
       "Draw a mouse pointer that travels to each scripted click in the footage.");
   parser.addOption(film_cursor_opt);
+  QCommandLineOption const film_audio_opt(
+      "film-audio",
+      "Mix the game's own sound offline in step with the film and write it to "
+      "audio.wav beside the frames (no sound reaches the speakers).");
+  parser.addOption(film_audio_opt);
   parser.process(app);
 
   opts.component_gallery_requested = parser.isSet(component_gallery_opt);
@@ -242,6 +247,12 @@ auto parse_command_line(QCoreApplication& app,
     }
     config.background = !parser.isSet(film_visible_opt);
     config.draw_cursor = parser.isSet(film_cursor_opt);
+    config.audio = parser.isSet(film_audio_opt);
+    if (config.audio) {
+      // Before the audio system starts: the mixer opens no device and is
+      // pulled by the film instead.
+      qputenv("SOI_AUDIO_OFFLINE", "1");
+    }
     if (config.directory.isEmpty()) {
       qCritical() << "--film needs a directory";
       return 2;

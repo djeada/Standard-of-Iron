@@ -374,6 +374,15 @@ struct UnitRenderEntry {
   return unit.spawn_type == Game::Units::SpawnType::Barracks;
 }
 
+// Ground the player has explored keeps its buildings: a wall or a house seen
+// once stays drawn, as remembered terrain does. Troops show only while watched.
+[[nodiscard]] auto
+non_local_fog_mode(const Engine::Core::UnitComponent& unit) -> SubmissionFogMode {
+  return Game::Units::is_building_spawn(unit.spawn_type)
+             ? SubmissionFogMode::Revealed
+             : SubmissionFogMode::VisibleOnly;
+}
+
 struct RenderEntry {
   Engine::Core::Entity* entity{nullptr};
   Engine::Core::RenderableComponent* renderable{nullptr};
@@ -746,7 +755,7 @@ void Renderer::collect_unit_entries(Engine::Core::World& world,
       const auto visibility_result = m_submission_visibility.evaluate_sphere(
           unit_pos,
           cull_radius,
-          filter_enemy ? SubmissionFogMode::VisibleOnly : SubmissionFogMode::Ignore,
+          filter_enemy ? non_local_fog_mode(*unit_comp) : SubmissionFogMode::Ignore,
           FogExtent::Anchor);
       entry.in_frustum = visibility_result.in_frustum;
       entry.fog_visible = visibility_result.fog_visible;
@@ -941,7 +950,7 @@ auto Renderer::plan_unit_entry(UnitRenderEntry& entry,
     draw_ctx.submission_fog_mode =
         entry.unit != nullptr && entry.unit->owner_id != m_view.local_owner_id() &&
                 ctx.visibility_enabled && non_local_unit_visibility_filter_enabled()
-            ? SubmissionFogMode::VisibleOnly
+            ? non_local_fog_mode(*entry.unit)
             : SubmissionFogMode::Ignore;
     draw_ctx.animation_throttled = !should_update_animation;
 

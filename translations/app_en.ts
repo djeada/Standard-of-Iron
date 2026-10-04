@@ -7370,12 +7370,12 @@ to see preview</translation>
         <translation>A Roman watch camp on the old road, the night it finds out why the shepherds stopped using it. Timber, stone and a flock are close to the camp; the barrow ruins hold the middle ground; the cursed shrine stands alone on the north-east ground. A low knoll between the camp and the barrow is the only high ground worth having, and the road runs past the dead the whole way.</translation>
     </message>
     <message>
-        <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. The lower ward rings the outer crown with a timber curtain and towers; the citadel stands on the upper crown behind its own wall, with the granary and the garrison hall inside it. Three roads climb to the lower ward - from the Punic camp in the south, and from the Placentia road on either flank - and only one ramp climbs from the lower ward to the citadel gate.</source>
-        <translation>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. The lower ward rings the outer crown with a timber curtain and towers; the citadel stands on the upper crown behind its own wall, with the granary and the garrison hall inside it. Three roads climb to the lower ward - from the Punic camp in the south, and from the Placentia road on either flank - and only one ramp climbs from the lower ward to the citadel gate.</translation>
-    </message>
-    <message>
         <source>Victumulae</source>
         <translation>Victumulae</translation>
+    </message>
+    <message>
+        <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. A timber curtain with a tower at every corner rings the lower ward, where the temple and the market face each other across one street; the citadel stands on the upper crown at the back of the town behind its own wall, with the garrison hall inside it. One graded ramp climbs from the camp road to the south gate, and one short ramp climbs from the lower ward to the citadel gate. The relief columns come down the flank roads and never touch the hill.</source>
+        <translation>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. A timber curtain with a tower at every corner rings the lower ward, where the temple and the market face each other across one street; the citadel stands on the upper crown at the back of the town behind its own wall, with the garrison hall inside it. One graded ramp climbs from the camp road to the south gate, and one short ramp climbs from the lower ward to the citadel gate. The relief columns come down the flank roads and never touch the hill.</translation>
     </message>
 </context>
 <context>
@@ -10189,16 +10189,8 @@ Opens for your troops and allies</source>
 Opens for your troops and allies</translation>
     </message>
     <message>
-        <source>%1s</source>
-        <translation>%1s</translation>
-    </message>
-    <message>
         <source>Idle</source>
         <translation>Idle</translation>
-    </message>
-    <message>
-        <source>BUILDER CONSTRUCTION</source>
-        <translation>BUILDER CONSTRUCTION</translation>
     </message>
     <message>
         <source>Select a structure to build</source>
@@ -10315,10 +10307,6 @@ Wide vision and a durable settlement anchor</source>
 Wide vision and a durable settlement anchor</translation>
     </message>
     <message>
-        <source>Build siege weapons, structures, and gather wood, stone, iron, and food</source>
-        <translation>Build siege weapons, structures, and gather wood, stone, iron, and food</translation>
-    </message>
-    <message>
         <source>Harvest Grain</source>
         <translation>Harvest Grain</translation>
     </message>
@@ -10405,6 +10393,30 @@ Build time: %3s</source>
 %1
 Cost: %2
 Build time: %3s</translation>
+    </message>
+    <message>
+        <source>%1 · %2s</source>
+        <translation>%1 · %2s</translation>
+    </message>
+    <message>
+        <source>Ram</source>
+        <translation>Ram</translation>
+    </message>
+    <message>
+        <source>Tower</source>
+        <translation>Tower</translation>
+    </message>
+    <message>
+        <source>Wall</source>
+        <translation>Wall</translation>
+    </message>
+    <message>
+        <source>Gate</source>
+        <translation>Gate</translation>
+    </message>
+    <message>
+        <source>Market</source>
+        <translation>Market</translation>
     </message>
 </context>
 <context>
@@ -10602,6 +10614,10 @@ Use Deliver mode, then click a friendly barracks to add to its reserve.</transla
     <message>
         <source>A wall already stands here.</source>
         <translation>A wall already stands here.</translation>
+    </message>
+    <message>
+        <source>Troops are standing here. Move them first.</source>
+        <translation>Troops are standing here. Move them first.</translation>
     </message>
 </context>
 <context>

@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
+#include "game/map/map_definition.h"
 #include "game/map/visibility_service.h"
 
 namespace Engine::Core {
@@ -53,12 +54,14 @@ public:
   void set_frame_presenters(VisibilityFramePresenter* first,
                             VisibilityFramePresenter* second);
 
-  void initialize_for_world(Engine::Core::World& world,
-                            int local_owner_id,
-                            int width,
-                            int height,
-                            float tile_size,
-                            bool spectator_mode);
+  void
+  initialize_for_world(Engine::Core::World& world,
+                       int local_owner_id,
+                       int width,
+                       int height,
+                       float tile_size,
+                       bool spectator_mode,
+                       const std::vector<Game::Map::ScoutedArea>& scouted_areas = {});
 
   void update(Engine::Core::World& world,
               int local_owner_id,

@@ -53,6 +53,16 @@ void copy_standing_orders(Engine::Core::World& world,
     }
   }
 
+  // A company posted on its wall walk sends its reinforcement up there too.
+  if (const auto* walker = world.try_get<Engine::Core::WallWalkerComponent>(source);
+      walker != nullptr &&
+      walker->phase == Engine::Core::WallWalkerComponent::Phase::OnDeck &&
+      !world.has<Engine::Core::WallWalkerComponent>(clone)) {
+    auto* copy = world.emplace<Engine::Core::WallWalkerComponent>(clone);
+    copy->phase = Engine::Core::WallWalkerComponent::Phase::OnDeck;
+    copy->wall_id = 0;
+  }
+
   if (const auto* hold = world.try_get<Engine::Core::HoldModeComponent>(source)) {
     auto* copy = world.try_get<Engine::Core::HoldModeComponent>(clone);
     if (copy == nullptr) {
@@ -219,8 +229,10 @@ auto apply_starting_force_difficulty(Engine::Core::World& world,
 
     int added = 0;
     int unplaced = 0;
+    std::size_t next_source = 0;
     for (int i = 0; i < requested; ++i) {
-      const Conscript& source = troops[static_cast<std::size_t>(i) % troops.size()];
+      const Conscript& source = troops[next_source % troops.size()];
+      ++next_source;
 
       Game::Units::SpawnParams params;
       params.position = source.position;
@@ -238,15 +250,28 @@ auto apply_starting_force_difficulty(Engine::Core::World& world,
       }
 
       const Engine::Core::EntityID clone = unit->id();
-      const auto placed = place_clear_of_units(
-          world, clone, source.position, BuildingFootprints::Refuse);
+      // A crowded post lends its clone to the next authored post with room; the
+      // clone keeps that post's standing orders, so it fights where it stands.
+      const Conscript* post = &source;
+      auto placed = place_clear_of_units(
+          world, clone, post->position, BuildingFootprints::Refuse);
+      for (std::size_t tried = 1; !placed.has_value() && tried < troops.size();
+           ++tried) {
+        const Conscript& other = troops[(next_source + tried - 1) % troops.size()];
+        if (other.spawn_type != source.spawn_type) {
+          continue;
+        }
+        post = &other;
+        placed = place_clear_of_units(
+            world, clone, post->position, BuildingFootprints::Refuse);
+      }
       if (!placed.has_value()) {
 
         world.destroy_entity(clone);
         ++unplaced;
         continue;
       }
-      copy_standing_orders(world, source.id, clone, *placed);
+      copy_standing_orders(world, post->id, clone, *placed);
       ++added;
     }
 

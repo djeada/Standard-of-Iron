@@ -111,6 +111,7 @@ auto load_match(const QString& map_path,
   result.map_name = definition.name;
   result.rain_settings = definition.rain;
   result.fog_zones = definition.fog_zones;
+  result.scouted_areas = definition.scouted_areas;
   result.rivers = definition.rivers;
   result.lakes = definition.lakes;
   result.biome_seed = definition.biome.seed;

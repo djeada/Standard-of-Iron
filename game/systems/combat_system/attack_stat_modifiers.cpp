@@ -88,12 +88,11 @@ void apply_hold_mode_bonuses(Engine::Core::Entity* attacker,
                              Engine::Core::UnitComponent* unit_comp,
                              float& range,
                              int& damage) {
+  range *= Game::Systems::ranged_reach_multiplier(*attacker, unit_comp->spawn_type);
   auto* hold_mode = attacker->get_component<Engine::Core::HoldModeComponent>();
   if ((hold_mode == nullptr) || !hold_mode->active) {
     return;
   }
-
-  range *= Game::Systems::hold_mode_range_multiplier(*attacker, unit_comp->spawn_type);
 
   if (unit_comp->spawn_type == Game::Units::SpawnType::Archer) {
     damage = static_cast<int>(static_cast<float>(damage) *

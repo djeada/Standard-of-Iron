@@ -91,6 +91,25 @@ TEST_F(CaptureSystemTest, DefendersInTheRingHoldTheBarracks) {
       << "an equal garrison must deny the three-to-one advantage a capture needs";
 }
 
+TEST_F(CaptureSystemTest, TheDefendersOwnWallsAreNotItsGarrison) {
+  auto* barracks = add_barracks(k_defender, 0.0F, 0.0F);
+  for (int i = 0; i < 4; ++i) {
+    auto* wall = add_troop(k_defender, -3.0F + (2.0F * static_cast<float>(i)), 6.0F);
+    wall->get_component<Engine::Core::UnitComponent>()->spawn_type =
+        Game::Units::SpawnType::WallSegment;
+    wall->add_component<Engine::Core::BuildingComponent>();
+  }
+  add_troop(k_attacker, 2.0F, 0.0F);
+
+  m_system.update(&world(), 0.1F);
+
+  auto* capture = barracks->get_component<Engine::Core::CaptureComponent>();
+  ASSERT_NE(capture, nullptr);
+  EXPECT_TRUE(capture->is_being_captured)
+      << "a hall inside its own curtain could only be taken by an army three times "
+         "the price of the wall";
+}
+
 TEST_F(CaptureSystemTest, TroopsOutsideTheRingDoNotCount) {
   auto* barracks = add_barracks(k_defender, 0.0F, 0.0F);
   for (int i = 0; i < 6; ++i) {

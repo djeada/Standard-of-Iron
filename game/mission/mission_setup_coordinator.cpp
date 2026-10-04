@@ -18,6 +18,8 @@
 
 #include "game/command/command_queue.h"
 #include "game/core/component_gameplay.h"
+#include "game/core/component_structures.h"
+#include "game/core/entity.h"
 #include "game/core/startup_profiler.h"
 #include "game/core/world.h"
 #include "game/map/map_context.h"
@@ -101,6 +103,52 @@ auto make_mission_position_to_world(const Game::Systems::LevelSnapshot& level)
     return mission_position_to_world(position, context.definition(), level);
   };
 }
+
+namespace {
+
+// A building the mission must capture cannot be razed instead: a ram sent into
+// the citadel would otherwise leave nothing to take.
+void mark_capture_objectives(Engine::Core::World& world,
+                             const Game::Mission::MissionDefinition& mission,
+                             int local_owner_id) {
+  QSet<QString> wanted;
+  for (const auto& condition : mission.victory_conditions) {
+    if (condition.type == QStringLiteral("capture_structures")) {
+      for (const auto& type : condition.structure_types) {
+        wanted.insert(type.trimmed().toLower());
+      }
+    }
+  }
+  for (const auto& stage : mission.stages) {
+    if (stage.type == QStringLiteral("capture_structures")) {
+      for (const auto& type : stage.structure_types) {
+        wanted.insert(type.trimmed().toLower());
+      }
+    }
+  }
+  if (wanted.isEmpty()) {
+    return;
+  }
+  const auto& owners = Game::Session::session_for(world).owners();
+  std::vector<Engine::Core::Entity*> objectives;
+  for (auto [entity, unit, building] :
+       world.entity_view<const Engine::Core::UnitComponent,
+                         const Engine::Core::BuildingComponent>()) {
+    (void)building;
+    if (owners.are_enemies(local_owner_id, unit.owner_id) &&
+        wanted.contains(Game::Units::spawn_typeToQString(unit.spawn_type))) {
+      objectives.push_back(&entity);
+    }
+  }
+  // The capture system adds the component on its first tick; the flag has to
+  // be on it before any blow lands.
+  for (auto* entity : objectives) {
+    Engine::Core::get_or_add_component<Engine::Core::CaptureComponent>(*entity)
+        ->capture_objective = true;
+  }
+}
+
+} // namespace
 
 auto MissionSetupCoordinator::apply_mission_setup(
     const MissionSetupApplyContext& ctx) const -> MissionSetupEffects {
@@ -586,6 +634,8 @@ auto MissionSetupCoordinator::apply_mission_setup(
   effects.center_camera_on_local_forces = true;
   effects.troop_count_changed = true;
   effects.owner_info_changed = true;
+  mark_capture_objectives(ctx.world, mission, ctx.local_owner_id);
+
   return effects;
 }
 

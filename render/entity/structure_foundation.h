@@ -27,8 +27,6 @@ struct StructureFoundation {
 
 inline constexpr float k_structure_foundation_min_depth = 0.06F;
 
-inline constexpr float k_structure_foundation_max_depth = 4.0F;
-
 [[nodiscard]] auto
 resolve_structure_foundation(const Game::Map::TerrainService& terrain,
                              Game::Units::SpawnType spawn_type,

@@ -38,6 +38,7 @@ struct TerrainFeature {
   float depth{};
   float height{};
   float crown = 0.0F;
+  bool exact_height = false;
 
   std::vector<QVector3D> entrances;
 

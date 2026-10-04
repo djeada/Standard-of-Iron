@@ -4,9 +4,11 @@
 #include <cmath>
 #include <vector>
 
+#include "game/core/ambient_session.h"
 #include "game/core/component_core.h"
 #include "game/core/component_structures.h"
 #include "game/core/world.h"
+#include "game/systems/building_collision_registry.h"
 #include "game/systems/movement/command_service.h"
 #include "game/systems/navigation/walkability.h"
 #include "game/systems/undead_awakening_system.h"
@@ -70,9 +72,20 @@ auto find_free_ground_near(Engine::Core::World& world,
            undead->would_wake_a_zone(centre.x(), centre.z(), radius);
   };
 
+  // A clone stands on its source's side of every wall: the nearest free ground
+  // behind a curtain or a gate is another side of the battle.
+  const auto& buildings_registry =
+      *Game::Session::services_for(world).building_collision;
+  const auto reachable = [&](const QVector3D& centre) {
+    return !buildings_registry.segment_crosses_wall(
+        origin.x(), origin.z(), centre.x(), centre.z());
+  };
   const auto fits = [&](const QVector3D& centre) {
     if (wakes_the_dead(centre) ||
         !Game::Systems::Walkability::can_stand(centre, ground)) {
+      return false;
+    }
+    if (!reachable(centre)) {
       return false;
     }
     for (int probe = 0; probe < k_footprint_probes; ++probe) {

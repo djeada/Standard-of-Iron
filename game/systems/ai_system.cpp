@@ -12,7 +12,9 @@
 #include <utility>
 
 #include "../core/ambient_session.h"
+#include "../core/component_combat.h"
 #include "../core/component_core.h"
+#include "../core/component_gameplay.h"
 #include "../core/world.h"
 #include "../session/session_context.h"
 #include "../units/spawn_type.h"
@@ -29,11 +31,13 @@
 #include "ai_system/behaviors/defend_behavior.h"
 #include "ai_system/behaviors/economy_behavior.h"
 #include "ai_system/behaviors/expand_behavior.h"
+#include "ai_system/behaviors/garrison_behavior.h"
 #include "ai_system/behaviors/gather_behavior.h"
 #include "ai_system/behaviors/gold_vein_behavior.h"
 #include "ai_system/behaviors/harass_behavior.h"
 #include "ai_system/behaviors/local_engagement_behavior.h"
 #include "ai_system/behaviors/production_behavior.h"
+#include "ai_system/behaviors/rampart_behavior.h"
 #include "ai_system/behaviors/retreat_behavior.h"
 #include "ai_system/behaviors/squad_discipline_behavior.h"
 #include "core/event_manager.h"
@@ -91,6 +95,7 @@ AISystem::AISystem(Services services)
 }
 
 void AISystem::populate_behavior_registry(AI::AIBehaviorRegistry& registry) {
+  registry.register_behavior(std::make_unique<AI::GarrisonBehavior>());
   registry.register_behavior(std::make_unique<AI::RetreatBehavior>());
   registry.register_behavior(std::make_unique<AI::DefendBehavior>());
   registry.register_behavior(std::make_unique<AI::AllyAidBehavior>());
@@ -102,6 +107,7 @@ void AISystem::populate_behavior_registry(AI::AIBehaviorRegistry& registry) {
   registry.register_behavior(std::make_unique<AI::CommanderBehavior>());
   registry.register_behavior(std::make_unique<AI::ExpandBehavior>());
   registry.register_behavior(std::make_unique<AI::GoldVeinBehavior>());
+  registry.register_behavior(std::make_unique<AI::RampartBehavior>());
   registry.register_behavior(std::make_unique<AI::HarassBehavior>());
   registry.register_behavior(std::make_unique<AI::AttackBehavior>());
   registry.register_behavior(std::make_unique<AI::LocalEngagementBehavior>());
@@ -122,6 +128,47 @@ void AISystem::reinitialize() {
   initialize_ai_players();
 }
 
+namespace {
+
+void leash_garrison(Engine::Core::World& world,
+                    int owner_id,
+                    const AI::AISnapshot& snapshot) {
+  for (auto [id, unit, controlled] :
+       world.view<const Engine::Core::UnitComponent,
+                  Engine::Core::AIControlledComponent>()) {
+    if (unit.owner_id != owner_id || unit.health <= 0 ||
+        !Game::Units::is_troop_spawn(unit.spawn_type)) {
+      continue;
+    }
+    const auto* wave = world.try_get<Engine::Core::AssaultWaveComponent>(id);
+    // A party sent out at a siege engine follows it down the ramp; it comes
+    // home under its own orders once the engine burns.
+    bool sallying = false;
+    if (controlled.sallying) {
+      if (const auto* attack = world.try_get<Engine::Core::AttackTargetComponent>(id);
+          attack != nullptr && attack->target_id != 0) {
+        const auto* target =
+            world.try_get<Engine::Core::UnitComponent>(attack->target_id);
+        sallying = target != nullptr && target->health > 0 &&
+                   Game::Units::is_siege_engine_spawn(target->spawn_type);
+      }
+      controlled.sallying = sallying;
+    }
+    const bool in_the_ward =
+        snapshot.has_ward && !sallying && (wave == nullptr || !wave->active);
+    // Inside the curtain and its gateway, not out on the apron: only a party
+    // sent after an engine leaves the walls.
+    controlled.leash_x = snapshot.ward_x;
+    controlled.leash_z = snapshot.ward_z;
+    controlled.leash_half_x =
+        in_the_ward ? AI::GarrisonBehavior::inner_half(snapshot.ward_half_x) : 0.0F;
+    controlled.leash_half_z =
+        in_the_ward ? AI::GarrisonBehavior::inner_half(snapshot.ward_half_z) : 0.0F;
+  }
+}
+
+} // namespace
+
 auto AISystem::submit_decision_job(AIInstance& ai,
                                    Engine::Core::World& world,
                                    float delta_time) -> bool {
@@ -129,6 +176,9 @@ auto AISystem::submit_decision_job(AIInstance& ai,
       world, ai.context.player_id, &ai.known_objectives);
   snapshot.game_time = m_total_game_time;
   snapshot.pledges = ai.pledges;
+  if (ai.context.strategy_config.posture == AI::AIPosture::Garrison) {
+    leash_garrison(world, ai.context.player_id, snapshot);
+  }
   ++m_snapshot_build_count;
 
   AI::AIJob job;

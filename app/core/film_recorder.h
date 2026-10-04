@@ -34,6 +34,8 @@ struct FilmConfig {
   bool background{true};
 
   bool draw_cursor{false};
+  // Mix the game's own audio offline, one film step at a time, into audio.wav.
+  bool audio{false};
 };
 
 class FilmRecorder : public QObject {
@@ -92,6 +94,12 @@ private:
   std::condition_variable m_pending_changed;
   bool m_writers_stop{false};
   bool m_save_failed{false};
+
+  void mix_audio(double dt, bool record);
+  auto write_audio() const -> bool;
+  std::vector<float> m_audio;
+  std::vector<float> m_audio_scratch;
+  double m_audio_carry{0.0};
 };
 
 } // namespace App::Core

@@ -7382,12 +7382,12 @@ to see preview</source>
         <translation>معسكر حراسة روماني على الطريق القديم، في الليلة التي يكتشف فيها لماذا كفّ الرعاة عن سلوكه. الخشب والحجر وقطيع من الماشية قريبة من المعسكر؛ وأطلال المدفن تتوسّط الأرض؛ والمزار الملعون يقف وحيدًا في الأرض الشمالية الشرقية. رابية منخفضة بين المعسكر والمدفن هي الأرض المرتفعة الوحيدة التي تستحق الامتلاك، والطريق يمرّ بمحاذاة الموتى طوال الوقت.</translation>
     </message>
     <message>
-        <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. The lower ward rings the outer crown with a timber curtain and towers; the citadel stands on the upper crown behind its own wall, with the granary and the garrison hall inside it. Three roads climb to the lower ward - from the Punic camp in the south, and from the Placentia road on either flank - and only one ramp climbs from the lower ward to the citadel gate.</source>
-        <translation>بلدة سوق مسوّرة في سهل الإنسوبريين، قائمة على تلّ مزدوج فوق حقول الشتاء. تطوّق المدينة السفلى القمة الخارجية بسور ستارة من الخشب وأبراج؛ وتقوم القلعة على القمة العليا خلف سورها الخاص، وفي داخلها مخزن الحبوب وقاعة الحامية. ثلاث طرق تصعد إلى المدينة السفلى - من المعسكر البوني في الجنوب، ومن طريق بلاسنتيا على الجانبين - ومنحدر واحد فقط يصعد من المدينة السفلى إلى بوابة القلعة.</translation>
-    </message>
-    <message>
         <source>Victumulae</source>
         <translation>فيكتومولاي</translation>
+    </message>
+    <message>
+        <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. A timber curtain with a tower at every corner rings the lower ward, where the temple and the market face each other across one street; the citadel stands on the upper crown at the back of the town behind its own wall, with the garrison hall inside it. One graded ramp climbs from the camp road to the south gate, and one short ramp climbs from the lower ward to the citadel gate. The relief columns come down the flank roads and never touch the hill.</source>
+        <translation>بلدة سوق مسوَّرة في سهل الإنسوبريين، قامت على تلٍّ مزدوج فوق حقول الشتاء. يحيط بالساحة السفلى سور خشبي في كل ركن منه برج، ويتقابل فيها المعبد والسوق على جانبي شارع واحد؛ وتقوم القلعة على القمة العليا في مؤخرة البلدة خلف سورها الخاص، وفي داخلها قاعة الحامية. ويصعد منحدر واحد متدرّج من طريق المعسكر إلى البوابة الجنوبية، ومنحدر قصير من الساحة السفلى إلى بوابة القلعة. وتنزل أرتال الإمداد عبر طرق الجناحين ولا تمسّ التل أبدًا.</translation>
     </message>
 </context>
 <context>
@@ -10201,16 +10201,8 @@ Opens for your troops and allies</source>
 تُفتح لقواتك وحلفائك</translation>
     </message>
     <message>
-        <source>%1s</source>
-        <translation>%1 ث</translation>
-    </message>
-    <message>
         <source>Idle</source>
         <translation>خامل</translation>
-    </message>
-    <message>
-        <source>BUILDER CONSTRUCTION</source>
-        <translation>أعمال البناء</translation>
     </message>
     <message>
         <source>Select a structure to build</source>
@@ -10327,10 +10319,6 @@ Wide vision and a durable settlement anchor</source>
 رؤية واسعة ومرتكز متين للمستوطنة</translation>
     </message>
     <message>
-        <source>Build siege weapons, structures, and gather wood, stone, iron, and food</source>
-        <translation>ابنِ أسلحة الحصار والمنشآت، واجمع الخشب والحجر والحديد والطعام</translation>
-    </message>
-    <message>
         <source>Harvest Grain</source>
         <translation>حصاد الحبوب</translation>
     </message>
@@ -10417,6 +10405,30 @@ Build time: %3s</source>
 %1
 الكلفة: %2
 زمن البناء: %3 ث</translation>
+    </message>
+    <message>
+        <source>%1 · %2s</source>
+        <translation>%1 · %2s</translation>
+    </message>
+    <message>
+        <source>Ram</source>
+        <translation>كبش</translation>
+    </message>
+    <message>
+        <source>Tower</source>
+        <translation>برج</translation>
+    </message>
+    <message>
+        <source>Wall</source>
+        <translation>سور</translation>
+    </message>
+    <message>
+        <source>Gate</source>
+        <translation>بوابة</translation>
+    </message>
+    <message>
+        <source>Market</source>
+        <translation>سوق</translation>
     </message>
 </context>
 <context>
@@ -10614,6 +10626,10 @@ Use Deliver mode, then click a friendly barracks to add to its reserve.</source>
     <message>
         <source>A wall already stands here.</source>
         <translation>يوجد سور هنا بالفعل.</translation>
+    </message>
+    <message>
+        <source>Troops are standing here. Move them first.</source>
+        <translation>توجد قوات هنا. انقلها أولاً.</translation>
     </message>
 </context>
 <context>

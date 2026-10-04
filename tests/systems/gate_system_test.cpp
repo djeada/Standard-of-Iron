@@ -213,6 +213,81 @@ TEST_F(GateSystemTest, StaysShutForEnemyTroopInRange) {
   EXPECT_FALSE(gate->is_passable());
 }
 
+TEST_F(GateSystemTest, StaysBarredForItsOwnMenWhileTheEnemyIsAtIt) {
+  World world;
+  auto* gate_entity = make_gate(world, 0.0F, 0.0F, k_gate_owner);
+  // A defender asks to go out; the assault waits just beyond the gate.
+  make_troop(world, 0.0F, -3.0F, k_gate_owner);
+  make_troop(world, 0.0F, 8.0F, k_enemy_owner);
+
+  tick(world, 3.0F);
+
+  const auto* gate = gate_entity->get_component<GateComponent>();
+  EXPECT_FLOAT_EQ(gate->open_amount, 0.0F);
+  EXPECT_FALSE(gate->is_passable());
+}
+
+TEST_F(GateSystemTest, OpensForItsOwnMenOnceTheEnemyDrawsOff) {
+  World world;
+  auto* gate_entity = make_gate(world, 0.0F, 0.0F, k_gate_owner);
+  make_troop(world, 0.0F, -3.0F, k_gate_owner);
+  auto* enemy = make_troop(world, 0.0F, 8.0F, k_enemy_owner);
+
+  tick(world, 1.0F);
+  enemy->get_component<TransformComponent>()->position.z = 30.0F;
+  tick(world, 2.0F);
+
+  EXPECT_TRUE(gate_entity->get_component<GateComponent>()->is_passable());
+}
+
+TEST_F(GateSystemTest, AManInThePassageHoldsItOpenEvenWithTheEnemyAtTheGate) {
+  World world;
+  auto* gate_entity = make_gate(world, 0.0F, 0.0F, k_gate_owner);
+  auto* troop = make_troop(world, 0.0F, -3.0F, k_gate_owner);
+
+  tick(world, 2.0F);
+  ASSERT_TRUE(gate_entity->get_component<GateComponent>()->is_passable());
+  troop->get_component<TransformComponent>()->position.z = 0.0F;
+  make_troop(world, 0.0F, 6.0F, k_enemy_owner);
+  tick(world, 3.0F);
+
+  EXPECT_TRUE(gate_entity->get_component<GateComponent>()->is_passable());
+}
+
+TEST_F(GateSystemTest, ACompanyStandingIdleBesideTheGateDoesNotHoldItOpen) {
+  World world;
+  auto* gate_entity = make_gate(world, 0.0F, 0.0F, k_gate_owner);
+  auto* troop = make_troop(world, 0.0F, -3.0F, k_gate_owner);
+  troop->add_component<MovementComponent>();
+
+  tick(world, 3.0F);
+
+  EXPECT_FLOAT_EQ(gate_entity->get_component<GateComponent>()->open_amount, 0.0F);
+}
+
+TEST_F(GateSystemTest, AManWalkingUpToTheGateOpensIt) {
+  World world;
+  auto* gate_entity = make_gate(world, 0.0F, 0.0F, k_gate_owner);
+  auto* troop = make_troop(world, 3.0F, -3.0F, k_gate_owner);
+  troop->add_component<MovementComponent>()->engage_manual_move(3.0F, -12.0F);
+
+  tick(world, 2.0F);
+
+  EXPECT_TRUE(gate_entity->get_component<GateComponent>()->is_passable());
+}
+
+TEST_F(GateSystemTest, MenOnTheWallWalkOverTheGateDoNotOpenIt) {
+  World world;
+  auto* gate_entity = make_gate(world, 0.0F, 0.0F, k_gate_owner);
+  auto* troop = make_troop(world, 1.0F, 0.0F, k_gate_owner);
+  troop->add_component<MovementComponent>()->engage_manual_move(4.0F, 0.0F);
+  world.emplace<WallWalkerComponent>(troop->get_id());
+
+  tick(world, 3.0F);
+
+  EXPECT_FLOAT_EQ(gate_entity->get_component<GateComponent>()->open_amount, 0.0F);
+}
+
 TEST_F(GateSystemTest, ClosesOnceTheApproachClears) {
   World world;
   auto* gate_entity = make_gate(world, 0.0F, 0.0F, k_gate_owner);

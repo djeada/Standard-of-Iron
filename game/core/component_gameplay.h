@@ -33,6 +33,21 @@ namespace Engine::Core {
 class AIControlledComponent {
 public:
   AIControlledComponent() = default;
+
+  // A walled town's garrison fights on its own ground: past this box a soldier
+  // stops pursuing. Derived each decision round, never saved.
+  float leash_x{0.0F};
+  float leash_z{0.0F};
+  float leash_half_x{0.0F};
+  float leash_half_z{0.0F};
+
+  // Sent out of the leash after a siege engine; cleared once it no longer
+  // hunts one. Derived, never saved.
+  bool sallying{false};
+
+  [[nodiscard]] auto leashed() const -> bool {
+    return leash_half_x > 0.0F && leash_half_z > 0.0F;
+  }
 };
 
 class CaptureComponent {
@@ -46,6 +61,10 @@ public:
   bool is_being_captured{false};
 
   bool capture_blocked{false};
+
+  // A mission must take this building, so no blow may raze it: it stands at
+  // one hit point until someone holds its yard.
+  bool capture_objective{false};
 };
 
 enum class BuilderTaskFault : std::uint8_t {

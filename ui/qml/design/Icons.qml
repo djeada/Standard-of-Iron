@@ -156,6 +156,7 @@ QtObject {
             "skeleton_archer": "skeleton_archer.png",
             "grave_priest": "grave_priest.png",
             "sheep": "sheep.png",
+            "wall_ladder": "wall.png",
             "wolf": "wolf.png"
         })
 

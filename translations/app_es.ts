@@ -7370,12 +7370,12 @@ para ver la vista previa</translation>
         <translation>Un campamento de guardia romano en el viejo camino, la noche en que descubre por qué los pastores dejaron de usarlo. Madera, piedra y un rebaño quedan cerca del campamento; las ruinas del sepulcro ocupan el terreno central; el santuario maldito se alza solo en el terreno del noreste. Un otero bajo entre el campamento y el sepulcro es la única altura que vale la pena, y el camino pasa junto a los muertos todo el trayecto.</translation>
     </message>
     <message>
-        <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. The lower ward rings the outer crown with a timber curtain and towers; the citadel stands on the upper crown behind its own wall, with the granary and the garrison hall inside it. Three roads climb to the lower ward - from the Punic camp in the south, and from the Placentia road on either flank - and only one ramp climbs from the lower ward to the citadel gate.</source>
-        <translation>Una villa mercado amurallada de la llanura ínsubre, alzada sobre una doble colina por encima de los campos invernales. El recinto bajo rodea la cima exterior con una cortina de madera y torres; la ciudadela se alza en la cima superior tras su propia muralla, con el granero y la sala de la guarnición dentro. Tres caminos suben al recinto bajo - desde el campamento púnico al sur y desde el camino de Placencia por ambos flancos - y una sola rampa sube del recinto bajo a la puerta de la ciudadela.</translation>
-    </message>
-    <message>
         <source>Victumulae</source>
         <translation>Victumulae</translation>
+    </message>
+    <message>
+        <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. A timber curtain with a tower at every corner rings the lower ward, where the temple and the market face each other across one street; the citadel stands on the upper crown at the back of the town behind its own wall, with the garrison hall inside it. One graded ramp climbs from the camp road to the south gate, and one short ramp climbs from the lower ward to the citadel gate. The relief columns come down the flank roads and never touch the hill.</source>
+        <translation>Una ciudad mercado amurallada de la llanura insubra, alzada sobre una doble colina por encima de los campos de invierno. Una cortina de madera con una torre en cada esquina rodea el recinto inferior, donde el templo y el mercado se miran a través de una sola calle; la ciudadela se alza en la cima superior, al fondo de la ciudad, tras su propia muralla, con el salón de la guarnición en su interior. Una sola rampa trazada sube desde el camino del campamento hasta la puerta sur, y una rampa corta sube desde el recinto inferior hasta la puerta de la ciudadela. Las columnas de socorro bajan por los caminos de los flancos y nunca tocan la colina.</translation>
     </message>
 </context>
 <context>
@@ -10189,16 +10189,8 @@ Opens for your troops and allies</source>
 Se abre para tus tropas y aliados</translation>
     </message>
     <message>
-        <source>%1s</source>
-        <translation>%1 s</translation>
-    </message>
-    <message>
         <source>Idle</source>
         <translation>Inactivo</translation>
-    </message>
-    <message>
-        <source>BUILDER CONSTRUCTION</source>
-        <translation>CONSTRUCCIÓN</translation>
     </message>
     <message>
         <source>Select a structure to build</source>
@@ -10315,10 +10307,6 @@ Wide vision and a durable settlement anchor</source>
 Amplia visión y un ancla duradera para el asentamiento</translation>
     </message>
     <message>
-        <source>Build siege weapons, structures, and gather wood, stone, iron, and food</source>
-        <translation>Construye armas de asedio y estructuras, y recolecta madera, piedra, hierro y comida</translation>
-    </message>
-    <message>
         <source>Harvest Grain</source>
         <translation>Cosechar grano</translation>
     </message>
@@ -10405,6 +10393,30 @@ Build time: %3s</source>
 %1
 Coste: %2
 Tiempo de construcción: %3 s</translation>
+    </message>
+    <message>
+        <source>%1 · %2s</source>
+        <translation>%1 · %2s</translation>
+    </message>
+    <message>
+        <source>Ram</source>
+        <translation>Ariete</translation>
+    </message>
+    <message>
+        <source>Tower</source>
+        <translation>Torre</translation>
+    </message>
+    <message>
+        <source>Wall</source>
+        <translation>Muro</translation>
+    </message>
+    <message>
+        <source>Gate</source>
+        <translation>Puerta</translation>
+    </message>
+    <message>
+        <source>Market</source>
+        <translation>Mercado</translation>
     </message>
 </context>
 <context>
@@ -10602,6 +10614,10 @@ Usa el modo Entregar y luego haz clic en un cuartel aliado para aumentar su rese
     <message>
         <source>A wall already stands here.</source>
         <translation>Aquí ya se alza una muralla.</translation>
+    </message>
+    <message>
+        <source>Troops are standing here. Move them first.</source>
+        <translation>Hay tropas aquí. Muévelas primero.</translation>
     </message>
 </context>
 <context>

@@ -180,6 +180,13 @@ auto find_free_site(const AISnapshot& snapshot,
   constexpr int k_site_search_attempts = 24;
 
   ResolvedSite site;
+  // A garrison builds inside its walls, but in peace its fields lie outside
+  // them: an estate ringed by its own wall otherwise never laid a third field.
+  const bool fields_may_lie_outside =
+      building_type == BUILDING_TYPE_FARM &&
+      std::none_of(snapshot.visible_enemies.begin(),
+                   snapshot.visible_enemies.end(),
+                   [](const ContactSnapshot& enemy) { return is_war_contact(enemy); });
   for (const bool honour_plan : {true, false}) {
     for (int attempt = 0; attempt < k_site_search_attempts && !site.resolved;
          ++attempt) {
@@ -188,6 +195,12 @@ auto find_free_site(const AISnapshot& snapshot,
       const float candidate_x = context.base_pos_x + offset.x();
       const float candidate_z = context.base_pos_z + offset.z();
       if (!site_is_free(snapshot, building_type, candidate_x, candidate_z)) {
+        continue;
+      }
+      if (context.strategy_config.posture == AIPosture::Garrison && snapshot.has_ward &&
+          !fields_may_lie_outside &&
+          (std::abs(candidate_x - snapshot.ward_x) > snapshot.ward_half_x ||
+           std::abs(candidate_z - snapshot.ward_z) > snapshot.ward_half_z)) {
         continue;
       }
       if (plan_reserves_ground(context,
