@@ -16,6 +16,8 @@ constexpr float k_hill_ramp_steepness_exponent = 0.92F;
 
 constexpr float k_width_falloff_padding = 4.00F;
 
+constexpr float k_embankment_run_per_metre = 1.2F;
+
 constexpr float k_entry_bowl_exponent = 1.30F;
 
 constexpr float k_entry_base_width_scale = Game::Map::k_hill_entry_base_width_scale;
@@ -171,7 +173,10 @@ auto HillStamp::measure_ramp(const RampAxis& axis,
       1.0F,
       entry_width * std::max(k_entry_base_width_scale, k_entry_top_width_scale) *
           (1.0F + k_entry_mouth_flare_strength));
-  float const corridor_reach = max_taper + k_width_falloff_padding + 1.0F;
+  float const corridor_reach =
+      max_taper +
+      std::max(k_width_falloff_padding, hill_height * k_embankment_run_per_metre) +
+      1.0F;
 
   float const ramp_end_x = ramp_origin_x + dir_x * ramp_span;
   float const ramp_end_z = ramp_origin_z + dir_z * ramp_span;
@@ -302,8 +307,10 @@ auto HillStamp::sample_ramp_cell(const RampLayout& ramp,
     tapered_width = std::max(1.0F, tapered_width * outward_width_mul);
   }
 
-  float const edge_t = smooth_range(
-      tapered_width * 0.16F, tapered_width + k_width_falloff_padding, std::abs(across));
+  float const side_run = std::max(k_width_falloff_padding,
+                                  center_ramp_height * k_embankment_run_per_metre);
+  float const edge_t =
+      smooth_range(tapered_width * 0.16F, tapered_width + side_run, std::abs(across));
 
   return RampCell{across,
                   edge_t,

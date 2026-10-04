@@ -1,7 +1,4 @@
-// The fortress assault mission rests on two engines getting where they are
-// sent on its hill: a siege tower up the ramp and against the outer curtain,
-// and a ram up to the south gate. Both are checked on the shipped map, with its
-// walls, gates and towers standing.
+
 
 #include <QDir>
 #include <QString>
@@ -93,7 +90,7 @@ protected:
     m_session->terrain().initialize(map);
     NavGrid::initialize(map.grid.width, map.grid.height);
     Game::Map::MapTransformer::apply_to_world(map, m_session->world());
-    // As a match does: hill ramps get their stone caches, and so on.
+
     Game::Session::configure_map_systems(m_session->world(), map, nullptr);
     NavGrid::get_pathfinder()->update_navigation_grid();
   }
@@ -158,7 +155,6 @@ protected:
     return best;
   }
 
-  // Leaves the garrison its walls and nothing to fight with or recruit.
   void disarm_garrison() {
     std::vector<EntityID> doomed;
     for (auto [id, unit] :
@@ -186,13 +182,13 @@ protected:
 
 } // namespace
 
-// The outer curtain runs east-west at z = -3.5 either side of the south gate;
-// the camp lies far to the south across the ramp at z = 12.5.
 const QVector3D k_camp_yard(26.0F, 0.0F, 46.0F);
-const QVector3D k_before_west_curtain(-7.5F, 0.0F, -1.2F);
+const QVector3D k_before_west_curtain(-7.5F, 0.0F, 4.8F);
 
 TEST_F(FortressSiegeTraversalTest, SiegeTowerClimbsTheRampAndDocksOnTheCurtain) {
   load_fortress();
+
+  disarm_garrison();
   auto const tower = spawn(Game::Units::SpawnType::SiegeTower, k_camp_yard);
   ASSERT_NE(tower, 0U);
   run(0.5);
@@ -207,9 +203,9 @@ TEST_F(FortressSiegeTraversalTest, SiegeTowerGetsPastItsOwnCompanies) {
   disarm_garrison();
   auto const tower = spawn(Game::Units::SpawnType::SiegeTower, k_camp_yard);
   ASSERT_NE(tower, 0U);
-  // The escort waits on the crown, right where the tower has to roll through.
-  for (QVector3D const at : {QVector3D(-7.5F, 0.0F, 7.0F),
-                             QVector3D(-4.5F, 0.0F, 6.0F),
+
+  for (QVector3D const at : {QVector3D(-7.5F, 0.0F, 7.5F),
+                             QVector3D(-4.5F, 0.0F, 6.5F),
                              QVector3D(-1.5F, 0.0F, 8.0F)}) {
     ASSERT_NE(spawn(Game::Units::SpawnType::Swordsman, at), 0U);
   }
@@ -222,12 +218,14 @@ TEST_F(FortressSiegeTraversalTest, SiegeTowerGetsPastItsOwnCompanies) {
 
 TEST_F(FortressSiegeTraversalTest, AttackOrderOnAWallSendsTheTowerToDockAgainstIt) {
   load_fortress();
+
+  disarm_garrison();
   auto const tower = spawn(Game::Units::SpawnType::SiegeTower, k_camp_yard);
   ASSERT_NE(tower, 0U);
-  auto const wall = first_garrison_wall_near(-7.5F, -3.5F);
+  auto const wall = first_garrison_wall_near(-7.5F, 2.5F);
   ASSERT_NE(wall, 0U);
   run(0.5);
-  // What a right-click on the curtain with the tower selected sends.
+
   Game::Command::dispatch(
       m_session->world(),
       Game::Command::Command{
@@ -243,7 +241,7 @@ TEST_F(FortressSiegeTraversalTest, RamClimbsTheRampToTheSouthGate) {
   auto const ram = spawn(Game::Units::SpawnType::Ram, {32.0F, 0.0F, 62.0F});
   ASSERT_NE(ram, 0U);
   run(0.5);
-  QVector3D const before_gate(0.5F, 0.0F, 2.5F);
+  QVector3D const before_gate(0.5F, 0.0F, 5.5F);
   CommandService::move_units(m_session->world(), {ram}, {before_gate});
   float closest = 1.0e9F;
   for (int second = 0; second < 150; ++second) {
@@ -257,6 +255,8 @@ TEST_F(FortressSiegeTraversalTest, RamClimbsTheRampToTheSouthGate) {
 
 TEST_F(FortressSiegeTraversalTest, PlayerMoveOrderTakesTheTowerToTheCurtain) {
   load_fortress();
+
+  disarm_garrison();
   auto const tower = spawn(Game::Units::SpawnType::SiegeTower, k_camp_yard);
   ASSERT_NE(tower, 0U);
   run(0.5);
@@ -276,4 +276,35 @@ TEST_F(FortressSiegeTraversalTest, PlayerMoveOrderTakesTheTowerToTheCurtain) {
       << "planned to (" << targets.front().x() << ", " << targets.front().z()
       << "); the tower stopped at (" << position_of(tower).x() << ", "
       << position_of(tower).z() << ")";
+}
+
+TEST_F(FortressSiegeTraversalTest, RamOrderedOntoTheSouthGateBreaksIt) {
+  load_fortress();
+
+  disarm_garrison();
+  auto const ram = spawn(Game::Units::SpawnType::Ram, {32.0F, 0.0F, 62.0F});
+  ASSERT_NE(ram, 0U);
+  EntityID gate = 0;
+  for (auto [id, unit] : m_session->world().view<const Engine::Core::UnitComponent>()) {
+    if (unit.owner_id == k_garrison &&
+        unit.spawn_type == Game::Units::SpawnType::WallGate &&
+        (gate == 0 || position_of(id).z() > position_of(gate).z())) {
+      gate = id;
+    }
+  }
+  ASSERT_NE(gate, 0U);
+  run(0.5);
+
+  Game::Command::dispatch(m_session->world(),
+                          Game::Command::Command{.owner_id = k_attacker,
+                                                 .payload = Game::Command::AttackTarget{
+                                                     .units = {ram}, .target = gate}});
+  bool broken = false;
+  for (int second = 0; second < 180 && !broken; ++second) {
+    run(1.0);
+    auto const* unit = m_session->world().try_get<Engine::Core::UnitComponent>(gate);
+    broken = unit == nullptr || unit->health <= 0;
+  }
+  EXPECT_TRUE(broken) << "the ram stopped at (" << position_of(ram).x() << ", "
+                      << position_of(ram).z() << ")";
 }

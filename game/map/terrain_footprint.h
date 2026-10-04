@@ -223,7 +223,8 @@ hill_crown_profile(const FootprintCells& footprint,
                    float authored_height,
                    float tile_size,
                    bool campaign_scale,
-                   float authored_crown = 0.0F) -> HillCrownProfile {
+                   float authored_crown = 0.0F,
+                   bool exact_height = false) -> HillCrownProfile {
   const float tile = std::max(tile_size, 0.0001F);
   const float scaled_height =
       authored_height * (campaign_scale ? k_campaign_hill_height_scale : 1.0F);
@@ -232,8 +233,9 @@ hill_crown_profile(const FootprintCells& footprint,
       k_hill_footprint_height_ratio;
 
   HillCrownProfile profile;
-  profile.height =
-      campaign_scale ? std::max(scaled_height, footprint_height) : scaled_height;
+  profile.height = campaign_scale && !exact_height
+                       ? std::max(scaled_height, footprint_height)
+                       : scaled_height;
 
   const float elevation_cells =
       std::max(profile.height / tile, k_hill_min_elevation_cells);

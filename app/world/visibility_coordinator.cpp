@@ -1,5 +1,9 @@
 #include "app/world/visibility_coordinator.h"
 
+#include <algorithm>
+#include <cmath>
+#include <vector>
+
 #include "app/world/minimap_manager.h"
 #include "game/core/world.h"
 #include "render/ground/fog_renderer.h"
@@ -54,12 +58,14 @@ void VisibilityCoordinator::set_frame_presenters(VisibilityFramePresenter* first
   m_presenters[1] = second;
 }
 
-void VisibilityCoordinator::initialize_for_world(Engine::Core::World& world,
-                                                 int local_owner_id,
-                                                 int width,
-                                                 int height,
-                                                 float tile_size,
-                                                 bool spectator_mode) {
+void VisibilityCoordinator::initialize_for_world(
+    Engine::Core::World& world,
+    int local_owner_id,
+    int width,
+    int height,
+    float tile_size,
+    bool spectator_mode,
+    const std::vector<Game::Map::ScoutedArea>& scouted_areas) {
   m_visibility.initialize(width, height, tile_size);
   m_update_accumulator = 0.0F;
   m_presenters_hidden = spectator_mode;
@@ -75,6 +81,34 @@ void VisibilityCoordinator::initialize_for_world(Engine::Core::World& world,
   }
 
   m_visibility.compute_immediate(world, local_owner_id);
+  if (!scouted_areas.empty()) {
+    std::vector<std::uint8_t> known(
+        static_cast<std::size_t>(width) * static_cast<std::size_t>(height), 0U);
+    const float half_width = static_cast<float>(width) * 0.5F - 0.5F;
+    const float half_height = static_cast<float>(height) * 0.5F - 0.5F;
+    for (const auto& area : scouted_areas) {
+      const float centre_x = area.x / tile_size + half_width;
+      const float centre_z = area.z / tile_size + half_height;
+      const float radius = area.radius / tile_size;
+      const int min_z = std::max(0, static_cast<int>(std::floor(centre_z - radius)));
+      const int max_z =
+          std::min(height - 1, static_cast<int>(std::ceil(centre_z + radius)));
+      const int min_x = std::max(0, static_cast<int>(std::floor(centre_x - radius)));
+      const int max_x =
+          std::min(width - 1, static_cast<int>(std::ceil(centre_x + radius)));
+      for (int grid_z = min_z; grid_z <= max_z; ++grid_z) {
+        for (int grid_x = min_x; grid_x <= max_x; ++grid_x) {
+          const float dx = static_cast<float>(grid_x) - centre_x;
+          const float dz = static_cast<float>(grid_z) - centre_z;
+          if ((dx * dx) + (dz * dz) <= radius * radius) {
+            known[static_cast<std::size_t>(grid_z) * static_cast<std::size_t>(width) +
+                  static_cast<std::size_t>(grid_x)] = 1U;
+          }
+        }
+      }
+    }
+    (void)m_visibility.restore_explored(known, width, height);
+  }
   publish_current_frame(true);
 }
 

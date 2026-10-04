@@ -34,6 +34,11 @@ the payoff lands before any text and the text never sits on moving troops.
 ``end_card_destination`` is the one line the viewer must be able to read on a
 phone; ``end_card_lines`` are smaller, subordinate notes under it.
 
+Every end card must send the viewer to the Steam store page. ``"end_card":
+"steam_demo"`` fills the card from ``END_CARD_PRESETS`` (any of its keys the
+spec also sets win), and a card whose text carries no Steam link is refused.
+``"end_card_steam": false`` opts a card out, for footage that is not marketing.
+
 ``sfx`` cues are timed one-shots laid over the score. ``at`` is a time on the
 finished, blended timeline -- the same one caption timing uses -- so a cue is
 placed against the cut the viewer sees rather than against raw clip lengths.
@@ -103,6 +108,20 @@ END_CARD_SECONDS = 2.2
 END_CARD_DIM = 0.84
 END_CARD_DIM_FADE = 0.7
 OPENING_FADE = 0.0
+STEAM_LINK = "STORE.STEAMPOWERED.COM/APP/5129960/STANDARD_OF_IRON"
+STEAM_LINK_MARKERS = ("S.TEAM/", "STORE.STEAMPOWERED.COM/APP/")
+END_CARD_PRESETS = {
+    "steam_demo": {
+        "title": "STANDARD OF IRON",
+        "subtitle": "PLAY THE FREE DEMO ON STEAM",
+        "end_card_destination": STEAM_LINK,
+        "end_card_lines": [
+            "WISHLIST NOW  -  WINDOWS  -  LINUX",
+            "OPEN SOURCE  -  GITHUB.COM/DJEADA/STANDARD-OF-IRON",
+        ],
+        "end_card_seconds": 3.0,
+    },
+}
 FIRST_FRAME_MIN_PEAK = 8
 FIRST_FRAME_VISIBLE_LUMA = 32
 FIRST_FRAME_MIN_VISIBLE = 0.001
@@ -595,6 +614,33 @@ def external_clip_seconds(path: Path) -> float:
         return 0.0
 
 
+def apply_end_card_preset(spec: dict) -> dict:
+    name = spec.get("end_card")
+    if name is None:
+        return spec
+    if name not in END_CARD_PRESETS:
+        fail(f"unknown end_card preset {name!r}; known: {sorted(END_CARD_PRESETS)}")
+    return {**END_CARD_PRESETS[name], **spec}
+
+
+def end_card_has_steam_link(spec: dict) -> bool:
+    texts = [spec.get("subtitle"), spec.get("end_card_destination")]
+    texts += list(spec.get("end_card_lines", []))
+    joined = " ".join(str(text).upper() for text in texts if text)
+    return any(marker in joined for marker in STEAM_LINK_MARKERS)
+
+
+def check_end_card(spec: dict) -> None:
+    has_card = bool(spec.get("title") or spec.get("subtitle"))
+    if not has_card or spec.get("end_card_steam") is False:
+        return
+    if not end_card_has_steam_link(spec):
+        fail(
+            'the end card has no Steam link; set "end_card": "steam_demo" '
+            f'or put {STEAM_LINK} on it ("end_card_steam": false opts out)'
+        )
+
+
 def fail(message: str) -> None:
     print(f"promo-edit: {message}", file=sys.stderr)
     raise SystemExit(1)
@@ -644,6 +690,22 @@ def resolve_font(requested: str | None) -> str:
         "accept that the reel will not match the others."
     )
     raise AssertionError("unreachable")
+
+
+DISPLAY_FACE_ASCII = frozenset(
+    " !\"#%&'()+,-./0123456789:;?ABCDEFGHIJKLMNOPQRSTUVWXYZ[]"
+)
+
+
+def face_for(text: str, font: str) -> str:
+    """The display face has no lowercase and few symbols (no ``_`` for a store
+    URL); a line that needs one falls back to the bundled EB Garamond."""
+    if Path(font) != FONT_CANDIDATES[0]:
+        return font
+    if all(ch in DISPLAY_FACE_ASCII or ord(ch) > 0x7E for ch in text):
+        return font
+    fallback = FONT_CANDIDATES[1]
+    return str(fallback) if fallback.is_file() else font
 
 
 def text_width(text: str, font: str, size: int) -> int:
@@ -1100,6 +1162,12 @@ def main() -> int:
         action="store_true",
         help="publish even when the cut trips the photosensitivity check",
     )
+    parser.add_argument(
+        "--allow-motion",
+        action="store_true",
+        help="publish a cut that is in near-constant motion (close tracking of a "
+        "marching column, say) with a warning instead of refusing it",
+    )
     args = parser.parse_args()
 
     if shutil.which("ffmpeg") is None:
@@ -1107,7 +1175,8 @@ def main() -> int:
 
     if not args.spec.is_file():
         fail(f"promo spec not found: {args.spec}")
-    spec = json.loads(args.spec.read_text())
+    spec = apply_end_card_preset(json.loads(args.spec.read_text()))
+    check_end_card(spec)
 
     manifest_path = args.clips / "shots.json"
     if not manifest_path.is_file():
@@ -1441,15 +1510,18 @@ def main() -> int:
         credit_color = "#cfc6b4"
         destination = spec.get("end_card_destination")
         if destination:
-
+            destination_font = face_for(destination, font)
             destination_size = max(34 * text_scale, int(type_base * 0.052))
             chain.append(
                 f"[{stage}]"
                 + drawtext(
                     text=tracked(destination),
-                    font=font,
+                    font=destination_font,
                     size=fit_font_size(
-                        tracked(destination), font, destination_size, safe_width
+                        tracked(destination),
+                        destination_font,
+                        destination_size,
+                        safe_width,
                     ),
                     y_expr=f"h*{TITLE_Y_FRACTION}+{credit_top}",
                     start=card_text_start + 0.6,
@@ -1472,9 +1544,9 @@ def main() -> int:
                     f"[{stage}]"
                     + drawtext(
                         text=tracked(line),
-                        font=font,
+                        font=face_for(line, font),
                         size=fit_font_size(
-                            tracked(line), font, credit_size, safe_width
+                            tracked(line), face_for(line, font), credit_size, safe_width
                         ),
                         y_expr=f"h*{TITLE_Y_FRACTION}+{offset}",
                         start=card_text_start + credit_delay + (0.25 * line_index),
@@ -1648,7 +1720,9 @@ def main() -> int:
         print(f"promo-edit: warning: --allow-flashes set; {offence}")
 
     moving = motion_offence(motion)
-    if moving is not None:
+    if moving is not None and args.allow_motion:
+        print(f"promo-edit: warning: --allow-motion set; {moving}")
+    elif moving is not None:
         reject(
             staged,
             output,

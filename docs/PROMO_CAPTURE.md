@@ -378,6 +378,29 @@ Those include areas such as:
 
 Keeping editorial work out of Arena means a caption or grade change does not require replaying the battle.
 
+## The Steam end card
+
+Every marketing cut ends by sending the viewer to the Steam store page.
+`"end_card": "steam_demo"` fills the card from `END_CARD_PRESETS` in
+`promo-edit.py`: the free-demo call to action, the full store URL, a wishlist
+line and the GitHub link. Any of those keys the spec also sets wins, so a spec
+keeps its own `title`. `promo-edit.py` refuses a card whose text carries no
+Steam link, and `scripts/trailer/deliver.py` refuses a cinematic cut whose
+closing card lacks one; `"end_card_steam": false` opts out an internal review
+cut that is not marketing. `tests/scripts/test_promo_end_card.py` checks every
+spec under `tools/arena/promos/`.
+
+The display face has capitals only and no `_`, so a card line that needs
+another glyph (the store URL's underscores) is set in the bundled EB Garamond.
+
+## Cuts that never hold still
+
+`promo-edit.py` refuses a cut in which more than one frame in ten changes by
+over 6/255, because a frame the eye cannot settle on reads as chaos on a
+phone. Close tracking of a marching column trips that by design;
+`--allow-motion` publishes such a cut with a warning instead, the way
+`--allow-flashes` does for the photosensitivity check.
+
 ## Transition semantics
 
 The editor's `TRANSITIONS` table is the source of truth for transition vocabulary.
@@ -475,6 +498,15 @@ not understood; Arena capture renders offscreen and is the dependable path for
 unattended footage. `--campaign-mission` takes a `campaign_id/mission_id`
 pair, not a path.
 
+`--film-audio` gives a game-window film its sound the way Arena audio capture
+does: it sets `SOI_AUDIO_OFFLINE` before the audio system starts, pulls exactly
+one film step of 48 kHz stereo from `AudioSystem::render_offline` after every
+step, keeps the steps that wrote a frame, and writes `audio.wav` beside the PNGs,
+the same length as the footage. A film renders faster or slower than real
+time, so recording the desktop's output would drift. The take's profile must not
+have `master_volume=0` (a muted playtest profile films silence). Mux with
+`ffmpeg -framerate FPS -i frame_%06d.png -i audio.wav -c:v libx264 -c:a aac`.
+
 ## Cinematic camera rig
 
 The orbit keys above describe a camera circling a focus. Trailer work also
@@ -546,6 +578,28 @@ rendered on.
 set, and `cut.json`, the edit decision list with its looks and complete sound
 design. `scripts/trailer/` finishes it; see `docs/TRAILER.md`.
 
+## Long-form films
+
+Half-hour ambience films are captured and finished with two tools:
+
+- `scripts/promo-guarded-capture.py SPEC OUTDIR` captures a long spec in
+  chunks, one `arena_app` process per chunk, under a thermal guard that pauses
+  the arena on a hot CPU or GPU (an unguarded 30-minute Ultra render once
+  powered a workstation off), retries stalled or short clips, and writes the
+  `shots.json` that `promo-edit.py` cuts from.
+- `scripts/promo-long-film.py` cuts the picture with `promo-edit.py`, builds a
+  chapter-by-chapter ambience and music soundtrack, burns in the film and
+  chapter titles, normalises to -14 LUFS and writes a YouTube description with
+  chapter timestamps. Its docstring documents the spec's `chapters` list and
+  the soundtrack file.
+
+A shot that needs the city, camp or village running for half an hour should
+not stretch a scenario's scripted steps across the whole film: the scenario
+runner slows sharply once a definition carries thousands of steps. Cycle shot
+starts through the scenario's own length instead and let the capture planner
+split the passes; each shot's `lighting.hour` still carries the film from dawn
+to night.
+
 ## Reproducibility rules
 
 The current pipeline depends on several invariants:
@@ -563,13 +617,14 @@ These rules make the promo pipeline suitable for source-controlled production ra
 
 ## Source map
 
-| Concern                           | Source                                        |
-| --------------------------------- | --------------------------------------------- |
-| Promo schema/camera/pass planning | `tools/arena/promo_spec.h` and implementation |
-| Arena capture                     | `tools/arena/` promo/capture code             |
-| Matchup parser/generator          | Arena matchup path                            |
-| Offline edit                      | `scripts/promo-edit.py`                       |
-| Formation reel orchestration      | `scripts/capture-formation-promos.sh`         |
-| Authored promo specs              | `tools/arena/promos/`                         |
+| Concern                           | Source                                                           |
+| --------------------------------- | ---------------------------------------------------------------- |
+| Promo schema/camera/pass planning | `tools/arena/promo_spec.h` and implementation                    |
+| Arena capture                     | `tools/arena/` promo/capture code                                |
+| Matchup parser/generator          | Arena matchup path                                               |
+| Offline edit                      | `scripts/promo-edit.py`                                          |
+| Long-form capture and finishing   | `scripts/promo-guarded-capture.py`, `scripts/promo-long-film.py` |
+| Formation reel orchestration      | `scripts/capture-formation-promos.sh`                            |
+| Authored promo specs              | `tools/arena/promos/`                                            |
 
 The current promo spec, Arena capture implementation, and offline editor are the source of truth for how a reel is produced. Notes about an earlier revision of a trailer are not part of the production contract.

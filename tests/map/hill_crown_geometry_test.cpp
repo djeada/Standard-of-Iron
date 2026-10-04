@@ -1,6 +1,10 @@
+#include <algorithm>
+#include <cmath>
 #include <gtest/gtest.h>
 #include <vector>
 
+#include "game/map/map_definition.h"
+#include "game/map/map_loader.h"
 #include "game/map/terrain.h"
 
 namespace {
@@ -121,4 +125,32 @@ TEST(HillCrownGeometryTest, AHillRaisedOnAnotherHillNeverCarvesBelowTheOuterCrow
       << "the inner hill should stand as a keep above the outer crown";
   EXPECT_TRUE(stacked.is_walkable(mid, mid));
   EXPECT_TRUE(stacked.is_walkable(mid - 50, mid));
+}
+
+TEST(HillCrownGeometryTest, VictumulaesRampStandsOnAnEmbankmentNotACliff) {
+  Game::Map::MapDefinition map;
+  QString error;
+  ASSERT_TRUE(Game::Map::MapLoader::load_from_json_file(
+      QStringLiteral("assets/maps/map_victumulae.json"), map, &error))
+      << error.toStdString();
+  Game::Map::TerrainHeightMap height_map(map.grid.width, map.grid.height, 1.0F);
+  height_map.apply_biome_variation(map.biome);
+  height_map.build_from_features(map.terrain);
+
+  float steepest = 0.0F;
+  int proud_cells = 0;
+  for (int z = 98; z < 112; ++z) {
+    const float plain = height_map.get_height_at_grid(60, z);
+    if (height_map.get_height_at_grid(80, z) - plain < 2.0F) {
+      continue;
+    }
+    ++proud_cells;
+    for (int x = 64; x < 96; ++x) {
+      const float a = height_map.get_height_at_grid(x, z);
+      const float b = height_map.get_height_at_grid(x + 1, z);
+      steepest = std::max(steepest, std::abs(a - b));
+    }
+  }
+  ASSERT_GT(proud_cells, 0) << "the ramp no longer stands above the plain";
+  EXPECT_LT(steepest, 1.05F) << "a ramp flank drops " << steepest << " m in one cell";
 }

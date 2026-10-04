@@ -54,6 +54,8 @@ struct UnitSpawn {
   QString behavior;
   float guard_radius = 10.0F;
   std::vector<QVector3D> patrol_waypoints;
+
+  bool on_wall = false;
 };
 
 struct PointStructureGeometry {
@@ -678,6 +680,12 @@ undead_zone_fog(float world_x, float world_z, float radius, float density) -> Fo
   return fog;
 }
 
+struct ScoutedArea {
+  float x = 0.0F;
+  float z = 0.0F;
+  float radius = 0.0F;
+};
+
 struct MapDefinition {
   QString name;
   GridDefinition grid;
@@ -696,6 +704,7 @@ struct MapDefinition {
   bool hill_rockfall_caches = true;
   std::vector<Forest> forests;
   std::vector<FogZone> fog_zones;
+  std::vector<ScoutedArea> scouted_areas;
   BiomeSettings biome;
   CoordSystem coordSystem = CoordSystem::Grid;
   int max_troops_per_player = 250;

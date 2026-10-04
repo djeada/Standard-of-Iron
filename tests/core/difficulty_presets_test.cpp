@@ -162,6 +162,8 @@ struct MatchReadout {
 
   std::vector<std::pair<QVector3D, float>> enemy_troop_footprints;
 
+  int enemy_capture_objectives = 0;
+
   std::map<QString, int> wave_roles;
 
   Game::Mission::DifficultyForceResult forces;
@@ -277,6 +279,14 @@ public:
     readout.global_max_troops =
         Game::GameConfig::instance().get_max_troops_per_player();
     readout.global_starting_gold = Game::GameConfig::instance().get_starting_gold();
+
+    for (auto [id, unit, capture] :
+         m_world.view<const UnitComponent, const Engine::Core::CaptureComponent>()) {
+      (void)id;
+      if (unit.owner_id != k_local_owner && capture.capture_objective) {
+        ++readout.enemy_capture_objectives;
+      }
+    }
 
     for (auto* entity : m_world.collect_entities_with<UnitComponent>()) {
       const auto* unit = entity->get_component<UnitComponent>();
@@ -703,6 +713,25 @@ TEST_F(DifficultyPresetsTest, ReinforcementsAddNoOverlappingTroops) {
         << id << " added no troops at all, so this proves nothing";
     EXPECT_EQ(overlapping_pairs(readout), authored_overlaps)
         << id << " stacked a reinforcement on ground that was already taken";
+  }
+}
+
+TEST_F(DifficultyPresetsTest, AWalledGarrisonsReinforcementsStayInsideItsWalls) {
+  reset_globals();
+  MissionRun run{QStringLiteral("hard"),
+                 QStringLiteral("assets/missions/storming_of_victumulae.json")};
+  QString error;
+  ASSERT_TRUE(run.run(&error)) << error.toStdString();
+  const MatchReadout readout = run.readout();
+  ASSERT_GT(readout.forces.units_added, 0)
+      << "hard added nobody, so this proves nothing";
+
+  for (const auto& [centre, footprint] : readout.enemy_troop_footprints) {
+    const float grid_x = centre.x() + 79.5F;
+    const float grid_z = centre.z() + 79.5F;
+    EXPECT_TRUE(grid_x > 42.0F && grid_x < 118.0F && grid_z > 20.0F && grid_z < 82.0F)
+        << "a garrison company stands outside its walls at grid (" << grid_x << ", "
+        << grid_z << ")";
   }
 }
 

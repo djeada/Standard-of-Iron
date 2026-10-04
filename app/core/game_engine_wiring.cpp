@@ -42,6 +42,7 @@
 #include "game/session/selection_service.h"
 #include "game/session/session_context.h"
 #include "game/session/session_snapshot.h"
+#include "game/systems/global_stats_registry.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/persistence/save_load_service.h"
 #include "game/systems/victory_service.h"
@@ -110,9 +111,35 @@ void GameEngine::on_match_outcome(const QString& state) {
         Qt::QueuedConnection);
   }
 
-  if (state == "victory" &&
-      m_campaign_manager->current_mission_context().has_mission()) {
+  const bool is_mission = m_campaign_manager->current_mission_context().has_mission();
+  const std::string mission_id = m_campaign_manager->current_mission_id().toStdString();
+  if (state == "victory" && is_mission) {
     m_match_setup_view_model->mark_current_mission_completed();
+    m_timeline.mission_completed(mission_id);
+    if (m_campaign_manager->campaign_completed()) {
+      m_timeline.campaign_completed(
+          m_campaign_manager->current_campaign_id().toStdString());
+      m_achievements.campaign_completed();
+    }
+  } else if (state == "defeat" && is_mission) {
+    m_timeline.mission_failed(mission_id);
+  } else if (state == "victory" || state == "defeat") {
+    m_timeline.skirmish_result(state == "victory");
+  }
+
+  if (state == "victory" || state == "defeat") {
+    if (state == "victory") {
+      m_achievements.match_won(mission_id, is_mission);
+    }
+    App::Platform::MatchSummary summary{
+        .victory = state == "victory",
+        .campaign_mission = is_mission,
+        .waves_cleared = m_mission->waves().director().cleared_wave_count()};
+    if (const auto* stats = m_session->stats().get_stats(m_runtime.local_owner_id)) {
+      summary.enemies_defeated = stats->enemies_killed;
+      summary.units_recruited = stats->troops_recruited;
+    }
+    m_match_stats.report(summary);
   }
 }
 

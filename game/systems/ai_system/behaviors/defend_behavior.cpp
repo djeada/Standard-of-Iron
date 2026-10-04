@@ -287,7 +287,7 @@ void DefendBehavior::execute(const AISnapshot& snapshot,
           return;
         }
       }
-    } else {
+    } else if (context.strategy_config.posture != AIPosture::Garrison) {
 
       const ContactSnapshot* closest_threat = nullptr;
       float closest_dist_sq = std::numeric_limits<float>::max();
@@ -454,7 +454,10 @@ void DefendBehavior::execute(const AISnapshot& snapshot,
 
 auto DefendBehavior::should_execute(const AISnapshot& snapshot,
                                     const AIContext& context) const -> bool {
-  (void)snapshot;
+
+  if (context.strategy_config.posture == AIPosture::Garrison && snapshot.has_ward) {
+    return false;
+  }
 
   if (!has_defensible_ground(context)) {
     return false;

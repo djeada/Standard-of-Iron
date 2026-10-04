@@ -1,12 +1,8 @@
 {
   "id": "trailer_v2",
   "title": "STANDARD OF IRON",
-  "subtitle": "PLAY THE DEMO",
+  "end_card": "steam_demo",
   "end_card_seconds": 5.0,
-  "end_card_destination": "GITHUB.COM/DJEADA/STANDARD-OF-IRON",
-  "end_card_lines": [
-    "FREE AND OPEN SOURCE  \u00b7  WINDOWS  \u00b7  MACOS  \u00b7  LINUX"
-  ],
   "width": 1920,
   "height": 1080,
   "fps": 60,

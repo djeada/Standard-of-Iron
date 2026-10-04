@@ -72,6 +72,20 @@ pick_enemy_unit_at_screen(Engine::Core::World* world,
                           int viewport_height,
                           int local_owner_id) -> Engine::Core::EntityID;
 
+[[nodiscard]] auto
+only_engines_selected(Engine::Core::World* world,
+                      const std::vector<Engine::Core::EntityID>& selected) -> bool;
+
+[[nodiscard]] auto
+pick_enemy_structure_for_engines(Engine::Core::World* world,
+                                 const std::vector<Engine::Core::EntityID>& selected,
+                                 Render::GL::Camera* camera,
+                                 qreal sx,
+                                 qreal sy,
+                                 int viewport_width,
+                                 int viewport_height,
+                                 int local_owner_id) -> Engine::Core::EntityID;
+
 auto issue_attack_command(Engine::Core::World* world,
                           const std::vector<Engine::Core::EntityID>& selected,
                           Engine::Core::EntityID target_id,

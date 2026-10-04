@@ -194,6 +194,8 @@ struct GeometryCaches {
 
 struct WorkSite {
   bool active{false};
+  float center_x{0.0F};
+  float center_z{0.0F};
   float half_width{0.0F};
   float half_depth{0.0F};
   float relative_yaw_radians{0.0F};

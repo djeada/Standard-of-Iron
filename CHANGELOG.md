@@ -23,6 +23,81 @@ may change in any release — see [Save compatibility](#save-compatibility).
   Carthage's team. They use Carthage's formation doctrine and voices. The arena
   adds `allied_identity_lineup` and `cannae_allied_clash`.
 
+### Changed
+
+- **The Storming of Victumulae is a fortress you besiege.** The town is a square
+  timber curtain with a tower at every corner and one gate, a walled citadel on an
+  inner crown, and a garrison of archers on the wall walk, spears and swords behind
+  the gate, and reserves in the plaza. The hill has a single graded ramp to the
+  south gate instead of four ramps cut straight through its cliffs (three of them
+  ending at a blank wall), and a new `exact_height` hill field lets a campaign map
+  author a ramp that is about 24 degrees instead of 50. The ground, light and
+  haze are clearer.
+- **A garrison AI stays behind its walls.** Its soldiers stop pursuing at the strip
+  outside the gate instead of chasing survivors down the ramp, its builders no
+  longer walk out to chop timber or lay farms on the plain, its defence no longer
+  marches out to the nearest enemy on the map, and its archers climb to the wall
+  walk and hold it.
+- **Victumulae is a town worth storming.** The lower crown is a broad plateau
+  painted as a mask, with a glacis round it and a level apron outside the
+  curtain where engines and archers fight; the citadel stands at the back of the
+  town on its own crown, so the lower ward between them is a real ward with a
+  street, a temple and a market facing each other, houses in the side lanes,
+  carts and cypresses. The besieger starts knowing the town: its walls, towers
+  and houses are drawn from the first frame (a map's new `scouted_areas` marks
+  ground the local player has already explored), and enemy buildings on any map
+  now stay drawn on ground the player has explored instead of vanishing with
+  the last scout. The garrison barracks keeps a
+  small reserve instead of raising forty more companies during the siege.
+- **The garrison fights like a garrison.** Its infantry holds the posts it
+  started on; a lone ram or tower under the walls draws a party of three
+  companies that burns it and comes home (an escorted engine draws none); and
+  the moment the enemy is inside the walls every company turns on the men who
+  broke in instead of waiting to be taken one at a time. A sally now goes out
+  through its own shut gate, which opens for it.
+- **Wall archers stand on the wall and shoot.** Victumulae's archers start on
+  the wall walk, men on the walk no longer bob between standing and walking, an
+  idle company walks the balcony towards the assault, and a bow on the wall walk
+  reaches 1.35 times as far.
+- **The testudo closes up and stands still.** Legionaries in guard mode form
+  the tight Roman testudo (and Carthaginian swordsmen their shield wall) and hold
+  it without shuffling.
+- **A ram's right-click finds the gate behind a defender.** With only siege
+  engines selected, the click goes to the structure under the cursor even when
+  an enemy soldier stands in front of it, since a ram cannot strike a man.
+- **Game films carry their sound.** `--film-audio` mixes the game's own audio
+  offline in step with the footage and writes `audio.wav` beside the frames.
+- **An AI town no longer stalls behind a building it cannot place.** A wish
+  with nowhere to stand steps aside for a minute and the next one is built, and
+  a walled estate lays its fields outside its walls while no enemy is in sight.
+- **Gates open for men walking up to them.** A company idling beside a gate or
+  standing on the wall walk above it no longer holds it open.
+- **A gate stays barred with the enemy at it.** An automatic gate no longer opens
+  for its own men while a hostile troop is within 12 m, so a sally can no longer
+  hold the gate open for the assault to walk in. A man already in the passage
+  still keeps it from closing on him.
+- **The garrison's archers man the wall over the gate.** With no enemy in sight
+  they take the posts nearest the outer gate instead of the wall closest to the
+  hall, which was the back wall of the town.
+- **Harder difficulties no longer put garrison troops outside their own walls.**
+  The extra companies Hard and Very Hard add are placed on their post's side of
+  every wall and gate, and a crowded post lends its company to another post of
+  the same kind instead of dropping it.
+- **Rams batter gates.** A right-click on an enemy gate, wall or tower with a
+  siege engine selected attacks it (a tower docks), instead of driving to the
+  ground underneath. Infantry still treat a right-click on a wall as a move.
+  Buildings are clicked on their walls and roofs, not only on the patch of ground
+  at their foot. A ram's roof turns 90% of arrows and a siege tower's hides 85%,
+  so the wall archers alone can no longer stop an engine before it arrives.
+- **Hill ramps are embankments.** A ramp that stands above the plain falls away
+  at its sides at about forty degrees instead of as a black cliff.
+- **The builder's command bar fits every order.** All twelve construction cards
+  show at once in two rows of six instead of a scrolling column of three, and the
+  build progress names what is being built.
+- **The commander's speech card no longer covers the minimap.** On a short window
+  it shrinks the spoken line to the room between the minimap and the bottom bar
+  instead of sliding up over the map, and a wide window gives it a wider column.
+
 ## [0.2.0] — 2026-09-27
 
 ### Added

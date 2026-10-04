@@ -48,8 +48,6 @@ void WallLadder::init(const SpawnParams& params) {
 
   m_r = add_building_renderable(*e, nation_id, m_type_string);
 
-  // Ladders do not join the wall network or block movement; refreshing the
-  // network is what hangs them on their wall.
   Game::Systems::WallNetworkService::refresh_world(*m_world);
 
   Engine::Core::EventManager::instance().publish(Engine::Core::UnitSpawnedEvent(

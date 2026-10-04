@@ -22,6 +22,8 @@ enum class PlacementRuling : std::uint8_t {
 
   BlockedByStructure,
 
+  BlockedByTroops,
+
   BlockedByObstacle,
 
   BlockedByWater,

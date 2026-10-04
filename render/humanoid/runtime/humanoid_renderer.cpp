@@ -1,5 +1,6 @@
 #include "render/humanoid/runtime/humanoid_renderer.h"
 
+#include <algorithm>
 #include <string>
 #include <utility>
 
@@ -105,7 +106,11 @@ auto resolve_construction_role(
           variant_table != nullptr && variant_table->variant_trigger_pose ==
                                           Render::Creature::PoseIntent::Construct,
       .variant_stride = variant_table != nullptr
-                            ? static_cast<std::uint8_t>(variant_table->variant_stride)
+                            ? static_cast<std::uint8_t>(
+                                  variant_table->seed_variant_limit > 0U
+                                      ? std::min(variant_table->seed_variant_limit,
+                                                 variant_table->variant_stride)
+                                      : variant_table->variant_stride)
                             : std::uint8_t{0U},
       .variant_is_seed_based =
           variant_table != nullptr && variant_table->variant_is_seed_based,

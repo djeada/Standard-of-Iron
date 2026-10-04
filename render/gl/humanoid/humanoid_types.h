@@ -52,21 +52,21 @@ struct VisualMovementState {
 };
 
 struct AnimationInputs {
-  float time;
+  float time{0.0F};
   Render::Creature::MovementAnimationState movement_state{
       Render::Creature::MovementAnimationState::Idle};
   VisualMovementState visual_movement{};
 
   float action_link_weight{0.0F};
   bool is_mounted{false};
-  bool is_attacking;
-  bool is_melee;
-  bool is_in_hold_mode;
+  bool is_attacking{false};
+  bool is_melee{false};
+  bool is_in_hold_mode{false};
 
   bool hold_attack_preserves_pose{false};
-  bool is_exiting_hold;
-  float hold_exit_progress;
-  float hold_entry_progress;
+  bool is_exiting_hold{false};
+  float hold_exit_progress{0.0F};
+  float hold_entry_progress{0.0F};
   CombatAnimPhase combat_phase{CombatAnimPhase::Idle};
   float combat_phase_progress{0.0F};
 

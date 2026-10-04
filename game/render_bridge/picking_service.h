@@ -27,17 +27,10 @@ class PickingService {
 public:
   PickingService() = default;
 
-  // Orders, hovers and drags all resolve the cursor through screen_to_ground.
-  // Once a match binds its terrain and world here, that pick follows the real
-  // surface - hills, slopes and the planks of a wall walk - instead of a flat
-  // plane at y = 0, so the order lands under the cursor. Unbound (tools,
-  // tests), it stays the flat-plane pick.
   static void bind_surface(const Game::Map::TerrainService* terrain,
                            const Engine::Core::World* world);
   static void unbind_surface(const Engine::Core::World* world);
-  // Height of the bound surface at (x, z): the terrain, or the planks of a wall
-  // walk standing there; 0 when nothing is bound. The inverse of
-  // screen_to_ground, for projecting a world point the way the pick sees it.
+
   static auto surface_height_at(float world_x, float world_z) -> float;
 
   auto update_hover(float sx,
@@ -52,14 +45,13 @@ public:
                                int view_h,
                                const QPointF& screen_pt,
                                QVector3D& out_world) -> bool;
-  // The flat y = 0 plane pick, whatever is bound.
+
   static auto screen_to_plane(const Render::GL::Camera& camera,
                               int view_w,
                               int view_h,
                               const QPointF& screen_pt,
                               QVector3D& out_world) -> bool;
-  // Where a ray first meets the top of a wall walk (balcony planks or stake
-  // tips) in `world`, as a distance along the ray; negative when it misses.
+
   static auto ray_hits_wall_walk(const Engine::Core::World& world,
                                  const Game::Map::TerrainService* terrain,
                                  const QVector3D& origin,
@@ -119,7 +111,28 @@ public:
                            int view_h,
                            int owner_filter) -> std::vector<Engine::Core::EntityID>;
 
+  static auto pick_building(float sx,
+                            float sy,
+                            Engine::Core::World& world,
+                            const Render::GL::Camera& camera,
+                            int view_w,
+                            int view_h) -> Engine::Core::EntityID;
+
 private:
+  struct NearestPicks {
+    Engine::Core::EntityID unit_id = 0;
+    float unit_dist2 = 0.0F;
+    Engine::Core::EntityID building_id = 0;
+    float building_dist2 = 0.0F;
+  };
+  static auto pick_nearest(float sx,
+                           float sy,
+                           Engine::Core::World& world,
+                           const Render::GL::Camera& camera,
+                           int view_w,
+                           int view_h,
+                           int owner_filter) -> NearestPicks;
+
   Engine::Core::EntityID m_prev_hover_id = 0;
   int m_hover_grace_ticks = 0;
   static auto project_bounds(const Render::GL::Camera& cam,

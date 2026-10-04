@@ -70,6 +70,14 @@ A path consults `width` and `depth` when `thickness` is absent, so it needs eith
 
 `cells` is used by `mask`. Painted areas can be represented as row spans such as `[z, x_from, x_to]` or as individual `[x, z]` pairs. The map editor writes this representation directly.
 
+### `crown` and `exact_height`
+
+On a campaign-scale map (a grid of 128 cells or more) a hill rises at least `0.18` of its shorter side, whatever `height` says, and `height` is multiplied by `2.8`. A hill 84 cells deep is therefore 15 m tall, and the entrance ramp the engine cuts through it climbs that in about 13 cells: a slope of roughly 50 degrees that a siege engine cannot be asked to drive up and a company cannot be asked to march up in order.
+
+`"exact_height": true` drops the floor, so `height` (still times `2.8`) is the crown's height. The ramp then climbs the lower crown over the same run at about 24 degrees at its steepest. `crown` (at most `0.9`) sets how much of the footprint is the level top. Victumulae uses both: its lower crown is `height: 2.6` (7.3 m) and its citadel `3.8` (10.6 m above the plain), each with `exact_height`, and it authors a single entrance, so the cliff ring around the town is unbroken except for the one graded ramp to its south gate. Both crowns are `mask` hills painted as rounded rectangles, because a `blob` cannot be made to fit a rectangular curtain: its outline wandered off one corner of the wall. On a mask, `crown` sets how far in from the painted edge the slope reaches; Victumulae's `0.7` gives a glacis of about nine cells, and an entrance set a few cells out from the painted edge gives the ramp room to climb at under 30 degrees.
+
+A ramp that runs out beyond its hill stands on the plain as a causeway. Its flanks fall away over at least four cells, or 1.2 cells per metre of ramp height if that is more, so a tall ramp has earthwork sides instead of a cliff.
+
 ### `rotation`
 
 `rotation` turns the complete shape around its `x` / `z` centre. It is ignored for `mask`, whose cells already exist in map space.

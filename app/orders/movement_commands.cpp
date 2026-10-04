@@ -143,14 +143,26 @@ auto MovementCommands::on_attack_press(const PointerTarget& target,
     return result;
   }
 
-  Engine::Core::EntityID const target_id =
-      App::Utils::pick_enemy_unit_at_screen(m_world,
-                                            target.camera,
-                                            target.sx,
-                                            target.sy,
-                                            target.viewport_width,
-                                            target.viewport_height,
-                                            local_owner_id);
+  Engine::Core::EntityID target_id =
+      App::Utils::only_engines_selected(m_world, selected)
+          ? 0U
+          : App::Utils::pick_enemy_unit_at_screen(m_world,
+                                                  target.camera,
+                                                  target.sx,
+                                                  target.sy,
+                                                  target.viewport_width,
+                                                  target.viewport_height,
+                                                  local_owner_id);
+  if (target_id == 0U) {
+    target_id = App::Utils::pick_enemy_structure_for_engines(m_world,
+                                                             selected,
+                                                             target.camera,
+                                                             target.sx,
+                                                             target.sy,
+                                                             target.viewport_width,
+                                                             target.viewport_height,
+                                                             local_owner_id);
+  }
   if (target_id == 0U) {
     return result;
   }

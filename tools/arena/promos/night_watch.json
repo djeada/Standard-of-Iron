@@ -1,6 +1,7 @@
 {
   "id": "night_watch",
   "title": "NIGHT WATCH IN THE RAIN",
+  "end_card": "steam_demo",
   "width": 1920,
   "height": 1080,
   "fps": 30,

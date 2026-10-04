@@ -131,8 +131,7 @@ TEST_F(SiegeTowerSystemTest, TowerDrivesUpBetweenTwoPostsAndDropsItsBridge) {
   }
   EXPECT_FLOAT_EQ(state->ramp, 1.0F);
   EXPECT_FALSE(state->garrison_aboard);
-  // A tower carries no company of its own: with nobody escorting it, nobody
-  // crosses.
+
   EXPECT_EQ(find_walker(world), nullptr);
 }
 
@@ -155,7 +154,6 @@ TEST_F(SiegeTowerSystemTest, EscortClimbsTheDockedTowerAndCrossesTheBridge) {
   ASSERT_EQ(state->state, SiegeTowerComponent::State::Docked);
   EXPECT_FLOAT_EQ(state->ramp, 1.0F);
 
-  // Called up when the bridge dropped: it walks round to the back.
   auto const* approach = escort->get_component<WallWalkerComponent>();
   ASSERT_NE(approach, nullptr);
   EXPECT_EQ(approach->phase, WallWalkerComponent::Phase::Approaching);
@@ -172,7 +170,7 @@ TEST_F(SiegeTowerSystemTest, EscortClimbsTheDockedTowerAndCrossesTheBridge) {
   EXPECT_EQ(boarding->phase, WallWalkerComponent::Phase::Boarding);
   EXPECT_NEAR(boarding->crest_x, -3.0F, 1.0e-3F);
   EXPECT_NEAR(boarding->crest_z, 0.0F, 1.0e-3F);
-  // Each man starts at the foot of the tower's inner ladder, behind the door.
+
   EXPECT_LT(boarding->base_z, boarding->door_z);
   EXPECT_NEAR(transform->position.z, WW::k_deck_lane, 1.0e-3F);
   ASSERT_FALSE(boarding->path.empty());
@@ -192,8 +190,7 @@ TEST_F(SiegeTowerSystemTest, TroopClimbsALadderWhereTheWallHasNoStair) {
   for (int i = 0; i < 8; ++i) {
     make_wall(world, -8.0F + 2.0F * static_cast<float>(i), 0.0F, k_defender);
   }
-  // A standing ladder against the segment at x = -2, hung on it the way the
-  // network refresh does.
+
   auto* ladder = world.create_entity();
   ladder->add_component<TransformComponent>(
       -2.0F, 0.0F, WW::k_deck_outer_edge + WW::k_ladder_run * 0.5F);
@@ -305,8 +302,7 @@ TEST_F(SiegeTowerSystemTest, WallWalkerFollowsTheBalconyAndLeavesByTheStair) {
   bool descended = false;
   bool leaving = false;
   float lowest = WW::k_deck_height;
-  // Once the leader is down the troop keeps to the stair while the rest of the
-  // file comes off the wall; nothing walks it away here, so it waits that out.
+
   for (int i = 0; i < 800 && troop->has_component<WallWalkerComponent>(); ++i) {
     walkers.update(&world, 0.1F);
     if (auto const* w = troop->get_component<WallWalkerComponent>()) {

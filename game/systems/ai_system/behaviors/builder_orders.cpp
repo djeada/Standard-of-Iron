@@ -62,7 +62,8 @@ void order_harvest(const AISnapshot& snapshot,
   float closest_distance_sq = std::numeric_limits<float>::infinity();
   for (const auto& node : snapshot.resource_nodes) {
     if (node.reserved || !node_matches_resource(node, resource) ||
-        node_is_sour(sour, node.id, snapshot.game_time)) {
+        node_is_sour(sour, node.id, snapshot.game_time) ||
+        !forage_is_within_reach(context, node.pos_x, node.pos_z)) {
       continue;
     }
     const float dx = node.pos_x - context.base_pos_x;

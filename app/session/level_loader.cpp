@@ -53,6 +53,7 @@ auto LevelLoader::loadFromAssets(
   res.victory_config = match.victory_config;
   res.rain_settings = match.rain_settings;
   res.fog_zones = match.fog_zones;
+  res.scouted_areas = match.scouted_areas;
   res.rivers = match.rivers;
   res.lakes = match.lakes;
   res.biome_seed = match.biome_seed;

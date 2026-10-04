@@ -19,6 +19,11 @@ Item {
     readonly property var request: source && source.request ? source.request : ({})
     readonly property bool asking: showing && (request.amount || 0) > 0 && !!request.resource
 
+    property real maxHeight: 0
+    readonly property real columnWidth: Math.max(Design.Metrics.space24 * 15, Math.min(Design.Metrics.space24 * 20, (messageRoot.parent ? messageRoot.parent.width : 0) * 0.27))
+    readonly property real chromeHeight: Design.Metrics.space12 * 2 + Design.Metrics.space24 * 4
+    readonly property real lineRoom: maxHeight > 0 ? Math.max(Design.Typography.caption * 3, maxHeight - chromeHeight) : 100000
+
     signal requestAnswered(bool accepted)
 
     property int revealed: 0
@@ -72,9 +77,12 @@ Item {
         id: lineMetrics
 
         visible: false
-        width: Design.Metrics.space24 * 15
+        width: messageRoot.columnWidth
+        height: messageRoot.lineRoom
         text: fullText.text
         wrapMode: Text.WordWrap
+        fontSizeMode: Text.Fit
+        minimumPixelSize: Design.Typography.caption
         font.family: Design.Typography.displayFamily
         font.pixelSize: Design.Typography.body
         font.italic: true
@@ -199,8 +207,8 @@ Item {
             ColumnLayout {
 
                 Layout.fillWidth: true
-                Layout.preferredWidth: Design.Metrics.space24 * 15
-                Layout.maximumWidth: Design.Metrics.space24 * 15
+                Layout.preferredWidth: messageRoot.columnWidth
+                Layout.maximumWidth: messageRoot.columnWidth
                 spacing: Design.Metrics.space4
 
                 Text {
@@ -255,12 +263,12 @@ Item {
 
                     Layout.fillWidth: true
                     Layout.topMargin: Design.Metrics.space4
-                    Layout.preferredHeight: lineMetrics.implicitHeight
+                    Layout.preferredHeight: Math.min(lineMetrics.contentHeight, messageRoot.lineRoom)
                     text: Design.A11y.reducedMotion ? fullText.text : fullText.text.substring(0, messageRoot.revealed)
                     color: Design.Theme.textPrimary
                     wrapMode: Text.WordWrap
                     font.family: Design.Typography.displayFamily
-                    font.pixelSize: Design.Typography.body
+                    font.pixelSize: lineMetrics.fontInfo.pixelSize
                     font.italic: true
                     lineHeight: 1.25
                 }

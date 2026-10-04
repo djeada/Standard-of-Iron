@@ -14,6 +14,9 @@ auto placement_refusal_text(Game::Systems::PlacementRuling ruling,
   case PlacementRuling::BlockedByStructure:
     return QCoreApplication::translate("ProductionManager",
                                        "Something is already standing here.");
+  case PlacementRuling::BlockedByTroops:
+    return QCoreApplication::translate("ProductionManager",
+                                       "Troops are standing here. Move them first.");
   case PlacementRuling::BlockedByObstacle:
     return QCoreApplication::translate("ProductionManager",
                                        "This ground cannot be cleared to build on.");

@@ -187,8 +187,7 @@ struct FormationSoldierPresentation {
   float crowd_offset_z{0.0F};
 
   float elevation{0.0F};
-  // On a ladder or a siege tower's inner ladder: drawn hand over hand, facing
-  // the rungs, its stride set by `elevation`.
+
   bool climbing{false};
 
   auto operator==(const FormationSoldierPresentation&) const -> bool = default;

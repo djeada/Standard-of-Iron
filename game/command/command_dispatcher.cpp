@@ -27,8 +27,7 @@ void dispatch(World& world, const Command& command) {
           apply_move(world, payload);
         } else if constexpr (std::is_same_v<T, AttackTarget>) {
           Game::Formation::ArmyFormationService::release(world, payload.units);
-          // A siege tower sent at an enemy wall rolls up to dock against it;
-          // everything else attacks.
+
           std::vector<Engine::Core::EntityID> attackers;
           attackers.reserve(payload.units.size());
           for (auto const id : payload.units) {

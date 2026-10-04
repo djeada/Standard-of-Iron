@@ -1,7 +1,7 @@
 {
   "id": "imperial_capital",
   "title": "AURELIA MAGNA",
-  "subtitle": "STANDARD OF IRON",
+  "end_card": "steam_demo",
   "width": 1920,
   "height": 1080,
   "fps": 30,

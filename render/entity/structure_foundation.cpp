@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cmath>
 
+#include "game/map/terrain.h"
 #include "game/map/terrain_service.h"
 #include "game/units/building_body.h"
 #include "render/gl/primitives.h"
@@ -14,7 +15,7 @@ namespace Render::GL {
 
 namespace {
 
-constexpr int k_foundation_samples = 5;
+constexpr int k_foundation_min_samples = 5;
 
 constexpr float k_foundation_inset = 0.96F;
 
@@ -48,13 +49,24 @@ auto resolve_structure_foundation(const Game::Map::TerrainService& terrain,
   }
 
   QVector3D const seat = model.map(QVector3D(0.0F, 0.0F, 0.0F));
+
+  float const sample_spacing =
+      std::max(terrain.get_height_map()->get_tile_size() * 0.5F, 1.0e-4F);
+  auto sample_count = [&](float half_extent, int axis) {
+    float const world_extent =
+        2.0F * half_extent * model.column(axis).toVector3D().length();
+    return std::max(k_foundation_min_samples,
+                    static_cast<int>(std::ceil(world_extent / sample_spacing)) + 1);
+  };
+  int const samples_x = sample_count(foundation.half_width, 0);
+  int const samples_z = sample_count(foundation.half_depth, 2);
   float lowest = seat.y();
-  for (int iz = 0; iz < k_foundation_samples; ++iz) {
-    float const v = -1.0F + 2.0F * static_cast<float>(iz) /
-                                static_cast<float>(k_foundation_samples - 1);
-    for (int ix = 0; ix < k_foundation_samples; ++ix) {
-      float const u = -1.0F + 2.0F * static_cast<float>(ix) /
-                                  static_cast<float>(k_foundation_samples - 1);
+  for (int iz = 0; iz < samples_z; ++iz) {
+    float const v =
+        -1.0F + 2.0F * static_cast<float>(iz) / static_cast<float>(samples_z - 1);
+    for (int ix = 0; ix < samples_x; ++ix) {
+      float const u =
+          -1.0F + 2.0F * static_cast<float>(ix) / static_cast<float>(samples_x - 1);
       QVector3D const local(foundation.center_x + u * foundation.half_width,
                             0.0F,
                             foundation.center_z + v * foundation.half_depth);
@@ -67,7 +79,8 @@ auto resolve_structure_foundation(const Game::Map::TerrainService& terrain,
 
   float const depth = seat.y() - lowest;
   if (depth >= k_structure_foundation_min_depth) {
-    foundation.depth = std::min(depth, k_structure_foundation_max_depth);
+
+    foundation.depth = depth;
   }
   return foundation;
 }

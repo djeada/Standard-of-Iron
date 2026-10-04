@@ -36,8 +36,6 @@ auto read_text(const fs::path& path) -> std::string {
   return contents.str();
 }
 
-// The root CMakeLists.txt composes cmake/*.cmake includes that share its scope,
-// so what it defines is the root file plus every include.
 auto read_root_build_definitions(const fs::path& root) -> std::string {
   std::string combined = read_text(root / "CMakeLists.txt");
   std::vector<fs::path> modules;

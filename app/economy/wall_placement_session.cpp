@@ -84,8 +84,7 @@ auto WallPlacementSession::plan(Engine::Core::World& world,
                                              .target = target,
                                              .rotation_y = m_rotation_y};
   if (ladder) {
-    // A ladder is aimed, not dragged: it follows the pointer onto the nearest
-    // town face of the owner's wall.
+
     m_request.ladder = true;
     m_request.pointer = pointer_world;
   }

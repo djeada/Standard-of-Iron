@@ -1,6 +1,7 @@
 {
   "id": "last_stand",
   "title": "THE LAST STAND",
+  "end_card": "steam_demo",
   "width": 1080,
   "height": 1920,
   "fps": 60,
@@ -236,7 +237,6 @@
       ]
     }
   ],
-  "subtitle": "STANDARD OF IRON",
   "grade": {
     "contrast": 1.1,
     "saturation": 1.05,

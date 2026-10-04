@@ -17,7 +17,10 @@ Checks run on the *encoded* file (a failed check leaves the file at
 * no luminance flash series that would trip WCAG 2.3.1 (three flashes/second);
 * frame zero, and every frame in the first half second, is a lit image, never
   a fade from black: platforms use frame zero as the cover and thumbnail, so no
-  ``--allow-black`` span can excuse it.
+  ``--allow-black`` span can excuse it;
+* with ``--cut``, the last card carries the Steam store link
+  (``s.team/a/...`` or ``store.steampowered.com/app/...``): every marketing
+  video ends by sending the viewer to Steam.
 """
 
 from __future__ import annotations
@@ -150,6 +153,17 @@ def main() -> int:
         spans = []
         t = 0.0
         events = json.loads(args.cut.read_text())["events"]
+        cards = [event["card"] for event in events if "card" in event]
+        closing = " ".join(
+            str(line.get("text", ""))
+            for line in (cards[-1] if cards else {}).get("lines", [])
+        ).upper()
+        if not any(m in closing for m in ("S.TEAM/", "STORE.STEAMPOWERED.COM/APP/")):
+            print(
+                "deliver: the closing card has no Steam link (store.steampowered.com/app/5129960/Standard_of_Iron)",
+                file=sys.stderr,
+            )
+            return 1
         for i, event in enumerate(events):
             d = float(event["dur"])
             if "card" in event:

@@ -1,6 +1,7 @@
 {
   "id": "cine_field",
   "title": "STANDARD OF IRON",
+  "end_card": "steam_demo",
   "width": 1920,
   "height": 1080,
   "fps": 96,

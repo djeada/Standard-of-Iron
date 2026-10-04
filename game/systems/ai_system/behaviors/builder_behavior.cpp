@@ -20,7 +20,7 @@ namespace Game::Systems::AI {
 namespace {
 
 constexpr int k_smallest_useful_work_party = 4;
-constexpr float k_engine_site_retry_seconds = 60.0F;
+constexpr float k_unsited_retry_seconds = 60.0F;
 
 auto desired_work_parties(const AIContext& context) -> int {
   (void)context;
@@ -95,9 +95,7 @@ auto BuilderBehavior::resolve_site(const AISnapshot& snapshot,
     return site;
   }
 
-  if (is_siege_engine_building(site.building)) {
-    m_ledger.defer(site.building, snapshot.game_time + k_engine_site_retry_seconds);
-  }
+  m_ledger.defer(site.building, snapshot.game_time + k_unsited_retry_seconds);
   site.building = nullptr;
   return site;
 }
@@ -148,7 +146,7 @@ auto BuilderBehavior::run_construction_cycle(const AISnapshot& snapshot,
   const SettlementAssessment town = assess_settlement(snapshot, context);
   const auto intents = gather_construction_intents(
       snapshot, context, town, m_ledger.blocked_plan_slots(), m_construction_counter);
-  const IntentChoice choice =
+  IntentChoice choice =
       choose_construction_intent(snapshot, context, intents, m_ledger);
 
   if (choice.missing_resource != ResourceType::Count) {
@@ -161,6 +159,14 @@ auto BuilderBehavior::run_construction_cycle(const AISnapshot& snapshot,
   }
 
   PendingSite site = resolve_site(snapshot, context, choice.chosen);
+
+  constexpr int k_unsited_fallbacks = 4;
+  for (int fallback = 0; fallback < k_unsited_fallbacks && choice.chosen != nullptr &&
+                         site.building == nullptr;
+       ++fallback) {
+    choice = choose_construction_intent(snapshot, context, intents, m_ledger);
+    site = resolve_site(snapshot, context, choice.chosen);
+  }
 
   order_field_work(
       snapshot, context, pool, starved_of_food(snapshot) ? 0 : 1, out_commands);

@@ -539,7 +539,8 @@ auto SkirmishLoader::start(const QString& map_path,
                                 map_width,
                                 map_height,
                                 level_result.tile_size,
-                                is_spectator_mode);
+                                is_spectator_mode,
+                                level_result.scouted_areas);
   }
   pump_events();
 

@@ -175,6 +175,8 @@ void apply_role_specific_combat_clip(
   }
 }
 
+constexpr float k_formed_shield_hold_phase = 0.0F;
+
 [[nodiscard]] auto
 defensive_layout_clip_for(Render::GL::ShieldFormationPose pose) -> std::uint16_t {
   switch (pose) {
@@ -319,8 +321,12 @@ auto build_selection_for_pose(const UnitVisualSpec& spec,
       selection.resolved_archetype, anim, selection.state);
 
   if (spec.animation_manifest.variant_table != nullptr) {
-    auto const job_role = Animation::humanoid_construction_role_for_job(
-        static_cast<Animation::HumanoidWorkJob>(anim.inputs.construction_job));
+    auto const job_role =
+        anim.construction_role != Animation::HumanoidConstructionRole::None
+            ? anim.construction_role
+            : Animation::humanoid_construction_role_for_job(
+                  static_cast<Animation::HumanoidWorkJob>(
+                      anim.inputs.construction_job));
 
     bool const job_forces_tool =
         anim.inputs.is_constructing &&
@@ -355,6 +361,35 @@ auto build_selection_for_pose(const UnitVisualSpec& spec,
       selection.phase = humanoid_phase_for_state(anim, selection.state);
       selection.clip_variant = humanoid_clip_variant_for_state(
           selection.resolved_archetype, anim, selection.state);
+    }
+  }
+
+  auto const* table = spec.animation_manifest.variant_table;
+  if (table != nullptr &&
+      table->variant_trigger_pose == Render::Creature::PoseIntent::Construct) {
+    auto const role =
+        anim.construction_role != Animation::HumanoidConstructionRole::None
+            ? anim.construction_role
+            : Animation::humanoid_construction_role_for_job(
+                  static_cast<Animation::HumanoidWorkJob>(
+                      anim.inputs.construction_job));
+    if (role != Animation::HumanoidConstructionRole::Push &&
+        role != Animation::HumanoidConstructionRole::Climb) {
+      auto const tool = Animation::resolve_archetype_variant_override({
+          .table = table,
+          .pose_intent = Render::Creature::PoseIntent::Construct,
+          .seed = seed,
+          .forced_variant_index =
+              Animation::humanoid_construction_variant_for_role(role),
+          .has_forced_variant_index = role != Animation::HumanoidConstructionRole::None,
+      });
+      if (tool.archetype_changed) {
+        selection.resolved_archetype =
+            variant != nullptr ? Render::Humanoid::resolve_facial_hair_archetype(
+                                     tool.archetype, *variant)
+                               : tool.archetype;
+        selection.variant_table_changed = true;
+      }
     }
   }
 
@@ -753,6 +788,21 @@ auto resolve_humanoid_animation_selection(
   }
 
   if (defensive_clip != Animation::k_unmapped_clip) {
+
+    bool const holding_still =
+        (selection.state == Render::Creature::AnimationStateId::Idle ||
+         selection.state == Render::Creature::AnimationStateId::Hold) &&
+        !Render::Creature::is_moving_animation(anim.inputs.movement_state) &&
+        !anim.inputs.is_attacking && !anim.inputs.is_hit_reacting &&
+        !anim.inputs.is_dying && !anim.inputs.is_dead;
+    if (holding_still) {
+      selection.clip_id = defensive_clip;
+      selection.clip_variant = 0U;
+      selection.phase = k_formed_shield_hold_phase;
+      selection.full_body_blend = {};
+      selection.upper_body_overlay = {};
+      return selection;
+    }
     apply_defensive_overlay(selection);
     return selection;
   }

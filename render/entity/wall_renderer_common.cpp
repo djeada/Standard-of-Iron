@@ -701,8 +701,7 @@ auto build_wall_walk_span_desc(std::string_view name_prefix,
                QVector3D(0.5F, 0.045F, 0.03F),
                palette.wood_dark,
                k_standing);
-  // The joist under the planks sits a hair below the rails it carries, so their
-  // tops never tie.
+
   desc.add_box(QVector3D(0.0F, top - 0.11F, (inner + outer) * 0.5F),
                QVector3D(0.04F, 0.045F, (outer - inner) * 0.5F + 0.02F),
                palette.wood_mid,
@@ -824,8 +823,7 @@ auto build_wall_ladder_desc(std::string_view name_prefix,
   const float top = WW::k_deck_height;
   const float half_run = WW::k_ladder_run * 0.5F;
   const float half_width = WW::k_ladder_half_width;
-  // The rails carry on past the lip so a climber has something to grab as he
-  // steps onto the planks.
+
   const float overshoot = 0.55F;
   const float slope = WW::k_ladder_run / top;
   const QVector3D foot(0.0F, 0.0F, -half_run);
@@ -839,12 +837,12 @@ auto build_wall_ladder_desc(std::string_view name_prefix,
                       0.042F,
                       palette.wood_dark,
                       k_standing);
-    // A lashing where the rail rests on the lip.
+
     desc.add_box(lip + offset + QVector3D(0.0F, 0.02F, 0.0F),
                  QVector3D(0.055F, 0.03F, 0.055F),
                  palette.rope,
                  k_standing);
-    // Feet dug into the ground.
+
     desc.add_box(foot + offset + QVector3D(0.0F, 0.015F, -0.04F),
                  QVector3D(0.07F, 0.015F, 0.07F),
                  palette.earth_dark,
@@ -861,7 +859,7 @@ auto build_wall_ladder_desc(std::string_view name_prefix,
                       tone,
                       k_standing);
   }
-  // Broken: the rails lie in the street, rungs snapped.
+
   desc.add_rotated_box(QVector3D(-0.12F, 0.04F, -0.1F),
                        QVector3D(0.04F, 0.035F, 0.95F),
                        QVector3D(0.0F, 9.0F, 0.0F),

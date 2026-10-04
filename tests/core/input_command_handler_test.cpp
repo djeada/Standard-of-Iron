@@ -265,6 +265,62 @@ TEST_F(InputCommandHandlerTest, RightPressAppliesAttackOnlyToEligibleUnits) {
   EXPECT_EQ(builder->get_component<Engine::Core::AttackTargetComponent>(), nullptr);
 }
 
+TEST_F(InputCommandHandlerTest, ARamRightClickedOntoAnEnemyGateBattersIt) {
+  auto* ram = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Ram);
+  auto* gate = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::WallGate);
+  ASSERT_NE(ram, nullptr);
+  ASSERT_NE(gate, nullptr);
+  ram->add_component<Engine::Core::AttackComponent>();
+  gate->add_component<Engine::Core::BuildingComponent>();
+  selection_system->select_unit(ram->get_id());
+
+  QPointF const gate_screen = world_to_screen(QVector3D(0.0F, 3.0F, 0.0F));
+
+  EXPECT_TRUE(
+      input_handler->on_right_press(gate_screen.x(), gate_screen.y(), 1, viewport));
+  EXPECT_FALSE(input_handler->is_placing_formation());
+
+  auto* attack_target = ram->get_component<Engine::Core::AttackTargetComponent>();
+  ASSERT_NE(attack_target, nullptr) << "the ram drove to the ground under the gate";
+  EXPECT_EQ(attack_target->target_id, gate->get_id());
+}
+
+TEST_F(InputCommandHandlerTest, ARamRightClickedOnADefenderAtTheGateBattersTheGate) {
+  auto* ram = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Ram);
+  auto* gate = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::WallGate);
+  auto* defender = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Swordsman);
+  ASSERT_NE(ram, nullptr);
+  ASSERT_NE(gate, nullptr);
+  ASSERT_NE(defender, nullptr);
+  ram->add_component<Engine::Core::AttackComponent>();
+  gate->add_component<Engine::Core::BuildingComponent>();
+  selection_system->select_unit(ram->get_id());
+
+  QPointF const gate_screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
+  (void)input_handler->on_right_press(gate_screen.x(), gate_screen.y(), 1, viewport);
+
+  auto* attack_target = ram->get_component<Engine::Core::AttackTargetComponent>();
+  ASSERT_NE(attack_target, nullptr)
+      << "a ram cannot strike a man, so the click was lost";
+  EXPECT_EQ(attack_target->target_id, gate->get_id());
+}
+
+TEST_F(InputCommandHandlerTest, InfantryRightClickedOntoAnEnemyGateOnlyMoves) {
+  auto* spearman = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Spearman);
+  auto* gate = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::WallGate);
+  ASSERT_NE(spearman, nullptr);
+  ASSERT_NE(gate, nullptr);
+  spearman->add_component<Engine::Core::AttackComponent>();
+  gate->add_component<Engine::Core::BuildingComponent>();
+  selection_system->select_unit(spearman->get_id());
+
+  QPointF const gate_screen = world_to_screen(QVector3D(0.0F, 3.0F, 0.0F));
+  (void)input_handler->on_right_press(gate_screen.x(), gate_screen.y(), 1, viewport);
+
+  EXPECT_EQ(spearman->get_component<Engine::Core::AttackTargetComponent>(), nullptr)
+      << "a plain right-click sent infantry to hack at a wall";
+}
+
 TEST_F(InputCommandHandlerTest, RightPressStartsFormationPlacementForGroundMove) {
   auto* unit = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
   auto* second = create_unit(-2.0F, 0.0F, 1, Game::Units::SpawnType::Archer);

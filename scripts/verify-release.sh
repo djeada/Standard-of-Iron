@@ -248,6 +248,9 @@ stage_package() {
     FAILED=1
     printf '%s   no PASS in %s%s\n' "$RED" "$fallback_log" "$RESET"
   fi
+
+  run_check "Polish startup regression" \
+    bash scripts/verify-polish-startup.sh "$binary"
 }
 
 for stage in "${STAGES[@]}"; do

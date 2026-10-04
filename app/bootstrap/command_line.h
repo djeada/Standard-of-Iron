@@ -13,8 +13,6 @@ class QCoreApplication;
 
 namespace App::Bootstrap {
 
-// Everything the command line can ask of a run. Defaults describe a normal
-// interactive launch.
 struct CommandLineOptions {
   QString direct_campaign_mission;
   QString direct_mission_file;
@@ -36,9 +34,6 @@ struct CommandLineOptions {
   std::optional<App::Core::FilmConfig> film_config;
 };
 
-// Parses the process arguments, applies the graphics-related options to the
-// global settings and exports the benchmark/film environment variables.
-// Returns -1 to continue starting up, otherwise the exit code to return.
 auto parse_command_line(QCoreApplication& app,
                         bool release_self_test,
                         CommandLineOptions& opts) -> int;

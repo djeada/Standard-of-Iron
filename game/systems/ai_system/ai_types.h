@@ -199,6 +199,8 @@ struct EntitySnapshot {
 
   bool fighting_troops = false;
 
+  bool on_wall_stair = false;
+
   float pos_x = 0.0F;
   float pos_y = 0.0F;
   float pos_z = 0.0F;
@@ -231,6 +233,11 @@ struct ContactSnapshot {
   int health = 0;
   int max_health = 0;
   Game::Units::SpawnType spawn_type = Game::Units::SpawnType::Archer;
+};
+
+struct WallPostSnapshot {
+  float pos_x = 0.0F;
+  float pos_z = 0.0F;
 };
 
 struct GoldVeinSnapshot {
@@ -274,6 +281,15 @@ struct AISnapshot {
   std::vector<ContactSnapshot> defense_anchors;
   std::vector<GoldVeinSnapshot> gold_veins;
   std::vector<ResourceNodeSnapshot> resource_nodes;
+
+  std::vector<WallPostSnapshot> wall_posts;
+  std::vector<WallPostSnapshot> wall_garrison;
+
+  bool has_ward = false;
+  float ward_x = 0.0F;
+  float ward_z = 0.0F;
+  float ward_half_x = 0.0F;
+  float ward_half_z = 0.0F;
   ResourceAmounts resources;
   bool has_resource_snapshot = false;
 
@@ -594,6 +610,8 @@ struct AICommand {
 
   Engine::Core::EntityID target_id = 0;
   bool should_chase = false;
+
+  bool sally = false;
   Engine::Core::EntityID building_id = 0;
   Game::Units::TroopType product_type = Game::Units::TroopType::Archer;
 

@@ -114,12 +114,14 @@ add_construction_inputs(Animation::HumanoidActionSampleInputs& inputs,
                         const Entity& entity,
                         const DeathAnimationComponent* death) -> std::uint8_t {
   auto const* builder = entity.get_component<BuilderProductionComponent>();
-  std::uint8_t construction_job = 0;
+  std::uint8_t construction_job = builder != nullptr && builder->has_construction_site
+                                      ? builder_work_job(builder->product_type)
+                                      : 0;
   if (builder != nullptr && builder->in_progress) {
     inputs.construction = {
         .active = true,
-        .build_time = builder->build_time,
-        .time_remaining = builder->time_remaining,
+        .build_time = builder->work_animation_seconds,
+        .time_remaining = 0.0F,
     };
     construction_job = builder_work_job(builder->product_type);
   } else if (auto const* push = entity.get_component<RockfallPushComponent>();

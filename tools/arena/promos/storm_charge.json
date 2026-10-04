@@ -1,6 +1,7 @@
 {
   "id": "storm_charge",
   "title": "STORM CHARGE",
+  "end_card": "steam_demo",
   "width": 1080,
   "height": 1920,
   "fps": 60,
@@ -202,7 +203,6 @@
       ]
     }
   ],
-  "subtitle": "STANDARD OF IRON",
   "grade": {
     "contrast": 1.12,
     "saturation": 0.86,

@@ -189,6 +189,11 @@ jobs:
           # is simply mute. The self-test reports on it; fail the release here.
           grep -q "SOI_AUDIO_SELF_TEST: PASS" renderer_self_test.log
 
+      - name: Verify localized startup in the packaged app
+        env:
+          APPIMAGE: ${{ steps.package.outputs.name }}
+        run: bash scripts/verify-polish-startup.sh "./${APPIMAGE}"
+
       # Saves live under QStandardPaths::AppDataLocation, and Steam Auto-Cloud
       # is configured against that exact directory. Ask the packaged build
       # where it is, rather than trusting that it has not moved.

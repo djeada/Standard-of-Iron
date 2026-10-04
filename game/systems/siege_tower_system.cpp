@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "../core/ambient_session.h"
+#include "../core/component_combat.h"
 #include "../core/component_core.h"
 #include "../core/component_gameplay.h"
 #include "../core/component_presentation.h"
@@ -21,6 +22,7 @@
 #include "../units/factory.h"
 #include "../units/spawn_type.h"
 #include "../util/planar_math.h"
+#include "combat_system/combat_types.h"
 #include "core/wall_walk_geometry.h"
 #include "movement/command_service.h"
 #include "navigation/wall_walk_path.h"
@@ -51,12 +53,10 @@ constexpr float k_dock_give_up_distance = 9.0F;
 
 constexpr float k_tower_door_depth = 0.20F;
 constexpr float k_tower_lip_depth = 0.80F;
-// Behind the tower, where a company forms up to climb, and the foot of the
-// inner ladder each man climbs to the door.
+
 constexpr float k_tower_rear_reach = 2.1F;
 constexpr float k_tower_ladder_depth = -0.45F;
-// Infantry this close when the bridge first drops is called up; any idle
-// troop that later walks up behind a docked tower climbs it too.
+
 constexpr float k_escort_call_radius = 14.0F;
 constexpr float k_rear_board_radius = 3.2F;
 constexpr float k_tower_arrival = 1.1F;
@@ -65,18 +65,17 @@ constexpr float k_tower_arrival_idle = 2.6F;
 constexpr float k_wall_link_reach = 2.7F;
 constexpr float k_node_arrival = 0.12F;
 constexpr float k_path_radius = 18.0F;
-// The tower's inner ladder takes one man at a time, a body length apart.
+
 constexpr float k_board_seconds_per_man = 0.85F;
 constexpr float k_board_seconds_slack = 8.0F;
 constexpr int k_board_default_company = 24;
-// After the leader steps off a stair or ladder the troop keeps to it this long
-// (or until it has walked this far) so the men behind him finish the descent.
+
 constexpr float k_leave_seconds_per_man = 1.6F;
 constexpr float k_leave_seconds_slack = 5.0F;
 constexpr float k_leave_distance = 16.0F;
-// ...and on the way up, the men below the leader keep the stair on their walk.
+
 constexpr float k_recent_stair_seconds = 8.0F;
-// Picking a ladder over a stair costs this much more, in metres walked.
+
 constexpr float k_ladder_detour = 4.0F;
 constexpr float k_stair_speed = 0.9F;
 constexpr float k_deck_speed_scale = 0.75F;
@@ -84,8 +83,6 @@ constexpr float k_stair_arrival = 0.9F;
 constexpr float k_stair_arrival_idle = 2.2F;
 constexpr float k_approach_order_slack = 0.6F;
 
-// Long enough for the whole company to climb the tower, file across the bridge
-// and settle.
 auto board_seconds(Engine::Core::World& world, EntityID id) -> float {
   int men = k_board_default_company;
   if (auto const* roster =
@@ -111,7 +108,7 @@ struct WallNode {
   }
   [[nodiscard]] auto walkable() const -> bool { return inner_x != 0 || inner_z != 0; }
   [[nodiscard]] auto access() const -> bool { return stair || ladder; }
-  // A builder's ladder is the way up only where the segment has no stair.
+
   [[nodiscard]] auto by_ladder() const -> bool { return ladder && !stair; }
 };
 
@@ -189,8 +186,6 @@ auto is_wall_order(const WallNode& node, float x, float z) -> bool {
   return WW::is_wall_walk_order(node.x, node.z, node.inner_x, node.inner_z, x, z);
 }
 
-// Wall nodes sit on a 2 m lattice; looking up the cells around a point finds
-// the walls near it without scanning every wall.
 class WallIndex {
 public:
   explicit WallIndex(std::vector<WallNode> nodes)
@@ -227,8 +222,6 @@ private:
   std::unordered_multimap<std::int64_t, int> m_cells;
 };
 
-// Breadth-first distances (in hops) from `from` across linked wall nodes; -1 for
-// nodes on another run.
 auto hop_distances(const std::vector<WallNode>& nodes, int from) -> std::vector<int> {
   std::vector<int> hops(nodes.size(), -1);
   if (from < 0) {
@@ -267,15 +260,12 @@ auto next_hop(const std::vector<WallNode>& nodes, int from, int to) -> int {
   return from;
 }
 
-// Where a troop stands to start up a segment's stair or ladder.
 auto access_foot(const WallNode& node) -> WW::Point {
   return node.by_ladder()
              ? WW::ladder_approach(node.x, node.z, node.inner_x, node.inner_z)
              : WW::stair_foot(node.x, node.z, node.inner_x, node.inner_z);
 }
 
-// The stair whose foot is cheapest to use: walking from (x, z) on the ground to
-// it, or along the balcony from `on_deck` to it.
 auto best_stair(const std::vector<WallNode>& nodes,
                 int on_deck,
                 float x,
@@ -349,7 +339,6 @@ struct StairPose {
   float y{0.0F};
 };
 
-// Position on a stair, 0 at its foot on the ground and 1 on the balcony lane.
 auto stair_pose(const StairLine& s, float progress) -> StairPose {
   float const a = std::hypot(s.foot.x - s.ground.x, s.foot.z - s.ground.z);
   float const b = std::hypot(std::hypot(s.ground.x - s.edge.x, s.ground.z - s.edge.z),
@@ -452,8 +441,6 @@ void publish_path(WallWalkerComponent& walker,
   }
 }
 
-// Coming off the wall: the balcony, the stair or ladder used, and the ground
-// from its foot to wherever the leader has walked since.
 void publish_leaving_path(WallWalkerComponent& walker,
                           const std::vector<WallNode>& nodes,
                           int stair,
@@ -482,8 +469,6 @@ void leave_wall(Engine::Core::World& world, EntityID id, UnitComponent* unit) {
   world.remove<WallWalkerComponent>(id);
 }
 
-// Faces a troop along the balcony towards the longer stretch of wall, so its
-// file lies on the planks.
 auto along_wall_yaw(const std::vector<WallNode>& nodes, int here) -> float {
   if (here < 0) {
     return 0.0F;
@@ -504,8 +489,6 @@ auto along_wall_yaw(const std::vector<WallNode>& nodes, int here) -> float {
   return runs_x ? yaw_towards(sign, 0.0F) : yaw_towards(0.0F, sign);
 }
 
-// Turns an idle troop on the balcony to whichever way along the wall is nearer
-// its current facing, so its file lies along the planks rather than across them.
 auto settle_along_wall(const WallNode& node, float yaw) -> float {
   bool const runs_x = node.inner_z != 0;
   float const forward = runs_x ? 90.0F : 0.0F;
@@ -537,7 +520,6 @@ auto bridge_is_down(const SiegeTowerComponent& tower) -> bool {
          tower.docked_wall_id != 0;
 }
 
-// A docked tower whose bridge is down, with the side it is on.
 struct DockedTower {
   EntityID id{0};
   int owner_id{0};
@@ -569,8 +551,6 @@ auto docked_towers(Engine::Core::World& world) -> std::vector<DockedTower> {
   return out;
 }
 
-// Sends a troop to climb a docked tower: it walks round to the back, then
-// boards (see board_tower) and heads for (goal_x, goal_z) on the wall.
 void begin_tower_approach(Engine::Core::World& world,
                           EntityID id,
                           const DockedTower& tower,
@@ -590,9 +570,6 @@ void begin_tower_approach(Engine::Core::World& world,
   CommandService::move_unit(world, id, QVector3D(rear.x, 0.0F, rear.z));
 }
 
-// The company has reached the back of the tower: from here each man climbs
-// the inner ladder to the door and crosses the bridge; the troop itself is
-// already counted on the balcony.
 void board_tower(Engine::Core::World& world,
                  EntityID id,
                  UnitComponent& unit,
@@ -648,9 +625,6 @@ auto allied(const Game::Session::AmbientServices& services, int a, int b) -> boo
   return a == b || (services.owners != nullptr && services.owners->are_allies(a, b));
 }
 
-// A troop ordered onto a wall walks to the nearest stair or ladder of its own
-// wall, or - for an enemy wall - round to the back of a friendly siege tower
-// docked on that stretch.
 void start_climbs(Engine::Core::World& world) {
   auto const& services = Game::Session::services_for(world);
   std::unordered_map<int, WallIndex> walls;
@@ -750,8 +724,79 @@ void start_climbs(Engine::Core::World& world) {
   }
 }
 
-// When a tower's bridge first comes down its escort is called up; after that
-// any idle infantry that comes up behind it climbs it.
+void seat_requested_troops(Engine::Core::World& world) {
+  constexpr float k_seat_spacing = 6.0F;
+  std::vector<EntityID> pending;
+  std::vector<WW::Point> held;
+  for (auto [id, walker] : world.view<WallWalkerComponent>()) {
+    if (walker.wall_id == 0 && walker.phase == Phase::OnDeck && walker.tower_id == 0) {
+      pending.push_back(id);
+    } else if (auto const* at = world.try_get<TransformComponent>(id)) {
+      held.push_back({at->position.x, at->position.z});
+    }
+  }
+  if (pending.empty()) {
+    return;
+  }
+  std::unordered_map<int, std::vector<WallNode>> networks;
+  for (EntityID const id : pending) {
+    auto* unit = world.try_get<UnitComponent>(id);
+    auto* transform = world.try_get<TransformComponent>(id);
+    auto* walker = world.try_get<WallWalkerComponent>(id);
+    if (unit == nullptr || transform == nullptr || walker == nullptr) {
+      world.remove<WallWalkerComponent>(id);
+      continue;
+    }
+    auto network = networks.find(unit->owner_id);
+    if (network == networks.end()) {
+      network =
+          networks.emplace(unit->owner_id, gather_walls(world, unit->owner_id)).first;
+    }
+    auto const& nodes = network->second;
+    int pick = -1;
+    int fallback = -1;
+    float pick_d = std::numeric_limits<float>::max();
+    float fallback_d = std::numeric_limits<float>::max();
+    for (std::size_t i = 0; i < nodes.size(); ++i) {
+      auto const lane = nodes[i].lane();
+      float const d =
+          std::hypot(lane.x - transform->position.x, lane.z - transform->position.z);
+      if (d < fallback_d) {
+        fallback_d = d;
+        fallback = static_cast<int>(i);
+      }
+      bool const free = std::none_of(held.begin(), held.end(), [&](const WW::Point& p) {
+        return std::hypot(p.x - lane.x, p.z - lane.z) < k_seat_spacing;
+      });
+      if (free && d < pick_d) {
+        pick_d = d;
+        pick = static_cast<int>(i);
+      }
+    }
+    if (pick < 0) {
+      pick = fallback;
+    }
+    if (pick < 0) {
+      world.remove<WallWalkerComponent>(id);
+      continue;
+    }
+    auto const& node = nodes[static_cast<std::size_t>(pick)];
+    auto const lane = node.lane();
+    transform->position.x = lane.x;
+    transform->position.z = lane.z;
+    transform->rotation.y = along_wall_yaw(nodes, pick);
+    if (auto* movement = world.try_get<MovementComponent>(id)) {
+      movement->stop();
+    }
+    walker->wall_id = node.id;
+    walker->elevation = WW::k_deck_height;
+    walker->has_goal = false;
+    enter_wall(*unit, *walker);
+    publish_path(*walker, nodes, lane.x, lane.z, -1);
+    held.push_back(lane);
+  }
+}
+
 void call_up_escorts(Engine::Core::World& world,
                      const DockedTower& tower,
                      float radius,
@@ -770,8 +815,7 @@ void call_up_escorts(Engine::Core::World& world,
         world.has<Engine::Core::PendingRemovalComponent>(id)) {
       continue;
     }
-    // Idle troops, or - when the bridge first drops - troops still walking up
-    // with the tower, are its escort.
+
     bool const moving = movement.get_has_target() || movement.get_has_requested_goal();
     if (moving) {
       bool const escorting =
@@ -791,9 +835,127 @@ void call_up_escorts(Engine::Core::World& world,
   }
 }
 
-// A computer-held town mans its walls against an assault: idle archers go up
-// onto the stretch of balcony nearest the enemy outside it, where the stakes
-// cover them and the height lends their arrows weight.
+template <typename Troops>
+void shift_wall_archers_to_the_assault(Engine::Core::World& world,
+                                       const Troops& troops) {
+  constexpr float k_threat_reach = 30.0F;
+  constexpr float k_gain_to_move = 4.0F;
+  constexpr float k_post_spacing = 5.0F;
+
+  constexpr float k_shift_reach = 20.0F;
+  constexpr float k_outside = -0.6F;
+  auto const& services = Game::Session::services_for(world);
+
+  struct Aloft {
+    EntityID id{0};
+    int owner{0};
+    EntityID wall_id{0};
+    float x{0.0F};
+    float z{0.0F};
+    float reach{0.0F};
+  };
+  std::vector<Aloft> archers;
+  std::vector<WW::Point> held;
+  for (auto [id, unit, walker, transform] : world.view<const UnitComponent,
+                                                       const WallWalkerComponent,
+                                                       const TransformComponent>()) {
+    if (unit.health <= 0 || !walker.aloft()) {
+      continue;
+    }
+    held.push_back({walker.has_goal ? walker.goal_x : transform.position.x,
+                    walker.has_goal ? walker.goal_z : transform.position.z});
+    auto const* attack = world.try_get<Engine::Core::AttackComponent>(id);
+    auto const* target = world.try_get<Engine::Core::AttackTargetComponent>(id);
+    if (unit.spawn_type != Game::Units::SpawnType::Archer || attack == nullptr ||
+        !world.has<Engine::Core::AIControlledComponent>(id) || !walker.watching ||
+        walker.has_goal || (target != nullptr && target->target_id != 0)) {
+      continue;
+    }
+    archers.push_back(
+        {id,
+         unit.owner_id,
+         walker.wall_id,
+         transform.position.x,
+         transform.position.z,
+         attack->range * Combat::Constants::k_range_multiplier_wall_walk});
+  }
+  if (archers.empty()) {
+    return;
+  }
+
+  auto nearest_hostile = [&](int owner, float x, float z, const WallNode* node) {
+    float best = std::numeric_limits<float>::max();
+    for (auto const& troop : troops) {
+      if (allied(services, troop.owner, owner)) {
+        continue;
+      }
+      if (node != nullptr &&
+          (troop.x - node->x) * static_cast<float>(node->inner_x) +
+                  (troop.z - node->z) * static_cast<float>(node->inner_z) >=
+              k_outside) {
+        continue;
+      }
+      best = std::min(best, std::hypot(troop.x - x, troop.z - z));
+    }
+    return best;
+  };
+
+  std::unordered_map<int, std::vector<WallNode>> networks;
+  for (auto const& archer : archers) {
+    if (nearest_hostile(archer.owner, archer.x, archer.z, nullptr) <= archer.reach) {
+      continue;
+    }
+    auto network = networks.find(archer.owner);
+    if (network == networks.end()) {
+      network = networks.emplace(archer.owner, gather_walls(world, archer.owner)).first;
+    }
+    auto const& nodes = network->second;
+    int const here = index_of(nodes, archer.wall_id);
+    if (here < 0) {
+      continue;
+    }
+    auto const& here_node = nodes[static_cast<std::size_t>(here)];
+    float const here_threat =
+        nearest_hostile(archer.owner, archer.x, archer.z, &here_node);
+    if (here_threat > 4.0F * k_threat_reach) {
+      continue;
+    }
+    auto const hops = hop_distances(nodes, here);
+    int pick = -1;
+    float pick_threat = here_threat - k_gain_to_move;
+    for (std::size_t i = 0; i < nodes.size(); ++i) {
+      auto const& node = nodes[i];
+      bool const same_run =
+          node.inner_x == here_node.inner_x && node.inner_z == here_node.inner_z &&
+          (here_node.inner_z != 0 ? std::abs(node.z - here_node.z)
+                                  : std::abs(node.x - here_node.x)) < 0.5F;
+      if (hops[i] < 0 || !same_run ||
+          std::hypot(node.x - here_node.x, node.z - here_node.z) > k_shift_reach) {
+        continue;
+      }
+      auto const lane = node.lane();
+      bool const taken = std::any_of(held.begin(), held.end(), [&](const WW::Point& p) {
+        return std::hypot(p.x - lane.x, p.z - lane.z) < k_post_spacing &&
+               std::hypot(p.x - archer.x, p.z - archer.z) > 0.5F;
+      });
+      if (taken) {
+        continue;
+      }
+      float const threat = nearest_hostile(archer.owner, lane.x, lane.z, &node);
+      if (threat < k_threat_reach && threat < pick_threat) {
+        pick_threat = threat;
+        pick = static_cast<int>(i);
+      }
+    }
+    if (pick < 0) {
+      continue;
+    }
+    auto const lane = nodes[static_cast<std::size_t>(pick)].lane();
+    held.push_back(lane);
+    CommandService::move_unit(world, archer.id, QVector3D(lane.x, 0.0F, lane.z));
+  }
+}
+
 void man_threatened_walls(Engine::Core::World& world) {
   constexpr float k_threat_reach = 30.0F;
   constexpr float k_archer_reach = 40.0F;
@@ -832,7 +994,7 @@ void man_threatened_walls(Engine::Core::World& world) {
     if (!reachable) {
       continue;
     }
-    // Each threatened stretch, nearest assault first.
+
     std::vector<std::pair<float, int>> threatened;
     for (std::size_t i = 0; i < nodes.size(); ++i) {
       auto const& node = nodes[i];
@@ -883,6 +1045,7 @@ void man_threatened_walls(Engine::Core::World& world) {
       CommandService::move_unit(world, archer.id, QVector3D(lane.x, 0.0F, lane.z));
     }
   }
+  shift_wall_archers_to_the_assault(world, enemies_all);
 }
 
 } // namespace
@@ -920,7 +1083,7 @@ auto siege_tower_dock_approach(Engine::Core::World& world,
       QVector3D const spot((node.x + other.x) * 0.5F + ox * reach,
                            0.0F,
                            (node.z + other.z) * 0.5F + oz * reach);
-      // Nearest to the wall that was clicked, then to the tower.
+
       float const d = std::hypot(spot.x() - wall_transform->position.x,
                                  spot.z() - wall_transform->position.z) *
                           2.0F +
@@ -1032,7 +1195,6 @@ void SiegeTowerSystem::update(Engine::Core::World* world, float delta_time) {
       continue;
     }
 
-    // Dock against the stakes between two posts, where the bridge clears them.
     std::vector<std::pair<int, WallNode>> hostile;
     for (auto [wall_id, wall_unit, wall_transform] :
          world->view<const UnitComponent, const TransformComponent>()) {
@@ -1103,6 +1265,7 @@ void WallWalkSystem::update(Engine::Core::World* world, float delta_time) {
     m_garrison_timer = 0.0F;
     man_threatened_walls(*world);
   }
+  seat_requested_troops(*world);
   start_climbs(*world);
 
   std::unordered_map<int, std::vector<WallNode>> networks;
@@ -1243,8 +1406,7 @@ void WallWalkSystem::update(Engine::Core::World* world, float delta_time) {
         walker->stair_wall_id = 0;
         transform->rotation.y = along_wall_yaw(nodes, stair);
       } else if (!up && walker->stair_progress <= 0.0F) {
-        // The leader is down; the rest of the file still has to come off the
-        // wall behind him before the troop is back on open ground.
+
         walker->phase = Phase::Leaving;
         walker->elevation = 0.0F;
         walker->boarding_seconds = 0.0F;
@@ -1298,8 +1460,6 @@ void WallWalkSystem::update(Engine::Core::World* world, float delta_time) {
       }
     }
 
-    // New orders arrive through the movement component: a point on this wall
-    // walks the balcony, anything else walks to a stair and down.
     if (walker->phase == Phase::OnDeck && movement != nullptr &&
         movement->get_has_target()) {
       bool const ordered = movement->get_has_requested_goal();

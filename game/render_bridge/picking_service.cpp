@@ -15,6 +15,7 @@
 #include "../core/wall_walk_geometry.h"
 #include "../core/world.h"
 #include "../map/terrain_service.h"
+#include "../systems/building_collision_registry.h"
 #include "../units/spawn_type.h"
 #include "scene/camera.h"
 
@@ -22,10 +23,11 @@ namespace Game::Systems {
 
 namespace {
 
+constexpr float k_building_pick_height = 4.5F;
+
 std::atomic<const Game::Map::TerrainService*> g_bound_terrain{nullptr};
 std::atomic<const Engine::Core::World*> g_bound_world{nullptr};
 
-// First crossing of the terrain surface along the ray, or negative.
 auto ray_hits_terrain(const Game::Map::TerrainService& terrain_service,
                       const QVector3D& ray_origin,
                       const QVector3D& ray_dir,
@@ -86,7 +88,7 @@ auto PickingService::surface_height_at(float world_x, float world_z) -> float {
     height = terrain->sample_surface_height(world_x, world_z).world_y;
   }
   if (world != nullptr) {
-    // A vertical ray from above finds the planks if there are any.
+
     constexpr float k_above = 50.0F;
     QVector3D const origin(world_x, height + k_above, world_z);
     float const t = ray_hits_wall_walk(
@@ -108,9 +110,7 @@ auto PickingService::ray_hits_wall_walk(const Engine::Core::World& world,
     return -1.0F;
   }
   float best = -1.0F;
-  // Each segment's walk is a 2 m slab along its run: the balcony planks on the
-  // town face at deck height, and the stake tips over the centre line at
-  // crest height, which is what a click on the palisade itself meets.
+
   auto try_slab = [&](float node_x,
                       float node_z,
                       float base_y,
@@ -322,15 +322,13 @@ auto PickingService::update_hover(float sx,
   return current_hover;
 }
 
-auto PickingService::pick_single(float sx,
-                                 float sy,
-                                 Engine::Core::World& world,
-                                 const Render::GL::Camera& camera,
-                                 int view_w,
-                                 int view_h,
-                                 int owner_filter,
-                                 bool prefer_buildings_first)
-    -> Engine::Core::EntityID {
+auto PickingService::pick_nearest(float sx,
+                                  float sy,
+                                  Engine::Core::World& world,
+                                  const Render::GL::Camera& camera,
+                                  int view_w,
+                                  int view_h,
+                                  int owner_filter) -> NearestPicks {
 
   const float base_unit_pick_radius = 30.0F;
   const float base_building_pick_radius = 30.0F;
@@ -369,9 +367,14 @@ auto PickingService::pick_single(float sx,
       float pick_dist2 = d2;
       const float margin_x_z = 1.6F;
       const float margin_y = 1.2F;
-      float const hx = std::max(0.6F, t->scale.x * margin_x_z);
-      float const hz = std::max(0.6F, t->scale.z * margin_x_z);
-      float const hy = std::max(0.5F, t->scale.y * margin_y);
+
+      auto const footprint =
+          BuildingCollisionRegistry::get_building_size(u->spawn_type);
+      float const footprint_half = 0.5F * std::max(footprint.width, footprint.depth) *
+                                   std::max(std::max(t->scale.x, t->scale.z), 1.0F);
+      float const hx = std::max({0.6F, t->scale.x * margin_x_z, footprint_half});
+      float const hz = std::max({0.6F, t->scale.z * margin_x_z, footprint_half});
+      float const hy = std::max({0.5F, t->scale.y * margin_y, k_building_pick_height});
       QPointF pts[8];
       int ok_count = 0;
       auto project = [&](const QVector3D& w, QPointF& out) {
@@ -437,23 +440,48 @@ auto PickingService::pick_single(float sx,
       }
     }
   }
+  return {.unit_id = best_unit_id,
+          .unit_dist2 = best_unit_dist2,
+          .building_id = best_building_id,
+          .building_dist2 = best_building_dist2};
+}
+
+auto PickingService::pick_single(float sx,
+                                 float sy,
+                                 Engine::Core::World& world,
+                                 const Render::GL::Camera& camera,
+                                 int view_w,
+                                 int view_h,
+                                 int owner_filter,
+                                 bool prefer_buildings_first)
+    -> Engine::Core::EntityID {
+  auto const picks = pick_nearest(sx, sy, world, camera, view_w, view_h, owner_filter);
   if (prefer_buildings_first) {
-    if ((best_building_id != 0U) &&
-        ((best_unit_id == 0U) || best_building_dist2 <= best_unit_dist2)) {
-      return best_building_id;
+    if ((picks.building_id != 0U) &&
+        ((picks.unit_id == 0U) || picks.building_dist2 <= picks.unit_dist2)) {
+      return picks.building_id;
     }
-    if (best_unit_id != 0U) {
-      return best_unit_id;
+    if (picks.unit_id != 0U) {
+      return picks.unit_id;
     }
   } else {
-    if (best_unit_id != 0U) {
-      return best_unit_id;
+    if (picks.unit_id != 0U) {
+      return picks.unit_id;
     }
-    if (best_building_id != 0U) {
-      return best_building_id;
+    if (picks.building_id != 0U) {
+      return picks.building_id;
     }
   }
   return 0;
+}
+
+auto PickingService::pick_building(float sx,
+                                   float sy,
+                                   Engine::Core::World& world,
+                                   const Render::GL::Camera& camera,
+                                   int view_w,
+                                   int view_h) -> Engine::Core::EntityID {
+  return pick_nearest(sx, sy, world, camera, view_w, view_h, 0).building_id;
 }
 
 auto PickingService::pick_unit_first(float sx,

@@ -94,6 +94,10 @@ struct GuardReach {
   float center_x{0.0F};
   float center_z{0.0F};
   float radius{0.0F};
+
+  bool boxed{false};
+  float half_x{0.0F};
+  float half_z{0.0F};
 };
 
 auto guard_post_of(const Engine::Core::Entity* entity) -> std::optional<QVector3D>;

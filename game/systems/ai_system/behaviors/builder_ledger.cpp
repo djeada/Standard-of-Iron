@@ -4,13 +4,17 @@ namespace Game::Systems::AI {
 
 auto ConstructionLedger::is_deferred(const char* building_type,
                                      float game_time) const -> bool {
-  return building_type != nullptr && building_type == m_deferred_type &&
-         game_time < m_deferred_until;
+  if (building_type == nullptr) {
+    return false;
+  }
+  const auto found = m_deferred_until.find(building_type);
+  return found != m_deferred_until.end() && game_time < found->second;
 }
 
 void ConstructionLedger::defer(const char* building_type, float until_game_time) {
-  m_deferred_type = building_type;
-  m_deferred_until = until_game_time;
+  if (building_type != nullptr) {
+    m_deferred_until[building_type] = until_game_time;
+  }
 }
 
 void ConstructionLedger::note_order(const char* building_type,
@@ -43,8 +47,7 @@ void ConstructionLedger::note_order(const char* building_type,
 
   if (m_last_order_repeats >= k_orders_before_giving_up) {
 
-    m_deferred_type = building_type;
-    m_deferred_until = game_time + k_defer_seconds;
+    defer(building_type, game_time + k_defer_seconds);
     m_last_order_repeats = 0;
   }
 }

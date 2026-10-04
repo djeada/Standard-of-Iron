@@ -1,15 +1,10 @@
 {
   "id": "trailer",
   "title": "STANDARD OF IRON",
-  "subtitle": "BUILD. MARCH. CONQUER. SURVIVE THE NIGHT.",
+  "end_card": "steam_demo",
   "end_card_seconds": 5.2,
   "advisory": "THE FOLLOWING TRAILER IS NOT RATED|IT CONTAINS SCENES OF BATTLE AND IS NOT|SUITABLE FOR YOUNG CHILDREN",
   "advisory_seconds": 3.2,
-  "end_card_lines": [
-    "GITHUB.COM/DJEADA/STANDARD-OF-IRON",
-    "WINDOWS  \u00b7  MACOS  \u00b7  LINUX",
-    "SOURCE UNDER THE MIT LICENCE"
-  ],
   "width": 1920,
   "height": 1080,
   "fps": 60,
