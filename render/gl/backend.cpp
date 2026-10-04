@@ -14,6 +14,8 @@
 #include <chrono>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
+#include <cstring>
 #include <limits>
 #include <memory>
 #include <mutex>
@@ -72,6 +74,22 @@
 #include "ubo_bindings.h"
 
 namespace Render::GL {
+
+namespace {
+
+[[nodiscard]] auto shadow_content_mix(std::uint64_t seed,
+                                      std::uint64_t value) -> std::uint64_t {
+  seed ^= value + 0x9E3779B97F4A7C15ULL + (seed << 6U) + (seed >> 2U);
+  return seed;
+}
+
+[[nodiscard]] auto shadow_float_bits(float value) -> std::uint64_t {
+  std::uint32_t bits = 0;
+  std::memcpy(&bits, &value, sizeof(bits));
+  return bits;
+}
+
+} // namespace
 
 using namespace Render::GL::ColorIndex;
 using namespace Render::GL::VertexAttrib;
@@ -525,6 +543,19 @@ void Backend::release_directional_shadow_resources() {
     glDeleteFramebuffers(1, &m_directional_shadow_fbo);
     m_directional_shadow_fbo = 0;
   }
+  if (m_directional_shadow_static_texture != 0) {
+    glDeleteTextures(1, &m_directional_shadow_static_texture);
+    m_directional_shadow_static_texture = 0;
+  }
+  if (m_directional_shadow_static_far_texture != 0) {
+    glDeleteTextures(1, &m_directional_shadow_static_far_texture);
+    m_directional_shadow_static_far_texture = 0;
+  }
+  if (m_directional_shadow_cache_fbo != 0) {
+    glDeleteFramebuffers(1, &m_directional_shadow_cache_fbo);
+    m_directional_shadow_cache_fbo = 0;
+  }
+  m_shadow_static_layers.fill(ShadowStaticLayer{});
   if (m_directional_shadow_compare_sampler != 0) {
     glDeleteSamplers(1, &m_directional_shadow_compare_sampler);
     m_directional_shadow_compare_sampler = 0;
@@ -646,9 +677,13 @@ void Backend::ensure_directional_shadow_resources(int resolution, int cascades) 
 
   release_directional_shadow_resources();
   allocate_shadow_array(*this, m_directional_shadow_texture, resolution, near_cascades);
+  allocate_shadow_array(
+      *this, m_directional_shadow_static_texture, resolution, near_cascades);
   if (far_cascades > 0) {
     allocate_shadow_array(
         *this, m_directional_shadow_far_texture, far_resolution, far_cascades);
+    allocate_shadow_array(
+        *this, m_directional_shadow_static_far_texture, far_resolution, far_cascades);
   }
 
   const GLfloat border[] = {1.0F, 1.0F, 1.0F, 1.0F};
@@ -693,6 +728,8 @@ void Backend::ensure_directional_shadow_resources(int resolution, int cascades) 
                 m_directional_shadow_depth_sampler);
 
   glGenFramebuffers(1, &m_directional_shadow_fbo);
+  glGenFramebuffers(1, &m_directional_shadow_cache_fbo);
+  m_shadow_static_layers.fill(ShadowStaticLayer{});
   m_directional_shadow_resolution = resolution;
   m_directional_shadow_far_resolution = far_resolution;
   m_directional_shadow_cascades = cascades;
@@ -702,6 +739,8 @@ void Backend::ensure_directional_shadow_resources(int resolution, int cascades) 
 namespace {
 
 constexpr float k_shadow_min_caster_texels = 0.75F;
+constexpr float k_shadow_light_follow_cos = 0.99999848F;
+constexpr double k_shadow_cache_triangles_per_texel = 0.1;
 constexpr std::size_t k_shadow_min_instanced_run = 2;
 constexpr float k_shadow_receiver_margin_texels = 16.0F;
 
@@ -841,7 +880,13 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
   m_directional_shadow_splits =
       compute_shadow_cascade_splits(near_distance, far_distance, cascade_count);
 
-  QVector3D light_direction = m_environment_lighting.primary_direction.normalized();
+  const QVector3D sun_direction = m_environment_lighting.primary_direction.normalized();
+  if (m_shadow_light_direction.isNull() ||
+      QVector3D::dotProduct(sun_direction, m_shadow_light_direction) <
+          k_shadow_light_follow_cos) {
+    m_shadow_light_direction = sun_direction;
+  }
+  QVector3D light_direction = m_shadow_light_direction;
   const QVector3D light_up =
       std::abs(QVector3D::dotProduct(light_direction, QVector3D(0, 1, 0))) > 0.96F
           ? QVector3D(0, 0, 1)
@@ -868,20 +913,22 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
   glEnable(GL_POLYGON_OFFSET_FILL);
   glPolygonOffset(2.0F, 4.0F);
 
-  const auto add_static_caster = [this](Mesh* mesh, const QMatrix4x4& model) {
-    if (mesh == nullptr) {
-      return;
-    }
-    ShadowStaticCaster caster;
-    caster.mesh = mesh;
-    caster.model = &model;
-    caster.world_center = model.map(mesh->bounds_center());
-    const float scale = std::max({model.column(0).toVector3D().length(),
-                                  model.column(1).toVector3D().length(),
-                                  model.column(2).toVector3D().length()});
-    caster.world_radius = mesh->bounds_radius() * scale;
-    m_shadow_static_casters.push_back(caster);
-  };
+  const auto add_static_caster =
+      [this](Mesh* mesh, const QMatrix4x4& model, bool terrain = false) {
+        if (mesh == nullptr) {
+          return;
+        }
+        ShadowStaticCaster caster;
+        caster.mesh = mesh;
+        caster.model = &model;
+        caster.terrain = terrain;
+        caster.world_center = model.map(mesh->bounds_center());
+        const float scale = std::max({model.column(0).toVector3D().length(),
+                                      model.column(1).toVector3D().length(),
+                                      model.column(2).toVector3D().length()});
+        caster.world_radius = mesh->bounds_radius() * scale;
+        m_shadow_static_casters.push_back(caster);
+      };
 
   m_shadow_static_casters.clear();
   for (const auto& item : queue.items()) {
@@ -895,7 +942,7 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
       }
     } else if (const auto* terrain = std::get_if<TerrainSurfaceCmd>(&item)) {
       if (!terrain->horizon_dressing) {
-        add_static_caster(terrain->mesh, terrain->model);
+        add_static_caster(terrain->mesh, terrain->model, true);
       }
     }
   }
@@ -967,13 +1014,13 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
     m_directional_shadow_matrices[cascade] = light_vp;
 
     glViewport(0, 0, cascade_resolution, cascade_resolution);
-    glFramebufferTextureLayer(
-        GL_FRAMEBUFFER,
-        GL_DEPTH_ATTACHMENT,
-        far_cascade ? m_directional_shadow_far_texture : m_directional_shadow_texture,
-        0,
-        far_cascade ? cascade - m_directional_shadow_near_cascades : cascade);
-    glClear(GL_DEPTH_BUFFER_BIT);
+    const GLuint cascade_texture =
+        far_cascade ? m_directional_shadow_far_texture : m_directional_shadow_texture;
+    const GLuint cascade_static_texture = far_cascade
+                                              ? m_directional_shadow_static_far_texture
+                                              : m_directional_shadow_static_texture;
+    const GLint cascade_layer =
+        far_cascade ? cascade - m_directional_shadow_near_cascades : cascade;
 
     const ShadowCascadeCull cull{
         .center = center,
@@ -991,10 +1038,12 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
         .min_caster_radius = world_texel * k_shadow_min_caster_texels,
     };
     m_shadow_cascade_casters.clear();
+    m_shadow_cascade_terrain_casters.clear();
     for (const auto& caster : m_shadow_static_casters) {
       if (caster.world_radius >= cull.min_caster_radius &&
           cull.accepts(caster.world_center, caster.world_radius)) {
-        m_shadow_cascade_casters.push_back(&caster);
+        (caster.terrain ? m_shadow_cascade_terrain_casters : m_shadow_cascade_casters)
+            .push_back(&caster);
       }
     }
 
@@ -1009,43 +1058,121 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
       bound_depth_shader = shader;
     };
 
-    for (std::size_t index = 0; index < m_shadow_cascade_casters.size();) {
-      Mesh* const mesh = m_shadow_cascade_casters[index]->mesh;
-      std::size_t run_end = index + 1;
-      while (run_end < m_shadow_cascade_casters.size() &&
-             m_shadow_cascade_casters[run_end]->mesh == mesh) {
-        ++run_end;
-      }
-      const std::size_t run = run_end - index;
+    const auto draw_casters =
+        [&](const std::vector<const ShadowStaticCaster*>& casters) {
+          for (std::size_t index = 0; index < casters.size();) {
+            Mesh* const mesh = casters[index]->mesh;
+            std::size_t run_end = index + 1;
+            while (run_end < casters.size() && casters[run_end]->mesh == mesh) {
+              ++run_end;
+            }
+            const std::size_t run = run_end - index;
 
-      if (can_instance_shadow_casters && run >= k_shadow_min_instanced_run) {
+            if (can_instance_shadow_casters && run >= k_shadow_min_instanced_run) {
+              bind_depth_shader(m_directional_shadow_depth_instanced_shader,
+                                m_shadow_depth_instanced_light_vp);
+              m_mesh_instancing_pipeline->begin_batch(mesh);
+              for (std::size_t j = index; j < run_end; ++j) {
+                m_mesh_instancing_pipeline->accumulate(
+                    *casters[j]->model, QVector3D(1.0F, 1.0F, 1.0F), 1.0F);
+              }
+              m_mesh_instancing_pipeline->flush();
+              m_last_playback_stats.shadow_static_instanced_draws += 1;
+              m_last_playback_stats.shadow_static_instanced_instances += run;
+            } else {
+              bind_depth_shader(m_directional_shadow_depth_shader,
+                                m_shadow_depth_light_vp);
+              for (std::size_t j = index; j < run_end; ++j) {
+                m_directional_shadow_depth_shader->set_uniform(m_shadow_depth_model,
+                                                               *casters[j]->model);
+                mesh->draw();
+                m_last_playback_stats.shadow_static_single_draws += 1;
+              }
+            }
+            index = run_end;
+          }
+        };
+
+    std::uint64_t static_content = 0;
+    std::size_t static_triangles = 0;
+    for (const ShadowStaticCaster* caster : m_shadow_cascade_terrain_casters) {
+      static_triangles += caster->mesh->get_indices().size() / 3U;
+      static_content = shadow_content_mix(
+          static_content, reinterpret_cast<std::uintptr_t>(caster->mesh));
+      for (int element = 0; element < 16; ++element) {
+        static_content = shadow_content_mix(
+            static_content, shadow_float_bits(caster->model->constData()[element]));
+      }
+    }
+    if (static_batch != nullptr) {
+      static_content = shadow_content_mix(
+          static_content, collect_static_batch_shadow(*static_batch, cull));
+      static_triangles += m_static_shadow_triangles;
+    }
+
+    const auto draw_static_casters = [&]() {
+      draw_casters(m_shadow_cascade_terrain_casters);
+      if (static_batch != nullptr) {
         bind_depth_shader(m_directional_shadow_depth_instanced_shader,
                           m_shadow_depth_instanced_light_vp);
-        m_mesh_instancing_pipeline->begin_batch(mesh);
-        for (std::size_t j = index; j < run_end; ++j) {
-          m_mesh_instancing_pipeline->accumulate(
-              *m_shadow_cascade_casters[j]->model, QVector3D(1.0F, 1.0F, 1.0F), 1.0F);
-        }
-        m_mesh_instancing_pipeline->flush();
-        m_last_playback_stats.shadow_static_instanced_draws += 1;
-        m_last_playback_stats.shadow_static_instanced_instances += run;
-      } else {
-        bind_depth_shader(m_directional_shadow_depth_shader, m_shadow_depth_light_vp);
-        for (std::size_t j = index; j < run_end; ++j) {
-          m_directional_shadow_depth_shader->set_uniform(
-              m_shadow_depth_model, *m_shadow_cascade_casters[j]->model);
-          mesh->draw();
-          m_last_playback_stats.shadow_static_single_draws += 1;
-        }
+        draw_collected_static_batch_shadow();
       }
-      index = run_end;
+    };
+
+    auto& static_layer = m_shadow_static_layers[static_cast<std::size_t>(cascade)];
+    const auto cascade_texels = static_cast<double>(cascade_resolution) *
+                                static_cast<double>(cascade_resolution);
+    const bool cache_worthwhile = static_cast<double>(static_triangles) >=
+                                  cascade_texels * k_shadow_cache_triangles_per_texel;
+    if (!cache_worthwhile) {
+      static_layer.valid = false;
+      glFramebufferTextureLayer(
+          GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, cascade_texture, 0, cascade_layer);
+      glClear(GL_DEPTH_BUFFER_BIT);
+      draw_static_casters();
+      ++m_last_playback_stats.shadow_static_cache_bypasses;
+    } else {
+      const bool static_layer_current = static_layer.valid &&
+                                        static_layer.content == static_content &&
+                                        static_layer.light_vp == light_vp;
+      if (!static_layer_current) {
+        glFramebufferTextureLayer(GL_FRAMEBUFFER,
+                                  GL_DEPTH_ATTACHMENT,
+                                  cascade_static_texture,
+                                  0,
+                                  cascade_layer);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        draw_static_casters();
+        static_layer = ShadowStaticLayer{
+            .light_vp = light_vp, .content = static_content, .valid = true};
+        ++m_last_playback_stats.shadow_static_cache_misses;
+      } else {
+        ++m_last_playback_stats.shadow_static_cache_hits;
+      }
+
+      glFramebufferTextureLayer(
+          GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, cascade_texture, 0, cascade_layer);
+      glBindFramebuffer(GL_READ_FRAMEBUFFER, m_directional_shadow_cache_fbo);
+      glFramebufferTextureLayer(GL_READ_FRAMEBUFFER,
+                                GL_DEPTH_ATTACHMENT,
+                                cascade_static_texture,
+                                0,
+                                cascade_layer);
+      glReadBuffer(GL_NONE);
+      glBlitFramebuffer(0,
+                        0,
+                        cascade_resolution,
+                        cascade_resolution,
+                        0,
+                        0,
+                        cascade_resolution,
+                        cascade_resolution,
+                        GL_DEPTH_BUFFER_BIT,
+                        GL_NEAREST);
+      glBindFramebuffer(GL_READ_FRAMEBUFFER, m_directional_shadow_fbo);
     }
 
-    if (static_batch != nullptr) {
-      bind_depth_shader(m_directional_shadow_depth_instanced_shader,
-                        m_shadow_depth_instanced_light_vp);
-      draw_static_batch_shadow(*static_batch, cull);
-    }
+    draw_casters(m_shadow_cascade_casters);
 
     const auto draw_single_rigged_shadow = [&](const RiggedCreatureCmd& rigged) {
       glBindBufferRange(GL_UNIFORM_BUFFER,
@@ -1551,15 +1678,13 @@ void Backend::execute_scene(const DrawQueue& queue, const Camera& cam) {
     pending_static_batch = nullptr;
   };
 
+  draw_pending_static_batch();
+
   std::size_t batch_index = 0;
   while (batch_index < prepared_batches.size()) {
     const PreparedBatch& prepared = prepared_batches[batch_index];
     const std::size_t i = prepared.start;
     const auto& cmd = queue.get_sorted(i);
-    if ((queue.sort_key_for_sorted(i) >> k_sort_key_bucket_shift) >=
-        static_cast<std::uint64_t>(RenderPassOrder::Mesh)) {
-      draw_pending_static_batch();
-    }
     breakdown_enter(draw_cmd_type(cmd));
     draw_tally.set_type(static_cast<std::size_t>(draw_cmd_type(cmd)));
     switch (draw_cmd_type(cmd)) {

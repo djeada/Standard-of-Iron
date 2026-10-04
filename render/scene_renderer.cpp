@@ -306,6 +306,12 @@ void Renderer::end_frame() {
           static_cast<std::uint64_t>(stats.rigged_instanced_instances);
       profile.rigged_single_draws =
           static_cast<std::uint64_t>(stats.rigged_single_draws);
+      profile.shadow_static_cache_hits =
+          static_cast<std::uint64_t>(stats.shadow_static_cache_hits);
+      profile.shadow_static_cache_misses =
+          static_cast<std::uint64_t>(stats.shadow_static_cache_misses);
+      profile.shadow_static_cache_bypasses =
+          static_cast<std::uint64_t>(stats.shadow_static_cache_bypasses);
       profile.triangles_by_type = stats.triangles_by_type;
       profile.triangles = 0;
       profile.instances = 0;

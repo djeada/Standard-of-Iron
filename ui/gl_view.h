@@ -18,6 +18,7 @@ class QOpenGLDebugLogger;
 #include <vector>
 
 #include "game/core/presentation_coverage.h"
+#include "render/frame_cadence.h"
 #include "render/profiling/frame_pacing.h"
 #include "render/profiling/frame_profile.h"
 
@@ -62,6 +63,7 @@ private:
   private:
     QPointer<GLView> m_view;
     QPointer<GameEngine> m_engine;
+    Render::FrameCadence m_cadence;
     bool m_ready_reported = false;
     QStringList m_pending_commander_speakers;
     QSize m_size;
@@ -106,6 +108,9 @@ private:
     std::uint64_t m_benchmark_rigged_instanced_draws = 0;
     std::uint64_t m_benchmark_rigged_instanced_instances = 0;
     std::uint64_t m_benchmark_rigged_single_draws = 0;
+    std::uint64_t m_benchmark_shadow_cache_hits = 0;
+    std::uint64_t m_benchmark_shadow_cache_misses = 0;
+    std::uint64_t m_benchmark_shadow_cache_bypasses = 0;
     std::array<std::uint64_t, 16> m_benchmark_triangles_by_type{};
     std::array<std::uint64_t,
                static_cast<std::size_t>(Render::Profiling::Phase::_Count)>

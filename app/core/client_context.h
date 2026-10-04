@@ -109,6 +109,11 @@ public:
 
   [[nodiscard]] virtual auto lock_frame() -> std::unique_lock<std::recursive_mutex> = 0;
 
+  [[nodiscard]] virtual auto
+  try_lock_frame() -> std::unique_lock<std::recursive_mutex> {
+    return lock_frame();
+  }
+
   virtual void set_cursor_mode(CursorMode mode) = 0;
 };
 

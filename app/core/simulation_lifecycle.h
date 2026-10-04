@@ -20,11 +20,13 @@ struct FrameLockStats {
   std::atomic<std::uint64_t> deferred_presentations{0};
   std::atomic<std::uint64_t> forced_presentation_waits{0};
   std::atomic<std::uint64_t> simulation_handoff_yields{0};
+  std::atomic<std::uint64_t> try_lock_skips{0};
 };
 
 class SimulationLifecycle {
 public:
   using TickBody = std::function<void(float dt)>;
+  using UnlockedStage = std::function<void()>;
 
   SimulationLifecycle() = default;
   ~SimulationLifecycle();
@@ -33,7 +35,7 @@ public:
   SimulationLifecycle(SimulationLifecycle&&) = delete;
   auto operator=(SimulationLifecycle&&) -> SimulationLifecycle& = delete;
 
-  void start(TickBody body);
+  void start(TickBody body, UnlockedStage after_unlock = {});
   void stop();
   [[nodiscard]] auto running() const -> bool {
     return m_running.load(std::memory_order_acquire);
@@ -43,6 +45,7 @@ public:
   }
 
   [[nodiscard]] auto lock_frame() -> std::unique_lock<std::recursive_mutex>;
+  [[nodiscard]] auto try_lock_frame() -> std::unique_lock<std::recursive_mutex>;
   [[nodiscard]] auto frame_mutex() const -> std::recursive_mutex& {
     return m_frame_mutex;
   }
@@ -63,6 +66,7 @@ private:
   mutable std::recursive_mutex m_frame_mutex;
   mutable FrameLockStats m_stats;
   TickBody m_body;
+  UnlockedStage m_after_unlock;
   std::unique_ptr<QThread> m_thread;
 };
 

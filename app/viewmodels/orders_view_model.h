@@ -5,6 +5,9 @@
 #include <QString>
 #include <QVariantMap>
 
+#include <chrono>
+#include <cstdint>
+
 #include "app/core/frame_snapshot.h"
 
 namespace App::Core {
@@ -80,6 +83,15 @@ signals:
 public:
   void reset_gesture() { m_right_mouse.reset(); }
 
+  struct HoverStats {
+    std::uint64_t evaluated = 0;
+    std::uint64_t throttled = 0;
+    std::uint64_t lock_busy = 0;
+  };
+  [[nodiscard]] auto hover_stats() const -> const HoverStats& { return m_hover_stats; }
+
+  static constexpr std::chrono::milliseconds k_stationary_hover_refresh{100};
+
 private:
   [[nodiscard]] auto action_enabled(const QString& action_id) const -> bool;
 
@@ -103,6 +115,17 @@ private:
   CommanderViewModel& m_commander;
   RightMouseGesture m_right_mouse;
   QVariantMap m_context_intent;
+
+  struct HoverEvaluation {
+    qreal sx = -1.0;
+    qreal sy = -1.0;
+    std::chrono::steady_clock::time_point at{};
+    bool valid = false;
+  };
+  HoverEvaluation m_last_hover;
+  mutable QVariantMap m_last_action_states;
+  mutable bool m_has_action_states = false;
+  HoverStats m_hover_stats;
 };
 
 } // namespace App::ViewModels

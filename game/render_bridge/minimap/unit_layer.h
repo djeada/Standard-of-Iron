@@ -120,6 +120,10 @@ public:
   [[nodiscard]] auto world_to_pixel(float world_x,
                                     float world_z) const -> std::pair<float, float>;
 
+  [[nodiscard]] auto structure_redraws() const -> std::uint64_t {
+    return m_structure_redraws;
+  }
+
 private:
   struct PlacedMarker {
     float px = 0.0F;
@@ -131,6 +135,19 @@ private:
   [[nodiscard]] auto
   get_color_for_owner(int owner_id,
                       const PlayerColorFn& player_color_fn) -> TeamColors::ColorSet;
+
+  struct StructureLayer {
+    QImage image;
+    QRect rect;
+  };
+
+  [[nodiscard]] auto
+  structure_signature(const PlayerColorFn& player_color_fn) -> std::uint64_t;
+  void redraw_structure_layers(const PlayerColorFn& player_color_fn);
+  void redraw_structure_layer(StructureLayer& layer,
+                              const std::vector<PlacedMarker>& placed,
+                              const std::function<void(QPainter&)>& draw);
+  [[nodiscard]] auto marker_bounds(const PlacedMarker& placed) const -> QRect;
 
   void draw_troops(QPainter& painter, const PlayerColorFn& player_color_fn);
   void draw_minor_structures(QPainter& painter, const PlayerColorFn& player_color_fn);
@@ -168,6 +185,12 @@ private:
   float m_offset_y = 0.0F;
 
   QRect m_content_rect;
+
+  StructureLayer m_structures_below;
+  StructureLayer m_structures_above;
+  std::uint64_t m_structure_signature = 0;
+  bool m_structure_signature_valid = false;
+  std::uint64_t m_structure_redraws = 0;
 
   std::vector<PlacedMarker> m_minor_structures;
   std::vector<PlacedMarker> m_structures;

@@ -76,6 +76,9 @@ public:
     std::size_t shadow_static_single_draws{0};
     std::size_t shadow_static_instanced_draws{0};
     std::size_t shadow_static_instanced_instances{0};
+    std::size_t shadow_static_cache_hits{0};
+    std::size_t shadow_static_cache_misses{0};
+    std::size_t shadow_static_cache_bypasses{0};
     std::size_t static_batch_draws{0};
     std::size_t static_batch_instances{0};
     double gpu_shadow_ms{0.0};
@@ -261,6 +264,9 @@ private:
   };
   void draw_static_batch_shadow(const StaticBuildingBatch& batch,
                                 const ShadowCascadeCull& cull);
+  auto collect_static_batch_shadow(const StaticBuildingBatch& batch,
+                                   const ShadowCascadeCull& cull) -> std::uint64_t;
+  void draw_collected_static_batch_shadow();
 
   struct MeshShaderBinding {
     Shader* shader = nullptr;
@@ -368,6 +374,16 @@ private:
   std::vector<Render::LocalLight> m_active_local_lights{};
   GLuint m_directional_shadow_ubo{0};
   GLuint m_directional_shadow_fbo{0};
+  GLuint m_directional_shadow_static_texture{0};
+  GLuint m_directional_shadow_static_far_texture{0};
+  GLuint m_directional_shadow_cache_fbo{0};
+  struct ShadowStaticLayer {
+    QMatrix4x4 light_vp;
+    std::uint64_t content{0};
+    bool valid{false};
+  };
+  std::array<ShadowStaticLayer, k_max_shadow_cascades> m_shadow_static_layers{};
+  QVector3D m_shadow_light_direction;
   std::uint32_t m_graphics_generation{0U};
   bool m_graphics_profile_applied{false};
   Render::ShaderTier m_shader_tier{Render::ShaderTier::High};
@@ -384,15 +400,18 @@ private:
 
   std::vector<BuildingInstanceGpu> m_static_shadow_instances;
   std::vector<StaticBatchDraw> m_static_shadow_draws;
+  std::size_t m_static_shadow_triangles{0};
 
   struct ShadowStaticCaster {
     Mesh* mesh = nullptr;
     const QMatrix4x4* model = nullptr;
     QVector3D world_center;
     float world_radius = 0.0F;
+    bool terrain = false;
   };
   std::vector<ShadowStaticCaster> m_shadow_static_casters;
   std::vector<const ShadowStaticCaster*> m_shadow_cascade_casters;
+  std::vector<const ShadowStaticCaster*> m_shadow_cascade_terrain_casters;
 
   std::unordered_map<const Mesh*, std::pair<float, float>>
       m_shadow_terrain_height_cache;

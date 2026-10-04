@@ -26,10 +26,12 @@ add_executable(
     core/settings_persistence_test.cpp
     core/save_runtime_restore_test.cpp
     core/minimap_manager_test.cpp
+    core/minimap_unit_layer_test.cpp
     core/commander_control_regression_test.cpp
     core/save_slot_controller_test.cpp
     core/mission_tick_ownership_test.cpp
     core/simulation_lifecycle_test.cpp
+    core/deferred_presentation_queue_test.cpp
     core/replay_coordinator_test.cpp
     core/loading_overlay_test.cpp
     core/battle_stats_test.cpp

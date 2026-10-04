@@ -21,11 +21,12 @@ SimulationLifecycle::~SimulationLifecycle() {
   stop();
 }
 
-void SimulationLifecycle::start(TickBody body) {
+void SimulationLifecycle::start(TickBody body, UnlockedStage after_unlock) {
   if (m_thread != nullptr) {
     return;
   }
   m_body = std::move(body);
+  m_after_unlock = std::move(after_unlock);
   m_running.store(true, std::memory_order_release);
   m_thread.reset(QThread::create([this]() { run(); }));
   m_thread->setObjectName(QStringLiteral("SoISimulation"));
@@ -67,6 +68,16 @@ auto SimulationLifecycle::lock_frame() -> std::unique_lock<std::recursive_mutex>
   return lock;
 }
 
+auto SimulationLifecycle::try_lock_frame() -> std::unique_lock<std::recursive_mutex> {
+  std::unique_lock<std::recursive_mutex> lock(m_frame_mutex, std::try_to_lock);
+  if (lock.owns_lock()) {
+    m_stats.uncontended.fetch_add(1, std::memory_order_relaxed);
+  } else {
+    m_stats.try_lock_skips.fetch_add(1, std::memory_order_relaxed);
+  }
+  return lock;
+}
+
 void SimulationLifecycle::run() {
   auto next_tick = std::chrono::steady_clock::now();
   auto last_tick = next_tick;
@@ -95,6 +106,10 @@ void SimulationLifecycle::run() {
                                   tick_end - tick_start)
                                   .count()),
                           std::memory_order_acq_rel);
+    }
+
+    if (m_after_unlock) {
+      m_after_unlock();
     }
 
     for (int spin = 0;

@@ -98,6 +98,85 @@ Focused validation passed 6 capture tests, 38 formation-geometry tests, 2 access
 recorder tests and 21 fog/visibility tests. The remaining access-verification test
 is explicitly skipped because component access recording is compiled out in Release.
 
+## October 2026 live-play profile
+
+Seven minutes of Aurelia Magna were played by hand at Ultra, 1920x1080, vsync off,
+with `perf record -g --call-graph fp` attached to a symbolised Release build
+(`-DSOI_RELEASE_DEBUG_INFO=ON -DSOI_KEEP_SYMBOLS=ON` plus frame pointers). Playing
+mattered: the worst costs only appear when the cursor rests on the map, troops are
+selected and the army is moving through the city.
+
+What the profile showed, and the rule each fix now enforces:
+
+**The GUI thread waited on the simulation.** A 16 ms QML timer called
+`OrdersViewModel::set_hover_at_screen` sixty times a second, mouse still or not, and
+it took the blocking frame lock that the simulation holds for its whole tick. The
+game counted 6,625 contended acquisitions, 41 s of waiting and a 0.92 s worst case in
+seven minutes; frames whose render work took 5-7 ms and GPU work 13-25 ms were
+presented 60-94 ms apart. Three more timer paths had the same shape
+(`CameraViewModel::move`, `OrdersViewModel::action_states`,
+`ProductionViewModel::selected_building_id`).
+_Rule:_ anything a QML `Timer` reaches uses `ClientHost::try_lock_frame()` and skips,
+defers or serves the last published value when the simulation is mid-tick. Reads come
+from the per-frame `Published` snapshot; camera pans accumulate and are applied by
+`CameraViewModel::publish_frame()` under the lock. `scripts/check-frame-lock.py`
+follows every Timer handler (through the QML functions it calls) to the C++ it reaches
+and fails on a blocking lock. Hover itself re-evaluates on cursor movement and at
+most every 100 ms for a still cursor, and picks project with one cached
+view-projection matrix (`Camera::screen_projector`) instead of one locked matrix
+fetch per entity.
+
+**Presentation work ran inside the locked tick.** About 40% of the simulation
+thread was presentation: the minimap repainting every tower, temple and stronghold
+as antialiased stroked polygons twenty times a second (its change hash includes
+every moving unit), formation presentation, snapshot publication.
+_Rule:_ the locked tick only _collects_; expensive presentation work that needs no
+live world state is posted to `DeferredPresentationQueue` and runs in
+`SimulationLifecycle`'s unlocked stage after the lock is released. The minimap stages
+its markers under the lock and paints in that stage; its published image has its own
+mutex, so the GUI never reads a half-painted composite. The minimap unit layer keeps
+structures in two cached layers (below and above troops, preserving the draw order)
+that repaint only when their own signature changes; troops and selected troops are
+sprite blits.
+
+**Render caches were keyed on snapshot pointers.** The render thread reads one of
+several rotating snapshot worlds, so `Entity*` and component pointers differ from
+frame to frame. `UnitRenderCache` treated a pointer change as an invalidation, which
+recomputed every building's model matrix, re-resolved its renderer key string and
+re-sampled the terrain under every foundation every frame
+(`resolve_structure_foundation` alone was 5.5% of the render thread).
+_Rule:_ render-side caches key on entity id and compare values, never snapshot
+pointers. `unit_render_cache_test` alternates two snapshot copies and asserts nothing
+is re-derived.
+
+**The GPU re-rendered static content every frame.** Each shadow cascade cleared and
+redrew the terrain and the whole static building batch every frame, and the terrain
+surface (a 1,300-line fragment shader with PCSS shadows) was drawn before the
+buildings that hide much of it.
+_Rule:_ static content is cached by content revision, not redrawn by default. Each
+cascade keeps a static depth layer keyed on its light matrix and a hash of the static
+casters it accepts; a hit copies that layer and draws only dynamic casters. The copy
+is not free (a 4096² layer is 64 MB), so a cascade only uses the cache when its static
+triangles exceed one per ten texels; otherwise it draws directly. The shadow light
+direction follows the sun in 0.1° steps, so continuous day cycles still hit. The
+benchmark report counts `shadow_static_cache` hits, misses and bypasses. Opaque static
+buildings are drawn before the terrain surface so the depth test rejects terrain
+fragments they cover.
+
+**A background window rendered flat out.** When the game window is not active the
+renderer now holds itself to 30 fps (`Render::FrameCadence`); benchmark and film runs
+are exempt.
+
+Investigated and left alone: the rigged pipeline orphans its palette and instance
+streams once per frame (about four orphans a frame, ~1.8 MB each). That is the
+intended streaming pattern, not resubmission.
+
+Measurement of these changes is still to do. A first interleaved pair on the opening
+view went from 42 to 50 fps, GPU colour pass 14.8 to 11.7 ms and frame-lock waiting
+628 to 7 ms, but another process was using a third of the GPU at the time, so it is
+indicative only. The intended comparison records a played session with
+`--record-replay` and replays it on both builds with `--replay`.
+
 ## Simulation
 
 **Unreachable goals.** A* used to flood the whole reachable region whenever the goal

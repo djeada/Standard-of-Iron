@@ -81,7 +81,18 @@ MinimapManager::MinimapManager() = default;
 
 MinimapManager::~MinimapManager() = default;
 
+QImage MinimapManager::get_image() const {
+  const std::lock_guard<std::mutex> lock(m_published_mutex);
+  return m_published_image;
+}
+
+void MinimapManager::publish_image() {
+  const std::lock_guard<std::mutex> lock(m_published_mutex);
+  m_published_image = m_minimap_image;
+}
+
 bool MinimapManager::consume_dirty_flag() {
+  const std::lock_guard<std::recursive_mutex> state_lock(m_state_mutex);
   bool const was_dirty = m_dirty;
   m_dirty = false;
   return was_dirty;
@@ -94,6 +105,7 @@ constexpr int k_hud_minimap_max_dimension = 320;
 } // namespace
 
 void MinimapManager::generate_for_map(const Game::Map::MapDefinition& map_def) {
+  const std::lock_guard<std::recursive_mutex> state_lock(m_state_mutex);
 
   Game::Map::Minimap::MinimapOrientation::instance().set_yaw_degrees(
       map_def.camera.yaw_deg);
@@ -150,7 +162,12 @@ void MinimapManager::generate_for_map(const Game::Map::MapDefinition& map_def) {
     m_last_unit_hash = 0;
     m_camera_viewport_valid = false;
     m_viewport_composite_dirty = true;
+    m_units_staged = false;
+    m_camera_viewport_staged = false;
+    m_staged_markers.clear();
+    m_staged_visibility.reset();
     mark_dirty();
+    publish_image();
   } else {
     qWarning() << "MinimapManager: Failed to generate minimap";
   }
@@ -158,6 +175,7 @@ void MinimapManager::generate_for_map(const Game::Map::MapDefinition& map_def) {
 
 void MinimapManager::update_fog(
     const Game::Map::VisibilityService::Snapshot& snapshot) {
+  const std::lock_guard<std::recursive_mutex> state_lock(m_state_mutex);
   if (m_minimap_base_image.isNull()) {
     return;
   }
@@ -176,9 +194,11 @@ void MinimapManager::update_fog(
   m_minimap_image = m_minimap_units_image;
   m_viewport_composite_dirty = true;
   mark_dirty();
+  publish_image();
 }
 
 void MinimapManager::clear_fog() {
+  const std::lock_guard<std::recursive_mutex> state_lock(m_state_mutex);
   if (m_minimap_base_image.isNull()) {
     return;
   }
@@ -192,6 +212,7 @@ void MinimapManager::clear_fog() {
   m_minimap_image = m_minimap_units_image;
   m_viewport_composite_dirty = true;
   mark_dirty();
+  publish_image();
 }
 
 bool MinimapManager::world_to_normalized(float world_x,
@@ -210,6 +231,7 @@ bool MinimapManager::world_to_normalized(float world_x,
 }
 
 bool MinimapManager::consume_destinations_dirty() {
+  const std::lock_guard<std::recursive_mutex> state_lock(m_state_mutex);
   const bool was_dirty = m_destinations_dirty;
   m_destinations_dirty = false;
   return was_dirty;
@@ -218,6 +240,27 @@ bool MinimapManager::consume_destinations_dirty() {
 void MinimapManager::update_units(Engine::Core::World* world,
                                   Game::Session::SelectionService* selection_system,
                                   int local_owner_id) {
+  stage_units(world, selection_system, local_owner_id);
+  paint_staged_units();
+}
+
+void MinimapManager::update_camera_viewport(const Render::GL::Camera* camera,
+                                            float screen_width,
+                                            float screen_height) {
+  stage_camera_viewport(camera, screen_width, screen_height);
+  paint_staged_camera_viewport();
+}
+
+void MinimapManager::paint_staged() {
+  const std::lock_guard<std::recursive_mutex> state_lock(m_state_mutex);
+  paint_staged_units();
+  paint_staged_camera_viewport();
+}
+
+void MinimapManager::stage_units(Engine::Core::World* world,
+                                 Game::Session::SelectionService* selection_system,
+                                 int local_owner_id) {
+  const std::lock_guard<std::recursive_mutex> state_lock(m_state_mutex);
   if (m_minimap_fog_image.isNull() || !m_unit_layer || (world == nullptr)) {
     return;
   }
@@ -350,57 +393,79 @@ void MinimapManager::update_units(Engine::Core::World* world,
     mark_dirty();
 
     auto& visibility_service = Game::Session::session_for(*world).visibility();
-    Game::Map::Minimap::VisibilityCheckFn visibility_check = nullptr;
-
-    Game::Map::VisibilityService::SnapshotPtr visibility_snapshot;
+    m_staged_visibility.reset();
     if (visibility_service.is_initialized()) {
-      visibility_snapshot = visibility_service.snapshot_ptr();
-    }
-    if (visibility_snapshot != nullptr) {
-
-      const auto* snapshot = visibility_snapshot.get();
-      visibility_check = [snapshot](float world_x, float world_z) -> bool {
-        return Game::Map::should_render_non_local_unit(*snapshot, world_x, world_z);
-      };
+      m_staged_visibility = visibility_service.snapshot_ptr();
     }
 
+    m_staged_owner_colors.clear();
     const auto& owners = Game::Session::session_for(*world).owners();
-    Game::Map::Minimap::PlayerColorFn const player_color =
-        [&owners](int owner_id, std::uint8_t& r, std::uint8_t& g, std::uint8_t& b) {
-          if (Game::Core::is_neutral_owner(owner_id)) {
-            return false;
-          }
-          const auto& known = owners.get_all_owners();
-          const bool registered =
-              std::any_of(known.begin(), known.end(), [owner_id](const auto& info) {
-                return info.owner_id == owner_id;
-              });
-          if (!registered) {
-            return false;
-          }
-          const auto color = owners.get_owner_color(owner_id);
-          const auto to_byte = [](float value) {
-            return static_cast<std::uint8_t>(std::clamp(value, 0.0F, 1.0F) * 255.0F +
-                                             0.5F);
-          };
-          r = to_byte(color[0]);
-          g = to_byte(color[1]);
-          b = to_byte(color[2]);
-          return true;
-        };
-    m_unit_layer->update(markers, local_owner_id, visibility_check, player_color);
-
-    m_minimap_units_image = m_minimap_fog_image;
-    const QImage& unit_overlay = m_unit_layer->get_image();
-    const QRect& overlay_rect = m_unit_layer->content_rect();
-    if (!unit_overlay.isNull() && !overlay_rect.isEmpty()) {
-      QPainter painter(&m_minimap_units_image);
-      painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
-      painter.drawImage(overlay_rect, unit_overlay, overlay_rect);
+    for (const auto& info : owners.get_all_owners()) {
+      if (Game::Core::is_neutral_owner(info.owner_id)) {
+        continue;
+      }
+      const auto color = owners.get_owner_color(info.owner_id);
+      const auto to_byte = [](float value) {
+        return static_cast<std::uint8_t>(std::clamp(value, 0.0F, 1.0F) * 255.0F + 0.5F);
+      };
+      m_staged_owner_colors.push_back(OwnerColor{
+          info.owner_id, to_byte(color[0]), to_byte(color[1]), to_byte(color[2])});
     }
-    m_minimap_image = m_minimap_units_image;
-    m_viewport_composite_dirty = true;
+
+    m_staged_markers.swap(markers);
+    m_staged_local_owner_id = local_owner_id;
+    m_units_staged = true;
   }
+}
+
+void MinimapManager::paint_staged_units() {
+  const std::lock_guard<std::recursive_mutex> state_lock(m_state_mutex);
+  if (!m_units_staged) {
+    return;
+  }
+  m_units_staged = false;
+  if (!m_unit_layer) {
+    return;
+  }
+
+  Game::Map::Minimap::VisibilityCheckFn visibility_check = nullptr;
+  if (m_staged_visibility != nullptr) {
+    const auto* snapshot = m_staged_visibility.get();
+    visibility_check = [snapshot](float world_x, float world_z) -> bool {
+      return Game::Map::should_render_non_local_unit(*snapshot, world_x, world_z);
+    };
+  }
+
+  const auto& colors = m_staged_owner_colors;
+  Game::Map::Minimap::PlayerColorFn const player_color =
+      [&colors](int owner_id, std::uint8_t& r, std::uint8_t& g, std::uint8_t& b) {
+        const auto found =
+            std::find_if(colors.begin(), colors.end(), [owner_id](const auto& known) {
+              return known.owner_id == owner_id;
+            });
+        if (found == colors.end()) {
+          return false;
+        }
+        r = found->r;
+        g = found->g;
+        b = found->b;
+        return true;
+      };
+  m_unit_layer->update(
+      m_staged_markers, m_staged_local_owner_id, visibility_check, player_color);
+  m_staged_visibility.reset();
+
+  m_minimap_units_image = m_minimap_fog_image;
+  const QImage& unit_overlay = m_unit_layer->get_image();
+  const QRect& overlay_rect = m_unit_layer->content_rect();
+  if (!unit_overlay.isNull() && !overlay_rect.isEmpty()) {
+    QPainter painter(&m_minimap_units_image);
+    painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+    painter.drawImage(overlay_rect, unit_overlay, overlay_rect);
+  }
+  m_minimap_image = m_minimap_units_image;
+  m_viewport_composite_dirty = true;
+  publish_image();
 }
 
 void MinimapManager::collect_capture_alerts(const std::vector<CaptureWatch>& current) {
@@ -431,9 +496,10 @@ void MinimapManager::collect_capture_alerts(const std::vector<CaptureWatch>& cur
   m_capture_watch.assign(current.begin(), current.end());
 }
 
-void MinimapManager::update_camera_viewport(const Render::GL::Camera* camera,
-                                            float screen_width,
-                                            float screen_height) {
+void MinimapManager::stage_camera_viewport(const Render::GL::Camera* camera,
+                                           float screen_width,
+                                           float screen_height) {
+  const std::lock_guard<std::recursive_mutex> state_lock(m_state_mutex);
   if (m_minimap_image.isNull() || !m_camera_viewport_layer || (camera == nullptr)) {
     return;
   }
@@ -460,18 +526,34 @@ void MinimapManager::update_camera_viewport(const Render::GL::Camera* camera,
                               std::abs(camera_z - m_last_camera_z) > EPSILON ||
                               std::abs(viewport_width - m_last_viewport_w) > EPSILON ||
                               std::abs(viewport_height - m_last_viewport_h) > EPSILON;
-  if (!camera_changed && !m_viewport_composite_dirty) {
-    return;
-  }
-
   if (camera_changed) {
     m_last_camera_x = camera_x;
     m_last_camera_z = camera_z;
     m_last_viewport_w = viewport_width;
     m_last_viewport_h = viewport_height;
     m_camera_viewport_valid = true;
+    m_staged_camera_changed = true;
+  }
+  m_camera_viewport_staged = true;
+}
+
+void MinimapManager::paint_staged_camera_viewport() {
+  const std::lock_guard<std::recursive_mutex> state_lock(m_state_mutex);
+  if (!m_camera_viewport_staged) {
+    return;
+  }
+  m_camera_viewport_staged = false;
+  if (!m_staged_camera_changed && !m_viewport_composite_dirty) {
+    return;
+  }
+  if (m_minimap_image.isNull() || !m_camera_viewport_layer) {
+    return;
+  }
+
+  if (m_staged_camera_changed) {
+    m_staged_camera_changed = false;
     m_camera_viewport_layer->update(
-        camera_x, camera_z, viewport_width, viewport_height);
+        m_last_camera_x, m_last_camera_z, m_last_viewport_w, m_last_viewport_h);
   }
 
   m_minimap_image = m_minimap_units_image;
@@ -485,4 +567,5 @@ void MinimapManager::update_camera_viewport(const Render::GL::Camera* camera,
   }
   m_viewport_composite_dirty = false;
   mark_dirty();
+  publish_image();
 }

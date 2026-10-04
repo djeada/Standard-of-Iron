@@ -248,3 +248,49 @@ TEST_F(UnitRenderCacheTest, ASnappedPresentationSampleIsNotInterpolated) {
 }
 
 } // namespace
+
+namespace {
+
+auto make_snapshot_building(Engine::Core::StandaloneEntity& scratch,
+                            float x) -> Engine::Core::Entity& {
+  Engine::Core::Entity& entity = scratch.entity();
+  entity.add_component<Engine::Core::RenderableComponent>();
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+  unit->spawn_type = Game::Units::SpawnType::Barracks;
+  unit->nation_id = Game::Systems::NationID::RomanRepublic;
+  entity.add_component<Engine::Core::BuildingComponent>();
+  entity.add_component<Engine::Core::TransformComponent>(x, 0.0F, 2.0F);
+  return entity;
+}
+
+TEST_F(UnitRenderCacheTest, AlternatingSnapshotCopiesKeepTheCachedDerivedData) {
+  Render::UnitRenderCache cache;
+
+  Engine::Core::StandaloneEntity buffer_a(77);
+  Engine::Core::StandaloneEntity buffer_b(77);
+  Engine::Core::Entity& in_a = make_snapshot_building(buffer_a, 5.0F);
+  Engine::Core::Entity& in_b = make_snapshot_building(buffer_b, 5.0F);
+
+  auto& first = cache.get_or_create(world_view, 77, &in_a, 1);
+  EXPECT_TRUE(Render::UnitRenderCache::update_model_matrix(first, 0.0F));
+  first.foundation_valid = true;
+  first.renderer_handle = 9;
+  first.has_renderer_handle = true;
+
+  for (std::uint32_t frame = 2; frame < 8; ++frame) {
+    auto& again =
+        cache.get_or_create(world_view, 77, (frame % 2 == 0) ? &in_b : &in_a, frame);
+    EXPECT_FALSE(Render::UnitRenderCache::update_model_matrix(again, 0.0F))
+        << "an identical transform in another snapshot buffer is not a change";
+    EXPECT_TRUE(again.foundation_valid);
+    EXPECT_TRUE(again.has_renderer_handle);
+    EXPECT_EQ(again.renderer_key, "troops/roman/barracks");
+  }
+
+  in_b.get_component<Engine::Core::TransformComponent>()->position.x = 6.0F;
+  auto& moved = cache.get_or_create(world_view, 77, &in_b, 9);
+  EXPECT_TRUE(Render::UnitRenderCache::update_model_matrix(moved, 0.0F));
+  EXPECT_FALSE(moved.foundation_valid) << "a real move still re-derives the foundation";
+}
+
+} // namespace

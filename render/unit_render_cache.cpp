@@ -73,10 +73,10 @@ auto UnitRenderCache::get_or_create(const WorldView& world,
   data.entity_id = entity_id;
   data.last_seen_frame = frame;
 
-  if (inserted || data.entity != entity) {
-    data.entity = entity;
+  if (inserted) {
     data.model_matrix_valid = false;
   }
+  data.entity = entity;
 
   if (entity == nullptr) {
     data.transform = nullptr;
@@ -100,7 +100,7 @@ auto UnitRenderCache::get_or_create(const WorldView& world,
   auto* previous_unit = data.unit;
   auto* previous_renderable = data.renderable;
 
-  if (data.transform != new_transform) {
+  if (new_transform == nullptr) {
     data.model_matrix_valid = false;
   }
 
@@ -115,8 +115,9 @@ auto UnitRenderCache::get_or_create(const WorldView& world,
       (data.renderable != nullptr) ? std::string_view(data.renderable->renderer_id)
                                    : std::string_view{};
   const bool renderer_key_changed =
-      !data.renderer_key_valid || (previous_unit != new_unit) ||
-      (previous_renderable != new_renderable) ||
+      !data.renderer_key_valid ||
+      ((previous_unit == nullptr) != (new_unit == nullptr)) ||
+      ((previous_renderable == nullptr) != (new_renderable == nullptr)) ||
       (data.last_is_building != is_building) ||
       ((data.unit != nullptr) && (data.last_spawn_type != data.unit->spawn_type ||
                                   data.last_nation_id != data.unit->nation_id)) ||

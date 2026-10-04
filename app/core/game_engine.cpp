@@ -382,7 +382,11 @@ auto GameEngine::scene_context() const -> AppSceneContext {
                          .victory_service = m_victory_service.get(),
                          .rain_manager = m_environment->rain_manager(),
                          .weather_audio = m_environment->weather_audio(),
-                         .environment_clock = m_environment->clock()};
+                         .environment_clock = m_environment->clock(),
+                         .defer_presentation = [queue = &m_deferred_presentation](
+                                                   std::function<void()> job) {
+                           queue->post(std::move(job));
+                         }};
 }
 
 auto GameEngine::get_player_stats(int owner_id) -> QVariantMap {
@@ -485,7 +489,8 @@ void GameEngine::end_simulation_tick() {
 }
 
 void GameEngine::start_simulation_thread() {
-  m_lifecycle.start([this](float dt) { run_simulation_tick(dt); });
+  m_lifecycle.start([this](float dt) { run_simulation_tick(dt); },
+                    [this]() { (void)m_deferred_presentation.drain(); });
 }
 
 void GameEngine::stop_simulation_thread() {
@@ -499,18 +504,21 @@ void GameEngine::run_simulation_tick(float dt) {
 }
 
 void GameEngine::film_step(float dt) {
-  const std::lock_guard<std::recursive_mutex> frame_lock(m_lifecycle.frame_mutex());
-  if (!try_begin_simulation_tick()) {
-    return;
-  }
-  simulate(dt);
+  {
+    const std::lock_guard<std::recursive_mutex> frame_lock(m_lifecycle.frame_mutex());
+    if (!try_begin_simulation_tick()) {
+      return;
+    }
+    simulate(dt);
 
-  if (m_world != nullptr && !m_runtime.loading) {
-    Engine::Core::publish_creature_presentations(*m_world);
+    if (m_world != nullptr && !m_runtime.loading) {
+      Engine::Core::publish_creature_presentations(*m_world);
+    }
+    update_presentation(dt);
+    m_saves->drain_pending_capture();
+    end_simulation_tick();
   }
-  update_presentation(dt);
-  m_saves->drain_pending_capture();
-  end_simulation_tick();
+  (void)m_deferred_presentation.drain();
 }
 
 void GameEngine::simulate(float dt) {
@@ -704,11 +712,14 @@ void GameEngine::publish_frame_snapshots() {
 }
 
 void GameEngine::update(float dt) {
-  const std::lock_guard<std::recursive_mutex> frame_lock(m_lifecycle.frame_mutex());
-  simulate(dt);
-  update_presentation(dt);
-  m_match_stats.note_army_size(m_entity_cache.player_troop_count);
-  m_achievements.army_size(m_entity_cache.player_troop_count);
+  {
+    const std::lock_guard<std::recursive_mutex> frame_lock(m_lifecycle.frame_mutex());
+    simulate(dt);
+    update_presentation(dt);
+    m_match_stats.note_army_size(m_entity_cache.player_troop_count);
+    m_achievements.army_size(m_entity_cache.player_troop_count);
+  }
+  (void)m_deferred_presentation.drain();
 }
 
 void GameEngine::render(int pixel_width, int pixel_height) {

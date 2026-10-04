@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <limits>
 #include <memory>
+#include <mutex>
 #include <vector>
 
 #include "game/map/visibility_service.h"
@@ -60,6 +61,17 @@ public:
                               float screen_width,
                               float screen_height);
 
+  void stage_units(Engine::Core::World* world,
+                   Game::Session::SelectionService* selection_system,
+                   int local_owner_id);
+  void stage_camera_viewport(const Render::GL::Camera* camera,
+                             float screen_width,
+                             float screen_height);
+  void paint_staged();
+  [[nodiscard]] bool has_staged_paint() const {
+    return m_units_staged || m_camera_viewport_staged;
+  }
+
   [[nodiscard]] bool consume_dirty_flag();
 
   [[nodiscard]] bool
@@ -75,7 +87,7 @@ public:
   }
   void clear_capture_alerts() { m_capture_alerts.clear(); }
 
-  [[nodiscard]] const QImage& get_image() const { return m_minimap_image; }
+  [[nodiscard]] QImage get_image() const;
   [[nodiscard]] bool has_minimap() const { return !m_minimap_base_image.isNull(); }
   [[nodiscard]] float get_world_width() const { return m_world_width; }
   [[nodiscard]] float get_world_height() const { return m_world_height; }
@@ -86,7 +98,30 @@ public:
   }
 
 private:
+  struct OwnerColor {
+    int owner_id = 0;
+    std::uint8_t r = 0;
+    std::uint8_t g = 0;
+    std::uint8_t b = 0;
+  };
+
   void mark_dirty() { m_dirty = true; }
+  void publish_image();
+  void paint_staged_units();
+  void paint_staged_camera_viewport();
+
+  mutable std::recursive_mutex m_state_mutex;
+  mutable std::mutex m_published_mutex;
+  QImage m_published_image;
+
+  bool m_units_staged = false;
+  int m_staged_local_owner_id = 0;
+  Game::Map::VisibilityService::SnapshotPtr m_staged_visibility;
+  std::vector<OwnerColor> m_staged_owner_colors;
+  std::vector<Game::Map::Minimap::UnitMarker> m_staged_markers;
+
+  bool m_camera_viewport_staged = false;
+  bool m_staged_camera_changed = false;
 
   QImage m_minimap_image;
   QImage m_minimap_base_image;

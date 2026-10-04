@@ -1,3 +1,5 @@
+#include <cstdint>
+#include <cstring>
 #include <type_traits>
 
 #include "command_executor_common.h"
@@ -257,10 +259,28 @@ void Backend::execute_static_batch(const StaticBuildingBatch& batch,
   }
 }
 
-void Backend::draw_static_batch_shadow(const StaticBuildingBatch& batch,
-                                       const ShadowCascadeCull& cull) {
+namespace {
+
+[[nodiscard]] auto mix_shadow_signature(std::uint64_t seed,
+                                        std::uint64_t value) -> std::uint64_t {
+  seed ^= value + 0x9E3779B97F4A7C15ULL + (seed << 6U) + (seed >> 2U);
+  return seed;
+}
+
+[[nodiscard]] auto float_bits(float value) -> std::uint64_t {
+  std::uint32_t bits = 0;
+  std::memcpy(&bits, &value, sizeof(bits));
+  return bits;
+}
+
+} // namespace
+
+auto Backend::collect_static_batch_shadow(
+    const StaticBuildingBatch& batch, const ShadowCascadeCull& cull) -> std::uint64_t {
   m_static_shadow_instances.clear();
   m_static_shadow_draws.clear();
+  m_static_shadow_triangles = 0;
+  std::uint64_t signature = 0;
   for (const StaticBatchDraw& draw : batch.draws()) {
     auto const first = static_cast<std::uint32_t>(m_static_shadow_instances.size());
     for (std::uint32_t index = draw.first; index < draw.first + draw.count; ++index) {
@@ -269,7 +289,17 @@ void Backend::draw_static_batch_shadow(const StaticBuildingBatch& batch,
       if (batch.instances()[index].state[2] <= 0.0F &&
           bounds.radius >= cull.min_caster_radius &&
           cull.accepts(bounds.center, bounds.radius)) {
-        m_static_shadow_instances.push_back(batch.instances()[index]);
+        const BuildingInstanceGpu& instance = batch.instances()[index];
+        m_static_shadow_instances.push_back(instance);
+        signature = mix_shadow_signature(
+            signature,
+            static_cast<std::uint64_t>(reinterpret_cast<std::uintptr_t>(draw.mesh)));
+        for (const float* column :
+             {instance.model_col0, instance.model_col1, instance.model_col2}) {
+          for (int component = 0; component < 4; ++component) {
+            signature = mix_shadow_signature(signature, float_bits(column[component]));
+          }
+        }
       }
     }
     auto const count =
@@ -277,6 +307,7 @@ void Backend::draw_static_batch_shadow(const StaticBuildingBatch& batch,
     if (count == 0U) {
       continue;
     }
+    m_static_shadow_triangles += (draw.mesh->indices.size() / 3U) * count;
     if (!m_static_shadow_draws.empty() &&
         m_static_shadow_draws.back().mesh == draw.mesh) {
       m_static_shadow_draws.back().count += count;
@@ -285,6 +316,10 @@ void Backend::draw_static_batch_shadow(const StaticBuildingBatch& batch,
           StaticBatchDraw{.mesh = draw.mesh, .first = first, .count = count});
     }
   }
+  return mix_shadow_signature(signature, m_static_shadow_instances.size());
+}
+
+void Backend::draw_collected_static_batch_shadow() {
   std::size_t byte_offset = 0;
   if (m_static_shadow_instances.empty() ||
       !m_mesh_instancing_pipeline->upload(m_static_shadow_instances.data(),
@@ -303,6 +338,12 @@ void Backend::draw_static_batch_shadow(const StaticBuildingBatch& batch,
     m_last_playback_stats.shadow_static_instanced_draws += 1;
     m_last_playback_stats.shadow_static_instanced_instances += draw.count;
   }
+}
+
+void Backend::draw_static_batch_shadow(const StaticBuildingBatch& batch,
+                                       const ShadowCascadeCull& cull) {
+  (void)collect_static_batch_shadow(batch, cull);
+  draw_collected_static_batch_shadow();
 }
 
 } // namespace Render::GL

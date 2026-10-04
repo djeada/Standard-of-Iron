@@ -4,6 +4,8 @@
 #include <QVariantMap>
 #include <QVector3D>
 
+#include <mutex>
+
 #include "app/core/frame_snapshot.h"
 
 namespace App::Core {
@@ -66,7 +68,12 @@ signals:
   void moved();
 
 private:
+  void apply_pending_move();
+
   App::Core::Published<App::Core::CameraProjection> m_projection;
+  std::mutex m_pending_move_mutex;
+  float m_pending_move_x = 0.0F;
+  float m_pending_move_z = 0.0F;
 
   const App::Core::ClientContext& m_context;
   App::Core::ClientHost& m_host;

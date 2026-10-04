@@ -34,6 +34,18 @@ This check enforces the first rule of that split: a Q_INVOKABLE or Q_PROPERTY
 READ body may not reach world/session/selection state unless it holds the frame
 lock. Bodies that only read a published snapshot touch none of it and pass.
 
+It also enforces the converse for periodic work. A QML Timer fires on the GUI
+thread whether or not the user did anything, so whatever it reaches must never
+*wait* for the frame lock: the simulation holds that lock for its whole tick, and
+a GUI thread parked behind it cannot sync the next scene-graph frame. Measured
+in a live Aurelia Magna session, a 16 ms hover timer that took the blocking lock
+queued the GUI thread 6,625 times for 41 s in seven minutes, and frames whose
+render and GPU work took 5-25 ms were presented 60-94 ms apart. Every C++ entry
+point reachable from a Timer handler (directly, or through the QML functions it
+calls) must therefore use `try_lock_frame()` and skip the work when the
+simulation is mid-tick. Mark a genuinely safe body
+`// frame-lock-timer-exempt: <reason>`.
+
 To exempt a body that is genuinely safe, put a reason on it:
 
     // frame-lock-exempt: reads an atomic snapshot published by the GUI thread
@@ -185,8 +197,88 @@ def check(root: Path) -> list[str]:
     return findings
 
 
+QML_FUNCTION = re.compile(r"\bfunction\s+(\w+)\s*\(")
+QML_TIMER = re.compile(r"\bTimer\s*\{")
+QML_CALL = re.compile(r"\b(\w+)\s*\(")
+QML_GAME_CALL = re.compile(r"\bgame\.(?:(\w+)\.)?(\w+)\s*\(")
+BLOCKING_LOCK = re.compile(
+    r"(?<!try_)\block_frame\s*\(|lock_guard<std::recursive_mutex>[^;]*frame_mutex\(\)"
+)
+TIMER_EXEMPT = re.compile(r"//\s*frame-lock-timer-exempt:")
+TIMER_SOURCES = ("app/viewmodels", "app/core")
+
+
+def timer_reachable_calls(qml: Path) -> set[str]:
+    """C++ method names a Timer in `qml` reaches, through same-file functions."""
+    text = qml.read_text(errors="ignore")
+    functions: dict[str, str] = {}
+    for match in QML_FUNCTION.finditer(text):
+        found = body_of(text, match.end())
+        if found is not None:
+            functions[match.group(1)] = found[0]
+
+    methods: set[str] = set()
+    for match in QML_TIMER.finditer(text):
+        found = body_of(text, match.start())
+        if found is None or "onTriggered" not in found[0]:
+            continue
+        pending = [found[0]]
+        seen: set[str] = set()
+        while pending:
+            chunk = pending.pop()
+            for call in QML_GAME_CALL.finditer(chunk):
+                methods.add(call.group(2))
+            for call in QML_CALL.finditer(chunk):
+                name = call.group(1)
+                if name in functions and name not in seen:
+                    seen.add(name)
+                    pending.append(functions[name])
+    return methods
+
+
+def check_timer_paths(root: Path) -> list[str]:
+    qml_root = root / "ui" / "qml"
+    if not qml_root.is_dir():
+        return []
+    reached: dict[str, set[str]] = {}
+    for qml in sorted(qml_root.rglob("*.qml")):
+        for method in timer_reachable_calls(qml):
+            reached.setdefault(method, set()).add(str(qml.relative_to(root)))
+
+    findings: list[str] = []
+    for directory in TIMER_SOURCES:
+        base = root / directory
+        if not base.is_dir():
+            continue
+        for source in sorted(base.glob("*.cpp")):
+            text = source.read_text(errors="ignore")
+            for method, origins in sorted(reached.items()):
+                for body, line in definitions(text, method):
+                    if TIMER_EXEMPT.search(body) or "try_lock_frame" in body:
+                        continue
+                    if BLOCKING_LOCK.search(body) is None:
+                        continue
+                    findings.append(
+                        f"{source.relative_to(root)}:{line}: {method}() waits for the "
+                        f"frame lock but a QML Timer reaches it "
+                        f"({', '.join(sorted(origins))})"
+                    )
+    return findings
+
+
 def main() -> int:
     root = Path(sys.argv[1] if len(sys.argv) > 1 else ".").resolve()
+    timer_findings = check_timer_paths(root)
+    if timer_findings:
+        print("QML Timers reaching a blocking frame lock:\n")
+        for finding in timer_findings:
+            print(f"  {finding}")
+        print(
+            f"\n{len(timer_findings)} periodic entry point(s) wait on the simulation. "
+            "Use `m_host.try_lock_frame()` and skip the work when it is not "
+            "owned, or mark the body `// frame-lock-timer-exempt: <reason>`."
+        )
+        return 1
     findings = check(root) + check_publish_sites(root)
     if findings:
         print("QML entry points touching simulation state without the frame lock:\n")

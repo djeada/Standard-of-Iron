@@ -147,7 +147,7 @@ void RuntimeFrameOrchestrator::update(const AppSceneContext& scene,
             scene.world->acquire_render_snapshot();
 
         if (minimap_snapshot != nullptr) {
-          scene.minimap_manager->update_units(
+          scene.minimap_manager->stage_units(
               minimap_snapshot.get(), selection_system, state.local_owner_id);
           if (unit_update_due) {
             state.minimap_unit_update_accumulator = std::fmod(
@@ -155,14 +155,24 @@ void RuntimeFrameOrchestrator::update(const AppSceneContext& scene,
           }
         }
       }
-      scene.minimap_manager->update_camera_viewport(
+      scene.minimap_manager->stage_camera_viewport(
           scene.active_camera,
           static_cast<float>(state.viewport_width),
           static_cast<float>(state.viewport_height));
 
-      if (scene.minimap_manager->consume_dirty_flag() &&
-          callbacks.on_minimap_image_changed) {
-        callbacks.on_minimap_image_changed();
+      auto paint = [minimap = scene.minimap_manager,
+                    notify = callbacks.on_minimap_image_changed]() {
+        Render::Profiling::AccumulatorScope const paint_scope(
+            &Render::Profiling::global_profile().minimap_update_us);
+        minimap->paint_staged();
+        if (minimap->consume_dirty_flag() && notify) {
+          notify();
+        }
+      };
+      if (scene.defer_presentation) {
+        scene.defer_presentation(std::move(paint));
+      } else {
+        paint();
       }
     }
   }

@@ -29,6 +29,7 @@
 #include <ctime>
 #include <exception>
 #include <numeric>
+#include <thread>
 #include <unordered_map>
 #include <utility>
 
@@ -325,6 +326,13 @@ void GLView::GLRenderer::render() {
     return;
   }
 
+  if (m_last_frame_time.time_since_epoch().count() != 0) {
+    const auto wait = m_cadence.wait_before_next_frame(
+        m_last_frame_time, std::chrono::steady_clock::now());
+    if (wait > std::chrono::steady_clock::duration::zero()) {
+      std::this_thread::sleep_for(wait);
+    }
+  }
   update();
 }
 
@@ -385,6 +393,9 @@ void GLView::GLRenderer::reset_runtime_benchmark_samples() {
   m_benchmark_rigged_instanced_draws = 0;
   m_benchmark_rigged_instanced_instances = 0;
   m_benchmark_rigged_single_draws = 0;
+  m_benchmark_shadow_cache_hits = 0;
+  m_benchmark_shadow_cache_misses = 0;
+  m_benchmark_shadow_cache_bypasses = 0;
   m_benchmark_triangles_by_type.fill(0);
   m_benchmark_world_us = 0;
   m_benchmark_visibility_us = 0;
@@ -508,6 +519,9 @@ void GLView::GLRenderer::observe_runtime_benchmark(
   m_benchmark_rigged_instanced_draws += profile.rigged_instanced_draws;
   m_benchmark_rigged_instanced_instances += profile.rigged_instanced_instances;
   m_benchmark_rigged_single_draws += profile.rigged_single_draws;
+  m_benchmark_shadow_cache_hits += profile.shadow_static_cache_hits;
+  m_benchmark_shadow_cache_misses += profile.shadow_static_cache_misses;
+  m_benchmark_shadow_cache_bypasses += profile.shadow_static_cache_bypasses;
   for (std::size_t i = 0; i < m_benchmark_triangles_by_type.size(); ++i) {
     m_benchmark_triangles_by_type[i] += profile.triangles_by_type[i];
   }
@@ -612,6 +626,13 @@ void GLView::GLRenderer::finish_runtime_benchmark() {
        sample_count > 0.0
            ? static_cast<double>(m_benchmark_instanced_batches) / sample_count
            : 0.0},
+      {QStringLiteral("shadow_static_cache"),
+       QJsonObject{
+           {QStringLiteral("hits"), static_cast<qint64>(m_benchmark_shadow_cache_hits)},
+           {QStringLiteral("misses"),
+            static_cast<qint64>(m_benchmark_shadow_cache_misses)},
+           {QStringLiteral("bypasses"),
+            static_cast<qint64>(m_benchmark_shadow_cache_bypasses)}}},
       {QStringLiteral("rigged_draws_average"),
        QJsonObject{
            {QStringLiteral("commands"),
@@ -744,6 +765,9 @@ void GLView::GLRenderer::finish_runtime_benchmark() {
       QStringLiteral("frame_lock_stats"),
       QJsonObject{
           {"contended", static_cast<qint64>(lock_stats.contended.load())},
+          {"try_lock_skips", static_cast<qint64>(lock_stats.try_lock_skips.load())},
+          {"deferred_presentation_jobs",
+           static_cast<qint64>(m_engine->deferred_presentation_jobs())},
           {"waited_us", static_cast<qint64>(lock_stats.waited_us.load())},
           {"longest_wait_us", static_cast<qint64>(lock_stats.longest_wait_us.load())},
           {"deferred_presentations",
@@ -879,6 +903,9 @@ auto GLView::GLRenderer::createFramebufferObject(const QSize& size)
 void GLView::GLRenderer::synchronize(QQuickFramebufferObject* item) {
   auto* view = dynamic_cast<GLView*>(item);
   m_engine = qobject_cast<GameEngine*>(view->engine());
+  const bool cadence_exempt = m_benchmark_seconds > 0.0 || m_film_fps > 0;
+  m_cadence.set_window_active(
+      cadence_exempt || (view->window() != nullptr && view->window()->isActive()));
   if (m_engine != nullptr) {
     m_engine->set_input_viewport_size(view->width(), view->height());
   }

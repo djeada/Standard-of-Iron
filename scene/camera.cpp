@@ -815,18 +815,16 @@ auto Camera::screen_to_world_ray(qreal sx,
   return true;
 }
 
-auto Camera::world_to_screen(const QVector3D& world,
-                             qreal screen_w,
-                             qreal screen_h,
-                             QPointF& out_screen) const -> bool {
-  if (screen_w <= 0 || screen_h <= 0) {
+auto ScreenProjector::project(const QVector3D& world,
+                              QPointF& out_screen) const -> bool {
+  if (m_screen_w <= 0 || m_screen_h <= 0) {
     return false;
   }
   if (!finite(world)) {
     return false;
   }
 
-  QVector4D const clip = get_view_projection_matrix() * QVector4D(world, 1.0F);
+  QVector4D const clip = m_view_projection * QVector4D(world, 1.0F);
   if (std::abs(clip.w()) < k_eps) {
     return false;
   }
@@ -839,10 +837,24 @@ auto Camera::world_to_screen(const QVector3D& world,
     return false;
   }
 
-  qreal const sx = (ndc.x() * k_ndc_half + k_ndc_half) * screen_w;
-  qreal const sy = (k_ndc_offset - (ndc.y() * k_ndc_half + k_ndc_half)) * screen_h;
+  qreal const sx = (ndc.x() * k_ndc_half + k_ndc_half) * m_screen_w;
+  qreal const sy = (k_ndc_offset - (ndc.y() * k_ndc_half + k_ndc_half)) * m_screen_h;
   out_screen = QPointF(sx, sy);
   return qIsFinite(sx) && qIsFinite(sy);
+}
+
+auto Camera::screen_projector(qreal screen_w, qreal screen_h) const -> ScreenProjector {
+  return ScreenProjector(get_view_projection_matrix(), screen_w, screen_h);
+}
+
+auto Camera::world_to_screen(const QVector3D& world,
+                             qreal screen_w,
+                             qreal screen_h,
+                             QPointF& out_screen) const -> bool {
+  if (screen_w <= 0 || screen_h <= 0) {
+    return false;
+  }
+  return screen_projector(screen_w, screen_h).project(world, out_screen);
 }
 
 void Camera::update_follow(const QVector3D& target_center) {
