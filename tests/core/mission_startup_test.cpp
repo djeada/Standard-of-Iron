@@ -201,27 +201,26 @@ TEST_F(MissionStartupTest, StartingUnitsStandApartOnOpenGround) {
 }
 
 TEST_F(MissionStartupTest, StartingUnitsCanFieldCarthagesAllies) {
-  QFile source(QStringLiteral("assets/missions/battle_of_cannae.json"));
+  QFile source(QString::fromLatin1(k_mission_file));
   ASSERT_TRUE(source.open(QIODevice::ReadOnly));
   QJsonObject root = QJsonDocument::fromJson(source.readAll()).object();
   QJsonObject player = root.value(QStringLiteral("player_setup")).toObject();
-  ASSERT_EQ(player.value(QStringLiteral("nation")).toString(),
-            QStringLiteral("carthage"));
+  player[QStringLiteral("nation")] = QStringLiteral("carthage");
   QJsonArray units = player.value(QStringLiteral("starting_units")).toArray();
   units.append(QJsonObject{{"type", "swordsman"},
                            {"count", 1},
                            {"nation", "gauls"},
-                           {"position", QJsonObject{{"x", 182.0}, {"z", 232.0}}}});
+                           {"position", QJsonObject{{"x", 36.0}, {"z", 66.0}}}});
   units.append(QJsonObject{{"type", "horse_swordsman"},
                            {"count", 1},
                            {"nation", "iberians"},
-                           {"position", QJsonObject{{"x", 176.0}, {"z", 238.0}}}});
+                           {"position", QJsonObject{{"x", 42.0}, {"z", 66.0}}}});
   player[QStringLiteral("starting_units")] = units;
   root[QStringLiteral("player_setup")] = player;
 
   QTemporaryDir dir;
   ASSERT_TRUE(dir.isValid());
-  const QString path = dir.filePath(QStringLiteral("cannae_with_allies.json"));
+  const QString path = dir.filePath(QStringLiteral("sallow_ford_with_allies.json"));
   QFile out(path);
   ASSERT_TRUE(out.open(QIODevice::WriteOnly));
   out.write(QJsonDocument(root).toJson());
