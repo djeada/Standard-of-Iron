@@ -431,6 +431,8 @@ void ToolPanel::setup_ui() {
   m_nation_box->addItem("Roman", QStringLiteral("roman_republic"));
   m_nation_box->addItem("Carthage", QStringLiteral("carthage"));
   m_nation_box->addItem("Sepulcher", QStringLiteral("iron_sepulcher"));
+  m_nation_box->addItem("Gallic allies", QStringLiteral("gauls"));
+  m_nation_box->addItem("Iberian allies", QStringLiteral("iberians"));
   connect(m_nation_box,
           qOverload<int>(&QComboBox::currentIndexChanged),
           this,

@@ -112,7 +112,9 @@ QtObject {
     readonly property var nationArtSuffix: ({
             "roman_republic": "rome",
             "carthage": "cartaghe",
-            "iron_sepulcher": "rome"
+            "iron_sepulcher": "rome",
+            "gauls": "cartaghe",
+            "iberians": "cartaghe"
         })
 
     readonly property string defaultNationSuffix: "rome"

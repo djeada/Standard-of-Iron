@@ -339,7 +339,7 @@ auto MissionWaves::spawn(const MissionWaveContext& ctx,
       sp.player_id = wave.owner_id;
       sp.spawn_type = spawn_type.value();
       sp.ai_controlled = ai_controlled;
-      sp.nation_id = wave.nation_id;
+      sp.nation_id = Game::Systems::authored_nation_or(comp.nation, wave.nation_id);
 
       auto unit = reg->create(sp.spawn_type, ctx.world, sp);
       if (!unit) {

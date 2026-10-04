@@ -35,10 +35,25 @@ auto parse_unit_behavior(const QString& value) -> UnitBehavior {
   return UnitBehavior::Strategic;
 }
 
+namespace {
+
+auto parse_unit_nation(const QJsonObject& obj, const QString& unit_type) -> QString {
+  const QString nation = obj["nation"].toString().trimmed();
+  Game::Systems::NationID parsed{};
+  if (!nation.isEmpty() && !Game::Systems::try_parse_nation_id(nation, parsed)) {
+    qWarning() << "MissionLoader: unknown nation" << nation << "on" << unit_type
+               << "- it will fight under its owner's nation";
+  }
+  return nation;
+}
+
+} // namespace
+
 auto MissionLoader::parse_unit_setup(const QJsonObject& obj) -> UnitSetup {
   UnitSetup unit;
   unit.type = obj["type"].toString();
   unit.count = obj["count"].toInt(1);
+  unit.nation = parse_unit_nation(obj, unit.type);
   unit.position = parse_position(obj["position"].toObject());
   unit.behavior = parse_unit_behavior(obj["behavior"].toString());
   unit.guard_radius = static_cast<float>(obj["guard_radius"].toDouble(10.0));
@@ -114,6 +129,7 @@ auto MissionLoader::parse_wave_composition(const QJsonObject& obj) -> WaveCompos
   WaveComposition comp;
   comp.type = obj["type"].toString();
   comp.count = obj["count"].toInt(1);
+  comp.nation = parse_unit_nation(obj, comp.type);
   comp.elite = obj["elite"].toBool(false);
   comp.title = obj["title"].toString();
   return comp;

@@ -7,7 +7,7 @@ TestCase {
 
     name: "FactionTheme"
 
-    readonly property var shippedFactions: ["roman_republic", "carthage", "iron_sepulcher"]
+    readonly property var shippedFactions: ["roman_republic", "carthage", "iron_sepulcher", "gauls", "iberians"]
 
     function cleanup() {
         FactionTheme.activeFaction = "";
@@ -32,7 +32,7 @@ TestCase {
     }
 
     function test_unknown_faction_falls_back_to_the_neutral_skin() {
-        var unknown = FactionTheme.describe("gauls");
+        var unknown = FactionTheme.describe("parthians");
         compare(unknown.id, "");
         compare(unknown.name, FactionTheme.neutral.name);
     }

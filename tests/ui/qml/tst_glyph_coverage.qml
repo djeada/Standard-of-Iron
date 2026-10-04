@@ -81,7 +81,7 @@ TestCase {
     }
 
     function test_every_faction_glyph_exists_in_the_display_font() {
-        var factions = ["roman_republic", "carthage", "iron_sepulcher", ""];
+        var factions = ["roman_republic", "carthage", "iron_sepulcher", "gauls", "iberians", ""];
         var broken = [];
         for (var i = 0; i < factions.length; ++i) {
             var missing = missingDisplayCharacters(FactionTheme.glyphFor(factions[i]));

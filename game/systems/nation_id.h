@@ -63,6 +63,14 @@ inline auto try_parse_nation_id(const QString& value, NationID& out) -> bool {
   return false;
 }
 
+inline auto authored_nation_or(const QString& authored, NationID fallback) -> NationID {
+  if (authored.trimmed().isEmpty()) {
+    return fallback;
+  }
+  NationID parsed{};
+  return try_parse_nation_id(authored, parsed) ? parsed : fallback;
+}
+
 inline auto nation_id_from_string(const std::string& str) -> std::optional<NationID> {
   NationID result;
   if (try_parse_nation_id(QString::fromStdString(str), result)) {

@@ -44,6 +44,24 @@ QtObject {
                     "glyph": "\u25C8",
                     "emblem": root.emblemFor("iron_sepulcher"),
                     "motto": qsTr("The watch does not sleep")
+                }),
+            "gauls": ({
+                    "id": "gauls",
+                    "name": qsTr("Gallic Allies"),
+                    "accent": "#5f8a3c",
+                    "accentDeep": "#3d5a26",
+                    "glyph": "\u25C6",
+                    "emblem": root.emblemFor("gauls"),
+                    "motto": qsTr("Allies of Carthage from beyond the Po")
+                }),
+            "iberians": ({
+                    "id": "iberians",
+                    "name": qsTr("Iberian Allies"),
+                    "accent": "#b03a32",
+                    "accentDeep": "#74241f",
+                    "glyph": "\u25B2",
+                    "emblem": root.emblemFor("iberians"),
+                    "motto": qsTr("Allies of Carthage from Hispania")
                 })
         })
 

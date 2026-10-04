@@ -3,6 +3,7 @@
 #include <utility>
 
 #include "arena_ai_duel_scenarios.h"
+#include "arena_allied_nation_scenarios.h"
 #include "arena_ambience_scenarios.h"
 #include "arena_animation_matrix_scenarios.h"
 #include "arena_battle_scale_scenarios.h"
@@ -104,6 +105,7 @@ auto definitions() -> const std::vector<ArenaScenarioDefinition>& {
     append(values, build_engagement_definitions());
     append(values, build_structure_lifecycle_definitions());
     append(values, build_grounding_definitions());
+    append(values, build_allied_nation_definitions());
 
     for (auto& scenario : values) {
       if (scenario.rpg_mode && !scenario.rpg_commander_group.isEmpty()) {
