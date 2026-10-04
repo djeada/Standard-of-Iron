@@ -302,6 +302,7 @@ auto gallic_shield_config() -> const ShieldRenderConfig& {
     cfg.shield_radius = 0.098F;
     cfg.shield_aspect = 1.95F;
     cfg.has_spine = true;
+    cfg.dome_depth = 0.30F;
     return cfg;
   }();
   return config;
@@ -315,6 +316,7 @@ auto caetra_config() -> const ShieldRenderConfig& {
     cfg.metal_color = QVector3D(0.80F, 0.62F, 0.34F);
     cfg.shield_radius = 0.084F;
     cfg.shield_aspect = 1.0F;
+    cfg.dome_depth = 0.42F;
     return cfg;
   }();
   return config;

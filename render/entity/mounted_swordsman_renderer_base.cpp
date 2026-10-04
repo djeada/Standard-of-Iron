@@ -12,8 +12,8 @@
 #include "game/core/entity.h"
 #include "mounted_swordsman_pose.h"
 #include "nations/equipment_loadout_catalog.h"
-#include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/archetype_registry.h"
+#include "render/creature/pipeline/creature_asset.h"
 #include "render/equipment/equipment_registry.h"
 #include "render/equipment/horse_equipment_archetype.h"
 #include "render/equipment/humanoid_equipment_archetype.h"
@@ -33,7 +33,7 @@ constexpr float k_rider_team_mix_weight = 0.6F;
 constexpr float k_rider_style_mix_weight = 0.4F;
 constexpr float k_rider_leather_team_mix_weight = 0.15F;
 
-}
+} // namespace
 
 MountedSwordsmanRendererBase::MountedSwordsmanRendererBase(
     MountedSwordsmanRendererConfig config)
@@ -131,9 +131,11 @@ void MountedSwordsmanRendererBase::get_variant(const DrawContext& ctx,
                 v.palette.cloth,
                 style.cloth_team_weight.value_or(k_rider_team_mix_weight),
                 style.cloth_style_weight.value_or(k_rider_style_mix_weight));
-    apply_color(style.leather_color, v.palette.leather, k_rider_leather_team_mix_weight);
     apply_color(
-        style.leather_dark_color, v.palette.leather_dark, k_rider_leather_team_mix_weight);
+        style.leather_color, v.palette.leather, k_rider_leather_team_mix_weight);
+    apply_color(style.leather_dark_color,
+                v.palette.leather_dark,
+                k_rider_leather_team_mix_weight);
     apply_color(style.metal_color, v.palette.metal);
   }
   if (m_config.facial_hair.has_value()) {
@@ -156,9 +158,9 @@ void MountedSwordsmanRendererBase::build_visual_spec() {
       m_config.has_sword ? m_sword_handle : k_invalid_equipment_handle,
       m_greaves_handle,
   };
-  std::size_t const handle_count =
-      m_greaves_handle != k_invalid_equipment_handle ? handles.size()
-                                                     : handles.size() - 1U;
+  std::size_t const handle_count = m_greaves_handle != k_invalid_equipment_handle
+                                       ? handles.size()
+                                       : handles.size() - 1U;
 
   UnitVisualSpec spec{};
   spec.kind = CreatureKind::Humanoid;

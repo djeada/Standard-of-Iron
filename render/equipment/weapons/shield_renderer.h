@@ -24,6 +24,7 @@ struct ShieldRenderConfig {
   float shield_aspect = 1.0F;
   bool has_cross_decal = false;
   bool has_spine = false;
+  float dome_depth = 0.0F;
   int material_id = 4;
 };
 

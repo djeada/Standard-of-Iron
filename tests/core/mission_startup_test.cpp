@@ -205,7 +205,8 @@ TEST_F(MissionStartupTest, StartingUnitsCanFieldCarthagesAllies) {
   ASSERT_TRUE(source.open(QIODevice::ReadOnly));
   QJsonObject root = QJsonDocument::fromJson(source.readAll()).object();
   QJsonObject player = root.value(QStringLiteral("player_setup")).toObject();
-  ASSERT_EQ(player.value(QStringLiteral("nation")).toString(), QStringLiteral("carthage"));
+  ASSERT_EQ(player.value(QStringLiteral("nation")).toString(),
+            QStringLiteral("carthage"));
   QJsonArray units = player.value(QStringLiteral("starting_units")).toArray();
   units.append(QJsonObject{{"type", "swordsman"},
                            {"count", 1},

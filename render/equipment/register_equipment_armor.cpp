@@ -270,10 +270,17 @@ auto build_gallic_braccae_attachments(std::uint8_t base_role_byte)
   };
 }
 
+auto build_gallic_tunic_attachments(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return {Render::GL::gallic_tunic_make_static_attachment(base_role_byte)};
+}
+
 auto build_iberian_tunic_attachments(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec> {
-  return to_vector(Render::GL::iberian_tunic_make_static_attachments(
-      base_role_byte, humanoid_cloth_role_byte()));
+  std::uint8_t const crimson_role = base_role_byte + 1U;
+  return {Render::GL::iberian_tunic_make_static_attachment(base_role_byte),
+          Render::GL::iberian_hem_band_make_static_attachment(true, crimson_role),
+          Render::GL::iberian_hem_band_make_static_attachment(false, crimson_role)};
 }
 
 auto build_roman_shoulder_attachments(std::uint8_t base_role_byte)
@@ -573,13 +580,31 @@ auto carthage_greaves_role_colors(const void* variant_void,
 }
 
 auto gallic_braccae_role_colors(const void* variant_void,
-                               QVector3D* out,
-                               std::uint32_t base_count,
-                               std::size_t max_count) -> std::uint32_t {
+                                QVector3D* out,
+                                std::uint32_t base_count,
+                                std::size_t max_count) -> std::uint32_t {
   (void)variant_void;
   (void)out;
   (void)max_count;
   return base_count;
+}
+
+auto gallic_tunic_role_colors(const void* variant_void,
+                              QVector3D* out,
+                              std::uint32_t base_count,
+                              std::size_t max_count) -> std::uint32_t {
+  return with_variant_palette(
+      variant_void,
+      [](const HumanoidVariant& variant,
+         QVector3D* colors,
+         std::uint32_t count,
+         std::size_t max) {
+        return count + Render::GL::gallic_tunic_fill_role_colors(
+                           variant.palette, colors + count, max - count);
+      },
+      out,
+      base_count,
+      max_count);
 }
 
 auto iberian_tunic_role_colors(const void* variant_void,

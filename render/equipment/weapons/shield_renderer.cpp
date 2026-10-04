@@ -45,13 +45,14 @@ struct ShieldArchetypeKey {
   int aspect_key{0};
   bool has_cross_decal{false};
   bool has_spine{false};
+  int dome_key{0};
   int material_id{0};
 };
 
 auto operator==(const ShieldArchetypeKey& lhs, const ShieldArchetypeKey& rhs) -> bool {
   return lhs.radius_key == rhs.radius_key && lhs.aspect_key == rhs.aspect_key &&
-         lhs.has_cross_decal == rhs.has_cross_decal &&
-         lhs.has_spine == rhs.has_spine && lhs.material_id == rhs.material_id;
+         lhs.has_cross_decal == rhs.has_cross_decal && lhs.has_spine == rhs.has_spine &&
+         lhs.dome_key == rhs.dome_key && lhs.material_id == rhs.material_id;
 }
 
 auto quantize_shield_value(float value) -> int {
@@ -75,6 +76,7 @@ auto shield_archetype(const ShieldRenderConfig& config) -> const RenderArchetype
                                quantize_shield_value(config.shield_aspect),
                                config.has_cross_decal,
                                config.has_spine,
+                               quantize_shield_value(config.dome_depth),
                                config.material_id};
   for (const auto& entry : cache) {
     if (entry.key == key) {
@@ -96,7 +98,8 @@ auto shield_archetype(const ShieldRenderConfig& config) -> const RenderArchetype
                                  std::to_string(key.aspect_key) + "_" +
                                  std::to_string(static_cast<int>(key.has_cross_decal)) +
                                  "_" + std::to_string(key.material_id) +
-                                 (key.has_spine ? "_spine" : "")};
+                                 (key.has_spine ? "_spine" : "") + "_d" +
+                                 std::to_string(key.dome_key)};
 
   QMatrix4x4 front_plate;
   front_plate.translate(shield_center + QVector3D(0.0F, 0.0F, plate_half));
@@ -113,6 +116,23 @@ auto shield_archetype(const ShieldRenderConfig& config) -> const RenderArchetype
   back_plate.scale(shield_width * 0.985F, shield_height * 0.985F, plate_full);
   builder.add_palette_mesh(
       get_unit_cylinder(), back_plate, k_back_slot, nullptr, 1.0F, config.material_id);
+
+  float const dome = min_extent * std::max(0.0F, config.dome_depth);
+  if (dome > 0.0F) {
+    QMatrix4x4 dome_shell;
+    dome_shell.translate(shield_center);
+    dome_shell.scale(shield_width * 0.985F, shield_height * 0.985F, dome);
+    builder.add_palette_mesh(get_unit_sphere(),
+                             dome_shell,
+                             k_shield_slot,
+                             nullptr,
+                             1.0F,
+                             config.material_id);
+  }
+  auto face_z = [&](float y) {
+    float const t = std::clamp(y / shield_height, -1.0F, 1.0F);
+    return plate_full * 0.5F + dome * std::sqrt(std::max(0.0F, 1.0F - t * t));
+  };
 
   auto add_ring = [&](float width,
                       float height,
@@ -144,27 +164,34 @@ auto shield_archetype(const ShieldRenderConfig& config) -> const RenderArchetype
            k_inner_ring_slot);
 
   if (config.has_spine) {
-    QVector3D const spine_front =
-        shield_center + QVector3D(0.0F, 0.0F, plate_full * 0.5F + 0.004F);
-    builder.add_palette_mesh(
-        get_unit_cylinder(),
-        cylinder_between(spine_front + QVector3D(0.0F, shield_height * 0.94F, 0.0F),
-                         spine_front - QVector3D(0.0F, shield_height * 0.94F, 0.0F),
-                         min_extent * 0.045F),
-        k_trim_slot,
-        nullptr,
-        1.0F,
-        config.material_id);
+    constexpr int k_spine_segments = 8;
+    float const spine_r = min_extent * 0.045F;
+    for (int i = 0; i < k_spine_segments; ++i) {
+      float const y0 = shield_height * 0.94F *
+                       (-1.0F + 2.0F * static_cast<float>(i) / k_spine_segments);
+      float const y1 = shield_height * 0.94F *
+                       (-1.0F + 2.0F * static_cast<float>(i + 1) / k_spine_segments);
+      builder.add_palette_mesh(
+          get_unit_cylinder(),
+          cylinder_between(shield_center + QVector3D(0.0F, y0, face_z(y0) + 0.002F),
+                           shield_center + QVector3D(0.0F, y1, face_z(y1) + 0.002F),
+                           spine_r),
+          k_trim_slot,
+          nullptr,
+          1.0F,
+          config.material_id);
+    }
 
     QMatrix4x4 boss;
-    boss.translate(shield_center + QVector3D(0.0F, 0.0F, 0.012F * k_scale_factor));
+    boss.translate(shield_center + QVector3D(0.0F, 0.0F, face_z(0.0F)));
     boss.scale(min_extent * 0.20F, min_extent * 0.36F, 0.018F * k_scale_factor);
     builder.add_palette_mesh(
         get_unit_sphere(), boss, k_metal_slot, nullptr, 1.0F, config.material_id);
   } else {
     builder.add_palette_mesh(
         get_unit_sphere(),
-        sphere_at(shield_center + QVector3D(0.0F, 0.0F, 0.02F * k_scale_factor),
+        sphere_at(shield_center +
+                      QVector3D(0.0F, 0.0F, std::max(0.02F * k_scale_factor, dome)),
                   0.045F * k_scale_factor),
         k_metal_slot,
         nullptr,

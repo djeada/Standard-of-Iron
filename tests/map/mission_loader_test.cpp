@@ -178,14 +178,14 @@ TEST_F(MissionLoaderTest, ParsesPerUnitAlliedNations) {
   QJsonObject root = QJsonDocument::fromJson(createTestMission().toUtf8()).object();
   QJsonArray ai_setups = root.value("ai_setups").toArray();
   QJsonObject carthage = ai_setups[0].toObject();
-  carthage["starting_units"] = QJsonArray{
-      QJsonObject{{"type", "swordsman"},
-                  {"count", 2},
-                  {"nation", "gauls"},
-                  {"position", QJsonObject{{"x", 40}, {"z", 40}}}},
-      QJsonObject{{"type", "swordsman"},
-                  {"count", 1},
-                  {"position", QJsonObject{{"x", 44}, {"z", 40}}}}};
+  carthage["starting_units"] =
+      QJsonArray{QJsonObject{{"type", "swordsman"},
+                             {"count", 2},
+                             {"nation", "gauls"},
+                             {"position", QJsonObject{{"x", 40}, {"z", 40}}}},
+                 QJsonObject{{"type", "swordsman"},
+                             {"count", 1},
+                             {"position", QJsonObject{{"x", 44}, {"z", 40}}}}};
   QJsonArray waves = carthage.value("waves").toArray();
   QJsonObject wave = waves[0].toObject();
   wave["composition"] = QJsonArray{
@@ -203,8 +203,7 @@ TEST_F(MissionLoaderTest, ParsesPerUnitAlliedNations) {
 
   MissionDefinition mission;
   QString error;
-  ASSERT_TRUE(
-      MissionLoader::load_from_json_file(temp_file.fileName(), mission, &error))
+  ASSERT_TRUE(MissionLoader::load_from_json_file(temp_file.fileName(), mission, &error))
       << error.toStdString();
   ASSERT_EQ(mission.ai_setups.size(), 1U);
   const auto& setup = mission.ai_setups[0];
@@ -223,8 +222,9 @@ TEST_F(MissionLoaderTest, ParsesPerUnitAlliedNations) {
   EXPECT_EQ(Game::Systems::authored_nation_or(setup.starting_units[1].nation,
                                               NationID::Carthage),
             NationID::Carthage);
-  EXPECT_EQ(Game::Systems::authored_nation_or(QStringLiteral("gaul"), NationID::Carthage),
-            NationID::Carthage);
+  EXPECT_EQ(
+      Game::Systems::authored_nation_or(QStringLiteral("gaul"), NationID::Carthage),
+      NationID::Carthage);
 }
 
 TEST_F(MissionLoaderTest, ParsesVictoryConditions) {

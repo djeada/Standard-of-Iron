@@ -58,10 +58,6 @@ auto humanoid_leather_dark_role_byte() -> std::uint8_t {
   return 4U;
 }
 
-auto humanoid_cloth_role_byte() -> std::uint8_t {
-  return Render::Humanoid::k_humanoid_cloth_role;
-}
-
 auto humanoid_cloth_dark_role_byte() -> std::uint8_t {
   return Render::Humanoid::k_humanoid_cloth_dark_role;
 }

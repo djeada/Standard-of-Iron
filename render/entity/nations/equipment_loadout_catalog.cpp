@@ -240,6 +240,7 @@ auto default_loadouts() -> LoadoutMap {
   gallic_swordsman.sword = "sword_gallic";
   gallic_swordsman.shield = "shield_gallic";
   gallic_swordsman.helmet = "gallic_montefortino";
+  gallic_swordsman.armor = "gallic_tunic";
   gallic_swordsman.greaves = "gallic_braccae";
   map.emplace("troops/gauls/swordsman", std::move(gallic_swordsman));
 

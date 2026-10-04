@@ -247,15 +247,22 @@ TEST_F(EquipmentLoadoutCatalogTest, CarthageAlliesResolveEveryAuthoredSlot) {
     const char* shield;
     const char* helmet;
   };
-  for (auto const& expected :
-       {Expected{"troops/gauls/swordsman", "sword_gallic", "shield_gallic",
-                 "gallic_montefortino"},
-        Expected{"troops/gauls/horse_swordsman", "sword_gallic", "shield_gallic",
-                 "gallic_montefortino"},
-        Expected{"troops/iberians/swordsman", "sword_falcata", "shield_caetra",
-                 "iberian_sinew_cap"},
-        Expected{"troops/iberians/horse_swordsman", "sword_falcata", "shield_caetra",
-                 "iberian_sinew_cap"}}) {
+  for (auto const& expected : {Expected{"troops/gauls/swordsman",
+                                        "sword_gallic",
+                                        "shield_gallic",
+                                        "gallic_montefortino"},
+                               Expected{"troops/gauls/horse_swordsman",
+                                        "sword_gallic",
+                                        "shield_gallic",
+                                        "gallic_montefortino"},
+                               Expected{"troops/iberians/swordsman",
+                                        "sword_falcata",
+                                        "shield_caetra",
+                                        "iberian_sinew_cap"},
+                               Expected{"troops/iberians/horse_swordsman",
+                                        "sword_falcata",
+                                        "shield_caetra",
+                                        "iberian_sinew_cap"}}) {
     const auto loadout = Render::GL::Nation::resolve_equipment_loadout(expected.key);
     ASSERT_TRUE(loadout.found) << expected.key;
     EXPECT_EQ(loadout.ids.sword, expected.sword) << expected.key;
@@ -270,6 +277,8 @@ TEST_F(EquipmentLoadoutCatalogTest, CarthageAlliesResolveEveryAuthoredSlot) {
   const auto gallic =
       Render::GL::Nation::resolve_equipment_loadout("troops/gauls/swordsman");
   EXPECT_EQ(gallic.ids.greaves, "gallic_braccae");
+  EXPECT_EQ(gallic.ids.armor, "gallic_tunic");
+  EXPECT_NE(gallic.armor_handle, k_invalid_equipment_handle);
   EXPECT_NE(gallic.greaves_handle, k_invalid_equipment_handle);
   const auto gallic_horse =
       Render::GL::Nation::resolve_equipment_loadout("troops/gauls/horse_swordsman");

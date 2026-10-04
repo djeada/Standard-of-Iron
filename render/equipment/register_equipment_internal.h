@@ -40,7 +40,6 @@ auto humanoid_foot_r_bone() -> std::uint16_t;
 auto humanoid_hip_l_bone() -> std::uint16_t;
 auto humanoid_metal_role_byte() -> std::uint8_t;
 auto humanoid_leather_dark_role_byte() -> std::uint8_t;
-auto humanoid_cloth_role_byte() -> std::uint8_t;
 auto humanoid_cloth_dark_role_byte() -> std::uint8_t;
 auto humanoid_shoulder_l_bone() -> std::uint16_t;
 auto humanoid_shoulder_r_bone() -> std::uint16_t;
@@ -194,6 +193,8 @@ auto build_carthage_light_armor_attachment(std::uint8_t base_role_byte)
 auto build_carthage_heavy_armor_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec>;
 auto build_gallic_braccae_attachments(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec>;
+auto build_gallic_tunic_attachments(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec>;
 auto build_iberian_tunic_attachments(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec>;
@@ -426,9 +427,13 @@ auto carthage_heavy_armor_role_colors(const void* variant_void,
                                       std::uint32_t base_count,
                                       std::size_t max_count) -> std::uint32_t;
 auto gallic_braccae_role_colors(const void* variant_void,
-                               QVector3D* out,
-                               std::uint32_t base_count,
-                               std::size_t max_count) -> std::uint32_t;
+                                QVector3D* out,
+                                std::uint32_t base_count,
+                                std::size_t max_count) -> std::uint32_t;
+auto gallic_tunic_role_colors(const void* variant_void,
+                              QVector3D* out,
+                              std::uint32_t base_count,
+                              std::size_t max_count) -> std::uint32_t;
 auto iberian_tunic_role_colors(const void* variant_void,
                                QVector3D* out,
                                std::uint32_t base_count,

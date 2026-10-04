@@ -347,19 +347,18 @@ TEST(NationLoader, CarthageAlliesResolveTheirOwnRenderers) {
     Game::Units::TroopType troop;
     const char* renderer;
   };
-  for (auto const& expected :
-       {Expected{Game::Systems::NationID::Gauls,
-                 Game::Units::TroopType::Swordsman,
-                 "troops/gauls/swordsman"},
-        Expected{Game::Systems::NationID::Gauls,
-                 Game::Units::TroopType::MountedSwordsman,
-                 "troops/gauls/horse_swordsman"},
-        Expected{Game::Systems::NationID::Iberians,
-                 Game::Units::TroopType::Swordsman,
-                 "troops/iberians/swordsman"},
-        Expected{Game::Systems::NationID::Iberians,
-                 Game::Units::TroopType::MountedSwordsman,
-                 "troops/iberians/horse_swordsman"}}) {
+  for (auto const& expected : {Expected{Game::Systems::NationID::Gauls,
+                                        Game::Units::TroopType::Swordsman,
+                                        "troops/gauls/swordsman"},
+                               Expected{Game::Systems::NationID::Gauls,
+                                        Game::Units::TroopType::MountedSwordsman,
+                                        "troops/gauls/horse_swordsman"},
+                               Expected{Game::Systems::NationID::Iberians,
+                                        Game::Units::TroopType::Swordsman,
+                                        "troops/iberians/swordsman"},
+                               Expected{Game::Systems::NationID::Iberians,
+                                        Game::Units::TroopType::MountedSwordsman,
+                                        "troops/iberians/horse_swordsman"}}) {
     auto const profile = profiles.get_profile(expected.nation, expected.troop);
     EXPECT_EQ(profile.visuals.renderer_id, expected.renderer);
     EXPECT_FALSE(profile.lore.history.empty()) << expected.renderer;

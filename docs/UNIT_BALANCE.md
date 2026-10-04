@@ -232,6 +232,17 @@ The balance surface therefore includes both:
 
 Faction line fixtures are useful because they test the resulting combined data rather than assuming all line infantry inherit the base profile unchanged.
 
+Carthage's allies follow the same rule. `gauls.json` and `iberians.json` each override only the swordsman and the mounted swordsman:
+
+| Troop | Health | Melee damage | Cooldown | Speed | Expression |
+| --- | --- | --- | --- | --- | --- |
+| Gallic Swordsmen | 980 | 31 | 0.62 s | 2.6 | hits hardest, frailest line infantry, longest reach (1.75) |
+| Iberian Swordsmen | 1060 | 28 | 0.52 s | 2.5 | fastest strikes with the falcata |
+| Gallic Cavalry | 1950 | 36 | 0.66 s | 4.4 | heavy shock horse |
+| Iberian Cavalry | 1800 | 33 | 0.60 s | 4.7 | quicker, lighter horse |
+
+Neither nation has an economy or buildings. They reach the field through map spawns, mission starting units and wave entries that carry `"nation": "gauls"` or `"nation": "iberians"` under a Carthaginian owner, or through their own owner slot on Carthage's team.
+
 ## Siege survivability
 
 Siege survivability should be understood as a combined product of:

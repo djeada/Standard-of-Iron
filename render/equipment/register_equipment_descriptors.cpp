@@ -332,10 +332,16 @@ void register_body_armor_descriptors() {
                                 .role_count = 0U});
   register_humanoid_descriptor(
       EquipmentCategory::Armor,
+      "gallic_tunic",
+      {.build_attachments = &build_gallic_tunic_attachments,
+       .append_role_colors = &gallic_tunic_role_colors,
+       .role_count = static_cast<std::uint8_t>(Render::GL::k_allied_tunic_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Armor,
       "iberian_tunic",
       {.build_attachments = &build_iberian_tunic_attachments,
        .append_role_colors = &iberian_tunic_role_colors,
-       .role_count = static_cast<std::uint8_t>(Render::GL::k_iberian_tunic_role_count)});
+       .role_count = static_cast<std::uint8_t>(Render::GL::k_allied_tunic_role_count)});
   register_humanoid_descriptor(
       EquipmentCategory::Armor,
       "commander_pauldron",

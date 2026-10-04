@@ -166,7 +166,6 @@ auto gallic_montefortino() -> const RenderArchetype& {
         generated_cylinder(
             {0.80F, -1.46F, 0.54F}, {0.30F, -1.74F, 0.40F}, 0.09F, k_leather, 1.0F, 0),
 
-
         generated_sphere({0.0F, 1.76F, -0.08F}, 0.27F, k_metal, 1.0F, 2),
     }};
     return build_generated_equipment_archetype("gallic_montefortino_helmet", parts);
@@ -200,12 +199,8 @@ auto iberian_sinew_cap() -> const RenderArchetype& {
                            0),
         generated_cylinder(
             {1.22F, -0.08F, 0.28F}, {0.92F, -1.02F, 0.44F}, 0.10F, k_leather, 1.0F, 0),
-        generated_cylinder({-0.92F, -1.02F, 0.44F},
-                           {0.92F, -1.02F, 0.44F},
-                           0.07F,
-                           k_leather,
-                           1.0F,
-                           0),
+        generated_cylinder(
+            {-0.92F, -1.02F, 0.44F}, {0.92F, -1.02F, 0.44F}, 0.07F, k_leather, 1.0F, 0),
         generated_sphere({0.0F, 0.40F, 1.44F}, 0.16F, k_dark, 1.0F, 0),
     }};
     return build_generated_equipment_archetype("iberian_sinew_cap_helmet", parts);
@@ -379,7 +374,8 @@ auto historical_helmet_fill_role_colors(HistoricalHelmet helmet,
   }
   using Render::GL::Humanoid::saturate_color;
   if (helmet == HistoricalHelmet::IberianSinewCap) {
-    QVector3D const sinew = saturate_color(palette.leather * QVector3D(0.92F, 0.80F, 0.66F));
+    QVector3D const sinew =
+        saturate_color(palette.leather * QVector3D(0.92F, 0.80F, 0.66F));
     out[0] = sinew;
     out[1] = sinew * 0.62F;
     out[2] = saturate_color(palette.leather_dark);
