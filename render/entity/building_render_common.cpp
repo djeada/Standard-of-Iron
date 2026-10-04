@@ -206,6 +206,8 @@ auto select_nation_variant_renderer_key(std::string_view roman_key,
     -> std::string_view {
   switch (nation_id) {
   case Game::Systems::NationID::Carthage:
+  case Game::Systems::NationID::Gauls:
+  case Game::Systems::NationID::Iberians:
     return carthage_key;
   case Game::Systems::NationID::IronSepulcher:
     return sepulcher_key.empty() ? roman_key : sepulcher_key;

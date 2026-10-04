@@ -2,13 +2,16 @@
 
 #include <QVector3D>
 
+#include <optional>
 #include <string>
+#include <string_view>
 
 #include "mounted_horse_equipment.h"
 #include "mounted_humanoid_renderer_base.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
 #include "render/creature/render_request.h"
 #include "render/equipment/equipment_registry.h"
+#include "swordsman_renderer_common.h"
 
 namespace Render::GL {
 
@@ -18,6 +21,7 @@ struct MountedSwordsmanRendererConfig {
   std::string helmet_equipment_id;
   std::string armor_equipment_id;
   std::string shoulder_equipment_id;
+  std::string greaves_equipment_id;
   std::string horse_saddle_equipment_id;
   std::string horse_bridle_equipment_id;
   std::string horse_reins_equipment_id;
@@ -31,6 +35,8 @@ struct MountedSwordsmanRendererConfig {
   bool has_cavalry_shield = true;
   bool has_shoulder = false;
   float helmet_offset_moving = 0.0F;
+  std::optional<SwordsmanStyleConfig> rider_style;
+  std::optional<FacialHairParams> facial_hair;
   Render::Creature::Pipeline::CreatureAssetId rider_creature_asset_id{
       Render::Creature::Pipeline::k_invalid_creature_asset};
 
@@ -48,6 +54,7 @@ struct MountedSwordsmanRendererConfig {
   EquipmentHandle helmet_handle{k_invalid_equipment_handle};
   EquipmentHandle armor_handle{k_invalid_equipment_handle};
   EquipmentHandle shoulder_handle{k_invalid_equipment_handle};
+  EquipmentHandle greaves_handle{k_invalid_equipment_handle};
   EquipmentHandle horse_saddle_handle{k_invalid_equipment_handle};
   EquipmentHandle horse_bridle_handle{k_invalid_equipment_handle};
   EquipmentHandle horse_reins_handle{k_invalid_equipment_handle};
@@ -83,9 +90,13 @@ private:
   EquipmentHandle m_helmet_handle{k_invalid_equipment_handle};
   EquipmentHandle m_armor_handle{k_invalid_equipment_handle};
   EquipmentHandle m_shoulder_handle{k_invalid_equipment_handle};
+  EquipmentHandle m_greaves_handle{k_invalid_equipment_handle};
   MountedHorseHandles m_horse_handles;
   Render::Creature::Pipeline::UnitVisualSpec m_spec{};
   void build_visual_spec();
 };
+
+auto make_mounted_swordsman_config_from_loadout(std::string_view renderer_key)
+    -> MountedSwordsmanRendererConfig;
 
 } // namespace Render::GL

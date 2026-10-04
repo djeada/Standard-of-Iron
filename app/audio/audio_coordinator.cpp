@@ -26,6 +26,8 @@ auto nation_audio_tag(Game::Systems::NationID nation_id) -> QString {
   case Game::Systems::NationID::RomanRepublic:
     return QStringLiteral("roman");
   case Game::Systems::NationID::Carthage:
+  case Game::Systems::NationID::Gauls:
+  case Game::Systems::NationID::Iberians:
     return QStringLiteral("carthage");
   case Game::Systems::NationID::IronSepulcher:
     return QStringLiteral("iron_sepulcher");

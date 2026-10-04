@@ -1,3 +1,4 @@
+#include "armor/allied_garments.h"
 #include "armor/arm_guards_renderer.h"
 #include "armor/armor_heavy_carthage.h"
 #include "armor/armor_light_carthage.h"
@@ -255,6 +256,24 @@ auto build_roman_greaves_attachments(std::uint8_t base_role_byte)
       Render::GL::roman_greaves_make_static_attachment(
           humanoid_knee_r_bone(), base_role_byte, humanoid_shin_bind_matrix(false)),
   };
+}
+
+auto build_gallic_braccae_attachments(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  (void)base_role_byte;
+  std::uint8_t const cloth_role = humanoid_cloth_dark_role_byte();
+  return {
+      Render::GL::gallic_braccae_make_static_attachment(
+          humanoid_knee_l_bone(), cloth_role, humanoid_shin_bind_matrix(true)),
+      Render::GL::gallic_braccae_make_static_attachment(
+          humanoid_knee_r_bone(), cloth_role, humanoid_shin_bind_matrix(false)),
+  };
+}
+
+auto build_iberian_tunic_attachments(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return to_vector(Render::GL::iberian_tunic_make_static_attachments(
+      base_role_byte, humanoid_cloth_role_byte()));
 }
 
 auto build_roman_shoulder_attachments(std::uint8_t base_role_byte)
@@ -547,6 +566,34 @@ auto carthage_greaves_role_colors(const void* variant_void,
 
         colors[count] = QVector3D(0.62F, 0.46F, 0.22F);
         return count + Render::GL::k_roman_greaves_role_count;
+      },
+      out,
+      base_count,
+      max_count);
+}
+
+auto gallic_braccae_role_colors(const void* variant_void,
+                               QVector3D* out,
+                               std::uint32_t base_count,
+                               std::size_t max_count) -> std::uint32_t {
+  (void)variant_void;
+  (void)out;
+  (void)max_count;
+  return base_count;
+}
+
+auto iberian_tunic_role_colors(const void* variant_void,
+                               QVector3D* out,
+                               std::uint32_t base_count,
+                               std::size_t max_count) -> std::uint32_t {
+  return with_variant_palette(
+      variant_void,
+      [](const HumanoidVariant& variant,
+         QVector3D* colors,
+         std::uint32_t count,
+         std::size_t max) {
+        return count + Render::GL::iberian_tunic_fill_role_colors(
+                           variant.palette, colors + count, max - count);
       },
       out,
       base_count,

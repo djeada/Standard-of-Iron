@@ -23,6 +23,7 @@ struct ShieldRenderConfig {
   float shield_radius = 0.18F;
   float shield_aspect = 1.0F;
   bool has_cross_decal = false;
+  bool has_spine = false;
   int material_id = 4;
 };
 

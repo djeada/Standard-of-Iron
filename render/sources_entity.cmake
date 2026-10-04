@@ -32,6 +32,10 @@ set(RENDER_ENTITY_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/horse_spearman_renderer_base.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/horse_swordsman_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/horse_swordsman_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/gauls/swordsman_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/gauls/horse_swordsman_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/iberians/swordsman_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/iberians/horse_swordsman_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/horse_archer_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/horse_archer_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/horse_spearman_renderer.cpp

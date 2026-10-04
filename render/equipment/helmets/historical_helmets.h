@@ -17,6 +17,8 @@ enum class HistoricalHelmet : std::uint8_t {
   RomanBoeotianCavalry,
   CarthagePunicConical,
   CarthageThracianCrested,
+  GallicMontefortino,
+  IberianSinewCap,
 };
 
 inline constexpr std::uint32_t k_historical_helmet_role_count = 4U;

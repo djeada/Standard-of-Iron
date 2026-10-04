@@ -34,6 +34,8 @@ auto nation_voice_prefix(Game::Systems::NationID nation_id) -> std::string {
   case Game::Systems::NationID::RomanRepublic:
     return "roman";
   case Game::Systems::NationID::Carthage:
+  case Game::Systems::NationID::Gauls:
+  case Game::Systems::NationID::Iberians:
     return "carthage";
   case Game::Systems::NationID::IronSepulcher:
     return {};

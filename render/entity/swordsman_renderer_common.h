@@ -27,6 +27,9 @@ struct SwordsmanStyleConfig {
   std::optional<QVector3D> shield_color;
   std::optional<QVector3D> shield_trim_color;
 
+  std::optional<float> cloth_team_weight;
+  std::optional<float> cloth_style_weight;
+
   std::optional<float> shield_radius_scale;
   std::optional<float> shield_aspect_ratio;
   std::optional<bool> shield_cross_decal;

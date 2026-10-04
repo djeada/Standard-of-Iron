@@ -282,6 +282,71 @@
       "greaves": "roman_greaves",
       "armor": "roman_hamata_mail",
       "shoulder": "roman_shoulder_cover"
+    },
+    "troops/gauls/swordsman": {
+      "sword": "sword_gallic",
+      "shield": "shield_gallic",
+      "helmet": "gallic_montefortino",
+      "greaves": "gallic_braccae",
+      "facial_hair": {
+        "style": "mustache",
+        "color": [
+          0.56,
+          0.36,
+          0.17
+        ]
+      }
+    },
+    "troops/gauls/horse_swordsman": {
+      "sword": "sword_gallic",
+      "shield": "shield_gallic",
+      "helmet": "gallic_montefortino",
+      "armor": "roman_hamata_mail",
+      "greaves": "gallic_braccae",
+      "horse_saddle": "roman_horse_saddle",
+      "horse_bridle": "horse_bridle",
+      "horse_reins": "horse_reins",
+      "horse_blanket": "horse_blanket",
+      "facial_hair": {
+        "style": "mustache",
+        "color": [
+          0.56,
+          0.36,
+          0.17
+        ]
+      }
+    },
+    "troops/iberians/swordsman": {
+      "sword": "sword_falcata",
+      "shield": "shield_caetra",
+      "helmet": "iberian_sinew_cap",
+      "armor": "iberian_tunic",
+      "facial_hair": {
+        "style": "short_beard",
+        "color": [
+          0.12,
+          0.09,
+          0.07
+        ]
+      }
+    },
+    "troops/iberians/horse_swordsman": {
+      "sword": "sword_falcata",
+      "shield": "shield_caetra",
+      "helmet": "iberian_sinew_cap",
+      "armor": "iberian_tunic",
+      "horse_saddle": "light_cavalry_saddle",
+      "horse_bridle": "horse_bridle",
+      "horse_reins": "horse_reins",
+      "horse_blanket": "horse_blanket",
+      "facial_hair": {
+        "style": "short_beard",
+        "color": [
+          0.12,
+          0.09,
+          0.07
+        ]
+      }
     }
   }
 }

@@ -46,6 +46,8 @@ enum HumanoidColorRole : std::uint8_t {
   Hair = 8,
 };
 
+static_assert(Cloth == k_humanoid_cloth_role);
+static_assert(ClothDark == k_humanoid_cloth_dark_role);
 static_assert(Hair == k_humanoid_hair_role);
 static_assert(LeatherDark == k_humanoid_leather_dark_role);
 static_assert(Wood == k_humanoid_wood_role);

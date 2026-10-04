@@ -1,3 +1,4 @@
+#include "armor/allied_garments.h"
 #include "armor/arm_guards_renderer.h"
 #include "armor/armor_heavy_carthage.h"
 #include "armor/armor_light_carthage.h"
@@ -31,6 +32,7 @@
 #include "weapons/quiver_renderer.h"
 #include "weapons/roman_scutum.h"
 #include "weapons/shield_carthage.h"
+#include "weapons/shield_renderer.h"
 #include "weapons/spear_renderer.h"
 #include "weapons/sword_carthage.h"
 #include "weapons/sword_renderer.h"
@@ -218,6 +220,20 @@ void register_helmet_descriptors() {
            static_cast<std::uint8_t>(Render::GL::k_historical_helmet_role_count)});
   register_humanoid_descriptor(
       EquipmentCategory::Helmet,
+      "gallic_montefortino",
+      {.build_attachments = &build_gallic_montefortino_attachment,
+       .append_role_colors = &gallic_montefortino_role_colors,
+       .role_count =
+           static_cast<std::uint8_t>(Render::GL::k_historical_helmet_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Helmet,
+      "iberian_sinew_cap",
+      {.build_attachments = &build_iberian_sinew_cap_attachment,
+       .append_role_colors = &iberian_sinew_cap_role_colors,
+       .role_count =
+           static_cast<std::uint8_t>(Render::GL::k_historical_helmet_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Helmet,
       "headwrap",
       {.build_attachments = &build_headwrap_attachment,
        .append_role_colors = [](const void* variant_void,
@@ -309,6 +325,17 @@ void register_body_armor_descriptors() {
                                 .append_role_colors = &carthage_greaves_role_colors,
                                 .role_count = static_cast<std::uint8_t>(
                                     Render::GL::k_roman_greaves_role_count)});
+  register_humanoid_descriptor(EquipmentCategory::Armor,
+                               "gallic_braccae",
+                               {.build_attachments = &build_gallic_braccae_attachments,
+                                .append_role_colors = &gallic_braccae_role_colors,
+                                .role_count = 0U});
+  register_humanoid_descriptor(
+      EquipmentCategory::Armor,
+      "iberian_tunic",
+      {.build_attachments = &build_iberian_tunic_attachments,
+       .append_role_colors = &iberian_tunic_role_colors,
+       .role_count = static_cast<std::uint8_t>(Render::GL::k_iberian_tunic_role_count)});
   register_humanoid_descriptor(
       EquipmentCategory::Armor,
       "commander_pauldron",
@@ -408,6 +435,32 @@ void register_weapon_descriptors() {
       {.build_attachments = &build_sepulcher_sword_attachments,
        .append_role_colors = &sepulcher_sword_role_colors,
        .role_count = static_cast<std::uint8_t>(Render::GL::k_sword_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Weapon,
+      "sword_gallic",
+      {.build_attachments = &build_gallic_sword_attachments,
+       .append_role_colors = &gallic_sword_role_colors,
+       .role_count = static_cast<std::uint8_t>(Render::GL::k_sword_role_count +
+                                               Render::GL::k_scabbard_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Weapon,
+      "sword_falcata",
+      {.build_attachments = &build_falcata_attachments,
+       .append_role_colors = &falcata_role_colors,
+       .role_count = static_cast<std::uint8_t>(Render::GL::k_sword_role_count +
+                                               Render::GL::k_scabbard_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Weapon,
+      "shield_gallic",
+      {.build_attachments = &build_gallic_shield_attachment,
+       .append_role_colors = &gallic_shield_role_colors,
+       .role_count = static_cast<std::uint8_t>(Render::GL::k_shield_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Weapon,
+      "shield_caetra",
+      {.build_attachments = &build_caetra_attachment,
+       .append_role_colors = &caetra_role_colors,
+       .role_count = static_cast<std::uint8_t>(Render::GL::k_shield_role_count)});
   register_humanoid_descriptor(
       EquipmentCategory::Weapon,
       "bow_roman",

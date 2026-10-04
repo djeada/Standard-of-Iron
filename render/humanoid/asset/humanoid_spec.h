@@ -29,9 +29,11 @@ namespace Render::Creature::Pipeline {}
 namespace Render::Humanoid {
 
 inline constexpr std::size_t k_humanoid_role_count = 8;
+inline constexpr std::uint8_t k_humanoid_cloth_role = 1;
 inline constexpr std::uint8_t k_humanoid_leather_dark_role = 4;
 inline constexpr std::uint8_t k_humanoid_wood_role = 5;
 inline constexpr std::uint8_t k_humanoid_metal_role = 6;
+inline constexpr std::uint8_t k_humanoid_cloth_dark_role = 7;
 inline constexpr std::uint8_t k_humanoid_hair_role = 8;
 
 [[nodiscard]] auto

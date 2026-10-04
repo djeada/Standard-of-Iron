@@ -235,6 +235,43 @@ auto default_loadouts() -> LoadoutMap {
   carthage_horse_swordsman.horse_barding = "horse_champion_barding";
   carthage_horse_swordsman.horse_crupper = "horse_crupper";
   map.emplace("troops/carthage/horse_swordsman", std::move(carthage_horse_swordsman));
+
+  EquipmentLoadoutIds gallic_swordsman{};
+  gallic_swordsman.sword = "sword_gallic";
+  gallic_swordsman.shield = "shield_gallic";
+  gallic_swordsman.helmet = "gallic_montefortino";
+  gallic_swordsman.greaves = "gallic_braccae";
+  map.emplace("troops/gauls/swordsman", std::move(gallic_swordsman));
+
+  EquipmentLoadoutIds gallic_horse_swordsman{};
+  gallic_horse_swordsman.sword = "sword_gallic";
+  gallic_horse_swordsman.shield = "shield_gallic";
+  gallic_horse_swordsman.helmet = "gallic_montefortino";
+  gallic_horse_swordsman.armor = "roman_hamata_mail";
+  gallic_horse_swordsman.greaves = "gallic_braccae";
+  gallic_horse_swordsman.horse_saddle = "roman_horse_saddle";
+  gallic_horse_swordsman.horse_bridle = "horse_bridle";
+  gallic_horse_swordsman.horse_reins = "horse_reins";
+  gallic_horse_swordsman.horse_blanket = "horse_blanket";
+  map.emplace("troops/gauls/horse_swordsman", std::move(gallic_horse_swordsman));
+
+  EquipmentLoadoutIds iberian_swordsman{};
+  iberian_swordsman.sword = "sword_falcata";
+  iberian_swordsman.shield = "shield_caetra";
+  iberian_swordsman.helmet = "iberian_sinew_cap";
+  iberian_swordsman.armor = "iberian_tunic";
+  map.emplace("troops/iberians/swordsman", std::move(iberian_swordsman));
+
+  EquipmentLoadoutIds iberian_horse_swordsman{};
+  iberian_horse_swordsman.sword = "sword_falcata";
+  iberian_horse_swordsman.shield = "shield_caetra";
+  iberian_horse_swordsman.helmet = "iberian_sinew_cap";
+  iberian_horse_swordsman.armor = "iberian_tunic";
+  iberian_horse_swordsman.horse_saddle = "light_cavalry_saddle";
+  iberian_horse_swordsman.horse_bridle = "horse_bridle";
+  iberian_horse_swordsman.horse_reins = "horse_reins";
+  iberian_horse_swordsman.horse_blanket = "horse_blanket";
+  map.emplace("troops/iberians/horse_swordsman", std::move(iberian_horse_swordsman));
   return map;
 }
 

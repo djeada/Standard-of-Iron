@@ -18,6 +18,8 @@ void register_equipment_ids(EquipmentRegistry& registry) {
   registry.register_equipment_id(EquipmentCategory::Weapon, "sword_carthage");
   registry.register_equipment_id(EquipmentCategory::Weapon, "sword_sepulcher");
   registry.register_equipment_id(EquipmentCategory::Weapon, "sword_roman");
+  registry.register_equipment_id(EquipmentCategory::Weapon, "sword_gallic");
+  registry.register_equipment_id(EquipmentCategory::Weapon, "sword_falcata");
   registry.register_equipment_id(EquipmentCategory::Weapon, "sword_scipio");
   registry.register_equipment_id(EquipmentCategory::Weapon, "sword_hannibal");
   registry.register_equipment_id(EquipmentCategory::Weapon, "spear");
@@ -26,6 +28,8 @@ void register_equipment_ids(EquipmentRegistry& registry) {
   registry.register_equipment_id(EquipmentCategory::Weapon, "shield");
   registry.register_equipment_id(EquipmentCategory::Weapon, "shield_carthage");
   registry.register_equipment_id(EquipmentCategory::Weapon, "shield_carthage_cavalry");
+  registry.register_equipment_id(EquipmentCategory::Weapon, "shield_gallic");
+  registry.register_equipment_id(EquipmentCategory::Weapon, "shield_caetra");
 
   registry.register_equipment_id(EquipmentCategory::Helmet, "carthage_heavy");
   registry.register_equipment_id(EquipmentCategory::Helmet, "carthage_light");
@@ -36,6 +40,8 @@ void register_equipment_ids(EquipmentRegistry& registry) {
   registry.register_equipment_id(EquipmentCategory::Helmet, "carthage_punic_conical");
   registry.register_equipment_id(EquipmentCategory::Helmet,
                                  "carthage_thracian_crested");
+  registry.register_equipment_id(EquipmentCategory::Helmet, "gallic_montefortino");
+  registry.register_equipment_id(EquipmentCategory::Helmet, "iberian_sinew_cap");
   registry.register_equipment_id(EquipmentCategory::Helmet, "headwrap");
   registry.register_equipment_id(EquipmentCategory::Helmet, "commander_fabius");
   registry.register_equipment_id(EquipmentCategory::Helmet, "commander_scipio");
@@ -58,6 +64,8 @@ void register_equipment_ids(EquipmentRegistry& registry) {
                                  "roman_shoulder_cover_cavalry");
   registry.register_equipment_id(EquipmentCategory::Armor, "roman_greaves");
   registry.register_equipment_id(EquipmentCategory::Armor, "carthage_greaves");
+  registry.register_equipment_id(EquipmentCategory::Armor, "gallic_braccae");
+  registry.register_equipment_id(EquipmentCategory::Armor, "iberian_tunic");
   registry.register_equipment_id(EquipmentCategory::Armor, "carthage_shoulder_cover");
   registry.register_equipment_id(EquipmentCategory::Armor,
                                  "carthage_shoulder_cover_cavalry");
