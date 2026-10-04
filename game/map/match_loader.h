@@ -29,6 +29,7 @@ struct MatchLoadResult {
   VictoryConfig victory_config;
   RainSettings rain_settings;
   std::vector<FogZone> fog_zones;
+  std::vector<ScoutedArea> scouted_areas;
   std::vector<RiverSegment> rivers;
   std::vector<Lake> lakes;
   std::uint32_t biome_seed = 0;

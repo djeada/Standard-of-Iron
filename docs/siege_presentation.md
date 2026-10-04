@@ -101,6 +101,6 @@ structures.
 
 Defenders on a wall walk shoot from height (×1.35 for archers and spearmen
 instead of a hill's ×1.8) and the stakes cover them from arrows shot up from the
-ground (×0.65). A computer-held town posts its idle archers onto the stretch of
-balcony nearest an assault, and once there its commander leaves them as the
-wall's garrison.
+ground (×0.65). A computer-held town with a garrison posture posts its archers onto the stretch
+of balcony nearest an assault (`RampartBehavior`, see AI_ARCHITECTURE.md), and
+once there its commander leaves them as the wall's garrison.

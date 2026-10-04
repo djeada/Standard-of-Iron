@@ -111,7 +111,28 @@ public:
                            int view_h,
                            int owner_filter) -> std::vector<Engine::Core::EntityID>;
 
+  static auto pick_building(float sx,
+                            float sy,
+                            Engine::Core::World& world,
+                            const Render::GL::Camera& camera,
+                            int view_w,
+                            int view_h) -> Engine::Core::EntityID;
+
 private:
+  struct NearestPicks {
+    Engine::Core::EntityID unit_id = 0;
+    float unit_dist2 = 0.0F;
+    Engine::Core::EntityID building_id = 0;
+    float building_dist2 = 0.0F;
+  };
+  static auto pick_nearest(float sx,
+                           float sy,
+                           Engine::Core::World& world,
+                           const Render::GL::Camera& camera,
+                           int view_w,
+                           int view_h,
+                           int owner_filter) -> NearestPicks;
+
   Engine::Core::EntityID m_prev_hover_id = 0;
   int m_hover_grace_ticks = 0;
   static auto project_bounds(const Render::GL::Camera& cam,

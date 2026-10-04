@@ -534,6 +534,12 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
     }
 
     apply_authored_unit_behavior(*e, authored_behavior, s, sp.position, def);
+    if (s.on_wall) {
+
+      auto* walker = world.emplace<Engine::Core::WallWalkerComponent>(e->get_id());
+      walker->phase = Engine::Core::WallWalkerComponent::Phase::OnDeck;
+      walker->wall_id = 0;
+    }
   }
 
   for (std::size_t structure_index = 0; structure_index < def.structures.size();

@@ -1,5 +1,6 @@
 #include "film_recorder.h"
 
+#include <QDataStream>
 #include <QDebug>
 #include <QDir>
 #include <QEvent>
@@ -23,6 +24,7 @@
 #include "app/core/benchmark_action_fixture.h"
 #include "app/core/film_action_dispatch.h"
 #include "app/core/game_engine.h"
+#include "game/audio/audio_system.h"
 
 namespace App::Core {
 
@@ -32,6 +34,9 @@ constexpr int k_warmup_frames = 4;
 
 constexpr int k_writer_threads = 3;
 constexpr std::size_t k_max_pending_saves = 6;
+
+constexpr int k_audio_sample_rate = 48000;
+constexpr int k_audio_channels = 2;
 constexpr int k_png_quality = 85;
 constexpr int k_parked_visible_pixels = 8;
 
@@ -326,10 +331,13 @@ void FilmRecorder::pump() {
   m_engine->film_step(static_cast<float>(dt));
   const auto step_end = std::chrono::steady_clock::now();
 
+  const int written_before = m_frames_written;
   if (!grab_frame()) {
     finish(21);
     return;
   }
+
+  mix_audio(dt, m_frames_written > written_before);
   const auto grab_end = std::chrono::steady_clock::now();
   if (m_frames_written % 30 == 1) {
     qInfo().noquote()
@@ -354,9 +362,60 @@ void FilmRecorder::pump() {
   }
 }
 
+void FilmRecorder::mix_audio(double dt, bool record) {
+  if (!m_config.audio) {
+    return;
+  }
+  m_audio_carry += dt * k_audio_sample_rate;
+  const auto frames = static_cast<unsigned>(std::floor(m_audio_carry));
+  m_audio_carry -= frames;
+  if (frames == 0U) {
+    return;
+  }
+  m_audio_scratch.resize(static_cast<std::size_t>(frames) * k_audio_channels);
+  AudioSystem::get_instance().render_offline(m_audio_scratch.data(), frames);
+  if (record) {
+    m_audio.insert(m_audio.end(), m_audio_scratch.begin(), m_audio_scratch.end());
+  }
+}
+
+auto FilmRecorder::write_audio() const -> bool {
+  QFile file(m_config.directory + QStringLiteral("/audio.wav"));
+  if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+    return false;
+  }
+  const auto data_bytes = static_cast<quint32>(m_audio.size() * sizeof(qint16));
+  QDataStream out(&file);
+  out.setByteOrder(QDataStream::LittleEndian);
+  out.writeRawData("RIFF", 4);
+  out << static_cast<quint32>(36 + data_bytes);
+  out.writeRawData("WAVE", 4);
+  out.writeRawData("fmt ", 4);
+  out << static_cast<quint32>(16) << static_cast<quint16>(1)
+      << static_cast<quint16>(k_audio_channels)
+      << static_cast<quint32>(k_audio_sample_rate)
+      << static_cast<quint32>(k_audio_sample_rate * k_audio_channels * sizeof(qint16))
+      << static_cast<quint16>(k_audio_channels * sizeof(qint16))
+      << static_cast<quint16>(16);
+  out.writeRawData("data", 4);
+  out << data_bytes;
+  std::vector<qint16> pcm(m_audio.size());
+  for (std::size_t index = 0; index < m_audio.size(); ++index) {
+    pcm[index] = static_cast<qint16>(
+        std::lround(std::clamp(m_audio[index], -1.0F, 1.0F) * 32767.0F));
+  }
+  out.writeRawData(reinterpret_cast<const char*>(pcm.data()),
+                   static_cast<int>(pcm.size() * sizeof(qint16)));
+  return out.status() == QDataStream::Ok;
+}
+
 void FilmRecorder::finish(int exit_code) {
   m_timer->stop();
   drain_saves();
+  if (m_config.audio && !write_audio() && exit_code == 0) {
+    qCritical() << "SOI_FILM: FAIL - the soundtrack could not be written";
+    exit_code = 21;
+  }
   {
     const std::lock_guard<std::mutex> lock(m_pending_mutex);
     if (m_save_failed && exit_code == 0) {

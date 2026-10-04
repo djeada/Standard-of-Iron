@@ -110,13 +110,35 @@ TEST_F(StructureCombatTest, RamRoofTurnsMostArrowsButNotStones) {
 
   auto const arrow =
       Game::Systems::Combat::apply_unit_damage(&world, ram, 40, archer->get_id());
-  EXPECT_EQ(arrow.applied_damage, 10);
+  EXPECT_EQ(arrow.applied_damage, 4);
   auto const stone =
       Game::Systems::Combat::apply_unit_damage(&world, ram, 40, catapult->get_id());
   EXPECT_EQ(stone.applied_damage, 40);
   auto const blade =
       Game::Systems::Combat::apply_unit_damage(&world, ram, 40, sword->get_id());
   EXPECT_EQ(blade.applied_damage, 40);
+}
+
+TEST_F(StructureCombatTest, AMissionsCaptureObjectiveCannotBeRazed) {
+  Engine::Core::World world;
+  auto* ram = add_attacker(world, Game::Units::SpawnType::Ram);
+  auto* hall = add_structure(world, Game::Units::SpawnType::Barracks, 5.0F, 0.0F);
+  hall->add_component<Engine::Core::CaptureComponent>()->capture_objective = true;
+  auto* unit = hall->get_component<Engine::Core::UnitComponent>();
+
+  for (int blow = 0; blow < 50; ++blow) {
+    (void)Game::Systems::Combat::apply_unit_damage(&world, hall, 400, ram->get_id());
+  }
+  EXPECT_EQ(unit->health, 1) << "a ram razed the building the mission must take";
+
+  auto* barracks = add_structure(world, Game::Units::SpawnType::Barracks, 15.0F, 0.0F);
+  barracks->add_component<Engine::Core::CaptureComponent>();
+  for (int blow = 0; blow < 50; ++blow) {
+    (void)Game::Systems::Combat::apply_unit_damage(
+        &world, barracks, 400, ram->get_id());
+  }
+  EXPECT_LE(barracks->get_component<Engine::Core::UnitComponent>()->health, 0)
+      << "an ordinary barracks must still fall to a ram";
 }
 
 TEST_F(StructureCombatTest, AppliedDamageAndEventsUseEffectiveStructureDamage) {

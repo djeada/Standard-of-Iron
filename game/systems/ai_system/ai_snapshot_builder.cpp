@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <limits>
 #include <memory>
 #include <unordered_map>
 #include <unordered_set>
@@ -13,6 +14,7 @@
 
 #include "../../core/component_combat.h"
 #include "../../core/component_economy.h"
+#include "../../core/wall_walk_geometry.h"
 #include "../../core/world.h"
 #include "../../game_config.h"
 #include "../../map/terrain_service.h"
@@ -27,6 +29,7 @@
 #include "../owner_registry.h"
 #include "../player_resource_registry.h"
 #include "ai_utils.h"
+#include "core/wall_walk_geometry.h"
 #include "systems/ai_system/ai_types.h"
 
 namespace {
@@ -424,9 +427,13 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
       continue;
     }
 
-    if (const auto* walker =
-            world.try_get<Engine::Core::WallWalkerComponent>(entity->get_id());
-        walker != nullptr && walker->aloft()) {
+    const auto* walker =
+        world.try_get<Engine::Core::WallWalkerComponent>(entity->get_id());
+    if (walker != nullptr && walker->aloft()) {
+      if (const auto* aloft_at =
+              world.try_get<Engine::Core::TransformComponent>(entity->get_id())) {
+        snapshot.wall_garrison.push_back({aloft_at->position.x, aloft_at->position.z});
+      }
       continue;
     }
 
@@ -458,6 +465,7 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
     data.squad_strength = Game::Units::squad_strength(*unit);
     data.squad_establishment = Game::Units::squad_establishment(unit->spawn_type);
     data.is_assault = is_assault;
+    data.on_wall_stair = walker != nullptr;
     data.has_delivery_order =
         world.has<Engine::Core::CivilianDeliveryComponent>(data.id);
     if (const auto* crop = world.try_get<Engine::Core::FarmComponent>(data.id);
@@ -566,6 +574,65 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
     }
 
     snapshot.friendly_units.push_back(std::move(data));
+  }
+
+  for (auto [id, unit, transform, wall] :
+       world.view<const Engine::Core::UnitComponent,
+                  const Engine::Core::TransformComponent,
+                  const Engine::Core::WallSegmentComponent>()) {
+    if (unit.owner_id != ai_owner_id || unit.health <= 0 ||
+        unit.spawn_type != Game::Units::SpawnType::WallSegment ||
+        (wall.inner_x == 0 && wall.inner_z == 0) ||
+        world.has<Engine::Core::PendingRemovalComponent>(id)) {
+      continue;
+    }
+    const auto lane = Game::Systems::WallWalk::lane_point(
+        transform.position.x, transform.position.z, wall.inner_x, wall.inner_z);
+    snapshot.wall_posts.push_back({lane.x, lane.z});
+  }
+  {
+    constexpr int k_least_walls_for_a_ward = 8;
+    constexpr float k_ward_apron = 6.0F;
+    float min_x = std::numeric_limits<float>::max();
+    float max_x = std::numeric_limits<float>::lowest();
+    float min_z = std::numeric_limits<float>::max();
+    float max_z = std::numeric_limits<float>::lowest();
+    int walls = 0;
+    for (auto [id, unit] : world.view<const Engine::Core::UnitComponent>()) {
+      if (unit.owner_id != ai_owner_id || unit.health <= 0 ||
+          unit.spawn_type != Game::Units::SpawnType::WallSegment ||
+          world.has<Engine::Core::PendingRemovalComponent>(id)) {
+        continue;
+      }
+      if (const auto* at = world.try_get<Engine::Core::TransformComponent>(id)) {
+        min_x = std::min(min_x, at->position.x);
+        max_x = std::max(max_x, at->position.x);
+        min_z = std::min(min_z, at->position.z);
+        max_z = std::max(max_z, at->position.z);
+        ++walls;
+      }
+    }
+    if (walls >= k_least_walls_for_a_ward) {
+      snapshot.has_ward = true;
+      snapshot.ward_x = 0.5F * (min_x + max_x);
+      snapshot.ward_z = 0.5F * (min_z + max_z);
+      snapshot.ward_half_x = (0.5F * (max_x - min_x)) + k_ward_apron;
+      snapshot.ward_half_z = (0.5F * (max_z - min_z)) + k_ward_apron;
+    }
+  }
+
+  const bool wall_is_climbable = [&world, ai_owner_id]() {
+    for (auto [id, unit, wall] :
+         world.view<const Engine::Core::UnitComponent,
+                    const Engine::Core::WallSegmentComponent>()) {
+      if (unit.owner_id == ai_owner_id && unit.health > 0 && wall.has_access()) {
+        return true;
+      }
+    }
+    return false;
+  }();
+  if (!wall_is_climbable) {
+    snapshot.wall_posts.clear();
   }
 
   auto enemies = Game::Systems::Combat::collect_hostile_contacts(world, ai_owner_id);

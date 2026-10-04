@@ -9,6 +9,8 @@
 #include "../core/event_manager.h"
 #include "../core/world.h"
 #include "../units/spawn_type.h"
+#include "core/ambient_session.h"
+#include "owner_registry.h"
 #include "systems/navigation/gate_service.h"
 
 namespace Game::Systems {
@@ -22,6 +24,8 @@ using Engine::Core::UnitComponent;
 
 constexpr float k_occupancy_margin = 0.6F;
 
+constexpr float k_barred_radius = 12.0F;
+
 struct GateRecord {
   GateComponent* gate{nullptr};
   float center_x{0.0F};
@@ -32,6 +36,7 @@ struct GateRecord {
   int owner_id{0};
   bool wants_open{false};
   bool occupied{false};
+  bool enemy_at_gate{false};
 };
 
 auto movement_intends_to_cross(const GateRecord& gate,
@@ -120,6 +125,7 @@ void GateSystem::update(Engine::Core::World* world, float delta_time) {
     return;
   }
 
+  const auto& owners = *Game::Session::services_for(*world).owners;
   for (auto [entity_id, unit_component, transform_component] :
        world->view<const UnitComponent, const TransformComponent>()) {
     if (world->has<PendingRemovalComponent>(entity_id)) {
@@ -134,19 +140,33 @@ void GateSystem::update(Engine::Core::World* world, float delta_time) {
 
     auto const* movement = world->try_get<Engine::Core::MovementComponent>(entity_id);
 
-    for (auto& record : gates) {
-      if (record.wants_open && record.occupied) {
-        continue;
-      }
+    auto const* walker = world->try_get<Engine::Core::WallWalkerComponent>(entity_id);
+    bool const aloft = walker != nullptr && walker->aloft();
 
-      if (!GateService::serves_owner(*world, record.owner_id, unit->owner_id)) {
+    for (auto& record : gates) {
+      if (record.wants_open && record.occupied && record.enemy_at_gate) {
         continue;
       }
 
       const float dx = transform->position.x - record.center_x;
       const float dz = transform->position.z - record.center_z;
+      if (!GateService::serves_owner(*world, record.owner_id, unit->owner_id)) {
+        if (!record.enemy_at_gate && unit->owner_id > 0 &&
+            !Game::Units::is_siege_engine_spawn(unit->spawn_type) &&
+            owners.are_enemies(record.owner_id, unit->owner_id) &&
+            (dx * dx) + (dz * dz) <= k_barred_radius * k_barred_radius) {
+          record.enemy_at_gate = true;
+        }
+        continue;
+      }
+      if (aloft) {
+        continue;
+      }
+
+      const bool loitering = movement != nullptr && !movement->get_has_target() &&
+                             !movement->get_has_requested_goal();
       const float radius = record.gate->trigger_radius;
-      if ((dx * dx) + (dz * dz) <= radius * radius) {
+      if (!loitering && (dx * dx) + (dz * dz) <= radius * radius) {
         record.wants_open = true;
       }
 
@@ -175,6 +195,10 @@ void GateSystem::update(Engine::Core::World* world, float delta_time) {
       target_open = record.occupied;
       break;
     case GateComponent::ManualMode::Automatic:
+      if (record.enemy_at_gate) {
+        record.wants_open = false;
+        gate.hold_timer = 0.0F;
+      }
       if (record.wants_open || record.occupied) {
         gate.hold_timer = gate.hold_open_seconds;
       } else {
@@ -217,6 +241,7 @@ auto GateSystem::access() const -> Engine::Core::SystemAccess {
   return SystemAccess::declare(Reads<TransformComponent,
                                      UnitComponent,
                                      MovementComponent,
+                                     WallWalkerComponent,
                                      PendingRemovalComponent>{},
                                Writes<GateComponent>{});
 }

@@ -230,6 +230,43 @@ TEST(TerrainGroundingTest, StructuresOnASlopeReachDownToTheLowestGround) {
   EXPECT_FLOAT_EQ(again.depth, foundation.depth);
 }
 
+TEST(TerrainGroundingTest, MountainFoundationsReachGroundBeyondFourMeters) {
+  auto map_def = hill_map();
+  map_def.terrain.front().height = 40.0F;
+  Game::Map::TerrainService terrain;
+  terrain.initialize(map_def);
+  QVector3D const site = steepest_point(terrain);
+
+  for (float yaw : {0.0F, 30.0F, 90.0F}) {
+    SCOPED_TRACE(yaw);
+    QMatrix4x4 model;
+    model.translate(site);
+    model.rotate(yaw, 0.0F, 1.0F, 0.0F);
+    model.scale(1.8F, 1.5F, 1.8F);
+    auto const foundation = Render::GL::resolve_structure_foundation(
+        terrain, Game::Units::SpawnType::Home, model);
+
+    float lowest = site.y();
+    for (int edge = 0; edge < 4; ++edge) {
+      for (int step = 0; step <= 100; ++step) {
+        float const along = -1.0F + 2.0F * static_cast<float>(step) / 100.0F;
+        float const side = (edge % 2 == 0) ? -1.0F : 1.0F;
+        float const u = (edge < 2) ? along : side;
+        float const v = (edge < 2) ? side : along;
+        QVector3D const world = model.map(
+            QVector3D(foundation.center_x + u * foundation.half_width * 0.96F,
+                      0.0F,
+                      foundation.center_z + v * foundation.half_depth * 0.96F));
+        lowest = std::min(lowest, terrain.get_terrain_height(world.x(), world.z()));
+      }
+    }
+    ASSERT_GT(site.y() - lowest, 4.0F)
+        << "fixture must expose the former four-meter foundation cap";
+    EXPECT_LE(site.y() - foundation.depth - 0.08F, lowest + 1.0e-3F)
+        << "foundation bottoms must be buried along every edge";
+  }
+}
+
 TEST(TerrainGroundingTest, PitchFollowsTheSlopeAlongTheHeading) {
   Game::Map::TerrainService terrain;
   terrain.initialize(hill_map());

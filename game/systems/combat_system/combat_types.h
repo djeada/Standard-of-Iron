@@ -10,6 +10,8 @@ inline constexpr float k_min_distance = 0.001F;
 inline constexpr float k_max_displacement_per_frame = 0.02F;
 inline constexpr float k_range_multiplier_hold = 1.5F;
 inline constexpr float k_range_multiplier_spearman_hold = 2.0F;
+
+inline constexpr float k_range_multiplier_wall_walk = 1.35F;
 inline constexpr float k_damage_multiplier_archer_hold = 1.5F;
 inline constexpr float k_damage_multiplier_spearman_hold = 1.5F;
 inline constexpr float k_damage_multiplier_default_hold = 1.75F;

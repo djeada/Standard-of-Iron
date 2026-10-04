@@ -67,6 +67,9 @@ inline constexpr float k_attack_range_duplicate_center_factor = 0.35F;
 hold_mode_range_multiplier(const Engine::Core::Entity& entity,
                            Game::Units::SpawnType spawn_type) -> float;
 
+[[nodiscard]] auto ranged_reach_multiplier(const Engine::Core::Entity& entity,
+                                           Game::Units::SpawnType spawn_type) -> float;
+
 [[nodiscard]] auto
 range_weapon_class(Game::Units::SpawnType spawn_type) -> RangeWeaponClass;
 

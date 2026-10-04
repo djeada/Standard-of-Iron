@@ -33,6 +33,17 @@ namespace Engine::Core {
 class AIControlledComponent {
 public:
   AIControlledComponent() = default;
+
+  float leash_x{0.0F};
+  float leash_z{0.0F};
+  float leash_half_x{0.0F};
+  float leash_half_z{0.0F};
+
+  bool sallying{false};
+
+  [[nodiscard]] auto leashed() const -> bool {
+    return leash_half_x > 0.0F && leash_half_z > 0.0F;
+  }
 };
 
 class CaptureComponent {
@@ -46,6 +57,8 @@ public:
   bool is_being_captured{false};
 
   bool capture_blocked{false};
+
+  bool capture_objective{false};
 };
 
 enum class BuilderTaskFault : std::uint8_t {

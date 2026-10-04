@@ -73,6 +73,22 @@ auto hold_mode_range_multiplier(const Engine::Core::Entity& entity,
   return 1.0F;
 }
 
+auto ranged_reach_multiplier(const Engine::Core::Entity& entity,
+                             Game::Units::SpawnType spawn_type) -> float {
+  float multiplier = hold_mode_range_multiplier(entity, spawn_type);
+  const auto* registry = entity.registry();
+  const auto* walker =
+      registry != nullptr
+          ? registry->try_get<Engine::Core::WallWalkerComponent>(entity.get_id())
+          : nullptr;
+  if (walker != nullptr &&
+      walker->phase == Engine::Core::WallWalkerComponent::Phase::OnDeck &&
+      range_weapon_class(spawn_type) == RangeWeaponClass::Bow) {
+    multiplier *= Combat::Constants::k_range_multiplier_wall_walk;
+  }
+  return multiplier;
+}
+
 auto range_weapon_class(Game::Units::SpawnType spawn_type) -> RangeWeaponClass {
   switch (spawn_type) {
   case Game::Units::SpawnType::Archer:
@@ -132,7 +148,7 @@ auto resolve_attack_range(const Engine::Core::Entity& entity) -> AttackRangeProf
     return profile;
   }
 
-  float const multiplier = hold_mode_range_multiplier(entity, unit->spawn_type);
+  float const multiplier = ranged_reach_multiplier(entity, unit->spawn_type);
   profile.ranged = true;
   profile.max_range = attack->range * multiplier;
   profile.current_range = attack->get_current_range() * multiplier;

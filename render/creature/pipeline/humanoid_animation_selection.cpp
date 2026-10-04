@@ -175,6 +175,8 @@ void apply_role_specific_combat_clip(
   }
 }
 
+constexpr float k_formed_shield_hold_phase = 0.0F;
+
 [[nodiscard]] auto
 defensive_layout_clip_for(Render::GL::ShieldFormationPose pose) -> std::uint16_t {
   switch (pose) {
@@ -786,6 +788,21 @@ auto resolve_humanoid_animation_selection(
   }
 
   if (defensive_clip != Animation::k_unmapped_clip) {
+
+    bool const holding_still =
+        (selection.state == Render::Creature::AnimationStateId::Idle ||
+         selection.state == Render::Creature::AnimationStateId::Hold) &&
+        !Render::Creature::is_moving_animation(anim.inputs.movement_state) &&
+        !anim.inputs.is_attacking && !anim.inputs.is_hit_reacting &&
+        !anim.inputs.is_dying && !anim.inputs.is_dead;
+    if (holding_still) {
+      selection.clip_id = defensive_clip;
+      selection.clip_variant = 0U;
+      selection.phase = k_formed_shield_hold_phase;
+      selection.full_body_blend = {};
+      selection.upper_body_overlay = {};
+      return selection;
+    }
     apply_defensive_overlay(selection);
     return selection;
   }

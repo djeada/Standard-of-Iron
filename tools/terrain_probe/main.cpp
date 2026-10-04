@@ -18,8 +18,9 @@ auto usage() -> int {
                "\n"
                "Builds the map's terrain with the engine's own heightfield pass and\n"
                "writes what an authored-placement audit cannot derive from the JSON:\n"
-               "the surface every body actually stands on, and the hill entrance\n"
-               "ramps the engine carves outside the authored footprint.\n");
+               "the surface every body actually stands on, the hill entrance\n"
+               "ramps the engine carves outside the authored footprint, and\n"
+               "which cells a body may stand on at all.\n");
   return 2;
 }
 
@@ -62,10 +63,14 @@ auto main(int argc, char** argv) -> int {
 
   std::vector<std::uint8_t> entrance_bytes(cell_count, 0);
   std::vector<std::uint8_t> type_bytes(cell_count, 0);
+  std::vector<std::uint8_t> walkable_bytes(cell_count, 0);
   for (std::size_t index = 0; index < cell_count; ++index) {
     entrance_bytes[index] = index < entrances.size() && entrances[index] ? 1U : 0U;
     type_bytes[index] =
         index < types.size() ? static_cast<std::uint8_t>(types[index]) : 0U;
+    int const grid_x = static_cast<int>(index % static_cast<std::size_t>(width));
+    int const grid_z = static_cast<int>(index / static_cast<std::size_t>(width));
+    walkable_bytes[index] = height_map.is_walkable(grid_x, grid_z) ? 1U : 0U;
   }
 
   QFile out(args.at(2));
@@ -77,7 +82,7 @@ auto main(int argc, char** argv) -> int {
 
   const QString header =
       QStringLiteral(
-          R"({"width":%1,"height":%2,"tile_size":%3,"planes":["f32:height","u8:hill_entrance","u8:terrain_type"]})")
+          R"({"width":%1,"height":%2,"tile_size":%3,"planes":["f32:height","u8:hill_entrance","u8:terrain_type","u8:walkable"]})")
           .arg(width)
           .arg(height)
           .arg(static_cast<double>(height_map.get_tile_size()), 0, 'g', 9);
@@ -88,6 +93,8 @@ auto main(int argc, char** argv) -> int {
   out.write(reinterpret_cast<const char*>(entrance_bytes.data()),
             static_cast<qint64>(cell_count));
   out.write(reinterpret_cast<const char*>(type_bytes.data()),
+            static_cast<qint64>(cell_count));
+  out.write(reinterpret_cast<const char*>(walkable_bytes.data()),
             static_cast<qint64>(cell_count));
   out.close();
   return 0;

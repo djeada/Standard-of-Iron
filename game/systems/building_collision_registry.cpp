@@ -657,6 +657,27 @@ auto BuildingCollisionRegistry::segment_crosses_blocking_building(
       m_authored_obstacles.begin(), m_authored_obstacles.end(), separates);
 }
 
+auto BuildingCollisionRegistry::segment_crosses_wall(float start_x,
+                                                     float start_z,
+                                                     float end_x,
+                                                     float end_z) const -> bool {
+  float const delta_x = end_x - start_x;
+  float const delta_z = end_z - start_z;
+  bool crossed = false;
+  for_each_building_in_region(
+      std::min(start_x, end_x),
+      std::max(start_x, end_x),
+      std::min(start_z, end_z),
+      std::max(start_z, end_z),
+      [&](const BuildingFootprint& footprint) {
+        if (crossed || !(footprint.wall_link || footprint.wall_tower)) {
+          return;
+        }
+        crossed = segment_hits_footprint(footprint, start_x, start_z, delta_x, delta_z);
+      });
+  return crossed;
+}
+
 void BuildingCollisionRegistry::set_authored_obstacles(
     std::vector<BuildingFootprint> obstacles) {
   m_authored_obstacles = std::move(obstacles);

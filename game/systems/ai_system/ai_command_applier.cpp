@@ -122,12 +122,25 @@ auto AICommandApplier::apply(Engine::Core::World& world,
           continue;
         }
         auto* attacker = world.get_entity(unit_id);
-        if (!Game::Systems::Combat::melee_walled_off_from(attacker, target)) {
+
+        if (command.sally ||
+            !Game::Systems::Combat::melee_walled_off_from(attacker, target)) {
           attackers.push_back(unit_id);
         }
       }
       if (attackers.empty()) {
         break;
+      }
+      if (command.sally) {
+        for (const auto unit_id : attackers) {
+          if (auto* controlled =
+                  world.try_get<Engine::Core::AIControlledComponent>(unit_id)) {
+
+            controlled->sallying = true;
+            controlled->leash_half_x = 0.0F;
+            controlled->leash_half_z = 0.0F;
+          }
+        }
       }
 
       submit(world,

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <string>
 #include <vector>
 
 namespace Game::Systems::AI {
@@ -25,8 +26,8 @@ private:
   const char* m_last_order_type = nullptr;
   int m_last_order_repeats = 0;
   int m_last_building_total = -1;
-  const char* m_deferred_type = nullptr;
-  float m_deferred_until = -1000.0F;
+
+  std::map<std::string, float> m_deferred_until;
 
   std::map<int, int> m_plan_slot_orders;
   std::vector<int> m_blocked_plan_slots;

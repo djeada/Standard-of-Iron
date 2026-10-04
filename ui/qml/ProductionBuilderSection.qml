@@ -26,6 +26,7 @@ Rectangle {
         }, {
             "item_type": "ram",
             "label": qsTr("Battering Ram"),
+            "short_label": qsTr("Ram"),
             "description": qsTr("Gate-breaking siege engine\nImmune to most arrows"),
             "tooltip": qsTr("Build Battering Ram\n%1\nCost: %2\nBuild time: %3s"),
             "default_build_time": 14,
@@ -42,6 +43,7 @@ Rectangle {
         }, {
             "item_type": "defense_tower",
             "label": qsTr("Defense Tower"),
+            "short_label": qsTr("Tower"),
             "description": qsTr("Stationary defense structure\nShoots arrows at enemies"),
             "tooltip": qsTr("Build Defense Tower\n%1\nCost: %2\nBuild time: %3s"),
             "default_build_time": 20,
@@ -66,6 +68,7 @@ Rectangle {
         }, {
             "item_type": "wall_segment",
             "label": qsTr("Wall Segment"),
+            "short_label": qsTr("Wall"),
             "description": qsTr("Wooden defensive wall\nBlocks enemy movement"),
             "tooltip": qsTr("Build Wall Segment\n%1\nCost: %2\nBuild time: %3s"),
             "default_build_time": 8,
@@ -74,6 +77,7 @@ Rectangle {
         }, {
             "item_type": "wall_gate",
             "label": qsTr("Wall Gate"),
+            "short_label": qsTr("Gate"),
             "description": qsTr("Gated opening in a wall\nOpens for your troops and allies"),
             "tooltip": qsTr("Build Wall Gate\n%1\nCost: %2\nBuild time: %3s"),
             "default_build_time": 12,
@@ -90,6 +94,7 @@ Rectangle {
         }, {
             "item_type": "marketplace",
             "label": qsTr("Marketplace"),
+            "short_label": qsTr("Market"),
             "description": qsTr("Trade building\nBuy or sell resources for gold"),
             "tooltip": qsTr("Build Marketplace\n%1\nCost: %2\nBuild time: %3s"),
             "default_build_time": 10,
@@ -126,49 +131,13 @@ Rectangle {
 
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
-        anchors.margins: 8
-        spacing: 8
-        width: parent.width - 16
-
-        Row {
-            anchors.horizontalCenter: parent.horizontalCenter
-            spacing: 6
-
-            Image {
-                id: builderHeaderIcon
-
-                width: 18
-                height: 18
-                source: panel.unit_icon_source("builder")
-                fillMode: Image.PreserveAspectFit
-                smooth: true
-                visible: source !== ""
-            }
-
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                text: builderHeaderIcon.visible ? qsTr("BUILDER CONSTRUCTION") : Design.Icons.build + " " + qsTr("BUILDER CONSTRUCTION")
-                color: hs.bronze
-                font.pixelSize: Design.Typography.caption
-                font.bold: true
-            }
-        }
-
-        Text {
-            width: parent.width
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: qsTr("Build siege weapons, structures, and gather wood, stone, iron, and food")
-            color: "#8D7146"
-            font.pixelSize: Design.Typography.caption
-            horizontalAlignment: Text.AlignHCenter
-            wrapMode: Text.WordWrap
-            maximumLineCount: 2
-            elide: Text.ElideRight
-        }
+        anchors.margins: 6
+        spacing: 5
+        width: parent.width - 12
 
         Rectangle {
             width: parent.width - 20
-            height: Math.max(Design.A11y.scaled(20), Design.Typography.label + 6)
+            height: Math.max(Design.A11y.scaled(16), Design.Typography.caption + 4)
             anchors.horizontalCenter: parent.horizontalCenter
             radius: 10
             color: "#120D09"
@@ -210,7 +179,7 @@ Rectangle {
 
             Text {
                 anchors.centerIn: parent
-                text: builderProductionContent.builder_prod.in_progress ? qsTr("%1s").arg(Math.max(0, builderProductionContent.builder_prod.time_remaining).toFixed(1)) : qsTr("Idle")
+                text: builderProductionContent.builder_prod.in_progress ? qsTr("%1 · %2s").arg(builderStatus.text).arg(Math.max(0, builderProductionContent.builder_prod.time_remaining).toFixed(1)) : qsTr("Idle")
                 color: "#F4E7C8"
                 font.pixelSize: Design.Typography.caption
                 font.bold: true
@@ -220,11 +189,13 @@ Rectangle {
         }
 
         Text {
+            id: builderStatus
+
             width: parent.width
             anchors.horizontalCenter: parent.horizontalCenter
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap
-            maximumLineCount: 2
+            maximumLineCount: 1
             elide: Text.ElideRight
             text: {
                 if (!builderProductionContent.builder_prod.in_progress)
@@ -257,24 +228,25 @@ Rectangle {
                 }
                 return (is_collection_task ? qsTr("Task: %1") : qsTr("Building: %1")).arg(label);
             }
-            color: builderProductionContent.builder_prod.in_progress ? "#7F9A5F" : "#8D7146"
+            color: "#8D7146"
             font.pixelSize: Design.Typography.caption
-            font.bold: builderProductionContent.builder_prod.in_progress === true
-            visible: true
+            visible: false
         }
 
         Grid {
             id: builderCardGrid
 
-            readonly property int cardWidth: 150
+            readonly property int minCardWidth: 74
+            readonly property int cardWidth: Math.floor((parent.width - (columns - 1) * columnSpacing) / columns)
+            readonly property int cardHeight: 64
 
             objectName: "builderCardGrid"
 
             anchors.horizontalCenter: parent.horizontalCenter
 
-            columns: Math.max(1, Math.min(3, Math.floor((parent.width + columnSpacing) / (cardWidth + columnSpacing))))
-            columnSpacing: 8
-            rowSpacing: 8
+            columns: Math.max(1, Math.min(6, Math.floor((parent.width + columnSpacing) / (minCardWidth + columnSpacing))))
+            columnSpacing: 5
+            rowSpacing: 5
 
             Repeater {
                 model: builderSection.card_specs
@@ -286,6 +258,7 @@ Rectangle {
                     builder_prod: builderProductionContent.builder_prod
                     spec: modelData
                     cardWidth: builderCardGrid.cardWidth
+                    cardHeight: builderCardGrid.cardHeight
                 }
             }
         }

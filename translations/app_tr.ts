@@ -7367,12 +7367,12 @@ bir harita seç</translation>
         <translation>Eski yol üzerinde bir Roma gözcü kampı, çobanların o yolu neden bıraktığını öğrendiği gece. Kereste, taş ve bir sürü kampa yakındır; mezar harabeleri ortadaki araziyi tutar; lanetli tapınak kuzeydoğudaki arazide tek başına durur. Kampla mezar arasındaki alçak bir tümsek, sahip olmaya değer tek yüksek yerdir ve yol baştan sona ölülerin yanından geçer.</translation>
     </message>
     <message>
-        <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. The lower ward rings the outer crown with a timber curtain and towers; the citadel stands on the upper crown behind its own wall, with the granary and the garrison hall inside it. Three roads climb to the lower ward - from the Punic camp in the south, and from the Placentia road on either flank - and only one ramp climbs from the lower ward to the citadel gate.</source>
-        <translation>İnsubr ovasında, kış tarlalarının üzerinde çifte bir tepeye kurulmuş surlu bir pazar kasabası. Aşağı şehir, dış tepeyi ahşap bir perde duvarı ve kulelerle çevreler; iç kale üst tepede kendi surunun ardında durur, tahıl ambarı ve garnizon binası da onun içindedir. Aşağı şehre üç yol tırmanır - güneydeki Pön kampından ve iki yandan Placentia yolundan - ve aşağı şehirden iç kale kapısına yalnızca tek bir rampa çıkar.</translation>
-    </message>
-    <message>
         <source>Victumulae</source>
         <translation>Victumulae</translation>
+    </message>
+    <message>
+        <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. A timber curtain with a tower at every corner rings the lower ward, where the temple and the market face each other across one street; the citadel stands on the upper crown at the back of the town behind its own wall, with the garrison hall inside it. One graded ramp climbs from the camp road to the south gate, and one short ramp climbs from the lower ward to the citadel gate. The relief columns come down the flank roads and never touch the hill.</source>
+        <translation>İnsubria ovasında, kış tarlalarının üzerinde çifte bir tepeye kurulmuş surlu bir pazar kasabası. Her köşesinde bir kule bulunan ahşap bir sur, tapınakla pazarın tek bir caddenin iki yanında karşılıklı durduğu alt avluyu çevreler; kale, kasabanın arka ucunda, kendi suruyla çevrili üst tepede durur, garnizon salonu da içindedir. Kamp yolundan güney kapısına tek bir eğimli rampa çıkar, alt avludan kale kapısına ise kısa bir rampa. Yardım sütunları yan yollardan iner ve tepeye hiç dokunmaz.</translation>
     </message>
 </context>
 <context>
@@ -10186,20 +10186,8 @@ Opens for your troops and allies</source>
 Birliklerine ve müttefiklerine açılır</translation>
     </message>
     <message>
-        <source>%1s</source>
-        <translation>%1sn</translation>
-    </message>
-    <message>
         <source>Idle</source>
         <translation>Beklemede</translation>
-    </message>
-    <message>
-        <source>BUILDER CONSTRUCTION</source>
-        <translation>İNŞAATÇI YAPIMI</translation>
-    </message>
-    <message>
-        <source>Build siege weapons, structures, and gather wood, stone, iron, and food</source>
-        <translation>Kuşatma silahları ve yapılar inşa et, odun, taş, demir ve yiyecek topla</translation>
     </message>
     <message>
         <source>Select a structure to build</source>
@@ -10403,6 +10391,30 @@ Build time: %3s</source>
 Bedel: %2
 İnşa süresi: %3sn</translation>
     </message>
+    <message>
+        <source>%1 · %2s</source>
+        <translation>%1 · %2s</translation>
+    </message>
+    <message>
+        <source>Ram</source>
+        <translation>Koçbaşı</translation>
+    </message>
+    <message>
+        <source>Tower</source>
+        <translation>Kule</translation>
+    </message>
+    <message>
+        <source>Wall</source>
+        <translation>Sur</translation>
+    </message>
+    <message>
+        <source>Gate</source>
+        <translation>Kapı</translation>
+    </message>
+    <message>
+        <source>Market</source>
+        <translation>Pazar</translation>
+    </message>
 </context>
 <context>
     <name>ProductionConstructionCard</name>
@@ -10599,6 +10611,10 @@ Teslim et kipini kullan, sonra yedeğine eklemek için dost bir kışlaya tıkla
     <message>
         <source>No available builder.</source>
         <translation>Boş inşaatçı yok.</translation>
+    </message>
+    <message>
+        <source>Troops are standing here. Move them first.</source>
+        <translation>Burada askerler var. Önce onları taşıyın.</translation>
     </message>
 </context>
 <context>

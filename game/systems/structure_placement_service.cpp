@@ -30,7 +30,7 @@ auto StructurePlacementService::ground_ruling(
   const auto verdict = assess_ground(world, building_type, x, z, 0, rotation_y, crew);
   if (verdict == GroundVerdict::Clear &&
       troops_stand_on(world, building_type, x, z, rotation_y, crew)) {
-    return ruling_for(GroundVerdict::Occupied);
+    return PlacementRuling::BlockedByTroops;
   }
   return ruling_for(verdict);
 }

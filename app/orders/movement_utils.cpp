@@ -10,6 +10,7 @@
 #include "game/core/ambient_session.h"
 #include "game/core/component_core.h"
 #include "game/core/component_economy.h"
+#include "game/core/component_structures.h"
 #include "game/core/world.h"
 #include "game/render_bridge/picking_service.h"
 #include "game/systems/combat_system/target_rules.h"
@@ -323,6 +324,53 @@ auto pick_enemy_unit_at_screen(Engine::Core::World* world,
   return ruling == Game::Systems::Combat::TargetRefusal::None ? target_id : 0;
 }
 
+auto only_engines_selected(Engine::Core::World* world,
+                           const std::vector<Engine::Core::EntityID>& selected)
+    -> bool {
+  return world != nullptr && !selected.empty() &&
+         std::all_of(
+             selected.begin(), selected.end(), [world](Engine::Core::EntityID id) {
+               auto const* unit = world->try_get<Engine::Core::UnitComponent>(id);
+               return unit != nullptr &&
+                      Game::Units::is_siege_engine_spawn(unit->spawn_type);
+             });
+}
+
+auto pick_enemy_structure_for_engines(
+    Engine::Core::World* world,
+    const std::vector<Engine::Core::EntityID>& selected,
+    Render::GL::Camera* camera,
+    qreal sx,
+    qreal sy,
+    int viewport_width,
+    int viewport_height,
+    int local_owner_id) -> Engine::Core::EntityID {
+  if ((world == nullptr) || (camera == nullptr) || (viewport_width <= 0) ||
+      (viewport_height <= 0)) {
+    return 0;
+  }
+  const bool has_engine =
+      std::any_of(selected.begin(), selected.end(), [world](Engine::Core::EntityID id) {
+        auto const* unit = world->try_get<Engine::Core::UnitComponent>(id);
+        return unit != nullptr && Game::Units::is_siege_engine_spawn(unit->spawn_type);
+      });
+  if (!has_engine) {
+    return 0;
+  }
+  Engine::Core::EntityID const target_id = Game::Systems::PickingService::pick_building(
+      float(sx), float(sy), *world, *camera, viewport_width, viewport_height);
+  if (target_id == 0U || !world->has<Engine::Core::BuildingComponent>(target_id)) {
+    return 0;
+  }
+  const auto ruling = Game::Systems::Combat::evaluate_target(
+      *Game::Session::services_for(*world).owners,
+      local_owner_id,
+      world->get_entity(target_id),
+      {.intent = Game::Systems::Combat::EngagementIntent::Ordered,
+       .allow_buildings = true});
+  return ruling == Game::Systems::Combat::TargetRefusal::None ? target_id : 0;
+}
+
 auto issue_attack_command(Engine::Core::World* world,
                           const std::vector<Engine::Core::EntityID>& selected,
                           Engine::Core::EntityID target_id,
@@ -376,10 +424,26 @@ auto issue_move_or_attack_command(Engine::Core::World* world,
     return App::Core::rejected_order(OrderKind::Move, App::Core::no_selection_reason());
   }
 
-  Engine::Core::EntityID const target_id = pick_enemy_unit_at_screen(
-      world, camera, sx, sy, viewport_width, viewport_height, local_owner_id);
+  Engine::Core::EntityID const target_id =
+      only_engines_selected(world, selected)
+          ? 0U
+          : pick_enemy_unit_at_screen(
+                world, camera, sx, sy, viewport_width, viewport_height, local_owner_id);
   if (target_id != 0U) {
     return issue_attack_command(world, selected, target_id, local_owner_id);
+  }
+
+  if (Engine::Core::EntityID const structure_id =
+          pick_enemy_structure_for_engines(world,
+                                           selected,
+                                           camera,
+                                           sx,
+                                           sy,
+                                           viewport_width,
+                                           viewport_height,
+                                           local_owner_id);
+      structure_id != 0U) {
+    return issue_attack_command(world, selected, structure_id, local_owner_id);
   }
 
   QVector3D hit;

@@ -18,6 +18,7 @@
 #include "formation_combat_roles.h"
 #include "formation_local_frame.h"
 #include "formation_reform_walk.h"
+#include "formation_soldier_gait.h"
 #include "formation_soldier_walk.h"
 #include "structure_combat.h"
 #include "target_rules.h"
@@ -909,6 +910,12 @@ void pin_to_wall_walk(const EntityFrame& frame,
   if (step_time > 0.0F && !fresh) {
     directive.world_velocity_x = (point.x - from_x) / step_time;
     directive.world_velocity_z = (point.z - from_z) / step_time;
+
+    directive.angular_speed =
+        std::abs(signed_yaw_delta(previous->world_yaw, directive.world_yaw)) /
+        step_time;
+    settle_soldier_gait(
+        previous, directive, step_time, gait_run_speed(k_wall_run_speed));
   }
 }
 

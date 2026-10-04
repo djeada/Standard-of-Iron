@@ -169,6 +169,7 @@ void read_spawns(const QJsonArray& arr, std::vector<UnitSpawn>& out) {
     }
 
     spawn.behavior = spawn_obj.value(QStringLiteral("behavior")).toString();
+    spawn.on_wall = spawn_obj.value(QStringLiteral("on_wall")).toBool(false);
     spawn.guard_radius =
         float(spawn_obj.value(QStringLiteral("guard_radius")).toDouble(10.0));
     const QJsonArray patrol_waypoints =
@@ -640,7 +641,42 @@ void read_map_scenery(const QJsonObject& root, MapDefinition& out_map) {
   }
 }
 
+void read_scouted_areas(const QJsonArray& arr,
+                        std::vector<ScoutedArea>& out,
+                        const GridDefinition& grid,
+                        CoordSystem coord_sys) {
+  out.clear();
+  out.reserve(arr.size());
+  constexpr float grid_center_offset = 0.5F;
+  const float tile = std::max(0.0001F, grid.tile_size);
+  for (const auto val : arr) {
+    const auto obj = val.toObject();
+    ScoutedArea area;
+    area.x = static_cast<float>(obj.value(X).toDouble(0.0));
+    area.z = static_cast<float>(obj.value(Z).toDouble(0.0));
+    area.radius = static_cast<float>(obj.value(RADIUS).toDouble(0.0));
+    if (coord_sys == CoordSystem::Grid) {
+      area.x = (area.x - (grid.width * grid_center_offset - grid_center_offset)) * tile;
+      area.z =
+          (area.z - (grid.height * grid_center_offset - grid_center_offset)) * tile;
+      area.radius *= tile;
+    }
+    if (area.radius > 0.0F) {
+      out.push_back(area);
+    }
+  }
+}
+
 void read_map_fog(const QJsonObject& root, MapDefinition& out_map) {
+  if (root.contains(SCOUTED_AREAS) && root.value(SCOUTED_AREAS).isArray()) {
+    read_scouted_areas(root.value(SCOUTED_AREAS).toArray(),
+                       out_map.scouted_areas,
+                       out_map.grid,
+                       out_map.coordSystem);
+  } else {
+    out_map.scouted_areas.clear();
+  }
+
   if (root.contains(FOG_ZONES) && root.value(FOG_ZONES).isArray()) {
     read_fog_zones(root.value(FOG_ZONES).toArray(),
                    out_map.fog_zones,
