@@ -67,6 +67,7 @@ struct SwordArchetypeKey {
   int blade_back_spike_count{0};
   int blade_back_spike_length_key{0};
   int material_id{0};
+  bool has_hooked_pommel{false};
 };
 
 auto operator==(const SwordArchetypeKey& lhs, const SwordArchetypeKey& rhs) -> bool {
@@ -85,7 +86,8 @@ auto operator==(const SwordArchetypeKey& lhs, const SwordArchetypeKey& rhs) -> b
          lhs.guard_spike_length_key == rhs.guard_spike_length_key &&
          lhs.blade_back_spike_count == rhs.blade_back_spike_count &&
          lhs.blade_back_spike_length_key == rhs.blade_back_spike_length_key &&
-         lhs.material_id == rhs.material_id;
+         lhs.material_id == rhs.material_id &&
+         lhs.has_hooked_pommel == rhs.has_hooked_pommel;
 }
 
 auto quantize_sword_value(float value) -> int {
@@ -243,7 +245,8 @@ auto sword_archetype(const SwordRenderConfig& config) -> const RenderArchetype& 
                               quantize_sword_value(config.guard_spike_length),
                               std::clamp(config.blade_back_spike_count, 0, 4),
                               quantize_sword_value(config.blade_back_spike_length),
-                              config.material_id};
+                              config.material_id,
+                              config.has_hooked_pommel};
   for (const auto& entry : cache) {
     if (entry.key == key) {
       return entry.archetype;
@@ -277,22 +280,22 @@ auto sword_archetype(const SwordRenderConfig& config) -> const RenderArchetype& 
   QVector3D const guard_left(-config.guard_half_width, config.guard_curve, 0.0F);
   QVector3D const guard_right(config.guard_half_width, config.guard_curve, 0.0F);
 
-  RenderArchetypeBuilder builder{"sword_" + std::to_string(key.sword_length_key) + "_" +
-                                 std::to_string(key.sword_width_key) + "_" +
-                                 std::to_string(key.guard_half_width_key) + "_" +
-                                 std::to_string(key.handle_radius_key) + "_" +
-                                 std::to_string(key.pommel_radius_key) + "_" +
-                                 std::to_string(key.pommel_length_key) + "_" +
-                                 std::to_string(key.blade_ricasso_key) + "_" +
-                                 std::to_string(key.blade_taper_bias_key) + "_" +
-                                 std::to_string(key.blade_mid_width_scale_key) + "_" +
-                                 std::to_string(key.blade_tip_width_scale_key) + "_" +
-                                 std::to_string(key.blade_curve_key) + "_" +
-                                 std::to_string(key.guard_curve_key) + "_" +
-                                 std::to_string(key.guard_spike_length_key) + "_" +
-                                 std::to_string(key.blade_back_spike_count) + "_" +
-                                 std::to_string(key.blade_back_spike_length_key) + "_" +
-                                 std::to_string(key.material_id)};
+  RenderArchetypeBuilder builder{
+      "sword_" + std::to_string(key.sword_length_key) + "_" +
+      std::to_string(key.sword_width_key) + "_" +
+      std::to_string(key.guard_half_width_key) + "_" +
+      std::to_string(key.handle_radius_key) + "_" +
+      std::to_string(key.pommel_radius_key) + "_" +
+      std::to_string(key.pommel_length_key) + "_" +
+      std::to_string(key.blade_ricasso_key) + "_" +
+      std::to_string(key.blade_taper_bias_key) + "_" +
+      std::to_string(key.blade_mid_width_scale_key) + "_" +
+      std::to_string(key.blade_tip_width_scale_key) + "_" +
+      std::to_string(key.blade_curve_key) + "_" + std::to_string(key.guard_curve_key) +
+      "_" + std::to_string(key.guard_spike_length_key) + "_" +
+      std::to_string(key.blade_back_spike_count) + "_" +
+      std::to_string(key.blade_back_spike_length_key) + "_" +
+      std::to_string(key.material_id) + (key.has_hooked_pommel ? "_hooked" : "")};
 
   builder.add_palette_mesh(get_unit_cylinder(),
                            cylinder_between(QVector3D(0.0F, -handle_len, 0.0F),
@@ -424,7 +427,31 @@ auto sword_archetype(const SwordRenderConfig& config) -> const RenderArchetype& 
                            nullptr,
                            1.0F,
                            config.material_id);
-  if (config.pommel_length > 1e-4F) {
+  if (config.has_hooked_pommel) {
+    // An open, forward-turning hilt gives the falcata a distinct silhouette.
+    QVector3D const heel(0.0F, pommel_y, 0.0F);
+    QVector3D const hook(-config.pommel_radius * 1.8F, pommel_y + 0.018F, 0.0F);
+    QVector3D const beak(-config.pommel_radius * 1.5F, pommel_y + 0.068F, 0.0F);
+    builder.add_palette_mesh(get_unit_cylinder(),
+                             cylinder_between(heel, hook, config.handle_radius),
+                             k_leather_slot,
+                             nullptr,
+                             1.0F,
+                             0);
+    builder.add_palette_mesh(get_unit_cylinder(),
+                             cylinder_between(hook, beak, config.handle_radius * 0.85F),
+                             k_leather_slot,
+                             nullptr,
+                             1.0F,
+                             0);
+    builder.add_palette_mesh(get_unit_sphere(),
+                             sphere_at(beak, config.handle_radius),
+                             k_metal_slot,
+                             nullptr,
+                             1.0F,
+                             config.material_id);
+  }
+  if (!config.has_hooked_pommel && config.pommel_length > 1e-4F) {
     builder.add_palette_mesh(
         get_unit_cone(),
         Render::Geom::cone_from_to(
