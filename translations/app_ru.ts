@@ -13537,6 +13537,34 @@ Right-click to cancel.</source>
         <source>The Barcids raised their best foot in Spain. Iberian swordsmen wore white tunics edged in crimson and fought with the curved falcata.</source>
         <translation>Баркиды набирали лучшую пехоту в Испании. Иберийские мечники носили белые туники с багряной каймой и сражались изогнутой фалькатой.</translation>
     </message>
+    <message>
+        <source>Balearic Slinger</source>
+        <translation>Балеарский пращник</translation>
+    </message>
+    <message>
+        <source>Velites</source>
+        <translation>Велиты</translation>
+    </message>
+    <message>
+        <source>Balearic islanders served Carthage as specialist slingers, carrying spare slings and a pouch of stones.</source>
+        <translation>Жители Балеарских островов служили Карфагену опытными пращниками, нося запасные пращи и мешочек с камнями.</translation>
+    </message>
+    <message>
+        <source>Light infantry screen</source>
+        <translation>Заслон лёгкой пехоты</translation>
+    </message>
+    <message>
+        <source>Loose order and quick withdrawal behind friendly infantry.</source>
+        <translation>Рассыпной строй и быстрый отход за свою пехоту.</translation>
+    </message>
+    <message>
+        <source>Roman velites screened the legions with light javelins, round parma shields and distinctive animal pelts.</source>
+        <translation>Римские велиты прикрывали легионы лёгкими дротиками, круглыми щитами-пармами и приметными звериными шкурами.</translation>
+    </message>
+    <message>
+        <source>Vulnerable to cavalry and sustained melee.</source>
+        <translation>Уязвимы для конницы и затяжного ближнего боя.</translation>
+    </message>
 </context>
 <context>
     <name>WallNetworkService</name>

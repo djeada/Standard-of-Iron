@@ -91,6 +91,8 @@ auto ranged_reach_multiplier(const Engine::Core::Entity& entity,
 
 auto range_weapon_class(Game::Units::SpawnType spawn_type) -> RangeWeaponClass {
   switch (spawn_type) {
+  case Game::Units::SpawnType::Slinger:
+  case Game::Units::SpawnType::Velites:
   case Game::Units::SpawnType::Archer:
   case Game::Units::SpawnType::HorseArcher:
   case Game::Units::SpawnType::SkeletonArcher:

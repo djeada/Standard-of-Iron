@@ -13537,6 +13537,34 @@ Prawy przycisk anuluje.</translation>
         <source>The Barcids raised their best foot in Spain. Iberian swordsmen wore white tunics edged in crimson and fought with the curved falcata.</source>
         <translation>Barkidzi werbowali najlepszą piechotę w Hiszpanii. Iberyjscy miecznicy nosili białe tuniki obszyte karmazynem i walczyli zakrzywioną falkatą.</translation>
     </message>
+    <message>
+        <source>Balearic Slinger</source>
+        <translation>Balearski procarz</translation>
+    </message>
+    <message>
+        <source>Velites</source>
+        <translation>Welici</translation>
+    </message>
+    <message>
+        <source>Balearic islanders served Carthage as specialist slingers, carrying spare slings and a pouch of stones.</source>
+        <translation>Mieszkańcy Balearów służyli Kartaginie jako wyspecjalizowani procarze, nosząc zapasowe proce i sakwę kamieni.</translation>
+    </message>
+    <message>
+        <source>Light infantry screen</source>
+        <translation>Osłona lekkiej piechoty</translation>
+    </message>
+    <message>
+        <source>Loose order and quick withdrawal behind friendly infantry.</source>
+        <translation>Luźny szyk i szybkie wycofanie się za własną piechotę.</translation>
+    </message>
+    <message>
+        <source>Roman velites screened the legions with light javelins, round parma shields and distinctive animal pelts.</source>
+        <translation>Rzymscy welici osłaniali legiony lekkimi oszczepami, okrągłymi tarczami parma i charakterystycznymi skórami zwierząt.</translation>
+    </message>
+    <message>
+        <source>Vulnerable to cavalry and sustained melee.</source>
+        <translation>Podatni na kawalerię i długotrwałą walkę wręcz.</translation>
+    </message>
 </context>
 <context>
     <name>WallNetworkService</name>

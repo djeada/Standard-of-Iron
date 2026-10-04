@@ -121,6 +121,8 @@ QtObject {
 
     readonly property var unitArtBase: ({
             "archer": "archer",
+            "slinger": "archer",
+            "velites": "spearman",
             "swordsman": "swordsman",
             "spearman": "spearman",
             "horse_archer": "horse_archer",
@@ -171,6 +173,8 @@ QtObject {
 
     readonly property var unitGlyphs: ({
             "archer": "\u279C",
+            "slinger": "\u279C",
+            "velites": "\u2694",
             "swordsman": "\u2694",
             "spearman": "\u25B2",
             "horse_swordsman": "\u265E",

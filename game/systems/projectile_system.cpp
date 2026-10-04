@@ -30,6 +30,10 @@ auto launch_cue_for_kind(ProjectileKind kind,
     return "combat.siege_launch";
   }
   switch (kind) {
+  case ProjectileKind::SlingStone:
+    return "combat.sling_throw";
+  case ProjectileKind::Javelin:
+    return "combat.javelin_throw";
   case ProjectileKind::Stone:
   case ProjectileKind::FlamingStone:
     return "combat.siege_launch";
@@ -51,6 +55,9 @@ auto impact_cue_for(ProjectileKind kind,
                     bool aimed_shot,
                     bool hit_target,
                     bool damage_applied) -> const char* {
+  if (kind == ProjectileKind::SlingStone || kind == ProjectileKind::Javelin) {
+    return hit_target ? "combat.hit.arrow" : "combat.skirmisher_ground_impact";
+  }
   if (kind == ProjectileKind::Fireball) {
     return "combat.fireball_impact";
   }
@@ -130,10 +137,12 @@ auto target_escaped_impact(const Engine::Core::Entity* target,
 
 [[nodiscard]] auto leaves_a_shaft(ProjectileKind kind) -> bool {
   switch (kind) {
+  case ProjectileKind::Javelin:
   case ProjectileKind::Arrow:
   case ProjectileKind::CursedArrow:
     return true;
   case ProjectileKind::Fireball:
+  case ProjectileKind::SlingStone:
   case ProjectileKind::Stone:
   case ProjectileKind::FlamingStone:
     return false;
@@ -256,7 +265,8 @@ void ProjectileSystem::spawn_arrow(const QVector3D& start,
                                         target_origin_at_launch.value_or(end)));
 
   bool const counts_toward_volley =
-      !is_ballista_bolt && kind != ProjectileKind::Stone &&
+      !is_ballista_bolt && kind != ProjectileKind::SlingStone &&
+      kind != ProjectileKind::Javelin && kind != ProjectileKind::Stone &&
       kind != ProjectileKind::FlamingStone && kind != ProjectileKind::Fireball;
   m_pending_launch_cues.push_back(
       {.cue_id = launch_cue_for_kind(kind, is_ballista_bolt, visual_style),

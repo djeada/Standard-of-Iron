@@ -32,6 +32,7 @@ void Archer::init(const SpawnParams& params) {
   const auto nation_id = resolve_nation_id(params);
   const auto troop_type =
       spawn_typeToTroopType(params.spawn_type).value_or(TroopType::Archer);
+  m_type_string = troop_typeToString(troop_type);
   auto profile =
       Game::Systems::TroopProfileService::instance().get_profile(nation_id, troop_type);
 

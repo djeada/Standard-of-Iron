@@ -38,6 +38,7 @@ add_library(
     arena_rpg_friendly_scenarios.cpp
     arena_identity_scenarios.cpp
     arena_allied_nation_scenarios.cpp
+    arena_skirmisher_scenarios.cpp
     arena_commander_duel_scenarios.cpp
     arena_weapon_scenarios.cpp
     arena_animation_matrix_scenarios.cpp

@@ -13533,6 +13533,34 @@ Clique com o botão direito para cancelar.</translation>
         <source>The Barcids raised their best foot in Spain. Iberian swordsmen wore white tunics edged in crimson and fought with the curved falcata.</source>
         <translation>Os Barcidas recrutaram sua melhor infantaria na Hispânia. Os espadachins iberos vestiam túnicas brancas com barra carmesim e lutavam com a falcata curva.</translation>
     </message>
+    <message>
+        <source>Balearic Slinger</source>
+        <translation>Fundibulário balear</translation>
+    </message>
+    <message>
+        <source>Velites</source>
+        <translation>Vélites</translation>
+    </message>
+    <message>
+        <source>Balearic islanders served Carthage as specialist slingers, carrying spare slings and a pouch of stones.</source>
+        <translation>Os ilhéus baleares serviram Cartago como fundibulários especializados, levando fundas de reserva e uma bolsa de pedras.</translation>
+    </message>
+    <message>
+        <source>Light infantry screen</source>
+        <translation>Cortina de infantaria leve</translation>
+    </message>
+    <message>
+        <source>Loose order and quick withdrawal behind friendly infantry.</source>
+        <translation>Ordem aberta e retirada rápida para trás da infantaria aliada.</translation>
+    </message>
+    <message>
+        <source>Roman velites screened the legions with light javelins, round parma shields and distinctive animal pelts.</source>
+        <translation>Os vélites romanos protegiam as legiões com dardos leves, escudos redondos parma e peles de animais marcantes.</translation>
+    </message>
+    <message>
+        <source>Vulnerable to cavalry and sustained melee.</source>
+        <translation>Vulnerável à cavalaria e ao combate corpo a corpo prolongado.</translation>
+    </message>
 </context>
 <context>
     <name>WallNetworkService</name>

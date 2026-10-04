@@ -13533,6 +13533,34 @@ Rechtsklick zum Abbrechen.</translation>
         <source>The Barcids raised their best foot in Spain. Iberian swordsmen wore white tunics edged in crimson and fought with the curved falcata.</source>
         <translation>Die Barkiden hoben ihr bestes Fußvolk in Hispanien aus. Iberische Schwertkämpfer trugen weiße Tuniken mit purpurrotem Saum und kämpften mit der gekrümmten Falcata.</translation>
     </message>
+    <message>
+        <source>Balearic Slinger</source>
+        <translation>Balearischer Schleuderer</translation>
+    </message>
+    <message>
+        <source>Velites</source>
+        <translation>Veliten</translation>
+    </message>
+    <message>
+        <source>Balearic islanders served Carthage as specialist slingers, carrying spare slings and a pouch of stones.</source>
+        <translation>Bewohner der Balearen dienten Karthago als spezialisierte Schleuderer und trugen Ersatzschleudern und einen Beutel voller Steine.</translation>
+    </message>
+    <message>
+        <source>Light infantry screen</source>
+        <translation>Leichte Infanterieschirmlinie</translation>
+    </message>
+    <message>
+        <source>Loose order and quick withdrawal behind friendly infantry.</source>
+        <translation>Lockere Ordnung und schneller Rückzug hinter die eigene Infanterie.</translation>
+    </message>
+    <message>
+        <source>Roman velites screened the legions with light javelins, round parma shields and distinctive animal pelts.</source>
+        <translation>Römische Veliten schirmten die Legionen mit leichten Wurfspeeren, runden Parma-Schilden und auffälligen Tierfellen ab.</translation>
+    </message>
+    <message>
+        <source>Vulnerable to cavalry and sustained melee.</source>
+        <translation>Anfällig gegen Reiterei und anhaltenden Nahkampf.</translation>
+    </message>
 </context>
 <context>
     <name>WallNetworkService</name>

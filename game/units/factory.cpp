@@ -76,6 +76,16 @@ void register_built_in_units(UnitFactoryRegistry& reg) {
                          return Archer::Create(world, params);
                        });
 
+  reg.register_factory(SpawnType::Slinger,
+                       [](Engine::Core::World& world, const SpawnParams& params) {
+                         return Archer::Create(world, params);
+                       });
+
+  reg.register_factory(SpawnType::Velites,
+                       [](Engine::Core::World& world, const SpawnParams& params) {
+                         return Archer::Create(world, params);
+                       });
+
   reg.register_factory(SpawnType::Swordsman,
                        [](Engine::Core::World& world, const SpawnParams& params) {
                          return Swordsman::Create(world, params);

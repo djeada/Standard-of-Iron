@@ -67,6 +67,7 @@ struct HumanoidAnimationManifest {
       Render::Humanoid::HumanoidPosePolicy::None};
 
   std::uint16_t melee_clip_override{0xFFFFU};
+  std::uint16_t ranged_clip_override{0xFFFFU};
 };
 
 struct ProportionScaling {

@@ -13,7 +13,7 @@ namespace {
 
 // clang-format off
 [[maybe_unused]] const char* const k_asset_strings[] = {
-    // 1135 strings across 9 contexts.
+    // 1142 strings across 9 contexts.
     // ---- Missions (448) ----
     QT_TRANSLATE_NOOP("Missions", "202 BC: Scipio arranged lanes through his infantry to blunt Hannibal's elephants, while Masinissa and Laelius commanded superior allied cavalry. The returning cavalry helped decide the battle. The Sepulcher intervention is the campaign's deliberate dark-fantasy break from history."),
     QT_TRANSLATE_NOOP("Missions", "215-212 BC: Hannibal campaigned across Campania while Capua served as his principal Italian ally and winter base. This dark-fantasy composite condenses several Roman attempts to contain and isolate the Carthaginian army."),
@@ -527,7 +527,7 @@ namespace {
     QT_TRANSLATE_NOOP("Nations", "Testudo"),
     QT_TRANSLATE_NOOP("Nations", "The Iron Sepulcher"),
 
-    // ---- Units (140) ----
+    // ---- Units (147) ----
     QT_TRANSLATE_NOOP("Units", "A tower rolled up to the curtain turned a wall from a barrier into a road."),
     QT_TRANSLATE_NOOP("Units", "African War Elephant"),
     QT_TRANSLATE_NOOP("Units", "An ancient army marched with its own carpenters and masons, raising and fortifying a camp every night."),
@@ -539,6 +539,8 @@ namespace {
     QT_TRANSLATE_NOOP("Units", "As brittle as any archer, and it withers as soon as the line in front of it fails."),
     QT_TRANSLATE_NOOP("Units", "Assault tower"),
     QT_TRANSLATE_NOOP("Units", "Auxiliary Archer"),
+    QT_TRANSLATE_NOOP("Units", "Balearic Slinger"),
+    QT_TRANSLATE_NOOP("Units", "Balearic islanders served Carthage as specialist slingers, carrying spare slings and a pouch of stones."),
     QT_TRANSLATE_NOOP("Units", "Ballista"),
     QT_TRANSLATE_NOOP("Units", "Battering Ram"),
     QT_TRANSLATE_NOOP("Units", "Battle caster"),
@@ -602,6 +604,8 @@ namespace {
     QT_TRANSLATE_NOOP("Units", "Legionary"),
     QT_TRANSLATE_NOOP("Units", "Liby-Phoenician Spear"),
     QT_TRANSLATE_NOOP("Units", "Libyan Archer"),
+    QT_TRANSLATE_NOOP("Units", "Light infantry screen"),
+    QT_TRANSLATE_NOOP("Units", "Loose order and quick withdrawal behind friendly infantry."),
     QT_TRANSLATE_NOOP("Units", "Loses the straight infantry fight to swords, and caught in the open it is only a slower line."),
     QT_TRANSLATE_NOOP("Units", "Marcus Claudius Marcellus"),
     QT_TRANSLATE_NOOP("Units", "Massed missile line"),
@@ -624,6 +628,7 @@ namespace {
     QT_TRANSLATE_NOOP("Units", "Raises every building an army needs and repairs what the enemy breaks."),
     QT_TRANSLATE_NOOP("Units", "Rams were hung from a timber frame and roofed in wet hides so the crew could pound a gate while the defenders burned and shot in vain."),
     QT_TRANSLATE_NOOP("Units", "Repays its cost against cavalry, and braced on high ground it holds against far heavier attacks."),
+    QT_TRANSLATE_NOOP("Units", "Roman velites screened the legions with light javelins, round parma shields and distinctive animal pelts."),
     QT_TRANSLATE_NOOP("Units", "Rome raised few archers of its own and drew them from Crete and the eastern allies instead."),
     QT_TRANSLATE_NOOP("Units", "Rome standardised the bolt thrower until every legion carried its own, mounted on carts and served by trained crews."),
     QT_TRANSLATE_NOOP("Units", "Sacred Band Healer"),
@@ -664,7 +669,9 @@ namespace {
     QT_TRANSLATE_NOOP("Units", "Towers taller than the wall were pushed against the curtain so a drawbridge could drop onto the parapet."),
     QT_TRANSLATE_NOOP("Units", "Triarius"),
     QT_TRANSLATE_NOOP("Units", "Turris"),
+    QT_TRANSLATE_NOOP("Units", "Velites"),
     QT_TRANSLATE_NOOP("Units", "Very slow, and a tall target that fire and stone-throwers bring down."),
+    QT_TRANSLATE_NOOP("Units", "Vulnerable to cavalry and sustained melee."),
     QT_TRANSLATE_NOOP("Units", "War Elephant"),
     QT_TRANSLATE_NOOP("Units", "War elephants terrified armies that had never met them, and were nearly useless against those that had."),
     QT_TRANSLATE_NOOP("Units", "Wins the straight infantry fight against spears, and overruns unescorted siege in seconds."),

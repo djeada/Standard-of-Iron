@@ -47,14 +47,20 @@ enum class SpawnType : std::uint8_t {
   Sheep,
   Wolf,
   Farm,
-  WallLadder
+  WallLadder,
+  Slinger,
+  Velites
 };
 
 inline constexpr std::size_t k_spawn_type_count =
-    static_cast<std::size_t>(SpawnType::WallLadder) + 1U;
+    static_cast<std::size_t>(SpawnType::Velites) + 1U;
 
 constexpr auto spawn_type_name(SpawnType type) -> std::string_view {
   switch (type) {
+  case SpawnType::Slinger:
+    return "slinger";
+  case SpawnType::Velites:
+    return "velites";
   case SpawnType::Archer:
     return "archer";
   case SpawnType::Swordsman:
@@ -129,6 +135,10 @@ constexpr auto spawn_type_name(SpawnType type) -> std::string_view {
 
 inline auto spawn_typeToQString(SpawnType type) -> QString {
   switch (type) {
+  case SpawnType::Slinger:
+    return QStringLiteral("slinger");
+  case SpawnType::Velites:
+    return QStringLiteral("velites");
   case SpawnType::Archer:
     return QStringLiteral("archer");
   case SpawnType::Swordsman:
@@ -207,6 +217,14 @@ inline auto spawn_typeToString(SpawnType type) -> std::string {
 
 inline auto try_parse_spawn_type(const QString& value, SpawnType& out) -> bool {
   const QString lowered = value.trimmed().toLower();
+  if (lowered == QStringLiteral("slinger")) {
+    out = SpawnType::Slinger;
+    return true;
+  }
+  if (lowered == QStringLiteral("velites")) {
+    out = SpawnType::Velites;
+    return true;
+  }
   if (lowered == QStringLiteral("archer")) {
     out = SpawnType::Archer;
     return true;
@@ -351,6 +369,12 @@ inline auto try_parse_spawn_type(const QString& value, SpawnType& out) -> bool {
 }
 
 inline auto spawn_typeFromString(const std::string& str) -> std::optional<SpawnType> {
+  if (str == "slinger") {
+    return SpawnType::Slinger;
+  }
+  if (str == "velites") {
+    return SpawnType::Velites;
+  }
   if (str == "archer") {
     return SpawnType::Archer;
   }
@@ -459,6 +483,10 @@ inline auto spawn_typeFromString(const std::string& str) -> std::optional<SpawnT
   return std::nullopt;
 }
 
+[[nodiscard]] inline auto is_skirmisher_spawn(SpawnType type) noexcept -> bool {
+  return type == SpawnType::Slinger || type == SpawnType::Velites;
+}
+
 [[nodiscard]] inline auto is_wildlife_spawn(SpawnType type) noexcept -> bool {
   return type == SpawnType::Sheep || type == SpawnType::Wolf;
 }
@@ -495,6 +523,8 @@ inline auto is_wall_network_spawn(SpawnType type) -> bool {
 
 [[nodiscard]] inline auto can_enter_forest(SpawnType type) noexcept -> bool {
   switch (type) {
+  case SpawnType::Slinger:
+  case SpawnType::Velites:
   case SpawnType::Archer:
   case SpawnType::Swordsman:
   case SpawnType::Healer:
@@ -592,6 +622,8 @@ inline auto can_use_patrol_mode(SpawnType type) -> bool {
 
 [[nodiscard]] inline auto can_use_run_mode(SpawnType type) noexcept -> bool {
   switch (type) {
+  case SpawnType::Slinger:
+  case SpawnType::Velites:
   case SpawnType::Archer:
   case SpawnType::Swordsman:
   case SpawnType::Spearman:
@@ -634,6 +666,10 @@ inline auto can_use_patrol_mode(SpawnType type) -> bool {
 
 inline auto spawn_typeToTroopType(SpawnType type) -> std::optional<TroopType> {
   switch (type) {
+  case SpawnType::Slinger:
+    return TroopType::Slinger;
+  case SpawnType::Velites:
+    return TroopType::Velites;
   case SpawnType::Archer:
     return TroopType::Archer;
   case SpawnType::Swordsman:
@@ -708,6 +744,10 @@ inline auto spawn_typeToTroopType(SpawnType type) -> std::optional<TroopType> {
 
 inline auto spawn_typeFromTroopType(TroopType type) -> SpawnType {
   switch (type) {
+  case TroopType::Slinger:
+    return SpawnType::Slinger;
+  case TroopType::Velites:
+    return SpawnType::Velites;
   case TroopType::Archer:
     return SpawnType::Archer;
   case TroopType::Swordsman:

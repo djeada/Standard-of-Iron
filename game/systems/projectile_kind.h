@@ -9,7 +9,9 @@ enum class ProjectileKind : std::uint8_t {
   Fireball,
   CursedArrow,
   Stone,
-  FlamingStone
+  FlamingStone,
+  SlingStone,
+  Javelin
 };
 
 [[nodiscard]] constexpr auto
@@ -17,6 +19,8 @@ is_cast_projectile_kind(ProjectileKind kind) noexcept -> bool {
   switch (kind) {
   case ProjectileKind::Fireball:
     return true;
+  case ProjectileKind::SlingStone:
+  case ProjectileKind::Javelin:
   case ProjectileKind::Arrow:
   case ProjectileKind::CursedArrow:
   case ProjectileKind::Stone:
@@ -32,6 +36,8 @@ is_incendiary_projectile_kind(ProjectileKind kind) noexcept -> bool {
   case ProjectileKind::Fireball:
   case ProjectileKind::FlamingStone:
     return true;
+  case ProjectileKind::SlingStone:
+  case ProjectileKind::Javelin:
   case ProjectileKind::Arrow:
   case ProjectileKind::CursedArrow:
   case ProjectileKind::Stone:

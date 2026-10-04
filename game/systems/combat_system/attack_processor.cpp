@@ -366,7 +366,8 @@ auto attacker_uses_bow_action(const Attacker& attacker,
                               bool special_projectile) -> bool {
   return special_projectile ||
          (is_ranged_mode(attacker.attack) &&
-          (attacker.unit->spawn_type == Game::Units::SpawnType::Archer ||
+          (Game::Units::is_skirmisher_spawn(attacker.unit->spawn_type) ||
+           attacker.unit->spawn_type == Game::Units::SpawnType::Archer ||
            attacker.unit->spawn_type == Game::Units::SpawnType::HorseArcher));
 }
 

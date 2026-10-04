@@ -585,6 +585,22 @@ TEST(ArenaScenariosTest, AlliedScenesFieldGallicAndIberianFootAndHorse) {
   }
 }
 
+TEST(ArenaScenariosTest, SkirmisherScenesFieldVelitesAndSlingers) {
+  using Game::Systems::NationID;
+  using Game::Units::TroopType;
+  for (auto const* id : {Arena::Scenarios::k_skirmisher_lineup_id,
+                         Arena::Scenarios::k_skirmisher_screen_id}) {
+    auto const* scenario = Arena::Scenarios::find_definition(QString::fromLatin1(id));
+    ASSERT_NE(scenario, nullptr) << id;
+    std::set<std::pair<NationID, TroopType>> fielded;
+    for (auto const& group : scenario->groups) {
+      fielded.emplace(group.nation_id, group.troop_type);
+    }
+    EXPECT_TRUE(fielded.contains({NationID::RomanRepublic, TroopType::Velites})) << id;
+    EXPECT_TRUE(fielded.contains({NationID::Carthage, TroopType::Slinger})) << id;
+  }
+}
+
 TEST(ArenaScenariosTest, CannaeAlliesFightOnCarthagesTeam) {
   using Game::Systems::NationID;
   auto const* scenario = Arena::Scenarios::find_definition(

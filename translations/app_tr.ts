@@ -13529,6 +13529,34 @@ Right-click to cancel.</source>
         <source>The Barcids raised their best foot in Spain. Iberian swordsmen wore white tunics edged in crimson and fought with the curved falcata.</source>
         <translation>Barkalılar en iyi piyadelerini Hispania&apos;da topladı. İberyalı kılıççılar kızıl kenarlı beyaz tunikler giyer ve kavisli falcata ile savaşırdı.</translation>
     </message>
+    <message>
+        <source>Balearic Slinger</source>
+        <translation>Balear Sapancısı</translation>
+    </message>
+    <message>
+        <source>Velites</source>
+        <translation>Velitler</translation>
+    </message>
+    <message>
+        <source>Balearic islanders served Carthage as specialist slingers, carrying spare slings and a pouch of stones.</source>
+        <translation>Balear adalıları Kartaca&apos;ya uzman sapancılar olarak hizmet etti; yedek sapanlar ve bir kese taş taşıyorlardı.</translation>
+    </message>
+    <message>
+        <source>Light infantry screen</source>
+        <translation>Hafif piyade perdesi</translation>
+    </message>
+    <message>
+        <source>Loose order and quick withdrawal behind friendly infantry.</source>
+        <translation>Gevşek düzen ve dost piyadenin arkasına hızlı geri çekilme.</translation>
+    </message>
+    <message>
+        <source>Roman velites screened the legions with light javelins, round parma shields and distinctive animal pelts.</source>
+        <translation>Romalı velitler lejyonları hafif ciritler, yuvarlak parma kalkanları ve dikkat çekici hayvan postlarıyla perdeledi.</translation>
+    </message>
+    <message>
+        <source>Vulnerable to cavalry and sustained melee.</source>
+        <translation>Süvariye ve uzun süren yakın dövüşe karşı savunmasız.</translation>
+    </message>
 </context>
 <context>
     <name>WallNetworkService</name>

@@ -465,6 +465,8 @@ enum class CombatAttackFamily : std::uint8_t {
   using Game::Units::SpawnType;
   if (mode == AttackComponent::CombatMode::Ranged) {
     switch (spawn_type) {
+    case SpawnType::Slinger:
+    case SpawnType::Velites:
     case SpawnType::Archer:
     case SpawnType::SkeletonArcher:
     case SpawnType::GravePriest:
@@ -480,6 +482,8 @@ enum class CombatAttackFamily : std::uint8_t {
   switch (spawn_type) {
   case SpawnType::Swordsman:
   case SpawnType::MountedSwordsman:
+  case SpawnType::Slinger:
+  case SpawnType::Velites:
   case SpawnType::Archer:
   case SpawnType::HorseArcher:
   case SpawnType::SkeletonSwordsman:

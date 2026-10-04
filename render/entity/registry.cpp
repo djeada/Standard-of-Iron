@@ -43,6 +43,7 @@
 #include "render/wildlife/sheep_spec.h"
 #include "render/wildlife/wolf_spec.h"
 #include "siege_assault_renderer.h"
+#include "skirmisher_renderer.h"
 #include "temple_renderer.h"
 #include "wall_renderer.h"
 #include "wildlife/sheep_renderer.h"
@@ -101,6 +102,7 @@ void register_built_in_entity_renderers(EntityRendererRegistry& registry) {
   Render::Wildlife::initialize_sheep_asset();
   Render::Wildlife::initialize_wolf_asset();
 
+  register_skirmisher_renderers(registry);
   Roman::register_archer_renderer(registry);
   Carthage::register_archer_renderer(registry);
 

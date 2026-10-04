@@ -32,6 +32,7 @@
 #include "settlement_life_system.h"
 #include "showcase_routine_system.h"
 #include "siege_tower_system.h"
+#include "skirmish_screen_system.h"
 #include "stamina_system.h"
 #include "systems/economy/capture_system.h"
 #include "systems/economy/civilian_delivery_system.h"
@@ -106,6 +107,9 @@ void register_runtime_systems(Engine::Core::World& world) {
   world.add_system(std::make_unique<PatrolSystem>(),
                    Engine::Core::SystemPhase::Movement);
   world.add_system(std::make_unique<GuardSystem>(),
+                   Engine::Core::SystemPhase::Movement);
+  world.add_system(std::make_unique<SkirmishScreenSystem>(
+                       SkirmishScreenSystem::Services{.owners = session.owners()}),
                    Engine::Core::SystemPhase::Movement);
   world.add_system(std::make_unique<Game::Formation::ArmyFormationRuntime>(),
                    Engine::Core::SystemPhase::Movement);

@@ -33,6 +33,7 @@
 #include "arena_sepulcher_scenarios.h"
 #include "arena_settlement_life_scenarios.h"
 #include "arena_showcase_scenarios.h"
+#include "arena_skirmisher_scenarios.h"
 #include "arena_spotlight_scenarios.h"
 #include "arena_structure_lifecycle_scenarios.h"
 #include "arena_stuck_recovery_scenarios.h"
@@ -103,6 +104,7 @@ auto definitions() -> const std::vector<ArenaScenarioDefinition>& {
     append(values, build_structure_lifecycle_definitions());
     append(values, build_grounding_definitions());
     append(values, build_allied_nation_definitions());
+    append(values, build_skirmisher_definitions());
 
     for (auto& scenario : values) {
       if (scenario.rpg_mode && !scenario.rpg_commander_group.isEmpty()) {
