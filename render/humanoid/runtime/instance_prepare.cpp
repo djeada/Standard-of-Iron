@@ -1889,6 +1889,7 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
 
   ++stats.soldiers_rendered;
 
+  inst_ctx.soldier_index = static_cast<std::uint16_t>(idx);
   RCP::CreatureGraphInputs graph_inputs{};
   graph_inputs.ctx = &inst_ctx;
   graph_inputs.anim = &soldier_render_anim;

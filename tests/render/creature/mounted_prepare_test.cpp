@@ -670,6 +670,50 @@ TEST(MountedPrepare, MountedRiderRequestUsesAbsoluteSeatWorld) {
   EXPECT_GT(rider_from_horse.column(3).toVector3D().length(), 0.0F);
 }
 
+TEST(MountedPrepare, FallenRiderLeavesTheSaddleForTheGround) {
+  Render::GL::MountedSwordsmanRendererConfig cfg;
+  cfg.has_sword = false;
+  cfg.has_cavalry_shield = false;
+  Render::GL::MountedSwordsmanRendererBase const renderer(cfg);
+
+  auto rider_offset_from_horse = [&](bool dying) -> QVector3D {
+    Render::GL::DrawContext ctx{};
+    ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
+    ctx.force_single_soldier = true;
+    Render::GL::AnimationInputs anim{};
+    anim.is_dying = dying;
+    anim.death_progress = dying ? 0.4F : 0.0F;
+
+    Render::Humanoid::HumanoidPreparation prep;
+    Render::Humanoid::prepare_humanoid_instances(
+        renderer, ctx, anim, test_runtime(0U), prep);
+    auto const& requests = prep.bodies.requests();
+    auto const horse_req =
+        std::find_if(requests.begin(), requests.end(), [](const auto& req) {
+          return Render::Creature::ArchetypeRegistry::instance().species(
+                     req.archetype) == Render::Creature::Pipeline::CreatureKind::Horse;
+        });
+    auto const rider_req =
+        std::find_if(requests.begin(), requests.end(), [](const auto& req) {
+          return Render::Creature::ArchetypeRegistry::instance().species(
+                     req.archetype) ==
+                 Render::Creature::Pipeline::CreatureKind::Humanoid;
+        });
+    if (horse_req == requests.end() || rider_req == requests.end()) {
+      ADD_FAILURE() << "missing horse or rider request";
+      return {};
+    }
+    return (horse_req->world.inverted() * rider_req->world).column(3).toVector3D();
+  };
+
+  QVector3D const seated = rider_offset_from_horse(false);
+  QVector3D const fallen = rider_offset_from_horse(true);
+  EXPECT_LT(std::abs(seated.x()), 0.05F) << "a living rider sits over the spine";
+  EXPECT_NEAR(fallen.y(), 0.0F, 1.0e-3F)
+      << "a dying rider's death clip falls from the ground, not from the saddle";
+  EXPECT_GT(std::abs(fallen.x()), 0.1F) << "and he falls beside the horse, not into it";
+}
+
 TEST(MountedPrepare, MountedUnitGroupsRiderAndHorseBySharedWorldKey) {
   using Render::Creature::Pipeline::CreatureKind;
 

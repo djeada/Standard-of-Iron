@@ -201,11 +201,11 @@ auto cannae_allied_clash() -> ArenaScenarioDefinition {
   };
   s.steps.back().group = QStringLiteral("iberian_centre");
   s.steps.back().target_group = QStringLiteral("roman_line");
-  // Body stability is asserted on the infantry only: cavalry meeting cavalry
-  // tilts riders past the check whichever nation rides (Carthage's own horse
-  // does it too), which is a mounted-melee issue of its own.
-  add_visual_stability(
-      s, {QStringLiteral("gallic_centre"), QStringLiteral("iberian_centre")});
+  add_visual_stability(s,
+                       {QStringLiteral("gallic_centre"),
+                        QStringLiteral("iberian_centre"),
+                        QStringLiteral("gallic_horse"),
+                        QStringLiteral("iberian_horse")});
   s.expectations.push_back(expectation(Expect::AttackHasVisibleContact,
                                        QStringLiteral("roman_line"),
                                        QStringLiteral("gallic_centre")));
