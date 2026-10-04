@@ -3208,6 +3208,22 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
         <source>The watch does not sleep</source>
         <translation>Nöbet uyumaz</translation>
     </message>
+    <message>
+        <source>Gallic Allies</source>
+        <translation>Galyalı Müttefikler</translation>
+    </message>
+    <message>
+        <source>Allies of Carthage from beyond the Po</source>
+        <translation>Po&apos;nun ötesinden Kartaca&apos;nın müttefikleri</translation>
+    </message>
+    <message>
+        <source>Iberian Allies</source>
+        <translation>İberyalı Müttefikler</translation>
+    </message>
+    <message>
+        <source>Allies of Carthage from Hispania</source>
+        <translation>Hispania&apos;dan Kartaca&apos;nın müttefikleri</translation>
+    </message>
 </context>
 <context>
     <name>FloatingNumbers</name>
@@ -9737,6 +9753,14 @@ bir harita seç</translation>
         <source>The Iron Sepulcher</source>
         <translation>Demir Kabir</translation>
     </message>
+    <message>
+        <source>Gallic Allies</source>
+        <translation>Galyalı Müttefikler</translation>
+    </message>
+    <message>
+        <source>Iberian Allies</source>
+        <translation>İberyalı Müttefikler</translation>
+    </message>
 </context>
 <context>
     <name>Numerals</name>
@@ -13472,6 +13496,66 @@ Right-click to cancel.</source>
     <message>
         <source>Very slow, and a tall target that fire and stone-throwers bring down.</source>
         <translation>Çok yavaştır; ateş ve taş atanların indirdiği uzun bir hedeftir.</translation>
+    </message>
+    <message>
+        <source>Gallic Cavalry</source>
+        <translation>Galya Süvarisi</translation>
+    </message>
+    <message>
+        <source>Gallic Swordsmen</source>
+        <translation>Galya Kılıççıları</translation>
+    </message>
+    <message>
+        <source>Gallic nobles fought on horseback with long swords. Under Hasdrubal at Cannae they broke the Roman horse on the river flank and rode round to close the trap.</source>
+        <translation>Galyalı soylular uzun kılıçlarla at sırtında savaşırdı. Cannae&apos;de Hasdrubal&apos;ın komutasında nehir kanadındaki Roma süvarilerini dağıttılar ve tuzağı kapatmak için arkadan dolandılar.</translation>
+    </message>
+    <message>
+        <source>Gauls of the Po valley joined Hannibal once he was over the Alps. At Cannae they held the centre of the crescent and fell back on purpose, drawing the legions in.</source>
+        <translation>Po vadisinin Galyalıları, Hannibal Alpleri aşar aşmaz ona katıldı. Cannae&apos;de hilalin merkezini tuttular ve lejyonları içeri çekmek için bilerek geri çekildiler.</translation>
+    </message>
+    <message>
+        <source>Iberian Cavalry</source>
+        <translation>İberya Süvarisi</translation>
+    </message>
+    <message>
+        <source>Iberian Swordsmen</source>
+        <translation>İberya Kılıççıları</translation>
+    </message>
+    <message>
+        <source>Iberian horsemen carried the small round caetra and the falcata. At Cannae they rode beside the Gauls on the left wing and helped ride down the Roman cavalry.</source>
+        <translation>İberyalı süvariler küçük yuvarlak caetra kalkanını ve falcatayı taşırdı. Cannae&apos;de sol kanatta Galyalıların yanında at sürdüler ve Roma süvarilerini ezmeye yardım ettiler.</translation>
+    </message>
+    <message>
+        <source>The Barcids raised their best foot in Spain. Iberian swordsmen wore white tunics edged in crimson and fought with the curved falcata.</source>
+        <translation>Barkalılar en iyi piyadelerini Hispania&apos;da topladı. İberyalı kılıççılar kızıl kenarlı beyaz tunikler giyer ve kavisli falcata ile savaşırdı.</translation>
+    </message>
+    <message>
+        <source>Balearic Slinger</source>
+        <translation>Balear Sapancısı</translation>
+    </message>
+    <message>
+        <source>Velites</source>
+        <translation>Velitler</translation>
+    </message>
+    <message>
+        <source>Balearic islanders served Carthage as specialist slingers, carrying spare slings and a pouch of stones.</source>
+        <translation>Balear adalıları Kartaca&apos;ya uzman sapancılar olarak hizmet etti; yedek sapanlar ve bir kese taş taşıyorlardı.</translation>
+    </message>
+    <message>
+        <source>Light infantry screen</source>
+        <translation>Hafif piyade perdesi</translation>
+    </message>
+    <message>
+        <source>Loose order and quick withdrawal behind friendly infantry.</source>
+        <translation>Gevşek düzen ve dost piyadenin arkasına hızlı geri çekilme.</translation>
+    </message>
+    <message>
+        <source>Roman velites screened the legions with light javelins, round parma shields and distinctive animal pelts.</source>
+        <translation>Romalı velitler lejyonları hafif ciritler, yuvarlak parma kalkanları ve dikkat çekici hayvan postlarıyla perdeledi.</translation>
+    </message>
+    <message>
+        <source>Vulnerable to cavalry and sustained melee.</source>
+        <translation>Süvariye ve uzun süren yakın dövüşe karşı savunmasız.</translation>
     </message>
 </context>
 <context>

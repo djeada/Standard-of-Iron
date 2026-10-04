@@ -168,6 +168,15 @@ void apply_role_specific_combat_clip(
     }
   }
 
+  if (!anim.inputs.is_melee &&
+      spec.animation_manifest.ranged_clip_override != Animation::k_unmapped_clip) {
+    selection.clip_id = spec.animation_manifest.ranged_clip_override;
+    selection.clip_variant = 0U;
+    selection.phase = anim.inputs.has_authored_action_phase
+                          ? std::clamp(anim.inputs.authored_action_phase, 0.0F, 1.0F)
+                          : std::clamp(anim.attack_phase, 0.0F, 1.0F);
+  }
+
   if (anim.inputs.is_melee &&
       spec.animation_manifest.melee_clip_override != Animation::k_unmapped_clip) {
     selection.clip_id = spec.animation_manifest.melee_clip_override;

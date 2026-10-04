@@ -34,6 +34,8 @@ auto nation_voice_prefix(Game::Systems::NationID nation_id) -> std::string {
   case Game::Systems::NationID::RomanRepublic:
     return "roman";
   case Game::Systems::NationID::Carthage:
+  case Game::Systems::NationID::Gauls:
+  case Game::Systems::NationID::Iberians:
     return "carthage";
   case Game::Systems::NationID::IronSepulcher:
     return {};
@@ -160,6 +162,8 @@ auto hit_cue_for_attacker(Game::Units::SpawnType type) -> const char* {
   case Game::Units::SpawnType::Spearman:
   case Game::Units::SpawnType::HorseSpearman:
     return Cue::k_combat_hit_spear;
+  case Game::Units::SpawnType::Slinger:
+  case Game::Units::SpawnType::Velites:
   case Game::Units::SpawnType::Archer:
   case Game::Units::SpawnType::SkeletonArcher:
   case Game::Units::SpawnType::HorseArcher:

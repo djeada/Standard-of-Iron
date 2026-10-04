@@ -63,6 +63,62 @@
       }
     },
     {
+      "id": "slinger",
+      "display_name": "Balearic Slinger",
+      "production": {
+        "cost": 16,
+        "population": 16,
+        "resource_costs": {
+          "wood": 20,
+          "iron": 0
+        },
+        "build_time": 4.5,
+        "priority": 11,
+        "is_melee": false
+      },
+      "combat": {
+        "health": 360,
+        "max_health": 360,
+        "speed": 3.6,
+        "vision_range": 16.0,
+        "ranged_range": 8.2,
+        "ranged_damage": 18,
+        "ranged_cooldown": 1.15,
+        "melee_range": 1.5,
+        "melee_damage": 5,
+        "melee_cooldown": 0.8,
+        "can_ranged": true,
+        "can_melee": true
+      },
+      "visuals": {
+        "render_scale": 0.55,
+        "selection_ring_size": 1.2,
+        "selection_ring_ground_offset": 0.0,
+        "renderer_id": "troops/carthage/slinger",
+        "formation_spacing": 1.15
+      },
+      "formation": {
+        "individuals_per_unit": 16,
+        "max_units_per_row": 8,
+        "roles": [
+          "ranged",
+          "skirmisher"
+        ],
+        "unit_layout": "loose_order_ranged",
+        "defensive_layout": "loose_order_ranged",
+        "army_roles": [
+          "screen",
+          "ranged"
+        ]
+      },
+      "lore": {
+        "role": "Light infantry screen",
+        "strengths": "Loose order and quick withdrawal behind friendly infantry.",
+        "weaknesses": "Vulnerable to cavalry and sustained melee.",
+        "history": "Balearic islanders served Carthage as specialist slingers, carrying spare slings and a pouch of stones."
+      }
+    },
+    {
       "id": "swordsman",
       "display_name": "Citizen Infantry",
       "production": {

@@ -9,6 +9,20 @@ may change in any release — see [Save compatibility](#save-compatibility).
 
 ## [Unreleased]
 
+### Added
+
+- **Gauls and Iberians fight for Carthage.** Two allied nations, each with a
+  swordsman and a mounted swordsman, modelled on the Iron Sepulcher: not playable,
+  no economy, no buildings. Gauls carry a tall oval shield with a spine, a long
+  La Tène sword and a crestless Montefortino, and wear a striped wool tunic over
+  trousers. Iberians wear a white tunic bordered in crimson, a broad belt with a
+  bronze plaque and a sinew cap, and carry the falcata and the small round
+  caetra. Both tunics are fitted with the same torso mesh as the body armours. Map spawns, mission `starting_units` and
+  wave `composition` entries take a per-unit `"nation"`, so a Carthaginian owner
+  can field them directly; an ally can also hold its own owner slot on
+  Carthage's team. They use Carthage's formation doctrine and voices. The arena
+  adds `allied_identity_lineup` and `cannae_allied_clash`.
+
 ### Changed
 
 - **The Storming of Victumulae is a fortress you besiege.** The town is a square

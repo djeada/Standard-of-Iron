@@ -44,6 +44,29 @@ auto volley_color(const Engine::Core::UnitComponent* attacker_unit) -> QVector3D
              : QVector3D(0.8F, 0.9F, 1.0F);
 }
 
+struct MissileProfile {
+  ProjectileKind kind{ProjectileKind::Arrow};
+  ArrowVisualStyle style{ArrowVisualStyle::Focused};
+  float speed{Constants::k_arrow_speed};
+  float arc_scale{1.0F};
+};
+
+auto missile_profile(const Engine::Core::Entity& attacker,
+                     ArrowVisualStyle style) -> MissileProfile {
+  auto const* registry = attacker.registry();
+  auto const* unit =
+      registry == nullptr
+          ? nullptr
+          : registry->try_get<Engine::Core::UnitComponent>(attacker.get_id());
+  if (unit != nullptr && unit->spawn_type == Game::Units::SpawnType::Slinger) {
+    return {ProjectileKind::SlingStone, ArrowVisualStyle::Focused, 18.0F, 0.18F};
+  }
+  if (unit != nullptr && unit->spawn_type == Game::Units::SpawnType::Velites) {
+    return {ProjectileKind::Javelin, ArrowVisualStyle::Javelin, 12.0F, 1.0F};
+  }
+  return {ProjectileKind::Arrow, style, Constants::k_arrow_speed, 1.0F};
+}
+
 void spawn_focused_arrow_at_rpg_target(Engine::Core::Entity* attacker,
                                        Engine::Core::Entity* target,
                                        ProjectileSystem* projectile_sys,
@@ -67,12 +90,13 @@ void spawn_focused_arrow_at_rpg_target(Engine::Core::Entity* attacker,
   QVector3D const start = source_pos + QVector3D(0.0F, 1.18F, 0.0F) +
                           direction * Constants::k_arrow_start_offset;
   QVector3D const end = t_pos + QVector3D(0.0F, 1.25F, 0.0F) - direction * 0.42F;
+  auto const missile = missile_profile(*attacker, ArrowVisualStyle::Focused);
   projectile_sys->spawn_arrow(start,
                               end,
                               color,
-                              Constants::k_arrow_speed,
+                              missile.speed,
                               false,
-                              ProjectileKind::Arrow,
+                              missile.kind,
                               true,
                               std::max(1, damage),
                               attacker->get_id(),
@@ -80,8 +104,9 @@ void spawn_focused_arrow_at_rpg_target(Engine::Core::Entity* attacker,
                               0.0F,
                               0.0F,
                               false,
-                              ArrowVisualStyle::Focused,
-                              t_pos);
+                              missile.style,
+                              t_pos,
+                              missile.arc_scale);
 }
 
 auto crowd_arrow_count(const Engine::Core::Entity* attacker,
@@ -201,12 +226,13 @@ void spawn_volley_arrow(Engine::Core::Entity* attacker,
                 QVector3D(0.0F, Constants::k_arrow_target_offset, 0.0F) + end_offset;
 
   bool const damage_carrier = i == volley.arrow_count / 2;
+  auto const missile = missile_profile(*attacker, volley.style);
   projectile_sys->spawn_arrow(start,
                               end,
                               geometry.color,
-                              Constants::k_arrow_speed,
+                              missile.speed,
                               false,
-                              ProjectileKind::Arrow,
+                              missile.kind,
                               damage_carrier,
                               damage_carrier ? std::max(1, damage) : 0,
                               attacker->get_id(),
@@ -214,8 +240,9 @@ void spawn_volley_arrow(Engine::Core::Entity* attacker,
                               0.0F,
                               0.0F,
                               false,
-                              volley.style,
-                              t_pos);
+                              missile.style,
+                              t_pos,
+                              missile.arc_scale);
 }
 
 } // namespace

@@ -1,0 +1,83 @@
+{
+  "id": "gauls",
+  "display_name": "Gallic Allies",
+  "primary_building": "none",
+  "playable": false,
+  "has_economy": false,
+  "selectable_in_skirmish": false,
+  "doctrine": "carthage",
+  "troops": [
+    {
+      "id": "swordsman",
+      "display_name": "Gallic Swordsmen",
+      "production": {
+        "cost": 0,
+        "build_time": 0.0,
+        "priority": 10,
+        "is_melee": true
+      },
+      "combat": {
+        "health": 980,
+        "max_health": 980,
+        "speed": 2.6,
+        "vision_range": 14.5,
+        "ranged_range": 1.5,
+        "ranged_damage": 5,
+        "ranged_cooldown": 1.8,
+        "melee_range": 1.75,
+        "melee_damage": 31,
+        "melee_cooldown": 0.62,
+        "can_ranged": false,
+        "can_melee": true
+      },
+      "visuals": {
+        "render_scale": 0.62,
+        "selection_ring_size": 1.4,
+        "renderer_id": "troops/gauls/swordsman"
+      },
+      "formation": {
+        "individuals_per_unit": 16,
+        "max_units_per_row": 4
+      },
+      "lore": {
+        "history": "Gauls of the Po valley joined Hannibal once he was over the Alps. At Cannae they held the centre of the crescent and fell back on purpose, drawing the legions in."
+      }
+    },
+    {
+      "id": "horse_swordsman",
+      "display_name": "Gallic Cavalry",
+      "production": {
+        "cost": 0,
+        "build_time": 0.0,
+        "priority": 16,
+        "is_melee": true
+      },
+      "combat": {
+        "health": 1950,
+        "max_health": 1950,
+        "speed": 4.4,
+        "vision_range": 18.0,
+        "ranged_range": 1.5,
+        "ranged_damage": 5,
+        "ranged_cooldown": 1.8,
+        "melee_range": 2.0,
+        "melee_damage": 36,
+        "melee_cooldown": 0.66,
+        "can_ranged": false,
+        "can_melee": true
+      },
+      "visuals": {
+        "render_scale": 0.84,
+        "selection_ring_size": 2.1,
+        "renderer_id": "troops/gauls/horse_swordsman"
+      },
+      "formation": {
+        "individuals_per_unit": 9,
+        "max_units_per_row": 3
+      },
+      "lore": {
+        "history": "Gallic nobles fought on horseback with long swords. Under Hasdrubal at Cannae they broke the Roman horse on the river flank and rode round to close the trap."
+      }
+    }
+  ]
+}

@@ -161,7 +161,10 @@ private:
     if (m_profile.apply_skin_override) {
       apply_color(style.skin_color, variant.palette.skin, 0.0F, 1.0F);
     }
-    apply_color(style.cloth_color, variant.palette.cloth);
+    apply_color(style.cloth_color,
+                variant.palette.cloth,
+                style.cloth_team_weight.value_or(k_team_mix_weight),
+                style.cloth_style_weight.value_or(k_style_mix_weight));
     apply_color(
         style.leather_color, variant.palette.leather, k_leather_team_mix_weight);
     apply_color(style.leather_dark_color,

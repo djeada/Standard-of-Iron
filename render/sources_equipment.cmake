@@ -21,6 +21,7 @@ set(RENDER_EQUIPMENT_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/armor_light_carthage.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/armor_heavy_carthage.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/roman_greaves.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/allied_garments.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/roman_shoulder_cover.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/carthage_shoulder_cover.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/work_apron_renderer.cpp

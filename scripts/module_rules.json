@@ -336,6 +336,7 @@
         "game/systems/healing_rules",
         "game/systems/healing_system",
         "game/systems/guard_system",
+        "game/systems/skirmish_screen_system",
         "game/systems/patrol_system",
         "game/systems/commander_system",
         "game/systems/stamina_system",

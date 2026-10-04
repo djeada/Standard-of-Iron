@@ -294,6 +294,83 @@ TEST(NationLoader, IronSepulcherProfilesResolveUndeadRenderers) {
   EXPECT_TRUE(grave_priest.has_ability("fireball"));
 }
 
+TEST(NationLoader, CarthageAlliesRoundTripNationIds) {
+  for (auto const& [text, id] :
+       {std::pair{QStringLiteral("gauls"), Game::Systems::NationID::Gauls},
+        std::pair{QStringLiteral("iberians"), Game::Systems::NationID::Iberians}}) {
+    Game::Systems::NationID parsed{};
+    EXPECT_TRUE(Game::Systems::try_parse_nation_id(text, parsed)) << text.toStdString();
+    EXPECT_EQ(parsed, id);
+    EXPECT_EQ(Game::Systems::nation_id_to_qstring(id), text);
+  }
+}
+
+TEST(NationLoader, CarthageAlliesLoadAsSwordAndHorseRosters) {
+  auto const nations = Game::Systems::NationLoader::load_default_nations();
+  ASSERT_FALSE(nations.empty());
+
+  for (auto const id :
+       {Game::Systems::NationID::Gauls, Game::Systems::NationID::Iberians}) {
+    auto const it = std::find_if(
+        nations.begin(), nations.end(), [id](const Game::Systems::Nation& nation) {
+          return nation.id == id;
+        });
+    ASSERT_NE(it, nations.end()) << Game::Systems::nation_id_to_string(id);
+
+    EXPECT_EQ(it->doctrine, "carthage") << it->display_name;
+    EXPECT_FALSE(it->primary_building.has_value()) << it->display_name;
+    EXPECT_FALSE(it->playable) << it->display_name;
+    EXPECT_FALSE(it->has_economy) << it->display_name;
+    EXPECT_FALSE(it->selectable_in_skirmish) << it->display_name;
+    ASSERT_EQ(it->available_troops.size(), 2U) << it->display_name;
+    EXPECT_NE(it->get_troop(Game::Units::TroopType::Swordsman), nullptr);
+    EXPECT_NE(it->get_troop(Game::Units::TroopType::MountedSwordsman), nullptr);
+  }
+}
+
+TEST(NationLoader, CarthageAlliesResolveTheirOwnRenderers) {
+  auto const nations = Game::Systems::NationLoader::load_default_nations();
+  ASSERT_FALSE(nations.empty());
+
+  auto& registry = Game::Systems::NationRegistry::instance();
+  registry.clear();
+  registry.clear_player_assignments();
+  for (const auto& nation : nations) {
+    registry.register_nation(nation);
+  }
+
+  auto& profiles = Game::Systems::TroopProfileService::instance();
+  profiles.clear();
+
+  struct Expected {
+    Game::Systems::NationID nation;
+    Game::Units::TroopType troop;
+    const char* renderer;
+  };
+  for (auto const& expected : {Expected{Game::Systems::NationID::Gauls,
+                                        Game::Units::TroopType::Swordsman,
+                                        "troops/gauls/swordsman"},
+                               Expected{Game::Systems::NationID::Gauls,
+                                        Game::Units::TroopType::MountedSwordsman,
+                                        "troops/gauls/horse_swordsman"},
+                               Expected{Game::Systems::NationID::Iberians,
+                                        Game::Units::TroopType::Swordsman,
+                                        "troops/iberians/swordsman"},
+                               Expected{Game::Systems::NationID::Iberians,
+                                        Game::Units::TroopType::MountedSwordsman,
+                                        "troops/iberians/horse_swordsman"}}) {
+    auto const profile = profiles.get_profile(expected.nation, expected.troop);
+    EXPECT_EQ(profile.visuals.renderer_id, expected.renderer);
+    EXPECT_FALSE(profile.lore.history.empty()) << expected.renderer;
+  }
+
+  auto const carthage = profiles.get_profile(Game::Systems::NationID::Carthage,
+                                             Game::Units::TroopType::Swordsman);
+  auto const gauls = profiles.get_profile(Game::Systems::NationID::Gauls,
+                                          Game::Units::TroopType::Swordsman);
+  EXPECT_NE(gauls.display_name, carthage.display_name);
+}
+
 TEST(NationLoader, DefaultNationRemainsRomanRepublic) {
   auto& registry = Game::Systems::NationRegistry::instance();
   registry.clear();

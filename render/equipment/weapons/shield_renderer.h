@@ -23,7 +23,11 @@ struct ShieldRenderConfig {
   float shield_radius = 0.18F;
   float shield_aspect = 1.0F;
   bool has_cross_decal = false;
+  bool has_spine = false;
+  float dome_depth = 0.0F;
   int material_id = 4;
+  // Painted motifs and rim fittings, enabled only by the allied loadouts.
+  bool has_radial_decoration = false;
 };
 
 class ShieldRenderer : public IEquipmentRenderer {

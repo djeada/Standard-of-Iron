@@ -436,6 +436,7 @@ add_library(
     systems/rpg_combat_system/rpg_targeting.cpp
     systems/patrol_system.cpp
     systems/guard_system.cpp
+    systems/skirmish_screen_system.cpp
     systems/engagement_slot_system.cpp
     systems/target_commitment_system.cpp
     systems/attack_range.cpp

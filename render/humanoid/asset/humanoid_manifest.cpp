@@ -51,6 +51,8 @@ enum class BakerAttackType : std::uint8_t {
   BowMelee,
   SpearFromHold,
   BowFromHold,
+  Sling,
+  Javelin,
 };
 enum class BakerWorkType : std::uint8_t {
   None,
@@ -253,7 +255,8 @@ struct HumanoidClipSpec {
 }
 
 [[nodiscard]] auto is_ranged_attack_type(BakerAttackType type) noexcept -> bool {
-  return type == BakerAttackType::Bow || type == BakerAttackType::BowFromHold;
+  return type == BakerAttackType::Bow || type == BakerAttackType::BowFromHold ||
+         type == BakerAttackType::Sling || type == BakerAttackType::Javelin;
 }
 
 constexpr auto k_humanoid_baker_clip_count = Animation::k_humanoid_clip_count;
@@ -1426,6 +1429,32 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Animation::k_humanoid_climb_cycle_time,
      true,
      BakerWorkType::Climb},
+    {"sling_throw",
+     Render::GL::HumanoidMotionState::Attacking,
+     BakerAttackType::Sling,
+     0,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     48U,
+     48.0F,
+     1.0F,
+     false},
+    {"javelin_throw",
+     Render::GL::HumanoidMotionState::Attacking,
+     BakerAttackType::Javelin,
+     0,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     48U,
+     48.0F,
+     1.0F,
+     false},
 }};
 
 struct HumanoidSocketSpec {
@@ -2353,6 +2382,36 @@ void bake_humanoid_clip_frame(BakeProfile profile,
         ctrl.spear_thrust_variant(phase, clip.attack_variant);
       }
       break;
+    case BakerAttackType::Sling:
+    case BakerAttackType::Javelin: {
+      // Both releases coincide with the RTS missile event at phase 0.46.
+      bool const sling = clip.attack_type == BakerAttackType::Sling;
+      float const windup = std::clamp(phase / 0.36F, 0.0F, 1.0F);
+      float const release = std::clamp((phase - 0.36F) / 0.10F, 0.0F, 1.0F);
+      float const recover = std::clamp((phase - 0.60F) / 0.40F, 0.0F, 1.0F);
+      float const angle = windup * 4.0F * std::numbers::pi_v<float>;
+      QVector3D const rest(0.10F, -0.30F, 0.18F);
+      QVector3D const loaded = sling ? QVector3D(0.20F + 0.12F * std::cos(angle),
+                                                 0.20F,
+                                                 0.12F * std::sin(angle))
+                                     : QVector3D(0.13F, 0.15F, -0.30F);
+      QVector3D const extended(0.02F, 0.02F, 0.48F);
+      QVector3D const cocked = rest * (1.0F - windup) + loaded * windup;
+      QVector3D const thrown = cocked * (1.0F - release) + extended * release;
+      pose.hand_r = pose.shoulder_r + thrown * (1.0F - recover) + rest * recover;
+      pose.elbow_r = pose.shoulder_r +
+                     QVector3D(0.23F, 0.02F, -0.06F) * (windup * (1.0F - recover)) +
+                     QVector3D(0.08F, -0.18F, 0.10F);
+      pose.hand_l = pose.shoulder_l + QVector3D(-0.04F, -0.22F, 0.27F);
+      pose.elbow_l = pose.shoulder_l + QVector3D(-0.12F, -0.17F, 0.10F);
+      pose.grip_axis_r =
+          sling ? QVector3D(std::cos(angle), 0.12F, std::sin(angle)).normalized()
+                : QVector3D(0.0F, 0.20F - release * 0.15F, 1.0F).normalized();
+      pose.grip_axis_l = QVector3D(0.0F, 1.0F, 0.0F);
+      ctrl.tilt_torso(-0.10F * windup * (1.0F - recover),
+                      (0.16F * windup - 0.30F * release) * (1.0F - recover));
+      break;
+    }
     case BakerAttackType::Bow:
       ctrl.aim_bow(phase);
       break;
@@ -2680,6 +2739,8 @@ void bake_humanoid_clip_frame(BakeProfile profile,
       clip.attack_type == BakerAttackType::SpearFromHold ||
       clip.attack_type == BakerAttackType::Bow ||
       clip.attack_type == BakerAttackType::BowFromHold ||
+      clip.attack_type == BakerAttackType::Sling ||
+      clip.attack_type == BakerAttackType::Javelin ||
       clip.hold_type == BakerHoldType::Spear || clip.hold_type == BakerHoldType::Bow ||
       clip.riding_type == BakerRidingType::SwordStrike ||
       clip.riding_type == BakerRidingType::SpearThrust) {

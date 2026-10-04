@@ -3,6 +3,7 @@
 #include "weapons/quiver_renderer.h"
 #include "weapons/roman_scutum.h"
 #include "weapons/shield_carthage.h"
+#include "weapons/shield_renderer.h"
 #include "weapons/spear_renderer.h"
 #include "weapons/sword_carthage.h"
 #include "weapons/sword_renderer.h"
@@ -245,6 +246,86 @@ auto sepulcher_sword_config() -> const SwordRenderConfig& {
   }();
   return config;
 }
+
+auto gallic_sword_config() -> const SwordRenderConfig& {
+  static const SwordRenderConfig config = []() {
+    SwordRenderConfig cfg;
+    cfg.metal_color = QVector3D(0.72F, 0.75F, 0.78F);
+    cfg.grip_color = QVector3D(0.30F, 0.18F, 0.09F);
+    cfg.sword_length = 1.10F;
+    cfg.sword_width = 0.074F;
+    cfg.guard_half_width = 0.058F;
+    cfg.handle_radius = 0.017F;
+    cfg.pommel_radius = 0.040F;
+    cfg.pommel_length = 0.040F;
+    cfg.blade_ricasso = 0.04F;
+    cfg.blade_taper_bias = 0.18F;
+    cfg.blade_mid_width_scale = 1.00F;
+    cfg.blade_tip_width_scale = 0.52F;
+    cfg.blade_curve = 0.0F;
+    cfg.guard_curve = 0.012F;
+    cfg.guard_spike_length = 0.0F;
+    cfg.material_id = 3;
+    return cfg;
+  }();
+  return config;
+}
+
+auto falcata_config() -> const SwordRenderConfig& {
+  static const SwordRenderConfig config = []() {
+    SwordRenderConfig cfg;
+    cfg.metal_color = QVector3D(0.76F, 0.78F, 0.80F);
+    cfg.grip_color = QVector3D(0.22F, 0.12F, 0.07F);
+    cfg.sword_length = 0.76F;
+    cfg.sword_width = 0.094F;
+    cfg.guard_half_width = 0.050F;
+    cfg.handle_radius = 0.017F;
+    cfg.pommel_radius = 0.034F;
+    cfg.pommel_length = 0.030F;
+    cfg.blade_ricasso = 0.06F;
+    cfg.blade_taper_bias = 0.86F;
+    cfg.blade_mid_width_scale = 1.42F;
+    cfg.blade_tip_width_scale = 0.14F;
+    cfg.blade_curve = 0.20F;
+    cfg.guard_curve = 0.018F;
+    cfg.has_hooked_pommel = true;
+    cfg.guard_spike_length = 0.0F;
+    cfg.material_id = 3;
+    return cfg;
+  }();
+  return config;
+}
+
+auto gallic_shield_config() -> const ShieldRenderConfig& {
+  static const ShieldRenderConfig config = []() {
+    ShieldRenderConfig cfg;
+    cfg.shield_color = QVector3D(0.24F, 0.38F, 0.32F);
+    cfg.trim_color = QVector3D(0.84F, 0.73F, 0.46F);
+    cfg.metal_color = QVector3D(0.58F, 0.58F, 0.56F);
+    cfg.shield_radius = 0.098F;
+    cfg.shield_aspect = 1.95F;
+    cfg.has_spine = true;
+    cfg.dome_depth = 0.24F;
+    cfg.has_radial_decoration = true;
+    return cfg;
+  }();
+  return config;
+}
+
+auto caetra_config() -> const ShieldRenderConfig& {
+  static const ShieldRenderConfig config = []() {
+    ShieldRenderConfig cfg;
+    cfg.shield_color = QVector3D(0.42F, 0.16F, 0.11F);
+    cfg.trim_color = QVector3D(0.72F, 0.56F, 0.30F);
+    cfg.metal_color = QVector3D(0.80F, 0.62F, 0.34F);
+    cfg.shield_radius = 0.084F;
+    cfg.shield_aspect = 1.0F;
+    cfg.dome_depth = 0.30F;
+    cfg.has_radial_decoration = true;
+    return cfg;
+  }();
+  return config;
+}
 constexpr float k_scabbard_radius = 0.060F * 0.85F;
 auto build_spear_attachments(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec> {
@@ -331,6 +412,39 @@ auto build_sepulcher_sword_attachments(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec> {
   return {Render::GL::sword_make_static_attachment(
       sepulcher_sword_config(), base_role_byte, QVector3D(0.02F, 0.90F, 0.36F))};
+}
+
+auto build_gallic_sword_attachments(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return {
+      Render::GL::sword_make_static_attachment(gallic_sword_config(), base_role_byte),
+      Render::GL::scabbard_make_static_attachment(
+          k_scabbard_radius * 0.92F,
+          humanoid_pelvis_bone(),
+          static_cast<std::uint8_t>(base_role_byte + Render::GL::k_sword_role_count)),
+  };
+}
+
+auto build_falcata_attachments(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return {
+      Render::GL::sword_make_static_attachment(falcata_config(), base_role_byte),
+      Render::GL::scabbard_make_static_attachment(
+          k_scabbard_radius * 1.08F,
+          humanoid_pelvis_bone(),
+          static_cast<std::uint8_t>(base_role_byte + Render::GL::k_sword_role_count)),
+  };
+}
+
+auto build_gallic_shield_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return {Render::GL::shield_make_static_attachment(gallic_shield_config(),
+                                                    base_role_byte)};
+}
+
+auto build_caetra_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return {Render::GL::shield_make_static_attachment(caetra_config(), base_role_byte)};
 }
 
 auto build_roman_bow_attachments(std::uint8_t base_role_byte)
@@ -577,6 +691,57 @@ auto sepulcher_sword_role_colors(const void* variant_void,
       out,
       base_count,
       max_count);
+}
+
+auto gallic_sword_role_colors(const void* variant_void,
+                              QVector3D* out,
+                              std::uint32_t base_count,
+                              std::size_t max_count) -> std::uint32_t {
+  return sword_with_scabbard_role_colors<gallic_sword_config>(
+      variant_void, out, base_count, max_count);
+}
+
+auto falcata_role_colors(const void* variant_void,
+                         QVector3D* out,
+                         std::uint32_t base_count,
+                         std::size_t max_count) -> std::uint32_t {
+  return sword_with_scabbard_role_colors<falcata_config>(
+      variant_void, out, base_count, max_count);
+}
+
+template <const ShieldRenderConfig& (*ConfigFn)()>
+auto shield_config_role_colors(const void* variant_void,
+                               QVector3D* out,
+                               std::uint32_t base_count,
+                               std::size_t max_count) -> std::uint32_t {
+  return with_variant_palette(
+      variant_void,
+      [](const HumanoidVariant& variant,
+         QVector3D* colors,
+         std::uint32_t count,
+         std::size_t max) {
+        return count + Render::GL::shield_fill_role_colors(
+                           variant.palette, ConfigFn(), colors + count, max - count);
+      },
+      out,
+      base_count,
+      max_count);
+}
+
+auto gallic_shield_role_colors(const void* variant_void,
+                               QVector3D* out,
+                               std::uint32_t base_count,
+                               std::size_t max_count) -> std::uint32_t {
+  return shield_config_role_colors<gallic_shield_config>(
+      variant_void, out, base_count, max_count);
+}
+
+auto caetra_role_colors(const void* variant_void,
+                        QVector3D* out,
+                        std::uint32_t base_count,
+                        std::size_t max_count) -> std::uint32_t {
+  return shield_config_role_colors<caetra_config>(
+      variant_void, out, base_count, max_count);
 }
 
 auto bow_role_colors(const void* variant_void,

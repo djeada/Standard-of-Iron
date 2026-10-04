@@ -3208,6 +3208,22 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>The watch does not sleep</source>
         <translation>Стража не спит</translation>
     </message>
+    <message>
+        <source>Gallic Allies</source>
+        <translation>Галльские союзники</translation>
+    </message>
+    <message>
+        <source>Allies of Carthage from beyond the Po</source>
+        <translation>Союзники Карфагена из-за реки По</translation>
+    </message>
+    <message>
+        <source>Iberian Allies</source>
+        <translation>Иберийские союзники</translation>
+    </message>
+    <message>
+        <source>Allies of Carthage from Hispania</source>
+        <translation>Союзники Карфагена из Испании</translation>
+    </message>
 </context>
 <context>
     <name>FloatingNumbers</name>
@@ -9743,6 +9759,14 @@ to see preview</source>
         <source>The Iron Sepulcher</source>
         <translation>Железная Гробница</translation>
     </message>
+    <message>
+        <source>Gallic Allies</source>
+        <translation>Галльские союзники</translation>
+    </message>
+    <message>
+        <source>Iberian Allies</source>
+        <translation>Иберийские союзники</translation>
+    </message>
 </context>
 <context>
     <name>Numerals</name>
@@ -13480,6 +13504,66 @@ Right-click to cancel.</source>
     <message>
         <source>Very slow, and a tall target that fire and stone-throwers bring down.</source>
         <translation>Очень медленна и высока: огонь и камнемёты быстро её сносят.</translation>
+    </message>
+    <message>
+        <source>Gallic Cavalry</source>
+        <translation>Галльская конница</translation>
+    </message>
+    <message>
+        <source>Gallic Swordsmen</source>
+        <translation>Галльские мечники</translation>
+    </message>
+    <message>
+        <source>Gallic nobles fought on horseback with long swords. Under Hasdrubal at Cannae they broke the Roman horse on the river flank and rode round to close the trap.</source>
+        <translation>Галльская знать сражалась верхом с длинными мечами. Под началом Гасдрубала при Каннах они опрокинули римскую конницу на речном фланге и обошли её, чтобы захлопнуть ловушку.</translation>
+    </message>
+    <message>
+        <source>Gauls of the Po valley joined Hannibal once he was over the Alps. At Cannae they held the centre of the crescent and fell back on purpose, drawing the legions in.</source>
+        <translation>Галлы из долины По присоединились к Ганнибалу, как только он перешёл Альпы. При Каннах они держали центр полумесяца и намеренно отступали, втягивая легионы.</translation>
+    </message>
+    <message>
+        <source>Iberian Cavalry</source>
+        <translation>Иберийская конница</translation>
+    </message>
+    <message>
+        <source>Iberian Swordsmen</source>
+        <translation>Иберийские мечники</translation>
+    </message>
+    <message>
+        <source>Iberian horsemen carried the small round caetra and the falcata. At Cannae they rode beside the Gauls on the left wing and helped ride down the Roman cavalry.</source>
+        <translation>Иберийские всадники носили маленькую круглую цетру и фалькату. При Каннах они скакали рядом с галлами на левом фланге и помогли смять римскую конницу.</translation>
+    </message>
+    <message>
+        <source>The Barcids raised their best foot in Spain. Iberian swordsmen wore white tunics edged in crimson and fought with the curved falcata.</source>
+        <translation>Баркиды набирали лучшую пехоту в Испании. Иберийские мечники носили белые туники с багряной каймой и сражались изогнутой фалькатой.</translation>
+    </message>
+    <message>
+        <source>Balearic Slinger</source>
+        <translation>Балеарский пращник</translation>
+    </message>
+    <message>
+        <source>Velites</source>
+        <translation>Велиты</translation>
+    </message>
+    <message>
+        <source>Balearic islanders served Carthage as specialist slingers, carrying spare slings and a pouch of stones.</source>
+        <translation>Жители Балеарских островов служили Карфагену опытными пращниками, нося запасные пращи и мешочек с камнями.</translation>
+    </message>
+    <message>
+        <source>Light infantry screen</source>
+        <translation>Заслон лёгкой пехоты</translation>
+    </message>
+    <message>
+        <source>Loose order and quick withdrawal behind friendly infantry.</source>
+        <translation>Рассыпной строй и быстрый отход за свою пехоту.</translation>
+    </message>
+    <message>
+        <source>Roman velites screened the legions with light javelins, round parma shields and distinctive animal pelts.</source>
+        <translation>Римские велиты прикрывали легионы лёгкими дротиками, круглыми щитами-пармами и приметными звериными шкурами.</translation>
+    </message>
+    <message>
+        <source>Vulnerable to cavalry and sustained melee.</source>
+        <translation>Уязвимы для конницы и затяжного ближнего боя.</translation>
     </message>
 </context>
 <context>

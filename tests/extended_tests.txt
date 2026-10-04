@@ -99,6 +99,10 @@ StaticMeshPack.ShippedBuildingPackMatchesTheCatalog
 # pack-coverage check measured 11.1 s in the pull-request Debug profile.
 AttachmentMeshPack.ShippedPackCoversOneNationsTroops
 AttachmentMeshPack.ShippedPackCoversEveryTroopOfEveryNation
+# Same fixture: starts the renderer, loads the shipped creature assets and prewarms
+# every nation. Nearly all of it is fixed cost (asset loading and the 100 worker
+# bodies), so a smaller roster does not help; 12.0 s in the pull-request Debug profile.
+CreatureSpeciesPrewarm.EverySpeciesBodyIsReadyBeforePlay
 DrawQueueSortCost.*
 TemplatePrewarmRegression.*
 ScatterRuntimeTest.CampaniaCampaignMaintainsRichNaturalScatter

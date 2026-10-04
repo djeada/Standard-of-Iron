@@ -46,6 +46,12 @@ void register_equipment_archetypes() {
   ar.register_archetype("carthage_thracian_crested_helmet", [] {
     (void)historical_helmet_archetype(HistoricalHelmet::CarthageThracianCrested);
   });
+  ar.register_archetype("gallic_montefortino_helmet", [] {
+    (void)historical_helmet_archetype(HistoricalHelmet::GallicMontefortino);
+  });
+  ar.register_archetype("iberian_sinew_cap_helmet", [] {
+    (void)historical_helmet_archetype(HistoricalHelmet::IberianSinewCap);
+  });
   ar.register_archetype("headwrap_helmet", [] { (void)headwrap_helmet_archetype(); });
   ar.register_archetype("commander_helmet_fabius", [] {
     (void)commander_helmet_archetype(CommanderHelmetStyle::Fabius);

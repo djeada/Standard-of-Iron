@@ -560,6 +560,8 @@ void Renderer::prewarm_unit_templates(
   auto is_prewarmable_troop = [](Game::Units::TroopType type) -> bool {
     using Game::Units::TroopType;
     switch (type) {
+    case TroopType::Slinger:
+    case TroopType::Velites:
     case TroopType::Archer:
     case TroopType::Swordsman:
     case TroopType::Spearman:
@@ -782,6 +784,8 @@ void Renderer::prewarm_unit_templates(
 
       using Game::Units::TroopType;
       for (auto type : {TroopType::Archer,
+                        TroopType::Slinger,
+                        TroopType::Velites,
                         TroopType::Swordsman,
                         TroopType::Spearman,
                         TroopType::RomanLegionOrganizer,

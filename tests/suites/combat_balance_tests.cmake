@@ -33,6 +33,7 @@ add_executable(
     systems/event_audience_test.cpp
     systems/structure_fire_test.cpp
     systems/guard_system_test.cpp
+    systems/skirmish_screen_system_test.cpp
     systems/stamina_system_test.cpp
     systems/attack_range_test.cpp
     systems/attack_targeting_test.cpp

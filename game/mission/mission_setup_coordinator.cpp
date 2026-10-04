@@ -314,6 +314,8 @@ auto MissionSetupCoordinator::apply_mission_setup(
               : authored_count;
       requested_bonus += count - authored_count;
       const QVector3D base_pos = position_to_world(unit_setup.position);
+      const auto unit_nation_id =
+          Game::Systems::authored_nation_or(unit_setup.nation, nation_id);
 
       for (int i = 0; i < count; ++i) {
         QVector3D pos = base_pos;
@@ -324,7 +326,7 @@ auto MissionSetupCoordinator::apply_mission_setup(
         sp.spawn_type = spawn_type.value();
         sp.ai_controlled =
             ai_controlled && !is_scenario_controlled_behavior(unit_setup.behavior);
-        sp.nation_id = nation_id;
+        sp.nation_id = unit_nation_id;
 
         auto unit = reg->create(sp.spawn_type, ctx.world, sp);
         if (!unit) {

@@ -23,6 +23,10 @@
 #include "nations/carthage/horse_swordsman_renderer.h"
 #include "nations/carthage/spearman_renderer.h"
 #include "nations/carthage/swordsman_renderer.h"
+#include "nations/gauls/horse_swordsman_renderer.h"
+#include "nations/gauls/swordsman_renderer.h"
+#include "nations/iberians/horse_swordsman_renderer.h"
+#include "nations/iberians/swordsman_renderer.h"
 #include "nations/roman/archer_renderer.h"
 #include "nations/roman/ballista_renderer.h"
 #include "nations/roman/builder_renderer.h"
@@ -39,6 +43,7 @@
 #include "render/wildlife/sheep_spec.h"
 #include "render/wildlife/wolf_spec.h"
 #include "siege_assault_renderer.h"
+#include "skirmisher_renderer.h"
 #include "temple_renderer.h"
 #include "wall_renderer.h"
 #include "wildlife/sheep_renderer.h"
@@ -97,6 +102,7 @@ void register_built_in_entity_renderers(EntityRendererRegistry& registry) {
   Render::Wildlife::initialize_sheep_asset();
   Render::Wildlife::initialize_wolf_asset();
 
+  register_skirmisher_renderers(registry);
   Roman::register_archer_renderer(registry);
   Carthage::register_archer_renderer(registry);
 
@@ -105,9 +111,13 @@ void register_built_in_entity_renderers(EntityRendererRegistry& registry) {
 
   Roman::register_swordsman_renderer(registry);
   Carthage::register_swordsman_renderer(registry);
+  Gauls::register_swordsman_renderer(registry);
+  Iberians::register_swordsman_renderer(registry);
 
   Roman::register_mounted_swordsman_renderer(registry);
   Carthage::register_mounted_swordsman_renderer(registry);
+  Gauls::register_mounted_swordsman_renderer(registry);
+  Iberians::register_mounted_swordsman_renderer(registry);
 
   Roman::register_horse_archer_renderer(registry);
   Carthage::register_horse_archer_renderer(registry);

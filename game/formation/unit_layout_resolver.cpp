@@ -10,6 +10,8 @@ auto default_doctrine_for_nation(Game::Systems::NationID nation)
   case Game::Systems::NationID::RomanRepublic:
     return "rome";
   case Game::Systems::NationID::Carthage:
+  case Game::Systems::NationID::Gauls:
+  case Game::Systems::NationID::Iberians:
     return "carthage";
   case Game::Systems::NationID::IronSepulcher:
     return "iron_sepulcher";

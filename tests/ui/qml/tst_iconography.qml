@@ -8,7 +8,7 @@ TestCase {
 
     name: "Iconography"
 
-    readonly property var shippedNations: ["roman_republic", "carthage", "iron_sepulcher"]
+    readonly property var shippedNations: ["roman_republic", "carthage", "iron_sepulcher", "gauls", "iberians"]
 
     readonly property var hudCommands: ["attack", "guard", "hold", "patrol", "divide", "join", "build", "heal", "collect", "rally", "deliver", "aura", "stop", "run", "gate", "auto_gather", "repair", "dismantle", "roll_stones"]
 
@@ -81,8 +81,13 @@ TestCase {
     }
 
     function test_unknown_nation_falls_back_rather_than_returning_nothing() {
-        verify(Icons.unit("archer", "gauls").toString() !== "");
-        compare(Icons.unit("archer", "gauls").toString(), Icons.unit("archer", "roman_republic").toString());
+        verify(Icons.unit("archer", "parthians").toString() !== "");
+        compare(Icons.unit("archer", "parthians").toString(), Icons.unit("archer", "roman_republic").toString());
+    }
+
+    function test_carthage_allies_borrow_carthaginian_unit_art() {
+        compare(Icons.unit("swordsman", "gauls").toString(), Icons.unit("swordsman", "carthage").toString());
+        compare(Icons.unit("horse_swordsman", "iberians").toString(), Icons.unit("horse_swordsman", "carthage").toString());
     }
 
     function test_unknown_unit_type_returns_nothing_so_the_glyph_takes_over() {

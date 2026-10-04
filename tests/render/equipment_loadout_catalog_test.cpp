@@ -240,6 +240,76 @@ TEST_F(EquipmentLoadoutCatalogTest, MountedNationsUseDistinctHorseSaddles) {
   EXPECT_NE(roman.horse_saddle_handle, carthage.horse_saddle_handle);
 }
 
+TEST_F(EquipmentLoadoutCatalogTest, CarthageAlliesResolveEveryAuthoredSlot) {
+  struct Expected {
+    const char* key;
+    const char* sword;
+    const char* shield;
+    const char* helmet;
+  };
+  for (auto const& expected : {Expected{"troops/gauls/swordsman",
+                                        "sword_gallic",
+                                        "shield_gallic",
+                                        "gallic_montefortino"},
+                               Expected{"troops/gauls/horse_swordsman",
+                                        "sword_gallic",
+                                        "shield_gallic",
+                                        "gallic_montefortino"},
+                               Expected{"troops/iberians/swordsman",
+                                        "sword_falcata",
+                                        "shield_caetra",
+                                        "iberian_sinew_cap"},
+                               Expected{"troops/iberians/horse_swordsman",
+                                        "sword_falcata",
+                                        "shield_caetra",
+                                        "iberian_sinew_cap"}}) {
+    const auto loadout = Render::GL::Nation::resolve_equipment_loadout(expected.key);
+    ASSERT_TRUE(loadout.found) << expected.key;
+    EXPECT_EQ(loadout.ids.sword, expected.sword) << expected.key;
+    EXPECT_EQ(loadout.ids.shield, expected.shield) << expected.key;
+    EXPECT_EQ(loadout.ids.helmet, expected.helmet) << expected.key;
+    EXPECT_NE(loadout.sword_handle, k_invalid_equipment_handle) << expected.key;
+    EXPECT_NE(loadout.shield_handle, k_invalid_equipment_handle) << expected.key;
+    EXPECT_NE(loadout.helmet_handle, k_invalid_equipment_handle) << expected.key;
+    EXPECT_TRUE(loadout.ids.facial_hair.has_value()) << expected.key;
+  }
+
+  const auto gallic =
+      Render::GL::Nation::resolve_equipment_loadout("troops/gauls/swordsman");
+  EXPECT_EQ(gallic.ids.greaves, "gallic_braccae");
+  EXPECT_EQ(gallic.ids.armor, "gallic_tunic");
+  EXPECT_NE(gallic.armor_handle, k_invalid_equipment_handle);
+  EXPECT_NE(gallic.greaves_handle, k_invalid_equipment_handle);
+  const auto gallic_horse =
+      Render::GL::Nation::resolve_equipment_loadout("troops/gauls/horse_swordsman");
+  EXPECT_NE(gallic_horse.greaves_handle, k_invalid_equipment_handle);
+
+  const auto iberian =
+      Render::GL::Nation::resolve_equipment_loadout("troops/iberians/swordsman");
+  EXPECT_EQ(iberian.ids.armor, "iberian_tunic");
+  EXPECT_NE(iberian.armor_handle, k_invalid_equipment_handle);
+}
+
+TEST_F(EquipmentLoadoutCatalogTest, CarthageAlliesCarryTheirOwnArmsNotCarthageOrRome) {
+  const LoadoutHandleMember handle_slots[] = {
+      &Render::GL::Nation::ResolvedEquipmentLoadout::sword_handle,
+      &Render::GL::Nation::ResolvedEquipmentLoadout::shield_handle,
+      &Render::GL::Nation::ResolvedEquipmentLoadout::helmet_handle,
+  };
+  const char* const allies[] = {"troops/gauls/swordsman", "troops/iberians/swordsman"};
+  const char* const others[] = {"troops/carthage/swordsman", "troops/roman/swordsman"};
+  const auto gauls = Render::GL::Nation::resolve_equipment_loadout(allies[0]);
+  const auto iberians = Render::GL::Nation::resolve_equipment_loadout(allies[1]);
+  for (auto const slot : handle_slots) {
+    EXPECT_NE(gauls.*slot, iberians.*slot);
+    for (const char* other_key : others) {
+      const auto other = Render::GL::Nation::resolve_equipment_loadout(other_key);
+      EXPECT_NE(gauls.*slot, other.*slot) << other_key;
+      EXPECT_NE(iberians.*slot, other.*slot) << other_key;
+    }
+  }
+}
+
 TEST_F(EquipmentLoadoutCatalogTest, CommanderLoadoutsResolveAllExpectedHandles) {
   struct CommanderLoadoutExpectation {
     const char* renderer_key;

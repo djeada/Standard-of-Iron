@@ -37,11 +37,17 @@ enum class TroopType {
   Civilian,
   Builder,
   Sheep,
-  Wolf
+  Wolf,
+  Slinger,
+  Velites
 };
 
 inline auto troop_typeToQString(TroopType type) -> QString {
   switch (type) {
+  case TroopType::Slinger:
+    return QStringLiteral("slinger");
+  case TroopType::Velites:
+    return QStringLiteral("velites");
   case TroopType::Archer:
     return QStringLiteral("archer");
   case TroopType::Swordsman:
@@ -102,6 +108,14 @@ inline auto troop_typeToString(TroopType type) -> std::string {
 
 inline auto try_parse_troop_type(const QString& value, TroopType& out) -> bool {
   const QString lowered = value.trimmed().toLower();
+  if (lowered == QStringLiteral("slinger")) {
+    out = TroopType::Slinger;
+    return true;
+  }
+  if (lowered == QStringLiteral("velites")) {
+    out = TroopType::Velites;
+    return true;
+  }
   if (lowered == QStringLiteral("archer")) {
     out = TroopType::Archer;
     return true;
@@ -223,6 +237,10 @@ inline auto try_parse_troop_type(const std::string& str) -> std::optional<TroopT
     return result;
   }
   return std::nullopt;
+}
+
+[[nodiscard]] inline auto is_skirmisher_troop(TroopType type) noexcept -> bool {
+  return type == TroopType::Slinger || type == TroopType::Velites;
 }
 
 [[nodiscard]] inline auto is_wildlife_troop(TroopType type) noexcept -> bool {

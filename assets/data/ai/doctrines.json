@@ -57,7 +57,7 @@
         "ranged_share": 0.35,
         "cavalry_share": 0.15,
         "siege_share": 0.08,
-        "preferred": ["swordsman", "horse_swordsman", "catapult"]
+        "preferred": ["swordsman", "velites", "horse_swordsman", "catapult"]
       },
       "wave": {
         "size": 7,
@@ -78,7 +78,7 @@
         "ranged_share": 0.3,
         "cavalry_share": 0.3,
         "siege_share": 0.0,
-        "preferred": ["horse_swordsman", "swordsman"]
+        "preferred": ["horse_swordsman", "velites", "swordsman"]
       },
       "wave": {
         "size": 5,
@@ -99,7 +99,7 @@
         "ranged_share": 0.4,
         "cavalry_share": 0.05,
         "siege_share": 0.1,
-        "preferred": ["spearman", "archer"]
+        "preferred": ["spearman", "slinger"]
       },
       "wave": {
         "size": 7,
@@ -120,7 +120,7 @@
         "ranged_share": 0.7,
         "cavalry_share": 0.25,
         "siege_share": 0.0,
-        "preferred": ["horse_archer", "archer"]
+        "preferred": ["horse_archer", "slinger"]
       },
       "wave": {
         "size": 5,

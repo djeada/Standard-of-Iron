@@ -685,6 +685,10 @@ auto may_engage(Engine::Core::Entity* unit,
       enemy->has_component<Engine::Core::PendingRemovalComponent>()) {
     return false;
   }
+  if (Game::Units::is_skirmisher_spawn(unit_comp->spawn_type) &&
+      suppresses_opportunistic_combat(unit)) {
+    return false;
+  }
 
   if (!auto_acquires_targets(unit)) {
     auto const* registry = unit->registry();

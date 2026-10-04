@@ -10,6 +10,8 @@ auto building_asset_key(std::string_view nation_slug,
 auto nation_asset_slug(Game::Systems::NationID nation_id) -> std::string_view {
   switch (nation_id) {
   case Game::Systems::NationID::Carthage:
+  case Game::Systems::NationID::Gauls:
+  case Game::Systems::NationID::Iberians:
     return "carthage";
   case Game::Systems::NationID::IronSepulcher:
     return "iron_sepulcher";

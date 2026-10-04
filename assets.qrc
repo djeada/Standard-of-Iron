@@ -488,6 +488,8 @@
         <file>assets/data/nations/roman_republic.json</file>
         <file>assets/data/nations/carthage.json</file>
         <file>assets/data/nations/iron_sepulcher.json</file>
+        <file>assets/data/nations/gauls.json</file>
+        <file>assets/data/nations/iberians.json</file>
 
         <!-- Commander voice banks: what each commander says as enemy or ally -->
         <file>assets/data/commanders/voices/roman_legion_organizer.json</file>

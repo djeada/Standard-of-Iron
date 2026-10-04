@@ -44,13 +44,17 @@ struct ShieldArchetypeKey {
   int radius_key{0};
   int aspect_key{0};
   bool has_cross_decal{false};
+  bool has_spine{false};
+  int dome_key{0};
   int material_id{0};
+  bool has_radial_decoration{false};
 };
 
 auto operator==(const ShieldArchetypeKey& lhs, const ShieldArchetypeKey& rhs) -> bool {
   return lhs.radius_key == rhs.radius_key && lhs.aspect_key == rhs.aspect_key &&
-         lhs.has_cross_decal == rhs.has_cross_decal &&
-         lhs.material_id == rhs.material_id;
+         lhs.has_cross_decal == rhs.has_cross_decal && lhs.has_spine == rhs.has_spine &&
+         lhs.dome_key == rhs.dome_key && lhs.material_id == rhs.material_id &&
+         lhs.has_radial_decoration == rhs.has_radial_decoration;
 }
 
 auto quantize_shield_value(float value) -> int {
@@ -73,7 +77,10 @@ auto shield_archetype(const ShieldRenderConfig& config) -> const RenderArchetype
   ShieldArchetypeKey const key{quantize_shield_value(config.shield_radius),
                                quantize_shield_value(config.shield_aspect),
                                config.has_cross_decal,
-                               config.material_id};
+                               config.has_spine,
+                               quantize_shield_value(config.dome_depth),
+                               config.material_id,
+                               config.has_radial_decoration};
   for (const auto& entry : cache) {
     if (entry.key == key) {
       return entry.archetype;
@@ -90,14 +97,17 @@ auto shield_archetype(const ShieldRenderConfig& config) -> const RenderArchetype
   QVector3D const grip_center_local{0.0F, -0.02F, 0.0F};
   QVector3D const shield_center = shield_center_local(config);
 
-  RenderArchetypeBuilder builder{"shield_" + std::to_string(key.radius_key) + "_" +
-                                 std::to_string(key.aspect_key) + "_" +
-                                 std::to_string(static_cast<int>(key.has_cross_decal)) +
-                                 "_" + std::to_string(key.material_id)};
+  RenderArchetypeBuilder builder{
+      "shield_" + std::to_string(key.radius_key) + "_" +
+      std::to_string(key.aspect_key) + "_" +
+      std::to_string(static_cast<int>(key.has_cross_decal)) + "_" +
+      std::to_string(key.material_id) + (key.has_spine ? "_spine" : "") + "_d" +
+      std::to_string(key.dome_key) + (key.has_radial_decoration ? "_painted" : "")};
 
   QMatrix4x4 front_plate;
   front_plate.translate(shield_center + QVector3D(0.0F, 0.0F, plate_half));
   front_plate.scale(shield_width, shield_height, plate_full);
+  front_plate.rotate(90.0F, 1.0F, 0.0F, 0.0F);
   builder.add_palette_mesh(get_unit_cylinder(),
                            front_plate,
                            k_shield_slot,
@@ -108,31 +118,49 @@ auto shield_archetype(const ShieldRenderConfig& config) -> const RenderArchetype
   QMatrix4x4 back_plate;
   back_plate.translate(shield_center - QVector3D(0.0F, 0.0F, plate_half));
   back_plate.scale(shield_width * 0.985F, shield_height * 0.985F, plate_full);
+  back_plate.rotate(90.0F, 1.0F, 0.0F, 0.0F);
   builder.add_palette_mesh(
       get_unit_cylinder(), back_plate, k_back_slot, nullptr, 1.0F, config.material_id);
 
-  auto add_ring = [&](float width,
-                      float height,
-                      float thickness,
-                      ShieldPaletteSlot slot) {
-    constexpr int k_segments = 18;
-    for (int i = 0; i < k_segments; ++i) {
-      float const a0 = static_cast<float>(i) / static_cast<float>(k_segments) * 2.0F *
-                       std::numbers::pi_v<float>;
-      float const a1 = static_cast<float>(i + 1) / static_cast<float>(k_segments) *
-                       2.0F * std::numbers::pi_v<float>;
-      QVector3D const p0 =
-          shield_center + QVector3D(width * std::cos(a0), height * std::sin(a0), 0.0F);
-      QVector3D const p1 =
-          shield_center + QVector3D(width * std::cos(a1), height * std::sin(a1), 0.0F);
-      builder.add_palette_mesh(get_unit_cylinder(),
-                               cylinder_between(p0, p1, thickness),
-                               slot,
-                               nullptr,
-                               1.0F,
-                               config.material_id);
-    }
+  float const dome = min_extent * std::max(0.0F, config.dome_depth);
+  if (dome > 0.0F) {
+    QMatrix4x4 dome_shell;
+    dome_shell.translate(shield_center);
+    dome_shell.scale(shield_width * 0.985F, shield_height * 0.985F, dome);
+    builder.add_palette_mesh(get_unit_sphere(),
+                             dome_shell,
+                             k_shield_slot,
+                             nullptr,
+                             1.0F,
+                             config.material_id);
+  }
+  auto face_z = [&](float x, float y) {
+    float const nx = x / (shield_width * 0.985F);
+    float const ny = y / (shield_height * 0.985F);
+    return plate_full + dome * std::sqrt(std::max(0.0F, 1.0F - nx * nx - ny * ny));
   };
+  auto face_point = [&](float x, float y) {
+    return shield_center + QVector3D(x, y, face_z(x, y));
+  };
+
+  auto add_ring =
+      [&](float width, float height, float thickness, ShieldPaletteSlot slot) {
+        constexpr int k_segments = 18;
+        for (int i = 0; i < k_segments; ++i) {
+          float const a0 = static_cast<float>(i) / static_cast<float>(k_segments) *
+                           2.0F * std::numbers::pi_v<float>;
+          float const a1 = static_cast<float>(i + 1) / static_cast<float>(k_segments) *
+                           2.0F * std::numbers::pi_v<float>;
+          QVector3D const p0 = face_point(width * std::cos(a0), height * std::sin(a0));
+          QVector3D const p1 = face_point(width * std::cos(a1), height * std::sin(a1));
+          builder.add_palette_mesh(get_unit_cylinder(),
+                                   cylinder_between(p0, p1, thickness),
+                                   slot,
+                                   nullptr,
+                                   1.0F,
+                                   config.material_id);
+        }
+      };
 
   add_ring(shield_width, shield_height, min_extent * 0.010F, k_trim_slot);
   add_ring(shield_width * 0.72F,
@@ -140,14 +168,86 @@ auto shield_archetype(const ShieldRenderConfig& config) -> const RenderArchetype
            min_extent * 0.006F,
            k_inner_ring_slot);
 
-  builder.add_palette_mesh(
-      get_unit_sphere(),
-      sphere_at(shield_center + QVector3D(0.0F, 0.0F, 0.02F * k_scale_factor),
-                0.045F * k_scale_factor),
-      k_metal_slot,
-      nullptr,
-      1.0F,
-      config.material_id);
+  if (config.has_radial_decoration) {
+    // Follow the dome so the painted rays and rivets remain on its surface.
+    constexpr int k_rays = 8;
+    constexpr int k_ray_segments = 4;
+    for (int ray = 0; ray < k_rays; ++ray) {
+      float const angle = (static_cast<float>(ray) + 0.5F) *
+                          (2.0F * std::numbers::pi_v<float> / k_rays);
+      for (int segment = 0; segment < k_ray_segments; ++segment) {
+        float const r0 = 0.38F + 0.065F * static_cast<float>(segment);
+        float const r1 = r0 + 0.065F;
+        builder.add_palette_mesh(
+            get_unit_cylinder(),
+            cylinder_between(face_point(shield_width * r0 * std::cos(angle),
+                                        shield_height * r0 * std::sin(angle)),
+                             face_point(shield_width * r1 * std::cos(angle),
+                                        shield_height * r1 * std::sin(angle)),
+                             min_extent * 0.018F),
+            k_trim_slot,
+            nullptr,
+            1.0F,
+            0);
+      }
+      builder.add_palette_mesh(
+          get_unit_sphere(),
+          sphere_at(face_point(shield_width * 0.91F * std::cos(angle),
+                               shield_height * 0.91F * std::sin(angle)),
+                    min_extent * 0.024F),
+          k_metal_slot,
+          nullptr,
+          1.0F,
+          3);
+    }
+  }
+
+  if (config.has_spine) {
+    constexpr int k_spine_segments = 8;
+    float const spine_r = min_extent * 0.045F;
+    for (int i = 0; i < k_spine_segments; ++i) {
+      float const y0 = shield_height * 0.94F *
+                       (-1.0F + 2.0F * static_cast<float>(i) / k_spine_segments);
+      float const y1 = shield_height * 0.94F *
+                       (-1.0F + 2.0F * static_cast<float>(i + 1) / k_spine_segments);
+      builder.add_palette_mesh(
+          get_unit_cylinder(),
+          cylinder_between(
+              shield_center + QVector3D(0.0F, y0, face_z(0.0F, y0) + 0.002F),
+              shield_center + QVector3D(0.0F, y1, face_z(0.0F, y1) + 0.002F),
+              spine_r),
+          k_trim_slot,
+          nullptr,
+          1.0F,
+          config.material_id);
+    }
+
+    QMatrix4x4 boss;
+    boss.translate(shield_center + QVector3D(0.0F, 0.0F, face_z(0.0F, 0.0F)));
+    boss.scale(min_extent * 0.20F, min_extent * 0.36F, 0.018F * k_scale_factor);
+    builder.add_palette_mesh(
+        get_unit_sphere(), boss, k_metal_slot, nullptr, 1.0F, config.material_id);
+  } else if (config.has_radial_decoration) {
+    // Keep the caetra's low bronze boss in proportion to the small shield.
+    QMatrix4x4 flange;
+    flange.translate(face_point(0.0F, 0.0F));
+    flange.scale(min_extent * 0.29F, min_extent * 0.29F, min_extent * 0.055F);
+    builder.add_palette_mesh(get_unit_sphere(), flange, k_metal_slot, nullptr, 1.0F, 3);
+    QMatrix4x4 boss;
+    boss.translate(face_point(0.0F, 0.0F));
+    boss.scale(min_extent * 0.22F, min_extent * 0.22F, min_extent * 0.18F);
+    builder.add_palette_mesh(get_unit_sphere(), boss, k_metal_slot, nullptr, 1.0F, 3);
+  } else {
+    builder.add_palette_mesh(
+        get_unit_sphere(),
+        sphere_at(shield_center +
+                      QVector3D(0.0F, 0.0F, std::max(0.02F * k_scale_factor, dome)),
+                  0.045F * k_scale_factor),
+        k_metal_slot,
+        nullptr,
+        1.0F,
+        config.material_id);
+  }
 
   builder.add_palette_mesh(
       get_unit_cylinder(),

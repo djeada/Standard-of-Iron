@@ -385,7 +385,8 @@ auto write_attachment_meshes(Game::Session::SessionContext& session,
   Engine::Core::World world;
   int owner_id = 1;
   for (const auto& nation : nations.get_all_nations()) {
-    for (int type = 0; type <= static_cast<int>(Game::Units::TroopType::Wolf); ++type) {
+    for (int type = 0; type <= static_cast<int>(Game::Units::TroopType::Velites);
+         ++type) {
       const auto troop = static_cast<Game::Units::TroopType>(type);
       const auto profile =
           Game::Systems::TroopProfileService::instance().get_profile(nation.id, troop);

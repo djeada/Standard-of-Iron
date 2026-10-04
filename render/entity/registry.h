@@ -90,6 +90,7 @@ struct DrawContext {
   bool force_single_soldier = false;
 
   int max_rendered_individuals = 0;
+  std::uint16_t soldier_index = 0;
   bool skip_ground_offset = false;
   bool has_variant_override = false;
   std::uint8_t variant_override = 0;

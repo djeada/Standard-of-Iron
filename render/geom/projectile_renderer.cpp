@@ -567,6 +567,32 @@ void render_arrow_projectile(Renderer* renderer,
       (180.0F / std::numbers::pi_v<float>);
   model.rotate(pitch_deg, QVector3D(1, 0, 0));
 
+  if (projectile.kind == Game::Systems::ProjectileKind::SlingStone) {
+    QMatrix4x4 stone;
+    stone.translate(pos);
+    stone.rotate(projectile.progress * 720.0F, 0.3F, 1.0F, 0.2F);
+    stone.scale(0.060F, 0.045F, 0.075F);
+    renderer->mesh(
+        Geom::Stone::get(), stone, QVector3D(0.55F, 0.52F, 0.44F), nullptr, 1.0F);
+    return;
+  }
+  if (projectile.kind == Game::Systems::ProjectileKind::Javelin) {
+    QVector3D const direction = flight_tangent(projectile);
+    renderer->mesh(get_unit_cylinder(),
+                   Geom::cylinder_between(
+                       pos - direction * 0.48F, pos + direction * 0.32F, 0.012F),
+                   QVector3D(0.52F, 0.34F, 0.17F),
+                   nullptr,
+                   1.0F);
+    renderer->mesh(
+        get_unit_cone(),
+        Geom::cone_from_to(pos + direction * 0.32F, pos + direction * 0.52F, 0.030F),
+        QVector3D(0.75F, 0.77F, 0.79F),
+        nullptr,
+        1.0F);
+    return;
+  }
+
   if (projectile.kind == Game::Systems::ProjectileKind::Fireball) {
     auto* fireball_mesh = get_unit_sphere();
     if (fireball_mesh == nullptr) {

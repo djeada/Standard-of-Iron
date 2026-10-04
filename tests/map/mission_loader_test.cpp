@@ -174,6 +174,59 @@ TEST_F(MissionLoaderTest, ParsesAISetups) {
   EXPECT_EQ(mission.ai_setups[0].waves.size(), 1);
 }
 
+TEST_F(MissionLoaderTest, ParsesPerUnitAlliedNations) {
+  QJsonObject root = QJsonDocument::fromJson(createTestMission().toUtf8()).object();
+  QJsonArray ai_setups = root.value("ai_setups").toArray();
+  QJsonObject carthage = ai_setups[0].toObject();
+  carthage["starting_units"] =
+      QJsonArray{QJsonObject{{"type", "swordsman"},
+                             {"count", 2},
+                             {"nation", "gauls"},
+                             {"position", QJsonObject{{"x", 40}, {"z", 40}}}},
+                 QJsonObject{{"type", "swordsman"},
+                             {"count", 1},
+                             {"position", QJsonObject{{"x", 44}, {"z", 40}}}}};
+  QJsonArray waves = carthage.value("waves").toArray();
+  QJsonObject wave = waves[0].toObject();
+  wave["composition"] = QJsonArray{
+      QJsonObject{{"type", "horse_swordsman"}, {"count", 3}, {"nation", "iberians"}},
+      QJsonObject{{"type", "swordsman"}, {"count", 4}}};
+  waves[0] = wave;
+  carthage["waves"] = waves;
+  ai_setups[0] = carthage;
+  root["ai_setups"] = ai_setups;
+
+  QTemporaryFile temp_file;
+  ASSERT_TRUE(temp_file.open());
+  temp_file.write(QJsonDocument(root).toJson());
+  temp_file.flush();
+
+  MissionDefinition mission;
+  QString error;
+  ASSERT_TRUE(MissionLoader::load_from_json_file(temp_file.fileName(), mission, &error))
+      << error.toStdString();
+  ASSERT_EQ(mission.ai_setups.size(), 1U);
+  const auto& setup = mission.ai_setups[0];
+  ASSERT_EQ(setup.starting_units.size(), 2U);
+  EXPECT_EQ(setup.starting_units[0].nation, "gauls");
+  EXPECT_TRUE(setup.starting_units[1].nation.isEmpty());
+  ASSERT_EQ(setup.waves.size(), 1U);
+  ASSERT_EQ(setup.waves[0].composition.size(), 2U);
+  EXPECT_EQ(setup.waves[0].composition[0].nation, "iberians");
+  EXPECT_TRUE(setup.waves[0].composition[1].nation.isEmpty());
+
+  using Game::Systems::NationID;
+  EXPECT_EQ(Game::Systems::authored_nation_or(setup.starting_units[0].nation,
+                                              NationID::Carthage),
+            NationID::Gauls);
+  EXPECT_EQ(Game::Systems::authored_nation_or(setup.starting_units[1].nation,
+                                              NationID::Carthage),
+            NationID::Carthage);
+  EXPECT_EQ(
+      Game::Systems::authored_nation_or(QStringLiteral("gaul"), NationID::Carthage),
+      NationID::Carthage);
+}
+
 TEST_F(MissionLoaderTest, ParsesVictoryConditions) {
   QTemporaryFile temp_file;
   ASSERT_TRUE(temp_file.open());

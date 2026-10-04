@@ -288,14 +288,27 @@ void MountedHumanoidRendererBase::append_companion_preparation(
     rider_lod.lod = lod;
   }
   auto rider_output = RCP::build_base_graph_output(rider_inputs, rider_lod);
+  rider_output.instance_index = ctx.soldier_index;
   rider_output.spec = RCP::finalize_visible_humanoid_spec(
       RCP::resolve_unit_visual_spec(mounted_visual_spec().rider, variant),
       anim_ctx.inputs,
       Render::Creature::is_moving_animation(anim_ctx.inputs.movement_state));
   rider_output.seed = seed;
   rider_output.world_already_grounded = true;
-  rider_output.world_matrix = rider_ctx.model * rider_local_world_from_mount(
-                                                    mount, rider_output.spec, anim_ctx);
+  if (anim_ctx.inputs.is_dying || anim_ctx.inputs.is_dead) {
+    // The death clip falls from standing to the ground. Pinned to the saddle it
+    // would leave the corpse lying in the air over the horse, so a fallen rider
+    // is stood on the ground beside his mount and falls from there.
+    QVector3D const beside =
+        mount.seat_position + mount.seat_right * (dims.body_width * 1.15F);
+    QMatrix4x4 ground;
+    ground.translate(beside.x(), 0.0F, beside.z());
+    rider_output.world_matrix = rider_ctx.model * ground;
+  } else {
+    rider_output.world_matrix =
+        rider_ctx.model *
+        rider_local_world_from_mount(mount, rider_output.spec, anim_ctx);
+  }
   rider_output.humanoid_selection = RCP::resolve_humanoid_animation_selection(
       rider_output.spec, anim_ctx, rider_output.seed, &variant);
   out.bodies.add_humanoid(rider_output, pose, variant, anim_ctx);

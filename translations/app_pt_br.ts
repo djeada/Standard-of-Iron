@@ -3208,6 +3208,22 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <source>The watch does not sleep</source>
         <translation>A vigília não dorme</translation>
     </message>
+    <message>
+        <source>Gallic Allies</source>
+        <translation>Aliados gauleses</translation>
+    </message>
+    <message>
+        <source>Allies of Carthage from beyond the Po</source>
+        <translation>Aliados de Cartago de além do Pó</translation>
+    </message>
+    <message>
+        <source>Iberian Allies</source>
+        <translation>Aliados iberos</translation>
+    </message>
+    <message>
+        <source>Allies of Carthage from Hispania</source>
+        <translation>Aliados de Cartago vindos da Hispânia</translation>
+    </message>
 </context>
 <context>
     <name>FloatingNumbers</name>
@@ -9740,6 +9756,14 @@ para ver a prévia</translation>
         <source>Testudo</source>
         <translation>Testudo</translation>
     </message>
+    <message>
+        <source>Gallic Allies</source>
+        <translation>Aliados gauleses</translation>
+    </message>
+    <message>
+        <source>Iberian Allies</source>
+        <translation>Aliados iberos</translation>
+    </message>
 </context>
 <context>
     <name>Numerals</name>
@@ -13476,6 +13500,66 @@ Clique com o botão direito para cancelar.</translation>
     <message>
         <source>Very slow, and a tall target that fire and stone-throwers bring down.</source>
         <translation>Muito lenta e um alvo alto que o fogo e os lançadores de pedras derrubam.</translation>
+    </message>
+    <message>
+        <source>Gallic Cavalry</source>
+        <translation>Cavalaria gaulesa</translation>
+    </message>
+    <message>
+        <source>Gallic Swordsmen</source>
+        <translation>Espadachins gauleses</translation>
+    </message>
+    <message>
+        <source>Gallic nobles fought on horseback with long swords. Under Hasdrubal at Cannae they broke the Roman horse on the river flank and rode round to close the trap.</source>
+        <translation>Os nobres gauleses lutavam a cavalo com espadas longas. Sob Asdrúbal, em Canas, romperam a cavalaria romana no flanco do rio e a contornaram para fechar a armadilha.</translation>
+    </message>
+    <message>
+        <source>Gauls of the Po valley joined Hannibal once he was over the Alps. At Cannae they held the centre of the crescent and fell back on purpose, drawing the legions in.</source>
+        <translation>Gauleses do vale do Pó juntaram-se a Aníbal assim que ele cruzou os Alpes. Em Canas, mantiveram o centro do crescente e recuaram de propósito, atraindo as legiões.</translation>
+    </message>
+    <message>
+        <source>Iberian Cavalry</source>
+        <translation>Cavalaria ibera</translation>
+    </message>
+    <message>
+        <source>Iberian Swordsmen</source>
+        <translation>Espadachins iberos</translation>
+    </message>
+    <message>
+        <source>Iberian horsemen carried the small round caetra and the falcata. At Cannae they rode beside the Gauls on the left wing and helped ride down the Roman cavalry.</source>
+        <translation>Os cavaleiros iberos levavam a pequena caetra redonda e a falcata. Em Canas, cavalgaram ao lado dos gauleses na ala esquerda e ajudaram a derrubar a cavalaria romana.</translation>
+    </message>
+    <message>
+        <source>The Barcids raised their best foot in Spain. Iberian swordsmen wore white tunics edged in crimson and fought with the curved falcata.</source>
+        <translation>Os Barcidas recrutaram sua melhor infantaria na Hispânia. Os espadachins iberos vestiam túnicas brancas com barra carmesim e lutavam com a falcata curva.</translation>
+    </message>
+    <message>
+        <source>Balearic Slinger</source>
+        <translation>Fundibulário balear</translation>
+    </message>
+    <message>
+        <source>Velites</source>
+        <translation>Vélites</translation>
+    </message>
+    <message>
+        <source>Balearic islanders served Carthage as specialist slingers, carrying spare slings and a pouch of stones.</source>
+        <translation>Os ilhéus baleares serviram Cartago como fundibulários especializados, levando fundas de reserva e uma bolsa de pedras.</translation>
+    </message>
+    <message>
+        <source>Light infantry screen</source>
+        <translation>Cortina de infantaria leve</translation>
+    </message>
+    <message>
+        <source>Loose order and quick withdrawal behind friendly infantry.</source>
+        <translation>Ordem aberta e retirada rápida para trás da infantaria aliada.</translation>
+    </message>
+    <message>
+        <source>Roman velites screened the legions with light javelins, round parma shields and distinctive animal pelts.</source>
+        <translation>Os vélites romanos protegiam as legiões com dardos leves, escudos redondos parma e peles de animais marcantes.</translation>
+    </message>
+    <message>
+        <source>Vulnerable to cavalry and sustained melee.</source>
+        <translation>Vulnerável à cavalaria e ao combate corpo a corpo prolongado.</translation>
     </message>
 </context>
 <context>

@@ -3208,6 +3208,22 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
         <source>The watch does not sleep</source>
         <translation>Straż nie śpi</translation>
     </message>
+    <message>
+        <source>Gallic Allies</source>
+        <translation>Galijscy sojusznicy</translation>
+    </message>
+    <message>
+        <source>Allies of Carthage from beyond the Po</source>
+        <translation>Sojusznicy Kartaginy zza Padu</translation>
+    </message>
+    <message>
+        <source>Iberian Allies</source>
+        <translation>Iberyjscy sojusznicy</translation>
+    </message>
+    <message>
+        <source>Allies of Carthage from Hispania</source>
+        <translation>Sojusznicy Kartaginy z Hiszpanii</translation>
+    </message>
 </context>
 <context>
     <name>FloatingNumbers</name>
@@ -9743,6 +9759,14 @@ by zobaczyć podgląd</translation>
         <source>The Iron Sepulcher</source>
         <translation>Żelazny Grobowiec</translation>
     </message>
+    <message>
+        <source>Gallic Allies</source>
+        <translation>Galijscy sojusznicy</translation>
+    </message>
+    <message>
+        <source>Iberian Allies</source>
+        <translation>Iberyjscy sojusznicy</translation>
+    </message>
 </context>
 <context>
     <name>Numerals</name>
@@ -13480,6 +13504,66 @@ Prawy przycisk anuluje.</translation>
     <message>
         <source>Very slow, and a tall target that fire and stone-throwers bring down.</source>
         <translation>Bardzo powolna i wysoki cel, który obalają ogień i miotacze kamieni.</translation>
+    </message>
+    <message>
+        <source>Gallic Cavalry</source>
+        <translation>Jazda galijska</translation>
+    </message>
+    <message>
+        <source>Gallic Swordsmen</source>
+        <translation>Galijscy miecznicy</translation>
+    </message>
+    <message>
+        <source>Gallic nobles fought on horseback with long swords. Under Hasdrubal at Cannae they broke the Roman horse on the river flank and rode round to close the trap.</source>
+        <translation>Galijscy możni walczyli konno długimi mieczami. Pod wodzą Hasdrubala pod Kannami rozbili rzymską jazdę na skrzydle nad rzeką i objechali ją, by zamknąć pułapkę.</translation>
+    </message>
+    <message>
+        <source>Gauls of the Po valley joined Hannibal once he was over the Alps. At Cannae they held the centre of the crescent and fell back on purpose, drawing the legions in.</source>
+        <translation>Galowie z doliny Padu przyłączyli się do Hannibala, gdy tylko przeszedł Alpy. Pod Kannami utrzymywali środek półksiężyca i celowo się cofali, wciągając legiony.</translation>
+    </message>
+    <message>
+        <source>Iberian Cavalry</source>
+        <translation>Jazda iberyjska</translation>
+    </message>
+    <message>
+        <source>Iberian Swordsmen</source>
+        <translation>Iberyjscy miecznicy</translation>
+    </message>
+    <message>
+        <source>Iberian horsemen carried the small round caetra and the falcata. At Cannae they rode beside the Gauls on the left wing and helped ride down the Roman cavalry.</source>
+        <translation>Iberyjscy jeźdźcy nosili małą okrągłą cetrę i falkatę. Pod Kannami jechali obok Galów na lewym skrzydle i pomogli stratować rzymską jazdę.</translation>
+    </message>
+    <message>
+        <source>The Barcids raised their best foot in Spain. Iberian swordsmen wore white tunics edged in crimson and fought with the curved falcata.</source>
+        <translation>Barkidzi werbowali najlepszą piechotę w Hiszpanii. Iberyjscy miecznicy nosili białe tuniki obszyte karmazynem i walczyli zakrzywioną falkatą.</translation>
+    </message>
+    <message>
+        <source>Balearic Slinger</source>
+        <translation>Balearski procarz</translation>
+    </message>
+    <message>
+        <source>Velites</source>
+        <translation>Welici</translation>
+    </message>
+    <message>
+        <source>Balearic islanders served Carthage as specialist slingers, carrying spare slings and a pouch of stones.</source>
+        <translation>Mieszkańcy Balearów służyli Kartaginie jako wyspecjalizowani procarze, nosząc zapasowe proce i sakwę kamieni.</translation>
+    </message>
+    <message>
+        <source>Light infantry screen</source>
+        <translation>Osłona lekkiej piechoty</translation>
+    </message>
+    <message>
+        <source>Loose order and quick withdrawal behind friendly infantry.</source>
+        <translation>Luźny szyk i szybkie wycofanie się za własną piechotę.</translation>
+    </message>
+    <message>
+        <source>Roman velites screened the legions with light javelins, round parma shields and distinctive animal pelts.</source>
+        <translation>Rzymscy welici osłaniali legiony lekkimi oszczepami, okrągłymi tarczami parma i charakterystycznymi skórami zwierząt.</translation>
+    </message>
+    <message>
+        <source>Vulnerable to cavalry and sustained melee.</source>
+        <translation>Podatni na kawalerię i długotrwałą walkę wręcz.</translation>
     </message>
 </context>
 <context>

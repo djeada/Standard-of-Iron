@@ -42,6 +42,8 @@ auto default_troop_formation_profile(TroopType troop) -> TroopFormationProfile {
     profile.marching_layout = "marching_column";
     break;
 
+  case TroopType::Slinger:
+  case TroopType::Velites:
   case TroopType::Archer:
     profile.roles = mask({RoleTag::Ranged, RoleTag::Skirmisher});
     profile.army_roles = {ArmyRole::Ranged, ArmyRole::Screen};

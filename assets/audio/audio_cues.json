@@ -952,6 +952,28 @@
       "spatial": true
     },
     {
+      "id": "combat.sling_throw",
+      "description": "A sling cord snaps forward and releases a stone.",
+      "category": "sfx",
+      "importance": "optional",
+      "volume": 0.48,
+      "priority": 2,
+      "cooldown_ms": 150,
+      "resources": ["sfx.combat.javelin_throw_whoosh"],
+      "spatial": true
+    },
+    {
+      "id": "combat.skirmisher_ground_impact",
+      "description": "A light missile strikes the ground.",
+      "category": "sfx",
+      "importance": "optional",
+      "volume": 0.32,
+      "priority": 1,
+      "cooldown_ms": 150,
+      "resources": ["sfx.combat.arrow_impact_01"],
+      "spatial": true
+    },
+    {
       "id": "combat.javelin_throw",
       "description": "A thrown javelin leaves the hand.",
       "category": "sfx",

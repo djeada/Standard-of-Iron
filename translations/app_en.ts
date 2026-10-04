@@ -3208,6 +3208,22 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <source>The watch does not sleep</source>
         <translation>The watch does not sleep</translation>
     </message>
+    <message>
+        <source>Gallic Allies</source>
+        <translation>Gallic Allies</translation>
+    </message>
+    <message>
+        <source>Allies of Carthage from beyond the Po</source>
+        <translation>Allies of Carthage from beyond the Po</translation>
+    </message>
+    <message>
+        <source>Iberian Allies</source>
+        <translation>Iberian Allies</translation>
+    </message>
+    <message>
+        <source>Allies of Carthage from Hispania</source>
+        <translation>Allies of Carthage from Hispania</translation>
+    </message>
 </context>
 <context>
     <name>FloatingNumbers</name>
@@ -9740,6 +9756,14 @@ to see preview</translation>
         <source>Testudo</source>
         <translation>Testudo</translation>
     </message>
+    <message>
+        <source>Gallic Allies</source>
+        <translation>Gallic Allies</translation>
+    </message>
+    <message>
+        <source>Iberian Allies</source>
+        <translation>Iberian Allies</translation>
+    </message>
 </context>
 <context>
     <name>Numerals</name>
@@ -13476,6 +13500,66 @@ Right-click to cancel.</translation>
     <message>
         <source>Very slow, and a tall target that fire and stone-throwers bring down.</source>
         <translation>Very slow, and a tall target that fire and stone-throwers bring down.</translation>
+    </message>
+    <message>
+        <source>Gallic Cavalry</source>
+        <translation>Gallic Cavalry</translation>
+    </message>
+    <message>
+        <source>Gallic Swordsmen</source>
+        <translation>Gallic Swordsmen</translation>
+    </message>
+    <message>
+        <source>Gallic nobles fought on horseback with long swords. Under Hasdrubal at Cannae they broke the Roman horse on the river flank and rode round to close the trap.</source>
+        <translation>Gallic nobles fought on horseback with long swords. Under Hasdrubal at Cannae they broke the Roman horse on the river flank and rode round to close the trap.</translation>
+    </message>
+    <message>
+        <source>Gauls of the Po valley joined Hannibal once he was over the Alps. At Cannae they held the centre of the crescent and fell back on purpose, drawing the legions in.</source>
+        <translation>Gauls of the Po valley joined Hannibal once he was over the Alps. At Cannae they held the centre of the crescent and fell back on purpose, drawing the legions in.</translation>
+    </message>
+    <message>
+        <source>Iberian Cavalry</source>
+        <translation>Iberian Cavalry</translation>
+    </message>
+    <message>
+        <source>Iberian Swordsmen</source>
+        <translation>Iberian Swordsmen</translation>
+    </message>
+    <message>
+        <source>Iberian horsemen carried the small round caetra and the falcata. At Cannae they rode beside the Gauls on the left wing and helped ride down the Roman cavalry.</source>
+        <translation>Iberian horsemen carried the small round caetra and the falcata. At Cannae they rode beside the Gauls on the left wing and helped ride down the Roman cavalry.</translation>
+    </message>
+    <message>
+        <source>The Barcids raised their best foot in Spain. Iberian swordsmen wore white tunics edged in crimson and fought with the curved falcata.</source>
+        <translation>The Barcids raised their best foot in Spain. Iberian swordsmen wore white tunics edged in crimson and fought with the curved falcata.</translation>
+    </message>
+    <message>
+        <source>Balearic Slinger</source>
+        <translation>Balearic Slinger</translation>
+    </message>
+    <message>
+        <source>Velites</source>
+        <translation>Velites</translation>
+    </message>
+    <message>
+        <source>Balearic islanders served Carthage as specialist slingers, carrying spare slings and a pouch of stones.</source>
+        <translation>Balearic islanders served Carthage as specialist slingers, carrying spare slings and a pouch of stones.</translation>
+    </message>
+    <message>
+        <source>Light infantry screen</source>
+        <translation>Light infantry screen</translation>
+    </message>
+    <message>
+        <source>Loose order and quick withdrawal behind friendly infantry.</source>
+        <translation>Loose order and quick withdrawal behind friendly infantry.</translation>
+    </message>
+    <message>
+        <source>Roman velites screened the legions with light javelins, round parma shields and distinctive animal pelts.</source>
+        <translation>Roman velites screened the legions with light javelins, round parma shields and distinctive animal pelts.</translation>
+    </message>
+    <message>
+        <source>Vulnerable to cavalry and sustained melee.</source>
+        <translation>Vulnerable to cavalry and sustained melee.</translation>
     </message>
 </context>
 <context>

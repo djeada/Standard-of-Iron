@@ -1,6 +1,9 @@
 #include "historical_helmets.h"
 
 #include <array>
+#include <cmath>
+#include <numbers>
+#include <vector>
 
 #include "helmet_alignment.h"
 #include "render/equipment/attachment_builder.h"
@@ -103,6 +106,119 @@ auto montefortino() -> const RenderArchetype& {
             {0.0F, 0.80F, -1.80F}, {0.18F, 0.56F, 0.38F}, k_crest, 1.0F, 0),
     }};
     return build_generated_equipment_archetype("roman_montefortino_helmet", parts);
+  }();
+  return value;
+}
+
+auto gallic_montefortino() -> const RenderArchetype& {
+  static const RenderArchetype value = [] {
+    std::array<GeneratedEquipmentPrimitive, 22> const parts{{
+
+        generated_ellipsoid(
+            {0.0F, 0.34F, -0.06F}, {1.46F, 1.34F, 1.58F}, k_metal, 1.0F, 2),
+        generated_ellipsoid(
+            {0.0F, 0.86F, -0.08F}, {1.10F, 0.84F, 1.18F}, k_metal, 1.0F, 2),
+
+        generated_cylinder(
+            {0.0F, 1.48F, -0.08F}, {0.0F, 1.72F, -0.08F}, 0.22F, k_dark, 1.0F, 2),
+        generated_ellipsoid(
+            {0.0F, 1.64F, -0.08F}, {0.32F, 0.08F, 0.32F}, k_dark, 1.0F, 2),
+
+        generated_ellipsoid(
+            {0.0F, -0.28F, 1.10F}, {1.12F, 0.13F, 0.36F}, k_metal, 1.0F, 2),
+        generated_ellipsoid(
+            {-0.70F, -0.30F, 1.24F}, {0.42F, 0.09F, 0.18F}, k_dark, 1.0F, 2),
+        generated_ellipsoid(
+            {0.70F, -0.30F, 1.24F}, {0.42F, 0.09F, 0.18F}, k_dark, 1.0F, 2),
+
+        generated_cylinder(
+            {-0.76F, -0.30F, 1.16F}, {-1.18F, -0.46F, 0.28F}, 0.11F, k_dark, 1.0F, 2),
+        generated_cylinder(
+            {0.76F, -0.30F, 1.16F}, {1.18F, -0.46F, 0.28F}, 0.11F, k_dark, 1.0F, 2),
+
+        generated_ellipsoid(
+            {0.0F, -0.40F, -1.28F}, {1.22F, 0.18F, 0.40F}, k_metal, 1.0F, 2),
+        generated_ellipsoid(
+            {0.0F, -0.58F, -1.48F}, {1.18F, 0.09F, 0.32F}, k_metal, 1.0F, 2),
+
+        generated_cylinder(
+            {-1.14F, -0.34F, 0.34F}, {-1.32F, -0.39F, 0.29F}, 0.60F, k_metal, 1.0F, 2),
+        generated_cylinder(
+            {-1.00F, -0.96F, 0.50F}, {-1.18F, -1.01F, 0.45F}, 0.46F, k_metal, 1.0F, 2),
+        generated_cylinder(
+            {-0.78F, -1.40F, 0.60F}, {-0.94F, -1.45F, 0.55F}, 0.28F, k_metal, 1.0F, 2),
+        generated_cylinder(
+            {1.14F, -0.34F, 0.34F}, {1.32F, -0.39F, 0.29F}, 0.60F, k_metal, 1.0F, 2),
+        generated_cylinder(
+            {1.00F, -0.96F, 0.50F}, {1.18F, -1.01F, 0.45F}, 0.46F, k_metal, 1.0F, 2),
+        generated_cylinder(
+            {0.78F, -1.40F, 0.60F}, {0.94F, -1.45F, 0.55F}, 0.28F, k_metal, 1.0F, 2),
+
+        generated_sphere({-1.36F, -0.22F, 0.28F}, 0.15F, k_dark, 1.0F, 2),
+        generated_sphere({1.36F, -0.22F, 0.28F}, 0.15F, k_dark, 1.0F, 2),
+
+        generated_cylinder({-0.80F, -1.46F, 0.54F},
+                           {-0.30F, -1.74F, 0.40F},
+                           0.09F,
+                           k_leather,
+                           1.0F,
+                           0),
+        generated_cylinder(
+            {0.80F, -1.46F, 0.54F}, {0.30F, -1.74F, 0.40F}, 0.09F, k_leather, 1.0F, 0),
+
+        generated_sphere({0.0F, 1.76F, -0.08F}, 0.27F, k_metal, 1.0F, 2),
+    }};
+    return build_generated_equipment_archetype("gallic_montefortino_helmet", parts);
+  }();
+  return value;
+}
+
+auto iberian_sinew_cap() -> const RenderArchetype& {
+  static const RenderArchetype value = [] {
+    std::vector<GeneratedEquipmentPrimitive> parts{
+        generated_ellipsoid(
+            {0.0F, 0.30F, -0.06F}, {1.42F, 1.16F, 1.52F}, k_metal, 1.0F, 0),
+        generated_cylinder(
+            {0.0F, -0.18F, -0.06F}, {0.0F, -0.02F, -0.06F}, 1.50F, k_dark, 1.0F, 0),
+        generated_ellipsoid(
+            {0.0F, 0.66F, -0.06F}, {1.30F, 0.09F, 1.40F}, k_dark, 1.0F, 0),
+        generated_box({0.0F, 1.40F, -0.10F}, {0.10F, 0.18F, 0.96F}, k_dark, 1.0F, 0),
+        generated_cylinder({-1.22F, -0.08F, 0.28F},
+                           {-0.92F, -1.02F, 0.44F},
+                           0.10F,
+                           k_leather,
+                           1.0F,
+                           0),
+        generated_cylinder(
+            {1.22F, -0.08F, 0.28F}, {0.92F, -1.02F, 0.44F}, 0.10F, k_leather, 1.0F, 0),
+        generated_cylinder(
+            {-0.92F, -1.02F, 0.44F}, {0.92F, -1.02F, 0.44F}, 0.07F, k_leather, 1.0F, 0),
+        generated_sphere({0.0F, 0.40F, 1.44F}, 0.16F, k_dark, 1.0F, 0),
+    };
+    // Narrow overlapping tufts give the crest a continuous swept outline.
+    for (int i = 0; i < 7; ++i) {
+      float const t = static_cast<float>(i) / 6.0F;
+      float const z = 0.95F - t * 2.0F;
+      float const crown = 1.45F + 0.34F * std::sin(t * std::numbers::pi_v<float>);
+      parts.push_back(generated_ellipsoid(
+          {0.0F, crown, z}, {0.11F, 0.38F, 0.30F}, k_crest, 1.0F, 0));
+    }
+    // Sinew seams hug the cap surface instead of crossing it as solid slabs.
+    for (int seam = 0; seam < 4; ++seam) {
+      float const azimuth =
+          (static_cast<float>(seam) + 0.5F) * std::numbers::pi_v<float> * 0.5F;
+      auto point = [&](float angle) {
+        return QVector3D(1.44F * std::sin(angle) * std::sin(azimuth),
+                         0.30F + 1.18F * std::cos(angle),
+                         -0.06F + 1.54F * std::sin(angle) * std::cos(azimuth));
+      };
+      for (int segment = 0; segment < 6; ++segment) {
+        float const angle = 0.22F + static_cast<float>(segment) * 0.25F;
+        parts.push_back(generated_cylinder(
+            point(angle), point(angle + 0.25F), 0.035F, k_dark, 1.0F, 0));
+      }
+    }
+    return build_generated_equipment_archetype("iberian_sinew_cap_helmet", parts);
   }();
   return value;
 }
@@ -256,6 +372,10 @@ auto historical_helmet_archetype(HistoricalHelmet helmet) -> const RenderArchety
     return punic_conical();
   case HistoricalHelmet::CarthageThracianCrested:
     return thracian();
+  case HistoricalHelmet::GallicMontefortino:
+    return gallic_montefortino();
+  case HistoricalHelmet::IberianSinewCap:
+    return iberian_sinew_cap();
   }
   return montefortino();
 }
@@ -268,6 +388,24 @@ auto historical_helmet_fill_role_colors(HistoricalHelmet helmet,
     return 0U;
   }
   using Render::GL::Humanoid::saturate_color;
+  if (helmet == HistoricalHelmet::IberianSinewCap) {
+    QVector3D const sinew =
+        saturate_color(palette.leather * 0.40F + QVector3D(0.40F, 0.30F, 0.18F));
+    out[0] = sinew;
+    out[1] = sinew * 0.62F;
+    out[2] = saturate_color(palette.leather_dark);
+    out[3] = QVector3D(0.64F, 0.10F, 0.10F);
+    return k_historical_helmet_role_count;
+  }
+  if (helmet == HistoricalHelmet::GallicMontefortino) {
+    QVector3D const bronze =
+        saturate_color(palette.metal * QVector3D(1.20F, 1.02F, 0.60F));
+    out[0] = bronze;
+    out[1] = bronze * 0.62F;
+    out[2] = saturate_color(palette.leather_dark);
+    out[3] = bronze;
+    return k_historical_helmet_role_count;
+  }
   bool const carthaginian = helmet == HistoricalHelmet::CarthagePunicConical ||
                             helmet == HistoricalHelmet::CarthageThracianCrested;
   QVector3D const metal =

@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 #include <limits>
 #include <map>
+#include <optional>
 #include <set>
 #include <string>
 #include <utility>
@@ -561,6 +562,84 @@ TEST(ArenaScenariosTest, SepulcherBattlesPitUndeadAgainstBothPlayableNations) {
     EXPECT_TRUE(has_opponent) << id;
     EXPECT_FALSE(scenario->steps.empty()) << id;
   }
+}
+
+TEST(ArenaScenariosTest, AlliedScenesFieldGallicAndIberianFootAndHorse) {
+  using Game::Systems::NationID;
+  using Game::Units::TroopType;
+  for (auto const* id : {Arena::Scenarios::k_allied_identity_lineup_id,
+                         Arena::Scenarios::k_cannae_allied_clash_id}) {
+    auto const* scenario = Arena::Scenarios::find_definition(QString::fromLatin1(id));
+    ASSERT_NE(scenario, nullptr) << id;
+    std::set<std::pair<NationID, TroopType>> fielded;
+    for (auto const& group : scenario->groups) {
+      fielded.emplace(group.nation_id, group.troop_type);
+    }
+    for (auto const nation : {NationID::Gauls, NationID::Iberians}) {
+      for (auto const troop : {TroopType::Swordsman, TroopType::MountedSwordsman}) {
+        EXPECT_TRUE(fielded.contains({nation, troop}))
+            << id << " misses " << Game::Systems::nation_id_to_string(nation) << " "
+            << Game::Units::troop_typeToString(troop);
+      }
+    }
+  }
+}
+
+TEST(ArenaScenariosTest, SkirmisherScenesFieldVelitesAndSlingers) {
+  using Game::Systems::NationID;
+  using Game::Units::TroopType;
+  for (auto const* id : {Arena::Scenarios::k_skirmisher_lineup_id,
+                         Arena::Scenarios::k_skirmisher_screen_id}) {
+    auto const* scenario = Arena::Scenarios::find_definition(QString::fromLatin1(id));
+    ASSERT_NE(scenario, nullptr) << id;
+    std::set<std::pair<NationID, TroopType>> fielded;
+    for (auto const& group : scenario->groups) {
+      fielded.emplace(group.nation_id, group.troop_type);
+    }
+    EXPECT_TRUE(fielded.contains({NationID::RomanRepublic, TroopType::Velites})) << id;
+    EXPECT_TRUE(fielded.contains({NationID::Carthage, TroopType::Slinger})) << id;
+  }
+}
+
+TEST(ArenaScenariosTest, CannaeAlliesFightOnCarthagesTeam) {
+  using Game::Systems::NationID;
+  auto const* scenario = Arena::Scenarios::find_definition(
+      QString::fromLatin1(Arena::Scenarios::k_cannae_allied_clash_id));
+  ASSERT_NE(scenario, nullptr);
+
+  std::map<int, int> team_of;
+  for (auto const& entry : scenario->owner_teams) {
+    team_of[entry.owner_id] = entry.team_id;
+  }
+  std::optional<int> carthage_team;
+  std::optional<int> rome_team;
+  std::set<int> allied_owners;
+  for (auto const& group : scenario->groups) {
+    ASSERT_TRUE(team_of.contains(group.owner_id)) << group.name.toStdString();
+    switch (group.nation_id) {
+    case NationID::Carthage:
+      carthage_team = team_of[group.owner_id];
+      break;
+    case NationID::RomanRepublic:
+      rome_team = team_of[group.owner_id];
+      break;
+    case NationID::Gauls:
+    case NationID::Iberians:
+      allied_owners.insert(group.owner_id);
+      break;
+    case NationID::IronSepulcher:
+      ADD_FAILURE() << "unexpected undead group " << group.name.toStdString();
+      break;
+    }
+  }
+  ASSERT_TRUE(carthage_team.has_value());
+  ASSERT_TRUE(rome_team.has_value());
+  EXPECT_NE(*carthage_team, *rome_team);
+  EXPECT_GE(allied_owners.size(), 2U) << "each ally should hold its own owner slot";
+  for (int const owner : allied_owners) {
+    EXPECT_EQ(team_of[owner], *carthage_team) << "owner " << owner;
+  }
+  EXPECT_FALSE(scenario->steps.empty());
 }
 
 TEST(ArenaScenariosTest, FireballReviewSceneIsolatesTheSpellFromEverythingElse) {

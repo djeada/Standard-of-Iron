@@ -187,6 +187,8 @@ float get_unit_base_cull_radius(Game::Units::SpawnType spawn_type) {
   case Game::Units::SpawnType::WallSegment:
     return 3.5F;
   case Game::Units::SpawnType::Spearman:
+  case Game::Units::SpawnType::Slinger:
+  case Game::Units::SpawnType::Velites:
   case Game::Units::SpawnType::Archer:
   case Game::Units::SpawnType::Swordsman:
     return 2.5F;
@@ -199,6 +201,8 @@ auto is_formation_render_spawn(Game::Units::SpawnType spawn_type) noexcept -> bo
   using Game::Units::SpawnType;
   switch (spawn_type) {
   case SpawnType::Spearman:
+  case SpawnType::Slinger:
+  case SpawnType::Velites:
   case SpawnType::Archer:
   case SpawnType::Swordsman:
   case SpawnType::MountedSwordsman:

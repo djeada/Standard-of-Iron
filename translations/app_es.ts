@@ -3208,6 +3208,22 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <source>The watch does not sleep</source>
         <translation>La guardia no duerme</translation>
     </message>
+    <message>
+        <source>Gallic Allies</source>
+        <translation>Aliados galos</translation>
+    </message>
+    <message>
+        <source>Allies of Carthage from beyond the Po</source>
+        <translation>Aliados de Cartago de más allá del Po</translation>
+    </message>
+    <message>
+        <source>Iberian Allies</source>
+        <translation>Aliados íberos</translation>
+    </message>
+    <message>
+        <source>Allies of Carthage from Hispania</source>
+        <translation>Aliados de Cartago desde Hispania</translation>
+    </message>
 </context>
 <context>
     <name>FloatingNumbers</name>
@@ -9740,6 +9756,14 @@ para ver la vista previa</translation>
         <source>Testudo</source>
         <translation>Testudo</translation>
     </message>
+    <message>
+        <source>Gallic Allies</source>
+        <translation>Aliados galos</translation>
+    </message>
+    <message>
+        <source>Iberian Allies</source>
+        <translation>Aliados íberos</translation>
+    </message>
 </context>
 <context>
     <name>Numerals</name>
@@ -13476,6 +13500,66 @@ Clic derecho para cancelar.</translation>
     <message>
         <source>Very slow, and a tall target that fire and stone-throwers bring down.</source>
         <translation>Muy lenta y un blanco alto que el fuego y los lanzapiedras derriban.</translation>
+    </message>
+    <message>
+        <source>Gallic Cavalry</source>
+        <translation>Caballería gala</translation>
+    </message>
+    <message>
+        <source>Gallic Swordsmen</source>
+        <translation>Espaderos galos</translation>
+    </message>
+    <message>
+        <source>Gallic nobles fought on horseback with long swords. Under Hasdrubal at Cannae they broke the Roman horse on the river flank and rode round to close the trap.</source>
+        <translation>Los nobles galos luchaban a caballo con espadas largas. A las órdenes de Asdrúbal en Cannas, rompieron la caballería romana en el flanco del río y la rodearon para cerrar la trampa.</translation>
+    </message>
+    <message>
+        <source>Gauls of the Po valley joined Hannibal once he was over the Alps. At Cannae they held the centre of the crescent and fell back on purpose, drawing the legions in.</source>
+        <translation>Los galos del valle del Po se unieron a Aníbal en cuanto cruzó los Alpes. En Cannas sostuvieron el centro de la media luna y retrocedieron a propósito, atrayendo a las legiones.</translation>
+    </message>
+    <message>
+        <source>Iberian Cavalry</source>
+        <translation>Caballería íbera</translation>
+    </message>
+    <message>
+        <source>Iberian Swordsmen</source>
+        <translation>Espaderos íberos</translation>
+    </message>
+    <message>
+        <source>Iberian horsemen carried the small round caetra and the falcata. At Cannae they rode beside the Gauls on the left wing and helped ride down the Roman cavalry.</source>
+        <translation>Los jinetes íberos llevaban la pequeña caetra redonda y la falcata. En Cannas cabalgaron junto a los galos en el ala izquierda y ayudaron a arrollar a la caballería romana.</translation>
+    </message>
+    <message>
+        <source>The Barcids raised their best foot in Spain. Iberian swordsmen wore white tunics edged in crimson and fought with the curved falcata.</source>
+        <translation>Los Bárcidas reclutaron su mejor infantería en Hispania. Los espaderos íberos vestían túnicas blancas ribeteadas de carmesí y luchaban con la falcata curva.</translation>
+    </message>
+    <message>
+        <source>Balearic Slinger</source>
+        <translation>Hondero balear</translation>
+    </message>
+    <message>
+        <source>Velites</source>
+        <translation>Vélites</translation>
+    </message>
+    <message>
+        <source>Balearic islanders served Carthage as specialist slingers, carrying spare slings and a pouch of stones.</source>
+        <translation>Los isleños baleares sirvieron a Cartago como honderos especializados, con hondas de repuesto y una bolsa de piedras.</translation>
+    </message>
+    <message>
+        <source>Light infantry screen</source>
+        <translation>Pantalla de infantería ligera</translation>
+    </message>
+    <message>
+        <source>Loose order and quick withdrawal behind friendly infantry.</source>
+        <translation>Orden abierto y rápida retirada tras la infantería aliada.</translation>
+    </message>
+    <message>
+        <source>Roman velites screened the legions with light javelins, round parma shields and distinctive animal pelts.</source>
+        <translation>Los vélites romanos cubrían a las legiones con jabalinas ligeras, escudos redondos parma y llamativas pieles de animal.</translation>
+    </message>
+    <message>
+        <source>Vulnerable to cavalry and sustained melee.</source>
+        <translation>Vulnerable a la caballería y al combate cuerpo a cuerpo prolongado.</translation>
     </message>
 </context>
 <context>

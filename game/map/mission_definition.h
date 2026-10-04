@@ -27,6 +27,8 @@ enum class UnitBehavior {
 struct UnitSetup {
   QString type;
   int count = 1;
+
+  QString nation;
   Position position;
   UnitBehavior behavior = UnitBehavior::Strategic;
   float guard_radius = 10.0F;
@@ -63,6 +65,8 @@ struct AIPersonality {
 struct WaveComposition {
   QString type;
   int count = 1;
+
+  QString nation;
   bool elite = false;
   QString title;
 };

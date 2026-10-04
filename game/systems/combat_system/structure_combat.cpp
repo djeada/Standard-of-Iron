@@ -133,6 +133,8 @@ auto structure_attack_profile(const Engine::Core::Entity* attacker)
 
   using Game::Units::SpawnType;
   switch (unit->spawn_type) {
+  case SpawnType::Slinger:
+  case SpawnType::Velites:
   case SpawnType::Archer:
   case SpawnType::HorseArcher:
   case SpawnType::SkeletonArcher:

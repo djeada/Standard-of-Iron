@@ -505,6 +505,13 @@ auto authored_humanoid_clip_markers(
   case k_humanoid_rpg_spear_launcher_clip:
   case k_humanoid_rpg_spear_finisher_clip:
     return rpg_spear_markers(clip_id);
+  case k_humanoid_sling_throw_clip:
+  case k_humanoid_javelin_throw_clip:
+    return {.anticipation_start = 0.08F,
+            .weapon_release = 0.46F,
+            .contact = 0.50F,
+            .recover_unlocked = 0.70F,
+            .exit_safe = 0.90F};
   case k_humanoid_archer_melee_clip:
     return attack_sword_markers(false);
   case k_humanoid_hold_spear_attack_clip:

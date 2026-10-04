@@ -258,7 +258,9 @@ inline constexpr std::uint16_t k_humanoid_climb_clip = 86U;
 inline constexpr float k_humanoid_climb_cycle_time = 1.0F;
 inline constexpr float k_humanoid_climb_rise_per_cycle = 0.52F;
 
-inline constexpr std::uint16_t k_humanoid_clip_count = 87U;
+inline constexpr std::uint16_t k_humanoid_sling_throw_clip = 87U;
+inline constexpr std::uint16_t k_humanoid_javelin_throw_clip = 88U;
+inline constexpr std::uint16_t k_humanoid_clip_count = 89U;
 
 inline constexpr float k_humanoid_combat_ready_cycle_time = 2.2F;
 inline constexpr std::uint32_t k_humanoid_combat_ready_frames = 48U;
