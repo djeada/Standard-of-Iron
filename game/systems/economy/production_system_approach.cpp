@@ -23,7 +23,7 @@ namespace Game::Systems::ProductionTasks {
 
 namespace {
 
-constexpr float k_work_spot_arrival_distance_sq = 0.2F * 0.2F;
+constexpr float k_work_spot_arrival_distance_sq = 0.05F * 0.05F;
 constexpr float k_site_arrival_distance_sq = 0.3F * 0.3F;
 constexpr float k_footprint_reach_sq = 1.0F * 1.0F;
 constexpr float k_site_approach_limit_seconds = 30.0F;
@@ -284,7 +284,7 @@ auto men_at_posts(Engine::Core::World& world,
       continue;
     }
     if (!man.world_motion_valid) {
-      return false;
+      continue;
     }
     float const speed = std::hypot(man.world_velocity_x, man.world_velocity_z);
     if (speed >= k_standing_speed) {
@@ -307,7 +307,8 @@ auto men_at_posts(Engine::Core::World& world,
 auto crew_at_posts(Engine::Core::World& world,
                    Engine::Core::EntityID id,
                    const Engine::Core::BuilderProductionComponent& builder) -> bool {
-  return men_at_posts(world, id, builder.site_settle_seconds);
+  return is_gather_builder_product(builder.product_type) ||
+         men_at_posts(world, id, builder.site_settle_seconds);
 }
 
 void settle_crew_at_posts(Engine::Core::World&,
@@ -346,13 +347,9 @@ void advance_site_approach(Engine::Core::World& world,
       !work_spot || builder.has_task_target || builder.structure_task_entity_id != 0;
 
   bool const stalled_within_reach =
-      is_harvest_builder_product(builder.product_type) && has_work_target &&
-      dist_sq <= k_stalled_work_reach_sq &&
+      work_spot && has_work_target && dist_sq <= k_stalled_work_reach_sq &&
       builder.site_approach_seconds > k_stalled_work_seconds;
-  if (dist_sq < arrival_sq ||
-      (work_spot && dist_sq <= k_stalled_work_reach_sq && !line_clear &&
-       has_work_target) ||
-      stalled_within_reach) {
+  if (dist_sq < arrival_sq || stalled_within_reach) {
     if (retarget_onto_field(world, actor, builder)) {
       return;
     }
