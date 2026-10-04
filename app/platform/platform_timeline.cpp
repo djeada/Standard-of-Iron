@@ -30,8 +30,7 @@ public:
 
 auto make_platform_timeline_sink() -> std::unique_ptr<TimelineSink> {
 #ifdef SOI_STEAMWORKS
-  // SteamAPI_Init fails when the game was not started by Steam or Steam is
-  // not running. That is the normal case for a non-Steam build: play on.
+
   if (SteamAPI_Init()) {
     return std::make_unique<SteamTimelineSink>();
   }

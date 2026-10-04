@@ -374,8 +374,6 @@ struct UnitRenderEntry {
   return unit.spawn_type == Game::Units::SpawnType::Barracks;
 }
 
-// Ground the player has explored keeps its buildings: a wall or a house seen
-// once stays drawn, as remembered terrain does. Troops show only while watched.
 [[nodiscard]] auto
 non_local_fog_mode(const Engine::Core::UnitComponent& unit) -> SubmissionFogMode {
   return Game::Units::is_building_spawn(unit.spawn_type)

@@ -38,8 +38,6 @@ auto wall_walker_of(const Engine::Core::Entity* entity)
              : nullptr;
 }
 
-// Height a fighter stands at. Terrain alignment already lifts a soldier on a
-// balcony, stair or tower bridge by its walking height.
 auto standing_height(const Engine::Core::Entity* entity) -> std::optional<float> {
   auto const* registry = entity != nullptr ? entity->registry() : nullptr;
   auto const* transform =

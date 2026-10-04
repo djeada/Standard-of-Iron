@@ -36,29 +36,27 @@ namespace {
 using Index = Engine::Core::WorldSpatialIndex;
 
 constexpr float k_gravity = 14.0F;
-// A rolling solid sphere converts 2/7 of its potential energy into spin.
+
 constexpr float k_rolling_share = 5.0F / 7.0F;
 constexpr float k_rolling_resistance = 0.20F;
 constexpr float k_restitution = 0.30F;
 constexpr float k_landing_friction = 0.85F;
 constexpr float k_rebound_speed = 1.8F;
-// The ground has to drop away this much faster than the boulder follows it
-// before the boulder leaves the slope.
+
 constexpr float k_lift_off_clearance = 0.35F;
 constexpr float k_max_speed = 24.0F;
 constexpr float k_speed_kept_in_bends = 0.85F;
-// Casualties are flung at most this fast however hard the boulder hits, so
-// bodies land on the slope rather than across the valley.
+
 constexpr float k_max_launch_speed = 6.0F;
 constexpr float k_settle_speed = 0.45F;
 constexpr float k_min_roll_seconds = 1.0F;
 constexpr float k_max_substep = 1.0F / 60.0F;
 constexpr float k_push_speed = 2.5F;
-// Speed at which a boulder deals exactly its trap's damage.
+
 constexpr float k_reference_speed = 9.0F;
 constexpr float k_momentum_kept_per_strike = 0.82F;
 constexpr float k_men_in_boulder_lane = 2.5F;
-// A boulder this far above a troop's ground bounds over its heads.
+
 constexpr float k_overhead_clearance = 1.6F;
 constexpr float k_dust_lifetime = 1.3F;
 constexpr float k_trail_dust_interval = 0.18F;
@@ -68,23 +66,21 @@ constexpr float k_dusty_landing_speed = 3.0F;
 constexpr std::size_t k_max_dust = 128;
 constexpr float k_settled_sink_seconds = 1.2F;
 
-// Hill caches: a ramp has to climb at least this much to be worth guarding.
 constexpr float k_min_ramp_rise = 1.5F;
-// The pile sits this far past the top of the ramp, on the plateau edge.
+
 constexpr float k_cache_setback = 1.2F;
-// The ramp's crest is where it has made this share of its full climb.
+
 constexpr float k_crest_fraction = 0.92F;
 constexpr int k_crest_samples = 48;
-// Pushers heave from this close to the spot behind the pile.
+
 constexpr float k_push_reach = 2.5F;
-// How long a troop may take to walk up behind the pile.
+
 constexpr float k_approach_timeout = 6.0F;
-// Half the width of the ramp corridor a hill cache covers.
+
 constexpr float k_ramp_half_width = 4.5F;
-// An AI rolls a hill cache once climbers are within this share of the ramp
-// from its crest.
+
 constexpr float k_ai_release_reach = 0.7F;
-// Two ramps whose tops are this close share one cache.
+
 constexpr float k_cache_merge_distance = 5.0F;
 
 [[nodiscard]] auto hash01(std::uint64_t seed) -> float {
@@ -214,8 +210,7 @@ void RockfallSystem::stage_hill_caches() {
     if (top.y() - foot.y() < k_min_ramp_rise) {
       continue;
     }
-    // The centreline runs on across the plateau; the stones belong where the
-    // ramp meets its edge, so walk up the ramp until it stops climbing.
+
     QVector3D const uphill = flat(top - foot).normalized();
     float const crest_height = foot.y() + (top.y() - foot.y()) * k_crest_fraction;
     QVector3D crest = top;
@@ -240,7 +235,6 @@ void RockfallSystem::stage_hill_caches() {
       continue;
     }
 
-    // The kill zone is the ramp itself; the stones are aimed at its foot.
     QVector3D const zone_centre = (top + foot) * 0.5F;
     float const ramp_length = flat(top - foot).length();
     Game::Map::RockfallTrap definition;
@@ -257,8 +251,7 @@ void RockfallSystem::stage_hill_caches() {
     definition.release_spread = 1.6F;
     definition.release_interval = 0.22F;
     definition.damage = 60;
-    // As deadly as an authored trap: a volley down a crowded ramp should cost
-    // an assault dearly, not erase the army climbing it.
+
     definition.casualty_fraction = Game::Map::RockfallTrap{}.casualty_fraction;
     definition.ai_min_targets = 1;
     add_trap(definition, cache, foot, true);
@@ -392,7 +385,7 @@ void RockfallSystem::begin_push(Engine::Core::World& world,
       flat(QVector3D(transform->position.x, 0.0F, transform->position.z) - spot)
               .length() > k_push_reach;
   if (far_off) {
-    // Walk up behind the pile first; the heave starts once they are there.
+
     trap.approaching = true;
     trap.approach_remaining = k_approach_timeout;
     Game::Systems::CommandService::move_unit(world, troop, spot);
@@ -420,7 +413,7 @@ void RockfallSystem::advance_push(Engine::Core::World& world,
   auto* transform = world.try_get<Engine::Core::TransformComponent>(pusher);
   if (unit == nullptr || transform == nullptr || unit->health <= 0 ||
       unit->owner_id != trap.owner_id) {
-    // The men at the pile were cut down or driven off before it went.
+
     trap.pusher = 0;
     trap.push_remaining = 0.0F;
     trap.approaching = false;
@@ -435,7 +428,7 @@ void RockfallSystem::advance_push(Engine::Core::World& world,
       return;
     }
     if (!arrived && flat(at - trap.release_world).length() > k_rockfall_use_radius) {
-      // Blocked or drawn away; the order lapses and the stones stay put.
+
       trap.pusher = 0;
       trap.approaching = false;
       return;
@@ -494,8 +487,7 @@ auto RockfallSystem::hostile_troops_in_zone(Engine::Core::World& world,
       trap.hill_cache ? trap.definition.target_x : trap.target_world.x();
   float const zone_z =
       trap.hill_cache ? trap.definition.target_z : trap.target_world.z();
-  // A hill cache covers its ramp: a corridor from the crest down to the foot.
-  // `reach` is how far down that corridor counts, from the crest.
+
   QVector3D const crest = flat(trap.release_world);
   QVector3D const ramp = flat(trap.target_world) - crest;
   float const ramp_length_sq = std::max(ramp.lengthSquared(), 1.0e-4F);
@@ -649,8 +641,7 @@ void RockfallSystem::evaluate_auto_trigger(Engine::Core::World& world,
     if (!m_services.owners.is_ai(trap.owner_id)) {
       return;
     }
-    // The stones take a while to heave and to roll; an AI lets them go once
-    // the climbers are far enough up the ramp to be caught on it.
+
     int const in_reach = trap.hill_cache
                              ? hostile_troops_in_zone(world, trap, k_ai_release_reach)
                              : trap.hostile_in_zone;
@@ -761,9 +752,7 @@ void RockfallSystem::step_boulder(Boulder& boulder, float dt) {
     QVector3D velocity = boulder.velocity + downhill * dt;
     float const speed_before_turn = velocity.length();
     velocity -= normal * QVector3D::dotProduct(velocity, normal);
-    // Real slopes curve into the valley floor, so a rolling boulder is turned
-    // by the bend rather than stopped by it. Keep most of its speed through a
-    // concave break instead of discarding everything off the new tangent.
+
     if (float const turned = velocity.length(); turned > 1.0e-4F) {
       float const kept = std::max(turned, speed_before_turn * k_speed_kept_in_bends);
       velocity *= kept / turned;
@@ -885,9 +874,7 @@ void RockfallSystem::strike(Engine::Core::World& world,
           ? m_traps[static_cast<std::size_t>(boulder.trap_index)].definition
           : fallback;
   float const momentum = std::clamp(speed / k_reference_speed, 0.45F, 1.25F);
-  // A boulder only crushes the men in its lane: a couple of soldiers of a
-  // company, however many companies stand in its way, and never more than the
-  // trap's share of one.
+
   float const per_man =
       static_cast<float>(unit->max_health) /
       static_cast<float>(Game::Units::squad_establishment(unit->spawn_type));

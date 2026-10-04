@@ -67,9 +67,6 @@ inline constexpr float k_attack_range_duplicate_center_factor = 0.35F;
 hold_mode_range_multiplier(const Engine::Core::Entity& entity,
                            Game::Units::SpawnType spawn_type) -> float;
 
-// Hold mode and a post on a wall walk together: how much further than his
-// listed range a ranged troop reaches. Acquisition, firing and the range rings
-// all read it, so a troop never sees what it cannot hit or hits what it cannot see.
 [[nodiscard]] auto ranged_reach_multiplier(const Engine::Core::Entity& entity,
                                            Game::Units::SpawnType spawn_type) -> float;
 

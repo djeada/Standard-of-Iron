@@ -1015,8 +1015,7 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
   bool const soldier_elevated =
       shared_footing != nullptr && shared_footing->elevation > 0.0F;
   if (shared_footing != nullptr) {
-    // Each man's own walking height: a troop counted on the balcony still has
-    // men on the ground queueing for the ladder or the tower.
+
     entity_ground_offset = -shared_footing->elevation;
   }
   const bool has_shared_footsteps =

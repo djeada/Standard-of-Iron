@@ -188,8 +188,6 @@ Rectangle {
             }
         }
 
-        // Names what is being built for the progress bar; the selection panel
-        // already says these are builders, so the cards need no header.
         Text {
             id: builderStatus
 
@@ -238,8 +236,6 @@ Rectangle {
         Grid {
             id: builderCardGrid
 
-            // Every order a builder has fits in two rows of the bottom HUD, as on a
-            // castle builder's command bar: no scrolling to find the ram.
             readonly property int minCardWidth: 74
             readonly property int cardWidth: Math.floor((parent.width - (columns - 1) * columnSpacing) / columns)
             readonly property int cardHeight: 64

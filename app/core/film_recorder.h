@@ -34,7 +34,7 @@ struct FilmConfig {
   bool background{true};
 
   bool draw_cursor{false};
-  // Mix the game's own audio offline, one film step at a time, into audio.wav.
+
   bool audio{false};
 };
 

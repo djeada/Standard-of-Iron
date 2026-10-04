@@ -34,7 +34,7 @@ constexpr int k_warmup_frames = 4;
 
 constexpr int k_writer_threads = 3;
 constexpr std::size_t k_max_pending_saves = 6;
-// The rate the offline mixer runs at, and the channels it hands back.
+
 constexpr int k_audio_sample_rate = 48000;
 constexpr int k_audio_channels = 2;
 constexpr int k_png_quality = 85;
@@ -336,8 +336,7 @@ void FilmRecorder::pump() {
     finish(21);
     return;
   }
-  // The mixer runs every step so it keeps sim time; only the steps that wrote a
-  // frame are kept, so sound and picture start together.
+
   mix_audio(dt, m_frames_written > written_before);
   const auto grab_end = std::chrono::steady_clock::now();
   if (m_frames_written % 30 == 1) {

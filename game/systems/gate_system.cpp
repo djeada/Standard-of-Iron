@@ -24,8 +24,6 @@ using Engine::Core::UnitComponent;
 
 constexpr float k_occupancy_margin = 0.6F;
 
-// A gate with the enemy at it stays barred: opening it to let a sally out lets
-// the assault in. Only men already in the passage hold it open.
 constexpr float k_barred_radius = 12.0F;
 
 struct GateRecord {
@@ -141,7 +139,7 @@ void GateSystem::update(Engine::Core::World* world, float delta_time) {
     }
 
     auto const* movement = world->try_get<Engine::Core::MovementComponent>(entity_id);
-    // A company up on the wall walk stands over the gate, not at it.
+
     auto const* walker = world->try_get<Engine::Core::WallWalkerComponent>(entity_id);
     bool const aloft = walker != nullptr && walker->aloft();
 
@@ -165,9 +163,6 @@ void GateSystem::update(Engine::Core::World* world, float delta_time) {
         continue;
       }
 
-      // A gate opens for men walking up to it; a company standing idle beside
-      // it (a healer by the citadel gate, a post by the gatehouse) does not
-      // hold it open. Only a man in the passage itself does that.
       const bool loitering = movement != nullptr && !movement->get_has_target() &&
                              !movement->get_has_requested_goal();
       const float radius = record.gate->trigger_radius;

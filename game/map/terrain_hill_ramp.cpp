@@ -15,8 +15,7 @@ constexpr int k_hill_ramp_extra_steps = 7;
 constexpr float k_hill_ramp_steepness_exponent = 0.92F;
 
 constexpr float k_width_falloff_padding = 4.00F;
-// A ramp standing proud of the plain is an embankment: its sides fall away at
-// about forty degrees, not as a cliff. Cells of side slope per metre of ramp.
+
 constexpr float k_embankment_run_per_metre = 1.2F;
 
 constexpr float k_entry_bowl_exponent = 1.30F;

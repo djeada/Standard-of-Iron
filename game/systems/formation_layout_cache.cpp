@@ -137,7 +137,18 @@ struct SlotPlacer {
     query.seed = layout.seed;
     auto offset = Game::Formation::UnitLayoutSystem::instance().offset(query);
     if (work_site.active) {
+
+      float const cosine = std::cos(work_site.relative_yaw_radians);
+      float const sine = std::sin(work_site.relative_yaw_radians);
+      float const x = offset.offset_x;
+      float const z = offset.offset_z;
+      offset.offset_x = cosine * x - sine * z;
+      offset.offset_z = sine * x + cosine * z;
       place_on_site_perimeter(work_site, offset.offset_x, offset.offset_z);
+      offset.yaw_offset = std::atan2(-offset.offset_x, -offset.offset_z) * 180.0F /
+                          std::numbers::pi_v<float>;
+      offset.offset_x += work_site.center_x;
+      offset.offset_z += work_site.center_z;
     }
     auto const [world_x, world_z] =
         world_slot(transform, offset.offset_x, offset.offset_z);
@@ -234,8 +245,6 @@ void append_casualty_slots(
   }
 }
 
-// The layout state of a troop that has closed into its defensive layout (a
-// testudo, a shield wall), else nullptr.
 auto defensive_layout_state(const Engine::Core::Entity& entity)
     -> const Engine::Core::UnitLayoutStateComponent* {
   const auto* registry = entity.registry();
@@ -256,8 +265,7 @@ auto build_formation_layout(const Engine::Core::Entity& entity,
     -> FormationLayout {
   FormationLayout result;
   auto definition = resolve_definition(unit);
-  // A troop that has closed into a testudo or a shield wall stands in that
-  // layout's slots, not its marching ones: the men close the gaps.
+
   if (auto const* layout_state = defensive_layout_state(entity);
       layout_state != nullptr &&
       layout_state->layout_id != Game::Formation::k_invalid_layout) {
@@ -383,10 +391,17 @@ auto layout_signature(const Engine::Core::Entity& entity) -> std::uint64_t {
     bool const working = builder->in_progress && builder->at_construction_site;
     hash_combine(signature, working ? 1U : 0U);
     if (working) {
+
+      if (transform != nullptr) {
+        hash_float(signature, transform->position.x);
+        hash_float(signature, transform->position.z);
+        hash_float(signature, transform->rotation.y);
+      }
       hash_combine(signature, std::hash<std::string>{}(builder->product_type));
       hash_float(signature, builder->construction_site_x);
       hash_float(signature, builder->construction_site_z);
       hash_float(signature, builder->construction_site_rotation_y);
+      hash_combine(signature, builder->structure_task_entity_id);
     }
   }
   hash_combine(signature, is_building ? 1U : 0U);

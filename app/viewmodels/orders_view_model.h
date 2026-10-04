@@ -36,8 +36,7 @@ public:
   Q_INVOKABLE void select_all_troops();
   Q_INVOKABLE void select_unit_by_id(qulonglong unit_id);
   Q_INVOKABLE void select_by_type(const QString& unit_type);
-  // Every one of the player's units of a type, builders included (scripted
-  // playtests; the HUD selects builders by clicking them).
+
   void select_all_of_type(const QString& unit_type);
   Q_INVOKABLE void set_hover_at_screen(qreal sx, qreal sy);
 

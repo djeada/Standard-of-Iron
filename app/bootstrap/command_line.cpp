@@ -249,8 +249,7 @@ auto parse_command_line(QCoreApplication& app,
     config.draw_cursor = parser.isSet(film_cursor_opt);
     config.audio = parser.isSet(film_audio_opt);
     if (config.audio) {
-      // Before the audio system starts: the mixer opens no device and is
-      // pulled by the film instead.
+
       qputenv("SOI_AUDIO_OFFLINE", "1");
     }
     if (config.directory.isEmpty()) {

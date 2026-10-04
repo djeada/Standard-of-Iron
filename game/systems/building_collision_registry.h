@@ -266,8 +266,6 @@ public:
                                                        float end_x,
                                                        float end_z) const -> bool;
 
-  // Whether the segment passes through a wall, gate or wall tower, open or
-  // closed: the two ends stand on different sides of a defence line.
   [[nodiscard]] auto segment_crosses_wall(float start_x,
                                           float start_z,
                                           float end_x,

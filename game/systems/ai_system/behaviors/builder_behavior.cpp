@@ -95,9 +95,6 @@ auto BuilderBehavior::resolve_site(const AISnapshot& snapshot,
     return site;
   }
 
-  // Nowhere to put it: step aside for a while so the next wish gets a turn. A
-  // second barracks with no ground left in a walled estate otherwise stood
-  // first in line for the rest of the match, and no farm was ever laid.
   m_ledger.defer(site.building, snapshot.game_time + k_unsited_retry_seconds);
   site.building = nullptr;
   return site;
@@ -162,8 +159,7 @@ auto BuilderBehavior::run_construction_cycle(const AISnapshot& snapshot,
   }
 
   PendingSite site = resolve_site(snapshot, context, choice.chosen);
-  // A wish with nowhere to stand is deferred by resolve_site; the next one in
-  // line gets this round rather than waiting a whole cycle behind it.
+
   constexpr int k_unsited_fallbacks = 4;
   for (int fallback = 0; fallback < k_unsited_fallbacks && choice.chosen != nullptr &&
                          site.building == nullptr;

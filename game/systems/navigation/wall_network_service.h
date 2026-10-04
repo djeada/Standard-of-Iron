@@ -44,8 +44,6 @@ struct WallPlacementValidation {
   std::string failure_reason;
 };
 
-// Where a ladder pointed at (x, z) would stand: against the town face of one
-// of the owner's straight wall segments, its feet in the street.
 struct LadderPlacement {
   bool valid{false};
   Engine::Core::EntityID host_id{0};
@@ -110,9 +108,6 @@ public:
                                       std::uint8_t mask,
                                       float current_rotation_y) -> WallAppearance;
 
-  // Ladders only go on the town side of the owner's own wall: a straight
-  // segment with a balcony, no stair and no other ladder. `ignore_entity_id`
-  // is a ladder (or ladder site) whose own claim does not count.
   static auto
   find_ladder_placement(Engine::Core::World& world,
                         int owner_id,

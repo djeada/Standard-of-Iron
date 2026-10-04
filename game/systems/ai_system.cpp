@@ -141,8 +141,7 @@ void leash_garrison(Engine::Core::World& world,
       continue;
     }
     const auto* wave = world.try_get<Engine::Core::AssaultWaveComponent>(id);
-    // A party sent out at a siege engine follows it down the ramp; it comes
-    // home under its own orders once the engine burns.
+
     bool sallying = false;
     if (controlled.sallying) {
       if (const auto* attack = world.try_get<Engine::Core::AttackTargetComponent>(id);
@@ -156,8 +155,7 @@ void leash_garrison(Engine::Core::World& world,
     }
     const bool in_the_ward =
         snapshot.has_ward && !sallying && (wave == nullptr || !wave->active);
-    // Inside the curtain and its gateway, not out on the apron: only a party
-    // sent after an engine leaves the walls.
+
     controlled.leash_x = snapshot.ward_x;
     controlled.leash_z = snapshot.ward_z;
     controlled.leash_half_x =

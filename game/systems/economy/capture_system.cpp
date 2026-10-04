@@ -149,8 +149,7 @@ void CaptureSystem::process_barrack_capture(Engine::Core::World* world,
            world->view<Engine::Core::UnitComponent,
                        Engine::Core::TransformComponent>()) {
         (void)id;
-        // Only men hold a yard: a wall segment beside the hall is not a
-        // defender, and counting its price made a walled hall untakeable.
+
         if (troop.health > 0 && Game::Units::is_troop_spawn(troop.spawn_type)) {
           troops.push_back({position.position.x,
                             position.position.z,

@@ -137,9 +137,6 @@ TEST(HillCrownGeometryTest, VictumulaesRampStandsOnAnEmbankmentNotACliff) {
   height_map.apply_biome_variation(map.biome);
   height_map.build_from_features(map.terrain);
 
-  // The south ramp runs out beyond the lower crown's foot (z 97) toward the
-  // camp road; where it stands well above the plain its flanks must fall away
-  // as an earthwork, not as a cliff the camera sees black.
   float steepest = 0.0F;
   int proud_cells = 0;
   for (int z = 98; z < 112; ++z) {

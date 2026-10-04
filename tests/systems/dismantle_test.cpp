@@ -124,6 +124,27 @@ TEST_F(DismantleTest, ABuildingComesDownAndPaysPartOfItsCostBack) {
   EXPECT_LE(unit->health, 0) << "the building should be dead once the work finishes";
 }
 
+TEST_F(DismantleTest, AnApproachingCrewKeepsTheJobWithoutDismantlingRemotely) {
+  Engine::Core::World world;
+  auto* tower = add_building(world, Game::Units::SpawnType::DefenseTower);
+  auto* worker = add_builder(world, -10.0F);
+  order_dismantle(world, {worker->get_id()}, tower->get_id());
+
+  tick(world, 3.0F);
+  ASSERT_NE(site_of(tower), nullptr);
+  EXPECT_FLOAT_EQ(site_of(tower)->progress, 0.0F);
+  EXPECT_EQ(site_of(tower)->active_workers, 0);
+  auto const* builder =
+      worker->get_component<Engine::Core::BuilderProductionComponent>();
+  EXPECT_FLOAT_EQ(builder->task_target_x, 10.0F);
+  EXPECT_FLOAT_EQ(builder->task_target_z, 0.0F);
+
+  put_crew_to_work(worker);
+  tick(world, 1.0F);
+  ASSERT_NE(site_of(tower), nullptr);
+  EXPECT_GT(site_of(tower)->progress, 0.0F);
+}
+
 TEST_F(DismantleTest, ARefundNeverExceedsWhatTheBuildingCost) {
   for (const auto* item : {"defense_tower",
                            "home",

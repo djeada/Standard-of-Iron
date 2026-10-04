@@ -94,8 +94,7 @@ struct GuardReach {
   float center_x{0.0F};
   float center_z{0.0F};
   float radius{0.0F};
-  // A walled garrison's ground is the box inside its walls, not a circle: the
-  // ramp below the gate is nearer the middle of the town than its corners are.
+
   bool boxed{false};
   float half_x{0.0F};
   float half_z{0.0F};

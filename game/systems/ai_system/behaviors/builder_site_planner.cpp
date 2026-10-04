@@ -180,8 +180,7 @@ auto find_free_site(const AISnapshot& snapshot,
   constexpr int k_site_search_attempts = 24;
 
   ResolvedSite site;
-  // A garrison builds inside its walls, but in peace its fields lie outside
-  // them: an estate ringed by its own wall otherwise never laid a third field.
+
   const bool fields_may_lie_outside =
       building_type == BUILDING_TYPE_FARM &&
       std::none_of(snapshot.visible_enemies.begin(),

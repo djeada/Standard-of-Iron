@@ -72,8 +72,6 @@ auto find_free_ground_near(Engine::Core::World& world,
            undead->would_wake_a_zone(centre.x(), centre.z(), radius);
   };
 
-  // A clone stands on its source's side of every wall: the nearest free ground
-  // behind a curtain or a gate is another side of the battle.
   const auto& buildings_registry =
       *Game::Session::services_for(world).building_collision;
   const auto reachable = [&](const QVector3D& centre) {

@@ -26,8 +26,7 @@ private:
   const char* m_last_order_type = nullptr;
   int m_last_order_repeats = 0;
   int m_last_building_total = -1;
-  // Each type stands aside on its own clock: with one slot, deferring a
-  // barracks undid the ram's deferral and the two took every turn between them.
+
   std::map<std::string, float> m_deferred_until;
 
   std::map<int, int> m_plan_slot_orders;

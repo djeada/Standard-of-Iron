@@ -106,8 +106,6 @@ auto make_mission_position_to_world(const Game::Systems::LevelSnapshot& level)
 
 namespace {
 
-// A building the mission must capture cannot be razed instead: a ram sent into
-// the citadel would otherwise leave nothing to take.
 void mark_capture_objectives(Engine::Core::World& world,
                              const Game::Mission::MissionDefinition& mission,
                              int local_owner_id) {
@@ -140,8 +138,7 @@ void mark_capture_objectives(Engine::Core::World& world,
       objectives.push_back(&entity);
     }
   }
-  // The capture system adds the component on its first tick; the flag has to
-  // be on it before any blow lands.
+
   for (auto* entity : objectives) {
     Engine::Core::get_or_add_component<Engine::Core::CaptureComponent>(*entity)
         ->capture_objective = true;

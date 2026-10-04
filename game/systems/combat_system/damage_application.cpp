@@ -225,12 +225,8 @@ resolve_attacker(Engine::Core::World* world,
   return info;
 }
 
-// A ram's roof is built to take arrows: a dozen companies on a wall walk still
-// need most of a minute to stop one, long enough to break a gate. Men with
-// axes are what kills a ram.
 constexpr float k_ram_roof_ranged_damage_scale = 0.1F;
-// A siege tower's wet hides turn most arrows too; it is pushed up under the
-// wall archers' bows, and it has to arrive.
+
 constexpr float k_tower_hide_ranged_damage_scale = 0.15F;
 
 auto apply_roof_cover(const Engine::Core::UnitComponent& target,

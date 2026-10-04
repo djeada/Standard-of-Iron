@@ -61,6 +61,7 @@ struct WalkTiming {
 struct SlotAim {
   QVector3D destination;
   bool obstructed{false};
+  bool held_short{false};
   float heading_change{0.0F};
   float target_x{0.0F};
   float target_z{0.0F};
@@ -228,12 +229,49 @@ auto prop_clearance_of(const SlotWalk& walk) -> float {
   return std::max(walk.body_radius, k_min_prop_clearance);
 }
 
+auto worker_waypoint(const SlotWalk& walk,
+                     const Soldier& soldier,
+                     QVector3D destination,
+                     Pathfinding& pathfinder,
+                     bool& held_short) -> QVector3D {
+  QVector3D const from(soldier.world_x, walk.actor.position.y, soldier.world_z);
+  if (!pathfinder.is_world_position_walkable(from, walk.passability) ||
+      pathfinder.is_world_segment_walkable(from, destination, walk.passability)) {
+    return destination;
+  }
+  auto const start = pathfinder.world_to_grid(from.x(), from.z());
+  auto goal = pathfinder.world_to_grid(destination.x(), destination.z());
+  if (!pathfinder.is_world_position_walkable(destination, walk.passability)) {
+    auto const reachable =
+        pathfinder.find_nearest_connected_point(goal, start, 3, walk.passability);
+    if (!reachable.has_value()) {
+      return destination;
+    }
+    goal = *reachable;
+    destination = pathfinder.path_waypoint_world_position(goal);
+    held_short = std::hypot(destination.x() - from.x(), destination.z() - from.z()) <
+                 k_slot_settle_distance;
+  }
+  if (std::hypot(destination.x() - from.x(), destination.z() - from.z()) <= 0.2F) {
+    return destination;
+  }
+  auto const route = pathfinder.find_path(start, goal, walk.passability);
+  for (auto it = route.rbegin(); it != route.rend(); ++it) {
+    auto const point = pathfinder.path_waypoint_world_position(*it);
+    if ((point - from).lengthSquared() > 0.04F &&
+        pathfinder.is_world_segment_walkable(from, point, walk.passability)) {
+      return point;
+    }
+  }
+  return destination;
+}
+
 auto aim_at_slot(const SlotWalk& walk,
                  const Soldier& previous,
                  const Soldier& soldier,
                  QVector3D destination,
                  const WalkTiming& timing,
-                 const Pathfinding* pathfinder,
+                 Pathfinding* pathfinder,
                  const Game::Map::WorldPropClearanceIndex& props) -> SlotAim {
   destination.setX(destination.x() + soldier.crowd_offset_x);
   destination.setZ(destination.z() + soldier.crowd_offset_z);
@@ -253,6 +291,12 @@ auto aim_at_slot(const SlotWalk& walk,
 
   SlotAim aim;
   aim.obstructed = destination != slot_destination || previous.relocation_blocked;
+  if (walk.worker && pathfinder != nullptr) {
+    auto const waypoint =
+        worker_waypoint(walk, soldier, destination, *pathfinder, aim.held_short);
+    aim.obstructed = aim.obstructed || waypoint != destination;
+    destination = waypoint;
+  }
   aim.heading_change =
       signed_yaw_delta(walk.formation.motion_root_yaw, walk.actor.rotation.y);
   float const dt = timing.dt;
@@ -268,6 +312,12 @@ auto aim_at_slot(const SlotWalk& walk,
       dt > 0.0F ? (walk.actor.position.z - walk.formation.motion_root_z) / dt -
                       heading_rate * aim.target_x
                 : 0.0F;
+  if (walk.walking_to_work_posts) {
+
+    aim.heading_change = 0.0F;
+    aim.slot_velocity_x = 0.0F;
+    aim.slot_velocity_z = 0.0F;
+  }
   aim.dx = destination.x() - soldier.world_x;
   aim.dz = destination.z() - soldier.world_z;
   aim.distance = std::hypot(aim.dx, aim.dz);
@@ -381,11 +431,13 @@ auto plan_steering(const SlotWalk& walk,
     steering.desired_z *= scale;
     steering.desired_magnitude = timing.max_speed;
   }
-  steering.travel_yaw = steering.desired_magnitude > 0.25F
+  float const facing_speed =
+      walk.worker && aim.distance > k_slot_settle_distance ? 0.01F : 0.25F;
+  steering.travel_yaw = steering.desired_magnitude > facing_speed
                             ? std::atan2(steering.desired_x, steering.desired_z) *
                                   180.0F / std::numbers::pi_v<float>
                             : timing.desired_facing;
-  steering.facing_target = !walk.engaged && steering.desired_magnitude > 0.25F
+  steering.facing_target = !walk.engaged && steering.desired_magnitude > facing_speed
                                ? steering.travel_yaw
                                : timing.desired_facing;
   steering.responding = soldier.turn_response_remaining <= 0.0F;
@@ -569,12 +621,22 @@ void land_step(const SlotWalk& walk,
   bool const stranded = (stopped_dead && aim.distance > k_stranded_distance) ||
                         aim.distance > k_lost_distance;
   bool snapped = false;
-  if (dt > 0.0F && stranded &&
+  if (!walk.worker && dt > 0.0F && stranded &&
       (pathfinder == nullptr ||
        terrain_walkable_at(*pathfinder, aim.destination.x(), aim.destination.z()))) {
     plan.x = aim.dx;
     plan.z = aim.dz;
     snapped = true;
+  }
+  if (walk.worker) {
+
+    float const step = std::hypot(plan.x, plan.z);
+    float const budget = std::max(walk.march_speed, walk.squad_speed) *
+                         (walk.walking_to_work_posts ? 1.0F : 1.2F) * dt;
+    if (step > budget && step > 0.0001F) {
+      plan.x *= budget / step;
+      plan.z *= budget / step;
+    }
   }
   soldier.world_x += plan.x;
   soldier.world_z += plan.z;
@@ -640,14 +702,14 @@ auto foreign_gather_radius(float spacing, bool mounted) -> float {
 void walk_formation_slot(const SlotWalk& walk,
                          const Soldier* previous,
                          Soldier& soldier) {
-  auto const* pathfinder = NavGrid::get_pathfinder();
+  auto* pathfinder = NavGrid::get_pathfinder();
   QVector3D destination = local_to_world(walk.actor, soldier.local_x, soldier.local_z);
   if (pathfinder != nullptr) {
     pull_onto_terrain(
         *pathfinder, walk.actor.position.x, walk.actor.position.z, destination);
   }
   WalkTiming const timing = measure_timing(walk, previous, soldier);
-  if (timing.reset || walk.external_reform) {
+  if (timing.reset || (walk.external_reform && !walk.worker)) {
     snap_to_slot(walk, previous, soldier, destination, timing);
     return;
   }
@@ -659,6 +721,7 @@ void walk_formation_slot(const SlotWalk& walk,
   auto const props = Game::Map::shared_world_prop_clearance_index();
   SlotAim const aim =
       aim_at_slot(walk, *previous, soldier, destination, timing, pathfinder, *props);
+  soldier.relocation_blocked = soldier.relocation_blocked || aim.held_short;
   begin_turn_response(walk, soldier, aim, timing);
 
   CatchDirection const catching = catch_direction(walk, soldier, aim, personal_space);

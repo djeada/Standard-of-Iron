@@ -122,7 +122,7 @@ auto AICommandApplier::apply(Engine::Core::World& world,
           continue;
         }
         auto* attacker = world.get_entity(unit_id);
-        // A sally goes out through the garrison's own gate, which opens for it.
+
         if (command.sally ||
             !Game::Systems::Combat::melee_walled_off_from(attacker, target)) {
           attackers.push_back(unit_id);
@@ -135,8 +135,7 @@ auto AICommandApplier::apply(Engine::Core::World& world,
         for (const auto unit_id : attackers) {
           if (auto* controlled =
                   world.try_get<Engine::Core::AIControlledComponent>(unit_id)) {
-            // Off the leash now, not at the next snapshot: combat would drop
-            // the engine as out of reach before the leash caught up.
+
             controlled->sallying = true;
             controlled->leash_half_x = 0.0F;
             controlled->leash_half_z = 0.0F;

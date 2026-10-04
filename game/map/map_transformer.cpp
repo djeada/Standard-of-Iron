@@ -535,7 +535,7 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
 
     apply_authored_unit_behavior(*e, authored_behavior, s, sp.position, def);
     if (s.on_wall) {
-      // The wall walk system sets it down on the planks once the walls exist.
+
       auto* walker = world.emplace<Engine::Core::WallWalkerComponent>(e->get_id());
       walker->phase = Engine::Core::WallWalkerComponent::Phase::OnDeck;
       walker->wall_id = 0;

@@ -454,8 +454,7 @@ void DefendBehavior::execute(const AISnapshot& snapshot,
 
 auto DefendBehavior::should_execute(const AISnapshot& snapshot,
                                     const AIContext& context) const -> bool {
-  // A walled garrison's companies keep their posts and answer a breach as one;
-  // GarrisonBehavior commands them.
+
   if (context.strategy_config.posture == AIPosture::Garrison && snapshot.has_ward) {
     return false;
   }

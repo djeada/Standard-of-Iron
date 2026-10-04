@@ -19,9 +19,6 @@ Item {
     readonly property var request: source && source.request ? source.request : ({})
     readonly property bool asking: showing && (request.amount || 0) > 0 && !!request.resource
 
-    // The room the card may take. A short window leaves little between the
-    // minimap and the bottom bar, so the spoken line shrinks to fit rather
-    // than the card sliding up over the minimap. Zero means no limit.
     property real maxHeight: 0
     readonly property real columnWidth: Math.max(Design.Metrics.space24 * 15, Math.min(Design.Metrics.space24 * 20, (messageRoot.parent ? messageRoot.parent.width : 0) * 0.27))
     readonly property real chromeHeight: Design.Metrics.space12 * 2 + Design.Metrics.space24 * 4

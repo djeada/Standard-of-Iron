@@ -216,7 +216,7 @@ TEST_F(GateSystemTest, StaysShutForEnemyTroopInRange) {
 TEST_F(GateSystemTest, StaysBarredForItsOwnMenWhileTheEnemyIsAtIt) {
   World world;
   auto* gate_entity = make_gate(world, 0.0F, 0.0F, k_gate_owner);
-  // A defender asks to go out; the assault waits just beyond the gate.
+
   make_troop(world, 0.0F, -3.0F, k_gate_owner);
   make_troop(world, 0.0F, 8.0F, k_enemy_owner);
 

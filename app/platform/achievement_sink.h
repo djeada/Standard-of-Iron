@@ -5,8 +5,6 @@
 
 namespace App::Platform {
 
-// Platform achievements (Steam User Stats). Ids are the API names configured
-// in Steamworks and are stable once released.
 class AchievementSink {
 public:
   virtual ~AchievementSink() = default;

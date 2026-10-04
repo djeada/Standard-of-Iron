@@ -54,8 +54,7 @@ struct UnitSpawn {
   QString behavior;
   float guard_radius = 10.0F;
   std::vector<QVector3D> patrol_waypoints;
-  // Starts the match on the wall walk of its own wall nearest (x, z), as a
-  // garrison already at its post.
+
   bool on_wall = false;
 };
 
@@ -681,8 +680,6 @@ undead_zone_fog(float world_x, float world_z, float radius, float density) -> Fo
   return fog;
 }
 
-// Ground the local player knows before the match starts: a besieged town is
-// on every map the attacker carries. World units.
 struct ScoutedArea {
   float x = 0.0F;
   float z = 0.0F;

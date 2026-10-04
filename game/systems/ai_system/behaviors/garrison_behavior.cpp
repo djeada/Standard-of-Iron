@@ -98,8 +98,7 @@ void GarrisonBehavior::execute(const AISnapshot& snapshot,
     }
     infantry.push_back(&unit);
     alive.insert(unit.id);
-    // A company's post is wherever it first stood: the map's authored post, or
-    // the ground a reinforcement was mustered on.
+
     m_posts.try_emplace(unit.id, Post{unit.pos_x, unit.pos_z});
   }
   std::erase_if(m_posts,
@@ -110,8 +109,6 @@ void GarrisonBehavior::execute(const AISnapshot& snapshot,
     return;
   }
 
-  // Hold every company for this behavior so the general defence, the muster
-  // and the retreat never march the town's garrison off somewhere else.
   {
     std::vector<Engine::Core::EntityID> ids;
     ids.reserve(infantry.size());
@@ -136,7 +133,7 @@ void GarrisonBehavior::execute(const AISnapshot& snapshot,
 auto GarrisonBehavior::counterattack(const AISnapshot& snapshot,
                                      const std::vector<const EntitySnapshot*>& infantry,
                                      std::vector<AICommand>& out_commands) -> bool {
-  // The enemy inside the walls: every company turns on the nearest of them.
+
   std::vector<const ContactSnapshot*> intruders;
   for (const auto& enemy : snapshot.visible_enemies) {
     if (enemy.is_building || !is_war_contact(enemy) || is_engine(enemy)) {
@@ -165,7 +162,7 @@ auto GarrisonBehavior::counterattack(const AISnapshot& snapshot,
       if (nearest == nullptr) {
         continue;
       }
-      // Already locked with someone inside: let him finish that fight.
+
       bool const fighting_inside =
           unit->attack_target_id != 0 &&
           std::any_of(intruders.begin(), intruders.end(), [unit](const auto* enemy) {
@@ -187,8 +184,7 @@ auto GarrisonBehavior::counterattack(const AISnapshot& snapshot,
 void GarrisonBehavior::sally(const AISnapshot& snapshot,
                              const std::vector<const EntitySnapshot*>& infantry,
                              std::vector<AICommand>& out_commands) {
-  // A siege engine come up to the walls with no escort to speak of: a small
-  // party goes out, burns it and comes home.
+
   const ContactSnapshot* engine = nullptr;
   if (m_sally_target != 0) {
     for (const auto& enemy : snapshot.visible_enemies) {
@@ -231,7 +227,7 @@ void GarrisonBehavior::sally(const AISnapshot& snapshot,
     bool const lonely = escort <= k_lonely_escort;
     if (!lonely) {
       if (!m_sally_party.empty()) {
-        // The escort has come up: the party is called back before it is cut off.
+
         m_sally_cooldown_until = snapshot.game_time + k_sally_cooldown_seconds;
       }
       m_sally_target = 0;
@@ -304,12 +300,9 @@ void GarrisonBehavior::hold_posts(const AISnapshot& snapshot,
     if (off <= k_post_slack || heading_home) {
       continue;
     }
-    // Chasing an enemy within the leash is the leash's business; anything
-    // else - an engine burnt, an intruder dead - sends the company home.
+
     if (unit->attack_target_id != 0) {
-      // A fight inside the leash is his to finish; a target beyond it (an
-      // alert pointed him at an engine on the ramp) only strands him at the
-      // edge of the ward.
+
       bool const target_within_reach =
           std::any_of(snapshot.visible_enemies.begin(),
                       snapshot.visible_enemies.end(),

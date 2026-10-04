@@ -6,7 +6,6 @@
 
 namespace Arena::Scenarios {
 
-// The locomotion, damage and action transition matrices.
 [[nodiscard]] auto
 build_animation_matrix_definitions() -> std::vector<ArenaScenarioDefinition>;
 

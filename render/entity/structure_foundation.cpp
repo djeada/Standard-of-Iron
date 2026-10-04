@@ -49,7 +49,7 @@ auto resolve_structure_foundation(const Game::Map::TerrainService& terrain,
   }
 
   QVector3D const seat = model.map(QVector3D(0.0F, 0.0F, 0.0F));
-  // Sample at least twice per terrain tile, including scaled building footprints.
+
   float const sample_spacing =
       std::max(terrain.get_height_map()->get_tile_size() * 0.5F, 1.0e-4F);
   auto sample_count = [&](float half_extent, int axis) {
@@ -79,8 +79,7 @@ auto resolve_structure_foundation(const Game::Map::TerrainService& terrain,
 
   float const depth = seat.y() - lowest;
   if (depth >= k_structure_foundation_min_depth) {
-    // The terrain hides the buried walls. Capping their depth leaves a floating
-    // rectangular bottom exposed on steep mountain slopes.
+
     foundation.depth = depth;
   }
   return foundation;

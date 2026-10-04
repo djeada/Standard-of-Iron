@@ -726,8 +726,6 @@ TEST_F(DifficultyPresetsTest, AWalledGarrisonsReinforcementsStayInsideItsWalls) 
   ASSERT_GT(readout.forces.units_added, 0)
       << "hard added nobody, so this proves nothing";
 
-  // Victumulae's outer curtain is the rectangle x 42..118, z 20..82 in grid
-  // cells; the nearest free ground to a crowded post was often beyond it.
   for (const auto& [centre, footprint] : readout.enemy_troop_footprints) {
     const float grid_x = centre.x() + 79.5F;
     const float grid_z = centre.z() + 79.5F;

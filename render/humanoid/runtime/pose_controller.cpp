@@ -660,15 +660,13 @@ void HumanoidPoseController::climb_ladder(float cycle_phase) {
   using HP = HumanProportions;
   float const two_pi = 2.0F * std::numbers::pi_v<float>;
   float const s = std::sin(cycle_phase * two_pi);
-  // One foot steps up a rung while the opposite hand reaches for the next one;
-  // half a cycle later the sides swap.
+
   float const left_step = std::max(0.0F, s);
   float const right_step = std::max(0.0F, -s);
   float const ground = HP::GROUND_Y + m_pose.foot_y_offset;
   constexpr float k_rung_lift = 0.30F;
   constexpr float k_ladder_reach = 0.16F;
 
-  // Hug the ladder: hips tucked in under the shoulders, chest over the rungs.
   m_pose.pelvis_pos += QVector3D(0.0F, -0.04F - 0.03F * std::abs(s), 0.05F);
   lean(QVector3D(0.0F, 0.0F, 1.0F), 1.0F);
 

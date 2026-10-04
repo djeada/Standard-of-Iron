@@ -8,9 +8,6 @@
 
 #include "arena_scenario.h"
 
-// Builders shared by every scenario domain file. They are not part of the
-// arena's public API: each scenario file stages its own groups and steps with
-// the same small vocabulary, so the vocabulary lives here once.
 namespace Arena::Scenarios::builders {
 
 auto group(QString name,

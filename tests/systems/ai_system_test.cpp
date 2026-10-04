@@ -2619,8 +2619,7 @@ TEST_F(AISystemTest, WithNoEnemyInSightAGarrisonMansTheWallOverItsOuterGate) {
   Game::Systems::AI::AISnapshot snapshot;
   snapshot.player_id = 3;
   snapshot.game_time = 100.0F;
-  // The hall stands at the back of the town, nearer the north wall than the
-  // south gate the assault has to come through.
+
   auto archer = make_unit(1, 80.0F, 40.0F);
   archer.spawn_type = Game::Units::SpawnType::Archer;
   auto citadel_gate = make_unit(10, 80.0F, 47.0F);
@@ -2723,7 +2722,6 @@ TEST_F(AISystemTest, AWalledGarrisonSoldierIsLeashedToItsWard) {
 
 namespace {
 
-// A walled town 60 by 50 across, its ward box carrying the snapshot's apron.
 auto walled_town_snapshot() -> Game::Systems::AI::AISnapshot {
   Game::Systems::AI::AISnapshot snapshot;
   snapshot.player_id = 3;

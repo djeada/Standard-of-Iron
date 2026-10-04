@@ -198,7 +198,7 @@ struct EntitySnapshot {
   bool engaged = false;
 
   bool fighting_troops = false;
-  // On its way up to (or down from) a wall walk.
+
   bool on_wall_stair = false;
 
   float pos_x = 0.0F;
@@ -281,12 +281,10 @@ struct AISnapshot {
   std::vector<ContactSnapshot> defense_anchors;
   std::vector<GoldVeinSnapshot> gold_veins;
   std::vector<ResourceNodeSnapshot> resource_nodes;
-  // Where a company can stand on the AI's own wall walk, and where its troops
-  // already do. The garrison of a walled town is posted from these.
+
   std::vector<WallPostSnapshot> wall_posts;
   std::vector<WallPostSnapshot> wall_garrison;
-  // The ground inside the AI's own walls, with the strip outside them that its
-  // garrison will fight on.
+
   bool has_ward = false;
   float ward_x = 0.0F;
   float ward_z = 0.0F;
@@ -612,7 +610,7 @@ struct AICommand {
 
   Engine::Core::EntityID target_id = 0;
   bool should_chase = false;
-  // A walled garrison's party sent out of its leash after a siege engine.
+
   bool sally = false;
   Engine::Core::EntityID building_id = 0;
   Game::Units::TroopType product_type = Game::Units::TroopType::Archer;

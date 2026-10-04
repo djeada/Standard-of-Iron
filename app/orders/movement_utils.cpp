@@ -382,7 +382,7 @@ auto issue_attack_command(Engine::Core::World* world,
   }
   auto attackers = App::Core::filter_selected_units_for_action(
       world, selected, QStringLiteral("attack"));
-  // A siege tower cannot strike a wall, but sent at one it rolls up and docks.
+
   if (auto const* target_unit = world->try_get<Engine::Core::UnitComponent>(target_id);
       target_unit != nullptr &&
       Game::Units::is_wall_network_spawn(target_unit->spawn_type)) {
@@ -424,8 +424,6 @@ auto issue_move_or_attack_command(Engine::Core::World* world,
     return App::Core::rejected_order(OrderKind::Move, App::Core::no_selection_reason());
   }
 
-  // A ram cannot strike a man: with only engines selected, the click goes to the
-  // gate behind a defender, not to the defender.
   Engine::Core::EntityID const target_id =
       only_engines_selected(world, selected)
           ? 0U
@@ -435,9 +433,6 @@ auto issue_move_or_attack_command(Engine::Core::World* world,
     return issue_attack_command(world, selected, target_id, local_owner_id);
   }
 
-  // An engine is built to break structures: a right-click on a gate or a wall
-  // with a ram or a tower selected batters or docks against it instead of
-  // driving to the ground beneath it.
   if (Engine::Core::EntityID const structure_id =
           pick_enemy_structure_for_engines(world,
                                            selected,

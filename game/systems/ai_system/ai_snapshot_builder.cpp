@@ -427,8 +427,6 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
       continue;
     }
 
-    // A troop up on a wall walk is its garrison: it fights from the planks and
-    // the commander leaves it there rather than marching it off.
     const auto* walker =
         world.try_get<Engine::Core::WallWalkerComponent>(entity->get_id());
     if (walker != nullptr && walker->aloft()) {
@@ -622,8 +620,7 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
       snapshot.ward_half_z = (0.5F * (max_z - min_z)) + k_ward_apron;
     }
   }
-  // A wall nobody can climb is no post: only offer the balcony once a stair or
-  // ladder reaches some stretch of it.
+
   const bool wall_is_climbable = [&world, ai_owner_id]() {
     for (auto [id, unit, wall] :
          world.view<const Engine::Core::UnitComponent,

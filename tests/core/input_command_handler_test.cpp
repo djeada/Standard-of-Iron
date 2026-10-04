@@ -274,7 +274,6 @@ TEST_F(InputCommandHandlerTest, ARamRightClickedOntoAnEnemyGateBattersIt) {
   gate->add_component<Engine::Core::BuildingComponent>();
   selection_system->select_unit(ram->get_id());
 
-  // The player clicks the gatehouse as drawn, well above its foot.
   QPointF const gate_screen = world_to_screen(QVector3D(0.0F, 3.0F, 0.0F));
 
   EXPECT_TRUE(
@@ -297,7 +296,6 @@ TEST_F(InputCommandHandlerTest, ARamRightClickedOnADefenderAtTheGateBattersTheGa
   gate->add_component<Engine::Core::BuildingComponent>();
   selection_system->select_unit(ram->get_id());
 
-  // A swordsman stands in the gateway, under the cursor before the gatehouse.
   QPointF const gate_screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
   (void)input_handler->on_right_press(gate_screen.x(), gate_screen.y(), 1, viewport);
 

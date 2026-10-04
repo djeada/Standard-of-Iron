@@ -44,8 +44,7 @@ auto choose_front(const AISnapshot& snapshot, const AIContext& context) -> Front
   if (nearest != nullptr) {
     return {nearest->pos_x, nearest->pos_z};
   }
-  // With no enemy in sight the assault will come to the outer gate: it is the
-  // only way in, so the archers man the wall over it first.
+
   const float centre_x = snapshot.has_ward ? snapshot.ward_x : context.base_pos_x;
   const float centre_z = snapshot.has_ward ? snapshot.ward_z : context.base_pos_z;
   const EntitySnapshot* outer_gate = nullptr;
@@ -112,9 +111,7 @@ void RampartBehavior::execute(const AISnapshot& snapshot,
       ++it;
     }
   }
-  // An archer on his way up keeps his post: claims go stale after a few
-  // seconds, and an unclaimed archer is marched back to the muster by the
-  // gatherers before he ever reaches the stair.
+
   if (!m_postings.empty()) {
     std::vector<Engine::Core::EntityID> walking;
     walking.reserve(m_postings.size());

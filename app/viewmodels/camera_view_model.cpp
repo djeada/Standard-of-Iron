@@ -196,8 +196,7 @@ void CameraViewModel::look_at_world(float x, float z) {
   if (camera == nullptr) {
     return;
   }
-  // Aim at the ground actually there - a hill crown or a wall walk - so the
-  // camera frames it instead of a point buried under it.
+
   const QVector3D target(x, Game::Systems::PickingService::surface_height_at(x, z), z);
   const QVector3D offset = camera->get_position() - camera->get_target();
   camera->look_at(target + offset, target, camera->get_up_vector());

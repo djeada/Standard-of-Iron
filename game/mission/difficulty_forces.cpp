@@ -53,7 +53,6 @@ void copy_standing_orders(Engine::Core::World& world,
     }
   }
 
-  // A company posted on its wall walk sends its reinforcement up there too.
   if (const auto* walker = world.try_get<Engine::Core::WallWalkerComponent>(source);
       walker != nullptr &&
       walker->phase == Engine::Core::WallWalkerComponent::Phase::OnDeck &&
@@ -250,8 +249,7 @@ auto apply_starting_force_difficulty(Engine::Core::World& world,
       }
 
       const Engine::Core::EntityID clone = unit->id();
-      // A crowded post lends its clone to the next authored post with room; the
-      // clone keeps that post's standing orders, so it fights where it stands.
+
       const Conscript* post = &source;
       auto placed = place_clear_of_units(
           world, clone, post->position, BuildingFootprints::Refuse);

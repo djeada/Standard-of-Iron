@@ -12,8 +12,7 @@ Rectangle {
     required property var spec
     property int cardWidth: 150
     property int cardHeight: 80
-    // A narrow card in the builder's two-row bar keeps every cost on show by
-    // tightening the chips rather than hiding them.
+
     readonly property bool compact: cardWidth < 110
     readonly property string item_type: spec.item_type
     readonly property var hs: StyleGuide.historical
