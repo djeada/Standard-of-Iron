@@ -2556,6 +2556,7 @@
 "No resource here to work.","Здесь нет ресурса для работы."
 "No valid wall segments in that drag.","В этом протягивании нет годных участков стены."
 "No available builder.","Свободного строителя нет."
+"Troops are standing here. Move them first.","Здесь стоят войска. Сначала переместите их."
 "%1 %2","%1 %2"
 "MARKETPLACE","РЫНОК"
 "Sell %1 %2 for %3 gold","Продайте %1 %2 за %3 золота"

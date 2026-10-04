@@ -2556,6 +2556,7 @@
 "The ground here is too steep to build on.","Der Boden ist hier zu steil zum Bauen."
 "That is beyond the edge of the battlefield.","Das liegt jenseits des Schlachtfeldrandes."
 "A wall already stands here.","Hier steht bereits eine Mauer."
+"Troops are standing here. Move them first.","Hier stehen Truppen. Ziehe sie zuerst weg."
 "%1 %2","%1 %2"
 "MARKETPLACE","MARKTPLATZ"
 "Sell %1 %2 for %3 gold","%1 %2 für %3 Gold verkaufen"

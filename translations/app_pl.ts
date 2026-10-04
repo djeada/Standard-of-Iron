@@ -10618,6 +10618,10 @@ Użyj trybu Odstaw, a potem kliknij przyjazne koszary, by dodać do ich rezerwy.
         <source>No available builder.</source>
         <translation>Brak wolnego budowniczego.</translation>
     </message>
+    <message>
+        <source>Troops are standing here. Move them first.</source>
+        <translation>Stoją tu oddziały. Najpierw je przesuń.</translation>
+    </message>
 </context>
 <context>
     <name>ProductionMarketplaceSection</name>

@@ -10615,6 +10615,10 @@ Use o modo Entregar e clique em um quartel aliado para aumentar a reserva dele.<
         <source>A wall already stands here.</source>
         <translation>Já há uma muralha aqui.</translation>
     </message>
+    <message>
+        <source>Troops are standing here. Move them first.</source>
+        <translation>Há tropas aqui. Mova-as primeiro.</translation>
+    </message>
 </context>
 <context>
     <name>ProductionMarketplaceSection</name>

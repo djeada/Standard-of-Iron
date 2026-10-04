@@ -10615,6 +10615,10 @@ Usa el modo Entregar y luego haz clic en un cuartel aliado para aumentar su rese
         <source>A wall already stands here.</source>
         <translation>Aquí ya se alza una muralla.</translation>
     </message>
+    <message>
+        <source>Troops are standing here. Move them first.</source>
+        <translation>Hay tropas aquí. Muévelas primero.</translation>
+    </message>
 </context>
 <context>
     <name>ProductionMarketplaceSection</name>

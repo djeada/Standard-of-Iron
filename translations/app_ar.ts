@@ -10627,6 +10627,10 @@ Use Deliver mode, then click a friendly barracks to add to its reserve.</source>
         <source>A wall already stands here.</source>
         <translation>يوجد سور هنا بالفعل.</translation>
     </message>
+    <message>
+        <source>Troops are standing here. Move them first.</source>
+        <translation>توجد قوات هنا. انقلها أولاً.</translation>
+    </message>
 </context>
 <context>
     <name>ProductionMarketplaceSection</name>

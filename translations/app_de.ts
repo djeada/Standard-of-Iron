@@ -10615,6 +10615,10 @@ Nutze den Liefermodus und klicke dann eine eigene Kaserne an, um ihre Reserve au
         <source>A wall already stands here.</source>
         <translation>Hier steht bereits eine Mauer.</translation>
     </message>
+    <message>
+        <source>Troops are standing here. Move them first.</source>
+        <translation>Hier stehen Truppen. Ziehe sie zuerst weg.</translation>
+    </message>
 </context>
 <context>
     <name>ProductionMarketplaceSection</name>

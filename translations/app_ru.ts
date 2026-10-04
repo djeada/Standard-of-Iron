@@ -10618,6 +10618,10 @@ Use Deliver mode, then click a friendly barracks to add to its reserve.</source>
         <source>No available builder.</source>
         <translation>Свободного строителя нет.</translation>
     </message>
+    <message>
+        <source>Troops are standing here. Move them first.</source>
+        <translation>Здесь стоят войска. Сначала переместите их.</translation>
+    </message>
 </context>
 <context>
     <name>ProductionMarketplaceSection</name>

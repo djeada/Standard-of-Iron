@@ -2556,6 +2556,7 @@
 "The ground here is too steep to build on.","الأرض هنا شديدة الانحدار على البناء."
 "That is beyond the edge of the battlefield.","هذا خارج حدود ساحة المعركة."
 "A wall already stands here.","يوجد سور هنا بالفعل."
+"Troops are standing here. Move them first.","توجد قوات هنا. انقلها أولاً."
 "%1 %2","%1 %2"
 "MARKETPLACE","السوق"
 "Sell %1 %2 for %3 gold","بِع %1 %2 مقابل %3 من الذهب"

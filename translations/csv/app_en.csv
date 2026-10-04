@@ -2556,6 +2556,7 @@
 "The ground here is too steep to build on.","The ground here is too steep to build on."
 "That is beyond the edge of the battlefield.","That is beyond the edge of the battlefield."
 "A wall already stands here.","A wall already stands here."
+"Troops are standing here. Move them first.","Troops are standing here. Move them first."
 "%1 %2","%1 %2"
 "MARKETPLACE","MARKETPLACE"
 "Sell %1 %2 for %3 gold","Sell %1 %2 for %3 gold"

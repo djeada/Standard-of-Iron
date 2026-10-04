@@ -10612,6 +10612,10 @@ Teslim et kipini kullan, sonra yedeğine eklemek için dost bir kışlaya tıkla
         <source>No available builder.</source>
         <translation>Boş inşaatçı yok.</translation>
     </message>
+    <message>
+        <source>Troops are standing here. Move them first.</source>
+        <translation>Burada askerler var. Önce onları taşıyın.</translation>
+    </message>
 </context>
 <context>
     <name>ProductionMarketplaceSection</name>
