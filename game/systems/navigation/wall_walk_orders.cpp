@@ -16,8 +16,6 @@ namespace Game::Systems::WallWalk {
 
 namespace {
 
-// How far along an enemy wall a docked tower's bridge still counts as the way
-// onto it.
 constexpr float k_tower_bridge_reach = 30.0F;
 
 struct BridgeHead {
@@ -26,8 +24,6 @@ struct BridgeHead {
   float z{0.0F};
 };
 
-// Enemy walls `owner_id` can reach: through its (or an ally's) siege towers
-// docked against them with the bridge down.
 auto bridge_heads(Engine::Core::World& world, int owner_id) -> std::vector<BridgeHead> {
   std::vector<BridgeHead> heads;
   auto const* services = Game::Session::services_for_or_null(world);

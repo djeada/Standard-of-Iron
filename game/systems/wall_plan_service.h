@@ -38,7 +38,7 @@ struct PlannedWallSegment {
 struct WallPlanRequest {
   int owner_id = 0;
   bool gate = false;
-  // A ladder against the town face of an existing wall, aimed at `pointer`.
+
   bool ladder = false;
   QVector3D pointer;
   WallGridPosition anchor;

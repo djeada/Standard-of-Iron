@@ -34,7 +34,6 @@ constexpr float k_stalled_work_reach_sq = 1.6F * 1.6F;
 constexpr float k_stalled_work_seconds = 2.5F;
 constexpr float k_crew_settle_limit_seconds = 5.0F;
 constexpr float k_post_reach = 0.15F;
-constexpr float k_walk_in_grace_seconds = 0.5F;
 constexpr float k_standing_speed = 0.2F;
 
 void face_work_target(Engine::Core::TransformComponent& transform,
@@ -158,8 +157,7 @@ auto retarget_onto_field(Engine::Core::World& world,
 
 void arrive_at_site(const SiteApproachActor& actor,
                     Engine::Core::BuilderProductionComponent& builder,
-                    bool work_spot,
-                    bool line_clear) {
+                    bool work_spot) {
   auto& transform = *actor.transform;
   builder.at_construction_site = true;
   builder.in_progress = true;
@@ -169,11 +167,9 @@ void arrive_at_site(const SiteApproachActor& actor,
   builder.site_approach_x = transform.position.x;
   builder.site_approach_z = transform.position.z;
   builder.site_settle_seconds = 0.0F;
+  builder.work_animation_seconds = 0.0F;
   if (!work_spot) {
     publish_construction_started(actor, builder);
-  } else if (line_clear) {
-    transform.position.x = builder.construction_site_x;
-    transform.position.z = builder.construction_site_z;
   }
 
   if (actor.movement != nullptr) {
@@ -284,14 +280,23 @@ auto men_at_posts(Engine::Core::World& world,
       continue;
     }
     auto const& man = formation->soldiers[post.index];
-    if (!man.alive || !man.world_motion_valid ||
-        std::hypot(man.world_x - post.world_x, man.world_z - post.world_z) <=
-            k_post_reach) {
+    if (!man.alive) {
+      continue;
+    }
+    if (!man.world_motion_valid) {
+      return false;
+    }
+    float const speed = std::hypot(man.world_velocity_x, man.world_velocity_z);
+    if (speed >= k_standing_speed) {
+      return false;
+    }
+    if (std::hypot(man.world_x - post.world_x, man.world_z - post.world_z) <=
+        k_post_reach) {
       continue;
     }
     bool const held_short =
-        settle_seconds >= k_walk_in_grace_seconds &&
-        std::hypot(man.world_velocity_x, man.world_velocity_z) < k_standing_speed;
+        man.relocation_blocked && settle_seconds >= k_crew_settle_limit_seconds &&
+        std::hypot(man.world_x - post.world_x, man.world_z - post.world_z) <= 2.0F;
     if (!held_short) {
       return false;
     }
@@ -302,21 +307,17 @@ auto men_at_posts(Engine::Core::World& world,
 auto crew_at_posts(Engine::Core::World& world,
                    Engine::Core::EntityID id,
                    const Engine::Core::BuilderProductionComponent& builder) -> bool {
-  return is_gather_builder_product(builder.product_type) ||
-         builder.site_settle_seconds >= k_crew_settle_limit_seconds ||
-         men_at_posts(world, id, builder.site_settle_seconds);
+  return men_at_posts(world, id, builder.site_settle_seconds);
 }
 
-void settle_crew_at_posts(Engine::Core::World& world,
-                          Engine::Core::EntityID id,
+void settle_crew_at_posts(Engine::Core::World&,
+                          Engine::Core::EntityID,
                           Engine::Core::BuilderProductionComponent& builder,
                           float delta_time) {
   if (builder.site_settle_seconds >= k_crew_settle_limit_seconds) {
     return;
   }
-  builder.site_settle_seconds = men_at_posts(world, id, builder.site_settle_seconds)
-                                    ? k_crew_settle_limit_seconds
-                                    : builder.site_settle_seconds + delta_time;
+  builder.site_settle_seconds += std::max(0.0F, delta_time);
 }
 
 void advance_site_approach(Engine::Core::World& world,
@@ -348,17 +349,29 @@ void advance_site_approach(Engine::Core::World& world,
       is_harvest_builder_product(builder.product_type) && has_work_target &&
       dist_sq <= k_stalled_work_reach_sq &&
       builder.site_approach_seconds > k_stalled_work_seconds;
-  if (dist_sq < arrival_sq || (within_reach && !line_clear && has_work_target) ||
+  if (dist_sq < arrival_sq ||
+      (work_spot && dist_sq <= k_stalled_work_reach_sq && !line_clear &&
+       has_work_target) ||
       stalled_within_reach) {
     if (retarget_onto_field(world, actor, builder)) {
       return;
     }
-    arrive_at_site(actor, builder, work_spot, line_clear && !stalled_within_reach);
+    arrive_at_site(actor, builder, work_spot);
     return;
   }
 
   record_approach_progress(world, actor, builder, dist_sq, delta_time);
-  if (reached_footprint) {
+  if (!line_clear) {
+    builder.bypass_movement_active = false;
+    if (needs_site_route(builder, actor.movement)) {
+      CommandService::move_unit(
+          world,
+          actor.id,
+          QVector3D(builder.construction_site_x, 0.0F, builder.construction_site_z),
+          CommandService::MoveOptions{.kind = MoveOrderKind::RecoveryMove,
+                                      .preserve_formation_mode = true});
+    }
+  } else if (reached_footprint) {
     if (!builder.bypass_movement_active) {
       abandon_site_route(builder, actor.movement);
       reset_site_approach(builder);

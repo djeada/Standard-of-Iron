@@ -201,7 +201,8 @@ void apply_start_construction(World& world,
     if (builder == nullptr) {
       continue;
     }
-    release_task_target(session.terrain(), *builder);
+    Game::Systems::OrderService::clear_builder_task(world, entity);
+    Game::Systems::OrderService::clear_builder_gather_order(entity);
     begin_site_work(
         *entity, *builder, order.construction_type, order.site, order.rotation_y);
     if (auto* movement = entity->get_component<Engine::Core::MovementComponent>()) {
@@ -375,6 +376,8 @@ void apply_repair_structure(World& world, int owner_id, const RepairStructure& o
     builder->build_time = Game::Systems::k_builder_repair_tick_seconds;
     builder->time_remaining = Game::Systems::k_builder_repair_tick_seconds;
     builder->structure_task_entity_id = order.structure;
+    builder->task_target_x = structure_position.x();
+    builder->task_target_z = structure_position.z();
     builder->has_construction_site = true;
     builder->construction_site_x = work_position.x();
     builder->construction_site_z = work_position.z();
@@ -437,6 +440,8 @@ void apply_dismantle_structure(World& world,
     builder->build_time = Game::Systems::dismantle_duration(structure_key);
     builder->time_remaining = builder->build_time;
     builder->structure_task_entity_id = order.structure;
+    builder->task_target_x = structure_position.x();
+    builder->task_target_z = structure_position.z();
     builder->has_construction_site = true;
     builder->construction_site_x = work_position.x();
     builder->construction_site_z = work_position.z();

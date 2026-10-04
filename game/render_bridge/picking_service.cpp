@@ -25,7 +25,6 @@ namespace {
 std::atomic<const Game::Map::TerrainService*> g_bound_terrain{nullptr};
 std::atomic<const Engine::Core::World*> g_bound_world{nullptr};
 
-// First crossing of the terrain surface along the ray, or negative.
 auto ray_hits_terrain(const Game::Map::TerrainService& terrain_service,
                       const QVector3D& ray_origin,
                       const QVector3D& ray_dir,
@@ -86,7 +85,7 @@ auto PickingService::surface_height_at(float world_x, float world_z) -> float {
     height = terrain->sample_surface_height(world_x, world_z).world_y;
   }
   if (world != nullptr) {
-    // A vertical ray from above finds the planks if there are any.
+
     constexpr float k_above = 50.0F;
     QVector3D const origin(world_x, height + k_above, world_z);
     float const t = ray_hits_wall_walk(
@@ -108,9 +107,7 @@ auto PickingService::ray_hits_wall_walk(const Engine::Core::World& world,
     return -1.0F;
   }
   float best = -1.0F;
-  // Each segment's walk is a 2 m slab along its run: the balcony planks on the
-  // town face at deck height, and the stake tips over the centre line at
-  // crest height, which is what a click on the palisade itself meets.
+
   auto try_slab = [&](float node_x,
                       float node_z,
                       float base_y,

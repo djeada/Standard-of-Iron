@@ -334,7 +334,7 @@ auto issue_attack_command(Engine::Core::World* world,
   }
   auto attackers = App::Core::filter_selected_units_for_action(
       world, selected, QStringLiteral("attack"));
-  // A siege tower cannot strike a wall, but sent at one it rolls up and docks.
+
   if (auto const* target_unit = world->try_get<Engine::Core::UnitComponent>(target_id);
       target_unit != nullptr &&
       Game::Units::is_wall_network_spawn(target_unit->spawn_type)) {

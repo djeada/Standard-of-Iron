@@ -51,9 +51,6 @@ void append(std::vector<ArenaScenarioDefinition>& values,
                 std::make_move_iterator(more.end()));
 }
 
-// The scenarios that were once one function, in their original order. The
-// catalog order is observable (options(), listings, batch runs), so a new
-// domain file goes at the end of definitions() unless it must sit among these.
 auto build_core_definitions() -> std::vector<ArenaScenarioDefinition> {
   std::vector<ArenaScenarioDefinition> result;
   for (auto const build : {

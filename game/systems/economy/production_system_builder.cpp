@@ -180,6 +180,7 @@ void advance_working_builder(BuilderTick& tick) {
   }
 
   settle_crew_at_posts(tick.world, tick.entity.get_id(), builder, tick.delta_time);
+  builder.work_animation_seconds += std::max(0.0F, tick.delta_time);
   if (!crew_at_posts(tick.world, tick.entity.get_id(), builder)) {
     return;
   }

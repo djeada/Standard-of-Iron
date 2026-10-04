@@ -4,12 +4,15 @@
 
 #include "core/component.h"
 #include "core/world.h"
+#include "systems/builder_product_types.h"
+#include "systems/building_collision_registry.h"
 #include "systems/combat_actions/combat_action_definition.h"
 #include "systems/combat_system/attack_processor.h"
 #include "systems/combat_system/combat_action_processor.h"
 #include "systems/combat_system/combat_utils.h"
 #include "systems/combat_system/damage_application.h"
 #include "systems/combat_system/formation_contact_processor.h"
+#include "systems/combat_system/formation_soldier_walk.h"
 #include "systems/default_content.h"
 #include "systems/formation_combat_geometry.h"
 #include "systems/movement/movement_pipeline.h"
@@ -1399,4 +1402,157 @@ TEST_F(FormationCombatGeometry, ACasualtyFallsWhereItFought) {
       << "the body must not snap back to its formation slot on death";
   EXPECT_NEAR(after.local_z, before.local_z, 1.0e-3F);
   EXPECT_NEAR(after.local_yaw, before.local_yaw, 1.0e-3F);
+}
+
+TEST_F(FormationCombatGeometry, BuilderWorkPostsStayFixedWhenTheCrewRootTurns) {
+  Engine::Core::World world;
+  auto* entity = add_spearmen(world, 1, 0.0F, 0.0F);
+  auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+  unit->spawn_type = Game::Units::SpawnType::Builder;
+  auto* builder = entity->add_component<Engine::Core::BuilderProductionComponent>();
+  builder->in_progress = true;
+  builder->at_construction_site = true;
+  builder->has_construction_site = true;
+  builder->product_type = "home";
+  builder->construction_site_x = 1.0F;
+  builder->construction_site_z = 2.0F;
+  auto const before = Game::Systems::FormationCombat::resolve_layout(*entity);
+  auto* root = entity->get_component<Engine::Core::TransformComponent>();
+  root->rotation.y = 125.0F;
+  root->position.x += 0.25F;
+  auto const after = Game::Systems::FormationCombat::resolve_layout(*entity);
+  ASSERT_EQ(before.live_slots.size(), after.live_slots.size());
+  ASSERT_FALSE(after.live_slots.empty());
+  for (std::size_t i = 0; i < after.live_slots.size(); ++i) {
+    EXPECT_NEAR(before.live_slots[i].world_x, after.live_slots[i].world_x, 0.001F);
+    EXPECT_NEAR(before.live_slots[i].world_z, after.live_slots[i].world_z, 0.001F);
+  }
+}
+
+TEST_F(FormationCombatGeometry, AStrandedBuilderWalksInsteadOfTeleportingToHisPost) {
+  Engine::Core::TransformComponent root;
+  Engine::Core::FormationPresentationComponent formation;
+  formation.motion_root_valid = true;
+  Engine::Core::FormationSoldierPresentation previous;
+  previous.alive = true;
+  previous.world_motion_valid = true;
+  previous.world_x = -14.0F;
+  previous.world_yaw = 90.0F;
+  std::vector<Engine::Core::FormationSoldierPresentation> neighbors{previous};
+  std::vector<Game::Systems::Combat::ForeignSoldier> foreign;
+  for (bool reform : {false, true}) {
+    auto next = previous;
+    next.local_x = 0.0F;
+    next.local_z = 0.0F;
+    Game::Systems::Combat::walk_formation_slot({.actor = root,
+                                                .formation = formation,
+                                                .neighbors = neighbors,
+                                                .foreign_neighbors = foreign,
+                                                .squad_speed = 2.0F,
+                                                .march_speed = 2.0F,
+                                                .spacing = 0.6F,
+                                                .external_reform = reform,
+                                                .walking_to_work_posts = true,
+                                                .worker = true,
+                                                .delta_time = 0.05F},
+                                               &previous,
+                                               next);
+    EXPECT_LE(
+        std::hypot(next.world_x - previous.world_x, next.world_z - previous.world_z),
+        0.1001F);
+    EXPECT_LT(next.world_x, -13.0F);
+  }
+}
+
+TEST_F(FormationCombatGeometry, RepairAndDismantlePostsSurroundTheTargetBuilding) {
+  Engine::Core::World world;
+  auto* entity = add_spearmen(world, 1, 0.0F, 0.0F);
+  entity->get_component<Engine::Core::UnitComponent>()->spawn_type =
+      Game::Units::SpawnType::Builder;
+  auto* builder = entity->add_component<Engine::Core::BuilderProductionComponent>();
+  builder->in_progress = true;
+  builder->at_construction_site = true;
+  builder->has_construction_site = true;
+  builder->product_type = "home";
+  builder->construction_site_x = 5.0F;
+  builder->construction_site_z = 2.0F;
+  builder->construction_site_rotation_y = 40.0F;
+  auto const expected = Game::Systems::FormationCombat::resolve_layout(*entity);
+
+  auto* home = world.create_entity();
+  auto* target = home->add_component<Engine::Core::TransformComponent>();
+  target->position = {5.0F, 0.0F, 2.0F};
+  target->rotation.y = 40.0F;
+  home->add_component<Engine::Core::UnitComponent>()->spawn_type =
+      Game::Units::SpawnType::Home;
+  builder->structure_task_entity_id = home->get_id();
+  builder->construction_site_x = 0.0F;
+  builder->construction_site_z = 0.0F;
+  builder->construction_site_rotation_y = 0.0F;
+  for (auto const job : {Game::Systems::k_builder_product_repair,
+                         Game::Systems::k_builder_product_dismantle}) {
+    builder->product_type = job;
+    auto const actual = Game::Systems::FormationCombat::resolve_layout(*entity);
+    ASSERT_EQ(expected.live_slots.size(), actual.live_slots.size());
+    for (std::size_t i = 0; i < actual.live_slots.size(); ++i) {
+      EXPECT_NEAR(expected.live_slots[i].world_x, actual.live_slots[i].world_x, 0.001F);
+      EXPECT_NEAR(expected.live_slots[i].world_z, actual.live_slots[i].world_z, 0.001F);
+    }
+  }
+}
+
+TEST_F(FormationCombatGeometry, ABuilderWalksAroundABuildingToReachHisPost) {
+  auto& buildings = Game::Systems::BuildingCollisionRegistry::instance();
+  constexpr Engine::Core::EntityID obstacle = 987654;
+  buildings.register_building(
+      obstacle,
+      "home",
+      0.0F,
+      0.0F,
+      1,
+      Game::Systems::BuildingCollisionRegistry::BuildingSize{4.0F, 4.0F});
+  Game::Systems::NavGrid::get_pathfinder()->update_navigation_grid();
+  Engine::Core::TransformComponent root;
+  root.position.x = -6.0F;
+  Engine::Core::FormationPresentationComponent formation;
+  formation.motion_root_valid = true;
+  formation.motion_root_x = root.position.x;
+  Engine::Core::FormationSoldierPresentation previous;
+  previous.alive = true;
+  previous.world_motion_valid = true;
+  previous.world_x = -6.0F;
+  previous.world_yaw = 90.0F;
+  std::vector<Engine::Core::FormationSoldierPresentation> neighbors{previous};
+  std::vector<Game::Systems::Combat::ForeignSoldier> foreign;
+  float max_step = 0.0F;
+  bool crossed_building = false;
+  for (int i = 0; i < 1200; ++i) {
+    Engine::Core::FormationSoldierPresentation next;
+    next.alive = true;
+    next.local_x = 12.0F;
+    neighbors[0] = previous;
+    Game::Systems::Combat::walk_formation_slot({.actor = root,
+                                                .formation = formation,
+                                                .neighbors = neighbors,
+                                                .foreign_neighbors = foreign,
+                                                .squad_speed = 2.0F,
+                                                .march_speed = 2.0F,
+                                                .spacing = 0.6F,
+                                                .walking_to_work_posts = true,
+                                                .worker = true,
+                                                .delta_time = 0.05F},
+                                               &previous,
+                                               next);
+    max_step = std::max(
+        max_step,
+        std::hypot(next.world_x - previous.world_x, next.world_z - previous.world_z));
+    crossed_building = crossed_building ||
+                       (std::abs(next.world_x) < 2.0F && std::abs(next.world_z) < 2.0F);
+    previous = next;
+  }
+  buildings.unregister_building(obstacle);
+  EXPECT_LE(max_step, 0.1001F);
+  EXPECT_FALSE(crossed_building);
+  EXPECT_NEAR(previous.world_x, 6.0F, 0.2F);
+  EXPECT_NEAR(previous.world_z, 0.0F, 0.2F);
 }

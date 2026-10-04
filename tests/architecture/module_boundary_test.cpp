@@ -187,7 +187,7 @@ TEST(ModuleBoundaries, NoWrongWayEdgeIsToleratedAnyMore) {
 
 TEST(ModuleBoundaries, TestBinariesLinkProductionCodeRatherThanRecompilingIt) {
   const auto root = find_repo_root();
-  // The suites live in tests/suites/*.cmake, included into tests/CMakeLists.txt.
+
   std::vector<std::pair<std::string, QString>> files;
   files.emplace_back("tests/CMakeLists.txt",
                      read_text(root / "tests" / "CMakeLists.txt"));

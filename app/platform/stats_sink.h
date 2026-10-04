@@ -5,16 +5,13 @@
 
 namespace App::Platform {
 
-// Durable integer statistics held by the platform (Steam User Stats). The API
-// names are the stable identifiers configured in Steamworks; never rename one
-// after release.
 class StatsSink {
 public:
   virtual ~StatsSink() = default;
-  // False when the platform is unavailable or does not know the stat.
+
   virtual auto get_int(const std::string& api_name, int& value) -> bool = 0;
   virtual void set_int(const std::string& api_name, int value) = 0;
-  // Persist everything set since the last store. Called once per match.
+
   virtual void store() = 0;
 };
 

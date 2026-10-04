@@ -14,14 +14,12 @@ struct PathPoint {
   float z{0.0F};
   float y{0.0F};
   bool valid{false};
-  // On a ladder (a run steeper than any stair): climbed hand over hand,
-  // facing (face_x, face_z), the way the ladder leans.
+
   bool steep{false};
   float face_x{0.0F};
   float face_z{1.0F};
 };
 
-// A run rises this much per metre walked or more only on a ladder.
 inline constexpr float k_steep_rise = 1.3F;
 
 [[nodiscard]] inline auto
@@ -30,8 +28,6 @@ segment_is_steep(const Engine::Core::WallWalkSegment& s) -> bool {
   return std::abs(s.by - s.ay) > k_steep_rise * run && std::abs(s.by - s.ay) > 0.2F;
 }
 
-// Nearest point on a walker's published path (balcony runs, stairs, a tower
-// bridge), with the walking height there.
 [[nodiscard]] inline auto
 project_onto_path(const std::vector<Engine::Core::WallWalkSegment>& path,
                   float x,
@@ -54,7 +50,7 @@ project_onto_path(const std::vector<Engine::Core::WallWalkSegment>& path,
       best_d2 = d2;
       best = {px, pz, segment.ay + (segment.by - segment.ay) * t, true};
       if (segment_is_steep(segment)) {
-        // Face up the ladder: towards the end that is higher.
+
         float const sign = segment.by >= segment.ay ? 1.0F : -1.0F;
         float const len = std::hypot(dx, dz);
         best.steep = true;

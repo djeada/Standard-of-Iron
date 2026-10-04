@@ -104,6 +104,8 @@ public:
 
   float site_settle_seconds{0.0F};
 
+  float work_animation_seconds{0.0F};
+
   bool has_site_approach{false};
   float site_approach_x{0.0F};
   float site_approach_z{0.0F};
@@ -145,14 +147,10 @@ public:
 
   bool freeform{false};
 
-  // Which way the town lies across this segment, per lateral axis (-1, 0, +1).
-  // The wall-walk balcony and stairs hang on that face. Derived by
-  // WallNetworkService::refresh_world, never saved.
   std::int8_t inner_x{0};
   std::int8_t inner_z{0};
   bool has_stair{false};
-  // A builder's ladder leaning on this segment's balcony: none, still a site
-  // (its timbers lie at the foot), or standing. Derived like the stair.
+
   enum class Ladder : std::uint8_t {
     None = 0,
     Site,
@@ -207,8 +205,7 @@ struct SiegeTowerComponent {
 
   State state{State::Rolling};
   EntityID docked_wall_id{0};
-  // Until the bridge first comes down: then the infantry escorting the tower
-  // is called up its ladder. The tower carries no company of its own.
+
   bool garrison_aboard{true};
   float ramp{0.0F};
   float dock_x{0.0F};
@@ -235,19 +232,16 @@ struct WallWalkerComponent {
     Approaching,
     Climbing,
     Descending,
-    // Back on the ground: the leader has stepped off the stair or ladder and
-    // the rest of the file is still coming down it.
+
     Leaving
   };
 
-  // Up on the wall (the balcony, a stair, a ladder or a tower bridge), as
-  // opposed to walking to it or away from it on the ground.
   [[nodiscard]] auto aloft() const -> bool {
     return phase != Phase::Approaching && phase != Phase::Leaving;
   }
 
   static constexpr float k_wall_top_height = 2.00F;
-  // A tower's company crosses the bridge one man at a time, this far apart.
+
   static constexpr float k_file_out_interval = 0.45F;
 
   EntityID wall_id{0};
@@ -264,8 +258,7 @@ struct WallWalkerComponent {
   float crest_z{0.0F};
   float landing_x{0.0F};
   float landing_z{0.0F};
-  // A company boarding through a siege tower: the tower, and the foot of its
-  // inner ladder where each man starts the climb to the door.
+
   EntityID tower_id{0};
   float base_x{0.0F};
   float base_z{0.0F};
@@ -276,18 +269,14 @@ struct WallWalkerComponent {
   bool has_goal{false};
   float stair_progress{0.0F};
   int saved_files_override{0};
-  // The stair or ladder a troop has just come up, kept on its walk a moment so
-  // the men behind the leader finish the climb. Not saved.
+
   EntityID recent_stair_id{0};
   float recent_stair_seconds{0.0F};
 
-  // Derived each tick: where an idle soldier on the balcony looks (degrees) -
-  // out over the stakes for the wall's owner, into the town for a boarder.
   bool watching{false};
   float watch_yaw{0.0F};
   std::vector<WallWalkSegment> path;
-  // The way down while the troop is coming off the wall: from the top of its
-  // stair or ladder to the foot, in order.
+
   std::vector<WallWalkSegment> exit_chain;
 };
 
@@ -862,9 +851,6 @@ public:
   float scaffold{0.0F};
 };
 
-// A troop heaving a rockfall cache over the edge. RockfallSystem keeps it on
-// the pusher for as long as the push lasts; the presentation reads it to play
-// the crew-push work pose.
 class RockfallPushComponent {
 public:
   float elapsed{0.0F};

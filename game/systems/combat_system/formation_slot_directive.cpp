@@ -506,15 +506,13 @@ void walk_slot(const EntityFrame& frame,
        .external_reform = frame.reform != nullptr,
        .position_is_authored = slot.traversal_slot != nullptr && !frame.mounted,
        .walking_to_work_posts = works_a_site(frame),
+       .worker = frame.unit.spawn_type == Game::Units::SpawnType::Builder,
        .passability = frame.passability,
        .delta_time = frame.delta_time},
       previous,
       directive);
 }
 
-// Where a man stands along a chain of wall-walk links (tower ladder and
-// bridge, or the way down a stair or ladder), measured in metres from its
-// start; nullopt when he is not on it.
 auto arc_along(const Engine::Core::WallWalkSegment* chain,
                std::size_t links,
                float x,
@@ -550,8 +548,6 @@ auto arc_along(const Engine::Core::WallWalkSegment* chain,
   return arc;
 }
 
-// How far a man may go along a chain before he would tread on the heels of
-// the man ahead of him on it.
 auto room_ahead(const Engine::Core::WallWalkSegment* chain,
                 std::size_t links,
                 float my_arc,
@@ -560,9 +556,7 @@ auto room_ahead(const Engine::Core::WallWalkSegment* chain,
   constexpr float k_file_gap = 0.75F;
   float room = std::numeric_limits<float>::max();
   for (auto const& other : others) {
-    // A man standing on the planks is not on the chain yet (or any longer):
-    // only men exactly at deck height are, and nobody on a chain ever is.
-    // Men back on the ground have stepped off it as well.
+
     if (other.slot_index == my_index || !other.alive || !other.world_motion_valid ||
         std::abs(other.elevation - Game::Systems::WallWalk::k_deck_height) < 1.0e-4F ||
         other.elevation <= 5.0e-4F) {
@@ -581,11 +575,6 @@ auto room_ahead(const Engine::Core::WallWalkSegment* chain,
   return std::max(0.0F, room);
 }
 
-// Soldiers of a troop on a wall stay on its walk: the balcony, the stair they
-// are using, or the bridge of the tower they are leaving. Each heads for the
-// spot its slot asks for, at a run, and is held to the nearest point of the
-// walk with that point's height. A tower's company files out of the door one
-// after another, nearest the landing first.
 void pin_to_wall_walk(const EntityFrame& frame,
                       const SlotContext& slot,
                       const std::vector<Soldier>& others,
@@ -599,7 +588,7 @@ void pin_to_wall_walk(const EntityFrame& frame,
     return;
   }
   if (!directive.alive) {
-    // The fallen lie where they fell, on the planks.
+
     if (slot.previous != nullptr && slot.previous->world_motion_valid) {
       directive.world_x = slot.previous->world_x;
       directive.world_z = slot.previous->world_z;
@@ -620,8 +609,6 @@ void pin_to_wall_walk(const EntityFrame& frame,
   float const target_z = directive.world_z;
   directive.climbing = false;
 
-  // A boarding company's route: up the tower's inner ladder (when it boards
-  // through a tower), door to lip, onto the stake tips and down to the planks.
   std::array<Engine::Core::WallWalkSegment, 4> chain{};
   std::size_t links = 0;
   if (tower_climb) {
@@ -677,9 +664,7 @@ void pin_to_wall_walk(const EntityFrame& frame,
        walker->phase == Engine::Core::WallWalkerComponent::Phase::Leaving) &&
       !walker->exit_chain.empty() && !fresh && previous->elevation > 0.0005F;
   if (coming_down) {
-    // Off the wall the way the troop came: along the planks to the top of the
-    // stair or ladder, then down it. Projection alone cannot tell the street
-    // under the balcony from the planks over it.
+
     auto const& down = walker->exit_chain;
     auto const& top = down.front();
     float const to_top =
@@ -687,7 +672,7 @@ void pin_to_wall_walk(const EntityFrame& frame,
     bool const on_planks = std::abs(previous->elevation - WW::k_deck_height) < 1.0e-4F;
     if (on_planks && to_top > 0.12F) {
       float allowed = k_wall_run_speed * std::max(0.0F, frame.delta_time);
-      // Wait at the top while the man before him is still on the first rungs.
+
       if (to_top < 0.9F &&
           room_ahead(down.data(), down.size(), -to_top, slot.original.index, others) <
               to_top) {
@@ -749,7 +734,7 @@ void pin_to_wall_walk(const EntityFrame& frame,
             length > 1.0e-4F ? std::clamp(remaining / length, 0.0F, 1.0F) : 1.0F;
         float y = link.ay + dy * t;
         if (std::abs(y - WW::k_deck_height) < 1.0e-3F) {
-          // Leaving the planks: never again exactly at deck height.
+
           y = WW::k_deck_height - 1.0e-3F;
         }
         bool const steep = WW::segment_is_steep(link);
@@ -764,18 +749,17 @@ void pin_to_wall_walk(const EntityFrame& frame,
     }
   }
   if (walker->phase == Engine::Core::WallWalkerComponent::Phase::Leaving) {
-    // Down on the street with the rest of the troop.
+
     directive.elevation = 0.0F;
     return;
   }
 
   if (boarding) {
-    // Off the chain once a man stands on the planks; until then his height
-    // is never exactly the deck's.
+
     bool const on_chain = !fresh && std::abs(previous->elevation - WW::k_deck_height) >
                                         k_deck_band * 0.5F;
     if (!released || (fresh && !tower_climb)) {
-      // Waiting his turn: in the tower door, or where the company halted.
+
       if (tower_climb && !fresh) {
         settle(previous->world_x, previous->world_z, previous->elevation);
       } else {
@@ -786,7 +770,7 @@ void pin_to_wall_walk(const EntityFrame& frame,
       return;
     }
     if (tower_climb && (fresh || previous->elevation <= 0.0F)) {
-      // Walk round to the foot of the inner ladder first.
+
       float const from_x = fresh ? start.x : previous->world_x;
       float const from_z = fresh ? start.z : previous->world_z;
       float const dx = start.x - from_x;
@@ -799,7 +783,7 @@ void pin_to_wall_walk(const EntityFrame& frame,
         return;
       }
       if (room_ahead(chain.data(), links, 0.0F, slot.original.index, others) <= 0.0F) {
-        // Someone is still on the bottom rungs: wait at the foot.
+
         settle(start.x, start.z, 0.0F);
         return;
       }
@@ -810,7 +794,7 @@ void pin_to_wall_walk(const EntityFrame& frame,
       return;
     }
     if (on_chain) {
-      // Where along the chain he stands, by his position and height.
+
       float travelled = 0.0F;
       float best_d2 = std::numeric_limits<float>::max();
       float arc = 0.0F;
@@ -893,8 +877,7 @@ void pin_to_wall_walk(const EntityFrame& frame,
     x = from_x + dx / want * allowed;
     z = from_z + dz / want * allowed;
   }
-  // Once on the planks a boarder keeps to them: the bridge chain at the end of
-  // the published path is only for men still crossing.
+
   std::vector<Engine::Core::WallWalkSegment> deck_only;
   auto const* walk = &walker->path;
   if (boarding && walker->path.size() > links) {
@@ -912,7 +895,7 @@ void pin_to_wall_walk(const EntityFrame& frame,
   directive.elevation = point.y;
   directive.world_motion_valid = true;
   if (point.steep) {
-    // On a ladder: face the rungs whichever way he is going.
+
     directive.climbing = true;
     if (std::abs(point.face_x) + std::abs(point.face_z) > 1.0e-4F) {
       directive.world_yaw =

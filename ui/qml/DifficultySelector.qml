@@ -45,9 +45,6 @@ FocusScope {
         root.select_index(root.index_of(root.selected_id) + delta);
     }
 
-    // Keep the preferred width independent of the width assigned by a parent
-    // layout. The heading below is responsive, so exposing column.implicitWidth
-    // here would feed the assigned width back into the parent's size hint.
     implicitWidth: root.preferred_width
     implicitHeight: column.implicitHeight
 

@@ -226,8 +226,7 @@ resolve_attacker(Engine::Core::World* world,
 }
 
 constexpr float k_ram_roof_ranged_damage_scale = 0.25F;
-// A siege tower's wet hides turn most arrows too; it is pushed up under the
-// wall archers' bows, and it has to arrive.
+
 constexpr float k_tower_hide_ranged_damage_scale = 0.3F;
 
 auto apply_roof_cover(const Engine::Core::UnitComponent& target,

@@ -807,8 +807,6 @@ struct LadderHostCandidate {
   Engine::Core::EntityID ladder_id{0};
 };
 
-// The owner's balcony segment nearest (x, z), measured along and across its
-// run (across is positive into the town).
 auto nearest_ladder_host(Engine::Core::World& world,
                          int owner_id,
                          float x,
@@ -862,7 +860,6 @@ auto ladder_spot(const LadderHostCandidate& host) -> std::pair<float, float> {
           host.node_z + static_cast<float>(host.inner_z) * reach};
 }
 
-// Hangs every ladder and ladder site on the segment it leans against.
 void hang_ladders(Engine::Core::World& world) {
   std::vector<Engine::Core::EntityID> ladders;
   for (auto [id, transform] : world.view<const TransformComponent>()) {
@@ -939,7 +936,7 @@ auto WallNetworkService::find_ladder_placement(Engine::Core::World& world,
   out.host_id = host->id;
   out.x = x;
   out.z = z;
-  // The ladder faces the wall it climbs.
+
   out.rotation_y = yaw_degrees_from_direction(-static_cast<float>(host->inner_x),
                                               -static_cast<float>(host->inner_z));
   return out;

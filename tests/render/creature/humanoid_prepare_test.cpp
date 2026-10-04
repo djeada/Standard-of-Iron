@@ -11741,3 +11741,73 @@ TEST(HumanoidGuardShield, ShieldFrontNeverFacesItsBearerInAnyState) {
     }
   }
 }
+
+TEST(HumanoidPrepare, BuilderToolMatchesRetainedWorkRoleThroughTransitions) {
+  using namespace Render::Creature;
+  using namespace Render::Creature::Pipeline;
+  using Role = Animation::HumanoidConstructionRole;
+  EXPECT_GT(render_builder_submission_count(
+                "troops/roman/builder", Game::Systems::NationID::RomanRepublic, true),
+            0);
+  EXPECT_GT(render_builder_submission_count(
+                "troops/carthage/builder", Game::Systems::NationID::Carthage, true),
+            0);
+
+  for (std::string const nation : {"roman", "carthage"}) {
+    std::string const prefix = "troops/" + nation + "/builder";
+    ArchetypeVariantTable table;
+    table.variant_trigger_pose = PoseIntent::Construct;
+    table.variant_stride = 5;
+    table.seed_variant_limit = 4;
+    table.variant_is_seed_based = true;
+    std::array<std::string, 5> const suffixes{"/construction_hammer",
+                                              "/construction_saw",
+                                              "/construction_chisel",
+                                              "/construction_chisel",
+                                              "/construction_sickle"};
+    for (std::size_t i = 0; i < suffixes.size(); ++i) {
+      table.archetype_for_variant[i] = find_archetype_id(prefix + suffixes[i]);
+      ASSERT_NE(table.archetype_for_variant[i], k_invalid_archetype);
+      table.state_for_variant[i] = AnimationStateId::AttackSword;
+    }
+    UnitVisualSpec spec;
+    spec.archetype_id = find_archetype_id(prefix);
+    spec.animation_manifest.variant_table = &table;
+    auto const* base = ArchetypeRegistry::instance().get(spec.archetype_id);
+    ASSERT_NE(base, nullptr);
+    for (Role role :
+         {Role::Hammer, Role::Saw, Role::Chisel, Role::KneelingChisel, Role::Reap}) {
+      auto const expected =
+          table.archetype_for_variant[Animation::humanoid_construction_variant_for_role(
+              role)];
+      auto const* tool = ArchetypeRegistry::instance().get(expected);
+      ASSERT_NE(tool, nullptr);
+      EXPECT_GT(tool->bake_attachment_count, base->bake_attachment_count);
+      for (std::uint32_t seed = 0; seed < 16; ++seed) {
+        Render::GL::HumanoidAnimationContext anim;
+        anim.inputs.is_constructing = true;
+        anim.construction_role = role;
+        anim.construction_blend = 1.0F;
+        auto selection = resolve_humanoid_animation_selection(spec, anim, seed);
+        EXPECT_EQ(selection.resolved_archetype, expected);
+        EXPECT_EQ(selection.clip_id,
+                  Animation::humanoid_construction_clip_for_role(role));
+
+        anim.inputs.is_constructing = false;
+        anim.construction_blend = 0.5F;
+        selection = resolve_humanoid_animation_selection(spec, anim, seed);
+        EXPECT_EQ(selection.resolved_archetype, expected);
+        EXPECT_GT(selection.full_body_blend.weight, 0.0F);
+      }
+    }
+    Render::GL::HumanoidAnimationContext walking;
+    walking.inputs.movement_state = Animation::MovementState::Walk;
+    for (std::uint32_t seed = 0; seed < 16; ++seed) {
+      auto const selection = resolve_humanoid_animation_selection(spec, walking, seed);
+      EXPECT_EQ(
+          selection.resolved_archetype,
+          table.archetype_for_variant[Animation::seeded_visual_variant_index(seed, 4)]);
+      EXPECT_NE(selection.state, AnimationStateId::AttackSword);
+    }
+  }
+}

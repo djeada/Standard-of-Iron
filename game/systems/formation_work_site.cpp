@@ -4,6 +4,8 @@
 #include <numbers>
 
 #include "../core/component.h"
+#include "../units/spawn_type.h"
+#include "builder_product_types.h"
 #include "building_collision_registry.h"
 #include "formation_geometry_internal.h"
 
@@ -11,7 +13,6 @@ namespace Game::Systems::FormationCombat::Detail {
 namespace {
 
 constexpr float k_work_site_clearance = 0.35F;
-constexpr float k_work_site_centre_tolerance = 0.5F;
 
 } // namespace
 
@@ -27,19 +28,34 @@ auto work_site_for(const Engine::Core::Entity& entity,
   if (!builder->has_construction_site) {
     return site;
   }
-  float const dx = transform.position.x - builder->construction_site_x;
-  float const dz = transform.position.z - builder->construction_site_z;
-  if ((dx * dx) + (dz * dz) >
-      k_work_site_centre_tolerance * k_work_site_centre_tolerance) {
-    return site;
+  float center_x = builder->construction_site_x;
+  float center_z = builder->construction_site_z;
+  float site_yaw = builder->construction_site_rotation_y;
+  std::string footprint = builder->product_type;
+  if (builder->structure_task_entity_id != 0 && entity.registry() != nullptr &&
+      (builder->product_type == k_builder_product_repair ||
+       builder->product_type == k_builder_product_dismantle)) {
+    auto const* target = entity.registry()->try_get<Engine::Core::TransformComponent>(
+        builder->structure_task_entity_id);
+    auto const* unit = entity.registry()->try_get<Engine::Core::UnitComponent>(
+        builder->structure_task_entity_id);
+    if (target != nullptr && unit != nullptr) {
+      center_x = target->position.x;
+      center_z = target->position.z;
+      site_yaw = target->rotation.y;
+      footprint = Game::Units::spawn_typeToString(unit->spawn_type);
+    }
   }
-
-  auto const size = BuildingCollisionRegistry::get_building_size(builder->product_type);
+  float const yaw = transform.rotation.y * std::numbers::pi_v<float> / 180.0F;
+  float const dx = center_x - transform.position.x;
+  float const dz = center_z - transform.position.z;
+  site.center_x = std::cos(yaw) * dx - std::sin(yaw) * dz;
+  site.center_z = std::sin(yaw) * dx + std::cos(yaw) * dz;
+  auto const size = BuildingCollisionRegistry::get_building_size(footprint);
   site.half_width = std::max(0.0F, size.width * 0.5F);
   site.half_depth = std::max(0.0F, size.depth * 0.5F);
   site.relative_yaw_radians =
-      (transform.rotation.y - builder->construction_site_rotation_y) *
-      std::numbers::pi_v<float> / 180.0F;
+      (transform.rotation.y - site_yaw) * std::numbers::pi_v<float> / 180.0F;
   return site;
 }
 

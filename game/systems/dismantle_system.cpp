@@ -13,6 +13,7 @@
 #include "player_feedback.h"
 #include "resource_types.h"
 #include "systems/economy/construction_cost_catalog.h"
+#include "systems/economy/production_system_approach.h"
 
 namespace Game::Systems {
 
@@ -54,16 +55,22 @@ void DismantleSystem::update(Engine::Core::World* world, float delta_time) {
   }
 
   std::unordered_map<Engine::Core::EntityID, int> crew_by_structure;
+  std::unordered_map<Engine::Core::EntityID, int> assigned_by_structure;
   for (auto [worker_id, builder, worker_unit] :
        world->view<Engine::Core::BuilderProductionComponent,
                    Engine::Core::UnitComponent>()) {
-    (void)worker_id;
     if (worker_unit.health <= 0) {
       continue;
     }
     if (builder.structure_task_entity_id != 0 &&
-        is_working_on(builder, builder.structure_task_entity_id)) {
-      crew_by_structure[builder.structure_task_entity_id] += 1;
+        builder.product_type == k_builder_product_dismantle &&
+        builder.has_construction_site) {
+      assigned_by_structure[builder.structure_task_entity_id] += 1;
+      if (is_working_on(builder, builder.structure_task_entity_id) &&
+          builder.at_construction_site &&
+          ProductionTasks::crew_at_posts(*world, worker_id, builder)) {
+        crew_by_structure[builder.structure_task_entity_id] += 1;
+      }
     }
   }
 
@@ -81,7 +88,9 @@ void DismantleSystem::update(Engine::Core::World* world, float delta_time) {
     site.active_workers = crew;
 
     if (crew == 0) {
-      abandoned.push_back(structure_id);
+      if (!assigned_by_structure.contains(structure_id)) {
+        abandoned.push_back(structure_id);
+      }
       continue;
     }
 

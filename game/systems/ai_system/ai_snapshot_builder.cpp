@@ -424,8 +424,6 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
       continue;
     }
 
-    // A troop up on a wall walk is its garrison: it fights from the planks and
-    // the commander leaves it there rather than marching it off.
     if (const auto* walker =
             world.try_get<Engine::Core::WallWalkerComponent>(entity->get_id());
         walker != nullptr && walker->aloft()) {

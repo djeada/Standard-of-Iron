@@ -72,8 +72,6 @@ auto base_name(const BenchmarkAction& action) -> QString {
   return name;
 }
 
-// World points in a fixture lie on the surface the pick will meet: the
-// terrain, or a wall walk's planks.
 auto ground_y(float x, float z) -> float {
   return Game::Systems::PickingService::surface_height_at(x, z);
 }

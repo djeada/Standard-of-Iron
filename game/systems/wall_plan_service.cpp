@@ -215,8 +215,7 @@ auto WallPlanService::commit(Engine::Core::World& world,
     auto* transform = entity->add_component<Engine::Core::TransformComponent>();
     auto* renderable = entity->add_component<Engine::Core::RenderableComponent>();
     if (request.ladder) {
-      // A ladder site is not a wall cell: its wall draws the timbers lying at
-      // the foot until a builder stands them up.
+
       auto* site =
           world.emplace<Engine::Core::WallConstructionSiteComponent>(entity->get_id());
       if (transform == nullptr || renderable == nullptr || site == nullptr) {

@@ -182,6 +182,11 @@ void OrderService::clear_builder_task(Engine::Core::World& world,
   builder->construction_site_entity_id = 0;
   builder->structure_task_entity_id = 0;
   builder->queued_construction_site_ids.clear();
+  builder->site_approach_seconds = 0.0F;
+  builder->site_closest_approach = 0.0F;
+  builder->site_settle_seconds = 0.0F;
+  builder->work_animation_seconds = 0.0F;
+  builder->has_site_approach = false;
   builder->has_task_target = false;
   builder->task_target_id = 0;
   builder->task_target_x = 0.0F;

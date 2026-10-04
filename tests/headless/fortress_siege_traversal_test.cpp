@@ -1,7 +1,4 @@
-// The fortress assault mission rests on two engines getting where they are
-// sent on its hill: a siege tower up the ramp and against the outer curtain,
-// and a ram up to the south gate. Both are checked on the shipped map, with its
-// walls, gates and towers standing.
+
 
 #include <QDir>
 #include <QString>
@@ -93,7 +90,7 @@ protected:
     m_session->terrain().initialize(map);
     NavGrid::initialize(map.grid.width, map.grid.height);
     Game::Map::MapTransformer::apply_to_world(map, m_session->world());
-    // As a match does: hill ramps get their stone caches, and so on.
+
     Game::Session::configure_map_systems(m_session->world(), map, nullptr);
     NavGrid::get_pathfinder()->update_navigation_grid();
   }
@@ -158,7 +155,6 @@ protected:
     return best;
   }
 
-  // Leaves the garrison its walls and nothing to fight with or recruit.
   void disarm_garrison() {
     std::vector<EntityID> doomed;
     for (auto [id, unit] :
@@ -186,8 +182,6 @@ protected:
 
 } // namespace
 
-// The outer curtain runs east-west at z = -3.5 either side of the south gate;
-// the camp lies far to the south across the ramp at z = 12.5.
 const QVector3D k_camp_yard(26.0F, 0.0F, 46.0F);
 const QVector3D k_before_west_curtain(-7.5F, 0.0F, -1.2F);
 
@@ -207,7 +201,7 @@ TEST_F(FortressSiegeTraversalTest, SiegeTowerGetsPastItsOwnCompanies) {
   disarm_garrison();
   auto const tower = spawn(Game::Units::SpawnType::SiegeTower, k_camp_yard);
   ASSERT_NE(tower, 0U);
-  // The escort waits on the crown, right where the tower has to roll through.
+
   for (QVector3D const at : {QVector3D(-7.5F, 0.0F, 7.0F),
                              QVector3D(-4.5F, 0.0F, 6.0F),
                              QVector3D(-1.5F, 0.0F, 8.0F)}) {
@@ -227,7 +221,7 @@ TEST_F(FortressSiegeTraversalTest, AttackOrderOnAWallSendsTheTowerToDockAgainstI
   auto const wall = first_garrison_wall_near(-7.5F, -3.5F);
   ASSERT_NE(wall, 0U);
   run(0.5);
-  // What a right-click on the curtain with the tower selected sends.
+
   Game::Command::dispatch(
       m_session->world(),
       Game::Command::Command{

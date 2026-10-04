@@ -256,8 +256,7 @@ auto InputCommandHandler::on_right_press(qreal sx,
   }
 
   const QVector3D clicked = hit;
-  // A click on a wall walk is an order onto the planks, not a point to snap off
-  // the wall onto the ground beside it.
+
   bool const onto_wall = Game::Systems::WallWalk::wall_walk_order_at(
                              *m_world, local_owner_id, clicked.x(), clicked.z())
                              .has_value();

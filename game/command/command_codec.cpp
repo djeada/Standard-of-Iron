@@ -119,8 +119,6 @@ public:
   auto real(const char* key) -> float { return static_cast<float>(number(key)); }
   auto integer(const char* key) -> int { return static_cast<int>(number(key)); }
 
-  // Fields added after a command shipped read as their default when absent,
-  // so older recordings still decode.
   auto has(const char* key) const -> bool {
     return m_object.contains(QLatin1String(key));
   }

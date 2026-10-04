@@ -1,9 +1,5 @@
 #pragma once
 
-// Private to the arena scenario runner: the runner state and the helpers its
-// implementation files share. Nothing outside tools/arena/arena_scenario*.cpp
-// includes this.
-
 #include <QDebug>
 #include <QDir>
 #include <QFile>
