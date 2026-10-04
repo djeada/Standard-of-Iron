@@ -10,8 +10,8 @@
 
 #include "../core/component.h"
 #include "../formation/traversal_layout_policy.h"
-#include "../formation/unit_layout_state.h"
 #include "../formation/unit_layout_resolver.h"
+#include "../formation/unit_layout_state.h"
 #include "formation_combat_geometry.h"
 #include "formation_geometry_internal.h"
 
@@ -234,6 +234,22 @@ void append_casualty_slots(
   }
 }
 
+// The layout state of a troop that has closed into its defensive layout (a
+// testudo, a shield wall), else nullptr.
+auto defensive_layout_state(const Engine::Core::Entity& entity)
+    -> const Engine::Core::UnitLayoutStateComponent* {
+  const auto* registry = entity.registry();
+  const auto* layout =
+      registry != nullptr
+          ? registry->try_get<Engine::Core::UnitLayoutStateComponent>(entity.get_id())
+          : nullptr;
+  return layout != nullptr &&
+                 layout->state == static_cast<std::uint8_t>(
+                                      Game::Formation::UnitLayoutState::Defensive)
+             ? layout
+             : nullptr;
+}
+
 auto build_formation_layout(const Engine::Core::Entity& entity,
                             const Engine::Core::UnitComponent& unit,
                             const Engine::Core::TransformComponent& transform)
@@ -242,11 +258,8 @@ auto build_formation_layout(const Engine::Core::Entity& entity,
   auto definition = resolve_definition(unit);
   // A troop that has closed into a testudo or a shield wall stands in that
   // layout's slots, not its marching ones: the men close the gaps.
-  if (auto const* layout_state =
-          entity.get_component<Engine::Core::UnitLayoutStateComponent>();
+  if (auto const* layout_state = defensive_layout_state(entity);
       layout_state != nullptr &&
-      layout_state->state ==
-          static_cast<std::uint8_t>(Game::Formation::UnitLayoutState::Defensive) &&
       layout_state->layout_id != Game::Formation::k_invalid_layout) {
     definition.layout = layout_state->layout_id;
   }
@@ -348,11 +361,8 @@ auto layout_signature(const Engine::Core::Entity& entity) -> std::uint64_t {
     hash_combine(signature, static_cast<std::uint64_t>(unit->formation_files_override));
     hash_combine(signature, static_cast<std::uint64_t>(unit->squad_strength));
     hash_combine(signature, unit->uses_nation_formation_profile ? 1U : 0U);
-    if (auto const* layout_state =
-            entity.get_component<Engine::Core::UnitLayoutStateComponent>();
-        layout_state != nullptr &&
-        layout_state->state ==
-            static_cast<std::uint8_t>(Game::Formation::UnitLayoutState::Defensive)) {
+    if (auto const* layout_state = defensive_layout_state(entity);
+        layout_state != nullptr) {
       hash_combine(signature, static_cast<std::uint64_t>(layout_state->layout_id));
     }
 

@@ -22,8 +22,8 @@
 #include "../units/factory.h"
 #include "../units/spawn_type.h"
 #include "../util/planar_math.h"
-#include "core/wall_walk_geometry.h"
 #include "combat_system/combat_types.h"
+#include "core/wall_walk_geometry.h"
 #include "movement/command_service.h"
 #include "navigation/wall_walk_path.h"
 #include "owner_registry.h"
@@ -780,8 +780,8 @@ void seat_requested_troops(Engine::Core::World& world) {
     }
     auto network = networks.find(unit->owner_id);
     if (network == networks.end()) {
-      network = networks.emplace(unit->owner_id, gather_walls(world, unit->owner_id))
-                    .first;
+      network =
+          networks.emplace(unit->owner_id, gather_walls(world, unit->owner_id)).first;
     }
     auto const& nodes = network->second;
     int pick = -1;
@@ -895,10 +895,9 @@ void shift_wall_archers_to_the_assault(Engine::Core::World& world,
   };
   std::vector<Aloft> archers;
   std::vector<WW::Point> held;
-  for (auto [id, unit, walker, transform] :
-       world.view<const UnitComponent,
-                  const WallWalkerComponent,
-                  const TransformComponent>()) {
+  for (auto [id, unit, walker, transform] : world.view<const UnitComponent,
+                                                       const WallWalkerComponent,
+                                                       const TransformComponent>()) {
     if (unit.health <= 0 || !walker.aloft()) {
       continue;
     }
@@ -911,12 +910,13 @@ void shift_wall_archers_to_the_assault(Engine::Core::World& world,
         walker.has_goal || (target != nullptr && target->target_id != 0)) {
       continue;
     }
-    archers.push_back({id,
-                       unit.owner_id,
-                       walker.wall_id,
-                       transform.position.x,
-                       transform.position.z,
-                       attack->range * Combat::Constants::k_range_multiplier_wall_walk});
+    archers.push_back(
+        {id,
+         unit.owner_id,
+         walker.wall_id,
+         transform.position.x,
+         transform.position.z,
+         attack->range * Combat::Constants::k_range_multiplier_wall_walk});
   }
   if (archers.empty()) {
     return;
@@ -947,8 +947,7 @@ void shift_wall_archers_to_the_assault(Engine::Core::World& world,
     }
     auto network = networks.find(archer.owner);
     if (network == networks.end()) {
-      network =
-          networks.emplace(archer.owner, gather_walls(world, archer.owner)).first;
+      network = networks.emplace(archer.owner, gather_walls(world, archer.owner)).first;
     }
     auto const& nodes = network->second;
     int const here = index_of(nodes, archer.wall_id);
@@ -966,11 +965,10 @@ void shift_wall_archers_to_the_assault(Engine::Core::World& world,
     float pick_threat = here_threat - k_gain_to_move;
     for (std::size_t i = 0; i < nodes.size(); ++i) {
       auto const& node = nodes[i];
-      bool const same_run = node.inner_x == here_node.inner_x &&
-                            node.inner_z == here_node.inner_z &&
-                            (here_node.inner_z != 0 ? std::abs(node.z - here_node.z)
-                                                    : std::abs(node.x - here_node.x)) <
-                                0.5F;
+      bool const same_run =
+          node.inner_x == here_node.inner_x && node.inner_z == here_node.inner_z &&
+          (here_node.inner_z != 0 ? std::abs(node.z - here_node.z)
+                                  : std::abs(node.x - here_node.x)) < 0.5F;
       if (hops[i] < 0 || !same_run ||
           std::hypot(node.x - here_node.x, node.z - here_node.z) > k_shift_reach) {
         continue;

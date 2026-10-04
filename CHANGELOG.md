@@ -53,6 +53,9 @@ may change in any release — see [Save compatibility](#save-compatibility).
   an enemy soldier stands in front of it, since a ram cannot strike a man.
 - **Game films carry their sound.** `--film-audio` mixes the game's own audio
   offline in step with the footage and writes `audio.wav` beside the frames.
+- **An AI town no longer stalls behind a building it cannot place.** A wish
+  with nowhere to stand steps aside for a minute and the next one is built, and
+  a walled estate lays its fields outside its walls while no enemy is in sight.
 - **Gates open for men walking up to them.** A company idling beside a gate or
   standing on the wall walk above it no longer holds it open.
 - **A gate stays barred with the enemy at it.** An automatic gate no longer opens

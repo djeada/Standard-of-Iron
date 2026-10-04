@@ -76,7 +76,11 @@ auto hold_mode_range_multiplier(const Engine::Core::Entity& entity,
 auto ranged_reach_multiplier(const Engine::Core::Entity& entity,
                              Game::Units::SpawnType spawn_type) -> float {
   float multiplier = hold_mode_range_multiplier(entity, spawn_type);
-  const auto* walker = entity.get_component<Engine::Core::WallWalkerComponent>();
+  const auto* registry = entity.registry();
+  const auto* walker =
+      registry != nullptr
+          ? registry->try_get<Engine::Core::WallWalkerComponent>(entity.get_id())
+          : nullptr;
   if (walker != nullptr &&
       walker->phase == Engine::Core::WallWalkerComponent::Phase::OnDeck &&
       range_weapon_class(spawn_type) == RangeWeaponClass::Bow) {

@@ -34,6 +34,7 @@
 #include "game/systems/ai_system/behaviors/assault_behavior.h"
 #include "game/systems/ai_system/behaviors/attack_behavior.h"
 #include "game/systems/ai_system/behaviors/builder_behavior.h"
+#include "game/systems/ai_system/behaviors/builder_ledger.h"
 #include "game/systems/ai_system/behaviors/commander_behavior.h"
 #include "game/systems/ai_system/behaviors/defend_behavior.h"
 #include "game/systems/ai_system/behaviors/economy_behavior.h"
@@ -2754,6 +2755,18 @@ auto attacks_on(const std::vector<Game::Systems::AI::AICommand>& commands,
 }
 
 } // namespace
+
+TEST_F(AISystemTest, TheConstructionLedgerDefersEachBuildingOnItsOwnClock) {
+  Game::Systems::AI::ConstructionLedger ledger;
+  ledger.defer("ram", 60.0F);
+  ledger.defer("barracks", 61.0F);
+
+  EXPECT_TRUE(ledger.is_deferred("ram", 10.0F))
+      << "deferring the barracks gave the ram its turn back";
+  EXPECT_TRUE(ledger.is_deferred("barracks", 10.0F));
+  EXPECT_FALSE(ledger.is_deferred("farm", 10.0F));
+  EXPECT_FALSE(ledger.is_deferred("ram", 60.5F));
+}
 
 TEST_F(AISystemTest, ALoneRamUnderTheWallsDrawsASmallSallyNotTheWholeGarrison) {
   auto snapshot = walled_town_snapshot();
