@@ -1,9 +1,8 @@
 {
   "id": "spotlight_01_barca_campaign_vertical",
   "title": "STANDARD OF IRON",
-  "subtitle": "FEATURE SPOTLIGHT — THE BARCA CAMPAIGN",
+  "end_card": "steam_demo",
   "end_card_seconds": 5.0,
-  "end_card_destination": "GITHUB.COM/DJEADA/STANDARD-OF-IRON",
   "width": 1080,
   "height": 1920,
   "fps": 60,

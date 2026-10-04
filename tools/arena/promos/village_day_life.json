@@ -1,7 +1,7 @@
 {
   "id": "village_day_life",
   "title": "A DAY IN THE HAMLET",
-  "subtitle": "STANDARD OF IRON",
+  "end_card": "steam_demo",
   "width": 1920,
   "height": 1080,
   "fps": 60,

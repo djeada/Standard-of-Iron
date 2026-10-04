@@ -1,7 +1,7 @@
 {
   "id": "ai_war_of_towns_cast",
   "title": "SCIPIO  VS  HANNIBAL",
-  "subtitle": "AI VS AI  ·  STANDARD OF IRON",
+  "end_card": "steam_demo",
   "_comment": [
     "A cast match, not a surveillance tape. The recorder plays the match through",
     "once without rendering (require_decision), refuses to record a stalemate,",
@@ -26,7 +26,8 @@
   "music_volume": 0.16,
   "end_card_seconds": 4.5,
   "end_card_lines": [
-    "GITHUB.COM/DJEADA/STANDARD-OF-IRON",
+    "WISHLIST NOW  -  WINDOWS  -  LINUX",
+    "OPEN SOURCE  -  GITHUB.COM/DJEADA/STANDARD-OF-IRON",
     "EVERY ORDER IN THIS MATCH CAME FROM THE GAME AI"
   ],
   "transition": { "type": "dissolve", "duration": 0.4 },

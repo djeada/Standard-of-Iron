@@ -36,11 +36,8 @@ HEADER = {
         "mean_clip_seconds": 1.6,
     },
     "title": "STANDARD OF IRON",
-    "subtitle": "FREE ROME VS CARTHAGE RTS",
-    "end_card_seconds": 1.8,
+    "end_card": "steam_demo",
     "end_card_background": "dim",
-    "end_card_destination": "GITHUB.COM/DJEADA/STANDARD-OF-IRON",
-    "end_card_lines": ["FREE AND OPEN SOURCE  -  WINDOWS  -  MACOS  -  LINUX"],
 }
 
 

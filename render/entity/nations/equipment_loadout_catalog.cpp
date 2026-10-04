@@ -82,7 +82,6 @@ auto default_loadouts() -> LoadoutMap {
   map.emplace("troops/roman/camp_rest", std::move(roman_camp_rest));
 
   EquipmentLoadoutIds roman_camp_rest_helmed{};
-  roman_camp_rest_helmed.sword = "sword_roman";
   roman_camp_rest_helmed.helmet = "roman_montefortino";
   roman_camp_rest_helmed.greaves = "roman_greaves";
   roman_camp_rest_helmed.armor = "roman_hamata_mail";
