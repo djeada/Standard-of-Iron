@@ -36,6 +36,7 @@ struct SwordRenderConfig {
   float blade_back_spike_length = 0.06F;
   bool has_scabbard = true;
   int material_id = 3;
+  bool has_hooked_pommel = false;
 };
 
 class SwordRenderer : public IEquipmentRenderer {

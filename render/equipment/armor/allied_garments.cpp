@@ -6,6 +6,7 @@
 #include <cmath>
 #include <memory>
 #include <numbers>
+#include <vector>
 
 #include "animation/rig/humanoid_proportions.h"
 #include "render/equipment/attachment_builder.h"
@@ -203,28 +204,122 @@ void add_belt(RenderArchetypeBuilder& builder, const TunicFit& f, float half_hei
       1);
 }
 
-// A Gallic wool tunic, woven in the dark stripes Diodorus describes on Gallic
-// dress (a second, shorter torso layer whose rims show at the shoulders and the
-// chest), belted over the braccae.
+// Clip the fitted torso triangles into woven bands. Reusing its actual surface
+// keeps the stripes flush across the chest, shoulders and back.
+auto woven_bands_mesh() -> Mesh* {
+  // Resolve the source before entering the geometry cache's builder lock.
+  Mesh const* source = torso_mesh();
+  return SharedGeometryCache::instance().get_or_build(
+      geometry_key("equipment/garments/gallic_woven_bands"), [source] {
+        std::vector<Vertex> vertices;
+        std::vector<unsigned int> indices;
+        auto clip = [](const std::vector<Vertex>& polygon, float y, bool above) {
+          std::vector<Vertex> result;
+          if (polygon.empty()) {
+            return result;
+          }
+          Vertex previous = polygon.back();
+          bool previous_inside =
+              above ? previous.position[1] >= y : previous.position[1] <= y;
+          for (Vertex const& current : polygon) {
+            bool const inside =
+                above ? current.position[1] >= y : current.position[1] <= y;
+            if (inside != previous_inside) {
+              float const t = (y - previous.position[1]) /
+                              (current.position[1] - previous.position[1]);
+              Vertex edge{};
+              for (std::size_t axis = 0; axis < 3; ++axis) {
+                edge.position[axis] =
+                    std::lerp(previous.position[axis], current.position[axis], t);
+                edge.normal[axis] =
+                    std::lerp(previous.normal[axis], current.normal[axis], t);
+              }
+              for (std::size_t axis = 0; axis < 2; ++axis) {
+                edge.tex_coord[axis] =
+                    std::lerp(previous.tex_coord[axis], current.tex_coord[axis], t);
+              }
+              result.push_back(edge);
+            }
+            if (inside) {
+              result.push_back(current);
+            }
+            previous = current;
+            previous_inside = inside;
+          }
+          return result;
+        };
+        auto const& source_vertices = source->get_vertices();
+        auto const& source_indices = source->get_indices();
+        for (float centre : {-0.30F, -0.08F, 0.14F, 0.36F}) {
+          for (std::size_t i = 0; i + 2 < source_indices.size(); i += 3) {
+            std::vector<Vertex> polygon{source_vertices[source_indices[i]],
+                                        source_vertices[source_indices[i + 1]],
+                                        source_vertices[source_indices[i + 2]]};
+            polygon = clip(polygon, centre - 0.026F, true);
+            polygon = clip(polygon, centre + 0.026F, false);
+            if (polygon.size() < 3) {
+              continue;
+            }
+            auto const base = static_cast<unsigned int>(vertices.size());
+            vertices.insert(vertices.end(), polygon.begin(), polygon.end());
+            for (unsigned int j = 1; j + 1 < polygon.size(); ++j) {
+              indices.insert(indices.end(), {base, base + j, base + j + 1});
+            }
+          }
+        }
+        return std::make_unique<Mesh>(vertices, indices);
+      });
+}
+
+// Ochre wool with dark woven bands, a leather belt and a bronze neck torc.
 auto gallic_tunic_archetype() -> const RenderArchetype& {
   static const RenderArchetype archetype = [] {
     TunicFit const& f = tunic_fit();
     RenderArchetypeBuilder builder{"gallic_tunic"};
     add_tunic_body(builder, f);
 
-    QVector3D const mantle_bottom = f.top + (f.bottom - f.top) * 0.55F;
-    builder.add_palette_mesh(torso_mesh(),
-                             torso_layer(f,
-                                         f.top + f.up * 0.004F,
-                                         mantle_bottom,
-                                         k_tunic_radius * 1.08F,
-                                         k_tunic_depth * 1.10F),
-                             k_accent_slot,
-                             nullptr,
-                             1.0F,
-                             1);
-
+    builder.add_palette_mesh(
+        woven_bands_mesh(),
+        torso_layer(
+            f, f.top, f.bottom, k_tunic_radius * 1.012F, k_tunic_depth * 1.012F),
+        k_accent_slot,
+        nullptr,
+        1.0F,
+        1);
     add_belt(builder, f, 0.020F);
+
+    // An open torc follows the neck; rounded terminals face forward.
+    QVector3D const neck = f.local.point(f.top + f.up * 0.025F);
+    constexpr int k_torc_segments = 12;
+    constexpr float k_gap = 0.48F;
+    auto torc_point = [&](float angle) {
+      return neck + QVector3D(0.075F * std::sin(angle), 0.0F, 0.065F * std::cos(angle));
+    };
+    for (int i = 0; i < k_torc_segments; ++i) {
+      float const a0 = k_gap + (2.0F * std::numbers::pi_v<float> - 2.0F * k_gap) *
+                                   static_cast<float>(i) / k_torc_segments;
+      float const a1 = k_gap + (2.0F * std::numbers::pi_v<float> - 2.0F * k_gap) *
+                                   static_cast<float>(i + 1) / k_torc_segments;
+      builder.add_palette_mesh(get_unit_cylinder(),
+                               cylinder_between(torc_point(a0), torc_point(a1), 0.008F),
+                               k_ornament_slot,
+                               nullptr,
+                               1.0F,
+                               3);
+    }
+    for (float angle : {k_gap, -k_gap}) {
+      builder.add_palette_mesh(get_unit_sphere(),
+                               sphere_at(torc_point(angle), 0.013F),
+                               k_ornament_slot,
+                               nullptr,
+                               1.0F,
+                               3);
+    }
+    QVector3D const buckle =
+        f.local.point(f.bottom + f.up * 0.026F) +
+        QVector3D(0.0F, 0.0F, f.torso_depth * k_tunic_depth * 1.06F);
+    builder.add_palette_box(
+        buckle, QVector3D(0.025F, 0.016F, 0.008F), k_ornament_slot, nullptr, 1.0F, 3);
 
     return std::move(builder).build();
   }();
@@ -252,8 +347,23 @@ auto iberian_tunic_archetype() -> const RenderArchetype& {
     plaque.translate(
         f.local.point(f.bottom + f.up * 0.036F) +
         QVector3D(0.0F, 0.0F, f.torso_depth * k_tunic_depth * 1.06F + 0.006F));
-    plaque.scale(0.050F, 0.040F, 0.010F);
-    builder.add_palette_mesh(get_unit_sphere(), plaque, k_ornament_slot);
+    plaque.scale(0.047F, 0.024F, 0.010F);
+    builder.add_palette_mesh(
+        get_unit_cube(), plaque, k_ornament_slot, nullptr, 1.0F, 3);
+    // Dark inset and bronze studs make the broad belt readable at game scale.
+    QVector3D const plaque_centre = plaque.column(3).toVector3D();
+    builder.add_palette_box(plaque_centre + QVector3D(0.0F, 0.0F, 0.010F),
+                            QVector3D(0.031F, 0.014F, 0.002F),
+                            k_belt_slot);
+    for (float x : {-0.036F, 0.036F}) {
+      builder.add_palette_mesh(
+          get_unit_sphere(),
+          sphere_at(plaque_centre + QVector3D(x, 0.0F, 0.012F), 0.005F),
+          k_ornament_slot,
+          nullptr,
+          1.0F,
+          3);
+    }
     return std::move(builder).build();
   }();
   return archetype;
@@ -328,7 +438,7 @@ auto gallic_tunic_fill_role_colors(const HumanoidPalette& palette,
   }
   out[k_tunic_slot] = palette.cloth;
   out[k_accent_slot] =
-      saturate_color(palette.cloth * 0.30F + QVector3D(0.06F, 0.16F, 0.08F));
+      saturate_color(palette.cloth * 0.18F + QVector3D(0.05F, 0.12F, 0.10F));
   out[k_belt_slot] = saturate_color(palette.leather_dark * 0.90F);
   out[k_ornament_slot] = QVector3D(0.88F, 0.70F, 0.30F);
   return k_allied_tunic_role_count;

@@ -250,7 +250,8 @@ auto sepulcher_sword_config() -> const SwordRenderConfig& {
 auto gallic_sword_config() -> const SwordRenderConfig& {
   static const SwordRenderConfig config = []() {
     SwordRenderConfig cfg;
-    cfg.metal_color = QVector3D(0.62F, 0.64F, 0.66F);
+    cfg.metal_color = QVector3D(0.72F, 0.75F, 0.78F);
+    cfg.grip_color = QVector3D(0.30F, 0.18F, 0.09F);
     cfg.sword_length = 1.10F;
     cfg.sword_width = 0.074F;
     cfg.guard_half_width = 0.058F;
@@ -262,7 +263,7 @@ auto gallic_sword_config() -> const SwordRenderConfig& {
     cfg.blade_mid_width_scale = 1.00F;
     cfg.blade_tip_width_scale = 0.52F;
     cfg.blade_curve = 0.0F;
-    cfg.guard_curve = 0.10F;
+    cfg.guard_curve = 0.012F;
     cfg.guard_spike_length = 0.0F;
     cfg.material_id = 3;
     return cfg;
@@ -273,7 +274,8 @@ auto gallic_sword_config() -> const SwordRenderConfig& {
 auto falcata_config() -> const SwordRenderConfig& {
   static const SwordRenderConfig config = []() {
     SwordRenderConfig cfg;
-    cfg.metal_color = QVector3D(0.70F, 0.71F, 0.74F);
+    cfg.metal_color = QVector3D(0.76F, 0.78F, 0.80F);
+    cfg.grip_color = QVector3D(0.22F, 0.12F, 0.07F);
     cfg.sword_length = 0.76F;
     cfg.sword_width = 0.094F;
     cfg.guard_half_width = 0.050F;
@@ -284,8 +286,9 @@ auto falcata_config() -> const SwordRenderConfig& {
     cfg.blade_taper_bias = 0.86F;
     cfg.blade_mid_width_scale = 1.42F;
     cfg.blade_tip_width_scale = 0.14F;
-    cfg.blade_curve = 0.34F;
-    cfg.guard_curve = 0.30F;
+    cfg.blade_curve = 0.20F;
+    cfg.guard_curve = 0.018F;
+    cfg.has_hooked_pommel = true;
     cfg.guard_spike_length = 0.0F;
     cfg.material_id = 3;
     return cfg;
@@ -296,13 +299,14 @@ auto falcata_config() -> const SwordRenderConfig& {
 auto gallic_shield_config() -> const ShieldRenderConfig& {
   static const ShieldRenderConfig config = []() {
     ShieldRenderConfig cfg;
-    cfg.shield_color = QVector3D(0.46F, 0.36F, 0.18F);
-    cfg.trim_color = QVector3D(0.30F, 0.22F, 0.13F);
+    cfg.shield_color = QVector3D(0.24F, 0.38F, 0.32F);
+    cfg.trim_color = QVector3D(0.84F, 0.73F, 0.46F);
     cfg.metal_color = QVector3D(0.58F, 0.58F, 0.56F);
     cfg.shield_radius = 0.098F;
     cfg.shield_aspect = 1.95F;
     cfg.has_spine = true;
-    cfg.dome_depth = 0.30F;
+    cfg.dome_depth = 0.24F;
+    cfg.has_radial_decoration = true;
     return cfg;
   }();
   return config;
@@ -311,12 +315,13 @@ auto gallic_shield_config() -> const ShieldRenderConfig& {
 auto caetra_config() -> const ShieldRenderConfig& {
   static const ShieldRenderConfig config = []() {
     ShieldRenderConfig cfg;
-    cfg.shield_color = QVector3D(0.30F, 0.19F, 0.11F);
+    cfg.shield_color = QVector3D(0.42F, 0.16F, 0.11F);
     cfg.trim_color = QVector3D(0.72F, 0.56F, 0.30F);
     cfg.metal_color = QVector3D(0.80F, 0.62F, 0.34F);
     cfg.shield_radius = 0.084F;
     cfg.shield_aspect = 1.0F;
-    cfg.dome_depth = 0.42F;
+    cfg.dome_depth = 0.30F;
+    cfg.has_radial_decoration = true;
     return cfg;
   }();
   return config;

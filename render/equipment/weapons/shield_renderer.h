@@ -26,6 +26,8 @@ struct ShieldRenderConfig {
   bool has_spine = false;
   float dome_depth = 0.0F;
   int material_id = 4;
+  // Painted motifs and rim fittings, enabled only by the allied loadouts.
+  bool has_radial_decoration = false;
 };
 
 class ShieldRenderer : public IEquipmentRenderer {
