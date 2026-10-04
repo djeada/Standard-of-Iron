@@ -162,19 +162,26 @@ auto LevelOrchestrator::load_skirmish(const QString& map_path,
   loader.set_ambient_fog_renderer(scene.ambient_fog);
 
   loader.set_on_owners_updated(std::move(owner_update));
-  loader.set_on_visibility_initialized([visibility_coordinator](
-                                           Engine::Core::World& loaded_world,
-                                           int local_owner_id,
-                                           int map_width,
-                                           int map_height,
-                                           float tile_size,
-                                           bool spectator_mode) {
-    if (visibility_coordinator == nullptr) {
-      return;
-    }
-    visibility_coordinator->initialize_for_world(
-        loaded_world, local_owner_id, map_width, map_height, tile_size, spectator_mode);
-  });
+  loader.set_on_visibility_initialized(
+      [visibility_coordinator](
+          Engine::Core::World& loaded_world,
+          int local_owner_id,
+          int map_width,
+          int map_height,
+          float tile_size,
+          bool spectator_mode,
+          const std::vector<Game::Map::ScoutedArea>& scouted_areas) {
+        if (visibility_coordinator == nullptr) {
+          return;
+        }
+        visibility_coordinator->initialize_for_world(loaded_world,
+                                                     local_owner_id,
+                                                     map_width,
+                                                     map_height,
+                                                     tile_size,
+                                                     spectator_mode,
+                                                     scouted_areas);
+      });
 
   if (progress_tracker != nullptr) {
     progress_tracker->set_stage(LoadingProgressTracker::LoadingStage::LOADING_ENTITIES);

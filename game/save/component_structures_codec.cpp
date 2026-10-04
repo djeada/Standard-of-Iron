@@ -54,6 +54,7 @@ void write_capture(const Entity* entity, QJsonObject& entity_obj) {
     capture_obj["capture_progress"] = static_cast<double>(capture->capture_progress);
     capture_obj["required_time"] = static_cast<double>(capture->required_time);
     capture_obj["is_being_captured"] = capture->is_being_captured;
+    capture_obj["capture_objective"] = capture->capture_objective;
     entity_obj["capture"] = capture_obj;
   }
 }
@@ -68,6 +69,7 @@ void read_capture(Entity* entity, const QJsonObject& json) {
     capture->required_time = static_cast<float>(capture_obj["required_time"].toDouble(
         static_cast<double>(Defaults::k_capture_required_time)));
     capture->is_being_captured = capture_obj["is_being_captured"].toBool(false);
+    capture->capture_objective = capture_obj["capture_objective"].toBool(false);
   }
 }
 

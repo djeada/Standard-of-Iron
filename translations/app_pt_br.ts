@@ -7374,8 +7374,8 @@ para ver a prévia</translation>
         <translation>Victumulae</translation>
     </message>
     <message>
-        <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. A timber curtain with a tower at every corner rings the lower ward; the citadel stands on the upper crown behind its own wall, with the garrison hall inside it. One graded ramp climbs from the camp road to the south gate, and one narrow ramp climbs from the lower ward to the citadel gate. The relief columns come down the flank roads and never touch the hill.</source>
-        <translation>Uma cidade-mercado murada da planície insúbria, erguida sobre uma colina dupla acima dos campos de inverno. Uma cortina de madeira com uma torre em cada canto cerca o recinto inferior; a cidadela fica no topo superior atrás de sua própria muralha, com o salão da guarnição em seu interior. Uma única rampa graduada sobe da estrada do acampamento até o portão sul, e uma rampa estreita sobe do recinto inferior até o portão da cidadela. As colunas de socorro descem pelas estradas dos flancos e nunca tocam a colina.</translation>
+        <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. A timber curtain with a tower at every corner rings the lower ward, where the temple and the market face each other across one street; the citadel stands on the upper crown at the back of the town behind its own wall, with the garrison hall inside it. One graded ramp climbs from the camp road to the south gate, and one short ramp climbs from the lower ward to the citadel gate. The relief columns come down the flank roads and never touch the hill.</source>
+        <translation>Uma cidade-mercado murada da planície insúbria, erguida sobre uma colina dupla acima dos campos de inverno. Uma cortina de madeira com uma torre em cada canto cerca o recinto inferior, onde o templo e o mercado se encaram através de uma única rua; a cidadela fica no topo superior, no fundo da cidade, atrás de sua própria muralha, com o salão da guarnição em seu interior. Uma única rampa graduada sobe da estrada do acampamento até o portão sul, e uma rampa curta sobe do recinto inferior até o portão da cidadela. As colunas de socorro descem pelas estradas dos flancos e nunca tocam a colina.</translation>
     </message>
 </context>
 <context>
@@ -10189,16 +10189,8 @@ Opens for your troops and allies</source>
 Abre-se para suas tropas e aliados</translation>
     </message>
     <message>
-        <source>%1s</source>
-        <translation>%1s</translation>
-    </message>
-    <message>
         <source>Idle</source>
         <translation>Ocioso</translation>
-    </message>
-    <message>
-        <source>BUILDER CONSTRUCTION</source>
-        <translation>CONSTRUÇÃO DO CONSTRUTOR</translation>
     </message>
     <message>
         <source>Select a structure to build</source>
@@ -10315,10 +10307,6 @@ Wide vision and a durable settlement anchor</source>
 Ampla visão e uma âncora duradoura para o assentamento</translation>
     </message>
     <message>
-        <source>Build siege weapons, structures, and gather wood, stone, iron, and food</source>
-        <translation>Construa armas de cerco e estruturas e colete madeira, pedra, ferro e comida</translation>
-    </message>
-    <message>
         <source>Harvest Grain</source>
         <translation>Colher grãos</translation>
     </message>
@@ -10405,6 +10393,30 @@ Build time: %3s</source>
 %1
 Custo: %2
 Tempo de construção: %3s</translation>
+    </message>
+    <message>
+        <source>%1 · %2s</source>
+        <translation>%1 · %2s</translation>
+    </message>
+    <message>
+        <source>Ram</source>
+        <translation>Aríete</translation>
+    </message>
+    <message>
+        <source>Tower</source>
+        <translation>Torre</translation>
+    </message>
+    <message>
+        <source>Wall</source>
+        <translation>Muro</translation>
+    </message>
+    <message>
+        <source>Gate</source>
+        <translation>Portão</translation>
+    </message>
+    <message>
+        <source>Market</source>
+        <translation>Mercado</translation>
     </message>
 </context>
 <context>

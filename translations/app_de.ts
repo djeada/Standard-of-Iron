@@ -7374,8 +7374,8 @@ um die Vorschau zu sehen</translation>
         <translation>Victumulae</translation>
     </message>
     <message>
-        <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. A timber curtain with a tower at every corner rings the lower ward; the citadel stands on the upper crown behind its own wall, with the garrison hall inside it. One graded ramp climbs from the camp road to the south gate, and one narrow ramp climbs from the lower ward to the citadel gate. The relief columns come down the flank roads and never touch the hill.</source>
-        <translation>Eine ummauerte Marktstadt der insubrischen Ebene, auf einem Doppelhügel über den winterlichen Feldern errichtet. Ein hölzerner Mauerzug mit einem Turm an jeder Ecke umgibt die Unterstadt; die Zitadelle steht auf der oberen Kuppe hinter ihrer eigenen Mauer, mit der Garnisonshalle darin. Eine einzige angelegte Rampe führt von der Lagerstraße zum Südtor, und eine schmale Rampe führt von der Unterstadt zum Zitadellentor. Die Entsatzkolonnen kommen über die Flankenstraßen und berühren den Hügel nie.</translation>
+        <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. A timber curtain with a tower at every corner rings the lower ward, where the temple and the market face each other across one street; the citadel stands on the upper crown at the back of the town behind its own wall, with the garrison hall inside it. One graded ramp climbs from the camp road to the south gate, and one short ramp climbs from the lower ward to the citadel gate. The relief columns come down the flank roads and never touch the hill.</source>
+        <translation>Eine ummauerte Marktstadt der insubrischen Ebene, auf einem Doppelhügel über den winterlichen Feldern errichtet. Ein hölzerner Mauerzug mit einem Turm an jeder Ecke umgibt die Unterstadt, in der Tempel und Markt einander über eine einzige Straße gegenüberstehen; die Zitadelle steht auf der oberen Kuppe am hinteren Ende der Stadt hinter ihrer eigenen Mauer, mit der Garnisonshalle darin. Eine einzige angelegte Rampe führt von der Lagerstraße zum Südtor, und eine kurze Rampe führt von der Unterstadt zum Zitadellentor. Die Entsatzkolonnen kommen über die Flankenstraßen und berühren den Hügel nie.</translation>
     </message>
 </context>
 <context>
@@ -10189,16 +10189,8 @@ Opens for your troops and allies</source>
 Öffnet sich für deine Truppen und Verbündeten</translation>
     </message>
     <message>
-        <source>%1s</source>
-        <translation>%1 s</translation>
-    </message>
-    <message>
         <source>Idle</source>
         <translation>Untätig</translation>
-    </message>
-    <message>
-        <source>BUILDER CONSTRUCTION</source>
-        <translation>BAUMEISTER-BAU</translation>
     </message>
     <message>
         <source>Select a structure to build</source>
@@ -10315,10 +10307,6 @@ Wide vision and a durable settlement anchor</source>
 Weite Sicht und ein dauerhafter Anker der Siedlung</translation>
     </message>
     <message>
-        <source>Build siege weapons, structures, and gather wood, stone, iron, and food</source>
-        <translation>Baue Belagerungswaffen und Gebäude und sammle Holz, Stein, Eisen und Nahrung</translation>
-    </message>
-    <message>
         <source>Harvest Grain</source>
         <translation>Getreide ernten</translation>
     </message>
@@ -10405,6 +10393,30 @@ Build time: %3s</source>
 %1
 Kosten: %2
 Bauzeit: %3 s</translation>
+    </message>
+    <message>
+        <source>%1 · %2s</source>
+        <translation>%1 · %2s</translation>
+    </message>
+    <message>
+        <source>Ram</source>
+        <translation>Rammbock</translation>
+    </message>
+    <message>
+        <source>Tower</source>
+        <translation>Turm</translation>
+    </message>
+    <message>
+        <source>Wall</source>
+        <translation>Mauer</translation>
+    </message>
+    <message>
+        <source>Gate</source>
+        <translation>Tor</translation>
+    </message>
+    <message>
+        <source>Market</source>
+        <translation>Markt</translation>
     </message>
 </context>
 <context>

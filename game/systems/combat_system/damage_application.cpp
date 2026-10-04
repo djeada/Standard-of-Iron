@@ -225,10 +225,13 @@ resolve_attacker(Engine::Core::World* world,
   return info;
 }
 
-constexpr float k_ram_roof_ranged_damage_scale = 0.25F;
+// A ram's roof is built to take arrows: a dozen companies on a wall walk still
+// need most of a minute to stop one, long enough to break a gate. Men with
+// axes are what kills a ram.
+constexpr float k_ram_roof_ranged_damage_scale = 0.1F;
 // A siege tower's wet hides turn most arrows too; it is pushed up under the
 // wall archers' bows, and it has to arrive.
-constexpr float k_tower_hide_ranged_damage_scale = 0.3F;
+constexpr float k_tower_hide_ranged_damage_scale = 0.15F;
 
 auto apply_roof_cover(const Engine::Core::UnitComponent& target,
                       const Engine::Core::Entity* attacker,
@@ -450,6 +453,14 @@ apply_unit_damage(Engine::Core::World* world,
   result.new_health = result.previous_health;
   if (hit.effective_damage <= 0 || result.previous_health <= 0) {
     return result;
+  }
+  if (const auto* capture = target->get_component<Engine::Core::CaptureComponent>();
+      capture != nullptr && capture->capture_objective) {
+    hit.effective_damage =
+        std::min(hit.effective_damage, std::max(0, result.previous_health - 1));
+    if (hit.effective_damage <= 0) {
+      return result;
+    }
   }
   result.applied_damage = hit.effective_damage;
   result.new_health = std::max(0, result.previous_health - hit.effective_damage);

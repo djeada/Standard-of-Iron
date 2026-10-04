@@ -44,6 +44,26 @@ auto choose_front(const AISnapshot& snapshot, const AIContext& context) -> Front
   if (nearest != nullptr) {
     return {nearest->pos_x, nearest->pos_z};
   }
+  // With no enemy in sight the assault will come to the outer gate: it is the
+  // only way in, so the archers man the wall over it first.
+  const float centre_x = snapshot.has_ward ? snapshot.ward_x : context.base_pos_x;
+  const float centre_z = snapshot.has_ward ? snapshot.ward_z : context.base_pos_z;
+  const EntitySnapshot* outer_gate = nullptr;
+  float farthest = -1.0F;
+  for (const auto& unit : snapshot.friendly_units) {
+    if (!unit.is_building || unit.spawn_type != Game::Units::SpawnType::WallGate) {
+      continue;
+    }
+    const float dist_sq =
+        distance_squared(unit.pos_x, 0.0F, unit.pos_z, centre_x, 0.0F, centre_z);
+    if (dist_sq > farthest) {
+      farthest = dist_sq;
+      outer_gate = &unit;
+    }
+  }
+  if (outer_gate != nullptr) {
+    return {outer_gate->pos_x, outer_gate->pos_z};
+  }
   return {context.base_pos_x + (context.settlement_facing_x * k_quiet_front_distance),
           context.base_pos_z + (context.settlement_facing_z * k_quiet_front_distance)};
 }
@@ -91,6 +111,23 @@ void RampartBehavior::execute(const AISnapshot& snapshot,
     } else {
       ++it;
     }
+  }
+  // An archer on his way up keeps his post: claims go stale after a few
+  // seconds, and an unclaimed archer is marched back to the muster by the
+  // gatherers before he ever reaches the stair.
+  if (!m_postings.empty()) {
+    std::vector<Engine::Core::EntityID> walking;
+    walking.reserve(m_postings.size());
+    for (const auto& [id, posting] : m_postings) {
+      (void)posting;
+      walking.push_back(id);
+    }
+    (void)claim_units(walking,
+                      get_priority(),
+                      k_task_name,
+                      context,
+                      snapshot.game_time,
+                      k_decision_seconds);
   }
   std::vector<WallPostSnapshot> taken = snapshot.wall_garrison;
   for (const auto& [id, posting] : m_postings) {

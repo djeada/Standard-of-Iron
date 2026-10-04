@@ -12,6 +12,7 @@
 #include <utility>
 
 #include "../core/ambient_session.h"
+#include "../core/component_combat.h"
 #include "../core/component_core.h"
 #include "../core/component_gameplay.h"
 #include "../core/world.h"
@@ -35,6 +36,7 @@
 #include "ai_system/behaviors/harass_behavior.h"
 #include "ai_system/behaviors/local_engagement_behavior.h"
 #include "ai_system/behaviors/production_behavior.h"
+#include "ai_system/behaviors/garrison_behavior.h"
 #include "ai_system/behaviors/rampart_behavior.h"
 #include "ai_system/behaviors/retreat_behavior.h"
 #include "ai_system/behaviors/squad_discipline_behavior.h"
@@ -93,6 +95,7 @@ AISystem::AISystem(Services services)
 }
 
 void AISystem::populate_behavior_registry(AI::AIBehaviorRegistry& registry) {
+  registry.register_behavior(std::make_unique<AI::GarrisonBehavior>());
   registry.register_behavior(std::make_unique<AI::RetreatBehavior>());
   registry.register_behavior(std::make_unique<AI::DefendBehavior>());
   registry.register_behavior(std::make_unique<AI::AllyAidBehavior>());
@@ -138,11 +141,28 @@ void leash_garrison(Engine::Core::World& world,
       continue;
     }
     const auto* wave = world.try_get<Engine::Core::AssaultWaveComponent>(id);
-    const bool in_the_ward = snapshot.has_ward && (wave == nullptr || !wave->active);
+    // A party sent out at a siege engine follows it down the ramp; it comes
+    // home under its own orders once the engine burns.
+    bool sallying = false;
+    if (controlled.sallying) {
+      if (const auto* attack = world.try_get<Engine::Core::AttackTargetComponent>(id);
+          attack != nullptr && attack->target_id != 0) {
+        const auto* target = world.try_get<Engine::Core::UnitComponent>(attack->target_id);
+        sallying = target != nullptr && target->health > 0 &&
+                   Game::Units::is_siege_engine_spawn(target->spawn_type);
+      }
+      controlled.sallying = sallying;
+    }
+    const bool in_the_ward =
+        snapshot.has_ward && !sallying && (wave == nullptr || !wave->active);
+    // Inside the curtain and its gateway, not out on the apron: only a party
+    // sent after an engine leaves the walls.
     controlled.leash_x = snapshot.ward_x;
     controlled.leash_z = snapshot.ward_z;
-    controlled.leash_half_x = in_the_ward ? snapshot.ward_half_x : 0.0F;
-    controlled.leash_half_z = in_the_ward ? snapshot.ward_half_z : 0.0F;
+    controlled.leash_half_x =
+        in_the_ward ? AI::GarrisonBehavior::inner_half(snapshot.ward_half_x) : 0.0F;
+    controlled.leash_half_z =
+        in_the_ward ? AI::GarrisonBehavior::inner_half(snapshot.ward_half_z) : 0.0F;
   }
 }
 

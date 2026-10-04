@@ -475,6 +475,15 @@ not understood; Arena capture renders offscreen and is the dependable path for
 unattended footage. `--campaign-mission` takes a `campaign_id/mission_id`
 pair, not a path.
 
+`--film-audio` gives a game-window film its sound the way Arena audio capture
+does: it sets `SOI_AUDIO_OFFLINE` before the audio system starts, pulls exactly
+one film step of 48 kHz stereo from `AudioSystem::render_offline` after every
+step, keeps the steps that wrote a frame, and writes `audio.wav` beside the PNGs,
+the same length as the footage. A film renders faster or slower than real
+time, so recording the desktop's output would drift. The take's profile must not
+have `master_volume=0` (a muted playtest profile films silence). Mux with
+`ffmpeg -framerate FPS -i frame_%06d.png -i audio.wav -c:v libx264 -c:a aac`.
+
 ## Cinematic camera rig
 
 The orbit keys above describe a camera circling a focus. Trailer work also

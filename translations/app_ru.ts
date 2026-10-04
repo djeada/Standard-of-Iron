@@ -7377,8 +7377,8 @@ to see preview</source>
         <translation>Виктумулы</translation>
     </message>
     <message>
-        <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. A timber curtain with a tower at every corner rings the lower ward; the citadel stands on the upper crown behind its own wall, with the garrison hall inside it. One graded ramp climbs from the camp road to the south gate, and one narrow ramp climbs from the lower ward to the citadel gate. The relief columns come down the flank roads and never touch the hill.</source>
-        <translation>Обнесённый стеной торговый город инсубрийской равнины, поднятый на двойном холме над зимними полями. Деревянная куртина с башней в каждом углу опоясывает нижний двор; цитадель стоит на верхней вершине за собственной стеной, и в ней находится зал гарнизона. Одна выровненная рампа поднимается от лагерной дороги к южным воротам, а одна узкая рампа ведёт из нижнего двора к воротам цитадели. Колонны подкрепления спускаются по боковым дорогам и никогда не касаются холма.</translation>
+        <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. A timber curtain with a tower at every corner rings the lower ward, where the temple and the market face each other across one street; the citadel stands on the upper crown at the back of the town behind its own wall, with the garrison hall inside it. One graded ramp climbs from the camp road to the south gate, and one short ramp climbs from the lower ward to the citadel gate. The relief columns come down the flank roads and never touch the hill.</source>
+        <translation>Обнесённый стеной торговый город инсубрийской равнины, поднятый на двойном холме над зимними полями. Деревянная куртина с башней в каждом углу опоясывает нижний двор, где храм и рынок стоят друг против друга через единственную улицу; цитадель стоит на верхней вершине в глубине города за собственной стеной, и в ней находится зал гарнизона. Одна выровненная рампа поднимается от лагерной дороги к южным воротам, а одна короткая рампа ведёт из нижнего двора к воротам цитадели. Колонны подкрепления спускаются по боковым дорогам и никогда не касаются холма.</translation>
     </message>
 </context>
 <context>
@@ -10192,20 +10192,8 @@ Opens for your troops and allies</source>
 Открывается вашим отрядам и союзникам</translation>
     </message>
     <message>
-        <source>%1s</source>
-        <translation>%1 с</translation>
-    </message>
-    <message>
         <source>Idle</source>
         <translation>Простой</translation>
-    </message>
-    <message>
-        <source>BUILDER CONSTRUCTION</source>
-        <translation>СТРОИТЕЛЬСТВО</translation>
-    </message>
-    <message>
-        <source>Build siege weapons, structures, and gather wood, stone, iron, and food</source>
-        <translation>Стройте осадные машины и постройки, собирайте древесину, камень, железо и еду</translation>
     </message>
     <message>
         <source>Select a structure to build</source>
@@ -10408,6 +10396,30 @@ Build time: %3s</source>
 %1
 Цена: %2
 Время: %3 с</translation>
+    </message>
+    <message>
+        <source>%1 · %2s</source>
+        <translation>%1 · %2s</translation>
+    </message>
+    <message>
+        <source>Ram</source>
+        <translation>Таран</translation>
+    </message>
+    <message>
+        <source>Tower</source>
+        <translation>Башня</translation>
+    </message>
+    <message>
+        <source>Wall</source>
+        <translation>Стена</translation>
+    </message>
+    <message>
+        <source>Gate</source>
+        <translation>Ворота</translation>
+    </message>
+    <message>
+        <source>Market</source>
+        <translation>Рынок</translation>
     </message>
 </context>
 <context>

@@ -66,7 +66,7 @@
         "yaw": 225.0
     },
     "coord_system": "grid",
-    "description": "A walled market town of the Insubrian plain, raised on a double hill above the winter fields. A timber curtain with a tower at every corner rings the lower ward; the citadel stands on the upper crown behind its own wall, with the garrison hall inside it. One graded ramp climbs from the camp road to the south gate, and one narrow ramp climbs from the lower ward to the citadel gate. The relief columns come down the flank roads and never touch the hill.",
+    "description": "A walled market town of the Insubrian plain, raised on a double hill above the winter fields. A timber curtain with a tower at every corner rings the lower ward, where the temple and the market face each other across one street; the citadel stands on the upper crown at the back of the town behind its own wall, with the garrison hall inside it. One graded ramp climbs from the camp road to the south gate, and one short ramp climbs from the lower ward to the citadel gate. The relief columns come down the flank roads and never touch the hill.",
     "dressing": [
         {
             "id": "punic_camp_tent_lines",
@@ -108,7 +108,7 @@
             "kind": "ramp_mouth",
             "x": 80,
             "z": 92,
-            "statue": true,
+            "statue": false,
             "fire": true
         },
         {
@@ -292,60 +292,6 @@
         },
         {
             "end": [
-                80,
-                97
-            ],
-            "id": "south_gate_road_west",
-            "start": [
-                66,
-                112
-            ],
-            "style": "default",
-            "waypoints": [
-                [
-                    66,
-                    112
-                ],
-                [
-                    73,
-                    104.5
-                ],
-                [
-                    80,
-                    97
-                ]
-            ],
-            "width": 4.0
-        },
-        {
-            "end": [
-                94,
-                112
-            ],
-            "id": "south_gate_road_east",
-            "start": [
-                80,
-                97
-            ],
-            "style": "default",
-            "waypoints": [
-                [
-                    80,
-                    97
-                ],
-                [
-                    87,
-                    104.5
-                ],
-                [
-                    94,
-                    112
-                ]
-            ],
-            "width": 4.0
-        },
-        {
-            "end": [
                 20,
                 112
             ],
@@ -442,123 +388,69 @@
             "id": "gate_ramp_road",
             "start": [
                 80,
-                97
+                112
             ],
             "end": [
                 80,
-                80
+                82
             ],
             "style": "default",
             "width": 4.0,
             "waypoints": [
                 [
                     80,
-                    97
+                    112
                 ],
                 [
                     80,
-                    92
+                    102
                 ],
                 [
                     80,
-                    86
+                    94
                 ],
                 [
                     80,
-                    80
+                    88
+                ],
+                [
+                    80,
+                    82
                 ]
             ]
         },
         {
-            "id": "gate_ramp_road",
+            "id": "town_street",
             "start": [
                 80,
-                97
+                82
             ],
             "end": [
                 80,
-                80
+                47
             ],
             "style": "default",
-            "width": 4.0,
+            "width": 3.6,
             "waypoints": [
                 [
                     80,
-                    97
+                    82
                 ],
                 [
                     80,
-                    92
+                    70
                 ],
                 [
                     80,
-                    86
+                    58
                 ],
                 [
                     80,
-                    80
-                ]
-            ]
-        },
-        {
-            "id": "gate_ramp_road",
-            "start": [
-                80,
-                97
-            ],
-            "end": [
-                80,
-                80
-            ],
-            "style": "default",
-            "width": 4.0,
-            "waypoints": [
-                [
-                    80,
-                    97
+                    52
                 ],
                 [
                     80,
-                    92
-                ],
-                [
-                    80,
-                    86
-                ],
-                [
-                    80,
-                    80
-                ]
-            ]
-        },
-        {
-            "id": "gate_ramp_road",
-            "start": [
-                80,
-                97
-            ],
-            "end": [
-                80,
-                80
-            ],
-            "style": "default",
-            "width": 4.0,
-            "waypoints": [
-                [
-                    80,
-                    97
-                ],
-                [
-                    80,
-                    92
-                ],
-                [
-                    80,
-                    86
-                ],
-                [
-                    80,
-                    80
+                    47
                 ]
             ]
         }
@@ -587,12 +479,12 @@
             "plan": "terraced",
             "plan_options": {
                 "inner": [
-                    12,
-                    10
+                    28,
+                    18
                 ],
                 "size": [
-                    36,
-                    28
+                    76,
+                    62
                 ]
             },
             "player_id": 2,
@@ -615,7 +507,7 @@
             "id": "victumulae_praefect",
             "type": "roman_field_commander",
             "x": 80.0,
-            "z": 44.0,
+            "z": 32.0,
             "player_id": 2,
             "nation": "roman_republic",
             "max_population": -1
@@ -623,19 +515,17 @@
         {
             "id": "citadel_guard",
             "type": "swordsman",
-            "x": 73.65,
-            "z": 54.16,
+            "x": 72.0,
+            "z": 41.0,
             "player_id": 2,
             "nation": "roman_republic",
-            "max_population": -1,
-            "behavior": "guard",
-            "guard_radius": 12
+            "max_population": -1
         },
         {
             "id": "citadel_physician",
             "type": "healer",
             "x": 80.0,
-            "z": 55.0,
+            "z": 43.0,
             "player_id": 2,
             "nation": "roman_republic",
             "max_population": -1,
@@ -644,33 +534,29 @@
         {
             "id": "citadel_guard_east",
             "type": "swordsman",
-            "x": 86.0,
-            "z": 54.0,
+            "x": 88.0,
+            "z": 41.0,
             "player_id": 2,
             "nation": "roman_republic",
-            "max_population": -1,
-            "behavior": "guard",
-            "guard_radius": 12
+            "max_population": -1
         },
         {
             "id": "south_gate_spears_west",
             "type": "spearman",
             "x": 75.0,
-            "z": 72.0,
+            "z": 76.0,
             "player_id": 2,
             "nation": "roman_republic",
-            "max_population": -1,
-            "behavior": "hold"
+            "max_population": -1
         },
         {
             "id": "south_gate_spears_east",
             "type": "spearman",
             "x": 85.0,
-            "z": 72.0,
+            "z": 76.0,
             "player_id": 2,
             "nation": "roman_republic",
-            "max_population": -1,
-            "behavior": "hold"
+            "max_population": -1
         },
         {
             "id": "south_gate_swords_west",
@@ -679,9 +565,7 @@
             "z": 70.0,
             "player_id": 2,
             "nation": "roman_republic",
-            "max_population": -1,
-            "behavior": "guard",
-            "guard_radius": 10
+            "max_population": -1
         },
         {
             "id": "south_gate_swords_east",
@@ -690,96 +574,76 @@
             "z": 70.0,
             "player_id": 2,
             "nation": "roman_republic",
-            "max_population": -1,
-            "behavior": "guard",
-            "guard_radius": 10
+            "max_population": -1
         },
         {
             "id": "plaza_reserve_west",
             "type": "spearman",
-            "x": 66.0,
-            "z": 62.0,
-            "player_id": 2,
-            "nation": "roman_republic",
-            "max_population": -1,
-            "behavior": "guard",
-            "guard_radius": 20
-        },
-        {
-            "id": "plaza_reserve_east",
-            "type": "spearman",
-            "x": 94.0,
-            "z": 62.0,
-            "player_id": 2,
-            "nation": "roman_republic",
-            "max_population": -1,
-            "behavior": "guard",
-            "guard_radius": 20
-        },
-        {
-            "id": "north_reserve",
-            "type": "swordsman",
             "x": 80.0,
-            "z": 34.0,
+            "z": 62.0,
             "player_id": 2,
             "nation": "roman_republic",
-            "max_population": -1,
-            "behavior": "guard",
-            "guard_radius": 20
+            "max_population": -1
         },
         {
             "id": "wall_archers_1",
             "type": "archer",
-            "x": 66.0,
-            "z": 70.0,
+            "x": 70.0,
+            "z": 80.0,
             "player_id": 2,
             "nation": "roman_republic",
-            "max_population": -1
+            "max_population": -1,
+            "on_wall": true
         },
         {
             "id": "wall_archers_2",
             "type": "archer",
-            "x": 94.0,
-            "z": 70.0,
+            "x": 90.0,
+            "z": 80.0,
             "player_id": 2,
             "nation": "roman_republic",
-            "max_population": -1
+            "max_population": -1,
+            "on_wall": true
         },
         {
             "id": "wall_archers_3",
             "type": "archer",
-            "x": 59.0,
-            "z": 52.0,
+            "x": 58.0,
+            "z": 80.0,
             "player_id": 2,
             "nation": "roman_republic",
-            "max_population": -1
+            "max_population": -1,
+            "on_wall": true
         },
         {
             "id": "wall_archers_4",
             "type": "archer",
-            "x": 59.0,
-            "z": 40.0,
+            "x": 102.0,
+            "z": 80.0,
             "player_id": 2,
             "nation": "roman_republic",
-            "max_population": -1
+            "max_population": -1,
+            "on_wall": true
         },
         {
             "id": "wall_archers_5",
             "type": "archer",
-            "x": 101.0,
-            "z": 40.0,
+            "x": 74.0,
+            "z": 46.0,
             "player_id": 2,
             "nation": "roman_republic",
-            "max_population": -1
+            "max_population": -1,
+            "on_wall": true
         },
         {
             "id": "wall_archers_6",
             "type": "archer",
-            "x": 100.0,
-            "z": 34.0,
+            "x": 86.0,
+            "z": 46.0,
             "player_id": 2,
             "nation": "roman_republic",
-            "max_population": -1
+            "max_population": -1,
+            "on_wall": true
         }
     ],
     "starting_resources": {
@@ -796,9 +660,9 @@
             "player_id": 2,
             "settlement": "victumulae",
             "type": "wall_gate",
-            "rotation": 0.0,
             "x": 80.0,
-            "z": 76.0
+            "z": 82.0,
+            "rotation": 0.0
         },
         {
             "authored": true,
@@ -806,9 +670,9 @@
             "player_id": 2,
             "settlement": "victumulae",
             "type": "wall_gate",
-            "rotation": 0.0,
             "x": 80.0,
-            "z": 58.0
+            "z": 47.0,
+            "rotation": 0.0
         },
         {
             "authored": true,
@@ -817,8 +681,44 @@
             "settlement": "victumulae",
             "type": "barracks",
             "x": 80.0,
-            "z": 50.0,
-            "max_population": 40
+            "z": 37.0,
+            "max_population": 6
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "type": "defense_tower",
+            "x": 46.0,
+            "z": 24.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "type": "defense_tower",
+            "x": 114.0,
+            "z": 24.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "type": "defense_tower",
+            "x": 46.0,
+            "z": 78.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "type": "defense_tower",
+            "x": 114.0,
+            "z": 78.0
         },
         {
             "authored": true,
@@ -826,9 +726,9 @@
             "player_id": 2,
             "settlement": "victumulae",
             "type": "temple",
-            "x": 67.0,
-            "z": 31.0,
-            "rotation": 0.0
+            "x": 56.0,
+            "z": 65.0,
+            "rotation": 90.0
         },
         {
             "authored": true,
@@ -836,8 +736,8 @@
             "player_id": 2,
             "settlement": "victumulae",
             "type": "marketplace",
-            "x": 102.0,
-            "z": 50.0
+            "x": 104.0,
+            "z": 65.0
         },
         {
             "authored": true,
@@ -845,48 +745,8 @@
             "player_id": 2,
             "settlement": "victumulae",
             "type": "home",
-            "x": 83.0,
-            "z": 31.0,
-            "rotation": 180.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "type": "home",
-            "x": 95.0,
-            "z": 31.0,
-            "rotation": 180.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "type": "home",
-            "x": 59.0,
-            "z": 46.0,
-            "rotation": 90.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "type": "home",
-            "x": 59.0,
-            "z": 58.0,
-            "rotation": 90.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "victumulae",
-            "type": "home",
-            "x": 63.0,
-            "z": 69.0,
+            "x": 66.0,
+            "z": 61.0,
             "rotation": 0.0
         },
         {
@@ -895,8 +755,8 @@
             "player_id": 2,
             "settlement": "victumulae",
             "type": "home",
-            "x": 97.0,
-            "z": 69.0,
+            "x": 94.0,
+            "z": 61.0,
             "rotation": 0.0
         },
         {
@@ -904,36 +764,60 @@
             "nation": "roman_republic",
             "player_id": 2,
             "settlement": "victumulae",
-            "type": "defense_tower",
-            "x": 59.0,
-            "z": 31.0
+            "type": "home",
+            "x": 64.0,
+            "z": 75.0,
+            "rotation": 180.0
         },
         {
             "authored": true,
             "nation": "roman_republic",
             "player_id": 2,
             "settlement": "victumulae",
-            "type": "defense_tower",
-            "x": 103.0,
-            "z": 31.0
+            "type": "home",
+            "x": 96.0,
+            "z": 75.0,
+            "rotation": 180.0
         },
         {
             "authored": true,
             "nation": "roman_republic",
             "player_id": 2,
             "settlement": "victumulae",
-            "type": "defense_tower",
-            "x": 59.0,
-            "z": 71.0
+            "type": "home",
+            "x": 48.0,
+            "z": 33.0,
+            "rotation": 90.0
         },
         {
             "authored": true,
             "nation": "roman_republic",
             "player_id": 2,
             "settlement": "victumulae",
-            "type": "defense_tower",
-            "x": 103.0,
-            "z": 71.0
+            "type": "home",
+            "x": 48.0,
+            "z": 43.0,
+            "rotation": 90.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "type": "home",
+            "x": 112.0,
+            "z": 33.0,
+            "rotation": 270.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "victumulae",
+            "type": "home",
+            "x": 112.0,
+            "z": 43.0,
+            "rotation": 270.0
         },
         {
             "authored": true,
@@ -952,12 +836,12 @@
             "settlement": "victumulae",
             "type": "wall_segment",
             "start": [
-                54.0,
-                26.0
+                42.0,
+                20.0
             ],
             "end": [
-                108.0,
-                26.0
+                118.0,
+                20.0
             ],
             "width": 2.0
         },
@@ -968,12 +852,12 @@
             "settlement": "victumulae",
             "type": "wall_segment",
             "start": [
-                54.0,
-                26.0
+                42.0,
+                20.0
             ],
             "end": [
-                54.0,
-                76.0
+                42.0,
+                82.0
             ],
             "width": 2.0
         },
@@ -984,12 +868,12 @@
             "settlement": "victumulae",
             "type": "wall_segment",
             "start": [
-                108.0,
-                26.0
+                118.0,
+                20.0
             ],
             "end": [
-                108.0,
-                76.0
+                118.0,
+                82.0
             ],
             "width": 2.0
         },
@@ -1000,12 +884,12 @@
             "settlement": "victumulae",
             "type": "wall_segment",
             "start": [
-                54.0,
-                76.0
+                42.0,
+                82.0
             ],
             "end": [
-                76.0,
-                76.0
+                76,
+                82.0
             ],
             "width": 2.0
         },
@@ -1016,12 +900,12 @@
             "settlement": "victumulae",
             "type": "wall_segment",
             "start": [
-                84.0,
-                76.0
+                84,
+                82.0
             ],
             "end": [
-                108.0,
-                76.0
+                118.0,
+                82.0
             ],
             "width": 2.0
         },
@@ -1032,12 +916,12 @@
             "settlement": "victumulae",
             "type": "wall_segment",
             "start": [
-                70.0,
-                40.0
+                66.0,
+                29.0
             ],
             "end": [
-                92.0,
-                40.0
+                94.0,
+                29.0
             ],
             "width": 2.0
         },
@@ -1048,12 +932,12 @@
             "settlement": "victumulae",
             "type": "wall_segment",
             "start": [
-                70.0,
-                40.0
+                66.0,
+                29.0
             ],
             "end": [
-                70.0,
-                58.0
+                66.0,
+                47.0
             ],
             "width": 2.0
         },
@@ -1064,12 +948,12 @@
             "settlement": "victumulae",
             "type": "wall_segment",
             "start": [
-                92.0,
-                40.0
+                94.0,
+                29.0
             ],
             "end": [
-                92.0,
-                58.0
+                94.0,
+                47.0
             ],
             "width": 2.0
         },
@@ -1080,12 +964,12 @@
             "settlement": "victumulae",
             "type": "wall_segment",
             "start": [
-                70.0,
-                58.0
+                66.0,
+                47.0
             ],
             "end": [
-                76.0,
-                58.0
+                76,
+                47.0
             ],
             "width": 2.0
         },
@@ -1096,54 +980,690 @@
             "settlement": "victumulae",
             "type": "wall_segment",
             "start": [
-                84.0,
-                58.0
+                84,
+                47.0
             ],
             "end": [
-                92.0,
-                58.0
+                94.0,
+                47.0
             ],
             "width": 2.0
         }
     ],
     "terrain": [
         {
-            "crown": 0.85,
-            "depth": 84.0,
-            "description": "The broad lower crown that carries the town ward; one graded ramp climbs it from the camp road.",
+            "crown": 0.7,
+            "depth": 92.0,
+            "description": "The broad lower crown that carries the town: a level apron runs round the curtain, and one graded ramp climbs to the south gate.",
             "entrances": [
                 {
                     "radius": 2.0,
                     "x": 80.0,
-                    "z": 92.0
+                    "z": 104.0
                 }
             ],
             "height": 2.6,
             "id": "victumulae_lower_crown",
             "type": "hill",
-            "width": 110.0,
+            "width": 106.0,
             "x": 80.0,
             "z": 50.0,
-            "exact_height": true
+            "exact_height": true,
+            "shape": "mask",
+            "cells": [
+                [
+                    5,
+                    43,
+                    117
+                ],
+                [
+                    6,
+                    37,
+                    123
+                ],
+                [
+                    7,
+                    35,
+                    125
+                ],
+                [
+                    8,
+                    34,
+                    126
+                ],
+                [
+                    9,
+                    32,
+                    128
+                ],
+                [
+                    10,
+                    31,
+                    129
+                ],
+                [
+                    11,
+                    31,
+                    129
+                ],
+                [
+                    12,
+                    30,
+                    130
+                ],
+                [
+                    13,
+                    29,
+                    131
+                ],
+                [
+                    14,
+                    29,
+                    131
+                ],
+                [
+                    15,
+                    28,
+                    132
+                ],
+                [
+                    16,
+                    28,
+                    132
+                ],
+                [
+                    17,
+                    28,
+                    132
+                ],
+                [
+                    18,
+                    27,
+                    133
+                ],
+                [
+                    19,
+                    27,
+                    133
+                ],
+                [
+                    20,
+                    27,
+                    133
+                ],
+                [
+                    21,
+                    27,
+                    133
+                ],
+                [
+                    22,
+                    27,
+                    133
+                ],
+                [
+                    23,
+                    27,
+                    133
+                ],
+                [
+                    24,
+                    27,
+                    133
+                ],
+                [
+                    25,
+                    27,
+                    133
+                ],
+                [
+                    26,
+                    27,
+                    133
+                ],
+                [
+                    27,
+                    27,
+                    133
+                ],
+                [
+                    28,
+                    27,
+                    133
+                ],
+                [
+                    29,
+                    27,
+                    133
+                ],
+                [
+                    30,
+                    27,
+                    133
+                ],
+                [
+                    31,
+                    27,
+                    133
+                ],
+                [
+                    32,
+                    27,
+                    133
+                ],
+                [
+                    33,
+                    27,
+                    133
+                ],
+                [
+                    34,
+                    27,
+                    133
+                ],
+                [
+                    35,
+                    27,
+                    133
+                ],
+                [
+                    36,
+                    27,
+                    133
+                ],
+                [
+                    37,
+                    27,
+                    133
+                ],
+                [
+                    38,
+                    27,
+                    133
+                ],
+                [
+                    39,
+                    27,
+                    133
+                ],
+                [
+                    40,
+                    27,
+                    133
+                ],
+                [
+                    41,
+                    27,
+                    133
+                ],
+                [
+                    42,
+                    27,
+                    133
+                ],
+                [
+                    43,
+                    27,
+                    133
+                ],
+                [
+                    44,
+                    27,
+                    133
+                ],
+                [
+                    45,
+                    27,
+                    133
+                ],
+                [
+                    46,
+                    27,
+                    133
+                ],
+                [
+                    47,
+                    27,
+                    133
+                ],
+                [
+                    48,
+                    27,
+                    133
+                ],
+                [
+                    49,
+                    27,
+                    133
+                ],
+                [
+                    50,
+                    27,
+                    133
+                ],
+                [
+                    51,
+                    27,
+                    133
+                ],
+                [
+                    52,
+                    27,
+                    133
+                ],
+                [
+                    53,
+                    27,
+                    133
+                ],
+                [
+                    54,
+                    27,
+                    133
+                ],
+                [
+                    55,
+                    27,
+                    133
+                ],
+                [
+                    56,
+                    27,
+                    133
+                ],
+                [
+                    57,
+                    27,
+                    133
+                ],
+                [
+                    58,
+                    27,
+                    133
+                ],
+                [
+                    59,
+                    27,
+                    133
+                ],
+                [
+                    60,
+                    27,
+                    133
+                ],
+                [
+                    61,
+                    27,
+                    133
+                ],
+                [
+                    62,
+                    27,
+                    133
+                ],
+                [
+                    63,
+                    27,
+                    133
+                ],
+                [
+                    64,
+                    27,
+                    133
+                ],
+                [
+                    65,
+                    27,
+                    133
+                ],
+                [
+                    66,
+                    27,
+                    133
+                ],
+                [
+                    67,
+                    27,
+                    133
+                ],
+                [
+                    68,
+                    27,
+                    133
+                ],
+                [
+                    69,
+                    27,
+                    133
+                ],
+                [
+                    70,
+                    27,
+                    133
+                ],
+                [
+                    71,
+                    27,
+                    133
+                ],
+                [
+                    72,
+                    27,
+                    133
+                ],
+                [
+                    73,
+                    27,
+                    133
+                ],
+                [
+                    74,
+                    27,
+                    133
+                ],
+                [
+                    75,
+                    27,
+                    133
+                ],
+                [
+                    76,
+                    27,
+                    133
+                ],
+                [
+                    77,
+                    27,
+                    133
+                ],
+                [
+                    78,
+                    27,
+                    133
+                ],
+                [
+                    79,
+                    27,
+                    133
+                ],
+                [
+                    80,
+                    27,
+                    133
+                ],
+                [
+                    81,
+                    27,
+                    133
+                ],
+                [
+                    82,
+                    27,
+                    133
+                ],
+                [
+                    83,
+                    27,
+                    133
+                ],
+                [
+                    84,
+                    27,
+                    133
+                ],
+                [
+                    85,
+                    28,
+                    132
+                ],
+                [
+                    86,
+                    28,
+                    132
+                ],
+                [
+                    87,
+                    28,
+                    132
+                ],
+                [
+                    88,
+                    29,
+                    131
+                ],
+                [
+                    89,
+                    29,
+                    131
+                ],
+                [
+                    90,
+                    30,
+                    130
+                ],
+                [
+                    91,
+                    31,
+                    129
+                ],
+                [
+                    92,
+                    31,
+                    129
+                ],
+                [
+                    93,
+                    32,
+                    128
+                ],
+                [
+                    94,
+                    34,
+                    126
+                ],
+                [
+                    95,
+                    35,
+                    125
+                ],
+                [
+                    96,
+                    37,
+                    123
+                ],
+                [
+                    97,
+                    43,
+                    117
+                ]
+            ]
         },
         {
             "crown": 0.6,
-            "depth": 40.0,
-            "description": "The upper crown: the citadel and its single ramp.",
+            "depth": 34.0,
+            "description": "The upper crown at the back of the town: the citadel and its single ramp from the lower ward.",
             "entrances": [
                 {
                     "radius": 2.0,
                     "x": 80.0,
-                    "z": 70.0
+                    "z": 55.0
                 }
             ],
             "height": 3.8,
             "id": "victumulae_citadel_crown",
             "type": "hill",
-            "width": 48.0,
+            "width": 54.0,
             "x": 80.0,
-            "z": 50.0,
-            "exact_height": true
+            "z": 38.0,
+            "exact_height": true,
+            "shape": "mask",
+            "cells": [
+                [
+                    22,
+                    65,
+                    95
+                ],
+                [
+                    23,
+                    61,
+                    99
+                ],
+                [
+                    24,
+                    60,
+                    100
+                ],
+                [
+                    25,
+                    59,
+                    101
+                ],
+                [
+                    26,
+                    58,
+                    102
+                ],
+                [
+                    27,
+                    58,
+                    102
+                ],
+                [
+                    28,
+                    57,
+                    103
+                ],
+                [
+                    29,
+                    57,
+                    103
+                ],
+                [
+                    30,
+                    57,
+                    103
+                ],
+                [
+                    31,
+                    57,
+                    103
+                ],
+                [
+                    32,
+                    57,
+                    103
+                ],
+                [
+                    33,
+                    57,
+                    103
+                ],
+                [
+                    34,
+                    57,
+                    103
+                ],
+                [
+                    35,
+                    57,
+                    103
+                ],
+                [
+                    36,
+                    57,
+                    103
+                ],
+                [
+                    37,
+                    57,
+                    103
+                ],
+                [
+                    38,
+                    57,
+                    103
+                ],
+                [
+                    39,
+                    57,
+                    103
+                ],
+                [
+                    40,
+                    57,
+                    103
+                ],
+                [
+                    41,
+                    57,
+                    103
+                ],
+                [
+                    42,
+                    57,
+                    103
+                ],
+                [
+                    43,
+                    57,
+                    103
+                ],
+                [
+                    44,
+                    57,
+                    103
+                ],
+                [
+                    45,
+                    57,
+                    103
+                ],
+                [
+                    46,
+                    57,
+                    103
+                ],
+                [
+                    47,
+                    57,
+                    103
+                ],
+                [
+                    48,
+                    57,
+                    103
+                ],
+                [
+                    49,
+                    58,
+                    102
+                ],
+                [
+                    50,
+                    58,
+                    102
+                ],
+                [
+                    51,
+                    59,
+                    101
+                ],
+                [
+                    52,
+                    60,
+                    100
+                ],
+                [
+                    53,
+                    61,
+                    99
+                ],
+                [
+                    54,
+                    65,
+                    95
+                ]
+            ]
         },
         {
             "depth": 22.0,
@@ -1607,25 +2127,9 @@
             "dressing": "victumulae_south_ramp"
         },
         {
-            "type": "statue",
-            "x": 61.31,
-            "z": 107.82,
-            "scale": 1.0,
-            "rotation": -1.571,
-            "dressing": "victumulae_south_ramp"
-        },
-        {
-            "type": "statue",
-            "x": 86.95,
-            "z": 116.4,
-            "scale": 1.0,
-            "rotation": -3.142,
-            "dressing": "victumulae_crossroads"
-        },
-        {
             "type": "firecamp",
-            "x": 67.0,
-            "z": 73.5,
+            "x": 70.0,
+            "z": 72.0,
             "scale": 1.0,
             "rotation": 0.0,
             "radius": 3.0,
@@ -1634,8 +2138,8 @@
         },
         {
             "type": "firecamp",
-            "x": 93.0,
-            "z": 73.5,
+            "x": 90.0,
+            "z": 72.0,
             "scale": 1.0,
             "rotation": 0.0,
             "radius": 3.0,
@@ -1644,86 +2148,102 @@
         },
         {
             "type": "weapon_rack",
-            "x": 100.5,
-            "z": 42.0,
+            "x": 74.0,
+            "z": 44.0,
             "scale": 1.0,
-            "rotation": 90.0
+            "rotation": 0.0
         },
         {
             "type": "weapon_rack",
-            "x": 59.5,
-            "z": 62.0,
+            "x": 86.0,
+            "z": 44.0,
             "scale": 1.0,
-            "rotation": 90.0
-        },
-        {
-            "type": "firecamp",
-            "x": 67.0,
-            "z": 73.5,
-            "scale": 1.0,
-            "rotation": 0.0,
-            "radius": 3.0,
-            "intensity": 1.1,
-            "persistent": true
-        },
-        {
-            "type": "firecamp",
-            "x": 93.0,
-            "z": 73.5,
-            "scale": 1.0,
-            "rotation": 0.0,
-            "radius": 3.0,
-            "intensity": 1.1,
-            "persistent": true
+            "rotation": 0.0
         },
         {
             "type": "weapon_rack",
-            "x": 100.5,
-            "z": 42.0,
+            "x": 104.5,
+            "z": 58.0,
             "scale": 1.0,
-            "rotation": 90.0
+            "rotation": 0.0
         },
         {
-            "type": "weapon_rack",
-            "x": 59.5,
-            "z": 62.0,
-            "scale": 1.0,
-            "rotation": 90.0
+            "type": "cypress_tree",
+            "x": 71.0,
+            "z": 34.0,
+            "scale": 1.1,
+            "rotation": 0.4
         },
         {
-            "type": "firecamp",
-            "x": 67.0,
-            "z": 73.5,
-            "scale": 1.0,
-            "rotation": 0.0,
-            "radius": 3.0,
-            "intensity": 1.1,
-            "persistent": true
+            "type": "cypress_tree",
+            "x": 89.26,
+            "z": 33.56,
+            "scale": 1.05,
+            "rotation": 2.1
         },
         {
-            "type": "firecamp",
-            "x": 93.0,
-            "z": 73.5,
-            "scale": 1.0,
-            "rotation": 0.0,
-            "radius": 3.0,
-            "intensity": 1.1,
-            "persistent": true
+            "type": "cypress_tree",
+            "x": 63.3,
+            "z": 57.98,
+            "scale": 0.95,
+            "rotation": 1.2
         },
         {
-            "type": "weapon_rack",
-            "x": 100.5,
-            "z": 42.0,
+            "type": "cypress_tree",
+            "x": 63.36,
+            "z": 71.05,
             "scale": 1.0,
-            "rotation": 90.0
+            "rotation": 4.4
         },
         {
-            "type": "weapon_rack",
-            "x": 59.5,
-            "z": 62.0,
+            "type": "supply_cart",
+            "x": 109.5,
+            "z": 60.0,
             "scale": 1.0,
-            "rotation": 90.0
+            "rotation": 1.571
+        },
+        {
+            "type": "supply_cart",
+            "x": 109.0,
+            "z": 70.5,
+            "scale": 1.0,
+            "rotation": 1.2
+        },
+        {
+            "type": "plant",
+            "x": 52.0,
+            "z": 36.0,
+            "scale": 1.0,
+            "rotation": 0.0
+        },
+        {
+            "type": "plant",
+            "x": 108.0,
+            "z": 36.0,
+            "scale": 1.0,
+            "rotation": 1.0
+        },
+        {
+            "type": "plant",
+            "x": 69.5,
+            "z": 58.0,
+            "scale": 0.9,
+            "rotation": 2.0
+        },
+        {
+            "type": "plant",
+            "x": 90.5,
+            "z": 58.0,
+            "scale": 0.9,
+            "rotation": 3.0
         }
     ],
-    "hill_rockfall_caches": false
+    "hill_rockfall_caches": false,
+    "scouted_areas": [
+        {
+            "x": 80.0,
+            "z": 51.0,
+            "radius": 62.0
+        }
+    ]
 }

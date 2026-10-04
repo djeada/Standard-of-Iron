@@ -11,6 +11,7 @@
 #include "../../core/world.h"
 #include "../../core/world_spatial_index.h"
 #include "../../units/spawn_type.h"
+#include "../attack_range.h"
 #include "../building_collision_registry.h"
 #include "../combat_rules.h"
 #include "../formation_combat_geometry.h"
@@ -926,7 +927,9 @@ auto acquisition_range(Engine::Core::Entity* entity) -> float {
   }
 
   if (opens_fire_without_closing(entity) || !pursues_targets(entity)) {
-    return attack->range;
+    return unit != nullptr
+               ? attack->range * ranged_reach_multiplier(*entity, unit->spawn_type)
+               : attack->range;
   }
 
   return unit != nullptr ? std::max(unit->vision_range, attack->range) : attack->range;

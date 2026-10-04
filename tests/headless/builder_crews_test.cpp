@@ -22,6 +22,7 @@
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/resource_types.h"
 #include "game/systems/runtime_system_registry.h"
+#include "game/systems/structure_placement_service.h"
 #include "game/units/factory.h"
 #include "game/units/spawn_type.h"
 #include "game/units/squad.h"
@@ -363,6 +364,10 @@ TEST_F(BuilderCrewsTest, AHouseCannotBeOrderedOnTopOfStandingTroops) {
   const QVector3D site = Game::Systems::NavGrid::grid_to_world({48, 48});
   EXPECT_TRUE(Game::Systems::troops_stand_on(
       m_session->world(), "home", site.x(), site.z(), 0.0F, {&crew, 1}));
+  EXPECT_EQ(Game::Systems::StructurePlacementService::ground_ruling(
+                m_session->world(), "home", site.x(), site.z(), 0.0F, {&crew, 1}),
+            Game::Systems::PlacementRuling::BlockedByTroops)
+      << "the player is told a building stands where only his own men do";
   ASSERT_TRUE(Game::Command::submit(
       m_session->world(),
       Game::Command::Source::LocalPlayer,

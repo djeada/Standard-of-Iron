@@ -7374,8 +7374,8 @@ to see preview</translation>
         <translation>Victumulae</translation>
     </message>
     <message>
-        <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. A timber curtain with a tower at every corner rings the lower ward; the citadel stands on the upper crown behind its own wall, with the garrison hall inside it. One graded ramp climbs from the camp road to the south gate, and one narrow ramp climbs from the lower ward to the citadel gate. The relief columns come down the flank roads and never touch the hill.</source>
-        <translation>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. A timber curtain with a tower at every corner rings the lower ward; the citadel stands on the upper crown behind its own wall, with the garrison hall inside it. One graded ramp climbs from the camp road to the south gate, and one narrow ramp climbs from the lower ward to the citadel gate. The relief columns come down the flank roads and never touch the hill.</translation>
+        <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. A timber curtain with a tower at every corner rings the lower ward, where the temple and the market face each other across one street; the citadel stands on the upper crown at the back of the town behind its own wall, with the garrison hall inside it. One graded ramp climbs from the camp road to the south gate, and one short ramp climbs from the lower ward to the citadel gate. The relief columns come down the flank roads and never touch the hill.</source>
+        <translation>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. A timber curtain with a tower at every corner rings the lower ward, where the temple and the market face each other across one street; the citadel stands on the upper crown at the back of the town behind its own wall, with the garrison hall inside it. One graded ramp climbs from the camp road to the south gate, and one short ramp climbs from the lower ward to the citadel gate. The relief columns come down the flank roads and never touch the hill.</translation>
     </message>
 </context>
 <context>
@@ -10189,16 +10189,8 @@ Opens for your troops and allies</source>
 Opens for your troops and allies</translation>
     </message>
     <message>
-        <source>%1s</source>
-        <translation>%1s</translation>
-    </message>
-    <message>
         <source>Idle</source>
         <translation>Idle</translation>
-    </message>
-    <message>
-        <source>BUILDER CONSTRUCTION</source>
-        <translation>BUILDER CONSTRUCTION</translation>
     </message>
     <message>
         <source>Select a structure to build</source>
@@ -10315,10 +10307,6 @@ Wide vision and a durable settlement anchor</source>
 Wide vision and a durable settlement anchor</translation>
     </message>
     <message>
-        <source>Build siege weapons, structures, and gather wood, stone, iron, and food</source>
-        <translation>Build siege weapons, structures, and gather wood, stone, iron, and food</translation>
-    </message>
-    <message>
         <source>Harvest Grain</source>
         <translation>Harvest Grain</translation>
     </message>
@@ -10405,6 +10393,30 @@ Build time: %3s</source>
 %1
 Cost: %2
 Build time: %3s</translation>
+    </message>
+    <message>
+        <source>%1 · %2s</source>
+        <translation>%1 · %2s</translation>
+    </message>
+    <message>
+        <source>Ram</source>
+        <translation>Ram</translation>
+    </message>
+    <message>
+        <source>Tower</source>
+        <translation>Tower</translation>
+    </message>
+    <message>
+        <source>Wall</source>
+        <translation>Wall</translation>
+    </message>
+    <message>
+        <source>Gate</source>
+        <translation>Gate</translation>
+    </message>
+    <message>
+        <source>Market</source>
+        <translation>Market</translation>
     </message>
 </context>
 <context>

@@ -7386,8 +7386,8 @@ to see preview</source>
         <translation>فيكتومولاي</translation>
     </message>
     <message>
-        <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. A timber curtain with a tower at every corner rings the lower ward; the citadel stands on the upper crown behind its own wall, with the garrison hall inside it. One graded ramp climbs from the camp road to the south gate, and one narrow ramp climbs from the lower ward to the citadel gate. The relief columns come down the flank roads and never touch the hill.</source>
-        <translation>بلدة سوق مسوَّرة في سهل الإنسوبريين، قامت على تلٍّ مزدوج فوق حقول الشتاء. يحيط بالساحة السفلى سور خشبي في كل ركن منه برج؛ وتقوم القلعة على القمة العليا خلف سورها الخاص، وفي داخلها قاعة الحامية. ويصعد منحدر واحد متدرّج من طريق المعسكر إلى البوابة الجنوبية، ومنحدر ضيق من الساحة السفلى إلى بوابة القلعة. وتنزل أرتال الإمداد عبر طرق الجناحين ولا تمسّ التل أبدًا.</translation>
+        <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. A timber curtain with a tower at every corner rings the lower ward, where the temple and the market face each other across one street; the citadel stands on the upper crown at the back of the town behind its own wall, with the garrison hall inside it. One graded ramp climbs from the camp road to the south gate, and one short ramp climbs from the lower ward to the citadel gate. The relief columns come down the flank roads and never touch the hill.</source>
+        <translation>بلدة سوق مسوَّرة في سهل الإنسوبريين، قامت على تلٍّ مزدوج فوق حقول الشتاء. يحيط بالساحة السفلى سور خشبي في كل ركن منه برج، ويتقابل فيها المعبد والسوق على جانبي شارع واحد؛ وتقوم القلعة على القمة العليا في مؤخرة البلدة خلف سورها الخاص، وفي داخلها قاعة الحامية. ويصعد منحدر واحد متدرّج من طريق المعسكر إلى البوابة الجنوبية، ومنحدر قصير من الساحة السفلى إلى بوابة القلعة. وتنزل أرتال الإمداد عبر طرق الجناحين ولا تمسّ التل أبدًا.</translation>
     </message>
 </context>
 <context>
@@ -10201,16 +10201,8 @@ Opens for your troops and allies</source>
 تُفتح لقواتك وحلفائك</translation>
     </message>
     <message>
-        <source>%1s</source>
-        <translation>%1 ث</translation>
-    </message>
-    <message>
         <source>Idle</source>
         <translation>خامل</translation>
-    </message>
-    <message>
-        <source>BUILDER CONSTRUCTION</source>
-        <translation>أعمال البناء</translation>
     </message>
     <message>
         <source>Select a structure to build</source>
@@ -10327,10 +10319,6 @@ Wide vision and a durable settlement anchor</source>
 رؤية واسعة ومرتكز متين للمستوطنة</translation>
     </message>
     <message>
-        <source>Build siege weapons, structures, and gather wood, stone, iron, and food</source>
-        <translation>ابنِ أسلحة الحصار والمنشآت، واجمع الخشب والحجر والحديد والطعام</translation>
-    </message>
-    <message>
         <source>Harvest Grain</source>
         <translation>حصاد الحبوب</translation>
     </message>
@@ -10417,6 +10405,30 @@ Build time: %3s</source>
 %1
 الكلفة: %2
 زمن البناء: %3 ث</translation>
+    </message>
+    <message>
+        <source>%1 · %2s</source>
+        <translation>%1 · %2s</translation>
+    </message>
+    <message>
+        <source>Ram</source>
+        <translation>كبش</translation>
+    </message>
+    <message>
+        <source>Tower</source>
+        <translation>برج</translation>
+    </message>
+    <message>
+        <source>Wall</source>
+        <translation>سور</translation>
+    </message>
+    <message>
+        <source>Gate</source>
+        <translation>بوابة</translation>
+    </message>
+    <message>
+        <source>Market</source>
+        <translation>سوق</translation>
     </message>
 </context>
 <context>

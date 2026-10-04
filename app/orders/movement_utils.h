@@ -72,6 +72,23 @@ pick_enemy_unit_at_screen(Engine::Core::World* world,
                           int viewport_height,
                           int local_owner_id) -> Engine::Core::EntityID;
 
+// Every selected unit is a siege engine: a ram or a tower strikes structures only.
+[[nodiscard]] auto
+only_engines_selected(Engine::Core::World* world,
+                      const std::vector<Engine::Core::EntityID>& selected) -> bool;
+
+// The enemy structure under the cursor when the selection carries a siege
+// engine, else 0: a plain right-click never sends infantry at a wall.
+[[nodiscard]] auto
+pick_enemy_structure_for_engines(Engine::Core::World* world,
+                                 const std::vector<Engine::Core::EntityID>& selected,
+                                 Render::GL::Camera* camera,
+                                 qreal sx,
+                                 qreal sy,
+                                 int viewport_width,
+                                 int viewport_height,
+                                 int local_owner_id) -> Engine::Core::EntityID;
+
 auto issue_attack_command(Engine::Core::World* world,
                           const std::vector<Engine::Core::EntityID>& selected,
                           Engine::Core::EntityID target_id,

@@ -42,6 +42,20 @@ Every village is shown at its known location and in the color of its current own
 
 Because the live stronghold marker must cover the stone keep baked into the parchment base, `k_stronghold_scale` is sized relative to `structure_icon_size`. Changes to either value should be reviewed together or the underlying baked icon can appear as an unintended halo.
 
+## Scouted ground and remembered buildings
+
+A map can list `scouted_areas`, circles (`x`, `z`, `radius`, in the map's
+coordinates) that the local player starts the match having explored. The
+visibility coordinator marks them `Explored` right after the first vision
+pass, through the same `restore_explored` a save load uses, so they persist in
+saves like ground the player walked. A siege map uses it for the town being
+besieged: the attacker knows where the walls are before the first scout.
+
+Explored ground keeps its buildings. The scene renderer draws a non-local
+structure (any `is_building_spawn` type) in `Revealed` fog mode, so it stays on
+screen once its cell has been seen; troops stay `VisibleOnly`. Selection and
+hover already accepted explored buildings.
+
 ## Cartographic art direction
 
 The minimap is styled as an inked military chart rather than a modern radar panel.

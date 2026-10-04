@@ -22,6 +22,9 @@ enum class PlacementRuling : std::uint8_t {
 
   BlockedByStructure,
 
+  // The ground is clear but the player's own companies stand on it.
+  BlockedByTroops,
+
   BlockedByObstacle,
 
   BlockedByWater,

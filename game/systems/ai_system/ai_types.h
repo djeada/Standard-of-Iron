@@ -612,6 +612,8 @@ struct AICommand {
 
   Engine::Core::EntityID target_id = 0;
   bool should_chase = false;
+  // A walled garrison's party sent out of its leash after a siege engine.
+  bool sally = false;
   Engine::Core::EntityID building_id = 0;
   Game::Units::TroopType product_type = Game::Units::TroopType::Archer;
 

@@ -11,6 +11,10 @@ Rectangle {
     required property var builder_prod
     required property var spec
     property int cardWidth: 150
+    property int cardHeight: 80
+    // A narrow card in the builder's two-row bar keeps every cost on show by
+    // tightening the chips rather than hiding them.
+    readonly property bool compact: cardWidth < 110
     readonly property string item_type: spec.item_type
     readonly property var hs: StyleGuide.historical
 
@@ -23,7 +27,7 @@ Rectangle {
     property bool is_hovered: cardMouseArea.containsMouse
 
     width: cardWidth
-    height: 80
+    height: cardHeight
     radius: 6
     color: panel ? panel.recruit_card_color(is_enabled, is_hovered) : "transparent"
     border.color: panel ? panel.recruit_card_border(is_enabled, is_hovered) : "transparent"
@@ -39,7 +43,7 @@ Rectangle {
         fillMode: spec.fit_icon ? Image.PreserveAspectFit : Image.PreserveAspectCrop
         smooth: true
         source: panel ? panel.unit_icon_source(item_type) : ""
-        visible: spec.fit_icon ? status === Image.Ready : source !== ""
+        visible: spec.fit_icon ? status === Image.Ready : (source !== "" && status !== Image.Error)
         opacity: parent.is_enabled ? 1 : 0.35
     }
 
@@ -84,10 +88,12 @@ Rectangle {
         anchors.rightMargin: 4
         horizontalAlignment: Text.AlignHCenter
         elide: Text.ElideRight
-        text: spec.label
+        text: card.compact && spec.short_label ? spec.short_label : spec.label
         color: parent.is_enabled ? "#D4B57C" : "#6B5231"
         font.pixelSize: Design.Typography.caption
         font.bold: true
+        fontSizeMode: card.compact ? Text.HorizontalFit : Text.FixedSize
+        minimumPixelSize: Design.Typography.caption - 3
     }
 
     Flow {
@@ -96,15 +102,15 @@ Rectangle {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
-        anchors.margins: 4
-        spacing: 4
+        anchors.margins: card.compact ? 2 : 4
+        spacing: card.compact ? 2 : 4
 
         Repeater {
             model: panel ? panel.cost_entries(0, card.construction_info.resource_costs || {}, false) : []
 
             delegate: Rectangle {
-                width: costRow.implicitWidth + 8
-                height: costRow.implicitHeight + 6
+                width: costRow.implicitWidth + (card.compact ? 4 : 8)
+                height: costRow.implicitHeight + (card.compact ? 2 : 6)
                 radius: 8
                 color: card.is_enabled ? "#cc2a1d12" : "#991f150d"
                 border.color: card.is_enabled ? hs.bronze : "#8C6A3E"
@@ -114,7 +120,7 @@ Rectangle {
                     id: costRow
 
                     anchors.centerIn: parent
-                    spacing: 3
+                    spacing: card.compact ? 1 : 3
 
                     Image {
                         width: Design.A11y.scaled(9)

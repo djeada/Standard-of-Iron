@@ -38,6 +38,7 @@
 #include "game/systems/ai_system/behaviors/defend_behavior.h"
 #include "game/systems/ai_system/behaviors/economy_behavior.h"
 #include "game/systems/ai_system/behaviors/expand_behavior.h"
+#include "game/systems/ai_system/behaviors/garrison_behavior.h"
 #include "game/systems/ai_system/behaviors/gather_behavior.h"
 #include "game/systems/ai_system/behaviors/gold_vein_behavior.h"
 #include "game/systems/ai_system/behaviors/harass_behavior.h"
@@ -2611,6 +2612,44 @@ TEST_F(AISystemTest, AGarrisonPostsItsArchersOnTheNearestWallWalkAndStopsThere) 
       << "a field army does not man a wall";
 }
 
+TEST_F(AISystemTest, WithNoEnemyInSightAGarrisonMansTheWallOverItsOuterGate) {
+  Game::Systems::AI::RampartBehavior behavior;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 100.0F;
+  // The hall stands at the back of the town, nearer the north wall than the
+  // south gate the assault has to come through.
+  auto archer = make_unit(1, 80.0F, 40.0F);
+  archer.spawn_type = Game::Units::SpawnType::Archer;
+  auto citadel_gate = make_unit(10, 80.0F, 47.0F);
+  citadel_gate.is_building = true;
+  citadel_gate.spawn_type = Game::Units::SpawnType::WallGate;
+  auto outer_gate = make_unit(11, 80.0F, 82.0F);
+  outer_gate.is_building = true;
+  outer_gate.spawn_type = Game::Units::SpawnType::WallGate;
+  snapshot.friendly_units = {archer, citadel_gate, outer_gate};
+  snapshot.wall_posts = {{80.0F, 21.0F}, {74.0F, 81.0F}};
+  snapshot.has_ward = true;
+  snapshot.ward_x = 80.0F;
+  snapshot.ward_z = 51.0F;
+  snapshot.ward_half_x = 44.0F;
+  snapshot.ward_half_z = 37.0F;
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.strategy_config.posture = Game::Systems::AI::AIPosture::Garrison;
+  context.has_base_anchor = true;
+  context.base_pos_x = 80.0F;
+  context.base_pos_z = 37.0F;
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 5.0F, commands);
+  ASSERT_EQ(commands.size(), 1U);
+  EXPECT_NEAR(commands.front().move_target_z.front(), 81.0F, 0.01F)
+      << "the archers manned the back wall, facing nobody";
+}
+
 TEST_F(AISystemTest, AGarrisonShunsAWallPostItsArchersCannotReach) {
   Game::Systems::AI::RampartBehavior behavior;
 
@@ -2679,6 +2718,154 @@ TEST_F(AISystemTest, AWalledGarrisonSoldierIsLeashedToItsWard) {
       << "the garrison came down the ramp to fight below the gate";
   EXPECT_FALSE(Game::Systems::Combat::within_guard_reach(soldier, 80.0F, 130.0F))
       << "the garrison chased a lone man down the ramp and onto the plain";
+}
+
+namespace {
+
+// A walled town 60 by 50 across, its ward box carrying the snapshot's apron.
+auto walled_town_snapshot() -> Game::Systems::AI::AISnapshot {
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.has_ward = true;
+  snapshot.ward_x = 80.0F;
+  snapshot.ward_z = 50.0F;
+  snapshot.ward_half_x = 30.0F + Game::Systems::AI::GarrisonBehavior::k_ward_apron;
+  snapshot.ward_half_z = 25.0F + Game::Systems::AI::GarrisonBehavior::k_ward_apron;
+  return snapshot;
+}
+
+auto garrison_context() -> Game::Systems::AI::AIContext {
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.strategy_config.posture = Game::Systems::AI::AIPosture::Garrison;
+  return context;
+}
+
+auto attacks_on(const std::vector<Game::Systems::AI::AICommand>& commands,
+                Engine::Core::EntityID target) -> std::vector<Engine::Core::EntityID> {
+  std::vector<Engine::Core::EntityID> units;
+  for (const auto& command : commands) {
+    if (command.type == Game::Systems::AI::AICommandType::AttackTarget &&
+        command.target_id == target) {
+      units.insert(units.end(), command.units.begin(), command.units.end());
+    }
+  }
+  return units;
+}
+
+} // namespace
+
+TEST_F(AISystemTest, ALoneRamUnderTheWallsDrawsASmallSallyNotTheWholeGarrison) {
+  auto snapshot = walled_town_snapshot();
+  for (Engine::Core::EntityID id = 1; id <= 6; ++id) {
+    snapshot.friendly_units.push_back(
+        make_unit(id, 60.0F + (6.0F * static_cast<float>(id)), 60.0F));
+  }
+  auto ram = make_enemy(50, 80.0F, 85.0F);
+  ram.spawn_type = Game::Units::SpawnType::Ram;
+  snapshot.visible_enemies.push_back(ram);
+  auto context = garrison_context();
+
+  Game::Systems::AI::GarrisonBehavior behavior;
+  ASSERT_TRUE(behavior.should_execute(snapshot, context));
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 1.1F, commands);
+
+  const auto party = attacks_on(commands, 50);
+  EXPECT_EQ(
+      party.size(),
+      static_cast<std::size_t>(Game::Systems::AI::GarrisonBehavior::k_sally_party));
+  for (const auto& command : commands) {
+    if (command.type == Game::Systems::AI::AICommandType::AttackTarget) {
+      EXPECT_TRUE(command.sally) << "the party is flagged so the leash lets it out";
+    }
+  }
+}
+
+TEST_F(AISystemTest, AnEscortedRamDrawsNoSally) {
+  auto snapshot = walled_town_snapshot();
+  for (Engine::Core::EntityID id = 1; id <= 6; ++id) {
+    snapshot.friendly_units.push_back(
+        make_unit(id, 60.0F + (6.0F * static_cast<float>(id)), 60.0F));
+  }
+  auto ram = make_enemy(50, 80.0F, 85.0F);
+  ram.spawn_type = Game::Units::SpawnType::Ram;
+  snapshot.visible_enemies = {
+      ram, make_enemy(51, 76.0F, 88.0F), make_enemy(52, 84.0F, 88.0F)};
+  auto context = garrison_context();
+
+  Game::Systems::AI::GarrisonBehavior behavior;
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 1.1F, commands);
+
+  EXPECT_TRUE(attacks_on(commands, 50).empty())
+      << "two companies walk beside the ram: going out is how a garrison is cut off";
+}
+
+TEST_F(AISystemTest, EveryGarrisonCompanyTurnsOnTheEnemyInsideTheWalls) {
+  auto snapshot = walled_town_snapshot();
+  for (Engine::Core::EntityID id = 1; id <= 6; ++id) {
+    snapshot.friendly_units.push_back(
+        make_unit(id, 60.0F + (6.0F * static_cast<float>(id)), 40.0F));
+  }
+  snapshot.visible_enemies.push_back(make_enemy(60, 80.0F, 70.0F));
+  auto context = garrison_context();
+
+  Game::Systems::AI::GarrisonBehavior behavior;
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 1.1F, commands);
+
+  EXPECT_EQ(attacks_on(commands, 60).size(), 6U)
+      << "no company waits at its post to be taken one at a time";
+}
+
+TEST_F(AISystemTest, AGarrisonCompanyDrawnFromItsPostIsSentBack) {
+  auto snapshot = walled_town_snapshot();
+  snapshot.friendly_units = {make_unit(1, 70.0F, 60.0F), make_unit(2, 90.0F, 60.0F)};
+  auto context = garrison_context();
+
+  Game::Systems::AI::GarrisonBehavior behavior;
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 1.1F, commands);
+  EXPECT_TRUE(commands.empty()) << "both companies stand on the posts they started at";
+
+  snapshot.friendly_units[0].pos_x = 75.0F;
+  snapshot.friendly_units[0].pos_z = 68.0F;
+  commands.clear();
+  behavior.execute(snapshot, context, 1.1F, commands);
+
+  ASSERT_EQ(commands.size(), 1U);
+  EXPECT_EQ(commands.front().type, Game::Systems::AI::AICommandType::MoveUnits);
+  ASSERT_EQ(commands.front().units.size(), 1U);
+  EXPECT_EQ(commands.front().units.front(), 1U);
+  EXPECT_FLOAT_EQ(commands.front().move_target_x.front(), 70.0F);
+  EXPECT_FLOAT_EQ(commands.front().move_target_z.front(), 60.0F);
+}
+
+TEST_F(AISystemTest, ASallyOrderSlipsTheLeashTheMomentItIsGiven) {
+  Engine::Core::World world;
+  auto* soldier = add_world_unit(world, 3, 80.0F, 60.0F, 20.0F, true);
+  auto* ram = add_world_unit(
+      world, 7, 80.0F, 95.0F, 10.0F, false, false, Game::Units::SpawnType::Ram);
+  ASSERT_NE(soldier, nullptr);
+  ASSERT_NE(ram, nullptr);
+  auto* controlled = soldier->get_component<Engine::Core::AIControlledComponent>();
+  controlled->leash_x = 80.0F;
+  controlled->leash_z = 50.0F;
+  controlled->leash_half_x = 30.0F;
+  controlled->leash_half_z = 25.0F;
+
+  Game::Systems::AI::AICommand sally;
+  sally.type = Game::Systems::AI::AICommandType::AttackTarget;
+  sally.units = {soldier->get_id()};
+  sally.target_id = ram->get_id();
+  sally.sally = true;
+  Game::Systems::AI::AICommandApplier::apply(world, 3, {sally});
+
+  EXPECT_TRUE(controlled->sallying);
+  EXPECT_TRUE(Game::Systems::Combat::within_guard_reach(soldier, 80.0F, 95.0F))
+      << "a leash still drawn round the walls until the next snapshot would drop "
+         "the engine as out of reach before the party ever left";
 }
 
 TEST_F(AISystemTest, SnapshotOffersTheWallWalkAndWardOfAWalledTown) {

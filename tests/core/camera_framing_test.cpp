@@ -232,7 +232,7 @@ TEST_F(CameraFramingTest, SiegeTownCanBeReachedFromCampWithoutRotating) {
       const QVector3D heading = camera.get_forward_vector();
 
       for (const QVector3D goal : {world_point(80, 82),
-                                   world_point(80, 50),
+                                   world_point(80, 38),
                                    world_point(80, 25),
                                    world_point(40, 50),
                                    world_point(120, 50)}) {
@@ -257,7 +257,7 @@ TEST_F(CameraFramingTest, SiegeTownCanBeReachedFromCampWithoutRotating) {
         const QVector3D eye = camera.get_position();
         EXPECT_GE(eye.y() - terrain.get_height_map()->get_height_at(eye.x(), eye.z()),
                   Render::GL::CameraDefaults::k_rts_terrain_clearance - 0.01F);
-        if (goal == world_point(80, 50)) {
+        if (goal == world_point(80, 38)) {
           const float height =
               terrain.get_height_map()->get_height_at(goal.x(), goal.z());
           ASSERT_GT(height, 5.0F) << "the route must reach the raised citadel";

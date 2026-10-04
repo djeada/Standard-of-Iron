@@ -7377,8 +7377,8 @@ by zobaczyć podgląd</translation>
         <translation>Victumulae</translation>
     </message>
     <message>
-        <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. A timber curtain with a tower at every corner rings the lower ward; the citadel stands on the upper crown behind its own wall, with the garrison hall inside it. One graded ramp climbs from the camp road to the south gate, and one narrow ramp climbs from the lower ward to the citadel gate. The relief columns come down the flank roads and never touch the hill.</source>
-        <translation>Obwarowane miasto targowe na równinie Insubrów, wzniesione na podwójnym wzgórzu ponad zimowymi polami. Drewniana kurtyna z wieżą w każdym narożniku opasuje dolny gród; cytadela stoi na górnym szczycie za własnym murem, a w jej wnętrzu mieści się sala garnizonu. Jedna wyrównana rampa wspina się od drogi obozowej do bramy południowej, a jedna wąska rampa wiedzie z dolnego grodu do bramy cytadeli. Kolumny odsieczy schodzą bocznymi drogami i nigdy nie dotykają wzgórza.</translation>
+        <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. A timber curtain with a tower at every corner rings the lower ward, where the temple and the market face each other across one street; the citadel stands on the upper crown at the back of the town behind its own wall, with the garrison hall inside it. One graded ramp climbs from the camp road to the south gate, and one short ramp climbs from the lower ward to the citadel gate. The relief columns come down the flank roads and never touch the hill.</source>
+        <translation>Obwarowane miasto targowe na równinie Insubrów, wzniesione na podwójnym wzgórzu ponad zimowymi polami. Drewniana kurtyna z wieżą w każdym narożniku opasuje dolny gród, w którym świątynia i targ stoją naprzeciw siebie po dwóch stronach jednej ulicy; cytadela stoi na górnym szczycie na tyłach miasta, za własnym murem, a w jej wnętrzu mieści się sala garnizonu. Jedna wyrównana rampa wspina się od drogi obozowej do bramy południowej, a jedna krótka rampa wiedzie z dolnego grodu do bramy cytadeli. Kolumny odsieczy schodzą bocznymi drogami i nigdy nie dotykają wzgórza.</translation>
     </message>
 </context>
 <context>
@@ -10192,20 +10192,8 @@ Opens for your troops and allies</source>
 Otwiera się przed twoimi oddziałami i sojusznikami</translation>
     </message>
     <message>
-        <source>%1s</source>
-        <translation>%1 s</translation>
-    </message>
-    <message>
         <source>Idle</source>
         <translation>Bezczynny</translation>
-    </message>
-    <message>
-        <source>BUILDER CONSTRUCTION</source>
-        <translation>BUDOWA</translation>
-    </message>
-    <message>
-        <source>Build siege weapons, structures, and gather wood, stone, iron, and food</source>
-        <translation>Buduj machiny oblężnicze i budowle oraz zbieraj drewno, kamień, żelazo i żywność</translation>
     </message>
     <message>
         <source>Select a structure to build</source>
@@ -10408,6 +10396,30 @@ Build time: %3s</source>
 %1
 Koszt: %2
 Czas budowy: %3 s</translation>
+    </message>
+    <message>
+        <source>%1 · %2s</source>
+        <translation>%1 · %2s</translation>
+    </message>
+    <message>
+        <source>Ram</source>
+        <translation>Taran</translation>
+    </message>
+    <message>
+        <source>Tower</source>
+        <translation>Wieża</translation>
+    </message>
+    <message>
+        <source>Wall</source>
+        <translation>Mur</translation>
+    </message>
+    <message>
+        <source>Gate</source>
+        <translation>Brama</translation>
+    </message>
+    <message>
+        <source>Market</source>
+        <translation>Targ</translation>
     </message>
 </context>
 <context>

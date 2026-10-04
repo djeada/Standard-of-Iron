@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "../core/ambient_session.h"
+#include "../core/component_combat.h"
 #include "../core/component_core.h"
 #include "../core/component_gameplay.h"
 #include "../core/component_presentation.h"
@@ -22,6 +23,7 @@
 #include "../units/spawn_type.h"
 #include "../util/planar_math.h"
 #include "core/wall_walk_geometry.h"
+#include "combat_system/combat_types.h"
 #include "movement/command_service.h"
 #include "navigation/wall_walk_path.h"
 #include "owner_registry.h"
@@ -750,6 +752,82 @@ void start_climbs(Engine::Core::World& world) {
   }
 }
 
+// A garrison authored on its wall starts on the planks: a walker asked for on
+// deck with no wall yet is set down on the stretch of its owner's wall nearest
+// it that no other troop holds, so a company and its clones spread along it.
+void seat_requested_troops(Engine::Core::World& world) {
+  constexpr float k_seat_spacing = 6.0F;
+  std::vector<EntityID> pending;
+  std::vector<WW::Point> held;
+  for (auto [id, walker] : world.view<WallWalkerComponent>()) {
+    if (walker.wall_id == 0 && walker.phase == Phase::OnDeck && walker.tower_id == 0) {
+      pending.push_back(id);
+    } else if (auto const* at = world.try_get<TransformComponent>(id)) {
+      held.push_back({at->position.x, at->position.z});
+    }
+  }
+  if (pending.empty()) {
+    return;
+  }
+  std::unordered_map<int, std::vector<WallNode>> networks;
+  for (EntityID const id : pending) {
+    auto* unit = world.try_get<UnitComponent>(id);
+    auto* transform = world.try_get<TransformComponent>(id);
+    auto* walker = world.try_get<WallWalkerComponent>(id);
+    if (unit == nullptr || transform == nullptr || walker == nullptr) {
+      world.remove<WallWalkerComponent>(id);
+      continue;
+    }
+    auto network = networks.find(unit->owner_id);
+    if (network == networks.end()) {
+      network = networks.emplace(unit->owner_id, gather_walls(world, unit->owner_id))
+                    .first;
+    }
+    auto const& nodes = network->second;
+    int pick = -1;
+    int fallback = -1;
+    float pick_d = std::numeric_limits<float>::max();
+    float fallback_d = std::numeric_limits<float>::max();
+    for (std::size_t i = 0; i < nodes.size(); ++i) {
+      auto const lane = nodes[i].lane();
+      float const d =
+          std::hypot(lane.x - transform->position.x, lane.z - transform->position.z);
+      if (d < fallback_d) {
+        fallback_d = d;
+        fallback = static_cast<int>(i);
+      }
+      bool const free = std::none_of(held.begin(), held.end(), [&](const WW::Point& p) {
+        return std::hypot(p.x - lane.x, p.z - lane.z) < k_seat_spacing;
+      });
+      if (free && d < pick_d) {
+        pick_d = d;
+        pick = static_cast<int>(i);
+      }
+    }
+    if (pick < 0) {
+      pick = fallback;
+    }
+    if (pick < 0) {
+      world.remove<WallWalkerComponent>(id);
+      continue;
+    }
+    auto const& node = nodes[static_cast<std::size_t>(pick)];
+    auto const lane = node.lane();
+    transform->position.x = lane.x;
+    transform->position.z = lane.z;
+    transform->rotation.y = along_wall_yaw(nodes, pick);
+    if (auto* movement = world.try_get<MovementComponent>(id)) {
+      movement->stop();
+    }
+    walker->wall_id = node.id;
+    walker->elevation = WW::k_deck_height;
+    walker->has_goal = false;
+    enter_wall(*unit, *walker);
+    publish_path(*walker, nodes, lane.x, lane.z, -1);
+    held.push_back(lane);
+  }
+}
+
 // When a tower's bridge first comes down its escort is called up; after that
 // any idle infantry that comes up behind it climbs it.
 void call_up_escorts(Engine::Core::World& world,
@@ -788,6 +866,135 @@ void call_up_escorts(Engine::Core::World& world,
   }
   for (EntityID const id : called) {
     begin_tower_approach(world, id, tower, 0.0F, 0.0F, false);
+  }
+}
+
+// Archers already on the wall walk the balcony towards the stretch the assault
+// is coming at, rather than watching an empty field from a corner. Only an
+// archer with nothing in reach moves, and only for a stretch clearly nearer
+// the enemy, so a company does not pace up and down between two.
+template <typename Troops>
+void shift_wall_archers_to_the_assault(Engine::Core::World& world,
+                                       const Troops& troops) {
+  constexpr float k_threat_reach = 30.0F;
+  constexpr float k_gain_to_move = 4.0F;
+  constexpr float k_post_spacing = 5.0F;
+  // Along its own run of wall only, and not far: a company does not march the
+  // balcony round a corner and down the far side of the town.
+  constexpr float k_shift_reach = 20.0F;
+  constexpr float k_outside = -0.6F;
+  auto const& services = Game::Session::services_for(world);
+
+  struct Aloft {
+    EntityID id{0};
+    int owner{0};
+    EntityID wall_id{0};
+    float x{0.0F};
+    float z{0.0F};
+    float reach{0.0F};
+  };
+  std::vector<Aloft> archers;
+  std::vector<WW::Point> held;
+  for (auto [id, unit, walker, transform] :
+       world.view<const UnitComponent,
+                  const WallWalkerComponent,
+                  const TransformComponent>()) {
+    if (unit.health <= 0 || !walker.aloft()) {
+      continue;
+    }
+    held.push_back({walker.has_goal ? walker.goal_x : transform.position.x,
+                    walker.has_goal ? walker.goal_z : transform.position.z});
+    auto const* attack = world.try_get<Engine::Core::AttackComponent>(id);
+    auto const* target = world.try_get<Engine::Core::AttackTargetComponent>(id);
+    if (unit.spawn_type != Game::Units::SpawnType::Archer || attack == nullptr ||
+        !world.has<Engine::Core::AIControlledComponent>(id) || !walker.watching ||
+        walker.has_goal || (target != nullptr && target->target_id != 0)) {
+      continue;
+    }
+    archers.push_back({id,
+                       unit.owner_id,
+                       walker.wall_id,
+                       transform.position.x,
+                       transform.position.z,
+                       attack->range * Combat::Constants::k_range_multiplier_wall_walk});
+  }
+  if (archers.empty()) {
+    return;
+  }
+
+  // Nearest enemy outside this stretch of wall (or anywhere, for no stretch).
+  auto nearest_hostile = [&](int owner, float x, float z, const WallNode* node) {
+    float best = std::numeric_limits<float>::max();
+    for (auto const& troop : troops) {
+      if (allied(services, troop.owner, owner)) {
+        continue;
+      }
+      if (node != nullptr &&
+          (troop.x - node->x) * static_cast<float>(node->inner_x) +
+                  (troop.z - node->z) * static_cast<float>(node->inner_z) >=
+              k_outside) {
+        continue;
+      }
+      best = std::min(best, std::hypot(troop.x - x, troop.z - z));
+    }
+    return best;
+  };
+
+  std::unordered_map<int, std::vector<WallNode>> networks;
+  for (auto const& archer : archers) {
+    if (nearest_hostile(archer.owner, archer.x, archer.z, nullptr) <= archer.reach) {
+      continue;
+    }
+    auto network = networks.find(archer.owner);
+    if (network == networks.end()) {
+      network =
+          networks.emplace(archer.owner, gather_walls(world, archer.owner)).first;
+    }
+    auto const& nodes = network->second;
+    int const here = index_of(nodes, archer.wall_id);
+    if (here < 0) {
+      continue;
+    }
+    auto const& here_node = nodes[static_cast<std::size_t>(here)];
+    float const here_threat =
+        nearest_hostile(archer.owner, archer.x, archer.z, &here_node);
+    if (here_threat > 4.0F * k_threat_reach) {
+      continue;
+    }
+    auto const hops = hop_distances(nodes, here);
+    int pick = -1;
+    float pick_threat = here_threat - k_gain_to_move;
+    for (std::size_t i = 0; i < nodes.size(); ++i) {
+      auto const& node = nodes[i];
+      bool const same_run = node.inner_x == here_node.inner_x &&
+                            node.inner_z == here_node.inner_z &&
+                            (here_node.inner_z != 0 ? std::abs(node.z - here_node.z)
+                                                    : std::abs(node.x - here_node.x)) <
+                                0.5F;
+      if (hops[i] < 0 || !same_run ||
+          std::hypot(node.x - here_node.x, node.z - here_node.z) > k_shift_reach) {
+        continue;
+      }
+      auto const lane = node.lane();
+      bool const taken = std::any_of(held.begin(), held.end(), [&](const WW::Point& p) {
+        return std::hypot(p.x - lane.x, p.z - lane.z) < k_post_spacing &&
+               std::hypot(p.x - archer.x, p.z - archer.z) > 0.5F;
+      });
+      if (taken) {
+        continue;
+      }
+      float const threat = nearest_hostile(archer.owner, lane.x, lane.z, &node);
+      if (threat < k_threat_reach && threat < pick_threat) {
+        pick_threat = threat;
+        pick = static_cast<int>(i);
+      }
+    }
+    if (pick < 0) {
+      continue;
+    }
+    auto const lane = nodes[static_cast<std::size_t>(pick)].lane();
+    held.push_back(lane);
+    CommandService::move_unit(world, archer.id, QVector3D(lane.x, 0.0F, lane.z));
   }
 }
 
@@ -883,6 +1090,7 @@ void man_threatened_walls(Engine::Core::World& world) {
       CommandService::move_unit(world, archer.id, QVector3D(lane.x, 0.0F, lane.z));
     }
   }
+  shift_wall_archers_to_the_assault(world, enemies_all);
 }
 
 } // namespace
@@ -1103,6 +1311,7 @@ void WallWalkSystem::update(Engine::Core::World* world, float delta_time) {
     m_garrison_timer = 0.0F;
     man_threatened_walls(*world);
   }
+  seat_requested_troops(*world);
   start_climbs(*world);
 
   std::unordered_map<int, std::vector<WallNode>> networks;
