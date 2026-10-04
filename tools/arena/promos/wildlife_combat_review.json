@@ -1,6 +1,7 @@
 {
   "id": "wildlife_combat_review",
   "title": "Wildlife combat contact review",
+  "end_card_steam": false,
   "width": 960,
   "height": 540,
   "fps": 30,

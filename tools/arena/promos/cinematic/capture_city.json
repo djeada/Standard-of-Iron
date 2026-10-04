@@ -15,6 +15,7 @@
   },
   "id": "cine_city",
   "title": "STANDARD OF IRON",
+  "end_card": "steam_demo",
   "shots": [
     {
       "name": "citadel_panorama",

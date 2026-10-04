@@ -1,7 +1,7 @@
 {
   "id": "rome_hill_drill",
   "title": "DRILL ON THE RIDGE",
-  "subtitle": "STANDARD OF IRON",
+  "end_card": "steam_demo",
   "width": 1920,
   "height": 1080,
   "fps": 60,

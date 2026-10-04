@@ -1,6 +1,7 @@
 {
   "id": "kingdom_rise",
   "title": "THE RISE OF A TOWN",
+  "end_card": "steam_demo",
   "width": 1920,
   "height": 1080,
   "fps": 30,

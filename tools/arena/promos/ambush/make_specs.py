@@ -202,6 +202,7 @@ def main():
         },
         "id": "ambush_preview" if preview else "cine_ambush",
         "title": "THE NIGHT ROAD",
+        "end_card": "steam_demo",
         "shots": SHOTS,
     }
     out = HERE / ("capture_ambush_preview.json" if preview else "capture_ambush.json")
