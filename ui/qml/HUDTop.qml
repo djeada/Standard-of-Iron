@@ -980,10 +980,23 @@ Item {
                     font.family: Design.Typography.family
                     font.pixelSize: Design.Typography.caption
                     font.weight: Design.Typography.medium
-                    style: Text.Outline
-                    styleColor: Design.Theme.backgroundDeep
                 }
             }
         }
+    }
+
+    Rectangle {
+        visible: fogLegend.visible
+        anchors.fill: fogLegend
+        anchors.leftMargin: -Design.Metrics.space8
+        anchors.rightMargin: -Design.Metrics.space4
+        anchors.topMargin: -Design.Metrics.space2
+        anchors.bottomMargin: -Design.Metrics.space2
+        z: 99
+        radius: Design.Metrics.radiusSmall
+        color: Design.Theme.panelIron
+        opacity: 0.86
+        border.width: Design.Metrics.borderThin
+        border.color: Design.Theme.borderSubtle
     }
 }

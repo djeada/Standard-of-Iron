@@ -77,8 +77,29 @@ ComboBox {
     }
 
     background: Rectangle {
-        color: control.interactive ? Design.Theme.panelIron : Design.Theme.surfaceDisabled
+        id: field
+
+        color: !control.interactive ? Design.Theme.surfaceDisabled : (control.hovered || control.popup.visible) ? Design.Theme.panelLeather : Design.Theme.panelIron
         radius: Design.Metrics.radiusSmall
+
+        gradient: Gradient {
+            GradientStop {
+                position: 0
+                color: Design.Theme.sheenTop(field.color)
+            }
+
+            GradientStop {
+                position: 1
+                color: Design.Theme.sheenBottom(field.color)
+            }
+        }
+
+        Behavior on color  {
+            ColorAnimation {
+                duration: Design.Motion.fast
+            }
+        }
+
         border.width: control.showFocusRing ? Design.Metrics.borderFocus : Design.Metrics.borderThin
         border.color: !control.interactive ? Design.Theme.borderSubtle : control.showFocusRing ? Design.Theme.focus : control.hovered ? Design.Theme.accent : Design.Theme.borderSubtle
 
@@ -120,6 +141,12 @@ ComboBox {
         background: Rectangle {
             color: entry.highlighted ? Design.Theme.panelLeather : Design.Theme.panelIron
 
+            Behavior on color  {
+                ColorAnimation {
+                    duration: Design.Motion.fast
+                }
+            }
+
             Rectangle {
                 anchors.left: parent.left
                 anchors.top: parent.top
@@ -150,6 +177,10 @@ ComboBox {
             radius: Design.Metrics.radiusSmall
             border.width: Design.Metrics.borderThin
             border.color: Design.Theme.borderStrong
+
+            Design.IronShadow {
+                cornerRadius: parent.radius
+            }
         }
 
         enter: Transition {

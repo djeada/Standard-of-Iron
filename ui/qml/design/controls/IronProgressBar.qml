@@ -19,7 +19,7 @@ ProgressBar {
     }
 
     background: Rectangle {
-        color: Design.Theme.panelIron
+        color: Design.Theme.backgroundDeep
         radius: height / 2
         border.width: Design.Metrics.borderThin
         border.color: Design.Theme.borderSubtle
@@ -30,7 +30,19 @@ ProgressBar {
             width: control.animatedPosition * parent.width
             height: parent.height
             radius: height / 2
-            color: control.fillColor
+            visible: width > 0
+
+            gradient: Gradient {
+                GradientStop {
+                    position: 0
+                    color: Design.Theme.sheenTop(control.fillColor)
+                }
+
+                GradientStop {
+                    position: 1
+                    color: Design.Theme.sheenBottom(control.fillColor)
+                }
+            }
         }
     }
 }

@@ -45,5 +45,11 @@ ItemDelegate {
         color: control.checked ? Design.Theme.selection : control.hovered ? Design.Theme.panelLeather : Design.Theme.panelIron
         border.width: control.activeFocus ? Design.Metrics.borderFocus : Design.Metrics.borderThin
         border.color: control.activeFocus ? Design.Theme.focus : Design.Theme.borderSubtle
+
+        Behavior on color  {
+            ColorAnimation {
+                duration: Design.Motion.fast
+            }
+        }
     }
 }

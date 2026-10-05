@@ -65,12 +65,46 @@ Button {
     }
 
     background: Rectangle {
-        color: !control.interactive ? Design.Theme.panelIron : control.down ? Qt.darker(Design.Theme.accent, 1.35) : control.hovered ? Design.Theme.panelLeather : control.primary ? Qt.darker(Design.Theme.accent, 1.65) : Design.Theme.panelIron
+        id: face
+
+        readonly property color primaryFill: Qt.darker(Design.Theme.accent, 1.65)
+
+        color: !control.interactive ? Design.Theme.panelIron : control.down ? Qt.darker(Design.Theme.accent, 1.35) : control.primary ? (control.hovered ? Qt.darker(Design.Theme.accent, 1.42) : face.primaryFill) : control.hovered ? Design.Theme.panelLeather : Design.Theme.panelIron
         radius: Design.Metrics.radiusSmall
         border.width: control.showFocusRing ? Design.Metrics.borderFocus : Design.Metrics.borderThin
         border.color: !control.interactive ? Design.Theme.borderSubtle : control.destructive ? Design.Theme.danger : control.showFocusRing ? Design.Theme.focus : control.hovered ? Design.Theme.accent : Design.Theme.borderStrong
 
+        gradient: Gradient {
+            GradientStop {
+                position: 0
+                color: control.down ? Design.Theme.sheenBottom(face.color) : Design.Theme.sheenTop(face.color)
+            }
+
+            GradientStop {
+                position: 1
+                color: control.down ? face.color : Design.Theme.sheenBottom(face.color)
+            }
+        }
+
+        Rectangle {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.leftMargin: face.radius + face.border.width
+            anchors.rightMargin: face.radius + face.border.width
+            anchors.topMargin: face.border.width
+            height: Design.Metrics.borderThin
+            color: Design.Theme.edgeHighlight
+            visible: control.interactive && !control.down
+        }
+
         Behavior on color  {
+            ColorAnimation {
+                duration: Design.Motion.fast
+            }
+        }
+
+        Behavior on border.color  {
             ColorAnimation {
                 duration: Design.Motion.fast
             }

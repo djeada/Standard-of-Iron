@@ -115,6 +115,29 @@ Item {
         border.width: 1
         opacity: 0.98
 
+        gradient: Gradient {
+            GradientStop {
+                position: 0
+                color: Design.Theme.sheenTop(container.color)
+            }
+
+            GradientStop {
+                position: 0.3
+                color: container.color
+            }
+
+            GradientStop {
+                position: 1
+                color: Design.Theme.sheenBottom(container.color)
+            }
+        }
+
+        Design.IronShadow {
+            cornerRadius: container.radius
+            spread: Design.Metrics.space24
+            lift: Design.Metrics.space8
+        }
+
         ColumnLayout {
             anchors.fill: parent
             anchors.margins: Theme.spacingXLarge

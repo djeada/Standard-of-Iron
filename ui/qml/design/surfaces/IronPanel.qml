@@ -9,6 +9,7 @@ Rectangle {
     property bool shieldsBackground: true
 
     property bool translucent: false
+    property bool castsShadow: true
     property int contentPadding: Design.Metrics.panelPadding
     default property alias content: contentHost.data
 
@@ -18,6 +19,28 @@ Rectangle {
     border.width: Design.Metrics.borderThin
     border.color: raised ? Design.Theme.borderStrong : Design.Theme.borderSubtle
     Accessible.name: accessibleName
+
+    gradient: Gradient {
+        GradientStop {
+            position: 0
+            color: Design.Theme.sheenTop(root.color)
+        }
+
+        GradientStop {
+            position: 0.35
+            color: root.color
+        }
+
+        GradientStop {
+            position: 1
+            color: Design.Theme.sheenBottom(root.color)
+        }
+    }
+
+    Design.IronShadow {
+        cornerRadius: root.radius
+        strength: root.castsShadow ? (root.raised ? 1 : 0.7) : 0
+    }
 
     Rectangle {
         anchors.left: parent.left

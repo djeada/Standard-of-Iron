@@ -51,6 +51,10 @@ ToolTip {
         radius: Design.Metrics.radiusSmall
         border.color: Design.Theme.borderStrong
         border.width: Design.Metrics.borderThin
+
+        Design.IronShadow {
+            cornerRadius: parent.radius
+        }
     }
 
     contentItem: Column {

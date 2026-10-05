@@ -24,5 +24,9 @@ ToolTip {
         color: Design.Theme.panelLeather
         radius: Design.Metrics.radiusSmall
         border.color: Design.Theme.borderStrong
+
+        Design.IronShadow {
+            cornerRadius: parent.radius
+        }
     }
 }

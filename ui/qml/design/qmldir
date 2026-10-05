@@ -16,6 +16,7 @@ ComponentGallery 1.0 ComponentGallery.qml
 GalleryWindow 1.0 GalleryWindow.qml
 
 IronPanel 1.0 surfaces/IronPanel.qml
+IronShadow 1.0 surfaces/IronShadow.qml
 
 IronButton 1.0 controls/IronButton.qml
 IronIconButton 1.0 controls/IronIconButton.qml

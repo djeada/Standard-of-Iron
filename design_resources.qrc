@@ -21,6 +21,7 @@
         <file alias="ComponentGallery.qml">ui/qml/design/ComponentGallery.qml</file>
         <file alias="GalleryWindow.qml">ui/qml/design/GalleryWindow.qml</file>
         <file alias="surfaces/IronPanel.qml">ui/qml/design/surfaces/IronPanel.qml</file>
+        <file alias="surfaces/IronShadow.qml">ui/qml/design/surfaces/IronShadow.qml</file>
         <file alias="controls/IronButton.qml">ui/qml/design/controls/IronButton.qml</file>
         <file alias="controls/IronIconButton.qml">ui/qml/design/controls/IronIconButton.qml</file>
         <file alias="controls/IronTabBar.qml">ui/qml/design/controls/IronTabBar.qml</file>
