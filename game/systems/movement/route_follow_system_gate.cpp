@@ -139,7 +139,9 @@ auto classify_movement_gate(const Engine::Core::Entity& entity) -> MovementGate 
     return MovementGate::Dead;
   }
 
-  if (entity.has_component<Engine::Core::RaftRiderComponent>()) {
+  if (auto const* registry = entity.registry();
+      registry != nullptr &&
+      registry->has<Engine::Core::RaftRiderComponent>(entity.get_id())) {
     return MovementGate::OnRaft;
   }
 

@@ -175,7 +175,9 @@ auto activity_for_builder_product(std::string_view product_type) -> ActivityKind
 }
 
 auto classify_unit_activity(const Engine::Core::Entity& entity) -> UnitActivity {
-  if (entity.has_component<Engine::Core::RaftRiderComponent>()) {
+  if (auto const* registry = entity.registry();
+      registry != nullptr &&
+      registry->has<Engine::Core::RaftRiderComponent>(entity.get_id())) {
     return {ActivityKind::Ferry, ActivityState::Locked, 0};
   }
 
