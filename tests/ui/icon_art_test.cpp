@@ -64,25 +64,11 @@ TEST(IconArtTest, EveryUnitActivityHasADrawing) {
 }
 
 TEST(IconArtTest, EveryHudOrderHasADrawing) {
-  for (const char* action : {"attack",
-                             "guard",
-                             "hold",
-                             "patrol",
-                             "divide",
-                             "join",
-                             "formation",
-                             "build",
-                             "repair",
-                             "heal",
-                             "collect",
-                             "auto_gather",
-                             "rally",
-                             "deliver",
-                             "aura",
-                             "gate",
-                             "roll_stones",
-                             "stop",
-                             "run"}) {
+  for (const char* action :
+       {"attack",  "guard",       "hold",       "patrol",  "divide",
+        "join",    "formation",   "build",      "repair",  "heal",
+        "collect", "auto_gather", "rally",      "deliver", "aura",
+        "gate",    "roll_stones", "cross_raft", "stop",    "run"}) {
     EXPECT_NE(Ui::IconArt::find(QString::fromLatin1(action)), nullptr)
         << "HUD order has no icon: " << action;
   }

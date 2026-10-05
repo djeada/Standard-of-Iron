@@ -11,6 +11,8 @@
 #include <optional>
 #include <vector>
 
+#include "../../core/ambient_session.h"
+#include "../../map/terrain_service.h"
 #include "../../util/planar_math.h"
 #include "../navigation/wall_walk_path.h"
 #include "combat_utils.h"
@@ -919,6 +921,43 @@ void pin_to_wall_walk(const EntityFrame& frame,
   }
 }
 
+void pin_to_raft(const EntityFrame& frame,
+                 const SlotContext& slot,
+                 Soldier& directive) {
+  auto const* rider = frame.raft_rider;
+
+  if (rider == nullptr || frame.actor == nullptr || !directive.alive) {
+    return;
+  }
+  directive.local_x = slot.anchor_local_x;
+  directive.local_z = slot.anchor_local_z;
+  QVector3D const deck =
+      local_to_world(*frame.actor, directive.local_x, directive.local_z);
+  float const step_time = std::max(0.0F, frame.delta_time);
+  auto const* previous = slot.previous;
+  bool const fresh = previous == nullptr || !previous->world_motion_valid;
+  directive.world_velocity_x =
+      !fresh && step_time > 0.0F ? (deck.x() - previous->world_x) / step_time : 0.0F;
+  directive.world_velocity_z =
+      !fresh && step_time > 0.0F ? (deck.z() - previous->world_z) / step_time : 0.0F;
+  directive.world_x = deck.x();
+  directive.world_z = deck.z();
+  directive.world_yaw = frame.actor->rotation.y + directive.local_yaw;
+  directive.world_motion_valid = true;
+  directive.climbing = false;
+  bool const stepping =
+      std::hypot(directive.world_velocity_x, directive.world_velocity_z) > 0.2F;
+  directive.gait = rider->afloat || !stepping
+                       ? Engine::Core::FormationSoldierGait::Idle
+                       : Engine::Core::FormationSoldierGait::Walk;
+  auto const* terrain = Game::Session::services_for(frame.world).terrain;
+  float const ground =
+      terrain != nullptr
+          ? terrain->resolve_surface_world_y(deck.x(), deck.z(), 0.0F, rider->deck_y)
+          : rider->deck_y;
+  directive.elevation = std::max(0.0F, rider->deck_y - ground);
+}
+
 auto build_slot_directive(const EntityFrame& frame,
                           SlotContext& slot,
                           const std::vector<Soldier>& previous_soldiers) -> Soldier {
@@ -946,6 +985,7 @@ auto build_slot_directive(const EntityFrame& frame,
   keep_directive_off_facade(frame, directive);
   walk_slot(frame, slot, previous_soldiers, directive);
   pin_to_wall_walk(frame, slot, previous_soldiers, directive);
+  pin_to_raft(frame, slot, directive);
   return directive;
 }
 

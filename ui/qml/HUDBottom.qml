@@ -525,6 +525,28 @@ RowLayout {
                 }
             }
         }, {
+            "id": "cross_raft",
+            "label": qsTr("Cross by Raft"),
+            "shortLabel": qsTr("Raft"),
+            "hint": qsTr("The selected troops line up at the river raft and are ferried to the far bank, one unit per trip."),
+            "details": [{
+                    "term": qsTr("Give it"),
+                    "text": qsTr("Bring troops near either bank of a raft crossing, then press Cross by Raft.")
+                }, {
+                    "term": qsTr("Scope"),
+                    "text": qsTr("The raft carries one unit at a time and comes back empty for the next in line.")
+                }, {
+                    "term": qsTr("Troops"),
+                    "text": qsTr("Men on the water cannot run or close ranks, so every hit lands harder.")
+                }],
+            "unavailable": qsTr("Move troops next to a river raft"),
+            "invoke": function () {
+                if (bottomRoot.game_ready() && game.orders.cross_raft) {
+                    game.orders.cross_raft();
+                    bottomRoot.update_action_states();
+                }
+            }
+        }, {
             "id": "aura",
             "label": qsTr("Aura"),
             "hint": qsTr("The commander empowers the troops around him for a while, then must recharge."),
@@ -538,7 +560,7 @@ RowLayout {
         }]
 
     readonly property var primaryCommandIds: ["attack", "guard", "patrol", "hold", "stop"]
-    readonly property var contextualCommandIds: ["build", "collect", "auto_gather", "repair", "dismantle", "divide", "join", "deliver", "rally", "aura", "gate", "roll_stones", "heal"]
+    readonly property var contextualCommandIds: ["build", "collect", "auto_gather", "repair", "dismantle", "divide", "join", "deliver", "rally", "aura", "gate", "roll_stones", "cross_raft", "heal"]
     readonly property var primaryCommands: bottomRoot.commands_for_ids(bottomRoot.primaryCommandIds)
 
     property var contextualCommands: []
@@ -663,18 +685,13 @@ RowLayout {
         onTriggered: bottomRoot.update_action_states()
     }
 
-    property int stones_ready: 0
+    Connections {
+        target: (typeof game !== "undefined" && game) ? game.orders : null
+        ignoreUnknownSignals: true
 
-    Timer {
-        interval: 250
-        repeat: true
-        running: bottomRoot.selection_count > 0 && bottomRoot.game_ready()
-        onTriggered: {
-            var ready = game.orders.stones_ready ? game.orders.stones_ready() : 0;
-            if (ready !== bottomRoot.stones_ready) {
-                bottomRoot.stones_ready = ready;
+        function onContext_actions_changed() {
+            if (bottomRoot.selection_count > 0 && bottomRoot.game_ready())
                 bottomRoot.update_action_states();
-            }
         }
     }
 

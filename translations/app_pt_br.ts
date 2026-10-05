@@ -203,6 +203,14 @@
         <source>Hauling a load to the barracks. New orders wait until the load is dropped off.</source>
         <translation>Levando uma carga ao quartel. Novas ordens esperam até a entrega da carga.</translation>
     </message>
+    <message>
+        <source>On the raft</source>
+        <translation>Na jangada</translation>
+    </message>
+    <message>
+        <source>Being ferried across the river. It takes no orders until it lands.</source>
+        <translation>Sendo levado pelo rio. Não recebe ordens até desembarcar.</translation>
+    </message>
 </context>
 <context>
     <name>AllyAppealPanel</name>
@@ -4839,6 +4847,34 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <source>Move troops next to stones your side holds</source>
         <translation>Mova tropas para perto de pedras que seu lado controla</translation>
     </message>
+    <message>
+        <source>Cross by Raft</source>
+        <translation>Atravessar de jangada</translation>
+    </message>
+    <message>
+        <source>Raft</source>
+        <translation>Jangada</translation>
+    </message>
+    <message>
+        <source>The selected troops line up at the river raft and are ferried to the far bank, one unit per trip.</source>
+        <translation>As tropas selecionadas fazem fila na jangada do rio e são levadas à outra margem, uma unidade por viagem.</translation>
+    </message>
+    <message>
+        <source>Bring troops near either bank of a raft crossing, then press Cross by Raft.</source>
+        <translation>Leve tropas para perto de qualquer margem de uma travessia de jangada e pressione Atravessar de jangada.</translation>
+    </message>
+    <message>
+        <source>The raft carries one unit at a time and comes back empty for the next in line.</source>
+        <translation>A jangada leva uma unidade por vez e volta vazia para a próxima da fila.</translation>
+    </message>
+    <message>
+        <source>Men on the water cannot run or close ranks, so every hit lands harder.</source>
+        <translation>Homens sobre a água não podem correr nem cerrar fileiras, então cada golpe acerta com mais força.</translation>
+    </message>
+    <message>
+        <source>Move troops next to a river raft</source>
+        <translation>Mova tropas para perto de uma jangada do rio</translation>
+    </message>
 </context>
 <context>
     <name>HUDBottomCommander</name>
@@ -8339,10 +8375,6 @@ para ver a prévia</translation>
         <translation>Atropele os comandantes assim que as travessias forem quebradas.</translation>
     </message>
     <message>
-        <source>Scipio inherits any crossing you leave behind.</source>
-        <translation>Cipião herda qualquer travessia que você deixar para trás.</translation>
-    </message>
-    <message>
         <source>Seize Masinissa&apos;s camp to finish the four.</source>
         <translation>Tome o acampamento de Masinissa para completar os quatro.</translation>
     </message>
@@ -8409,10 +8441,6 @@ para ver a prévia</translation>
     <message>
         <source>Take the river camp</source>
         <translation>Tomar o acampamento do rio</translation>
-    </message>
-    <message>
-        <source>Take the second camp on the southern supply road.</source>
-        <translation>Tome o segundo acampamento na estrada de suprimentos ao sul.</translation>
     </message>
     <message>
         <source>Take the shore camp</source>
@@ -9593,6 +9621,14 @@ para ver a prévia</translation>
     <message>
         <source>Winter 218 BC: after the victory on the Trebia, Hannibal attacked the depot near Placentia and then stormed Victumulae, a fortified market of the Insubrian plain where the people of the district had gathered for safety. Livy records that it fell to assault and was sacked. This altered history gives the town a Roman praefect, a citadel garrison and a relief force on the Placentia road.</source>
         <translation>Inverno de 218 a.C.: depois da vitória no Trébia, Aníbal atacou o depósito perto de Placência e depois tomou de assalto Victumulae, um mercado fortificado da planície ínsubre onde o povo da região havia se reunido em busca de segurança. Tito Lívio registra que ela caiu por assalto e foi saqueada. Esta história alterada dá à vila um prefeito romano, uma guarnição na cidadela e uma força de socorro na estrada de Placência.</translation>
+    </message>
+    <message>
+        <source>Ferry your companies over on the rafts, one at a time: one below the Gaulish landing, one further south, one across the eastern branch.</source>
+        <translation>Leve suas companhias nas jangadas, uma de cada vez: uma abaixo do desembarque gaulês, outra mais ao sul e outra no braço oriental.</translation>
+    </message>
+    <message>
+        <source>Take the second camp on the southern supply road. No bridge reaches its bank of the river.</source>
+        <translation>Tome o segundo acampamento na estrada de suprimentos do sul. Nenhuma ponte alcança a sua margem do rio.</translation>
     </message>
 </context>
 <context>

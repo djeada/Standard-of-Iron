@@ -30,6 +30,7 @@ public:
   auto on_guard_click(const PointerTarget& target) -> CommandResult;
   auto on_gate_command() -> CommandResult;
   auto on_roll_stones_command() -> CommandResult;
+  auto on_cross_raft_command() -> CommandResult;
   auto on_run_command() -> CommandResult;
   void enable_run_mode_for_selected();
   void disable_run_mode_for_selected();

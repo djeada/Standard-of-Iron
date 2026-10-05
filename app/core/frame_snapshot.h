@@ -60,8 +60,6 @@ struct PlacementReadout {
 struct OrdersReadout {
   QString command_mode = QStringLiteral("normal");
   bool has_commandable_selection = false;
-
-  int stones_ready = 0;
 };
 
 } // namespace App::Core

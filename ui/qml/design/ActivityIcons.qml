@@ -11,6 +11,12 @@ QtObject {
                 "hint": qsTr("Standing by and awaiting orders."),
                 "resource": ""
             },
+            "ferry": {
+                "icon": "cross_raft",
+                "label": qsTr("On the raft"),
+                "hint": qsTr("Being ferried across the river. It takes no orders until it lands."),
+                "resource": ""
+            },
             "move": {
                 "icon": "move",
                 "label": qsTr("Moving"),

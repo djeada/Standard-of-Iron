@@ -139,6 +139,12 @@ auto classify_movement_gate(const Engine::Core::Entity& entity) -> MovementGate 
     return MovementGate::Dead;
   }
 
+  if (auto const* registry = entity.registry();
+      registry != nullptr &&
+      registry->has<Engine::Core::RaftRiderComponent>(entity.get_id())) {
+    return MovementGate::OnRaft;
+  }
+
   auto const* commander = entity.get_component<Engine::Core::CommanderComponent>();
   if (commander != nullptr && (commander->jump_active || commander->fpv_controlled)) {
     return MovementGate::DirectControl;

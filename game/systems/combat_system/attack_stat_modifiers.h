@@ -2,7 +2,7 @@
 
 namespace Engine::Core {
 class Entity;
-struct UnitComponent;
+class UnitComponent;
 } // namespace Engine::Core
 
 namespace Game::Systems::Combat {

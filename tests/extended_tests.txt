@@ -81,6 +81,12 @@ HillNavigationTest.HillEntrancesNeverOpenWaterOrMountain
 HillNavigationTest.RoutesAcrossOneHilltopKeepToTheHighGround
 MapBridgeCoverageTest.RuntimeDecksAreLongerThanTheyAreWide
 PathfindingTest.CrossingRhoneAuthoredBridgeRoutesAcrossRiver
+# Loads every shipped map and raises terrain for each authored raft crossing;
+# measured 25.8 s in the pull-request Debug profile.
+RaftSystemTest.EveryRaftOnAShippedMapFindsItsRiver
+# Raises the shipped Rhone terrain and floods its navigation grid from both
+# camps to verify ferry-only access; measured 26.0 s in the same profile.
+RaftSystemTest.RhoneRiverTownCanOnlyBeReachedByRaft
 UndeadShrinePlacementTest.EveryShippedUndeadZoneCanPlaceItsShrine
 
 # campaign_tests

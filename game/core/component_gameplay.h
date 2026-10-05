@@ -869,4 +869,10 @@ public:
   float elapsed{0.0F};
 };
 
+class RaftRiderComponent {
+public:
+  float deck_y{0.0F};
+  bool afloat{false};
+};
+
 } // namespace Engine::Core

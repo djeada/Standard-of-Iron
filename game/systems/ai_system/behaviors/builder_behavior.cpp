@@ -144,7 +144,7 @@ auto BuilderBehavior::run_construction_cycle(const AISnapshot& snapshot,
                                              std::vector<AICommand>& out_commands)
     -> bool {
   const SettlementAssessment town = assess_settlement(snapshot, context);
-  const auto intents = gather_construction_intents(
+  auto intents = gather_construction_intents(
       snapshot, context, town, m_ledger.blocked_plan_slots(), m_construction_counter);
   IntentChoice choice =
       choose_construction_intent(snapshot, context, intents, m_ledger);
@@ -164,6 +164,7 @@ auto BuilderBehavior::run_construction_cycle(const AISnapshot& snapshot,
   for (int fallback = 0; fallback < k_unsited_fallbacks && choice.chosen != nullptr &&
                          site.building == nullptr;
        ++fallback) {
+    intents.erase(intents.begin() + (choice.chosen - intents.data()));
     choice = choose_construction_intent(snapshot, context, intents, m_ledger);
     site = resolve_site(snapshot, context, choice.chosen);
   }

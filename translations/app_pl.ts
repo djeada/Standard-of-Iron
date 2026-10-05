@@ -203,6 +203,14 @@
         <source>%1 (%2 units)</source>
         <translation>%1 (jednostki: %2)</translation>
     </message>
+    <message>
+        <source>On the raft</source>
+        <translation>Na tratwie</translation>
+    </message>
+    <message>
+        <source>Being ferried across the river. It takes no orders until it lands.</source>
+        <translation>Przeprawia się przez rzekę. Nie przyjmuje rozkazów, dopóki nie wyląduje.</translation>
+    </message>
 </context>
 <context>
     <name>AllyAppealPanel</name>
@@ -4840,6 +4848,34 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
         <source>Move troops next to stones your side holds</source>
         <translation>Przesuń oddziały obok kamieni twojej strony</translation>
     </message>
+    <message>
+        <source>Cross by Raft</source>
+        <translation>Przepraw się tratwą</translation>
+    </message>
+    <message>
+        <source>Raft</source>
+        <translation>Tratwa</translation>
+    </message>
+    <message>
+        <source>The selected troops line up at the river raft and are ferried to the far bank, one unit per trip.</source>
+        <translation>Wybrane oddziały ustawiają się przy tratwie i są przewożone na drugi brzeg, jeden oddział na kurs.</translation>
+    </message>
+    <message>
+        <source>Bring troops near either bank of a raft crossing, then press Cross by Raft.</source>
+        <translation>Doprowadź oddziały do któregoś brzegu przeprawy tratwą, a potem naciśnij Przepraw się tratwą.</translation>
+    </message>
+    <message>
+        <source>The raft carries one unit at a time and comes back empty for the next in line.</source>
+        <translation>Tratwa przewozi naraz jeden oddział i wraca pusta po następny w kolejce.</translation>
+    </message>
+    <message>
+        <source>Men on the water cannot run or close ranks, so every hit lands harder.</source>
+        <translation>Ludzie na wodzie nie mogą biec ani zwierać szyków, więc każdy cios trafia mocniej.</translation>
+    </message>
+    <message>
+        <source>Move troops next to a river raft</source>
+        <translation>Przesuń oddziały do tratwy na rzece</translation>
+    </message>
 </context>
 <context>
     <name>HUDBottomCommander</name>
@@ -8234,10 +8270,6 @@ by zobaczyć podgląd</translation>
         <translation>Scypion rozciąga linię. Trzymaj środek pewnie i nie daj słoniom zostać samym.</translation>
     </message>
     <message>
-        <source>Scipio inherits any crossing you leave behind.</source>
-        <translation>Scypion odziedziczy każdą przeprawę, którą zostawisz.</translation>
-    </message>
-    <message>
         <source>Seize Masinissa&apos;s camp to finish the four.</source>
         <translation>Zajmij obóz Masynissy, by dopełnić czwórkę.</translation>
     </message>
@@ -8344,10 +8376,6 @@ by zobaczyć podgląd</translation>
     <message>
         <source>Take the river camp</source>
         <translation>Zdobądź obóz nad rzeką</translation>
-    </message>
-    <message>
-        <source>Take the second camp on the southern supply road.</source>
-        <translation>Zdobądź drugi obóz przy południowej drodze zaopatrzeniowej.</translation>
     </message>
     <message>
         <source>Take the shore camp</source>
@@ -9596,6 +9624,14 @@ by zobaczyć podgląd</translation>
     <message>
         <source>Winter 218 BC: after the victory on the Trebia, Hannibal attacked the depot near Placentia and then stormed Victumulae, a fortified market of the Insubrian plain where the people of the district had gathered for safety. Livy records that it fell to assault and was sacked. This altered history gives the town a Roman praefect, a citadel garrison and a relief force on the Placentia road.</source>
         <translation>Zima 218 p.n.e.: po zwycięstwie nad Trebią Hannibal zaatakował skład pod Placentią, a potem zdobył szturmem Victumulae, warowny targ na równinie Insubrów, gdzie schronili się mieszkańcy okolicy. Liwiusz zapisuje, że miasto padło w szturmie i zostało złupione. Ta zmieniona historia daje miastu rzymskiego prefekta, załogę cytadeli i odsiecz na drodze do Placentii.</translation>
+    </message>
+    <message>
+        <source>Ferry your companies over on the rafts, one at a time: one below the Gaulish landing, one further south, one across the eastern branch.</source>
+        <translation>Przewieź swoje kompanie tratwami, jedną po drugiej: jedna poniżej galijskiej przystani, druga dalej na południe, trzecia przez wschodnie ramię.</translation>
+    </message>
+    <message>
+        <source>Take the second camp on the southern supply road. No bridge reaches its bank of the river.</source>
+        <translation>Zdobądź drugi obóz przy południowym szlaku zaopatrzenia. Żaden most nie sięga jego brzegu rzeki.</translation>
     </message>
 </context>
 <context>

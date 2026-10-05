@@ -137,6 +137,22 @@ auto validate_scenario(const ArenaScenarioDefinition& definition)
     }
   }
 
+  QSet<QString> raft_ids;
+  for (std::size_t i = 0; i < definition.rafts.size(); ++i) {
+    auto const& raft = definition.rafts[i];
+    QString const field = QStringLiteral("rafts[%1]").arg(i);
+    if (raft.id.trimmed().isEmpty()) {
+      errors.push_back({field, QStringLiteral("raft id is empty")});
+    } else if (raft_ids.contains(raft.id)) {
+      errors.push_back({field, QStringLiteral("duplicate raft '%1'").arg(raft.id)});
+    } else {
+      raft_ids.insert(raft.id);
+    }
+    if (definition.rivers.empty()) {
+      errors.push_back({field, QStringLiteral("a raft needs a river to float on")});
+    }
+  }
+
   for (std::size_t i = 0; i < definition.steps.size(); ++i) {
     auto const& step = definition.steps[i];
     QString const field = QStringLiteral("steps[%1]").arg(i);

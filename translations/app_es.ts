@@ -203,6 +203,14 @@
         <source>Hauling a load to the barracks. New orders wait until the load is dropped off.</source>
         <translation>Transporta una carga al cuartel. Las nuevas órdenes esperan hasta que la entregue.</translation>
     </message>
+    <message>
+        <source>On the raft</source>
+        <translation>En la balsa</translation>
+    </message>
+    <message>
+        <source>Being ferried across the river. It takes no orders until it lands.</source>
+        <translation>Cruzando el río en balsa. No acepta órdenes hasta desembarcar.</translation>
+    </message>
 </context>
 <context>
     <name>AllyAppealPanel</name>
@@ -4839,6 +4847,34 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <source>Move troops next to stones your side holds</source>
         <translation>Mueve tropas junto a piedras que controle tu bando</translation>
     </message>
+    <message>
+        <source>Cross by Raft</source>
+        <translation>Cruzar en balsa</translation>
+    </message>
+    <message>
+        <source>Raft</source>
+        <translation>Balsa</translation>
+    </message>
+    <message>
+        <source>The selected troops line up at the river raft and are ferried to the far bank, one unit per trip.</source>
+        <translation>Las tropas seleccionadas hacen fila en la balsa del río y son llevadas a la otra orilla, una unidad por viaje.</translation>
+    </message>
+    <message>
+        <source>Bring troops near either bank of a raft crossing, then press Cross by Raft.</source>
+        <translation>Lleva tropas cerca de cualquiera de las orillas de un paso en balsa y pulsa Cruzar en balsa.</translation>
+    </message>
+    <message>
+        <source>The raft carries one unit at a time and comes back empty for the next in line.</source>
+        <translation>La balsa lleva una unidad cada vez y vuelve vacía a por la siguiente de la fila.</translation>
+    </message>
+    <message>
+        <source>Men on the water cannot run or close ranks, so every hit lands harder.</source>
+        <translation>Los hombres sobre el agua no pueden correr ni cerrar filas, así que cada golpe hace más daño.</translation>
+    </message>
+    <message>
+        <source>Move troops next to a river raft</source>
+        <translation>Mueve tropas junto a una balsa del río</translation>
+    </message>
 </context>
 <context>
     <name>HUDBottomCommander</name>
@@ -8339,10 +8375,6 @@ para ver la vista previa</translation>
         <translation>Arrolla a los comandantes en cuanto se rompan los cruces.</translation>
     </message>
     <message>
-        <source>Scipio inherits any crossing you leave behind.</source>
-        <translation>Escipión hereda cualquier cruce que dejes atrás.</translation>
-    </message>
-    <message>
         <source>Seize Masinissa&apos;s camp to finish the four.</source>
         <translation>Toma el campamento de Masinisa para completar los cuatro.</translation>
     </message>
@@ -8409,10 +8441,6 @@ para ver la vista previa</translation>
     <message>
         <source>Take the river camp</source>
         <translation>Tomar el campamento del río</translation>
-    </message>
-    <message>
-        <source>Take the second camp on the southern supply road.</source>
-        <translation>Toma el segundo campamento en la ruta de suministro del sur.</translation>
     </message>
     <message>
         <source>Take the shore camp</source>
@@ -9593,6 +9621,14 @@ para ver la vista previa</translation>
     <message>
         <source>Winter 218 BC: after the victory on the Trebia, Hannibal attacked the depot near Placentia and then stormed Victumulae, a fortified market of the Insubrian plain where the people of the district had gathered for safety. Livy records that it fell to assault and was sacked. This altered history gives the town a Roman praefect, a citadel garrison and a relief force on the Placentia road.</source>
         <translation>Invierno del 218 a. C.: tras la victoria del Trebia, Aníbal atacó el depósito cercano a Placencia y luego asaltó Victumulae, un mercado fortificado de la llanura ínsubre donde la gente de la comarca se había refugiado. Livio cuenta que cayó al asalto y fue saqueada. Esta historia alterada da a la villa un prefecto romano, una guarnición en la ciudadela y una fuerza de socorro en el camino de Placencia.</translation>
+    </message>
+    <message>
+        <source>Ferry your companies over on the rafts, one at a time: one below the Gaulish landing, one further south, one across the eastern branch.</source>
+        <translation>Lleva a tus compañías en las balsas, una cada vez: una bajo el embarcadero galo, otra más al sur y otra a través del brazo oriental.</translation>
+    </message>
+    <message>
+        <source>Take the second camp on the southern supply road. No bridge reaches its bank of the river.</source>
+        <translation>Toma el segundo campamento en la ruta de suministro del sur. Ningún puente llega a su orilla del río.</translation>
     </message>
 </context>
 <context>

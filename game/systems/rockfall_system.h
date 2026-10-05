@@ -178,8 +178,10 @@ private:
               float speed);
   void add_dust(const QVector3D& position, float scale);
   void publish_render_views(Engine::Core::World& world) const;
+  void track_reach(Engine::Core::World& world);
 
   Services m_services;
+  std::vector<std::uint64_t> m_reach_signature;
   std::vector<RuntimeTrap> m_traps;
   std::vector<Boulder> m_boulders;
   std::vector<Dust> m_dust;

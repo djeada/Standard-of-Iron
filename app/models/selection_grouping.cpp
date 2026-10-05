@@ -34,6 +34,7 @@ auto activity_rank(const QString& activity) -> int {
                                     QLatin1String("guard"),
                                     QLatin1String("hold"),
                                     QLatin1String("patrol"),
+                                    QLatin1String("ferry"),
                                     QLatin1String("move"),
                                     QLatin1String("idle")});
   for (std::size_t index = 0; index < k_order.size(); ++index) {

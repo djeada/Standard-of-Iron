@@ -428,7 +428,7 @@ auto sword_archetype(const SwordRenderConfig& config) -> const RenderArchetype& 
                            1.0F,
                            config.material_id);
   if (config.has_hooked_pommel) {
-    // An open, forward-turning hilt gives the falcata a distinct silhouette.
+
     QVector3D const heel(0.0F, pommel_y, 0.0F);
     QVector3D const hook(-config.pommel_radius * 1.8F, pommel_y + 0.018F, 0.0F);
     QVector3D const beak(-config.pommel_radius * 1.5F, pommel_y + 0.068F, 0.0F);

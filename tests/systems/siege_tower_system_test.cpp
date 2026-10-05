@@ -87,11 +87,13 @@ protected:
   }
 
   static auto find_walker(World& world) -> Entity* {
-    for (auto [id, walker] : world.view<WallWalkerComponent>()) {
-      (void)walker;
-      return world.get_entity(id);
+    auto walkers = world.view<WallWalkerComponent>();
+    if (walkers.begin() == walkers.end()) {
+      return nullptr;
     }
-    return nullptr;
+    auto [id, walker] = *walkers.begin();
+    (void)walker;
+    return world.get_entity(id);
   }
 
   std::shared_ptr<Game::Units::UnitFactoryRegistry> m_factory;

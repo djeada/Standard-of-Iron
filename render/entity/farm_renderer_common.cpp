@@ -29,18 +29,6 @@ auto lerp(const QVector3D& a, const QVector3D& b, float t) -> QVector3D {
   return a + (b - a) * std::clamp(t, 0.0F, 1.0F);
 }
 
-auto state_index(BuildingState state) -> std::size_t {
-  switch (state) {
-  case BuildingState::Normal:
-    return 0;
-  case BuildingState::Damaged:
-    return 1;
-  case BuildingState::Destroyed:
-    return 2;
-  }
-  return 0;
-}
-
 struct StalkLook {
   float height{0.0F};
   float radius{0.0F};

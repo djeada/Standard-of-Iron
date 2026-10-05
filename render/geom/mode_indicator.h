@@ -17,7 +17,7 @@ using IndicatorKind = Game::Systems::ActivityKind;
 using IndicatorState = Game::Systems::ActivityState;
 
 inline constexpr std::size_t k_indicator_kind_count =
-    static_cast<std::size_t>(IndicatorKind::Blocked) + 1U;
+    static_cast<std::size_t>(IndicatorKind::Ferry) + 1U;
 
 constexpr float k_indicator_height_base = 2.05F;
 

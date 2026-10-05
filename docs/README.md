@@ -28,6 +28,7 @@ boundaries between `game/`, `render/`, `app/`, `ui/`, `tools/` and `tests/`.
 - [CAMPAIGN_MISSIONS.md](CAMPAIGN_MISSIONS.md) — campaign mission roster
 - [IRON_SEPULCHER.md](IRON_SEPULCHER.md), [CURSED_GOLD_VEIN.md](CURSED_GOLD_VEIN.md),
   [ROCKFALL.md](ROCKFALL.md) — individual mission write-ups
+- [RAFTS.md](RAFTS.md) — river rafts: placement rules and ferrying
 - [AMBIENT_WILDLIFE.md](AMBIENT_WILDLIFE.md), [farm_activity.md](farm_activity.md),
   [home_activity.md](home_activity.md) — ambient life
 - [siege_presentation.md](siege_presentation.md) — siege engine presentation

@@ -393,7 +393,7 @@ TEST(SessionDigestTest, EveryBuiltInSnapshotContributorIsHashed) {
   Game::Session::register_built_in_snapshot_contributors();
   const auto hashed = Game::Session::SessionSnapshot::digest_keys();
   for (const char* key :
-       {"undead_zones", "cursed_gold_veins", "rockfall", "wildlife"}) {
+       {"undead_zones", "cursed_gold_veins", "rockfall", "rafts", "wildlife"}) {
     EXPECT_NE(std::find(hashed.begin(), hashed.end(), std::string(key)), hashed.end())
         << key << " is saved but not covered by the replay digest";
   }

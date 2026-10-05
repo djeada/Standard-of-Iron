@@ -97,6 +97,8 @@ auto command_name(ScenarioCommandKind kind) -> QString {
     return QStringLiteral("TriggerRockfall");
   case ScenarioCommandKind::RollStones:
     return QStringLiteral("RollStones");
+  case ScenarioCommandKind::CrossByRaft:
+    return QStringLiteral("CrossByRaft");
   }
   return QStringLiteral("Unknown");
 }
@@ -1174,6 +1176,18 @@ void ArenaScenarioRunner::Impl::execute_step(std::size_t index,
       add_issue(
           QStringLiteral("roll_stones_failed"),
           QStringLiteral("%1 stands beside no stone cache it holds").arg(step.group));
+    }
+    break;
+  }
+  case ScenarioCommandKind::CrossByRaft: {
+    auto* rafts = world.get_system<Game::Systems::RaftSystem>();
+    bool queued = false;
+    for (auto const id : ids(step.group)) {
+      queued = (rafts != nullptr && rafts->order_crossing(world, id)) || queued;
+    }
+    if (!queued) {
+      add_issue(QStringLiteral("raft_order_failed"),
+                QStringLiteral("%1 stands near no raft landing").arg(step.group));
     }
     break;
   }

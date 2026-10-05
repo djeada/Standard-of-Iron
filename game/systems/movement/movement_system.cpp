@@ -156,7 +156,8 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
   }
   auto const* wall_walker = world->try_get<Engine::Core::WallWalkerComponent>(id);
   if (!movement->get_escape_active() &&
-      (wall_walker == nullptr || !wall_walker->aloft())) {
+      (wall_walker == nullptr || !wall_walker->aloft()) &&
+      !world->has<Engine::Core::RaftRiderComponent>(id)) {
     MovementCollision::unstick_body(*entity, *transform, delta_time);
   }
 
@@ -174,6 +175,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     Gates::step_builder_bypass(mover);
     return;
   case MovementGate::OnWall:
+  case MovementGate::OnRaft:
     return;
   default:
     Motor::drive(mover);
@@ -192,6 +194,7 @@ auto MovementSystem::access() const -> Engine::Core::SystemAccess {
                                      RpgCommanderActionComponent,
                                      BuilderProductionComponent,
                                      WallWalkerComponent,
+                                     RaftRiderComponent,
                                      RenderableComponent,
                                      PendingRemovalComponent>{},
                                Writes<MovementComponent,

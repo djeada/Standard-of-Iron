@@ -69,5 +69,6 @@ void apply_ally_appeal_answer(Engine::Core::World& world,
                               int owner_id,
                               const AllyAppealAnswer& answer);
 void apply_roll_stones(Engine::Core::World& world, const RollStones& order);
+void apply_cross_by_raft(Engine::Core::World& world, const CrossByRaft& order);
 
 } // namespace Game::Command::handlers

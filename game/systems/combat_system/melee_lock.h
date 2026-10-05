@@ -7,8 +7,8 @@
 namespace Engine::Core {
 class World;
 class Entity;
-struct AttackComponent;
-struct TransformComponent;
+class AttackComponent;
+class TransformComponent;
 } // namespace Engine::Core
 
 namespace Game::Systems::Combat {

@@ -256,6 +256,7 @@ void publish_entity(Engine::Core::World& world,
 
   frame.reform = world.try_get<Engine::Core::SquadReformComponent>(id);
   frame.wall_walker = world.try_get<Engine::Core::WallWalkerComponent>(id);
+  frame.raft_rider = world.try_get<Engine::Core::RaftRiderComponent>(id);
   advance_squad_reform(frame.reform, frame.actor, delta_time);
   frame.squad_speed = squad_speed_of(world, id);
   frame.passability = passability_of(world, id);

@@ -5,10 +5,12 @@
 #include <QString>
 #include <QVariantMap>
 
+#include <atomic>
 #include <chrono>
 #include <cstdint>
 
 #include "app/core/frame_snapshot.h"
+#include "game/core/event_manager.h"
 
 namespace App::Core {
 struct ClientContext;
@@ -59,6 +61,7 @@ public:
   Q_INVOKABLE void hold();
   Q_INVOKABLE void gate();
   Q_INVOKABLE void roll_stones();
+  Q_INVOKABLE void cross_raft();
   Q_INVOKABLE void guard();
   Q_INVOKABLE void run();
   Q_INVOKABLE void heal();
@@ -66,7 +69,6 @@ public:
 
   Q_INVOKABLE [[nodiscard]] QVariantMap action_states() const;
   Q_INVOKABLE [[nodiscard]] QString command_mode() const;
-  Q_INVOKABLE [[nodiscard]] int stones_ready() const;
   Q_INVOKABLE [[nodiscard]] QString toggle_state(const QString& mode) const;
   Q_INVOKABLE [[nodiscard]] QVariantMap mode_availability() const;
   Q_INVOKABLE [[nodiscard]] bool has_commandable_selection() const;
@@ -79,6 +81,8 @@ public:
 
 signals:
   void context_intent_changed();
+
+  void context_actions_changed();
 
 public:
   void reset_gesture() { m_right_mouse.reset(); }
@@ -96,6 +100,10 @@ private:
   [[nodiscard]] auto action_enabled(const QString& action_id) const -> bool;
 
   App::Core::Published<App::Core::OrdersReadout> m_readout;
+  Engine::Core::ScopedEventSubscription<Engine::Core::ContextActionsChangedEvent>
+      m_context_actions_subscription;
+  std::atomic<bool> m_context_actions_pending{false};
+  mutable std::atomic<bool> m_action_states_stale{false};
 
   struct RightMouseGesture {
     QPointF press_position;

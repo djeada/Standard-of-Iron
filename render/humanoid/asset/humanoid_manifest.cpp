@@ -2384,7 +2384,7 @@ void bake_humanoid_clip_frame(BakeProfile profile,
       break;
     case BakerAttackType::Sling:
     case BakerAttackType::Javelin: {
-      // Both releases coincide with the RTS missile event at phase 0.46.
+
       bool const sling = clip.attack_type == BakerAttackType::Sling;
       float const windup = std::clamp(phase / 0.36F, 0.0F, 1.0F);
       float const release = std::clamp((phase - 0.36F) / 0.10F, 0.0F, 1.0F);

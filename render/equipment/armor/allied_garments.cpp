@@ -97,10 +97,6 @@ enum TunicSlot : std::uint8_t {
   k_ornament_slot = 3U,
 };
 
-// The tunic is fitted exactly like armor_light_carthage: the humanoid torso mesh
-// placed between the bind torso top and the waist, in torso-local space, so it
-// sits over the body the way every nation's body armour does. It ends at the
-// waist like those armours; the body's ClothDark thighs are the tunic skirt.
 struct TunicFit {
   TorsoLocalFrame local;
   QVector3D up;
@@ -204,10 +200,8 @@ void add_belt(RenderArchetypeBuilder& builder, const TunicFit& f, float half_hei
       1);
 }
 
-// Clip the fitted torso triangles into woven bands. Reusing its actual surface
-// keeps the stripes flush across the chest, shoulders and back.
 auto woven_bands_mesh() -> Mesh* {
-  // Resolve the source before entering the geometry cache's builder lock.
+
   Mesh const* source = torso_mesh();
   return SharedGeometryCache::instance().get_or_build(
       geometry_key("equipment/garments/gallic_woven_bands"), [source] {
@@ -271,7 +265,6 @@ auto woven_bands_mesh() -> Mesh* {
       });
 }
 
-// Ochre wool with dark woven bands, a leather belt and a bronze neck torc.
 auto gallic_tunic_archetype() -> const RenderArchetype& {
   static const RenderArchetype archetype = [] {
     TunicFit const& f = tunic_fit();
@@ -288,7 +281,6 @@ auto gallic_tunic_archetype() -> const RenderArchetype& {
         1);
     add_belt(builder, f, 0.020F);
 
-    // An open torc follows the neck; rounded terminals face forward.
     QVector3D const neck = f.local.point(f.top + f.up * 0.025F);
     constexpr int k_torc_segments = 12;
     constexpr float k_gap = 0.48F;
@@ -326,9 +318,6 @@ auto gallic_tunic_archetype() -> const RenderArchetype& {
   return archetype;
 }
 
-// An Iberian linen tunic: white, bordered in crimson at the neck, and held by the
-// broad belt with the bronze plaque that Iberian graves are full of. The crimson
-// hem rides on the thighs (see iberian_hem_band_make_static_attachment).
 auto iberian_tunic_archetype() -> const RenderArchetype& {
   static const RenderArchetype archetype = [] {
     TunicFit const& f = tunic_fit();
@@ -350,7 +339,7 @@ auto iberian_tunic_archetype() -> const RenderArchetype& {
     plaque.scale(0.047F, 0.024F, 0.010F);
     builder.add_palette_mesh(
         get_unit_cube(), plaque, k_ornament_slot, nullptr, 1.0F, 3);
-    // Dark inset and bronze studs make the broad belt readable at game scale.
+
     QVector3D const plaque_centre = plaque.column(3).toVector3D();
     builder.add_palette_box(plaque_centre + QVector3D(0.0F, 0.0F, 0.010F),
                             QVector3D(0.031F, 0.014F, 0.002F),
@@ -369,8 +358,6 @@ auto iberian_tunic_archetype() -> const RenderArchetype& {
   return archetype;
 }
 
-// The tunic's crimson border, worn where the body's thigh "skirt" ends. It is
-// authored in bind space and rides the hip bone, like greaves ride the knee.
 auto hem_band_archetype(bool left) -> RenderArchetype {
   HumanoidBone const hip = left ? HumanoidBone::HipL : HumanoidBone::HipR;
   HumanoidBone const knee = left ? HumanoidBone::KneeL : HumanoidBone::KneeR;

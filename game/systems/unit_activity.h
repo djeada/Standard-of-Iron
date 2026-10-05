@@ -32,6 +32,7 @@ enum class ActivityKind : std::uint8_t {
   Heal,
   Train,
   Blocked,
+  Ferry,
 };
 
 enum class ActivityState : std::uint8_t {

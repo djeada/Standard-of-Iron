@@ -65,6 +65,7 @@ public:
   void on_hold_command();
   void on_gate_command();
   void on_roll_stones_command();
+  void on_cross_raft_command();
   void on_guard_command();
   void on_formation_command();
   void on_auto_gather_command(const QString& priority_product_type = {});

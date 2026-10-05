@@ -37,7 +37,4 @@ struct ActionContext {
     const QString& action_id) -> std::vector<Engine::Core::EntityID>;
 [[nodiscard]] auto action_id_for_cursor_mode(CursorMode mode) -> QString;
 
-[[nodiscard]] auto
-count_selected_ready_to_roll_stones(Engine::Core::World* world) -> int;
-
 } // namespace App::Core

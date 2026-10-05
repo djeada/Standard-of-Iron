@@ -6,7 +6,7 @@
 
 namespace Engine::Core {
 class Entity;
-struct TransformComponent;
+class TransformComponent;
 } // namespace Engine::Core
 
 namespace Game::Systems::Combat {

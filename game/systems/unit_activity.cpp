@@ -7,6 +7,7 @@
 #include "builder_product_types.h"
 #include "game/core/component_core.h"
 #include "game/core/component_economy.h"
+#include "game/core/component_gameplay.h"
 #include "game/core/component_structures.h"
 #include "game/core/entity.h"
 #include "game/core/movement_facts.h"
@@ -52,6 +53,7 @@ constexpr std::array k_kind_names = std::to_array<KindName>({
     {ActivityKind::Heal, "heal"},
     {ActivityKind::Train, "train"},
     {ActivityKind::Blocked, "blocked"},
+    {ActivityKind::Ferry, "ferry"},
 });
 
 struct StateName {
@@ -173,6 +175,12 @@ auto activity_for_builder_product(std::string_view product_type) -> ActivityKind
 }
 
 auto classify_unit_activity(const Engine::Core::Entity& entity) -> UnitActivity {
+  if (auto const* registry = entity.registry();
+      registry != nullptr &&
+      registry->has<Engine::Core::RaftRiderComponent>(entity.get_id())) {
+    return {ActivityKind::Ferry, ActivityState::Locked, 0};
+  }
+
   if (const auto* builder =
           entity.get_component<Engine::Core::BuilderProductionComponent>()) {
     if (auto activity = builder_activity(entity, *builder); activity.has_value()) {

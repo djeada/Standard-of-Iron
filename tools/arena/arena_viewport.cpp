@@ -77,6 +77,7 @@
 #include "game/systems/owner_registry.h"
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/projectile_system.h"
+#include "game/systems/raft_system.h"
 #include "game/systems/rockfall_system.h"
 #include "game/systems/run_stamina.h"
 #include "game/systems/target_focus.h"
@@ -732,6 +733,7 @@ void ArenaViewport::paintGL() {
           m_renderer.get(), res, m_world->render_effects_frame(), &view);
       Render::GL::render_rockfall(
           m_renderer.get(), m_world->render_effects_frame(), &view);
+      Render::GL::render_rafts(m_renderer.get(), m_world->render_effects_frame());
     }
     {
       const auto& beams = m_world->render_effects_frame().healing_beams;
@@ -2832,6 +2834,24 @@ void ArenaViewport::configure_scenario_undead_zones(
   }
 }
 
+void ArenaViewport::configure_scenario_rafts(
+    const Arena::ArenaScenarioDefinition& definition) {
+  if (m_world == nullptr) {
+    return;
+  }
+  auto* rafts = m_world->get_system<Game::Systems::RaftSystem>();
+  if (rafts == nullptr) {
+    return;
+  }
+  Game::Map::MapDefinition map_definition;
+  map_definition.coordSystem = Game::Map::CoordSystem::World;
+  map_definition.grid.width = m_terrain_grid_extent;
+  map_definition.grid.height = m_terrain_grid_extent;
+  map_definition.grid.tile_size = k_terrain_tile_size;
+  map_definition.rafts = definition.rafts;
+  rafts->configure(map_definition);
+}
+
 void ArenaViewport::configure_scenario_rockfall_traps(
     const Arena::ArenaScenarioDefinition& definition,
     const QVector3D& scenario_origin) {
@@ -4726,6 +4746,7 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
       m_force_animation_diagnostics);
 
   configure_scenario_rockfall_traps(*definition, scenario_origin);
+  configure_scenario_rafts(*definition);
   if (!m_scenario_runner->start()) {
     qWarning().noquote() << QStringLiteral(
                                 "Arena scenario '%1' failed validation or startup")

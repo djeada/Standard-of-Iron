@@ -53,6 +53,7 @@ constexpr std::array<KindStyle, k_indicator_kind_count> k_kind_styles = {{
     {IndicatorKind::Heal, {0.72F, 1.00F, 0.72F}, true},
     {IndicatorKind::Train, {0.80F, 0.58F, 1.00F}, true},
     {IndicatorKind::Blocked, {1.00F, 0.36F, 0.12F}, true},
+    {IndicatorKind::Ferry, {0.36F, 0.70F, 0.86F}, true},
 }};
 
 [[nodiscard]] auto style_for(IndicatorKind kind) noexcept -> const KindStyle& {
@@ -315,6 +316,23 @@ void build_auto_gather(GlyphBuilder& builder) {
   builder.end_glyph(k_glyph_extrusion);
 }
 
+void build_ferry(GlyphBuilder& builder) {
+  const std::array<QVector2D, 5> wave = {{
+      {-0.36F, -0.28F},
+      {-0.18F, -0.20F},
+      {0.00F, -0.28F},
+      {0.18F, -0.20F},
+      {0.36F, -0.28F},
+  }};
+  builder.begin_glyph();
+  builder.rect({0.00F, 0.02F}, {0.34F, 0.075F});
+  builder.bar({-0.22F, 0.12F}, {-0.22F, -0.08F}, 0.070F);
+  builder.bar({0.22F, 0.12F}, {0.22F, -0.08F}, 0.070F);
+  builder.bar({0.00F, 0.40F}, {0.00F, 0.09F}, 0.070F);
+  builder.polyline(wave, 0.090F);
+  builder.end_glyph(k_glyph_extrusion);
+}
+
 void build_deliver(GlyphBuilder& builder) {
   const std::array<QVector2D, 4> crate = {{
       {-0.28F, -0.34F},
@@ -501,6 +519,9 @@ auto build_indicator_glyph(IndicatorKind kind) -> GlyphBuilder {
     break;
   case IndicatorKind::Blocked:
     build_blocked(builder);
+    break;
+  case IndicatorKind::Ferry:
+    build_ferry(builder);
     break;
   }
 
