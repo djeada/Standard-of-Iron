@@ -10,6 +10,17 @@ Rectangle {
     color: Design.Theme.backgroundDeep
     radius: Design.Metrics.radiusSmall
     border.color: Design.Theme.borderSubtle
+
+    Rectangle {
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.leftMargin: root.radius
+        anchors.rightMargin: root.radius
+        height: Design.Metrics.borderThin
+        color: Design.Theme.borderStrong
+        opacity: 0.55
+    }
     Text {
         id: label
         anchors.centerIn: parent

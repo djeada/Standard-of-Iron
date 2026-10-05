@@ -52,12 +52,32 @@ CheckBox {
 
         Text {
             anchors.centerIn: parent
-            visible: control.checked
+            opacity: control.checked ? 1 : 0
+            scale: control.checked ? 1 : 0.4
             text: "✓"
             color: Design.Theme.backgroundDeep
             font.family: Design.Typography.family
             font.pixelSize: Design.Typography.caption
             font.weight: Design.Typography.bold
+
+            Behavior on opacity  {
+                NumberAnimation {
+                    duration: Design.Motion.fast
+                }
+            }
+
+            Behavior on scale  {
+                NumberAnimation {
+                    duration: Design.Motion.fast
+                    easing.type: Design.Motion.emphasizedEasing
+                }
+            }
+        }
+
+        Behavior on border.color  {
+            ColorAnimation {
+                duration: Design.Motion.fast
+            }
         }
 
         Behavior on color  {

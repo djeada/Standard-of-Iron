@@ -766,7 +766,7 @@ RowLayout {
             contentPadding: 0
             raised: bottomRoot.current_command_mode !== "normal"
             border.color: showTarget ? Design.Theme.danger : bottomRoot.banner_tone()
-            opacity: bottomRoot.has_movable_units || commandBanner.showTarget ? 1 : 0.6
+            opacity: bottomRoot.has_movable_units || commandBanner.showTarget ? 1 : 0.85
 
             RowLayout {
                 anchors.fill: parent

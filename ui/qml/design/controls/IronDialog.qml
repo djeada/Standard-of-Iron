@@ -39,6 +39,12 @@ Dialog {
         Accessible.role: Accessible.Dialog
         Accessible.name: root.title
         Accessible.description: root.message
+
+        Design.IronShadow {
+            cornerRadius: parent.radius
+            spread: Design.Metrics.space24
+            lift: Design.Metrics.space8
+        }
     }
 
     Overlay.modal: Rectangle {

@@ -9,12 +9,19 @@ TextField {
     color: Design.Theme.textPrimary
     placeholderTextColor: Design.Theme.textDisabled
     selectByMouse: true
+    hoverEnabled: true
     implicitHeight: Design.Metrics.controlHeight
     leftPadding: Design.Metrics.space8
     background: Rectangle {
         color: Design.Theme.panelIron
         radius: Design.Metrics.radiusSmall
         border.width: control.activeFocus ? Design.Metrics.borderFocus : Design.Metrics.borderThin
-        border.color: control.activeFocus ? Design.Theme.focus : Design.Theme.borderSubtle
+        border.color: control.activeFocus ? Design.Theme.focus : control.hovered ? Design.Theme.accent : Design.Theme.borderSubtle
+
+        Behavior on border.color  {
+            ColorAnimation {
+                duration: Design.Motion.fast
+            }
+        }
     }
 }

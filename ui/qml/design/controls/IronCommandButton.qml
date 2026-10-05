@@ -156,7 +156,22 @@ AbstractButton {
     }
 
     background: Rectangle {
+        id: face
+
         radius: Design.Metrics.radiusMedium
+
+        gradient: Gradient {
+            GradientStop {
+                position: 0
+                color: control.down ? Design.Theme.sheenBottom(face.color) : Design.Theme.sheenTop(face.color)
+            }
+
+            GradientStop {
+                position: 1
+                color: control.down ? face.color : Design.Theme.sheenBottom(face.color)
+            }
+        }
+
         color: !control.interactive ? Design.Theme.surfaceDisabled : control.down ? Qt.darker(Design.Theme.panelLeather, 1.2) : (control.highlighted || control.hovered) ? Design.Theme.panelLeather : Design.Theme.panelIron
         border.width: (control.showFocusRing || control.highlighted) ? Design.Metrics.borderFocus : Design.Metrics.borderThin
         border.color: control.showFocusRing ? Design.Theme.focus : control.stateColor
@@ -179,7 +194,25 @@ AbstractButton {
             }
         }
 
+        Rectangle {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.leftMargin: face.radius + face.border.width
+            anchors.rightMargin: face.radius + face.border.width
+            anchors.topMargin: face.border.width
+            height: Design.Metrics.borderThin
+            color: Design.Theme.edgeHighlight
+            visible: control.interactive && !control.down
+        }
+
         Behavior on color  {
+            ColorAnimation {
+                duration: Design.Motion.fast
+            }
+        }
+
+        Behavior on border.color  {
             ColorAnimation {
                 duration: Design.Motion.fast
             }

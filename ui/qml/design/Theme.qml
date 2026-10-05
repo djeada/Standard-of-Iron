@@ -31,6 +31,17 @@ QtObject {
     readonly property color surfaceDisabled: highContrast ? "#1a1a1a" : Core.Theme.disabledBg
     readonly property color scrim: Core.Theme.dim
 
+    readonly property color edgeHighlight: highContrast ? "transparent" : Qt.rgba(1, 0.93, 0.78, 0.09)
+    readonly property real shadowStrength: highContrast ? 0 : 1
+
+    function sheenTop(base) {
+        return root.highContrast ? base : Qt.lighter(base, 1.16);
+    }
+
+    function sheenBottom(base) {
+        return root.highContrast ? base : Qt.darker(base, 1.14);
+    }
+
     function statusColor(status) {
         switch (status) {
         case "success":
