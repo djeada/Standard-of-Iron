@@ -11,6 +11,7 @@
 #include "arena_city_scenarios.h"
 #include "arena_combat_scenarios.h"
 #include "arena_commander_duel_scenarios.h"
+#include "arena_duel_reel_scenarios.h"
 #include "arena_economy_scenarios.h"
 #include "arena_engagement_scenarios.h"
 #include "arena_facade_scenarios.h"
@@ -61,6 +62,7 @@ auto build_core_definitions() -> std::vector<ArenaScenarioDefinition> {
            &build_rpg_friendly_definitions,
            &build_identity_definitions,
            &build_commander_duel_definitions,
+           &build_duel_reel_definitions,
            &build_weapon_definitions,
            &build_animation_matrix_definitions,
            &build_combat_definitions,

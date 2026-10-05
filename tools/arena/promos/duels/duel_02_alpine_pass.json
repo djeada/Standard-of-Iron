@@ -1,0 +1,529 @@
+{
+  "fps": 30,
+  "supersample": 1,
+  "gameplay_ui": false,
+  "audio": true,
+  "record_music": false,
+  "transition": {
+    "type": "cut"
+  },
+  "grade": {
+    "contrast": 1.1,
+    "saturation": 1.08,
+    "grain": 0,
+    "vignette": 0.16,
+    "sharpen": 0.4
+  },
+  "motion_limits": {
+    "yaw_degrees_per_second": 40,
+    "pitch_degrees_per_second": 16,
+    "fov_degrees_per_second": 18,
+    "minimum_clip_seconds": 1.2,
+    "mean_clip_seconds": 1.6
+  },
+  "title": "STANDARD OF IRON",
+  "end_card": "steam_demo",
+  "end_card_background": "dim",
+  "id": "duel_02_alpine_pass",
+  "music": "assets/audio/music/campaign/campaign_crossing_of_the_alps.ogg",
+  "music_start": 0.0,
+  "shots": [
+    {
+      "name": "the_challenge",
+      "scenario": "duel_reel_alpine_pass",
+      "seed": 7,
+      "start": 0.3,
+      "duration": 2.4,
+      "focus": {
+        "mode": "group",
+        "group": "fabius",
+        "smoothing": 0.2
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 5.6,
+          "pitch": 7,
+          "yaw": 268.8,
+          "fov": 40,
+          "height": 1.5
+        },
+        {
+          "time": 2.4,
+          "distance": 4.4,
+          "pitch": 6,
+          "yaw": 263.2,
+          "fov": 40,
+          "height": 1.4,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "NO FURTHER, CARTHAGINIAN."
+    },
+    {
+      "name": "the_answer",
+      "scenario": "duel_reel_alpine_pass",
+      "seed": 7,
+      "start": 2.9,
+      "duration": 2.5,
+      "focus": {
+        "mode": "group",
+        "group": "hannibal",
+        "smoothing": 0.2
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 4.6,
+          "pitch": 4,
+          "yaw": 235.8,
+          "fov": 38,
+          "height": 1.3
+        },
+        {
+          "time": 2.5,
+          "distance": 3.5,
+          "pitch": 3,
+          "yaw": 242.20000000000002,
+          "fov": 38,
+          "height": 1.25,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "I CROSSED THE ALPS FOR THIS?"
+    },
+    {
+      "name": "the_walk",
+      "scenario": "duel_reel_alpine_pass",
+      "seed": 7,
+      "start": 5.7,
+      "duration": 1.98,
+      "focus": {
+        "mode": "group_pair",
+        "group": "fabius",
+        "second_group": "hannibal",
+        "smoothing": 0.3
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 15,
+          "pitch": 7,
+          "yaw": 242.0,
+          "fov": 40,
+          "height": 1.0
+        },
+        {
+          "time": 1.9799999999999995,
+          "distance": 8.5,
+          "pitch": 5,
+          "yaw": 246.0,
+          "fov": 40,
+          "height": 1.0,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "THE HIGH PASS"
+    },
+    {
+      "name": "the_clash",
+      "scenario": "duel_reel_alpine_pass",
+      "seed": 7,
+      "start": 7.68,
+      "duration": 1.05,
+      "focus": {
+        "mode": "group_pair",
+        "group": "fabius",
+        "second_group": "hannibal",
+        "smoothing": 0.26
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 7.4,
+          "pitch": 6,
+          "yaw": 350.2,
+          "fov": 40,
+          "height": 1.15
+        },
+        {
+          "time": 1.05,
+          "distance": 5.6,
+          "pitch": 5,
+          "yaw": 343.8,
+          "fov": 40,
+          "height": 1.1,
+          "ease": "smooth"
+        }
+      ],
+      "slow_motion": 2.6,
+      "jolts": [
+        {
+          "at": 0.53,
+          "degrees": 0.9,
+          "decay": 0.3
+        }
+      ],
+      "punch": [
+        {
+          "at": 1.3780000000000001,
+          "amount": 0.1,
+          "decay": 0.35
+        }
+      ]
+    },
+    {
+      "name": "the_string",
+      "scenario": "duel_reel_alpine_pass",
+      "seed": 7,
+      "start": 8.73,
+      "duration": 1.8,
+      "focus": {
+        "mode": "group_pair",
+        "group": "fabius",
+        "second_group": "hannibal",
+        "smoothing": 0.26
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 7.4,
+          "pitch": 9,
+          "yaw": 351.2,
+          "fov": 42,
+          "height": 1.25
+        },
+        {
+          "time": 1.799999999999999,
+          "distance": 6.4,
+          "pitch": 7,
+          "yaw": 340.8,
+          "fov": 42,
+          "height": 1.2,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "SPEAR AGAINST SWORD"
+    },
+    {
+      "name": "the_finisher",
+      "scenario": "duel_reel_alpine_pass",
+      "seed": 7,
+      "start": 10.53,
+      "duration": 1.15,
+      "focus": {
+        "mode": "group_pair",
+        "group": "fabius",
+        "second_group": "hannibal",
+        "smoothing": 0.3
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 7.6,
+          "pitch": 5,
+          "yaw": 308.6,
+          "fov": 42,
+          "height": 1.1
+        },
+        {
+          "time": 1.15,
+          "distance": 9.4,
+          "pitch": 7,
+          "yaw": 313.40000000000003,
+          "fov": 42,
+          "height": 1.2,
+          "ease": "smooth"
+        }
+      ],
+      "slow_motion": 2.4,
+      "jolts": [
+        {
+          "at": 0.5,
+          "degrees": 1.1,
+          "decay": 0.35
+        }
+      ],
+      "punch": [
+        {
+          "at": 1.2,
+          "amount": 0.12,
+          "decay": 0.4
+        }
+      ]
+    },
+    {
+      "name": "the_circle",
+      "scenario": "duel_reel_alpine_pass",
+      "seed": 7,
+      "start": 12.2,
+      "duration": 1.63,
+      "focus": {
+        "mode": "group_pair",
+        "group": "fabius",
+        "second_group": "hannibal",
+        "smoothing": 0.35
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 10.5,
+          "pitch": 13,
+          "yaw": 337.0,
+          "fov": 40,
+          "height": 1.2
+        },
+        {
+          "time": 1.6300000000000008,
+          "distance": 9.0,
+          "pitch": 10,
+          "yaw": 353.0,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "THE SNOW TAKES NO SIDE"
+    },
+    {
+      "name": "the_press",
+      "scenario": "duel_reel_alpine_pass",
+      "seed": 7,
+      "start": 13.83,
+      "duration": 1.99,
+      "focus": {
+        "mode": "group_pair",
+        "group": "fabius",
+        "second_group": "hannibal",
+        "smoothing": 0.26
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 6.8,
+          "pitch": 6,
+          "yaw": 70.4,
+          "fov": 42,
+          "height": 1.2
+        },
+        {
+          "time": 1.9899999999999984,
+          "distance": 6.2,
+          "pitch": 5,
+          "yaw": 61.60000000000001,
+          "fov": 42,
+          "height": 1.15,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "the_slip",
+      "scenario": "duel_reel_alpine_pass",
+      "seed": 7,
+      "start": 15.82,
+      "duration": 1.15,
+      "focus": {
+        "mode": "group_pair",
+        "group": "fabius",
+        "second_group": "hannibal",
+        "smoothing": 0.3
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 7.2,
+          "pitch": 5,
+          "yaw": 50.8,
+          "fov": 42,
+          "height": 1.2
+        },
+        {
+          "time": 1.15,
+          "distance": 8.0,
+          "pitch": 6,
+          "yaw": 45.199999999999996,
+          "fov": 42,
+          "height": 1.25,
+          "ease": "smooth"
+        }
+      ],
+      "slow_motion": 2.2,
+      "caption": "FABIUS SLIPS THE POINT"
+    },
+    {
+      "name": "the_juggle",
+      "scenario": "duel_reel_alpine_pass",
+      "seed": 7,
+      "start": 19.37,
+      "duration": 2.75,
+      "focus": {
+        "mode": "group_pair",
+        "group": "fabius",
+        "second_group": "hannibal",
+        "smoothing": 0.26
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 8.2,
+          "pitch": 1,
+          "yaw": 40.8,
+          "fov": 46,
+          "height": 1.5
+        },
+        {
+          "time": 2.7500000000000036,
+          "distance": 7.4,
+          "pitch": 3,
+          "yaw": 51.199999999999996,
+          "fov": 46,
+          "height": 1.5,
+          "ease": "smooth"
+        }
+      ],
+      "slow_motion": 1.8,
+      "jolts": [
+        {
+          "at": 2.400000000000002,
+          "degrees": 1.2,
+          "decay": 0.35
+        }
+      ],
+      "punch": [
+        {
+          "at": 4.320000000000004,
+          "amount": 0.12,
+          "decay": 0.4
+        }
+      ],
+      "caption": "HANNIBAL BREAKS HIS GUARD"
+    },
+    {
+      "name": "the_bind",
+      "scenario": "duel_reel_alpine_pass",
+      "seed": 7,
+      "start": 24.13,
+      "duration": 1.52,
+      "focus": {
+        "mode": "group_pair",
+        "group": "fabius",
+        "second_group": "hannibal",
+        "smoothing": 0.26
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 7.0,
+          "pitch": 6,
+          "yaw": 328.0,
+          "fov": 40,
+          "height": 1.15
+        },
+        {
+          "time": 1.5200000000000038,
+          "distance": 5.8,
+          "pitch": 5,
+          "yaw": 320.0,
+          "fov": 40,
+          "height": 1.1,
+          "ease": "smooth"
+        }
+      ],
+      "slow_motion": 1.9,
+      "jolts": [
+        {
+          "at": 0.48000000000000004,
+          "degrees": 0.8,
+          "decay": 0.3
+        },
+        {
+          "at": 1.3500000000000023,
+          "degrees": 0.9,
+          "decay": 0.3
+        }
+      ]
+    },
+    {
+      "name": "the_end",
+      "scenario": "duel_reel_alpine_pass",
+      "seed": 7,
+      "start": 33.55,
+      "duration": 1.25,
+      "focus": {
+        "mode": "group_pair",
+        "group": "fabius",
+        "second_group": "hannibal",
+        "smoothing": 0.3
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 6.4,
+          "pitch": 5,
+          "yaw": 47.4,
+          "fov": 42,
+          "height": 1.15
+        },
+        {
+          "time": 1.25,
+          "distance": 5.6,
+          "pitch": 4,
+          "yaw": 54.6,
+          "fov": 42,
+          "height": 1.1,
+          "ease": "smooth"
+        }
+      ],
+      "slow_motion": 2.4,
+      "jolts": [
+        {
+          "at": 0.75,
+          "degrees": 1.3,
+          "decay": 0.4
+        }
+      ],
+      "punch": [
+        {
+          "at": 1.7999999999999998,
+          "amount": 0.14,
+          "decay": 0.45
+        }
+      ]
+    },
+    {
+      "name": "the_field",
+      "scenario": "duel_reel_alpine_pass",
+      "seed": 7,
+      "start": 35.0,
+      "duration": 2.6,
+      "focus": {
+        "mode": "group",
+        "group": "hannibal",
+        "smoothing": 0.5
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 5.0,
+          "pitch": 6,
+          "yaw": 355.4,
+          "fov": 40,
+          "height": 1.3
+        },
+        {
+          "time": 2.6,
+          "distance": 8.5,
+          "pitch": 9,
+          "yaw": 362.59999999999997,
+          "fov": 40,
+          "height": 1.5,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "THE ROAD TO ROME IS OPEN"
+    }
+  ],
+  "width": 1080,
+  "height": 1920
+}

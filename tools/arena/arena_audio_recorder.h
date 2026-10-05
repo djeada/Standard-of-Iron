@@ -51,6 +51,7 @@ public:
   [[nodiscard]] static auto mux(const QString& clip_path,
                                 const QString& wav_path,
                                 float gain_db,
+                                float stretch,
                                 QString* error) -> bool;
 
   [[nodiscard]] static auto measure_loudness(const QStringList& wav_paths,

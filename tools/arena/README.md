@@ -795,6 +795,17 @@ signatures or the melee lock. See
 [docs/PROMO_CAPTURE.md](../../docs/PROMO_CAPTURE.md) for how its shots are
 aimed.
 
+`duel_reel_old_enemies`, `duel_reel_alpine_pass` and `duel_reel_night_raid`
+stage a commander duel on a production campaign map: the statue avenue of the
+Zama sanctuary at golden hour, the pass shrine in the Alps under snow, and the
+west gate of the Punic camp on the Trebia after dark. Each opens with a
+flourish and a taunt, then leaves the fight to the duel director (see
+"Commander duels" in [docs/COMBAT_SYSTEM.md](../../docs/COMBAT_SYSTEM.md)).
+`tools/arena/promos/duels/make_duel_reels.py` writes one vertical reel spec per
+stage; its table lists when each beat happens and which way the pair faces, read
+from a batch trace of the scenario. Re-read those times after changing a stage
+or the director, because every shot is cut to them.
+
 ## Trailer chapters
 
 `trailer_*` are the master trailer's chapters. Five of them play on one

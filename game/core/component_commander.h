@@ -163,6 +163,54 @@ public:
   bool flag_rally_issue_commands{false};
 };
 
+enum class CommanderDuelPhase : std::uint8_t {
+  Closing = 0,
+  Exchange,
+  Break,
+  Standoff,
+};
+
+enum class CommanderDuelOutcome : std::uint8_t {
+  None = 0,
+  Parry,
+  Hit,
+  Evade,
+  Clash,
+  ClashReply,
+  Launch,
+  Juggle,
+  Finish,
+};
+
+class CommanderDuelComponent {
+public:
+  CommanderDuelComponent() = default;
+
+  EntityID opponent_id{0};
+  CommanderDuelPhase phase{CommanderDuelPhase::Closing};
+  float phase_time{0.0F};
+  float phase_length{0.0F};
+  std::uint8_t round{0U};
+  std::uint8_t link{0U};
+  bool aggressor{false};
+  bool attack_permitted{false};
+  bool clash_reply_requested{false};
+  bool evade_started{false};
+  bool round_decided{false};
+  CommanderDuelOutcome pending_outcome{CommanderDuelOutcome::None};
+  float swing_delay{0.0F};
+  float tumble_remaining{0.0F};
+
+  float desired_separation{1.35F};
+  float approach_speed{0.0F};
+  float orbit_degrees_per_second{0.0F};
+  float slide_vx{0.0F};
+  float slide_vz{0.0F};
+
+  static constexpr float k_slide_drag = 4.2F;
+  static constexpr float k_tumble_seconds = 0.75F;
+};
+
 class CommanderBodyControlComponent {
 public:
   CommanderBodyControlComponent() = default;

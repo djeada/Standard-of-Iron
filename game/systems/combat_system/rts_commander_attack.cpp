@@ -13,6 +13,7 @@
 #include "../combat_rules.h"
 #include "attack_control.h"
 #include "combat_types.h"
+#include "commander_duel.h"
 #include "melee_exchange.h"
 #include "target_rules.h"
 
@@ -289,9 +290,14 @@ void begin_rts_melee_action(Engine::Core::World& world,
   auto const family = Engine::Core::resolve_combat_attack_family(
       unit->spawn_type, Engine::Core::AttackComponent::CombatMode::Melee);
   bool const chaining_from_link = is_chaining_from_commander_link(*action);
-  auto const signature = claim_commander_signature(attacker, damage);
+  auto const duel_link = claim_duel_link(*attacker, *target);
+  auto const signature = duel_permits_signature(*attacker)
+                             ? claim_commander_signature(attacker, damage)
+                             : std::nullopt;
   auto const routine_id = routine_melee_action(attacker, target, family);
-  auto const commander_id = rts_commander_action(world, *attacker, *target, family);
+  auto const commander_id =
+      duel_link.has_value() ? *duel_link
+                            : rts_commander_action(world, *attacker, *target, family);
   auto const id =
       signature.has_value()
           ? *signature
@@ -365,6 +371,9 @@ auto resolve_melee_swing_cadence(Engine::Core::Entity* attacker,
       target->get_id(),
       static_cast<std::uint8_t>((action->melee_attack_sequence + 1U) % 250U),
       true);
+  if (auto const duel_cadence = duel_swing_cadence(*attacker, cooldown, link_length)) {
+    return *duel_cadence;
+  }
   float const interval = cooldown * next_beat.interval_weight;
   float const delay = base_delay * next_beat.delay_weight;
   return cooldown - std::max(interval + delay, link_length);

@@ -1,0 +1,499 @@
+{
+  "fps": 30,
+  "supersample": 1,
+  "gameplay_ui": false,
+  "audio": true,
+  "record_music": false,
+  "transition": {
+    "type": "cut"
+  },
+  "grade": {
+    "contrast": 1.1,
+    "saturation": 1.08,
+    "grain": 0,
+    "vignette": 0.16,
+    "sharpen": 0.4
+  },
+  "motion_limits": {
+    "yaw_degrees_per_second": 40,
+    "pitch_degrees_per_second": 16,
+    "fov_degrees_per_second": 18,
+    "minimum_clip_seconds": 1.2,
+    "mean_clip_seconds": 1.6
+  },
+  "title": "STANDARD OF IRON",
+  "end_card": "steam_demo",
+  "end_card_background": "dim",
+  "id": "duel_03_night_raid",
+  "music": "assets/audio/music/combat/combat_shield_wall_at_dusk.ogg",
+  "music_start": 0.0,
+  "shots": [
+    {
+      "name": "the_challenge",
+      "scenario": "duel_reel_night_raid",
+      "seed": 7,
+      "start": 0.3,
+      "duration": 2.4,
+      "focus": {
+        "mode": "group",
+        "group": "hanno",
+        "smoothing": 0.2
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 5.6,
+          "pitch": 7,
+          "yaw": 13.8,
+          "fov": 40,
+          "height": 1.5
+        },
+        {
+          "time": 2.4,
+          "distance": 4.4,
+          "pitch": 6,
+          "yaw": 8.2,
+          "fov": 40,
+          "height": 1.4,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "ROMAN. WRONG CAMP."
+    },
+    {
+      "name": "the_answer",
+      "scenario": "duel_reel_night_raid",
+      "seed": 7,
+      "start": 2.9,
+      "duration": 2.5,
+      "focus": {
+        "mode": "group",
+        "group": "scipio",
+        "smoothing": 0.2
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 4.6,
+          "pitch": 4,
+          "yaw": 340.8,
+          "fov": 38,
+          "height": 1.3
+        },
+        {
+          "time": 2.5,
+          "distance": 3.5,
+          "pitch": 3,
+          "yaw": 347.2,
+          "fov": 38,
+          "height": 1.25,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "I CAME FOR YOU, HANNO."
+    },
+    {
+      "name": "the_walk",
+      "scenario": "duel_reel_night_raid",
+      "seed": 7,
+      "start": 5.7,
+      "duration": 2.42,
+      "focus": {
+        "mode": "group_pair",
+        "group": "scipio",
+        "second_group": "hanno",
+        "smoothing": 0.3
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 15,
+          "pitch": 7,
+          "yaw": 347.0,
+          "fov": 40,
+          "height": 1.0
+        },
+        {
+          "time": 2.419999999999999,
+          "distance": 8.5,
+          "pitch": 5,
+          "yaw": 351.0,
+          "fov": 40,
+          "height": 1.0,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "THE TREBIA. AFTER DARK."
+    },
+    {
+      "name": "the_clash",
+      "scenario": "duel_reel_night_raid",
+      "seed": 7,
+      "start": 8.12,
+      "duration": 1.05,
+      "focus": {
+        "mode": "group_pair",
+        "group": "scipio",
+        "second_group": "hanno",
+        "smoothing": 0.26
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 7.4,
+          "pitch": 6,
+          "yaw": 275.2,
+          "fov": 40,
+          "height": 1.15
+        },
+        {
+          "time": 1.05,
+          "distance": 5.6,
+          "pitch": 5,
+          "yaw": 268.8,
+          "fov": 40,
+          "height": 1.1,
+          "ease": "smooth"
+        }
+      ],
+      "slow_motion": 2.6,
+      "jolts": [
+        {
+          "at": 0.53,
+          "degrees": 0.9,
+          "decay": 0.3
+        }
+      ],
+      "punch": [
+        {
+          "at": 1.3780000000000001,
+          "amount": 0.1,
+          "decay": 0.35
+        }
+      ]
+    },
+    {
+      "name": "the_string",
+      "scenario": "duel_reel_night_raid",
+      "seed": 7,
+      "start": 9.17,
+      "duration": 1.86,
+      "focus": {
+        "mode": "group_pair",
+        "group": "scipio",
+        "second_group": "hanno",
+        "smoothing": 0.26
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 7.4,
+          "pitch": 9,
+          "yaw": 276.2,
+          "fov": 42,
+          "height": 1.25
+        },
+        {
+          "time": 1.8599999999999994,
+          "distance": 6.4,
+          "pitch": 7,
+          "yaw": 265.8,
+          "fov": 42,
+          "height": 1.2,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "ONE CONSUL. ONE CAMP."
+    },
+    {
+      "name": "the_finisher",
+      "scenario": "duel_reel_night_raid",
+      "seed": 7,
+      "start": 11.03,
+      "duration": 1.15,
+      "focus": {
+        "mode": "group_pair",
+        "group": "scipio",
+        "second_group": "hanno",
+        "smoothing": 0.3
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 7.6,
+          "pitch": 5,
+          "yaw": 233.6,
+          "fov": 42,
+          "height": 1.1
+        },
+        {
+          "time": 1.15,
+          "distance": 9.4,
+          "pitch": 7,
+          "yaw": 238.4,
+          "fov": 42,
+          "height": 1.2,
+          "ease": "smooth"
+        }
+      ],
+      "slow_motion": 2.4,
+      "jolts": [
+        {
+          "at": 0.5,
+          "degrees": 1.1,
+          "decay": 0.35
+        }
+      ],
+      "punch": [
+        {
+          "at": 1.2,
+          "amount": 0.12,
+          "decay": 0.4
+        }
+      ]
+    },
+    {
+      "name": "the_circle",
+      "scenario": "duel_reel_night_raid",
+      "seed": 7,
+      "start": 12.3,
+      "duration": 1.9,
+      "focus": {
+        "mode": "group_pair",
+        "group": "scipio",
+        "second_group": "hanno",
+        "smoothing": 0.35
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 10.5,
+          "pitch": 13,
+          "yaw": 302.0,
+          "fov": 40,
+          "height": 1.2
+        },
+        {
+          "time": 1.9,
+          "distance": 9.0,
+          "pitch": 10,
+          "yaw": 318.0,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "NO ONE IS COMING"
+    },
+    {
+      "name": "the_press",
+      "scenario": "duel_reel_night_raid",
+      "seed": 7,
+      "start": 14.47,
+      "duration": 1.95,
+      "focus": {
+        "mode": "group_pair",
+        "group": "scipio",
+        "second_group": "hanno",
+        "smoothing": 0.26
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 6.8,
+          "pitch": 6,
+          "yaw": 341.4,
+          "fov": 42,
+          "height": 1.2
+        },
+        {
+          "time": 1.9499999999999975,
+          "distance": 6.2,
+          "pitch": 5,
+          "yaw": 332.59999999999997,
+          "fov": 42,
+          "height": 1.15,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "the_slip",
+      "scenario": "duel_reel_night_raid",
+      "seed": 7,
+      "start": 16.42,
+      "duration": 1.15,
+      "focus": {
+        "mode": "group_pair",
+        "group": "scipio",
+        "second_group": "hanno",
+        "smoothing": 0.3
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 7.2,
+          "pitch": 5,
+          "yaw": 321.8,
+          "fov": 42,
+          "height": 1.2
+        },
+        {
+          "time": 1.15,
+          "distance": 8.0,
+          "pitch": 6,
+          "yaw": 316.2,
+          "fov": 42,
+          "height": 1.25,
+          "ease": "smooth"
+        }
+      ],
+      "slow_motion": 2.2,
+      "caption": "SCIPIO SLIPS THE SPEAR"
+    },
+    {
+      "name": "the_juggle",
+      "scenario": "duel_reel_night_raid",
+      "seed": 7,
+      "start": 19.93,
+      "duration": 2.82,
+      "focus": {
+        "mode": "group_pair",
+        "group": "scipio",
+        "second_group": "hanno",
+        "smoothing": 0.26
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 8.2,
+          "pitch": 1,
+          "yaw": 315.8,
+          "fov": 46,
+          "height": 1.5
+        },
+        {
+          "time": 2.8200000000000003,
+          "distance": 7.4,
+          "pitch": 3,
+          "yaw": 326.2,
+          "fov": 46,
+          "height": 1.5,
+          "ease": "smooth"
+        }
+      ],
+      "slow_motion": 1.8,
+      "jolts": [
+        {
+          "at": 2.469999999999999,
+          "degrees": 1.2,
+          "decay": 0.35
+        }
+      ],
+      "punch": [
+        {
+          "at": 4.445999999999998,
+          "amount": 0.12,
+          "decay": 0.4
+        }
+      ],
+      "caption": "HANNO SENDS HIM UP"
+    },
+    {
+      "name": "the_bind",
+      "scenario": "duel_reel_night_raid",
+      "seed": 7,
+      "start": 24.93,
+      "duration": 1.49,
+      "focus": {
+        "mode": "group_pair",
+        "group": "scipio",
+        "second_group": "hanno",
+        "smoothing": 0.26
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 7.0,
+          "pitch": 6,
+          "yaw": 236.0,
+          "fov": 40,
+          "height": 1.15
+        },
+        {
+          "time": 1.4900000000000027,
+          "distance": 5.8,
+          "pitch": 5,
+          "yaw": 228.0,
+          "fov": 40,
+          "height": 1.1,
+          "ease": "smooth"
+        }
+      ],
+      "slow_motion": 1.9,
+      "jolts": [
+        {
+          "at": 0.48000000000000004,
+          "degrees": 0.8,
+          "decay": 0.3
+        },
+        {
+          "at": 1.3200000000000012,
+          "degrees": 0.9,
+          "decay": 0.3
+        }
+      ]
+    },
+    {
+      "name": "the_end",
+      "scenario": "duel_reel_night_raid",
+      "seed": 7,
+      "start": 28.32,
+      "duration": 1.25,
+      "focus": {
+        "mode": "group_pair",
+        "group": "scipio",
+        "second_group": "hanno",
+        "smoothing": 0.3
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 6.4,
+          "pitch": 5,
+          "yaw": 357.4,
+          "fov": 42,
+          "height": 1.15
+        },
+        {
+          "time": 1.25,
+          "distance": 5.6,
+          "pitch": 4,
+          "yaw": 364.59999999999997,
+          "fov": 42,
+          "height": 1.1,
+          "ease": "smooth"
+        }
+      ],
+      "slow_motion": 2.4,
+      "jolts": [
+        {
+          "at": 0.75,
+          "degrees": 1.3,
+          "decay": 0.4
+        }
+      ],
+      "punch": [
+        {
+          "at": 1.7999999999999998,
+          "amount": 0.14,
+          "decay": 0.45
+        }
+      ],
+      "freeze": 1.4,
+      "freeze_text": "WHO WALKS OUT?"
+    }
+  ],
+  "width": 1080,
+  "height": 1920
+}

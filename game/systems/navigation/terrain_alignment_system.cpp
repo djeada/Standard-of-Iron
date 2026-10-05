@@ -5,6 +5,7 @@
 #include <algorithm>
 
 #include "core/ambient_session.h"
+#include "core/component_commander.h"
 #include "core/component_core.h"
 #include "core/component_gameplay.h"
 #include "core/entity.h"
@@ -22,7 +23,15 @@ void TerrainAlignmentSystem::run(Engine::Core::SystemContext& context) {
   }
 
   for (auto [entity_id, transform] : context.view<Engine::Core::TransformComponent>()) {
+    auto* launch = context.try_get<Engine::Core::CombatLaunchComponent>(entity_id);
+    float const launch_height =
+        launch != nullptr ? std::max(0.0F, transform.position.y - launch->ground_y)
+                          : 0.0F;
     align_transform_to_terrain(transform, terrain_service);
+    if (launch != nullptr) {
+      launch->ground_y = transform.position.y;
+      transform.position.y += launch_height;
+    }
     if (const auto* walker =
             context.try_get<Engine::Core::WallWalkerComponent>(entity_id)) {
       transform.position.y += walker->elevation;
@@ -45,7 +54,7 @@ void TerrainAlignmentSystem::align_transform_to_terrain(
 auto TerrainAlignmentSystem::access() const -> Engine::Core::SystemAccess {
   using namespace Engine::Core;
   return SystemAccess::declare(Reads<WallWalkerComponent, RaftRiderComponent>{},
-                               Writes<TransformComponent>{});
+                               Writes<TransformComponent, CombatLaunchComponent>{});
 }
 
 } // namespace Game::Systems

@@ -4,6 +4,7 @@
 #include "combat_system/attack_processor.h"
 #include "combat_system/combat_state_processor.h"
 #include "combat_system/combat_utils.h"
+#include "combat_system/commander_duel.h"
 #include "combat_system/elephant_special_processor.h"
 #include "combat_system/formation_contact_processor.h"
 #include "combat_system/hit_feedback_processor.h"
@@ -18,6 +19,7 @@ void CombatSystem::update(Engine::Core::World* world, float delta_time) {
   m_target_commitment.update(world, delta_time);
   Combat::process_hit_feedback(world, delta_time);
   Combat::process_combat_state(world, delta_time);
+  Combat::process_commander_duels(world, m_query_context, delta_time);
   Combat::process_attacks(world, m_query_context, delta_time);
   Combat::update_formation_contacts(world, delta_time);
   Combat::process_siege_specials(world, m_query_context, delta_time);

@@ -287,6 +287,49 @@ Single-body one-on-one combat can use duel footwork around the lock. Formation m
 
 **Any two enemies that touch are locked.** `lock_touching_enemies`, at the start of `process_attacks`, locks every pair of hostile units whose bodies touch, whatever orders they carry. Builders, civilians, archers and marching troops used to walk through an enemy block unless someone had attacked them explicitly. For formation slots, touching means `surface_gap <= 0.001`, the same threshold a locked squad needs to land a blow. For single bodies, it means the centre distance is within the contact or body-contact distance plus 5 cm. Both units take the other as a `MeleeLock` target and stop their movement. The rule leaves out elephants (they trample through), wildlife (it never holds a lock, see [AMBIENT_WILDLIFE.md](AMBIENT_WILDLIFE.md)), buildings, the dead, non-participants and units without an `AttackComponent`. `ArmyCommandTest.AnyTwoEnemiesThatTouchAreLockedInMelee` pins a builder crew walking into swordsmen, swordsmen walking into builders, and spearmen marching into archers.
 
+## Commander duels
+
+Two computer-led commanders who meet one on one do not stand toe to toe and trade. `process_commander_duels` (`combat_system/commander_duel.cpp`), which runs just before `process_attacks`, pairs them and plays the fight in rounds.
+
+**Why it exists.** A commander has 300 poise, so no ordinary hit staggers, launches or knocks him back, and every lunge stops at the same 1.35 m standoff. Two of them locked together stood on one spot swinging until one fell over. The launchers, air links, dives and gap closers were all authored but none of them could show.
+
+**Who duels.** Both must be commanders that are not under direct control, have `advanced_combat_enabled`, are not wounded, fight in melee with a sword or a spear, and are single bodies (`DuelSpacing::is_duel_body`). Each must want the other (melee lock or attack target), stand within 8 m, and have no other living enemy within 3.2 m. The director then locks them on each other and gives each a `CommanderDuelComponent`. The pair dissolves when the lock is broken (an order, a death, a wall between them) or when, at the end of a round, a third party has closed in. A dissolved pair falls back to ordinary combat and can form again.
+
+**A round** is four phases:
+
+| Phase    | What happens                                                                              |
+| -------- | ----------------------------------------------------------------------------------------- |
+| Closing  | The aggressor dashes to lunge distance (3.3 m). In the first round both do.               |
+| Exchange | Only the aggressor swings, link after link, each starting when the last one is exit-safe. |
+| Break    | Nobody swings until slides, staggers, launches and flips have settled.                    |
+| Standoff | Both back off to 4.8 m and circle for 1.0 to 1.9 s; then the next round begins.           |
+
+The lead changes hands on a Thue-Morse pattern seeded by the two entity ids, so over eight rounds each fighter leads each string once. Everything is derived from ids and the round counter: no random numbers, so replays and the digest stay stable.
+
+**Strings.** A round plays one of four strings, in order. Each link names a move and what becomes of it:
+
+| Outcome | Effect on the defender                                                | Damage |
+| ------- | --------------------------------------------------------------------- | ------ |
+| Parry   | Block reaction, sparks, pushed back about 0.6 m                       | 0.5x   |
+| Hit     | Flinch, pushed back about 0.8 m                                       | 2x     |
+| Clash   | Defender swings too; blades meet, both recoil about 1.1 m             | none   |
+| Evade   | Defender cartwheels out of the line (`SideAerial`), the thrust whiffs | none   |
+| Launch  | Thrown 2 m up, tumbling                                               | 2x     |
+| Juggle  | Struck again in the air and kept up; the aggressor rises with him     | 1.5x   |
+| Finish  | Sent flying about 2.5 m and tumbling; ends the round                  | 4x     |
+
+Only a Finish may take the last point of health, so a duel always ends on a decisive blow. Below 15 % health the aggressor drops the string and goes straight for a Finish. A commander's signature move is only claimed on a Finish link. An Evade is downgraded to a Parry when the landing spot is not standable or a structure lies in the way, because the flip's travel is applied without collision.
+
+The pace is slower than the old trade (roughly half the damage per second), which is deliberate: a duel between commanders is the one fight a player stops to watch.
+
+**Troops keep out.** `evaluate_target` refuses a duelling commander to anything that is auto-acquiring a target (`TargetRefusal::Passive`), so bystanders watch. An explicit attack order still works, and the next Break notices the newcomer and dissolves the duel.
+
+**Motion.** `DuelFootwork::apply` moves duellists from the component: `desired_separation` and `approach_speed` for the measure, `orbit_degrees_per_second` for circling, and `slide_vx/vz` for knockback, which decays at `k_slide_drag`. A staggered, launched or flipping fighter only slides. `process_melee_lock` never times a duelling pair out for standing apart.
+
+**Launch height survives the frame.** `TerrainAlignmentSystem` used to snap every transform to the ground each tick, so a launched body never left it. It now keeps the height above `CombatLaunchComponent::ground_y`, refreshes `ground_y` to the terrain under the body, and the creature presentation folds that height into `jump_height_offset` so the renderer lifts the model.
+
+`CommanderDuelTest.TwoCommandersFightInRoundsInsteadOfTradingOnTheSpot` pins all four phases, the change of lead, a real launch, an evade, a tumble and that the defender never swings through the aggressor's string. `TroopsLeaveDuellingCommandersToIt` pins the bystander rule.
+
 ## Formation contact
 
 `update_formation_contacts()` publishes contact/front information used by formation combat and presentation.

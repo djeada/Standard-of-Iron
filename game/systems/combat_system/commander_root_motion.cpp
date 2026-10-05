@@ -26,6 +26,7 @@ auto authored_drive(float s) -> float {
 }
 
 constexpr float k_rts_commander_root_motion_max_speed = 5.5F;
+constexpr float k_rts_commander_gap_closer_max_speed = 12.0F;
 
 constexpr float k_rts_commander_lunge_clearance_per_scale = 0.70F;
 
@@ -52,8 +53,12 @@ struct RootMotionBody {
       0.0F,
       (action.normalized_action_time - action.previous_normalized_action_time) *
           std::max(0.001F, action.action_duration));
+  float const max_speed =
+      definition.role == Game::Systems::CombatActions::CommanderActionRole::GapCloser
+          ? k_rts_commander_gap_closer_max_speed
+          : k_rts_commander_root_motion_max_speed;
   return std::min(profile.distance * (authored_drive(s_now) - authored_drive(s_prev)),
-                  k_rts_commander_root_motion_max_speed * elapsed);
+                  max_speed * elapsed);
 }
 
 [[nodiscard]] auto nearest_soldier(Engine::Core::Entity& target,

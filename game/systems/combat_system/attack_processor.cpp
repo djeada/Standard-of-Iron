@@ -24,6 +24,7 @@
 #include "combat_mode_processor.h"
 #include "combat_types.h"
 #include "combat_utils.h"
+#include "commander_duel.h"
 #include "damage_processor.h"
 #include "melee_lock.h"
 #include "rts_commander_attack.h"
@@ -471,7 +472,8 @@ void process_attacker(Engine::Core::Entity* entity, TickContext& ctx) {
   attack_clock += ctx.delta_time;
 
   bool const attack_ready =
-      attack_clock >= stats.cooldown && !commander_link_still_swinging(entity);
+      (attack_clock >= stats.cooldown || duel_forces_swing(*entity)) &&
+      duel_permits_attack(*entity) && !commander_link_still_swinging(entity);
   if (attack_ready && should_prioritize_healing(entity, ctx.query)) {
     return;
   }

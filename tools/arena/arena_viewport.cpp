@@ -3956,6 +3956,10 @@ auto ArenaViewport::initialize_terrain_from_map(const QString& map_path) -> bool
     return false;
   }
   m_terrain_from_map = true;
+  if (m_suppress_procedural_props) {
+    definition.biome.procedural_boulders_enabled = false;
+    definition.biome.procedural_iron_ore_enabled = false;
+  }
   m_terrain_review_definition = std::move(definition);
   apply_map_terrain();
   return true;

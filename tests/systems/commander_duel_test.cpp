@@ -131,7 +131,7 @@ TEST_F(CommanderDuelTest, DuellistsCloseToWithinTheirWeaponsReach) {
   struct Pair {
     Game::Units::SpawnType a;
     Game::Units::SpawnType b;
-    float max_settled;
+    float reach;
     const char* name;
   };
   for (auto const& pair : {Pair{Game::Units::SpawnType::RomanVeteranConsul,
@@ -158,22 +158,146 @@ TEST_F(CommanderDuelTest, DuellistsCloseToWithinTheirWeaponsReach) {
     ASSERT_NE(two, nullptr) << pair.name;
     order_attack(*one, *two);
     order_attack(*two, *one);
-    for (int tick = 0; tick < 400; ++tick) {
-      world.update(0.05F);
-    }
 
     auto const* ta = one->get_component<TransformComponent>();
     auto const* tb = two->get_component<TransformComponent>();
     ASSERT_NE(ta, nullptr);
     ASSERT_NE(tb, nullptr);
-    float const settled =
-        std::hypot(tb->position.x - ta->position.x, tb->position.z - ta->position.z);
     auto const geometry = Game::Systems::FormationCombat::contact_geometry(*one, *two);
+    float closest = 1000.0F;
+    for (int tick = 0; tick < 400; ++tick) {
+      world.update(0.05F);
+      closest = std::min(
+          closest,
+          std::hypot(tb->position.x - ta->position.x, tb->position.z - ta->position.z));
+    }
 
-    EXPECT_LT(settled, pair.max_settled) << pair.name << " fights at arm's length";
-    EXPECT_GT(settled, geometry.contact_center_distance)
+    EXPECT_LT(closest, pair.reach) << pair.name << " never came to arm's length";
+    EXPECT_GT(closest, geometry.contact_center_distance)
         << pair.name << " has walked into its opponent";
   }
+}
+
+TEST_F(CommanderDuelTest, TwoCommandersFightInRoundsInsteadOfTradingOnTheSpot) {
+  Engine::Core::World world;
+  Game::Systems::register_runtime_systems(world);
+  auto* scipio = spawn(world,
+                       Game::Units::SpawnType::RomanVeteranConsul,
+                       1,
+                       QVector3D(-5.0F, 0.0F, 0.0F),
+                       Game::Systems::NationID::RomanRepublic);
+  auto* hannibal = spawn(world,
+                         Game::Units::SpawnType::CarthageSwordCommander,
+                         2,
+                         QVector3D(5.0F, 0.0F, 0.0F),
+                         Game::Systems::NationID::Carthage);
+  ASSERT_NE(scipio, nullptr);
+  ASSERT_NE(hannibal, nullptr);
+  order_attack(*scipio, *hannibal);
+  order_attack(*hannibal, *scipio);
+
+  using Engine::Core::CommanderDuelComponent;
+  using Engine::Core::CommanderDuelPhase;
+  std::set<CommanderDuelPhase> phases;
+  std::set<bool> scipio_roles;
+  float widest = 0.0F;
+  float highest_launch = 0.0F;
+  int both_swinging_outside_a_clash = 0;
+  bool evaded = false;
+  bool tumbled = false;
+  constexpr float k_tick = 1.0F / 30.0F;
+  for (int tick = 0; tick < 30 * 45; ++tick) {
+    world.update(k_tick);
+    auto const* duel = scipio->get_component<CommanderDuelComponent>();
+    auto const* theirs = hannibal->get_component<CommanderDuelComponent>();
+    if (duel == nullptr || theirs == nullptr) {
+      continue;
+    }
+    EXPECT_NE(duel->aggressor, theirs->aggressor);
+    phases.insert(duel->phase);
+    scipio_roles.insert(duel->aggressor);
+    auto const* ta = scipio->get_component<TransformComponent>();
+    auto const* tb = hannibal->get_component<TransformComponent>();
+    widest = std::max(
+        widest,
+        std::hypot(tb->position.x - ta->position.x, tb->position.z - ta->position.z));
+    for (auto const* fighter : {scipio, hannibal}) {
+      if (auto const* launch =
+              fighter->get_component<Engine::Core::CombatLaunchComponent>()) {
+        highest_launch =
+            std::max(highest_launch,
+                     fighter->get_component<TransformComponent>()->position.y -
+                         launch->ground_y);
+      }
+      auto const* routine =
+          fighter->get_component<Engine::Core::ShowcaseRoutineComponent>();
+      evaded = evaded || (routine != nullptr && routine->active);
+      tumbled = tumbled || fighter->get_component<CommanderComponent>()->dodge_active;
+    }
+    auto const* a = scipio->get_component<RpgCommanderActionComponent>();
+    auto const* b = hannibal->get_component<RpgCommanderActionComponent>();
+    bool const clash =
+        duel->pending_outcome == Engine::Core::CommanderDuelOutcome::Clash ||
+        theirs->pending_outcome == Engine::Core::CommanderDuelOutcome::Clash ||
+        duel->pending_outcome == Engine::Core::CommanderDuelOutcome::ClashReply ||
+        theirs->pending_outcome == Engine::Core::CommanderDuelOutcome::ClashReply;
+    if (a != nullptr && b != nullptr && a->weapon_trace_active &&
+        b->weapon_trace_active && !clash) {
+      ++both_swinging_outside_a_clash;
+    }
+  }
+
+  EXPECT_EQ(phases.size(), 4U) << "a duel closes, exchanges, breaks and circles";
+  EXPECT_EQ(scipio_roles.size(), 2U) << "the lead has to change hands between rounds";
+  EXPECT_GT(widest, 4.0F) << "the duellists never broke apart";
+  EXPECT_GT(highest_launch, 0.8F)
+      << "a launched commander has to leave the ground through a whole world tick";
+  EXPECT_TRUE(evaded) << "no thrust was slipped";
+  EXPECT_TRUE(tumbled) << "no finisher sent its man tumbling";
+  EXPECT_EQ(both_swinging_outside_a_clash, 0)
+      << "the defender swung through the aggressor's string";
+}
+
+TEST_F(CommanderDuelTest, TroopsLeaveDuellingCommandersToIt) {
+  Engine::Core::World world;
+  Game::Systems::register_runtime_systems(world);
+  auto* scipio = spawn(world,
+                       Game::Units::SpawnType::RomanVeteranConsul,
+                       1,
+                       QVector3D(-3.0F, 0.0F, 0.0F),
+                       Game::Systems::NationID::RomanRepublic);
+  auto* hannibal = spawn(world,
+                         Game::Units::SpawnType::CarthageSwordCommander,
+                         2,
+                         QVector3D(3.0F, 0.0F, 0.0F),
+                         Game::Systems::NationID::Carthage);
+  auto* legionary = spawn(world,
+                          Game::Units::SpawnType::Swordsman,
+                          1,
+                          QVector3D(0.0F, 0.0F, 9.0F),
+                          Game::Systems::NationID::RomanRepublic);
+  ASSERT_NE(scipio, nullptr);
+  ASSERT_NE(hannibal, nullptr);
+  ASSERT_NE(legionary, nullptr);
+  order_attack(*scipio, *hannibal);
+  order_attack(*hannibal, *scipio);
+
+  int duelling_ticks = 0;
+  for (int tick = 0; tick < 30 * 20; ++tick) {
+    world.update(1.0F / 30.0F);
+    if (!hannibal->has_component<Engine::Core::CommanderDuelComponent>()) {
+      continue;
+    }
+    ++duelling_ticks;
+    auto const* target =
+        legionary->get_component<Engine::Core::AttackTargetComponent>();
+    EXPECT_TRUE(target == nullptr || target->target_id != hannibal->get_id())
+        << "a legionary broke into the duel at tick " << tick;
+    if (::testing::Test::HasFailure()) {
+      break;
+    }
+  }
+  EXPECT_GT(duelling_ticks, 30 * 15) << "the duel did not hold";
 }
 
 TEST_F(CommanderDuelTest, SiegeEnginesStopShootingOnceLockedInMelee) {

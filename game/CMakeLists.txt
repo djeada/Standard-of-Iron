@@ -414,6 +414,7 @@ add_library(
     systems/combat_system/arrow_volley.cpp
     systems/combat_system/melee_lock.cpp
     systems/combat_system/rts_commander_attack.cpp
+    systems/combat_system/commander_duel.cpp
     systems/combat_system/melee_exchange.cpp
     systems/combat_system/elephant_special_processor.cpp
     systems/combat_system/siege_special_processor.cpp

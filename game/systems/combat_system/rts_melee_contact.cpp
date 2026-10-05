@@ -13,6 +13,7 @@
 #include "combat_action_predicates.h"
 #include "combat_hit_resolver.h"
 #include "combat_utils.h"
+#include "commander_duel.h"
 #include "commander_signature_effects.h"
 #include "damage_application.h"
 #include "damage_processor.h"
@@ -171,7 +172,7 @@ swing_is_within_facing_cone(Engine::Core::World& world,
         reach + Engine::Core::AttackComponent::k_melee_contact_range_grace +
         combat_radius(&target);
     bool const height_valid =
-        attack == nullptr ||
+        attack == nullptr || duelling_with(attacker, target) ||
         std::abs(target_transform.position.y - attacker_transform.position.y) <=
             attack->max_height_difference;
     in_range = distance <= effective_reach && height_valid &&
@@ -206,8 +207,11 @@ void resolve_rts_melee_contact(
           : melee_exchange_beat_for_outcome(
                 static_cast<MeleeExchangeOutcome>(action.exchange_outcome));
   int const base_damage = std::max(1, action.requested_damage);
+  auto const duel_contact = resolve_duel_contact(attacker, target, base_damage);
   int const damage =
-      signature_strike ? base_damage : melee_exchange_damage(base_damage, beat);
+      duel_contact.has_value()
+          ? duel_contact->damage
+          : (signature_strike ? base_damage : melee_exchange_damage(base_damage, beat));
   bool const first_hit = action.hit_target_count == 0U;
   if (damage > 0) {
     deal_damage(&world, &target, damage, attacker.get_id());
@@ -229,9 +233,15 @@ void resolve_rts_melee_contact(
                                  damage);
   }
 
+  if (duel_contact.has_value()) {
+    present_duel_contact(
+        world, attacker, target, *attacker_transform, *target_transform, *duel_contact);
+  }
   if (!signature_strike) {
-    present_melee_exchange(
-        world, attacker, target, *attacker_transform, *target_transform, beat, reach);
+    if (!duel_contact.has_value()) {
+      present_melee_exchange(
+          world, attacker, target, *attacker_transform, *target_transform, beat, reach);
+    }
     return;
   }
   apply_commander_signature_effects(

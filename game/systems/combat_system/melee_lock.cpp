@@ -13,6 +13,7 @@
 #include "attack_control.h"
 #include "combat_types.h"
 #include "combat_utils.h"
+#include "commander_duel.h"
 #include "structure_combat.h"
 #include "target_assignment.h"
 #include "target_rules.h"
@@ -216,7 +217,8 @@ void process_melee_lock(Engine::Core::Entity* attacker,
     lock_combatant_facing(lock_target, tgt_t, att_t, delta_time, ledger);
   }
 
-  if (is_in_range(attacker,
+  if (duelling_with(*attacker, *lock_target) ||
+      is_in_range(attacker,
                   lock_target,
                   attack_comp->melee_range +
                       Engine::Core::AttackComponent::k_melee_contact_range_grace)) {

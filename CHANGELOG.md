@@ -11,6 +11,18 @@ may change in any release — see [Save compatibility](#save-compatibility).
 
 ### Added
 
+- **Commanders duel in rounds.** Two computer-led sword or spear commanders who
+  meet one on one no longer stand on one spot trading blows. A duel director
+  plays the fight as rounds: both charge and their blades clash, one presses a
+  string the other parries, slips with a cartwheel or is launched and juggled
+  by, a finisher sends the loser flying, and they circle before the lead
+  changes hands. Only a finisher can land the killing blow. Troops that are
+  merely auto-acquiring leave a duelling commander alone. A launched body now
+  really leaves the ground (terrain alignment used to snap it back every tick).
+  Three arena stages on campaign maps (`duel_reel_*`) and three vertical reel
+  specs under `tools/arena/promos/duels/` film it. Slow-motion promo shots also
+  keep all their frames now: the capture muxed scene-time audio with
+  `-shortest`, which cut a 2.4x slow-motion clip to less than half its length.
 - **Gauls and Iberians fight for Carthage.** Two allied nations, each with a
   swordsman and a mounted swordsman, modelled on the Iron Sepulcher: not playable,
   no economy, no buildings. Gauls carry a tall oval shield with a spine, a long

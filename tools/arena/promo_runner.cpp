@@ -1460,8 +1460,11 @@ private:
                                     "Promo shot '%1': audio track not written")
                                     .arg(shot.name);
       } else {
-        m_pending_audio.push_back(
-            PendingAudio{m_clip_path, wav_path, shot.name, m_audio->clip_seconds()});
+        m_pending_audio.push_back(PendingAudio{m_clip_path,
+                                               wav_path,
+                                               shot.name,
+                                               m_audio->clip_seconds(),
+                                               std::max(1.0F, shot.slow_motion)});
       }
       m_audio->begin_clip();
     }
@@ -1552,8 +1555,11 @@ private:
 
     for (const PendingAudio& pending : m_pending_audio) {
       QString audio_error;
-      if (!AudioRecorder::mux(
-              pending.clip_path, pending.wav_path, gain_db, &audio_error)) {
+      if (!AudioRecorder::mux(pending.clip_path,
+                              pending.wav_path,
+                              gain_db,
+                              pending.slow_motion,
+                              &audio_error)) {
         qWarning().noquote() << QStringLiteral("Promo shot '%1': %2")
                                     .arg(pending.shot_name, audio_error);
       } else {
@@ -1685,6 +1691,7 @@ private:
     QString wav_path;
     QString shot_name;
     float seconds{0.0F};
+    float slow_motion{1.0F};
   };
 
   std::vector<PendingAudio> m_pending_audio;

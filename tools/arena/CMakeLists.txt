@@ -40,6 +40,7 @@ add_library(
     arena_allied_nation_scenarios.cpp
     arena_skirmisher_scenarios.cpp
     arena_commander_duel_scenarios.cpp
+    arena_duel_reel_scenarios.cpp
     arena_weapon_scenarios.cpp
     arena_animation_matrix_scenarios.cpp
     arena_combat_scenarios.cpp

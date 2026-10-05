@@ -4,6 +4,8 @@
 #include <cmath>
 #include <numbers>
 
+#include "core/component_commander.h"
+#include "core/component_presentation.h"
 #include "movement_system_collision.h"
 #include "systems/duel_spacing.h"
 #include "units/spawn_type.h"
@@ -50,6 +52,87 @@ constexpr float k_duel_measure_breath_period_seconds = 3.4F;
   return k_duel_measure_retreat * 0.5F + breath * k_duel_measure_breath;
 }
 
+[[nodiscard]] auto apply_commander_duel(
+    Mover& mover,
+    Engine::Core::AttackComponent& attack,
+    Engine::Core::CommanderDuelComponent& duel,
+    const Engine::Core::TransformComponent& opponent_transform) -> bool {
+  Engine::Core::Entity* entity = &mover.entity;
+  Engine::Core::TransformComponent& transform = mover.transform;
+  float const delta_time = mover.delta_time;
+
+  if (std::hypot(duel.slide_vx, duel.slide_vz) > 0.05F) {
+    MovementCollision::slide_body_to(*entity,
+                                     transform,
+                                     transform.position.x + duel.slide_vx * delta_time,
+                                     transform.position.z + duel.slide_vz * delta_time,
+                                     true);
+    float const drag =
+        std::exp(-Engine::Core::CommanderDuelComponent::k_slide_drag * delta_time);
+    duel.slide_vx *= drag;
+    duel.slide_vz *= drag;
+  } else {
+    duel.slide_vx = 0.0F;
+    duel.slide_vz = 0.0F;
+  }
+
+  auto const* routine = entity->get_component<Engine::Core::ShowcaseRoutineComponent>();
+  bool const flipping =
+      routine != nullptr && !routine->finished && !routine->steps.empty();
+  bool const off_balance = flipping ||
+                           entity->has_component<Engine::Core::StaggerComponent>() ||
+                           entity->has_component<Engine::Core::CombatLaunchComponent>();
+  attack.melee_footwork_offset = 0.0F;
+  if (!off_balance) {
+    float const rx = transform.position.x - opponent_transform.position.x;
+    float const rz = transform.position.z - opponent_transform.position.z;
+    if (std::abs(duel.orbit_degrees_per_second) > 0.01F) {
+      float const angle = duel.orbit_degrees_per_second * delta_time *
+                          std::numbers::pi_v<float> / 180.0F;
+      float const cos_a = std::cos(angle);
+      float const sin_a = std::sin(angle);
+      MovementCollision::slide_body_to(
+          *entity,
+          transform,
+          opponent_transform.position.x + (rx * cos_a) - (rz * sin_a),
+          opponent_transform.position.z + (rx * sin_a) + (rz * cos_a),
+          true);
+    }
+    float const to_x = opponent_transform.position.x - transform.position.x;
+    float const to_z = opponent_transform.position.z - transform.position.z;
+    float const separation = std::hypot(to_x, to_z);
+    if (separation > 0.0001F && duel.approach_speed > 0.0F) {
+      constexpr float k_duel_gain_per_second = 8.0F;
+      float const error = separation - duel.desired_separation;
+      float const max_step = duel.approach_speed * delta_time;
+      float const step =
+          std::clamp(error * k_duel_gain_per_second * delta_time, -max_step, max_step);
+      auto const measure = MovementCollision::slide_body_to(
+          *entity,
+          transform,
+          transform.position.x + (to_x / separation * step),
+          transform.position.z + (to_z / separation * step),
+          true);
+      attack.melee_footwork_offset =
+          std::copysign(std::hypot(measure.accepted_dx, measure.accepted_dz), step);
+    }
+  }
+
+  if (!flipping) {
+    float const face_x = opponent_transform.position.x - transform.position.x;
+    float const face_z = opponent_transform.position.z - transform.position.z;
+    if ((face_x * face_x) + (face_z * face_z) > k_duel_min_reach_sq) {
+      transform.rotation.y = Game::Systems::turn_yaw_toward(
+          transform.rotation.y,
+          Game::Systems::yaw_degrees_from_direction(face_x, face_z),
+          k_duel_footwork_turn_degrees_per_second * delta_time);
+    }
+  }
+  transform.desired_yaw = transform.rotation.y;
+  transform.has_desired_yaw = false;
+  return true;
+}
+
 } // namespace
 
 auto DuelFootwork::apply(Mover& mover,
@@ -84,6 +167,14 @@ auto DuelFootwork::apply(Mover& mover,
   float const rz = transform.position.z - opponent_transform->position.z;
   if ((rx * rx) + (rz * rz) < k_duel_min_reach_sq) {
     return false;
+  }
+
+  auto* duel = entity->get_component<Engine::Core::CommanderDuelComponent>();
+  if (duel != nullptr && duel->opponent_id != opponent->get_id()) {
+    duel = nullptr;
+  }
+  if (duel != nullptr) {
+    return apply_commander_duel(mover, attack, *duel, *opponent_transform);
   }
 
   auto const lhs = std::min(entity->get_id(), opponent->get_id());

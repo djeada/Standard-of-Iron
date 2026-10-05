@@ -309,6 +309,12 @@ void apply_commander(CreaturePresentationComponent& next, const Entity& entity) 
   next.jump_active = commander->jump_active;
   next.jump_phase = commander->jump_phase;
   next.jump_height_offset = commander->jump_height_offset;
+  if (auto const* launch = entity.get_component<CombatLaunchComponent>()) {
+    if (auto const* transform = entity.get_component<TransformComponent>()) {
+      next.jump_height_offset +=
+          std::max(0.0F, transform->position.y - launch->ground_y);
+    }
+  }
   next.dodge_active = commander->dodge_active;
   next.dodge_phase = commander->dodge_phase;
   next.flag_rally_planting = commander->is_flag_rally_planting();

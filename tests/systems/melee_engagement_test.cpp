@@ -201,7 +201,9 @@ TEST_P(MeleeDuelDistanceTest, DuellistsCloseToWeaponContactBeforeSwinging) {
     struck = struck || (presentation != nullptr && presentation->is_attacking);
   }
 
-  const float settled = separation(*attacker, *defender);
+  const bool fights_in_rounds =
+      attacker->has_component<Engine::Core::CommanderDuelComponent>();
+  const float settled = fights_in_rounds ? closest : separation(*attacker, *defender);
   const float allowed = strike_distance(*attacker, *defender);
 
   EXPECT_TRUE(struck) << GetParam().name << " never threw a blow (settled at "

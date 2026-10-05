@@ -1,6 +1,7 @@
 #include "target_rules.h"
 
 #include "../../core/ambient_session.h"
+#include "../../core/component_commander.h"
 #include "../../core/component_core.h"
 #include "../../core/component_economy.h"
 #include "../../core/component_gameplay.h"
@@ -69,6 +70,11 @@ auto evaluate_target(Engine::Core::Entity* target,
 
   if (query.intent == EngagementIntent::AutoAcquired && !query.in_reach &&
       is_passive_wildlife_target(target)) {
+    return TargetRefusal::Passive;
+  }
+
+  if (query.intent == EngagementIntent::AutoAcquired && !query.in_reach &&
+      target->has_component<Engine::Core::CommanderDuelComponent>()) {
     return TargetRefusal::Passive;
   }
 
