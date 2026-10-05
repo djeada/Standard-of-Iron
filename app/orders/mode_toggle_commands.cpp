@@ -368,6 +368,23 @@ auto ModeToggleCommands::on_roll_stones_command() -> CommandResult {
   return finished(std::move(result));
 }
 
+auto ModeToggleCommands::on_cross_raft_command() -> CommandResult {
+  CommandResult result;
+  if (!ready()) {
+    return result;
+  }
+
+  auto units = App::Core::filter_selected_units_for_action(
+      m_world, m_selection->get_selected_units(), QStringLiteral("cross_raft"));
+  if (units.empty()) {
+    return result;
+  }
+
+  App::Orders::submit_local_command(
+      m_world, Game::Command::CrossByRaft{.units = std::move(units)});
+  return finished(std::move(result));
+}
+
 auto ModeToggleCommands::on_run_command() -> CommandResult {
   CommandResult result;
   if (!ready()) {

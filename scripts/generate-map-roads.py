@@ -316,6 +316,8 @@ class RoutingField:
         self._raster_water()
         self._open_bridges()
         self._component_labels: list[int] | None = None
+        self.rafts = self._read_rafts()
+        self._ferries: DisjointSet | None = None
 
     def index(self, x: int, z: int) -> int:
         return z * self.width + x
@@ -338,6 +340,55 @@ class RoutingField:
         if not (0 <= x < self.width and 0 <= z < self.height):
             return -1
         return self.bridge_at[self.index(x, z)]
+
+    def _read_rafts(self) -> list[tuple[Point, float]]:
+        """Raft crossings: a raft joins the banks of the river it floats on."""
+        rafts: list[tuple[Point, float]] = []
+        for item in self.definition.get("rafts") or []:
+            position = item.get("position")
+            if position is None and "x" in item and "z" in item:
+                position = [item["x"], item["z"]]
+            if not position:
+                continue
+            point = self.coords.to_grid(position)
+            river_width = min(
+                (
+                    width
+                    for start, end, width in self.river_segments
+                    if point_segment_distance(point, start, end) <= width
+                ),
+                default=0.0,
+            )
+            if river_width > 0.0:
+                rafts.append((point, river_width * 0.81 + 6.0))
+        return rafts
+
+    def ferry_root(self, component: int) -> int:
+        """Components joined by a raft count as one network: no bridge is needed."""
+        if self._ferries is None:
+            self.passable_component((self.width * 0.5, self.height * 0.5))
+            labels = self._component_labels or []
+            ferries = DisjointSet(max(labels, default=-1) + 1)
+            for (raft_x, raft_z), reach in self.rafts:
+                found: set[int] = set()
+                low_x = max(0, int(math.floor(raft_x - reach)))
+                high_x = min(self.width - 1, int(math.ceil(raft_x + reach)))
+                low_z = max(0, int(math.floor(raft_z - reach)))
+                high_z = min(self.height - 1, int(math.ceil(raft_z + reach)))
+                for z in range(low_z, high_z + 1):
+                    for x in range(low_x, high_x + 1):
+                        if math.hypot(x - raft_x, z - raft_z) > reach:
+                            continue
+                        label = labels[self.index(x, z)]
+                        if label >= 0:
+                            found.add(label)
+                ordered = sorted(found)
+                for other in ordered[1:]:
+                    ferries.join(ordered[0], other)
+            self._ferries = ferries
+        if component < 0 or component >= len(self._ferries.parent):
+            return component
+        return self._ferries.find(component)
 
     def passable_component(self, point: Point) -> int:
         if self._component_labels is None:
@@ -777,6 +828,8 @@ class RoutingField:
         start_component = self.passable_component(start)
         end_component = self.passable_component(end)
         if start_component == end_component:
+            return True
+        if self.ferry_root(start_component) == self.ferry_root(end_component):
             return True
 
         candidates: list[tuple[float, Bridge]] = []
@@ -1574,6 +1627,18 @@ def road_components(field: RoutingField, roads: Sequence[dict]) -> list[list[int
         for start_road in start_roads:
             for end_road in end_roads:
                 sets.join(start_road, end_road)
+    if field.rafts:
+        first_road_on: dict[int, int] = {}
+        for index, points in enumerate(polylines):
+            if points:
+                first_road_on.setdefault(field.passable_component(points[0]), index)
+        first_on_ferry: dict[int, int] = {}
+        for component, index in first_road_on.items():
+            root = field.ferry_root(component)
+            if root in first_on_ferry:
+                sets.join(first_on_ferry[root], index)
+            else:
+                first_on_ferry[root] = index
     grouped: dict[int, list[int]] = {}
     for index in range(len(polylines)):
         grouped.setdefault(sets.find(index), []).append(index)

@@ -426,6 +426,35 @@ void read_rockfall_traps(const QJsonArray& arr, std::vector<RockfallTrap>& out) 
   }
 }
 
+void read_rafts(const QJsonArray& arr, std::vector<RaftCrossing>& out) {
+  out.clear();
+  out.reserve(arr.size());
+  int next_raft_index = 1;
+  for (const auto val : arr) {
+    auto obj = val.toObject();
+    RaftCrossing raft;
+    raft.id = obj.value(ID).toString().trimmed();
+    if (raft.id.isEmpty()) {
+      raft.id = QStringLiteral("raft_%1").arg(next_raft_index);
+    }
+    ++next_raft_index;
+    bool const has_position =
+        read_xz(obj.value(QStringLiteral("position")), raft.x, raft.z) ||
+        (obj.contains(X) && obj.contains(Z));
+    if (!has_position) {
+      qWarning() << "Raft" << raft.id << "needs a position on a river - skipping";
+      continue;
+    }
+    if (!obj.contains(QStringLiteral("position"))) {
+      raft.x = float(obj.value(X).toDouble());
+      raft.z = float(obj.value(Z).toDouble());
+    }
+    raft.speed = std::clamp(
+        float(obj.value(QStringLiteral("speed")).toDouble(raft.speed)), 0.3F, 6.0F);
+    out.push_back(std::move(raft));
+  }
+}
+
 void append_undead_zone_fog(MapDefinition& out_map) {
   constexpr float grid_center_offset = 0.5F;
   constexpr float min_tile_size = 0.0001F;
@@ -632,6 +661,12 @@ void read_map_scenery(const QJsonObject& root, MapDefinition& out_map) {
     read_rockfall_traps(root.value(ROCKFALL_TRAPS).toArray(), out_map.rockfall_traps);
   } else {
     out_map.rockfall_traps.clear();
+  }
+
+  if (root.contains(RAFTS) && root.value(RAFTS).isArray()) {
+    read_rafts(root.value(RAFTS).toArray(), out_map.rafts);
+  } else {
+    out_map.rafts.clear();
   }
 
   if (root.contains(FORESTS) && root.value(FORESTS).isArray()) {

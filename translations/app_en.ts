@@ -203,6 +203,14 @@
         <source>Hauling a load to the barracks. New orders wait until the load is dropped off.</source>
         <translation>Hauling a load to the barracks. New orders wait until the load is dropped off.</translation>
     </message>
+    <message>
+        <source>On the raft</source>
+        <translation>On the raft</translation>
+    </message>
+    <message>
+        <source>Being ferried across the river. It takes no orders until it lands.</source>
+        <translation>Being ferried across the river. It takes no orders until it lands.</translation>
+    </message>
 </context>
 <context>
     <name>AllyAppealPanel</name>
@@ -4839,6 +4847,34 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <source>Move troops next to stones your side holds</source>
         <translation>Move troops next to stones your side holds</translation>
     </message>
+    <message>
+        <source>Cross by Raft</source>
+        <translation>Cross by Raft</translation>
+    </message>
+    <message>
+        <source>Raft</source>
+        <translation>Raft</translation>
+    </message>
+    <message>
+        <source>The selected troops line up at the river raft and are ferried to the far bank, one unit per trip.</source>
+        <translation>The selected troops line up at the river raft and are ferried to the far bank, one unit per trip.</translation>
+    </message>
+    <message>
+        <source>Bring troops near either bank of a raft crossing, then press Cross by Raft.</source>
+        <translation>Bring troops near either bank of a raft crossing, then press Cross by Raft.</translation>
+    </message>
+    <message>
+        <source>The raft carries one unit at a time and comes back empty for the next in line.</source>
+        <translation>The raft carries one unit at a time and comes back empty for the next in line.</translation>
+    </message>
+    <message>
+        <source>Men on the water cannot run or close ranks, so every hit lands harder.</source>
+        <translation>Men on the water cannot run or close ranks, so every hit lands harder.</translation>
+    </message>
+    <message>
+        <source>Move troops next to a river raft</source>
+        <translation>Move troops next to a river raft</translation>
+    </message>
 </context>
 <context>
     <name>HUDBottomCommander</name>
@@ -8339,10 +8375,6 @@ to see preview</translation>
         <translation>Ride down the commanders once the crossings break.</translation>
     </message>
     <message>
-        <source>Scipio inherits any crossing you leave behind.</source>
-        <translation>Scipio inherits any crossing you leave behind.</translation>
-    </message>
-    <message>
         <source>Seize Masinissa&apos;s camp to finish the four.</source>
         <translation>Seize Masinissa&apos;s camp to finish the four.</translation>
     </message>
@@ -8409,10 +8441,6 @@ to see preview</translation>
     <message>
         <source>Take the river camp</source>
         <translation>Take the river camp</translation>
-    </message>
-    <message>
-        <source>Take the second camp on the southern supply road.</source>
-        <translation>Take the second camp on the southern supply road.</translation>
     </message>
     <message>
         <source>Take the shore camp</source>
@@ -9593,6 +9621,14 @@ to see preview</translation>
     <message>
         <source>Winter 218 BC: after the victory on the Trebia, Hannibal attacked the depot near Placentia and then stormed Victumulae, a fortified market of the Insubrian plain where the people of the district had gathered for safety. Livy records that it fell to assault and was sacked. This altered history gives the town a Roman praefect, a citadel garrison and a relief force on the Placentia road.</source>
         <translation>Winter 218 BC: after the victory on the Trebia, Hannibal attacked the depot near Placentia and then stormed Victumulae, a fortified market of the Insubrian plain where the people of the district had gathered for safety. Livy records that it fell to assault and was sacked. This altered history gives the town a Roman praefect, a citadel garrison and a relief force on the Placentia road.</translation>
+    </message>
+    <message>
+        <source>Ferry your companies over on the rafts, one at a time: one below the Gaulish landing, one further south, one across the eastern branch.</source>
+        <translation>Ferry your companies over on the rafts, one at a time: one below the Gaulish landing, one further south, one across the eastern branch.</translation>
+    </message>
+    <message>
+        <source>Take the second camp on the southern supply road. No bridge reaches its bank of the river.</source>
+        <translation>Take the second camp on the southern supply road. No bridge reaches its bank of the river.</translation>
     </message>
 </context>
 <context>

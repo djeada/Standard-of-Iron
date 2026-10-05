@@ -195,7 +195,7 @@ auto iberian_sinew_cap() -> const RenderArchetype& {
             {-0.92F, -1.02F, 0.44F}, {0.92F, -1.02F, 0.44F}, 0.07F, k_leather, 1.0F, 0),
         generated_sphere({0.0F, 0.40F, 1.44F}, 0.16F, k_dark, 1.0F, 0),
     };
-    // Narrow overlapping tufts give the crest a continuous swept outline.
+
     for (int i = 0; i < 7; ++i) {
       float const t = static_cast<float>(i) / 6.0F;
       float const z = 0.95F - t * 2.0F;
@@ -203,7 +203,7 @@ auto iberian_sinew_cap() -> const RenderArchetype& {
       parts.push_back(generated_ellipsoid(
           {0.0F, crown, z}, {0.11F, 0.38F, 0.30F}, k_crest, 1.0F, 0));
     }
-    // Sinew seams hug the cap surface instead of crossing it as solid slabs.
+
     for (int seam = 0; seam < 4; ++seam) {
       float const azimuth =
           (static_cast<float>(seam) + 0.5F) * std::numbers::pi_v<float> * 0.5F;

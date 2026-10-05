@@ -3,6 +3,7 @@
 #include "../core/world.h"
 #include "../map/map_definition.h"
 #include "../systems/cursed_gold_vein_system.h"
+#include "../systems/raft_system.h"
 #include "../systems/rockfall_system.h"
 #include "../systems/undead_awakening_system.h"
 #include "../systems/victory_service.h"
@@ -24,6 +25,9 @@ void configure_map_systems(Engine::Core::World& world,
   }
   if (auto* rockfall_system = world.get_system<Game::Systems::RockfallSystem>()) {
     rockfall_system->configure(map_definition);
+  }
+  if (auto* raft_system = world.get_system<Game::Systems::RaftSystem>()) {
+    raft_system->configure(map_definition);
   }
   if (auto* wildlife_system = world.get_system<Game::Wildlife::WildlifeSystem>()) {
     wildlife_system->configure(map_definition);

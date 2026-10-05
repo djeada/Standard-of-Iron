@@ -107,6 +107,8 @@ enum class ScenarioCommandKind : std::uint8_t {
   TriggerRockfall,
 
   RollStones,
+
+  CrossByRaft,
 };
 
 struct ArenaScenarioGroup {
@@ -314,6 +316,7 @@ enum class ArenaExpectationKind : std::uint8_t {
   GateRemainedClosed,
   SiegeTowerDocked,
   WallWalkerObserved,
+  RaftFerryObserved,
   BridgeTraversalObserved,
   BridgeCenterlineAligned,
   ElevationGainObserved,
@@ -484,6 +487,7 @@ struct ArenaScenarioDefinition {
   std::vector<Game::Map::UndeadZone> undead_zones;
 
   std::vector<Game::Map::RockfallTrap> rockfall_traps;
+  std::vector<Game::Map::RaftCrossing> rafts;
   std::vector<ArenaScenarioOwnerTeam> owner_teams;
   std::vector<ArenaScenarioAIProfile> ai_profiles;
   ArenaScenarioStartingResources ai_starting_resources;

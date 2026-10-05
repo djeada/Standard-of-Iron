@@ -150,6 +150,10 @@ auto CommandController::on_roll_stones_command() -> CommandResult {
   return m_modes.on_roll_stones_command();
 }
 
+auto CommandController::on_cross_raft_command() -> CommandResult {
+  return m_modes.on_cross_raft_command();
+}
+
 auto CommandController::on_guard_command() -> CommandResult {
   return m_modes.on_guard_command();
 }

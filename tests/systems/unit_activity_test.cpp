@@ -278,7 +278,8 @@ TEST(UnitActivityTest, IdsRoundTripSoQmlAndCppNameTheSameThing) {
                           ActivityKind::Deliver,
                           ActivityKind::Heal,
                           ActivityKind::Train,
-                          ActivityKind::Blocked}) {
+                          ActivityKind::Blocked,
+                          ActivityKind::Ferry}) {
     EXPECT_EQ(
         Game::Systems::activity_kind_from_id(Game::Systems::activity_kind_id(kind)),
         kind);

@@ -32,6 +32,8 @@ inline constexpr float k_forest_ranged_cover_multiplier = 0.6F;
 
 inline constexpr float k_wall_walk_ranged_cover_multiplier = 0.65F;
 
+inline constexpr float k_afloat_exposure_multiplier = 1.35F;
+
 inline constexpr float k_wall_walk_high_ground_multiplier = 1.35F;
 inline constexpr float k_optimal_range_factor = 0.85F;
 inline constexpr float k_optimal_range_buffer = 0.5F;

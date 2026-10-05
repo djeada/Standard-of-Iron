@@ -129,6 +129,22 @@ TestCase {
         compare(button.compact, false, "Roll Stones lost its label");
     }
 
+    function test_cross_raft_appears_only_beside_a_raft() {
+        panel.action_states = {
+            "cross_raft": state(0)
+        };
+        wait(1);
+        compare(collect(panel, function (item) {
+                    return item.objectName === "contextCommand_cross_raft";
+                }).length, 0, "Cross by Raft showed with no troops beside a raft");
+        panel.action_states = {
+            "cross_raft": state(1)
+        };
+        wait(1);
+        var button = named("contextCommand_cross_raft");
+        verify(button.visible, "Cross by Raft is hidden beside a raft");
+    }
+
     function test_builder_actions_fill_the_context_row_without_hiding_primary_orders() {
         panel.action_states = {
             "build": state(1),

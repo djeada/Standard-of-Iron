@@ -203,6 +203,14 @@
         <source>%1 (%2 units)</source>
         <translation>%1 (%2 birim)</translation>
     </message>
+    <message>
+        <source>On the raft</source>
+        <translation>Salda</translation>
+    </message>
+    <message>
+        <source>Being ferried across the river. It takes no orders until it lands.</source>
+        <translation>Nehrin karşısına taşınıyor. Karaya çıkana kadar emir almaz.</translation>
+    </message>
 </context>
 <context>
     <name>AllyAppealPanel</name>
@@ -4838,6 +4846,34 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
         <source>Move troops next to stones your side holds</source>
         <translation>Birlikleri tarafının tuttuğu taşların yanına götür</translation>
     </message>
+    <message>
+        <source>Cross by Raft</source>
+        <translation>Salla geç</translation>
+    </message>
+    <message>
+        <source>Raft</source>
+        <translation>Sal</translation>
+    </message>
+    <message>
+        <source>The selected troops line up at the river raft and are ferried to the far bank, one unit per trip.</source>
+        <translation>Seçili birlikler nehir salında sıraya girer ve her seferde bir birlik olmak üzere karşı kıyıya taşınır.</translation>
+    </message>
+    <message>
+        <source>Bring troops near either bank of a raft crossing, then press Cross by Raft.</source>
+        <translation>Birlikleri bir sal geçidinin iki kıyısından birine yaklaştır, sonra Salla geç&apos;e bas.</translation>
+    </message>
+    <message>
+        <source>The raft carries one unit at a time and comes back empty for the next in line.</source>
+        <translation>Sal her seferinde bir birlik taşır ve sıradaki için boş olarak geri döner.</translation>
+    </message>
+    <message>
+        <source>Men on the water cannot run or close ranks, so every hit lands harder.</source>
+        <translation>Sudaki adamlar ne koşabilir ne de safları sıklaştırabilir, bu yüzden her darbe daha sert iner.</translation>
+    </message>
+    <message>
+        <source>Move troops next to a river raft</source>
+        <translation>Birlikleri bir nehir salının yanına götür</translation>
+    </message>
 </context>
 <context>
     <name>HUDBottomCommander</name>
@@ -8228,10 +8264,6 @@ bir harita seç</translation>
         <translation>Scipio hattı genişletiyor. Merkezini sağlam tut ve fillerin yalnız kalmasını önle.</translation>
     </message>
     <message>
-        <source>Scipio inherits any crossing you leave behind.</source>
-        <translation>Arkanda bıraktığın her geçit Scipio&apos;ya kalır.</translation>
-    </message>
-    <message>
         <source>Seize Masinissa&apos;s camp to finish the four.</source>
         <translation>Dördü tamamlamak için Masinissa&apos;nın kampını ele geçir.</translation>
     </message>
@@ -8338,10 +8370,6 @@ bir harita seç</translation>
     <message>
         <source>Take the river camp</source>
         <translation>Nehir kampını al</translation>
-    </message>
-    <message>
-        <source>Take the second camp on the southern supply road.</source>
-        <translation>Güney ikmal yolundaki ikinci kampı al.</translation>
     </message>
     <message>
         <source>Take the shore camp</source>
@@ -9590,6 +9618,14 @@ bir harita seç</translation>
     <message>
         <source>Winter 218 BC: after the victory on the Trebia, Hannibal attacked the depot near Placentia and then stormed Victumulae, a fortified market of the Insubrian plain where the people of the district had gathered for safety. Livy records that it fell to assault and was sacked. This altered history gives the town a Roman praefect, a citadel garrison and a relief force on the Placentia road.</source>
         <translation>MÖ 218 kışı: Trebia zaferinden sonra Hannibal, Placentia yakınlarındaki ikmal deposuna saldırdı, ardından bölge halkının güvenlik için toplandığı, İnsubr ovasının tahkimli pazarı Victumulae&apos;yi hücumla aldı. Livius kasabanın hücumla düştüğünü ve yağmalandığını kaydeder. Bu değiştirilmiş tarih kasabaya Romalı bir prefekt, bir iç kale garnizonu ve Placentia yolunda bir yardım kuvveti verir.</translation>
+    </message>
+    <message>
+        <source>Ferry your companies over on the rafts, one at a time: one below the Gaulish landing, one further south, one across the eastern branch.</source>
+        <translation>Bölüklerini sallarla tek tek karşıya geçir: biri Galya iskelesinin aşağısında, biri daha güneyde, biri doğu kolunun karşısında.</translation>
+    </message>
+    <message>
+        <source>Take the second camp on the southern supply road. No bridge reaches its bank of the river.</source>
+        <translation>Güney ikmal yolundaki ikinci kampı ele geçir. Nehrin o kıyısına hiçbir köprü ulaşmıyor.</translation>
     </message>
 </context>
 <context>

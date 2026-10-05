@@ -169,7 +169,7 @@ auto shield_archetype(const ShieldRenderConfig& config) -> const RenderArchetype
            k_inner_ring_slot);
 
   if (config.has_radial_decoration) {
-    // Follow the dome so the painted rays and rivets remain on its surface.
+
     constexpr int k_rays = 8;
     constexpr int k_ray_segments = 4;
     for (int ray = 0; ray < k_rays; ++ray) {
@@ -228,7 +228,7 @@ auto shield_archetype(const ShieldRenderConfig& config) -> const RenderArchetype
     builder.add_palette_mesh(
         get_unit_sphere(), boss, k_metal_slot, nullptr, 1.0F, config.material_id);
   } else if (config.has_radial_decoration) {
-    // Keep the caetra's low bronze boss in proportion to the small shield.
+
     QMatrix4x4 flange;
     flange.translate(face_point(0.0F, 0.0F));
     flange.scale(min_extent * 0.29F, min_extent * 0.29F, min_extent * 0.055F);

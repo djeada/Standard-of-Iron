@@ -2,6 +2,8 @@
 
 #include <QVector3D>
 
+#include <algorithm>
+
 #include "core/ambient_session.h"
 #include "core/component_core.h"
 #include "core/component_gameplay.h"
@@ -25,6 +27,10 @@ void TerrainAlignmentSystem::run(Engine::Core::SystemContext& context) {
             context.try_get<Engine::Core::WallWalkerComponent>(entity_id)) {
       transform.position.y += walker->elevation;
     }
+    if (const auto* rider =
+            context.try_get<Engine::Core::RaftRiderComponent>(entity_id)) {
+      transform.position.y = std::max(transform.position.y, rider->deck_y);
+    }
   }
 }
 
@@ -38,7 +44,7 @@ void TerrainAlignmentSystem::align_transform_to_terrain(
 
 auto TerrainAlignmentSystem::access() const -> Engine::Core::SystemAccess {
   using namespace Engine::Core;
-  return SystemAccess::declare(Reads<WallWalkerComponent>{},
+  return SystemAccess::declare(Reads<WallWalkerComponent, RaftRiderComponent>{},
                                Writes<TransformComponent>{});
 }
 

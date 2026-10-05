@@ -9,6 +9,7 @@
 #include "game/systems/arrow_projectile.h"
 #include "game/systems/render_effects_frame.h"
 #include "game/systems/stone_projectile.h"
+#include "raft_renderer.h"
 #include "render/entity/barracks_flag_renderer.h"
 #include "render/entity/registry.h"
 #include "render/entity_appearance.h"
@@ -1345,6 +1346,25 @@ void render_rockfall(Renderer* renderer,
                            k_rockfall_dust_intensity,
                            dust.age);
   }
+}
+
+void render_rafts(Renderer* renderer,
+                  const Game::Systems::RenderEffectsFrame& effects) {
+  if (effects.rafts.empty()) {
+    return;
+  }
+  std::vector<RaftDrawable> drawables;
+  drawables.reserve(effects.rafts.size());
+  for (auto const& raft : effects.rafts) {
+    drawables.push_back({.position = raft.position,
+                         .across = raft.across,
+                         .docks = raft.docks,
+                         .half_length = raft.half_length,
+                         .half_width = raft.half_width,
+                         .moving = raft.moving,
+                         .seed = raft.seed});
+  }
+  draw_rafts(renderer, drawables);
 }
 
 } // namespace Render::GL

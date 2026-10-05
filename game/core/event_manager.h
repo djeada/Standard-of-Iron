@@ -267,6 +267,11 @@ public:
   int new_owner_id;
 };
 
+class ContextActionsChangedEvent : public Event {
+public:
+  ContextActionsChangedEvent() = default;
+};
+
 class UndeadZoneAwakenedEvent : public Event {
 public:
   UndeadZoneAwakenedEvent(QString zone_id,

@@ -203,6 +203,14 @@
         <source>%1 (%2 units)</source>
         <translation>%1 (отрядов: %2)</translation>
     </message>
+    <message>
+        <source>On the raft</source>
+        <translation>На плоту</translation>
+    </message>
+    <message>
+        <source>Being ferried across the river. It takes no orders until it lands.</source>
+        <translation>Переправляется через реку. Не принимает приказов, пока не высадится.</translation>
+    </message>
 </context>
 <context>
     <name>AllyAppealPanel</name>
@@ -4840,6 +4848,34 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>Move troops next to stones your side holds</source>
         <translation>Подведите войска к камням вашей стороны</translation>
     </message>
+    <message>
+        <source>Cross by Raft</source>
+        <translation>Переправиться на плоту</translation>
+    </message>
+    <message>
+        <source>Raft</source>
+        <translation>Плот</translation>
+    </message>
+    <message>
+        <source>The selected troops line up at the river raft and are ferried to the far bank, one unit per trip.</source>
+        <translation>Выбранные войска выстраиваются у речного плота и переправляются на другой берег, по одному отряду за рейс.</translation>
+    </message>
+    <message>
+        <source>Bring troops near either bank of a raft crossing, then press Cross by Raft.</source>
+        <translation>Подведите войска к любому берегу переправы на плоту и нажмите «Переправиться на плоту».</translation>
+    </message>
+    <message>
+        <source>The raft carries one unit at a time and comes back empty for the next in line.</source>
+        <translation>Плот везёт один отряд за раз и возвращается пустым за следующим в очереди.</translation>
+    </message>
+    <message>
+        <source>Men on the water cannot run or close ranks, so every hit lands harder.</source>
+        <translation>Люди на воде не могут бежать или сомкнуть ряды, поэтому каждый удар бьёт сильнее.</translation>
+    </message>
+    <message>
+        <source>Move troops next to a river raft</source>
+        <translation>Подведите войска к речному плоту</translation>
+    </message>
 </context>
 <context>
     <name>HUDBottomCommander</name>
@@ -8234,10 +8270,6 @@ to see preview</source>
         <translation>Сципион растягивает линию. Держите центр твёрдо и не давайте слонам остаться в одиночестве.</translation>
     </message>
     <message>
-        <source>Scipio inherits any crossing you leave behind.</source>
-        <translation>Сципиону достанется любая переправа, которую вы оставите.</translation>
-    </message>
-    <message>
         <source>Seize Masinissa&apos;s camp to finish the four.</source>
         <translation>Займите лагерь Масиниссы, чтобы дополнить четвёрку.</translation>
     </message>
@@ -8344,10 +8376,6 @@ to see preview</source>
     <message>
         <source>Take the river camp</source>
         <translation>Возьмите речной лагерь</translation>
-    </message>
-    <message>
-        <source>Take the second camp on the southern supply road.</source>
-        <translation>Возьмите второй лагерь на южной дороге снабжения.</translation>
     </message>
     <message>
         <source>Take the shore camp</source>
@@ -9596,6 +9624,14 @@ to see preview</source>
     <message>
         <source>Winter 218 BC: after the victory on the Trebia, Hannibal attacked the depot near Placentia and then stormed Victumulae, a fortified market of the Insubrian plain where the people of the district had gathered for safety. Livy records that it fell to assault and was sacked. This altered history gives the town a Roman praefect, a citadel garrison and a relief force on the Placentia road.</source>
         <translation>Зима 218 г. до н. э.: после победы на Требии Ганнибал напал на склад близ Плаценции, а затем взял штурмом Виктумулы, укреплённый торговый городок Инсубрской равнины, где укрылись жители округи. Ливий сообщает, что город пал при штурме и был разграблен. В этой изменённой истории у города есть римский префект, гарнизон в цитадели и войско подмоги на дороге из Плаценции.</translation>
+    </message>
+    <message>
+        <source>Ferry your companies over on the rafts, one at a time: one below the Gaulish landing, one further south, one across the eastern branch.</source>
+        <translation>Переправляйте роты на плотах по одной: один плот ниже галльской пристани, второй южнее, третий через восточный рукав.</translation>
+    </message>
+    <message>
+        <source>Take the second camp on the southern supply road. No bridge reaches its bank of the river.</source>
+        <translation>Захватите второй лагерь на южной дороге снабжения. Ни один мост не ведёт к его берегу реки.</translation>
     </message>
 </context>
 <context>

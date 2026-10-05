@@ -197,6 +197,7 @@ void add_plan_step_intent(const AIContext& context,
 void wish_for_shortfalls(const AIContext& context,
                          const SettlementAssessment& town,
                          const std::vector<int>& blocked_plan_slots,
+                         bool plan_offers_a_step,
                          std::vector<ConstructionIntent>& intents) {
   const auto& standing = town.standing;
   const auto& targets = town.targets;
@@ -210,7 +211,8 @@ void wish_for_shortfalls(const AIContext& context,
            {BUILDING_TYPE_HOME, standing.homes, targets.homes},
            {town.siege_engine, town.siege_count, town.target_catapults},
        })) {
-    if (plan_still_sites_this_itself(context, town, blocked_plan_slots, candidate)) {
+    if (plan_offers_a_step &&
+        plan_still_sites_this_itself(context, town, blocked_plan_slots, candidate)) {
       continue;
     }
     wish(intents, candidate);
@@ -282,7 +284,7 @@ auto gather_construction_intents(const AISnapshot& snapshot,
     wish(intents, BUILDING_TYPE_DEFENSE_TOWER);
   }
 
-  wish_for_shortfalls(context, town, blocked_plan_slots, intents);
+  wish_for_shortfalls(context, town, blocked_plan_slots, plan.present, intents);
   return intents;
 }
 

@@ -176,6 +176,44 @@ auto order_move(const char* name,
   return step;
 }
 
+constexpr float k_raft_river_width = 10.0F;
+constexpr float k_raft_bank_z = 16.0F;
+
+auto river_crossing(const char* id,
+                    const char* label,
+                    const char* description,
+                    float duration) -> ArenaScenarioDefinition {
+  ArenaScenarioDefinition result;
+  result.id = QString::fromLatin1(id);
+  result.label = QString::fromLatin1(label);
+  result.description = QString::fromLatin1(description);
+  result.duration_seconds = duration;
+  result.camera = {40.0F, 52.0F, 300.0F};
+  result.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+  result.terrain_grid_extent = 100;
+  result.arena_floor_half_extent = 36.0F;
+  result.ground_type = QStringLiteral("soil_rocky");
+  result.suppress_terrain_scatter = true;
+  result.suppress_spawn_anchor = true;
+  result.suppress_ui_overlays = true;
+  result.suppress_boundary_mountains = true;
+  result.rivers.push_back(Game::Map::RiverSegment{
+      {-44.0F, 0.0F, 0.0F}, {44.0F, 0.0F, 0.0F}, k_raft_river_width});
+  Game::Map::RaftCrossing raft;
+  raft.id = QStringLiteral("ferry");
+  result.rafts = {raft};
+  return result;
+}
+
+auto order_raft(const char* group, float at) -> ArenaScenarioStep {
+  ArenaScenarioStep step;
+  step.name = QStringLiteral("cross_by_raft");
+  step.trigger = {Trigger::AtTime, at, {}, {}, 0.0F};
+  step.command = Command::CrossByRaft;
+  step.group = QString::fromLatin1(group);
+  return step;
+}
+
 void expect_readable_casualties(ArenaScenarioDefinition& scenario) {
   scenario.expectations.push_back(expectation(Expect::AllGroupsRespondWithin, 2.5F));
   scenario.expectations.push_back(expectation(Expect::GroupHealthReduced, 1.0F));
@@ -299,6 +337,57 @@ auto build_hazard_definitions() -> std::vector<ArenaScenarioDefinition> {
         order_move("climb", "column", 1.0F, QVector3D(k_hill_x, 0.0F, 0.0F))};
     scenario.expectations.push_back(expectation(Expect::GroupHealthReduced, 1.0F));
     scenario.expectations.push_back(expectation(Expect::LaunchedCasualtyObserved));
+    result.push_back(std::move(scenario));
+  }
+
+  {
+    auto scenario = river_crossing(
+        k_raft_crossing_id,
+        "Rafts: Ferrying an Army Across",
+        "Three troops line up at a raft on a wide river. The raft carries one "
+        "troop at a time to the far bank and comes back empty for the next.",
+        48.0F);
+    auto crossers = troop("crossers",
+                          Game::Units::TroopType::Swordsman,
+                          1,
+                          3,
+                          QVector3D(6.0F, 0.0F, -k_raft_bank_z),
+                          0.0F);
+    scenario.groups = {crossers};
+    scenario.steps = {order_raft("crossers", 1.0F)};
+    scenario.expectations.push_back(expectation(Expect::RaftFerryObserved, 0.0F));
+    scenario.expectations.back().group = QStringLiteral("crossers");
+    scenario.expectations.push_back(expectation(Expect::GroupHealthUnchanged));
+    scenario.expectations.back().group = QStringLiteral("crossers");
+    result.push_back(std::move(scenario));
+  }
+
+  {
+    auto scenario = river_crossing(
+        k_raft_contested_crossing_id,
+        "Rafts: Contested Crossing",
+        "Troops ferry across a wide river by raft while archers on the far "
+        "bank shoot at every boat-load. Men afloat cannot close ranks, so "
+        "the arrows bite harder on the water.",
+        55.0F);
+    scenario.groups = {troop("crossers",
+                             Game::Units::TroopType::Swordsman,
+                             1,
+                             3,
+                             QVector3D(6.0F, 0.0F, -k_raft_bank_z),
+                             0.0F),
+                       troop("bank_archers",
+                             Game::Units::TroopType::Archer,
+                             2,
+                             2,
+                             QVector3D(5.0F, 0.0F, 3.5F),
+                             180.0F)};
+    scenario.groups[1].spacing = QVector3D(-10.0F, 0.0F, 0.0F);
+    scenario.steps = {order_raft("crossers", 1.0F)};
+    scenario.expectations.push_back(expectation(Expect::RaftFerryObserved));
+    scenario.expectations.back().group = QStringLiteral("crossers");
+    scenario.expectations.push_back(expectation(Expect::GroupHealthReduced, 1.0F));
+    scenario.expectations.back().group = QStringLiteral("crossers");
     result.push_back(std::move(scenario));
   }
 

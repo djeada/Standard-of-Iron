@@ -187,6 +187,13 @@ struct RockfallTrap {
   int ai_min_targets = 2;
 };
 
+struct RaftCrossing {
+  QString id;
+  float x = 0.0F;
+  float z = 0.0F;
+  float speed = 1.6F;
+};
+
 [[nodiscard]] inline auto default_undead_waves() -> std::vector<UndeadWave> {
   UndeadWave wave;
   wave.trigger = QStringLiteral("initial");
@@ -700,6 +707,7 @@ struct MapDefinition {
   std::vector<WorldProp> world_props;
   std::vector<UndeadZone> undead_zones;
   std::vector<RockfallTrap> rockfall_traps;
+  std::vector<RaftCrossing> rafts;
 
   bool hill_rockfall_caches = true;
   std::vector<Forest> forests;

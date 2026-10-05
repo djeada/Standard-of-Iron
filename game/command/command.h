@@ -120,6 +120,10 @@ struct RollStones {
   std::vector<Engine::Core::EntityID> units;
 };
 
+struct CrossByRaft {
+  std::vector<Engine::Core::EntityID> units;
+};
+
 enum class CommanderAbility : std::uint8_t {
   Aura,
   Rally,
@@ -236,7 +240,8 @@ using Payload = std::variant<Move,
                              AllyTribute,
                              AllyCall,
                              AllyAppealAnswer,
-                             RollStones>;
+                             RollStones,
+                             CrossByRaft>;
 
 struct Command {
   Source source = Source::LocalPlayer;

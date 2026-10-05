@@ -48,6 +48,7 @@
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/projectile_kind.h"
 #include "game/systems/projectile_system.h"
+#include "game/systems/raft_system.h"
 #include "game/systems/rockfall_system.h"
 #include "game/systems/rpg_combat_system/rpg_targeting.h"
 #include "game/systems/undead_awakening_system.h"
@@ -338,6 +339,8 @@ struct ArenaScenarioRunner::Impl {
   QHash<QString, bool> gate_opened_seen;
   QHash<QString, bool> tower_docked_seen;
   bool wall_walker_seen{false};
+  QHash<QString, QSet<std::uint64_t>> raft_riders_by_group;
+  int most_raft_riders{0};
   QHash<QString, BridgeAlignmentObservation> bridge_alignment;
   QHash<QString, float> initial_elevation;
   QHash<QString, float> maximum_elevation;

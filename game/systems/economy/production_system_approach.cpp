@@ -30,11 +30,12 @@ constexpr float k_site_approach_limit_seconds = 30.0F;
 constexpr float k_site_route_goal_tolerance_sq = 0.25F;
 constexpr float k_site_progress_epsilon = 0.75F;
 
-constexpr float k_stalled_work_reach_sq = 1.6F * 1.6F;
+constexpr float k_stalled_work_reach_sq = 2.0F * 2.0F;
 constexpr float k_stalled_work_seconds = 2.5F;
 constexpr float k_crew_settle_limit_seconds = 5.0F;
 constexpr float k_post_reach = 0.15F;
 constexpr float k_standing_speed = 0.2F;
+constexpr float k_stopped_grace_seconds = 0.5F;
 
 void face_work_target(Engine::Core::TransformComponent& transform,
                       const Engine::Core::BuilderProductionComponent& builder) {
@@ -192,7 +193,8 @@ void record_approach_progress(Engine::Core::World& world,
   bool const on_route = !builder.bypass_movement_active && actor.movement != nullptr &&
                         actor.movement->get_has_target() && facts != nullptr &&
                         facts->progress.remaining_arclength > 0.0F;
-  float const approach = on_route ? facts->progress.remaining_arclength : distance;
+  float const approach =
+      on_route ? std::max(facts->progress.remaining_arclength, distance) : distance;
   if (builder.site_closest_approach <= 0.0F ||
       approach < builder.site_closest_approach - k_site_progress_epsilon) {
     builder.site_closest_approach = approach;
@@ -268,6 +270,9 @@ void abandon_site_route(const Engine::Core::BuilderProductionComponent& builder,
 auto men_at_posts(Engine::Core::World& world,
                   Engine::Core::EntityID id,
                   float settle_seconds) -> bool {
+  if (settle_seconds >= k_crew_settle_limit_seconds) {
+    return true;
+  }
   auto const* entity = world.get_entity(id);
   auto const* formation =
       world.try_get<Engine::Core::FormationPresentationComponent>(id);
@@ -294,10 +299,7 @@ auto men_at_posts(Engine::Core::World& world,
         k_post_reach) {
       continue;
     }
-    bool const held_short =
-        man.relocation_blocked && settle_seconds >= k_crew_settle_limit_seconds &&
-        std::hypot(man.world_x - post.world_x, man.world_z - post.world_z) <= 2.0F;
-    if (!held_short) {
+    if (settle_seconds < k_stopped_grace_seconds) {
       return false;
     }
   }

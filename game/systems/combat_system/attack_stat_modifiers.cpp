@@ -174,6 +174,11 @@ auto calculate_tactical_damage_multiplier(Engine::Core::Entity* attacker,
     }
   }
 
+  if (auto const* rider = target->get_component<Engine::Core::RaftRiderComponent>();
+      rider != nullptr && rider->afloat) {
+    multiplier *= Constants::k_afloat_exposure_multiplier;
+  }
+
   if (is_ranged_mode(attacker->get_component<Engine::Core::AttackComponent>())) {
     if (auto const* cover = target->get_component<Engine::Core::ForestCoverComponent>();
         cover != nullptr && cover->in_forest) {

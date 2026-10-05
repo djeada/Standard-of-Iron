@@ -296,9 +296,7 @@ void MountedHumanoidRendererBase::append_companion_preparation(
   rider_output.seed = seed;
   rider_output.world_already_grounded = true;
   if (anim_ctx.inputs.is_dying || anim_ctx.inputs.is_dead) {
-    // The death clip falls from standing to the ground. Pinned to the saddle it
-    // would leave the corpse lying in the air over the horse, so a fallen rider
-    // is stood on the ground beside his mount and falls from there.
+
     QVector3D const beside =
         mount.seat_position + mount.seat_right * (dims.body_width * 1.15F);
     QMatrix4x4 ground;

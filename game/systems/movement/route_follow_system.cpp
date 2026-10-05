@@ -296,6 +296,7 @@ auto RouteFollowSystem::access() const -> Engine::Core::SystemAccess {
             HoldModeComponent,
             BuilderProductionComponent,
             WallWalkerComponent,
+            RaftRiderComponent,
             PendingRemovalComponent>{},
       Writes<MovementComponent, MovementFactsComponent, GuardModeComponent>{});
 }

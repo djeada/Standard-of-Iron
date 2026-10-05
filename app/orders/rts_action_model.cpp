@@ -13,6 +13,7 @@
 #include "game/systems/builder_product_types.h"
 #include "game/systems/combat_system/combat_types.h"
 #include "game/systems/owner_registry.h"
+#include "game/systems/raft_system.h"
 #include "game/systems/rockfall_system.h"
 #include "game/units/spawn_type.h"
 #include "game/units/squad.h"
@@ -41,6 +42,7 @@ enum class ActionId {
   Gate,
   Aura,
   RollStones,
+  CrossRaft,
   Unknown
 };
 
@@ -62,7 +64,8 @@ constexpr ActionId k_all_actions[] = {
     ActionId::Heal,       ActionId::Stop,   ActionId::Deliver, ActionId::Collect,
     ActionId::AutoGather, ActionId::Build,  ActionId::Repair,  ActionId::Dismantle,
     ActionId::Formation,  ActionId::Divide, ActionId::Join,    ActionId::Run,
-    ActionId::Rally,      ActionId::Gate,   ActionId::Aura,    ActionId::RollStones};
+    ActionId::Rally,      ActionId::Gate,   ActionId::Aura,    ActionId::RollStones,
+    ActionId::CrossRaft};
 
 auto action_to_string(ActionId action) -> QString {
   switch (action) {
@@ -106,6 +109,8 @@ auto action_to_string(ActionId action) -> QString {
     return QStringLiteral("aura");
   case ActionId::RollStones:
     return QStringLiteral("roll_stones");
+  case ActionId::CrossRaft:
+    return QStringLiteral("cross_raft");
   case ActionId::Unknown:
     break;
   }
@@ -173,6 +178,9 @@ auto action_from_string(const QString& action_id) -> ActionId {
   if (action_id == QStringLiteral("roll_stones")) {
     return ActionId::RollStones;
   }
+  if (action_id == QStringLiteral("cross_raft")) {
+    return ActionId::CrossRaft;
+  }
   return ActionId::Unknown;
 }
 
@@ -206,6 +214,18 @@ auto can_roll_stones(Engine::Core::World* world,
   auto const* rockfall = world->get_system<Game::Systems::RockfallSystem>();
   return rockfall != nullptr &&
          rockfall->cache_in_reach(*world, entity.get_id()).has_value();
+}
+
+auto can_cross_by_raft(Engine::Core::World* world,
+                       const Engine::Core::Entity& entity,
+                       const Engine::Core::UnitComponent* unit,
+                       const Game::Systems::OwnerRegistry& owners) -> bool {
+  if (world == nullptr || unit == nullptr ||
+      unit->owner_id != owners.get_local_player_id()) {
+    return false;
+  }
+  auto const* rafts = world->get_system<Game::Systems::RaftSystem>();
+  return rafts != nullptr && rafts->raft_in_reach(*world, entity.get_id()).has_value();
 }
 
 auto unit_is_eligible_for_action(Engine::Core::World* world,
@@ -253,6 +273,8 @@ auto unit_is_eligible_for_action(Engine::Core::World* world,
            unit != nullptr && unit->owner_id == owners.get_local_player_id();
   case ActionId::RollStones:
     return can_roll_stones(world, entity, unit, owners);
+  case ActionId::CrossRaft:
+    return can_cross_by_raft(world, entity, unit, owners);
   case ActionId::Unknown:
     break;
   }
@@ -322,6 +344,7 @@ auto unit_is_active_for_action(const Engine::Core::Entity& entity,
   case ActionId::Divide:
   case ActionId::Join:
   case ActionId::RollStones:
+  case ActionId::CrossRaft:
   case ActionId::Unknown:
     break;
   }
@@ -648,6 +671,8 @@ auto get_mode_availability(Engine::Core::World* world) -> QVariantMap {
   result[QStringLiteral("canAura")] = get_status(context, ActionId::Aura).enabled;
   result[QStringLiteral("canRollStones")] =
       get_status(context, ActionId::RollStones).enabled;
+  result[QStringLiteral("canCrossRaft")] =
+      get_status(context, ActionId::CrossRaft).enabled;
   result[QStringLiteral("canDivide")] = get_status(context, ActionId::Divide).enabled;
   result[QStringLiteral("canJoin")] =
       get_status(context, ActionId::Join).eligible_count >= 2;
@@ -711,16 +736,6 @@ auto action_id_for_cursor_mode(CursorMode mode) -> QString {
     break;
   }
   return {};
-}
-
-auto count_selected_ready_to_roll_stones(Engine::Core::World* world) -> int {
-  const auto* selected = selected_units(world);
-  if (selected == nullptr) {
-    return 0;
-  }
-  return static_cast<int>(
-      filter_selected_units_for_action(world, *selected, QStringLiteral("roll_stones"))
-          .size());
 }
 
 } // namespace App::Core

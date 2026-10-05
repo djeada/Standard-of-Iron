@@ -141,8 +141,8 @@
       ],
       "required_count": 2,
       "title": "Seize the river town",
-      "description": "Take the second camp on the southern supply road.",
-      "hint": "Scipio inherits any crossing you leave behind.",
+      "description": "Take the second camp on the southern supply road. No bridge reaches its bank of the river.",
+      "hint": "Ferry your companies over on the rafts, one at a time: one below the Gaulish landing, one further south, one across the eastern branch.",
       "target": {
         "x": 566,
         "z": 545

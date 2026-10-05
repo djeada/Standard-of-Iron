@@ -1747,6 +1747,11 @@ Three acceptance kinds back these scenes:
   wall.
 - `WallWalkerObserved` fails when no troop was ever seen standing on a wall-top
   walkway.
+- `RaftFerryObserved` fails when a living troop in the group never boarded a raft,
+  when one is still afloat at the end, or when two troops were ever aboard rafts at
+  once. `raft_crossing` and `raft_contested_crossing` use it; see `docs/RAFTS.md`.
+  Scenario `rafts` positions are in the same unshifted world frame as `rivers`,
+  not offset by the spawn anchor like groups, so a raft always lands on its river.
 - `GateRemainedClosed` fails when a gate opened, or when the named group was never
   sampled as a gate at all.
 - `GroupHeldOutsideDestination` is the mirror of `GroupReachedDestination`: it

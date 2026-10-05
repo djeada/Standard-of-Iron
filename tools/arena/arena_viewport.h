@@ -330,6 +330,7 @@ private:
   void align_units_to_terrain();
   void place_scenario_resource_patches(const Arena::ArenaScenarioDefinition& definition,
                                        const QVector3D& scenario_origin);
+  void configure_scenario_rafts(const Arena::ArenaScenarioDefinition& definition);
   void
   configure_scenario_rockfall_traps(const Arena::ArenaScenarioDefinition& definition,
                                     const QVector3D& scenario_origin);

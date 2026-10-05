@@ -42,6 +42,21 @@ OrdersViewModel::OrdersViewModel(const App::Core::ClientContext& context,
     , m_host(host)
     , m_placement(placement)
     , m_commander(commander) {
+  m_context_actions_subscription =
+      Engine::Core::ScopedEventSubscription<Engine::Core::ContextActionsChangedEvent>(
+          [this](const Engine::Core::ContextActionsChangedEvent&) {
+            m_action_states_stale.store(true);
+            if (m_context_actions_pending.exchange(true)) {
+              return;
+            }
+            QMetaObject::invokeMethod(
+                this,
+                [this] {
+                  m_context_actions_pending.store(false);
+                  emit context_actions_changed();
+                },
+                Qt::QueuedConnection);
+          });
 }
 
 void OrdersViewModel::on_click_select(qreal sx, qreal sy, bool additive) {
@@ -441,6 +456,15 @@ void OrdersViewModel::roll_stones() {
   m_context.input->on_roll_stones_command();
 }
 
+void OrdersViewModel::cross_raft() {
+  if (m_context.input == nullptr) {
+    return;
+  }
+  m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
+  m_context.input->on_cross_raft_command();
+}
+
 void OrdersViewModel::guard() {
   if (m_context.input == nullptr) {
     return;
@@ -502,11 +526,12 @@ auto action_context(const App::Core::ClientContext& context)
 auto OrdersViewModel::action_states() const -> QVariantMap {
   auto frame_lock = m_host.try_lock_frame();
   if (!frame_lock.owns_lock()) {
-    if (m_has_action_states) {
+    if (m_has_action_states && !m_action_states_stale.load()) {
       return m_last_action_states;
     }
     frame_lock = m_host.lock_frame();
   }
+  m_action_states_stale.store(false);
   m_last_action_states = App::Core::get_action_states(action_context(m_context));
   m_has_action_states = true;
   return m_last_action_states;
@@ -514,14 +539,7 @@ auto OrdersViewModel::action_states() const -> QVariantMap {
 
 void OrdersViewModel::publish_frame() {
   m_readout.publish(
-      {.command_mode = App::Core::get_current_action_mode(action_context(m_context)),
-       .stones_ready =
-           App::Core::count_selected_ready_to_roll_stones(m_context.world)});
-}
-
-auto OrdersViewModel::stones_ready() const -> int {
-  const auto readout = m_readout.read();
-  return readout ? readout->stones_ready : 0;
+      {.command_mode = App::Core::get_current_action_mode(action_context(m_context))});
 }
 
 auto OrdersViewModel::command_mode() const -> QString {

@@ -254,6 +254,20 @@ auto build_catalog() -> std::vector<Art> {
        line(QStringLiteral("M11.4 13.6 Q10.2 15.2 11.6 16.8"), Tone::Ember, 1.2F),
        line(QStringLiteral("M5 13.4 Q4 15.4 5.2 17.4"), Tone::Ember, 1.2F)});
 
+  add("cross_raft",
+      {line(QStringLiteral("M2.4 19.4 Q5.6 17.6 8.8 19.4 Q12 21.2 15.2 19.4 Q18.4 17.6 "
+                           "21.6 19.4"),
+            Tone::Metal,
+            1.4F),
+       fill(QStringLiteral("M3.6 12.4 L20.4 12.4 L20.4 16.4 L3.6 16.4 Z"),
+            Tone::Timber),
+       line(QStringLiteral(
+                "M7.8 12.4 L7.8 16.4 M12 12.4 L12 16.4 M16.2 12.4 L16.2 16.4"),
+            Tone::Ink,
+            1.0F),
+       line(QStringLiteral("M2.4 6.2 L21.6 6.2"), Tone::Ember, 1.2F),
+       line(QStringLiteral("M12 6.2 L12 12.4"), Tone::Ember, 1.0F)});
+
   add("wood",
       {fill(QStringLiteral("M3.4 8.6 L20.6 8.6 L20.6 15.4 L3.4 15.4 Z"), Tone::Timber),
        line(QStringLiteral("M7 12 L17 12"), Tone::Ink, 1.1F)});

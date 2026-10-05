@@ -254,6 +254,9 @@ void encode(QJsonObject& o, const AllyAppealAnswer& p) {
 void encode(QJsonObject& o, const RollStones& p) {
   o["units"] = ids_to_json(p.units);
 }
+void encode(QJsonObject& o, const CrossByRaft& p) {
+  o["units"] = ids_to_json(p.units);
+}
 void encode(QJsonObject& o, const UseCommanderAbility& p) {
   o["commander"] = id_to_json(p.commander);
   o["ability"] = enum_value(p.ability);
@@ -435,6 +438,10 @@ auto decode<AllyAppealAnswer>(Reader& r) -> AllyAppealAnswer {
 }
 template <>
 auto decode<RollStones>(Reader& r) -> RollStones {
+  return {.units = r.ids("units")};
+}
+template <>
+auto decode<CrossByRaft>(Reader& r) -> CrossByRaft {
   return {.units = r.ids("units")};
 }
 template <>

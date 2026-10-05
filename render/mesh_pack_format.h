@@ -81,6 +81,9 @@ private:
     if (count > m_size - m_offset) {
       return false;
     }
+    if (count == 0) {
+      return true;
+    }
     std::memcpy(out, m_data + m_offset, count);
     m_offset += count;
     return true;

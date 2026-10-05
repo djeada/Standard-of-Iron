@@ -12,6 +12,7 @@
 #include "game/map/map_definition.h"
 #include "game/map/terrain.h"
 #include "game/systems/navigation/wall_network_service.h"
+#include "game/systems/raft_system.h"
 #include "game/units/spawn_type.h"
 #include "tools/arena/arena_scenario.h"
 #include "tools/arena/arena_scenarios.h"
@@ -1765,6 +1766,40 @@ TEST(ArenaScenariosTest, RockfallAmbushScenariosStrikeAColumnInAnAlpinePass) {
   }
   EXPECT_FALSE(Arena::validate_scenario(broken).empty())
       << "a step naming an unknown trap is rejected";
+}
+
+TEST(ArenaScenariosTest, RaftScenariosFerryAGroupAcrossAWideRiver) {
+  for (auto const* id : {Arena::Scenarios::k_raft_crossing_id,
+                         Arena::Scenarios::k_raft_contested_crossing_id}) {
+    EXPECT_NE(Arena::Scenarios::find_option(QString::fromLatin1(id)), nullptr) << id;
+    auto const* scenario = Arena::Scenarios::find_definition(QString::fromLatin1(id));
+    ASSERT_NE(scenario, nullptr) << id;
+    EXPECT_TRUE(Arena::validate_scenario(*scenario).empty()) << id;
+    ASSERT_FALSE(scenario->rafts.empty()) << id;
+    ASSERT_FALSE(scenario->rivers.empty()) << id;
+    EXPECT_TRUE(Game::Systems::RaftSystem::river_admits_raft(scenario->rivers[0].width))
+        << id << " floats its raft on a river too narrow to carry one";
+    EXPECT_TRUE(std::any_of(scenario->steps.begin(),
+                            scenario->steps.end(),
+                            [](auto const& step) {
+                              return step.command ==
+                                     Arena::ScenarioCommandKind::CrossByRaft;
+                            }))
+        << id << " orders the crossing the way the HUD button does";
+    EXPECT_TRUE(std::any_of(scenario->expectations.begin(),
+                            scenario->expectations.end(),
+                            [](auto const& expectation) {
+                              return expectation.kind ==
+                                     Arena::ArenaExpectationKind::RaftFerryObserved;
+                            }))
+        << id;
+  }
+
+  auto broken = *Arena::Scenarios::find_definition(
+      QString::fromLatin1(Arena::Scenarios::k_raft_crossing_id));
+  broken.rivers.clear();
+  EXPECT_FALSE(Arena::validate_scenario(broken).empty())
+      << "a raft without a river is rejected";
 }
 
 TEST(ArenaScenariosTest, HillRampScenariosRollTheStagedStoneCache) {

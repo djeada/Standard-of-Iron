@@ -71,6 +71,7 @@ public:
   auto on_hold_command() -> CommandResult;
   auto on_gate_command() -> CommandResult;
   auto on_roll_stones_command() -> CommandResult;
+  auto on_cross_raft_command() -> CommandResult;
   auto on_guard_command() -> CommandResult;
 
   auto

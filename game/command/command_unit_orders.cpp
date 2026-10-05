@@ -10,6 +10,7 @@
 #include "../systems/movement/command_service.h"
 #include "../systems/movement/order_service.h"
 #include "../systems/navigation/gate_service.h"
+#include "../systems/raft_system.h"
 #include "../systems/rockfall_system.h"
 #include "../systems/squad_service.h"
 #include "../systems/troop_count_registry.h"
@@ -94,6 +95,22 @@ void apply_roll_stones(World& world, const RollStones& order) {
   }
   for (auto const unit : order.units) {
     (void)rockfall->order_release(world, unit);
+  }
+}
+void apply_cross_by_raft(World& world, const CrossByRaft& order) {
+  auto* rafts = world.get_system<Game::Systems::RaftSystem>();
+  if (rafts == nullptr) {
+    return;
+  }
+  std::vector<Engine::Core::EntityID> boarding;
+  for (auto const unit : order.units) {
+    if (rafts->raft_in_reach(world, unit).has_value()) {
+      boarding.push_back(unit);
+    }
+  }
+  Game::Formation::ArmyFormationService::release(world, boarding);
+  for (auto const unit : boarding) {
+    (void)rafts->order_crossing(world, unit);
   }
 }
 void apply_gate_mode(World& world, const SetGateMode& order) {

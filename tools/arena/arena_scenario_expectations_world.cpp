@@ -185,6 +185,37 @@ void ArenaScenarioRunner::Impl::check_movement_expectation(
                 QStringLiteral("no troop was ever seen on a wall-top walkway"));
     }
     break;
+  case ArenaExpectationKind::RaftFerryObserved: {
+    auto const ferried = raft_riders_by_group.value(expectation.group);
+    QStringList never_aboard;
+    QStringList still_afloat;
+    for (auto const entity_id : ids(expectation.group)) {
+      if (!entity_alive(entity_id)) {
+        continue;
+      }
+      if (!ferried.contains(entity_id)) {
+        never_aboard.push_back(QString::number(entity_id));
+      } else if (world.has<Engine::Core::RaftRiderComponent>(entity_id)) {
+        still_afloat.push_back(QString::number(entity_id));
+      }
+    }
+    if (most_raft_riders > 1) {
+      add_issue(QStringLiteral("raft_overloaded"),
+                QStringLiteral("%1 units were aboard rafts at once; a raft carries one")
+                    .arg(most_raft_riders));
+    }
+    if (!never_aboard.isEmpty()) {
+      add_issue(QStringLiteral("raft_never_boarded"),
+                QStringLiteral("%1 never boarded a raft: %2")
+                    .arg(expectation.group, never_aboard.join(QStringLiteral(", "))));
+    }
+    if (!still_afloat.isEmpty()) {
+      add_issue(QStringLiteral("raft_never_landed"),
+                QStringLiteral("%1 was still afloat when the run ended: %2")
+                    .arg(expectation.group, still_afloat.join(QStringLiteral(", "))));
+    }
+    break;
+  }
   case ArenaExpectationKind::GateRemainedClosed:
     if (!gate_seen.value(expectation.group, false)) {
       add_issue(

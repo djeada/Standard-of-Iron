@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "arena_scenario_internal.h"
 
 namespace Arena {
@@ -248,14 +250,22 @@ void ArenaScenarioRunner::observe_rendered_frame(
     }
     m_impl->observe_bridge_centerline_alignment(group.name);
   }
-  if (!m_impl->wall_walker_seen) {
-    for (auto [walker_id, walker] :
-         m_impl->world.view<const Engine::Core::WallWalkerComponent>()) {
-      (void)walker_id;
-      (void)walker;
-      m_impl->wall_walker_seen = true;
-      break;
+  int raft_riders = 0;
+  for (auto [rider_id, rider] :
+       m_impl->world.view<const Engine::Core::RaftRiderComponent>()) {
+    (void)rider;
+    ++raft_riders;
+    for (auto const& group : m_impl->scenario.groups) {
+      auto const& members = m_impl->ids(group.name);
+      if (std::find(members.begin(), members.end(), rider_id) != members.end()) {
+        m_impl->raft_riders_by_group[group.name].insert(rider_id);
+      }
     }
+  }
+  m_impl->most_raft_riders = std::max(m_impl->most_raft_riders, raft_riders);
+  if (!m_impl->wall_walker_seen) {
+    auto walkers = m_impl->world.view<const Engine::Core::WallWalkerComponent>();
+    m_impl->wall_walker_seen = walkers.begin() != walkers.end();
   }
   m_impl->observe_rpg_locomotion_presentation(frame);
   m_impl->observe_rpg_swing_cadence(frame);

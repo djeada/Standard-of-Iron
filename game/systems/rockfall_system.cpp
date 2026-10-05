@@ -264,6 +264,7 @@ void RockfallSystem::configure(const Game::Map::MapDefinition& map_definition) {
   m_dust.clear();
   m_total_strikes = 0;
   m_release_sequence = 0;
+  m_reach_signature.clear();
   float const tile = std::max(map_definition.grid.tile_size, 1.0e-4F);
   m_half_extent_x = static_cast<float>(map_definition.grid.width) * tile * 0.5F;
   m_half_extent_z = static_cast<float>(map_definition.grid.height) * tile * 0.5F;
@@ -999,9 +1000,43 @@ void RockfallSystem::update(Engine::Core::World* world, float delta_time) {
       dust.age += dt;
     }
     std::erase_if(m_dust, [](const Dust& dust) { return dust.age >= dust.lifetime; });
+    track_reach(*world);
   }
 
   publish_render_views(*world);
+}
+
+void RockfallSystem::track_reach(Engine::Core::World& world) {
+  thread_local std::vector<std::uint64_t> signature;
+  signature.clear();
+  auto const& index = world.spatial_index();
+  for (std::size_t trap_index = 0; trap_index < m_traps.size(); ++trap_index) {
+    auto const& trap = m_traps[trap_index];
+    bool const usable =
+        trap.armed && !trap.spent && trap.pending_releases == 0 && trap.pusher == 0 &&
+        trap.definition.trigger != Game::Map::RockfallTriggerMode::Scripted;
+    if (!usable) {
+      continue;
+    }
+    signature.push_back((static_cast<std::uint64_t>(trap_index) << 32U) |
+                        static_cast<std::uint32_t>(trap.owner_id));
+    std::size_t const first = signature.size();
+    index.for_each_in_radius(trap.release_world.x(),
+                             trap.release_world.z(),
+                             k_rockfall_use_radius,
+                             [&trap](const Index::Entry& entry) {
+                               if (is_usable_troop(entry) &&
+                                   entry.owner_id == trap.owner_id) {
+                                 signature.push_back(entry.id);
+                               }
+                             });
+    std::sort(signature.begin() + static_cast<std::ptrdiff_t>(first), signature.end());
+  }
+  if (signature != m_reach_signature) {
+    m_reach_signature.assign(signature.begin(), signature.end());
+    Engine::Core::EventManager::instance().publish(
+        Engine::Core::ContextActionsChangedEvent{});
+  }
 }
 
 void RockfallSystem::publish_render_views(Engine::Core::World& world) const {

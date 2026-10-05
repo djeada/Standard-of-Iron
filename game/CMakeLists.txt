@@ -525,6 +525,7 @@ add_library(
     systems/showcase_routine_system.cpp
     systems/cursed_gold_vein_system.cpp
     systems/rockfall_system.cpp
+    systems/raft_system.cpp
     systems/undead_awakening_system.cpp
     systems/undead_guardians.cpp
     systems/undead_shrine.cpp
