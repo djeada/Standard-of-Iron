@@ -4,6 +4,7 @@
 #include <QString>
 #include <QVector>
 
+#include <array>
 #include <memory>
 #include <optional>
 #include <variant>
@@ -50,6 +51,13 @@ using ElementSnapshot = std::variant<std::monostate,
                                      ForestElement>;
 
 namespace ElementOps {
+
+inline constexpr std::array<const char*, 4> k_generation_ownership_keys = {
+    "generated", "settlement", "landmark", "dressing"};
+
+[[nodiscard]] auto is_generated(const ElementSnapshot& snap) -> bool;
+[[nodiscard]] auto count_generated(const QVector<ElementSnapshot>& snaps) -> int;
+[[nodiscard]] auto as_authored(const ElementSnapshot& snap) -> ElementSnapshot;
 
 [[nodiscard]] auto is_valid_kind(int kind) -> bool;
 [[nodiscard]] auto kind_of(const ElementSnapshot& snap) -> int;

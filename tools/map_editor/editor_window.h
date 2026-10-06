@@ -16,6 +16,8 @@ class QTabWidget;
 
 namespace MapEditor {
 
+class GeneratorPanel;
+
 class EditorWindow : public QMainWindow {
   Q_OBJECT
 
@@ -24,6 +26,7 @@ public:
   ~EditorWindow() override;
 
   bool load_file(const QString& file_path);
+  void select_sidebar_tab(const QString& title);
 
 private slots:
   void new_map();
@@ -80,6 +83,7 @@ private:
   MapCanvas* m_canvas = nullptr;
   ToolPanel* m_tool_panel = nullptr;
   MissionPanel* m_mission_panel = nullptr;
+  GeneratorPanel* m_generator_panel = nullptr;
   QTabWidget* m_sidebar_tabs = nullptr;
   QScrollArea* m_mission_scroll = nullptr;
   QLabel* m_feedback_label = nullptr;

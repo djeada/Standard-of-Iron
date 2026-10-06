@@ -1,0 +1,21 @@
+{
+  "id": "multi_settlement_valley",
+  "label": "Multi-Settlement Valley",
+  "order": 7,
+  "description": "A settled valley: several towns and camps on a dense road net with farms between them.",
+  "width": 650,
+  "height": 650,
+  "parameters": {
+    "tactical.sectors": 5,
+    "settlements.towns": 2,
+    "settlements.forts": 2,
+    "settlements.camps": 1,
+    "settlements.spacing": 120,
+    "roads.loops": 3,
+    "roads.secondary": 0.6,
+    "water.rivers": 1,
+    "forests.density": 0.35,
+    "dressing.scatter": 0.7,
+    "general.biome": "temperate"
+  }
+}

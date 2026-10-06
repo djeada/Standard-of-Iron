@@ -12,6 +12,9 @@ add_library(
     map_data.cpp
     mission_data.cpp
     commander_preview.cpp
+    tool_catalog.cpp
+    element_edit_json.cpp
+    generator_client.cpp
     element_ops.cpp
     json_schema.cpp
     hill_projection_model.cpp
@@ -29,7 +32,10 @@ set(MAP_EDITOR_SOURCES
     main.cpp
     editor_window.cpp
     mission_panel.cpp
+    generator_panel.cpp
+    generation_preview_dialog.cpp
     map_canvas.cpp
+    map_canvas_paint.cpp
     spawn_icon_library.cpp
     tool_panel.cpp
     terrain_projection_widget.cpp

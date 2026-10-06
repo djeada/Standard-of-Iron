@@ -376,6 +376,22 @@ for a map they have not touched. Refresh handlers block their widgets' signals
 for that reason; the startup path also resets the document without prompting, so
 a missed blocker is a stale window title rather than a modal on launch.
 
+### Generated and authored elements
+
+The **Generator** tab drives `scripts/soi-mapgen.py` (see `docs/MAP_GENERATOR.md`).
+Generating never touches the open map: the candidate opens in a preview with its
+validation report, and only **Accept** replaces the document, as one undo step.
+
+Everything the generator writes carries a `generated` key naming its stage, and
+materialised structures and props keep their `settlement`, `landmark` or
+`dressing` owner. **Reroll Unlocked** replaces only the unlocked stages' tagged
+elements. Anything without those keys is authored and survives every reroll.
+Editing a generated element - dragging it, nudging it, snapping it, changing
+its owner or editing its JSON - strips those keys in the same undo step, so a
+hand-adjusted gate or tree is never silently replaced by the next reroll. The
+status bar says how many elements were converted. Undoing the edit restores
+the keys.
+
 ### Walls and gates in the editor
 
 Walls and gates are one tool group because they are one structure. Both live on

@@ -1,0 +1,20 @@
+{
+  "id": "broken_hills",
+  "label": "Broken Hills",
+  "order": 8,
+  "description": "Rough country of ridges, boomerangs and rings. Every sector boundary is high ground.",
+  "width": 650,
+  "height": 650,
+  "parameters": {
+    "tactical.sectors": 5,
+    "terrain.hills": 0.95,
+    "terrain.ridge_bias": 0.85,
+    "terrain.relief": 0.75,
+    "terrain.roughness": 0.7,
+    "tactical.formation_space": 0.3,
+    "water.rivers": 0,
+    "water.lakes": 1,
+    "forests.density": 0.3,
+    "general.biome": "canyon"
+  }
+}

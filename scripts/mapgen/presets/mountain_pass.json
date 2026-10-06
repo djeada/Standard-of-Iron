@@ -1,0 +1,24 @@
+{
+  "id": "mountain_pass",
+  "label": "Mountain Pass",
+  "order": 2,
+  "description": "Mountain walls on both flanks squeeze the routes into one pass with ridges across it.",
+  "width": 650,
+  "height": 650,
+  "parameters": {
+    "tactical.sectors": 4,
+    "tactical.flank_bias": 0.15,
+    "tactical.choke_intensity": 0.75,
+    "terrain.mountains": 0.9,
+    "terrain.ridge_bias": 0.7,
+    "terrain.relief": 0.7,
+    "terrain.hills": 0.4,
+    "water.rivers": 0,
+    "water.lakes": 0,
+    "forests.density": 0.3,
+    "settlements.towns": 0,
+    "settlements.forts": 2,
+    "settlements.hilltop": 0.4,
+    "general.biome": "alpine"
+  }
+}

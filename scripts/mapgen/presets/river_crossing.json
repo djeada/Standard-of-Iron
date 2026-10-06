@@ -1,0 +1,19 @@
+{
+  "id": "river_crossing",
+  "label": "River Crossing",
+  "order": 1,
+  "description": "One river splits the field. Each route crosses it once, so there are two bridges to hold or force.",
+  "width": 650,
+  "height": 650,
+  "parameters": {
+    "tactical.sectors": 4,
+    "water.rivers": 1,
+    "water.lakes": 1,
+    "water.edge_to_edge": 1.0,
+    "water.crossings": 2,
+    "water.river_width": 14,
+    "terrain.hills": 0.45,
+    "forests.density": 0.45,
+    "general.biome": "temperate"
+  }
+}

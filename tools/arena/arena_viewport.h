@@ -430,6 +430,25 @@ private:
   [[nodiscard]] auto ensure_flame_card_program() -> bool;
   void render_flame_card(int width, int height);
 
+  void step_world(float simulation_dt);
+  void submit_terrain_layers();
+  void submit_world_effects(Render::GL::ResourceManager* res);
+  void record_render_profile(Arena::ArenaRenderedFrameTimings& timings) const;
+  void paint_ui_overlays();
+  void deliver_capture_frame();
+  void publish_scenario_frame(const Arena::ArenaRenderedFrameTimings& timings);
+
+  void apply_scenario_environment(const Arena::ArenaScenarioDefinition& scenario);
+  [[nodiscard]] auto
+  apply_scenario_terrain(const Arena::ArenaScenarioDefinition& scenario) -> bool;
+  [[nodiscard]] auto
+  register_scenario_owners(const Arena::ArenaScenarioDefinition& scenario) -> bool;
+  auto spawn_scenario_group_entity(const Arena::ArenaScenarioGroup& group,
+                                   const QVector3D& requested_position)
+      -> Engine::Core::EntityID;
+  void bind_rpg_scenario_controls(Arena::ArenaScenarioHost& host);
+  void configure_scenario_ai_profiles(const Arena::ArenaScenarioDefinition& scenario);
+
   QTimer m_frame_timer;
   QElapsedTimer m_frame_clock;
   TerrainSettings m_terrain_settings;

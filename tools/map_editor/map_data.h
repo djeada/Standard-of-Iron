@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QByteArray>
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QObject>
@@ -37,6 +38,9 @@ struct TerrainElement {
   QJsonArray entrances;
   QJsonObject extra_fields;
 };
+
+[[nodiscard]] auto terrain_element_from_json(const QJsonObject& obj) -> TerrainElement;
+[[nodiscard]] auto terrain_element_to_json(const TerrainElement& elem) -> QJsonObject;
 
 struct WorldPropElement {
   QString type = "firecamp";
@@ -123,6 +127,7 @@ struct ForestElement {
   float x = 0.0F;
   float z = 0.0F;
   float radius = 12.0F;
+  QJsonObject extra_fields;
 };
 
 struct WildlifeAreaElement {
@@ -166,8 +171,18 @@ public:
   explicit MapData(QObject* parent = nullptr);
 
   bool load_from_json(const QString& file_path, QString* out_error = nullptr);
+  bool load_from_bytes(const QByteArray& data, QString* out_error = nullptr);
   bool save_to_json(const QString& file_path, QString* out_error = nullptr) const;
   [[nodiscard]] QString to_json_string() const;
+  [[nodiscard]] QByteArray to_json_bytes() const;
+
+  bool replace_document(const QByteArray& data,
+                        const QString& description,
+                        QString* out_error = nullptr);
+  bool restore_document(const QByteArray& data, QString* out_error = nullptr);
+  [[nodiscard]] QJsonObject generation() const {
+    return m_extra_root_fields.value(QStringLiteral("generation")).toObject();
+  }
 
   [[nodiscard]] QString name() const { return m_name; }
   void set_name(const QString& name);
@@ -307,6 +322,7 @@ private:
   std::vector<std::unique_ptr<Command>> m_undo_stack;
   std::vector<std::unique_ptr<Command>> m_redo_stack;
 
+  bool apply_document(const QByteArray& data, QString* out_error);
   void parse_terrain_array(const QJsonArray& arr);
   void parse_lakes_array(const QJsonArray& arr);
   void parse_world_props_array(const QJsonArray& arr);
@@ -869,6 +885,24 @@ private:
   MapData* m_data;
   QJsonObject m_before;
   QJsonObject m_after;
+};
+
+class ReplaceDocumentCmd : public Command {
+public:
+  ReplaceDocumentCmd(MapData* data, QByteArray before, QByteArray after, QString desc)
+      : m_data(data)
+      , m_before(std::move(before))
+      , m_after(std::move(after))
+      , m_desc(std::move(desc)) {}
+  void execute() override { m_data->restore_document(m_after); }
+  void undo() override { m_data->restore_document(m_before); }
+  [[nodiscard]] QString description() const override { return m_desc; }
+
+private:
+  MapData* m_data;
+  QByteArray m_before;
+  QByteArray m_after;
+  QString m_desc;
 };
 
 } // namespace MapEditor

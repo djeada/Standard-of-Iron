@@ -1,0 +1,20 @@
+{
+  "id": "forest_ambush",
+  "label": "Forest Ambush",
+  "order": 4,
+  "description": "Woods crowd the roads. Cavalry keeps to the routes; infantry owns the trees.",
+  "width": 650,
+  "height": 650,
+  "parameters": {
+    "tactical.sectors": 4,
+    "tactical.choke_intensity": 0.6,
+    "forests.density": 0.95,
+    "forests.ambush": 0.8,
+    "forests.size": 0.6,
+    "water.rivers": 1,
+    "water.lakes": 1,
+    "terrain.hills": 0.35,
+    "landmarks.count": 4,
+    "general.biome": "pine_forest"
+  }
+}

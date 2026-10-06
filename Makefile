@@ -409,6 +409,14 @@ test-promo-first-frame:
 	@echo "$(BOLD)$(BLUE)Running promo first-frame tests...$(RESET)"
 	@bash tests/promo_first_frame_test.sh
 
+## Soak the map generator: seeds=N consecutive seeds across every preset, validated (default 20).
+seeds ?= 20
+MAPGEN_SEED ?= 1
+.PHONY: test-map-generation
+test-map-generation:
+	@echo "$(BOLD)$(BLUE)Generating $(seeds) battlefield(s) across every preset...$(RESET)"
+	@$(PYTHON) scripts/soi-mapgen.py --preset all --seed $(MAPGEN_SEED) --count $(seeds) --report-dir artifacts/mapgen
+
 ## Run the RPG playability gate: build, commander unit tests, then every rpg_* Arena scenario sequentially.
 .PHONY: rpg-gate rpg-gate-baseline
 rpg-gate:

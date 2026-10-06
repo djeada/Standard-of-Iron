@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <type_traits>
 #include <utility>
 
 #include "map_json_keys.h"
@@ -16,6 +17,22 @@ struct Overloaded : Ts... {
 };
 template <typename... Ts>
 Overloaded(Ts...) -> Overloaded<Ts...>;
+
+template <typename Element>
+auto extra_fields_of(const Element& element) -> const QJsonObject* {
+  if constexpr (requires { element.extra_fields; }) {
+    return &element.extra_fields;
+  } else {
+    return nullptr;
+  }
+}
+
+auto has_ownership_key(const QJsonObject& fields) -> bool {
+  return std::any_of(
+      k_generation_ownership_keys.begin(),
+      k_generation_ownership_keys.end(),
+      [&fields](const char* key) { return fields.contains(QLatin1String(key)); });
+}
 
 auto round_cell(float value) -> float {
   return std::round(value);
@@ -437,14 +454,46 @@ auto make_remove(MapData& data, int kind, int index) -> std::unique_ptr<Command>
   return {};
 }
 
+auto is_generated(const ElementSnapshot& snap) -> bool {
+  return std::visit(
+      [](const auto& element) {
+        if constexpr (std::is_same_v<std::decay_t<decltype(element)>, std::monostate>) {
+          return false;
+        } else {
+          const QJsonObject* fields = extra_fields_of(element);
+          return fields != nullptr && has_ownership_key(*fields);
+        }
+      },
+      snap);
+}
+
+auto count_generated(const QVector<ElementSnapshot>& snaps) -> int {
+  return static_cast<int>(std::count_if(snaps.begin(), snaps.end(), is_generated));
+}
+
+auto as_authored(const ElementSnapshot& snap) -> ElementSnapshot {
+  ElementSnapshot authored = snap;
+  std::visit(
+      [](auto& element) {
+        if constexpr (requires { element.extra_fields; }) {
+          for (const char* key : k_generation_ownership_keys) {
+            element.extra_fields.remove(QLatin1String(key));
+          }
+        }
+      },
+      authored);
+  return authored;
+}
+
 auto make_update(MapData& data,
                  int index,
                  const ElementSnapshot& before,
-                 const ElementSnapshot& after,
+                 const ElementSnapshot& edited,
                  const QString& description) -> std::unique_ptr<Command> {
-  if (before.index() != after.index()) {
+  if (before.index() != edited.index()) {
     return {};
   }
+  const ElementSnapshot after = as_authored(edited);
   return std::visit(
       Overloaded{
           [](std::monostate) { return std::unique_ptr<Command>{}; },

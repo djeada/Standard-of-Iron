@@ -36,6 +36,9 @@ public:
   };
 
   void set_map_data(MapData* data);
+  void set_read_only(bool read_only) { m_read_only = read_only; }
+  [[nodiscard]] bool is_read_only() const { return m_read_only; }
+  void center_on(const QPointF& grid_pos) { center_on_grid_pos(grid_pos); }
   void set_mission_data(MissionData* data);
   void set_current_tool(ToolType tool);
   void clear_tool();
@@ -198,6 +201,7 @@ private:
   void drop_stale_view_state();
   void apply_zoom(float zoom, const QPointF& anchor_widget_pos);
   void center_on_grid_pos(const QPointF& grid_pos);
+  void report_converted(int converted);
   [[nodiscard]] ElementSnapshot selected_snapshot() const;
   [[nodiscard]] QVector<ElementSnapshot> selected_snapshots() const;
   [[nodiscard]] QVector<ElementRef> elements_in_rect(const QRect& rect) const;
@@ -214,6 +218,7 @@ private:
   MapData* m_map_data = nullptr;
   MissionData* m_mission_data = nullptr;
   ToolType m_current_tool = ToolType::Select;
+  bool m_read_only = false;
 
   float m_zoom = 1.0F;
   QPointF m_pan_offset{0, 0};

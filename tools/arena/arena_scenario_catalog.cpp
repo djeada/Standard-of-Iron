@@ -1,3 +1,6 @@
+#include <QRegularExpression>
+#include <QStringList>
+
 #include <algorithm>
 #include <iterator>
 #include <utility>
@@ -157,6 +160,58 @@ auto find_definition(const QString& scenario_id) -> const ArenaScenarioDefinitio
                    definitions().end(),
                    [&](auto const& scenario) { return scenario.id == scenario_id; });
   return found == definitions().end() ? nullptr : &*found;
+}
+
+auto select_definition_ids(const QString& selection, QString* error) -> QStringList {
+  QStringList selected;
+  auto const add = [&selected](const QString& id) {
+    if (!selected.contains(id)) {
+      selected.push_back(id);
+    }
+  };
+  auto const fail = [error](const QString& message) {
+    if (error != nullptr) {
+      *error = message;
+    }
+    return QStringList{};
+  };
+
+  for (const QString& raw : selection.split(QLatin1Char(','), Qt::SkipEmptyParts)) {
+    const QString pattern = raw.trimmed();
+    if (pattern.isEmpty()) {
+      continue;
+    }
+    const bool wildcard = pattern.contains(QLatin1Char('*')) ||
+                          pattern.contains(QLatin1Char('?')) ||
+                          pattern.contains(QLatin1Char('['));
+    if (!wildcard) {
+      if (find_definition(pattern) == nullptr) {
+        return fail(QStringLiteral("Unknown Arena scenario '%1'; use --list-scenarios")
+                        .arg(pattern));
+      }
+      add(pattern);
+      continue;
+    }
+
+    const QRegularExpression matcher = QRegularExpression::fromWildcard(pattern);
+    bool matched = false;
+    for (auto const& scenario : definitions()) {
+      if (matcher.match(scenario.id).hasMatch()) {
+        add(scenario.id);
+        matched = true;
+      }
+    }
+    if (!matched) {
+      return fail(QStringLiteral("Arena scenario pattern '%1' matched nothing; use "
+                                 "--list-scenarios")
+                      .arg(pattern));
+    }
+  }
+
+  if (selected.isEmpty()) {
+    return fail(QStringLiteral("No Arena scenarios selected"));
+  }
+  return selected;
 }
 
 auto options() -> const std::vector<ScenarioOption>& {

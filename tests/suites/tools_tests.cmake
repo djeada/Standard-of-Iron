@@ -13,6 +13,11 @@ add_executable(
     tools/map_editor_wildlife_test.cpp
     tools/map_editor_json_schema_test.cpp
     tools/map_editor_commander_preview_test.cpp
+    tools/map_editor_tool_catalog_test.cpp
+    tools/map_editor_element_edit_json_test.cpp
+    tools/map_editor_generator_client_test.cpp
+    tools/map_editor_generated_document_test.cpp
+    tools/map_editor_generator_e2e_test.cpp
     tools/hill_projection_model_test.cpp
     tools/balance_sim_test.cpp
     widget_main.cpp

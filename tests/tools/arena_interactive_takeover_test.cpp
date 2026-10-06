@@ -1,4 +1,5 @@
 #include <QByteArray>
+#include <QDir>
 #include <QFile>
 #include <QString>
 
@@ -14,6 +15,16 @@ auto read_source(const char* path) -> QByteArray {
   return file.readAll();
 }
 
+auto read_viewport_sources() -> QByteArray {
+  QByteArray sources;
+  const QDir arena(QStringLiteral("tools/arena"));
+  for (const QString& name : arena.entryList(
+           {QStringLiteral("arena_viewport*.cpp")}, QDir::Files, QDir::Name)) {
+    sources += read_source(arena.filePath(name).toLatin1().constData());
+  }
+  return sources;
+}
+
 auto contains(const QByteArray& source, const char* needle) -> bool {
   return source.contains(needle);
 }
@@ -22,7 +33,7 @@ auto contains(const QByteArray& source, const char* needle) -> bool {
 
 TEST(ArenaInteractiveTakeoverTest, TheViewportKeepsTabInsteadOfLosingItToFocus) {
   const auto header = read_source("tools/arena/arena_viewport.h");
-  const auto source = read_source("tools/arena/arena_viewport.cpp");
+  const auto source = read_viewport_sources();
   ASSERT_FALSE(header.isEmpty()) << "run the suite from the repo root";
   ASSERT_FALSE(source.isEmpty()) << "run the suite from the repo root";
 
@@ -37,7 +48,7 @@ TEST(ArenaInteractiveTakeoverTest, TheViewportKeepsTabInsteadOfLosingItToFocus) 
 }
 
 TEST(ArenaInteractiveTakeoverTest, InteractiveControlCanBeTracedOnDemand) {
-  const auto source = read_source("tools/arena/arena_viewport.cpp");
+  const auto source = read_viewport_sources();
   ASSERT_FALSE(source.isEmpty()) << "run the suite from the repo root";
 
   EXPECT_TRUE(contains(source, "SOI_ARENA_RPG_TRACE"));

@@ -396,13 +396,27 @@ build-debug/bin/arena_app \
   --seed 1337 \
   --artifact-dir artifacts/arena
 
+# Run several scenarios: a comma-separated list, with shell wildcards
+build/bin/arena_app --batch --scenario 'trailer_*,gate_destroyed_breach' \
+  --artifact-dir artifacts/arena
+
 # Run the complete local catalog
 build/bin/arena_app --batch --all --artifact-dir artifacts/arena
 ```
 
+`--scenario` takes ids and wildcard patterns (`*`, `?`, `[...]`) separated by
+commas. Each pattern expands in catalogue order, duplicates are dropped, and an
+unknown id or a pattern that matches nothing exits with status `2`. Without
+`--batch` the interactive Arena loads the first match.
+
 The command exits with status `0` only when every selected scenario passes,
 `1` for gameplay/render failures or watchdog timeouts, and `2` for invalid
-arguments. Each scenario directory contains:
+arguments. The closing `Arena batch complete` line is followed by the id of
+every failed or timed-out scenario, and `batch_summary.json` in the artifact
+root lists each scenario with its `passed`, `failed` or `timed_out` status and
+summary line. That file is rewritten after every scenario with
+`"complete": false`, so a sweep that dies part-way still says how far it got.
+Each scenario directory contains:
 
 - `report.json`: machine-readable acceptance results and exact offenders.
 - `trace.jsonl`: frame-by-frame entity and rendered-soldier observations.
