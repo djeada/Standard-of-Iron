@@ -359,8 +359,8 @@ void VegetationPipeline::initialize_olive_pipeline() {
     loft.cap(ring, cap_y, offset, v);
   };
 
-  int const t0 = add_ring(0.215F, -0.015F, -0.30F, 0.00F, QVector2D(-0.022F, 0.006F));
-  int const t1 = add_ring(0.165F, 0.09F, -0.05F, 0.07F, QVector2D(0.018F, -0.020F));
+  int const t0 = add_ring(0.170F, -0.015F, -0.30F, 0.00F, QVector2D(-0.022F, 0.006F));
+  int const t1 = add_ring(0.140F, 0.09F, -0.05F, 0.07F, QVector2D(0.018F, -0.020F));
   int const t2 = add_ring(0.125F, 0.18F, 0.08F, 0.14F, QVector2D(0.038F, 0.008F));
   int const t3 = add_ring(0.092F, 0.27F, 0.20F, 0.22F, QVector2D(0.016F, 0.036F));
   int const t4 = add_ring(0.072F, 0.34F, 0.34F, 0.29F, QVector2D(0.008F, 0.044F));
@@ -385,7 +385,7 @@ void VegetationPipeline::initialize_olive_pipeline() {
 
     length *= 1.28F;
     rise *= 0.88F;
-    leaf_r *= 1.12F;
+    leaf_r *= 1.24F;
 
     QVector2D const dir(dir_x, dir_z);
     QVector2D const ortho(-dir_z, dir_x);
@@ -645,7 +645,7 @@ void VegetationPipeline::initialize_palm_pipeline() {
 
   struct PalmVertex {
     QVector3D position;
-    QVector2D tex_coord;
+    QVector3D tex_coord;
     QVector3D normal;
   };
 
@@ -658,6 +658,11 @@ void VegetationPipeline::initialize_palm_pipeline() {
 
   constexpr float k_leaf_v = 0.60F;
   constexpr float k_dead_v = 0.30F;
+
+  constexpr float k_fibre_material = 0.5F;
+  constexpr float k_dead_frond_material = 1.0F;
+  constexpr float k_live_frond_material = 2.0F;
+  constexpr float k_frond_edge_material = 0.5F;
 
   RingLoftBuilder loft(k_trunk_segments);
   loft.reserve(16);
@@ -696,31 +701,31 @@ void VegetationPipeline::initialize_palm_pipeline() {
 
   {
     const QVector2D cc(crown.x(), crown.z());
-    const int h0 =
-        loft.add_ring({0.070F, crown.y() - 0.02F, -0.20F, k_leaf_v, 0.0F, cc});
-    const int h1 =
-        loft.add_ring({0.105F, crown.y() + 0.06F, 0.10F, k_leaf_v + 0.06F, 0.0F, cc});
-    const int h2 =
-        loft.add_ring({0.080F, crown.y() + 0.15F, 0.55F, k_leaf_v + 0.12F, 0.0F, cc});
+    const int h0 = loft.add_ring(
+        {0.070F, crown.y() - 0.02F, -0.20F, k_leaf_v, k_fibre_material, cc});
+    const int h1 = loft.add_ring(
+        {0.105F, crown.y() + 0.06F, 0.10F, k_leaf_v + 0.06F, k_fibre_material, cc});
+    const int h2 = loft.add_ring(
+        {0.080F, crown.y() + 0.15F, 0.55F, k_leaf_v + 0.12F, k_fibre_material, cc});
     loft.connect(trunk_chain.back(), h0);
     loft.connect(h0, h1);
     loft.connect(h1, h2);
-    loft.cap(h2, crown.y() + 0.24F, cc, k_leaf_v + 0.18F, 0.0F, true);
+    loft.cap(h2, crown.y() + 0.24F, cc, k_leaf_v + 0.18F, k_fibre_material, true);
   }
 
   for (const float yaw : {0.9F, 3.6F}) {
     const QVector2D cc(crown.x() + std::cos(yaw) * 0.12F,
                        crown.z() + std::sin(yaw) * 0.12F);
-    const int d0 =
-        loft.add_ring({0.030F, crown.y() - 0.30F, -0.60F, k_dead_v, 0.0F, cc});
-    const int d1 =
-        loft.add_ring({0.060F, crown.y() - 0.20F, -0.10F, k_dead_v, 0.0F, cc});
-    const int d2 =
-        loft.add_ring({0.045F, crown.y() - 0.08F, 0.40F, k_dead_v, 0.0F, cc});
+    const int d0 = loft.add_ring(
+        {0.030F, crown.y() - 0.30F, -0.60F, k_dead_v, k_fibre_material, cc});
+    const int d1 = loft.add_ring(
+        {0.060F, crown.y() - 0.20F, -0.10F, k_dead_v, k_fibre_material, cc});
+    const int d2 = loft.add_ring(
+        {0.045F, crown.y() - 0.08F, 0.40F, k_dead_v, k_fibre_material, cc});
     loft.connect(d0, d1);
     loft.connect(d1, d2);
-    loft.cap(d0, crown.y() - 0.35F, cc, k_dead_v, 0.0F, false);
-    loft.cap(d2, crown.y() - 0.02F, cc, k_dead_v, 0.0F, true);
+    loft.cap(d0, crown.y() - 0.35F, cc, k_dead_v, k_fibre_material, false);
+    loft.cap(d2, crown.y() - 0.02F, cc, k_dead_v, k_fibre_material, true);
   }
 
   std::vector<PalmVertex> vertices;
@@ -728,7 +733,8 @@ void VegetationPipeline::initialize_palm_pipeline() {
                    static_cast<std::size_t>((k_frond_count + k_dead_frond_count) *
                                             k_frond_stations * 4));
   for (const auto& vertex : loft.vertices()) {
-    vertices.push_back({vertex.position, QVector2D(vertex.u, vertex.v), vertex.normal});
+    vertices.push_back(
+        {vertex.position, QVector3D(vertex.u, vertex.v, vertex.weight), vertex.normal});
   }
   std::vector<std::uint16_t> indices = loft.indices();
 
@@ -742,7 +748,8 @@ void VegetationPipeline::initialize_palm_pipeline() {
                        float base_lift,
                        float v_base,
                        float v_span,
-                       float frond_u) {
+                       float frond_u,
+                       float material) {
     const QVector3D dir(std::cos(yaw), 0.0F, std::sin(yaw));
     const QVector3D side(-std::sin(yaw), 0.0F, std::cos(yaw));
     const auto base = static_cast<std::uint16_t>(vertices.size());
@@ -756,14 +763,16 @@ void VegetationPipeline::initialize_palm_pipeline() {
       const float fold = -half_width * (0.9F + 0.5F * t);
 
       const QVector3D spine = crown + dir * (length * t) + QVector3D(0.0F, lift, 0.0F);
-      const QVector2D uv(frond_u, v_base + t * v_span);
+      const float v = v_base + t * v_span;
+      const QVector3D spine_uv(frond_u, v, material);
+      const QVector3D edge_uv(frond_u, v, material + k_frond_edge_material);
       const QVector3D up(0.0F, 1.0F, 0.0F);
       const QVector3D droop_edge(0.0F, fold, 0.0F);
 
-      vertices.push_back({spine + side * half_width + droop_edge, uv, up});
-      vertices.push_back({spine, uv, up});
-      vertices.push_back({spine, uv, up});
-      vertices.push_back({spine - side * half_width + droop_edge, uv, up});
+      vertices.push_back({spine + side * half_width + droop_edge, edge_uv, up});
+      vertices.push_back({spine, spine_uv, up});
+      vertices.push_back({spine, spine_uv, up});
+      vertices.push_back({spine - side * half_width + droop_edge, edge_uv, up});
     }
     for (int station = 0; station + 1 < k_frond_stations; ++station) {
       const auto lower = static_cast<std::uint16_t>(base + station * 4);
@@ -791,7 +800,8 @@ void VegetationPipeline::initialize_palm_pipeline() {
               0.08F + ring * 0.05F,
               k_leaf_v,
               0.34F,
-              frond_u);
+              frond_u,
+              k_live_frond_material);
   }
   for (int f = 0; f < k_dead_frond_count; ++f) {
     const float frond_u =
@@ -805,7 +815,8 @@ void VegetationPipeline::initialize_palm_pipeline() {
               -0.03F,
               k_dead_v,
               0.0F,
-              frond_u);
+              frond_u,
+              k_dead_frond_material);
   }
 
   for (std::size_t i = first_frond_vertex; i < vertices.size(); ++i) {
@@ -831,7 +842,7 @@ void VegetationPipeline::initialize_palm_pipeline() {
 
   constexpr std::array<VertexAttributeLayout, 3> k_palm_attributes{{
       {k_foliage_position_location, vec3, offsetof(PalmVertex, position)},
-      {k_foliage_tex_coord_location, vec2, offsetof(PalmVertex, tex_coord)},
+      {k_foliage_tex_coord_location, vec3, offsetof(PalmVertex, tex_coord)},
       {k_foliage_normal_location, vec3, offsetof(PalmVertex, normal)},
   }};
   upload_static_instanced_mesh(*this,

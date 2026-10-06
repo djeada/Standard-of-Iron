@@ -298,6 +298,23 @@ TEST_F(ArmorRendererTest, CloakFacesHaveSeparateDepthToPreventZFight) {
   }
 }
 
+TEST_F(ArmorRendererTest, PeltCloaksOffsetTheirUvsAndPlainCloaksDoNot) {
+  CloakConfig pelt{};
+  pelt.leopard_pelt = true;
+  CloakMeshes const pelt_meshes = shared_cloak_meshes(pelt);
+  CloakMeshes const plain_meshes = shared_cloak_meshes(CloakConfig{});
+  ASSERT_NE(pelt_meshes.cloak, nullptr);
+  ASSERT_NE(plain_meshes.cloak, nullptr);
+  ASSERT_NE(pelt_meshes.cloak, plain_meshes.cloak);
+  for (const auto& vertex : pelt_meshes.cloak->get_vertices()) {
+    EXPECT_LE(vertex.tex_coord[0], k_cloak_pelt_uv_offset + 1.0F + 1e-4F);
+    EXPECT_GE(vertex.tex_coord[0], k_cloak_pelt_uv_offset - 1e-4F);
+  }
+  for (const auto& vertex : plain_meshes.cloak->get_vertices()) {
+    EXPECT_GE(vertex.tex_coord[0], -1e-4F);
+  }
+}
+
 TEST_F(ArmorRendererTest, MountedCloaksRegisterLowerShoulderAnchors) {
   CloakConfig cloak{};
   cloak.primary_color = QVector3D(0.70F, 0.15F, 0.18F);

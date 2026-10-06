@@ -22,6 +22,22 @@ out vec4 frag_color;
 
 const float k_needle_scatter = 0.45;
 
+#ifdef SOI_CYPRESS
+const vec3 k_needle_grain = vec3(36.0, 9.0, 36.0);
+const vec3 k_needle_clump = vec3(15.0, 5.5, 15.0);
+const vec3 k_needle_deep = vec3(0.032, 0.076, 0.044);
+const vec3 k_needle_mid = vec3(0.090, 0.180, 0.090);
+const vec3 k_needle_light = vec3(0.205, 0.318, 0.140);
+const vec3 k_needle_sun = vec3(0.305, 0.420, 0.190);
+#else
+const vec3 k_needle_grain = vec3(30.0, 13.0, 30.0);
+const vec3 k_needle_clump = vec3(11.0);
+const vec3 k_needle_deep = vec3(0.038, 0.096, 0.058);
+const vec3 k_needle_mid = vec3(0.112, 0.226, 0.122);
+const vec3 k_needle_light = vec3(0.252, 0.398, 0.190);
+const vec3 k_needle_sun = vec3(0.345, 0.505, 0.252);
+#endif
+
 const float PI = 3.14159265359;
 const float TWO_PI = 6.28318530718;
 
@@ -38,17 +54,17 @@ void main() {
   float fine_detail = 1.0 - smoothstep(0.006, 0.026, footprint);
   float mid_detail = 1.0 - smoothstep(0.016, 0.055, footprint);
 
-  float needle_fine =
-      soi_noise3(v_local_pos * vec3(30.0, 13.0, 30.0) + needle_seed_offset);
-  float needle_clump = soi_noise3(v_local_pos * 11.0 + needle_seed_offset.zxy);
+  float needle_fine = soi_noise3(v_local_pos * k_needle_grain + needle_seed_offset);
+  float needle_clump =
+      soi_noise3(v_local_pos * k_needle_clump + needle_seed_offset.zxy);
   float needle_tuft = soi_noise3(v_local_pos * 4.6 + needle_seed_offset.yzx);
   needle_fine = mix(0.5, needle_fine, fine_detail);
   needle_clump = mix(0.5, needle_clump, mid_detail);
 
-  vec3 needle_deep = vec3(0.038, 0.096, 0.058);
-  vec3 needle_mid = vec3(0.112, 0.226, 0.122);
-  vec3 needle_light = vec3(0.252, 0.398, 0.190);
-  vec3 needle_sun = vec3(0.345, 0.505, 0.252);
+  vec3 needle_deep = k_needle_deep;
+  vec3 needle_mid = k_needle_mid;
+  vec3 needle_light = k_needle_light;
+  vec3 needle_sun = k_needle_sun;
 
   float grain =
       clamp(needle_clump * 0.80 + (needle_fine - 0.5) * 0.20 + 0.10, 0.0, 1.0);

@@ -17,6 +17,7 @@
 #include <string>
 #include <vector>
 
+#include "render/equipment/armor/cloak_renderer.h"
 #include "render/gl/directional_shadow_block.h"
 #include "render/gl/shader.h"
 #include "render/gl/ubo_bindings.h"
@@ -324,6 +325,7 @@ TEST(ShaderSource, EveryWorldLightingVariantUsesSharedEnvironmentBlock) {
       "plant_instanced.frag",
       "pine_instanced.frag",
       "olive_instanced.frag",
+      "palm_instanced.frag",
       "tent_instanced.frag",
       "supply_cart_instanced.frag",
       "weapon_rack_instanced.frag",
@@ -377,6 +379,7 @@ TEST(ShaderSource, WorldShadersLeaveGradingToThePostProcessPass) {
       "stone_instanced.frag",
       "pine_instanced.frag",
       "olive_instanced.frag",
+      "palm_instanced.frag",
       "road.frag",
       "river.frag",
       "riverbank.frag",
@@ -435,6 +438,7 @@ TEST(ShaderSource, WorldSurfacesTakeTheirKeyLightFromTheSharedModel) {
       "iron_ore_instanced.frag",
       "pine_instanced.frag",
       "olive_instanced.frag",
+      "palm_instanced.frag",
   };
 
   for (const auto& name : shaders) {
@@ -556,6 +560,7 @@ TEST(ShaderSource, WorldMaterialHighlightsFollowTheCamera) {
       "statue_instanced.frag",
       "pine_instanced.frag",
       "olive_instanced.frag",
+      "palm_instanced.frag",
   };
 
   for (const auto& name : shaders) {
@@ -600,6 +605,23 @@ TEST(ShaderSource, WetStoneCarriesWeatherIntoItsMaterialResponse) {
             std::string::npos);
 }
 
+TEST(ShaderSource, PeltCloaksAreMarkedByTheirUvOffset) {
+  const auto root = find_repo_root();
+  const auto shading =
+      read_text(root / "assets" / "shaders" / "include" / "character_shading.glsl");
+  ASSERT_FALSE(shading.empty());
+  EXPECT_FLOAT_EQ(Render::GL::k_cloak_pelt_uv_offset, -16.0F);
+  EXPECT_NE(shading.find("const float k_pelt_uv_offset = -16.0;"), std::string::npos)
+      << "the shader must look for pelt cloaks at the offset the cloak mesh writes";
+  for (const auto* name :
+       {"character_skinned.frag", "character_skinned_gpu_instanced.frag"}) {
+    const auto source = read_text(root / "assets" / "shaders" / name);
+    ASSERT_FALSE(source.empty()) << name;
+    EXPECT_NE(source.find("base = apply_pelt_pattern(base, v_tex);"), std::string::npos)
+        << name;
+  }
+}
+
 TEST(ShaderSource, TreeCrownsCarrySecondaryWindMotion) {
   const auto root = find_repo_root();
   const auto pine = read_text(root / "assets" / "shaders" / "pine_instanced.vert");
@@ -613,6 +635,11 @@ TEST(ShaderSource, TreeCrownsCarrySecondaryWindMotion) {
   EXPECT_NE(flat_pine.find("branch_flutter * branch_flex * gust"), std::string::npos);
   EXPECT_NE(flat_olive.find("float leaf_flutter ="), std::string::npos);
   EXPECT_NE(flat_olive.find("leaf_flutter * flutter_flex * gust"), std::string::npos);
+  const auto palm = read_text(root / "assets" / "shaders" / "palm_instanced.vert");
+  ASSERT_FALSE(palm.empty());
+  const auto flat_palm = collapse_whitespace(palm);
+  EXPECT_NE(flat_palm.find("float frond_flutter ="), std::string::npos);
+  EXPECT_NE(flat_palm.find("frond_flutter * flutter_flex * gust"), std::string::npos);
 }
 
 TEST(ShaderSource, GeneralWorldShadersDoNotHardCodeDaylightColors) {

@@ -140,11 +140,20 @@ public:
     const QString pine_frag =
         resolve(shader_base + QStringLiteral("pine_instanced.frag"));
     load(QStringLiteral("pine_instanced"), pine_vert, pine_frag);
+    load(QStringLiteral("cypress_instanced"),
+         pine_vert,
+         pine_frag,
+         QStringLiteral("#define SOI_CYPRESS 1\n"));
     const QString olive_vert =
         resolve(shader_base + QStringLiteral("olive_instanced.vert"));
     const QString olive_frag =
         resolve(shader_base + QStringLiteral("olive_instanced.frag"));
     load(QStringLiteral("olive_instanced"), olive_vert, olive_frag);
+    const QString palm_vert =
+        resolve(shader_base + QStringLiteral("palm_instanced.vert"));
+    const QString palm_frag =
+        resolve(shader_base + QStringLiteral("palm_instanced.frag"));
+    load(QStringLiteral("palm_instanced"), palm_vert, palm_frag);
 
     const QString firecamp_vert =
         resolve(shader_base + QStringLiteral("firecamp.vert"));

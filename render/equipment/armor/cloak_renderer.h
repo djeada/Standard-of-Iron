@@ -24,6 +24,7 @@ struct CloakConfig {
   float clasp_anchor_up = 0.14F;
   float clasp_anchor_forward = 0.14F;
   bool show_clasp = true;
+  bool leopard_pelt = false;
 
   float team_blend = 0.0F;
   float team_shade = 1.0F;
@@ -36,6 +37,8 @@ struct CloakMeshes {
 };
 
 inline constexpr std::uint32_t k_cloak_role_count = 2;
+
+inline constexpr float k_cloak_pelt_uv_offset = -16.0F;
 
 auto cloak_fill_role_colors_with_primary(const QVector3D& primary_color,
                                          const HumanoidPalette& palette,

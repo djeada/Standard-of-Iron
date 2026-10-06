@@ -45,11 +45,13 @@ auto VegetationPipeline::initialize() -> bool {
     return false;
   }
 
-  const std::array<std::pair<GL::Shader**, const char*>, 14> shaders{{
+  const std::array<std::pair<GL::Shader**, const char*>, 16> shaders{{
       {&m_stone_shader, "stone_instanced"},
       {&m_plant_shader, "plant_instanced"},
       {&m_pine_shader, "pine_instanced"},
+      {&m_cypress_shader, "cypress_instanced"},
       {&m_olive_shader, "olive_instanced"},
+      {&m_palm_shader, "palm_instanced"},
       {&m_firecamp_shader, "firecamp"},
       {&m_tent_shader, "tent_instanced"},
       {&m_supply_cart_shader, "supply_cart_instanced"},
@@ -145,7 +147,9 @@ void VegetationPipeline::cache_uniforms() {
 
   cache_foliage_uniforms(m_plant_uniforms, m_plant_shader);
   cache_foliage_uniforms(m_pine_uniforms, m_pine_shader);
+  cache_foliage_uniforms(m_cypress_uniforms, m_cypress_shader);
   cache_foliage_uniforms(m_olive_uniforms, m_olive_shader);
+  cache_foliage_uniforms(m_palm_uniforms, m_palm_shader);
 
   if (m_firecamp_shader != nullptr) {
     m_firecamp_uniforms.view_proj =

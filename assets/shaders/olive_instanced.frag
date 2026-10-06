@@ -63,11 +63,11 @@ void main() {
 
   float silhouette = 1.0 - abs(dot(geometric_normal, view_dir));
 
-  vec3 leaf_dark_green = vec3(0.078, 0.110, 0.084);
-  vec3 leaf_mid_green = vec3(0.196, 0.246, 0.172);
-  vec3 leaf_light_green = vec3(0.340, 0.392, 0.270);
-  vec3 leaf_silver = vec3(0.600, 0.640, 0.590);
-  vec3 leaf_sun = vec3(0.470, 0.530, 0.362);
+  vec3 leaf_dark_green = vec3(0.060, 0.090, 0.058);
+  vec3 leaf_mid_green = vec3(0.160, 0.215, 0.128);
+  vec3 leaf_light_green = vec3(0.300, 0.360, 0.220);
+  vec3 leaf_silver = vec3(0.560, 0.610, 0.540);
+  vec3 leaf_sun = vec3(0.440, 0.500, 0.300);
 
   float color_choice =
       clamp(leaf_clump * 0.90 + (leaf_fine - 0.5) * 0.26 + 0.10, 0.0, 1.0);
@@ -113,7 +113,10 @@ void main() {
   silver_show = max(silver_show, turned_leaves);
   leaf_color = mix(leaf_color,
                    leaf_silver,
-                   clamp(silver_show, 0.0, 1.0) * mix(0.26, 0.48, canopy_height));
+                   clamp(silver_show, 0.0, 1.0) * mix(0.14, 0.30, canopy_height));
+
+  float leaf_gap = 1.0 - smoothstep(0.26, 0.56, leaf_sprig);
+  leaf_color = mix(leaf_color, leaf_dark_green, leaf_gap * 0.55 * v_foliage_mask);
 
   float sun_catch = smoothstep(0.43, 1.00, wrap) * mix(0.20, 0.62, leaf_clump);
   leaf_color = mix(leaf_color, leaf_sun, sun_catch * v_foliage_mask);
@@ -126,7 +129,7 @@ void main() {
                                  0.38,
                                  1.14);
   float ao = mix(1.0, canopy_occlusion, v_foliage_mask) * mix(0.72, 1.0, hemi);
-  ao *= mix(1.0, mix(0.70, 1.04, crevice), v_foliage_mask);
+  ao *= mix(1.0, mix(0.52, 1.06, crevice), v_foliage_mask);
 
   float bark_u = v_tex_coord.x * TWO_PI;
   float bark_v = v_tex_coord.y;
@@ -142,9 +145,9 @@ void main() {
       furrows * 0.46 + vertical_grain * 0.32 + bark_noise + bark_knots * 0.18;
   bark_texture = mix(bark_texture, 0.0, deep_furrow * 0.55);
 
-  vec3 bark_dark = vec3(0.24, 0.21, 0.18);
-  vec3 bark_mid = vec3(0.46, 0.43, 0.38);
-  vec3 bark_light = vec3(0.60, 0.58, 0.52);
+  vec3 bark_dark = vec3(0.27, 0.22, 0.17);
+  vec3 bark_mid = vec3(0.52, 0.46, 0.38);
+  vec3 bark_light = vec3(0.66, 0.62, 0.54);
   vec3 bark_lichen = vec3(0.34, 0.38, 0.30);
 
   vec3 bark_color = mix(bark_dark, bark_mid, bark_texture);

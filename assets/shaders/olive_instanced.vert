@@ -94,7 +94,7 @@ void main() {
     vec3 lobe_seed = vec3(leaf_seed * 23.0, silhouette_seed * 17.0, leaf_seed * 41.0);
     float lobe = soi_noise3(model_pos * 6.5 + lobe_seed) - 0.5;
     float tuft = soi_noise3(model_pos * 14.0 + lobe_seed.zxy) - 0.5;
-    float billow = (lobe * 0.05 + tuft * 0.02) * foliage_mask;
+    float billow = (lobe * 0.07 + tuft * 0.05) * foliage_mask;
     model_pos += a_normal * billow;
   }
 

@@ -350,3 +350,57 @@ vec3 apply_hair_tone(vec3 base, int material_id, int color_role, vec2 tex) {
   }
   return base;
 }
+
+const float k_pelt_uv_offset = -16.0;
+const vec2 k_pelt_rosette_grid = vec2(4.2, 4.6);
+const vec3 k_pelt_spot = vec3(0.060, 0.040, 0.024);
+
+vec2 pelt_hash2(vec2 cell) {
+  vec2 p = vec2(dot(cell, vec2(127.1, 311.7)), dot(cell, vec2(269.5, 183.3)));
+  return fract(sin(p) * 43758.5453);
+}
+
+vec3 apply_pelt_pattern(vec3 base, vec2 tex) {
+  vec2 p = vec2(tex.x - k_pelt_uv_offset, tex.y) * k_pelt_rosette_grid;
+  float footprint = max(fwidth(p.x), fwidth(p.y));
+  if (tex.x > k_pelt_uv_offset + 4.0) {
+    return base;
+  }
+
+  vec2 cell = floor(p);
+  float nearest = 8.0;
+  vec2 to_center = vec2(0.0);
+  vec2 nearest_seed = vec2(0.0);
+  for (int y = -1; y <= 1; ++y) {
+    for (int x = -1; x <= 1; ++x) {
+      vec2 neighbour = cell + vec2(float(x), float(y));
+      vec2 seed = pelt_hash2(neighbour);
+      vec2 offset = neighbour + 0.18 + seed * 0.64 - p;
+      float d = length(offset);
+      if (d < nearest) {
+        nearest = d;
+        to_center = offset;
+        nearest_seed = seed;
+      }
+    }
+  }
+
+  float radius = mix(0.28, 0.38, nearest_seed.x);
+  float ring = smoothstep(radius - 0.15, radius - 0.08, nearest) *
+               (1.0 - smoothstep(radius + 0.03, radius + 0.09, nearest));
+  float angle = atan(to_center.y, to_center.x);
+  float petals = 3.0 + floor(nearest_seed.y * 2.0);
+  float breaks = smoothstep(
+      0.18, 0.30, abs(fract(angle / 6.2831853 * petals + nearest_seed.x) - 0.5));
+  float spots = ring * breaks;
+  float heart = 1.0 - smoothstep(radius - 0.16, radius - 0.08, nearest);
+
+  vec3 ground = base * mix(0.92, 1.06, nearest_seed.y);
+  vec3 heart_tone = base * vec3(0.80, 0.66, 0.50);
+  vec3 pelt = mix(ground, heart_tone, heart * 0.75);
+  pelt = mix(pelt, k_pelt_spot, spots);
+
+  float average = 0.22;
+  vec3 far_pelt = mix(base * 0.92, k_pelt_spot, average);
+  return mix(pelt, far_pelt, smoothstep(0.25, 0.60, footprint));
+}
