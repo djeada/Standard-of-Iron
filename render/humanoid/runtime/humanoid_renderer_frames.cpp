@@ -82,6 +82,7 @@ void HumanoidRendererBase::append_companion_preparation(
     const HumanoidAnimationContext&,
     uint32_t,
     Render::Creature::CreatureLOD,
+    const Render::Creature::Pipeline::HumanoidAnimationSelection*,
     Render::Creature::Pipeline::CreaturePreparationResult&) const {
 }
 

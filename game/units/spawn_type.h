@@ -565,7 +565,7 @@ inline auto is_wall_network_spawn(SpawnType type) -> bool {
   case SpawnType::Wolf:
     return 340.0F;
   default:
-    return 720.0F;
+    return 450.0F;
   }
 }
 

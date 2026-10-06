@@ -423,7 +423,8 @@ enum class DeathSequenceProfile : std::uint8_t {
   MountedRider = 1,
   Horse = 2,
   Elephant = 3,
-  Structure = 4
+  Structure = 4,
+  SiegeEngine = 5
 };
 
 enum class DeathSequenceState : std::uint8_t {

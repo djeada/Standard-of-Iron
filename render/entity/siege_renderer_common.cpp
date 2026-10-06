@@ -9,6 +9,7 @@
 #include "../entity_appearance.h"
 #include "game/core/component_core.h"
 #include "game/core/component_gameplay.h"
+#include "game/core/death_sequence.h"
 #include "game/core/world.h"
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
@@ -225,6 +226,65 @@ void draw_siege_regalia(const DrawContext& ctx,
   out.mesh(get_unit_sphere(6, 10), badge, bronze, white, 1.0F);
 }
 
+auto resolve_siege_wreck(const DrawContext& ctx,
+                         Animation::SiegeWreckKind kind) -> SiegeWreckState {
+  SiegeWreckState wreck;
+  if (ctx.entity == nullptr || ctx.world == nullptr) {
+    return wreck;
+  }
+  auto const id = ctx.entity->get_id();
+  auto const* unit = ctx.world->try_get<Engine::Core::UnitComponent>(id);
+  auto const* death = ctx.world->try_get<Engine::Core::DeathAnimationComponent>(id);
+  if (death == nullptr && (unit == nullptr || unit->health > 0)) {
+    return wreck;
+  }
+  wreck.destroyed = true;
+  float collapse = 1.0F;
+  if (death != nullptr) {
+    if (death->state == Engine::Core::DeathSequenceState::Dying) {
+      collapse = death->state_duration > 0.0F
+                     ? std::clamp(death->state_time / death->state_duration, 0.0F, 1.0F)
+                     : 1.0F;
+    }
+    wreck.sink = Engine::Core::death_sink_progress(*death);
+    wreck.elapsed = Engine::Core::death_sequence_elapsed(*death);
+  } else {
+    wreck.elapsed = Animation::k_siege_wreck_collapse_seconds;
+  }
+  wreck.pose = Animation::resolve_siege_wreck_pose(kind, collapse, id);
+  return wreck;
+}
+
+void apply_siege_wreck(QMatrix4x4& model,
+                       const SiegeWreckState& wreck,
+                       float half_width,
+                       float sink_depth) {
+  if (!wreck.destroyed) {
+    return;
+  }
+  float const pivot_x = wreck.pose.side * half_width;
+  model.translate(0.0F, -(wreck.pose.drop + wreck.sink * sink_depth), 0.0F);
+  model.translate(pivot_x, 0.0F, 0.0F);
+  model.rotate(-wreck.pose.roll_degrees, 0.0F, 0.0F, 1.0F);
+  model.translate(-pivot_x, 0.0F, 0.0F);
+  model.rotate(wreck.pose.pitch_degrees, 1.0F, 0.0F, 0.0F);
+}
+
+auto siege_charred(const QVector3D& color, const SiegeWreckState& wreck) -> QVector3D {
+  if (!wreck.destroyed) {
+    return color;
+  }
+  QVector3D const soot(0.09F, 0.08F, 0.07F);
+  return color + (soot - color) * wreck.pose.char_amount;
+}
+
+namespace {
+
+constexpr float k_siege_engine_sink_depth = 1.8F;
+constexpr float k_siege_crew_sink_depth = 0.6F;
+
+} // namespace
+
 void register_siege_renderer_variant(EntityRendererRegistry& registry,
                                      const SiegeRendererConfig& config) {
   struct History {
@@ -280,6 +340,15 @@ void register_siege_renderer_variant(EntityRendererRegistry& registry,
         presentation.model.scale(ballista ? 1.35F : 1.20F);
         const auto motion = siege_motion(
             presentation, state, ballista ? 0.155F : 0.21F, ballista ? 0.355F : 0.57F);
+        auto const wreck =
+            resolve_siege_wreck(ctx,
+                                ballista ? Animation::SiegeWreckKind::Ballista
+                                         : Animation::SiegeWreckKind::Catapult);
+        apply_siege_wreck(presentation.model,
+                          wreck,
+                          ballista ? 0.355F : 0.57F,
+                          k_siege_engine_sink_depth);
+        team_color = siege_charred(team_color, wreck);
         config.draw_body(presentation, out, unit, white, team_color, motion);
 
         SiegeCrewFrame crew_frame{};
@@ -287,6 +356,9 @@ void register_siege_renderer_variant(EntityRendererRegistry& registry,
         crew_frame.engine_scale = presentation.model.column(0).toVector3D().length();
         crew_frame.travelled = state.travelled;
         crew_frame.movement = motion.movement;
+        crew_frame.destroyed = wreck.destroyed;
+        crew_frame.destroyed_elapsed = wreck.elapsed;
+        crew_frame.sink_offset = wreck.sink * k_siege_crew_sink_depth;
         if (ctx.entity != nullptr && ctx.world != nullptr) {
           using Loading = Engine::Core::CatapultLoadingComponent;
           if (const auto* loading = ctx.world->try_get<Loading>(ctx.entity->get_id())) {

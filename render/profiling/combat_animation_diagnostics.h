@@ -94,6 +94,7 @@ struct SubmittedBodyPose {
   QVector3D foot_l_world{};
   QVector3D foot_r_world{};
   float pelvis_yaw_degrees{0.0F};
+  float torso_yaw_degrees{0.0F};
   bool joints_valid{false};
 };
 
@@ -105,6 +106,7 @@ struct SoldierAnimationDebugSample {
   float attack_phase{0.0F};
   std::uint8_t attack_variant{0U};
   bool is_attacking{false};
+  bool attack_is_melee{false};
   bool is_hit_reacting{false};
   Engine::Core::HitReactionKind hit_reaction_kind{
       Engine::Core::HitReactionKind::Flinch};
@@ -148,6 +150,7 @@ struct SoldierAnimationDebugSample {
   QVector3D foot_l_world{};
   QVector3D foot_r_world{};
   float pelvis_yaw_degrees{0.0F};
+  float torso_yaw_degrees{0.0F};
   bool joint_sample_valid{false};
   bool visual_state_changed{false};
   bool movement_state_changed{false};
@@ -210,6 +213,7 @@ private:
   struct SoldierTracker {
     float last_time{0.0F};
     float last_attack_phase{0.0F};
+    bool last_attack_is_melee{false};
     std::uint8_t last_attack_variant{0U};
     std::uint8_t last_lod{0U};
     Render::Creature::MovementAnimationState last_locomotion{

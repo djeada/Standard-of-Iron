@@ -10,6 +10,7 @@
 #include "animation/rig/horse_gait.h"
 #include "combat_visual_state.h"
 #include "game/core/entity.h"
+#include "pipeline/humanoid_transition_continuity.h"
 #include "render/elephant/dimensions.h"
 #include "render/elephant/runtime/gait_state.h"
 #include "render/gl/humanoid/humanoid_types.h"
@@ -33,12 +34,9 @@ struct HumanoidAnimationStateComponent {
   CombatVisualPersistentState combat_visual{};
   Render::Humanoid::CombatRootSmoothingState combat_root{};
 
-  std::uint16_t action_link_clip{Animation::k_unmapped_clip};
-  float action_link_phase{0.0F};
-  float action_link_until{-1.0F};
-  std::uint16_t last_action_clip{Animation::k_unmapped_clip};
-  float last_action_phase{0.0F};
-  std::uint16_t last_primary_clip{Animation::k_unmapped_clip};
+  Pipeline::HumanoidTransitionMemory transition{};
+  float jump_pitch_degrees{0.0F};
+  float jump_pitch_time{-1.0F};
 
   float last_reaction_time{-1.0F};
   PlaybackLayerRequest last_overlay{};
@@ -69,6 +67,14 @@ struct ElephantAnimationStateComponent {
   float body_yaw_time{0.0F};
   float turn_rate{0.0F};
   bool body_yaw_valid{false};
+  AnimationStateId clip_state{AnimationStateId::Idle};
+  float clip_phase{0.0F};
+  AnimationStateId outgoing_state{AnimationStateId::Idle};
+  float outgoing_phase{0.0F};
+  float blend_started_at{-1.0F};
+  float blend_duration{0.0F};
+  float clip_time{-1.0F};
+  bool clip_valid{false};
 };
 
 struct HorseAnatomyComponent {

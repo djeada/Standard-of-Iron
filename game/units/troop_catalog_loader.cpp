@@ -226,6 +226,8 @@ auto TroopCatalogLoader::load_from_file(const QString& path) -> bool {
         read_float(combat, "vision_range", troop_class.combat.vision_range);
     troop_class.combat.ranged_range =
         read_float(combat, "ranged_range", troop_class.combat.ranged_range);
+    troop_class.combat.ranged_min_range =
+        read_float(combat, "ranged_min_range", troop_class.combat.ranged_min_range);
     troop_class.combat.ranged_damage =
         read_int(combat, "ranged_damage", troop_class.combat.ranged_damage);
     troop_class.combat.ranged_cooldown =

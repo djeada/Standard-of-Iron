@@ -187,7 +187,7 @@ auto WildlifeNatureActions::nearest_prey(const NatureContext& ctx,
   if (found == nullptr) {
     return {};
   }
-  return resolve_prey(m_world, found->id, ctx.x, ctx.z);
+  return resolve_prey(m_world, found->id, ctx.x, ctx.z, ctx.entity);
 }
 
 auto WildlifeNatureActions::nearest_quarry(const NatureContext& ctx,
@@ -197,12 +197,12 @@ auto WildlifeNatureActions::nearest_quarry(const NatureContext& ctx,
   if (found == nullptr) {
     return {};
   }
-  return resolve_prey(m_world, found->id, ctx.x, ctx.z);
+  return resolve_prey(m_world, found->id, ctx.x, ctx.z, ctx.entity);
 }
 
 auto WildlifeNatureActions::locate(const NatureContext& ctx,
                                    Engine::Core::EntityID entity_id) -> PreyRef {
-  return resolve_prey(m_world, entity_id, ctx.x, ctx.z);
+  return resolve_prey(m_world, entity_id, ctx.x, ctx.z, ctx.entity);
 }
 
 auto WildlifeNatureActions::claim_pack_slot(const NatureContext& ctx,

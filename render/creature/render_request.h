@@ -56,6 +56,30 @@ struct PlaybackLayerRequest {
   }
 };
 
+struct TransitionSource {
+  AnimationStateId state{AnimationStateId::Idle};
+  std::uint16_t clip_id{Animation::k_unmapped_clip};
+  std::uint8_t clip_variant{0U};
+  float phase{0.0F};
+  float upper_body_share{0.0F};
+  float lower_body_share{0.0F};
+};
+
+inline constexpr std::size_t k_transition_source_count = 3U;
+
+struct TransitionLayerRequest {
+  ArchetypeId archetype{k_invalid_archetype};
+  std::array<TransitionSource, k_transition_source_count> sources{};
+  float upper_body_weight{0.0F};
+  float lower_body_weight{0.0F};
+
+  [[nodiscard]] auto active() const noexcept -> bool {
+    return archetype != k_invalid_archetype &&
+           sources[0].clip_id != Animation::k_unmapped_clip &&
+           (upper_body_weight > 0.0F || lower_body_weight > 0.0F);
+  }
+};
+
 struct CreatureRenderRequest {
   ArchetypeId archetype{k_invalid_archetype};
   VariantId variant{k_canonical_variant};
@@ -90,6 +114,7 @@ struct CreatureRenderRequest {
   float team_emphasis{0.0F};
   PlaybackLayerRequest full_body_blend{};
   PlaybackLayerRequest upper_body_overlay{};
+  TransitionLayerRequest transition{};
 
   [[nodiscard]] auto role_colors_view() const noexcept -> std::span<const QVector3D> {
     return role_colors != nullptr ? role_colors->view() : std::span<const QVector3D>{};

@@ -10,6 +10,35 @@ namespace Animation {
 
 namespace {
 
+constexpr float k_recover_entry_phase = 0.60F;
+
+constexpr float k_recover_catch_up_seconds = 0.10F;
+
+constexpr float k_strike_commit_phase = 0.34F;
+
+constexpr float k_visual_catch_up_speed = 2.5F;
+
+constexpr float k_abort_resume_seconds = 0.5F;
+
+constexpr float k_late_join_after_hit_phase = 0.55F;
+
+auto swing_family(CombatAttackFamily family,
+                  bool is_melee) noexcept -> CombatAttackFamily {
+  return is_melee && family == CombatAttackFamily::Bow ? CombatAttackFamily::None
+                                                       : family;
+}
+
+auto resume_phase_after_abort(const CombatPersistentState& state,
+                              const CombatRawInputs& raw,
+                              float hint) noexcept -> float {
+  bool const recent = state.aborted_at >= 0.0F &&
+                      raw.sample_time - state.aborted_at <= k_abort_resume_seconds;
+  bool const same_target =
+      state.aborted_target_id == 0U || raw.attack_target_id == state.aborted_target_id;
+  bool const same_mode = state.aborted_is_melee == raw.is_melee;
+  return recent && same_target && same_mode ? state.aborted_phase : hint;
+}
+
 auto wrap_phase(float phase) noexcept -> float {
   float wrapped = std::fmod(phase, 1.0F);
   if (wrapped < 0.0F) {
@@ -168,6 +197,12 @@ void begin_transaction(CombatPersistentState& state,
                        std::uint32_t transaction_id,
                        float raw_phase_hint) noexcept {
   state.active = true;
+  state.strike_committed = false;
+  state.aborting = false;
+  state.aborted_phase = -1.0F;
+  state.aborted_at = -1.0F;
+  state.aborted_target_id = 0U;
+  state.aborted_is_melee = false;
   state.is_melee = raw.is_melee;
   state.is_mounted = raw.is_mounted;
   state.is_casting = raw.is_casting;
@@ -393,6 +428,13 @@ auto resolve_combat_transaction_state(const CombatPersistentState& previous,
 
   CombatPersistentState& next = resolution.persistent;
 
+  if (raw.has_authored_action_phase && next.active) {
+    next.attack_phase = std::clamp(raw.authored_action_phase, 0.0F, 0.995F);
+    next.phase = transaction_phase_from_attack_phase(next.attack_phase);
+    next.phase_progress =
+        transaction_phase_progress_from_attack_phase(next.attack_phase, next.phase);
+  }
+
   if (raw.is_dying || raw.is_dead) {
     next = {};
     next.interruption_reason = CombatInterruptReason::Death;
@@ -432,19 +474,35 @@ auto resolve_combat_transaction_state(const CombatPersistentState& previous,
   }
 
   if (!next.active) {
-    if (request_attack_viable && startup_attack_lane.has_value()) {
-      begin_transaction(next,
-                        raw,
-                        *startup_attack_lane,
-                        config,
-                        previous.transaction_id + 1U,
-                        raw_attack_phase_hint(raw, *startup_attack_lane));
+    bool const late_join_after_hit =
+        next.interruption_reason == CombatInterruptReason::HitReaction &&
+        startup_attack_lane.has_value() &&
+        raw_attack_phase_hint(raw, *startup_attack_lane) >= k_late_join_after_hit_phase;
+    if (request_attack_viable && startup_attack_lane.has_value() &&
+        !late_join_after_hit) {
+      begin_transaction(
+          next,
+          raw,
+          *startup_attack_lane,
+          config,
+          previous.transaction_id + 1U,
+          resume_phase_after_abort(
+              next, raw, raw_attack_phase_hint(raw, *startup_attack_lane)));
     }
     resolution.resolved = build_resolved_state(next, raw, lane);
     return resolution;
   }
 
   float const delta_time = std::max(0.0F, raw.sample_time - next.last_sample_time);
+  bool const mode_changed = request_attack_viable && next.is_melee != raw.is_melee;
+  bool const retarget_in_wind_up =
+      request_attack_viable && !mode_changed && !next.strike_committed &&
+      next.exit_policy == CombatExitPolicy::None && next.source_target_id > 0U &&
+      raw.attack_target_id > 0U && next.source_target_id != raw.attack_target_id &&
+      next.attack_phase < k_strike_commit_phase;
+  if (retarget_in_wind_up) {
+    next.source_target_id = raw.attack_target_id;
+  }
   bool const same_target = next.source_target_id == 0U || raw.attack_target_id == 0U ||
                            next.source_target_id == raw.attack_target_id;
   bool const target_changed = next.source_target_id > 0U && raw.attack_target_id > 0U &&
@@ -452,9 +510,14 @@ auto resolve_combat_transaction_state(const CombatPersistentState& previous,
   bool const target_died =
       next.source_target_id > 0U && !raw.attack_target_alive &&
       (raw.attack_target_id == 0U || raw.attack_target_id == next.source_target_id);
-  bool const family_changed = next.locked_family != CombatAttackFamily::None &&
-                              raw.attack_family != CombatAttackFamily::None &&
-                              next.locked_family != raw.attack_family;
+  CombatAttackFamily const locked_family =
+      swing_family(next.locked_family, next.is_melee);
+  CombatAttackFamily const requested_family =
+      swing_family(raw.attack_family, raw.is_melee);
+  bool const family_changed =
+      mode_changed || (locked_family != CombatAttackFamily::None &&
+                       requested_family != CombatAttackFamily::None &&
+                       locked_family != requested_family);
   constexpr float k_max_continuous_visual_cycle_seconds = 0.95F;
   constexpr float k_max_terminal_pose_seconds = 0.10F;
   bool const terminal_pose_expired =
@@ -481,11 +544,32 @@ auto resolve_combat_transaction_state(const CombatPersistentState& previous,
   }
 
   next.last_sample_time = raw.sample_time;
+  if (raw.combat_phase == CombatPhase::Strike ||
+      raw.combat_phase == CombatPhase::Impact ||
+      raw.combat_phase == CombatPhase::Recover ||
+      next.attack_phase >= k_strike_commit_phase) {
+    next.strike_committed = true;
+  }
 
   bool const hold_attack_lifetime = raw.sample_time < next.minimum_hold_until;
-  if (continue_current_transaction && next.exit_policy == CombatExitPolicy::None) {
-    next.attack_phase = std::clamp(
-        std::max(next.attack_phase, active_lane_phase_hint), next.attack_phase, 0.995F);
+  bool const resume_aborted_swing =
+      request_attack_viable && same_target && !target_changed && !family_changed &&
+      next.exit_policy != CombatExitPolicy::None &&
+      next.phase == CombatTransactionPhase::ExitBlend && !next.strike_committed &&
+      next.attack_phase < k_strike_commit_phase;
+  if (resume_aborted_swing) {
+    next.exit_policy = CombatExitPolicy::None;
+    next.exit_blend_progress = 0.0F;
+    next.aborting = false;
+  }
+  if ((continue_current_transaction || resume_aborted_swing) &&
+      next.exit_policy == CombatExitPolicy::None) {
+    float const catch_up_limit =
+        k_visual_catch_up_speed * delta_time / k_max_continuous_visual_cycle_seconds;
+    float const wanted = std::max(next.attack_phase, active_lane_phase_hint);
+    next.attack_phase = std::clamp(std::min(wanted, next.attack_phase + catch_up_limit),
+                                   next.attack_phase,
+                                   0.995F);
     next.phase = transaction_phase_from_attack_phase(next.attack_phase);
     next.phase_progress =
         transaction_phase_progress_from_attack_phase(next.attack_phase, next.phase);
@@ -510,15 +594,29 @@ auto resolve_combat_transaction_state(const CombatPersistentState& previous,
       }
     }
 
-    if (next.attack_phase < 0.995F) {
+    bool const aborted_before_strike =
+        !next.strike_committed && next.exit_policy != CombatExitPolicy::TargetDied &&
+        next.attack_phase < k_strike_commit_phase &&
+        next.phase != CombatTransactionPhase::Recover;
+    if (aborted_before_strike) {
+      next.phase = CombatTransactionPhase::ExitBlend;
+      next.aborting = true;
+    }
+    if (next.attack_phase < 0.995F && next.phase != CombatTransactionPhase::ExitBlend) {
       float const recover_duration =
           std::max(0.05F, config.recover_duration * active_lane.recover_scale);
       float const phase_step = (delta_time / recover_duration) * 0.40F;
-      next.attack_phase = std::clamp(
-          std::max(next.attack_phase, 0.60F) + phase_step, next.attack_phase, 0.995F);
+      float const catch_up =
+          next.attack_phase < k_recover_entry_phase
+              ? (k_recover_entry_phase - next.attack_phase) *
+                    std::min(1.0F, delta_time / k_recover_catch_up_seconds)
+              : 0.0F;
+      next.attack_phase = std::clamp(next.attack_phase + std::max(phase_step, catch_up),
+                                     next.attack_phase,
+                                     0.995F);
       next.phase = CombatTransactionPhase::Recover;
       next.phase_progress =
-          std::clamp((next.attack_phase - 0.60F) / 0.395F, 0.0F, 1.0F);
+          std::clamp((next.attack_phase - k_recover_entry_phase) / 0.395F, 0.0F, 1.0F);
       if (next.attack_phase >= 0.995F) {
         next.phase = CombatTransactionPhase::ExitBlend;
         next.phase_progress = 0.0F;
@@ -540,10 +638,20 @@ auto resolve_combat_transaction_state(const CombatPersistentState& previous,
         std::uint32_t const transaction_id = next.transaction_id;
         CombatQueuedAttack const queued_next = next.queued_next;
         SoldierCombatLane const last_attack_lane = next.locked_lane;
+        bool const was_aborted = next.aborting;
+        float const aborted_phase = next.attack_phase;
+        std::uint32_t const aborted_target = next.source_target_id;
+        bool const aborted_is_melee = next.is_melee;
         next = {};
         next.transaction_id = transaction_id;
         next.interruption_reason = reason;
         next.locked_lane = last_attack_lane;
+        if (was_aborted) {
+          next.aborted_phase = aborted_phase;
+          next.aborted_at = raw.sample_time;
+          next.aborted_target_id = aborted_target;
+          next.aborted_is_melee = aborted_is_melee;
+        }
         if (queued_followup_valid(queued_next, raw)) {
           CombatLaneProfile const queued_lane =
               profile_with_lane(lane, queued_next.lane);
@@ -556,12 +664,14 @@ auto resolve_combat_transaction_state(const CombatPersistentState& previous,
           next.presentation_driven_followup = true;
         } else if (request_attack_viable && !target_died &&
                    startup_attack_lane.has_value()) {
-          begin_transaction(next,
-                            raw,
-                            *startup_attack_lane,
-                            config,
-                            transaction_id + 1U,
-                            raw_attack_phase_hint(raw, *startup_attack_lane));
+          begin_transaction(
+              next,
+              raw,
+              *startup_attack_lane,
+              config,
+              transaction_id + 1U,
+              resume_phase_after_abort(
+                  next, raw, raw_attack_phase_hint(raw, *startup_attack_lane)));
         }
       }
     }

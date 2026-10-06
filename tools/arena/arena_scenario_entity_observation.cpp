@@ -1,3 +1,5 @@
+#include <QQuaternion>
+
 #include "arena_scenario_internal.h"
 
 namespace Arena {
@@ -29,6 +31,49 @@ constexpr float k_default_hand_step = 0.90F;
 constexpr float k_default_pelvis_step = 70.0F;
 
 constexpr float k_default_attack_torso_sweep = 6.0F;
+
+constexpr float k_locomotion_restart_presence = 0.5F;
+
+constexpr float k_fastest_cycle_phase_rate = 2.5F;
+
+constexpr float k_locomotion_phase_slack = 0.02F;
+
+constexpr float k_attack_restart_phase = 0.35F;
+
+constexpr float k_attack_restart_window_seconds = 0.4F;
+
+constexpr float k_attack_resume_tolerance = 0.02F;
+
+constexpr float k_default_body_pose_step = 0.30F;
+
+constexpr float k_swing_body_pose_step = 0.45F;
+
+constexpr float k_pose_snap_acceleration = 2.5F;
+
+constexpr float k_pose_snap_margin = 0.08F;
+
+auto wrapped_phase_delta(float now, float before) -> float {
+  float delta = std::fmod(now - before, 1.0F);
+  if (delta >= 0.5F) {
+    delta -= 1.0F;
+  } else if (delta < -0.5F) {
+    delta += 1.0F;
+  }
+  return delta;
+}
+
+auto body_local_joints(const Render::Profiling::SoldierAnimationDebugSample& soldier)
+    -> std::array<QVector3D, 4> {
+  QQuaternion const to_body =
+      QQuaternion::fromAxisAndAngle(0.0F, 1.0F, 0.0F, -soldier.root_yaw_degrees);
+  auto local = [&](const QVector3D& joint) {
+    return to_body.rotatedVector(joint - soldier.root_position);
+  };
+  return {local(soldier.hand_l_world),
+          local(soldier.hand_r_world),
+          local(soldier.foot_l_world),
+          local(soldier.foot_r_world)};
+}
 
 auto soldier_key(Engine::Core::EntityID entity_id, int soldier_index) -> std::uint64_t {
   return (static_cast<std::uint64_t>(entity_id) << 32U) |
@@ -295,6 +340,176 @@ void ArenaScenarioRunner::Impl::observe_narrow_layout(
     state.narrowest_files = traversal->target_files;
     state.narrowest_mode = traversal->target_mode;
   }
+}
+
+namespace {
+
+constexpr float k_motion_settle_seconds = 0.20F;
+
+constexpr float k_motion_max_sample_gap = 0.10F;
+
+constexpr float k_teleport_floor = 0.35F;
+
+constexpr float k_teleport_speed_margin = 2.5F;
+
+constexpr float k_charge_speed_scale = 1.6F;
+
+constexpr float k_facing_snap_floor_degrees = 35.0F;
+
+constexpr float k_facing_snap_rate = 720.0F;
+
+constexpr float k_fast_rotation_rate = 480.0F;
+
+constexpr int k_fast_rotation_frames = 6;
+
+constexpr float k_jitter_window_seconds = 1.0F;
+
+constexpr float k_facing_jitter_step = 2.0F;
+
+constexpr std::size_t k_facing_jitter_reversals = 3U;
+
+constexpr float k_position_jitter_step = 0.03F;
+
+constexpr std::size_t k_position_jitter_reversals = 4U;
+
+void keep_recent(std::vector<float>& times, float now) {
+  times.erase(
+      std::remove_if(times.begin(),
+                     times.end(),
+                     [now](float at) { return now - at > k_jitter_window_seconds; }),
+      times.end());
+}
+
+auto signed_yaw_step(float now, float before) -> float {
+  return std::fmod(now - before + 540.0F, 360.0F) - 180.0F;
+}
+
+} // namespace
+
+void ArenaScenarioRunner::Impl::observe_motion_quality(Engine::Core::EntityID entity_id,
+                                                       const QString& group) {
+  bool const wanted = std::any_of(
+      scenario.expectations.begin(),
+      scenario.expectations.end(),
+      [&](const ArenaExpectation& expectation) {
+        return expectation.kind == ArenaExpectationKind::EntityMotionIsSmooth &&
+               expectation_active(expectation) && applies_to(expectation, group);
+      });
+  if (!wanted) {
+    return;
+  }
+  auto* entity = world.get_entity(entity_id);
+  auto const* transform =
+      entity != nullptr ? entity->get_component<Engine::Core::TransformComponent>()
+                        : nullptr;
+  auto const* unit = entity != nullptr
+                         ? entity->get_component<Engine::Core::UnitComponent>()
+                         : nullptr;
+  auto& state = motion_states[entity_id];
+  bool const alive = transform != nullptr && unit != nullptr && unit->health > 0 &&
+                     !entity->has_component<Engine::Core::DeathAnimationComponent>();
+  if (!alive) {
+    state = {};
+    return;
+  }
+  QVector3D const position(transform->position.x, 0.0F, transform->position.z);
+  float const yaw = transform->rotation.y;
+  float const dt = elapsed - state.observed_at;
+  bool const comparable = state.initialized && dt > 0.0F &&
+                          dt <= k_motion_max_sample_gap &&
+                          elapsed >= k_motion_settle_seconds;
+  if (comparable) {
+    QVector3D const step = position - state.position;
+    float const distance = step.length();
+    float speed = unit->speed * k_charge_speed_scale;
+    if (auto const* movement =
+            entity->get_component<Engine::Core::MovementComponent>()) {
+      speed = std::max(speed, std::hypot(movement->get_vx(), movement->get_vz()));
+    }
+    float const allowed_step =
+        std::max(k_teleport_floor, speed * dt * k_teleport_speed_margin);
+    if (distance > allowed_step) {
+      add_issue(QStringLiteral("entity_teleport"),
+                QStringLiteral("%1 entity %2 jumped %3 m in one frame (allowed %4 m)")
+                    .arg(group)
+                    .arg(entity_id)
+                    .arg(distance, 0, 'f', 2)
+                    .arg(allowed_step, 0, 'f', 2),
+                entity_id);
+    }
+
+    auto const* formation =
+        entity->get_component<Engine::Core::FormationPresentationComponent>();
+    bool const drawn_as_soldiers =
+        formation != nullptr && formation->soldiers.size() > 1U;
+    float const yaw_step = drawn_as_soldiers ? 0.0F : signed_yaw_step(yaw, state.yaw);
+    float const snap_limit =
+        std::max(k_facing_snap_floor_degrees, k_facing_snap_rate * dt);
+    if (std::abs(yaw_step) > snap_limit) {
+      add_issue(QStringLiteral("facing_snap"),
+                QStringLiteral("%1 entity %2 turned %3 degrees in one frame")
+                    .arg(group)
+                    .arg(entity_id)
+                    .arg(yaw_step, 0, 'f', 1),
+                entity_id);
+    }
+    state.fast_rotation_frames = std::abs(yaw_step) / dt > k_fast_rotation_rate
+                                     ? state.fast_rotation_frames + 1
+                                     : 0;
+    if (state.fast_rotation_frames >= k_fast_rotation_frames) {
+      add_issue(QStringLiteral("fast_rotation"),
+                QStringLiteral("%1 entity %2 spun faster than %3 degrees/s for %4 "
+                               "frames")
+                    .arg(group)
+                    .arg(entity_id)
+                    .arg(k_fast_rotation_rate, 0, 'f', 0)
+                    .arg(state.fast_rotation_frames),
+                entity_id);
+    }
+
+    keep_recent(state.facing_reversals, elapsed);
+    if (std::abs(yaw_step) > k_facing_jitter_step &&
+        std::abs(state.last_yaw_step) > k_facing_jitter_step &&
+        (yaw_step > 0.0F) != (state.last_yaw_step > 0.0F)) {
+      state.facing_reversals.push_back(elapsed);
+    }
+    if (state.facing_reversals.size() >= k_facing_jitter_reversals) {
+      add_issue(QStringLiteral("facing_jitter"),
+                QStringLiteral("%1 entity %2 swung its facing back and forth %3 times "
+                               "within a second")
+                    .arg(group)
+                    .arg(entity_id)
+                    .arg(state.facing_reversals.size()),
+                entity_id);
+    }
+
+    keep_recent(state.position_reversals, elapsed);
+    float const last_distance = state.last_step.length();
+    if (distance > k_position_jitter_step && last_distance > k_position_jitter_step &&
+        QVector3D::dotProduct(step, state.last_step) <
+            -0.5F * distance * last_distance) {
+      state.position_reversals.push_back(elapsed);
+    }
+    if (state.position_reversals.size() >= k_position_jitter_reversals) {
+      add_issue(QStringLiteral("position_jitter"),
+                QStringLiteral("%1 entity %2 moved back and forth %3 times within a "
+                               "second")
+                    .arg(group)
+                    .arg(entity_id)
+                    .arg(state.position_reversals.size()),
+                entity_id);
+    }
+    state.last_step = step;
+    state.last_yaw_step = yaw_step;
+  } else {
+    state.last_step = {};
+    state.last_yaw_step = 0.0F;
+    state.fast_rotation_frames = 0;
+  }
+  state.position = position;
+  state.yaw = yaw;
+  state.observed_at = elapsed;
+  state.initialized = true;
 }
 
 void ArenaScenarioRunner::Impl::observe_entity(Engine::Core::EntityID entity_id,
@@ -1348,6 +1563,8 @@ void ArenaScenarioRunner::Impl::observe_soldiers(Engine::Core::EntityID entity_i
          soldier.submitted_body_pose_valid,
          soldier.foot_l_world,
          soldier.foot_r_world,
+         soldier.hand_l_world,
+         soldier.hand_r_world,
          soldier.locomotion_blend,
          soldier.locomotion_presence,
          soldier.cycle_phase,
@@ -1376,7 +1593,11 @@ void ArenaScenarioRunner::Impl::observe_soldiers(Engine::Core::EntityID entity_i
          soldier.transitions_last_second,
          culled,
          QString::fromLatin1(
-             Render::Profiling::soldier_cull_reason_name(soldier.cull_reason))});
+             Render::Profiling::soldier_cull_reason_name(soldier.cull_reason)),
+         static_cast<int>(soldier.lod),
+         soldier.pelvis_yaw_degrees,
+         soldier.torso_yaw_degrees,
+         soldier.attack_is_melee});
 
     std::uint64_t const key = soldier_key(entity_id, soldier.soldier_index);
     const bool continuity_alive =
@@ -1546,6 +1767,9 @@ void ArenaScenarioRunner::Impl::observe_soldiers(Engine::Core::EntityID entity_i
                     soldier.soldier_index);
         }
       }
+      bool const dying_now =
+          soldier.visual_state == Render::Profiling::SoldierVisualState::Dying ||
+          soldier.visual_state == Render::Profiling::SoldierVisualState::Dead;
       bool const joints_comparable = previous.initialized && previous.joints_valid &&
                                      soldier.joint_sample_valid && !previous.culled &&
                                      !culled && elapsed - previous.observed_at <= 0.05F;
@@ -1613,7 +1837,8 @@ void ArenaScenarioRunner::Impl::observe_soldiers(Engine::Core::EntityID entity_i
         }
       }
 
-      if (expectation.kind == ArenaExpectationKind::NoPelvisSnap && joints_comparable) {
+      if (expectation.kind == ArenaExpectationKind::NoPelvisSnap && joints_comparable &&
+          !dying_now && !previous.dying) {
         float const allowed = (expectation.threshold > 0.0F ? expectation.threshold
                                                             : k_default_pelvis_step) *
                               frame_budget_scale;
@@ -1632,15 +1857,111 @@ void ArenaScenarioRunner::Impl::observe_soldiers(Engine::Core::EntityID entity_i
         }
       }
 
+      if (expectation.kind == ArenaExpectationKind::NoLocomotionRestart &&
+          joints_comparable && !dying_now && !previous.dying &&
+          soldier.locomotion_presence >= k_locomotion_restart_presence &&
+          previous.locomotion_presence >= k_locomotion_restart_presence) {
+        float const dt = std::max(elapsed - previous.observed_at, 1.0F / 60.0F);
+        float const allowed =
+            (expectation.threshold > 0.0F ? expectation.threshold
+                                          : dt * k_fastest_cycle_phase_rate) +
+            k_locomotion_phase_slack;
+        float const jump =
+            std::abs(wrapped_phase_delta(soldier.cycle_phase, previous.cycle_phase));
+        if (jump > allowed) {
+          add_issue(QStringLiteral("locomotion_phase_restart"),
+                    QStringLiteral("%1 entity %2 soldier %3 stride phase jumped from "
+                                   "%4 to %5 while still walking")
+                        .arg(group)
+                        .arg(entity_id)
+                        .arg(soldier.soldier_index)
+                        .arg(previous.cycle_phase, 0, 'f', 3)
+                        .arg(soldier.cycle_phase, 0, 'f', 3),
+                    entity_id,
+                    soldier.soldier_index);
+        }
+      }
+
+      if (expectation.kind == ArenaExpectationKind::NoAttackRestart && !culled &&
+          observed_attack && !soldier.is_hit_reacting && !soldier.is_swing_recoiling) {
+        float const restart_phase = expectation.threshold > 0.0F
+                                        ? expectation.threshold
+                                        : k_attack_restart_phase;
+        bool const reset_in_place = soldier.attack_phase_reset && previous.attacking &&
+                                    previous.attack_phase < restart_phase;
+        bool const re_entered =
+            !previous.attacking && !previous.hit_since_attack_exit &&
+            !previous.walked_since_attack_exit && previous.attack_exit_at >= 0.0F &&
+            elapsed - previous.attack_exit_at <= k_attack_restart_window_seconds &&
+            previous.attack_exit_phase < restart_phase &&
+            previous.attack_exit_is_melee == soldier.attack_is_melee &&
+            soldier.attack_phase + k_attack_resume_tolerance <
+                previous.attack_exit_phase;
+        if (reset_in_place || re_entered) {
+          float const cut_at =
+              reset_in_place ? previous.attack_phase : previous.attack_exit_phase;
+          add_issue(QStringLiteral("attack_presentation_restart"),
+                    QStringLiteral("%1 entity %2 soldier %3 restarted its swing from "
+                                   "phase %4 before the strike landed")
+                        .arg(group)
+                        .arg(entity_id)
+                        .arg(soldier.soldier_index)
+                        .arg(cut_at, 0, 'f', 2),
+                    entity_id,
+                    soldier.soldier_index);
+        }
+      }
+
+      if (expectation.kind == ArenaExpectationKind::NoBodyPoseSnap &&
+          joints_comparable && !dying_now && !previous.dying) {
+        float const swing_step = observed_attack && previous.attacking
+                                     ? k_swing_body_pose_step
+                                     : k_default_body_pose_step;
+        float const allowed =
+            (expectation.threshold > 0.0F ? expectation.threshold : swing_step) *
+            frame_budget_scale;
+        auto const local = body_local_joints(soldier);
+        float worst = 0.0F;
+        std::size_t worst_joint = 0;
+        for (std::size_t joint = 0; joint < local.size(); ++joint) {
+          float const moved = (local[joint] - previous.local_joints[joint]).length();
+          float const continuing = k_pose_snap_acceleration *
+                                       previous.local_joint_steps[joint] *
+                                       frame_budget_scale +
+                                   k_pose_snap_margin;
+          if (moved > continuing && moved > worst) {
+            worst = moved;
+            worst_joint = joint;
+          }
+        }
+        static constexpr std::array<const char*, 4> k_joint_names{
+            "left hand", "right hand", "left foot", "right foot"};
+        if (worst > allowed) {
+          add_issue(
+              QStringLiteral("body_pose_snap"),
+              QStringLiteral("%1 entity %2 soldier %3 %4 jumped %5 m in "
+                             "the body frame between frames (%6)")
+                  .arg(group)
+                  .arg(entity_id)
+                  .arg(soldier.soldier_index)
+                  .arg(QString::fromLatin1(k_joint_names[worst_joint]))
+                  .arg(worst, 0, 'f', 3)
+                  .arg(QString::fromLatin1(Render::Profiling::animation_state_name(
+                      soldier.animation_state))),
+              entity_id,
+              soldier.soldier_index);
+        }
+      }
+
       if (expectation.kind == ArenaExpectationKind::AttackHasTorsoRotation &&
           soldier.joint_sample_valid && !culled) {
         if (observed_attack) {
           if (!previous.attack_yaw_tracked) {
-            previous.attack_pelvis_yaw_min = soldier.pelvis_yaw_degrees;
-            previous.attack_pelvis_yaw_max = soldier.pelvis_yaw_degrees;
+            previous.attack_pelvis_yaw_min = soldier.torso_yaw_degrees;
+            previous.attack_pelvis_yaw_max = soldier.torso_yaw_degrees;
             previous.attack_yaw_tracked = true;
           } else {
-            float const relative = shortest_degrees(soldier.pelvis_yaw_degrees,
+            float const relative = shortest_degrees(soldier.torso_yaw_degrees,
                                                     previous.attack_pelvis_yaw_min);
             previous.attack_pelvis_yaw_max =
                 std::max(previous.attack_pelvis_yaw_max,
@@ -1767,11 +2088,44 @@ void ArenaScenarioRunner::Impl::observe_soldiers(Engine::Core::EntityID entity_i
     previous.foot_r_world = soldier.foot_r_world;
     previous.pelvis_yaw_degrees = soldier.pelvis_yaw_degrees;
     previous.locomotion_presence = soldier.locomotion_presence;
+    previous.cycle_phase = soldier.cycle_phase;
+    if (previous.attacking && !observed_attack && !culled) {
+      previous.attack_exit_phase = previous.attack_phase;
+      previous.attack_exit_at = elapsed;
+      previous.attack_exit_is_melee = previous.attack_is_melee;
+      previous.hit_since_attack_exit = false;
+      previous.walked_since_attack_exit = false;
+    }
+    if (soldier.locomotion_presence >= k_locomotion_restart_presence) {
+      previous.walked_since_attack_exit = true;
+    }
+    if (soldier.is_hit_reacting || soldier.is_swing_recoiling) {
+      previous.hit_since_attack_exit = true;
+    }
+    previous.attack_phase = soldier.attack_phase;
+    if (soldier.joint_sample_valid) {
+      auto const local = body_local_joints(soldier);
+      bool const steps_comparable = previous.initialized && previous.joints_valid &&
+                                    !previous.culled && !culled &&
+                                    elapsed - previous.observed_at <= 0.05F;
+      for (std::size_t joint = 0; joint < local.size(); ++joint) {
+        previous.local_joint_steps[joint] =
+            steps_comparable
+                ? (local[joint] - previous.local_joints[joint]).length() /
+                      std::max(1.0F, (elapsed - previous.observed_at) * 60.0F)
+                : 0.0F;
+      }
+      previous.local_joints = local;
+    }
+    previous.dying =
+        soldier.visual_state == Render::Profiling::SoldierVisualState::Dying ||
+        soldier.visual_state == Render::Profiling::SoldierVisualState::Dead;
     previous.joints_valid = soldier.joint_sample_valid;
     previous.observed_at = elapsed;
     previous.initialized = true;
     previous.culled = culled;
     previous.attacking = observed_attack;
+    previous.attack_is_melee = soldier.attack_is_melee;
     previous.alive = continuity_alive;
   }
 

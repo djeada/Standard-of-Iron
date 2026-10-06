@@ -42,6 +42,8 @@ class BuildingCollisionRegistry;
 
 namespace Arena {
 
+inline constexpr char k_wildlife_group[] = "wildlife";
+
 enum class ScenarioTriggerKind : std::uint8_t {
   AtTime,
   GroupDestroyed,
@@ -261,6 +263,10 @@ enum class ArenaExpectationKind : std::uint8_t {
   NoPlantedFootSliding,
   NoWeaponTeleport,
   NoPelvisSnap,
+  NoLocomotionRestart,
+  NoAttackRestart,
+  NoBodyPoseSnap,
+  EntityMotionIsSmooth,
   AttackHasTorsoRotation,
   NoRenderVisibilityChurn,
   UnitsClearOfBuildings,

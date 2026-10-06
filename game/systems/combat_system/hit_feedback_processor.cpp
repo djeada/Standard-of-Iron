@@ -51,6 +51,11 @@ knockback_moves_body(const Engine::Core::Entity& unit,
   if (Game::Systems::CombatRules::uses_rpg_combat_rules(&unit)) {
     return false;
   }
+  if (const auto* unit_component = unit.get_component<Engine::Core::UnitComponent>();
+      unit_component != nullptr &&
+      Game::Units::is_siege_engine_spawn(unit_component->spawn_type)) {
+    return false;
+  }
   if (FormationCombat::has_formation_slots(unit)) {
     return false;
   }

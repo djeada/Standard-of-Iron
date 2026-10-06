@@ -9,6 +9,7 @@
 #include <numbers>
 
 #include "animation/elephant_gait_manifest.h"
+#include "animation/elephant_motion_manifest.h"
 #include "animation/quadruped_gait_manifest.h"
 #include "animation/rig/quadruped_gait.h"
 #include "dimensions.h"
@@ -24,6 +25,7 @@ namespace {
 
 constexpr float k_pi = std::numbers::pi_v<float>;
 constexpr float k_two_pi = 2.0F * k_pi;
+constexpr float k_elephant_idle_cycle_rate = 0.30F;
 
 namespace Quadruped = Render::Creature::Quadruped;
 
@@ -165,23 +167,12 @@ auto evaluate_elephant_motion(
   ElephantGait g = profile.gait;
   const ElephantDimensions& d = profile.dims;
 
-  {
-    constexpr float k_elephant_stance_fraction = 0.50F;
+  if (anim.visual_movement.speed_hint > 1.0e-3F) {
     const float scale = std::max(model_scale, 0.05F);
-    auto const cadence = Animation::resolve_quadruped_cadence({
-        .ground_speed = anim.visual_movement.speed_hint / scale,
-        .reference_speed = Animation::k_elephant_reference_speed / scale,
-        .authored_cycle_time = g.cycle_time,
-        .authored_stride_swing = g.stride_swing,
-        .stance_fraction = k_elephant_stance_fraction,
-
-        .stride_to_local = d.body_length * 0.28F,
-        .max_stride_scale = 1.0F,
-    });
-    g.cycle_time = cadence.cycle_time;
+    g.cycle_time = Animation::elephant_cycle_seconds_for_speed(
+        anim.visual_movement.speed_hint / scale,
+        Render::Creature::is_running_animation(anim.movement_state));
   }
-
-  g.cycle_time /= std::clamp(individuality.cadence_scale, 0.80F, 1.25F);
   sample.gait = g;
 
   Render::Creature::MovementAnimationState const movement_animation =
@@ -204,16 +195,16 @@ auto evaluate_elephant_motion(
     state.body_yaw_time = now;
     state.body_yaw_valid = true;
     constexpr float k_pivot_step_degrees_per_second = 8.0F;
-    constexpr float k_pivot_cadence_slowdown = 1.7F;
     if (!sample.is_moving && state.turn_rate > k_pivot_step_degrees_per_second) {
       sample.is_moving = true;
-      g.cycle_time *= k_pivot_cadence_slowdown;
-      g.stride_swing *= 0.45F;
+      sample.is_pivoting = true;
+      g.cycle_time = Animation::k_elephant_pivot_cycle_seconds;
       sample.gait = g;
     }
   }
-  sample.is_fighting =
-      anim.is_attacking || (anim.combat_phase != Render::GL::CombatAnimPhase::Idle);
+  bool const stomp_running = anim.is_attacking && anim.authored_action_phase > 0.0F &&
+                             anim.authored_action_phase < 1.0F;
+  sample.is_fighting = stomp_running;
   float motion_time = anim.time;
   if (sample.is_moving) {
     float const cycle_time = std::max(g.cycle_time, 0.001F);
@@ -242,6 +233,12 @@ auto evaluate_elephant_motion(
       elephant_motion_config());
   float const locomotion_intensity = quadruped_motion.locomotion_intensity;
   sample.phase = quadruped_motion.phase;
+  if (sample.is_fighting) {
+    sample.phase = std::clamp(anim.authored_action_phase, 0.0F, 1.0F);
+  } else if (!sample.is_moving) {
+    sample.phase = Quadruped::wrap_phase(anim.time * k_elephant_idle_cycle_rate +
+                                         individuality.gait_phase_offset);
+  }
   sample.bob = quadruped_motion.bob;
 
   float const trunk_primary = sample.is_moving

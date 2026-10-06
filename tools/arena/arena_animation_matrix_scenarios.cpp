@@ -171,8 +171,8 @@ auto build_animation_matrix_definitions() -> std::vector<ArenaScenarioDefinition
       troop->nation_id = Nation::Carthage;
       troop->owner_id = 2;
       troop->facing_degrees = 180.0F;
-      troop->health_override = 30;
-      troop->max_health_override = 30;
+      troop->health_override = 90;
+      troop->max_health_override = 90;
     }
     archers.origin.setZ(1.8F);
     swords.origin.setZ(1.8F);
@@ -254,8 +254,8 @@ auto build_animation_matrix_definitions() -> std::vector<ArenaScenarioDefinition
       troop->nation_id = Nation::Carthage;
       troop->owner_id = 2;
       troop->facing_degrees = 180.0F;
-      troop->health_override = 40;
-      troop->max_health_override = 40;
+      troop->health_override = 120;
+      troop->max_health_override = 120;
     }
     archers.origin.setZ(2.4F);
     swordsmans.origin.setZ(2.4F);

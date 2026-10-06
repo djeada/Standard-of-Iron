@@ -4,10 +4,12 @@
 #include <QVector3D>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <numbers>
 
 #include "animation/clip_manifest.h"
+#include "animation/siege_wreck_manifest.h"
 #include "civilian_actor.h"
 #include "game/core/component_core.h"
 #include "game/core/world.h"
@@ -16,6 +18,8 @@
 
 namespace Render::GL {
 namespace {
+
+constexpr float k_crew_buried_metres = 0.55F;
 
 constexpr float k_pi = std::numbers::pi_v<float>;
 constexpr float k_walk_speed = 0.95F;
@@ -246,6 +250,27 @@ void advance_siege_crew(SiegeCrewState& state,
   if (frame.loading || frame.firing) {
     state.last_load_time = time;
   }
+  if (frame.destroyed) {
+    state.mode = SiegeCrewMode::Fallen;
+    const float blend_step = dt / k_blend_seconds;
+    for (std::size_t i = 0; i < siege_crew_size(frame); ++i) {
+      auto& member = state.members[i];
+      member.blend = std::max(0.0F, member.blend - blend_step);
+      const float fall =
+          (frame.destroyed_elapsed -
+           Animation::siege_crew_fall_delay(static_cast<std::uint32_t>(i))) /
+          Animation::k_siege_crew_fall_seconds;
+      if (fall <= 0.0F) {
+        continue;
+      }
+      static constexpr std::array<std::uint16_t, 3> k_falls{
+          Animation::k_humanoid_die_infantry_clip,
+          Animation::k_humanoid_die_infantry_side_clip,
+          Animation::k_humanoid_die_infantry_face_clip};
+      set_clip(member, k_falls[i % k_falls.size()], std::clamp(fall, 0.0F, 1.0F));
+    }
+    return;
+  }
   state.mode = next_mode(state, frame, time);
 
   const auto& stations = stations_for(frame, state.mode);
@@ -298,12 +323,8 @@ void submit_siege_crew(const DrawContext& ctx,
   if (ctx.entity == nullptr || ctx.template_prewarm || !state.initialized) {
     return;
   }
-  if (ctx.world != nullptr) {
-    if (const auto* unit =
-            ctx.world->try_get<Engine::Core::UnitComponent>(ctx.entity->get_id());
-        unit != nullptr && unit->health <= 0) {
-      return;
-    }
+  if (frame.destroyed && frame.sink_offset >= k_crew_buried_metres) {
+    return;
   }
   if (ctx.distance_sq > k_far_metres * k_far_metres) {
     return;
@@ -357,6 +378,7 @@ void submit_siege_crew(const DrawContext& ctx,
       stand.setY(
           terrain.resolve_surface_world_y(stand.x(), stand.z(), 0.0F, stand.y()));
     }
+    stand.setY(stand.y() - frame.sink_offset);
     QMatrix4x4 world;
     world.translate(stand);
     world.rotate((engine_yaw + member.yaw) * 180.0F / k_pi, 0.0F, 1.0F, 0.0F);

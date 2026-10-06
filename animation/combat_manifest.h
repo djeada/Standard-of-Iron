@@ -135,6 +135,12 @@ struct CombatPersistentState {
   bool finisher_attack{false};
   bool amplified_attack{false};
   bool presentation_driven_followup{false};
+  bool strike_committed{false};
+  bool aborting{false};
+  float aborted_phase{-1.0F};
+  float aborted_at{-1.0F};
+  std::uint32_t aborted_target_id{0U};
+  bool aborted_is_melee{false};
   SoldierCombatLane locked_lane{SoldierCombatLane::None};
   CombatQueuedAttack queued_next{};
   CombatTransactionPhase phase{CombatTransactionPhase::None};

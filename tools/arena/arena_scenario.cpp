@@ -16,6 +16,9 @@ auto expectation_reads_soldier_samples(ArenaExpectationKind kind) noexcept -> bo
   case ArenaExpectationKind::NoWeaponTeleport:
   case ArenaExpectationKind::NoLimbOverextension:
   case ArenaExpectationKind::NoPelvisSnap:
+  case ArenaExpectationKind::NoLocomotionRestart:
+  case ArenaExpectationKind::NoAttackRestart:
+  case ArenaExpectationKind::NoBodyPoseSnap:
   case ArenaExpectationKind::HoldPoseMaintained:
   case ArenaExpectationKind::AllLivingSoldiersFight:
   case ArenaExpectationKind::AttackHasTorsoRotation:
@@ -247,8 +250,16 @@ void ArenaScenarioRunner::observe_rendered_frame(
       m_impl->observe_narrow_layout(group.name, entity_id);
       m_impl->observe_building_clearance(entity_id, group.name);
       m_impl->observe_soldiers(entity_id, group.name, frame);
+      m_impl->observe_motion_quality(entity_id, group.name);
     }
     m_impl->observe_bridge_centerline_alignment(group.name);
+  }
+  for (auto* animal :
+       m_impl->world.collect_entities_with<Engine::Core::WildlifeComponent>()) {
+    if (animal != nullptr) {
+      m_impl->observe_motion_quality(animal->get_id(),
+                                     QString::fromLatin1(k_wildlife_group));
+    }
   }
   int raft_riders = 0;
   for (auto [rider_id, rider] :

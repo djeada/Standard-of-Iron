@@ -4,6 +4,7 @@
 
 #include <string_view>
 
+#include "animation/siege_wreck_manifest.h"
 #include "registry.h"
 #include "siege_crew.h"
 
@@ -38,6 +39,23 @@ struct SiegeMotion {
                                 float half_track) -> SiegeMotion;
 [[nodiscard]] auto siege_body_model(const DrawContext& ctx,
                                     const SiegeMotion& motion) -> QMatrix4x4;
+struct SiegeWreckState {
+  bool destroyed{false};
+  float elapsed{0.0F};
+  float sink{0.0F};
+  Animation::SiegeWreckPose pose{};
+};
+
+[[nodiscard]] auto
+resolve_siege_wreck(const DrawContext& ctx,
+                    Animation::SiegeWreckKind kind) -> SiegeWreckState;
+void apply_siege_wreck(QMatrix4x4& model,
+                       const SiegeWreckState& wreck,
+                       float half_width,
+                       float sink_depth);
+[[nodiscard]] auto siege_charred(const QVector3D& color,
+                                 const SiegeWreckState& wreck) -> QVector3D;
+
 [[nodiscard]] auto siege_winding(float progress) -> float;
 [[nodiscard]] auto siege_release(float progress) -> float;
 

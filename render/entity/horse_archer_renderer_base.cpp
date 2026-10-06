@@ -142,9 +142,10 @@ void HorseArcherRendererBase::append_companion_preparation(
     const HumanoidAnimationContext& anim_ctx,
     std::uint32_t seed,
     Render::Creature::CreatureLOD lod,
+    const Render::Creature::Pipeline::HumanoidAnimationSelection* resolved_selection,
     Render::Creature::Pipeline::CreaturePreparationResult& out) const {
   MountedHumanoidRendererBase::append_companion_preparation(
-      ctx, variant, pose, anim_ctx, seed, lod, out);
+      ctx, variant, pose, anim_ctx, seed, lod, resolved_selection, out);
 }
 
 } // namespace Render::GL

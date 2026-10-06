@@ -46,7 +46,77 @@ auto elephant_state_for_motion(const Render::GL::ElephantMotionSample& motion,
   if (motion.is_fighting) {
     return Render::Creature::AnimationStateId::AttackMelee;
   }
+  if (motion.is_pivoting) {
+    return Render::Creature::AnimationStateId::Walk;
+  }
   return Render::Creature::animation_state_for_movement(motion.movement_state);
+}
+
+auto elephant_blend_seconds(Render::Creature::AnimationStateId from,
+                            Render::Creature::AnimationStateId to) noexcept -> float {
+  using Render::Creature::AnimationStateId;
+  if (to == AnimationStateId::Die || to == AnimationStateId::Dead) {
+    return from == AnimationStateId::Die ? 0.0F : 0.18F;
+  }
+  if (to == AnimationStateId::AttackMelee || from == AnimationStateId::AttackMelee) {
+    return 0.20F;
+  }
+  if (to == AnimationStateId::Idle || from == AnimationStateId::Idle) {
+    return 0.35F;
+  }
+  return 0.28F;
+}
+
+struct ElephantClipBlend {
+  Render::Creature::AnimationStateId outgoing_state{
+      Render::Creature::AnimationStateId::Idle};
+  float outgoing_phase{0.0F};
+  float outgoing_weight{0.0F};
+};
+
+auto resolve_elephant_clip_blend(
+    Render::Creature::ElephantAnimationStateComponent* state,
+    Render::Creature::AnimationStateId incoming,
+    float incoming_phase,
+    float time) noexcept -> ElephantClipBlend {
+  if (state == nullptr) {
+    return {};
+  }
+  bool const continuous =
+      state->clip_valid && time >= state->clip_time && time - state->clip_time <= 0.5F;
+  if (!continuous) {
+    state->clip_valid = true;
+    state->clip_state = incoming;
+    state->clip_phase = incoming_phase;
+    state->clip_time = time;
+    state->blend_started_at = -1.0F;
+    return {};
+  }
+  if (incoming != state->clip_state) {
+    float const duration = elephant_blend_seconds(state->clip_state, incoming);
+    if (duration > 0.0F) {
+      state->outgoing_state = state->clip_state;
+      state->outgoing_phase = state->clip_phase;
+      state->blend_started_at = time;
+      state->blend_duration = duration;
+    }
+    state->clip_state = incoming;
+  }
+  state->clip_phase = incoming_phase;
+  state->clip_time = time;
+  if (state->blend_started_at < 0.0F || state->blend_duration <= 0.0F) {
+    return {};
+  }
+  float const remaining =
+      1.0F -
+      std::clamp((time - state->blend_started_at) / state->blend_duration, 0.0F, 1.0F);
+  if (remaining <= 0.0F) {
+    state->blend_started_at = -1.0F;
+    return {};
+  }
+  return {.outgoing_state = state->outgoing_state,
+          .outgoing_phase = state->outgoing_phase,
+          .outgoing_weight = remaining * remaining * (3.0F - 2.0F * remaining)};
 }
 
 } // namespace
@@ -158,14 +228,15 @@ void prepare_elephant_render(const Render::GL::ElephantRendererBase& owner,
   using Render::GL::HowdahAttachmentFrame;
 
   const ElephantVariant& v = profile.variant;
+  auto* animation_state = Engine::Core::get_or_add_component<
+      Render::Creature::ElephantAnimationStateComponent>(ctx.entity);
   ElephantMotionSample const motion =
       (shared_motion != nullptr)
           ? *shared_motion
           : evaluate_elephant_motion(
                 profile,
                 anim,
-                Engine::Core::get_or_add_component<
-                    Render::Creature::ElephantAnimationStateComponent>(ctx.entity),
+                animation_state,
                 Render::Creature::Quadruped::mount_model_scale(ctx.world, ctx.entity),
                 Animation::resolve_soldier_individuality({
                     .soldier_seed =
@@ -223,6 +294,11 @@ void prepare_elephant_render(const Render::GL::ElephantRendererBase& owner,
   body_state.variant = v;
   body_state.animation_state = input.animation;
   body_state.phase = input.phase;
+  auto const blend = resolve_elephant_clip_blend(
+      animation_state, input.animation, input.phase, anim.time);
+  body_state.outgoing_state = blend.outgoing_state;
+  body_state.outgoing_phase = blend.outgoing_phase;
+  body_state.outgoing_weight = blend.outgoing_weight;
   out.bodies.add_quadruped(body_state);
 
   RCQ::add_quadruped_shadow(input, body, out);

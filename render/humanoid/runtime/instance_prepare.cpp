@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
@@ -26,6 +27,7 @@
 #include "render/creature/pipeline/creature_prepared_state.h"
 #include "render/creature/pipeline/creature_render_graph.h"
 #include "render/creature/pipeline/humanoid_animation_selection.h"
+#include "render/creature/pipeline/humanoid_transition_continuity.h"
 #include "render/creature/pipeline/lod_decision.h"
 #include "render/creature/pipeline/preparation_common.h"
 #include "render/creature/pose_intent.h"
@@ -61,23 +63,24 @@ struct CasualtyLaunch {
 };
 
 auto resolve_casualty_launch(
-    const Engine::Core::SoldierCasualtyAnimationComponent::Entry& entry)
-    -> CasualtyLaunch {
+    const Engine::Core::SoldierCasualtyAnimationComponent::Entry& entry,
+    float velocity_x,
+    float velocity_z) -> CasualtyLaunch {
   if (!entry.launched) {
     return {};
   }
 
-  constexpr float k_flight_seconds = 1.45F;
   constexpr float k_half_gravity = 4.9F;
 
+  float const landing_time = std::max(0.0F, entry.launch_velocity_y / k_half_gravity);
   float const flight_time =
-      std::min(Engine::Core::death_sequence_elapsed(entry), k_flight_seconds);
+      std::min(Engine::Core::death_sequence_elapsed(entry), landing_time);
 
-  return {entry.launch_velocity_x * flight_time,
+  return {velocity_x * flight_time,
           std::max(0.0F,
                    entry.launch_velocity_y * flight_time -
                        k_half_gravity * flight_time * flight_time),
-          entry.launch_velocity_z * flight_time,
+          velocity_z * flight_time,
           entry.launch_pitch_speed * flight_time,
           entry.launch_roll_speed * flight_time};
 }
@@ -860,6 +863,7 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
 
   auto& animation_diagnostics = *u.animation_diagnostics;
   bool swing_recoil_active = false;
+  bool last_swing_is_melee = false;
   auto record_soldier_debug = [&](int soldier_index,
                                   const AnimationInputs&,
                                   const AnimationInputs& resolved_anim,
@@ -894,6 +898,7 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
     sample.attack_phase = attack_phase;
     sample.attack_variant = resolved_anim.attack_variant;
     sample.is_attacking = resolved_anim.is_attacking;
+    sample.attack_is_melee = last_swing_is_melee;
     sample.is_hit_reacting = resolved_anim.is_hit_reacting;
     sample.hit_reaction_kind = resolved_anim.hit_reaction_kind;
     sample.is_swing_recoiling = swing_recoil_active;
@@ -1187,6 +1192,7 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
       ++stats.soldiers_skipped_lens_gap;
     }
     if (record_animation_diagnostics) {
+      last_swing_is_melee = soldier_render_anim.is_melee;
       record_soldier_debug(
           idx,
           soldier_render_anim,
@@ -1411,6 +1417,14 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
                               soldier_directive->combat_role == Role::SupportStrike ||
                               soldier_directive->combat_role == Role::StepIn;
   }
+  if (soldier_in_formation_fight && !visual_attack_requested &&
+      !soldier_render_anim.is_hit_reacting && previous_combat_visual.active &&
+      !previous_combat_visual.strike_committed && !previous_combat_visual.aborting &&
+      previous_combat_visual.exit_policy == Animation::CombatExitPolicy::None &&
+      (soldier_directive->opponent_id == 0U ||
+       soldier_directive->opponent_id == previous_combat_visual.source_target_id)) {
+    visual_attack_requested = true;
+  }
   raw_combat.attack_requested = visual_attack_requested;
   raw_combat.is_melee = soldier_render_anim.is_melee || soldier_in_formation_fight;
   raw_combat.is_mounted = is_mounted_spawn;
@@ -1450,6 +1464,13 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
   }
   if (allow_animation_persistence && locomotion_persistent_state != nullptr) {
     locomotion_persistent_state->combat_visual = combat_resolution.persistent;
+  }
+  {
+    auto const& shown = combat_resolution.resolved;
+    auto const& swing = combat_resolution.persistent;
+    last_swing_is_melee = shown.active                  ? shown.is_melee
+                          : swing.aborted_phase >= 0.0F ? swing.aborted_is_melee
+                                                        : raw_combat.is_melee;
   }
   sync_combat_visual_inputs(soldier_render_anim, combat_resolution.resolved);
   if (soldier_in_formation_fight && !soldier_render_anim.is_attacking &&
@@ -1687,7 +1708,11 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
     anchor_correction.translate(
         root.x() - rolled_root.x(), 0.0F, root.z() - rolled_root.z());
     inst_ctx.model = anchor_correction * inst_ctx.model;
-  } else if (commander_jump.active) {
+  }
+  float jump_pitch_target = 0.0F;
+  bool const dodging =
+      creature_presentation != nullptr && creature_presentation->dodge_active;
+  if (!dodging && commander_jump.active) {
     float const air = std::sin(std::clamp(commander_jump.phase, 0.0F, 1.0F) *
                                std::numbers::pi_v<float>);
     auto const* action_definition =
@@ -1700,15 +1725,33 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
     bool const diving = action_definition != nullptr &&
                         action_definition->role ==
                             Game::Systems::CombatActions::CommanderActionRole::Dive;
-    float const pitch = (diving ? 34.0F : -10.0F) * air;
-    if (std::abs(pitch) > 0.01F) {
-      QVector3D const pivot = RCP::model_world_origin(inst_ctx.model);
-      QMatrix4x4 tilt;
-      tilt.translate(pivot);
-      tilt.rotate(pitch, right);
-      tilt.translate(-pivot);
-      inst_ctx.model = tilt * inst_ctx.model;
+    jump_pitch_target = (diving ? 34.0F : -10.0F) * air;
+  }
+  float jump_pitch = jump_pitch_target;
+  if (locomotion_persistent_state != nullptr) {
+    constexpr float k_jump_pitch_tau = 0.06F;
+    auto& root_state = *locomotion_persistent_state;
+    float const dt =
+        root_state.jump_pitch_time >= 0.0F
+            ? std::clamp(anim.time - root_state.jump_pitch_time, 0.0F, 0.25F)
+            : -1.0F;
+    if (dt >= 0.0F) {
+      float const follow = 1.0F - std::exp(-dt / k_jump_pitch_tau);
+      jump_pitch = root_state.jump_pitch_degrees +
+                   (jump_pitch_target - root_state.jump_pitch_degrees) * follow;
     }
+    if (allow_animation_persistence) {
+      root_state.jump_pitch_degrees = dodging ? 0.0F : jump_pitch;
+      root_state.jump_pitch_time = anim.time;
+    }
+  }
+  if (!dodging && std::abs(jump_pitch) > 0.01F) {
+    QVector3D const pivot = RCP::model_world_origin(inst_ctx.model);
+    QMatrix4x4 tilt;
+    tilt.translate(pivot);
+    tilt.rotate(jump_pitch, right);
+    tilt.translate(-pivot);
+    inst_ctx.model = tilt * inst_ctx.model;
   }
   float const corpse_sink = RCP::corpse_sink_offset(
       RCP::CreatureKind::Humanoid, soldier_render_anim.death_sink_progress);
@@ -1923,8 +1966,11 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
     graph_output.humanoid_selection = RCP::resolve_humanoid_animation_selection(
         graph_output.spec, anim_ctx, graph_output.seed, &variant);
     if (selection_slot != nullptr) {
-      selection_slot->valid = selection_steady;
-      if (selection_steady) {
+      auto const& resolved = *graph_output.humanoid_selection;
+      bool const single_clip =
+          !resolved.full_body_blend.active() && !resolved.upper_body_overlay.active();
+      selection_slot->valid = selection_steady && single_clip;
+      if (selection_slot->valid) {
         selection_slot->archetype = graph_output.spec.archetype_id;
         selection_slot->movement_state =
             static_cast<std::uint8_t>(anim_ctx.inputs.movement_state);
@@ -1933,40 +1979,19 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
     }
   }
 
-  if (locomotion_persistent_state != nullptr &&
-      graph_output.humanoid_selection->clip_id.has_value()) {
-    constexpr float k_action_link_seconds = 0.2F;
-    auto& link_state = *locomotion_persistent_state;
-    auto& selection = *graph_output.humanoid_selection;
-    std::uint16_t const current_clip = *selection.clip_id;
-    if (allow_animation_persistence &&
-        link_state.last_action_clip != Animation::k_unmapped_clip &&
-        current_clip != link_state.last_primary_clip &&
-        current_clip != link_state.last_action_clip) {
-      link_state.action_link_clip = link_state.last_action_clip;
-      link_state.action_link_phase = link_state.last_action_phase;
-      link_state.action_link_until = anim.time + k_action_link_seconds;
-    }
-    float const remaining = link_state.action_link_until - anim.time;
-    float const linear = std::clamp(remaining / k_action_link_seconds, 0.0F, 1.0F);
-    float const weight = linear * linear * (3.0F - 2.0F * linear);
-    auto const& blend = selection.full_body_blend;
-    bool const already_blending_out =
-        blend.active() && blend.clip_id == link_state.action_link_clip;
-    if (remaining > 0.0F && remaining <= k_action_link_seconds + 1.0e-3F &&
-        !already_blending_out && (!blend.active() || weight > blend.weight)) {
-      RCP::blend_out_interrupted_clip(
-          selection, link_state.action_link_clip, link_state.action_link_phase, weight);
-      if (selection.full_body_blend.active()) {
-        anim_ctx.inputs.action_link_weight = weight;
-      }
-    }
-    if (allow_animation_persistence) {
-      bool const blend_dominates =
-          blend.active() && blend.weight > 0.5F && blend.clip_id.has_value();
-      link_state.last_primary_clip = current_clip;
-      link_state.last_action_clip = blend_dominates ? *blend.clip_id : current_clip;
-      link_state.last_action_phase = blend_dominates ? blend.phase : selection.phase;
+  if (locomotion_persistent_state != nullptr) {
+    auto const transition = RCP::apply_humanoid_transition_continuity(
+        *graph_output.humanoid_selection,
+        locomotion_persistent_state->transition,
+        {.time = anim.time,
+         .persist = allow_animation_persistence,
+         .hit_reaction = anim_ctx.inputs.is_hit_reacting,
+         .dying = anim_ctx.inputs.is_dying || anim_ctx.inputs.is_dead,
+         .working =
+             anim_ctx.inputs.is_constructing ||
+             anim_ctx.construction_role != Animation::HumanoidConstructionRole::None});
+    if (transition.link_weight > 0.0F) {
+      anim_ctx.inputs.action_link_weight = transition.link_weight;
     }
   }
 
@@ -2104,13 +2129,27 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
 
     if (is_mounted_spawn) {
       owner.append_companion_preparation(
-          inst_ctx, variant, pose, anim_ctx, inst_seed, graph_output.lod, out);
+          inst_ctx,
+          variant,
+          pose,
+          anim_ctx,
+          inst_seed,
+          graph_output.lod,
+          graph_output.humanoid_selection ? &*graph_output.humanoid_selection : nullptr,
+          out);
       break;
     }
 
     out.bodies.add_humanoid(graph_output, pose, variant, anim_ctx);
     owner.append_companion_preparation(
-        inst_ctx, variant, pose, anim_ctx, inst_seed, graph_output.lod, out);
+        inst_ctx,
+        variant,
+        pose,
+        anim_ctx,
+        inst_seed,
+        graph_output.lod,
+        graph_output.humanoid_selection ? &*graph_output.humanoid_selection : nullptr,
+        out);
     break;
   }
 
@@ -2121,7 +2160,14 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
     if (is_mounted_spawn && !ctx.allow_template_cache &&
         ctx.suppress_animation_state_persistence) {
       owner.append_companion_preparation(
-          inst_ctx, variant, pose, anim_ctx, inst_seed, graph_output.lod, out);
+          inst_ctx,
+          variant,
+          pose,
+          anim_ctx,
+          inst_seed,
+          graph_output.lod,
+          graph_output.humanoid_selection ? &*graph_output.humanoid_selection : nullptr,
+          out);
       break;
     }
     out.bodies.add_humanoid(graph_output, pose, variant, anim_ctx);
@@ -2230,7 +2276,8 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
         casualty_anim.death_progress = 1.0F;
         casualty_anim.death_sink_progress = Engine::Core::death_sink_progress(entry);
       }
-      const CasualtyLaunch launch = resolve_casualty_launch(entry);
+      float launch_velocity_x = entry.launch_velocity_x;
+      float launch_velocity_z = entry.launch_velocity_z;
       auto const& casualty_layout =
           soldier_layouts[static_cast<std::size_t>(entry.slot_index)];
       float rest_x = entry.has_local_anchor ? entry.local_x : casualty_layout.offset_x;
@@ -2251,7 +2298,9 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
                                                     unit_animation.root_yaw,
                                                     rest_x,
                                                     rest_z,
-                                                    rest_yaw});
+                                                    rest_yaw,
+                                                    launch_velocity_x,
+                                                    launch_velocity_z});
           anchor = std::prev(anchor_cache->casualty_anchors.end());
         }
         casualty_base = &anchor->frame;
@@ -2259,7 +2308,11 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
         rest_x = anchor->rest_x;
         rest_z = anchor->rest_z;
         rest_yaw = anchor->rest_yaw;
+        launch_velocity_x = anchor->launch_velocity_x;
+        launch_velocity_z = anchor->launch_velocity_z;
       }
+      const CasualtyLaunch launch =
+          resolve_casualty_launch(entry, launch_velocity_x, launch_velocity_z);
       append_soldier(static_cast<int>(entry.slot_index),
                      casualty_anim,
                      rest_x - casualty_layout.offset_x + launch.x,

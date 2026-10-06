@@ -74,6 +74,7 @@ set(RENDER_CREATURE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/pipeline/lod_decision.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/pipeline/preparation_common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/pipeline/humanoid_animation_selection.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/pipeline/humanoid_transition_continuity.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/pipeline/creature_render_graph.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/pipeline/creature_bone_probe.cpp
 )

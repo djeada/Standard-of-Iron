@@ -363,6 +363,7 @@ TEST(ElephantPrepare, MotionSampleCarriesResolvedRenderState) {
       .combat_phase = Render::GL::CombatAnimPhase::WindUp,
       .combat_phase_progress = 0.0F,
       .attack_variant = 0,
+      .authored_action_phase = 0.3F,
       .is_hit_reacting = false,
       .hit_reaction_intensity = 0.0F,
       .is_healing = false,

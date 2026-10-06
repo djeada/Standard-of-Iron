@@ -342,6 +342,8 @@ There are two carriers, and they are deliberately the same shape so one template
 - **`DeathAnimationComponent`** on the entity, for anything that dies as a whole: a single-body unit, a commander, a horse, an elephant, an animal, and the squad entity once its last soldier goes. When its sequence expires the entity is removed.
 - **`SoldierCasualtyAnimationComponent::Entry`** per slot on a living formation unit, for the men who fall while the squad fights on. An entry is erased when its own sequence expires.
 
+Siege engines die on their own `SiegeEngine` profile: a 1.6 s collapse, a 9 s hold and a 2.6 s sink. `animation/siege_wreck_manifest.*` turns collapse progress into a wreck pose: the engine tips toward a seeded side under gravity, settles with a small bounce and chars, by kind (a tower topples 74°, a ballista 28°, a catapult 21°, a ram 15° and drops onto its axles). The renderers pivot the frame about the ground edge it falls toward. The crew fall with it, each on a staggered delay, and stay until they have sunk instead of vanishing when health reaches zero. A ram stops striking once it is destroyed.
+
 `Combat::begin_death_sequence()` is the **only** way a body enters the sequence. It picks the profile (infantry collapse chosen by blow direction, mounted unseat, horse, elephant, wildlife on the horse profile), zeroes health, stops movement and applies the authored timing. Nation collapse, the undead garrison break and sheep slaughter used to hand-roll the component with the default 1.0 s fall, which never matched the 1.00–1.25 s baked collapses; they go through the same entry point now.
 
 ### Why bodies sink instead of popping
@@ -440,6 +442,82 @@ Three clips back this up, baked per profile so a swordsman raises his shield whe
 
 `tests/render/creature/combat_root_motion_test.cpp` pins the lunge shape, the reaction envelopes and that no reaction tilts the torso far enough to read as a fall; `humanoid_preview --clip combat_ready --weapon sword` shows the stance.
 
+## Transition continuity
+
+Every crossfade above is written by one selection rule for one pair of states. Nothing guaranteed the frame-to-frame result once several rules hand over at once — a run that meets melee lock, a hit that lands mid-swing, a second hit during the first reaction, a jump that turns into a finisher. Each of those used to cut the pose on one frame. Continuity is now a stage of its own, run after selection on every humanoid and owned by nobody else.
+
+### Layers
+
+A humanoid request carries four layers, composited in this order by `creature_pipeline.cpp`:
+
+```
+primary clip
+    │
+    ▼
+full-body blend      ← selection (locomotion, hold, construction, combat stance)
+    │
+    ▼
+transition layer     ← continuity stage only
+    │
+    ▼
+upper-body overlay   ← selection, with its own rate-limited weight
+```
+
+The transition layer comes **before** the overlay. The overlay has its own spring and rate limit in `instance_prepare.cpp`, so it is already continuous; composited last, a weight-one transition would erase the arms of a swing that is still in flight.
+
+### Detecting a cut
+
+`apply_humanoid_transition_continuity()` (`render/creature/pipeline/humanoid_transition_continuity.cpp`) compares the clip mix the selection asks for this frame with the one it asked for last frame. `clip_mix_discontinuity()` (`animation/transition_manifest.cpp`) is the total variation between the two: weight that moved from one clip instance to another. A clip whose phase jumped by more than `k_transition_phase_break`, or a one-shot clip whose phase stepped backwards by more than `k_transition_phase_rewind`, counts as a new instance — that is how a restarted hit reaction is caught. Loop flags come from the BPAT clip table, not from the state, because reaction clips are selected under `Idle`; reverse gaits and kneels that play backwards a little every frame are not rewinds.
+
+The threshold is `humanoid_transition_snap_threshold(dt)`: never below 0.15, and above what the fastest smooth source (τ = 0.12 s) can move in one frame. Ordinary crossfades therefore never start a transition, and every rule-to-rule handover that would cut the pose does.
+
+### Blending from what was on screen
+
+On a cut the stage starts from **the mix that was displayed last frame** — up to three clips with separate upper- and lower-body shares, already including any transition still in flight — at weight one, and fades it out. The first frame of a transition is therefore identical to the frame before it by construction, however many rules changed at once. Picking a single outgoing clip does not work: a hit reaction that is still fading out of a guard holds the legs in one clip and the arms in another, and blending from either alone moves the other half in one frame.
+
+Durations are state-specific and bounded (`humanoid_transition_timing()`, 0.06–0.30 s), with separate upper and lower values:
+
+| Incoming       | Upper body  | Lower body | Why                                                       |
+| -------------- | ----------- | ---------- | --------------------------------------------------------- |
+| Hit reaction   | 0.12 s      | 0.24 s     | the flinch must read at once; planted feet must not slide |
+| Attack (entry) | 0.12 s      | 0.18 s     | the wind-up shifts the stance                             |
+| Attack (chain) | 0.10 s      | 0.10 s     | consecutive swings already share a guard key              |
+| Guard / hold   | 0.20 s      | 0.20 s     |                                                           |
+| Work           | 0.24 s      | 0.24 s     |                                                           |
+| Locomotion     | 0.16–0.22 s | same       | by source: a recovery, a stand-up or a work post          |
+| Death          | 0.12 s      | 0.12 s     |                                                           |
+
+Blending only ever changes what is drawn. Damage, movement, order completion and every state change stay where the simulation put them.
+
+### Rules that are not crossfades
+
+- **A swing cut short.** When a combat transaction leaves its strike early, recovery used to restart at `max(phase, 0.60)` — the blade skipped the rest of the strike in one frame. It now catches up exponentially (τ = 0.10 s). A swing the simulation never committed (it never reached `Strike`, and its target is still alive) does not play a strike at all: it fades out from where it stopped through the exit blend. `CombatPersistentState::strike_committed` is what tells the two apart, so a hit the simulation already landed is always shown.
+- **A dropped swing resumes from its pose.** When an uncommitted swing is dropped and asked for again within 0.5 s against the same target and in the same mode, it restarts from the phase it was dropped at and catches up at the capped visual speed (2.5×). It used to take `max(sim phase, dropped phase)`: an archer who shuffled a step mid-draw came back 0.25 of a cycle further on in one frame.
+- **What counts as a new attack.** Switching between ranged and melee is a new attack (an archer dropping a draw because an elephant reached him), and so is a change of attack family. A target change before the strike commits is not: the wind-up adopts the new target and carries on. A `Bow` family on a melee swing is stale data from the ranged mode, not a family of its own, so it never aborts the swing when it catches up to `Sword`.
+- **No late join after a hit.** After a hit reaction, a swing the simulation is already past its strike on (phase ≥ 0.55) is waited out instead of joined; joining it snapped the arm to the follow-through.
+- **Formation roles let a swing finish.** The formation fight rotates soldiers between strike and guard roles. A soldier who loses his strike role before his swing commits keeps the swing while he is still in the same fight against the same opponent; the simulation's damage is unaffected.
+- **The authored timeline hands back.** While an authored action phase is authoritative, the transaction's own phase is kept equal to it, so when authority drops at contact the transaction resumes from the pose on screen rather than from a clock that ran on separately.
+- **Commander jump pitch.** The air pitch depends on the action's role (a dive leans forward, a jump leans back). It is now smoothed (τ = 0.06 s) instead of recomputed per frame, so a jump that turns into a dive finisher no longer flips the body 40° in one frame.
+- **Selection cache.** Only single-clip selections are cached between refreshes. A cached layered selection kept its blend phases frozen for up to eight frames and then jumped.
+- **Mounted riders** are drawn from the soldier's continuity-resolved selection (`append_companion_preparation` receives it) instead of re-resolving their own, which bypassed the stage entirely.
+- **Stranded formation soldiers** walk back to their slot at catch-up speed through the crowd instead of being cut onto it (`land_step` in `formation_soldier_walk.cpp`); a rider held behind a melee used to reappear 6 m away. The walk ignores the crowd and the unit footprints that wedged him but still respects the terrain — only when a slope leaves no walkable line toward the slot is the soldier placed on it, which keeps a squeezed lane from walking men across a hillside.
+
+### Arena gauntlets
+
+Eight `transition_gauntlet_*` scenarios exercise these transitions repeatedly: infantry with a field commander, archers, cavalry, elephants, builders, civilians, one large unit engaged from both flanks by single-body units, and the direct-control commander. Besides the existing checks they carry three continuity detectors that read the per-soldier samples:
+
+- `NoLocomotionRestart` — while a stride is present, its cycle phase may only advance or reverse at gait speed.
+- `NoAttackRestart` — a swing may not go back before it reaches the strike, in place or by re-entering within 0.4 s, unless a hit reaction came in between or the soldier switched between ranged and melee. The sample carries `attack_is_melee`, the mode of the soldier's last swing.
+- `NoBodyPoseSnap` — hands and feet in the body frame (root translation and yaw removed) may not jump. A joint moving fast because the swing is fast is not a snap; one moving much faster than it did the frame before is.
+
+Every gauntlet and matchup also carries `EntityMotionIsSmooth`, which watches whole entities, animals included (the reserved group name `wildlife`): `entity_teleport`, `facing_snap` (more than 35° or 720°/s in a frame), `fast_rotation` (above 480°/s for six frames), `facing_jitter` and `position_jitter` (three or four reversals within a second). Formation entities skip the facing checks; their facing is a layout, not a body.
+
+The `matchup_*` scenarios pair everything that can meet in melee: wolves against every troop, elephants against troops, buildings and siege, infantry against siege engines and buildings, archers and horse archers against swordsmen, single-body champions against squads. Each side attacks, breaks off and attacks again. Siege engines and buildings are harmless: a matchup against one fails if the attacker loses health. `matchup_destroy_*` breaks each siege engine and checks the wreck.
+
+Three simulation rules came out of the matrix. An engine that cannot melee (`can_melee` false) neither starts nor answers a melee lock, so a catapult no longer strikes back when swordsmen reach it, and the siege loading path respects `ranged_min_range` (catapult 6 m, ballista 4 m). An idle siege engine is neither knocked back by hits nor shoved by contact separation; swordsmen used to push a catapult 5 m back until they stood outside its minimum range and it could shoot them. A single-body unit turns at no more than 200°/s while its swing is in the strike or impact phase, so a commander retargeting mid-slash pivots instead of dragging his planted foot round.
+
+`trace.jsonl` carries hands, LOD, pelvis and torso yaw per soldier, so a failure can be read frame by frame. `AttackHasTorsoRotation` measures the shoulder axis: the baked rig twists the torso at the shoulders and never yaws the hips.
+
 ## Quadruped gait
 
 Horse and elephant share a single parametric gait core instead of each carrying its own copy of the phase, bob and leg math.
@@ -461,6 +539,17 @@ Quadruped::evaluate_cycle_motion(...)
 
 The shared evaluator gained **behaviour-exact config knobs** (bob harmonic weights/frequencies, bob base/intensity scale, cycle-time floor, optional unclamped swing ease/arc, optional non-mirrored swing target) so each species reproduces its prior output numerically — the consolidation deleted duplicate math without changing the gait feel. Mount/howdah attachment frames remain per-species (their anchor geometry differs).
 
+### Elephant gait
+
+The production elephant rig ships no locomotion clip, so `compiled_creature_assets.cpp` synthesises walk, run, idle and the attack at bake time from `animation/elephant_motion_manifest.*`:
+
+- **A lateral-sequence walk.** Legs move in the order hind-left, fore-left, hind-right, fore-right (offsets 0, 0.25, 0.5, 0.75). Each leg's stance carries the foot backward linearly under the body; its swing lifts it with a knee fold, a thigh counter-swing and a level-then-curled foot. Walk keeps a foot down 64% of the cycle with a 20° hip sweep; the run is an amble at 50% and 21°. Real elephants never go airborne and their hip excursion is about ±20°; past roughly 25° the top of the thigh leaves the barrel and opens a hole in the flank.
+- **Cadence follows speed.** `elephant_cycle_seconds_for_speed()` gives the cycle that makes the stance sweep match ground speed (sweep / (duty × speed), clamped to 0.8–3.4 s), so planted feet stay planted. Without a speed hint the profile cadence is kept. The locomotion phase accumulates, so a speed change alters the cadence without a jump.
+- **Turning in place steps.** A standing elephant that is turning walks its legs at a 1.7 s pivot cycle instead of sliding round on four planted feet.
+- **Secondary motion.** Trunk (three segments, lagged), ears, tail, head nod and body roll ride on the gait phase; idle runs its own slow cycle per elephant.
+- **The attack is a stomp.** It rears on the hind feet, lifts the forelegs, slams down at phase 0.46 (`k_elephant_stomp_contact_phase`) and recovers by 0.92. It plays only while the simulation's authored action phase is inside a swing, so the stomp is not shown at rest.
+- **Crossfades.** `ElephantAnimationStateComponent` remembers the clip on screen. A state change fades the outgoing clip out through the full-body blend layer (0.18 s into death, 0.20 s around the stomp, 0.35 s to and from idle, 0.28 s otherwise).
+
 ## Performance
 
 - **No per-frame skeleton solves** on the baked route — just a frame lookup + lerp.
@@ -476,6 +565,7 @@ The shared evaluator gained **behaviour-exact config knobs** (bob harmonic weigh
 | ECS → animation inputs  | `render/gl/humanoid/animation/animation_inputs.cpp`                                   |
 | Intent resolution       | `render/creature/pose_intent.{h,cpp}`                                                 |
 | Combat visual state     | `render/creature/combat_visual_state.{h,cpp}`                                         |
+| Transition continuity   | `animation/transition_manifest.cpp`, `pipeline/humanoid_transition_continuity.cpp`    |
 | Clip selection          | `render/creature/archetype_registry.cpp`, `pipeline/humanoid_animation_selection.cpp` |
 | BPAT playback           | `animation/bpat/bpat_playback.cpp`                                                    |
 | BPAT blob/registry      | `animation/bpat/bpat_reader.cpp`, `bpat_registry.cpp`                                 |

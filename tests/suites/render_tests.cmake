@@ -113,6 +113,7 @@ add_executable(
     render/creature/quadruped_topology_test.cpp
     render/creature/quadruped_gait_test.cpp
     render/creature/combat_visual_state_test.cpp
+    render/creature/transition_continuity_test.cpp
     render/creature/combat_root_motion_test.cpp
     render/creature/soldier_turn_smoothing_test.cpp
     render/creature/humanoid_prepare_test.cpp

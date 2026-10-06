@@ -12,10 +12,12 @@ class World;
 
 namespace Game::Wildlife {
 
-[[nodiscard]] auto resolve_prey(Engine::Core::World& world,
-                                Engine::Core::EntityID entity_id,
-                                float hunter_x,
-                                float hunter_z) -> PreyRef;
+[[nodiscard]] auto
+resolve_prey(Engine::Core::World& world,
+             Engine::Core::EntityID entity_id,
+             float hunter_x,
+             float hunter_z,
+             const Engine::Core::Entity* hunter = nullptr) -> PreyRef;
 
 class WildlifePredation {
 public:

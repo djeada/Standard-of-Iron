@@ -62,6 +62,7 @@ void Catapult::init(const SpawnParams& params) {
   m_atk = e->add_component<Engine::Core::AttackComponent>();
 
   m_atk->range = profile.combat.ranged_range;
+  m_atk->min_range = profile.combat.ranged_min_range;
   m_atk->damage = profile.combat.ranged_damage;
   m_atk->cooldown = profile.combat.ranged_cooldown;
 
