@@ -5,6 +5,7 @@
 add_executable(
     arena_tests
     tools/arena_scenarios_test.cpp
+    tools/arena_scenario_selection_test.cpp
     tools/arena_interactive_takeover_test.cpp
     tools/arena_rpg_gate_manifest_test.cpp
     tools/arena_commander_metrics_test.cpp

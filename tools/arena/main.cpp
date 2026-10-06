@@ -1,85 +1,31 @@
 #include <QApplication>
 #include <QCommandLineParser>
 #include <QDir>
-#include <QFile>
 #include <QFileInfo>
-#include <QImage>
-#include <QJsonArray>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QSet>
 #include <QSurfaceFormat>
-#include <QSysInfo>
 #include <QTextStream>
 #include <QTimer>
 
 #include <algorithm>
-#include <cmath>
-#include <functional>
-#include <memory>
 #include <optional>
 #include <vector>
 
+#include "arena_batch_runner.h"
 #include "arena_scenarios.h"
 #include "arena_viewport.h"
 #include "arena_window.h"
 #include "game/core/nav_profile.h"
-#include "game/map/campaign_loader.h"
-#include "game/map/mission_loader.h"
-#include "game/map/terrain_topology_audit.h"
 #include "game/session/session_context.h"
 #include "matchup_short.h"
 #include "promo_runner.h"
 #include "promo_spec.h"
-#include "render/gl/bootstrap.h"
 #include "render/gl/context_requirements.h"
 #include "render/graphics_settings.h"
 #include "render/profiling/frame_profile.h"
 #include "ui/theme.h"
 #include "ui/widget_shell.h"
-#include "utils/resource_utils.h"
 
 namespace {
-
-[[nodiscard]] auto host_cpu_model() -> QString {
-
-  QFile info(QStringLiteral("/proc/cpuinfo"));
-  if (!info.open(QIODevice::ReadOnly | QIODevice::Text)) {
-    return QSysInfo::currentCpuArchitecture();
-  }
-  const QString contents = QString::fromUtf8(info.readAll());
-  for (auto const& line : contents.split(QLatin1Char('\n'))) {
-    if (!line.startsWith(QStringLiteral("model name"))) {
-      continue;
-    }
-    int const separator = line.indexOf(QLatin1Char(':'));
-    if (separator >= 0) {
-      return line.mid(separator + 1).trimmed();
-    }
-  }
-  return QSysInfo::currentCpuArchitecture();
-}
-
-[[nodiscard]] auto reference_hardware(const ArenaViewport* viewport) -> QJsonObject {
-  auto const& adapter = Render::GL::RenderBootstrap::adapter();
-  QJsonObject hardware{
-      {QStringLiteral("cpu"), host_cpu_model()},
-      {QStringLiteral("gpu_vendor"),
-       adapter.vendor.isEmpty() ? QStringLiteral("unknown") : adapter.vendor},
-      {QStringLiteral("gpu_renderer"),
-       adapter.renderer.isEmpty() ? QStringLiteral("unknown") : adapter.renderer},
-      {QStringLiteral("gl_version"),
-       adapter.version.isEmpty() ? QStringLiteral("unknown") : adapter.version},
-      {QStringLiteral("os"), QSysInfo::prettyProductName()},
-      {QStringLiteral("kernel"), QSysInfo::kernelVersion()}};
-  if (viewport != nullptr) {
-    hardware.insert(QStringLiteral("viewport_width"),
-                    static_cast<int>(std::lround(viewport->width())));
-    hardware.insert(QStringLiteral("viewport_height"),
-                    static_cast<int>(std::lround(viewport->height())));
-  }
-  return hardware;
-}
 
 auto parse_time_of_day(const QString& value) -> std::optional<Game::Map::TimeOfDay> {
   QString const normalized = value.trimmed().toLower();
@@ -114,133 +60,6 @@ auto parse_graphics_quality(const QString& value)
     return Render::GraphicsQuality::Ultra;
   }
   return std::nullopt;
-}
-
-auto graphics_quality_name(Render::GraphicsQuality quality) -> QString {
-  switch (quality) {
-  case Render::GraphicsQuality::Low:
-    return QStringLiteral("Low");
-  case Render::GraphicsQuality::Medium:
-    return QStringLiteral("Medium");
-  case Render::GraphicsQuality::High:
-    return QStringLiteral("High");
-  case Render::GraphicsQuality::Ultra:
-    return QStringLiteral("Ultra");
-  }
-  return QStringLiteral("Unknown");
-}
-
-struct TerrainReviewEntry {
-  QString id;
-  QString map_path;
-};
-
-auto resolve_terrain_review_path(const QString& path) -> QString {
-  if (path.startsWith(QStringLiteral(":/"))) {
-    const QString source_candidate = QDir::current().absoluteFilePath(path.mid(2));
-    if (QFileInfo::exists(source_candidate)) {
-      return QDir::cleanPath(source_candidate);
-    }
-  }
-  return Utils::Resources::resolve_resource_path(path);
-}
-
-auto campaign_terrain_review_entries(QString* error)
-    -> std::vector<TerrainReviewEntry> {
-  std::vector<TerrainReviewEntry> entries;
-  QSet<QString> seen_maps;
-  const QString campaign_root =
-      resolve_terrain_review_path(QStringLiteral(":/assets/campaigns"));
-  QDir const campaign_dir(campaign_root);
-  const QStringList campaign_files =
-      campaign_dir.entryList({QStringLiteral("*.json")}, QDir::Files, QDir::Name);
-
-  for (const auto& campaign_file : campaign_files) {
-    Game::Campaign::CampaignDefinition campaign;
-    QString load_error;
-    if (!Game::Campaign::CampaignLoader::load_from_json_file(
-            campaign_dir.filePath(campaign_file), campaign, &load_error)) {
-      if (error != nullptr) {
-        *error = load_error;
-      }
-      return {};
-    }
-    std::stable_sort(campaign.missions.begin(),
-                     campaign.missions.end(),
-                     [](const auto& lhs, const auto& rhs) {
-                       return lhs.order_index < rhs.order_index;
-                     });
-    for (const auto& campaign_mission : campaign.missions) {
-      const QString mission_path = resolve_terrain_review_path(
-          QStringLiteral(":/assets/missions/%1.json").arg(campaign_mission.mission_id));
-      Game::Mission::MissionDefinition mission;
-      if (!Game::Mission::MissionLoader::load_from_json_file(
-              mission_path, mission, &load_error)) {
-        if (error != nullptr) {
-          *error = load_error;
-        }
-        return {};
-      }
-      const QString map_path = resolve_terrain_review_path(mission.map_path);
-      const QString canonical_path = QFileInfo(map_path).canonicalFilePath();
-      const QString identity = canonical_path.isEmpty() ? map_path : canonical_path;
-      if (identity.isEmpty() || seen_maps.contains(identity)) {
-        continue;
-      }
-      seen_maps.insert(identity);
-      entries.push_back({campaign_mission.mission_id, map_path});
-    }
-  }
-  return entries;
-}
-
-auto write_terrain_review_report(const QString& directory,
-                                 const TerrainReviewEntry& entry,
-                                 const Game::Map::MapDefinition& definition,
-                                 bool overview_saved,
-                                 bool gameplay_saved) -> bool {
-  const auto topology = Game::Map::audit_terrain_topology(definition);
-  QJsonArray topology_issues;
-  for (const auto& issue : topology.issues) {
-    topology_issues.push_back(issue);
-  }
-  QJsonObject const report{
-      {QStringLiteral("id"), entry.id},
-      {QStringLiteral("map_path"), entry.map_path},
-      {QStringLiteral("map_name"), definition.name},
-      {QStringLiteral("passed"), overview_saved && gameplay_saved && topology.passed()},
-      {QStringLiteral("grid"),
-       QJsonObject{{QStringLiteral("width"), definition.grid.width},
-                   {QStringLiteral("height"), definition.grid.height},
-                   {QStringLiteral("tile_size"), definition.grid.tile_size}}},
-      {QStringLiteral("terrain_features"),
-       static_cast<qint64>(definition.terrain.size())},
-      {QStringLiteral("roads"), static_cast<qint64>(definition.roads.size())},
-      {QStringLiteral("rivers"), static_cast<qint64>(definition.rivers.size())},
-      {QStringLiteral("lakes"), static_cast<qint64>(definition.lakes.size())},
-      {QStringLiteral("bridges"), static_cast<qint64>(definition.bridges.size())},
-      {QStringLiteral("topology"),
-       QJsonObject{{QStringLiteral("passed"), topology.passed()},
-                   {QStringLiteral("road_components"), topology.road_components},
-                   {QStringLiteral("river_components"), topology.river_components},
-                   {QStringLiteral("invalid_river_endpoints"),
-                    topology.invalid_river_endpoints},
-                   {QStringLiteral("hills_without_two_approaches"),
-                    topology.hills_without_two_approaches},
-                   {QStringLiteral("tactically_unanchored_lakes"),
-                    topology.tactically_unanchored_lakes},
-                   {QStringLiteral("issues"), topology_issues}}},
-      {QStringLiteral("overview_saved"), overview_saved},
-      {QStringLiteral("gameplay_saved"), gameplay_saved},
-      {QStringLiteral("renderer"),
-       QStringLiteral("ArenaViewport/OpenGL terrain review")}};
-  QFile report_file(QDir(directory).filePath(QStringLiteral("report.json")));
-  if (!report_file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-    return false;
-  }
-  const bool report_written =
-      report_file.write(QJsonDocument(report).toJson(QJsonDocument::Indented)) >= 0;
-  return report_written && topology.passed();
 }
 
 } // namespace
@@ -280,9 +99,11 @@ auto main(int argc, char** argv) -> int {
   QCommandLineOption const all_option(
       QStringList{QStringLiteral("all")},
       QStringLiteral("Run every registered Arena scenario."));
-  QCommandLineOption const scenario_option(QStringList{QStringLiteral("scenario")},
-                                           QStringLiteral("Scenario id to run."),
-                                           QStringLiteral("id"));
+  QCommandLineOption const scenario_option(
+      QStringList{QStringLiteral("scenario")},
+      QStringLiteral("Scenario ids to run: a comma-separated list that may use shell "
+                     "wildcards, e.g. 'trailer_*,gate_destroyed_breach'."),
+      QStringLiteral("ids"));
   QCommandLineOption const terrain_map_option(
       QStringList{QStringLiteral("terrain-map")},
       QStringLiteral("Load a map as isolated terrain for visual review."),
@@ -646,13 +467,21 @@ auto main(int argc, char** argv) -> int {
             }
           });
     } else if (parser.isSet(scenario_option)) {
-      QString const scenario_id = parser.value(scenario_option).trimmed();
-      if (Arena::Scenarios::find_definition(scenario_id) == nullptr) {
-        qCritical().noquote()
-            << QStringLiteral("Unknown Arena scenario '%1'; use --list-scenarios")
-                   .arg(scenario_id);
+      QString selection_error;
+      QStringList const selected = Arena::Scenarios::select_definition_ids(
+          parser.value(scenario_option), &selection_error);
+      if (selected.isEmpty()) {
+        qCritical().noquote() << selection_error;
         return 2;
       }
+      if (selected.size() > 1) {
+        qWarning().noquote()
+            << QStringLiteral("--scenario matched %1 scenarios; the interactive "
+                              "Arena loads the first, %2. Add --batch to run them all.")
+                   .arg(selected.size())
+                   .arg(selected.front());
+      }
+      QString const scenario_id = selected.front();
       bool seed_ok = false;
       int const seed = parser.value(seed_option).toInt(&seed_ok);
       if (!seed_ok) {
@@ -702,10 +531,10 @@ auto main(int argc, char** argv) -> int {
       return 2;
     }
 
-    std::vector<TerrainReviewEntry> reviews;
+    std::vector<Arena::Batch::TerrainReviewEntry> reviews;
     if (review_campaign_maps) {
       QString error;
-      reviews = campaign_terrain_review_entries(&error);
+      reviews = Arena::Batch::campaign_terrain_review_entries(&error);
       if (reviews.empty()) {
         qCritical().noquote() << QStringLiteral(
                                      "Could not discover campaign terrain maps: %1")
@@ -713,409 +542,64 @@ auto main(int argc, char** argv) -> int {
         return 2;
       }
     } else {
-      const QString map_path =
-          resolve_terrain_review_path(parser.value(terrain_map_option).trimmed());
+      const QString map_path = Arena::Batch::resolve_terrain_review_path(
+          parser.value(terrain_map_option).trimmed());
       reviews.push_back(
           {QFileInfo(map_path).completeBaseName().remove(QStringLiteral("map_")),
            map_path});
     }
 
-    struct TerrainReviewState {
-      std::vector<TerrainReviewEntry> entries;
-      std::size_t next_index{0};
-      int failed{0};
-      QString artifact_root;
-    };
-    auto state = std::make_shared<TerrainReviewState>();
-    state->entries = std::move(reviews);
-    state->artifact_root = QDir::cleanPath(parser.value(artifact_option));
-
-    auto* viewport = window.viewport();
-    viewport->set_batch_fixed_step(1.0F / static_cast<float>(fps));
-    auto start_next = std::make_shared<std::function<void()>>();
-    *start_next = [state,
-                   viewport,
-                   start_next,
-                   capture_interval,
-                   duration,
-                   promo_distance_scale,
-                   promo_tilt_deg,
-                   time_of_day_forced,
-                   forced_time_of_day]() {
-      if (state->next_index >= state->entries.size()) {
-        qInfo().noquote() << QStringLiteral("Campaign terrain review complete: %1 "
-                                            "map(s), %2 failed; artifacts: %3")
-                                 .arg(state->entries.size())
-                                 .arg(state->failed)
-                                 .arg(QDir(state->artifact_root).absolutePath());
-        QApplication::exit(state->failed == 0 ? 0 : 1);
-        return;
-      }
-
-      const TerrainReviewEntry entry = state->entries[state->next_index++];
-      const QString directory = QDir(state->artifact_root).filePath(entry.id);
-      QDir output_dir(directory);
-      if ((output_dir.exists() && !output_dir.removeRecursively()) ||
-          !QDir().mkpath(directory)) {
-        qCritical().noquote() << QStringLiteral(
-                                     "Could not prepare terrain review directory: %1")
-                                     .arg(directory);
-        ++state->failed;
-        QTimer::singleShot(25, [start_next]() { (*start_next)(); });
-        return;
-      }
-
-      QString error;
-      if (!viewport->load_terrain_review_map(entry.map_path, &error)) {
-        qCritical().noquote() << QStringLiteral("Terrain review failed to load %1: %2")
-                                     .arg(entry.id, error);
-        ++state->failed;
-        QTimer::singleShot(25, [start_next]() { (*start_next)(); });
-        return;
-      }
-      if (time_of_day_forced) {
-        viewport->set_time_of_day(forced_time_of_day);
-      }
-      qInfo().noquote()
-          << QStringLiteral("Reviewing campaign terrain: %1").arg(entry.id);
-
-      if (capture_interval > 0.0F) {
-        viewport->set_terrain_review_gameplay_camera();
-        viewport->arm_terrain_review_orbit(promo_distance_scale, promo_tilt_deg);
-
-        const int interval_ms =
-            std::max(1, static_cast<int>(std::lround(capture_interval * 1000.0F)));
-        const float shot_seconds = duration > 0.0F ? duration : 5.0F;
-        const int frame_target =
-            std::max(1, static_cast<int>(std::lround(shot_seconds / capture_interval)));
-        auto captured = std::make_shared<int>(0);
-        auto capture_next = std::make_shared<std::function<void()>>();
-        *capture_next = [state,
-                         viewport,
-                         start_next,
-                         directory,
-                         interval_ms,
-                         frame_target,
-                         captured,
-                         capture_next]() {
-          const QImage frame = viewport->grabFramebuffer();
-          if (!frame.isNull()) {
-            frame.save(QDir(directory).filePath(
-                QStringLiteral("frame_%1.png")
-                    .arg(++(*captured), 4, 10, QLatin1Char('0'))));
-          }
-          if (*captured >= frame_target) {
-            QTimer::singleShot(40, [start_next]() { (*start_next)(); });
-            return;
-          }
-          QTimer::singleShot(interval_ms, [capture_next]() { (*capture_next)(); });
-        };
-        QTimer::singleShot(500, [capture_next]() { (*capture_next)(); });
-        return;
-      }
-
-      viewport->set_terrain_review_overview_camera();
-
-      QTimer::singleShot(450, [state, viewport, start_next, entry, directory]() {
-        const QImage overview = viewport->grabFramebuffer();
-        const bool overview_saved =
-            !overview.isNull() &&
-            overview.save(QDir(directory).filePath(QStringLiteral("overview.png")));
-        viewport->set_terrain_review_gameplay_camera();
-        QTimer::singleShot(
-            350, [state, viewport, start_next, entry, directory, overview_saved]() {
-              const QImage gameplay = viewport->grabFramebuffer();
-              const bool gameplay_saved =
-                  !gameplay.isNull() && gameplay.save(QDir(directory).filePath(
-                                            QStringLiteral("gameplay.png")));
-              if (gameplay_saved) {
-                gameplay.save(QDir(directory).filePath(QStringLiteral("final.png")));
-              }
-              const auto* definition = viewport->terrain_review_definition();
-              const bool report_saved =
-                  definition != nullptr &&
-                  write_terrain_review_report(
-                      directory, entry, *definition, overview_saved, gameplay_saved);
-              if (!overview_saved || !gameplay_saved || !report_saved) {
-                ++state->failed;
-                qWarning().noquote()
-                    << QStringLiteral("Terrain review acceptance failed for %1")
-                           .arg(entry.id);
-              }
-              QTimer::singleShot(40, [start_next]() { (*start_next)(); });
-            });
-      });
-    };
-
-    QTimer::singleShot(250, [start_next]() { (*start_next)(); });
+    Arena::Batch::TerrainReviewSettings review_settings;
+    review_settings.artifact_root = QDir::cleanPath(parser.value(artifact_option));
+    review_settings.fps = fps;
+    review_settings.duration = duration;
+    review_settings.capture_interval = capture_interval;
+    review_settings.promo_distance_scale = promo_distance_scale;
+    review_settings.promo_tilt_deg = promo_tilt_deg;
+    if (time_of_day_forced) {
+      review_settings.forced_time_of_day = forced_time_of_day;
+    }
+    Arena::Batch::start_terrain_review(
+        *window.viewport(), std::move(reviews), review_settings);
     return QApplication::exec();
   }
 
-  struct BatchState {
-    QStringList scenarios;
-    int next_index{0};
-    int failed{0};
-    QString artifact_root;
-    QString current_directory;
-    QString current_scenario;
-    bool failure_context_started{false};
-    bool finishing{false};
-    int generation{0};
-    int capture_index{0};
-  };
-
-  auto state = std::make_shared<BatchState>();
-  state->artifact_root = QDir::cleanPath(parser.value(artifact_option));
+  QStringList scenario_ids;
   if (parser.isSet(all_option)) {
     for (auto const& scenario : Arena::Scenarios::definitions()) {
-      state->scenarios.push_back(scenario.id);
+      scenario_ids.push_back(scenario.id);
     }
   } else {
-    QString scenario_id = parser.value(scenario_option).trimmed();
-    if (scenario_id.isEmpty()) {
-      scenario_id =
+    QString selection = parser.value(scenario_option).trimmed();
+    if (selection.isEmpty()) {
+      selection =
           QString::fromLatin1(Arena::Scenarios::k_three_swords_vs_two_spears_id);
     }
-    if (Arena::Scenarios::find_definition(scenario_id) == nullptr) {
-      qCritical().noquote() << QStringLiteral(
-                                   "Unknown Arena scenario '%1'; use --list-scenarios")
-                                   .arg(scenario_id);
+    QString selection_error;
+    scenario_ids = Arena::Scenarios::select_definition_ids(selection, &selection_error);
+    if (scenario_ids.isEmpty()) {
+      qCritical().noquote() << selection_error;
       return 2;
     }
-    state->scenarios.push_back(scenario_id);
   }
-  if (state->scenarios.isEmpty()) {
+  if (scenario_ids.isEmpty()) {
     qCritical() << "No Arena scenarios selected";
     return 2;
   }
 
-  auto* viewport = window.viewport();
-  viewport->set_terrain_seed(seed);
-  viewport->set_batch_fixed_step(1.0F / static_cast<float>(fps));
-  viewport->set_scenario_duration_override(duration);
-
-  QObject::connect(
-      viewport,
-      &ArenaViewport::scenario_issue_detected,
-      &app,
-      [state, viewport](const QString& scenario_id, const QString& issue) {
-        qWarning().noquote()
-            << QStringLiteral("Arena failure [%1]: %2").arg(scenario_id, issue);
-        if (state->failure_context_started) {
-          return;
-        }
-        state->failure_context_started = true;
-        QImage const current = viewport->grabFramebuffer();
-        if (!current.isNull()) {
-          current.save(QDir(state->current_directory)
-                           .filePath(QStringLiteral("failure_frame.png")));
-        }
-      },
-      Qt::QueuedConnection);
-
-  auto start_next = std::make_shared<std::function<void()>>();
-  *start_next = [state,
-                 viewport,
-                 start_next,
-                 fps,
-                 seed,
-                 duration,
-                 capture_interval,
-                 detailed_profiling,
-                 watchdog_multiplier,
-                 environment_hour,
-                 environment_hour_forced,
-                 lighting_profile,
-                 graphics_quality_override]() {
-    if (state->next_index >= state->scenarios.size()) {
-      qInfo().noquote()
-          << QStringLiteral(
-                 "Arena batch complete: %1 scenario(s), %2 failed; artifacts: %3")
-                 .arg(state->scenarios.size())
-                 .arg(state->failed)
-                 .arg(QDir(state->artifact_root).absolutePath());
-      QApplication::exit(state->failed == 0 ? 0 : 1);
-      return;
-    }
-    QString const id = state->scenarios[state->next_index++];
-    state->current_scenario = id;
-    int const generation = ++state->generation;
-    state->current_directory = QDir(state->artifact_root).filePath(id);
-    state->failure_context_started = false;
-    state->finishing = false;
-    state->capture_index = 0;
-    QDir scenario_artifacts(state->current_directory);
-    if (scenario_artifacts.exists() && !scenario_artifacts.removeRecursively()) {
-      qCritical().noquote() << QStringLiteral(
-                                   "Could not replace stale Arena artifacts for %1: %2")
-                                   .arg(id, state->current_directory);
-      ++state->failed;
-      QTimer::singleShot(25, [start_next]() { (*start_next)(); });
-      return;
-    }
-    if (!QDir().mkpath(state->current_directory)) {
-      qCritical().noquote()
-          << QStringLiteral("Could not create Arena artifact directory for %1: %2")
-                 .arg(id, state->current_directory);
-      ++state->failed;
-      QTimer::singleShot(25, [start_next]() { (*start_next)(); });
-      return;
-    }
-    QFile config_file(
-        QDir(state->current_directory).filePath(QStringLiteral("run_config.json")));
-    if (config_file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-      auto const* scenario = Arena::Scenarios::find_definition(id);
-      const float effective_hour = (scenario != nullptr && !environment_hour_forced)
-                                       ? scenario->environment.start_time
-                                       : environment_hour;
-      const QString effective_profile = scenario != nullptr
-                                            ? scenario->environment.lighting_profile
-                                            : lighting_profile;
-      const auto effective_weather =
-          scenario != nullptr ? scenario->weather : Game::Map::WeatherLightingInput{};
-      auto lighting = Game::Map::lighting_for_hour(
-          effective_hour, effective_profile, effective_weather);
-
-      if (scenario != nullptr) {
-        if (scenario->environment.fog_density_override >= 0.0F) {
-          lighting.fog_density = scenario->environment.fog_density_override;
-        }
-        if (scenario->environment.exposure_override >= 0.0F) {
-          lighting.exposure = scenario->environment.exposure_override;
-        }
-      }
-      QJsonObject const config{
-          {QStringLiteral("scenario"), id},
-          {QStringLiteral("graphics_quality"),
-           graphics_quality_override.has_value()
-               ? graphics_quality_name(*graphics_quality_override)
-               : (scenario != nullptr
-                      ? graphics_quality_name(scenario->graphics_quality)
-                      : QStringLiteral("Unknown"))},
-          {QStringLiteral("seed"), seed},
-          {QStringLiteral("time_of_day"),
-           QString::fromLatin1(Game::Map::time_of_day_name(
-               Game::Map::time_of_day_for_hour(effective_hour)))},
-          {QStringLiteral("representative_clock_time"),
-           QString::number(effective_hour, 'f', 2)},
-          {QStringLiteral("lighting_profile"), effective_profile},
-          {QStringLiteral("primary_direction"),
-           QJsonArray{lighting.primary_direction.x(),
-                      lighting.primary_direction.y(),
-                      lighting.primary_direction.z()}},
-          {QStringLiteral("primary_color"),
-           QJsonArray{lighting.primary_color.x(),
-                      lighting.primary_color.y(),
-                      lighting.primary_color.z()}},
-          {QStringLiteral("primary_intensity"), lighting.primary_intensity},
-          {QStringLiteral("sky_color"),
-           QJsonArray{
-               lighting.sky_color.x(), lighting.sky_color.y(), lighting.sky_color.z()}},
-          {QStringLiteral("ambient_intensity"), lighting.ambient_intensity},
-          {QStringLiteral("fog_density"), lighting.fog_density},
-          {QStringLiteral("shadow_strength"), lighting.shadow_strength},
-          {QStringLiteral("shadow_softness"), lighting.shadow_softness},
-          {QStringLiteral("exposure"), lighting.exposure},
-          {QStringLiteral("cloud_cover"), lighting.cloud_cover},
-          {QStringLiteral("wetness"), lighting.wetness},
-          {QStringLiteral("fixed_fps"), fps},
-          {QStringLiteral("duration_override"), duration},
-          {QStringLiteral("capture_interval_seconds"), capture_interval},
-          {QStringLiteral("detailed_profiling"), detailed_profiling},
-          {QStringLiteral("watchdog_multiplier"), watchdog_multiplier},
-          {QStringLiteral("renderer"), QStringLiteral("ArenaViewport/OpenGL")},
-          {QStringLiteral("reference_hardware"), reference_hardware(viewport)}};
-      config_file.write(QJsonDocument(config).toJson(QJsonDocument::Indented));
-    }
-    qInfo().noquote() << QStringLiteral("Running rendered Arena scenario: %1").arg(id);
-    viewport->load_scenario(id);
-
-    if (capture_interval > 0.0F) {
-      int const capture_interval_ms =
-          std::max(1, static_cast<int>(std::lround(capture_interval * 1000.0F)));
-      auto capture_next = std::make_shared<std::function<void()>>();
-      *capture_next =
-          [state, viewport, generation, capture_interval_ms, capture_next]() {
-            if (state->generation != generation || state->finishing) {
-              return;
-            }
-            QImage const frame = viewport->grabFramebuffer();
-            if (!frame.isNull()) {
-              frame.save(
-                  QDir(state->current_directory)
-                      .filePath(
-                          QStringLiteral("frame_%1.png")
-                              .arg(++state->capture_index, 4, 10, QLatin1Char('0'))));
-            }
-            QTimer::singleShot(capture_interval_ms,
-                               [capture_next]() { (*capture_next)(); });
-          };
-      QTimer::singleShot(capture_interval_ms, [capture_next]() { (*capture_next)(); });
-    }
-
-    auto const* definition = Arena::Scenarios::find_definition(id);
-    float const effective_duration =
-        duration > 0.0F
-            ? duration
-            : (definition != nullptr ? definition->duration_seconds : 12.0F);
-    int const watchdog_ms = static_cast<int>(
-        std::max(15.0F, effective_duration * watchdog_multiplier) * 1000.0F);
-    QTimer::singleShot(watchdog_ms, [state, viewport, start_next, generation]() {
-      if (state->generation != generation || state->finishing) {
-        return;
-      }
-      state->finishing = true;
-      ++state->failed;
-      QImage const frame = viewport->grabFramebuffer();
-      if (!frame.isNull()) {
-        frame.save(
-            QDir(state->current_directory).filePath(QStringLiteral("timeout.png")));
-      }
-      QString ignored_error;
-      (void)viewport->write_scenario_artifacts(state->current_directory,
-                                               &ignored_error);
-      QFile timeout_file(
-          QDir(state->current_directory).filePath(QStringLiteral("timeout.txt")));
-      if (timeout_file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-        timeout_file.write("Scenario exceeded the local wall-clock watchdog.\n");
-      }
-      qCritical().noquote() << QStringLiteral("Arena scenario timed out: %1")
-                                   .arg(state->current_scenario);
-      QTimer::singleShot(25, [start_next]() { (*start_next)(); });
-    });
-  };
-
-  QObject::connect(
-      viewport,
-      &ArenaViewport::scenario_finished,
-      &app,
-      [state, viewport, start_next](
-          const QString& scenario_id, bool passed, const QString& summary) {
-        if (state->finishing || scenario_id != state->current_scenario) {
-          return;
-        }
-        state->finishing = true;
-        QImage const final_frame = viewport->grabFramebuffer();
-        if (!final_frame.isNull()) {
-          final_frame.save(
-              QDir(state->current_directory).filePath(QStringLiteral("final.png")));
-        }
-        QString error;
-        if (!viewport->write_scenario_artifacts(state->current_directory, &error)) {
-          qCritical().noquote()
-              << QStringLiteral("Could not write artifacts for %1: %2")
-                     .arg(scenario_id, error);
-          passed = false;
-        }
-        if (!passed) {
-          ++state->failed;
-        }
-        qInfo().noquote() << summary;
-        QTimer::singleShot(25, [start_next]() { (*start_next)(); });
-      },
-      Qt::QueuedConnection);
-
-  QTimer::singleShot(250, [start_next]() { (*start_next)(); });
+  Arena::Batch::ScenarioBatchSettings batch_settings;
+  batch_settings.artifact_root = QDir::cleanPath(parser.value(artifact_option));
+  batch_settings.fps = fps;
+  batch_settings.seed = seed;
+  batch_settings.duration = duration;
+  batch_settings.capture_interval = capture_interval;
+  batch_settings.watchdog_multiplier = watchdog_multiplier;
+  batch_settings.detailed_profiling = detailed_profiling;
+  batch_settings.environment_hour = environment_hour;
+  batch_settings.environment_hour_forced = environment_hour_forced;
+  batch_settings.lighting_profile = lighting_profile;
+  batch_settings.graphics_quality_override = graphics_quality_override;
+  Arena::Batch::start_scenario_batch(*window.viewport(), scenario_ids, batch_settings);
 
   return QApplication::exec();
 }

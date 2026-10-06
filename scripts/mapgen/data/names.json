@@ -1,0 +1,155 @@
+{
+  "settlements": {
+    "roman_republic": [
+      "Aquila",
+      "Castra Nova",
+      "Forum Novum",
+      "Ad Fines",
+      "Saxa Rubra",
+      "Tres Tabernae",
+      "Aquae Calidae",
+      "Vicus Albus",
+      "Pontes",
+      "Arx Vetus",
+      "Fons Martis",
+      "Ulmi",
+      "Vada Sabatia",
+      "Lucus Ferus",
+      "Clivus",
+      "Campus Altus",
+      "Turris",
+      "Ad Pirum",
+      "Statio Nova",
+      "Mutina Parva"
+    ],
+    "carthage": [
+      "Qart Hadasht Minor",
+      "Bet Melqart",
+      "Tsur Hadash",
+      "Ras Adar",
+      "Magonia",
+      "Gisco's Hold",
+      "Bet Tanit",
+      "Eshmun's Well",
+      "Hadrumetum Parva",
+      "Kerkouane",
+      "Utica Nova",
+      "Byrsa",
+      "Thapsus Minor",
+      "Baal's Rest",
+      "Sidon Watch",
+      "Hanno's Field",
+      "Qelt",
+      "Bet Shemesh",
+      "Iol",
+      "Rusadir"
+    ]
+  },
+  "rivers": [
+    "Aufidus",
+    "Trebia",
+    "Padus",
+    "Ticinus",
+    "Clanis",
+    "Liris",
+    "Vulturnus",
+    "Silarus",
+    "Arnus",
+    "Bagradas",
+    "Metaurus",
+    "Sessites",
+    "Tanager",
+    "Calor",
+    "Isara",
+    "Druentia",
+    "Sucro",
+    "Baetis",
+    "Anas",
+    "Muthul"
+  ],
+  "forests": {
+    "prefix": ["Silva", "Lucus", "Saltus", "Nemus"],
+    "root": [
+      "Nigra",
+      "Umbrosa",
+      "Antiqua",
+      "Ferox",
+      "Ciminia",
+      "Larum",
+      "Martia",
+      "Dianae",
+      "Picea",
+      "Alta",
+      "Muta",
+      "Lupina",
+      "Quercea",
+      "Tacita"
+    ]
+  },
+  "landmarks": {
+    "sanctuary": [
+      "Sanctuary of {deity}",
+      "Temple of {deity}",
+      "{deity}'s High Place"
+    ],
+    "shrine": ["Shrine of {deity}", "Altar of {deity}", "Wayside of {deity}"],
+    "hamlet": [
+      "Burnt {place}",
+      "Old {place}",
+      "Empty {place}",
+      "{place} Ruins"
+    ],
+    "watch": ["{place} Watch", "{place} Picket", "Post at {place}"]
+  },
+  "deities": {
+    "roman_republic": [
+      "Jupiter",
+      "Mars",
+      "Ceres",
+      "Diana",
+      "Janus",
+      "Vesta",
+      "Minerva",
+      "Neptune"
+    ],
+    "carthage": [
+      "Tanit",
+      "Baal Hammon",
+      "Melqart",
+      "Eshmun",
+      "Astarte",
+      "Reshef"
+    ]
+  },
+  "places": [
+    "Cedars",
+    "Fords",
+    "Crossroads",
+    "Wells",
+    "Stones",
+    "Elms",
+    "Mill",
+    "Tower",
+    "Springs",
+    "Barrow",
+    "Cairn",
+    "Oaks",
+    "Marsh",
+    "Ridge"
+  ],
+  "maps": {
+    "first": ["{river}", "{settlement}"],
+    "second": [
+      "Field",
+      "Crossing",
+      "Marches",
+      "Heights",
+      "Plain",
+      "Gap",
+      "Fords",
+      "Valley",
+      "Approach",
+      "Frontier"
+    ]
+  }
+}

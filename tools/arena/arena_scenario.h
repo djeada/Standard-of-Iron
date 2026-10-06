@@ -783,6 +783,9 @@ find_definition(const QString& scenario_id) -> const ArenaScenarioDefinition*;
 
 void register_runtime_definition(ArenaScenarioDefinition definition);
 
+[[nodiscard]] auto select_definition_ids(const QString& selection,
+                                         QString* error = nullptr) -> QStringList;
+
 void clear_runtime_definitions();
 
 } // namespace Scenarios

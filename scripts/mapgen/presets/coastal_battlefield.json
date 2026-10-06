@@ -1,0 +1,20 @@
+{
+  "id": "coastal_battlefield",
+  "label": "Coastal Battlefield",
+  "order": 3,
+  "description": "The sea closes one flank. Routes run along the shore; a river comes down to the coast.",
+  "width": 650,
+  "height": 650,
+  "parameters": {
+    "tactical.sectors": 4,
+    "water.coast": true,
+    "water.rivers": 1,
+    "water.edge_to_edge": 0.0,
+    "water.lakes": 0,
+    "terrain.hills": 0.4,
+    "forests.density": 0.35,
+    "settlements.towns": 1,
+    "settlements.forts": 1,
+    "general.biome": "mediterranean"
+  }
+}

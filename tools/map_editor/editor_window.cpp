@@ -36,13 +36,16 @@
 
 #include <cmath>
 
+#include "element_edit_json.h"
 #include "game/map/environment_lighting.h"
 #include "game/map/map_definition.h"
+#include "generator_client.h"
+#include "generator_panel.h"
 #include "json_edit_dialog.h"
 #include "json_schema.h"
 #include "map_json_keys.h"
 #include "resize_dialog.h"
-#include "troop_tool_specs.h"
+#include "tool_catalog.h"
 
 namespace {
 
@@ -100,6 +103,15 @@ auto createGuidePanel(QWidget* parent) -> QWidget* {
                          "cell grid: draw the hill shape or its entrances).\n"
                          "5. Save the map when the layout looks right.",
                          panel));
+
+  layout->addWidget(createGuideSection(
+      "Generator",
+      "The Generator tab builds a whole battlefield from a preset and a seed. "
+      "Generate opens a preview with a validation report; Accept replaces the "
+      "map in one undo step. Lock the stages you want to keep and press Reroll "
+      "Unlocked to regenerate the rest. Moving or editing a generated element "
+      "makes it authored, so later rerolls leave it alone.",
+      panel));
 
   layout->addWidget(
       createGuideSection("Mouse Controls",
@@ -405,18 +417,6 @@ auto normalizedDisplayPath(const QString& file_path) -> QString {
   return QDir::toNativeSeparators(QFileInfo(file_path).absoluteFilePath());
 }
 
-auto prettifyIdentifier(const QString& value) -> QString {
-  QString label = value;
-  label.replace(QLatin1Char('_'), QLatin1Char(' '));
-  QStringList parts = label.split(QLatin1Char(' '), Qt::SkipEmptyParts);
-  for (QString& part : parts) {
-    if (!part.isEmpty()) {
-      part[0] = part[0].toUpper();
-    }
-  }
-  return parts.join(QLatin1Char(' '));
-}
-
 } // namespace
 
 namespace MapEditor {
@@ -554,6 +554,25 @@ void EditorWindow::setup_ui() {
   environment_scroll->setWidgetResizable(true);
   environment_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   m_sidebar_tabs->addTab(environment_scroll, "Environment");
+
+  m_generator_panel = new GeneratorPanel(m_map_data, m_sidebar_tabs);
+  m_generator_panel->set_repository_root(repository_root());
+  connect(m_generator_panel,
+          &GeneratorPanel::feedback,
+          this,
+          [this](const QString& message, bool success) {
+            show_action_feedback(message, success);
+          });
+  connect(m_generator_panel, &GeneratorPanel::document_replaced, this, [this]() {
+    m_canvas->clear_selection();
+    m_canvas->zoom_to_fit();
+    update_dimensions_label();
+  });
+  auto* generator_scroll = new QScrollArea(m_sidebar_tabs);
+  generator_scroll->setWidget(m_generator_panel);
+  generator_scroll->setWidgetResizable(true);
+  generator_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  m_sidebar_tabs->addTab(generator_scroll, "Generator");
 
   auto* guide_scroll = new QScrollArea(m_sidebar_tabs);
   guide_scroll->setWidget(createGuidePanel(guide_scroll));
@@ -1034,155 +1053,7 @@ void EditorWindow::redo() {
 
 void EditorWindow::on_tool_selected(ToolType tool) {
   m_canvas->set_current_tool(tool);
-
-  QString tool_name;
-  if (const auto* spec = troop_tool_spec(tool)) {
-    tool_name = QString::fromLatin1(spec->name);
-  }
-  switch (tool) {
-  case ToolType::Select:
-    tool_name = "Select";
-    break;
-  case ToolType::Hill:
-    tool_name = "Hill";
-    break;
-  case ToolType::HillRidge:
-    tool_name = "Ridge hill";
-    break;
-  case ToolType::HillArc:
-    tool_name = "Boomerang hill";
-    break;
-  case ToolType::HillElbow:
-    tool_name = "Elbow hill";
-    break;
-  case ToolType::HillRing:
-    tool_name = "Ring hill";
-    break;
-  case ToolType::Mountain:
-    tool_name = "Mountain";
-    break;
-  case ToolType::River:
-    tool_name = "River (click start, then end)";
-    break;
-  case ToolType::Road:
-    tool_name = "Road (click start, then end)";
-    break;
-  case ToolType::Bridge:
-    tool_name = "Bridge (click start, then end)";
-    break;
-  case ToolType::PropFirecamp:
-    tool_name = "Fire Camp";
-    break;
-  case ToolType::PropTent:
-    tool_name = "Tent";
-    break;
-  case ToolType::PropSupplyCart:
-    tool_name = "Supply Cart";
-    break;
-  case ToolType::PropWeaponRack:
-    tool_name = "Weapon Rack";
-    break;
-  case ToolType::PropRuins:
-    tool_name = "Ruins";
-    break;
-  case ToolType::PropMagicShrine:
-    tool_name = "Magic Shrine";
-    break;
-  case ToolType::PropDeadTree:
-    tool_name = "Dead Tree";
-    break;
-  case ToolType::PropBoulder:
-    tool_name = "Boulder";
-    break;
-  case ToolType::PropPineTree:
-    tool_name = "Pine Tree";
-    break;
-  case ToolType::PropOliveTree:
-    tool_name = "Olive Tree";
-    break;
-  case ToolType::PropCypressTree:
-    tool_name = "Cypress Tree";
-    break;
-  case ToolType::PropPalmTree:
-    tool_name = "Palm Tree";
-    break;
-  case ToolType::PropPlant:
-    tool_name = "Plant";
-    break;
-  case ToolType::PropIronOre:
-    tool_name = "Iron Ore";
-    break;
-  case ToolType::PropAbandonedHome:
-    tool_name = "Abandoned Home";
-    break;
-  case ToolType::PropStatue:
-    tool_name = "Statue";
-    break;
-  case ToolType::PropCursedGoldVein:
-    tool_name = "Cursed Gold Vein";
-    break;
-  case ToolType::Barracks:
-    tool_name = "Barracks";
-    break;
-  case ToolType::Village:
-    tool_name = "Village";
-    break;
-  case ToolType::DefenseTower:
-    tool_name = "Defense Tower";
-    break;
-  case ToolType::Home:
-    tool_name = "Home";
-    break;
-  case ToolType::Marketplace:
-    tool_name = "Marketplace";
-    break;
-  case ToolType::Temple:
-    tool_name = "Temple";
-    break;
-  case ToolType::Farm:
-    tool_name = "Farm";
-    break;
-  case ToolType::Wall:
-    tool_name = "Wall (click start, then end)";
-    break;
-  case ToolType::Gate:
-    tool_name = "Gate (click a wall run, or off it to place free-standing)";
-    break;
-  case ToolType::UndeadZone:
-    tool_name = "Undead Zone";
-    break;
-  case ToolType::Eraser:
-    tool_name = "Eraser";
-    break;
-  case ToolType::TroopArcher:
-  case ToolType::TroopSwordsman:
-  case ToolType::TroopSpearman:
-  case ToolType::TroopHorseSwordsman:
-  case ToolType::TroopHorseArcher:
-  case ToolType::TroopHorseSpearman:
-  case ToolType::TroopHealer:
-  case ToolType::TroopCatapult:
-  case ToolType::TroopBallista:
-  case ToolType::TroopElephant:
-  case ToolType::TroopRomanLegionOrganizer:
-  case ToolType::TroopRomanVeteranConsul:
-  case ToolType::TroopRomanFieldCommander:
-  case ToolType::TroopCarthageSpearCommander:
-  case ToolType::TroopCarthageBowCommander:
-  case ToolType::TroopCarthageSwordCommander:
-  case ToolType::TroopSkeletonSwordsman:
-  case ToolType::TroopSkeletonArcher:
-  case ToolType::TroopGravePriest:
-  case ToolType::TroopCivilian:
-  case ToolType::TroopBuilder:
-  case ToolType::Forest:
-  case ToolType::WildlifeSheep:
-  case ToolType::WildlifeWolves:
-  case ToolType::WildlifeBirds:
-    break;
-  }
-
-  m_tool_status_text = "Tool: " + tool_name;
+  m_tool_status_text = "Tool: " + tool_status_label(tool);
   m_selection_status_text.clear();
   refresh_status_label();
 }
@@ -1218,485 +1089,46 @@ void EditorWindow::update_dimensions_label() {
 }
 
 void EditorWindow::on_element_double_clicked(int element_type, int index) {
-  QJsonObject json;
-  QString title;
-
-  if (element_type == 0) {
-
-    const auto& terrain = m_map_data->terrain_elements();
-    if (index < 0 || index >= terrain.size()) {
-      return;
-    }
-    const auto& elem = terrain[index];
-
-    json[MapJsonKeys::type] = elem.type;
-    json[MapJsonKeys::x] = static_cast<double>(elem.x);
-    json[MapJsonKeys::z] = static_cast<double>(elem.z);
-    json[MapJsonKeys::height] = static_cast<double>(elem.height);
-    json[MapJsonKeys::rotation] = static_cast<double>(elem.rotation);
-    const QString terrain_type = elem.type.trimmed().toLower();
-    const bool is_mountain = terrain_type == QStringLiteral("mountain");
-    if (elem.width > 0.0F) {
-      json[MapJsonKeys::width] = static_cast<double>(elem.width);
-    }
-    if (elem.depth > 0.0F) {
-      json[MapJsonKeys::depth] = static_cast<double>(elem.depth);
-    }
-    if (elem.radius > 0.0F && (elem.width <= 0.0F || elem.depth <= 0.0F)) {
-      json[MapJsonKeys::radius] = static_cast<double>(elem.radius);
-    }
-    if (!is_mountain && !elem.entrances.isEmpty()) {
-      json[MapJsonKeys::entrances] = elem.entrances;
-    }
-    for (const QString& key : elem.extra_fields.keys()) {
-      json[key] = elem.extra_fields[key];
-    }
-
-    title = "Edit Terrain: " + elem.type;
-  } else if (element_type == 1) {
-    const auto& world_props = m_map_data->world_props();
-    if (index < 0 || index >= world_props.size()) {
-      return;
-    }
-    const auto& elem = world_props[index];
-
-    json[MapJsonKeys::type] = elem.type;
-    json[MapJsonKeys::x] = static_cast<double>(elem.x);
-    json[MapJsonKeys::z] = static_cast<double>(elem.z);
-    if (elem.type == QStringLiteral("firecamp")) {
-      json[MapJsonKeys::intensity] = static_cast<double>(elem.intensity);
-      json[MapJsonKeys::radius] = static_cast<double>(elem.radius);
-      json[MapJsonKeys::persistent] = elem.persistent;
-    } else {
-      json[MapJsonKeys::scale] = static_cast<double>(elem.scale);
-      json[MapJsonKeys::rotation] = static_cast<double>(elem.rotation);
-    }
-    for (const QString& key : elem.extra_fields.keys()) {
-      json[key] = elem.extra_fields[key];
-    }
-
-    title = "Edit Prop: " + prettifyIdentifier(elem.type);
-  } else if (element_type == 2) {
-
-    const auto& linear = m_map_data->linear_elements();
-    if (index < 0 || index >= linear.size()) {
-      return;
-    }
-    const auto& elem = linear[index];
-
-    json[MapJsonKeys::type] = elem.type;
-    json[MapJsonKeys::start] = QJsonArray{static_cast<double>(elem.start.x()),
-                                          static_cast<double>(elem.start.y())};
-    json[MapJsonKeys::end] = QJsonArray{static_cast<double>(elem.end.x()),
-                                        static_cast<double>(elem.end.y())};
-    json[MapJsonKeys::width] = static_cast<double>(elem.width);
-    if (!elem.waypoints.isEmpty()) {
-      json[MapJsonKeys::waypoints] = waypoints_to_json(elem.waypoints);
-    }
-    if (elem.type == "bridge") {
-      json[MapJsonKeys::height] = static_cast<double>(elem.height);
-    }
-    if (elem.type == "road" && !elem.style.isEmpty()) {
-      json[MapJsonKeys::style] = elem.style;
-    }
-    if (elem.type == "wall") {
-      json[MapJsonKeys::player_id] = elem.player_id;
-      if (!elem.nation.isEmpty()) {
-        json[MapJsonKeys::nation] = elem.nation;
-      }
-    }
-    for (const QString& key : elem.extra_fields.keys()) {
-      json[key] = elem.extra_fields[key];
-    }
-
-    title = "Edit " + elem.type;
-  } else if (element_type == 3) {
-
-    const auto& structures = m_map_data->structures();
-    if (index < 0 || index >= structures.size()) {
-      return;
-    }
-    const auto& elem = structures[index];
-
-    json[MapJsonKeys::type] = elem.type;
-    json[MapJsonKeys::x] = static_cast<double>(elem.x);
-    json[MapJsonKeys::z] = static_cast<double>(elem.z);
-    json[MapJsonKeys::rotation] = static_cast<double>(elem.rotation);
-    json[MapJsonKeys::player_id] = elem.player_id;
-    if (elem.max_population != 100) {
-      json[MapJsonKeys::max_population] = elem.max_population;
-    }
-    if (!elem.nation.isEmpty()) {
-      json[MapJsonKeys::nation] = elem.nation;
-    }
-    for (const QString& key : elem.extra_fields.keys()) {
-      json[key] = elem.extra_fields[key];
-    }
-
-    title = "Edit " + elem.type;
-  } else if (element_type == 4) {
-    const auto& troop_spawns = m_map_data->troop_spawns();
-    if (index < 0 || index >= troop_spawns.size()) {
-      return;
-    }
-    const auto& elem = troop_spawns[index];
-
-    json[MapJsonKeys::type] = elem.type;
-    json[MapJsonKeys::x] = static_cast<double>(elem.x);
-    json[MapJsonKeys::z] = static_cast<double>(elem.z);
-    if (elem.player_id >= 0) {
-      json[MapJsonKeys::player_id] = elem.player_id;
-    }
-    if (elem.max_population >= 0) {
-      json[MapJsonKeys::max_population] = elem.max_population;
-    }
-    if (!elem.nation.isEmpty()) {
-      json[MapJsonKeys::nation] = elem.nation;
-    }
-    if (!elem.behavior.isEmpty()) {
-      json[MapJsonKeys::behavior] = elem.behavior;
-    }
-    if (elem.guard_radius != 10.0F) {
-      json[MapJsonKeys::guard_radius] = static_cast<double>(elem.guard_radius);
-    }
-    if (!elem.patrol_waypoints.isEmpty()) {
-      json[MapJsonKeys::patrol_waypoints] = elem.patrol_waypoints;
-    }
-    for (const QString& key : elem.extra_fields.keys()) {
-      json[key] = elem.extra_fields[key];
-    }
-
-    title = "Edit Troop: " + prettifyIdentifier(elem.type);
-  } else if (element_type == 5) {
-    const auto& undead_zones = m_map_data->undead_zones();
-    if (index < 0 || index >= undead_zones.size()) {
-      return;
-    }
-    const auto& elem = undead_zones[index];
-
-    json["id"] = elem.id;
-    json["anchor_type"] = elem.anchor_type;
-    json[MapJsonKeys::x] = static_cast<double>(elem.x);
-    json[MapJsonKeys::z] = static_cast<double>(elem.z);
-    json[MapJsonKeys::radius] = static_cast<double>(elem.radius);
-    json["leash_radius"] = static_cast<double>(elem.leash_radius);
-    json["owner_id"] = elem.owner_id;
-    json["team_id"] = elem.team_id;
-    if (!elem.awaken_on.isEmpty()) {
-      json["awaken_on"] = elem.awaken_on;
-    }
-    if (!elem.waves.isEmpty()) {
-      json["waves"] = elem.waves;
-    }
-    if (!elem.clear_reward.isEmpty()) {
-      json["clear_reward"] = elem.clear_reward;
-    }
-
-    title = "Edit Undead Zone: " + elem.id;
-  } else if (element_type == static_cast<int>(ElementKind::WildlifeArea)) {
-    const auto& areas = m_map_data->wildlife_areas();
-    if (index < 0 || index >= areas.size()) {
-      return;
-    }
-    const auto& elem = areas[index];
-
-    json["species"] = elem.species;
-    json[MapJsonKeys::x] = static_cast<double>(elem.x);
-    json[MapJsonKeys::z] = static_cast<double>(elem.z);
-    json[MapJsonKeys::radius] = static_cast<double>(elem.radius);
-
-    title = "Edit Wildlife Range: " + wildlife_species_label(elem.species);
-  } else if (element_type == static_cast<int>(ElementKind::Forest)) {
-    const auto& forests = m_map_data->forests();
-    if (index < 0 || index >= forests.size()) {
-      return;
-    }
-    const auto& elem = forests[index];
-
-    json["id"] = elem.id;
-    json[MapJsonKeys::x] = static_cast<double>(elem.x);
-    json[MapJsonKeys::z] = static_cast<double>(elem.z);
-    json[MapJsonKeys::radius] = static_cast<double>(elem.radius);
-
-    title = "Edit Forest: " + (elem.id.isEmpty() ? QStringLiteral("forest") : elem.id);
-  } else {
+  const ElementSnapshot before = ElementOps::snapshot(*m_map_data, element_type, index);
+  const auto document = ElementEditJson::to_document(before);
+  if (!document.has_value()) {
     return;
   }
 
-  const QString terrain_type =
-      json.value(MapJsonKeys::type).toString().trimmed().toLower();
-  const bool enable_hill_projection =
-      (element_type == 0 && (terrain_type == "hill" || terrain_type == "mountain"));
-  const QString sub_type = element_type == 5
-                               ? json.value(QStringLiteral("anchor_type")).toString()
-                               : json.value(MapJsonKeys::type).toString();
   const HillProjection::MapContext map_context{
       .tile_size = static_cast<double>(m_map_data->grid().tile_size),
       .map_grid_width = m_map_data->grid().width,
       .map_grid_height = m_map_data->grid().height};
-  JsonEditDialog dialog(title,
-                        json,
-                        enable_hill_projection,
-                        schema_for_element(element_type, sub_type),
+  JsonEditDialog dialog(document->title,
+                        document->json,
+                        document->hill_projection,
+                        schema_for_element(element_type, document->schema_sub_type),
                         this,
                         map_context);
-  if (dialog.exec() == QDialog::Accepted && dialog.is_valid()) {
-    QJsonObject new_json = dialog.get_json();
+  if (dialog.exec() != QDialog::Accepted || !dialog.is_valid()) {
+    return;
+  }
 
-    if (element_type == 0) {
-      TerrainElement elem;
-      elem.type = new_json[MapJsonKeys::type].toString();
-      elem.x = static_cast<float>(new_json[MapJsonKeys::x].toDouble());
-      elem.z = static_cast<float>(new_json[MapJsonKeys::z].toDouble());
-      elem.radius = static_cast<float>(new_json[MapJsonKeys::radius].toDouble(10.0));
-      elem.width = static_cast<float>(new_json[MapJsonKeys::width].toDouble(0.0));
-      elem.depth = static_cast<float>(new_json[MapJsonKeys::depth].toDouble(0.0));
-      elem.height = static_cast<float>(new_json[MapJsonKeys::height].toDouble(3.0));
-      elem.rotation = static_cast<float>(new_json[MapJsonKeys::rotation].toDouble(0.0));
-      elem.entrances = new_json[MapJsonKeys::entrances].toArray();
-      if (elem.type.trimmed().compare(QStringLiteral("mountain"),
-                                      Qt::CaseInsensitive) == 0) {
-        elem.entrances = QJsonArray{};
-      }
+  const ElementEditJson::EditResult result = ElementEditJson::from_json(
+      before, dialog.get_json(), m_map_data->linear_elements());
+  for (const QString& note : result.notes) {
+    show_action_feedback(note, false);
+  }
+  if (auto command = ElementOps::make_update(
+          *m_map_data, index, before, result.element, result.description)) {
+    m_map_data->execute_command(std::move(command));
+    if (ElementOps::is_generated(before)) {
+      show_action_feedback(QStringLiteral(
+          "Converted the generated element to authored; a reroll will keep it."));
+    }
+  }
+}
 
-      const QStringList known_keys = {MapJsonKeys::type,
-                                      MapJsonKeys::x,
-                                      MapJsonKeys::z,
-                                      MapJsonKeys::radius,
-                                      MapJsonKeys::width,
-                                      MapJsonKeys::depth,
-                                      MapJsonKeys::height,
-                                      MapJsonKeys::rotation,
-                                      MapJsonKeys::entrances};
-      for (const QString& key : new_json.keys()) {
-        if (!known_keys.contains(key)) {
-          elem.extra_fields[key] = new_json[key];
-        }
-      }
-
-      m_map_data->execute_command(
-          std::make_unique<UpdateTerrainCmd>(m_map_data,
-                                             index,
-                                             m_map_data->terrain_elements()[index],
-                                             elem,
-                                             "Edit terrain"));
-    } else if (element_type == 1) {
-      WorldPropElement elem;
-      elem.type = new_json[MapJsonKeys::type].toString(QStringLiteral("firecamp"));
-      elem.x = static_cast<float>(new_json[MapJsonKeys::x].toDouble());
-      elem.z = static_cast<float>(new_json[MapJsonKeys::z].toDouble());
-      elem.scale = static_cast<float>(new_json[MapJsonKeys::scale].toDouble(1.0));
-      elem.rotation = static_cast<float>(new_json[MapJsonKeys::rotation].toDouble(0.0));
-      elem.intensity =
-          static_cast<float>(new_json[MapJsonKeys::intensity].toDouble(1.0));
-      elem.radius = static_cast<float>(new_json[MapJsonKeys::radius].toDouble(3.0));
-      elem.persistent = new_json[MapJsonKeys::persistent].toBool(true);
-
-      const QStringList known_keys = {MapJsonKeys::type,
-                                      MapJsonKeys::x,
-                                      MapJsonKeys::z,
-                                      MapJsonKeys::scale,
-                                      MapJsonKeys::rotation,
-                                      MapJsonKeys::intensity,
-                                      MapJsonKeys::radius,
-                                      MapJsonKeys::persistent};
-      for (const QString& key : new_json.keys()) {
-        if (!known_keys.contains(key)) {
-          elem.extra_fields[key] = new_json[key];
-        }
-      }
-
-      m_map_data->execute_command(
-          std::make_unique<UpdateWorldPropCmd>(m_map_data,
-                                               index,
-                                               m_map_data->world_props()[index],
-                                               elem,
-                                               "Edit " + elem.type));
-    } else if (element_type == 2) {
-      LinearElement elem;
-      elem.type = new_json[MapJsonKeys::type].toString();
-
-      QJsonArray start_arr = new_json[MapJsonKeys::start].toArray();
-      QJsonArray end_arr = new_json[MapJsonKeys::end].toArray();
-      if (start_arr.size() >= 2 && end_arr.size() >= 2) {
-        elem.start = QVector2D(static_cast<float>(start_arr[0].toDouble()),
-                               static_cast<float>(start_arr[1].toDouble()));
-        elem.end = QVector2D(static_cast<float>(end_arr[0].toDouble()),
-                             static_cast<float>(end_arr[1].toDouble()));
-      }
-      elem.width = static_cast<float>(new_json[MapJsonKeys::width].toDouble(3.0));
-      elem.height = static_cast<float>(new_json[MapJsonKeys::height].toDouble(0.5));
-      elem.style = new_json[MapJsonKeys::style].toString("default");
-      elem.player_id = new_json[MapJsonKeys::player_id].toInt(0);
-      elem.nation = new_json[MapJsonKeys::nation].toString();
-      if (supports_waypoints(elem.type)) {
-        elem.waypoints =
-            waypoints_from_json(new_json[MapJsonKeys::waypoints].toArray());
-      }
-
-      const QStringList known_keys = {MapJsonKeys::type,
-                                      MapJsonKeys::start,
-                                      MapJsonKeys::end,
-                                      MapJsonKeys::width,
-                                      MapJsonKeys::height,
-                                      MapJsonKeys::style,
-                                      MapJsonKeys::player_id,
-                                      MapJsonKeys::nation,
-                                      MapJsonKeys::waypoints};
-      for (const QString& key : new_json.keys()) {
-        if (!known_keys.contains(key)) {
-          elem.extra_fields[key] = new_json[key];
-        }
-      }
-
-      if (elem.type == QStringLiteral("bridge")) {
-
-        if (elem.height < k_min_bridge_height) {
-          elem.height = k_min_bridge_height;
-          show_action_feedback(
-              QString("Bridge height raised to minimum %1.")
-                  .arg(static_cast<double>(k_min_bridge_height), 0, 'f', 2),
-              false);
-        }
-
-        const float required_width = compute_min_bridge_width(
-            elem.start, elem.end, m_map_data->linear_elements());
-        if (elem.width < required_width) {
-          show_action_feedback(
-              QString("Bridge width raised to %1 to span crossed river(s) from bank to "
-                      "bank.")
-                  .arg(static_cast<double>(required_width), 0, 'f', 2),
-              false);
-          elem.width = required_width;
-        }
-      }
-      if (elem.type == QStringLiteral("wall")) {
-        const QVector2D delta = elem.end - elem.start;
-        if (std::abs(delta.x()) >= std::abs(delta.y())) {
-          elem.end.setY(elem.start.y());
-        } else {
-          elem.end.setX(elem.start.x());
-        }
-      }
-
-      m_map_data->execute_command(
-          std::make_unique<UpdateLinearCmd>(m_map_data,
-                                            index,
-                                            m_map_data->linear_elements()[index],
-                                            elem,
-                                            "Edit " + elem.type));
-    } else if (element_type == 3) {
-      StructureElement elem;
-      elem.type = new_json[MapJsonKeys::type].toString();
-      elem.x = static_cast<float>(new_json[MapJsonKeys::x].toDouble());
-      elem.z = static_cast<float>(new_json[MapJsonKeys::z].toDouble());
-      elem.rotation = static_cast<float>(new_json[MapJsonKeys::rotation].toDouble(0.0));
-      elem.player_id = new_json[MapJsonKeys::player_id].toInt(0);
-      elem.max_population = new_json[MapJsonKeys::max_population].toInt(100);
-      elem.nation = new_json[MapJsonKeys::nation].toString();
-      elem.spawn_order = m_map_data->structures()[index].spawn_order;
-
-      const QStringList known_keys = {MapJsonKeys::type,
-                                      MapJsonKeys::x,
-                                      MapJsonKeys::z,
-                                      MapJsonKeys::rotation,
-                                      MapJsonKeys::player_id,
-                                      MapJsonKeys::max_population,
-                                      MapJsonKeys::nation};
-      for (const QString& key : new_json.keys()) {
-        if (!known_keys.contains(key)) {
-          elem.extra_fields[key] = new_json[key];
-        }
-      }
-
-      m_map_data->execute_command(
-          std::make_unique<UpdateStructureCmd>(m_map_data,
-                                               index,
-                                               m_map_data->structures()[index],
-                                               elem,
-                                               "Edit " + elem.type));
-    } else if (element_type == 4) {
-      TroopSpawnElement elem;
-      elem.type = new_json[MapJsonKeys::type].toString();
-      elem.x = static_cast<float>(new_json[MapJsonKeys::x].toDouble());
-      elem.z = static_cast<float>(new_json[MapJsonKeys::z].toDouble());
-      elem.player_id = new_json.contains(MapJsonKeys::player_id) &&
-                               !new_json.value(MapJsonKeys::player_id).isNull()
-                           ? new_json[MapJsonKeys::player_id].toInt(-1)
-                           : -1;
-      elem.max_population = new_json.contains(MapJsonKeys::max_population)
-                                ? new_json[MapJsonKeys::max_population].toInt(100)
-                                : -1;
-      elem.nation = new_json[MapJsonKeys::nation].toString();
-      elem.behavior = new_json[MapJsonKeys::behavior].toString();
-      elem.guard_radius =
-          static_cast<float>(new_json[MapJsonKeys::guard_radius].toDouble(10.0));
-      elem.patrol_waypoints = new_json[MapJsonKeys::patrol_waypoints].toArray();
-
-      const QStringList known_keys = {MapJsonKeys::type,
-                                      MapJsonKeys::x,
-                                      MapJsonKeys::z,
-                                      MapJsonKeys::player_id,
-                                      MapJsonKeys::max_population,
-                                      MapJsonKeys::nation,
-                                      MapJsonKeys::behavior,
-                                      MapJsonKeys::guard_radius,
-                                      MapJsonKeys::patrol_waypoints};
-      for (const QString& key : new_json.keys()) {
-        if (!known_keys.contains(key)) {
-          elem.extra_fields[key] = new_json[key];
-        }
-      }
-
-      m_map_data->execute_command(
-          std::make_unique<UpdateTroopSpawnCmd>(m_map_data,
-                                                index,
-                                                m_map_data->troop_spawns()[index],
-                                                elem,
-                                                "Edit " + elem.type));
-    } else if (element_type == 5) {
-      UndeadZoneElement elem;
-      elem.id = new_json["id"].toString();
-      elem.anchor_type =
-          new_json["anchor_type"].toString(QStringLiteral("magic_shrine"));
-      elem.x = static_cast<float>(new_json[MapJsonKeys::x].toDouble());
-      elem.z = static_cast<float>(new_json[MapJsonKeys::z].toDouble());
-      elem.radius = static_cast<float>(new_json[MapJsonKeys::radius].toDouble(8.0));
-      elem.leash_radius = static_cast<float>(new_json["leash_radius"].toDouble(14.0));
-      elem.owner_id = new_json["owner_id"].toInt(99);
-      elem.team_id = new_json["team_id"].toInt(99);
-      elem.awaken_on = new_json["awaken_on"].toArray();
-      elem.waves = new_json["waves"].toArray();
-      elem.clear_reward = new_json["clear_reward"].toObject();
-
-      m_map_data->execute_command(
-          std::make_unique<UpdateUndeadZoneCmd>(m_map_data,
-                                                index,
-                                                m_map_data->undead_zones()[index],
-                                                elem,
-                                                "Edit undead zone"));
-    } else if (element_type == static_cast<int>(ElementKind::WildlifeArea)) {
-      WildlifeAreaElement elem;
-      elem.species = new_json["species"].toString(QStringLiteral("sheep"));
-      elem.x = static_cast<float>(new_json[MapJsonKeys::x].toDouble());
-      elem.z = static_cast<float>(new_json[MapJsonKeys::z].toDouble());
-      elem.radius = static_cast<float>(new_json[MapJsonKeys::radius].toDouble(14.0));
-
-      m_map_data->execute_command(
-          std::make_unique<UpdateWildlifeAreaCmd>(m_map_data,
-                                                  index,
-                                                  m_map_data->wildlife_areas()[index],
-                                                  elem,
-                                                  "Edit wildlife range"));
-    } else if (element_type == static_cast<int>(ElementKind::Forest)) {
-      ForestElement elem;
-      elem.id = new_json["id"].toString();
-      elem.x = static_cast<float>(new_json[MapJsonKeys::x].toDouble());
-      elem.z = static_cast<float>(new_json[MapJsonKeys::z].toDouble());
-      elem.radius = static_cast<float>(new_json[MapJsonKeys::radius].toDouble(12.0));
-
-      m_map_data->execute_command(std::make_unique<UpdateForestCmd>(
-          m_map_data, index, m_map_data->forests()[index], elem, "Edit forest"));
+void EditorWindow::select_sidebar_tab(const QString& title) {
+  for (int index = 0; index < m_sidebar_tabs->count(); ++index) {
+    if (m_sidebar_tabs->tabText(index).compare(title, Qt::CaseInsensitive) == 0) {
+      m_sidebar_tabs->setCurrentIndex(index);
+      return;
     }
   }
 }
@@ -1873,19 +1305,8 @@ QString EditorWindow::repository_root() const {
   if (!m_current_file_path.isEmpty()) {
     starts.prepend(QFileInfo(m_current_file_path).absolutePath());
   }
-  for (const QString& start : starts) {
-    QDir directory(start);
-    for (int depth = 0; depth < 8; ++depth) {
-      if (QFileInfo::exists(directory.filePath(QStringLiteral("CMakeLists.txt"))) &&
-          QDir(directory.filePath(QStringLiteral("assets"))).exists()) {
-        return directory.absolutePath();
-      }
-      if (!directory.cdUp()) {
-        break;
-      }
-    }
-  }
-  return QDir::currentPath();
+  const QString root = Generator::find_repository_root(starts);
+  return root.isEmpty() ? QDir::currentPath() : root;
 }
 
 QString EditorWindow::resolve_authored_path(const QString& authored_path) const {
@@ -2252,7 +1673,8 @@ void EditorWindow::on_selection_changed(int element_type, int index) {
 
   if (!type_name.isEmpty()) {
     m_selection_status_text =
-        QString("Selected: %1 at %2").arg(prettifyIdentifier(type_name), coords);
+        QString("Selected: %1 at %2")
+            .arg(ElementEditJson::prettify_identifier(type_name), coords);
     const int extra = m_canvas->selection_count() - 1;
     if (extra > 0) {
       m_selection_status_text += QString(" (+%1 more)").arg(extra);

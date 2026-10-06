@@ -1,0 +1,23 @@
+{
+  "id": "open_plains",
+  "label": "Open Plains",
+  "order": 0,
+  "description": "Wide basins with little cover: two long routes, a single cross link, a few low hills. Room for every formation.",
+  "width": 650,
+  "height": 650,
+  "parameters": {
+    "tactical.sectors": 3,
+    "tactical.choke_intensity": 0.2,
+    "tactical.formation_space": 0.85,
+    "terrain.hills": 0.3,
+    "terrain.relief": 0.35,
+    "terrain.ridge_bias": 0.2,
+    "water.rivers": 0,
+    "water.lakes": 1,
+    "forests.density": 0.25,
+    "settlements.towns": 1,
+    "settlements.forts": 1,
+    "landmarks.count": 2,
+    "general.biome": "mediterranean"
+  }
+}

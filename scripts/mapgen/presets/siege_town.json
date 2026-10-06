@@ -1,0 +1,23 @@
+{
+  "id": "siege_town",
+  "label": "Siege Town",
+  "order": 5,
+  "description": "A great walled town behind a moat, forts on its approaches, and the player's camp across open ground.",
+  "width": 650,
+  "height": 650,
+  "parameters": {
+    "tactical.sectors": 3,
+    "settlements.towns": 1,
+    "settlements.forts": 2,
+    "settlements.camps": 0,
+    "water.ring_moat": true,
+    "water.rivers": 0,
+    "water.lakes": 1,
+    "terrain.hills": 0.3,
+    "forests.density": 0.3,
+    "roads.loops": 2,
+    "spawns.army": 14,
+    "spawns.garrison": 0.8,
+    "general.biome": "iberian"
+  }
+}

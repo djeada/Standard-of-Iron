@@ -144,9 +144,18 @@ target_link_libraries(
 # camera framing, world bootstrap or the RTS action model.
 set(ARENA_APP_SOURCES
     main.cpp
+    arena_batch_runner.cpp
     arena_typography.cpp
     arena_window.cpp
     arena_viewport.cpp
+    arena_viewport_animation.cpp
+    arena_viewport_capture.cpp
+    arena_viewport_environment.cpp
+    arena_viewport_input.cpp
+    arena_viewport_overlays.cpp
+    arena_viewport_rpg.cpp
+    arena_viewport_scenario.cpp
+    arena_viewport_spawning.cpp
     terrain_panel.cpp
     prop_panel.cpp
     promo_runner.cpp

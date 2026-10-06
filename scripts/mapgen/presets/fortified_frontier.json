@@ -1,0 +1,21 @@
+{
+  "id": "fortified_frontier",
+  "label": "Fortified Frontier",
+  "order": 6,
+  "description": "A line of forts on ridges along the border, with a town behind them.",
+  "width": 650,
+  "height": 650,
+  "parameters": {
+    "tactical.sectors": 4,
+    "tactical.choke_intensity": 0.7,
+    "terrain.ridge_bias": 0.8,
+    "terrain.hills": 0.55,
+    "settlements.towns": 1,
+    "settlements.forts": 3,
+    "settlements.hilltop": 0.5,
+    "water.rivers": 1,
+    "forests.density": 0.4,
+    "landmarks.guarded": 0.7,
+    "general.biome": "winter"
+  }
+}
