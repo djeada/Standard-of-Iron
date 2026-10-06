@@ -101,8 +101,10 @@ auto resolve_prey(Engine::Core::World& world,
       nearest_sq = std::min(nearest_sq, (dx * dx) + (dz * dz));
     }
     auto const* hunter_transform =
-        hunter != nullptr ? hunter->get_component<Engine::Core::TransformComponent>()
-                          : nullptr;
+        hunter != nullptr && hunter->registry() != nullptr
+            ? hunter->registry()->try_get<Engine::Core::TransformComponent>(
+                  hunter->get_id())
+            : nullptr;
     float const tolerance = std::sqrt(nearest_sq) + k_prey_slot_hysteresis;
     float best_score = std::numeric_limits<float>::max();
     for (const auto& anchor : anchors) {

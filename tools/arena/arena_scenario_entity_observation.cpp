@@ -398,16 +398,11 @@ void ArenaScenarioRunner::Impl::observe_motion_quality(Engine::Core::EntityID en
   if (!wanted) {
     return;
   }
-  auto* entity = world.get_entity(entity_id);
-  auto const* transform =
-      entity != nullptr ? entity->get_component<Engine::Core::TransformComponent>()
-                        : nullptr;
-  auto const* unit = entity != nullptr
-                         ? entity->get_component<Engine::Core::UnitComponent>()
-                         : nullptr;
+  auto const* transform = world.try_get<Engine::Core::TransformComponent>(entity_id);
+  auto const* unit = world.try_get<Engine::Core::UnitComponent>(entity_id);
   auto& state = motion_states[entity_id];
   bool const alive = transform != nullptr && unit != nullptr && unit->health > 0 &&
-                     !entity->has_component<Engine::Core::DeathAnimationComponent>();
+                     !world.has<Engine::Core::DeathAnimationComponent>(entity_id);
   if (!alive) {
     state = {};
     return;
@@ -423,7 +418,7 @@ void ArenaScenarioRunner::Impl::observe_motion_quality(Engine::Core::EntityID en
     float const distance = step.length();
     float speed = unit->speed * k_charge_speed_scale;
     if (auto const* movement =
-            entity->get_component<Engine::Core::MovementComponent>()) {
+            world.try_get<Engine::Core::MovementComponent>(entity_id)) {
       speed = std::max(speed, std::hypot(movement->get_vx(), movement->get_vz()));
     }
     float const allowed_step =
@@ -439,7 +434,7 @@ void ArenaScenarioRunner::Impl::observe_motion_quality(Engine::Core::EntityID en
     }
 
     auto const* formation =
-        entity->get_component<Engine::Core::FormationPresentationComponent>();
+        world.try_get<Engine::Core::FormationPresentationComponent>(entity_id);
     bool const drawn_as_soldiers =
         formation != nullptr && formation->soldiers.size() > 1U;
     float const yaw_step = drawn_as_soldiers ? 0.0F : signed_yaw_step(yaw, state.yaw);

@@ -254,12 +254,10 @@ void ArenaScenarioRunner::observe_rendered_frame(
     }
     m_impl->observe_bridge_centerline_alignment(group.name);
   }
-  for (auto* animal :
-       m_impl->world.collect_entities_with<Engine::Core::WildlifeComponent>()) {
-    if (animal != nullptr) {
-      m_impl->observe_motion_quality(animal->get_id(),
-                                     QString::fromLatin1(k_wildlife_group));
-    }
+  for (auto [animal_id, wildlife] :
+       m_impl->world.view<const Engine::Core::WildlifeComponent>()) {
+    (void)wildlife;
+    m_impl->observe_motion_quality(animal_id, QString::fromLatin1(k_wildlife_group));
   }
   int raft_riders = 0;
   for (auto [rider_id, rider] :
