@@ -117,8 +117,7 @@ def _rivers(ctx: Context, field: Field) -> None:
     layout = ctx.layout
     rivers = [b for b in layout.boundaries if b.kind == "river"]
     if layout.coast_side is not None:
-        # Coastal rivers come down from the inland edge to the sea, cutting
-        # across the routes the way the boundary rivers do elsewhere.
+
         wanted = int(params["water.rivers"])
         centres = layout.sector_centres()
         inner = [b.u for b in layout.boundaries] or centres
@@ -143,8 +142,7 @@ def _rivers(ctx: Context, field: Field) -> None:
                 width * rng.uniform(0.8, 1.2),
             )
             continue
-        # Edge to a flank lake: the lake closes one end of the barrier, so the
-        # river still has to be crossed but there is a way round the far side.
+
         side = rng.choice((0, 1))
         along = rng.uniform(52.0, 72.0)
         across = rng.uniform(56.0, 76.0)

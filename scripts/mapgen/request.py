@@ -36,9 +36,7 @@ STAGE_LABELS: dict[str, str] = {
     "spawns": "Spawns",
 }
 
-# A stage whose intent is derived from another stage's geometry cannot stay
-# locked while that stage is rerolled: roads run between settlement anchors,
-# dressing is anchored to bridges, gates and ramps.
+
 FORCED_BY: dict[str, tuple[str, ...]] = {
     "terrain": (),
     "water": (),
@@ -50,8 +48,7 @@ FORCED_BY: dict[str, tuple[str, ...]] = {
     "spawns": ("settlements",),
 }
 
-# Seeds stay inside the range a double holds exactly, so a seed survives a
-# round trip through the editor's QJsonValue unchanged.
+
 SEED_MASK = (1 << 53) - 1
 MAX_SEED = (1 << 32) - 1
 MIN_MAP_SIZE = 200

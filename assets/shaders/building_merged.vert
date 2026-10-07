@@ -25,11 +25,24 @@ flat out vec3 v_instance_color;
 flat out float v_instance_alpha;
 flat out int v_material_id;
 flat out float v_ground_height;
+flat out vec4 v_instance_tint;
 
 vec3 soi_transform_normal(mat3 m, vec3 n) {
   mat3 cofactor = mat3(cross(m[1], m[2]), cross(m[2], m[0]), cross(m[0], m[1]));
   float handedness = dot(m[0], cross(m[1], m[2])) < 0.0 ? -1.0 : 1.0;
   return cofactor * n * handedness;
+}
+
+const vec3 k_plaster_tints[5] = vec3[5](vec3(1.000, 1.000, 1.000),
+                                        vec3(1.020, 0.940, 0.780),
+                                        vec3(1.030, 0.915, 0.860),
+                                        vec3(1.015, 0.975, 0.840),
+                                        vec3(0.955, 0.950, 0.925));
+
+vec4 soi_building_instance_tint(vec2 origin) {
+  float h = fract(sin(dot(floor(origin * 4.0), vec2(12.9898, 78.233))) * 43758.5453);
+  float roof = fract(h * 7.31);
+  return vec4(k_plaster_tints[int(h * 5.0) % 5], mix(0.88, 1.08, roof));
 }
 
 vec3 soi_unseen_surface_color(vec3 color) {
@@ -78,5 +91,7 @@ void main() {
   v_normal = soi_transform_normal(mat3(model), a_normal);
   v_tex_coord = a_tex_coord;
   v_ground_height = a_instance_model_col1.w;
+  v_instance_tint = soi_building_instance_tint(
+      vec2(a_instance_model_col0.w, a_instance_model_col2.w));
   gl_Position = u_view_proj * world_pos4;
 }

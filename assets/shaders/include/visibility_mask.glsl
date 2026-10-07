@@ -64,7 +64,7 @@ float visibility_known_weight(VisibilityMask mask) {
 }
 
 float visibility_live_weight(VisibilityMask mask) {
-  return smoothstep(0.18, 0.86, mask.seen_now);
+  return smoothstep(0.10, 0.92, mask.seen_now);
 }
 
 float visibility_memory_falloff(VisibilityMask mask) {
@@ -74,8 +74,8 @@ float visibility_memory_falloff(VisibilityMask mask) {
 vec3 remembered_surface_color(vec3 lit_color, float explored_alpha) {
   float luminance = dot(lit_color, vec3(0.2126, 0.7152, 0.0722));
 
-  vec3 memory = mix(vec3(luminance), lit_color, 0.82);
-  return memory * vec3(0.94, 0.97, 1.02) * explored_alpha;
+  vec3 memory = mix(vec3(luminance), lit_color, 0.72);
+  return memory * vec3(1.00, 0.985, 0.95) * explored_alpha;
 }
 
 bool visibility_mask_active() {

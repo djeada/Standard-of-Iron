@@ -87,7 +87,7 @@ void main() {
   vec2 uv = mix(vec2(p.z, p.y * 1.25 + abs(p.x) * 1.05), p.xy, end_wall);
 
   float pick = soi_hash12_9f6e8e(v_anchor * 0.731 + 17.3);
-  float striped = step(0.42, pick) * (1.0 - step(0.76, pick));
+  float striped = step(0.64, pick) * (1.0 - step(0.76, pick));
   float trimmed = step(0.76, pick);
   float strip_index = floor(uv.x / k_strip_width + 0.5);
   float strip_parity = mod(strip_index, 2.0);

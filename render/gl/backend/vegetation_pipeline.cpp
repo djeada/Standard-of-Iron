@@ -161,8 +161,6 @@ void VegetationPipeline::cache_uniforms() {
         m_firecamp_shader->uniform_handle("u_flicker_amount");
     m_firecamp_uniforms.glow_strength =
         m_firecamp_shader->uniform_handle("u_glow_strength");
-    m_firecamp_uniforms.fire_texture =
-        m_firecamp_shader->uniform_handle("fire_texture");
     m_firecamp_uniforms.camera_right =
         m_firecamp_shader->uniform_handle("u_camera_right");
     m_firecamp_uniforms.camera_forward =

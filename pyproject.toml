@@ -36,6 +36,9 @@ select = ["E", "F", "W", "I", "B"]
 ignore = ["E501"]
 
 [tool.ruff.lint.per-file-ignores]
+# The map generator tests set up the scripts import path before local imports.
+# Keep this exception here because make format strips inline noqa comments.
+"tests/scripts/test_mapgen.py" = ["E402"]
 # Generator scripts intentionally keep large tabular literals inline.
 "scripts/generate-map-*.py" = ["E741"]
 # The font compiler has to disable bytecode caching and extend sys.path before

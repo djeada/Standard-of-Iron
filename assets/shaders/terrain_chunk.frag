@@ -26,6 +26,7 @@ uniform float u_slope_rock_threshold, u_slope_rock_sharpness;
 uniform float u_soil_blend_height, u_soil_blend_sharpness;
 uniform float u_height_noise_strength, u_height_noise_frequency;
 uniform float u_ambient_boost, u_rock_detail_strength;
+uniform float u_horizon_dressing;
 
 const float k_soi_terrain_detail_damping = 0.80;
 const float k_soi_tuft_shadow = 0.84;
@@ -1026,13 +1027,13 @@ void main() {
     rock_color = mix(rock_color, hill_earth, hill_face * 0.72);
     float face_weight = smoothstep(0.22, 0.62, slope);
     rock_color *=
-        1.0 + pattern.bedding * (0.10 + 0.08 * mountain_surface) * face_weight;
+        1.0 + pattern.bedding * (0.16 + 0.10 * mountain_surface) * face_weight;
     float weather_streak = smoothstep(0.05, 0.45, pattern.streak) * face_weight;
     rock_color *= 1.0 - weather_streak * 0.22;
     rock_color = mix(rock_color,
                      rock_color * vec3(1.06, 1.0, 0.90),
                      smoothstep(-0.30, -0.05, -pattern.streak) * face_weight * 0.35);
-    rock_color *= 1.0 - fracture * (0.115 + 0.150 * u_rock_detail_strength) *
+    rock_color *= 1.0 - fracture * (0.060 + 0.075 * u_rock_detail_strength) *
                             mix(0.35, 1.0, face_weight);
     rock_color *= 1.0 - chipping * (0.045 + 0.050 * u_rock_detail_strength);
     rock_color *= 1.0 + rock_grain * 0.075;
@@ -1336,6 +1337,14 @@ void main() {
   if (unseen_blend < 1.0) {
 
     lit_color = mix(unseen_terrain_color(), lit_color, unseen_blend);
+  }
+
+  if (u_horizon_dressing > 0.5) {
+    float reach = length(v_world_pos - u_camera_pos);
+    float aerial = clamp(0.10 + reach / 640.0, 0.10, 0.52) *
+                   (1.0 - 0.55 * environment_night_amount());
+    vec3 distance_tone = environment_horizon_haze() * 1.10 * environment_exposure();
+    lit_color = mix(lit_color, distance_tone, aerial);
   }
 
   frag_color = vec4(lit_color, 1.0);

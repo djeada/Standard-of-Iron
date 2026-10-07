@@ -251,6 +251,10 @@ void Backend::set_terrain_chunk_uniforms(Shader& shader,
     shader.set_uniform(uniforms.rock_detail_strength,
                        single.params.rock_detail_strength);
   }
+  if (uniforms.horizon_dressing != Shader::InvalidUniform) {
+    shader.set_uniform(uniforms.horizon_dressing,
+                       single.horizon_dressing ? 1.0F : 0.0F);
+  }
   if (uniforms.light_dir != Shader::InvalidUniform) {
     QVector3D light_dir = single.params.light_direction;
     if (!light_dir.isNull()) {

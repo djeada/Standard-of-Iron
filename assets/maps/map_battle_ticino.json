@@ -16,7 +16,7 @@
             0.32
         ],
         "ground_irregularity_enabled": true,
-        "ground_type": "soil_fertile",
+        "ground_type": "forest_mud",
         "height_noise": [
             0.14,
             0.05
@@ -46,7 +46,9 @@
         "sway_strength": 0.18,
         "tree_mix": {
             "palm": 0.0,
-            "cypress": 0.8
+            "cypress": 0.4,
+            "olive": 0.0,
+            "pine": 0.9
         }
     },
     "bridges": [
@@ -151,8 +153,8 @@
     "coord_system": "grid",
     "environment": {
         "day_length_seconds": 1800,
-        "lighting_profile": "mediterranean_summer",
-        "start_time": 15.5,
+        "lighting_profile": "delta_haze",
+        "start_time": 16.5,
         "time_mode": "locked"
     },
     "forests": [
@@ -4141,13 +4143,6 @@
             "z": 302.18
         },
         {
-            "rotation": 0.2,
-            "scale": 0.75,
-            "type": "supply_cart",
-            "x": 222.91,
-            "z": 98.24000000000001
-        },
-        {
             "rotation": 5.2,
             "scale": 0.8,
             "type": "dead_tree",
@@ -4167,13 +4162,6 @@
             "type": "ruins",
             "x": 232.05,
             "z": 277.32
-        },
-        {
-            "rotation": 2.4,
-            "scale": 0.9,
-            "type": "supply_cart",
-            "x": 251,
-            "z": 248.61
         },
         {
             "rotation": 2,
@@ -4218,13 +4206,6 @@
             "z": 347.91
         },
         {
-            "rotation": 4.4,
-            "scale": 0.8,
-            "type": "weapon_rack",
-            "x": 319.37,
-            "z": 359.55
-        },
-        {
             "rotation": 1.5,
             "scale": 1,
             "type": "dead_tree",
@@ -4237,13 +4218,6 @@
             "type": "dead_tree",
             "x": 404.07,
             "z": 339.95
-        },
-        {
-            "rotation": 2.6,
-            "scale": 0.9,
-            "type": "supply_cart",
-            "x": 444.49,
-            "z": 401.2
         },
         {
             "rotation": 2.2,
@@ -4351,13 +4325,6 @@
             "z": 328.12
         },
         {
-            "rotation": 1.1,
-            "scale": 0.9,
-            "type": "tent",
-            "x": 550,
-            "z": 365
-        },
-        {
             "rotation": 5.1000000000000005,
             "scale": 0.9,
             "type": "weapon_rack",
@@ -4397,15 +4364,6 @@
             "radius": 2.4,
             "scale": 1,
             "type": "firecamp",
-            "x": 243.01,
-            "z": 253.45
-        },
-        {
-            "intensity": 0.85,
-            "persistent": true,
-            "radius": 2.4,
-            "scale": 1,
-            "type": "firecamp",
             "x": 360.31,
             "z": 226.63
         },
@@ -4435,15 +4393,6 @@
             "type": "firecamp",
             "x": 489.85,
             "z": 336.52
-        },
-        {
-            "intensity": 0.55,
-            "persistent": true,
-            "radius": 1.8,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 442.13,
-            "z": 402.71
         },
         {
             "scale": 1,
@@ -4518,13 +4467,6 @@
             "z": 233.59
         },
         {
-            "rotation": 242.3,
-            "scale": 0.99,
-            "type": "tent",
-            "x": 613.76,
-            "z": 232.63
-        },
-        {
             "rotation": 54.300000000000004,
             "scale": 0.91,
             "type": "tent",
@@ -4576,15 +4518,6 @@
             "z": 211.49
         },
         {
-            "intensity": 1.22,
-            "persistent": true,
-            "radius": 2.7,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 543.9300000000001,
-            "z": 128.64000000000001
-        },
-        {
             "rotation": 309.6,
             "scale": 1.1,
             "type": "tent",
@@ -4620,22 +4553,6 @@
             "type": "firecamp",
             "x": 431.73,
             "z": 381.6
-        },
-        {
-            "rotation": 84.8,
-            "scale": 1.1500000000000001,
-            "type": "supply_cart",
-            "x": 545.42,
-            "z": 164.22
-        },
-        {
-            "intensity": 1.21,
-            "persistent": true,
-            "radius": 2.6,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 187.55,
-            "z": 251.73000000000002
         },
         {
             "rotation": 229.3,
@@ -4742,29 +4659,6 @@
             "type": "firecamp",
             "x": 271.74,
             "z": 280.45
-        },
-        {
-            "intensity": 1.1500000000000001,
-            "persistent": true,
-            "radius": 2.7,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 359.14,
-            "z": 443.07
-        },
-        {
-            "rotation": 254.1,
-            "scale": 1.06,
-            "type": "supply_cart",
-            "x": 386.57,
-            "z": 60.58
-        },
-        {
-            "rotation": 150.20000000000002,
-            "scale": 0.92,
-            "type": "supply_cart",
-            "x": 16.78,
-            "z": 291.27
         },
         {
             "rotation": 271.3,

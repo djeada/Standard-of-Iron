@@ -431,8 +431,8 @@ constexpr float k_selection_marker_thickness = 0.11F;
 constexpr float k_selection_marker_min_thickness = 0.05F;
 constexpr float k_selected_marker_alpha = 0.7F;
 constexpr float k_hovered_marker_alpha = 0.55F;
-const QVector3D k_selected_marker_color(0.2F, 0.4F, 1.0F);
-const QVector3D k_hovered_marker_color(0.90F, 0.90F, 0.25F);
+const QVector3D k_selected_marker_color(0.98F, 0.76F, 0.34F);
+const QVector3D k_hovered_marker_color(0.96F, 0.93F, 0.80F);
 } // namespace
 
 void Renderer::enqueue_selection_ring(Engine::Core::Entity* entity,

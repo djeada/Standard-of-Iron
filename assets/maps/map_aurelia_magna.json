@@ -60,8 +60,8 @@
     "description": "An enormous capital on a 768 m stage, built in rings. Farmland, orchards, quarries, lakes and a ruined old town fill the countryside; a great eight-gated wall encloses the new city with its circus, theatre, docks and insulae; an older Republican circuit holds the forum and the ancient core; and a walled citadel crowns the sacred mountain behind the whole thing, where the healers keep the temples.",
     "environment": {
         "day_length_seconds": 1800,
-        "lighting_profile": "clear_day",
-        "start_time": 11.4,
+        "lighting_profile": "mediterranean_summer",
+        "start_time": 16.25,
         "time_mode": "locked"
     },
     "forests": [
@@ -22131,6 +22131,2088 @@
         }
     },
     "world_props": [
+        {
+            "scale": 1.08,
+            "type": "cypress_tree",
+            "x": -149.16,
+            "z": -344.02
+        },
+        {
+            "scale": 0.84,
+            "type": "cypress_tree",
+            "x": -145.52,
+            "z": -344.69
+        },
+        {
+            "scale": 0.87,
+            "type": "cypress_tree",
+            "x": 165.6,
+            "z": -344.4
+        },
+        {
+            "scale": 0.99,
+            "type": "olive_tree",
+            "x": -75.87,
+            "z": -339.82
+        },
+        {
+            "scale": 0.91,
+            "type": "cypress_tree",
+            "x": 161.89,
+            "z": -340.16
+        },
+        {
+            "scale": 1.08,
+            "type": "olive_tree",
+            "x": -121.49,
+            "z": -334.07
+        },
+        {
+            "scale": 1.01,
+            "type": "olive_tree",
+            "x": 109.65,
+            "z": -333.48
+        },
+        {
+            "scale": 0.95,
+            "type": "olive_tree",
+            "x": -51.24,
+            "z": -330.11
+        },
+        {
+            "scale": 1.03,
+            "type": "olive_tree",
+            "x": 54.05,
+            "z": -329.99
+        },
+        {
+            "scale": 1.02,
+            "type": "olive_tree",
+            "x": 106.21,
+            "z": -329.47
+        },
+        {
+            "scale": 1.06,
+            "type": "olive_tree",
+            "x": -258.14,
+            "z": -325.83
+        },
+        {
+            "scale": 0.9,
+            "type": "olive_tree",
+            "x": -100.94,
+            "z": -326.71
+        },
+        {
+            "scale": 0.97,
+            "type": "olive_tree",
+            "x": 110.0,
+            "z": -326.82
+        },
+        {
+            "scale": 1.07,
+            "type": "olive_tree",
+            "x": 133.73,
+            "z": -326.72
+        },
+        {
+            "scale": 0.9,
+            "type": "olive_tree",
+            "x": 138.18,
+            "z": -327.18
+        },
+        {
+            "scale": 1.03,
+            "type": "olive_tree",
+            "x": -125.15,
+            "z": -322.32
+        },
+        {
+            "scale": 1.07,
+            "type": "olive_tree",
+            "x": -51.92,
+            "z": -323.27
+        },
+        {
+            "scale": 0.83,
+            "type": "olive_tree",
+            "x": 98.76,
+            "z": -323.47
+        },
+        {
+            "scale": 0.84,
+            "type": "olive_tree",
+            "x": 127.33,
+            "z": -323.35
+        },
+        {
+            "scale": 1.03,
+            "type": "olive_tree",
+            "x": 133.74,
+            "z": -323.02
+        },
+        {
+            "scale": 0.87,
+            "type": "olive_tree",
+            "x": 137.39,
+            "z": -323.66
+        },
+        {
+            "scale": 0.95,
+            "type": "cypress_tree",
+            "x": -257.5,
+            "z": -320.15
+        },
+        {
+            "scale": 0.89,
+            "type": "cypress_tree",
+            "x": -79.18,
+            "z": -319.74
+        },
+        {
+            "scale": 0.9,
+            "type": "cypress_tree",
+            "x": -72.1,
+            "z": -320.04
+        },
+        {
+            "scale": 1.07,
+            "type": "olive_tree",
+            "x": 208.14,
+            "z": -319.53
+        },
+        {
+            "scale": 0.95,
+            "type": "cypress_tree",
+            "x": -254.71,
+            "z": -316.18
+        },
+        {
+            "scale": 0.91,
+            "type": "olive_tree",
+            "x": -192.14,
+            "z": -316.36
+        },
+        {
+            "scale": 1.08,
+            "type": "cypress_tree",
+            "x": -125.12,
+            "z": -315.79
+        },
+        {
+            "scale": 1.0,
+            "type": "cypress_tree",
+            "x": -82.59,
+            "z": -315.43
+        },
+        {
+            "scale": 0.99,
+            "type": "cypress_tree",
+            "x": 95.35,
+            "z": -316.12
+        },
+        {
+            "scale": 0.97,
+            "type": "olive_tree",
+            "x": 206.98,
+            "z": -315.56
+        },
+        {
+            "scale": 0.92,
+            "type": "cypress_tree",
+            "x": -258.27,
+            "z": -312.65
+        },
+        {
+            "scale": 1.05,
+            "type": "cypress_tree",
+            "x": -254.11,
+            "z": -313.14
+        },
+        {
+            "scale": 0.88,
+            "type": "olive_tree",
+            "x": -188.62,
+            "z": -312.49
+        },
+        {
+            "scale": 0.96,
+            "type": "olive_tree",
+            "x": -184.51,
+            "z": -312.52
+        },
+        {
+            "scale": 0.91,
+            "type": "cypress_tree",
+            "x": -118.17,
+            "z": -312.96
+        },
+        {
+            "scale": 1.03,
+            "type": "cypress_tree",
+            "x": 88.47,
+            "z": -312.97
+        },
+        {
+            "scale": 0.84,
+            "type": "cypress_tree",
+            "x": -255.14,
+            "z": -308.33
+        },
+        {
+            "scale": 0.83,
+            "type": "cypress_tree",
+            "x": -177.23,
+            "z": -305.53
+        },
+        {
+            "scale": 1.05,
+            "type": "cypress_tree",
+            "x": -115.13,
+            "z": -305.06
+        },
+        {
+            "scale": 0.9,
+            "type": "cypress_tree",
+            "x": 127.61,
+            "z": -305.49
+        },
+        {
+            "scale": 0.96,
+            "type": "cypress_tree",
+            "x": 193.98,
+            "z": -305.96
+        },
+        {
+            "scale": 0.9,
+            "type": "olive_tree",
+            "x": -247.84,
+            "z": -301.72
+        },
+        {
+            "scale": 0.84,
+            "type": "cypress_tree",
+            "x": 95.48,
+            "z": -302.0
+        },
+        {
+            "scale": 1.01,
+            "type": "cypress_tree",
+            "x": 127.13,
+            "z": -301.96
+        },
+        {
+            "scale": 0.85,
+            "type": "olive_tree",
+            "x": 253.53,
+            "z": -302.67
+        },
+        {
+            "scale": 0.96,
+            "type": "cypress_tree",
+            "x": -124.94,
+            "z": -298.08
+        },
+        {
+            "scale": 1.04,
+            "type": "cypress_tree",
+            "x": -117.75,
+            "z": -297.88
+        },
+        {
+            "scale": 0.98,
+            "type": "cypress_tree",
+            "x": 137.43,
+            "z": -298.36
+        },
+        {
+            "scale": 0.94,
+            "type": "cypress_tree",
+            "x": 183.29,
+            "z": -298.65
+        },
+        {
+            "scale": 0.99,
+            "type": "olive_tree",
+            "x": -250.36,
+            "z": -294.77
+        },
+        {
+            "scale": 1.01,
+            "type": "cypress_tree",
+            "x": 193.94,
+            "z": -295.59
+        },
+        {
+            "scale": 0.89,
+            "type": "olive_tree",
+            "x": 252.42,
+            "z": -295.49
+        },
+        {
+            "scale": 0.84,
+            "type": "olive_tree",
+            "x": -215.97,
+            "z": -291.13
+        },
+        {
+            "scale": 1.01,
+            "type": "cypress_tree",
+            "x": -132.02,
+            "z": -291.16
+        },
+        {
+            "scale": 1.01,
+            "type": "cypress_tree",
+            "x": 140.48,
+            "z": -290.83
+        },
+        {
+            "scale": 1.01,
+            "type": "cypress_tree",
+            "x": 144.09,
+            "z": -291.32
+        },
+        {
+            "scale": 0.99,
+            "type": "olive_tree",
+            "x": -86.27,
+            "z": -287.81
+        },
+        {
+            "scale": 1.04,
+            "type": "cypress_tree",
+            "x": -54.65,
+            "z": -287.84
+        },
+        {
+            "scale": 0.9,
+            "type": "olive_tree",
+            "x": 186.49,
+            "z": -288.04
+        },
+        {
+            "scale": 0.86,
+            "type": "cypress_tree",
+            "x": -132.2,
+            "z": -285.0
+        },
+        {
+            "scale": 0.93,
+            "type": "cypress_tree",
+            "x": -55.02,
+            "z": -284.31
+        },
+        {
+            "scale": 0.98,
+            "type": "olive_tree",
+            "x": 200.97,
+            "z": -284.13
+        },
+        {
+            "scale": 0.85,
+            "type": "olive_tree",
+            "x": 204.3,
+            "z": -284.51
+        },
+        {
+            "scale": 0.92,
+            "type": "olive_tree",
+            "x": -222.69,
+            "z": -280.9
+        },
+        {
+            "scale": 0.88,
+            "type": "olive_tree",
+            "x": 186.2,
+            "z": -280.51
+        },
+        {
+            "scale": 0.91,
+            "type": "cypress_tree",
+            "x": -248.05,
+            "z": -277.33
+        },
+        {
+            "scale": 0.99,
+            "type": "cypress_tree",
+            "x": -243.75,
+            "z": -276.99
+        },
+        {
+            "scale": 0.92,
+            "type": "cypress_tree",
+            "x": -178.13,
+            "z": -277.35
+        },
+        {
+            "scale": 1.03,
+            "type": "cypress_tree",
+            "x": -170.59,
+            "z": -277.37
+        },
+        {
+            "scale": 0.97,
+            "type": "olive_tree",
+            "x": -111.09,
+            "z": -277.25
+        },
+        {
+            "scale": 1.01,
+            "type": "olive_tree",
+            "x": -100.09,
+            "z": -277.17
+        },
+        {
+            "scale": 0.86,
+            "type": "cypress_tree",
+            "x": -54.34,
+            "z": -277.87
+        },
+        {
+            "scale": 1.0,
+            "type": "olive_tree",
+            "x": 78.55,
+            "z": -276.93
+        },
+        {
+            "scale": 0.84,
+            "type": "olive_tree",
+            "x": 169.69,
+            "z": -277.49
+        },
+        {
+            "scale": 0.91,
+            "type": "olive_tree",
+            "x": 176.3,
+            "z": -277.71
+        },
+        {
+            "scale": 0.84,
+            "type": "cypress_tree",
+            "x": 190.17,
+            "z": -276.88
+        },
+        {
+            "scale": 0.82,
+            "type": "cypress_tree",
+            "x": -247.1,
+            "z": -273.73
+        },
+        {
+            "scale": 0.96,
+            "type": "cypress_tree",
+            "x": -209.37,
+            "z": -274.63
+        },
+        {
+            "scale": 0.92,
+            "type": "cypress_tree",
+            "x": -173.42,
+            "z": -273.58
+        },
+        {
+            "scale": 0.96,
+            "type": "olive_tree",
+            "x": -106.98,
+            "z": -273.76
+        },
+        {
+            "scale": 1.04,
+            "type": "olive_tree",
+            "x": -65.08,
+            "z": -274.18
+        },
+        {
+            "scale": 1.06,
+            "type": "olive_tree",
+            "x": 74.2,
+            "z": -274.43
+        },
+        {
+            "scale": 0.96,
+            "type": "cypress_tree",
+            "x": 88.56,
+            "z": -273.66
+        },
+        {
+            "scale": 0.85,
+            "type": "cypress_tree",
+            "x": 95.96,
+            "z": -274.04
+        },
+        {
+            "scale": 0.92,
+            "type": "cypress_tree",
+            "x": -163.06,
+            "z": -270.0
+        },
+        {
+            "scale": 0.96,
+            "type": "olive_tree",
+            "x": 70.56,
+            "z": -270.59
+        },
+        {
+            "scale": 0.98,
+            "type": "cypress_tree",
+            "x": -201.63,
+            "z": -267.29
+        },
+        {
+            "scale": 0.98,
+            "type": "olive_tree",
+            "x": -103.81,
+            "z": -267.2
+        },
+        {
+            "scale": 0.98,
+            "type": "olive_tree",
+            "x": -61.42,
+            "z": -266.81
+        },
+        {
+            "scale": 0.84,
+            "type": "cypress_tree",
+            "x": 190.4,
+            "z": -266.96
+        },
+        {
+            "scale": 0.95,
+            "type": "olive_tree",
+            "x": -199.07,
+            "z": -263.84
+        },
+        {
+            "scale": 0.96,
+            "type": "olive_tree",
+            "x": -131.74,
+            "z": -263.51
+        },
+        {
+            "scale": 1.06,
+            "type": "olive_tree",
+            "x": 238.96,
+            "z": -263.51
+        },
+        {
+            "scale": 0.86,
+            "type": "olive_tree",
+            "x": -209.18,
+            "z": -259.65
+        },
+        {
+            "scale": 0.87,
+            "type": "olive_tree",
+            "x": -206.11,
+            "z": -260.52
+        },
+        {
+            "scale": 0.98,
+            "type": "olive_tree",
+            "x": -202.37,
+            "z": -260.54
+        },
+        {
+            "scale": 0.92,
+            "type": "olive_tree",
+            "x": -180.94,
+            "z": -260.35
+        },
+        {
+            "scale": 0.86,
+            "type": "olive_tree",
+            "x": 239.35,
+            "z": -259.98
+        },
+        {
+            "scale": 0.88,
+            "type": "olive_tree",
+            "x": -198.64,
+            "z": -256.98
+        },
+        {
+            "scale": 0.98,
+            "type": "olive_tree",
+            "x": -205.85,
+            "z": -252.86
+        },
+        {
+            "scale": 1.06,
+            "type": "cypress_tree",
+            "x": -257.31,
+            "z": -249.65
+        },
+        {
+            "scale": 0.9,
+            "type": "olive_tree",
+            "x": -121.21,
+            "z": -250.09
+        },
+        {
+            "scale": 1.02,
+            "type": "olive_tree",
+            "x": -117.73,
+            "z": -249.95
+        },
+        {
+            "scale": 0.9,
+            "type": "cypress_tree",
+            "x": 126.41,
+            "z": -249.97
+        },
+        {
+            "scale": 1.01,
+            "type": "cypress_tree",
+            "x": 130.21,
+            "z": -249.57
+        },
+        {
+            "scale": 0.93,
+            "type": "cypress_tree",
+            "x": 175.47,
+            "z": -249.07
+        },
+        {
+            "scale": 0.96,
+            "type": "olive_tree",
+            "x": -13.33,
+            "z": -245.89
+        },
+        {
+            "scale": 0.85,
+            "type": "cypress_tree",
+            "x": 57.45,
+            "z": -245.64
+        },
+        {
+            "scale": 0.94,
+            "type": "olive_tree",
+            "x": -5.52,
+            "z": -242.13
+        },
+        {
+            "scale": 1.07,
+            "type": "olive_tree",
+            "x": -121.81,
+            "z": -239.12
+        },
+        {
+            "scale": 1.03,
+            "type": "olive_tree",
+            "x": -117.39,
+            "z": -238.78
+        },
+        {
+            "scale": 0.99,
+            "type": "cypress_tree",
+            "x": 130.85,
+            "z": -239.19
+        },
+        {
+            "scale": 0.99,
+            "type": "olive_tree",
+            "x": -202.08,
+            "z": -235.44
+        },
+        {
+            "scale": 0.88,
+            "type": "cypress_tree",
+            "x": -135.72,
+            "z": -235.11
+        },
+        {
+            "scale": 0.83,
+            "type": "olive_tree",
+            "x": 197.66,
+            "z": -234.85
+        },
+        {
+            "scale": 1.07,
+            "type": "olive_tree",
+            "x": 246.1,
+            "z": -234.84
+        },
+        {
+            "scale": 1.02,
+            "type": "cypress_tree",
+            "x": -71.91,
+            "z": -232.65
+        },
+        {
+            "scale": 0.89,
+            "type": "olive_tree",
+            "x": 200.54,
+            "z": -232.67
+        },
+        {
+            "scale": 0.85,
+            "type": "olive_tree",
+            "x": 242.35,
+            "z": -232.09
+        },
+        {
+            "scale": 1.0,
+            "type": "cypress_tree",
+            "x": -136.18,
+            "z": -228.57
+        },
+        {
+            "scale": 0.88,
+            "type": "cypress_tree",
+            "x": -131.65,
+            "z": -227.98
+        },
+        {
+            "scale": 0.89,
+            "type": "olive_tree",
+            "x": 246.07,
+            "z": -228.18
+        },
+        {
+            "scale": 1.07,
+            "type": "cypress_tree",
+            "x": 260.12,
+            "z": -229.19
+        },
+        {
+            "scale": 0.87,
+            "type": "olive_tree",
+            "x": -232.93,
+            "z": -225.26
+        },
+        {
+            "scale": 1.06,
+            "type": "cypress_tree",
+            "x": -136.07,
+            "z": -225.48
+        },
+        {
+            "scale": 1.06,
+            "type": "cypress_tree",
+            "x": -90.56,
+            "z": -224.43
+        },
+        {
+            "scale": 0.95,
+            "type": "cypress_tree",
+            "x": 98.8,
+            "z": -224.95
+        },
+        {
+            "scale": 1.05,
+            "type": "cypress_tree",
+            "x": 144.87,
+            "z": -225.62
+        },
+        {
+            "scale": 0.83,
+            "type": "cypress_tree",
+            "x": 151.95,
+            "z": -224.93
+        },
+        {
+            "scale": 1.05,
+            "type": "olive_tree",
+            "x": 242.09,
+            "z": -225.2
+        },
+        {
+            "scale": 1.05,
+            "type": "olive_tree",
+            "x": 246.01,
+            "z": -224.74
+        },
+        {
+            "scale": 0.84,
+            "type": "cypress_tree",
+            "x": 173.16,
+            "z": -221.89
+        },
+        {
+            "scale": 0.97,
+            "type": "cypress_tree",
+            "x": 178.94,
+            "z": -221.51
+        },
+        {
+            "scale": 0.95,
+            "type": "cypress_tree",
+            "x": 176.17,
+            "z": -217.92
+        },
+        {
+            "scale": 0.95,
+            "type": "olive_tree",
+            "x": 185.8,
+            "z": -217.84
+        },
+        {
+            "scale": 0.94,
+            "type": "olive_tree",
+            "x": -181.51,
+            "z": -214.76
+        },
+        {
+            "scale": 1.0,
+            "type": "olive_tree",
+            "x": -178.14,
+            "z": -214.95
+        },
+        {
+            "scale": 1.06,
+            "type": "olive_tree",
+            "x": -174.47,
+            "z": -214.77
+        },
+        {
+            "scale": 0.92,
+            "type": "olive_tree",
+            "x": 190.26,
+            "z": -214.39
+        },
+        {
+            "scale": 0.92,
+            "type": "olive_tree",
+            "x": -180.91,
+            "z": -210.47
+        },
+        {
+            "scale": 0.83,
+            "type": "olive_tree",
+            "x": -170.47,
+            "z": -210.38
+        },
+        {
+            "scale": 1.05,
+            "type": "cypress_tree",
+            "x": 169.56,
+            "z": -211.57
+        },
+        {
+            "scale": 0.86,
+            "type": "cypress_tree",
+            "x": -97.63,
+            "z": -207.86
+        },
+        {
+            "scale": 0.88,
+            "type": "cypress_tree",
+            "x": -93.64,
+            "z": -208.03
+        },
+        {
+            "scale": 0.99,
+            "type": "cypress_tree",
+            "x": 106.45,
+            "z": -207.9
+        },
+        {
+            "scale": 0.94,
+            "type": "cypress_tree",
+            "x": 158.22,
+            "z": -206.94
+        },
+        {
+            "scale": 0.93,
+            "type": "cypress_tree",
+            "x": 165.61,
+            "z": -206.84
+        },
+        {
+            "scale": 1.02,
+            "type": "cypress_tree",
+            "x": 196.32,
+            "z": -207.35
+        },
+        {
+            "scale": 0.91,
+            "type": "cypress_tree",
+            "x": 204.47,
+            "z": -207.26
+        },
+        {
+            "scale": 0.91,
+            "type": "cypress_tree",
+            "x": -153.3,
+            "z": -203.91
+        },
+        {
+            "scale": 0.9,
+            "type": "cypress_tree",
+            "x": -90.4,
+            "z": -203.41
+        },
+        {
+            "scale": 0.85,
+            "type": "cypress_tree",
+            "x": 102.79,
+            "z": -204.02
+        },
+        {
+            "scale": 0.85,
+            "type": "olive_tree",
+            "x": 115.85,
+            "z": -204.4
+        },
+        {
+            "scale": 0.94,
+            "type": "olive_tree",
+            "x": 119.43,
+            "z": -204.28
+        },
+        {
+            "scale": 0.86,
+            "type": "cypress_tree",
+            "x": 140.99,
+            "z": -204.38
+        },
+        {
+            "scale": 0.98,
+            "type": "cypress_tree",
+            "x": 147.64,
+            "z": -204.09
+        },
+        {
+            "scale": 1.03,
+            "type": "cypress_tree",
+            "x": 197.6,
+            "z": -204.1
+        },
+        {
+            "scale": 1.0,
+            "type": "cypress_tree",
+            "x": -190.98,
+            "z": -199.88
+        },
+        {
+            "scale": 1.0,
+            "type": "cypress_tree",
+            "x": 155.07,
+            "z": -200.38
+        },
+        {
+            "scale": 1.01,
+            "type": "cypress_tree",
+            "x": -152.83,
+            "z": -197.17
+        },
+        {
+            "scale": 1.03,
+            "type": "cypress_tree",
+            "x": -145.9,
+            "z": -197.43
+        },
+        {
+            "scale": 0.92,
+            "type": "cypress_tree",
+            "x": -93.92,
+            "z": -196.8
+        },
+        {
+            "scale": 0.96,
+            "type": "cypress_tree",
+            "x": 102.42,
+            "z": -197.3
+        },
+        {
+            "scale": 0.93,
+            "type": "olive_tree",
+            "x": 116.1,
+            "z": -196.79
+        },
+        {
+            "scale": 1.07,
+            "type": "cypress_tree",
+            "x": 144.67,
+            "z": -196.62
+        },
+        {
+            "scale": 1.04,
+            "type": "cypress_tree",
+            "x": -128.17,
+            "z": -193.38
+        },
+        {
+            "scale": 0.86,
+            "type": "cypress_tree",
+            "x": -51.28,
+            "z": -193.81
+        },
+        {
+            "scale": 0.83,
+            "type": "cypress_tree",
+            "x": -167.19,
+            "z": -189.4
+        },
+        {
+            "scale": 1.0,
+            "type": "cypress_tree",
+            "x": -139.43,
+            "z": -190.35
+        },
+        {
+            "scale": 0.92,
+            "type": "cypress_tree",
+            "x": -135.49,
+            "z": -189.46
+        },
+        {
+            "scale": 0.96,
+            "type": "cypress_tree",
+            "x": -37.42,
+            "z": -189.56
+        },
+        {
+            "scale": 0.98,
+            "type": "cypress_tree",
+            "x": -30.07,
+            "z": -190.48
+        },
+        {
+            "scale": 1.05,
+            "type": "cypress_tree",
+            "x": 21.73,
+            "z": -189.99
+        },
+        {
+            "scale": 1.03,
+            "type": "cypress_tree",
+            "x": -138.48,
+            "z": -186.92
+        },
+        {
+            "scale": 1.06,
+            "type": "cypress_tree",
+            "x": -55.06,
+            "z": -186.31
+        },
+        {
+            "scale": 1.05,
+            "type": "cypress_tree",
+            "x": -40.87,
+            "z": -186.82
+        },
+        {
+            "scale": 0.97,
+            "type": "cypress_tree",
+            "x": -30.89,
+            "z": -186.47
+        },
+        {
+            "scale": 0.9,
+            "type": "cypress_tree",
+            "x": 14.81,
+            "z": -186.34
+        },
+        {
+            "scale": 1.07,
+            "type": "cypress_tree",
+            "x": 21.63,
+            "z": -186.21
+        },
+        {
+            "scale": 1.05,
+            "type": "cypress_tree",
+            "x": 24.93,
+            "z": -186.23
+        },
+        {
+            "scale": 0.98,
+            "type": "cypress_tree",
+            "x": 49.5,
+            "z": -185.97
+        },
+        {
+            "scale": 0.87,
+            "type": "cypress_tree",
+            "x": -155.87,
+            "z": -183.15
+        },
+        {
+            "scale": 1.05,
+            "type": "cypress_tree",
+            "x": -47.43,
+            "z": -183.48
+        },
+        {
+            "scale": 0.91,
+            "type": "cypress_tree",
+            "x": -34.43,
+            "z": -183.09
+        },
+        {
+            "scale": 1.03,
+            "type": "cypress_tree",
+            "x": 52.97,
+            "z": -183.61
+        },
+        {
+            "scale": 0.83,
+            "type": "cypress_tree",
+            "x": -230.26,
+            "z": -179.38
+        },
+        {
+            "scale": 0.92,
+            "type": "cypress_tree",
+            "x": -226.11,
+            "z": -179.83
+        },
+        {
+            "scale": 1.03,
+            "type": "cypress_tree",
+            "x": -83.25,
+            "z": -180.14
+        },
+        {
+            "scale": 1.02,
+            "type": "olive_tree",
+            "x": 57.08,
+            "z": -178.81
+        },
+        {
+            "scale": 1.05,
+            "type": "cypress_tree",
+            "x": 206.8,
+            "z": -179.17
+        },
+        {
+            "scale": 0.82,
+            "type": "cypress_tree",
+            "x": -82.71,
+            "z": -176.65
+        },
+        {
+            "scale": 0.89,
+            "type": "cypress_tree",
+            "x": -76.54,
+            "z": -175.74
+        },
+        {
+            "scale": 0.99,
+            "type": "olive_tree",
+            "x": 14.9,
+            "z": -175.76
+        },
+        {
+            "scale": 0.84,
+            "type": "olive_tree",
+            "x": 60.83,
+            "z": -175.62
+        },
+        {
+            "scale": 0.87,
+            "type": "cypress_tree",
+            "x": 204.24,
+            "z": -173.15
+        },
+        {
+            "scale": 0.97,
+            "type": "olive_tree",
+            "x": 25.09,
+            "z": -169.26
+        },
+        {
+            "scale": 0.97,
+            "type": "olive_tree",
+            "x": 60.46,
+            "z": -169.22
+        },
+        {
+            "scale": 1.07,
+            "type": "cypress_tree",
+            "x": 196.67,
+            "z": -169.62
+        },
+        {
+            "scale": 0.93,
+            "type": "cypress_tree",
+            "x": 200.94,
+            "z": -168.5
+        },
+        {
+            "scale": 0.85,
+            "type": "cypress_tree",
+            "x": -114.73,
+            "z": -166.08
+        },
+        {
+            "scale": 1.04,
+            "type": "olive_tree",
+            "x": 73.9,
+            "z": -165.85
+        },
+        {
+            "scale": 0.83,
+            "type": "olive_tree",
+            "x": 81.22,
+            "z": -165.13
+        },
+        {
+            "scale": 1.04,
+            "type": "cypress_tree",
+            "x": 130.12,
+            "z": -165.13
+        },
+        {
+            "scale": 0.82,
+            "type": "cypress_tree",
+            "x": 126.91,
+            "z": -161.7
+        },
+        {
+            "scale": 0.92,
+            "type": "cypress_tree",
+            "x": 130.36,
+            "z": -162.05
+        },
+        {
+            "scale": 0.98,
+            "type": "olive_tree",
+            "x": -58.14,
+            "z": -158.7
+        },
+        {
+            "scale": 1.05,
+            "type": "olive_tree",
+            "x": 81.52,
+            "z": -158.9
+        },
+        {
+            "scale": 0.98,
+            "type": "cypress_tree",
+            "x": 133.77,
+            "z": -155.62
+        },
+        {
+            "scale": 0.92,
+            "type": "cypress_tree",
+            "x": 176.0,
+            "z": -152.09
+        },
+        {
+            "scale": 1.06,
+            "type": "cypress_tree",
+            "x": -187.82,
+            "z": -148.63
+        },
+        {
+            "scale": 0.85,
+            "type": "cypress_tree",
+            "x": -90.65,
+            "z": -148.42
+        },
+        {
+            "scale": 0.98,
+            "type": "cypress_tree",
+            "x": -79.35,
+            "z": -147.72
+        },
+        {
+            "scale": 0.92,
+            "type": "cypress_tree",
+            "x": 162.3,
+            "z": -148.03
+        },
+        {
+            "scale": 0.94,
+            "type": "olive_tree",
+            "x": 242.11,
+            "z": -148.01
+        },
+        {
+            "scale": 0.95,
+            "type": "olive_tree",
+            "x": 248.92,
+            "z": -148.45
+        },
+        {
+            "scale": 0.86,
+            "type": "cypress_tree",
+            "x": -194.69,
+            "z": -143.86
+        },
+        {
+            "scale": 0.86,
+            "type": "cypress_tree",
+            "x": -188.58,
+            "z": -144.15
+        },
+        {
+            "scale": 0.9,
+            "type": "olive_tree",
+            "x": 241.98,
+            "z": -141.01
+        },
+        {
+            "scale": 0.93,
+            "type": "cypress_tree",
+            "x": 218.35,
+            "z": -136.92
+        },
+        {
+            "scale": 0.83,
+            "type": "olive_tree",
+            "x": -173.68,
+            "z": -131.0
+        },
+        {
+            "scale": 0.96,
+            "type": "olive_tree",
+            "x": -209.68,
+            "z": -127.22
+        },
+        {
+            "scale": 0.92,
+            "type": "olive_tree",
+            "x": -177.4,
+            "z": -127.63
+        },
+        {
+            "scale": 0.94,
+            "type": "olive_tree",
+            "x": 74.37,
+            "z": -127.48
+        },
+        {
+            "scale": 0.84,
+            "type": "olive_tree",
+            "x": -250.5,
+            "z": -123.59
+        },
+        {
+            "scale": 1.02,
+            "type": "olive_tree",
+            "x": 225.19,
+            "z": -123.32
+        },
+        {
+            "scale": 0.83,
+            "type": "olive_tree",
+            "x": 235.49,
+            "z": -124.01
+        },
+        {
+            "scale": 0.98,
+            "type": "olive_tree",
+            "x": -251.66,
+            "z": -119.59
+        },
+        {
+            "scale": 0.93,
+            "type": "olive_tree",
+            "x": 8.43,
+            "z": -119.36
+        },
+        {
+            "scale": 1.06,
+            "type": "olive_tree",
+            "x": 11.78,
+            "z": -119.68
+        },
+        {
+            "scale": 0.84,
+            "type": "olive_tree",
+            "x": 228.52,
+            "z": -116.42
+        },
+        {
+            "scale": 0.85,
+            "type": "olive_tree",
+            "x": 224.86,
+            "z": -112.49
+        },
+        {
+            "scale": 1.03,
+            "type": "olive_tree",
+            "x": 228.57,
+            "z": -112.53
+        },
+        {
+            "scale": 1.06,
+            "type": "cypress_tree",
+            "x": -111.66,
+            "z": -109.58
+        },
+        {
+            "scale": 0.9,
+            "type": "cypress_tree",
+            "x": -218.8,
+            "z": -106.43
+        },
+        {
+            "scale": 1.02,
+            "type": "olive_tree",
+            "x": 78.55,
+            "z": -105.38
+        },
+        {
+            "scale": 0.86,
+            "type": "olive_tree",
+            "x": 176.53,
+            "z": -105.92
+        },
+        {
+            "scale": 1.04,
+            "type": "olive_tree",
+            "x": 67.01,
+            "z": -101.89
+        },
+        {
+            "scale": 0.84,
+            "type": "olive_tree",
+            "x": 74.87,
+            "z": -102.57
+        },
+        {
+            "scale": 0.96,
+            "type": "olive_tree",
+            "x": 74.19,
+            "z": -98.88
+        },
+        {
+            "scale": 0.93,
+            "type": "olive_tree",
+            "x": 81.06,
+            "z": -99.58
+        },
+        {
+            "scale": 0.97,
+            "type": "cypress_tree",
+            "x": -250.91,
+            "z": -92.34
+        },
+        {
+            "scale": 1.08,
+            "type": "cypress_tree",
+            "x": -250.82,
+            "z": -88.32
+        },
+        {
+            "scale": 0.92,
+            "type": "olive_tree",
+            "x": 155.48,
+            "z": -88.96
+        },
+        {
+            "scale": 0.87,
+            "type": "olive_tree",
+            "x": 161.89,
+            "z": -88.56
+        },
+        {
+            "scale": 0.9,
+            "type": "cypress_tree",
+            "x": 253.33,
+            "z": -85.09
+        },
+        {
+            "scale": 1.08,
+            "type": "olive_tree",
+            "x": -212.59,
+            "z": -82.12
+        },
+        {
+            "scale": 1.01,
+            "type": "olive_tree",
+            "x": -212.37,
+            "z": -73.87
+        },
+        {
+            "scale": 0.96,
+            "type": "olive_tree",
+            "x": 200.82,
+            "z": -70.7
+        },
+        {
+            "scale": 0.93,
+            "type": "cypress_tree",
+            "x": 176.07,
+            "z": -66.98
+        },
+        {
+            "scale": 0.99,
+            "type": "cypress_tree",
+            "x": 253.2,
+            "z": -53.38
+        },
+        {
+            "scale": 0.87,
+            "type": "cypress_tree",
+            "x": -107.33,
+            "z": -49.57
+        },
+        {
+            "scale": 1.01,
+            "type": "cypress_tree",
+            "x": -80.1,
+            "z": -49.44
+        },
+        {
+            "scale": 1.0,
+            "type": "cypress_tree",
+            "x": -195.4,
+            "z": -46.67
+        },
+        {
+            "scale": 0.99,
+            "type": "olive_tree",
+            "x": -152.37,
+            "z": -46.1
+        },
+        {
+            "scale": 0.86,
+            "type": "cypress_tree",
+            "x": -78.9,
+            "z": -46.03
+        },
+        {
+            "scale": 0.84,
+            "type": "cypress_tree",
+            "x": -50.92,
+            "z": -45.9
+        },
+        {
+            "scale": 1.05,
+            "type": "olive_tree",
+            "x": -149.8,
+            "z": -42.39
+        },
+        {
+            "scale": 0.91,
+            "type": "olive_tree",
+            "x": -258.24,
+            "z": -40.08
+        },
+        {
+            "scale": 0.85,
+            "type": "cypress_tree",
+            "x": -110.46,
+            "z": -39.63
+        },
+        {
+            "scale": 0.99,
+            "type": "cypress_tree",
+            "x": 213.82,
+            "z": -40.17
+        },
+        {
+            "scale": 0.88,
+            "type": "olive_tree",
+            "x": 245.34,
+            "z": -25.75
+        },
+        {
+            "scale": 0.84,
+            "type": "olive_tree",
+            "x": -41.4,
+            "z": -17.88
+        },
+        {
+            "scale": 0.92,
+            "type": "olive_tree",
+            "x": -72.62,
+            "z": -11.7
+        },
+        {
+            "scale": 1.08,
+            "type": "olive_tree",
+            "x": 158.94,
+            "z": -11.95
+        },
+        {
+            "scale": 0.9,
+            "type": "olive_tree",
+            "x": 162.53,
+            "z": -10.96
+        },
+        {
+            "scale": 0.83,
+            "type": "olive_tree",
+            "x": 155.47,
+            "z": -0.95
+        },
+        {
+            "scale": 0.84,
+            "type": "olive_tree",
+            "x": 158.89,
+            "z": -1.07
+        },
+        {
+            "scale": 0.9,
+            "type": "cypress_tree",
+            "x": -121.87,
+            "z": 9.34
+        },
+        {
+            "scale": 0.96,
+            "type": "olive_tree",
+            "x": -152.76,
+            "z": 16.07
+        },
+        {
+            "scale": 1.06,
+            "type": "olive_tree",
+            "x": -82.68,
+            "z": 15.97
+        },
+        {
+            "scale": 1.01,
+            "type": "olive_tree",
+            "x": -12.5,
+            "z": 16.8
+        },
+        {
+            "scale": 1.06,
+            "type": "olive_tree",
+            "x": 15.37,
+            "z": 15.8
+        },
+        {
+            "scale": 0.9,
+            "type": "olive_tree",
+            "x": 84.46,
+            "z": 15.87
+        },
+        {
+            "scale": 0.99,
+            "type": "olive_tree",
+            "x": -78.8,
+            "z": 19.68
+        },
+        {
+            "scale": 0.85,
+            "type": "olive_tree",
+            "x": 162.15,
+            "z": 23.47
+        },
+        {
+            "scale": 0.87,
+            "type": "olive_tree",
+            "x": 162.59,
+            "z": 26.77
+        },
+        {
+            "scale": 0.86,
+            "type": "cypress_tree",
+            "x": 231.36,
+            "z": 30.59
+        },
+        {
+            "scale": 0.83,
+            "type": "cypress_tree",
+            "x": 231.35,
+            "z": 33.89
+        },
+        {
+            "scale": 1.03,
+            "type": "cypress_tree",
+            "x": 231.41,
+            "z": 37.56
+        },
+        {
+            "scale": 0.9,
+            "type": "olive_tree",
+            "x": 239.4,
+            "z": 37.66
+        },
+        {
+            "scale": 0.82,
+            "type": "olive_tree",
+            "x": 245.67,
+            "z": 37.85
+        },
+        {
+            "scale": 1.07,
+            "type": "olive_tree",
+            "x": 241.94,
+            "z": 40.89
+        },
+        {
+            "scale": 0.97,
+            "type": "olive_tree",
+            "x": 248.95,
+            "z": 40.58
+        },
+        {
+            "scale": 0.91,
+            "type": "olive_tree",
+            "x": 196.38,
+            "z": 48.35
+        },
+        {
+            "scale": 0.89,
+            "type": "olive_tree",
+            "x": 201.2,
+            "z": 48.61
+        },
+        {
+            "scale": 0.89,
+            "type": "cypress_tree",
+            "x": 145.13,
+            "z": 55.19
+        },
+        {
+            "scale": 1.07,
+            "type": "olive_tree",
+            "x": 196.39,
+            "z": 55.05
+        },
+        {
+            "scale": 0.89,
+            "type": "olive_tree",
+            "x": 199.8,
+            "z": 54.49
+        },
+        {
+            "scale": 1.04,
+            "type": "cypress_tree",
+            "x": -183.98,
+            "z": 58.64
+        },
+        {
+            "scale": 1.04,
+            "type": "cypress_tree",
+            "x": 221.93,
+            "z": 58.77
+        },
+        {
+            "scale": 1.06,
+            "type": "olive_tree",
+            "x": 229.06,
+            "z": 58.79
+        },
+        {
+            "scale": 1.03,
+            "type": "cypress_tree",
+            "x": -191.62,
+            "z": 61.87
+        },
+        {
+            "scale": 0.87,
+            "type": "cypress_tree",
+            "x": 211.55,
+            "z": 62.28
+        },
+        {
+            "scale": 1.0,
+            "type": "olive_tree",
+            "x": 225.68,
+            "z": 62.65
+        },
+        {
+            "scale": 0.84,
+            "type": "olive_tree",
+            "x": 236.06,
+            "z": 62.67
+        },
+        {
+            "scale": 0.95,
+            "type": "olive_tree",
+            "x": -135.45,
+            "z": 64.96
+        },
+        {
+            "scale": 1.0,
+            "type": "cypress_tree",
+            "x": 218.15,
+            "z": 65.91
+        },
+        {
+            "scale": 0.99,
+            "type": "cypress_tree",
+            "x": -195.54,
+            "z": 69.04
+        },
+        {
+            "scale": 1.02,
+            "type": "cypress_tree",
+            "x": 221.78,
+            "z": 68.59
+        },
+        {
+            "scale": 0.83,
+            "type": "cypress_tree",
+            "x": 17.9,
+            "z": 71.82
+        },
+        {
+            "scale": 1.04,
+            "type": "cypress_tree",
+            "x": 21.85,
+            "z": 72.53
+        },
+        {
+            "scale": 0.89,
+            "type": "cypress_tree",
+            "x": 176.08,
+            "z": 78.87
+        },
+        {
+            "scale": 0.84,
+            "type": "cypress_tree",
+            "x": 175.87,
+            "z": 83.1
+        },
+        {
+            "scale": 0.87,
+            "type": "olive_tree",
+            "x": -188.64,
+            "z": 86.81
+        },
+        {
+            "scale": 0.93,
+            "type": "cypress_tree",
+            "x": 175.78,
+            "z": 86.51
+        },
+        {
+            "scale": 0.99,
+            "type": "olive_tree",
+            "x": 204.54,
+            "z": 87.04
+        },
+        {
+            "scale": 0.95,
+            "type": "cypress_tree",
+            "x": 179.61,
+            "z": 90.53
+        },
+        {
+            "scale": 1.05,
+            "type": "olive_tree",
+            "x": 203.52,
+            "z": 89.97
+        },
+        {
+            "scale": 1.07,
+            "type": "cypress_tree",
+            "x": 180.06,
+            "z": 94.12
+        },
+        {
+            "scale": 1.04,
+            "type": "olive_tree",
+            "x": -190.81,
+            "z": 96.79
+        },
+        {
+            "scale": 0.82,
+            "type": "olive_tree",
+            "x": 200.93,
+            "z": 96.92
+        },
+        {
+            "scale": 0.86,
+            "type": "olive_tree",
+            "x": -152.81,
+            "z": 103.42
+        },
+        {
+            "scale": 0.95,
+            "type": "olive_tree",
+            "x": -181.03,
+            "z": 114.28
+        },
+        {
+            "scale": 1.06,
+            "type": "cypress_tree",
+            "x": 175.78,
+            "z": 114.92
+        },
+        {
+            "scale": 0.96,
+            "type": "cypress_tree",
+            "x": 179.23,
+            "z": 113.94
+        },
+        {
+            "scale": 0.93,
+            "type": "cypress_tree",
+            "x": 228.72,
+            "z": 114.32
+        },
+        {
+            "scale": 0.89,
+            "type": "cypress_tree",
+            "x": 175.75,
+            "z": 118.29
+        },
+        {
+            "scale": 0.94,
+            "type": "cypress_tree",
+            "x": 179.79,
+            "z": 117.41
+        },
+        {
+            "scale": 1.05,
+            "type": "cypress_tree",
+            "x": 193.33,
+            "z": 118.48
+        },
+        {
+            "scale": 1.04,
+            "type": "cypress_tree",
+            "x": -188.35,
+            "z": 120.8
+        },
+        {
+            "scale": 0.9,
+            "type": "olive_tree",
+            "x": -178.08,
+            "z": 120.91
+        },
+        {
+            "scale": 0.86,
+            "type": "cypress_tree",
+            "x": 185.88,
+            "z": 121.64
+        },
+        {
+            "scale": 1.08,
+            "type": "cypress_tree",
+            "x": -187.56,
+            "z": 125.17
+        },
+        {
+            "scale": 0.93,
+            "type": "cypress_tree",
+            "x": 190.69,
+            "z": 124.96
+        },
+        {
+            "scale": 0.9,
+            "type": "cypress_tree",
+            "x": 166.16,
+            "z": 128.59
+        },
+        {
+            "scale": 0.91,
+            "type": "cypress_tree",
+            "x": 141.19,
+            "z": 139.47
+        },
+        {
+            "scale": 0.95,
+            "type": "olive_tree",
+            "x": -169.92,
+            "z": 142.25
+        },
+        {
+            "scale": 1.05,
+            "type": "olive_tree",
+            "x": 77.83,
+            "z": 142.39
+        },
+        {
+            "scale": 1.02,
+            "type": "olive_tree",
+            "x": -180.53,
+            "z": 146.17
+        },
+        {
+            "scale": 0.9,
+            "type": "cypress_tree",
+            "x": -222.71,
+            "z": 153.55
+        },
+        {
+            "scale": 1.04,
+            "type": "cypress_tree",
+            "x": -219.15,
+            "z": 153.09
+        },
+        {
+            "scale": 1.04,
+            "type": "olive_tree",
+            "x": 70.67,
+            "z": 153.63
+        },
+        {
+            "scale": 1.08,
+            "type": "olive_tree",
+            "x": 218.08,
+            "z": 152.92
+        },
+        {
+            "scale": 0.97,
+            "type": "olive_tree",
+            "x": -226.07,
+            "z": 156.1
+        },
+        {
+            "scale": 1.01,
+            "type": "cypress_tree",
+            "x": -166.89,
+            "z": 157.13
+        },
+        {
+            "scale": 1.06,
+            "type": "cypress_tree",
+            "x": -149.08,
+            "z": 156.8
+        },
+        {
+            "scale": 0.96,
+            "type": "olive_tree",
+            "x": -110.61,
+            "z": 156.73
+        },
+        {
+            "scale": 0.84,
+            "type": "olive_tree",
+            "x": -100.51,
+            "z": 155.92
+        },
+        {
+            "scale": 0.94,
+            "type": "cypress_tree",
+            "x": -93.52,
+            "z": 156.68
+        },
+        {
+            "scale": 0.85,
+            "type": "cypress_tree",
+            "x": -76.28,
+            "z": 156.66
+        },
+        {
+            "scale": 0.97,
+            "type": "cypress_tree",
+            "x": 98.94,
+            "z": 156.75
+        },
+        {
+            "scale": 1.07,
+            "type": "cypress_tree",
+            "x": 110.16,
+            "z": 156.7
+        },
+        {
+            "scale": 0.91,
+            "type": "cypress_tree",
+            "x": 130.39,
+            "z": 156.78
+        },
+        {
+            "scale": 0.88,
+            "type": "cypress_tree",
+            "x": -76.11,
+            "z": 195.13
+        },
+        {
+            "scale": 0.88,
+            "type": "olive_tree",
+            "x": -12.88,
+            "z": 195.16
+        },
+        {
+            "scale": 0.9,
+            "type": "olive_tree",
+            "x": 60.42,
+            "z": 195.52
+        },
         {
             "scale": 1.8,
             "type": "magic_shrine",

@@ -102,6 +102,7 @@ public:
     GL::Shader::UniformHandle height_noise_frequency{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle ambient_boost{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle rock_detail_strength{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle horizon_dressing{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle light_dir{GL::Shader::InvalidUniform};
 
     GL::Shader::UniformHandle snow_coverage{GL::Shader::InvalidUniform};

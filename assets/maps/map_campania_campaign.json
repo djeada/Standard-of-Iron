@@ -5811,15 +5811,6 @@
             "z": 383.16
         },
         {
-            "intensity": 0.9500000000000001,
-            "persistent": true,
-            "radius": 2.8000000000000003,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 210,
-            "z": 146
-        },
-        {
             "intensity": 0.85,
             "persistent": true,
             "radius": 2.6,
@@ -5827,15 +5818,6 @@
             "type": "firecamp",
             "x": 409.41,
             "z": 144.22
-        },
-        {
-            "intensity": 1.1,
-            "persistent": true,
-            "radius": 3.2,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 256,
-            "z": 528
         },
         {
             "intensity": 1,
@@ -5899,15 +5881,6 @@
             "z": 494.26
         },
         {
-            "intensity": 1.21,
-            "persistent": true,
-            "radius": 3.4,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 590.92,
-            "z": 239.58
-        },
-        {
             "rotation": 92.7,
             "scale": 1.11,
             "type": "tent",
@@ -5922,13 +5895,6 @@
             "z": 222
         },
         {
-            "rotation": 29.2,
-            "scale": 0.9500000000000001,
-            "type": "supply_cart",
-            "x": 110.31,
-            "z": 391.35
-        },
-        {
             "intensity": 0.98,
             "persistent": true,
             "radius": 2.7,
@@ -5936,13 +5902,6 @@
             "type": "firecamp",
             "x": 365.56,
             "z": 494.15000000000003
-        },
-        {
-            "rotation": 339.3,
-            "scale": 1.12,
-            "type": "tent",
-            "x": 616.6,
-            "z": 317.97
         },
         {
             "rotation": 51.5,
@@ -5977,13 +5936,6 @@
             "z": 565.24
         },
         {
-            "rotation": 113.3,
-            "scale": 0.98,
-            "type": "supply_cart",
-            "x": 581.83,
-            "z": 239.64000000000001
-        },
-        {
             "rotation": 14.5,
             "scale": 1.1,
             "type": "weapon_rack",
@@ -5996,13 +5948,6 @@
             "type": "tent",
             "x": 169.98,
             "z": 64.96
-        },
-        {
-            "rotation": 272.4,
-            "scale": 0.93,
-            "type": "tent",
-            "x": 535.35,
-            "z": 161.39000000000001
         },
         {
             "rotation": 109.3,
@@ -6033,27 +5978,11 @@
             "z": 328.63
         },
         {
-            "intensity": 1.3,
-            "persistent": true,
-            "radius": 3.3000000000000003,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 158.41,
-            "z": 20.55
-        },
-        {
             "rotation": 272.3,
             "scale": 1.16,
             "type": "tent",
             "x": 492.71000000000004,
             "z": 207.04
-        },
-        {
-            "rotation": 315.3,
-            "scale": 1.17,
-            "type": "tent",
-            "x": 63.45,
-            "z": 382.46000000000004
         },
         {
             "rotation": 352.1,
@@ -6107,13 +6036,6 @@
             "type": "supply_cart",
             "x": 299.1,
             "z": 156.12
-        },
-        {
-            "rotation": 292.2,
-            "scale": 0.9400000000000001,
-            "type": "tent",
-            "x": 80.15,
-            "z": 109.3
         },
         {
             "intensity": 1.1400000000000001,
@@ -6210,29 +6132,6 @@
             "z": 317.43
         },
         {
-            "intensity": 1.2,
-            "persistent": true,
-            "radius": 3.5,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 190.27,
-            "z": 131
-        },
-        {
-            "rotation": 181.8,
-            "scale": 0.97,
-            "type": "supply_cart",
-            "x": 314.14,
-            "z": 367.46
-        },
-        {
-            "rotation": 186,
-            "scale": 1.12,
-            "type": "supply_cart",
-            "x": 390,
-            "z": 201.11
-        },
-        {
             "intensity": 1.1,
             "persistent": true,
             "radius": 3.2,
@@ -6251,22 +6150,6 @@
             "z": 356.31
         },
         {
-            "intensity": 1.01,
-            "persistent": true,
-            "radius": 2.8000000000000003,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 350.15000000000003,
-            "z": 380.94
-        },
-        {
-            "rotation": 322.7,
-            "scale": 1.16,
-            "type": "supply_cart",
-            "x": 357.64,
-            "z": 385.67
-        },
-        {
             "intensity": 0.89,
             "persistent": true,
             "radius": 3.4,
@@ -6281,15 +6164,6 @@
             "type": "supply_cart",
             "x": 493.85,
             "z": 296.53000000000003
-        },
-        {
-            "intensity": 1.35,
-            "persistent": true,
-            "radius": 3,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 217.73000000000002,
-            "z": 160.70000000000002
         },
         {
             "rotation": 95.2,
@@ -6423,13 +6297,6 @@
             "type": "statue",
             "x": 363,
             "z": 279
-        },
-        {
-            "rotation": 227.70000000000002,
-            "scale": 0.9400000000000001,
-            "type": "statue",
-            "x": 262.06,
-            "z": 211.25
         },
         {
             "rotation": 177,

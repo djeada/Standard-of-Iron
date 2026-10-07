@@ -357,7 +357,7 @@ def _roads(definition, width, height, report: Report, metrics: dict) -> None:
     if loops >= 1:
         report.add("roads.loop", "pass", f"{loops} route loop(s)")
     else:
-        # RTS_MAP_DESIGN.md: a standard map needs at least one complete loop.
+
         standard = min(width, height) >= 500
         report.add(
             "roads.loop",

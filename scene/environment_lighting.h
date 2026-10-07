@@ -30,6 +30,7 @@ struct EnvironmentLightingState {
   float exposure = 1.0F;
   float cloud_cover = 0.0F;
   float wetness = 0.0F;
+  float cloud_time = 0.0F;
 
   [[nodiscard]] auto darkness_amount() const noexcept -> float {
     auto smooth = [](float edge0, float edge1, float value) {
@@ -87,7 +88,7 @@ struct EnvironmentLightingState {
         value.shadow_strength,
         value.shadow_softness,
         value.wetness,
-        0.0F,
+        value.cloud_time,
         0.0F,
     };
   }

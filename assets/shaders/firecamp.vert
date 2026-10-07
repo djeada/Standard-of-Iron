@@ -5,6 +5,7 @@ layout(location = 1) in vec2 a_tex_coord;
 
 layout(location = 3) in vec4 i_pos_intensity;
 layout(location = 4) in vec4 i_radius_phase;
+layout(location = 5) in vec4 i_ground;
 
 layout(std140) uniform FrameData {
   mat4 u_view_proj;
@@ -19,17 +20,22 @@ out vec2 tex_coord;
 out float intensity_val;
 out float flame_phase;
 out float flame_height;
+flat out int v_part;
+
+const int k_part_flame = 0;
+const int k_part_hearth = 1;
+const int k_part_smoke = 2;
 
 void main() {
   vec3 camp_pos = i_pos_intensity.xyz;
-  float intensity = i_pos_intensity.w;
+  float intensity = clamp(i_pos_intensity.w, 0.6, 1.6);
   float phase = i_radius_phase.y;
-  float radius = i_radius_phase.x;
+  vec2 ground_slope = i_ground.xy;
+  float hearth_radius = max(i_ground.z, 0.2);
 
   vec3 right_flat = vec3(u_camera_right.x, 0.0, u_camera_right.z);
   float right_len = length(right_flat);
   vec3 right_vec = right_len < 1e-4 ? vec3(1.0, 0.0, 0.0) : right_flat / right_len;
-
   vec3 forward_flat = vec3(u_camera_forward.x, 0.0, u_camera_forward.z);
   float forward_len = length(forward_flat);
   vec3 forward_vec = forward_len < 1e-4
@@ -37,63 +43,53 @@ void main() {
                          : forward_flat / forward_len;
   vec3 up_vec = vec3(0.0, 1.0, 0.0);
 
-  float plane_id = floor(a_pos.z + 0.5);
-  float angle = plane_id * 2.0943951;
-  float c = cos(angle);
-  float s = sin(angle);
-  vec3 horizontal_axis = normalize(right_vec * c + forward_vec * s);
-  if (length(horizontal_axis) < 1e-4)
-    horizontal_axis = right_vec;
+  float part_id = floor(a_pos.z + 0.5);
+  float intensity_scale = clamp(intensity, 0.7, 1.35);
+  float flame_tall = hearth_radius * 1.75 * intensity_scale;
+  float flame_wide = hearth_radius * 0.66 * mix(0.9, 1.08, intensity_scale - 0.7);
 
-  float intensity_scale = clamp(intensity, 0.65, 1.4);
-  float height_t = clamp(a_tex_coord.y, 0.0, 1.0);
-  float centered_x = a_tex_coord.x * 2.0 - 1.0;
-  float tip_bias = pow(height_t, 1.35);
-  float pulse = 0.94 + 0.12 * sin(u_time * (u_flicker_speed * 0.62) + phase * 1.7) +
-                0.05 * sin(u_time * (u_flicker_speed * 1.8) + phase * 2.8);
-  float curl_noise =
-      soi_noise_95f501(vec2(centered_x * 1.6 + phase * 0.12,
-                            height_t * 3.7 - u_time * (u_flicker_speed * 0.34)));
-  float gust_noise =
-      soi_noise_95f501(vec2(phase * 0.21, u_time * 0.22 + plane_id * 1.73));
+  vec3 wind = normalize(vec3(0.82, 0.0, 0.57));
+  float gust = soi_noise_95f501(vec2(phase * 0.37, u_time * 0.31));
+  vec3 pos;
 
-  float width_base = clamp(radius * 0.18 * intensity_scale, 0.55, 0.95);
-  float width_scale = mix(width_base * pulse,
-                          width_base * (0.18 + 0.12 * gust_noise + 0.08 * curl_noise),
-                          tip_bias);
-  float height_scale =
-      clamp(radius * 0.24 * intensity_scale, 0.55, 1.08) * (0.96 + 0.12 * pulse);
+  if (part_id > 2.5 && part_id < 3.5) {
+    vec2 disc = a_tex_coord;
+    vec2 offset = disc * hearth_radius * 0.86;
+    float slope = length(ground_slope);
+    float lift = 0.022 + 0.06 * min(slope, 1.5) + i_ground.w;
+    pos = camp_pos + vec3(offset.x, dot(ground_slope, offset) + lift, offset.y);
+    v_part = k_part_hearth;
+    flame_height = 0.0;
+  } else if (part_id > 3.5) {
+    float h = clamp(a_tex_coord.y, 0.0, 1.0);
+    float centered_x = a_tex_coord.x * 2.0 - 1.0;
+    float rise = flame_tall * 0.55 + h * flame_tall * 2.3;
+    float width = flame_wide * mix(0.55, 1.75, h);
+    float drift = h * h * flame_tall * (0.55 + 0.35 * gust);
+    pos = camp_pos + up_vec * rise + right_vec * (centered_x * width) + wind * drift;
+    v_part = k_part_smoke;
+    flame_height = h;
+  } else {
+    float angle = part_id * 1.0471976;
+    vec3 horizontal_axis = normalize(right_vec * cos(angle) + forward_vec * sin(angle));
 
-  float flicker_offset = (gust_noise - 0.5) * (u_flicker_amount * 0.7);
-  float sway = sin(u_time * (u_flicker_speed * 1.08) + phase * 2.1 + height_t * 5.3 +
-                   centered_x * 4.2);
-  float lean = (sway * 0.55 + (curl_noise - 0.5) * 1.2 + (gust_noise - 0.5) * 1.1) *
-               u_flicker_amount * radius * (0.12 + tip_bias * 1.15);
-  float swirl = sin(u_time * (u_flicker_speed * 1.45) + phase * 3.1 + centered_x * 6.2);
-  vec3 wobble_offset =
-      horizontal_axis * ((sway * 0.32 + (gust_noise - 0.5) * 0.75) * u_flicker_amount *
-                         radius * (0.08 + height_t * 0.42));
-  vec3 lean_axis = normalize(
-      mix(horizontal_axis, forward_vec, 0.28 * sin(phase * 1.11 + u_time * 0.41)));
+    float h = clamp(a_tex_coord.y, 0.0, 1.0);
+    float centered_x = a_tex_coord.x * 2.0 - 1.0;
+    float pulse = 0.95 + 0.07 * sin(u_time * (u_flicker_speed * 0.62) + phase * 1.7) +
+                  0.04 * sin(u_time * (u_flicker_speed * 1.8) + phase * 2.8);
+    float sway = sin(u_time * (u_flicker_speed * 0.9) + phase * 2.1 + h * 3.1) * 0.6 +
+                 (gust - 0.5) * 0.8;
+    vec3 lean = (wind * 0.6 + horizontal_axis * 0.4) * sway * u_flicker_amount *
+                flame_tall * h * h * 2.4;
 
-  vec3 local_offset = horizontal_axis * (centered_x * width_scale) +
-                      up_vec * (a_pos.y * height_scale * (0.85 + tip_bias * 0.28));
-
-  float taper = mix(0.0, width_base * 0.3, tip_bias);
-  local_offset += horizontal_axis * (-centered_x * taper);
-  local_offset += lean_axis * lean;
-  local_offset +=
-      forward_vec * (swirl * u_flicker_amount * radius * (0.03 + tip_bias * 0.22));
-
-  float base_lift = radius * 0.02 + intensity * 0.04;
-  float vertical_lift =
-      (0.3 + 0.7 * curl_noise) * u_flicker_amount * radius * (0.04 + height_t * 0.36);
-  vec3 pos = camp_pos + local_offset + wobble_offset +
-             up_vec * (flicker_offset + base_lift + vertical_lift);
+    pos = camp_pos + horizontal_axis * (centered_x * flame_wide) +
+          up_vec * (h * flame_tall * pulse + hearth_radius * 0.04) + lean;
+    v_part = k_part_flame;
+    flame_height = h;
+  }
 
   gl_Position = u_view_proj * vec4(pos, 1.0);
   tex_coord = a_tex_coord;
   intensity_val = intensity;
   flame_phase = phase;
-  flame_height = height_t;
 }

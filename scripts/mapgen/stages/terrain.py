@@ -117,7 +117,7 @@ def _mountains(ctx: Context, field: Field) -> None:
     frame = ctx.layout.frame
     sides = [side for side in (0, 1) if side != ctx.layout.coast_side]
     per_side = max(1, round(density * 5))
-    rotation = 90.0 - _v_axis_rotation(ctx)  # long axis along u
+    rotation = 90.0 - _v_axis_rotation(ctx)
     for side in sides:
         for i in range(per_side):
             u = 0.14 + (0.72 * (i + 0.5) / per_side) + rng.uniform(-0.03, 0.03)
@@ -270,8 +270,6 @@ def _shaped_hill(ctx: Context, p: Point, target: Point, size: float) -> dict:
         "depth": round2(size * (0.4 if shape == "corridor" else 0.95)),
         "thickness": thickness,
         "height": height,
-        # An arc's band sits on local +x, so pointing +x away from the road
-        # leaves its pocket open to the road: the camp ground of a natural keep.
         "rotation": round2(away if shape != "corridor" else away + 90.0),
     }
     if shape == "arc":

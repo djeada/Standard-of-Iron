@@ -34,9 +34,7 @@ ON_LANE = 75.0
 @dataclass
 class LanePlan:
     index: int
-    nodes: list[tuple[float, Point, str]] = field(
-        default_factory=list
-    )  # (u, point, kind)
+    nodes: list[tuple[float, Point, str]] = field(default_factory=list)
     junctions: list[tuple[float, Point]] = field(default_factory=list)
     settlements: list[tuple[float, Point, str, float]] = field(default_factory=list)
     breaks: list[tuple[float, Point, Point]] = field(default_factory=list)
@@ -181,8 +179,6 @@ def synthesise(ctx: Context) -> None:
         else:
             spurs.append(settlement)
 
-    # Rivers each route crosses, with where. Too few crossings adds diagonal
-    # links over the river; too many funnels the extra routes onto the first.
     wanted_crossings = int(params["water.crossings"])
     rivers = _rivers(ctx)
     extra_links: list[tuple[int, float, int, float, float]] = []
@@ -213,7 +209,7 @@ def synthesise(ctx: Context) -> None:
     links = []
     for link in layout.links:
         if link.lane_a == link.lane_b:
-            # One route: a loop is a bypass that leaves it and rejoins it.
+
             a = _junction(ctx, plans, link.lane_a, max(link.u - 0.09, 0.05))
             b = _junction(ctx, plans, link.lane_a, min(link.u + 0.09, 0.95))
             v = layout.lane_v(link.lane_a, link.u)
@@ -274,7 +270,6 @@ def synthesise(ctx: Context) -> None:
         _, lane, entrance_point, q = best
         spur_roads.extend(_approaches(ctx, plans, lane, entrance_point))
 
-    # Routes, edge to edge through their settlements, split at funnels.
     for plan in plans:
         start = _lane_point(ctx, plan.index, 0.0)
         end = _lane_point(ctx, plan.index, 1.0)

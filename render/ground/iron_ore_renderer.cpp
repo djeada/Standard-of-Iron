@@ -64,9 +64,9 @@ void IronOreRenderer::submit(Renderer& renderer, ResourceManager* resources) {
     const float pulse = 0.84F + 0.16F * std::sin((time * 1.9F) + phase);
     Render::LocalLight votive;
     votive.position = ore_pos + QVector3D(0.0F, scale * 0.6F, 0.0F);
-    votive.color = QVector3D(0.48F, 0.54F, 0.92F);
+    votive.color = QVector3D(0.95F, 0.18F, 0.16F);
     votive.radius = std::clamp(scale * 2.8F, 3.0F, 8.0F);
-    votive.intensity = 0.52F * pulse;
+    votive.intensity = 0.70F * pulse;
     renderer.local_light(votive);
   }
 }

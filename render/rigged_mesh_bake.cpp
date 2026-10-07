@@ -44,6 +44,18 @@ using Render::GL::Mesh;
 using Render::GL::RiggedVertex;
 using Render::GL::Vertex;
 
+constexpr float k_face_cranium_uv = -6.0F;
+constexpr float k_face_jaw_uv = -9.0F;
+constexpr float k_face_back_shift = 3.0F;
+
+auto face_marker_tex_coord(std::uint8_t marker,
+                           const QVector3D& unit_pos) -> std::array<float, 2> {
+  float const base =
+      marker == k_surface_marker_face_jaw ? k_face_jaw_uv : k_face_cranium_uv;
+  float const back = unit_pos.z() > 0.0F ? 0.0F : k_face_back_shift;
+  return {base + unit_pos.x(), unit_pos.y() + back};
+}
+
 struct VertexBoneBlend {
   std::array<std::uint8_t, 4> indices{0, 0, 0, 0};
   std::array<float, 4> weights{1.0F, 0.0F, 0.0F, 0.0F};
@@ -361,6 +373,9 @@ void append_primitive_vertices(const PrimitiveInstance& prim,
     rv.position_bone_local = {world_pos.x(), world_pos.y(), world_pos.z()};
     rv.normal_bone_local = {world_norm.x(), world_norm.y(), world_norm.z()};
     rv.tex_coord = v.tex_coord;
+    if (prim.surface_marker != Render::Creature::k_surface_marker_none) {
+      rv.tex_coord = face_marker_tex_coord(prim.surface_marker, local_pos);
+    }
     rv.color_role = prim.color_role;
     if (prim.shape == PrimitiveShape::Mesh && v.color_role != 0U) {
       rv.color_role = v.color_role;

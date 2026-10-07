@@ -1341,7 +1341,9 @@ void Backend::upload_frame_uniform_buffers(const QMatrix4x4& view_proj,
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
   }
   if (m_environment_lighting_ubo != 0) {
-    const auto packed = m_environment_lighting.packed_std140();
+    EnvironmentLightingState frame_lighting = m_environment_lighting;
+    frame_lighting.cloud_time = m_animation_time;
+    const auto packed = frame_lighting.packed_std140();
     glBindBuffer(GL_UNIFORM_BUFFER, m_environment_lighting_ubo);
     glBufferSubData(GL_UNIFORM_BUFFER,
                     0,

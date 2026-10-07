@@ -39,8 +39,8 @@ TEST(TerrainProfilesTest, ScatterRulesCentralizeDryGroundTreeChoice) {
   EXPECT_TRUE(dry_rules.tree(Game::Map::TreeSpecies::Olive).allowed);
   EXPECT_FLOAT_EQ(dry_rules.tree(Game::Map::TreeSpecies::Olive).base_density, 0.08F);
   EXPECT_FLOAT_EQ(dry_rules.tree(Game::Map::TreeSpecies::Olive).density_scale, 0.10F);
-  EXPECT_FLOAT_EQ(dry_rules.tree(Game::Map::TreeSpecies::Olive).scale_min, 2.8F);
-  EXPECT_FLOAT_EQ(dry_rules.tree(Game::Map::TreeSpecies::Olive).scale_max, 5.0F);
+  EXPECT_FLOAT_EQ(dry_rules.tree(Game::Map::TreeSpecies::Olive).scale_min, 2.2F);
+  EXPECT_FLOAT_EQ(dry_rules.tree(Game::Map::TreeSpecies::Olive).scale_max, 3.6F);
 
   const auto forest_rules =
       Game::Map::make_scatter_rules(Game::Map::GroundType::ForestMud);
@@ -62,8 +62,10 @@ TEST(TerrainProfilesTest, ScatterRulesCentralizeDryGroundTreeChoice) {
                   0.08F);
   EXPECT_FLOAT_EQ(fertile_rules.tree(Game::Map::TreeSpecies::Olive).density_scale,
                   0.12F);
-  EXPECT_FLOAT_EQ(fertile_rules.tree(Game::Map::TreeSpecies::Olive).scale_min, 3.0F);
-  EXPECT_FLOAT_EQ(fertile_rules.tree(Game::Map::TreeSpecies::Olive).scale_max, 5.4F);
+  EXPECT_FLOAT_EQ(fertile_rules.tree(Game::Map::TreeSpecies::Olive).scale_min, 2.3F);
+  EXPECT_FLOAT_EQ(fertile_rules.tree(Game::Map::TreeSpecies::Olive).scale_max, 3.8F);
+  EXPECT_FALSE(fertile_rules.tree(Game::Map::TreeSpecies::Palm).allowed)
+      << "palms belong to the African and desert maps, not the fields of Europe";
 
   const auto rocky_rules =
       Game::Map::make_scatter_rules(Game::Map::GroundType::SoilRocky);

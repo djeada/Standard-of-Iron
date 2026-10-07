@@ -245,7 +245,7 @@ inline auto make_scatter_rules(GroundType ground_type) -> TerrainScatterRules {
   auto& pine = rules.tree(TreeSpecies::Pine);
   pine = {true, 0.2F, 0.3F, 1.9F, 3.4F};
   auto& olive = rules.tree(TreeSpecies::Olive);
-  olive = {false, 0.05F, 0.08F, 3.2F, 5.8F};
+  olive = {false, 0.05F, 0.08F, 2.4F, 4.0F};
 
   auto& cypress = rules.tree(TreeSpecies::Cypress);
   auto& palm = rules.tree(TreeSpecies::Palm);
@@ -253,7 +253,7 @@ inline auto make_scatter_rules(GroundType ground_type) -> TerrainScatterRules {
   switch (ground_type) {
   case GroundType::GrassDry:
     pine.allowed = false;
-    olive = {true, 0.08F, 0.10F, 2.8F, 5.0F};
+    olive = {true, 0.08F, 0.10F, 2.2F, 3.6F};
     cypress = {true, 0.060F, 0.240F, 2.6F, 4.2F};
     palm = {true, 0.100F, 0.400F, 3.0F, 4.6F};
     break;
@@ -263,9 +263,9 @@ inline auto make_scatter_rules(GroundType ground_type) -> TerrainScatterRules {
     break;
   case GroundType::SoilFertile:
     pine.allowed = false;
-    olive = {true, 0.08F, 0.12F, 3.0F, 5.4F};
+    olive = {true, 0.08F, 0.12F, 2.3F, 3.8F};
     cypress = {true, 0.090F, 0.200F, 2.8F, 4.6F};
-    palm = {true, 0.108F, 0.240F, 3.0F, 4.6F};
+    palm.allowed = false;
     break;
   case GroundType::SoilRocky:
     pine.allowed = false;

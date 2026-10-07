@@ -6,9 +6,11 @@
 #include <array>
 #include <cmath>
 #include <numbers>
+#include <optional>
 #include <utility>
 #include <vector>
 
+#include "game/map/bridge_geometry.h"
 #include "game/map/river_ribbon.h"
 #include "game/map/scatter/ground_utils.h"
 #include "game/map/terrain_surface.h"
@@ -139,6 +141,15 @@ auto make_river_ribbon_settings() -> LinearFeatureRibbonSettings {
   settings.y_offset = 0.12F;
   settings.junction_sink = 0.03F;
   settings.segment_layer_step = 0.004F;
+  return settings;
+}
+
+auto make_water_surface_ribbon_settings(const Game::Map::TerrainHeightMap& height_map)
+    -> LinearFeatureRibbonSettings {
+  LinearFeatureRibbonSettings settings = make_river_ribbon_settings();
+  settings.height_map = &height_map;
+  settings.use_segment_elevation_profile = true;
+  settings.y_offset = 0.02F;
   return settings;
 }
 
@@ -508,6 +519,25 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
   float const parapet_half_width = std::clamp(bridge_width * 0.045F, 0.16F, 0.34F);
   float const side_bevel = std::clamp(bridge_width * 0.12F, 0.10F, 0.30F);
 
+  float const lake_padding = Game::Map::drawn_lake_padding(tile_size);
+  auto const landing_floor =
+      [&](float along_from, float along_to, float abutment_y) -> std::optional<float> {
+    if (!Game::Map::drawn_water_level_under_bridge(bridge,
+                                                   height_map.get_river_segments(),
+                                                   height_map.get_lakes(),
+                                                   lake_padding,
+                                                   along_from,
+                                                   along_to)
+             .has_value()) {
+      return std::nullopt;
+    }
+    return abutment_y;
+  };
+  std::optional<float> const start_landing_floor =
+      landing_floor(-landing_run, 0.0F, bridge.start.y());
+  std::optional<float> const end_landing_floor =
+      landing_floor(length, length + landing_run, bridge.end.y());
+
   auto add_vertex =
       [&](const QVector3D& position, const QVector3D& normal, float u, float v) {
         Render::GL::Vertex vtx{};
@@ -565,8 +595,12 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
     } else if (span_distance > visual_length - landing_run) {
       landing = smoothstep01((visual_length - span_distance) / landing_run);
     }
-    float const ground_y =
-        height_map.get_base_height_at(center_pos.x(), center_pos.z());
+    float ground_y = height_map.get_base_height_at(center_pos.x(), center_pos.z());
+    const std::optional<float>& landing_floor_y =
+        span_distance < visual_length * 0.5F ? start_landing_floor : end_landing_floor;
+    if (landing_floor_y.has_value()) {
+      ground_y = std::max(ground_y, *landing_floor_y);
+    }
     float const deck_height = mixf(ground_y + Game::Map::k_bridge_deck_visual_lift,
                                    Game::Map::bridge_deck_world_y(bridge, authored_t),
                                    landing);

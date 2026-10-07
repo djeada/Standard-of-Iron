@@ -1,19 +1,19 @@
 {
     "biome": {
         "grass_dry": [
-            0.52,
-            0.51,
-            0.27
+            0.7,
+            0.6,
+            0.33
         ],
         "grass_primary": [
-            0.28,
-            0.45,
-            0.2
+            0.4,
+            0.46,
+            0.22
         ],
         "grass_secondary": [
-            0.4,
+            0.53,
             0.54,
-            0.25
+            0.29
         ],
         "ground_irregularity_enabled": true,
         "ground_type": "grass_dry",
@@ -38,9 +38,9 @@
         ],
         "seed": 10037,
         "soil_color": [
-            0.35000000000000003,
-            0.28,
-            0.17
+            0.47,
+            0.37,
+            0.23
         ],
         "sway_speed": 0.9,
         "sway_strength": 0.13,
@@ -95,7 +95,7 @@
         "exposure": 1.06,
         "fog_density": 0,
         "lighting_profile": "mediterranean_summer",
-        "start_time": 9.5,
+        "start_time": 8.25,
         "time_mode": "locked"
     },
     "forests": [
@@ -3634,13 +3634,6 @@
             "z": 434.97
         },
         {
-            "rotation": 4.1,
-            "scale": 0.9,
-            "type": "ruins",
-            "x": 79.83,
-            "z": 392.19
-        },
-        {
             "rotation": 4.7,
             "scale": 0.9,
             "type": "dead_tree",
@@ -3690,13 +3683,6 @@
             "z": 394.62
         },
         {
-            "rotation": 4.7,
-            "scale": 1,
-            "type": "tent",
-            "x": 490.55,
-            "z": 404.40000000000003
-        },
-        {
             "rotation": 3.2,
             "scale": 1,
             "type": "dead_tree",
@@ -3709,13 +3695,6 @@
             "type": "dead_tree",
             "x": 382.02,
             "z": 404.40000000000003
-        },
-        {
-            "rotation": 1.2,
-            "scale": 0.9,
-            "type": "tent",
-            "x": 577.37,
-            "z": 143.5
         },
         {
             "rotation": 4.1,
@@ -3846,13 +3825,6 @@
             "z": 458.53000000000003
         },
         {
-            "rotation": 262,
-            "scale": 0.96,
-            "type": "tent",
-            "x": 608.23,
-            "z": 366.63
-        },
-        {
             "rotation": 149.3,
             "scale": 0.99,
             "type": "supply_cart",
@@ -3883,34 +3855,11 @@
             "z": 427.64
         },
         {
-            "rotation": 147.70000000000002,
-            "scale": 0.89,
-            "type": "supply_cart",
-            "x": 456.90000000000003,
-            "z": 388.96000000000004
-        },
-        {
-            "intensity": 1.35,
-            "persistent": true,
-            "radius": 2.8000000000000003,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 392.63,
-            "z": 23.54
-        },
-        {
             "rotation": 323.7,
             "scale": 1.1,
             "type": "tent",
             "x": 96.97,
             "z": 452.45
-        },
-        {
-            "rotation": 62.2,
-            "scale": 1.11,
-            "type": "weapon_rack",
-            "x": 402.25,
-            "z": 16.52
         },
         {
             "rotation": 215.1,
@@ -4012,13 +3961,6 @@
             "z": 232.41
         },
         {
-            "rotation": 234.6,
-            "scale": 0.9500000000000001,
-            "type": "weapon_rack",
-            "x": 383.59000000000003,
-            "z": 31.39
-        },
-        {
             "rotation": 79.7,
             "scale": 1.06,
             "type": "tent",
@@ -4079,15 +4021,6 @@
             "z": 355.63
         },
         {
-            "intensity": 1.12,
-            "persistent": true,
-            "radius": 2.7,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 374.92,
-            "z": 22.77
-        },
-        {
             "rotation": 78.60000000000001,
             "scale": 0.9500000000000001,
             "type": "supply_cart",
@@ -4107,15 +4040,6 @@
             "type": "supply_cart",
             "x": 442.75,
             "z": 315.27
-        },
-        {
-            "intensity": 1.1500000000000001,
-            "persistent": true,
-            "radius": 2.6,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 121.41,
-            "z": 569.74
         },
         {
             "rotation": 174.4,
@@ -4153,15 +4077,6 @@
             "type": "supply_cart",
             "x": 477.63,
             "z": 219.87
-        },
-        {
-            "intensity": 1.28,
-            "persistent": true,
-            "radius": 2.9,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 424.79,
-            "z": 583.19
         },
         {
             "intensity": 1.07,

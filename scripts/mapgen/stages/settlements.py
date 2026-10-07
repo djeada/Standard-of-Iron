@@ -58,8 +58,7 @@ def _existing(ctx: Context) -> list[Point]:
 
 def _pedestal_near(ctx: Context, p: Point, reach: float) -> dict | None:
     if "terrain" in ctx.locked:
-        # A hilltop settlement grows its hill to fit; a locked hill must not
-        # change, so locked terrain keeps settlements on the flat.
+
         return None
     for hill in ctx.map.get("terrain", []):
         if hill.get("role") == "pedestal" and dist(p, (hill["x"], hill["z"])) < reach:
@@ -128,9 +127,7 @@ def _place(
         }
     radius = settlement_radius(entry)
     if tier != "town" and not exact:
-        # Only a town is big enough to straddle a route: a camp or fort with
-        # the road through its middle has no ground left for a barracks. It
-        # stands beside the route instead and a spur leads in.
+
         origin = _beside_route(ctx, origin, radius)
     if hill:
         spot: Point | None = (float(hill["x"]), float(hill["z"]))
@@ -189,8 +186,7 @@ def _moat_centre(ctx: Context) -> Point | None:
 def synthesise(ctx: Context) -> None:
     params = ctx.params
     field = ctx.field(reserved=False)
-    # Spacing is authored for a standard 650 map; a smaller field scales it
-    # down rather than running out of room for the settlements it asked for.
+
     spacing = float(params["settlements.spacing"]) * min(
         1.0, min(ctx.width, ctx.height) / 650.0
     )
@@ -238,8 +234,7 @@ def synthesise(ctx: Context) -> None:
                 break
             if not 0.2 < site.u < 0.95:
                 continue
-            # The player starts from one camp; every other holding is there to
-            # be taken, and the settlement tool caps the homes a player owns.
+
             owner = 2
             if (
                 _place(ctx, field, ctx.world(site.u, site.v), tier, owner, spacing)

@@ -47,7 +47,7 @@ void main() {
 
   v_color = a_color_rot.rgb;
 
-  v_local_pos = a_pos * scale;
+  v_local_pos = a_pos;
 
   v_seed = soi_hash13_1c8396(world_origin * 0.173 + vec3(rotation, scale, 0.37));
 

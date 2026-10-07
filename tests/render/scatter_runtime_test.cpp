@@ -21,6 +21,7 @@
 #include "render/ground/biome_renderer.h"
 #include "render/ground/boulder_renderer.h"
 #include "render/ground/dead_tree_renderer.h"
+#include "render/ground/firecamp_renderer.h"
 #include "render/ground/iron_ore_renderer.h"
 #include "render/ground/magic_shrine_renderer.h"
 #include "render/ground/plant_renderer.h"
@@ -272,6 +273,77 @@ TEST(ScatterRuntimeTest, CampaniaCampaignMaintainsRichNaturalScatter) {
   EXPECT_LE(boulders.instance_count(), 600U);
 
   terrain.clear();
+}
+
+TEST(ScatterRuntimeTest, CampfiresOnHillsidesSitOnTheGround) {
+  const auto root = find_repo_root();
+  constexpr float k_tolerance = 0.03F;
+  for (const char* map_name : {"map_battle_trebia.json"}) {
+    SCOPED_TRACE(map_name);
+    Game::Map::MapDefinition map_def;
+    QString error;
+    ASSERT_TRUE(Game::Map::MapLoader::load_from_json_file(
+        QString::fromStdString((root / "assets" / "maps" / map_name).string()),
+        map_def,
+        &error))
+        << error.toStdString();
+
+    auto& terrain = Game::Map::TerrainService::instance();
+    terrain.initialize(map_def);
+    auto const* height_map = terrain.get_height_map();
+    ASSERT_NE(height_map, nullptr);
+
+    Render::GL::FireCampRenderer fires;
+    fires.set_world_view(
+        Render::WorldView::of(Game::Session::SessionContext::active()));
+    fires.configure(*height_map, map_def.biome, terrain.world_props());
+    ASSERT_GT(fires.camps().size(), 0U);
+    ASSERT_EQ(fires.camps().size(), fires.camp_decor().size());
+
+    auto ground = [&terrain](const QVector3D& point) {
+      return terrain.resolve_surface_world_y(point.x(), point.z());
+    };
+
+    for (const auto& camp : fires.camps()) {
+      const QVector3D centre = camp.pos_intensity.toVector3D();
+      EXPECT_NEAR(centre.y(), ground(centre), k_tolerance)
+          << "the flame at (" << centre.x() << ", " << centre.z()
+          << ") does not stand on the ground";
+    }
+
+    using Kind = Render::GL::FireCampRenderer::DecorKind;
+    for (const auto& decor : fires.camp_decor()) {
+      for (const auto& piece : decor.cylinders) {
+        const QVector3D middle = (piece.start + piece.end) * 0.5F;
+        for (const QVector3D& point : {piece.start, piece.end, middle}) {
+          const float above = point.y() - ground(point);
+          EXPECT_GT(above, -k_tolerance)
+              << "a campfire piece at (" << point.x() << ", " << point.z()
+              << ") is buried past its middle by " << -above;
+          if (piece.kind != Kind::Log) {
+            EXPECT_LT(above, k_tolerance + piece.radius * 2.8F)
+                << "a campfire piece at (" << point.x() << ", " << point.z()
+                << ") floats " << (above - piece.radius) << " above the ground";
+          }
+        }
+        if (piece.kind == Kind::Log && piece.ember_weight == 0.0F) {
+          EXPECT_LT(piece.start.y() - piece.radius, ground(piece.start) + k_tolerance)
+              << "a log foot at (" << piece.start.x() << ", " << piece.start.z()
+              << ") does not touch the ground";
+        }
+      }
+      for (const auto& stone : decor.stones) {
+        const float above = stone.centre.y() - ground(stone.centre);
+        EXPECT_GT(above, -k_tolerance)
+            << "a hearth stone at (" << stone.centre.x() << ", " << stone.centre.z()
+            << ") is buried past its middle by " << -above;
+        EXPECT_LT(above - stone.half_height, k_tolerance)
+            << "a hearth stone at (" << stone.centre.x() << ", " << stone.centre.z()
+            << ") floats " << (above - stone.half_height) << " above the ground";
+      }
+    }
+    terrain.clear();
+  }
 }
 
 TEST(ScatterRuntimeTest, RuntimePropRefreshDoesNotRescatterPlantsOrStones) {

@@ -14,7 +14,6 @@ from typing import Any, Iterable
 from .context import GENERATED_KEY
 from .geometry import dist
 
-# Arrays a stage owns outright.
 STAGE_ARRAYS: dict[str, tuple[str, ...]] = {
     "terrain": ("terrain",),
     "water": ("rivers", "lakes"),
@@ -25,7 +24,7 @@ STAGE_ARRAYS: dict[str, tuple[str, ...]] = {
     "dressing": ("dressing",),
     "spawns": ("spawns",),
 }
-# Materialiser output, found by the key the tool writes on it.
+
 OUTPUT_KEYS: dict[str, tuple[str, tuple[str, ...]]] = {
     "settlements": ("settlement", ("structures",)),
     "landmarks": ("landmark", ("structures", "world_props", "spawns")),

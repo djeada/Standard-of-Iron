@@ -1,19 +1,19 @@
 {
     "biome": {
         "grass_dry": [
-            0.5,
-            0.49,
-            0.27
+            0.64,
+            0.57,
+            0.32
         ],
         "grass_primary": [
-            0.27,
-            0.43,
-            0.2
+            0.33,
+            0.45,
+            0.21
         ],
         "grass_secondary": [
-            0.38,
+            0.46,
             0.53,
-            0.24
+            0.27
         ],
         "ground_irregularity_enabled": true,
         "ground_type": "grass_dry",
@@ -3842,13 +3842,6 @@
             "z": 585.27
         },
         {
-            "rotation": 192,
-            "scale": 1.1400000000000001,
-            "type": "tent",
-            "x": 168.36,
-            "z": 195.68
-        },
-        {
             "rotation": 15,
             "scale": 1.16,
             "type": "supply_cart",
@@ -3925,13 +3918,6 @@
             "type": "weapon_rack",
             "x": 243.5,
             "z": 551.89
-        },
-        {
-            "rotation": 343.1,
-            "scale": 1.08,
-            "type": "tent",
-            "x": 635.86,
-            "z": 94.21000000000001
         },
         {
             "rotation": 334.6,
@@ -4049,20 +4035,6 @@
             "z": 635.87
         },
         {
-            "rotation": 135.3,
-            "scale": 0.97,
-            "type": "supply_cart",
-            "x": 62.480000000000004,
-            "z": 409.61
-        },
-        {
-            "rotation": 194.5,
-            "scale": 1.1300000000000001,
-            "type": "supply_cart",
-            "x": 515.22,
-            "z": 197.05
-        },
-        {
             "rotation": 167.9,
             "scale": 1.02,
             "type": "supply_cart",
@@ -4100,15 +4072,6 @@
             "type": "supply_cart",
             "x": 543.69,
             "z": 468.85
-        },
-        {
-            "intensity": 1.01,
-            "persistent": true,
-            "radius": 2.6,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 71.99,
-            "z": 408.44
         },
         {
             "rotation": 208.20000000000002,
@@ -4249,13 +4212,6 @@
             "type": "statue",
             "x": 120.39,
             "z": 188.84
-        },
-        {
-            "rotation": 122.10000000000001,
-            "scale": 1.06,
-            "type": "statue",
-            "x": 23.61,
-            "z": 183.16
         },
         {
             "rotation": 18.8,

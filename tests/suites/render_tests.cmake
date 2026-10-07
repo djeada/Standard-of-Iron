@@ -58,6 +58,7 @@ add_executable(
     render/effect_batch_dispatch_test.cpp
     render/spark_direction_test.cpp
     render/linear_feature_geometry_test.cpp
+    render/bridge_water_clearance_test.cpp
     render/road_network_geometry_test.cpp
     render/linear_feature_visibility_test.cpp
     render/ground_utils_test.cpp

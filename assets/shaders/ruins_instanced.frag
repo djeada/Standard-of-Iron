@@ -62,8 +62,8 @@ void main() {
   float hemi = clamp(N.y * 0.5 + 0.5, 0.0, 1.0);
   vec3 sky = environment_sky_color();
   vec3 sun = environment_primary_color() * environment_primary_intensity();
-  vec3 illumination = soi_surface_lighting_scaled(N, 0.68);
-  float ao = mix(0.48, 1.0, hemi) * mix(1.0, 0.68, fracture);
+  vec3 illumination = soi_surface_lighting_scaled(N, 0.84);
+  float ao = mix(0.60, 1.0, hemi) * mix(1.0, 0.76, fracture);
   float specular = pow(max(dot(N, H), 0.0), 28.0) * (0.025 + rain_stain * 0.09);
   float rim = pow(1.0 - max(dot(N, V), 0.0), 4.0) * 0.045;
 

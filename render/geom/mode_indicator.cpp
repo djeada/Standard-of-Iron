@@ -36,7 +36,7 @@ struct KindStyle {
 constexpr std::array<KindStyle, k_indicator_kind_count> k_kind_styles = {{
     {IndicatorKind::Idle, {0.62F, 0.64F, 0.68F}, false},
     {IndicatorKind::Move, {0.50F, 0.86F, 0.98F}, true},
-    {IndicatorKind::Attack, {1.00F, 0.30F, 0.26F}, true},
+    {IndicatorKind::Attack, {0.90F, 0.27F, 0.20F}, true},
     {IndicatorKind::Patrol, {0.98F, 0.90F, 0.56F}, true},
     {IndicatorKind::Guard, {0.34F, 0.56F, 1.00F}, true},
     {IndicatorKind::Hold, {1.00F, 0.60F, 0.16F}, true},

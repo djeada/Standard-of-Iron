@@ -269,7 +269,8 @@ vec3 soi_finish_character(vec3 color,
     color -= sky_color * edge * mix(k_readable_rim_near, k_readable_rim_far, zoom) *
              k_elephant_rim_cancel;
 
-    color += environment_ground_bounce_color() * (1.0 - skylight) * 0.06;
+    color += environment_ground_bounce_color() * (1.0 - skylight) * 0.16;
+    color += base * sky_color * skylight * 0.06;
     color = max(color, vec3(0.0));
 
     vec3 shoulder = vec3(1.0 - k_elephant_highlight_knee);
@@ -347,6 +348,36 @@ const int k_humanoid_hair_role = 8;
 vec3 apply_hair_tone(vec3 base, int material_id, int color_role, vec2 tex) {
   if (material_id == 0 && color_role == k_humanoid_hair_role && tex.x > 0.0) {
     return base * tex.x;
+  }
+  return base;
+}
+
+const float k_face_cranium_uv = -6.0;
+const float k_face_jaw_uv = -9.0;
+const vec3 k_face_ink = vec3(0.055, 0.045, 0.040);
+
+float face_mark(float d, float radius) {
+  float aa = max(fwidth(d), 1.0e-4);
+  return 1.0 - smoothstep(radius - aa, radius + aa, d);
+}
+
+vec3 apply_playmobil_face(vec3 base, int material_id, int color_role, vec2 tex) {
+  if (material_id != 0 || color_role != k_humanoid_role_skin || tex.x > -4.5 ||
+      tex.x < -10.5 || tex.y > 1.5) {
+    return base;
+  }
+  float on_cranium = tex.x - k_face_cranium_uv;
+  if (abs(on_cranium) <= 1.05) {
+    vec2 p = vec2(abs(on_cranium), tex.y);
+    float eye = face_mark(length((p - vec2(0.33, 0.05)) * vec2(1.0, 0.82)), 0.085);
+    return mix(base, k_face_ink, eye);
+  }
+  float on_jaw = tex.x - k_face_jaw_uv;
+  if (abs(on_jaw) <= 1.05) {
+    vec2 p = vec2(on_jaw, tex.y);
+    float arc = abs(length(p - vec2(0.0, 0.95)) - 0.62);
+    float smile = face_mark(arc, 0.045) * (1.0 - smoothstep(0.26, 0.34, abs(p.x)));
+    return mix(base, base * 0.42, smile);
   }
   return base;
 }

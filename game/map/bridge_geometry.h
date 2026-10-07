@@ -104,6 +104,101 @@ bridge_visual_landing_run(float bridge_width) -> float {
       river.start, river.end, river.width, t, k_river_ribbon_shape);
 }
 
+[[nodiscard]] inline constexpr auto drawn_lake_padding(float tile_size) -> float {
+  return std::max(tile_size, 0.15F);
+}
+
+[[nodiscard]] inline auto drawn_water_level_at(const std::vector<RiverSegment>& rivers,
+                                               const std::vector<Lake>& lakes,
+                                               float lake_padding,
+                                               float world_x,
+                                               float world_z) -> std::optional<float> {
+  std::optional<float> level;
+  const auto raise = [&level](float candidate) {
+    level = level.has_value() ? std::max(*level, candidate) : candidate;
+  };
+
+  for (const RiverSegment& river : rivers) {
+    float const delta_x = river.end.x() - river.start.x();
+    float const delta_z = river.end.z() - river.start.z();
+    float const length_sq = (delta_x * delta_x) + (delta_z * delta_z);
+    float const t = length_sq < 1.0e-8F
+                        ? 0.0F
+                        : std::clamp((((world_x - river.start.x()) * delta_x) +
+                                      ((world_z - river.start.z()) * delta_z)) /
+                                         length_sq,
+                                     0.0F,
+                                     1.0F);
+    if (std::hypot(world_x - (river.start.x() + delta_x * t),
+                   world_z - (river.start.z() + delta_z * t)) >
+        river_drawn_half_width(river.width)) {
+      continue;
+    }
+    RibbonCrossSection const section = river_drawn_cross_section(river, t);
+    if (std::hypot(world_x - section.center.x(), world_z - section.center.z()) >
+        section.half_width) {
+      continue;
+    }
+    raise(river.start.y() + (river.end.y() - river.start.y()) * t);
+  }
+
+  for (const Lake& lake : lakes) {
+    if (point_in_lake(lake, world_x, world_z, lake_padding)) {
+      raise(lake.center.y());
+    }
+  }
+  return level;
+}
+
+inline constexpr float k_bridge_deck_flare = 1.25F;
+
+[[nodiscard]] inline auto
+drawn_water_level_under_bridge(const Bridge& bridge,
+                               const std::vector<RiverSegment>& rivers,
+                               const std::vector<Lake>& lakes,
+                               float lake_padding,
+                               float along_from,
+                               float along_to) -> std::optional<float> {
+  QVector3D direction = bridge.end - bridge.start;
+  direction.setY(0.0F);
+  float const length = direction.length();
+  if (length < 1.0e-4F || along_to < along_from) {
+    return std::nullopt;
+  }
+  direction /= length;
+  QVector3D const perpendicular(-direction.z(), 0.0F, direction.x());
+  float const half_width =
+      std::max(bridge.width, k_min_bridge_width) * 0.5F * k_bridge_deck_flare;
+
+  constexpr float k_sample_spacing = 0.5F;
+  int const along_samples = std::max(
+      1, static_cast<int>(std::ceil((along_to - along_from) / k_sample_spacing)));
+  int const lateral_samples =
+      std::max(2, static_cast<int>(std::ceil(half_width * 2.0F / k_sample_spacing)));
+
+  std::optional<float> level;
+  for (int along_index = 0; along_index <= along_samples; ++along_index) {
+    float const along = along_from + (along_to - along_from) *
+                                         static_cast<float>(along_index) /
+                                         static_cast<float>(along_samples);
+    for (int lateral_index = 0; lateral_index <= lateral_samples; ++lateral_index) {
+      float const lateral =
+          half_width *
+          ((static_cast<float>(lateral_index) / static_cast<float>(lateral_samples)) *
+               2.0F -
+           1.0F);
+      QVector3D const point =
+          bridge.start + direction * along + perpendicular * lateral;
+      if (auto const water =
+              drawn_water_level_at(rivers, lakes, lake_padding, point.x(), point.z());
+          water.has_value() && (!level.has_value() || *water > *level)) {
+        level = water;
+      }
+    }
+  }
+  return level;
+}
+
 struct RiverWaterReach {
   float behind = 0.0F;
   float ahead = 0.0F;
@@ -282,6 +377,13 @@ inline constexpr float k_river_bank_max_grade = 0.35F;
 inline constexpr float k_river_bank_max_blend_cells = 26.0F;
 
 inline constexpr float k_bridge_deck_visual_lift = 0.12F;
+
+inline constexpr float k_bridge_water_clearance = 0.10F;
+
+[[nodiscard]] inline constexpr auto
+bridge_abutment_floor_over_water(float water_level) -> float {
+  return water_level + k_bridge_water_clearance - k_bridge_deck_visual_lift;
+}
 
 inline constexpr float k_bridge_landing_thickness = 0.06F;
 

@@ -94,7 +94,7 @@ void main() {
   cavity *= mix(1.0, 0.95, streaks);
   cavity *= mix(1.0, 0.92, grime);
 
-  vec3 illumination = environment_ambient_light(N) * 1.38 * environment_exposure() +
+  vec3 illumination = environment_ambient_light(N) * 1.12 * environment_exposure() +
                       soi_key_light(N) * 0.86 * environment_exposure() + subsurface;
   float gloss = mix(0.020, 0.052, figure) * (1.0 + environment_wetness() * 1.8);
   float specular = pow(max(dot(N, H), 0.0), mix(22.0, 52.0, figure)) * gloss;
