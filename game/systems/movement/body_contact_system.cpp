@@ -87,6 +87,10 @@ auto body_yields_when_idle(const Engine::Core::World& world,
       world.has<Engine::Core::BuilderProductionComponent>(id)) {
     return false;
   }
+  if (const auto* unit = world.try_get<Engine::Core::UnitComponent>(id);
+      unit != nullptr && Game::Units::is_siege_engine_spawn(unit->spawn_type)) {
+    return false;
+  }
   const auto* movement = world.try_get<Engine::Core::MovementComponent>(id);
   return movement != nullptr && !movement->get_has_target();
 }

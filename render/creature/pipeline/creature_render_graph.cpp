@@ -498,6 +498,7 @@ void CreatureRenderBatch::add_humanoid(
   req.upper_body_overlay.clip_id =
       selection.upper_body_overlay.clip_id.value_or(Animation::k_unmapped_clip);
   req.upper_body_overlay.mode = selection.upper_body_overlay.mode;
+  req.transition = selection.transition;
   requests_.push_back(req);
 }
 
@@ -657,11 +658,21 @@ void CreatureRenderBatch::add_quadruped(const PreparedWildlifeBodyState& state) 
 }
 
 void CreatureRenderBatch::add_quadruped(const PreparedElephantBodyState& state) {
+  std::size_t const before = requests_.size();
   add_quadruped(state.graph,
                 state.variant,
                 state.animation_state,
                 state.phase,
                 state.clip_variant);
+  if (state.outgoing_weight <= 0.0F || requests_.size() == before) {
+    return;
+  }
+  auto& req = requests_.back();
+  req.full_body_blend.archetype = req.archetype;
+  req.full_body_blend.state = state.outgoing_state;
+  req.full_body_blend.phase = state.outgoing_phase;
+  req.full_body_blend.weight = std::clamp(state.outgoing_weight, 0.0F, 1.0F);
+  req.full_body_blend.mode = Render::Creature::PlaybackLayerMode::FullBodyBlend;
 }
 
 void CreatureRenderBatch::add_request(

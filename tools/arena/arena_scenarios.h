@@ -56,6 +56,22 @@ inline constexpr char k_hold_stance_review_id[] = "hold_stance_review";
 inline constexpr char k_hold_toggle_cycle_id[] = "hold_toggle_cycle";
 inline constexpr char k_hold_transition_interrupts_id[] = "hold_transition_interrupts";
 inline constexpr char k_lod_switch_id[] = "lod_switch";
+inline constexpr char k_transition_gauntlet_infantry_id[] =
+    "transition_gauntlet_infantry";
+inline constexpr char k_transition_gauntlet_archers_id[] =
+    "transition_gauntlet_archers";
+inline constexpr char k_transition_gauntlet_cavalry_id[] =
+    "transition_gauntlet_cavalry";
+inline constexpr char k_transition_gauntlet_elephants_id[] =
+    "transition_gauntlet_elephants";
+inline constexpr char k_transition_gauntlet_builders_id[] =
+    "transition_gauntlet_builders";
+inline constexpr char k_transition_gauntlet_civilians_id[] =
+    "transition_gauntlet_civilians";
+inline constexpr char k_transition_gauntlet_commander_id[] =
+    "transition_gauntlet_commander";
+inline constexpr char k_transition_gauntlet_flanked_id[] =
+    "transition_gauntlet_flanked";
 inline constexpr char k_commander_aura_pulse_id[] = "commander_aura_pulse";
 inline constexpr char k_rpg_melee_contact_id[] = "rpg_melee_contact";
 inline constexpr char k_rpg_defense_contact_id[] = "rpg_defense_contact";

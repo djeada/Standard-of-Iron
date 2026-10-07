@@ -421,6 +421,30 @@ void lerp_local_pose(LocalPose& io,
   }
 }
 
+void lerp_local_pose_by_region(
+    LocalPose& io,
+    std::span<const Render::Creature::Bpat::LocalBonePose> layer,
+    std::uint32_t bone_count,
+    float upper_body_weight,
+    float lower_body_weight,
+    const Render::Creature::SkeletonBlendProfile* blend_profile,
+    std::uint64_t flipped_bones) noexcept {
+  for (std::uint32_t bone = 0; bone < bone_count && bone < layer.size(); ++bone) {
+    bool const upper =
+        blend_profile == nullptr || blend_profile->upper_body.contains(bone);
+    float const weight = upper ? upper_body_weight : lower_body_weight;
+    if (weight <= 0.0F) {
+      continue;
+    }
+    io[bone].rotation = slerp_in_hemisphere(io[bone].rotation,
+                                            layer[bone].rotation,
+                                            weight,
+                                            ((flipped_bones >> bone) & 1ULL) != 0ULL);
+    io[bone].translation =
+        io[bone].translation * (1.0F - weight) + layer[bone].translation * weight;
+  }
+}
+
 auto sample_local_pose(const Render::Creature::Bpat::BpatBlob& blob,
                        const ResolvedRequestPlayback& playback,
                        std::uint32_t bone_count,
@@ -474,8 +498,8 @@ auto skin_palette_from_local_pose(const Render::Creature::Bpat::BpatBlob& blob,
 
 struct PaletteBlendKey {
   const Render::GL::RiggedMeshEntry* entry{nullptr};
-  std::array<std::uint32_t, 6> frames{};
-  std::array<std::uint32_t, 5> buckets{};
+  std::array<std::uint32_t, 12> frames{};
+  std::array<std::uint32_t, 16> buckets{};
   std::array<std::uint64_t, 2> flipped_bones{};
 
   auto operator==(const PaletteBlendKey& other) const noexcept -> bool {
@@ -690,6 +714,73 @@ void attach_owned_palette(
   cmd.palette_offset = 0U;
 }
 
+struct ResolvedTransition {
+  std::array<ResolvedRequestPlayback, Render::Creature::k_transition_source_count>
+      sources{};
+  std::array<float, Render::Creature::k_transition_source_count> upper_shares{};
+  std::array<float, Render::Creature::k_transition_source_count> lower_shares{};
+  float upper_body_weight{0.0F};
+  float lower_body_weight{0.0F};
+
+  [[nodiscard]] auto active() const noexcept -> bool {
+    return sources[0].valid() && std::max(upper_body_weight, lower_body_weight) > 0.0F;
+  }
+};
+
+void blend_transition_into(
+    LocalPose& pose,
+    const Render::Creature::Bpat::BpatBlob& blob,
+    const ResolvedTransition& transition,
+    float upper_body_weight,
+    float lower_body_weight,
+    std::uint32_t bone_count,
+    const Render::Creature::SkeletonBlendProfile* blend_profile) {
+  LocalPose outgoing{};
+  float upper_total = 0.0F;
+  float lower_total = 0.0F;
+  bool seeded = false;
+  for (std::size_t index = 0; index < transition.sources.size(); ++index) {
+    auto const& source = transition.sources[index];
+    float const upper = transition.upper_shares[index];
+    float const lower = transition.lower_shares[index];
+    if (!source.valid() || std::max(upper, lower) <= 0.0F) {
+      continue;
+    }
+    if (!seeded) {
+      if (!sample_local_pose(blob, source, bone_count, outgoing)) {
+        return;
+      }
+      seeded = true;
+    } else {
+      LocalPose layer{};
+      if (!sample_local_pose(blob, source, bone_count, layer)) {
+        continue;
+      }
+      float const upper_mix = upper > 0.0F ? upper / (upper_total + upper) : 0.0F;
+      float const lower_mix = lower > 0.0F ? lower / (lower_total + lower) : 0.0F;
+      lerp_local_pose_by_region(outgoing,
+                                layer,
+                                bone_count,
+                                upper_mix,
+                                lower_mix,
+                                blend_profile,
+                                shortest_path_flips(outgoing, layer, bone_count));
+    }
+    upper_total += upper;
+    lower_total += lower;
+  }
+  if (!seeded) {
+    return;
+  }
+  lerp_local_pose_by_region(pose,
+                            outgoing,
+                            bone_count,
+                            upper_body_weight,
+                            lower_body_weight,
+                            blend_profile,
+                            shortest_path_flips(pose, outgoing, bone_count));
+}
+
 void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
                             CreatureLOD lod,
                             ArchetypeId archetype,
@@ -708,6 +799,7 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
                             const ResolvedRequestPlayback& primary_playback,
                             const ResolvedRequestPlayback* full_body_blend,
                             const ResolvedRequestPlayback* upper_body_overlay,
+                            const ResolvedTransition* transition,
                             float full_body_blend_weight,
                             float upper_body_overlay_weight,
                             std::uint32_t entity_id,
@@ -744,7 +836,8 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
       (full_body_blend != nullptr && full_body_blend->valid() &&
        full_body_blend_weight > 0.0F) ||
       (upper_body_overlay != nullptr && upper_body_overlay->valid() &&
-       upper_body_overlay_weight > 0.0F);
+       upper_body_overlay_weight > 0.0F) ||
+      (transition != nullptr && transition->active());
   const auto* skin_atlas = entry->skin_atlas.get();
   if (skin_atlas == nullptr) {
     return;
@@ -797,11 +890,12 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
   const bool overlay_active = upper_body_overlay != nullptr &&
                               upper_body_overlay->valid() &&
                               upper_body_overlay_weight > 0.0F;
+  const bool transition_active = transition != nullptr && transition->active();
   const std::uint32_t primary_lerp_bucket =
       blend_weight_bucket(primary_playback.frame_lerp);
   const bool needs_owned_palette =
-      !use_resident_frames &&
-      (primary_lerp_bucket != 0U || full_body_active || overlay_active);
+      !use_resident_frames && (primary_lerp_bucket != 0U || full_body_active ||
+                               overlay_active || transition_active);
   if (needs_owned_palette) {
     PaletteBlendKey key{};
     key.entry = entry;
@@ -822,6 +916,25 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
       key.buckets[4] =
           blend_weight_bucket(upper_body_overlay_weight, k_layer_weight_buckets);
     }
+    if (transition_active) {
+      for (std::size_t index = 0; index < transition->sources.size(); ++index) {
+        auto const& source = transition->sources[index];
+        if (!source.valid()) {
+          continue;
+        }
+        key.frames[6 + index * 2] = source.global_frame;
+        key.frames[7 + index * 2] = source.next_global_frame;
+        key.buckets[5 + index * 3] = blend_weight_bucket(source.frame_lerp);
+        key.buckets[6 + index * 3] = blend_weight_bucket(
+            transition->upper_shares[index], k_layer_weight_buckets);
+        key.buckets[7 + index * 3] = blend_weight_bucket(
+            transition->lower_shares[index], k_layer_weight_buckets);
+      }
+      key.buckets[14] =
+          blend_weight_bucket(transition->upper_body_weight, k_layer_weight_buckets);
+      key.buckets[15] =
+          blend_weight_bucket(transition->lower_body_weight, k_layer_weight_buckets);
+    }
     const std::uint32_t bone_count = std::min<std::uint32_t>(
         skin_atlas->bone_count, Render::GL::RiggedCreatureCmd::k_max_owned_bones);
     const auto* blend_profile = asset->blend_profile;
@@ -835,8 +948,8 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
         return;
       }
       std::uint64_t const layer_key =
-          (static_cast<std::uint64_t>(entity_id) << 17U) |
-          (static_cast<std::uint64_t>(instance_index) << 1U) | slot;
+          (static_cast<std::uint64_t>(entity_id) << 18U) |
+          (static_cast<std::uint64_t>(instance_index) << 2U) | slot;
       key.flipped_bones[slot] =
           entity_id != 0U ? blend_hemispheres().flipped_bones(
                                 layer_key, playback.clip_id, pose, layer, bone_count)
@@ -859,6 +972,16 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
                     blend_bucket_weight(key.buckets[2], k_layer_weight_buckets),
                     false);
       }
+      if (transition_active) {
+        blend_transition_into(
+            pose,
+            blob,
+            *transition,
+            blend_bucket_weight(key.buckets[14], k_layer_weight_buckets),
+            blend_bucket_weight(key.buckets[15], k_layer_weight_buckets),
+            bone_count,
+            blend_profile);
+      }
       if (overlay_active) {
         blend_layer(*upper_body_overlay,
                     1U,
@@ -867,7 +990,7 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
       }
       return true;
     };
-    bool const layered = full_body_active || overlay_active;
+    bool const layered = full_body_active || overlay_active || transition_active;
     bool const layered_pose_ready = layered && compose_pose();
     OwnedPalette owned = blend_cache().get_or_compute(key, [&]() -> OwnedPalette {
       if (layered ? !layered_pose_ready : !compose_pose()) {
@@ -1168,6 +1291,7 @@ auto CreaturePipeline::submit_requests(
     }
     ResolvedRequestPlayback full_body{};
     ResolvedRequestPlayback overlay{};
+    ResolvedTransition transition{};
     {
       Render::Profiling::AccumulatorScope const playback_scope(
           &profile.bpat_playback_us);
@@ -1189,6 +1313,25 @@ auto CreaturePipeline::submit_requests(
                                            req.upper_body_overlay.clip_variant,
                                            req.upper_body_overlay.clip_id);
       }
+      if (req.transition.active()) {
+        for (std::size_t index = 0; index < req.transition.sources.size(); ++index) {
+          auto const& source = req.transition.sources[index];
+          if (source.clip_id == Animation::k_unmapped_clip) {
+            continue;
+          }
+          transition.sources[index] = resolve_request_playback(*handle,
+                                                               req.creature_asset_id,
+                                                               req.transition.archetype,
+                                                               source.state,
+                                                               source.phase,
+                                                               source.clip_variant,
+                                                               source.clip_id);
+          transition.upper_shares[index] = source.upper_body_share;
+          transition.lower_shares[index] = source.lower_body_share;
+        }
+        transition.upper_body_weight = req.transition.upper_body_weight;
+        transition.lower_body_weight = req.transition.lower_body_weight;
+      }
     }
 
     QMatrix4x4 draw_world = req.world;
@@ -1199,6 +1342,23 @@ auto CreaturePipeline::submit_requests(
         float const blend_weight = std::clamp(req.full_body_blend.weight, 0.0F, 1.0F);
         contact_y =
             contact_y * (1.0F - blend_weight) + secondary_contact * blend_weight;
+      }
+      if (transition.active()) {
+        float outgoing_contact = 0.0F;
+        float outgoing_share = 0.0F;
+        for (std::size_t index = 0; index < transition.sources.size(); ++index) {
+          if (transition.sources[index].valid()) {
+            outgoing_contact += contact_y_for_playback(transition.sources[index]) *
+                                transition.lower_shares[index];
+            outgoing_share += transition.lower_shares[index];
+          }
+        }
+        if (outgoing_share > 1.0e-4F) {
+          float const outgoing_weight =
+              std::clamp(transition.lower_body_weight, 0.0F, 1.0F);
+          contact_y = contact_y * (1.0F - outgoing_weight) +
+                      (outgoing_contact / outgoing_share) * outgoing_weight;
+        }
       }
       if (std::abs(contact_y) > 1.0e-6F) {
         QMatrix4x4 adjusted = req.world;
@@ -1218,6 +1378,9 @@ auto CreaturePipeline::submit_requests(
     if (req.upper_body_overlay.active() && overlay.valid()) {
       ++stats.upper_body_overlay_requests;
     }
+    if (transition.active()) {
+      ++stats.transition_blend_requests;
+    }
 
     const bool use_snapshot_mesh = snapshot_mesh_serves_request(
         req.lod,
@@ -1226,9 +1389,28 @@ auto CreaturePipeline::submit_requests(
         Render::GraphicsSettings::instance().creature_lod().snapshot_meshes);
     if (use_snapshot_mesh) {
       auto snapshot_playback = primary;
-      if (req.full_body_blend.active() && full_body.valid() &&
-          req.full_body_blend.weight >= 0.5F) {
+      float const outgoing_weight =
+          transition.active() ? std::clamp(transition.upper_body_weight, 0.0F, 1.0F)
+                              : 0.0F;
+      float const blend_weight =
+          req.full_body_blend.active() && full_body.valid()
+              ? std::clamp(req.full_body_blend.weight, 0.0F, 1.0F)
+              : 0.0F;
+      float best_share = (1.0F - outgoing_weight) * (1.0F - blend_weight);
+      float const blend_share = (1.0F - outgoing_weight) * blend_weight;
+      if (blend_share >= best_share && blend_weight > 0.0F) {
         snapshot_playback = full_body;
+        best_share = blend_share;
+      }
+      for (std::size_t index = 0; index < transition.sources.size(); ++index) {
+        float const share = outgoing_weight * transition.upper_shares[index];
+        if (transition.sources[index].valid() && share > best_share) {
+          snapshot_playback = transition.sources[index];
+          best_share = share;
+        }
+      }
+      if (snapshot_playback.clip_id != primary.clip_id ||
+          snapshot_playback.global_frame != primary.global_frame) {
         ++stats.dominant_snapshot_collapses;
       }
       const bool emitted =
@@ -1305,6 +1487,7 @@ auto CreaturePipeline::submit_requests(
                            primary,
                            full_body.valid() ? &full_body : nullptr,
                            overlay.valid() ? &overlay : nullptr,
+                           transition.active() ? &transition : nullptr,
                            req.full_body_blend.weight,
                            req.upper_body_overlay.weight,
                            req.entity_id,

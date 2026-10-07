@@ -1464,6 +1464,41 @@ TEST_F(FormationCombatGeometry, AStrandedBuilderWalksInsteadOfTeleportingToHisPo
   }
 }
 
+TEST_F(FormationCombatGeometry,
+       AStrandedSoldierWalksBackInsteadOfTeleportingToHisSlot) {
+  Engine::Core::TransformComponent root;
+  Engine::Core::FormationPresentationComponent formation;
+  formation.motion_root_valid = true;
+  Engine::Core::FormationSoldierPresentation previous;
+  previous.alive = true;
+  previous.world_motion_valid = true;
+  previous.world_x = -14.0F;
+  previous.world_yaw = 90.0F;
+  std::vector<Engine::Core::FormationSoldierPresentation> neighbors{previous};
+  std::vector<Game::Systems::Combat::ForeignSoldier> foreign;
+  for (bool mounted : {false, true}) {
+    auto next = previous;
+    next.local_x = 0.0F;
+    next.local_z = 0.0F;
+    Game::Systems::Combat::walk_formation_slot({.actor = root,
+                                                .formation = formation,
+                                                .neighbors = neighbors,
+                                                .foreign_neighbors = foreign,
+                                                .squad_speed = 2.0F,
+                                                .march_speed = 2.0F,
+                                                .spacing = 0.6F,
+                                                .mounted = mounted,
+                                                .delta_time = 0.05F},
+                                               &previous,
+                                               next);
+    float const step =
+        std::hypot(next.world_x - previous.world_x, next.world_z - previous.world_z);
+    EXPECT_GT(step, 0.0F) << "a stranded soldier still makes for his slot";
+    EXPECT_LT(step, 0.5F) << "but he walks there instead of appearing in it";
+    EXPECT_LT(next.world_x, -13.0F);
+  }
+}
+
 TEST_F(FormationCombatGeometry, RepairAndDismantlePostsSurroundTheTargetBuilding) {
   Engine::Core::World world;
   auto* entity = add_spearmen(world, 1, 0.0F, 0.0F);

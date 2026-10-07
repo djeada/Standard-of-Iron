@@ -55,6 +55,12 @@ auto expectation(ArenaExpectationKind kind,
 void add_visual_stability(ArenaScenarioDefinition& scenario,
                           std::initializer_list<QString> groups);
 
+void add_transition_continuity(ArenaScenarioDefinition& scenario,
+                               std::initializer_list<QString> groups);
+
+void add_motion_smoothness(ArenaScenarioDefinition& scenario,
+                           std::initializer_list<QString> groups);
+
 void add_commander_control_metrics(ArenaScenarioDefinition& scenario,
                                    const QString& commander_group);
 

@@ -24,7 +24,8 @@ class UnitComponent;
 
 namespace Render::Creature::Pipeline {
 struct CreaturePreparationResult;
-}
+struct HumanoidAnimationSelection;
+} // namespace Render::Creature::Pipeline
 
 namespace Render::GL {
 struct DrawContext;
@@ -132,6 +133,7 @@ public:
       const HumanoidAnimationContext& anim_ctx,
       std::uint32_t seed,
       Render::Creature::CreatureLOD lod,
+      const Render::Creature::Pipeline::HumanoidAnimationSelection* resolved_selection,
       Render::Creature::Pipeline::CreaturePreparationResult& out) const;
 
 protected:

@@ -11,6 +11,7 @@
 #include <QTextStream>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <limits>
 #include <numbers>
@@ -96,6 +97,17 @@ struct ArenaScenarioRunner::Impl {
     bool melee_lock{false};
     bool initialized{false};
   };
+  struct MotionQualityState {
+    QVector3D position;
+    QVector3D last_step;
+    float yaw{0.0F};
+    float last_yaw_step{0.0F};
+    float observed_at{0.0F};
+    int fast_rotation_frames{0};
+    std::vector<float> facing_reversals;
+    std::vector<float> position_reversals;
+    bool initialized{false};
+  };
   struct SoldierState {
     QVector3D root_position;
     QVector3D hand_l_world;
@@ -104,7 +116,18 @@ struct ArenaScenarioRunner::Impl {
     QVector3D foot_r_world;
     float pelvis_yaw_degrees{0.0F};
     float locomotion_presence{0.0F};
+    float cycle_phase{0.0F};
+    float attack_phase{0.0F};
+    float attack_exit_phase{0.0F};
+    float attack_exit_at{-1.0F};
+    bool attack_exit_is_melee{false};
+    bool attack_is_melee{false};
+    bool hit_since_attack_exit{false};
+    bool walked_since_attack_exit{false};
+    std::array<QVector3D, 4> local_joints{};
+    std::array<float, 4> local_joint_steps{};
     bool joints_valid{false};
+    bool dying{false};
     float attack_pelvis_yaw_min{0.0F};
     float attack_pelvis_yaw_max{0.0F};
     bool attack_yaw_tracked{false};
@@ -172,6 +195,8 @@ struct ArenaScenarioRunner::Impl {
     bool submitted_body_pose_valid{false};
     QVector3D foot_l_world;
     QVector3D foot_r_world;
+    QVector3D hand_l_world;
+    QVector3D hand_r_world;
     float locomotion_blend{0.0F};
     float locomotion_presence{0.0F};
     float cycle_phase{0.0F};
@@ -192,6 +217,10 @@ struct ArenaScenarioRunner::Impl {
     std::uint32_t transitions{0};
     bool culled{false};
     QString cull_reason;
+    int lod{0};
+    float pelvis_yaw_degrees{0.0F};
+    float torso_yaw_degrees{0.0F};
+    bool attack_is_melee{false};
   };
   struct TraceAnimal {
     Engine::Core::EntityID entity_id{0};
@@ -297,6 +326,7 @@ struct ArenaScenarioRunner::Impl {
   std::vector<StepRuntime> steps;
   QHash<Engine::Core::EntityID, CommandResponse> responses;
   QHash<Engine::Core::EntityID, EntityState> entity_states;
+  QHash<Engine::Core::EntityID, MotionQualityState> motion_states;
   QHash<std::uint64_t, SoldierState> soldier_states;
   QHash<Engine::Core::EntityID, QSet<int>> sampled_soldiers_by_entity;
   QSet<Engine::Core::EntityID> entities_with_render_samples;
@@ -554,6 +584,7 @@ struct ArenaScenarioRunner::Impl {
   static auto travel_key(const ArenaExpectation& expectation) -> QString;
   void observe_rpg_travel(const TraceFrame& frame);
   void observe_group_pair_proximity(const TraceFrame& frame);
+  void observe_motion_quality(Engine::Core::EntityID entity_id, const QString& group);
   void observe_soldiers(Engine::Core::EntityID entity_id,
                         const QString& group,
                         TraceFrame& frame);

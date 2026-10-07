@@ -37,6 +37,7 @@ void main() {
     base *= texture(u_texture, v_tex).rgb;
   }
   base = apply_hair_tone(base, u_material_id, color_role, v_tex);
+  base = apply_pelt_pattern(base, v_tex);
   float zoom = readable_zoom(v_pos_ws);
 
   vec4 readable_wear = v_wear_params;

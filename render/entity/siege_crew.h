@@ -12,6 +12,7 @@ enum class SiegeCrewMode : std::uint8_t {
   Rest,
   Push,
   Load,
+  Fallen,
 };
 
 struct SiegeCrewMember {
@@ -53,6 +54,9 @@ struct SiegeCrewFrame {
   bool firing{false};
   float loading_time{0.0F};
   float loading_progress{0.0F};
+  bool destroyed{false};
+  float destroyed_elapsed{0.0F};
+  float sink_offset{0.0F};
 };
 
 [[nodiscard]] auto siege_crew_size(bool ballista) noexcept -> std::size_t;

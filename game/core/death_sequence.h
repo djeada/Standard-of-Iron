@@ -5,6 +5,7 @@
 
 #include "../units/spawn_type.h"
 #include "animation/death_pose_manifest.h"
+#include "animation/siege_wreck_manifest.h"
 #include "component_economy.h"
 #include "component_gameplay.h"
 #include "entity.h"
@@ -111,6 +112,9 @@ resolve_death_profile(const UnitComponent* unit,
   if (unit->spawn_type == SpawnType::Elephant) {
     return DeathSequenceProfile::Elephant;
   }
+  if (Game::Units::is_siege_engine_spawn(unit->spawn_type)) {
+    return DeathSequenceProfile::SiegeEngine;
+  }
   if (unit->spawn_type == SpawnType::MountedSwordsman ||
       unit->spawn_type == SpawnType::HorseArcher ||
       unit->spawn_type == SpawnType::HorseSpearman) {
@@ -147,6 +151,12 @@ resolve_death_timing(DeathSequenceProfile profile,
     timing.state_duration = 1.50F;
     timing.dead_hold_duration = 10.0F;
     timing.sink_duration = 2.4F;
+    break;
+  case DeathSequenceProfile::SiegeEngine:
+    timing.state_duration = Animation::k_siege_wreck_collapse_seconds;
+    timing.dead_hold_duration = Animation::k_siege_wreck_hold_seconds;
+    timing.sink_duration = Animation::k_siege_wreck_sink_seconds;
+    timing.sequence_variant = variant;
     break;
   case DeathSequenceProfile::Structure:
     timing.state_duration = k_structure_collapse_duration;

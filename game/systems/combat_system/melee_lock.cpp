@@ -336,7 +336,7 @@ void reciprocate_melee_lock(Engine::Core::World* world,
                             Engine::Core::Entity* target,
                             bool keep_when_locked_on_attacker) {
   auto* target_atk = world->try_get<Engine::Core::AttackComponent>(target->get_id());
-  if (target_atk == nullptr) {
+  if (target_atk == nullptr || !target_atk->can_melee) {
     return;
   }
   if (world->has<Engine::Core::WildlifeComponent>(target->get_id())) {
@@ -372,7 +372,8 @@ auto enter_melee_lock(Engine::Core::Entity* attacker,
                       Engine::Core::World* world,
                       float delta_time,
                       FacingLedger& ledger) -> bool {
-  if ((attacker == nullptr) || (target == nullptr) || (attack_comp == nullptr)) {
+  if ((attacker == nullptr) || (target == nullptr) || (attack_comp == nullptr) ||
+      !attack_comp->can_melee) {
     return false;
   }
 

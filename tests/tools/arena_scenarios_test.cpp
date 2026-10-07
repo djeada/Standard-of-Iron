@@ -158,6 +158,18 @@ TEST(ArenaScenariosTest, ListsAllPhaseOneScenarioIds) {
     EXPECT_NE(std::find(ids.begin(), ids.end(), QString::fromLatin1(transition_id)),
               ids.end());
   }
+  for (auto const* gauntlet_id :
+       {Arena::Scenarios::k_transition_gauntlet_infantry_id,
+        Arena::Scenarios::k_transition_gauntlet_archers_id,
+        Arena::Scenarios::k_transition_gauntlet_cavalry_id,
+        Arena::Scenarios::k_transition_gauntlet_elephants_id,
+        Arena::Scenarios::k_transition_gauntlet_builders_id,
+        Arena::Scenarios::k_transition_gauntlet_civilians_id,
+        Arena::Scenarios::k_transition_gauntlet_flanked_id,
+        Arena::Scenarios::k_transition_gauntlet_commander_id}) {
+    EXPECT_NE(std::find(ids.begin(), ids.end(), QString::fromLatin1(gauntlet_id)),
+              ids.end());
+  }
   EXPECT_NE(std::find(ids.begin(),
                       ids.end(),
                       QString::fromLatin1(Arena::Scenarios::k_melee_lock_id)),

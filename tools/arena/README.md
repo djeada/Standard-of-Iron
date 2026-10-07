@@ -379,6 +379,53 @@ the slow close views to inspect paws and transitions. Keep the recorded clips
 and their manifest together when comparing later changes; periodic batch PNGs
 are sampled on a wall-clock timer and are not exact simulation-frame baselines.
 
+## Transition gauntlets
+
+```bash
+for s in infantry archers cavalry elephants builders civilians flanked commander; do
+  build/bin/arena_app --batch --scenario transition_gauntlet_$s \
+    --capture-interval 0 --animation-diagnostics --artifact-dir artifacts/gauntlet
+done
+```
+
+Each `transition_gauntlet_*` scenario gives its subjects a new order every
+half second or so — replanned marches, runs, stops, reversals, hold toggles,
+attacks, retargets, work orders and interruptions, a camera pull across the LOD
+bands — and fails on any visible cut: a stride restarting
+(`locomotion_phase_restart`), a swing restarting before it lands
+(`attack_presentation_restart`), a hand or foot jumping in the body frame
+(`body_pose_snap`), plus the usual root, weapon-hand, pelvis and planted-foot
+checks. `transition_gauntlet_flanked` is one 12-man swordsman unit fighting a
+commander, a civilian and a healer on two flanks and the rear.
+
+A failure names the joint and the animation state. To see why, read the
+soldier's frames out of `trace.jsonl` (`hand_*_world`, `foot_*_world`,
+`root_yaw_degrees`, `cycle_phase`, `attack_phase`, `lod`) and remove the root
+translation and yaw: a pose that changes between two frames with no matching
+change in the requested clips is a selection or compositing bug, and one
+that changes with the clips is a missing transition rule. The rules themselves
+live in "Transition continuity" in
+[docs/ANIMATION_ARCHITECTURE.md](../../docs/ANIMATION_ARCHITECTURE.md).
+
+## Matchup matrix
+
+```bash
+build/bin/arena_app --list-scenarios | cut -f1 | grep '^matchup_' |
+  while read id; do
+    build/bin/arena_app --batch --scenario "$id" --capture-interval 0 \
+      --animation-diagnostics --artifact-dir artifacts/matchups
+  done
+```
+
+Every `matchup_<attacker>_vs_<defender>` puts two sides into melee, breaks
+them apart and sends them back in. Every participant carries the continuity
+detectors above plus `EntityMotionIsSmooth` (teleports, facing snaps, fast or
+jittering rotation, position jitter); wolves are watched through the
+`wildlife` group. Against a ram, catapult, ballista, siege tower or building
+the attacker must not lose any health: those targets are harmless at arm's
+length. `matchup_destroy_<engine>` breaks each siege engine so the wreck and
+the crew's fall can be reviewed.
+
 ## Local batch inspection
 
 Batch mode intentionally opens the real Arena OpenGL window. It requires a

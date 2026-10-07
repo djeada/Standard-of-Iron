@@ -18,6 +18,8 @@ namespace {
 
 constexpr float desired_yaw_turn_speed_degrees = 720.0F;
 
+constexpr float k_swing_turn_speed_degrees = 200.0F;
+
 constexpr float k_formation_heading_min_speed = 0.4F;
 constexpr float k_formation_heading_speed_fraction = 0.25F;
 constexpr float k_formation_intent_min_distance = 1.0F;
@@ -148,6 +150,15 @@ public:
     m_shell_holds_its_face =
         DefensiveUnitLayoutService::holds_position(entity) && transform.has_desired_yaw;
     m_formation = unit != nullptr && FormationCombat::has_formation_slots(entity);
+    if (!m_formation) {
+      if (const auto* combat =
+              world.try_get<Engine::Core::CombatStateComponent>(entity.get_id());
+          combat != nullptr &&
+          (combat->animation_state == Engine::Core::CombatAnimationState::Strike ||
+           combat->animation_state == Engine::Core::CombatAnimationState::Impact)) {
+        m_turn_speed = std::min(m_turn_speed, k_swing_turn_speed_degrees);
+      }
+    }
 
     m_traversal =
         world.try_get<Engine::Core::UnitTraversalLayoutStateComponent>(entity.get_id());

@@ -27,7 +27,9 @@ public:
   [[nodiscard]] auto stone_shader() const -> GL::Shader* { return m_stone_shader; }
   [[nodiscard]] auto plant_shader() const -> GL::Shader* { return m_plant_shader; }
   [[nodiscard]] auto pine_shader() const -> GL::Shader* { return m_pine_shader; }
+  [[nodiscard]] auto cypress_shader() const -> GL::Shader* { return m_cypress_shader; }
   [[nodiscard]] auto olive_shader() const -> GL::Shader* { return m_olive_shader; }
+  [[nodiscard]] auto palm_shader() const -> GL::Shader* { return m_palm_shader; }
   [[nodiscard]] auto firecamp_shader() const -> GL::Shader* {
     return m_firecamp_shader;
   }
@@ -49,7 +51,9 @@ public:
 
   FoliageUniforms m_plant_uniforms;
   FoliageUniforms m_pine_uniforms;
+  FoliageUniforms m_cypress_uniforms;
   FoliageUniforms m_olive_uniforms;
+  FoliageUniforms m_palm_uniforms;
 
   struct FireCampUniforms {
     GL::Shader::UniformHandle view_proj{GL::Shader::InvalidUniform};
@@ -159,7 +163,9 @@ private:
   GL::Shader* m_stone_shader{nullptr};
   GL::Shader* m_plant_shader{nullptr};
   GL::Shader* m_pine_shader{nullptr};
+  GL::Shader* m_cypress_shader{nullptr};
   GL::Shader* m_olive_shader{nullptr};
+  GL::Shader* m_palm_shader{nullptr};
   GL::Shader* m_firecamp_shader{nullptr};
   GL::Shader* m_tent_shader{nullptr};
   GL::Shader* m_supply_cart_shader{nullptr};

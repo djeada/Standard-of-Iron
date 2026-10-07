@@ -39,6 +39,8 @@ add_library(
     arena_identity_scenarios.cpp
     arena_allied_nation_scenarios.cpp
     arena_skirmisher_scenarios.cpp
+    arena_transition_gauntlet_scenarios.cpp
+    arena_matchup_matrix_scenarios.cpp
     arena_commander_duel_scenarios.cpp
     arena_weapon_scenarios.cpp
     arena_animation_matrix_scenarios.cpp

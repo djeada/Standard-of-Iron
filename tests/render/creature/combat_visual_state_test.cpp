@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <gtest/gtest.h>
 #include <set>
+#include <utility>
 
 #include "animation/combat_manifest.h"
 #include "render/creature/combat_visual_state.h"
@@ -174,6 +175,169 @@ TEST(CombatVisualState, MonotonicRecoveryAndExitBlendPersistAfterAttackStops) {
   EXPECT_FALSE(settled.resolved.active);
   EXPECT_EQ(settled.persistent.interruption_reason,
             CombatVisualInterruptReason::NormalComplete);
+}
+
+auto sword_lane_profile() {
+  Render::Creature::CombatLaneInputs lane_inputs{};
+  lane_inputs.unit_seed = 17U;
+  lane_inputs.soldier_seed = 41U;
+  lane_inputs.is_melee = true;
+  lane_inputs.attack_family = Engine::Core::CombatAttackFamily::Sword;
+  return Render::Creature::resolve_soldier_combat_lane({}, lane_inputs).profile;
+}
+
+auto sword_swing_at(Engine::Core::CombatAnimationState phase, float progress) {
+  Render::Creature::CombatVisualRawInputs raw{};
+  raw.sample_time = 0.20F;
+  raw.attack_requested = true;
+  raw.is_melee = true;
+  raw.attack_family = Engine::Core::CombatAttackFamily::Sword;
+  raw.combat_phase = phase;
+  raw.combat_phase_progress = progress;
+  return raw;
+}
+
+TEST(CombatVisualState, AStrikeCutShortCatchesUpInsteadOfJumpingToRecovery) {
+  auto const lane = sword_lane_profile();
+  auto raw = sword_swing_at(Engine::Core::CombatAnimationState::Strike, 0.50F);
+  auto const active = Render::Creature::resolve_combat_visual_state({}, raw, lane);
+  ASSERT_TRUE(active.resolved.active);
+  float const struck = active.resolved.attack_phase;
+  ASSERT_LT(struck, 0.60F);
+
+  raw.sample_time += 1.0F / 60.0F;
+  raw.attack_requested = false;
+  raw.combat_phase = Engine::Core::CombatAnimationState::Idle;
+  raw.combat_phase_progress = 0.0F;
+  auto const next =
+      Render::Creature::resolve_combat_visual_state(active.persistent, raw, lane);
+  EXPECT_GT(next.resolved.attack_phase, struck);
+  EXPECT_LT(next.resolved.attack_phase - struck, 0.08F)
+      << "one frame may not skip the rest of the strike";
+}
+
+TEST(CombatVisualState, AWindUpCutShortFadesOutFromWhereItStopped) {
+  auto const lane = sword_lane_profile();
+  auto raw = sword_swing_at(Engine::Core::CombatAnimationState::WindUp, 0.30F);
+  auto const active = Render::Creature::resolve_combat_visual_state({}, raw, lane);
+  ASSERT_TRUE(active.resolved.active);
+  float const drawn = active.resolved.attack_phase;
+  ASSERT_LT(drawn, 0.34F);
+
+  raw.sample_time += 1.0F / 60.0F;
+  raw.attack_requested = false;
+  raw.combat_phase = Engine::Core::CombatAnimationState::Idle;
+  raw.combat_phase_progress = 0.0F;
+  auto const next =
+      Render::Creature::resolve_combat_visual_state(active.persistent, raw, lane);
+  EXPECT_EQ(next.resolved.phase, CombatVisualTransactionPhase::ExitBlend)
+      << "a swing that never reached the strike must not play one";
+  EXPECT_FLOAT_EQ(next.resolved.attack_phase, drawn);
+}
+
+auto drop_swing_until_idle(Render::Creature::CombatVisualPersistentState state,
+                           Render::Creature::CombatVisualRawInputs raw,
+                           const Render::Creature::CombatLaneProfile& lane)
+    -> std::pair<Render::Creature::CombatVisualPersistentState,
+                 Render::Creature::CombatVisualRawInputs> {
+  raw.attack_requested = false;
+  raw.combat_phase = Engine::Core::CombatAnimationState::Idle;
+  raw.combat_phase_progress = 0.0F;
+  for (int frame = 0; frame < 30 && state.active; ++frame) {
+    raw.sample_time += 1.0F / 60.0F;
+    state = Render::Creature::resolve_combat_visual_state(state, raw, lane).persistent;
+  }
+  return {state, raw};
+}
+
+TEST(CombatVisualState, AResumedWindUpContinuesFromItsPoseInsteadOfJumpingAhead) {
+  auto const lane = sword_lane_profile();
+  auto raw = sword_swing_at(Engine::Core::CombatAnimationState::WindUp, 0.10F);
+  auto const active = Render::Creature::resolve_combat_visual_state({}, raw, lane);
+  ASSERT_TRUE(active.resolved.active);
+  float const drawn = active.resolved.attack_phase;
+  ASSERT_LT(drawn, 0.34F);
+
+  auto [idle, dropped] = drop_swing_until_idle(active.persistent, raw, lane);
+  ASSERT_FALSE(idle.active);
+
+  dropped.sample_time += 1.0F / 60.0F;
+  dropped.attack_requested = true;
+  dropped.combat_phase = Engine::Core::CombatAnimationState::WindUp;
+  dropped.combat_phase_progress = 0.90F;
+  auto const resumed =
+      Render::Creature::resolve_combat_visual_state(idle, dropped, lane);
+  ASSERT_TRUE(resumed.resolved.active);
+  EXPECT_NEAR(resumed.resolved.attack_phase, drawn, 1.0e-4F)
+      << "the swing picks up where its pose was dropped and catches up from there";
+}
+
+TEST(CombatVisualState, ADrawDroppedForMeleeStartsAFreshSwing) {
+  auto const lane = sword_lane_profile();
+  auto raw = sword_swing_at(Engine::Core::CombatAnimationState::WindUp, 0.10F);
+  raw.is_melee = false;
+  auto const drawing = Render::Creature::resolve_combat_visual_state({}, raw, lane);
+  ASSERT_TRUE(drawing.resolved.active);
+  ASSERT_FALSE(drawing.persistent.is_melee);
+
+  auto [idle, dropped] = drop_swing_until_idle(drawing.persistent, raw, lane);
+  ASSERT_FALSE(idle.active);
+  ASSERT_GE(idle.aborted_phase, 0.0F)
+      << "the draw must have been dropped, not finished";
+
+  dropped.sample_time += 1.0F / 60.0F;
+  dropped.attack_requested = true;
+  dropped.is_melee = true;
+  dropped.combat_phase = Engine::Core::CombatAnimationState::WindUp;
+  dropped.combat_phase_progress = 0.05F;
+  auto const strike =
+      Render::Creature::resolve_combat_visual_state(idle, dropped, lane);
+  ASSERT_TRUE(strike.resolved.active);
+  EXPECT_TRUE(strike.persistent.is_melee);
+  EXPECT_LT(strike.resolved.attack_phase, drawing.resolved.attack_phase)
+      << "a melee strike is a new attack, not the rest of the bow draw";
+}
+
+TEST(CombatVisualState, AnArchersMeleeSwingSurvivesItsFamilyCatchingUp) {
+  auto const lane = sword_lane_profile();
+  auto raw = sword_swing_at(Engine::Core::CombatAnimationState::WindUp, 0.20F);
+  raw.attack_family = Engine::Core::CombatAttackFamily::Bow;
+  auto const swing = Render::Creature::resolve_combat_visual_state({}, raw, lane);
+  ASSERT_TRUE(swing.resolved.active);
+  float const wound = swing.resolved.attack_phase;
+
+  raw.sample_time += 1.0F / 60.0F;
+  raw.attack_family = Engine::Core::CombatAttackFamily::Sword;
+  raw.combat_phase_progress = 0.30F;
+  auto const next =
+      Render::Creature::resolve_combat_visual_state(swing.persistent, raw, lane);
+  EXPECT_NE(next.resolved.phase, CombatVisualTransactionPhase::ExitBlend)
+      << "a bow family on a melee swing is stale, not a different attack";
+  EXPECT_GE(next.resolved.attack_phase, wound);
+}
+
+TEST(CombatVisualState, AfterAHitTheSoldierWaitsOutASwingThatIsPastItsStrike) {
+  auto const lane = sword_lane_profile();
+  auto raw = sword_swing_at(Engine::Core::CombatAnimationState::Strike, 0.20F);
+  raw.is_hit_reacting = true;
+  auto const hit = Render::Creature::resolve_combat_visual_state({}, raw, lane);
+  ASSERT_FALSE(hit.resolved.active);
+
+  raw.sample_time += 1.0F / 60.0F;
+  raw.is_hit_reacting = false;
+  raw.combat_phase = Engine::Core::CombatAnimationState::Recover;
+  raw.combat_phase_progress = 0.60F;
+  auto const tail =
+      Render::Creature::resolve_combat_visual_state(hit.persistent, raw, lane);
+  EXPECT_FALSE(tail.resolved.active)
+      << "joining a swing in its recovery tail snaps the arm to the follow-through";
+
+  raw.sample_time += 1.0F / 60.0F;
+  raw.combat_phase = Engine::Core::CombatAnimationState::WindUp;
+  raw.combat_phase_progress = 0.10F;
+  auto const next_swing =
+      Render::Creature::resolve_combat_visual_state(tail.persistent, raw, lane);
+  EXPECT_TRUE(next_swing.resolved.active);
 }
 
 TEST(CombatVisualState, RetargetKeepsLockedVariantUntilTransactionEnds) {

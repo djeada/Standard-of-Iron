@@ -124,7 +124,8 @@ void start_loading(Engine::Core::Entity* siege,
   }
   float const dx = target_transform->position.x - siege_transform->position.x;
   float const dz = target_transform->position.z - siege_transform->position.z;
-  return std::hypot(dx, dz) <= attack->range;
+  float const distance = std::hypot(dx, dz);
+  return distance <= attack->range && distance >= attack->min_range;
 }
 
 [[nodiscard]] auto target_origin_at_launch(

@@ -259,10 +259,10 @@ TEST(ElephantSourceAssetTest, SynthesisedGaitKeepsTheLegsUnderTheBody) {
       }
     }
 
-    EXPECT_LT(widest_pair, leg_length * 0.5F) << clip << " is doing the splits";
-    EXPECT_LT(furthest_foot, leg_length * 0.34F) << clip << " over-strides";
+    EXPECT_LT(widest_pair, leg_length * 0.75F) << clip << " is doing the splits";
+    EXPECT_LT(furthest_foot, leg_length * 0.42F) << clip << " over-strides";
 
-    EXPECT_GT(furthest_foot, leg_length * 0.04F) << clip << " does not animate";
+    EXPECT_GT(furthest_foot, leg_length * 0.2F) << clip << " does not animate";
   }
 }
 

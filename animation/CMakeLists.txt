@@ -16,6 +16,7 @@ add_library(
     action_manifest.cpp
     death_pose_manifest.cpp
     elephant_gait_manifest.cpp
+    elephant_motion_manifest.cpp
     attack_pose_manifest.cpp
     guard_manifest.cpp
     hold_pose_manifest.cpp
@@ -32,7 +33,9 @@ add_library(
     quadruped_gait_manifest.cpp
     selection_manifest.cpp
     showcase_pose_manifest.cpp
+    siege_wreck_manifest.cpp
     state_manifest.cpp
+    transition_manifest.cpp
 )
 
 target_include_directories(animation_core PUBLIC ${CMAKE_SOURCE_DIR})

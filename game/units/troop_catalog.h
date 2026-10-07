@@ -35,6 +35,7 @@ struct TroopCombatStats {
   float vision_range = 12.0F;
 
   float ranged_range = 2.0F;
+  float ranged_min_range = 0.0F;
   int ranged_damage = 10;
   float ranged_cooldown = 1.0F;
 

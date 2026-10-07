@@ -82,6 +82,7 @@ public:
       const HumanoidAnimationContext& anim_ctx,
       std::uint32_t seed,
       Render::Creature::CreatureLOD lod,
+      const Render::Creature::Pipeline::HumanoidAnimationSelection* resolved_selection,
       Render::Creature::Pipeline::CreaturePreparationResult& out) const override;
 
 protected:

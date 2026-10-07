@@ -43,6 +43,8 @@ struct CasualtyAnchor {
   float rest_x{0.0F};
   float rest_z{0.0F};
   float rest_yaw{0.0F};
+  float launch_velocity_x{0.0F};
+  float launch_velocity_z{0.0F};
 };
 
 struct HumanoidInstanceStateComponent {

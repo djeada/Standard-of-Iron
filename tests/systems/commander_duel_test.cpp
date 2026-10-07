@@ -176,7 +176,7 @@ TEST_F(CommanderDuelTest, DuellistsCloseToWithinTheirWeaponsReach) {
   }
 }
 
-TEST_F(CommanderDuelTest, SiegeEnginesStopShootingOnceLockedInMelee) {
+TEST_F(CommanderDuelTest, SiegeEnginesNeitherShootNorBrawlWithAnEnemyOnTopOfThem) {
   Engine::Core::World world;
   Game::Systems::register_runtime_systems(world);
 
@@ -197,35 +197,40 @@ TEST_F(CommanderDuelTest, SiegeEnginesStopShootingOnceLockedInMelee) {
 
   auto* projectiles = world.get_system<Game::Systems::ProjectileSystem>();
   ASSERT_NE(projectiles, nullptr);
+  auto const* brawler_unit = brawler->get_component<Engine::Core::UnitComponent>();
+  ASSERT_NE(brawler_unit, nullptr);
+  int const brawler_health = brawler_unit->health;
 
   std::size_t seen = 0;
+  int shots = 0;
   int locked_frames = 0;
-  int ranged_while_locked = 0;
-  int shots_while_locked = 0;
+  int engine_alive_frames = 0;
   for (int tick = 0; tick < 400; ++tick) {
     world.update(0.05F);
+    auto const* unit = ballista->get_component<Engine::Core::UnitComponent>();
     auto const* attack = ballista->get_component<Engine::Core::AttackComponent>();
-    ASSERT_NE(attack, nullptr);
-    bool const locked = attack->in_melee_lock;
-    if (locked) {
-      ++locked_frames;
-      if (attack->current_mode == Engine::Core::AttackComponent::CombatMode::Ranged) {
-        ++ranged_while_locked;
-      }
-    }
+    bool const alive = unit != nullptr && unit->health > 0;
     std::size_t const now =
         projectiles->projectiles().size() + projectiles->spent_projectiles().size();
-    if (now > seen && locked) {
-      shots_while_locked += static_cast<int>(now - seen);
+    if (alive) {
+      ++engine_alive_frames;
+      if (attack != nullptr && attack->in_melee_lock) {
+        ++locked_frames;
+      }
+      if (now > seen) {
+        shots += static_cast<int>(now - seen);
+      }
     }
     seen = std::max(seen, now);
   }
 
-  ASSERT_GT(locked_frames, 200) << "the ballista never got dragged into a melee";
-  EXPECT_EQ(shots_while_locked, 0);
-  EXPECT_LE(ranged_while_locked, 1)
-      << "a locked engine may not sit in ranged mode; one frame of overlap is the "
-         "tick contact is made";
+  ASSERT_GT(engine_alive_frames, 20)
+      << "the ballista never stood with the swordsman on it";
+  EXPECT_EQ(shots, 0) << "the swordsman is inside the ballista's minimum range";
+  EXPECT_EQ(locked_frames, 0)
+      << "an engine that cannot melee may not enter a melee lock";
+  EXPECT_EQ(brawler_unit->health, brawler_health)
+      << "a siege engine is harmless at arm's length";
 }
 
 TEST_F(CommanderDuelTest, SiegeEnginesStillShootWhenNothingIsOnTopOfThem) {

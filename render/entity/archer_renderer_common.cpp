@@ -186,6 +186,7 @@ public:
       const HumanoidAnimationContext&,
       std::uint32_t,
       Render::Creature::CreatureLOD,
+      const Render::Creature::Pipeline::HumanoidAnimationSelection*,
       Render::Creature::Pipeline::CreaturePreparationResult&) const override {}
 
 private:

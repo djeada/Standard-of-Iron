@@ -35,6 +35,7 @@ struct SubmitStats {
   std::uint32_t snapshot_evictions{0};
   std::uint32_t full_body_blend_requests{0};
   std::uint32_t upper_body_overlay_requests{0};
+  std::uint32_t transition_blend_requests{0};
   std::uint32_t dominant_snapshot_collapses{0};
 
   void reset() noexcept { *this = SubmitStats{}; }
@@ -57,6 +58,7 @@ struct SubmitStats {
     snapshot_evictions += other.snapshot_evictions;
     full_body_blend_requests += other.full_body_blend_requests;
     upper_body_overlay_requests += other.upper_body_overlay_requests;
+    transition_blend_requests += other.transition_blend_requests;
     dominant_snapshot_collapses += other.dominant_snapshot_collapses;
   }
 };

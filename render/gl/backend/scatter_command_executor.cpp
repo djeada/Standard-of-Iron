@@ -26,9 +26,9 @@ auto resolve_foliage_draw(const BackendPipelines::VegetationPipeline& veg,
   case S::Olive:
     return {veg.olive_shader(), &veg.m_olive_mesh, &veg.m_olive_uniforms};
   case S::Cypress:
-    return {veg.pine_shader(), &veg.m_cypress_mesh, &veg.m_pine_uniforms};
+    return {veg.cypress_shader(), &veg.m_cypress_mesh, &veg.m_cypress_uniforms};
   case S::Palm:
-    return {veg.olive_shader(), &veg.m_palm_mesh, &veg.m_olive_uniforms};
+    return {veg.palm_shader(), &veg.m_palm_mesh, &veg.m_palm_uniforms};
   default:
     return {};
   }

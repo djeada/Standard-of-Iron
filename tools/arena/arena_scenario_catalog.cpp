@@ -24,6 +24,7 @@
 #include "arena_identity_scenarios.h"
 #include "arena_lighting_scenarios.h"
 #include "arena_maneuver_scenarios.h"
+#include "arena_matchup_matrix_scenarios.h"
 #include "arena_navigation_scenarios.h"
 #include "arena_pathing_scenarios.h"
 #include "arena_promo_scenarios.h"
@@ -41,6 +42,7 @@
 #include "arena_structure_lifecycle_scenarios.h"
 #include "arena_stuck_recovery_scenarios.h"
 #include "arena_trailer_scenarios.h"
+#include "arena_transition_gauntlet_scenarios.h"
 #include "arena_traversal_scenarios.h"
 #include "arena_weapon_scenarios.h"
 #include "arena_wildlife_scenarios.h"
@@ -108,6 +110,8 @@ auto definitions() -> const std::vector<ArenaScenarioDefinition>& {
     append(values, build_grounding_definitions());
     append(values, build_allied_nation_definitions());
     append(values, build_skirmisher_definitions());
+    append(values, build_transition_gauntlet_definitions());
+    append(values, build_matchup_matrix_definitions());
 
     for (auto& scenario : values) {
       if (scenario.rpg_mode && !scenario.rpg_commander_group.isEmpty()) {

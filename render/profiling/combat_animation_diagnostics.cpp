@@ -288,6 +288,7 @@ void CombatAnimationDiagnostics::record_soldier_sample(
     recorded.attack_phase_reset =
         recorded.is_attacking &&
         (tracker.last_visual_state == SoldierVisualState::Attack) &&
+        recorded.attack_is_melee == tracker.last_attack_is_melee &&
         (recorded.attack_phase + k_attack_phase_reset_epsilon <
          tracker.last_attack_phase);
   }
@@ -353,6 +354,7 @@ void CombatAnimationDiagnostics::record_soldier_sample(
     tracker.has_previous = true;
     tracker.last_time = recorded.sample_time;
     tracker.last_attack_phase = recorded.attack_phase;
+    tracker.last_attack_is_melee = recorded.attack_is_melee;
     tracker.last_attack_variant = recorded.attack_variant;
     tracker.last_locomotion = recorded.locomotion_state;
     tracker.last_lod = recorded.lod;
@@ -420,6 +422,7 @@ void CombatAnimationDiagnostics::record_submitted_body_pose(
   sample->foot_l_world = pose.foot_l_world;
   sample->foot_r_world = pose.foot_r_world;
   sample->pelvis_yaw_degrees = pose.pelvis_yaw_degrees;
+  sample->torso_yaw_degrees = pose.torso_yaw_degrees;
   sample->joint_sample_valid = true;
 }
 

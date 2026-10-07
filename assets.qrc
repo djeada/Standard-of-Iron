@@ -85,6 +85,8 @@
         <file>assets/shaders/pine_instanced.vert</file>
         <file>assets/shaders/olive_instanced.frag</file>
         <file>assets/shaders/olive_instanced.vert</file>
+        <file>assets/shaders/palm_instanced.frag</file>
+        <file>assets/shaders/palm_instanced.vert</file>
         <file>assets/shaders/plant_instanced.frag</file>
         <file>assets/shaders/plant_instanced.vert</file>
         <file>assets/shaders/primitive_instanced.frag</file>

@@ -7,6 +7,8 @@
 
 #include <algorithm>
 #include <gtest/gtest.h>
+#include <memory>
+#include <vector>
 
 #include "game/core/component.h"
 #include "game/core/component_economy.h"
@@ -1416,6 +1418,244 @@ TEST(ArenaScenarioRunnerTest, RenderProbeRejectsAPelvisThatSnapsRound) {
   ASSERT_FALSE(runner.report().passed());
   EXPECT_EQ(runner.report().issues.front().code, QStringLiteral("pelvis_snap"));
   diagnostics.set_enabled(false);
+}
+
+namespace {
+
+struct ContinuityFrame {
+  double at_seconds{0.0};
+  float cycle_phase{0.0F};
+  float locomotion_presence{0.0F};
+  bool attacking{false};
+  float attack_phase{0.0F};
+  QVector3D hand_r{-2.0F, 1.0F, -0.2F};
+};
+
+void submit_continuity_frames(Arena::ArenaScenarioRunner& runner,
+                              Engine::Core::EntityID entity_id,
+                              const std::vector<ContinuityFrame>& frames) {
+  auto& diagnostics = Render::Profiling::CombatAnimationDiagnostics::instance();
+  std::uint64_t frame_index = 1U;
+  for (auto const& frame : frames) {
+    diagnostics.begin_frame(frame_index++);
+    Render::Profiling::SoldierAnimationDebugSample sample;
+    sample.soldier_index = 0;
+    sample.sample_time = static_cast<float>(frame.at_seconds);
+    sample.root_position = QVector3D(-2.0F, 0.0F, 0.0F);
+    sample.cycle_phase = frame.cycle_phase;
+    sample.locomotion_presence = frame.locomotion_presence;
+    sample.is_attacking = frame.attacking;
+    sample.attack_phase = frame.attack_phase;
+    diagnostics.record_soldier_sample(entity_id, sample);
+    diagnostics.record_submitted_body_pose(entity_id,
+                                           0U,
+                                           joint_pose(QVector3D(-2.1F, 0.02F, 0.0F),
+                                                      QVector3D(-1.9F, 0.02F, 0.0F),
+                                                      QVector3D(-2.0F, 1.0F, 0.2F),
+                                                      frame.hand_r,
+                                                      0.0F));
+    runner.observe_rendered_frame(frame.at_seconds);
+  }
+}
+
+auto continuity_runner(Engine::Core::World& world, Arena::ArenaExpectationKind kind)
+    -> std::unique_ptr<Arena::ArenaScenarioRunner> {
+  auto scenario = minimal_definition();
+  scenario.groups.resize(1);
+  scenario.steps.clear();
+  scenario.expectations = {{kind, QStringLiteral("blue")}};
+  auto runner = std::make_unique<Arena::ArenaScenarioRunner>(
+      world, make_entity_host(world), scenario);
+  return runner;
+}
+
+auto first_issue_code(const Arena::ArenaScenarioRunner& runner) -> QString {
+  return runner.report().issues.empty() ? QString{}
+                                        : runner.report().issues.front().code;
+}
+
+} // namespace
+
+TEST(ArenaScenarioRunnerTest, RenderProbeRejectsAStrideThatRestartsWhileWalking) {
+  Engine::Core::World world;
+  auto runner =
+      continuity_runner(world, Arena::ArenaExpectationKind::NoLocomotionRestart);
+  ASSERT_TRUE(runner->start());
+  auto& diagnostics = Render::Profiling::CombatAnimationDiagnostics::instance();
+  diagnostics.set_enabled(true);
+  submit_continuity_frames(
+      *runner,
+      runner->group_entities(QStringLiteral("blue")).front(),
+      {{.at_seconds = 4.0, .cycle_phase = 0.40F, .locomotion_presence = 1.0F},
+       {.at_seconds = 4.0167, .cycle_phase = 0.43F, .locomotion_presence = 1.0F},
+       {.at_seconds = 4.0333, .cycle_phase = 0.02F, .locomotion_presence = 1.0F}});
+  ASSERT_FALSE(runner->report().passed());
+  EXPECT_EQ(first_issue_code(*runner), QStringLiteral("locomotion_phase_restart"));
+  diagnostics.set_enabled(false);
+}
+
+TEST(ArenaScenarioRunnerTest, RenderProbeAcceptsAStrideThatWrapsAndPlaysBackwards) {
+  Engine::Core::World world;
+  auto runner =
+      continuity_runner(world, Arena::ArenaExpectationKind::NoLocomotionRestart);
+  ASSERT_TRUE(runner->start());
+  auto& diagnostics = Render::Profiling::CombatAnimationDiagnostics::instance();
+  diagnostics.set_enabled(true);
+  submit_continuity_frames(
+      *runner,
+      runner->group_entities(QStringLiteral("blue")).front(),
+      {{.at_seconds = 4.0, .cycle_phase = 0.98F, .locomotion_presence = 1.0F},
+       {.at_seconds = 4.0167, .cycle_phase = 0.01F, .locomotion_presence = 1.0F},
+       {.at_seconds = 4.0333, .cycle_phase = 0.98F, .locomotion_presence = 1.0F}});
+  EXPECT_TRUE(runner->report().passed()) << first_issue_code(*runner).toStdString();
+  diagnostics.set_enabled(false);
+}
+
+TEST(ArenaScenarioRunnerTest, RenderProbeRejectsASwingRestartedBeforeItLands) {
+  Engine::Core::World world;
+  auto runner = continuity_runner(world, Arena::ArenaExpectationKind::NoAttackRestart);
+  ASSERT_TRUE(runner->start());
+  auto& diagnostics = Render::Profiling::CombatAnimationDiagnostics::instance();
+  diagnostics.set_enabled(true);
+  submit_continuity_frames(
+      *runner,
+      runner->group_entities(QStringLiteral("blue")).front(),
+      {{.at_seconds = 4.0, .attacking = true, .attack_phase = 0.20F},
+       {.at_seconds = 4.0167, .attacking = true, .attack_phase = 0.25F},
+       {.at_seconds = 4.0333, .attacking = true, .attack_phase = 0.02F}});
+  ASSERT_FALSE(runner->report().passed());
+  EXPECT_EQ(first_issue_code(*runner), QStringLiteral("attack_presentation_restart"));
+  diagnostics.set_enabled(false);
+}
+
+TEST(ArenaScenarioRunnerTest, RenderProbeAcceptsTheNextSwingAfterAFinishedOne) {
+  Engine::Core::World world;
+  auto runner = continuity_runner(world, Arena::ArenaExpectationKind::NoAttackRestart);
+  ASSERT_TRUE(runner->start());
+  auto& diagnostics = Render::Profiling::CombatAnimationDiagnostics::instance();
+  diagnostics.set_enabled(true);
+  submit_continuity_frames(
+      *runner,
+      runner->group_entities(QStringLiteral("blue")).front(),
+      {{.at_seconds = 4.0, .attacking = true, .attack_phase = 0.90F},
+       {.at_seconds = 4.0167, .attacking = true, .attack_phase = 0.97F},
+       {.at_seconds = 4.0333, .attacking = true, .attack_phase = 0.02F}});
+  EXPECT_TRUE(runner->report().passed()) << first_issue_code(*runner).toStdString();
+  diagnostics.set_enabled(false);
+}
+
+TEST(ArenaScenarioRunnerTest, RenderProbeRejectsABodyThatSnapsBetweenPoses) {
+  Engine::Core::World world;
+  auto runner = continuity_runner(world, Arena::ArenaExpectationKind::NoBodyPoseSnap);
+  ASSERT_TRUE(runner->start());
+  auto& diagnostics = Render::Profiling::CombatAnimationDiagnostics::instance();
+  diagnostics.set_enabled(true);
+  submit_continuity_frames(*runner,
+                           runner->group_entities(QStringLiteral("blue")).front(),
+                           {{.at_seconds = 4.0, .hand_r = {-2.0F, 1.0F, -0.2F}},
+                            {.at_seconds = 4.0167, .hand_r = {-2.0F, 1.0F, -0.21F}},
+                            {.at_seconds = 4.0333, .hand_r = {-2.0F, 0.5F, 0.3F}}});
+  ASSERT_FALSE(runner->report().passed());
+  EXPECT_EQ(first_issue_code(*runner), QStringLiteral("body_pose_snap"));
+  diagnostics.set_enabled(false);
+}
+
+TEST(ArenaScenarioRunnerTest, RenderProbeAcceptsAFastButContinuousSwing) {
+  Engine::Core::World world;
+  auto runner = continuity_runner(world, Arena::ArenaExpectationKind::NoBodyPoseSnap);
+  ASSERT_TRUE(runner->start());
+  auto& diagnostics = Render::Profiling::CombatAnimationDiagnostics::instance();
+  diagnostics.set_enabled(true);
+  submit_continuity_frames(*runner,
+                           runner->group_entities(QStringLiteral("blue")).front(),
+                           {{.at_seconds = 4.0, .hand_r = {-2.0F, 1.40F, 0.0F}},
+                            {.at_seconds = 4.0167, .hand_r = {-2.0F, 1.30F, 0.05F}},
+                            {.at_seconds = 4.0333, .hand_r = {-2.0F, 1.10F, 0.15F}},
+                            {.at_seconds = 4.05, .hand_r = {-2.0F, 0.80F, 0.30F}},
+                            {.at_seconds = 4.0667, .hand_r = {-2.0F, 0.75F, 0.32F}}});
+  EXPECT_TRUE(runner->report().passed()) << first_issue_code(*runner).toStdString();
+  diagnostics.set_enabled(false);
+}
+
+namespace {
+
+struct MotionFrame {
+  float x{0.0F};
+  float z{0.0F};
+  float yaw{0.0F};
+};
+
+auto motion_issues(const std::vector<MotionFrame>& frames) -> QStringList {
+  Engine::Core::World world;
+  auto scenario = minimal_definition();
+  scenario.groups.resize(1);
+  scenario.steps.clear();
+  scenario.duration_seconds = 10.0F;
+  scenario.expectations = {
+      {Arena::ArenaExpectationKind::EntityMotionIsSmooth, QStringLiteral("blue")}};
+  Arena::ArenaScenarioRunner runner(world, make_entity_host(world), scenario);
+  EXPECT_TRUE(runner.start());
+  auto const entity_id = runner.group_entities(QStringLiteral("blue")).front();
+  auto* transform =
+      world.get_entity(entity_id)->get_component<Engine::Core::TransformComponent>();
+  for (int settle = 0; settle < 15; ++settle) {
+    runner.update(1.0F / 60.0F);
+  }
+  for (auto const& frame : frames) {
+    transform->position.x = frame.x;
+    transform->position.z = frame.z;
+    transform->rotation.y = frame.yaw;
+    runner.update(1.0F / 60.0F);
+    runner.observe_rendered_frame(16.0);
+  }
+  QStringList codes;
+  for (auto const& issue : runner.report().issues) {
+    codes.push_back(issue.code);
+  }
+  return codes;
+}
+
+} // namespace
+
+TEST(ArenaScenarioRunnerTest, MotionProbeRejectsAnEntityThatTeleports) {
+  auto const codes =
+      motion_issues({{0.0F, 0.0F, 0.0F}, {0.0F, 0.02F, 0.0F}, {3.0F, 0.0F, 0.0F}});
+  EXPECT_TRUE(codes.contains(QStringLiteral("entity_teleport")))
+      << codes.join(',').toStdString();
+}
+
+TEST(ArenaScenarioRunnerTest, MotionProbeRejectsAFacingThatSnapsAndSwingsBack) {
+  auto const snap = motion_issues({{0.0F, 0.0F, 0.0F}, {0.0F, 0.0F, 120.0F}});
+  EXPECT_TRUE(snap.contains(QStringLiteral("facing_snap")))
+      << snap.join(',').toStdString();
+
+  std::vector<MotionFrame> jitter;
+  for (int frame = 0; frame < 20; ++frame) {
+    jitter.push_back({0.0F, 0.0F, frame % 2 == 0 ? 0.0F : 8.0F});
+  }
+  auto const swinging = motion_issues(jitter);
+  EXPECT_TRUE(swinging.contains(QStringLiteral("facing_jitter")))
+      << swinging.join(',').toStdString();
+}
+
+TEST(ArenaScenarioRunnerTest, MotionProbeRejectsABodyThatShuttlesBackAndForth) {
+  std::vector<MotionFrame> shuttle;
+  for (int frame = 0; frame < 20; ++frame) {
+    shuttle.push_back({frame % 2 == 0 ? 0.0F : 0.06F, 0.0F, 0.0F});
+  }
+  auto const codes = motion_issues(shuttle);
+  EXPECT_TRUE(codes.contains(QStringLiteral("position_jitter")))
+      << codes.join(',').toStdString();
+}
+
+TEST(ArenaScenarioRunnerTest, MotionProbeAcceptsASteadyWalkAndAMeasuredTurn) {
+  std::vector<MotionFrame> walk;
+  for (int frame = 0; frame < 60; ++frame) {
+    walk.push_back(
+        {0.0F, 0.025F * static_cast<float>(frame), 3.0F * static_cast<float>(frame)});
+  }
+  auto const codes = motion_issues(walk);
+  EXPECT_TRUE(codes.isEmpty()) << codes.join(',').toStdString();
 }
 
 TEST(ArenaScenarioRunnerTest, ReloadSweepsEntitiesTheGameCreatedOnItsOwn) {

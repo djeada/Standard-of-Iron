@@ -141,6 +141,27 @@ void add_visual_stability(ArenaScenarioDefinition& scenario,
       expectation(Expect::FrameBudget, {}, {}, 33.34F, 0.25F));
 }
 
+void add_transition_continuity(ArenaScenarioDefinition& scenario,
+                               std::initializer_list<QString> groups) {
+  add_visual_stability(scenario, groups);
+  for (auto const& name : groups) {
+    scenario.expectations.push_back(expectation(Expect::NoLocomotionRestart, name));
+    scenario.expectations.push_back(expectation(Expect::NoAttackRestart, name));
+    scenario.expectations.push_back(expectation(Expect::NoBodyPoseSnap, name));
+    scenario.expectations.push_back(expectation(Expect::NoWeaponTeleport, name));
+    scenario.expectations.push_back(expectation(Expect::NoPelvisSnap, name));
+    scenario.expectations.push_back(expectation(Expect::NoPlantedFootSliding, name));
+    scenario.expectations.push_back(expectation(Expect::NoLimbOverextension, name));
+  }
+}
+
+void add_motion_smoothness(ArenaScenarioDefinition& scenario,
+                           std::initializer_list<QString> groups) {
+  for (auto const& name : groups) {
+    scenario.expectations.push_back(expectation(Expect::EntityMotionIsSmooth, name));
+  }
+}
+
 void add_commander_control_metrics(ArenaScenarioDefinition& scenario,
                                    const QString& commander_group) {
   scenario.expectations.push_back(

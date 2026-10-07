@@ -167,6 +167,7 @@ auto make_cloak_grid(const CloakConfig& config) -> SheetGrid {
   grid.uvs.reserve(grid.positions.capacity());
 
   float accumulated_v = 0.0F;
+  float const uv_offset = config.leopard_pelt ? k_cloak_pelt_uv_offset : 0.0F;
   float const total_drop = std::max(1e-4F, sections.front().back_y - hem);
   for (int row = 0; row < grid.rows; ++row) {
     const CloakSection& sec = sections[static_cast<std::size_t>(row)];
@@ -207,7 +208,7 @@ auto make_cloak_grid(const CloakConfig& config) -> SheetGrid {
       y += 0.060F * t * t * across * across;
 
       grid.positions.emplace_back(x, y, z);
-      grid.uvs.emplace_back(u, accumulated_v);
+      grid.uvs.emplace_back(u + uv_offset, accumulated_v);
     }
   }
   return grid;
@@ -222,6 +223,7 @@ auto cloak_mesh_key(const CloakConfig& config) -> std::uint64_t {
                             config.drape_anchor_back}) {
     key = (key ^ static_cast<std::uint32_t>(equipment_key(value))) * 0x100000001B3ULL;
   }
+  key = (key ^ (config.leopard_pelt ? 1U : 0U)) * 0x100000001B3ULL;
   return key;
 }
 

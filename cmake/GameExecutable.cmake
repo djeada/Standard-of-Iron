@@ -155,6 +155,8 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/shaders/ground_plane.vert
             assets/shaders/pine_instanced.frag
             assets/shaders/pine_instanced.vert
+            assets/shaders/palm_instanced.frag
+            assets/shaders/palm_instanced.vert
             assets/shaders/plant_instanced.frag
             assets/shaders/plant_instanced.vert
             assets/shaders/river.frag

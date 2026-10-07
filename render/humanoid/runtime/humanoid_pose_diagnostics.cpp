@@ -63,6 +63,12 @@ void record_humanoid_body_pose(std::uint32_t entity_id,
           qRadiansToDegrees(std::atan2(hip_axis.x(), hip_axis.z()));
       pose.joints_valid = true;
     }
+    QVector3D const shoulder_axis =
+        world_of(HumanoidBone::ShoulderR) - world_of(HumanoidBone::ShoulderL);
+    pose.torso_yaw_degrees =
+        shoulder_axis.lengthSquared() > 1.0e-8F
+            ? qRadiansToDegrees(std::atan2(shoulder_axis.x(), shoulder_axis.z()))
+            : pose.pelvis_yaw_degrees;
   }
 
   Render::Profiling::CombatAnimationDiagnostics::instance().record_submitted_body_pose(

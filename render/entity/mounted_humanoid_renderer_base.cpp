@@ -237,6 +237,7 @@ void MountedHumanoidRendererBase::append_companion_preparation(
     const HumanoidAnimationContext& anim_ctx,
     std::uint32_t seed,
     Render::Creature::CreatureLOD lod,
+    const Render::Creature::Pipeline::HumanoidAnimationSelection* resolved_selection,
     Render::Creature::Pipeline::CreaturePreparationResult& out) const {
   (void)pose;
   if (!is_runtime_prewarm(ctx) && (lod == Render::Creature::CreatureLOD::Minimal ||
@@ -307,8 +308,11 @@ void MountedHumanoidRendererBase::append_companion_preparation(
         rider_ctx.model *
         rider_local_world_from_mount(mount, rider_output.spec, anim_ctx);
   }
-  rider_output.humanoid_selection = RCP::resolve_humanoid_animation_selection(
-      rider_output.spec, anim_ctx, rider_output.seed, &variant);
+  rider_output.humanoid_selection =
+      resolved_selection != nullptr
+          ? *resolved_selection
+          : RCP::resolve_humanoid_animation_selection(
+                rider_output.spec, anim_ctx, rider_output.seed, &variant);
   out.bodies.add_humanoid(rider_output, pose, variant, anim_ctx);
 }
 

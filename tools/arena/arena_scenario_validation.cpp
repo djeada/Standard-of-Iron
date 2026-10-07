@@ -72,6 +72,10 @@ auto validate_scenario(const ArenaScenarioDefinition& definition)
           {field, QStringLiteral("individuals_per_unit cannot be negative")});
     }
   }
+  QString const wildlife_group = QString::fromLatin1(k_wildlife_group);
+  if (definition.wildlife.enabled && !group_names.contains(wildlife_group)) {
+    group_names.insert(wildlife_group);
+  }
 
   auto check_group = [&](const QString& value, const QString& field, bool required) {
     if (value.isEmpty()) {

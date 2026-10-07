@@ -70,38 +70,35 @@ auto commander_cloak_config(CommanderCloakStyle style) -> const CloakConfig& {
   }();
   static const CloakConfig hanno = [] {
     CloakConfig cfg;
-    cfg.primary_color = {0.30F, 0.075F, 0.34F};
+    cfg.primary_color = {0.66F, 0.47F, 0.22F};
     cfg.trim_color = {0.90F, 0.62F, 0.22F};
     cfg.length_scale = 1.10F;
     cfg.width_scale = 1.06F;
     cfg.shoulder_anchor_up = 0.25F;
-    cfg.team_blend = 0.18F;
-    cfg.team_shade = 0.92F;
+    cfg.leopard_pelt = true;
     return cfg;
   }();
   static const CloakConfig hasdrubal = [] {
     CloakConfig cfg;
-    cfg.primary_color = {0.055F, 0.245F, 0.26F};
+    cfg.primary_color = {0.60F, 0.44F, 0.21F};
     cfg.trim_color = {0.54F, 0.57F, 0.41F};
     cfg.length_scale = 0.76F;
     cfg.width_scale = 0.86F;
     cfg.shoulder_anchor_up = 0.12F;
     cfg.show_clasp = false;
-    cfg.team_blend = 0.20F;
-    cfg.team_shade = 1.0F;
+    cfg.leopard_pelt = true;
     return cfg;
   }();
   static const CloakConfig hannibal = [] {
     CloakConfig cfg;
 
-    cfg.primary_color = {0.075F, 0.060F, 0.105F};
+    cfg.primary_color = {0.70F, 0.48F, 0.20F};
     cfg.trim_color = {0.82F, 0.54F, 0.18F};
     cfg.length_scale = 1.12F;
     cfg.width_scale = 0.92F;
     cfg.shoulder_anchor_up = 0.08F;
     cfg.drape_anchor_back = 0.60F;
-    cfg.team_blend = 0.16F;
-    cfg.team_shade = 0.88F;
+    cfg.leopard_pelt = true;
     cfg.back_material_id = 12;
     cfg.shoulder_material_id = 13;
     return cfg;

@@ -27,6 +27,10 @@
 namespace Render::GL {
 namespace {
 
+constexpr float k_ram_wreck_sink_depth = 1.4F;
+constexpr float k_tower_wreck_sink_depth = 2.6F;
+constexpr float k_assault_crew_sink_depth = 0.6F;
+
 using Render::Geom::clamp_vec_01;
 using Render::Geom::cylinder_between;
 
@@ -599,13 +603,36 @@ void register_variant(EntityRendererRegistry& registry, const Variant& v) {
         const float track =
             tower ? k_tower_base_half + 0.11F : k_ram_half_width + 0.08F;
         const auto motion = siege_motion(ctx, state, wheel, track);
-        const Palette palette = palette_for(v.carthage, team_color);
+        auto const wreck = resolve_siege_wreck(ctx,
+                                               tower ? Animation::SiegeWreckKind::Tower
+                                                     : Animation::SiegeWreckKind::Ram);
+        DrawContext presentation = ctx;
+        apply_siege_wreck(presentation.model,
+                          wreck,
+                          track,
+                          tower ? k_tower_wreck_sink_depth : k_ram_wreck_sink_depth);
+        Palette palette = palette_for(v.carthage, team_color);
+        for (QVector3D* tone : {&palette.wood_frame,
+                                &palette.wood_dark,
+                                &palette.wood_light,
+                                &palette.iron,
+                                &palette.bronze,
+                                &palette.hide,
+                                &palette.hide_wet,
+                                &palette.rope,
+                                &palette.wicker,
+                                &palette.team}) {
+          *tone = siege_charred(*tone, wreck);
+        }
 
         SiegeCrewFrame crew{};
         crew.kind = tower ? SiegeCrewKind::Tower : SiegeCrewKind::Ram;
         crew.engine_scale = ctx.model.column(0).toVector3D().length();
         crew.travelled = state.travelled;
         crew.movement = motion.movement;
+        crew.destroyed = wreck.destroyed;
+        crew.destroyed_elapsed = wreck.elapsed;
+        crew.sink_offset = wreck.sink * k_assault_crew_sink_depth;
 
         if (tower) {
           float ramp = 0.0F;
@@ -616,16 +643,16 @@ void register_variant(EntityRendererRegistry& registry, const Variant& v) {
               ramp = component->ramp;
             }
           }
-          draw_tower_body(ctx, out, unit, white, palette, motion, ramp);
+          draw_tower_body(presentation, out, unit, white, palette, motion, ramp);
         } else {
-          bool const striking = in_melee(ctx);
+          bool const striking = !wreck.destroyed && in_melee(ctx);
           float const phase = std::fmod(ctx.animation_time, k_ram_stroke_seconds) /
                               k_ram_stroke_seconds;
           float const stroke = striking ? ram_stroke(phase) : -0.06F * motion.jolt;
           crew.loading = striking;
           crew.loading_time = ctx.animation_time;
           crew.loading_progress = phase;
-          draw_ram_body(ctx, out, unit, white, palette, motion, stroke);
+          draw_ram_body(presentation, out, unit, white, palette, motion, stroke);
         }
         advance_siege_crew(state.crew, crew, ctx.animation_time);
         submit_siege_crew(ctx, out, state.crew, crew, v.carthage);

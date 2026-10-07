@@ -64,9 +64,18 @@ void main() {
 
   float spoke = floor(a_tex_coord.x * 20.0 + 0.5);
   float spoke_jitter = hash11(spoke * 1.7 + silhouette_seed * 13.0) - 0.5;
+#ifdef SOI_CYPRESS
+  float spoke_reach =
+      foliage_mask * smoothstep(0.04, 0.13, source_radius) * (1.0 - tip_mask * 0.4);
+  float serration = spoke_jitter * 0.24 * spoke_reach;
+  float flame = sin(a_tex_coord.y * 46.0 + angle * 2.0 + silhouette_seed * TWO_PI) *
+                sin(angle * 9.0 + a_tex_coord.y * 7.0 + needle_seed * TWO_PI);
+  scallop = flame * 0.07 * foliage_mask * (1.0 - tip_mask * 0.5);
+#else
   float spoke_reach =
       foliage_mask * smoothstep(0.14, 0.42, source_radius) * (1.0 - tip_mask * 0.5);
   float serration = spoke_jitter * 0.34 * spoke_reach;
+#endif
 
   model_pos.xz *= (1.0 + irregular + scallop + serration);
 

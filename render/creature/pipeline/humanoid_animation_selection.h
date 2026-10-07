@@ -41,6 +41,7 @@ struct HumanoidAnimationSelection {
   std::optional<std::uint16_t> clip_id{};
   HumanoidPlaybackLayerSelection full_body_blend{};
   HumanoidPlaybackLayerSelection upper_body_overlay{};
+  Render::Creature::TransitionLayerRequest transition{};
   bool variant_table_changed{false};
 };
 

@@ -43,6 +43,7 @@ constexpr float k_mounted_settle_slot_speed = 0.25F;
 
 constexpr float k_stranded_distance = 2.0F;
 constexpr float k_lost_distance = 12.0F;
+constexpr float k_stranded_walk_progress = 0.25F;
 
 [[nodiscard]] auto personal_space_of(float spacing) -> float {
   return std::max(0.28F, spacing * 0.72F);
@@ -615,18 +616,32 @@ void land_step(const SlotWalk& walk,
                StepPlan& plan,
                const SlotAim& aim,
                const Pathfinding* pathfinder,
-               float dt) {
+               const WalkTiming& timing) {
+  float const dt = timing.dt;
   bool const stopped_dead =
       plan.wanted > 1.0e-4F && std::hypot(plan.x, plan.z) < 1.0e-4F;
   bool const stranded = (stopped_dead && aim.distance > k_stranded_distance) ||
                         aim.distance > k_lost_distance;
   bool snapped = false;
-  if (!walk.worker && dt > 0.0F && stranded &&
-      (pathfinder == nullptr ||
-       terrain_walkable_at(*pathfinder, aim.destination.x(), aim.destination.z()))) {
-    plan.x = aim.dx;
-    plan.z = aim.dz;
-    snapped = true;
+  if (!walk.worker && dt > 0.0F && stranded && aim.distance > 1.0e-4F) {
+    float const wanted =
+        std::min(aim.distance, timing.max_speed * k_obstacle_catch_up_ratio * dt);
+    float slip_x = aim.dx / aim.distance * wanted;
+    float slip_z = aim.dz / aim.distance * wanted;
+    if (pathfinder != nullptr) {
+      constrain_step_to_terrain(
+          *pathfinder, soldier.world_x, soldier.world_z, slip_x, slip_z);
+    }
+    if (std::hypot(slip_x, slip_z) > k_stranded_walk_progress * wanted) {
+      plan.x = slip_x;
+      plan.z = slip_z;
+    } else if (pathfinder == nullptr || terrain_walkable_at(*pathfinder,
+                                                            aim.destination.x(),
+                                                            aim.destination.z())) {
+      plan.x = aim.dx;
+      plan.z = aim.dz;
+      snapped = true;
+    }
   }
   if (walk.worker) {
 
@@ -734,7 +749,7 @@ void walk_formation_slot(const SlotWalk& walk,
 
   StepPlan plan = plan_step(walk, soldier, aim, timing);
   constrain_step(walk, soldier, plan, pathfinder, *props, timing);
-  land_step(walk, *previous, soldier, plan, aim, pathfinder, timing.dt);
+  land_step(walk, *previous, soldier, plan, aim, pathfinder, timing);
   write_local_frame(walk, *previous, soldier);
   update_reforming_flags(soldier, aim, plan, timing);
   settle_soldier_gait(previous, soldier, timing.dt, timing.run_speed);

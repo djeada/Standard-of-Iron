@@ -22,6 +22,7 @@ namespace Game::Wildlife {
 namespace {
 
 constexpr float k_wolf_bite_recovery = 0.35F;
+constexpr float k_prey_slot_hysteresis = 0.5F;
 constexpr float k_wolf_bite_facing_degrees = 12.0F;
 constexpr float k_wolf_contact_facing_degrees = 15.0F;
 constexpr float k_wolf_contact_facing_max_degrees = 60.0F;
@@ -66,7 +67,8 @@ static auto prey_escape_allowance(Engine::Core::World& world,
 auto resolve_prey(Engine::Core::World& world,
                   Engine::Core::EntityID entity_id,
                   float hunter_x,
-                  float hunter_z) -> PreyRef {
+                  float hunter_z,
+                  const Engine::Core::Entity* hunter) -> PreyRef {
   auto* entity = world.get_entity(entity_id);
   if (entity == nullptr ||
       entity->has_component<Engine::Core::PendingRemovalComponent>()) {
@@ -96,9 +98,30 @@ auto resolve_prey(Engine::Core::World& world,
     for (const auto& anchor : anchors) {
       float const dx = anchor.world_x - hunter_x;
       float const dz = anchor.world_z - hunter_z;
+      nearest_sq = std::min(nearest_sq, (dx * dx) + (dz * dz));
+    }
+    auto const* hunter_transform =
+        hunter != nullptr && hunter->registry() != nullptr
+            ? hunter->registry()->try_get<Engine::Core::TransformComponent>(
+                  hunter->get_id())
+            : nullptr;
+    float const tolerance = std::sqrt(nearest_sq) + k_prey_slot_hysteresis;
+    float best_score = std::numeric_limits<float>::max();
+    for (const auto& anchor : anchors) {
+      float const dx = anchor.world_x - hunter_x;
+      float const dz = anchor.world_z - hunter_z;
       float const distance_sq = (dx * dx) + (dz * dz);
-      if (distance_sq < nearest_sq) {
-        nearest_sq = distance_sq;
+      if (distance_sq > tolerance * tolerance) {
+        continue;
+      }
+      float score = distance_sq;
+      if (hunter_transform != nullptr) {
+        float const bearing = std::atan2(dx, dz) * 180.0F / std::numbers::pi_v<float>;
+        score = std::abs(
+            Game::Systems::signed_yaw_delta(hunter_transform->rotation.y, bearing));
+      }
+      if (score < best_score) {
+        best_score = score;
         prey.x = anchor.world_x;
         prey.z = anchor.world_z;
         prey.radius = layout.body_radius;
@@ -167,7 +190,8 @@ void WildlifePredation::try_contact_bite(Engine::Core::World& world,
       wildlife.bite_timer > 0.0F) {
     return;
   }
-  PreyRef const prey = resolve_prey(world, wildlife.focus_id, animal.x, animal.z);
+  PreyRef const prey =
+      resolve_prey(world, wildlife.focus_id, animal.x, animal.z, animal.entity);
   if (!prey.valid()) {
     wildlife.focus_id = 0;
     return;
@@ -215,7 +239,8 @@ void WildlifePredation::hurt_prey(Engine::Core::World& world,
 void WildlifePredation::land_bite(Engine::Core::World& world,
                                   const AnimalRef& animal,
                                   const Engine::Core::WildlifeComponent& wildlife) {
-  PreyRef const prey = resolve_prey(world, wildlife.bite_target_id, animal.x, animal.z);
+  PreyRef const prey =
+      resolve_prey(world, wildlife.bite_target_id, animal.x, animal.z, animal.entity);
   auto const* wolf_transform =
       animal.entity->get_component<Engine::Core::TransformComponent>();
   auto const* attack = animal.entity->get_component<Engine::Core::AttackComponent>();

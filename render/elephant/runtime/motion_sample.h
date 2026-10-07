@@ -22,6 +22,7 @@ struct ElephantMotionSample {
   Render::Creature::MovementAnimationState movement_state{
       Render::Creature::MovementAnimationState::Idle};
   bool is_moving = false;
+  bool is_pivoting = false;
   bool is_fighting = false;
   float body_sway = 0.0F;
   float trunk_swing = 0.0F;
