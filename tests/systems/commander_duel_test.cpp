@@ -224,9 +224,11 @@ TEST_F(CommanderDuelTest, SiegeEnginesNeitherShootNorBrawlWithAnEnemyOnTopOfThem
     seen = std::max(seen, now);
   }
 
-  ASSERT_GT(engine_alive_frames, 20) << "the ballista never stood with the swordsman on it";
+  ASSERT_GT(engine_alive_frames, 20)
+      << "the ballista never stood with the swordsman on it";
   EXPECT_EQ(shots, 0) << "the swordsman is inside the ballista's minimum range";
-  EXPECT_EQ(locked_frames, 0) << "an engine that cannot melee may not enter a melee lock";
+  EXPECT_EQ(locked_frames, 0)
+      << "an engine that cannot melee may not enter a melee lock";
   EXPECT_EQ(brawler_unit->health, brawler_health)
       << "a siege engine is harmless at arm's length";
 }
