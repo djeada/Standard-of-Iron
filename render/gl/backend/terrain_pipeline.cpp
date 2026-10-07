@@ -185,6 +185,7 @@ void TerrainPipeline::cache_terrain_uniforms(GL::Shader* shader,
   uniforms.ambient_boost = required("u_ambient_boost");
   uniforms.rock_detail_strength =
       shader->optional_uniform_handle("u_rock_detail_strength");
+  uniforms.horizon_dressing = shader->optional_uniform_handle("u_horizon_dressing");
   uniforms.light_dir = shader->optional_uniform_handle("u_light_dir");
 
   uniforms.snow_coverage = required("u_snow_coverage");

@@ -1,9 +1,11 @@
 #include "firecamp_renderer.h"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <utility>
 #include <vector>
 
 #include "decoration_gpu.h"
@@ -13,7 +15,9 @@
 #include "map/biome_settings.h"
 #include "map/terrain.h"
 #include "map/terrain_service.h"
+#include "render/gl/primitives.h"
 #include "render/scene_renderer.h"
+#include "render/terrain_contact.h"
 #include "scatter_runtime.h"
 #include "scatter_submission.h"
 
@@ -72,6 +76,11 @@ void FireCampRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   cmd.firecamp = params;
   Scatter::submit_visible_chunks(renderer, m_state, cmd);
 
+  Mesh* const stone_mesh = get_unit_sphere();
+  constexpr float k_daylight_firelight = 0.35F;
+  const float night = environment_night_amount(renderer.environment_lighting());
+  const float daylight_scale =
+      k_daylight_firelight + (1.0F - k_daylight_firelight) * night;
   for (const auto& instance : m_state.visible_instances) {
     const QVector4D pos_intensity = instance.pos_intensity;
     const QVector4D radius_phase = instance.radius_phase;
@@ -93,7 +102,7 @@ void FireCampRenderer::submit(Renderer& renderer, ResourceManager* resources) {
       firelight.position = camp_pos + QVector3D(0.0F, shape.height_above_ground, 0.0F);
       firelight.color = QVector3D(1.0F, 0.52F, 0.19F);
       firelight.radius = shape.reach;
-      firelight.intensity = intensity * flicker;
+      firelight.intensity = intensity * flicker * daylight_scale;
       renderer.local_light(firelight);
     }
 
@@ -103,10 +112,13 @@ void FireCampRenderer::submit(Renderer& renderer, ResourceManager* resources) {
     }
     const CampDecor& decor = m_camp_decor[decor_index];
 
-    const QVector3D ember_color(0.58F, 0.105F, 0.025F);
+    const QVector3D ember_color(0.62F, 0.13F, 0.03F);
     const float ember_pulse =
-        0.5F + 0.5F * std::sin(params.time * 3.8F + decor.phase * 2.1F);
+        0.55F + 0.45F * std::sin(params.time * 3.1F + decor.phase * 2.1F);
 
+    for (const auto& stone : decor.stones) {
+      renderer.mesh(stone_mesh, stone.model, stone.color);
+    }
     for (const auto& piece : decor.cylinders) {
       const float weight = piece.ember_weight * ember_pulse;
       const QVector3D color = piece.base_color * (1.0F - weight) + ember_color * weight;
@@ -127,98 +139,132 @@ auto FireCampRenderer::fire_light_shape(float camp_radius) -> FireLightShape {
           std::clamp(radius * k_reach_per_camp_radius, k_min_reach, k_max_reach)};
 }
 
-void FireCampRenderer::build_camp_decor(const QVector3D& camp_pos,
-                                        float base_radius,
-                                        float phase,
-                                        CampDecor& decor) const {
-  const QVector3D log_color(0.31F, 0.17F, 0.075F);
-  const QVector3D char_color(0.055F, 0.034F, 0.022F);
+auto FireCampRenderer::hearth_radius(float authored_scale) -> float {
+  constexpr float k_hearth_radius = 0.5F;
+  return k_hearth_radius * std::clamp(authored_scale, 0.6F, 1.6F);
+}
 
+namespace {
+constexpr float k_max_stone_tilt_degrees = 30.0F;
+constexpr float k_degrees_per_radian = 57.2957795F;
+} // namespace
+
+auto FireCampRenderer::build_camp_decor(const Game::Map::TerrainService& terrain,
+                                        float world_x,
+                                        float world_z,
+                                        float hearth_radius,
+                                        float phase) -> CampDecor {
+  CampDecor decor;
   decor.phase = phase;
-  decor.cylinders.clear();
+
+  auto ground = [&terrain](float x, float z) {
+    return terrain.resolve_surface_world_y(x, z);
+  };
+  auto grounded = [&ground](float x, float z, float lift) {
+    return QVector3D(x, ground(x, z) + lift, z);
+  };
 
   uint32_t state = hash_coords(
-      static_cast<int>(std::floor(camp_pos.x())),
-      static_cast<int>(std::floor(camp_pos.z())),
+      static_cast<int>(std::floor(world_x)),
+      static_cast<int>(std::floor(world_z)),
       static_cast<uint32_t>(phase * HashConstants::k_temporal_variation_frequency));
 
-  const float char_amount = remap(rand_01(state), 0.58F, 0.84F);
-  const QVector3D blended_log_color =
-      log_color * (1.0F - char_amount) + char_color * char_amount;
+  const float base_yaw = rand_01(state) * MathConstants::k_two_pi;
+  const float centre_y = ground(world_x, world_z);
 
-  const float log_length = std::clamp(base_radius * 0.85F, 0.45F, 1.1F);
-  const float log_radius = std::clamp(base_radius * 0.08F, 0.03F, 0.08F);
-
-  const float base_yaw = (rand_01(state) - 0.5F) * 0.35F;
-  const QVector3D axis_a(std::cos(base_yaw), 0.0F, std::sin(base_yaw));
-  const QVector3D axis_b(-axis_a.z(), 0.0F, axis_a.x());
-
-  const QVector3D base_center = camp_pos + QVector3D(0.0F, -0.02F, 0.0F);
-  const QVector3D base_half_a = axis_a * (log_length * 0.5F);
-  const QVector3D base_half_b = axis_b * (log_length * 0.45F);
-
-  constexpr float k_log_ember_weight = 0.08F;
-  decor.cylinders.push_back({.start = base_center - base_half_a,
-                             .end = base_center + base_half_a,
-                             .base_color = blended_log_color,
-                             .radius = log_radius,
-                             .ember_weight = k_log_ember_weight});
-  decor.cylinders.push_back({.start = base_center - base_half_b,
-                             .end = base_center + base_half_b,
-                             .base_color = blended_log_color,
-                             .radius = log_radius,
-                             .ember_weight = k_log_ember_weight});
-
-  if (rand_01(state) > 0.25F) {
-    float const top_yaw = base_yaw + 0.6F + (rand_01(state) - 0.5F) * 0.35F;
-    QVector3D const top_axis(std::cos(top_yaw), 0.0F, std::sin(top_yaw));
-    QVector3D const top_half = top_axis * (log_length * 0.35F);
-    QVector3D const top_center = camp_pos + QVector3D(0.0F, log_radius * 1.6F, 0.0F);
-    decor.cylinders.push_back({.start = top_center - top_half,
-                               .end = top_center + top_half,
-                               .base_color = blended_log_color,
-                               .radius = log_radius * 0.85F,
-                               .ember_weight = k_log_ember_weight});
-  }
-
-  const float ring_radius = std::clamp(base_radius * 0.23F, 0.52F, 0.82F);
-  const int stone_count = 9;
-  for (int stone = 0; stone < stone_count; ++stone) {
-    float const angle = MathConstants::k_two_pi * static_cast<float>(stone) /
-                            static_cast<float>(stone_count) +
-                        base_yaw * 0.35F;
-    float const jitter = remap(rand_01(state), -0.035F, 0.035F);
-    QVector3D const radial(std::cos(angle), 0.0F, std::sin(angle));
-    QVector3D const tangent(-radial.z(), 0.0F, radial.x());
-    QVector3D const stone_center =
-        camp_pos + radial * (ring_radius + jitter) + QVector3D(0.0F, 0.015F, 0.0F);
-    float const stone_half_length = remap(rand_01(state), 0.065F, 0.105F);
-    float const stone_radius = remap(rand_01(state), 0.075F, 0.115F);
-    float const stone_tone = remap(rand_01(state), 0.76F, 1.05F);
-
-    decor.cylinders.push_back(
-        {.start = stone_center - tangent * stone_half_length,
-         .end = stone_center + tangent * stone_half_length,
-         .base_color = QVector3D(0.25F, 0.235F, 0.21F) * stone_tone,
-         .radius = stone_radius,
-         .ember_weight = 0.0F});
-  }
-
-  for (int coal = 0; coal < 5; ++coal) {
-    float const angle = rand_01(state) * MathConstants::k_two_pi;
-    float const distance = remap(rand_01(state), 0.08F, ring_radius * 0.48F);
-    QVector3D const coal_center =
-        camp_pos + QVector3D(std::cos(angle), 0.0F, std::sin(angle)) * distance +
-        QVector3D(0.0F, 0.025F, 0.0F);
-    QVector3D const coal_axis(-std::sin(angle), 0.0F, std::cos(angle));
-
-    float const heat_factor = remap(rand_01(state), 0.22F, 0.68F);
-    decor.cylinders.push_back({.start = coal_center - coal_axis * 0.035F,
-                               .end = coal_center + coal_axis * 0.035F,
+  const QVector3D bark_color(0.22F, 0.16F, 0.11F);
+  const QVector3D char_color(0.05F, 0.035F, 0.028F);
+  const float log_radius = hearth_radius * 0.085F;
+  constexpr int k_tepee_logs = 5;
+  for (int log = 0; log < k_tepee_logs; ++log) {
+    const float angle = base_yaw +
+                        MathConstants::k_two_pi * static_cast<float>(log) /
+                            static_cast<float>(k_tepee_logs) +
+                        remap(rand_01(state), -0.22F, 0.22F);
+    const float cos_a = std::cos(angle);
+    const float sin_a = std::sin(angle);
+    const float reach = hearth_radius * remap(rand_01(state), 0.62F, 0.78F);
+    const QVector3D outer =
+        grounded(world_x + cos_a * reach, world_z + sin_a * reach, log_radius * 0.85F);
+    const QVector3D inner(world_x + cos_a * hearth_radius * 0.06F,
+                          centre_y + hearth_radius * remap(rand_01(state), 0.36F, 0.5F),
+                          world_z + sin_a * hearth_radius * 0.06F);
+    const QVector3D burn_line = outer + (inner - outer) * 0.5F;
+    const float bark_tone = remap(rand_01(state), 0.8F, 1.1F);
+    decor.cylinders.push_back({.start = outer,
+                               .end = burn_line,
+                               .base_color = bark_color * bark_tone,
+                               .radius = log_radius,
+                               .ember_weight = 0.0F,
+                               .kind = DecorKind::Log});
+    decor.cylinders.push_back({.start = burn_line,
+                               .end = inner,
                                .base_color = char_color,
-                               .radius = 0.032F,
-                               .ember_weight = heat_factor});
+                               .radius = log_radius * 0.9F,
+                               .ember_weight = 0.12F,
+                               .kind = DecorKind::Log});
   }
+
+  constexpr int k_stone_count = 10;
+  const QVector3D stone_color(0.30F, 0.285F, 0.265F);
+  const QVector3D soot_color(0.11F, 0.10F, 0.09F);
+  for (int stone = 0; stone < k_stone_count; ++stone) {
+    const float angle = base_yaw + MathConstants::k_two_pi * static_cast<float>(stone) /
+                                       static_cast<float>(k_stone_count);
+    const float ring = hearth_radius * remap(rand_01(state), 0.94F, 1.04F);
+    const float centre_x = world_x + std::cos(angle) * ring;
+    const float centre_z = world_z + std::sin(angle) * ring;
+    const float size = hearth_radius * remap(rand_01(state), 0.17F, 0.23F);
+    const QVector3D half_extents(size * remap(rand_01(state), 1.05F, 1.3F),
+                                 size * remap(rand_01(state), 0.7F, 0.9F),
+                                 size * remap(rand_01(state), 0.8F, 0.95F));
+    const float tone = remap(rand_01(state), 0.75F, 1.1F);
+    const float soot = remap(rand_01(state), 0.0F, 0.5F);
+    const QVector3D centre = grounded(centre_x, centre_z, half_extents.y() * 0.3F);
+
+    DecorStone piece;
+    piece.centre = centre;
+    piece.half_height = half_extents.y();
+    piece.color = (stone_color * (1.0F - soot) + soot_color * soot) * tone;
+    piece.model.translate(centre);
+    piece.model.rotate(Render::ground_tilt_rotation(
+        terrain.sample_ground_normal(centre_x, centre_z), k_max_stone_tilt_degrees));
+    piece.model.rotate(-angle * k_degrees_per_radian + 90.0F, 0.0F, 1.0F, 0.0F);
+    piece.model.rotate(remap(rand_01(state), -14.0F, 14.0F), 1.0F, 0.0F, 0.0F);
+    piece.model.scale(half_extents);
+    decor.stones.push_back(piece);
+  }
+
+  const float pile_angle =
+      base_yaw + MathConstants::k_pi * remap(rand_01(state), 0.8F, 1.2F);
+  const float pile_x = world_x + std::cos(pile_angle) * hearth_radius * 1.5F;
+  const float pile_z = world_z + std::sin(pile_angle) * hearth_radius * 1.5F;
+  const float along_x = -std::sin(pile_angle);
+  const float along_z = std::cos(pile_angle);
+  const float across_x = std::cos(pile_angle);
+  const float across_z = std::sin(pile_angle);
+  const float wood_radius = hearth_radius * 0.075F;
+  const float wood_half = hearth_radius * 0.5F;
+  const std::array<std::pair<float, float>, 3> pile{
+      {{-1.05F, 1.0F}, {1.05F, 1.0F}, {0.0F, 2.75F}}};
+  for (const auto& [offset, lift] : pile) {
+    const float x = pile_x + across_x * offset * wood_radius;
+    const float z = pile_z + across_z * offset * wood_radius;
+    const float skew = remap(rand_01(state), -0.12F, 0.12F) * wood_half;
+    decor.cylinders.push_back(
+        {.start = grounded(x - along_x * (wood_half + skew),
+                           z - along_z * (wood_half + skew),
+                           wood_radius * lift),
+         .end = grounded(x + along_x * (wood_half - skew),
+                         z + along_z * (wood_half - skew),
+                         wood_radius * lift),
+         .base_color = bark_color * remap(rand_01(state), 0.95F, 1.25F),
+         .radius = wood_radius,
+         .ember_weight = 0.0F,
+         .kind = DecorKind::Firewood});
+  }
+
+  return decor;
 }
 
 void FireCampRenderer::clear() {
@@ -245,22 +291,47 @@ void FireCampRenderer::generate_firecamp_instances() {
       continue;
     }
 
-    const QVector3D resolved = terrain_service.world_prop_footprint_world_position(
-        prop, Game::Map::world_prop_ground_bounding_radius(prop.type, prop.scale));
+    const auto [world_x, world_z] = terrain_service.world_prop_world_xz(prop);
+    const float hearth = hearth_radius(prop.scale);
+    const float centre_y = terrain_service.resolve_surface_world_y(world_x, world_z);
+
+    constexpr int k_spokes = 8;
+    float slope_x = 0.0F;
+    float slope_z = 0.0F;
+    std::array<float, k_spokes> rim_heights{};
+    for (int spoke = 0; spoke < k_spokes; ++spoke) {
+      const float angle = MathConstants::k_two_pi * static_cast<float>(spoke) /
+                          static_cast<float>(k_spokes);
+      const float rise =
+          terrain_service.resolve_surface_world_y(world_x + std::cos(angle) * hearth,
+                                                  world_z + std::sin(angle) * hearth) -
+          centre_y;
+      rim_heights[static_cast<std::size_t>(spoke)] = rise;
+      slope_x += rise * std::cos(angle);
+      slope_z += rise * std::sin(angle);
+    }
+    slope_x /= hearth * static_cast<float>(k_spokes) * 0.5F;
+    slope_z /= hearth * static_cast<float>(k_spokes) * 0.5F;
+    float bulge = 0.0F;
+    for (int spoke = 0; spoke < k_spokes; ++spoke) {
+      const float angle = MathConstants::k_two_pi * static_cast<float>(spoke) /
+                          static_cast<float>(k_spokes);
+      const float plane =
+          (slope_x * std::cos(angle) + slope_z * std::sin(angle)) * hearth;
+      bulge = std::max(bulge, rim_heights[static_cast<std::size_t>(spoke)] - plane);
+    }
 
     const float base_radius = std::max(prop.radius, 1.0F);
     const float phase = static_cast<float>(i) * 1.234567F;
 
-    CampDecor decor;
-    build_camp_decor(resolved, base_radius, phase, decor);
     const auto decor_index = static_cast<float>(m_camp_decor.size());
-    m_camp_decor.push_back(std::move(decor));
+    m_camp_decor.push_back(
+        build_camp_decor(terrain_service, world_x, world_z, hearth, phase));
 
     FireCampInstanceGpu instance;
-    instance.pos_intensity =
-        QVector4D(resolved.x(), resolved.y(), resolved.z(), prop.intensity);
-
-    instance.radius_phase = QVector4D(base_radius, phase, 1.0F, decor_index);
+    instance.pos_intensity = QVector4D(world_x, centre_y, world_z, prop.intensity);
+    instance.radius_phase = QVector4D(base_radius, phase, prop.scale, decor_index);
+    instance.ground = QVector4D(slope_x, slope_z, hearth, std::min(bulge, 0.3F));
     firecamp_instances.push_back(instance);
   }
 

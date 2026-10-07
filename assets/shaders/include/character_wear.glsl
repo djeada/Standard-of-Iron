@@ -28,9 +28,9 @@ const int k_elephant_role_eye = 7;
 
 const float k_elephant_height_local = 1.75;
 const float k_elephant_rim_cancel = 0.78;
-const float k_elephant_shadow_floor = 0.26;
+const float k_elephant_shadow_floor = 0.50;
 const float k_elephant_sun_rim_scale = 0.30;
-const float k_elephant_diffuse_wrap = 0.10;
+const float k_elephant_diffuse_wrap = 0.32;
 const float k_elephant_belly_shade = 0.22;
 const float k_elephant_highlight_knee = 0.72;
 const float k_elephant_hide_saturation = 0.70;

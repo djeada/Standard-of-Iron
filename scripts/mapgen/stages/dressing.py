@@ -100,7 +100,6 @@ def synthesise(ctx: Context) -> None:
     pieces = Pieces(ctx)
     field = ctx.field(reserved=False)
 
-    # Routes: both ends of a bridge, the junctions, a lost ford upstream.
     for bridge in ctx.map.get("bridges", []):
         if _roll(ctx, 0.35 + 0.6 * density):
             pieces.add("bridgehead", _midpoint(bridge), cart=_roll(ctx, 0.5))
@@ -139,7 +138,6 @@ def synthesise(ctx: Context) -> None:
                 },
             )
 
-    # High ground: ramps at hill mouths, scree under the ridges.
     for hill in ctx.map.get("terrain", []):
         if (
             hill.get("type") == "hill"
@@ -173,7 +171,6 @@ def synthesise(ctx: Context) -> None:
                     dead_trees=2,
                 )
 
-    # Settled country: gates, fields, orchards, the player's tent lines.
     for settlement in ctx.map.get("settlements", []):
         centre = (float(settlement["x"]), float(settlement["z"]))
         tier = settlement.get("tier")
@@ -229,7 +226,6 @@ def synthesise(ctx: Context) -> None:
                 pieces.add("camp_lines", spot, rows=2, cols=2, rotation=0)
                 field.mark_disc(spot[0], spot[1], 16.0, LANDMARK)
 
-    # Open ground: copses, so the basins are not bare lawn.
     copses = round(scatter * ctx.layout.sectors * 2.5)
     attempts = 0
     while copses > 0 and attempts < 80:

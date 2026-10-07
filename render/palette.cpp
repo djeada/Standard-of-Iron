@@ -15,10 +15,10 @@ using Render::Geom::clamp_vec_01;
 
 namespace {
 
-constexpr float k_cloth_min_lightness = 0.52F;
-constexpr float k_cloth_max_lightness = 0.72F;
-constexpr float k_cloth_min_chroma = 0.12F;
-constexpr float k_cloth_max_chroma = 0.22F;
+constexpr float k_cloth_min_lightness = 0.37F;
+constexpr float k_cloth_max_lightness = 0.48F;
+constexpr float k_cloth_min_chroma = 0.10F;
+constexpr float k_cloth_max_chroma = 0.17F;
 constexpr float k_achromatic_epsilon = 1e-4F;
 
 auto srgb_to_linear(float channel) -> float {

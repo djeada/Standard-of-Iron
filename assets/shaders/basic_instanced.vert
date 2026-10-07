@@ -22,6 +22,7 @@ flat out vec3 v_instance_color;
 flat out float v_instance_alpha;
 flat out int v_material_id;
 flat out float v_ground_height;
+flat out vec4 v_instance_tint;
 
 const float k_no_ground_contact = -1.0e6;
 
@@ -48,5 +49,6 @@ void main() {
   v_instance_alpha = a_instance_color_alpha.a;
   v_material_id = u_material_id;
   v_ground_height = k_no_ground_contact;
+  v_instance_tint = vec4(1.0);
   gl_Position = u_view_proj * world_pos4;
 }

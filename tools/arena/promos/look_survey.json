@@ -1,0 +1,1865 @@
+{
+  "id": "look_survey",
+  "title": "LOOK SURVEY",
+  "width": 1920,
+  "height": 1080,
+  "fps": 24,
+  "supersample": 1,
+  "gameplay_ui": false,
+  "audio": false,
+  "record_music": false,
+  "end_card_steam": false,
+  "motion_limits": {
+    "yaw_degrees_per_second": 400,
+    "pitch_degrees_per_second": 400,
+    "fov_degrees_per_second": 400,
+    "roll_degrees_per_second": 400,
+    "roll_magnitude_degrees": 30,
+    "shake": 1,
+    "minimum_clip_seconds": 0.1,
+    "mean_clip_seconds": 0.1
+  },
+  "transition": {
+    "type": "cut"
+  },
+  "shots": [
+    {
+      "name": "terrain__01_barca_campaign__establish",
+      "scenario": "spotlight_crossing_the_rhone",
+      "start": 1.0,
+      "duration": 3.0,
+      "focus": {
+        "mode": "point",
+        "point": [-36.3, 0.0, -32.6]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 330,
+          "pitch": 36,
+          "yaw": 210,
+          "fov": 40,
+          "ease": "smooth"
+        },
+        {
+          "time": 5.0,
+          "distance": 250,
+          "pitch": 34,
+          "yaw": 220,
+          "fov": 38,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "terrain__01_barca_campaign__rhone",
+      "scenario": "spotlight_crossing_the_rhone",
+      "start": 1.0,
+      "duration": 2.8,
+      "focus": {
+        "mode": "point",
+        "point": [-294.6, 0.0, -154.2]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 125,
+          "pitch": 30,
+          "yaw": 210,
+          "fov": 40,
+          "ease": "smooth"
+        },
+        {
+          "time": 2.8,
+          "distance": 100,
+          "pitch": 28,
+          "yaw": 218,
+          "fov": 38,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "terrain__01_barca_campaign__alps",
+      "scenario": "spotlight_crossing_the_alps",
+      "start": 1.0,
+      "duration": 2.8,
+      "focus": {
+        "mode": "point",
+        "point": [-178.8, 0.0, -153.7]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 210,
+          "pitch": 30,
+          "yaw": 225,
+          "fov": 40,
+          "ease": "smooth"
+        },
+        {
+          "time": 2.8,
+          "distance": 175,
+          "pitch": 28,
+          "yaw": 233,
+          "fov": 38,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "terrain__01_barca_campaign__trebia",
+      "scenario": "spotlight_battle_of_trebia",
+      "start": 1.0,
+      "duration": 2.8,
+      "focus": {
+        "mode": "point",
+        "point": [-38, 0.0, -30]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 155,
+          "pitch": 26,
+          "yaw": 135,
+          "fov": 40,
+          "ease": "smooth"
+        },
+        {
+          "time": 2.8,
+          "distance": 130,
+          "pitch": 24,
+          "yaw": 143,
+          "fov": 38,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "terrain__01_barca_campaign__trasimene",
+      "scenario": "spotlight_battle_of_trasimene",
+      "start": 1.0,
+      "duration": 2.8,
+      "focus": {
+        "mode": "point",
+        "point": [0, 0.0, -215]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 165,
+          "pitch": 22,
+          "yaw": 0,
+          "fov": 40,
+          "ease": "smooth"
+        },
+        {
+          "time": 2.8,
+          "distance": 140,
+          "pitch": 20,
+          "yaw": 8,
+          "fov": 38,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "terrain__01_barca_campaign__cannae",
+      "scenario": "spotlight_battle_of_cannae",
+      "start": 1.0,
+      "duration": 2.8,
+      "focus": {
+        "mode": "point",
+        "point": [87, 0.0, -6]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 120,
+          "pitch": 26,
+          "yaw": 225,
+          "fov": 40,
+          "ease": "smooth"
+        },
+        {
+          "time": 2.8,
+          "distance": 95,
+          "pitch": 24,
+          "yaw": 233,
+          "fov": 38,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "terrain__01_barca_campaign__zama",
+      "scenario": "spotlight_battle_of_zama",
+      "start": 1.0,
+      "duration": 2.8,
+      "focus": {
+        "mode": "point",
+        "point": [-163.3, 0.0, -39.3]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 80,
+          "pitch": 20,
+          "yaw": 45,
+          "fov": 40,
+          "ease": "smooth"
+        },
+        {
+          "time": 2.8,
+          "distance": 64,
+          "pitch": 18,
+          "yaw": 53,
+          "fov": 38,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "terrain__01_barca_campaign__campania",
+      "scenario": "spotlight_campania_campaign",
+      "start": 1.0,
+      "duration": 2.8,
+      "focus": {
+        "mode": "point",
+        "point": [-53.1, 0.0, -68.3]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 120,
+          "pitch": 30,
+          "yaw": 225,
+          "fov": 40,
+          "ease": "smooth"
+        },
+        {
+          "time": 2.8,
+          "distance": 95,
+          "pitch": 28,
+          "yaw": 233,
+          "fov": 38,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "fight__01_barca_campaign__host",
+      "scenario": "spotlight_battle_of_cannae_battle",
+      "start": 0.2,
+      "duration": 3.0,
+      "gameplay_ui": false,
+      "gameplay_ui_all_owners": true,
+      "focus": {
+        "mode": "army",
+        "owner": 1,
+        "smoothing": 0.8
+      },
+      "camera": [
+        {
+          "time": 0,
+          "ease": "smooth",
+          "distance": 70,
+          "pitch": 22,
+          "yaw": 250,
+          "fov": 40
+        },
+        {
+          "time": 3.6,
+          "ease": "smooth",
+          "distance": 58,
+          "pitch": 18,
+          "yaw": 262,
+          "fov": 38
+        }
+      ]
+    },
+    {
+      "name": "fight__01_barca_campaign__play_clash",
+      "scenario": "spotlight_battle_of_cannae_battle",
+      "start": 10.5,
+      "duration": 3.0,
+      "gameplay_ui": true,
+      "gameplay_ui_all_owners": true,
+      "focus": {
+        "mode": "battle",
+        "smoothing": 0.8
+      },
+      "camera": [
+        {
+          "time": 0,
+          "ease": "smooth",
+          "distance": 44,
+          "pitch": 16,
+          "yaw": 175,
+          "fov": 40
+        },
+        {
+          "time": 4.5,
+          "ease": "smooth",
+          "distance": 38,
+          "pitch": 15,
+          "yaw": 188,
+          "fov": 40
+        }
+      ]
+    },
+    {
+      "name": "fight__01_barca_campaign__play_melee",
+      "scenario": "spotlight_battle_of_cannae_battle",
+      "start": 16.0,
+      "duration": 3.0,
+      "gameplay_ui": true,
+      "gameplay_ui_all_owners": true,
+      "focus": {
+        "mode": "battle",
+        "smoothing": 0.8
+      },
+      "camera": [
+        {
+          "time": 0,
+          "ease": "smooth",
+          "distance": 26,
+          "pitch": 12,
+          "yaw": 20,
+          "fov": 42
+        },
+        {
+          "time": 4.0,
+          "ease": "smooth",
+          "distance": 22,
+          "pitch": 11,
+          "yaw": 30,
+          "fov": 42
+        }
+      ]
+    },
+    {
+      "name": "fight__01_barca_campaign__play_overview",
+      "scenario": "spotlight_battle_of_cannae_battle",
+      "start": 21.0,
+      "duration": 3.0,
+      "gameplay_ui": true,
+      "gameplay_ui_all_owners": true,
+      "focus": {
+        "mode": "battle",
+        "smoothing": 0.8
+      },
+      "camera": [
+        {
+          "time": 0,
+          "ease": "smooth",
+          "distance": 95,
+          "pitch": 48,
+          "yaw": 200,
+          "fov": 40
+        },
+        {
+          "time": 4.5,
+          "ease": "smooth",
+          "distance": 85,
+          "pitch": 46,
+          "yaw": 206,
+          "fov": 40
+        }
+      ]
+    },
+    {
+      "name": "fight__massed_battle__two_hosts",
+      "scenario": "massed_battle_1000",
+      "start": 0.0,
+      "duration": 3.0,
+      "focus": {
+        "mode": "point",
+        "point": [0.0, 0.0, -6.0]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 58,
+          "pitch": 30,
+          "yaw": 190,
+          "fov": 44,
+          "height": 1.5
+        },
+        {
+          "time": 4.0,
+          "distance": 46,
+          "pitch": 24,
+          "yaw": 204,
+          "fov": 44,
+          "height": 1.5,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "fight__massed_battle__lines_collide",
+      "scenario": "massed_battle_1000",
+      "start": 7.2,
+      "duration": 3.0,
+      "slow_motion": 1.6,
+      "focus": {
+        "mode": "group_pair",
+        "group": "blue_swords_a",
+        "second_group": "red_swords_a",
+        "smoothing": 0.9
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 12.5,
+          "pitch": 14,
+          "yaw": 262,
+          "fov": 48,
+          "height": 1.7
+        },
+        {
+          "time": 3.0,
+          "distance": 9.5,
+          "pitch": 17,
+          "yaw": 282,
+          "fov": 48,
+          "height": 1.7,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "fight__massed_battle__the_press",
+      "scenario": "massed_battle_1000",
+      "start": 12.0,
+      "duration": 3.0,
+      "slow_motion": 1.5,
+      "focus": {
+        "mode": "group_pair",
+        "group": "blue_spears_a",
+        "second_group": "red_swords_a",
+        "smoothing": 1.0
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 9.0,
+          "pitch": 16,
+          "yaw": 296,
+          "fov": 48,
+          "height": 1.5
+        },
+        {
+          "time": 3.0,
+          "distance": 8.0,
+          "pitch": 19,
+          "yaw": 316,
+          "fov": 48,
+          "height": 1.5,
+          "ease": "linear"
+        }
+      ]
+    },
+    {
+      "name": "animal__massed_battle__cavalry_charge",
+      "scenario": "massed_battle_1000",
+      "start": 2.4,
+      "duration": 2.6,
+      "focus": {
+        "mode": "group",
+        "group": "blue_cavalry_right",
+        "smoothing": 0.7
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 13,
+          "pitch": 9,
+          "yaw": 150,
+          "fov": 50,
+          "height": 1.7
+        },
+        {
+          "time": 2.6,
+          "distance": 11,
+          "pitch": 11,
+          "yaw": 176,
+          "fov": 50,
+          "height": 1.7,
+          "ease": "linear"
+        }
+      ]
+    },
+    {
+      "name": "humanoid__commander_duel__first_clash",
+      "scenario": "promo_commander_duel",
+      "seed": 2024,
+      "start": 6.45,
+      "duration": 1.05,
+      "slow_motion": 2.4,
+      "shake": 0.03,
+      "focus": {
+        "mode": "group_pair",
+        "group": "scipio",
+        "second_group": "hannibal",
+        "smoothing": 0.16
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 9.2,
+          "pitch": 13,
+          "yaw": 52,
+          "fov": 38,
+          "height": 1.5,
+          "roll": -2
+        },
+        {
+          "time": 2.52,
+          "distance": 7.8,
+          "pitch": 16,
+          "yaw": 21.76,
+          "fov": 38,
+          "height": 1.5,
+          "roll": 2,
+          "ease": "linear"
+        }
+      ]
+    },
+    {
+      "name": "humanoid__commander_duel__trade",
+      "scenario": "promo_commander_duel",
+      "seed": 2024,
+      "start": 9.4,
+      "duration": 2.8,
+      "focus": {
+        "mode": "group_pair",
+        "group": "scipio",
+        "second_group": "hannibal",
+        "smoothing": 0.3
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 8.8,
+          "pitch": 10,
+          "yaw": 116,
+          "fov": 40,
+          "height": 1.5
+        },
+        {
+          "time": 2.8,
+          "distance": 7.6,
+          "pitch": 13,
+          "yaw": 138,
+          "fov": 40,
+          "height": 1.5,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "fight__last_stand__collision",
+      "scenario": "promo_last_stand",
+      "start": 4.6,
+      "duration": 1.1,
+      "slow_motion": 2.5,
+      "shake": 0.03,
+      "focus": {
+        "mode": "group_pair",
+        "group": "roman_line",
+        "second_group": "punic_horde",
+        "smoothing": 0.3
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 10.0,
+          "pitch": 14,
+          "yaw": 118,
+          "fov": 52,
+          "height": 1.5
+        },
+        {
+          "time": 1.1,
+          "distance": 8.5,
+          "pitch": 17,
+          "yaw": 104.8,
+          "fov": 52,
+          "height": 1.6,
+          "ease": "linear"
+        }
+      ]
+    },
+    {
+      "name": "fight__last_stand__melee_orbit",
+      "scenario": "promo_last_stand",
+      "start": 9.6,
+      "duration": 2.3,
+      "slow_motion": 1.0,
+      "focus": {
+        "mode": "group_pair",
+        "group": "roman_line",
+        "second_group": "punic_horde",
+        "smoothing": 0.6
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 15,
+          "pitch": 20.0,
+          "yaw": 150.0,
+          "fov": 46,
+          "height": 1.4
+        },
+        {
+          "time": 2.3,
+          "distance": 12,
+          "pitch": 17.0,
+          "yaw": 177.6,
+          "fov": 46,
+          "height": 1.4,
+          "ease": "linear"
+        }
+      ]
+    },
+    {
+      "name": "fight__capture_siege__clash_gate",
+      "scenario": "cine_siege",
+      "start": 34.0,
+      "duration": 3.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [205, 0.9, 24],
+          "look": [218, 0.8, -32],
+          "fov": 11
+        },
+        {
+          "time": 10.0,
+          "eye": [209, 0.9, 24],
+          "look": [222, 0.8, -32],
+          "fov": 11
+        }
+      ],
+      "ground_clearance": 0.3,
+      "lighting": {
+        "hour": 16.9
+      }
+    },
+    {
+      "name": "animal__capture_siege__elephants_gate",
+      "scenario": "cine_siege",
+      "start": 16.0,
+      "duration": 3.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [232, 0.55, -6],
+          "look": [272, 1.4, -30],
+          "fov": 22
+        },
+        {
+          "time": 9.0,
+          "eye": [233, 0.55, -7],
+          "look": [262, 1.4, -30],
+          "fov": 22
+        }
+      ],
+      "ground_clearance": 0.3,
+      "lighting": {
+        "hour": 16.9
+      }
+    },
+    {
+      "name": "fight__capture_siege__legion_before_gate",
+      "scenario": "cine_siege",
+      "start": 10.0,
+      "duration": 3.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [238, 0.5, -22],
+          "look": [210, 0.8, -34],
+          "fov": 22
+        },
+        {
+          "time": 8.0,
+          "eye": [237, 0.5, -20.5],
+          "look": [210, 0.8, -34],
+          "fov": 22
+        }
+      ],
+      "ground_clearance": 0.3,
+      "lighting": {
+        "hour": 16.9
+      }
+    },
+    {
+      "name": "animal__carthage_crescent__elephants",
+      "scenario": "promo_carthage_crescent",
+      "start": 22.0,
+      "duration": 3.0,
+      "slow_motion": 1.5,
+      "focus": {
+        "mode": "group",
+        "group": "war_elephants",
+        "smoothing": 0.3
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 22,
+          "pitch": 7,
+          "yaw": 200,
+          "fov": 48,
+          "height": 2.4
+        },
+        {
+          "time": 3.0,
+          "distance": 16,
+          "pitch": 10,
+          "yaw": 214,
+          "fov": 48,
+          "height": 2.4,
+          "ease": "out"
+        }
+      ]
+    },
+    {
+      "name": "fight__carthage_crescent__encircle",
+      "scenario": "promo_carthage_crescent",
+      "start": 38.0,
+      "duration": 3.0,
+      "focus": {
+        "mode": "all",
+        "smoothing": 0.9
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 32,
+          "pitch": 20,
+          "yaw": 6,
+          "fov": 40,
+          "height": 1.2
+        },
+        {
+          "time": 7.0,
+          "distance": 46,
+          "pitch": 38,
+          "yaw": 0,
+          "fov": 40,
+          "height": 1.0,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "town__imperial_capital__city_aerial",
+      "scenario": "promo_imperial_capital",
+      "seed": 8190,
+      "start": 24.0,
+      "duration": 3.0,
+      "focus": {
+        "mode": "point",
+        "point": [0.0, 0.0, 118.0],
+        "smoothing": 0.85
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 300,
+          "pitch": 42,
+          "yaw": 6,
+          "fov": 34,
+          "height": 58.0
+        },
+        {
+          "time": 6.0,
+          "distance": 34,
+          "pitch": 15,
+          "yaw": 0,
+          "fov": 30,
+          "height": 5.0,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "town__imperial_capital__gate",
+      "scenario": "promo_imperial_capital",
+      "seed": 8190,
+      "start": 30.0,
+      "duration": 3.0,
+      "focus": {
+        "mode": "point",
+        "point": [0.0, 0.0, 118.0],
+        "smoothing": 0.85
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 30,
+          "pitch": 15,
+          "yaw": 180,
+          "fov": 30,
+          "height": 5.0
+        },
+        {
+          "time": 4.1,
+          "distance": 21,
+          "pitch": 13,
+          "yaw": 187,
+          "fov": 30,
+          "height": 4.2,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "town__imperial_capital__avenue",
+      "scenario": "promo_imperial_capital",
+      "seed": 8190,
+      "start": 56.0,
+      "duration": 3.0,
+      "focus": {
+        "mode": "group",
+        "group": "capital_column_swords",
+        "smoothing": 0.85
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 22,
+          "pitch": 10,
+          "yaw": 74,
+          "fov": 30,
+          "height": 2.4
+        },
+        {
+          "time": 4.1,
+          "distance": 22,
+          "pitch": 10,
+          "yaw": 84,
+          "fov": 30,
+          "height": 2.4,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "town__imperial_capital__work",
+      "scenario": "promo_imperial_capital",
+      "seed": 8190,
+      "start": 40.0,
+      "duration": 3.0,
+      "focus": {
+        "mode": "group",
+        "group": "capital_masons_forum",
+        "smoothing": 0.85
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 20,
+          "pitch": 13,
+          "yaw": 156,
+          "fov": 30,
+          "height": 3.0
+        },
+        {
+          "time": 4.1,
+          "distance": 14,
+          "pitch": 13,
+          "yaw": 156,
+          "fov": 30,
+          "height": 2.2,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "town__imperial_capital__temple_hill",
+      "scenario": "promo_imperial_capital",
+      "seed": 8190,
+      "start": 70.0,
+      "duration": 3.0,
+      "focus": {
+        "mode": "group",
+        "group": "capital_temple",
+        "smoothing": 0.85
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 68,
+          "pitch": 31,
+          "yaw": 0,
+          "fov": 32,
+          "height": 6.0
+        },
+        {
+          "time": 4.6,
+          "distance": 54,
+          "pitch": 27,
+          "yaw": 14,
+          "fov": 32,
+          "height": 5.0,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "town__capture_city__forum_crowd",
+      "scenario": "promo_imperial_capital",
+      "start": 36.0,
+      "duration": 3.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [10, 0.9, -66],
+          "look": [-2, 1.6, -102],
+          "fov": 24
+        },
+        {
+          "time": 9,
+          "eye": [8, 0.9, -66],
+          "look": [-2, 1.6, -102],
+          "fov": 24
+        }
+      ],
+      "ground_clearance": 0.3,
+      "lighting": {
+        "hour": 10.5
+      }
+    },
+    {
+      "name": "town__capture_city__dock_market",
+      "scenario": "promo_imperial_capital",
+      "start": 32.0,
+      "duration": 3.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [-40, 1.0, 162],
+          "look": [-60, 0.9, 146],
+          "fov": 26
+        },
+        {
+          "time": 9.0,
+          "eye": [-41, 1.0, 162],
+          "look": [-60, 0.9, 146],
+          "fov": 26
+        }
+      ],
+      "ground_clearance": 0.3,
+      "lighting": {
+        "hour": 10.5
+      }
+    },
+    {
+      "name": "town__village_day_life__lane",
+      "scenario": "village_day_life",
+      "seed": 8051,
+      "start": 14.0,
+      "duration": 3.0,
+      "focus": {
+        "mode": "point",
+        "point": [-2.0, 0.0, 1.0],
+        "smoothing": 0.6
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 27,
+          "pitch": 24,
+          "yaw": 28,
+          "fov": 40,
+          "height": 1.8
+        },
+        {
+          "time": 6.0,
+          "distance": 23,
+          "pitch": 27,
+          "yaw": 46,
+          "fov": 40,
+          "height": 2.0,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "town__village_day_life__market",
+      "scenario": "village_day_life",
+      "seed": 8051,
+      "start": 26.0,
+      "duration": 3.0,
+      "focus": {
+        "mode": "group",
+        "group": "day_market_folk",
+        "smoothing": 0.45
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 15,
+          "pitch": 23,
+          "yaw": 34,
+          "fov": 38,
+          "height": 1.4
+        },
+        {
+          "time": 5.0,
+          "distance": 13,
+          "pitch": 26,
+          "yaw": 50,
+          "fov": 38,
+          "height": 1.5,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "town__village_day_life__wide",
+      "scenario": "village_day_life",
+      "seed": 8051,
+      "start": 82.0,
+      "duration": 3.0,
+      "focus": {
+        "mode": "point",
+        "point": [-2.0, 0.0, 1.0],
+        "smoothing": 0.7
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 26,
+          "pitch": 22,
+          "yaw": 20,
+          "fov": 40,
+          "height": 2.0
+        },
+        {
+          "time": 7.0,
+          "distance": 42,
+          "pitch": 34,
+          "yaw": 44,
+          "fov": 40,
+          "height": 3.0,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "animal__village_day_life__flock",
+      "scenario": "village_day_life",
+      "seed": 8051,
+      "start": 70.0,
+      "duration": 3.0,
+      "focus": {
+        "mode": "point",
+        "point": [-16.0, 0.0, 15.0],
+        "smoothing": 0.5
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 16,
+          "pitch": 20,
+          "yaw": 6,
+          "fov": 38,
+          "height": 1.5
+        },
+        {
+          "time": 4.5,
+          "distance": 18,
+          "pitch": 24,
+          "yaw": 24,
+          "fov": 38,
+          "height": 1.7,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "humanoid__village_day_life__hearth",
+      "scenario": "village_day_life",
+      "seed": 8051,
+      "start": 58.0,
+      "duration": 3.0,
+      "focus": {
+        "mode": "group",
+        "group": "day_yard_folk",
+        "smoothing": 0.5
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 14,
+          "pitch": 22,
+          "yaw": 44,
+          "fov": 38,
+          "height": 1.4
+        },
+        {
+          "time": 5.0,
+          "distance": 15,
+          "pitch": 25,
+          "yaw": 26,
+          "fov": 38,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "town__trailer__punic_town",
+      "scenario": "carthage_trade_town",
+      "start": 4.0,
+      "duration": 3.0,
+      "focus": {
+        "mode": "point",
+        "point": [0.0, 0.0, 0.0]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 34.0,
+          "pitch": 24,
+          "yaw": 216,
+          "fov": 42,
+          "height": 2.0
+        },
+        {
+          "time": 3.2,
+          "distance": 26.0,
+          "pitch": 21,
+          "yaw": 236,
+          "fov": 42,
+          "height": 1.9,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "town__trailer__mill_town",
+      "scenario": "riverside_mill_town",
+      "start": 5.0,
+      "duration": 3.0,
+      "focus": {
+        "mode": "all",
+        "smoothing": 0.4
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 30.0,
+          "pitch": 16,
+          "yaw": 240,
+          "fov": 43,
+          "height": 1.8
+        },
+        {
+          "time": 3.0,
+          "distance": 23.0,
+          "pitch": 14,
+          "yaw": 222,
+          "fov": 43,
+          "height": 1.7,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "terrain__trailer__high_pass",
+      "scenario": "trailer_highland",
+      "start": 12.0,
+      "duration": 3.0,
+      "focus": {
+        "mode": "group",
+        "group": "pass_column",
+        "smoothing": 0.25
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 28.0,
+          "pitch": 18,
+          "yaw": 254,
+          "fov": 44,
+          "height": 2.6
+        },
+        {
+          "time": 3.8,
+          "distance": 20.0,
+          "pitch": 15,
+          "yaw": 272,
+          "fov": 44,
+          "height": 2.2,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "terrain__trailer__wood_march",
+      "scenario": "trailer_forest_ambush",
+      "start": 7.0,
+      "duration": 3.0,
+      "focus": {
+        "mode": "group",
+        "group": "wood_column",
+        "smoothing": 0.25
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 18.0,
+          "pitch": 11,
+          "yaw": 241,
+          "fov": 45,
+          "height": 1.6
+        },
+        {
+          "time": 3.0,
+          "distance": 13.0,
+          "pitch": 13,
+          "yaw": 224,
+          "fov": 45,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "animal__trailer__flock",
+      "scenario": "trailer_wolf_rain",
+      "start": 8.0,
+      "duration": 3.0,
+      "focus": {
+        "mode": "point",
+        "point": [0.0, 0.0, 6.0]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 31.0,
+          "pitch": 22,
+          "yaw": 232,
+          "fov": 44,
+          "height": 2.3
+        },
+        {
+          "time": 3.0,
+          "distance": 25.0,
+          "pitch": 19,
+          "yaw": 248,
+          "fov": 44,
+          "height": 2.1,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "animal__trailer__wolf_rush",
+      "scenario": "trailer_wolf_rain",
+      "start": 13.0,
+      "duration": 3.0,
+      "slow_motion": 1.5,
+      "focus": {
+        "mode": "point",
+        "point": [0.0, 0.0, 6.0]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 27.0,
+          "pitch": 21,
+          "yaw": 240,
+          "fov": 45,
+          "height": 2.1
+        },
+        {
+          "time": 3.0,
+          "distance": 20.0,
+          "pitch": 18,
+          "yaw": 258,
+          "fov": 45,
+          "height": 1.9,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "humanoid__humanoid_showcase__walk",
+      "scenario": "promo_humanoid_showcase",
+      "seed": 44,
+      "start": 4.0,
+      "duration": 3.0,
+      "focus": {
+        "mode": "group",
+        "group": "runner",
+        "smoothing": 0.35
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 5.25,
+          "pitch": 13,
+          "yaw": 168,
+          "fov": 36,
+          "height": 1.25
+        },
+        {
+          "time": 3.0,
+          "distance": 4.76,
+          "pitch": 17,
+          "yaw": 150,
+          "fov": 36,
+          "height": 1.3,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "humanoid__humanoid_showcase__blade",
+      "scenario": "promo_humanoid_showcase",
+      "seed": 44,
+      "start": 15.8,
+      "duration": 3.0,
+      "slow_motion": 1.25,
+      "focus": {
+        "mode": "group",
+        "group": "blademaster",
+        "smoothing": 0.25
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 4.59,
+          "pitch": 13,
+          "yaw": -16,
+          "fov": 38,
+          "height": 1.3
+        },
+        {
+          "time": 4.0,
+          "distance": 4.1,
+          "pitch": 17,
+          "yaw": 22,
+          "fov": 38,
+          "height": 1.35,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "humanoid__humanoid_showcase__wide",
+      "scenario": "promo_humanoid_showcase",
+      "seed": 44,
+      "start": 24.0,
+      "duration": 3.0,
+      "focus": {
+        "mode": "point",
+        "point": [-2.0, 0.0, -2.0]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 15.0,
+          "pitch": 16,
+          "yaw": 30,
+          "fov": 34,
+          "height": 1.6
+        },
+        {
+          "time": 4.0,
+          "distance": 21.0,
+          "pitch": 24,
+          "yaw": 8,
+          "fov": 34,
+          "height": 1.9,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "humanoid__commander_rally__his_face",
+      "scenario": "promo_commander_rally",
+      "start": 15.5,
+      "duration": 1.7,
+      "slow_motion": 1.4,
+      "focus": {
+        "mode": "point",
+        "point": [0.5, 7.0, -15.5],
+        "smoothing": 2.6
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 7.0,
+          "pitch": -5,
+          "yaw": 332,
+          "fov": 32,
+          "height": 0.9
+        },
+        {
+          "time": 1.7,
+          "distance": 6.4,
+          "pitch": -7,
+          "yaw": 344,
+          "fov": 32,
+          "height": 1.0,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "humanoid__rome_iron_line__front_rank",
+      "scenario": "promo_rome_iron_line",
+      "start": 24.0,
+      "duration": 3.0,
+      "focus": {
+        "mode": "group",
+        "group": "first_line",
+        "smoothing": 0.4
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 26,
+          "pitch": 7,
+          "yaw": 96,
+          "fov": 46,
+          "height": 1.8
+        },
+        {
+          "time": 3.4,
+          "distance": 22,
+          "pitch": 9,
+          "yaw": 74,
+          "fov": 46,
+          "height": 1.8,
+          "ease": "linear"
+        }
+      ]
+    },
+    {
+      "name": "fight__rome_iron_line__shield_wall",
+      "scenario": "promo_rome_iron_line",
+      "start": 31.0,
+      "duration": 3.0,
+      "slow_motion": 1.4,
+      "focus": {
+        "mode": "group",
+        "group": "spear_screen",
+        "smoothing": 0.3
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 20,
+          "pitch": 12,
+          "yaw": 186,
+          "fov": 48,
+          "height": 1.6
+        },
+        {
+          "time": 3.0,
+          "distance": 14,
+          "pitch": 15,
+          "yaw": 196,
+          "fov": 48,
+          "height": 1.5,
+          "ease": "out"
+        }
+      ]
+    },
+    {
+      "name": "animal__wolf_attack__the_pack",
+      "scenario": "promo_wolf_attack",
+      "seed": 101,
+      "start": 5.2,
+      "duration": 2.4,
+      "focus": {
+        "mode": "point",
+        "point": [14.0, 0.0, 3.6],
+        "smoothing": 0.4
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 9.0,
+          "pitch": 16,
+          "yaw": 300,
+          "fov": 40,
+          "height": 1.8
+        },
+        {
+          "time": 2.2,
+          "distance": 6.0,
+          "pitch": 19,
+          "yaw": 320,
+          "fov": 40,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "animal__wolf_attack__mauled",
+      "scenario": "promo_wolf_attack",
+      "seed": 101,
+      "start": 9.9,
+      "duration": 3.0,
+      "focus": {
+        "mode": "point",
+        "point": [-0.5, 0.0, 9.6],
+        "smoothing": 0.2
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 5.8,
+          "pitch": 20,
+          "yaw": 330,
+          "fov": 40,
+          "height": 1.5
+        },
+        {
+          "time": 2.3,
+          "distance": 4.6,
+          "pitch": 24,
+          "yaw": 306,
+          "fov": 40,
+          "height": 1.4,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "animal__wolf_attack__the_charge",
+      "scenario": "promo_wolf_attack",
+      "seed": 101,
+      "start": 13.4,
+      "duration": 2.4,
+      "shake": 0.012,
+      "focus": {
+        "mode": "group",
+        "group": "riders",
+        "smoothing": 0.2
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 11.0,
+          "pitch": 15,
+          "yaw": 172,
+          "fov": 42,
+          "height": 2.4
+        },
+        {
+          "time": 2.2,
+          "distance": 8.0,
+          "pitch": 19,
+          "yaw": 196,
+          "fov": 42,
+          "height": 2.2,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "animal__capture_field__elephants_ridge",
+      "scenario": "cine_field",
+      "start": 3.0,
+      "duration": 3.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "lighting": {
+        "hour": 15.4
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [14, 0.8, -12],
+          "look": [70, 2.4, -36],
+          "fov": 10.5
+        },
+        {
+          "time": 5.0,
+          "eye": [14, 0.8, -15],
+          "look": [70, 2.4, -36],
+          "fov": 10.5
+        }
+      ],
+      "ground_clearance": 0.3
+    },
+    {
+      "name": "animal__capture_field__numidian_track",
+      "scenario": "cine_field",
+      "start": 17.0,
+      "duration": 3.0,
+      "rig": "free",
+      "focus": {
+        "mode": "group",
+        "group": "numidians_n",
+        "smoothing": 0.6,
+        "spring": true,
+        "dead_zone": 0.6
+      },
+      "lighting": {
+        "hour": 15.4
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [2, 1.7, -24],
+          "look": [0, 0.7, 0],
+          "fov": 30
+        },
+        {
+          "time": 7,
+          "eye": [-2, 1.7, -24],
+          "look": [0, 0.7, 0],
+          "fov": 30
+        }
+      ],
+      "ground_clearance": 0.3
+    },
+    {
+      "name": "fight__capture_field__melee_tele",
+      "scenario": "cine_field",
+      "start": 50.0,
+      "duration": 3.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "ground_clearance": 0.3,
+      "lighting": {
+        "hour": 15.4
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [-2, 1.6, -40],
+          "look": [-8, 0.7, -2],
+          "fov": 12
+        },
+        {
+          "time": 10,
+          "eye": [2, 1.6, -40],
+          "look": [-6, 0.7, -2],
+          "fov": 12
+        }
+      ]
+    },
+    {
+      "name": "night__night_of_the_dead__grave_light",
+      "scenario": "promo_night_of_the_dead",
+      "start": 14.0,
+      "duration": 1.1,
+      "slow_motion": 2.0,
+      "focus": {
+        "mode": "point",
+        "point": [0.0, 0.0, 4.0]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 7.0,
+          "pitch": 5,
+          "yaw": 22,
+          "fov": 50,
+          "height": 2.0,
+          "roll": 3
+        },
+        {
+          "time": 1.1,
+          "distance": 6.0,
+          "pitch": 8,
+          "yaw": 8.8,
+          "fov": 50,
+          "height": 2.2,
+          "roll": -1.4,
+          "ease": "linear"
+        }
+      ]
+    },
+    {
+      "name": "night__night_of_the_dead__first_contact",
+      "scenario": "promo_night_of_the_dead",
+      "start": 11.0,
+      "duration": 1.2,
+      "slow_motion": 2.2,
+      "shake": 0.03,
+      "focus": {
+        "mode": "group",
+        "group": "roman_column",
+        "smoothing": 0.25
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 8.0,
+          "pitch": 12,
+          "yaw": 96,
+          "fov": 52,
+          "height": 1.5
+        },
+        {
+          "time": 1.2,
+          "distance": 6.6,
+          "pitch": 15,
+          "yaw": 84,
+          "fov": 52,
+          "height": 1.5,
+          "ease": "linear"
+        }
+      ]
+    },
+    {
+      "name": "night__night_watch__watch",
+      "scenario": "ambience_night_watch",
+      "seed": 5501,
+      "start": 14.0,
+      "duration": 3.0,
+      "shake": 0.0,
+      "focus": {
+        "mode": "point",
+        "point": [0.0, 0.35, 0.0]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 10.0,
+          "pitch": 10.0,
+          "yaw": 80.0,
+          "fov": 33.0,
+          "height": 0.85,
+          "ease": "linear"
+        },
+        {
+          "time": 36.0,
+          "distance": 10.0,
+          "pitch": 10.0,
+          "yaw": 80.0,
+          "fov": 33.0,
+          "height": 0.85,
+          "ease": "linear"
+        }
+      ]
+    },
+    {
+      "name": "night__capture_sepulcher__snow_melee",
+      "scenario": "cine_sepulcher",
+      "start": 30.0,
+      "duration": 3.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [14, 1.0, -2],
+          "look": [0, 0.7, -10],
+          "fov": 22
+        },
+        {
+          "time": 10.0,
+          "eye": [13, 1.0, -3],
+          "look": [0, 0.7, -10],
+          "fov": 22
+        }
+      ],
+      "ground_clearance": 0.3,
+      "lighting": {
+        "ambient_scale": 2.2,
+        "sun_scale": 1.8,
+        "exposure": 1.35
+      }
+    },
+    {
+      "name": "night__capture_sepulcher__barrow_mist",
+      "scenario": "cine_sepulcher",
+      "start": 1.0,
+      "duration": 3.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [9, 0.9, 20],
+          "look": [0, 1.2, -18],
+          "fov": 28
+        },
+        {
+          "time": 8.0,
+          "eye": [8, 0.9, 18.5],
+          "look": [0, 1.2, -18],
+          "fov": 27
+        }
+      ],
+      "ground_clearance": 0.3,
+      "lighting": {
+        "ambient_scale": 2.2,
+        "sun_scale": 1.8,
+        "exposure": 1.35
+      }
+    }
+  ]
+}

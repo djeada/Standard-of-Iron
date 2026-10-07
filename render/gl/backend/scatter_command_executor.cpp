@@ -484,15 +484,6 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
             m_vegetation_pipeline->m_firecamp_uniforms.camera_forward, camera_forward);
       }
 
-      if (m_vegetation_pipeline->m_firecamp_uniforms.fire_texture !=
-          Shader::InvalidUniform) {
-        if (m_resources && (m_resources->white() != nullptr)) {
-          m_resources->white()->bind(0);
-          firecamp_shader->set_uniform(
-              m_vegetation_pipeline->m_firecamp_uniforms.fire_texture, 0);
-        }
-      }
-
       glBindVertexArray(m_vegetation_pipeline->m_firecamp_mesh.vao);
       firecamp.instance_buffer->bind();
       const auto stride = static_cast<GLsizei>(sizeof(FireCampInstanceGpu));
@@ -507,7 +498,13 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
                                    GL_FLOAT,
                                    GL_FALSE,
                                    stride,
-                                   offsetof(FireCampInstanceGpu, radius_phase)}});
+                                   offsetof(FireCampInstanceGpu, radius_phase)},
+                                  {instance_color,
+                                   vec4,
+                                   GL_FLOAT,
+                                   GL_FALSE,
+                                   stride,
+                                   offsetof(FireCampInstanceGpu, ground)}});
       firecamp.instance_buffer->unbind();
 
       glDrawElementsInstanced(GL_TRIANGLES,

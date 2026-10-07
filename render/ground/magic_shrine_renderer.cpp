@@ -17,9 +17,9 @@ namespace {
 
 using namespace Render::Ground;
 
-constexpr float k_base_color_r = 0.28F;
-constexpr float k_base_color_g = 0.20F;
-constexpr float k_base_color_b = 0.38F;
+constexpr float k_base_color_r = 0.128F;
+constexpr float k_base_color_g = 0.118F;
+constexpr float k_base_color_b = 0.124F;
 
 } // namespace
 
@@ -52,13 +52,15 @@ void MagicShrineRenderer::submit(Renderer& renderer, ResourceManager* resources)
   for (const auto& inst : m_state.visible_instances) {
     const QVector3D shrine_pos = inst.pos_scale.toVector3D();
     const float scale = std::max(inst.pos_scale.w(), 0.1F);
-    const float pulse =
-        0.88F + 0.12F * std::sin((m_state.params.time * 1.4F) + inst.color_rot.w());
+    const float time = m_state.params.time;
+    const float phase = inst.color_rot.w();
+    const float pulse = 0.86F + (0.08F * std::sin((time * 7.3F) + phase)) +
+                        (0.06F * std::sin((time * 3.1F) + (phase * 2.0F)));
     Render::LocalLight votive;
-    votive.position = shrine_pos + QVector3D(0.0F, scale * 0.9F, 0.0F);
-    votive.color = QVector3D(0.52F, 0.62F, 0.86F);
-    votive.radius = std::clamp(scale * 3.4F, 3.5F, 11.0F);
-    votive.intensity = 0.55F * pulse;
+    votive.position = shrine_pos + QVector3D(0.0F, scale * 1.0F, 0.0F);
+    votive.color = QVector3D(1.00F, 0.36F, 0.12F);
+    votive.radius = std::clamp(scale * 3.8F, 4.0F, 12.0F);
+    votive.intensity = 0.95F * pulse;
     renderer.local_light(votive);
   }
 }

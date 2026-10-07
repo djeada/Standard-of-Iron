@@ -48,7 +48,7 @@ vec3 soi_mineral_variation(vec3 base_color, vec2 uv, vec3 normal) {
   float grain = soi_detail_fine(uv * 8.5) - 0.5;
   float upness = abs(normal.y);
 
-  vec3 cool_lime = base_color * vec3(0.94, 0.98, 1.025);
+  vec3 cool_lime = base_color * vec3(0.965, 0.985, 1.005);
   vec3 sun_worn = base_color * vec3(1.045, 0.995, 0.91);
   vec3 variation = mix(cool_lime, sun_worn, smoothstep(-0.35, 0.35, broad));
   variation *= 0.97 + broad * 0.10 + mottle * 0.075 + grain * 0.035;
@@ -139,7 +139,7 @@ vec3 soi_material_variation(vec3 base_color,
   if (material_id == k_material_mineral || material_id == 0 ||
       material_id == k_material_wood || material_id == k_material_ceramic) {
     float luma = dot(base_color, vec3(0.299, 0.587, 0.114));
-    float saturation = material_id == k_material_wood ? 0.92 : 0.86;
+    float saturation = material_id == k_material_wood ? 0.94 : 0.93;
     base_color = mix(vec3(luma), base_color, mix(1.0, saturation, tactical));
   }
   if (!u_has_material_detail) {

@@ -71,7 +71,7 @@ def synthesise(ctx: Context) -> None:
         tangent = (q[0] - p[0], q[1] - p[1])
         norm = math.hypot(*tangent) or 1.0
         normal = (-tangent[1] / norm, tangent[0] / norm)
-        # Outer side of the road: the one facing away from the map centre.
+
         outward = (points[i][0] - centre[0]) * normal[0] + (
             points[i][1] - centre[1]
         ) * normal[1]

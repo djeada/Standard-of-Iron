@@ -130,7 +130,7 @@ auto dark_mage_fill_role_colors(const HumanoidPalette& palette,
       robe * 2.30F + QVector3D(0.035F, 0.028F, 0.070F));
 
   out[k_mage_glyph_slot] = Render::GL::Humanoid::saturate_color(
-      QVector3D(0.30F, 0.86F, 0.62F) * 0.76F + palette.cloth * 0.24F);
+      QVector3D(0.62F, 0.86F, 0.80F) * 0.82F + palette.cloth * 0.18F);
   out[k_mage_metal_slot] = Render::GL::Humanoid::saturate_color(
       palette.metal * 0.55F + QVector3D(0.10F, 0.07F, 0.02F));
   out[k_mage_bone_slot] = QVector3D(0.78F, 0.75F, 0.66F);

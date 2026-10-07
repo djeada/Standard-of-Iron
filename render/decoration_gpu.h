@@ -102,6 +102,7 @@ struct FoliageBatchParams {
 struct FireCampInstanceGpu {
   QVector4D pos_intensity;
   QVector4D radius_phase;
+  QVector4D ground;
 };
 
 struct FireCampBatchParams {

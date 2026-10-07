@@ -93,9 +93,9 @@ void StatueRenderer::generate_instances(
 
     float const quarry = rand_01(state);
     QVector3D color =
-        quarry < 0.55F
+        quarry < 0.30F
             ? pentelic_marble
-            : (quarry < 0.82F ? pentelic_marble * 0.45F + travertine * 0.55F
+            : (quarry < 0.74F ? pentelic_marble * 0.45F + travertine * 0.55F
                               : pentelic_marble * 0.35F + grey_limestone * 0.65F);
     float const weathering = remap(rand_01(state), 0.0F, 0.14F);
     color *= 1.0F - weathering;

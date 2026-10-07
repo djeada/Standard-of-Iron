@@ -590,9 +590,13 @@ void TerrainRenderer::submit(Renderer& renderer, ResourceManager* resources) {
     }
     submission_cache.was_submitted = true;
 
+    constexpr float k_inverse_sqrt3 = 0.57735027F;
     TerrainSurfaceCmd cmd;
     cmd.mesh = chunk.mesh.get();
     cmd.model = k_identity_matrix;
+    const float half_extent = chunk.cull_radius * k_inverse_sqrt3;
+    cmd.aabb.min = chunk.cull_center - QVector3D(half_extent, half_extent, half_extent);
+    cmd.aabb.max = chunk.cull_center + QVector3D(half_extent, half_extent, half_extent);
     cmd.params = chunk.params;
     cmd.height = height_resources;
     cmd.visibility = visibility_resources;

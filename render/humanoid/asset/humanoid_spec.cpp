@@ -305,6 +305,7 @@ constexpr auto make_full_cranium() noexcept -> Creature::PrimitiveInstance {
 
   Creature::PrimitiveInstance p{};
   p.debug_name = "humanoid_full_cranium";
+  p.surface_marker = Creature::k_surface_marker_face_cranium;
   p.shape = Creature::PrimitiveShape::OrientedSphere;
   p.params.anchor_bone = bone(HumanoidBone::Head);
   p.params.head_offset = QVector3D(0.0F, HP::HEAD_RADIUS * 0.06F, 0.0F);
@@ -318,6 +319,7 @@ constexpr auto make_full_cranium() noexcept -> Creature::PrimitiveInstance {
 constexpr auto make_full_jaw() noexcept -> Creature::PrimitiveInstance {
   Creature::PrimitiveInstance p{};
   p.debug_name = "humanoid_full_jaw";
+  p.surface_marker = Creature::k_surface_marker_face_jaw;
   p.shape = Creature::PrimitiveShape::OrientedSphere;
   p.params.anchor_bone = bone(HumanoidBone::Head);
   p.params.head_offset =
@@ -1105,6 +1107,7 @@ constexpr auto make_skeleton_foot(bool left) noexcept -> Creature::PrimitiveInst
 
 constexpr auto make_skeleton_skull() noexcept -> Creature::PrimitiveInstance {
   Creature::PrimitiveInstance p = make_full_cranium();
+  p.surface_marker = Creature::k_surface_marker_none;
   p.debug_name = "skeleton_skull";
   p.params.head_offset = QVector3D(0.0F, HP::HEAD_RADIUS * 0.10F, 0.0F);
   p.params.half_extents = QVector3D(
@@ -1115,6 +1118,7 @@ constexpr auto make_skeleton_skull() noexcept -> Creature::PrimitiveInstance {
 
 constexpr auto make_skeleton_jaw() noexcept -> Creature::PrimitiveInstance {
   Creature::PrimitiveInstance p = make_full_jaw();
+  p.surface_marker = Creature::k_surface_marker_none;
   p.debug_name = "skeleton_jaw";
   p.params.head_offset =
       QVector3D(0.0F, -HP::HEAD_RADIUS * 0.46F, HP::HEAD_RADIUS * 0.20F);

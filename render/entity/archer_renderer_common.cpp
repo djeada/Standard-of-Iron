@@ -221,8 +221,8 @@ private:
     apply_color(style.leather_dark_color,
                 variant.palette.leather_dark,
                 k_leather_team_mix_weight);
-    apply_color(style.metal_color, variant.palette.metal);
-    apply_color(style.wood_color, variant.palette.wood);
+    apply_color(style.metal_color, variant.palette.metal, 0.0F);
+    apply_color(style.wood_color, variant.palette.wood, 0.0F);
   }
 };
 

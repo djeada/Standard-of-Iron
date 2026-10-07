@@ -61,7 +61,6 @@ public:
     GL::Shader::UniformHandle flicker_speed{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle flicker_amount{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle glow_strength{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle fire_texture{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle camera_right{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle camera_forward{GL::Shader::InvalidUniform};
   } m_firecamp_uniforms;

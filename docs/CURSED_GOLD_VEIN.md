@@ -106,7 +106,7 @@ The rock is constructed from jittered, lofted masses rather than stacked frustum
 
 `assets/shaders/cursed_gold_vein_instanced.{vert,frag}` combines dark, rusted rock with an FBM ore seam, height-keyed gold, and metallic specular response. A slow blood-red pulse travels along the seam through `u_magic_strength`.
 
-The visual target is warm but uneasy, deliberately contrasting with the cooler, steadier presentation of the magic shrine.
+The visual target is warm but uneasy: amber gold over a smouldering curse, deliberately softer than the magic shrine, whose black basalt burns with crimson hellfire.
 
 ### Light
 

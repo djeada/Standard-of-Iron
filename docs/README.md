@@ -35,6 +35,7 @@ boundaries between `game/`, `render/`, `app/`, `ui/`, `tools/` and `tests/`.
 
 ## Rendering and animation
 
+- [ART_DIRECTION.md](ART_DIRECTION.md) — the look: palette, biomes, light, magic
 - [RENDERING_ARCHITECTURE.md](RENDERING_ARCHITECTURE.md) — render pipeline
 - [BAKED_MESHES.md](BAKED_MESHES.md) — build-time baked meshes
 - [ANIMATION_ARCHITECTURE.md](ANIMATION_ARCHITECTURE.md) — poses and clips

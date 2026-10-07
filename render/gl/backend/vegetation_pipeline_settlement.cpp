@@ -47,37 +47,47 @@ void VegetationPipeline::initialize_fire_camp_pipeline() {
     QVector2D tex_coord;
   };
 
-  constexpr std::size_t k_firecamp_vertex_reserve = 12;
-  constexpr std::size_t k_firecamp_index_reserve = 18;
+  constexpr float k_flame_part = 0.0F;
+  constexpr float k_hearth_part = 3.0F;
+  constexpr float k_smoke_part = 4.0F;
+  constexpr int k_hearth_segments = 18;
+
   std::vector<FireCampVertex> vertices;
-  vertices.reserve(k_firecamp_vertex_reserve);
+  vertices.reserve(8 + 1 + k_hearth_segments);
   std::vector<unsigned short> indices;
-  indices.reserve(k_firecamp_index_reserve);
+  indices.reserve(12 + static_cast<std::size_t>(k_hearth_segments) * 3);
 
-  auto append_plane = [&](float plane_index) {
+  auto append_card = [&](float part) {
     auto const base = static_cast<unsigned short>(vertices.size());
-    vertices.push_back({QVector3D(-1.0F, 0.0F, plane_index), QVector2D(0.0F, 0.0F)});
-    vertices.push_back({QVector3D(1.0F, 0.0F, plane_index), QVector2D(1.0F, 0.0F)});
-    vertices.push_back({QVector3D(1.0F, 2.0F, plane_index), QVector2D(1.0F, 1.0F)});
-    vertices.push_back({QVector3D(-1.0F, 2.0F, plane_index), QVector2D(0.0F, 1.0F)});
-
-    indices.push_back(base + 0);
-    indices.push_back(base + 1);
-    indices.push_back(base + 2);
-    indices.push_back(base + 0);
-    indices.push_back(base + 2);
-    indices.push_back(base + 3);
+    vertices.push_back({QVector3D(-1.0F, 0.0F, part), QVector2D(0.0F, 0.0F)});
+    vertices.push_back({QVector3D(1.0F, 0.0F, part), QVector2D(1.0F, 0.0F)});
+    vertices.push_back({QVector3D(1.0F, 1.0F, part), QVector2D(1.0F, 1.0F)});
+    vertices.push_back({QVector3D(-1.0F, 1.0F, part), QVector2D(0.0F, 1.0F)});
+    for (int const corner : {0, 1, 2, 0, 2, 3}) {
+      indices.push_back(static_cast<unsigned short>(base + corner));
+    }
   };
 
-  append_plane(0.0F);
-  append_plane(1.0F);
-  append_plane(2.0F);
+  auto const hearth_centre = static_cast<unsigned short>(vertices.size());
+  vertices.push_back({QVector3D(0.0F, 0.0F, k_hearth_part), QVector2D(0.0F, 0.0F)});
+  for (int segment = 0; segment < k_hearth_segments; ++segment) {
+    float const angle = MathConstants::k_two_pi * static_cast<float>(segment) /
+                        static_cast<float>(k_hearth_segments);
+    vertices.push_back({QVector3D(0.0F, 0.0F, k_hearth_part),
+                        QVector2D(std::cos(angle), std::sin(angle))});
+    indices.push_back(hearth_centre);
+    indices.push_back(static_cast<unsigned short>(hearth_centre + 1 + segment));
+    indices.push_back(static_cast<unsigned short>(hearth_centre + 1 +
+                                                  ((segment + 1) % k_hearth_segments)));
+  }
+  append_card(k_smoke_part);
+  append_card(k_flame_part);
 
   constexpr std::array<VertexAttributeLayout, 2> k_firecamp_attributes{{
       {0, vec3, offsetof(FireCampVertex, position)},
       {1, vec2, offsetof(FireCampVertex, tex_coord)},
   }};
-  constexpr std::array<GLuint, 2> k_firecamp_instance_locations{3, 4};
+  constexpr std::array<GLuint, 3> k_firecamp_instance_locations{3, 4, 5};
   upload_static_instanced_mesh(*this,
                                m_firecamp_mesh,
                                vertices.data(),
@@ -378,70 +388,9 @@ void VegetationPipeline::initialize_magic_shrine_pipeline() {
   using namespace Render::GL::BackendPipelines::MagicShrineParts;
 
   append_parts(verts, idx, std::span{k_magic_shrine_boxes});
-  for (auto const& part : k_magic_shrine_prisms) {
-    append_prop_taper(verts,
-                      idx,
-                      part.cx,
-                      part.y0,
-                      part.cz,
-                      part.r,
-                      part.y0 > 1.7F ? 0.008F : part.r * 0.65F,
-                      part.height,
-                      part.segments);
-  }
-  append_parts(verts, idx, std::span{k_magic_shrine_oriented_boxes});
-
-  auto add_rune_stone = [&](const QVector3D& center, float rotation) {
-    constexpr float half_extent = 0.08F;
-    append_box(verts,
-               idx,
-               {center.x() - half_extent, 0.02F, center.z() - half_extent},
-               {center.x() + half_extent, 0.18F, center.z() + half_extent});
-    append_oriented_box(verts,
-                        idx,
-                        {center.x(), 0.18F, center.z()},
-                        {center.x() + std::cos(rotation) * 0.05F,
-                         0.34F,
-                         center.z() + std::sin(rotation) * 0.05F},
-                        0.045F,
-                        0.05F);
-  };
-
-  auto add_obelisk = [&](float x, float z) {
-    append_box(
-        verts, idx, {x - 0.18F, 0.08F, z - 0.18F}, {x + 0.18F, 0.18F, z + 0.18F});
-    append_box(
-        verts, idx, {x - 0.14F, 0.18F, z - 0.14F}, {x + 0.14F, 0.26F, z + 0.14F});
-    append_prop_taper(verts, idx, x, 0.26F, z, 0.105F, 0.070F, 0.78F, 6);
-    append_prop_taper(verts, idx, x, 1.04F, z, 0.070F, 0.045F, 0.16F, 6);
-    append_box(
-        verts, idx, {x - 0.10F, 1.20F, z - 0.10F}, {x + 0.10F, 1.28F, z + 0.10F});
-  };
-
-  add_obelisk(-0.54F, -0.54F);
-  add_obelisk(0.54F, -0.54F);
-  add_obelisk(-0.54F, 0.54F);
-  add_obelisk(0.54F, 0.54F);
-
-  for (int i = 0; i < 8; ++i) {
-    float const angle = static_cast<float>(i) * 0.78539816F;
-    float const radius = (i % 2 == 0) ? 0.88F : 0.94F;
-    float const x = std::cos(angle) * radius;
-    float const z = std::sin(angle) * radius;
-    append_oriented_box(verts,
-                        idx,
-                        {x, 0.08F, z},
-                        {x * 0.88F, 0.60F + 0.08F * float(i % 3), z * 0.88F},
-                        0.045F,
-                        0.055F);
-  }
-
-  add_rune_stone({-0.72F, 0.0F, -0.06F}, 0.6F);
-  add_rune_stone({0.72F, 0.0F, 0.08F}, 2.5F);
-  add_rune_stone({-0.06F, 0.0F, 0.72F}, 1.3F);
-  add_rune_stone({0.10F, 0.0F, -0.74F}, -1.2F);
-  add_rune_stone({-0.62F, 0.0F, 0.58F}, 0.9F);
-  add_rune_stone({0.62F, 0.0F, -0.60F}, -0.4F);
+  append_parts(verts, idx, std::span{k_magic_shrine_tapers});
+  append_parts(verts, idx, std::span{k_magic_shrine_limbs});
+  append_parts(verts, idx, std::span{k_magic_shrine_beams});
 
   upload_prop_mesh_impl(verts, idx, m_magic_shrine_mesh);
 }

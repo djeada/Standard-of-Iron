@@ -52,6 +52,9 @@ struct LinearFeatureJunctionMesh {
 
 [[nodiscard]] auto make_river_ribbon_settings() -> LinearFeatureRibbonSettings;
 
+[[nodiscard]] auto make_water_surface_ribbon_settings(
+    const Game::Map::TerrainHeightMap& height_map) -> LinearFeatureRibbonSettings;
+
 [[nodiscard]] auto sample_linear_feature_cross_section(
     const LinearFeatureRibbonSegment& segment,
     float t,

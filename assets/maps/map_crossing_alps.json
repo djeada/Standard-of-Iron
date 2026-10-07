@@ -3452,13 +3452,6 @@
             "z": 501.40000000000003
         },
         {
-            "rotation": 5.8,
-            "scale": 1,
-            "type": "tent",
-            "x": 482.7,
-            "z": 490.14
-        },
-        {
             "rotation": 2.6,
             "scale": 1,
             "type": "supply_cart",
@@ -3478,13 +3471,6 @@
             "type": "supply_cart",
             "x": 565.59,
             "z": 560.01
-        },
-        {
-            "rotation": 0.6,
-            "scale": 0.9,
-            "type": "weapon_rack",
-            "x": 577.79,
-            "z": 520.94
         },
         {
             "intensity": 1.1,
@@ -3908,15 +3894,6 @@
             "z": 316.57
         },
         {
-            "intensity": 0.9500000000000001,
-            "persistent": true,
-            "radius": 2.8000000000000003,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 248.21,
-            "z": 355.97
-        },
-        {
             "intensity": 0.9,
             "persistent": true,
             "radius": 2.8000000000000003,
@@ -4001,15 +3978,6 @@
             "z": 99.59
         },
         {
-            "intensity": 0.97,
-            "persistent": true,
-            "radius": 3.5,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 16.13,
-            "z": 114.02
-        },
-        {
             "rotation": 96.60000000000001,
             "scale": 0.93,
             "type": "tent",
@@ -4024,13 +3992,6 @@
             "type": "firecamp",
             "x": 222.33,
             "z": 299.93
-        },
-        {
-            "rotation": 154.20000000000002,
-            "scale": 1.1,
-            "type": "weapon_rack",
-            "x": 558.5500000000001,
-            "z": 624.01
         },
         {
             "intensity": 1.28,
@@ -4054,15 +4015,6 @@
             "type": "supply_cart",
             "x": 149.39000000000001,
             "z": 380.28000000000003
-        },
-        {
-            "intensity": 1.03,
-            "persistent": true,
-            "radius": 2.9,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 584.29,
-            "z": 625.82
         },
         {
             "rotation": 264.7,
@@ -4093,13 +4045,6 @@
             "type": "tent",
             "x": 73.63,
             "z": 126.69
-        },
-        {
-            "rotation": 224.70000000000002,
-            "scale": 0.89,
-            "type": "tent",
-            "x": 140.34,
-            "z": 375.31
         },
         {
             "rotation": 118.60000000000001,

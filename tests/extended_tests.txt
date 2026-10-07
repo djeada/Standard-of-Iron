@@ -97,6 +97,9 @@ MissionAssetRulesTest.GatherObjectivesFitTheHarvestActuallyOnTheMap
 
 # render_tests
 BpatRegistry.*
+# Raises the terrain of every shipped map with bridges and compares each deck
+# with the water meshes under it; 4.6 s in Release, so far over budget in Debug.
+BridgeWaterClearanceTest.ShippedBridgeDecksStayAboveTheDrawnWater
 # Rebake every building and every troop's equipment and compare with the shipped
 # packs; the pull-request lane keeps the cheap name-coverage checks.
 StaticMeshPack.ShippedBuildingPackMatchesTheCatalog

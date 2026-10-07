@@ -34,7 +34,12 @@ float sky_azimuth_toward_sun(vec3 ray, vec3 sun_direction) {
 }
 
 vec3 sky_horizon_color() {
-  return environment_fog_color() * k_sky_horizon_lift;
+  return environment_horizon_haze() * k_sky_horizon_lift;
+}
+
+vec3 sky_distant_land(vec3 horizon, float below) {
+  vec3 land = horizon * 0.58 + environment_ground_bounce_color() * 0.62;
+  return mix(horizon, land, smoothstep(0.0, 0.20, below));
 }
 
 vec3 sky_gradient(vec3 ray) {
@@ -44,6 +49,9 @@ vec3 sky_gradient(vec3 ray) {
   vec3 horizon = sky_horizon_color();
   vec3 zenith = environment_sky_color() * k_sky_zenith_gain * k_sky_zenith_deepen;
   vec3 sky = mix(horizon, zenith, gradient);
+  if (ray.y < 0.0) {
+    sky = sky_distant_land(horizon, -ray.y);
+  }
 
   float low_sun = environment_low_sun_amount();
   float toward_sun_azimuth =

@@ -46,8 +46,8 @@
         "sway_strength": 0.12,
         "tree_mix": {
             "pine": 0.0,
-            "cypress": 0.25,
-            "olive": 0.8,
+            "cypress": 0.0,
+            "olive": 0.3,
             "palm": 1.4
         }
     },
@@ -106,8 +106,8 @@
     "environment": {
         "day_length_seconds": 1800,
         "fog_density": 0.01,
-        "lighting_profile": "iron_sepulcher",
-        "start_time": 14,
+        "lighting_profile": "canyon_dry",
+        "start_time": 16.5,
         "time_mode": "locked"
     },
     "forests": [
@@ -5296,27 +5296,6 @@
             "z": 340.33
         },
         {
-            "rotation": 2.1,
-            "scale": 1,
-            "type": "ruins",
-            "x": 606.14,
-            "z": 164.18
-        },
-        {
-            "rotation": 5,
-            "scale": 0.9,
-            "type": "weapon_rack",
-            "x": 731.37,
-            "z": 134.99
-        },
-        {
-            "rotation": 0.4,
-            "scale": 1.25,
-            "type": "ruins",
-            "x": 45.08,
-            "z": 518.07
-        },
-        {
             "rotation": 4.3,
             "scale": 1.1,
             "type": "dead_tree",
@@ -5348,24 +5327,6 @@
             "scale": 1,
             "type": "firecamp",
             "x": 566.0600000000001,
-            "z": 310.11
-        },
-        {
-            "intensity": 0.9500000000000001,
-            "persistent": true,
-            "radius": 2.8000000000000003,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 596.12,
-            "z": 153.23
-        },
-        {
-            "intensity": 0.65,
-            "persistent": true,
-            "radius": 2.4,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 325.61,
             "z": 310.11
         },
         {
@@ -5446,27 +5407,11 @@
             "z": 367.74
         },
         {
-            "intensity": 0.87,
-            "persistent": true,
-            "radius": 2.9,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 572.88,
-            "z": 704.67
-        },
-        {
             "rotation": 99.7,
             "scale": 0.96,
             "type": "tent",
             "x": 186.84,
             "z": 427.75
-        },
-        {
-            "rotation": 90.7,
-            "scale": 0.96,
-            "type": "tent",
-            "x": 713.89,
-            "z": 335.22
         },
         {
             "rotation": 52.9,
@@ -5476,15 +5421,6 @@
             "z": 415.38
         },
         {
-            "intensity": 1.18,
-            "persistent": true,
-            "radius": 3.2,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 718.35,
-            "z": 381.29
-        },
-        {
             "rotation": 304.1,
             "scale": 1.1300000000000001,
             "type": "weapon_rack",
@@ -5492,25 +5428,11 @@
             "z": 250.87
         },
         {
-            "rotation": 3.4,
-            "scale": 0.98,
-            "type": "tent",
-            "x": 418.36,
-            "z": 97.35
-        },
-        {
             "rotation": 288.5,
             "scale": 1.17,
             "type": "supply_cart",
             "x": 161.42000000000002,
             "z": 414.13
-        },
-        {
-            "rotation": 61.300000000000004,
-            "scale": 1.18,
-            "type": "weapon_rack",
-            "x": 734.98,
-            "z": 397.25
         },
         {
             "rotation": 270.2,
@@ -5601,15 +5523,6 @@
             "z": 327.37
         },
         {
-            "intensity": 1.32,
-            "persistent": true,
-            "radius": 3.1,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 670.47,
-            "z": 318.5
-        },
-        {
             "intensity": 1.17,
             "persistent": true,
             "radius": 2.9,
@@ -5628,13 +5541,6 @@
             "z": 370.45
         },
         {
-            "rotation": 114.9,
-            "scale": 1.11,
-            "type": "weapon_rack",
-            "x": 729.12,
-            "z": 126.92
-        },
-        {
             "rotation": 320.5,
             "scale": 0.87,
             "type": "tent",
@@ -5647,13 +5553,6 @@
             "type": "tent",
             "x": 145.81,
             "z": 360.39
-        },
-        {
-            "rotation": 79.4,
-            "scale": 1.03,
-            "type": "tent",
-            "x": 666.3000000000001,
-            "z": 221.12
         },
         {
             "rotation": 239.3,
@@ -5716,22 +5615,6 @@
             "z": 425.47
         },
         {
-            "intensity": 1.2,
-            "persistent": true,
-            "radius": 2.9,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 727.11,
-            "z": 408.84
-        },
-        {
-            "rotation": 312.1,
-            "scale": 1.16,
-            "type": "tent",
-            "x": 696.36,
-            "z": 255.37
-        },
-        {
             "intensity": 1.1400000000000001,
             "persistent": true,
             "radius": 3,
@@ -5755,32 +5638,11 @@
             "z": 561.46
         },
         {
-            "rotation": 345.90000000000003,
-            "scale": 1.17,
-            "type": "supply_cart",
-            "x": 358.87,
-            "z": 222.70000000000002
-        },
-        {
             "rotation": 122.3,
             "scale": 1.12,
             "type": "supply_cart",
             "x": 459.81,
             "z": 586.77
-        },
-        {
-            "rotation": 211.6,
-            "scale": 0.91,
-            "type": "supply_cart",
-            "x": 89.68,
-            "z": 636.42
-        },
-        {
-            "rotation": 65,
-            "scale": 1.1400000000000001,
-            "type": "supply_cart",
-            "x": 99.79,
-            "z": 680.39
         },
         {
             "intensity": 1.28,
@@ -5957,13 +5819,6 @@
             "type": "dead_tree",
             "x": 376.96,
             "z": 495.56
-        },
-        {
-            "rotation": 27.900000000000002,
-            "scale": 1.01,
-            "type": "ruins",
-            "x": 115.4,
-            "z": 700.85
         },
         {
             "rotation": 161.20000000000002,

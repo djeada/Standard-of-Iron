@@ -71,18 +71,32 @@ auto resolve_casualty_launch(
   }
 
   constexpr float k_half_gravity = 4.9F;
+  constexpr float k_max_launch_pitch_degrees = 70.0F;
+  constexpr float k_max_launch_roll_degrees = 24.0F;
+  constexpr float k_pi = 3.14159265F;
 
   float const landing_time = std::max(0.0F, entry.launch_velocity_y / k_half_gravity);
   float const flight_time =
       std::min(Engine::Core::death_sequence_elapsed(entry), landing_time);
+
+  float const arc =
+      landing_time > 0.0F ? std::sin(k_pi * flight_time / landing_time) : 0.0F;
+  float const pitch_amplitude =
+      std::clamp(entry.launch_pitch_speed * landing_time * 0.25F,
+                 -k_max_launch_pitch_degrees,
+                 k_max_launch_pitch_degrees);
+  float const roll_amplitude =
+      std::clamp(entry.launch_roll_speed * landing_time * 0.25F,
+                 -k_max_launch_roll_degrees,
+                 k_max_launch_roll_degrees);
 
   return {velocity_x * flight_time,
           std::max(0.0F,
                    entry.launch_velocity_y * flight_time -
                        k_half_gravity * flight_time * flight_time),
           velocity_z * flight_time,
-          entry.launch_pitch_speed * flight_time,
-          entry.launch_roll_speed * flight_time};
+          pitch_amplitude * arc,
+          roll_amplitude * arc};
 }
 
 constexpr float k_soldier_cull_enter_band = 1.5F;

@@ -20,9 +20,9 @@ ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
-from mapgen import schema  # noqa: E402
-from mapgen.orchestrator import generate  # noqa: E402
-from mapgen.request import (  # noqa: E402
+from mapgen import schema
+from mapgen.orchestrator import generate
+from mapgen.request import (
     FORCED_BY,
     STAGES,
     GenerationRequest,

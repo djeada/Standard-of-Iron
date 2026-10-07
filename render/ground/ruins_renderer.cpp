@@ -57,10 +57,12 @@ void RuinsRenderer::generate_instances(
     float const stone_mix = remap(rand_01(state), 0.18F, 0.68F);
     QVector3D color = surface_profile.rock_low * (1.0F - stone_mix) +
                       surface_profile.rock_high * stone_mix;
-    QVector3D const age_tint(0.31F, 0.32F, 0.30F);
-    float const age_mix = remap(rand_01(state), 0.18F, 0.34F);
+    QVector3D const cut_stone(0.76F, 0.70F, 0.60F);
+    color = color * 0.45F + cut_stone * 0.55F;
+    QVector3D const age_tint(0.46F, 0.45F, 0.41F);
+    float const age_mix = remap(rand_01(state), 0.14F, 0.28F);
     color = color * (1.0F - age_mix) + age_tint * age_mix;
-    color *= 0.78F;
+    color *= 0.92F;
 
     PropInstanceGpu inst;
     inst.pos_scale = QVector4D(resolved.x(),

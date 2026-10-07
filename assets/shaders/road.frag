@@ -148,10 +148,10 @@ void main() {
         (broad - 0.5) * 0.11 + (medium - 0.5) * 0.08 + (grain - 0.5) * 0.045;
     float stone_face = 1.0 - smoothstep(0.08, 0.48, worley_result.x);
     vec3 stone_color = u_color * (0.92 + stone_variation + stone_face * 0.035);
-    vec3 mortar_color = mix(u_color * 0.54, vec3(0.20, 0.17, 0.13), 0.18);
+    vec3 mortar_color = mix(u_color * 0.70, vec3(0.34, 0.30, 0.21), 0.45);
     base_color = mix(mortar_color, stone_color, stone_mask);
     float cavity = smoothstep(0.0, 0.18, edge_metric);
-    ao = mix(0.64, 1.0, cavity);
+    ao = mix(0.80, 1.0, cavity);
     h = (medium - 0.5) * 0.024 * stone_mask - mortar_mask * 0.032;
     material_roughness = 0.90;
   } else if (u_surface_kind == 1) {

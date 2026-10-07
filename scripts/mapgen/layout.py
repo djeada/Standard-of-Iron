@@ -26,7 +26,7 @@ LANE_MARGIN = 0.1
 class Boundary:
     index: int
     u: float
-    kind: str  # river, ridge, forest or open
+    kind: str
 
 
 @dataclass
@@ -40,7 +40,7 @@ class Link:
 class Site:
     u: float
     v: float
-    role: str  # town, fort, camp
+    role: str
     lane: int
 
 
@@ -95,8 +95,7 @@ def _boundary_kinds(rng: random.Random, count: int, params: dict) -> list[str]:
     )
     rivers = min(int(params["water.rivers"]), count)
     if params["water.coast"]:
-        # A coastal river runs down to the sea rather than across the field,
-        # so it does not use up a boundary.
+
         rivers = 0
     for index in order[:rivers]:
         kinds[index] = "river"
@@ -136,7 +135,7 @@ def build_layout(rng: random.Random, width: int, height: int, params: dict) -> L
         jitter = 0.0 if symmetric else rng.uniform(-0.035, 0.035)
         boundaries.append(Boundary(k - 1, k / sectors + jitter, kinds[k - 1]))
     if symmetric:
-        # Mirror the boundary kinds so both armies cross the same obstacles.
+
         for i in range(len(boundaries) // 2):
             boundaries[-1 - i].kind = boundaries[i].kind
 
@@ -172,14 +171,12 @@ def build_layout(rng: random.Random, width: int, height: int, params: dict) -> L
         for u in control_us:
             wander = 0.0
             if 0.0 < u < 1.0 and not symmetric:
-                # Routes bend between basins: enough to read as roads laid
-                # over ground, not grid lines, while staying in their flank.
+
                 wander = rng.uniform(-0.085, 0.085) * usable
             points.append((u, min(max(lane_v + wander, lo), hi)))
         lanes.append(points)
     if symmetric and len(lanes) >= 2:
-        # Point reflection through the centre swaps the outer lanes, so one
-        # side's left flank is the other side's left flank too.
+
         lanes[-1] = [(1.0 - u, 1.0 - v) for u, v in reversed(lanes[0])]
 
     links: list[Link] = []
@@ -199,7 +196,7 @@ def build_layout(rng: random.Random, width: int, height: int, params: dict) -> L
             pair = i % (len(lanes) - 1)
             links.append(Link(u, pair, pair + 1))
         if wanted > len(ranked):
-            # More loops than inner sectors: close the outer sectors too.
+
             for u in [centres[0], centres[-1]][: wanted - len(ranked)]:
                 links.append(Link(u, 0, len(lanes) - 1))
     if len(lanes) == 1 and wanted:
@@ -214,8 +211,7 @@ def build_layout(rng: random.Random, width: int, height: int, params: dict) -> L
     start = (start[0], next_v(lanes, start_lane, start[0]))
     main_u = 0.88
     if params["water.ring_moat"]:
-        # A moat needs its radius plus a road's approach between it and the
-        # map edge, or the route out of the town has nowhere to run.
+
         main_u = min(main_u, 1.0 - 125.0 / frame.u_length)
     enemy_main = (main_u, next_v(lanes, enemy_lane, main_u))
 

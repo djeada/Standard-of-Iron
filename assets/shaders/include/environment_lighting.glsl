@@ -84,6 +84,53 @@ float environment_low_sun_amount() {
          (1.0 - environment_night_amount());
 }
 
+const float k_horizon_sky_share = 0.42;
+
+vec3 environment_horizon_haze() {
+  return mix(environment_fog_color(), environment_sky_color(), k_horizon_sky_share);
+}
+
+float environment_cloud_time() {
+  return u_env_shadow_softness_wetness.z;
+}
+
+float soi_cloud_hash(vec2 cell) {
+  return fract(sin(dot(cell, vec2(127.1, 311.7))) * 43758.5453);
+}
+
+float soi_cloud_value_noise(vec2 p) {
+  vec2 cell = floor(p);
+  vec2 f = fract(p);
+  vec2 u = f * f * (3.0 - 2.0 * f);
+  float a = soi_cloud_hash(cell);
+  float b = soi_cloud_hash(cell + vec2(1.0, 0.0));
+  float c = soi_cloud_hash(cell + vec2(0.0, 1.0));
+  float d = soi_cloud_hash(cell + vec2(1.0, 1.0));
+  return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
+}
+
+const vec2 k_cloud_wind = vec2(1.15, 0.55);
+const float k_cloud_scale = 0.0105;
+const float k_cloud_clear_strength = 0.24;
+const float k_cloud_overcast_strength = 0.46;
+
+float environment_cloud_shadow_amount(vec3 world_position) {
+  float daylight = 1.0 - environment_night_amount();
+  if (daylight <= 0.0) {
+    return 0.0;
+  }
+  float cover = environment_cloud_cover();
+  vec2 p =
+      (world_position.xz + k_cloud_wind * environment_cloud_time()) * k_cloud_scale;
+  float n = soi_cloud_value_noise(p) * 0.56 +
+            soi_cloud_value_noise(p * 2.07 + vec2(17.3, -4.1)) * 0.29 +
+            soi_cloud_value_noise(p * 4.31 + vec2(-9.7, 23.5)) * 0.15;
+  float threshold = mix(0.60, 0.40, cover);
+  float mask = smoothstep(threshold, threshold + 0.17, n);
+  float strength = mix(k_cloud_clear_strength, k_cloud_overcast_strength, cover);
+  return mask * strength * daylight;
+}
+
 const float k_soi_sun_bounce_gain = 0.50;
 const float k_soi_horizon_fill_gain = 1.00;
 

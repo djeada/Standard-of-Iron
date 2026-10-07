@@ -17,10 +17,7 @@ from typing import Any
 
 SCRIPTS = Path(__file__).resolve().parents[1]
 
-# Surface probing measures the ground with the engine's terrain_probe when it
-# is built. Its presence differs from machine to machine, and a seed has to
-# reproduce the same map everywhere, so the generator always uses the
-# authored geometry.
+
 SURFACE = ["--surface", "off"]
 
 TOOLS = {

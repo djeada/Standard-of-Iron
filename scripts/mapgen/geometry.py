@@ -16,8 +16,8 @@ from typing import Iterable, Sequence
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from map_hill_shapes import hill_shape_strokes  # noqa: E402
-from map_water_geometry import river_points  # noqa: E402
+from map_hill_shapes import hill_shape_strokes
+from map_water_geometry import river_points
 
 Point = tuple[float, float]
 
@@ -208,7 +208,6 @@ class Field:
         self.rows = int(math.ceil(self.height / self.CELL)) + 1
         self.cells = bytearray(self.cols * self.rows)
 
-    # --- rasterising -----------------------------------------------------
     def _bbox(self, x0: float, z0: float, x1: float, z1: float):
         c0 = max(0, int(math.floor(x0 / self.CELL)))
         c1 = min(self.cols - 1, int(math.ceil(x1 / self.CELL)))
@@ -281,7 +280,6 @@ class Field:
             for col in range(c0, c1 + 1):
                 self.cells[base + col] |= bit
 
-    # --- queries ---------------------------------------------------------
     def blocked(self, x: float, z: float, r: float, mask: int) -> bool:
         if x - r < 0 or z - r < 0 or x + r > self.width - 1 or z + r > self.height - 1:
             return True
@@ -315,7 +313,7 @@ class Collector(Field):
         super().__init__(width, height)
         from collections import defaultdict
 
-        self.cells = defaultdict(int)  # type: ignore[assignment]
+        self.cells = defaultdict(int)
 
     def touched(self) -> list[int]:
         return [index for index, value in self.cells.items() if value]

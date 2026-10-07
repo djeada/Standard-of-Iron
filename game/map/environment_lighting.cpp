@@ -360,10 +360,10 @@ auto iron_sepulcher_profile() -> const std::array<LightingKeyframe, 8>& {
           (keyframe.lighting.fog_color * 0.68F) + QVector3D(0.10F, 0.13F, 0.18F);
       keyframe.lighting.primary_color =
           (keyframe.lighting.primary_color * 0.86F) + QVector3D(0.05F, 0.06F, 0.09F);
-      const QVector3D grave_shadow(0.26F, 0.24F, 0.40F);
+      const QVector3D grave_shadow(0.24F, 0.30F, 0.33F);
       keyframe.lighting.shadow_tint +=
           (grave_shadow - keyframe.lighting.shadow_tint) * 0.55F;
-      keyframe.lighting.exposure *= 0.92F;
+      keyframe.lighting.exposure *= 0.97F;
     }
     return result;
   }();

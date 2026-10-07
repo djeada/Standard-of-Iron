@@ -68,13 +68,14 @@ void main() {
   float fissure_field =
       abs(sin(p.x * 13.0 - p.z * 9.0 + p.y * 6.0 + broad * 4.0 + v_seed * 4.0));
   float fissures = 1.0 - smoothstep(0.035, 0.14, fissure_field);
+  fissures *= smoothstep(0.48, 0.72, stone_noise3(p * 4.6 + seed_offset * 1.7));
 
   vec3 N = relief_normal(N_face, p, 0.10 * detail_weight);
 
   vec3 stone = v_color * mix(0.70, 1.08, broad);
   stone *= mix(1.0, mix(0.86, 1.08, grain * 0.65 + strata * 0.35), detail_weight);
   stone *= mix(1.0, mix(0.93, 1.05, speckle), detail_weight);
-  stone = mix(stone, stone * vec3(0.58, 0.58, 0.57), fissures * 0.72 * detail_weight);
+  stone = mix(stone, stone * vec3(0.62, 0.61, 0.59), fissures * 0.50 * detail_weight);
 
   float upward = smoothstep(0.28, 0.86, N.y);
   float lichen_noise = stone_noise3(v_world_pos * 1.8 + vec3(3.0, 8.0, 1.0));

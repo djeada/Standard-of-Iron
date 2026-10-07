@@ -96,9 +96,9 @@ constexpr uint32_t k_salt_move_bob = 0x213U;
 
 namespace ElephantVariantConstants {
 
-constexpr float k_skin_base_r = 0.262F;
-constexpr float k_skin_base_g = 0.252F;
-constexpr float k_skin_base_b = 0.246F;
+constexpr float k_skin_base_r = 0.380F;
+constexpr float k_skin_base_g = 0.335F;
+constexpr float k_skin_base_b = 0.295F;
 
 constexpr float k_skin_variation_min = 0.90F;
 constexpr float k_skin_variation_max = 1.10F;

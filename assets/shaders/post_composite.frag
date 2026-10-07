@@ -51,20 +51,20 @@ const float k_fog_inscatter_power = 5.0;
 const float k_fog_inscatter_gain = 0.42;
 const vec3 k_fog_haze_tone = vec3(0.86, 0.84, 0.82);
 
-const float k_ground_fog_gain = 0.30;
+const float k_ground_fog_gain = 0.20;
 const float k_ground_fog_night_gain = 0.22;
 const float k_ground_fog_dawn_gain = 0.30;
 const float k_ground_fog_weather_gain = 0.22;
-const float k_ground_fog_max_opacity = 0.45;
+const float k_ground_fog_max_opacity = 0.24;
 const float k_ground_fog_distance_reach = 34.0;
-const vec3 k_ground_fog_lift = vec3(1.10, 1.10, 1.08);
+const vec3 k_ground_fog_lift = vec3(1.02, 1.03, 1.04);
 const float k_mist_water_ceiling = 1.7;
 const float k_mist_miasma_ceiling = 2.8;
 const float k_mist_miasma_gain = 0.72;
 const float k_mist_bank_reach = 7.0;
 const vec3 k_mist_water_lift = vec3(1.18, 1.18, 1.16);
-const vec3 k_mist_miasma_tint = vec3(1.02, 0.86, 1.24);
-const vec3 k_mist_miasma_floor = vec3(0.012, 0.008, 0.028);
+const vec3 k_mist_miasma_tint = vec3(0.92, 1.03, 1.02);
+const vec3 k_mist_miasma_floor = vec3(0.008, 0.014, 0.014);
 
 const vec2 k_ao_taps[8] = vec2[8](vec2(1.0, 0.0),
                                   vec2(0.7071, 0.7071),
@@ -140,7 +140,7 @@ vec3 fog_color_toward(vec3 world) {
   float inscatter = pow(toward_sun, k_fog_inscatter_power) * k_fog_inscatter_gain *
                     (0.35 + 0.65 * low_sun);
   vec3 sun = environment_primary_color() * environment_primary_intensity();
-  vec3 haze = environment_fog_color() * k_fog_haze_tone;
+  vec3 haze = environment_horizon_haze() * k_fog_haze_tone;
   return haze + sun * inscatter;
 }
 

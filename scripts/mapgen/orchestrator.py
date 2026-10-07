@@ -250,9 +250,7 @@ def _attempt(
         subject = definition
         rings: list[dict] = []
         if tool == "water":
-            # The water tool validates every river as a polyline, and a ring
-            # has no ends to put on an edge. Rings are exempt by design, so
-            # they sit the tool out.
+
             rings = [
                 r for r in definition.get("rivers") or [] if r.get("shape") == "ring"
             ]
@@ -273,10 +271,7 @@ def _attempt(
             return
         if rings:
             updated["rivers"] = list(updated.get("rivers") or []) + rings
-        # Locked means verbatim. The settlement tool may grow or reshape a
-        # hill to carry a settlement, or move a ramp out of a new ring; a
-        # locked stage's arrays are put back, the change is reported, and the
-        # validation gates decide whether the candidate still holds.
+
         for stage in locked:
             for array in STAGE_ARRAYS[stage]:
                 before = subject.get(array) or []
@@ -307,7 +302,7 @@ def _attempt(
                     "attempt": attempt,
                 },
             )
-            # Locked intent is still laid out again when what it stands on changed.
+
             if stage == "roads" and regenerated & {"terrain", "water"}:
                 materialise("settlements", record)
             if stage == "landmarks" and regenerated & {"terrain", "water", "forests"}:
@@ -327,7 +322,7 @@ def _attempt(
         ctx.notes = []
         try:
             SYNTHESISERS[stage](ctx)
-        except Exception as error:  # a synthesiser bug must not lose the run
+        except Exception as error:
             record.status = "failed"
             ctx.notes.append(f"synthesis failed: {type(error).__name__}: {error}")
         definition = ctx.map

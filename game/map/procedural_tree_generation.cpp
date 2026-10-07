@@ -460,7 +460,7 @@ void append_generated_dead_trees(std::vector<WorldProp>& out,
           static_cast<float>(x) + rand_01(state) * float(k_dead_tree_cell_span);
       float const gz =
           static_cast<float>(z) + rand_01(state) * float(k_dead_tree_cell_span);
-      (void)add_dead_tree(gx, gz, 1.35F, 2.30F, state);
+      (void)add_dead_tree(gx, gz, 0.85F, 1.35F, state);
     }
   }
 }

@@ -53,10 +53,8 @@ void WaterRenderer::build_meshes() {
     return;
   }
 
-  Ground::LinearFeatureRibbonSettings settings = Ground::make_river_ribbon_settings();
-  settings.height_map = m_height_map;
-  settings.use_segment_elevation_profile = true;
-  settings.y_offset = 0.02F;
+  const Ground::LinearFeatureRibbonSettings settings =
+      Ground::make_water_surface_ribbon_settings(*m_height_map);
 
   std::vector<Ground::LinearFeatureRibbonSegment> segments;
   segments.reserve(m_river_segments.size());

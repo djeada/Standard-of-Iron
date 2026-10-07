@@ -249,8 +249,6 @@ void TerrainHeightMap::add_lakes(const std::vector<Lake>& lakes) {
 }
 
 void TerrainHeightMap::add_bridges(const std::vector<Bridge>& bridges) {
-  constexpr float k_bridge_water_clearance = 0.10F;
-
   m_bridges.clear();
   m_bridges.reserve(bridges.size());
 
@@ -270,6 +268,20 @@ void TerrainHeightMap::add_bridges(const std::vector<Bridge>& bridges) {
         raise(lake.center.y());
       }
     }
+    const float landing_run =
+        bridge_visual_landing_run(std::max(bridge.width, k_min_bridge_width));
+    const float span = std::hypot(bridge.end.x() - bridge.start.x(),
+                                  bridge.end.z() - bridge.start.z());
+    if (auto const drawn =
+            drawn_water_level_under_bridge(bridge,
+                                           m_river_segments,
+                                           m_lakes,
+                                           drawn_lake_padding(m_tile_size),
+                                           -landing_run,
+                                           span + landing_run);
+        drawn.has_value()) {
+      raise(*drawn);
+    }
     return level;
   };
 
@@ -282,7 +294,7 @@ void TerrainHeightMap::add_bridges(const std::vector<Bridge>& bridges) {
 
     float abutment_floor = std::numeric_limits<float>::lowest();
     if (auto const water = spanned_water_level(adjusted); water.has_value()) {
-      abutment_floor = *water + k_bridge_water_clearance - k_bridge_deck_visual_lift;
+      abutment_floor = bridge_abutment_floor_over_water(*water);
     }
     adjusted.start.setY(std::max(get_height_at(adjusted.start.x(), adjusted.start.z()),
                                  abutment_floor));
