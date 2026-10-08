@@ -25,4 +25,8 @@ inline constexpr QVector3D k_earth_light{0.39F, 0.32F, 0.24F};
 inline constexpr QVector3D k_earth_dark{0.27F, 0.22F, 0.17F};
 inline constexpr QVector3D k_rope{0.49F, 0.40F, 0.27F};
 
+inline constexpr QVector3D k_palisade_light{0.57F, 0.48F, 0.38F};
+inline constexpr QVector3D k_palisade{0.46F, 0.38F, 0.30F};
+inline constexpr QVector3D k_palisade_dark{0.31F, 0.25F, 0.20F};
+
 } // namespace Render::GL::Roman::BuildingPalette

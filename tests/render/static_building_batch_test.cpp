@@ -2,6 +2,7 @@
 #include <QVector3D>
 
 #include <array>
+#include <cmath>
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <memory>
@@ -155,6 +156,80 @@ TEST(MergedBuildingMesh, TexturedPartsGroupIntoRanges) {
     total += range.index_count;
   }
   EXPECT_EQ(total, merged.indices.size());
+}
+
+TEST(MergedBuildingMesh, AuthoredTimberCarriesItsGrainFrame) {
+  using Render::GL::k_grain_frame_offset;
+  using Render::GL::k_grain_member_stride;
+  const QVector3D timber_colour{0.46F, 0.38F, 0.30F};
+  RenderArchetypeBuilder builder("timber_frame");
+  builder.set_timber(true);
+  builder.add_box(QVector3D(0.0F, 1.0F, 0.0F),
+                  QVector3D(0.1F, 1.0F, 0.3F),
+                  timber_colour,
+                  nullptr,
+                  1.0F,
+                  Render::k_material_wood);
+  builder.add_cylinder(QVector3D(0.0F, 0.0F, 2.0F),
+                       QVector3D(0.0F, 2.0F, 2.0F),
+                       0.1F,
+                       timber_colour,
+                       nullptr,
+                       1.0F,
+                       Render::k_material_wood);
+  builder.set_timber(false);
+  builder.add_box(QVector3D(0.0F, 1.0F, -2.0F),
+                  QVector3D(0.1F, 1.0F, 0.3F),
+                  timber_colour,
+                  nullptr,
+                  1.0F,
+                  Render::k_material_wood);
+  const RenderArchetype archetype = std::move(builder).build();
+  const MergedBuildingMesh merged =
+      Render::GL::build_merged_building_mesh(full_slice(archetype));
+
+  const auto& cube = Render::GL::get_unit_cube()->get_vertices();
+  const std::size_t cylinder_count = merged.vertices.size() - (2U * cube.size());
+  ASSERT_GT(cylinder_count, 0U);
+
+  auto along_of = [&](const MergedBuildingVertex& vertex) {
+    const float encoded = vertex.tex_coord[1] - k_grain_frame_offset;
+    const float member = std::floor((encoded / k_grain_member_stride) + 0.5F);
+    return encoded - (member * k_grain_member_stride);
+  };
+
+  for (std::size_t i = 0; i < cube.size(); ++i) {
+    const MergedBuildingVertex& vertex = merged.vertices[i];
+    ASSERT_GT(vertex.tex_coord[1], k_grain_frame_offset * 0.5F);
+    EXPECT_NEAR(along_of(vertex), vertex.position[1] - 1.0F, 1.0e-3F)
+        << "a tall plank's grain runs up its height";
+    const QVector3D normal =
+        QVector3D(vertex.normal[0], vertex.normal[1], vertex.normal[2]).normalized();
+    if (std::abs(normal.y()) > 0.9F) {
+      EXPECT_LE(vertex.tex_coord[0], -3.0F) << "top and bottom are end grain";
+      EXPECT_GE(vertex.tex_coord[0], -4.0F);
+    } else {
+      EXPECT_GE(vertex.tex_coord[0], 0.0F) << "side faces are sawn";
+      EXPECT_LE(vertex.tex_coord[0], 0.6F + 1.0e-4F);
+    }
+  }
+
+  for (std::size_t i = cube.size(); i < cube.size() + cylinder_count; ++i) {
+    const MergedBuildingVertex& vertex = merged.vertices[i];
+    EXPECT_NEAR(along_of(vertex), vertex.position[1] - 1.0F, 1.0e-3F);
+    const QVector3D normal =
+        QVector3D(vertex.normal[0], vertex.normal[1], vertex.normal[2]).normalized();
+    const float lower = std::abs(normal.y()) > 0.9F ? -4.0F : -2.0F;
+    EXPECT_GE(vertex.tex_coord[0], lower);
+    EXPECT_LE(vertex.tex_coord[0], lower + 1.0F);
+  }
+
+  for (std::size_t i = 0; i < cube.size(); ++i) {
+    const MergedBuildingVertex& vertex =
+        merged.vertices[cube.size() + cylinder_count + i];
+    EXPECT_EQ(vertex.tex_coord, cube[i].tex_coord)
+        << "wood picked by colour alone keeps the mesh UVs";
+  }
 }
 
 struct DecodedPart {

@@ -188,9 +188,12 @@ auto build_tower_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
                    BuildingStateMask::All);
     }
 
-    desc.add_box(QVector3D(0.0F, deck_y, 0.0F),
-                 QVector3D(platform_radius, 0.05F, platform_radius),
-                 c.cedar);
+    {
+      BuildingPartMaterial const timber(desc, k_building_material_wood);
+      desc.add_box(QVector3D(0.0F, deck_y, 0.0F),
+                   QVector3D(platform_radius, 0.05F, platform_radius),
+                   c.cedar);
+    }
 
     add_square_parapet(
         [&desc](const QVector3D& centre, const QVector3D& half, const QVector3D& col) {
@@ -220,6 +223,7 @@ auto build_tower_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
 
       const float roof_y = battlement_y + 0.62F;
       const float post_offset = battlement_radius - 0.30F;
+      BuildingPartMaterial const timber(desc, k_building_material_wood);
       for (const float px : {-post_offset, post_offset}) {
         for (const float pz : {-post_offset, post_offset}) {
           desc.add_box(QVector3D(px, (deck_y + roof_y) * 0.5F, pz),
@@ -259,10 +263,13 @@ auto build_tower_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
     desc.add_box(QVector3D(-0.36F, 1.06F, -0.38F),
                  QVector3D(0.20F, 0.16F, 0.20F),
                  c.limestone_dark);
-    desc.add_box(QVector3D(0.0F, 1.60F, 0.0F),
-                 QVector3D(0.38F, 0.08F, 0.24F),
-                 c.cedar_dark,
-                 BuildingStateMask::All);
+    {
+      BuildingPartMaterial const timber(desc, k_building_material_wood);
+      desc.add_box(QVector3D(0.0F, 1.60F, 0.0F),
+                   QVector3D(0.38F, 0.08F, 0.24F),
+                   c.cedar_dark,
+                   BuildingStateMask::All);
+    }
     desc.add_box(
         QVector3D(0.28F, 1.36F, -0.20F), QVector3D(0.14F, 0.10F, 0.12F), c.terracotta);
   }

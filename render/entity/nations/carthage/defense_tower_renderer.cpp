@@ -207,9 +207,12 @@ auto build_tower_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
                  QVector3D(damaged ? 0.94F : 1.04F, 0.04F, damaged ? 0.94F : 1.04F),
                  c.stone_dark,
                  BuildingStateMask::All);
-    desc.add_box(QVector3D(0.0F, deck_y, 0.0F),
-                 QVector3D(damaged ? 0.90F : 1.00F, 0.05F, damaged ? 0.90F : 1.00F),
-                 c.wood);
+    {
+      BuildingPartMaterial const timber(desc, k_building_material_wood);
+      desc.add_box(QVector3D(0.0F, deck_y, 0.0F),
+                   QVector3D(damaged ? 0.90F : 1.00F, 0.05F, damaged ? 0.90F : 1.00F),
+                   c.wood);
+    }
 
     const float parapet_half = damaged ? 0.755F : 0.855F;
     const float merlon_y = damaged ? 2.44F : 2.72F;

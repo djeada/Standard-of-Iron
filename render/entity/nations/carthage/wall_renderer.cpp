@@ -10,9 +10,9 @@
 namespace Render::GL::Carthage {
 namespace {
 
-const WallPalette k_wall_palette{.wood_light = BuildingPalette::k_wood_light,
-                                 .wood_mid = BuildingPalette::k_wood,
-                                 .wood_dark = BuildingPalette::k_wood_dark,
+const WallPalette k_wall_palette{.wood_light = BuildingPalette::k_palisade_light,
+                                 .wood_mid = BuildingPalette::k_palisade,
+                                 .wood_dark = BuildingPalette::k_palisade_dark,
                                  .rope = BuildingPalette::k_rope,
                                  .masonry_accent = BuildingPalette::k_sandstone_shade,
                                  .earth_light = BuildingPalette::k_earth_light,
@@ -53,6 +53,12 @@ auto gate_archetype() -> const BuildingArchetypeSet& {
   return archetype;
 }
 
+auto gate_leaf_archetype() -> const BuildingArchetypeSet& {
+  static const BuildingArchetypeSet& archetype =
+      wall_gate_leaf_archetype("carthage_wall_variant");
+  return archetype;
+}
+
 } // namespace
 
 auto wall_palette() -> const WallPalette& {
@@ -78,7 +84,7 @@ void register_wall_renderer(Render::GL::EntityRendererRegistry& registry) {
 
   register_building_renderer(
       registry, "carthage", "wall_gate", [](const DrawContext& p, ISubmitter& out) {
-        submit_wall_gate(out, p, gate_archetype(), k_wall_palette, k_wall_geometry);
+        submit_wall_gate(out, p, gate_archetype(), gate_leaf_archetype());
       });
 }
 

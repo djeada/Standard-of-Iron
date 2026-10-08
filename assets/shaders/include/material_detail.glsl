@@ -76,6 +76,126 @@ vec3 soi_wood_variation(
   return base_color * (1.0 + wood_noise) + vec3(sheen);
 }
 
+const float k_grain_frame_offset = 4096.0;
+const float k_grain_member_stride = 64.0;
+const float k_board_width = 0.21;
+
+bool soi_has_grain_frame(vec2 frame) {
+  return frame.y > k_grain_frame_offset * 0.5;
+}
+
+float soi_wood_hash(float n) {
+  return fract(sin(n * 91.3458 + 17.17) * 47453.5453);
+}
+
+float soi_line_fade(float width) {
+  return 1.0 - smoothstep(0.25, 0.75, width);
+}
+
+vec3 soi_wood_grain(
+    vec3 base_color, vec2 frame, vec3 normal, vec3 view_dir, float tactical) {
+  float encoded = frame.y - k_grain_frame_offset;
+  float timber = floor(encoded / k_grain_member_stride + 0.5);
+  float along = encoded - timber * k_grain_member_stride;
+  bool sawn = frame.x >= 0.0;
+  bool round_side = frame.x < -0.5 && frame.x >= -2.5;
+  bool end_grain = frame.x < -2.5 && frame.x >= -4.5;
+  bool hewn = frame.x < -4.5;
+
+  float across = frame.x;
+  if (round_side) {
+    across = (-1.0 - frame.x) * 0.75;
+  } else if (end_grain) {
+    across = (-3.0 - frame.x) * 0.12;
+  } else if (hewn) {
+    across = (-5.0 - frame.x) * 0.60;
+  }
+
+  float across_width = fwidth(across);
+  float radius_width = fwidth(-3.0 - frame.x);
+
+  float board = sawn ? floor(across / k_board_width) : 0.0;
+  float seed = soi_wood_hash(timber * 7.13 + board * 3.71 + 0.5);
+  float seed_b = soi_wood_hash(timber * 1.37 + board * 11.3 + 9.1);
+  float phase = seed * 37.0;
+  float micro = 1.0 - tactical * 0.6;
+
+  float luma = dot(base_color, vec3(0.299, 0.587, 0.114));
+  vec3 silver = vec3(luma) * vec3(1.00, 0.98, 0.94);
+  vec3 warm = base_color * vec3(1.04, 0.99, 0.90);
+
+  float chroma = max(base_color.r, max(base_color.g, base_color.b)) -
+                 min(base_color.r, min(base_color.g, base_color.b));
+  float weathering = (0.16 + 0.36 * seed_b + 0.22 * max(normal.y, 0.0)) *
+                     (1.0 - smoothstep(0.25, 0.36, chroma));
+  vec3 tone = mix(warm, silver, weathering) * (0.80 + 0.30 * seed);
+
+  float streak = soi_detail_mid(vec2(across * 7.0 + phase, along * 0.45)) - 0.5;
+  float fibre = soi_detail_fine(vec2(across * 34.0 + phase, along * 1.6)) - 0.5;
+  vec3 color = tone * (1.0 + (streak * 0.28 + fibre * 0.14) * micro);
+
+  float grain_field =
+      soi_detail_fine(vec2(across * 46.0 + streak * 5.0 + phase, along * 0.7));
+  float grain_line =
+      smoothstep(0.60, 0.78, grain_field) * soi_line_fade(across_width * 46.0);
+  color *= 1.0 - grain_line * 0.22 * micro;
+
+  if (sawn) {
+    float figure = sin((across + streak * 0.05) * 160.0 + phase);
+    float latewood =
+        smoothstep(0.55, 0.95, figure) * soi_line_fade(across_width * 26.0);
+    color *= 1.0 - latewood * 0.10 * micro;
+  }
+
+  if (round_side) {
+    float bark_field =
+        soi_detail_coarse(vec2(across * 1.6 + phase, along * 0.30 + phase)) +
+        clamp(-along * 0.18, -0.15, 0.20);
+    float bark = smoothstep(0.52, 0.60, bark_field);
+    float furrow = soi_detail_fine(vec2(across * 22.0 + phase, along * 0.9)) - 0.5;
+    vec3 bark_color =
+        base_color * vec3(0.50, 0.44, 0.40) * (1.0 + furrow * 0.55 * micro);
+    color = mix(color, bark_color, bark * 0.85);
+  }
+
+  float check_line = abs(fract(across * 5.5 + streak * 0.6 + seed) - 0.5);
+  float check_run =
+      smoothstep(0.62, 0.72, soi_detail_mid(vec2(across * 3.0 + phase, along * 0.35)));
+  float check = (1.0 - smoothstep(0.015, 0.04 + across_width * 6.0, check_line)) *
+                check_run * soi_line_fade(across_width * 12.0);
+  color *= 1.0 - check * 0.45 * micro;
+
+  float knot_field = soi_detail_mid(vec2(across * 2.6 + phase, along * 1.1 + phase));
+  float knot = smoothstep(0.88, 0.94, knot_field);
+  color = mix(color, tone * vec3(0.46, 0.36, 0.28), knot * 0.70);
+
+  if (sawn && across > k_board_width * 0.5) {
+    float seam_distance =
+        abs(fract(across / k_board_width + 0.5) - 0.5) * k_board_width;
+    float seam_width = across_width;
+    float seam = 1.0 - smoothstep(0.007, 0.007 + seam_width * 1.5, seam_distance);
+    color *= 1.0 - seam * 0.55 * (1.0 - smoothstep(0.03, 0.09, seam_width));
+  }
+
+  if (end_grain) {
+    float radius = -3.0 - frame.x;
+    float ring_width = radius_width * 14.0;
+    float rings = sin(radius * 44.0 + streak * 3.0) * soi_line_fade(ring_width);
+    color = tone * vec3(1.16, 1.06, 0.92) * (1.0 + rings * 0.06 * micro);
+    color *= 1.0 - smoothstep(0.82, 1.0, radius) * 0.25;
+    color *= 1.0 - (1.0 - smoothstep(0.0, 0.10, radius)) * 0.30;
+  }
+
+  if (hewn) {
+    float facet = soi_wood_hash(floor((-5.0 - frame.x) * 7.0) + timber * 5.0);
+    color = tone * vec3(1.12, 1.04, 0.92) * (0.90 + facet * 0.18) *
+            (1.0 + fibre * 0.10 * micro);
+  }
+
+  float view_angle = abs(dot(normal, view_dir));
+  return color + vec3(pow(1.0 - view_angle, 4.0) * 0.035);
+}
+
 vec3 soi_metal_variation(vec3 base_color, vec2 uv, vec3 normal, vec3 view_dir) {
   float metal_noise = (soi_detail_fine(uv * 9.0) - 0.5) * 0.018;
   float view_angle = abs(dot(normal, view_dir));
@@ -130,10 +250,8 @@ vec3 soi_ceramic_variation(
   return variation + base_color * burnish;
 }
 
-vec3 soi_material_variation(vec3 base_color,
-                            vec3 world_pos,
-                            vec3 normal,
-                            int material_id) {
+vec3 soi_material_variation(
+    vec3 base_color, vec3 world_pos, vec3 normal, int material_id, vec2 grain_frame) {
   float tactical = ground_tactical_distance(length(u_camera_pos - world_pos));
 
   if (material_id == k_material_mineral || material_id == 0 ||
@@ -145,8 +263,15 @@ vec3 soi_material_variation(vec3 base_color,
   if (!u_has_material_detail) {
     return base_color;
   }
-  vec2 uv = soi_surface_lattice(world_pos, normal) * 4.0;
   vec3 view_dir = normalize(u_camera_pos - world_pos);
+
+  bool timber_colour = base_color.g > base_color.r * 0.66;
+  if (material_id == k_material_wood && timber_colour &&
+      soi_has_grain_frame(grain_frame)) {
+    return clamp(
+        soi_wood_grain(base_color, grain_frame, normal, view_dir, tactical), 0.0, 1.0);
+  }
+  vec2 uv = soi_surface_lattice(world_pos, normal) * 4.0;
   vec3 variation = base_color;
   if (material_id == k_material_mineral || material_id == 0) {
     variation = soi_mineral_variation(base_color, uv, normal);

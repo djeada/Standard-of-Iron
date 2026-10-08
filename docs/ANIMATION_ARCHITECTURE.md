@@ -465,6 +465,35 @@ upper-body overlay   ← selection, with its own rate-limited weight
 
 The transition layer comes **before** the overlay. The overlay has its own spring and rate limit in `instance_prepare.cpp`, so it is already continuous; composited last, a weight-one transition would erase the arms of a swing that is still in flight.
 
+A melee lock keeps the swing on the spring-smoothed upper-body overlay over
+the fighting stance. Playing the attack clip full body was tried (October
+2026): every cut into or out of a swing (a flinch, a stagger, a resumed
+strike) then became a 0.12 s full-body crossfade, and the linear palette blend
+whipped the hands past 2000 degrees per second, which
+`HumanoidMotionQuality.MeleeHitsRecoveryAndRetargetingStayVisuallyContinuous`
+catches. Springing the remaining full-body stance blend weight was tried too and
+made it worse: an unrooted swing that ended early left the attack clip at high
+weight, so the cut to idle was bigger.
+
+Formation soldiers within weapon reach work through one exchange (strike,
+support strike, guard, step in, strike, step out, support strike, guard), each
+on a personal beat and from a personal starting point, so a rank never swings
+in unison and nobody stays behind the shield all fight. Only a soldier on a
+guard beat braces in the shield hold. Everyone else between blows, and the
+ranks waiting out of reach, stand in the bouncing combat-ready stance.
+
+Horse spearmen ride with the spear-ready humanoid asset (`humanoid_spear.bpat`),
+not the generic rider bake. Its riding clips aim the spear explicitly through
+the right hand's grip axis (`MountedPoseController::grip_spear`, directions from
+`resolve_mounted_spear_guard_pose`): upright in the fist at rest and while
+reining, couched along the horse's right side at the gallop. A mounted melee
+attack with the spear family resolves to `AttackSpear`, which the rider
+manifest plays as `riding_spear_thrust`. This is a one-handed cavalry thrust
+with the left hand on the reins, driving forward and down past the horse's head.
+Before October 2026 the spear followed the forearm and ran through the horse's
+neck, and stationary riders played the motionless charge pose instead of
+striking. `mounted_spear_grip` in the arena is the close-up review scene.
+
 ### Detecting a cut
 
 `apply_humanoid_transition_continuity()` (`render/creature/pipeline/humanoid_transition_continuity.cpp`) compares the clip mix the selection asks for this frame with the one it asked for last frame. `clip_mix_discontinuity()` (`animation/transition_manifest.cpp`) is the total variation between the two: weight that moved from one clip instance to another. A clip whose phase jumped by more than `k_transition_phase_break`, or a one-shot clip whose phase stepped backwards by more than `k_transition_phase_rewind`, counts as a new instance — that is how a restarted hit reaction is caught. Loop flags come from the BPAT clip table, not from the state, because reaction clips are selected under `Idle`; reverse gaits and kneels that play backwards a little every frame are not rewinds.

@@ -145,6 +145,17 @@ struct DuelCase {
 class MeleeDuelDistanceTest : public MeleeEngagementTest,
                               public ::testing::WithParamInterface<DuelCase> {};
 
+struct MixedMeleeCase {
+  Game::Units::SpawnType opponent;
+  bool formation;
+  bool reciprocal_order;
+  const char* name;
+};
+
+class MixedMeleeEngagementTest : public MeleeEngagementTest,
+                                 public ::testing::WithParamInterface<MixedMeleeCase> {
+};
+
 struct BareHandedCase {
   Game::Units::SpawnType defender;
   const char* name;
@@ -164,6 +175,124 @@ auto sanitized_case_name(const char* name) -> std::string {
 }
 
 } // namespace
+
+TEST_P(MixedMeleeEngagementTest, BothSidesKeepFightingAfterClosing) {
+  Engine::Core::World world;
+  Game::Systems::register_runtime_systems(world);
+  auto* swordsmen = GetParam().formation
+                        ? spawn_formation(world,
+                                          Game::Units::SpawnType::Swordsman,
+                                          1,
+                                          {-6.0F, 0.0F, 0.0F},
+                                          Game::Systems::NationID::RomanRepublic)
+                        : spawn(world,
+                                Game::Units::SpawnType::Swordsman,
+                                1,
+                                {-6.0F, 0.0F, 0.0F},
+                                Game::Systems::NationID::RomanRepublic);
+  auto* opponent = spawn(world,
+                         GetParam().opponent,
+                         2,
+                         {6.0F, 0.0F, 0.0F},
+                         Game::Systems::NationID::Carthage);
+  ASSERT_NE(swordsmen, nullptr);
+  ASSERT_NE(opponent, nullptr);
+  for (auto* fighter : {swordsmen, opponent}) {
+    auto* unit = fighter->get_component<UnitComponent>();
+    unit->health = unit->max_health = 100000;
+  }
+  order_attack(*swordsmen, *opponent);
+  if (GetParam().reciprocal_order) {
+    order_attack(*opponent, *swordsmen);
+  }
+
+  for (int tick = 0; tick < 200; ++tick) {
+    world.update(0.05F);
+  }
+  for (int window = 0; window < 3; ++window) {
+    int const swordsmen_health = swordsmen->get_component<UnitComponent>()->health;
+    int const opponent_health = opponent->get_component<UnitComponent>()->health;
+    bool swordsmen_attacked = false;
+    bool opponent_attacked = false;
+    for (int tick = 0; tick < 100; ++tick) {
+      world.update(0.05F);
+      auto const* swordsmen_pose =
+          swordsmen->get_component<CreaturePresentationComponent>();
+      auto const* opponent_pose =
+          opponent->get_component<CreaturePresentationComponent>();
+      swordsmen_attacked |= swordsmen_pose != nullptr && swordsmen_pose->is_attacking;
+      opponent_attacked |= opponent_pose != nullptr && opponent_pose->is_attacking;
+    }
+    SCOPED_TRACE(::testing::Message() << "window " << window << ", separation "
+                                      << separation(*swordsmen, *opponent));
+    EXPECT_LT(swordsmen->get_component<UnitComponent>()->health, swordsmen_health);
+    EXPECT_LT(opponent->get_component<UnitComponent>()->health, opponent_health);
+    EXPECT_TRUE(swordsmen_attacked);
+    EXPECT_TRUE(opponent_attacked);
+  }
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    Matchups,
+    MixedMeleeEngagementTest,
+    ::testing::Values(
+        MixedMeleeCase{Game::Units::SpawnType::Elephant,
+                       false,
+                       false,
+                       "swordsman_attacks_elephant"},
+        MixedMeleeCase{
+            Game::Units::SpawnType::Elephant, false, true, "swordsman_duels_elephant"},
+        MixedMeleeCase{
+            Game::Units::SpawnType::Elephant, true, false, "squad_attacks_elephant"},
+        MixedMeleeCase{
+            Game::Units::SpawnType::Elephant, true, true, "squad_duels_elephant"},
+        MixedMeleeCase{Game::Units::SpawnType::CarthageSwordCommander,
+                       false,
+                       false,
+                       "swordsman_attacks_commander"},
+        MixedMeleeCase{Game::Units::SpawnType::CarthageSwordCommander,
+                       false,
+                       true,
+                       "swordsman_duels_commander"},
+        MixedMeleeCase{Game::Units::SpawnType::CarthageSwordCommander,
+                       true,
+                       false,
+                       "squad_attacks_commander"},
+        MixedMeleeCase{Game::Units::SpawnType::CarthageSwordCommander,
+                       true,
+                       true,
+                       "squad_duels_commander"}),
+    [](const testing::TestParamInfo<MixedMeleeCase>& info) { return info.param.name; });
+
+TEST_F(MeleeEngagementTest, SwordsmanReachesAnElephantWithoutWaitingForItsAttack) {
+  Engine::Core::World world;
+  Game::Systems::register_runtime_systems(world);
+  auto* swordsman = spawn(world,
+                          Game::Units::SpawnType::Swordsman,
+                          1,
+                          {-6.0F, 0.0F, 0.0F},
+                          Game::Systems::NationID::RomanRepublic);
+  auto* elephant = spawn(world,
+                         Game::Units::SpawnType::Elephant,
+                         2,
+                         {6.0F, 0.0F, 0.0F},
+                         Game::Systems::NationID::Carthage);
+  ASSERT_NE(swordsman, nullptr);
+  ASSERT_NE(elephant, nullptr);
+  elephant->add_component<Engine::Core::HoldModeComponent>()->active = true;
+  auto* elephant_attack = elephant->get_component<AttackComponent>();
+  elephant_attack->melee_cooldown = 10000.0F;
+  elephant_attack->time_since_last = 0.0F;
+  auto* elephant_unit = elephant->get_component<UnitComponent>();
+  elephant_unit->health = elephant_unit->max_health = 100000;
+  order_attack(*swordsman, *elephant);
+  for (int tick = 0; tick < 300; ++tick) {
+    world.update(0.05F);
+  }
+  EXPECT_LT(elephant_unit->health, elephant_unit->max_health)
+      << "the swordsman stopped " << separation(*swordsman, *elephant)
+      << " metres away and waited for the elephant to initiate contact";
+}
 
 TEST_P(MeleeDuelDistanceTest, DuellistsCloseToWeaponContactBeforeSwinging) {
   Engine::Core::World world;

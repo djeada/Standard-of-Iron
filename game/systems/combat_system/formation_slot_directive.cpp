@@ -178,15 +178,24 @@ void press_toward_target(const EntityFrame& frame,
                       desired_yaw,
                       k_contact_turn_degrees * std::max(0.0F, frame.delta_time));
 
+  bool const single_opponent = opponent != nullptr && !is_building(opponent) &&
+                               !FormationCombat::has_formation_slots(*opponent);
+  auto const* attack =
+      frame.world.try_get<Engine::Core::AttackComponent>(frame.entity.get_id());
+  float const weapon_reach = attack != nullptr ? attack->melee_range : 1.5F;
+  float const contact_distance =
+      single_opponent
+          ? layout.body_radius + opponent_layout.body_radius + weapon_reach * 0.35F
+          : k_weapon_contact_distance;
   float const pull_distance =
       rank.ranked
           ? std::clamp(rank.surface.distance -
                            structure_attack_profile(&frame.entity).contact_clearance,
                        0.0F,
                        layout.spacing * 1.6F)
-          : std::clamp(contact_vector.distance - k_weapon_contact_distance,
+          : std::clamp(contact_vector.distance - contact_distance,
                        0.0F,
-                       layout.spacing * 0.20F);
+                       layout.spacing * (single_opponent ? 1.6F : 0.20F));
   if (contact_vector.distance > 0.0001F) {
     directive.local_x += contact_vector.x / contact_vector.distance * pull_distance;
     directive.local_z += contact_vector.z / contact_vector.distance * pull_distance;
@@ -238,16 +247,20 @@ void apply_assigned_engagement(const EntityFrame& frame,
   assign_target(frame, slot, retained, directive);
   FacadeRank const rank = rank_against_structure(frame, opponent, directive);
   bool const opponent_is_structure = opponent != nullptr && is_building(opponent);
+  auto const* attack =
+      frame.world.try_get<Engine::Core::AttackComponent>(frame.entity.get_id());
+  float const weapon_reach =
+      attack != nullptr ? attack->melee_range : frame.layout.spacing * 0.65F;
   bool const opponent_within_reach =
-      opponent_is_structure
-          ? rank.ranked
-          : directive.engagement_surface_gap <= frame.layout.spacing * 0.65F;
+      opponent_is_structure ? rank.ranked
+                            : directive.engagement_surface_gap <= weapon_reach;
   directive.combat_role =
       brawls_as_a_crowd(frame.world, frame.entity.get_id())
           ? crowd_brawl_role(slot.original.index)
       : opponent_within_reach
-          ? combat_role_for(frame.layout.seed, slot.original.index, true)
-          : Engine::Core::FormationSoldierCombatRole::Guard;
+          ? combat_role_for(
+                frame.layout.seed, slot.original.index, true, frame.combat_motion_time)
+          : Engine::Core::FormationSoldierCombatRole::Ready;
   directive.action = action_for_role(directive.combat_role);
 
   press_toward_target(
@@ -334,10 +347,12 @@ void continue_follow_through(const EntityFrame& frame,
 void apply_unassigned_melee(const EntityFrame& frame,
                             const SlotContext& slot,
                             Soldier& directive) {
-  directive.combat_role =
-      brawls_as_a_crowd(frame.world, frame.entity.get_id())
-          ? crowd_brawl_role(slot.original.index)
-          : combat_role_for(frame.layout.seed, slot.original.index, false);
+  directive.combat_role = brawls_as_a_crowd(frame.world, frame.entity.get_id())
+                              ? crowd_brawl_role(slot.original.index)
+                              : combat_role_for(frame.layout.seed,
+                                                slot.original.index,
+                                                false,
+                                                frame.combat_motion_time);
   directive.action = action_for_role(directive.combat_role);
   face_crowd_opponent(frame, directive);
   press_against_attacked_structure(frame, slot, directive);

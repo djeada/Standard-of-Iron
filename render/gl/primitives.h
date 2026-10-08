@@ -2,6 +2,7 @@
 
 #include <QMatrix4x4>
 
+#include <cstdint>
 #include <memory>
 
 #include "mesh.h"
@@ -42,5 +43,13 @@ inline constexpr float k_bake_chord_tolerance = 0.0015F;
 inline constexpr int k_min_bake_radial_segments = 8;
 
 [[nodiscard]] auto bake_tessellated_mesh(Mesh* mesh, const QMatrix4x4& model) -> Mesh*;
+
+enum class UnitSurfaceShape : std::uint8_t {
+  Flat,
+  Round,
+  Pointed,
+};
+
+[[nodiscard]] auto unit_surface_shape(const Mesh* mesh) -> UnitSurfaceShape;
 
 } // namespace Render::GL

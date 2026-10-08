@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <gtest/gtest.h>
 
@@ -484,9 +485,10 @@ TEST_F(FormationCombatGeometry, DeepOverlapEngagesEveryLivingSoldier) {
       EXPECT_NE(directive.combat_role, Engine::Core::FormationSoldierCombatRole::None);
       EXPECT_EQ(directive.target_slot, pair->target_slot);
       EXPECT_EQ(directive.engagement_surface_gap, pair->surface_gap);
-      if (directive.engagement_surface_gap > presentation->spacing * 0.65F) {
+      if (directive.engagement_surface_gap >
+          attacker->get_component<Engine::Core::AttackComponent>()->melee_range) {
         EXPECT_EQ(directive.combat_role,
-                  Engine::Core::FormationSoldierCombatRole::Guard);
+                  Engine::Core::FormationSoldierCombatRole::Ready);
       }
     }
   }
@@ -497,6 +499,38 @@ TEST_F(FormationCombatGeometry, DeepOverlapEngagesEveryLivingSoldier) {
                                    presentation->soldiers.front().combat_role;
                           }))
       << "a fully engaged formation should not animate as one synchronized block";
+}
+
+TEST_F(FormationCombatGeometry, EngagedSoldiersTakeTurnsStrikingAndDefending) {
+  using Role = Engine::Core::FormationSoldierCombatRole;
+  Engine::Core::World world;
+  auto* attacker = add_spearmen(world, 1, 0.0F, 0.0F);
+  auto* target = add_spearmen(world, 2, 0.5F, 180.0F);
+  attacker->add_component<Engine::Core::AttackTargetComponent>()->target_id =
+      target->get_id();
+
+  std::array<bool, 12> struck{};
+  std::array<bool, 12> defended{};
+  bool varied_roles = false;
+  for (int tick = 0; tick < 360; ++tick) {
+    Game::Systems::Combat::update_formation_contacts(&world, 1.0F / 30.0F);
+    auto const* presentation =
+        attacker->get_component<Engine::Core::FormationPresentationComponent>();
+    ASSERT_NE(presentation, nullptr);
+    ASSERT_EQ(presentation->soldiers.size(), struck.size());
+    for (auto const& soldier : presentation->soldiers) {
+      struck[soldier.slot_index] |= soldier.combat_role == Role::LeadStrike ||
+                                    soldier.combat_role == Role::SupportStrike;
+      defended[soldier.slot_index] |=
+          soldier.combat_role == Role::Guard || soldier.combat_role == Role::StepOut;
+      varied_roles |= soldier.combat_role != presentation->soldiers.front().combat_role;
+    }
+  }
+  EXPECT_TRUE(varied_roles) << "the entire rank must not swing in unison";
+  for (std::size_t slot = 0; slot < struck.size(); ++slot) {
+    EXPECT_TRUE(struck[slot]) << "soldier " << slot << " never took a swing";
+    EXPECT_TRUE(defended[slot]) << "soldier " << slot << " never defended";
+  }
 }
 
 TEST_F(FormationCombatGeometry, EngagementWaitsForFormationFootprintsToMerge) {

@@ -1489,9 +1489,16 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
   sync_combat_visual_inputs(soldier_render_anim, combat_resolution.resolved);
   if (soldier_in_formation_fight && !soldier_render_anim.is_attacking &&
       !soldier_render_anim.is_hit_reacting) {
-    soldier_render_anim.is_guarding = true;
-    soldier_render_anim.guard_pose_progress =
-        std::clamp(soldier_directive->target_held_seconds / 0.18F, 0.0F, 1.0F);
+
+    if (soldier_directive->combat_role ==
+        Engine::Core::FormationSoldierCombatRole::Guard) {
+      soldier_render_anim.is_guarding = true;
+      soldier_render_anim.guard_pose_progress =
+          std::clamp(soldier_directive->target_held_seconds / 0.18F, 0.0F, 1.0F);
+    } else if (!Render::Creature::is_moving_animation(
+                   soldier_render_anim.movement_state)) {
+      soldier_render_anim.is_in_melee_lock = true;
+    }
   }
   resolve_guard_shield_pose();
 

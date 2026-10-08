@@ -18,6 +18,7 @@
 #include "game/units/spawn_type.h"
 #include "render/creature/animation_state_components.h"
 #include "render/creature/archetype_registry.h"
+#include "render/creature/humanoid_clip_ids.h"
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/pipeline/creature_render_state.h"
 #include "render/creature/pipeline/prepared_submit.h"
@@ -435,7 +436,7 @@ TEST(MountedPrepare, MountedHumanoidPreparationQueuesRiderAndHorseBodies) {
   EXPECT_EQ(prep.bodies.requests().size(), 2U);
 }
 
-TEST(MountedPrepare, MountedRiderUsesMountedChargeStateForMeleeAttack) {
+TEST(MountedPrepare, MountedSpearAttackPlaysTheMountedThrust) {
   Render::GL::HorseSpearmanRendererConfig cfg;
   cfg.has_spear = false;
   cfg.has_shield = false;
@@ -462,7 +463,9 @@ TEST(MountedPrepare, MountedRiderUsesMountedChargeStateForMeleeAttack) {
                Render::Creature::Pipeline::CreatureKind::Humanoid;
       });
   ASSERT_NE(rider_req, requests.end());
-  EXPECT_EQ(rider_req->state, Render::Creature::AnimationStateId::RidingCharge);
+  EXPECT_EQ(rider_req->state, Render::Creature::AnimationStateId::AttackSpear);
+  EXPECT_EQ(rider_req->clip_id, Render::Creature::k_humanoid_riding_spear_thrust_clip)
+      << "the charge pose holds the spear still; a stationary rider never struck";
 }
 
 TEST(MountedPrepare, MountedSwordAttackUsesMountedSwordStateWhileMoving) {

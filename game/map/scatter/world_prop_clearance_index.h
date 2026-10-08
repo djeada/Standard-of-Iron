@@ -16,6 +16,9 @@ public:
 
   [[nodiscard]] auto overlaps(float world_x, float world_z, float radius) const -> bool;
 
+  [[nodiscard]] auto
+  overlap_depth(float world_x, float world_z, float radius) const -> float;
+
   auto push_out(float& world_x, float& world_z, float radius) const -> bool;
 
   [[nodiscard]] auto empty() const -> bool { return m_bodies.empty(); }

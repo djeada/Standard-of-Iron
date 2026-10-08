@@ -14,6 +14,13 @@
 
 namespace Render::GL {
 
+inline constexpr float k_grain_frame_offset = 4096.0F;
+inline constexpr float k_grain_member_stride = 64.0F;
+inline constexpr int k_grain_member_count = 16;
+inline constexpr float k_grain_round_band = -1.0F;
+inline constexpr float k_grain_end_band = -3.0F;
+inline constexpr float k_grain_hewn_band = -5.0F;
+
 struct MergedBuildingVertex {
   std::array<float, 3> position{};
   std::array<float, 3> normal{};

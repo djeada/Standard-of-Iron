@@ -52,7 +52,7 @@ void main() {
   vec3 normal = normalize(v_normal);
   int soi_material = u_material_id % 10;
   int soi_damage_tier = u_material_id / 10;
-  color = soi_material_variation(color, v_world_pos, normal, soi_material);
+  color = soi_material_variation(color, v_world_pos, normal, soi_material, vec2(0.0));
   color = soi_apply_damage_soot(color, v_world_pos, soi_damage_tier);
 
   float avg_color = (color.r + color.g + color.b) / 3.0;

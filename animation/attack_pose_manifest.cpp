@@ -1539,41 +1539,39 @@ auto resolve_mounted_spear_thrust_pose(
     -> MountedSpearThrustPoseSample {
   float const attack_phase = std::clamp(inputs.attack_phase, 0.0F, 1.0F);
 
-  constexpr MountedSeatOffset guard_pos{0.12F, 0.15F, 0.15F};
-  constexpr MountedSeatOffset couch_pos{0.05F, 0.12F, 0.08F};
+  constexpr MountedSeatOffset guard_pos{0.12F, 0.24F, 0.15F};
+  constexpr MountedSeatOffset couch_pos{0.02F, 0.24F, 0.10F};
+  constexpr MountedSeatOffset thrust_pos{0.46F, 0.22F, 0.04F};
+  constexpr MountedSeatOffset extended_pos{0.52F, 0.21F, -0.02F};
+  constexpr MountedSeatOffset left_rein{0.26F, -0.08F, 0.02F};
 
-  constexpr MountedSeatOffset thrust_pos{0.46F, 0.08F, 0.02F};
-  constexpr MountedSeatOffset extended_pos{0.52F, 0.05F, -0.04F};
+  constexpr MountedSeatOffset guard_dir{1.0F, 0.12F, 0.02F};
+  constexpr MountedSeatOffset couch_dir{1.0F, 0.13F, -0.06F};
+  constexpr MountedSeatOffset thrust_dir{1.0F, 0.10F, -0.30F};
+  constexpr MountedSeatOffset extended_dir{1.0F, 0.09F, -0.38F};
 
   MountedSpearThrustPoseSample sample{};
+  sample.left_hand = left_rein;
 
   if (attack_phase < 0.20F) {
-    float const t = attack_phase / 0.20F;
-    float const ease_t = smoothstep(t);
+    float const ease_t = smoothstep(attack_phase / 0.20F);
     sample.right_hand = lerp(guard_pos, couch_pos, ease_t);
-    sample.left_hand = lerp(
-        MountedSeatOffset{guard_pos.forward, guard_pos.right - 0.25F, guard_pos.up},
-        MountedSeatOffset{couch_pos.forward, couch_pos.right - 0.22F, couch_pos.up},
-        ease_t);
+    sample.spear_direction = lerp(guard_dir, couch_dir, ease_t);
     sample.torso_compression = 0.03F * ease_t;
     sample.forward_lean = 0.04F * ease_t;
     sample.head_forward_tilt = 0.1F * ease_t;
     sample.debug_label = "spear_couch";
   } else if (attack_phase < 0.30F) {
     sample.right_hand = couch_pos;
-    sample.left_hand = {couch_pos.forward, couch_pos.right - 0.22F, couch_pos.up};
+    sample.spear_direction = couch_dir;
     sample.torso_compression = 0.03F;
     sample.forward_lean = 0.04F;
     sample.head_forward_tilt = 0.1F;
     sample.debug_label = "spear_tension";
   } else if (attack_phase < 0.50F) {
-    float const t = (attack_phase - 0.30F) / 0.20F;
-    float const power_t = smoothstep(t);
+    float const power_t = smoothstep((attack_phase - 0.30F) / 0.20F);
     sample.right_hand = lerp(couch_pos, thrust_pos, power_t);
-    sample.left_hand = lerp(
-        MountedSeatOffset{couch_pos.forward, couch_pos.right - 0.22F, couch_pos.up},
-        MountedSeatOffset{thrust_pos.forward, thrust_pos.right - 0.28F, thrust_pos.up},
-        power_t);
+    sample.spear_direction = lerp(couch_dir, thrust_dir, power_t);
     sample.forward_lean = 0.04F + 0.10F * power_t;
     sample.torso_twist = 0.05F * power_t;
     sample.shoulder_drop = 0.04F * power_t;
@@ -1581,14 +1579,9 @@ auto resolve_mounted_spear_thrust_pose(
     sample.head_forward_tilt = 0.10F + 0.20F * power_t;
     sample.debug_label = "spear_thrust";
   } else if (attack_phase < 0.65F) {
-    float const t = (attack_phase - 0.50F) / 0.15F;
-    float const ease_t = smoothstep(t);
+    float const ease_t = smoothstep((attack_phase - 0.50F) / 0.15F);
     sample.right_hand = lerp(thrust_pos, extended_pos, ease_t);
-    sample.left_hand = lerp(
-        MountedSeatOffset{thrust_pos.forward, thrust_pos.right - 0.28F, thrust_pos.up},
-        MountedSeatOffset{
-            extended_pos.forward, extended_pos.right - 0.32F, extended_pos.up},
-        ease_t);
+    sample.spear_direction = lerp(thrust_dir, extended_dir, ease_t);
     sample.forward_lean = 0.14F;
     sample.torso_twist = 0.05F;
     sample.shoulder_drop = 0.04F;
@@ -1596,14 +1589,9 @@ auto resolve_mounted_spear_thrust_pose(
     sample.torso_compression = 0.015F * (1.0F - ease_t);
     sample.debug_label = "spear_extend";
   } else {
-    float const t = (attack_phase - 0.65F) / 0.35F;
-    float const ease_t = smoothstep(t);
+    float const ease_t = smoothstep((attack_phase - 0.65F) / 0.35F);
     sample.right_hand = lerp(extended_pos, guard_pos, ease_t);
-    sample.left_hand = lerp(
-        MountedSeatOffset{
-            extended_pos.forward, extended_pos.right - 0.32F, extended_pos.up},
-        MountedSeatOffset{guard_pos.forward, guard_pos.right - 0.25F, guard_pos.up},
-        ease_t);
+    sample.spear_direction = lerp(extended_dir, guard_dir, ease_t);
     sample.forward_lean = 0.14F * (1.0F - ease_t);
     sample.torso_twist = 0.05F * (1.0F - ease_t);
     sample.shoulder_drop = 0.04F * (1.0F - ease_t);
@@ -1620,20 +1608,31 @@ auto resolve_mounted_spear_guard_pose(
 
   switch (inputs.grip) {
   case MountedSpearGuardGrip::Couched:
-    sample.right_hand = {-0.15F, 0.08F, 0.08F};
+    sample.right_hand = {-0.10F, 0.24F, 0.10F};
     sample.left_hand_uses_rein = true;
     sample.left_rein_slack = 0.35F;
     sample.left_rein_tension = 0.20F;
+    sample.spear_direction = {1.0F, 0.14F, 0.03F};
     break;
   case MountedSpearGuardGrip::TwoHanded:
-    sample.right_hand = {0.15F, 0.15F, 0.12F};
-    sample.left_hand = {0.15F, -0.10F, 0.12F};
+    sample.right_hand = {0.02F, 0.20F, 0.12F};
+    sample.left_hand = {0.30F, 0.12F, 0.16F};
+    sample.spear_direction = {1.0F, -0.27F, 0.14F};
     break;
   case MountedSpearGuardGrip::Overhand:
-    sample.right_hand = {0.0F, 0.12F, 0.55F};
+    sample.right_hand = {0.0F, 0.20F, 0.55F};
     sample.left_hand_uses_rein = true;
     sample.left_rein_slack = 0.30F;
     sample.left_rein_tension = 0.30F;
+    sample.spear_direction = {1.0F, 0.10F, -0.30F};
+    break;
+  case MountedSpearGuardGrip::Upright:
+    sample.right_hand = {0.10F, 0.26F, 0.04F};
+    sample.left_hand_uses_rein = true;
+    sample.left_rein_slack = 0.40F;
+    sample.left_rein_tension = 0.15F;
+    sample.spear_direction = {0.30F, 0.03F, 1.0F};
+    sample.debug_label = "spear_upright";
     break;
   }
 

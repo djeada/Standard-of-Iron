@@ -17,6 +17,10 @@ inline constexpr QVector3D k_tile_dark{0.40F, 0.19F, 0.14F};
 inline constexpr QVector3D k_wood{0.43F, 0.31F, 0.21F};
 inline constexpr QVector3D k_wood_dark{0.25F, 0.18F, 0.13F};
 inline constexpr QVector3D k_wood_light{0.56F, 0.42F, 0.28F};
+
+inline constexpr QVector3D k_palisade_light{0.60F, 0.49F, 0.36F};
+inline constexpr QVector3D k_palisade{0.48F, 0.38F, 0.28F};
+inline constexpr QVector3D k_palisade_dark{0.32F, 0.25F, 0.19F};
 inline constexpr QVector3D k_bronze{0.67F, 0.50F, 0.25F};
 inline constexpr QVector3D k_indigo{0.20F, 0.32F, 0.52F};
 inline constexpr QVector3D k_oxblood{0.48F, 0.20F, 0.17F};

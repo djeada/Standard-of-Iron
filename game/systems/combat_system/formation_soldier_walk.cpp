@@ -588,24 +588,27 @@ void constrain_step(const SlotWalk& walk,
   float landing_x = soldier.world_x + plan.x;
   float landing_z = soldier.world_z + plan.z;
   if (props.push_out(landing_x, landing_z, prop_clearance_of(walk))) {
-    float const correction_x = landing_x - soldier.world_x - plan.x;
-    float const correction_z = landing_z - soldier.world_z - plan.z;
-    float const correction = std::hypot(correction_x, correction_z);
-    float const correction_limit =
-        timing.max_speed * k_obstacle_catch_up_ratio * timing.dt;
-    float const keep = correction > correction_limit && correction > 0.0001F
-                           ? correction_limit / correction
-                           : 1.0F;
-
-    bool const onto_slope =
-        pathfinder != nullptr &&
-        !terrain_walkable_at(*pathfinder,
-                             soldier.world_x + plan.x + correction_x * keep,
-                             soldier.world_z + plan.z + correction_z * keep);
-    if (!onto_slope) {
-      plan.x += correction_x * keep;
-      plan.z += correction_z * keep;
+    float to_x = landing_x - soldier.world_x;
+    float to_z = landing_z - soldier.world_z;
+    float const reach = std::hypot(to_x, to_z);
+    float const limit =
+        std::max(std::hypot(plan.x, plan.z),
+                 timing.max_speed * k_obstacle_catch_up_ratio * timing.dt);
+    if (reach > limit && reach > 0.0001F) {
+      to_x *= limit / reach;
+      to_z *= limit / reach;
     }
+    bool const onto_slope =
+        pathfinder != nullptr && !terrain_walkable_at(*pathfinder,
+                                                      soldier.world_x + to_x,
+                                                      soldier.world_z + to_z);
+    float const clearance = prop_clearance_of(walk);
+    bool const deeper =
+        props.overlap_depth(soldier.world_x + to_x, soldier.world_z + to_z, clearance) >
+        props.overlap_depth(soldier.world_x, soldier.world_z, clearance) + 1.0e-4F;
+    bool const hold = onto_slope || deeper;
+    plan.x = hold ? 0.0F : to_x;
+    plan.z = hold ? 0.0F : to_z;
     soldier.relocation_blocked = true;
   }
 }
@@ -616,6 +619,7 @@ void land_step(const SlotWalk& walk,
                StepPlan& plan,
                const SlotAim& aim,
                const Pathfinding* pathfinder,
+               const Game::Map::WorldPropClearanceIndex& props,
                const WalkTiming& timing) {
   float const dt = timing.dt;
   bool const stopped_dead =
@@ -632,12 +636,20 @@ void land_step(const SlotWalk& walk,
       constrain_step_to_terrain(
           *pathfinder, soldier.world_x, soldier.world_z, slip_x, slip_z);
     }
+    float landing_x = soldier.world_x + slip_x;
+    float landing_z = soldier.world_z + slip_z;
+    if (props.push_out(landing_x, landing_z, prop_clearance_of(walk))) {
+      slip_x = landing_x - soldier.world_x;
+      slip_z = landing_z - soldier.world_z;
+    }
     if (std::hypot(slip_x, slip_z) > k_stranded_walk_progress * wanted) {
       plan.x = slip_x;
       plan.z = slip_z;
-    } else if (pathfinder == nullptr || terrain_walkable_at(*pathfinder,
-                                                            aim.destination.x(),
-                                                            aim.destination.z())) {
+    } else if ((pathfinder == nullptr || terrain_walkable_at(*pathfinder,
+                                                             aim.destination.x(),
+                                                             aim.destination.z())) &&
+               !props.overlaps(
+                   aim.destination.x(), aim.destination.z(), prop_clearance_of(walk))) {
       plan.x = aim.dx;
       plan.z = aim.dz;
       snapped = true;
@@ -749,7 +761,7 @@ void walk_formation_slot(const SlotWalk& walk,
 
   StepPlan plan = plan_step(walk, soldier, aim, timing);
   constrain_step(walk, soldier, plan, pathfinder, *props, timing);
-  land_step(walk, *previous, soldier, plan, aim, pathfinder, timing);
+  land_step(walk, *previous, soldier, plan, aim, pathfinder, *props, timing);
   write_local_frame(walk, *previous, soldier);
   update_reforming_flags(soldier, aim, plan, timing);
   settle_soldier_gait(previous, soldier, timing.dt, timing.run_speed);

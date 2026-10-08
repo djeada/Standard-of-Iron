@@ -4022,11 +4022,11 @@ TEST(AnimationCoreAttackPoseManifest, MountedSpearThrustCouchesBeforeStrike) {
       .attack_phase = 0.10F,
   });
 
-  EXPECT_NEAR(sample.right_hand.forward, 0.085F, 0.0001F);
-  EXPECT_NEAR(sample.right_hand.right, 0.135F, 0.0001F);
-  EXPECT_NEAR(sample.right_hand.up, 0.115F, 0.0001F);
-  EXPECT_NEAR(sample.left_hand.forward, 0.085F, 0.0001F);
-  EXPECT_NEAR(sample.left_hand.right, -0.10F, 0.0001F);
+  EXPECT_LT(sample.right_hand.forward, 0.12F);
+  EXPECT_GT(sample.right_hand.right, 0.20F)
+      << "the spear hand rides on the horse's right side, clear of its neck";
+  EXPECT_LT(sample.left_hand.right, 0.0F) << "the left hand stays on the reins";
+  EXPECT_GT(sample.spear_direction.forward, 0.9F);
   EXPECT_GT(sample.torso_compression, 0.0F);
   EXPECT_GT(sample.forward_lean, 0.0F);
   EXPECT_STREQ(sample.debug_label, "spear_couch");
@@ -4039,9 +4039,10 @@ TEST(AnimationCoreAttackPoseManifest, MountedSpearThrustDrivesForwardAtImpact) {
 
   EXPECT_GT(sample.right_hand.forward, 0.46F);
   EXPECT_LT(sample.right_hand.forward, 0.53F);
-  EXPECT_LT(sample.right_hand.right, 0.08F);
-  EXPECT_LT(sample.right_hand.up, 0.02F);
-  EXPECT_LT(sample.left_hand.up, 0.02F);
+  EXPECT_GT(sample.right_hand.right, 0.15F);
+  EXPECT_LT(sample.right_hand.up, 0.05F);
+  EXPECT_LT(sample.spear_direction.up, -0.25F) << "the point drives down at infantry";
+  EXPECT_GT(sample.spear_direction.right, 0.0F) << "the shaft must clear the horse";
   EXPECT_FLOAT_EQ(sample.forward_lean, 0.14F);
   EXPECT_FLOAT_EQ(sample.torso_twist, 0.05F);
   EXPECT_FLOAT_EQ(sample.shoulder_drop, 0.04F);
@@ -4060,26 +4061,28 @@ TEST(AnimationCoreAttackPoseManifest, MountedSpearPiercesForwardAndDownWithoutSw
   EXPECT_GT(pierce.right_hand.forward, couch.right_hand.forward + 0.38F);
   EXPECT_LT(pierce.right_hand.up, couch.right_hand.up - 0.08F);
   EXPECT_LT(std::abs(pierce.right_hand.right - couch.right_hand.right), 0.10F);
-  EXPECT_GT(pierce.left_hand.forward, couch.left_hand.forward + 0.38F);
-  EXPECT_LT(pierce.left_hand.up, couch.left_hand.up - 0.08F);
+  EXPECT_LT(pierce.spear_direction.up, couch.spear_direction.up - 0.2F);
+  EXPECT_LT(std::abs(pierce.spear_direction.right - couch.spear_direction.right),
+            0.10F);
 }
 
 TEST(AnimationCoreAttackPoseManifest, MountedSpearThrustRecoversToGuard) {
-  auto const sample = Animation::resolve_mounted_spear_thrust_pose({
+  auto const recovered = Animation::resolve_mounted_spear_thrust_pose({
       .attack_phase = 1.0F,
   });
+  auto const start = Animation::resolve_mounted_spear_thrust_pose({
+      .attack_phase = 0.0F,
+  });
 
-  EXPECT_FLOAT_EQ(sample.right_hand.forward, 0.12F);
-  EXPECT_FLOAT_EQ(sample.right_hand.right, 0.15F);
-  EXPECT_FLOAT_EQ(sample.right_hand.up, 0.15F);
-  EXPECT_FLOAT_EQ(sample.left_hand.forward, 0.12F);
-  EXPECT_FLOAT_EQ(sample.left_hand.right, -0.10F);
-  EXPECT_FLOAT_EQ(sample.left_hand.up, 0.15F);
-  EXPECT_NEAR(sample.forward_lean, 0.0F, 0.0001F);
-  EXPECT_NEAR(sample.torso_twist, 0.0F, 0.0001F);
-  EXPECT_NEAR(sample.shoulder_drop, 0.0F, 0.0001F);
-  EXPECT_FLOAT_EQ(sample.head_forward_tilt, 0.0F);
-  EXPECT_STREQ(sample.debug_label, "spear_recover");
+  EXPECT_FLOAT_EQ(recovered.right_hand.forward, start.right_hand.forward);
+  EXPECT_FLOAT_EQ(recovered.right_hand.right, start.right_hand.right);
+  EXPECT_FLOAT_EQ(recovered.right_hand.up, start.right_hand.up);
+  EXPECT_FLOAT_EQ(recovered.spear_direction.up, start.spear_direction.up);
+  EXPECT_NEAR(recovered.forward_lean, 0.0F, 0.0001F);
+  EXPECT_NEAR(recovered.torso_twist, 0.0F, 0.0001F);
+  EXPECT_NEAR(recovered.shoulder_drop, 0.0F, 0.0001F);
+  EXPECT_FLOAT_EQ(recovered.head_forward_tilt, 0.0F);
+  EXPECT_STREQ(recovered.debug_label, "spear_recover");
 }
 
 TEST(AnimationCoreAttackPoseManifest, MountedSwordStrikeChambers) {
@@ -4148,11 +4151,22 @@ TEST(AnimationCoreAttackPoseManifest, MountedSpearGuardExposesGripTargets) {
   EXPECT_TRUE(overhand.left_hand_uses_rein);
   EXPECT_FLOAT_EQ(overhand.right_hand.up, 0.55F);
   EXPECT_FLOAT_EQ(overhand.left_rein_slack, 0.30F);
-  EXPECT_FLOAT_EQ(couched.right_hand.forward, -0.15F);
+  EXPECT_FLOAT_EQ(couched.right_hand.forward, -0.10F);
   EXPECT_FLOAT_EQ(couched.left_rein_tension, 0.20F);
   EXPECT_FALSE(two_handed.left_hand_uses_rein);
-  EXPECT_FLOAT_EQ(two_handed.left_hand.right, -0.10F);
+  EXPECT_GT(two_handed.left_hand.forward, two_handed.right_hand.forward)
+      << "the leading hand sits ahead on the shaft, not beside the rear hand";
   EXPECT_STREQ(two_handed.debug_label, "spear_guard_pose");
+
+  auto const upright = Animation::resolve_mounted_spear_guard_pose({
+      .grip = Animation::MountedSpearGuardGrip::Upright,
+  });
+  EXPECT_TRUE(upright.left_hand_uses_rein);
+  EXPECT_GT(upright.spear_direction.up, 0.9F) << "a resting rider shoulders the spear";
+  EXPECT_GT(upright.right_hand.right, 0.20F);
+  for (auto const& grip : {overhand, couched, two_handed, upright}) {
+    EXPECT_GT(grip.spear_direction.forward, 0.0F) << "the point never trails";
+  }
 }
 
 TEST(AnimationCoreAttackPoseManifest, MountedBowDrawOwnsDrawHandCurve) {
@@ -5344,7 +5358,7 @@ TEST(AnimationCoreIntentManifest, MountedSwordAndSpearResolveDifferentActions) {
       .is_melee = true,
       .attack_family = Animation::CombatAttackFamily::Spear,
   });
-  EXPECT_EQ(spear.semantic.action, Animation::ActionIntent::MountedCharge);
+  EXPECT_EQ(spear.semantic.action, Animation::ActionIntent::AttackSpear);
   EXPECT_TRUE(spear.semantic.prioritize_action_over_locomotion);
 }
 

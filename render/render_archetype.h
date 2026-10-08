@@ -43,6 +43,8 @@ struct RenderArchetypeDraw {
   float alpha = 1.0F;
   int material_id = 0;
   std::uint8_t palette_slot = k_render_archetype_fixed_color_slot;
+
+  bool timber = false;
 };
 
 struct RenderArchetypeSlice {
@@ -137,6 +139,8 @@ public:
   void use_lod(RenderArchetypeLod lod);
   void set_max_distance(float max_distance);
 
+  void set_timber(bool timber);
+
   void add_mesh(Mesh* mesh,
                 const QMatrix4x4& local_model,
                 const QVector3D& color,
@@ -199,6 +203,7 @@ private:
 
   RenderArchetype m_archetype;
   RenderArchetypeLod m_active_lod{RenderArchetypeLod::Full};
+  bool m_timber{false};
 };
 
 } // namespace Render::GL

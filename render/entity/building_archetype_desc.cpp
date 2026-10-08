@@ -408,6 +408,7 @@ auto build_building_archetype(const BuildingArchetypeDesc& desc,
       }
       auto surfaced = part;
       surfaced.material_id = building_material(part);
+      builder.set_timber(part.material_id % 10 == k_building_material_wood);
       add_part_to_builder(builder, surfaced, decayed_color(part.color, state, seed));
     }
   };

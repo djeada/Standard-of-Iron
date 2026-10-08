@@ -174,9 +174,10 @@ auto extents_at(std::size_t dir,
 }
 
 auto alternating_stake_color(const WallPalette& palette, int index) -> QVector3D {
-  const bool even_index = (index % 2) == 0;
-  const bool use_light = palette.alternate_starts_light ? even_index : !even_index;
-  return use_light ? palette.wood_light : palette.wood_mid;
+
+  const float roll =
+      decay_hash((index * 29) + (palette.alternate_starts_light ? 3 : 11));
+  return palette.wood_mid + (palette.wood_light - palette.wood_mid) * roll;
 }
 
 auto stake_height_variation(const WallGeometry& geometry, int index) -> float {
@@ -195,7 +196,7 @@ auto stake_lean(const WallGeometry& geometry, int index) -> float {
 
 auto binding_color(const WallPalette& palette,
                    const WallGeometry& geometry) -> QVector3D {
-  return geometry.metal_bands ? palette.masonry_accent : palette.rope;
+  return wall_binding_color(palette, geometry);
 }
 
 void add_stake_bindings(BuildingArchetypeDesc& desc,
@@ -207,6 +208,7 @@ void add_stake_bindings(BuildingArchetypeDesc& desc,
                         BuildingStateMask states) {
   const float lateral_half = rail_offset(geometry) + (geometry.rail_radius * 0.9F);
   BuildingPartLabel const label(desc, "stake_binding");
+  BuildingPartMaterial const binding(desc, wall_binding_material(geometry));
   for (const float height : {geometry.lower_rail_y, geometry.upper_rail_y}) {
     desc.add_box(point_at(dir, along, 0.0F, height),
                  extents_at(dir, radius * 0.95F, 0.042F, lateral_half),
@@ -244,6 +246,7 @@ void add_span_debris(BuildingArchetypeDesc& desc,
   const QVector3D center = point_at(dir, along_half, 0.0F, 0.0F);
   const QVector3D extent = extents_at(dir, along_half * 0.86F, 0.0F, lateral_half);
 
+  BuildingPartMaterial const stone(desc, k_building_material_stone);
   add_rubble_field(desc,
                    RubbleField{.center = center,
                                .extent = extent,
@@ -262,15 +265,18 @@ void add_span_debris(BuildingArchetypeDesc& desc,
                                .count = 11,
                                .seed = (static_cast<int>(dir) * 23) + 500,
                                .states = BuildingStateMask::Destroyed});
-  add_charred_beams(desc,
-                    CharredBeams{.center = center,
-                                 .extent = extent,
-                                 .timber = palette.wood_dark * 0.45F,
-                                 .length = 0.55F,
-                                 .radius = 0.05F,
-                                 .count = 3,
-                                 .seed = (static_cast<int>(dir) * 29) + 90,
-                                 .states = BuildingStateMask::Destroyed});
+  {
+    BuildingPartMaterial const charred(desc, k_building_material_wood);
+    add_charred_beams(desc,
+                      CharredBeams{.center = center,
+                                   .extent = extent,
+                                   .timber = palette.wood_dark * 0.45F,
+                                   .length = 0.55F,
+                                   .radius = 0.05F,
+                                   .count = 3,
+                                   .seed = (static_cast<int>(dir) * 29) + 90,
+                                   .states = BuildingStateMask::Destroyed});
+  }
   add_scorch_patch(desc,
                    ScorchPatch{.center = center,
                                .radius = along_half * 0.7F,
@@ -308,8 +314,8 @@ void add_span_stakes(BuildingArchetypeDesc& desc,
                       upright_states);
     desc.add_cone(point_at(dir, along, lean, top - 0.01F),
                   point_at(dir, along, lean, top + geometry.tip_height),
-                  radius * 1.05F,
-                  palette.wood_dark,
+                  radius * 1.02F,
+                  alternating_stake_color(palette, i) * 0.94F,
                   upright_states);
     add_stake_bindings(desc, palette, geometry, dir, along, radius, upright_states);
 
@@ -350,7 +356,7 @@ void add_span_stakes(BuildingArchetypeDesc& desc,
   desc.add_cone(point_at(dir, along, 0.0F, top - 0.01F),
                 point_at(dir, along, 0.0F, top + geometry.tip_height),
                 radius * 1.02F,
-                palette.wood_dark,
+                palette.wood_mid * 0.94F,
                 BuildingStateMask::Normal);
   add_snapped_stake(desc,
                     palette,
@@ -485,7 +491,7 @@ void add_junction_post(BuildingArchetypeDesc& desc,
   desc.add_cone(QVector3D(0.0F, top - 0.01F, 0.0F),
                 QVector3D(0.0F, top + (geometry.tip_height * 1.1F), 0.0F),
                 geometry.post_radius * 1.02F,
-                palette.wood_dark,
+                palette.wood_mid * 0.94F,
                 BuildingStateMask::Normal);
 
   desc.add_cylinder(QVector3D(0.0F, 0.02F, 0.0F),
@@ -494,6 +500,7 @@ void add_junction_post(BuildingArchetypeDesc& desc,
                     palette.wood_dark,
                     BuildingStateMask::Destroyed);
 
+  BuildingPartMaterial const binding(desc, wall_binding_material(geometry));
   for (const float height : {geometry.lower_rail_y, geometry.upper_rail_y}) {
     desc.add_cylinder(QVector3D(0.0F, height - 0.05F, 0.0F),
                       QVector3D(0.0F, height + 0.05F, 0.0F),
@@ -508,6 +515,7 @@ void add_earth_berm(BuildingArchetypeDesc& desc,
                     const WallGeometry& geometry,
                     const WallLayout& layout) {
   constexpr float k_sink = 0.03F;
+  BuildingPartMaterial const earth(desc, k_building_material_stone);
 
   constexpr float k_bank_spread = 1.30F;
   constexpr float k_bank_height_ratio = 0.55F;
@@ -649,6 +657,8 @@ void add_palisade(BuildingArchetypeDesc& desc,
                   const WallPalette& palette,
                   const WallGeometry& geometry,
                   const WallLayout& layout) {
+
+  BuildingPartMaterial const timber(desc, k_building_material_wood);
   if (geometry.earthwork_base) {
     add_earth_berm(desc, palette, geometry, layout);
   }
@@ -670,6 +680,15 @@ void add_palisade(BuildingArchetypeDesc& desc,
 }
 
 } // namespace
+
+auto wall_binding_color(const WallPalette& palette,
+                        const WallGeometry& geometry) -> QVector3D {
+  return geometry.metal_bands ? palette.iron : palette.rope;
+}
+
+auto wall_binding_material(const WallGeometry& geometry) -> int {
+  return geometry.metal_bands ? k_building_material_metal : k_building_material_cloth;
+}
 
 namespace WW = Game::Systems::WallWalk;
 
@@ -716,10 +735,13 @@ auto build_wall_walk_span_desc(std::string_view name_prefix,
                     0.026F,
                     palette.wood_mid,
                     k_standing);
-  desc.add_box(QVector3D(0.0F, top * 0.30F, outer - 0.05F),
-               QVector3D(0.07F, 0.018F, 0.07F),
-               palette.rope,
-               k_standing);
+  {
+    BuildingPartMaterial const lashing(desc, k_building_material_cloth);
+    desc.add_box(QVector3D(0.0F, top * 0.30F, outer - 0.05F),
+                 QVector3D(0.07F, 0.018F, 0.07F),
+                 palette.rope,
+                 k_standing);
+  }
   desc.add_rotated_box(QVector3D(0.05F, 0.04F, 0.55F),
                        QVector3D(0.42F, 0.025F, 0.06F),
                        QVector3D(0.0F, 17.0F, 6.0F),
@@ -801,10 +823,13 @@ auto build_wall_walk_stair_desc(std::string_view name_prefix,
                  tone,
                  k_standing);
   }
-  desc.add_box(QVector3D(0.0F, 0.02F, foot + 0.12F),
-               QVector3D(half_width + 0.06F, 0.02F, 0.16F),
-               palette.earth_dark,
-               k_standing);
+  {
+    BuildingPartMaterial const earth(desc, k_building_material_stone);
+    desc.add_box(QVector3D(0.0F, 0.02F, foot + 0.12F),
+                 QVector3D(half_width + 0.06F, 0.02F, 0.16F),
+                 palette.earth_dark,
+                 k_standing);
+  }
   desc.add_rotated_box(QVector3D(0.05F, 0.04F, 0.55F),
                        QVector3D(0.42F, 0.025F, 0.06F),
                        QVector3D(0.0F, 17.0F, 6.0F),
@@ -838,15 +863,20 @@ auto build_wall_ladder_desc(std::string_view name_prefix,
                       palette.wood_dark,
                       k_standing);
 
-    desc.add_box(lip + offset + QVector3D(0.0F, 0.02F, 0.0F),
-                 QVector3D(0.055F, 0.03F, 0.055F),
-                 palette.rope,
-                 k_standing);
-
-    desc.add_box(foot + offset + QVector3D(0.0F, 0.015F, -0.04F),
-                 QVector3D(0.07F, 0.015F, 0.07F),
-                 palette.earth_dark,
-                 k_standing);
+    {
+      BuildingPartMaterial const lashing(desc, k_building_material_cloth);
+      desc.add_box(lip + offset + QVector3D(0.0F, 0.02F, 0.0F),
+                   QVector3D(0.055F, 0.03F, 0.055F),
+                   palette.rope,
+                   k_standing);
+    }
+    {
+      BuildingPartMaterial const earth(desc, k_building_material_stone);
+      desc.add_box(foot + offset + QVector3D(0.0F, 0.015F, -0.04F),
+                   QVector3D(0.07F, 0.015F, 0.07F),
+                   palette.earth_dark,
+                   k_standing);
+    }
   }
   const int rungs = WW::k_ladder_rungs;
   for (int i = 0; i < rungs; ++i) {

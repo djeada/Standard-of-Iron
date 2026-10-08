@@ -10,6 +10,10 @@
 
 namespace Game::Map {
 
+namespace {
+constexpr int k_push_out_passes = 4;
+}
+
 auto WorldPropClearanceIndex::cell_key(int cell_x, int cell_z) -> std::uint64_t {
   const auto x = static_cast<std::uint64_t>(static_cast<std::uint32_t>(cell_x));
   const auto z = static_cast<std::uint64_t>(static_cast<std::uint32_t>(cell_z));
@@ -105,39 +109,64 @@ auto WorldPropClearanceIndex::overlaps(float world_x,
   return hit;
 }
 
+auto WorldPropClearanceIndex::overlap_depth(float world_x,
+                                            float world_z,
+                                            float radius) const -> float {
+  const float reach = std::max(radius, 0.0F);
+  float deepest = 0.0F;
+  for_each_candidate(world_x, world_z, reach, [&](const Body& body) {
+    deepest = std::max(deepest,
+                       world_prop_overlap_depth(body.type,
+                                                body.scale,
+                                                body.x,
+                                                body.z,
+                                                body.rotation,
+                                                world_x,
+                                                world_z,
+                                                reach));
+    return false;
+  });
+  return deepest;
+}
+
 auto WorldPropClearanceIndex::push_out(float& world_x,
                                        float& world_z,
                                        float radius) const -> bool {
   const float reach = std::max(radius, 0.0F);
   bool moved = false;
-  for_each_candidate(world_x, world_z, reach, [&](const Body& body) {
-    const WorldPropHalfExtents extents =
-        world_prop_ground_half_extents(body.type, body.scale);
-    const float cosine = std::cos(body.rotation);
-    const float sine = std::sin(body.rotation);
-    const float dx = world_x - body.x;
-    const float dz = world_z - body.z;
-    const float local_x = (cosine * dx) + (sine * dz);
-    const float local_z = (-sine * dx) + (cosine * dz);
-    const float reach_x = extents.x + reach;
-    const float reach_z = extents.z + reach;
-    const float gap_x = reach_x - std::abs(local_x);
-    const float gap_z = reach_z - std::abs(local_z);
-    if (gap_x <= 0.0F || gap_z <= 0.0F) {
+  bool pass_moved = true;
+  for (int pass = 0; pass < k_push_out_passes && pass_moved; ++pass) {
+    pass_moved = false;
+    for_each_candidate(world_x, world_z, reach, [&](const Body& body) {
+      const WorldPropHalfExtents extents =
+          world_prop_ground_half_extents(body.type, body.scale);
+      const float cosine = std::cos(body.rotation);
+      const float sine = std::sin(body.rotation);
+      const float dx = world_x - body.x;
+      const float dz = world_z - body.z;
+      const float local_x = (cosine * dx) + (sine * dz);
+      const float local_z = (-sine * dx) + (cosine * dz);
+      const float reach_x = extents.x + reach;
+      const float reach_z = extents.z + reach;
+      const float gap_x = reach_x - std::abs(local_x);
+      const float gap_z = reach_z - std::abs(local_z);
+      if (gap_x <= 0.0F || gap_z <= 0.0F) {
+        return false;
+      }
+      float out_x = local_x;
+      float out_z = local_z;
+      if (gap_x < gap_z) {
+        out_x = std::copysign(reach_x, local_x == 0.0F ? 1.0F : local_x);
+      } else {
+        out_z = std::copysign(reach_z, local_z == 0.0F ? 1.0F : local_z);
+      }
+      world_x = body.x + (cosine * out_x) - (sine * out_z);
+      world_z = body.z + (sine * out_x) + (cosine * out_z);
+      moved = true;
+      pass_moved = true;
       return false;
-    }
-    float out_x = local_x;
-    float out_z = local_z;
-    if (gap_x < gap_z) {
-      out_x = std::copysign(reach_x, local_x == 0.0F ? 1.0F : local_x);
-    } else {
-      out_z = std::copysign(reach_z, local_z == 0.0F ? 1.0F : local_z);
-    }
-    world_x = body.x + (cosine * out_x) - (sine * out_z);
-    world_z = body.z + (sine * out_x) + (cosine * out_z);
-    moved = true;
-    return false;
-  });
+    });
+  }
   return moved;
 }
 
