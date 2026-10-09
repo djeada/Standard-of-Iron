@@ -28,7 +28,7 @@ from . import REPO
 
 SERIES_TITLE = "THE BARCID ROAD"
 SERIES_SUBTITLE = "HANNIBAL'S WAR"
-SERIES_SHORT = "THE BARCID ROAD"
+SERIES_NAME = "The Barcid Road: Hannibal's War"
 
 FONTS = {
     "display": REPO / "assets" / "fonts" / "StandardIronDisplay-Bold.ttf",
@@ -91,7 +91,13 @@ TYPE_SCALE = {
     "reel_hook": 72,
 }
 
-TRACKING = {"title": 0.30, "heading": 0.18, "label": 0.16, "number": 0.06, "caption": 0.04}
+TRACKING = {
+    "title": 0.30,
+    "heading": 0.18,
+    "label": 0.16,
+    "number": 0.06,
+    "caption": 0.04,
+}
 
 STROKE = {
     "rule": 2.0,
@@ -229,7 +235,9 @@ def runs(text: str, face: str) -> list[tuple[str, str]]:
     return out
 
 
-def text_width(text: str, size: int, face: str = "display", tracking: float = 0.0) -> float:
+def text_width(
+    text: str, size: int, face: str = "display", tracking: float = 0.0
+) -> float:
     gap = tracking * size
     width = 0.0
     for char in text:
@@ -266,7 +274,9 @@ def cap_height(size: int) -> float:
     return size * 0.70
 
 
-def wrap(text: str, size: int, max_width: float, face: str = "display", tracking: float = 0.0) -> list[str]:
+def wrap(
+    text: str, size: int, max_width: float, face: str = "display", tracking: float = 0.0
+) -> list[str]:
     """Greedy wrap, then rebalance the last two lines so neither is a widow."""
     words = text.split()
     lines: list[str] = []
@@ -281,7 +291,9 @@ def wrap(text: str, size: int, max_width: float, face: str = "display", tracking
         best = None
         for cut in range(1, len(both)):
             a, b = " ".join(both[:cut]), " ".join(both[cut:])
-            wa, wb = text_width(a, size, face, tracking), text_width(b, size, face, tracking)
+            wa, wb = text_width(a, size, face, tracking), text_width(
+                b, size, face, tracking
+            )
             if wa <= max_width and wb <= max_width:
                 score = abs(wa - wb)
                 if best is None or score < best[0]:
@@ -325,7 +337,9 @@ def ease_out(t: float) -> float:
     return 1 - (1 - t) ** 3
 
 
-def envelope(t: float, dur: float, fade_in: float | None = None, fade_out: float | None = None) -> float:
+def envelope(
+    t: float, dur: float, fade_in: float | None = None, fade_out: float | None = None
+) -> float:
     """Opacity of a graphic ``t`` seconds into its ``dur``: eased in, held, eased out."""
     fi = TIMING["fade_in"] if fade_in is None else fade_in
     fo = TIMING["fade_out"] if fade_out is None else fade_out

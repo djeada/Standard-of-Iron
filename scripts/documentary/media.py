@@ -128,7 +128,9 @@ def file_key(path: Path, *extra) -> str:
 
 
 def data_key(*parts) -> str:
-    return hashlib.sha1(json.dumps(parts, sort_keys=True, default=str).encode()).hexdigest()[:12]
+    return hashlib.sha1(
+        json.dumps(parts, sort_keys=True, default=str).encode()
+    ).hexdigest()[:12]
 
 
 def speech_segments(
@@ -200,31 +202,33 @@ def loudness(path: Path, stream: str = "0:a") -> dict:
 
 
 def short_term(path: Path) -> list[tuple[float, float]]:
-    """``(time, short-term LUFS)`` every 100 ms, from ``ebur128`` frame logging."""
+    """``(time, short-term LUFS)`` every 100 ms, from ``ebur128`` frame metadata."""
     out = ffmpeg(
         [
             "-nostats",
             "-i",
             str(path),
             "-af",
-            "ebur128=framelog=verbose",
+            f"asetnsamples=n={RATE // 10}:p=0,ebur128=metadata=1,ametadata=print:key=lavfi.r128.S",
             "-f",
             "null",
             "-",
         ],
         f"short-term loudness of {path.name}",
     )
-    rows = re.findall(r"t:\s*([0-9.]+)\s+TARGET.*?S:\s*(-?[0-9.]+|-inf)", out)
-    series = []
-    for t, s in rows:
-        value = -120.0 if "inf" in s else float(s)
-        series.append((float(t), value))
-    return series
+    times = [float(v) for v in re.findall(r"pts_time:([0-9.]+)", out)]
+    values = [
+        (-120.0 if "inf" in v else float(v))
+        for v in re.findall(r"lavfi\.r128\.S=(-?[0-9.]+|-?inf)", out)
+    ]
+    return list(zip(times, values, strict=False))
 
 
 def write_control_wav(path: Path, values: list[float], rate: int) -> None:
     """A mono 16-bit WAV of gain values in [0, 1] (a control signal for ``amultiply``)."""
-    samples = array.array("h", (int(round(max(0.0, min(1.0, v)) * 32767)) for v in values))
+    samples = array.array(
+        "h", (int(round(max(0.0, min(1.0, v)) * 32767)) for v in values)
+    )
     with wave.open(str(path), "wb") as handle:
         handle.setnchannels(1)
         handle.setsampwidth(2)
@@ -244,7 +248,16 @@ def luma_series(path: Path, crop: float = 1.0) -> list[float]:
 def extract_frame(video: Path, at: float, out: Path, width: int | None = None) -> Path:
     vf = ["-vf", f"scale={width}:-2:flags=lanczos"] if width else []
     ffmpeg(
-        ["-ss", f"{max(0.0, at):.3f}", "-i", str(video), "-frames:v", "1", *vf, str(out)],
+        [
+            "-ss",
+            f"{max(0.0, at):.3f}",
+            "-i",
+            str(video),
+            "-frames:v",
+            "1",
+            *vf,
+            str(out),
+        ],
         f"frame grab at {at:.2f}s",
     )
     return out

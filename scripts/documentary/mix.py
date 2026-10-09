@@ -69,7 +69,9 @@ def db(value: float) -> float:
     return 10 ** (value / 20.0)
 
 
-def merge_spans(spans: list[tuple[float, float]], gap: float) -> list[tuple[float, float]]:
+def merge_spans(
+    spans: list[tuple[float, float]], gap: float
+) -> list[tuple[float, float]]:
     merged: list[tuple[float, float]] = []
     for a, b in sorted(spans):
         if merged and a - merged[-1][1] <= gap:
@@ -113,12 +115,19 @@ def duck_envelope(
     return [1.0 - (1.0 - floor) * v for v in amount]
 
 
-def fill_envelope(spans: list[tuple[float, float]], total: float, ramp: float = 0.05, rate: int = CONTROL_RATE) -> list[float]:
+def fill_envelope(
+    spans: list[tuple[float, float]],
+    total: float,
+    ramp: float = 0.05,
+    rate: int = CONTROL_RATE,
+) -> list[float]:
     """1.0 between recordings, 0.0 under them: where room tone must fill."""
     n = int(total * rate) + 2
     gain = [1.0] * n
     for a, b in spans:
-        for i in range(max(0, int((a - ramp) * rate)), min(n, int((b + ramp) * rate) + 1)):
+        for i in range(
+            max(0, int((a - ramp) * rate)), min(n, int((b + ramp) * rate) + 1)
+        ):
             t = i / rate
             inside = min((t - (a - ramp)) / ramp, ((b + ramp) - t) / ramp, 1.0)
             gain[i] = min(gain[i], 1.0 - max(0.0, inside))
@@ -150,7 +159,9 @@ class Graph:
         self.filters.append(text)
 
 
-def _envelope_input(graph: Graph, work: Path, values: list[float], total: float, tag: str) -> str:
+def _envelope_input(
+    graph: Graph, work: Path, values: list[float], total: float, tag: str
+) -> str:
     digest = hashlib.sha1(array.array("f", values).tobytes()).hexdigest()[:12]
     path = work / f"env_{tag}_{digest}.wav"
     if not path.exists():
@@ -243,7 +254,9 @@ def build(plan: MixPlan, work: Path) -> dict:
                 f"[{index}:a]aformat=sample_rates={media.RATE}:sample_fmts=fltp:channel_layouts=stereo,"
                 "highpass=f=80,lowpass=f=9000[rt_raw]"
             )
-        env = _envelope_input(graph, work, fill_envelope(recorded, total), total, "fill")
+        env = _envelope_input(
+            graph, work, fill_envelope(recorded, total), total, "fill"
+        )
         graph.add(f"[rt_raw][{env}]amultiply[roomtone]")
         vo_labels.append("roomtone")
     vo_bus = _bus(graph, vo_labels, "vo", total)
@@ -284,7 +297,9 @@ def build(plan: MixPlan, work: Path) -> dict:
             loop = ["-stream_loop", "-1"] if cue.get("loop") else []
             index = graph.input(*loop, "-i", str(path))
             label = f"mu{index}"
-            gain = float(cue.get("gain_db", 0.0)) + float(cue.get("stem_gain_db", {}).get(stem_name, 0.0) if stems else 0.0)
+            gain = float(cue.get("gain_db", 0.0)) + float(
+                cue.get("stem_gain_db", {}).get(stem_name, 0.0) if stems else 0.0
+            )
             graph.add(f"[{index}:a]{_cue_chain(cue, dur, span.start, gain)}[{label}]")
             depth = default_depth if allowed is None or stem_name in allowed else -40.0
             music_groups.setdefault(depth, []).append(label)
@@ -303,7 +318,11 @@ def build(plan: MixPlan, work: Path) -> dict:
         path = resolve(bed["file"])
         index = graph.input("-stream_loop", "-1", "-i", str(path))
         label = f"bed{index}"
-        cue = {"fade_in": bed.get("fade_in", 2.0), "fade_out": bed.get("fade_out", 2.0), **bed}
+        cue = {
+            "fade_in": bed.get("fade_in", 2.0),
+            "fade_out": bed.get("fade_out", 2.0),
+            **bed,
+        }
         graph.add(
             f"[{index}:a]{_cue_chain(cue, max(0.05, span.end - span.start), span.start, float(bed.get('gain_db', 0.0)))}[{label}]"
         )
@@ -313,7 +332,9 @@ def build(plan: MixPlan, work: Path) -> dict:
 
     game_labels = []
     for clip in plan.game:
-        index = graph.input("-ss", f"{clip.src_in:.4f}", "-t", f"{clip.dur:.4f}", "-i", str(clip.path))
+        index = graph.input(
+            "-ss", f"{clip.src_in:.4f}", "-t", f"{clip.dur:.4f}", "-i", str(clip.path)
+        )
         label = f"game{index}"
         graph.add(
             f"[{index}:a]aformat=sample_rates={media.RATE}:sample_fmts=fltp:channel_layouts=stereo,"
@@ -354,7 +375,10 @@ def build(plan: MixPlan, work: Path) -> dict:
     for name in names:
         outputs += ["-map", f"[{name}_out]", "-c:a", "pcm_f32le", str(stems[name])]
     outputs += ["-map", "[premix]", "-c:a", "pcm_f32le", str(premix)]
-    media.ffmpeg([*graph.inputs, "-filter_complex_script", str(script), *outputs], f"{plan.name} mix")
+    media.ffmpeg(
+        [*graph.inputs, "-filter_complex_script", str(script), *outputs],
+        f"{plan.name} mix",
+    )
 
     master_path = work / f"{plan.name}.master.wav"
     report = master(premix, master_path, float(p["lufs"]), float(p["true_peak"]))
@@ -407,7 +431,11 @@ def master(premix: Path, out: Path, lufs: float, true_peak: float) -> dict:
     }
 
 
-def _during(series: list[tuple[float, float]], spans: list[tuple[float, float]], skip: float = 0.0) -> list[float]:
+def _during(
+    series: list[tuple[float, float]],
+    spans: list[tuple[float, float]],
+    skip: float = 0.0,
+) -> list[float]:
     values = []
     for t, value in series:
         if value <= -70:
@@ -428,7 +456,9 @@ def _percentile(values: list[float], q: float) -> float:
     return ordered[lo] + (ordered[hi] - ordered[lo]) * (k - lo)
 
 
-def vo_report(plan: MixPlan, stems: dict[str, Path], speech: list[tuple[float, float]]) -> dict:
+def vo_report(
+    plan: MixPlan, stems: dict[str, Path], speech: list[tuple[float, float]]
+) -> dict:
     """Short-term consistency of the narration and its margin over the music."""
     recorded = [v for v in plan.vo if v.take and v.take.processed]
     if not recorded:
@@ -443,16 +473,22 @@ def vo_report(plan: MixPlan, stems: dict[str, Path], speech: list[tuple[float, f
         if values:
             paragraph_medians[item.id] = round(statistics.median(values), 2)
     overall = statistics.median(vo_values) if vo_values else -70.0
-    spread = _percentile(vo_values, 0.9) - _percentile(vo_values, 0.1) if vo_values else 0.0
+    spread = (
+        _percentile(vo_values, 0.9) - _percentile(vo_values, 0.1) if vo_values else 0.0
+    )
     outliers = {k: v for k, v in paragraph_medians.items() if abs(v - overall) > 2.0}
     margin = overall - statistics.median(music_values) if music_values else None
     warnings = []
     if spread > 6.0:
         warnings.append(f"VO short-term spread {spread:.1f} LU (p10-p90) is over 6 LU")
     if outliers:
-        warnings.append(f"paragraphs off the VO median by more than 2 LU: {sorted(outliers)}")
+        warnings.append(
+            f"paragraphs off the VO median by more than 2 LU: {sorted(outliers)}"
+        )
     if margin is not None and margin < 8.0:
-        warnings.append(f"music sits only {margin:.1f} LU under the narration (want >= 8)")
+        warnings.append(
+            f"music sits only {margin:.1f} LU under the narration (want >= 8)"
+        )
     return {
         "vo": {
             "recorded": len(recorded),

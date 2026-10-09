@@ -19,7 +19,11 @@
     "script": "Adam Djellouli"
   },
   "scale_note": "Armies are shown in the game at about 1:10 of their historical strength; historical numbers are given in narration and on cards.",
-  "next_episode": { "number": 8, "title": "The Long War", "years": "216-211 BC" },
+  "next_episode": {
+    "number": 8,
+    "title": "The Long War",
+    "years": "216-211 BC"
+  },
   "sides": [
     {
       "id": "rome",
@@ -31,8 +35,16 @@
         { "label": "Cavalry", "value": 6000 }
       ],
       "commanders": [
-        { "id": "varro", "name": "Gaius Terentius Varro", "title": "Consul, in command on the day" },
-        { "id": "paullus", "name": "Lucius Aemilius Paullus", "title": "Consul" }
+        {
+          "id": "varro",
+          "name": "Gaius Terentius Varro",
+          "title": "Consul, in command on the day"
+        },
+        {
+          "id": "paullus",
+          "name": "Lucius Aemilius Paullus",
+          "title": "Consul"
+        }
       ]
     },
     {
@@ -45,9 +57,21 @@
         { "label": "Cavalry", "value": 10000 }
       ],
       "commanders": [
-        { "id": "hannibal", "name": "Hannibal Barca", "title": "General of Carthage" },
-        { "id": "hasdrubal", "name": "Hasdrubal", "title": "Commander of the heavy cavalry" },
-        { "id": "maharbal", "name": "Maharbal", "title": "Commander of the Numidian horse" }
+        {
+          "id": "hannibal",
+          "name": "Hannibal Barca",
+          "title": "General of Carthage"
+        },
+        {
+          "id": "hasdrubal",
+          "name": "Hasdrubal",
+          "title": "Commander of the heavy cavalry"
+        },
+        {
+          "id": "maharbal",
+          "name": "Maharbal",
+          "title": "Commander of the Numidian horse"
+        }
       ]
     }
   ],
@@ -76,8 +100,20 @@
       "kind": "cold_open",
       "title": "Cold open",
       "shots": [
-        { "id": "co_ring", "clip": "ep07_ground/ring_aerial", "in": 4.0, "until": "vo:p01@end+1.6", "thumbnail": true },
-        { "id": "co_clash", "clip": "ep07_ground/clash_low", "in": 1.0, "dur": 5.0, "game_audio_db": -6 }
+        {
+          "id": "co_ring",
+          "clip": "ep07_ground/ring_aerial",
+          "in": 4.0,
+          "until": "vo:p01@end+1.6",
+          "thumbnail": true
+        },
+        {
+          "id": "co_clash",
+          "clip": "ep07_ground/clash_low",
+          "in": 1.0,
+          "dur": 5.0,
+          "game_audio_db": -6
+        }
       ]
     },
     {
@@ -92,8 +128,18 @@
       "kind": "road",
       "title": "The road to Cannae",
       "shots": [
-        { "id": "road_map", "clip": "ep07_map/route_flight", "in": 0.0, "until": "vo:p03@end+1.4" },
-        { "id": "road_cannae", "clip": "ep07_map/apulia_descent", "in": 0.0, "dur": 6.0 }
+        {
+          "id": "road_map",
+          "clip": "ep07_map/route_flight",
+          "in": 0.0,
+          "until": "vo:p03@end+1.4"
+        },
+        {
+          "id": "road_cannae",
+          "clip": "ep07_map/apulia_descent",
+          "in": 0.0,
+          "dur": 6.0
+        }
       ]
     },
     {
@@ -101,9 +147,26 @@
       "kind": "armies",
       "title": "Armies and commanders",
       "shots": [
-        { "id": "arm_rome", "clip": "ep07_ground/legions_hero", "in": 2.0, "until": "vo:p04@end+0.8", "game_audio_db": -14 },
-        { "id": "arm_carthage", "clip": "ep07_ground/hannibal_hero", "in": 1.0, "until": "vo:p05@end+1.0", "game_audio_db": -14 },
-        { "id": "arm_oob", "clip": "ep07_ground/lines_wide", "in": 0.0, "dur": 9.0 }
+        {
+          "id": "arm_rome",
+          "clip": "ep07_ground/legions_hero",
+          "in": 2.0,
+          "until": "vo:p04@end+0.8",
+          "game_audio_db": -14
+        },
+        {
+          "id": "arm_carthage",
+          "clip": "ep07_ground/hannibal_hero",
+          "in": 1.0,
+          "until": "vo:p05@end+1.0",
+          "game_audio_db": -14
+        },
+        {
+          "id": "arm_oob",
+          "clip": "ep07_ground/lines_wide",
+          "in": 0.0,
+          "dur": 9.0
+        }
       ]
     },
     {
@@ -111,7 +174,12 @@
       "kind": "ground",
       "title": "The ground",
       "shots": [
-        { "id": "gr_flyover", "clip": "ep07_ground/aufidus_flyover", "in": 0.0, "until": "vo:p06@end+1.0" },
+        {
+          "id": "gr_flyover",
+          "clip": "ep07_ground/aufidus_flyover",
+          "in": 0.0,
+          "until": "vo:p06@end+1.0"
+        },
         {
           "id": "gr_tactical",
           "clip": "ep07_tactical/deployment",
@@ -140,7 +208,13 @@
           "until": "vo:p08@end+0.8",
           "overlays": [{ "file": "ep07_cavalry_river.mov" }]
         },
-        { "id": "b1_ground", "clip": "ep07_ground/cavalry_melee", "in": 3.0, "dur": 14.0, "game_audio_db": -4 },
+        {
+          "id": "b1_ground",
+          "clip": "ep07_ground/cavalry_melee",
+          "in": 3.0,
+          "dur": 14.0,
+          "game_audio_db": -4
+        },
         {
           "id": "b2_tac",
           "clip": "ep07_tactical/crescent_bends",
@@ -148,7 +222,13 @@
           "until": "vo:p09@end+1.0",
           "overlays": [{ "file": "ep07_crescent_bends.mov" }]
         },
-        { "id": "b2_ground", "clip": "ep07_ground/crescent_ground", "in": 2.0, "dur": 16.0, "game_audio_db": -4 },
+        {
+          "id": "b2_ground",
+          "clip": "ep07_ground/crescent_ground",
+          "in": 2.0,
+          "dur": 16.0,
+          "game_audio_db": -4
+        },
         {
           "id": "b3_tac",
           "clip": "ep07_tactical/libyans_wheel",
@@ -156,7 +236,13 @@
           "until": "vo:p10@end+1.0",
           "overlays": [{ "file": "ep07_libyans_wheel.mov" }]
         },
-        { "id": "b3_ground", "clip": "ep07_ground/rear_charge", "in": 1.0, "dur": 12.0, "game_audio_db": -4 }
+        {
+          "id": "b3_ground",
+          "clip": "ep07_ground/rear_charge",
+          "in": 1.0,
+          "dur": 12.0,
+          "game_audio_db": -4
+        }
       ]
     },
     {
@@ -164,9 +250,26 @@
       "kind": "climax",
       "title": "The ring closes",
       "shots": [
-        { "id": "cl_ring", "clip": "ep07_ground/ring_from_above", "in": 0.0, "dur": 22.0, "thumbnail": true },
-        { "id": "cl_inside", "clip": "ep07_ground/inside_the_ring", "in": 0.0, "dur": 18.0, "game_audio_db": -3 },
-        { "id": "cl_after", "clip": "ep07_ground/the_silence_after", "in": 0.0, "until": "vo:p11@end+4.0" }
+        {
+          "id": "cl_ring",
+          "clip": "ep07_ground/ring_from_above",
+          "in": 0.0,
+          "dur": 22.0,
+          "thumbnail": true
+        },
+        {
+          "id": "cl_inside",
+          "clip": "ep07_ground/inside_the_ring",
+          "in": 0.0,
+          "dur": 18.0,
+          "game_audio_db": -3
+        },
+        {
+          "id": "cl_after",
+          "clip": "ep07_ground/the_silence_after",
+          "in": 0.0,
+          "until": "vo:p11@end+4.0"
+        }
       ]
     },
     {
@@ -174,9 +277,24 @@
       "kind": "aftermath",
       "title": "Aftermath",
       "shots": [
-        { "id": "af_field", "clip": "ep07_ground/field_after", "in": 0.0, "until": "vo:p12@end+1.0" },
-        { "id": "af_map", "clip": "ep07_map/italy_defections", "in": 0.0, "until": "vo:p14@end+1.2" },
-        { "id": "af_end", "clip": "ep07_ground/fire_card", "in": 0.0, "dur": 11.0 }
+        {
+          "id": "af_field",
+          "clip": "ep07_ground/field_after",
+          "in": 0.0,
+          "until": "vo:p12@end+1.0"
+        },
+        {
+          "id": "af_map",
+          "clip": "ep07_map/italy_defections",
+          "in": 0.0,
+          "until": "vo:p14@end+1.2"
+        },
+        {
+          "id": "af_end",
+          "clip": "ep07_ground/fire_card",
+          "in": 0.0,
+          "dur": 11.0
+        }
       ]
     }
   ],
@@ -267,7 +385,7 @@
     },
     {
       "id": "battle_cavalry",
-      "plan_cue": "ep07_battle_cavalry",
+      "plan_cue": "ep07_battle_a",
       "role": "battle",
       "file": "assets/audio/music/combat/combat_cavalry_of_carthage.ogg",
       "at": "shot:b1_ground",
@@ -289,7 +407,7 @@
     },
     {
       "id": "battle_crescent",
-      "plan_cue": "ep07_battle_crescent",
+      "plan_cue": "ep07_battle_b",
       "role": "battle",
       "file": "assets/audio/music/combat/combat_dust_of_cannae.ogg",
       "at": "shot:b2_ground",
@@ -311,7 +429,7 @@
     },
     {
       "id": "battle_trap",
-      "plan_cue": "ep07_battle_trap",
+      "plan_cue": "ep07_battle_c",
       "role": "battle",
       "file": "assets/audio/music/combat/combat_carthaginian_dust.ogg",
       "at": "shot:b3_ground",
@@ -346,7 +464,7 @@
     },
     {
       "id": "end_theme",
-      "plan_cue": "series_end_theme",
+      "plan_cue": "ep07_end_sting",
       "role": "theme",
       "file": "assets/audio/music/menu/main_theme_iron_kingdom.ogg",
       "at": "shot:af_end",
@@ -373,12 +491,31 @@
     }
   ],
   "sfx": [
-    { "file": "assets/audio/sfx/combat/roman_shield_wall_impact.ogg", "at": "shot:co_clash", "gain_db": -2, "hit": true },
-    { "file": "assets/audio/sfx/combat/charge_roar.ogg", "at": "shot:b3_ground+0.5", "gain_db": -6, "hit": true },
-    { "file": "assets/audio/sfx/combat/roman_war_horns_orders.ogg", "at": "shot:arm_oob+0.2", "gain_db": -8 }
+    {
+      "file": "assets/audio/sfx/combat/roman_shield_wall_impact.ogg",
+      "at": "shot:co_clash",
+      "gain_db": -2,
+      "hit": true
+    },
+    {
+      "file": "assets/audio/sfx/combat/charge_roar.ogg",
+      "at": "shot:b3_ground+0.5",
+      "gain_db": -6,
+      "hit": true
+    },
+    {
+      "file": "assets/audio/sfx/combat/roman_war_horns_orders.ogg",
+      "at": "shot:arm_oob+0.2",
+      "gain_db": -8
+    }
   ],
   "graphics": [
-    { "id": "g_title", "type": "title_sequence", "at": "shot:title", "until": "shot:title@end" },
+    {
+      "id": "g_title",
+      "type": "title_sequence",
+      "at": "shot:title",
+      "until": "shot:title@end"
+    },
     {
       "id": "g_stamp_new_carthage",
       "type": "place_date",
@@ -395,18 +532,90 @@
       "until": "shot:road_map@end",
       "values": { "rome": [0, 86000], "carthage": [50000, 50000] }
     },
-    { "id": "g_stamp_cannae", "type": "place_date", "at": "shot:road_cannae+0.4", "dur": 5.0 },
-    { "id": "g_chapter_armies", "type": "chapter_card", "section": "armies", "at": "section:armies+0.2", "dur": 3.0 },
-    { "id": "g_plate_paullus", "type": "name_plate", "commander": "paullus", "at": "vo:p04+1.6", "dur": 4.0 },
-    { "id": "g_plate_varro", "type": "name_plate", "commander": "varro", "at": "vo:p04+6.4", "dur": 4.5 },
-    { "id": "g_plate_hannibal", "type": "name_plate", "commander": "hannibal", "at": "shot:arm_carthage+0.6", "dur": 4.0 },
-    { "id": "g_oob", "type": "order_of_battle", "at": "shot:arm_oob+0.3", "until": "shot:arm_oob@end-0.2" },
-    { "id": "g_chapter_ground", "type": "chapter_card", "section": "ground", "at": "section:ground+0.3", "dur": 3.0 },
-    { "id": "g_phase_1", "type": "chapter_card", "numeral": "I", "title": "The cavalry by the river", "at": "shot:b1_cav_tac+0.2", "dur": 3.0 },
-    { "id": "g_phase_2", "type": "chapter_card", "numeral": "II", "title": "The crescent", "at": "shot:b2_tac+0.2", "dur": 3.0 },
-    { "id": "g_phase_3", "type": "chapter_card", "numeral": "III", "title": "The trap", "at": "shot:b3_tac+0.2", "dur": 3.0 },
-    { "id": "g_tally", "type": "casualty_tally", "at": "vo:p12+0.4", "until": "vo:p12@end+0.6" },
-    { "id": "g_end", "type": "end_card", "end_card": "steam_demo", "at": "shot:af_end+0.4", "until": "end" }
+    {
+      "id": "g_stamp_cannae",
+      "type": "place_date",
+      "at": "shot:road_cannae+0.4",
+      "dur": 5.0
+    },
+    {
+      "id": "g_chapter_armies",
+      "type": "chapter_card",
+      "section": "armies",
+      "at": "section:armies+0.2",
+      "dur": 3.0
+    },
+    {
+      "id": "g_plate_paullus",
+      "type": "name_plate",
+      "commander": "paullus",
+      "at": "vo:p04+1.6",
+      "dur": 4.0
+    },
+    {
+      "id": "g_plate_varro",
+      "type": "name_plate",
+      "commander": "varro",
+      "at": "vo:p04+6.4",
+      "dur": 4.5
+    },
+    {
+      "id": "g_plate_hannibal",
+      "type": "name_plate",
+      "commander": "hannibal",
+      "at": "shot:arm_carthage+0.6",
+      "dur": 4.0
+    },
+    {
+      "id": "g_oob",
+      "type": "order_of_battle",
+      "at": "shot:arm_oob+0.3",
+      "until": "shot:arm_oob@end-0.2"
+    },
+    {
+      "id": "g_chapter_ground",
+      "type": "chapter_card",
+      "section": "ground",
+      "at": "section:ground+0.3",
+      "dur": 3.0
+    },
+    {
+      "id": "g_phase_1",
+      "type": "chapter_card",
+      "numeral": "I",
+      "title": "The cavalry by the river",
+      "at": "shot:b1_cav_tac+0.2",
+      "dur": 3.0
+    },
+    {
+      "id": "g_phase_2",
+      "type": "chapter_card",
+      "numeral": "II",
+      "title": "The crescent",
+      "at": "shot:b2_tac+0.2",
+      "dur": 3.0
+    },
+    {
+      "id": "g_phase_3",
+      "type": "chapter_card",
+      "numeral": "III",
+      "title": "The trap",
+      "at": "shot:b3_tac+0.2",
+      "dur": 3.0
+    },
+    {
+      "id": "g_tally",
+      "type": "casualty_tally",
+      "at": "vo:p12+0.4",
+      "until": "vo:p12@end+0.6"
+    },
+    {
+      "id": "g_end",
+      "type": "end_card",
+      "end_card": "steam_demo",
+      "at": "shot:af_end+0.4",
+      "until": "end"
+    }
   ],
   "thumbnail": {
     "title": "Cannae",
@@ -435,12 +644,52 @@
         "text": "86,000 Romans marched onto this field.",
         "kicker": "By sunset, most of them were dead."
       },
-      { "id": "beat1", "role": "beat", "clip": "ep07_vertical/crescent", "in": 0.5, "vo": "r02", "pad": 0.7 },
-      { "id": "beat2", "role": "beat", "clip": "ep07_vertical/libyans_turn", "in": 0.5, "vo": "r03", "pad": 0.7 },
-      { "id": "beat3", "role": "beat", "clip": "ep07_vertical/rear_charge", "in": 0.5, "vo": "r04", "pad": 0.7 },
-      { "id": "consequence", "role": "consequence", "clip": "ep07_vertical/the_silence_after", "in": 0.0, "vo": "r05", "pad": 1.2 },
-      { "id": "tag", "role": "tag", "clip": "ep07_vertical/fire_card", "in": 0.0, "dur": 4.0 }
+      {
+        "id": "beat1",
+        "role": "beat",
+        "clip": "ep07_vertical/crescent",
+        "in": 0.5,
+        "vo": "r02",
+        "pad": 0.7
+      },
+      {
+        "id": "beat2",
+        "role": "beat",
+        "clip": "ep07_vertical/libyans_turn",
+        "in": 0.5,
+        "vo": "r03",
+        "pad": 0.7
+      },
+      {
+        "id": "beat3",
+        "role": "beat",
+        "clip": "ep07_vertical/rear_charge",
+        "in": 0.5,
+        "vo": "r04",
+        "pad": 0.7
+      },
+      {
+        "id": "consequence",
+        "role": "consequence",
+        "clip": "ep07_vertical/the_silence_after",
+        "in": 0.0,
+        "vo": "r05",
+        "pad": 1.2
+      },
+      {
+        "id": "tag",
+        "role": "tag",
+        "clip": "ep07_vertical/fire_card",
+        "in": 0.0,
+        "dur": 4.0
+      }
     ],
-    "sfx": [{ "file": "assets/audio/sfx/combat/roman_shield_wall_impact.ogg", "at": "part:beat3", "gain_db": -4 }]
+    "sfx": [
+      {
+        "file": "assets/audio/sfx/combat/roman_shield_wall_impact.ogg",
+        "at": "part:beat3",
+        "gain_db": -4
+      }
+    ]
   }
 }

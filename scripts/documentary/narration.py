@@ -38,7 +38,9 @@ from pathlib import Path
 from . import EditError, media
 
 PARA_RE = re.compile(r"^\[(?P<id>ep\d{2}_[pr]\d{2,3})\]\s*(?P<text>.*)$")
-TAKE_RE = re.compile(r"^(?P<id>ep\d{2}_[pr]\d{2,3})(?:_(?:t|take)(?P<n>\d+))?\.(?:wav|flac)$")
+TAKE_RE = re.compile(
+    r"^(?P<id>ep\d{2}_[pr]\d{2,3})(?:_(?:t|take)(?P<n>\d+))?\.(?:wav|flac)$"
+)
 PRE_ROLL = 0.12
 TAIL = 0.30
 
@@ -151,7 +153,9 @@ def find_takes(vo_dir: Path) -> dict[str, list[tuple[int, Path, bool]]]:
 
 
 def choose_take(
-    paragraph_id: str, takes: dict[str, list[tuple[int, Path, bool]]], pinned: int | None = None
+    paragraph_id: str,
+    takes: dict[str, list[tuple[int, Path, bool]]],
+    pinned: int | None = None,
 ) -> tuple[int, Path, bool] | None:
     options = takes.get(paragraph_id, [])
     if pinned is not None:
@@ -165,10 +169,14 @@ def choose_take(
 def estimate(paragraph: Paragraph, wpm: float) -> Take:
     """A placeholder length for a paragraph nobody has read yet (animatic timing)."""
     seconds = max(1.5, paragraph.words / wpm * 60.0 + 0.4)
-    return Take(paragraph.id, round(seconds, 3), [(0.0, round(seconds, 3))], estimated=True)
+    return Take(
+        paragraph.id, round(seconds, 3), [(0.0, round(seconds, 3))], estimated=True
+    )
 
 
-def _trim_window(segments: list[tuple[float, float]], total: float) -> tuple[float, float]:
+def _trim_window(
+    segments: list[tuple[float, float]], total: float
+) -> tuple[float, float]:
     if not segments:
         return 0.0, total
     head = max(0.0, segments[0][0] - PRE_ROLL)
@@ -242,13 +250,26 @@ def process_take(
         for a, b in raw_segments
         if b > head and a < tail
     ] or [(0.0, round(length, 4))]
-    info = {"duration": round(length, 4), "segments": segments, "gain_db": round(gain, 2)}
+    info = {
+        "duration": round(length, 4),
+        "segments": segments,
+        "gain_db": round(gain, 2),
+    }
     meta.write_text(json.dumps(info))
     for stale in out_dir.glob(f"{paragraph_id}.*.wav"):
         if stale != processed and not stale.name.endswith(".stage.wav"):
             stale.unlink(missing_ok=True)
             stale.with_suffix(".json").unlink(missing_ok=True)
-    return Take(paragraph_id, info["duration"], segments, source, processed, take, scratch, gain_db=gain)
+    return Take(
+        paragraph_id,
+        info["duration"],
+        segments,
+        source,
+        processed,
+        take,
+        scratch,
+        gain_db=gain,
+    )
 
 
 def gather_takes(
@@ -328,7 +349,14 @@ def synthesise(
         if media.have("espeak-ng"):
             raw = out_dir / f"{paragraph.id}.espeak.wav"
             media.run(
-                ["espeak-ng", "-s", str(int(words_per_second * 60 / stretch)), "-w", str(raw), paragraph.clean],
+                [
+                    "espeak-ng",
+                    "-s",
+                    str(int(words_per_second * 60 / stretch)),
+                    "-w",
+                    str(raw),
+                    paragraph.clean,
+                ],
                 "espeak-ng",
             )
             media.ffmpeg(

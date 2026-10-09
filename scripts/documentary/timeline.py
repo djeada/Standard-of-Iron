@@ -38,7 +38,9 @@ EXPR_RE = re.compile(
     r"^\s*(?:(?P<kind>shot|section|vo|cue|graphic):(?P<id>[A-Za-z0-9_\-]+)(?P<edge>@end|@start)?"
     r"|(?P<end>end))?\s*(?P<offset>[+-]\s*[0-9]*\.?[0-9]+)?\s*$"
 )
-EVENT_RE = re.compile(r"^\s*event:(?P<name>[A-Za-z0-9_:]+?)\s*(?P<offset>[+-]\s*[0-9]*\.?[0-9]+)?\s*$")
+EVENT_RE = re.compile(
+    r"^\s*event:(?P<name>[A-Za-z0-9_:]+?)\s*(?P<offset>[+-]\s*[0-9]*\.?[0-9]+)?\s*$"
+)
 
 
 def parse_time(expr) -> tuple[str | None, str | None, bool, float]:
@@ -82,7 +84,11 @@ class VoSpan(Span):
     take: Take | None = None
 
     def speech(self) -> list[tuple[float, float]]:
-        segments = self.take.segments if self.take and self.take.segments else [(0.0, self.dur)]
+        segments = (
+            self.take.segments
+            if self.take and self.take.segments
+            else [(0.0, self.dur)]
+        )
         return [(self.start + a, self.start + b) for a, b in segments]
 
 
@@ -129,7 +135,9 @@ class Timeline:
             "episode": self.episode,
             "fps": self.fps,
             "duration": round(self.duration, 3),
-            "chapters": [{"at": round(t, 3), "title": title} for t, title in self.chapters()],
+            "chapters": [
+                {"at": round(t, 3), "title": title} for t, title in self.chapters()
+            ],
             "sections": [strip(s) for s in self.sections],
             "shots": [strip(s) for s in self.shots],
             "vo": [
@@ -157,12 +165,18 @@ class Timeline:
 
 
 class Resolver:
-    def __init__(self, episode: Episode, paragraphs: list[Paragraph], takes: dict[str, Take]):
+    def __init__(
+        self, episode: Episode, paragraphs: list[Paragraph], takes: dict[str, Take]
+    ):
         self.episode = episode
-        self.paragraphs = {p.short: p for p in paragraphs if p.id.startswith(episode.id + "_p")}
+        self.paragraphs = {
+            p.short: p for p in paragraphs if p.id.startswith(episode.id + "_p")
+        }
         self.takes = takes
         self.shots: list[tuple[dict, dict]] = [
-            (shot, section) for section in episode.sections for shot in section.get("shots", [])
+            (shot, section)
+            for section in episode.sections
+            for shot in section.get("shots", [])
         ]
         self.shot_index = {shot["id"]: i for i, (shot, _) in enumerate(self.shots)}
         self.sections = {section["id"]: section for section in episode.sections}
@@ -175,7 +189,9 @@ class Resolver:
             previous = short
         for short in self.paragraphs:
             if short not in self.vo_entries:
-                self.warnings.append(f"paragraph {short} has no placement; chained after {previous}")
+                self.warnings.append(
+                    f"paragraph {short} has no placement; chained after {previous}"
+                )
                 at = f"vo:{previous}@end+0.6" if previous else 0.0
                 self.vo_entries[short] = {"id": short, "at": at}
                 previous = short
@@ -193,7 +209,9 @@ class Resolver:
             return self._memo[key]
         if key in self._active:
             chain = " -> ".join(":".join(map(str, k)) for k in self._active)
-            raise EditError(f"circular timing involving {':'.join(map(str, key))} ({chain})")
+            raise EditError(
+                f"circular timing involving {':'.join(map(str, key))} ({chain})"
+            )
         self._active.add(key)
         try:
             value = compute()
@@ -276,7 +294,9 @@ class Resolver:
             if ident not in self.graphic_defs:
                 raise EditError(f"time '{expr}' names unknown graphic '{ident}'")
             start = self.when(self.graphic_defs[ident]["at"])
-            return (self.span_end(self.graphic_defs[ident], start) if at_end else start) + offset
+            return (
+                self.span_end(self.graphic_defs[ident], start) if at_end else start
+            ) + offset
         raise EditError(f"cannot read time '{expr}'")
 
     def span_end(self, item: dict, start: float) -> float:
@@ -299,13 +319,18 @@ class Resolver:
         when = None
         for match_data in timeline_json.get("matches", []):
             for event in match_data.get("events", []):
-                if event.get("event") in (match["name"], f"{name}:{side}" if side else name):
+                if event.get("event") in (
+                    match["name"],
+                    f"{name}:{side}" if side else name,
+                ):
                     when = float(event["at"])
                     break
             if when is not None:
                 break
         if when is None:
-            raise EditError(f"shot '{shot['id']}': event '{match['name']}' not in {ref}'s timeline.json")
+            raise EditError(
+                f"shot '{shot['id']}': event '{match['name']}' not in {ref}'s timeline.json"
+            )
         scene_start = shot.get("scene_start")
         if scene_start is None:
             shot_name = ref.partition("/")[2]
@@ -321,7 +346,9 @@ class Resolver:
         return max(0.0, when - float(scene_start) + offset)
 
 
-def resolve(episode: Episode, paragraphs: list[Paragraph], takes: dict[str, Take]) -> Timeline:
+def resolve(
+    episode: Episode, paragraphs: list[Paragraph], takes: dict[str, Take]
+) -> Timeline:
     r = Resolver(episode, paragraphs, takes)
     shots = []
     for i, (shot, section) in enumerate(r.shots):
@@ -339,7 +366,9 @@ def resolve(episode: Episode, paragraphs: list[Paragraph], takes: dict[str, Take
     for section in episode.sections:
         first = r.shot_index[section["shots"][0]["id"]]
         last = r.shot_index[section["shots"][-1]["id"]]
-        sections.append(Span(section["id"], r.shot_start(first), r.shot_end(last), section))
+        sections.append(
+            Span(section["id"], r.shot_start(first), r.shot_end(last), section)
+        )
     vo = []
     for short, entry in r.vo_entries.items():
         if short not in r.paragraphs:
@@ -347,7 +376,9 @@ def resolve(episode: Episode, paragraphs: list[Paragraph], takes: dict[str, Take
         start = r.vo_start(short)
         paragraph = r.paragraphs[short]
         take = takes[paragraph.id]
-        vo.append(VoSpan(short, start, start + take.duration, entry, paragraph.clean, take))
+        vo.append(
+            VoSpan(short, start, start + take.duration, entry, paragraph.clean, take)
+        )
     vo.sort(key=lambda v: v.start)
 
     def spans(items: list[dict], prefix: str) -> list[Span]:
@@ -373,7 +404,9 @@ def resolve(episode: Episode, paragraphs: list[Paragraph], takes: dict[str, Take
     )
     for item in timeline.vo:
         if item.end > timeline.duration + 0.01:
-            timeline.warnings.append(f"paragraph {item.id} runs past the end of the picture")
+            timeline.warnings.append(
+                f"paragraph {item.id} runs past the end of the picture"
+            )
     return timeline
 
 

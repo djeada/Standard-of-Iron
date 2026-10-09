@@ -115,7 +115,9 @@ class Episode:
         raise EditError(f"{self.id}: no section '{section_id}'")
 
     def find_clip(self, ref: str, vertical: bool = False) -> Path:
-        return find_clip(self.vertical_clips if vertical else self.clips, ref, self.path.parent)
+        return find_clip(
+            self.vertical_clips if vertical else self.clips, ref, self.path.parent
+        )
 
 
 def resolve_path(value: str | Path, base: Path) -> Path:
@@ -132,7 +134,12 @@ def find_clip(root: Path, ref: str, base: Path | None = None) -> Path:
     """A clip by ``capture/shot`` (the arena's ``NN_shot.mp4``) or by file path."""
     direct = Path(ref)
     if direct.suffix:
-        for candidate in (root / direct, (base or root) / direct, REPO / direct, direct):
+        for candidate in (
+            root / direct,
+            (base or root) / direct,
+            REPO / direct,
+            direct,
+        ):
             if candidate.exists():
                 return candidate
         raise EditError(f"clip file not found: {ref} (looked under {root})")
@@ -150,7 +157,11 @@ def find_clip(root: Path, ref: str, base: Path | None = None) -> Path:
 def capture_manifest(root: Path, ref: str) -> tuple[dict, dict]:
     """``shots.json`` and ``timeline.json`` of the capture a clip came from."""
     folder = root / ref.partition("/")[0]
-    shots = json.loads((folder / "shots.json").read_text()) if (folder / "shots.json").exists() else {}
+    shots = (
+        json.loads((folder / "shots.json").read_text())
+        if (folder / "shots.json").exists()
+        else {}
+    )
     timeline = (
         json.loads((folder / "timeline.json").read_text())
         if (folder / "timeline.json").exists()
@@ -187,7 +198,9 @@ def load(
         data=data,
         clips=pick(clips, "clips", f"artifacts/documentary/{eid}/clips"),
         vertical_clips=pick(
-            vertical_clips, "vertical_clips", paths.get("clips", f"artifacts/documentary/{eid}/clips")
+            vertical_clips,
+            "vertical_clips",
+            paths.get("clips", f"artifacts/documentary/{eid}/clips"),
         ),
         vo=pick(vo, "vo", f"artifacts/documentary/{eid}/vo"),
         overlays=pick(overlays, "overlays", f"artifacts/documentary/{eid}/overlays"),
@@ -234,15 +247,21 @@ def validate(data: dict, path: Path | None = None) -> None:
             problems.append(f"section '{section.get('id')}' has no shots")
         kind = section.get("kind")
         if kind is not None and kind not in SECTION_KINDS:
-            problems.append(f"section '{section.get('id')}' kind '{kind}' not in {SECTION_KINDS}")
+            problems.append(
+                f"section '{section.get('id')}' kind '{kind}' not in {SECTION_KINDS}"
+            )
     for shot in shots:
         sources = [k for k in ("clip", "graphic", "black") if shot.get(k)]
         if len(sources) != 1:
-            problems.append(f"shot '{shot.get('id')}' needs exactly one of clip/graphic/black")
+            problems.append(
+                f"shot '{shot.get('id')}' needs exactly one of clip/graphic/black"
+            )
         if ("dur" in shot) == ("until" in shot):
             problems.append(f"shot '{shot.get('id')}' needs exactly one of dur/until")
         if shot.get("graphic") and shot["graphic"] not in GRAPHIC_TYPES:
-            problems.append(f"shot '{shot.get('id')}' graphic '{shot['graphic']}' unknown")
+            problems.append(
+                f"shot '{shot.get('id')}' graphic '{shot['graphic']}' unknown"
+            )
         for layer in shot.get("overlays", []):
             if "file" not in layer:
                 problems.append(f"shot '{shot.get('id')}' overlay without 'file'")
@@ -251,21 +270,31 @@ def validate(data: dict, path: Path | None = None) -> None:
     _ids(data.get("graphics", []), "graphic", problems)
     for cue in data.get("music", []):
         if cue.get("role") not in MUSIC_ROLES:
-            problems.append(f"music cue '{cue.get('id')}' role must be one of {MUSIC_ROLES}")
+            problems.append(
+                f"music cue '{cue.get('id')}' role must be one of {MUSIC_ROLES}"
+            )
         if "file" not in cue and "stems" not in cue:
             problems.append(f"music cue '{cue.get('id')}' needs 'file' or 'stems'")
         if "at" not in cue or (("dur" in cue) == ("until" in cue)):
-            problems.append(f"music cue '{cue.get('id')}' needs 'at' and one of dur/until")
+            problems.append(
+                f"music cue '{cue.get('id')}' needs 'at' and one of dur/until"
+            )
     for graphic in data.get("graphics", []):
         if graphic.get("type") not in GRAPHIC_TYPES:
-            problems.append(f"graphic '{graphic.get('id')}' type must be one of {GRAPHIC_TYPES}")
+            problems.append(
+                f"graphic '{graphic.get('id')}' type must be one of {GRAPHIC_TYPES}"
+            )
         if "at" not in graphic or (("dur" in graphic) == ("until" in graphic)):
-            problems.append(f"graphic '{graphic.get('id')}' needs 'at' and one of dur/until")
+            problems.append(
+                f"graphic '{graphic.get('id')}' needs 'at' and one of dur/until"
+            )
     for cue in data.get("sfx", []) + data.get("beds", []):
         if "file" not in cue or "at" not in cue:
             problems.append(f"sfx/bed entry needs 'file' and 'at': {cue}")
     side_ids = _ids(data.get("sides", []), "side", problems)
-    commanders = [c for side in data.get("sides", []) for c in side.get("commanders", [])]
+    commanders = [
+        c for side in data.get("sides", []) for c in side.get("commanders", [])
+    ]
     _ids(commanders, "commander", problems)
     for tally in data.get("casualties", []):
         if tally.get("side") not in side_ids:

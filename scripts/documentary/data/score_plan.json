@@ -1,0 +1,326 @@
+{
+  "schema": "soi-documentary-score/1",
+  "about": "The extended series score (#1537): per-episode cue lists in each battle's palette. Nothing here is generated yet; 'score manifest' turns it into requests for the music service.",
+  "service": "ElevenLabs Music, under the project author's licence that permits commercial use",
+  "stems": ["percussion", "strings", "brass", "choir"],
+  "loudness": {
+    "cue_lufs": -16.0,
+    "tolerance_lu": 1.0,
+    "true_peak_dbtp": -1.0,
+    "sample_rate": 48000
+  },
+  "rules": [
+    "Under narration only beds, drones and sparse percussion, ducked 9-12 dB; never full-intensity music under words.",
+    "Big hits land in the gaps between lines; every climax is preceded by 0.5-1.5 s of near-silence.",
+    "Kingdom of Iron is the series theme: title, climaxes and end card. Each battle has its own palette.",
+    "Battle and climax cues are written for the ground cinematics that carry no narration.",
+    "No passage of 60 s or more is used twice in the series; only the 10 s title ident repeats.",
+    "Never combat_last_defensive_wall; reels and anything marketing use driving, upbeat cues.",
+    "The Iron Sepulcher (Skeletons Awaken) stays out of the series except, at most, a post-credits tease in episode 9."
+  ],
+  "themes": {
+    "kingdom_of_iron": {
+      "library": "assets/audio/music/menu/main_theme_iron_kingdom.ogg",
+      "use": "series theme: title ident, every climax, every end sting, the trailer"
+    },
+    "dust_of_cannae": {
+      "library": "assets/audio/music/combat/combat_dust_of_cannae.ogg",
+      "use": "episode 7's battle motif; quoted in episode 9 when Scipio's veterans of Cannae fight at Zama"
+    },
+    "skeletons_awaken": {
+      "library": "assets/audio/music/events/skeletons_awaken.ogg",
+      "use": "excluded from the series; at most the episode 9 post-credits tease"
+    }
+  },
+  "roles": {
+    "bed": {
+      "under_vo": true,
+      "stems": ["strings", "percussion"],
+      "intensity": "low, sustained, no melody that competes with a voice"
+    },
+    "tension": {
+      "under_vo": true,
+      "stems": ["strings", "percussion", "choir"],
+      "intensity": "low-mid, pulsing ostinato, sparse percussion"
+    },
+    "battle": {
+      "under_vo": false,
+      "stems": ["percussion", "strings", "brass", "choir"],
+      "intensity": "high, driving, written for ground cinematics with no narration"
+    },
+    "climax": {
+      "under_vo": false,
+      "stems": ["percussion", "strings", "brass", "choir"],
+      "intensity": "full statement of the Kingdom of Iron theme in the battle's palette, opening from silence"
+    },
+    "elegy": {
+      "under_vo": true,
+      "stems": ["strings", "choir"],
+      "intensity": "low, slow, spacious; dignified rather than sad"
+    },
+    "theme": {
+      "under_vo": false,
+      "stems": ["percussion", "strings", "brass", "choir"],
+      "intensity": "Kingdom of Iron statement"
+    },
+    "reel": {
+      "under_vo": true,
+      "stems": ["percussion", "strings", "brass", "choir"],
+      "intensity": "driving and upbeat from bar one; bed stems sit under the reel's lines"
+    }
+  },
+  "episode_template": [
+    {
+      "cue": "tension_open",
+      "role": "tension",
+      "section": "cold_open",
+      "seconds": 25
+    },
+    { "cue": "bed_road", "role": "bed", "section": "road", "seconds": 60 },
+    { "cue": "bed_armies", "role": "bed", "section": "armies", "seconds": 45 },
+    {
+      "cue": "tension_ground",
+      "role": "tension",
+      "section": "ground",
+      "seconds": 35
+    },
+    {
+      "cue": "tension_battle",
+      "role": "tension",
+      "section": "battle",
+      "seconds": 100
+    },
+    { "cue": "battle_a", "role": "battle", "section": "battle", "seconds": 25 },
+    { "cue": "battle_b", "role": "battle", "section": "battle", "seconds": 25 },
+    { "cue": "battle_c", "role": "battle", "section": "battle", "seconds": 20 },
+    {
+      "cue": "climax",
+      "role": "climax",
+      "section": "climax",
+      "seconds": 60,
+      "theme": "kingdom_of_iron"
+    },
+    { "cue": "elegy", "role": "elegy", "section": "aftermath", "seconds": 70 },
+    {
+      "cue": "end_sting",
+      "role": "theme",
+      "section": "aftermath",
+      "seconds": 12,
+      "theme": "kingdom_of_iron"
+    },
+    { "cue": "reel", "role": "reel", "section": "reel", "seconds": 55 }
+  ],
+  "series_cues": [
+    {
+      "id": "series_title_theme",
+      "role": "theme",
+      "section": "title",
+      "seconds": 10,
+      "theme": "kingdom_of_iron",
+      "signature": true,
+      "tempo": 92,
+      "key": "D minor",
+      "notes": "The title ident; the only passage every episode repeats."
+    },
+    {
+      "id": "series_trailer",
+      "role": "theme",
+      "section": "trailer",
+      "seconds": 90,
+      "theme": "kingdom_of_iron",
+      "tempo": 96,
+      "key": "D minor",
+      "notes": "Series trailer: builds from a lone drum to the full theme."
+    }
+  ],
+  "episodes": [
+    {
+      "number": 1,
+      "id": "ep01",
+      "battle": "Saguntum",
+      "year": "219 BC",
+      "palette": {
+        "key": "D dorian",
+        "tempo": 88,
+        "colour": "dry heat on stone walls; a long siege",
+        "instruments": "frame drums, low brass, plucked strings, male choir",
+        "library": [
+          "combat/combat_siege_at_dawn.ogg",
+          "base/base_ancient_preparations.ogg"
+        ]
+      },
+      "cue_notes": {
+        "battle_a": "the rams at the walls",
+        "battle_b": "the breach",
+        "climax": "the city falls"
+      }
+    },
+    {
+      "number": 2,
+      "id": "ep02",
+      "battle": "The Rhône",
+      "year": "218 BC",
+      "palette": {
+        "key": "E minor",
+        "tempo": 100,
+        "colour": "a wide river, boats and rafts, war cries from the far bank",
+        "instruments": "flowing string ostinato, low horns, chanting choir, deep drums",
+        "library": ["campaign/campaign_hannibals_ascent.ogg"]
+      },
+      "cue_notes": {
+        "battle_a": "the crossing under arrows",
+        "battle_b": "Hanno's column strikes from upstream",
+        "battle_c": "elephants on the rafts"
+      }
+    },
+    {
+      "number": 3,
+      "id": "ep03",
+      "battle": "The Alps",
+      "year": "218 BC",
+      "palette": {
+        "key": "B minor",
+        "tempo": 70,
+        "colour": "cold, altitude, snow and loss",
+        "instruments": "high sustained strings, sparse choir, wind-like textures, distant drums",
+        "library": [
+          "campaign/campaign_crossing_of_the_alps.ogg",
+          "base/base_ancient_peak_fires.ogg"
+        ]
+      },
+      "cue_notes": {
+        "battle_a": "ambush in the pass",
+        "battle_b": "rockfall",
+        "battle_c": "the descent into Italy",
+        "elegy": "half the army left in the snow"
+      }
+    },
+    {
+      "number": 4,
+      "id": "ep04",
+      "battle": "Ticinus",
+      "year": "218 BC",
+      "palette": {
+        "key": "A minor",
+        "tempo": 120,
+        "colour": "a fast cavalry clash on open ground",
+        "instruments": "galloping 6/8 hand percussion, fast strings, bright horns",
+        "library": ["combat/combat_cavalry_of_carthage.ogg"]
+      },
+      "cue_notes": {
+        "battle_a": "the horse meet head on",
+        "battle_b": "the Numidians ride round the flank",
+        "climax": "the consul wounded and carried out"
+      }
+    },
+    {
+      "number": 5,
+      "id": "ep05",
+      "battle": "Trebia",
+      "year": "218 BC",
+      "palette": {
+        "key": "F minor",
+        "tempo": 90,
+        "colour": "winter dawn, sleet, an icy river",
+        "instruments": "tremolo strings, muted brass, low choir, sudden drums",
+        "library": ["base/base_echoes_ancient_outpost.ogg"]
+      },
+      "cue_notes": {
+        "battle_a": "the Romans wade the freezing river",
+        "battle_b": "the lines meet",
+        "battle_c": "Mago's ambush from the stream bed"
+      }
+    },
+    {
+      "number": 6,
+      "id": "ep06",
+      "battle": "Lake Trasimene",
+      "year": "217 BC",
+      "palette": {
+        "key": "C minor",
+        "tempo": 76,
+        "colour": "morning mist on a lakeshore; an army walks into an ambush",
+        "instruments": "drones, distant choir, drums emerging out of fog",
+        "library": ["combat/combat_dust_of_trasimene.ogg"]
+      },
+      "cue_notes": {
+        "battle_a": "the signal on the hills",
+        "battle_b": "the column pinned against the lake",
+        "climax": "Flaminius falls"
+      }
+    },
+    {
+      "number": 7,
+      "id": "ep07",
+      "battle": "Cannae",
+      "year": "216 BC",
+      "palette": {
+        "key": "D minor",
+        "tempo": 96,
+        "colour": "summer heat and dust; a crescent that bends and a ring that closes",
+        "instruments": "relentless string ostinato that tightens, war drums, brass, full choir at the climax",
+        "library": [
+          "combat/combat_dust_of_cannae.ogg",
+          "menu/main_theme_iron_kingdom.ogg"
+        ]
+      },
+      "cue_notes": {
+        "battle_a": "the cavalry by the river",
+        "battle_b": "the crescent gives ground",
+        "battle_c": "the Libyans turn inward",
+        "climax": "the ring closes (Dust of Cannae inside Kingdom of Iron)",
+        "elegy": "the silence after"
+      }
+    },
+    {
+      "number": 8,
+      "id": "ep08",
+      "battle": "The Long War",
+      "year": "216-211 BC",
+      "palette": {
+        "key": "G minor",
+        "tempo": 88,
+        "colour": "years of attrition; marching armies, besieged cities, a war of patience",
+        "instruments": "marching ostinato, evolving string variations, low brass",
+        "library": ["base/base_march_of_the_old_gods.ogg"]
+      },
+      "cue_notes": {
+        "battle_a": "Capua opens its gates",
+        "battle_b": "the siege of Syracuse",
+        "battle_c": "Hannibal marches on Rome",
+        "battle_d": "the fall of Capua"
+      },
+      "extra_cues": [
+        {
+          "cue": "battle_d",
+          "role": "battle",
+          "section": "battle",
+          "seconds": 20
+        }
+      ]
+    },
+    {
+      "number": 9,
+      "id": "ep09",
+      "battle": "Zama",
+      "year": "202 BC",
+      "palette": {
+        "key": "D minor",
+        "tempo": 100,
+        "colour": "North Africa; elephants, war horns, the last battle",
+        "instruments": "North African percussion, war horns, full choir and brass",
+        "library": [
+          "menu/main_theme_iron_kingdom.ogg",
+          "combat/combat_dust_of_cannae.ogg"
+        ]
+      },
+      "cue_notes": {
+        "battle_a": "the elephants charge through the lanes",
+        "battle_b": "the infantry lines grind",
+        "battle_c": "Masinissa and Laelius return to the rear",
+        "climax": "the final statement of Kingdom of Iron",
+        "end_sting": "series close"
+      }
+    }
+  ]
+}

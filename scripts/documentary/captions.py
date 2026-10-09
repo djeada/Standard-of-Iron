@@ -18,7 +18,20 @@ from dataclasses import dataclass
 
 SENTENCE_RE = re.compile(r"(?<=[.!?])[\"')\]]*\s+(?=[\"'(\[]?[A-Z0-9])")
 BREAK_AFTER = re.compile(r"[,;:—–]$|--$")
-CONJUNCTIONS = {"and", "but", "while", "as", "who", "which", "that", "where", "when", "until", "or", "so"}
+CONJUNCTIONS = {
+    "and",
+    "but",
+    "while",
+    "as",
+    "who",
+    "which",
+    "that",
+    "where",
+    "when",
+    "until",
+    "or",
+    "so",
+}
 
 
 @dataclass(frozen=True)
@@ -33,7 +46,15 @@ class Style:
 
 
 EPISODE = Style()
-REEL = Style(max_line=18, max_lines=2, min_seconds=0.6, max_seconds=2.4, linger=0.12, gap=0.0, upper=True)
+REEL = Style(
+    max_line=18,
+    max_lines=2,
+    min_seconds=0.6,
+    max_seconds=2.4,
+    linger=0.12,
+    gap=0.0,
+    upper=True,
+)
 
 
 @dataclass
@@ -64,7 +85,9 @@ def wrap_lines(text: str, max_line: int, max_lines: int = 2) -> list[str]:
         for cut in range(1, len(words)):
             a, b = " ".join(words[:cut]), " ".join(words[cut:])
             if len(a) <= max_line and len(b) <= max_line:
-                score = abs(len(a) - len(b)) - (4 if BREAK_AFTER.search(words[cut - 1]) else 0)
+                score = abs(len(a) - len(b)) - (
+                    4 if BREAK_AFTER.search(words[cut - 1]) else 0
+                )
                 if best is None or score < best[0]:
                     best = (score, [a, b])
         if best:
@@ -80,7 +103,9 @@ def wrap_lines(text: str, max_line: int, max_lines: int = 2) -> list[str]:
 
 def _fits(text: str, style: Style) -> bool:
     lines = wrap_lines(text, style.max_line, style.max_lines)
-    return len(lines) <= style.max_lines and all(len(line) <= style.max_line for line in lines)
+    return len(lines) <= style.max_lines and all(
+        len(line) <= style.max_line for line in lines
+    )
 
 
 def chunk(sentence: str, style: Style) -> list[str]:
@@ -112,7 +137,9 @@ def _weight(text: str) -> float:
     return len(re.sub(r"[^A-Za-z0-9]", "", text)) + 3.0
 
 
-def _pauses(segments: list[tuple[float, float]], min_gap: float = 0.2) -> list[tuple[float, float]]:
+def _pauses(
+    segments: list[tuple[float, float]], min_gap: float = 0.2
+) -> list[tuple[float, float]]:
     return [
         (segments[i][1], segments[i + 1][0])
         for i in range(len(segments) - 1)
@@ -147,7 +174,9 @@ def sentence_times(
             if i <= used:
                 continue
             mid = (a + b) / 2
-            if abs(mid - guess) <= tolerance and (best is None or abs(mid - guess) < best[0]):
+            if abs(mid - guess) <= tolerance and (
+                best is None or abs(mid - guess) < best[0]
+            ):
                 best = (abs(mid - guess), i)
         if best is not None:
             used = best[1]
@@ -174,7 +203,9 @@ def paragraph_captions(
     """Captions for one paragraph placed at ``start`` on the episode timeline."""
     sentences = split_sentences(text)
     captions: list[Caption] = []
-    for sentence, (a, b) in zip(sentences, sentence_times(sentences, segments, duration), strict=True):
+    for sentence, (a, b) in zip(
+        sentences, sentence_times(sentences, segments, duration), strict=True
+    ):
         pieces = chunk(sentence, style)
         weights = [_weight(p) for p in pieces]
         total = sum(weights)
@@ -195,7 +226,9 @@ def _split_long(captions: list[Caption], style: Style) -> list[Caption]:
             out.append(caption)
             continue
         cut = len(words) // 2
-        mid = caption.start + (caption.end - caption.start) * _weight(" ".join(words[:cut])) / _weight(caption.text)
+        mid = caption.start + (caption.end - caption.start) * _weight(
+            " ".join(words[:cut])
+        ) / _weight(caption.text)
         out += _split_long(
             [
                 Caption(caption.start, mid, " ".join(words[:cut]), caption.paragraph),
@@ -211,7 +244,9 @@ def finalise(captions: list[Caption], style: Style = EPISODE) -> list[Caption]:
     captions = _split_long(sorted(captions, key=lambda c: c.start), style)
     out: list[Caption] = []
     for i, caption in enumerate(captions):
-        limit = captions[i + 1].start - style.gap if i + 1 < len(captions) else float("inf")
+        limit = (
+            captions[i + 1].start - style.gap if i + 1 < len(captions) else float("inf")
+        )
         end = min(caption.end + style.linger, limit)
         if end - caption.start < style.min_seconds:
             end = min(caption.start + style.min_seconds, limit)
@@ -221,7 +256,9 @@ def finalise(captions: list[Caption], style: Style = EPISODE) -> list[Caption]:
             start = out[-1].end + style.gap
         if end - start < 0.2:
             end = start + 0.2
-        out.append(Caption(round(start, 3), round(end, 3), caption.text, caption.paragraph))
+        out.append(
+            Caption(round(start, 3), round(end, 3), caption.text, caption.paragraph)
+        )
     return out
 
 
