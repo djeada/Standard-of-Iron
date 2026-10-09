@@ -19,16 +19,7 @@ public:
 
   auto create(SpawnType type,
               Engine::Core::World& world,
-              const SpawnParams& params) const -> std::unique_ptr<Unit> {
-    auto it = m_factories.find(type);
-    if (it == m_factories.end()) {
-      return nullptr;
-    }
-    auto unit = it->second(world, params);
-
-    apply_forest_passability(world, unit.get(), type);
-    return unit;
-  }
+              const SpawnParams& params) const -> std::unique_ptr<Unit>;
 
   auto create(TroopType type,
               Engine::Core::World& world,
@@ -40,6 +31,9 @@ public:
 private:
   static void
   apply_forest_passability(Engine::Core::World& world, Unit* unit, SpawnType type);
+  static void apply_historical_commander(Engine::Core::World& world,
+                                         Unit* unit,
+                                         const SpawnParams& params);
 
   std::unordered_map<SpawnType, Factory> m_factories;
 };

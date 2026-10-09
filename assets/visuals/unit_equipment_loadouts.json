@@ -178,6 +178,167 @@
         ]
       }
     },
+    "troops/roman/commanders/sempronius_longus": {
+      "sword": "sword_roman",
+      "shield": "roman_scutum",
+      "shoulder": "regalia_scipio",
+      "helmet": "commander_sempronius",
+      "greaves": "roman_greaves",
+      "armor": "roman_anatomical_cuirass",
+      "cloak": "cloak_sempronius",
+      "facial_hair": {
+        "style": "stubble",
+        "color": [
+          0.2,
+          0.15,
+          0.11
+        ]
+      }
+    },
+    "troops/roman/commanders/gaius_flaminius": {
+      "spear": "spear",
+      "helmet": "commander_flaminius",
+      "greaves": "roman_greaves",
+      "armor": "roman_hamata_mail",
+      "shoulder": "regalia_fabius",
+      "cloak": "cloak_flaminius",
+      "facial_hair": {
+        "style": "short_beard",
+        "color": [
+          0.16,
+          0.12,
+          0.09
+        ],
+        "greyness": 0.2
+      }
+    },
+    "troops/roman/commanders/terentius_varro": {
+      "sword": "sword_scipio",
+      "shield": "roman_scutum",
+      "shoulder": "regalia_scipio",
+      "helmet": "commander_varro",
+      "greaves": "roman_greaves",
+      "armor": "roman_heavy_armor",
+      "cloak": "cloak_varro"
+    },
+    "troops/roman/commanders/aemilius_paullus": {
+      "spear": "spear",
+      "helmet": "commander_paullus",
+      "greaves": "roman_greaves",
+      "armor": "roman_anatomical_cuirass",
+      "shoulder": "regalia_fabius",
+      "cloak": "cloak_paullus",
+      "facial_hair": {
+        "style": "short_beard",
+        "color": [
+          0.3,
+          0.27,
+          0.24
+        ],
+        "greyness": 0.6
+      }
+    },
+    "troops/roman/commanders/scipio_consul_218": {
+      "sword": "sword_roman",
+      "shield": "roman_scutum",
+      "shoulder": "regalia_scipio",
+      "helmet": "commander_scipio_elder",
+      "greaves": "roman_greaves",
+      "armor": "roman_heavy_armor",
+      "cloak": "cloak_scipio_elder",
+      "facial_hair": {
+        "style": "short_beard",
+        "color": [
+          0.24,
+          0.2,
+          0.16
+        ],
+        "greyness": 0.45
+      }
+    },
+    "troops/carthage/commanders/mago_barca": {
+      "sword": "sword_carthage",
+      "shield": "shield_carthage",
+      "helmet": "commander_mago",
+      "greaves": "carthage_greaves",
+      "armor": "carthage_linothorax",
+      "shoulder": "regalia_hannibal",
+      "cloak": "cloak_mago",
+      "facial_hair": {
+        "style": "short_beard",
+        "color": [
+          0.09,
+          0.06,
+          0.045
+        ]
+      }
+    },
+    "troops/carthage/commanders/maharbal": {
+      "spear": "spear",
+      "helmet": "commander_maharbal",
+      "greaves": "carthage_greaves",
+      "armor": "armor_light_carthage",
+      "shoulder": "regalia_hanno",
+      "cloak": "cloak_maharbal",
+      "facial_hair": {
+        "style": "mustache_and_beard",
+        "color": [
+          0.16,
+          0.1,
+          0.06
+        ],
+        "greyness": 0.15
+      }
+    },
+    "troops/carthage/commanders/hanno_bomilcar": {
+      "bow": "bow_carthage",
+      "quiver": "quiver_carthage",
+      "shoulder": "regalia_hasdrubal",
+      "helmet": "commander_hanno_bomilcar",
+      "greaves": "carthage_greaves",
+      "armor": "armor_light_carthage",
+      "cloak": "cloak_hanno_bomilcar",
+      "facial_hair": {
+        "style": "goatee",
+        "color": [
+          0.08,
+          0.055,
+          0.04
+        ]
+      }
+    },
+    "troops/carthage/commanders/hasdrubal_cavalry": {
+      "sword": "sword_falcata",
+      "shield": "shield_caetra",
+      "helmet": "commander_hasdrubal_cavalry",
+      "greaves": "carthage_greaves",
+      "armor": "carthage_gilded_scale",
+      "shoulder": "regalia_hannibal",
+      "cloak": "cloak_hasdrubal_cavalry",
+      "facial_hair": {
+        "style": "long_beard",
+        "color": [
+          0.11,
+          0.08,
+          0.06
+        ],
+        "greyness": 0.25
+      }
+    },
+    "troops/numidian/commanders/masinissa": {
+      "spear": "spear",
+      "helmet": "commander_masinissa",
+      "armor": "iberian_tunic",
+      "cloak": "cloak_masinissa",
+      "facial_hair": {
+        "style": "full_beard",
+        "color": [
+          0.04,
+          0.03,
+          0.025
+        ]
+      }
+    },
     "troops/roman/horse_archer": {
       "bow": "bow_roman",
       "quiver": "quiver",

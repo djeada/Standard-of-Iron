@@ -108,6 +108,7 @@ add_library(
     soi_world
     STATIC
     units/commander_catalog.cpp
+    units/historical_commander_catalog.cpp
     units/troop_catalog.cpp
     units/troop_catalog_loader.cpp
     visuals/building_asset_key.cpp

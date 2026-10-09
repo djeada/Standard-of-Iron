@@ -423,7 +423,9 @@ auto ArenaViewport::spawn_single_unit(int owner_id,
                                       Game::Systems::NationID nation_id,
                                       Game::Units::TroopType unit_type,
                                       const QVector3D& spawn_position,
-                                      bool ai_controlled) -> Engine::Core::EntityID {
+                                      bool ai_controlled,
+                                      const QString& commander_id)
+    -> Engine::Core::EntityID {
   if (m_unit_factory == nullptr || m_world == nullptr) {
     return 0U;
   }
@@ -437,8 +439,9 @@ auto ArenaViewport::spawn_single_unit(int owner_id,
   params.spawn_type = Game::Units::spawn_typeFromTroopType(resolved_unit_type);
   params.ai_controlled = ai_controlled;
   params.nation_id = nation_id;
+  params.commander_id = commander_id.toStdString();
 
-  auto unit = m_unit_factory->create(resolved_unit_type, *m_world, params);
+  auto unit = m_unit_factory->create(params.spawn_type, *m_world, params);
   if (unit == nullptr) {
     return 0U;
   }

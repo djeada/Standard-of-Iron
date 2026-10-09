@@ -1,5 +1,6 @@
 #include "arena_identity_scenarios.h"
 
+#include <span>
 #include <utility>
 #include <vector>
 
@@ -17,10 +18,107 @@ using Nation = Game::Systems::NationID;
 using Trigger = ScenarioTriggerKind;
 using Troop = Game::Units::TroopType;
 
+struct HistoricalCommanderEntry {
+  const char* group_name{};
+  const char* commander_id{};
+  Nation nation;
+  int owner{};
+};
+
+// The ten historical cameo commanders of issue #1522: Rome and Masinissa in the
+// front rank, the Barcid officers behind. Two owners only, because cameos serve
+// side by side under one owner the way the battle scripts field them.
+constexpr HistoricalCommanderEntry k_historical_front_rank[] = {
+    {"sempronius", "roman_sempronius_longus", Nation::RomanRepublic, 1},
+    {"flaminius", "roman_gaius_flaminius", Nation::RomanRepublic, 1},
+    {"varro", "roman_terentius_varro", Nation::RomanRepublic, 1},
+    {"paullus", "roman_aemilius_paullus", Nation::RomanRepublic, 1},
+    {"scipio_218", "roman_scipio_consul_218", Nation::RomanRepublic, 1},
+    {"masinissa", "numidian_masinissa", Nation::RomanRepublic, 1},
+};
+constexpr HistoricalCommanderEntry k_historical_back_rank[] = {
+    {"mago", "carthage_mago_barca", Nation::Carthage, 2},
+    {"maharbal", "carthage_maharbal", Nation::Carthage, 2},
+    {"hanno_bomilcar", "carthage_hanno_bomilcar", Nation::Carthage, 2},
+    {"hasdrubal_cavalry", "carthage_hasdrubal_cavalry", Nation::Carthage, 2},
+};
+
+void add_historical_commander_ranks(ArenaScenarioDefinition& s,
+                                    float spacing,
+                                    float rank_depth,
+                                    bool expect_existence) {
+  auto add_rank = [&](std::span<const HistoricalCommanderEntry> rank, float z) {
+    float const first_x = -0.5F * spacing * static_cast<float>(rank.size() - 1U);
+    for (std::size_t index = 0; index < rank.size(); ++index) {
+      auto const& entry = rank[index];
+      QVector3D const position(first_x + spacing * static_cast<float>(index), 0.0F, z);
+      auto commander = group(QString::fromLatin1(entry.group_name),
+                             Troop::RomanVeteranConsul,
+                             entry.owner,
+                             1,
+                             position,
+                             1);
+      commander.nation_id = entry.nation;
+      commander.commander_id = QString::fromLatin1(entry.commander_id);
+      s.groups.push_back(std::move(commander));
+      s.steps.push_back(
+          at(0.05F, Command::Hold, QString::fromLatin1(entry.group_name)));
+      if (expect_existence) {
+        s.expectations.push_back(
+            expectation(Expect::GroupExists, QString::fromLatin1(entry.group_name)));
+      }
+      s.expectations.push_back(
+          expectation(Expect::GroupIsRendered, QString::fromLatin1(entry.group_name)));
+    }
+  };
+  add_rank(k_historical_front_rank, rank_depth);
+  add_rank(k_historical_back_rank, -rank_depth);
+}
+
 } // namespace
 
 auto build_identity_definitions() -> std::vector<ArenaScenarioDefinition> {
   std::vector<ArenaScenarioDefinition> result;
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_historical_commander_lineup_id),
+        QStringLiteral("Historical Commander Lineup"),
+        QStringLiteral("The ten non-playable historical commanders (consuls, Barcid "
+                       "officers and Masinissa) without escorts, for close-shot "
+                       "review of helmet, plume, cloak and weapon identity."),
+        12.0F,
+        {15.5F, 18.0F, 0.0F});
+    s.suppress_terrain_scatter = true;
+    s.suppress_terrain_features = true;
+    s.camera_focus = QVector3D(0.0F, 1.15F, 0.0F);
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.owner_teams = {{.owner_id = 1, .team_id = 1}, {.owner_id = 2, .team_id = 1}};
+    add_historical_commander_ranks(s, 3.0F, 1.7F, true);
+    s.expectations.push_back(expectation(Expect::FrameBudget, {}, {}, 33.34F, 0.25F));
+    result.push_back(std::move(s));
+  }
+  {
+    auto s = definition(
+        QString::fromLatin1(k_historical_commander_helmet_review_id),
+        QStringLiteral("Historical Commander Helmet Review"),
+        QStringLiteral("Head-height close-up of the ten historical commanders so "
+                       "crest, plume, diadem and cloak colour can be told apart at "
+                       "the size a documentary close shot reads them."),
+        6.0F,
+        {10.5F, 9.0F, 0.0F});
+    s.suppress_terrain_scatter = true;
+    s.suppress_terrain_features = true;
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.owner_teams = {{.owner_id = 1, .team_id = 1}, {.owner_id = 2, .team_id = 1}};
+    s.camera_focus = QVector3D(0.0F, 1.10F, 0.0F);
+    add_historical_commander_ranks(s, 1.9F, 1.3F, false);
+    result.push_back(std::move(s));
+  }
 
   {
     auto s = definition(

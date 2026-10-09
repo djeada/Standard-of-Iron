@@ -1,6 +1,7 @@
 #include "render/humanoid/runtime/style_palette.h"
 
 #include <algorithm>
+#include <optional>
 
 namespace Render::GL::Humanoid {
 
@@ -19,6 +20,7 @@ void apply_commander_palette(std::string_view renderer_key,
     std::string_view key;
     QVector3D cloth;
     QVector3D metal;
+    std::optional<QVector3D> skin{};
   };
   const Dress dresses[] = {
       {"troops/roman/commanders/fabius_maximus",
@@ -39,6 +41,38 @@ void apply_commander_palette(std::string_view renderer_key,
       {"troops/carthage/commanders/hannibal_barca",
        {0.11F, 0.085F, 0.13F},
        {0.44F, 0.36F, 0.24F}},
+
+      {"troops/roman/commanders/sempronius_longus",
+       {0.56F, 0.12F, 0.05F},
+       {0.55F, 0.45F, 0.28F}},
+      {"troops/roman/commanders/gaius_flaminius",
+       {0.50F, 0.36F, 0.12F},
+       {0.42F, 0.43F, 0.45F}},
+      {"troops/roman/commanders/terentius_varro",
+       {0.30F, 0.07F, 0.33F},
+       {0.72F, 0.56F, 0.26F}},
+      {"troops/roman/commanders/aemilius_paullus",
+       {0.70F, 0.68F, 0.62F},
+       {0.62F, 0.63F, 0.66F}},
+      {"troops/roman/commanders/scipio_consul_218",
+       {0.17F, 0.25F, 0.40F},
+       {0.50F, 0.41F, 0.25F}},
+      {"troops/carthage/commanders/mago_barca",
+       {0.07F, 0.24F, 0.11F},
+       {0.52F, 0.41F, 0.23F}},
+      {"troops/carthage/commanders/maharbal",
+       {0.05F, 0.28F, 0.29F},
+       {0.56F, 0.47F, 0.28F}},
+      {"troops/carthage/commanders/hanno_bomilcar",
+       {0.11F, 0.11F, 0.34F},
+       {0.46F, 0.41F, 0.31F}},
+      {"troops/carthage/commanders/hasdrubal_cavalry",
+       {0.10F, 0.09F, 0.10F},
+       {0.30F, 0.30F, 0.32F}},
+      {"troops/numidian/commanders/masinissa",
+       {0.86F, 0.83F, 0.74F},
+       {0.80F, 0.64F, 0.30F},
+       QVector3D(0.36F, 0.24F, 0.16F)},
   };
   for (const auto& dress : dresses) {
     if (renderer_key != dress.key) {
@@ -48,6 +82,9 @@ void apply_commander_palette(std::string_view renderer_key,
     palette.metal = dress.metal;
     palette.leather = {0.23F, 0.14F, 0.095F};
     palette.leather_dark = {0.105F, 0.07F, 0.055F};
+    if (dress.skin.has_value()) {
+      palette.skin = *dress.skin;
+    }
     return;
   }
 }

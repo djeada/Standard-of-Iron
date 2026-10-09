@@ -27,10 +27,14 @@ const SpearmanRendererProfile k_profile{
     .ensure_styles_registered = &register_carthage_spearman_styles,
 };
 
-const std::array<SpearmanRendererRegistration, 2> k_renderers{{
+const std::array<SpearmanRendererRegistration, 4> k_renderers{{
     {.renderer_key = "troops/carthage/spearman"},
 
     {.renderer_key = "troops/carthage/commanders/hanno_the_great",
+     .use_beard_archetypes = false},
+    {.renderer_key = "troops/carthage/commanders/maharbal",
+     .use_beard_archetypes = false},
+    {.renderer_key = "troops/numidian/commanders/masinissa",
      .use_beard_archetypes = false},
 }};
 

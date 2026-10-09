@@ -621,7 +621,8 @@ auto ArenaViewport::spawn_scenario_group_entity(const Arena::ArenaScenarioGroup&
                                          group.nation_id,
                                          group.troop_type,
                                          position,
-                                         group.ai_controlled);
+                                         group.ai_controlled,
+                                         group.commander_id);
   auto* entity = m_world != nullptr ? m_world->get_entity(entity_id) : nullptr;
   auto* transform = entity != nullptr
                         ? entity->get_component<Engine::Core::TransformComponent>()

@@ -1,4 +1,5 @@
 #include "arena_scenario_internal.h"
+#include "game/units/commander_catalog.h"
 
 namespace Arena {
 
@@ -70,6 +71,12 @@ auto validate_scenario(const ArenaScenarioDefinition& definition)
     if (group.individuals_per_unit < 0) {
       errors.push_back(
           {field, QStringLiteral("individuals_per_unit cannot be negative")});
+    }
+    if (!group.commander_id.isEmpty() &&
+        !Game::Units::is_historical_commander_id(group.commander_id.toStdString())) {
+      errors.push_back(
+          {field,
+           QStringLiteral("unknown historical commander '%1'").arg(group.commander_id)});
     }
   }
   QString const wildlife_group = QString::fromLatin1(k_wildlife_group);

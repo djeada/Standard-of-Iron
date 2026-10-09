@@ -56,6 +56,11 @@ struct UnitSpawn {
   std::vector<QVector3D> patrol_waypoints;
 
   bool on_wall = false;
+
+  // Historical cameo commander (e.g. "roman_terentius_varro"); empty for every
+  // other spawn. Authored either as "commander_id" next to a commander type or
+  // directly as the spawn "type".
+  QString commander_id;
 };
 
 struct PointStructureGeometry {

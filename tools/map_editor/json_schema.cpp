@@ -361,6 +361,12 @@ auto troop_schema(const QString& sub_type) -> JsonSchema {
                      "[]",
                      "Patrol route: [{\"x\": 0, \"z\": 0}, …].",
                      QJsonArray{}),
+      optional_field("commander_id",
+                     "string",
+                     "unset",
+                     "Historical cameo commander fielded by a commander spawn, "
+                     "e.g. roman_terentius_varro; never playable.",
+                     QStringLiteral("roman_terentius_varro")),
   };
 
   return schema;
