@@ -1,0 +1,446 @@
+{
+  "schema": "soi-documentary-episode/1",
+  "id": "ep07",
+  "number": 7,
+  "slug": "cannae",
+  "title": "Cannae",
+  "place": "Cannae",
+  "region": "Apulia, southern Italy",
+  "date": { "day": 2, "month": "August", "year": 216, "era": "BC" },
+  "fps": 24,
+  "script": "ep07_cannae_script.md",
+  "summary": "Varro and Paullus bring 86,000 men against Hannibal's 50,000 on the plain by the Aufidus. The Gallic and Iberian crescent yields, the African infantry wheels inward and Hasdrubal's cavalry closes the rear: the double envelopment.",
+  "sources": [
+    { "author": "Polybius", "work": "Histories", "refs": "III.107-118" },
+    { "author": "Livy", "work": "Ab Urbe Condita", "refs": "XXII.36-52" }
+  ],
+  "credits": {
+    "narration": "Adam Djellouli",
+    "script": "Adam Djellouli"
+  },
+  "scale_note": "Armies are shown in the game at about 1:10 of their historical strength; historical numbers are given in narration and on cards.",
+  "next_episode": { "number": 8, "title": "The Long War", "years": "216-211 BC" },
+  "sides": [
+    {
+      "id": "rome",
+      "name": "Rome",
+      "strength": 86000,
+      "rendered": 8600,
+      "breakdown": [
+        { "label": "Infantry", "value": 80000 },
+        { "label": "Cavalry", "value": 6000 }
+      ],
+      "commanders": [
+        { "id": "varro", "name": "Gaius Terentius Varro", "title": "Consul, in command on the day" },
+        { "id": "paullus", "name": "Lucius Aemilius Paullus", "title": "Consul" }
+      ]
+    },
+    {
+      "id": "carthage",
+      "name": "Carthage",
+      "strength": 50000,
+      "rendered": 5000,
+      "breakdown": [
+        { "label": "Infantry", "value": 40000 },
+        { "label": "Cavalry", "value": 10000 }
+      ],
+      "commanders": [
+        { "id": "hannibal", "name": "Hannibal Barca", "title": "General of Carthage" },
+        { "id": "hasdrubal", "name": "Hasdrubal", "title": "Commander of the heavy cavalry" },
+        { "id": "maharbal", "name": "Maharbal", "title": "Commander of the Numidian horse" }
+      ]
+    }
+  ],
+  "strength_source": "Polybius III.113-114",
+  "casualties": [
+    {
+      "side": "rome",
+      "label": "Killed",
+      "value": [48200, 70000],
+      "sources": [
+        { "author": "Livy", "ref": "XXII.49", "value": 48200 },
+        { "author": "Polybius", "ref": "III.117", "value": 70000 }
+      ]
+    },
+    {
+      "side": "carthage",
+      "label": "Killed",
+      "value": 5700,
+      "sources": [{ "author": "Polybius", "ref": "III.117", "value": 5700 }]
+    }
+  ],
+  "mix": { "duck_db": -10.0, "release": 0.9, "lufs": -14.0, "true_peak": -1.0 },
+  "sections": [
+    {
+      "id": "cold_open",
+      "kind": "cold_open",
+      "title": "Cold open",
+      "shots": [
+        { "id": "co_ring", "clip": "ep07_ground/ring_aerial", "in": 4.0, "until": "vo:p01@end+1.6", "thumbnail": true },
+        { "id": "co_clash", "clip": "ep07_ground/clash_low", "in": 1.0, "dur": 5.0, "game_audio_db": -6 }
+      ]
+    },
+    {
+      "id": "series_title",
+      "kind": "title",
+      "title": "Series title",
+      "chapter": false,
+      "shots": [{ "id": "title", "graphic": "title_sequence", "dur": 9.5 }]
+    },
+    {
+      "id": "road",
+      "kind": "road",
+      "title": "The road to Cannae",
+      "shots": [
+        { "id": "road_map", "clip": "ep07_map/route_flight", "in": 0.0, "until": "vo:p03@end+1.4" },
+        { "id": "road_cannae", "clip": "ep07_map/apulia_descent", "in": 0.0, "dur": 6.0 }
+      ]
+    },
+    {
+      "id": "armies",
+      "kind": "armies",
+      "title": "Armies and commanders",
+      "shots": [
+        { "id": "arm_rome", "clip": "ep07_ground/legions_hero", "in": 2.0, "until": "vo:p04@end+0.8", "game_audio_db": -14 },
+        { "id": "arm_carthage", "clip": "ep07_ground/hannibal_hero", "in": 1.0, "until": "vo:p05@end+1.0", "game_audio_db": -14 },
+        { "id": "arm_oob", "clip": "ep07_ground/lines_wide", "in": 0.0, "dur": 9.0 }
+      ]
+    },
+    {
+      "id": "ground",
+      "kind": "ground",
+      "title": "The ground",
+      "shots": [
+        { "id": "gr_flyover", "clip": "ep07_ground/aufidus_flyover", "in": 0.0, "until": "vo:p06@end+1.0" },
+        {
+          "id": "gr_tactical",
+          "clip": "ep07_tactical/deployment",
+          "in": 0.0,
+          "dur": 8.0,
+          "overlays": [{ "file": "ep07_deployment.mov" }]
+        }
+      ]
+    },
+    {
+      "id": "battle",
+      "kind": "battle",
+      "title": "The battle",
+      "shots": [
+        {
+          "id": "b1_tac",
+          "clip": "ep07_tactical/deployment_detail",
+          "in": 0.0,
+          "until": "vo:p07@end+1.0",
+          "overlays": [{ "file": "ep07_crescent_forms.mov" }]
+        },
+        {
+          "id": "b1_cav_tac",
+          "clip": "ep07_tactical/cavalry_river",
+          "in": 0.0,
+          "until": "vo:p08@end+0.8",
+          "overlays": [{ "file": "ep07_cavalry_river.mov" }]
+        },
+        { "id": "b1_ground", "clip": "ep07_ground/cavalry_melee", "in": 3.0, "dur": 14.0, "game_audio_db": -4 },
+        {
+          "id": "b2_tac",
+          "clip": "ep07_tactical/crescent_bends",
+          "in": 0.0,
+          "until": "vo:p09@end+1.0",
+          "overlays": [{ "file": "ep07_crescent_bends.mov" }]
+        },
+        { "id": "b2_ground", "clip": "ep07_ground/crescent_ground", "in": 2.0, "dur": 16.0, "game_audio_db": -4 },
+        {
+          "id": "b3_tac",
+          "clip": "ep07_tactical/libyans_wheel",
+          "in": 0.0,
+          "until": "vo:p10@end+1.0",
+          "overlays": [{ "file": "ep07_libyans_wheel.mov" }]
+        },
+        { "id": "b3_ground", "clip": "ep07_ground/rear_charge", "in": 1.0, "dur": 12.0, "game_audio_db": -4 }
+      ]
+    },
+    {
+      "id": "climax",
+      "kind": "climax",
+      "title": "The ring closes",
+      "shots": [
+        { "id": "cl_ring", "clip": "ep07_ground/ring_from_above", "in": 0.0, "dur": 22.0, "thumbnail": true },
+        { "id": "cl_inside", "clip": "ep07_ground/inside_the_ring", "in": 0.0, "dur": 18.0, "game_audio_db": -3 },
+        { "id": "cl_after", "clip": "ep07_ground/the_silence_after", "in": 0.0, "until": "vo:p11@end+4.0" }
+      ]
+    },
+    {
+      "id": "aftermath",
+      "kind": "aftermath",
+      "title": "Aftermath",
+      "shots": [
+        { "id": "af_field", "clip": "ep07_ground/field_after", "in": 0.0, "until": "vo:p12@end+1.0" },
+        { "id": "af_map", "clip": "ep07_map/italy_defections", "in": 0.0, "until": "vo:p14@end+1.2" },
+        { "id": "af_end", "clip": "ep07_ground/fire_card", "in": 0.0, "dur": 11.0 }
+      ]
+    }
+  ],
+  "vo": [
+    { "id": "p01", "at": "shot:co_ring+1.0" },
+    { "id": "p02", "at": "shot:road_map+1.5" },
+    { "id": "p03", "at": "vo:p02@end+0.8" },
+    { "id": "p04", "at": "shot:arm_rome+0.8" },
+    { "id": "p05", "at": "shot:arm_carthage+0.6" },
+    { "id": "p06", "at": "shot:gr_flyover+1.0" },
+    { "id": "p07", "at": "shot:b1_tac+1.2" },
+    { "id": "p08", "at": "shot:b1_cav_tac+0.5" },
+    { "id": "p09", "at": "shot:b2_tac+1.2" },
+    { "id": "p10", "at": "shot:b3_tac+1.2" },
+    { "id": "p11", "at": "shot:cl_after+2.0" },
+    { "id": "p12", "at": "shot:af_field+1.0" },
+    { "id": "p13", "at": "shot:af_map+0.8" },
+    { "id": "p14", "at": "vo:p13@end+0.8" }
+  ],
+  "music": [
+    {
+      "id": "cold_tension",
+      "plan_cue": "ep07_tension_open",
+      "role": "tension",
+      "file": "assets/audio/music/base/base_march_of_the_old_gods.ogg",
+      "at": 0.0,
+      "until": "shot:co_clash-0.6",
+      "src_in": 4.0,
+      "fade_out": 1.2,
+      "gain_db": -2
+    },
+    {
+      "id": "title_theme",
+      "plan_cue": "series_title_theme",
+      "role": "theme",
+      "file": "assets/audio/music/menu/main_theme_iron_kingdom.ogg",
+      "at": "shot:title-0.3",
+      "until": "shot:title@end+0.8",
+      "src_in": 0.0,
+      "fade_in": 0.3,
+      "fade_out": 1.6
+    },
+    {
+      "id": "road_bed",
+      "plan_cue": "ep07_bed_road",
+      "role": "bed",
+      "file": "assets/audio/music/campaign/campaign_hannibals_ascent.ogg",
+      "at": "section:road",
+      "until": "section:road@end",
+      "src_in": 0.0,
+      "fade_in": 1.5,
+      "fade_out": 2.0,
+      "loop": true
+    },
+    {
+      "id": "armies_bed",
+      "plan_cue": "ep07_bed_armies",
+      "role": "bed",
+      "file": "assets/audio/music/base/base_ancient_preparations.ogg",
+      "at": "section:armies-0.8",
+      "until": "section:armies@end",
+      "src_in": 0.0,
+      "fade_in": 1.5,
+      "fade_out": 1.5,
+      "loop": true
+    },
+    {
+      "id": "ground_tension",
+      "plan_cue": "ep07_tension_ground",
+      "role": "tension",
+      "file": "assets/audio/music/base/base_echoes_ancient_outpost.ogg",
+      "at": "section:ground",
+      "until": "section:ground@end+0.5",
+      "src_in": 30.0,
+      "fade_in": 1.0,
+      "fade_out": 1.5
+    },
+    {
+      "id": "battle_tension",
+      "plan_cue": "ep07_tension_battle",
+      "role": "tension",
+      "file": "assets/audio/music/base/base_echoes_ancient_outpost.ogg",
+      "at": "shot:b1_tac",
+      "until": "shot:b1_ground+0.5",
+      "src_in": 120.0,
+      "fade_in": 1.0,
+      "fade_out": 0.6
+    },
+    {
+      "id": "battle_cavalry",
+      "plan_cue": "ep07_battle_cavalry",
+      "role": "battle",
+      "file": "assets/audio/music/combat/combat_cavalry_of_carthage.ogg",
+      "at": "shot:b1_ground",
+      "until": "shot:b1_ground@end+0.4",
+      "src_in": 6.0,
+      "fade_in": 0.2,
+      "fade_out": 0.8
+    },
+    {
+      "id": "battle_crescent_bed",
+      "plan_cue": "ep07_tension_battle",
+      "role": "tension",
+      "file": "assets/audio/music/base/base_echoes_ancient_outpost.ogg",
+      "at": "shot:b2_tac",
+      "until": "shot:b2_ground+0.5",
+      "src_in": 160.0,
+      "fade_in": 0.6,
+      "fade_out": 0.6
+    },
+    {
+      "id": "battle_crescent",
+      "plan_cue": "ep07_battle_crescent",
+      "role": "battle",
+      "file": "assets/audio/music/combat/combat_dust_of_cannae.ogg",
+      "at": "shot:b2_ground",
+      "until": "shot:b2_ground@end+0.4",
+      "src_in": 4.0,
+      "fade_in": 0.2,
+      "fade_out": 0.8
+    },
+    {
+      "id": "battle_trap_bed",
+      "plan_cue": "ep07_tension_battle",
+      "role": "tension",
+      "file": "assets/audio/music/base/base_echoes_ancient_outpost.ogg",
+      "at": "shot:b3_tac",
+      "until": "shot:b3_ground+0.5",
+      "src_in": 200.0,
+      "fade_in": 0.6,
+      "fade_out": 0.6
+    },
+    {
+      "id": "battle_trap",
+      "plan_cue": "ep07_battle_trap",
+      "role": "battle",
+      "file": "assets/audio/music/combat/combat_carthaginian_dust.ogg",
+      "at": "shot:b3_ground",
+      "until": "shot:cl_ring-1.0",
+      "src_in": 10.0,
+      "fade_in": 0.2,
+      "fade_out": 1.2
+    },
+    {
+      "id": "climax_theme",
+      "plan_cue": "ep07_climax",
+      "role": "climax",
+      "file": "assets/audio/music/menu/main_theme_iron_kingdom.ogg",
+      "at": "shot:cl_ring",
+      "until": "shot:cl_after+1.0",
+      "src_in": 14.0,
+      "pre_silence": 1.0,
+      "fade_out": 2.0,
+      "loop": true
+    },
+    {
+      "id": "elegy",
+      "plan_cue": "ep07_elegy",
+      "role": "elegy",
+      "file": "assets/audio/music/base/base_legion_at_dusk.ogg",
+      "at": "section:aftermath-1.0",
+      "until": "shot:af_end+0.5",
+      "src_in": 0.0,
+      "fade_in": 2.5,
+      "fade_out": 1.5,
+      "loop": true
+    },
+    {
+      "id": "end_theme",
+      "plan_cue": "series_end_theme",
+      "role": "theme",
+      "file": "assets/audio/music/menu/main_theme_iron_kingdom.ogg",
+      "at": "shot:af_end",
+      "until": "end",
+      "src_in": 46.0,
+      "fade_in": 0.4,
+      "fade_out": 1.5
+    }
+  ],
+  "beds": [
+    {
+      "id": "plains",
+      "file": "assets/audio/ambience/battlefield_dry_wind_distant_march_01.ogg",
+      "at": "section:road",
+      "until": "section:ground@end",
+      "gain_db": -12
+    },
+    {
+      "id": "aftermath_wind",
+      "file": "assets/audio/ambience/burning_village_aftermath.ogg",
+      "at": "section:aftermath",
+      "until": "end",
+      "gain_db": -14
+    }
+  ],
+  "sfx": [
+    { "file": "assets/audio/sfx/combat/roman_shield_wall_impact.ogg", "at": "shot:co_clash", "gain_db": -2, "hit": true },
+    { "file": "assets/audio/sfx/combat/charge_roar.ogg", "at": "shot:b3_ground+0.5", "gain_db": -6, "hit": true },
+    { "file": "assets/audio/sfx/combat/roman_war_horns_orders.ogg", "at": "shot:arm_oob+0.2", "gain_db": -8 }
+  ],
+  "graphics": [
+    { "id": "g_title", "type": "title_sequence", "at": "shot:title", "until": "shot:title@end" },
+    {
+      "id": "g_stamp_new_carthage",
+      "type": "place_date",
+      "at": "vo:p02+0.4",
+      "dur": 4.5,
+      "place": "New Carthage",
+      "region": "Hispania",
+      "date": { "season": "Spring", "year": 218, "era": "BC" }
+    },
+    {
+      "id": "g_counter_road",
+      "type": "army_counter",
+      "at": "vo:p03+2.0",
+      "until": "shot:road_map@end",
+      "values": { "rome": [0, 86000], "carthage": [50000, 50000] }
+    },
+    { "id": "g_stamp_cannae", "type": "place_date", "at": "shot:road_cannae+0.4", "dur": 5.0 },
+    { "id": "g_chapter_armies", "type": "chapter_card", "section": "armies", "at": "section:armies+0.2", "dur": 3.0 },
+    { "id": "g_plate_paullus", "type": "name_plate", "commander": "paullus", "at": "vo:p04+1.6", "dur": 4.0 },
+    { "id": "g_plate_varro", "type": "name_plate", "commander": "varro", "at": "vo:p04+6.4", "dur": 4.5 },
+    { "id": "g_plate_hannibal", "type": "name_plate", "commander": "hannibal", "at": "shot:arm_carthage+0.6", "dur": 4.0 },
+    { "id": "g_oob", "type": "order_of_battle", "at": "shot:arm_oob+0.3", "until": "shot:arm_oob@end-0.2" },
+    { "id": "g_chapter_ground", "type": "chapter_card", "section": "ground", "at": "section:ground+0.3", "dur": 3.0 },
+    { "id": "g_phase_1", "type": "chapter_card", "numeral": "I", "title": "The cavalry by the river", "at": "shot:b1_cav_tac+0.2", "dur": 3.0 },
+    { "id": "g_phase_2", "type": "chapter_card", "numeral": "II", "title": "The crescent", "at": "shot:b2_tac+0.2", "dur": 3.0 },
+    { "id": "g_phase_3", "type": "chapter_card", "numeral": "III", "title": "The trap", "at": "shot:b3_tac+0.2", "dur": 3.0 },
+    { "id": "g_tally", "type": "casualty_tally", "at": "vo:p12+0.4", "until": "vo:p12@end+0.6" },
+    { "id": "g_end", "type": "end_card", "end_card": "steam_demo", "at": "shot:af_end+0.4", "until": "end" }
+  ],
+  "thumbnail": {
+    "title": "Cannae",
+    "kicker": "216 BC",
+    "line": "The double envelopment"
+  },
+  "reel": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "music": {
+      "plan_cue": "ep07_reel",
+      "file": "assets/audio/music/combat/combat_dust_of_cannae.ogg",
+      "src_in": 2.0,
+      "gain_db": -1,
+      "fade_out": 1.5
+    },
+    "parts": [
+      {
+        "id": "hook",
+        "role": "hook",
+        "clip": "ep07_vertical/ring_aerial",
+        "in": 1.0,
+        "vo": "r01",
+        "pad": 0.6,
+        "text": "86,000 Romans marched onto this field.",
+        "kicker": "By sunset, most of them were dead."
+      },
+      { "id": "beat1", "role": "beat", "clip": "ep07_vertical/crescent", "in": 0.5, "vo": "r02", "pad": 0.7 },
+      { "id": "beat2", "role": "beat", "clip": "ep07_vertical/libyans_turn", "in": 0.5, "vo": "r03", "pad": 0.7 },
+      { "id": "beat3", "role": "beat", "clip": "ep07_vertical/rear_charge", "in": 0.5, "vo": "r04", "pad": 0.7 },
+      { "id": "consequence", "role": "consequence", "clip": "ep07_vertical/the_silence_after", "in": 0.0, "vo": "r05", "pad": 1.2 },
+      { "id": "tag", "role": "tag", "clip": "ep07_vertical/fire_card", "in": 0.0, "dur": 4.0 }
+    ],
+    "sfx": [{ "file": "assets/audio/sfx/combat/roman_shield_wall_impact.ogg", "at": "part:beat3", "gain_db": -4 }]
+  }
+}
