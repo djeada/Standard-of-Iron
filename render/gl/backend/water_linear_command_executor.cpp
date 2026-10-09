@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "command_executor_common.h"
 
 namespace Render::GL {
@@ -158,6 +160,22 @@ void Backend::execute_water_linear_commands(const PreparedBatch& prepared,
               Shader::InvalidUniform) {
             water_shader->set_uniform(m_water_pipeline->m_water_uniforms.surface_kind,
                                       static_cast<int>(single.water_kind));
+          }
+          if (uniforms.ford_count != Shader::InvalidUniform) {
+            int const fords = std::clamp(
+                single.ford_patch_count, 0, TerrainFeatureCmd::k_max_ford_patches);
+            water_shader->set_uniform(uniforms.ford_count, fords);
+            for (int patch = 0; patch < fords; ++patch) {
+              auto const slot = static_cast<std::size_t>(patch);
+              if (uniforms.ford_a[slot] != Shader::InvalidUniform) {
+                water_shader->set_uniform(uniforms.ford_a[slot],
+                                          single.ford_patch_a[slot]);
+              }
+              if (uniforms.ford_b[slot] != Shader::InvalidUniform) {
+                water_shader->set_uniform(uniforms.ford_b[slot],
+                                          single.ford_patch_b[slot]);
+              }
+            }
           }
           water_shader->set_uniform(m_water_pipeline->m_water_uniforms.model,
                                     single.model);

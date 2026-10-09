@@ -34,7 +34,8 @@ auto beside_ford(const Game::Map::TerrainService& terrain, float x, float z) -> 
 } // namespace
 
 FordSystem::FordSystem(Services services)
-    : m_services(services) {}
+    : m_services(services) {
+}
 
 void FordSystem::update(Engine::Core::World* world, float delta_time) {
   if (world == nullptr) {
@@ -64,10 +65,10 @@ void FordSystem::update(Engine::Core::World* world, float delta_time) {
   for (auto [id, unit, transform] :
        world->view<Engine::Core::UnitComponent, Engine::Core::TransformComponent>()) {
     auto* wading = world->try_get<Engine::Core::WadingComponent>(id);
-    bool const eligible =
-        unit.health > 0 && !world->has<Engine::Core::BuildingComponent>(id) &&
-        !world->has<Engine::Core::PendingRemovalComponent>(id) &&
-        !world->has<Engine::Core::RaftRiderComponent>(id);
+    bool const eligible = unit.health > 0 &&
+                          !world->has<Engine::Core::BuildingComponent>(id) &&
+                          !world->has<Engine::Core::PendingRemovalComponent>(id) &&
+                          !world->has<Engine::Core::RaftRiderComponent>(id);
     float const x = transform.position.x;
     float const z = transform.position.z;
     bool const near = eligible && beside_ford(terrain, x, z);

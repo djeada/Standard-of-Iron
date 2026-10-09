@@ -106,6 +106,9 @@ struct AnimationInputs {
   float hit_recoil_z{0.0F};
   bool is_healing{false};
   bool is_routing{false};
+  // Standing in a river ford: 0 on the bank, 1 once the water is at the waist.
+  bool is_wading{false};
+  float wade_amount{0.0F};
   float healing_target_dx{0.0F};
   float healing_target_dz{0.0F};
   bool is_constructing{false};

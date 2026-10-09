@@ -32,7 +32,8 @@ speed_multiplier(const Engine::Core::WadingComponent* wading) noexcept -> float 
   if (wading == nullptr) {
     return 1.0F;
   }
-  float multiplier = 1.0F - (k_chill_speed_penalty * std::clamp(wading->chill, 0.0F, 1.0F));
+  float multiplier =
+      1.0F - (k_chill_speed_penalty * std::clamp(wading->chill, 0.0F, 1.0F));
   if (wading->in_water()) {
     multiplier *= std::clamp(wading->speed, 0.05F, 1.0F);
   }
@@ -54,7 +55,8 @@ damage_multiplier(const Engine::Core::WadingComponent* attacker,
     if (attacker->in_water()) {
       multiplier *= k_wading_attack_multiplier;
     }
-    multiplier *= 1.0F - (k_chill_attack_penalty * std::clamp(attacker->chill, 0.0F, 1.0F));
+    multiplier *=
+        1.0F - (k_chill_attack_penalty * std::clamp(attacker->chill, 0.0F, 1.0F));
   }
   if (target != nullptr && target->in_water()) {
     multiplier *= std::max(1.0F, target->exposure);
@@ -71,10 +73,8 @@ can_brace(const Engine::Core::WadingComponent* wading) noexcept -> bool {
   return wading == nullptr || !wading->in_water();
 }
 
-[[nodiscard]] inline auto next_chill(float chill,
-                                     bool in_water,
-                                     float cold,
-                                     float delta_time) noexcept -> float {
+[[nodiscard]] inline auto
+next_chill(float chill, bool in_water, float cold, float delta_time) noexcept -> float {
   float const dt = std::max(0.0F, delta_time);
   if (in_water && cold > 0.0F) {
     return std::min(1.0F, chill + (k_chill_gain_per_second * cold * dt));

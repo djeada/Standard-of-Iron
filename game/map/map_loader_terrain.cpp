@@ -355,7 +355,18 @@ void read_fords(const QJsonArray& arr,
     float raw_x = 0.0F;
     float raw_z = 0.0F;
     const QJsonValue position = obj.value(QStringLiteral("position"));
-    if (position.isArray() && position.toArray().size() >= 2) {
+    const QJsonValue start = obj.value(QStringLiteral("start"));
+    const QJsonValue end = obj.value(QStringLiteral("end"));
+    const bool drawn_across = start.isArray() && end.isArray() &&
+                              start.toArray().size() >= 2 && end.toArray().size() >= 2;
+    if (drawn_across) {
+      // Drawn like a bridge, bank to bank: the ford sits where the line
+      // meets the river and its width is how far it runs along the river.
+      const QJsonArray from = start.toArray();
+      const QJsonArray to = end.toArray();
+      raw_x = float((from.at(0).toDouble(0.0) + to.at(0).toDouble(0.0)) * 0.5);
+      raw_z = float((from.at(1).toDouble(0.0) + to.at(1).toDouble(0.0)) * 0.5);
+    } else if (position.isArray() && position.toArray().size() >= 2) {
       const QJsonArray point = position.toArray();
       raw_x = float(point.at(0).toDouble(0.0));
       raw_z = float(point.at(point.size() >= 3 ? 2 : 1).toDouble(0.0));
@@ -366,14 +377,18 @@ void read_fords(const QJsonArray& arr,
       raw_x = float(obj.value(X).toDouble(0.0));
       raw_z = float(obj.value(Z).toDouble(0.0));
     } else {
-      qWarning() << "MapLoader: ford" << ford.id << "needs a position on a river - skipping";
+      qWarning() << "MapLoader: ford" << ford.id
+                 << "needs a position on a river - skipping";
       continue;
     }
     ford.position = authored_position(raw_x, raw_z, grid, coord_sys);
-    ford.length = std::clamp(
-        float(obj.value(QStringLiteral("length")).toDouble(ford.length)),
-        k_min_ford_length,
-        k_max_ford_length);
+    const double authored_length =
+        obj.contains(QStringLiteral("length"))
+            ? obj.value(QStringLiteral("length")).toDouble()
+            : obj.value(QStringLiteral("width"))
+                  .toDouble(static_cast<double>(ford.length));
+    ford.length =
+        std::clamp(float(authored_length), k_min_ford_length, k_max_ford_length);
     ford.profile = read_ford_profile(obj).value_or(FordProfile{});
     out.push_back(std::move(ford));
   }

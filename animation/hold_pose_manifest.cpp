@@ -153,6 +153,53 @@ auto resolve_humanoid_held_pose(const HumanoidHeldPoseInputs& inputs) noexcept
     sample.offhand_axis = {-0.10F - 0.04F * run_mix, 0.98F, 0.17F + 0.06F * run_mix};
     break;
   }
+  case HumanoidHeldPoseKind::WadeSwordShield: {
+    float const bob = 0.010F * hold_cycle;
+    sample.right_hand = {0.27F, shoulder_y + 0.17F + bob, 0.15F};
+    sample.left_hand = {-0.25F, shoulder_y - 0.02F - bob, 0.33F};
+    sample.has_blade_direction = true;
+    sample.blade_direction = {0.10F, 0.94F, 0.32F};
+    sample.has_offhand_axis = true;
+    sample.offhand_axis = {-0.08F, 0.97F, 0.22F};
+    sample.shoulder_r_y_delta = 0.035F;
+    sample.shoulder_l_y_delta = 0.015F;
+    sample.shoulder_r_z_delta = 0.02F;
+    sample.shoulder_l_z_delta = 0.05F;
+    sample.neck_z_delta = 0.035F;
+    sample.head_z_delta = 0.025F;
+    sample.head_y_delta = -0.008F;
+    break;
+  }
+  case HumanoidHeldPoseKind::WadeSpear: {
+    float const bob = 0.010F * hold_cycle;
+    sample.right_hand = {0.17F, shoulder_y + 0.20F + bob, 0.02F};
+    sample.use_offhand_spear_grip = true;
+    sample.offhand_spear_direction = {0.030F, 0.150F, 0.988F};
+    sample.offhand_along_offset = 0.40F;
+    sample.offhand_y_drop = 0.0F;
+    sample.offhand_lateral_offset = -0.10F;
+    sample.shoulder_r_y_delta = 0.040F;
+    sample.shoulder_l_y_delta = 0.030F;
+    sample.shoulder_r_z_delta = 0.02F;
+    sample.shoulder_l_z_delta = 0.03F;
+    sample.neck_z_delta = 0.030F;
+    sample.head_z_delta = 0.020F;
+    sample.head_y_delta = -0.006F;
+    break;
+  }
+  case HumanoidHeldPoseKind::WadeHandsHigh: {
+    float const bob = 0.010F * hold_cycle;
+    sample.right_hand = {0.21F, shoulder_y + 0.14F + bob, 0.17F};
+    sample.left_hand = {-0.19F, shoulder_y + 0.15F - bob, 0.19F};
+    sample.shoulder_r_y_delta = 0.030F;
+    sample.shoulder_l_y_delta = 0.030F;
+    sample.shoulder_r_z_delta = 0.02F;
+    sample.shoulder_l_z_delta = 0.02F;
+    sample.neck_z_delta = 0.030F;
+    sample.head_z_delta = 0.020F;
+    sample.head_y_delta = -0.006F;
+    break;
+  }
   case HumanoidHeldPoseKind::ResourceCarry: {
     float const bob = 0.006F * hold_cycle;
     float const hand_y = shoulder_y + k_resource_carry_hand_y_from_shoulder;

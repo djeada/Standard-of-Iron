@@ -195,7 +195,8 @@ private:
   void precompute_ford_cells(bool lower_beds);
   auto ford_table_index(const FordProfile& profile, float water_y) -> std::uint8_t;
   void stamp_ford_cell(int x, int z, std::uint8_t entry);
-  [[nodiscard]] auto ford_entry_at(float world_x, float world_z) const -> const FordCell*;
+  [[nodiscard]] auto ford_entry_at(float world_x,
+                                   float world_z) const -> const FordCell*;
 
   [[nodiscard]] static auto calculateFeatureHeight(const TerrainFeature& feature,
                                                    float world_x,

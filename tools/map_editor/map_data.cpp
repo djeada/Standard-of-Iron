@@ -636,32 +636,16 @@ bool MapData::apply_document(const QByteArray& data, QString* out_error) {
       return false;
     }
   }
-  const QStringList known_root_keys = {MapJsonKeys::name,
-                                       MapJsonKeys::description,
-                                       coord_system_key,
-                                       legacy_coord_system_key,
-                                       max_troops_key,
-                                       legacy_max_troops_key,
-                                       MapJsonKeys::grid,
-                                       MapJsonKeys::biome,
-                                       MapJsonKeys::camera,
-                                       MapJsonKeys::spawns,
-                                       MapJsonKeys::structures,
-                                       MapJsonKeys::victory,
-                                       MapJsonKeys::rain,
-                                       MapJsonKeys::environment,
-                                       MapJsonKeys::time_of_day,
-                                       MapJsonKeys::terrain,
-                                       MapJsonKeys::world_props,
-                                       MapJsonKeys::firecamps,
-                                       MapJsonKeys::rivers,
-                                       MapJsonKeys::lakes,
-                                       MapJsonKeys::roads,
-                                       MapJsonKeys::bridges,
-                                       MapJsonKeys::undead_zones,
-                                       MapJsonKeys::fog_zones,
-                                       MapJsonKeys::forests,
-                                       MapJsonKeys::wildlife};
+  const QStringList known_root_keys = {
+      MapJsonKeys::name,       MapJsonKeys::description, coord_system_key,
+      legacy_coord_system_key, max_troops_key,           legacy_max_troops_key,
+      MapJsonKeys::grid,       MapJsonKeys::biome,       MapJsonKeys::camera,
+      MapJsonKeys::spawns,     MapJsonKeys::structures,  MapJsonKeys::victory,
+      MapJsonKeys::rain,       MapJsonKeys::environment, MapJsonKeys::time_of_day,
+      MapJsonKeys::terrain,    MapJsonKeys::world_props, MapJsonKeys::firecamps,
+      MapJsonKeys::rivers,     MapJsonKeys::lakes,       MapJsonKeys::roads,
+      MapJsonKeys::bridges,    MapJsonKeys::fords,       MapJsonKeys::undead_zones,
+      MapJsonKeys::fog_zones,  MapJsonKeys::forests,     MapJsonKeys::wildlife};
   m_extra_root_fields = copyExtraFields(root, known_root_keys);
 
   m_name = root[MapJsonKeys::name].toString("Untitled Map");
@@ -731,6 +715,9 @@ bool MapData::apply_document(const QByteArray& data, QString* out_error) {
   }
   if (root.contains(MapJsonKeys::roads)) {
     parse_roads_array(root[MapJsonKeys::roads].toArray());
+  }
+  if (root.contains(MapJsonKeys::fords)) {
+    parse_fords_array(root[MapJsonKeys::fords].toArray());
   }
   if (root.contains(MapJsonKeys::bridges)) {
     parse_bridges_array(root[MapJsonKeys::bridges].toArray());
@@ -810,6 +797,10 @@ QJsonObject MapData::build_root_json() const {
     root[MapJsonKeys::roads] = roads_arr;
   }
 
+  QJsonArray const fords_arr = fords_to_json();
+  if (!fords_arr.isEmpty()) {
+    root[MapJsonKeys::fords] = fords_arr;
+  }
   QJsonArray const bridges_arr = bridges_to_json();
   if (!bridges_arr.isEmpty()) {
     root[MapJsonKeys::bridges] = bridges_arr;
@@ -1060,6 +1051,52 @@ void MapData::parse_roads_array(const QJsonArray& arr) {
   }
 }
 
+void MapData::parse_fords_array(const QJsonArray& arr) {
+  for (const auto val : arr) {
+    QJsonObject obj = val.toObject();
+    LinearElement elem;
+    elem.type = QStringLiteral("ford");
+
+    if (obj.value(MapJsonKeys::start).isArray() &&
+        obj.value(MapJsonKeys::end).isArray()) {
+      applyLinearEndpoints(obj, elem);
+    } else {
+      // A ford placed by its centre: give it a short bank-to-bank stroke so
+      // it can be seen and dragged; saving writes it back drawn across.
+      QVector2D centre;
+      const QJsonValue position = obj.value(QStringLiteral("position"));
+      if (position.isArray()) {
+        const QJsonArray point = position.toArray();
+        centre = QVector2D(
+            static_cast<float>(point.at(0).toDouble()),
+            static_cast<float>(point.at(point.size() >= 3 ? 2 : 1).toDouble()));
+      } else {
+        centre =
+            QVector2D(static_cast<float>(obj.value(QStringLiteral("x")).toDouble()),
+                      static_cast<float>(obj.value(QStringLiteral("z")).toDouble()));
+      }
+      elem.start = centre - QVector2D(0.0F, k_default_ford_stroke);
+      elem.end = centre + QVector2D(0.0F, k_default_ford_stroke);
+    }
+    elem.width =
+        static_cast<float>(obj.contains(QStringLiteral("length"))
+                               ? obj.value(QStringLiteral("length")).toDouble()
+                               : obj[MapJsonKeys::width].toDouble(
+                                     static_cast<double>(k_default_ford_width)));
+
+    const QStringList known_keys = {MapJsonKeys::start,
+                                    MapJsonKeys::end,
+                                    MapJsonKeys::width,
+                                    QStringLiteral("length"),
+                                    QStringLiteral("position"),
+                                    QStringLiteral("x"),
+                                    QStringLiteral("z")};
+    elem.extra_fields = copyExtraFields(obj, known_keys);
+
+    m_linear_elements.append(elem);
+  }
+}
+
 void MapData::parse_bridges_array(const QJsonArray& arr) {
   for (const auto val : arr) {
     QJsonObject obj = val.toObject();
@@ -1241,6 +1278,26 @@ QJsonArray MapData::roads_to_json() const {
       obj[key] = elem.extra_fields[key];
     }
 
+    arr.append(obj);
+  }
+  return arr;
+}
+
+QJsonArray MapData::fords_to_json() const {
+  QJsonArray arr;
+  for (const auto& elem : m_linear_elements) {
+    if (elem.type != QStringLiteral("ford")) {
+      continue;
+    }
+    QJsonObject obj;
+    obj[MapJsonKeys::start] = QJsonArray{static_cast<double>(elem.start.x()),
+                                         static_cast<double>(elem.start.y())};
+    obj[MapJsonKeys::end] = QJsonArray{static_cast<double>(elem.end.x()),
+                                       static_cast<double>(elem.end.y())};
+    obj[MapJsonKeys::width] = static_cast<double>(elem.width);
+    for (const QString& key : elem.extra_fields.keys()) {
+      obj[key] = elem.extra_fields[key];
+    }
     arr.append(obj);
   }
   return arr;

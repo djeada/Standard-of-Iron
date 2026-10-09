@@ -218,7 +218,6 @@ public:
   static constexpr int k_wade_exposure_penalty = 6;
 
 private:
-
   static constexpr int k_straight_step_cost = 10;
   static constexpr int k_diagonal_step_cost = 14;
 

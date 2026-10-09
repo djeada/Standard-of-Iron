@@ -1,5 +1,7 @@
 #pragma once
 
+#include <array>
+
 #include "pipeline_interface.h"
 #include "render/gl/shader.h"
 
@@ -36,6 +38,11 @@ public:
     GL::Shader::UniformHandle surface_kind{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle camera_position{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle light_direction{GL::Shader::InvalidUniform};
+    std::array<GL::Shader::UniformHandle, 2> ford_a{GL::Shader::InvalidUniform,
+                                                    GL::Shader::InvalidUniform};
+    std::array<GL::Shader::UniformHandle, 2> ford_b{GL::Shader::InvalidUniform,
+                                                    GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle ford_count{GL::Shader::InvalidUniform};
   };
 
   struct RiverbankUniforms {

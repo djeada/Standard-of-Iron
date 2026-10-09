@@ -214,6 +214,41 @@ auto order_raft(const char* group, float at) -> ArenaScenarioStep {
   return step;
 }
 
+constexpr float k_ford_river_width = 12.0F;
+constexpr float k_ford_length = 30.0F;
+
+// A river too deep to cross except at one broad ford in the middle: icy, as
+// the Trebia was when the Roman army waded it at dawn.
+auto ford_crossing(const char* id,
+                   const char* label,
+                   const char* description,
+                   float duration) -> ArenaScenarioDefinition {
+  ArenaScenarioDefinition result;
+  result.id = QString::fromLatin1(id);
+  result.label = QString::fromLatin1(label);
+  result.description = QString::fromLatin1(description);
+  result.duration_seconds = duration;
+  result.camera = {44.0F, 40.0F, 300.0F};
+  result.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+  result.terrain_grid_extent = 100;
+  result.arena_floor_half_extent = 40.0F;
+  result.ground_type = QStringLiteral("soil_rocky");
+  result.suppress_terrain_scatter = true;
+  result.suppress_spawn_anchor = true;
+  result.suppress_ui_overlays = true;
+  result.suppress_boundary_mountains = true;
+  result.environment.start_time = 7.5F;
+  result.rivers.push_back(Game::Map::RiverSegment{
+      {-48.0F, 0.0F, 0.0F}, {48.0F, 0.0F, 0.0F}, k_ford_river_width});
+  Game::Map::FordCrossing ford;
+  ford.id = QStringLiteral("trebia_ford");
+  ford.position = QVector3D(0.0F, 0.0F, 0.0F);
+  ford.length = k_ford_length;
+  ford.profile.cold = 0.6F;
+  result.fords = {ford};
+  return result;
+}
+
 void expect_readable_casualties(ArenaScenarioDefinition& scenario) {
   scenario.expectations.push_back(expectation(Expect::AllGroupsRespondWithin, 2.5F));
   scenario.expectations.push_back(expectation(Expect::GroupHealthReduced, 1.0F));
@@ -388,6 +423,93 @@ auto build_hazard_definitions() -> std::vector<ArenaScenarioDefinition> {
     scenario.expectations.back().group = QStringLiteral("crossers");
     scenario.expectations.push_back(expectation(Expect::GroupHealthReduced, 1.0F));
     scenario.expectations.back().group = QStringLiteral("crossers");
+    result.push_back(std::move(scenario));
+  }
+
+  {
+    auto scenario = ford_crossing(
+        k_ford_legion_crossing_id,
+        "Fords: A Legion Wades the River",
+        "A Roman legion wades an icy river at its one ford, waist-deep and "
+        "slowed, while Balearic slingers and archers on the far bank pour "
+        "missiles into the water. Carthaginian infantry wait on the bank to "
+        "meet the men as they climb out.",
+        70.0F);
+    auto legion = troop("legion",
+                        Game::Units::TroopType::Swordsman,
+                        2,
+                        4,
+                        QVector3D(9.0F, 0.0F, -18.0F),
+                        0.0F);
+    auto triarii = troop("triarii",
+                         Game::Units::TroopType::Spearman,
+                         2,
+                         2,
+                         QVector3D(3.0F, 0.0F, -27.0F),
+                         0.0F);
+    auto slingers = troop("slingers",
+                          Game::Units::TroopType::Slinger,
+                          1,
+                          2,
+                          QVector3D(11.0F, 0.0F, 15.0F),
+                          180.0F);
+    slingers.spacing = QVector3D(-22.0F, 0.0F, 0.0F);
+    auto archers = troop("archers",
+                         Game::Units::TroopType::Archer,
+                         1,
+                         2,
+                         QVector3D(5.0F, 0.0F, 19.0F),
+                         180.0F);
+    archers.spacing = QVector3D(-10.0F, 0.0F, 0.0F);
+    auto defenders = troop("defenders",
+                           Game::Units::TroopType::Swordsman,
+                           1,
+                           2,
+                           QVector3D(4.0F, 0.0F, 26.0F),
+                           180.0F);
+    defenders.spacing = QVector3D(-8.0F, 0.0F, 0.0F);
+    scenario.groups = {legion, triarii, slingers, archers, defenders};
+    scenario.steps = {
+        order_move("wade", "legion", 1.0F, QVector3D(0.0F, 0.0F, 22.0F)),
+        order_move("follow", "triarii", 4.0F, QVector3D(0.0F, 0.0F, 14.0F))};
+    scenario.expectations.push_back(expectation(Expect::FordWadedObserved));
+    scenario.expectations.back().group = QStringLiteral("legion");
+    scenario.expectations.push_back(expectation(Expect::GroupHealthReduced, 1.0F));
+    scenario.expectations.back().group = QStringLiteral("legion");
+    scenario.expectations.push_back(expectation(Expect::GroupHealthReduced, 1.0F));
+    scenario.expectations.back().group = QStringLiteral("defenders");
+    result.push_back(std::move(scenario));
+  }
+
+  {
+    auto scenario = ford_crossing(
+        k_ford_mounted_crossing_id,
+        "Fords: Horse and Elephants Wade",
+        "Numidian horse and war elephants wade the ford unopposed: the water "
+        "rises to the horses' bellies and the elephants' knees.",
+        45.0F);
+    auto horse = troop("horse",
+                       Game::Units::TroopType::MountedSwordsman,
+                       1,
+                       3,
+                       QVector3D(10.0F, 0.0F, -20.0F),
+                       0.0F);
+    horse.spacing = QVector3D(-10.0F, 0.0F, 0.0F);
+    auto elephants = troop("elephants",
+                           Game::Units::TroopType::Elephant,
+                           1,
+                           2,
+                           QVector3D(6.0F, 0.0F, -30.0F),
+                           0.0F);
+    elephants.spacing = QVector3D(-12.0F, 0.0F, 0.0F);
+    scenario.groups = {horse, elephants};
+    scenario.steps = {
+        order_move("ride", "horse", 1.0F, QVector3D(0.0F, 0.0F, 22.0F)),
+        order_move("lumber", "elephants", 3.0F, QVector3D(0.0F, 0.0F, 16.0F))};
+    scenario.expectations.push_back(expectation(Expect::FordWadedObserved));
+    scenario.expectations.back().group = QStringLiteral("horse");
+    scenario.expectations.push_back(expectation(Expect::FordWadedObserved));
+    scenario.expectations.back().group = QStringLiteral("elephants");
     result.push_back(std::move(scenario));
   }
 

@@ -25,6 +25,7 @@
 #include "render/entity/healing_beam_renderer.h"
 #include "render/entity/healing_waves_renderer.h"
 #include "render/entity/production_completion_renderer.h"
+#include "render/entity/wading_effects_renderer.h"
 #include "render/geom/arrow.h"
 #include "render/geom/attack_target_markers.h"
 #include "render/geom/formation_arrow.h"
@@ -310,6 +311,7 @@ void render_effects(const RenderEffectsContext& context,
   Render::GL::render_healer_auras(context.renderer, res, context.snapshot);
   Render::GL::render_commander_auras(context.renderer, res, context.snapshot);
   Render::GL::render_combat_dust(context.renderer, res, context.snapshot);
+  Render::GL::render_wading_effects(context.renderer, res, context.snapshot);
   Render::GL::render_blood_stains(context.renderer, res, context.snapshot);
 
   if (render_runtime_mode_effects) {

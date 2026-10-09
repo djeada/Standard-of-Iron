@@ -315,8 +315,8 @@ auto TerrainService::ford_water_depth_at(float world_x, float world_z) const -> 
                                  : 0.0F;
 }
 
-auto TerrainService::ford_water_level_at(float world_x, float world_z) const
-    -> std::optional<float> {
+auto TerrainService::ford_water_level_at(float world_x,
+                                         float world_z) const -> std::optional<float> {
   return m_height_map != nullptr ? m_height_map->ford_water_level_at(world_x, world_z)
                                  : std::nullopt;
 }

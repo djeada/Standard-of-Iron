@@ -46,6 +46,7 @@
 #include "render/entity/healing_beam_renderer.h"
 #include "render/entity/healing_waves_renderer.h"
 #include "render/entity/production_completion_renderer.h"
+#include "render/entity/wading_effects_renderer.h"
 #include "render/geom/arrow.h"
 #include "render/geom/projectile_renderer.h"
 #include "render/geom/range_rings.h"
@@ -475,6 +476,7 @@ void ArenaViewport::submit_world_effects(Render::GL::ResourceManager* res) {
     Render::GL::render_combat_dust(m_renderer.get(), res, m_world.get());
   }
   Render::GL::render_blood_stains(m_renderer.get(), res, m_world.get());
+  Render::GL::render_wading_effects(m_renderer.get(), res, m_world.get());
   render_attack_range_rings(res);
   render_target_focus_rings(res);
   const bool cinematic_capture = m_clean_capture || m_promo_mode ||

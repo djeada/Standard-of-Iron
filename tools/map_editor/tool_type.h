@@ -13,6 +13,7 @@ enum class ToolType {
   River,
   Road,
   Bridge,
+  Ford,
   PropFirecamp,
   PropTent,
   PropSupplyCart,

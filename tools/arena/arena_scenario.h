@@ -323,6 +323,7 @@ enum class ArenaExpectationKind : std::uint8_t {
   SiegeTowerDocked,
   WallWalkerObserved,
   RaftFerryObserved,
+  FordWadedObserved,
   BridgeTraversalObserved,
   BridgeCenterlineAligned,
   ElevationGainObserved,

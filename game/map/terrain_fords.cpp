@@ -46,11 +46,8 @@ struct ReachCell {
 // Visits every grid cell inside the blocked reach of a river segment: the
 // drawn water plus the bank clearance strip. Mirrors precompute_water_blocked.
 template <typename Visit>
-void for_each_river_reach_cell(const RiverSegment& river,
-                               int width,
-                               int height,
-                               float tile_size,
-                               Visit&& visit) {
+void for_each_river_reach_cell(
+    const RiverSegment& river, int width, int height, float tile_size, Visit&& visit) {
   const float delta_x = river.end.x() - river.start.x();
   const float delta_z = river.end.z() - river.start.z();
   if ((delta_x * delta_x) + (delta_z * delta_z) < 1.0e-4F) {
@@ -136,8 +133,8 @@ auto nearest_river(const std::vector<RiverSegment>& rivers,
     const RibbonCrossSection section = river_drawn_cross_section(river, t);
     const float distance =
         std::hypot(point.x() - section.center.x(), point.z() - section.center.z());
-    if (distance > std::max(section.half_width, river.width * 0.5F) +
-                       k_water_bank_clearance) {
+    if (distance >
+        std::max(section.half_width, river.width * 0.5F) + k_water_bank_clearance) {
       continue;
     }
     if (!best.has_value() || distance < best->distance) {
@@ -161,8 +158,8 @@ void TerrainHeightMap::add_fords(const std::vector<FordCrossing>& fords) {
     ford.profile = ford.profile.clamped();
     ford.length = std::clamp(ford.length, k_min_ford_length, k_max_ford_length);
     if (!nearest_river(m_river_segments, ford.position).has_value()) {
-      qWarning() << "Ford" << ford.id << "at" << ford.position.x()
-                 << ford.position.z() << "is not on a river - skipping";
+      qWarning() << "Ford" << ford.id << "at" << ford.position.x() << ford.position.z()
+                 << "is not on a river - skipping";
       continue;
     }
     m_fords.push_back(ford);
@@ -202,7 +199,8 @@ void TerrainHeightMap::stamp_ford_cell(int x, int z, std::uint8_t entry) {
 }
 
 void TerrainHeightMap::precompute_ford_cells(bool lower_beds) {
-  const auto count = static_cast<std::size_t>(m_width) * static_cast<std::size_t>(m_height);
+  const auto count =
+      static_cast<std::size_t>(m_width) * static_cast<std::size_t>(m_height);
   m_ford_table.clear();
   m_ford_cells.assign(count, 0U);
 
@@ -257,8 +255,8 @@ void TerrainHeightMap::precompute_ford_cells(bool lower_beds) {
     const QVector3D across(-along.z(), 0.0F, along.x());
     const float water_y = water_y_along(host, hit->t);
     const float half_length = ford.length * 0.5F;
-    const float half_span = river_bank_standing_half_width(host.width) +
-                            k_ford_lateral_slack;
+    const float half_span =
+        river_bank_standing_half_width(host.width) + k_ford_lateral_slack;
     const std::uint8_t entry = ford_table_index(ford.profile, water_y);
     if (entry == 0U) {
       continue;
@@ -293,8 +291,8 @@ auto TerrainHeightMap::is_ford_cell(int grid_x, int grid_z) const -> bool {
   return ford_profile_at_grid(grid_x, grid_z) != nullptr;
 }
 
-auto TerrainHeightMap::ford_profile_at_grid(int grid_x, int grid_z) const
-    -> const FordProfile* {
+auto TerrainHeightMap::ford_profile_at_grid(int grid_x,
+                                            int grid_z) const -> const FordProfile* {
   if (!in_bounds(grid_x, grid_z) || m_ford_cells.empty()) {
     return nullptr;
   }
@@ -342,7 +340,8 @@ auto TerrainHeightMap::ford_water_level_at(float world_x, float world_z) const
   return entry->water_y;
 }
 
-auto TerrainHeightMap::ford_water_depth_at(float world_x, float world_z) const -> float {
+auto TerrainHeightMap::ford_water_depth_at(float world_x,
+                                           float world_z) const -> float {
   const FordCell* entry = ford_entry_at(world_x, world_z);
   if (entry == nullptr) {
     return 0.0F;

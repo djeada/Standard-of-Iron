@@ -75,6 +75,9 @@ struct LinearElement {
 
 inline constexpr float k_min_bridge_height = 0.1F;
 inline constexpr float k_min_bridge_width = 8.0F;
+// A ford's width is how far it runs along the river (game: "length").
+inline constexpr float k_default_ford_width = 14.0F;
+inline constexpr float k_default_ford_stroke = 6.0F;
 
 [[nodiscard]] auto
 compute_min_bridge_width(const QVector2D& bridge_start,
@@ -330,6 +333,7 @@ private:
   void parse_rivers_array(const QJsonArray& arr);
   void parse_roads_array(const QJsonArray& arr);
   void parse_bridges_array(const QJsonArray& arr);
+  void parse_fords_array(const QJsonArray& arr);
   void parse_spawns_array(const QJsonArray& arr);
   void parse_undead_zones_array(const QJsonArray& arr);
   void parse_fog_zones_array(const QJsonArray& arr);
@@ -343,6 +347,7 @@ private:
   [[nodiscard]] QJsonArray rivers_to_json() const;
   [[nodiscard]] QJsonArray roads_to_json() const;
   [[nodiscard]] QJsonArray bridges_to_json() const;
+  [[nodiscard]] QJsonArray fords_to_json() const;
   [[nodiscard]] QJsonArray structures_to_json() const;
   [[nodiscard]] QJsonObject build_root_json() const;
   [[nodiscard]] QJsonObject troop_to_spawn_json(const TroopSpawnElement& elem) const;

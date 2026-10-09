@@ -6,6 +6,7 @@
 
 #include "animation/attack_pose_manifest.h"
 #include "animation/death_pose_manifest.h"
+#include "animation/hold_pose_manifest.h"
 #include "animation/melee_swing_manifest.h"
 #include "animation/reaction_pose_manifest.h"
 #include "animation/rig/humanoid_proportions.h"
@@ -72,6 +73,8 @@ public:
   void channel_spell_idle();
   void carry_stave();
   void carry_resource_load();
+  // Arms raised, weapon and shield held clear of the water of a ford.
+  void wade_arms_raised(Animation::HumanoidHeldPoseKind kind);
   void brace_spear_for_hold();
   void hold_bow_ready();
   void rest_bow_idle(float cycle_phase);

@@ -79,6 +79,7 @@ enum class BakerHoldType : std::uint8_t {
   Spear,
   Bow,
   ResourceCarry,
+  Wade,
   TestudoFront,
   TestudoTop,
   TestudoLeft,
@@ -121,6 +122,7 @@ defensive_shield_pose(BakerHoldType type) noexcept -> Animation::ShieldFormation
   case BakerHoldType::Spear:
   case BakerHoldType::Bow:
   case BakerHoldType::ResourceCarry:
+  case BakerHoldType::Wade:
     break;
   }
   return Animation::ShieldFormationPose::RomanFront;
@@ -1455,6 +1457,19 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      48.0F,
      1.0F,
      false},
+    {"wade",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::Wade,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     32U,
+     24.0F,
+     Animation::k_humanoid_wade_cycle_time,
+     true},
 }};
 
 struct HumanoidSocketSpec {
@@ -2123,6 +2138,15 @@ void bake_hold_pose(BakeProfile profile,
     ctrl.carry_resource_load();
     return;
   }
+  if (hold_type == BakerHoldType::Wade) {
+    ctrl.wade_arms_raised(profile == BakeProfile::SwordReady ||
+                                  profile == BakeProfile::Skeleton
+                              ? Animation::HumanoidHeldPoseKind::WadeSwordShield
+                          : profile == BakeProfile::SpearReady
+                              ? Animation::HumanoidHeldPoseKind::WadeSpear
+                              : Animation::HumanoidHeldPoseKind::WadeHandsHigh);
+    return;
+  }
   if (kneels) {
     ctrl.kneel(kneel_depth);
   }
@@ -2758,6 +2782,7 @@ void bake_humanoid_clip_frame(BakeProfile profile,
       clip.attack_type == BakerAttackType::Sling ||
       clip.attack_type == BakerAttackType::Javelin ||
       clip.hold_type == BakerHoldType::Spear || clip.hold_type == BakerHoldType::Bow ||
+      clip.hold_type == BakerHoldType::Wade ||
       clip.riding_type == BakerRidingType::SwordStrike ||
       clip.riding_type == BakerRidingType::SpearThrust) {
     Render::Humanoid::rebuild_humanoid_frames(pose, QVector3D(1.0F, 1.0F, 1.0F), 1.0F);

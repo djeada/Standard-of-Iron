@@ -187,7 +187,8 @@ auto calculate_tactical_damage_multiplier(Engine::Core::Entity* attacker,
   auto const* attacker_registry = attacker->registry();
   auto const* attacker_wading =
       attacker_registry != nullptr
-          ? attacker_registry->try_get<Engine::Core::WadingComponent>(attacker->get_id())
+          ? attacker_registry->try_get<Engine::Core::WadingComponent>(
+                attacker->get_id())
           : nullptr;
   auto const* target_wading =
       target_registry != nullptr

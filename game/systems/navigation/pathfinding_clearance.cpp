@@ -77,8 +77,8 @@ auto Pathfinding::wade_step_penalty(const Game::Map::FordProfile* ford)
   float const speed = std::clamp(ford->speed, 0.05F, 1.0F);
   float const slowdown =
       static_cast<float>(k_straight_step_cost) * ((1.0F / speed) - 1.0F);
-  return static_cast<std::uint8_t>(std::clamp(
-      std::lround(slowdown) + k_wade_exposure_penalty, 0L, 250L));
+  return static_cast<std::uint8_t>(
+      std::clamp(std::lround(slowdown) + k_wade_exposure_penalty, 0L, 250L));
 }
 
 auto Pathfinding::wade_penalty(int index) const -> int {
