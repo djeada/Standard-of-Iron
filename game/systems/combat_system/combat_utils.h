@@ -134,6 +134,8 @@ void send_guard_home(Engine::Core::World& world,
 
 [[nodiscard]] auto in_rts_melee_lock(const Engine::Core::Entity* entity) -> bool;
 
+[[nodiscard]] auto runs_an_open_lane(const Engine::Core::Entity* entity) -> bool;
+
 auto combat_radius(Engine::Core::Entity* entity) -> float;
 
 auto is_in_range(Engine::Core::Entity* attacker,

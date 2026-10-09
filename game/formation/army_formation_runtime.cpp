@@ -143,6 +143,13 @@ auto ArmyFormationRuntime::give_ground_velocity(const Engine::Core::Entity& enti
                               : Manoeuvre::give_ground_velocity(*formation, entity);
 }
 
+auto ArmyFormationRuntime::holds_for_manoeuvre(const Engine::Core::Entity& entity)
+    -> bool {
+  const auto* formation = formation_of(entity);
+  return formation != nullptr &&
+         Manoeuvre::holds_for_manoeuvre(*formation, entity.get_id());
+}
+
 auto ArmyFormationRuntime::move_speed_multiplier(const Engine::Core::Entity& entity)
     -> float {
   const auto* formation = formation_of(entity);

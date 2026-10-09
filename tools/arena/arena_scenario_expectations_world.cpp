@@ -1,4 +1,5 @@
 #include "arena_scenario_internal.h"
+#include "game/formation/army_formation_registry.h"
 
 namespace Arena {
 
@@ -42,6 +43,19 @@ void ArenaScenarioRunner::Impl::check_movement_expectation(
                 QStringLiteral("%1 never engaged a hostile on its own initiative "
                                "(passive: %2)")
                     .arg(expectation.group, passive.join(QStringLiteral(", "))));
+    }
+    break;
+  }
+  case ArenaExpectationKind::BattleOrderManoeuvreObserved: {
+    auto const key = expectation.group + QLatin1Char('/') + expectation.counter_key;
+    float const peak = battle_order_peaks.value(key, 0.0F);
+    if (peak + 1.0e-4F < expectation.threshold) {
+      add_issue(QStringLiteral("battle_order_manoeuvre_missing"),
+                QStringLiteral("%1 reached %2 = %3, expected at least %4")
+                    .arg(expectation.group,
+                         expectation.counter_key,
+                         QString::number(peak, 'f', 2),
+                         QString::number(expectation.threshold, 'f', 2)));
     }
     break;
   }
@@ -786,6 +800,41 @@ void ArenaScenarioRunner::Impl::check_world_expectation(
   default:
     break;
   }
+}
+
+void ArenaScenarioRunner::Impl::observe_battle_order(const ArenaExpectation& expectation) {
+  auto const key = expectation.group + QLatin1Char('/') + expectation.counter_key;
+  float value = battle_order_peaks.value(key, 0.0F);
+  if (expectation.counter_key == QLatin1String("elephant_lane_runs")) {
+    for (auto entity_id : ids(expectation.group)) {
+      const auto* elephant = world.try_get<Engine::Core::ElephantComponent>(entity_id);
+      if (elephant != nullptr && elephant->lane_run_out_seconds > 0.0F) {
+        lane_runners.insert(entity_id);
+      }
+    }
+    int runners = 0;
+    for (auto entity_id : ids(expectation.group)) {
+      runners += lane_runners.contains(entity_id) ? 1 : 0;
+    }
+    battle_order_peaks.insert(key, std::max(value, static_cast<float>(runners)));
+    return;
+  }
+  auto& registry = Game::Formation::ArmyFormationRegistry::for_world(world);
+  for (auto entity_id : ids(expectation.group)) {
+    const auto* formation = registry.find(registry.group_of(entity_id));
+    if (formation == nullptr) {
+      continue;
+    }
+    auto const& state = formation->manoeuvre;
+    if (expectation.counter_key == QLatin1String("centre_yield")) {
+      value = std::max(value, state.centre_yield);
+    } else if (expectation.counter_key == QLatin1String("wing_wheel")) {
+      value = std::max(value, state.wing_wheel);
+    } else if (expectation.counter_key == QLatin1String("lane_shift")) {
+      value = std::max(value, state.lane_shift);
+    }
+  }
+  battle_order_peaks.insert(key, value);
 }
 
 } // namespace Arena

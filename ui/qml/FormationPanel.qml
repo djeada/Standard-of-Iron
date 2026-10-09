@@ -122,6 +122,12 @@ Item {
             return "##...##" + "#.....#" + ".#####." + ".#####.";
         case "siege_escort":
             return "#######" + ".#####." + "..@@@.." + ".......";
+        case "triplex_acies":
+            return "#.#.#.#" + ".#.#.#." + "#.#.#.#" + ".......";
+        case "convex_crescent":
+            return "..###.." + ".#####." + "#.....#" + "#.....#";
+        case "elephant_screen":
+            return "@.@.@.@" + "......." + "#######" + ".#####.";
         }
         return "";
     }
@@ -142,6 +148,12 @@ Item {
             return qsTr("Wide flanks that close around a target. Needs cavalry.");
         case "siege_escort":
             return qsTr("Engines protected behind infantry. Needs a siege engine.");
+        case "triplex_acies":
+            return qsTr("Three lines of maniples with open lanes: principes cover the gaps of the hastati, triarii stand at the rear. Against elephants the lanes open straight through.");
+        case "convex_crescent":
+            return qsTr("The centre bows toward the enemy and gives ground under pressure while the wings hold, then the wings wheel in on the enemy's flanks.");
+        case "elephant_screen":
+            return qsTr("War elephants spread out ahead of the main line. Needs elephants.");
         }
         return "";
     }
@@ -304,7 +316,8 @@ Item {
                                 anchors.top: parent.top
                                 anchors.topMargin: Design.Metrics.space2
                                 opacity: choice.available ? 1 : 0.5
-                                text: String(index + 1)
+                                text: String((index + 1) % 10)
+                                visible: index < 10
                             }
 
                             MouseArea {

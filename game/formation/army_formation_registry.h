@@ -89,6 +89,9 @@ public:
   [[nodiscard]] static auto
   give_ground_velocity(const Engine::Core::Entity& entity) -> QVector3D;
 
+  [[nodiscard]] static auto
+  holds_for_manoeuvre(const Engine::Core::Entity& entity) -> bool;
+
   static void begin_move(Engine::Core::World& world,
                          FormationGroupID id,
                          const QVector3D& destination,

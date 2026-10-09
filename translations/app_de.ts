@@ -3389,6 +3389,38 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <source>Arrived</source>
         <translation>Angekommen</translation>
     </message>
+    <message>
+        <source>Triplex Acies</source>
+        <translation>Triplex Acies</translation>
+    </message>
+    <message>
+        <source>Convex Crescent</source>
+        <translation>Konvexer Halbmond</translation>
+    </message>
+    <message>
+        <source>Elephant Screen</source>
+        <translation>Elefantenschirm</translation>
+    </message>
+    <message>
+        <source>Requires infantry to form the maniples.</source>
+        <translation>Benötigt Infanterie für die Manipel.</translation>
+    </message>
+    <message>
+        <source>Requires infantry to form the crescent.</source>
+        <translation>Benötigt Infanterie für den Halbmond.</translation>
+    </message>
+    <message>
+        <source>Requires war elephants in the selection.</source>
+        <translation>Benötigt Kriegselefanten in der Auswahl.</translation>
+    </message>
+    <message>
+        <source>%1 does not fight in this order.</source>
+        <translation>%1 kämpft nicht in dieser Ordnung.</translation>
+    </message>
+    <message>
+        <source>This battle order needs at least three units.</source>
+        <translation>Diese Schlachtordnung braucht mindestens drei Einheiten.</translation>
+    </message>
 </context>
 <context>
     <name>FormationPanel</name>
@@ -3695,6 +3727,18 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     <message>
         <source>Facing (auto)</source>
         <translation>Blickrichtung (auto)</translation>
+    </message>
+    <message>
+        <source>Three lines of maniples with open lanes: principes cover the gaps of the hastati, triarii stand at the rear. Against elephants the lanes open straight through.</source>
+        <translation>Drei Treffen aus Manipeln mit offenen Gassen: Die Principes decken die Lücken der Hastati, die Triarier stehen hinten. Gegen Elefanten öffnen sich die Gassen gerade durch.</translation>
+    </message>
+    <message>
+        <source>The centre bows toward the enemy and gives ground under pressure while the wings hold, then the wings wheel in on the enemy&apos;s flanks.</source>
+        <translation>Die Mitte wölbt sich dem Feind entgegen und weicht unter Druck zurück, während die Flügel halten; dann schwenken die Flügel auf die Flanken des Feindes ein.</translation>
+    </message>
+    <message>
+        <source>War elephants spread out ahead of the main line. Needs elephants.</source>
+        <translation>Kriegselefanten weit verteilt vor der Hauptlinie. Benötigt Elefanten.</translation>
     </message>
 </context>
 <context>

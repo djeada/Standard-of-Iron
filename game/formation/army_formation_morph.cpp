@@ -36,6 +36,10 @@ auto kind_of(Engine::Core::World& world, EntityID id) -> std::uint64_t {
       unit != nullptr ? static_cast<std::uint64_t>(unit->spawn_type) : 0U;
   kind = (kind << 1U) |
          ((movement != nullptr && !movement->get_can_enter_forest()) ? 1U : 0U);
+  // Contingents of different nations keep their own places in the shape.
+  if (unit != nullptr) {
+    kind = (kind << 8U) | static_cast<std::uint64_t>(unit->nation_id);
+  }
   return kind;
 }
 

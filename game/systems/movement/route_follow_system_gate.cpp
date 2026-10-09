@@ -126,6 +126,12 @@ auto formation_navigation_speed(const Engine::Core::Entity& entity,
   if (!std::isfinite(speed) || speed <= 0.0F) {
     speed = max_navigation_speed(unit, nullptr);
   }
+  // An elephant charging down an open lane runs at its charge pace.
+  if (const auto* elephant = entity.get_component<Engine::Core::ElephantComponent>();
+      elephant != nullptr &&
+      (elephant->lane_running || elephant->lane_run_out_seconds > 0.0F)) {
+    speed *= elephant->charge_speed_multiplier;
+  }
   if (stamina != nullptr && stamina->is_running) {
     speed *= Engine::Core::StaminaComponent::k_run_speed_multiplier;
   }

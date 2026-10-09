@@ -68,6 +68,11 @@ auto troop_kind_key(const ArmyFormationMember& member) -> std::uint64_t {
   hasher.mix(static_cast<std::uint64_t>(member.troop_type));
   hasher.mix(static_cast<std::uint64_t>(member.individuals));
   hasher.mix(static_cast<std::uint64_t>(member.heavy));
+  // An allied contingent keeps its own place (the crescent's centre), so it
+  // never trades slots with the army's own troops of the same type.
+  if (member.allied) {
+    hasher.mix(0xa111edULL);
+  }
   return hasher.value();
 }
 

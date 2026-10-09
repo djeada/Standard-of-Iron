@@ -186,9 +186,20 @@ enum class ArmyFormationIntent {
   Defensive,
   Assault,
   Encirclement,
-  SiegeEscort
+  SiegeEscort,
+  TriplexAcies,
+  ConvexCrescent,
+  ElephantScreen
 };
 ```
+
+The last three are the historical **battle orders** (`is_battle_order_intent`),
+named `triplex_acies`, `convex_crescent` and `elephant_screen` everywhere a
+string is used (saves, commands, film/battle scripts, AI doctrine data). Only
+a doctrine with its own template offers one: Rome the triplex acies, Carthage
+(and with it the allied Gauls and Iberians) the crescent and the elephant
+screen, the neutral composite doctrine all three. See
+[Battle orders](#battle-orders).
 
 Intent describes the tactical deployment requested by the player or AI.
 
@@ -404,10 +415,88 @@ gaps (1.6 m between troops, 2 m between ranks, scaled by the spacing option).
   rows follow the pictogram, the frontage and depth options, and the template's
   `max_frontage` (counting the wings) and `max_depth` (a column too deep gains a
   file).
+- The battle orders own their geometry entirely
+  (`formation_battle_orders.cpp`); see [Battle orders](#battle-orders).
 - Troop sizes are measured, not estimated: `layout_reach_for_files()` returns the
   real soldier extents for every file count a template may ask for, so a
   reshaped troop (a column's deep blocks, riders who keep their own shape) is
   planned at the size it will actually have.
+
+## Battle orders
+
+The three historical orders are laid out by `place_battle_order`, which the
+silhouette pass hands the whole slot list. Every slot gets a `BattleBand`
+(serialized as `band`): `screen`, `hastati`, `principes`, `triarii`,
+`crescent_centre`, `crescent_wing` or `elephants` (`none` otherwise).
+
+- **Triplex acies.** Infantry is split into three lines of maniples: about a
+  fifth (at least every spearman, at most a third) as triarii at the rear, the
+  rest into hastati in front and one fewer principes between, so the principes
+  stand exactly on the hastati gaps (the quincunx) and the triarii on the
+  hastati files again. Neighbouring maniples of one line are separated by an
+  open lane at least as wide as a maniple and never under
+  `k_min_maniple_lane` (6 m), which a war elephant passes without trampling
+  either side; a dragged frontage only widens the lanes. Skirmishers and
+  archers (velites) stand a screen ahead, cavalry on both wings, everything
+  else behind the triarii. The depth option deepens the maniples themselves
+  (`depth_scale` divides their files aspect), which is how a "deep" consular
+  army at Cannae is ordered. The template marches with `MaintainFormation`, so
+  the frame morph carries the lanes unchanged while the army advances.
+- **Convex crescent.** When the infantry mixes playable and allied
+  (non-playable) nations, the allies (Gauls, Iberians) form the centre and the
+  home infantry (the Libyans) the wings; otherwise the middle half of the line
+  is the centre. The centre bows forward on an arc
+  (`k_crescent_bulge_share` of its half width, at least two troop depths), its
+  ends turned outward; the wings stand back, level with the ends, two deep;
+  cavalry beyond them. Each centre slot records `yield_depth`, how far it goes
+  back when the centre has fully yielded (two bulges: the mirrored concave
+  arc).
+- **Elephant screen.** The elephants stand in a widely spaced row (gaps of at
+  least 8 m) well ahead of the rest, which forms its faction battle line.
+
+### Manoeuvres (`army_formation_manoeuvre.cpp`)
+
+A battle order also behaves. Its state is `ArmyFormation::manoeuvre`
+(serialized); every cohesion refresh (0.35 s) `Manoeuvre::update` advances it
+and moves the slots by a per-slot `manoeuvre_offset`/`manoeuvre_facing` laid
+over the planned place. Replans keep the state and re-apply the offsets
+(`Manoeuvre::reapply` after `apply_plan`); a new order (`begin_move`, a new
+intent or a new group) clears it. While a frame morph runs the manoeuvre waits.
+Members that are not fighting walk with their slots through the ordinary
+dispatch (`moves_pending` once the slots have drifted 0.75 m).
+
+- **The yielding centre.** While at least a quarter of the crescent's centre is
+  locked in melee, `centre_yield` climbs toward 1 over about 40 s, faster when
+  the centre is outnumbered (enemies locked on it per centre troop), slower
+  when it holds its own; it never comes back. Centre slots slide back by
+  `yield_depth × centre_yield`, so the convex line turns concave. A centre
+  troop locked in melee cannot walk, so the melee gate steps it back toward its
+  slot at up to 0.55 m/s (`give_ground_velocity`), and an enemy locked onto it
+  presses after it at the same pace: the fight moves back without breaking the
+  lock (`MovementSystem::Gates::give_ground_in_melee`).
+- **The wings hold, then wheel.** Until the wheel is ordered, a wing troop does
+  not go looking for a fight (`holds_for_manoeuvre`; it still answers blows).
+  At `centre_yield` 0.7 the wheel is ordered: over 10 s each wing swings 90°
+  about its inner front corner to face inward, onto the flanks of whatever has
+  pushed into the pocket, and engages freely.
+- **Lanes against elephants.** When an enemy elephant comes within 60 m of a
+  triplex acies, it opens its lanes the way Scipio did at Zama: over 5 s the
+  principes step half a lane sideways to stand behind the hastati, so every
+  lane runs straight through all three lines, and the screen falls back
+  through them to behind the triarii.
+
+### Elephants run the lanes (`elephant_lane_run.cpp`)
+
+An elephant whose target stands in a triplex acies, within 35 m of its front,
+looks for a lane of the front line that runs clear through every line behind
+it (wide enough for its body plus a margin). It steers for the mouth of the
+nearest one, runs down it at its charge pace (`charge_speed_multiplier`) and
+out the back, keeps running for 8 s, and only then turns back to fight. While
+it runs a lane, melee troops do not step into its path (`runs_an_open_lane` in
+`may_engage`; missile troops still shoot it), and its trample reaches nobody,
+because the lane keeps every maniple centre outside the trample radius. With
+the lanes still in quincunx no straight lane exists and the beast charges a
+maniple as before.
 
 ## Slot assignment for new orders
 
@@ -881,13 +970,17 @@ Formation behavior is covered at several levels.
 | Terrain/navigation fitting       | `tests/formation/formation_terrain_navigation_test.cpp` |
 | Cohesion and combat multiplier   | `tests/formation/formation_cohesion_test.cpp`           |
 | Planner split/cache behavior     | `tests/formation/formation_planner_cache_test.cpp`      |
+| Battle order geometry            | `tests/formation/battle_order_layout_test.cpp`          |
+| Crescent yield, lanes, elephants | `tests/headless/battle_order_behaviour_test.cpp`        |
 | Defensive unit layouts           | `tests/systems/defensive_unit_layout_test.cpp`          |
 | Planner UI                       | `tests/ui/qml/tst_formation_panel.qml`                  |
 | Status badge                     | `tests/ui/qml/tst_formation_status_badge.qml`           |
 | Input/placement behavior         | `tests/core/input_command_handler_test.cpp`             |
 | Key binding                      | `tests/ui/input_bindings_test.cpp`                      |
 
-Arena scenarios prefixed with `unit_layout_` and `army_formation_` exercise the same runtime visually with real rendering and scenario commands.
+Arena scenarios prefixed with `unit_layout_` and `army_formation_` exercise the same runtime visually with real rendering and scenario commands. `battle_order_cannae` and `battle_order_zama` fight the battle orders out
+(`BattleOrderManoeuvreObserved` checks the yield, the wheel, the lanes and the
+elephants' lane runs).
 
 # Debugging by layer
 
@@ -957,6 +1050,9 @@ The current formation system depends on these invariants:
 | Unit layout types/system  | `game/formation/unit_layout.*`                         |
 | Formation types/options   | `game/formation/army_formation_types.h`                |
 | Army planner              | `game/formation/army_formation_planner.*`              |
+| Battle order layouts      | `game/formation/formation_battle_orders.*`             |
+| Battle order manoeuvres   | `game/formation/army_formation_manoeuvre.*`            |
+| Elephant lane runs        | `game/systems/combat_system/elephant_lane_run.*`       |
 | Registry/runtime/cohesion | `game/formation/army_formation_registry.*`             |
 | Formation service         | `game/formation/army_formation_service.*`              |
 | Formation data loader     | `game/formation/formation_data_loader.*`               |

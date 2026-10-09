@@ -87,6 +87,8 @@ declares in its own `formation` block:
 ```
 
 Intents are `faction_default`, `line`, `column`, `defensive`, `assault`,
-`encirclement`, `siege_escort`. An intent may declare `requires_roles` plus a
+`encirclement`, `siege_escort`, and the historical battle orders
+`triplex_acies` (Rome), `convex_crescent` and `elephant_screen` (Carthage); a
+doctrine without a template for a battle order does not offer it. An intent may declare `requires_roles` plus a
 `requirement_hint`; the UI shows that hint as the reason the preset is greyed
 out for the current selection.

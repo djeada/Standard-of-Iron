@@ -3389,6 +3389,38 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>Arrived</source>
         <translation>وصل</translation>
     </message>
+    <message>
+        <source>Triplex Acies</source>
+        <translation>التشكيل الثلاثي</translation>
+    </message>
+    <message>
+        <source>Convex Crescent</source>
+        <translation>الهلال المحدّب</translation>
+    </message>
+    <message>
+        <source>Elephant Screen</source>
+        <translation>ستار الفيلة</translation>
+    </message>
+    <message>
+        <source>Requires infantry to form the maniples.</source>
+        <translation>يتطلب مشاة لتشكيل الكتائب.</translation>
+    </message>
+    <message>
+        <source>Requires infantry to form the crescent.</source>
+        <translation>يتطلب مشاة لتشكيل الهلال.</translation>
+    </message>
+    <message>
+        <source>Requires war elephants in the selection.</source>
+        <translation>يتطلب فيلة حرب ضمن التحديد.</translation>
+    </message>
+    <message>
+        <source>%1 does not fight in this order.</source>
+        <translation>%1 لا يقاتل بهذا التشكيل.</translation>
+    </message>
+    <message>
+        <source>This battle order needs at least three units.</source>
+        <translation>يحتاج تشكيل المعركة هذا إلى ثلاث وحدات على الأقل.</translation>
+    </message>
 </context>
 <context>
     <name>FormationPanel</name>
@@ -3695,6 +3727,18 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>Facing (auto)</source>
         <translation>الاتجاه (تلقائي)</translation>
+    </message>
+    <message>
+        <source>Three lines of maniples with open lanes: principes cover the gaps of the hastati, triarii stand at the rear. Against elephants the lanes open straight through.</source>
+        <translation>ثلاثة صفوف من الكتائب بينها ممرات مفتوحة: يغطي الصف الثاني فجوات الصف الأول ويقف المخضرمون في المؤخرة. أمام الفيلة تنفتح الممرات على استقامتها.</translation>
+    </message>
+    <message>
+        <source>The centre bows toward the enemy and gives ground under pressure while the wings hold, then the wings wheel in on the enemy&apos;s flanks.</source>
+        <translation>يتقوّس القلب نحو العدو ويتراجع تحت الضغط بينما تثبت الأجنحة، ثم تلتف الأجنحة على جانبي العدو.</translation>
+    </message>
+    <message>
+        <source>War elephants spread out ahead of the main line. Needs elephants.</source>
+        <translation>فيلة حرب منتشرة أمام الخط الرئيسي. يتطلب فيلة.</translation>
     </message>
 </context>
 <context>

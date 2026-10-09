@@ -53,6 +53,11 @@ void reapply(ArmyFormation& formation);
                                         const Engine::Core::Entity& entity)
     -> QVector3D;
 
+// True for a crescent wing troop that is holding its ground until the wing
+// wheels: it answers blows but does not go looking for a fight.
+[[nodiscard]] auto holds_for_manoeuvre(const ArmyFormation& formation,
+                                       EntityID entity) -> bool;
+
 // Lane pitch (distance between neighbouring maniple centres of one line) of a
 // triplex acies, measured from its hastati; 0 when there are no lanes.
 [[nodiscard]] auto lane_pitch(const ArmyFormation& formation) -> float;

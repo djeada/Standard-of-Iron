@@ -401,6 +401,12 @@ enum class ArenaExpectationKind : std::uint8_t {
   NoAutoEngagementObserved,
 
   EngagementReleasedByOrder,
+
+  // A battle order's manoeuvre reached `threshold` on the metric named by
+  // `counter_key` for the formation holding `group`: "centre_yield",
+  // "wing_wheel", "lane_shift", or "elephant_lane_runs" (the number of the
+  // group's elephants that ran a lane out the back of an enemy line).
+  BattleOrderManoeuvreObserved,
 };
 
 struct ArenaExpectation {

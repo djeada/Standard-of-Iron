@@ -3389,6 +3389,38 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
         <source>Encirclement needs at least three units.</source>
         <translation>Kuşatma en az üç birim ister.</translation>
     </message>
+    <message>
+        <source>Triplex Acies</source>
+        <translation>Üçlü saf</translation>
+    </message>
+    <message>
+        <source>Convex Crescent</source>
+        <translation>Dışbükey hilal</translation>
+    </message>
+    <message>
+        <source>Elephant Screen</source>
+        <translation>Fil perdesi</translation>
+    </message>
+    <message>
+        <source>Requires infantry to form the maniples.</source>
+        <translation>Manipülleri kurmak için piyade gerekir.</translation>
+    </message>
+    <message>
+        <source>Requires infantry to form the crescent.</source>
+        <translation>Hilali kurmak için piyade gerekir.</translation>
+    </message>
+    <message>
+        <source>Requires war elephants in the selection.</source>
+        <translation>Seçimde savaş fili gerekir.</translation>
+    </message>
+    <message>
+        <source>%1 does not fight in this order.</source>
+        <translation>%1 bu düzende savaşmaz.</translation>
+    </message>
+    <message>
+        <source>This battle order needs at least three units.</source>
+        <translation>Bu savaş düzeni en az üç birlik gerektirir.</translation>
+    </message>
 </context>
 <context>
     <name>FormationPanel</name>
@@ -3695,6 +3727,18 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     <message>
         <source>Reset to faction default</source>
         <translation>Taraf varsayılanına sıfırla</translation>
+    </message>
+    <message>
+        <source>Three lines of maniples with open lanes: principes cover the gaps of the hastati, triarii stand at the rear. Against elephants the lanes open straight through.</source>
+        <translation>Aralarında açık koridorlar olan üç sıra manipül: principes hastati boşluklarını kapatır, triarii arkada durur. Fillere karşı koridorlar boydan boya açılır.</translation>
+    </message>
+    <message>
+        <source>The centre bows toward the enemy and gives ground under pressure while the wings hold, then the wings wheel in on the enemy&apos;s flanks.</source>
+        <translation>Merkez düşmana doğru kavis yapar ve baskı altında geri çekilirken kanatlar yerini korur; ardından kanatlar düşmanın yanlarına döner.</translation>
+    </message>
+    <message>
+        <source>War elephants spread out ahead of the main line. Needs elephants.</source>
+        <translation>Ana hattın önüne dağıtılmış savaş filleri. Fil gerekir.</translation>
     </message>
 </context>
 <context>

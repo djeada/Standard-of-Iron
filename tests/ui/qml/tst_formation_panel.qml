@@ -12,7 +12,7 @@ TestCase {
     height: 700
     visible: true
 
-    readonly property var all_intents: ["faction_default", "line", "column", "defensive", "assault", "encirclement", "siege_escort"]
+    readonly property var all_intents: ["faction_default", "line", "column", "defensive", "assault", "encirclement", "siege_escort", "triplex_acies", "convex_crescent", "elephant_screen"]
 
     function makePanel(props) {
         return panelComponent.createObject(testCase, props);

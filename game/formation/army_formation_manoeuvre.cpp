@@ -32,7 +32,11 @@ struct WheelPivots {
 struct Frame {
   WheelPivots pivots;
   float pitch{0.0F};
+  bool has_rear{false};
+  float rear{0.0F};
 };
+
+constexpr float k_screen_fallback_gap = 4.0F;
 
 auto wheel_pivots(const ArmyFormation& formation) -> WheelPivots {
   WheelPivots pivots;
@@ -70,6 +74,14 @@ auto frame_of(const ArmyFormation& formation) -> Frame {
   }
   if (formation.intent == ArmyFormationIntent::TriplexAcies) {
     frame.pitch = lane_pitch(formation);
+    for (const auto& slot : formation.slot_list) {
+      if (slot.band == BattleBand::Hastati || slot.band == BattleBand::Principes ||
+          slot.band == BattleBand::Triarii) {
+        float const rear = slot.local_offset.z() - slot.half_depth;
+        frame.rear = frame.has_rear ? std::min(frame.rear, rear) : rear;
+        frame.has_rear = true;
+      }
+    }
   }
   return frame;
 }
@@ -103,6 +115,13 @@ auto manoeuvre_with(const ArmyFormation& formation,
   }
   case BattleBand::Principes:
     out.offset = QVector3D(frame.pitch * 0.5F * state.lane_shift, 0.0F, 0.0F);
+    break;
+  case BattleBand::Screen:
+    // The skirmishers fall back through the lanes, out of the elephants' way.
+    if (formation.intent == ArmyFormationIntent::TriplexAcies && frame.has_rear) {
+      float const behind = frame.rear - k_screen_fallback_gap - slot.half_depth;
+      out.offset = QVector3D(0.0F, 0.0F, (behind - slot.local_offset.z()) * state.lane_shift);
+    }
     break;
   default:
     break;
@@ -293,6 +312,15 @@ void reapply(ArmyFormation& formation) {
     slot.manoeuvre_facing = 0.0F;
   }
   static_cast<void>(apply_offsets(formation));
+}
+
+auto holds_for_manoeuvre(const ArmyFormation& formation, EntityID entity) -> bool {
+  if (formation.intent != ArmyFormationIntent::ConvexCrescent ||
+      formation.manoeuvre.wheel_ordered) {
+    return false;
+  }
+  const auto* slot = formation.find_slot_for(entity);
+  return slot != nullptr && slot->band == BattleBand::CrescentWing;
 }
 
 auto give_ground_velocity(const ArmyFormation& formation,
