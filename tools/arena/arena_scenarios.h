@@ -27,6 +27,7 @@ inline constexpr char k_catapult_ammunition_retarget_id[] =
     "catapult_ammunition_retarget";
 inline constexpr char k_mounted_sword_duel_id[] = "mounted_sword_duel";
 inline constexpr char k_mounted_spear_duel_id[] = "mounted_spear_duel";
+inline constexpr char k_mounted_spear_grip_id[] = "mounted_spear_grip";
 inline constexpr char k_mounted_bow_exchange_id[] = "mounted_bow_exchange";
 inline constexpr char k_infantry_locomotion_matrix_id[] = "infantry_locomotion_matrix";
 inline constexpr char k_mounted_locomotion_matrix_id[] = "mounted_locomotion_matrix";

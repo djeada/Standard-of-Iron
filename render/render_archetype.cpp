@@ -141,6 +141,10 @@ void RenderArchetypeBuilder::set_max_distance(float max_distance) {
   m_archetype.lods[lod_index(m_active_lod)].max_distance = max_distance;
 }
 
+void RenderArchetypeBuilder::set_timber(bool timber) {
+  m_timber = timber;
+}
+
 void RenderArchetypeBuilder::add_mesh(Mesh* mesh,
                                       const QMatrix4x4& local_model,
                                       const QVector3D& color,
@@ -267,6 +271,7 @@ auto RenderArchetypeBuilder::build() && -> RenderArchetype {
 void RenderArchetypeBuilder::add_draw(RenderArchetypeDraw draw) {
   RenderArchetypeSlice& slice = m_archetype.lods[lod_index(m_active_lod)];
   expand_unit_bounds(slice.local_bounds, draw.local_model);
+  draw.timber = m_timber;
   slice.draws.push_back(std::move(draw));
 }
 

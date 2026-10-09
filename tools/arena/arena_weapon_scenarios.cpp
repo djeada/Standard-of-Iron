@@ -815,6 +815,40 @@ auto build_weapon_definitions() -> std::vector<ArenaScenarioDefinition> {
 
   {
     auto s = definition(
+        QString::fromLatin1(k_mounted_spear_grip_id),
+        QStringLiteral("Mounted Spear Grip"),
+        QStringLiteral("Close look at how a horse spearman holds the spear: one rider "
+                       "rests with it upright, the other thrusts at a dummy. The shaft "
+                       "must leave the right fist and clear the horse's neck."),
+        8.0F,
+        {7.5F, 26.0F, 70.0F});
+    auto resting = group(QStringLiteral("resting_rider"),
+                         Troop::HorseSpearman,
+                         1,
+                         1,
+                         {-2.4F, 0.0F, 0.0F},
+                         1);
+    resting.attacks_disabled = true;
+    auto striker = group(
+        QStringLiteral("striker"), Troop::HorseSpearman, 1, 1, {2.4F, 0.0F, -1.3F}, 1);
+    auto dummy =
+        group(QStringLiteral("dummy"), Troop::Spearman, 2, 1, {2.4F, 0.0F, 1.0F}, 1);
+    dummy.facing_degrees = 180.0F;
+    dummy.attacks_disabled = true;
+    dummy.health_override = dummy.max_health_override = 100000;
+    s.groups = {resting, striker, dummy};
+    s.steps = {
+        at(0.5F, Command::Attack, QStringLiteral("striker"), QStringLiteral("dummy"))};
+    s.expectations.push_back(expectation(Expect::AttackHasVisibleContact,
+                                         QStringLiteral("striker"),
+                                         QStringLiteral("dummy")));
+    s.expectations.push_back(
+        expectation(Expect::NoLimbOverextension, QStringLiteral("striker")));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
         QString::fromLatin1(k_mounted_bow_exchange_id),
         QStringLiteral("Mounted Bow Exchange"),
         QStringLiteral("Mounted bow raise, draw, release, and riding stability."),

@@ -12,9 +12,11 @@
 #include "animation/rig/humanoid_proportions.h"
 #include "render/horse/horse_motion.h"
 #include "render/horse/horse_renderer_base.h"
+#include "render/humanoid/runtime/grip_axis.h"
 #include "render/humanoid/runtime/humanoid_math.h"
 #include "render/humanoid/runtime/pose_controller.h"
 #include "render/humanoid/runtime/pose_primitives.h"
+#include "render/humanoid/runtime/spear_pose_utils.h"
 
 namespace Render::GL {
 
@@ -32,6 +34,19 @@ auto seat_relative(const MountedAttachmentFrame& mount,
 auto seat_relative(const MountedAttachmentFrame& mount,
                    Animation::MountedSeatOffset offset) -> QVector3D {
   return seat_relative(mount, offset.forward, offset.right, offset.up);
+}
+
+void aim_mounted_spear(HumanoidPose& pose,
+                       const MountedAttachmentFrame& mount,
+                       Animation::MountedSeatOffset direction) {
+  QVector3D const wanted = mount.seat_forward * direction.forward +
+                           mount.seat_right * direction.right +
+                           mount.seat_up * direction.up;
+  if (wanted.lengthSquared() < 1.0e-6F) {
+    return;
+  }
+  pose.grip_axis_r = Render::Humanoid::hand_axis_for_weapon_direction(
+      wanted.normalized(), resolve_spear_direction(AnimationInputs{}), true);
 }
 
 auto rein_anchor(const MountedAttachmentFrame& mount,
@@ -85,6 +100,8 @@ auto to_animation_spear_grip(SpearGrip grip) -> Animation::MountedSpearGuardGrip
     return Animation::MountedSpearGuardGrip::Couched;
   case SpearGrip::TWO_HANDED:
     return Animation::MountedSpearGuardGrip::TwoHanded;
+  case SpearGrip::UPRIGHT:
+    return Animation::MountedSpearGuardGrip::Upright;
   case SpearGrip::OVERHAND:
     break;
   }
@@ -284,6 +301,13 @@ void MountedPoseController::hold_spear_mounted(const MountedAttachmentFrame& mou
                                                SpearGrip grip_style) {
   mount_on_horse(mount);
   apply_spear_guard(mount, grip_style);
+}
+
+void MountedPoseController::grip_spear(const MountedAttachmentFrame& mount,
+                                       SpearGrip grip_style) {
+  apply_spear_guard(mount, grip_style);
+  enforce_arm_reach(Side::Left);
+  enforce_arm_reach(Side::Right);
 }
 
 void MountedPoseController::hold_bow_mounted(const MountedAttachmentFrame& mount) {
@@ -606,6 +630,7 @@ void MountedPoseController::apply_spear_thrust(const MountedAttachmentFrame& mou
 
   get_hand(Side::Right) = hand_r_target;
   get_hand(Side::Left) = hand_l_target;
+  aim_mounted_spear(m_pose, mount, sample.spear_direction);
 
   const QVector3D left_outward = compute_outward_dir(Side::Left);
   const QVector3D right_outward = compute_outward_dir(Side::Right);
@@ -641,6 +666,7 @@ void MountedPoseController::apply_spear_guard(const MountedAttachmentFrame& moun
 
   get_hand(Side::Right) = hand_r_target;
   get_hand(Side::Left) = hand_l_target;
+  aim_mounted_spear(m_pose, mount, sample.spear_direction);
 
   const QVector3D left_outward = compute_outward_dir(Side::Left);
   const QVector3D right_outward = compute_outward_dir(Side::Right);

@@ -19,7 +19,8 @@ struct MountedAttachmentFrame;
 enum class SpearGrip {
   OVERHAND,
   COUCHED,
-  TWO_HANDED
+  TWO_HANDED,
+  UPRIGHT
 };
 
 class MountedPoseController {
@@ -49,6 +50,7 @@ public:
                   float left_tension = 0.0F,
                   float right_tension = 0.0F);
   void hold_spear_mounted(const MountedAttachmentFrame& mount, SpearGrip grip_style);
+  void grip_spear(const MountedAttachmentFrame& mount, SpearGrip grip_style);
   void hold_bow_mounted(const MountedAttachmentFrame& mount);
 
   enum class MountedSeatPose {

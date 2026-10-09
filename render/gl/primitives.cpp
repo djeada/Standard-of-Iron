@@ -1022,6 +1022,24 @@ auto bake_tessellated_mesh(Mesh* mesh, const QMatrix4x4& model) -> Mesh* {
   return mesh;
 }
 
+auto unit_surface_shape(const Mesh* mesh) -> UnitSurfaceShape {
+  const UnitPrimitive* primitive = unit_primitive_of(mesh);
+  if (primitive == nullptr) {
+    return UnitSurfaceShape::Flat;
+  }
+  switch (primitive->kind) {
+  case UnitPrimitiveKind::Cylinder:
+  case UnitPrimitiveKind::TaperedCylinder:
+  case UnitPrimitiveKind::Capsule:
+    return UnitSurfaceShape::Round;
+  case UnitPrimitiveKind::Cone:
+    return UnitSurfaceShape::Pointed;
+  case UnitPrimitiveKind::Sphere:
+    return UnitSurfaceShape::Flat;
+  }
+  return UnitSurfaceShape::Flat;
+}
+
 auto get_orientation_arrow() -> Mesh* {
   return SharedGeometryCache::instance().get_or_build(
       geometry_key("gl/orientation_arrow"), create_orientation_arrow_mesh);

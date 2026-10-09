@@ -10,6 +10,7 @@
 #include "game/core/entity.h"
 #include "mounted_swordsman_pose.h"
 #include "render/creature/archetype_registry.h"
+#include "render/creature/pipeline/creature_asset.h"
 #include "render/equipment/equipment_registry.h"
 #include "render/equipment/horse_equipment_archetype.h"
 #include "render/equipment/humanoid_equipment_archetype.h"
@@ -125,6 +126,8 @@ void HorseSpearmanRendererBase::build_visual_spec() {
   spec.scaling = k_profile.as_pipeline_scaling();
   spec.archetype_id = resolve_humanoid_equipment_archetype(
       m_config.rider_debug_name, base_rider_id, handles);
+
+  spec.creature_asset_id = Render::Creature::Pipeline::k_humanoid_spear_asset;
 
   set_visual_spec(spec);
 

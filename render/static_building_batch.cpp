@@ -1,6 +1,8 @@
 #include "static_building_batch.h"
 
 #include <algorithm>
+#include <cmath>
+#include <cstdint>
 #include <limits>
 
 #include "draw_commands.h"
@@ -41,6 +43,59 @@ auto transform_normal(const QMatrix4x4& model, const QVector3D& normal) -> QVect
          handedness;
 }
 
+auto grain_member(const QMatrix4x4& local_model) -> float {
+  QVector3D const center = local_model.column(3).toVector3D();
+  std::uint32_t hash = 2166136261U;
+  for (int axis = 0; axis < 3; ++axis) {
+    hash ^= static_cast<std::uint32_t>(std::lround(center[axis] * 1000.0F));
+    hash *= 16777619U;
+  }
+  hash ^= hash >> 15U;
+  return static_cast<float>(hash % static_cast<std::uint32_t>(k_grain_member_count));
+}
+
+auto dominant_axis(const std::array<float, 3>& v) -> int {
+  int axis = 0;
+  for (int i = 1; i < 3; ++i) {
+    if (std::abs(v[i]) > std::abs(v[axis])) {
+      axis = i;
+    }
+  }
+  return axis;
+}
+
+auto grain_frame(const Vertex& vertex,
+                 UnitSurfaceShape shape,
+                 const std::array<float, 3>& scale,
+                 float member) -> std::array<float, 2> {
+  const auto& p = vertex.position;
+  const auto& n = vertex.normal;
+  const float turn = std::clamp(vertex.tex_coord[0], 0.0F, 1.0F);
+  int grain_axis = 1;
+  float across = 0.0F;
+  if (shape == UnitSurfaceShape::Pointed) {
+    across = n[1] < -0.9F ? k_grain_end_band - std::hypot(p[0], p[2])
+                          : k_grain_hewn_band - turn;
+  } else if (shape == UnitSurfaceShape::Round) {
+    across = std::abs(n[1]) > 0.9F ? k_grain_end_band - std::hypot(p[0], p[2])
+                                   : k_grain_round_band - turn;
+  } else {
+    grain_axis = dominant_axis(scale);
+    const int face_axis = dominant_axis(n);
+    if (face_axis == grain_axis) {
+      across = k_grain_end_band - 0.5F;
+    } else {
+      const int across_axis = 3 - grain_axis - face_axis;
+      across = (p[across_axis] + 1.0F) * scale[across_axis];
+    }
+  }
+  const float half_stride = k_grain_member_stride * 0.5F - 1.0F;
+  const float along =
+      std::clamp(p[grain_axis] * scale[grain_axis], -half_stride, half_stride);
+  return {std::clamp(across, k_grain_hewn_band - 1.0F, half_stride),
+          k_grain_frame_offset + member * k_grain_member_stride + along};
+}
+
 void append_part(MergedBuildingMesh& merged, const RenderArchetypeDraw& draw) {
   auto const base = static_cast<std::uint32_t>(merged.vertices.size());
   float const slot = draw.palette_slot < k_merged_building_palette_capacity
@@ -53,6 +108,13 @@ void append_part(MergedBuildingMesh& merged, const RenderArchetypeDraw& draw) {
                                                      unseen_surface_color(draw.color))),
       static_cast<float>(draw.material_id)};
   const Mesh* mesh = bake_tessellated_mesh(draw.mesh, draw.local_model);
+
+  bool const wood = draw.timber && draw.material_id % 10 == Render::k_material_wood;
+  UnitSurfaceShape const shape = unit_surface_shape(mesh);
+  std::array<float, 3> const scale{draw.local_model.column(0).toVector3D().length(),
+                                   draw.local_model.column(1).toVector3D().length(),
+                                   draw.local_model.column(2).toVector3D().length()};
+  float const member = grain_member(draw.local_model);
   for (const Vertex& vertex : mesh->get_vertices()) {
     QVector3D const position = draw.local_model.map(
         QVector3D(vertex.position[0], vertex.position[1], vertex.position[2]));
@@ -62,7 +124,8 @@ void append_part(MergedBuildingMesh& merged, const RenderArchetypeDraw& draw) {
     merged.vertices.push_back(MergedBuildingVertex{
         .position = {position.x(), position.y(), position.z()},
         .normal = {normal.x(), normal.y(), normal.z()},
-        .tex_coord = vertex.tex_coord,
+        .tex_coord =
+            wood ? grain_frame(vertex, shape, scale, member) : vertex.tex_coord,
         .color_alpha = {draw.color.x(), draw.color.y(), draw.color.z(), draw.alpha},
         .material = material,
     });

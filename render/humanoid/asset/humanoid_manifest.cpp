@@ -2571,6 +2571,22 @@ void bake_humanoid_clip_frame(BakeProfile profile,
       default:
         break;
       }
+
+      if (profile == BakeProfile::SpearReady) {
+        switch (clip.riding_type) {
+        case BakerRidingType::Idle:
+        case BakerRidingType::Reining:
+          ctrl.grip_spear(mount, Render::GL::SpearGrip::UPRIGHT);
+          grip_oriented_by_stance = true;
+          break;
+        case BakerRidingType::Charge:
+          ctrl.grip_spear(mount, Render::GL::SpearGrip::COUCHED);
+          grip_oriented_by_stance = true;
+          break;
+        default:
+          break;
+        }
+      }
     }
     if (clip.riding_type == BakerRidingType::Idle) {
 

@@ -68,7 +68,7 @@ void main() {
                      (1.0 - smoothstep(0.62, 0.80, tint_luma));
   color *= mix(vec3(1.0), v_instance_tint.rgb, plaster);
   color *= mix(1.0, v_instance_tint.a, terracotta);
-  color = soi_material_variation(color, v_world_pos, normal, soi_material);
+  color = soi_material_variation(color, v_world_pos, normal, soi_material, v_tex_coord);
   color = soi_apply_damage_soot(color, v_world_pos, soi_damage_tier);
 
   float wall_face = 1.0 - smoothstep(0.55, 0.90, abs(normal.y));

@@ -1,6 +1,7 @@
 #include "formation_combat_roles.h"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <limits>
 
@@ -29,30 +30,28 @@ auto opponent_alive(Engine::Core::World& world,
 
 auto combat_role_for(std::uint32_t formation_seed,
                      std::uint16_t stable_slot,
-                     bool engaged) -> Engine::Core::FormationSoldierCombatRole {
+                     bool engaged,
+                     float combat_seconds) -> Engine::Core::FormationSoldierCombatRole {
   if (!engaged) {
     return Engine::Core::FormationSoldierCombatRole::Ready;
   }
-  std::uint32_t const choice =
-      mix_hash32(formation_seed ^
-                 (static_cast<std::uint32_t>(stable_slot) * 0x9e3779b9U)) %
-      100U;
-  if (choice < 26U) {
-    return Engine::Core::FormationSoldierCombatRole::LeadStrike;
-  }
-  if (choice < 48U) {
-    return Engine::Core::FormationSoldierCombatRole::SupportStrike;
-  }
-  if (choice < 66U) {
-    return Engine::Core::FormationSoldierCombatRole::Guard;
-  }
-  if (choice < 79U) {
-    return Engine::Core::FormationSoldierCombatRole::StepIn;
-  }
-  if (choice < 90U) {
-    return Engine::Core::FormationSoldierCombatRole::StepOut;
-  }
-  return Engine::Core::FormationSoldierCombatRole::Ready;
+  using Role = Engine::Core::FormationSoldierCombatRole;
+  std::uint32_t const seed = mix_hash32(
+      formation_seed ^ (static_cast<std::uint32_t>(stable_slot) * 0x9e3779b9U));
+
+  constexpr std::array<Role, 8> k_exchange{Role::LeadStrike,
+                                           Role::SupportStrike,
+                                           Role::Guard,
+                                           Role::StepIn,
+                                           Role::LeadStrike,
+                                           Role::StepOut,
+                                           Role::SupportStrike,
+                                           Role::Guard};
+  float const beat_seconds = 1.8F + static_cast<float>(seed % 41U) * 0.01F;
+  float const offset = static_cast<float>((seed >> 8U) % 100U) * 0.01F;
+  auto const beat = static_cast<std::uint32_t>(
+      std::floor(std::max(0.0F, combat_seconds) / beat_seconds + offset));
+  return k_exchange[((seed >> 16U) + beat) % k_exchange.size()];
 }
 
 auto brawls_as_a_crowd(const Engine::Core::World& world,

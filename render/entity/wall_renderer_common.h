@@ -31,6 +31,7 @@ struct WallPalette {
   QVector3D earth_light{0.34F, 0.25F, 0.15F};
   QVector3D earth_dark{0.22F, 0.16F, 0.10F};
   QVector3D rubble{0.44F, 0.42F, 0.40F};
+  QVector3D iron{0.25F, 0.24F, 0.23F};
   bool alternate_starts_light{true};
   bool horned_masonry{false};
 };
@@ -55,6 +56,10 @@ struct WallGeometry {
   float masonry_half_width{0.28F};
   float masonry_height{1.34F};
 };
+
+[[nodiscard]] auto wall_binding_color(const WallPalette& palette,
+                                      const WallGeometry& geometry) -> QVector3D;
+[[nodiscard]] auto wall_binding_material(const WallGeometry& geometry) -> int;
 
 struct WallArchetypeSet {
   std::array<const BuildingArchetypeSet*, 6> variants{};

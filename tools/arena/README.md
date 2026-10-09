@@ -426,6 +426,10 @@ the attacker must not lose any health: those targets are harmless at arm's
 length. `matchup_destroy_<engine>` breaks each siege engine so the wreck and
 the crew's fall can be reviewed.
 
+Commander and elephant matchups against swordsmen and spearmen also require
+visible infantry strikes and damage on both sides. The commander must show
+repeated attack cycles, so an idle pose cannot pass just because health decreased.
+
 ## Local batch inspection
 
 Batch mode intentionally opens the real Arena OpenGL window. It requires a

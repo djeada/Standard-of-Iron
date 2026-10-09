@@ -126,6 +126,13 @@ constexpr std::array k_matchups{
     Matchup{k_builder, k_spearman},
     Matchup{k_commander, k_swordsman},
     Matchup{k_commander, k_elephant},
+    Matchup{k_swordsman, k_swordsman},
+    Matchup{k_spearman, k_spearman},
+    Matchup{k_mounted_swordsman, k_swordsman},
+    Matchup{k_horse_spearman, k_spearman},
+    Matchup{k_commander, k_spearman},
+    Matchup{k_commander, k_mounted_swordsman},
+    Matchup{k_spearman, k_healer},
 };
 
 constexpr int k_attacker_owner = 1;
@@ -263,6 +270,29 @@ auto matchup(const Matchup& pair) -> ArenaScenarioDefinition {
     s.expectations.push_back(expectation(Expect::GroupHealthReduced, defender));
     if (!pair.defender.fights) {
       s.expectations.push_back(expectation(Expect::GroupHealthUnchanged, attacker));
+    }
+  }
+
+  auto const melee_fighter = [](Troop troop) {
+    return troop == Troop::RomanVeteranConsul || troop == Troop::Elephant ||
+           troop == Troop::Swordsman || troop == Troop::Spearman ||
+           troop == Troop::MountedSwordsman || troop == Troop::HorseSpearman;
+  };
+  bool const mixed_melee = !wolves && melee_fighter(pair.attacker.troop) &&
+                           (pair.defender.troop == Troop::Swordsman ||
+                            pair.defender.troop == Troop::Spearman);
+  if (mixed_melee) {
+    s.expectations.push_back(expectation(Expect::GroupHealthReduced, attacker));
+    s.expectations.push_back(
+        expectation(Expect::AttackHasVisibleContact, defender, attacker));
+    if (pair.attacker.body == Body::Humanoid) {
+
+      if (pair.attacker.individuals == 1) {
+        s.expectations.push_back(
+            expectation(Expect::RepeatedAttackAnimationObserved, attacker, {}, 3.0F));
+      }
+      s.expectations.push_back(
+          expectation(Expect::AttackHasVisibleContact, attacker, defender));
     }
   }
 

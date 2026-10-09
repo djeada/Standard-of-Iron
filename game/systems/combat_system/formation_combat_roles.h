@@ -29,7 +29,8 @@ struct RetainedTarget {
 [[nodiscard]] auto
 combat_role_for(std::uint32_t formation_seed,
                 std::uint16_t stable_slot,
-                bool engaged) -> Engine::Core::FormationSoldierCombatRole;
+                bool engaged,
+                float combat_seconds) -> Engine::Core::FormationSoldierCombatRole;
 
 [[nodiscard]] auto brawls_as_a_crowd(const Engine::Core::World& world,
                                      Engine::Core::EntityID entity_id) -> bool;

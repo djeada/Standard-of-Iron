@@ -21,6 +21,7 @@ enum class MountedSpearGuardGrip : std::uint8_t {
   Overhand,
   Couched,
   TwoHanded,
+  Upright,
 };
 
 enum class HumanoidConstructionPoseKind : std::uint8_t {
@@ -150,6 +151,7 @@ struct MountedSpearThrustPoseSample {
   float shoulder_drop{0.0F};
   float torso_compression{0.0F};
   float head_forward_tilt{0.0F};
+  MountedSeatOffset spear_direction{1.0F, 0.12F, 0.10F};
   const char* debug_label{"mounted_spear"};
 };
 
@@ -183,6 +185,7 @@ struct MountedSpearGuardPoseSample {
   bool left_hand_uses_rein{false};
   float left_rein_slack{0.0F};
   float left_rein_tension{0.0F};
+  MountedSeatOffset spear_direction{1.0F, 0.12F, 0.10F};
   const char* debug_label{"spear_guard_pose"};
 };
 

@@ -30,7 +30,7 @@ Both packs share one container, `render/mesh_pack_format.h`: named entries of on
 
 ## Buildings
 
-`building_archetype_catalog()` lists every building: each nation's home, barracks, tower, marketplace, temple, five farm stages, six wall variants and the gate. It is the **only** way to get a building:
+`building_archetype_catalog()` lists every building: each nation's home, barracks, tower, marketplace, temple, five farm stages, six wall variants, the gate and its swinging leaf. It is the **only** way to get a building:
 
 - The baker merges each catalog entry in each `BuildingState` and writes it as `"<name>/<state>"` (for example `roman_home/damaged`).
 - At runtime, `building_archetype_set(name)` (`render/entity/building_archetype_library.*`) returns archetypes that hold only the baked mesh. Renderers ask for buildings by catalog name; nothing in the game builds a building's parts.
@@ -39,6 +39,23 @@ Both packs share one container, `render/mesh_pack_format.h`: named entries of on
 - Tools and tests that inspect building geometry (the building preview, silhouette and seam tests) get the source parts through `building_source_parts()`; the default `ISubmitter::render_instance` expands baked buildings that way. The game's `Renderer` never does.
 
 `tests/architecture/humanoid_layering_test.cpp` (`StaticMeshBakeBoundary`) fails if anything outside the library builds a building archetype or merges a static mesh. `tests/render/static_mesh_pack_test.cpp` fails if a catalog building is missing from the pack, and (extended lane) if the pack differs from a fresh merge.
+
+### Timber grain
+
+Parts authored as wood (`BuildingPartMaterial(desc, k_building_material_wood)` or `desc.set_material(...)`) carry a grain frame instead of their unit-mesh UVs. Baked buildings only ever sample a white texture, so the two texture coordinates are free. `RenderArchetypeBuilder::set_timber()` marks those draws, and `append_part()` in `render/static_building_batch.cpp` writes the frame at merge time:
+
+- `tex_coord.y` = `k_grain_frame_offset` + member × `k_grain_member_stride` + metres along the grain. The grain runs along the part's longest axis, or along the axis of a cylinder or cone. The member is a hash of the part's centre, and gives every log and board its own tree: tone, silvering and grain phase.
+- `tex_coord.x` holds the surface kind:
+    - `>= 0`: a sawn face, in metres across the grain from the face's edge.
+    - `[-2, -1]`: the round side of a log.
+    - `[-4, -3]`: end grain, with the radius for growth rings.
+    - `[-6, -5]`: the hewn point of a sharpened stake.
+
+`soi_wood_grain()` in `assets/shaders/include/material_detail.glsl` decodes the same layout. It draws board joints every 0.21 m on sawn faces, figure, bark patches toward a log's butt, drying checks and knots. The fine detail fades out at command distance. The per-member tone and weathering are what still read from there, so they do not fade.
+
+Parts that only classify as wood by colour keep the older world-space wood shading. Earth banks, rope, yards and terracotta roof tiles all fall inside the colour classifier's wood band, and grain on them looked wrong. Red-painted and fired surfaces (`g < 0.66 r`) skip the grain even when tagged as wood. Bare timber silvers with weather; painted boards keep their colour.
+
+Walls, gates and towers tag their timber explicitly and scope earthworks to stone and bindings to rope (cloth) or iron (metal). Palisades use their own seasoned-timber palette (`k_palisade*`), greyer than the cedar joinery of houses. The gate leaves are a baked archetype (`<nation>_wall_variant_gate_leaf`) placed per hinge. They used to be loose runtime boxes.
 
 ## Equipment
 

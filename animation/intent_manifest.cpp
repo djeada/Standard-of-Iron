@@ -83,6 +83,9 @@ auto resolve_humanoid_intent(const HumanoidIntentInputs& inputs) noexcept
       intent.action = ActionIntent::AttackMelee;
       break;
     case CombatAttackFamily::Spear:
+
+      intent.action = ActionIntent::AttackSpear;
+      break;
     case CombatAttackFamily::Bow:
     case CombatAttackFamily::None:
     default:
