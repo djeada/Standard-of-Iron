@@ -22,6 +22,7 @@
 #include <QtGlobal>
 #include <QtMath>
 
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <numbers>
@@ -32,6 +33,7 @@
 #include "../game/util/asset_text.h"
 #include "../render/gl/shader.h"
 #include "../utils/resource_utils.h"
+#include "campaign_map_film.h"
 #include "campaign_map_render_utils.h"
 #include "render/gl/gl_resource_tracking.h"
 
@@ -360,6 +362,11 @@ public:
       return;
     }
 
+    if (m_film.active) {
+      render_film();
+      return;
+    }
+
     glViewport(0, 0, m_size.width(), m_size.height());
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
@@ -445,6 +452,21 @@ public:
 
     m_current_mission = view->current_mission();
 
+    m_film = view->film_state();
+    if (m_film.active) {
+      m_terrain_height_scale = m_film.terrain_height_scale;
+      m_show_province_fills = m_film.province_fills;
+      m_province_fill_alpha = m_film.province_fill_alpha;
+      m_hover_province_id.clear();
+      m_selected_province_id.clear();
+    } else {
+      m_province_fill_alpha = 1.0F;
+    }
+    if (m_film_route_version != view->film_route_version()) {
+      m_film_route = CampaignMapFilm::RoutePath(view->film_route_points());
+      m_film_route_version = view->film_route_version();
+    }
+
     if (m_province_state_version != view->province_state_version() &&
         m_province_layer.ready) {
       apply_province_overrides(view->province_overrides());
@@ -499,6 +521,18 @@ private:
   bool m_show_province_fills = true;
   qint64 m_hover_start_time = 0;
   qint64 m_last_update_time = 0;
+  float m_province_fill_alpha = 1.0F;
+
+  CampaignMapFilm::FrameState m_film;
+  CampaignMapFilm::RoutePath m_film_route;
+  int m_film_route_version = 0;
+  CampaignMapFilm::TerrainHeightField m_film_heights;
+  bool m_film_heights_tried = false;
+  QOpenGLShaderProgram m_pixel_program;
+  GLuint m_pixel_vao = 0;
+  GLuint m_pixel_vbo = 0;
+  GLuint m_region_vao = 0;
+  GLuint m_region_vbo = 0;
 
   auto ensure_initialized() -> bool {
     if (m_initialized) {
@@ -656,6 +690,62 @@ void main() {
 
     init_asset_shader(m_terrain_program, QStringLiteral("campaign_terrain"));
     init_asset_shader(m_province_program, QStringLiteral("campaign_province"));
+    return true;
+  }
+
+  auto ensure_pixel_program() -> bool {
+    if (m_pixel_program.isLinked()) {
+      return true;
+    }
+    static const char* k_pixel_vert = R"(
+#version 330 core
+layout(location = 0) in vec2 a_px;
+
+uniform vec2 u_viewport;
+
+void main() {
+  gl_Position = vec4(a_px / u_viewport * 2.0 - 1.0, 0.0, 1.0);
+}
+)";
+    static const char* k_pixel_frag = R"(
+#version 330 core
+uniform vec4 u_color;
+
+out vec4 fragColor;
+
+void main() {
+  fragColor = u_color;
+}
+)";
+    if (!m_pixel_program.addShaderFromSourceCode(QOpenGLShader::Vertex, k_pixel_vert) ||
+        !m_pixel_program.addShaderFromSourceCode(QOpenGLShader::Fragment,
+                                                 k_pixel_frag) ||
+        !m_pixel_program.link()) {
+      qWarning() << "CampaignMapRenderer: Failed to build film overlay shader";
+      m_pixel_program.removeAllShaders();
+      return false;
+    }
+    glGenVertexArrays(1, &m_pixel_vao);
+    Render::GL::note_vertex_arrays_created(1);
+    glGenBuffers(1, &m_pixel_vbo);
+    Render::GL::note_buffers_created(1);
+    glBindVertexArray(m_pixel_vao);
+    glBindBuffer(GL_ARRAY_BUFFER, m_pixel_vbo);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(
+        0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), reinterpret_cast<void*>(0));
+    glBindVertexArray(0);
+
+    glGenVertexArrays(1, &m_region_vao);
+    Render::GL::note_vertex_arrays_created(1);
+    glGenBuffers(1, &m_region_vbo);
+    Render::GL::note_buffers_created(1);
+    glBindVertexArray(m_region_vao);
+    glBindBuffer(GL_ARRAY_BUFFER, m_region_vbo);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(
+        0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), reinterpret_cast<void*>(0));
+    glBindVertexArray(0);
     return true;
   }
 
@@ -2293,6 +2383,7 @@ void main() {
     color.setX(color.x() * parchment_tint);
     color.setY(color.y() * parchment_tint);
     color.setZ(color.z() * parchment_tint * 0.98F);
+    color.setW(color.w() * m_province_fill_alpha);
     if (m_terrain_mesh.ready && m_terrain_height_scale > 0.01F) {
       const float fade = 1.0F / (1.0F + 3.0F * m_terrain_height_scale);
       color.setW(color.w() * fade);
@@ -2510,8 +2601,395 @@ void main() {
     m_label_layer.labels.clear();
     m_label_layer.ready = false;
 
+    if (m_pixel_vbo != 0) {
+      glDeleteBuffers(1, &m_pixel_vbo);
+      m_pixel_vbo = 0;
+    }
+    if (m_pixel_vao != 0) {
+      glDeleteVertexArrays(1, &m_pixel_vao);
+      m_pixel_vao = 0;
+    }
+    if (m_region_vbo != 0) {
+      glDeleteBuffers(1, &m_region_vbo);
+      m_region_vbo = 0;
+    }
+    if (m_region_vao != 0) {
+      glDeleteVertexArrays(1, &m_region_vao);
+      m_region_vao = 0;
+    }
+
     m_base_texture = nullptr;
     m_water_texture = nullptr;
+  }
+
+  void render_film() {
+    glViewport(0, 0, m_size.width(), m_size.height());
+    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glClearColor(0.157F, 0.267F, 0.361F, 1.0F);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+    if (!m_film_heights_tried) {
+      m_film_heights_tried = true;
+      m_film_heights.load_default();
+    }
+    ensure_pixel_program();
+
+    CampaignMapFilm::CameraPose pose = m_film.camera;
+    pose.target_height =
+        m_film_heights.height_at(pose.target) * m_film.terrain_height_scale;
+    const QMatrix4x4 mvp = CampaignMapFilm::view_projection(
+        static_cast<float>(m_size.width()), static_cast<float>(m_size.height()), pose);
+
+    draw_textured_layer(m_water_texture, m_ocean_vao, 6, mvp, 1.0F, -0.01F);
+    if (m_terrain_mesh.ready && m_terrain_program.isLinked()) {
+      draw_terrain_layer(m_terrain_mesh, mvp);
+    } else if (m_land_vertex_count > 0) {
+      draw_textured_layer(
+          m_base_texture, m_land_vao, m_land_vertex_count, mvp, 1.0F, 0.0F);
+    }
+
+    glDisable(GL_DEPTH_TEST);
+    if (m_show_province_fills) {
+      draw_province_layer(m_province_layer, mvp, 0.002F);
+    }
+    const std::vector<int> region_offsets = upload_film_regions();
+    draw_film_region_fills(mvp, region_offsets);
+    draw_line_layer(m_province_border_layer, mvp, 0.0045F);
+    draw_line_layer(m_coast_layer, mvp, 0.004F);
+    draw_line_layer(m_river_layer, mvp, 0.003F);
+    if (m_film.show_game_route) {
+      draw_progressive_path_layers(m_path_layer, mvp, 0.006F);
+    }
+    draw_film_region_rims(mvp, region_offsets);
+    if (m_film.show_symbols) {
+      draw_symbol_layer(m_symbol_layer, mvp, 0.007F);
+    }
+    draw_film_route(mvp);
+  }
+
+  [[nodiscard]] auto film_pixel_scale() const -> float {
+    return static_cast<float>(qMax(1, m_size.height())) /
+           qMax(1.0F, m_film.reference_height);
+  }
+
+  auto upload_film_regions() -> std::vector<int> {
+    std::vector<int> offsets;
+    offsets.reserve(m_film.highlights.size() + 1);
+    std::vector<float> verts;
+    for (const auto& highlight : m_film.highlights) {
+      offsets.push_back(static_cast<int>(verts.size() / 2));
+      for (const auto& pt : highlight.triangles) {
+        verts.push_back(pt.x());
+        verts.push_back(pt.y());
+      }
+    }
+    offsets.push_back(static_cast<int>(verts.size() / 2));
+    if (!verts.empty() && m_region_vbo != 0) {
+      glBindBuffer(GL_ARRAY_BUFFER, m_region_vbo);
+      glBufferData(GL_ARRAY_BUFFER,
+                   static_cast<GLsizeiptr>(verts.size() * sizeof(float)),
+                   verts.data(),
+                   GL_STREAM_DRAW);
+      glBindBuffer(GL_ARRAY_BUFFER, 0);
+    }
+    return offsets;
+  }
+
+  void draw_film_region_pieces(std::size_t index, const std::vector<int>& offsets) {
+    const auto& highlight = m_film.highlights[index];
+    if (m_province_layer.ready && m_province_layer.vao != 0 &&
+        !highlight.provinces.empty()) {
+      glBindVertexArray(m_province_layer.vao);
+      for (const auto& span : m_province_layer.spans) {
+        if (std::find(highlight.provinces.begin(), highlight.provinces.end(),
+                      span.id) != highlight.provinces.end()) {
+          glDrawArrays(GL_TRIANGLES, span.start, span.count);
+        }
+      }
+    }
+    const int start = offsets[index];
+    const int count = offsets[index + 1] - start;
+    if (count >= 3 && m_region_vao != 0) {
+      glBindVertexArray(m_region_vao);
+      glDrawArrays(GL_TRIANGLES, start, count);
+    }
+    glBindVertexArray(0);
+  }
+
+  auto bind_film_region_program(const QMatrix4x4& mvp) -> QOpenGLShaderProgram* {
+    if (!m_province_program.isLinked() || m_base_texture == nullptr) {
+      return nullptr;
+    }
+    m_province_program.bind();
+    m_province_program.setUniformValue("u_mvp", mvp);
+    m_province_program.setUniformValue("u_z", 0.0025F);
+    m_province_program.setUniformValue("u_base_texture", 0);
+    m_province_program.setUniformValue("u_parchment_strength", 0.35F);
+    m_province_program.setUniformValue("u_parchment_scale", 6.0F);
+    m_province_program.setUniformValue("u_use_parchment", true);
+    m_province_program.setUniformValue("u_ndc_offset", QVector2D(0.0F, 0.0F));
+    glActiveTexture(GL_TEXTURE0);
+    m_base_texture->bind();
+    return &m_province_program;
+  }
+
+  void release_film_region_program(QOpenGLShaderProgram* program) {
+    if (program == nullptr) {
+      return;
+    }
+    m_base_texture->release();
+    program->release();
+  }
+
+  void draw_film_region_fills(const QMatrix4x4& mvp, const std::vector<int>& offsets) {
+    if (m_film.highlights.empty()) {
+      return;
+    }
+    float dim = 0.0F;
+    for (const auto& highlight : m_film.highlights) {
+      dim = qMax(dim, highlight.dim_outside * highlight.amount);
+    }
+    QOpenGLShaderProgram* program = bind_film_region_program(mvp);
+    if (program == nullptr) {
+      return;
+    }
+
+    if (dim > 0.001F && m_pixel_program.isLinked()) {
+      glEnable(GL_STENCIL_TEST);
+      glStencilMask(0xFF);
+      glClear(GL_STENCIL_BUFFER_BIT);
+      glStencilFunc(GL_ALWAYS, 1, 0xFF);
+      glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+      glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+      program->setUniformValue("u_color", QVector4D(1.0F, 1.0F, 1.0F, 1.0F));
+      for (std::size_t i = 0; i < m_film.highlights.size(); ++i) {
+        if (m_film.highlights[i].amount > 0.001F) {
+          draw_film_region_pieces(i, offsets);
+        }
+      }
+      glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+      release_film_region_program(program);
+
+      glStencilFunc(GL_EQUAL, 0, 0xFF);
+      glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+      const float w = static_cast<float>(m_size.width());
+      const float h = static_cast<float>(m_size.height());
+      draw_pixel_geometry({QVector2D(0.0F, 0.0F), QVector2D(w, 0.0F),
+                           QVector2D(0.0F, h), QVector2D(w, h)},
+                          GL_TRIANGLE_STRIP,
+                          QVector4D(0.05F, 0.04F, 0.03F, qMin(0.85F, dim)));
+      glDisable(GL_STENCIL_TEST);
+      program = bind_film_region_program(mvp);
+      if (program == nullptr) {
+        return;
+      }
+    }
+
+    for (std::size_t i = 0; i < m_film.highlights.size(); ++i) {
+      const auto& highlight = m_film.highlights[i];
+      const float alpha = highlight.fill.w() * highlight.amount;
+      if (alpha <= 0.001F) {
+        continue;
+      }
+      QVector4D color = highlight.fill;
+      color.setW(alpha);
+      program->setUniformValue("u_color", color);
+      draw_film_region_pieces(i, offsets);
+    }
+    release_film_region_program(program);
+  }
+
+  void draw_film_region_rims(const QMatrix4x4& mvp, const std::vector<int>& offsets) {
+    if (m_film.highlights.empty()) {
+      return;
+    }
+    QOpenGLShaderProgram* program = bind_film_region_program(mvp);
+    if (program == nullptr) {
+      return;
+    }
+    const float width_px = static_cast<float>(qMax(1, m_size.width()));
+    const float height_px = static_cast<float>(qMax(1, m_size.height()));
+    const float scale = film_pixel_scale();
+
+    glEnable(GL_STENCIL_TEST);
+    glStencilMask(0xFF);
+    for (std::size_t i = 0; i < m_film.highlights.size(); ++i) {
+      const auto& highlight = m_film.highlights[i];
+      const float alpha = highlight.rim.w() * highlight.amount;
+      if (alpha <= 0.001F || highlight.rim_px <= 0.0F) {
+        continue;
+      }
+      glClear(GL_STENCIL_BUFFER_BIT);
+      glStencilFunc(GL_ALWAYS, 1, 0xFF);
+      glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+      glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+      program->setUniformValue("u_ndc_offset", QVector2D(0.0F, 0.0F));
+      draw_film_region_pieces(i, offsets);
+      glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+
+      QVector4D color = highlight.rim;
+      color.setW(alpha);
+      program->setUniformValue("u_color", color);
+      glStencilFunc(GL_EQUAL, 0, 0xFF);
+      glStencilOp(GL_KEEP, GL_KEEP, GL_INCR);
+      const float radius = highlight.rim_px * scale;
+      for (int step = 0; step < k_outline_steps; ++step) {
+        const float angle = 2.0F * std::numbers::pi_v<float> * static_cast<float>(step) /
+                            static_cast<float>(k_outline_steps);
+        program->setUniformValue("u_ndc_offset",
+                                 QVector2D(2.0F * radius * std::cos(angle) / width_px,
+                                           2.0F * radius * std::sin(angle) / height_px));
+        draw_film_region_pieces(i, offsets);
+      }
+    }
+    program->setUniformValue("u_ndc_offset", QVector2D(0.0F, 0.0F));
+    glDisable(GL_STENCIL_TEST);
+    release_film_region_program(program);
+  }
+
+  void draw_pixel_geometry(const std::vector<QVector2D>& verts,
+                           GLenum mode,
+                           const QVector4D& color) {
+    if (verts.empty() || !m_pixel_program.isLinked()) {
+      return;
+    }
+    m_pixel_program.bind();
+    m_pixel_program.setUniformValue(
+        "u_viewport",
+        QVector2D(static_cast<float>(m_size.width()), static_cast<float>(m_size.height())));
+    m_pixel_program.setUniformValue("u_color", color);
+    glBindVertexArray(m_pixel_vao);
+    glBindBuffer(GL_ARRAY_BUFFER, m_pixel_vbo);
+    glBufferData(GL_ARRAY_BUFFER,
+                 static_cast<GLsizeiptr>(verts.size() * sizeof(QVector2D)),
+                 verts.data(),
+                 GL_STREAM_DRAW);
+    glDrawArrays(mode, 0, static_cast<GLsizei>(verts.size()));
+    glBindVertexArray(0);
+    m_pixel_program.release();
+  }
+
+  [[nodiscard]] auto film_to_pixels(const QMatrix4x4& mvp,
+                                    const std::vector<QVector2D>& uv_points) const
+      -> std::vector<QVector2D> {
+    std::vector<QVector2D> out;
+    out.reserve(uv_points.size());
+    const float w = static_cast<float>(m_size.width());
+    const float h = static_cast<float>(m_size.height());
+    for (const auto& uv : uv_points) {
+      const float height = m_film_heights.height_at(uv) * m_film.terrain_height_scale;
+      const auto projected =
+          CampaignMapFilm::project(mvp, CampaignMapFilm::world_point(uv, height), w, h);
+      if (!projected.in_front) {
+        continue;
+      }
+      out.emplace_back(static_cast<float>(projected.pixel.x()),
+                       h - static_cast<float>(projected.pixel.y()));
+    }
+    return out;
+  }
+
+  void draw_film_stroke(const std::vector<QVector2D>& pixels,
+                        float width,
+                        const QVector4D& color,
+                        const QVector2D& offset = QVector2D()) {
+    if (pixels.size() < 2 || width <= 0.0F || color.w() <= 0.0F) {
+      return;
+    }
+    CampaignMapRender::StrokeMeshConfig config;
+    config.width = width;
+    config.start_cap = CampaignMapRender::CapStyle::Round;
+    config.end_cap = CampaignMapRender::CapStyle::Round;
+    config.join_style = CampaignMapRender::JoinStyle::Miter;
+    config.cap_segments = 10;
+    config.miter_params.max_miter_ratio = 2.0F;
+    std::vector<QVector2D> strip = CampaignMapRender::build_stroke_mesh(pixels, config);
+    if (strip.size() < 4) {
+      return;
+    }
+    if (!offset.isNull()) {
+      for (auto& v : strip) {
+        v += offset;
+      }
+    }
+    glEnable(GL_STENCIL_TEST);
+    glStencilMask(0xFF);
+    glClear(GL_STENCIL_BUFFER_BIT);
+    glStencilFunc(GL_EQUAL, 0, 0xFF);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_INCR);
+    draw_pixel_geometry(strip, GL_TRIANGLE_STRIP, color);
+    glDisable(GL_STENCIL_TEST);
+  }
+
+  void draw_film_disc(const QVector2D& center, float radius, const QVector4D& color) {
+    if (radius <= 0.0F || color.w() <= 0.0F) {
+      return;
+    }
+    constexpr int k_segments = 48;
+    std::vector<QVector2D> fan;
+    fan.reserve(k_segments + 2);
+    fan.push_back(center);
+    for (int i = 0; i <= k_segments; ++i) {
+      const float angle = 2.0F * std::numbers::pi_v<float> * static_cast<float>(i) /
+                          static_cast<float>(k_segments);
+      fan.emplace_back(center.x() + radius * std::cos(angle),
+                       center.y() + radius * std::sin(angle));
+    }
+    draw_pixel_geometry(fan, GL_TRIANGLE_FAN, color);
+  }
+
+  void draw_film_route(const QMatrix4x4& mvp) {
+    if (!m_film.route_visible || m_film_route.empty() || !m_pixel_program.isLinked()) {
+      return;
+    }
+    const auto& style = m_film.route_style;
+    const float scale = film_pixel_scale();
+    const float width = style.width_px * scale;
+
+    if (style.ghost_alpha > 0.0F && m_film.route_window_end > m_film.route_to) {
+      const auto ghost = film_to_pixels(
+          mvp, m_film_route.slice(m_film.route_to, m_film.route_window_end));
+      QVector4D ghost_color = style.casing;
+      ghost_color.setW(style.ghost_alpha);
+      draw_film_stroke(ghost, width * 0.45F, ghost_color);
+    }
+
+    const auto pixels =
+        film_to_pixels(mvp, m_film_route.slice(m_film.route_from, m_film.route_to));
+    if (pixels.size() >= 2) {
+      draw_film_stroke(pixels,
+                       width * 1.15F,
+                       QVector4D(0.0F, 0.0F, 0.0F, style.shadow_alpha),
+                       QVector2D(0.9F * scale, -1.4F * scale));
+      draw_film_stroke(pixels, width, style.casing);
+      draw_film_stroke(pixels, width * 0.68F, style.gold);
+      draw_film_stroke(pixels, width * 0.34F, style.core);
+    }
+
+    if (!style.head || m_film.route_to <= m_film.route_from) {
+      return;
+    }
+    const auto head_pixels =
+        film_to_pixels(mvp, {m_film_route.point_at(m_film.route_to)});
+    if (head_pixels.empty()) {
+      return;
+    }
+    const QVector2D head = head_pixels.front();
+    const float radius = style.head_radius_px * scale;
+    const float pulse =
+        0.5F + 0.5F * std::sin(m_film.time * 2.0F * std::numbers::pi_v<float> / 1.6F);
+    draw_film_disc(head, radius * (1.9F + 0.45F * pulse),
+                   QVector4D(style.gold.x(), style.gold.y(), style.gold.z(),
+                             0.10F + 0.10F * (1.0F - pulse)));
+    draw_film_disc(head + QVector2D(0.9F * scale, -1.4F * scale), radius * 1.12F,
+                   QVector4D(0.0F, 0.0F, 0.0F, style.shadow_alpha));
+    draw_film_disc(head, radius * 1.12F, style.casing);
+    draw_film_disc(head, radius * 0.86F, style.gold);
+    draw_film_disc(head, radius * 0.46F, style.core);
   }
 };
 
@@ -3044,6 +3522,17 @@ void CampaignMapView::set_show_province_fills(bool show) {
   }
   m_show_province_fills = show;
   emit show_province_fills_changed();
+  update();
+}
+
+void CampaignMapView::set_film_state(const CampaignMapFilm::FrameState& state) {
+  m_film_state = state;
+  update();
+}
+
+void CampaignMapView::set_film_route(const std::vector<QVector2D>& raw_points) {
+  m_film_route_raw = raw_points;
+  ++m_film_route_version;
   update();
 }
 
