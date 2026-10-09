@@ -15,6 +15,8 @@ struct MistVolume {
   float radius = 4.0F;
   float strength = 0.5F;
   Kind kind = Kind::WaterMist;
+
+  float ceiling = 0.0F;
 };
 
 inline constexpr int k_max_mist_volumes = 24;

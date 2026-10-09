@@ -397,6 +397,12 @@ auto ArenaViewport::active_lighting() const -> Game::Map::EnvironmentLightingSta
   if (m_environment_definition.exposure_override >= 0.0F) {
     lighting.exposure = m_environment_definition.exposure_override;
   }
+  if (m_scripted_fog_density.has_value()) {
+    lighting.fog_density = *m_scripted_fog_density;
+  }
+  if (m_scripted_exposure.has_value()) {
+    lighting.exposure = *m_scripted_exposure;
+  }
   const auto& look = m_promo_lighting;
   if (look.sun_azimuth.has_value() || look.sun_elevation.has_value()) {
     const QVector3D current = lighting.primary_direction.normalized();

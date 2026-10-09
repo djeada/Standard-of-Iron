@@ -1,6 +1,7 @@
 #include <algorithm>
 
 #include "arena_scenario_internal.h"
+#include "game/session/world_digest.h"
 
 namespace Arena {
 
@@ -200,8 +201,19 @@ void ArenaScenarioRunner::update(float simulation_dt) {
   if (m_impl->elapsed + 1.0e-5F >= m_impl->duration_limit ||
       m_impl->battle_decision_ends_scenario()) {
     m_impl->check_end_expectations();
+    m_impl->report.world_digest = Game::Session::world_digest(m_impl->world);
     m_impl->complete = true;
   }
+}
+
+auto ArenaScenarioRunner::events() const noexcept
+    -> const std::vector<ArenaScenarioEvent>& {
+  return m_impl->report.events;
+}
+
+auto ArenaScenarioRunner::weather_schedule() const noexcept
+    -> const std::vector<ArenaTimedWeatherChange>& {
+  return m_impl->weather_schedule;
 }
 
 void ArenaScenarioRunner::observe_rendered_frame(double frame_time_ms) {

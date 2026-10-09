@@ -20,6 +20,7 @@ set(RENDER_CORE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/static_mesh_pack.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/attachment_mesh_library.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/world_view.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/mist_volume_builder.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/prepare_worker_pool.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/world_chunk.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/primitive_batch.cpp

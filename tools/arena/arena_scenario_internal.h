@@ -324,6 +324,8 @@ struct ArenaScenarioRunner::Impl {
   QHash<QString, QVector3D> formed_destinations;
   QHash<Engine::Core::EntityID, QString> entity_groups;
   std::vector<StepRuntime> steps;
+  QHash<QString, std::size_t> step_index_by_name;
+  std::vector<ArenaTimedWeatherChange> weather_schedule;
   QHash<Engine::Core::EntityID, CommandResponse> responses;
   QHash<Engine::Core::EntityID, EntityState> entity_states;
   QHash<Engine::Core::EntityID, MotionQualityState> motion_states;
@@ -520,6 +522,11 @@ struct ArenaScenarioRunner::Impl {
   void stop_group(const QString& group, bool clear_attack);
   void attack_group(const QString& group, const QString& target_group, bool chase);
   void form_army(const ArenaScenarioStep& step);
+  [[nodiscard]] auto named_step_executed_at(const QString& name) const
+      -> std::optional<float>;
+  [[nodiscard]] auto group_strength(const QString& group) const -> std::optional<float>;
+  void shape_move_group(const ArenaScenarioStep& step);
+  void wheel_group(const ArenaScenarioStep& step);
   void execute_step(std::size_t index, const ArenaScenarioStep& step);
   struct WildlifeObservation {
     bool grazing_seen{false};

@@ -1,3 +1,5 @@
+#include <QtMath>
+
 #include "arena_scenario_internal.h"
 
 namespace Arena {
@@ -99,6 +101,14 @@ auto command_name(ScenarioCommandKind kind) -> QString {
     return QStringLiteral("RollStones");
   case ScenarioCommandKind::CrossByRaft:
     return QStringLiteral("CrossByRaft");
+  case ScenarioCommandKind::Marker:
+    return QStringLiteral("Marker");
+  case ScenarioCommandKind::ShapeMove:
+    return QStringLiteral("ShapeMove");
+  case ScenarioCommandKind::Wheel:
+    return QStringLiteral("Wheel");
+  case ScenarioCommandKind::SetWeather:
+    return QStringLiteral("SetWeather");
   }
   return QStringLiteral("Unknown");
 }
@@ -114,8 +124,34 @@ ArenaScenarioRunner::Impl::Impl(Engine::Core::World& world_value,
     , scenario(definition)
     , world_origin(origin)
     , steps(definition.steps.size())
+    , weather_schedule(definition.weather_script.timeline)
     , duration_limit(definition.duration_seconds) {
   report.scenario_id = definition.id;
+  for (std::size_t i = 0; i < definition.steps.size(); ++i) {
+    auto const& name = definition.steps[i].name;
+    if (!name.isEmpty() && !step_index_by_name.contains(name)) {
+      step_index_by_name.insert(name, i);
+    }
+  }
+}
+
+auto ArenaScenarioRunner::Impl::named_step_executed_at(const QString& name) const
+    -> std::optional<float> {
+  auto const found = step_index_by_name.constFind(name);
+  if (found == step_index_by_name.cend() || !steps[found.value()].executed) {
+    return std::nullopt;
+  }
+  return steps[found.value()].executed_at;
+}
+
+auto ArenaScenarioRunner::Impl::group_strength(const QString& group) const
+    -> std::optional<float> {
+  auto const initial = initial_health_by_group.constFind(group);
+  if (initial == initial_health_by_group.cend() || initial.value() <= 0) {
+    return std::nullopt;
+  }
+  return static_cast<float>(group_health(group)) /
+         static_cast<float>(initial.value());
 }
 
 auto ArenaScenarioRunner::Impl::ordered_destination(const QString& group) const
@@ -312,11 +348,17 @@ void ArenaScenarioRunner::Impl::spawn_group(const ArenaScenarioGroup& group) {
     return;
   }
   auto& spawned = groups[group.name];
-  spawned.reserve(static_cast<std::size_t>(group.count));
+  bool const explicit_positions = !group.positions.empty();
+  int const member_count =
+      explicit_positions ? static_cast<int>(group.positions.size()) : group.count;
+  spawned.reserve(static_cast<std::size_t>(member_count));
   float const center = (static_cast<float>(group.count) - 1.0F) * 0.5F;
-  for (int index = 0; index < group.count; ++index) {
-    QVector3D const position = world_origin + group.origin +
-                               group.spacing * (static_cast<float>(index) - center);
+  for (int index = 0; index < member_count; ++index) {
+    QVector3D const position =
+        explicit_positions
+            ? world_origin + group.positions[static_cast<std::size_t>(index)]
+            : world_origin + group.origin +
+                  group.spacing * (static_cast<float>(index) - center);
     Engine::Core::EntityID const entity_id = host.spawn_unit(group, position);
     if (entity_id == 0U) {
       add_issue(
@@ -354,6 +396,14 @@ void ArenaScenarioRunner::Impl::spawn_group(const ArenaScenarioGroup& group) {
 auto ArenaScenarioRunner::Impl::trigger_ready(
     std::size_t index, const ArenaScenarioStep& step) const -> bool {
   auto const& trigger = step.trigger;
+  if (!trigger.after_step.isEmpty() &&
+      !named_step_executed_at(trigger.after_step).has_value()) {
+    return false;
+  }
+  if (trigger.fallback_seconds >= 0.0F &&
+      elapsed + 1.0e-5F >= trigger.fallback_seconds) {
+    return true;
+  }
   switch (trigger.kind) {
   case ScenarioTriggerKind::AtTime:
     return elapsed + 1.0e-5F >= trigger.time_seconds;
@@ -373,8 +423,106 @@ auto ArenaScenarioRunner::Impl::trigger_ready(
   }
   case ScenarioTriggerKind::PreviousStepComplete:
     return index == 0 || steps[index - 1].executed;
+  case ScenarioTriggerKind::GroupStrengthBelow: {
+    auto const strength = group_strength(trigger.group);
+    return strength.has_value() && *strength < trigger.threshold;
+  }
+  case ScenarioTriggerKind::StepExecuted: {
+    auto const executed_at = named_step_executed_at(trigger.step);
+    return executed_at.has_value() &&
+           elapsed + 1.0e-5F >= *executed_at + trigger.time_seconds;
+  }
   }
   return false;
+}
+
+void ArenaScenarioRunner::Impl::shape_move_group(const ArenaScenarioStep& step) {
+  auto const center = centroid(step.group);
+  if (!center.has_value()) {
+    return;
+  }
+  QVector3D offset = (world_origin + step.destination) - *center;
+  offset.setY(0.0F);
+  std::vector<Game::Systems::CommandService::MoveIntent> intents;
+  for (auto entity_id : ids(step.group)) {
+    auto const* transform = world.try_get<Engine::Core::TransformComponent>(entity_id);
+    if (transform == nullptr || !entity_alive(entity_id)) {
+      continue;
+    }
+    Game::Systems::CommandService::MoveIntent intent;
+    intent.unit_id = entity_id;
+    intent.target = vector_from_transform(*transform) + offset;
+    intent.target.setY(0.0F);
+    intent.facing_angle = transform->rotation.y;
+    intents.push_back(intent);
+  }
+  if (!intents.empty()) {
+    Game::Systems::CommandService::move_units(world, intents);
+  }
+  arm_response(step.group, command_name(step.command));
+}
+
+void ArenaScenarioRunner::Impl::wheel_group(const ArenaScenarioStep& step) {
+  std::vector<std::pair<Engine::Core::EntityID, QVector3D>> members;
+  for (auto entity_id : ids(step.group)) {
+    auto const* transform = world.try_get<Engine::Core::TransformComponent>(entity_id);
+    if (transform != nullptr && entity_alive(entity_id)) {
+      members.emplace_back(entity_id, vector_from_transform(*transform));
+    }
+  }
+  if (members.empty()) {
+    return;
+  }
+  QVector3D pivot = world_origin + step.destination;
+  if (!step.pivot_side.isEmpty()) {
+    QVector3D sum;
+    float yaw_sum = 0.0F;
+    for (auto const& [entity_id, position] : members) {
+      sum += position;
+      auto const* transform =
+          world.try_get<Engine::Core::TransformComponent>(entity_id);
+      yaw_sum += transform != nullptr ? transform->rotation.y : 0.0F;
+    }
+    QVector3D const center = sum / static_cast<float>(members.size());
+    pivot = center;
+    if (step.pivot_side != QStringLiteral("center")) {
+      float const yaw = qDegreesToRadians(yaw_sum / static_cast<float>(members.size()));
+      QVector3D const forward(std::sin(yaw), 0.0F, std::cos(yaw));
+      QVector3D const right(-forward.z(), 0.0F, forward.x());
+      bool const want_right = step.pivot_side == QStringLiteral("right");
+      float best = want_right ? -std::numeric_limits<float>::max()
+                              : std::numeric_limits<float>::max();
+      for (auto const& [entity_id, position] : members) {
+        (void)entity_id;
+        float const along = QVector3D::dotProduct(position - center, right);
+        if ((want_right && along > best) || (!want_right && along < best)) {
+          best = along;
+          pivot = center + right * along;
+        }
+      }
+    }
+  }
+  float const radians = qDegreesToRadians(step.angle_degrees);
+  float const cos_a = std::cos(radians);
+  float const sin_a = std::sin(radians);
+  std::vector<Game::Systems::CommandService::MoveIntent> intents;
+  intents.reserve(members.size());
+  for (auto const& [entity_id, position] : members) {
+    QVector3D const local = position - pivot;
+    QVector3D const rotated(local.x() * cos_a + local.z() * sin_a,
+                            0.0F,
+                            -local.x() * sin_a + local.z() * cos_a);
+    Game::Systems::CommandService::MoveIntent intent;
+    intent.unit_id = entity_id;
+    intent.target = pivot + rotated;
+    intent.target.setY(0.0F);
+    auto const* transform = world.try_get<Engine::Core::TransformComponent>(entity_id);
+    intent.facing_angle =
+        (transform != nullptr ? transform->rotation.y : 0.0F) + step.angle_degrees;
+    intents.push_back(intent);
+  }
+  Game::Systems::CommandService::move_units(world, intents);
+  arm_response(step.group, command_name(step.command));
 }
 
 void ArenaScenarioRunner::Impl::arm_response(const QString& group,
@@ -568,8 +716,24 @@ void ArenaScenarioRunner::Impl::execute_step(std::size_t index,
   auto& runtime = steps[index];
   runtime.executed = true;
   runtime.executed_at = elapsed;
+  if (!step.event.isEmpty()) {
+    report.events.push_back({step.event, elapsed});
+  }
 
   switch (step.command) {
+  case ScenarioCommandKind::Marker:
+    break;
+  case ScenarioCommandKind::ShapeMove:
+    shape_move_group(step);
+    break;
+  case ScenarioCommandKind::Wheel:
+    wheel_group(step);
+    break;
+  case ScenarioCommandKind::SetWeather:
+    if (step.weather_change >= 0) {
+      weather_schedule.push_back({elapsed, step.weather_change});
+    }
+    break;
   case ScenarioCommandKind::Stand:
   case ScenarioCommandKind::Stop:
     stop_group(step.group, true);
