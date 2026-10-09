@@ -272,8 +272,8 @@ void add_side_feathers(std::vector<Primitive>& primitives) {
     }};
     add_lobed_mass(primitives, feather, 0.30F, 0.13F, k_plume_slot, 0.42F);
   }
-  primitives.push_back(generated_sphere(
-      QVector3D(0.0F, 1.80F, -0.06F), 0.26F, k_accent_slot, 1.0F, 2));
+  primitives.push_back(
+      generated_sphere(QVector3D(0.0F, 1.80F, -0.06F), 0.26F, k_accent_slot, 1.0F, 2));
 }
 
 void add_triple_feathers(std::vector<Primitive>& primitives) {
@@ -322,8 +322,8 @@ void add_crown_tail(std::vector<Primitive>& primitives) {
                                           k_accent_slot,
                                           1.0F,
                                           2));
-  primitives.push_back(generated_sphere(
-      QVector3D(0.0F, 2.10F, -0.10F), 0.24F, k_accent_slot, 1.0F, 2));
+  primitives.push_back(
+      generated_sphere(QVector3D(0.0F, 2.10F, -0.10F), 0.24F, k_accent_slot, 1.0F, 2));
   std::array<QVector3D, 8> const tail{{
       {0.0F, 2.22F, -0.14F},
       {0.0F, 2.30F, -0.56F},
@@ -457,14 +457,14 @@ void add_numidian_diadem(std::vector<Primitive>& primitives) {
           (static_cast<float>(curl) + 0.5F * static_cast<float>(ring)) * 2.0F * k_pi /
           static_cast<float>(curls);
       float const horizontal = std::cos(elevation);
-      primitives.push_back(generated_sphere(
-          QVector3D(1.24F * horizontal * std::sin(azimuth),
-                    0.56F + 0.98F * std::sin(elevation),
-                    -0.18F + 1.38F * horizontal * std::cos(azimuth)),
-          0.26F,
-          k_dark_slot,
-          1.0F,
-          0));
+      primitives.push_back(
+          generated_sphere(QVector3D(1.24F * horizontal * std::sin(azimuth),
+                                     0.56F + 0.98F * std::sin(elevation),
+                                     -0.18F + 1.38F * horizontal * std::cos(azimuth)),
+                           0.26F,
+                           k_dark_slot,
+                           1.0F,
+                           0));
     }
   }
 
@@ -472,9 +472,8 @@ void add_numidian_diadem(std::vector<Primitive>& primitives) {
   for (int bead = 0; bead < k_band_beads; ++bead) {
     float const azimuth =
         static_cast<float>(bead) * 2.0F * k_pi / static_cast<float>(k_band_beads);
-    QVector3D const centre(1.36F * std::sin(azimuth),
-                           0.40F,
-                           -0.18F + 1.50F * std::cos(azimuth));
+    QVector3D const centre(
+        1.36F * std::sin(azimuth), 0.40F, -0.18F + 1.50F * std::cos(azimuth));
     primitives.push_back(generated_ellipsoid(
         centre, QVector3D(0.20F, 0.11F, 0.20F), k_plume_slot, 1.0F, 1));
     if (bead % 3 == 0) {

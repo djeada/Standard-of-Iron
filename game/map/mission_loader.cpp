@@ -89,6 +89,17 @@ void warn_on_authored_commander(const QJsonObject& obj, const QString& force_lab
   }
 }
 
+auto read_historical_commanders(const QJsonObject& obj) -> QStringList {
+  QStringList ids;
+  for (const auto value : obj["historical_commanders"].toArray()) {
+    const QString id = value.toString().trimmed();
+    if (!id.isEmpty()) {
+      ids.append(id);
+    }
+  }
+  return ids;
+}
+
 } // namespace
 
 auto MissionLoader::parse_player_setup(const QJsonObject& obj) -> PlayerSetup {
@@ -113,6 +124,7 @@ auto MissionLoader::parse_player_setup(const QJsonObject& obj) -> PlayerSetup {
 
   setup.starting_resources =
       Game::Systems::read_resource_overlay(obj["starting_resources"].toObject());
+  setup.historical_commanders = read_historical_commanders(obj);
 
   return setup;
 }
@@ -186,6 +198,7 @@ auto MissionLoader::parse_ai_setup(const QJsonObject& obj) -> AISetup {
   setup.difficulty = obj["difficulty"].toString();
   setup.difficulty_scaling = obj["difficulty_scaling"].toBool(true);
   warn_on_authored_commander(obj, setup.id);
+  setup.historical_commanders = read_historical_commanders(obj);
 
   if (obj.contains("team_id")) {
     setup.team_id = obj["team_id"].toInt();

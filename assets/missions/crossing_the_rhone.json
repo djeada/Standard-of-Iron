@@ -11,6 +11,9 @@
     "nation": "carthage",
     "faction": "carthaginian",
     "color": "brown",
+    "historical_commanders": [
+      "carthage_hanno_bomilcar"
+    ],
     "starting_units": [],
     "starting_buildings": [],
     "starting_resources": {

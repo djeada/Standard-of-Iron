@@ -74,9 +74,9 @@ auto validate_scenario(const ArenaScenarioDefinition& definition)
     }
     if (!group.commander_id.isEmpty() &&
         !Game::Units::is_historical_commander_id(group.commander_id.toStdString())) {
-      errors.push_back(
-          {field,
-           QStringLiteral("unknown historical commander '%1'").arg(group.commander_id)});
+      errors.push_back({field,
+                        QStringLiteral("unknown historical commander '%1'")
+                            .arg(group.commander_id)});
     }
   }
   QString const wildlife_group = QString::fromLatin1(k_wildlife_group);

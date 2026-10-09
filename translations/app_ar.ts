@@ -2382,6 +2382,406 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>Encircling Cut</source>
         <translation>الضربة المطوِّقة</translation>
     </message>
+    <message>
+        <source>A historical commander fielded by missions and scenarios; not playable and never produced from a barracks.</source>
+        <translation>قائد تاريخي تستدعيه المهام والسيناريوهات؛ غير قابل للعب ولا يُدرَّب في الثكنات أبدًا.</translation>
+    </message>
+    <message>
+        <source>Rallies wavering troops nearby back into fighting order.</source>
+        <translation>يعيد القوات المترددة القريبة إلى صفوف القتال.</translation>
+    </message>
+    <message>
+        <source>If he falls, nearby allies lose heart and his aura ends.</source>
+        <translation>إن سقط فقد الحلفاء القريبون عزيمتهم وانتهت هالته.</translation>
+    </message>
+    <message>
+        <source>Tiberius Sempronius Longus</source>
+        <translation>تيبيريوس سمبرونيوس لونغوس</translation>
+    </message>
+    <message>
+        <source>Consul of 218 BC, eager for battle, who sent his army across the freezing Trebia before breakfast.</source>
+        <translation>قنصل عام 218 ق.م، متلهف للمعركة، دفع جيشه لعبور نهر تريبيا المتجمد قبل الإفطار.</translation>
+    </message>
+    <message>
+        <source>Consular sword commander who leads the legions from the front of the attack.</source>
+        <translation>قائد قنصلي بالسيف يقود الفيالق من مقدمة الهجوم.</translation>
+    </message>
+    <message>
+        <source>Drives a fresh assault hard and fast.</source>
+        <translation>يدفع هجومًا جديدًا بقوة وسرعة.</translation>
+    </message>
+    <message>
+        <source>Commits early and walks into prepared ground.</source>
+        <translation>يلتزم بالقتال مبكرًا ويدخل أرضًا مُعدّة سلفًا.</translation>
+    </message>
+    <message>
+        <source>Consular Impetus sharpens the attack of nearby legions.</source>
+        <translation>الاندفاع القنصلي يشحذ هجوم الفيالق القريبة.</translation>
+    </message>
+    <message>
+        <source>Nearby allied swordsmen gain the most attack in aura range.</source>
+        <translation>يكسب المبارزون الحلفاء القريبون أكبر زيادة في الهجوم ضمن نطاق الهالة.</translation>
+    </message>
+    <message>
+        <source>Hold the line, Romans!</source>
+        <translation>اثبتوا في الصف يا رومان!</translation>
+    </message>
+    <message>
+        <source>Across, and at them!</source>
+        <translation>اعبروا وانقضّوا عليهم!</translation>
+    </message>
+    <message>
+        <source>Back to the river bank!</source>
+        <translation>عودوا إلى ضفة النهر!</translation>
+    </message>
+    <message>
+        <source>Gaius Flaminius</source>
+        <translation>غايوس فلامينيوس</translation>
+    </message>
+    <message>
+        <source>Popular consul of 217 BC who marched his column into Hannibal&apos;s ambush at Lake Trasimene and died there.</source>
+        <translation>قنصل شعبي عام 217 ق.م قاد رتله إلى كمين حنبعل عند بحيرة تراسيمين ولقي حتفه هناك.</translation>
+    </message>
+    <message>
+        <source>Spear commander who keeps a marching column moving at speed.</source>
+        <translation>قائد بالرمح يُبقي رتل المسير متحركًا بسرعة.</translation>
+    </message>
+    <message>
+        <source>Fast on the march and quick to engage.</source>
+        <translation>سريع في المسير وسريع إلى الاشتباك.</translation>
+    </message>
+    <message>
+        <source>Scouts nothing; easily caught deployed in column.</source>
+        <translation>لا يستطلع شيئًا؛ يسهل مباغتته وهو في رتل المسير.</translation>
+    </message>
+    <message>
+        <source>Forced March hurries nearby troops along the road.</source>
+        <translation>المسير الإجباري يستحث القوات القريبة على الطريق.</translation>
+    </message>
+    <message>
+        <source>Nearby allied spearmen move fastest in aura range.</source>
+        <translation>يتحرك الرماحون الحلفاء القريبون بأقصى سرعة ضمن نطاق الهالة.</translation>
+    </message>
+    <message>
+        <source>Close up, form on me!</source>
+        <translation>رصّوا الصفوف، تجمعوا حولي!</translation>
+    </message>
+    <message>
+        <source>Forward, and no halting!</source>
+        <translation>إلى الأمام، ولا توقف!</translation>
+    </message>
+    <message>
+        <source>Back to the road!</source>
+        <translation>عودوا إلى الطريق!</translation>
+    </message>
+    <message>
+        <source>Gaius Terentius Varro</source>
+        <translation>غايوس تيرينتيوس فارو</translation>
+    </message>
+    <message>
+        <source>Consul of 216 BC who led the largest army Rome had ever fielded into the encirclement at Cannae, and survived it.</source>
+        <translation>قنصل عام 216 ق.م قاد أكبر جيش جهّزته روما على الإطلاق إلى التطويق في كاناي، ونجا منه.</translation>
+    </message>
+    <message>
+        <source>Sword commander who throws the full weight of the line forward.</source>
+        <translation>قائد بالسيف يلقي بثقل الصف كله إلى الأمام.</translation>
+    </message>
+    <message>
+        <source>Numbers, nerve and a crushing first push.</source>
+        <translation>العدد والجرأة ودفعة أولى ساحقة.</translation>
+    </message>
+    <message>
+        <source>Rash; blind to the flanks once the line is moving.</source>
+        <translation>متهور؛ يغفل عن الأجنحة متى تحرك الصف.</translation>
+    </message>
+    <message>
+        <source>Weight of Numbers drives nearby legions harder into the enemy centre.</source>
+        <translation>ثقل العدد يدفع الفيالق القريبة بقوة أكبر نحو قلب العدو.</translation>
+    </message>
+    <message>
+        <source>Nearby allied swordsmen gain strong attack in aura range.</source>
+        <translation>يكسب المبارزون الحلفاء القريبون هجومًا قويًا ضمن نطاق الهالة.</translation>
+    </message>
+    <message>
+        <source>Stand, Rome is watching!</source>
+        <translation>اثبتوا، روما تراقب!</translation>
+    </message>
+    <message>
+        <source>Push! Push the centre!</source>
+        <translation>ادفعوا! ادفعوا القلب!</translation>
+    </message>
+    <message>
+        <source>To Venusia, fall back!</source>
+        <translation>إلى فينوسيا، تراجعوا!</translation>
+    </message>
+    <message>
+        <source>Lucius Aemilius Paullus</source>
+        <translation>لوكيوس أيميليوس باولوس</translation>
+    </message>
+    <message>
+        <source>Cautious consul of 216 BC who advised against battle at Cannae and died on the field.</source>
+        <translation>قنصل حذر عام 216 ق.م نصح بعدم القتال في كاناي ومات في الميدان.</translation>
+    </message>
+    <message>
+        <source>Spear commander who steadies the line and refuses to break.</source>
+        <translation>قائد بالرمح يثبّت الصف ويأبى الانكسار.</translation>
+    </message>
+    <message>
+        <source>Calm under pressure; keeps a wing standing.</source>
+        <translation>هادئ تحت الضغط؛ يُبقي الجناح صامدًا.</translation>
+    </message>
+    <message>
+        <source>Slow to move and bound by a colleague&apos;s decisions.</source>
+        <translation>بطيء الحركة ومقيد بقرارات زميله.</translation>
+    </message>
+    <message>
+        <source>Aristocratic Composure helps nearby troops recover in a long fight.</source>
+        <translation>رباطة الجأش الأرستقراطية تساعد القوات القريبة على التعافي في القتال الطويل.</translation>
+    </message>
+    <message>
+        <source>Nearby allied spearmen regenerate health fastest in aura range.</source>
+        <translation>يستعيد الرماحون الحلفاء القريبون صحتهم بأسرع ما يمكن ضمن نطاق الهالة.</translation>
+    </message>
+    <message>
+        <source>Steady! Keep your ranks!</source>
+        <translation>اثبتوا! حافظوا على صفوفكم!</translation>
+    </message>
+    <message>
+        <source>With me, together!</source>
+        <translation>معي، معًا!</translation>
+    </message>
+    <message>
+        <source>Give ground, slowly!</source>
+        <translation>تراجعوا، ببطء!</translation>
+    </message>
+    <message>
+        <source>Publius Cornelius Scipio (consul 218 BC)</source>
+        <translation>بوبليوس كورنيليوس سكيبيو (قنصل 218 ق.م)</translation>
+    </message>
+    <message>
+        <source>Consul of 218 BC and father of Scipio Africanus; wounded at the Ticinus and carried from the field by his son.</source>
+        <translation>قنصل عام 218 ق.م ووالد سكيبيو الأفريقي؛ جُرح عند تيكينوس وحمله ابنه من الميدان.</translation>
+    </message>
+    <message>
+        <source>Sword commander who screens the army&apos;s advance with fast mounted troops.</source>
+        <translation>قائد بالسيف يحمي تقدم الجيش بقوات خيالة سريعة.</translation>
+    </message>
+    <message>
+        <source>Quick to probe, quick to pull a screen back.</source>
+        <translation>سريع في الاستطلاع وسريع في سحب الستار.</translation>
+    </message>
+    <message>
+        <source>Fights from the front and is easily cut off.</source>
+        <translation>يقاتل في المقدمة ويسهل عزله.</translation>
+    </message>
+    <message>
+        <source>Consular Screen quickens nearby riders and skirmishers.</source>
+        <translation>الستار القنصلي يسرّع الفرسان والمناوشين القريبين.</translation>
+    </message>
+    <message>
+        <source>Nearby allied horsemen move fastest in aura range.</source>
+        <translation>يتحرك الفرسان الحلفاء القريبون بأقصى سرعة ضمن نطاق الهالة.</translation>
+    </message>
+    <message>
+        <source>Rally to the consul!</source>
+        <translation>التفّوا حول القنصل!</translation>
+    </message>
+    <message>
+        <source>Ride them down!</source>
+        <translation>اسحقوهم بالخيل!</translation>
+    </message>
+    <message>
+        <source>Back across the Ticinus!</source>
+        <translation>عودوا عبر تيكينوس!</translation>
+    </message>
+    <message>
+        <source>Mago Barca</source>
+        <translation>ماغون برقا</translation>
+    </message>
+    <message>
+        <source>Hannibal&apos;s youngest brother, who sprang the ambush from the stream bed at the Trebia and fought in the centre at Cannae.</source>
+        <translation>أصغر إخوة حنبعل، أطلق الكمين من مجرى السيل عند تريبيا وقاتل في القلب في كاناي.</translation>
+    </message>
+    <message>
+        <source>Sword commander who leads a hidden detachment into the enemy&apos;s rear.</source>
+        <translation>قائد بالسيف يقود مفرزة مخفية إلى مؤخرة العدو.</translation>
+    </message>
+    <message>
+        <source>Strikes hard from concealment.</source>
+        <translation>يضرب بقوة من مكمنه.</translation>
+    </message>
+    <message>
+        <source>Small command; vulnerable once the ambush is spent.</source>
+        <translation>قيادة صغيرة؛ يصبح عرضة للخطر متى استُنفد الكمين.</translation>
+    </message>
+    <message>
+        <source>Ambush Strike lends nearby troops a sharper first blow.</source>
+        <translation>ضربة الكمين تمنح القوات القريبة ضربة أولى أشد.</translation>
+    </message>
+    <message>
+        <source>To me, sons of Carthage!</source>
+        <translation>إليّ يا أبناء قرطاج!</translation>
+    </message>
+    <message>
+        <source>Out of the reeds, now!</source>
+        <translation>اخرجوا من القصب، الآن!</translation>
+    </message>
+    <message>
+        <source>Back to the stream bed!</source>
+        <translation>عودوا إلى مجرى السيل!</translation>
+    </message>
+    <message>
+        <source>Maharbal</source>
+        <translation>مهربعل</translation>
+    </message>
+    <message>
+        <source>Hannibal&apos;s cavalry commander, who rounded up the survivors of Trasimene and urged a march on Rome after Cannae.</source>
+        <translation>قائد فرسان حنبعل، جمع ناجي تراسيمين وألحّ على الزحف إلى روما بعد كاناي.</translation>
+    </message>
+    <message>
+        <source>Spear-armed cavalry commander who hunts broken troops.</source>
+        <translation>قائد فرسان مسلح بالرمح يطارد القوات المنكسرة.</translation>
+    </message>
+    <message>
+        <source>Relentless in pursuit.</source>
+        <translation>لا يرحم في المطاردة.</translation>
+    </message>
+    <message>
+        <source>Light protection; poor at holding ground.</source>
+        <translation>حماية خفيفة؛ ضعيف في الثبات بالأرض.</translation>
+    </message>
+    <message>
+        <source>Cavalry Pursuit speeds nearby riders after a breaking enemy.</source>
+        <translation>مطاردة الفرسان تسرّع الفرسان القريبين خلف عدو ينهار.</translation>
+    </message>
+    <message>
+        <source>Horsemen, to me!</source>
+        <translation>أيها الفرسان، إليّ!</translation>
+    </message>
+    <message>
+        <source>After them, no quarter!</source>
+        <translation>الحقوا بهم، بلا رحمة!</translation>
+    </message>
+    <message>
+        <source>Wheel away, reform!</source>
+        <translation>انعطفوا وأعيدوا التشكيل!</translation>
+    </message>
+    <message>
+        <source>Hanno, son of Bomilcar</source>
+        <translation>حنون بن بوملقار</translation>
+    </message>
+    <message>
+        <source>Hannibal&apos;s nephew, who crossed the Rhone upstream and signalled his flank attack with smoke.</source>
+        <translation>ابن أخت حنبعل، عبر نهر الرون عند أعلاه وأعلن هجومه الجانبي بالدخان.</translation>
+    </message>
+    <message>
+        <source>Mobile commander who takes a detachment round the enemy&apos;s flank.</source>
+        <translation>قائد متنقل يلتف بمفرزة حول جناح العدو.</translation>
+    </message>
+    <message>
+        <source>Fast, independent flanking marches.</source>
+        <translation>مسيرات التفاف سريعة ومستقلة.</translation>
+    </message>
+    <message>
+        <source>Thin in a frontal fight.</source>
+        <translation>ضعيف في المواجهة المباشرة.</translation>
+    </message>
+    <message>
+        <source>Flanking March hurries nearby troops round the enemy.</source>
+        <translation>مسيرة الالتفاف تستحث القوات القريبة حول العدو.</translation>
+    </message>
+    <message>
+        <source>Nearby allied archers move fastest in aura range.</source>
+        <translation>يتحرك الرماة الحلفاء القريبون بأقصى سرعة ضمن نطاق الهالة.</translation>
+    </message>
+    <message>
+        <source>Hold here, wait for the smoke!</source>
+        <translation>اثبتوا هنا، انتظروا الدخان!</translation>
+    </message>
+    <message>
+        <source>Now, into their flank!</source>
+        <translation>الآن، إلى جناحهم!</translation>
+    </message>
+    <message>
+        <source>Back to the ford!</source>
+        <translation>عودوا إلى المخاضة!</translation>
+    </message>
+    <message>
+        <source>Hasdrubal (cavalry commander)</source>
+        <translation>حصدربعل (قائد الفرسان)</translation>
+    </message>
+    <message>
+        <source>Commander of the Celtic and Iberian heavy horse on Hannibal&apos;s left at Cannae; not Hannibal&apos;s brother Hasdrubal Barca.</source>
+        <translation>قائد الفرسان الثقيلة الكلتية والإيبيرية على ميسرة حنبعل في كاناي؛ وليس حصدربعل برقا شقيق حنبعل.</translation>
+    </message>
+    <message>
+        <source>Heavy cavalry commander who breaks a wing and rides into the rear.</source>
+        <translation>قائد فرسان ثقيلة يكسر جناحًا ويندفع إلى المؤخرة.</translation>
+    </message>
+    <message>
+        <source>Shock and discipline in the charge.</source>
+        <translation>صدمة وانضباط في الهجوم.</translation>
+    </message>
+    <message>
+        <source>Costly to replace if he is cut down.</source>
+        <translation>يصعب تعويضه إن سقط.</translation>
+    </message>
+    <message>
+        <source>Heavy Horse Charge adds weight to nearby attacks.</source>
+        <translation>هجمة الخيالة الثقيلة تضيف ثقلًا إلى الهجمات القريبة.</translation>
+    </message>
+    <message>
+        <source>Nearby allied horsemen gain the most attack in aura range.</source>
+        <translation>يكسب الفرسان الحلفاء القريبون أكبر زيادة في الهجوم ضمن نطاق الهالة.</translation>
+    </message>
+    <message>
+        <source>Close the ranks, horsemen!</source>
+        <translation>رصّوا الصفوف أيها الفرسان!</translation>
+    </message>
+    <message>
+        <source>Charge! Break their wing!</source>
+        <translation>اهجموا! اكسروا جناحهم!</translation>
+    </message>
+    <message>
+        <source>Rein in and reform!</source>
+        <translation>شدّوا اللجام وأعيدوا التشكيل!</translation>
+    </message>
+    <message>
+        <source>Masinissa</source>
+        <translation>ماسينيسا</translation>
+    </message>
+    <message>
+        <source>Numidian prince who fought for Carthage in Spain, changed sides, and led Rome&apos;s allied horse at Zama.</source>
+        <translation>أمير نوميدي قاتل لقرطاج في إسبانيا ثم بدّل صفه وقاد خيالة روما الحليفة في زاما.</translation>
+    </message>
+    <message>
+        <source>Light cavalry commander who harries with javelins and never stands still.</source>
+        <translation>قائد فرسان خفيفة يناوش بالحراب ولا يقف ساكنًا أبدًا.</translation>
+    </message>
+    <message>
+        <source>The fastest horse in Africa.</source>
+        <translation>أسرع خيل في أفريقيا.</translation>
+    </message>
+    <message>
+        <source>Unarmoured; no use in a static fight.</source>
+        <translation>بلا درع؛ لا نفع له في قتال ثابت.</translation>
+    </message>
+    <message>
+        <source>Numidian Horse keeps nearby riders moving and wheeling.</source>
+        <translation>الخيالة النوميدية تُبقي الفرسان القريبين في حركة والتفاف دائمين.</translation>
+    </message>
+    <message>
+        <source>Riders, to me!</source>
+        <translation>أيها الخيالة، إليّ!</translation>
+    </message>
+    <message>
+        <source>Throw, and wheel!</source>
+        <translation>ارموا، ثم التفّوا!</translation>
+    </message>
+    <message>
+        <source>Scatter and come again!</source>
+        <translation>تفرّقوا ثم عودوا!</translation>
+    </message>
 </context>
 <context>
     <name>ComponentGallery</name>
@@ -7756,6 +8156,10 @@ to see preview</source>
     <message>
         <source>Battle tempo: the speed buttons sit on the top bar beside pause, from %1 up to %2. Press %3 or %4 to change speed without leaving the field.</source>
         <translation>إيقاع المعركة: أزرار السرعة في الشريط العلوي بجوار الإيقاف المؤقت، من %1 حتى %2. اضغط %3 أو %4 لتغيير السرعة دون مغادرة الميدان.</translation>
+    </message>
+    <message>
+        <source>Also in command: %1</source>
+        <translation>في القيادة أيضًا: %1</translation>
     </message>
 </context>
 <context>

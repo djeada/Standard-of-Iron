@@ -182,13 +182,20 @@ auto build_commander_map(const QString& commander_troop) -> QVariantMap {
   QVariantMap map;
   map["troop"] = commander_troop;
 
-  Game::Units::TroopType troop_type;
-  if (!Game::Units::try_parse_troop_type(commander_troop, troop_type)) {
-    map["display_name"] = titleize(commander_troop);
-    return map;
+  const auto* definition =
+      Game::Units::historical_commander_definition(commander_troop.toStdString());
+  if (definition != nullptr) {
+    map["troop"] = Game::Units::troop_typeToQString(definition->troop_type);
+  } else {
+    Game::Units::TroopType troop_type;
+    if (!Game::Units::try_parse_troop_type(commander_troop, troop_type)) {
+      map["display_name"] = titleize(commander_troop);
+      return map;
+    }
+    definition = Game::Units::commander_definition(troop_type);
   }
 
-  if (const auto* definition = Game::Units::commander_definition(troop_type)) {
+  if (definition != nullptr) {
     using Game::Util::k_commanders_context;
     using Game::Util::tr_asset;
     map["id"] = QString::fromStdString(definition->id);
@@ -218,6 +225,28 @@ auto build_commander_map(const QString& commander_troop) -> QVariantMap {
   return map;
 }
 
+auto build_historical_commanders_list(const QStringList& ids) -> QVariantList {
+  using Game::Util::k_commanders_context;
+  using Game::Util::tr_asset;
+  QVariantList list;
+  for (const QString& id : ids) {
+    const auto* definition =
+        Game::Units::historical_commander_definition(id.toStdString());
+    if (definition == nullptr) {
+      continue;
+    }
+    QVariantMap entry;
+    entry["id"] = QString::fromStdString(definition->id);
+    entry["display_name"] = tr_asset(k_commanders_context, definition->display_name);
+    entry["strategic_identity"] =
+        tr_asset(k_commanders_context, definition->strategic_identity);
+    entry["battlefield_role"] =
+        tr_asset(k_commanders_context, definition->battlefield_role);
+    list.append(entry);
+  }
+  return list;
+}
+
 void apply_map_commander(QVariantMap& map,
                          const std::map<int, QString>& map_commanders,
                          int owner_id) {
@@ -225,8 +254,9 @@ void apply_map_commander(QVariantMap& map,
   if (it == map_commanders.end() || it->second.isEmpty()) {
     return;
   }
-  map["commander_troop"] = it->second;
-  map["commander"] = build_commander_map(it->second);
+  const QVariantMap commander = build_commander_map(it->second);
+  map["commander_troop"] = commander.value("troop", it->second);
+  map["commander"] = commander;
 }
 
 auto build_player_setup_map(const Game::Mission::PlayerSetup& setup,
@@ -238,6 +268,8 @@ auto build_player_setup_map(const Game::Mission::PlayerSetup& setup,
   map["color"] = setup.color;
 
   apply_map_commander(map, map_commanders, k_local_owner_id);
+  map["historical_commanders"] =
+      build_historical_commanders_list(setup.historical_commanders);
 
   map["starting_units"] = build_unit_setup_list(setup.starting_units);
   map["starting_buildings"] = build_building_setup_list(setup.starting_buildings);
@@ -263,6 +295,8 @@ auto build_ai_setup_map(const Game::Mission::AISetup& setup,
   map["difficulty"] = setup.difficulty;
 
   apply_map_commander(map, map_commanders, owner_id);
+  map["historical_commanders"] =
+      build_historical_commanders_list(setup.historical_commanders);
   if (setup.team_id.has_value()) {
     map["team_id"] = setup.team_id.value();
   }
@@ -322,7 +356,8 @@ auto build_mission_definition_map(const Game::Mission::MissionDefinition& missio
     result["terrain_type"] = mission.terrain_type.value();
   }
 
-  const auto map_commanders = Game::Mission::commander_troops_for_map(mission.map_path);
+  const auto map_commanders =
+      Game::Mission::commander_identities_for_map(mission.map_path);
   result["player_setup"] = build_player_setup_map(mission.player_setup, map_commanders);
 
   QVariantList ai_setups;

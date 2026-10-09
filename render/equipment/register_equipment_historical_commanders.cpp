@@ -77,26 +77,26 @@ auto make_cloak(QVector3D primary,
 
 auto cameo_cloak_config(CameoCloak cloak) -> const CloakConfig& {
   static const std::array<CloakConfig, 10> configs{{
-      make_cloak({0.64F, 0.13F, 0.045F}, {0.92F, 0.70F, 0.26F}, 1.08F, 0.94F, 0.07F,
-                 true),
-      make_cloak({0.74F, 0.53F, 0.12F}, {0.30F, 0.20F, 0.10F}, 0.92F, 0.88F, 0.10F,
-                 true),
-      make_cloak({0.34F, 0.06F, 0.38F}, {0.94F, 0.74F, 0.28F}, 1.16F, 1.04F, 0.07F,
-                 true),
-      make_cloak({0.44F, 0.20F, 0.10F}, {0.80F, 0.80F, 0.82F}, 1.06F, 0.92F, 0.07F,
-                 true),
-      make_cloak({0.20F, 0.32F, 0.50F}, {0.90F, 0.88F, 0.82F}, 1.02F, 0.92F, 0.08F,
-                 true),
-      make_cloak({0.07F, 0.30F, 0.14F}, {0.90F, 0.68F, 0.24F}, 1.06F, 0.92F, 0.08F,
-                 true),
-      make_cloak({0.04F, 0.36F, 0.38F}, {0.88F, 0.84F, 0.70F}, 0.84F, 0.86F, 0.12F,
-                 false),
-      make_cloak({0.12F, 0.12F, 0.42F}, {0.80F, 0.80F, 0.84F}, 0.80F, 0.86F, 0.12F,
-                 false),
-      make_cloak({0.05F, 0.05F, 0.06F}, {0.70F, 0.46F, 0.18F}, 1.04F, 0.96F, 0.08F,
-                 true),
-      make_cloak({0.88F, 0.85F, 0.76F}, {0.58F, 0.06F, 0.06F}, 0.62F, 0.80F, 0.14F,
-                 false),
+      make_cloak(
+          {0.64F, 0.13F, 0.045F}, {0.92F, 0.70F, 0.26F}, 1.08F, 0.94F, 0.07F, true),
+      make_cloak(
+          {0.74F, 0.53F, 0.12F}, {0.30F, 0.20F, 0.10F}, 0.92F, 0.88F, 0.10F, true),
+      make_cloak(
+          {0.34F, 0.06F, 0.38F}, {0.94F, 0.74F, 0.28F}, 1.16F, 1.04F, 0.07F, true),
+      make_cloak(
+          {0.44F, 0.20F, 0.10F}, {0.80F, 0.80F, 0.82F}, 1.06F, 0.92F, 0.07F, true),
+      make_cloak(
+          {0.20F, 0.32F, 0.50F}, {0.90F, 0.88F, 0.82F}, 1.02F, 0.92F, 0.08F, true),
+      make_cloak(
+          {0.07F, 0.30F, 0.14F}, {0.90F, 0.68F, 0.24F}, 1.06F, 0.92F, 0.08F, true),
+      make_cloak(
+          {0.04F, 0.36F, 0.38F}, {0.88F, 0.84F, 0.70F}, 0.84F, 0.86F, 0.12F, false),
+      make_cloak(
+          {0.12F, 0.12F, 0.42F}, {0.80F, 0.80F, 0.84F}, 0.80F, 0.86F, 0.12F, false),
+      make_cloak(
+          {0.05F, 0.05F, 0.06F}, {0.70F, 0.46F, 0.18F}, 1.04F, 0.96F, 0.08F, true),
+      make_cloak(
+          {0.88F, 0.85F, 0.76F}, {0.58F, 0.06F, 0.06F}, 0.62F, 0.80F, 0.14F, false),
   }};
   return configs[static_cast<std::size_t>(cloak)];
 }
@@ -105,9 +105,11 @@ template <CameoCloak Cloak>
 auto build_cameo_cloak(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec> {
   auto const& config = cameo_cloak_config(Cloak);
-  return {Render::GL::cloak_make_static_attachment(
-      config, Render::GL::shared_cloak_meshes(config), humanoid_chest_bone(),
-      base_role_byte)};
+  return {
+      Render::GL::cloak_make_static_attachment(config,
+                                               Render::GL::shared_cloak_meshes(config),
+                                               humanoid_chest_bone(),
+                                               base_role_byte)};
 }
 
 template <CameoCloak Cloak>

@@ -2382,6 +2382,406 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>Encircling Cut</source>
         <translation>Охватывающий разрез</translation>
     </message>
+    <message>
+        <source>A historical commander fielded by missions and scenarios; not playable and never produced from a barracks.</source>
+        <translation>Исторический командир, которого выставляют миссии и сценарии; неиграбельный и никогда не обучается в казармах.</translation>
+    </message>
+    <message>
+        <source>Rallies wavering troops nearby back into fighting order.</source>
+        <translation>Возвращает дрогнувшие поблизости войска в боевой порядок.</translation>
+    </message>
+    <message>
+        <source>If he falls, nearby allies lose heart and his aura ends.</source>
+        <translation>Если он падёт, ближние союзники падают духом, а его аура исчезает.</translation>
+    </message>
+    <message>
+        <source>Tiberius Sempronius Longus</source>
+        <translation>Тиберий Семпроний Лонг</translation>
+    </message>
+    <message>
+        <source>Consul of 218 BC, eager for battle, who sent his army across the freezing Trebia before breakfast.</source>
+        <translation>Консул 218 г. до н. э., жаждавший битвы, бросивший армию через ледяную Треббию ещё до завтрака.</translation>
+    </message>
+    <message>
+        <source>Consular sword commander who leads the legions from the front of the attack.</source>
+        <translation>Консульский командир с мечом, ведущий легионы в первых рядах атаки.</translation>
+    </message>
+    <message>
+        <source>Drives a fresh assault hard and fast.</source>
+        <translation>Ведёт свежий натиск мощно и стремительно.</translation>
+    </message>
+    <message>
+        <source>Commits early and walks into prepared ground.</source>
+        <translation>Ввязывается рано и заходит на подготовленную врагом местность.</translation>
+    </message>
+    <message>
+        <source>Consular Impetus sharpens the attack of nearby legions.</source>
+        <translation>Консульский порыв усиливает атаку ближних легионов.</translation>
+    </message>
+    <message>
+        <source>Nearby allied swordsmen gain the most attack in aura range.</source>
+        <translation>Союзные мечники в радиусе ауры получают наибольший прирост атаки.</translation>
+    </message>
+    <message>
+        <source>Hold the line, Romans!</source>
+        <translation>Держать строй, римляне!</translation>
+    </message>
+    <message>
+        <source>Across, and at them!</source>
+        <translation>Вброд — и на них!</translation>
+    </message>
+    <message>
+        <source>Back to the river bank!</source>
+        <translation>Назад, к берегу реки!</translation>
+    </message>
+    <message>
+        <source>Gaius Flaminius</source>
+        <translation>Гай Фламиний</translation>
+    </message>
+    <message>
+        <source>Popular consul of 217 BC who marched his column into Hannibal&apos;s ambush at Lake Trasimene and died there.</source>
+        <translation>Народный консул 217 г. до н. э., заведший свою колонну в засаду Ганнибала у Тразименского озера и погибший там.</translation>
+    </message>
+    <message>
+        <source>Spear commander who keeps a marching column moving at speed.</source>
+        <translation>Командир с копьём, ведущий походную колонну быстрым маршем.</translation>
+    </message>
+    <message>
+        <source>Fast on the march and quick to engage.</source>
+        <translation>Быстр на марше и скор на схватку.</translation>
+    </message>
+    <message>
+        <source>Scouts nothing; easily caught deployed in column.</source>
+        <translation>Не ведёт разведки; его легко застать в походной колонне.</translation>
+    </message>
+    <message>
+        <source>Forced March hurries nearby troops along the road.</source>
+        <translation>Форсированный марш подгоняет ближние войска в пути.</translation>
+    </message>
+    <message>
+        <source>Nearby allied spearmen move fastest in aura range.</source>
+        <translation>Союзные копейщики в радиусе ауры движутся быстрее всех.</translation>
+    </message>
+    <message>
+        <source>Close up, form on me!</source>
+        <translation>Сомкнуться, стройся ко мне!</translation>
+    </message>
+    <message>
+        <source>Forward, and no halting!</source>
+        <translation>Вперёд, без остановки!</translation>
+    </message>
+    <message>
+        <source>Back to the road!</source>
+        <translation>Назад, на дорогу!</translation>
+    </message>
+    <message>
+        <source>Gaius Terentius Varro</source>
+        <translation>Гай Теренций Варрон</translation>
+    </message>
+    <message>
+        <source>Consul of 216 BC who led the largest army Rome had ever fielded into the encirclement at Cannae, and survived it.</source>
+        <translation>Консул 216 г. до н. э., заведший крупнейшую армию в истории Рима в окружение при Каннах и уцелевший.</translation>
+    </message>
+    <message>
+        <source>Sword commander who throws the full weight of the line forward.</source>
+        <translation>Командир с мечом, бросающий вперёд всю мощь строя.</translation>
+    </message>
+    <message>
+        <source>Numbers, nerve and a crushing first push.</source>
+        <translation>Численность, дерзость и сокрушительный первый натиск.</translation>
+    </message>
+    <message>
+        <source>Rash; blind to the flanks once the line is moving.</source>
+        <translation>Опрометчив; не видит флангов, как только строй двинулся.</translation>
+    </message>
+    <message>
+        <source>Weight of Numbers drives nearby legions harder into the enemy centre.</source>
+        <translation>Сила числа сильнее гонит ближние легионы в центр врага.</translation>
+    </message>
+    <message>
+        <source>Nearby allied swordsmen gain strong attack in aura range.</source>
+        <translation>Союзные мечники в радиусе ауры получают сильный прирост атаки.</translation>
+    </message>
+    <message>
+        <source>Stand, Rome is watching!</source>
+        <translation>Стоять, Рим смотрит!</translation>
+    </message>
+    <message>
+        <source>Push! Push the centre!</source>
+        <translation>Дави! Дави центр!</translation>
+    </message>
+    <message>
+        <source>To Venusia, fall back!</source>
+        <translation>К Венузии, отходим!</translation>
+    </message>
+    <message>
+        <source>Lucius Aemilius Paullus</source>
+        <translation>Луций Эмилий Павел</translation>
+    </message>
+    <message>
+        <source>Cautious consul of 216 BC who advised against battle at Cannae and died on the field.</source>
+        <translation>Осторожный консул 216 г. до н. э., отговаривавший от битвы при Каннах и павший на поле.</translation>
+    </message>
+    <message>
+        <source>Spear commander who steadies the line and refuses to break.</source>
+        <translation>Командир с копьём, укрепляющий строй и не дающий ему сломаться.</translation>
+    </message>
+    <message>
+        <source>Calm under pressure; keeps a wing standing.</source>
+        <translation>Спокоен под натиском; удерживает фланг.</translation>
+    </message>
+    <message>
+        <source>Slow to move and bound by a colleague&apos;s decisions.</source>
+        <translation>Медлителен и связан решениями коллеги.</translation>
+    </message>
+    <message>
+        <source>Aristocratic Composure helps nearby troops recover in a long fight.</source>
+        <translation>Аристократическое хладнокровие помогает ближним войскам восстанавливаться в долгом бою.</translation>
+    </message>
+    <message>
+        <source>Nearby allied spearmen regenerate health fastest in aura range.</source>
+        <translation>Союзные копейщики в радиусе ауры быстрее всех восстанавливают здоровье.</translation>
+    </message>
+    <message>
+        <source>Steady! Keep your ranks!</source>
+        <translation>Спокойно! Держать ряды!</translation>
+    </message>
+    <message>
+        <source>With me, together!</source>
+        <translation>За мной, вместе!</translation>
+    </message>
+    <message>
+        <source>Give ground, slowly!</source>
+        <translation>Отходить, медленно!</translation>
+    </message>
+    <message>
+        <source>Publius Cornelius Scipio (consul 218 BC)</source>
+        <translation>Публий Корнелий Сципион (консул 218 г. до н. э.)</translation>
+    </message>
+    <message>
+        <source>Consul of 218 BC and father of Scipio Africanus; wounded at the Ticinus and carried from the field by his son.</source>
+        <translation>Консул 218 г. до н. э. и отец Сципиона Африканского; ранен при Тицине и вынесен с поля сыном.</translation>
+    </message>
+    <message>
+        <source>Sword commander who screens the army&apos;s advance with fast mounted troops.</source>
+        <translation>Командир с мечом, прикрывающий наступление армии быстрой конницей.</translation>
+    </message>
+    <message>
+        <source>Quick to probe, quick to pull a screen back.</source>
+        <translation>Быстро прощупывает, быстро отводит заслон.</translation>
+    </message>
+    <message>
+        <source>Fights from the front and is easily cut off.</source>
+        <translation>Сражается впереди, и его легко отрезать.</translation>
+    </message>
+    <message>
+        <source>Consular Screen quickens nearby riders and skirmishers.</source>
+        <translation>Консульский заслон ускоряет ближних всадников и застрельщиков.</translation>
+    </message>
+    <message>
+        <source>Nearby allied horsemen move fastest in aura range.</source>
+        <translation>Союзные всадники в радиусе ауры движутся быстрее всех.</translation>
+    </message>
+    <message>
+        <source>Rally to the consul!</source>
+        <translation>Ко мне, к консулу!</translation>
+    </message>
+    <message>
+        <source>Ride them down!</source>
+        <translation>Растопчите их!</translation>
+    </message>
+    <message>
+        <source>Back across the Ticinus!</source>
+        <translation>Назад, за Тицин!</translation>
+    </message>
+    <message>
+        <source>Mago Barca</source>
+        <translation>Магон Барка</translation>
+    </message>
+    <message>
+        <source>Hannibal&apos;s youngest brother, who sprang the ambush from the stream bed at the Trebia and fought in the centre at Cannae.</source>
+        <translation>Младший брат Ганнибала, ударивший из засады в русле ручья при Треббии и сражавшийся в центре при Каннах.</translation>
+    </message>
+    <message>
+        <source>Sword commander who leads a hidden detachment into the enemy&apos;s rear.</source>
+        <translation>Командир с мечом, выводящий скрытый отряд в тыл врага.</translation>
+    </message>
+    <message>
+        <source>Strikes hard from concealment.</source>
+        <translation>Бьёт мощно из укрытия.</translation>
+    </message>
+    <message>
+        <source>Small command; vulnerable once the ambush is spent.</source>
+        <translation>Малый отряд; уязвим, когда засада исчерпана.</translation>
+    </message>
+    <message>
+        <source>Ambush Strike lends nearby troops a sharper first blow.</source>
+        <translation>Удар из засады придаёт ближним войскам более резкий первый удар.</translation>
+    </message>
+    <message>
+        <source>To me, sons of Carthage!</source>
+        <translation>Ко мне, сыны Карфагена!</translation>
+    </message>
+    <message>
+        <source>Out of the reeds, now!</source>
+        <translation>Из камышей, сейчас!</translation>
+    </message>
+    <message>
+        <source>Back to the stream bed!</source>
+        <translation>Назад, в русло ручья!</translation>
+    </message>
+    <message>
+        <source>Maharbal</source>
+        <translation>Магарбал</translation>
+    </message>
+    <message>
+        <source>Hannibal&apos;s cavalry commander, who rounded up the survivors of Trasimene and urged a march on Rome after Cannae.</source>
+        <translation>Начальник конницы Ганнибала, переловивший уцелевших у Тразименского озера и звавший идти на Рим после Канн.</translation>
+    </message>
+    <message>
+        <source>Spear-armed cavalry commander who hunts broken troops.</source>
+        <translation>Командир конницы с копьём, преследующий разбитые войска.</translation>
+    </message>
+    <message>
+        <source>Relentless in pursuit.</source>
+        <translation>Неумолим в преследовании.</translation>
+    </message>
+    <message>
+        <source>Light protection; poor at holding ground.</source>
+        <translation>Лёгкая защита; плохо удерживает позицию.</translation>
+    </message>
+    <message>
+        <source>Cavalry Pursuit speeds nearby riders after a breaking enemy.</source>
+        <translation>Конная погоня ускоряет ближних всадников вслед бегущему врагу.</translation>
+    </message>
+    <message>
+        <source>Horsemen, to me!</source>
+        <translation>Всадники, ко мне!</translation>
+    </message>
+    <message>
+        <source>After them, no quarter!</source>
+        <translation>За ними, пощады нет!</translation>
+    </message>
+    <message>
+        <source>Wheel away, reform!</source>
+        <translation>Разворот, перестроиться!</translation>
+    </message>
+    <message>
+        <source>Hanno, son of Bomilcar</source>
+        <translation>Ганнон, сын Бомилькара</translation>
+    </message>
+    <message>
+        <source>Hannibal&apos;s nephew, who crossed the Rhone upstream and signalled his flank attack with smoke.</source>
+        <translation>Племянник Ганнибала, переправившийся через Родан выше по течению и подавший дымом сигнал к удару во фланг.</translation>
+    </message>
+    <message>
+        <source>Mobile commander who takes a detachment round the enemy&apos;s flank.</source>
+        <translation>Подвижный командир, обводящий отряд вокруг фланга врага.</translation>
+    </message>
+    <message>
+        <source>Fast, independent flanking marches.</source>
+        <translation>Быстрые самостоятельные обходные марши.</translation>
+    </message>
+    <message>
+        <source>Thin in a frontal fight.</source>
+        <translation>Слаб в лобовом бою.</translation>
+    </message>
+    <message>
+        <source>Flanking March hurries nearby troops round the enemy.</source>
+        <translation>Обходной марш подгоняет ближние войска в обход врага.</translation>
+    </message>
+    <message>
+        <source>Nearby allied archers move fastest in aura range.</source>
+        <translation>Союзные лучники в радиусе ауры движутся быстрее всех.</translation>
+    </message>
+    <message>
+        <source>Hold here, wait for the smoke!</source>
+        <translation>Стоять здесь, ждать дыма!</translation>
+    </message>
+    <message>
+        <source>Now, into their flank!</source>
+        <translation>Теперь — им во фланг!</translation>
+    </message>
+    <message>
+        <source>Back to the ford!</source>
+        <translation>Назад, к броду!</translation>
+    </message>
+    <message>
+        <source>Hasdrubal (cavalry commander)</source>
+        <translation>Гасдрубал (начальник конницы)</translation>
+    </message>
+    <message>
+        <source>Commander of the Celtic and Iberian heavy horse on Hannibal&apos;s left at Cannae; not Hannibal&apos;s brother Hasdrubal Barca.</source>
+        <translation>Командир кельтской и иберийской тяжёлой конницы на левом крыле Ганнибала при Каннах; не брат Ганнибала Гасдрубал Барка.</translation>
+    </message>
+    <message>
+        <source>Heavy cavalry commander who breaks a wing and rides into the rear.</source>
+        <translation>Командир тяжёлой конницы, ломающий крыло и врывающийся в тыл.</translation>
+    </message>
+    <message>
+        <source>Shock and discipline in the charge.</source>
+        <translation>Удар и дисциплина в атаке.</translation>
+    </message>
+    <message>
+        <source>Costly to replace if he is cut down.</source>
+        <translation>Его гибель трудно восполнить.</translation>
+    </message>
+    <message>
+        <source>Heavy Horse Charge adds weight to nearby attacks.</source>
+        <translation>Атака тяжёлой конницы придаёт вес ближним ударам.</translation>
+    </message>
+    <message>
+        <source>Nearby allied horsemen gain the most attack in aura range.</source>
+        <translation>Союзные всадники в радиусе ауры получают наибольший прирост атаки.</translation>
+    </message>
+    <message>
+        <source>Close the ranks, horsemen!</source>
+        <translation>Сомкнуть ряды, всадники!</translation>
+    </message>
+    <message>
+        <source>Charge! Break their wing!</source>
+        <translation>В атаку! Сломить их крыло!</translation>
+    </message>
+    <message>
+        <source>Rein in and reform!</source>
+        <translation>Придержать коней, перестроиться!</translation>
+    </message>
+    <message>
+        <source>Masinissa</source>
+        <translation>Масинисса</translation>
+    </message>
+    <message>
+        <source>Numidian prince who fought for Carthage in Spain, changed sides, and led Rome&apos;s allied horse at Zama.</source>
+        <translation>Нумидийский царевич, воевавший за Карфаген в Испании, перешедший на другую сторону и водивший союзную конницу Рима при Заме.</translation>
+    </message>
+    <message>
+        <source>Light cavalry commander who harries with javelins and never stands still.</source>
+        <translation>Командир лёгкой конницы, изматывающий дротиками и никогда не стоящий на месте.</translation>
+    </message>
+    <message>
+        <source>The fastest horse in Africa.</source>
+        <translation>Самая быстрая конница Африки.</translation>
+    </message>
+    <message>
+        <source>Unarmoured; no use in a static fight.</source>
+        <translation>Без доспеха; бесполезен в позиционном бою.</translation>
+    </message>
+    <message>
+        <source>Numidian Horse keeps nearby riders moving and wheeling.</source>
+        <translation>Нумидийская конница держит ближних всадников в движении и манёвре.</translation>
+    </message>
+    <message>
+        <source>Riders, to me!</source>
+        <translation>Конники, ко мне!</translation>
+    </message>
+    <message>
+        <source>Throw, and wheel!</source>
+        <translation>Метай и разворачивайся!</translation>
+    </message>
+    <message>
+        <source>Scatter and come again!</source>
+        <translation>Рассыпаться — и снова в атаку!</translation>
+    </message>
 </context>
 <context>
     <name>ComponentGallery</name>
@@ -7747,6 +8147,10 @@ to see preview</source>
     <message>
         <source>✓ Completed</source>
         <translation>✓ Пройдено</translation>
+    </message>
+    <message>
+        <source>Also in command: %1</source>
+        <translation>Также командуют: %1</translation>
     </message>
 </context>
 <context>

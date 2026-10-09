@@ -8,8 +8,8 @@
 #include "barracks.h"
 #include "builder.h"
 #include "catapult.h"
-#include "commander_catalog.h"
 #include "civilian.h"
+#include "commander_catalog.h"
 #include "defense_tower.h"
 #include "elephant.h"
 #include "farm.h"
@@ -49,7 +49,8 @@ auto owner_has_living_commander(Engine::Core::World& world, int owner_id) -> boo
     }
     // Historical cameos serve beside an owner's commander and never occupy the
     // owner's single commander slot.
-    if (const auto* commander = entity->get_component<Engine::Core::CommanderComponent>();
+    if (const auto* commander =
+            entity->get_component<Engine::Core::CommanderComponent>();
         commander != nullptr && is_historical_commander_id(commander->commander_id)) {
       continue;
     }
@@ -61,8 +62,8 @@ auto owner_has_living_commander(Engine::Core::World& world, int owner_id) -> boo
   return false;
 }
 
-auto resolve_historical_spawn(const SpawnParams& params, SpawnType requested)
-    -> SpawnType {
+auto resolve_historical_spawn(const SpawnParams& params,
+                              SpawnType requested) -> SpawnType {
   const auto* definition = historical_commander_definition(params.commander_id);
   if (definition == nullptr) {
     return requested;

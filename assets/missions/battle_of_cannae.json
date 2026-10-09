@@ -11,6 +11,11 @@
     "nation": "carthage",
     "faction": "carthaginian",
     "color": "brown",
+    "historical_commanders": [
+      "carthage_hasdrubal_cavalry",
+      "carthage_mago_barca",
+      "carthage_maharbal"
+    ],
     "starting_units": [],
     "starting_buildings": [],
     "starting_resources": {
@@ -24,6 +29,9 @@
       "nation": "roman_republic",
       "faction": "roman",
       "color": "red",
+      "historical_commanders": [
+        "roman_terentius_varro"
+      ],
       "team_id": 1,
       "difficulty": "very_hard",
       "strategy": "aggressive",
@@ -82,6 +90,9 @@
       "nation": "roman_republic",
       "faction": "roman",
       "color": "orange",
+      "historical_commanders": [
+        "roman_aemilius_paullus"
+      ],
       "team_id": 1,
       "difficulty": "hard",
       "strategy": "defensive",

@@ -13,6 +13,7 @@
 #include "game/map/terrain.h"
 #include "game/systems/navigation/wall_network_service.h"
 #include "game/systems/raft_system.h"
+#include "game/units/commander_catalog.h"
 #include "game/units/spawn_type.h"
 #include "tools/arena/arena_scenario.h"
 #include "tools/arena/arena_scenarios.h"
@@ -211,6 +212,8 @@ TEST(ArenaScenariosTest, ListsAllPhaseOneScenarioIds) {
   for (auto const* commander_id :
        {Arena::Scenarios::k_commander_aura_pulse_id,
         Arena::Scenarios::k_commander_identity_lineup_id,
+        Arena::Scenarios::k_historical_commander_lineup_id,
+        Arena::Scenarios::k_historical_commander_helmet_review_id,
         Arena::Scenarios::k_commander_sword_duel_id,
         Arena::Scenarios::k_commander_bow_duel_id,
         Arena::Scenarios::k_commander_spear_duel_id,
@@ -595,6 +598,28 @@ TEST(ArenaScenariosTest, AlliedScenesFieldGallicAndIberianFootAndHorse) {
             << Game::Units::troop_typeToString(troop);
       }
     }
+  }
+}
+
+TEST(ArenaScenariosTest, HistoricalCommanderScenesFieldAllTenCameos) {
+  for (auto const* id : {Arena::Scenarios::k_historical_commander_lineup_id,
+                         Arena::Scenarios::k_historical_commander_helmet_review_id}) {
+    auto const* scenario = Arena::Scenarios::find_definition(QString::fromLatin1(id));
+    ASSERT_NE(scenario, nullptr) << id;
+    EXPECT_TRUE(Arena::validate_scenario(*scenario).empty()) << id;
+    std::set<std::string> fielded;
+    for (auto const& group : scenario->groups) {
+      EXPECT_EQ(group.count, 1) << group.name.toStdString();
+      EXPECT_TRUE(
+          Game::Units::is_historical_commander_id(group.commander_id.toStdString()))
+          << group.name.toStdString();
+      fielded.insert(group.commander_id.toStdString());
+    }
+    std::set<std::string> roster;
+    for (auto const& definition : Game::Units::historical_commander_definitions()) {
+      roster.insert(definition.id);
+    }
+    EXPECT_EQ(fielded, roster) << id;
   }
 }
 

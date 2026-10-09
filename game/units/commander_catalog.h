@@ -70,8 +70,8 @@ struct CommanderBarks {
   std::vector<std::string> charge;
   std::vector<std::string> fall_back;
 
-  [[nodiscard]] auto lines(CommanderBarkKind kind) const
-      -> const std::vector<std::string>&;
+  [[nodiscard]] auto
+  lines(CommanderBarkKind kind) const -> const std::vector<std::string>&;
   [[nodiscard]] auto empty() const -> bool {
     return rally.empty() && charge.empty() && fall_back.empty();
   }
@@ -129,8 +129,7 @@ all_commander_definitions() -> const std::vector<CommanderDefinition>&;
 // borrows the troop_type of a playable commander and is addressed by its id.
 [[nodiscard]] auto
 historical_commander_definitions() -> const std::vector<CommanderDefinition>&;
-[[nodiscard]] auto
-historical_commander_definition(std::string_view commander_id)
+[[nodiscard]] auto historical_commander_definition(std::string_view commander_id)
     -> const CommanderDefinition*;
 [[nodiscard]] auto is_historical_commander_id(std::string_view commander_id) -> bool;
 // Looks an id up in both rosters.
@@ -141,16 +140,15 @@ find_commander_definition(std::string_view commander_id) -> const CommanderDefin
 // bow) as the cameo's own troop_type.
 [[nodiscard]] auto
 historical_commander_troop_for_nation(const CommanderDefinition& definition,
-                                      Game::Systems::NationID nation_id)
-    -> TroopType;
+                                      Game::Systems::NationID nation_id) -> TroopType;
 // Gives a spawned commander the identity, aura numbers and look of a cameo.
 // Returns false (and leaves the entity untouched) for unknown ids or entities
 // that are not commanders.
 auto apply_historical_commander(Engine::Core::Entity& entity,
                                 std::string_view commander_id) -> bool;
-[[nodiscard]] auto commander_bark_lines(std::string_view commander_id,
-                                        CommanderBarkKind kind)
-    -> const std::vector<std::string>&;
+[[nodiscard]] auto
+commander_bark_lines(std::string_view commander_id,
+                     CommanderBarkKind kind) -> const std::vector<std::string>&;
 
 [[nodiscard]] auto
 commander_definition(TroopType troop_type) -> const CommanderDefinition*;

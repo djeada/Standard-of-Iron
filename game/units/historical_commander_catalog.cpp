@@ -174,8 +174,9 @@ auto build_historical_roster() -> std::vector<CommanderDefinition> {
                           "Spear commander who keeps a marching column moving at "
                           "speed."),
         QT_TRANSLATE_NOOP("Commanders", "Fast on the march and quick to engage."),
-        QT_TRANSLATE_NOOP("Commanders", "Scouts nothing; easily caught deployed in "
-                                        "column."),
+        QT_TRANSLATE_NOOP("Commanders",
+                          "Scouts nothing; easily caught deployed in "
+                          "column."),
         QT_TRANSLATE_NOOP("Commanders",
                           "Forced March hurries nearby troops along the road."),
         QT_TRANSLATE_NOOP("Commanders",
@@ -245,8 +246,7 @@ auto build_historical_roster() -> std::vector<CommanderDefinition> {
         QT_TRANSLATE_NOOP("Commanders",
                           "Spear commander who steadies the line and refuses to "
                           "break."),
-        QT_TRANSLATE_NOOP("Commanders",
-                          "Calm under pressure; keeps a wing standing."),
+        QT_TRANSLATE_NOOP("Commanders", "Calm under pressure; keeps a wing standing."),
         QT_TRANSLATE_NOOP("Commanders",
                           "Slow to move and bound by a colleague's decisions."),
         QT_TRANSLATE_NOOP("Commanders",
@@ -283,10 +283,8 @@ auto build_historical_roster() -> std::vector<CommanderDefinition> {
         QT_TRANSLATE_NOOP("Commanders",
                           "Sword commander who screens the army's advance with fast "
                           "mounted troops."),
-        QT_TRANSLATE_NOOP("Commanders",
-                          "Quick to probe, quick to pull a screen back."),
-        QT_TRANSLATE_NOOP("Commanders",
-                          "Fights from the front and is easily cut off."),
+        QT_TRANSLATE_NOOP("Commanders", "Quick to probe, quick to pull a screen back."),
+        QT_TRANSLATE_NOOP("Commanders", "Fights from the front and is easily cut off."),
         QT_TRANSLATE_NOOP("Commanders",
                           "Consular Screen quickens nearby riders and skirmishers."),
         QT_TRANSLATE_NOOP("Commanders",
@@ -479,9 +477,9 @@ auto build_historical_roster() -> std::vector<CommanderDefinition> {
         24.0F,
         12.0F,
         50.0F},
-       "Bareheaded with dark curled hair, a gold diadem and a white plume, full "
-       "black beard, short white cloak with crimson trim over a white tunic, no "
-       "armour, and a light javelin.",
+       "Bareheaded with dark curled hair under a white royal diadem studded with "
+       "gold, full black beard, short white cloak with crimson trim over a white "
+       "tunic, no armour, and a light javelin.",
        QT_TRANSLATE_NOOP("Commanders", "Riders, to me!"),
        QT_TRANSLATE_NOOP("Commanders", "Throw, and wheel!"),
        QT_TRANSLATE_NOOP("Commanders", "Scatter and come again!")},
@@ -557,8 +555,7 @@ auto historical_commander_troop_for_nation(const CommanderDefinition& definition
   case CameoWeapon::Bow:
     return carthage ? TroopType::CarthageBowCommander : TroopType::RomanFieldCommander;
   case CameoWeapon::Sword:
-    return carthage ? TroopType::CarthageSwordCommander
-                    : TroopType::RomanVeteranConsul;
+    return carthage ? TroopType::CarthageSwordCommander : TroopType::RomanVeteranConsul;
   }
   return definition.troop_type;
 }
@@ -579,8 +576,8 @@ auto apply_historical_commander(Engine::Core::Entity& entity,
   return true;
 }
 
-auto commander_bark_lines(std::string_view commander_id, CommanderBarkKind kind)
-    -> const std::vector<std::string>& {
+auto commander_bark_lines(std::string_view commander_id,
+                          CommanderBarkKind kind) -> const std::vector<std::string>& {
   if (const auto* definition = find_commander_definition(commander_id)) {
     return definition->barks.lines(kind);
   }
