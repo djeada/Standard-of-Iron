@@ -46,6 +46,11 @@ if(TARGET arena_app)
     # capture succeeds, and the frames show the previous version of the file.
     add_dependencies(arena_app stage_runtime_assets)
 endif()
+if(TARGET campaign_map_film)
+    # The map film reads the campaign map, its shaders and the march from the
+    # staged copy, like the game; an unstaged edit would film the old file.
+    add_dependencies(campaign_map_film stage_runtime_assets)
+endif()
 if(TARGET bake_creature_assets)
     # The baker resolves creature packages against the staged copies under
     # bin/assets before it falls back to the repo tree; staging must run

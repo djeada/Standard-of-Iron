@@ -7,6 +7,7 @@ add_subdirectory(city_export)
 add_subdirectory(movement_trace_report)
 add_subdirectory(bpat_baker)
 add_subdirectory(audio_master)
+add_subdirectory(campaign_film)
 
 # Arena scenarios inspect the baked clips, so an Arena-only build must never
 # run against assets produced by an older pose controller.

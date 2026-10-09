@@ -110,7 +110,6 @@ struct RouteTrack {
   QString to;
   std::vector<RouteKey> keys;
   CampaignMapFilm::RouteStyle style;
-  bool trail_from_start = true;
 };
 
 struct Window {
@@ -150,6 +149,7 @@ struct MarkerTrack {
   bool show_date = true;
   bool on_arrival = false;
   float hold = std::numeric_limits<float>::infinity();
+  float label_hold = std::numeric_limits<float>::infinity();
   Window window;
 };
 
@@ -242,6 +242,7 @@ struct LabelValue {
 struct MarkerValue {
   std::size_t index = 0;
   float alpha = 0.0F;
+  float text_alpha = 0.0F;
   float pop = 1.0F;
 };
 
