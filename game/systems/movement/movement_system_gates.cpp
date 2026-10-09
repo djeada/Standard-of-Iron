@@ -4,6 +4,8 @@
 #include <cmath>
 
 #include "core/component_economy.h"
+#include "formation/army_formation_registry.h"
+#include "movement_system_collision.h"
 #include "movement_system_heading.h"
 #include "movement_system_motor.h"
 #include "order_service.h"
@@ -100,10 +102,37 @@ void MovementSystem::Gates::step_melee_lock(Mover& mover,
     transform.desired_yaw = transform.rotation.y;
     transform.has_desired_yaw = false;
   }
+  give_ground_in_melee(mover, atk);
 
   MovementHeading::clamp_to_map_bounds(transform);
   Motor::publish_displacement(
       mover.facts, transform, mover.previous_x, mover.previous_z, mover.delta_time);
+}
+
+// A pressed troop of a yielding battle line (the crescent's centre) steps back
+// while it fights, and an enemy locked onto it presses after it, so the
+// fight moves back at the line's pace instead of breaking the lock.
+void MovementSystem::Gates::give_ground_in_melee(Mover& mover,
+                                                 const Engine::Core::AttackComponent* atk) {
+  if (mover.delta_time <= 0.0F) {
+    return;
+  }
+  QVector3D velocity =
+      Game::Formation::ArmyFormationRuntime::give_ground_velocity(mover.entity);
+  if (velocity.isNull() && atk != nullptr && atk->melee_lock_target_id != 0U) {
+    if (const auto* opponent = mover.world.get_entity(atk->melee_lock_target_id)) {
+      velocity = Game::Formation::ArmyFormationRuntime::give_ground_velocity(*opponent);
+    }
+  }
+  if (velocity.isNull()) {
+    return;
+  }
+  auto& transform = mover.transform;
+  MovementCollision::slide_body_to(mover.entity,
+                                   transform,
+                                   transform.position.x + velocity.x() * mover.delta_time,
+                                   transform.position.z + velocity.z() * mover.delta_time,
+                                   true);
 }
 
 void MovementSystem::Gates::step_builder_bypass(Mover& mover) {

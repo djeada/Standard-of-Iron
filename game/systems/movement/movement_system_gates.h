@@ -13,6 +13,8 @@ public:
   static void step_hold_mode(Mover& mover);
 
   static void step_melee_lock(Mover& mover, const DuelFootwork& footwork);
+  static void give_ground_in_melee(Mover& mover,
+                                   const Engine::Core::AttackComponent* atk);
 
   static void step_builder_bypass(Mover& mover);
 };

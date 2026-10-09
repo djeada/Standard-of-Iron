@@ -6,6 +6,7 @@
 #include <iterator>
 #include <utility>
 
+#include "formation_battle_orders.h"
 #include "formation_row_split.h"
 #include "formation_silhouette_shapes.h"
 #include "formation_slot_adjust.h"
@@ -59,6 +60,9 @@ public:
   }
 
   void run() {
+    if (place_battle_order(m_slots, m_extents, m_params, {m_lateral_gap, m_rank_gap})) {
+      return;
+    }
     partition_into_tiers();
     if (m_tiers.empty()) {
       return;

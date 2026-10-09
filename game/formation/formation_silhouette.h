@@ -10,6 +10,10 @@ namespace Game::Formation::planning {
 struct SlotExtents {
   std::vector<float> half_width;
   std::vector<float> half_depth;
+
+  std::vector<RoleTagSet> roles;
+  std::vector<int> troop;
+  std::vector<unsigned char> allied;
 };
 
 struct SilhouetteParams {

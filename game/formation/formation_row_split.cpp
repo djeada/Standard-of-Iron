@@ -96,7 +96,7 @@ auto wedge_rows(int total, int growth) -> std::vector<int> {
 auto intent_owns_its_rows(ArmyFormationIntent intent) -> bool {
   return intent == ArmyFormationIntent::Column ||
          intent == ArmyFormationIntent::Assault ||
-         intent == ArmyFormationIntent::Defensive;
+         intent == ArmyFormationIntent::Defensive || is_battle_order_intent(intent);
 }
 
 auto silhouette_rows(ArmyFormationIntent intent,
@@ -112,6 +112,9 @@ auto silhouette_rows(ArmyFormationIntent intent,
   switch (intent) {
   case ArmyFormationIntent::Line:
   case ArmyFormationIntent::Encirclement:
+  case ArmyFormationIntent::TriplexAcies:
+  case ArmyFormationIntent::ConvexCrescent:
+  case ArmyFormationIntent::ElephantScreen:
     return even_rows(total, total <= 3 ? 1 : scaled(2));
   case ArmyFormationIntent::Column: {
     int const files = std::clamp(static_cast<int>(std::lround((total <= 2   ? 1.0F

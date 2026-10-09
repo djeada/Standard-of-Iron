@@ -811,6 +811,11 @@ public:
 
   float foot_lateral{0.153F};
   float foot_forward{0.280F};
+
+  bool lane_running{false};
+  float lane_run_out_seconds{0.0F};
+  float lane_goal_x{0.0F};
+  float lane_goal_z{0.0F};
 };
 
 class ElephantPanicComponent {

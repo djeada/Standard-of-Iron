@@ -40,6 +40,16 @@ auto slot_to_json(const FormationSlot& slot) -> QJsonObject {
   obj["half_width"] = static_cast<double>(slot.half_width);
   obj["half_depth"] = static_cast<double>(slot.half_depth);
   obj["heavy"] = slot.heavy;
+  if (slot.band != BattleBand::None) {
+    obj["band"] = QString::fromLatin1(battle_band_to_string(slot.band));
+  }
+  if (slot.yield_depth != 0.0F) {
+    obj["yield_depth"] = static_cast<double>(slot.yield_depth);
+  }
+  if (!slot.manoeuvre_offset.isNull() || slot.manoeuvre_facing != 0.0F) {
+    obj["manoeuvre_offset"] = vector_to_json(slot.manoeuvre_offset);
+    obj["manoeuvre_facing"] = static_cast<double>(slot.manoeuvre_facing);
+  }
   return obj;
 }
 
@@ -58,6 +68,14 @@ auto slot_from_json(const QJsonObject& obj) -> FormationSlot {
   slot.half_width = static_cast<float>(obj["half_width"].toDouble(0.5));
   slot.half_depth = static_cast<float>(obj["half_depth"].toDouble(0.5));
   slot.heavy = obj["heavy"].toBool(false);
+  if (auto band = try_parse_battle_band(obj["band"].toString())) {
+    slot.band = *band;
+  }
+  slot.yield_depth = static_cast<float>(obj["yield_depth"].toDouble(0.0));
+  if (obj.contains("manoeuvre_offset")) {
+    slot.manoeuvre_offset = vector_from_json(obj["manoeuvre_offset"].toArray());
+    slot.manoeuvre_facing = static_cast<float>(obj["manoeuvre_facing"].toDouble(0.0));
+  }
   return slot;
 }
 
@@ -170,6 +188,16 @@ void write_state_fields(const ArmyFormation& formation, QJsonObject& obj) {
   obj["destination"] = vector_to_json(formation.destination);
   obj["advance_progress"] = static_cast<double>(formation.advance_progress);
   obj["move_plan"] = move_plan_to_json(formation.move_plan);
+  if (is_battle_order_intent(formation.intent)) {
+    QJsonObject manoeuvre;
+    manoeuvre["centre_yield"] = static_cast<double>(formation.manoeuvre.centre_yield);
+    manoeuvre["wing_wheel"] = static_cast<double>(formation.manoeuvre.wing_wheel);
+    manoeuvre["wheel_ordered"] = formation.manoeuvre.wheel_ordered;
+    manoeuvre["yielding"] = formation.manoeuvre.yielding;
+    manoeuvre["lane_shift"] = static_cast<double>(formation.manoeuvre.lane_shift);
+    manoeuvre["lanes_opened"] = formation.manoeuvre.lanes_opened;
+    obj["manoeuvre"] = manoeuvre;
+  }
 }
 
 void read_shape_fields(const QJsonObject& obj, ArmyFormation& formation) {
@@ -206,6 +234,16 @@ void read_state_fields(const QJsonObject& obj, ArmyFormation& formation) {
   formation.advance_progress =
       static_cast<float>(obj["advance_progress"].toDouble(0.0));
   move_plan_from_json(obj["move_plan"].toObject(), formation.move_plan);
+  auto const manoeuvre = obj["manoeuvre"].toObject();
+  formation.manoeuvre.centre_yield =
+      static_cast<float>(manoeuvre["centre_yield"].toDouble(0.0));
+  formation.manoeuvre.wing_wheel =
+      static_cast<float>(manoeuvre["wing_wheel"].toDouble(0.0));
+  formation.manoeuvre.wheel_ordered = manoeuvre["wheel_ordered"].toBool(false);
+  formation.manoeuvre.yielding = manoeuvre["yielding"].toBool(false);
+  formation.manoeuvre.lane_shift =
+      static_cast<float>(manoeuvre["lane_shift"].toDouble(0.0));
+  formation.manoeuvre.lanes_opened = manoeuvre["lanes_opened"].toBool(false);
 }
 
 void read_member_ids(const QJsonObject& obj, ArmyFormation& formation) {

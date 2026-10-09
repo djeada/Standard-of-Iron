@@ -77,6 +77,7 @@ void hash_members(Hasher& hasher, const std::vector<ArmyFormationMember>& member
     hasher.mix(static_cast<std::uint64_t>(member.troop_type));
     hasher.mix(static_cast<std::uint64_t>(member.roles));
     hasher.mix(member.doctrine);
+    hasher.mix(static_cast<std::uint64_t>(member.allied));
     hasher.mix_float(member.footprint);
 
     hasher.mix_float(member.current_position.x());
@@ -184,10 +185,17 @@ auto slot_extents_of(const std::vector<FormationSlot>& slot_list,
   planning::SlotExtents extents;
   extents.half_width.reserve(slot_list.size());
   extents.half_depth.reserve(slot_list.size());
+  extents.roles.reserve(slot_list.size());
+  extents.troop.reserve(slot_list.size());
+  extents.allied.reserve(slot_list.size());
   for (const auto& slot : slot_list) {
     auto const it = by_id.find(slot.occupant);
-    extents.half_width.push_back(it == by_id.end() ? 0.5F : it->second->half_width);
-    extents.half_depth.push_back(it == by_id.end() ? 0.5F : it->second->half_depth);
+    bool const known = it != by_id.end();
+    extents.half_width.push_back(known ? it->second->half_width : 0.5F);
+    extents.half_depth.push_back(known ? it->second->half_depth : 0.5F);
+    extents.roles.push_back(known ? it->second->roles : 0U);
+    extents.troop.push_back(known ? static_cast<int>(it->second->troop_type) : -1);
+    extents.allied.push_back(known && it->second->allied ? 1U : 0U);
   }
   return extents;
 }
@@ -549,9 +557,14 @@ auto ArmyFormationPlanner::build_layout(const std::vector<ArmyFormationMember>& 
   layout.movement_policy =
       resolve_movement_policy(request.options.movement_policy, *tmpl);
 
+  float files_aspect = tmpl->unit_files_aspect;
+  if (is_battle_order_intent(request.intent) && files_aspect > 0.0F) {
+    files_aspect *= std::clamp(request.options.frontage_scale, 0.4F, 3.0F) /
+                    std::clamp(request.options.depth_scale, 0.4F, 3.0F);
+  }
   std::vector<ArmyFormationMember> shaped = members;
   for (auto& member : shaped) {
-    shape_member_for_intent(member, tmpl->unit_files_aspect);
+    shape_member_for_intent(member, files_aspect);
   }
   auto line_layout = tightest_line_layout(shaped, *tmpl, request, spacing);
   layout.slot_list = std::move(line_layout.slot_list);
