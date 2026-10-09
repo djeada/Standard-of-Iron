@@ -17,6 +17,7 @@
 #include "arena_viewport_internal.h"
 #include "game/core/component_economy.h"
 #include "game/core/component_presentation.h"
+#include "game/core/death_sequence.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
 #include "game/session/selection_service.h"
@@ -743,4 +744,42 @@ void ArenaViewport::update_active_scenario(float simulation_dt) {
   if (m_scenario_runner != nullptr && simulation_dt > 0.0F) {
     m_scenario_runner->update(simulation_dt);
   }
+}
+
+auto ArenaViewport::scenario_group_samples(
+    const Arena::Promo::GroupExport& selection) const
+    -> std::vector<Arena::Promo::GroupSample> {
+  std::vector<Arena::Promo::GroupSample> samples;
+  if (m_scenario_runner == nullptr || m_world == nullptr || selection.none()) {
+    return samples;
+  }
+  for (const auto& group : m_scenario_runner->definition().groups) {
+    if (!selection.all && !selection.names.contains(group.name)) {
+      continue;
+    }
+    Arena::Promo::GroupSample sample;
+    sample.name = group.name;
+    sample.owner = group.owner_id;
+    for (Engine::Core::EntityID const entity_id :
+         m_scenario_runner->group_entities(group.name)) {
+      auto* entity = m_world->get_entity(entity_id);
+      if (entity == nullptr || !Engine::Core::is_live_entity(*entity)) {
+        continue;
+      }
+      auto const* transform = entity->get_component<Engine::Core::TransformComponent>();
+      if (transform == nullptr) {
+        continue;
+      }
+      sample.units.push_back(Arena::Promo::UnitSample{
+          entity_id,
+          QVector3D(transform->position.x, transform->position.y, transform->position.z),
+          transform->rotation.y});
+    }
+    samples.push_back(std::move(sample));
+  }
+  return samples;
+}
+
+auto ArenaViewport::terrain_half_extent() const -> float {
+  return static_cast<float>(m_terrain_grid_extent) * k_terrain_tile_size * 0.5F;
 }

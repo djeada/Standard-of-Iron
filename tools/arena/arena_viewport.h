@@ -31,6 +31,7 @@
 #include "game/systems/nation_id.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
+#include "promo_camera_export.h"
 #include "promo_spec.h"
 
 class QOpenGLShaderProgram;
@@ -278,6 +279,38 @@ public:
                                         const QSize& frame_size,
                                         QPointF& out) const -> bool;
 
+  struct CinematicState {
+    bool view_valid{false};
+    bool eye_valid{false};
+    QVector3D target;
+    QVector3D eye;
+    float distance{16.0F};
+    float pitch{18.0F};
+    float yaw{40.0F};
+    float fov{40.0F};
+    float roll{0.0F};
+    float near_plane{0.0F};
+    float ground_clearance{-1.0F};
+  };
+  [[nodiscard]] auto cinematic_state() const -> CinematicState;
+  void set_cinematic_state(const CinematicState& state);
+
+  struct CaptureVariant {
+    int width{0};
+    int height{0};
+    CinematicState lens;
+    std::function<void(const QImage&)> sink;
+  };
+  void set_capture_variants(std::vector<CaptureVariant> variants);
+  void set_capture_variant_lens(std::size_t index, const CinematicState& lens);
+
+  [[nodiscard]] auto capture_camera() const -> const Arena::Promo::CameraSample& {
+    return m_capture_camera;
+  }
+  [[nodiscard]] auto scenario_group_samples(const Arena::Promo::GroupExport& selection)
+      const -> std::vector<Arena::Promo::GroupSample>;
+  [[nodiscard]] auto terrain_half_extent() const -> float;
+
 public:
   [[nodiscard]] auto
   attack_range_rings() const -> const std::vector<Game::Systems::AttackRangeRing>& {
@@ -436,6 +469,9 @@ private:
   void record_render_profile(Arena::ArenaRenderedFrameTimings& timings) const;
   void paint_ui_overlays();
   void deliver_capture_frame();
+  void render_capture_variants(bool flame_card);
+  [[nodiscard]] auto sample_capture_camera(int width, int height) const
+      -> Arena::Promo::CameraSample;
   void publish_scenario_frame(const Arena::ArenaRenderedFrameTimings& timings);
 
   void apply_scenario_environment(const Arena::ArenaScenarioDefinition& scenario);
@@ -562,6 +598,9 @@ private:
   std::unique_ptr<QOpenGLFramebufferObject> m_capture_target;
   std::unique_ptr<QOpenGLFramebufferObject> m_capture_preview_resolve;
   std::function<void(const QImage&)> m_capture_sink;
+  std::vector<CaptureVariant> m_capture_variants;
+  std::vector<std::unique_ptr<QOpenGLFramebufferObject>> m_variant_targets;
+  Arena::Promo::CameraSample m_capture_camera;
   std::function<void(float)> m_frame_hook;
   int m_capture_width = 0;
   int m_capture_height = 0;

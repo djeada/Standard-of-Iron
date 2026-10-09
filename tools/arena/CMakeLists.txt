@@ -59,6 +59,9 @@ add_library(
     # the harness rather than only inside arena_app -- which is what forced
     # tools_tests to compile promo_spec.cpp a second time to reach it.
     promo_spec.cpp
+    # Per-frame camera matrices and group positions written beside each clip,
+    # read by scripts/tactical_overlay.py to register overlays to the world.
+    promo_camera_export.cpp
     # The ffmpeg pipe writer, here for the same reason: arena_tests asserts on
     # its backpressure, and a second compiled copy could pass while the object
     # the arena ships is broken.
