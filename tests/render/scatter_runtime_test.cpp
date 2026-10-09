@@ -278,12 +278,13 @@ TEST(ScatterRuntimeTest, CampaniaCampaignMaintainsRichNaturalScatter) {
 TEST(ScatterRuntimeTest, CampfiresOnHillsidesSitOnTheGround) {
   const auto root = find_repo_root();
   constexpr float k_tolerance = 0.03F;
-  for (const char* map_name : {"map_battle_trebia.json"}) {
+  for (const char* map_name : {"hillside_campfires.json"}) {
     SCOPED_TRACE(map_name);
     Game::Map::MapDefinition map_def;
     QString error;
     ASSERT_TRUE(Game::Map::MapLoader::load_from_json_file(
-        QString::fromStdString((root / "assets" / "maps" / map_name).string()),
+        QString::fromStdString(
+            (root / "tests" / "render" / "fixtures" / map_name).string()),
         map_def,
         &error))
         << error.toStdString();
@@ -304,8 +305,15 @@ TEST(ScatterRuntimeTest, CampfiresOnHillsidesSitOnTheGround) {
       return terrain.resolve_surface_world_y(point.x(), point.z());
     };
 
+    int hillside_camps = 0;
     for (const auto& camp : fires.camps()) {
       const QVector3D centre = camp.pos_intensity.toVector3D();
+      const float rise =
+          std::max(std::abs(ground(centre + QVector3D(1.0F, 0.0F, 0.0F)) -
+                            ground(centre - QVector3D(1.0F, 0.0F, 0.0F))),
+                   std::abs(ground(centre + QVector3D(0.0F, 0.0F, 1.0F)) -
+                            ground(centre - QVector3D(0.0F, 0.0F, 1.0F))));
+      hillside_camps += rise > 0.3F ? 1 : 0;
       EXPECT_NEAR(centre.y(), ground(centre), k_tolerance)
           << "the flame at (" << centre.x() << ", " << centre.z()
           << ") does not stand on the ground";
@@ -342,6 +350,7 @@ TEST(ScatterRuntimeTest, CampfiresOnHillsidesSitOnTheGround) {
             << ") floats " << (above - stone.half_height) << " above the ground";
       }
     }
+    EXPECT_GE(hillside_camps, 3) << "the fixture no longer puts campfires on slopes";
     terrain.clear();
   }
 }

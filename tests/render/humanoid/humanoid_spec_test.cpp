@@ -339,16 +339,12 @@ TEST(HumanoidSpecTest, FullSpecPreservesShoulderWaistTaperAndHeadHierarchy) {
   auto const* neck = find_primitive(spec.lod_full.primitives, "humanoid_full_neck");
   auto const* cranium =
       find_primitive(spec.lod_full.primitives, "humanoid_full_cranium");
-  auto const* jaw = find_primitive(spec.lod_full.primitives, "humanoid_full_jaw");
-  auto const* nose = find_primitive(spec.lod_full.primitives, "humanoid_full_nose");
 
   ASSERT_NE(chest, nullptr);
   ASSERT_NE(abdomen, nullptr);
   ASSERT_NE(pelvis, nullptr);
   ASSERT_NE(neck, nullptr);
   ASSERT_NE(cranium, nullptr);
-  ASSERT_NE(jaw, nullptr);
-  ASSERT_NE(nose, nullptr);
 
   ASSERT_EQ(pelvis->shape, Render::Creature::PrimitiveShape::Mesh);
   ASSERT_NE(pelvis->custom_mesh, nullptr);
@@ -369,9 +365,7 @@ TEST(HumanoidSpecTest, FullSpecPreservesShoulderWaistTaperAndHeadHierarchy) {
   EXPECT_GT(chest->params.radius, waist);
   EXPECT_GT(hips, abdomen->params.radius);
   EXPECT_GT(chest->params.depth_radius, abdomen->params.depth_radius);
-  EXPECT_LT(neck->params.radius, jaw->params.half_extents.x());
-  EXPECT_LT(jaw->params.half_extents.x(), cranium->params.half_extents.x());
-  EXPECT_GT(nose->params.head_offset.z(), jaw->params.head_offset.z());
+  EXPECT_LT(neck->params.radius, cranium->params.half_extents.x());
 }
 
 TEST(HumanoidSpecTest, FullSpecKeepsArmsAndLegsTaperedTowardExtremities) {
@@ -687,5 +681,85 @@ TEST(HumanoidSpecTest, MinimalLodRespectsWorldFromUnit) {
       EXPECT_NEAR(moved.y() - base.y(), 0.0F, 1.0e-4F);
       EXPECT_NEAR(moved.z() - base.z(), 0.0F, 1.0e-4F);
     }
+  }
+}
+
+TEST(HumanoidSpecTest, FullBodyCarriesABakedFaceOnTheCraniumFront) {
+  CreatureSpec const& spec = humanoid_creature_spec();
+  auto const* face = find_primitive(spec.lod_full.primitives, "humanoid_full_face");
+  auto const* cranium =
+      find_primitive(spec.lod_full.primitives, "humanoid_full_cranium");
+  ASSERT_NE(face, nullptr);
+  ASSERT_NE(cranium, nullptr);
+  EXPECT_EQ(find_primitive(spec.lod_minimal.primitives, "humanoid_full_face"), nullptr);
+  ASSERT_EQ(face->shape, Render::Creature::PrimitiveShape::Mesh);
+  ASSERT_NE(face->custom_mesh, nullptr);
+  EXPECT_EQ(face->params.anchor_bone, static_cast<std::uint16_t>(HumanoidBone::Head));
+
+  QVector3D const centre = cranium->params.head_offset;
+  QVector3D const radii = cranium->params.half_extents * 2.0F;
+  auto const& vertices = face->custom_mesh->get_vertices();
+  ASSERT_FALSE(vertices.empty());
+  for (auto const& v : vertices) {
+    QVector3D const d(v.position[0] - centre.x(),
+                      v.position[1] - centre.y(),
+                      v.position[2] - centre.z());
+    float const r = std::sqrt((d.x() * d.x()) / (radii.x() * radii.x()) +
+                              (d.y() * d.y()) / (radii.y() * radii.y()) +
+                              (d.z() * d.z()) / (radii.z() * radii.z()));
+    EXPECT_GT(r, 1.0F);
+    EXPECT_LT(r, 1.03F);
+    EXPECT_GT(v.position[2], 0.0F);
+    EXPECT_TRUE(v.color_role == 2U || v.color_role == 8U);
+    EXPECT_EQ(v.bone_indices[0], static_cast<std::uint8_t>(HumanoidBone::Head));
+    EXPECT_FLOAT_EQ(v.bone_weights[0], 1.0F);
+  }
+
+  auto const& indices = face->custom_mesh->get_indices();
+  ASSERT_EQ(indices.size() % 3U, 0U);
+  for (std::size_t i = 0; i < indices.size(); i += 3) {
+    auto pos = [&](unsigned int k) {
+      auto const& p = vertices[k].position;
+      return QVector3D(p[0], p[1], p[2]);
+    };
+    QVector3D const n = QVector3D::crossProduct(pos(indices[i + 1]) - pos(indices[i]),
+                                                pos(indices[i + 2]) - pos(indices[i]));
+    EXPECT_GT(n.z(), 0.0F) << "triangle " << i / 3 << " faces into the head";
+  }
+}
+
+TEST(HumanoidSpecTest, NoFullBodyHeadPartIsBuriedInsideTheCranium) {
+  CreatureSpec const& spec = humanoid_creature_spec();
+  auto const* cranium =
+      find_primitive(spec.lod_full.primitives, "humanoid_full_cranium");
+  ASSERT_NE(cranium, nullptr);
+  QVector3D const centre = cranium->params.head_offset;
+  QVector3D const radii = cranium->params.half_extents * 2.0F;
+  auto outside = [&](const QVector3D& p) {
+    QVector3D const d = p - centre;
+    return (d.x() * d.x()) / (radii.x() * radii.x()) +
+               (d.y() * d.y()) / (radii.y() * radii.y()) +
+               (d.z() * d.z()) / (radii.z() * radii.z()) >
+           1.0F;
+  };
+  for (auto const& part : spec.lod_full.primitives) {
+    if (&part == cranium ||
+        part.params.anchor_bone != static_cast<std::uint16_t>(HumanoidBone::Head) ||
+        part.shape != Render::Creature::PrimitiveShape::OrientedSphere) {
+      continue;
+    }
+    QVector3D const r = part.params.half_extents * 2.0F;
+    bool visible = false;
+    for (int i = 0; i < 64 && !visible; ++i) {
+      for (int j = 0; j <= 16 && !visible; ++j) {
+        float const az = 6.2831853F * static_cast<float>(i) / 64.0F;
+        float const el = -1.5707963F + (3.1415927F * static_cast<float>(j) / 16.0F);
+        visible = outside(part.params.head_offset +
+                          QVector3D(r.x() * std::cos(el) * std::sin(az),
+                                    r.y() * std::sin(el),
+                                    r.z() * std::cos(el) * std::cos(az)));
+      }
+    }
+    EXPECT_TRUE(visible) << part.debug_name << " is drawn entirely inside the cranium";
   }
 }

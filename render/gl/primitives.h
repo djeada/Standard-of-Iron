@@ -44,6 +44,21 @@ inline constexpr int k_min_bake_radial_segments = 8;
 
 [[nodiscard]] auto bake_tessellated_mesh(Mesh* mesh, const QMatrix4x4& model) -> Mesh*;
 
+[[nodiscard]] auto bake_radial_segments(float radius, int authored) -> int;
+
+enum class UnitSolidKind : std::uint8_t {
+  None,
+  Ball,
+  Prism,
+};
+
+struct UnitSolid {
+  UnitSolidKind kind{UnitSolidKind::None};
+  float inradius{0.0F};
+};
+
+[[nodiscard]] auto unit_solid_of(const Mesh* mesh) -> UnitSolid;
+
 enum class UnitSurfaceShape : std::uint8_t {
   Flat,
   Round,

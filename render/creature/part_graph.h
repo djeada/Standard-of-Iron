@@ -79,10 +79,6 @@ struct PrimitiveParams {
   QVector3D half_extents{1.0F, 1.0F, 1.0F};
 };
 
-inline constexpr std::uint8_t k_surface_marker_none = 0U;
-inline constexpr std::uint8_t k_surface_marker_face_cranium = 1U;
-inline constexpr std::uint8_t k_surface_marker_face_jaw = 2U;
-
 struct PrimitiveInstance {
   std::string_view debug_name{};
   PrimitiveShape shape{PrimitiveShape::None};
@@ -99,7 +95,6 @@ struct PrimitiveInstance {
   int material_id{0};
 
   std::uint8_t lod_mask{k_lod_all};
-  std::uint8_t surface_marker{k_surface_marker_none};
 };
 
 struct PartGraph {

@@ -1,0 +1,189 @@
+{
+  "name": "Hillside Campfires Fixture",
+  "coord_system": "grid",
+  "grid": {
+    "width": 200,
+    "height": 128,
+    "tile_size": 1
+  },
+  "biome": {
+    "grass_dry": [0.58, 0.55, 0.42],
+    "grass_primary": [0.28, 0.38, 0.25],
+    "grass_secondary": [0.4, 0.46, 0.3],
+    "ground_irregularity_enabled": true,
+    "ground_type": "forest_mud",
+    "height_noise": [0.2, 0.07],
+    "irregularity_amplitude": 0.08,
+    "irregularity_scale": 0.15,
+    "patch_density": 3.35,
+    "patch_jitter": 0.9,
+    "plant_density": 0.68,
+    "rock_high": [0.68, 0.68, 0.65],
+    "rock_low": [0.38, 0.38, 0.36],
+    "seed": 10061,
+    "soil_color": [0.24, 0.22, 0.18],
+    "sway_speed": 0.65,
+    "sway_strength": 0.1
+  },
+  "terrain": [
+    {
+      "depth": 71.81,
+      "entrances": [
+        {
+          "radius": 16.14,
+          "x": 118.0,
+          "z": 28.85
+        },
+        {
+          "x": 27.0,
+          "z": 72.0
+        }
+      ],
+      "height": 2.2,
+      "rotation": -6,
+      "type": "hill",
+      "width": 147.29,
+      "x": 100.0,
+      "z": 64.0
+    }
+  ],
+  "world_props": [
+    {
+      "intensity": 0.85,
+      "persistent": true,
+      "radius": 2.8000000000000003,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 90.03,
+      "z": 28.71
+    },
+    {
+      "intensity": 0.8,
+      "persistent": true,
+      "radius": 2.5,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 58.31,
+      "z": 31.89
+    },
+    {
+      "type": "firecamp",
+      "x": 100.0,
+      "z": 66.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "dressing": "trebia_oppidum",
+      "radius": 3.2,
+      "intensity": 1.15,
+      "persistent": true
+    },
+    {
+      "intensity": 1,
+      "persistent": true,
+      "radius": 3,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 167.38,
+      "z": 56.92
+    },
+    {
+      "intensity": 1,
+      "persistent": true,
+      "radius": 3,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 160.08,
+      "z": 74.29
+    },
+    {
+      "intensity": 1,
+      "persistent": true,
+      "radius": 3,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 136.68,
+      "z": 88.91
+    },
+    {
+      "intensity": 1,
+      "persistent": true,
+      "radius": 3,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 103.45,
+      "z": 96.85
+    },
+    {
+      "intensity": 1,
+      "persistent": true,
+      "radius": 3,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 69.3,
+      "z": 95.99
+    },
+    {
+      "intensity": 1,
+      "persistent": true,
+      "radius": 3,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 43.37,
+      "z": 86.56
+    },
+    {
+      "intensity": 1,
+      "persistent": true,
+      "radius": 3,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 32.62,
+      "z": 71.08
+    },
+    {
+      "intensity": 1,
+      "persistent": true,
+      "radius": 3,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 39.92,
+      "z": 53.71
+    },
+    {
+      "intensity": 1,
+      "persistent": true,
+      "radius": 3,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 63.32,
+      "z": 39.09
+    },
+    {
+      "intensity": 1,
+      "persistent": true,
+      "radius": 3,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 96.55,
+      "z": 31.15
+    },
+    {
+      "intensity": 1,
+      "persistent": true,
+      "radius": 3,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 130.7,
+      "z": 32.01
+    },
+    {
+      "intensity": 1,
+      "persistent": true,
+      "radius": 3,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 156.63,
+      "z": 41.44
+    }
+  ]
+}

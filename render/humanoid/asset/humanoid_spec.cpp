@@ -22,6 +22,7 @@
 #include "render/gl/mesh.h"
 #include "render/gl/primitives.h"
 #include "render/humanoid/asset/humanoid_beard_mesh.h"
+#include "render/humanoid/asset/humanoid_face_mesh.h"
 #include "render/humanoid/runtime/body_frame_resolver.h"
 #include "render/humanoid/runtime/humanoid_renderer.h"
 #include "render/humanoid/runtime/skeleton_evaluator.h"
@@ -305,7 +306,6 @@ constexpr auto make_full_cranium() noexcept -> Creature::PrimitiveInstance {
 
   Creature::PrimitiveInstance p{};
   p.debug_name = "humanoid_full_cranium";
-  p.surface_marker = Creature::k_surface_marker_face_cranium;
   p.shape = Creature::PrimitiveShape::OrientedSphere;
   p.params.anchor_bone = bone(HumanoidBone::Head);
   p.params.head_offset = QVector3D(0.0F, HP::HEAD_RADIUS * 0.06F, 0.0F);
@@ -319,7 +319,6 @@ constexpr auto make_full_cranium() noexcept -> Creature::PrimitiveInstance {
 constexpr auto make_full_jaw() noexcept -> Creature::PrimitiveInstance {
   Creature::PrimitiveInstance p{};
   p.debug_name = "humanoid_full_jaw";
-  p.surface_marker = Creature::k_surface_marker_face_jaw;
   p.shape = Creature::PrimitiveShape::OrientedSphere;
   p.params.anchor_bone = bone(HumanoidBone::Head);
   p.params.head_offset =
@@ -340,20 +339,6 @@ constexpr auto make_full_brow() noexcept -> Creature::PrimitiveInstance {
       QVector3D(0.0F, HP::HEAD_RADIUS * 0.30F, HP::HEAD_RADIUS * 0.60F);
   p.params.half_extents = QVector3D(
       HP::HEAD_RADIUS * 0.60F, HP::HEAD_RADIUS * 0.12F, HP::HEAD_RADIUS * 0.22F);
-  p.color_role = Skin;
-  p.lod_mask = Creature::k_lod_full;
-  return p;
-}
-
-constexpr auto make_full_nose() noexcept -> Creature::PrimitiveInstance {
-  Creature::PrimitiveInstance p{};
-  p.debug_name = "humanoid_full_nose";
-  p.shape = Creature::PrimitiveShape::OrientedSphere;
-  p.params.anchor_bone = bone(HumanoidBone::Head);
-  p.params.head_offset =
-      QVector3D(0.0F, -HP::HEAD_RADIUS * 0.01F, HP::HEAD_RADIUS * 0.80F);
-  p.params.half_extents = QVector3D(
-      HP::HEAD_RADIUS * 0.09F, HP::HEAD_RADIUS * 0.18F, HP::HEAD_RADIUS * 0.18F);
   p.color_role = Skin;
   p.lod_mask = Creature::k_lod_full;
   return p;
@@ -519,7 +504,7 @@ constexpr std::array<Creature::PrimitiveInstance, 17> k_minimal_parts = {
     as_minimal(make_full_foot(false)),
 };
 
-constexpr std::array<Creature::PrimitiveInstance, 41> k_full_parts = {
+constexpr std::array<Creature::PrimitiveInstance, 38> k_full_parts = {
 
     make_full_chest(),
     make_full_pectoral(true),
@@ -548,9 +533,6 @@ constexpr std::array<Creature::PrimitiveInstance, 41> k_full_parts = {
 
     make_full_neck(),
     make_full_cranium(),
-    make_full_jaw(),
-    make_full_brow(),
-    make_full_nose(),
 
     make_full_thigh_proximal(true),
     make_full_thigh_proximal(false),
@@ -568,18 +550,20 @@ constexpr std::array<Creature::PrimitiveInstance, 41> k_full_parts = {
     make_full_foot(false),
 };
 
+constexpr int k_smooth_limb_slices = 32;
+
 auto smooth_limb_mesh(float tail_radius,
                       float head_slope,
                       float tail_slope,
                       bool cap_head,
-                      bool cap_tail) -> std::unique_ptr<Render::GL::Mesh> {
-  constexpr unsigned int k_slices = 32;
+                      bool cap_tail,
+                      unsigned int slices) -> std::unique_ptr<Render::GL::Mesh> {
   constexpr unsigned int k_stacks = 4;
-  constexpr unsigned int k_row = k_slices + 1;
+  unsigned int const row = slices + 1;
   std::vector<Render::GL::Vertex> vertices;
   std::vector<unsigned int> indices;
-  vertices.reserve((k_stacks + 3) * k_row + 2);
-  indices.reserve((k_stacks * 2 + 2) * k_slices * 3);
+  vertices.reserve((k_stacks + 3) * row + 2);
+  indices.reserve((k_stacks * 2 + 2) * slices * 3);
 
   float const a = 2.0F - 2.0F * tail_radius + head_slope + tail_slope;
   float const b = -3.0F + 3.0F * tail_radius - 2.0F * head_slope - tail_slope;
@@ -587,10 +571,9 @@ auto smooth_limb_mesh(float tail_radius,
     float const t = static_cast<float>(stack) / k_stacks;
     float const radius = ((a * t + b) * t + head_slope) * t + 1.0F;
     float const slope = (3.0F * a * t + 2.0F * b) * t + head_slope;
-    for (unsigned int slice = 0; slice <= k_slices; ++slice) {
-      float const u = static_cast<float>(slice) / k_slices;
-      float const angle =
-          slice == k_slices ? 0.0F : 2.0F * std::numbers::pi_v<float> * u;
+    for (unsigned int slice = 0; slice <= slices; ++slice) {
+      float const u = static_cast<float>(slice) / slices;
+      float const angle = slice == slices ? 0.0F : 2.0F * std::numbers::pi_v<float> * u;
       float const x = std::cos(angle);
       float const z = std::sin(angle);
       QVector3D const normal = QVector3D(x, -slope, z).normalized();
@@ -600,10 +583,10 @@ auto smooth_limb_mesh(float tail_radius,
     }
   }
   for (unsigned int stack = 0; stack < k_stacks; ++stack) {
-    for (unsigned int slice = 0; slice < k_slices; ++slice) {
-      auto const a0 = stack * k_row + slice;
+    for (unsigned int slice = 0; slice < slices; ++slice) {
+      auto const a0 = stack * row + slice;
       indices.insert(indices.end(),
-                     {a0, a0 + k_row, a0 + 1, a0 + 1, a0 + k_row, a0 + k_row + 1});
+                     {a0, a0 + row, a0 + 1, a0 + 1, a0 + row, a0 + row + 1});
     }
   }
 
@@ -612,11 +595,11 @@ auto smooth_limb_mesh(float tail_radius,
     float const y = tail ? 0.5F : -0.5F;
     float const ny = tail ? 1.0F : -1.0F;
     vertices.push_back({{0.0F, y, 0.0F}, {0.0F, ny, 0.0F}, {0.5F, 0.5F}});
-    for (unsigned int slice = 0; slice <= k_slices; ++slice) {
-      auto const& side = vertices[(tail ? k_stacks * k_row : 0) + slice];
+    for (unsigned int slice = 0; slice <= slices; ++slice) {
+      auto const& side = vertices[(tail ? k_stacks * row : 0) + slice];
       vertices.push_back({side.position, {0.0F, ny, 0.0F}, side.tex_coord});
     }
-    for (unsigned int slice = 0; slice < k_slices; ++slice) {
+    for (unsigned int slice = 0; slice < slices; ++slice) {
       auto const first = center + slice + 1;
       indices.insert(indices.end(),
                      {center, tail ? first + 1 : first, tail ? first : first + 1});
@@ -671,11 +654,29 @@ void fit_tunic_hem(Creature::PrimitiveInstance& part) {
   part.mesh_skinning = Creature::MeshSkinning::Authored;
 }
 
+auto face_primitive(Render::GL::Mesh* mesh) -> Creature::PrimitiveInstance {
+  Creature::PrimitiveInstance p{};
+  p.debug_name = "humanoid_full_face";
+  p.shape = Creature::PrimitiveShape::Mesh;
+  p.params.anchor_bone = bone(HumanoidBone::Head);
+  p.params.half_extents = QVector3D(1.0F, 1.0F, 1.0F);
+  p.custom_mesh = mesh;
+  p.mesh_skinning = Creature::MeshSkinning::Authored;
+  p.color_role = Skin;
+  p.lod_mask = Creature::k_lod_full;
+  return p;
+}
+
 struct SmoothBodyParts {
-  std::array<Creature::PrimitiveInstance, k_full_parts.size()> parts = k_full_parts;
+  std::array<Creature::PrimitiveInstance, k_full_parts.size() + 1> parts{};
   std::vector<std::unique_ptr<Render::GL::Mesh>> meshes;
 
   SmoothBodyParts() {
+    std::copy(k_full_parts.begin(), k_full_parts.end(), parts.begin());
+    constexpr auto cranium = make_full_cranium();
+    meshes.push_back(build_humanoid_face_mesh(cranium.params.head_offset,
+                                              cranium.params.half_extents * 2.0F));
+    parts.back() = face_primitive(meshes.back().get());
     for (auto& part : parts) {
       if (part.params.anchor_bone == bone(HumanoidBone::Pelvis) &&
           std::string_view(part.debug_name) == "humanoid_full_pelvis_block") {
@@ -713,6 +714,12 @@ struct SmoothBodyParts {
             first_slope * second_slope > 0.0F
                 ? 2.0F * first_slope * second_slope / (first_slope + second_slope)
                 : 0.0F;
+        auto const slices = static_cast<unsigned int>(
+            Render::GL::bake_radial_segments(std::max({proximal.params.radius,
+                                                       proximal.params.tail_radius,
+                                                       distal.params.radius,
+                                                       distal.params.tail_radius}),
+                                             k_smooth_limb_slices));
         auto attach = [&](Creature::PrimitiveInstance& part,
                           float span,
                           float start_slope,
@@ -723,7 +730,8 @@ struct SmoothBodyParts {
                                             start_slope * span / radius,
                                             end_slope * span / radius,
                                             first,
-                                            !first));
+                                            !first,
+                                            slices));
           part.custom_mesh = meshes.back().get();
         };
         attach(proximal, first_length, first_slope, join_slope, true);
@@ -1107,7 +1115,6 @@ constexpr auto make_skeleton_foot(bool left) noexcept -> Creature::PrimitiveInst
 
 constexpr auto make_skeleton_skull() noexcept -> Creature::PrimitiveInstance {
   Creature::PrimitiveInstance p = make_full_cranium();
-  p.surface_marker = Creature::k_surface_marker_none;
   p.debug_name = "skeleton_skull";
   p.params.head_offset = QVector3D(0.0F, HP::HEAD_RADIUS * 0.10F, 0.0F);
   p.params.half_extents = QVector3D(
@@ -1118,7 +1125,6 @@ constexpr auto make_skeleton_skull() noexcept -> Creature::PrimitiveInstance {
 
 constexpr auto make_skeleton_jaw() noexcept -> Creature::PrimitiveInstance {
   Creature::PrimitiveInstance p = make_full_jaw();
-  p.surface_marker = Creature::k_surface_marker_none;
   p.debug_name = "skeleton_jaw";
   p.params.head_offset =
       QVector3D(0.0F, -HP::HEAD_RADIUS * 0.46F, HP::HEAD_RADIUS * 0.20F);
