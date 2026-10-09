@@ -66,6 +66,10 @@ add_library(
     # The matchup short generator: it turns "20 swordsman vs 20 archer" into a
     # scenario and a promo spec, so it needs both and no GL.
     matchup_short.cpp
+    # Battle scripts: an order of battle in JSON compiled into a scenario, and
+    # the scripted weather / fog bank timeline it can drive.
+    battle_script.cpp
+    arena_weather.cpp
 )
 target_include_directories(arena_scenario_harness PUBLIC "${CMAKE_SOURCE_DIR}")
 # game_sim, not game_systems: every scenario is scripted, so the harness spawns
@@ -75,6 +79,13 @@ target_link_libraries(
     arena_scenario_harness
     PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui engine_core render_gl game_sim
 )
+
+# Plays a battle script on the real simulation with no window, for phase
+# timelines and the determinism check. Its own library because it needs the
+# runtime system registry (soi_runtime), which the scripted harness does not.
+add_library(arena_battle_headless STATIC battle_script_headless.cpp)
+target_include_directories(arena_battle_headless PUBLIC "${CMAKE_SOURCE_DIR}")
+target_link_libraries(arena_battle_headless PUBLIC arena_scenario_harness soi_runtime)
 
 # The game's RPG HUD (ui/qml/RpgFpvOverlay.qml) rendered offscreen over promo
 # frames. Its own library so arena_tests can paint it onto an image and look at
@@ -192,6 +203,7 @@ target_link_libraries(
         audio_system
         app_core
         arena_scenario_harness
+        arena_battle_headless
         arena_panels
         arena_feedback
         arena_casting_overlay

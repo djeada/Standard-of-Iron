@@ -28,12 +28,8 @@ auto lerp(const QVector3D& from, const QVector3D& to, float weight) -> QVector3D
 }
 
 auto bank_at(const ArenaFogBank& bank, float time_seconds) -> ArenaFogBankState {
-  ArenaFogBankState state{bank.id,
-                          bank.start,
-                          bank.end,
-                          bank.radius,
-                          bank.ceiling,
-                          bank.density};
+  ArenaFogBankState state{
+      bank.id, bank.start, bank.end, bank.radius, bank.ceiling, bank.density};
   if (bank.keys.empty()) {
     return state;
   }
@@ -101,16 +97,18 @@ auto evaluate_weather(const ArenaWeatherScript& script,
   }
 
   std::vector<ArenaTimedWeatherChange> ordered = schedule;
-  std::stable_sort(ordered.begin(), ordered.end(), [](const auto& lhs, const auto& rhs) {
-    return lhs.at_seconds < rhs.at_seconds;
-  });
+  std::stable_sort(
+      ordered.begin(), ordered.end(), [](const auto& lhs, const auto& rhs) {
+        return lhs.at_seconds < rhs.at_seconds;
+      });
   for (const auto& timed : ordered) {
     if (timed.change < 0 ||
         static_cast<std::size_t>(timed.change) >= script.changes.size()) {
       continue;
     }
     const auto& change = script.changes[static_cast<std::size_t>(timed.change)];
-    float const w = smooth_weight(time_seconds, timed.at_seconds, change.duration_seconds);
+    float const w =
+        smooth_weight(time_seconds, timed.at_seconds, change.duration_seconds);
     if (w <= 0.0F) {
       continue;
     }
@@ -123,9 +121,10 @@ auto evaluate_weather(const ArenaWeatherScript& script,
     blend(state.wind_direction_deg, state.wind_scripted, change.wind_direction_deg, w);
     blend(state.hour, state.hour_scripted, change.hour, w);
     for (const auto& target : change.fog_banks) {
-      auto bank = std::find_if(state.fog_banks.begin(),
-                               state.fog_banks.end(),
-                               [&](const auto& candidate) { return candidate.id == target.id; });
+      auto bank = std::find_if(
+          state.fog_banks.begin(), state.fog_banks.end(), [&](const auto& candidate) {
+            return candidate.id == target.id;
+          });
       if (bank == state.fog_banks.end()) {
         continue;
       }
@@ -181,8 +180,7 @@ auto fog_bank_mist_volumes(const std::vector<ArenaFogBankState>& banks,
     QVector3D const start = world_origin + bank.start;
     QVector3D const end = world_origin + bank.end;
     QVector3D const mid = (start + end) * 0.5F;
-    float const base_y =
-        surface_y ? surface_y(mid.x(), mid.z()) : 0.0F;
+    float const base_y = surface_y ? surface_y(mid.x(), mid.z()) : 0.0F;
     volume.start = QVector3D(start.x(), base_y, start.z());
     volume.end = QVector3D(end.x(), base_y, end.z());
     volume.radius = bank.radius;

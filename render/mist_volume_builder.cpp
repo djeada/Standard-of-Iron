@@ -43,8 +43,7 @@ void simplify_polyline(const std::vector<QVector2D>& points,
 } // namespace
 
 auto build_mist_volumes(const MistSources& sources,
-                        const MistSurfaceHeight& surface_y)
-    -> std::vector<MistVolume> {
+                        const MistSurfaceHeight& surface_y) -> std::vector<MistVolume> {
   std::vector<MistVolume> volumes;
   const auto height_at = [&surface_y](float world_x, float world_z) {
     return surface_y ? surface_y(world_x, world_z) : 0.0F;
@@ -73,8 +72,7 @@ auto build_mist_volumes(const MistSources& sources,
     while (river_index < rivers.size()) {
       const float width = rivers[river_index].width;
       std::vector<QVector2D> points;
-      points.emplace_back(rivers[river_index].start.x(),
-                          rivers[river_index].start.z());
+      points.emplace_back(rivers[river_index].start.x(), rivers[river_index].start.z());
       while (river_index < rivers.size()) {
         const auto& segment = rivers[river_index];
         const QVector2D seg_start(segment.start.x(), segment.start.z());

@@ -21,9 +21,9 @@ struct MistSources {
   const std::vector<Game::Map::Lake>* lakes = nullptr;
 };
 
-[[nodiscard]] auto build_mist_volumes(const MistSources& sources,
-                                      const MistSurfaceHeight& surface_y)
-    -> std::vector<MistVolume>;
+[[nodiscard]] auto
+build_mist_volumes(const MistSources& sources,
+                   const MistSurfaceHeight& surface_y) -> std::vector<MistVolume>;
 
 [[nodiscard]] auto
 merge_mist_volumes(std::vector<MistVolume> priority,

@@ -204,8 +204,16 @@ The current event names recognized by `promo_spec.h` are:
 
 - `first_wave`;
 - `first_contact`;
-- `first_building_lost`; and
-- `decision`.
+- `first_building_lost`;
+- `decision`; and
+- `phase:<event>`, a named phase of a battle script (see "Battle scripts" in
+  `tools/arena/README.md`). A spec loads its scripts with a top-level
+  `"battle_scripts": ["../battles/cannae.json"]` (paths relative to the spec,
+  optional `"battle_script_scale"`), and its shots name the script's `id` as
+  their `scenario`. The dry run copies every phase the battle reached into
+  `timeline.json` under its `phase:` name, so `"start_on": {"event":
+  "phase:libyans_wheel", "offset": -2}` cuts on the wheel however long the
+  centre took to give way.
 
 `StartOn` can also select a side and apply a positive or negative offset.
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QString>
+#include <QStringList>
 #include <QVector3D>
 
 #include <cstdint>
@@ -224,6 +225,8 @@ struct Spec {
 
   MotionLimits motion_limits;
   std::vector<Shot> shots;
+
+  QStringList battle_scripts;
 };
 
 struct GroundFootprint {

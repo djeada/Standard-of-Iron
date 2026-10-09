@@ -174,6 +174,8 @@ struct ArenaScenarioGroup {
   QString showcase_released_renderer;
 
   std::vector<QVector3D> positions;
+
+  bool keep_troop_speed{false};
 };
 
 struct ArenaScenarioResourcePatch {
@@ -279,6 +281,8 @@ struct ArenaScenarioStep {
   float angle_degrees{0.0F};
 
   QString pivot_side;
+
+  bool destination_is_offset{false};
 
   int weather_change{-1};
 };
@@ -866,8 +870,8 @@ public:
 
   [[nodiscard]] auto events() const noexcept -> const std::vector<ArenaScenarioEvent>&;
 
-  [[nodiscard]] auto weather_schedule() const noexcept
-      -> const std::vector<ArenaTimedWeatherChange>&;
+  [[nodiscard]] auto
+  weather_schedule() const noexcept -> const std::vector<ArenaTimedWeatherChange>&;
   [[nodiscard]] auto battle_decided() const noexcept -> bool;
 
   [[nodiscard]] auto group_entities(const QString& group) const

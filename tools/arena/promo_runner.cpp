@@ -688,6 +688,9 @@ private:
       if (timeline.decided) {
         timeline.note(QLatin1String(k_event_decision), timeline.decided_at);
       }
+      for (const auto& event : report->events) {
+        timeline.note(event.name, event.time_seconds);
+      }
     }
     std::stable_sort(
         timeline.events.begin(),

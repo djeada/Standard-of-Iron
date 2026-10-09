@@ -290,13 +290,14 @@ public:
   [[nodiscard]] auto
   active_scenario_report() const -> const Arena::ArenaScenarioReport*;
 
-  [[nodiscard]] auto active_scenario_events() const -> std::vector<Arena::ArenaScenarioEvent>;
+  [[nodiscard]] auto
+  active_scenario_events() const -> std::vector<Arena::ArenaScenarioEvent>;
 
   [[nodiscard]] auto scenario_weather_state() const -> const Arena::ArenaWeatherState& {
     return m_weather_state;
   }
-  [[nodiscard]] auto applied_mist_volumes() const
-      -> const std::vector<Render::MistVolume>& {
+  [[nodiscard]] auto
+  applied_mist_volumes() const -> const std::vector<Render::MistVolume>& {
     return m_applied_mist;
   }
   [[nodiscard]] auto write_scenario_artifacts(const QString& directory,
@@ -393,7 +394,8 @@ private:
                          Game::Systems::NationID nation_id,
                          Game::Units::TroopType unit_type,
                          const QVector3D& spawn_position,
-                         bool ai_controlled) -> Engine::Core::EntityID;
+                         bool ai_controlled,
+                         bool keep_troop_speed = false) -> Engine::Core::EntityID;
   auto resolve_spawn_unit_type(Game::Systems::NationID nation_id,
                                Game::Units::TroopType preferred) const
       -> Game::Units::TroopType;

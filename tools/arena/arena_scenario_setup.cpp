@@ -150,8 +150,7 @@ auto ArenaScenarioRunner::Impl::group_strength(const QString& group) const
   if (initial == initial_health_by_group.cend() || initial.value() <= 0) {
     return std::nullopt;
   }
-  return static_cast<float>(group_health(group)) /
-         static_cast<float>(initial.value());
+  return static_cast<float>(group_health(group)) / static_cast<float>(initial.value());
 }
 
 auto ArenaScenarioRunner::Impl::ordered_destination(const QString& group) const
@@ -441,7 +440,9 @@ void ArenaScenarioRunner::Impl::shape_move_group(const ArenaScenarioStep& step) 
   if (!center.has_value()) {
     return;
   }
-  QVector3D offset = (world_origin + step.destination) - *center;
+  QVector3D offset = step.destination_is_offset
+                         ? step.destination
+                         : (world_origin + step.destination) - *center;
   offset.setY(0.0F);
   std::vector<Game::Systems::CommandService::MoveIntent> intents;
   for (auto entity_id : ids(step.group)) {

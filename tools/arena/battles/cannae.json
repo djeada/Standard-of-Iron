@@ -1,0 +1,309 @@
+{
+  "schema": "soi.battle_script/1",
+  "id": "battle_cannae",
+  "title": "Cannae, 216 BC",
+  "description": "Hannibal's double envelopment on the Aufidus: the Roman deep centre presses the Gallic and Iberian crescent back, the Libyans wheel in on both flanks, and Hasdrubal's horse rides round the Roman rear.",
+  "sources": "Polybius 3.107-117; Livy 22.44-50",
+  "scale": 0.1,
+  "duration": 300,
+  "graphics_quality": "ultra",
+  "camera": { "distance": 430, "tilt": 55, "yaw": 0, "focus": [0, -20] },
+  "terrain": {
+    "grid_extent": 640,
+    "flat_extent": 300,
+    "ground_type": "grass_dry",
+    "height_scale": 0.3,
+    "seed": 216,
+    "rivers": [
+      { "points": [[-292, 320], [-286, 160], [-296, 0], [-288, -160], [-294, -320]], "width": 14 }
+    ],
+    "note": "The Aufidus runs along the west edge: the Roman right and the Carthaginian left rest on it."
+  },
+  "environment": {
+    "hour": 8.5,
+    "lighting_profile": "mediterranean_summer",
+    "time_mode": "locked"
+  },
+  "weather": { "wind_strength": 0.35, "wind_direction": 160, "water_mist": true },
+  "armies": [
+    {
+      "id": "rome",
+      "label": "Roman Republic",
+      "nation": "roman_republic",
+      "team": 1,
+      "facing": 0,
+      "historical_strength": 86000,
+      "groups": [
+        {
+          "id": "roman_centre",
+          "label": "Hastati and principes, drawn up deeper than they were wide",
+          "troop": "swordsman",
+          "historical": 62000,
+          "deployment": {
+            "shape": "multi_line",
+            "center": [0, -120],
+            "lines": 2,
+            "ranks": 6,
+            "line_gap": 6,
+            "rank_spacing": 5.5
+          }
+        },
+        {
+          "id": "triarii",
+          "troop": "spearman",
+          "historical": 10000,
+          "deployment": { "shape": "line", "ranks": 3, "anchor": { "behind": "roman_centre", "gap": 8 } }
+        },
+        {
+          "id": "velites",
+          "troop": "velites",
+          "historical": 8000,
+          "deployment": { "shape": "line", "ranks": 2, "anchor": { "ahead_of": "roman_centre", "gap": 14 } }
+        },
+        {
+          "id": "roman_horse",
+          "label": "Roman cavalry under Paullus, by the river",
+          "troop": "horse_swordsman",
+          "historical": 2400,
+          "deployment": { "shape": "line", "ranks": 3, "anchor": { "right_of": "roman_centre", "gap": 24 } }
+        },
+        {
+          "id": "allied_horse",
+          "label": "Allied cavalry under Varro",
+          "troop": "horse_swordsman",
+          "historical": 3600,
+          "deployment": { "shape": "line", "ranks": 4, "anchor": { "left_of": "roman_centre", "gap": 24 } }
+        }
+      ],
+      "commanders": [
+        {
+          "id": "paullus",
+          "historical_name": "Lucius Aemilius Paullus",
+          "catalog_id": "roman_veteran_consul",
+          "todo": "#1522: swap to catalog id 'paullus'",
+          "with": "roman_horse"
+        },
+        {
+          "id": "varro",
+          "historical_name": "Gaius Terentius Varro",
+          "catalog_id": "roman_field_commander",
+          "todo": "#1522: swap to catalog id 'varro'",
+          "with": "allied_horse"
+        },
+        {
+          "id": "servilius",
+          "historical_name": "Gnaeus Servilius Geminus",
+          "catalog_id": "roman_legion_organizer",
+          "todo": "#1522: no catalog entry planned; keep the stand-in",
+          "with": "triarii"
+        }
+      ]
+    },
+    {
+      "id": "carthage",
+      "label": "Hannibal's army",
+      "nation": "carthage",
+      "team": 2,
+      "facing": 180,
+      "historical_strength": 50000,
+      "groups": [
+        {
+          "id": "gallic_centre",
+          "label": "Gauls in the convex crescent",
+          "todo": "#1527: once the convex crescent formation exists, add \"formation\": \"convex_crescent\" here",
+          "troop": "swordsman",
+          "nation": "gauls",
+          "historical": 16000,
+          "deployment": { "shape": "crescent", "center": [0, 90], "ranks": 3, "bulge": 30 }
+        },
+        {
+          "id": "iberian_centre",
+          "label": "Iberians alongside the Gauls",
+          "troop": "swordsman",
+          "nation": "iberians",
+          "historical": 6000,
+          "deployment": { "shape": "crescent", "ranks": 1, "bulge": 30, "anchor": { "behind": "gallic_centre", "gap": -24 } }
+        },
+        {
+          "id": "slingers",
+          "label": "Balearic slingers and spear-armed light troops",
+          "troop": "slinger",
+          "historical": 8000,
+          "deployment": { "shape": "line", "ranks": 2, "anchor": { "ahead_of": "gallic_centre", "gap": 14 } }
+        },
+        {
+          "id": "libyans_left",
+          "label": "Libyan heavy infantry, left",
+          "troop": "spearman",
+          "historical": 5000,
+          "deployment": { "shape": "column", "files": 4, "anchor": { "left_of": "gallic_centre", "gap": 14, "offset": [0, -24] } }
+        },
+        {
+          "id": "libyans_right",
+          "label": "Libyan heavy infantry, right",
+          "troop": "spearman",
+          "historical": 5000,
+          "deployment": { "shape": "column", "files": 4, "anchor": { "right_of": "gallic_centre", "gap": 14, "offset": [0, -24] } }
+        },
+        {
+          "id": "iberian_horse",
+          "label": "Hasdrubal's Iberian horse",
+          "troop": "horse_swordsman",
+          "nation": "iberians",
+          "historical": 4000,
+          "deployment": { "shape": "line", "ranks": 4, "anchor": { "left_of": "libyans_left", "gap": 24, "offset": [0, 24] } }
+        },
+        {
+          "id": "gallic_horse",
+          "label": "Hasdrubal's Gallic horse",
+          "troop": "horse_swordsman",
+          "nation": "gauls",
+          "historical": 2500,
+          "deployment": { "shape": "line", "ranks": 3, "anchor": { "behind": "iberian_horse", "gap": 8 } }
+        },
+        {
+          "id": "numidians",
+          "label": "Numidian light horse",
+          "troop": "horse_archer",
+          "historical": 3500,
+          "todo": "Numidians threw javelins; horse_archer is the nearest skirmishing horse the game has",
+          "deployment": { "shape": "line", "ranks": 3, "anchor": { "right_of": "libyans_right", "gap": 24, "offset": [0, 24] } }
+        }
+      ],
+      "commanders": [
+        {
+          "id": "hannibal",
+          "historical_name": "Hannibal Barca",
+          "catalog_id": "carthage_sword_commander",
+          "with": "iberian_centre"
+        },
+        {
+          "id": "mago",
+          "historical_name": "Mago Barca",
+          "catalog_id": "carthage_spear_commander",
+          "todo": "#1522: swap to catalog id 'mago'",
+          "with": "iberian_centre",
+          "offset": [18, -14]
+        },
+        {
+          "id": "hasdrubal",
+          "historical_name": "Hasdrubal (cavalry commander)",
+          "catalog_id": "carthage_bow_commander",
+          "todo": "#1522: swap to catalog id 'hasdrubal'",
+          "with": "gallic_horse"
+        },
+        {
+          "id": "hanno",
+          "historical_name": "Hanno son of Bomilcar",
+          "catalog_id": "carthage_spear_commander",
+          "todo": "#1522: swap to catalog id 'hanno_son_of_bomilcar'",
+          "with": "numidians"
+        }
+      ]
+    }
+  ],
+  "phases": [
+    {
+      "id": "skirmish",
+      "label": "Velites and Balearic slingers open the battle",
+      "trigger": { "type": "time", "at": 2 },
+      "actions": [
+        { "type": "attack", "group": "velites", "target": "slingers" },
+        { "type": "attack", "group": "slingers", "target": "velites" }
+      ]
+    },
+    {
+      "id": "cavalry_clash",
+      "label": "Hasdrubal's horse crashes into the Roman cavalry by the river",
+      "trigger": { "type": "phase", "phase": "skirmish", "delay": 6 },
+      "actions": [
+        { "type": "charge", "groups": ["iberian_horse", "gallic_horse"], "target": "roman_horse" },
+        { "type": "attack", "groups": ["roman_horse", "paullus"], "target": "iberian_horse", "delay": 1 },
+        { "type": "attack", "groups": ["numidians", "hanno"], "target": "allied_horse" },
+        { "type": "attack", "groups": ["allied_horse", "varro"], "target": "numidians", "delay": 1 }
+      ]
+    },
+    {
+      "id": "screens_withdraw",
+      "label": "The light troops fall back through the lines",
+      "trigger": { "type": "strength_below", "group": "velites", "fraction": 0.75, "fallback_at": 40 },
+      "actions": [
+        { "type": "move", "group": "velites", "to": [0, -205], "keep_shape": false },
+        { "type": "move", "group": "slingers", "to": [0, 160], "keep_shape": false }
+      ]
+    },
+    {
+      "id": "roman_advance",
+      "label": "The deep Roman centre advances on the crescent",
+      "trigger": { "type": "phase", "phase": "screens_withdraw", "delay": 3 },
+      "actions": [
+        { "type": "attack", "group": "roman_centre", "target": "gallic_centre" },
+        { "type": "move", "group": "triarii", "to": [0, -60], "delay": 4 }
+      ]
+    },
+    {
+      "id": "crescent_engaged",
+      "label": "The Gauls and Iberians meet the legions",
+      "trigger": { "type": "contact", "group": "roman_centre", "with": "gallic_centre", "distance": 4, "fallback_at": 120 },
+      "actions": [
+        { "type": "attack", "groups": ["gallic_centre", "iberian_centre"], "target": "roman_centre" }
+      ]
+    },
+    {
+      "id": "centre_yields",
+      "label": "Hannibal's convex centre gives ground and turns concave",
+      "trigger": { "type": "strength_below", "group": "gallic_centre", "fraction": 0.85, "after": "crescent_engaged", "fallback_at": 150 },
+      "actions": [
+        { "type": "move", "groups": ["gallic_centre", "iberian_centre"], "to": [0, 135] },
+        { "type": "move", "groups": ["hannibal", "mago"], "to": [0, 175] },
+        { "type": "attack", "groups": ["gallic_centre", "iberian_centre"], "target": "roman_centre", "delay": 14 }
+      ]
+    },
+    {
+      "id": "libyans_wheel",
+      "label": "The Libyans face inward on both flanks",
+      "trigger": { "type": "phase", "phase": "centre_yields", "delay": 10 },
+      "actions": [
+        { "type": "wheel", "group": "libyans_left", "degrees": 90, "pivot": "right" },
+        { "type": "wheel", "group": "libyans_right", "degrees": -90, "pivot": "left" },
+        { "type": "attack", "groups": ["libyans_left", "libyans_right"], "target": "roman_centre", "delay": 9 }
+      ]
+    },
+    {
+      "id": "roman_horse_routed",
+      "label": "The Roman horse is cut down or flees along the river",
+      "trigger": { "type": "strength_below", "group": "roman_horse", "fraction": 0.3, "fallback_at": 130 },
+      "actions": [
+        { "type": "move", "groups": ["iberian_horse", "gallic_horse", "hasdrubal"], "to": [150, -250], "keep_shape": false, "run": true }
+      ]
+    },
+    {
+      "id": "allied_horse_breaks",
+      "label": "Hasdrubal falls on the allied horse, which breaks",
+      "trigger": { "type": "phase", "phase": "roman_horse_routed", "delay": 18 },
+      "actions": [
+        { "type": "charge", "groups": ["iberian_horse", "gallic_horse"], "target": "allied_horse" },
+        { "type": "attack", "group": "hasdrubal", "target": "allied_horse" }
+      ]
+    },
+    {
+      "id": "rear_attack",
+      "label": "Hasdrubal leaves the pursuit to the Numidians and charges the Roman rear",
+      "trigger": { "type": "strength_below", "group": "allied_horse", "fraction": 0.35, "after": "allied_horse_breaks", "fallback_at": 220 },
+      "actions": [
+        { "type": "attack", "groups": ["numidians", "hanno"], "target": "allied_horse" },
+        { "type": "charge", "groups": ["iberian_horse", "gallic_horse"], "target": "triarii" },
+        { "type": "attack", "group": "hasdrubal", "target": "triarii" }
+      ]
+    },
+    {
+      "id": "encirclement",
+      "label": "The ring closes",
+      "trigger": { "type": "phase", "phase": "rear_attack", "delay": 12 },
+      "actions": [
+        { "type": "attack", "groups": ["slingers", "hannibal", "mago"], "target": "roman_centre" },
+        { "type": "attack", "groups": ["triarii", "servilius"], "target": "iberian_horse" }
+      ]
+    }
+  ]
+}

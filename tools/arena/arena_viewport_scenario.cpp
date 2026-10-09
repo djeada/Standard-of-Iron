@@ -18,6 +18,8 @@
 #include "game/core/component_economy.h"
 #include "game/core/component_presentation.h"
 #include "game/core/world.h"
+#include "game/map/environment_lighting.h"
+#include "game/map/terrain.h"
 #include "game/map/terrain_service.h"
 #include "game/session/selection_service.h"
 #include "game/session/session_context.h"
@@ -270,7 +272,8 @@ auto ArenaViewport::active_scenario_events() const
                                       : std::vector<Arena::ArenaScenarioEvent>{};
 }
 
-void ArenaViewport::rebuild_static_mist(const Arena::ArenaScenarioDefinition& scenario) {
+void ArenaViewport::rebuild_static_mist(
+    const Arena::ArenaScenarioDefinition& scenario) {
   m_static_mist.clear();
   m_applied_fog_banks.clear();
   m_mist_dirty = true;
@@ -293,7 +296,8 @@ void ArenaViewport::rebuild_static_mist(const Arena::ArenaScenarioDefinition& sc
   static const std::vector<Game::Map::Lake> k_no_lakes;
   m_static_mist = Render::build_mist_volumes(
       {.fog_zones = &fog_zones,
-       .rivers = height_map != nullptr ? &height_map->get_river_segments() : &k_no_rivers,
+       .rivers =
+           height_map != nullptr ? &height_map->get_river_segments() : &k_no_rivers,
        .lakes = height_map != nullptr ? &height_map->get_lakes() : &k_no_lakes},
       [&terrain](float world_x, float world_z) {
         return terrain.is_initialized()
@@ -348,8 +352,8 @@ void ArenaViewport::apply_scenario_weather() {
     m_weather_lighting.rain = state.rain;
     m_weather_lighting.storm = state.storm;
     m_weather_lighting.snow = state.snow;
-    m_weather_type = state.snow > 0.0F ? Game::Map::WeatherType::Snow
-                                       : Game::Map::WeatherType::Rain;
+    m_weather_type =
+        state.snow > 0.0F ? Game::Map::WeatherType::Snow : Game::Map::WeatherType::Rain;
     bool const enabled = intensity > 0.001F;
     if (enabled != m_rain_enabled || std::abs(intensity - m_rain_intensity) > 1.0e-4F) {
       m_rain_enabled = enabled;
@@ -365,7 +369,8 @@ void ArenaViewport::apply_scenario_weather() {
     m_rain->set_wind_strength(state.wind_strength);
     m_rain->set_wind_direction_deg(state.wind_direction_deg);
   }
-  if (m_renderer != nullptr && (m_mist_dirty || state.fog_banks != m_applied_fog_banks)) {
+  if (m_renderer != nullptr &&
+      (m_mist_dirty || state.fog_banks != m_applied_fog_banks)) {
     auto const& terrain = m_session.terrain();
     auto banks = Arena::fog_bank_mist_volumes(
         state.fog_banks, m_scenario_origin, [&terrain](float world_x, float world_z) {
@@ -752,7 +757,8 @@ auto ArenaViewport::spawn_scenario_group_entity(const Arena::ArenaScenarioGroup&
                                          group.nation_id,
                                          group.troop_type,
                                          position,
-                                         group.ai_controlled);
+                                         group.ai_controlled,
+                                         group.keep_troop_speed);
   auto* entity = m_world != nullptr ? m_world->get_entity(entity_id) : nullptr;
   auto* transform = entity != nullptr
                         ? entity->get_component<Engine::Core::TransformComponent>()

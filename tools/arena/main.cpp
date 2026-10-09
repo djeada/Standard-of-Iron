@@ -1,6 +1,7 @@
 #include <QApplication>
 #include <QCommandLineParser>
 #include <QDir>
+#include <QFile>
 #include <QFileInfo>
 #include <QSurfaceFormat>
 #include <QTextStream>
@@ -14,8 +15,11 @@
 #include "arena_scenarios.h"
 #include "arena_viewport.h"
 #include "arena_window.h"
+#include "battle_script.h"
+#include "battle_script_headless.h"
 #include "game/core/nav_profile.h"
 #include "game/session/session_context.h"
+#include "game/systems/default_content.h"
 #include "matchup_short.h"
 #include "promo_runner.h"
 #include "promo_spec.h"
@@ -257,6 +261,34 @@ auto main(int argc, char** argv) -> int {
       QStringList{QStringLiteral("promo-precheck-only")},
       QStringLiteral("Only the dry run: write the match timeline and verdict, record "
                      "nothing."));
+  QCommandLineOption const battle_script_option(
+      QStringList{QStringLiteral("battle-script")},
+      QStringLiteral("Compile a battle-script JSON (an order of battle with phases) "
+                     "into a scenario and run it; repeat for several files."),
+      QStringLiteral("file"));
+  QCommandLineOption const battle_script_scale_option(
+      QStringList{QStringLiteral("battle-script-scale")},
+      QStringLiteral("Replace the script's historical-to-game scale (default: the "
+                     "file's own, 0.1 if unset). Counts and map geometry follow."),
+      QStringLiteral("scale"));
+  QCommandLineOption const battle_script_check_option(
+      QStringList{QStringLiteral("battle-script-check")},
+      QStringLiteral("Validate the battle scripts, print their order of battle and "
+                     "phases, and exit."));
+  QCommandLineOption const headless_option(
+      QStringList{QStringLiteral("headless")},
+      QStringLiteral("Play the battle scripts on the real simulation without a "
+                     "window; prints the phase timeline and world digest and "
+                     "writes <artifact-dir>/<id>/timeline.json."));
+  QCommandLineOption const determinism_check_option(
+      QStringList{QStringLiteral("determinism-check")},
+      QStringLiteral("With --headless: play each script twice and fail unless "
+                     "every world digest and phase event matches."));
+  parser.addOptions({battle_script_option,
+                     battle_script_scale_option,
+                     battle_script_check_option,
+                     headless_option,
+                     determinism_check_option});
   parser.addOptions({batch_option,
                      all_option,
                      scenario_option,
@@ -337,6 +369,119 @@ auto main(int argc, char** argv) -> int {
 
   const QString lighting_profile = parser.value(lighting_profile_option).trimmed();
 
+  Arena::BattleScript::LoadOptions battle_options;
+  if (parser.isSet(battle_script_scale_option)) {
+    bool scale_ok = false;
+    battle_options.scale_override =
+        parser.value(battle_script_scale_option).toFloat(&scale_ok);
+    if (!scale_ok) {
+      qCritical() << "Invalid --battle-script-scale value";
+      return 2;
+    }
+  }
+  const QStringList battle_scripts = parser.values(battle_script_option);
+  QStringList battle_script_ids;
+  const auto register_battle_scripts = [&]() -> bool {
+    for (const QString& script : battle_scripts) {
+      QString error;
+      const auto id =
+          Arena::BattleScript::register_file(script, battle_options, &error);
+      if (!id.has_value()) {
+        qCritical().noquote() << error;
+        return false;
+      }
+      battle_script_ids.push_back(*id);
+    }
+    return true;
+  };
+
+  if (parser.isSet(battle_script_check_option) || parser.isSet(headless_option)) {
+    if (battle_scripts.isEmpty()) {
+      qCritical() << "--battle-script-check and --headless need --battle-script";
+      return 2;
+    }
+    Game::Systems::initialize_default_content(session.nations());
+    if (parser.isSet(battle_script_check_option)) {
+      bool all_ok = true;
+      for (const QString& script : battle_scripts) {
+        const auto result = Arena::BattleScript::load_file(script, battle_options);
+        QTextStream out(stdout);
+        if (!result.errors.empty() || !result.warnings.empty()) {
+          out << Arena::BattleScript::format_diagnostics(result) << "\n";
+        }
+        if (result.ok()) {
+          out << Arena::BattleScript::summary_text(result) << "\n";
+        } else {
+          all_ok = false;
+        }
+      }
+      return all_ok ? 0 : 1;
+    }
+    if (!register_battle_scripts()) {
+      return 2;
+    }
+    Arena::Headless::Options headless;
+    headless.duration_override = parser.value(duration_option).toFloat();
+    int status = 0;
+    for (const QString& id : battle_script_ids) {
+      const auto* definition = Arena::Scenarios::find_definition(id);
+      std::vector<Arena::Headless::Result> runs;
+      const int passes = parser.isSet(determinism_check_option) ? 2 : 1;
+      for (int pass = 0; pass < passes; ++pass) {
+        runs.push_back(Arena::Headless::run(*definition, headless));
+        const auto& run = runs.back();
+        if (!run.started) {
+          qCritical().noquote()
+              << QStringLiteral("Headless run of %1 failed: %2").arg(id, run.error);
+          return 1;
+        }
+        qInfo().noquote()
+            << QStringLiteral("Headless %1 pass %2: %3 units, %4 s simulated in %5 s, "
+                              "digest %6")
+                   .arg(id)
+                   .arg(pass + 1)
+                   .arg(run.spawned_units)
+                   .arg(QString::number(run.elapsed_seconds, 'f', 1))
+                   .arg(QString::number(run.wall_seconds, 'f', 1))
+                   .arg(run.final_digest, 16, 16, QLatin1Char('0'));
+        for (const auto& event : run.events) {
+          qInfo().noquote() << QStringLiteral("  %1 s  %2")
+                                   .arg(QString::number(event.time_seconds, 'f', 1), 7)
+                                   .arg(event.name);
+        }
+        for (const auto& side : run.report.battle.sides) {
+          qInfo().noquote() << QStringLiteral("  side %1: %2 of %3 units standing%4")
+                                   .arg(side.label)
+                                   .arg(side.living_units)
+                                   .arg(side.peak_units)
+                                   .arg(side.eliminated_at >= 0.0F
+                                            ? QStringLiteral(", broken at %1 s")
+                                                  .arg(side.eliminated_at)
+                                            : QString());
+        }
+      }
+      const QString directory =
+          QDir(QDir::cleanPath(parser.value(artifact_option))).filePath(id);
+      QDir().mkpath(directory);
+      QFile timeline(QDir(directory).filePath(QStringLiteral("timeline.json")));
+      if (timeline.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        timeline.write(Arena::Headless::timeline_json(runs, id));
+        qInfo().noquote() << QStringLiteral("  timeline: %1").arg(timeline.fileName());
+      }
+      if (passes == 2) {
+        const auto verdict = Arena::Headless::compare(runs[0], runs[1]);
+        qInfo().noquote() << QStringLiteral("Determinism %1: %2")
+                                 .arg(verdict.deterministic ? QStringLiteral("PASS")
+                                                            : QStringLiteral("FAIL"))
+                                 .arg(verdict.detail);
+        if (!verdict.deterministic) {
+          status = 1;
+        }
+      }
+    }
+    return status;
+  }
+
   const bool include_map_preview_content = parser.isSet(map_preview_content_option);
   if (include_map_preview_content && !parser.isSet(terrain_map_option) &&
       !parser.isSet(campaign_terrain_option)) {
@@ -376,6 +521,10 @@ auto main(int argc, char** argv) -> int {
   window.viewport()->set_capture_orbit_speed(
       parser.value(capture_orbit_option).toFloat());
   window.viewport()->set_fog_of_war_enabled(parser.isSet(fog_of_war_option));
+
+  if (!register_battle_scripts()) {
+    return 2;
+  }
 
   if (parser.isSet(matchup_option)) {
     if (parser.isSet(batch_option) || parser.isSet(promo_spec_option) ||
@@ -466,10 +615,12 @@ auto main(int argc, char** argv) -> int {
               viewport->set_time_of_day(forced_time_of_day);
             }
           });
-    } else if (parser.isSet(scenario_option)) {
+    } else if (parser.isSet(scenario_option) || !battle_script_ids.isEmpty()) {
       QString selection_error;
       QStringList const selected = Arena::Scenarios::select_definition_ids(
-          parser.value(scenario_option), &selection_error);
+          parser.isSet(scenario_option) ? parser.value(scenario_option)
+                                        : battle_script_ids.join(QLatin1Char(',')),
+          &selection_error);
       if (selected.isEmpty()) {
         qCritical().noquote() << selection_error;
         return 2;
@@ -571,6 +722,9 @@ auto main(int argc, char** argv) -> int {
     }
   } else {
     QString selection = parser.value(scenario_option).trimmed();
+    if (selection.isEmpty() && !battle_script_ids.isEmpty()) {
+      selection = battle_script_ids.join(QLatin1Char(','));
+    }
     if (selection.isEmpty()) {
       selection =
           QString::fromLatin1(Arena::Scenarios::k_three_swords_vs_two_spears_id);

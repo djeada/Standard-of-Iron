@@ -1,0 +1,229 @@
+{
+  "schema": "soi.battle_script/1",
+  "id": "battle_trasimene",
+  "title": "Lake Trasimene, 217 BC",
+  "description": "Flaminius's column marches east along the lakeshore at dawn into dense lake fog; Hannibal's men wait on the hills above. The fog thins as the ambush springs.",
+  "sources": "Polybius 3.82-84; Livy 22.4-6",
+  "scale": 0.1,
+  "duration": 200,
+  "graphics_quality": "ultra",
+  "camera": { "distance": 260, "tilt": 38, "yaw": 200, "focus": [-20, -10] },
+  "terrain": {
+    "grid_extent": 448,
+    "flat_extent": 200,
+    "ground_type": "grass_dry",
+    "height_scale": 0.4,
+    "seed": 217,
+    "lakes": [
+      { "center": [0, -150], "width": 440, "depth": 170 }
+    ],
+    "hills": [
+      { "center": [-150, 105], "radius": 80, "height": 9, "plateau": 25 },
+      { "center": [-10, 120], "radius": 90, "height": 11, "plateau": 30 },
+      { "center": [140, 100], "radius": 80, "height": 9, "plateau": 25 },
+      { "center": [215, -20], "radius": 50, "height": 7, "plateau": 10 }
+    ],
+    "note": "The lake fills the south; a narrow shore road runs east between the water and the hills."
+  },
+  "environment": {
+    "hour": 5.6,
+    "lighting_profile": "river_mist",
+    "time_mode": "locked",
+    "fog_density": 0.05
+  },
+  "weather": {
+    "water_mist": true,
+    "fog_banks": [
+      {
+        "id": "lake_fog",
+        "from": [-220, -48],
+        "to": [210, -48],
+        "radius": 62,
+        "height": 10,
+        "density": 0.92,
+        "keys": [
+          { "at": 40, "density": 0.85 },
+          { "at": 120, "density": 0.45, "height": 6 },
+          { "at": 190, "density": 0.18, "height": 3, "radius": 48 }
+        ]
+      },
+      {
+        "id": "hill_fog",
+        "from": [-200, 95],
+        "to": [180, 95],
+        "radius": 70,
+        "height": 14,
+        "density": 0.55
+      }
+    ],
+    "changes": [
+      { "at": 0, "name": "dawn", "duration": 180, "hour": 7.4, "fog_density": 0.012 }
+    ]
+  },
+  "armies": [
+    {
+      "id": "rome",
+      "label": "Flaminius's column",
+      "nation": "roman_republic",
+      "team": 1,
+      "facing": 90,
+      "historical_strength": 25000,
+      "groups": [
+        {
+          "id": "column_van",
+          "label": "Vanguard",
+          "troop": "swordsman",
+          "historical": 9000,
+          "deployment": { "shape": "column", "files": 3, "center": [-120, -38], "facing": 90 }
+        },
+        {
+          "id": "column_main",
+          "label": "Main body",
+          "troop": "swordsman",
+          "historical": 11000,
+          "deployment": { "shape": "column", "files": 3, "anchor": { "behind": "column_van", "gap": 6 } }
+        },
+        {
+          "id": "column_rear",
+          "label": "Rearguard",
+          "troop": "spearman",
+          "historical": 3000,
+          "deployment": { "shape": "column", "files": 3, "anchor": { "behind": "column_main", "gap": 6 } }
+        },
+        {
+          "id": "column_horse",
+          "troop": "horse_swordsman",
+          "historical": 2000,
+          "deployment": { "shape": "column", "files": 2, "anchor": { "behind": "column_rear", "gap": 6 } }
+        }
+      ],
+      "commanders": [
+        {
+          "id": "flaminius",
+          "historical_name": "Gaius Flaminius",
+          "catalog_id": "roman_field_commander",
+          "todo": "#1522: swap to catalog id 'flaminius'",
+          "with": "column_main",
+          "offset": [6, 0]
+        }
+      ]
+    },
+    {
+      "id": "carthage",
+      "label": "Hannibal's army in the hills",
+      "nation": "carthage",
+      "team": 2,
+      "facing": 180,
+      "historical_strength": 40000,
+      "groups": [
+        {
+          "id": "blocking_force",
+          "label": "Spanish and Libyan infantry across the road ahead",
+          "troop": "spearman",
+          "historical": 8000,
+          "ambush": true,
+          "deployment": { "shape": "line", "ranks": 4, "center": [150, -36], "facing": 270 }
+        },
+        {
+          "id": "gallic_ambush",
+          "label": "Gauls on the hills above the column",
+          "troop": "swordsman",
+          "nation": "gauls",
+          "historical": 12000,
+          "ambush": true,
+          "deployment": { "shape": "line", "ranks": 3, "center": [-20, 60], "facing": 180 }
+        },
+        {
+          "id": "light_troops",
+          "label": "Balearic slingers and light troops on the ridge",
+          "troop": "slinger",
+          "historical": 6000,
+          "ambush": true,
+          "deployment": { "shape": "line", "ranks": 2, "center": [-140, 62], "facing": 180 }
+        },
+        {
+          "id": "cavalry_trap",
+          "label": "Cavalry closing the western entrance of the defile",
+          "troop": "horse_swordsman",
+          "nation": "iberians",
+          "historical": 6000,
+          "ambush": true,
+          "deployment": { "shape": "line", "ranks": 4, "center": [-215, -30], "facing": 90 }
+        }
+      ],
+      "commanders": [
+        {
+          "id": "hannibal",
+          "historical_name": "Hannibal Barca",
+          "catalog_id": "carthage_sword_commander",
+          "position": [170, -10],
+          "facing": 270,
+          "ambush": true
+        },
+        {
+          "id": "maharbal",
+          "historical_name": "Maharbal",
+          "catalog_id": "carthage_spear_commander",
+          "todo": "#1522: swap to catalog id 'maharbal'",
+          "position": [-225, -5],
+          "facing": 90,
+          "ambush": true
+        }
+      ]
+    }
+  ],
+  "phases": [
+    {
+      "id": "march",
+      "label": "The column marches east along the shore in the fog",
+      "trigger": { "type": "time", "at": 1 },
+      "actions": [
+        { "type": "move", "groups": ["column_van", "column_main", "column_rear", "column_horse", "flaminius"], "by": [180, 0] }
+      ]
+    },
+    {
+      "id": "ambush",
+      "label": "The trap is sprung from the hills",
+      "trigger": { "type": "area", "group": "column_van", "center": [60, -38], "radius": 45, "fallback_at": 90 },
+      "actions": [
+        { "type": "reveal", "group": "blocking_force", "target": "column_van" },
+        { "type": "reveal", "group": "hannibal", "target": "column_van" },
+        { "type": "reveal", "group": "gallic_ambush", "target": "column_main", "delay": 2 },
+        { "type": "reveal", "group": "light_troops", "target": "column_rear", "delay": 3 },
+        { "type": "reveal", "group": "cavalry_trap", "target": "column_horse", "delay": 4 },
+        { "type": "reveal", "group": "maharbal", "target": "column_horse", "delay": 4 },
+        {
+          "type": "weather",
+          "name": "fog_lifts_from_the_hills",
+          "duration": 40,
+          "fog_banks": [ { "id": "hill_fog", "density": 0.0, "height": 2 } ]
+        }
+      ]
+    },
+    {
+      "id": "column_turns",
+      "label": "The column turns to face the hills, too late",
+      "trigger": { "type": "phase", "phase": "ambush", "delay": 6 },
+      "actions": [
+        { "type": "attack", "group": "column_main", "target": "gallic_ambush" },
+        { "type": "attack", "group": "column_van", "target": "blocking_force" },
+        { "type": "attack", "group": "column_rear", "target": "light_troops" },
+        { "type": "attack", "group": "column_horse", "target": "cavalry_trap" }
+      ]
+    },
+    {
+      "id": "flaminius_falls",
+      "label": "Flaminius is killed",
+      "trigger": { "type": "destroyed", "group": "flaminius", "fallback_at": 180 },
+      "actions": []
+    },
+    {
+      "id": "column_broken",
+      "label": "The main body breaks against the lake",
+      "trigger": { "type": "strength_below", "group": "column_main", "fraction": 0.3, "after": "ambush" },
+      "actions": [
+        { "type": "weather", "name": "morning_clears", "duration": 30, "fog_density": 0.006 }
+      ]
+    }
+  ]
+}
