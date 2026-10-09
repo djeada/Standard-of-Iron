@@ -779,7 +779,14 @@ scripts/promo-edit.py \
 ```
 
 The capture writes one `NN_<shot>.mp4` per shot, an `NN_<shot>.png` poster, and
-a `shots.json` manifest. `scripts/promo-edit.py` then concatenates, grades,
+a `shots.json` manifest. Beside each clip sits `NN_<shot>.camera.jsonl`, the
+exact view and projection matrices of every frame plus the live positions of the
+scenario's groups, and the pass writes `terrain_<scenario>_<seed>.json` once;
+`scripts/tactical_overlay.py` uses them to draw arrows, army blocks and labels
+that stay locked to the ground. A shot's `vertical` block records a 9:16 take of
+the same frames in the same pass (`NN_<shot>.vertical.mp4`). See "Vertical takes
+from the same pass", "Camera export" and "Tactical overlays" in
+[docs/PROMO_CAPTURE.md](../../docs/PROMO_CAPTURE.md). `scripts/promo-edit.py` then concatenates, grades,
 captions and scores them into one finished short in a single ffmpeg pass.
 `ffmpeg` must be on `PATH` for both steps.
 

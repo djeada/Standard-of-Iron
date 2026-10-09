@@ -144,13 +144,23 @@ class RealCaptureTest(unittest.TestCase):
             for component in local:
                 self.assertAlmostEqual(component, 0.0, delta=1e-2)
 
-    def test_known_world_points_hit_measured_pixels(self):
-        measured = json.loads((FIXTURES / "real_points.json").read_text())
-        for case in measured["points"]:
-            camera = self.track.camera(case["frame"])
-            x, y = camera.project(tuple(case["world"]))
-            self.assertAlmostEqual(x, case["pixel"][0], delta=case.get("tolerance", 1.0))
-            self.assertAlmostEqual(y, case["pixel"][1], delta=case.get("tolerance", 1.0))
+    def test_the_authored_focus_point_lands_on_the_frame_centre(self):
+        # The fixture's spec aims an orbit camera at the world point (-4, 0, 0):
+        # that point, authored in the spec and never touched by the exporter,
+        # must come out of the real matrices at the centre pixel.
+        for index in range(len(self.track.frames)):
+            camera = self.track.camera(index)
+            x, y = camera.project((-4.0, 0.0, 0.0))
+            self.assertAlmostEqual(x, self.track.width / 2, delta=0.05)
+            self.assertAlmostEqual(y, self.track.height / 2, delta=0.05)
+
+    def test_live_groups_project_inside_the_shot(self):
+        for index, frame in enumerate(self.track.frames):
+            camera = self.track.camera(index)
+            for name, group in frame.get("groups", {}).items():
+                x, y = camera.project(tuple(group["centroid"]))
+                self.assertTrue(0 <= x <= self.track.width and 0 <= y <= self.track.height,
+                                (index, name, x, y))
 
 
 class ArrowGeometryTest(unittest.TestCase):

@@ -578,6 +578,163 @@ rendered on.
 set, and `cut.json`, the edit decision list with its looks and complete sound
 design. `scripts/trailer/` finishes it; see `docs/TRAILER.md`.
 
+## Vertical takes from the same pass
+
+A shot can record more than one framing of the same frames. `vertical` asks for a
+9:16 take (1080x1920 unless it says otherwise) rendered in the same scenario
+pass as the 16:9 shot: after every captured frame the arena moves the lens to
+the variant's pose, renders the same simulation state a second time into its own
+offscreen target, and streams it to a second encoder. Nothing is re-simulated,
+so the two takes show the same soldiers in the same places on every frame, and
+the vertical take never depends on two runs agreeing.
+
+```json
+{
+  "name": "phase_one",
+  "scenario": "cine_field",
+  "start": 16.0,
+  "duration": 8.0,
+  "focus": { "mode": "point", "point": [-4, 0, 0] },
+  "camera": [
+    { "time": 0.0, "distance": 125, "pitch": 34, "yaw": 150, "fov": 38 },
+    { "time": 8.0, "distance": 110, "pitch": 30, "yaw": 178, "fov": 38 }
+  ],
+  "vertical": {
+    "focus": { "offset": [-18, 0, 0] },
+    "camera": [
+      { "time": 0.0, "distance": 105, "pitch": 40, "yaw": 120, "fov": 46 },
+      { "time": 8.0, "distance": 95, "pitch": 36, "yaw": 140, "fov": 46 }
+    ]
+  }
+}
+```
+
+- A variant is the shot's own JSON with the variant's keys laid over it, so it
+  can replace `camera`, `rig`, `interp`, `ends`, `eye_space`/`look_space`,
+  `handheld`, `jolts`, `shake`, `near`, `ground_clearance`, `casting_overlay`
+  and the focus `offset`. It shares the shot's subject (focus mode and group).
+- Quick lens changes need no new keys: `fov_scale`, `distance_scale`,
+  `yaw_offset`, `pitch_offset` and `offset` (added to the focus offset) adjust
+  every inherited key. Keep in mind that `fov` is vertical: a 9:16 frame with the
+  16:9 lens is already much tighter horizontally.
+- Anything that would need a different simulation is refused: `scenario`,
+  `seed`, `start`, `start_on`, `duration`, `slow_motion`, `time_lapse`,
+  `report_card`, `flame_card`, `gameplay_camera`, `lighting`, `rpg_hud`,
+  `gameplay_ui` and `stabilize_seconds`.
+- `variants: [{ "name": "square", "width": 1080, "height": 1080, ... }]` records
+  any number of other framings; `vertical` is shorthand for one named
+  `vertical`. A spec-level `vertical` block gives every shot a vertical take;
+  a shot opts out with `"vertical": false`.
+- Variants are checked against the spec's motion limits like any other camera.
+- Each variant writes `NN_<shot>.<variant>.mp4`, its poster, its own camera
+  track, and the shot's game audio. A report card is repainted at the variant's
+  size. `shots.json` lists them under each shot's `variants`.
+- `scripts/promo-edit.py --variant vertical` cuts the vertical takes with the
+  same spec, so a reel and its episode come from one capture.
+
+Each variant costs one more world render per frame; at Ultra a vertical take
+roughly doubles capture time.
+
+## Camera export
+
+Every clip is written with a camera track beside it, `NN_<shot>.camera.jsonl`
+(and `NN_<shot>.<variant>.camera.jsonl` for variants). The first line is a
+header; every following line is one frame of the clip, in order, with the same
+count as the video.
+
+```json
+{"type":"soi_camera_track","version":1,"spec":"cine_field_tactical","shot":"phase_one",
+ "variant":"","scenario":"cine_field","seed":1337,"clip":"01_phase_one.mp4","fps":30,
+ "width":1920,"height":1080,"supersample":1,"slow_motion":1,"start_seconds":16,
+ "terrain":"terrain_cine_field_1337.json","groups":["rome_swords","punic_swords"],
+ "matrix_layout":"column_major","clip_space":"opengl","pixel_origin":"top_left","world_up":"+y"}
+{"frame":0,"t":0,"scene_t":16.033,"shot_t":0.0,"view":[16 floats],"projection":[16 floats],
+ "eye":[x,y,z],"target":[x,y,z],"up":[x,y,z],"fov_y":38,"aspect":1.7778,"near":0.5,"far":900,
+ "render_size":[1920,1080],"viewport":[0,0,1920,1080],
+ "groups":{"rome_swords":{"owner":1,"alive":26,"centroid":[x,y,z],"forward":[x,y,z],
+   "front":[[x,y,z],[x,y,z]],"width":104.0,"depth":3.2,"units":[[id,x,y,z,yaw],...]}}}
+```
+
+- `view` and `projection` are read from the game camera after the frame was
+  rendered, so they are exactly the matrices the renderer used, including the
+  cinematic lift over terrain, handheld wobble and gameplay stabilisation. They
+  are column-major (Qt and OpenGL order). A world point maps to pixels with
+  `clip = projection * view * [x, y, z, 1]`, `px = (clip.x / clip.w * 0.5 + 0.5) * width`,
+  `py = (1 - (clip.y / clip.w * 0.5 + 0.5)) * height`. Normalised device
+  coordinates do not depend on resolution, so supersampled captures project the
+  same way at the delivered size; `render_size` records the internal one.
+- `t` is clip time (`frame / fps`), `scene_t` is the scenario clock of the
+  rendered state, and `shot_t` is the time the camera keys were evaluated at.
+- `groups` carries every living unit of each exported group, the centroid, the
+  mean facing (`forward`; yaw 0 faces +z, 90 faces +x), and the two ends of the
+  leading rank (`front`, ordered left to right as the group faces). Which groups
+  are exported is `overlay_groups` (spec or shot): `"all"` (the default), a
+  list of names, or `"none"`.
+- Report-card frames carry `"camera": false`.
+- The battlefield height field is written once per scenario and seed as
+  `terrain_<scenario>_<seed>.json` and a raw little-endian float32 grid beside
+  it (row-major, z rows then x columns, 1 m spacing), sampled with the same
+  `TerrainService::get_terrain_height` units stand on.
+
+## Tactical overlays
+
+`scripts/tactical_overlay.py` draws documentary map graphics on a captured clip
+-- movement arrows, army blocks, frontage lines and labels -- registered to the
+world. Elements are authored in arena metres, draped over the exported terrain,
+and projected through each frame's own matrices, so an arrow drawn down a
+hillside stays on that hillside while the camera moves. Ground elements are
+drawn without depth testing: they are never hidden behind soldiers or hills.
+
+```sh
+scripts/tactical_overlay.py \
+  --clip artifacts/promo/cine_field_tactical/01_phase_one.mp4 \
+  --overlay tools/arena/promos/tactical/cine_field_tactical.overlay.json \
+  --out artifacts/promo/cine_field_tactical/01_phase_one.tactical.mp4
+```
+
+`--alpha-out plate.mov` writes the overlay alone as ProRes 4444 with alpha, and
+`--frames DIR --stills 0,120,239` writes single RGBA frames for review. The
+conform stage (`scripts/trailer/conform.py`) takes an event's `"overlay"` (a path
+or an inline object) and `"overlay_style"`, renders the plate, puts it through the
+event's own trim, speed, motion blur, reframe and shake, and lays it over the
+picture after the grade so the look never tints the graphics.
+
+An overlay description is a list of `elements`. Every element takes `start` and
+`end` (clip seconds), `fade_in`/`fade_out`, `class` (named styles) and `style`
+(inline overrides).
+
+| Element    | Fields                                                                                                                                                                                                                    |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `arrow`    | `points` (two or more anchors), `bend` (two points: the apex sits that many chord lengths to the left; negative bends right), `smooth` (spline through 3+ points), `draw` (draw-on seconds), `track` (`"fixed"` at start, `"live"`, or a clip time) |
+| `block`    | `group`: a rectangle around the group's living units, oriented by their facing and padded by `padding_m`; its leading edge is drawn heavier. Follows the group live.                                                         |
+| `frontage` | `group`: a line along the leading rank, extended by `extend_m`, drawn on from the centre. Follows the group live.                                                                                                          |
+| `label`    | `text` and `at` (one anchor), `height_m` above the ground; text is set in the display face and offset in pixels.                                                                                                          |
+
+An anchor is `[x, z]` (or `[x, y, z]`, y ignored) in arena metres, or a group
+reference: `{"group": "rome_swords", "at": "centroid" | "front" | "front_left" |
+"front_right" | "rear"}`, optionally `"unit": k` (the k-th living unit as first
+exported, followed by entity id, so it stays the same maniple), `"forward_m"` /
+`"right_m"` along the group's facing, and `"offset": [dx, dz]`.
+
+Styling is injectable. `DEFAULT_STYLE` in the script gives every element a
+default (palette, owner colours, metric widths, pixel strokes authored for a
+1080-pixel short side, the bundled display face). A style JSON passed as
+`--style`, or `style=` from Python, is merged over it -- this is where the
+series graphics package plugs in -- then the description's own `style` block,
+then any `class` entries from `style.classes`, then the element's inline
+`style`. A colour is a palette name, `#rrggbb` or `[r, g, b]`; with no colour,
+blocks and frontages take their owner's colour and arrows the owner of their
+first group anchor.
+
+Shapes are filled into supersampled coverage masks (Pillow only) and
+box-filtered, which is what makes their edges anti-aliased; labels use the
+font's own anti-aliasing.
+
+`tools/arena/promos/tactical/cine_field_tactical.json` and its
+`.overlay.json` are the worked example: an oblique camera orbiting `cine_field`
+while a Roman maniple's arrow runs down the Roman hill to the Carthaginian
+centre.
+
 ## Long-form films
 
 Half-hour ambience films are captured and finished with two tools:
@@ -625,6 +782,8 @@ These rules make the promo pipeline suitable for source-controlled production ra
 | Offline edit                      | `scripts/promo-edit.py`                                          |
 | Long-form capture and finishing   | `scripts/promo-guarded-capture.py`, `scripts/promo-long-film.py` |
 | Formation reel orchestration      | `scripts/capture-formation-promos.sh`                            |
+| Camera export                     | `tools/arena/promo_camera_export.cpp`                            |
+| Tactical overlays                 | `scripts/tactical_overlay.py`                                    |
 | Authored promo specs              | `tools/arena/promos/`                                            |
 
 The current promo spec, Arena capture implementation, and offline editor are the source of truth for how a reel is produced. Notes about an earlier revision of a trailer are not part of the production contract.
