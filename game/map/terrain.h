@@ -44,6 +44,35 @@ public:
 
   void add_lakes(const std::vector<Lake>& lakes);
 
+  // Marks the authored ford crossings (and every river segment flagged as a
+  // ford) as wadeable and lowers their beds so troops stand waist-deep.
+  // Call after add_river_segments and before add_bridges.
+  void add_fords(const std::vector<FordCrossing>& fords);
+
+  [[nodiscard]] auto get_fords() const -> const std::vector<FordCrossing>& {
+    return m_fords;
+  }
+
+  [[nodiscard]] auto is_ford_cell(int grid_x, int grid_z) const -> bool;
+
+  // The ford profile of the cell under a world point, or null on dry land
+  // and on unfordable water.
+  [[nodiscard]] auto ford_profile_at(float world_x,
+                                     float world_z) const -> const FordProfile*;
+
+  [[nodiscard]] auto ford_profile_at_grid(int grid_x,
+                                          int grid_z) const -> const FordProfile*;
+
+  // Metres of water over the ground at a world point inside a ford; zero on
+  // dry land, on the bank, and anywhere that is not a ford.
+  [[nodiscard]] auto ford_water_depth_at(float world_x, float world_z) const -> float;
+
+  // The water surface height of the ford under a world point.
+  [[nodiscard]] auto ford_water_level_at(float world_x,
+                                         float world_z) const -> std::optional<float>;
+
+  [[nodiscard]] auto has_fords() const -> bool { return !m_ford_table.empty(); }
+
   [[nodiscard]] auto get_height_at(float world_x, float world_z) const -> float;
 
   [[nodiscard]] auto get_base_height_at(float world_x, float world_z) const -> float;
@@ -112,7 +141,8 @@ public:
                          const std::vector<RiverSegment>& rivers,
                          const std::vector<Bridge>& bridges,
                          const std::vector<Lake>& lakes = {},
-                         const HillNavigation& hills = {});
+                         const HillNavigation& hills = {},
+                         const std::vector<FordCrossing>& fords = {});
 
 private:
   int m_width;
@@ -135,6 +165,14 @@ private:
   std::vector<bool> m_bridge_centerline;
   std::vector<QVector3D> m_bridge_centers;
 
+  struct FordCell {
+    FordProfile profile;
+    float water_y = 0.0F;
+  };
+  std::vector<FordCrossing> m_fords;
+  std::vector<FordCell> m_ford_table;
+  std::vector<std::uint8_t> m_ford_cells;
+
   [[nodiscard]] auto indexAt(int x, int z) const -> int;
   [[nodiscard]] auto in_bounds(int x, int z) const -> bool;
 
@@ -153,6 +191,11 @@ private:
   void apply_legacy_height_noise(const TerrainSurfaceProfile& surface_profile);
 
   void precompute_water_blocked();
+
+  void precompute_ford_cells(bool lower_beds);
+  auto ford_table_index(const FordProfile& profile, float water_y) -> std::uint8_t;
+  void stamp_ford_cell(int x, int z, std::uint8_t entry);
+  [[nodiscard]] auto ford_entry_at(float world_x, float world_z) const -> const FordCell*;
 
   [[nodiscard]] static auto calculateFeatureHeight(const TerrainFeature& feature,
                                                    float world_x,

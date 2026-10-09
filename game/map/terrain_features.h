@@ -64,11 +64,57 @@ enum class WaterElevationMode : std::uint8_t {
   Authored,
 };
 
+inline constexpr float k_default_ford_depth = 0.45F;
+inline constexpr float k_min_ford_depth = 0.15F;
+inline constexpr float k_max_ford_depth = 0.80F;
+inline constexpr float k_default_ford_speed = 0.55F;
+inline constexpr float k_min_ford_speed = 0.2F;
+inline constexpr float k_max_ford_speed = 1.0F;
+inline constexpr float k_default_ford_length = 14.0F;
+inline constexpr float k_min_ford_length = 4.0F;
+inline constexpr float k_max_ford_length = 80.0F;
+inline constexpr float k_default_ford_exposure = 1.25F;
+inline constexpr float k_min_ford_exposure = 1.0F;
+inline constexpr float k_max_ford_exposure = 2.0F;
+
+// How a shallow stretch of river treats the troops that wade it. `depth` is
+// metres of water over the bed in mid-stream, `speed` the fraction of land
+// speed a wading unit keeps, and `cold` (0..1) how icy the water is: cold
+// water drains stamina and leaves the men chilled for a while after they
+// climb out. `exposure` multiplies the damage a wading unit takes (missiles
+// hit a little harder still).
+struct FordProfile {
+  float depth = k_default_ford_depth;
+  float speed = k_default_ford_speed;
+  float cold = 0.0F;
+  float exposure = k_default_ford_exposure;
+
+  [[nodiscard]] auto clamped() const noexcept -> FordProfile {
+    return {std::clamp(depth, k_min_ford_depth, k_max_ford_depth),
+            std::clamp(speed, k_min_ford_speed, k_max_ford_speed),
+            std::clamp(cold, 0.0F, 1.0F),
+            std::clamp(exposure, k_min_ford_exposure, k_max_ford_exposure)};
+  }
+
+  auto operator==(const FordProfile&) const -> bool = default;
+};
+
 struct RiverSegment {
   QVector3D start;
   QVector3D end;
   float width = 2.0F;
   WaterElevationMode elevation_mode = WaterElevationMode::Terrain;
+  // The whole segment can be waded when set.
+  std::optional<FordProfile> ford;
+};
+
+// A fordable stretch of an otherwise impassable river: `length` metres of the
+// river, measured along its course and centred on `position` (world space).
+struct FordCrossing {
+  QString id;
+  QVector3D position;
+  float length = k_default_ford_length;
+  FordProfile profile;
 };
 
 struct Lake {

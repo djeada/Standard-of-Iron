@@ -236,7 +236,16 @@ public:
                                const std::vector<WorldProp>& world_props = {},
                                const std::vector<WorldProp>& authored_world_props = {},
                                const std::vector<Lake>& lakes = {},
-                               const HillNavigation& hills = {});
+                               const HillNavigation& hills = {},
+                               const std::vector<FordCrossing>& fords = {});
+
+  // Fords: shallow river crossings that land units can wade.
+  [[nodiscard]] auto ford_profile_at(float world_x,
+                                     float world_z) const -> const FordProfile*;
+  [[nodiscard]] auto ford_water_depth_at(float world_x, float world_z) const -> float;
+  [[nodiscard]] auto ford_water_level_at(float world_x,
+                                         float world_z) const -> std::optional<float>;
+  [[nodiscard]] auto has_fords() const -> bool;
 
 private:
   void rebuild_terrain_field();

@@ -47,7 +47,7 @@ auto Pathfinding::terrain_cell_value(const Game::Map::TerrainService& terrain_se
     return Pathfinding::CellValue::Blocked;
   }
 
-  if (height_map->isBridgeCell(x, z) ||
+  if (height_map->isBridgeCell(x, z) || height_map->is_ford_cell(x, z) ||
       hill_entrance_opens_cell(*height_map, terrain_type, x, z)) {
     return Pathfinding::CellValue::Walkable;
   }

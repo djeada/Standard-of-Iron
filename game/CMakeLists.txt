@@ -144,6 +144,7 @@ add_library(
     map/terrain_hill_ramp.cpp
     map/terrain_hill_nav.cpp
     map/terrain_water_bridges.cpp
+    map/terrain_fords.cpp
     map/terrain_landform.cpp
     map/terrain_service.cpp
     map/terrain_road_index.cpp
@@ -504,6 +505,7 @@ add_library(
     command/replay.cpp
     map/match_loader.cpp
     systems/forest_cover_system.cpp
+    systems/ford_system.cpp
     session/map_session.cpp
     session/session_context.cpp
     systems/alliance_board.cpp

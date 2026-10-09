@@ -100,6 +100,7 @@ void TerrainService::initialize(const MapDefinition& map_def) {
   m_height_map->build_from_features(map_def.terrain);
   m_height_map->add_lakes(map_def.lakes);
   m_height_map->add_river_segments(map_def.rivers);
+  m_height_map->add_fords(map_def.fords);
   m_height_map->add_bridges(map_def.bridges);
   m_biome_settings = map_def.biome;
 
@@ -193,13 +194,14 @@ void TerrainService::restore_from_serialized(
     const std::vector<WorldProp>& world_props,
     const std::vector<WorldProp>& authored_world_props,
     const std::vector<Lake>& lakes,
-    const HillNavigation& hills) {
+    const HillNavigation& hills,
+    const std::vector<FordCrossing>& fords) {
   m_sealed = false;
   m_prop_surface_cache.clear();
   m_prop_surface_cache_valid = false;
   m_height_map = std::make_unique<TerrainHeightMap>(width, height, tile_size);
   m_height_map->restore_from_data(
-      heights, terrain_types, rivers, bridges, lakes, hills);
+      heights, terrain_types, rivers, bridges, lakes, hills, fords);
   m_biome_settings = biome;
   m_coord_system = CoordSystem::Grid;
 
@@ -300,6 +302,27 @@ void TerrainService::rebuild_terrain_field() {
           std::sqrt(dxx * dxx + dzz * dzz + 2.0F * dxz * dxz) / curvature_scale;
     }
   }
+}
+
+auto TerrainService::ford_profile_at(float world_x,
+                                     float world_z) const -> const FordProfile* {
+  return m_height_map != nullptr ? m_height_map->ford_profile_at(world_x, world_z)
+                                 : nullptr;
+}
+
+auto TerrainService::ford_water_depth_at(float world_x, float world_z) const -> float {
+  return m_height_map != nullptr ? m_height_map->ford_water_depth_at(world_x, world_z)
+                                 : 0.0F;
+}
+
+auto TerrainService::ford_water_level_at(float world_x, float world_z) const
+    -> std::optional<float> {
+  return m_height_map != nullptr ? m_height_map->ford_water_level_at(world_x, world_z)
+                                 : std::nullopt;
+}
+
+auto TerrainService::has_fords() const -> bool {
+  return m_height_map != nullptr && m_height_map->has_fords();
 }
 
 auto TerrainService::next_props_revision() -> std::uint64_t {

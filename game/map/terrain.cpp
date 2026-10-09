@@ -106,6 +106,10 @@ auto TerrainHeightMap::is_walkable(int grid_x, int grid_z) const -> bool {
     return true;
   }
 
+  if (!m_ford_cells.empty() && m_ford_cells[static_cast<std::size_t>(idx)] != 0U) {
+    return true;
+  }
+
   if (!m_water_blocked.empty() && m_water_blocked[idx]) {
     return false;
   }
@@ -198,7 +202,8 @@ void TerrainHeightMap::restore_from_data(const std::vector<float>& heights,
                                          const std::vector<RiverSegment>& rivers,
                                          const std::vector<Bridge>& bridges,
                                          const std::vector<Lake>& lakes,
-                                         const HillNavigation& hills) {
+                                         const HillNavigation& hills,
+                                         const std::vector<FordCrossing>& fords) {
 
   const auto expected_size = static_cast<size_t>(m_width * m_height);
 
@@ -243,6 +248,8 @@ void TerrainHeightMap::restore_from_data(const std::vector<float>& heights,
   }
 
   precompute_water_blocked();
+  m_fords = fords;
+  precompute_ford_cells(false);
   precompute_bridge_data();
 }
 

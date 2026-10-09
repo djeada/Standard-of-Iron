@@ -516,6 +516,7 @@ void ArenaViewport::apply_scenario_environment(
 auto ArenaViewport::apply_scenario_terrain(
     const Arena::ArenaScenarioDefinition& scenario) -> bool {
   m_arena_rivers = scenario.rivers;
+  m_arena_fords = scenario.fords;
   m_arena_lakes = scenario.lakes;
   m_arena_bridges = scenario.bridges;
   m_arena_roads = scenario.roads;

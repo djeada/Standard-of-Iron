@@ -231,7 +231,8 @@ void Pathfinding::relax_neighbors(SearchBuffers& buffers,
         current.g_cost +
         ((step_x != 0 && step_z != 0) ? k_diagonal_step_cost : k_straight_step_cost) +
         search_clearance_cost(neighbor.x, neighbor.y) +
-        climb_penalty(current.index, neighbor_idx) + (turns ? k_turn_penalty : 0);
+        climb_penalty(current.index, neighbor_idx) + wade_penalty(neighbor_idx) +
+        (turns ? k_turn_penalty : 0);
     if (tentative_gcost >= get_g_cost(buffers, neighbor_idx, generation)) {
       continue;
     }

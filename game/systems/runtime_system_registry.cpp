@@ -27,6 +27,7 @@
 #include "home_system.h"
 #include "patrol_system.h"
 #include "projectile_system.h"
+#include "ford_system.h"
 #include "raft_system.h"
 #include "rockfall_system.h"
 #include "rpg_combat_system/rpg_engagement_system.h"
@@ -122,6 +123,9 @@ void register_runtime_systems(Engine::Core::World& world) {
                    Engine::Core::SystemPhase::Movement);
   world.add_system(
       std::make_unique<RaftSystem>(RaftSystem::Services{.terrain = session.terrain()}),
+      Engine::Core::SystemPhase::Movement);
+  world.add_system(
+      std::make_unique<FordSystem>(FordSystem::Services{.terrain = session.terrain()}),
       Engine::Core::SystemPhase::Movement);
 
   world.add_system(std::make_unique<EngagementSlotSystem>(),

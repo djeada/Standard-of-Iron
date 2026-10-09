@@ -68,7 +68,8 @@ auto TerrainService::sample_surface_base_height(
   }
 
   const float terrain_height = m_height_map->get_base_height_at(world_x, world_z);
-  if (m_road_index.is_near(world_x, world_z, 0.0F)) {
+  if (m_road_index.is_near(world_x, world_z, 0.0F) &&
+      m_height_map->ford_profile_at(world_x, world_z) == nullptr) {
     const float radius = std::max(m_height_map->get_tile_size(), k_min_tile_size) *
                          k_road_surface_envelope_tiles;
     float highest = terrain_height;
