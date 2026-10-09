@@ -44,18 +44,6 @@ using Render::GL::Mesh;
 using Render::GL::RiggedVertex;
 using Render::GL::Vertex;
 
-constexpr float k_face_cranium_uv = -6.0F;
-constexpr float k_face_jaw_uv = -9.0F;
-constexpr float k_face_back_shift = 3.0F;
-
-auto face_marker_tex_coord(std::uint8_t marker,
-                           const QVector3D& unit_pos) -> std::array<float, 2> {
-  float const base =
-      marker == k_surface_marker_face_jaw ? k_face_jaw_uv : k_face_cranium_uv;
-  float const back = unit_pos.z() > 0.0F ? 0.0F : k_face_back_shift;
-  return {base + unit_pos.x(), unit_pos.y() + back};
-}
-
 struct VertexBoneBlend {
   std::array<std::uint8_t, 4> indices{0, 0, 0, 0};
   std::array<float, 4> weights{1.0F, 0.0F, 0.0F, 0.0F};
@@ -343,11 +331,95 @@ auto transform_normal(const QMatrix3x3& m, const QVector3D& n) -> QVector3D {
   return QVector3D{mapped.x() * inv_len, mapped.y() * inv_len, mapped.z() * inv_len};
 }
 
+struct EnclosingSolid {
+  QMatrix4x4 to_unit;
+  Render::GL::UnitSolid solid;
+  std::uint8_t bone{0};
+};
+
+constexpr float k_enclosure_margin = 0.999F;
+
+void add_enclosing_solid(const Mesh& mesh,
+                         const QMatrix4x4& model,
+                         std::uint8_t bone,
+                         std::vector<EnclosingSolid>& solids) {
+  Render::GL::UnitSolid const solid = Render::GL::unit_solid_of(&mesh);
+  if (solid.kind == Render::GL::UnitSolidKind::None) {
+    return;
+  }
+  bool invertible = false;
+  QMatrix4x4 const to_unit = model.inverted(&invertible);
+  if (invertible) {
+    solids.push_back({.to_unit = to_unit, .solid = solid, .bone = bone});
+  }
+}
+
+auto encloses(const EnclosingSolid& s, const std::array<float, 3>& position) -> bool {
+  QVector3D const q = s.to_unit.map(QVector3D(position[0], position[1], position[2]));
+  float const limit = s.solid.inradius * k_enclosure_margin;
+  if (s.solid.kind == Render::GL::UnitSolidKind::Ball) {
+    return q.lengthSquared() < limit * limit;
+  }
+  return (q.x() * q.x()) + (q.z() * q.z()) < limit * limit &&
+         std::abs(q.y()) < 0.5F * k_enclosure_margin;
+}
+
+auto rigid_bone(const RiggedVertex& v) -> int {
+  return v.bone_weights[0] >= k_enclosure_margin ? v.bone_indices[0] : -1;
+}
+
+void drop_enclosed_triangles(BakedRiggedMeshCpu& out,
+                             const std::vector<EnclosingSolid>& solids) {
+  if (solids.empty()) {
+    return;
+  }
+  std::vector<std::uint32_t> kept;
+  kept.reserve(out.indices.size());
+  for (std::size_t i = 0; i + 2 < out.indices.size(); i += 3) {
+    auto const& a = out.vertices[out.indices[i]];
+    auto const& b = out.vertices[out.indices[i + 1]];
+    auto const& c = out.vertices[out.indices[i + 2]];
+    int const bone = rigid_bone(a);
+    bool const rigid = bone >= 0 && rigid_bone(b) == bone && rigid_bone(c) == bone;
+    bool const hidden =
+        rigid &&
+        std::any_of(solids.begin(), solids.end(), [&](const EnclosingSolid& s) {
+          return s.bone == bone && encloses(s, a.position_bone_local) &&
+                 encloses(s, b.position_bone_local) &&
+                 encloses(s, c.position_bone_local);
+        });
+    if (!hidden) {
+      kept.insert(kept.end(), {out.indices[i], out.indices[i + 1], out.indices[i + 2]});
+    }
+  }
+  if (kept.size() == out.indices.size()) {
+    return;
+  }
+  std::vector<std::uint32_t> remap(out.vertices.size(), 0U);
+  for (std::uint32_t const index : kept) {
+    remap[index] = 1U;
+  }
+  std::vector<RiggedVertex> vertices;
+  vertices.reserve(out.vertices.size());
+  for (std::size_t i = 0; i < out.vertices.size(); ++i) {
+    if (remap[i] != 0U) {
+      remap[i] = static_cast<std::uint32_t>(vertices.size());
+      vertices.push_back(out.vertices[i]);
+    }
+  }
+  for (std::uint32_t& index : kept) {
+    index = remap[index];
+  }
+  out.vertices = std::move(vertices);
+  out.indices = std::move(kept);
+}
+
 void append_primitive_vertices(const PrimitiveInstance& prim,
                                const Mesh& unit_mesh,
                                const QMatrix4x4& unit_model,
                                std::span<const BoneWorldMatrix> bind_pose,
-                               BakedRiggedMeshCpu& out) {
+                               BakedRiggedMeshCpu& out,
+                               std::vector<EnclosingSolid>& solids) {
 
   auto const normal_matrix = unit_model.normalMatrix();
   auto const& src_verts = unit_mesh.get_vertices();
@@ -359,6 +431,9 @@ void append_primitive_vertices(const PrimitiveInstance& prim,
   auto const base_vertex = static_cast<std::uint32_t>(out.vertices.size());
   auto const anchor = static_cast<std::uint8_t>(prim.params.anchor_bone);
   bool const two_bone = is_two_bone_blend(prim.shape);
+  if (!two_bone && prim.shape != PrimitiveShape::Mesh && prim.alpha >= 1.0F) {
+    add_enclosing_solid(unit_mesh, unit_model, anchor, solids);
+  }
   auto const tail =
       two_bone ? static_cast<std::uint8_t>(prim.params.tail_bone) : anchor;
 
@@ -373,9 +448,6 @@ void append_primitive_vertices(const PrimitiveInstance& prim,
     rv.position_bone_local = {world_pos.x(), world_pos.y(), world_pos.z()};
     rv.normal_bone_local = {world_norm.x(), world_norm.y(), world_norm.z()};
     rv.tex_coord = v.tex_coord;
-    if (prim.surface_marker != Render::Creature::k_surface_marker_none) {
-      rv.tex_coord = face_marker_tex_coord(prim.surface_marker, local_pos);
-    }
     rv.color_role = prim.color_role;
     if (prim.shape == PrimitiveShape::Mesh && v.color_role != 0U) {
       rv.color_role = v.color_role;
@@ -478,7 +550,8 @@ void apply_drape_blend(const AttachmentDrapeBlend& drape,
 
 void append_static_attachment(const StaticAttachmentSpec& spec,
                               CreatureLOD lod,
-                              BakedRiggedMeshCpu& out) {
+                              BakedRiggedMeshCpu& out,
+                              std::vector<EnclosingSolid>& solids) {
   if (spec.archetype == nullptr) {
     return;
   }
@@ -525,6 +598,9 @@ void append_static_attachment(const StaticAttachmentSpec& spec,
     auto const base_vertex = static_cast<std::uint32_t>(out.vertices.size());
     auto const bone = static_cast<std::uint8_t>(spec.socket_bone_index & 0xFFU);
     auto const normal_matrix = attach_model.normalMatrix();
+    if (!spec.drape.enabled && draw.alpha >= 1.0F) {
+      add_enclosing_solid(*src, attach_model, bone, solids);
+    }
 
     reserve_for_append(out.vertices, src_verts.size());
     for (Render::GL::Vertex const& v : src_verts) {
@@ -558,6 +634,7 @@ void append_static_attachment(const StaticAttachmentSpec& spec,
 auto bake_rigged_mesh_cpu(const BakeInput& in) -> BakedRiggedMeshCpu {
   Render::Profiling::count_asset(Render::Profiling::AssetCounter::RiggedMeshBake);
   BakedRiggedMeshCpu out;
+  std::vector<EnclosingSolid> solids;
   if (in.graph != nullptr) {
     for (PrimitiveInstance const& prim : in.graph->primitives) {
       if (prim.shape == PrimitiveShape::None) {
@@ -589,7 +666,8 @@ auto bake_rigged_mesh_cpu(const BakeInput& in) -> BakedRiggedMeshCpu {
           *Render::GL::bake_tessellated_mesh(unit_mesh, unit_model),
           unit_model,
           in.bind_pose,
-          out);
+          out,
+          solids);
     }
   }
 
@@ -597,9 +675,10 @@ auto bake_rigged_mesh_cpu(const BakeInput& in) -> BakedRiggedMeshCpu {
     if (!in.bind_pose.empty() && spec.socket_bone_index >= in.bind_pose.size()) {
       continue;
     }
-    append_static_attachment(spec, in.lod, out);
+    append_static_attachment(spec, in.lod, out, solids);
   }
 
+  drop_enclosed_triangles(out, solids);
   return out;
 }
 

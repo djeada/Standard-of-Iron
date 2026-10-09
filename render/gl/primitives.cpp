@@ -862,6 +862,45 @@ auto axis_length(const QMatrix4x4& model, int column) -> float {
 
 } // namespace
 
+auto unit_solid_of(const Mesh* mesh) -> UnitSolid {
+  const UnitPrimitive* primitive = unit_primitive_of(mesh);
+  if (primitive == nullptr) {
+    return {};
+  }
+  if (primitive->kind == UnitPrimitiveKind::Cylinder) {
+    return {.kind = UnitSolidKind::Prism,
+            .inradius = k_unit_radius *
+                        std::cos(std::numbers::pi_v<float> /
+                                 static_cast<float>(primitive->radial_segments))};
+  }
+  if (primitive->kind != UnitPrimitiveKind::Sphere) {
+    return {};
+  }
+  auto const& vertices = mesh->get_vertices();
+  auto const& indices = mesh->get_indices();
+  auto position = [&](unsigned int i) {
+    auto const& p = vertices[i].position;
+    return QVector3D(p[0], p[1], p[2]);
+  };
+  float inradius = k_unit_radius;
+  for (std::size_t i = 0; i + 2 < indices.size(); i += 3) {
+    QVector3D const a = position(indices[i]);
+    QVector3D const normal = QVector3D::crossProduct(position(indices[i + 1]) - a,
+                                                     position(indices[i + 2]) - a);
+    if (normal.lengthSquared() < 1.0e-12F) {
+      continue;
+    }
+    inradius =
+        std::min(inradius, std::abs(QVector3D::dotProduct(normal.normalized(), a)));
+  }
+  return {.kind = UnitSolidKind::Ball, .inradius = inradius};
+}
+
+auto bake_radial_segments(float radius, int authored) -> int {
+  return keep_axis_extremes(
+      segments_for_radius(radius, authored, k_min_bake_radial_segments), authored);
+}
+
 auto get_unit_cylinder(int radial_segments) -> Mesh* {
   radial_segments = std::max(radial_segments, 3);
   return SharedGeometryCache::instance().get_or_build(
@@ -983,41 +1022,25 @@ auto bake_tessellated_mesh(Mesh* mesh, const QMatrix4x4& model) -> Mesh* {
   switch (primitive->kind) {
   case UnitPrimitiveKind::Sphere: {
     const float radius = std::max(radial, axis_length(model, 1));
-    const int lon = keep_axis_extremes(segments_for_radius(radius,
-                                                           primitive->radial_segments,
-                                                           k_min_bake_radial_segments),
-                                       primitive->radial_segments);
+    const int lon = bake_radial_segments(radius, primitive->radial_segments);
 
     const int lat = std::min(((lon / 2) + 1) / 2 * 2, primitive->lat_segments);
     return get_unit_sphere(std::max(lat, std::min(4, primitive->lat_segments)), lon);
   }
   case UnitPrimitiveKind::Cylinder:
-    return get_unit_cylinder(keep_axis_extremes(
-        segments_for_radius(
-            radial, primitive->radial_segments, k_min_bake_radial_segments),
-        primitive->radial_segments));
+    return get_unit_cylinder(bake_radial_segments(radial, primitive->radial_segments));
   case UnitPrimitiveKind::Cone:
-    return get_unit_cone(keep_axis_extremes(
-        segments_for_radius(
-            radial, primitive->radial_segments, k_min_bake_radial_segments),
-        primitive->radial_segments));
+    return get_unit_cone(bake_radial_segments(radial, primitive->radial_segments));
   case UnitPrimitiveKind::Capsule:
-    return get_unit_capsule(
-        keep_axis_extremes(segments_for_radius(radial,
-                                               primitive->radial_segments,
-                                               k_min_bake_radial_segments),
-                           primitive->radial_segments),
-        primitive->height_segments);
+    return get_unit_capsule(bake_radial_segments(radial, primitive->radial_segments),
+                            primitive->height_segments);
   case UnitPrimitiveKind::TaperedCylinder:
     return get_unit_tapered_cylinder(
         primitive->anchor_radius_scale,
         primitive->tail_radius_scale,
-        keep_axis_extremes(
-            segments_for_radius(radial * std::max(primitive->anchor_radius_scale,
-                                                  primitive->tail_radius_scale),
-                                primitive->radial_segments,
-                                k_min_bake_radial_segments),
-            primitive->radial_segments));
+        bake_radial_segments(radial * std::max(primitive->anchor_radius_scale,
+                                               primitive->tail_radius_scale),
+                             primitive->radial_segments));
   }
   return mesh;
 }

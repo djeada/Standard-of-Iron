@@ -38,7 +38,7 @@ void main() {
   }
   base = apply_hair_tone(base, u_material_id, color_role, v_tex);
   base = apply_pelt_pattern(base, v_tex);
-  base = apply_playmobil_face(base, u_material_id, color_role, v_tex);
+  base = apply_face_features(base, u_material_id, color_role, v_tex);
   float zoom = readable_zoom(v_pos_ws);
 
   vec4 readable_wear = v_wear_params;

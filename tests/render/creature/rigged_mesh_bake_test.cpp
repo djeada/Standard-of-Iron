@@ -45,6 +45,7 @@ struct ToyGraph {
     prims[0].debug_name = "sphere_on_A";
     prims[0].shape = PrimitiveShape::Sphere;
     prims[0].params.anchor_bone = k_bone_a;
+    prims[0].params.head_offset = QVector3D{4.0F, 0.0F, 0.0F};
     prims[0].params.radius = 1.0F;
     prims[0].color_role = 3;
 
@@ -145,6 +146,7 @@ TEST(RiggedMeshBake, TwoPrimitiveGraphAccumulatesVertexAndIndexCounts) {
 TEST(RiggedMeshBake, EllipsoidNormalsFollowSurfaceRatherThanPositionScale) {
   ToyGraph t;
   t.prims[0].shape = PrimitiveShape::OrientedSphere;
+  t.prims[0].params.head_offset = QVector3D(0.0F, 0.0F, 0.0F);
   t.prims[0].params.half_extents = QVector3D(0.4F, 1.2F, 0.2F);
   auto const baked = bake_rigged_mesh_cpu(
       BakeInput{&t.graph, std::span<const BoneWorldMatrix>{t.bind_pose}});
@@ -451,3 +453,31 @@ TEST(RiggedMeshBake, ElephantFullRiggedMeshStaysNearMinimalGroundContact) {
 }
 
 } // namespace
+
+TEST(RiggedMeshBake, TrianglesSealedInsideASolidOnTheSameBoneAreDropped) {
+  ToyGraph t;
+  t.prims[0].params.head_offset = QVector3D{0.0F, 0.0F, 0.0F};
+  BakeInput input{&t.graph, std::span<const BoneWorldMatrix>{t.bind_pose}};
+  auto baked = bake_rigged_mesh_cpu(input);
+
+  auto* sphere = Render::GL::get_unit_sphere();
+  auto* cylinder = Render::GL::get_unit_cylinder();
+  std::size_t const full_indices =
+      sphere->get_indices().size() + cylinder->get_indices().size();
+  EXPECT_LT(baked.indices.size(), full_indices);
+
+  for (std::size_t i = 0; i + 2 < baked.indices.size(); i += 3) {
+    bool all_inside = true;
+    for (std::size_t k = 0; k < 3; ++k) {
+      auto const& v = baked.vertices[baked.indices[i + k]];
+      QVector3D const p(
+          v.position_bone_local[0], v.position_bone_local[1], v.position_bone_local[2]);
+      all_inside = all_inside && p.length() < 0.95F && v.bone_weights[0] > 0.999F &&
+                   v.bone_indices[0] == ToyGraph::k_bone_a;
+    }
+    EXPECT_FALSE(all_inside) << "triangle " << i / 3 << " is sealed inside the sphere";
+  }
+  for (auto index : baked.indices) {
+    ASSERT_LT(index, baked.vertices.size());
+  }
+}

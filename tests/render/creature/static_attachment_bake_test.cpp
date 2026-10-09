@@ -221,6 +221,7 @@ TEST(StaticAttachmentBake, AttachmentsCoexistWithPrimitiveGraph) {
   prims[0].debug_name = "sphere";
   prims[0].shape = PrimitiveShape::Sphere;
   prims[0].params.anchor_bone = 0;
+  prims[0].params.head_offset = QVector3D{4.0F, 0.0F, 0.0F};
   prims[0].params.radius = 1.0F;
   prims[0].color_role = 6;
 
