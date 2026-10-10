@@ -285,6 +285,7 @@ void ArenaViewport::paintGL() {
   float const simulation_dt = (m_paused || !sampled_frame) ? 0.0F : real_dt;
   m_environment_clock.update(simulation_dt, m_paused);
   m_environment_hour = m_environment_clock.hour();
+  apply_scenario_weather();
   m_time_of_day = Game::Map::time_of_day_for_hour(m_environment_hour);
   m_renderer->set_environment_lighting(active_lighting());
 

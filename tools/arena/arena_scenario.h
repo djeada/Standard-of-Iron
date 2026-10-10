@@ -51,6 +51,10 @@ enum class ScenarioTriggerKind : std::uint8_t {
   GroupsWithinDistance,
   GroupEnteredArea,
   PreviousStepComplete,
+
+  GroupStrengthBelow,
+
+  StepExecuted,
 };
 
 struct ScenarioTrigger {
@@ -60,6 +64,14 @@ struct ScenarioTrigger {
   QString target_group;
   float distance{0.0F};
   QVector3D position;
+
+  float threshold{0.0F};
+
+  QString step;
+
+  QString after_step;
+
+  float fallback_seconds{-1.0F};
 };
 
 enum class ScenarioCommandKind : std::uint8_t {
@@ -111,6 +123,14 @@ enum class ScenarioCommandKind : std::uint8_t {
   RollStones,
 
   CrossByRaft,
+
+  Marker,
+
+  ShapeMove,
+
+  Wheel,
+
+  SetWeather,
 };
 
 struct ArenaScenarioGroup {
@@ -155,6 +175,10 @@ struct ArenaScenarioGroup {
   std::optional<QVector3D> showcase_throw_target;
   float render_scale_override{0.0F};
   QString showcase_released_renderer;
+
+  std::vector<QVector3D> positions;
+
+  bool keep_troop_speed{false};
 };
 
 struct ArenaScenarioResourcePatch {
@@ -254,6 +278,16 @@ struct ArenaScenarioStep {
   std::optional<float> rpg_view_yaw_degrees;
   std::optional<float> rpg_view_pitch_degrees;
   ArenaScenarioFormationOrder formation;
+
+  QString event;
+
+  float angle_degrees{0.0F};
+
+  QString pivot_side;
+
+  bool destination_is_offset{false};
+
+  int weather_change{-1};
 };
 
 enum class ArenaExpectationKind : std::uint8_t {
@@ -442,6 +476,69 @@ struct ArenaCameraView {
   float yaw{30.0F};
 };
 
+struct ArenaFogBankKey {
+  float time_seconds{0.0F};
+  std::optional<float> density;
+  std::optional<float> radius;
+  std::optional<float> ceiling;
+  std::optional<QVector3D> start;
+  std::optional<QVector3D> end;
+};
+
+struct ArenaFogBank {
+  QString id;
+
+  QVector3D start;
+  QVector3D end;
+  float radius{20.0F};
+  float ceiling{4.0F};
+  float density{0.6F};
+  std::vector<ArenaFogBankKey> keys;
+};
+
+struct ArenaFogBankChange {
+  QString id;
+  std::optional<float> density;
+  std::optional<float> radius;
+  std::optional<float> ceiling;
+  std::optional<QVector3D> start;
+  std::optional<QVector3D> end;
+};
+
+struct ArenaWeatherChange {
+  QString name;
+  float duration_seconds{0.0F};
+  std::optional<float> fog_density;
+  std::optional<float> exposure;
+  std::optional<float> rain;
+  std::optional<float> storm;
+  std::optional<float> snow;
+  std::optional<float> wind_strength;
+  std::optional<float> wind_direction_deg;
+  std::optional<float> hour;
+  std::vector<ArenaFogBankChange> fog_banks;
+};
+
+struct ArenaTimedWeatherChange {
+  float at_seconds{0.0F};
+  int change{-1};
+};
+
+struct ArenaWeatherScript {
+
+  bool water_mist{true};
+  std::vector<ArenaFogBank> fog_banks;
+
+  std::vector<ArenaWeatherChange> changes;
+
+  std::vector<ArenaTimedWeatherChange> timeline;
+};
+
+struct ArenaScenarioEvent {
+  QString name;
+  float time_seconds{0.0F};
+};
+
 struct ArenaScenarioDefinition {
   QString id;
   QString label;
@@ -491,6 +588,7 @@ struct ArenaScenarioDefinition {
   };
   Game::Map::WeatherLightingInput weather{};
   Game::Map::RainSettings precipitation{};
+  ArenaWeatherScript weather_script;
   Game::Wildlife::WildlifeSettings wildlife{};
   std::vector<Game::Map::RiverSegment> rivers;
   std::vector<Game::Map::Lake> lakes;
@@ -648,6 +746,9 @@ struct ArenaScenarioReport {
   ArenaBattleOutcome battle;
   std::vector<ArenaGroupMovementDiagnostics> movement;
   std::vector<ArenaNarrowLayoutOutcome> narrow_layout;
+  std::vector<ArenaScenarioEvent> events;
+
+  std::uint64_t world_digest{0};
   std::vector<ArenaScenarioIssue> issues;
 
   [[nodiscard]] auto passed() const noexcept -> bool { return issues.empty(); }
@@ -779,6 +880,11 @@ public:
   [[nodiscard]] auto report() const noexcept -> const ArenaScenarioReport&;
 
   [[nodiscard]] auto live_battle_sides() const -> std::vector<ArenaBattleSideResult>;
+
+  [[nodiscard]] auto events() const noexcept -> const std::vector<ArenaScenarioEvent>&;
+
+  [[nodiscard]] auto
+  weather_schedule() const noexcept -> const std::vector<ArenaTimedWeatherChange>&;
   [[nodiscard]] auto battle_decided() const noexcept -> bool;
 
   [[nodiscard]] auto group_entities(const QString& group) const

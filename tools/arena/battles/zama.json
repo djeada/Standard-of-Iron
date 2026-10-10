@@ -1,0 +1,397 @@
+{
+  "schema": "soi.battle_script/1",
+  "id": "battle_zama",
+  "title": "Zama, 202 BC (skeleton)",
+  "description": "Skeleton: Hannibal's elephants charge Scipio's lines, which open lanes for them; the cavalry wings clear the field and return to strike the Carthaginian rear.",
+  "sources": "Polybius 15.9-16; Livy 30.32-35",
+  "todo": "Skeleton. Replace the geometric lanes with the triplex acies formation from #1527 and the elephant screen once they land.",
+  "scale": 0.1,
+  "duration": 240,
+  "graphics_quality": "ultra",
+  "camera": {
+    "distance": 320,
+    "tilt": 50,
+    "yaw": 270,
+    "focus": [
+      -10,
+      -110
+    ]
+  },
+  "terrain": {
+    "map": "assets/maps/map_battle_zama.json"
+  },
+  "environment": {
+    "hour": 9.5,
+    "lighting_profile": "canyon_dry"
+  },
+  "armies": [
+    {
+      "nation": "roman_republic",
+      "team": 1,
+      "facing": 270,
+      "id": "rome",
+      "label": "Scipio",
+      "historical_strength": 29000,
+      "groups": [
+        {
+          "id": "roman_lines",
+          "label": "Hastati, principes and triarii with lanes left open",
+          "troop": "swordsman",
+          "historical": 23000,
+          "todo": "#1527: \"formation\": \"triplex_acies\"",
+          "deployment": {
+            "shape": "multi_line",
+            "lines": 3,
+            "split": [
+              0.4,
+              0.4,
+              0.2
+            ],
+            "ranks": 2,
+            "line_gap": 10,
+            "lanes": 6,
+            "lane_width": 12,
+            "stagger": false,
+            "center": [
+              90,
+              -110
+            ]
+          }
+        },
+        {
+          "id": "velites",
+          "troop": "velites",
+          "historical": 6000,
+          "deployment": {
+            "shape": "line",
+            "ranks": 1,
+            "anchor": {
+              "ahead_of": "roman_lines",
+              "gap": 10
+            }
+          }
+        }
+      ],
+      "commanders": [
+        {
+          "id": "scipio",
+          "historical_name": "Publius Cornelius Scipio (Africanus)",
+          "catalog_id": "roman_veteran_consul",
+          "with": "roman_lines"
+        }
+      ]
+    },
+    {
+      "nation": "roman_republic",
+      "team": 1,
+      "facing": 270,
+      "id": "laelius_wing",
+      "label": "Laelius and the Italian horse",
+      "historical_strength": 1500,
+      "groups": [
+        {
+          "id": "laelius_horse",
+          "label": "Italian horse under Laelius",
+          "troop": "horse_swordsman",
+          "historical": 1500,
+          "deployment": {
+            "shape": "line",
+            "ranks": 3,
+            "anchor": {
+              "left_of": "roman_lines",
+              "gap": 16
+            }
+          }
+        }
+      ],
+      "commanders": [
+        {
+          "id": "laelius",
+          "historical_name": "Gaius Laelius",
+          "catalog_id": "roman_legion_organizer",
+          "todo": "#1522: swap to catalog id 'laelius' if one is added",
+          "with": "laelius_horse"
+        }
+      ]
+    },
+    {
+      "nation": "roman_republic",
+      "team": 1,
+      "facing": 270,
+      "id": "masinissa_wing",
+      "label": "Masinissa's Numidians",
+      "historical_strength": 4000,
+      "groups": [
+        {
+          "id": "masinissa_horse",
+          "label": "Masinissa's Numidian horse",
+          "troop": "horse_archer",
+          "historical": 4000,
+          "todo": "Numidian allies of Rome; horse_archer stands in for javelin horse",
+          "deployment": {
+            "shape": "line",
+            "ranks": 3,
+            "anchor": {
+              "right_of": "roman_lines",
+              "gap": 16
+            }
+          }
+        }
+      ],
+      "commanders": [
+        {
+          "id": "masinissa",
+          "historical_name": "Masinissa",
+          "catalog_id": "roman_field_commander",
+          "todo": "#1522: swap to catalog id 'masinissa'",
+          "with": "masinissa_horse"
+        }
+      ]
+    },
+    {
+      "nation": "carthage",
+      "team": 2,
+      "facing": 90,
+      "id": "carthage",
+      "label": "Hannibal",
+      "historical_strength": 40000,
+      "groups": [
+        {
+          "id": "elephants",
+          "troop": "elephant",
+          "historical": 80,
+          "deployment": {
+            "shape": "line",
+            "center": [
+              -60,
+              -110
+            ],
+            "file_spacing": 22
+          }
+        },
+        {
+          "id": "mercenaries",
+          "label": "Ligurian, Gallic, Balearic and Moorish mercenaries",
+          "troop": "swordsman",
+          "nation": "gauls",
+          "historical": 12000,
+          "deployment": {
+            "shape": "line",
+            "ranks": 3,
+            "anchor": {
+              "behind": "elephants",
+              "gap": 18
+            }
+          }
+        },
+        {
+          "id": "second_line",
+          "label": "Libyans and Carthaginian levies",
+          "troop": "spearman",
+          "historical": 12000,
+          "deployment": {
+            "shape": "line",
+            "ranks": 3,
+            "anchor": {
+              "behind": "mercenaries",
+              "gap": 14
+            }
+          }
+        },
+        {
+          "id": "veterans",
+          "label": "Hannibal's veterans of Italy, held back",
+          "troop": "swordsman",
+          "historical": 12000,
+          "hold": true,
+          "deployment": {
+            "shape": "line",
+            "ranks": 3,
+            "anchor": {
+              "behind": "second_line",
+              "gap": 60
+            }
+          }
+        },
+        {
+          "id": "carthaginian_horse",
+          "troop": "horse_swordsman",
+          "historical": 2000,
+          "deployment": {
+            "shape": "line",
+            "ranks": 3,
+            "anchor": {
+              "right_of": "mercenaries",
+              "gap": 18
+            }
+          }
+        },
+        {
+          "id": "numidian_horse",
+          "label": "Tychaeus's Numidians",
+          "troop": "horse_archer",
+          "historical": 2000,
+          "deployment": {
+            "shape": "line",
+            "ranks": 3,
+            "anchor": {
+              "left_of": "mercenaries",
+              "gap": 18
+            }
+          }
+        }
+      ],
+      "commanders": [
+        {
+          "id": "hannibal",
+          "historical_name": "Hannibal Barca",
+          "catalog_id": "carthage_sword_commander",
+          "with": "veterans"
+        }
+      ]
+    }
+  ],
+  "phases": [
+    {
+      "id": "elephant_charge",
+      "label": "Eighty elephants charge the Roman lines",
+      "trigger": {
+        "type": "time",
+        "at": 3
+      },
+      "actions": [
+        {
+          "type": "attack",
+          "group": "elephants",
+          "target": "roman_lines"
+        },
+        {
+          "type": "attack",
+          "group": "velites",
+          "target": "elephants"
+        },
+        {
+          "type": "hold",
+          "group": "roman_lines"
+        }
+      ]
+    },
+    {
+      "id": "cavalry_wings",
+      "label": "Laelius and Masinissa drive off the Carthaginian horse",
+      "trigger": {
+        "type": "phase",
+        "phase": "elephant_charge",
+        "delay": 5
+      },
+      "actions": [
+        {
+          "type": "charge",
+          "group": "laelius_horse",
+          "target": "carthaginian_horse"
+        },
+        {
+          "type": "attack",
+          "group": "masinissa_horse",
+          "target": "numidian_horse"
+        },
+        {
+          "type": "attack",
+          "group": "carthaginian_horse",
+          "target": "laelius_horse"
+        },
+        {
+          "type": "attack",
+          "group": "numidian_horse",
+          "target": "masinissa_horse"
+        }
+      ]
+    },
+    {
+      "id": "infantry_clash",
+      "trigger": {
+        "type": "strength_below",
+        "group": "elephants",
+        "fraction": 0.4,
+        "fallback_at": 60
+      },
+      "actions": [
+        {
+          "type": "hold",
+          "group": "roman_lines",
+          "enabled": false
+        },
+        {
+          "type": "attack",
+          "groups": [
+            "roman_lines",
+            "scipio"
+          ],
+          "target": "mercenaries"
+        },
+        {
+          "type": "attack",
+          "group": "mercenaries",
+          "target": "roman_lines"
+        },
+        {
+          "type": "attack",
+          "group": "second_line",
+          "target": "roman_lines",
+          "delay": 15
+        }
+      ]
+    },
+    {
+      "id": "veterans_engage",
+      "label": "The two veteran lines meet",
+      "trigger": {
+        "type": "strength_below",
+        "group": "mercenaries",
+        "fraction": 0.4,
+        "fallback_at": 150
+      },
+      "actions": [
+        {
+          "type": "hold",
+          "group": "veterans",
+          "enabled": false
+        },
+        {
+          "type": "attack",
+          "groups": [
+            "veterans",
+            "hannibal"
+          ],
+          "target": "roman_lines"
+        }
+      ]
+    },
+    {
+      "id": "cavalry_returns",
+      "label": "The cavalry returns and strikes the rear",
+      "trigger": {
+        "type": "phase",
+        "phase": "veterans_engage",
+        "delay": 20
+      },
+      "actions": [
+        {
+          "type": "charge",
+          "group": "laelius_horse",
+          "target": "veterans"
+        },
+        {
+          "type": "attack",
+          "groups": [
+            "masinissa_horse",
+            "masinissa",
+            "laelius"
+          ],
+          "target": "veterans"
+        }
+      ]
+    }
+  ],
+  "notes": "Each commander leads his own allied army: the game allows one living commander per owner, and an owner whose commander dies collapses."
+}

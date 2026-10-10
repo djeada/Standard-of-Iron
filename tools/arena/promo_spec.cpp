@@ -1,6 +1,8 @@
 #include "promo_spec.h"
 
+#include <QDir>
 #include <QFile>
+#include <QFileInfo>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -12,6 +14,8 @@
 #include <cmath>
 #include <numbers>
 #include <utility>
+
+#include "battle_script.h"
 
 namespace Arena::Promo {
 namespace {
@@ -533,6 +537,32 @@ auto load(const QString& path, QString* error) -> std::optional<Spec> {
   }
   spec.supersample = std::clamp(spec.supersample, 1, 4);
 
+  const QJsonArray battle_scripts =
+      root.value(QStringLiteral("battle_scripts")).toArray();
+  for (const QJsonValue& entry : battle_scripts) {
+    QString script = entry.toString().trimmed();
+    if (script.isEmpty()) {
+      continue;
+    }
+    if (QFileInfo(script).isRelative() && !QFileInfo::exists(script)) {
+      script = QFileInfo(path).dir().filePath(script);
+    }
+    BattleScript::LoadOptions options;
+    if (root.contains(QStringLiteral("battle_script_scale"))) {
+      options.scale_override = static_cast<float>(
+          root.value(QStringLiteral("battle_script_scale")).toDouble());
+    }
+    QString script_error;
+    const auto id = BattleScript::register_file(script, options, &script_error);
+    if (!id.has_value()) {
+      if (error != nullptr) {
+        *error = QStringLiteral("promo spec '%1': %2").arg(path, script_error);
+      }
+      return std::nullopt;
+    }
+    spec.battle_scripts.push_back(*id);
+  }
+
   const QJsonArray shots = root.value(QStringLiteral("shots")).toArray();
   if (shots.isEmpty()) {
     if (error != nullptr) {
@@ -594,7 +624,8 @@ auto load(const QString& path, QString* error) -> std::optional<Spec> {
       if (!known_start_event(resolved.event)) {
         if (error != nullptr) {
           *error = QStringLiteral("shot '%1': unknown start_on event '%2' (one of "
-                                  "%3, %4, %5, %6)")
+                                  "%3, %4, %5, %6, or phase:<event> from a battle "
+                                  "script)")
                        .arg(shot.name,
                             resolved.event,
                             QLatin1String(k_event_first_wave),
@@ -938,7 +969,10 @@ auto known_start_event(const QString& event) -> bool {
   return event == QLatin1String(k_event_first_wave) ||
          event == QLatin1String(k_event_first_contact) ||
          event == QLatin1String(k_event_first_building_lost) ||
-         event == QLatin1String(k_event_decision);
+         event == QLatin1String(k_event_decision) ||
+         (event.startsWith(QLatin1String(BattleScript::k_phase_event_prefix)) &&
+          event.size() >
+              static_cast<qsizetype>(qstrlen(BattleScript::k_phase_event_prefix)));
 }
 
 auto uses_start_events(const Spec& spec) -> bool {

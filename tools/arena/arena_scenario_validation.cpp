@@ -171,6 +171,55 @@ auto validate_scenario(const ArenaScenarioDefinition& definition)
     }
   }
 
+  QSet<QString> step_names;
+  for (auto const& step : definition.steps) {
+    if (!step.name.isEmpty()) {
+      step_names.insert(step.name);
+    }
+  }
+  for (std::size_t i = 0; i < definition.weather_script.timeline.size(); ++i) {
+    auto const& timed = definition.weather_script.timeline[i];
+    if (timed.change < 0 || static_cast<std::size_t>(timed.change) >=
+                                definition.weather_script.changes.size()) {
+      errors.push_back({QStringLiteral("weather_script.timeline[%1]").arg(i),
+                        QStringLiteral("unknown weather change %1").arg(timed.change)});
+    }
+  }
+  QSet<QString> fog_bank_ids;
+  for (std::size_t i = 0; i < definition.weather_script.fog_banks.size(); ++i) {
+    auto const& bank = definition.weather_script.fog_banks[i];
+    QString const field = QStringLiteral("weather_script.fog_banks[%1]").arg(i);
+    if (bank.id.isEmpty() || fog_bank_ids.contains(bank.id)) {
+      errors.push_back({field, QStringLiteral("fog bank id is empty or duplicated")});
+    }
+    fog_bank_ids.insert(bank.id);
+    if (bank.radius <= 0.0F || bank.ceiling < 0.0F) {
+      errors.push_back(
+          {field, QStringLiteral("fog bank radius must be positive and ceiling "
+                                 "non-negative")});
+    }
+  }
+  for (std::size_t c = 0; c < definition.weather_script.changes.size(); ++c) {
+    auto const& change = definition.weather_script.changes[c];
+    for (std::size_t b = 0; b < change.fog_banks.size(); ++b) {
+      if (!fog_bank_ids.contains(change.fog_banks[b].id)) {
+        errors.push_back(
+            {QStringLiteral("weather_script.changes[%1].fog_banks[%2]").arg(c).arg(b),
+             QStringLiteral("unknown fog bank '%1'").arg(change.fog_banks[b].id)});
+      }
+    }
+  }
+  for (std::size_t i = 0; i < definition.groups.size(); ++i) {
+    auto const& group = definition.groups[i];
+    if (!group.positions.empty() &&
+        static_cast<int>(group.positions.size()) != group.count) {
+      errors.push_back({QStringLiteral("groups[%1].positions").arg(i),
+                        QStringLiteral("%1 positions for a count of %2")
+                            .arg(group.positions.size())
+                            .arg(group.count)});
+    }
+  }
+
   for (std::size_t i = 0; i < definition.steps.size(); ++i) {
     auto const& step = definition.steps[i];
     QString const field = QStringLiteral("steps[%1]").arg(i);
@@ -181,7 +230,9 @@ auto validate_scenario(const ArenaScenarioDefinition& definition)
     bool const command_needs_group =
         step.zone_id.isEmpty() && step.command != ScenarioCommandKind::SetCamera &&
         step.command != ScenarioCommandKind::SetFullCreatureLod &&
-        step.command != ScenarioCommandKind::ReloadUndeadZoneState && !rockfall_step;
+        step.command != ScenarioCommandKind::ReloadUndeadZoneState &&
+        step.command != ScenarioCommandKind::Marker &&
+        step.command != ScenarioCommandKind::SetWeather && !rockfall_step;
     check_group(step.group, field + QStringLiteral(".group"), command_needs_group);
     if (rockfall_step && !rockfall_ids.contains(step.zone_id)) {
       errors.push_back(
@@ -203,8 +254,34 @@ auto validate_scenario(const ArenaScenarioDefinition& definition)
                 field + QStringLiteral(".target_group"),
                 command_needs_target);
     if (step.trigger.kind != ScenarioTriggerKind::AtTime &&
-        step.trigger.kind != ScenarioTriggerKind::PreviousStepComplete) {
+        step.trigger.kind != ScenarioTriggerKind::PreviousStepComplete &&
+        step.trigger.kind != ScenarioTriggerKind::StepExecuted) {
       check_group(step.trigger.group, field + QStringLiteral(".trigger.group"), true);
+    }
+    if (step.trigger.kind == ScenarioTriggerKind::StepExecuted &&
+        !step_names.contains(step.trigger.step)) {
+      errors.push_back({field + QStringLiteral(".trigger.step"),
+                        QStringLiteral("unknown step reference '%1'")
+                            .arg(step.trigger.step)});
+    }
+    if (!step.trigger.after_step.isEmpty() &&
+        !step_names.contains(step.trigger.after_step)) {
+      errors.push_back({field + QStringLiteral(".trigger.after_step"),
+                        QStringLiteral("unknown step reference '%1'")
+                            .arg(step.trigger.after_step)});
+    }
+    if (step.trigger.kind == ScenarioTriggerKind::GroupStrengthBelow &&
+        (step.trigger.threshold <= 0.0F || step.trigger.threshold > 1.0F)) {
+      errors.push_back({field + QStringLiteral(".trigger.threshold"),
+                        QStringLiteral("strength threshold must be in (0, 1]")});
+    }
+    if (step.command == ScenarioCommandKind::SetWeather &&
+        (step.weather_change < 0 ||
+         static_cast<std::size_t>(step.weather_change) >=
+             definition.weather_script.changes.size())) {
+      errors.push_back({field + QStringLiteral(".weather_change"),
+                        QStringLiteral("unknown weather change %1")
+                            .arg(step.weather_change)});
     }
     if (step.trigger.kind == ScenarioTriggerKind::FirstContact ||
         step.trigger.kind == ScenarioTriggerKind::GroupsWithinDistance) {

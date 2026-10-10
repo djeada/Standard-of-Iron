@@ -22,6 +22,7 @@
 #include "arena_casting.h"
 #include "arena_feedback.h"
 #include "arena_scenario.h"
+#include "arena_weather.h"
 #include "game/core/component_combat.h"
 #include "game/map/bridge_geometry.h"
 #include "game/map/ground_type.h"
@@ -32,6 +33,7 @@
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
 #include "promo_spec.h"
+#include "render/mist_volume.h"
 
 class QOpenGLShaderProgram;
 class QOpenGLVertexArrayObject;
@@ -287,6 +289,17 @@ public:
   [[nodiscard]] auto active_scenario_finished() const -> bool;
   [[nodiscard]] auto
   active_scenario_report() const -> const Arena::ArenaScenarioReport*;
+
+  [[nodiscard]] auto
+  active_scenario_events() const -> std::vector<Arena::ArenaScenarioEvent>;
+
+  [[nodiscard]] auto scenario_weather_state() const -> const Arena::ArenaWeatherState& {
+    return m_weather_state;
+  }
+  [[nodiscard]] auto
+  applied_mist_volumes() const -> const std::vector<Render::MistVolume>& {
+    return m_applied_mist;
+  }
   [[nodiscard]] auto write_scenario_artifacts(const QString& directory,
                                               QString* error = nullptr) const -> bool;
 
@@ -382,7 +395,8 @@ private:
                          Game::Units::TroopType unit_type,
                          const QVector3D& spawn_position,
                          bool ai_controlled,
-                         const QString& commander_id = {}) -> Engine::Core::EntityID;
+                         const QString& commander_id = {},
+                         bool keep_troop_speed = false) -> Engine::Core::EntityID;
   auto resolve_spawn_unit_type(Game::Systems::NationID nation_id,
                                Game::Units::TroopType preferred) const
       -> Game::Units::TroopType;
@@ -440,6 +454,8 @@ private:
   void publish_scenario_frame(const Arena::ArenaRenderedFrameTimings& timings);
 
   void apply_scenario_environment(const Arena::ArenaScenarioDefinition& scenario);
+  void rebuild_static_mist(const Arena::ArenaScenarioDefinition& scenario);
+  void apply_scenario_weather();
   [[nodiscard]] auto
   apply_scenario_terrain(const Arena::ArenaScenarioDefinition& scenario) -> bool;
   [[nodiscard]] auto
@@ -473,6 +489,15 @@ private:
   float m_rain_intensity = 0.5F;
   Game::Map::WeatherType m_weather_type = Game::Map::WeatherType::Rain;
   Game::Map::WeatherLightingInput m_weather_lighting{};
+  Arena::ArenaWeatherBase m_weather_base{};
+  Arena::ArenaWeatherState m_weather_state{};
+  std::optional<float> m_scripted_fog_density;
+  std::optional<float> m_scripted_exposure;
+  std::vector<Render::MistVolume> m_static_mist;
+  std::vector<Arena::ArenaFogBankState> m_applied_fog_banks;
+  std::vector<Render::MistVolume> m_applied_mist;
+  bool m_mist_dirty{true};
+  QVector3D m_scenario_origin;
   QString m_animation_name = QStringLiteral("Idle");
 
   Game::Session::SessionContext& m_session;

@@ -424,7 +424,8 @@ auto ArenaViewport::spawn_single_unit(int owner_id,
                                       Game::Units::TroopType unit_type,
                                       const QVector3D& spawn_position,
                                       bool ai_controlled,
-                                      const QString& commander_id)
+                                      const QString& commander_id,
+                                      bool keep_troop_speed)
     -> Engine::Core::EntityID {
   if (m_unit_factory == nullptr || m_world == nullptr) {
     return 0U;
@@ -459,7 +460,9 @@ auto ArenaViewport::spawn_single_unit(int owner_id,
     transform->has_desired_yaw = true;
   }
   if (unit_component != nullptr) {
-    unit_component->speed = m_default_unit_speed;
+    if (!keep_troop_speed) {
+      unit_component->speed = m_default_unit_speed;
+    }
     unit_component->render_individuals_per_unit_override =
         m_spawn_individuals_per_unit_override;
     unit_component->render_rider = m_spawn_rider_visible;
