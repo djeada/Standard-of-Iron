@@ -196,12 +196,9 @@ auto TroopRoleRegistry::instance() -> TroopRoleRegistry& {
 
 void TroopRoleRegistry::reset_to_defaults() {
   m_profiles.clear();
-  constexpr int k_last_troop = static_cast<int>(TroopType::Velites);
+  constexpr int k_last_troop = static_cast<int>(TroopType::Builder);
   for (int i = 0; i <= k_last_troop; ++i) {
     auto const troop = static_cast<TroopType>(i);
-    if (troop == TroopType::Sheep || troop == TroopType::Wolf) {
-      continue;
-    }
     m_profiles[troop] = default_troop_formation_profile(troop);
   }
   m_fallback = default_troop_formation_profile(TroopType::Swordsman);

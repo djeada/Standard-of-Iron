@@ -10,7 +10,6 @@
 
 #include "../../formation/army_formation_planner.h"
 #include "../../formation/unit_layout_resolver.h"
-#include "../../units/spawn_type.h"
 #include "../nation_registry.h"
 #include "ai_doctrine_catalog.h"
 
@@ -226,67 +225,9 @@ auto doctrine_intent(const AIContext& context)
   if (name == "faction_default") {
     return ArmyFormationIntent::FactionDefault;
   }
-  if (name == "triplex_acies" || name == "triplex") {
-    return ArmyFormationIntent::TriplexAcies;
-  }
-  if (name == "convex_crescent" || name == "crescent") {
-    return ArmyFormationIntent::ConvexCrescent;
-  }
-  if (name == "elephant_screen") {
-    return ArmyFormationIntent::ElephantScreen;
-  }
   qCWarning(formation_ai_logger())
       << "commander doctrine names unknown formation" << QString::fromStdString(name)
       << "; using the situational choice";
-  return std::nullopt;
-}
-
-struct ArmyMakeup {
-  int infantry{0};
-  int cavalry{0};
-  int elephants{0};
-};
-
-auto army_makeup(const AISnapshot& snapshot) -> ArmyMakeup {
-  using Game::Units::SpawnType;
-  ArmyMakeup makeup;
-  for (const auto& unit : snapshot.friendly_units) {
-    if (unit.is_building || unit.is_commander) {
-      continue;
-    }
-    if (unit.spawn_type == SpawnType::Elephant) {
-      ++makeup.elephants;
-    } else if (Game::Units::is_cavalry(unit.spawn_type)) {
-      ++makeup.cavalry;
-    } else if (unit.spawn_type == SpawnType::Swordsman ||
-               unit.spawn_type == SpawnType::Spearman) {
-      ++makeup.infantry;
-    }
-  }
-  return makeup;
-}
-
-// The historical battle orders of the two great powers, used when nothing more
-// specific applies: Rome forms its maniples into the triplex acies, Carthage
-// screens with its elephants or forms the crescent around cavalry wings.
-auto battle_order_intent(const AISnapshot& snapshot, const AIContext& context)
-    -> std::optional<Game::Formation::ArmyFormationIntent> {
-  using Game::Formation::ArmyFormationIntent;
-  if (context.nation == nullptr) {
-    return std::nullopt;
-  }
-  auto const makeup = army_makeup(snapshot);
-  if (context.nation->id == NationID::RomanRepublic && makeup.infantry >= 6) {
-    return ArmyFormationIntent::TriplexAcies;
-  }
-  if (context.nation->id == NationID::Carthage) {
-    if (makeup.elephants >= 2 && makeup.infantry >= 2) {
-      return ArmyFormationIntent::ElephantScreen;
-    }
-    if (makeup.cavalry >= 2 && makeup.infantry >= 4) {
-      return ArmyFormationIntent::ConvexCrescent;
-    }
-  }
   return std::nullopt;
 }
 
@@ -315,9 +256,6 @@ auto select_ai_intent(const AISnapshot& snapshot,
   }
   if (context.strategy_config.personality.aggression > 0.6F) {
     return ArmyFormationIntent::Assault;
-  }
-  if (const auto historical = battle_order_intent(snapshot, context)) {
-    return *historical;
   }
   return ArmyFormationIntent::FactionDefault;
 }
