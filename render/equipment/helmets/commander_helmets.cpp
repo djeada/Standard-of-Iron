@@ -356,9 +356,9 @@ void add_fan_crest(std::vector<Primitive>& primitives) {
     return points;
   };
   auto const inner = arc(0.78F, 0.0F);
-  add_lobed_mass(primitives, inner, 0.46F, 0.46F, k_plume_slot, 0.30F);
+  add_lobed_mass(primitives, inner, 0.50F, 0.50F, k_plume_slot, 0.50F);
   auto const outer = arc(1.28F, 0.0F);
-  add_lobed_mass(primitives, outer, 0.24F, 0.24F, k_accent_slot, 0.34F);
+  add_lobed_mass(primitives, outer, 0.26F, 0.26F, k_accent_slot, 0.55F);
 }
 
 void add_tall_column_plume(std::vector<Primitive>& primitives) {
