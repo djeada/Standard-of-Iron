@@ -25,6 +25,7 @@
 #include <memory>
 #include <numbers>
 #include <optional>
+#include <set>
 #include <utility>
 #include <vector>
 
@@ -38,6 +39,7 @@
 #include "game/core/event_manager.h"
 #include "game/session/session_context.h"
 #include "game/visuals/team_colors.h"
+#include "promo_camera_export.h"
 #include "promo_casting_overlay.h"
 #include "promo_rpg_hud.h"
 #include "render/graphics_settings.h"
@@ -430,7 +432,59 @@ struct ShotResult {
 
   int edge_frames{0};
   float worst_edge_extent{0.0F};
+
+  QString camera_path;
+  QString terrain_path;
+
+  struct Variant {
+    QString name;
+    int width{0};
+    int height{0};
+    QString clip_path;
+    QString camera_path;
+    QString poster_path;
+    int frames{0};
+  };
+  std::vector<Variant> variants;
 };
+
+auto clip_base(std::size_t shot_index, const QString& shot_name) -> QString {
+  return QStringLiteral("%1_%2")
+      .arg(shot_index + 1U, 2, 10, QLatin1Char('0'))
+      .arg(shot_name);
+}
+
+auto terrain_file_name(const QString& scenario, int seed) -> QString {
+  return QStringLiteral("terrain_%1_%2.json").arg(scenario).arg(seed);
+}
+
+auto with_size(const Spec& spec, int width, int height) -> Spec {
+  Spec sized = spec;
+  sized.width = width;
+  sized.height = height;
+  return sized;
+}
+
+auto dissolve_card(const QImage& card,
+                   const std::optional<QImage>& from,
+                   int written,
+                   int dissolve_frames) -> QImage {
+  if (!from.has_value() || written >= dissolve_frames || from->size() != card.size()) {
+    return card;
+  }
+  const double linear =
+      static_cast<double>(written + 1) / static_cast<double>(dissolve_frames);
+  const double eased = linear * linear * (3.0 - 2.0 * linear);
+  QImage composed = *from;
+  if (composed.format() != QImage::Format_RGB32 &&
+      composed.format() != QImage::Format_ARGB32) {
+    composed = composed.convertToFormat(QImage::Format_RGB32);
+  }
+  QPainter painter(&composed);
+  painter.setOpacity(eased);
+  painter.drawImage(0, 0, card);
+  return composed;
+}
 
 struct MatchTimeline {
   QString scenario;
@@ -932,11 +986,9 @@ private:
       return;
     }
     const Shot& shot = current_shot();
-    m_clip_path =
-        QDir(m_options.output_directory)
-            .filePath(QStringLiteral("%1_%2.mp4")
-                          .arg(current_shot_index() + 1U, 2, 10, QLatin1Char('0'))
-                          .arg(shot.name));
+    const QDir output(m_options.output_directory);
+    const QString base = clip_base(current_shot_index(), shot.name);
+    m_clip_path = output.filePath(base + QStringLiteral(".mp4"));
     QString encoder_error;
     m_encoder = std::make_unique<VideoEncoder>();
     if (!m_encoder->open(
@@ -979,6 +1031,7 @@ private:
                                        shot.gameplay_ui_all_owners);
     m_viewport.set_cinematic_lens(shot.near_plane, shot.ground_clearance);
     m_viewport.set_promo_lighting(shot.lighting);
+    open_tracks(shot, base);
 
     qInfo().noquote() << QStringLiteral("  shot %1: %2 (%3 frames at %4x%5, from "
                                         "%6 s)")
@@ -988,6 +1041,162 @@ private:
                              .arg(m_spec.width)
                              .arg(m_spec.height)
                              .arg(QString::number(shot.start_seconds, 'f', 1));
+  }
+
+  [[nodiscard]] auto track_header(const Shot& shot,
+                                  const QString& variant,
+                                  const QString& clip,
+                                  int width,
+                                  int height) const -> TrackHeader {
+    TrackHeader header;
+    header.spec_id = m_spec.id;
+    header.shot = shot.name;
+    header.variant = variant;
+    header.scenario = shot.scenario;
+    header.seed = shot.seed;
+    header.clip = clip;
+    header.fps = m_spec.fps;
+    header.width = width;
+    header.height = height;
+    header.supersample = m_spec.supersample;
+    header.slow_motion = shot.slow_motion;
+    header.start_seconds = shot.start_seconds;
+    header.terrain = terrain_file_name(shot.scenario, shot.seed);
+    if (const auto* definition = Arena::Scenarios::find_definition(shot.scenario);
+        definition != nullptr && !shot.overlay_groups.none()) {
+      for (const auto& group : definition->groups) {
+        if (shot.overlay_groups.all || shot.overlay_groups.names.contains(group.name)) {
+          header.groups.push_back(group.name);
+        }
+      }
+    }
+    return header;
+  }
+
+  void open_tracks(const Shot& shot, const QString& base) {
+    const QDir output(m_options.output_directory);
+    QString error;
+    if (!m_track.open(output.filePath(base + QStringLiteral(".camera.jsonl")),
+                      track_header(shot,
+                                   QString{},
+                                   base + QStringLiteral(".mp4"),
+                                   m_spec.width,
+                                   m_spec.height),
+                      &error)) {
+      qWarning().noquote()
+          << QStringLiteral("Promo shot '%1': %2").arg(shot.name, error);
+    }
+    m_frame_groups.clear();
+    m_primary_wrote_frame = false;
+
+    m_variants.clear();
+    std::vector<ArenaViewport::CaptureVariant> targets;
+    for (const ShotVariant& variant : shot.variants) {
+      auto recording = std::make_unique<VariantRecording>();
+      recording->name = variant.name;
+      recording->width = variant.width;
+      recording->height = variant.height;
+      const QString variant_base = QStringLiteral("%1.%2").arg(base, variant.name);
+      recording->clip_path = output.filePath(variant_base + QStringLiteral(".mp4"));
+      recording->camera_path =
+          output.filePath(variant_base + QStringLiteral(".camera.jsonl"));
+      recording->encoder = std::make_unique<VideoEncoder>();
+      QString encoder_error;
+      if (!recording->encoder->open(recording->clip_path,
+                                    variant.width,
+                                    variant.height,
+                                    m_spec.fps,
+                                    &encoder_error)) {
+        qCritical().noquote() << QStringLiteral("Promo shot '%1' variant '%2': %3")
+                                     .arg(shot.name, variant.name, encoder_error);
+        m_failed = true;
+        continue;
+      }
+      QString track_error;
+      if (!recording->track.open(recording->camera_path,
+                                 track_header(shot,
+                                              variant.name,
+                                              variant_base + QStringLiteral(".mp4"),
+                                              variant.width,
+                                              variant.height),
+                                 &track_error)) {
+        qWarning().noquote()
+            << QStringLiteral("Promo shot '%1': %2").arg(shot.name, track_error);
+      }
+      const std::size_t slot = m_variants.size();
+      ArenaViewport::CaptureVariant target;
+      target.width = variant.width * m_spec.supersample;
+      target.height = variant.height * m_spec.supersample;
+      target.lens = m_viewport.cinematic_state();
+      target.sink = [this, slot](const QImage& frame) {
+        on_variant_frame(slot, frame);
+      };
+      targets.push_back(std::move(target));
+      recording->spec_index = static_cast<std::size_t>(&variant - shot.variants.data());
+      m_variants.push_back(std::move(recording));
+      qInfo().noquote() << QStringLiteral("    + %1 variant at %2x%3")
+                               .arg(variant.name)
+                               .arg(variant.width)
+                               .arg(variant.height);
+    }
+    m_viewport.set_capture_variants(std::move(targets));
+  }
+
+  [[nodiscard]] auto
+  place_camera(const Shot& shot,
+               const QVector3D& focus,
+               float shot_time,
+               std::optional<GroundFootprint>* footprint) -> QVector3D {
+    QVector3D target;
+    if (shot.rig == Rig::Free) {
+      const QVector3D anchor = focus + shot.focus.offset;
+      const FreePose free = evaluate_free(shot.free_keys, shot_time, shot.ends);
+      auto place = [&](const QVector3D& local, Space space) {
+        if (space == Space::Focus) {
+          return anchor + local;
+        }
+        QVector3D world = local;
+        if (shot.terrain_relative) {
+          world.setY(world.y() + smoothed_ground(world.x(), world.z()));
+        }
+        return world;
+      };
+      const QVector3D eye = place(free.eye, shot.eye_space);
+      target = place(free.look, shot.look_space);
+      if (shot.shake > 0.0F) {
+        target += shake_offset(m_frames_written, shot.shake);
+      }
+      aim(shot, shot_time, eye, target, free.fov, free.roll);
+      return target;
+    }
+    Pose pose = shot.interp == Interp::Spline
+                    ? evaluate_spline(shot.keys, shot_time, shot.ends)
+                    : evaluate(shot.keys, shot_time);
+    target = focus + shot.focus.offset + QVector3D(0.0F, pose.height, 0.0F);
+    if (shot.shake > 0.0F) {
+      target += shake_offset(m_frames_written, shot.shake);
+    }
+    if (shot.handheld.degrees > 0.0F || !shot.jolts.empty()) {
+      const float pitch = qDegreesToRadians(pose.pitch);
+      const float yaw = qDegreesToRadians(pose.yaw);
+      const float horizontal = pose.distance * std::cos(pitch);
+      const QVector3D eye = target + QVector3D(std::sin(yaw) * horizontal,
+                                               pose.distance * std::sin(pitch),
+                                               std::cos(yaw) * horizontal);
+      aim(shot, shot_time, eye, target, pose.fov, pose.roll);
+    } else {
+      m_viewport.set_cinematic_view(
+          target, pose.distance, pose.pitch, pose.yaw, pose.fov, pose.roll);
+    }
+    if (footprint != nullptr) {
+      *footprint =
+          view_ground_footprint(pose,
+                                focus + shot.focus.offset,
+                                static_cast<float>(m_spec.width) /
+                                    static_cast<float>(std::max(1, m_spec.height)),
+                                0.0F);
+    }
+    return target;
   }
 
   void on_tick(float scenario_time) {
@@ -1029,55 +1238,26 @@ private:
 
     QVector3D target;
     std::optional<GroundFootprint> footprint;
+    m_tick_shot_time = shot_time;
     if (shot.gameplay_camera || shot.flame_card) {
 
       m_viewport.clear_cinematic_view();
-    } else if (shot.rig == Rig::Free) {
-      const QVector3D anchor = resolve_focus(shot) + shot.focus.offset;
-      const FreePose free = evaluate_free(shot.free_keys, shot_time, shot.ends);
-      auto place = [&](const QVector3D& local, Space space) {
-        if (space == Space::Focus) {
-          return anchor + local;
-        }
-        QVector3D world = local;
-        if (shot.terrain_relative) {
-          world.setY(world.y() + smoothed_ground(world.x(), world.z()));
-        }
-        return world;
-      };
-      const QVector3D eye = place(free.eye, shot.eye_space);
-      target = place(free.look, shot.look_space);
-      if (shot.shake > 0.0F) {
-        target += shake_offset(m_frames_written, shot.shake);
+      for (std::size_t slot = 0; slot < m_variants.size(); ++slot) {
+        m_viewport.set_capture_variant_lens(slot, m_viewport.cinematic_state());
       }
-      aim(shot, shot_time, eye, target, free.fov, free.roll);
     } else {
       const QVector3D focus = resolve_focus(shot);
-      Pose pose = shot.interp == Interp::Spline
-                      ? evaluate_spline(shot.keys, shot_time, shot.ends)
-                      : evaluate(shot.keys, shot_time);
-      target = focus + shot.focus.offset + QVector3D(0.0F, pose.height, 0.0F);
-      if (shot.shake > 0.0F) {
-        target += shake_offset(m_frames_written, shot.shake);
+      const auto primary_lens = m_viewport.cinematic_state();
+      for (std::size_t slot = 0; slot < m_variants.size(); ++slot) {
+        const Shot& camera = shot.variants[m_variants[slot]->spec_index].camera;
+        (void)place_camera(camera, focus, shot_time, nullptr);
+        auto lens = m_viewport.cinematic_state();
+        lens.near_plane = camera.near_plane;
+        lens.ground_clearance = camera.ground_clearance;
+        m_viewport.set_capture_variant_lens(slot, lens);
       }
-      if (shot.handheld.degrees > 0.0F || !shot.jolts.empty()) {
-        const float pitch = qDegreesToRadians(pose.pitch);
-        const float yaw = qDegreesToRadians(pose.yaw);
-        const float horizontal = pose.distance * std::cos(pitch);
-        const QVector3D eye = target + QVector3D(std::sin(yaw) * horizontal,
-                                                 pose.distance * std::sin(pitch),
-                                                 std::cos(yaw) * horizontal);
-        aim(shot, shot_time, eye, target, pose.fov, pose.roll);
-      } else {
-        m_viewport.set_cinematic_view(
-            target, pose.distance, pose.pitch, pose.yaw, pose.fov, pose.roll);
-      }
-      footprint =
-          view_ground_footprint(pose,
-                                focus + shot.focus.offset,
-                                static_cast<float>(m_spec.width) /
-                                    static_cast<float>(std::max(1, m_spec.height)),
-                                0.0F);
+      m_viewport.set_cinematic_state(primary_lens);
+      target = place_camera(shot, focus, shot_time, &footprint);
     }
 
     const bool in_window =
@@ -1160,6 +1340,39 @@ private:
     }
   }
 
+  void write_variant_cards(int dissolve_frames) {
+    for (auto& pointer : m_variants) {
+      VariantRecording& recording = *pointer;
+      if (recording.encoder == nullptr) {
+        continue;
+      }
+      if (!recording.card.has_value()) {
+        const Spec sized = with_size(m_spec, recording.width, recording.height);
+        recording.card =
+            m_spec.report_card_style == ReportCardStyle::Matchup
+                ? paint_matchup_card(sized, m_viewport.active_scenario_report())
+                : paint_report_card(sized, m_viewport.active_scenario_report());
+        recording.card_from = recording.last_frame;
+        recording.last_frame = recording.card;
+      }
+      const QImage composed = dissolve_card(
+          *recording.card, recording.card_from, m_card_frames_written, dissolve_frames);
+      QString error;
+      if (!recording.encoder->write_frame(composed, &error)) {
+        qCritical().noquote() << QStringLiteral("Promo variant '%1' encode failed: %2")
+                                     .arg(recording.name, error);
+        m_failed = true;
+        recording.encoder.reset();
+        continue;
+      }
+      recording.track.write(camera_frame_json(
+          frame_stamp(m_frames_written, recording.width, recording.height),
+          CameraSample{},
+          {}));
+      ++recording.frames_written;
+    }
+  }
+
   [[nodiscard]] auto begin_report_card() -> bool {
     if (m_card_active || m_encoder == nullptr || m_frames_written == 0 ||
         current_shot().report_card_seconds <= 0.0F) {
@@ -1205,25 +1418,13 @@ private:
     }
 
     const QImage& card = *m_card_image;
-    QImage composed = card;
     const int dissolve_frames =
         std::max(1,
                  static_cast<int>(std::lround(static_cast<double>(m_spec.fps) *
                                               k_card_dissolve_seconds)));
-    if (m_card_dissolve_from.has_value() && m_card_frames_written < dissolve_frames &&
-        m_card_dissolve_from->size() == card.size()) {
-      const double linear = static_cast<double>(m_card_frames_written + 1) /
-                            static_cast<double>(dissolve_frames);
-      const double eased = linear * linear * (3.0 - 2.0 * linear);
-      composed = *m_card_dissolve_from;
-      if (composed.format() != QImage::Format_RGB32 &&
-          composed.format() != QImage::Format_ARGB32) {
-        composed = composed.convertToFormat(QImage::Format_RGB32);
-      }
-      QPainter painter(&composed);
-      painter.setOpacity(eased);
-      painter.drawImage(0, 0, card);
-    }
+    const QImage composed = dissolve_card(
+        card, m_card_dissolve_from, m_card_frames_written, dissolve_frames);
+    write_variant_cards(dissolve_frames);
 
     QString error;
     if (!m_encoder->write_frame(composed, &error)) {
@@ -1234,6 +1435,10 @@ private:
       end_pass();
       return;
     }
+    m_track.write(
+        camera_frame_json(frame_stamp(m_frames_written, m_spec.width, m_spec.height),
+                          CameraSample{},
+                          {}));
     ++m_frames_written;
     ++m_card_frames_written;
     if (m_audio != nullptr) {
@@ -1247,6 +1452,7 @@ private:
   }
 
   void on_frame(const QImage& frame) {
+    m_primary_wrote_frame = false;
     if (!m_shot_active || m_encoder == nullptr) {
       return;
     }
@@ -1310,8 +1516,91 @@ private:
       end_pass();
       return;
     }
+    m_frame_groups = m_viewport.scenario_group_samples(current_shot().overlay_groups);
+    write_terrain_once(current_shot());
+    m_track.write(
+        camera_frame_json(frame_stamp(m_frames_written, m_spec.width, m_spec.height),
+                          m_viewport.capture_camera(),
+                          m_frame_groups));
     ++m_frames_written;
     m_last_frame = output;
+    m_primary_wrote_frame = true;
+  }
+
+  [[nodiscard]] auto frame_stamp(int frame, int width, int height) const -> FrameStamp {
+    FrameStamp stamp;
+    stamp.frame = frame;
+    stamp.fps = m_spec.fps;
+    stamp.scene_seconds = m_viewport.scenario_elapsed_seconds();
+    stamp.shot_seconds = m_tick_shot_time;
+    stamp.output_width = width;
+    stamp.output_height = height;
+    return stamp;
+  }
+
+  void write_terrain_once(const Shot& shot) {
+    const auto key = std::make_pair(shot.scenario, shot.seed);
+    if (m_terrain_written.contains(key)) {
+      return;
+    }
+    m_terrain_written.insert(key);
+    float half_extent = m_viewport.terrain_half_extent();
+    if (const auto* definition = Arena::Scenarios::find_definition(shot.scenario);
+        definition != nullptr && definition->arena_floor_half_extent > 0.0F) {
+      half_extent = std::min(half_extent, definition->arena_floor_half_extent + 16.0F);
+    }
+    QString error;
+    if (!write_terrain_grid(
+            QDir(m_options.output_directory)
+                .filePath(terrain_file_name(shot.scenario, shot.seed)),
+            terrain_grid_for(half_extent, 1.0F),
+            [this](float x, float z) { return m_viewport.terrain_height_at(x, z); },
+            &error)) {
+      qWarning().noquote() << QStringLiteral("Promo terrain export: %1").arg(error);
+    }
+  }
+
+  void on_variant_frame(std::size_t slot, const QImage& frame) {
+    if (!m_shot_active || !m_primary_wrote_frame || slot >= m_variants.size()) {
+      return;
+    }
+    VariantRecording& recording = *m_variants[slot];
+    if (recording.encoder == nullptr) {
+      return;
+    }
+    const Shot& camera = current_shot().variants[recording.spec_index].camera;
+    QImage output = frame;
+    if (output.width() != recording.width || output.height() != recording.height) {
+      output = frame.scaled(recording.width,
+                            recording.height,
+                            Qt::IgnoreAspectRatio,
+                            Qt::SmoothTransformation);
+    }
+    if (current_shot().gameplay_ui && !current_shot().flame_card &&
+        !current_shot().rpg_hud) {
+      if (output.format() != QImage::Format_ARGB32 &&
+          output.format() != QImage::Format_RGB32) {
+        output = output.convertToFormat(QImage::Format_ARGB32);
+      }
+      m_viewport.paint_capture_gameplay_ui(output);
+    }
+    if (camera.casting_overlay && !current_shot().flame_card) {
+      paint_casting_overlay(output, m_viewport.casting_snapshot());
+    }
+    QString error;
+    if (!recording.encoder->write_frame(output, &error)) {
+      qCritical().noquote() << QStringLiteral("Promo variant '%1' encode failed: %2")
+                                   .arg(recording.name, error);
+      m_failed = true;
+      recording.encoder.reset();
+      return;
+    }
+    recording.track.write(camera_frame_json(
+        frame_stamp(m_frames_written - 1, recording.width, recording.height),
+        m_viewport.capture_camera(),
+        m_frame_groups));
+    ++recording.frames_written;
+    recording.last_frame = output;
   }
 
   [[nodiscard]] auto smoothed_ground(float x, float z) const -> float {
@@ -1444,6 +1733,8 @@ private:
     m_viewport.set_capture_active(false);
     m_viewport.set_batch_fixed_step(idle_step());
     m_viewport.set_flame_card(false);
+    m_viewport.set_capture_variants({});
+    m_track.close();
 
     const std::size_t shot_index = current_shot_index();
     const Shot& shot = m_spec.shots[shot_index];
@@ -1455,6 +1746,41 @@ private:
     }
     m_encoder.reset();
 
+    std::vector<ShotResult::Variant> variant_results;
+    for (auto& pointer : m_variants) {
+      VariantRecording& recording = *pointer;
+      recording.track.close();
+      if (recording.encoder != nullptr && !recording.encoder->close(&error)) {
+        qCritical().noquote() << QStringLiteral("Promo shot '%1' variant '%2': %3")
+                                     .arg(shot.name, recording.name, error);
+        m_failed = true;
+      }
+      recording.encoder.reset();
+      if (recording.frames_written != m_frames_written) {
+        qCritical().noquote()
+            << QStringLiteral("Promo shot '%1' variant '%2' wrote %3 frames, the "
+                              "shot %4")
+                   .arg(shot.name, recording.name)
+                   .arg(recording.frames_written)
+                   .arg(m_frames_written);
+        m_failed = true;
+      }
+      ShotResult::Variant result;
+      result.name = recording.name;
+      result.width = recording.width;
+      result.height = recording.height;
+      result.clip_path = recording.clip_path;
+      result.camera_path = recording.camera_path;
+      result.frames = recording.frames_written;
+      if (m_options.write_posters && recording.last_frame.has_value()) {
+        result.poster_path = recording.clip_path;
+        result.poster_path.replace(
+            result.poster_path.size() - 4, 4, QStringLiteral(".png"));
+        recording.last_frame->save(result.poster_path);
+      }
+      variant_results.push_back(result);
+    }
+
     if (m_audio != nullptr && m_frames_written > 0) {
 
       const QString wav_path = m_clip_path + QStringLiteral(".wav");
@@ -1463,11 +1789,24 @@ private:
                                     "Promo shot '%1': audio track not written")
                                     .arg(shot.name);
       } else {
-        m_pending_audio.push_back(
-            PendingAudio{m_clip_path, wav_path, shot.name, m_audio->clip_seconds()});
+        for (const ShotResult::Variant& variant : variant_results) {
+          const QString variant_wav = variant.clip_path + QStringLiteral(".wav");
+          QFile::remove(variant_wav);
+          if (variant.frames > 0 && QFile::copy(wav_path, variant_wav)) {
+            m_pending_audio.push_back(
+                PendingAudio{variant.clip_path,
+                             variant_wav,
+                             shot.name + QLatin1Char('.') + variant.name,
+                             m_audio->clip_seconds(),
+                             true});
+          }
+        }
+        m_pending_audio.push_back(PendingAudio{
+            m_clip_path, wav_path, shot.name, m_audio->clip_seconds(), false});
       }
       m_audio->begin_clip();
     }
+    m_variants.clear();
 
     ShotResult result;
     result.name = shot.name;
@@ -1479,6 +1818,11 @@ private:
         static_cast<float>(m_frames_written) / static_cast<float>(m_spec.fps);
     result.edge_frames = m_edge_frames;
     result.worst_edge_extent = m_worst_edge_extent;
+    result.camera_path = QDir(m_options.output_directory)
+                             .filePath(clip_base(shot_index, shot.name) +
+                                       QStringLiteral(".camera.jsonl"));
+    result.terrain_path = terrain_file_name(shot.scenario, shot.seed);
+    result.variants = std::move(variant_results);
     if (m_edge_frames > 0) {
       const QString what =
           m_worst_edge_extent >= 1e6F
@@ -1531,6 +1875,9 @@ private:
       QStringList wav_paths;
       wav_paths.reserve(static_cast<int>(m_pending_audio.size()));
       for (const PendingAudio& pending : m_pending_audio) {
+        if (pending.variant) {
+          continue;
+        }
         wav_paths << pending.wav_path;
       }
       QString measure_error;
@@ -1615,6 +1962,28 @@ private:
         }));
   }
 
+  [[nodiscard]] auto variants_json(const ShotResult& result) const -> QJsonArray {
+    QJsonArray variants;
+    for (const ShotResult::Variant& variant : result.variants) {
+      if (variant.frames <= 0) {
+        continue;
+      }
+      variants.append(QJsonObject{
+          {QStringLiteral("name"), variant.name},
+          {QStringLiteral("width"), variant.width},
+          {QStringLiteral("height"), variant.height},
+          {QStringLiteral("clip"), QFileInfo(variant.clip_path).fileName()},
+          {QStringLiteral("camera"), QFileInfo(variant.camera_path).fileName()},
+          {QStringLiteral("poster"),
+           variant.poster_path.isEmpty() ? QString{}
+                                         : QFileInfo(variant.poster_path).fileName()},
+          {QStringLiteral("frames"), variant.frames},
+          {QStringLiteral("clip_seconds"),
+           static_cast<double>(variant.frames) / static_cast<double>(m_spec.fps)}});
+    }
+    return variants;
+  }
+
   void write_manifest() {
     QJsonArray shots;
     for (const ShotResult& result : m_results) {
@@ -1631,7 +2000,10 @@ private:
           {QStringLiteral("frames"), result.frames},
           {QStringLiteral("scene_seconds"), result.scene_duration},
           {QStringLiteral("clip_seconds"), result.clip_duration},
-          {QStringLiteral("edge_frames"), result.edge_frames}});
+          {QStringLiteral("edge_frames"), result.edge_frames},
+          {QStringLiteral("camera"), QFileInfo(result.camera_path).fileName()},
+          {QStringLiteral("terrain"), result.terrain_path},
+          {QStringLiteral("variants"), variants_json(result)}});
     }
     const QJsonObject manifest{{QStringLiteral("id"), m_spec.id},
                                {QStringLiteral("title"), m_spec.title},
@@ -1688,7 +2060,30 @@ private:
     QString wav_path;
     QString shot_name;
     float seconds{0.0F};
+    bool variant{false};
   };
+
+  struct VariantRecording {
+    QString name;
+    int width{0};
+    int height{0};
+    std::size_t spec_index{0};
+    QString clip_path;
+    QString camera_path;
+    std::unique_ptr<VideoEncoder> encoder;
+    CameraTrackWriter track;
+    int frames_written{0};
+    std::optional<QImage> last_frame;
+    std::optional<QImage> card;
+    std::optional<QImage> card_from;
+  };
+
+  std::vector<std::unique_ptr<VariantRecording>> m_variants;
+  CameraTrackWriter m_track;
+  std::vector<GroupSample> m_frame_groups;
+  std::set<std::pair<QString, int>> m_terrain_written;
+  float m_tick_shot_time{0.0F};
+  bool m_primary_wrote_frame{false};
 
   std::vector<PendingAudio> m_pending_audio;
   std::unique_ptr<AudioRecorder> m_audio;

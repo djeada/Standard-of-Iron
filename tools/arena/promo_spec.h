@@ -135,6 +135,15 @@ inline constexpr const char* k_event_decision = "decision";
 
 [[nodiscard]] auto known_start_event(const QString& event) -> bool;
 
+struct GroupExport {
+  bool all{true};
+  QStringList names;
+
+  [[nodiscard]] auto none() const -> bool { return !all && names.isEmpty(); }
+};
+
+struct ShotVariant;
+
 struct Shot {
   QString name;
   QString scenario;
@@ -179,6 +188,18 @@ struct Shot {
   float near_plane{0.0F};
   float ground_clearance{-1.0F};
   LightingOverride lighting;
+
+  GroupExport overlay_groups;
+
+  std::vector<ShotVariant> variants;
+};
+
+struct ShotVariant {
+  QString name;
+  int width{1080};
+  int height{1920};
+
+  Shot camera;
 };
 
 struct MotionLimits {
@@ -227,6 +248,7 @@ struct Spec {
   std::vector<Shot> shots;
 
   QStringList battle_scripts;
+  GroupExport overlay_groups;
 };
 
 struct GroundFootprint {

@@ -341,10 +341,11 @@ void ArenaViewport::paintGL() {
   if (m_flame_card_active) {
     render_flame_card(capture_frame ? m_capture_width : width(),
                       capture_frame ? m_capture_height : height());
-    ++m_flame_card_frame;
     if (capture_frame) {
       deliver_capture_frame();
+      render_capture_variants(true);
     }
+    ++m_flame_card_frame;
     if (m_scenario_runner != nullptr && sampled_frame) {
       publish_animation_clock();
       publish_commander_presentation_trace();
@@ -402,6 +403,7 @@ void ArenaViewport::paintGL() {
 
   if (capture_frame) {
     deliver_capture_frame();
+    render_capture_variants(false);
   }
 
   if (m_scenario_runner != nullptr && sampled_frame) {
@@ -560,6 +562,9 @@ void ArenaViewport::paint_ui_overlays() {
 }
 
 void ArenaViewport::deliver_capture_frame() {
+  m_capture_camera = m_flame_card_active
+                         ? Arena::Promo::CameraSample{}
+                         : sample_capture_camera(m_capture_width, m_capture_height);
   stamp_capture_alpha_opaque();
   QImage const captured = m_capture_target->toImage();
   m_capture_target->release();

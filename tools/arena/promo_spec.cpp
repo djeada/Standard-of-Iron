@@ -7,6 +7,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonParseError>
+#include <QRegularExpression>
 #include <QStringList>
 #include <QtMath>
 
@@ -49,6 +50,84 @@ auto parse_ease(const QString& name) -> Ease {
     return Ease::EaseOut;
   }
   return Ease::Smooth;
+}
+
+auto parse_group_export(const QJsonValue& value,
+                        const GroupExport& fallback) -> GroupExport {
+  if (value.isUndefined() || value.isNull()) {
+    return fallback;
+  }
+  GroupExport result;
+  if (value.isBool()) {
+    result.all = value.toBool();
+    return result;
+  }
+  if (value.isString()) {
+    const QString word = value.toString().trimmed().toLower();
+    result.all = word == QStringLiteral("all");
+    if (!result.all && word != QStringLiteral("none") && !word.isEmpty()) {
+      result.names.push_back(value.toString().trimmed());
+    }
+    return result;
+  }
+  result.all = false;
+  for (const QJsonValue name : value.toArray()) {
+    const QString trimmed = name.toString().trimmed();
+    if (!trimmed.isEmpty() && !result.names.contains(trimmed)) {
+      result.names.push_back(trimmed);
+    }
+  }
+  return result;
+}
+
+constexpr int k_default_vertical_width = 1080;
+constexpr int k_default_vertical_height = 1920;
+
+auto variant_knob(const QString& key) -> bool {
+  return key == QStringLiteral("name") || key == QStringLiteral("width") ||
+         key == QStringLiteral("height") || key == QStringLiteral("fov_scale") ||
+         key == QStringLiteral("distance_scale") ||
+         key == QStringLiteral("yaw_offset") || key == QStringLiteral("pitch_offset") ||
+         key == QStringLiteral("offset");
+}
+
+auto variant_locks(const QString& key) -> bool {
+  return key == QStringLiteral("scenario") || key == QStringLiteral("seed") ||
+         key == QStringLiteral("start") || key == QStringLiteral("start_on") ||
+         key == QStringLiteral("duration") || key == QStringLiteral("slow_motion") ||
+         key == QStringLiteral("time_lapse") || key == QStringLiteral("report_card") ||
+         key == QStringLiteral("flame_card") ||
+         key == QStringLiteral("gameplay_camera") ||
+         key == QStringLiteral("variants") || key == QStringLiteral("vertical") ||
+         key == QStringLiteral("lighting") || key == QStringLiteral("rpg_hud") ||
+         key == QStringLiteral("gameplay_ui") ||
+         key == QStringLiteral("gameplay_ui_all_owners") ||
+         key == QStringLiteral("stabilize_seconds");
+}
+
+void apply_variant_knobs(const QJsonObject& variant, Shot& shot) {
+  const float fov_scale =
+      static_cast<float>(variant.value(QStringLiteral("fov_scale")).toDouble(1.0));
+  const float distance_scale =
+      static_cast<float>(variant.value(QStringLiteral("distance_scale")).toDouble(1.0));
+  const float yaw_offset =
+      static_cast<float>(variant.value(QStringLiteral("yaw_offset")).toDouble(0.0));
+  const float pitch_offset =
+      static_cast<float>(variant.value(QStringLiteral("pitch_offset")).toDouble(0.0));
+  shot.focus.offset += parse_vector(variant.value(QStringLiteral("offset")), {});
+  for (CameraKey& key : shot.keys) {
+    key.fov = std::clamp(key.fov * fov_scale, 5.0F, 120.0F);
+    key.distance = std::max(0.2F, key.distance * distance_scale);
+    key.yaw += yaw_offset;
+    key.pitch = std::clamp(key.pitch + pitch_offset, -89.0F, 89.0F);
+  }
+  const bool same_space = shot.eye_space == shot.look_space;
+  for (FreeKey& key : shot.free_keys) {
+    key.fov = std::clamp(key.fov * fov_scale, 5.0F, 120.0F);
+    if (same_space && distance_scale != 1.0F) {
+      key.eye = key.look + ((key.eye - key.look) * distance_scale);
+    }
+  }
 }
 
 auto parse_focus(const QJsonObject& object, QString* error) -> std::optional<Focus> {
@@ -571,13 +650,14 @@ auto load(const QString& path, QString* error) -> std::optional<Spec> {
     return std::nullopt;
   }
 
-  for (const QJsonValue shot_value : shots) {
-    const QJsonObject shot_object = shot_value.toObject();
-    if (shot_object.contains(QStringLiteral("clip"))) {
+  spec.overlay_groups = parse_group_export(root.value(QStringLiteral("overlay_groups")),
+                                           spec.overlay_groups);
 
-      continue;
-    }
-    Shot shot;
+  auto parse_shot = [&spec, error](const QJsonObject& shot_object,
+                                   std::size_t ordinal,
+                                   Shot& shot) -> bool {
+    shot.overlay_groups = parse_group_export(
+        shot_object.value(QStringLiteral("overlay_groups")), spec.overlay_groups);
     shot.gameplay_ui = spec.gameplay_ui;
     shot.gameplay_ui_all_owners = spec.gameplay_ui_all_owners;
     shot.casting_overlay = spec.casting_overlay;
@@ -598,7 +678,7 @@ auto load(const QString& path, QString* error) -> std::optional<Spec> {
                                   "they are the same knob")
                        .arg(shot.name);
         }
-        return std::nullopt;
+        return false;
       }
       const float factor = static_cast<float>(time_lapse.toDouble(1.0));
       if (factor < 1.0F) {
@@ -607,7 +687,7 @@ auto load(const QString& path, QString* error) -> std::optional<Spec> {
                                   "slow_motion to slow a shot down)")
                        .arg(shot.name);
         }
-        return std::nullopt;
+        return false;
       }
       shot.slow_motion = 1.0F / factor;
     }
@@ -633,14 +713,14 @@ auto load(const QString& path, QString* error) -> std::optional<Spec> {
                             QLatin1String(k_event_first_building_lost),
                             QLatin1String(k_event_decision));
         }
-        return std::nullopt;
+        return false;
       }
       if (shot_object.contains(QStringLiteral("start"))) {
         if (error != nullptr) {
           *error =
               QStringLiteral("shot '%1' sets both start and start_on").arg(shot.name);
         }
-        return std::nullopt;
+        return false;
       }
       shot.start_on = resolved;
     }
@@ -754,25 +834,23 @@ auto load(const QString& path, QString* error) -> std::optional<Spec> {
       if (error != nullptr) {
         *error = QStringLiteral("shot '%1' has no scenario").arg(shot.name);
       }
-      return std::nullopt;
+      return false;
     }
     if (shot.name.trimmed().isEmpty()) {
-      shot.name = QStringLiteral("shot_%1").arg(
-          spec.shots.size() + 1U, 2, 10, QLatin1Char('0'));
+      shot.name = QStringLiteral("shot_%1").arg(ordinal + 1U, 2, 10, QLatin1Char('0'));
     }
     if (shot.duration_seconds <= 0.0F || shot.start_seconds < 0.0F) {
       if (error != nullptr) {
         *error =
             QStringLiteral("shot '%1' has an invalid start or duration").arg(shot.name);
       }
-      return std::nullopt;
+      return false;
     }
     shot.slow_motion = std::clamp(shot.slow_motion, k_min_slow_motion, 8.0F);
 
     if (shot.gameplay_camera || shot.flame_card) {
 
-      spec.shots.push_back(std::move(shot));
-      continue;
+      return true;
     }
 
     QString focus_error;
@@ -782,7 +860,7 @@ auto load(const QString& path, QString* error) -> std::optional<Spec> {
       if (error != nullptr) {
         *error = QStringLiteral("shot '%1': %2").arg(shot.name, focus_error);
       }
-      return std::nullopt;
+      return false;
     }
     shot.focus = *focus;
 
@@ -805,7 +883,7 @@ auto load(const QString& path, QString* error) -> std::optional<Spec> {
             *error = QStringLiteral("shot '%1' has an out-of-range free camera key")
                          .arg(shot.name);
           }
-          return std::nullopt;
+          return false;
         }
         shot.free_keys.push_back(key);
       }
@@ -813,14 +891,13 @@ auto load(const QString& path, QString* error) -> std::optional<Spec> {
           shot.free_keys.begin(),
           shot.free_keys.end(),
           [](const FreeKey& lhs, const FreeKey& rhs) { return lhs.time < rhs.time; });
-      spec.shots.push_back(std::move(shot));
-      continue;
+      return true;
     }
     if (keys.isEmpty()) {
       if (error != nullptr) {
         *error = QStringLiteral("shot '%1' has no camera keyframes").arg(shot.name);
       }
-      return std::nullopt;
+      return false;
     }
     for (const QJsonValue key_value : keys) {
       const QJsonObject key_object = key_value.toObject();
@@ -845,7 +922,7 @@ auto load(const QString& path, QString* error) -> std::optional<Spec> {
           *error = QStringLiteral("shot '%1' has an out-of-range camera keyframe")
                        .arg(shot.name);
         }
-        return std::nullopt;
+        return false;
       }
       shot.keys.push_back(key);
     }
@@ -853,11 +930,147 @@ auto load(const QString& path, QString* error) -> std::optional<Spec> {
         shot.keys.begin(),
         shot.keys.end(),
         [](const CameraKey& lhs, const CameraKey& rhs) { return lhs.time < rhs.time; });
+    return true;
+  };
+
+  const QJsonValue spec_vertical = root.value(QStringLiteral("vertical"));
+  auto parse_variants = [&](const QJsonObject& shot_object, Shot& shot) -> bool {
+    QJsonArray entries = shot_object.value(QStringLiteral("variants")).toArray();
+    QJsonValue vertical = shot_object.value(QStringLiteral("vertical"));
+    if (vertical.isUndefined() && entries.isEmpty()) {
+      vertical = spec_vertical;
+    }
+    if (vertical.isBool() && vertical.toBool()) {
+      vertical = QJsonObject{};
+    }
+    if (vertical.isObject()) {
+      QJsonObject object = vertical.toObject();
+      if (!object.contains(QStringLiteral("name"))) {
+        object.insert(QStringLiteral("name"), QStringLiteral("vertical"));
+      }
+      entries.push_front(object);
+    }
+    for (const QJsonValue entry : entries) {
+      if (!entry.isObject()) {
+        if (error != nullptr) {
+          *error =
+              QStringLiteral("shot '%1': a variant must be an object").arg(shot.name);
+        }
+        return false;
+      }
+      const QJsonObject variant = entry.toObject();
+      ShotVariant result;
+      result.name = variant.value(QStringLiteral("name")).toString().trimmed();
+      result.width =
+          variant.value(QStringLiteral("width")).toInt(k_default_vertical_width);
+      result.height =
+          variant.value(QStringLiteral("height")).toInt(k_default_vertical_height);
+      static const QRegularExpression k_variant_name(QStringLiteral("^[a-z0-9_-]+$"));
+      if (result.name.isEmpty() || !k_variant_name.match(result.name).hasMatch()) {
+        if (error != nullptr) {
+          *error = QStringLiteral("shot '%1': variant name '%2' must be lower-case "
+                                  "letters, digits, '_' or '-'")
+                       .arg(shot.name, result.name);
+        }
+        return false;
+      }
+      if (std::any_of(
+              shot.variants.begin(),
+              shot.variants.end(),
+              [&](const ShotVariant& other) { return other.name == result.name; })) {
+        if (error != nullptr) {
+          *error = QStringLiteral("shot '%1' declares variant '%2' twice")
+                       .arg(shot.name, result.name);
+        }
+        return false;
+      }
+      if (result.width < 16 || result.height < 16 || result.width > 7680 ||
+          result.height > 7680 || (result.width % 2) != 0 || (result.height % 2) != 0) {
+        if (error != nullptr) {
+          *error = QStringLiteral("shot '%1': variant '%2' resolution %3x%4 must be "
+                                  "even and within 16..7680")
+                       .arg(shot.name, result.name)
+                       .arg(result.width)
+                       .arg(result.height);
+        }
+        return false;
+      }
+      QJsonObject merged = shot_object;
+      merged.remove(QStringLiteral("variants"));
+      merged.remove(QStringLiteral("vertical"));
+      for (auto it = variant.begin(); it != variant.end(); ++it) {
+        if (variant_knob(it.key())) {
+          continue;
+        }
+        if (variant_locks(it.key())) {
+          if (error != nullptr) {
+            *error = QStringLiteral("shot '%1': variant '%2' may not change '%3'; it "
+                                    "is recorded in the same scenario pass")
+                         .arg(shot.name, result.name, it.key());
+          }
+          return false;
+        }
+        if (it.key() == QStringLiteral("focus") && it.value().isObject()) {
+          QJsonObject focus = shot_object.value(QStringLiteral("focus")).toObject();
+          const QJsonObject changes = it.value().toObject();
+          for (auto change = changes.begin(); change != changes.end(); ++change) {
+            if (change.key() != QStringLiteral("offset")) {
+              if (error != nullptr) {
+                *error = QStringLiteral("shot '%1': variant '%2' may only change the "
+                                        "focus offset; it shares the shot's subject")
+                             .arg(shot.name, result.name);
+              }
+              return false;
+            }
+            focus.insert(change.key(), change.value());
+          }
+          merged.insert(QStringLiteral("focus"), focus);
+          continue;
+        }
+        merged.insert(it.key(), it.value());
+      }
+      merged.insert(QStringLiteral("name"),
+                    QStringLiteral("%1.%2").arg(shot.name, result.name));
+      if (!parse_shot(merged, spec.shots.size(), result.camera)) {
+        return false;
+      }
+      apply_variant_knobs(variant, result.camera);
+      result.camera.variants.clear();
+      shot.variants.push_back(std::move(result));
+    }
+    return true;
+  };
+
+  for (const QJsonValue shot_value : shots) {
+    const QJsonObject shot_object = shot_value.toObject();
+    if (shot_object.contains(QStringLiteral("clip"))) {
+
+      continue;
+    }
+    Shot shot;
+    if (!parse_shot(shot_object, spec.shots.size(), shot)) {
+      return std::nullopt;
+    }
+    if (!parse_variants(shot_object, shot)) {
+      return std::nullopt;
+    }
     spec.shots.push_back(std::move(shot));
   }
 
-  if (auto const breaches = motion_violations(spec, spec.motion_limits);
-      !breaches.empty()) {
+  Spec variant_cameras = spec;
+  variant_cameras.shots.clear();
+  for (const Shot& shot : spec.shots) {
+    for (const ShotVariant& variant : shot.variants) {
+      variant_cameras.shots.push_back(variant.camera);
+    }
+  }
+  auto breaches = motion_violations(spec, spec.motion_limits);
+  if (!variant_cameras.shots.empty()) {
+    for (QString& breach : motion_violations(variant_cameras, spec.motion_limits)) {
+      breaches.push_back(std::move(breach));
+    }
+  }
+  if (!breaches.empty()) {
     if (error != nullptr) {
       QStringList lines;
       lines.reserve(static_cast<int>(breaches.size()));

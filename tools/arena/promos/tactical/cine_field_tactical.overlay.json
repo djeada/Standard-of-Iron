@@ -1,0 +1,31 @@
+{
+  "clip": "phase_one",
+  "elements": [
+    { "type": "block", "group": "rome_swords", "start": 0.0 },
+    { "type": "block", "group": "punic_swords", "start": 0.0 },
+    { "type": "frontage", "group": "punic_swords", "start": 0.6 },
+    {
+      "type": "arrow",
+      "points": [
+        { "group": "rome_swords", "unit": 13, "forward_m": 4 },
+        { "group": "punic_swords", "at": "front", "forward_m": 3 }
+      ],
+      "bend": 0.08,
+      "start": 1.0,
+      "draw": 1.6
+    },
+    {
+      "type": "label",
+      "text": "Roman maniple",
+      "at": { "group": "rome_swords", "unit": 13 },
+      "start": 1.0
+    },
+    {
+      "type": "label",
+      "text": "Carthaginian centre",
+      "at": { "group": "punic_swords", "at": "front" },
+      "style": { "offset_px": [0, -60] },
+      "start": 2.6
+    }
+  ]
+}

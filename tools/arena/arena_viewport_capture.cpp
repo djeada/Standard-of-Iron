@@ -628,3 +628,150 @@ auto ArenaViewport::project_to_capture(const QVector3D& world,
   return m_camera != nullptr && frame_size.width() > 0 && frame_size.height() > 0 &&
          m_camera->world_to_screen(world, frame_size.width(), frame_size.height(), out);
 }
+
+auto ArenaViewport::cinematic_state() const -> CinematicState {
+  CinematicState state;
+  state.view_valid = m_cinematic_view_valid;
+  state.eye_valid = m_cinematic_eye_valid;
+  state.target = m_cinematic_target;
+  state.eye = m_cinematic_eye;
+  state.distance = m_cinematic_distance;
+  state.pitch = m_cinematic_pitch;
+  state.yaw = m_cinematic_yaw;
+  state.fov = m_cinematic_fov;
+  state.roll = m_cinematic_roll;
+  state.near_plane = m_cinematic_near;
+  state.ground_clearance = m_cinematic_ground_clearance;
+  return state;
+}
+
+void ArenaViewport::set_cinematic_state(const CinematicState& state) {
+  m_cinematic_view_valid = state.view_valid;
+  m_cinematic_eye_valid = state.eye_valid;
+  m_cinematic_target = state.target;
+  m_cinematic_eye = state.eye;
+  m_cinematic_distance = state.distance;
+  m_cinematic_pitch = state.pitch;
+  m_cinematic_yaw = state.yaw;
+  m_cinematic_fov = state.fov;
+  m_cinematic_roll = state.roll;
+  m_cinematic_near = state.near_plane;
+  m_cinematic_ground_clearance = state.ground_clearance;
+}
+
+void ArenaViewport::set_capture_variants(std::vector<CaptureVariant> variants) {
+  m_capture_variants = std::move(variants);
+}
+
+void ArenaViewport::set_capture_variant_lens(std::size_t index,
+                                             const CinematicState& lens) {
+  if (index < m_capture_variants.size()) {
+    m_capture_variants[index].lens = lens;
+  }
+}
+
+auto ArenaViewport::sample_capture_camera(int width, int height) const
+    -> Arena::Promo::CameraSample {
+  Arena::Promo::CameraSample sample;
+  if (m_camera == nullptr) {
+    return sample;
+  }
+  sample.valid = true;
+  sample.view = m_camera->get_view_matrix();
+  sample.projection = m_camera->get_projection_matrix();
+  sample.eye = m_camera->get_position();
+  sample.target = m_camera->get_target();
+  sample.up = m_camera->get_up_vector();
+  sample.fov_y = m_camera->get_fov();
+  sample.aspect = m_camera->get_aspect();
+  sample.near_plane = m_camera->get_near();
+  sample.far_plane = m_camera->get_far();
+  sample.render_width = width;
+  sample.render_height = height;
+  return sample;
+}
+
+void ArenaViewport::render_capture_variants(bool flame_card) {
+  if (m_capture_variants.empty() || m_camera == nullptr || context() == nullptr) {
+    return;
+  }
+  auto* gl = context()->functions();
+  const CinematicState primary = cinematic_state();
+  const QVector3D eye = m_camera->get_position();
+  const QVector3D target = m_camera->get_target();
+  const QVector3D up = m_camera->get_up_vector();
+  const float fov = m_camera->get_fov();
+  const float aspect = m_camera->get_aspect();
+  const float near_plane = m_camera->get_near();
+  const float far_plane = m_camera->get_far();
+  const Arena::Promo::CameraSample primary_camera = m_capture_camera;
+
+  if (m_variant_targets.size() != m_capture_variants.size()) {
+    m_variant_targets.resize(m_capture_variants.size());
+  }
+  for (std::size_t index = 0; index < m_capture_variants.size(); ++index) {
+    CaptureVariant& variant = m_capture_variants[index];
+    if (variant.width <= 0 || variant.height <= 0 || !variant.sink) {
+      continue;
+    }
+    auto& fbo = m_variant_targets[index];
+    if (fbo == nullptr || fbo->width() != variant.width ||
+        fbo->height() != variant.height) {
+      QOpenGLFramebufferObjectFormat format;
+      format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
+      format.setInternalTextureFormat(GL_RGBA8);
+      format.setSamples(4);
+      fbo = std::make_unique<QOpenGLFramebufferObject>(
+          variant.width, variant.height, format);
+      if (!fbo->isValid()) {
+        format.setSamples(0);
+        fbo = std::make_unique<QOpenGLFramebufferObject>(
+            variant.width, variant.height, format);
+      }
+      if (!fbo->isValid()) {
+        qWarning() << "ArenaViewport: could not create a" << variant.width << "x"
+                   << variant.height << "variant capture target";
+        fbo.reset();
+        continue;
+      }
+    }
+
+    if (variant.lens.view_valid) {
+      set_cinematic_state(variant.lens);
+      apply_cinematic_view();
+    } else {
+      m_camera->look_at(eye, target, up);
+      m_camera->set_perspective(fov, aspect, near_plane, far_plane);
+    }
+    fbo->bind();
+    m_renderer->set_viewport(variant.width, variant.height);
+    if (flame_card) {
+      render_flame_card(variant.width, variant.height);
+      m_capture_camera = {};
+    } else {
+      m_renderer->set_world_view(Render::WorldView::of(m_session));
+      m_renderer->begin_frame();
+      submit_terrain_layers();
+      m_renderer->render_world(m_world.get());
+      if (auto* res = m_renderer->resources(); res != nullptr) {
+        submit_world_effects(res);
+      }
+      m_renderer->end_frame();
+      m_capture_camera = sample_capture_camera(variant.width, variant.height);
+    }
+    stamp_capture_alpha_opaque();
+    QImage const captured = fbo->toImage();
+    fbo->release();
+    gl->glBindFramebuffer(GL_FRAMEBUFFER, defaultFramebufferObject());
+    if (!captured.isNull()) {
+      variant.sink(captured);
+    }
+  }
+
+  set_cinematic_state(primary);
+  m_camera->look_at(eye, target, up);
+  m_camera->set_perspective(fov, aspect, near_plane, far_plane);
+  m_renderer->set_viewport(m_capture_width, m_capture_height);
+  m_camera->set_perspective(fov, aspect, near_plane, far_plane);
+  m_capture_camera = primary_camera;
+}
