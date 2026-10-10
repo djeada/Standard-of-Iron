@@ -1,11 +1,11 @@
 {
   "id": "campania_campaign",
   "title": "The Campanian Vigil",
-  "summary": "Defend Hannibal's fortified Campanian supply town and break all three coordinated Roman assaults arriving from separate consular roads.",
+  "summary": "Hold Hannibal's Punic quarter in Campania against three coordinated Roman assaults - Fabius down the Volturnus, the allied wing from the south, and Marcellus's siege column bringing rams and a tower against the walls.",
   "map_path": ":/assets/maps/map_campania_campaign.json",
   "teaching_goal": "Supply is a target - and it cuts both ways. Your market and your homes are what the Romans are actually marching at, and their siege camp keeps its own stockpile within reach of a raid.",
-  "narrative_intent": "After Cannae, Rome refuses the battle Hannibal wants. The Republic instead presses every road, ally, granary, and walled town. Beneath the orchards, Iron Sepulcher graves make even a successful defense feel temporary.",
-  "historical_context": "215-212 BC: Hannibal campaigned across Campania while Capua served as his principal Italian ally and winter base. This dark-fantasy composite condenses several Roman attempts to contain and isolate the Carthaginian army.",
+  "narrative_intent": "After Cannae, Rome refuses the battle Hannibal wants. Fabius shadows him and Marcellus strikes at whatever he leaves exposed, while the Republic presses every road, ally, granary, and walled town. Beneath the orchards, Iron Sepulcher graves make even a successful defense feel temporary.",
+  "historical_context": "216-211 BC: after Cannae, Capua went over to Hannibal, and his army wintered there in 216-215. Rome answered by containment rather than battle: Quintus Fabius Maximus, the Delayer and 'shield of Rome', shadowed Hannibal and stripped the country, while Marcus Claudius Marcellus, the 'sword of Rome', held Nola against him in 216, 215 and 214 BC. In 212 the consuls closed a ring of siege works around Capua, and the city fell in 211 after Hannibal's march on Rome failed to draw the legions off. This mission is a dark-fantasy composite: it compresses those years into one defence, puts Fabius, the allied legions and Marcellus at the head of a siege army on the field at once, and adds the Iron Sepulcher, which history does not record.",
   "terrain_type": "campanian_plain",
   "player_setup": {
     "nation": "carthage",
@@ -121,6 +121,10 @@
               "count": 4,
               "elite": true,
               "title": "Consular guard"
+            },
+            {
+              "type": "ram",
+              "count": 1
             }
           ],
           "entry_point": {
@@ -304,6 +308,10 @@
             {
               "type": "archer",
               "count": 3
+            },
+            {
+              "type": "ram",
+              "count": 1
             }
           ],
           "entry_point": {
@@ -330,6 +338,14 @@
             {
               "type": "horse_swordsman",
               "count": 4
+            },
+            {
+              "type": "ram",
+              "count": 1
+            },
+            {
+              "type": "siege_tower",
+              "count": 1
             }
           ],
           "entry_point": {
@@ -392,7 +408,7 @@
         "barracks"
       ],
       "min_count": 1,
-      "description": "Between assaults, seize the eastern Roman siege camp."
+      "description": "Between assaults, seize the eastern Roman siege camp and the engines' stockpile with it."
     }
   ],
   "stages": [
@@ -402,7 +418,7 @@
       "wave_count": 3,
       "title": "Break the three assault phases",
       "description": "Hold the Punic quarter through every consular column.",
-      "hint": "The quarter holds when the last column is dead in the streets."
+      "hint": "The quarter holds when the last column is dead in the streets. Rams batter walls and gates, not men: kill them before they reach the stones."
     },
     {
       "id": "kill_commanders",
@@ -426,7 +442,7 @@
       "actions": [
         {
           "type": "show_message",
-          "text": "Three Roman columns are on the roads: Fabius down the Volturnus, the allied wing from the south, Marcellus's siege column out of Nola to the east. The first assault reaches the walls within the minute."
+          "text": "Three Roman columns are on the roads: Fabius down the Volturnus, the allied wing from the south, Marcellus's siege column out of the eastern works with rams and a tower. The first assault reaches the walls within the minute."
         }
       ]
     },
@@ -465,7 +481,7 @@
         "type": "mission_victory",
         "delay": 1.0
       },
-      "text": "Keep Capua, then. I shall come back after the harvest, and after the one following it. I have buried three consuls who were in a hurry. Patience is cheaper, and it does not require a triumph.",
+      "text": "Keep Capua, then. I shall come back after the harvest, and after the one following it. I watched Sempronius, Flaminius and Varro hurry to their battles. Patience is cheaper, and it does not require a triumph.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 120
@@ -536,7 +552,7 @@
         "owner_id": 4,
         "delay": 0.5
       },
-      "text": "The siege column is at the run. Engines behind, ladders in front. I do not besiege towns. I take them.",
+      "text": "The siege column is at the run: rams in front, the tower behind. I held Nola against you three times. Capua opened her gates to you; I will open them again from the other side.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 55
@@ -594,7 +610,7 @@
         "type": "near_defeat",
         "owner_id": 2
       },
-      "text": "The Volturnus legion is spent. I have others. I have always had others. That is what the delaying was for.",
+      "text": "The Volturnus legion is spent. I have others. I have always had others. Marcellus is the sword; I am only the shield, and a shield does not need to win. It needs to still be there.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 80
@@ -636,7 +652,20 @@
         "by_owner_id": "player",
         "delay": 11.0
       },
-      "text": "His ladders, his grain, his camp. Marcellus may walk back to Nola and explain.",
+      "text": "His rams, his grain, his camp. Marcellus may walk back to Nola and explain.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 80
+    },
+    {
+      "id": "campania_marcellus_last_stand",
+      "speaker": "roman_field_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "near_defeat",
+        "owner_id": 4
+      },
+      "text": "Three times you came at Nola and three times you went away. Burn the engines if you can. Rome has a habit of sending me back.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 80

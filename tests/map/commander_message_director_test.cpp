@@ -66,6 +66,24 @@ TEST_F(CommanderMessageDirectorTest, MissionStartLineResolvesItsSpeakerFromTheCa
   EXPECT_EQ(m_director.active().nation, QStringLiteral("roman_republic"));
 }
 
+TEST_F(CommanderMessageDirectorTest, ALineForACameoLedForceCarriesTheCameosName) {
+  Game::Mission::CommanderMessageScript script;
+  script.mission_lines.push_back(make_message(
+      QStringLiteral("open"), Game::Mission::CommanderMessageTrigger::MissionStart));
+  script.speakers = {{.owner_id = k_hill_fort_owner,
+                      .troop_type = QStringLiteral("roman_veteran_consul"),
+                      .relationship = Game::Mission::CommanderRelationship::Enemy,
+                      .commander_id = QStringLiteral("roman_sempronius_longus")}};
+  m_director.configure(script, k_local_owner, identity_to_world());
+
+  m_director.notify_mission_start();
+  EXPECT_TRUE(m_director.update(0.0F));
+  ASSERT_TRUE(m_director.has_active());
+  EXPECT_EQ(m_director.active().speaker_name,
+            QStringLiteral("Tiberius Sempronius Longus"));
+  EXPECT_EQ(m_director.active().speaker_owner_id, k_hill_fort_owner);
+}
+
 TEST_F(CommanderMessageDirectorTest, TheLocalGeneralSpeaksAsAnAlly) {
   auto line = make_message(QStringLiteral("hannibal_open"),
                            Game::Mission::CommanderMessageTrigger::MissionStart);

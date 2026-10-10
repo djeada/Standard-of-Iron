@@ -22,6 +22,9 @@ struct CommanderSpeaker {
   int owner_id = 0;
   QString troop_type;
   CommanderRelationship relationship = CommanderRelationship::Enemy;
+  // Historical cameo id when the owner's fielded commander is one (empty
+  // otherwise); lines spoken for this owner then carry the cameo's name.
+  QString commander_id;
 };
 
 [[nodiscard]] auto

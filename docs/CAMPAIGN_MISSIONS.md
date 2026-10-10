@@ -63,6 +63,27 @@ Every standalone sanctuary has one or two wardens. Two soldiers do not create a 
 
 Wildlife is authored per map rather than inherited from a derived default. Each map includes a sheep pasture worth a detour and a wolf range placed in forest terrain. From the Alps onward, maps also introduce scheduled wolf packs. Wolves can pass through forest while cavalry cannot, which creates threats a mounted column cannot simply chase down. See [AMBIENT_WILDLIFE.md](AMBIENT_WILDLIFE.md) and [RTS_MAP_DESIGN.md](../scripts/RTS_MAP_DESIGN.md).
 
+## History underneath the campaign
+
+The Barcid Road is an altered history, and each mission's `historical_context` says plainly what is real and what is the game's. The real part follows Polybius (book 3) and Livy (books 21-22 and 30), using the features the documentary work added:
+
+| Mission | What is historical | What is deliberately altered |
+| --- | --- | --- |
+| Crossing the Rhône | The Volcae hold the east bank; Hanno's Iberians cross upstream and come down behind them; the army and its elephants go over by raft | The bridges, the Roman advance camps on the far bank, the Sepulcher barrows |
+| Crossing the Alps | Allobroges hold the heights and roll stones onto the column in the defiles | Roman officers paying the mountain peoples and garrisoning the passes |
+| Battle of Ticino | A cavalry fight; velites and Gallic horse in Scipio's front, Iberian heavy horse against them; Scipio wounded and carried off | The two camps; in game terms his death stands for his wounding |
+| Battle of Trebia | Sempronius wades a fordable, freezing Trebia; Gauls and Balearic slingers in Hannibal's line; Mago's detachment hidden in the brush | Three separate crossings, the Placentia reserve as a second army, the barrow-dead |
+| Battle of Lake Trasimene | Mist over the shore road, hilltops clear; Gauls and slingers on the heights; Flaminius in command of a column in marching order | The column town, the shore camp, the lake altar |
+| Battle of Cannae | Gauls and Iberians in the crescent centre, Africans on the wings, Hasdrubal's Iberian and Gallic horse by the river; Varro with the allied horse, Paullus with the Roman horse; the Aufidus ford | Three camps instead of two, the field towns, the Sepulcher graves |
+| The Campanian Vigil | Capua's defection; Fabius shadowing, Marcellus pressing, rams and a siege tower against the walls | Years of containment compressed into one defence |
+| Battle of Zama | Scipio's lanes with velites for the elephants; Masinissa's Numidians on Rome's side; Hannibal's three lines of mercenaries, levies and veterans | The four camps and the Iron Sepulcher's intervention |
+
+Rules that keep this additive:
+
+- **Hannibal is the only commander on the player's side.** A historical cameo beside him would keep `lose_commander` from firing and announce his death whenever the officer fell. His officers - Hanno, Mago, Maharbal, Hasdrubal - appear in the briefing (`player_setup.historical_commanders`) and through their detachments of troops.
+- **An enemy cameo takes over its owner's single commander spawn, in the same body.** The map sets `commander_id` on the existing spawn; the AI setup names the same cameo in its briefing. Lines spoken for that owner keep a playable `speaker` id but are shown under the cameo's name. `HistoricalCommanderMissionTest.CampaignCameosLeadEnemyForcesTheirBriefingsName` checks all three rules.
+- **Allied Gauls and Iberians are authored per unit** (`"nation": "gauls"` or `"iberians"` on a `swordsman` or `horse_swordsman`), and can also stand with Rome, as the Volcae, the Allobroges and the Cenomani did.
+
 ## Difficulty progression
 
 The campaign's `difficulty_modifier` rises monotonically from the Rhône to Zama. The star rating shown in the campaign list is derived from that value:

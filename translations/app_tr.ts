@@ -755,26 +755,6 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
 <context>
     <name>Campaigns</name>
     <message>
-        <source>202 BC: recalled to Africa, Hannibal faces Scipio and Masinissa on the plain near Zama. The elephant lanes are prepared, the Roman camps are fortified, and the Iron Sepulcher no longer waits at the edge of history. Take all four camps and break both risings of the dead — nothing less ends this war.</source>
-        <translation>MÖ 202: Afrika&apos;ya geri çağrılan Hannibal, Zama yakınlarındaki ovada Scipio ve Masinissa ile karşı karşıya gelir. Fil koridorları hazırlanmış, Roma kampları tahkim edilmiş, Demir Kabir ise artık tarihin kıyısında beklemiyor. Dört kampı da al ve ölülerin iki kalkışını da kır — bundan azı bu savaşı bitirmez.</translation>
-    </message>
-    <message>
-        <source>215-212 BC: Capua and the Campanian allies sustain Hannibal while Rome avoids another Cannae and attacks roads, farms, and loyalties. Fortify the Punic supply quarter and break all three coordinated assaults — the quarter is not held until the last consular column lies dead in the streets.</source>
-        <translation>MÖ 215-212: Capua ve Campania müttefikleri Hannibal&apos;ı ayakta tutarken Roma yeni bir Cannae&apos;den kaçınır ve yollara, tarlalara ve sadakatlere saldırır. Pön ikmal mahallesini tahkim et ve üç eşgüdümlü saldırıyı da kır — son konsül kolu sokaklarda ölü yatmadan mahalle tutulmuş sayılmaz.</translation>
-    </message>
-    <message>
-        <source>218 BC: Hannibal turns from the Rhône into the Alps with soldiers, cavalry, baggage animals, and elephants. The pass cannot be taken by the sword alone — it must be paid for in timber, stone and iron. Set your builders to the slopes while the mountain peoples contest every switchback; do not follow the grave-lights into the snow.</source>
-        <translation>MÖ 218: Hannibal, Rhône&apos;dan askerleri, süvarileri, yük hayvanları ve filleriyle Alpler&apos;e döner. Geçit yalnızca kılıçla alınamaz — bedeli kereste, taş ve demirle ödenmelidir. Dağ halkları her viraja itiraz ederken inşaatçılarını yamaçlara sür; mezar ışıklarının ardından kara girme.</translation>
-    </message>
-    <message>
-        <source>218 BC: the Rhône must be secured faster than Publius Cornelius Scipio can bring his army from Massalia. In this altered campaign, Roman advance posts hold the eastern approaches. Cross by ford, pontoon, or wooded detour and seize their river camps.</source>
-        <translation>MÖ 218: Rhône, Publius Cornelius Scipio ordusunu Massalia&apos;dan getirebilmeden önce güvenceye alınmalı. Bu değiştirilmiş seferde Roma ileri karakolları doğu yaklaşımlarını tutuyor. Sığ geçitten, dubalı köprüden ya da ormanlık bir dolambaçtan geç ve nehir kamplarını ele geçir.</translation>
-    </message>
-    <message>
-        <source>At dawn the market still stands and the consular roads are choked with Roman shields. Campania has bought the army another season, though every ally now understands how long Rome is willing to bleed.</source>
-        <translation>Şafakta pazar hâlâ ayakta ve konsül yolları Roma kalkanlarıyla tıkalı. Campania orduya bir mevsim daha kazandırdı; gerçi artık her müttefik Roma&apos;nın ne kadar kanamaya razı olduğunu anlıyor.</translation>
-    </message>
-    <message>
         <source>Command Hannibal&apos;s Carthaginian army from the Alpine invasion of 218 BC to Zama in 202 BC. Break Roman camps, take fortified towns, preserve allied economies, and survive the Republic&apos;s answering legions while the Iron Sepulcher watches from roads older than either empire.</source>
         <translation>Hannibal&apos;ın Kartaca ordusunu MÖ 218&apos;deki Alp istilasından MÖ 202&apos;deki Zama&apos;ya kadar komuta et. Roma kamplarını kır, tahkimli kasabaları al, müttefik ekonomileri koru ve Demir Kabir her iki imparatorluktan da eski yollardan izlerken Cumhuriyet&apos;in karşılık veren lejyonlarına karşı ayakta kal.</translation>
     </message>
@@ -783,48 +763,68 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
         <translation>Barka Yolu</translation>
     </message>
     <message>
-        <source>The Roman army is destroyed and the camps are taken, yet Rome refuses negotiation. So many dead lie on the plain that the Sepulcher&apos;s iron bells sound beneath the earth for seven nights.</source>
-        <translation>Roma ordusu yok edildi ve kamplar alındı, yine de Roma görüşmeyi reddediyor. Ovada o kadar çok ölü yatıyor ki Kabir&apos;in demir çanları yedi gece boyunca toprağın altından çınlıyor.</translation>
-    </message>
-    <message>
-        <source>The column reaches the plain of the Po diminished but unbroken. Italy lies below, and fires answer from Gallic settlements. Behind you, the sealed shrine in the pass begins counting the dead.</source>
-        <translation>Kol, Po ovasına eksilmiş ama kırılmamış olarak ulaşır. İtalya aşağıda uzanır ve Galya yerleşimlerinden ateşler karşılık verir. Arkanda, geçitteki mühürlü mabet ölüleri saymaya başlar.</translation>
-    </message>
-    <message>
-        <source>The ferries and supply road belong to Carthage. Scipio finds abandoned standards and cold cooking fires; Hannibal is already turning toward the mountains.</source>
-        <translation>Sallar ve ikmal yolu Kartaca&apos;nın. Scipio terk edilmiş sancaklarla sönmüş ocaklar bulur; Hannibal çoktan dağlara dönmüştür.</translation>
-    </message>
-    <message>
         <source>The last standards fall under an African sky. Rome and Carthage will remember the field differently; the Iron Sepulcher remembers only that both armies finally entered its reach.</source>
         <translation>Son sancaklar bir Afrika göğü altında düşer. Roma ile Kartaca meydanı farklı hatırlayacak; Demir Kabir yalnızca iki ordunun da sonunda erimine girdiğini hatırlıyor.</translation>
     </message>
     <message>
-        <source>The survivors flee toward Placentia through sleet and mud. Roman tents, grain, and weapons are captured; bodies beneath the ice rise only when nobody is watching.</source>
-        <translation>Sağ kalanlar sulusepken ve çamurun içinden Placentia&apos;ya kaçar. Roma çadırları, tahılı ve silahları ele geçirilir; buzun altındaki bedenler ise yalnızca kimse bakmazken kalkar.</translation>
+        <source>202 BC: recalled to Africa, Hannibal meets Scipio on the plain near Zama. The maniples stand in columns with lanes for the elephants and velites waiting in them; Masinissa&apos;s Numidians ride for Rome; and the Iron Sepulcher no longer waits at the edge of history. Take all four camps and break both risings of the dead - nothing less ends this war.</source>
+        <translation>MÖ 202: Afrika&apos;ya geri çağrılan Hannibal, Zama yakınlarındaki ovada Scipio ile karşı karşıya gelir. Manipüller sütunlar hâlinde dizilmiş; aralarındaki koridorlar fillere açık, velitler o koridorlarda bekliyor; Masinissa&apos;nın Numidyalıları Roma için at sürüyor; Demir Kabir ise artık tarihin kıyısında beklemiyor. Dört kampı da al ve ölülerin iki kalkışını da kır - bundan azı bu savaşı bitirmez.</translation>
     </message>
     <message>
-        <source>216 BC: the consuls mass Rome&apos;s greatest field army beside the Aufidus. Yield the Punic center by design, win both cavalry wings, close the double envelopment, then take the allied camp to the south, Varro&apos;s town behind the line and the reserve camp across the river.</source>
-        <translation>MÖ 216: konsüller Roma&apos;nın en büyük sahra ordusunu Aufidus kıyısında topluyor. Pön merkezini bilerek geri ver, iki süvari kanadını da kazan, çifte kuşatmayı kapat, ardından güneydeki müttefik kampını, hattın gerisindeki Varro&apos;nun kasabasını ve nehrin karşısındaki yedek kampını al.</translation>
+        <source>216 BC: the consuls cross the Aufidus and mass Rome&apos;s greatest field army on the plain. Varro has the command and the allied horse; Paullus holds the river flank. Bow the Gallic and Iberian centre out in a crescent and let it yield, hold with the Africans, send Hasdrubal&apos;s horse along the river, then take the allied camp to the south, the consular town behind the line and the reserve camp across the river.</source>
+        <translation>MÖ 216: konsüller Aufidus&apos;u geçer ve Roma&apos;nın en büyük sahra ordusunu ovada toplar. Komuta da müttefik süvarisi de Varro&apos;da; nehir kanadını Paullus tutuyor. Galyalı ve İber merkezini hilal biçiminde dışa doğru bük ve geri vermesine izin ver, Afrikalılarla tut, Hasdrubal&apos;ın atlılarını nehir boyunca gönder, ardından güneydeki müttefik kampını, hattın gerisindeki konsül kasabasını ve nehrin karşısındaki yedek kampını al.</translation>
     </message>
     <message>
-        <source>217 BC: Flaminius pursues along the shore road of Lake Trasimene. Mist closes the road between lake and wooded height — and it will not hold for long. Strike the length of the column and seize both field posts within twenty minutes, before the air clears and a cohort carries word out of the basin.</source>
-        <translation>MÖ 217: Flaminius, Trasimeno Gölü&apos;nün kıyı yolu boyunca peşine düşüyor. Sis, göl ile ormanlık tepe arasındaki yolu kapatıyor — ve uzun sürmeyecek. Kolu boydan boya vur ve hava açılıp bir kohort haberi çanaktan dışarı taşımadan yirmi dakika içinde iki sahra karakolunu da ele geçir.</translation>
+        <source>216-211 BC: Capua has opened her gates to Hannibal, and Rome will not risk another Cannae. Fabius shadows the army down the Volturnus, the allied legions press from the south, and Marcellus brings rams and a siege tower against the walls from the east. Fortify the Punic quarter and break all three coordinated assaults - the quarter is not held until the last consular column lies dead in the streets.</source>
+        <translation>MÖ 216-211: Capua kapılarını Hannibal&apos;a açtı ve Roma yeni bir Cannae&apos;yi göze almayacak. Fabius orduyu Volturnus boyunca gölge gibi izliyor, müttefik lejyonları güneyden yükleniyor, Marcellus ise doğudan surlara koçbaşları ve bir kuşatma kulesi getiriyor. Pön mahallesini tahkim et ve üç eşgüdümlü saldırıyı da kır - son konsül kolu sokaklarda ölü yatmadan mahalle tutulmuş sayılmaz.</translation>
     </message>
     <message>
-        <source>218 BC, winter: Sempronius Longus accepts the bait and drives his hungry army through the freezing Trebia. Hold the southern line, break all three crossings, then ride down the officers who sent them. You need not take his camp — you need only be standing when the river has finished with him.</source>
-        <translation>MÖ 218, kış: Sempronius Longus yemi yutar ve aç ordusunu donan Trebia&apos;nın içinden sürer. Güney hattını tut, üç geçidi de kır, sonra onları gönderen subayları kovala. Kampını alman gerekmez — nehir onunla işini bitirdiğinde ayakta olman yeter.</translation>
+        <source>217 BC: Flaminius pursues along the shore road of Lake Trasimene in marching order. Mist lies thick on the road between lake and height while the hilltops stand clear, and your Gauls, Iberians and slingers wait above it. It will not hold for long. Strike the length of the column and seize both field posts within twenty minutes, before the air clears and a cohort carries word out of the basin.</source>
+        <translation>MÖ 217: Flaminius, yürüyüş düzeninde Trasimeno Gölü&apos;nün kıyı yolu boyunca peşine düşüyor. Tepeler açıkken göl ile yamaç arasındaki yolun üstüne kalın bir sis çökmüş; Galyalıların, İberlerin ve sapancıların yukarıda bekliyor. Uzun sürmeyecek. Kolu boydan boya vur ve hava açılıp bir kohort haberi çanaktan dışarı taşımadan yirmi dakika içinde iki sahra karakolunu da ele geçir.</translation>
     </message>
     <message>
-        <source>218 BC: near the Ticinus, Scipio&apos;s reconnaissance force tests Hannibal&apos;s cavalry. Win the mounted engagement, cut the bridge road, and overrun both Roman camps before Scipio can pull his screen back across the river.</source>
-        <translation>MÖ 218: Ticinus yakınlarında Scipio&apos;nun keşif kuvveti Hannibal&apos;ın süvarisini yokluyor. Atlı çarpışmayı kazan, köprü yolunu kes ve Scipio perdesini nehrin öte yakasına çekemeden iki Roma kampını da çiğne.</translation>
+        <source>218 BC, late autumn: Hannibal turns from the Rhône into the Alps with soldiers, cavalry, baggage animals, and elephants. The Allobroges hold the heights over the defiles with stones ready to roll, and in this altered campaign Roman officers pay them to hold the road. The pass cannot be taken by the sword alone - it must be paid for in timber, stone and iron. Set your builders to the slopes; do not follow the grave-lights into the snow.</source>
+        <translation>MÖ 218, geç sonbahar: Hannibal, Rhône&apos;dan askerleri, süvarileri, yük hayvanları ve filleriyle Alpler&apos;e döner. Allobroglar boğazların üstündeki tepeleri tutuyor, yuvarlanmaya hazır taşları başlarında; bu değiştirilmiş seferde Romalı subaylar yolu tutmaları için onlara para ödüyor. Geçit yalnızca kılıçla alınamaz - bedeli kereste, taş ve demirle ödenmelidir. İnşaatçılarını yamaçlara sür; mezar ışıklarının ardından kara girme.</translation>
     </message>
     <message>
-        <source>Flaminius and fifteen thousand are lost beside the lake; next morning Maharbal&apos;s horse rounds up the six thousand who broke through the van. Rome names Fabius dictator. Past the eastern stream, an Iron Sepulcher altar has fed well without choosing a side.</source>
-        <translation>Flaminius ve on beş bin adam gölün kıyısında yitip gitti; ertesi sabah Maharbal&apos;ın atlıları öncüyü yarıp geçen altı bini topluyor. Roma, Fabius&apos;u diktatör ilan ediyor. Doğudaki derenin ötesinde bir Demir Kabir sunağı, taraf seçmeden iyice doydu.</translation>
+        <source>218 BC, winter: Sempronius Longus wants his battle before his consular year runs out, and drives his hungry army chest-deep through the freezing Trebia fords. Your Gauls and slingers hold the southern line; Mago lies hidden in the brush by the eastern crossing. Break all three crossings, then ride down the officers who sent them. You need not take his camp - you need only be standing when the river has finished with him.</source>
+        <translation>MÖ 218, kış: Sempronius Longus konsüllük yılı dolmadan muharebesini istiyor ve aç ordusunu donan Trebia&apos;nın sığ geçitlerinden göğüs boyu suyun içinden sürüyor. Güney hattını Galyalıların ve sapancıların tutuyor; Mago doğu geçidinin yanındaki çalılıkta gizleniyor. Üç geçidi de kır, sonra onları gönderen subayları kovala. Kampını alman gerekmez - nehir onunla işini bitirdiğinde ayakta olman yeter.</translation>
     </message>
     <message>
-        <source>The Roman screen breaks and Scipio is carried from the field wounded. The Insubres see that Carthage can defeat Rome on Italian ground—but pale bowmen still haunt the abandoned ford.</source>
-        <translation>Roma perdesi dağılıyor ve Scipio yaralı olarak alandan taşınıyor. İnsubrlar, Kartaca&apos;nın Roma&apos;yı İtalya topraklarında yenebileceğini görüyor — ama solgun okçular hâlâ terk edilmiş geçidin başında dolaşıyor.</translation>
+        <source>218 BC: near the Ticinus, Scipio rides out with his javelin-men and Gallic horse in front to test Hannibal&apos;s cavalry. Send the bridled Iberian horse at his centre and the Numidians round his wings, cut the bridge road, and overrun both Roman camps before Scipio can pull his screen back across the river.</source>
+        <translation>MÖ 218: Ticinus yakınlarında Scipio, Hannibal&apos;ın süvarisini yoklamak için ciritçilerini ve Galyalı atlılarını öne alarak yola çıkıyor. Dizginli İber süvarisini merkezine, Numidyalıları kanatlarının çevresine gönder, köprü yolunu kes ve Scipio perdesini nehrin öte yakasına çekemeden iki Roma kampını da çiğne.</translation>
+    </message>
+    <message>
+        <source>218 BC: the Volcae hold the east bank of the Rhône, and Publius Cornelius Scipio is marching up from the sea. Hanno son of Bomilcar has gone upstream with the Iberians and is already across; when his smoke rises, put the army over by bridge and raft, elephants and all. In this altered campaign, Roman advance camps hold the far-bank road - seize them before Scipio arrives.</source>
+        <translation>MÖ 218: Volcae Rhône&apos;un doğu kıyısını tutuyor, Publius Cornelius Scipio ise denizden yukarı yürüyor. Bomilkar oğlu Hanno İberlerle birlikte nehrin yukarısına gitti ve çoktan karşıya geçti; dumanı yükseldiğinde orduyu köprüyle ve sallarla, filleriyle birlikte karşıya geçir. Bu değiştirilmiş seferde Roma ileri kampları karşı kıyı yolunu tutuyor - Scipio gelmeden onları ele geçir.</translation>
+    </message>
+    <message>
+        <source>At dawn the market still stands and the rams lie burned before the east gate. Campania has bought the army another season, but the shield and the sword of Rome are both still in the field, and every ally now understands how long Rome is willing to bleed.</source>
+        <translation>Şafakta pazar hâlâ ayakta ve koçbaşları doğu kapısının önünde yanmış yatıyor. Campania orduya bir mevsim daha kazandırdı; ama Roma&apos;nın kalkanı da kılıcı da hâlâ sahada ve artık her müttefik Roma&apos;nın ne kadar kanamaya razı olduğunu anlıyor.</translation>
+    </message>
+    <message>
+        <source>Flaminius falls to an Insubrian horseman and fifteen thousand are lost beside the lake; next morning Maharbal&apos;s horse rounds up the six thousand who broke through the van. Rome names Fabius dictator. Past the eastern stream, an Iron Sepulcher altar has fed well without choosing a side.</source>
+        <translation>Flaminius İnsubr bir atlının elinde düşüyor ve on beş bin adam gölün kıyısında yitip gidiyor; ertesi sabah Maharbal&apos;ın atlıları öncüyü yarıp geçen altı bini topluyor. Roma, Fabius&apos;u diktatör ilan ediyor. Doğudaki derenin ötesinde bir Demir Kabir sunağı, taraf seçmeden iyice doydu.</translation>
+    </message>
+    <message>
+        <source>The Roman army is destroyed and the camps are taken. Paullus lies among his men; Varro reaches Venusia with a handful of horse, and the Senate thanks him for not despairing of the Republic. Rome refuses negotiation. So many dead lie on the plain that the Sepulcher&apos;s iron bells sound beneath the earth for seven nights.</source>
+        <translation>Roma ordusu yok edildi ve kamplar alındı. Paullus adamlarının arasında yatıyor; Varro bir avuç atlıyla Venusia&apos;ya ulaşıyor ve Senato, Cumhuriyet&apos;ten umudunu kesmediği için ona teşekkür ediyor. Roma görüşmeyi reddediyor. Ovada o kadar çok ölü yatıyor ki Kabir&apos;in demir çanları yedi gece boyunca toprağın altından çınlıyor.</translation>
+    </message>
+    <message>
+        <source>The Volcae break between the river and Hanno&apos;s swords, and the far-bank camps belong to Carthage. Scipio reaches the crossing three days late and finds cold cooking fires; Hannibal is already turning toward the mountains.</source>
+        <translation>Volcae nehirle Hanno&apos;nun kılıçları arasında dağılıyor ve karşı kıyıdaki kamplar Kartaca&apos;nın oluyor. Scipio geçide üç gün geç varır ve sönmüş ocaklar bulur; Hannibal çoktan dağlara dönmüştür.</translation>
+    </message>
+    <message>
+        <source>The column reaches the plain of the Po diminished but unbroken, the scree behind it red with the price of the passes. Italy lies below, and fires answer from Gallic settlements. Behind you, the sealed shrine in the pass begins counting the dead.</source>
+        <translation>Kol, Po ovasına eksilmiş ama kırılmamış olarak ulaşır; ardındaki taşlı yamaçlar geçitlerin bedeliyle kızıla boyanmıştır. İtalya aşağıda uzanır ve Galya yerleşimlerinden ateşler karşılık verir. Arkanda, geçitteki mühürlü mabet ölüleri saymaya başlar.</translation>
+    </message>
+    <message>
+        <source>The legions come out of the river and Mago comes out of the reeds behind them. Ten thousand cut their way through to Placentia; the rest stay in the water. Sempronius writes to Rome that the weather robbed him of victory, and bodies beneath the ice rise only when nobody is watching.</source>
+        <translation>Lejyonlar nehirden çıkar, Mago da arkalarındaki sazlıktan. On bin kişi Placentia&apos;ya kadar yarıp geçer; geri kalanlar suda kalır. Sempronius Roma&apos;ya zaferi elinden havanın aldığını yazar; buzun altındaki bedenler ise yalnızca kimse bakmazken kalkar.</translation>
+    </message>
+    <message>
+        <source>The velites run before they throw, and Scipio is carried from the field across his son&apos;s saddle. Rome falls back over the Po to Placentia. The Insubres see that Carthage can defeat Rome on Italian ground - but pale bowmen still haunt the abandoned ford.</source>
+        <translation>Velitler cirit atmadan kaçıyor ve Scipio oğlunun eyerinin üstünde alandan taşınıyor. Roma, Po&apos;nun öte yakasına, Placentia&apos;ya çekiliyor. İnsubrlar, Kartaca&apos;nın Roma&apos;yı İtalya topraklarında yenebileceğini görüyor - ama solgun okçular hâlâ terk edilmiş geçidin başında dolaşıyor.</translation>
     </message>
 </context>
 <context>
@@ -8284,44 +8284,8 @@ bir harita seç</translation>
 <context>
     <name>Missions</name>
     <message>
-        <source>202 BC: Scipio arranged lanes through his infantry to blunt Hannibal&apos;s elephants, while Masinissa and Laelius commanded superior allied cavalry. The returning cavalry helped decide the battle. The Sepulcher intervention is the campaign&apos;s deliberate dark-fantasy break from history.</source>
-        <translation>MÖ 202: Scipio, Hannibal&apos;ın fillerini etkisizleştirmek için piyadesinin arasında koridorlar açtı; Masinissa ile Laelius ise üstün müttefik süvarisini yönetti. Geri dönen süvari savaşın kaderini belirledi. Kabir&apos;in müdahalesi, seferin tarihten bilinçli olarak kopan kara fantezi hamlesidir.</translation>
-    </message>
-    <message>
-        <source>215-212 BC: Hannibal campaigned across Campania while Capua served as his principal Italian ally and winter base. This dark-fantasy composite condenses several Roman attempts to contain and isolate the Carthaginian army.</source>
-        <translation>MÖ 215-212: Capua onun başlıca İtalyan müttefiki ve kışlık üssü olarak iş görürken Hannibal Campania boyunca sefer yürüttü. Bu kara fantezi bileşimi, Roma&apos;nın Kartaca ordusunu çevreleme ve yalıtma girişimlerinden birkaçını tek bir görevde yoğunlaştırır.</translation>
-    </message>
-    <message>
-        <source>216 BC: beside the Aufidus, Hannibal&apos;s deliberately yielding center drew a much larger Roman infantry mass forward while African infantry attacked its flanks and Carthaginian cavalry closed the rear. Two Roman camps supported the army.</source>
-        <translation>MÖ 216: Aufidus kıyısında Hannibal&apos;ın bilerek geri verdiği merkez, çok daha büyük bir Roma piyade kütlesini öne çekerken Afrikalı piyade kanatlarına saldırdı ve Kartaca süvarisi arkasını kapattı. Orduyu iki Roma kampı destekliyordu.</translation>
-    </message>
-    <message>
-        <source>217 BC: Hannibal drew Gaius Flaminius along the narrow northern shore of Lake Trasimene and attacked from concealed high ground in morning mist. The Roman marching column had little room to deploy and Flaminius was killed.</source>
-        <translation>MÖ 217: Hannibal, Gaius Flaminius&apos;u Trasimene Gölü&apos;nün dar kuzey kıyısı boyunca çekti ve sabah sisinde gizlenmiş yüksek zeminden saldırdı. Roma yürüyüş kolunun yerleşecek yeri neredeyse yoktu ve Flaminius öldürüldü.</translation>
-    </message>
-    <message>
-        <source>218 BC: Hannibal crossed the Alps with a multinational army, cavalry, baggage train, and surviving elephants. Ancient sources disagree on the route; this scenario combines contested passes and local attacks into one dark-fantasy ascent.</source>
-        <translation>MÖ 218: Hannibal Alpler&apos;i çok uluslu bir orduyla, süvariyle, ağırlık katarıyla ve sağ kalan filleriyle aştı. Antik kaynaklar güzergâh konusunda anlaşamaz; bu senaryo çekişmeli geçitleri ve yerel saldırıları tek bir kara fantezi tırmanışında birleştirir.</translation>
-    </message>
-    <message>
-        <source>218 BC: Hannibal crossed the Rhône upstream from its mouth using boats, rafts, and a detached force sent across to turn local opposition. Scipio arrived too late; this altered history places Roman advance camps on the far-bank road to create the opening Carthage-versus-Rome engagement.</source>
-        <translation>MÖ 218: Hannibal Rhône&apos;u ağzından yukarıda kayıklar, sallar ve yerel direnci arkadan çevirmek için karşıya geçirilen ayrı bir kuvvetle aştı. Scipio çok geç geldi; bu değiştirilmiş tarih, açılış Kartaca-Roma çarpışmasını yaratmak için karşı kıyı yoluna Roma ileri kampları yerleştirir.</translation>
-    </message>
-    <message>
-        <source>218 BC: the Ticinus was primarily a cavalry engagement between reconnaissance forces. Roman consul Publius Cornelius Scipio was wounded and rescued during the retreat; the camp assault is a plausible dark-fantasy extension of that pursuit.</source>
-        <translation>MÖ 218: Ticinus esas olarak keşif kuvvetleri arasında bir süvari çarpışmasıydı. Roma konsülü Publius Cornelius Scipio yaralandı ve çekilme sırasında kurtarıldı; kamp taarruzu bu takibin akla yatkın bir kara fantezi uzantısıdır.</translation>
-    </message>
-    <message>
-        <source>A broad river operation with ferries, wooded detours, bridgeheads, and fortified supply quarters; the Iron Sepulcher occupies an avoidable ruin on the southern flank.</source>
-        <translation>Sallar, ormanlık dolambaçlar, köprübaşları ve tahkimli ikmal mahalleleriyle geniş bir nehir harekâtı; Demir Kabir güney kanadında kaçınılabilir bir harabeyi tutuyor.</translation>
-    </message>
-    <message>
         <source>A camp is taken by holding its yard, not by levelling it.</source>
         <translation>Bir kamp, yerle bir edilerek değil, avlusu tutularak alınır.</translation>
-    </message>
-    <message>
-        <source>A camp is taken by standing in it, not by levelling it. Nine men cannot kill thirty-eight, but they can hold two gate yards long enough to claim them - and a Roman column without its commander stops being a column.</source>
-        <translation>Bir kamp, yerle bir edilerek değil, içinde durularak alınır. Dokuz adam otuz sekizini öldüremez, ama iki kapı avlusunu sahiplenecek kadar tutabilir - ve komutansız bir Roma kolu artık kol olmaktan çıkar.</translation>
     </message>
     <message>
         <source>A camp, and nobody left standing in it. Get up. There is no shame in it. The shame would be in doing it a second time in the same valley.</source>
@@ -8352,10 +8316,6 @@ bir harita seç</translation>
         <translation>Vadide yeni bir sancak ve altında elinde iki kereden fazla mızrak tutmuş kimse yok. Karakolumun sizi görmeye gitme emri var. Vardıklarında hâlâ ayakta olmaya çalışın; raporu yazmaya değsin.</translation>
     </message>
     <message>
-        <source>After Cannae, Rome refuses the battle Hannibal wants. The Republic instead presses every road, ally, granary, and walled town. Beneath the orchards, Iron Sepulcher graves make even a successful defense feel temporary.</source>
-        <translation>Cannae&apos;den sonra Roma, Hannibal&apos;ın istediği savaşı reddeder. Cumhuriyet bunun yerine her yola, müttefike, tahıl ambarına ve surlu kasabaya yüklenir. Meyve bahçelerinin altında Demir Kabir mezarları, başarılı bir savunmayı bile geçici hissettirir.</translation>
-    </message>
-    <message>
         <source>An assault walks toward your camp but turns for whatever it can see. Bait it with something visible and it will take the ground you chose instead of the ground it wanted.</source>
         <translation>Bir taarruz kampına doğru yürür ama görebildiği her şeye döner. Görünür bir şeyle yemle, istediği zemini değil senin seçtiğin zemini alacaktır.</translation>
     </message>
@@ -8378,10 +8338,6 @@ bir harita seç</translation>
     <message>
         <source>Battle of Zama</source>
         <translation>Zama Muharebesi</translation>
-    </message>
-    <message>
-        <source>Between assaults, seize the eastern Roman siege camp.</source>
-        <translation>Taarruzlar arasında doğudaki Roma kuşatma kampını ele geçir.</translation>
     </message>
     <message>
         <source>Break all five columns. The ford is held when the last of them is dead in front of it, and not one column sooner.</source>
@@ -8412,28 +8368,8 @@ bir harita seç</translation>
         <translation>Kolu ilk geçide ulaştır</translation>
     </message>
     <message>
-        <source>Bring the column to the pontoon bridge on the near bank.</source>
-        <translation>Kolu yakın kıyıdaki dubalı köprüye ulaştır.</translation>
-    </message>
-    <message>
-        <source>Cavalry reaches it first; hold the yard until the standard changes.</source>
-        <translation>Oraya önce süvari varır; sancak değişene kadar avluyu tut.</translation>
-    </message>
-    <message>
-        <source>Close the encirclement on the Aufidus camp to the north.</source>
-        <translation>Kuzeydeki Aufidus kampında kuşatmayı kapat.</translation>
-    </message>
-    <message>
         <source>Close the trap on the column town</source>
         <translation>Kol kasabasında tuzağı kapat</translation>
-    </message>
-    <message>
-        <source>Cold water and an early start, and my colleague is very pleased with both. He has the men in the river before their porridge. I said what I thought and was overruled, so I shall stand here and watch your ambush do its arithmetic.</source>
-        <translation>Soğuk su ve erken bir başlangıç; meslektaşım ikisinden de pek memnun. Adamları çorbalarını içmeden nehre soktu. Düşündüğümü söyledim ama dinlenmedim, bu yüzden burada durup pusunun hesabını yapmasını izleyeceğim.</translation>
-    </message>
-    <message>
-        <source>Cross the Rhône by one of several prepared routes, sever the eastern supply road, and capture two Roman advance camps before Scipio reaches the river.</source>
-        <translation>Rhône&apos;u hazırlanmış birkaç güzergâhtan biriyle aş, doğudaki ikmal yolunu kes ve Scipio nehre varmadan iki Roma ileri kampını ele geçir.</translation>
     </message>
     <message>
         <source>Crossing the Alps</source>
@@ -8456,18 +8392,6 @@ bir harita seç</translation>
         <translation>Kızaklar için kereste kes, yol için taş kır ve nal ile dingiller için demir çıkar. Kol, inşaatçılarının taşıyabildiğiyle geçer.</translation>
     </message>
     <message>
-        <source>December 218 BC: Hannibal provoked Tiberius Sempronius Longus into crossing the cold Trebia before breakfast. Carthaginian infantry, cavalry, elephants, and Mago&apos;s hidden detachment struck the exhausted Roman army from front, flanks, and rear.</source>
-        <translation>MÖ 218 Aralık: Hannibal, Tiberius Sempronius Longus&apos;u kahvaltıdan önce soğuk Trebia&apos;yı geçmeye kışkırttı. Kartaca piyadesi, süvarisi, filleri ve Mago&apos;nun gizli müfrezesi bitkin Roma ordusuna cepheden, kanatlardan ve arkadan vurdu.</translation>
-    </message>
-    <message>
-        <source>Defend Hannibal&apos;s fortified Campanian supply town and break all three coordinated Roman assaults arriving from separate consular roads.</source>
-        <translation>Hannibal&apos;ın tahkimli Campania ikmal kasabasını savun ve ayrı konsül yollarından gelen üç eşgüdümlü Roma taarruzunu da kır.</translation>
-    </message>
-    <message>
-        <source>Eighty thousand. I would rather you heard the number than saw it, because seeing it takes most of a morning. Varro has the command today, and Varro believes in going forward. Stand wherever you like.</source>
-        <translation>Seksen bin. Bu sayıyı görmeden duymanı yeğlerim, çünkü görmek neredeyse bütün bir sabah alıyor. Bugün komuta Varro&apos;da ve Varro ileri gitmeye inanır. Nerede istersen orada dur.</translation>
-    </message>
-    <message>
         <source>End the war with the men who lead it.</source>
         <translation>Savaşı, onu yönetenlerle birlikte bitir.</translation>
     </message>
@@ -8484,16 +8408,8 @@ bir harita seç</translation>
         <translation>Bir ilk maçın istediği her sistem, yeni bir komutanın onlarla karşılaştığı sırayla: seçim ve emirler, ağaçtan avluya kaynak döngüsü, inşa bedeli ve yerleştirme, devşirme ve onu sınırlayan nüfus, duruşlar, komutanın aurası ve toplanması, kamera, hız ve hedefler - sonra hepsini birleştiren küçük bir taarruz.</translation>
     </message>
     <message>
-        <source>Execute the encirclement, then seize all three Roman camps before their reserves can restore the line.</source>
-        <translation>Kuşatmayı uygula, sonra yedekleri hattı onaramadan üç Roma kampını da ele geçir.</translation>
-    </message>
-    <message>
         <source>Field Training</source>
         <translation>Sahra Talimi</translation>
-    </message>
-    <message>
-        <source>Fifteen thousand in the shallows, and the augurs will say the sacred chickens warned us. Kill a consul and Rome elects another by market day. That is the trick of us: we are not a man.</source>
-        <translation>Sığlıkta on beş bin ve kâhinler kutsal tavukların bizi uyardığını söyleyecek. Bir konsül öldür, Roma pazar gününe kalmadan bir yenisini seçer. Bizim hilemiz budur: biz bir adam değiliz.</translation>
     </message>
     <message>
         <source>Final battle in Africa: blunt Scipio&apos;s line, survive the Numidian cavalry, and seize all four Roman camps while breaking both risings of the dead.</source>
@@ -8504,20 +8420,12 @@ bir harita seç</translation>
         <translation>Meydandaki konsül subaylarını bitir.</translation>
     </message>
     <message>
-        <source>Finish the officers inside the ring.</source>
-        <translation>Halkanın içindeki subayları bitir.</translation>
-    </message>
-    <message>
         <source>First battle on Italian soil. Win the cavalry duel, then seize the Roman reserve camp before fresh reinforcements regroup.</source>
         <translation>İtalyan toprağındaki ilk savaş. Süvari düellosunu kazan, sonra taze takviyeler toparlanmadan Roma yedek kampını ele geçir.</translation>
     </message>
     <message>
         <source>Five columns and the ford still ours. Count the men twice and do not write the number down until morning; it is always worse in the dark and always worse again in daylight.</source>
         <translation>Beş kol ve geçit hâlâ bizim. Adamları iki kez say ve sayıyı sabaha kadar yazma; karanlıkta hep daha kötüdür, gün ışığında ise yine daha kötü.</translation>
-    </message>
-    <message>
-        <source>Fix the Roman center in place. Keep both cavalry wings active.</source>
-        <translation>Roma merkezini yerine çivile. İki süvari kanadını da etkin tut.</translation>
     </message>
     <message>
         <source>Grave-lights move among the western orchards. The Iron Sepulcher is watching, but the legions remain the greater danger.</source>
@@ -8532,16 +8440,8 @@ bir harita seç</translation>
         <translation>Hannibal&apos;ın İtalya&apos;daki ilk zaferi, tempo ve süvari denetimi sınavıdır. Geçit gölgeleri kanatları zorlaştırır ama Roma düşmanının yerini almaz.</translation>
     </message>
     <message>
-        <source>Hannibal&apos;s masterpiece becomes a prolonged operational battle, not a single frontal collision.</source>
-        <translation>Hannibal&apos;ın başyapıtı, tek bir cepheden çarpışma değil, uzun süreli bir harekât savaşına dönüşür.</translation>
-    </message>
-    <message>
         <source>High ground doubles a bowman and hardens him against what shoots back. The ridge over the Roman camp is worth more than the extra squadron you would have spent the same minutes recruiting.</source>
         <translation>Yüksek zemin bir okçuyu ikiye katlar ve karşılık verene karşı onu sertleştirir. Roma kampına bakan sırt, aynı dakikalarda devşirebileceğin fazladan bölükten daha değerlidir.</translation>
-    </message>
-    <message>
-        <source>Hold discipline. Let the Romans commit at the ford.</source>
-        <translation>Disiplini koru. Bırak Romalılar geçitte kendilerini adasın.</translation>
     </message>
     <message>
         <source>Hold the Punic quarter through every consular column.</source>
@@ -8592,10 +8492,6 @@ bir harita seç</translation>
         <translation>Dört kamptan hattına en yakın olanı.</translation>
     </message>
     <message>
-        <source>Keep Capua, then. I shall come back after the harvest, and after the one following it. I have buried three consuls who were in a hurry. Patience is cheaper, and it does not require a triumph.</source>
-        <translation>Öyleyse Capua sende kalsın. Hasattan sonra döneceğim, ondan sonraki hasattan sonra da. Acelesi olan üç konsül gömdüm. Sabır daha ucuzdur ve zafer alayı gerektirmez.</translation>
-    </message>
-    <message>
         <source>Keep both towers standing. Lose one and the lane it watches is yours to walk yourself.</source>
         <translation>İki kuleyi de ayakta tut. Birini yitirirsen gözettiği koridoru kendin yürümek zorunda kalırsın.</translation>
     </message>
@@ -8644,10 +8540,6 @@ bir harita seç</translation>
         <translation>Masinissa&apos;nın Numidya atlıları kuzeydoğu yolundan giriyor.</translation>
     </message>
     <message>
-        <source>Mist on a lake road. Flaminius holds that a column moves faster than an ambush can close, and he is a consul, so he must be right. Do enjoy the next hour. I shall be the one writing the account of it.</source>
-        <translation>Göl yolunda sis. Flaminius bir kolun, bir pusunun kapanabileceğinden daha hızlı ilerlediğini savunuyor ve o bir konsül, demek ki haklı olmalı. Önümüzdeki saatin tadını çıkar. Hesabını yazan ben olacağım.</translation>
-    </message>
-    <message>
         <source>Move the army up to the lower pass camp before the snow closes it.</source>
         <translation>Kar kapatmadan orduyu alt geçit kampına çıkar.</translation>
     </message>
@@ -8680,10 +8572,6 @@ bir harita seç</translation>
         <translation>Pazarı ve dört evi koru: Campania yalnızca surları için değil, halkı ve erzağı için savunuluyor.</translation>
     </message>
     <message>
-        <source>Provision the column for the descent: harvest timber, stone and iron from the pass while the mountain tribes contest every switchback.</source>
-        <translation>Kolu iniş için donat: dağ kabileleri her viraja itiraz ederken geçitten kereste, taş ve demir topla.</translation>
-    </message>
-    <message>
         <source>Reach the Rhone crossing</source>
         <translation>Rhône geçidine ulaş</translation>
     </message>
@@ -8698,26 +8586,6 @@ bir harita seç</translation>
     <message>
         <source>Roman cavalry screens the field. Punch through before reserves arrive.</source>
         <translation>Roma süvarisi meydanı perdeliyor. Yedekler gelmeden yar.</translation>
-    </message>
-    <message>
-        <source>Roman cavalry waves intensify. Collapse one flank before the rear guard arrives.</source>
-        <translation>Roma süvari dalgaları yoğunlaşıyor. Artçı gelmeden bir kanadı çökert.</translation>
-    </message>
-    <message>
-        <source>Roman reserves are entering from the northern camp. Close the pocket faster.</source>
-        <translation>Roma yedekleri kuzey kampından giriyor. Cebi daha hızlı kapat.</translation>
-    </message>
-    <message>
-        <source>Scipio extends the line. Keep your center steady and protect elephants from isolation.</source>
-        <translation>Scipio hattı genişletiyor. Merkezini sağlam tut ve fillerin yalnız kalmasını önle.</translation>
-    </message>
-    <message>
-        <source>Seize Masinissa&apos;s camp to finish the four.</source>
-        <translation>Dördü tamamlamak için Masinissa&apos;nın kampını ele geçir.</translation>
-    </message>
-    <message>
-        <source>Seize Varro&apos;s town at the centre of the Roman line.</source>
-        <translation>Roma hattının merkezindeki Varro&apos;nun kasabasını ele geçir.</translation>
     </message>
     <message>
         <source>Seize all four Roman camps — the consular line, Masinissa&apos;s Numidians, the rear guard, and the northern camp — before the cavalry closes your rear.</source>
@@ -8752,10 +8620,6 @@ bir harita seç</translation>
         <translation>İnşaatçıları yamaçlara koş; geçidin bedeli kanla değil malzemeyle ödenir.</translation>
     </message>
     <message>
-        <source>So the centre gave and the wings did not. That was well done, and I say so, and I was inside it. Rome has lost an army and a ring for every knight in it. Rome has not yet lost anything that matters.</source>
-        <translation>Demek merkez verdi, kanatlar vermedi. İyi yapılmıştı, bunu söylüyorum ve içindeydim. Roma bir ordu ve içindeki her şövalye için bir yüzük yitirdi. Roma henüz önemli olan bir şey yitirmedi.</translation>
-    </message>
-    <message>
         <source>So you came down the far side. Fewer, and on foot, and I am told you left the baggage up in the snow along with the men who were carrying it. Italy is waiting. Italy is not empty.</source>
         <translation>Demek öbür yamaçtan indin. Daha az sayıda, yaya ve duyduğuma göre ağırlıkları, onları taşıyan adamlarla birlikte karda bırakmışsın. İtalya bekliyor. İtalya boş değil.</translation>
     </message>
@@ -8766,10 +8630,6 @@ bir harita seç</translation>
     <message>
         <source>So. The Barcid crawls down to the Rhone. Cross where you like - the river is not particular about whose bones it keeps, and Rome has a great deal of patience and a very great many shovels. My surveyors are already pacing out your grave. They tell me the ground here drinks well.</source>
         <translation>Demek. Barka, Rhône&apos;a doğru sürünüyor. İstediğin yerden geç - nehir kimin kemiklerini tuttuğuna aldırmaz ve Roma&apos;nın bir hayli sabrı ve pek çok küreği vardır. Ölçücülerim şimdiden mezarını adımlıyor. Buranın toprağı iyi içermiş, diyorlar.</translation>
-    </message>
-    <message>
-        <source>Spring the ambush and capture both Roman field camps within twenty minutes, before the mist lifts and a cohort escapes the basin.</source>
-        <translation>Pusuyu kur ve sis kalkıp bir kohort havzadan kaçmadan yirmi dakika içinde iki Roma sahra kampını da ele geçir.</translation>
     </message>
     <message>
         <source>Stand in the gate yard of the northern advance camp until it falls to Carthage.</source>
@@ -8828,28 +8688,8 @@ bir harita seç</translation>
         <translation>Campania Nöbeti</translation>
     </message>
     <message>
-        <source>The Roman column enters the corridor. Wait for full commitment.</source>
-        <translation>Roma kolu koridora giriyor. Tam olarak girmesini bekle.</translation>
-    </message>
-    <message>
-        <source>The Roman column walks into a geographical trap and is destroyed by converging attacks while the lakeside Sepulcher altar remains an optional horror.</source>
-        <translation>Roma kolu coğrafi bir tuzağa yürür ve birleşen saldırılarla yok edilir; göl kıyısındaki Kabir sunağı isteğe bağlı bir dehşet olarak kalır.</translation>
-    </message>
-    <message>
-        <source>The Romans are baited into the winter river and punished by Mago&apos;s concealed force, then the defense becomes an assault on a complete winter camp.</source>
-        <translation>Romalılar kış nehrine çekilip Mago&apos;nun gizli kuvvetiyle cezalandırılır, sonra savunma eksiksiz bir kış kampına taarruza dönüşür.</translation>
-    </message>
-    <message>
         <source>The Timber Levy</source>
         <translation>Kereste Levhası</translation>
-    </message>
-    <message>
-        <source>The centre gives way once the wings are wrapped around it.</source>
-        <translation>Kanatlar çevresine dolandığında merkez çöker.</translation>
-    </message>
-    <message>
-        <source>The centre is the strongest camp; bring the elephants up first.</source>
-        <translation>Merkez en güçlü kamptır; önce filleri çıkar.</translation>
     </message>
     <message>
         <source>The commander falls and the line behind him is just men standing in a dry riverbed.</source>
@@ -8862,10 +8702,6 @@ bir harita seç</translation>
     <message>
         <source>The crew is gone and the officer is standing in a clearing with an axe. That is not a work party.</source>
         <translation>Ekip yok oldu ve subay bir açıklıkta elinde baltayla duruyor. Bu bir çalışma kolu değil.</translation>
-    </message>
-    <message>
-        <source>The crossing is a running battle against terrain, local resistance, and Roman influence. Sepulcher grave-lights remain a dangerous side path rather than the campaign&apos;s main enemy.</source>
-        <translation>Geçiş; arazi, yerel direniş ve Roma nüfuzuna karşı süren bir savaştır. Kabir&apos;in mezar ışıkları, seferin ana düşmanı değil, tehlikeli bir yan yol olarak kalır.</translation>
     </message>
     <message>
         <source>The final confrontation is Carthage against three coordinated Roman commands, until an Iron Sepulcher host attacks from the battlefield&apos;s neglected flank.</source>
@@ -8888,24 +8724,12 @@ bir harita seç</translation>
         <translation>Öyleyse geçit onları alıkoyar. Bunu okuyana bir öğüt: kar tarlasındaki ışıkların ardından gitme. O yükseklikte fener taşıyan her neyse, çoban olmayalı çok oldu.</translation>
     </message>
     <message>
-        <source>The quarter holds when the last column is dead in the streets.</source>
-        <translation>Mahalle, son kol sokaklarda öldüğünde tutulmuş olur.</translation>
-    </message>
-    <message>
         <source>The redoubt is gone. Go south, keep the spur on your left, and do not stop to look at the ford. There is nothing there now that is worth a second of your life.</source>
         <translation>Tabya gitti. Güneye git, mahmuzu solunda tut ve geçide bakmak için durma. Orada artık hayatının bir saniyesine değecek hiçbir şey yok.</translation>
     </message>
     <message>
         <source>The reserve feeds the consular line; cut it and the line thins.</source>
         <translation>Yedek konsül hattını besler; onu kes, hat incelir.</translation>
-    </message>
-    <message>
-        <source>The river keeps whatever it is given. Your elephants went in and not all of them came out, and the Trebia is not a large river. Rome has never needed a large one.</source>
-        <translation>Nehir kendisine verileni tutar. Fillerin girdi ve hepsi çıkmadı; Trebia da büyük bir nehir değil. Roma&apos;nın hiçbir zaman büyüğüne ihtiyacı olmadı.</translation>
-    </message>
-    <message>
-        <source>The river runs north to south across the middle of the valley; the nearest crossing is due east of camp.</source>
-        <translation>Nehir vadinin ortasından kuzeyden güneye akar; en yakın geçit kampın tam doğusunda.</translation>
     </message>
     <message>
         <source>The scouts are not coming back, then. Well - everyone begins somewhere, and you have begun by breaking an outpost full of men who were expecting their lunch. Rome will send someone who counts next time.</source>
@@ -8960,20 +8784,12 @@ bir harita seç</translation>
         <translation>Kereste, ancak bir inşaatçı onu kampta indirdiğinde sayılır. En zengin korular depodan en uzakta olanlardır, yani görev baltanın savruluşuyla değil yolun uzunluğuyla kazanılır.</translation>
     </message>
     <message>
-        <source>Turn the nearest Roman allied camp south of the field.</source>
-        <translation>Meydanın güneyindeki en yakın Roma müttefik kampını çevir.</translation>
-    </message>
-    <message>
         <source>Turn the nearest Roman camp before the cavalry returns.</source>
         <translation>Süvari dönmeden en yakın Roma kampını çevir.</translation>
     </message>
     <message>
         <source>Twenty minutes before the mist lifts. If a cohort clears the basin, Rome learns the shape of the trap.</source>
         <translation>Sis kalkmadan yirmi dakika. Bir kohort havzadan çıkarsa Roma tuzağın biçimini öğrenir.</translation>
-    </message>
-    <message>
-        <source>With the river camp taken there is nowhere left for the legions to reform.</source>
-        <translation>Nehir kampı alındığında lejyonların yeniden dizileceği hiçbir yer kalmaz.</translation>
     </message>
     <message>
         <source>You bent us and we did not break, and that is the only sentence anyone will need. Gather your dead off the Aufidus. The river runs slow here; they will be a long time going by.</source>
@@ -9004,10 +8820,6 @@ bir harita seç</translation>
         <translation>Komutanın düşer - ve arkasındaki her hat çöker.</translation>
     </message>
     <message>
-        <source>A few of the screen left, and me. My son is somewhere on this field; if he finds me, he will be insufferable about it for the rest of his life.</source>
-        <translation>Perdeden birkaç kişi kaldı, bir de ben. Oğlum bu meydanın bir yerinde; beni bulursa hayatının geri kalanında bunu başıma kakar.</translation>
-    </message>
-    <message>
         <source>Cut and carry home eight hundred of timber and two hundred and ten of stone. The near stand was stripped bare; the deep pines and the east screen are the only timber left standing.</source>
         <translation>Sekiz yüz kereste ve iki yüz on taş kesip eve getir. Yakın koruluk sıyrıldı; derin çamlar ile doğu perdesi ayakta kalan tek keresteliktir.</translation>
     </message>
@@ -9036,14 +8848,6 @@ bir harita seç</translation>
         <translation>Hannibal Trebia&apos;nın çamurunda yatıyor. Mago&apos;nun dere yataklarına ne sakladıysa, onu geri getirmeyecek.</translation>
     </message>
     <message>
-        <source>Hannibal is down. The Senate will strike a coin. I shall keep one and never spend it, which I am told is what he would have done.</source>
-        <translation>Hannibal düştü. Senato bir sikke bastıracak. Birini saklayıp asla harcamayacağım; bana dedikleri kadarıyla o da böyle yapardı.</translation>
-    </message>
-    <message>
-        <source>Here they come - the whole consular line, in step, at Varro&apos;s tempo. Eighty thousand men do not turn. Remember that when you want them to.</source>
-        <translation>İşte geliyorlar: bütün konsül hattı, adım adım, Varro&apos;nun temposunda. Seksen bin adam dönmez. Dönmelerini istediğinde bunu hatırla.</translation>
-    </message>
-    <message>
         <source>Leave the axes. Leave the carts. A detail that cannot fill its own levy before the column comes through does not get to carry anything.</source>
         <translation>Baltaları bırak. Arabaları bırak. Kol geçmeden kendi vergisini karşılayamayan ekip hiçbir şey taşımaz.</translation>
     </message>
@@ -9054,10 +8858,6 @@ bir harita seç</translation>
     <message>
         <source>Light is going. Five minutes of road left in the day, and whatever is on the carts when the column reaches us is what we levied. Bring them home.</source>
         <translation>Işık gidiyor. Günde beş dakikalık yol kaldı ve kol bize yetiştiğinde arabalarda ne varsa, vergimiz odur. Onları eve getir.</translation>
-    </message>
-    <message>
-        <source>Masinissa&apos;s camp is yours. His riders will not care; they were never in it. Watch the horizon, not the tents.</source>
-        <translation>Masinissa&apos;nın ordugâhı senin. Süvarileri aldırmaz; zaten içinde değillerdi. Çadırlara değil, ufka bak.</translation>
     </message>
     <message>
         <source>My forward town, taken by horsemen. Horsemen. My father would have said something cutting; I find I am simply cold.</source>
@@ -9080,40 +8880,12 @@ bir harita seç</translation>
         <translation>Tabyalarında devriyeler var. Sırtın yollarıma dönükken bir nehri geçmeye çalışıyorsun. Cesurca. Aynı zamanda insanın boğulma şekli.</translation>
     </message>
     <message>
-        <source>Sempronius has a handful left and they are on the wrong side of a winter river. He will still call it a victory in Rome. He always does.</source>
-        <translation>Sempronius&apos;un elinde bir avuç kaldı ve kışlık bir nehrin yanlış tarafındalar. Yine de Roma&apos;da buna zafer diyecek. Hep der.</translation>
-    </message>
-    <message>
-        <source>Sempronius is crossing. Now, in the cold, without breakfast, because a consul&apos;s year ends in March and he wants his battle before it does.</source>
-        <translation>Sempronius geçiyor. Şimdi, soğukta, kahvaltısız; çünkü bir konsülün yılı mart&apos;ta biter ve o muharebesini ondan önce istiyor.</translation>
-    </message>
-    <message>
-        <source>So he dies by his own lake in his own fog. Rome will call it justice. I call it weather, and I have always respected weather.</source>
-        <translation>Demek kendi gölünün kıyısında, kendi sisinde ölüyor. Roma buna adalet diyecek. Ben hava diyorum ve havaya hep saygı duydum.</translation>
-    </message>
-    <message>
         <source>Somebody is trying to cut a way out along the shore. Good. Somebody should get home and describe this accurately.</source>
         <translation>Biri kıyı boyunca kendine bir çıkış açmaya çalışıyor. Güzel. Birinin eve varıp bunu doğru anlatması gerek.</translation>
     </message>
     <message>
-        <source>The Aufidus camp. So the ring closes. I told the Senate a ring was what he wanted. They told me I was old.</source>
-        <translation>Aufidus ordugâhı. Demek halka kapanıyor. Senato&apos;ya onun istediğinin bir halka olduğunu söylemiştim. Bana yaşlandığımı söylediler.</translation>
-    </message>
-    <message>
         <source>The Barcid falls at the Ticinus. Then this was the whole war, and it fit inside an afternoon. I expected more of it; I am not sure I wanted more.</source>
         <translation>Barka Ticinus&apos;ta düşer. O zaman bütün savaş buymuş ve bir öğleden sonraya sığmış. Ondan daha fazlasını bekliyordum; daha fazlasını istedim mi, emin değilim.</translation>
-    </message>
-    <message>
-        <source>The Numidians are riding. Your Numidians, once. Now they ride for Rome, and they ride the same way they always did - around you.</source>
-        <translation>Numidialılar at sürüyor. Bir zamanlar senin Numidialıların. Şimdi Roma için sürüyorlar ve hep yaptıkları gibi sürüyorlar: etrafından.</translation>
-    </message>
-    <message>
-        <source>The allied wing is at your works. Italians, mostly. They fight for Rome because the alternative is fighting Rome, which is a very persuasive argument.</source>
-        <translation>Müttefik kanadı tabyalarında. Çoğu İtalyalı. Roma için dövüşüyorlar, çünkü alternatif Roma&apos;ya karşı dövüşmek; bu da çok ikna edici bir gerekçe.</translation>
-    </message>
-    <message>
-        <source>The allied wing is down to a handful. I have counted them twice, because there was time. Whatever happens next on this field, remember someone counted.</source>
-        <translation>Müttefik kanadından bir avuç kaldı. Onları iki kez saydım, çünkü vakit vardı. Bu meydanda bundan sonra ne olursa olsun, birinin saydığını hatırla.</translation>
     </message>
     <message>
         <source>The allied wing is on the southern road. They know this country - they own most of it, or did, before you started eating it.</source>
@@ -9122,14 +8894,6 @@ bir harita seç</translation>
     <message>
         <source>The column came back through and the carts were still empty. A levy that misses the road is a levy nobody signed for.</source>
         <translation>Kol geri geçti ve arabalar hâlâ boştu. Yola yetişemeyen bir vergi, kimsenin imzalamadığı bir vergidir.</translation>
-    </message>
-    <message>
-        <source>The column is nearly gone. What is left of it will hold until the fog lifts, because that is the only order anyone can still hear.</source>
-        <translation>Kol neredeyse tükendi. Kalanı sis kalkana dek dayanacak, çünkü hâlâ duyulabilen tek emir bu.</translation>
-    </message>
-    <message>
-        <source>The column is on the lakeside road. In fog, in a defile, in a hurry. Every word of that sentence is a mistake and Flaminius owns them all.</source>
-        <translation>Kol göl kıyısı yolunda. Siste, bir boğazda, telaşla. Bu cümlenin her kelimesi bir hata ve hepsi Flaminius&apos;un.</translation>
     </message>
     <message>
         <source>The high pass is sending everything it has. They have been paid in Roman silver to hold that road, and mountain men earn their silver.</source>
@@ -9142,10 +8906,6 @@ bir harita seç</translation>
     <message>
         <source>The last column. Everything they have left is on the road. Hold this one and the ford is ours until the spring.</source>
         <translation>Son kol. Ellerinde ne varsa yolda. Bunu tut, geçit bahara kadar bizim.</translation>
-    </message>
-    <message>
-        <source>The last of the legions is in the water. Everything Rome has north of the Apennines is coming at you wet. Hold this and you hold Italy for a winter.</source>
-        <translation>Son lejyonlar suyun içinde. Roma&apos;nın Apeninler&apos;in kuzeyinde ne varsa ıslak hâlde üstüne geliyor. Bunu tut, İtalya&apos;yı bir kış boyunca tutmuş olursun.</translation>
     </message>
     <message>
         <source>The last of the northern columns is moving. I have spent a year making you hold this quarter. Hold it one more hour and I will have spent it well.</source>
@@ -9172,10 +8932,6 @@ bir harita seç</translation>
         <translation>Devriyeler neredeyse bitti. Olsun. Donanmayı İtalya&apos;ya geri götürür, Cumhuriyet&apos;in kalanıyla orada beklerim.</translation>
     </message>
     <message>
-        <source>The rearguard camp falls. I held it the way I hold everything - long enough, and no longer. Scipio will manage without an old man&apos;s tents.</source>
-        <translation>Artçı ordugâhı düşüyor. Onu her şeyi tuttuğum gibi tuttum: yetecek kadar, bir an fazla değil. Scipio ihtiyar bir adamın çadırları olmadan da idare eder.</translation>
-    </message>
-    <message>
         <source>The reserve camp is yours. It was never meant to fight - it was meant to be there afterwards. There is not going to be an afterwards, is there.</source>
         <translation>İhtiyat ordugâhı senin. Hiç dövüşmek için düşünülmemişti; sonrasında orada olmak içindi. Bir &quot;sonrası&quot; olmayacak, değil mi?</translation>
     </message>
@@ -9192,10 +8948,6 @@ bir harita seç</translation>
         <translation>Kıyı ordugâhı. Çıkış yolu oydu, şimdi yalnızca göl var. Romalılar, genel olarak, yüzen bir halk değildir.</translation>
     </message>
     <message>
-        <source>The siege column is at the run. Engines behind, ladders in front. I do not besiege towns. I take them.</source>
-        <translation>Kuşatma kolu koşar adım geliyor. Makineler arkada, merdivenler önde. Ben şehirleri kuşatmam. Alırım.</translation>
-    </message>
-    <message>
         <source>The tribes are coming down the slope. They do not fight in lines. They fight in rockfalls.</source>
         <translation>Kabileler yamaçtan iniyor. Hat hâlinde dövüşmezler. Kaya düşer gibi dövüşürler.</translation>
     </message>
@@ -9204,28 +8956,12 @@ bir harita seç</translation>
         <translation>Batı ihtiyatı, tavsiyeme rağmen hareket ediyor. Tavsiyeyi göz ardı edileceğini bilerek verdim; yine de vermeye değerdi.</translation>
     </message>
     <message>
-        <source>They are hitting your camp, because it is the only thing on this road they can see. Men in fog attack whatever is nearest. Remember it.</source>
-        <translation>Ordugâhına vuruyorlar, çünkü bu yolda görebildikleri tek şey o. Sisteki adamlar en yakındakine saldırır. Bunu hatırla.</translation>
-    </message>
-    <message>
-        <source>Varro&apos;s town. Varro is not in it; Varro is out front, being brave at other people. Enjoy the walls. I never needed them.</source>
-        <translation>Varro&apos;nun kasabası. Varro içinde değil; Varro önde, başkaları üzerinden cesaret gösteriyor. Surların keyfini çıkar. Benim onlara hiç ihtiyacım olmadı.</translation>
-    </message>
-    <message>
         <source>We are losing men on the goat path. Pull the wounded back and put fresh spears in the gap. Nobody dies standing in a hole.</source>
         <translation>Keçi yolunda adam kaybediyoruz. Yaralıları geri çek ve gediğe taze mızrak koy. Kimse çukurda dikilerek ölmez.</translation>
     </message>
     <message>
         <source>We are on your bank and at your works. A river only stops men who are not already freezing.</source>
         <translation>Senin kıyındayız ve tabyalarındayız. Bir nehir yalnızca henüz donmayanları durdurur.</translation>
-    </message>
-    <message>
-        <source>You have the allied camp. Socii - allies. They were promised land for this war, and you have just handed them the first piece of it face down.</source>
-        <translation>Müttefik ordugâhı sende. Socii; müttefikler. Bu savaş için onlara toprak sözü verilmişti, sen de az önce ilk parçasını yüzüstü teslim ettin.</translation>
-    </message>
-    <message>
-        <source>You have the marching town. Flaminius built it in a fog and never looked back. There is a lesson there; he will not be the one to learn it.</source>
-        <translation>Yürüyüş kasabası sende. Flaminius onu siste kurdu ve arkasına hiç bakmadı. Bunda bir ders var; onu öğrenecek olan o değil.</translation>
     </message>
     <message>
         <source>Your camp is under the screen&apos;s spears. A camp on the wrong bank of a cold river - I would not have chosen it, and now you cannot un-choose it.</source>
@@ -9244,16 +8980,8 @@ bir harita seç</translation>
         <translation>Adamların buzda ölüyor. Mızraktan değil; soğuktan, açlıktan ve tahılından uzun bir yolun aritmetiğinden.</translation>
     </message>
     <message>
-        <source>Your men are dying too. A trap costs the trapper something; the good ones simply cost him less.</source>
-        <translation>Senin adamların da ölüyor. Bir tuzak, tuzağı kurana da bir bedele mal olur; iyileri sadece daha aza mal olur.</translation>
-    </message>
-    <message>
         <source>Your men are falling at the water. The Rhone is not particular about whose bones it keeps; I did tell you.</source>
         <translation>Adamların suyun kıyısında düşüyor. Rhone kimin kemiğini alıkoyduğuna aldırmaz; söylemiştim.</translation>
-    </message>
-    <message>
-        <source>Your men are going down in the centre. I know - that is where you put the Gauls, and Gauls are for spending. It is still a great many funerals.</source>
-        <translation>Adamların merkezde düşüyor. Biliyorum; Galyalıları oraya koydun ve Galyalılar harcanmak içindir. Yine de pek çok cenaze eder.</translation>
     </message>
     <message>
         <source>Your riders are dying by the ford. Numidians, I think. They ride beautifully, and they die at the ordinary speed.</source>
@@ -9408,18 +9136,6 @@ bir harita seç</translation>
         <translation>Kampının kuzeybatısındaki çöl tapınağını temizle; hazinesi doğuya yapılacak hamlenin bedelini öder.</translation>
     </message>
     <message>
-        <source>Eighty elephants, and he has cut a lane for every one. Hold the men of Italy back in the third line. They are the last answer I have.</source>
-        <translation>Seksen fil, ve her biri için bir koridor açmış. İtalya&apos;nın adamlarını üçüncü hatta geride tut. Elimdeki son cevap onlar.</translation>
-    </message>
-    <message>
-        <source>Fabius waits at the basin watch south of the road; Scipio holds the sanctuary above the eastern ford. Take them before the column turns on your camp.</source>
-        <translation>Fabius yolun güneyindeki çanak gözetleme noktasında bekliyor; Scipio doğu geçidinin üstündeki tapınağı tutuyor. Kol kampına dönmeden onları al.</translation>
-    </message>
-    <message>
-        <source>Fine. Sempronius rides to Rome to explain his morning. Ten thousand of ours cut through your centre and walked on to Placentia, and they will meet you in the spring with dry feet and long memories.</source>
-        <translation>Peki. Sempronius sabahını açıklamak için Roma&apos;ya at sürüyor. Bizden on bin kişi merkezini yarıp Placentia&apos;ya yürüdü; ilkbaharda seni kuru ayaklar ve uzun hafızalarla karşılayacaklar.</translation>
-    </message>
-    <message>
         <source>Fresh Roman horse is coming up from the consular town and the allied camp. Keep your own cavalry between it and your centre.</source>
         <translation>Konsül kasabasından ve müttefik kampından taze Roma süvarisi geliyor. Kendi süvarini onunla merkezin arasında tut.</translation>
     </message>
@@ -9432,16 +9148,8 @@ bir harita seç</translation>
         <translation>Hannibal Campania&apos;da, meyve bahçelerinin arasında, Saguntum&apos;da başlattığı bir savaşta düşer. Bunda bir tür merhamet var, ve ben bunu amaçlamadım.</translation>
     </message>
     <message>
-        <source>Hanno&apos;s smoke is up on the far bank. Across, all of you - Scipio is three days behind and I intend to keep him there.</source>
-        <translation>Hanno&apos;nun dumanı karşı kıyıda yükseldi. Hepiniz karşıya - Scipio üç gün geride ve onu orada tutmaya niyetliyim.</translation>
-    </message>
-    <message>
         <source>He will not fight me, so he will starve me. Good. Every column he sends to the walls is a battle he swore he would not give.</source>
         <translation>Benimle savaşmayacak, o hâlde beni aç bırakacak. İyi. Surlara yolladığı her kol, vermeyeceğine yemin ettiği bir savaştır.</translation>
-    </message>
-    <message>
-        <source>His ladders, his grain, his camp. Marcellus may walk back to Nola and explain.</source>
-        <translation>Merdivenleri, tahılı, kampı. Marcellus yürüyerek Nola&apos;ya dönüp açıklama yapabilir.</translation>
     </message>
     <message>
         <source>Hold the southern bank through all three crossings. Sempronius spends his army in the river; spend less of yours.</source>
@@ -9460,20 +9168,12 @@ bir harita seç</translation>
         <translation>Geçitlerdeki Roma subaylarını öldür</translation>
     </message>
     <message>
-        <source>Lake on their left, hills on their right, mist over both. Nobody moves until the whole column is inside.</source>
-        <translation>Sollarında göl, sağlarında tepeler, ikisinin üstünde sis. Bütün kol içeri girene dek kimse kıpırdamasın.</translation>
-    </message>
-    <message>
         <source>Last column. Spend the reserve at the gate it chooses, not the one you fear.</source>
         <translation>Son kol. Yedeği korktuğun kapıda değil, onun seçtiği kapıda harca.</translation>
     </message>
     <message>
         <source>Let him count. Numidians on the wings, the bridled horse in the centre, and nobody waits for the consul to finish his sentence.</source>
         <translation>Saysın. Numidyalılar kanatlarda, dizginli atlar merkezde, ve kimse konsülün cümlesini bitirmesini beklemiyor.</translation>
-    </message>
-    <message>
-        <source>Let the centre give. The Africans wait on the wings, Hasdrubal has the river. Eighty thousand men walk into a sack as easily as into a field.</source>
-        <translation>Merkez geri versin. Afrikalılar kanatlarda bekliyor, nehir Hasdrubal&apos;da. Seksen bin adam bir çuvala da bir tarlaya girer gibi kolayca girer.</translation>
     </message>
     <message>
         <source>Masinissa has no one left to ride for. Turn the elephants on the centre.</source>
@@ -9512,14 +9212,6 @@ bir harita seç</translation>
         <translation>Rhône&apos;un üzerinde altı köprü var ve her birinin öbür ucunu Roma gözleri izliyor. Bir geçit seç ve kararlı ol.</translation>
     </message>
     <message>
-        <source>Stay out of the water. Every Roman who wades it reaches you cold and slow.</source>
-        <translation>Sudan uzak dur. Suya giren her Romalı sana üşümüş ve ağır ulaşır.</translation>
-    </message>
-    <message>
-        <source>Strike now. Take Fabius at the basin watch before the column finds your camp.</source>
-        <translation>Şimdi vur. Kol kampını bulmadan Fabius&apos;u çanak gözetleme noktasında yakala.</translation>
-    </message>
-    <message>
         <source>Take a Roman barracks. The winter camp&apos;s grain is worth the ride.</source>
         <translation>Bir Roma kışlası al. Kış kampının tahılı bu yolculuğa değer.</translation>
     </message>
@@ -9552,18 +9244,6 @@ bir harita seç</translation>
         <translation>Volturnus lejyonu meyve bahçelerinin arasından iniyor. Yavaşça. Yavaşça emrettim. Geçtikleri her ağaç, senin hasat etmeyeceğin bir ağaçtır.</translation>
     </message>
     <message>
-        <source>The Volturnus legion is spent. I have others. I have always had others. That is what the delaying was for.</source>
-        <translation>Volturnus lejyonu tükendi. Başkaları da var bende. Her zaman başkaları vardı. Oyalamanın amacı buydu.</translation>
-    </message>
-    <message>
-        <source>The allies have lost their consul. Turn that wing inward.</source>
-        <translation>Müttefikler konsüllerini kaybetti. O kanadı içeri çevir.</translation>
-    </message>
-    <message>
-        <source>The column has lost its head. Take the town before anyone thinks to pick it up.</source>
-        <translation>Kol başını kaybetti. Kimse onu yerden almayı akıl etmeden kasabayı al.</translation>
-    </message>
-    <message>
         <source>The descent garrison is marching up from the south-east. Hold the camp and keep the sledges loading.</source>
         <translation>İniş garnizonu güneydoğudan yukarı yürüyor. Kampı tut ve kızakları yüklemeye devam et.</translation>
     </message>
@@ -9592,18 +9272,6 @@ bir harita seç</translation>
         <translation>Adamlar yemeğini yedi ve ateşlerin başında uzuvlarını yağladı; Mago da iki bin kişiyle dere yatağında. Bırak Romalılar bize ıslak gelsin.</translation>
     </message>
     <message>
-        <source>The mist lifted a little early for you. It happens. The lake will keep what it has been given, and the thing beneath the altar past the eastern stream is not particular about whose it is.</source>
-        <translation>Sis senin için biraz erken kalktı. Olur böyle şeyler. Göl kendisine verileni saklayacak, doğudaki derenin ötesindeki sunağın altında yatan şey de kimin olduğuna pek aldırmaz.</translation>
-    </message>
-    <message>
-        <source>The road runs east along the lake. Shut its western mouth and the column has only one way left to go.</source>
-        <translation>Yol göl boyunca doğuya uzanır. Batı ağzını kapat, kolun gidebileceği tek bir yol kalsın.</translation>
-    </message>
-    <message>
-        <source>The screen is coming across the flats. Spears in front, horse on the wings, the usual arrangement. Please try to stand still; it makes the reports so much tidier.</source>
-        <translation>Perde düzlüklerin üzerinden geliyor. Önde mızraklar, kanatlarda atlılar, her zamanki düzen. Lütfen kıpırdamamaya çalış; raporlar çok daha derli toplu oluyor.</translation>
-    </message>
-    <message>
         <source>The screen&apos;s cavalry comes again from the east. Rotate quickly.</source>
         <translation>Perdenin süvarisi yine doğudan geliyor. Birlikleri çabuk döndür.</translation>
     </message>
@@ -9622,10 +9290,6 @@ bir harita seç</translation>
     <message>
         <source>They tell me you have taken an army into the Alps in October, with elephants. I came round by sea to hold the far side. The mountain is a more thorough officer than I am, and it does not require pay.</source>
         <translation>Ekim&apos;de, üstelik fillerle, bir orduyu Alpler&apos;e soktuğunu söylüyorlar. Ben öbür yakayı tutmak için denizden dolandım. Dağ benden daha titiz bir subaydır ve maaş da istemez.</translation>
-    </message>
-    <message>
-        <source>Three Roman columns are on the roads: Fabius down the Volturnus, the allied wing from the south, Marcellus&apos;s siege column out of Nola to the east. The first assault reaches the walls within the minute.</source>
-        <translation>Yollarda üç Roma kolu var: Volturnus boyunca inen Fabius, güneyden müttefik kanadı, doğuda Nola&apos;dan çıkan Marcellus&apos;un kuşatma kolu. İlk saldırı bir dakika içinde surlara ulaşır.</translation>
     </message>
     <message>
         <source>Three men lead the siege: Fabius in the Volturnus camp to the north-west, the allied commander at the southern camp, Marcellus in the siege works to the east.</source>
@@ -9826,10 +9490,6 @@ bir harita seç</translation>
     <message>
         <source>Two gates at once</source>
         <translation>Aynı anda iki kapı</translation>
-    </message>
-    <message>
-        <source>Varro&apos;s legions</source>
-        <translation>Varro&apos;nun lejyonları</translation>
     </message>
     <message>
         <source>Africa, then, and the two of us, and no river to stand behind. I have the measure of your elephants and I have your Numidians. Whatever you mean to do, do it where I can see it. I have waited sixteen years to stand across a field from you with an army of my own.</source>
@@ -10068,12 +9728,384 @@ bir harita seç</translation>
         <translation>MÖ 218 kışı: Trebia zaferinden sonra Hannibal, Placentia yakınlarındaki ikmal deposuna saldırdı, ardından bölge halkının güvenlik için toplandığı, İnsubr ovasının tahkimli pazarı Victumulae&apos;yi hücumla aldı. Livius kasabanın hücumla düştüğünü ve yağmalandığını kaydeder. Bu değiştirilmiş tarih kasabaya Romalı bir prefekt, bir iç kale garnizonu ve Placentia yolunda bir yardım kuvveti verir.</translation>
     </message>
     <message>
-        <source>Ferry your companies over on the rafts, one at a time: one below the Gaulish landing, one further south, one across the eastern branch.</source>
-        <translation>Bölüklerini sallarla tek tek karşıya geçir: biri Galya iskelesinin aşağısında, biri daha güneyde, biri doğu kolunun karşısında.</translation>
-    </message>
-    <message>
         <source>Take the second camp on the southern supply road. No bridge reaches its bank of the river.</source>
         <translation>Güney ikmal yolundaki ikinci kampı ele geçir. Nehrin o kıyısına hiçbir köprü ulaşmıyor.</translation>
+    </message>
+    <message>
+        <source>202 BC, near Zama in Africa: Publius Cornelius Scipio - son of the consul of 218, soon to be called Africanus - drew up his maniples one behind another instead of in the usual chequer, leaving straight lanes held by velites through which Hannibal&apos;s eighty elephants could be driven or let pass. Masinissa&apos;s Numidian horse on the right and Laelius&apos;s Italian cavalry on the left drove Hannibal&apos;s cavalry off the field. Hannibal&apos;s three lines - Ligurian, Gallic, Balearic and Moorish mercenaries; Carthaginian and African levies; his veterans of Italy held back in the third - fought the legions to a standstill until the Roman and Numidian cavalry returned and struck the third line from behind. The Iron Sepulcher&apos;s intervention is the campaign&apos;s deliberate dark-fantasy break from history.</source>
+        <translation>MÖ 202, Afrika&apos;da Zama yakınları: 218 konsülünün oğlu, yakında Africanus diye anılacak olan Publius Cornelius Scipio, manipüllerini alışılmış dama düzeni yerine birbirinin arkasına dizdi ve aralarında velitlerin tuttuğu, Hannibal&apos;ın seksen filinin içine sürülebileceği ya da geçip gitmesine izin verilebileceği düz koridorlar bıraktı. Sağda Masinissa&apos;nın Numidya süvarisi, solda Laelius&apos;un İtalyan süvarisi Hannibal&apos;ın süvarisini alandan sürdü. Hannibal&apos;ın üç hattı - Ligur, Galyalı, Balear ve Mağripli paralı askerler; Kartacalı ve Afrikalı toplama askerler; üçüncü hatta geride tutulan İtalya kıdemlileri - Roma ve Numidya süvarisi geri dönüp üçüncü hatta arkadan vurana dek lejyonlarla başa baş çarpıştı. Demir Kabir&apos;in müdahalesi, seferin tarihten bilinçli olarak kopan kara fantezi hamlesidir.</translation>
+    </message>
+    <message>
+        <source>216-211 BC: after Cannae, Capua went over to Hannibal, and his army wintered there in 216-215. Rome answered by containment rather than battle: Quintus Fabius Maximus, the Delayer and &apos;shield of Rome&apos;, shadowed Hannibal and stripped the country, while Marcus Claudius Marcellus, the &apos;sword of Rome&apos;, held Nola against him in 216, 215 and 214 BC. In 212 the consuls closed a ring of siege works around Capua, and the city fell in 211 after Hannibal&apos;s march on Rome failed to draw the legions off. This mission is a dark-fantasy composite: it compresses those years into one defence, puts Fabius, the allied legions and Marcellus at the head of a siege army on the field at once, and adds the Iron Sepulcher, which history does not record.</source>
+        <translation>MÖ 216-211: Cannae&apos;den sonra Capua Hannibal&apos;ın tarafına geçti ve ordusu 216-215 kışını orada geçirdi. Roma buna muharebeyle değil kuşatıp sınırlamayla karşılık verdi: Oyalayıcı ve “Roma&apos;nın kalkanı” Quintus Fabius Maximus, Hannibal&apos;ı gölge gibi izleyip kırsalı boşaltırken “Roma&apos;nın kılıcı” Marcus Claudius Marcellus, MÖ 216, 215 ve 214&apos;te Nola&apos;yı ona karşı tuttu. 212&apos;de konsüller Capua&apos;nın çevresinde bir kuşatma hatları halkası kapattı; Hannibal&apos;ın Roma üzerine yürüyüşü lejyonları geri çekmeyi başaramayınca şehir 211&apos;de düştü. Bu görev bir kara fantezi derlemesidir: o yılları tek bir savunmaya sıkıştırır, Fabius&apos;u, müttefik lejyonlarını ve Marcellus&apos;u aynı anda bir kuşatma ordusunun başında sahaya çıkarır ve tarihin kaydetmediği Demir Kabir&apos;i ekler.</translation>
+    </message>
+    <message>
+        <source>218 BC, late autumn: Hannibal crossed the Alps in about fifteen days with a multinational army, cavalry, baggage train, and surviving elephants. At the first ascent the Allobroges held the heights above a defile; Hannibal seized their posts by night, yet they still fell on the strung-out column, and the track killed as many men and animals as their spears. Higher up, mountain Gauls who had come with olive branches led the army into a ravine and rolled rocks down onto it from above (Polybius 3.50-53; Livy 21.32-35). Ancient sources disagree on the route. Historical: the Gallic ambushes, the rockfall, the snow and the hunt for supplies. Altered: Roman officers and camps in the passes paying the tribes - no Roman force stood in the Alps - and the Iron Sepulcher&apos;s grave-lights.</source>
+        <translation>MÖ 218, geç sonbahar: Hannibal Alpler&apos;i yaklaşık on beş günde çok uluslu bir orduyla, süvariyle, ağırlık katarıyla ve sağ kalan filleriyle aştı. İlk tırmanışta Allobroglar bir boğazın üstündeki tepeleri tuttu; Hannibal mevzilerini geceleyin ele geçirdi, yine de uzayıp giden kola saldırdılar ve patika, mızrakları kadar insan ve hayvan öldürdü. Daha yukarıda, ellerinde zeytin dallarıyla gelen dağ Galyalıları orduyu bir sarp vadiye soktu ve yukarıdan üzerine kayalar yuvarladı (Polybios 3.50-53; Livius 21.32-35). Antik kaynaklar güzergâh konusunda anlaşamaz. Tarihî olan: Galya pusuları, kaya düşüşü, kar ve erzak arayışı. Değiştirilen: geçitlerde kabilelere para ödeyen Romalı subaylar ve kamplar - Alpler&apos;de hiçbir Roma kuvveti yoktu - ve Demir Kabir&apos;in mezar ışıkları.</translation>
+    </message>
+    <message>
+        <source>218 BC: Hannibal reached the Rhône some four days&apos; march from the sea and found the Volcae massed on the east bank to stop him. He sent Hanno son of Bomilcar upstream by night with a picked force, mostly Iberians; they crossed on rafts and skins, came down the far bank and signalled with smoke. As the boats and rafts pushed off, Hanno fell on the Volcae from behind and broke them. The elephants were floated over on earth-covered rafts, and Scipio&apos;s scouting horse clashed with the Numidians before the consul, landed at the river mouth, arrived three days too late (Polybius 3.42-49; Livy 21.26-32). Historical: the Volcae, Hanno&apos;s flanking march, the rafts and elephants, the cavalry skirmish. Altered: the bridges, the Roman advance camps on the far-bank road and Scipio&apos;s garrisons - Rome had no army at the crossing - and the Iron Sepulcher&apos;s barrows.</source>
+        <translation>MÖ 218: Hannibal Rhône&apos;a denizden yaklaşık dört günlük yürüyüş mesafesinde ulaştı ve Volcae&apos;yi onu durdurmak için doğu kıyısında toplanmış buldu. Bomilkar oğlu Hanno&apos;yu çoğu İber olan seçme bir kuvvetle geceleyin nehrin yukarısına gönderdi; bunlar sallar ve tulumlarla karşıya geçti, karşı kıyıdan aşağı indi ve dumanla işaret verdi. Kayıklar ve sallar kıyıdan ayrılırken Hanno Volcae&apos;ye arkadan saldırıp onları dağıttı. Filler üstü toprakla örtülü sallarla karşıya yüzdürüldü; Scipio&apos;nun keşif atlıları Numidyalılarla çarpıştı, nehir ağzına çıkan konsül ise üç gün geç geldi (Polybios 3.42-49; Livius 21.26-32). Tarihî olan: Volcae, Hanno&apos;nun kuşatma yürüyüşü, sallar ve filler, süvari çarpışması. Değiştirilen: köprüler, karşı kıyı yolundaki Roma ileri kampları ve Scipio&apos;nun garnizonları - Roma&apos;nın geçitte hiç ordusu yoktu - ve Demir Kabir&apos;in kurganları.</translation>
+    </message>
+    <message>
+        <source>A broad river operation with ferries, wooded detours, bridgeheads, and fortified supply quarters: the Volcae hold the far end of the crossing, Hanno&apos;s Iberians wait upstream on their side of the water, and the Iron Sepulcher occupies an avoidable ruin on the southern flank.</source>
+        <translation>Sallar, ormanlık dolambaçlar, köprübaşları ve tahkimli ikmal mahalleleriyle geniş bir nehir harekâtı: geçidin öbür ucunu Volcae tutuyor, Hanno&apos;nun İberleri nehrin yukarısında suyun kendi yakasında bekliyor, Demir Kabir ise güney kanadında kaçınılabilir bir harabeyi tutuyor.</translation>
+    </message>
+    <message>
+        <source>A camp is taken by standing in it, not by levelling it. A dozen companies cannot kill fifty, but they can hold two gate yards long enough to claim them - and a Roman column without its commander stops being a column.</source>
+        <translation>Bir kamp, yerle bir edilerek değil, içinde durularak alınır. Bir düzine bölük ellisini öldüremez, ama iki kapı avlusunu sahiplenecek kadar tutabilir - ve komutansız bir Roma kolu artık kol olmaktan çıkar.</translation>
+    </message>
+    <message>
+        <source>A few of the screen left, and me, with a hole in my side I would rather not look at. My son is somewhere on this field; if he finds me, he will be insufferable about it for the rest of his life.</source>
+        <translation>Perdeden birkaç kişi kaldı, bir de ben; böğrümde bakmamayı tercih ettiğim bir delikle. Oğlum bu meydanın bir yerinde; beni bulursa hayatının geri kalanında bunu başıma kakar.</translation>
+    </message>
+    <message>
+        <source>A handful left, and on the wrong bank of a winter river. Ten thousand went through to Placentia; that is not a defeat. I shall tell Rome it was the snow.</source>
+        <translation>Bir avuç kaldı, o da bir kış nehrinin yanlış yakasında. On bin kişi Placentia&apos;ya geçti; bu bir yenilgi değil. Roma&apos;ya karın yüzünden olduğunu söyleyeceğim.</translation>
+    </message>
+    <message>
+        <source>After Cannae, Rome refuses the battle Hannibal wants. Fabius shadows him and Marcellus strikes at whatever he leaves exposed, while the Republic presses every road, ally, granary, and walled town. Beneath the orchards, Iron Sepulcher graves make even a successful defense feel temporary.</source>
+        <translation>Cannae&apos;den sonra Roma, Hannibal&apos;ın istediği savaşı reddeder. Fabius onu gölge gibi izler, Marcellus açıkta bıraktığı her şeye vurur; Cumhuriyet ise her yola, müttefike, tahıl ambarına ve surlu kasabaya yüklenir. Meyve bahçelerinin altında Demir Kabir mezarları, başarılı bir savunmayı bile geçici hissettirir.</translation>
+    </message>
+    <message>
+        <source>Allobroges on the heights above the narrows south of camp. Where scree scars the slope, they have stones waiting for the column.</source>
+        <translation>Kampın güneyindeki dar geçidin üstündeki tepelerde Allobroglar var. Yamacı taş yığıntılarının yaraladığı yerlerde kol için bekleyen taşları hazır.</translation>
+    </message>
+    <message>
+        <source>August 216 BC: beside the Aufidus the consuls crossed the river and drew up some eighty thousand men, the legions in the centre deeper than they were wide. Varro, in command that day, led the allied horse on the Roman left; Paullus led the Roman horse on the right by the river. Hannibal bowed his Gauls and Iberians out toward them in a crescent, set his Africans on the wings and screened the front with Balearic slingers. Hasdrubal&apos;s Iberian and Gallic horse broke Paullus by the river, rode behind the Roman army and fell on its rear as the crescent gave and the Africans turned inward. Paullus died on the field; Varro escaped to Venusia. Altered here: the Romans had two camps, not three, and the field towns and the Sepulcher graves are the game&apos;s.</source>
+        <translation>MÖ 216 Ağustos: konsüller Aufidus kıyısında nehri geçti ve yaklaşık seksen bin adamı, merkezdeki lejyonlar genişliklerinden daha derin olacak biçimde, savaş düzenine soktu. O gün komutayı elinde tutan Varro, Roma solunda müttefik süvarisini yönetti; Paullus ise sağda, nehrin yanında Roma süvarisini yönetti. Hannibal Galyalılarını ve İberlerini hilal biçiminde onlara doğru dışa bükerek dizdi, Afrikalılarını kanatlara yerleştirdi ve cepheyi Balear sapancılarıyla perdeledi. Hasdrubal&apos;ın İber ve Galyalı atlıları nehrin yanında Paullus&apos;u dağıttı, Roma ordusunun arkasından dolaştı ve hilal geri verip Afrikalılar içeri dönerken ordunun gerisine saldırdı. Paullus alanda öldü; Varro Venusia&apos;ya kaçtı. Burada değiştirilen: Romalıların üç değil iki kampı vardı; sahra kasabaları ve Kabir mezarları ise oyuna aittir.</translation>
+    </message>
+    <message>
+        <source>Between assaults, seize the eastern Roman siege camp and the engines&apos; stockpile with it.</source>
+        <translation>Taarruzlar arasında doğudaki Roma kuşatma kampını ve onunla birlikte makinelerin yedek deposunu ele geçir.</translation>
+    </message>
+    <message>
+        <source>Breakfast can wait; Numidians at my palisade cannot. My colleague lies in his tent with his wound and his caution, and a consul&apos;s year is short. Velites over first, then the legions. The water is only cold.</source>
+        <translation>Kahvaltı bekleyebilir; çitimin dibindeki Numidyalılar bekleyemez. Meslektaşım yarası ve temkiniyle çadırında yatıyor ve bir konsülün yılı kısadır. Önce velitler geçsin, sonra lejyonlar. Su yalnızca soğuk.</translation>
+    </message>
+    <message>
+        <source>Bring the column to the pontoon bridge on the near bank. The Volcae hold its far end.</source>
+        <translation>Kolu yakın kıyıdaki dubalı köprüye ulaştır. Köprünün öbür ucunu Volcae tutuyor.</translation>
+    </message>
+    <message>
+        <source>Cavalry reaches it first. The javelin-men screening the gate break if you charge them; hold the yard until the standard changes.</source>
+        <translation>Oraya önce süvari varır. Kapıyı perdeleyen ciritçiler hücum edersen dağılır; sancak değişene kadar avluyu tut.</translation>
+    </message>
+    <message>
+        <source>Close the encirclement on Paullus&apos; camp across the Aufidus to the north.</source>
+        <translation>Kuzeyde, Aufidus&apos;un karşısındaki Paullus&apos;un kampında kuşatmayı kapat.</translation>
+    </message>
+    <message>
+        <source>December 218 BC: Hannibal&apos;s Numidians provoked Tiberius Sempronius Longus into sending his velites, then his whole army, across the swollen Trebia at dawn, unfed and chest-deep in icy water, while his wounded colleague Scipio urged him to wait. Hannibal had fed his men and oiled them by the fires. Balearic slingers and spearmen screened a line of Africans, Iberians and some eight thousand newly joined Cisalpine Gauls, with horse and elephants on the wings; Mago&apos;s two thousand picked horse and foot lay in an overgrown stream bed and fell on the Roman rear. About ten thousand Romans cut through the Gallic centre and reached Placentia. Altered: the battle is fought as three crossings against your bank, the Placentia reserve marches out as a second Roman army, and the barrow-dead by the western bank are this campaign&apos;s invention.</source>
+        <translation>MÖ 218 Aralık: Hannibal&apos;ın Numidyalıları Tiberius Sempronius Longus&apos;u kışkırttı; o da yaralı meslektaşı Scipio beklemesini öğütlerken önce velitlerini, sonra bütün ordusunu şafakta, aç karnına ve göğüs boyu buzlu suyun içinden taşkın Trebia&apos;nın karşısına gönderdi. Hannibal adamlarını doyurmuş, ateşlerin başında yağlatmıştı. Balear sapancıları ve mızrakçılar; Afrikalılardan, İberlerden ve yeni katılmış sekiz bin kadar Cisalpin Galyalıdan oluşan bir hattı perdeliyordu, kanatlarda atlılar ve filler vardı; Mago&apos;nun iki bin seçme atlı ve yayası otlarla kaplı bir dere yatağında yatıp Roma&apos;nın gerisine saldırdı. Yaklaşık on bin Romalı Galyalı merkezi yarıp Placentia&apos;ya ulaştı. Değiştirilen: muharebe senin kıyına karşı üç geçitte yapılır, Placentia yedeği ikinci bir Roma ordusu olarak yola çıkar ve batı kıyısındaki kurgan ölüleri bu seferin uydurmasıdır.</translation>
+    </message>
+    <message>
+        <source>Ducarius the Insubrian knew the consul who burned his country, and has paid him for it. The column has lost its head. Take the town before anyone thinks to pick it up.</source>
+        <translation>İnsubr Ducarius, ülkesini yakan konsülü tanıdı ve hesabını ona ödetti. Kol başını kaybetti. Kimse onu yerden almayı akıl etmeden kasabayı al.</translation>
+    </message>
+    <message>
+        <source>Eighty elephants, and he has cut a lane for every one. Mercenaries in the first line, Africa&apos;s levies in the second. Hold the men of Italy back in the third. They are the last answer I have.</source>
+        <translation>Seksen fil, ve her biri için bir koridor açmış. İlk hatta paralı askerler, ikincide Afrika&apos;nın toplama askerleri. İtalya&apos;nın adamlarını üçüncü hatta geride tut. Elimdeki son cevap onlar.</translation>
+    </message>
+    <message>
+        <source>Eighty thousand, and the command is mine today. Paullus looked at this plain and saw cavalry ground; I looked at the legions and saw the end of the war. He may keep the right by the river. I take the allied horse on the left myself.</source>
+        <translation>Seksen bin adam, ve bugün komuta benim. Paullus bu ovaya baktı ve süvari arazisi gördü; ben lejyonlara baktım ve savaşın sonunu gördüm. Nehrin yanındaki sağ kanat onda kalsın. Soldaki müttefik süvarisini bizzat ben alıyorum.</translation>
+    </message>
+    <message>
+        <source>Ferry your companies over on the rafts, one at a time - the elephants too, as Hannibal floated his across: one below the Gaulish landing, one further south, one across the eastern branch.</source>
+        <translation>Bölüklerini sallarla tek tek karşıya geçir - filleri de, Hannibal&apos;ın kendi fillerini yüzdürdüğü gibi: biri Galya iskelesinin aşağısında, biri daha güneyde, biri doğu kolunun karşısında.</translation>
+    </message>
+    <message>
+        <source>Fifteen thousand in the shallows, and a consul among them. The praetor will climb the Rostra and say only: we have been beaten in a great battle. Rome elects another consul by market day. That is the trick of us: we are not a man.</source>
+        <translation>Sığlıkta on beş bin adam, aralarında bir de konsül. Pretor Rostra&apos;ya çıkıp yalnızca şunu söyleyecek: büyük bir muharebede yenildik. Roma pazar gününe kalmadan bir konsül daha seçer. Bizim hilemiz budur: biz bir adam değiliz.</translation>
+    </message>
+    <message>
+        <source>Finish the officers inside the ring: Paullus by the river, Varro with the allied horse, and the commander of the centre.</source>
+        <translation>Halkanın içindeki subayları bitir: nehrin yanındaki Paullus&apos;u, müttefik süvarisinin başındaki Varro&apos;yu ve merkezin komutanını.</translation>
+    </message>
+    <message>
+        <source>Flaminius rides at the basin watch south of the road; the van&apos;s tribune holds the sanctuary above the eastern ford. Take them before the column turns on your camp.</source>
+        <translation>Flaminius yolun güneyindeki çanak gözetleme noktasında at sürüyor; öncünün tribunu doğu geçidinin üstündeki tapınağı tutuyor. Kol kampına dönmeden onları al.</translation>
+    </message>
+    <message>
+        <source>Flaminius&apos; marching column walks blind into a geographical trap along a mist-filled shore road and is destroyed by converging attacks from the heights, while the lakeside Sepulcher altar remains an optional horror.</source>
+        <translation>Flaminius&apos;un yürüyüş kolu sisle dolu bir kıyı yolu boyunca coğrafi bir tuzağa körlemesine yürür ve tepelerden birleşen saldırılarla yok edilir; göl kıyısındaki Kabir sunağı ise isteğe bağlı bir dehşet olarak kalır.</translation>
+    </message>
+    <message>
+        <source>Force the Rhône against the Volcae massed on the far bank - by bridge or by raft, with Hanno&apos;s detachment falling on them from upstream - then capture two Roman advance camps before Scipio reaches the river.</source>
+        <translation>Karşı kıyıda toplanmış Volcae&apos;ye karşı Rhône&apos;u zorla geç - köprüyle ya da salla, Hanno&apos;nun müfrezesi nehrin yukarısından üstlerine çullanırken - ardından Scipio nehre varmadan iki Roma ileri kampını ele geçir.</translation>
+    </message>
+    <message>
+        <source>Hannibal is down. Fabius said wait. Paullus said wait. The butcher&apos;s son from the Forum said fight, and here we are.</source>
+        <translation>Hannibal düştü. Fabius bekle dedi. Paullus bekle dedi. Forum&apos;daki kasabın oğlu savaş dedi, ve işte buradayız.</translation>
+    </message>
+    <message>
+        <source>Hannibal&apos;s masterpiece becomes a prolonged operational battle, not a single frontal collision: a Gallic and Iberian crescent that gives ground, African wings that hold, and Hasdrubal&apos;s heavy horse on the river flank.</source>
+        <translation>Hannibal&apos;ın başyapıtı, tek bir cepheden çarpışma değil, uzun süreli bir harekât savaşına dönüşür: geri veren bir Galyalı ve İber hilali, dayanan Afrikalı kanatlar ve nehir kanadında Hasdrubal&apos;ın ağır süvarisi.</translation>
+    </message>
+    <message>
+        <source>Hanno&apos;s smoke is up on the far bank. His Iberians are behind the Volcae - across, all of you, while they look the wrong way. Scipio is three days behind and I intend to keep him there.</source>
+        <translation>Hanno&apos;nun dumanı karşı kıyıda yükseldi. İberleri Volcae&apos;nin arkasında - onlar yanlış yöne bakarken hepiniz karşıya. Scipio üç gün geride ve onu orada tutmaya niyetliyim.</translation>
+    </message>
+    <message>
+        <source>Here they come - the whole consular line, deeper than it is wide, at Varro&apos;s tempo. Eighty thousand men do not turn. Remember that when you want them to.</source>
+        <translation>İşte geliyorlar: bütün konsül hattı, genişliğinden derin, Varro&apos;nun temposunda. Seksen bin adam dönmez. Dönmelerini istediğinde bunu hatırla.</translation>
+    </message>
+    <message>
+        <source>His rams, his grain, his camp. Marcellus may walk back to Nola and explain.</source>
+        <translation>Koçbaşları, tahılı, kampı. Marcellus yürüyerek Nola&apos;ya dönüp açıklama yapabilir.</translation>
+    </message>
+    <message>
+        <source>Hold Hannibal&apos;s Punic quarter in Campania against three coordinated Roman assaults - Fabius down the Volturnus, the allied wing from the south, and Marcellus&apos;s siege column bringing rams and a tower against the walls.</source>
+        <translation>Hannibal&apos;ın Campania&apos;daki Pön mahallesini üç eşgüdümlü Roma taarruzuna karşı tut - Volturnus boyunca inen Fabius, güneyden müttefik kanadı ve surlara koçbaşları ile bir kule getiren Marcellus&apos;un kuşatma kolu.</translation>
+    </message>
+    <message>
+        <source>Hold discipline. Let the Romans commit at the fords. Mago waits in the brush by the eastern crossing until you call him out.</source>
+        <translation>Disiplini koru. Bırak Romalılar geçitlerde kendilerini adasın. Mago, sen çağırana dek doğu geçidinin yanındaki çalılıkta bekliyor.</translation>
+    </message>
+    <message>
+        <source>Hold the crescent, win both cavalry wings, close the double envelopment, then seize all three Roman camps before their reserves can restore the line.</source>
+        <translation>Hilali tut, iki süvari kanadını da kazan, çifte kuşatmayı kapat, sonra yedekleri hattı onaramadan üç Roma kampını da ele geçir.</translation>
+    </message>
+    <message>
+        <source>I have lost a kingdom once already and won it back with Roman friends. Kill my riders if you can. Rome will give me more.</source>
+        <translation>Bir krallığı zaten bir kez kaybettim ve Romalı dostlarla geri kazandım. Gücün yetiyorsa atlılarımı öldür. Roma bana yenilerini verir.</translation>
+    </message>
+    <message>
+        <source>Into the water. Yes, cold, and before breakfast. A consul&apos;s year ends in March, and I will have my battle before it does.</source>
+        <translation>Suya. Evet, soğuk, hem de kahvaltıdan önce. Bir konsülün yılı mart&apos;ta biter ve muharebemi ondan önce alacağım.</translation>
+    </message>
+    <message>
+        <source>June 217 BC: Hannibal drew the consul Gaius Flaminius along the narrow northern shore of Lake Trasimene. Morning mist lay thick over the lake road while the hilltops stood clear. Gauls and cavalry waited on the heights by the entrance, Balearic slingers and light troops along the ridge, Africans and Iberians on the hill across the exit. The column, strung out in marching order, had no room to deploy. Flaminius was cut down by an Insubrian horseman, Ducarius; some fifteen thousand Romans died, and six thousand who broke out of the van surrendered to Maharbal the next day. Altered here: the column town, the shore camp and Flaminius&apos; post at the basin watch are the game&apos;s, and so is the Sepulcher altar by the lake.</source>
+        <translation>MÖ 217 Haziran: Hannibal konsül Gaius Flaminius&apos;u Trasimeno Gölü&apos;nün dar kuzey kıyısı boyunca peşinden çekti. Tepeler açıkken göl yolunun üzerine kalın bir sabah sisi çökmüştü. Galyalılar ve süvari girişin yanındaki tepelerde, Balear sapancıları ve hafif birlikler sırt boyunca, Afrikalılar ve İberler çıkışın karşısındaki tepede bekliyordu. Yürüyüş düzeninde uzayıp giden kolun açılacak yeri yoktu. Flaminius İnsubr bir atlı olan Ducarius tarafından öldürüldü; on beş bin kadar Romalı can verdi, öncüden yarıp çıkan altı bin kişi ise ertesi gün Maharbal&apos;a teslim oldu. Burada değiştirilen: kol kasabası, kıyı kampı ve Flaminius&apos;un çanak gözetleme noktasındaki mevzisi oyuna aittir; göl kıyısındaki Kabir sunağı da öyle.</translation>
+    </message>
+    <message>
+        <source>Keep Capua, then. I shall come back after the harvest, and after the one following it. I watched Sempronius, Flaminius and Varro hurry to their battles. Patience is cheaper, and it does not require a triumph.</source>
+        <translation>Öyleyse Capua sende kalsın. Hasattan sonra döneceğim, ondan sonraki hasattan sonra da. Sempronius&apos;un, Flaminius&apos;un ve Varro&apos;nun muharebelerine koşuşunu izledim. Sabır daha ucuzdur ve zafer alayı gerektirmez.</translation>
+    </message>
+    <message>
+        <source>Laelius and Masinissa are coming back from the cavalry fight. Collapse one flank before the rear guard arrives.</source>
+        <translation>Laelius ile Masinissa süvari çarpışmasından dönüyor. Artçı gelmeden bir kanadı çökert.</translation>
+    </message>
+    <message>
+        <source>Lake on their left, hills on their right, mist over both. Gauls on the heights by the entrance, slingers along the ridge. Nobody moves until the whole column is inside.</source>
+        <translation>Sollarında göl, sağlarında tepeler, ikisinin üstünde sis. Girişin yanındaki tepelerde Galyalılar, sırt boyunca sapancılar. Bütün kol içeri girene dek kimse kıpırdamasın.</translation>
+    </message>
+    <message>
+        <source>Late 218 BC: Publius Cornelius Scipio crossed the Ticinus with his cavalry and velites to find Hannibal and met Hannibal&apos;s horse coming the other way. Scipio put the javelin-men and his Gallic horse in front; the velites fled through their own squadrons at the first charge without throwing. Hannibal sent his bridled Iberian heavy horse straight at the Roman centre and the Numidians round both wings into the Roman rear. Scipio was wounded and carried out of the fight, by his seventeen-year-old son in the account Polybius heard, and the Romans fell back across the Po to Placentia. Altered: the consular town, the reserve camp and the river-shades are this campaign&apos;s invention, and here the consul&apos;s fall stands for his wounding: his force breaks as it did, and he is carried from the field.</source>
+        <translation>MÖ 218 sonları: Publius Cornelius Scipio, Hannibal&apos;ı bulmak için süvarisi ve velitleriyle Ticinus&apos;u geçti ve karşı yönden gelen Hannibal&apos;ın atlılarıyla karşılaştı. Scipio ciritçileri ve Galyalı atlılarını öne koydu; velitler ilk hücumda cirit atmadan kendi bölüklerinin arasından kaçtı. Hannibal dizginli İber ağır süvarisini doğrudan Roma merkezine, Numidyalıları ise iki kanadın çevresinden Roma&apos;nın gerisine gönderdi. Scipio yaralandı ve Polybios&apos;un duyduğu anlatıya göre on yedi yaşındaki oğlu tarafından çarpışmanın dışına taşındı; Romalılar Po&apos;nun öte yakasına, Placentia&apos;ya çekildi. Değiştirilen: konsül kasabası, yedek kamp ve nehir gölgeleri bu seferin uydurmasıdır; burada konsülün düşüşü yaralanmasını temsil eder: kuvveti tarihte olduğu gibi dağılır ve kendisi alandan taşınır.</translation>
+    </message>
+    <message>
+        <source>Let the Gallic and Iberian crescent take the Roman centre and give ground slowly. Keep both cavalry wings active.</source>
+        <translation>Galyalı ve İber hilali Roma merkezini karşılasın ve yavaş yavaş geri versin. İki süvari kanadını da etkin tut.</translation>
+    </message>
+    <message>
+        <source>Let the centre give. The Gauls and Iberians bow out toward them, the Africans wait on the wings, Hasdrubal has the river. Eighty thousand men walk into a sack as easily as into a field.</source>
+        <translation>Merkez geri versin. Galyalılar ve İberler onlara doğru dışa bükülüyor, Afrikalılar kanatlarda bekliyor, nehir Hasdrubal&apos;da. Seksen bin adam bir çuvala da bir tarlaya girer gibi kolayca girer.</translation>
+    </message>
+    <message>
+        <source>Mist on the lake road, and the augurs whine. My horse threw me; a standard would not come out of the ground. Dig it out, I told them. Hannibal burns Etruria and runs ahead of me, and I will have him before my colleague can share the credit.</source>
+        <translation>Göl yolunda sis var ve kâhinler sızlanıyor. Atım beni üstünden attı; bir sancak yerden çıkmadı. Kazıp çıkarın, dedim. Hannibal Etrurya&apos;yı yakıp önümden kaçıyor ve meslektaşım şana ortak olamadan onu yakalayacağım.</translation>
+    </message>
+    <message>
+        <source>My allies are at your works. Italians, mostly. They fight for Rome because the alternative is fighting Rome, which is a very persuasive argument. I make it often.</source>
+        <translation>Müttefiklerim tabyalarında. Çoğu İtalyalı. Roma için dövüşüyorlar, çünkü alternatif Roma&apos;ya karşı dövüşmek; bu da çok ikna edici bir gerekçe. Ben sık sık dile getiririm.</translation>
+    </message>
+    <message>
+        <source>My camp is yours. Keep it. Numidians were never men for tents, and my riders were never in it. Watch the horizon, Carthaginian, not the palisade.</source>
+        <translation>Ordugâhım senin. Al, senin olsun. Numidyalılar hiçbir zaman çadır adamı olmadı, atlılarım da zaten içinde değildi. Çite değil, ufka bak, Kartacalı.</translation>
+    </message>
+    <message>
+        <source>My horse are riding. I learned war in your camps in Spain; now Syphax is in chains and Numidia is mine, and I ride the way you taught me - around you.</source>
+        <translation>Atlılarım yola çıktı. Savaşı İspanya&apos;da sizin kamplarınızda öğrendim; şimdi Syphax zincirde, Numidya benim ve bana öğrettiğiniz gibi at sürüyorum: etrafınızdan.</translation>
+    </message>
+    <message>
+        <source>My men are at your camp. In fog a soldier strikes whatever is nearest, and I mean every one of them to find you nearest.</source>
+        <translation>Adamlarım ordugâhında. Siste asker en yakınındakine vurur ve her birinin en yakında seni bulmasını istiyorum.</translation>
+    </message>
+    <message>
+        <source>Paullus is dead. He would not take a horse to leave the field. Find his body and bury it with honour; Rome kept the wrong consul.</source>
+        <translation>Paullus öldü. Alandan ayrılmak için bir ata binmeyi reddetti. Cesedini bul ve onurla göm; Roma yanlış konsülü elinde tuttu.</translation>
+    </message>
+    <message>
+        <source>Paullus&apos; reserves are crossing the Aufidus from the northern camp. Close the pocket faster.</source>
+        <translation>Paullus&apos;un yedekleri kuzey kampından Aufidus&apos;u geçiyor. Cebi daha hızlı kapat.</translation>
+    </message>
+    <message>
+        <source>Provision the column for the descent: harvest timber, stone and iron from the pass while Allobroges war bands and Roman-paid camps contest every switchback and roll stones from the heights.</source>
+        <translation>Kolu iniş için donat: Allobrog savaş çeteleri ve Roma&apos;dan para alan kamplar her viraja itiraz edip tepelerden taş yuvarlarken geçitten kereste, taş ve demir topla.</translation>
+    </message>
+    <message>
+        <source>Scipio has drawn his maniples up one behind another, not chequered: straight lanes run through the line, and velites wait in them for the elephants. Keep your centre steady and do not let the elephants be isolated.</source>
+        <translation>Scipio manipüllerini dama düzeninde değil, birbirinin arkasına dizdi: hattın içinden düz koridorlar geçiyor ve velitler o koridorlarda filleri bekliyor. Merkezini sağlam tut ve fillerin yalnız kalmasına izin verme.</translation>
+    </message>
+    <message>
+        <source>Seize Masinissa&apos;s camp to finish the four. He rides for Rome now, with Syphax&apos;s kingdom as his price.</source>
+        <translation>Dördü tamamlamak için Masinissa&apos;nın kampını ele geçir. Artık Roma için at sürüyor; bedeli Syphax&apos;ın krallığı.</translation>
+    </message>
+    <message>
+        <source>Seize the consular town at the centre of the Roman line, behind the legions.</source>
+        <translation>Roma hattının merkezinde, lejyonların gerisindeki konsül kasabasını ele geçir.</translation>
+    </message>
+    <message>
+        <source>Smoke on the far bank, upstream of the bridge. Hanno son of Bomilcar crossed by night on rafts and skins with his Iberians; the Volcae watching the crossing have not seen him.</source>
+        <translation>Karşı kıyıda, köprünün yukarısında duman. Bomilkar oğlu Hanno İberleriyle geceleyin sallar ve tulumlarla karşıya geçti; geçidi gözleyen Volcae onu görmedi.</translation>
+    </message>
+    <message>
+        <source>So the centre gave and the wings closed, and I rode out of it with seventy horse to Venusia. The Senate will come out to thank me for not despairing of the Republic. It is the strangest thanks a man was ever given, and I will take it.</source>
+        <translation>Demek merkez geri verdi, kanatlar kapandı, ben de yetmiş atlıyla oradan çıkıp Venusia&apos;ya gittim. Senato, Cumhuriyet&apos;ten umudumu kesmediğim için bana teşekkür etmeye çıkacak. Bir adama verilmiş en tuhaf teşekkür bu, ve kabul edeceğim.</translation>
+    </message>
+    <message>
+        <source>Spring the ambush on the fogbound shore road and capture both Roman field camps within twenty minutes, before the mist lifts and a cohort escapes the basin.</source>
+        <translation>Sisli kıyı yolunda pusuyu kur ve sis kalkıp bir kohort havzadan kaçmadan yirmi dakika içinde iki Roma sahra kampını da ele geçir.</translation>
+    </message>
+    <message>
+        <source>Stay out of the water. Every Roman who wades it reaches you cold and slow. Mago&apos;s men lie hidden in the wood east of the second crossing; loose them on the Roman rear once the line is engaged.</source>
+        <translation>Sudan uzak dur. Suya giren her Romalı sana üşümüş ve ağır ulaşır. Mago&apos;nun adamları ikinci geçidin doğusundaki ormanda gizleniyor; hat çarpışmaya girince onları Roma&apos;nın gerisine sal.</translation>
+    </message>
+    <message>
+        <source>Strike now. Take Flaminius at the basin watch before the column finds your camp.</source>
+        <translation>Şimdi vur. Kol kampını bulmadan Flaminius&apos;u çanak gözetleme noktasında yakala.</translation>
+    </message>
+    <message>
+        <source>The African dies in his own fog by his own lake. Tell the Senate it was done by the new man they never wanted for consul.</source>
+        <translation>Afrikalı kendi sisinde, kendi gölünün kıyısında ölüyor. Senato&apos;ya söyleyin: bu işi, konsül olmasını hiç istemedikleri yeni adam yaptı.</translation>
+    </message>
+    <message>
+        <source>The Aufidus camp. So the ring closes. Tell the Senate to fortify the city. Tell Fabius I kept his counsel to the end. I stay here with my men.</source>
+        <translation>Aufidus ordugâhı. Demek halka kapanıyor. Senato&apos;ya şehri tahkim etmesini söyleyin. Fabius&apos;a da öğüdüne sonuna dek uyduğumu söyleyin. Ben burada, adamlarımın yanında kalıyorum.</translation>
+    </message>
+    <message>
+        <source>The Roman column enters the corridor in marching order, blind in the mist. Wait for full commitment.</source>
+        <translation>Roma kolu yürüyüş düzeninde, siste kör hâlde koridora giriyor. Tam olarak girmesini bekle.</translation>
+    </message>
+    <message>
+        <source>The Roman horse is with me by the river. Varro wanted this battle; I will fight it properly all the same. Close up on the bank. Do not let Hasdrubal through.</source>
+        <translation>Roma süvarisi nehrin yanında benimle. Bu muharebeyi Varro istedi; ben yine de onu gereğince yapacağım. Kıyıda safları sıklaştırın. Hasdrubal&apos;ı geçirmeyin.</translation>
+    </message>
+    <message>
+        <source>The Romans are baited into the winter river and wade it cold and unfed against a line of Gauls, Africans and Balearic slingers, then are punished by Mago&apos;s concealed force; the defense becomes an assault on a complete winter camp.</source>
+        <translation>Romalılar kış nehrine çekilir, Galyalılardan, Afrikalılardan ve Balear sapancılarından oluşan bir hatta karşı suyu üşümüş ve aç karnına geçer, ardından Mago&apos;nun gizli kuvvetiyle cezalandırılır; savunma eksiksiz bir kış kampına taarruza dönüşür.</translation>
+    </message>
+    <message>
+        <source>The Volturnus legion is spent. I have others. I have always had others. Marcellus is the sword; I am only the shield, and a shield does not need to win. It needs to still be there.</source>
+        <translation>Volturnus lejyonu tükendi. Başkaları da var bende. Her zaman başkaları vardı. Kılıç Marcellus&apos;tur; ben yalnızca kalkanım ve bir kalkanın kazanması gerekmez. Hâlâ orada olması gerekir.</translation>
+    </message>
+    <message>
+        <source>The allied horse is down to a handful and Hasdrubal&apos;s riders are behind it. There is a road to Venusia. A consul who lives can raise another army; a dead one only gets a statue.</source>
+        <translation>Müttefik süvarisinden bir avuç kaldı ve Hasdrubal&apos;ın atlıları arkasında. Venusia&apos;ya giden bir yol var. Yaşayan bir konsül yeni bir ordu toplayabilir; ölü bir konsüle yalnızca bir heykel düşer.</translation>
+    </message>
+    <message>
+        <source>The allied wing has lost its consul. Varro will not see Venusia. Turn that wing inward.</source>
+        <translation>Müttefik kanadı konsülünü kaybetti. Varro Venusia&apos;yı görmeyecek. O kanadı içeri çevir.</translation>
+    </message>
+    <message>
+        <source>The centre gives way once the wings are wrapped around it. Put the Gauls and Iberians in Convex Crescent from the Formation panel: the centre bows out toward the enemy and gives ground under pressure while the Africans on the wings hold, as Hannibal&apos;s did.</source>
+        <translation>Kanatlar çevresine dolandığında merkez çöker. Düzen panelinden Galyalıları ve İberleri Dışbükey hilal düzenine sok: merkez düşmana doğru dışa bükülür ve baskı altında geri verirken kanatlardaki Afrikalılar dayanır, tıpkı Hannibal&apos;ınkiler gibi.</translation>
+    </message>
+    <message>
+        <source>The centre is the strongest camp; bring the elephants up first, and expect the velites in the lanes to turn them.</source>
+        <translation>Merkez en güçlü kamptır; önce filleri çıkar ve koridorlardaki velitlerin onları geri çevirmesini bekle.</translation>
+    </message>
+    <message>
+        <source>The column is nearly gone and the Gauls are on the road. Let the Insubres come for me. I broke them once by the Addua; they will not take a consul alive.</source>
+        <translation>Kol neredeyse tükendi ve Galyalılar yolda. Bırakın İnsubrlar gelsin bana. Onları bir kez Addua kıyısında kırdım; bir konsülü sağ ele geçiremezler.</translation>
+    </message>
+    <message>
+        <source>The column is on the lake road in order of march, and it does not stop for mist. Close up and push on. Hannibal is ahead of us, not above us.</source>
+        <translation>Kol yürüyüş düzeninde göl yolunda ve sis için durmaz. Safları sıklaştırın ve ilerleyin. Hannibal önümüzde, tepemizde değil.</translation>
+    </message>
+    <message>
+        <source>The consul is down, and a boy has him across a saddle and is cutting a road out for him. Let them go. The screen has lost its head; take the town.</source>
+        <translation>Konsül düştü; bir oğlan onu eyerinin üstüne almış, ona yol açıyor. Bırak gitsinler. Perde başını kaybetti; kasabayı al.</translation>
+    </message>
+    <message>
+        <source>The consular town. Varro is not in it; Varro is out on the left with the allied horse, being brave at other people. Enjoy the walls. We never needed them.</source>
+        <translation>Konsül kasabası. Varro içinde değil; Varro solda müttefik süvarisinin başında, başkaları üzerinden cesaret gösteriyor. Surların keyfini çıkar. Bizim onlara hiç ihtiyacımız olmadı.</translation>
+    </message>
+    <message>
+        <source>The crossing is a running battle against terrain, local resistance, and Roman influence: Gallic ambushes hold the narrows and stones wait above the track. Sepulcher grave-lights remain a dangerous side path rather than the campaign&apos;s main enemy.</source>
+        <translation>Geçiş; arazi, yerel direniş ve Roma nüfuzuna karşı süren bir savaştır: Galya pusuları dar geçitleri tutar, taşlar patikanın üstünde bekler. Kabir&apos;in mezar ışıkları, seferin ana düşmanı değil, tehlikeli bir yan yol olarak kalır.</translation>
+    </message>
+    <message>
+        <source>The ford below the old wreck is shallow in August. With the river camp taken there is nowhere left for the legions to reform.</source>
+        <translation>Eski enkazın aşağısındaki geçit ağustosta sığdır. Nehir kampı alındığında lejyonların yeniden dizileceği hiçbir yer kalmaz.</translation>
+    </message>
+    <message>
+        <source>The last of the legions is in the water. Everything Rome has north of the Apennines is coming at you wet. Hold this and you hold Italy for a winter. You will not hold it.</source>
+        <translation>Son lejyonlar suyun içinde. Roma&apos;nın Apeninler&apos;in kuzeyinde ne varsa ıslak hâlde üstüne geliyor. Bunu tut, İtalya&apos;yı bir kış boyunca tutmuş olursun. Tutamayacaksın.</translation>
+    </message>
+    <message>
+        <source>The legions of the centre</source>
+        <translation>Merkezin lejyonları</translation>
+    </message>
+    <message>
+        <source>The mist lifted a little early for you. The Senate called me reckless; let them call this luck. The lake keeps what it is given, and the thing beneath the altar past the eastern stream is not particular about whose it is.</source>
+        <translation>Sis senin için biraz erken kalktı. Senato bana pervasız dedi; buna da şans desinler. Göl kendisine verileni saklar, doğudaki derenin ötesindeki sunağın altında yatan şey de kimin olduğuna pek aldırmaz.</translation>
+    </message>
+    <message>
+        <source>The quarter holds when the last column is dead in the streets. Rams batter walls and gates, not men: kill them before they reach the stones.</source>
+        <translation>Mahalle, son kol sokaklarda öldüğünde tutulmuş olur. Koçbaşları adamları değil, surları ve kapıları döver: taşlara ulaşmadan onları yok et.</translation>
+    </message>
+    <message>
+        <source>The rearguard camp falls. I held it the way the triarii hold everything - long enough, and no longer. Scipio will manage without my tents.</source>
+        <translation>Artçı ordugâhı düşüyor. Onu triarii&apos;nin her şeyi tuttuğu gibi tuttum: yetecek kadar, bir an fazla değil. Scipio benim çadırlarım olmadan da idare eder.</translation>
+    </message>
+    <message>
+        <source>The river runs north to south across the middle of the valley; the nearest crossing is due east of camp. Hanno&apos;s Iberians wait upstream on the far bank - strike the Volcae from both sides at once.</source>
+        <translation>Nehir vadinin ortasından kuzeyden güneye akar; en yakın geçit kampın tam doğusunda. Hanno&apos;nun İberleri karşı kıyıda, nehrin yukarısında bekliyor - Volcae&apos;ye iki yandan aynı anda vur.</translation>
+    </message>
+    <message>
+        <source>The road runs east along the lake. Bring the Gauls down off the western heights to shut its mouth, and the column has only one way left to go.</source>
+        <translation>Yol göl boyunca doğuya uzanır. Galyalıları batıdaki tepelerden indirip ağzını kapat, kolun gidebileceği tek bir yol kalsın.</translation>
+    </message>
+    <message>
+        <source>The screen is coming across the flats. Javelin-men and the Gallic horse in front, my own horse behind them, the usual arrangement. Please try to stand still; it makes the reports so much tidier.</source>
+        <translation>Perde düzlüklerin üzerinden geliyor. Önde ciritçiler ve Galyalı atlılar, arkalarında benim atlılarım, her zamanki düzen. Lütfen kıpırdamamaya çalış; raporlar çok daha derli toplu oluyor.</translation>
+    </message>
+    <message>
+        <source>The siege column is at the run: rams in front, the tower behind. I held Nola against you three times. Capua opened her gates to you; I will open them again from the other side.</source>
+        <translation>Kuşatma kolu koşar adım geliyor: koçbaşları önde, kule arkada. Nola&apos;yı sana karşı üç kez tuttum. Capua kapılarını sana açtı; ben onları öbür taraftan yeniden açacağım.</translation>
+    </message>
+    <message>
+        <source>Their camps fall neutral once their commander is dead. Beyond the first pass the track narrows under scree, and the Allobroges keep stones on the heights: send one company ahead to spring the fall, or rush the narrows in strength.</source>
+        <translation>Komutanları ölünce kampları tarafsız düşer. İlk geçidin ötesinde patika taş yığıntılarının altında daralır ve Allobroglar tepelerde taş bekletir: düşüşü tetiklemek için bir bölüğü öne gönder ya da dar geçide tüm gücünle dal.</translation>
+    </message>
+    <message>
+        <source>There. Scipio said wait, and Scipio may say what he likes now. The river keeps whatever it is given, and your elephants went in and not all of them came out. Rome has never needed a large river.</source>
+        <translation>İşte. Scipio bekle dedi; Scipio artık ne isterse söyleyebilir. Nehir kendisine verileni tutar; fillerin girdi ve hepsi çıkmadı. Roma&apos;nın hiçbir zaman büyük bir nehre ihtiyacı olmadı.</translation>
+    </message>
+    <message>
+        <source>Three Roman columns are on the roads: Fabius down the Volturnus, the allied wing from the south, Marcellus&apos;s siege column out of the eastern works with rams and a tower. The first assault reaches the walls within the minute.</source>
+        <translation>Yollarda üç Roma kolu var: Volturnus boyunca inen Fabius, güneyden müttefik kanadı, doğudaki tabyalardan koçbaşları ve bir kuleyle çıkan Marcellus&apos;un kuşatma kolu. İlk saldırı bir dakika içinde surlara ulaşır.</translation>
+    </message>
+    <message>
+        <source>Three times you came at Nola and three times you went away. Burn the engines if you can. Rome has a habit of sending me back.</source>
+        <translation>Üç kez Nola&apos;ya geldin, üç kez çekip gittin. Gücün yetiyorsa makineleri yak. Roma&apos;nın beni geri gönderme alışkanlığı vardır.</translation>
+    </message>
+    <message>
+        <source>Turn the Roman allied camp south of the field, where Varro leads the allied horse.</source>
+        <translation>Meydanın güneyinde, Varro&apos;nun müttefik süvarisini yönettiği Roma müttefik kampını çevir.</translation>
+    </message>
+    <message>
+        <source>Write it down as the weather. Sleet, a river in spate, a morning without bread. Ten thousand of mine cut through your Gauls and walked on to Placentia, and Rome will hear that the storm robbed us, not you.</source>
+        <translation>Havaya yaz bunu. Sulusepken, taşkın bir nehir, ekmeksiz bir sabah. Benim on bin adamım Galyalılarını yarıp Placentia&apos;ya yürüdü ve Roma, zaferi bizden senin değil, fırtınanın çaldığını duyacak.</translation>
+    </message>
+    <message>
+        <source>You have my marching town. I built it in a fog and never looked back, because a consul of the people does not look back. Keep it. The column will be through your hills before you have counted the huts.</source>
+        <translation>Yürüyüş kasabam sende. Onu siste kurdum ve arkama hiç bakmadım, çünkü halkın konsülü arkasına bakmaz. Al, senin olsun. Sen kulübeleri sayana kadar kol tepelerini çoktan geçmiş olacak.</translation>
+    </message>
+    <message>
+        <source>You have the allied camp. Socii - allies. I promised them land for this war, and you have just handed them the first piece of it face down.</source>
+        <translation>Müttefik ordugâhı sende. Socii; müttefikler. Bu savaş için onlara toprak sözü verdim, sen de az önce ilk parçasını yüzüstü teslim ettin.</translation>
+    </message>
+    <message>
+        <source>Your centre is going down. Of course it is: you put the Gauls there, and Gauls are for spending. My legions will walk through the hole by noon.</source>
+        <translation>Merkezin çöküyor. Elbette çöküyor: Galyalıları oraya koydun ve Galyalılar harcanmak içindir. Lejyonlarım öğleye kadar o gedikten geçip gidecek.</translation>
+    </message>
+    <message>
+        <source>Your men are dying too. Every one of them is a Carthaginian I will not have to chase back to Africa.</source>
+        <translation>Senin adamların da ölüyor. Her biri, Afrika&apos;ya kadar kovalamak zorunda kalmayacağım bir Kartacalı.</translation>
     </message>
 </context>
 <context>

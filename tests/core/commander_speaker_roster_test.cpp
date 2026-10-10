@@ -172,3 +172,33 @@ TEST_F(CommanderSpeakerRosterTest, AnAiWithNoNationAndNoUnitsIsNotGuessedAsRoman
 }
 
 } // namespace
+
+TEST_F(CommanderSpeakerRosterTest, ACameoLedOwnerCarriesTheCameoId) {
+  Engine::Core::World world;
+  spawn(world,
+        k_enemy,
+        Game::Units::SpawnType::RomanVeteranConsul,
+        Game::Systems::NationID::RomanRepublic,
+        true);
+  for (auto [entity_id, commander] : world.view<Engine::Core::CommanderComponent>()) {
+    (void)entity_id;
+    commander.commander_id = "roman_sempronius_longus";
+  }
+  spawn(world,
+        k_headless_enemy,
+        Game::Units::SpawnType::RomanLegionOrganizer,
+        Game::Systems::NationID::RomanRepublic,
+        true);
+
+  const auto roster = Game::Mission::build_commander_speaker_roster(
+      world, Game::Systems::OwnerRegistry::instance(), m_nations, k_local);
+  ASSERT_GE(roster.size(), 2U);
+  for (const auto& speaker : roster) {
+    if (speaker.owner_id == k_enemy) {
+      EXPECT_EQ(speaker.commander_id, QStringLiteral("roman_sempronius_longus"));
+    } else {
+      EXPECT_TRUE(speaker.commander_id.isEmpty())
+          << "a playable commander keeps its own name";
+    }
+  }
+}

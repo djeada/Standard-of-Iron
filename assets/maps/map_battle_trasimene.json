@@ -140,6 +140,7 @@
     "coord_system": "grid",
     "environment": {
         "day_length_seconds": 5760,
+        "fog_density": 0.016,
         "lighting_profile": "mediterranean_summer",
         "start_time": 5.5,
         "time_mode": "continuous"
@@ -1777,6 +1778,7 @@
             "z": 270.0
         },
         {
+            "commander_id": "roman_gaius_flaminius",
             "max_population": -1,
             "nation": "roman_republic",
             "player_id": 2,
@@ -8282,6 +8284,64 @@
             "rows": 1,
             "x": 583,
             "z": 175
+        }
+    ],
+    "fog_zones": [
+        {
+            "x": 72,
+            "z": 172.0,
+            "width": 76,
+            "height": 60,
+            "density": 0.4
+        },
+        {
+            "x": 147,
+            "z": 165.2,
+            "width": 76,
+            "height": 60,
+            "density": 0.5
+        },
+        {
+            "x": 223,
+            "z": 158.3,
+            "width": 76,
+            "height": 60,
+            "density": 0.5
+        },
+        {
+            "x": 298,
+            "z": 151.5,
+            "width": 76,
+            "height": 60,
+            "density": 0.5
+        },
+        {
+            "x": 374,
+            "z": 144.5,
+            "width": 76,
+            "height": 60,
+            "density": 0.5
+        },
+        {
+            "x": 449,
+            "z": 137.7,
+            "width": 76,
+            "height": 60,
+            "density": 0.5
+        },
+        {
+            "x": 525,
+            "z": 130.8,
+            "width": 76,
+            "height": 60,
+            "density": 0.5
+        },
+        {
+            "x": 600,
+            "z": 124.0,
+            "width": 76,
+            "height": 60,
+            "density": 0.4
         }
     ]
 }

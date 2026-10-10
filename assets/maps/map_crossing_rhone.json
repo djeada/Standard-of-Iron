@@ -6006,6 +6006,50 @@
             "type": "spearman",
             "x": 305.36,
             "z": 176
+        },
+        {
+            "behavior": "guard",
+            "guard_radius": 12,
+            "id": "rhone_volcae_bridgehead_01",
+            "max_population": -1,
+            "nation": "gauls",
+            "player_id": 2,
+            "type": "swordsman",
+            "x": 264,
+            "z": 192
+        },
+        {
+            "behavior": "guard",
+            "guard_radius": 12,
+            "id": "rhone_volcae_bridgehead_02",
+            "max_population": -1,
+            "nation": "gauls",
+            "player_id": 2,
+            "type": "swordsman",
+            "x": 266,
+            "z": 201
+        },
+        {
+            "behavior": "guard",
+            "guard_radius": 14,
+            "id": "rhone_volcae_horse_01",
+            "max_population": -1,
+            "nation": "gauls",
+            "player_id": 2,
+            "type": "horse_swordsman",
+            "x": 273,
+            "z": 193
+        },
+        {
+            "behavior": "guard",
+            "guard_radius": 12,
+            "id": "rhone_volcae_landing_01",
+            "max_population": -1,
+            "nation": "gauls",
+            "player_id": 3,
+            "type": "swordsman",
+            "x": 262,
+            "z": 280
         }
     ],
     "starting_resources": {

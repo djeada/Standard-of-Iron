@@ -4,7 +4,7 @@
   "summary": "First battle on Italian soil. Win the cavalry duel, then seize the Roman reserve camp before fresh reinforcements regroup.",
   "teaching_goal": "High ground doubles a bowman and hardens him against what shoots back. The ridge over the Roman camp is worth more than the extra squadron you would have spent the same minutes recruiting.",
   "narrative_intent": "Hannibal's first Italian victory is a test of tempo and cavalry control. Ford-shades complicate the flanks but do not replace the Roman enemy.",
-  "historical_context": "218 BC: the Ticinus was primarily a cavalry engagement between reconnaissance forces. Roman consul Publius Cornelius Scipio was wounded and rescued during the retreat; the camp assault is a plausible dark-fantasy extension of that pursuit.",
+  "historical_context": "Late 218 BC: Publius Cornelius Scipio crossed the Ticinus with his cavalry and velites to find Hannibal and met Hannibal's horse coming the other way. Scipio put the javelin-men and his Gallic horse in front; the velites fled through their own squadrons at the first charge without throwing. Hannibal sent his bridled Iberian heavy horse straight at the Roman centre and the Numidians round both wings into the Roman rear. Scipio was wounded and carried out of the fight, by his seventeen-year-old son in the account Polybius heard, and the Romans fell back across the Po to Placentia. Altered: the consular town, the reserve camp and the river-shades are this campaign's invention, and here the consul's fall stands for his wounding: his force breaks as it did, and he is carried from the field.",
   "terrain_type": "po_valley_river_plain",
   "map_path": ":/assets/maps/map_battle_ticino.json",
   "player_setup": {
@@ -14,7 +14,17 @@
     "historical_commanders": [
       "carthage_maharbal"
     ],
-    "starting_units": [],
+    "starting_units": [
+      {
+        "type": "horse_swordsman",
+        "count": 2,
+        "nation": "iberians",
+        "position": {
+          "x": 170,
+          "z": 262
+        }
+      }
+    ],
     "starting_buildings": [],
     "starting_resources": {
       "gold": 550,
@@ -55,6 +65,15 @@
             {
               "type": "horse_swordsman",
               "count": 3
+            },
+            {
+              "type": "velites",
+              "count": 2
+            },
+            {
+              "type": "horse_swordsman",
+              "count": 1,
+              "nation": "gauls"
             }
           ],
           "entry_point": {
@@ -200,7 +219,7 @@
       "required_count": 1,
       "title": "Take the consular town",
       "description": "Hold the gate yard of Scipio's forward town.",
-      "hint": "Cavalry reaches it first; hold the yard until the standard changes.",
+      "hint": "Cavalry reaches it first. The javelin-men screening the gate break if you charge them; hold the yard until the standard changes.",
       "target": {
         "x": 430,
         "z": 300
@@ -348,7 +367,7 @@
         "owner_id": 2,
         "delay": 0.5
       },
-      "text": "The screen is coming across the flats. Spears in front, horse on the wings, the usual arrangement. Please try to stand still; it makes the reports so much tidier.",
+      "text": "The screen is coming across the flats. Javelin-men and the Gallic horse in front, my own horse behind them, the usual arrangement. Please try to stand still; it makes the reports so much tidier.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 60
@@ -420,7 +439,7 @@
         "type": "near_defeat",
         "owner_id": 2
       },
-      "text": "A few of the screen left, and me. My son is somewhere on this field; if he finds me, he will be insufferable about it for the rest of his life.",
+      "text": "A few of the screen left, and me, with a hole in my side I would rather not look at. My son is somewhere on this field; if he finds me, he will be insufferable about it for the rest of his life.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 80
@@ -447,6 +466,21 @@
         "final_wave": false
       },
       "text": "That was the screen. Put the archers on the ridge before the reserve remembers it is there.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 80
+    },
+    {
+      "id": "ticino_hannibal_consul_carried_off",
+      "speaker": "carthage_sword_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "commander_defeated",
+        "owner_id": 2,
+        "by_owner_id": "player",
+        "delay": 6.0
+      },
+      "text": "The consul is down, and a boy has him across a saddle and is cutting a road out for him. Let them go. The screen has lost its head; take the town.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 80

@@ -2,6 +2,7 @@
 #include <gtest/gtest.h>
 #include <set>
 #include <string>
+#include <tuple>
 
 #include "core/component_combat.h"
 #include "core/component_commander.h"
@@ -773,11 +774,14 @@ TEST_F(CommanderDuelTest, CommanderArrowsCarryTheCommanderStyle) {
   int routine = 0;
   int signature = 0;
   int other = 0;
-  std::set<const Game::Systems::Projectile*> seen;
+  // A spent arrow's storage is reused by the next one loosed, so an address
+  // alone does not tell two arrows apart; the launch point does.
+  std::set<std::tuple<const Game::Systems::Projectile*, float, float, float>> seen;
   for (int tick = 0; tick < 400; ++tick) {
     world.update(0.05F);
     for (auto const& projectile : projectiles->projectiles()) {
-      if (!seen.insert(projectile.get()).second) {
+      QVector3D const start = projectile->get_start();
+      if (!seen.emplace(projectile.get(), start.x(), start.y(), start.z()).second) {
         continue;
       }
       auto const* arrow =

@@ -1655,6 +1655,46 @@
             "type": "archer",
             "x": 62,
             "z": 226
+        },
+        {
+            "behavior": "hold",
+            "id": "alps_allobroges_narrows_01",
+            "max_population": -1,
+            "nation": "gauls",
+            "player_id": 2,
+            "type": "swordsman",
+            "x": 122,
+            "z": 262
+        },
+        {
+            "behavior": "hold",
+            "id": "alps_allobroges_narrows_02",
+            "max_population": -1,
+            "nation": "gauls",
+            "player_id": 2,
+            "type": "swordsman",
+            "x": 126,
+            "z": 256
+        },
+        {
+            "behavior": "hold",
+            "id": "alps_allobroges_summit_01",
+            "max_population": -1,
+            "nation": "gauls",
+            "player_id": 3,
+            "type": "swordsman",
+            "x": 256,
+            "z": 404
+        },
+        {
+            "behavior": "hold",
+            "id": "alps_allobroges_summit_02",
+            "max_population": -1,
+            "nation": "gauls",
+            "player_id": 3,
+            "type": "swordsman",
+            "x": 262,
+            "z": 408
         }
     ],
     "starting_resources": {
@@ -8171,6 +8211,48 @@
             "width": 41.2,
             "x": 283.9,
             "z": 16.7
+        }
+    ],
+    "rockfall_traps": [
+        {
+            "id": "alps_narrows_rockfall",
+            "release": [
+                105,
+                263
+            ],
+            "target": [
+                103,
+                252
+            ],
+            "owner_id": 2,
+            "trigger": "ai",
+            "radius": 8,
+            "boulders": 5,
+            "spread": 6,
+            "interval": 0.4,
+            "damage": 30,
+            "casualty_fraction": 0.06,
+            "rearm": 0
+        },
+        {
+            "id": "alps_summit_rockfall",
+            "release": [
+                240,
+                428
+            ],
+            "target": [
+                242,
+                396
+            ],
+            "owner_id": 3,
+            "trigger": "ai",
+            "radius": 9,
+            "boulders": 5,
+            "spread": 6,
+            "interval": 0.4,
+            "damage": 30,
+            "casualty_fraction": 0.06,
+            "rearm": 0
         }
     ]
 }

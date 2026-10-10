@@ -69,6 +69,21 @@ auto is_muted(const CommanderVoicesPolicy& policy,
          policy.muted_lines.end();
 }
 
+// A line spoken for an owner whose commander is a historical cameo carries
+// the cameo's own name and role rather than its body's.
+void name_cue_after_speaker(CommanderMessageCue& cue, const CommanderSpeaker& speaker) {
+  if (speaker.commander_id.isEmpty()) {
+    return;
+  }
+  const auto* cameo =
+      Game::Units::historical_commander_definition(speaker.commander_id.toStdString());
+  if (cameo == nullptr) {
+    return;
+  }
+  cue.speaker_name = QString::fromStdString(cameo->display_name);
+  cue.speaker_role = QString::fromStdString(cameo->battlefield_role);
+}
+
 } // namespace
 
 CommanderMessageDirector::~CommanderMessageDirector() {
@@ -161,6 +176,7 @@ void CommanderMessageDirector::add_mission_rules(
         rule.speaker_owner_id = speaker.owner_id;
         rule.cue.speaker_owner_id = speaker.owner_id;
         rule.cue.relationship = commander_relationship_name(speaker.relationship);
+        name_cue_after_speaker(rule.cue, speaker);
         break;
       }
     }
@@ -203,6 +219,7 @@ void CommanderMessageDirector::add_bank_rules(const CommanderMessageScript& scri
         rule.cue.speaker_owner_id = speaker.owner_id;
         rule.cue.relationship = commander_relationship_name(speaker.relationship);
         rule.cue.text_context = Game::Util::k_commander_voices_context;
+        name_cue_after_speaker(rule.cue, speaker);
         m_rules.push_back(std::move(rule));
       }
     }
