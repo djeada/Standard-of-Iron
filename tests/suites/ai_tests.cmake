@@ -6,6 +6,7 @@ add_executable(
     systems/ai_system_test.cpp
     systems/ai_scouted_intel_test.cpp
     systems/ai_stall_recovery_test.cpp
+    systems/ford_ai_crossing_test.cpp
     systems/ai_worker_pool_test.cpp
     systems/ai_commander_doctrine_test.cpp
     systems/ai_doctrine_catalog_test.cpp

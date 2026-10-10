@@ -20,8 +20,6 @@
 #include "game/save/entity_codec.h"
 #include "game/save/serialization.h"
 #include "game/session/session_context.h"
-#include "game/systems/ai_system/ai_command_applier.h"
-#include "game/systems/ai_system/ai_types.h"
 #include "game/systems/default_content.h"
 #include "game/systems/ford_rules.h"
 #include "game/systems/ford_system.h"
@@ -31,7 +29,6 @@
 #include "game/systems/navigation/nav_grid.h"
 #include "game/systems/navigation/pathfinding.h"
 #include "game/systems/owner_registry.h"
-#include "game/systems/runtime_system_registry.h"
 #include "units/spawn_type.h"
 
 namespace {
@@ -451,52 +448,4 @@ TEST_F(FordTest, FordSystemTagsWadersAndTheChillLingers) {
   }
   EXPECT_EQ(world.try_get<Engine::Core::WadingComponent>(wader->get_id()), nullptr)
       << "a dried-off unit sheds the component";
-}
-
-TEST_F(FordTest, AnAiPlannerMoveWadesAcrossTheFord) {
-  auto map = make_river_map();
-  map.fords = {ford_at(-12.0F, 10.0F)};
-  build_navigation(map);
-
-  Engine::Core::World world;
-  Game::Systems::register_runtime_systems(world);
-  std::vector<Engine::Core::EntityID> squad;
-  for (int index = 0; index < 4; ++index) {
-    auto* entity = add_unit(
-        world, QVector3D(-16.0F, 0.0F, 8.0F + static_cast<float>(index) * 1.5F), 2);
-    entity->add_component<Engine::Core::AIControlledComponent>();
-    squad.push_back(entity->get_id());
-  }
-
-  QVector3D const target(16.0F, 0.0F, 8.0F);
-  Game::Systems::AI::AICommand command;
-  command.type = Game::Systems::AI::AICommandType::MoveUnits;
-  command.units = squad;
-  command.move_target_x = {target.x()};
-  command.move_target_y = {0.0F};
-  command.move_target_z = {target.z()};
-  Game::Systems::AI::AICommandApplier::apply(world, 2, {command});
-
-  bool waded = false;
-  int arrived = 0;
-  for (int tick = 0; tick < 30 * 90 && arrived < static_cast<int>(squad.size());
-       ++tick) {
-    world.update(k_tick);
-    arrived = 0;
-    for (auto const id : squad) {
-      if (auto const* wading = world.try_get<Engine::Core::WadingComponent>(id);
-          wading != nullptr && wading->in_water()) {
-        waded = true;
-      }
-      auto const* transform = world.try_get<Engine::Core::TransformComponent>(id);
-      if (transform != nullptr && transform->position.x > 6.0F &&
-          std::hypot(transform->position.x - target.x(),
-                     transform->position.z - target.z()) < 8.0F) {
-        ++arrived;
-      }
-    }
-  }
-  EXPECT_TRUE(waded) << "the AI's troops took the ford";
-  EXPECT_GE(arrived, static_cast<int>(squad.size()) - 1)
-      << "the AI's squad reached the far bank";
 }

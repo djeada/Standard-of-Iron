@@ -25,9 +25,9 @@ constexpr float k_ford_lateral_slack = 1.5F;
 // How far into the water the bed takes to fall from the bank to the full
 // ford depth. Scaled by the river, clamped so a narrow stream still gets a
 // shelf to wade in on and a wide river does not drop off a cliff.
-constexpr float k_ford_shelf_fraction = 0.45F;
-constexpr float k_ford_min_shelf = 0.8F;
-constexpr float k_ford_max_shelf = 3.0F;
+constexpr float k_ford_shelf_fraction = 0.22F;
+constexpr float k_ford_min_shelf = 0.6F;
+constexpr float k_ford_max_shelf = 1.6F;
 
 // A man counts as wading once the water is over his ankles.
 constexpr float k_min_wading_depth = 0.05F;
