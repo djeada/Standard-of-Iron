@@ -66,6 +66,7 @@ boundaries between `game/`, `render/`, `app/`, `ui/`, `tools/` and `tests/`.
 - [PERFORMANCE.md](PERFORMANCE.md) — profiling and budgets
 - [BATTLEFIELD_CAPTURE.md](BATTLEFIELD_CAPTURE.md) — battlefield capture runner
 - [PROMO_CAPTURE.md](PROMO_CAPTURE.md), [TRAILER.md](TRAILER.md) — promo and trailer capture
+- [DOCUMENTARY.md](DOCUMENTARY.md) — documentary post-production: narration, series graphics, 4K delivery, reels, score plan
 
 ## Save and replay
 
