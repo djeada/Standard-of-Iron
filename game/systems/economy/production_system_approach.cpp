@@ -1,3 +1,5 @@
+#include <cstdio>
+#include <cstdlib>
 #include "production_system_approach.h"
 
 #include <QVector3D>
@@ -233,6 +235,7 @@ void give_up_on_site(Engine::Core::World& world,
   builder.bypass_movement_active = false;
   reset_site_approach(builder);
   clear_builder_task_target(world, &builder);
+  if (std::getenv("SOI_TMP_BUILD") != nullptr) { std::fprintf(stderr, "FAULT UNREACHABLE %s at %.1f,%.1f\n", builder.product_type.c_str(), builder.construction_site_x, builder.construction_site_z); }
   builder.report_fault(Engine::Core::BuilderTaskFault::Unreachable);
 }
 

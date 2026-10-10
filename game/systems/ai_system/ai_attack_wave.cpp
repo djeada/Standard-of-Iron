@@ -1,3 +1,5 @@
+#include <cstdio>
+#include <cstdlib>
 #include "ai_attack_wave.h"
 
 #include <QDebug>
@@ -511,6 +513,7 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
                                static_cast<float>(std::max(1, wave.initial_size)))));
     if (remaining <= spent_threshold) {
       wave.committed = false;
+      if (std::getenv("SOI_TMP_BUILD") != nullptr) { std::fprintf(stderr, "WAVE-END-SPENT t=%.0f p%d\n" , snapshot.game_time, context.player_id); }
       wave.members.clear();
       wave.target_id = 0;
       wave.ended_at = snapshot.game_time;
@@ -530,6 +533,7 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
     if (snapshot.game_time - std::max(wave.progress_at, wave.committed_at) >
         k_wave_stall_seconds) {
       wave.committed = false;
+      if (std::getenv("SOI_TMP_BUILD") != nullptr) { std::fprintf(stderr, "WAVE-END-STALL t=%.0f p%d\n" , snapshot.game_time, context.player_id); }
       wave.members.clear();
       wave.target_id = 0;
       wave.best_gap = -1.0F;
@@ -565,6 +569,11 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
         wave.target_id = 0;
         wave.ended_at = snapshot.game_time;
         return;
+      }
+      if (std::getenv("SOI_TMP_BUILD") != nullptr) {
+        std::fprintf(stderr, "WAVE-RETARGET t=%.0f p%d %llu -> %llu owner %d\n", snapshot.game_time,
+                     context.player_id, static_cast<unsigned long long>(wave.target_id),
+                     static_cast<unsigned long long>(target->id), target->owner_id);
       }
       wave.target_id = target->id;
     }
@@ -720,6 +729,11 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
   wave.progress_at = snapshot.game_time;
   wave.assembling = false;
   wave.ready_since = -1000.0F;
+  if (std::getenv("SOI_TMP_BUILD") != nullptr) {
+    std::fprintf(stderr, "WAVE-COMMIT t=%.0f p%d target %llu members %zu at %.1f,%.1f\n", snapshot.game_time,
+                 context.player_id, static_cast<unsigned long long>(wave.target_id), wave.members.size(),
+                 wave.target_x, wave.target_z);
+  }
 }
 
 auto wave_objective(const AISnapshot& snapshot,

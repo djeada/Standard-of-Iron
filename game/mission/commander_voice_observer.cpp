@@ -303,9 +303,12 @@ void CommanderVoiceObserver::poll(Engine::Core::World& world,
         plan->committed_at <= state.last_committed_at) {
       continue;
     }
-    state.last_committed_at = plan->committed_at;
     const auto* target = world.try_get<Engine::Core::UnitComponent>(plan->target_id);
-    if (target == nullptr || target->owner_id == owner) {
+    if (target == nullptr) {
+      continue;
+    }
+    state.last_committed_at = plan->committed_at;
+    if (target->owner_id == owner) {
       continue;
     }
     bus.publish(

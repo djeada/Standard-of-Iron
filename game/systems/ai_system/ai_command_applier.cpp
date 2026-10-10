@@ -229,14 +229,16 @@ auto AICommandApplier::apply(Engine::Core::World& world,
           wall_link ? k_wall_link_nudge_radius : k_site_nudge_radius,
           command.construction_rotation_y,
           command.units,
-          command.construction_keep_out);
+          command.construction_keep_out,
+          std::getenv("SOI_TMP_OFF_NUDGE") == nullptr);
       if (!site.has_value() ||
-          Game::Systems::troops_stand_on(world,
-                                         command.construction_type,
-                                         site->x(),
-                                         site->z(),
-                                         command.construction_rotation_y,
-                                         command.units)) {
+          (std::getenv("SOI_TMP_OFF_NUDGE") != nullptr &&
+           Game::Systems::troops_stand_on(world,
+                                          command.construction_type,
+                                          site->x(),
+                                          site->z(),
+                                          command.construction_rotation_y,
+                                          command.units))) {
 
         if (std::getenv("SOI_TMP_BUILD") != nullptr) {
           std::fprintf(stderr, "REFUSE p%d %s at %.1f,%.1f site %d troops %d\n", ai_owner_id,

@@ -231,6 +231,32 @@ auto nearest_threat_to(const AISnapshot& snapshot,
   return nearest;
 }
 
+struct HomePost {
+  float x = 0.0F;
+  float z = 0.0F;
+};
+
+auto on_home_ground(const AIContext& context, float x, float z) -> bool {
+  const float dx = x - context.base_pos_x;
+  const float dz = z - context.base_pos_z;
+  return (dx * dx) + (dz * dz) <= k_home_ground_radius_sq;
+}
+
+auto home_post(const AIContext& context) -> HomePost {
+  if (std::getenv("SOI_TMP_OFF_CMD") != nullptr) {
+    return {context.station.x, context.station.z};
+  }
+  if (on_home_ground(context, context.station.x, context.station.z)) {
+    return {context.station.x, context.station.z};
+  }
+
+  if (context.has_settlement_stations &&
+      on_home_ground(context, context.muster_inside_x, context.muster_inside_z)) {
+    return {context.muster_inside_x, context.muster_inside_z};
+  }
+  return {context.base_pos_x, context.base_pos_z};
+}
+
 } // namespace
 
 void CommanderBehavior::execute(const AISnapshot& snapshot,
@@ -314,13 +340,19 @@ void CommanderBehavior::execute(const AISnapshot& snapshot,
       }
       target_x = snap->pos_x + away_x * k_commander_retreat_step;
       target_z = snap->pos_z + away_z * k_commander_retreat_step;
-      if (army.count >= k_minimum_escort) {
+      if (army.count >= k_minimum_escort &&
+          (!context.has_base_anchor || on_home_ground(context, army.x, army.z) || std::getenv("SOI_TMP_OFF_CMD") != nullptr)) {
         target_x = (target_x + army.x) * 0.5F;
         target_z = (target_z + army.z) * 0.5F;
+      } else if (context.has_base_anchor) {
+        const HomePost post = home_post(context);
+        target_x = (target_x + post.x) * 0.5F;
+        target_z = (target_z + post.z) * 0.5F;
       }
     } else if (context.has_base_anchor) {
-      target_x = context.station.x;
-      target_z = context.station.z;
+      const HomePost post = home_post(context);
+      target_x = post.x;
+      target_z = post.z;
     } else {
       continue;
     }

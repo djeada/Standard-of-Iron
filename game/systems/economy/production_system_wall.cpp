@@ -1,3 +1,5 @@
+#include <cstdio>
+#include <cstdlib>
 #include "production_system_wall.h"
 
 #include <algorithm>
@@ -141,6 +143,7 @@ auto skip_invalid_wall_site(Engine::Core::World* world,
   builder->construction_complete = false;
   builder->bypass_movement_active = false;
   clear_builder_task_target(*world, builder, false);
+  if (std::getenv("SOI_TMP_BUILD") != nullptr) { std::fprintf(stderr, "FAULT WALL-INVALID %s at %.1f,%.1f\n", builder->product_type.c_str(), transform->position.x, transform->position.z); }
   builder->report_fault(Engine::Core::BuilderTaskFault::TargetLost);
   WallNetworkService::refresh_world(*world);
   assign_next_wall_site(world, builder_entity, builder);
