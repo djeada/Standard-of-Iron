@@ -38,8 +38,8 @@ using Game::Formation::ArmyFormationIntent;
 using Game::Formation::ArmyFormationRegistry;
 using Game::Formation::BattleBand;
 using Game::Session::SessionContext;
-using Game::Systems::NavGrid;
 using Game::Systems::NationID;
+using Game::Systems::NavGrid;
 using Game::Units::SpawnType;
 
 constexpr int k_rome = 1;
@@ -91,7 +91,8 @@ protected:
     auto& owners = m_session->owners();
     owners.register_owner_with_id(k_rome, Game::Systems::OwnerType::Player, "rome");
     owners.set_owner_team(k_rome, 1);
-    owners.register_owner_with_id(k_carthage, Game::Systems::OwnerType::Player, "carthage");
+    owners.register_owner_with_id(
+        k_carthage, Game::Systems::OwnerType::Player, "carthage");
     owners.set_owner_team(k_carthage, 2);
     Game::Systems::initialize_default_content(m_session->nations());
     m_session->nations().set_player_nation(k_rome, NationID::RomanRepublic);
@@ -104,7 +105,8 @@ protected:
     pathfinder->update_navigation_grid();
   }
 
-  auto spawn(SpawnType type, int owner, const QVector3D& position, float yaw) -> EntityID {
+  auto
+  spawn(SpawnType type, int owner, const QVector3D& position, float yaw) -> EntityID {
     Game::Units::SpawnParams params;
     params.position = position;
     params.player_id = owner;
@@ -124,7 +126,8 @@ protected:
            float yaw) -> std::vector<EntityID> {
     std::vector<EntityID> units;
     for (int i = 0; i < count; ++i) {
-      float const x = (static_cast<float>(i) - static_cast<float>(count - 1) * 0.5F) * pitch;
+      float const x =
+          (static_cast<float>(i) - static_cast<float>(count - 1) * 0.5F) * pitch;
       units.push_back(spawn(type, owner, centre + QVector3D(x, 0.0F, 0.0F), yaw));
     }
     return units;
@@ -141,8 +144,10 @@ protected:
     order.facing = facing;
     order.intent = intent;
     order.spacing = 1.5F;
-    Game::Command::submit(
-        m_session->world(), Game::Command::Source::LocalPlayer, owner, std::move(order));
+    Game::Command::submit(m_session->world(),
+                          Game::Command::Source::LocalPlayer,
+                          owner,
+                          std::move(order));
   }
 
   void attack(const std::vector<EntityID>& units, int owner, EntityID target) {
@@ -150,11 +155,14 @@ protected:
     order.units = units;
     order.target = target;
     order.should_chase = true;
-    Game::Command::submit(
-        m_session->world(), Game::Command::Source::LocalPlayer, owner, std::move(order));
+    Game::Command::submit(m_session->world(),
+                          Game::Command::Source::LocalPlayer,
+                          owner,
+                          std::move(order));
   }
 
-  template <typename Fn> void run(double seconds, Fn&& each_tick) {
+  template <typename Fn>
+  void run(double seconds, Fn&& each_tick) {
     double const step = m_session->clock().tick_seconds();
     for (double elapsed = 0.0; elapsed < seconds - 1e-9; elapsed += step) {
       m_session->clock().advance(step);
@@ -193,7 +201,8 @@ protected:
   auto health_of(const std::vector<EntityID>& units) -> int {
     int total = 0;
     for (auto const id : units) {
-      if (const auto* unit = m_session->world().try_get<Engine::Core::UnitComponent>(id)) {
+      if (const auto* unit =
+              m_session->world().try_get<Engine::Core::UnitComponent>(id)) {
         total += std::max(0, unit->health);
       }
     }
@@ -235,8 +244,8 @@ protected:
 
   auto run_crescent(double seconds) -> CrescentRun {
     open();
-    auto const carthage =
-        row(SpawnType::Swordsman, k_carthage, 8, QVector3D(0.0F, 0.0F, -20.0F), 8.0F, 0.0F);
+    auto const carthage = row(
+        SpawnType::Swordsman, k_carthage, 8, QVector3D(0.0F, 0.0F, -20.0F), 8.0F, 0.0F);
     deploy(carthage,
            k_carthage,
            QVector3D(0.0F, 0.0F, -20.0F),
@@ -271,8 +280,8 @@ protected:
       start[id] = position_of(id);
     }
 
-    auto const romans =
-        row(SpawnType::Swordsman, k_rome, 6, QVector3D(0.0F, 0.0F, 18.0F), 6.0F, 180.0F);
+    auto const romans = row(
+        SpawnType::Swordsman, k_rome, 6, QVector3D(0.0F, 0.0F, 18.0F), 6.0F, 180.0F);
     for (std::size_t i = 0; i < romans.size(); ++i) {
       attack({romans[i]}, k_rome, centre[i % centre.size()]);
     }
@@ -298,6 +307,20 @@ protected:
           }
         }
       }
+      // How far the centre has given ground by the time the wings wheel.
+      if (state.wheel_ordered && result.centre_counted == 0) {
+        float retreat = 0.0F;
+        for (auto const& [id, furthest] : forward_at_contact) {
+          if (alive(id)) {
+            retreat += furthest - QVector3D::dotProduct(position_of(id), forward);
+            ++result.centre_counted;
+          }
+        }
+        result.centre_retreat =
+            result.centre_counted > 0
+                ? retreat / static_cast<float>(result.centre_counted)
+                : 0.0F;
+      }
       result.saw_yielding = result.saw_yielding || state.yielding;
       result.centre_yield = std::max(result.centre_yield, state.centre_yield);
       result.wing_wheel = std::max(result.wing_wheel, state.wing_wheel);
@@ -313,17 +336,7 @@ protected:
         }
       }
     });
-    float retreat = 0.0F;
-    int counted = 0;
-    for (auto const& [id, at_contact] : forward_at_contact) {
-      if (!alive(id)) {
-        continue;
-      }
-      retreat += at_contact - QVector3D::dotProduct(position_of(id), forward);
-      ++counted;
-    }
-    result.centre_retreat = counted > 0 ? retreat / static_cast<float>(counted) : 0.0F;
-    result.centre_counted = counted;
+
     for (auto const id : carthage) {
       result.final_positions.push_back(position_of(id));
     }
@@ -343,7 +356,8 @@ TEST_F(BattleOrderBehaviourTest, CrescentCentreGivesGroundWhileTheWingsHold) {
   EXPECT_TRUE(result.saw_yielding);
   EXPECT_GT(result.centre_yield, 0.7F);
   // The pressed centre stepped back toward its own lines...
-  EXPECT_GT(result.centre_retreat, 3.0F) << result.centre_counted << " centre troops measured";
+  EXPECT_GT(result.centre_retreat, 3.0F)
+      << result.centre_counted << " centre troops measured";
   // ...while the wings stood...
   EXPECT_LT(result.wing_drift_while_holding, 1.5F);
   // ...until, given ground enough, they wheeled in.
@@ -369,7 +383,10 @@ TEST_F(BattleOrderBehaviourTest, ElephantsRunTheOpenLanesOfATriplexAcies) {
   // The legion faces south (toward -z); the elephant comes from the south.
   auto const legion =
       row(SpawnType::Swordsman, k_rome, 9, QVector3D(0.0F, 0.0F, 30.0F), 8.0F, 180.0F);
-  deploy(legion, k_rome, QVector3D(0.0F, 0.0F, 30.0F), 180.0F,
+  deploy(legion,
+         k_rome,
+         QVector3D(0.0F, 0.0F, 30.0F),
+         180.0F,
          ArmyFormationIntent::TriplexAcies);
   form_up(legion, 60.0);
   const auto* formation = formation_of(legion.front());
@@ -379,8 +396,8 @@ TEST_F(BattleOrderBehaviourTest, ElephantsRunTheOpenLanesOfATriplexAcies) {
   EntityID target = 0;
   for (const auto& slot : formation->slot_list) {
     if (slot.band == BattleBand::Hastati &&
-        (target == 0 || std::abs(slot.world_position.x()) <
-                            std::abs(position_of(target).x()))) {
+        (target == 0 ||
+         std::abs(slot.world_position.x()) < std::abs(position_of(target).x()))) {
       target = slot.occupant;
     }
   }
@@ -411,7 +428,8 @@ TEST_F(BattleOrderBehaviourTest, ElephantsRunTheOpenLanesOfATriplexAcies) {
         rear_z = std::max(rear_z, slot.world_position.z() + slot.half_depth);
       }
     }
-    if (alive(elephant) && rear_z > -1000.0F && position_of(elephant).z() > rear_z + 1.0F) {
+    if (alive(elephant) && rear_z > -1000.0F &&
+        position_of(elephant).z() > rear_z + 1.0F) {
       ran_through = true;
     }
   });

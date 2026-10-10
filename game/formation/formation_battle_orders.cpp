@@ -192,11 +192,8 @@ private:
 
   // A loose row centred on x = 0 at depth z (its centre line), spread over at
   // least `span` between the outermost troop centres.
-  void place_row(const Indices& row,
-                 float z_centre,
-                 float span,
-                 BattleBand band,
-                 int rank) {
+  void
+  place_row(const Indices& row, float z_centre, float span, BattleBand band, int rank) {
     if (row.empty()) {
       return;
     }
@@ -294,8 +291,11 @@ private:
       return;
     }
     float const depth = deepest(rest);
-    place_row(
-        rest, behind_z - 2.0F * m_gaps.rank - depth * 0.5F, 0.0F, BattleBand::None, rank);
+    place_row(rest,
+              behind_z - 2.0F * m_gaps.rank - depth * 0.5F,
+              0.0F,
+              BattleBand::None,
+              rank);
   }
 
   void place_triplex_acies();
@@ -357,8 +357,7 @@ void BattleOrderLayout::place_triplex_acies() {
     return seniority(a) < seniority(b);
   });
   Indices rear_line(ordered.begin(), ordered.begin() + triarii);
-  Indices middle_line(ordered.begin() + triarii,
-                      ordered.begin() + triarii + principes);
+  Indices middle_line(ordered.begin() + triarii, ordered.begin() + triarii + principes);
   Indices front_line(ordered.begin() + triarii + principes, ordered.end());
   sort_by_lateral(rear_line);
   sort_by_lateral(middle_line);
@@ -412,8 +411,8 @@ void BattleOrderLayout::place_triplex_acies() {
   screen.insert(screen.end(), parts.elephants.begin(), parts.elephants.end());
   sort_by_lateral(screen);
   if (!screen.empty()) {
-    float const screen_z = front_depth * 0.5F + k_screen_rank_gaps * m_gaps.rank +
-                           deepest(screen) * 0.5F;
+    float const screen_z =
+        front_depth * 0.5F + k_screen_rank_gaps * m_gaps.rank + deepest(screen) * 0.5F;
     place_row(screen,
               screen_z,
               std::max(0.0F, 2.0F * front_half_span - maniple_width),
@@ -444,12 +443,12 @@ void BattleOrderLayout::place_convex_crescent() {
   auto parts = partition();
   Indices centre;
   Indices wings;
-  bool const mixed =
-      std::any_of(parts.infantry.begin(),
-                  parts.infantry.end(),
-                  [&](auto i) { return allied(i); }) &&
-      std::any_of(
-          parts.infantry.begin(), parts.infantry.end(), [&](auto i) { return !allied(i); });
+  bool const mixed = std::any_of(parts.infantry.begin(),
+                                 parts.infantry.end(),
+                                 [&](auto i) { return allied(i); }) &&
+                     std::any_of(parts.infantry.begin(),
+                                 parts.infantry.end(),
+                                 [&](auto i) { return !allied(i); });
   if (mixed) {
     for (auto const i : parts.infantry) {
       (allied(i) ? centre : wings).push_back(i);
@@ -468,10 +467,10 @@ void BattleOrderLayout::place_convex_crescent() {
   float const centre_width = std::max(widest(centre), 1.0F);
   float const centre_depth = std::max(deepest(centre), 1.0F);
   float const pitch = centre_width + m_gaps.lateral;
-  int const ranks = std::max(
-      1,
-      (static_cast<int>(centre.size()) + k_crescent_centre_per_rank - 1) /
-          k_crescent_centre_per_rank);
+  int const ranks =
+      std::max(1,
+               (static_cast<int>(centre.size()) + k_crescent_centre_per_rank - 1) /
+                   k_crescent_centre_per_rank);
   int const per_rank =
       (static_cast<int>(centre.size()) + ranks - 1) / std::max(1, ranks);
   float const half_centre =
@@ -494,7 +493,8 @@ void BattleOrderLayout::place_convex_crescent() {
       float const t = std::clamp(xs[k] / half_centre, -1.0F, 1.0F);
       float const weight = 1.0F - t * t;
       float const slope = -2.0F * bulge * xs[k] / (half_centre * half_centre);
-      float const facing = std::atan2(-slope, 1.0F) * k_rad_to_deg * k_crescent_turn_share;
+      float const facing =
+          std::atan2(-slope, 1.0F) * k_rad_to_deg * k_crescent_turn_share;
       put(index,
           xs[k],
           row_z + bulge * weight,
@@ -527,7 +527,8 @@ void BattleOrderLayout::place_convex_crescent() {
   float const tip = bulge + centre_depth * 0.5F;
   float screen_z = tip;
   if (!parts.elephants.empty()) {
-    screen_z += k_elephant_screen_rank_gaps * m_gaps.rank + deepest(parts.elephants) * 0.5F;
+    screen_z +=
+        k_elephant_screen_rank_gaps * m_gaps.rank + deepest(parts.elephants) * 0.5F;
     place_row(parts.elephants,
               screen_z,
               2.0F * half_centre * k_elephant_screen_span_share,
@@ -537,7 +538,8 @@ void BattleOrderLayout::place_convex_crescent() {
   }
   if (!parts.screen.empty()) {
     place_row(parts.screen,
-              screen_z + k_screen_rank_gaps * m_gaps.rank + deepest(parts.screen) * 0.5F,
+              screen_z + k_screen_rank_gaps * m_gaps.rank +
+                  deepest(parts.screen) * 0.5F,
               2.0F * half_centre,
               BattleBand::Screen,
               0);
@@ -598,7 +600,8 @@ void BattleOrderLayout::place_elephant_screen() {
 
   float const elephant_width = widest(elephants);
   float const min_pitch =
-      elephant_width + std::max(k_elephant_min_gap, 1.5F * elephant_width) * m_gap_scale;
+      elephant_width +
+      std::max(k_elephant_min_gap, 1.5F * elephant_width) * m_gap_scale;
   float const span = 2.0F * main_half_span * k_elephant_screen_span_share;
   float const pitch =
       elephants.size() > 1U
@@ -622,8 +625,8 @@ auto lattice_positions(int count, float phase, float pitch) -> std::vector<float
     return xs;
   }
   xs.reserve(static_cast<std::size_t>(count));
-  auto const start = static_cast<float>(
-      std::lround(-static_cast<float>(count - 1) * 0.5F - phase));
+  auto const start =
+      static_cast<float>(std::lround(-static_cast<float>(count - 1) * 0.5F - phase));
   for (int i = 0; i < count; ++i) {
     xs.push_back((start + static_cast<float>(i) + phase) * pitch);
   }

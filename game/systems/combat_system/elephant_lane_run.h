@@ -24,10 +24,10 @@ inline constexpr float k_lane_run_out_distance = 30.0F;
 // (a triplex acies), the point it should run for instead of the target: first
 // the mouth of the nearest clear lane, then through it and out past the rear
 // line. Empty when there is no clear lane, or the elephant is not charging one.
-[[nodiscard]] auto elephant_lane_goal(Engine::Core::World& world,
-                                      Engine::Core::Entity& elephant,
-                                      const Engine::Core::Entity* target)
-    -> std::optional<QVector3D>;
+[[nodiscard]] auto
+elephant_lane_goal(Engine::Core::World& world,
+                   Engine::Core::Entity& elephant,
+                   const Engine::Core::Entity* target) -> std::optional<QVector3D>;
 
 void steer_down_lane(Engine::Core::Entity& elephant,
                      const QVector3D& goal,

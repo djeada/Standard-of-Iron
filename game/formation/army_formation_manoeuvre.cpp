@@ -48,19 +48,17 @@ auto wheel_pivots(const ArmyFormation& formation) -> WheelPivots {
     float const front = slot.local_offset.z() + slot.half_depth;
     if (x < 0.0F) {
       float const inner = x + slot.half_width;
-      pivots.left = pivots.has_left
-                        ? QVector3D(std::max(pivots.left.x(), inner),
-                                    0.0F,
-                                    std::max(pivots.left.z(), front))
-                        : QVector3D(inner, 0.0F, front);
+      pivots.left = pivots.has_left ? QVector3D(std::max(pivots.left.x(), inner),
+                                                0.0F,
+                                                std::max(pivots.left.z(), front))
+                                    : QVector3D(inner, 0.0F, front);
       pivots.has_left = true;
     } else {
       float const inner = x - slot.half_width;
-      pivots.right = pivots.has_right
-                         ? QVector3D(std::min(pivots.right.x(), inner),
-                                     0.0F,
-                                     std::max(pivots.right.z(), front))
-                         : QVector3D(inner, 0.0F, front);
+      pivots.right = pivots.has_right ? QVector3D(std::min(pivots.right.x(), inner),
+                                                  0.0F,
+                                                  std::max(pivots.right.z(), front))
+                                      : QVector3D(inner, 0.0F, front);
       pivots.has_right = true;
     }
   }
@@ -109,7 +107,8 @@ auto manoeuvre_with(const ArmyFormation& formation,
     QVector3D const from_pivot = slot.local_offset - pivot;
     float const signed_turn = left ? turn : -turn;
     QVector3D const swung = planning::rotate_offset(from_pivot, signed_turn);
-    out.offset = QVector3D(swung.x() - from_pivot.x(), 0.0F, swung.z() - from_pivot.z());
+    out.offset =
+        QVector3D(swung.x() - from_pivot.x(), 0.0F, swung.z() - from_pivot.z());
     out.facing = signed_turn;
     break;
   }
@@ -120,7 +119,8 @@ auto manoeuvre_with(const ArmyFormation& formation,
     // The skirmishers fall back through the lanes, out of the elephants' way.
     if (formation.intent == ArmyFormationIntent::TriplexAcies && frame.has_rear) {
       float const behind = frame.rear - k_screen_fallback_gap - slot.half_depth;
-      out.offset = QVector3D(0.0F, 0.0F, (behind - slot.local_offset.z()) * state.lane_shift);
+      out.offset =
+          QVector3D(0.0F, 0.0F, (behind - slot.local_offset.z()) * state.lane_shift);
     }
     break;
   default:
@@ -172,8 +172,7 @@ void advance_crescent(Engine::Core::World& world,
     for (auto const id : world.entities_with<Engine::Core::AttackComponent>()) {
       const auto* attack = world.try_get<Engine::Core::AttackComponent>(id);
       if (attack != nullptr && attack->in_melee_lock &&
-          centre.count(attack->melee_lock_target_id) != 0U &&
-          centre.count(id) == 0U) {
+          centre.count(attack->melee_lock_target_id) != 0U && centre.count(id) == 0U) {
         ++attackers;
       }
     }
@@ -209,9 +208,8 @@ auto enemy_elephant_near(Engine::Core::World& world,
           slot.band != BattleBand::Triarii) {
         continue;
       }
-      QVector3D const delta(slot.world_position.x() - at.x(),
-                            0.0F,
-                            slot.world_position.z() - at.z());
+      QVector3D const delta(
+          slot.world_position.x() - at.x(), 0.0F, slot.world_position.z() - at.z());
       if (delta.lengthSquared() <= reach_sq) {
         return true;
       }
@@ -228,7 +226,8 @@ void advance_triplex(Engine::Core::World& world,
     state.lanes_opened = true;
   }
   if (state.lanes_opened) {
-    state.lane_shift = std::min(1.0F, state.lane_shift + elapsed / k_lane_shift_seconds);
+    state.lane_shift =
+        std::min(1.0F, state.lane_shift + elapsed / k_lane_shift_seconds);
   }
 }
 
@@ -242,7 +241,8 @@ auto apply_offsets(ArmyFormation& formation) -> float {
     if (delta_local.lengthSquared() < 1.0e-8F && std::abs(delta_facing) < 1.0e-4F) {
       continue;
     }
-    QVector3D const delta_world = planning::rotate_offset(delta_local, formation.facing);
+    QVector3D const delta_world =
+        planning::rotate_offset(delta_local, formation.facing);
     slot.world_position += QVector3D(delta_world.x(), 0.0F, delta_world.z());
     slot.facing += delta_facing;
     slot.manoeuvre_offset = next.offset;
@@ -340,8 +340,8 @@ auto give_ground_velocity(const ArmyFormation& formation,
   QVector3D const forward =
       planning::rotate_offset(QVector3D(0.0F, 0.0F, 1.0F), formation.facing);
   QVector3D const to_slot = slot->world_position - ground(*transform);
-  float const ahead = -QVector3D::dotProduct(
-      QVector3D(to_slot.x(), 0.0F, to_slot.z()), QVector3D(forward.x(), 0.0F, forward.z()));
+  float const ahead = -QVector3D::dotProduct(QVector3D(to_slot.x(), 0.0F, to_slot.z()),
+                                             QVector3D(forward.x(), 0.0F, forward.z()));
   if (ahead <= k_give_ground_dead_band) {
     return {};
   }

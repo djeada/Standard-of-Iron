@@ -55,7 +55,8 @@ struct Army {
 
 auto layout(const Army& army,
             ArmyFormationIntent intent,
-            const Game::Formation::FormationDoctrineId& doctrine) -> ArmyFormationLayout {
+            const Game::Formation::FormationDoctrineId& doctrine)
+    -> ArmyFormationLayout {
   ArmyFormationRequest request;
   for (const auto& member : army.members) {
     request.members.push_back(member.entity_id);
@@ -67,7 +68,8 @@ auto layout(const Army& army,
   return ArmyFormationPlanner::build_layout(army.members, request);
 }
 
-auto band(const ArmyFormationLayout& plan, BattleBand which) -> std::vector<FormationSlot> {
+auto band(const ArmyFormationLayout& plan,
+          BattleBand which) -> std::vector<FormationSlot> {
   std::vector<FormationSlot> out;
   for (const auto& slot : plan.slot_list) {
     if (slot.band == which) {
@@ -164,7 +166,8 @@ TEST_F(BattleOrderLayoutTest, TriplexAciesFormsThreeLinesWithOpenLanes) {
     for (std::size_t i = 1; i < line->size(); ++i) {
       float const lane = ((*line)[i].local_offset.x() - (*line)[i].half_width) -
                          ((*line)[i - 1].local_offset.x() + (*line)[i - 1].half_width);
-      EXPECT_GE(lane + k_eps, std::max(maniple, Game::Formation::planning::k_min_maniple_lane));
+      EXPECT_GE(lane + k_eps,
+                std::max(maniple, Game::Formation::planning::k_min_maniple_lane));
     }
   }
 }
@@ -183,14 +186,16 @@ TEST_F(BattleOrderLayoutTest, TriplexPrincipesCoverTheHastatiGaps) {
 
   // Quincunx: each principes maniple stands behind the middle of a hastati gap.
   for (const auto& slot : principes) {
-    float const steps = (slot.local_offset.x() - hastati.front().local_offset.x()) / pitch;
+    float const steps =
+        (slot.local_offset.x() - hastati.front().local_offset.x()) / pitch;
     EXPECT_NEAR(steps - std::floor(steps), 0.5F, 0.01F) << slot.local_offset.x();
     EXPECT_GT(slot.local_offset.x(), hastati.front().local_offset.x());
     EXPECT_LT(slot.local_offset.x(), hastati.back().local_offset.x());
   }
   // Triarii stand on the hastati files again.
   for (const auto& slot : triarii) {
-    float const steps = (slot.local_offset.x() - hastati.front().local_offset.x()) / pitch;
+    float const steps =
+        (slot.local_offset.x() - hastati.front().local_offset.x()) / pitch;
     EXPECT_NEAR(steps, std::round(steps), 0.01F) << slot.local_offset.x();
   }
   // The principes are centred on the hastati.
@@ -199,7 +204,8 @@ TEST_F(BattleOrderLayoutTest, TriplexPrincipesCoverTheHastatiGaps) {
     sum += slot.local_offset.x();
   }
   EXPECT_NEAR(sum / static_cast<float>(principes.size()),
-              (hastati.front().local_offset.x() + hastati.back().local_offset.x()) * 0.5F,
+              (hastati.front().local_offset.x() + hastati.back().local_offset.x()) *
+                  0.5F,
               k_eps);
 }
 
@@ -213,7 +219,8 @@ TEST_F(BattleOrderLayoutTest, TriplexScreensWithVelitesAndPutsCavalryOnTheWings)
   auto const hastati = band(plan, BattleBand::Hastati);
   auto const screen = band(plan, BattleBand::Screen);
   ASSERT_EQ(screen.size(), 3U);
-  float const hastati_front = hastati.front().local_offset.z() + hastati.front().half_depth;
+  float const hastati_front =
+      hastati.front().local_offset.z() + hastati.front().half_depth;
   for (const auto& slot : screen) {
     EXPECT_GT(slot.local_offset.z() - slot.half_depth, hastati_front + 2.0F);
   }
@@ -243,7 +250,8 @@ TEST_F(BattleOrderLayoutTest, LanesWidenToTheDraggedFrontage) {
   ASSERT_TRUE(plan.valid);
   auto const hastati = band(plan, BattleBand::Hastati);
   ASSERT_GE(hastati.size(), 2U);
-  EXPECT_NEAR(hastati.back().local_offset.x() - hastati.front().local_offset.x(), 120.0F, 0.5F);
+  EXPECT_NEAR(
+      hastati.back().local_offset.x() - hastati.front().local_offset.x(), 120.0F, 0.5F);
 }
 
 TEST_F(BattleOrderLayoutTest, ConvexCrescentBulgesTowardTheEnemy) {
@@ -373,10 +381,12 @@ TEST_F(BattleOrderLayoutTest, ElephantScreenStandsSpacedAheadOfTheLine) {
     }
   }
   for (std::size_t i = 0; i < elephants.size(); ++i) {
-    EXPECT_GT(elephants[i].local_offset.z() - elephants[i].half_depth, line_front + 6.0F);
+    EXPECT_GT(elephants[i].local_offset.z() - elephants[i].half_depth,
+              line_front + 6.0F);
     if (i > 0) {
-      float const gap = (elephants[i].local_offset.x() - elephants[i].half_width) -
-                        (elephants[i - 1].local_offset.x() + elephants[i - 1].half_width);
+      float const gap =
+          (elephants[i].local_offset.x() - elephants[i].half_width) -
+          (elephants[i - 1].local_offset.x() + elephants[i - 1].half_width);
       EXPECT_GE(gap, 7.9F);
     }
   }
@@ -390,10 +400,12 @@ TEST_F(BattleOrderLayoutTest, BattleOrdersBelongToTheirDoctrines) {
   auto const with_elephants = infantry | to_mask(RoleTag::Elephant);
 
   EXPECT_TRUE(
-      registry.availability_reason("rome", ArmyFormationIntent::TriplexAcies, infantry, 6)
+      registry
+          .availability_reason("rome", ArmyFormationIntent::TriplexAcies, infantry, 6)
           .empty());
   EXPECT_FALSE(
-      registry.availability_reason("rome", ArmyFormationIntent::ConvexCrescent, infantry, 6)
+      registry
+          .availability_reason("rome", ArmyFormationIntent::ConvexCrescent, infantry, 6)
           .empty());
   EXPECT_FALSE(registry
                    .availability_reason(
@@ -407,12 +419,14 @@ TEST_F(BattleOrderLayoutTest, BattleOrdersBelongToTheirDoctrines) {
                    .availability_reason(
                        "carthage", ArmyFormationIntent::ElephantScreen, infantry, 6)
                    .empty());
-  EXPECT_TRUE(registry
-                  .availability_reason(
-                      "carthage", ArmyFormationIntent::ElephantScreen, with_elephants, 6)
-                  .empty());
+  EXPECT_TRUE(
+      registry
+          .availability_reason(
+              "carthage", ArmyFormationIntent::ElephantScreen, with_elephants, 6)
+          .empty());
   EXPECT_FALSE(
-      registry.availability_reason("rome", ArmyFormationIntent::TriplexAcies, infantry, 2)
+      registry
+          .availability_reason("rome", ArmyFormationIntent::TriplexAcies, infantry, 2)
           .empty());
 }
 

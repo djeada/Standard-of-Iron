@@ -49,9 +49,9 @@ void reapply(ArmyFormation& formation);
 
 // Velocity at which a fighting member of a yielding crescent centre gives
 // ground this tick (zero when it should hold).
-[[nodiscard]] auto give_ground_velocity(const ArmyFormation& formation,
-                                        const Engine::Core::Entity& entity)
-    -> QVector3D;
+[[nodiscard]] auto
+give_ground_velocity(const ArmyFormation& formation,
+                     const Engine::Core::Entity& entity) -> QVector3D;
 
 // True for a crescent wing troop that is holding its ground until the wing
 // wheels: it answers blows but does not go looking for a fight.

@@ -53,11 +53,8 @@ auto attack_move(float time, QString source, QString target) -> ArenaScenarioSte
   return result;
 }
 
-auto form(float time,
-          QStringList groups,
-          Intent intent,
-          QVector3D anchor,
-          float facing) -> ArenaScenarioStep {
+auto form(float time, QStringList groups, Intent intent, QVector3D anchor, float facing)
+    -> ArenaScenarioStep {
   auto result = at(time, Command::FormArmy, groups.value(0));
   result.name += QStringLiteral("_form");
   result.formation.groups = std::move(groups);
@@ -117,14 +114,15 @@ auto battlefield(QString id,
 // Roman flanks while the cavalry, having beaten the Roman horse, closes the
 // rear.
 auto cannae_battle_orders() -> ArenaScenarioDefinition {
-  auto s = battlefield(QStringLiteral("battle_order_cannae"),
-                       QStringLiteral("Battle Order: Cannae"),
-                       QStringLiteral("A deep Roman triplex acies drives into Hannibal's "
-                                      "convex crescent. The Gallic and Iberian centre "
-                                      "gives ground until the line turns concave; the "
-                                      "Libyan wings, which held, wheel in on the Roman "
-                                      "flanks and the cavalry closes the rear."),
-                       120.0F);
+  auto s =
+      battlefield(QStringLiteral("battle_order_cannae"),
+                  QStringLiteral("Battle Order: Cannae"),
+                  QStringLiteral("A deep Roman triplex acies drives into Hannibal's "
+                                 "convex crescent. The Gallic and Iberian centre "
+                                 "gives ground until the line turns concave; the "
+                                 "Libyan wings, which held, wheel in on the Roman "
+                                 "flanks and the cavalry closes the rear."),
+                  120.0F);
   s.groups = {
       group(QStringLiteral("legion_swords"),
             Troop::Swordsman,
@@ -233,25 +231,30 @@ auto cannae_battle_orders() -> ArenaScenarioDefinition {
       Game::Formation::MovementPolicy::MaintainFormation;
   s.steps.push_back(std::move(advance));
 
-  s.steps.push_back(attack_move(16.0F, QStringLiteral("gallic_horse"), QStringLiteral("equites")));
-  s.steps.push_back(attack_move(16.0F, QStringLiteral("numidians"), QStringLiteral("equites")));
   s.steps.push_back(
-      attack_move(32.0F, QStringLiteral("legion_swords"), QStringLiteral("gallic_centre")));
+      attack_move(16.0F, QStringLiteral("gallic_horse"), QStringLiteral("equites")));
+  s.steps.push_back(
+      attack_move(16.0F, QStringLiteral("numidians"), QStringLiteral("equites")));
+  s.steps.push_back(attack_move(
+      32.0F, QStringLiteral("legion_swords"), QStringLiteral("gallic_centre")));
   s.steps.push_back(
       attack_move(34.0F, QStringLiteral("triarii"), QStringLiteral("iberian_centre")));
 
-  for (auto const& rider : {QStringLiteral("gallic_horse"), QStringLiteral("numidians")}) {
+  for (auto const& rider :
+       {QStringLiteral("gallic_horse"), QStringLiteral("numidians")}) {
     ArenaScenarioStep close;
     close.name = rider + QStringLiteral("_closes_the_rear");
-    close.trigger = {Trigger::GroupDestroyed, 0.0F, QStringLiteral("equites"), {}, 0.0F};
+    close.trigger = {
+        Trigger::GroupDestroyed, 0.0F, QStringLiteral("equites"), {}, 0.0F};
     close.command = Command::AttackMove;
     close.group = rider;
     close.target_group = QStringLiteral("triarii");
     s.steps.push_back(std::move(close));
   }
 
-  s.battle_sides = {{k_rome, QStringLiteral("Rome"), {0.0F, 0.0F, 50.0F}, 30.0F},
-                    {k_carthage, QStringLiteral("Carthage"), {0.0F, 0.0F, -22.0F}, 30.0F}};
+  s.battle_sides = {
+      {k_rome, QStringLiteral("Rome"), {0.0F, 0.0F, 50.0F}, 30.0F},
+      {k_carthage, QStringLiteral("Carthage"), {0.0F, 0.0F, -22.0F}, 30.0F}};
   s.expectations = {
       rendered(QStringLiteral("legion_swords")),
       rendered(QStringLiteral("gallic_centre")),
@@ -347,20 +350,24 @@ auto zama_battle_orders() -> ArenaScenarioDefinition {
                          QStringLiteral("mercenaries"),
                          QStringLiteral("veterans"),
                          QStringLiteral("punic_horse")};
-  s.steps.push_back(form(0.3F, host, Intent::ElephantScreen, {0.0F, 0.0F, -50.0F}, 0.0F));
-  s.steps.push_back(form(0.3F, legion, Intent::TriplexAcies, {0.0F, 0.0F, 52.0F}, 180.0F));
+  s.steps.push_back(
+      form(0.3F, host, Intent::ElephantScreen, {0.0F, 0.0F, -50.0F}, 0.0F));
+  s.steps.push_back(
+      form(0.3F, legion, Intent::TriplexAcies, {0.0F, 0.0F, 52.0F}, 180.0F));
   s.steps.push_back(
       attack_move(14.0F, QStringLiteral("elephants"), QStringLiteral("legion_swords")));
-  s.steps.push_back(
-      attack_move(52.0F, QStringLiteral("legion_swords"), QStringLiteral("mercenaries")));
+  s.steps.push_back(attack_move(
+      52.0F, QStringLiteral("legion_swords"), QStringLiteral("mercenaries")));
 
-  s.battle_sides = {{k_rome, QStringLiteral("Rome"), {0.0F, 0.0F, 52.0F}, 30.0F},
-                    {k_carthage, QStringLiteral("Carthage"), {0.0F, 0.0F, -50.0F}, 30.0F}};
+  s.battle_sides = {
+      {k_rome, QStringLiteral("Rome"), {0.0F, 0.0F, 52.0F}, 30.0F},
+      {k_carthage, QStringLiteral("Carthage"), {0.0F, 0.0F, -50.0F}, 30.0F}};
   s.expectations = {
       rendered(QStringLiteral("legion_swords")),
       rendered(QStringLiteral("elephants")),
       manoeuvre(QStringLiteral("legion_swords"), QStringLiteral("lane_shift"), 0.99F),
-      manoeuvre(QStringLiteral("elephants"), QStringLiteral("elephant_lane_runs"), 3.0F),
+      manoeuvre(
+          QStringLiteral("elephants"), QStringLiteral("elephant_lane_runs"), 3.0F),
   };
   return s;
 }

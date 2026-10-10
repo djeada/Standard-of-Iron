@@ -35,8 +35,7 @@ auto place_battle_order(std::vector<FormationSlot>& slot_list,
 // Positions of `count` troops on a lattice of the given pitch, centred on zero as
 // closely as the lattice phase allows (phase 0 = integer multiples of the pitch,
 // 0.5 = half-way between them).
-[[nodiscard]] auto lattice_positions(int count,
-                                     float phase,
-                                     float pitch) -> std::vector<float>;
+[[nodiscard]] auto
+lattice_positions(int count, float phase, float pitch) -> std::vector<float>;
 
 } // namespace Game::Formation::planning

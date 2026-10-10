@@ -802,7 +802,8 @@ void ArenaScenarioRunner::Impl::check_world_expectation(
   }
 }
 
-void ArenaScenarioRunner::Impl::observe_battle_order(const ArenaExpectation& expectation) {
+void ArenaScenarioRunner::Impl::observe_battle_order(
+    const ArenaExpectation& expectation) {
   auto const key = expectation.group + QLatin1Char('/') + expectation.counter_key;
   float value = battle_order_peaks.value(key, 0.0F);
   if (expectation.counter_key == QLatin1String("elephant_lane_runs")) {

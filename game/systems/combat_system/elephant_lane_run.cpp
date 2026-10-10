@@ -57,9 +57,8 @@ auto formation_of(Engine::Core::World& world,
   if (membership == nullptr || !membership->is_valid()) {
     return nullptr;
   }
-  const auto* formation =
-      Game::Formation::ArmyFormationRegistry::for_world(world).find(
-          membership->group_id);
+  const auto* formation = Game::Formation::ArmyFormationRegistry::for_world(world).find(
+      membership->group_id);
   if (formation == nullptr || !formation->has_member(member.get_id())) {
     return nullptr;
   }
@@ -68,7 +67,8 @@ auto formation_of(Engine::Core::World& world,
 
 auto elephant_radius(const Engine::Core::Entity& elephant) -> float {
   const auto* movement = elephant.get_component<Engine::Core::MovementComponent>();
-  float const clearance = movement != nullptr ? movement->get_navigation_clearance() : 0.0F;
+  float const clearance =
+      movement != nullptr ? movement->get_navigation_clearance() : 0.0F;
   return std::max(k_min_elephant_radius, clearance);
 }
 
@@ -162,12 +162,10 @@ auto elephant_lane_goal(Engine::Core::World& world,
 
   Frame frame;
   frame.origin = QVector3D(formation->anchor.x(), 0.0F, formation->anchor.z());
-  frame.forward =
-      Game::Formation::planning::rotate_offset(QVector3D(0.0F, 0.0F, 1.0F),
-                                               formation->facing);
-  frame.lateral =
-      Game::Formation::planning::rotate_offset(QVector3D(1.0F, 0.0F, 0.0F),
-                                               formation->facing);
+  frame.forward = Game::Formation::planning::rotate_offset(QVector3D(0.0F, 0.0F, 1.0F),
+                                                           formation->facing);
+  frame.lateral = Game::Formation::planning::rotate_offset(QVector3D(1.0F, 0.0F, 0.0F),
+                                                           formation->facing);
 
   std::vector<Block> blocks;
   float front = -std::numeric_limits<float>::max();
@@ -177,7 +175,8 @@ auto elephant_lane_goal(Engine::Core::World& world,
       continue;
     }
     QVector3D const local = frame.to_local(slot.world_position);
-    blocks.push_back({local.x(), local.z(), slot.half_width, slot.half_depth, slot.band});
+    blocks.push_back(
+        {local.x(), local.z(), slot.half_width, slot.half_depth, slot.band});
     front = std::max(front, local.z() + slot.half_depth);
     rear = std::min(rear, local.z() - slot.half_depth);
   }
@@ -244,7 +243,8 @@ void steer_down_lane(Engine::Core::Entity& elephant,
     return;
   }
   movement->clear_structure_approach_target();
-  if (const auto* transform = elephant.get_component<Engine::Core::TransformComponent>()) {
+  if (const auto* transform =
+          elephant.get_component<Engine::Core::TransformComponent>()) {
     QVector3D const here(transform->position.x, 0.0F, transform->position.z);
     if ((here - goal).lengthSquared() <= 1.0F) {
       return;
