@@ -722,7 +722,7 @@ default (palette, owner colours, metric widths, pixel strokes authored for a
 `--style`, or `style=` from Python, is merged over it -- this is where the
 series graphics package plugs in -- then the description's own `style` block,
 then any `class` entries from `style.classes`, then the element's inline
-`style`. A colour is a palette name, `#rrggbb` or `[r, g, b]`; with no colour,
+`style`. The series graphics package's own token dump (`python3 scripts/documentary style --json tokens.json`) can be passed as the style unchanged: it is recognised and translated (side and contingent colours, faces, label size and tracking, stroke widths, opacities, fade and draw timings), while the overlay keeps its metric arrow widths. A colour is a palette name, `#rrggbb` or `[r, g, b]`; with no colour,
 blocks and frontages take their owner's colour and arrows the owner of their
 first group anchor.
 

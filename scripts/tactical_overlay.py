@@ -141,9 +141,85 @@ def deep_merge(base: dict, *overrides: dict | None) -> dict:
     return result
 
 
+def is_series_tokens(style: dict | None) -> bool:
+    """True for the series graphics package's token dump (#1534).
+
+    ``python3 scripts/documentary style --json`` writes the whole series look
+    (colours, sides, faces, type scale, strokes, opacities, timing) in its own
+    schema; :func:`style_from_series_tokens` maps it onto this module's.
+    """
+    return bool(style) and "sides" in style and "stroke_px" in style
+
+
+def style_from_series_tokens(tokens: dict) -> dict:
+    """Translate series tokens into an overlay style override."""
+
+    def colour(value):
+        return value if isinstance(value, (str, list, tuple)) else None
+
+    palette: dict[str, Any] = {}
+    for name, value in tokens.get("colors", {}).items():
+        palette[name] = colour(value)
+    for side, entry in tokens.get("sides", {}).items():
+        palette[side] = colour(entry.get("color"))
+        if entry.get("deep"):
+            palette[f"{side}_deep"] = colour(entry["deep"])
+        for contingent, value in entry.get("contingents", {}).items():
+            palette[contingent] = colour(value)
+    if "gauls" in palette:
+        palette.setdefault("gaul", palette["gauls"])
+    if "iberians" in palette:
+        palette.setdefault("iberia", palette["iberians"])
+    palette = {k: v for k, v in palette.items() if v is not None}
+
+    style: dict[str, Any] = {"palette": palette}
+    fonts = tokens.get("fonts", {})
+    for key, target in (("display", "font"), ("text", "font_fallback")):
+        if fonts.get(key):
+            path = Path(fonts[key])
+            style[target] = str(path if path.is_absolute() else REPO / path)
+    if "ink" in palette:
+        palette.setdefault("neutral", palette["ink"])
+    dark = "iron" if "iron" in palette else "ink"
+    stroke = tokens.get("stroke_px", {})
+    opacity = tokens.get("opacity", {})
+    timing = tokens.get("timing_s", {})
+    scale = tokens.get("type_scale_px", {})
+    tracking = tokens.get("tracking_em", {})
+
+    def put(kind: str, key: str, value) -> None:
+        if value is not None:
+            style.setdefault(kind, {})[key] = value
+
+    put("arrow", "outline", dark)
+    put("arrow", "outline_px", stroke.get("arrow_outline"))
+    put("arrow", "opacity", opacity.get("arrow_fill"))
+    put("block", "fill_opacity", opacity.get("zone_fill"))
+    put("block", "outline_px", stroke.get("rule_heavy"))
+    put("block", "front_px", stroke.get("side_bar"))
+    put("frontage", "width_px", stroke.get("front_line"))
+    put("frontage", "outline", dark)
+    put("frontage", "draw_seconds", timing.get("rule_draw"))
+    put("label", "color", "ink" if "ink" in palette else None)
+    put("label", "size_px", scale.get("label"))
+    put("label", "tracking", tracking.get("label"))
+    put("label", "shadow", "shadow" if "shadow" in palette else dark)
+    put("label", "shadow_opacity", opacity.get("shadow"))
+    if timing.get("fade_in") is not None:
+        style["fade_seconds"] = timing["fade_in"]
+    return style
+
+
 def resolve_style(*overrides: dict | None) -> dict:
-    """The default style with each override (series package, overlay) applied."""
-    return deep_merge(DEFAULT_STYLE, *overrides)
+    """The default style with each override (series package, overlay) applied.
+
+    An override may be the series package's raw token dump; it is translated
+    with :func:`style_from_series_tokens` first.
+    """
+    translated = [
+        style_from_series_tokens(o) if is_series_tokens(o) else o for o in overrides
+    ]
+    return deep_merge(DEFAULT_STYLE, *translated)
 
 
 def element_style(style: dict, element: dict) -> dict:

@@ -287,6 +287,37 @@ class StyleTest(unittest.TestCase):
             overlay.Overlay.parse({"elements": [
                 {"type": "arrow", "points": [[0, 0], [1, 0]], "class": "missing"}]})
 
+    def test_series_tokens_are_translated(self):
+        # The shape ``python3 scripts/documentary style --json`` writes (#1534).
+        tokens = {
+            "fonts": {"display": "assets/fonts/StandardIronDisplay-Bold.ttf",
+                      "text": "assets/fonts/EBGaramond12-Bold.ttf"},
+            "colors": {"ink": "#f4e7c8", "iron": "#120d09", "shadow": "#000000"},
+            "sides": {
+                "rome": {"name": "ROME", "color": "#c44034", "deep": "#78221c",
+                         "contingents": {"legions": "#c44034"}},
+                "carthage": {"name": "CARTHAGE", "color": "#487aba", "deep": "#244070",
+                             "contingents": {"gauls": "#5f8a3c", "iberians": "#b07034"}},
+            },
+            "type_scale_px": {"label": 30},
+            "tracking_em": {"label": 0.16},
+            "stroke_px": {"arrow_outline": 2.5, "front_line": 5.0, "rule_heavy": 4.0,
+                          "side_bar": 6.0},
+            "opacity": {"arrow_fill": 0.88, "zone_fill": 0.22, "shadow": 0.72},
+            "timing_s": {"fade_in": 0.5, "rule_draw": 0.6},
+        }
+        style = overlay.resolve_style(tokens)
+        self.assertEqual(overlay.parse_color("carthage", style), (0x48, 0x7A, 0xBA))
+        self.assertEqual(overlay.parse_color(overlay.owner_color(style, 3), style),
+                         (0x5F, 0x8A, 0x3C), "owner 3 is the Gauls")
+        self.assertTrue(style["font"].endswith("StandardIronDisplay-Bold.ttf"))
+        self.assertTrue(Path(style["font"]).is_absolute())
+        self.assertEqual(style["label"]["size_px"], 30)
+        self.assertEqual(style["block"]["fill_opacity"], 0.22)
+        self.assertEqual(style["arrow"]["outline"], "iron")
+        self.assertEqual(style["fade_seconds"], 0.5)
+        self.assertEqual(style["arrow"]["width_m"], overlay.DEFAULT_STYLE["arrow"]["width_m"])
+
     def test_fades(self):
         parsed = overlay.Overlay.parse({"elements": [
             {"type": "arrow", "points": [[0, 0], [1, 0]], "start": 1.0, "end": 3.0,
