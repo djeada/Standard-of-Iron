@@ -1,10 +1,10 @@
 {
   "id": "battle_of_cannae",
   "title": "Battle of Cannae",
-  "summary": "Execute the encirclement, then seize all three Roman camps before their reserves can restore the line.",
+  "summary": "Hold the crescent, win both cavalry wings, close the double envelopment, then seize all three Roman camps before their reserves can restore the line.",
   "teaching_goal": "Nothing new is taught here. The ridge, the bait and the beheading are all things you already know; Cannae only asks whether you can run three of them at once against four times your number.",
-  "narrative_intent": "Hannibal's masterpiece becomes a prolonged operational battle, not a single frontal collision.",
-  "historical_context": "216 BC: beside the Aufidus, Hannibal's deliberately yielding center drew a much larger Roman infantry mass forward while African infantry attacked its flanks and Carthaginian cavalry closed the rear. Two Roman camps supported the army.",
+  "narrative_intent": "Hannibal's masterpiece becomes a prolonged operational battle, not a single frontal collision: a Gallic and Iberian crescent that gives ground, African wings that hold, and Hasdrubal's heavy horse on the river flank.",
+  "historical_context": "August 216 BC: beside the Aufidus the consuls crossed the river and drew up some eighty thousand men, the legions in the centre deeper than they were wide. Varro, in command that day, led the allied horse on the Roman left; Paullus led the Roman horse on the right by the river. Hannibal bowed his Gauls and Iberians out toward them in a crescent, set his Africans on the wings and screened the front with Balearic slingers. Hasdrubal's Iberian and Gallic horse broke Paullus by the river, rode behind the Roman army and fell on its rear as the crescent gave and the Africans turned inward. Paullus died on the field; Varro escaped to Venusia. Altered here: the Romans had two camps, not three, and the field towns and the Sepulcher graves are the game's.",
   "terrain_type": "apulian_river_plain",
   "map_path": ":/assets/maps/map_battle_cannae.json",
   "player_setup": {
@@ -16,7 +16,78 @@
       "carthage_mago_barca",
       "carthage_maharbal"
     ],
-    "starting_units": [],
+    "starting_units": [
+      {
+        "type": "swordsman",
+        "count": 1,
+        "nation": "gauls",
+        "position": {
+          "x": 222.0,
+          "z": 258.0
+        }
+      },
+      {
+        "type": "swordsman",
+        "count": 1,
+        "nation": "gauls",
+        "position": {
+          "x": 222.0,
+          "z": 284.0
+        }
+      },
+      {
+        "type": "swordsman",
+        "count": 1,
+        "nation": "iberians",
+        "position": {
+          "x": 228.0,
+          "z": 270.0
+        }
+      },
+      {
+        "type": "swordsman",
+        "count": 1,
+        "nation": "iberians",
+        "position": {
+          "x": 216.0,
+          "z": 296.0
+        }
+      },
+      {
+        "type": "slinger",
+        "count": 1,
+        "position": {
+          "x": 244.0,
+          "z": 262.0
+        }
+      },
+      {
+        "type": "slinger",
+        "count": 1,
+        "position": {
+          "x": 244.0,
+          "z": 288.0
+        }
+      },
+      {
+        "type": "horse_swordsman",
+        "count": 1,
+        "nation": "iberians",
+        "position": {
+          "x": 150.0,
+          "z": 182.0
+        }
+      },
+      {
+        "type": "horse_swordsman",
+        "count": 1,
+        "nation": "gauls",
+        "position": {
+          "x": 136.0,
+          "z": 172.0
+        }
+      }
+    ],
     "starting_buildings": [],
     "starting_resources": {
       "gold": 750,
@@ -29,9 +100,6 @@
       "nation": "roman_republic",
       "faction": "roman",
       "color": "red",
-      "historical_commanders": [
-        "roman_terentius_varro"
-      ],
       "team_id": 1,
       "difficulty": "very_hard",
       "strategy": "aggressive",
@@ -57,13 +125,17 @@
             {
               "type": "archer",
               "count": 4
+            },
+            {
+              "type": "velites",
+              "count": 2
             }
           ],
           "entry_point": {
             "x": 486,
             "z": 330
           },
-          "label": "Varro's legions"
+          "label": "The legions of the centre"
         },
         {
           "timing": 420.0,
@@ -155,6 +227,9 @@
       "nation": "roman_republic",
       "faction": "roman",
       "color": "yellow",
+      "historical_commanders": [
+        "roman_terentius_varro"
+      ],
       "team_id": 1,
       "difficulty": "hard",
       "strategy": "balanced",
@@ -176,6 +251,10 @@
             {
               "type": "archer",
               "count": 4
+            },
+            {
+              "type": "velites",
+              "count": 2
             }
           ],
           "entry_point": {
@@ -254,7 +333,7 @@
       ],
       "required_count": 1,
       "title": "Take the allied camp",
-      "description": "Turn the nearest Roman allied camp south of the field.",
+      "description": "Turn the Roman allied camp south of the field, where Varro leads the allied horse.",
       "hint": "It is the closest camp to your hill; take it before the wings close.",
       "target": {
         "x": 407,
@@ -270,8 +349,8 @@
       ],
       "required_count": 2,
       "title": "Take the consular town",
-      "description": "Seize Varro's town at the centre of the Roman line.",
-      "hint": "The centre gives way once the wings are wrapped around it.",
+      "description": "Seize the consular town at the centre of the Roman line, behind the legions.",
+      "hint": "The centre gives way once the wings are wrapped around it. Put the Gauls and Iberians in Convex Crescent from the Formation panel: the centre bows out toward the enemy and gives ground under pressure while the Africans on the wings hold, as Hannibal's did.",
       "target": {
         "x": 524,
         "z": 314
@@ -286,8 +365,8 @@
       ],
       "required_count": 3,
       "title": "Take the river camp",
-      "description": "Close the encirclement on the Aufidus camp to the north.",
-      "hint": "With the river camp taken there is nowhere left for the legions to reform.",
+      "description": "Close the encirclement on Paullus' camp across the Aufidus to the north.",
+      "hint": "The ford below the old wreck is shallow in August. With the river camp taken there is nowhere left for the legions to reform.",
       "target": {
         "x": 392,
         "z": 88
@@ -298,7 +377,7 @@
       "id": "kill_commanders",
       "type": "eliminate_commanders",
       "title": "Kill the consular commanders",
-      "description": "Finish the officers inside the ring.",
+      "description": "Finish the officers inside the ring: Paullus by the river, Varro with the allied horse, and the commander of the centre.",
       "hint": "Their troops leave the field with them."
     }
   ],
@@ -311,7 +390,7 @@
       "actions": [
         {
           "type": "show_message",
-          "text": "Fix the Roman center in place. Keep both cavalry wings active."
+          "text": "Let the Gallic and Iberian crescent take the Roman centre and give ground slowly. Keep both cavalry wings active."
         }
       ]
     },
@@ -323,7 +402,7 @@
       "actions": [
         {
           "type": "show_message",
-          "text": "Roman reserves are entering from the northern camp. Close the pocket faster."
+          "text": "Paullus' reserves are crossing the Aufidus from the northern camp. Close the pocket faster."
         }
       ]
     },
@@ -349,7 +428,7 @@
         "type": "mission_start",
         "delay": 2.5
       },
-      "text": "Eighty thousand. I would rather you heard the number than saw it, because seeing it takes most of a morning. Varro has the command today, and Varro believes in going forward. Stand wherever you like.",
+      "text": "Eighty thousand, and the command is mine today. Paullus looked at this plain and saw cavalry ground; I looked at the legions and saw the end of the war. He may keep the right by the river. I take the allied horse on the left myself.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 100
@@ -362,7 +441,7 @@
         "type": "mission_victory",
         "delay": 1.0
       },
-      "text": "So the centre gave and the wings did not. That was well done, and I say so, and I was inside it. Rome has lost an army and a ring for every knight in it. Rome has not yet lost anything that matters.",
+      "text": "So the centre gave and the wings closed, and I rode out of it with seventy horse to Venusia. The Senate will come out to thank me for not despairing of the Republic. It is the strangest thanks a man was ever given, and I will take it.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 120
@@ -390,7 +469,7 @@
         "by_owner_id": "player",
         "delay": 1.5
       },
-      "text": "You have the allied camp. Socii - allies. They were promised land for this war, and you have just handed them the first piece of it face down.",
+      "text": "You have the allied camp. Socii - allies. I promised them land for this war, and you have just handed them the first piece of it face down.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 60
@@ -405,7 +484,7 @@
         "by_owner_id": "player",
         "delay": 1.5
       },
-      "text": "Varro's town. Varro is not in it; Varro is out front, being brave at other people. Enjoy the walls. I never needed them.",
+      "text": "The consular town. Varro is not in it; Varro is out on the left with the allied horse, being brave at other people. Enjoy the walls. We never needed them.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 60
@@ -420,7 +499,7 @@
         "by_owner_id": "player",
         "delay": 1.5
       },
-      "text": "The Aufidus camp. So the ring closes. I told the Senate a ring was what he wanted. They told me I was old.",
+      "text": "The Aufidus camp. So the ring closes. Tell the Senate to fortify the city. Tell Fabius I kept his counsel to the end. I stay here with my men.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 60
@@ -434,7 +513,7 @@
         "owner_id": 2,
         "delay": 0.5
       },
-      "text": "Here they come - the whole consular line, in step, at Varro's tempo. Eighty thousand men do not turn. Remember that when you want them to.",
+      "text": "Here they come - the whole consular line, deeper than it is wide, at Varro's tempo. Eighty thousand men do not turn. Remember that when you want them to.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 60
@@ -449,7 +528,7 @@
         "by_owner_id": 4,
         "cooldown": 120
       },
-      "text": "The allied wing is at your works. Italians, mostly. They fight for Rome because the alternative is fighting Rome, which is a very persuasive argument.",
+      "text": "My allies are at your works. Italians, mostly. They fight for Rome because the alternative is fighting Rome, which is a very persuasive argument. I make it often.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 45,
@@ -464,7 +543,7 @@
         "owner_id": "player",
         "cooldown": 120
       },
-      "text": "Your men are going down in the centre. I know - that is where you put the Gauls, and Gauls are for spending. It is still a great many funerals.",
+      "text": "Your centre is going down. Of course it is: you put the Gauls there, and Gauls are for spending. My legions will walk through the hole by noon.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 40,
@@ -479,7 +558,7 @@
         "owner_id": "player",
         "delay": 2.0
       },
-      "text": "Hannibal is down. The Senate will strike a coin. I shall keep one and never spend it, which I am told is what he would have done.",
+      "text": "Hannibal is down. Fabius said wait. Paullus said wait. The butcher's son from the Forum said fight, and here we are.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 80
@@ -492,7 +571,7 @@
         "type": "near_defeat",
         "owner_id": 4
       },
-      "text": "The allied wing is down to a handful. I have counted them twice, because there was time. Whatever happens next on this field, remember someone counted.",
+      "text": "The allied horse is down to a handful and Hasdrubal's riders are behind it. There is a road to Venusia. A consul who lives can raise another army; a dead one only gets a statue.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 80
@@ -505,7 +584,7 @@
         "type": "mission_start",
         "delay": 16.0
       },
-      "text": "Let the centre give. The Africans wait on the wings, Hasdrubal has the river. Eighty thousand men walk into a sack as easily as into a field.",
+      "text": "Let the centre give. The Gauls and Iberians bow out toward them, the Africans wait on the wings, Hasdrubal has the river. Eighty thousand men walk into a sack as easily as into a field.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 90
@@ -520,7 +599,7 @@
         "by_owner_id": "player",
         "delay": 6.0
       },
-      "text": "The allies have lost their consul. Turn that wing inward.",
+      "text": "The allied wing has lost its consul. Varro will not see Venusia. Turn that wing inward.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 80
@@ -537,6 +616,35 @@
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 85
+    },
+    {
+      "id": "cannae_paullus_holds_the_river",
+      "speaker": "roman_legion_organizer",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "wave_incoming",
+        "owner_id": 3,
+        "delay": 0.5
+      },
+      "text": "The Roman horse is with me by the river. Varro wanted this battle; I will fight it properly all the same. Close up on the bank. Do not let Hasdrubal through.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 55
+    },
+    {
+      "id": "cannae_hannibal_paullus_falls",
+      "speaker": "carthage_sword_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "commander_defeated",
+        "owner_id": 3,
+        "by_owner_id": "player",
+        "delay": 6.0
+      },
+      "text": "Paullus is dead. He would not take a horse to leave the field. Find his body and bury it with honour; Rome kept the wrong consul.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 80
     }
   ],
   "include_ambient_undead": false,

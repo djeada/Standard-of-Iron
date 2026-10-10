@@ -755,26 +755,6 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
 <context>
     <name>Campaigns</name>
     <message>
-        <source>202 BC: recalled to Africa, Hannibal faces Scipio and Masinissa on the plain near Zama. The elephant lanes are prepared, the Roman camps are fortified, and the Iron Sepulcher no longer waits at the edge of history. Take all four camps and break both risings of the dead — nothing less ends this war.</source>
-        <translation>202 v. Chr.: Nach Afrika zurückgerufen, stellt sich Hannibal Scipio und Masinissa auf der Ebene bei Zama. Die Elefantengassen sind vorbereitet, die römischen Lager befestigt, und das Eiserne Grabmal wartet nicht länger am Rand der Geschichte. Nehmt alle vier Lager und brecht beide Erhebungen der Toten – nichts Geringeres beendet diesen Krieg.</translation>
-    </message>
-    <message>
-        <source>215-212 BC: Capua and the Campanian allies sustain Hannibal while Rome avoids another Cannae and attacks roads, farms, and loyalties. Fortify the Punic supply quarter and break all three coordinated assaults — the quarter is not held until the last consular column lies dead in the streets.</source>
-        <translation>215–212 v. Chr.: Capua und die kampanischen Verbündeten tragen Hannibal, während Rom ein zweites Cannae meidet und stattdessen Straßen, Höfe und Treueschwüre angreift. Befestigt das punische Nachschubviertel und brecht alle drei abgestimmten Angriffe – das Viertel ist erst gehalten, wenn die letzte konsularische Kolonne tot in den Gassen liegt.</translation>
-    </message>
-    <message>
-        <source>218 BC: Hannibal turns from the Rhône into the Alps with soldiers, cavalry, baggage animals, and elephants. The pass cannot be taken by the sword alone — it must be paid for in timber, stone and iron. Set your builders to the slopes while the mountain peoples contest every switchback; do not follow the grave-lights into the snow.</source>
-        <translation>218 v. Chr.: Hannibal wendet sich von der Rhone in die Alpen – mit Soldaten, Reiterei, Tragtieren und Elefanten. Der Pass lässt sich nicht mit dem Schwert allein nehmen; er will in Holz, Stein und Eisen bezahlt sein. Setzt Eure Baumeister an die Hänge, während die Bergvölker jede Kehre bestreiten – und folgt den Grablichtern nicht in den Schnee.</translation>
-    </message>
-    <message>
-        <source>218 BC: the Rhône must be secured faster than Publius Cornelius Scipio can bring his army from Massalia. In this altered campaign, Roman advance posts hold the eastern approaches. Cross by ford, pontoon, or wooded detour and seize their river camps.</source>
-        <translation>218 v. Chr.: Die Rhone muss gesichert sein, ehe Publius Cornelius Scipio sein Heer von Massalia heranführen kann. In diesem veränderten Feldzug halten römische Vorposten die östlichen Zugänge. Überquert den Fluss durch Furt, über Pontons oder auf bewaldetem Umweg und nehmt ihre Flusslager ein.</translation>
-    </message>
-    <message>
-        <source>At dawn the market still stands and the consular roads are choked with Roman shields. Campania has bought the army another season, though every ally now understands how long Rome is willing to bleed.</source>
-        <translation>Im Morgengrauen steht der Markt noch, und die Konsularstraßen sind verstopft von römischen Schilden. Kampanien hat dem Heer eine weitere Jahreszeit erkauft – doch jeder Verbündete begreift nun, wie lange Rom zu bluten bereit ist.</translation>
-    </message>
-    <message>
         <source>Command Hannibal&apos;s Carthaginian army from the Alpine invasion of 218 BC to Zama in 202 BC. Break Roman camps, take fortified towns, preserve allied economies, and survive the Republic&apos;s answering legions while the Iron Sepulcher watches from roads older than either empire.</source>
         <translation>Führt Hannibals karthagisches Heer vom Alpenzug 218 v. Chr. bis nach Zama 202 v. Chr. Brecht römische Lager, nehmt befestigte Städte, bewahrt die Wirtschaft Eurer Verbündeten und überlebt die Legionen, mit denen die Republik antwortet – während das Eiserne Grabmal von Straßen aus zusieht, die älter sind als beide Reiche.</translation>
     </message>
@@ -783,48 +763,68 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <translation>Der Weg der Barkiden</translation>
     </message>
     <message>
-        <source>The Roman army is destroyed and the camps are taken, yet Rome refuses negotiation. So many dead lie on the plain that the Sepulcher&apos;s iron bells sound beneath the earth for seven nights.</source>
-        <translation>Das römische Heer ist vernichtet und die Lager sind genommen, doch Rom verweigert jede Verhandlung. So viele Tote liegen auf der Ebene, dass die eisernen Glocken des Grabmals sieben Nächte lang unter der Erde läuten.</translation>
-    </message>
-    <message>
-        <source>The column reaches the plain of the Po diminished but unbroken. Italy lies below, and fires answer from Gallic settlements. Behind you, the sealed shrine in the pass begins counting the dead.</source>
-        <translation>Die Kolonne erreicht die Poebene, dezimiert, doch ungebrochen. Italien liegt darunter, und aus gallischen Siedlungen antworten Feuer. Hinter Euch beginnt der versiegelte Schrein im Pass, die Toten zu zählen.</translation>
-    </message>
-    <message>
-        <source>The ferries and supply road belong to Carthage. Scipio finds abandoned standards and cold cooking fires; Hannibal is already turning toward the mountains.</source>
-        <translation>Die Fähren und die Nachschubstraße gehören Karthago. Scipio findet zurückgelassene Feldzeichen und erkaltete Kochfeuer; Hannibal wendet sich bereits den Bergen zu.</translation>
-    </message>
-    <message>
         <source>The last standards fall under an African sky. Rome and Carthage will remember the field differently; the Iron Sepulcher remembers only that both armies finally entered its reach.</source>
         <translation>Die letzten Feldzeichen sinken unter afrikanischem Himmel. Rom und Karthago werden dieses Feld verschieden in Erinnerung behalten; das Eiserne Grabmal erinnert nur, dass beide Heere endlich in seine Reichweite traten.</translation>
     </message>
     <message>
-        <source>The survivors flee toward Placentia through sleet and mud. Roman tents, grain, and weapons are captured; bodies beneath the ice rise only when nobody is watching.</source>
-        <translation>Die Überlebenden fliehen durch Graupel und Schlamm auf Placentia zu. Römische Zelte, Getreide und Waffen werden erbeutet; die Leiber unter dem Eis erheben sich nur, wenn niemand hinsieht.</translation>
+        <source>202 BC: recalled to Africa, Hannibal meets Scipio on the plain near Zama. The maniples stand in columns with lanes for the elephants and velites waiting in them; Masinissa&apos;s Numidians ride for Rome; and the Iron Sepulcher no longer waits at the edge of history. Take all four camps and break both risings of the dead - nothing less ends this war.</source>
+        <translation>202 v. Chr.: Nach Afrika zurückgerufen, trifft Hannibal auf der Ebene bei Zama auf Scipio. Die Manipel stehen in Kolonnen, mit Gassen für die Elefanten, in denen Veliten warten; Massinissas Numider reiten für Rom; und das Eiserne Grabmal wartet nicht länger am Rand der Geschichte. Nehmt alle vier Lager und brecht beide Erhebungen der Toten – nichts Geringeres beendet diesen Krieg.</translation>
     </message>
     <message>
-        <source>216 BC: the consuls mass Rome&apos;s greatest field army beside the Aufidus. Yield the Punic center by design, win both cavalry wings, close the double envelopment, then take the allied camp to the south, Varro&apos;s town behind the line and the reserve camp across the river.</source>
-        <translation>216 v. Chr.: Die Konsuln sammeln Roms größtes Feldheer am Aufidus. Gebt die punische Mitte mit Absicht preis, gewinnt beide Reiterflügel, schließt die doppelte Umfassung und nehmt dann das verbündete Lager im Süden, Varros Stadt hinter der Linie und das Reservelager jenseits des Flusses.</translation>
+        <source>216 BC: the consuls cross the Aufidus and mass Rome&apos;s greatest field army on the plain. Varro has the command and the allied horse; Paullus holds the river flank. Bow the Gallic and Iberian centre out in a crescent and let it yield, hold with the Africans, send Hasdrubal&apos;s horse along the river, then take the allied camp to the south, the consular town behind the line and the reserve camp across the river.</source>
+        <translation>216 v. Chr.: Die Konsuln überschreiten den Aufidus und ziehen Roms größtes Feldheer auf der Ebene zusammen. Varro hat den Oberbefehl und die verbündete Reiterei; Paullus hält die Flussflanke. Wölbt die gallische und iberische Mitte zu einem Halbmond vor und lasst sie nachgeben, haltet mit den Afrikanern, schickt Hasdrubals Reiterei den Fluss entlang und nehmt dann das verbündete Lager im Süden, die Konsularstadt hinter der Linie und das Reservelager jenseits des Flusses.</translation>
     </message>
     <message>
-        <source>217 BC: Flaminius pursues along the shore road of Lake Trasimene. Mist closes the road between lake and wooded height — and it will not hold for long. Strike the length of the column and seize both field posts within twenty minutes, before the air clears and a cohort carries word out of the basin.</source>
-        <translation>217 v. Chr.: Flaminius setzt entlang der Uferstraße des Trasimenischen Sees nach. Nebel legt sich über die Straße zwischen See und bewaldeter Höhe — und er wird nicht lange halten. Schlagt die Kolonne in ihrer ganzen Länge und nehmt binnen zwanzig Minuten beide Feldposten, ehe die Luft aufklart und eine Kohorte Nachricht aus dem Becken trägt.</translation>
+        <source>216-211 BC: Capua has opened her gates to Hannibal, and Rome will not risk another Cannae. Fabius shadows the army down the Volturnus, the allied legions press from the south, and Marcellus brings rams and a siege tower against the walls from the east. Fortify the Punic quarter and break all three coordinated assaults - the quarter is not held until the last consular column lies dead in the streets.</source>
+        <translation>216–211 v. Chr.: Capua hat Hannibal seine Tore geöffnet, und Rom wird kein zweites Cannae riskieren. Fabius folgt dem Heer wie ein Schatten den Volturnus hinab, die verbündeten Legionen drängen von Süden, und Marcellus führt von Osten Rammböcke und einen Belagerungsturm gegen die Mauern. Befestigt das punische Viertel und brecht alle drei abgestimmten Angriffe – das Viertel ist erst gehalten, wenn die letzte konsularische Kolonne tot in den Straßen liegt.</translation>
     </message>
     <message>
-        <source>218 BC, winter: Sempronius Longus accepts the bait and drives his hungry army through the freezing Trebia. Hold the southern line, break all three crossings, then ride down the officers who sent them. You need not take his camp — you need only be standing when the river has finished with him.</source>
-        <translation>218 v. Chr., Winter: Sempronius Longus schluckt den Köder und treibt sein hungriges Heer durch die eiskalte Trebia. Haltet die südliche Linie, brecht alle drei Übergänge und reitet dann die Offiziere nieder, die sie geschickt haben. Sein Lager müsst Ihr nicht nehmen — Ihr müsst nur noch stehen, wenn der Fluss mit ihm fertig ist.</translation>
+        <source>217 BC: Flaminius pursues along the shore road of Lake Trasimene in marching order. Mist lies thick on the road between lake and height while the hilltops stand clear, and your Gauls, Iberians and slingers wait above it. It will not hold for long. Strike the length of the column and seize both field posts within twenty minutes, before the air clears and a cohort carries word out of the basin.</source>
+        <translation>217 v. Chr.: Flaminius verfolgt Euch in Marschordnung auf der Uferstraße des Trasimenischen Sees. Dichter Nebel liegt auf der Straße zwischen See und Höhen, während die Hügelkuppen klar stehen, und Eure Gallier, Iberer und Schleuderer warten darüber. Der Nebel wird nicht lange halten. Schlagt auf der ganzen Länge der Kolonne zu und nehmt binnen zwanzig Minuten beide Feldposten, ehe die Luft aufklart und eine Kohorte die Nachricht aus dem Becken trägt.</translation>
     </message>
     <message>
-        <source>218 BC: near the Ticinus, Scipio&apos;s reconnaissance force tests Hannibal&apos;s cavalry. Win the mounted engagement, cut the bridge road, and overrun both Roman camps before Scipio can pull his screen back across the river.</source>
-        <translation>218 v. Chr.: Am Ticinus prüft Scipios Aufklärungsverband Hannibals Reiterei. Gewinnt das Reitergefecht, schneidet die Brückenstraße ab und überrennt beide römischen Lager, ehe Scipio seinen Schirm über den Fluss zurückziehen kann.</translation>
+        <source>218 BC, late autumn: Hannibal turns from the Rhône into the Alps with soldiers, cavalry, baggage animals, and elephants. The Allobroges hold the heights over the defiles with stones ready to roll, and in this altered campaign Roman officers pay them to hold the road. The pass cannot be taken by the sword alone - it must be paid for in timber, stone and iron. Set your builders to the slopes; do not follow the grave-lights into the snow.</source>
+        <translation>218 v. Chr., Spätherbst: Hannibal wendet sich von der Rhone in die Alpen, mit Soldaten, Reiterei, Lasttieren und Elefanten. Die Allobroger halten die Höhen über den Engpässen, Steine zum Rollen bereit, und in diesem veränderten Feldzug bezahlen römische Offiziere sie dafür, die Straße zu halten. Der Pass ist mit dem Schwert allein nicht zu nehmen – er muss mit Holz, Stein und Eisen bezahlt werden. Schickt Eure Baumeister an die Hänge; folgt nicht den Grablichtern in den Schnee.</translation>
     </message>
     <message>
-        <source>Flaminius and fifteen thousand are lost beside the lake; next morning Maharbal&apos;s horse rounds up the six thousand who broke through the van. Rome names Fabius dictator. Past the eastern stream, an Iron Sepulcher altar has fed well without choosing a side.</source>
-        <translation>Flaminius und fünfzehntausend Mann sind am See verloren; am nächsten Morgen treibt Maharbals Reiterei die sechstausend zusammen, die durch die Vorhut gebrochen waren. Rom ernennt Fabius zum Diktator. Jenseits des östlichen Bachs hat sich ein Altar des Eisernen Grabmals satt gefressen, ohne Partei zu ergreifen.</translation>
+        <source>218 BC, winter: Sempronius Longus wants his battle before his consular year runs out, and drives his hungry army chest-deep through the freezing Trebia fords. Your Gauls and slingers hold the southern line; Mago lies hidden in the brush by the eastern crossing. Break all three crossings, then ride down the officers who sent them. You need not take his camp - you need only be standing when the river has finished with him.</source>
+        <translation>218 v. Chr., Winter: Sempronius Longus will seine Schlacht, bevor sein Konsulatsjahr abläuft, und treibt sein hungriges Heer brusttief durch die eisigen Furten der Trebia. Eure Gallier und Schleuderer halten die südliche Linie; Mago liegt im Gestrüpp am östlichen Übergang verborgen. Brecht alle drei Übergänge und reitet dann die Offiziere nieder, die sie geschickt haben. Ihr müsst sein Lager nicht nehmen – Ihr müsst nur noch stehen, wenn der Fluss mit ihm fertig ist.</translation>
     </message>
     <message>
-        <source>The Roman screen breaks and Scipio is carried from the field wounded. The Insubres see that Carthage can defeat Rome on Italian ground—but pale bowmen still haunt the abandoned ford.</source>
-        <translation>Der römische Schirm bricht, und Scipio wird verwundet vom Feld getragen. Die Insubrer sehen, dass Karthago Rom auf italischem Boden schlagen kann — doch bleiche Bogenschützen spuken noch an der verlassenen Furt.</translation>
+        <source>218 BC: near the Ticinus, Scipio rides out with his javelin-men and Gallic horse in front to test Hannibal&apos;s cavalry. Send the bridled Iberian horse at his centre and the Numidians round his wings, cut the bridge road, and overrun both Roman camps before Scipio can pull his screen back across the river.</source>
+        <translation>218 v. Chr.: Nahe dem Ticinus reitet Scipio aus, seine Speerwerfer und gallische Reiterei voran, um Hannibals Reiterei zu erproben. Schickt die gezäumte iberische Reiterei gegen seine Mitte und die Numider um seine Flügel, schneidet die Brückenstraße ab und überrennt beide römischen Lager, ehe Scipio seinen Schirm über den Fluss zurückziehen kann.</translation>
+    </message>
+    <message>
+        <source>218 BC: the Volcae hold the east bank of the Rhône, and Publius Cornelius Scipio is marching up from the sea. Hanno son of Bomilcar has gone upstream with the Iberians and is already across; when his smoke rises, put the army over by bridge and raft, elephants and all. In this altered campaign, Roman advance camps hold the far-bank road - seize them before Scipio arrives.</source>
+        <translation>218 v. Chr.: Die Volcae halten das Ostufer der Rhone, und Publius Cornelius Scipio marschiert vom Meer herauf. Hanno, Sohn des Bomilkar, ist mit den Iberern flussaufwärts gezogen und bereits drüben; wenn sein Rauch aufsteigt, setzt das Heer über Brücke und Floß über, samt den Elefanten. In diesem veränderten Feldzug halten römische Vorpostenlager die Straße am anderen Ufer – nehmt sie, ehe Scipio eintrifft.</translation>
+    </message>
+    <message>
+        <source>At dawn the market still stands and the rams lie burned before the east gate. Campania has bought the army another season, but the shield and the sword of Rome are both still in the field, and every ally now understands how long Rome is willing to bleed.</source>
+        <translation>Im Morgengrauen steht der Markt noch, und die Rammböcke liegen verbrannt vor dem Osttor. Kampanien hat dem Heer eine weitere Jahreszeit erkauft, doch Schild und Schwert Roms stehen beide noch im Feld, und jeder Verbündete begreift nun, wie lange Rom zu bluten bereit ist.</translation>
+    </message>
+    <message>
+        <source>Flaminius falls to an Insubrian horseman and fifteen thousand are lost beside the lake; next morning Maharbal&apos;s horse rounds up the six thousand who broke through the van. Rome names Fabius dictator. Past the eastern stream, an Iron Sepulcher altar has fed well without choosing a side.</source>
+        <translation>Flaminius fällt durch einen insubrischen Reiter, und fünfzehntausend Mann sind am See verloren; am nächsten Morgen treibt Maharbals Reiterei die sechstausend zusammen, die durch die Vorhut gebrochen waren. Rom ernennt Fabius zum Diktator. Jenseits des östlichen Bachs hat sich ein Altar des Eisernen Grabmals satt gefressen, ohne Partei zu ergreifen.</translation>
+    </message>
+    <message>
+        <source>The Roman army is destroyed and the camps are taken. Paullus lies among his men; Varro reaches Venusia with a handful of horse, and the Senate thanks him for not despairing of the Republic. Rome refuses negotiation. So many dead lie on the plain that the Sepulcher&apos;s iron bells sound beneath the earth for seven nights.</source>
+        <translation>Das römische Heer ist vernichtet, die Lager sind genommen. Paullus liegt unter seinen Männern; Varro erreicht Venusia mit einer Handvoll Reiter, und der Senat dankt ihm dafür, dass er nicht an der Republik verzweifelt ist. Rom verweigert Verhandlungen. So viele Tote liegen auf der Ebene, dass die eisernen Glocken des Grabmals sieben Nächte lang unter der Erde läuten.</translation>
+    </message>
+    <message>
+        <source>The Volcae break between the river and Hanno&apos;s swords, and the far-bank camps belong to Carthage. Scipio reaches the crossing three days late and finds cold cooking fires; Hannibal is already turning toward the mountains.</source>
+        <translation>Die Volcae zerbrechen zwischen dem Fluss und Hannos Schwertern, und die Lager am anderen Ufer gehören Karthago. Scipio erreicht den Übergang drei Tage zu spät und findet erkaltete Kochfeuer; Hannibal wendet sich bereits den Bergen zu.</translation>
+    </message>
+    <message>
+        <source>The column reaches the plain of the Po diminished but unbroken, the scree behind it red with the price of the passes. Italy lies below, and fires answer from Gallic settlements. Behind you, the sealed shrine in the pass begins counting the dead.</source>
+        <translation>Die Kolonne erreicht die Poebene, dezimiert, doch ungebrochen, das Geröll hinter ihr rot vom Preis der Pässe. Italien liegt darunter, und aus gallischen Siedlungen antworten Feuer. Hinter Euch beginnt der versiegelte Schrein im Pass, die Toten zu zählen.</translation>
+    </message>
+    <message>
+        <source>The legions come out of the river and Mago comes out of the reeds behind them. Ten thousand cut their way through to Placentia; the rest stay in the water. Sempronius writes to Rome that the weather robbed him of victory, and bodies beneath the ice rise only when nobody is watching.</source>
+        <translation>Die Legionen steigen aus dem Fluss, und Mago steigt hinter ihnen aus dem Schilf. Zehntausend schlagen sich nach Placentia durch; der Rest bleibt im Wasser. Sempronius schreibt nach Rom, das Wetter habe ihn um den Sieg gebracht, und die Leiber unter dem Eis erheben sich nur, wenn niemand hinsieht.</translation>
+    </message>
+    <message>
+        <source>The velites run before they throw, and Scipio is carried from the field across his son&apos;s saddle. Rome falls back over the Po to Placentia. The Insubres see that Carthage can defeat Rome on Italian ground - but pale bowmen still haunt the abandoned ford.</source>
+        <translation>Die Veliten fliehen, ehe sie werfen, und Scipio wird quer über dem Sattel seines Sohnes vom Feld getragen. Rom weicht über den Po nach Placentia zurück. Die Insubrer sehen, dass Karthago Rom auf italischem Boden schlagen kann – doch bleiche Bogenschützen spuken noch an der verlassenen Furt.</translation>
     </message>
 </context>
 <context>
@@ -8287,38 +8287,6 @@ um die Vorschau zu sehen</translation>
 <context>
     <name>Missions</name>
     <message>
-        <source>202 BC: Scipio arranged lanes through his infantry to blunt Hannibal&apos;s elephants, while Masinissa and Laelius commanded superior allied cavalry. The returning cavalry helped decide the battle. The Sepulcher intervention is the campaign&apos;s deliberate dark-fantasy break from history.</source>
-        <translation>202 v. Chr.: Scipio ließ Gassen durch seine Infanterie öffnen, um Hannibals Elefanten die Wucht zu nehmen, während Masinissa und Laelius die überlegene verbündete Reiterei führten. Die zurückkehrende Kavallerie half, die Schlacht zu entscheiden. Das Eingreifen des Grabmals ist der bewusste Dark-Fantasy-Bruch dieses Feldzugs mit der Geschichte.</translation>
-    </message>
-    <message>
-        <source>215-212 BC: Hannibal campaigned across Campania while Capua served as his principal Italian ally and winter base. This dark-fantasy composite condenses several Roman attempts to contain and isolate the Carthaginian army.</source>
-        <translation>215–212 v. Chr.: Hannibal führte Krieg quer durch Kampanien, während Capua sein wichtigster italischer Verbündeter und Winterstützpunkt war. Diese Dark-Fantasy-Verdichtung fasst mehrere römische Versuche zusammen, das karthagische Heer einzudämmen und zu isolieren.</translation>
-    </message>
-    <message>
-        <source>216 BC: beside the Aufidus, Hannibal&apos;s deliberately yielding center drew a much larger Roman infantry mass forward while African infantry attacked its flanks and Carthaginian cavalry closed the rear. Two Roman camps supported the army.</source>
-        <translation>216 v. Chr.: Am Aufidus zog Hannibals absichtlich nachgebendes Zentrum eine weit größere römische Infanteriemasse nach vorn, während afrikanische Infanterie deren Flanken angriff und karthagische Reiterei den Rücken schloss. Zwei römische Lager stützten das Heer.</translation>
-    </message>
-    <message>
-        <source>217 BC: Hannibal drew Gaius Flaminius along the narrow northern shore of Lake Trasimene and attacked from concealed high ground in morning mist. The Roman marching column had little room to deploy and Flaminius was killed.</source>
-        <translation>217 v. Chr.: Hannibal lockte Gaius Flaminius am schmalen Nordufer des Trasimenischen Sees entlang und griff im Morgennebel aus verdeckter Höhe an. Die römische Marschkolonne hatte kaum Raum, sich zu entfalten, und Flaminius fiel.</translation>
-    </message>
-    <message>
-        <source>218 BC: Hannibal crossed the Alps with a multinational army, cavalry, baggage train, and surviving elephants. Ancient sources disagree on the route; this scenario combines contested passes and local attacks into one dark-fantasy ascent.</source>
-        <translation>218 v. Chr.: Hannibal überquerte die Alpen mit einem vielvölkischen Heer, Reiterei, Tross und den überlebenden Elefanten. Die antiken Quellen sind sich über die Route uneins; dieses Szenario verbindet umkämpfte Pässe und örtliche Angriffe zu einem einzigen Dark-Fantasy-Aufstieg.</translation>
-    </message>
-    <message>
-        <source>218 BC: Hannibal crossed the Rhône upstream from its mouth using boats, rafts, and a detached force sent across to turn local opposition. Scipio arrived too late; this altered history places Roman advance camps on the far-bank road to create the opening Carthage-versus-Rome engagement.</source>
-        <translation>218 v. Chr.: Hannibal überquerte die Rhone oberhalb ihrer Mündung mit Booten, Flößen und einer abgesetzten Abteilung, die den örtlichen Widerstand umging. Scipio kam zu spät; diese veränderte Geschichte setzt römische Vorlager an die Straße am jenseitigen Ufer, um das erste Gefecht Karthago gegen Rom zu schaffen.</translation>
-    </message>
-    <message>
-        <source>218 BC: the Ticinus was primarily a cavalry engagement between reconnaissance forces. Roman consul Publius Cornelius Scipio was wounded and rescued during the retreat; the camp assault is a plausible dark-fantasy extension of that pursuit.</source>
-        <translation>218 v. Chr.: Der Ticinus war vor allem ein Reitergefecht zwischen Aufklärungsverbänden. Der römische Konsul Publius Cornelius Scipio wurde verwundet und auf dem Rückzug gerettet; der Lagerangriff ist eine plausible Dark-Fantasy-Fortführung dieser Verfolgung.</translation>
-    </message>
-    <message>
-        <source>A broad river operation with ferries, wooded detours, bridgeheads, and fortified supply quarters; the Iron Sepulcher occupies an avoidable ruin on the southern flank.</source>
-        <translation>Eine breit angelegte Flussoperation mit Fähren, bewaldeten Umwegen, Brückenköpfen und befestigten Nachschubvierteln; das Eiserne Grabmal besetzt eine vermeidbare Ruine an der Südflanke.</translation>
-    </message>
-    <message>
         <source>A camp, and nobody left standing in it. Get up. There is no shame in it. The shame would be in doing it a second time in the same valley.</source>
         <translation>Ein Lager, und niemand mehr, der darin steht. Steh auf. Darin liegt keine Schande. Die Schande läge darin, es im selben Tal ein zweites Mal zu tun.</translation>
     </message>
@@ -8333,10 +8301,6 @@ um die Vorschau zu sehen</translation>
     <message>
         <source>A new standard in the valley, and nobody under it who has held a spear more than twice. My outpost has orders to go and look at you. Try to still be standing when they arrive; it makes the report worth writing.</source>
         <translation>Ein neues Feldzeichen im Tal, und niemand darunter, der schon mehr als zweimal einen Speer gehalten hat. Mein Vorposten hat Befehl, nach dir zu sehen. Versuche, noch zu stehen, wenn sie eintreffen; das macht den Bericht erst lesenswert.</translation>
-    </message>
-    <message>
-        <source>After Cannae, Rome refuses the battle Hannibal wants. The Republic instead presses every road, ally, granary, and walled town. Beneath the orchards, Iron Sepulcher graves make even a successful defense feel temporary.</source>
-        <translation>Nach Cannae verweigert Rom die Schlacht, die Hannibal sucht. Stattdessen setzt die Republik jeder Straße, jedem Verbündeten, jedem Kornspeicher und jeder ummauerten Stadt zu. Unter den Obstgärten lassen die Gräber des Eisernen Grabmals selbst eine geglückte Verteidigung vorläufig erscheinen.</translation>
     </message>
     <message>
         <source>Battle of Cannae</source>
@@ -8359,20 +8323,8 @@ um die Vorschau zu sehen</translation>
         <translation>Schlacht von Zama</translation>
     </message>
     <message>
-        <source>Between assaults, seize the eastern Roman siege camp.</source>
-        <translation>Nehmt zwischen den Angriffen das östliche römische Belagerungslager.</translation>
-    </message>
-    <message>
         <source>Break all three Roman assault phases. The quarter holds when the last consular column is dead in the streets.</source>
         <translation>Brecht alle drei römischen Angriffsphasen. Das Viertel hält, wenn die letzte konsularische Kolonne tot in den Gassen liegt.</translation>
-    </message>
-    <message>
-        <source>Cold water and an early start, and my colleague is very pleased with both. He has the men in the river before their porridge. I said what I thought and was overruled, so I shall stand here and watch your ambush do its arithmetic.</source>
-        <translation>Kaltes Wasser und ein früher Aufbruch, und mein Amtsgenosse ist mit beidem höchst zufrieden. Er hat die Männer im Fluss, noch ehe sie ihren Brei bekamen. Ich sagte, was ich dachte, und wurde überstimmt; also werde ich hier stehen und zusehen, wie dein Hinterhalt seine Rechnung aufmacht.</translation>
-    </message>
-    <message>
-        <source>Cross the Rhône by one of several prepared routes, sever the eastern supply road, and capture two Roman advance camps before Scipio reaches the river.</source>
-        <translation>Überquert die Rhone auf einer von mehreren vorbereiteten Routen, kappt die östliche Nachschubstraße und nehmt zwei römische Vorlager, ehe Scipio den Fluss erreicht.</translation>
     </message>
     <message>
         <source>Crossing the Alps</source>
@@ -8391,28 +8343,8 @@ um die Vorschau zu sehen</translation>
         <translation>Schlagt Holz für die Schlitten, brecht Stein für die Straße und gewinnt Eisen für Beschläge und Achsen. Die Kolonne kommt nur so weit, wie Eure Baumeister tragen können.</translation>
     </message>
     <message>
-        <source>December 218 BC: Hannibal provoked Tiberius Sempronius Longus into crossing the cold Trebia before breakfast. Carthaginian infantry, cavalry, elephants, and Mago&apos;s hidden detachment struck the exhausted Roman army from front, flanks, and rear.</source>
-        <translation>Dezember 218 v. Chr.: Hannibal reizte Tiberius Sempronius Longus dazu, noch vor dem Frühmahl die kalte Trebia zu durchqueren. Karthagische Infanterie, Reiterei, Elefanten und Magos verborgene Abteilung trafen das erschöpfte römische Heer von vorn, von den Flanken und aus dem Rücken.</translation>
-    </message>
-    <message>
-        <source>Defend Hannibal&apos;s fortified Campanian supply town and break all three coordinated Roman assaults arriving from separate consular roads.</source>
-        <translation>Verteidigt Hannibals befestigte kampanische Nachschubstadt und brecht alle drei abgestimmten römischen Angriffe, die über getrennte Konsularstraßen anrücken.</translation>
-    </message>
-    <message>
-        <source>Eighty thousand. I would rather you heard the number than saw it, because seeing it takes most of a morning. Varro has the command today, and Varro believes in going forward. Stand wherever you like.</source>
-        <translation>Achtzigtausend. Mir wäre lieber, du hörtest die Zahl, als dass du sie sähest, denn sie zu sehen kostet den halben Vormittag. Varro führt heute den Befehl, und Varro glaubt daran, vorwärtszugehen. Stell dich hin, wohin es dir beliebt.</translation>
-    </message>
-    <message>
         <source>Every soldier lost is counted by the enemy tonight.</source>
         <translation>Jeder verlorene Soldat wird heute Nacht vom Feind gezählt.</translation>
-    </message>
-    <message>
-        <source>Execute the encirclement, then seize all three Roman camps before their reserves can restore the line.</source>
-        <translation>Führt die Umfassung aus und nehmt dann alle drei römischen Lager, ehe die Reserven die Linie wiederherstellen können.</translation>
-    </message>
-    <message>
-        <source>Fifteen thousand in the shallows, and the augurs will say the sacred chickens warned us. Kill a consul and Rome elects another by market day. That is the trick of us: we are not a man.</source>
-        <translation>Fünfzehntausend im Flachwasser, und die Auguren werden sagen, die heiligen Hühner hätten uns gewarnt. Töte einen Konsul, und Rom wählt bis zum Markttag einen neuen. Das ist unser Kunststück: Wir sind kein einzelner Mann.</translation>
     </message>
     <message>
         <source>Final battle in Africa: blunt Scipio&apos;s line, survive the Numidian cavalry, and seize all four Roman camps while breaking both risings of the dead.</source>
@@ -8429,10 +8361,6 @@ um die Vorschau zu sehen</translation>
     <message>
         <source>Hannibal&apos;s first Italian victory is a test of tempo and cavalry control. Ford-shades complicate the flanks but do not replace the Roman enemy.</source>
         <translation>Hannibals erster italischer Sieg ist eine Prüfung von Tempo und Reiterkontrolle. Die Schatten an der Furt erschweren die Flanken, ersetzen den römischen Feind aber nicht.</translation>
-    </message>
-    <message>
-        <source>Hannibal&apos;s masterpiece becomes a prolonged operational battle, not a single frontal collision.</source>
-        <translation>Hannibals Meisterstück wird zu einer langgezogenen operativen Schlacht statt zu einem einzigen frontalen Zusammenstoß.</translation>
     </message>
     <message>
         <source>Hold the field, then. My horse is dead, my son is dragging me off it by the arm, and I find I can still count. You have won a ford. Italy is nine hundred miles long.</source>
@@ -8455,10 +8383,6 @@ um die Vorschau zu sehen</translation>
         <translation>Es ist vorbei. Karthago wird Bedingungen erhalten, und die Bedingung wird sein, dass ihre Flotte im eigenen Hafen verbrennt, wo sie zusehen kann. Du warst der bessere Feldherr. Es hat sich als unerheblich erwiesen.</translation>
     </message>
     <message>
-        <source>Keep Capua, then. I shall come back after the harvest, and after the one following it. I have buried three consuls who were in a hurry. Patience is cheaper, and it does not require a triumph.</source>
-        <translation>Dann behalte Capua. Ich komme nach der Ernte wieder, und nach der übernächsten. Ich habe drei Konsuln begraben, die es eilig hatten. Geduld ist billiger, und sie verlangt keinen Triumphzug.</translation>
-    </message>
-    <message>
         <source>Lose the river camp and the cold takes what the Romans couldn&apos;t.</source>
         <translation>Verliert Ihr das Flusslager, holt sich die Kälte, was die Römer nicht bekamen.</translation>
     </message>
@@ -8471,10 +8395,6 @@ um die Vorschau zu sehen</translation>
         <translation>Verliert Ihr Euer Lager, stirbt das Tempo mit ihm.</translation>
     </message>
     <message>
-        <source>Mist on a lake road. Flaminius holds that a column moves faster than an ambush can close, and he is a consul, so he must be right. Do enjoy the next hour. I shall be the one writing the account of it.</source>
-        <translation>Nebel auf einer Seestraße. Flaminius meint, eine Marschsäule bewege sich schneller, als ein Hinterhalt sich schließen kann, und er ist Konsul, also muss er recht haben. Genieße die nächste Stunde. Ich werde derjenige sein, der den Bericht darüber schreibt.</translation>
-    </message>
-    <message>
         <source>No living formation remains to hold the gates.</source>
         <translation>Keine lebende Formation ist mehr da, um die Tore zu halten.</translation>
     </message>
@@ -8483,20 +8403,12 @@ um die Vorschau zu sehen</translation>
         <translation>Bewahrt den Markt und vier Wohnhäuser: Kampanien wird für seine Menschen und Vorräte verteidigt, nicht bloß für seine Mauern.</translation>
     </message>
     <message>
-        <source>Provision the column for the descent: harvest timber, stone and iron from the pass while the mountain tribes contest every switchback.</source>
-        <translation>Rüstet die Kolonne für den Abstieg: Gewinnt Holz, Stein und Eisen aus dem Pass, während die Bergstämme jede Kehre bestreiten.</translation>
-    </message>
-    <message>
         <source>Seize all four Roman camps — the consular line, Masinissa&apos;s Numidians, the rear guard, and the northern camp — before the cavalry closes your rear.</source>
         <translation>Nehmt alle vier römischen Lager – die konsularische Linie, Masinissas Numider, die Nachhut und das Nordlager –, ehe die Reiterei Euch den Rücken schließt.</translation>
     </message>
     <message>
         <source>Seize both Roman camps. The ambush is not finished until their flags come down.</source>
         <translation>Nehmt beide römischen Lager. Der Hinterhalt ist erst beendet, wenn ihre Feldzeichen fallen.</translation>
-    </message>
-    <message>
-        <source>So the centre gave and the wings did not. That was well done, and I say so, and I was inside it. Rome has lost an army and a ring for every knight in it. Rome has not yet lost anything that matters.</source>
-        <translation>Die Mitte gab also nach und die Flügel nicht. Das war gut gemacht, und ich sage es, und ich war mittendrin. Rom hat ein Heer verloren und einen Ring für jeden Ritter darin. Rom hat noch nichts verloren, worauf es ankäme.</translation>
     </message>
     <message>
         <source>So you came down the far side. Fewer, and on foot, and I am told you left the baggage up in the snow along with the men who were carrying it. Italy is waiting. Italy is not empty.</source>
@@ -8511,10 +8423,6 @@ um die Vorschau zu sehen</translation>
         <translation>So also. Der Barkide kriecht zur Rhone hinab. Setze über, wo es dir beliebt – der Fluss ist nicht wählerisch, wessen Knochen er behält, und Rom hat sehr viel Geduld und sehr viele Schaufeln. Meine Feldmesser schreiten dein Grab bereits ab. Man sagt mir, der Boden hier trinke gut.</translation>
     </message>
     <message>
-        <source>Spring the ambush and capture both Roman field camps within twenty minutes, before the mist lifts and a cohort escapes the basin.</source>
-        <translation>Lasst den Hinterhalt zuschnappen und nehmt beide römischen Feldlager binnen zwanzig Minuten, ehe der Nebel sich hebt und eine Kohorte aus dem Becken entkommt.</translation>
-    </message>
-    <message>
         <source>Take the crossings, then. Take the whole cold length of the road north and every stone laid on it. Rome does not lose provinces - she lends them, at interest, and I am told the collectors on this road wear no faces at all.</source>
         <translation>Dann nimm die Übergänge. Nimm die ganze kalte Länge der Straße nach Norden und jeden Stein, der darauf liegt. Rom verliert keine Provinzen – es verleiht sie, gegen Zinsen, und man sagt mir, die Eintreiber auf dieser Straße tragen überhaupt kein Gesicht.</translation>
     </message>
@@ -8523,20 +8431,8 @@ um die Vorschau zu sehen</translation>
         <translation>Die kampanische Wacht</translation>
     </message>
     <message>
-        <source>The Roman column walks into a geographical trap and is destroyed by converging attacks while the lakeside Sepulcher altar remains an optional horror.</source>
-        <translation>Die römische Kolonne läuft in eine geografische Falle und wird von zusammenlaufenden Angriffen vernichtet, während der Grabmalaltar am Seeufer ein wahlweiser Schrecken bleibt.</translation>
-    </message>
-    <message>
-        <source>The Romans are baited into the winter river and punished by Mago&apos;s concealed force, then the defense becomes an assault on a complete winter camp.</source>
-        <translation>Die Römer werden in den winterlichen Fluss gelockt und von Magos verborgener Truppe bestraft; dann wird aus der Verteidigung ein Angriff auf ein vollständiges Winterlager.</translation>
-    </message>
-    <message>
         <source>The commander falls — and every line collapses behind him.</source>
         <translation>Der Befehlshaber fällt – und jede Linie bricht hinter ihm zusammen.</translation>
-    </message>
-    <message>
-        <source>The crossing is a running battle against terrain, local resistance, and Roman influence. Sepulcher grave-lights remain a dangerous side path rather than the campaign&apos;s main enemy.</source>
-        <translation>Der Übergang ist ein fortwährender Kampf gegen Gelände, örtlichen Widerstand und römischen Einfluss. Die Grablichter des Grabmals bleiben ein gefährlicher Nebenweg, nicht der Hauptfeind des Feldzugs.</translation>
     </message>
     <message>
         <source>The final confrontation is Carthage against three coordinated Roman commands, until an Iron Sepulcher host attacks from the battlefield&apos;s neglected flank.</source>
@@ -8549,10 +8445,6 @@ um die Vorschau zu sehen</translation>
     <message>
         <source>The pass keeps them, then. A word of advice to whoever reads this: do not follow the lights on the snowfield. Whatever carries a lantern at that height stopped being a shepherd a long time ago.</source>
         <translation>Der Pass behält sie also. Ein Rat an den, der dies liest: Folge nicht den Lichtern auf dem Schneefeld. Was in dieser Höhe eine Laterne trägt, hat schon vor langer Zeit aufgehört, ein Hirte zu sein.</translation>
-    </message>
-    <message>
-        <source>The river keeps whatever it is given. Your elephants went in and not all of them came out, and the Trebia is not a large river. Rome has never needed a large one.</source>
-        <translation>Der Fluss behält, was man ihm gibt. Deine Elefanten gingen hinein, und nicht alle kamen wieder heraus, und die Trebia ist kein großer Fluss. Rom hat nie einen großen gebraucht.</translation>
     </message>
     <message>
         <source>The scouts are not coming back, then. Well - everyone begins somewhere, and you have begun by breaking an outpost full of men who were expecting their lunch. Rome will send someone who counts next time.</source>
@@ -8607,44 +8499,16 @@ um die Vorschau zu sehen</translation>
         <translation>Euer Kommando fällt – und die Flügel klappen nach innen.</translation>
     </message>
     <message>
-        <source>Fix the Roman center in place. Keep both cavalry wings active.</source>
-        <translation>Bindet das römische Zentrum. Haltet beide Reiterflügel in Bewegung.</translation>
-    </message>
-    <message>
         <source>Grave-lights move among the western orchards. The Iron Sepulcher is watching, but the legions remain the greater danger.</source>
         <translation>Grablichter ziehen durch die westlichen Obstgärten. Das Eiserne Grabmal sieht zu, doch die Legionen bleiben die größere Gefahr.</translation>
-    </message>
-    <message>
-        <source>Hold discipline. Let the Romans commit at the ford.</source>
-        <translation>Wahrt die Disziplin. Lasst die Römer sich an der Furt festlegen.</translation>
     </message>
     <message>
         <source>Roman cavalry screens the field. Punch through before reserves arrive.</source>
         <translation>Römische Reiterei schirmt das Feld ab. Stoßt durch, ehe Reserven eintreffen.</translation>
     </message>
     <message>
-        <source>Roman cavalry waves intensify. Collapse one flank before the rear guard arrives.</source>
-        <translation>Die römischen Reiterwellen verstärken sich. Lasst eine Flanke zusammenbrechen, ehe die Nachhut eintrifft.</translation>
-    </message>
-    <message>
-        <source>Roman reserves are entering from the northern camp. Close the pocket faster.</source>
-        <translation>Römische Reserven rücken aus dem Nordlager ein. Schließt den Kessel schneller.</translation>
-    </message>
-    <message>
-        <source>Scipio extends the line. Keep your center steady and protect elephants from isolation.</source>
-        <translation>Scipio dehnt die Linie. Haltet Euer Zentrum ruhig und schützt die Elefanten vor Vereinzelung.</translation>
-    </message>
-    <message>
         <source>Take the first pass quickly before the next ambush line assembles.</source>
         <translation>Nehmt den ersten Pass rasch, ehe sich die nächste Hinterhaltslinie sammelt.</translation>
-    </message>
-    <message>
-        <source>The Roman column enters the corridor. Wait for full commitment.</source>
-        <translation>Die römische Kolonne betritt den Korridor. Wartet, bis sie sich ganz festgelegt hat.</translation>
-    </message>
-    <message>
-        <source>A camp is taken by standing in it, not by levelling it. Nine men cannot kill thirty-eight, but they can hold two gate yards long enough to claim them - and a Roman column without its commander stops being a column.</source>
-        <translation>Ein Lager nimmt man, indem man darin steht, nicht indem man es schleift. Neun Mann können achtunddreißig nicht töten, doch sie können zwei Torhöfe lange genug halten, um sie zu beanspruchen – und eine römische Kolonne ohne ihren Befehlshaber hört auf, eine Kolonne zu sein.</translation>
     </message>
     <message>
         <source>A nation stands on its commander. Kill him and the camps go quiet and unclaimed - which, against a twenty-minute clock, is the only version of this battle that finishes in time.</source>
@@ -8743,18 +8607,6 @@ um die Vorschau zu sehen</translation>
         <translation>Die Kolonne zum ersten Pass führen</translation>
     </message>
     <message>
-        <source>Bring the column to the pontoon bridge on the near bank.</source>
-        <translation>Führe die Kolonne zur Pontonbrücke am diesseitigen Ufer.</translation>
-    </message>
-    <message>
-        <source>Cavalry reaches it first; hold the yard until the standard changes.</source>
-        <translation>Die Reiterei ist zuerst dort; halte den Hof, bis das Feldzeichen wechselt.</translation>
-    </message>
-    <message>
-        <source>Close the encirclement on the Aufidus camp to the north.</source>
-        <translation>Schließe die Umfassung am Aufidus-Lager im Norden.</translation>
-    </message>
-    <message>
         <source>Close the trap on the column town</source>
         <translation>Die Falle um die Kolonnenstadt schließen</translation>
     </message>
@@ -8773,10 +8625,6 @@ um die Vorschau zu sehen</translation>
     <message>
         <source>Finish the consular officers on the field.</source>
         <translation>Mache die konsularischen Offiziere auf dem Feld nieder.</translation>
-    </message>
-    <message>
-        <source>Finish the officers inside the ring.</source>
-        <translation>Mache die Offiziere im Ring nieder.</translation>
     </message>
     <message>
         <source>Hold the Punic quarter through every consular column.</source>
@@ -8821,14 +8669,6 @@ um die Vorschau zu sehen</translation>
     <message>
         <source>Ride down the commanders once the crossings break.</source>
         <translation>Reite die Befehlshaber nieder, sobald die Übergänge brechen.</translation>
-    </message>
-    <message>
-        <source>Seize Masinissa&apos;s camp to finish the four.</source>
-        <translation>Nimm Masinissas Lager, um die vier vollzumachen.</translation>
-    </message>
-    <message>
-        <source>Seize Varro&apos;s town at the centre of the Roman line.</source>
-        <translation>Nimm Varros Stadt in der Mitte der römischen Linie.</translation>
     </message>
     <message>
         <source>Seize the Roman hill fort</source>
@@ -8895,28 +8735,12 @@ um die Vorschau zu sehen</translation>
         <translation>Das Uferlager nehmen</translation>
     </message>
     <message>
-        <source>The centre gives way once the wings are wrapped around it.</source>
-        <translation>Die Mitte gibt nach, sobald die Flügel sie umfassen.</translation>
-    </message>
-    <message>
-        <source>The centre is the strongest camp; bring the elephants up first.</source>
-        <translation>Die Mitte ist das stärkste Lager; führe zuerst die Elefanten heran.</translation>
-    </message>
-    <message>
         <source>The last camp lies to the north-east, beyond the consular line.</source>
         <translation>Das letzte Lager liegt im Nordosten, jenseits der konsularischen Linie.</translation>
     </message>
     <message>
-        <source>The quarter holds when the last column is dead in the streets.</source>
-        <translation>Das Viertel hält, wenn die letzte Kolonne tot in den Gassen liegt.</translation>
-    </message>
-    <message>
         <source>The reserve feeds the consular line; cut it and the line thins.</source>
         <translation>Die Reserve speist die konsularische Linie; kappe sie, und die Linie dünnt aus.</translation>
-    </message>
-    <message>
-        <source>The river runs north to south across the middle of the valley; the nearest crossing is due east of camp.</source>
-        <translation>Der Fluss läuft von Norden nach Süden durch die Mitte des Tals; der nächste Übergang liegt genau östlich des Lagers.</translation>
     </message>
     <message>
         <source>The winter camp lies north across the river.</source>
@@ -8935,16 +8759,8 @@ um die Vorschau zu sehen</translation>
         <translation>Holz für die Schlitten, Stein für den Straßenkörper, Eisen für Beschläge und Achsen.</translation>
     </message>
     <message>
-        <source>Turn the nearest Roman allied camp south of the field.</source>
-        <translation>Wende das nächste römische Bundesgenossenlager südlich des Feldes.</translation>
-    </message>
-    <message>
         <source>Turn the nearest Roman camp before the cavalry returns.</source>
         <translation>Wende das nächste römische Lager, ehe die Reiterei zurückkehrt.</translation>
-    </message>
-    <message>
-        <source>With the river camp taken there is nowhere left for the legions to reform.</source>
-        <translation>Ist das Flusslager genommen, bleibt den Legionen kein Ort mehr, sich neu zu ordnen.</translation>
     </message>
     <message>
         <source>Break all five columns. The ford is held when the last of them is dead in front of it, and not one column sooner.</source>
@@ -9007,10 +8823,6 @@ um die Vorschau zu sehen</translation>
         <translation>Der Sporn teilt sie für uns, und das ist die einzige Freundlichkeit, die dieser Boden bietet. Karrentor im Westen, Ziegenpfad im Osten, und sie treffen sich nur dort, wo wir stehen. Du kannst nicht beide Mündungen halten. Wähl eine, halte sie, und rühr dich, wenn die Hörner es sagen.</translation>
     </message>
     <message>
-        <source>A few of the screen left, and me. My son is somewhere on this field; if he finds me, he will be insufferable about it for the rest of his life.</source>
-        <translation>Ein paar vom Schirm sind noch da, und ich. Mein Sohn ist irgendwo auf diesem Feld; findet er mich, wird er sein Leben lang unerträglich damit sein.</translation>
-    </message>
-    <message>
         <source>Cut and carry home eight hundred of timber and two hundred and ten of stone. The near stand was stripped bare; the deep pines and the east screen are the only timber left standing.</source>
         <translation>Schlagt und bringt achthundert Holz und zweihundertzehn Stein heim. Der nahe Bestand ist kahl geschlagen; die tiefen Kiefern und der Ostschirm sind das einzige Holz, das noch steht.</translation>
     </message>
@@ -9039,14 +8851,6 @@ um die Vorschau zu sehen</translation>
         <translation>Hannibal liegt im Schlamm der Trebia. Was Mago auch in den Rinnen verborgen hat, es bringt ihn nicht zurück.</translation>
     </message>
     <message>
-        <source>Hannibal is down. The Senate will strike a coin. I shall keep one and never spend it, which I am told is what he would have done.</source>
-        <translation>Hannibal ist gefallen. Der Senat wird eine Münze prägen. Ich behalte eine und gebe sie nie aus, was er, wie man mir sagt, ebenso gehalten hätte.</translation>
-    </message>
-    <message>
-        <source>Here they come - the whole consular line, in step, at Varro&apos;s tempo. Eighty thousand men do not turn. Remember that when you want them to.</source>
-        <translation>Da kommen sie - die ganze Konsularlinie, im Gleichschritt, in Varros Takt. Achtzigtausend Mann wenden nicht. Denkt daran, wenn Ihr es von ihnen wollt.</translation>
-    </message>
-    <message>
         <source>Leave the axes. Leave the carts. A detail that cannot fill its own levy before the column comes through does not get to carry anything.</source>
         <translation>Lasst die Äxte. Lasst die Karren. Ein Trupp, der seine Abgabe nicht erfüllt, ehe die Kolonne durchkommt, darf gar nichts tragen.</translation>
     </message>
@@ -9057,10 +8861,6 @@ um die Vorschau zu sehen</translation>
     <message>
         <source>Light is going. Five minutes of road left in the day, and whatever is on the carts when the column reaches us is what we levied. Bring them home.</source>
         <translation>Das Licht geht. Fünf Minuten Straße bleiben vom Tag, und was auf den Karren liegt, wenn die Kolonne uns erreicht, ist unsere Abgabe. Bringt sie heim.</translation>
-    </message>
-    <message>
-        <source>Masinissa&apos;s camp is yours. His riders will not care; they were never in it. Watch the horizon, not the tents.</source>
-        <translation>Masinissas Lager gehört Euch. Seine Reiter wird es nicht kümmern; sie waren nie darin. Achtet auf den Horizont, nicht auf die Zelte.</translation>
     </message>
     <message>
         <source>My forward town, taken by horsemen. Horsemen. My father would have said something cutting; I find I am simply cold.</source>
@@ -9083,40 +8883,12 @@ um die Vorschau zu sehen</translation>
         <translation>Patrouillen an Euren Werken. Ihr wollt einen Fluss überqueren mit dem Rücken zu meinen Straßen. Das ist kühn. Es ist auch, wie man ertrinkt.</translation>
     </message>
     <message>
-        <source>Sempronius has a handful left and they are on the wrong side of a winter river. He will still call it a victory in Rome. He always does.</source>
-        <translation>Sempronius bleibt eine Handvoll, und die steht auf der falschen Seite eines Winterflusses. In Rom wird er es dennoch einen Sieg nennen. Das tut er immer.</translation>
-    </message>
-    <message>
-        <source>Sempronius is crossing. Now, in the cold, without breakfast, because a consul&apos;s year ends in March and he wants his battle before it does.</source>
-        <translation>Sempronius setzt über. Jetzt, in der Kälte, ohne Frühstück, weil das Jahr eines Konsuls im März endet und er seine Schlacht davor will.</translation>
-    </message>
-    <message>
-        <source>So he dies by his own lake in his own fog. Rome will call it justice. I call it weather, and I have always respected weather.</source>
-        <translation>So stirbt er an seinem eigenen See in seinem eigenen Nebel. Rom wird es Gerechtigkeit nennen. Ich nenne es Wetter, und Wetter habe ich stets geachtet.</translation>
-    </message>
-    <message>
         <source>Somebody is trying to cut a way out along the shore. Good. Somebody should get home and describe this accurately.</source>
         <translation>Jemand versucht, sich am Ufer entlang einen Weg hinaus zu schlagen. Gut. Jemand sollte heimkommen und dies genau beschreiben.</translation>
     </message>
     <message>
-        <source>The Aufidus camp. So the ring closes. I told the Senate a ring was what he wanted. They told me I was old.</source>
-        <translation>Das Aufidus-Lager. So schließt sich der Ring. Ich sagte dem Senat, ein Ring sei, was er wollte. Sie sagten mir, ich sei alt.</translation>
-    </message>
-    <message>
         <source>The Barcid falls at the Ticinus. Then this was the whole war, and it fit inside an afternoon. I expected more of it; I am not sure I wanted more.</source>
         <translation>Der Barkide fällt am Ticinus. Dann war dies der ganze Krieg, und er passte in einen Nachmittag. Ich hatte mehr erwartet; ob ich mehr wollte, weiß ich nicht.</translation>
-    </message>
-    <message>
-        <source>The Numidians are riding. Your Numidians, once. Now they ride for Rome, and they ride the same way they always did - around you.</source>
-        <translation>Die Numider reiten. Einst Eure Numider. Nun reiten sie für Rom, und sie reiten wie stets - um Euch herum.</translation>
-    </message>
-    <message>
-        <source>The allied wing is at your works. Italians, mostly. They fight for Rome because the alternative is fighting Rome, which is a very persuasive argument.</source>
-        <translation>Der Bundesgenossenflügel steht an Euren Werken. Meist Italiker. Sie kämpfen für Rom, weil die Alternative heißt, gegen Rom zu kämpfen, was ein sehr überzeugendes Argument ist.</translation>
-    </message>
-    <message>
-        <source>The allied wing is down to a handful. I have counted them twice, because there was time. Whatever happens next on this field, remember someone counted.</source>
-        <translation>Vom Bundesgenossenflügel bleibt eine Handvoll. Ich habe sie zweimal gezählt, weil Zeit war. Was auf diesem Feld auch geschieht, denkt daran, dass jemand gezählt hat.</translation>
     </message>
     <message>
         <source>The allied wing is on the southern road. They know this country - they own most of it, or did, before you started eating it.</source>
@@ -9125,14 +8897,6 @@ um die Vorschau zu sehen</translation>
     <message>
         <source>The column came back through and the carts were still empty. A levy that misses the road is a levy nobody signed for.</source>
         <translation>Die Kolonne kam zurück, und die Karren waren noch leer. Eine Abgabe, die die Straße verfehlt, hat niemand gezeichnet.</translation>
-    </message>
-    <message>
-        <source>The column is nearly gone. What is left of it will hold until the fog lifts, because that is the only order anyone can still hear.</source>
-        <translation>Die Kolonne ist beinahe dahin. Was von ihr bleibt, hält, bis der Nebel steigt, denn das ist der einzige Befehl, den noch jemand hört.</translation>
-    </message>
-    <message>
-        <source>The column is on the lakeside road. In fog, in a defile, in a hurry. Every word of that sentence is a mistake and Flaminius owns them all.</source>
-        <translation>Die Kolonne ist auf der Seestraße. Im Nebel, in einem Engpass, in Eile. Jedes Wort dieses Satzes ist ein Fehler, und Flaminius besitzt sie alle.</translation>
     </message>
     <message>
         <source>The high pass is sending everything it has. They have been paid in Roman silver to hold that road, and mountain men earn their silver.</source>
@@ -9145,10 +8909,6 @@ um die Vorschau zu sehen</translation>
     <message>
         <source>The last column. Everything they have left is on the road. Hold this one and the ford is ours until the spring.</source>
         <translation>Die letzte Kolonne. Alles, was sie noch haben, ist auf der Straße. Haltet diese und die Furt gehört uns bis zum Frühjahr.</translation>
-    </message>
-    <message>
-        <source>The last of the legions is in the water. Everything Rome has north of the Apennines is coming at you wet. Hold this and you hold Italy for a winter.</source>
-        <translation>Die letzten Legionen sind im Wasser. Alles, was Rom nördlich des Apennins hat, kommt nass auf Euch zu. Haltet dies und Ihr haltet Italien für einen Winter.</translation>
     </message>
     <message>
         <source>The last of the northern columns is moving. I have spent a year making you hold this quarter. Hold it one more hour and I will have spent it well.</source>
@@ -9175,10 +8935,6 @@ um die Vorschau zu sehen</translation>
         <translation>Die Patrouillen sind beinahe erledigt. So sei es. Ich bringe die Flotte nach Italien zurück und erwarte Euch dort mit dem Rest der Republik.</translation>
     </message>
     <message>
-        <source>The rearguard camp falls. I held it the way I hold everything - long enough, and no longer. Scipio will manage without an old man&apos;s tents.</source>
-        <translation>Das Nachhutlager fällt. Ich hielt es, wie ich alles halte - lange genug, und nicht länger. Scipio kommt ohne die Zelte eines alten Mannes aus.</translation>
-    </message>
-    <message>
         <source>The reserve camp is yours. It was never meant to fight - it was meant to be there afterwards. There is not going to be an afterwards, is there.</source>
         <translation>Das Reservelager gehört Euch. Es war nie zum Kämpfen gedacht - es sollte danach da sein. Es wird kein Danach geben, nicht wahr.</translation>
     </message>
@@ -9195,10 +8951,6 @@ um die Vorschau zu sehen</translation>
         <translation>Das Uferlager. Das war der Weg hinaus, und nun bleibt nur der See. Römer sind im Großen und Ganzen kein schwimmendes Volk.</translation>
     </message>
     <message>
-        <source>The siege column is at the run. Engines behind, ladders in front. I do not besiege towns. I take them.</source>
-        <translation>Die Belagerungskolonne kommt im Laufschritt. Geschütze hinten, Leitern vorn. Ich belagere keine Städte. Ich nehme sie.</translation>
-    </message>
-    <message>
         <source>The tribes are coming down the slope. They do not fight in lines. They fight in rockfalls.</source>
         <translation>Die Stämme kommen den Hang herab. Sie kämpfen nicht in Linien. Sie kämpfen in Steinschlägen.</translation>
     </message>
@@ -9207,28 +8959,12 @@ um die Vorschau zu sehen</translation>
         <translation>Die westliche Reserve setzt sich in Bewegung, gegen meinen Rat. Ich gab den Rat im Wissen, dass er übergangen würde; er war dennoch wert, gegeben zu werden.</translation>
     </message>
     <message>
-        <source>They are hitting your camp, because it is the only thing on this road they can see. Men in fog attack whatever is nearest. Remember it.</source>
-        <translation>Sie schlagen auf Euer Lager ein, weil es das Einzige auf dieser Straße ist, das sie sehen. Männer im Nebel greifen an, was am nächsten ist. Denkt daran.</translation>
-    </message>
-    <message>
-        <source>Varro&apos;s town. Varro is not in it; Varro is out front, being brave at other people. Enjoy the walls. I never needed them.</source>
-        <translation>Varros Stadt. Varro ist nicht darin; Varro ist vorn und ist tapfer gegen andere Leute. Erfreut Euch der Mauern. Ich brauchte nie welche.</translation>
-    </message>
-    <message>
         <source>We are losing men on the goat path. Pull the wounded back and put fresh spears in the gap. Nobody dies standing in a hole.</source>
         <translation>Wir verlieren Männer auf dem Ziegenpfad. Zieht die Verwundeten zurück und setzt frische Speere in die Lücke. Niemand stirbt, indem er in einem Loch steht.</translation>
     </message>
     <message>
         <source>We are on your bank and at your works. A river only stops men who are not already freezing.</source>
         <translation>Wir stehen an Eurem Ufer und an Euren Werken. Ein Fluss hält nur Männer auf, die nicht schon frieren.</translation>
-    </message>
-    <message>
-        <source>You have the allied camp. Socii - allies. They were promised land for this war, and you have just handed them the first piece of it face down.</source>
-        <translation>Ihr habt das Bundesgenossenlager. Socii - Verbündete. Ihnen wurde Land für diesen Krieg versprochen, und Ihr habt ihnen soeben das erste Stück davon verkehrt herum überreicht.</translation>
-    </message>
-    <message>
-        <source>You have the marching town. Flaminius built it in a fog and never looked back. There is a lesson there; he will not be the one to learn it.</source>
-        <translation>Ihr habt die Marschstadt. Flaminius baute sie im Nebel und blickte nie zurück. Darin liegt eine Lehre; er wird nicht der sein, der sie lernt.</translation>
     </message>
     <message>
         <source>Your camp is under the screen&apos;s spears. A camp on the wrong bank of a cold river - I would not have chosen it, and now you cannot un-choose it.</source>
@@ -9247,16 +8983,8 @@ um die Vorschau zu sehen</translation>
         <translation>Eure Männer sterben auf dem Eis. Nicht an Speeren - an Kälte, Hunger und der Rechnung einer Straße, die länger ist als Euer Korn.</translation>
     </message>
     <message>
-        <source>Your men are dying too. A trap costs the trapper something; the good ones simply cost him less.</source>
-        <translation>Auch Eure Männer sterben. Eine Falle kostet den Fallensteller etwas; die guten kosten ihn bloß weniger.</translation>
-    </message>
-    <message>
         <source>Your men are falling at the water. The Rhone is not particular about whose bones it keeps; I did tell you.</source>
         <translation>Eure Männer fallen am Wasser. Die Rhone ist nicht wählerisch, wessen Knochen sie behält; ich habe es Euch gesagt.</translation>
-    </message>
-    <message>
-        <source>Your men are going down in the centre. I know - that is where you put the Gauls, and Gauls are for spending. It is still a great many funerals.</source>
-        <translation>Eure Männer gehen in der Mitte nieder. Ich weiß - dorthin habt Ihr die Gallier gestellt, und Gallier sind zum Ausgeben da. Es sind dennoch sehr viele Begräbnisse.</translation>
     </message>
     <message>
         <source>Your riders are dying by the ford. Numidians, I think. They ride beautifully, and they die at the ordinary speed.</source>
@@ -9411,18 +9139,6 @@ um die Vorschau zu sehen</translation>
         <translation>Säubere den Wüstenschrein nordwestlich deines Lagers; sein Hort bezahlt den Vorstoß nach Osten.</translation>
     </message>
     <message>
-        <source>Eighty elephants, and he has cut a lane for every one. Hold the men of Italy back in the third line. They are the last answer I have.</source>
-        <translation>Achtzig Elefanten, und er hat jedem eine Gasse geschlagen. Haltet die Männer Italiens im dritten Treffen zurück. Sie sind die letzte Antwort, die ich habe.</translation>
-    </message>
-    <message>
-        <source>Fabius waits at the basin watch south of the road; Scipio holds the sanctuary above the eastern ford. Take them before the column turns on your camp.</source>
-        <translation>Fabius wartet an der Beckenwacht südlich der Straße; Scipio hält das Heiligtum über der östlichen Furt. Nimm sie, ehe sich die Kolonne gegen dein Lager wendet.</translation>
-    </message>
-    <message>
-        <source>Fine. Sempronius rides to Rome to explain his morning. Ten thousand of ours cut through your centre and walked on to Placentia, and they will meet you in the spring with dry feet and long memories.</source>
-        <translation>Schön. Sempronius reitet nach Rom, um seinen Morgen zu erklären. Zehntausend der Unseren haben sich durch Eure Mitte geschlagen und sind weiter nach Placentia gezogen, und im Frühjahr treffen sie Euch mit trockenen Füßen und langem Gedächtnis.</translation>
-    </message>
-    <message>
         <source>Fresh Roman horse is coming up from the consular town and the allied camp. Keep your own cavalry between it and your centre.</source>
         <translation>Frische römische Reiterei rückt aus der Konsulstadt und dem verbündeten Lager heran. Halte deine eigene Reiterei zwischen ihr und deiner Mitte.</translation>
     </message>
@@ -9435,16 +9151,8 @@ um die Vorschau zu sehen</translation>
         <translation>Hannibal fällt in Kampanien, zwischen den Obstgärten, in einem Krieg, den er bei Saguntum begann. Darin liegt eine Art Gnade, und ich habe sie nicht beabsichtigt.</translation>
     </message>
     <message>
-        <source>Hanno&apos;s smoke is up on the far bank. Across, all of you - Scipio is three days behind and I intend to keep him there.</source>
-        <translation>Hannos Rauch steigt am anderen Ufer auf. Hinüber, ihr alle - Scipio ist drei Tage hinter uns, und dort gedenke ich ihn zu halten.</translation>
-    </message>
-    <message>
         <source>He will not fight me, so he will starve me. Good. Every column he sends to the walls is a battle he swore he would not give.</source>
         <translation>Er will nicht gegen mich kämpfen, also will er mich aushungern. Gut. Jede Kolonne, die er an die Mauern schickt, ist eine Schlacht, die er geschworen hat, nicht zu schlagen.</translation>
-    </message>
-    <message>
-        <source>His ladders, his grain, his camp. Marcellus may walk back to Nola and explain.</source>
-        <translation>Seine Leitern, sein Korn, sein Lager. Marcellus mag nach Nola zurückgehen und es erklären.</translation>
     </message>
     <message>
         <source>Hold the southern bank through all three crossings. Sempronius spends his army in the river; spend less of yours.</source>
@@ -9463,20 +9171,12 @@ um die Vorschau zu sehen</translation>
         <translation>Töte die römischen Offiziere in den Pässen</translation>
     </message>
     <message>
-        <source>Lake on their left, hills on their right, mist over both. Nobody moves until the whole column is inside.</source>
-        <translation>Den See zur Linken, die Hügel zur Rechten, Nebel über beiden. Niemand rührt sich, bis die ganze Kolonne drin ist.</translation>
-    </message>
-    <message>
         <source>Last column. Spend the reserve at the gate it chooses, not the one you fear.</source>
         <translation>Letzte Kolonne. Setz die Reserve an dem Tor ein, das sie wählt, nicht an dem, das du fürchtest.</translation>
     </message>
     <message>
         <source>Let him count. Numidians on the wings, the bridled horse in the centre, and nobody waits for the consul to finish his sentence.</source>
         <translation>Soll er zählen. Numider auf den Flügeln, die gezäumte Reiterei in der Mitte, und niemand wartet, bis der Konsul seinen Satz beendet hat.</translation>
-    </message>
-    <message>
-        <source>Let the centre give. The Africans wait on the wings, Hasdrubal has the river. Eighty thousand men walk into a sack as easily as into a field.</source>
-        <translation>Lasst die Mitte nachgeben. Die Afrikaner warten auf den Flügeln, Hasdrubal hat den Fluss. Achtzigtausend Mann laufen so leicht in einen Sack wie auf ein Feld.</translation>
     </message>
     <message>
         <source>Masinissa has no one left to ride for. Turn the elephants on the centre.</source>
@@ -9515,14 +9215,6 @@ um die Vorschau zu sehen</translation>
         <translation>Sechs Brücken überspannen die Rhone, und römische Augen bewachen das Ende jeder einzelnen. Wähle einen Übergang und bleib dabei.</translation>
     </message>
     <message>
-        <source>Stay out of the water. Every Roman who wades it reaches you cold and slow.</source>
-        <translation>Bleib aus dem Wasser. Jeder Römer, der hindurchwatet, erreicht dich kalt und langsam.</translation>
-    </message>
-    <message>
-        <source>Strike now. Take Fabius at the basin watch before the column finds your camp.</source>
-        <translation>Schlag jetzt zu. Nimm Fabius an der Beckenwacht, ehe die Kolonne dein Lager findet.</translation>
-    </message>
-    <message>
         <source>Take a Roman barracks. The winter camp&apos;s grain is worth the ride.</source>
         <translation>Nimm eine römische Kaserne. Das Korn des Winterlagers ist den Ritt wert.</translation>
     </message>
@@ -9555,18 +9247,6 @@ um die Vorschau zu sehen</translation>
         <translation>Die Volturnus-Legion kommt durch die Obstgärten herab. Langsam. Ich habe langsam befohlen. Jeder Baum, an dem sie vorbeizieht, ist einer, den Ihr nicht ernten werdet.</translation>
     </message>
     <message>
-        <source>The Volturnus legion is spent. I have others. I have always had others. That is what the delaying was for.</source>
-        <translation>Die Volturnus-Legion ist verbraucht. Ich habe andere. Ich hatte immer andere. Dafür war das Zaudern da.</translation>
-    </message>
-    <message>
-        <source>The allies have lost their consul. Turn that wing inward.</source>
-        <translation>Die Verbündeten haben ihren Konsul verloren. Schwenkt diesen Flügel nach innen.</translation>
-    </message>
-    <message>
-        <source>The column has lost its head. Take the town before anyone thinks to pick it up.</source>
-        <translation>Die Kolonne hat ihren Kopf verloren. Nehmt die Stadt, ehe jemand daran denkt, ihn aufzuheben.</translation>
-    </message>
-    <message>
         <source>The descent garrison is marching up from the south-east. Hold the camp and keep the sledges loading.</source>
         <translation>Die Abstiegsbesatzung marschiert von Südosten herauf. Halte das Lager und lass die Schlitten weiter beladen.</translation>
     </message>
@@ -9595,18 +9275,6 @@ um die Vorschau zu sehen</translation>
         <translation>Die Männer haben gegessen und sich an den Feuern die Glieder geölt, und Mago liegt mit zweitausend im Bachbett. Lasst die Römer nass zu uns kommen.</translation>
     </message>
     <message>
-        <source>The mist lifted a little early for you. It happens. The lake will keep what it has been given, and the thing beneath the altar past the eastern stream is not particular about whose it is.</source>
-        <translation>Der Nebel hat sich für Euch ein wenig früh gehoben. Das kommt vor. Der See behält, was man ihm gegeben hat, und das Ding unter dem Altar jenseits des östlichen Bachs ist nicht wählerisch, wem es gehört.</translation>
-    </message>
-    <message>
-        <source>The road runs east along the lake. Shut its western mouth and the column has only one way left to go.</source>
-        <translation>Die Straße läuft am See entlang nach Osten. Schließ ihre westliche Mündung, und der Kolonne bleibt nur noch ein Weg.</translation>
-    </message>
-    <message>
-        <source>The screen is coming across the flats. Spears in front, horse on the wings, the usual arrangement. Please try to stand still; it makes the reports so much tidier.</source>
-        <translation>Der Schirm kommt über die Ebene. Speere vorn, Reiterei auf den Flügeln, die übliche Aufstellung. Bitte versucht stillzustehen; das macht die Berichte so viel ordentlicher.</translation>
-    </message>
-    <message>
         <source>The screen&apos;s cavalry comes again from the east. Rotate quickly.</source>
         <translation>Die Reiterei des Schirms kommt erneut von Osten. Wechsle rasch durch.</translation>
     </message>
@@ -9625,10 +9293,6 @@ um die Vorschau zu sehen</translation>
     <message>
         <source>They tell me you have taken an army into the Alps in October, with elephants. I came round by sea to hold the far side. The mountain is a more thorough officer than I am, and it does not require pay.</source>
         <translation>Man sagt mir, Ihr habt ein Heer im Oktober in die Alpen geführt, mit Elefanten. Ich bin übers Meer herumgekommen, um die andere Seite zu halten. Der Berg ist ein gründlicherer Offizier als ich, und er verlangt keinen Sold.</translation>
-    </message>
-    <message>
-        <source>Three Roman columns are on the roads: Fabius down the Volturnus, the allied wing from the south, Marcellus&apos;s siege column out of Nola to the east. The first assault reaches the walls within the minute.</source>
-        <translation>Drei römische Kolonnen sind auf den Straßen: Fabius den Volturnus herab, der verbündete Flügel von Süden, Marcellus&apos; Belagerungskolonne aus Nola im Osten. Der erste Sturm erreicht die Mauern binnen einer Minute.</translation>
     </message>
     <message>
         <source>Three men lead the siege: Fabius in the Volturnus camp to the north-west, the allied commander at the southern camp, Marcellus in the siege works to the east.</source>
@@ -9829,10 +9493,6 @@ um die Vorschau zu sehen</translation>
     <message>
         <source>Two gates at once</source>
         <translation>Zwei Tore zugleich</translation>
-    </message>
-    <message>
-        <source>Varro&apos;s legions</source>
-        <translation>Varros Legionen</translation>
     </message>
     <message>
         <source>Africa, then, and the two of us, and no river to stand behind. I have the measure of your elephants and I have your Numidians. Whatever you mean to do, do it where I can see it. I have waited sixteen years to stand across a field from you with an army of my own.</source>
@@ -10071,12 +9731,384 @@ um die Vorschau zu sehen</translation>
         <translation>Winter 218 v. Chr.: Nach dem Sieg an der Trebia griff Hannibal das Depot bei Placentia an und erstürmte dann Victumulae, einen befestigten Markt der insubrischen Ebene, in dem sich die Bewohner der Gegend in Sicherheit gebracht hatten. Livius berichtet, dass es im Sturm fiel und geplündert wurde. Diese veränderte Geschichte gibt der Stadt einen römischen Präfekten, eine Zitadellengarnison und ein Entsatzheer auf der Straße nach Placentia.</translation>
     </message>
     <message>
-        <source>Ferry your companies over on the rafts, one at a time: one below the Gaulish landing, one further south, one across the eastern branch.</source>
-        <translation>Setze deine Kompanien mit den Flößen über, eine nach der anderen: eines unterhalb der gallischen Anlegestelle, eines weiter südlich, eines über den östlichen Arm.</translation>
-    </message>
-    <message>
         <source>Take the second camp on the southern supply road. No bridge reaches its bank of the river.</source>
         <translation>Nimm das zweite Lager an der südlichen Nachschubstraße. Keine Brücke reicht an sein Flussufer.</translation>
+    </message>
+    <message>
+        <source>202 BC, near Zama in Africa: Publius Cornelius Scipio - son of the consul of 218, soon to be called Africanus - drew up his maniples one behind another instead of in the usual chequer, leaving straight lanes held by velites through which Hannibal&apos;s eighty elephants could be driven or let pass. Masinissa&apos;s Numidian horse on the right and Laelius&apos;s Italian cavalry on the left drove Hannibal&apos;s cavalry off the field. Hannibal&apos;s three lines - Ligurian, Gallic, Balearic and Moorish mercenaries; Carthaginian and African levies; his veterans of Italy held back in the third - fought the legions to a standstill until the Roman and Numidian cavalry returned and struck the third line from behind. The Iron Sepulcher&apos;s intervention is the campaign&apos;s deliberate dark-fantasy break from history.</source>
+        <translation>202 v. Chr., bei Zama in Afrika: Publius Cornelius Scipio – Sohn des Konsuls von 218, bald Africanus genannt – stellte seine Manipel hintereinander statt im üblichen Schachbrett auf und ließ gerade, von Veliten gehaltene Gassen frei, durch die Hannibals achtzig Elefanten getrieben oder durchgelassen werden konnten. Massinissas numidische Reiterei auf dem rechten und Laelius&apos; italische Reiterei auf dem linken Flügel jagten Hannibals Reiterei vom Feld. Hannibals drei Treffen – ligurische, gallische, balearische und maurische Söldner; karthagische und afrikanische Aushebungen; seine Veteranen aus Italien im dritten zurückgehalten – brachten die Legionen im Kampf zum Stehen, bis die römische und die numidische Reiterei zurückkehrten und das dritte Treffen von hinten trafen. Das Eingreifen des Eisernen Grabmals ist der bewusste Dark-Fantasy-Bruch dieses Feldzugs mit der Geschichte.</translation>
+    </message>
+    <message>
+        <source>216-211 BC: after Cannae, Capua went over to Hannibal, and his army wintered there in 216-215. Rome answered by containment rather than battle: Quintus Fabius Maximus, the Delayer and &apos;shield of Rome&apos;, shadowed Hannibal and stripped the country, while Marcus Claudius Marcellus, the &apos;sword of Rome&apos;, held Nola against him in 216, 215 and 214 BC. In 212 the consuls closed a ring of siege works around Capua, and the city fell in 211 after Hannibal&apos;s march on Rome failed to draw the legions off. This mission is a dark-fantasy composite: it compresses those years into one defence, puts Fabius, the allied legions and Marcellus at the head of a siege army on the field at once, and adds the Iron Sepulcher, which history does not record.</source>
+        <translation>216–211 v. Chr.: Nach Cannae lief Capua zu Hannibal über, und sein Heer überwinterte dort 216–215. Rom antwortete mit Eindämmung statt mit einer Schlacht: Quintus Fabius Maximus, der Zauderer und „Schild Roms“, folgte Hannibal wie ein Schatten und räumte das Land leer, während Marcus Claudius Marcellus, das „Schwert Roms“, Nola 216, 215 und 214 v. Chr. gegen ihn hielt. 212 schlossen die Konsuln einen Ring aus Belagerungswerken um Capua, und die Stadt fiel 211, nachdem Hannibals Marsch auf Rom die Legionen nicht hatte abziehen können. Diese Mission ist eine Dark-Fantasy-Verdichtung: Sie fasst jene Jahre in eine einzige Verteidigung zusammen, stellt Fabius, die verbündeten Legionen und Marcellus zugleich an die Spitze eines Belagerungsheers im Feld und fügt das Eiserne Grabmal hinzu, von dem die Geschichte nichts berichtet.</translation>
+    </message>
+    <message>
+        <source>218 BC, late autumn: Hannibal crossed the Alps in about fifteen days with a multinational army, cavalry, baggage train, and surviving elephants. At the first ascent the Allobroges held the heights above a defile; Hannibal seized their posts by night, yet they still fell on the strung-out column, and the track killed as many men and animals as their spears. Higher up, mountain Gauls who had come with olive branches led the army into a ravine and rolled rocks down onto it from above (Polybius 3.50-53; Livy 21.32-35). Ancient sources disagree on the route. Historical: the Gallic ambushes, the rockfall, the snow and the hunt for supplies. Altered: Roman officers and camps in the passes paying the tribes - no Roman force stood in the Alps - and the Iron Sepulcher&apos;s grave-lights.</source>
+        <translation>218 v. Chr., Spätherbst: Hannibal überquerte die Alpen in etwa fünfzehn Tagen mit einem Heer vieler Völker, mit Reiterei, Tross und den überlebenden Elefanten. Beim ersten Aufstieg hielten die Allobroger die Höhen über einem Engpass; Hannibal nahm ihre Posten bei Nacht, doch sie fielen dennoch über die auseinandergezogene Kolonne her, und der Pfad tötete so viele Männer und Tiere wie ihre Speere. Weiter oben führten Berggallier, die mit Ölzweigen gekommen waren, das Heer in eine Schlucht und ließen von oben Felsen darauf hinabrollen (Polybios 3,50–53; Livius 21,32–35). Die antiken Quellen sind über die Route uneins. Historisch: die gallischen Hinterhalte, der Steinschlag, der Schnee und die Suche nach Vorräten. Verändert: römische Offiziere und Lager in den Pässen, die die Stämme bezahlen – keine römische Streitmacht stand in den Alpen – und die Grablichter des Eisernen Grabmals.</translation>
+    </message>
+    <message>
+        <source>218 BC: Hannibal reached the Rhône some four days&apos; march from the sea and found the Volcae massed on the east bank to stop him. He sent Hanno son of Bomilcar upstream by night with a picked force, mostly Iberians; they crossed on rafts and skins, came down the far bank and signalled with smoke. As the boats and rafts pushed off, Hanno fell on the Volcae from behind and broke them. The elephants were floated over on earth-covered rafts, and Scipio&apos;s scouting horse clashed with the Numidians before the consul, landed at the river mouth, arrived three days too late (Polybius 3.42-49; Livy 21.26-32). Historical: the Volcae, Hanno&apos;s flanking march, the rafts and elephants, the cavalry skirmish. Altered: the bridges, the Roman advance camps on the far-bank road and Scipio&apos;s garrisons - Rome had no army at the crossing - and the Iron Sepulcher&apos;s barrows.</source>
+        <translation>218 v. Chr.: Hannibal erreichte die Rhone etwa vier Tagesmärsche vom Meer entfernt und fand die Volcae am Ostufer versammelt, um ihn aufzuhalten. Er schickte Hanno, Sohn des Bomilkar, nachts mit einer ausgesuchten Truppe, meist Iberern, flussaufwärts; sie setzten auf Flößen und Fellschläuchen über, zogen am anderen Ufer herab und gaben mit Rauch ein Zeichen. Als die Boote und Flöße ablegten, fiel Hanno den Volcae in den Rücken und zerschlug sie. Die Elefanten wurden auf mit Erde bedeckten Flößen übergesetzt, und Scipios Späherreiter stießen mit den Numidern zusammen, ehe der Konsul, an der Flussmündung gelandet, drei Tage zu spät eintraf (Polybios 3,42–49; Livius 21,26–32). Historisch: die Volcae, Hannos Flankenmarsch, die Flöße und Elefanten, das Reitergefecht. Verändert: die Brücken, die römischen Vorpostenlager an der Straße am anderen Ufer und Scipios Besatzungen – Rom hatte kein Heer am Übergang – sowie die Hügelgräber des Eisernen Grabmals.</translation>
+    </message>
+    <message>
+        <source>A broad river operation with ferries, wooded detours, bridgeheads, and fortified supply quarters: the Volcae hold the far end of the crossing, Hanno&apos;s Iberians wait upstream on their side of the water, and the Iron Sepulcher occupies an avoidable ruin on the southern flank.</source>
+        <translation>Eine weiträumige Flussoperation mit Fähren, bewaldeten Umwegen, Brückenköpfen und befestigten Versorgungsquartieren: Die Volcae halten das andere Ende des Übergangs, Hannos Iberer warten flussaufwärts auf ihrer Seite des Wassers, und das Eiserne Grabmal besetzt an der Südflanke eine Ruine, der man ausweichen kann.</translation>
+    </message>
+    <message>
+        <source>A camp is taken by standing in it, not by levelling it. A dozen companies cannot kill fifty, but they can hold two gate yards long enough to claim them - and a Roman column without its commander stops being a column.</source>
+        <translation>Ein Lager nimmt man, indem man darin steht, nicht indem man es schleift. Ein Dutzend Kompanien kann fünfzig nicht töten, doch es kann zwei Torhöfe lange genug halten, um sie zu beanspruchen – und eine römische Kolonne ohne ihren Befehlshaber hört auf, eine Kolonne zu sein.</translation>
+    </message>
+    <message>
+        <source>A few of the screen left, and me, with a hole in my side I would rather not look at. My son is somewhere on this field; if he finds me, he will be insufferable about it for the rest of his life.</source>
+        <translation>Ein paar vom Schirm sind noch da, und ich, mit einem Loch in der Seite, das ich mir lieber nicht ansehe. Mein Sohn ist irgendwo auf diesem Feld; findet er mich, wird er sein Leben lang unerträglich damit sein.</translation>
+    </message>
+    <message>
+        <source>A handful left, and on the wrong bank of a winter river. Ten thousand went through to Placentia; that is not a defeat. I shall tell Rome it was the snow.</source>
+        <translation>Eine Handvoll ist noch übrig, und am falschen Ufer eines Winterflusses. Zehntausend sind nach Placentia durchgekommen; das ist keine Niederlage. Ich werde Rom sagen, es war der Schnee.</translation>
+    </message>
+    <message>
+        <source>After Cannae, Rome refuses the battle Hannibal wants. Fabius shadows him and Marcellus strikes at whatever he leaves exposed, while the Republic presses every road, ally, granary, and walled town. Beneath the orchards, Iron Sepulcher graves make even a successful defense feel temporary.</source>
+        <translation>Nach Cannae verweigert Rom die Schlacht, die Hannibal sucht. Fabius folgt ihm wie ein Schatten, und Marcellus schlägt nach allem, was er ungedeckt lässt, während die Republik jeder Straße, jedem Verbündeten, jedem Kornspeicher und jeder ummauerten Stadt zusetzt. Unter den Obstgärten lassen die Gräber des Eisernen Grabmals selbst eine geglückte Verteidigung vorläufig erscheinen.</translation>
+    </message>
+    <message>
+        <source>Allobroges on the heights above the narrows south of camp. Where scree scars the slope, they have stones waiting for the column.</source>
+        <translation>Allobroger auf den Höhen über dem Engpass südlich des Lagers. Wo Geröll den Hang zeichnet, halten sie Steine für die Kolonne bereit.</translation>
+    </message>
+    <message>
+        <source>August 216 BC: beside the Aufidus the consuls crossed the river and drew up some eighty thousand men, the legions in the centre deeper than they were wide. Varro, in command that day, led the allied horse on the Roman left; Paullus led the Roman horse on the right by the river. Hannibal bowed his Gauls and Iberians out toward them in a crescent, set his Africans on the wings and screened the front with Balearic slingers. Hasdrubal&apos;s Iberian and Gallic horse broke Paullus by the river, rode behind the Roman army and fell on its rear as the crescent gave and the Africans turned inward. Paullus died on the field; Varro escaped to Venusia. Altered here: the Romans had two camps, not three, and the field towns and the Sepulcher graves are the game&apos;s.</source>
+        <translation>August 216 v. Chr.: Am Aufidus überschritten die Konsuln den Fluss und stellten etwa achtzigtausend Mann auf, die Legionen in der Mitte tiefer als breit. Varro, der an diesem Tag den Oberbefehl hatte, führte die verbündete Reiterei auf dem römischen linken Flügel; Paullus führte die römische Reiterei rechts am Fluss. Hannibal wölbte seine Gallier und Iberer in einem Halbmond gegen sie vor, stellte seine Afrikaner auf die Flügel und schirmte die Front mit balearischen Schleuderern ab. Hasdrubals iberische und gallische Reiterei zerschlug Paullus am Fluss, ritt hinter das römische Heer und fiel ihm in den Rücken, als der Halbmond nachgab und die Afrikaner nach innen schwenkten. Paullus fiel auf dem Feld; Varro entkam nach Venusia. Hier verändert: Die Römer hatten zwei Lager, nicht drei, und die Feldstädte und die Gräber des Grabmals stammen aus dem Spiel.</translation>
+    </message>
+    <message>
+        <source>Between assaults, seize the eastern Roman siege camp and the engines&apos; stockpile with it.</source>
+        <translation>Nimm zwischen den Angriffen das östliche römische Belagerungslager und mit ihm den Vorrat der Belagerungsmaschinen.</translation>
+    </message>
+    <message>
+        <source>Breakfast can wait; Numidians at my palisade cannot. My colleague lies in his tent with his wound and his caution, and a consul&apos;s year is short. Velites over first, then the legions. The water is only cold.</source>
+        <translation>Das Frühstück kann warten; Numider an meiner Palisade nicht. Mein Amtskollege liegt mit seiner Wunde und seiner Vorsicht in seinem Zelt, und das Jahr eines Konsuls ist kurz. Zuerst die Veliten hinüber, dann die Legionen. Das Wasser ist nur kalt.</translation>
+    </message>
+    <message>
+        <source>Bring the column to the pontoon bridge on the near bank. The Volcae hold its far end.</source>
+        <translation>Bring die Kolonne zur Pontonbrücke am diesseitigen Ufer. Die Volcae halten ihr anderes Ende.</translation>
+    </message>
+    <message>
+        <source>Cavalry reaches it first. The javelin-men screening the gate break if you charge them; hold the yard until the standard changes.</source>
+        <translation>Die Reiterei erreicht es zuerst. Die Speerwerfer, die das Tor abschirmen, brechen, wenn du sie angreifst; halte den Hof, bis das Feldzeichen wechselt.</translation>
+    </message>
+    <message>
+        <source>Close the encirclement on Paullus&apos; camp across the Aufidus to the north.</source>
+        <translation>Schließe die Umfassung um Paullus&apos; Lager jenseits des Aufidus im Norden.</translation>
+    </message>
+    <message>
+        <source>December 218 BC: Hannibal&apos;s Numidians provoked Tiberius Sempronius Longus into sending his velites, then his whole army, across the swollen Trebia at dawn, unfed and chest-deep in icy water, while his wounded colleague Scipio urged him to wait. Hannibal had fed his men and oiled them by the fires. Balearic slingers and spearmen screened a line of Africans, Iberians and some eight thousand newly joined Cisalpine Gauls, with horse and elephants on the wings; Mago&apos;s two thousand picked horse and foot lay in an overgrown stream bed and fell on the Roman rear. About ten thousand Romans cut through the Gallic centre and reached Placentia. Altered: the battle is fought as three crossings against your bank, the Placentia reserve marches out as a second Roman army, and the barrow-dead by the western bank are this campaign&apos;s invention.</source>
+        <translation>Dezember 218 v. Chr.: Hannibals Numider reizten Tiberius Sempronius Longus dazu, im Morgengrauen erst seine Veliten, dann sein ganzes Heer über die angeschwollene Trebia zu schicken, ungespeist und brusttief im eisigen Wasser, während sein verwundeter Amtskollege Scipio ihn drängte zu warten. Hannibal hatte seine Männer essen lassen und sie an den Feuern mit Öl eingerieben. Balearische Schleuderer und Speerträger schirmten eine Linie aus Afrikanern, Iberern und etwa achttausend neu hinzugekommenen cisalpinen Galliern ab, mit Reiterei und Elefanten auf den Flügeln; Magos zweitausend ausgesuchte Reiter und Fußkämpfer lagen in einem überwucherten Bachbett und fielen den Römern in den Rücken. Etwa zehntausend Römer schlugen sich durch die gallische Mitte und erreichten Placentia. Verändert: Die Schlacht wird als drei Übergänge gegen Euer Ufer ausgetragen, die Reserve aus Placentia rückt als zweites römisches Heer aus, und die Hügelgrab-Toten am Westufer sind eine Erfindung dieses Feldzugs.</translation>
+    </message>
+    <message>
+        <source>Ducarius the Insubrian knew the consul who burned his country, and has paid him for it. The column has lost its head. Take the town before anyone thinks to pick it up.</source>
+        <translation>Ducarius der Insubrer kannte den Konsul, der sein Land verbrannt hat, und hat es ihm heimgezahlt. Die Kolonne hat ihren Kopf verloren. Nehmt die Stadt, ehe jemand auf den Gedanken kommt, ihn aufzuheben.</translation>
+    </message>
+    <message>
+        <source>Eighty elephants, and he has cut a lane for every one. Mercenaries in the first line, Africa&apos;s levies in the second. Hold the men of Italy back in the third. They are the last answer I have.</source>
+        <translation>Achtzig Elefanten, und er hat für jeden eine Gasse geschnitten. Söldner im ersten Treffen, Afrikas Aushebungen im zweiten. Haltet die Männer aus Italien im dritten zurück. Sie sind die letzte Antwort, die ich habe.</translation>
+    </message>
+    <message>
+        <source>Eighty thousand, and the command is mine today. Paullus looked at this plain and saw cavalry ground; I looked at the legions and saw the end of the war. He may keep the right by the river. I take the allied horse on the left myself.</source>
+        <translation>Achtzigtausend, und heute habe ich den Befehl. Paullus sah diese Ebene und sah Reitergelände; ich sah die Legionen und sah das Ende des Krieges. Er mag den rechten Flügel am Fluss behalten. Die verbündete Reiterei auf der Linken führe ich selbst.</translation>
+    </message>
+    <message>
+        <source>Ferry your companies over on the rafts, one at a time - the elephants too, as Hannibal floated his across: one below the Gaulish landing, one further south, one across the eastern branch.</source>
+        <translation>Setz deine Kompanien auf den Flößen über, eine nach der anderen – die Elefanten ebenso, wie Hannibal die seinen übersetzte: ein Floß unterhalb der gallischen Anlegestelle, eines weiter südlich, eines über den östlichen Arm.</translation>
+    </message>
+    <message>
+        <source>Fifteen thousand in the shallows, and a consul among them. The praetor will climb the Rostra and say only: we have been beaten in a great battle. Rome elects another consul by market day. That is the trick of us: we are not a man.</source>
+        <translation>Fünfzehntausend in den Untiefen, und ein Konsul unter ihnen. Der Prätor wird die Rostra besteigen und nur sagen: Wir sind in einer großen Schlacht besiegt worden. Bis zum Markttag wählt Rom einen neuen Konsul. Das ist unser Kunstgriff: Wir sind kein einzelner Mann.</translation>
+    </message>
+    <message>
+        <source>Finish the officers inside the ring: Paullus by the river, Varro with the allied horse, and the commander of the centre.</source>
+        <translation>Erledige die Offiziere im Ring: Paullus am Fluss, Varro bei der verbündeten Reiterei und den Befehlshaber der Mitte.</translation>
+    </message>
+    <message>
+        <source>Flaminius rides at the basin watch south of the road; the van&apos;s tribune holds the sanctuary above the eastern ford. Take them before the column turns on your camp.</source>
+        <translation>Flaminius sitzt an der Beckenwacht südlich der Straße zu Pferd; der Tribun der Vorhut hält das Heiligtum über der östlichen Furt. Nimm sie, ehe sich die Kolonne gegen dein Lager wendet.</translation>
+    </message>
+    <message>
+        <source>Flaminius&apos; marching column walks blind into a geographical trap along a mist-filled shore road and is destroyed by converging attacks from the heights, while the lakeside Sepulcher altar remains an optional horror.</source>
+        <translation>Flaminius&apos; Marschkolonne läuft auf einer nebelverhangenen Uferstraße blind in eine Geländefalle und wird von Angriffen vernichtet, die von den Höhen zusammenlaufen, während der Grabmal-Altar am See ein optionaler Schrecken bleibt.</translation>
+    </message>
+    <message>
+        <source>Force the Rhône against the Volcae massed on the far bank - by bridge or by raft, with Hanno&apos;s detachment falling on them from upstream - then capture two Roman advance camps before Scipio reaches the river.</source>
+        <translation>Erzwingt den Übergang über die Rhone gegen die am anderen Ufer versammelten Volcae – über Brücke oder Floß, während Hannos Abteilung von flussaufwärts über sie herfällt – und nehmt dann zwei römische Vorpostenlager, ehe Scipio den Fluss erreicht.</translation>
+    </message>
+    <message>
+        <source>Hannibal is down. Fabius said wait. Paullus said wait. The butcher&apos;s son from the Forum said fight, and here we are.</source>
+        <translation>Hannibal liegt am Boden. Fabius sagte: Wartet. Paullus sagte: Wartet. Der Metzgerssohn vom Forum sagte: Kämpft – und hier sind wir.</translation>
+    </message>
+    <message>
+        <source>Hannibal&apos;s masterpiece becomes a prolonged operational battle, not a single frontal collision: a Gallic and Iberian crescent that gives ground, African wings that hold, and Hasdrubal&apos;s heavy horse on the river flank.</source>
+        <translation>Hannibals Meisterstück wird zu einer langgezogenen operativen Schlacht statt eines einzigen frontalen Zusammenpralls: ein gallischer und iberischer Halbmond, der Boden preisgibt, afrikanische Flügel, die halten, und Hasdrubals schwere Reiterei an der Flussflanke.</translation>
+    </message>
+    <message>
+        <source>Hanno&apos;s smoke is up on the far bank. His Iberians are behind the Volcae - across, all of you, while they look the wrong way. Scipio is three days behind and I intend to keep him there.</source>
+        <translation>Hannos Rauch steigt am anderen Ufer auf. Seine Iberer stehen hinter den Volcae – hinüber, ihr alle, solange sie in die falsche Richtung schauen. Scipio ist drei Tage hinter uns, und ich gedenke ihn dort zu halten.</translation>
+    </message>
+    <message>
+        <source>Here they come - the whole consular line, deeper than it is wide, at Varro&apos;s tempo. Eighty thousand men do not turn. Remember that when you want them to.</source>
+        <translation>Da kommen sie - die ganze Konsularlinie, tiefer als breit, in Varros Takt. Achtzigtausend Mann wenden nicht. Denkt daran, wenn Ihr es von ihnen wollt.</translation>
+    </message>
+    <message>
+        <source>His rams, his grain, his camp. Marcellus may walk back to Nola and explain.</source>
+        <translation>Seine Rammböcke, sein Korn, sein Lager. Marcellus mag nach Nola zurückgehen und es erklären.</translation>
+    </message>
+    <message>
+        <source>Hold Hannibal&apos;s Punic quarter in Campania against three coordinated Roman assaults - Fabius down the Volturnus, the allied wing from the south, and Marcellus&apos;s siege column bringing rams and a tower against the walls.</source>
+        <translation>Haltet Hannibals punisches Viertel in Kampanien gegen drei abgestimmte römische Angriffe – Fabius den Volturnus herab, den verbündeten Flügel von Süden und Marcellus&apos; Belagerungskolonne, die Rammböcke und einen Turm gegen die Mauern bringt.</translation>
+    </message>
+    <message>
+        <source>Hold discipline. Let the Romans commit at the fords. Mago waits in the brush by the eastern crossing until you call him out.</source>
+        <translation>Wahre die Disziplin. Lass die Römer sich an den Furten festlegen. Mago wartet im Gestrüpp am östlichen Übergang, bis du ihn hervorrufst.</translation>
+    </message>
+    <message>
+        <source>Hold the crescent, win both cavalry wings, close the double envelopment, then seize all three Roman camps before their reserves can restore the line.</source>
+        <translation>Haltet den Halbmond, gewinnt beide Reiterflügel, schließt die doppelte Umfassung und nehmt dann alle drei römischen Lager, ehe ihre Reserven die Linie wiederherstellen können.</translation>
+    </message>
+    <message>
+        <source>I have lost a kingdom once already and won it back with Roman friends. Kill my riders if you can. Rome will give me more.</source>
+        <translation>Ich habe schon einmal ein Königreich verloren und es mit römischen Freunden zurückgewonnen. Tötet meine Reiter, wenn Ihr könnt. Rom wird mir neue geben.</translation>
+    </message>
+    <message>
+        <source>Into the water. Yes, cold, and before breakfast. A consul&apos;s year ends in March, and I will have my battle before it does.</source>
+        <translation>Ins Wasser. Ja, kalt, und vor dem Frühstück. Das Jahr eines Konsuls endet im März, und ich will meine Schlacht davor.</translation>
+    </message>
+    <message>
+        <source>June 217 BC: Hannibal drew the consul Gaius Flaminius along the narrow northern shore of Lake Trasimene. Morning mist lay thick over the lake road while the hilltops stood clear. Gauls and cavalry waited on the heights by the entrance, Balearic slingers and light troops along the ridge, Africans and Iberians on the hill across the exit. The column, strung out in marching order, had no room to deploy. Flaminius was cut down by an Insubrian horseman, Ducarius; some fifteen thousand Romans died, and six thousand who broke out of the van surrendered to Maharbal the next day. Altered here: the column town, the shore camp and Flaminius&apos; post at the basin watch are the game&apos;s, and so is the Sepulcher altar by the lake.</source>
+        <translation>Juni 217 v. Chr.: Hannibal lockte den Konsul Gaius Flaminius am schmalen Nordufer des Trasimenischen Sees entlang. Dichter Morgennebel lag über der Seestraße, während die Hügelkuppen klar standen. Gallier und Reiterei warteten auf den Höhen am Eingang, balearische Schleuderer und leichte Truppen entlang des Grats, Afrikaner und Iberer auf dem Hügel gegenüber dem Ausgang. Die in Marschordnung auseinandergezogene Kolonne hatte keinen Raum, sich zu entfalten. Flaminius wurde von einem insubrischen Reiter, Ducarius, niedergehauen; etwa fünfzehntausend Römer starben, und sechstausend, die aus der Vorhut ausgebrochen waren, ergaben sich am nächsten Tag Maharbal. Hier verändert: Die Kolonnenstadt, das Uferlager und Flaminius&apos; Posten an der Beckenwacht stammen aus dem Spiel, ebenso der Grabmal-Altar am See.</translation>
+    </message>
+    <message>
+        <source>Keep Capua, then. I shall come back after the harvest, and after the one following it. I watched Sempronius, Flaminius and Varro hurry to their battles. Patience is cheaper, and it does not require a triumph.</source>
+        <translation>Dann behaltet Capua. Ich komme nach der Ernte wieder, und nach der übernächsten. Ich habe Sempronius, Flaminius und Varro zu ihren Schlachten eilen sehen. Geduld ist billiger, und sie verlangt keinen Triumphzug.</translation>
+    </message>
+    <message>
+        <source>Laelius and Masinissa are coming back from the cavalry fight. Collapse one flank before the rear guard arrives.</source>
+        <translation>Laelius und Massinissa kehren vom Reitergefecht zurück. Bring eine Flanke zum Einsturz, ehe die Nachhut eintrifft.</translation>
+    </message>
+    <message>
+        <source>Lake on their left, hills on their right, mist over both. Gauls on the heights by the entrance, slingers along the ridge. Nobody moves until the whole column is inside.</source>
+        <translation>Der See zu ihrer Linken, die Hügel zu ihrer Rechten, Nebel über beidem. Gallier auf den Höhen am Eingang, Schleuderer entlang des Grats. Niemand rührt sich, bis die ganze Kolonne drinnen ist.</translation>
+    </message>
+    <message>
+        <source>Late 218 BC: Publius Cornelius Scipio crossed the Ticinus with his cavalry and velites to find Hannibal and met Hannibal&apos;s horse coming the other way. Scipio put the javelin-men and his Gallic horse in front; the velites fled through their own squadrons at the first charge without throwing. Hannibal sent his bridled Iberian heavy horse straight at the Roman centre and the Numidians round both wings into the Roman rear. Scipio was wounded and carried out of the fight, by his seventeen-year-old son in the account Polybius heard, and the Romans fell back across the Po to Placentia. Altered: the consular town, the reserve camp and the river-shades are this campaign&apos;s invention, and here the consul&apos;s fall stands for his wounding: his force breaks as it did, and he is carried from the field.</source>
+        <translation>Ende 218 v. Chr.: Publius Cornelius Scipio überschritt mit seiner Reiterei und seinen Veliten den Ticinus, um Hannibal zu finden, und traf auf Hannibals Reiterei, die ihm entgegenkam. Scipio stellte die Speerwerfer und seine gallische Reiterei nach vorn; die Veliten flohen beim ersten Angriff ohne zu werfen durch ihre eigenen Schwadronen. Hannibal schickte seine gezäumte iberische schwere Reiterei geradewegs gegen die römische Mitte und die Numider um beide Flügel in den römischen Rücken. Scipio wurde verwundet und aus dem Kampf getragen – nach dem Bericht, den Polybios hörte, von seinem siebzehnjährigen Sohn –, und die Römer wichen über den Po nach Placentia zurück. Verändert: Die Konsularstadt, das Reservelager und die Flussschatten sind eine Erfindung dieses Feldzugs, und hier steht der Sturz des Konsuls für seine Verwundung: Seine Truppe bricht wie damals, und er wird vom Feld getragen.</translation>
+    </message>
+    <message>
+        <source>Let the Gallic and Iberian crescent take the Roman centre and give ground slowly. Keep both cavalry wings active.</source>
+        <translation>Lass den gallischen und iberischen Halbmond die römische Mitte aufnehmen und langsam Boden preisgeben. Halte beide Reiterflügel in Bewegung.</translation>
+    </message>
+    <message>
+        <source>Let the centre give. The Gauls and Iberians bow out toward them, the Africans wait on the wings, Hasdrubal has the river. Eighty thousand men walk into a sack as easily as into a field.</source>
+        <translation>Lasst die Mitte nachgeben. Die Gallier und Iberer wölben sich ihnen entgegen, die Afrikaner warten auf den Flügeln, Hasdrubal hat den Fluss. Achtzigtausend Mann laufen so leicht in einen Sack wie auf ein Feld.</translation>
+    </message>
+    <message>
+        <source>Mist on the lake road, and the augurs whine. My horse threw me; a standard would not come out of the ground. Dig it out, I told them. Hannibal burns Etruria and runs ahead of me, and I will have him before my colleague can share the credit.</source>
+        <translation>Nebel auf der Seestraße, und die Auguren jammern. Mein Pferd hat mich abgeworfen; ein Feldzeichen wollte nicht aus dem Boden. Grabt es aus, sagte ich ihnen. Hannibal brennt Etrurien nieder und läuft vor mir her, und ich stelle ihn, ehe mein Amtskollege den Ruhm teilen kann.</translation>
+    </message>
+    <message>
+        <source>My allies are at your works. Italians, mostly. They fight for Rome because the alternative is fighting Rome, which is a very persuasive argument. I make it often.</source>
+        <translation>Meine Verbündeten stehen an Euren Werken. Meist Italiker. Sie kämpfen für Rom, weil die Alternative heißt, gegen Rom zu kämpfen, was ein sehr überzeugendes Argument ist. Ich bringe es oft vor.</translation>
+    </message>
+    <message>
+        <source>My camp is yours. Keep it. Numidians were never men for tents, and my riders were never in it. Watch the horizon, Carthaginian, not the palisade.</source>
+        <translation>Mein Lager gehört Euch. Behaltet es. Numider waren nie Männer für Zelte, und meine Reiter waren nie darin. Beobachtet den Horizont, Karthager, nicht die Palisade.</translation>
+    </message>
+    <message>
+        <source>My horse are riding. I learned war in your camps in Spain; now Syphax is in chains and Numidia is mine, and I ride the way you taught me - around you.</source>
+        <translation>Meine Reiter sitzen auf. Ich habe den Krieg in Euren Lagern in Hispanien gelernt; nun liegt Syphax in Ketten, Numidien ist mein, und ich reite so, wie Ihr es mich gelehrt habt – um Euch herum.</translation>
+    </message>
+    <message>
+        <source>My men are at your camp. In fog a soldier strikes whatever is nearest, and I mean every one of them to find you nearest.</source>
+        <translation>Meine Männer stehen an Eurem Lager. Im Nebel schlägt ein Soldat auf das, was ihm am nächsten ist, und ich will, dass jeder Einzelne von ihnen Euch am nächsten findet.</translation>
+    </message>
+    <message>
+        <source>Paullus is dead. He would not take a horse to leave the field. Find his body and bury it with honour; Rome kept the wrong consul.</source>
+        <translation>Paullus ist tot. Er wollte kein Pferd nehmen, um das Feld zu verlassen. Findet seinen Leichnam und bestattet ihn mit Ehren; Rom hat den falschen Konsul behalten.</translation>
+    </message>
+    <message>
+        <source>Paullus&apos; reserves are crossing the Aufidus from the northern camp. Close the pocket faster.</source>
+        <translation>Paullus&apos; Reserven setzen aus dem Nordlager über den Aufidus. Schließt den Kessel schneller.</translation>
+    </message>
+    <message>
+        <source>Provision the column for the descent: harvest timber, stone and iron from the pass while Allobroges war bands and Roman-paid camps contest every switchback and roll stones from the heights.</source>
+        <translation>Versorgt die Kolonne für den Abstieg: Gewinnt Holz, Stein und Eisen aus dem Pass, während Kriegerscharen der Allobroger und von Rom bezahlte Lager Euch jede Kehre streitig machen und Steine von den Höhen rollen.</translation>
+    </message>
+    <message>
+        <source>Scipio has drawn his maniples up one behind another, not chequered: straight lanes run through the line, and velites wait in them for the elephants. Keep your centre steady and do not let the elephants be isolated.</source>
+        <translation>Scipio hat seine Manipel hintereinander aufgestellt, nicht im Schachbrett: Gerade Gassen ziehen sich durch die Linie, und Veliten warten darin auf die Elefanten. Halte deine Mitte fest und lass nicht zu, dass die Elefanten abgeschnitten werden.</translation>
+    </message>
+    <message>
+        <source>Seize Masinissa&apos;s camp to finish the four. He rides for Rome now, with Syphax&apos;s kingdom as his price.</source>
+        <translation>Nimm Massinissas Lager, um die vier vollzumachen. Er reitet nun für Rom, mit Syphax&apos; Königreich als Preis.</translation>
+    </message>
+    <message>
+        <source>Seize the consular town at the centre of the Roman line, behind the legions.</source>
+        <translation>Nimm die Konsularstadt in der Mitte der römischen Linie, hinter den Legionen.</translation>
+    </message>
+    <message>
+        <source>Smoke on the far bank, upstream of the bridge. Hanno son of Bomilcar crossed by night on rafts and skins with his Iberians; the Volcae watching the crossing have not seen him.</source>
+        <translation>Rauch am anderen Ufer, flussaufwärts der Brücke. Hanno, Sohn des Bomilkar, ist nachts mit seinen Iberern auf Flößen und Fellschläuchen übergesetzt; die Volcae, die den Übergang bewachen, haben ihn nicht gesehen.</translation>
+    </message>
+    <message>
+        <source>So the centre gave and the wings closed, and I rode out of it with seventy horse to Venusia. The Senate will come out to thank me for not despairing of the Republic. It is the strangest thanks a man was ever given, and I will take it.</source>
+        <translation>So gab die Mitte nach, und die Flügel schlossen sich, und ich ritt mit siebzig Reitern hinaus nach Venusia. Der Senat wird herauskommen, um mir zu danken, dass ich nicht an der Republik verzweifelt bin. Es ist der seltsamste Dank, den ein Mann je erhielt, und ich nehme ihn an.</translation>
+    </message>
+    <message>
+        <source>Spring the ambush on the fogbound shore road and capture both Roman field camps within twenty minutes, before the mist lifts and a cohort escapes the basin.</source>
+        <translation>Lasst den Hinterhalt auf der nebelverhangenen Uferstraße zuschnappen und nehmt beide römischen Feldlager binnen zwanzig Minuten, ehe der Nebel sich hebt und eine Kohorte aus dem Becken entkommt.</translation>
+    </message>
+    <message>
+        <source>Stay out of the water. Every Roman who wades it reaches you cold and slow. Mago&apos;s men lie hidden in the wood east of the second crossing; loose them on the Roman rear once the line is engaged.</source>
+        <translation>Bleib aus dem Wasser. Jeder Römer, der hindurchwatet, erreicht dich kalt und langsam. Magos Männer liegen im Wald östlich des zweiten Übergangs verborgen; lass sie auf den römischen Rücken los, sobald die Linie im Kampf steht.</translation>
+    </message>
+    <message>
+        <source>Strike now. Take Flaminius at the basin watch before the column finds your camp.</source>
+        <translation>Schlag jetzt zu. Nimm Flaminius an der Beckenwacht, ehe die Kolonne dein Lager findet.</translation>
+    </message>
+    <message>
+        <source>The African dies in his own fog by his own lake. Tell the Senate it was done by the new man they never wanted for consul.</source>
+        <translation>Der Afrikaner stirbt in seinem eigenen Nebel an seinem eigenen See. Sagt dem Senat, es war das Werk des neuen Mannes, den sie nie zum Konsul wollten.</translation>
+    </message>
+    <message>
+        <source>The Aufidus camp. So the ring closes. Tell the Senate to fortify the city. Tell Fabius I kept his counsel to the end. I stay here with my men.</source>
+        <translation>Das Aufidus-Lager. So schließt sich der Ring. Sagt dem Senat, er soll die Stadt befestigen. Sagt Fabius, ich habe seinen Rat bis zuletzt befolgt. Ich bleibe hier bei meinen Männern.</translation>
+    </message>
+    <message>
+        <source>The Roman column enters the corridor in marching order, blind in the mist. Wait for full commitment.</source>
+        <translation>Die römische Kolonne betritt den Korridor in Marschordnung, blind im Nebel. Warte, bis sie sich ganz festgelegt hat.</translation>
+    </message>
+    <message>
+        <source>The Roman horse is with me by the river. Varro wanted this battle; I will fight it properly all the same. Close up on the bank. Do not let Hasdrubal through.</source>
+        <translation>Die römische Reiterei ist bei mir am Fluss. Varro wollte diese Schlacht; ich werde sie trotzdem ordentlich schlagen. Schließt am Ufer auf. Lasst Hasdrubal nicht durch.</translation>
+    </message>
+    <message>
+        <source>The Romans are baited into the winter river and wade it cold and unfed against a line of Gauls, Africans and Balearic slingers, then are punished by Mago&apos;s concealed force; the defense becomes an assault on a complete winter camp.</source>
+        <translation>Die Römer werden in den Winterfluss gelockt und waten kalt und ungespeist hindurch gegen eine Linie aus Galliern, Afrikanern und balearischen Schleuderern, ehe Magos verborgene Streitmacht sie bestraft; die Verteidigung wird zum Angriff auf ein vollständiges Winterlager.</translation>
+    </message>
+    <message>
+        <source>The Volturnus legion is spent. I have others. I have always had others. Marcellus is the sword; I am only the shield, and a shield does not need to win. It needs to still be there.</source>
+        <translation>Die Volturnus-Legion ist verbraucht. Ich habe andere. Ich hatte immer andere. Marcellus ist das Schwert; ich bin nur der Schild, und ein Schild muss nicht siegen. Er muss nur noch da sein.</translation>
+    </message>
+    <message>
+        <source>The allied horse is down to a handful and Hasdrubal&apos;s riders are behind it. There is a road to Venusia. A consul who lives can raise another army; a dead one only gets a statue.</source>
+        <translation>Die verbündete Reiterei ist auf eine Handvoll geschrumpft, und Hasdrubals Reiter sind hinter ihr. Es gibt eine Straße nach Venusia. Ein Konsul, der lebt, kann ein neues Heer aufstellen; ein toter bekommt nur eine Statue.</translation>
+    </message>
+    <message>
+        <source>The allied wing has lost its consul. Varro will not see Venusia. Turn that wing inward.</source>
+        <translation>Der verbündete Flügel hat seinen Konsul verloren. Varro wird Venusia nicht sehen. Schwenke diesen Flügel nach innen.</translation>
+    </message>
+    <message>
+        <source>The centre gives way once the wings are wrapped around it. Put the Gauls and Iberians in Convex Crescent from the Formation panel: the centre bows out toward the enemy and gives ground under pressure while the Africans on the wings hold, as Hannibal&apos;s did.</source>
+        <translation>Die Mitte gibt nach, sobald die Flügel sie umschlungen haben. Stelle die Gallier und Iberer über die Formationstafel auf „Konvexer Halbmond“: Die Mitte wölbt sich dem Feind entgegen und gibt unter Druck Boden preis, während die Afrikaner auf den Flügeln halten – wie die Hannibals.</translation>
+    </message>
+    <message>
+        <source>The centre is the strongest camp; bring the elephants up first, and expect the velites in the lanes to turn them.</source>
+        <translation>Die Mitte ist das stärkste Lager; bring zuerst die Elefanten heran und rechne damit, dass die Veliten in den Gassen sie abdrängen.</translation>
+    </message>
+    <message>
+        <source>The column is nearly gone and the Gauls are on the road. Let the Insubres come for me. I broke them once by the Addua; they will not take a consul alive.</source>
+        <translation>Die Kolonne ist fast dahin, und die Gallier sind auf der Straße. Sollen die Insubrer mich holen kommen. Ich habe sie einmal an der Addua geschlagen; einen Konsul nehmen sie nicht lebend.</translation>
+    </message>
+    <message>
+        <source>The column is on the lake road in order of march, and it does not stop for mist. Close up and push on. Hannibal is ahead of us, not above us.</source>
+        <translation>Die Kolonne ist in Marschordnung auf der Seestraße, und sie hält nicht wegen ein wenig Nebel an. Aufschließen und weiter. Hannibal ist vor uns, nicht über uns.</translation>
+    </message>
+    <message>
+        <source>The consul is down, and a boy has him across a saddle and is cutting a road out for him. Let them go. The screen has lost its head; take the town.</source>
+        <translation>Der Konsul ist gefallen, und ein Junge hat ihn quer über dem Sattel und schlägt ihm einen Weg hinaus. Lasst sie ziehen. Der Schirm hat seinen Kopf verloren; nehmt die Stadt.</translation>
+    </message>
+    <message>
+        <source>The consular town. Varro is not in it; Varro is out on the left with the allied horse, being brave at other people. Enjoy the walls. We never needed them.</source>
+        <translation>Die Konsularstadt. Varro ist nicht darin; Varro ist draußen auf der Linken bei der verbündeten Reiterei und ist tapfer gegen andere Leute. Erfreut Euch der Mauern. Wir brauchten sie nie.</translation>
+    </message>
+    <message>
+        <source>The crossing is a running battle against terrain, local resistance, and Roman influence: Gallic ambushes hold the narrows and stones wait above the track. Sepulcher grave-lights remain a dangerous side path rather than the campaign&apos;s main enemy.</source>
+        <translation>Der Übergang ist ein laufendes Gefecht gegen Gelände, örtlichen Widerstand und römischen Einfluss: Gallische Hinterhalte halten die Engpässe, und über dem Pfad warten Steine. Die Grablichter des Grabmals bleiben ein gefährlicher Seitenweg statt des Hauptfeinds des Feldzugs.</translation>
+    </message>
+    <message>
+        <source>The ford below the old wreck is shallow in August. With the river camp taken there is nowhere left for the legions to reform.</source>
+        <translation>Die Furt unterhalb des alten Wracks ist im August seicht. Ist das Flusslager genommen, bleibt den Legionen kein Ort mehr, um sich neu zu ordnen.</translation>
+    </message>
+    <message>
+        <source>The last of the legions is in the water. Everything Rome has north of the Apennines is coming at you wet. Hold this and you hold Italy for a winter. You will not hold it.</source>
+        <translation>Die letzten Legionen sind im Wasser. Alles, was Rom nördlich des Apennins hat, kommt nass auf Euch zu. Haltet dies, und Ihr haltet Italien für einen Winter. Ihr werdet es nicht halten.</translation>
+    </message>
+    <message>
+        <source>The legions of the centre</source>
+        <translation>Die Legionen der Mitte</translation>
+    </message>
+    <message>
+        <source>The mist lifted a little early for you. The Senate called me reckless; let them call this luck. The lake keeps what it is given, and the thing beneath the altar past the eastern stream is not particular about whose it is.</source>
+        <translation>Der Nebel hat sich für Euch ein wenig früh gehoben. Der Senat nannte mich tollkühn; soll er dies Glück nennen. Der See behält, was man ihm gibt, und das Ding unter dem Altar jenseits des östlichen Bachs ist nicht wählerisch, wem es gehört.</translation>
+    </message>
+    <message>
+        <source>The quarter holds when the last column is dead in the streets. Rams batter walls and gates, not men: kill them before they reach the stones.</source>
+        <translation>Das Viertel hält, wenn die letzte Kolonne tot in den Straßen liegt. Rammböcke berennen Mauern und Tore, nicht Männer: Töte sie, ehe sie die Steine erreichen.</translation>
+    </message>
+    <message>
+        <source>The rearguard camp falls. I held it the way the triarii hold everything - long enough, and no longer. Scipio will manage without my tents.</source>
+        <translation>Das Nachhutlager fällt. Ich hielt es, wie die Triarier alles halten - lange genug, und nicht länger. Scipio kommt ohne meine Zelte aus.</translation>
+    </message>
+    <message>
+        <source>The river runs north to south across the middle of the valley; the nearest crossing is due east of camp. Hanno&apos;s Iberians wait upstream on the far bank - strike the Volcae from both sides at once.</source>
+        <translation>Der Fluss fließt von Norden nach Süden mitten durch das Tal; der nächste Übergang liegt genau östlich des Lagers. Hannos Iberer warten flussaufwärts am anderen Ufer – greif die Volcae von beiden Seiten zugleich an.</translation>
+    </message>
+    <message>
+        <source>The road runs east along the lake. Bring the Gauls down off the western heights to shut its mouth, and the column has only one way left to go.</source>
+        <translation>Die Straße führt am See entlang nach Osten. Bring die Gallier von den westlichen Höhen herab, um ihre Mündung zu verschließen, und der Kolonne bleibt nur noch ein Weg.</translation>
+    </message>
+    <message>
+        <source>The screen is coming across the flats. Javelin-men and the Gallic horse in front, my own horse behind them, the usual arrangement. Please try to stand still; it makes the reports so much tidier.</source>
+        <translation>Der Schirm kommt über die Ebene. Speerwerfer und die gallische Reiterei vorn, meine eigene Reiterei dahinter, die übliche Aufstellung. Bitte versucht stillzustehen; das macht die Berichte so viel ordentlicher.</translation>
+    </message>
+    <message>
+        <source>The siege column is at the run: rams in front, the tower behind. I held Nola against you three times. Capua opened her gates to you; I will open them again from the other side.</source>
+        <translation>Die Belagerungskolonne kommt im Laufschritt: Rammböcke vorn, der Turm dahinter. Dreimal habe ich Nola gegen Euch gehalten. Capua hat Euch seine Tore geöffnet; ich werde sie von der anderen Seite wieder öffnen.</translation>
+    </message>
+    <message>
+        <source>Their camps fall neutral once their commander is dead. Beyond the first pass the track narrows under scree, and the Allobroges keep stones on the heights: send one company ahead to spring the fall, or rush the narrows in strength.</source>
+        <translation>Ihre Lager werden neutral, sobald ihr Befehlshaber tot ist. Hinter dem ersten Pass wird der Pfad unter dem Geröll schmal, und die Allobroger halten Steine auf den Höhen: Schick eine Kompanie voraus, um den Steinschlag auszulösen, oder stürme die Engstelle mit starken Kräften.</translation>
+    </message>
+    <message>
+        <source>There. Scipio said wait, and Scipio may say what he likes now. The river keeps whatever it is given, and your elephants went in and not all of them came out. Rome has never needed a large river.</source>
+        <translation>Da. Scipio sagte: Warte, und Scipio mag jetzt sagen, was er will. Der Fluss behält, was man ihm gibt, und deine Elefanten gingen hinein, und nicht alle kamen wieder heraus. Rom hat nie einen großen Fluss gebraucht.</translation>
+    </message>
+    <message>
+        <source>Three Roman columns are on the roads: Fabius down the Volturnus, the allied wing from the south, Marcellus&apos;s siege column out of the eastern works with rams and a tower. The first assault reaches the walls within the minute.</source>
+        <translation>Drei römische Kolonnen sind auf den Straßen: Fabius den Volturnus herab, der verbündete Flügel von Süden, Marcellus&apos; Belagerungskolonne mit Rammböcken und einem Turm aus den östlichen Werken. Der erste Sturm erreicht die Mauern binnen einer Minute.</translation>
+    </message>
+    <message>
+        <source>Three times you came at Nola and three times you went away. Burn the engines if you can. Rome has a habit of sending me back.</source>
+        <translation>Dreimal seid Ihr gegen Nola gezogen, und dreimal seid Ihr wieder abgezogen. Verbrennt die Maschinen, wenn Ihr könnt. Rom hat die Angewohnheit, mich zurückzuschicken.</translation>
+    </message>
+    <message>
+        <source>Turn the Roman allied camp south of the field, where Varro leads the allied horse.</source>
+        <translation>Nimm das römische Bundesgenossenlager südlich des Feldes ein, wo Varro die verbündete Reiterei führt.</translation>
+    </message>
+    <message>
+        <source>Write it down as the weather. Sleet, a river in spate, a morning without bread. Ten thousand of mine cut through your Gauls and walked on to Placentia, and Rome will hear that the storm robbed us, not you.</source>
+        <translation>Schreib es dem Wetter zu. Graupel, ein Fluss im Hochwasser, ein Morgen ohne Brot. Zehntausend der Meinen schlugen sich durch deine Gallier und marschierten weiter nach Placentia, und Rom wird hören, dass der Sturm uns um den Sieg brachte, nicht du.</translation>
+    </message>
+    <message>
+        <source>You have my marching town. I built it in a fog and never looked back, because a consul of the people does not look back. Keep it. The column will be through your hills before you have counted the huts.</source>
+        <translation>Ihr habt meine Marschstadt. Ich habe sie im Nebel gebaut und nie zurückgeblickt, denn ein Konsul des Volkes blickt nicht zurück. Behaltet sie. Die Kolonne ist durch Eure Hügel, ehe Ihr die Hütten gezählt habt.</translation>
+    </message>
+    <message>
+        <source>You have the allied camp. Socii - allies. I promised them land for this war, and you have just handed them the first piece of it face down.</source>
+        <translation>Ihr habt das Bundesgenossenlager. Socii - Verbündete. Ich habe ihnen Land für diesen Krieg versprochen, und Ihr habt ihnen soeben das erste Stück davon überreicht – mit dem Gesicht nach unten.</translation>
+    </message>
+    <message>
+        <source>Your centre is going down. Of course it is: you put the Gauls there, and Gauls are for spending. My legions will walk through the hole by noon.</source>
+        <translation>Eure Mitte bricht ein. Natürlich: Ihr habt die Gallier dorthin gestellt, und Gallier sind zum Ausgeben da. Meine Legionen marschieren bis Mittag durch das Loch.</translation>
+    </message>
+    <message>
+        <source>Your men are dying too. Every one of them is a Carthaginian I will not have to chase back to Africa.</source>
+        <translation>Eure Männer sterben auch. Jeder von ihnen ist ein Karthager, den ich nicht nach Afrika zurückjagen muss.</translation>
     </message>
 </context>
 <context>

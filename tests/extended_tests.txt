@@ -55,10 +55,21 @@ FormationPropClearance.SoldiersMarchAroundSolidProps
 # about 80 s of simulated time, 11 s on a pull-request runner in Debug. The
 # single-block pace tests in the same suite keep the street cases on PRs.
 MovementPaceTest.AnArmyReorderedThroughATownHoldsPace
+# Two crescents fight it out to the end of the clash: 13.7 s and 11.2 s on a
+# pull-request runner in Debug. The battle-order unit tests stay on PRs.
+BattleOrderBehaviourTest.CrescentCentreGivesGroundWhileTheWingsHold
+BattleOrderBehaviourTest.CrescentFightIsDeterministicTakeToTake
+
+# arena_tests
+# Plays the whole Cannae battle script twice and compares the takes: 60.1 s on
+# a pull-request runner in Debug. BattleScriptTest keeps compilation on PRs.
+BattleScriptDeterminismTest.CannaePlaysThroughItsPhasesIdenticallyTwice
 
 # app_tests
 AudioBattleLoadTest.*
 CampaignWaveAssaultTest.*
+# Plays every Barcid Road mission to its end, up to 25 game minutes each.
+CampaignPlaythroughTest.*
 
 # campaign_tests
 TutorialMissionTest.TheRaidClosesOnThePlayerCampWhileTheCommanderKeepsHisPost

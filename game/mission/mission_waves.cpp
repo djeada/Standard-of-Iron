@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "game/command/command_queue.h"
+#include "game/core/component_commander.h"
 #include "game/core/component_gameplay.h"
 #include "game/core/world.h"
 #include "game/map/map_context.h"
@@ -129,6 +130,7 @@ auto resolve_defense_reference(Engine::Core::World& world,
   QVector3D barracks;
   QVector3D halls;
   QVector3D troops;
+  std::optional<QVector3D> commander;
   int barracks_count = 0;
   int hall_count = 0;
   int troop_count = 0;
@@ -158,6 +160,10 @@ auto resolve_defense_reference(Engine::Core::World& world,
     } else {
       troops += position;
       troop_count++;
+      if (!commander.has_value() &&
+          world.has<Engine::Core::CommanderComponent>(entity->get_id())) {
+        commander = position;
+      }
     }
   }
 
@@ -166,6 +172,11 @@ auto resolve_defense_reference(Engine::Core::World& world,
   }
   if (hall_count > 0) {
     return halls / static_cast<float>(hall_count);
+  }
+  // With no camp to march on, the army is wherever its commander stands; a
+  // detachment landed far away must not drag the target into empty ground.
+  if (commander.has_value()) {
+    return *commander;
   }
   if (troop_count > 0) {
     return troops / static_cast<float>(troop_count);

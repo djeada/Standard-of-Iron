@@ -19,6 +19,7 @@
 #include "game/core/component_commander.h"
 #include "game/core/component_core.h"
 #include "game/core/world.h"
+#include "game/map/map_context.h"
 #include "game/map/map_definition.h"
 #include "game/map/mission_loader.h"
 #include "game/mission/mission_commander_setup.h"
@@ -435,7 +436,7 @@ TEST(HistoricalCommanderMissionTest, CampaignBriefingsNameTheHistoricalLeaders) 
   const Expected expected[] = {
       {"battle_of_trebia", "roman_main_army", "roman_sempronius_longus"},
       {"battle_of_trasimene", "roman_column", "roman_gaius_flaminius"},
-      {"battle_of_cannae", "roman_consular_line", "roman_terentius_varro"},
+      {"battle_of_cannae", "roman_allied_wing", "roman_terentius_varro"},
       {"battle_of_cannae", "roman_reserve_wing", "roman_aemilius_paullus"},
       {"battle_of_ticino", "roman_screen", "roman_scipio_consul_218"},
       {"battle_of_zama", "roman_numidian_allies", "numidian_masinissa"},
@@ -478,3 +479,79 @@ TEST(HistoricalCommanderMissionTest, CampaignBriefingsNameTheHistoricalLeaders) 
 }
 
 } // namespace
+
+namespace {
+
+auto barcid_road_mission_ids() -> std::vector<QString> {
+  return {QStringLiteral("crossing_the_rhone"),
+          QStringLiteral("crossing_the_alps"),
+          QStringLiteral("battle_of_ticino"),
+          QStringLiteral("battle_of_trebia"),
+          QStringLiteral("battle_of_trasimene"),
+          QStringLiteral("battle_of_cannae"),
+          QStringLiteral("campania_campaign"),
+          QStringLiteral("battle_of_zama")};
+}
+
+} // namespace
+
+// A cameo beside Hannibal would keep the player's lose_commander rule from
+// firing and announce "Hannibal has fallen" when the officer dies, so the
+// player's officers stay in the briefing. An enemy cameo replaces its owner's
+// single commander in the same body, so speakers and seats still line up.
+TEST(HistoricalCommanderMissionTest, CampaignCameosLeadEnemyForcesTheirBriefingsName) {
+  for (const auto& mission_id : barcid_road_mission_ids()) {
+    SCOPED_TRACE(mission_id.toStdString());
+    Game::Mission::MissionDefinition mission;
+    QString error;
+    ASSERT_TRUE(Game::Mission::MissionLoader::load_from_json_file(
+        Utils::Resources::resolve_resource_path(
+            QStringLiteral(":/assets/missions/%1.json").arg(mission_id)),
+        mission,
+        &error))
+        << error.toStdString();
+    const auto context = Game::Map::MapContextStore::acquire(mission.map_path, &error);
+    ASSERT_TRUE(context.valid()) << error.toStdString();
+
+    std::map<int, int> commander_spawns_by_owner;
+    for (const auto& spawn : context.definition()->spawns) {
+      const auto troop = Game::Units::spawn_typeToTroopType(spawn.type);
+      if (troop.has_value() && Game::Units::is_commander_troop(*troop)) {
+        commander_spawns_by_owner[spawn.player_id] += 1;
+      }
+      if (spawn.commander_id.isEmpty()) {
+        continue;
+      }
+      EXPECT_NE(spawn.player_id, 1)
+          << spawn.commander_id.toStdString() << " must not stand beside Hannibal";
+      const auto ai_index = static_cast<std::size_t>(spawn.player_id - 2);
+      ASSERT_LT(ai_index, mission.ai_setups.size());
+      EXPECT_TRUE(mission.ai_setups[ai_index].historical_commanders.contains(
+          spawn.commander_id))
+          << mission.ai_setups[ai_index].id.toStdString() << " briefing omits "
+          << spawn.commander_id.toStdString();
+      const auto* cameo = Game::Units::historical_commander_definition(
+          spawn.commander_id.toStdString());
+      ASSERT_NE(cameo, nullptr) << spawn.commander_id.toStdString();
+      ASSERT_TRUE(troop.has_value());
+      EXPECT_EQ(*troop, cameo->troop_type)
+          << spawn.commander_id.toStdString()
+          << " must take over a commander spawn of its own body";
+    }
+    for (const auto& [owner, count] : commander_spawns_by_owner) {
+      EXPECT_EQ(count, 1) << "owner " << owner << " fields one commander";
+    }
+
+    const auto identities =
+        Game::Mission::commander_identities_by_owner(*context.definition());
+    for (std::size_t i = 0; i < mission.ai_setups.size(); ++i) {
+      const int owner = static_cast<int>(i) + 2;
+      for (const auto& briefed : mission.ai_setups[i].historical_commanders) {
+        ASSERT_TRUE(identities.contains(owner));
+        EXPECT_EQ(identities.at(owner), briefed)
+            << mission.ai_setups[i].id.toStdString()
+            << " names a commander it never fields";
+      }
+    }
+  }
+}

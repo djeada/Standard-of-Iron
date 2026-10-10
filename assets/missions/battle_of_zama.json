@@ -4,14 +4,49 @@
   "summary": "Final battle in Africa: blunt Scipio's line, survive the Numidian cavalry, and seize all four Roman camps while breaking both risings of the dead.",
   "teaching_goal": "The shrines you have walked past all campaign were never scenery. Zama reads back over every map behind it - and the Sepulcher has no commander to kill, so the one rule that has served you since Trasimene is the one rule that will not work here.",
   "narrative_intent": "The final confrontation is Carthage against three coordinated Roman commands, until an Iron Sepulcher host attacks from the battlefield's neglected flank.",
-  "historical_context": "202 BC: Scipio arranged lanes through his infantry to blunt Hannibal's elephants, while Masinissa and Laelius commanded superior allied cavalry. The returning cavalry helped decide the battle. The Sepulcher intervention is the campaign's deliberate dark-fantasy break from history.",
+  "historical_context": "202 BC, near Zama in Africa: Publius Cornelius Scipio - son of the consul of 218, soon to be called Africanus - drew up his maniples one behind another instead of in the usual chequer, leaving straight lanes held by velites through which Hannibal's eighty elephants could be driven or let pass. Masinissa's Numidian horse on the right and Laelius's Italian cavalry on the left drove Hannibal's cavalry off the field. Hannibal's three lines - Ligurian, Gallic, Balearic and Moorish mercenaries; Carthaginian and African levies; his veterans of Italy held back in the third - fought the legions to a standstill until the Roman and Numidian cavalry returned and struck the third line from behind. The Iron Sepulcher's intervention is the campaign's deliberate dark-fantasy break from history.",
   "terrain_type": "north_african_plain",
   "map_path": ":/assets/maps/map_battle_zama.json",
   "player_setup": {
     "nation": "carthage",
     "faction": "carthaginian",
     "color": "brown",
-    "starting_units": [],
+    "starting_units": [
+      {
+        "type": "swordsman",
+        "count": 1,
+        "nation": "gauls",
+        "position": {
+          "x": 262,
+          "z": 400
+        }
+      },
+      {
+        "type": "swordsman",
+        "count": 1,
+        "nation": "gauls",
+        "position": {
+          "x": 262,
+          "z": 455
+        }
+      },
+      {
+        "type": "slinger",
+        "count": 1,
+        "position": {
+          "x": 294,
+          "z": 388
+        }
+      },
+      {
+        "type": "slinger",
+        "count": 1,
+        "position": {
+          "x": 300,
+          "z": 505
+        }
+      }
+    ],
     "starting_buildings": [],
     "starting_resources": {
       "gold": 650,
@@ -106,6 +141,10 @@
             {
               "type": "horse_archer",
               "count": 3
+            },
+            {
+              "type": "horse_spearman",
+              "count": 1
             }
           ],
           "entry_point": {
@@ -326,7 +365,7 @@
       "required_count": 3,
       "title": "Take Scipio's town",
       "description": "Break the consular line at its centre.",
-      "hint": "The centre is the strongest camp; bring the elephants up first.",
+      "hint": "The centre is the strongest camp; bring the elephants up first, and expect the velites in the lanes to turn them.",
       "target": {
         "x": 636,
         "z": 396
@@ -341,7 +380,7 @@
       ],
       "required_count": 4,
       "title": "Take the Numidian camp",
-      "description": "Seize Masinissa's camp to finish the four.",
+      "description": "Seize Masinissa's camp to finish the four. He rides for Rome now, with Syphax's kingdom as his price.",
       "hint": "The last camp lies to the north-east, beyond the consular line.",
       "target": {
         "x": 712,
@@ -366,7 +405,7 @@
       "actions": [
         {
           "type": "show_message",
-          "text": "Scipio extends the line. Keep your center steady and protect elephants from isolation."
+          "text": "Scipio has drawn his maniples up one behind another, not chequered: straight lanes run through the line, and velites wait in them for the elephants. Keep your centre steady and do not let the elephants be isolated."
         }
       ]
     },
@@ -402,7 +441,7 @@
       "actions": [
         {
           "type": "show_message",
-          "text": "Roman cavalry waves intensify. Collapse one flank before the rear guard arrives."
+          "text": "Laelius and Masinissa are coming back from the cavalry fight. Collapse one flank before the rear guard arrives."
         }
       ]
     },
@@ -476,7 +515,7 @@
     },
     {
       "id": "zama_rearguard_camp_lost",
-      "speaker": "roman_legion_organizer",
+      "speaker": "roman_field_commander",
       "pose": "cynical",
       "trigger": {
         "type": "structure_captured",
@@ -484,7 +523,7 @@
         "by_owner_id": "player",
         "delay": 1.5
       },
-      "text": "The rearguard camp falls. I held it the way I hold everything - long enough, and no longer. Scipio will manage without an old man's tents.",
+      "text": "The rearguard camp falls. I held it the way the triarii hold everything - long enough, and no longer. Scipio will manage without my tents.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 60
@@ -506,7 +545,7 @@
     },
     {
       "id": "zama_numidian_camp_lost",
-      "speaker": "roman_field_commander",
+      "speaker": "roman_legion_organizer",
       "pose": "cynical",
       "trigger": {
         "type": "structure_captured",
@@ -514,7 +553,7 @@
         "by_owner_id": "player",
         "delay": 1.5
       },
-      "text": "Masinissa's camp is yours. His riders will not care; they were never in it. Watch the horizon, not the tents.",
+      "text": "My camp is yours. Keep it. Numidians were never men for tents, and my riders were never in it. Watch the horizon, Carthaginian, not the palisade.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 60
@@ -535,14 +574,14 @@
     },
     {
       "id": "zama_numidians_ride",
-      "speaker": "roman_field_commander",
+      "speaker": "roman_legion_organizer",
       "pose": "dismissive",
       "trigger": {
         "type": "wave_incoming",
         "owner_id": 3,
         "delay": 0.5
       },
-      "text": "The Numidians are riding. Your Numidians, once. Now they ride for Rome, and they ride the same way they always did - around you.",
+      "text": "My horse are riding. I learned war in your camps in Spain; now Syphax is in chains and Numidia is mine, and I ride the way you taught me - around you.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 55
@@ -613,7 +652,7 @@
         "type": "mission_start",
         "delay": 16.0
       },
-      "text": "Eighty elephants, and he has cut a lane for every one. Hold the men of Italy back in the third line. They are the last answer I have.",
+      "text": "Eighty elephants, and he has cut a lane for every one. Mercenaries in the first line, Africa's levies in the second. Hold the men of Italy back in the third. They are the last answer I have.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 90
@@ -645,6 +684,19 @@
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 85
+    },
+    {
+      "id": "zama_masinissa_last_stand",
+      "speaker": "roman_legion_organizer",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "near_defeat",
+        "owner_id": 3
+      },
+      "text": "I have lost a kingdom once already and won it back with Roman friends. Kill my riders if you can. Rome will give me more.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 80
     }
   ],
   "include_ambient_undead": true,

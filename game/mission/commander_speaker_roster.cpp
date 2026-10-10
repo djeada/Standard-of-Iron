@@ -28,6 +28,16 @@ auto default_commander_for_nation(Game::Systems::NationID nation) -> QString {
   return Game::Units::troop_typeToQString(troop);
 }
 
+auto cameo_id_of(Engine::Core::World& world,
+                 Engine::Core::EntityID entity_id) -> QString {
+  const auto* commander = world.try_get<Engine::Core::CommanderComponent>(entity_id);
+  if (commander == nullptr ||
+      !Game::Units::is_historical_commander_id(commander->commander_id)) {
+    return {};
+  }
+  return QString::fromStdString(commander->commander_id);
+}
+
 } // namespace
 
 auto build_commander_speaker_roster(Engine::Core::World& world,
@@ -36,6 +46,7 @@ auto build_commander_speaker_roster(Engine::Core::World& world,
                                     int local_owner_id)
     -> std::vector<CommanderSpeaker> {
   std::map<int, QString> fielded_by_owner;
+  std::map<int, QString> cameo_by_owner;
   std::map<int, Game::Systems::NationID> nation_by_owner;
   for (const auto& [owner_id, nation] : nations.player_nation_assignments()) {
     nation_by_owner.insert_or_assign(owner_id, nation);
@@ -54,8 +65,11 @@ auto build_commander_speaker_roster(Engine::Core::World& world,
     if (!troop_type.has_value() || !Game::Units::is_commander_troop(*troop_type)) {
       continue;
     }
-    fielded_by_owner.try_emplace(unit.owner_id,
-                                 Game::Units::troop_typeToQString(*troop_type));
+    const auto [fielded, inserted] = fielded_by_owner.try_emplace(
+        unit.owner_id, Game::Units::troop_typeToQString(*troop_type));
+    if (inserted) {
+      cameo_by_owner.insert_or_assign(unit.owner_id, cameo_id_of(world, entity_id));
+    }
   }
 
   std::vector<CommanderSpeaker> roster;
@@ -78,11 +92,14 @@ auto build_commander_speaker_roster(Engine::Core::World& world,
     if (troop_type.isEmpty()) {
       continue;
     }
-    roster.push_back({.owner_id = owner.owner_id,
-                      .troop_type = troop_type,
-                      .relationship = owners.are_allies(owner.owner_id, local_owner_id)
-                                          ? CommanderRelationship::Ally
-                                          : CommanderRelationship::Enemy});
+    const auto cameo = cameo_by_owner.find(owner.owner_id);
+    roster.push_back(
+        {.owner_id = owner.owner_id,
+         .troop_type = troop_type,
+         .relationship = owners.are_allies(owner.owner_id, local_owner_id)
+                             ? CommanderRelationship::Ally
+                             : CommanderRelationship::Enemy,
+         .commander_id = cameo != cameo_by_owner.end() ? cameo->second : QString{}});
   }
 
   std::sort(roster.begin(), roster.end(), [](const auto& lhs, const auto& rhs) {
@@ -104,7 +121,8 @@ auto local_commander_speaker(Engine::Core::World& world,
     }
     return CommanderSpeaker{.owner_id = local_owner_id,
                             .troop_type = Game::Units::troop_typeToQString(*troop_type),
-                            .relationship = CommanderRelationship::Ally};
+                            .relationship = CommanderRelationship::Ally,
+                            .commander_id = cameo_id_of(world, entity_id)};
   }
   return std::nullopt;
 }

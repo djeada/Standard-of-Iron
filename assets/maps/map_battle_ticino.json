@@ -2476,6 +2476,7 @@
             "z": 240.37
         },
         {
+            "commander_id": "roman_scipio_consul_218",
             "max_population": -1,
             "nation": "roman_republic",
             "player_id": 2,
@@ -2589,6 +2590,20 @@
             "type": "archer",
             "x": 254,
             "z": 56
+        },
+        {
+            "max_population": -1,
+            "player_id": 2,
+            "type": "velites",
+            "x": 330,
+            "z": 265
+        },
+        {
+            "max_population": -1,
+            "player_id": 2,
+            "type": "velites",
+            "x": 330,
+            "z": 305
         }
     ],
     "starting_resources": {

@@ -2316,6 +2316,20 @@
             "type": "spearman",
             "x": 154,
             "z": 404
+        },
+        {
+            "max_population": -1,
+            "player_id": 1,
+            "type": "horse_swordsman",
+            "x": 384,
+            "z": 238
+        },
+        {
+            "max_population": -1,
+            "player_id": 1,
+            "type": "horse_swordsman",
+            "x": 384,
+            "z": 262
         }
     ],
     "starting_resources": {

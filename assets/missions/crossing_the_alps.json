@@ -1,10 +1,10 @@
 {
   "id": "crossing_the_alps",
   "title": "Crossing the Alps",
-  "summary": "Provision the column for the descent: harvest timber, stone and iron from the pass while the mountain tribes contest every switchback.",
+  "summary": "Provision the column for the descent: harvest timber, stone and iron from the pass while Allobroges war bands and Roman-paid camps contest every switchback and roll stones from the heights.",
   "teaching_goal": "Timber only counts once a builder unloads it at the camp. The richest stands are the furthest from the stockpile, so the mission is won on the length of the walk, not the swing of the axe.",
-  "narrative_intent": "The crossing is a running battle against terrain, local resistance, and Roman influence. Sepulcher grave-lights remain a dangerous side path rather than the campaign's main enemy.",
-  "historical_context": "218 BC: Hannibal crossed the Alps with a multinational army, cavalry, baggage train, and surviving elephants. Ancient sources disagree on the route; this scenario combines contested passes and local attacks into one dark-fantasy ascent.",
+  "narrative_intent": "The crossing is a running battle against terrain, local resistance, and Roman influence: Gallic ambushes hold the narrows and stones wait above the track. Sepulcher grave-lights remain a dangerous side path rather than the campaign's main enemy.",
+  "historical_context": "218 BC, late autumn: Hannibal crossed the Alps in about fifteen days with a multinational army, cavalry, baggage train, and surviving elephants. At the first ascent the Allobroges held the heights above a defile; Hannibal seized their posts by night, yet they still fell on the strung-out column, and the track killed as many men and animals as their spears. Higher up, mountain Gauls who had come with olive branches led the army into a ravine and rolled rocks down onto it from above (Polybius 3.50-53; Livy 21.32-35). Ancient sources disagree on the route. Historical: the Gallic ambushes, the rockfall, the snow and the hunt for supplies. Altered: Roman officers and camps in the passes paying the tribes - no Roman force stood in the Alps - and the Iron Sepulcher's grave-lights.",
   "terrain_type": "mountain",
   "map_path": ":/assets/maps/map_crossing_alps.json",
   "player_setup": {
@@ -67,7 +67,8 @@
           "composition": [
             {
               "type": "swordsman",
-              "count": 5
+              "count": 5,
+              "nation": "gauls"
             },
             {
               "type": "spearman",
@@ -121,11 +122,13 @@
           "composition": [
             {
               "type": "horse_swordsman",
-              "count": 3
+              "count": 3,
+              "nation": "gauls"
             },
             {
               "type": "swordsman",
-              "count": 5
+              "count": 5,
+              "nation": "gauls"
             }
           ],
           "entry_point": {
@@ -183,11 +186,13 @@
             },
             {
               "type": "swordsman",
-              "count": 8
+              "count": 8,
+              "nation": "gauls"
             },
             {
               "type": "horse_swordsman",
-              "count": 3
+              "count": 3,
+              "nation": "gauls"
             }
           ],
           "entry_point": {
@@ -270,7 +275,7 @@
       "type": "eliminate_commanders",
       "title": "Kill the Roman officers in the passes",
       "description": "Rome has paid the tribes and sent officers to hold them to the bargain. Kill the officers and the tribes go home.",
-      "hint": "Their camps fall neutral once their commander is dead."
+      "hint": "Their camps fall neutral once their commander is dead. Beyond the first pass the track narrows under scree, and the Allobroges keep stones on the heights: send one company ahead to spring the fall, or rush the narrows in strength."
     }
   ],
   "events": [
@@ -307,6 +312,18 @@
         {
           "type": "show_message",
           "text": "The descent garrison is marching up from the south-east. Hold the camp and keep the sledges loading."
+        }
+      ]
+    },
+    {
+      "trigger": {
+        "type": "timer",
+        "time": 120.0
+      },
+      "actions": [
+        {
+          "type": "show_message",
+          "text": "Allobroges on the heights above the narrows south of camp. Where scree scars the slope, they have stones waiting for the column."
         }
       ]
     }

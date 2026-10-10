@@ -2506,6 +2506,7 @@
             "z": 445.39
         },
         {
+            "commander_id": "roman_sempronius_longus",
             "max_population": -1,
             "nation": "roman_republic",
             "player_id": 2,
@@ -8652,6 +8653,44 @@
             "width": 42.7,
             "x": 12.6,
             "z": 344.9
+        }
+    ],
+    "fords": [
+        {
+            "id": "trebia_ford_wreck",
+            "position": [
+                335.2,
+                232.0
+            ],
+            "length": 18,
+            "depth": 0.7,
+            "speed": 0.45,
+            "cold": 0.9,
+            "exposure": 1.4
+        },
+        {
+            "id": "trebia_ford_centre",
+            "position": [
+                294.5,
+                241.6
+            ],
+            "length": 24,
+            "depth": 0.65,
+            "speed": 0.45,
+            "cold": 0.85,
+            "exposure": 1.4
+        },
+        {
+            "id": "trebia_ford_east",
+            "position": [
+                600.0,
+                241.5
+            ],
+            "length": 18,
+            "depth": 0.7,
+            "speed": 0.45,
+            "cold": 0.85,
+            "exposure": 1.4
         }
     ]
 }

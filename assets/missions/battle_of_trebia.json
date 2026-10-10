@@ -3,8 +3,8 @@
   "title": "Battle of Trebia",
   "summary": "Hold the river line and break all three Roman crossings. Let the cold and the water do the work Sempronius will not.",
   "teaching_goal": "An assault walks toward your camp but turns for whatever it can see. Bait it with something visible and it will take the ground you chose instead of the ground it wanted.",
-  "narrative_intent": "The Romans are baited into the winter river and punished by Mago's concealed force, then the defense becomes an assault on a complete winter camp.",
-  "historical_context": "December 218 BC: Hannibal provoked Tiberius Sempronius Longus into crossing the cold Trebia before breakfast. Carthaginian infantry, cavalry, elephants, and Mago's hidden detachment struck the exhausted Roman army from front, flanks, and rear.",
+  "narrative_intent": "The Romans are baited into the winter river and wade it cold and unfed against a line of Gauls, Africans and Balearic slingers, then are punished by Mago's concealed force; the defense becomes an assault on a complete winter camp.",
+  "historical_context": "December 218 BC: Hannibal's Numidians provoked Tiberius Sempronius Longus into sending his velites, then his whole army, across the swollen Trebia at dawn, unfed and chest-deep in icy water, while his wounded colleague Scipio urged him to wait. Hannibal had fed his men and oiled them by the fires. Balearic slingers and spearmen screened a line of Africans, Iberians and some eight thousand newly joined Cisalpine Gauls, with horse and elephants on the wings; Mago's two thousand picked horse and foot lay in an overgrown stream bed and fell on the Roman rear. About ten thousand Romans cut through the Gallic centre and reached Placentia. Altered: the battle is fought as three crossings against your bank, the Placentia reserve marches out as a second Roman army, and the barrow-dead by the western bank are this campaign's invention.",
   "terrain_type": "winter_river_plain",
   "map_path": ":/assets/maps/map_battle_trebia.json",
   "player_setup": {
@@ -14,7 +14,43 @@
     "historical_commanders": [
       "carthage_mago_barca"
     ],
-    "starting_units": [],
+    "starting_units": [
+      {
+        "type": "swordsman",
+        "count": 2,
+        "nation": "gauls",
+        "position": {
+          "x": 290,
+          "z": 430
+        }
+      },
+      {
+        "type": "slinger",
+        "count": 2,
+        "position": {
+          "x": 298,
+          "z": 416
+        }
+      },
+      {
+        "type": "horse_swordsman",
+        "count": 2,
+        "position": {
+          "x": 518,
+          "z": 286
+        },
+        "behavior": "hold"
+      },
+      {
+        "type": "swordsman",
+        "count": 2,
+        "position": {
+          "x": 508,
+          "z": 296
+        },
+        "behavior": "hold"
+      }
+    ],
     "starting_buildings": [],
     "starting_resources": {
       "gold": 500,
@@ -55,6 +91,10 @@
             {
               "type": "archer",
               "count": 3
+            },
+            {
+              "type": "velites",
+              "count": 4
             }
           ],
           "entry_point": {
@@ -79,6 +119,11 @@
             {
               "type": "horse_swordsman",
               "count": 3
+            },
+            {
+              "type": "swordsman",
+              "count": 2,
+              "nation": "gauls"
             }
           ],
           "entry_point": {
@@ -277,7 +322,7 @@
       "wave_count": 3,
       "title": "Break the three crossings",
       "description": "Hold the southern bank through every Roman assault phase.",
-      "hint": "Stay out of the water. Every Roman who wades it reaches you cold and slow."
+      "hint": "Stay out of the water. Every Roman who wades it reaches you cold and slow. Mago's men lie hidden in the wood east of the second crossing; loose them on the Roman rear once the line is engaged."
     },
     {
       "id": "kill_commanders",
@@ -301,7 +346,7 @@
       "actions": [
         {
           "type": "show_message",
-          "text": "Hold discipline. Let the Romans commit at the ford."
+          "text": "Hold discipline. Let the Romans commit at the fords. Mago waits in the brush by the eastern crossing until you call him out."
         }
       ]
     }
@@ -315,7 +360,7 @@
         "type": "mission_start",
         "delay": 2.5
       },
-      "text": "Cold water and an early start, and my colleague is very pleased with both. He has the men in the river before their porridge. I said what I thought and was overruled, so I shall stand here and watch your ambush do its arithmetic.",
+      "text": "Breakfast can wait; Numidians at my palisade cannot. My colleague lies in his tent with his wound and his caution, and a consul's year is short. Velites over first, then the legions. The water is only cold.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 100
@@ -328,7 +373,7 @@
         "type": "mission_victory",
         "delay": 1.0
       },
-      "text": "Fine. Sempronius rides to Rome to explain his morning. Ten thousand of ours cut through your centre and walked on to Placentia, and they will meet you in the spring with dry feet and long memories.",
+      "text": "Write it down as the weather. Sleet, a river in spate, a morning without bread. Ten thousand of mine cut through your Gauls and walked on to Placentia, and Rome will hear that the storm robbed us, not you.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 120
@@ -341,7 +386,7 @@
         "type": "mission_defeat",
         "delay": 1.0
       },
-      "text": "The river keeps whatever it is given. Your elephants went in and not all of them came out, and the Trebia is not a large river. Rome has never needed a large one.",
+      "text": "There. Scipio said wait, and Scipio may say what he likes now. The river keeps whatever it is given, and your elephants went in and not all of them came out. Rome has never needed a large river.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 120
@@ -356,7 +401,7 @@
         "delay": 0.5,
         "final_wave": false
       },
-      "text": "Sempronius is crossing. Now, in the cold, without breakfast, because a consul's year ends in March and he wants his battle before it does.",
+      "text": "Into the water. Yes, cold, and before breakfast. A consul's year ends in March, and I will have my battle before it does.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 60
@@ -371,7 +416,7 @@
         "delay": 0.5,
         "final_wave": true
       },
-      "text": "The last of the legions is in the water. Everything Rome has north of the Apennines is coming at you wet. Hold this and you hold Italy for a winter.",
+      "text": "The last of the legions is in the water. Everything Rome has north of the Apennines is coming at you wet. Hold this and you hold Italy for a winter. You will not hold it.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 65
@@ -443,7 +488,7 @@
         "type": "near_defeat",
         "owner_id": 2
       },
-      "text": "Sempronius has a handful left and they are on the wrong side of a winter river. He will still call it a victory in Rome. He always does.",
+      "text": "A handful left, and on the wrong bank of a winter river. Ten thousand went through to Placentia; that is not a defeat. I shall tell Rome it was the snow.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 80

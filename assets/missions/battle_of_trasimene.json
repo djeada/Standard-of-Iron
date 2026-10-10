@@ -1,10 +1,10 @@
 {
   "id": "battle_of_trasimene",
   "title": "Battle of Lake Trasimene",
-  "summary": "Spring the ambush and capture both Roman field camps within twenty minutes, before the mist lifts and a cohort escapes the basin.",
+  "summary": "Spring the ambush on the fogbound shore road and capture both Roman field camps within twenty minutes, before the mist lifts and a cohort escapes the basin.",
   "teaching_goal": "A nation stands on its commander. Kill him and the camps go quiet and unclaimed - which, against a twenty-minute clock, is the only version of this battle that finishes in time.",
-  "narrative_intent": "The Roman column walks into a geographical trap and is destroyed by converging attacks while the lakeside Sepulcher altar remains an optional horror.",
-  "historical_context": "217 BC: Hannibal drew Gaius Flaminius along the narrow northern shore of Lake Trasimene and attacked from concealed high ground in morning mist. The Roman marching column had little room to deploy and Flaminius was killed.",
+  "narrative_intent": "Flaminius' marching column walks blind into a geographical trap along a mist-filled shore road and is destroyed by converging attacks from the heights, while the lakeside Sepulcher altar remains an optional horror.",
+  "historical_context": "June 217 BC: Hannibal drew the consul Gaius Flaminius along the narrow northern shore of Lake Trasimene. Morning mist lay thick over the lake road while the hilltops stood clear. Gauls and cavalry waited on the heights by the entrance, Balearic slingers and light troops along the ridge, Africans and Iberians on the hill across the exit. The column, strung out in marching order, had no room to deploy. Flaminius was cut down by an Insubrian horseman, Ducarius; some fifteen thousand Romans died, and six thousand who broke out of the van surrendered to Maharbal the next day. Altered here: the column town, the shore camp and Flaminius' post at the basin watch are the game's, and so is the Sepulcher altar by the lake.",
   "terrain_type": "lakeside_hill_country",
   "map_path": ":/assets/maps/map_battle_trasimene.json",
   "player_setup": {
@@ -14,7 +14,56 @@
     "historical_commanders": [
       "carthage_maharbal"
     ],
-    "starting_units": [],
+    "starting_units": [
+      {
+        "type": "swordsman",
+        "count": 1,
+        "nation": "gauls",
+        "behavior": "hold",
+        "position": {
+          "x": 106.0,
+          "z": 260.0
+        }
+      },
+      {
+        "type": "swordsman",
+        "count": 1,
+        "nation": "gauls",
+        "behavior": "hold",
+        "position": {
+          "x": 120.0,
+          "z": 258.0
+        }
+      },
+      {
+        "type": "swordsman",
+        "count": 1,
+        "nation": "iberians",
+        "behavior": "hold",
+        "position": {
+          "x": 298.0,
+          "z": 226.0
+        }
+      },
+      {
+        "type": "slinger",
+        "count": 1,
+        "behavior": "hold",
+        "position": {
+          "x": 284.0,
+          "z": 222.0
+        }
+      },
+      {
+        "type": "slinger",
+        "count": 1,
+        "behavior": "hold",
+        "position": {
+          "x": 314.0,
+          "z": 230.0
+        }
+      }
+    ],
     "starting_buildings": [],
     "starting_resources": {
       "gold": 360,
@@ -175,7 +224,7 @@
       "required_count": 1,
       "title": "Close the trap on the column town",
       "description": "Take the Roman marching town at the western mouth of the lake road.",
-      "hint": "The road runs east along the lake. Shut its western mouth and the column has only one way left to go.",
+      "hint": "The road runs east along the lake. Bring the Gauls down off the western heights to shut its mouth, and the column has only one way left to go.",
       "target": {
         "x": 72,
         "z": 186
@@ -202,7 +251,7 @@
       "id": "kill_commanders",
       "type": "eliminate_commanders",
       "title": "Kill the Roman commanders",
-      "description": "Fabius waits at the basin watch south of the road; Scipio holds the sanctuary above the eastern ford. Take them before the column turns on your camp.",
+      "description": "Flaminius rides at the basin watch south of the road; the van's tribune holds the sanctuary above the eastern ford. Take them before the column turns on your camp.",
       "hint": "Their camps fall neutral once their commander is dead."
     }
   ],
@@ -215,7 +264,7 @@
       "actions": [
         {
           "type": "show_message",
-          "text": "The Roman column enters the corridor. Wait for full commitment."
+          "text": "The Roman column enters the corridor in marching order, blind in the mist. Wait for full commitment."
         }
       ]
     },
@@ -227,7 +276,7 @@
       "actions": [
         {
           "type": "show_message",
-          "text": "Strike now. Take Fabius at the basin watch before the column finds your camp."
+          "text": "Strike now. Take Flaminius at the basin watch before the column finds your camp."
         }
       ]
     },
@@ -253,7 +302,7 @@
         "type": "mission_start",
         "delay": 2.5
       },
-      "text": "Mist on a lake road. Flaminius holds that a column moves faster than an ambush can close, and he is a consul, so he must be right. Do enjoy the next hour. I shall be the one writing the account of it.",
+      "text": "Mist on the lake road, and the augurs whine. My horse threw me; a standard would not come out of the ground. Dig it out, I told them. Hannibal burns Etruria and runs ahead of me, and I will have him before my colleague can share the credit.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 100
@@ -266,7 +315,7 @@
         "type": "mission_victory",
         "delay": 1.0
       },
-      "text": "Fifteen thousand in the shallows, and the augurs will say the sacred chickens warned us. Kill a consul and Rome elects another by market day. That is the trick of us: we are not a man.",
+      "text": "Fifteen thousand in the shallows, and a consul among them. The praetor will climb the Rostra and say only: we have been beaten in a great battle. Rome elects another consul by market day. That is the trick of us: we are not a man.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 120
@@ -279,7 +328,7 @@
         "type": "mission_defeat",
         "delay": 1.0
       },
-      "text": "The mist lifted a little early for you. It happens. The lake will keep what it has been given, and the thing beneath the altar past the eastern stream is not particular about whose it is.",
+      "text": "The mist lifted a little early for you. The Senate called me reckless; let them call this luck. The lake keeps what it is given, and the thing beneath the altar past the eastern stream is not particular about whose it is.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 120
@@ -294,7 +343,7 @@
         "by_owner_id": "player",
         "delay": 1.5
       },
-      "text": "You have the marching town. Flaminius built it in a fog and never looked back. There is a lesson there; he will not be the one to learn it.",
+      "text": "You have my marching town. I built it in a fog and never looked back, because a consul of the people does not look back. Keep it. The column will be through your hills before you have counted the huts.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 60
@@ -323,7 +372,7 @@
         "owner_id": 2,
         "delay": 0.5
       },
-      "text": "The column is on the lakeside road. In fog, in a defile, in a hurry. Every word of that sentence is a mistake and Flaminius owns them all.",
+      "text": "The column is on the lake road in order of march, and it does not stop for mist. Close up and push on. Hannibal is ahead of us, not above us.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 60
@@ -352,7 +401,7 @@
         "by_owner_id": 2,
         "cooldown": 120
       },
-      "text": "They are hitting your camp, because it is the only thing on this road they can see. Men in fog attack whatever is nearest. Remember it.",
+      "text": "My men are at your camp. In fog a soldier strikes whatever is nearest, and I mean every one of them to find you nearest.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 45,
@@ -367,7 +416,7 @@
         "owner_id": "player",
         "cooldown": 120
       },
-      "text": "Your men are dying too. A trap costs the trapper something; the good ones simply cost him less.",
+      "text": "Your men are dying too. Every one of them is a Carthaginian I will not have to chase back to Africa.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 40,
@@ -382,7 +431,7 @@
         "owner_id": "player",
         "delay": 2.0
       },
-      "text": "So he dies by his own lake in his own fog. Rome will call it justice. I call it weather, and I have always respected weather.",
+      "text": "The African dies in his own fog by his own lake. Tell the Senate it was done by the new man they never wanted for consul.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 80
@@ -395,7 +444,7 @@
         "type": "near_defeat",
         "owner_id": 2
       },
-      "text": "The column is nearly gone. What is left of it will hold until the fog lifts, because that is the only order anyone can still hear.",
+      "text": "The column is nearly gone and the Gauls are on the road. Let the Insubres come for me. I broke them once by the Addua; they will not take a consul alive.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 80
@@ -408,7 +457,7 @@
         "type": "mission_start",
         "delay": 16.0
       },
-      "text": "Lake on their left, hills on their right, mist over both. Nobody moves until the whole column is inside.",
+      "text": "Lake on their left, hills on their right, mist over both. Gauls on the heights by the entrance, slingers along the ridge. Nobody moves until the whole column is inside.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 90
@@ -423,7 +472,7 @@
         "by_owner_id": "player",
         "delay": 6.0
       },
-      "text": "The column has lost its head. Take the town before anyone thinks to pick it up.",
+      "text": "Ducarius the Insubrian knew the consul who burned his country, and has paid him for it. The column has lost its head. Take the town before anyone thinks to pick it up.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 80

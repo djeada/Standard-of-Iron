@@ -1,10 +1,10 @@
 {
   "id": "crossing_the_rhone",
   "title": "Crossing the Rh\u00f4ne",
-  "summary": "Cross the Rh\u00f4ne by one of several prepared routes, sever the eastern supply road, and capture two Roman advance camps before Scipio reaches the river.",
-  "teaching_goal": "A camp is taken by standing in it, not by levelling it. Nine men cannot kill thirty-eight, but they can hold two gate yards long enough to claim them - and a Roman column without its commander stops being a column.",
-  "narrative_intent": "A broad river operation with ferries, wooded detours, bridgeheads, and fortified supply quarters; the Iron Sepulcher occupies an avoidable ruin on the southern flank.",
-  "historical_context": "218 BC: Hannibal crossed the Rh\u00f4ne upstream from its mouth using boats, rafts, and a detached force sent across to turn local opposition. Scipio arrived too late; this altered history places Roman advance camps on the far-bank road to create the opening Carthage-versus-Rome engagement.",
+  "summary": "Force the Rh\u00f4ne against the Volcae massed on the far bank - by bridge or by raft, with Hanno's detachment falling on them from upstream - then capture two Roman advance camps before Scipio reaches the river.",
+  "teaching_goal": "A camp is taken by standing in it, not by levelling it. A dozen companies cannot kill fifty, but they can hold two gate yards long enough to claim them - and a Roman column without its commander stops being a column.",
+  "narrative_intent": "A broad river operation with ferries, wooded detours, bridgeheads, and fortified supply quarters: the Volcae hold the far end of the crossing, Hanno's Iberians wait upstream on their side of the water, and the Iron Sepulcher occupies an avoidable ruin on the southern flank.",
+  "historical_context": "218 BC: Hannibal reached the Rh\u00f4ne some four days' march from the sea and found the Volcae massed on the east bank to stop him. He sent Hanno son of Bomilcar upstream by night with a picked force, mostly Iberians; they crossed on rafts and skins, came down the far bank and signalled with smoke. As the boats and rafts pushed off, Hanno fell on the Volcae from behind and broke them. The elephants were floated over on earth-covered rafts, and Scipio's scouting horse clashed with the Numidians before the consul, landed at the river mouth, arrived three days too late (Polybius 3.42-49; Livy 21.26-32). Historical: the Volcae, Hanno's flanking march, the rafts and elephants, the cavalry skirmish. Altered: the bridges, the Roman advance camps on the far-bank road and Scipio's garrisons - Rome had no army at the crossing - and the Iron Sepulcher's barrows.",
   "terrain_type": "river_valley",
   "map_path": ":/assets/maps/map_crossing_rhone.json",
   "player_setup": {
@@ -14,7 +14,43 @@
     "historical_commanders": [
       "carthage_hanno_bomilcar"
     ],
-    "starting_units": [],
+    "starting_units": [
+      {
+        "type": "elephant",
+        "count": 1,
+        "position": {
+          "x": 20.0,
+          "z": 170.0
+        }
+      },
+      {
+        "type": "swordsman",
+        "count": 1,
+        "nation": "iberians",
+        "position": {
+          "x": 300.0,
+          "z": 128.0
+        }
+      },
+      {
+        "type": "swordsman",
+        "count": 1,
+        "nation": "iberians",
+        "position": {
+          "x": 306.0,
+          "z": 124.0
+        }
+      },
+      {
+        "type": "horse_swordsman",
+        "count": 1,
+        "nation": "iberians",
+        "position": {
+          "x": 308.0,
+          "z": 132.0
+        }
+      }
+    ],
     "starting_buildings": [],
     "starting_resources": {
       "gold": 300,
@@ -112,8 +148,8 @@
       "id": "reach_crossing",
       "type": "reach_position",
       "title": "Reach the Rhone crossing",
-      "description": "Bring the column to the pontoon bridge on the near bank.",
-      "hint": "The river runs north to south across the middle of the valley; the nearest crossing is due east of camp.",
+      "description": "Bring the column to the pontoon bridge on the near bank. The Volcae hold its far end.",
+      "hint": "The river runs north to south across the middle of the valley; the nearest crossing is due east of camp. Hanno's Iberians wait upstream on the far bank - strike the Volcae from both sides at once.",
       "target": {
         "x": 240.9,
         "z": 189.5
@@ -145,7 +181,7 @@
       "required_count": 2,
       "title": "Seize the river town",
       "description": "Take the second camp on the southern supply road. No bridge reaches its bank of the river.",
-      "hint": "Ferry your companies over on the rafts, one at a time: one below the Gaulish landing, one further south, one across the eastern branch.",
+      "hint": "Ferry your companies over on the rafts, one at a time - the elephants too, as Hannibal floated his across: one below the Gaulish landing, one further south, one across the eastern branch.",
       "target": {
         "x": 566,
         "z": 545
@@ -194,6 +230,18 @@
         {
           "type": "show_message",
           "text": "Two camps hold the far bank: a hill fort to the north-east, a walled river town far to the south-east. Stand in their gate yards to take them."
+        }
+      ]
+    },
+    {
+      "trigger": {
+        "type": "timer",
+        "time": 40.0
+      },
+      "actions": [
+        {
+          "type": "show_message",
+          "text": "Smoke on the far bank, upstream of the bridge. Hanno son of Bomilcar crossed by night on rafts and skins with his Iberians; the Volcae watching the crossing have not seen him."
         }
       ]
     }
@@ -363,7 +411,7 @@
         "type": "mission_start",
         "delay": 17.0
       },
-      "text": "Hanno's smoke is up on the far bank. Across, all of you - Scipio is three days behind and I intend to keep him there.",
+      "text": "Hanno's smoke is up on the far bank. His Iberians are behind the Volcae - across, all of you, while they look the wrong way. Scipio is three days behind and I intend to keep him there.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 90

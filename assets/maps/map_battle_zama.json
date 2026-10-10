@@ -2070,15 +2070,16 @@
             "max_population": -1,
             "nation": "roman_republic",
             "player_id": 3,
-            "type": "roman_field_commander",
+            "type": "roman_legion_organizer",
             "x": 560.16,
-            "z": 194.9
+            "z": 194.9,
+            "commander_id": "numidian_masinissa"
         },
         {
             "max_population": -1,
             "nation": "roman_republic",
             "player_id": 4,
-            "type": "roman_legion_organizer",
+            "type": "roman_field_commander",
             "x": 548.0,
             "z": 596.0
         },
@@ -2152,6 +2153,48 @@
             "type": "archer",
             "x": 87.16,
             "z": 316.11
+        },
+        {
+            "max_population": -1,
+            "player_id": 1,
+            "type": "elephant",
+            "x": 285,
+            "z": 405
+        },
+        {
+            "max_population": -1,
+            "player_id": 2,
+            "type": "velites",
+            "x": 450,
+            "z": 305
+        },
+        {
+            "max_population": -1,
+            "player_id": 2,
+            "type": "velites",
+            "x": 450,
+            "z": 397
+        },
+        {
+            "max_population": -1,
+            "player_id": 2,
+            "type": "velites",
+            "x": 450,
+            "z": 488
+        },
+        {
+            "max_population": -1,
+            "player_id": 3,
+            "type": "horse_archer",
+            "x": 572,
+            "z": 206
+        },
+        {
+            "max_population": -1,
+            "player_id": 3,
+            "type": "horse_archer",
+            "x": 548,
+            "z": 206
         }
     ],
     "starting_resources": {
