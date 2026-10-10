@@ -40,7 +40,16 @@ class HannibalMarchTest(unittest.TestCase):
         battles = {s["id"] for s in self.march["stops"] if s["kind"] == "battle"}
         self.assertEqual(
             battles,
-            {"saguntum", "rhone", "alps", "ticinus", "trebia", "trasimene", "cannae", "zama"},
+            {
+                "saguntum",
+                "rhone",
+                "alps",
+                "ticinus",
+                "trebia",
+                "trasimene",
+                "cannae",
+                "zama",
+            },
         )
 
     def test_march_starts_at_carthago_nova_and_passes_cannae_before_zama(self) -> None:
@@ -52,7 +61,9 @@ class HannibalMarchTest(unittest.TestCase):
 
     def test_stop_points_match_their_coordinates(self) -> None:
         for stop in self.march["stops"]:
-            u, v = hannibal_path.lon_lat_to_uv(stop["lonlat"][0], stop["lonlat"][1], BOUNDS)
+            u, v = hannibal_path.lon_lat_to_uv(
+                stop["lonlat"][0], stop["lonlat"][1], BOUNDS
+            )
             self.assertAlmostEqual(stop["uv"][0], u)
             self.assertAlmostEqual(stop["uv"][1], v)
             self.assertEqual(self.march["points"][stop["index"]], stop["uv"])
@@ -63,7 +74,9 @@ class HannibalMarchTest(unittest.TestCase):
         except ImportError:
             self.skipTest("pillow is not installed")
         heightmap = ROOT / "assets" / "campaign_map" / "terrain_height.png"
-        meta = json.loads((ROOT / "assets" / "campaign_map" / "terrain_height.json").read_text())
+        meta = json.loads(
+            (ROOT / "assets" / "campaign_map" / "terrain_height.json").read_text()
+        )
         image = Image.open(heightmap)
         width, height = image.size
         pixels = image.load()
@@ -75,13 +88,15 @@ class HannibalMarchTest(unittest.TestCase):
 
         points = self.march["points"]
         stops = self.march["stops"]
-        for source, (start, end) in zip(hannibal_path.MARCH_STOPS, zip(stops, stops[1:])):
+        for source, start, end in zip(
+            hannibal_path.MARCH_STOPS[:-1], stops[:-1], stops[1:], strict=True
+        ):
             if source.get("leg", "land") != "land":
                 continue
             leg = points[start["index"] : end["index"] + 1]
             samples = [
                 (a[0] + (b[0] - a[0]) * k / 10, a[1] + (b[1] - a[1]) * k / 10)
-                for a, b in zip(leg, leg[1:])
+                for a, b in zip(leg[:-1], leg[1:], strict=True)
                 for k in range(10)
             ]
             on_land = sum(is_land(u, v) for u, v in samples) / len(samples)

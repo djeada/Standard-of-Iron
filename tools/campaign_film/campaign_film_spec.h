@@ -213,7 +213,10 @@ struct Spec {
   float terrain_height_scale = 0.10F;
   bool province_fills = false;
   float province_fill_alpha = 0.6F;
-  bool show_symbols = true;
+  bool show_symbols = false;
+  bool draped_lines = true;
+  float coast_width = 1.5F;
+  float river_width = 1.1F;
   bool show_borders = false;
   bool show_game_route = false;
   bool burn_text = true;

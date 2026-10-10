@@ -290,6 +290,11 @@ struct LabelLayer {
   GLuint font_texture = 0;
 };
 
+struct FilmPolyline {
+  std::vector<QVector2D> uv;
+  std::vector<float> height;
+};
+
 struct QStringHash {
   std::size_t operator()(const QString& s) const noexcept { return qHash(s); }
 };
@@ -533,6 +538,10 @@ private:
   GLuint m_pixel_vbo = 0;
   GLuint m_region_vao = 0;
   GLuint m_region_vbo = 0;
+  bool m_film_lines_loaded = false;
+  float m_film_lines_drape = -1.0F;
+  std::vector<FilmPolyline> m_film_coast;
+  std::vector<FilmPolyline> m_film_rivers;
 
   auto ensure_initialized() -> bool {
     if (m_initialized) {
@@ -2660,8 +2669,12 @@ void main() {
     if (m_film.show_borders) {
       draw_line_layer(m_province_border_layer, mvp, 0.0045F);
     }
-    draw_line_layer(m_coast_layer, mvp, 0.004F);
-    draw_line_layer(m_river_layer, mvp, 0.003F);
+    if (m_film.draped_lines) {
+      draw_film_lines(mvp);
+    } else {
+      draw_line_layer(m_coast_layer, mvp, 0.004F);
+      draw_line_layer(m_river_layer, mvp, 0.003F);
+    }
     if (m_film.show_game_route) {
       draw_progressive_path_layers(m_path_layer, mvp, 0.006F);
     }
@@ -2700,6 +2713,7 @@ void main() {
                    static_cast<GLsizeiptr>(verts.size() * sizeof(float)),
                    verts.data(),
                    GL_STREAM_DRAW);
+      Render::GL::note_buffer_storage(verts.size() * sizeof(float), true);
       glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
     return offsets;
@@ -2879,6 +2893,7 @@ void main() {
                  static_cast<GLsizeiptr>(verts.size() * sizeof(QVector2D)),
                  verts.data(),
                  GL_STREAM_DRAW);
+    Render::GL::note_buffer_storage(verts.size() * sizeof(QVector2D), true);
     glDrawArrays(mode, 0, static_cast<GLsizei>(verts.size()));
     glBindVertexArray(0);
     m_pixel_program.release();
@@ -2934,6 +2949,131 @@ void main() {
     glStencilOp(GL_KEEP, GL_KEEP, GL_INCR);
     draw_pixel_geometry(strip, GL_TRIANGLE_STRIP, color);
     glDisable(GL_STENCIL_TEST);
+  }
+
+  static auto
+  load_film_polylines(const QString& resource) -> std::vector<FilmPolyline> {
+    std::vector<FilmPolyline> out;
+    QFile file(Utils::Resources::resolve_resource_path(resource));
+    if (!file.open(QIODevice::ReadOnly)) {
+      return out;
+    }
+    const QJsonArray lines =
+        QJsonDocument::fromJson(file.readAll()).object().value("lines").toArray();
+    for (const auto line_val : lines) {
+      FilmPolyline line;
+      for (const auto pt_val : line_val.toArray()) {
+        const QJsonArray pt = pt_val.toArray();
+        if (pt.size() >= 2) {
+          line.uv.emplace_back(static_cast<float>(pt.at(0).toDouble()),
+                               static_cast<float>(pt.at(1).toDouble()));
+        }
+      }
+      if (line.uv.size() < 2) {
+        continue;
+      }
+      out.push_back(std::move(line));
+    }
+    return out;
+  }
+
+  void ensure_film_lines() {
+    if (!m_film_lines_loaded) {
+      m_film_lines_loaded = true;
+      m_film_coast = load_film_polylines(
+          QStringLiteral(":/assets/campaign_map/coastlines_uv.json"));
+      m_film_rivers =
+          load_film_polylines(QStringLiteral(":/assets/campaign_map/rivers_uv.json"));
+    }
+    if (qFuzzyCompare(m_film_lines_drape + 1.0F, m_film.drape_radius + 1.0F) &&
+        !m_film_coast.empty() && !m_film_coast.front().height.empty()) {
+      return;
+    }
+    m_film_lines_drape = m_film.drape_radius;
+    for (auto* set : {&m_film_coast, &m_film_rivers}) {
+      for (auto& line : *set) {
+        line.height.clear();
+        line.height.reserve(line.uv.size());
+        for (const auto& p : line.uv) {
+          line.height.push_back(
+              m_film_heights.smoothed_height_at(p, m_film.drape_radius));
+        }
+      }
+    }
+  }
+
+  static void append_strip_as_triangles(const std::vector<QVector2D>& strip,
+                                        std::vector<QVector2D>& out) {
+    for (std::size_t i = 0; i + 2 < strip.size(); ++i) {
+      out.push_back(strip[i]);
+      out.push_back(strip[i + 1]);
+      out.push_back(strip[i + 2]);
+    }
+  }
+
+  void draw_film_polyline_set(const QMatrix4x4& mvp,
+                              const std::vector<FilmPolyline>& lines,
+                              float width,
+                              const QVector4D& color) {
+    if (lines.empty() || width <= 0.0F || color.w() <= 0.0F) {
+      return;
+    }
+    const float w = static_cast<float>(m_size.width());
+    const float h = static_cast<float>(m_size.height());
+    const float margin = width * 4.0F;
+    CampaignMapRender::StrokeMeshConfig config;
+    config.width = width;
+    config.start_cap = CampaignMapRender::CapStyle::Round;
+    config.end_cap = CampaignMapRender::CapStyle::Round;
+    config.join_style = CampaignMapRender::JoinStyle::Miter;
+    config.cap_segments = 4;
+    config.miter_params.max_miter_ratio = 2.0F;
+    std::vector<QVector2D> triangles;
+    std::vector<QVector2D> pixels;
+    for (const auto& line : lines) {
+      pixels.clear();
+      bool any_inside = false;
+      for (std::size_t i = 0; i < line.uv.size(); ++i) {
+        const auto projected = CampaignMapFilm::project(
+            mvp,
+            CampaignMapFilm::world_point(line.uv[i],
+                                         line.height[i] * m_film.terrain_height_scale),
+            w,
+            h);
+        if (!projected.in_front) {
+          continue;
+        }
+        const QVector2D px(static_cast<float>(projected.pixel.x()),
+                           h - static_cast<float>(projected.pixel.y()));
+        any_inside = any_inside || (px.x() > -margin && px.x() < w + margin &&
+                                    px.y() > -margin && px.y() < h + margin);
+        pixels.push_back(px);
+      }
+      if (!any_inside || pixels.size() < 2) {
+        continue;
+      }
+      append_strip_as_triangles(CampaignMapRender::build_stroke_mesh(pixels, config),
+                                triangles);
+    }
+    if (triangles.empty()) {
+      return;
+    }
+    glEnable(GL_STENCIL_TEST);
+    glStencilMask(0xFF);
+    glClear(GL_STENCIL_BUFFER_BIT);
+    glStencilFunc(GL_EQUAL, 0, 0xFF);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_INCR);
+    draw_pixel_geometry(triangles, GL_TRIANGLES, color);
+    glDisable(GL_STENCIL_TEST);
+  }
+
+  void draw_film_lines(const QMatrix4x4& mvp) {
+    ensure_film_lines();
+    const float scale = film_pixel_scale();
+    draw_film_polyline_set(
+        mvp, m_film_rivers, m_film.river_width_px * scale, m_film.river_color);
+    draw_film_polyline_set(
+        mvp, m_film_coast, m_film.coast_width_px * scale, m_film.coast_color);
   }
 
   void draw_film_disc(const QVector2D& center, float radius, const QVector4D& color) {
