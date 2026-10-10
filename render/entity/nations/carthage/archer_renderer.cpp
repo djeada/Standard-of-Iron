@@ -42,11 +42,14 @@ const ArcherRendererProfile k_archer_profile{
     .apply_carthage_variant_traits = true,
     .ensure_styles_registered = ensure_archer_styles_registered};
 
-const std::array<ArcherRendererRegistration, 2> k_archer_renderers{{
+const std::array<ArcherRendererRegistration, 3> k_archer_renderers{{
     {.renderer_key = "troops/carthage/archer",
      .style_key = "carthage",
      .creature_asset_id = Render::Creature::Pipeline::k_humanoid_asset},
     {.renderer_key = "troops/carthage/commanders/hasdrubal_barca",
+     .style_key = "carthage",
+     .creature_asset_id = Render::Creature::Pipeline::k_humanoid_asset},
+    {.renderer_key = "troops/carthage/commanders/hanno_bomilcar",
      .style_key = "carthage",
      .creature_asset_id = Render::Creature::Pipeline::k_humanoid_asset},
 }};

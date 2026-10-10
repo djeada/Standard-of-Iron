@@ -34,10 +34,14 @@ const SwordsmanRendererProfile k_swordsman_profile{
     .apply_skin_override = true,
     .ensure_styles_registered = ensure_swordsman_styles_registered};
 
-const std::array<SwordsmanRendererRegistration, 2> k_swordsman_renderers{{
+const std::array<SwordsmanRendererRegistration, 4> k_swordsman_renderers{{
     {.renderer_key = "troops/carthage/swordsman",
      .creature_asset_id = Render::Creature::Pipeline::k_humanoid_sword_asset},
     {.renderer_key = "troops/carthage/commanders/hannibal_barca",
+     .creature_asset_id = Render::Creature::Pipeline::k_humanoid_sword_asset},
+    {.renderer_key = "troops/carthage/commanders/mago_barca",
+     .creature_asset_id = Render::Creature::Pipeline::k_humanoid_sword_asset},
+    {.renderer_key = "troops/carthage/commanders/hasdrubal_cavalry",
      .creature_asset_id = Render::Creature::Pipeline::k_humanoid_sword_asset},
 }};
 

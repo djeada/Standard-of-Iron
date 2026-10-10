@@ -381,7 +381,8 @@ private:
                          Game::Systems::NationID nation_id,
                          Game::Units::TroopType unit_type,
                          const QVector3D& spawn_position,
-                         bool ai_controlled) -> Engine::Core::EntityID;
+                         bool ai_controlled,
+                         const QString& commander_id = {}) -> Engine::Core::EntityID;
   auto resolve_spawn_unit_type(Game::Systems::NationID nation_id,
                                Game::Units::TroopType preferred) const
       -> Game::Units::TroopType;

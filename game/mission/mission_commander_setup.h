@@ -38,6 +38,14 @@ resolve_commander_troop(const QString& nation,
 [[nodiscard]] auto
 commander_troops_for_map(const QString& map_path) -> std::map<int, QString>;
 
+// Like commander_troops_by_owner, but an owner led by a historical cameo maps to
+// the cameo's id (e.g. "roman_terentius_varro") instead of its troop type.
+[[nodiscard]] auto commander_identities_by_owner(const Game::Map::MapDefinition& map)
+    -> std::map<int, QString>;
+
+[[nodiscard]] auto
+commander_identities_for_map(const QString& map_path) -> std::map<int, QString>;
+
 [[nodiscard]] auto resolve_commander_position(
     const std::vector<Game::Mission::UnitSetup>& units,
     const std::vector<Game::Mission::BuildingSetup>& buildings,

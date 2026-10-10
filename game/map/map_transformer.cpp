@@ -527,6 +527,7 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
     sp.max_population = s.max_population;
     sp.nation_id =
         resolve_nation_id_for_map_owner(nations, effective_player_id, s.nation);
+    sp.commander_id = s.commander_id.toStdString();
 
     e = spawn_map_unit(sp, world, &rt.unit_ids);
     if (e == nullptr) {

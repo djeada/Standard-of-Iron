@@ -253,17 +253,284 @@ void add_hannibal_crest(std::vector<Primitive>& primitives) {
   }
 }
 
+void add_side_feathers(std::vector<Primitive>& primitives) {
+  for (int side : {-1, 1}) {
+    float const s = static_cast<float>(side);
+    primitives.push_back(generated_cylinder(QVector3D(s * 1.02F, 0.78F, 0.04F),
+                                            QVector3D(s * 1.08F, 1.42F, 0.00F),
+                                            0.10F,
+                                            k_accent_slot,
+                                            1.0F,
+                                            2));
+    std::array<QVector3D, 6> const feather{{
+        {s * 1.08F, 1.30F, 0.02F},
+        {s * 1.16F, 1.86F, -0.04F},
+        {s * 1.24F, 2.40F, -0.12F},
+        {s * 1.30F, 2.90F, -0.24F},
+        {s * 1.32F, 3.30F, -0.40F},
+        {s * 1.30F, 3.58F, -0.58F},
+    }};
+    add_lobed_mass(primitives, feather, 0.40F, 0.17F, k_plume_slot, 0.55F);
+  }
+  primitives.push_back(
+      generated_sphere(QVector3D(0.0F, 1.80F, -0.06F), 0.26F, k_accent_slot, 1.0F, 2));
+}
+
+void add_triple_feathers(std::vector<Primitive>& primitives) {
+  primitives.push_back(generated_box(QVector3D(0.0F, 1.66F, -0.06F),
+                                     QVector3D(0.62F, 0.16F, 0.24F),
+                                     k_accent_slot,
+                                     1.0F,
+                                     2));
+  for (int index = -1; index <= 1; ++index) {
+    float const x = 0.40F * static_cast<float>(index);
+    std::array<QVector3D, 6> const feather{{
+        {x, 1.72F, -0.06F},
+        {x * 1.12F, 2.26F, -0.10F},
+        {x * 1.24F, 2.80F, -0.16F},
+        {x * 1.36F, 3.28F, -0.26F},
+        {x * 1.46F, 3.66F, -0.40F},
+        {x * 1.52F, 3.92F, -0.56F},
+    }};
+    add_lobed_mass(primitives, feather, 0.26F, 0.11F, k_plume_slot, 0.55F);
+  }
+}
+
+void add_forward_arch_crest(std::vector<Primitive>& primitives) {
+  primitives.push_back(generated_box(QVector3D(0.0F, 1.56F, -0.04F),
+                                     QVector3D(0.16F, 0.30F, 1.20F),
+                                     k_accent_slot,
+                                     1.0F,
+                                     2));
+  std::array<QVector3D, 8> const arch{{
+      {0.0F, 1.04F, -1.72F},
+      {0.0F, 1.84F, -1.32F},
+      {0.0F, 2.42F, -0.70F},
+      {0.0F, 2.70F, 0.00F},
+      {0.0F, 2.66F, 0.70F},
+      {0.0F, 2.38F, 1.34F},
+      {0.0F, 1.94F, 1.82F},
+      {0.0F, 1.46F, 2.08F},
+  }};
+  add_lobed_mass(primitives, arch, 0.70F, 0.38F, k_plume_slot, 0.46F);
+}
+
+void add_crown_tail(std::vector<Primitive>& primitives) {
+  primitives.push_back(generated_cylinder(QVector3D(0.0F, 1.60F, -0.06F),
+                                          QVector3D(0.0F, 2.02F, -0.10F),
+                                          0.16F,
+                                          k_accent_slot,
+                                          1.0F,
+                                          2));
+  primitives.push_back(
+      generated_sphere(QVector3D(0.0F, 2.10F, -0.10F), 0.24F, k_accent_slot, 1.0F, 2));
+  std::array<QVector3D, 8> const tail{{
+      {0.0F, 2.22F, -0.14F},
+      {0.0F, 2.30F, -0.56F},
+      {0.0F, 2.10F, -1.04F},
+      {0.0F, 1.70F, -1.48F},
+      {0.0F, 1.18F, -1.86F},
+      {0.0F, 0.58F, -2.10F},
+      {0.0F, -0.04F, -2.22F},
+      {0.0F, -0.56F, -2.26F},
+  }};
+  add_lobed_mass(primitives, tail, 0.42F, 0.24F, k_plume_slot, 0.66F);
+}
+
+void add_fan_crest(std::vector<Primitive>& primitives) {
+  primitives.push_back(generated_box(QVector3D(0.0F, 1.52F, -0.05F),
+                                     QVector3D(0.14F, 0.26F, 1.10F),
+                                     k_accent_slot,
+                                     1.0F,
+                                     2));
+  constexpr float k_pi = 3.14159265F;
+  auto arc = [](float radius, float y_lift) {
+    std::array<QVector3D, 9> points{};
+    for (std::size_t i = 0; i < points.size(); ++i) {
+      float const t = static_cast<float>(i) / static_cast<float>(points.size() - 1U);
+      float const angle = (0.10F + 0.80F * t) * k_pi;
+      points[i] = QVector3D(0.0F,
+                            1.50F + y_lift + radius * std::sin(angle),
+                            -0.05F + radius * std::cos(angle));
+    }
+    return points;
+  };
+  auto const inner = arc(0.78F, 0.0F);
+  add_lobed_mass(primitives, inner, 0.50F, 0.50F, k_plume_slot, 0.50F);
+  auto const outer = arc(1.28F, 0.0F);
+  add_lobed_mass(primitives, outer, 0.26F, 0.26F, k_accent_slot, 0.55F);
+}
+
+void add_tall_column_plume(std::vector<Primitive>& primitives) {
+  primitives.push_back(generated_cylinder(QVector3D(0.0F, 2.18F, -0.14F),
+                                          QVector3D(0.0F, 2.62F, -0.18F),
+                                          0.17F,
+                                          k_accent_slot,
+                                          1.0F,
+                                          2));
+  std::array<QVector3D, 7> const column{{
+      {0.0F, 2.50F, -0.16F},
+      {0.0F, 2.96F, -0.20F},
+      {0.0F, 3.40F, -0.30F},
+      {0.0F, 3.80F, -0.48F},
+      {0.0F, 4.10F, -0.76F},
+      {0.0F, 4.24F, -1.10F},
+      {0.0F, 4.20F, -1.40F},
+  }};
+  add_lobed_mass(primitives, column, 0.46F, 0.24F, k_plume_slot, 0.62F);
+}
+
+void add_horsehair_ridge(std::vector<Primitive>& primitives) {
+  primitives.push_back(generated_box(QVector3D(0.0F, 1.80F, -0.10F),
+                                     QVector3D(0.16F, 0.30F, 1.24F),
+                                     k_accent_slot,
+                                     1.0F,
+                                     2));
+  std::array<QVector3D, 8> const ridge{{
+      {0.0F, 1.58F, 1.26F},
+      {0.0F, 2.18F, 0.86F},
+      {0.0F, 2.56F, 0.30F},
+      {0.0F, 2.66F, -0.30F},
+      {0.0F, 2.48F, -0.90F},
+      {0.0F, 2.06F, -1.42F},
+      {0.0F, 1.46F, -1.82F},
+      {0.0F, 0.82F, -2.02F},
+  }};
+  add_lobed_mass(primitives, ridge, 0.48F, 0.34F, k_plume_slot, 0.50F);
+}
+
+void add_phrygian_peak(std::vector<Primitive>& primitives) {
+  std::array<QVector3D, 6> const peak{{
+      {0.0F, 2.04F, -0.12F},
+      {0.0F, 2.48F, 0.06F},
+      {0.0F, 2.70F, 0.44F},
+      {0.0F, 2.62F, 0.86F},
+      {0.0F, 2.34F, 1.18F},
+      {0.0F, 2.00F, 1.30F},
+  }};
+  add_lobed_mass(primitives, peak, 0.62F, 0.22F, k_metal_slot, 0.86F);
+  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 1.98F, 1.32F),
+                                           QVector3D(0.24F, 0.20F, 0.20F),
+                                           k_accent_slot,
+                                           1.0F,
+                                           2));
+  std::array<QVector3D, 5> const plume{{
+      {0.0F, 2.30F, -0.46F},
+      {0.0F, 2.72F, -0.74F},
+      {0.0F, 3.04F, -1.08F},
+      {0.0F, 3.20F, -1.44F},
+      {0.0F, 3.18F, -1.76F},
+  }};
+  add_lobed_mass(primitives, plume, 0.28F, 0.14F, k_plume_slot, 0.55F);
+}
+
+void add_horn_plumes(std::vector<Primitive>& primitives) {
+  for (int side : {-1, 1}) {
+    float const s = static_cast<float>(side);
+    std::array<QVector3D, 7> const horn{{
+        {s * 1.04F, 1.04F, -0.06F},
+        {s * 1.40F, 1.54F, -0.10F},
+        {s * 1.66F, 2.10F, -0.16F},
+        {s * 1.76F, 2.66F, -0.24F},
+        {s * 1.66F, 3.16F, -0.32F},
+        {s * 1.42F, 3.52F, -0.40F},
+        {s * 1.12F, 3.70F, -0.46F},
+    }};
+    add_lobed_mass(primitives, horn, 0.38F, 0.15F, k_plume_slot, 0.85F);
+  }
+}
+
+void add_numidian_diadem(std::vector<Primitive>& primitives) {
+  constexpr float k_pi = 3.14159265F;
+
+  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 0.56F, -0.18F),
+                                           QVector3D(1.30F, 1.02F, 1.44F),
+                                           k_dark_slot,
+                                           1.0F,
+                                           0));
+  constexpr int k_curl_rings = 3;
+  for (int ring = 0; ring < k_curl_rings; ++ring) {
+    float const elevation = (0.20F + 0.24F * static_cast<float>(ring)) * k_pi;
+    int const curls = 14 - 4 * ring;
+    for (int curl = 0; curl < curls; ++curl) {
+      float const azimuth =
+          (static_cast<float>(curl) + 0.5F * static_cast<float>(ring)) * 2.0F * k_pi /
+          static_cast<float>(curls);
+      float const horizontal = std::cos(elevation);
+      primitives.push_back(
+          generated_sphere(QVector3D(1.24F * horizontal * std::sin(azimuth),
+                                     0.56F + 0.98F * std::sin(elevation),
+                                     -0.18F + 1.38F * horizontal * std::cos(azimuth)),
+                           0.26F,
+                           k_dark_slot,
+                           1.0F,
+                           0));
+    }
+  }
+
+  constexpr int k_band_beads = 30;
+  for (int bead = 0; bead < k_band_beads; ++bead) {
+    float const azimuth =
+        static_cast<float>(bead) * 2.0F * k_pi / static_cast<float>(k_band_beads);
+    QVector3D const centre(
+        1.36F * std::sin(azimuth), 0.40F, -0.18F + 1.50F * std::cos(azimuth));
+    primitives.push_back(generated_ellipsoid(
+        centre, QVector3D(0.20F, 0.11F, 0.20F), k_plume_slot, 1.0F, 1));
+    if (bead % 3 == 0) {
+      primitives.push_back(generated_sphere(centre * QVector3D(1.04F, 1.0F, 1.0F) +
+                                                QVector3D(0.0F, 0.0F, 0.04F),
+                                            0.07F,
+                                            k_accent_slot,
+                                            1.0F,
+                                            2));
+    }
+  }
+  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 0.42F, 1.36F),
+                                           QVector3D(0.20F, 0.20F, 0.08F),
+                                           k_accent_slot,
+                                           1.0F,
+                                           2));
+  for (int side : {-1, 1}) {
+    float const s = static_cast<float>(side);
+    std::array<QVector3D, 5> const ribbon{{
+        {s * 0.18F, 0.36F, -1.66F},
+        {s * 0.26F, 0.02F, -1.78F},
+        {s * 0.32F, -0.36F, -1.82F},
+        {s * 0.36F, -0.74F, -1.80F},
+        {s * 0.38F, -1.10F, -1.74F},
+    }};
+    add_lobed_mass(primitives, ribbon, 0.14F, 0.11F, k_plume_slot, 0.85F);
+  }
+}
+
+auto is_roman_commander_helmet(CommanderHelmetStyle style) -> bool {
+  switch (style) {
+  case CommanderHelmetStyle::Fabius:
+  case CommanderHelmetStyle::Scipio:
+  case CommanderHelmetStyle::Marcellus:
+  case CommanderHelmetStyle::Sempronius:
+  case CommanderHelmetStyle::Flaminius:
+  case CommanderHelmetStyle::Varro:
+  case CommanderHelmetStyle::Paullus:
+  case CommanderHelmetStyle::ScipioElder:
+    return true;
+  default:
+    return false;
+  }
+}
+
 auto build_commander_helmet(CommanderHelmetStyle style,
                             std::string_view debug_name) -> RenderArchetype {
   std::vector<Primitive> primitives;
   primitives.reserve(96U);
-  bool const roman = style == CommanderHelmetStyle::Fabius ||
-                     style == CommanderHelmetStyle::Scipio ||
-                     style == CommanderHelmetStyle::Marcellus;
-  if (roman) {
+  if (style == CommanderHelmetStyle::Masinissa) {
+    add_numidian_diadem(primitives);
+  } else if (is_roman_commander_helmet(style)) {
     add_roman_base_helmet(primitives);
   } else {
-    add_base_helmet(primitives, style == CommanderHelmetStyle::Hannibal);
+    add_base_helmet(primitives,
+                    style == CommanderHelmetStyle::Hannibal ||
+                        style == CommanderHelmetStyle::HasdrubalCavalry);
   }
   switch (style) {
   case CommanderHelmetStyle::Fabius:
@@ -283,6 +550,35 @@ auto build_commander_helmet(CommanderHelmetStyle style,
     break;
   case CommanderHelmetStyle::Hannibal:
     add_hannibal_crest(primitives);
+    break;
+  case CommanderHelmetStyle::Sempronius:
+    add_side_feathers(primitives);
+    break;
+  case CommanderHelmetStyle::Flaminius:
+    add_triple_feathers(primitives);
+    break;
+  case CommanderHelmetStyle::Varro:
+    add_forward_arch_crest(primitives);
+    break;
+  case CommanderHelmetStyle::Paullus:
+    add_crown_tail(primitives);
+    break;
+  case CommanderHelmetStyle::ScipioElder:
+    add_fan_crest(primitives);
+    break;
+  case CommanderHelmetStyle::Mago:
+    add_tall_column_plume(primitives);
+    break;
+  case CommanderHelmetStyle::Maharbal:
+    add_horsehair_ridge(primitives);
+    break;
+  case CommanderHelmetStyle::HannoBomilcar:
+    add_phrygian_peak(primitives);
+    break;
+  case CommanderHelmetStyle::HasdrubalCavalry:
+    add_horn_plumes(primitives);
+    break;
+  case CommanderHelmetStyle::Masinissa:
     break;
   }
   return build_generated_equipment_archetype(debug_name, primitives);
@@ -322,6 +618,56 @@ auto commander_colors(CommanderHelmetStyle style, const HumanoidPalette& palette
             QVector3D(0.075F, 0.08F, 0.095F),
             QVector3D(0.78F, 0.48F, 0.14F),
             QVector3D(0.055F, 0.055F, 0.070F)};
+  case CommanderHelmetStyle::Sempronius:
+    return {QVector3D(0.55F, 0.44F, 0.26F),
+            QVector3D(0.18F, 0.14F, 0.10F),
+            QVector3D(0.80F, 0.62F, 0.28F),
+            QVector3D(0.92F, 0.90F, 0.84F)};
+  case CommanderHelmetStyle::Flaminius:
+    return {QVector3D(0.42F, 0.43F, 0.45F),
+            QVector3D(0.12F, 0.12F, 0.13F),
+            QVector3D(0.62F, 0.46F, 0.22F),
+            QVector3D(0.07F, 0.05F, 0.09F)};
+  case CommanderHelmetStyle::Varro:
+    return {QVector3D(0.78F, 0.60F, 0.24F),
+            QVector3D(0.22F, 0.16F, 0.08F),
+            QVector3D(0.95F, 0.78F, 0.36F),
+            QVector3D(0.40F, 0.06F, 0.46F)};
+  case CommanderHelmetStyle::Paullus:
+    return {QVector3D(0.66F, 0.67F, 0.70F),
+            QVector3D(0.20F, 0.20F, 0.22F),
+            QVector3D(0.85F, 0.85F, 0.88F),
+            QVector3D(0.86F, 0.66F, 0.22F)};
+  case CommanderHelmetStyle::ScipioElder:
+    return {QVector3D(0.50F, 0.40F, 0.24F),
+            QVector3D(0.15F, 0.12F, 0.09F),
+            QVector3D(0.88F, 0.86F, 0.80F),
+            QVector3D(0.06F, 0.06F, 0.07F)};
+  case CommanderHelmetStyle::Mago:
+    return {QVector3D(0.52F, 0.40F, 0.22F),
+            QVector3D(0.14F, 0.10F, 0.07F),
+            QVector3D(0.88F, 0.64F, 0.22F),
+            QVector3D(0.62F, 0.04F, 0.06F)};
+  case CommanderHelmetStyle::Maharbal:
+    return {QVector3D(0.58F, 0.48F, 0.28F),
+            QVector3D(0.15F, 0.12F, 0.08F),
+            QVector3D(0.30F, 0.22F, 0.12F),
+            QVector3D(0.80F, 0.32F, 0.08F)};
+  case CommanderHelmetStyle::HannoBomilcar:
+    return {QVector3D(0.46F, 0.40F, 0.30F),
+            QVector3D(0.12F, 0.12F, 0.16F),
+            QVector3D(0.76F, 0.74F, 0.72F),
+            QVector3D(0.12F, 0.20F, 0.62F)};
+  case CommanderHelmetStyle::HasdrubalCavalry:
+    return {QVector3D(0.24F, 0.25F, 0.27F),
+            QVector3D(0.08F, 0.08F, 0.09F),
+            QVector3D(0.66F, 0.44F, 0.18F),
+            QVector3D(0.90F, 0.88F, 0.82F)};
+  case CommanderHelmetStyle::Masinissa:
+    return {QVector3D(0.80F, 0.64F, 0.30F),
+            QVector3D(0.045F, 0.035F, 0.030F),
+            QVector3D(0.92F, 0.74F, 0.30F),
+            QVector3D(0.93F, 0.92F, 0.88F)};
   }
   return {QVector3D(0.52F, 0.55F, 0.58F),
           QVector3D(0.20F, 0.20F, 0.22F),
@@ -344,6 +690,26 @@ auto commander_helmet_archetype(CommanderHelmetStyle style) -> const RenderArche
       CommanderHelmetStyle::Hasdrubal, "commander_helmet_hasdrubal");
   static const RenderArchetype hannibal = build_commander_helmet(
       CommanderHelmetStyle::Hannibal, "commander_helmet_hannibal");
+  static const RenderArchetype sempronius = build_commander_helmet(
+      CommanderHelmetStyle::Sempronius, "commander_helmet_sempronius");
+  static const RenderArchetype flaminius = build_commander_helmet(
+      CommanderHelmetStyle::Flaminius, "commander_helmet_flaminius");
+  static const RenderArchetype varro =
+      build_commander_helmet(CommanderHelmetStyle::Varro, "commander_helmet_varro");
+  static const RenderArchetype paullus =
+      build_commander_helmet(CommanderHelmetStyle::Paullus, "commander_helmet_paullus");
+  static const RenderArchetype scipio_elder = build_commander_helmet(
+      CommanderHelmetStyle::ScipioElder, "commander_helmet_scipio_elder");
+  static const RenderArchetype mago =
+      build_commander_helmet(CommanderHelmetStyle::Mago, "commander_helmet_mago");
+  static const RenderArchetype maharbal = build_commander_helmet(
+      CommanderHelmetStyle::Maharbal, "commander_helmet_maharbal");
+  static const RenderArchetype hanno_bomilcar = build_commander_helmet(
+      CommanderHelmetStyle::HannoBomilcar, "commander_helmet_hanno_bomilcar");
+  static const RenderArchetype hasdrubal_cavalry = build_commander_helmet(
+      CommanderHelmetStyle::HasdrubalCavalry, "commander_helmet_hasdrubal_cavalry");
+  static const RenderArchetype masinissa = build_commander_helmet(
+      CommanderHelmetStyle::Masinissa, "commander_helmet_masinissa");
   switch (style) {
   case CommanderHelmetStyle::Fabius:
     return fabius;
@@ -357,6 +723,26 @@ auto commander_helmet_archetype(CommanderHelmetStyle style) -> const RenderArche
     return hasdrubal;
   case CommanderHelmetStyle::Hannibal:
     return hannibal;
+  case CommanderHelmetStyle::Sempronius:
+    return sempronius;
+  case CommanderHelmetStyle::Flaminius:
+    return flaminius;
+  case CommanderHelmetStyle::Varro:
+    return varro;
+  case CommanderHelmetStyle::Paullus:
+    return paullus;
+  case CommanderHelmetStyle::ScipioElder:
+    return scipio_elder;
+  case CommanderHelmetStyle::Mago:
+    return mago;
+  case CommanderHelmetStyle::Maharbal:
+    return maharbal;
+  case CommanderHelmetStyle::HannoBomilcar:
+    return hanno_bomilcar;
+  case CommanderHelmetStyle::HasdrubalCavalry:
+    return hasdrubal_cavalry;
+  case CommanderHelmetStyle::Masinissa:
+    return masinissa;
   }
   return fabius;
 }

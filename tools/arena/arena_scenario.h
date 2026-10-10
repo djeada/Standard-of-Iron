@@ -144,6 +144,9 @@ struct ArenaScenarioGroup {
   std::optional<Game::Units::SpawnType> spawn_type;
 
   QString renderer_override;
+  // Historical cameo commander id (game/units/historical_commander_catalog).
+  // The group spawns that commander on the cameo's body for its nation.
+  QString commander_id;
   QStringList showcase_routine;
   float showcase_start_delay{0.0F};
   bool showcase_loop{true};

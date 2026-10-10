@@ -1,5 +1,6 @@
 #include "factory.h"
 
+#include "../core/component_commander.h"
 #include "../core/component_core.h"
 #include "../core/world.h"
 #include "archer.h"
@@ -8,6 +9,7 @@
 #include "builder.h"
 #include "catapult.h"
 #include "civilian.h"
+#include "commander_catalog.h"
 #include "defense_tower.h"
 #include "elephant.h"
 #include "farm.h"
@@ -45,6 +47,13 @@ auto owner_has_living_commander(Engine::Core::World& world, int owner_id) -> boo
     if (unit == nullptr || unit->owner_id != owner_id || unit->health <= 0) {
       continue;
     }
+    // Historical cameos serve beside an owner's commander and never occupy the
+    // owner's single commander slot.
+    if (const auto* commander =
+            entity->get_component<Engine::Core::CommanderComponent>();
+        commander != nullptr && is_historical_commander_id(commander->commander_id)) {
+      continue;
+    }
     const auto troop_type = spawn_typeToTroopType(unit->spawn_type);
     if (troop_type.has_value() && is_commander_troop(*troop_type)) {
       return true;
@@ -53,7 +62,52 @@ auto owner_has_living_commander(Engine::Core::World& world, int owner_id) -> boo
   return false;
 }
 
+auto resolve_historical_spawn(const SpawnParams& params,
+                              SpawnType requested) -> SpawnType {
+  const auto* definition = historical_commander_definition(params.commander_id);
+  const auto requested_troop = spawn_typeToTroopType(requested);
+  if (definition == nullptr || !requested_troop.has_value() ||
+      !is_commander_troop(*requested_troop)) {
+    return requested;
+  }
+  return spawn_typeFromTroopType(
+      historical_commander_troop_for_nation(*definition, params.nation_id));
+}
+
 } // namespace
+
+auto UnitFactoryRegistry::create(SpawnType type,
+                                 Engine::Core::World& world,
+                                 const SpawnParams& params) const
+    -> std::unique_ptr<Unit> {
+  SpawnParams resolved_params = params;
+  if (!params.commander_id.empty()) {
+    type = resolve_historical_spawn(params, type);
+    resolved_params.spawn_type = type;
+  }
+  auto it = m_factories.find(type);
+  if (it == m_factories.end()) {
+    return nullptr;
+  }
+  auto unit = it->second(world, resolved_params);
+
+  apply_forest_passability(world, unit.get(), type);
+  apply_historical_commander(world, unit.get(), resolved_params);
+  return unit;
+}
+
+void UnitFactoryRegistry::apply_historical_commander(Engine::Core::World& world,
+                                                     Unit* unit,
+                                                     const SpawnParams& params) {
+  if (unit == nullptr || params.commander_id.empty()) {
+    return;
+  }
+  auto* entity = world.get_entity(unit->id());
+  if (entity == nullptr) {
+    return;
+  }
+  (void)Game::Units::apply_historical_commander(*entity, params.commander_id);
+}
 
 void UnitFactoryRegistry::apply_forest_passability(Engine::Core::World& world,
                                                    Unit* unit,
@@ -157,7 +211,8 @@ void register_built_in_units(UnitFactoryRegistry& reg) {
                        });
 
   auto can_spawn_commander = [](Engine::Core::World& world, const SpawnParams& params) {
-    return !owner_has_living_commander(world, params.player_id);
+    return is_historical_commander_id(params.commander_id) ||
+           !owner_has_living_commander(world, params.player_id);
   };
   auto sword_commander_factory =
       [can_spawn_commander](Engine::Core::World& world,

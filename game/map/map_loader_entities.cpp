@@ -15,7 +15,9 @@
 #include "map/map_definition.h"
 #include "map_loader_internal.h"
 #include "systems/resource_json.h"
+#include "units/commander_catalog.h"
 #include "units/spawn_type.h"
+#include "units/troop_type.h"
 #include "wildlife/wildlife_placement.h"
 
 namespace Game::Map::loader_detail {
@@ -138,7 +140,12 @@ void read_spawns(const QJsonArray& arr, std::vector<UnitSpawn>& out) {
     auto spawn_obj = spawn_val.toObject();
     UnitSpawn spawn;
     const QString type_str = spawn_obj.value(TYPE).toString();
-    if (!Game::Units::try_parse_spawn_type(type_str, spawn.type)) {
+    const auto* cameo = Game::Units::historical_commander_definition(
+        type_str.trimmed().toLower().toStdString());
+    if (cameo != nullptr) {
+      spawn.commander_id = QString::fromStdString(cameo->id);
+      spawn.type = Game::Units::spawn_typeFromTroopType(cameo->troop_type);
+    } else if (!Game::Units::try_parse_spawn_type(type_str, spawn.type)) {
       qWarning() << "MapLoader: unknown spawn type" << type_str << "- skipping";
       continue;
     }
@@ -166,6 +173,29 @@ void read_spawns(const QJsonArray& arr, std::vector<UnitSpawn>& out) {
       } else {
         qWarning() << "MapLoader: unknown nation" << nation_str << "- will use default";
       }
+    }
+
+    if (spawn_obj.contains(QStringLiteral("commander_id"))) {
+      const QString commander_id =
+          spawn_obj.value(QStringLiteral("commander_id")).toString().trimmed();
+      const auto* authored = Game::Units::historical_commander_definition(
+          commander_id.toLower().toStdString());
+      const auto troop = Game::Units::spawn_typeToTroopType(spawn.type);
+      if (authored == nullptr) {
+        qWarning() << "MapLoader: unknown commander_id" << commander_id
+                   << "- spawning the plain" << type_str;
+      } else if (!troop.has_value() || !Game::Units::is_commander_troop(*troop)) {
+        qWarning() << "MapLoader: commander_id" << commander_id
+                   << "needs a commander spawn type, not" << type_str;
+      } else {
+        spawn.commander_id = QString::fromStdString(authored->id);
+      }
+    }
+    if (const auto* fielded = Game::Units::historical_commander_definition(
+            spawn.commander_id.toStdString());
+        fielded != nullptr && spawn.nation.has_value()) {
+      spawn.type = Game::Units::spawn_typeFromTroopType(
+          Game::Units::historical_commander_troop_for_nation(*fielded, *spawn.nation));
     }
 
     spawn.behavior = spawn_obj.value(QStringLiteral("behavior")).toString();

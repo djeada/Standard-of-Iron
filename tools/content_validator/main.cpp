@@ -415,12 +415,85 @@ auto validateCommanderVoices(const QString& assets_dir,
     out_library.add(std::move(*bank));
   }
 
+  // Only the playable roster speaks in full chatter banks; historical cameos
+  // (playable == false) carry short barks instead, checked separately.
   for (const auto& definition : Game::Units::all_commander_definitions()) {
+    if (!definition.playable) {
+      continue;
+    }
     const QString commander_id = QString::fromStdString(definition.id);
     if (out_library.bank_for(commander_id) == nullptr) {
       result.addError(
           QString("Commander voices: %1 has no voice bank").arg(commander_id));
     }
+  }
+  return result;
+}
+
+constexpr int k_commander_bark_max_chars = 48;
+
+auto validateHistoricalCommanders() -> ValidationResult {
+  ValidationResult result;
+  std::set<std::string> ids;
+  for (const auto& definition : Game::Units::all_commander_definitions()) {
+    ids.insert(definition.id);
+  }
+  for (const auto& definition : Game::Units::historical_commander_definitions()) {
+    const QString id = QString::fromStdString(definition.id);
+    if (!ids.insert(definition.id).second) {
+      result.addError(
+          QString("Historical commander '%1' reuses another commander's id").arg(id));
+    }
+    if (definition.playable) {
+      result.addError(
+          QString("Historical commander '%1' must not be playable").arg(id));
+    }
+    if (!Game::Units::is_commander_troop(definition.troop_type)) {
+      result.addError(
+          QString("Historical commander '%1' borrows a body that is not a commander")
+              .arg(id));
+    }
+    if (definition.renderer_id.empty()) {
+      result.addError(
+          QString("Historical commander '%1' has no renderer of its own").arg(id));
+    }
+    for (auto const kind : {Game::Units::CommanderBarkKind::Rally,
+                            Game::Units::CommanderBarkKind::Charge,
+                            Game::Units::CommanderBarkKind::FallBack}) {
+      const auto& lines = definition.barks.lines(kind);
+      if (lines.empty()) {
+        result.addError(QString("Historical commander '%1' is missing a bark").arg(id));
+      }
+      for (const auto& line : lines) {
+        if (line.empty() ||
+            QString::fromStdString(line).length() > k_commander_bark_max_chars) {
+          result.addError(QString("Historical commander '%1': bark '%2' must be a "
+                                  "one-liner of at most %3 characters")
+                              .arg(id, QString::fromStdString(line))
+                              .arg(k_commander_bark_max_chars));
+        }
+      }
+    }
+  }
+  return result;
+}
+
+auto validateMissionHistoricalCommanders(
+    const QString& file_path,
+    const Game::Mission::MissionDefinition& mission) -> ValidationResult {
+  ValidationResult result;
+  auto check = [&](const QStringList& ids, const QString& force) {
+    for (const QString& id : ids) {
+      if (!Game::Units::is_historical_commander_id(id.toStdString())) {
+        result.addError(QString("Mission %1: %2 names historical commander '%3', "
+                                "which is not in the cameo roster")
+                            .arg(file_path, force, id));
+      }
+    }
+  };
+  check(mission.player_setup.historical_commanders, QStringLiteral("player_setup"));
+  for (const auto& setup : mission.ai_setups) {
+    check(setup.historical_commanders, setup.id);
   }
   return result;
 }
@@ -651,6 +724,15 @@ auto main(int argc, char* argv[]) -> int {
   bool all_valid = true;
   std::set<QString> mission_ids;
 
+  {
+    std::cout << "\nValidating historical commanders..." << '\n';
+    const ValidationResult result = validateHistoricalCommanders();
+    printResults(result, QStringLiteral("historical commanders"));
+    if (!result.success) {
+      all_valid = false;
+    }
+  }
+
   Game::Mission::CommanderVoiceLibrary voices;
   const QDir voices_dir = base_dir.filePath("data/commanders/voices");
   if (voices_dir.exists()) {
@@ -686,6 +768,12 @@ auto main(int argc, char* argv[]) -> int {
               validateMissionVoicePolicy(mission_path, mission, voices);
           if (!policy.success) {
             printResults(policy, QString("missions/") + mission_file);
+            all_valid = false;
+          }
+          const ValidationResult cameos =
+              validateMissionHistoricalCommanders(mission_path, mission);
+          if (!cameos.success) {
+            printResults(cameos, QString("missions/") + mission_file);
             all_valid = false;
           }
         }
