@@ -21,7 +21,7 @@
 #include "game/save/serialization.h"
 #include "game/session/session_context.h"
 #include "game/systems/default_content.h"
-#include "game/systems/ford_rules.h"
+#include "game/core/ford_rules.h"
 #include "game/systems/ford_system.h"
 #include "game/systems/movement/command_service.h"
 #include "game/systems/movement/route_follow_system_gate.h"

@@ -5,7 +5,7 @@
 #include "../../core/component_gameplay.h"
 #include "../../core/entity.h"
 #include "../../core/world.h"
-#include "../ford_rules.h"
+#include "game/core/ford_rules.h"
 
 namespace Game::Systems::Combat {
 

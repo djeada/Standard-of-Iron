@@ -10,7 +10,7 @@
 #include "../core/component_structures.h"
 #include "../core/world.h"
 #include "../map/terrain_service.h"
-#include "ford_rules.h"
+#include "game/core/ford_rules.h"
 
 namespace Game::Systems {
 

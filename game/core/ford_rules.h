@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-#include "../core/component_gameplay.h"
+#include "component_gameplay.h"
 
 // How wading a river ford changes a unit. The per-ford numbers (depth, speed,
 // cold, exposure) are authored on the map; the constants here are the shared

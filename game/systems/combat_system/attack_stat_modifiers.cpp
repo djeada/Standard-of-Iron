@@ -8,7 +8,7 @@
 #include "../../units/troop_config.h"
 #include "../attack_range.h"
 #include "../combat_rules.h"
-#include "../ford_rules.h"
+#include "game/core/ford_rules.h"
 #include "../troop_profile_service.h"
 #include "combat_types.h"
 #include "combat_utils.h"
