@@ -2639,8 +2639,7 @@ void main() {
     ensure_pixel_program();
 
     CampaignMapFilm::CameraPose pose = m_film.camera;
-    pose.target_height =
-        m_film_heights.height_at(pose.target) * m_film.terrain_height_scale;
+    pose.target_height = film_height(pose.target);
     const QMatrix4x4 mvp = CampaignMapFilm::view_projection(
         static_cast<float>(m_size.width()), static_cast<float>(m_size.height()), pose);
 
@@ -2658,7 +2657,9 @@ void main() {
     }
     const std::vector<int> region_offsets = upload_film_regions();
     draw_film_region_fills(mvp, region_offsets);
-    draw_line_layer(m_province_border_layer, mvp, 0.0045F);
+    if (m_film.show_borders) {
+      draw_line_layer(m_province_border_layer, mvp, 0.0045F);
+    }
     draw_line_layer(m_coast_layer, mvp, 0.004F);
     draw_line_layer(m_river_layer, mvp, 0.003F);
     if (m_film.show_game_route) {
@@ -2669,6 +2670,11 @@ void main() {
       draw_symbol_layer(m_symbol_layer, mvp, 0.007F);
     }
     draw_film_route(mvp);
+  }
+
+  [[nodiscard]] auto film_height(const QVector2D& uv) const -> float {
+    return m_film_heights.smoothed_height_at(uv, m_film.drape_radius) *
+           m_film.terrain_height_scale;
   }
 
   [[nodiscard]] auto film_pixel_scale() const -> float {
@@ -2881,7 +2887,7 @@ void main() {
     const float w = static_cast<float>(m_size.width());
     const float h = static_cast<float>(m_size.height());
     for (const auto& uv : uv_points) {
-      const float height = m_film_heights.height_at(uv) * m_film.terrain_height_scale;
+      const float height = film_height(uv);
       const auto projected =
           CampaignMapFilm::project(mvp, CampaignMapFilm::world_point(uv, height), w, h);
       if (!projected.in_front) {

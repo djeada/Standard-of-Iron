@@ -221,6 +221,8 @@ struct FrameState {
   float terrain_height_scale = 0.085F;
   bool province_fills = false;
   float province_fill_alpha = 1.0F;
+  bool show_borders = false;
+  float drape_radius = 0.008F;
   bool show_game_route = false;
   bool show_symbols = true;
   bool route_visible = false;

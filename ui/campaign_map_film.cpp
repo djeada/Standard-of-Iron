@@ -112,4 +112,28 @@ auto TerrainHeightField::height_at(float u, float v) const -> float {
   return height;
 }
 
+auto TerrainHeightField::smoothed_height_at(const QVector2D& uv, float radius) const
+    -> float {
+  if (!m_ready || radius <= 0.0F) {
+    return height_at(uv);
+  }
+  constexpr int k_taps = 2;
+  float sum = 0.0F;
+  float weight_sum = 0.0F;
+  for (int dy = -k_taps; dy <= k_taps; ++dy) {
+    for (int dx = -k_taps; dx <= k_taps; ++dx) {
+      const float fx = static_cast<float>(dx) / static_cast<float>(k_taps);
+      const float fy = static_cast<float>(dy) / static_cast<float>(k_taps);
+      const float weight = std::max(0.0F, 1.0F - 0.5F * (fx * fx + fy * fy));
+      sum += weight * height_at(uv.x() + fx * radius, uv.y() + fy * radius);
+      weight_sum += weight;
+    }
+  }
+  return weight_sum > 0.0F ? sum / weight_sum : 0.0F;
+}
+
+auto TerrainHeightField::is_land(const QVector2D& uv) const -> bool {
+  return m_ready && raw_at(uv.x(), uv.y()) > 0.0F;
+}
+
 } // namespace CampaignMapFilm

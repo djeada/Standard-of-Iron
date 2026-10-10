@@ -198,8 +198,11 @@ struct Spec {
   bool province_fills = false;
   float province_fill_alpha = 0.6F;
   bool show_symbols = true;
+  bool show_borders = false;
   bool show_game_route = false;
   bool burn_text = true;
+  bool forbid_world_edge = false;
+  float drape_radius = 0.008F;
   Interp interp = Interp::Spline;
   Ends ends = Ends::Ease;
   std::vector<CameraKey> camera;

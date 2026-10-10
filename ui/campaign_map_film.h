@@ -17,6 +17,8 @@ public:
   [[nodiscard]] auto height_at(const QVector2D& uv) const -> float {
     return height_at(uv.x(), uv.y());
   }
+  [[nodiscard]] auto smoothed_height_at(const QVector2D& uv, float radius) const -> float;
+  [[nodiscard]] auto is_land(const QVector2D& uv) const -> bool;
 
 private:
   [[nodiscard]] auto raw_at(float u, float v) const -> float;

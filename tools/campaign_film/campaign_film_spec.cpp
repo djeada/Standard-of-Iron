@@ -388,6 +388,9 @@ auto parse_spec(const QJsonObject& object, const LoadContext& context, QString* 
       read_float(object, "province_fill_alpha", spec.province_fill_alpha);
   spec.show_symbols = object.value(QStringLiteral("symbols")).toBool(true);
   spec.show_game_route = object.value(QStringLiteral("game_route")).toBool(false);
+  spec.show_borders = object.value(QStringLiteral("borders")).toBool(false);
+  spec.forbid_world_edge = object.value(QStringLiteral("forbid_world_edge")).toBool(false);
+  spec.drape_radius = std::max(0.0F, read_float(object, "drape_radius", spec.drape_radius));
   spec.burn_text = object.value(QStringLiteral("burn_text")).toBool(true);
   spec.interp = object.value(QStringLiteral("interp")).toString().toLower() ==
                         QStringLiteral("keys")
@@ -811,7 +814,7 @@ auto Timeline::arrival_time(float progress) const -> std::optional<float> {
     return std::nullopt;
   }
   constexpr float k_step = 1.0F / 480.0F;
-  constexpr float k_tolerance = 1e-5F;
+  constexpr float k_tolerance = 2e-7F;
   if (route_progress(0.0F) >= progress - k_tolerance) {
     return 0.0F;
   }
@@ -1032,6 +1035,8 @@ auto Timeline::frame_state(const FrameEval& eval) const -> CampaignMapFilm::Fram
   state.province_fill_alpha = m_spec.province_fill_alpha;
   state.show_game_route = m_spec.show_game_route;
   state.show_symbols = m_spec.show_symbols;
+  state.show_borders = m_spec.show_borders;
+  state.drape_radius = m_spec.drape_radius;
   state.route_visible = m_spec.route.enabled;
   state.route_from = eval.route_from;
   state.route_to = eval.route_head;

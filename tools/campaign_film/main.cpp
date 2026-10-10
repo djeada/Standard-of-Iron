@@ -196,7 +196,8 @@ auto build_timeline_json(const Spec& spec,
                          const Timeline& timeline,
                          const QString& clip_name,
                          int first_frame,
-                         int end_frame) -> QJsonObject {
+                         int end_frame,
+                         const QJsonArray& edge_ranges) -> QJsonObject {
   QJsonObject root;
   root.insert(QStringLiteral("id"), spec.id);
   root.insert(QStringLiteral("title"), spec.title);
@@ -341,8 +342,63 @@ auto build_timeline_json(const Spec& spec,
   for (const QString& warning : timeline.warnings()) {
     warnings.push_back(warning);
   }
+  for (const auto& range : edge_ranges) {
+    const QJsonArray triple = range.toArray();
+    warnings.push_back(QStringLiteral("the map's %3 edge is in frame from %1 s to %2 s")
+                           .arg(triple.at(0).toDouble())
+                           .arg(triple.at(1).toDouble())
+                           .arg(triple.at(2).toString()));
+  }
   root.insert(QStringLiteral("warnings"), warnings);
+  root.insert(QStringLiteral("edge_frames"), edge_ranges);
   return root;
+}
+
+auto world_edges_visible(const QMatrix4x4& mvp,
+                         float width,
+                         float height,
+                         const CampaignMapFilm::TerrainHeightField& heights) -> QString {
+  static const char* k_names[] = {"south", "north", "west", "east"};
+  constexpr int k_samples = 128;
+  constexpr float k_inset = 0.004F;
+  QString edges;
+  for (int edge = 0; edge < 4; ++edge) {
+    for (int i = 0; i <= k_samples; ++i) {
+      const float t = static_cast<float>(i) / static_cast<float>(k_samples);
+      QVector2D uv;
+      QVector2D inside;
+      switch (edge) {
+      case 0:
+        uv = QVector2D(t, 0.0F);
+        inside = QVector2D(t, k_inset);
+        break;
+      case 1:
+        uv = QVector2D(t, 1.0F);
+        inside = QVector2D(t, 1.0F - k_inset);
+        break;
+      case 2:
+        uv = QVector2D(0.0F, t);
+        inside = QVector2D(k_inset, t);
+        break;
+      default:
+        uv = QVector2D(1.0F, t);
+        inside = QVector2D(1.0F - k_inset, t);
+        break;
+      }
+      if (!heights.is_land(inside)) {
+        continue;
+      }
+      const auto projected =
+          CampaignMapFilm::project(mvp, CampaignMapFilm::world_point(uv, 0.0F), width, height);
+      if (projected.in_front && projected.pixel.x() >= 0.0 && projected.pixel.y() >= 0.0 &&
+          projected.pixel.x() <= width && projected.pixel.y() <= height) {
+        edges += (edges.isEmpty() ? QString() : QStringLiteral("+")) +
+                 QLatin1String(k_names[edge]);
+        break;
+      }
+    }
+  }
+  return edges;
 }
 
 auto pick_family(const QStringList& registered,
@@ -541,6 +597,49 @@ auto main(int argc, char** argv) -> int {
     }
   }
 
+  CampaignMapFilm::TerrainHeightField heights;
+  heights.load_default();
+  auto film_height = [&heights, &spec](const QVector2D& uv) {
+    return heights.smoothed_height_at(uv, spec.drape_radius) * spec.terrain_height_scale;
+  };
+  auto camera_matrix = [&](const FrameEval& eval, float width, float height) {
+    CampaignMapFilm::CameraPose pose = eval.camera;
+    pose.target_height = film_height(pose.target);
+    return CampaignMapFilm::view_projection(width, height, pose);
+  };
+
+  QJsonArray edge_ranges;
+  {
+    float range_start = 0.0F;
+    QString range_edges;
+    for (int frame = 0; frame <= total_frames; ++frame) {
+      const float time = static_cast<float>(frame) / static_cast<float>(spec.fps);
+      const QString edges =
+          frame < total_frames
+              ? world_edges_visible(camera_matrix(timeline.evaluate(time),
+                                                  static_cast<float>(spec.width),
+                                                  static_cast<float>(spec.height)),
+                                    static_cast<float>(spec.width),
+                                    static_cast<float>(spec.height), heights)
+              : QString();
+      if (edges == range_edges) {
+        continue;
+      }
+      if (!range_edges.isEmpty()) {
+        edge_ranges.push_back(QJsonArray{std::round(range_start * 100.0) / 100.0,
+                                         std::round(time * 100.0) / 100.0, range_edges});
+      }
+      range_start = time;
+      range_edges = edges;
+    }
+  }
+  for (const auto& range : edge_ranges) {
+    log_line(QStringLiteral("warning: the map's %3 edge is in frame from %1 s to %2 s")
+                 .arg(range.toArray().at(0).toDouble())
+                 .arg(range.toArray().at(1).toDouble())
+                 .arg(range.toArray().at(2).toString()));
+  }
+
   const QString out_dir = QDir(parser.value(out_option)).filePath(spec.id);
   QDir().mkpath(out_dir);
   const QString clip_name =
@@ -548,7 +647,8 @@ auto main(int argc, char** argv) -> int {
                      ? QStringLiteral(".mov")
                      : QStringLiteral(".mp4"));
   write_json(QDir(out_dir).filePath(QStringLiteral("timeline.json")),
-             build_timeline_json(spec, *march, timeline, clip_name, first_frame, end_frame));
+             build_timeline_json(spec, *march, timeline, clip_name, first_frame, end_frame,
+                                 edge_ranges));
   log_line(QStringLiteral("%1: %2x%3 @ %4 fps, supersample %5, %6 s (%7 frames), out %8")
                .arg(spec.id)
                .arg(spec.width)
@@ -558,6 +658,10 @@ auto main(int argc, char** argv) -> int {
                .arg(spec.duration)
                .arg(total_frames)
                .arg(out_dir));
+  if (spec.forbid_world_edge && !edge_ranges.isEmpty()) {
+    log_line(QStringLiteral("the spec forbids framing the map edge"));
+    return 5;
+  }
   if (parser.isSet(validate_option)) {
     return 0;
   }
@@ -611,9 +715,6 @@ auto main(int argc, char** argv) -> int {
   view->setSize(internal);
   view->set_film_route(march->points);
 
-  CampaignMapFilm::TerrainHeightField heights;
-  heights.load_default();
-
   const QStringList registered = Ui::BrandFonts::register_bundled();
   OverlayFonts fonts;
   fonts.display = pick_family(registered, {QStringLiteral("Standard Iron Display")},
@@ -638,14 +739,12 @@ auto main(int argc, char** argv) -> int {
     control.endFrame();
     QImage image = target.toImage().convertToFormat(QImage::Format_ARGB32_Premultiplied);
 
-    CampaignMapFilm::CameraPose pose = eval.camera;
-    pose.target_height = heights.height_at(pose.target) * spec.terrain_height_scale;
-    const QMatrix4x4 mvp = CampaignMapFilm::view_projection(
-        static_cast<float>(internal.width()), static_cast<float>(internal.height()), pose);
+    const QMatrix4x4 mvp = camera_matrix(eval, static_cast<float>(internal.width()),
+                                         static_cast<float>(internal.height()));
     const Projector project = [&](const QVector2D& uv) -> std::optional<QPointF> {
       const auto projected = CampaignMapFilm::project(
           mvp,
-          CampaignMapFilm::world_point(uv, heights.height_at(uv) * spec.terrain_height_scale),
+          CampaignMapFilm::world_point(uv, film_height(uv)),
           static_cast<float>(internal.width()), static_cast<float>(internal.height()));
       if (!projected.in_front) {
         return std::nullopt;
@@ -714,15 +813,13 @@ auto main(int argc, char** argv) -> int {
                                                                               QLatin1Char('0'))));
     }
 
-    CampaignMapFilm::CameraPose pose = eval.camera;
-    pose.target_height = heights.height_at(pose.target) * spec.terrain_height_scale;
-    const QMatrix4x4 mvp = CampaignMapFilm::view_projection(
-        static_cast<float>(spec.width), static_cast<float>(spec.height), pose);
+    const QMatrix4x4 mvp =
+        camera_matrix(eval, static_cast<float>(spec.width), static_cast<float>(spec.height));
     auto point_json = [&](const QVector2D& uv) {
       QJsonObject point;
       const auto projected = CampaignMapFilm::project(
           mvp,
-          CampaignMapFilm::world_point(uv, heights.height_at(uv) * spec.terrain_height_scale),
+          CampaignMapFilm::world_point(uv, film_height(uv)),
           static_cast<float>(spec.width), static_cast<float>(spec.height));
       point.insert(QStringLiteral("x"), round3(projected.pixel.x()));
       point.insert(QStringLiteral("y"), round3(projected.pixel.y()));
