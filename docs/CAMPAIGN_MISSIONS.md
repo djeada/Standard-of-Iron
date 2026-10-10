@@ -67,16 +67,16 @@ Wildlife is authored per map rather than inherited from a derived default. Each 
 
 The Barcid Road is an altered history, and each mission's `historical_context` says plainly what is real and what is the game's. The real part follows Polybius (book 3) and Livy (books 21-22 and 30), using the features the documentary work added:
 
-| Mission | What is historical | What is deliberately altered |
-| --- | --- | --- |
-| Crossing the Rhône | The Volcae hold the east bank; Hanno's Iberians cross upstream and come down behind them; the army and its elephants go over by raft | The bridges, the Roman advance camps on the far bank, the Sepulcher barrows |
-| Crossing the Alps | Allobroges hold the heights and roll stones onto the column in the defiles | Roman officers paying the mountain peoples and garrisoning the passes |
-| Battle of Ticino | A cavalry fight; velites and Gallic horse in Scipio's front, Iberian heavy horse against them; Scipio wounded and carried off | The two camps; in game terms his death stands for his wounding |
-| Battle of Trebia | Sempronius wades a fordable, freezing Trebia; Gauls and Balearic slingers in Hannibal's line; Mago's detachment hidden in the brush | Three separate crossings, the Placentia reserve as a second army, the barrow-dead |
-| Battle of Lake Trasimene | Mist over the shore road, hilltops clear; Gauls and slingers on the heights; Flaminius in command of a column in marching order | The column town, the shore camp, the lake altar |
-| Battle of Cannae | Gauls and Iberians in the crescent centre, Africans on the wings, Hasdrubal's Iberian and Gallic horse by the river; Varro with the allied horse, Paullus with the Roman horse; the Aufidus ford | Three camps instead of two, the field towns, the Sepulcher graves |
-| The Campanian Vigil | Capua's defection; Fabius shadowing, Marcellus pressing, rams and a siege tower against the walls | Years of containment compressed into one defence |
-| Battle of Zama | Scipio's lanes with velites for the elephants; Masinissa's Numidians on Rome's side; Hannibal's three lines of mercenaries, levies and veterans | The four camps and the Iron Sepulcher's intervention |
+| Mission                  | What is historical                                                                                                                                                                               | What is deliberately altered                                                      |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------- |
+| Crossing the Rhône       | The Volcae hold the east bank; Hanno's Iberians cross upstream and come down behind them; the army and its elephants go over by raft                                                             | The bridges, the Roman advance camps on the far bank, the Sepulcher barrows       |
+| Crossing the Alps        | Allobroges hold the heights and roll stones onto the column in the defiles                                                                                                                       | Roman officers paying the mountain peoples and garrisoning the passes             |
+| Battle of Ticino         | A cavalry fight; velites and Gallic horse in Scipio's front, Iberian heavy horse against them; Scipio wounded and carried off                                                                    | The two camps; in game terms his death stands for his wounding                    |
+| Battle of Trebia         | Sempronius wades a fordable, freezing Trebia; Gauls and Balearic slingers in Hannibal's line; Mago's detachment hidden in the brush                                                              | Three separate crossings, the Placentia reserve as a second army, the barrow-dead |
+| Battle of Lake Trasimene | Mist over the shore road, hilltops clear; Gauls and slingers on the heights; Flaminius in command of a column in marching order                                                                  | The column town, the shore camp, the lake altar                                   |
+| Battle of Cannae         | Gauls and Iberians in the crescent centre, Africans on the wings, Hasdrubal's Iberian and Gallic horse by the river; Varro with the allied horse, Paullus with the Roman horse; the Aufidus ford | Three camps instead of two, the field towns, the Sepulcher graves                 |
+| The Campanian Vigil      | Capua's defection; Fabius shadowing, Marcellus pressing, rams and a siege tower against the walls                                                                                                | Years of containment compressed into one defence                                  |
+| Battle of Zama           | Scipio's lanes with velites for the elephants; Masinissa's Numidians on Rome's side; Hannibal's three lines of mercenaries, levies and veterans                                                  | The four camps and the Iron Sepulcher's intervention                              |
 
 Rules that keep this additive:
 

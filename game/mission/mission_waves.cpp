@@ -161,7 +161,7 @@ auto resolve_defense_reference(Engine::Core::World& world,
       troops += position;
       troop_count++;
       if (!commander.has_value() &&
-          entity->has_component<Engine::Core::CommanderComponent>()) {
+          world.has<Engine::Core::CommanderComponent>(entity->get_id())) {
         commander = position;
       }
     }
