@@ -213,7 +213,7 @@ TEST(ArenaScenariosTest, ListsAllPhaseOneScenarioIds) {
        {Arena::Scenarios::k_commander_aura_pulse_id,
         Arena::Scenarios::k_commander_identity_lineup_id,
         Arena::Scenarios::k_historical_commander_lineup_id,
-        Arena::Scenarios::k_historical_commander_helmet_review_id,
+        Arena::Scenarios::k_historical_commander_closeups_id,
         Arena::Scenarios::k_commander_sword_duel_id,
         Arena::Scenarios::k_commander_bow_duel_id,
         Arena::Scenarios::k_commander_spear_duel_id,
@@ -603,7 +603,7 @@ TEST(ArenaScenariosTest, AlliedScenesFieldGallicAndIberianFootAndHorse) {
 
 TEST(ArenaScenariosTest, HistoricalCommanderScenesFieldAllTenCameos) {
   for (auto const* id : {Arena::Scenarios::k_historical_commander_lineup_id,
-                         Arena::Scenarios::k_historical_commander_helmet_review_id}) {
+                         Arena::Scenarios::k_historical_commander_closeups_id}) {
     auto const* scenario = Arena::Scenarios::find_definition(QString::fromLatin1(id));
     ASSERT_NE(scenario, nullptr) << id;
     EXPECT_TRUE(Arena::validate_scenario(*scenario).empty()) << id;

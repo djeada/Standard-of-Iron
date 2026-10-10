@@ -1,6 +1,8 @@
 #include "arena_identity_scenarios.h"
 
-#include <span>
+#include <cmath>
+#include <iterator>
+#include <numbers>
 #include <utility>
 #include <vector>
 
@@ -25,58 +27,51 @@ struct HistoricalCommanderEntry {
   int owner{};
 };
 
-// The ten historical cameo commanders of issue #1522: Rome and Masinissa in the
-// front rank, the Barcid officers behind. Two owners only (1 and 3; the arena
-// turns owner 2 to face the enemy side), because cameos serve
-// side by side under one owner the way the battle scripts field them.
-constexpr HistoricalCommanderEntry k_historical_front_rank[] = {
+// The ten historical cameo commanders of issue #1522. Two owners only (1 for
+// Rome and Masinissa, 3 for Carthage), because cameos serve side by side under
+// one owner the way the battle scripts field them.
+constexpr HistoricalCommanderEntry k_historical_commanders[] = {
     {"sempronius", "roman_sempronius_longus", Nation::RomanRepublic, 1},
     {"flaminius", "roman_gaius_flaminius", Nation::RomanRepublic, 1},
     {"varro", "roman_terentius_varro", Nation::RomanRepublic, 1},
     {"paullus", "roman_aemilius_paullus", Nation::RomanRepublic, 1},
     {"scipio_218", "roman_scipio_consul_218", Nation::RomanRepublic, 1},
     {"masinissa", "numidian_masinissa", Nation::RomanRepublic, 1},
-};
-constexpr HistoricalCommanderEntry k_historical_back_rank[] = {
     {"mago", "carthage_mago_barca", Nation::Carthage, 3},
     {"maharbal", "carthage_maharbal", Nation::Carthage, 3},
     {"hanno_bomilcar", "carthage_hanno_bomilcar", Nation::Carthage, 3},
     {"hasdrubal_cavalry", "carthage_hasdrubal_cavalry", Nation::Carthage, 3},
 };
+constexpr std::size_t k_historical_front_rank_size = 6U;
 
-void add_historical_commander_ranks(ArenaScenarioDefinition& s,
-                                    float spacing,
-                                    float rank_depth,
-                                    bool expect_existence) {
-  auto add_rank = [&](std::span<const HistoricalCommanderEntry> rank,
-                      float z,
-                      float x_shift) {
-    float const first_x =
-        -0.5F * spacing * static_cast<float>(rank.size() - 1U) + x_shift;
-    for (std::size_t index = 0; index < rank.size(); ++index) {
-      auto const& entry = rank[index];
-      QVector3D const position(first_x + spacing * static_cast<float>(index), 0.0F, z);
-      auto commander = group(QString::fromLatin1(entry.group_name),
-                             Troop::RomanVeteranConsul,
-                             entry.owner,
-                             1,
-                             position,
-                             1);
-      commander.nation_id = entry.nation;
-      commander.commander_id = QString::fromLatin1(entry.commander_id);
-      s.groups.push_back(std::move(commander));
-      s.steps.push_back(
-          at(0.05F, Command::Hold, QString::fromLatin1(entry.group_name)));
-      if (expect_existence) {
-        s.expectations.push_back(
-            expectation(Expect::GroupExists, QString::fromLatin1(entry.group_name)));
-      }
-      s.expectations.push_back(
-          expectation(Expect::GroupIsRendered, QString::fromLatin1(entry.group_name)));
-    }
-  };
-  add_rank(k_historical_front_rank, rank_depth, 0.0F);
-  add_rank(k_historical_back_rank, -rank_depth, 0.5F * spacing);
+void add_historical_commander(ArenaScenarioDefinition& s,
+                              const HistoricalCommanderEntry& entry,
+                              QVector3D position,
+                              float facing_degrees) {
+  auto commander = group(QString::fromLatin1(entry.group_name),
+                         Troop::RomanVeteranConsul,
+                         entry.owner,
+                         1,
+                         position,
+                         1);
+  commander.nation_id = entry.nation;
+  commander.facing_degrees = facing_degrees;
+  commander.commander_id = QString::fromLatin1(entry.commander_id);
+  s.groups.push_back(std::move(commander));
+  s.steps.push_back(at(0.05F, Command::Hold, QString::fromLatin1(entry.group_name)));
+  s.expectations.push_back(
+      expectation(Expect::GroupExists, QString::fromLatin1(entry.group_name)));
+  s.expectations.push_back(
+      expectation(Expect::GroupIsRendered, QString::fromLatin1(entry.group_name)));
+}
+
+void prepare_historical_commander_scene(ArenaScenarioDefinition& s) {
+  s.suppress_terrain_scatter = true;
+  s.suppress_terrain_features = true;
+  s.select_spawned_units = false;
+  s.suppress_spawn_anchor = true;
+  s.suppress_ui_overlays = true;
+  s.owner_teams = {{.owner_id = 1, .team_id = 1}, {.owner_id = 3, .team_id = 1}};
 }
 
 } // namespace
@@ -89,38 +84,55 @@ auto build_identity_definitions() -> std::vector<ArenaScenarioDefinition> {
         QString::fromLatin1(k_historical_commander_lineup_id),
         QStringLiteral("Historical Commander Lineup"),
         QStringLiteral("The ten non-playable historical commanders (consuls, Barcid "
-                       "officers and Masinissa) without escorts, for close-shot "
-                       "review of helmet, plume, cloak and weapon identity."),
+                       "officers and Masinissa) without escorts, all facing the "
+                       "camera in two staggered ranks: Rome and Masinissa in front, "
+                       "the Barcid officers behind."),
         12.0F,
         {19.0F, 12.0F, 0.0F});
-    s.suppress_terrain_scatter = true;
-    s.suppress_terrain_features = true;
+    prepare_historical_commander_scene(s);
     s.camera_focus = QVector3D(0.0F, 1.15F, 0.0F);
-    s.select_spawned_units = false;
-    s.suppress_spawn_anchor = true;
-    s.suppress_ui_overlays = true;
-    s.owner_teams = {{.owner_id = 1, .team_id = 1}, {.owner_id = 3, .team_id = 1}};
-    add_historical_commander_ranks(s, 3.0F, 1.7F, true);
+    constexpr float k_spacing = 3.0F;
+    std::size_t const back_rank_size =
+        std::size(k_historical_commanders) - k_historical_front_rank_size;
+    for (std::size_t index = 0; index < std::size(k_historical_commanders); ++index) {
+      bool const front = index < k_historical_front_rank_size;
+      std::size_t const rank_size =
+          front ? k_historical_front_rank_size : back_rank_size;
+      std::size_t const slot = front ? index : index - k_historical_front_rank_size;
+      float const x = k_spacing * (static_cast<float>(slot) -
+                                   0.5F * static_cast<float>(rank_size - 1U));
+      add_historical_commander(
+          s, k_historical_commanders[index], {x, 0.0F, front ? 1.7F : -1.7F}, 0.0F);
+    }
     s.expectations.push_back(expectation(Expect::FrameBudget, {}, {}, 33.34F, 0.25F));
     result.push_back(std::move(s));
   }
   {
+    // Commander i stands on a ring at 36*i degrees facing outward, so
+    // `--scenario-yaw 36*i` swings the close camera onto him alone.
     auto s = definition(
-        QString::fromLatin1(k_historical_commander_helmet_review_id),
-        QStringLiteral("Historical Commander Helmet Review"),
-        QStringLiteral("Head-height close-up of the ten historical commanders so "
-                       "crest, plume, diadem and cloak colour can be told apart at "
-                       "the size a documentary close shot reads them."),
+        QString::fromLatin1(k_historical_commander_closeups_id),
+        QStringLiteral("Historical Commander Close-ups"),
+        QStringLiteral("The ten historical commanders on a ring, each facing "
+                       "outward. Batch-capture with --scenario-yaw 0, 36, 72 ... "
+                       "324 for a head-and-shoulders close shot of each in turn "
+                       "(Sempronius, Flaminius, Varro, Paullus, Scipio, Masinissa, "
+                       "Mago, Maharbal, Hanno, Hasdrubal)."),
         6.0F,
-        {11.5F, 6.0F, 0.0F});
-    s.suppress_terrain_scatter = true;
-    s.suppress_terrain_features = true;
-    s.select_spawned_units = false;
-    s.suppress_spawn_anchor = true;
-    s.suppress_ui_overlays = true;
-    s.owner_teams = {{.owner_id = 1, .team_id = 1}, {.owner_id = 3, .team_id = 1}};
-    s.camera_focus = QVector3D(0.0F, 1.10F, 0.0F);
-    add_historical_commander_ranks(s, 1.9F, 1.3F, false);
+        {5.5F, 6.0F, 0.0F});
+    prepare_historical_commander_scene(s);
+    s.camera_focus = QVector3D(0.0F, 1.0F, 0.0F);
+    constexpr float k_ring_radius = 3.0F;
+    constexpr float k_degrees_per_commander = 36.0F;
+    for (std::size_t index = 0; index < std::size(k_historical_commanders); ++index) {
+      float const degrees = k_degrees_per_commander * static_cast<float>(index);
+      float const radians = degrees * std::numbers::pi_v<float> / 180.0F;
+      add_historical_commander(
+          s,
+          k_historical_commanders[index],
+          {k_ring_radius * std::sin(radians), 0.0F, k_ring_radius * std::cos(radians)},
+          degrees);
+    }
     result.push_back(std::move(s));
   }
 

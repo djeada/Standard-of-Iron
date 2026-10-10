@@ -127,8 +127,8 @@ inline constexpr char k_helmet_identity_review_id[] = "helmet_identity_review";
 inline constexpr char k_commander_helmet_review_id[] = "commander_helmet_review";
 inline constexpr char k_historical_commander_lineup_id[] =
     "historical_commander_lineup";
-inline constexpr char k_historical_commander_helmet_review_id[] =
-    "historical_commander_helmet_review";
+inline constexpr char k_historical_commander_closeups_id[] =
+    "historical_commander_closeups";
 inline constexpr char k_roman_settlement_works_id[] = "roman_settlement_works";
 inline constexpr char k_carthage_settlement_works_id[] = "carthage_settlement_works";
 inline constexpr char k_commander_sword_duel_id[] = "commander_sword_commanders_duel";
