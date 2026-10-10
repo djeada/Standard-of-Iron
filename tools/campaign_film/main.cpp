@@ -52,14 +52,20 @@ public:
       log_line(QStringLiteral("ffmpeg not found; no clip will be written"));
       return false;
     }
-    QStringList args{QStringLiteral("-hide_banner"), QStringLiteral("-loglevel"),
-                     QStringLiteral("error"),        QStringLiteral("-y"),
-                     QStringLiteral("-f"),           QStringLiteral("rawvideo"),
-                     QStringLiteral("-pixel_format"), QStringLiteral("rgba"),
+    QStringList args{QStringLiteral("-hide_banner"),
+                     QStringLiteral("-loglevel"),
+                     QStringLiteral("error"),
+                     QStringLiteral("-y"),
+                     QStringLiteral("-f"),
+                     QStringLiteral("rawvideo"),
+                     QStringLiteral("-pixel_format"),
+                     QStringLiteral("rgba"),
                      QStringLiteral("-video_size"),
                      QStringLiteral("%1x%2").arg(width).arg(height),
-                     QStringLiteral("-framerate"),   QString::number(fps),
-                     QStringLiteral("-i"),           QStringLiteral("-"),
+                     QStringLiteral("-framerate"),
+                     QString::number(fps),
+                     QStringLiteral("-i"),
+                     QStringLiteral("-"),
                      QStringLiteral("-an")};
     if (codec == QStringLiteral("prores")) {
       args << QStringLiteral("-c:v") << QStringLiteral("prores_ks")
@@ -67,10 +73,10 @@ public:
            << QStringLiteral("-pix_fmt") << QStringLiteral("yuv422p10le");
     } else {
       args << QStringLiteral("-c:v") << QStringLiteral("libx264")
-           << QStringLiteral("-preset") << QStringLiteral("slow") << QStringLiteral("-crf")
-           << QStringLiteral("10") << QStringLiteral("-pix_fmt")
-           << QStringLiteral("yuv420p") << QStringLiteral("-movflags")
-           << QStringLiteral("+faststart");
+           << QStringLiteral("-preset") << QStringLiteral("slow")
+           << QStringLiteral("-crf") << QStringLiteral("10")
+           << QStringLiteral("-pix_fmt") << QStringLiteral("yuv420p")
+           << QStringLiteral("-movflags") << QStringLiteral("+faststart");
     }
     args << path;
     m_process.setProcessChannelMode(QProcess::ForwardedErrorChannel);
@@ -85,7 +91,8 @@ public:
     }
     const QImage rgba = frame.convertToFormat(QImage::Format_RGBA8888);
     const qint64 bytes = static_cast<qint64>(rgba.sizeInBytes());
-    if (m_process.write(reinterpret_cast<const char*>(rgba.constBits()), bytes) != bytes) {
+    if (m_process.write(reinterpret_cast<const char*>(rgba.constBits()), bytes) !=
+        bytes) {
       return false;
     }
     while (m_process.bytesToWrite() > bytes * 3) {
@@ -137,13 +144,15 @@ auto read_gpu_temperature() -> std::optional<int> {
     return std::nullopt;
   }
   QProcess process;
-  process.start(smi, {QStringLiteral("--query-gpu=temperature.gpu"),
-                      QStringLiteral("--format=csv,noheader,nounits")});
+  process.start(smi,
+                {QStringLiteral("--query-gpu=temperature.gpu"),
+                 QStringLiteral("--format=csv,noheader,nounits")});
   if (!process.waitForFinished(3000)) {
     return std::nullopt;
   }
   bool ok = false;
-  const int value = process.readAllStandardOutput().trimmed().split('\n').value(0).toInt(&ok);
+  const int value =
+      process.readAllStandardOutput().trimmed().split('\n').value(0).toInt(&ok);
   return ok ? std::optional<int>(value) : std::nullopt;
 }
 
@@ -181,7 +190,9 @@ auto write_json(const QString& path, const QJsonObject& object) -> bool {
   return true;
 }
 
-auto round3(double value) -> double { return std::round(value * 1000.0) / 1000.0; }
+auto round3(double value) -> double {
+  return std::round(value * 1000.0) / 1000.0;
+}
 
 auto values_json(const QMap<QString, double>& values) -> QJsonObject {
   QJsonObject object;
@@ -251,21 +262,21 @@ auto build_timeline_json(const Spec& spec,
     root.insert(QStringLiteral("route"), route);
   }
 
-  auto window_event = [&events](const QString& type, const QString& name, const Window& w,
-                                float in) {
-    QJsonObject event;
-    event.insert(QStringLiteral("time"), round3(in));
-    event.insert(QStringLiteral("type"), type + QStringLiteral("_in"));
-    event.insert(QStringLiteral("name"), name);
-    events.push_back(event);
-    if (!std::isinf(w.out)) {
-      QJsonObject out_event;
-      out_event.insert(QStringLiteral("time"), round3(w.out));
-      out_event.insert(QStringLiteral("type"), type + QStringLiteral("_out"));
-      out_event.insert(QStringLiteral("name"), name);
-      events.push_back(out_event);
-    }
-  };
+  auto window_event =
+      [&events](const QString& type, const QString& name, const Window& w, float in) {
+        QJsonObject event;
+        event.insert(QStringLiteral("time"), round3(in));
+        event.insert(QStringLiteral("type"), type + QStringLiteral("_in"));
+        event.insert(QStringLiteral("name"), name);
+        events.push_back(event);
+        if (!std::isinf(w.out)) {
+          QJsonObject out_event;
+          out_event.insert(QStringLiteral("time"), round3(w.out));
+          out_event.insert(QStringLiteral("type"), type + QStringLiteral("_out"));
+          out_event.insert(QStringLiteral("name"), name);
+          events.push_back(out_event);
+        }
+      };
   for (const auto& marker : spec.markers) {
     Window w = marker.window;
     w.in = timeline.marker_appear_time(marker);
@@ -299,7 +310,8 @@ auto build_timeline_json(const Spec& spec,
     for (const auto& key : army.keys) {
       QJsonObject key_entry;
       const auto at = timeline.army_key_time(key);
-      key_entry.insert(QStringLiteral("time"), at ? QJsonValue(round3(*at)) : QJsonValue());
+      key_entry.insert(QStringLiteral("time"),
+                       at ? QJsonValue(round3(*at)) : QJsonValue());
       if (!key.at.isEmpty()) {
         key_entry.insert(QStringLiteral("at"), key.at);
       }
@@ -333,10 +345,11 @@ auto build_timeline_json(const Spec& spec,
   root.insert(QStringLiteral("camera_keys"), camera);
 
   QVariantList sorted = events.toVariantList();
-  std::stable_sort(sorted.begin(), sorted.end(), [](const QVariant& a, const QVariant& b) {
-    return a.toMap().value(QStringLiteral("time")).toDouble() <
-           b.toMap().value(QStringLiteral("time")).toDouble();
-  });
+  std::stable_sort(
+      sorted.begin(), sorted.end(), [](const QVariant& a, const QVariant& b) {
+        return a.toMap().value(QStringLiteral("time")).toDouble() <
+               b.toMap().value(QStringLiteral("time")).toDouble();
+      });
   root.insert(QStringLiteral("events"), QJsonArray::fromVariantList(sorted));
   QJsonArray warnings;
   for (const QString& warning : timeline.warnings()) {
@@ -357,7 +370,8 @@ auto build_timeline_json(const Spec& spec,
 auto world_edges_visible(const QMatrix4x4& mvp,
                          float width,
                          float height,
-                         const CampaignMapFilm::TerrainHeightField& heights) -> QString {
+                         const CampaignMapFilm::TerrainHeightField& heights)
+    -> QString {
   static const char* k_names[] = {"south", "north", "west", "east"};
   constexpr int k_samples = 128;
   constexpr float k_inset = 0.004F;
@@ -388,10 +402,11 @@ auto world_edges_visible(const QMatrix4x4& mvp,
       if (!heights.is_land(inside)) {
         continue;
       }
-      const auto projected =
-          CampaignMapFilm::project(mvp, CampaignMapFilm::world_point(uv, 0.0F), width, height);
-      if (projected.in_front && projected.pixel.x() >= 0.0 && projected.pixel.y() >= 0.0 &&
-          projected.pixel.x() <= width && projected.pixel.y() <= height) {
+      const auto projected = CampaignMapFilm::project(
+          mvp, CampaignMapFilm::world_point(uv, 0.0F), width, height);
+      if (projected.in_front && projected.pixel.x() >= 0.0 &&
+          projected.pixel.y() >= 0.0 && projected.pixel.x() <= width &&
+          projected.pixel.y() <= height) {
         edges += (edges.isEmpty() ? QString() : QStringLiteral("+")) +
                  QLatin1String(k_names[edge]);
         break;
@@ -467,8 +482,8 @@ auto main(int argc, char** argv) -> int {
       QStringLiteral("stills"),
       QStringLiteral("Comma-separated times; writes PNG stills instead of a clip."),
       QStringLiteral("t1,t2"));
-  const QCommandLineOption frames_option(QStringLiteral("frames"),
-                                         QStringLiteral("Also write every frame as PNG."));
+  const QCommandLineOption frames_option(
+      QStringLiteral("frames"), QStringLiteral("Also write every frame as PNG."));
   const QCommandLineOption no_clip_option(QStringLiteral("no-clip"),
                                           QStringLiteral("Do not encode a clip."));
   const QCommandLineOption no_text_option(
@@ -483,25 +498,44 @@ auto main(int argc, char** argv) -> int {
                                         QStringLiteral("h264"));
   const QCommandLineOption validate_option(
       QStringLiteral("validate-only"),
-      QStringLiteral("Parse the spec, write timeline.json and exit without rendering."));
-  const QCommandLineOption march_option(QStringLiteral("march"),
-                                        QStringLiteral("hannibal_path.json to read."),
-                                        QStringLiteral("file"),
-                                        QStringLiteral("assets/campaign_map/hannibal_path.json"));
-  const QCommandLineOption catalog_option(QStringLiteral("catalog"),
-                                          QStringLiteral("Region catalogue JSON."),
-                                          QStringLiteral("file"),
-                                          QStringLiteral("tools/campaign_film/regions.json"));
-  const QCommandLineOption bounds_option(QStringLiteral("bounds"),
-                                         QStringLiteral("Map bounds JSON."),
-                                         QStringLiteral("file"),
-                                         QStringLiteral("tools/map_pipeline/map_bounds.json"));
-  const QCommandLineOption no_guard_option(QStringLiteral("no-thermal-guard"),
-                                           QStringLiteral("Do not pause on hot CPU/GPU."));
-  parser.addOptions({spec_option, out_option, width_option, height_option, fps_option,
-                     ss_option, start_option, end_option, stills_option, frames_option,
-                     no_clip_option, no_text_option, armies_option, codec_option,
-                     validate_option, march_option, catalog_option, bounds_option,
+      QStringLiteral(
+          "Parse the spec, write timeline.json and exit without rendering."));
+  const QCommandLineOption march_option(
+      QStringLiteral("march"),
+      QStringLiteral("hannibal_path.json to read."),
+      QStringLiteral("file"),
+      QStringLiteral("assets/campaign_map/hannibal_path.json"));
+  const QCommandLineOption catalog_option(
+      QStringLiteral("catalog"),
+      QStringLiteral("Region catalogue JSON."),
+      QStringLiteral("file"),
+      QStringLiteral("tools/campaign_film/regions.json"));
+  const QCommandLineOption bounds_option(
+      QStringLiteral("bounds"),
+      QStringLiteral("Map bounds JSON."),
+      QStringLiteral("file"),
+      QStringLiteral("tools/map_pipeline/map_bounds.json"));
+  const QCommandLineOption no_guard_option(
+      QStringLiteral("no-thermal-guard"),
+      QStringLiteral("Do not pause on hot CPU/GPU."));
+  parser.addOptions({spec_option,
+                     out_option,
+                     width_option,
+                     height_option,
+                     fps_option,
+                     ss_option,
+                     start_option,
+                     end_option,
+                     stills_option,
+                     frames_option,
+                     no_clip_option,
+                     no_text_option,
+                     armies_option,
+                     codec_option,
+                     validate_option,
+                     march_option,
+                     catalog_option,
+                     bounds_option,
                      no_guard_option});
   parser.process(app);
 
@@ -581,13 +615,15 @@ auto main(int argc, char** argv) -> int {
   int end_frame = total_frames;
   if (parser.isSet(start_option)) {
     first_frame = std::clamp(
-        static_cast<int>(std::lround(parser.value(start_option).toDouble() * spec.fps)), 0,
+        static_cast<int>(std::lround(parser.value(start_option).toDouble() * spec.fps)),
+        0,
         total_frames - 1);
   }
   if (parser.isSet(end_option)) {
     end_frame = std::clamp(
         static_cast<int>(std::lround(parser.value(end_option).toDouble() * spec.fps)),
-        first_frame + 1, total_frames);
+        first_frame + 1,
+        total_frames);
   }
   std::vector<float> still_times;
   if (parser.isSet(stills_option)) {
@@ -600,7 +636,8 @@ auto main(int argc, char** argv) -> int {
   CampaignMapFilm::TerrainHeightField heights;
   heights.load_default();
   auto film_height = [&heights, &spec](const QVector2D& uv) {
-    return heights.smoothed_height_at(uv, spec.drape_radius) * spec.terrain_height_scale;
+    return heights.smoothed_height_at(uv, spec.drape_radius) *
+           spec.terrain_height_scale;
   };
   auto camera_matrix = [&](const FrameEval& eval, float width, float height) {
     CampaignMapFilm::CameraPose pose = eval.camera;
@@ -620,14 +657,16 @@ auto main(int argc, char** argv) -> int {
                                                   static_cast<float>(spec.width),
                                                   static_cast<float>(spec.height)),
                                     static_cast<float>(spec.width),
-                                    static_cast<float>(spec.height), heights)
+                                    static_cast<float>(spec.height),
+                                    heights)
               : QString();
       if (edges == range_edges) {
         continue;
       }
       if (!range_edges.isEmpty()) {
         edge_ranges.push_back(QJsonArray{std::round(range_start * 100.0) / 100.0,
-                                         std::round(time * 100.0) / 100.0, range_edges});
+                                         std::round(time * 100.0) / 100.0,
+                                         range_edges});
       }
       range_start = time;
       range_edges = edges;
@@ -642,22 +681,29 @@ auto main(int argc, char** argv) -> int {
 
   const QString out_dir = QDir(parser.value(out_option)).filePath(spec.id);
   QDir().mkpath(out_dir);
+  const bool sliced = first_frame != 0 || end_frame != total_frames;
+  const QString slice_suffix = sliced ? QStringLiteral("_f%1-%2")
+                                            .arg(first_frame, 6, 10, QLatin1Char('0'))
+                                            .arg(end_frame, 6, 10, QLatin1Char('0'))
+                                      : QString();
   const QString clip_name =
-      spec.id + (parser.value(codec_option) == QStringLiteral("prores")
-                     ? QStringLiteral(".mov")
-                     : QStringLiteral(".mp4"));
-  write_json(QDir(out_dir).filePath(QStringLiteral("timeline.json")),
-             build_timeline_json(spec, *march, timeline, clip_name, first_frame, end_frame,
-                                 edge_ranges));
-  log_line(QStringLiteral("%1: %2x%3 @ %4 fps, supersample %5, %6 s (%7 frames), out %8")
-               .arg(spec.id)
-               .arg(spec.width)
-               .arg(spec.height)
-               .arg(spec.fps)
-               .arg(spec.supersample)
-               .arg(spec.duration)
-               .arg(total_frames)
-               .arg(out_dir));
+      spec.id + slice_suffix +
+      (parser.value(codec_option) == QStringLiteral("prores") ? QStringLiteral(".mov")
+                                                              : QStringLiteral(".mp4"));
+  write_json(
+      QDir(out_dir).filePath(QStringLiteral("timeline.json")),
+      build_timeline_json(
+          spec, *march, timeline, clip_name, first_frame, end_frame, edge_ranges));
+  log_line(
+      QStringLiteral("%1: %2x%3 @ %4 fps, supersample %5, %6 s (%7 frames), out %8")
+          .arg(spec.id)
+          .arg(spec.width)
+          .arg(spec.height)
+          .arg(spec.fps)
+          .arg(spec.supersample)
+          .arg(spec.duration)
+          .arg(total_frames)
+          .arg(out_dir));
   if (spec.forbid_world_edge && !edge_ranges.isEmpty()) {
     log_line(QStringLiteral("the spec forbids framing the map edge"));
     return 5;
@@ -699,14 +745,16 @@ auto main(int argc, char** argv) -> int {
     log_line(QStringLiteral("QQuickRenderControl failed to initialise"));
     return 3;
   }
-  QOpenGLFramebufferObject target(internal, QOpenGLFramebufferObject::CombinedDepthStencil);
+  QOpenGLFramebufferObject target(internal,
+                                  QOpenGLFramebufferObject::CombinedDepthStencil);
   if (!target.isValid()) {
     log_line(QStringLiteral("cannot allocate a %1x%2 render target")
                  .arg(internal.width())
                  .arg(internal.height()));
     return 3;
   }
-  window.setRenderTarget(QQuickRenderTarget::fromOpenGLTexture(target.texture(), internal));
+  window.setRenderTarget(
+      QQuickRenderTarget::fromOpenGLTexture(target.texture(), internal));
   window.setGeometry(0, 0, internal.width(), internal.height());
   window.contentItem()->setSize(internal);
 
@@ -717,12 +765,13 @@ auto main(int argc, char** argv) -> int {
 
   const QStringList registered = Ui::BrandFonts::register_bundled();
   OverlayFonts fonts;
-  fonts.display = pick_family(registered, {QStringLiteral("Standard Iron Display")},
-                              QStringLiteral("serif"));
-  fonts.text = pick_family(registered, {QStringLiteral("EB Garamond")},
-                           QStringLiteral("serif"));
+  fonts.display = pick_family(
+      registered, {QStringLiteral("Standard Iron Display")}, QStringLiteral("serif"));
+  fonts.text =
+      pick_family(registered, {QStringLiteral("EB Garamond")}, QStringLiteral("serif"));
 
-  const float pixel_scale = static_cast<float>(internal.height()) / spec.reference_height;
+  const float pixel_scale =
+      static_cast<float>(internal.height()) / spec.reference_height;
   OverlayOptions overlay_options;
   overlay_options.pixel_scale = pixel_scale;
   overlay_options.draw_text = draw_text;
@@ -737,15 +786,18 @@ auto main(int argc, char** argv) -> int {
     control.sync();
     control.render();
     control.endFrame();
-    QImage image = target.toImage().convertToFormat(QImage::Format_ARGB32_Premultiplied);
+    QImage image =
+        target.toImage().convertToFormat(QImage::Format_ARGB32_Premultiplied);
 
-    const QMatrix4x4 mvp = camera_matrix(eval, static_cast<float>(internal.width()),
+    const QMatrix4x4 mvp = camera_matrix(eval,
+                                         static_cast<float>(internal.width()),
                                          static_cast<float>(internal.height()));
     const Projector project = [&](const QVector2D& uv) -> std::optional<QPointF> {
-      const auto projected = CampaignMapFilm::project(
-          mvp,
-          CampaignMapFilm::world_point(uv, film_height(uv)),
-          static_cast<float>(internal.width()), static_cast<float>(internal.height()));
+      const auto projected =
+          CampaignMapFilm::project(mvp,
+                                   CampaignMapFilm::world_point(uv, film_height(uv)),
+                                   static_cast<float>(internal.width()),
+                                   static_cast<float>(internal.height()));
       if (!projected.in_front) {
         return std::nullopt;
       }
@@ -753,8 +805,8 @@ auto main(int argc, char** argv) -> int {
     };
     paint_overlay(image, spec, eval, project, fonts, overlay_options);
     if (spec.supersample > 1) {
-      image = image.scaled(spec.width, spec.height, Qt::IgnoreAspectRatio,
-                           Qt::SmoothTransformation);
+      image = image.scaled(
+          spec.width, spec.height, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
     }
     if (eval_out != nullptr) {
       *eval_out = eval;
@@ -775,8 +827,8 @@ auto main(int argc, char** argv) -> int {
     QDir().mkpath(still_dir);
     for (const float t : still_times) {
       const QImage image = render_frame(t, nullptr);
-      const QString path =
-          QDir(still_dir).filePath(QStringLiteral("still_%1.png").arg(t, 6, 'f', 2, QLatin1Char('0')));
+      const QString path = QDir(still_dir).filePath(
+          QStringLiteral("still_%1.png").arg(t, 6, 'f', 2, QLatin1Char('0')));
       image.save(path);
       log_line(QStringLiteral("still %1 s -> %2").arg(t).arg(path));
     }
@@ -792,8 +844,11 @@ auto main(int argc, char** argv) -> int {
   Encoder encoder;
   bool encoding = false;
   if (!parser.isSet(no_clip_option)) {
-    encoding = encoder.open(QDir(out_dir).filePath(clip_name), spec.width, spec.height,
-                            spec.fps, parser.value(codec_option));
+    encoding = encoder.open(QDir(out_dir).filePath(clip_name),
+                            spec.width,
+                            spec.height,
+                            spec.fps,
+                            parser.value(codec_option));
   }
 
   QJsonArray frames_json;
@@ -809,18 +864,19 @@ auto main(int argc, char** argv) -> int {
       encoding = false;
     }
     if (keep_frames) {
-      image.save(QDir(frame_dir).filePath(QStringLiteral("frame_%1.png").arg(frame, 6, 10,
-                                                                              QLatin1Char('0'))));
+      image.save(QDir(frame_dir).filePath(
+          QStringLiteral("frame_%1.png").arg(frame, 6, 10, QLatin1Char('0'))));
     }
 
-    const QMatrix4x4 mvp =
-        camera_matrix(eval, static_cast<float>(spec.width), static_cast<float>(spec.height));
+    const QMatrix4x4 mvp = camera_matrix(
+        eval, static_cast<float>(spec.width), static_cast<float>(spec.height));
     auto point_json = [&](const QVector2D& uv) {
       QJsonObject point;
-      const auto projected = CampaignMapFilm::project(
-          mvp,
-          CampaignMapFilm::world_point(uv, film_height(uv)),
-          static_cast<float>(spec.width), static_cast<float>(spec.height));
+      const auto projected =
+          CampaignMapFilm::project(mvp,
+                                   CampaignMapFilm::world_point(uv, film_height(uv)),
+                                   static_cast<float>(spec.width),
+                                   static_cast<float>(spec.height));
       point.insert(QStringLiteral("x"), round3(projected.pixel.x()));
       point.insert(QStringLiteral("y"), round3(projected.pixel.y()));
       point.insert(QStringLiteral("on_screen"),
@@ -891,7 +947,9 @@ auto main(int argc, char** argv) -> int {
   overlays.insert(QStringLiteral("coordinates"),
                   QStringLiteral("output pixels, origin top-left"));
   overlays.insert(QStringLiteral("frames"), frames_json);
-  write_json(QDir(out_dir).filePath(QStringLiteral("overlays.json")), overlays);
+  write_json(
+      QDir(out_dir).filePath(QStringLiteral("overlays%1.json").arg(slice_suffix)),
+      overlays);
 
   if (encoding) {
     if (encoder.close()) {

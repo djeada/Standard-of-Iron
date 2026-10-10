@@ -25,7 +25,9 @@ auto with_alpha(QColor color, float alpha) -> QColor {
   return color;
 }
 
-auto make_font(const QString& family, float pixel_size, float spacing_percent) -> QFont {
+auto make_font(const QString& family,
+               float pixel_size,
+               float spacing_percent) -> QFont {
   QFont font(family);
   font.setPixelSize(std::max(1, static_cast<int>(std::lround(pixel_size))));
   font.setLetterSpacing(QFont::PercentageSpacing, 100.0 + spacing_percent);
@@ -83,8 +85,8 @@ void draw_marker_glyph(QPainter& painter,
                        float scale) {
   painter.setPen(Qt::NoPen);
   painter.setBrush(with_alpha(QColor(0, 0, 0, 90), alpha));
-  painter.drawEllipse(center + QPointF(0.8 * scale, 1.2 * scale), radius * 1.08,
-                      radius * 1.08);
+  painter.drawEllipse(
+      center + QPointF(0.8 * scale, 1.2 * scale), radius * 1.08, radius * 1.08);
   if (kind == QStringLiteral("battle")) {
     painter.setBrush(with_alpha(k_parchment, alpha));
     QPen ring(with_alpha(k_ink, alpha), 1.5F * scale);
@@ -141,25 +143,26 @@ void paint_overlay(QImage& image,
       TextStyle style;
       QString text = label.text;
       if (label.style == QStringLiteral("region")) {
-        style.font = make_font(fonts.display, (label.size_px > 0 ? label.size_px : 30.0F) * s,
-                               32.0F);
+        style.font = make_font(
+            fonts.display, (label.size_px > 0 ? label.size_px : 30.0F) * s, 32.0F);
         style.fill = with_alpha(k_ink, 0.62F);
         style.halo = with_alpha(k_parchment, 0.35F);
         style.halo_width = 3.0F * s;
         text = text.toUpper();
       } else if (label.style == QStringLiteral("sea")) {
-        style.font =
-            make_font(fonts.text, (label.size_px > 0 ? label.size_px : 24.0F) * s, 38.0F);
+        style.font = make_font(
+            fonts.text, (label.size_px > 0 ? label.size_px : 24.0F) * s, 38.0F);
         style.fill = with_alpha(k_sea_ink, 0.80F);
       } else {
-        style.font = make_font(fonts.display, (label.size_px > 0 ? label.size_px : 18.0F) * s,
-                               12.0F);
+        style.font = make_font(
+            fonts.display, (label.size_px > 0 ? label.size_px : 18.0F) * s, 12.0F);
         style.fill = k_ink;
         style.halo = with_alpha(k_parchment, 0.85F);
         style.halo_width = 4.0F * s;
         text = text.toUpper();
       }
-      const QPointF anchor = *where + QPointF(label.offset_px.x() * s, label.offset_px.y() * s);
+      const QPointF anchor =
+          *where + QPointF(label.offset_px.x() * s, label.offset_px.y() * s);
       draw_text(painter, text, style, anchor, 0.5F, value.alpha);
     }
   }
@@ -173,8 +176,8 @@ void paint_overlay(QImage& image,
     if (!where) {
       continue;
     }
-    const float radius = (marker.kind == QStringLiteral("battle") ? 8.5F : 6.0F) * s *
-                         value.pop;
+    const float radius =
+        (marker.kind == QStringLiteral("battle") ? 8.5F : 6.0F) * s * value.pop;
     draw_marker_glyph(painter, *where, marker.kind, radius, value.alpha, s);
     if (!options.draw_text) {
       continue;
@@ -201,7 +204,8 @@ void paint_overlay(QImage& image,
     const float x = static_cast<float>(where->x()) + (left ? -gap : gap);
     const bool two_lines = !name.isEmpty() && !date.isEmpty();
     const float name_y = static_cast<float>(where->y()) - (two_lines ? 9.0F * s : 0.0F);
-    const float date_y = static_cast<float>(where->y()) + (two_lines ? 11.0F * s : 0.0F);
+    const float date_y =
+        static_cast<float>(where->y()) + (two_lines ? 11.0F * s : 0.0F);
     draw_text(painter, name, name_style, QPointF(x, name_y), align, value.text_alpha);
     draw_text(painter, date, date_style, QPointF(x, date_y), align, value.text_alpha);
   }
@@ -219,12 +223,20 @@ void paint_overlay(QImage& image,
       shadow.fill = QColor(0, 0, 0, 120);
       TextStyle title = shadow;
       title.fill = k_parchment;
-      draw_text(painter, stamp.title.toUpper(), shadow,
-                QPointF(left + 1.5F * s, base - 34.0F * s + 2.0F * s), 0.0F, value.alpha);
-      draw_text(painter, stamp.title.toUpper(), title, QPointF(left, base - 34.0F * s), 0.0F,
+      draw_text(painter,
+                stamp.title.toUpper(),
+                shadow,
+                QPointF(left + 1.5F * s, base - 34.0F * s + 2.0F * s),
+                0.0F,
                 value.alpha);
-      const float rule_w = std::max(60.0F * s, text_width(stamp.title.toUpper(), title.font) *
-                                                   0.45F);
+      draw_text(painter,
+                stamp.title.toUpper(),
+                title,
+                QPointF(left, base - 34.0F * s),
+                0.0F,
+                value.alpha);
+      const float rule_w =
+          std::max(60.0F * s, text_width(stamp.title.toUpper(), title.font) * 0.45F);
       painter.setPen(Qt::NoPen);
       painter.setBrush(with_alpha(k_gold, value.alpha));
       painter.drawRect(QRectF(left, base - 12.0F * s, rule_w * value.alpha, 2.0F * s));
@@ -233,9 +245,17 @@ void paint_overlay(QImage& image,
       sub_shadow.fill = QColor(0, 0, 0, 120);
       TextStyle sub = sub_shadow;
       sub.fill = with_alpha(k_parchment, 0.92F);
-      draw_text(painter, stamp.subtitle, sub_shadow,
-                QPointF(left + 1.5F * s, base + 14.0F * s + 2.0F * s), 0.0F, value.alpha);
-      draw_text(painter, stamp.subtitle, sub, QPointF(left, base + 14.0F * s), 0.0F,
+      draw_text(painter,
+                stamp.subtitle,
+                sub_shadow,
+                QPointF(left + 1.5F * s, base + 14.0F * s + 2.0F * s),
+                0.0F,
+                value.alpha);
+      draw_text(painter,
+                stamp.subtitle,
+                sub,
+                QPointF(left, base + 14.0F * s),
+                0.0F,
                 value.alpha);
     }
   }
@@ -255,9 +275,10 @@ void paint_overlay(QImage& image,
       style.fill = QColor(255, 80, 200);
       style.halo = QColor(0, 0, 0, 200);
       style.halo_width = 3.0F * s;
-      const QString line = QStringLiteral("[%1] %2").arg(spec.armies[i].label,
-                                                         format_army_line(value.values));
-      draw_text(painter, line, style, *where + QPointF(0.0, 34.0 * s), 0.5F, value.alpha);
+      const QString line = QStringLiteral("[%1] %2").arg(
+          spec.armies[i].label, format_army_line(value.values));
+      draw_text(
+          painter, line, style, *where + QPointF(0.0, 34.0 * s), 0.5F, value.alpha);
     }
   }
 }

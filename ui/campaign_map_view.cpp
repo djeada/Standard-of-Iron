@@ -2711,7 +2711,8 @@ void main() {
         !highlight.provinces.empty()) {
       glBindVertexArray(m_province_layer.vao);
       for (const auto& span : m_province_layer.spans) {
-        if (std::find(highlight.provinces.begin(), highlight.provinces.end(),
+        if (std::find(highlight.provinces.begin(),
+                      highlight.provinces.end(),
                       span.id) != highlight.provinces.end()) {
           glDrawArrays(GL_TRIANGLES, span.start, span.count);
         }
@@ -2784,8 +2785,10 @@ void main() {
       glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
       const float w = static_cast<float>(m_size.width());
       const float h = static_cast<float>(m_size.height());
-      draw_pixel_geometry({QVector2D(0.0F, 0.0F), QVector2D(w, 0.0F),
-                           QVector2D(0.0F, h), QVector2D(w, h)},
+      draw_pixel_geometry({QVector2D(0.0F, 0.0F),
+                           QVector2D(w, 0.0F),
+                           QVector2D(0.0F, h),
+                           QVector2D(w, h)},
                           GL_TRIANGLE_STRIP,
                           QVector4D(0.05F, 0.04F, 0.03F, qMin(0.85F, dim)));
       glDisable(GL_STENCIL_TEST);
@@ -2844,11 +2847,13 @@ void main() {
       glStencilOp(GL_KEEP, GL_KEEP, GL_INCR);
       const float radius = highlight.rim_px * scale;
       for (int step = 0; step < k_outline_steps; ++step) {
-        const float angle = 2.0F * std::numbers::pi_v<float> * static_cast<float>(step) /
+        const float angle = 2.0F * std::numbers::pi_v<float> *
+                            static_cast<float>(step) /
                             static_cast<float>(k_outline_steps);
-        program->setUniformValue("u_ndc_offset",
-                                 QVector2D(2.0F * radius * std::cos(angle) / width_px,
-                                           2.0F * radius * std::sin(angle) / height_px));
+        program->setUniformValue(
+            "u_ndc_offset",
+            QVector2D(2.0F * radius * std::cos(angle) / width_px,
+                      2.0F * radius * std::sin(angle) / height_px));
         draw_film_region_pieces(i, offsets);
       }
     }
@@ -2864,9 +2869,9 @@ void main() {
       return;
     }
     m_pixel_program.bind();
-    m_pixel_program.setUniformValue(
-        "u_viewport",
-        QVector2D(static_cast<float>(m_size.width()), static_cast<float>(m_size.height())));
+    m_pixel_program.setUniformValue("u_viewport",
+                                    QVector2D(static_cast<float>(m_size.width()),
+                                              static_cast<float>(m_size.height())));
     m_pixel_program.setUniformValue("u_color", color);
     glBindVertexArray(m_pixel_vao);
     glBindBuffer(GL_ARRAY_BUFFER, m_pixel_vbo);
@@ -2988,10 +2993,14 @@ void main() {
     const float radius = style.head_radius_px * scale;
     const float pulse =
         0.5F + 0.5F * std::sin(m_film.time * 2.0F * std::numbers::pi_v<float> / 1.6F);
-    draw_film_disc(head, radius * (1.9F + 0.45F * pulse),
-                   QVector4D(style.gold.x(), style.gold.y(), style.gold.z(),
+    draw_film_disc(head,
+                   radius * (1.9F + 0.45F * pulse),
+                   QVector4D(style.gold.x(),
+                             style.gold.y(),
+                             style.gold.z(),
                              0.10F + 0.10F * (1.0F - pulse)));
-    draw_film_disc(head + QVector2D(0.9F * scale, -1.4F * scale), radius * 1.12F,
+    draw_film_disc(head + QVector2D(0.9F * scale, -1.4F * scale),
+                   radius * 1.12F,
                    QVector4D(0.0F, 0.0F, 0.0F, style.shadow_alpha));
     draw_film_disc(head, radius * 1.12F, style.casing);
     draw_film_disc(head, radius * 0.86F, style.gold);

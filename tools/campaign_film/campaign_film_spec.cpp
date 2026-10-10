@@ -112,8 +112,8 @@ auto parse_target(const QJsonValue& value,
   return true;
 }
 
-auto march_progress_window(const Spec& spec, const March& march)
-    -> std::pair<float, float> {
+auto march_progress_window(const Spec& spec,
+                           const March& march) -> std::pair<float, float> {
   float from = 0.0F;
   float to = 1.0F;
   if (!spec.route.from.isEmpty()) {
@@ -169,7 +169,8 @@ auto Window::alpha(float time) const -> float {
     return 1.0F;
   }
   const float rise = ease_value(Ease::Smooth, (time - in) / fade);
-  const float fall = std::isinf(out) ? 1.0F : ease_value(Ease::Smooth, (out - time) / fade);
+  const float fall =
+      std::isinf(out) ? 1.0F : ease_value(Ease::Smooth, (out - time) / fade);
   return std::min(rise, fall);
 }
 
@@ -190,12 +191,13 @@ auto March::progress_of(const QString& id) const -> std::optional<float> {
   return path.progress_at_raw_index(stop->index);
 }
 
-auto parse_march(const QJsonObject& hannibal_path, QString* error)
-    -> std::optional<March> {
+auto parse_march(const QJsonObject& hannibal_path,
+                 QString* error) -> std::optional<March> {
   const QJsonObject object = hannibal_path.value(QStringLiteral("march")).toObject();
   if (object.isEmpty()) {
-    fail(error, QStringLiteral("hannibal_path.json has no \"march\"; regenerate it "
-                               "with tools/map_pipeline/hannibal_path.py"));
+    fail(error,
+         QStringLiteral("hannibal_path.json has no \"march\"; regenerate it "
+                        "with tools/map_pipeline/hannibal_path.py"));
     return std::nullopt;
   }
   March march;
@@ -216,7 +218,8 @@ auto parse_march(const QJsonObject& hannibal_path, QString* error)
     stop.kind = stop_object.value(QStringLiteral("kind")).toString();
     stop.index =
         static_cast<std::size_t>(stop_object.value(QStringLiteral("index")).toInt(-1));
-    if (stop.id.isEmpty() || !read_pair(stop_object.value(QStringLiteral("uv")), &stop.uv) ||
+    if (stop.id.isEmpty() ||
+        !read_pair(stop_object.value(QStringLiteral("uv")), &stop.uv) ||
         stop.index >= march.points.size()) {
       fail(error, QStringLiteral("march stop '%1' is malformed").arg(stop.id));
       return std::nullopt;
@@ -240,8 +243,9 @@ auto Catalog::find(const QString& id) const -> const CatalogRegion* {
   return nullptr;
 }
 
-auto parse_catalog(const QJsonObject& object, const MapBounds& bounds, QString* error)
-    -> std::optional<Catalog> {
+auto parse_catalog(const QJsonObject& object,
+                   const MapBounds& bounds,
+                   QString* error) -> std::optional<Catalog> {
   Catalog catalog;
   catalog.bounds = bounds;
   for (const auto& value : object.value(QStringLiteral("regions")).toArray()) {
@@ -249,18 +253,21 @@ auto parse_catalog(const QJsonObject& object, const MapBounds& bounds, QString* 
     CatalogRegion region;
     region.id = region_object.value(QStringLiteral("id")).toString();
     region.name = region_object.value(QStringLiteral("name")).toString();
-    for (const auto& province : region_object.value(QStringLiteral("provinces")).toArray()) {
+    for (const auto& province :
+         region_object.value(QStringLiteral("provinces")).toArray()) {
       region.provinces.push_back(province.toString());
     }
     for (const auto& point : region_object.value(QStringLiteral("lonlat")).toArray()) {
       QVector2D pair;
       if (!read_pair(point, &pair)) {
-        fail(error, QStringLiteral("region '%1' has a malformed lonlat point").arg(region.id));
+        fail(error,
+             QStringLiteral("region '%1' has a malformed lonlat point").arg(region.id));
         return std::nullopt;
       }
       region.polygon.push_back(bounds.to_uv(pair.x(), pair.y()));
     }
-    if (region.id.isEmpty() || (region.provinces.isEmpty() && region.polygon.size() < 3)) {
+    if (region.id.isEmpty() ||
+        (region.provinces.isEmpty() && region.polygon.size() < 3)) {
       fail(error,
            QStringLiteral("region '%1' needs provinces or a polygon").arg(region.id));
       return std::nullopt;
@@ -291,7 +298,9 @@ auto triangulate(const std::vector<QVector2D>& polygon) -> std::vector<QVector2D
   auto cross = [](const QVector2D& o, const QVector2D& a, const QVector2D& b) {
     return (a.x() - o.x()) * (b.y() - o.y()) - (a.y() - o.y()) * (b.x() - o.x());
   };
-  auto inside = [&](const QVector2D& p, const QVector2D& a, const QVector2D& b,
+  auto inside = [&](const QVector2D& p,
+                    const QVector2D& a,
+                    const QVector2D& b,
                     const QVector2D& c) {
     return cross(a, b, p) >= 0.0F && cross(b, c, p) >= 0.0F && cross(c, a, p) >= 0.0F;
   };
@@ -349,7 +358,8 @@ auto Spec::frame_count() const -> int {
   return std::max(1, static_cast<int>(std::lround(duration * static_cast<float>(fps))));
 }
 
-auto load_json_object(const QString& path, QString* error) -> std::optional<QJsonObject> {
+auto load_json_object(const QString& path,
+                      QString* error) -> std::optional<QJsonObject> {
   QFile file(path);
   if (!file.open(QIODevice::ReadOnly)) {
     fail(error, QStringLiteral("cannot open %1").arg(path));
@@ -358,16 +368,18 @@ auto load_json_object(const QString& path, QString* error) -> std::optional<QJso
   QJsonParseError parse_error{};
   const QJsonDocument document = QJsonDocument::fromJson(file.readAll(), &parse_error);
   if (parse_error.error != QJsonParseError::NoError || !document.isObject()) {
-    fail(error, QStringLiteral("%1: %2 at offset %3")
-                    .arg(path, parse_error.errorString())
-                    .arg(parse_error.offset));
+    fail(error,
+         QStringLiteral("%1: %2 at offset %3")
+             .arg(path, parse_error.errorString())
+             .arg(parse_error.offset));
     return std::nullopt;
   }
   return document.object();
 }
 
-auto parse_spec(const QJsonObject& object, const LoadContext& context, QString* error)
-    -> std::optional<Spec> {
+auto parse_spec(const QJsonObject& object,
+                const LoadContext& context,
+                QString* error) -> std::optional<Spec> {
   Spec spec;
   spec.id = object.value(QStringLiteral("id")).toString();
   if (spec.id.isEmpty()) {
@@ -378,7 +390,8 @@ auto parse_spec(const QJsonObject& object, const LoadContext& context, QString* 
   spec.width = object.value(QStringLiteral("width")).toInt(spec.width);
   spec.height = object.value(QStringLiteral("height")).toInt(spec.height);
   spec.fps = object.value(QStringLiteral("fps")).toInt(spec.fps);
-  spec.supersample = object.value(QStringLiteral("supersample")).toInt(spec.supersample);
+  spec.supersample =
+      object.value(QStringLiteral("supersample")).toInt(spec.supersample);
   spec.duration = read_float(object, "duration", spec.duration);
   spec.reference_height = read_float(object, "reference_height", spec.reference_height);
   spec.terrain_height_scale =
@@ -389,8 +402,10 @@ auto parse_spec(const QJsonObject& object, const LoadContext& context, QString* 
   spec.show_symbols = object.value(QStringLiteral("symbols")).toBool(true);
   spec.show_game_route = object.value(QStringLiteral("game_route")).toBool(false);
   spec.show_borders = object.value(QStringLiteral("borders")).toBool(false);
-  spec.forbid_world_edge = object.value(QStringLiteral("forbid_world_edge")).toBool(false);
-  spec.drape_radius = std::max(0.0F, read_float(object, "drape_radius", spec.drape_radius));
+  spec.forbid_world_edge =
+      object.value(QStringLiteral("forbid_world_edge")).toBool(false);
+  spec.drape_radius =
+      std::max(0.0F, read_float(object, "drape_radius", spec.drape_radius));
   spec.burn_text = object.value(QStringLiteral("burn_text")).toBool(true);
   spec.interp = object.value(QStringLiteral("interp")).toString().toLower() ==
                         QStringLiteral("keys")
@@ -420,7 +435,9 @@ auto parse_spec(const QJsonObject& object, const LoadContext& context, QString* 
     key.time = read_float(key_object, "time", previous.time);
     if (key_object.contains(QStringLiteral("look"))) {
       QString target_error;
-      if (!parse_target(key_object.value(QStringLiteral("look")), context, &key.look,
+      if (!parse_target(key_object.value(QStringLiteral("look")),
+                        context,
+                        &key.look,
                         &target_error)) {
         fail(error, QStringLiteral("camera key %1: %2").arg(i).arg(target_error));
         return std::nullopt;
@@ -433,14 +450,16 @@ auto parse_spec(const QJsonObject& object, const LoadContext& context, QString* 
     key.yaw = read_float(key_object, "yaw", previous.yaw);
     key.pitch = read_float(key_object, "pitch", previous.pitch);
     key.fov = read_float(key_object, "fov", previous.fov);
-    key.ease = parse_ease(key_object.value(QStringLiteral("ease")).toString(), Ease::Smooth);
+    key.ease =
+        parse_ease(key_object.value(QStringLiteral("ease")).toString(), Ease::Smooth);
     if (i > 0 && key.time < previous.time) {
       fail(error, QStringLiteral("camera keys must be in time order (key %1)").arg(i));
       return std::nullopt;
     }
     if (!(key.distance > 0.0F) || key.pitch < 1.0F || key.pitch > 90.0F) {
-      fail(error, QStringLiteral("camera key %1: distance must be > 0 and pitch 1..90")
-                      .arg(i));
+      fail(
+          error,
+          QStringLiteral("camera key %1: distance must be > 0 and pitch 1..90").arg(i));
       return std::nullopt;
     }
     spec.camera.push_back(key);
@@ -477,7 +496,8 @@ auto parse_spec(const QJsonObject& object, const LoadContext& context, QString* 
     style.head_radius_px = read_float(route, "head_radius", style.head_radius_px);
     style.ghost_alpha = read_float(route, "ghost", style.ghost_alpha);
     style.shadow_alpha = read_float(route, "shadow", style.shadow_alpha);
-    style.casing = read_color(route.value(QStringLiteral("casing_color")), style.casing);
+    style.casing =
+        read_color(route.value(QStringLiteral("casing_color")), style.casing);
     style.gold = read_color(route.value(QStringLiteral("gold_color")), style.gold);
     style.core = read_color(route.value(QStringLiteral("core_color")), style.core);
     float last_time = -std::numeric_limits<float>::infinity();
@@ -492,13 +512,15 @@ auto parse_spec(const QJsonObject& object, const LoadContext& context, QString* 
         key.at = key_object.value(QStringLiteral("at")).toString();
         const auto stop_progress = context.march->progress_of(key.at);
         if (!stop_progress) {
-          fail(error, QStringLiteral("route key %1: unknown stop '%2'").arg(i).arg(key.at));
+          fail(error,
+               QStringLiteral("route key %1: unknown stop '%2'").arg(i).arg(key.at));
           return std::nullopt;
         }
         if (*stop_progress < *from - 1e-5F || *stop_progress > *to + 1e-5F) {
-          fail(error, QStringLiteral("route key %1: stop '%2' lies outside from..to")
-                          .arg(i)
-                          .arg(key.at));
+          fail(error,
+               QStringLiteral("route key %1: stop '%2' lies outside from..to")
+                   .arg(i)
+                   .arg(key.at));
           return std::nullopt;
         }
       } else if (key_object.value(QStringLiteral("progress")).isDouble()) {
@@ -546,9 +568,10 @@ auto parse_spec(const QJsonObject& object, const LoadContext& context, QString* 
       region.triangles = triangulate(polygon);
     }
     if (region.provinces.isEmpty() && region.triangles.empty()) {
-      fail(error, QStringLiteral("region '%1' is not in the catalog and defines no "
-                                 "provinces or lonlat polygon")
-                      .arg(region.id));
+      fail(error,
+           QStringLiteral("region '%1' is not in the catalog and defines no "
+                          "provinces or lonlat polygon")
+               .arg(region.id));
       return std::nullopt;
     }
     region.name = region_object.value(QStringLiteral("name")).toString(region.name);
@@ -557,7 +580,8 @@ auto parse_spec(const QJsonObject& object, const LoadContext& context, QString* 
     region.rim_px = read_float(region_object, "rim_width", region.rim_px);
     region.dim_outside = read_float(region_object, "dim_outside", region.dim_outside);
     region.window = parse_window(region_object, region.window);
-    for (const auto& key_value : region_object.value(QStringLiteral("keys")).toArray()) {
+    for (const auto& key_value :
+         region_object.value(QStringLiteral("keys")).toArray()) {
       const QJsonObject key_object = key_value.toObject();
       ScalarKey key;
       key.time = read_float(key_object, "time", 0.0F);
@@ -581,12 +605,13 @@ auto parse_spec(const QJsonObject& object, const LoadContext& context, QString* 
       marker.date = stop->date;
       marker.uv = stop->uv;
       marker.kind = stop->kind == QStringLiteral("battle") ? QStringLiteral("battle")
-                                                          : QStringLiteral("place");
+                                                           : QStringLiteral("place");
     } else if (read_pair(marker_object.value(QStringLiteral("lonlat")), &lonlat)) {
       marker.uv = context.bounds.to_uv(lonlat.x(), lonlat.y());
     } else {
-      fail(error, QStringLiteral("marker '%1' is not a march stop and has no lonlat")
-                      .arg(marker.site));
+      fail(error,
+           QStringLiteral("marker '%1' is not a march stop and has no lonlat")
+               .arg(marker.site));
       return std::nullopt;
     }
     marker.name = marker_object.value(QStringLiteral("name")).toString(marker.name);
@@ -598,9 +623,10 @@ auto parse_spec(const QJsonObject& object, const LoadContext& context, QString* 
     marker.window = parse_window(marker_object, marker.window);
     if (appear.isString() && appear.toString() == QStringLiteral("arrival")) {
       if (stop == nullptr || !spec.route.enabled) {
-        fail(error, QStringLiteral("marker '%1' appears on arrival but is not a stop "
-                                   "on a route")
-                        .arg(marker.site));
+        fail(error,
+             QStringLiteral("marker '%1' appears on arrival but is not a stop "
+                            "on a route")
+                 .arg(marker.site));
         return std::nullopt;
       }
       marker.on_arrival = true;
@@ -617,12 +643,14 @@ auto parse_spec(const QJsonObject& object, const LoadContext& context, QString* 
     LabelTrack label;
     label.text = label_object.value(QStringLiteral("text")).toString();
     QString target_error;
-    if (label.text.isEmpty() ||
-        !parse_target(label_object.value(QStringLiteral("at")), context, &label.at,
-                      &target_error)) {
-      fail(error, QStringLiteral("label '%1': %2")
-                      .arg(label.text, target_error.isEmpty()
-                                           ? QStringLiteral("needs text and at")
+    if (label.text.isEmpty() || !parse_target(label_object.value(QStringLiteral("at")),
+                                              context,
+                                              &label.at,
+                                              &target_error)) {
+      fail(error,
+           QStringLiteral("label '%1': %2")
+               .arg(label.text,
+                    target_error.isEmpty() ? QStringLiteral("needs text and at")
                                            : target_error));
       return std::nullopt;
     }
@@ -658,11 +686,16 @@ auto parse_spec(const QJsonObject& object, const LoadContext& context, QString* 
     QString target_error;
     const QJsonValue anchor = army_object.value(QStringLiteral("anchor"));
     if (army.id.isEmpty() ||
-        !parse_target(anchor.isUndefined() ? QJsonValue(QStringLiteral("head")) : anchor,
-                      context, &army.anchor, &target_error)) {
-      fail(error, QStringLiteral("army '%1': %2")
-                      .arg(army.id, target_error.isEmpty() ? QStringLiteral("needs an id")
-                                                           : target_error));
+        !parse_target(anchor.isUndefined() ? QJsonValue(QStringLiteral("head"))
+                                           : anchor,
+                      context,
+                      &army.anchor,
+                      &target_error)) {
+      fail(error,
+           QStringLiteral("army '%1': %2")
+               .arg(army.id,
+                    target_error.isEmpty() ? QStringLiteral("needs an id")
+                                           : target_error));
       return std::nullopt;
     }
     for (const auto& key_value : army_object.value(QStringLiteral("keys")).toArray()) {
@@ -672,7 +705,8 @@ auto parse_spec(const QJsonObject& object, const LoadContext& context, QString* 
       key.at = key_object.value(QStringLiteral("at")).toString();
       if (!key.at.isEmpty() &&
           (context.march == nullptr || context.march->find(key.at) == nullptr)) {
-        fail(error, QStringLiteral("army '%1': unknown stop '%2'").arg(army.id, key.at));
+        fail(error,
+             QStringLiteral("army '%1': unknown stop '%2'").arg(army.id, key.at));
         return std::nullopt;
       }
       for (auto it = key_object.begin(); it != key_object.end(); ++it) {
@@ -765,7 +799,9 @@ auto keyed_channel(const std::vector<float>& times,
   return values[count - 1];
 }
 
-Timeline::Timeline(const Spec& spec, const March& march) : m_spec(spec), m_march(march) {
+Timeline::Timeline(const Spec& spec, const March& march)
+    : m_spec(spec)
+    , m_march(march) {
   if (spec.route.enabled) {
     std::tie(m_window_from, m_window_to) = march_progress_window(spec, march);
     for (const auto& key : spec.route.keys) {
@@ -826,7 +862,8 @@ auto Timeline::arrival_time(float progress) const -> std::optional<float> {
     if (value >= progress - k_tolerance) {
       const float span = value - previous_value;
       const float blend =
-          span > 1e-9F ? std::clamp((progress - previous_value) / span, 0.0F, 1.0F) : 1.0F;
+          span > 1e-9F ? std::clamp((progress - previous_value) / span, 0.0F, 1.0F)
+                       : 1.0F;
       return previous_time + (t - previous_time) * blend;
     }
     previous_time = t;
@@ -859,8 +896,9 @@ auto Timeline::resolve(const Target& target, float time) const -> QVector2D {
       QVector2D sum;
       float weight_sum = 0.0F;
       for (int i = 0; i < k_taps; ++i) {
-        const float offset = (static_cast<float>(i) / static_cast<float>(k_taps - 1) - 0.5F) *
-                             2.0F * target.smooth_seconds;
+        const float offset =
+            (static_cast<float>(i) / static_cast<float>(k_taps - 1) - 0.5F) * 2.0F *
+            target.smooth_seconds;
         const float weight = 1.0F - std::abs(offset) / (target.smooth_seconds * 1.5F);
         const float sample_time = std::clamp(time + offset, 0.0F, m_spec.duration);
         sum += m_march.path.point_at(route_progress(sample_time)) * weight;
@@ -896,7 +934,8 @@ auto Timeline::camera(float time) const -> CampaignMapFilm::CameraPose {
     us.push_back(look.x());
     vs.push_back(look.y());
     log_distances.push_back(std::log(std::max(1e-4F, key.distance)));
-    yaws.push_back(yaws.empty() ? key.yaw : yaws.back() + shorter_arc(yaws.back(), key.yaw));
+    yaws.push_back(yaws.empty() ? key.yaw
+                                : yaws.back() + shorter_arc(yaws.back(), key.yaw));
     pitches.push_back(key.pitch);
     fovs.push_back(key.fov);
     eases.push_back(key.ease);
@@ -972,10 +1011,10 @@ auto Timeline::evaluate(float time) const -> FrameEval {
       text_window.out = std::min(window.out, window.in + marker.label_hold);
     }
     value.text_alpha = text_window.alpha(time);
-    value.pop = 0.7F + 0.3F * ease_value(Ease::EaseOut,
-                                         window.fade > 0.0F
-                                             ? (time - window.in) / window.fade
-                                             : 1.0F);
+    value.pop =
+        0.7F +
+        0.3F * ease_value(Ease::EaseOut,
+                          window.fade > 0.0F ? (time - window.in) / window.fade : 1.0F);
     eval.markers.push_back(value);
   }
 
@@ -1000,8 +1039,9 @@ auto Timeline::evaluate(float time) const -> FrameEval {
         timed.emplace_back(*at, &key);
       }
     }
-    std::stable_sort(timed.begin(), timed.end(),
-                     [](const auto& a, const auto& b) { return a.first < b.first; });
+    std::stable_sort(timed.begin(), timed.end(), [](const auto& a, const auto& b) {
+      return a.first < b.first;
+    });
     if (!timed.empty()) {
       std::size_t current = 0;
       while (current + 1 < timed.size() && timed[current + 1].first <= time) {
@@ -1014,8 +1054,8 @@ auto Timeline::evaluate(float time) const -> FrameEval {
         const auto& next = timed[current + 1].second->values;
         for (auto it = value.values.begin(); it != value.values.end(); ++it) {
           if (next.contains(it.key())) {
-            it.value() = std::round(std::lerp(it.value(), next.value(it.key()),
-                                              static_cast<double>(blend)));
+            it.value() = std::round(std::lerp(
+                it.value(), next.value(it.key()), static_cast<double>(blend)));
           }
         }
       }

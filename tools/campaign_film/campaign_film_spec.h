@@ -17,9 +17,20 @@
 
 namespace CampaignFilm {
 
-enum class Ease : std::uint8_t { Linear, Smooth, EaseIn, EaseOut };
-enum class Interp : std::uint8_t { Keys, Spline };
-enum class Ends : std::uint8_t { Moving, Ease };
+enum class Ease : std::uint8_t {
+  Linear,
+  Smooth,
+  EaseIn,
+  EaseOut
+};
+enum class Interp : std::uint8_t {
+  Keys,
+  Spline
+};
+enum class Ends : std::uint8_t {
+  Moving,
+  Ease
+};
 
 [[nodiscard]] auto parse_ease(const QString& name, Ease fallback) -> Ease;
 [[nodiscard]] auto ease_value(Ease ease, float t) -> float;
@@ -54,8 +65,8 @@ struct March {
   [[nodiscard]] auto progress_of(const QString& id) const -> std::optional<float>;
 };
 
-[[nodiscard]] auto parse_march(const QJsonObject& hannibal_path, QString* error)
-    -> std::optional<March>;
+[[nodiscard]] auto parse_march(const QJsonObject& hannibal_path,
+                               QString* error) -> std::optional<March>;
 
 struct CatalogRegion {
   QString id;
@@ -75,11 +86,15 @@ struct Catalog {
                                  const MapBounds& bounds,
                                  QString* error) -> std::optional<Catalog>;
 
-[[nodiscard]] auto triangulate(const std::vector<QVector2D>& polygon)
-    -> std::vector<QVector2D>;
+[[nodiscard]] auto
+triangulate(const std::vector<QVector2D>& polygon) -> std::vector<QVector2D>;
 
 struct Target {
-  enum class Kind : std::uint8_t { Uv, Stop, Head };
+  enum class Kind : std::uint8_t {
+    Uv,
+    Stop,
+    Head
+  };
   Kind kind = Kind::Uv;
   QVector2D uv{0.5F, 0.5F};
   QString stop;
@@ -226,8 +241,8 @@ struct LoadContext {
                               const LoadContext& context,
                               QString* error) -> std::optional<Spec>;
 
-[[nodiscard]] auto load_json_object(const QString& path, QString* error)
-    -> std::optional<QJsonObject>;
+[[nodiscard]] auto load_json_object(const QString& path,
+                                    QString* error) -> std::optional<QJsonObject>;
 
 struct ArmyValue {
   QString id;
@@ -281,8 +296,8 @@ public:
   [[nodiscard]] auto resolve(const Target& target, float time) const -> QVector2D;
   [[nodiscard]] auto camera(float time) const -> CampaignMapFilm::CameraPose;
   [[nodiscard]] auto evaluate(float time) const -> FrameEval;
-  [[nodiscard]] auto frame_state(const FrameEval& eval) const
-      -> CampaignMapFilm::FrameState;
+  [[nodiscard]] auto
+  frame_state(const FrameEval& eval) const -> CampaignMapFilm::FrameState;
   [[nodiscard]] auto marker_appear_time(const MarkerTrack& marker) const -> float;
   [[nodiscard]] auto army_key_time(const ArmyKey& key) const -> std::optional<float>;
   [[nodiscard]] auto warnings() const -> const QStringList& { return m_warnings; }

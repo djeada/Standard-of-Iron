@@ -41,19 +41,20 @@ inline auto camera_eye(const CameraPose& pose) -> QVector3D {
           center.z() + distance * std::cos(yaw_rad) * std::cos(pitch_rad)};
 }
 
-inline auto view_projection(float width, float height, const CameraPose& pose)
-    -> QMatrix4x4 {
+inline auto
+view_projection(float width, float height, const CameraPose& pose) -> QMatrix4x4 {
   const float aspect = std::max(1.0F, width) / std::max(1.0F, height);
   const float distance = std::max(0.01F, pose.distance);
   const float near_plane = std::clamp(distance * 0.05F, 0.002F, 0.1F);
   const float far_plane = std::max(10.0F, distance * 8.0F);
 
   QMatrix4x4 projection;
-  projection.perspective(std::clamp(pose.fov, 5.0F, 120.0F), aspect, near_plane,
-                         far_plane);
+  projection.perspective(
+      std::clamp(pose.fov, 5.0F, 120.0F), aspect, near_plane, far_plane);
 
   QMatrix4x4 view;
-  view.lookAt(camera_eye(pose), world_point(pose.target, pose.target_height),
+  view.lookAt(camera_eye(pose),
+              world_point(pose.target, pose.target_height),
               QVector3D(0.0F, 0.0F, 1.0F));
   return projection * view;
 }
@@ -89,7 +90,8 @@ public:
 
   explicit RoutePath(const std::vector<QVector2D>& raw,
                      int samples_per_segment = k_samples_per_segment)
-      : m_samples(std::max(1, samples_per_segment)), m_raw_count(raw.size()) {
+      : m_samples(std::max(1, samples_per_segment))
+      , m_raw_count(raw.size()) {
     if (raw.size() < 2) {
       m_points = raw;
     } else {

@@ -60,8 +60,8 @@ auto TerrainHeightField::load(const QString& image_resource,
 
   m_width = image.width();
   m_height = image.height();
-  m_samples.assign(static_cast<std::size_t>(m_width) * static_cast<std::size_t>(m_height),
-                   0.0F);
+  m_samples.assign(
+      static_cast<std::size_t>(m_width) * static_cast<std::size_t>(m_height), 0.0F);
   const float range = max_m - min_m;
   float land_max = 0.0F;
   for (int y = 0; y < m_height; ++y) {
@@ -112,8 +112,8 @@ auto TerrainHeightField::height_at(float u, float v) const -> float {
   return height;
 }
 
-auto TerrainHeightField::smoothed_height_at(const QVector2D& uv, float radius) const
-    -> float {
+auto TerrainHeightField::smoothed_height_at(const QVector2D& uv,
+                                            float radius) const -> float {
   if (!m_ready || radius <= 0.0F) {
     return height_at(uv);
   }

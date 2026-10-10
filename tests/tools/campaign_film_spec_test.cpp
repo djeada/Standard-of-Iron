@@ -38,8 +38,9 @@ auto straight_march() -> CampaignFilm::March {
   return *march;
 }
 
-auto parse(const CampaignFilm::March& march, const char* text, QString* error)
-    -> std::optional<CampaignFilm::Spec> {
+auto parse(const CampaignFilm::March& march,
+           const char* text,
+           QString* error) -> std::optional<CampaignFilm::Spec> {
   CampaignFilm::LoadContext context;
   context.march = &march;
   return CampaignFilm::parse_spec(json(text), context, error);
@@ -65,8 +66,8 @@ constexpr const char* k_minimal_spec = R"({
 } // namespace
 
 TEST(CampaignRoutePath, StraightLineArcLengthAndPoints) {
-  const RoutePath path({QVector2D(0.0F, 0.0F), QVector2D(1.0F, 0.0F),
-                        QVector2D(2.0F, 0.0F)});
+  const RoutePath path(
+      {QVector2D(0.0F, 0.0F), QVector2D(1.0F, 0.0F), QVector2D(2.0F, 0.0F)});
   ASSERT_FALSE(path.empty());
   EXPECT_NEAR(path.length(), 2.0F, 1e-4F);
   EXPECT_NEAR(path.progress_at_raw_index(0), 0.0F, 1e-6F);
@@ -79,8 +80,10 @@ TEST(CampaignRoutePath, StraightLineArcLengthAndPoints) {
 }
 
 TEST(CampaignRoutePath, RawPointsSurviveSmoothing) {
-  const std::vector<QVector2D> raw{QVector2D(0.0F, 0.0F), QVector2D(0.2F, 0.3F),
-                                   QVector2D(0.5F, 0.1F), QVector2D(0.7F, 0.6F)};
+  const std::vector<QVector2D> raw{QVector2D(0.0F, 0.0F),
+                                   QVector2D(0.2F, 0.3F),
+                                   QVector2D(0.5F, 0.1F),
+                                   QVector2D(0.7F, 0.6F)};
   const RoutePath path(raw);
   for (std::size_t i = 0; i < raw.size(); ++i) {
     const QVector2D at = path.point_at(path.progress_at_raw_index(i));
@@ -96,8 +99,8 @@ TEST(CampaignRoutePath, RawPointsSurviveSmoothing) {
 }
 
 TEST(CampaignRoutePath, SliceRevealsExactlyTheWindow) {
-  const RoutePath path({QVector2D(0.0F, 0.0F), QVector2D(1.0F, 0.0F),
-                        QVector2D(1.0F, 1.0F)});
+  const RoutePath path(
+      {QVector2D(0.0F, 0.0F), QVector2D(1.0F, 0.0F), QVector2D(1.0F, 1.0F)});
   const auto slice = path.slice(0.2F, 0.7F);
   ASSERT_GE(slice.size(), 2U);
   EXPECT_NEAR((slice.front() - path.point_at(0.2F)).length(), 0.0F, 1e-5F);
@@ -124,11 +127,15 @@ TEST(CampaignRoutePath, ProjectionPutsTheTargetAtScreenCentre) {
   EXPECT_NEAR(centre.pixel.x(), 960.0, 0.5);
   EXPECT_NEAR(centre.pixel.y(), 540.0, 0.5);
   const auto north = CampaignMapFilm::project(
-      vp, CampaignMapFilm::world_point(pose.target + QVector2D(0.0F, 0.05F), 0.0F),
-      1920.0F, 1080.0F);
+      vp,
+      CampaignMapFilm::world_point(pose.target + QVector2D(0.0F, 0.05F), 0.0F),
+      1920.0F,
+      1080.0F);
   const auto east = CampaignMapFilm::project(
-      vp, CampaignMapFilm::world_point(pose.target + QVector2D(0.05F, 0.0F), 0.0F),
-      1920.0F, 1080.0F);
+      vp,
+      CampaignMapFilm::world_point(pose.target + QVector2D(0.05F, 0.0F), 0.0F),
+      1920.0F,
+      1080.0F);
   EXPECT_LT(north.pixel.y(), centre.pixel.y());
   EXPECT_GT(east.pixel.x(), centre.pixel.x());
 }
@@ -148,13 +155,15 @@ TEST(CampaignFilmCurves, HermiteSplinePassesThroughKeysAndIsSmooth) {
   const std::vector<float> values{0.0F, 2.0F, 1.0F, 5.0F};
   for (std::size_t i = 0; i < times.size(); ++i) {
     EXPECT_NEAR(CampaignFilm::hermite_channel(times, values, times[i], Ends::Ease),
-                values[i], 1e-5F);
+                values[i],
+                1e-5F);
   }
   const float h = 1e-3F;
   for (const float key_time : {1.0F, 3.0F}) {
-    const float left = (CampaignFilm::hermite_channel(times, values, key_time, Ends::Ease) -
-                        CampaignFilm::hermite_channel(times, values, key_time - h, Ends::Ease)) /
-                       h;
+    const float left =
+        (CampaignFilm::hermite_channel(times, values, key_time, Ends::Ease) -
+         CampaignFilm::hermite_channel(times, values, key_time - h, Ends::Ease)) /
+        h;
     const float right =
         (CampaignFilm::hermite_channel(times, values, key_time + h, Ends::Ease) -
          CampaignFilm::hermite_channel(times, values, key_time, Ends::Ease)) /
@@ -172,10 +181,14 @@ TEST(CampaignFilmCurves, HermiteSplinePassesThroughKeysAndIsSmooth) {
 TEST(CampaignFilmCurves, KeyedChannelUsesTheIncomingKeysEase) {
   const std::vector<float> times{0.0F, 2.0F};
   const std::vector<float> values{10.0F, 20.0F};
-  EXPECT_NEAR(CampaignFilm::keyed_channel(times, values, {Ease::Linear, Ease::Linear}, 1.0F),
-              15.0F, 1e-5F);
-  EXPECT_NEAR(CampaignFilm::keyed_channel(times, values, {Ease::Linear, Ease::EaseIn}, 1.0F),
-              11.25F, 1e-5F);
+  EXPECT_NEAR(
+      CampaignFilm::keyed_channel(times, values, {Ease::Linear, Ease::Linear}, 1.0F),
+      15.0F,
+      1e-5F);
+  EXPECT_NEAR(
+      CampaignFilm::keyed_channel(times, values, {Ease::Linear, Ease::EaseIn}, 1.0F),
+      11.25F,
+      1e-5F);
   EXPECT_NEAR(CampaignFilm::keyed_channel(times, values, {}, -1.0F), 10.0F, 1e-6F);
   EXPECT_NEAR(CampaignFilm::keyed_channel(times, values, {}, 9.0F), 20.0F, 1e-6F);
 }
@@ -216,20 +229,30 @@ TEST(CampaignFilmSpec, RejectsBrokenSpecs) {
   QString error;
   EXPECT_FALSE(parse(march, R"({"camera": [{"time": 0, "look": "a"}]})", &error));
   EXPECT_TRUE(error.contains(QStringLiteral("id")));
-  EXPECT_FALSE(parse(march, R"({"id": "x", "camera": [{"time": 0, "look": "nowhere"}]})",
-                     &error));
+  EXPECT_FALSE(parse(
+      march, R"({"id": "x", "camera": [{"time": 0, "look": "nowhere"}]})", &error));
   EXPECT_TRUE(error.contains(QStringLiteral("nowhere")));
-  EXPECT_FALSE(parse(march, R"({"id": "x", "camera": [
-      {"time": 2, "look": "a"}, {"time": 1, "look": "b"}]})", &error));
-  EXPECT_FALSE(parse(march, R"({"id": "x", "camera": [{"time": 0, "look": "a", "pitch": 95}]})",
+  EXPECT_FALSE(parse(march,
+                     R"({"id": "x", "camera": [
+      {"time": 2, "look": "a"}, {"time": 1, "look": "b"}]})",
                      &error));
-  EXPECT_FALSE(parse(march, R"({"id": "x", "camera": [{"time": 0, "look": "a"}],
-      "route": {"from": "b", "to": "c", "keys": [{"time": 0, "at": "a"}]}})", &error));
+  EXPECT_FALSE(
+      parse(march,
+            R"({"id": "x", "camera": [{"time": 0, "look": "a", "pitch": 95}]})",
+            &error));
+  EXPECT_FALSE(parse(march,
+                     R"({"id": "x", "camera": [{"time": 0, "look": "a"}],
+      "route": {"from": "b", "to": "c", "keys": [{"time": 0, "at": "a"}]}})",
+                     &error));
   EXPECT_TRUE(error.contains(QStringLiteral("outside")));
-  EXPECT_FALSE(parse(march, R"({"id": "x", "camera": [{"time": 0, "look": "a"}],
-      "route": {"from": "c", "to": "a", "keys": [{"time": 0, "progress": 0}]}})", &error));
-  EXPECT_FALSE(parse(march, R"({"id": "x", "camera": [{"time": 0, "look": "a"}],
-      "markers": [{"site": "b", "appear": "arrival"}]})", &error));
+  EXPECT_FALSE(parse(march,
+                     R"({"id": "x", "camera": [{"time": 0, "look": "a"}],
+      "route": {"from": "c", "to": "a", "keys": [{"time": 0, "progress": 0}]}})",
+                     &error));
+  EXPECT_FALSE(parse(march,
+                     R"({"id": "x", "camera": [{"time": 0, "look": "a"}],
+      "markers": [{"site": "b", "appear": "arrival"}]})",
+                     &error));
 }
 
 TEST(CampaignFilmTimeline, RouteProgressHitsStopsOnTheirKeys) {
@@ -249,8 +272,8 @@ TEST(CampaignFilmTimeline, RouteProgressHitsStopsOnTheirKeys) {
   const auto arrival = timeline.arrival_time(QStringLiteral("b"));
   ASSERT_TRUE(arrival.has_value());
   EXPECT_NEAR(*arrival, 2.0F, 0.01F);
-  EXPECT_NEAR((timeline.evaluate(2.0F).head_uv - QVector2D(0.5F, 0.5F)).length(), 0.0F,
-              1e-3F);
+  EXPECT_NEAR(
+      (timeline.evaluate(2.0F).head_uv - QVector2D(0.5F, 0.5F)).length(), 0.0F, 1e-3F);
 }
 
 TEST(CampaignFilmTimeline, MarkersAndArmiesFollowArrivals) {
@@ -264,10 +287,14 @@ TEST(CampaignFilmTimeline, MarkersAndArmiesFollowArrivals) {
   EXPECT_GT(timeline.evaluate(2.3F).markers[0].alpha, 0.5F);
   EXPECT_GT(timeline.evaluate(3.3F).markers[0].alpha, 0.99F);
   EXPECT_LT(timeline.evaluate(3.3F).markers[0].text_alpha, 0.01F);
-  EXPECT_DOUBLE_EQ(timeline.evaluate(1.5F).armies[0].values.value(QStringLiteral("foot")), 100.0);
-  EXPECT_DOUBLE_EQ(timeline.evaluate(2.5F).armies[0].values.value(QStringLiteral("foot")), 60.0);
-  EXPECT_DOUBLE_EQ(timeline.evaluate(3.5F).armies[0].values.value(QStringLiteral("foot")), 40.0);
-  EXPECT_NEAR((timeline.evaluate(2.0F).armies[0].uv - QVector2D(0.5F, 0.5F)).length(), 0.0F,
+  EXPECT_DOUBLE_EQ(
+      timeline.evaluate(1.5F).armies[0].values.value(QStringLiteral("foot")), 100.0);
+  EXPECT_DOUBLE_EQ(
+      timeline.evaluate(2.5F).armies[0].values.value(QStringLiteral("foot")), 60.0);
+  EXPECT_DOUBLE_EQ(
+      timeline.evaluate(3.5F).armies[0].values.value(QStringLiteral("foot")), 40.0);
+  EXPECT_NEAR((timeline.evaluate(2.0F).armies[0].uv - QVector2D(0.5F, 0.5F)).length(),
+              0.0F,
               1e-3F);
 }
 
@@ -298,17 +325,22 @@ TEST(CampaignFilmRegions, TriangulationPreservesArea) {
       const QVector2D a = tris[i];
       const QVector2D b = tris[i + 1];
       const QVector2D c = tris[i + 2];
-      total += std::abs((b.x() - a.x()) * (c.y() - a.y()) - (c.x() - a.x()) * (b.y() - a.y())) *
+      total += std::abs((b.x() - a.x()) * (c.y() - a.y()) -
+                        (c.x() - a.x()) * (b.y() - a.y())) *
                0.5;
     }
     return total;
   };
-  const std::vector<QVector2D> square{QVector2D(0, 0), QVector2D(1, 0), QVector2D(1, 1),
-                                      QVector2D(0, 1)};
+  const std::vector<QVector2D> square{
+      QVector2D(0, 0), QVector2D(1, 0), QVector2D(1, 1), QVector2D(0, 1)};
   EXPECT_EQ(CampaignFilm::triangulate(square).size(), 6U);
   EXPECT_NEAR(area(CampaignFilm::triangulate(square)), 1.0, 1e-6);
-  const std::vector<QVector2D> ell{QVector2D(0, 0), QVector2D(2, 0), QVector2D(2, 1),
-                                   QVector2D(1, 1), QVector2D(1, 2), QVector2D(0, 2)};
+  const std::vector<QVector2D> ell{QVector2D(0, 0),
+                                   QVector2D(2, 0),
+                                   QVector2D(2, 1),
+                                   QVector2D(1, 1),
+                                   QVector2D(1, 2),
+                                   QVector2D(0, 2)};
   EXPECT_NEAR(area(CampaignFilm::triangulate(ell)), 3.0, 1e-6);
   std::vector<QVector2D> clockwise(ell.rbegin(), ell.rend());
   EXPECT_NEAR(area(CampaignFilm::triangulate(clockwise)), 3.0, 1e-6);
@@ -316,8 +348,8 @@ TEST(CampaignFilmRegions, TriangulationPreservesArea) {
 
 TEST(CampaignFilmShipped, CarthagoNovaToCannaeSpecIsValid) {
   QString error;
-  const auto bounds_object =
-      CampaignFilm::load_json_object(QStringLiteral("tools/map_pipeline/map_bounds.json"), &error);
+  const auto bounds_object = CampaignFilm::load_json_object(
+      QStringLiteral("tools/map_pipeline/map_bounds.json"), &error);
   ASSERT_TRUE(bounds_object.has_value()) << error.toStdString();
   CampaignFilm::MapBounds bounds;
   bounds.lon_min = bounds_object->value(QStringLiteral("lon_min")).toDouble();
@@ -331,8 +363,15 @@ TEST(CampaignFilmShipped, CarthagoNovaToCannaeSpecIsValid) {
   EXPECT_EQ(path_object->value(QStringLiteral("lines")).toArray().size(), 8);
   const auto march = CampaignFilm::parse_march(*path_object, &error);
   ASSERT_TRUE(march.has_value()) << error.toStdString();
-  for (const char* id : {"carthago_nova", "saguntum", "rhone", "alps", "ticinus", "trebia",
-                         "trasimene", "cannae", "zama"}) {
+  for (const char* id : {"carthago_nova",
+                         "saguntum",
+                         "rhone",
+                         "alps",
+                         "ticinus",
+                         "trebia",
+                         "trasimene",
+                         "cannae",
+                         "zama"}) {
     EXPECT_NE(march->find(QString::fromLatin1(id)), nullptr) << id;
   }
   float previous = -1.0F;
@@ -342,8 +381,8 @@ TEST(CampaignFilmShipped, CarthagoNovaToCannaeSpecIsValid) {
     previous = progress;
   }
 
-  const auto catalog_object =
-      CampaignFilm::load_json_object(QStringLiteral("tools/campaign_film/regions.json"), &error);
+  const auto catalog_object = CampaignFilm::load_json_object(
+      QStringLiteral("tools/campaign_film/regions.json"), &error);
   ASSERT_TRUE(catalog_object.has_value()) << error.toStdString();
   const auto catalog = CampaignFilm::parse_catalog(*catalog_object, bounds, &error);
   ASSERT_TRUE(catalog.has_value()) << error.toStdString();
@@ -370,7 +409,8 @@ TEST(CampaignFilmShipped, CarthagoNovaToCannaeSpecIsValid) {
   EXPECT_EQ(spec->supersample, 2);
 
   const CampaignFilm::Timeline timeline(*spec, *march);
-  EXPECT_TRUE(timeline.warnings().isEmpty()) << timeline.warnings().join(';').toStdString();
+  EXPECT_TRUE(timeline.warnings().isEmpty())
+      << timeline.warnings().join(';').toStdString();
   const auto [from, to] = timeline.route_window();
   EXPECT_NEAR(from, *march->progress_of(QStringLiteral("carthago_nova")), 1e-6F);
   EXPECT_NEAR(to, *march->progress_of(QStringLiteral("cannae")), 1e-6F);
@@ -395,16 +435,21 @@ TEST(CampaignFilmOverlay, PaintsMarkersOnlyWhereProjected) {
   const CampaignFilm::Timeline timeline(*spec, march);
   QImage image(200, 100, QImage::Format_ARGB32_Premultiplied);
   image.fill(Qt::white);
-  const CampaignFilm::Projector project = [](const QVector2D&) -> std::optional<QPointF> {
+  const CampaignFilm::Projector project =
+      [](const QVector2D&) -> std::optional<QPointF> {
     return QPointF(100.0, 50.0);
   };
   CampaignFilm::OverlayOptions options;
   options.draw_text = false;
-  CampaignFilm::paint_overlay(image, *spec, timeline.evaluate(3.5F), project,
-                              {QStringLiteral("serif"), QStringLiteral("serif")}, options);
+  CampaignFilm::paint_overlay(image,
+                              *spec,
+                              timeline.evaluate(3.5F),
+                              project,
+                              {QStringLiteral("serif"), QStringLiteral("serif")},
+                              options);
   EXPECT_NE(image.pixelColor(100, 50), QColor(Qt::white));
   EXPECT_EQ(image.pixelColor(5, 5), QColor(Qt::white));
-  EXPECT_EQ(CampaignFilm::format_army_line({{QStringLiteral("foot"), 38000.0},
-                                            {QStringLiteral("horse"), 8000.0}}),
+  EXPECT_EQ(CampaignFilm::format_army_line(
+                {{QStringLiteral("foot"), 38000.0}, {QStringLiteral("horse"), 8000.0}}),
             QStringLiteral("38,000 foot, 8,000 horse"));
 }

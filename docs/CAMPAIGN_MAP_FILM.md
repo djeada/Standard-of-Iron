@@ -46,7 +46,9 @@ Outputs land in `<out>/<spec id>/`:
 | `frames/frame_NNNNNN.png` | Only with `--frames`. |
 | `stills/still_TTT.TT.png` | Only with `--stills`. |
 
-Other switches: `--start`/`--end` (seconds) render a slice; `--no-clip` skips
+Other switches: `--start`/`--end` (seconds) render a slice, written as
+`<id>_fFFFFFF-EEEEEE.mp4` and `overlays_fFFFFFF-EEEEEE.json` (first frame,
+end frame exclusive) so slices concatenate without overwriting each other; `--no-clip` skips
 encoding; `--no-text` keeps marker glyphs but drops every name, label and stamp
 so the graphics package (#1534) can letter the shot from `overlays.json`;
 `--draw-armies` paints the exported army figures in magenta as a debug check of
@@ -68,6 +70,20 @@ until they fall below 78 C and 75 C. A 4K take at 2x supersampling renders a
 long takes in slices with `--start`/`--end` and a rest between them rather than
 in one unattended run. `--no-thermal-guard` disables the check.
 
+## The map's edges
+
+The map covers 10° W - 18° E, 30° - 47.5° N. Where land runs into that border
+(north of the Alps, the Balkans and the heel of Italy on the east, the Sahara on
+the south) the terrain stops in a straight cliff, which must never be in shot.
+Every run, including `--validate-only`, projects the land stretches of the four
+borders for every frame and reports the time ranges in which any is visible
+(`edge_frames` and `warnings` in `timeline.json`, and on stderr), naming the
+edge. `forbid_world_edge: true` turns that into a failure before anything is
+rendered — the same contract as the arena promo specs' `forbid_world_edge`.
+Italy is the hard case: Cannae sits 2° from the east border. The shipped spec
+swings round to look west-north-west from over the Adriatic (`yaw` ≈ 235-240) once
+the route enters Italy, which puts the east border behind the camera.
+
 ## Spec schema
 
 A spec is one JSON object. Field names and easing names follow the arena promo
@@ -84,7 +100,10 @@ specs (`docs/PROMO_CAPTURE.md`): `time`, `ease` (`linear`, `smooth`, `in`,
 | `supersample` | 1 | Internal render scale, 1-4. The frame is rendered at `width*s x height*s` (the map's own 4x MSAA on top) and box-filtered down. |
 | `duration` | 10 | Seconds. |
 | `reference_height` | 1080 | Every pixel size in the spec (route width, text size, rim width) is authored at this height and scaled to the render, so a 720p proxy and the 4K take frame identically. |
-| `terrain_height_scale` | 0.10 | Relief exaggeration. The campaign screen uses 0.085; oblique film angles read better slightly higher. |
+| `terrain_height_scale` | 0.10 | Relief exaggeration. The campaign screen uses 0.085 seen almost straight down; the heightmap is noisy, so oblique film angles read better lower (the shipped spec uses 0.055). |
+| `drape_radius` | 0.008 | The route, its head, markers and the camera target sit on the terrain heights averaged over this radius (UV), so the line follows the relief without zigzagging over every ridge. |
+| `borders` | false | The game's province border lines. Off: they are gameplay borders, and the regions are lit explicitly. |
+| `forbid_world_edge` | false | Fail (exit 5) if the edge of the map's land is ever in frame; see below. |
 | `province_fills` / `province_fill_alpha` | false / 0.6 | The campaign screen's owner tint per province. Off by default: the film lights regions explicitly. |
 | `symbols` | true | The map's city and mountain glyphs. |
 | `game_route` | false | The campaign screen's eight mission lines. Off: they are the game's route, not the historical march. |
@@ -108,8 +127,9 @@ specs (`docs/PROMO_CAPTURE.md`): `time`, `ease` (`linear`, `smooth`, `in`,
   corner of the route). Any target takes an `offset: [du, dv]`. The camera
   looks at the terrain surface under the target, so a close orbit around the
   Alps centres on the peaks rather than on sea level beneath them.
-- **orbit** is `yaw` in degrees (180 = north up, larger turns the view
-  clockwise); yaw takes the shorter way round between keys.
+- **orbit** is `yaw` in degrees: where the camera stands around the target.
+  180 stands south looking north (north up, as on the campaign screen); 270
+  stands east looking west. Yaw takes the shorter way round between keys.
 - **tilt** is `pitch` in degrees above the map (90 = straight down, 1-90).
 - **zoom** is `distance` (map units; the map is 1x1) and/or `fov` (degrees).
   Distance interpolates in log space, so a zoom reads at an even speed.
@@ -236,9 +256,10 @@ pinned to the head.
 definition of done: 20 seconds, 3840x2160 at 30 fps, 2x supersampled. The
 camera opens oblique over Iberia with the province lit and the
 "Carthago Nova — Spring 218 BC" stamp, the route draws in from 1 s, eases into
-the Alps at 8.6 s for a low pass over the relief, sweeps down Italy past
-Ticinus, Trebia and Trasimene, and settles on Cannae at 17.6 s with Apulia lit
-and the "Cannae — 2 August 216 BC" stamp. Hannibal's and Rome's strengths are
+the Alps at 8.6 s for a closer pass over the relief, then swings round to look
+west across Italy from over the Adriatic as the line runs past Ticinus, Trebia
+and Trasimene, and settles on Cannae at 17.6 s with Apulia lit and the
+"Cannae — 2 August 216 BC" stamp. It sets `forbid_world_edge`. Hannibal's and Rome's strengths are
 exported, not drawn.
 
 ## Source map
