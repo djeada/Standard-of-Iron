@@ -196,7 +196,9 @@ auto TroopRoleRegistry::instance() -> TroopRoleRegistry& {
 
 void TroopRoleRegistry::reset_to_defaults() {
   m_profiles.clear();
-  constexpr int k_last_troop = static_cast<int>(TroopType::Builder);
+  // Velites is the last enumerator; stopping at Builder left the slingers and
+  // velites on the swordsman fallback until the troop catalogue was loaded.
+  constexpr int k_last_troop = static_cast<int>(TroopType::Velites);
   for (int i = 0; i <= k_last_troop; ++i) {
     auto const troop = static_cast<TroopType>(i);
     m_profiles[troop] = default_troop_formation_profile(troop);

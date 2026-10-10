@@ -10,6 +10,7 @@
 
 #include "../../formation/army_formation_planner.h"
 #include "../../formation/unit_layout_resolver.h"
+#include "../../units/spawn_type.h"
 #include "../nation_registry.h"
 #include "ai_doctrine_catalog.h"
 
@@ -231,12 +232,65 @@ auto doctrine_intent(const AIContext& context)
   return std::nullopt;
 }
 
+// A historical battle order for an army that has the troops for it: Rome's
+// triplex acies once there are enough maniples to fill three lines, Carthage
+// and its Gallic and Iberian allies an elephant screen when elephants march with
+// the infantry, otherwise the crescent when cavalry can hold its wings.
+constexpr int k_min_triplex_infantry = 6;
+constexpr int k_min_crescent_infantry = 4;
+constexpr int k_min_crescent_cavalry = 2;
+constexpr int k_min_screen_elephants = 2;
+constexpr int k_min_screened_infantry = 2;
+
+auto battle_order_intent(const AISnapshot& snapshot, const AIContext& context)
+    -> std::optional<Game::Formation::ArmyFormationIntent> {
+  using Game::Formation::ArmyFormationIntent;
+  using Game::Units::SpawnType;
+  if (context.nation == nullptr) {
+    return std::nullopt;
+  }
+  int infantry = 0;
+  int cavalry = 0;
+  int elephants = 0;
+  for (const auto& unit : snapshot.friendly_units) {
+    if (unit.spawn_type == SpawnType::Elephant) {
+      ++elephants;
+    } else if (Game::Units::is_cavalry(unit.spawn_type)) {
+      ++cavalry;
+    } else if (unit.spawn_type == SpawnType::Swordsman ||
+               unit.spawn_type == SpawnType::Spearman) {
+      ++infantry;
+    }
+  }
+  switch (context.nation->id) {
+  case NationID::RomanRepublic:
+    if (infantry >= k_min_triplex_infantry) {
+      return ArmyFormationIntent::TriplexAcies;
+    }
+    break;
+  case NationID::Carthage:
+  case NationID::Gauls:
+  case NationID::Iberians:
+    if (elephants >= k_min_screen_elephants && infantry >= k_min_screened_infantry) {
+      return ArmyFormationIntent::ElephantScreen;
+    }
+    if (cavalry >= k_min_crescent_cavalry && infantry >= k_min_crescent_infantry) {
+      return ArmyFormationIntent::ConvexCrescent;
+    }
+    break;
+  default:
+    break;
+  }
+  return std::nullopt;
+}
+
 } // namespace
 
 auto select_ai_intent(const AISnapshot& snapshot,
                       const AIContext& context,
                       bool defensive_posture,
-                      bool escorting_siege) -> Game::Formation::ArmyFormationIntent {
+                      bool escorting_siege,
+                      bool field_battle) -> Game::Formation::ArmyFormationIntent {
   using Game::Formation::ArmyFormationIntent;
 
   if (escorting_siege) {
@@ -253,6 +307,13 @@ auto select_ai_intent(const AISnapshot& snapshot,
   auto const enemies = static_cast<int>(snapshot.visible_enemies.size());
   if (enemies > 0 && friendly >= enemies * 2 && friendly >= 6) {
     return ArmyFormationIntent::Encirclement;
+  }
+  // Battle orders are for armies marching out to fight; a muster or a station
+  // at home keeps its ordinary shape so gates and ramps stay open.
+  if (field_battle) {
+    if (const auto order = battle_order_intent(snapshot, context)) {
+      return *order;
+    }
   }
   if (context.strategy_config.personality.aggression > 0.6F) {
     return ArmyFormationIntent::Assault;

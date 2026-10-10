@@ -57,6 +57,8 @@ auto load_terrain(const ArenaScenarioDefinition& definition,
     map.lakes = definition.lakes;
     map.bridges = definition.bridges;
   }
+  // A battle script's fords sit on the map's own rivers or on the generated ones.
+  map.fords.insert(map.fords.end(), definition.fords.begin(), definition.fords.end());
   Game::Systems::NavGrid::initialize(map.grid.width, map.grid.height);
   session.terrain().initialize(map);
   if (auto* pathfinder = Game::Systems::NavGrid::get_pathfinder()) {

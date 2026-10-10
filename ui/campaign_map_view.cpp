@@ -2700,6 +2700,8 @@ void main() {
                    static_cast<GLsizeiptr>(verts.size() * sizeof(float)),
                    verts.data(),
                    GL_STREAM_DRAW);
+      Render::GL::note_buffer_storage(
+          static_cast<std::size_t>(verts.size() * sizeof(float)), true);
       glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
     return offsets;
@@ -2879,6 +2881,9 @@ void main() {
                  static_cast<GLsizeiptr>(verts.size() * sizeof(QVector2D)),
                  verts.data(),
                  GL_STREAM_DRAW);
+    Render::GL::note_buffer_storage(
+        static_cast<std::size_t>(verts.size() * sizeof(QVector2D)),
+        verts.data() != nullptr);
     glDrawArrays(mode, 0, static_cast<GLsizei>(verts.size()));
     glBindVertexArray(0);
     m_pixel_program.release();

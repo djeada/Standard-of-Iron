@@ -126,7 +126,7 @@ auto muster_stations(const AISnapshot& snapshot,
   const float spacing = context.macro_targets.gather_spacing;
 
   const auto muster_intent =
-      select_ai_intent(snapshot, context, garrison_posture, false);
+      select_ai_intent(snapshot, context, garrison_posture, false, false);
   std::vector<Station> stations;
   if (garrison_per_base) {
     stations.reserve(context.bases.size());

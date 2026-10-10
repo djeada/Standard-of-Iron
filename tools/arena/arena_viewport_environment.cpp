@@ -709,6 +709,9 @@ auto ArenaViewport::initialize_terrain_from_map(const QString& map_path) -> bool
     qWarning() << "Arena: cannot read map" << map_path << ":" << error;
     return false;
   }
+  // Scenario fords (a battle script's crossing) sit on the map's own rivers.
+  definition.fords.insert(
+      definition.fords.end(), m_arena_fords.begin(), m_arena_fords.end());
   m_terrain_from_map = true;
   m_terrain_review_definition = std::move(definition);
   apply_map_terrain();

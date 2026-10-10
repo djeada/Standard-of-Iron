@@ -1296,7 +1296,8 @@ auto apply_fords(const std::vector<FordSegment>& fords,
     crossing.profile = segment.profile.clamped();
     scenario.fords.push_back(crossing);
   }
-  if (!fords.empty() && scenario.rivers.empty()) {
+  if (!fords.empty() && scenario.rivers.empty() &&
+      scenario.campaign_map_path.isEmpty()) {
     return QStringLiteral("%1 ford(s) declared but the terrain has no river to cross")
         .arg(fords.size());
   }

@@ -176,8 +176,12 @@ auto muster_ground(const AISnapshot& snapshot,
   request.player_id = context.player_id;
   request.nation = context.nation;
   request.spacing = context.macro_targets.gather_spacing;
-  request.intent = select_ai_intent(
-      snapshot, context, context.strategy_config.posture == AIPosture::Garrison, false);
+  request.intent =
+      select_ai_intent(snapshot,
+                       context,
+                       context.strategy_config.posture == AIPosture::Garrison,
+                       false,
+                       false);
   request.facing = context.station.facing_deg;
   request.preserve_member_order = true;
   request.resolve_terrain = false;
