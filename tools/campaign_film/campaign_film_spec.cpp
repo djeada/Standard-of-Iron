@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <tuple>
 
 namespace CampaignFilm {
 
