@@ -225,6 +225,11 @@ struct FrameState {
   float province_fill_alpha = 1.0F;
   bool show_borders = false;
   float drape_radius = 0.008F;
+  bool draped_lines = true;
+  float coast_width_px = 1.5F;
+  float river_width_px = 1.1F;
+  QVector4D coast_color{0.12F, 0.10F, 0.08F, 0.88F};
+  QVector4D river_color{0.33F, 0.46F, 0.57F, 0.85F};
   bool show_game_route = false;
   bool show_symbols = true;
   bool route_visible = false;

@@ -80,9 +80,13 @@ borders for every frame and reports the time ranges in which any is visible
 (`edge_frames` and `warnings` in `timeline.json`, and on stderr), naming the
 edge. `forbid_world_edge: true` turns that into a failure before anything is
 rendered — the same contract as the arena promo specs' `forbid_world_edge`.
-Italy is the hard case: Cannae sits 2° from the east border. The shipped spec
-swings round to look west-north-west from over the Adriatic (`yaw` ≈ 235-240) once
-the route enters Italy, which puts the east border behind the camera.
+Italy is the hard case: Cannae sits 2° from the east border, with the Dalmatian
+coast and the heel of Italy both cut by it. Keep north-up (`yaw` 180 ± a few
+degrees) and clear the border by framing: look down steeply (`pitch` ≈ 76-80)
+and close (`distance` ≈ 0.2-0.36), with the target offset west so the head runs
+toward the right of frame. The shipped spec does that from Trebia to Cannae.
+Trial and error is cheap: `--validate-only` reports every edge frame in well
+under a second.
 
 ## Spec schema
 
@@ -92,22 +96,23 @@ specs (`docs/PROMO_CAPTURE.md`): `time`, `ease` (`linear`, `smooth`, `in`,
 
 ### Output
 
-| Field                                    | Default      | Meaning                                                                                                                                                                           |
-| ---------------------------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`, `title`                            | required, id | Output directory name and a human title.                                                                                                                                          |
-| `width`, `height`                        | 1920, 1080   | Output size.                                                                                                                                                                      |
-| `fps`                                    | 30           | Frame rate.                                                                                                                                                                       |
-| `supersample`                            | 1            | Internal render scale, 1-4. The frame is rendered at `width*s x height*s` (the map's own 4x MSAA on top) and box-filtered down.                                                   |
-| `duration`                               | 10           | Seconds.                                                                                                                                                                          |
-| `reference_height`                       | 1080         | Every pixel size in the spec (route width, text size, rim width) is authored at this height and scaled to the render, so a 720p proxy and the 4K take frame identically.          |
-| `terrain_height_scale`                   | 0.10         | Relief exaggeration. The campaign screen uses 0.085 seen almost straight down; the heightmap is noisy, so oblique film angles read better lower (the shipped spec uses 0.055).    |
-| `drape_radius`                           | 0.008        | The route, its head, markers and the camera target sit on the terrain heights averaged over this radius (UV), so the line follows the relief without zigzagging over every ridge. |
-| `borders`                                | false        | The game's province border lines. Off: they are gameplay borders, and the regions are lit explicitly.                                                                             |
-| `forbid_world_edge`                      | false        | Fail (exit 5) if the edge of the map's land is ever in frame; see below.                                                                                                          |
-| `province_fills` / `province_fill_alpha` | false / 0.6  | The campaign screen's owner tint per province. Off by default: the film lights regions explicitly.                                                                                |
-| `symbols`                                | true         | The map's city and mountain glyphs.                                                                                                                                               |
-| `game_route`                             | false        | The campaign screen's eight mission lines. Off: they are the game's route, not the historical march.                                                                              |
-| `burn_text`                              | true         | Draw names, labels and stamps into the frame.                                                                                                                                     |
+| Field                                    | Default      | Meaning                                                                                                                                                                                                                                                                                                                                                          |
+| ---------------------------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`, `title`                            | required, id | Output directory name and a human title.                                                                                                                                                                                                                                                                                                                         |
+| `width`, `height`                        | 1920, 1080   | Output size.                                                                                                                                                                                                                                                                                                                                                     |
+| `fps`                                    | 30           | Frame rate.                                                                                                                                                                                                                                                                                                                                                      |
+| `supersample`                            | 1            | Internal render scale, 1-4. The frame is rendered at `width*s x height*s` (the map's own 4x MSAA on top) and box-filtered down.                                                                                                                                                                                                                                  |
+| `duration`                               | 10           | Seconds.                                                                                                                                                                                                                                                                                                                                                         |
+| `reference_height`                       | 1080         | Every pixel size in the spec (route width, text size, rim width) is authored at this height and scaled to the render, so a 720p proxy and the 4K take frame identically.                                                                                                                                                                                         |
+| `terrain_height_scale`                   | 0.10         | Relief exaggeration. The campaign screen uses 0.085 seen almost straight down; the heightmap is noisy, so oblique film angles read better lower (the shipped spec uses 0.055).                                                                                                                                                                                   |
+| `drape_radius`                           | 0.008        | The route, its head, markers and the camera target sit on the terrain heights averaged over this radius (UV), so the line follows the relief without zigzagging over every ridge.                                                                                                                                                                                |
+| `borders`                                | false        | The game's province border lines. Off: they are gameplay borders, and the regions are lit explicitly.                                                                                                                                                                                                                                                            |
+| `forbid_world_edge`                      | false        | Fail (exit 5) if the edge of the map's land is ever in frame; see below.                                                                                                                                                                                                                                                                                         |
+| `province_fills` / `province_fill_alpha` | false / 0.6  | The campaign screen's owner tint per province. Off by default: the film lights regions explicitly.                                                                                                                                                                                                                                                               |
+| `symbols`                                | false        | The campaign screen's city and mountain glyphs. They are 1-pixel outline strokes made for a top-down UI and read as stray marks in a film frame, so they are off; pin the places a shot needs with `markers`.                                                                                                                                                    |
+| `draped_lines`                           | true         | Draw coasts and rivers draped on the relief in screen space (`coast_width`, `river_width`, reference px; defaults 1.5 and 1.1). The campaign screen draws them as GL lines a little above sea level, which slips a few pixels off the texture's own shoreline as soon as the camera tilts and stays 1 px wide at any resolution. `false` uses the game's layers. |
+| `game_route`                             | false        | The campaign screen's eight mission lines. Off: they are the game's route, not the historical march.                                                                                                                                                                                                                                                             |
+| `burn_text`                              | true         | Draw names, labels and stamps into the frame.                                                                                                                                                                                                                                                                                                                    |
 
 ### Camera keys (orbit, pan, zoom, tilt)
 
@@ -176,12 +181,14 @@ unchanged and adds `march`: one polyline (`points`, UV) plus named `stops`,
 each with `id`, `name`, `date`, `kind` (`city`, `battle`, `crossing`, `pass`,
 `waypoint`), `lonlat`, `uv` and the `index` of its point. It follows Polybius
 (III.33-118) and Livy (XXI-XXII, XXX): Carthago Nova, Saguntum, the Ebro, the
-Pyrenees, the Rhône crossing, up the Isère to the Alps, Taurasia, Ticinus,
+Pyrenees, Ruscino and Narbo round the Gulf of Lion, the Rhône crossing, up the Isère to the Alps, Taurasia, Ticinus,
 Trebia, Bononia and the Arno marshes, Trasimene, Spoletium, the Adriatic coast,
 Gerunium, Cannae, then Capua, Tarentum, Croton, the crossing to Hadrumetum, and
 Zama. Edit `MARCH_STOPS` in `hannibal_path.py` and rerun it;
 `tests/scripts/test_hannibal_march.py` fails if the committed asset drifts from
-the generator or the mission lines change.
+the generator, the mission lines change, or a land leg runs over the sea (checked
+against the terrain heightmap; only the Croton-Hadrumetum crossing is marked
+`open_sea`).
 
 ### Regions
 
@@ -257,14 +264,14 @@ pinned to the head.
 ## Definition-of-done shot
 
 `tools/campaign_film/specs/carthago_nova_to_cannae.json` is the #1531
-definition of done: 20 seconds, 3840x2160 at 30 fps, 2x supersampled. The
-camera opens oblique over Iberia with the province lit and the
+definition of done: 20 seconds, 3840x2160 at 30 fps, 2x supersampled, north-up
+throughout. The camera opens oblique over Iberia with the province lit and the
 "Carthago Nova — Spring 218 BC" stamp, the route draws in from 1 s, eases into
-the Alps at 8.6 s for a closer pass over the relief, then swings round to look
-west across Italy from over the Adriatic as the line runs past Ticinus, Trebia
-and Trasimene, and settles on Cannae at 17.6 s with Apulia lit and the
-"Cannae — 2 August 216 BC" stamp. It sets `forbid_world_edge`. Hannibal's and Rome's strengths are
-exported, not drawn.
+the Alps at 8.6 s for a closer pass over the relief, then looks down more
+steeply as the line runs past Ticinus, Trebia and Trasimene, and settles on
+Cannae at 17.6 s with Apulia lit and the "Cannae — 2 August 216 BC" stamp. It
+sets `forbid_world_edge`. Hannibal's and Rome's strengths are exported, not
+drawn.
 
 ## Source map
 

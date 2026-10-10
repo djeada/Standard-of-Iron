@@ -399,7 +399,12 @@ auto parse_spec(const QJsonObject& object,
   spec.province_fills = object.value(QStringLiteral("province_fills")).toBool(false);
   spec.province_fill_alpha =
       read_float(object, "province_fill_alpha", spec.province_fill_alpha);
-  spec.show_symbols = object.value(QStringLiteral("symbols")).toBool(true);
+  spec.show_symbols = object.value(QStringLiteral("symbols")).toBool(false);
+  spec.draped_lines = object.value(QStringLiteral("draped_lines")).toBool(true);
+  spec.coast_width =
+      std::max(0.0F, read_float(object, "coast_width", spec.coast_width));
+  spec.river_width =
+      std::max(0.0F, read_float(object, "river_width", spec.river_width));
   spec.show_game_route = object.value(QStringLiteral("game_route")).toBool(false);
   spec.show_borders = object.value(QStringLiteral("borders")).toBool(false);
   spec.forbid_world_edge =
@@ -1083,6 +1088,9 @@ auto Timeline::frame_state(const FrameEval& eval) const -> CampaignMapFilm::Fram
   state.show_game_route = m_spec.show_game_route;
   state.show_symbols = m_spec.show_symbols;
   state.show_borders = m_spec.show_borders;
+  state.draped_lines = m_spec.draped_lines;
+  state.coast_width_px = m_spec.coast_width;
+  state.river_width_px = m_spec.river_width;
   state.drape_radius = m_spec.drape_radius;
   state.route_visible = m_spec.route.enabled;
   state.route_from = eval.route_from;

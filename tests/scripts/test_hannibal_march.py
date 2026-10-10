@@ -88,15 +88,15 @@ class HannibalMarchTest(unittest.TestCase):
 
         points = self.march["points"]
         stops = self.march["stops"]
-        for source, (start, end) in zip(
-            hannibal_path.MARCH_STOPS, zip(stops, stops[1:], strict=False), strict=False
+        for source, start, end in zip(
+            hannibal_path.MARCH_STOPS[:-1], stops[:-1], stops[1:], strict=True
         ):
             if source.get("leg", "land") != "land":
                 continue
             leg = points[start["index"] : end["index"] + 1]
             samples = [
                 (a[0] + (b[0] - a[0]) * k / 10, a[1] + (b[1] - a[1]) * k / 10)
-                for a, b in zip(leg, leg[1:], strict=False)
+                for a, b in zip(leg[:-1], leg[1:], strict=True)
                 for k in range(10)
             ]
             on_land = sum(is_land(u, v) for u, v in samples) / len(samples)
