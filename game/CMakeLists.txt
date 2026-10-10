@@ -275,6 +275,8 @@ add_library(
     formation/formation_slot_adjust.cpp
     formation/formation_line_layout.cpp
     formation/formation_silhouette_shapes.cpp
+    formation/formation_battle_orders.cpp
+    formation/army_formation_manoeuvre.cpp
     formation/formation_silhouette.cpp
     formation/formation_assignment.cpp
     formation/army_formation_registry.cpp
@@ -417,6 +419,7 @@ add_library(
     systems/combat_system/rts_commander_attack.cpp
     systems/combat_system/melee_exchange.cpp
     systems/combat_system/elephant_special_processor.cpp
+    systems/combat_system/elephant_lane_run.cpp
     systems/combat_system/siege_special_processor.cpp
     systems/combat_actions/body_impact.cpp
     systems/combat_actions/combat_action_definition.cpp

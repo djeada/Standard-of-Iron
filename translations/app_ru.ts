@@ -3789,6 +3789,38 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>Encirclement needs at least three units.</source>
         <translation>Для окружения нужно не меньше трёх отрядов.</translation>
     </message>
+    <message>
+        <source>Triplex Acies</source>
+        <translation>Тройной строй</translation>
+    </message>
+    <message>
+        <source>Convex Crescent</source>
+        <translation>Выпуклый полумесяц</translation>
+    </message>
+    <message>
+        <source>Elephant Screen</source>
+        <translation>Заслон слонов</translation>
+    </message>
+    <message>
+        <source>Requires infantry to form the maniples.</source>
+        <translation>Нужна пехота, чтобы построить манипулы.</translation>
+    </message>
+    <message>
+        <source>Requires infantry to form the crescent.</source>
+        <translation>Нужна пехота, чтобы построить полумесяц.</translation>
+    </message>
+    <message>
+        <source>Requires war elephants in the selection.</source>
+        <translation>Нужны боевые слоны в выделении.</translation>
+    </message>
+    <message>
+        <source>%1 does not fight in this order.</source>
+        <translation>%1 не сражается в этом строю.</translation>
+    </message>
+    <message>
+        <source>This battle order needs at least three units.</source>
+        <translation>Этому боевому порядку нужно не менее трёх отрядов.</translation>
+    </message>
 </context>
 <context>
     <name>FormationPanel</name>
@@ -4095,6 +4127,18 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>Reset to faction default</source>
         <translation>Вернуть к умолчанию фракции</translation>
+    </message>
+    <message>
+        <source>Three lines of maniples with open lanes: principes cover the gaps of the hastati, triarii stand at the rear. Against elephants the lanes open straight through.</source>
+        <translation>Три линии манипул с открытыми проходами: принципы прикрывают промежутки гастатов, триарии стоят позади. Против слонов проходы открываются насквозь.</translation>
+    </message>
+    <message>
+        <source>The centre bows toward the enemy and gives ground under pressure while the wings hold, then the wings wheel in on the enemy&apos;s flanks.</source>
+        <translation>Центр выгибается навстречу врагу и под натиском отходит, пока крылья держатся; затем крылья заходят врагу во фланги.</translation>
+    </message>
+    <message>
+        <source>War elephants spread out ahead of the main line. Needs elephants.</source>
+        <translation>Боевые слоны, расставленные перед главной линией. Нужны слоны.</translation>
     </message>
 </context>
 <context>

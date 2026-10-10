@@ -10,6 +10,7 @@
 #include "../../core/component_gameplay.h"
 #include "../../core/world.h"
 #include "../../core/world_spatial_index.h"
+#include "../../formation/army_formation_registry.h"
 #include "../../units/spawn_type.h"
 #include "../attack_range.h"
 #include "../building_collision_registry.h"
@@ -671,6 +672,14 @@ auto suppresses_opportunistic_combat(Engine::Core::Entity* unit) -> bool {
          (movement->get_has_target() || movement->has_waypoints());
 }
 
+auto runs_an_open_lane(const Engine::Core::Entity* entity) -> bool {
+  const auto* elephant = entity != nullptr
+                             ? entity->get_component<Engine::Core::ElephantComponent>()
+                             : nullptr;
+  return elephant != nullptr &&
+         (elephant->lane_running || elephant->lane_run_out_seconds > 0.0F);
+}
+
 auto may_engage(Engine::Core::Entity* unit,
                 Engine::Core::Entity* enemy,
                 EngagementTrigger trigger) -> bool {
@@ -725,6 +734,20 @@ auto may_engage(Engine::Core::Entity* unit,
 
   auto const* attack_comp = unit->get_component<Engine::Core::AttackComponent>();
   if (attack_comp != nullptr && attack_comp->in_melee_lock) {
+    return false;
+  }
+
+  // An elephant running down an open lane of a battle line is let through: the
+  // maniples beside the lane do not step into its path (missile troops still
+  // shoot it).
+  if (trigger == EngagementTrigger::Opportunity && runs_an_open_lane(enemy) &&
+      (attack_comp == nullptr || !is_ranged_mode(attack_comp))) {
+    return false;
+  }
+  // A crescent wing holds its ground until it wheels in on the enemy flank: it
+  // answers a blow aimed at itself, nothing else.
+  if (trigger != EngagementTrigger::Retaliation &&
+      Game::Formation::ArmyFormationRuntime::holds_for_manoeuvre(*unit)) {
     return false;
   }
 

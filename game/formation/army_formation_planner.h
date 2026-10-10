@@ -36,6 +36,8 @@ struct ArmyFormationMember {
   bool heavy{false};
   std::vector<std::pair<float, float>> extents_by_files;
   FormationDoctrineId doctrine;
+
+  bool allied{false};
 };
 
 struct ArmyFormationRequest {

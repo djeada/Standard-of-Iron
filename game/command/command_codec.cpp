@@ -462,7 +462,8 @@ auto decode<DeployFormation>(Reader& r) -> DeployFormation {
   p.facing = r.real("facing");
   p.frontage = r.real("frontage");
   p.spacing = r.real("spacing");
-  p.intent = r.enumeration("intent", Game::Formation::ArmyFormationIntent::SiegeEscort);
+  p.intent =
+      r.enumeration("intent", Game::Formation::ArmyFormationIntent::ElephantScreen);
   p.doctrine = r.text("doctrine");
 
   return p;

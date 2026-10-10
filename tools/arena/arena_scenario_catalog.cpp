@@ -9,6 +9,7 @@
 #include "arena_allied_nation_scenarios.h"
 #include "arena_ambience_scenarios.h"
 #include "arena_animation_matrix_scenarios.h"
+#include "arena_battle_order_scenarios.h"
 #include "arena_battle_scale_scenarios.h"
 #include "arena_cinematic_scenarios.h"
 #include "arena_city_scenarios.h"
@@ -112,6 +113,7 @@ auto definitions() -> const std::vector<ArenaScenarioDefinition>& {
     append(values, build_skirmisher_definitions());
     append(values, build_transition_gauntlet_definitions());
     append(values, build_matchup_matrix_definitions());
+    append(values, build_battle_order_definitions());
 
     for (auto& scenario : values) {
       if (scenario.rpg_mode && !scenario.rpg_commander_group.isEmpty()) {

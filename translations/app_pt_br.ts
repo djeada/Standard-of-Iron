@@ -3789,6 +3789,38 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <source>Arrived</source>
         <translation>Chegou</translation>
     </message>
+    <message>
+        <source>Triplex Acies</source>
+        <translation>Triplex acies</translation>
+    </message>
+    <message>
+        <source>Convex Crescent</source>
+        <translation>Meia-lua convexa</translation>
+    </message>
+    <message>
+        <source>Elephant Screen</source>
+        <translation>Cortina de elefantes</translation>
+    </message>
+    <message>
+        <source>Requires infantry to form the maniples.</source>
+        <translation>Requer infantaria para formar os manípulos.</translation>
+    </message>
+    <message>
+        <source>Requires infantry to form the crescent.</source>
+        <translation>Requer infantaria para formar a meia-lua.</translation>
+    </message>
+    <message>
+        <source>Requires war elephants in the selection.</source>
+        <translation>Requer elefantes de guerra na seleção.</translation>
+    </message>
+    <message>
+        <source>%1 does not fight in this order.</source>
+        <translation>%1 não combate nesta ordem.</translation>
+    </message>
+    <message>
+        <source>This battle order needs at least three units.</source>
+        <translation>Esta ordem de batalha precisa de pelo menos três unidades.</translation>
+    </message>
 </context>
 <context>
     <name>FormationPanel</name>
@@ -4095,6 +4127,18 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
     <message>
         <source>Facing (auto)</source>
         <translation>Orientação (auto)</translation>
+    </message>
+    <message>
+        <source>Three lines of maniples with open lanes: principes cover the gaps of the hastati, triarii stand at the rear. Against elephants the lanes open straight through.</source>
+        <translation>Três linhas de manípulos com corredores abertos: os príncipes cobrem as lacunas dos hastados e os triários ficam na retaguarda. Contra elefantes, os corredores se abrem de ponta a ponta.</translation>
+    </message>
+    <message>
+        <source>The centre bows toward the enemy and gives ground under pressure while the wings hold, then the wings wheel in on the enemy&apos;s flanks.</source>
+        <translation>O centro se curva em direção ao inimigo e cede terreno sob pressão enquanto as alas resistem; depois as alas giram sobre os flancos inimigos.</translation>
+    </message>
+    <message>
+        <source>War elephants spread out ahead of the main line. Needs elephants.</source>
+        <translation>Elefantes de guerra espalhados à frente da linha principal. Requer elefantes.</translation>
     </message>
 </context>
 <context>

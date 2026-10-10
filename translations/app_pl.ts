@@ -3789,6 +3789,38 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
         <source>Encirclement needs at least three units.</source>
         <translation>Okrążenie wymaga co najmniej trzech jednostek.</translation>
     </message>
+    <message>
+        <source>Triplex Acies</source>
+        <translation>Triplex acies</translation>
+    </message>
+    <message>
+        <source>Convex Crescent</source>
+        <translation>Wypukły półksiężyc</translation>
+    </message>
+    <message>
+        <source>Elephant Screen</source>
+        <translation>Zasłona słoni</translation>
+    </message>
+    <message>
+        <source>Requires infantry to form the maniples.</source>
+        <translation>Wymaga piechoty do sformowania manipułów.</translation>
+    </message>
+    <message>
+        <source>Requires infantry to form the crescent.</source>
+        <translation>Wymaga piechoty do sformowania półksiężyca.</translation>
+    </message>
+    <message>
+        <source>Requires war elephants in the selection.</source>
+        <translation>Wymaga słoni bojowych w zaznaczeniu.</translation>
+    </message>
+    <message>
+        <source>%1 does not fight in this order.</source>
+        <translation>%1 nie walczy w tym szyku.</translation>
+    </message>
+    <message>
+        <source>This battle order needs at least three units.</source>
+        <translation>Ten szyk bojowy wymaga co najmniej trzech oddziałów.</translation>
+    </message>
 </context>
 <context>
     <name>FormationPanel</name>
@@ -4095,6 +4127,18 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
     <message>
         <source>Reset to faction default</source>
         <translation>Przywróć domyślny dla frakcji</translation>
+    </message>
+    <message>
+        <source>Three lines of maniples with open lanes: principes cover the gaps of the hastati, triarii stand at the rear. Against elephants the lanes open straight through.</source>
+        <translation>Trzy linie manipułów z otwartymi przejściami: principes zasłaniają luki hastati, triarii stoją z tyłu. Przeciw słoniom przejścia otwierają się na wylot.</translation>
+    </message>
+    <message>
+        <source>The centre bows toward the enemy and gives ground under pressure while the wings hold, then the wings wheel in on the enemy&apos;s flanks.</source>
+        <translation>Środek wygina się ku wrogowi i pod naporem ustępuje pola, a skrzydła trwają; potem skrzydła zawijają na flanki wroga.</translation>
+    </message>
+    <message>
+        <source>War elephants spread out ahead of the main line. Needs elephants.</source>
+        <translation>Słonie bojowe rozstawione przed główną linią. Wymaga słoni.</translation>
     </message>
 </context>
 <context>

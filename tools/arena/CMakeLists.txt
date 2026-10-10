@@ -21,6 +21,7 @@ add_library(
     arena_spotlight_scenarios.cpp
     arena_engagement_scenarios.cpp
     arena_formation_scenarios.cpp
+    arena_battle_order_scenarios.cpp
     arena_grounding_scenarios.cpp
     arena_navigation_scenarios.cpp
     arena_stuck_recovery_scenarios.cpp

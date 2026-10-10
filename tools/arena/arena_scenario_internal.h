@@ -322,6 +322,8 @@ struct ArenaScenarioRunner::Impl {
   QVector3D world_origin;
   QHash<QString, std::vector<Engine::Core::EntityID>> groups;
   QHash<QString, QVector3D> formed_destinations;
+  QHash<QString, float> battle_order_peaks;
+  QSet<Engine::Core::EntityID> lane_runners;
   QHash<Engine::Core::EntityID, QString> entity_groups;
   std::vector<StepRuntime> steps;
   QHash<Engine::Core::EntityID, CommandResponse> responses;
@@ -593,6 +595,7 @@ struct ArenaScenarioRunner::Impl {
                                   int living_samples,
                                   int lens_gap_culled);
   void check_formation_order(const ArenaExpectation& expectation);
+  void observe_battle_order(const ArenaExpectation& expectation);
   void publish_movement_diagnostics();
   void publish_narrow_layout_outcome();
   void check_end_expectations();

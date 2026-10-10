@@ -738,7 +738,7 @@ TEST_F(InputCommandHandlerTest, FormationSlotsKeepTheirMeaningAcrossSelections) 
   ASSERT_TRUE(command_controller->formation().is_placing_formation());
 
   const QStringList mixed = command_controller->formation().formation_intents();
-  EXPECT_EQ(mixed.size(), 7);
+  EXPECT_EQ(mixed.size(), 10);
   EXPECT_EQ(mixed.at(0), QStringLiteral("faction_default"));
   EXPECT_EQ(mixed.at(1), QStringLiteral("line"));
   EXPECT_EQ(mixed.at(2), QStringLiteral("column"));

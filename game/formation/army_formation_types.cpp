@@ -34,14 +34,27 @@ struct NameTable {
   }
 };
 
-constexpr NameTable<ArmyFormationIntent, 7> k_intents{
+constexpr NameTable<ArmyFormationIntent, 10> k_intents{
     {{{ArmyFormationIntent::FactionDefault, "faction_default"},
       {ArmyFormationIntent::Line, "line"},
       {ArmyFormationIntent::Column, "column"},
       {ArmyFormationIntent::Defensive, "defensive"},
       {ArmyFormationIntent::Assault, "assault"},
       {ArmyFormationIntent::Encirclement, "encirclement"},
-      {ArmyFormationIntent::SiegeEscort, "siege_escort"}}}};
+      {ArmyFormationIntent::SiegeEscort, "siege_escort"},
+      {ArmyFormationIntent::TriplexAcies, "triplex_acies"},
+      {ArmyFormationIntent::ConvexCrescent, "convex_crescent"},
+      {ArmyFormationIntent::ElephantScreen, "elephant_screen"}}}};
+
+constexpr NameTable<BattleBand, 8> k_bands{
+    {{{BattleBand::None, "none"},
+      {BattleBand::Screen, "screen"},
+      {BattleBand::Hastati, "hastati"},
+      {BattleBand::Principes, "principes"},
+      {BattleBand::Triarii, "triarii"},
+      {BattleBand::CrescentCentre, "crescent_centre"},
+      {BattleBand::CrescentWing, "crescent_wing"},
+      {BattleBand::Elephants, "elephants"}}}};
 
 constexpr NameTable<FlankPreference, 4> k_flanks{
     {{{FlankPreference::Balanced, "balanced"},
@@ -88,6 +101,12 @@ auto intent_display_name(ArmyFormationIntent intent) -> QString {
     return QCoreApplication::translate("Formation", "Encirclement");
   case ArmyFormationIntent::SiegeEscort:
     return QCoreApplication::translate("Formation", "Siege Escort");
+  case ArmyFormationIntent::TriplexAcies:
+    return QCoreApplication::translate("Formation", "Triplex Acies");
+  case ArmyFormationIntent::ConvexCrescent:
+    return QCoreApplication::translate("Formation", "Convex Crescent");
+  case ArmyFormationIntent::ElephantScreen:
+    return QCoreApplication::translate("Formation", "Elephant Screen");
   }
   return QCoreApplication::translate("Formation", "Faction Default");
 }
@@ -103,7 +122,24 @@ auto all_intents() -> std::vector<ArmyFormationIntent> {
           ArmyFormationIntent::Defensive,
           ArmyFormationIntent::Assault,
           ArmyFormationIntent::Encirclement,
-          ArmyFormationIntent::SiegeEscort};
+          ArmyFormationIntent::SiegeEscort,
+          ArmyFormationIntent::TriplexAcies,
+          ArmyFormationIntent::ConvexCrescent,
+          ArmyFormationIntent::ElephantScreen};
+}
+
+auto is_battle_order_intent(ArmyFormationIntent intent) -> bool {
+  return intent == ArmyFormationIntent::TriplexAcies ||
+         intent == ArmyFormationIntent::ConvexCrescent ||
+         intent == ArmyFormationIntent::ElephantScreen;
+}
+
+auto battle_band_to_string(BattleBand band) -> const char* {
+  return k_bands.to_string(band);
+}
+
+auto try_parse_battle_band(const QString& value) -> std::optional<BattleBand> {
+  return k_bands.parse(value);
 }
 
 auto flank_preference_to_string(FlankPreference pref) -> const char* {

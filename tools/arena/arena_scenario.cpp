@@ -196,6 +196,9 @@ void ArenaScenarioRunner::update(float simulation_dt) {
         m_impl->expectation_active(expectation)) {
       m_impl->check_formation_order(expectation);
     }
+    if (expectation.kind == ArenaExpectationKind::BattleOrderManoeuvreObserved) {
+      m_impl->observe_battle_order(expectation);
+    }
   }
   if (m_impl->elapsed + 1.0e-5F >= m_impl->duration_limit ||
       m_impl->battle_decision_ends_scenario()) {
