@@ -362,6 +362,17 @@ void advance_site_approach(Engine::Core::World& world,
     return;
   }
 
+  if (std::getenv("SOI_TMP_APPROACH") != nullptr && builder.product_type == "wall_segment" && dist_sq < 9.0F) {
+    static int tick = 0;
+    if ((++tick % 30) == 0) {
+      std::fprintf(stderr, "APPROACH id %llu site %.1f,%.1f at %.2f,%.2f dist %.2f edge %.2f foot %d reach %d line %d bypass %d secs %.1f closest %.2f mv %d\n",
+                   static_cast<unsigned long long>(actor.id), builder.construction_site_x, builder.construction_site_z,
+                   transform.position.x, transform.position.z, std::sqrt(dist_sq), edge, reached_footprint ? 1 : 0,
+                   within_reach ? 1 : 0, line_clear ? 1 : 0, builder.bypass_movement_active ? 1 : 0,
+                   builder.site_approach_seconds, builder.site_closest_approach,
+                   actor.movement != nullptr && actor.movement->get_has_target() ? 1 : 0);
+    }
+  }
   record_approach_progress(world, actor, builder, dist_sq, delta_time);
   if (!line_clear) {
     builder.bypass_movement_active = false;
