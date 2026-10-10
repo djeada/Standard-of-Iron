@@ -26,7 +26,8 @@ struct HistoricalCommanderEntry {
 };
 
 // The ten historical cameo commanders of issue #1522: Rome and Masinissa in the
-// front rank, the Barcid officers behind. Two owners only, because cameos serve
+// front rank, the Barcid officers behind. Two owners only (1 and 3; the arena
+// turns owner 2 to face the enemy side), because cameos serve
 // side by side under one owner the way the battle scripts field them.
 constexpr HistoricalCommanderEntry k_historical_front_rank[] = {
     {"sempronius", "roman_sempronius_longus", Nation::RomanRepublic, 1},
@@ -37,18 +38,21 @@ constexpr HistoricalCommanderEntry k_historical_front_rank[] = {
     {"masinissa", "numidian_masinissa", Nation::RomanRepublic, 1},
 };
 constexpr HistoricalCommanderEntry k_historical_back_rank[] = {
-    {"mago", "carthage_mago_barca", Nation::Carthage, 2},
-    {"maharbal", "carthage_maharbal", Nation::Carthage, 2},
-    {"hanno_bomilcar", "carthage_hanno_bomilcar", Nation::Carthage, 2},
-    {"hasdrubal_cavalry", "carthage_hasdrubal_cavalry", Nation::Carthage, 2},
+    {"mago", "carthage_mago_barca", Nation::Carthage, 3},
+    {"maharbal", "carthage_maharbal", Nation::Carthage, 3},
+    {"hanno_bomilcar", "carthage_hanno_bomilcar", Nation::Carthage, 3},
+    {"hasdrubal_cavalry", "carthage_hasdrubal_cavalry", Nation::Carthage, 3},
 };
 
 void add_historical_commander_ranks(ArenaScenarioDefinition& s,
                                     float spacing,
                                     float rank_depth,
                                     bool expect_existence) {
-  auto add_rank = [&](std::span<const HistoricalCommanderEntry> rank, float z) {
-    float const first_x = -0.5F * spacing * static_cast<float>(rank.size() - 1U);
+  auto add_rank = [&](std::span<const HistoricalCommanderEntry> rank,
+                      float z,
+                      float x_shift) {
+    float const first_x =
+        -0.5F * spacing * static_cast<float>(rank.size() - 1U) + x_shift;
     for (std::size_t index = 0; index < rank.size(); ++index) {
       auto const& entry = rank[index];
       QVector3D const position(first_x + spacing * static_cast<float>(index), 0.0F, z);
@@ -71,8 +75,8 @@ void add_historical_commander_ranks(ArenaScenarioDefinition& s,
           expectation(Expect::GroupIsRendered, QString::fromLatin1(entry.group_name)));
     }
   };
-  add_rank(k_historical_front_rank, rank_depth);
-  add_rank(k_historical_back_rank, -rank_depth);
+  add_rank(k_historical_front_rank, rank_depth, 0.0F);
+  add_rank(k_historical_back_rank, -rank_depth, 0.5F * spacing);
 }
 
 } // namespace
@@ -88,14 +92,14 @@ auto build_identity_definitions() -> std::vector<ArenaScenarioDefinition> {
                        "officers and Masinissa) without escorts, for close-shot "
                        "review of helmet, plume, cloak and weapon identity."),
         12.0F,
-        {15.5F, 18.0F, 0.0F});
+        {19.0F, 12.0F, 0.0F});
     s.suppress_terrain_scatter = true;
     s.suppress_terrain_features = true;
     s.camera_focus = QVector3D(0.0F, 1.15F, 0.0F);
     s.select_spawned_units = false;
     s.suppress_spawn_anchor = true;
     s.suppress_ui_overlays = true;
-    s.owner_teams = {{.owner_id = 1, .team_id = 1}, {.owner_id = 2, .team_id = 1}};
+    s.owner_teams = {{.owner_id = 1, .team_id = 1}, {.owner_id = 3, .team_id = 1}};
     add_historical_commander_ranks(s, 3.0F, 1.7F, true);
     s.expectations.push_back(expectation(Expect::FrameBudget, {}, {}, 33.34F, 0.25F));
     result.push_back(std::move(s));
@@ -108,13 +112,13 @@ auto build_identity_definitions() -> std::vector<ArenaScenarioDefinition> {
                        "crest, plume, diadem and cloak colour can be told apart at "
                        "the size a documentary close shot reads them."),
         6.0F,
-        {10.5F, 9.0F, 0.0F});
+        {11.5F, 6.0F, 0.0F});
     s.suppress_terrain_scatter = true;
     s.suppress_terrain_features = true;
     s.select_spawned_units = false;
     s.suppress_spawn_anchor = true;
     s.suppress_ui_overlays = true;
-    s.owner_teams = {{.owner_id = 1, .team_id = 1}, {.owner_id = 2, .team_id = 1}};
+    s.owner_teams = {{.owner_id = 1, .team_id = 1}, {.owner_id = 3, .team_id = 1}};
     s.camera_focus = QVector3D(0.0F, 1.10F, 0.0F);
     add_historical_commander_ranks(s, 1.9F, 1.3F, false);
     result.push_back(std::move(s));
@@ -474,7 +478,7 @@ auto build_identity_definitions() -> std::vector<ArenaScenarioDefinition> {
       float z{};
       float facing{};
     };
-    s.owner_teams = {{.owner_id = 1, .team_id = 1}, {.owner_id = 2, .team_id = 1}};
+    s.owner_teams = {{.owner_id = 1, .team_id = 1}, {.owner_id = 3, .team_id = 1}};
     const WorkerLineupEntry entries[] = {
         {"rome_builder_front",
          Troop::Builder,

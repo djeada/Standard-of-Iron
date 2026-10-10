@@ -270,7 +270,7 @@ void add_side_feathers(std::vector<Primitive>& primitives) {
         {s * 1.32F, 3.30F, -0.40F},
         {s * 1.30F, 3.58F, -0.58F},
     }};
-    add_lobed_mass(primitives, feather, 0.30F, 0.13F, k_plume_slot, 0.42F);
+    add_lobed_mass(primitives, feather, 0.40F, 0.17F, k_plume_slot, 0.55F);
   }
   primitives.push_back(
       generated_sphere(QVector3D(0.0F, 1.80F, -0.06F), 0.26F, k_accent_slot, 1.0F, 2));
@@ -312,7 +312,7 @@ void add_forward_arch_crest(std::vector<Primitive>& primitives) {
       {0.0F, 1.94F, 1.82F},
       {0.0F, 1.46F, 2.08F},
   }};
-  add_lobed_mass(primitives, arch, 0.60F, 0.34F, k_plume_slot, 0.34F);
+  add_lobed_mass(primitives, arch, 0.70F, 0.38F, k_plume_slot, 0.46F);
 }
 
 void add_crown_tail(std::vector<Primitive>& primitives) {
@@ -396,7 +396,7 @@ void add_horsehair_ridge(std::vector<Primitive>& primitives) {
       {0.0F, 1.46F, -1.82F},
       {0.0F, 0.82F, -2.02F},
   }};
-  add_lobed_mass(primitives, ridge, 0.40F, 0.30F, k_plume_slot, 0.38F);
+  add_lobed_mass(primitives, ridge, 0.48F, 0.34F, k_plume_slot, 0.50F);
 }
 
 void add_phrygian_peak(std::vector<Primitive>& primitives) {
@@ -436,7 +436,7 @@ void add_horn_plumes(std::vector<Primitive>& primitives) {
         {s * 1.42F, 3.52F, -0.40F},
         {s * 1.12F, 3.70F, -0.46F},
     }};
-    add_lobed_mass(primitives, horn, 0.30F, 0.12F, k_plume_slot, 0.80F);
+    add_lobed_mass(primitives, horn, 0.38F, 0.15F, k_plume_slot, 0.85F);
   }
 }
 
