@@ -470,8 +470,8 @@ private:
   void paint_ui_overlays();
   void deliver_capture_frame();
   void render_capture_variants(bool flame_card);
-  [[nodiscard]] auto sample_capture_camera(int width, int height) const
-      -> Arena::Promo::CameraSample;
+  [[nodiscard]] auto
+  sample_capture_camera(int width, int height) const -> Arena::Promo::CameraSample;
   void publish_scenario_frame(const Arena::ArenaRenderedFrameTimings& timings);
 
   void apply_scenario_environment(const Arena::ArenaScenarioDefinition& scenario);

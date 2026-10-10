@@ -48,8 +48,8 @@ auto parse_ease(const QString& name) -> Ease {
   return Ease::Smooth;
 }
 
-auto parse_group_export(const QJsonValue& value, const GroupExport& fallback)
-    -> GroupExport {
+auto parse_group_export(const QJsonValue& value,
+                        const GroupExport& fallback) -> GroupExport {
   if (value.isUndefined() || value.isNull()) {
     return fallback;
   }
@@ -83,8 +83,8 @@ auto variant_knob(const QString& key) -> bool {
   return key == QStringLiteral("name") || key == QStringLiteral("width") ||
          key == QStringLiteral("height") || key == QStringLiteral("fov_scale") ||
          key == QStringLiteral("distance_scale") ||
-         key == QStringLiteral("yaw_offset") ||
-         key == QStringLiteral("pitch_offset") || key == QStringLiteral("offset");
+         key == QStringLiteral("yaw_offset") || key == QStringLiteral("pitch_offset") ||
+         key == QStringLiteral("offset");
 }
 
 auto variant_locks(const QString& key) -> bool {
@@ -93,9 +93,10 @@ auto variant_locks(const QString& key) -> bool {
          key == QStringLiteral("duration") || key == QStringLiteral("slow_motion") ||
          key == QStringLiteral("time_lapse") || key == QStringLiteral("report_card") ||
          key == QStringLiteral("flame_card") ||
-         key == QStringLiteral("gameplay_camera") || key == QStringLiteral("variants") ||
-         key == QStringLiteral("vertical") || key == QStringLiteral("lighting") ||
-         key == QStringLiteral("rpg_hud") || key == QStringLiteral("gameplay_ui") ||
+         key == QStringLiteral("gameplay_camera") ||
+         key == QStringLiteral("variants") || key == QStringLiteral("vertical") ||
+         key == QStringLiteral("lighting") || key == QStringLiteral("rpg_hud") ||
+         key == QStringLiteral("gameplay_ui") ||
          key == QStringLiteral("gameplay_ui_all_owners") ||
          key == QStringLiteral("stabilize_seconds");
 }
@@ -103,8 +104,8 @@ auto variant_locks(const QString& key) -> bool {
 void apply_variant_knobs(const QJsonObject& variant, Shot& shot) {
   const float fov_scale =
       static_cast<float>(variant.value(QStringLiteral("fov_scale")).toDouble(1.0));
-  const float distance_scale = static_cast<float>(
-      variant.value(QStringLiteral("distance_scale")).toDouble(1.0));
+  const float distance_scale =
+      static_cast<float>(variant.value(QStringLiteral("distance_scale")).toDouble(1.0));
   const float yaw_offset =
       static_cast<float>(variant.value(QStringLiteral("yaw_offset")).toDouble(0.0));
   const float pitch_offset =
@@ -805,8 +806,7 @@ auto load(const QString& path, QString* error) -> std::optional<Spec> {
       return false;
     }
     if (shot.name.trimmed().isEmpty()) {
-      shot.name = QStringLiteral("shot_%1").arg(
-          ordinal + 1U, 2, 10, QLatin1Char('0'));
+      shot.name = QStringLiteral("shot_%1").arg(ordinal + 1U, 2, 10, QLatin1Char('0'));
     }
     if (shot.duration_seconds <= 0.0F || shot.start_seconds < 0.0F) {
       if (error != nullptr) {
@@ -902,7 +902,6 @@ auto load(const QString& path, QString* error) -> std::optional<Spec> {
     return true;
   };
 
-
   const QJsonValue spec_vertical = root.value(QStringLiteral("vertical"));
   auto parse_variants = [&](const QJsonObject& shot_object, Shot& shot) -> bool {
     QJsonArray entries = shot_object.value(QStringLiteral("variants")).toArray();
@@ -923,14 +922,16 @@ auto load(const QString& path, QString* error) -> std::optional<Spec> {
     for (const QJsonValue entry : entries) {
       if (!entry.isObject()) {
         if (error != nullptr) {
-          *error = QStringLiteral("shot '%1': a variant must be an object").arg(shot.name);
+          *error =
+              QStringLiteral("shot '%1': a variant must be an object").arg(shot.name);
         }
         return false;
       }
       const QJsonObject variant = entry.toObject();
       ShotVariant result;
       result.name = variant.value(QStringLiteral("name")).toString().trimmed();
-      result.width = variant.value(QStringLiteral("width")).toInt(k_default_vertical_width);
+      result.width =
+          variant.value(QStringLiteral("width")).toInt(k_default_vertical_width);
       result.height =
           variant.value(QStringLiteral("height")).toInt(k_default_vertical_height);
       static const QRegularExpression k_variant_name(QStringLiteral("^[a-z0-9_-]+$"));
@@ -942,9 +943,10 @@ auto load(const QString& path, QString* error) -> std::optional<Spec> {
         }
         return false;
       }
-      if (std::any_of(shot.variants.begin(),
-                      shot.variants.end(),
-                      [&](const ShotVariant& other) { return other.name == result.name; })) {
+      if (std::any_of(
+              shot.variants.begin(),
+              shot.variants.end(),
+              [&](const ShotVariant& other) { return other.name == result.name; })) {
         if (error != nullptr) {
           *error = QStringLiteral("shot '%1' declares variant '%2' twice")
                        .arg(shot.name, result.name);

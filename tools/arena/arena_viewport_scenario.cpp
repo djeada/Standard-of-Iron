@@ -746,9 +746,8 @@ void ArenaViewport::update_active_scenario(float simulation_dt) {
   }
 }
 
-auto ArenaViewport::scenario_group_samples(
-    const Arena::Promo::GroupExport& selection) const
-    -> std::vector<Arena::Promo::GroupSample> {
+auto ArenaViewport::scenario_group_samples(const Arena::Promo::GroupExport& selection)
+    const -> std::vector<Arena::Promo::GroupSample> {
   std::vector<Arena::Promo::GroupSample> samples;
   if (m_scenario_runner == nullptr || m_world == nullptr || selection.none()) {
     return samples;
@@ -770,10 +769,11 @@ auto ArenaViewport::scenario_group_samples(
       if (transform == nullptr) {
         continue;
       }
-      sample.units.push_back(Arena::Promo::UnitSample{
-          entity_id,
-          QVector3D(transform->position.x, transform->position.y, transform->position.z),
-          transform->rotation.y});
+      sample.units.push_back(Arena::Promo::UnitSample{entity_id,
+                                                      QVector3D(transform->position.x,
+                                                                transform->position.y,
+                                                                transform->position.z),
+                                                      transform->rotation.y});
     }
     samples.push_back(std::move(sample));
   }

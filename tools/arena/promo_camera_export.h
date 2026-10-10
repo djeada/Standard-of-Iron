@@ -59,7 +59,8 @@ struct GroupFrontage {
 
 [[nodiscard]] auto unit_forward(float yaw_degrees) -> QVector3D;
 
-[[nodiscard]] auto group_frontage(const std::vector<UnitSample>& units) -> GroupFrontage;
+[[nodiscard]] auto
+group_frontage(const std::vector<UnitSample>& units) -> GroupFrontage;
 
 [[nodiscard]] auto matrix_json(const QMatrix4x4& matrix) -> QJsonArray;
 
@@ -76,10 +77,10 @@ struct FrameStamp {
   int output_height{0};
 };
 
-[[nodiscard]] auto camera_frame_json(const FrameStamp& stamp,
-                                     const CameraSample& camera,
-                                     const std::vector<GroupSample>& groups)
-    -> QJsonObject;
+[[nodiscard]] auto
+camera_frame_json(const FrameStamp& stamp,
+                  const CameraSample& camera,
+                  const std::vector<GroupSample>& groups) -> QJsonObject;
 
 struct TrackHeader {
   QString spec_id;

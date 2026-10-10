@@ -1080,7 +1080,8 @@ private:
                                    m_spec.width,
                                    m_spec.height),
                       &error)) {
-      qWarning().noquote() << QStringLiteral("Promo shot '%1': %2").arg(shot.name, error);
+      qWarning().noquote()
+          << QStringLiteral("Promo shot '%1': %2").arg(shot.name, error);
     }
     m_frame_groups.clear();
     m_primary_wrote_frame = false;
@@ -1124,7 +1125,9 @@ private:
       target.width = variant.width * m_spec.supersample;
       target.height = variant.height * m_spec.supersample;
       target.lens = m_viewport.cinematic_state();
-      target.sink = [this, slot](const QImage& frame) { on_variant_frame(slot, frame); };
+      target.sink = [this, slot](const QImage& frame) {
+        on_variant_frame(slot, frame);
+      };
       targets.push_back(std::move(target));
       recording->spec_index = static_cast<std::size_t>(&variant - shot.variants.data());
       m_variants.push_back(std::move(recording));
@@ -1136,11 +1139,11 @@ private:
     m_viewport.set_capture_variants(std::move(targets));
   }
 
-  [[nodiscard]] auto place_camera(const Shot& shot,
-                                  const QVector3D& focus,
-                                  float shot_time,
-                                  std::optional<GroundFootprint>* footprint)
-      -> QVector3D {
+  [[nodiscard]] auto
+  place_camera(const Shot& shot,
+               const QVector3D& focus,
+               float shot_time,
+               std::optional<GroundFootprint>* footprint) -> QVector3D {
     QVector3D target;
     if (shot.rig == Rig::Free) {
       const QVector3D anchor = focus + shot.focus.offset;
@@ -1183,11 +1186,12 @@ private:
           target, pose.distance, pose.pitch, pose.yaw, pose.fov, pose.roll);
     }
     if (footprint != nullptr) {
-      *footprint = view_ground_footprint(
-          pose,
-          focus + shot.focus.offset,
-          static_cast<float>(m_spec.width) / static_cast<float>(std::max(1, m_spec.height)),
-          0.0F);
+      *footprint =
+          view_ground_footprint(pose,
+                                focus + shot.focus.offset,
+                                static_cast<float>(m_spec.width) /
+                                    static_cast<float>(std::max(1, m_spec.height)),
+                                0.0F);
     }
     return target;
   }
@@ -1428,8 +1432,10 @@ private:
       end_pass();
       return;
     }
-    m_track.write(camera_frame_json(
-        frame_stamp(m_frames_written, m_spec.width, m_spec.height), CameraSample{}, {}));
+    m_track.write(
+        camera_frame_json(frame_stamp(m_frames_written, m_spec.width, m_spec.height),
+                          CameraSample{},
+                          {}));
     ++m_frames_written;
     ++m_card_frames_written;
     if (m_audio != nullptr) {
@@ -1509,9 +1515,10 @@ private:
     }
     m_frame_groups = m_viewport.scenario_group_samples(current_shot().overlay_groups);
     write_terrain_once(current_shot());
-    m_track.write(camera_frame_json(frame_stamp(m_frames_written, m_spec.width, m_spec.height),
-                                    m_viewport.capture_camera(),
-                                    m_frame_groups));
+    m_track.write(
+        camera_frame_json(frame_stamp(m_frames_written, m_spec.width, m_spec.height),
+                          m_viewport.capture_camera(),
+                          m_frame_groups));
     ++m_frames_written;
     m_last_frame = output;
     m_primary_wrote_frame = true;
@@ -1764,7 +1771,8 @@ private:
       result.frames = recording.frames_written;
       if (m_options.write_posters && recording.last_frame.has_value()) {
         result.poster_path = recording.clip_path;
-        result.poster_path.replace(result.poster_path.size() - 4, 4, QStringLiteral(".png"));
+        result.poster_path.replace(
+            result.poster_path.size() - 4, 4, QStringLiteral(".png"));
         recording.last_frame->save(result.poster_path);
       }
       variant_results.push_back(result);
@@ -1782,12 +1790,12 @@ private:
           const QString variant_wav = variant.clip_path + QStringLiteral(".wav");
           QFile::remove(variant_wav);
           if (variant.frames > 0 && QFile::copy(wav_path, variant_wav)) {
-            m_pending_audio.push_back(PendingAudio{variant.clip_path,
-                                                   variant_wav,
-                                                   shot.name + QLatin1Char('.') +
-                                                       variant.name,
-                                                   m_audio->clip_seconds(),
-                                                   true});
+            m_pending_audio.push_back(
+                PendingAudio{variant.clip_path,
+                             variant_wav,
+                             shot.name + QLatin1Char('.') + variant.name,
+                             m_audio->clip_seconds(),
+                             true});
           }
         }
         m_pending_audio.push_back(PendingAudio{

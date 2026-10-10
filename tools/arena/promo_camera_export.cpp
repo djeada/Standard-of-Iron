@@ -81,9 +81,8 @@ auto matrix_json(const QMatrix4x4& matrix) -> QJsonArray {
 }
 
 auto vector_json(const QVector3D& vector) -> QJsonArray {
-  return QJsonArray{rounded(vector.x(), 1e4),
-                    rounded(vector.y(), 1e4),
-                    rounded(vector.z(), 1e4)};
+  return QJsonArray{
+      rounded(vector.x(), 1e4), rounded(vector.y(), 1e4), rounded(vector.z(), 1e4)};
 }
 
 auto group_json(const GroupSample& group) -> QJsonObject {
@@ -95,9 +94,9 @@ auto group_json(const GroupSample& group) -> QJsonObject {
   }
   result.insert(QStringLiteral("centroid"), vector_json(frontage.centroid));
   result.insert(QStringLiteral("forward"), vector_json(frontage.forward));
-  result.insert(QStringLiteral("front"),
-                QJsonArray{vector_json(frontage.front_left),
-                           vector_json(frontage.front_right)});
+  result.insert(
+      QStringLiteral("front"),
+      QJsonArray{vector_json(frontage.front_left), vector_json(frontage.front_right)});
   result.insert(QStringLiteral("width"), rounded(frontage.width, 1e3));
   result.insert(QStringLiteral("depth"), rounded(frontage.depth, 1e3));
   QJsonArray units;
@@ -187,7 +186,8 @@ auto CameraTrackWriter::open(const QString& path,
     return false;
   }
   m_frames = 0;
-  m_file->write(QJsonDocument(track_header_json(header)).toJson(QJsonDocument::Compact));
+  m_file->write(
+      QJsonDocument(track_header_json(header)).toJson(QJsonDocument::Compact));
   m_file->write("\n");
   return true;
 }
@@ -212,8 +212,8 @@ void CameraTrackWriter::close() {
 auto terrain_grid_for(float half_extent, float spacing) -> TerrainGrid {
   TerrainGrid grid;
   grid.spacing = std::max(0.05F, spacing);
-  const int half_cells =
-      std::max(1, static_cast<int>(std::ceil(std::max(0.0F, half_extent) / grid.spacing)));
+  const int half_cells = std::max(
+      1, static_cast<int>(std::ceil(std::max(0.0F, half_extent) / grid.spacing)));
   grid.columns = (half_cells * 2) + 1;
   grid.rows = grid.columns;
   grid.origin_x = -static_cast<float>(half_cells) * grid.spacing;
@@ -230,7 +230,8 @@ auto write_terrain_grid(const QString& json_path,
   QFile data(info.dir().filePath(data_name));
   if (!data.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
     if (error != nullptr) {
-      *error = QStringLiteral("could not write terrain heights %1").arg(data.fileName());
+      *error =
+          QStringLiteral("could not write terrain heights %1").arg(data.fileName());
     }
     return false;
   }
@@ -260,22 +261,21 @@ auto write_terrain_grid(const QString& json_path,
   }
   header.write(
       QJsonDocument(
-          QJsonObject{
-              {QStringLiteral("type"), QStringLiteral("soi_terrain_heights")},
-              {QStringLiteral("version"), 1},
-              {QStringLiteral("data"), data_name},
-              {QStringLiteral("encoding"), QStringLiteral("float32le")},
-              {QStringLiteral("layout"), QStringLiteral("row_major_z_then_x")},
-              {QStringLiteral("origin"),
-               QJsonArray{static_cast<double>(grid.origin_x),
-                          static_cast<double>(grid.origin_z)}},
-              {QStringLiteral("spacing"), static_cast<double>(grid.spacing)},
-              {QStringLiteral("columns"), grid.columns},
-              {QStringLiteral("rows"), grid.rows},
-              {QStringLiteral("min"), static_cast<double>(lowest)},
-              {QStringLiteral("max"), static_cast<double>(highest)},
-              {QStringLiteral("sampler"),
-               QStringLiteral("TerrainService::get_terrain_height")}})
+          QJsonObject{{QStringLiteral("type"), QStringLiteral("soi_terrain_heights")},
+                      {QStringLiteral("version"), 1},
+                      {QStringLiteral("data"), data_name},
+                      {QStringLiteral("encoding"), QStringLiteral("float32le")},
+                      {QStringLiteral("layout"), QStringLiteral("row_major_z_then_x")},
+                      {QStringLiteral("origin"),
+                       QJsonArray{static_cast<double>(grid.origin_x),
+                                  static_cast<double>(grid.origin_z)}},
+                      {QStringLiteral("spacing"), static_cast<double>(grid.spacing)},
+                      {QStringLiteral("columns"), grid.columns},
+                      {QStringLiteral("rows"), grid.rows},
+                      {QStringLiteral("min"), static_cast<double>(lowest)},
+                      {QStringLiteral("max"), static_cast<double>(highest)},
+                      {QStringLiteral("sampler"),
+                       QStringLiteral("TerrainService::get_terrain_height")}})
           .toJson(QJsonDocument::Indented));
   return true;
 }

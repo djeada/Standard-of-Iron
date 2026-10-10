@@ -661,16 +661,6 @@ void ArenaViewport::set_cinematic_state(const CinematicState& state) {
 
 void ArenaViewport::set_capture_variants(std::vector<CaptureVariant> variants) {
   m_capture_variants = std::move(variants);
-  if (m_variant_targets.size() > m_capture_variants.size() ||
-      m_capture_variants.empty()) {
-    if (context() != nullptr && context()->isValid()) {
-      makeCurrent();
-      m_variant_targets.clear();
-      doneCurrent();
-    } else {
-      m_variant_targets.clear();
-    }
-  }
 }
 
 void ArenaViewport::set_capture_variant_lens(std::size_t index,
@@ -716,7 +706,7 @@ void ArenaViewport::render_capture_variants(bool flame_card) {
   const float far_plane = m_camera->get_far();
   const Arena::Promo::CameraSample primary_camera = m_capture_camera;
 
-  if (m_variant_targets.size() < m_capture_variants.size()) {
+  if (m_variant_targets.size() != m_capture_variants.size()) {
     m_variant_targets.resize(m_capture_variants.size());
   }
   for (std::size_t index = 0; index < m_capture_variants.size(); ++index) {
