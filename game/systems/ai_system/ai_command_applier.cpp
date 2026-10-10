@@ -33,6 +33,7 @@
 #include "../player_resource_registry.h"
 #include "../troop_profile_service.h"
 #include "ai_utils.h"
+#include "behaviors/builder_catalog.h"
 #include "systems/ai_system/ai_types.h"
 #include "units/spawn_type.h"
 #include "units/troop_type.h"
@@ -220,6 +221,7 @@ auto AICommandApplier::apply(Engine::Core::World& world,
       constexpr float k_wall_link_nudge_radius = 0.0F;
       const bool wall_link =
           Game::Systems::is_wall_link_building_type(command.construction_type);
+      const bool fortification = is_fortification_or_tower(command.construction_type);
       const auto site = Game::Systems::find_clear_site(
           world,
           command.construction_type,
@@ -228,8 +230,14 @@ auto AICommandApplier::apply(Engine::Core::World& world,
           command.construction_rotation_y,
           command.units,
           command.construction_keep_out,
-          true);
-      if (!site.has_value()) {
+          !fortification);
+      if (!site.has_value() || (fortification && Game::Systems::troops_stand_on(
+                                                     world,
+                                                     command.construction_type,
+                                                     site->x(),
+                                                     site->z(),
+                                                     command.construction_rotation_y,
+                                                     command.units))) {
         ++report.refused_construction;
         break;
       }
