@@ -106,4 +106,10 @@ The validation output shows for each mission:
 - Path length and average segment size
 - Confirmation that path will render as continuous GL_LINE_STRIP in C++
 
+**Historical march (for the campaign map film):** the same run also writes a
+`"march"` key: one named route from Carthago Nova over the Alps to Cannae and on
+to Zama, with dated stops (`MARCH_STOPS`). The game ignores it; the mission
+`lines` above are unchanged. `tools/campaign_film` draws it progressively; see
+`docs/CAMPAIGN_MAP_FILM.md`.
+
 **Note**: This script does NOT require `provinces.json` - it calculates UV coordinates directly from lon/lat. If you need to generate `provinces.json` for the full campaign map visualization, run `provinces.py` after running the full pipeline.

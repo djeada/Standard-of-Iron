@@ -67,6 +67,7 @@ boundaries between `game/`, `render/`, `app/`, `ui/`, `tools/` and `tests/`.
 - [BATTLEFIELD_CAPTURE.md](BATTLEFIELD_CAPTURE.md) — battlefield capture runner
 - [PROMO_CAPTURE.md](PROMO_CAPTURE.md), [TRAILER.md](TRAILER.md) — promo and trailer capture
 - [DOCUMENTARY.md](DOCUMENTARY.md) — documentary post-production: narration, series graphics, 4K delivery, reels, score plan
+- [CAMPAIGN_MAP_FILM.md](CAMPAIGN_MAP_FILM.md) — filming the campaign map: camera keys, the route drawing in, regions, markers, exported army counters
 
 ## Save and replay
 

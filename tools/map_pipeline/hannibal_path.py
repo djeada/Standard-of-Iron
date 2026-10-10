@@ -483,6 +483,156 @@ def simulate_cpp_rendering(lines: List[List[List[float]]]) -> bool:
     return all_valid
 
 
+# The historical march, for the campaign map film (docs/CAMPAIGN_MAP_FILM.md).
+#
+# The eight mission lines above are the game's campaign route and are left
+# exactly as they are. The march is a separate, named route that follows
+# Polybius (III.33-118) and Livy (XXI-XXII, XXX): it starts at Carthago Nova,
+# not Carthage, crosses the Alps instead of cutting from Massalia to
+# Mediolanum, and runs on to Cannae, Capua, Croton and Zama. Every stop is a
+# named place with real coordinates, so the film can reveal the line stop by
+# stop, pin markers to battle sites and anchor army figures to the head.
+#
+# kind: city | battle | crossing | pass | waypoint. Waypoints shape the line
+# and carry no label. leg: the kind of ground between this stop and the next.
+MARCH_STOPS: List[dict] = [
+    {"id": "carthago_nova", "name": "Carthago Nova", "lonlat": (-0.98, 37.60),
+     "date": "Spring 218 BC", "kind": "city"},
+    {"id": "saguntum", "name": "Saguntum", "lonlat": (-0.27, 39.68),
+     "date": "219 BC", "kind": "battle"},
+    {"id": "ebro", "name": "Ebro", "lonlat": (0.52, 40.81),
+     "date": "Summer 218 BC", "kind": "crossing"},
+    {"id": "pyrenees", "name": "Pyrenees", "lonlat": (2.87, 42.47),
+     "date": "Summer 218 BC", "kind": "pass"},
+    {"id": "ruscino", "name": "Ruscino", "lonlat": (2.90, 42.70),
+     "date": "", "kind": "waypoint"},
+    {"id": "narbo", "name": "Narbo", "lonlat": (3.00, 43.18),
+     "date": "", "kind": "waypoint"},
+    {"id": "baeterrae", "name": "Baeterrae", "lonlat": (3.22, 43.34),
+     "date": "", "kind": "waypoint"},
+    {"id": "nemausus", "name": "Nemausus", "lonlat": (4.36, 43.84),
+     "date": "", "kind": "waypoint"},
+    {"id": "rhone", "name": "Rhône Crossing", "lonlat": (4.78, 44.05),
+     "date": "September 218 BC", "kind": "battle"},
+    {"id": "the_island", "name": "The Island", "lonlat": (4.87, 44.97),
+     "date": "", "kind": "waypoint"},
+    {"id": "cularo", "name": "Cularo", "lonlat": (5.72, 45.19),
+     "date": "", "kind": "waypoint"},
+    {"id": "isere_valley", "name": "Isère valley", "lonlat": (6.05, 45.50),
+     "date": "", "kind": "waypoint"},
+    {"id": "alps", "name": "The Alps", "lonlat": (6.93, 45.24),
+     "date": "October 218 BC", "kind": "battle"},
+    {"id": "taurasia", "name": "Taurasia", "lonlat": (7.68, 45.07),
+     "date": "November 218 BC", "kind": "city"},
+    {"id": "ticinus", "name": "Ticinus", "lonlat": (8.88, 45.20),
+     "date": "November 218 BC", "kind": "battle"},
+    {"id": "trebia", "name": "Trebia", "lonlat": (9.58, 45.02),
+     "date": "December 218 BC", "kind": "battle"},
+    {"id": "bononia", "name": "Bononia", "lonlat": (11.34, 44.49),
+     "date": "Spring 217 BC", "kind": "waypoint"},
+    {"id": "pistoria", "name": "Pistoria", "lonlat": (10.92, 43.93),
+     "date": "", "kind": "waypoint"},
+    {"id": "arretium", "name": "Arretium", "lonlat": (11.88, 43.46),
+     "date": "", "kind": "waypoint"},
+    {"id": "trasimene", "name": "Lake Trasimene", "lonlat": (12.08, 43.18),
+     "date": "June 217 BC", "kind": "battle"},
+    {"id": "spoletium", "name": "Spoletium", "lonlat": (12.74, 42.73),
+     "date": "", "kind": "waypoint"},
+    {"id": "hadria", "name": "Hadria", "lonlat": (13.97, 42.66),
+     "date": "", "kind": "waypoint"},
+    {"id": "gerunium", "name": "Gerunium", "lonlat": (14.97, 41.73),
+     "date": "Winter 217 BC", "kind": "city"},
+    {"id": "cannae", "name": "Cannae", "lonlat": (16.13, 41.31),
+     "date": "2 August 216 BC", "kind": "battle"},
+    {"id": "capua", "name": "Capua", "lonlat": (14.25, 41.08),
+     "date": "216 BC", "kind": "city"},
+    {"id": "tarentum", "name": "Tarentum", "lonlat": (17.24, 40.47),
+     "date": "212 BC", "kind": "city"},
+    {"id": "ad_tarentum", "name": "Tarentine hinterland", "lonlat": (17.05, 40.62),
+     "date": "", "kind": "waypoint"},
+    {"id": "metapontum", "name": "Metapontum", "lonlat": (16.75, 40.45),
+     "date": "", "kind": "waypoint"},
+    {"id": "thurii", "name": "Thurii", "lonlat": (16.42, 39.73),
+     "date": "", "kind": "waypoint"},
+    {"id": "croton", "name": "Croton", "lonlat": (17.12, 39.08),
+     "date": "203 BC", "kind": "city", "leg": "open_sea"},
+    {"id": "hadrumetum", "name": "Hadrumetum", "lonlat": (10.64, 35.83),
+     "date": "203 BC", "kind": "city"},
+    {"id": "zama", "name": "Zama", "lonlat": (9.40, 36.10),
+     "date": "202 BC", "kind": "battle"},
+]
+
+MARCH_KINDS = {"city", "battle", "crossing", "pass", "waypoint"}
+
+
+def build_march(bounds: dict) -> dict:
+    """Build the named historical march as one polyline plus stop indices."""
+    points: List[List[float]] = []
+    stops: List[dict] = []
+    for i, stop in enumerate(MARCH_STOPS):
+        u, v = lon_lat_to_uv(stop["lonlat"][0], stop["lonlat"][1], bounds)
+        stops.append(
+            {
+                "id": stop["id"],
+                "name": stop["name"],
+                "date": stop["date"],
+                "kind": stop["kind"],
+                "lonlat": [float(stop["lonlat"][0]), float(stop["lonlat"][1])],
+                "uv": [float(u), float(v)],
+                "index": len(points),
+            }
+        )
+        if i + 1 == len(MARCH_STOPS):
+            points.append([float(u), float(v)])
+            break
+        nxt = MARCH_STOPS[i + 1]
+        nu, nv = lon_lat_to_uv(nxt["lonlat"][0], nxt["lonlat"][1], bounds)
+        leg = stop.get("leg", "land")
+        segment = add_coastal_waypoints((u, v), (nu, nv), leg, 1)
+        for pu, pv in segment[:-1]:
+            points.append([float(pu), float(pv)])
+    return {
+        "source": "Polybius III.33-118, Livy XXI-XXII and XXX",
+        "points": points,
+        "stops": stops,
+    }
+
+
+def validate_march(march: dict) -> bool:
+    """The march must be continuous, inside the map and reference real points."""
+    points = march["points"]
+    stops = march["stops"]
+    ok = True
+    ids = set()
+    for stop in stops:
+        if stop["id"] in ids:
+            print(f"ERROR: march stop id '{stop['id']}' is duplicated")
+            ok = False
+        ids.add(stop["id"])
+        if stop["kind"] not in MARCH_KINDS:
+            print(f"ERROR: march stop '{stop['id']}' has unknown kind {stop['kind']}")
+            ok = False
+        u, v = stop["uv"]
+        if not (0.0 <= u <= 1.0 and 0.0 <= v <= 1.0):
+            print(f"ERROR: march stop '{stop['id']}' lies outside the map bounds")
+            ok = False
+        index = stop["index"]
+        if index >= len(points) or points[index] != stop["uv"]:
+            print(f"ERROR: march stop '{stop['id']}' index does not land on its point")
+            ok = False
+    indices = [stop["index"] for stop in stops]
+    if indices != sorted(indices) or len(set(indices)) != len(indices):
+        print("ERROR: march stop indices must strictly increase")
+        ok = False
+    for i in range(len(points) - 1):
+        p1, p2 = points[i], points[i + 1]
+        distance = ((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2) ** 0.5
+        if distance > MAX_SEGMENT_DISTANCE * 1.6:
+            print(f"ERROR: march segment {i}->{i + 1} jumps {distance:.4f} UV")
+            ok = False
+    return ok
+
+
 def main() -> None:
     """Generate and validate Hannibal's campaign paths."""
     print("Generating Hannibal's campaign paths...\n")
@@ -503,12 +653,18 @@ def main() -> None:
         print("\nWARNING: Some paths may have rendering issues in C++")
         print("Review the warnings above and consider adjusting waypoint density.")
 
+    march = build_march(bounds)
+    if not validate_march(march):
+        print("\nERROR: Historical march validation failed!")
+        sys.exit(1)
+
     OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    OUT_PATH.write_text(json.dumps({"lines": lines}, indent=2))
+    OUT_PATH.write_text(json.dumps({"lines": lines, "march": march}, indent=2))
 
     print(f"\n✓ Successfully wrote validated paths to {OUT_PATH}")
     print(f"  Total missions: {len(lines)}")
     print(f"  Total waypoints: {sum(len(line) for line in lines)}")
+    print(f"  Historical march: {len(march['stops'])} stops, {len(march['points'])} points")
 
 
 if __name__ == "__main__":

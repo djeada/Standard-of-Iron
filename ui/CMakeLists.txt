@@ -91,6 +91,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
         STATIC
         gl_view.cpp
         campaign_map_view.cpp
+        campaign_map_film.cpp
         commander_portrait_view.cpp
         commander_portrait_scenes.cpp
     )
