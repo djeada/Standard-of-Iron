@@ -1,9 +1,11 @@
 #include "battle_script_headless.h"
 
+#include <QDebug>
 #include <QElapsedTimer>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QStringList>
 
 #include <algorithm>
 #include <memory>
@@ -161,11 +163,51 @@ auto run(const ArenaScenarioDefinition& definition, const Options& options) -> R
   result.started = true;
   const float step = std::max(options.fixed_step_seconds, 1.0e-3F);
   float next_digest = 0.0F;
+  float next_trace = 0.0F;
+  const auto trace = [&]() {
+    QStringList parts;
+    for (const auto& group : definition.groups) {
+      int living = 0;
+      int health = 0;
+      QVector3D sum;
+      for (const auto id : runner.group_entities(group.name)) {
+        const auto* unit = world.try_get<Engine::Core::UnitComponent>(id);
+        const auto* transform = world.try_get<Engine::Core::TransformComponent>(id);
+        if (unit != nullptr && unit->health > 0) {
+          ++living;
+          health += unit->health;
+          if (transform != nullptr) {
+            sum += QVector3D(transform->position.x, 0.0F, transform->position.z);
+          }
+        }
+      }
+      if (runner.group_entities(group.name).empty()) {
+        continue;
+      }
+      const QVector3D centre =
+          living > 0 ? sum / static_cast<float>(living) : QVector3D();
+      parts.push_back(QStringLiteral("%1 %2/%3 hp%4 @(%5,%6)")
+                          .arg(group.name)
+                          .arg(living)
+                          .arg(runner.group_entities(group.name).size())
+                          .arg(health)
+                          .arg(static_cast<int>(centre.x()))
+                          .arg(static_cast<int>(centre.z())));
+    }
+    qInfo().noquote() << QStringLiteral("[%1 s] %2")
+                             .arg(QString::number(runner.elapsed_seconds(), 'f', 0))
+                             .arg(parts.join(QStringLiteral(" | ")));
+  };
   while (!runner.finished()) {
     if (runner.elapsed_seconds() + 1.0e-4F >= next_digest) {
       result.digests.push_back(
           {runner.elapsed_seconds(), Game::Session::world_digest(world)});
       next_digest += std::max(options.digest_interval_seconds, step);
+    }
+    if (options.trace_interval_seconds > 0.0F &&
+        runner.elapsed_seconds() + 1.0e-4F >= next_trace) {
+      trace();
+      next_trace += options.trace_interval_seconds;
     }
     world.update(step);
     runner.update(step);

@@ -422,6 +422,10 @@ auto main(int argc, char** argv) -> int {
     }
     Arena::Headless::Options headless;
     headless.duration_override = parser.value(duration_option).toFloat();
+    headless.trace_interval_seconds =
+        qEnvironmentVariableIntValue("SOI_BATTLE_TRACE") > 0
+            ? static_cast<float>(qEnvironmentVariableIntValue("SOI_BATTLE_TRACE"))
+            : 0.0F;
     int status = 0;
     for (const QString& id : battle_script_ids) {
       const auto* definition = Arena::Scenarios::find_definition(id);

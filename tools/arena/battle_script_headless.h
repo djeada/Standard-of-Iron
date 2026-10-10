@@ -15,6 +15,8 @@ struct Options {
   float duration_override{0.0F};
 
   float digest_interval_seconds{1.0F};
+
+  float trace_interval_seconds{0.0F};
 };
 
 struct DigestSample {
