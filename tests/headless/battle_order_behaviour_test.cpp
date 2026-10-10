@@ -218,6 +218,7 @@ protected:
     bool saw_yielding{false};
     float centre_retreat{0.0F};
     float wing_drift_while_holding{0.0F};
+    int centre_counted{0};
     std::vector<QVector3D> final_positions;
   };
 
@@ -284,9 +285,17 @@ protected:
         return;
       }
       auto const& state = live->manoeuvre;
-      if (state.yielding && !result.saw_yielding) {
+      // The furthest forward each centre troop got while the centre was pressed.
+      if (state.yielding) {
         for (auto const id : centre) {
-          forward_at_contact[id] = QVector3D::dotProduct(position_of(id), forward);
+          if (!alive(id)) {
+            continue;
+          }
+          float const ahead = QVector3D::dotProduct(position_of(id), forward);
+          auto [it, inserted] = forward_at_contact.try_emplace(id, ahead);
+          if (!inserted) {
+            it->second = std::max(it->second, ahead);
+          }
         }
       }
       result.saw_yielding = result.saw_yielding || state.yielding;
@@ -314,6 +323,7 @@ protected:
       ++counted;
     }
     result.centre_retreat = counted > 0 ? retreat / static_cast<float>(counted) : 0.0F;
+    result.centre_counted = counted;
     for (auto const id : carthage) {
       result.final_positions.push_back(position_of(id));
     }
@@ -333,7 +343,7 @@ TEST_F(BattleOrderBehaviourTest, CrescentCentreGivesGroundWhileTheWingsHold) {
   EXPECT_TRUE(result.saw_yielding);
   EXPECT_GT(result.centre_yield, 0.7F);
   // The pressed centre stepped back toward its own lines...
-  EXPECT_GT(result.centre_retreat, 3.0F);
+  EXPECT_GT(result.centre_retreat, 3.0F) << result.centre_counted << " centre troops measured";
   // ...while the wings stood...
   EXPECT_LT(result.wing_drift_while_holding, 1.5F);
   // ...until, given ground enough, they wheeled in.
