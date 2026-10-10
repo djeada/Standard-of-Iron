@@ -1948,7 +1948,7 @@ metres in scenario space, centred on the map; yaw 0 faces +z and positive
   `boundary_mountains`, `scatter`, `props`, `rivers` (`points`, `width`),
   `lakes` (`center`, `width`, `depth`, `rotation`), `hills` (`center`,
   `radius`, `height`, `plateau`), `bridges` (`from`, `to`, `width`). Both forms
-  accept `fords` (see the extension points).
+  accept `fords` (see "Formations, commanders and fords").
 - `environment`: `hour`, `lighting_profile`, `time_mode` (`locked` or
   `continuous`), `day_length`, `fog_density`, `exposure`.
 - `weather`: `rain`, `storm`, `snow`, `wind_strength`, `wind_direction`,
@@ -2036,32 +2036,29 @@ shore at 05:36 into a 10 m lake fog bank (`lake_fog`, density 0.92) that thins
 to 0.18 by 190 s while the hour brightens to 07:24 and the haze clears; the
 hill fog lifts when the ambush is revealed.
 
-### Extension points (#1522, #1523, #1527)
-
-These are the only places that need to change when the parallel mechanics land:
+### Formations, commanders and fords (#1522, #1523, #1527)
 
 - **Formations (#1527).** A group's or a `formation` action's `formation` is
   resolved by `resolve_formation()` → `Game::Formation::try_parse_intent()`, and
-  the error lists `known_formation_names()` from `all_intents()`. A new intent
-  added to the formation system's name table (`triplex_acies`,
-  `convex_crescent`, `elephant_screen`) is accepted with no loader change. A
-  group with a `formation` is spawned on its geometric layout and then handed
-  to `ArmyFormationService` with `FormArmy` at t = 0 (anchor = the deployment
+  the error lists `known_formation_names()` from `all_intents()`, which include
+  `triplex_acies`, `convex_crescent` and `elephant_screen`. A group with a
+  `formation` is spawned on its geometric layout and then handed to
+  `ArmyFormationService` with `FormArmy` at t = 0 (anchor = the deployment
   centre, facing and frontage from the layout), so the formation system owns
-  the final slots. Cannae and Zama carry `todo` notes where the names go.
+  the final slots. Cannae's Gallic centre forms `convex_crescent` and Zama's
+  Roman lines `triplex_acies`.
 - **Commanders (#1522).** `catalog_id` is resolved by `resolve_commander()`
-  against `all_commander_definitions()`; the spawned troop type and nation come
-  from the catalog entry. Historical commanders that have no entry yet use an
-  existing id plus a `todo` naming the planned id (e.g. Varro on
-  `roman_field_commander`), so the swap is a one-line edit of `catalog_id`.
-  If #1522 adds catalog entries that share a troop type, `resolve_commander`
-  is where the id-to-spawn mapping has to grow.
-- **Fords (#1523).** `terrain.fords[]` (`river` index, `at`, `width`) is parsed
-  and validated into `FordSegment`s and handed to `apply_fords()`, which today
-  only returns the warning that the ford is not applied (the river stays
-  impassable except at bridges). Implement `apply_fords()` to mark the
-  segment shallow/walkable in the compiled scenario; nothing else changes.
-  `trebia.json` declares the Roman crossing.
+  through `find_commander_definition()`, which covers the six playable
+  commanders and the historical cameos (`roman_terentius_varro`,
+  `roman_aemilius_paullus`, `carthage_mago_barca`, ...). A cameo spawns on its
+  borrowed commander body with its own look (`ArenaScenarioGroup::commander_id`)
+  and does not occupy the owner's commander slot. Commanders with no catalog
+  entry (Servilius, Laelius) keep a stand-in id and a `todo` note.
+- **Fords (#1523).** `terrain.fords[]` takes `id`, `river`, `at`, `width` (how
+  far the shallows run along the river) and optional `depth`, `speed`, `cold`
+  and `exposure` (the `FordProfile`, clamped to the game's limits).
+  `apply_fords()` turns them into `ArenaScenarioDefinition::fords`, which the
+  arena applies like map fords. `trebia.json` declares the Roman crossing.
 
 ### Determinism
 

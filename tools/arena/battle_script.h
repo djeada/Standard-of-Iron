@@ -94,9 +94,12 @@ struct CompileResult {
 resolve_commander(const QString& catalog_id) -> const Game::Units::CommanderDefinition*;
 
 struct FordSegment {
+  QString id;
   int river{0};
   QVector3D at;
+  // How far the shallows run along the river (metres).
   float width{6.0F};
+  Game::Map::FordProfile profile;
 };
 
 [[nodiscard]] auto apply_fords(const std::vector<FordSegment>& fords,

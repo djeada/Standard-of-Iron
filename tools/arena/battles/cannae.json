@@ -151,8 +151,7 @@
         {
           "id": "paullus",
           "historical_name": "Lucius Aemilius Paullus",
-          "catalog_id": "roman_veteran_consul",
-          "todo": "#1522: swap to catalog id 'paullus'",
+          "catalog_id": "roman_aemilius_paullus",
           "with": "roman_horse"
         }
       ]
@@ -184,8 +183,7 @@
         {
           "id": "varro",
           "historical_name": "Gaius Terentius Varro",
-          "catalog_id": "roman_field_commander",
-          "todo": "#1522: swap to catalog id 'varro'",
+          "catalog_id": "roman_terentius_varro",
           "with": "allied_horse"
         }
       ]
@@ -201,7 +199,6 @@
         {
           "id": "gallic_centre",
           "label": "Gauls in the convex crescent",
-          "todo": "#1527: once the convex crescent formation exists, add \"formation\": \"convex_crescent\" here",
           "troop": "swordsman",
           "nation": "gauls",
           "historical": 16000,
@@ -213,7 +210,8 @@
             ],
             "ranks": 3,
             "bulge": 30
-          }
+          },
+          "formation": "convex_crescent"
         },
         {
           "id": "iberian_centre",
@@ -304,8 +302,7 @@
         {
           "id": "mago",
           "historical_name": "Mago Barca",
-          "catalog_id": "carthage_spear_commander",
-          "todo": "#1522: swap to catalog id 'mago'",
+          "catalog_id": "carthage_mago_barca",
           "with": "iberian_centre",
           "offset": [
             18,
@@ -361,8 +358,7 @@
         {
           "id": "hasdrubal",
           "historical_name": "Hasdrubal (cavalry commander)",
-          "catalog_id": "carthage_bow_commander",
-          "todo": "#1522: swap to catalog id 'hasdrubal'",
+          "catalog_id": "carthage_hasdrubal_cavalry",
           "with": "gallic_horse"
         }
       ]
@@ -399,8 +395,7 @@
         {
           "id": "hanno",
           "historical_name": "Hanno son of Bomilcar",
-          "catalog_id": "carthage_spear_commander",
-          "todo": "#1522: swap to catalog id 'hanno_son_of_bomilcar'",
+          "catalog_id": "carthage_hanno_bomilcar",
           "with": "numidians"
         }
       ]

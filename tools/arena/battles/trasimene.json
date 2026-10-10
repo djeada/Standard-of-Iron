@@ -207,8 +207,7 @@
         {
           "id": "flaminius",
           "historical_name": "Gaius Flaminius",
-          "catalog_id": "roman_field_commander",
-          "todo": "#1522: swap to catalog id 'flaminius'",
+          "catalog_id": "roman_gaius_flaminius",
           "with": "column_main",
           "offset": [
             6,
@@ -319,8 +318,7 @@
         {
           "id": "maharbal",
           "historical_name": "Maharbal",
-          "catalog_id": "carthage_spear_commander",
-          "todo": "#1522: swap to catalog id 'maharbal'",
+          "catalog_id": "carthage_maharbal",
           "position": [
             -225,
             -5

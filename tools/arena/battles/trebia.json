@@ -4,7 +4,7 @@
   "title": "The Trebia, 218 BC (skeleton)",
   "description": "Skeleton: Sempronius's army, soaked from the winter crossing, meets Hannibal on the west bank while snow and sleet fall; Mago's hidden force breaks from the streambed into the Roman rear.",
   "sources": "Polybius 3.70-74; Livy 21.52-56",
-  "todo": "Skeleton. Start the Romans on the east bank and add a 'crossing' phase once fordable rivers (#1523) land; the ford below is parsed but not yet applied.",
+  "todo": "Start the Romans on the east bank and add a 'crossing' phase through trebia_ford (the ford is applied now).",
   "scale": 0.1,
   "duration": 240,
   "graphics_quality": "ultra",
@@ -26,7 +26,11 @@
           -30,
           -84
         ],
-        "width": 30
+        "width": 30,
+        "id": "trebia_ford",
+        "depth": 0.8,
+        "speed": 0.5,
+        "cold": 0.6
       }
     ]
   },
@@ -120,8 +124,7 @@
         {
           "id": "sempronius",
           "historical_name": "Tiberius Sempronius Longus",
-          "catalog_id": "roman_veteran_consul",
-          "todo": "#1522: swap to catalog id 'sempronius'",
+          "catalog_id": "roman_sempronius_longus",
           "with": "legions"
         }
       ]
@@ -267,8 +270,7 @@
         {
           "id": "mago",
           "historical_name": "Mago Barca",
-          "catalog_id": "carthage_spear_commander",
-          "todo": "#1522: swap to catalog id 'mago'",
+          "catalog_id": "carthage_mago_barca",
           "position": [
             -118,
             -40

@@ -417,6 +417,9 @@ struct PlannedGroup {
   Game::Systems::NationID nation{Game::Systems::NationID::RomanRepublic};
   int units{0};
   bool commander{false};
+  // Set for the historical cameo commanders (#1522), which spawn on a borrowed
+  // body and do not take the owner's commander slot.
+  QString commander_id;
   bool ambush{false};
   bool hold{false};
   QString formation;
@@ -962,12 +965,51 @@ void compile_terrain(const Context& context,
       continue;
     }
     const QJsonObject ford = ford_array.at(f).toObject();
-    context.check_keys(ford, ford_path, {"river", "at", "width"});
+    context.check_keys(
+        ford, ford_path, {"id", "river", "at", "width", "depth", "speed", "cold", "exposure"});
     FordSegment segment;
+    segment.id = context.string(ford, ford_path, "id", false);
+    if (segment.id.isEmpty()) {
+      segment.id = QStringLiteral("ford_%1").arg(f + 1);
+    }
     segment.river = static_cast<int>(
         context.number(ford, ford_path, "river", 0.0F, 0.0F, 1000.0F).value_or(0.0F));
     segment.at = context.point(ford, ford_path, "at", true).value_or(QVector3D());
-    segment.width = context.distance(ford, ford_path, "width", 6.0F, 1.0F);
+    segment.width = context
+                        .number(ford,
+                                ford_path,
+                                "width",
+                                Game::Map::k_default_ford_length,
+                                Game::Map::k_min_ford_length,
+                                Game::Map::k_max_ford_length)
+                        .value_or(Game::Map::k_default_ford_length);
+    auto& profile = segment.profile;
+    profile.depth = context
+                        .number(ford,
+                                ford_path,
+                                "depth",
+                                profile.depth,
+                                Game::Map::k_min_ford_depth,
+                                Game::Map::k_max_ford_depth)
+                        .value_or(profile.depth);
+    profile.speed = context
+                        .number(ford,
+                                ford_path,
+                                "speed",
+                                profile.speed,
+                                Game::Map::k_min_ford_speed,
+                                Game::Map::k_max_ford_speed)
+                        .value_or(profile.speed);
+    profile.cold =
+        context.number(ford, ford_path, "cold", profile.cold, 0.0F, 1.0F).value_or(profile.cold);
+    profile.exposure = context
+                           .number(ford,
+                                   ford_path,
+                                   "exposure",
+                                   profile.exposure,
+                                   Game::Map::k_min_ford_exposure,
+                                   Game::Map::k_max_ford_exposure)
+                           .value_or(profile.exposure);
     fords.push_back(segment);
   }
 }
@@ -1231,30 +1273,32 @@ auto known_commander_ids() -> QStringList {
   for (const auto& definition : Game::Units::all_commander_definitions()) {
     ids.push_back(QString::fromStdString(definition.id));
   }
+  for (const auto& definition : Game::Units::historical_commander_definitions()) {
+    ids.push_back(QString::fromStdString(definition.id));
+  }
   return ids;
 }
 
 auto resolve_commander(const QString& catalog_id)
     -> const Game::Units::CommanderDefinition* {
-  const std::string wanted = catalog_id.trimmed().toStdString();
-  for (const auto& definition : Game::Units::all_commander_definitions()) {
-    if (definition.id == wanted) {
-      return &definition;
-    }
-  }
-  return nullptr;
+  return Game::Units::find_commander_definition(catalog_id.trimmed().toStdString());
 }
 
 auto apply_fords(const std::vector<FordSegment>& fords,
                  ArenaScenarioDefinition& scenario) -> QString {
-  (void)scenario;
-  if (fords.empty()) {
-    return {};
+  for (const auto& segment : fords) {
+    Game::Map::FordCrossing crossing;
+    crossing.id = segment.id;
+    crossing.position = segment.at;
+    crossing.length = segment.width;
+    crossing.profile = segment.profile.clamped();
+    scenario.fords.push_back(crossing);
   }
-  return QStringLiteral("%1 ford segment(s) parsed but not applied: the game has no "
-                        "fordable river cells yet (#1523). The river stays impassable "
-                        "except at bridges.")
-      .arg(fords.size());
+  if (!fords.empty() && scenario.rivers.empty()) {
+    return QStringLiteral("%1 ford(s) declared but the terrain has no river to cross")
+        .arg(fords.size());
+  }
+  return {};
 }
 
 auto compile(const QJsonObject& root, const LoadOptions& options) -> CompileResult {
@@ -1589,6 +1633,9 @@ auto compile(const QJsonObject& root, const LoadOptions& options) -> CompileResu
       if (definition != nullptr) {
         group.troop = definition->troop_type;
         group.nation = definition->nation_id;
+        if (Game::Units::is_historical_commander_id(definition->id)) {
+          group.commander_id = QString::fromStdString(definition->id);
+        }
       }
       group.ambush = context.boolean(commander, commander_path, "ambush", false);
       group.hold = context.boolean(commander, commander_path, "hold", false);
@@ -1707,6 +1754,7 @@ auto compile(const QJsonObject& root, const LoadOptions& options) -> CompileResu
     out.owner_id = army.owner;
     out.spawn_at_start = !group.ambush;
     out.keep_troop_speed = true;
+    out.commander_id = group.commander_id;
     if (group.ambush) {
       ambush_ids.insert(group.id);
     }

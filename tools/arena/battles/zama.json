@@ -4,7 +4,7 @@
   "title": "Zama, 202 BC (skeleton)",
   "description": "Skeleton: Hannibal's elephants charge Scipio's lines, which open lanes for them; the cavalry wings clear the field and return to strike the Carthaginian rear.",
   "sources": "Polybius 15.9-16; Livy 30.32-35",
-  "todo": "Skeleton. Replace the geometric lanes with the triplex acies formation from #1527 and the elephant screen once they land.",
+  "todo": "Elephant screen: the elephants deploy as a geometric line; switch them to the 'elephant_screen' formation once its interaction with the phase orders is verified.",
   "scale": 0.1,
   "duration": 240,
   "graphics_quality": "ultra",
@@ -38,7 +38,6 @@
           "label": "Hastati, principes and triarii with lanes left open",
           "troop": "swordsman",
           "historical": 23000,
-          "todo": "#1527: \"formation\": \"triplex_acies\"",
           "deployment": {
             "shape": "multi_line",
             "lines": 3,
@@ -56,7 +55,8 @@
               90,
               -110
             ]
-          }
+          },
+          "formation": "triplex_acies"
         },
         {
           "id": "velites",
@@ -142,8 +142,7 @@
         {
           "id": "masinissa",
           "historical_name": "Masinissa",
-          "catalog_id": "roman_field_commander",
-          "todo": "#1522: swap to catalog id 'masinissa'",
+          "catalog_id": "numidian_masinissa",
           "with": "masinissa_horse"
         }
       ]

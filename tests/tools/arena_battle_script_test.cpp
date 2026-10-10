@@ -343,13 +343,38 @@ TEST(BattleScriptTest, ShippedBattleScriptsCompile) {
   }
 }
 
-TEST(BattleScriptTest, TrebiaFordIsAnExtensionPointWarning) {
+TEST(BattleScriptTest, TrebiaFordIsAppliedToTheScenario) {
   const auto result =
       Arena::BattleScript::load_file(QStringLiteral("tools/arena/battles/trebia.json"));
   ASSERT_TRUE(result.ok()) << error_text(result);
-  EXPECT_TRUE(std::any_of(result.warnings.begin(), result.warnings.end(), [](auto& w) {
+  EXPECT_TRUE(std::none_of(result.warnings.begin(), result.warnings.end(), [](auto& w) {
     return w.path == QStringLiteral("$.terrain.fords");
   }));
+  const auto& fords = result.scenario->fords;
+  ASSERT_EQ(fords.size(), 1U);
+  EXPECT_EQ(fords.front().id, QStringLiteral("trebia_ford"));
+  EXPECT_FLOAT_EQ(fords.front().length, 30.0F);
+  EXPECT_FLOAT_EQ(fords.front().profile.depth, 0.8F);
+  EXPECT_FLOAT_EQ(fords.front().profile.cold, 0.6F);
+}
+
+TEST(BattleScriptTest, HistoricalCommandersSpawnAsCameos) {
+  const auto result =
+      Arena::BattleScript::load_file(QStringLiteral("tools/arena/battles/cannae.json"));
+  ASSERT_TRUE(result.ok()) << error_text(result);
+  QStringList cameos;
+  for (const auto& group : result.scenario->groups) {
+    if (!group.commander_id.isEmpty()) {
+      cameos.push_back(group.commander_id);
+    }
+  }
+  for (const char* expected : {"roman_terentius_varro",
+                               "roman_aemilius_paullus",
+                               "carthage_mago_barca",
+                               "carthage_hasdrubal_cavalry",
+                               "carthage_hanno_bomilcar"}) {
+    EXPECT_TRUE(cameos.contains(QString::fromLatin1(expected))) << expected;
+  }
 }
 
 TEST(BattlePhaseTriggerTest, TimePhaseAndDelayTriggersFireInOrder) {
