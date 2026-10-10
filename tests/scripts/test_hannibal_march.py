@@ -57,6 +57,38 @@ class HannibalMarchTest(unittest.TestCase):
             self.assertAlmostEqual(stop["uv"][1], v)
             self.assertEqual(self.march["points"][stop["index"]], stop["uv"])
 
+    def test_land_legs_stay_on_land(self) -> None:
+        try:
+            from PIL import Image
+        except ImportError:
+            self.skipTest("pillow is not installed")
+        heightmap = ROOT / "assets" / "campaign_map" / "terrain_height.png"
+        meta = json.loads((ROOT / "assets" / "campaign_map" / "terrain_height.json").read_text())
+        image = Image.open(heightmap)
+        width, height = image.size
+        pixels = image.load()
+
+        def is_land(u: float, v: float) -> bool:
+            value = pixels[int(u * (width - 1)), int((1.0 - v) * (height - 1))]
+            value = value[0] if isinstance(value, tuple) else value
+            return meta["min_m"] + value / 65535 * (meta["max_m"] - meta["min_m"]) > 0
+
+        points = self.march["points"]
+        stops = self.march["stops"]
+        for source, (start, end) in zip(hannibal_path.MARCH_STOPS, zip(stops, stops[1:])):
+            if source.get("leg", "land") != "land":
+                continue
+            leg = points[start["index"] : end["index"] + 1]
+            samples = [
+                (a[0] + (b[0] - a[0]) * k / 10, a[1] + (b[1] - a[1]) * k / 10)
+                for a, b in zip(leg, leg[1:])
+                for k in range(10)
+            ]
+            on_land = sum(is_land(u, v) for u, v in samples) / len(samples)
+            self.assertGreaterEqual(
+                on_land, 0.9, f"{start['id']} -> {end['id']} runs over the sea"
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
