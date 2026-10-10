@@ -1,5 +1,3 @@
-#include <cstdio>
-#include <cstdlib>
 #include "production_system_approach.h"
 
 #include <QVector3D>
@@ -235,7 +233,6 @@ void give_up_on_site(Engine::Core::World& world,
   builder.bypass_movement_active = false;
   reset_site_approach(builder);
   clear_builder_task_target(world, &builder);
-  if (std::getenv("SOI_TMP_BUILD") != nullptr) { std::fprintf(stderr, "FAULT UNREACHABLE %s at %.1f,%.1f\n", builder.product_type.c_str(), builder.construction_site_x, builder.construction_site_z); }
   builder.report_fault(Engine::Core::BuilderTaskFault::Unreachable);
 }
 
@@ -354,7 +351,9 @@ void advance_site_approach(Engine::Core::World& world,
   bool const stalled_within_reach =
       work_spot && has_work_target && dist_sq <= k_stalled_work_reach_sq &&
       builder.site_approach_seconds > k_stalled_work_seconds;
-  if (dist_sq < arrival_sq || stalled_within_reach) {
+  bool const stalled_at_footprint =
+      reached_footprint && builder.site_approach_seconds > k_stalled_work_seconds;
+  if (dist_sq < arrival_sq || stalled_within_reach || stalled_at_footprint) {
     if (retarget_onto_field(world, actor, builder)) {
       return;
     }
@@ -362,17 +361,6 @@ void advance_site_approach(Engine::Core::World& world,
     return;
   }
 
-  if (std::getenv("SOI_TMP_APPROACH") != nullptr && builder.product_type == "wall_segment" && dist_sq < 9.0F) {
-    static int tick = 0;
-    if ((++tick % 30) == 0) {
-      std::fprintf(stderr, "APPROACH id %llu site %.1f,%.1f at %.2f,%.2f dist %.2f edge %.2f foot %d reach %d line %d bypass %d secs %.1f closest %.2f mv %d\n",
-                   static_cast<unsigned long long>(actor.id), builder.construction_site_x, builder.construction_site_z,
-                   transform.position.x, transform.position.z, std::sqrt(dist_sq), edge, reached_footprint ? 1 : 0,
-                   within_reach ? 1 : 0, line_clear ? 1 : 0, builder.bypass_movement_active ? 1 : 0,
-                   builder.site_approach_seconds, builder.site_closest_approach,
-                   actor.movement != nullptr && actor.movement->get_has_target() ? 1 : 0);
-    }
-  }
   record_approach_progress(world, actor, builder, dist_sq, delta_time);
   if (!line_clear) {
     builder.bypass_movement_active = false;
@@ -386,8 +374,12 @@ void advance_site_approach(Engine::Core::World& world,
     }
   } else if (reached_footprint) {
     if (!builder.bypass_movement_active) {
+      const bool left_a_route =
+          actor.movement != nullptr && walking_to_site(builder, *actor.movement);
       abandon_site_route(builder, actor.movement);
-      reset_site_approach(builder);
+      if (left_a_route) {
+        reset_site_approach(builder);
+      }
       activate_bypass_movement(
           &builder, builder.construction_site_x, builder.construction_site_z);
     }

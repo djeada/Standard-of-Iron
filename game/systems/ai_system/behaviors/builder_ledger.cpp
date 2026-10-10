@@ -1,5 +1,3 @@
-#include <cstdio>
-#include <cstdlib>
 #include "builder_ledger.h"
 
 namespace Game::Systems::AI {
@@ -35,9 +33,6 @@ void ConstructionLedger::note_order(const char* building_type,
     const int orders = ++m_plan_slot_orders[plan_slot];
     if (orders >= k_slot_orders_before_giving_up) {
       m_blocked_plan_slots.push_back(plan_slot);
-      if (std::getenv("SOI_TMP_BUILD") != nullptr) {
-        std::fprintf(stderr, "SLOT-BLOCKED t=%.0f %s slot %d\n", game_time, building_type, plan_slot);
-      }
       m_plan_slot_orders.erase(plan_slot);
     }
   }

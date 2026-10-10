@@ -3,8 +3,6 @@
 #include <QVector2D>
 
 #include <utility>
-#include <cstdio>
-#include <cstdlib>
 
 #include "../../nation_registry.h"
 #include "../ai_base_manager.h"
@@ -171,20 +169,6 @@ auto BuilderBehavior::run_construction_cycle(const AISnapshot& snapshot,
     site = resolve_site(snapshot, context, choice.chosen);
   }
 
-  if (std::getenv("SOI_TMP_BUILD") != nullptr) {
-    std::fprintf(stderr, "BT t=%.0f p%d homes %d/%d farms %d/%d tw %d/%d wl %d/%d hf %d civleft %d mp %d builders %d |",
-                 snapshot.game_time, context.player_id, town.standing.homes, town.targets.homes,
-                 town.standing.farms, town.targets.farms, town.standing.towers, town.targets.towers,
-                 town.standing.walls, town.targets.walls,
-                 context.macro_targets.raise_homes_first ? 1 : 0, context.home_civilians_remaining,
-                 context.recruitment_manpower_available, context.builder_count);
-    for (const auto& in : intents) {
-      std::fprintf(stderr, " %s%s%s", in.type ? in.type : "?", in.plan_slot >= 0 ? "#" : "",
-                   m_ledger.is_deferred(in.type, snapshot.game_time) ? "(def)" : "");
-    }
-    std::fprintf(stderr, " => %s res %d miss %d\n", site.building ? site.building : "none",
-                 site.resolved ? 1 : 0, static_cast<int>(choice.missing_resource));
-  }
   order_field_work(
       snapshot, context, pool, starved_of_food(snapshot) ? 0 : 1, out_commands);
   order_repairs(snapshot, pool, 1, out_commands);

@@ -1,5 +1,3 @@
-#include <cstdio>
-#include <cstdlib>
 #include "production_system_construction.h"
 
 #include <QVector3D>
@@ -161,8 +159,7 @@ auto settle_on_clear_site(Engine::Core::World& world,
                        pose.position.y(),
                        pose.position.z(),
                        construction_cost_info(builder.product_type).resource_costs);
-if (std::getenv("SOI_TMP_BUILD") != nullptr) { std::fprintf(stderr, "FAULT SETTLE %s at %.1f,%.1f\n", builder.product_type.c_str(), pose.position.x(), pose.position.z()); }
-      abandon_unfinished_structure(world, builder);
+    abandon_unfinished_structure(world, builder);
     builder.report_fault(Engine::Core::BuilderTaskFault::Unreachable);
     return false;
   }

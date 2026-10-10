@@ -1,5 +1,3 @@
-#include <cstdio>
-#include <cstdlib>
 #include <QVector3D>
 
 #include <algorithm>
@@ -177,9 +175,6 @@ void apply_start_construction(World& world,
   auto& session = Game::Session::session_for(world);
   auto& resources = session.economy();
   if (!costs.empty() && !resources.has_at_least(owner_id, costs)) {
-    if (std::getenv("SOI_TMP_BUILD") != nullptr) {
-      std::fprintf(stderr, "DISPATCH-POOR p%d %s\n", owner_id, order.construction_type.c_str());
-    }
     return;
   }
 
@@ -197,10 +192,6 @@ void apply_start_construction(World& world,
                                      order.site.z(),
                                      order.rotation_y,
                                      order.units)) {
-    if (std::getenv("SOI_TMP_BUILD") != nullptr) {
-      std::fprintf(stderr, "DISPATCH-REFUSE p%d %s verdict %d\n", owner_id,
-                   order.construction_type.c_str(), static_cast<int>(verdict));
-    }
     return;
   }
 

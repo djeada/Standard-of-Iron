@@ -1,5 +1,3 @@
-#include <cstdio>
-#include <cstdlib>
 #include "builder_stall_watch.h"
 
 #include <algorithm>
@@ -53,12 +51,6 @@ void WorkerStallWatch::review(const AISnapshot& snapshot, float now) {
       continue;
     }
 
-    if (std::getenv("SOI_TMP_BUILD") != nullptr) {
-      std::fprintf(stderr, "STALL t=%.0f b%llu prod %d site %.1f,%.1f at %.1f,%.1f task %d moving %d path %d\n", now,
-                   static_cast<unsigned long long>(entity.id), work.raising_a_building ? static_cast<int>(work.building_under_way) : -1, work.construction_site_x,
-                   work.construction_site_z, entity.pos_x, entity.pos_z, work.has_task_target ? 1 : 0,
-                   entity.movement.has_target ? 1 : 0, 0);
-    }
     m_stalled_builders.insert(entity.id);
     if (watch.task_target_id != 0) {
 

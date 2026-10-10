@@ -1,4 +1,3 @@
-#include <cstdlib>
 #include "builder_intent.h"
 
 #include <algorithm>
@@ -213,7 +212,7 @@ void wish_for_shortfalls(const AIContext& context,
            {town.siege_engine, town.siege_count, town.target_catapults},
        })) {
     const bool roof_the_plan_has_not_reached =
-        candidate == BUILDING_TYPE_HOME && plan.choice.building != BUILDING_TYPE_HOME && std::getenv("SOI_TMP_OFF_HOMES") == nullptr;
+        candidate == BUILDING_TYPE_HOME && plan.choice.building != BUILDING_TYPE_HOME;
     if (plan.present && !roof_the_plan_has_not_reached &&
         plan_still_sites_this_itself(context, town, blocked_plan_slots, candidate)) {
       continue;

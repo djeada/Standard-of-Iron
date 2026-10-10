@@ -1,5 +1,3 @@
-#include <cstdio>
-#include <cstdlib>
 #include "ai_command_applier.h"
 
 #include <QDebug>
@@ -230,29 +228,10 @@ auto AICommandApplier::apply(Engine::Core::World& world,
           command.construction_rotation_y,
           command.units,
           command.construction_keep_out,
-          std::getenv("SOI_TMP_OFF_NUDGE") == nullptr);
-      if (!site.has_value() ||
-          (std::getenv("SOI_TMP_OFF_NUDGE") != nullptr &&
-           Game::Systems::troops_stand_on(world,
-                                          command.construction_type,
-                                          site->x(),
-                                          site->z(),
-                                          command.construction_rotation_y,
-                                          command.units))) {
-
-        if (std::getenv("SOI_TMP_BUILD") != nullptr) {
-          std::fprintf(stderr, "REFUSE p%d %s at %.1f,%.1f site %d troops %d\n", ai_owner_id,
-                       command.construction_type, command.construction_site_x,
-                       command.construction_site_z, site.has_value() ? 1 : 0,
-                       site.has_value() ? 1 : 0);
-        }
+          true);
+      if (!site.has_value()) {
         ++report.refused_construction;
         break;
-      }
-      if (std::getenv("SOI_TMP_BUILD") != nullptr) {
-        std::fprintf(stderr, "ORDER p%d %s at %.1f,%.1f -> %.1f,%.1f units %zu\n", ai_owner_id,
-                     command.construction_type, command.construction_site_x,
-                     command.construction_site_z, site->x(), site->z(), command.units.size());
       }
       submit(world,
              ai_owner_id,

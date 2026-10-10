@@ -1,8 +1,6 @@
 #include "commander_behavior.h"
 
 #include <algorithm>
-#include <cstdio>
-#include <cstdlib>
 #include <cmath>
 #include <limits>
 #include <utility>
@@ -243,9 +241,6 @@ auto on_home_ground(const AIContext& context, float x, float z) -> bool {
 }
 
 auto home_post(const AIContext& context) -> HomePost {
-  if (std::getenv("SOI_TMP_OFF_CMD") != nullptr) {
-    return {context.station.x, context.station.z};
-  }
   if (on_home_ground(context, context.station.x, context.station.z)) {
     return {context.station.x, context.station.z};
   }
@@ -341,7 +336,7 @@ void CommanderBehavior::execute(const AISnapshot& snapshot,
       target_x = snap->pos_x + away_x * k_commander_retreat_step;
       target_z = snap->pos_z + away_z * k_commander_retreat_step;
       if (army.count >= k_minimum_escort &&
-          (!context.has_base_anchor || on_home_ground(context, army.x, army.z) || std::getenv("SOI_TMP_OFF_CMD") != nullptr)) {
+          (!context.has_base_anchor || on_home_ground(context, army.x, army.z))) {
         target_x = (target_x + army.x) * 0.5F;
         target_z = (target_z + army.z) * 0.5F;
       } else if (context.has_base_anchor) {
@@ -359,18 +354,6 @@ void CommanderBehavior::execute(const AISnapshot& snapshot,
 
     const float dx = snap->pos_x - target_x;
     const float dz = snap->pos_z - target_z;
-    if (std::getenv("SOI_TMP_BUILD") != nullptr) {
-      const auto owner = context.assigned_units.find(commander_id);
-      std::fprintf(stderr, "CMD t=%.0f p%d at %.1f,%.1f hp %d base %.1f,%.1f dist %.1f army %d@%.1f,%.1f -> %.1f,%.1f march %d wave %d/%zu state %d owner %s\n",
-                   snapshot.game_time, context.player_id, snap->pos_x, snap->pos_z, snap->health,
-                   context.base_pos_x, context.base_pos_z,
-                   std::hypot(snap->pos_x - context.base_pos_x, snap->pos_z - context.base_pos_z),
-                   army.count, army.x, army.z, target_x, target_z,
-                   commander_marches_with_army(context, *snap, army) ? 1 : 0,
-                   context.wave.committed ? 1 : 0, context.wave.members.size(),
-                   static_cast<int>(context.state),
-                   owner != context.assigned_units.end() ? owner->second.assigned_task : "-");
-    }
     if (dx * dx + dz * dz < k_snap_threshold_sq) {
       continue;
     }

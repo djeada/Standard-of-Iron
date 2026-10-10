@@ -1,5 +1,3 @@
-#include <cstdio>
-#include <cstdlib>
 #include "build_site.h"
 
 #include <algorithm>
@@ -453,12 +451,6 @@ auto troops_stand_on(const Engine::Core::World& world,
     const float outside_z =
         std::max(0.0F, std::abs(transform->position.z - z) - half_depth);
     if (std::hypot(outside_x, outside_z) <= reach) {
-      if (std::getenv("SOI_TMP_BUILD") != nullptr) {
-        std::fprintf(stderr, "  ON-SITE owner %d type %d id %llu at %.1f,%.1f moving %d\n", unit->owner_id,
-                     static_cast<int>(unit->spawn_type), static_cast<unsigned long long>(id),
-                     transform->position.x, transform->position.z,
-                     movement != nullptr && movement->get_has_target() ? 1 : 0);
-      }
       return true;
     }
   }
