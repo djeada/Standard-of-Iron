@@ -199,7 +199,9 @@ void paint_overlay(QImage& image,
     const float name_w = text_width(name, name_style.font);
     const float date_w = text_width(date, date_style.font);
     const float block_w = std::max(name_w, date_w);
-    const bool left = where->x() + gap + block_w > width - 24.0F * s;
+    const bool overflow = where->x() + gap + block_w > width - 24.0F * s;
+    const bool left = marker.label_side == QStringLiteral("left") ||
+                      (marker.label_side.isEmpty() && overflow);
     const float align = left ? 1.0F : 0.0F;
     const float x = static_cast<float>(where->x()) + (left ? -gap : gap);
     const bool two_lines = !name.isEmpty() && !date.isEmpty();

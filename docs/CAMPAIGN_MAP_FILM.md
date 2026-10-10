@@ -197,7 +197,9 @@ Transalpina/Cisalpina, Etruria, Italia, Sicilia, Africa, Numidia, the Alps,
 Apulia, Campania, Samnium); a spec may instead give `provinces` (ids from
 `provinces.json`) or a `lonlat` polygon of its own. Polygons are clipped to land
 by the map's own land mask, so their sea sides can be loose — only the land
-borders need care. A lit region gets a warm wash (`fill`), a screen-space rim
+borders need care. Iberia is a polygon rather than the game's two Iberian
+provinces, because the game's interior province reaches north of the Pyrenees
+into Aquitaine. A lit region gets a warm wash (`fill`), a screen-space rim
 (`rim`, `rim_width` px) and optionally dims the rest of the map
 (`dim_outside`, 0..1). `in`/`out`/`fade` set its window; `keys` (`time`,
 `amount`) can shape it further.
@@ -217,7 +219,9 @@ borders need care. A lit region gets a warm wash (`fill`), a screen-space rim
   drawing head reaches it; `appear: <seconds>` or `in` sets it by time. `hold`
   removes the marker after that long; `label_hold` fades only its name and date,
   leaving the glyph on the map. `label: false` / `show_date: false` drop either
-  line.
+  line. `label_side: "left"` or `"right"` pins the name to one side when two
+  sites sit close together (Ticinus and Trebia); by default it goes right, or
+  left near the frame edge.
 - **labels** are free text at a target: `region` (spaced display capitals,
   ink at 60%), `place` (display capitals with a parchment halo) or `sea`
   (spaced Garamond in sea ink). `size` is in reference pixels; `offset` moves it.

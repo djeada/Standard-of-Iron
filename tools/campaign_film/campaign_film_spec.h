@@ -165,6 +165,7 @@ struct MarkerTrack {
   bool on_arrival = false;
   float hold = std::numeric_limits<float>::infinity();
   float label_hold = std::numeric_limits<float>::infinity();
+  QString label_side;
   Window window;
 };
 

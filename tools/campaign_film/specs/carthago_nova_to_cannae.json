@@ -31,16 +31,28 @@
     {
       "time": 4.6,
       "look": {
-        "head": true,
-        "smooth": 1.2,
+        "stop": "pyrenees",
         "offset": [
-          0.0,
-          -0.02
+          0.01,
+          -0.03
         ]
       },
-      "distance": 0.5,
+      "distance": 0.48,
       "yaw": 188,
       "pitch": 68
+    },
+    {
+      "time": 6.6,
+      "look": {
+        "stop": "rhone",
+        "offset": [
+          0.0,
+          -0.05
+        ]
+      },
+      "distance": 0.4,
+      "yaw": 187,
+      "pitch": 72
     },
     {
       "time": 8.6,
@@ -48,12 +60,12 @@
         "stop": "alps",
         "offset": [
           0.0,
-          -0.035
+          -0.04
         ]
       },
       "distance": 0.3,
       "yaw": 186,
-      "pitch": 68
+      "pitch": 70
     },
     {
       "time": 10.6,
@@ -86,39 +98,39 @@
       "look": {
         "stop": "gerunium",
         "offset": [
-          -0.06,
+          -0.065,
           0.0
         ]
       },
       "distance": 0.28,
       "yaw": 240,
-      "pitch": 64
+      "pitch": 66
     },
     {
       "time": 17.6,
       "look": {
         "stop": "cannae",
         "offset": [
-          -0.06,
+          -0.07,
           0.0
         ]
       },
       "distance": 0.24,
       "yaw": 238,
-      "pitch": 58
+      "pitch": 62
     },
     {
       "time": 20.0,
       "look": {
         "stop": "cannae",
         "offset": [
-          -0.06,
+          -0.065,
           0.0
         ]
       },
       "distance": 0.22,
       "yaw": 232,
-      "pitch": 56
+      "pitch": 58
     }
   ],
   "route": {
@@ -229,7 +241,8 @@
       "site": "ticinus",
       "appear": "arrival",
       "fade": 0.5,
-      "label_hold": 1.6
+      "label_hold": 1.6,
+      "label_side": "left"
     },
     {
       "site": "trebia",

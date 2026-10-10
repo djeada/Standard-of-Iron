@@ -635,6 +635,13 @@ auto parse_spec(const QJsonObject& object,
     }
     marker.hold = read_float(marker_object, "hold", marker.hold);
     marker.label_hold = read_float(marker_object, "label_hold", marker.label_hold);
+    marker.label_side = marker_object.value(QStringLiteral("label_side")).toString();
+    if (!marker.label_side.isEmpty() && marker.label_side != QStringLiteral("left") &&
+        marker.label_side != QStringLiteral("right")) {
+      fail(error,
+           QStringLiteral("marker '%1': label_side is left or right").arg(marker.site));
+      return std::nullopt;
+    }
     spec.markers.push_back(marker);
   }
 
