@@ -881,4 +881,26 @@ public:
   bool afloat{false};
 };
 
+// A unit at or in a river ford. FordSystem keeps it on any unit standing in
+// or next to a ford, and on a unit still chilled after leaving icy water.
+class WadingComponent {
+public:
+  // Metres of water at the unit's footing; zero on the bank.
+  float depth{0.0F};
+  // Fraction of land speed kept while in the water.
+  float speed{1.0F};
+  // Damage multiplier the unit suffers while in the water.
+  float exposure{1.0F};
+  // How icy the ford being waded is (0..1).
+  float cold{0.0F};
+  // Lingering chill from icy water (0..1); fades after the unit climbs out.
+  float chill{0.0F};
+
+  static constexpr float k_wading_depth = 0.2F;
+
+  [[nodiscard]] auto in_water() const noexcept -> bool {
+    return depth >= k_wading_depth;
+  }
+};
+
 } // namespace Engine::Core

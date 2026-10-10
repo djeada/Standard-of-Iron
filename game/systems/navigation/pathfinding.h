@@ -17,6 +17,7 @@
 namespace Game::Map {
 class TerrainService;
 class TerrainHeightMap;
+struct FordProfile;
 } // namespace Game::Map
 
 namespace Game::Systems {
@@ -208,7 +209,15 @@ private:
 
   void rebuild_elevation(int min_x, int max_x, int min_z, int max_z);
   [[nodiscard]] auto climb_penalty(int from_index, int to_index) const -> int;
+  [[nodiscard]] auto wade_penalty(int index) const -> int;
 
+public:
+  // Extra A* cost of stepping into a ford cell (zero off a ford).
+  [[nodiscard]] static auto
+  wade_step_penalty(const Game::Map::FordProfile* ford) -> std::uint8_t;
+  static constexpr int k_wade_exposure_penalty = 6;
+
+private:
   static constexpr int k_straight_step_cost = 10;
   static constexpr int k_diagonal_step_cost = 14;
 
@@ -458,6 +467,7 @@ private:
   std::vector<bool> m_forest_cells;
   std::vector<std::uint8_t> m_clearance_penalty;
   std::vector<float> m_cell_height;
+  std::vector<std::uint8_t> m_wade_penalty;
   std::atomic<std::uint64_t> m_navigation_revision{1};
   std::uint64_t m_path_cache_revision{0};
   std::uint64_t m_path_cache_clock{0};

@@ -510,6 +510,16 @@ constexpr auto k_tools = std::to_array<ToolSpec>({
      "bridge",
      "Add bridges across rivers or other crossings.",
      "click start, then end"},
+    {T::Ford,
+     S::Paths,
+     P::Linear,
+     "Ford",
+     nullptr,
+     "≈",
+     "ford",
+     "Mark a shallow stretch of river that troops can wade: draw it bank to bank "
+     "like a bridge; its width is how far the ford runs along the river.",
+     "click one bank, then the other"},
 
     {T::Wall,
      S::Fortifications,

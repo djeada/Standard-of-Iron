@@ -8,6 +8,7 @@
 #include "../../units/troop_config.h"
 #include "../attack_range.h"
 #include "../combat_rules.h"
+#include "game/core/ford_rules.h"
 #include "../troop_profile_service.h"
 #include "combat_types.h"
 #include "combat_utils.h"
@@ -183,7 +184,24 @@ auto calculate_tactical_damage_multiplier(Engine::Core::Entity* attacker,
     multiplier *= Constants::k_afloat_exposure_multiplier;
   }
 
-  if (is_ranged_mode(attacker->get_component<Engine::Core::AttackComponent>())) {
+  auto const* attacker_registry = attacker->registry();
+  auto const* attacker_wading =
+      attacker_registry != nullptr
+          ? attacker_registry->try_get<Engine::Core::WadingComponent>(
+                attacker->get_id())
+          : nullptr;
+  auto const* target_wading =
+      target_registry != nullptr
+          ? target_registry->try_get<Engine::Core::WadingComponent>(target->get_id())
+          : nullptr;
+  bool const ranged_attack =
+      is_ranged_mode(attacker->get_component<Engine::Core::AttackComponent>());
+  if (attacker_wading != nullptr || target_wading != nullptr) {
+    multiplier *=
+        FordRules::damage_multiplier(attacker_wading, target_wading, ranged_attack);
+  }
+
+  if (ranged_attack) {
     if (auto const* cover = target->get_component<Engine::Core::ForestCoverComponent>();
         cover != nullptr && cover->in_forest) {
       multiplier *= Constants::k_forest_ranged_cover_multiplier;

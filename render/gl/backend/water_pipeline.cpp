@@ -87,6 +87,11 @@ void WaterPipeline::cache_water_uniforms() {
       m_water_shader->optional_uniform_handle("u_camera_pos");
   m_water_uniforms.light_direction =
       m_water_shader->optional_uniform_handle("u_light_dir");
+  m_water_uniforms.ford_a[0] = m_water_shader->optional_uniform_handle("u_ford_a[0]");
+  m_water_uniforms.ford_a[1] = m_water_shader->optional_uniform_handle("u_ford_a[1]");
+  m_water_uniforms.ford_b[0] = m_water_shader->optional_uniform_handle("u_ford_b[0]");
+  m_water_uniforms.ford_b[1] = m_water_shader->optional_uniform_handle("u_ford_b[1]");
+  m_water_uniforms.ford_count = m_water_shader->optional_uniform_handle("u_ford_count");
 }
 
 void WaterPipeline::cache_riverbank_uniforms() {

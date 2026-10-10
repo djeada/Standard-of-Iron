@@ -511,6 +511,7 @@ private:
   Game::Units::SpawnType m_spawn_building_type = Game::Units::SpawnType::Barracks;
   std::vector<Game::Map::WorldProp> m_world_props;
   std::vector<Game::Map::RiverSegment> m_arena_rivers;
+  std::vector<Game::Map::FordCrossing> m_arena_fords;
   std::vector<Game::Map::Lake> m_arena_lakes;
   std::vector<Game::Map::Bridge> m_arena_bridges;
   std::vector<Game::Map::RoadSegment> m_arena_roads;

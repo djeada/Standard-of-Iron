@@ -18,6 +18,7 @@
 #include "cursed_gold_vein_system.h"
 #include "dismantle_system.h"
 #include "engagement_slot_system.h"
+#include "ford_system.h"
 #include "forest_cover_system.h"
 #include "game/session/session_snapshot.h"
 #include "gate_system.h"
@@ -122,6 +123,9 @@ void register_runtime_systems(Engine::Core::World& world) {
                    Engine::Core::SystemPhase::Movement);
   world.add_system(
       std::make_unique<RaftSystem>(RaftSystem::Services{.terrain = session.terrain()}),
+      Engine::Core::SystemPhase::Movement);
+  world.add_system(
+      std::make_unique<FordSystem>(FordSystem::Services{.terrain = session.terrain()}),
       Engine::Core::SystemPhase::Movement);
 
   world.add_system(std::make_unique<EngagementSlotSystem>(),

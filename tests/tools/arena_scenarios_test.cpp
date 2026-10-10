@@ -1839,6 +1839,33 @@ TEST(ArenaScenariosTest, RaftScenariosFerryAGroupAcrossAWideRiver) {
       << "a raft without a river is rejected";
 }
 
+TEST(ArenaScenariosTest, FordScenariosWadeTroopsAcrossAFordableRiver) {
+  for (auto const* id : {Arena::Scenarios::k_ford_legion_crossing_id,
+                         Arena::Scenarios::k_ford_mounted_crossing_id}) {
+    EXPECT_NE(Arena::Scenarios::find_option(QString::fromLatin1(id)), nullptr) << id;
+    auto const* scenario = Arena::Scenarios::find_definition(QString::fromLatin1(id));
+    ASSERT_NE(scenario, nullptr) << id;
+    EXPECT_TRUE(Arena::validate_scenario(*scenario).empty()) << id;
+    ASSERT_FALSE(scenario->rivers.empty()) << id;
+    ASSERT_FALSE(scenario->fords.empty()) << id;
+    EXPECT_FALSE(scenario->rivers.front().ford.has_value())
+        << id << " keeps the rest of the river impassable";
+    EXPECT_TRUE(std::any_of(scenario->expectations.begin(),
+                            scenario->expectations.end(),
+                            [](auto const& expectation) {
+                              return expectation.kind ==
+                                     Arena::ArenaExpectationKind::FordWadedObserved;
+                            }))
+        << id;
+  }
+
+  auto broken = *Arena::Scenarios::find_definition(
+      QString::fromLatin1(Arena::Scenarios::k_ford_legion_crossing_id));
+  broken.rivers.clear();
+  EXPECT_FALSE(Arena::validate_scenario(broken).empty())
+      << "a ford without a river is rejected";
+}
+
 TEST(ArenaScenariosTest, HillRampScenariosRollTheStagedStoneCache) {
   for (auto const* id : {Arena::Scenarios::k_rockfall_hill_ramp_id,
                          Arena::Scenarios::k_rockfall_hill_ai_id}) {

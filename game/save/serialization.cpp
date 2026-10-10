@@ -146,7 +146,8 @@ void read_terrain(Game::Session::SessionContext& session,
                                           world_props,
                                           authored_world_props,
                                           temp_height_map->get_lakes(),
-                                          temp_height_map->hill_navigation());
+                                          temp_height_map->hill_navigation(),
+                                          temp_height_map->get_fords());
 }
 
 } // namespace

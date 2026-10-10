@@ -186,6 +186,13 @@ struct TerrainFeatureCmd {
 
   float ambient_boost = TerrainChunkParams::k_default_ambient_boost;
   float alpha = 1.0F;
+  // Up to two fordable stretches crossing this water mesh, drawn as shallow
+  // water over gravel with riffles. a = (centre x, centre z, along x, along z),
+  // b = (half length, half width, 0, 0), world units.
+  static constexpr int k_max_ford_patches = 2;
+  std::array<QVector4D, k_max_ford_patches> ford_patch_a{};
+  std::array<QVector4D, k_max_ford_patches> ford_patch_b{};
+  int ford_patch_count = 0;
   LinearFeatureKind kind = LinearFeatureKind::Water;
   WaterSurfaceKind water_kind = WaterSurfaceKind::River;
   RoadSurfaceKind road_surface_kind = RoadSurfaceKind::PackedEarth;

@@ -326,6 +326,7 @@ enum class ArenaExpectationKind : std::uint8_t {
   SiegeTowerDocked,
   WallWalkerObserved,
   RaftFerryObserved,
+  FordWadedObserved,
   BridgeTraversalObserved,
   BridgeCenterlineAligned,
   ElevationGainObserved,
@@ -503,6 +504,9 @@ struct ArenaScenarioDefinition {
 
   std::vector<Game::Map::RockfallTrap> rockfall_traps;
   std::vector<Game::Map::RaftCrossing> rafts;
+  // Ford zones on the scenario's rivers (segment-wide fords are set on the
+  // river segments themselves).
+  std::vector<Game::Map::FordCrossing> fords;
   std::vector<ArenaScenarioOwnerTeam> owner_teams;
   std::vector<ArenaScenarioAIProfile> ai_profiles;
   ArenaScenarioStartingResources ai_starting_resources;

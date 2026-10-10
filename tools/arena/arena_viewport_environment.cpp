@@ -202,6 +202,7 @@ void ArenaViewport::regenerate_terrain() {
   water_mask.restore_from_data(heights, terrain_types, {}, {}, {}, hills);
   water_mask.add_lakes(m_arena_lakes);
   water_mask.add_river_segments(m_arena_rivers);
+  water_mask.add_fords(m_arena_fords);
   water_mask.add_bridges(m_arena_bridges);
   heights = water_mask.get_height_data();
   terrain_types = water_mask.getTerrainTypes();
@@ -209,6 +210,7 @@ void ArenaViewport::regenerate_terrain() {
   const auto runtime_rivers = water_mask.get_river_segments();
   const auto runtime_lakes = water_mask.get_lakes();
   const auto runtime_bridges = water_mask.get_bridges();
+  const auto runtime_fords = water_mask.get_fords();
 
   m_session.visibility().initialize(
       m_terrain_grid_extent, m_terrain_grid_extent, k_terrain_tile_size);
@@ -224,7 +226,8 @@ void ArenaViewport::regenerate_terrain() {
                                               m_world_props,
                                               {},
                                               runtime_lakes,
-                                              hills);
+                                              hills,
+                                              runtime_fords);
   Game::Systems::NavGrid::initialize(m_terrain_grid_extent, m_terrain_grid_extent);
   apply_initial_visibility();
   sync_camera_map_bounds(m_camera.get(), m_session.visibility());

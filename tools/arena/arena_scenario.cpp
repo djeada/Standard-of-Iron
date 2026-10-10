@@ -275,6 +275,18 @@ void ArenaScenarioRunner::observe_rendered_frame(
     }
   }
   m_impl->most_raft_riders = std::max(m_impl->most_raft_riders, raft_riders);
+  for (auto [wader_id, wading] :
+       m_impl->world.view<const Engine::Core::WadingComponent>()) {
+    if (!wading.in_water()) {
+      continue;
+    }
+    for (auto const& group : m_impl->scenario.groups) {
+      auto const& members = m_impl->ids(group.name);
+      if (std::find(members.begin(), members.end(), wader_id) != members.end()) {
+        m_impl->waders_by_group[group.name].insert(wader_id);
+      }
+    }
+  }
   if (!m_impl->wall_walker_seen) {
     auto walkers = m_impl->world.view<const Engine::Core::WallWalkerComponent>();
     m_impl->wall_walker_seen = walkers.begin() != walkers.end();

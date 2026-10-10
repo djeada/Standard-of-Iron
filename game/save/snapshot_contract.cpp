@@ -282,6 +282,10 @@ constexpr std::array k_fields = std::to_array<FieldSpec>({
     {"RockfallPushComponent",
      DerivedRebuilt,
      "RockfallSystem saves the push and puts this back on the pusher every tick."},
+    {"WadingComponent",
+     AuthoritativeSerialized,
+     "FordSystem recomputes depth, speed and exposure from the unit's footing "
+     "every tick; the lingering chill from icy water is saved."},
     {"RaftRiderComponent",
      DerivedRebuilt,
      "RaftSystem saves who is aboard each raft and puts this back on the "

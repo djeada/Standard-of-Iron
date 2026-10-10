@@ -16,6 +16,10 @@ enum class HumanoidHeldPoseKind : std::uint8_t {
   CasterChannel,
   StaveCarry,
   ResourceCarry,
+  // Wading a ford: arms up, weapons and shield held clear of the water.
+  WadeSwordShield,
+  WadeSpear,
+  WadeHandsHigh,
 };
 
 inline constexpr float k_resource_carry_hand_y_from_shoulder = -0.325F;

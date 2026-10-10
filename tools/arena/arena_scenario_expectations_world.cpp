@@ -199,6 +199,21 @@ void ArenaScenarioRunner::Impl::check_movement_expectation(
                 QStringLiteral("no troop was ever seen on a wall-top walkway"));
     }
     break;
+  case ArenaExpectationKind::FordWadedObserved: {
+    auto const waded = waders_by_group.value(expectation.group);
+    QStringList stayed_dry;
+    for (auto const entity_id : ids(expectation.group)) {
+      if (entity_alive(entity_id) && !waded.contains(entity_id)) {
+        stayed_dry.push_back(QString::number(entity_id));
+      }
+    }
+    if (!stayed_dry.isEmpty()) {
+      add_issue(QStringLiteral("ford_never_waded"),
+                QStringLiteral("%1 never waded the ford: %2")
+                    .arg(expectation.group, stayed_dry.join(QStringLiteral(", "))));
+    }
+    break;
+  }
   case ArenaExpectationKind::RaftFerryObserved: {
     auto const ferried = raft_riders_by_group.value(expectation.group);
     QStringList never_aboard;

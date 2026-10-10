@@ -373,6 +373,7 @@ struct ArenaScenarioRunner::Impl {
   bool wall_walker_seen{false};
   QHash<QString, QSet<std::uint64_t>> raft_riders_by_group;
   int most_raft_riders{0};
+  QHash<QString, QSet<std::uint64_t>> waders_by_group;
   QHash<QString, BridgeAlignmentObservation> bridge_alignment;
   QHash<QString, float> initial_elevation;
   QHash<QString, float> maximum_elevation;

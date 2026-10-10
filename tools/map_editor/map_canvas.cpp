@@ -1664,6 +1664,10 @@ void MapCanvas::finish_linear_element(const QPointF& grid_pos) {
         compute_min_bridge_width(elem.start, elem.end, m_map_data->linear_elements()));
     elem.height = 0.5F;
     break;
+  case ToolType::Ford:
+    elem.type = "ford";
+    elem.width = k_default_ford_width;
+    break;
   case ToolType::Wall:
     elem.type = "wall";
     elem.width = WallGeometry::k_lattice;

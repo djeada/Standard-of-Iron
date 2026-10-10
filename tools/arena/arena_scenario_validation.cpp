@@ -164,6 +164,13 @@ auto validate_scenario(const ArenaScenarioDefinition& definition)
     }
   }
 
+  for (std::size_t i = 0; i < definition.fords.size(); ++i) {
+    if (definition.rivers.empty()) {
+      errors.push_back({QStringLiteral("fords[%1]").arg(i),
+                        QStringLiteral("a ford needs a river to cross")});
+    }
+  }
+
   for (std::size_t i = 0; i < definition.steps.size(); ++i) {
     auto const& step = definition.steps[i];
     QString const field = QStringLiteral("steps[%1]").arg(i);

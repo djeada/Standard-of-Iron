@@ -8,6 +8,7 @@
 #include "systems/builder_product_types.h"
 #include "systems/combat_rules.h"
 #include "systems/defensive_unit_layout_service.h"
+#include "game/core/ford_rules.h"
 #include "systems/navigation/nav_grid.h"
 #include "systems/navigation/pathfinding.h"
 #include "systems/navigation/walkability.h"
@@ -132,7 +133,13 @@ auto formation_navigation_speed(const Engine::Core::Entity& entity,
       (elephant->lane_running || elephant->lane_run_out_seconds > 0.0F)) {
     speed *= elephant->charge_speed_multiplier;
   }
-  if (stamina != nullptr && stamina->is_running) {
+  auto const* registry = entity.registry();
+  auto const* wading =
+      registry != nullptr
+          ? registry->try_get<Engine::Core::WadingComponent>(entity.get_id())
+          : nullptr;
+  speed *= FordRules::speed_multiplier(wading);
+  if (stamina != nullptr && stamina->is_running && FordRules::can_run(wading)) {
     speed *= Engine::Core::StaminaComponent::k_run_speed_multiplier;
   }
   return speed;

@@ -53,6 +53,7 @@ set(RENDER_ENTITY_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/healing_waves_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/healer_aura_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/commander_aura_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/wading_effects_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/combat_dust_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/building_archetype_desc.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/building_archetype_catalog.cpp

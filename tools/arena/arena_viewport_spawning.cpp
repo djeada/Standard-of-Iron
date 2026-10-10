@@ -1076,6 +1076,7 @@ void ArenaViewport::reset_arena() {
       m_terrain_from_map;
   m_terrain_from_map = false;
   m_arena_rivers.clear();
+  m_arena_fords.clear();
   m_arena_lakes.clear();
   m_arena_bridges.clear();
   m_arena_roads.clear();
