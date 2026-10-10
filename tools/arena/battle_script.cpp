@@ -1540,6 +1540,13 @@ auto compile(const QJsonObject& root, const LoadOptions& options) -> CompileResu
     const QString commanders_path = child(army_path, QStringLiteral("commanders"));
     const QJsonArray commanders =
         context.array(army_object, army_path, "commanders", false);
+    if (commanders.size() > 1) {
+      context.error(commanders_path,
+                    QStringLiteral("an army fields one commander: the game allows one "
+                                   "living commander per owner, and an owner whose "
+                                   "commander dies collapses. Give each commander his "
+                                   "own allied army (same 'team') for his contingent"));
+    }
     for (qsizetype c = 0; c < commanders.size(); ++c) {
       const QString commander_path = index_path(commanders_path, c);
       if (!commanders.at(c).isObject()) {

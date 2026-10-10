@@ -1970,7 +1970,14 @@ metres in scenario space, centred on the map; yaw 0 faces +z and positive
   `lane_width`, `stagger` for a quincunx; unstaggered lanes stay aligned so
   elephants can pass through, as at Zama). `file_spacing` / `rank_spacing`
   override the per-troop defaults (6 m infantry, 7.5-8 m horse).
-- `commanders[]`: `id`, `catalog_id` (validated against
+- `commanders[]`: at most **one per army**. The game allows one living
+  commander per owner (`owner_has_living_commander` in the unit factory) and
+  collapses an owner whose commander dies (`collapse_nation_if_leaderless`:
+  every troop of that owner falls at once). So each commander leads his own
+  allied army on the same `team` -- Cannae is seven armies (Servilius with the
+  infantry, Paullus with the Roman horse, Varro with the allied horse; Hannibal,
+  Mago, Hasdrubal, Hanno) and Paullus's death breaks only his wing. Fields:
+  `id`, `catalog_id` (validated against
   `Game::Units::all_commander_definitions()`), then `position` + `facing` or
   `with` a group (+ `offset`, default just behind it); `ambush` and `hold` as
   for groups.
