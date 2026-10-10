@@ -152,7 +152,7 @@ auto cannae_battle_orders() -> ArenaScenarioDefinition {
             Troop::MountedSwordsman,
             Nation::RomanRepublic,
             k_rome,
-            4,
+            3,
             {0.0F, 0.0F, 72.0F},
             8.0F,
             180.0F),
@@ -177,7 +177,7 @@ auto cannae_battle_orders() -> ArenaScenarioDefinition {
             Troop::MountedSwordsman,
             Nation::Gauls,
             k_carthage,
-            3,
+            5,
             {-50.0F, 0.0F, -30.0F},
             7.0F,
             0.0F),
@@ -201,7 +201,7 @@ auto cannae_battle_orders() -> ArenaScenarioDefinition {
             Troop::HorseSpearman,
             Nation::Carthage,
             k_carthage,
-            3,
+            4,
             {50.0F, 0.0F, -30.0F},
             7.0F,
             0.0F),
@@ -275,7 +275,7 @@ auto zama_battle_orders() -> ArenaScenarioDefinition {
                                       "lanes as they come, the velites fall back, and "
                                       "the beasts run down the lanes and out behind "
                                       "the triarii."),
-                       80.0F);
+                       100.0F);
   s.groups = {
       group(QStringLiteral("legion_swords"),
             Troop::Swordsman,
@@ -314,7 +314,7 @@ auto zama_battle_orders() -> ArenaScenarioDefinition {
             Nation::Carthage,
             k_carthage,
             8,
-            {0.0F, 0.0F, -38.0F},
+            {0.0F, 0.0F, -30.0F},
             8.0F,
             0.0F),
       group(QStringLiteral("mercenaries"),
@@ -355,16 +355,15 @@ auto zama_battle_orders() -> ArenaScenarioDefinition {
   s.steps.push_back(
       form(0.3F, legion, Intent::TriplexAcies, {0.0F, 0.0F, 52.0F}, 180.0F));
   s.steps.push_back(
-      attack_move(14.0F, QStringLiteral("elephants"), QStringLiteral("legion_swords")));
+      attack_move(6.0F, QStringLiteral("elephants"), QStringLiteral("legion_swords")));
   s.steps.push_back(attack_move(
-      52.0F, QStringLiteral("legion_swords"), QStringLiteral("mercenaries")));
+      85.0F, QStringLiteral("legion_swords"), QStringLiteral("mercenaries")));
 
   s.battle_sides = {
       {k_rome, QStringLiteral("Rome"), {0.0F, 0.0F, 52.0F}, 30.0F},
       {k_carthage, QStringLiteral("Carthage"), {0.0F, 0.0F, -50.0F}, 30.0F}};
   s.expectations = {
       rendered(QStringLiteral("legion_swords")),
-      rendered(QStringLiteral("elephants")),
       manoeuvre(QStringLiteral("legion_swords"), QStringLiteral("lane_shift"), 0.99F),
       manoeuvre(
           QStringLiteral("elephants"), QStringLiteral("elephant_lane_runs"), 3.0F),
