@@ -1,6 +1,8 @@
 #include "commander_behavior.h"
 
 #include <algorithm>
+#include <cstdio>
+#include <cstdlib>
 #include <cmath>
 #include <limits>
 #include <utility>
@@ -325,6 +327,18 @@ void CommanderBehavior::execute(const AISnapshot& snapshot,
 
     const float dx = snap->pos_x - target_x;
     const float dz = snap->pos_z - target_z;
+    if (std::getenv("SOI_TMP_BUILD") != nullptr) {
+      const auto owner = context.assigned_units.find(commander_id);
+      std::fprintf(stderr, "CMD t=%.0f p%d at %.1f,%.1f hp %d base %.1f,%.1f dist %.1f army %d@%.1f,%.1f -> %.1f,%.1f march %d wave %d/%zu state %d owner %s\n",
+                   snapshot.game_time, context.player_id, snap->pos_x, snap->pos_z, snap->health,
+                   context.base_pos_x, context.base_pos_z,
+                   std::hypot(snap->pos_x - context.base_pos_x, snap->pos_z - context.base_pos_z),
+                   army.count, army.x, army.z, target_x, target_z,
+                   commander_marches_with_army(context, *snap, army) ? 1 : 0,
+                   context.wave.committed ? 1 : 0, context.wave.members.size(),
+                   static_cast<int>(context.state),
+                   owner != context.assigned_units.end() ? owner->second.assigned_task : "-");
+    }
     if (dx * dx + dz * dz < k_snap_threshold_sq) {
       continue;
     }
