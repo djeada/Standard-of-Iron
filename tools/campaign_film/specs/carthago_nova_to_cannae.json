@@ -366,7 +366,6 @@
       "anchor": "head",
       "source": "Polybius III.35, III.56, III.60, III.114",
       "in": 1.0,
-      "out": 20.0,
       "keys": [
         {
           "time": 0.0,
@@ -408,7 +407,6 @@
       },
       "source": "Polybius III.113",
       "in": 17.6,
-      "out": 20.0,
       "keys": [
         {
           "time": 0.0,
