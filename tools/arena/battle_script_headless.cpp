@@ -87,8 +87,8 @@ auto run(const ArenaScenarioDefinition& definition, const Options& options) -> R
         Game::Systems::OwnerType::Neutral) {
       owners.register_owner_with_id(
           owner_team.owner_id,
-          Game::Systems::OwnerType::AI,
-          QStringLiteral("Arena Ally %1").arg(owner_team.owner_id).toStdString());
+          Game::Systems::OwnerType::Player,
+          QStringLiteral("Scripted Army %1").arg(owner_team.owner_id).toStdString());
     }
     owners.set_owner_team(owner_team.owner_id, owner_team.team_id);
   }

@@ -5,7 +5,7 @@
   "description": "Hannibal's double envelopment on the Aufidus: the Roman deep centre presses the Gallic and Iberian crescent back, the Libyans wheel in on both flanks, and Hasdrubal's horse rides round the Roman rear.",
   "sources": "Polybius 3.107-117; Livy 22.44-50",
   "scale": 0.1,
-  "duration": 300,
+  "duration": 360,
   "graphics_quality": "ultra",
   "camera": {
     "distance": 430,
@@ -455,20 +455,16 @@
         },
         {
           "type": "attack",
-          "groups": [
-            "numidians",
-            "hanno"
-          ],
+          "group": "numidians",
           "target": "allied_horse"
         },
         {
-          "type": "attack",
+          "type": "hold",
           "groups": [
             "allied_horse",
             "varro"
           ],
-          "target": "numidians",
-          "delay": 1
+          "note": "Varro's horse stands while the Numidians skirmish"
         }
       ]
     },
@@ -626,11 +622,10 @@
     },
     {
       "id": "roman_horse_routed",
-      "label": "The Roman horse is cut down or flees along the river",
+      "label": "The Roman horse is cut down by the river; Hasdrubal rides behind the Roman army",
       "trigger": {
-        "type": "strength_below",
+        "type": "destroyed",
         "group": "roman_horse",
-        "fraction": 0.3,
         "fallback_at": 130
       },
       "actions": [
@@ -642,8 +637,39 @@
             "hasdrubal"
           ],
           "to": [
-            150,
-            -250
+            -240,
+            -300
+          ],
+          "keep_shape": false,
+          "run": true
+        }
+      ]
+    },
+    {
+      "id": "hasdrubal_rides",
+      "label": "Hasdrubal crosses behind the whole Roman army",
+      "trigger": {
+        "type": "area",
+        "group": "iberian_horse",
+        "center": [
+          -240,
+          -300
+        ],
+        "radius": 45,
+        "after": "roman_horse_routed",
+        "fallback_at": 150
+      },
+      "actions": [
+        {
+          "type": "move",
+          "groups": [
+            "iberian_horse",
+            "gallic_horse",
+            "hasdrubal"
+          ],
+          "to": [
+            170,
+            -290
           ],
           "keep_shape": false,
           "run": true
@@ -654,11 +680,25 @@
       "id": "allied_horse_breaks",
       "label": "Hasdrubal falls on the allied horse, which breaks",
       "trigger": {
-        "type": "phase",
-        "phase": "roman_horse_routed",
-        "delay": 18
+        "type": "area",
+        "group": "iberian_horse",
+        "center": [
+          170,
+          -290
+        ],
+        "radius": 60,
+        "after": "hasdrubal_rides",
+        "fallback_at": 230
       },
       "actions": [
+        {
+          "type": "hold",
+          "groups": [
+            "allied_horse",
+            "varro"
+          ],
+          "enabled": false
+        },
         {
           "type": "charge",
           "groups": [
@@ -671,6 +711,11 @@
           "type": "attack",
           "group": "hasdrubal",
           "target": "allied_horse"
+        },
+        {
+          "type": "attack",
+          "group": "allied_horse",
+          "target": "iberian_horse"
         }
       ]
     },
@@ -682,7 +727,7 @@
         "group": "allied_horse",
         "fraction": 0.35,
         "after": "allied_horse_breaks",
-        "fallback_at": 220
+        "fallback_at": 280
       },
       "actions": [
         {
