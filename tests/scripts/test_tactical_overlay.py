@@ -114,7 +114,10 @@ class ProjectionTest(unittest.TestCase):
 
 @unittest.skipUnless((FIXTURES / "real.camera.jsonl").is_file(), "no real capture fixture")
 class RealCaptureTest(unittest.TestCase):
-    """Frames exported by an arena capture of cine_field (see the fixture README)."""
+    """Frames 0, 120 and 239 of the track arena wrote for
+    tools/arena/promos/tactical/cine_field_tactical.json (RTX 5060, Ultra),
+    trimmed to two groups without per-unit rows. The shot aims an orbit camera
+    at (-4, 0, 0)."""
 
     def setUp(self):
         self.track = overlay.CameraTrack.load(FIXTURES / "real.camera.jsonl")

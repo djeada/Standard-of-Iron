@@ -8,25 +8,63 @@
   "supersample": 1,
   "audio": false,
   "gameplay_ui": false,
-  "overlay_groups": ["rome_swords", "rome_spears", "punic_swords", "punic_spears"],
+  "overlay_groups": [
+    "rome_swords",
+    "rome_spears",
+    "punic_swords",
+    "punic_spears"
+  ],
   "shots": [
     {
       "name": "phase_one",
       "scenario": "cine_field",
       "start": 16.0,
       "duration": 8.0,
-      "focus": { "mode": "point", "point": [-4, 0, 0], "smoothing": 0 },
-      "lighting": { "hour": 15.4 },
+      "focus": {
+        "mode": "point",
+        "point": [
+          -4,
+          0,
+          0
+        ],
+        "smoothing": 0
+      },
+      "lighting": {
+        "hour": 15.4
+      },
       "interp": "spline",
       "camera": [
-        { "time": 0.0, "distance": 125, "pitch": 34, "yaw": 150, "fov": 38 },
-        { "time": 8.0, "distance": 110, "pitch": 30, "yaw": 178, "fov": 38 }
+        {
+          "time": 0.0,
+          "distance": 125,
+          "pitch": 34,
+          "yaw": 150,
+          "fov": 38
+        },
+        {
+          "time": 8.0,
+          "distance": 110,
+          "pitch": 30,
+          "yaw": 178,
+          "fov": 38
+        }
       ],
       "vertical": {
-        "focus": { "offset": [-18, 0, 0] },
         "camera": [
-          { "time": 0.0, "distance": 105, "pitch": 40, "yaw": 120, "fov": 46 },
-          { "time": 8.0, "distance": 95, "pitch": 36, "yaw": 140, "fov": 46 }
+          {
+            "time": 0.0,
+            "distance": 140,
+            "pitch": 44,
+            "yaw": 258,
+            "fov": 40
+          },
+          {
+            "time": 8.0,
+            "distance": 125,
+            "pitch": 40,
+            "yaw": 276,
+            "fov": 40
+          }
         ]
       }
     }
