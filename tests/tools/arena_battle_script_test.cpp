@@ -386,6 +386,8 @@ TEST(BattlePhaseTriggerTest, TimePhaseAndDelayTriggersFireInOrder) {
                     marker("second", after_first),
                     marker("gated", gated),
                     marker("fallback", never_but_fallback)};
+  scenario.expectations = {
+      {Arena::ArenaExpectationKind::GroupExists, QStringLiteral("a")}};
   ASSERT_TRUE(Arena::validate_scenario(scenario).empty());
 
   Arena::ArenaScenarioRunner runner(world, make_entity_host(world), scenario);
@@ -439,6 +441,8 @@ TEST(BattlePhaseTriggerTest, StrengthAreaAndContactTriggers) {
   scenario.steps = {marker("weakened", weakened),
                     marker("arrived", arrived),
                     marker("touching", touching)};
+  scenario.expectations = {
+      {Arena::ArenaExpectationKind::GroupExists, QStringLiteral("a")}};
   ASSERT_TRUE(Arena::validate_scenario(scenario).empty());
 
   Arena::ArenaScenarioRunner runner(world, make_entity_host(world), scenario);
