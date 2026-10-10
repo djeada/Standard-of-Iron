@@ -8,6 +8,7 @@ add_executable(
     systems/ai_stall_recovery_test.cpp
     systems/ai_worker_pool_test.cpp
     systems/ai_commander_doctrine_test.cpp
+    systems/ai_battle_order_intent_test.cpp
     systems/ai_doctrine_catalog_test.cpp
     systems/squad_service_test.cpp
     systems/wall_system_test.cpp

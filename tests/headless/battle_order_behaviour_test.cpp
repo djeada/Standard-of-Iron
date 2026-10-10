@@ -217,15 +217,29 @@ protected:
     float wing_wheel{0.0F};
     bool saw_yielding{false};
     float centre_retreat{0.0F};
-    float wing_drift_before_wheel{0.0F};
+    float wing_drift_while_holding{0.0F};
     std::vector<QVector3D> final_positions;
   };
+
+  auto live_formation(const std::vector<EntityID>& members) -> const ArmyFormation* {
+    for (auto const id : members) {
+      if (alive(id)) {
+        if (const auto* formation = formation_of(id)) {
+          return formation;
+        }
+      }
+    }
+    return nullptr;
+  }
 
   auto run_crescent(double seconds) -> CrescentRun {
     open();
     auto const carthage =
-        row(SpawnType::Swordsman, k_carthage, 8, QVector3D(80.0F, 0.0F, 60.0F), 8.0F, 0.0F);
-    deploy(carthage, k_carthage, QVector3D(80.0F, 0.0F, 60.0F), 0.0F,
+        row(SpawnType::Swordsman, k_carthage, 8, QVector3D(0.0F, 0.0F, -20.0F), 8.0F, 0.0F);
+    deploy(carthage,
+           k_carthage,
+           QVector3D(0.0F, 0.0F, -20.0F),
+           0.0F,
            ArmyFormationIntent::ConvexCrescent);
     form_up(carthage, 60.0);
     const auto* formation = formation_of(carthage.front());
@@ -248,44 +262,55 @@ protected:
     }
     EXPECT_FALSE(centre.empty());
     EXPECT_FALSE(wings.empty());
+    if (centre.empty()) {
+      return {};
+    }
     std::map<EntityID, QVector3D> start;
     for (auto const id : carthage) {
       start[id] = position_of(id);
     }
 
     auto const romans =
-        row(SpawnType::Swordsman, k_rome, 6, QVector3D(80.0F, 0.0F, 98.0F), 6.0F, 180.0F);
+        row(SpawnType::Swordsman, k_rome, 6, QVector3D(0.0F, 0.0F, 18.0F), 6.0F, 180.0F);
     for (std::size_t i = 0; i < romans.size(); ++i) {
       attack({romans[i]}, k_rome, centre[i % centre.size()]);
     }
 
     CrescentRun result;
+    std::map<EntityID, float> forward_at_contact;
     run(seconds, [&] {
-      const auto* live = formation_of(carthage.front());
+      const auto* live = live_formation(carthage);
       if (live == nullptr) {
         return;
       }
-      result.saw_yielding = result.saw_yielding || live->manoeuvre.yielding;
-      if (!live->manoeuvre.wheel_ordered) {
+      auto const& state = live->manoeuvre;
+      if (state.yielding && !result.saw_yielding) {
+        for (auto const id : centre) {
+          forward_at_contact[id] = QVector3D::dotProduct(position_of(id), forward);
+        }
+      }
+      result.saw_yielding = result.saw_yielding || state.yielding;
+      result.centre_yield = std::max(result.centre_yield, state.centre_yield);
+      result.wing_wheel = std::max(result.wing_wheel, state.wing_wheel);
+      // While the centre has given less than half its ground the fight is all
+      // at the centre; the wings must stand.
+      if (state.centre_yield < 0.5F) {
         for (auto const id : wings) {
           if (alive(id)) {
-            result.wing_drift_before_wheel = std::max(
-                result.wing_drift_before_wheel, (position_of(id) - start[id]).length());
+            result.wing_drift_while_holding =
+                std::max(result.wing_drift_while_holding,
+                         (position_of(id) - start[id]).length());
           }
         }
       }
     });
-    if (const auto* live = formation_of(carthage.front())) {
-      result.centre_yield = live->manoeuvre.centre_yield;
-      result.wing_wheel = live->manoeuvre.wing_wheel;
-    }
     float retreat = 0.0F;
     int counted = 0;
-    for (auto const id : centre) {
+    for (auto const& [id, at_contact] : forward_at_contact) {
       if (!alive(id)) {
         continue;
       }
-      retreat += -QVector3D::dotProduct(position_of(id) - start[id], forward);
+      retreat += at_contact - QVector3D::dotProduct(position_of(id), forward);
       ++counted;
     }
     result.centre_retreat = counted > 0 ? retreat / static_cast<float>(counted) : 0.0F;
@@ -304,15 +329,15 @@ protected:
 };
 
 TEST_F(BattleOrderBehaviourTest, CrescentCentreGivesGroundWhileTheWingsHold) {
-  auto const result = run_crescent(45.0);
+  auto const result = run_crescent(80.0);
   EXPECT_TRUE(result.saw_yielding);
-  EXPECT_GT(result.centre_yield, 0.25F);
+  EXPECT_GT(result.centre_yield, 0.7F);
   // The pressed centre stepped back toward its own lines...
-  EXPECT_GT(result.centre_retreat, 2.0F);
-  // ...while the wings stood until they were ordered to wheel.
-  EXPECT_LT(result.wing_drift_before_wheel, 2.5F);
-  // Given ground enough, the wings wheel in.
-  EXPECT_GT(result.wing_wheel, 0.0F);
+  EXPECT_GT(result.centre_retreat, 3.0F);
+  // ...while the wings stood...
+  EXPECT_LT(result.wing_drift_while_holding, 1.5F);
+  // ...until, given ground enough, they wheeled in.
+  EXPECT_GT(result.wing_wheel, 0.5F);
 }
 
 TEST_F(BattleOrderBehaviourTest, CrescentFightIsDeterministicTakeToTake) {
@@ -333,8 +358,8 @@ TEST_F(BattleOrderBehaviourTest, ElephantsRunTheOpenLanesOfATriplexAcies) {
   open();
   // The legion faces south (toward -z); the elephant comes from the south.
   auto const legion =
-      row(SpawnType::Swordsman, k_rome, 9, QVector3D(80.0F, 0.0F, 100.0F), 8.0F, 180.0F);
-  deploy(legion, k_rome, QVector3D(80.0F, 0.0F, 100.0F), 180.0F,
+      row(SpawnType::Swordsman, k_rome, 9, QVector3D(0.0F, 0.0F, 30.0F), 8.0F, 180.0F);
+  deploy(legion, k_rome, QVector3D(0.0F, 0.0F, 30.0F), 180.0F,
          ArmyFormationIntent::TriplexAcies);
   form_up(legion, 60.0);
   const auto* formation = formation_of(legion.front());
@@ -344,15 +369,15 @@ TEST_F(BattleOrderBehaviourTest, ElephantsRunTheOpenLanesOfATriplexAcies) {
   EntityID target = 0;
   for (const auto& slot : formation->slot_list) {
     if (slot.band == BattleBand::Hastati &&
-        (target == 0 || std::abs(slot.world_position.x() - 80.0F) <
-                            std::abs(position_of(target).x() - 80.0F))) {
+        (target == 0 || std::abs(slot.world_position.x()) <
+                            std::abs(position_of(target).x()))) {
       target = slot.occupant;
     }
   }
   ASSERT_NE(target, 0U);
 
   auto const elephant =
-      spawn(SpawnType::Elephant, k_carthage, QVector3D(83.0F, 0.0F, 30.0F), 0.0F);
+      spawn(SpawnType::Elephant, k_carthage, QVector3D(3.0F, 0.0F, -40.0F), 0.0F);
   ASSERT_NE(elephant, 0U);
   int const legion_health = health_of(legion);
   attack({elephant}, k_carthage, target);
@@ -360,12 +385,17 @@ TEST_F(BattleOrderBehaviourTest, ElephantsRunTheOpenLanesOfATriplexAcies) {
   float rear_z = -1000.0F;
   bool lanes_opened = false;
   bool ran_through = false;
+  bool ran_a_lane = false;
   run(45.0, [&] {
     const auto* live = formation_of(legion.front());
     if (live == nullptr) {
       return;
     }
     lanes_opened = lanes_opened || live->manoeuvre.lanes_opened;
+    if (const auto* beast =
+            m_session->world().try_get<Engine::Core::ElephantComponent>(elephant)) {
+      ran_a_lane = ran_a_lane || beast->lane_running;
+    }
     for (const auto& slot : live->slot_list) {
       if (slot.band == BattleBand::Triarii) {
         rear_z = std::max(rear_z, slot.world_position.z() + slot.half_depth);
@@ -377,6 +407,7 @@ TEST_F(BattleOrderBehaviourTest, ElephantsRunTheOpenLanesOfATriplexAcies) {
   });
 
   EXPECT_TRUE(lanes_opened);
+  EXPECT_TRUE(ran_a_lane);
   EXPECT_TRUE(ran_through) << "elephant ended at z=" << position_of(elephant).z()
                            << " rear line at z=" << rear_z;
   // The lanes absorbed the charge: the maniples lost little.

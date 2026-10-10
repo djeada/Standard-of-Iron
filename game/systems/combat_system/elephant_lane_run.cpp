@@ -244,6 +244,12 @@ void steer_down_lane(Engine::Core::Entity& elephant,
     return;
   }
   movement->clear_structure_approach_target();
+  if (const auto* transform = elephant.get_component<Engine::Core::TransformComponent>()) {
+    QVector3D const here(transform->position.x, 0.0F, transform->position.z);
+    if ((here - goal).lengthSquared() <= 1.0F) {
+      return;
+    }
+  }
   if (movement->get_has_target() || movement->has_waypoints()) {
     QVector3D const planned =
         movement->get_has_requested_goal()

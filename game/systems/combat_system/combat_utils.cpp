@@ -744,8 +744,9 @@ auto may_engage(Engine::Core::Entity* unit,
       (attack_comp == nullptr || !is_ranged_mode(attack_comp))) {
     return false;
   }
-  // A crescent wing holds its ground until it wheels in on the enemy flank.
-  if (trigger == EngagementTrigger::Opportunity &&
+  // A crescent wing holds its ground until it wheels in on the enemy flank: it
+  // answers a blow aimed at itself, nothing else.
+  if (trigger != EngagementTrigger::Retaliation &&
       Game::Formation::ArmyFormationRuntime::holds_for_manoeuvre(*unit)) {
     return false;
   }
