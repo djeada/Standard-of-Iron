@@ -7,6 +7,7 @@
 #include "core/component_core.h"
 #include "core/component_gameplay.h"
 #include "core/world.h"
+#include "game/command/command_queue.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
 #include "game/session/session_context.h"
@@ -107,7 +108,12 @@ TEST_F(FordAiCrossingTest, AnAiPlannerMoveWadesAcrossTheFord) {
   command.move_target_x = {target.x()};
   command.move_target_y = {0.0F};
   command.move_target_z = {target.z()};
-  Game::Systems::AI::AICommandApplier::apply(world, 2, {command});
+  {
+    // The test world has no session queue: dispatch the AI's order at once.
+    Game::Command::ScopedImmediateDispatch immediate_orders;
+    auto const report = Game::Systems::AI::AICommandApplier::apply(world, 2, {command});
+    ASSERT_EQ(report.stale_subjects, 0);
+  }
 
   bool waded = false;
   int arrived = 0;
