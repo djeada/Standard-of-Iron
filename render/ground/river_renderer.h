@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QMatrix4x4>
+#include <QVector4D>
 
 #include <memory>
 #include <vector>
@@ -37,12 +38,20 @@ private:
   float m_tile_size = 1.0F;
   const Game::Map::TerrainHeightMap* m_height_map = nullptr;
   Game::Map::BiomeSettings m_biome_settings;
+  struct FordPatch {
+    QVector4D a;
+    QVector4D b;
+  };
   struct SurfaceMesh {
     std::unique_ptr<Mesh> mesh;
     WaterSurfaceKind kind = WaterSurfaceKind::River;
     QVector3D visibility_start;
     QVector3D visibility_end;
+    std::vector<FordPatch> fords;
   };
+  [[nodiscard]] auto fords_near(const QVector3D& start,
+                                const QVector3D& end,
+                                float width) const -> std::vector<FordPatch>;
   std::vector<SurfaceMesh> m_meshes;
 };
 

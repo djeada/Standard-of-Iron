@@ -8,6 +8,7 @@
 #include "../core/world.h"
 #include "army_formation_ambient.h"
 #include "army_formation_cohesion.h"
+#include "army_formation_manoeuvre.h"
 #include "army_formation_march.h"
 #include "army_formation_morph.h"
 #include "army_formation_planner.h"
@@ -61,6 +62,7 @@ void refresh_cohesion(Engine::Core::World& world, ArmyFormationRegistry& registr
     if (formation == nullptr) {
       continue;
     }
+    Manoeuvre::update(world, *formation, Tuning::k_cohesion_interval_seconds);
     Cohesion::refresh_shape_state(world, *formation);
     Cohesion::collect_stragglers(
         world, *formation, Tuning::k_cohesion_interval_seconds);
@@ -134,6 +136,20 @@ auto ArmyFormationRuntime::damage_taken_multiplier(const Engine::Core::Entity& e
   return formation == nullptr ? 1.0F : Cohesion::damage_taken_multiplier(*formation);
 }
 
+auto ArmyFormationRuntime::give_ground_velocity(const Engine::Core::Entity& entity)
+    -> QVector3D {
+  const auto* formation = formation_of(entity);
+  return formation == nullptr ? QVector3D()
+                              : Manoeuvre::give_ground_velocity(*formation, entity);
+}
+
+auto ArmyFormationRuntime::holds_for_manoeuvre(const Engine::Core::Entity& entity)
+    -> bool {
+  const auto* formation = formation_of(entity);
+  return formation != nullptr &&
+         Manoeuvre::holds_for_manoeuvre(*formation, entity.get_id());
+}
+
 auto ArmyFormationRuntime::move_speed_multiplier(const Engine::Core::Entity& entity)
     -> float {
   const auto* formation = formation_of(entity);
@@ -152,6 +168,8 @@ void ArmyFormationRuntime::begin_move(Engine::Core::World& world,
     return;
   }
 
+  formation->manoeuvre.clear();
+  Manoeuvre::reapply(*formation);
   formation->destination = destination;
   formation->destination_facing = facing;
   formation->has_destination = true;

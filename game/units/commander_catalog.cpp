@@ -355,6 +355,12 @@ void configure_commander_component(Engine::Core::Entity& entity, TroopType troop
   if (definition == nullptr) {
     return;
   }
+  configure_commander_component(entity, *definition);
+}
+
+void configure_commander_component(Engine::Core::Entity& entity,
+                                   const CommanderDefinition& definition_ref) {
+  auto const* definition = &definition_ref;
   auto* commander = entity.get_component<Engine::Core::CommanderComponent>();
   if (commander == nullptr) {
     commander = entity.add_component<Engine::Core::CommanderComponent>();
@@ -400,7 +406,7 @@ auto commander_definitions_for_nation(Game::Systems::NationID nation_id)
     -> std::vector<const CommanderDefinition*> {
   std::vector<const CommanderDefinition*> result;
   for (const auto& definition : all_commander_definitions()) {
-    if (definition.nation_id == nation_id) {
+    if (definition.playable && definition.nation_id == nation_id) {
       result.push_back(&definition);
     }
   }

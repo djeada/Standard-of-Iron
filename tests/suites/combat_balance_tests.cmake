@@ -20,6 +20,7 @@ add_executable(
     formation/formation_data_loader_test.cpp
     formation/formation_movement_test.cpp
     formation/formation_terrain_navigation_test.cpp
+    formation/battle_order_layout_test.cpp
     map/map_crossing_traversal_test.cpp
     core/system_access_verification_test.cpp
     systems/runtime_phase_order_test.cpp
@@ -68,6 +69,7 @@ add_executable(
     headless/stuck_recovery_test.cpp
     headless/movement_pace_test.cpp
     headless/army_formation_march_test.cpp
+    headless/battle_order_behaviour_test.cpp
     headless/formation_ux_lab_test.cpp
     headless/army_command_test.cpp
     headless/hill_containment_test.cpp

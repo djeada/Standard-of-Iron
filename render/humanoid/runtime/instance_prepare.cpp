@@ -104,6 +104,11 @@ constexpr float k_soldier_cull_keep_band = 5.0F;
 constexpr std::uint32_t k_soldier_visibility_memory_frames = 12U;
 constexpr std::uint32_t k_selection_refresh_period = 8U;
 
+// Water depth (world units) at which a soldier starts lifting his arms, and the
+// extra depth over which the wading pose blends fully in.
+constexpr float k_wade_pose_start_depth = 0.12F;
+constexpr float k_wade_pose_full_span = 0.20F;
+
 auto humanoid_selection_is_steady(
     const Render::GL::HumanoidAnimationContext& anim_ctx) noexcept -> bool {
   auto const& in = anim_ctx.inputs;
@@ -111,7 +116,7 @@ auto humanoid_selection_is_steady(
       in.has_showcase_clip || in.has_authored_action_clip || in.is_in_hold_mode ||
       in.is_exiting_hold || in.is_guarding || in.is_exiting_guard ||
       in.is_hit_reacting || in.is_healing || in.is_routing || in.is_constructing ||
-      in.is_carrying_load || in.is_dying || in.is_dead ||
+      in.is_carrying_load || in.is_wading || in.is_dying || in.is_dead ||
       in.is_defensive_layout_locked ||
       in.shield_formation_pose != Render::GL::ShieldFormationPose::None ||
       in.combat_visual.authoritative ||
@@ -1707,6 +1712,17 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
       }
     }
     shadow_surface_height_valid = true;
+  }
+  if (!is_mounted_spawn) {
+    auto const& wade_terrain = ctx.world_view.terrain_or_empty();
+    if (wade_terrain.has_fords()) {
+      QVector3D const feet = RCP::model_world_origin(inst_ctx.model);
+      float const depth = wade_terrain.ford_water_depth_at(feet.x(), feet.z());
+      float const amount = std::clamp(
+          (depth - k_wade_pose_start_depth) / k_wade_pose_full_span, 0.0F, 1.0F);
+      anim_ctx.inputs.is_wading = amount > 0.0F;
+      anim_ctx.inputs.wade_amount = amount * amount * (3.0F - (2.0F * amount));
+    }
   }
   if (commander_jump.height_offset > 0.0F) {
     RCP::set_model_world_y(inst_ctx.model,

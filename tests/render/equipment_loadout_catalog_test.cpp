@@ -1,5 +1,6 @@
 #include <array>
 #include <gtest/gtest.h>
+#include <set>
 #include <string>
 
 #include "render/creature/archetype_registry.h"
@@ -424,6 +425,40 @@ TEST_F(EquipmentLoadoutCatalogTest, CommanderLoadoutsUseSixDistinctHelmetAndCloa
       EXPECT_NE(helmet_handles[left], helmet_handles[right]);
       EXPECT_NE(cloak_handles[left], cloak_handles[right]);
     }
+  }
+}
+
+TEST_F(EquipmentLoadoutCatalogTest,
+       HistoricalCommandersEachWearTheirOwnHelmetAndCloak) {
+  constexpr std::array<const char*, 16> renderer_keys{
+      "troops/roman/commanders/fabius_maximus",
+      "troops/roman/commanders/scipio_africanus",
+      "troops/roman/commanders/marcellus",
+      "troops/carthage/commanders/hanno_the_great",
+      "troops/carthage/commanders/hasdrubal_barca",
+      "troops/carthage/commanders/hannibal_barca",
+      "troops/roman/commanders/sempronius_longus",
+      "troops/roman/commanders/gaius_flaminius",
+      "troops/roman/commanders/terentius_varro",
+      "troops/roman/commanders/aemilius_paullus",
+      "troops/roman/commanders/scipio_consul_218",
+      "troops/carthage/commanders/mago_barca",
+      "troops/carthage/commanders/maharbal",
+      "troops/carthage/commanders/hanno_bomilcar",
+      "troops/carthage/commanders/hasdrubal_cavalry",
+      "troops/numidian/commanders/masinissa",
+  };
+
+  std::set<Render::GL::EquipmentHandle> helmets;
+  std::set<Render::GL::EquipmentHandle> cloaks;
+  for (auto const* renderer_key : renderer_keys) {
+    SCOPED_TRACE(renderer_key);
+    auto const loadout = Render::GL::Nation::resolve_equipment_loadout(renderer_key);
+    ASSERT_TRUE(loadout.found);
+    EXPECT_NE(loadout.helmet_handle, k_invalid_equipment_handle);
+    EXPECT_NE(loadout.cloak_handle, k_invalid_equipment_handle);
+    EXPECT_TRUE(helmets.insert(loadout.helmet_handle).second) << "shared helmet";
+    EXPECT_TRUE(cloaks.insert(loadout.cloak_handle).second) << "shared cloak";
   }
 }
 

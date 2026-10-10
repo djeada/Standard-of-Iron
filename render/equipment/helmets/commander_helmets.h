@@ -19,7 +19,21 @@ enum class CommanderHelmetStyle : std::uint8_t {
   Hanno,
   Hasdrubal,
   Hannibal,
+
+  // Historical cameo commanders (issue #1522); not playable.
+  Sempronius,
+  Flaminius,
+  Varro,
+  Paullus,
+  ScipioElder,
+  Mago,
+  Maharbal,
+  HannoBomilcar,
+  HasdrubalCavalry,
+  Masinissa,
 };
+
+inline constexpr std::size_t k_commander_helmet_style_count = 16U;
 
 inline constexpr std::uint32_t k_commander_helmet_role_count = 4U;
 

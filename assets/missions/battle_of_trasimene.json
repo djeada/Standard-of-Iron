@@ -11,6 +11,9 @@
     "nation": "carthage",
     "faction": "carthaginian",
     "color": "brown",
+    "historical_commanders": [
+      "carthage_maharbal"
+    ],
     "starting_units": [],
     "starting_buildings": [],
     "starting_resources": {
@@ -24,6 +27,9 @@
       "nation": "roman_republic",
       "faction": "roman",
       "color": "red",
+      "historical_commanders": [
+        "roman_gaius_flaminius"
+      ],
       "team_id": 1,
       "difficulty": "hard",
       "strategy": "rusher",

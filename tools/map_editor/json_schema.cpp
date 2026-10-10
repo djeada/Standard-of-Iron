@@ -237,7 +237,7 @@ auto linear_schema(const QString& sub_type) -> JsonSchema {
                      "string",
                      "Segment kind.",
                      sub_type.isEmpty() ? QStringLiteral("road") : sub_type,
-                     {"river", "road", "bridge", "wall"}),
+                     {"river", "road", "bridge", "ford", "wall"}),
       required_field("start", "[x, z]", "Start point in grid cells.", QJsonArray{0, 0}),
       required_field("end", "[x, z]", "End point in grid cells.", QJsonArray{0, 0}),
       optional_field("width", "number", "3.0", "Segment width in cells.", 3.0),
@@ -246,6 +246,48 @@ auto linear_schema(const QString& sub_type) -> JsonSchema {
   if (sub_type == QStringLiteral("bridge")) {
     schema.fields.append(optional_field(
         "height", "number", "0.5", "Deck height; raised to 0.1 minimum on save.", 0.5));
+  }
+  const auto append_ford_profile = [&schema]() {
+    schema.fields.append(
+        optional_field("depth",
+                       "number",
+                       "0.45",
+                       "Water over the bed in mid-stream (0.15-0.8 m).",
+                       0.45));
+    schema.fields.append(
+        optional_field("speed",
+                       "number",
+                       "0.55",
+                       "Fraction of land speed kept while wading (0.2-1).",
+                       0.55));
+    schema.fields.append(
+        optional_field("cold",
+                       "number",
+                       "0",
+                       "Icy water (0-1): drains stamina and leaves troops "
+                       "chilled (weaker, slower) for a while.",
+                       0.0));
+    schema.fields.append(optional_field("exposure",
+                                        "number",
+                                        "1.25",
+                                        "Damage multiplier on troops in the water "
+                                        "(missiles a further x1.1).",
+                                        1.25));
+  };
+  if (sub_type == QStringLiteral("ford")) {
+    schema.summary = QStringLiteral(
+        "A wadeable stretch of river. Draw it bank to bank like a bridge; its width "
+        "is how many metres of the river can be waded. Troops cross slowed and "
+        "exposed, at waist depth.");
+    append_ford_profile();
+  }
+  if (sub_type == QStringLiteral("river")) {
+    schema.fields.append(optional_field(
+        "ford",
+        "bool | {depth, speed, cold, exposure}",
+        "false",
+        "The whole river can be waded (true, or an object with the ford's profile).",
+        false));
   }
   if (sub_type == QStringLiteral("road") || sub_type.isEmpty()) {
     schema.fields.append(optional_field("style",
@@ -361,6 +403,12 @@ auto troop_schema(const QString& sub_type) -> JsonSchema {
                      "[]",
                      "Patrol route: [{\"x\": 0, \"z\": 0}, …].",
                      QJsonArray{}),
+      optional_field("commander_id",
+                     "string",
+                     "unset",
+                     "Historical cameo commander fielded by a commander spawn, "
+                     "e.g. roman_terentius_varro; never playable.",
+                     QStringLiteral("roman_terentius_varro")),
   };
 
   return schema;

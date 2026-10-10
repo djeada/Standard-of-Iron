@@ -20,6 +20,7 @@ add_executable(
     tools/map_editor_generator_e2e_test.cpp
     tools/hill_projection_model_test.cpp
     tools/balance_sim_test.cpp
+    tools/campaign_film_spec_test.cpp
     widget_main.cpp
 )
 target_link_libraries(
@@ -34,6 +35,7 @@ target_link_libraries(
         game_sim
         map_editor_core
         balance_sim_harness
+        campaign_film_core
 )
 soi_register_test_binary(tools_tests)
 if(TARGET bake_creature_assets)

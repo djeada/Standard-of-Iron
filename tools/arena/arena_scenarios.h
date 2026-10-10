@@ -125,6 +125,10 @@ inline constexpr char k_worker_identity_lineup_id[] = "worker_identity_lineup";
 inline constexpr char k_unarmed_support_brawl_id[] = "unarmed_support_brawl";
 inline constexpr char k_helmet_identity_review_id[] = "helmet_identity_review";
 inline constexpr char k_commander_helmet_review_id[] = "commander_helmet_review";
+inline constexpr char k_historical_commander_lineup_id[] =
+    "historical_commander_lineup";
+inline constexpr char k_historical_commander_closeups_id[] =
+    "historical_commander_closeups";
 inline constexpr char k_roman_settlement_works_id[] = "roman_settlement_works";
 inline constexpr char k_carthage_settlement_works_id[] = "carthage_settlement_works";
 inline constexpr char k_commander_sword_duel_id[] = "commander_sword_commanders_duel";
@@ -159,6 +163,8 @@ inline constexpr char k_rockfall_hill_ramp_id[] = "rockfall_hill_ramp";
 inline constexpr char k_rockfall_hill_ai_id[] = "rockfall_hill_ai";
 inline constexpr char k_raft_crossing_id[] = "raft_crossing";
 inline constexpr char k_raft_contested_crossing_id[] = "raft_contested_crossing";
+inline constexpr char k_ford_legion_crossing_id[] = "ford_legion_crossing";
+inline constexpr char k_ford_mounted_crossing_id[] = "ford_mounted_crossing";
 inline constexpr char k_path_building_alley_id[] = "path_building_alley";
 inline constexpr char k_path_diagonal_wall_seal_id[] = "path_diagonal_wall_seal";
 inline constexpr char k_path_bridge_column_id[] = "path_bridge_column";

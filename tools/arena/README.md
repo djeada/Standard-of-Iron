@@ -779,7 +779,14 @@ scripts/promo-edit.py \
 ```
 
 The capture writes one `NN_<shot>.mp4` per shot, an `NN_<shot>.png` poster, and
-a `shots.json` manifest. `scripts/promo-edit.py` then concatenates, grades,
+a `shots.json` manifest. Beside each clip sits `NN_<shot>.camera.jsonl`, the
+exact view and projection matrices of every frame plus the live positions of the
+scenario's groups, and the pass writes `terrain_<scenario>_<seed>.json` once;
+`scripts/tactical_overlay.py` uses them to draw arrows, army blocks and labels
+that stay locked to the ground. A shot's `vertical` block records a 9:16 take of
+the same frames in the same pass (`NN_<shot>.vertical.mp4`). See "Vertical takes
+from the same pass", "Camera export" and "Tactical overlays" in
+[docs/PROMO_CAPTURE.md](../../docs/PROMO_CAPTURE.md). `scripts/promo-edit.py` then concatenates, grades,
 captions and scores them into one finished short in a single ffmpeg pass.
 `ffmpeg` must be on `PATH` for both steps.
 
@@ -1890,3 +1897,178 @@ down a structure (`target_group`); it mirrors `RepairStructure`.
 For stills of the collapse itself, capture between 11 and 14 s with a short
 interval, e.g. `--duration 17 --capture-interval 0.25 --scenario-distance 0.75
 --scenario-tilt 38`.
+
+## Battle scripts
+
+A battle script is a historical battle written as data: armies with their
+units, nations and commanders, where each formation stands, the ground, the
+weather, and the phases of the fight with the simulation events that start
+them. `battle_script.cpp` compiles one into an ordinary
+`ArenaScenarioDefinition` (groups with explicit per-unit positions plus named
+steps), so everything the arena can do with a scenario -- batch reports,
+captures, promo specs -- works on it. The shipped scripts live in
+`tools/arena/battles/`: `cannae.json` is complete; `trasimene.json` (the fog
+scenario of #1528), `trebia.json` and `zama.json` are skeletons.
+
+```bash
+# Validate, and print the order of battle at game scale and the phase list
+build/bin/arena_app --battle-script tools/arena/battles/cannae.json --battle-script-check
+
+# Play it on the real simulation without a window: phase timeline, world digest,
+# <artifact-dir>/battle_cannae/timeline.json; --determinism-check plays it twice
+QT_QPA_PLATFORM=offscreen build/bin/arena_app --headless --determinism-check \
+  --battle-script tools/arena/battles/cannae.json --artifact-dir artifacts/battles
+
+# Watch it, or capture it (the script's id is the scenario id)
+DISPLAY=:0 build/bin/arena_app --batch --battle-script tools/arena/battles/cannae.json \
+  --battle-script-scale 0.02 --capture-interval 5 --clean-capture
+```
+
+`--battle-script-scale` replaces the file's scale for a quick preview: counts
+follow the new scale and every authored position and distance is multiplied by
+`sqrt(new / authored)` so the field keeps its shape (an existing map is not
+shrunk; the loader warns). Promo specs load scripts with `"battle_scripts"` and
+cut on `phase:<event>` (docs/PROMO_CAPTURE.md).
+
+### Schema (`"schema": "soi.battle_script/1"`)
+
+Every object rejects unknown fields with a JSON path (`$.armies[0].groups[2].troop:
+unknown troop 'hoplite' ...`); `todo`, `note`, `notes`, `comment`, `source`,
+`sources`, `historical_name` and any `_`-prefixed key are ignored, which is where
+stand-ins and their planned replacements are recorded. Points are `[x, z]`
+metres in scenario space, centred on the map; yaw 0 faces +z and positive
+`degrees` turn clockwise seen from above (to the unit's right).
+
+- Top level: `id` (also the scenario id), `title`, `description`, `scale`
+  (default 0.1), `duration` seconds, `graphics_quality`, `camera`
+  (`distance`, `tilt`, `yaw`, `focus`).
+- `terrain`: either `{"map": "assets/maps/map_battle_trebia.json"}` (the map's
+  terrain, rivers, lakes, structures and environment) or a generated field:
+  `grid_extent`, `flat_extent`, `ground_type`, `height_scale`, `seed`, `snow`,
+  `boundary_mountains`, `scatter`, `props`, `rivers` (`points`, `width`),
+  `lakes` (`center`, `width`, `depth`, `rotation`), `hills` (`center`,
+  `radius`, `height`, `plateau`), `bridges` (`from`, `to`, `width`). Both forms
+  accept `fords` (see "Formations, commanders and fords").
+- `environment`: `hour`, `lighting_profile`, `time_mode` (`locked` or
+  `continuous`), `day_length`, `fog_density`, `exposure`.
+- `weather`: `rain`, `storm`, `snow`, `wind_strength`, `wind_direction`,
+  `water_mist` (default true), `fog_banks` and timed `changes` (below).
+- `armies[]`: `id`, `label`, `owner` (default 2, 3, ... -- owner 1 is the
+  arena's local player), `team` (armies on one team are allies, e.g. Carthage
+  with its Gallic and Iberian contingents as separate armies), `nation`,
+  `facing`, `historical_strength` (checked against the groups), `groups[]`,
+  `commanders[]`.
+- `groups[]`: `id`, `troop` (`swordsman`, `spearman`, `archer`, `slinger`,
+  `velites`, `horse_swordsman`, `horse_spearman`, `horse_archer`, `elephant`,
+  ...), optional `nation` (defaults to the army's; `gauls` and `iberians` are
+  real nations), exactly one of `historical` (soldiers) or `units` (game units,
+  unscaled), `deployment`, optional `formation`, `hold` (stand ground from the
+  start) and `ambush` (not spawned until a `reveal`).
+  Game units = `round(round(historical * scale) / individuals_per_unit)`, where
+  individuals per unit is the troop's own (15 swordsmen, 24 spearmen, 9 horse,
+  1 elephant...), so Cannae's 62,000 hastati and principes become 6,200 soldiers
+  in 413 units.
+- `deployment`: `shape` with `center` + `facing`, or an `anchor` to another
+  group: `{"behind" | "ahead_of" | "left_of" | "right_of": id, "gap": m,
+"offset": [right, forward]}` (the facing follows the reference unless set).
+  Shapes: `line`/`block` (`ranks`), `column` (`files`), `crescent` (`ranks`,
+  `bulge` metres toward the enemy; negative is concave), `multi_line`
+  (`lines`, `split` shares, `ranks` per line, `line_gap`, `lanes`,
+  `lane_width`, `stagger` for a quincunx; unstaggered lanes stay aligned so
+  elephants can pass through, as at Zama). `file_spacing` / `rank_spacing`
+  override the per-troop defaults (6 m infantry, 7.5-8 m horse).
+- `commanders[]`: at most **one per army**. The game allows one living
+  commander per owner (`owner_has_living_commander` in the unit factory) and
+  collapses an owner whose commander dies (`collapse_nation_if_leaderless`:
+  every troop of that owner falls at once). So each commander leads his own
+  allied army on the same `team` -- Cannae is seven armies (Servilius with the
+  infantry, Paullus with the Roman horse, Varro with the allied horse; Hannibal,
+  Mago, Hasdrubal, Hanno) and Paullus's death breaks only his wing. Fields:
+  `id`, `catalog_id` (validated against
+  `Game::Units::all_commander_definitions()`), then `position` + `facing` or
+  `with` a group (+ `offset`, default just behind it); `ambush` and `hold` as
+  for groups.
+- `phases[]`: `id`, `label`, `event` (default the id; exported as
+  `phase:<event>`), `trigger`, `actions[]`.
+    - Triggers (`type`): `start`, `time` (`at`), `contact` (`group`, `with`,
+      `distance`), `strength_below` (`group`, `fraction` of its starting
+      health), `destroyed` (`group`), `area` (`group` centroid within `radius` of
+      `center`), `phase` (`phase` started, + `delay`). Any trigger can add
+      `after` (a phase that must have started first) and `fallback_at` (fire at
+      this second regardless, so a stalled fight still reaches its next beat).
+    - Actions (`type`, optional `delay` after the phase starts; orders take
+      `group` or `groups`): `move` (`to` a point, or `by` an offset; keeps the
+      group's shape unless `keep_shape` is false, `run` for a reforming run),
+      `attack` and `charge` (`target`), `hold` (`enabled`), `stop`, `wheel`
+      (`degrees`, `pivot` `left`/`right`/`center` or a point), `reveal` (spawns an
+      ambush group, optional `target`), `formation` (`groups`, `formation`, `at`,
+      `facing`, `frontage`) and `weather` (a weather change, below).
+- Weather changes (`weather.changes[]` with `at`, or a `weather` action):
+  `duration`, `fog_density`, `exposure`, `rain`, `storm`, `snow`,
+  `wind_strength`, `wind_direction`, `hour`, `fog_banks[]` (`id`, `density`,
+  `radius`, `height`, `center`/`from`, `to`). Each change blends with a
+  smoothstep from whatever the earlier layers give at that moment, so a fog
+  that is already thinning by its keys keeps thinning while a phase lifts it.
+
+Phases compile to named steps: a `Marker` step `phase:<id>` carries the
+trigger and the event, and each action is a step triggered by
+`StepExecuted(phase:<id>) + delay`. The runner records every marker it fires in
+`report.events` (also in `report.json` as `events`, with the final
+`world_digest`), and the promo dry run copies them into `timeline.json`.
+
+### Fog banks, lake mist and scripted weather
+
+The arena now builds the same mist the game does: `Render::build_mist_volumes`
+(render/mist_volume_builder.cpp, shared with `SkirmishLoader`) turns the
+terrain's rivers and lakes into water mist and fog zones / undead zones into
+miasma; `weather.water_mist: false` turns it off for a scenario. Fog banks are
+authored on top as capsules (`from`/`to`, or a round `center`) with `radius`,
+`height` (the mist ceiling above the ground, per volume -- the shader's
+`u_mist_ceiling`) and `density`, animated by time-ordered `keys` and by
+weather changes. `ArenaWeatherScript` holds banks, changes and their timed
+schedule; `evaluate_weather` (arena_weather.cpp) is a pure function of
+scenario time, so every promo pass sees the same fog. Per-shot promo
+`lighting` still has the last word: the script sets the environment, then the
+shot's look overrides hour, fog colour and density as before.
+
+`battle_trasimene` is the #1528 scene: a Roman column marching east along the
+shore at 05:36 into a 10 m lake fog bank (`lake_fog`, density 0.92) that thins
+to 0.18 by 190 s while the hour brightens to 07:24 and the haze clears; the
+hill fog lifts when the ambush is revealed.
+
+### Formations, commanders and fords (#1522, #1523, #1527)
+
+- **Formations (#1527).** A group's or a `formation` action's `formation` is
+  resolved by `resolve_formation()` → `Game::Formation::try_parse_intent()`, and
+  the error lists `known_formation_names()` from `all_intents()`, which include
+  `triplex_acies`, `convex_crescent` and `elephant_screen`. A group with a
+  `formation` is spawned on its geometric layout and then handed to
+  `ArmyFormationService` with `FormArmy` at t = 0 (anchor = the deployment
+  centre, facing and frontage from the layout), so the formation system owns
+  the final slots. Cannae's Gallic centre forms `convex_crescent` and Zama's
+  Roman lines `triplex_acies`.
+- **Commanders (#1522).** `catalog_id` is resolved by `resolve_commander()`
+  through `find_commander_definition()`, which covers the six playable
+  commanders and the historical cameos (`roman_terentius_varro`,
+  `roman_aemilius_paullus`, `carthage_mago_barca`, ...). A cameo spawns on its
+  borrowed commander body with its own look (`ArenaScenarioGroup::commander_id`)
+  and does not occupy the owner's commander slot. Commanders with no catalog
+  entry (Servilius, Laelius) keep a stand-in id and a `todo` note.
+- **Fords (#1523).** `terrain.fords[]` takes `id`, `river`, `at`, `width` (how
+  far the shallows run along the river) and optional `depth`, `speed`, `cold`
+  and `exposure` (the `FordProfile`, clamped to the game's limits).
+  `apply_fords()` turns them into `ArenaScenarioDefinition::fords`, which the
+  arena applies like map fords. `trebia.json` declares the Roman crossing.
+
+### Determinism
+
+`arena_app --headless --determinism-check` and
+`BattleScriptDeterminismTest.CannaePlaysThroughItsPhasesIdenticallyTwice` play
+a script twice on the real simulation (fresh `SessionContext`, runtime systems,
+unit factories, fixed 1/30 s step) and compare `Game::Session::world_digest`
+every 0.5-1 s plus the phase events. This is the same-binary contract of
+`sim_benchmark`'s digest -- a digest is never comparable across builds. The
+headless world has the script's water and bridges but not the arena's
+procedural relief, so its phase times are close to, not identical with, an
+arena run; the arena's own `report.json` carries its `world_digest` for
+take-to-take checks there.

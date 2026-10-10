@@ -610,6 +610,8 @@ void MapCanvas::draw_linear_element(QPainter& painter, int i) {
     color = QColor(139, 119, 101);
   } else if (elem.type == "bridge") {
     color = QColor(160, 140, 100);
+  } else if (elem.type == "ford") {
+    color = QColor(205, 182, 120);
   } else if (elem.type == "wall") {
     color = player_color_for_editor(elem.player_id);
   }
@@ -633,8 +635,22 @@ void MapCanvas::draw_linear_element(QPainter& painter, int i) {
       QPen(band_color, band_width, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
   painter.drawPolyline(path);
 
-  painter.setPen(QPen(
-      color.lighter(115), centre_width, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+  bool const fordable_river =
+      elem.type == "river" &&
+      elem.extra_fields.value(QStringLiteral("ford"))
+          .toBool(elem.extra_fields.value(QStringLiteral("ford")).isObject());
+  if (elem.type == "ford" || fordable_river) {
+    // Shallows: a dashed gravel-coloured centre line marks wadeable water.
+    QPen shallows(QColor(222, 200, 140),
+                  std::max(centre_width * 1.6, 2.0),
+                  Qt::DashLine,
+                  Qt::FlatCap,
+                  Qt::RoundJoin);
+    painter.setPen(shallows);
+  } else {
+    painter.setPen(QPen(
+        color.lighter(115), centre_width, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+  }
   painter.drawPolyline(path);
   painter.restore();
 

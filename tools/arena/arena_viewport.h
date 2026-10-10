@@ -22,6 +22,7 @@
 #include "arena_casting.h"
 #include "arena_feedback.h"
 #include "arena_scenario.h"
+#include "arena_weather.h"
 #include "game/core/component_combat.h"
 #include "game/map/bridge_geometry.h"
 #include "game/map/ground_type.h"
@@ -31,7 +32,9 @@
 #include "game/systems/nation_id.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
+#include "promo_camera_export.h"
 #include "promo_spec.h"
+#include "render/mist_volume.h"
 
 class QOpenGLShaderProgram;
 class QOpenGLVertexArrayObject;
@@ -278,6 +281,38 @@ public:
                                         const QSize& frame_size,
                                         QPointF& out) const -> bool;
 
+  struct CinematicState {
+    bool view_valid{false};
+    bool eye_valid{false};
+    QVector3D target;
+    QVector3D eye;
+    float distance{16.0F};
+    float pitch{18.0F};
+    float yaw{40.0F};
+    float fov{40.0F};
+    float roll{0.0F};
+    float near_plane{0.0F};
+    float ground_clearance{-1.0F};
+  };
+  [[nodiscard]] auto cinematic_state() const -> CinematicState;
+  void set_cinematic_state(const CinematicState& state);
+
+  struct CaptureVariant {
+    int width{0};
+    int height{0};
+    CinematicState lens;
+    std::function<void(const QImage&)> sink;
+  };
+  void set_capture_variants(std::vector<CaptureVariant> variants);
+  void set_capture_variant_lens(std::size_t index, const CinematicState& lens);
+
+  [[nodiscard]] auto capture_camera() const -> const Arena::Promo::CameraSample& {
+    return m_capture_camera;
+  }
+  [[nodiscard]] auto scenario_group_samples(const Arena::Promo::GroupExport& selection)
+      const -> std::vector<Arena::Promo::GroupSample>;
+  [[nodiscard]] auto terrain_half_extent() const -> float;
+
 public:
   [[nodiscard]] auto
   attack_range_rings() const -> const std::vector<Game::Systems::AttackRangeRing>& {
@@ -287,6 +322,17 @@ public:
   [[nodiscard]] auto active_scenario_finished() const -> bool;
   [[nodiscard]] auto
   active_scenario_report() const -> const Arena::ArenaScenarioReport*;
+
+  [[nodiscard]] auto
+  active_scenario_events() const -> std::vector<Arena::ArenaScenarioEvent>;
+
+  [[nodiscard]] auto scenario_weather_state() const -> const Arena::ArenaWeatherState& {
+    return m_weather_state;
+  }
+  [[nodiscard]] auto
+  applied_mist_volumes() const -> const std::vector<Render::MistVolume>& {
+    return m_applied_mist;
+  }
   [[nodiscard]] auto write_scenario_artifacts(const QString& directory,
                                               QString* error = nullptr) const -> bool;
 
@@ -381,7 +427,9 @@ private:
                          Game::Systems::NationID nation_id,
                          Game::Units::TroopType unit_type,
                          const QVector3D& spawn_position,
-                         bool ai_controlled) -> Engine::Core::EntityID;
+                         bool ai_controlled,
+                         const QString& commander_id = {},
+                         bool keep_troop_speed = false) -> Engine::Core::EntityID;
   auto resolve_spawn_unit_type(Game::Systems::NationID nation_id,
                                Game::Units::TroopType preferred) const
       -> Game::Units::TroopType;
@@ -436,9 +484,14 @@ private:
   void record_render_profile(Arena::ArenaRenderedFrameTimings& timings) const;
   void paint_ui_overlays();
   void deliver_capture_frame();
+  void render_capture_variants(bool flame_card);
+  [[nodiscard]] auto
+  sample_capture_camera(int width, int height) const -> Arena::Promo::CameraSample;
   void publish_scenario_frame(const Arena::ArenaRenderedFrameTimings& timings);
 
   void apply_scenario_environment(const Arena::ArenaScenarioDefinition& scenario);
+  void rebuild_static_mist(const Arena::ArenaScenarioDefinition& scenario);
+  void apply_scenario_weather();
   [[nodiscard]] auto
   apply_scenario_terrain(const Arena::ArenaScenarioDefinition& scenario) -> bool;
   [[nodiscard]] auto
@@ -472,6 +525,15 @@ private:
   float m_rain_intensity = 0.5F;
   Game::Map::WeatherType m_weather_type = Game::Map::WeatherType::Rain;
   Game::Map::WeatherLightingInput m_weather_lighting{};
+  Arena::ArenaWeatherBase m_weather_base{};
+  Arena::ArenaWeatherState m_weather_state{};
+  std::optional<float> m_scripted_fog_density;
+  std::optional<float> m_scripted_exposure;
+  std::vector<Render::MistVolume> m_static_mist;
+  std::vector<Arena::ArenaFogBankState> m_applied_fog_banks;
+  std::vector<Render::MistVolume> m_applied_mist;
+  bool m_mist_dirty{true};
+  QVector3D m_scenario_origin;
   QString m_animation_name = QStringLiteral("Idle");
 
   Game::Session::SessionContext& m_session;
@@ -510,6 +572,7 @@ private:
   Game::Units::SpawnType m_spawn_building_type = Game::Units::SpawnType::Barracks;
   std::vector<Game::Map::WorldProp> m_world_props;
   std::vector<Game::Map::RiverSegment> m_arena_rivers;
+  std::vector<Game::Map::FordCrossing> m_arena_fords;
   std::vector<Game::Map::Lake> m_arena_lakes;
   std::vector<Game::Map::Bridge> m_arena_bridges;
   std::vector<Game::Map::RoadSegment> m_arena_roads;
@@ -562,6 +625,9 @@ private:
   std::unique_ptr<QOpenGLFramebufferObject> m_capture_target;
   std::unique_ptr<QOpenGLFramebufferObject> m_capture_preview_resolve;
   std::function<void(const QImage&)> m_capture_sink;
+  std::vector<CaptureVariant> m_capture_variants;
+  std::vector<std::unique_ptr<QOpenGLFramebufferObject>> m_variant_targets;
+  Arena::Promo::CameraSample m_capture_camera;
   std::function<void(float)> m_frame_hook;
   int m_capture_width = 0;
   int m_capture_height = 0;

@@ -34,6 +34,7 @@ Rectangle {
     property string reward_summary: reward_summary_text()
     property var player_commander: mission_definition && mission_definition.player_setup ? mission_definition.player_setup.commander : null
     property var opposing_forces: mission_definition && mission_definition.ai_setups ? mission_definition.ai_setups : []
+    property var player_historical_commanders: mission_definition && mission_definition.player_setup && mission_definition.player_setup.historical_commanders ? mission_definition.player_setup.historical_commanders : []
 
     readonly property var speed_options: GameSpeeds.options
 
@@ -102,6 +103,17 @@ Rectangle {
 
     function command_banner_for_setup(setup) {
         return resolve_setup_faction(setup).indexOf("carth") !== -1 ? qsTr("Carthaginian High Command") : qsTr("Roman High Command");
+    }
+
+    function historical_commanders_text(commanders) {
+        if (!commanders || commanders.length === 0)
+            return "";
+        var names = [];
+        for (var i = 0; i < commanders.length; ++i) {
+            if (commanders[i] && commanders[i].display_name)
+                names.push(commanders[i].display_name);
+        }
+        return names.length > 0 ? qsTr("Also in command: %1").arg(names.join(", ")) : "";
     }
 
     function setup_summary(setup) {
@@ -644,6 +656,16 @@ Rectangle {
                                 }
 
                                 Label {
+                                    text: root.historical_commanders_text(root.player_historical_commanders)
+                                    visible: text.length > 0
+                                    color: Theme.textDim
+                                    wrapMode: Text.WordWrap
+                                    font.pixelSize: Design.Typography.label
+                                    font.italic: true
+                                    Layout.fillWidth: true
+                                }
+
+                                Label {
                                     text: root.reward_summary
                                     color: Theme.textSubLite
                                     wrapMode: Text.WordWrap
@@ -722,6 +744,16 @@ Rectangle {
                                                 text: modelData.commander && modelData.commander.bonus_summary ? modelData.commander.bonus_summary : qsTr("No named commander assigned to this force.")
                                                 color: Theme.textSubLite
                                                 font.pixelSize: Design.Typography.label
+                                                wrapMode: Text.WordWrap
+                                            }
+
+                                            Label {
+                                                Layout.fillWidth: true
+                                                text: root.historical_commanders_text(modelData.historical_commanders)
+                                                visible: text.length > 0
+                                                color: Theme.textDim
+                                                font.pixelSize: Design.Typography.label
+                                                font.italic: true
                                                 wrapMode: Text.WordWrap
                                             }
                                         }

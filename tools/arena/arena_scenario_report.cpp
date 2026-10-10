@@ -422,6 +422,16 @@ auto ArenaScenarioRunner::write_artifacts(const QString& directory,
                     {QStringLiteral("soldier_index"), issue.soldier_index}});
   }
   report_object.insert(QStringLiteral("issues"), issues);
+  QJsonArray events;
+  for (auto const& event : m_impl->report.events) {
+    events.append(
+        QJsonObject{{QStringLiteral("event"), event.name},
+                    {QStringLiteral("at"), static_cast<double>(event.time_seconds)}});
+  }
+  report_object.insert(QStringLiteral("events"), events);
+  report_object.insert(
+      QStringLiteral("world_digest"),
+      QStringLiteral("%1").arg(m_impl->report.world_digest, 16, 16, QLatin1Char('0')));
 
   report_object.insert(QStringLiteral("asset_counters"),
                        Render::Profiling::asset_counters_json());

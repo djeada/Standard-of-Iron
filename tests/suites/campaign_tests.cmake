@@ -36,6 +36,7 @@ add_executable(
     core/campaign_manager_test.cpp
     core/commander_speaker_roster_test.cpp
     core/commander_voice_observer_test.cpp
+    core/historical_commander_test.cpp
     core/mission_commander_setup_test.cpp
     core/mission_definition_view_test.cpp
     core/mission_events_test.cpp

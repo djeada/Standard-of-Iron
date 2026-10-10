@@ -29,7 +29,21 @@ enum class ArmyFormationIntent : std::uint8_t {
   Defensive,
   Assault,
   Encirclement,
-  SiegeEscort
+  SiegeEscort,
+  TriplexAcies,
+  ConvexCrescent,
+  ElephantScreen
+};
+
+enum class BattleBand : std::uint8_t {
+  None,
+  Screen,
+  Hastati,
+  Principes,
+  Triarii,
+  CrescentCentre,
+  CrescentWing,
+  Elephants
 };
 
 enum class FlankPreference : std::uint8_t {
@@ -82,6 +96,12 @@ enum class FormationPhase : std::uint8_t {
 try_parse_intent(const QString& value) -> std::optional<ArmyFormationIntent>;
 [[nodiscard]] auto all_intents() -> std::vector<ArmyFormationIntent>;
 
+[[nodiscard]] auto is_battle_order_intent(ArmyFormationIntent intent) -> bool;
+
+[[nodiscard]] auto battle_band_to_string(BattleBand band) -> const char*;
+[[nodiscard]] auto
+try_parse_battle_band(const QString& value) -> std::optional<BattleBand>;
+
 [[nodiscard]] auto flank_preference_to_string(FlankPreference pref) -> const char*;
 [[nodiscard]] auto
 try_parse_flank_preference(const QString& value) -> std::optional<FlankPreference>;
@@ -119,6 +139,12 @@ struct FormationSlot {
   float half_width{0.5F};
   float half_depth{0.5F};
   bool heavy{false};
+
+  BattleBand band{BattleBand::None};
+  float yield_depth{0.0F};
+
+  QVector3D manoeuvre_offset;
+  float manoeuvre_facing{0.0F};
 
   [[nodiscard]] auto is_occupied() const noexcept -> bool { return occupant != 0U; }
   [[nodiscard]] auto is_placeable() const noexcept -> bool {
@@ -177,6 +203,19 @@ struct FormationMorph {
   }
 };
 
+struct BattleManoeuvre {
+  float centre_yield{0.0F};
+  float wing_wheel{0.0F};
+  bool wheel_ordered{false};
+  bool yielding{false};
+  float lane_shift{0.0F};
+  bool lanes_opened{false};
+
+  float drift_since_dispatch{0.0F};
+
+  void clear() noexcept { *this = BattleManoeuvre{}; }
+};
+
 struct ArmyFormationShape {
   float frontage{0.0F};
   float depth{0.0F};
@@ -232,6 +271,8 @@ struct ArmyFormation {
   float advance_progress{0.0F};
 
   FormationMovePlan move_plan;
+
+  BattleManoeuvre manoeuvre;
 
   std::uint32_t plan_revision{0U};
   bool needs_replan{true};

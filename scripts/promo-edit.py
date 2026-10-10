@@ -1096,6 +1096,43 @@ def build_drum_bed(seconds: float, tempo: float) -> str:
     return f"aevalsrc='({kick}{offbeat}{drone}){swell}':s=48000:d={seconds:.3f}"
 
 
+def select_variant(manifest: dict, shots: list[dict], variant: str):
+    """Swap every shot's clip for its named framing variant.
+
+    A spec shot's ``vertical`` (or ``variants``) block makes the arena record a
+    second take of the same frames at another size and lens; ``shots.json``
+    lists those under each shot's ``variants``.
+    """
+    swapped: list[dict] = []
+    size: tuple[int, int] | None = None
+    for shot in shots:
+        match = next(
+            (v for v in shot.get("variants", []) if v.get("name") == variant), None
+        )
+        if match is None:
+            fail(
+                f"shot '{shot.get('name')}' has no '{variant}' variant in the capture; "
+                "add one to the spec and capture again"
+            )
+        dims = (int(match["width"]), int(match["height"]))
+        if size is not None and dims != size:
+            fail(f"'{variant}' variants disagree on size: {size} and {dims}")
+        size = dims
+        swapped.append(
+            {
+                **shot,
+                "clip": match["clip"],
+                "poster": match.get("poster", ""),
+                "frames": match.get("frames", 0),
+                "clip_seconds": match.get("clip_seconds", 0.0),
+                "camera": match.get("camera", ""),
+            }
+        )
+    if size is None:
+        return manifest, swapped
+    return {**manifest, "width": size[0], "height": size[1]}, swapped
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--spec", required=True, type=Path, help="promo spec JSON")
@@ -1168,6 +1205,11 @@ def main() -> int:
         help="publish a cut that is in near-constant motion (close tracking of a "
         "marching column, say) with a warning instead of refusing it",
     )
+    parser.add_argument(
+        "--variant",
+        help="cut a framing variant recorded in the same pass (e.g. 'vertical' "
+        "for the 9:16 takes) instead of the main clips",
+    )
     args = parser.parse_args()
 
     if shutil.which("ffmpeg") is None:
@@ -1184,6 +1226,8 @@ def main() -> int:
     manifest = json.loads(manifest_path.read_text())
 
     shots = manifest.get("shots", [])
+    if args.variant:
+        manifest, shots = select_variant(manifest, shots, args.variant)
     captured = {shot.get("name") for shot in shots}
     authored_names = [shot.get("name") for shot in spec.get("shots", [])]
     if any("clip" in shot for shot in spec.get("shots", [])) or (

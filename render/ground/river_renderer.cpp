@@ -9,9 +9,11 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <limits>
 #include <memory>
 #include <vector>
 
+#include "game/map/bridge_geometry.h"
 #include "game/map/scatter/ground_utils.h"
 #include "game/map/visibility_service.h"
 #include "linear_feature_geometry.h"
@@ -46,6 +48,86 @@ void WaterRenderer::configure(
   build_meshes();
 }
 
+auto WaterRenderer::fords_near(const QVector3D& start,
+                               const QVector3D& end,
+                               float width) const -> std::vector<FordPatch> {
+  std::vector<FordPatch> patches;
+  if (m_height_map == nullptr) {
+    return patches;
+  }
+  QVector3D const mid = (start + end) * 0.5F;
+  float const half_span =
+      std::hypot(end.x() - start.x(), end.z() - start.z()) * 0.5F + width;
+
+  for (const auto& segment : m_river_segments) {
+    if (!segment.ford.has_value()) {
+      continue;
+    }
+    QVector3D along = segment.end - segment.start;
+    along.setY(0.0F);
+    float const length = along.length();
+    if (length < 0.01F) {
+      continue;
+    }
+    along /= length;
+    QVector3D const centre = (segment.start + segment.end) * 0.5F;
+    if (std::hypot(centre.x() - mid.x(), centre.z() - mid.z()) >
+        half_span + length * 0.5F) {
+      continue;
+    }
+    patches.push_back(
+        {QVector4D(centre.x(), centre.z(), along.x(), along.z()),
+         QVector4D(length * 0.5F + 1.0F,
+                   Game::Map::river_bank_standing_half_width(segment.width) + 1.0F,
+                   0.0F,
+                   0.0F)});
+  }
+
+  for (const auto& ford : m_height_map->get_fords()) {
+    const Game::Map::RiverSegment* host = nullptr;
+    float best = std::numeric_limits<float>::max();
+    for (const auto& segment : m_river_segments) {
+      QVector3D const delta = segment.end - segment.start;
+      float const length_sq = delta.x() * delta.x() + delta.z() * delta.z();
+      if (length_sq < 1.0e-4F) {
+        continue;
+      }
+      float const t = std::clamp(((ford.position.x() - segment.start.x()) * delta.x() +
+                                  (ford.position.z() - segment.start.z()) * delta.z()) /
+                                     length_sq,
+                                 0.0F,
+                                 1.0F);
+      float const distance =
+          std::hypot(ford.position.x() - (segment.start.x() + delta.x() * t),
+                     ford.position.z() - (segment.start.z() + delta.z() * t));
+      if (distance < best) {
+        best = distance;
+        host = &segment;
+      }
+    }
+    if (host == nullptr ||
+        std::hypot(ford.position.x() - mid.x(), ford.position.z() - mid.z()) >
+            half_span + ford.length * 0.5F) {
+      continue;
+    }
+    QVector3D along = host->end - host->start;
+    along.setY(0.0F);
+    along.normalize();
+    patches.push_back(
+        {QVector4D(ford.position.x(), ford.position.z(), along.x(), along.z()),
+         QVector4D(ford.length * 0.5F,
+                   Game::Map::river_bank_standing_half_width(host->width) + 1.0F,
+                   0.0F,
+                   0.0F)});
+  }
+
+  if (patches.size() >
+      static_cast<std::size_t>(TerrainFeatureCmd::k_max_ford_patches)) {
+    patches.resize(TerrainFeatureCmd::k_max_ford_patches);
+  }
+  return patches;
+}
+
 void WaterRenderer::build_meshes() {
   m_meshes.clear();
 
@@ -71,19 +153,24 @@ void WaterRenderer::build_meshes() {
     m_meshes.push_back({std::move(river_meshes[index]),
                         WaterSurfaceKind::River,
                         m_river_segments[index].start,
-                        m_river_segments[index].end});
+                        m_river_segments[index].end,
+                        fords_near(m_river_segments[index].start,
+                                   m_river_segments[index].end,
+                                   m_river_segments[index].width)});
   }
   for (auto& junction : river_junctions) {
     m_meshes.push_back({std::move(junction.mesh),
                         WaterSurfaceKind::River,
                         junction.center,
-                        junction.center});
+                        junction.center,
+                        fords_near(junction.center, junction.center, 4.0F)});
   }
   for (const auto& lake : m_lakes) {
     m_meshes.push_back({Ground::build_lake_surface_mesh(lake, m_tile_size),
                         WaterSurfaceKind::Lake,
                         lake.center,
-                        lake.center});
+                        lake.center,
+                        {}});
   }
 }
 
@@ -132,6 +219,11 @@ void WaterRenderer::submit(Renderer& renderer, ResourceManager* resources) {
     cmd.biome_moisture = climate.moisture_level;
     cmd.biome_snow_coverage = climate.snow_coverage;
     cmd.alpha = 1.0F;
+    cmd.ford_patch_count = static_cast<int>(surface.fords.size());
+    for (std::size_t patch = 0; patch < surface.fords.size(); ++patch) {
+      cmd.ford_patch_a[patch] = surface.fords[patch].a;
+      cmd.ford_patch_b[patch] = surface.fords[patch].b;
+    }
     cmd.visibility = vis_res;
     renderer.terrain_feature(cmd);
   }

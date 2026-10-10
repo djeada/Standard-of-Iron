@@ -39,6 +39,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 fxmod = importlib.import_module("fx")
 titles = importlib.import_module("titles")
+sys.path.insert(0, str(REPO / "scripts"))
+tactical = importlib.import_module("tactical_overlay")
 
 WIDTH = 1920
 HEIGHT = 1080
@@ -81,6 +83,48 @@ def find_clip(clips: Path, ref: str) -> Path:
     if not matches:
         raise SystemExit(f"no clip for '{ref}' under {clips / folder}")
     return matches[0]
+
+
+def load_ref(value, base: Path):
+    """An inline JSON object, or a path to one (relative to the repository)."""
+    if value is None or isinstance(value, dict):
+        return value
+    path = Path(value)
+    if not path.is_absolute():
+        path = (REPO / path) if (REPO / path).exists() else (base / path)
+    return json.loads(path.read_text())
+
+
+def tactical_plate(
+    event: dict, clip: Path, work: Path, index: int, cut: dict
+) -> Path | None:
+    """Render an event's world-registered tactical overlay as ProRes 4444.
+
+    The plate covers the whole source clip frame for frame, so the event's own
+    trim, speed, motion blur, reframe and shake can be applied to it exactly as
+    they are to the picture; it is laid over the picture after the look, so the
+    grade never tints the series graphics.
+    """
+    if not event.get("overlay"):
+        return None
+    base = Path(cut.get("_path", REPO)).parent
+    description = load_ref(event["overlay"], base)
+    style = load_ref(event.get("overlay_style", cut.get("overlay_style")), base)
+    h = hashlib.sha1()
+    h.update(json.dumps([description, style], sort_keys=True).encode())
+    for path in [clip, *tactical.companions(clip)]:
+        if path is not None:
+            stat = path.stat()
+            h.update(f"{path}:{stat.st_size}:{stat.st_mtime_ns}".encode())
+    h.update(Path(tactical.__file__).read_bytes())
+    out = work / f"ov{index:03d}_{h.hexdigest()[:16]}.mov"
+    if out.exists():
+        return out
+    for stale in work.glob(f"ov{index:03d}_*.mov"):
+        stale.unlink()
+    renderer = tactical.build_renderer(clip, description, style)
+    tactical.encode_alpha(renderer, out, 0, len(renderer.track.frames) - 1)
+    return out
 
 
 def curve_points(points: list[list[float]]) -> str:
@@ -196,6 +240,12 @@ def render_event(index: int, event: dict, cut: dict, clips: Path, work: Path) ->
         "head": head,
         "tail": tail,
     }
+    if event.get("overlay"):
+        base_dir = Path(cut.get("_path", REPO)).parent
+        settings["overlay"] = load_ref(event["overlay"], base_dir)
+        settings["overlay_style"] = load_ref(
+            event.get("overlay_style", cut.get("overlay_style")), base_dir
+        )
 
     if "card" in event:
         clip = None
@@ -338,21 +388,8 @@ def render_event(index: int, event: dict, cut: dict, clips: Path, work: Path) ->
     ]
     if abs(speed - 1.0) > 1e-3:
         pre.append(f"setpts=PTS/{speed:.4f}")
-    base = ",".join(
-        pre
-        + blur
-        + [
-            f"setpts=N/{fps}/TB",
-            "format=gbrp16le",
-            f"scale={WIDTH}:{HEIGHT}:flags=lanczos",
-        ]
-        + flip
-        + [
-            f"crop={crop_w}:{crop_h}:{x0}:{y0}",
-            f"scale={WIDTH}:{scope_h}:flags=lanczos",
-        ]
-    )
     hits = [float(h) + head for h in event.get("hits", [])]
+    shake = ""
     if hits:
         amp = float(event.get("shake", 9.0))
         ow = int(round(WIDTH * 1.035 / 2)) * 2
@@ -362,7 +399,29 @@ def render_event(index: int, event: dict, cut: dict, clips: Path, work: Path) ->
         )
         xs = f"{(ow - WIDTH) / 2:.1f}+{amp:.1f}*({env})*sin(t*71)"
         ys = f"{(oh - scope_h) / 2:.1f}+{amp * 0.7:.1f}*({env})*sin(t*53+1.3)"
-        base += f",scale={ow}:{oh}:flags=lanczos,crop={WIDTH}:{scope_h}:x={xs}:y={ys}"
+        shake = f",scale={ow}:{oh}:flags=lanczos,crop={WIDTH}:{scope_h}:x={xs}:y={ys}"
+
+    def geometry(pixel_format: str) -> str:
+        """Trim, retime, blur and reframe; shared by the picture and its plates."""
+        return (
+            ",".join(
+                pre
+                + blur
+                + [
+                    f"setpts=N/{fps}/TB",
+                    f"format={pixel_format}",
+                    f"scale={WIDTH}:{HEIGHT}:flags=lanczos",
+                ]
+                + flip
+                + [
+                    f"crop={crop_w}:{crop_h}:{x0}:{y0}",
+                    f"scale={WIDTH}:{scope_h}:flags=lanczos",
+                ]
+            )
+            + shake
+        )
+
+    base = geometry("gbrp16le")
     base += "," + look_filter(look, scope_h)
     if hits:
         flash = "+".join(
@@ -373,11 +432,18 @@ def render_event(index: int, event: dict, cut: dict, clips: Path, work: Path) ->
     inputs = ["-i", str(clip)]
     chains = [f"[0:v]{base}[b0]"]
     stage = "b0"
+    plate = tactical_plate(event, clip, work, index, cut)
+    if plate is not None:
+        inputs += ["-i", str(plate)]
+        chains.append(f"[1:v]{geometry('rgba64le')}[ov]")
+        chains.append(f"[{stage}][ov]overlay=0:0:format=auto,format=yuv444p16le[bt]")
+        stage = "bt"
     fx = event.get("fx", {})
     if fx:
         chains.append(f"[{stage}]format=gbrpf32le[f0]")
         stage = "f0"
-        for k, (kind, spec) in enumerate(sorted(fx.items()), start=1):
+        first_input = 2 if plate is not None else 1
+        for k, (kind, spec) in enumerate(sorted(fx.items()), start=first_input):
             spec = spec if isinstance(spec, dict) else {"opacity": spec}
             plate_path = fxmod.plate(kind, work, fps, scope_h)
             plate_len = fxmod.PLATES[kind][1]
@@ -583,6 +649,7 @@ def main() -> int:
     args = parser.parse_args()
 
     cut = json.loads(args.cut.read_text())
+    cut["_path"] = str(args.cut.resolve())
     args.work.mkdir(parents=True, exist_ok=True)
     events = plan(cut)
     parts = []

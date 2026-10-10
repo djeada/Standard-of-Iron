@@ -20,6 +20,7 @@ inline constexpr const char* rivers = Game::Map::JsonKeys::RIVERS;
 inline constexpr const char* lakes = Game::Map::JsonKeys::LAKES;
 inline constexpr const char* roads = Game::Map::JsonKeys::ROADS;
 inline constexpr const char* bridges = Game::Map::JsonKeys::BRIDGES;
+inline constexpr const char* fords = Game::Map::JsonKeys::FORDS;
 inline constexpr const char* victory = Game::Map::JsonKeys::VICTORY;
 inline constexpr const char* rain = Game::Map::JsonKeys::RAIN;
 inline constexpr const char* thumbnail = Game::Map::JsonKeys::THUMBNAIL;

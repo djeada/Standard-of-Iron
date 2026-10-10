@@ -108,6 +108,7 @@ add_library(
     soi_world
     STATIC
     units/commander_catalog.cpp
+    units/historical_commander_catalog.cpp
     units/troop_catalog.cpp
     units/troop_catalog_loader.cpp
     visuals/building_asset_key.cpp
@@ -144,6 +145,7 @@ add_library(
     map/terrain_hill_ramp.cpp
     map/terrain_hill_nav.cpp
     map/terrain_water_bridges.cpp
+    map/terrain_fords.cpp
     map/terrain_landform.cpp
     map/terrain_service.cpp
     map/terrain_road_index.cpp
@@ -274,6 +276,8 @@ add_library(
     formation/formation_slot_adjust.cpp
     formation/formation_line_layout.cpp
     formation/formation_silhouette_shapes.cpp
+    formation/formation_battle_orders.cpp
+    formation/army_formation_manoeuvre.cpp
     formation/formation_silhouette.cpp
     formation/formation_assignment.cpp
     formation/army_formation_registry.cpp
@@ -416,6 +420,7 @@ add_library(
     systems/combat_system/rts_commander_attack.cpp
     systems/combat_system/melee_exchange.cpp
     systems/combat_system/elephant_special_processor.cpp
+    systems/combat_system/elephant_lane_run.cpp
     systems/combat_system/siege_special_processor.cpp
     systems/combat_actions/body_impact.cpp
     systems/combat_actions/combat_action_definition.cpp
@@ -504,6 +509,7 @@ add_library(
     command/replay.cpp
     map/match_loader.cpp
     systems/forest_cover_system.cpp
+    systems/ford_system.cpp
     session/map_session.cpp
     session/session_context.cpp
     systems/alliance_board.cpp

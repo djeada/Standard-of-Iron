@@ -202,6 +202,7 @@ void ArenaViewport::regenerate_terrain() {
   water_mask.restore_from_data(heights, terrain_types, {}, {}, {}, hills);
   water_mask.add_lakes(m_arena_lakes);
   water_mask.add_river_segments(m_arena_rivers);
+  water_mask.add_fords(m_arena_fords);
   water_mask.add_bridges(m_arena_bridges);
   heights = water_mask.get_height_data();
   terrain_types = water_mask.getTerrainTypes();
@@ -209,6 +210,7 @@ void ArenaViewport::regenerate_terrain() {
   const auto runtime_rivers = water_mask.get_river_segments();
   const auto runtime_lakes = water_mask.get_lakes();
   const auto runtime_bridges = water_mask.get_bridges();
+  const auto runtime_fords = water_mask.get_fords();
 
   m_session.visibility().initialize(
       m_terrain_grid_extent, m_terrain_grid_extent, k_terrain_tile_size);
@@ -224,7 +226,8 @@ void ArenaViewport::regenerate_terrain() {
                                               m_world_props,
                                               {},
                                               runtime_lakes,
-                                              hills);
+                                              hills,
+                                              runtime_fords);
   Game::Systems::NavGrid::initialize(m_terrain_grid_extent, m_terrain_grid_extent);
   apply_initial_visibility();
   sync_camera_map_bounds(m_camera.get(), m_session.visibility());
@@ -396,6 +399,12 @@ auto ArenaViewport::active_lighting() const -> Game::Map::EnvironmentLightingSta
   }
   if (m_environment_definition.exposure_override >= 0.0F) {
     lighting.exposure = m_environment_definition.exposure_override;
+  }
+  if (m_scripted_fog_density.has_value()) {
+    lighting.fog_density = *m_scripted_fog_density;
+  }
+  if (m_scripted_exposure.has_value()) {
+    lighting.exposure = *m_scripted_exposure;
   }
   const auto& look = m_promo_lighting;
   if (look.sun_azimuth.has_value() || look.sun_elevation.has_value()) {
@@ -700,6 +709,9 @@ auto ArenaViewport::initialize_terrain_from_map(const QString& map_path) -> bool
     qWarning() << "Arena: cannot read map" << map_path << ":" << error;
     return false;
   }
+  // Scenario fords (a battle script's crossing) sit on the map's own rivers.
+  definition.fords.insert(
+      definition.fords.end(), m_arena_fords.begin(), m_arena_fords.end());
   m_terrain_from_map = true;
   m_terrain_review_definition = std::move(definition);
   apply_map_terrain();

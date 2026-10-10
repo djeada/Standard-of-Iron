@@ -17,6 +17,7 @@ set(RENDER_EQUIPMENT_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/register_equipment_armor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/register_equipment_helmets.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/register_equipment_horse.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/register_equipment_historical_commanders.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/roman_armor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/armor_light_carthage.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/armor_heavy_carthage.cpp

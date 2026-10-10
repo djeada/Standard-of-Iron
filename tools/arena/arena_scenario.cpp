@@ -1,6 +1,7 @@
 #include <algorithm>
 
 #include "arena_scenario_internal.h"
+#include "game/session/world_digest.h"
 
 namespace Arena {
 
@@ -196,12 +197,26 @@ void ArenaScenarioRunner::update(float simulation_dt) {
         m_impl->expectation_active(expectation)) {
       m_impl->check_formation_order(expectation);
     }
+    if (expectation.kind == ArenaExpectationKind::BattleOrderManoeuvreObserved) {
+      m_impl->observe_battle_order(expectation);
+    }
   }
   if (m_impl->elapsed + 1.0e-5F >= m_impl->duration_limit ||
       m_impl->battle_decision_ends_scenario()) {
     m_impl->check_end_expectations();
+    m_impl->report.world_digest = Game::Session::world_digest(m_impl->world);
     m_impl->complete = true;
   }
+}
+
+auto ArenaScenarioRunner::events() const noexcept
+    -> const std::vector<ArenaScenarioEvent>& {
+  return m_impl->report.events;
+}
+
+auto ArenaScenarioRunner::weather_schedule() const noexcept
+    -> const std::vector<ArenaTimedWeatherChange>& {
+  return m_impl->weather_schedule;
 }
 
 void ArenaScenarioRunner::observe_rendered_frame(double frame_time_ms) {
@@ -272,6 +287,18 @@ void ArenaScenarioRunner::observe_rendered_frame(
     }
   }
   m_impl->most_raft_riders = std::max(m_impl->most_raft_riders, raft_riders);
+  for (auto [wader_id, wading] :
+       m_impl->world.view<const Engine::Core::WadingComponent>()) {
+    if (!wading.in_water()) {
+      continue;
+    }
+    for (auto const& group : m_impl->scenario.groups) {
+      auto const& members = m_impl->ids(group.name);
+      if (std::find(members.begin(), members.end(), wader_id) != members.end()) {
+        m_impl->waders_by_group[group.name].insert(wader_id);
+      }
+    }
+  }
   if (!m_impl->wall_walker_seen) {
     auto walkers = m_impl->world.view<const Engine::Core::WallWalkerComponent>();
     m_impl->wall_walker_seen = walkers.begin() != walkers.end();

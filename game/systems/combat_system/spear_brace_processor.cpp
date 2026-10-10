@@ -5,6 +5,7 @@
 #include "../../core/component_gameplay.h"
 #include "../../core/entity.h"
 #include "../../core/world.h"
+#include "game/core/ford_rules.h"
 
 namespace Game::Systems::Combat {
 
@@ -28,6 +29,13 @@ struct BraceIntent {
 
 [[nodiscard]] auto
 resolve_brace_intent(const Engine::Core::Entity& entity) -> BraceIntent {
+  if (auto const* registry = entity.registry();
+      registry != nullptr &&
+      !FordRules::can_brace(
+          registry->try_get<Engine::Core::WadingComponent>(entity.get_id()))) {
+    return {};
+  }
+
   if (auto const* commander = entity.get_component<Engine::Core::CommanderComponent>();
       commander != nullptr && commander->fpv_controlled) {
     auto const* guard = entity.get_component<Engine::Core::CommanderGuardComponent>();

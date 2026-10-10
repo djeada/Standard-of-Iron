@@ -51,6 +51,10 @@ enum class ScenarioTriggerKind : std::uint8_t {
   GroupsWithinDistance,
   GroupEnteredArea,
   PreviousStepComplete,
+
+  GroupStrengthBelow,
+
+  StepExecuted,
 };
 
 struct ScenarioTrigger {
@@ -60,6 +64,14 @@ struct ScenarioTrigger {
   QString target_group;
   float distance{0.0F};
   QVector3D position;
+
+  float threshold{0.0F};
+
+  QString step;
+
+  QString after_step;
+
+  float fallback_seconds{-1.0F};
 };
 
 enum class ScenarioCommandKind : std::uint8_t {
@@ -111,6 +123,14 @@ enum class ScenarioCommandKind : std::uint8_t {
   RollStones,
 
   CrossByRaft,
+
+  Marker,
+
+  ShapeMove,
+
+  Wheel,
+
+  SetWeather,
 };
 
 struct ArenaScenarioGroup {
@@ -144,6 +164,9 @@ struct ArenaScenarioGroup {
   std::optional<Game::Units::SpawnType> spawn_type;
 
   QString renderer_override;
+  // Historical cameo commander id (game/units/historical_commander_catalog).
+  // The group spawns that commander on the cameo's body for its nation.
+  QString commander_id;
   QStringList showcase_routine;
   float showcase_start_delay{0.0F};
   bool showcase_loop{true};
@@ -152,6 +175,10 @@ struct ArenaScenarioGroup {
   std::optional<QVector3D> showcase_throw_target;
   float render_scale_override{0.0F};
   QString showcase_released_renderer;
+
+  std::vector<QVector3D> positions;
+
+  bool keep_troop_speed{false};
 };
 
 struct ArenaScenarioResourcePatch {
@@ -251,6 +278,16 @@ struct ArenaScenarioStep {
   std::optional<float> rpg_view_yaw_degrees;
   std::optional<float> rpg_view_pitch_degrees;
   ArenaScenarioFormationOrder formation;
+
+  QString event;
+
+  float angle_degrees{0.0F};
+
+  QString pivot_side;
+
+  bool destination_is_offset{false};
+
+  int weather_change{-1};
 };
 
 enum class ArenaExpectationKind : std::uint8_t {
@@ -323,6 +360,7 @@ enum class ArenaExpectationKind : std::uint8_t {
   SiegeTowerDocked,
   WallWalkerObserved,
   RaftFerryObserved,
+  FordWadedObserved,
   BridgeTraversalObserved,
   BridgeCenterlineAligned,
   ElevationGainObserved,
@@ -401,6 +439,12 @@ enum class ArenaExpectationKind : std::uint8_t {
   NoAutoEngagementObserved,
 
   EngagementReleasedByOrder,
+
+  // A battle order's manoeuvre reached `threshold` on the metric named by
+  // `counter_key` for the formation holding `group`: "centre_yield",
+  // "wing_wheel", "lane_shift", or "elephant_lane_runs" (the number of the
+  // group's elephants that ran a lane out the back of an enemy line).
+  BattleOrderManoeuvreObserved,
 };
 
 struct ArenaExpectation {
@@ -430,6 +474,69 @@ struct ArenaCameraView {
   float distance{14.0F};
   float angle{45.0F};
   float yaw{30.0F};
+};
+
+struct ArenaFogBankKey {
+  float time_seconds{0.0F};
+  std::optional<float> density;
+  std::optional<float> radius;
+  std::optional<float> ceiling;
+  std::optional<QVector3D> start;
+  std::optional<QVector3D> end;
+};
+
+struct ArenaFogBank {
+  QString id;
+
+  QVector3D start;
+  QVector3D end;
+  float radius{20.0F};
+  float ceiling{4.0F};
+  float density{0.6F};
+  std::vector<ArenaFogBankKey> keys;
+};
+
+struct ArenaFogBankChange {
+  QString id;
+  std::optional<float> density;
+  std::optional<float> radius;
+  std::optional<float> ceiling;
+  std::optional<QVector3D> start;
+  std::optional<QVector3D> end;
+};
+
+struct ArenaWeatherChange {
+  QString name;
+  float duration_seconds{0.0F};
+  std::optional<float> fog_density;
+  std::optional<float> exposure;
+  std::optional<float> rain;
+  std::optional<float> storm;
+  std::optional<float> snow;
+  std::optional<float> wind_strength;
+  std::optional<float> wind_direction_deg;
+  std::optional<float> hour;
+  std::vector<ArenaFogBankChange> fog_banks;
+};
+
+struct ArenaTimedWeatherChange {
+  float at_seconds{0.0F};
+  int change{-1};
+};
+
+struct ArenaWeatherScript {
+
+  bool water_mist{true};
+  std::vector<ArenaFogBank> fog_banks;
+
+  std::vector<ArenaWeatherChange> changes;
+
+  std::vector<ArenaTimedWeatherChange> timeline;
+};
+
+struct ArenaScenarioEvent {
+  QString name;
+  float time_seconds{0.0F};
 };
 
 struct ArenaScenarioDefinition {
@@ -481,6 +588,7 @@ struct ArenaScenarioDefinition {
   };
   Game::Map::WeatherLightingInput weather{};
   Game::Map::RainSettings precipitation{};
+  ArenaWeatherScript weather_script;
   Game::Wildlife::WildlifeSettings wildlife{};
   std::vector<Game::Map::RiverSegment> rivers;
   std::vector<Game::Map::Lake> lakes;
@@ -494,6 +602,9 @@ struct ArenaScenarioDefinition {
 
   std::vector<Game::Map::RockfallTrap> rockfall_traps;
   std::vector<Game::Map::RaftCrossing> rafts;
+  // Ford zones on the scenario's rivers (segment-wide fords are set on the
+  // river segments themselves).
+  std::vector<Game::Map::FordCrossing> fords;
   std::vector<ArenaScenarioOwnerTeam> owner_teams;
   std::vector<ArenaScenarioAIProfile> ai_profiles;
   ArenaScenarioStartingResources ai_starting_resources;
@@ -635,6 +746,9 @@ struct ArenaScenarioReport {
   ArenaBattleOutcome battle;
   std::vector<ArenaGroupMovementDiagnostics> movement;
   std::vector<ArenaNarrowLayoutOutcome> narrow_layout;
+  std::vector<ArenaScenarioEvent> events;
+
+  std::uint64_t world_digest{0};
   std::vector<ArenaScenarioIssue> issues;
 
   [[nodiscard]] auto passed() const noexcept -> bool { return issues.empty(); }
@@ -766,6 +880,11 @@ public:
   [[nodiscard]] auto report() const noexcept -> const ArenaScenarioReport&;
 
   [[nodiscard]] auto live_battle_sides() const -> std::vector<ArenaBattleSideResult>;
+
+  [[nodiscard]] auto events() const noexcept -> const std::vector<ArenaScenarioEvent>&;
+
+  [[nodiscard]] auto
+  weather_schedule() const noexcept -> const std::vector<ArenaTimedWeatherChange>&;
   [[nodiscard]] auto battle_decided() const noexcept -> bool;
 
   [[nodiscard]] auto group_entities(const QString& group) const

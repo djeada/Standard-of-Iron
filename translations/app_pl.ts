@@ -2382,6 +2382,406 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
         <source>Encircling Cut</source>
         <translation>Cięcie okrążające</translation>
     </message>
+    <message>
+        <source>A historical commander fielded by missions and scenarios; not playable and never produced from a barracks.</source>
+        <translation>Historyczny dowódca wystawiany przez misje i scenariusze; niegrywalny i nigdy nie szkolony w koszarach.</translation>
+    </message>
+    <message>
+        <source>Rallies wavering troops nearby back into fighting order.</source>
+        <translation>Zbiera chwiejące się pobliskie oddziały z powrotem do szyku bojowego.</translation>
+    </message>
+    <message>
+        <source>If he falls, nearby allies lose heart and his aura ends.</source>
+        <translation>Gdy padnie, pobliscy sojusznicy tracą ducha, a jego aura gaśnie.</translation>
+    </message>
+    <message>
+        <source>Tiberius Sempronius Longus</source>
+        <translation>Tyberiusz Semproniusz Longus</translation>
+    </message>
+    <message>
+        <source>Consul of 218 BC, eager for battle, who sent his army across the freezing Trebia before breakfast.</source>
+        <translation>Konsul z 218 r. p.n.e., żądny bitwy, który przed śniadaniem przeprawił armię przez lodowatą Trebię.</translation>
+    </message>
+    <message>
+        <source>Consular sword commander who leads the legions from the front of the attack.</source>
+        <translation>Konsularny dowódca z mieczem, który prowadzi legiony na czele natarcia.</translation>
+    </message>
+    <message>
+        <source>Drives a fresh assault hard and fast.</source>
+        <translation>Prowadzi świeże natarcie mocno i szybko.</translation>
+    </message>
+    <message>
+        <source>Commits early and walks into prepared ground.</source>
+        <translation>Angażuje się zbyt wcześnie i wchodzi w przygotowany teren.</translation>
+    </message>
+    <message>
+        <source>Consular Impetus sharpens the attack of nearby legions.</source>
+        <translation>Konsularny impet wzmacnia natarcie pobliskich legionów.</translation>
+    </message>
+    <message>
+        <source>Nearby allied swordsmen gain the most attack in aura range.</source>
+        <translation>Pobliscy sojuszniczy miecznicy zyskują największą premię do ataku w zasięgu aury.</translation>
+    </message>
+    <message>
+        <source>Hold the line, Romans!</source>
+        <translation>Trzymać szyk, Rzymianie!</translation>
+    </message>
+    <message>
+        <source>Across, and at them!</source>
+        <translation>Przez rzekę i na nich!</translation>
+    </message>
+    <message>
+        <source>Back to the river bank!</source>
+        <translation>Wracać na brzeg rzeki!</translation>
+    </message>
+    <message>
+        <source>Gaius Flaminius</source>
+        <translation>Gajusz Flaminiusz</translation>
+    </message>
+    <message>
+        <source>Popular consul of 217 BC who marched his column into Hannibal&apos;s ambush at Lake Trasimene and died there.</source>
+        <translation>Ludowy konsul z 217 r. p.n.e., który wprowadził swoją kolumnę w zasadzkę Hannibala nad Jeziorem Trazymeńskim i tam zginął.</translation>
+    </message>
+    <message>
+        <source>Spear commander who keeps a marching column moving at speed.</source>
+        <translation>Dowódca z włócznią, który utrzymuje maszerującą kolumnę w szybkim ruchu.</translation>
+    </message>
+    <message>
+        <source>Fast on the march and quick to engage.</source>
+        <translation>Szybki w marszu i skory do walki.</translation>
+    </message>
+    <message>
+        <source>Scouts nothing; easily caught deployed in column.</source>
+        <translation>Niczego nie zwiaduje; łatwo go zaskoczyć w kolumnie marszowej.</translation>
+    </message>
+    <message>
+        <source>Forced March hurries nearby troops along the road.</source>
+        <translation>Marsz forsowny pogania pobliskie oddziały w drodze.</translation>
+    </message>
+    <message>
+        <source>Nearby allied spearmen move fastest in aura range.</source>
+        <translation>Pobliscy sojuszniczy włócznicy poruszają się najszybciej w zasięgu aury.</translation>
+    </message>
+    <message>
+        <source>Close up, form on me!</source>
+        <translation>Zewrzeć szeregi, do mnie!</translation>
+    </message>
+    <message>
+        <source>Forward, and no halting!</source>
+        <translation>Naprzód, bez postoju!</translation>
+    </message>
+    <message>
+        <source>Back to the road!</source>
+        <translation>Wracać na drogę!</translation>
+    </message>
+    <message>
+        <source>Gaius Terentius Varro</source>
+        <translation>Gajusz Terencjusz Warron</translation>
+    </message>
+    <message>
+        <source>Consul of 216 BC who led the largest army Rome had ever fielded into the encirclement at Cannae, and survived it.</source>
+        <translation>Konsul z 216 r. p.n.e., który poprowadził największą armię, jaką Rzym kiedykolwiek wystawił, w okrążenie pod Kannami i przeżył.</translation>
+    </message>
+    <message>
+        <source>Sword commander who throws the full weight of the line forward.</source>
+        <translation>Dowódca z mieczem, który rzuca naprzód cały ciężar szyku.</translation>
+    </message>
+    <message>
+        <source>Numbers, nerve and a crushing first push.</source>
+        <translation>Liczebność, odwaga i miażdżące pierwsze uderzenie.</translation>
+    </message>
+    <message>
+        <source>Rash; blind to the flanks once the line is moving.</source>
+        <translation>Porywczy; ślepy na skrzydła, gdy szyk ruszy.</translation>
+    </message>
+    <message>
+        <source>Weight of Numbers drives nearby legions harder into the enemy centre.</source>
+        <translation>Ciężar liczby mocniej pcha pobliskie legiony w środek wroga.</translation>
+    </message>
+    <message>
+        <source>Nearby allied swordsmen gain strong attack in aura range.</source>
+        <translation>Pobliscy sojuszniczy miecznicy zyskują silną premię do ataku w zasięgu aury.</translation>
+    </message>
+    <message>
+        <source>Stand, Rome is watching!</source>
+        <translation>Stać, Rzym patrzy!</translation>
+    </message>
+    <message>
+        <source>Push! Push the centre!</source>
+        <translation>Naciskać! Naciskać na środek!</translation>
+    </message>
+    <message>
+        <source>To Venusia, fall back!</source>
+        <translation>Do Wenuzji, odwrót!</translation>
+    </message>
+    <message>
+        <source>Lucius Aemilius Paullus</source>
+        <translation>Lucjusz Emiliusz Paulus</translation>
+    </message>
+    <message>
+        <source>Cautious consul of 216 BC who advised against battle at Cannae and died on the field.</source>
+        <translation>Ostrożny konsul z 216 r. p.n.e., który odradzał bitwę pod Kannami i poległ na polu.</translation>
+    </message>
+    <message>
+        <source>Spear commander who steadies the line and refuses to break.</source>
+        <translation>Dowódca z włócznią, który umacnia szyk i nie daje się złamać.</translation>
+    </message>
+    <message>
+        <source>Calm under pressure; keeps a wing standing.</source>
+        <translation>Spokojny pod presją; utrzymuje skrzydło.</translation>
+    </message>
+    <message>
+        <source>Slow to move and bound by a colleague&apos;s decisions.</source>
+        <translation>Powolny i związany decyzjami kolegi.</translation>
+    </message>
+    <message>
+        <source>Aristocratic Composure helps nearby troops recover in a long fight.</source>
+        <translation>Arystokratyczny spokój pomaga pobliskim oddziałom dochodzić do siebie w długiej walce.</translation>
+    </message>
+    <message>
+        <source>Nearby allied spearmen regenerate health fastest in aura range.</source>
+        <translation>Pobliscy sojuszniczy włócznicy najszybciej odzyskują zdrowie w zasięgu aury.</translation>
+    </message>
+    <message>
+        <source>Steady! Keep your ranks!</source>
+        <translation>Spokojnie! Trzymać szeregi!</translation>
+    </message>
+    <message>
+        <source>With me, together!</source>
+        <translation>Za mną, razem!</translation>
+    </message>
+    <message>
+        <source>Give ground, slowly!</source>
+        <translation>Ustępować pola, powoli!</translation>
+    </message>
+    <message>
+        <source>Publius Cornelius Scipio (consul 218 BC)</source>
+        <translation>Publiusz Korneliusz Scypion (konsul 218 p.n.e.)</translation>
+    </message>
+    <message>
+        <source>Consul of 218 BC and father of Scipio Africanus; wounded at the Ticinus and carried from the field by his son.</source>
+        <translation>Konsul z 218 r. p.n.e. i ojciec Scypiona Afrykańskiego; ranny nad Ticinusem, wyniesiony z pola przez syna.</translation>
+    </message>
+    <message>
+        <source>Sword commander who screens the army&apos;s advance with fast mounted troops.</source>
+        <translation>Dowódca z mieczem, który osłania marsz armii szybką jazdą.</translation>
+    </message>
+    <message>
+        <source>Quick to probe, quick to pull a screen back.</source>
+        <translation>Szybko sonduje i szybko wycofuje osłonę.</translation>
+    </message>
+    <message>
+        <source>Fights from the front and is easily cut off.</source>
+        <translation>Walczy na czele i łatwo go odciąć.</translation>
+    </message>
+    <message>
+        <source>Consular Screen quickens nearby riders and skirmishers.</source>
+        <translation>Konsularna osłona przyspiesza pobliskich jeźdźców i harcowników.</translation>
+    </message>
+    <message>
+        <source>Nearby allied horsemen move fastest in aura range.</source>
+        <translation>Pobliscy sojuszniczy jeźdźcy poruszają się najszybciej w zasięgu aury.</translation>
+    </message>
+    <message>
+        <source>Rally to the consul!</source>
+        <translation>Do konsula!</translation>
+    </message>
+    <message>
+        <source>Ride them down!</source>
+        <translation>Stratować ich!</translation>
+    </message>
+    <message>
+        <source>Back across the Ticinus!</source>
+        <translation>Z powrotem za Ticinus!</translation>
+    </message>
+    <message>
+        <source>Mago Barca</source>
+        <translation>Magon Barkas</translation>
+    </message>
+    <message>
+        <source>Hannibal&apos;s youngest brother, who sprang the ambush from the stream bed at the Trebia and fought in the centre at Cannae.</source>
+        <translation>Najmłodszy brat Hannibala, który nad Trebią wyprowadził zasadzkę z koryta strumienia, a pod Kannami walczył w centrum.</translation>
+    </message>
+    <message>
+        <source>Sword commander who leads a hidden detachment into the enemy&apos;s rear.</source>
+        <translation>Dowódca z mieczem, który prowadzi ukryty oddział na tyły wroga.</translation>
+    </message>
+    <message>
+        <source>Strikes hard from concealment.</source>
+        <translation>Uderza mocno z ukrycia.</translation>
+    </message>
+    <message>
+        <source>Small command; vulnerable once the ambush is spent.</source>
+        <translation>Niewielki oddział; wrażliwy, gdy zasadzka się wyczerpie.</translation>
+    </message>
+    <message>
+        <source>Ambush Strike lends nearby troops a sharper first blow.</source>
+        <translation>Uderzenie z zasadzki daje pobliskim oddziałom ostrzejszy pierwszy cios.</translation>
+    </message>
+    <message>
+        <source>To me, sons of Carthage!</source>
+        <translation>Do mnie, synowie Kartaginy!</translation>
+    </message>
+    <message>
+        <source>Out of the reeds, now!</source>
+        <translation>Z trzcin, teraz!</translation>
+    </message>
+    <message>
+        <source>Back to the stream bed!</source>
+        <translation>Wracać do koryta strumienia!</translation>
+    </message>
+    <message>
+        <source>Maharbal</source>
+        <translation>Maharbal</translation>
+    </message>
+    <message>
+        <source>Hannibal&apos;s cavalry commander, who rounded up the survivors of Trasimene and urged a march on Rome after Cannae.</source>
+        <translation>Dowódca jazdy Hannibala, który wyłapał ocalałych spod Trazymenu i po Kannach nalegał na marsz na Rzym.</translation>
+    </message>
+    <message>
+        <source>Spear-armed cavalry commander who hunts broken troops.</source>
+        <translation>Uzbrojony we włócznię dowódca jazdy, który ściga rozbite oddziały.</translation>
+    </message>
+    <message>
+        <source>Relentless in pursuit.</source>
+        <translation>Nieustępliwy w pościgu.</translation>
+    </message>
+    <message>
+        <source>Light protection; poor at holding ground.</source>
+        <translation>Lekko chroniony; słabo utrzymuje teren.</translation>
+    </message>
+    <message>
+        <source>Cavalry Pursuit speeds nearby riders after a breaking enemy.</source>
+        <translation>Pościg jazdy przyspiesza pobliskich jeźdźców za łamiącym się wrogiem.</translation>
+    </message>
+    <message>
+        <source>Horsemen, to me!</source>
+        <translation>Jeźdźcy, do mnie!</translation>
+    </message>
+    <message>
+        <source>After them, no quarter!</source>
+        <translation>Za nimi, bez litości!</translation>
+    </message>
+    <message>
+        <source>Wheel away, reform!</source>
+        <translation>Zawrócić, przegrupować się!</translation>
+    </message>
+    <message>
+        <source>Hanno, son of Bomilcar</source>
+        <translation>Hannon, syn Bomilkara</translation>
+    </message>
+    <message>
+        <source>Hannibal&apos;s nephew, who crossed the Rhone upstream and signalled his flank attack with smoke.</source>
+        <translation>Siostrzeniec Hannibala, który przeprawił się przez Rodan w górze rzeki i dał dymem sygnał do ataku z flanki.</translation>
+    </message>
+    <message>
+        <source>Mobile commander who takes a detachment round the enemy&apos;s flank.</source>
+        <translation>Ruchliwy dowódca, który wyprowadza oddział na skrzydło wroga.</translation>
+    </message>
+    <message>
+        <source>Fast, independent flanking marches.</source>
+        <translation>Szybkie, samodzielne marsze oskrzydlające.</translation>
+    </message>
+    <message>
+        <source>Thin in a frontal fight.</source>
+        <translation>Słaby w walce czołowej.</translation>
+    </message>
+    <message>
+        <source>Flanking March hurries nearby troops round the enemy.</source>
+        <translation>Marsz oskrzydlający pogania pobliskie oddziały wokół wroga.</translation>
+    </message>
+    <message>
+        <source>Nearby allied archers move fastest in aura range.</source>
+        <translation>Pobliscy sojuszniczy łucznicy poruszają się najszybciej w zasięgu aury.</translation>
+    </message>
+    <message>
+        <source>Hold here, wait for the smoke!</source>
+        <translation>Stać tu, czekać na dym!</translation>
+    </message>
+    <message>
+        <source>Now, into their flank!</source>
+        <translation>Teraz, w ich skrzydło!</translation>
+    </message>
+    <message>
+        <source>Back to the ford!</source>
+        <translation>Wracać do brodu!</translation>
+    </message>
+    <message>
+        <source>Hasdrubal (cavalry commander)</source>
+        <translation>Hazdrubal (dowódca jazdy)</translation>
+    </message>
+    <message>
+        <source>Commander of the Celtic and Iberian heavy horse on Hannibal&apos;s left at Cannae; not Hannibal&apos;s brother Hasdrubal Barca.</source>
+        <translation>Dowódca ciężkiej jazdy celtyckiej i iberyjskiej na lewym skrzydle Hannibala pod Kannami; nie mylić z bratem Hannibala, Hazdrubalem Barkasem.</translation>
+    </message>
+    <message>
+        <source>Heavy cavalry commander who breaks a wing and rides into the rear.</source>
+        <translation>Dowódca ciężkiej jazdy, który łamie skrzydło i wjeżdża na tyły.</translation>
+    </message>
+    <message>
+        <source>Shock and discipline in the charge.</source>
+        <translation>Impet i dyscyplina w szarży.</translation>
+    </message>
+    <message>
+        <source>Costly to replace if he is cut down.</source>
+        <translation>Trudny do zastąpienia, gdy polegnie.</translation>
+    </message>
+    <message>
+        <source>Heavy Horse Charge adds weight to nearby attacks.</source>
+        <translation>Szarża ciężkiej jazdy dodaje ciężaru pobliskim atakom.</translation>
+    </message>
+    <message>
+        <source>Nearby allied horsemen gain the most attack in aura range.</source>
+        <translation>Pobliscy sojuszniczy jeźdźcy zyskują największą premię do ataku w zasięgu aury.</translation>
+    </message>
+    <message>
+        <source>Close the ranks, horsemen!</source>
+        <translation>Zewrzeć szeregi, jeźdźcy!</translation>
+    </message>
+    <message>
+        <source>Charge! Break their wing!</source>
+        <translation>Szarża! Złamać ich skrzydło!</translation>
+    </message>
+    <message>
+        <source>Rein in and reform!</source>
+        <translation>Ściągnąć wodze, przegrupować się!</translation>
+    </message>
+    <message>
+        <source>Masinissa</source>
+        <translation>Masynissa</translation>
+    </message>
+    <message>
+        <source>Numidian prince who fought for Carthage in Spain, changed sides, and led Rome&apos;s allied horse at Zama.</source>
+        <translation>Numidyjski książę, który walczył dla Kartaginy w Hiszpanii, zmienił strony i dowodził sojuszniczą jazdą Rzymu pod Zamą.</translation>
+    </message>
+    <message>
+        <source>Light cavalry commander who harries with javelins and never stands still.</source>
+        <translation>Dowódca lekkiej jazdy, który nęka oszczepami i nigdy nie stoi w miejscu.</translation>
+    </message>
+    <message>
+        <source>The fastest horse in Africa.</source>
+        <translation>Najszybsza jazda Afryki.</translation>
+    </message>
+    <message>
+        <source>Unarmoured; no use in a static fight.</source>
+        <translation>Bez pancerza; bezużyteczny w walce pozycyjnej.</translation>
+    </message>
+    <message>
+        <source>Numidian Horse keeps nearby riders moving and wheeling.</source>
+        <translation>Jazda numidyjska utrzymuje pobliskich jeźdźców w ruchu i nawrotach.</translation>
+    </message>
+    <message>
+        <source>Riders, to me!</source>
+        <translation>Konni, do mnie!</translation>
+    </message>
+    <message>
+        <source>Throw, and wheel!</source>
+        <translation>Rzut i nawrót!</translation>
+    </message>
+    <message>
+        <source>Scatter and come again!</source>
+        <translation>Rozproszyć się i wracać!</translation>
+    </message>
 </context>
 <context>
     <name>ComponentGallery</name>
@@ -3389,6 +3789,38 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
         <source>Encirclement needs at least three units.</source>
         <translation>Okrążenie wymaga co najmniej trzech jednostek.</translation>
     </message>
+    <message>
+        <source>Triplex Acies</source>
+        <translation>Triplex acies</translation>
+    </message>
+    <message>
+        <source>Convex Crescent</source>
+        <translation>Wypukły półksiężyc</translation>
+    </message>
+    <message>
+        <source>Elephant Screen</source>
+        <translation>Zasłona słoni</translation>
+    </message>
+    <message>
+        <source>Requires infantry to form the maniples.</source>
+        <translation>Wymaga piechoty do sformowania manipułów.</translation>
+    </message>
+    <message>
+        <source>Requires infantry to form the crescent.</source>
+        <translation>Wymaga piechoty do sformowania półksiężyca.</translation>
+    </message>
+    <message>
+        <source>Requires war elephants in the selection.</source>
+        <translation>Wymaga słoni bojowych w zaznaczeniu.</translation>
+    </message>
+    <message>
+        <source>%1 does not fight in this order.</source>
+        <translation>%1 nie walczy w tym szyku.</translation>
+    </message>
+    <message>
+        <source>This battle order needs at least three units.</source>
+        <translation>Ten szyk bojowy wymaga co najmniej trzech oddziałów.</translation>
+    </message>
 </context>
 <context>
     <name>FormationPanel</name>
@@ -3695,6 +4127,18 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
     <message>
         <source>Reset to faction default</source>
         <translation>Przywróć domyślny dla frakcji</translation>
+    </message>
+    <message>
+        <source>Three lines of maniples with open lanes: principes cover the gaps of the hastati, triarii stand at the rear. Against elephants the lanes open straight through.</source>
+        <translation>Trzy linie manipułów z otwartymi przejściami: principes zasłaniają luki hastati, triarii stoją z tyłu. Przeciw słoniom przejścia otwierają się na wylot.</translation>
+    </message>
+    <message>
+        <source>The centre bows toward the enemy and gives ground under pressure while the wings hold, then the wings wheel in on the enemy&apos;s flanks.</source>
+        <translation>Środek wygina się ku wrogowi i pod naporem ustępuje pola, a skrzydła trwają; potem skrzydła zawijają na flanki wroga.</translation>
+    </message>
+    <message>
+        <source>War elephants spread out ahead of the main line. Needs elephants.</source>
+        <translation>Słonie bojowe rozstawione przed główną linią. Wymaga słoni.</translation>
     </message>
 </context>
 <context>
@@ -7747,6 +8191,10 @@ by zobaczyć podgląd</translation>
     <message>
         <source>✓ Completed</source>
         <translation>✓ Ukończone</translation>
+    </message>
+    <message>
+        <source>Also in command: %1</source>
+        <translation>Dowodzą także: %1</translation>
     </message>
 </context>
 <context>

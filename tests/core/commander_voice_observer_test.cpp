@@ -143,6 +143,26 @@ TEST_F(CommanderVoiceObserverTest, ACommittedWaveIsReportedOnceWithItsTargetOwne
   EXPECT_EQ(attacks.size(), 4U) << "a new commitment is a new attack";
 }
 
+TEST_F(CommanderVoiceObserverTest, AScoutingWaveIsAnnouncedOnceItPicksItsTarget) {
+  const auto barracks = spawn(k_local, Game::Units::SpawnType::Barracks);
+  ScriptedPlans plans;
+  plans.plan = AttackPlanSource::AttackPlan{
+      .committed = true, .committed_at = 30.0F, .target_id = 0};
+
+  tick(1.0F, &plans);
+  tick(1.0F, &plans);
+  EXPECT_TRUE(attacks.empty()) << "a wave marching on a scout point has no foe to name";
+
+  plans.plan->target_id = barracks;
+  tick(1.0F, &plans);
+  ASSERT_EQ(attacks.size(), 2U)
+      << "the commitment is announced when the wave finds its target";
+  EXPECT_EQ(attacks.front().b, k_local);
+
+  tick(5.0F, &plans);
+  EXPECT_EQ(attacks.size(), 2U) << "the same commitment must not be reported again";
+}
+
 TEST_F(CommanderVoiceObserverTest, SustainedBuildingDamageReadsAsOneSiegeUntilItCools) {
   for (int i = 0; i < 3; ++i) {
     hit_building(k_enemy, k_local, 30);

@@ -33,7 +33,8 @@ find_clear_site(const Engine::Core::World& world,
                 float search_radius,
                 float facing_degrees = 0.0F,
                 std::span<const Engine::Core::EntityID> crew = {},
-                std::span<const SiteKeepOut> keep_out = {}) -> std::optional<QVector3D>;
+                std::span<const SiteKeepOut> keep_out = {},
+                bool clear_of_troops = false) -> std::optional<QVector3D>;
 
 [[nodiscard]] auto
 troops_stand_on(const Engine::Core::World& world,

@@ -347,6 +347,35 @@ void read_stamina(Entity* entity, const QJsonObject& json) {
   }
 }
 
+void write_wading(const Entity* entity, QJsonObject& entity_obj) {
+  auto const* registry = entity->registry();
+  auto const* wading = registry != nullptr
+                           ? registry->try_get<WadingComponent>(entity->get_id())
+                           : nullptr;
+  if (wading == nullptr || wading->chill <= 0.0F) {
+    return;
+  }
+  QJsonObject wading_obj;
+  wading_obj["chill"] = static_cast<double>(wading->chill);
+  wading_obj["cold"] = static_cast<double>(wading->cold);
+  entity_obj["wading"] = wading_obj;
+}
+
+void read_wading(Entity* entity, const QJsonObject& json) {
+  if (!json.contains("wading")) {
+    return;
+  }
+  const auto wading_obj = json["wading"].toObject();
+  auto* wading = entity->add_component<WadingComponent>();
+  if (wading == nullptr) {
+    return;
+  }
+  wading->chill =
+      std::clamp(static_cast<float>(wading_obj["chill"].toDouble(0.0)), 0.0F, 1.0F);
+  wading->cold =
+      std::clamp(static_cast<float>(wading_obj["cold"].toDouble(0.0)), 0.0F, 1.0F);
+}
+
 void write_terrain_context(const Entity* entity, QJsonObject& entity_obj) {
   if (const auto* terrain_context = entity->get_component<TerrainContextComponent>()) {
     QJsonObject terrain_context_obj;
@@ -383,6 +412,7 @@ void write_core(const Entity* entity, QJsonObject& entity_obj) {
   write_army_formation_membership(entity, entity_obj);
   write_unit_layout_state(entity, entity_obj);
   write_stamina(entity, entity_obj);
+  write_wading(entity, entity_obj);
   write_terrain_context(entity, entity_obj);
 }
 
@@ -397,6 +427,7 @@ void read_core(Entity* entity, const QJsonObject& json) {
   read_army_formation_membership(entity, json);
   read_unit_layout_state(entity, json);
   read_stamina(entity, json);
+  read_wading(entity, json);
   read_terrain_context(entity, json);
 }
 

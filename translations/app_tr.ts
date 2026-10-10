@@ -2382,6 +2382,406 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
         <source>Encircling Cut</source>
         <translation>Kuşatan Kesik</translation>
     </message>
+    <message>
+        <source>A historical commander fielded by missions and scenarios; not playable and never produced from a barracks.</source>
+        <translation>Görevlerin ve senaryoların sahaya sürdüğü tarihi bir komutan; oynanamaz ve kışlada asla üretilmez.</translation>
+    </message>
+    <message>
+        <source>Rallies wavering troops nearby back into fighting order.</source>
+        <translation>Yakındaki sarsılan birlikleri yeniden savaş düzenine sokar.</translation>
+    </message>
+    <message>
+        <source>If he falls, nearby allies lose heart and his aura ends.</source>
+        <translation>Düşerse yakındaki müttefiklerin morali bozulur ve aurası sona erer.</translation>
+    </message>
+    <message>
+        <source>Tiberius Sempronius Longus</source>
+        <translation>Tiberius Sempronius Longus</translation>
+    </message>
+    <message>
+        <source>Consul of 218 BC, eager for battle, who sent his army across the freezing Trebia before breakfast.</source>
+        <translation>MÖ 218 konsülü; savaşa hevesliydi ve ordusunu kahvaltıdan önce buz gibi Trebia&apos;dan geçirdi.</translation>
+    </message>
+    <message>
+        <source>Consular sword commander who leads the legions from the front of the attack.</source>
+        <translation>Lejyonları saldırının en önünden yöneten konsül kılıç komutanı.</translation>
+    </message>
+    <message>
+        <source>Drives a fresh assault hard and fast.</source>
+        <translation>Yeni bir saldırıyı sert ve hızlı sürdürür.</translation>
+    </message>
+    <message>
+        <source>Commits early and walks into prepared ground.</source>
+        <translation>Erkenden bağlanır ve hazırlanmış araziye yürür.</translation>
+    </message>
+    <message>
+        <source>Consular Impetus sharpens the attack of nearby legions.</source>
+        <translation>Konsül Atılımı yakındaki lejyonların saldırısını keskinleştirir.</translation>
+    </message>
+    <message>
+        <source>Nearby allied swordsmen gain the most attack in aura range.</source>
+        <translation>Aura menzilindeki müttefik kılıç ustaları en fazla saldırı kazanır.</translation>
+    </message>
+    <message>
+        <source>Hold the line, Romans!</source>
+        <translation>Hattı tutun, Romalılar!</translation>
+    </message>
+    <message>
+        <source>Across, and at them!</source>
+        <translation>Karşıya geçin, üstlerine!</translation>
+    </message>
+    <message>
+        <source>Back to the river bank!</source>
+        <translation>Nehir kıyısına geri çekilin!</translation>
+    </message>
+    <message>
+        <source>Gaius Flaminius</source>
+        <translation>Gaius Flaminius</translation>
+    </message>
+    <message>
+        <source>Popular consul of 217 BC who marched his column into Hannibal&apos;s ambush at Lake Trasimene and died there.</source>
+        <translation>Kolonunu Trasimeno Gölü&apos;nde Hannibal&apos;in pususuna sokan ve orada ölen MÖ 217&apos;nin halkçı konsülü.</translation>
+    </message>
+    <message>
+        <source>Spear commander who keeps a marching column moving at speed.</source>
+        <translation>Yürüyüş kolonunu hızla hareket ettiren mızrak komutanı.</translation>
+    </message>
+    <message>
+        <source>Fast on the march and quick to engage.</source>
+        <translation>Yürüyüşte hızlı, çarpışmaya atılmakta çabuk.</translation>
+    </message>
+    <message>
+        <source>Scouts nothing; easily caught deployed in column.</source>
+        <translation>Hiç keşif yapmaz; kolon hâlindeyken kolayca yakalanır.</translation>
+    </message>
+    <message>
+        <source>Forced March hurries nearby troops along the road.</source>
+        <translation>Cebri Yürüyüş yakındaki birlikleri yol boyunca hızlandırır.</translation>
+    </message>
+    <message>
+        <source>Nearby allied spearmen move fastest in aura range.</source>
+        <translation>Aura menzilindeki müttefik mızrakçılar en hızlı hareket eder.</translation>
+    </message>
+    <message>
+        <source>Close up, form on me!</source>
+        <translation>Sıklaşın, yanımda düzen alın!</translation>
+    </message>
+    <message>
+        <source>Forward, and no halting!</source>
+        <translation>İleri, durmak yok!</translation>
+    </message>
+    <message>
+        <source>Back to the road!</source>
+        <translation>Yola geri dönün!</translation>
+    </message>
+    <message>
+        <source>Gaius Terentius Varro</source>
+        <translation>Gaius Terentius Varro</translation>
+    </message>
+    <message>
+        <source>Consul of 216 BC who led the largest army Rome had ever fielded into the encirclement at Cannae, and survived it.</source>
+        <translation>Roma&apos;nın o güne dek kurduğu en büyük orduyu Cannae&apos;deki kuşatmaya sürükleyen ve hayatta kalan MÖ 216 konsülü.</translation>
+    </message>
+    <message>
+        <source>Sword commander who throws the full weight of the line forward.</source>
+        <translation>Hattın tüm ağırlığını ileri atan kılıç komutanı.</translation>
+    </message>
+    <message>
+        <source>Numbers, nerve and a crushing first push.</source>
+        <translation>Kalabalık, cesaret ve ezici bir ilk hamle.</translation>
+    </message>
+    <message>
+        <source>Rash; blind to the flanks once the line is moving.</source>
+        <translation>Atılgan; hat ilerlemeye başlayınca kanatları görmez.</translation>
+    </message>
+    <message>
+        <source>Weight of Numbers drives nearby legions harder into the enemy centre.</source>
+        <translation>Sayı Ağırlığı yakındaki lejyonları düşman merkezine daha sert sürer.</translation>
+    </message>
+    <message>
+        <source>Nearby allied swordsmen gain strong attack in aura range.</source>
+        <translation>Aura menzilindeki müttefik kılıç ustaları güçlü saldırı kazanır.</translation>
+    </message>
+    <message>
+        <source>Stand, Rome is watching!</source>
+        <translation>Durun, Roma izliyor!</translation>
+    </message>
+    <message>
+        <source>Push! Push the centre!</source>
+        <translation>Bastırın! Merkeze bastırın!</translation>
+    </message>
+    <message>
+        <source>To Venusia, fall back!</source>
+        <translation>Venusia&apos;ya, geri çekilin!</translation>
+    </message>
+    <message>
+        <source>Lucius Aemilius Paullus</source>
+        <translation>Lucius Aemilius Paullus</translation>
+    </message>
+    <message>
+        <source>Cautious consul of 216 BC who advised against battle at Cannae and died on the field.</source>
+        <translation>Cannae&apos;de savaşa girilmemesini öğütleyen ve sahada ölen temkinli MÖ 216 konsülü.</translation>
+    </message>
+    <message>
+        <source>Spear commander who steadies the line and refuses to break.</source>
+        <translation>Hattı sağlamlaştıran ve dağılmayı reddeden mızrak komutanı.</translation>
+    </message>
+    <message>
+        <source>Calm under pressure; keeps a wing standing.</source>
+        <translation>Baskı altında sakin; bir kanadı ayakta tutar.</translation>
+    </message>
+    <message>
+        <source>Slow to move and bound by a colleague&apos;s decisions.</source>
+        <translation>Hareketi yavaş ve bir meslektaşının kararlarına bağlı.</translation>
+    </message>
+    <message>
+        <source>Aristocratic Composure helps nearby troops recover in a long fight.</source>
+        <translation>Aristokrat Soğukkanlılığı yakındaki birliklerin uzun bir savaşta toparlanmasına yardım eder.</translation>
+    </message>
+    <message>
+        <source>Nearby allied spearmen regenerate health fastest in aura range.</source>
+        <translation>Aura menzilindeki müttefik mızrakçılar sağlığı en hızlı yeniler.</translation>
+    </message>
+    <message>
+        <source>Steady! Keep your ranks!</source>
+        <translation>Sakin! Saflarınızı koruyun!</translation>
+    </message>
+    <message>
+        <source>With me, together!</source>
+        <translation>Benimle, hep birlikte!</translation>
+    </message>
+    <message>
+        <source>Give ground, slowly!</source>
+        <translation>Yavaşça geri çekilin!</translation>
+    </message>
+    <message>
+        <source>Publius Cornelius Scipio (consul 218 BC)</source>
+        <translation>Publius Cornelius Scipio (MÖ 218 konsülü)</translation>
+    </message>
+    <message>
+        <source>Consul of 218 BC and father of Scipio Africanus; wounded at the Ticinus and carried from the field by his son.</source>
+        <translation>MÖ 218 konsülü ve Scipio Africanus&apos;un babası; Ticinus&apos;ta yaralandı ve oğlu tarafından sahadan taşındı.</translation>
+    </message>
+    <message>
+        <source>Sword commander who screens the army&apos;s advance with fast mounted troops.</source>
+        <translation>Ordunun ilerleyişini hızlı atlı birliklerle perdeleyen kılıç komutanı.</translation>
+    </message>
+    <message>
+        <source>Quick to probe, quick to pull a screen back.</source>
+        <translation>Yoklamakta da perdeyi geri çekmekte de hızlı.</translation>
+    </message>
+    <message>
+        <source>Fights from the front and is easily cut off.</source>
+        <translation>En önde savaşır ve kolayca kuşatılır.</translation>
+    </message>
+    <message>
+        <source>Consular Screen quickens nearby riders and skirmishers.</source>
+        <translation>Konsül Perdesi yakındaki süvarileri ve avcı erlerini hızlandırır.</translation>
+    </message>
+    <message>
+        <source>Nearby allied horsemen move fastest in aura range.</source>
+        <translation>Aura menzilindeki müttefik süvariler en hızlı hareket eder.</translation>
+    </message>
+    <message>
+        <source>Rally to the consul!</source>
+        <translation>Konsülün etrafında toplanın!</translation>
+    </message>
+    <message>
+        <source>Ride them down!</source>
+        <translation>Çiğneyin onları!</translation>
+    </message>
+    <message>
+        <source>Back across the Ticinus!</source>
+        <translation>Ticinus&apos;un ötesine geri!</translation>
+    </message>
+    <message>
+        <source>Mago Barca</source>
+        <translation>Mago Barka</translation>
+    </message>
+    <message>
+        <source>Hannibal&apos;s youngest brother, who sprang the ambush from the stream bed at the Trebia and fought in the centre at Cannae.</source>
+        <translation>Hannibal&apos;in en küçük kardeşi; Trebia&apos;da dere yatağından pusuyu başlattı ve Cannae&apos;de merkezde savaştı.</translation>
+    </message>
+    <message>
+        <source>Sword commander who leads a hidden detachment into the enemy&apos;s rear.</source>
+        <translation>Gizli bir müfrezeyi düşmanın gerisine yönelten kılıç komutanı.</translation>
+    </message>
+    <message>
+        <source>Strikes hard from concealment.</source>
+        <translation>Saklandığı yerden sert vurur.</translation>
+    </message>
+    <message>
+        <source>Small command; vulnerable once the ambush is spent.</source>
+        <translation>Küçük bir birlik; pusu tükenince savunmasızdır.</translation>
+    </message>
+    <message>
+        <source>Ambush Strike lends nearby troops a sharper first blow.</source>
+        <translation>Pusu Darbesi yakındaki birliklere daha keskin bir ilk vuruş kazandırır.</translation>
+    </message>
+    <message>
+        <source>To me, sons of Carthage!</source>
+        <translation>Bana gelin, Kartaca&apos;nın evlatları!</translation>
+    </message>
+    <message>
+        <source>Out of the reeds, now!</source>
+        <translation>Sazlıktan çıkın, şimdi!</translation>
+    </message>
+    <message>
+        <source>Back to the stream bed!</source>
+        <translation>Dere yatağına geri!</translation>
+    </message>
+    <message>
+        <source>Maharbal</source>
+        <translation>Maharbal</translation>
+    </message>
+    <message>
+        <source>Hannibal&apos;s cavalry commander, who rounded up the survivors of Trasimene and urged a march on Rome after Cannae.</source>
+        <translation>Hannibal&apos;in süvari komutanı; Trasimeno&apos;nun hayatta kalanlarını topladı ve Cannae&apos;den sonra Roma&apos;ya yürünmesini istedi.</translation>
+    </message>
+    <message>
+        <source>Spear-armed cavalry commander who hunts broken troops.</source>
+        <translation>Dağılan birlikleri avlayan mızraklı süvari komutanı.</translation>
+    </message>
+    <message>
+        <source>Relentless in pursuit.</source>
+        <translation>Takipte amansız.</translation>
+    </message>
+    <message>
+        <source>Light protection; poor at holding ground.</source>
+        <translation>Hafif korumalı; mevzi tutmada zayıf.</translation>
+    </message>
+    <message>
+        <source>Cavalry Pursuit speeds nearby riders after a breaking enemy.</source>
+        <translation>Süvari Takibi, dağılan düşmanın peşindeki yakın süvarileri hızlandırır.</translation>
+    </message>
+    <message>
+        <source>Horsemen, to me!</source>
+        <translation>Süvariler, bana!</translation>
+    </message>
+    <message>
+        <source>After them, no quarter!</source>
+        <translation>Peşlerinden, aman yok!</translation>
+    </message>
+    <message>
+        <source>Wheel away, reform!</source>
+        <translation>Dönün, yeniden düzen alın!</translation>
+    </message>
+    <message>
+        <source>Hanno, son of Bomilcar</source>
+        <translation>Bomilkar oğlu Hanno</translation>
+    </message>
+    <message>
+        <source>Hannibal&apos;s nephew, who crossed the Rhone upstream and signalled his flank attack with smoke.</source>
+        <translation>Hannibal&apos;in yeğeni; Rhône&apos;u yukarıdan geçti ve kanat saldırısını dumanla haber verdi.</translation>
+    </message>
+    <message>
+        <source>Mobile commander who takes a detachment round the enemy&apos;s flank.</source>
+        <translation>Bir müfrezeyi düşmanın kanadından dolaştıran hareketli komutan.</translation>
+    </message>
+    <message>
+        <source>Fast, independent flanking marches.</source>
+        <translation>Hızlı, bağımsız kuşatma yürüyüşleri.</translation>
+    </message>
+    <message>
+        <source>Thin in a frontal fight.</source>
+        <translation>Cepheden çarpışmada zayıf.</translation>
+    </message>
+    <message>
+        <source>Flanking March hurries nearby troops round the enemy.</source>
+        <translation>Kuşatma Yürüyüşü yakındaki birlikleri düşmanın çevresinden hızlandırır.</translation>
+    </message>
+    <message>
+        <source>Nearby allied archers move fastest in aura range.</source>
+        <translation>Aura menzilindeki müttefik okçular en hızlı hareket eder.</translation>
+    </message>
+    <message>
+        <source>Hold here, wait for the smoke!</source>
+        <translation>Burada durun, dumanı bekleyin!</translation>
+    </message>
+    <message>
+        <source>Now, into their flank!</source>
+        <translation>Şimdi, kanatlarına!</translation>
+    </message>
+    <message>
+        <source>Back to the ford!</source>
+        <translation>Geçide geri dönün!</translation>
+    </message>
+    <message>
+        <source>Hasdrubal (cavalry commander)</source>
+        <translation>Hasdrubal (süvari komutanı)</translation>
+    </message>
+    <message>
+        <source>Commander of the Celtic and Iberian heavy horse on Hannibal&apos;s left at Cannae; not Hannibal&apos;s brother Hasdrubal Barca.</source>
+        <translation>Cannae&apos;de Hannibal&apos;in sol kanadındaki Kelt ve İber ağır süvarisinin komutanı; Hannibal&apos;in kardeşi Hasdrubal Barka değildir.</translation>
+    </message>
+    <message>
+        <source>Heavy cavalry commander who breaks a wing and rides into the rear.</source>
+        <translation>Bir kanadı kırıp gerilere dalan ağır süvari komutanı.</translation>
+    </message>
+    <message>
+        <source>Shock and discipline in the charge.</source>
+        <translation>Hücumda darbe ve disiplin.</translation>
+    </message>
+    <message>
+        <source>Costly to replace if he is cut down.</source>
+        <translation>Düşerse yerini doldurmak zordur.</translation>
+    </message>
+    <message>
+        <source>Heavy Horse Charge adds weight to nearby attacks.</source>
+        <translation>Ağır Süvari Hücumu yakındaki saldırılara ağırlık katar.</translation>
+    </message>
+    <message>
+        <source>Nearby allied horsemen gain the most attack in aura range.</source>
+        <translation>Aura menzilindeki müttefik süvariler en fazla saldırı kazanır.</translation>
+    </message>
+    <message>
+        <source>Close the ranks, horsemen!</source>
+        <translation>Safları sıklaştırın, süvariler!</translation>
+    </message>
+    <message>
+        <source>Charge! Break their wing!</source>
+        <translation>Hücum! Kanatlarını kırın!</translation>
+    </message>
+    <message>
+        <source>Rein in and reform!</source>
+        <translation>Dizginleri çekin, yeniden düzen alın!</translation>
+    </message>
+    <message>
+        <source>Masinissa</source>
+        <translation>Masinissa</translation>
+    </message>
+    <message>
+        <source>Numidian prince who fought for Carthage in Spain, changed sides, and led Rome&apos;s allied horse at Zama.</source>
+        <translation>İspanya&apos;da Kartaca için savaşan, taraf değiştiren ve Zama&apos;da Roma&apos;nın müttefik süvarisini yöneten Numidyalı prens.</translation>
+    </message>
+    <message>
+        <source>Light cavalry commander who harries with javelins and never stands still.</source>
+        <translation>Ciritlerle taciz eden ve hiç yerinde durmayan hafif süvari komutanı.</translation>
+    </message>
+    <message>
+        <source>The fastest horse in Africa.</source>
+        <translation>Afrika&apos;nın en hızlı atlıları.</translation>
+    </message>
+    <message>
+        <source>Unarmoured; no use in a static fight.</source>
+        <translation>Zırhsız; durağan bir savaşta işe yaramaz.</translation>
+    </message>
+    <message>
+        <source>Numidian Horse keeps nearby riders moving and wheeling.</source>
+        <translation>Numidya Süvarisi yakındaki atlıları hareket hâlinde ve dönüşte tutar.</translation>
+    </message>
+    <message>
+        <source>Riders, to me!</source>
+        <translation>Atlılar, bana!</translation>
+    </message>
+    <message>
+        <source>Throw, and wheel!</source>
+        <translation>Fırlatın ve dönün!</translation>
+    </message>
+    <message>
+        <source>Scatter and come again!</source>
+        <translation>Dağılın ve yeniden gelin!</translation>
+    </message>
 </context>
 <context>
     <name>ComponentGallery</name>
@@ -3389,6 +3789,38 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
         <source>Encirclement needs at least three units.</source>
         <translation>Kuşatma en az üç birim ister.</translation>
     </message>
+    <message>
+        <source>Triplex Acies</source>
+        <translation>Üçlü saf</translation>
+    </message>
+    <message>
+        <source>Convex Crescent</source>
+        <translation>Dışbükey hilal</translation>
+    </message>
+    <message>
+        <source>Elephant Screen</source>
+        <translation>Fil perdesi</translation>
+    </message>
+    <message>
+        <source>Requires infantry to form the maniples.</source>
+        <translation>Manipülleri kurmak için piyade gerekir.</translation>
+    </message>
+    <message>
+        <source>Requires infantry to form the crescent.</source>
+        <translation>Hilali kurmak için piyade gerekir.</translation>
+    </message>
+    <message>
+        <source>Requires war elephants in the selection.</source>
+        <translation>Seçimde savaş fili gerekir.</translation>
+    </message>
+    <message>
+        <source>%1 does not fight in this order.</source>
+        <translation>%1 bu düzende savaşmaz.</translation>
+    </message>
+    <message>
+        <source>This battle order needs at least three units.</source>
+        <translation>Bu savaş düzeni en az üç birlik gerektirir.</translation>
+    </message>
 </context>
 <context>
     <name>FormationPanel</name>
@@ -3695,6 +4127,18 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     <message>
         <source>Reset to faction default</source>
         <translation>Taraf varsayılanına sıfırla</translation>
+    </message>
+    <message>
+        <source>Three lines of maniples with open lanes: principes cover the gaps of the hastati, triarii stand at the rear. Against elephants the lanes open straight through.</source>
+        <translation>Aralarında açık koridorlar olan üç sıra manipül: principes hastati boşluklarını kapatır, triarii arkada durur. Fillere karşı koridorlar boydan boya açılır.</translation>
+    </message>
+    <message>
+        <source>The centre bows toward the enemy and gives ground under pressure while the wings hold, then the wings wheel in on the enemy&apos;s flanks.</source>
+        <translation>Merkez düşmana doğru kavis yapar ve baskı altında geri çekilirken kanatlar yerini korur; ardından kanatlar düşmanın yanlarına döner.</translation>
+    </message>
+    <message>
+        <source>War elephants spread out ahead of the main line. Needs elephants.</source>
+        <translation>Ana hattın önüne dağıtılmış savaş filleri. Fil gerekir.</translation>
     </message>
 </context>
 <context>
@@ -7741,6 +8185,10 @@ bir harita seç</translation>
     <message>
         <source>✓ Completed</source>
         <translation>✓ Tamamlandı</translation>
+    </message>
+    <message>
+        <source>Also in command: %1</source>
+        <translation>Komutada ayrıca: %1</translation>
     </message>
 </context>
 <context>

@@ -86,6 +86,7 @@
         "game/units/troop_config",
         "game/units/troop_catalog",
         "game/units/commander_catalog",
+        "game/units/historical_commander_catalog",
         "game/visuals/building_asset_key",
         "game/units/troop_catalog_loader"
       ],

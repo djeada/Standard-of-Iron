@@ -105,20 +105,56 @@ auto commander_troop_for_seat(const QString& nation, int seat) -> QString {
   return Game::Units::troop_typeToQString(roster[index]->troop_type);
 }
 
+namespace {
+
+// One commander per owner: the owner's playable commander when the map has one,
+// otherwise the first historical cameo it fields (cameos may stand beside a
+// playable commander without replacing it).
+auto owner_commander_spawns(const Game::Map::MapDefinition& map)
+    -> std::map<int, const Game::Map::UnitSpawn*> {
+  std::map<int, const Game::Map::UnitSpawn*> by_owner;
+  for (bool const cameo_pass : {false, true}) {
+    for (const auto& spawn : map.spawns) {
+      const auto troop_type = Game::Units::spawn_typeToTroopType(spawn.type);
+      if (!troop_type.has_value() || !Game::Units::is_commander_troop(*troop_type)) {
+        continue;
+      }
+      if (spawn.commander_id.isEmpty() == cameo_pass) {
+        continue;
+      }
+      const auto [it, inserted] = by_owner.emplace(spawn.player_id, &spawn);
+      if (!inserted && !cameo_pass) {
+        qWarning() << "Map authors more than one commander for owner" << spawn.player_id
+                   << "- keeping" << Game::Units::spawn_typeToQString(it->second->type)
+                   << "and ignoring" << Game::Units::spawn_typeToQString(spawn.type);
+      }
+    }
+  }
+  return by_owner;
+}
+
+} // namespace
+
 auto commander_troops_by_owner(const Game::Map::MapDefinition& map)
     -> std::map<int, QString> {
   std::map<int, QString> by_owner;
-  for (const auto& spawn : map.spawns) {
-    const auto troop_type = Game::Units::spawn_typeToTroopType(spawn.type);
-    if (!troop_type.has_value() || !Game::Units::is_commander_troop(*troop_type)) {
+  for (const auto& [owner, spawn] : owner_commander_spawns(map)) {
+    const auto troop_type = Game::Units::spawn_typeToTroopType(spawn->type);
+    by_owner.emplace(owner, Game::Units::troop_typeToQString(*troop_type));
+  }
+  return by_owner;
+}
+
+auto commander_identities_by_owner(const Game::Map::MapDefinition& map)
+    -> std::map<int, QString> {
+  std::map<int, QString> by_owner;
+  for (const auto& [owner, spawn] : owner_commander_spawns(map)) {
+    if (!spawn->commander_id.isEmpty()) {
+      by_owner.emplace(owner, spawn->commander_id);
       continue;
     }
-    const QString troop = Game::Units::troop_typeToQString(*troop_type);
-    const auto [it, inserted] = by_owner.emplace(spawn.player_id, troop);
-    if (!inserted) {
-      qWarning() << "Map authors more than one commander for owner" << spawn.player_id
-                 << "- keeping" << it->second << "and ignoring" << troop;
-    }
+    const auto troop_type = Game::Units::spawn_typeToTroopType(spawn->type);
+    by_owner.emplace(owner, Game::Units::troop_typeToQString(*troop_type));
   }
   return by_owner;
 }
@@ -132,6 +168,17 @@ auto commander_troops_for_map(const QString& map_path) -> std::map<int, QString>
     return {};
   }
   return commander_troops_by_owner(*context.definition());
+}
+
+auto commander_identities_for_map(const QString& map_path) -> std::map<int, QString> {
+  QString error;
+  const Game::Map::MapContext context =
+      Game::Map::MapContextStore::acquire(map_path, &error);
+  if (!context.valid()) {
+    qWarning() << "Commander lookup: failed to load map" << map_path << "-" << error;
+    return {};
+  }
+  return commander_identities_by_owner(*context.definition());
 }
 
 auto resolve_commander_position(

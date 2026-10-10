@@ -363,8 +363,8 @@ Item {
             event.accepted = true;
             return;
         }
-        if (game.placement.is_placing_formation && event.key >= Qt.Key_1 && event.key <= Qt.Key_9) {
-            game_view.select_formation_intent_slot(event.key - Qt.Key_1);
+        if (game.placement.is_placing_formation && event.key >= Qt.Key_0 && event.key <= Qt.Key_9) {
+            game_view.select_formation_intent_slot(event.key === Qt.Key_0 ? 9 : event.key - Qt.Key_1);
             event.accepted = true;
             return;
         }

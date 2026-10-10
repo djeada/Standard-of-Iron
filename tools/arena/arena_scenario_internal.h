@@ -322,8 +322,12 @@ struct ArenaScenarioRunner::Impl {
   QVector3D world_origin;
   QHash<QString, std::vector<Engine::Core::EntityID>> groups;
   QHash<QString, QVector3D> formed_destinations;
+  QHash<QString, float> battle_order_peaks;
+  QSet<Engine::Core::EntityID> lane_runners;
   QHash<Engine::Core::EntityID, QString> entity_groups;
   std::vector<StepRuntime> steps;
+  QHash<QString, std::size_t> step_index_by_name;
+  std::vector<ArenaTimedWeatherChange> weather_schedule;
   QHash<Engine::Core::EntityID, CommandResponse> responses;
   QHash<Engine::Core::EntityID, EntityState> entity_states;
   QHash<Engine::Core::EntityID, MotionQualityState> motion_states;
@@ -371,6 +375,7 @@ struct ArenaScenarioRunner::Impl {
   bool wall_walker_seen{false};
   QHash<QString, QSet<std::uint64_t>> raft_riders_by_group;
   int most_raft_riders{0};
+  QHash<QString, QSet<std::uint64_t>> waders_by_group;
   QHash<QString, BridgeAlignmentObservation> bridge_alignment;
   QHash<QString, float> initial_elevation;
   QHash<QString, float> maximum_elevation;
@@ -520,6 +525,11 @@ struct ArenaScenarioRunner::Impl {
   void stop_group(const QString& group, bool clear_attack);
   void attack_group(const QString& group, const QString& target_group, bool chase);
   void form_army(const ArenaScenarioStep& step);
+  [[nodiscard]] auto
+  named_step_executed_at(const QString& name) const -> std::optional<float>;
+  [[nodiscard]] auto group_strength(const QString& group) const -> std::optional<float>;
+  void shape_move_group(const ArenaScenarioStep& step);
+  void wheel_group(const ArenaScenarioStep& step);
   void execute_step(std::size_t index, const ArenaScenarioStep& step);
   struct WildlifeObservation {
     bool grazing_seen{false};
@@ -593,6 +603,7 @@ struct ArenaScenarioRunner::Impl {
                                   int living_samples,
                                   int lens_gap_culled);
   void check_formation_order(const ArenaExpectation& expectation);
+  void observe_battle_order(const ArenaExpectation& expectation);
   void publish_movement_diagnostics();
   void publish_narrow_layout_outcome();
   void check_end_expectations();

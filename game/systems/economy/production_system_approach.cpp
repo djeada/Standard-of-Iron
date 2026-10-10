@@ -351,7 +351,9 @@ void advance_site_approach(Engine::Core::World& world,
   bool const stalled_within_reach =
       work_spot && has_work_target && dist_sq <= k_stalled_work_reach_sq &&
       builder.site_approach_seconds > k_stalled_work_seconds;
-  if (dist_sq < arrival_sq || stalled_within_reach) {
+  bool const stalled_at_footprint =
+      reached_footprint && builder.site_approach_seconds > k_stalled_work_seconds;
+  if (dist_sq < arrival_sq || stalled_within_reach || stalled_at_footprint) {
     if (retarget_onto_field(world, actor, builder)) {
       return;
     }
@@ -372,8 +374,12 @@ void advance_site_approach(Engine::Core::World& world,
     }
   } else if (reached_footprint) {
     if (!builder.bypass_movement_active) {
+      const bool left_a_route =
+          actor.movement != nullptr && walking_to_site(builder, *actor.movement);
       abandon_site_route(builder, actor.movement);
-      reset_site_approach(builder);
+      if (left_a_route) {
+        reset_site_approach(builder);
+      }
       activate_bypass_movement(
           &builder, builder.construction_site_x, builder.construction_site_z);
     }

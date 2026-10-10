@@ -82,6 +82,9 @@
       "nation": "roman_republic",
       "faction": "roman",
       "color": "orange",
+      "historical_commanders": [
+        "numidian_masinissa"
+      ],
       "team_id": 1,
       "difficulty": "hard",
       "strategy": "harasser",

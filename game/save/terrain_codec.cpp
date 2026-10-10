@@ -76,6 +76,24 @@ void write_hills(const Game::Map::TerrainHeightMap* height_map,
   terrain_obj["hill_entrance_lines"] = hill_entrance_lines_array;
 }
 
+auto write_ford_profile(const Game::Map::FordProfile& profile) -> QJsonObject {
+  QJsonObject obj;
+  obj["depth"] = profile.depth;
+  obj["speed"] = profile.speed;
+  obj["cold"] = profile.cold;
+  obj["exposure"] = profile.exposure;
+  return obj;
+}
+
+auto read_ford_profile(const QJsonObject& obj) -> Game::Map::FordProfile {
+  Game::Map::FordProfile profile;
+  profile.depth = static_cast<float>(obj["depth"].toDouble(profile.depth));
+  profile.speed = static_cast<float>(obj["speed"].toDouble(profile.speed));
+  profile.cold = static_cast<float>(obj["cold"].toDouble(profile.cold));
+  profile.exposure = static_cast<float>(obj["exposure"].toDouble(profile.exposure));
+  return profile.clamped();
+}
+
 void write_rivers(const Game::Map::TerrainHeightMap* height_map,
                   QJsonObject& terrain_obj) {
   QJsonArray rivers_array;
@@ -89,9 +107,27 @@ void write_rivers(const Game::Map::TerrainHeightMap* height_map,
     river_obj["endY"] = river.end.y();
     river_obj["endZ"] = river.end.z();
     river_obj["width"] = river.width;
+    if (river.ford.has_value()) {
+      river_obj["ford"] = write_ford_profile(*river.ford);
+    }
     rivers_array.append(river_obj);
   }
   terrain_obj["rivers"] = rivers_array;
+}
+
+void write_fords(const Game::Map::TerrainHeightMap* height_map,
+                 QJsonObject& terrain_obj) {
+  QJsonArray fords_array;
+  for (const auto& ford : height_map->get_fords()) {
+    QJsonObject ford_obj;
+    ford_obj["id"] = ford.id;
+    ford_obj["x"] = ford.position.x();
+    ford_obj["z"] = ford.position.z();
+    ford_obj["length"] = ford.length;
+    ford_obj["profile"] = write_ford_profile(ford.profile);
+    fords_array.append(ford_obj);
+  }
+  terrain_obj["fords"] = fords_array;
 }
 
 void write_lakes(const Game::Map::TerrainHeightMap* height_map,
@@ -225,6 +261,22 @@ auto read_hill_navigation(const QJsonObject& json) -> Game::Map::HillNavigation 
   return hills;
 }
 
+auto read_fords(const QJsonObject& json) -> std::vector<Game::Map::FordCrossing> {
+  std::vector<Game::Map::FordCrossing> fords;
+  for (const auto value : json["fords"].toArray()) {
+    const auto ford_obj = value.toObject();
+    Game::Map::FordCrossing ford;
+    ford.id = ford_obj["id"].toString();
+    ford.position = QVector3D(static_cast<float>(ford_obj["x"].toDouble(0.0)),
+                              0.0F,
+                              static_cast<float>(ford_obj["z"].toDouble(0.0)));
+    ford.length = static_cast<float>(ford_obj["length"].toDouble(ford.length));
+    ford.profile = read_ford_profile(ford_obj["profile"].toObject());
+    fords.push_back(ford);
+  }
+  return fords;
+}
+
 auto read_rivers(const QJsonObject& json) -> std::vector<Game::Map::RiverSegment> {
   std::vector<Game::Map::RiverSegment> rivers;
   if (json.contains("rivers")) {
@@ -242,6 +294,9 @@ auto read_rivers(const QJsonObject& json) -> std::vector<Game::Map::RiverSegment
                             static_cast<float>(river_obj["endZ"].toDouble(0.0)));
       river.width = static_cast<float>(
           river_obj["width"].toDouble(static_cast<double>(default_river.width)));
+      if (river_obj["ford"].isObject()) {
+        river.ford = read_ford_profile(river_obj["ford"].toObject());
+      }
       rivers.push_back(river);
     }
   }
@@ -399,6 +454,7 @@ auto Serialization::serialize_terrain(
   write_grid(height_map, terrain_obj);
   write_hills(height_map, terrain_obj);
   write_rivers(height_map, terrain_obj);
+  write_fords(height_map, terrain_obj);
   write_lakes(height_map, terrain_obj);
   write_bridges(height_map, terrain_obj);
   write_roads(roads, terrain_obj);
@@ -430,7 +486,9 @@ void Serialization::deserialize_terrain(
   read_roads(json, roads);
   read_world_props(json, world_props, authored_world_props);
 
-  height_map->restore_from_data(heights, terrain_types, rivers, bridges, lakes, hills);
+  const auto fords = read_fords(json);
+  height_map->restore_from_data(
+      heights, terrain_types, rivers, bridges, lakes, hills, fords);
 }
 
 } // namespace Engine::Core

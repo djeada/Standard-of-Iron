@@ -1,0 +1,370 @@
+{
+  "id": "carthago_nova_to_cannae",
+  "title": "The road: Carthago Nova to Cannae (218-216 BC)",
+  "width": 3840,
+  "height": 2160,
+  "fps": 30,
+  "supersample": 2,
+  "duration": 20.0,
+  "reference_height": 1080,
+  "terrain_height_scale": 0.055,
+  "province_fills": false,
+  "burn_text": true,
+  "forbid_world_edge": true,
+  "interp": "spline",
+  "ends": "ease",
+  "camera": [
+    {
+      "time": 0.0,
+      "look": {
+        "uv": [0.335, 0.49]
+      },
+      "distance": 0.6,
+      "yaw": 184,
+      "pitch": 64,
+      "fov": 40
+    },
+    {
+      "time": 4.6,
+      "look": {
+        "stop": "pyrenees",
+        "offset": [0.01, -0.03]
+      },
+      "distance": 0.48,
+      "yaw": 184,
+      "pitch": 68
+    },
+    {
+      "time": 6.6,
+      "look": {
+        "stop": "rhone",
+        "offset": [0.0, -0.05]
+      },
+      "distance": 0.4,
+      "yaw": 183,
+      "pitch": 72
+    },
+    {
+      "time": 8.6,
+      "look": {
+        "stop": "alps",
+        "offset": [0.0, -0.04]
+      },
+      "distance": 0.3,
+      "yaw": 182,
+      "pitch": 70
+    },
+    {
+      "time": 10.6,
+      "look": {
+        "stop": "trebia",
+        "offset": [0.0, -0.06]
+      },
+      "distance": 0.4,
+      "yaw": 181,
+      "pitch": 78
+    },
+    {
+      "time": 13.4,
+      "look": {
+        "stop": "trasimene",
+        "offset": [-0.06, -0.03]
+      },
+      "distance": 0.36,
+      "yaw": 180,
+      "pitch": 80
+    },
+    {
+      "time": 16.0,
+      "look": {
+        "stop": "gerunium",
+        "offset": [-0.08, -0.04]
+      },
+      "distance": 0.24,
+      "yaw": 180,
+      "pitch": 80
+    },
+    {
+      "time": 17.6,
+      "look": {
+        "stop": "cannae",
+        "offset": [-0.07, 0.0]
+      },
+      "distance": 0.18,
+      "yaw": 180,
+      "pitch": 80
+    },
+    {
+      "time": 20.0,
+      "look": {
+        "stop": "cannae",
+        "offset": [-0.072, 0.0]
+      },
+      "distance": 0.17,
+      "yaw": 180,
+      "pitch": 79
+    }
+  ],
+  "route": {
+    "from": "carthago_nova",
+    "to": "cannae",
+    "width": 6.0,
+    "head": true,
+    "head_radius": 8.5,
+    "ghost": 0.0,
+    "keys": [
+      {
+        "time": 1.0,
+        "progress": 0.0
+      },
+      {
+        "time": 2.2,
+        "at": "saguntum"
+      },
+      {
+        "time": 3.0,
+        "at": "ebro"
+      },
+      {
+        "time": 4.6,
+        "at": "pyrenees"
+      },
+      {
+        "time": 6.4,
+        "at": "rhone"
+      },
+      {
+        "time": 8.6,
+        "at": "alps",
+        "ease": "out"
+      },
+      {
+        "time": 9.8,
+        "at": "ticinus",
+        "ease": "in"
+      },
+      {
+        "time": 10.6,
+        "at": "trebia"
+      },
+      {
+        "time": 13.4,
+        "at": "trasimene"
+      },
+      {
+        "time": 16.0,
+        "at": "gerunium"
+      },
+      {
+        "time": 17.6,
+        "at": "cannae",
+        "ease": "out"
+      }
+    ]
+  },
+  "regions": [
+    {
+      "id": "iberia",
+      "in": 0.0,
+      "out": 4.4,
+      "fade": 0.9,
+      "dim_outside": 0.22
+    },
+    {
+      "id": "gallia_cisalpina",
+      "in": 9.2,
+      "out": 12.6,
+      "fade": 0.8
+    },
+    {
+      "id": "apulia",
+      "in": 16.4,
+      "fade": 1.0,
+      "dim_outside": 0.18
+    }
+  ],
+  "markers": [
+    {
+      "site": "carthago_nova",
+      "appear": 0.3,
+      "fade": 0.6,
+      "label": false,
+      "show_date": false
+    },
+    {
+      "site": "saguntum",
+      "appear": "arrival",
+      "fade": 0.5,
+      "label_hold": 2.6
+    },
+    {
+      "site": "rhone",
+      "appear": "arrival",
+      "fade": 0.5,
+      "label_hold": 2.4
+    },
+    {
+      "site": "alps",
+      "appear": "arrival",
+      "fade": 0.5,
+      "label_hold": 2.4
+    },
+    {
+      "site": "ticinus",
+      "appear": "arrival",
+      "fade": 0.5,
+      "label_hold": 1.6,
+      "label_side": "left"
+    },
+    {
+      "site": "trebia",
+      "appear": "arrival",
+      "fade": 0.5,
+      "label_hold": 2.6
+    },
+    {
+      "site": "trasimene",
+      "appear": "arrival",
+      "fade": 0.5,
+      "label_hold": 2.6
+    },
+    {
+      "site": "cannae",
+      "appear": "arrival",
+      "fade": 0.6
+    }
+  ],
+  "labels": [
+    {
+      "text": "Iberia",
+      "style": "region",
+      "at": {
+        "lonlat": [-4.2, 40.2]
+      },
+      "in": 0.3,
+      "out": 4.4,
+      "fade": 0.8
+    },
+    {
+      "text": "Mare Internum",
+      "style": "sea",
+      "at": {
+        "lonlat": [5.0, 39.6]
+      },
+      "in": 0.6,
+      "out": 6.0,
+      "fade": 0.8
+    },
+    {
+      "text": "Gallia",
+      "style": "region",
+      "at": {
+        "lonlat": [2.6, 45.9]
+      },
+      "in": 4.4,
+      "out": 8.0,
+      "fade": 0.8
+    },
+    {
+      "text": "Gallia Cisalpina",
+      "style": "region",
+      "size": 24,
+      "at": {
+        "lonlat": [10.3, 45.6]
+      },
+      "in": 9.2,
+      "out": 12.6,
+      "fade": 0.8
+    },
+    {
+      "text": "Italia",
+      "style": "region",
+      "at": {
+        "lonlat": [13.6, 42.2]
+      },
+      "in": 12.2,
+      "out": 16.2,
+      "fade": 0.8
+    },
+    {
+      "text": "Apulia",
+      "style": "region",
+      "size": 24,
+      "at": {
+        "lonlat": [15.95, 40.95]
+      },
+      "in": 16.6,
+      "fade": 0.9
+    }
+  ],
+  "stamps": [
+    {
+      "title": "Carthago Nova",
+      "subtitle": "Spring 218 BC",
+      "in": 0.3,
+      "out": 3.8,
+      "fade": 0.6
+    },
+    {
+      "title": "Cannae",
+      "subtitle": "2 August 216 BC",
+      "in": 17.9,
+      "fade": 0.7
+    }
+  ],
+  "armies": [
+    {
+      "id": "hannibal",
+      "label": "Hannibal",
+      "side": "carthage",
+      "anchor": "head",
+      "source": "Polybius III.35, III.56, III.60, III.114",
+      "in": 1.0,
+      "keys": [
+        {
+          "time": 0.0,
+          "foot": 90000,
+          "horse": 12000
+        },
+        {
+          "at": "pyrenees",
+          "foot": 50000,
+          "horse": 9000
+        },
+        {
+          "at": "rhone",
+          "foot": 38000,
+          "horse": 8000
+        },
+        {
+          "at": "taurasia",
+          "foot": 20000,
+          "horse": 6000
+        },
+        {
+          "at": "cannae",
+          "foot": 40000,
+          "horse": 10000
+        }
+      ]
+    },
+    {
+      "id": "rome_cannae",
+      "label": "Rome at Cannae",
+      "side": "rome",
+      "anchor": {
+        "stop": "cannae",
+        "offset": [0.012, 0.004]
+      },
+      "source": "Polybius III.113",
+      "in": 17.6,
+      "keys": [
+        {
+          "time": 0.0,
+          "foot": 80000,
+          "horse": 6000
+        }
+      ]
+    }
+  ]
+}

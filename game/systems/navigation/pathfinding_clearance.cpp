@@ -47,12 +47,43 @@ void Pathfinding::rebuild_elevation(int min_x, int max_x, int min_z, int max_z) 
     return;
   }
 
+  bool const fords = height_map->has_fords();
+  if (fords && m_wade_penalty.size() != total) {
+    m_wade_penalty.assign(total, 0U);
+  }
   for (int z = min_z; z <= max_z; ++z) {
     for (int x = min_x; x <= max_x; ++x) {
-      m_cell_height[static_cast<std::size_t>(to_index(x, z))] =
-          height_map->get_height_at_grid(x, z);
+      auto const index = static_cast<std::size_t>(to_index(x, z));
+      m_cell_height[index] = height_map->get_height_at_grid(x, z);
+      if (fords) {
+        m_wade_penalty[index] =
+            wade_step_penalty(height_map->ford_profile_at_grid(x, z));
+      }
     }
   }
+  if (!fords) {
+    m_wade_penalty.clear();
+  }
+}
+
+auto Pathfinding::wade_step_penalty(const Game::Map::FordProfile* ford)
+    -> std::uint8_t {
+  if (ford == nullptr) {
+    return 0U;
+  }
+  // The time a wading step costs over a dry one, plus a premium for crossing
+  // exposed to missiles: a ford is used when the bridge is far, not when it
+  // is a short walk away.
+  float const speed = std::clamp(ford->speed, 0.05F, 1.0F);
+  float const slowdown =
+      static_cast<float>(k_straight_step_cost) * ((1.0F / speed) - 1.0F);
+  return static_cast<std::uint8_t>(
+      std::clamp(std::lround(slowdown) + k_wade_exposure_penalty, 0L, 250L));
+}
+
+auto Pathfinding::wade_penalty(int index) const -> int {
+  auto const at = static_cast<std::size_t>(index);
+  return at < m_wade_penalty.size() ? m_wade_penalty[at] : 0;
 }
 
 auto Pathfinding::climb_penalty(int from_index, int to_index) const -> int {

@@ -7,6 +7,7 @@
 #include "../core/ambient_session.h"
 #include "army_formation_ambient.h"
 #include "army_formation_codec.h"
+#include "army_formation_manoeuvre.h"
 #include "army_formation_planner.h"
 
 namespace Game::Formation {
@@ -195,6 +196,9 @@ void ArmyFormationRegistry::apply_plan(FormationGroupID id,
   if (formation == nullptr) {
     return;
   }
+  if (formation->intent != plan.intent) {
+    formation->manoeuvre.clear();
+  }
   formation->doctrine = plan.doctrine;
   formation->intent = plan.intent;
   formation->anchor = plan.anchor;
@@ -210,6 +214,7 @@ void ArmyFormationRegistry::apply_plan(FormationGroupID id,
   }
   formation->needs_replan = false;
   ++formation->plan_revision;
+  Manoeuvre::reapply(*formation);
   reindex_membership(*formation);
 }
 

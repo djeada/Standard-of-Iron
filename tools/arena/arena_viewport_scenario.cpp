@@ -17,7 +17,10 @@
 #include "arena_viewport_internal.h"
 #include "game/core/component_economy.h"
 #include "game/core/component_presentation.h"
+#include "game/core/death_sequence.h"
 #include "game/core/world.h"
+#include "game/map/environment_lighting.h"
+#include "game/map/terrain.h"
 #include "game/map/terrain_service.h"
 #include "game/session/selection_service.h"
 #include "game/session/session_context.h"
@@ -32,6 +35,7 @@
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
 #include "render/ground/rain_renderer.h"
+#include "render/mist_volume_builder.h"
 #include "render/profiling/combat_animation_diagnostics.h"
 #include "render/profiling/frame_continuity_analyzer.h"
 #include "render/scene_renderer.h"
@@ -263,6 +267,125 @@ auto ArenaViewport::active_scenario_report() const
   return m_scenario_runner != nullptr ? &m_scenario_runner->report() : nullptr;
 }
 
+auto ArenaViewport::active_scenario_events() const
+    -> std::vector<Arena::ArenaScenarioEvent> {
+  return m_scenario_runner != nullptr ? m_scenario_runner->events()
+                                      : std::vector<Arena::ArenaScenarioEvent>{};
+}
+
+void ArenaViewport::rebuild_static_mist(
+    const Arena::ArenaScenarioDefinition& scenario) {
+  m_static_mist.clear();
+  m_applied_fog_banks.clear();
+  m_mist_dirty = true;
+  if (!scenario.weather_script.water_mist) {
+    return;
+  }
+  auto const& terrain = m_session.terrain();
+  auto const* height_map = terrain.get_height_map();
+  std::vector<Game::Map::FogZone> fog_zones;
+  if (m_terrain_review_definition.has_value()) {
+    fog_zones = m_terrain_review_definition->fog_zones;
+  }
+  for (auto const& zone : m_arena_undead_zones) {
+    if (zone.fog_density > 0.0F) {
+      fog_zones.push_back(
+          Game::Map::undead_zone_fog(zone.x, zone.z, zone.radius, zone.fog_density));
+    }
+  }
+  static const std::vector<Game::Map::RiverSegment> k_no_rivers;
+  static const std::vector<Game::Map::Lake> k_no_lakes;
+  m_static_mist = Render::build_mist_volumes(
+      {.fog_zones = &fog_zones,
+       .rivers =
+           height_map != nullptr ? &height_map->get_river_segments() : &k_no_rivers,
+       .lakes = height_map != nullptr ? &height_map->get_lakes() : &k_no_lakes},
+      [&terrain](float world_x, float world_z) {
+        return terrain.is_initialized()
+                   ? terrain.resolve_surface_world_y(world_x, world_z, 0.0F)
+                   : 0.0F;
+      });
+}
+
+void ArenaViewport::apply_scenario_weather() {
+  if (m_scenario_runner == nullptr) {
+    m_scripted_fog_density.reset();
+    m_scripted_exposure.reset();
+    if (m_mist_dirty && m_renderer != nullptr) {
+      m_applied_mist = m_static_mist;
+      m_renderer->set_mist_volumes(m_applied_mist);
+      m_mist_dirty = false;
+    }
+    return;
+  }
+  auto const& scenario = m_scenario_runner->definition();
+  Arena::ArenaWeatherBase base = m_weather_base;
+  base.hour = m_environment_hour;
+  {
+    Game::Map::WeatherLightingInput weather = m_weather_lighting;
+    weather.rain = base.rain;
+    weather.storm = base.storm;
+    weather.snow = base.snow;
+    auto const lighting =
+        Game::Map::lighting_for_hour(m_environment_hour, m_lighting_profile, weather);
+    base.fog_density = scenario.environment.fog_density_override >= 0.0F
+                           ? scenario.environment.fog_density_override
+                           : lighting.fog_density;
+    base.exposure = scenario.environment.exposure_override >= 0.0F
+                        ? scenario.environment.exposure_override
+                        : lighting.exposure;
+  }
+  m_weather_state = Arena::evaluate_weather(scenario.weather_script,
+                                            m_scenario_runner->weather_schedule(),
+                                            m_scenario_runner->elapsed_seconds(),
+                                            base);
+  auto const& state = m_weather_state;
+  if (state.hour_scripted && !m_environment_hour_override.has_value()) {
+    m_environment_hour = Game::Map::normalize_hour(state.hour);
+  }
+  m_scripted_fog_density = state.fog_density_scripted
+                               ? std::optional<float>(state.fog_density)
+                               : std::nullopt;
+  m_scripted_exposure =
+      state.exposure_scripted ? std::optional<float>(state.exposure) : std::nullopt;
+  if (state.precipitation_scripted) {
+    float const intensity = std::max({state.rain, state.storm, state.snow});
+    m_weather_lighting.rain = state.rain;
+    m_weather_lighting.storm = state.storm;
+    m_weather_lighting.snow = state.snow;
+    m_weather_type =
+        state.snow > 0.0F ? Game::Map::WeatherType::Snow : Game::Map::WeatherType::Rain;
+    bool const enabled = intensity > 0.001F;
+    if (enabled != m_rain_enabled || std::abs(intensity - m_rain_intensity) > 1.0e-4F) {
+      m_rain_enabled = enabled;
+      m_rain_intensity = intensity;
+      if (m_rain != nullptr) {
+        m_rain->set_weather_type(m_weather_type);
+        m_rain->set_enabled(m_rain_enabled);
+        m_rain->set_intensity(m_rain_intensity);
+      }
+    }
+  }
+  if (state.wind_scripted && m_rain != nullptr) {
+    m_rain->set_wind_strength(state.wind_strength);
+    m_rain->set_wind_direction_deg(state.wind_direction_deg);
+  }
+  if (m_renderer != nullptr &&
+      (m_mist_dirty || state.fog_banks != m_applied_fog_banks)) {
+    auto const& terrain = m_session.terrain();
+    auto banks = Arena::fog_bank_mist_volumes(
+        state.fog_banks, m_scenario_origin, [&terrain](float world_x, float world_z) {
+          return terrain.is_initialized()
+                     ? terrain.resolve_surface_world_y(world_x, world_z, 0.0F)
+                     : 0.0F;
+        });
+    m_applied_mist = Render::merge_mist_volumes(std::move(banks), m_static_mist);
+    m_renderer->set_mist_volumes(m_applied_mist);
+    m_applied_fog_banks = state.fog_banks;
+    m_mist_dirty = false;
+  }
+}
+
 auto ArenaViewport::write_scenario_artifacts(const QString& directory,
                                              QString* error) const -> bool {
   if (m_scenario_runner == nullptr) {
@@ -472,6 +595,8 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
       definition->undead_zones.empty() ? 0.0F : 1.0F);
   reconfigure_terrain_from_state();
   configure_scenario_undead_zones(*definition, scenario_origin);
+  m_scenario_origin = scenario_origin;
+  rebuild_static_mist(*definition);
 
   if (has_scenario_ai) {
     configure_scenario_ai_profiles(*definition);
@@ -504,6 +629,18 @@ void ArenaViewport::apply_scenario_environment(
   m_weather_type = scenario.weather.snow > 0.0F ? Game::Map::WeatherType::Snow
                                                 : Game::Map::WeatherType::Rain;
   m_weather_lighting = scenario.weather;
+  m_weather_base = {};
+  m_weather_base.rain = scenario.weather.rain;
+  m_weather_base.storm = scenario.weather.storm;
+  m_weather_base.snow = scenario.weather.snow;
+  m_weather_base.wind_strength = scenario.precipitation.wind_strength;
+  m_weather_base.wind_direction_deg = scenario.precipitation.wind_direction_deg;
+  m_weather_state = {};
+  m_scripted_fog_density.reset();
+  m_scripted_exposure.reset();
+  m_static_mist.clear();
+  m_applied_fog_banks.clear();
+  m_mist_dirty = true;
   if (m_rain != nullptr) {
     m_rain->set_enabled(m_rain_enabled);
     m_rain->set_intensity(m_rain_intensity);
@@ -516,6 +653,7 @@ void ArenaViewport::apply_scenario_environment(
 auto ArenaViewport::apply_scenario_terrain(
     const Arena::ArenaScenarioDefinition& scenario) -> bool {
   m_arena_rivers = scenario.rivers;
+  m_arena_fords = scenario.fords;
   m_arena_lakes = scenario.lakes;
   m_arena_bridges = scenario.bridges;
   m_arena_roads = scenario.roads;
@@ -621,7 +759,9 @@ auto ArenaViewport::spawn_scenario_group_entity(const Arena::ArenaScenarioGroup&
                                          group.nation_id,
                                          group.troop_type,
                                          position,
-                                         group.ai_controlled);
+                                         group.ai_controlled,
+                                         group.commander_id,
+                                         group.keep_troop_speed);
   auto* entity = m_world != nullptr ? m_world->get_entity(entity_id) : nullptr;
   auto* transform = entity != nullptr
                         ? entity->get_component<Engine::Core::TransformComponent>()
@@ -743,4 +883,43 @@ void ArenaViewport::update_active_scenario(float simulation_dt) {
   if (m_scenario_runner != nullptr && simulation_dt > 0.0F) {
     m_scenario_runner->update(simulation_dt);
   }
+}
+
+auto ArenaViewport::scenario_group_samples(const Arena::Promo::GroupExport& selection)
+    const -> std::vector<Arena::Promo::GroupSample> {
+  std::vector<Arena::Promo::GroupSample> samples;
+  if (m_scenario_runner == nullptr || m_world == nullptr || selection.none()) {
+    return samples;
+  }
+  for (const auto& group : m_scenario_runner->definition().groups) {
+    if (!selection.all && !selection.names.contains(group.name)) {
+      continue;
+    }
+    Arena::Promo::GroupSample sample;
+    sample.name = group.name;
+    sample.owner = group.owner_id;
+    for (Engine::Core::EntityID const entity_id :
+         m_scenario_runner->group_entities(group.name)) {
+      auto* entity = m_world->get_entity(entity_id);
+      if (entity == nullptr || !Engine::Core::is_live_entity(*entity)) {
+        continue;
+      }
+      auto const* transform =
+          m_world->try_get<Engine::Core::TransformComponent>(entity_id);
+      if (transform == nullptr) {
+        continue;
+      }
+      sample.units.push_back(Arena::Promo::UnitSample{entity_id,
+                                                      QVector3D(transform->position.x,
+                                                                transform->position.y,
+                                                                transform->position.z),
+                                                      transform->rotation.y});
+    }
+    samples.push_back(std::move(sample));
+  }
+  return samples;
+}
+
+auto ArenaViewport::terrain_half_extent() const -> float {
+  return static_cast<float>(m_terrain_grid_extent) * k_terrain_tile_size * 0.5F;
 }

@@ -198,6 +198,48 @@ void add_catch_all(DoctrineIntentTemplate& tmpl, ArmyRole role, int max_per_row)
   tmpl.lines.push_back(rule);
 }
 
+auto battle_order_template(const DoctrineIntentTemplate& base,
+                           ArmyFormationIntent intent) -> DoctrineIntentTemplate {
+  DoctrineIntentTemplate tmpl = base;
+  tmpl.intent = intent;
+  tmpl.max_frontage = 0.0F;
+  tmpl.max_depth = 0.0F;
+  tmpl.reserve_rows = 0;
+  tmpl.default_flank = FlankPreference::Balanced;
+  tmpl.default_movement = MovementPolicy::MaintainFormation;
+  switch (intent) {
+  case ArmyFormationIntent::TriplexAcies:
+    tmpl.unit_files_aspect = 1.6F;
+    tmpl.default_ranged = RangedPlacement::Skirmish;
+    tmpl.required_roles = k_any_line | k_any_spear;
+    tmpl.requirement_hint =
+        QT_TRANSLATE_NOOP("Formation", "Requires infantry to form the maniples.");
+    break;
+  case ArmyFormationIntent::ConvexCrescent:
+    tmpl.unit_files_aspect = 2.6F;
+    tmpl.default_ranged = RangedPlacement::Skirmish;
+    tmpl.required_roles = k_any_line | k_any_spear;
+    tmpl.requirement_hint =
+        QT_TRANSLATE_NOOP("Formation", "Requires infantry to form the crescent.");
+    break;
+  case ArmyFormationIntent::ElephantScreen:
+    tmpl.unit_files_aspect = 2.6F;
+    tmpl.required_roles = k_any_elephant;
+    tmpl.requirement_hint =
+        QT_TRANSLATE_NOOP("Formation", "Requires war elephants in the selection.");
+    break;
+  default:
+    break;
+  }
+  return tmpl;
+}
+
+void add_battle_order(FormationDoctrine& doctrine,
+                      const DoctrineIntentTemplate& base,
+                      ArmyFormationIntent intent) {
+  doctrine.intents[static_cast<int>(intent)] = battle_order_template(base, intent);
+}
+
 } // namespace
 
 auto DoctrineLineRule::matches(RoleTagSet troop_roles) const -> bool {
@@ -295,6 +337,10 @@ auto make_neutral_doctrine() -> FormationDoctrine {
 
   doctrine.intents[static_cast<int>(ArmyFormationIntent::Column)] =
       column_template(ArmyFormationIntent::Column, 0.95F, 0.02F);
+
+  add_battle_order(doctrine, line, ArmyFormationIntent::TriplexAcies);
+  add_battle_order(doctrine, line, ArmyFormationIntent::ConvexCrescent);
+  add_battle_order(doctrine, line, ArmyFormationIntent::ElephantScreen);
 
   return doctrine;
 }
@@ -439,6 +485,8 @@ auto make_rome_doctrine() -> FormationDoctrine {
   }
   doctrine.intents[static_cast<int>(ArmyFormationIntent::Encirclement)] = encirclement;
 
+  add_battle_order(doctrine, battle_line, ArmyFormationIntent::TriplexAcies);
+
   return doctrine;
 }
 
@@ -576,6 +624,9 @@ auto make_carthage_doctrine() -> FormationDoctrine {
     }
   }
   doctrine.intents[static_cast<int>(ArmyFormationIntent::SiegeEscort)] = siege_escort;
+
+  add_battle_order(doctrine, battle_line, ArmyFormationIntent::ConvexCrescent);
+  add_battle_order(doctrine, battle_line, ArmyFormationIntent::ElephantScreen);
 
   return doctrine;
 }
@@ -736,6 +787,11 @@ auto DoctrineRegistry::availability_reason(const FormationDoctrineId& doctrine_i
     return QCoreApplication::translate("Formation", "No units selected.").toStdString();
   }
   const auto& doctrine = get_or_neutral(doctrine_id);
+  if (is_battle_order_intent(intent) && doctrine.find_template(intent) == nullptr) {
+    return QCoreApplication::translate("Formation", "%1 does not fight in this order.")
+        .arg(Util::tr_asset(Util::k_formations_context, doctrine.display_name))
+        .toStdString();
+  }
   const auto* tmpl = doctrine.resolve_template(intent);
   if (tmpl == nullptr) {
     return QCoreApplication::translate("Formation",
@@ -751,6 +807,13 @@ auto DoctrineRegistry::availability_reason(const FormationDoctrineId& doctrine_i
                      "The selection lacks the troop types this formation needs.")
                      .toStdString()
                : Util::tr_asset_std(Util::k_formations_context, tmpl->requirement_hint);
+  }
+  if ((intent == ArmyFormationIntent::TriplexAcies ||
+       intent == ArmyFormationIntent::ConvexCrescent) &&
+      member_count < 3) {
+    return QCoreApplication::translate("Formation",
+                                       "This battle order needs at least three units.")
+        .toStdString();
   }
   if (intent == ArmyFormationIntent::Encirclement && member_count < 3) {
     return QCoreApplication::translate("Formation",

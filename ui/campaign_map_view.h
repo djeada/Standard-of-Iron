@@ -12,6 +12,8 @@
 
 #include <vector>
 
+#include "campaign_route_path.h"
+
 class CampaignMapView : public QQuickFramebufferObject {
   Q_OBJECT
   QML_ELEMENT
@@ -111,6 +113,16 @@ public:
   }
   void set_show_province_fills(bool show);
 
+  void set_film_state(const CampaignMapFilm::FrameState& state);
+  void set_film_route(const std::vector<QVector2D>& raw_points);
+  [[nodiscard]] auto film_state() const -> const CampaignMapFilm::FrameState& {
+    return m_film_state;
+  }
+  [[nodiscard]] auto film_route_points() const -> const std::vector<QVector2D>& {
+    return m_film_route_raw;
+  }
+  [[nodiscard]] auto film_route_version() const -> int { return m_film_route_version; }
+
 signals:
   void orbit_yaw_changed();
   void orbit_pitch_changed();
@@ -164,6 +176,10 @@ private:
 
   QHash<QString, ProvinceVisual> m_province_overrides;
   int m_province_state_version = 0;
+
+  CampaignMapFilm::FrameState m_film_state;
+  std::vector<QVector2D> m_film_route_raw;
+  int m_film_route_version = 0;
 
   friend class CampaignMapRenderer;
 };

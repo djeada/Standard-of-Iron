@@ -25,6 +25,7 @@
 #include "combat_types.h"
 #include "combat_utils.h"
 #include "damage_processor.h"
+#include "elephant_lane_run.h"
 #include "melee_lock.h"
 #include "rts_commander_attack.h"
 #include "structure_combat.h"
@@ -204,6 +205,13 @@ void select_ordered_target(const Attacker& attacker,
   if (target_unit == nullptr || target_transform == nullptr) {
     drop_attack_target(ctx.world, attacker.entity);
     return;
+  }
+
+  if (ctx.world->has<Engine::Core::ElephantComponent>(attacker.entity->get_id())) {
+    if (auto const lane = elephant_lane_goal(*ctx.world, *attacker.entity, target)) {
+      steer_down_lane(*attacker.entity, *lane, ctx.chase_move_intents);
+      return;
+    }
   }
 
   if (reached_by_range_or_contact(attacker, target, stats.range)) {

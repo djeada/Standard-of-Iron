@@ -1,0 +1,391 @@
+{
+  "schema": "soi.battle_script/1",
+  "id": "battle_trebia",
+  "title": "The Trebia, 218 BC (skeleton)",
+  "description": "Skeleton: Sempronius's army, soaked from the winter crossing, meets Hannibal on the west bank while snow and sleet fall; Mago's hidden force breaks from the streambed into the Roman rear.",
+  "sources": "Polybius 3.70-74; Livy 21.52-56",
+  "todo": "Start the Romans on the east bank and add a 'crossing' phase through trebia_ford (the ford is applied now).",
+  "scale": 0.1,
+  "duration": 240,
+  "graphics_quality": "ultra",
+  "camera": {
+    "distance": 300,
+    "tilt": 48,
+    "yaw": 20,
+    "focus": [-10, 10]
+  },
+  "terrain": {
+    "map": "assets/maps/map_battle_trebia.json",
+    "fords": [
+      {
+        "river": 0,
+        "at": [-30, -84],
+        "width": 30,
+        "id": "trebia_ford",
+        "depth": 0.8,
+        "speed": 0.5,
+        "cold": 0.6
+      }
+    ]
+  },
+  "environment": {
+    "hour": 7.0,
+    "lighting_profile": "river_mist",
+    "fog_density": 0.03
+  },
+  "weather": {
+    "snow": 0.55,
+    "wind_strength": 0.45,
+    "wind_direction": 15,
+    "water_mist": true,
+    "changes": [
+      {
+        "at": 0,
+        "name": "sleet_thickens",
+        "duration": 120,
+        "snow": 0.8,
+        "fog_density": 0.045
+      }
+    ]
+  },
+  "armies": [
+    {
+      "nation": "roman_republic",
+      "team": 1,
+      "facing": 0,
+      "id": "rome",
+      "label": "Sempronius Longus",
+      "historical_strength": 40000,
+      "groups": [
+        {
+          "id": "legions",
+          "troop": "swordsman",
+          "historical": 16000,
+          "deployment": {
+            "shape": "multi_line",
+            "lines": 2,
+            "ranks": 3,
+            "center": [0, -30],
+            "stagger": true,
+            "lanes": 3,
+            "lane_width": 6
+          }
+        },
+        {
+          "id": "allied_infantry",
+          "troop": "swordsman",
+          "historical": 18000,
+          "deployment": {
+            "shape": "line",
+            "ranks": 4,
+            "anchor": {
+              "left_of": "legions",
+              "gap": 10
+            }
+          }
+        },
+        {
+          "id": "velites",
+          "troop": "velites",
+          "historical": 2000,
+          "deployment": {
+            "shape": "line",
+            "ranks": 1,
+            "anchor": {
+              "ahead_of": "legions",
+              "gap": 12
+            }
+          }
+        },
+        {
+          "id": "roman_horse",
+          "troop": "horse_swordsman",
+          "historical": 4000,
+          "deployment": {
+            "shape": "line",
+            "ranks": 3,
+            "anchor": {
+              "right_of": "legions",
+              "gap": 16
+            }
+          }
+        }
+      ],
+      "commanders": [
+        {
+          "id": "sempronius",
+          "historical_name": "Tiberius Sempronius Longus",
+          "catalog_id": "roman_sempronius_longus",
+          "with": "legions"
+        }
+      ]
+    },
+    {
+      "nation": "carthage",
+      "team": 2,
+      "facing": 180,
+      "id": "carthage",
+      "label": "Hannibal",
+      "historical_strength": 38000,
+      "groups": [
+        {
+          "id": "battle_line",
+          "troop": "spearman",
+          "historical": 12000,
+          "deployment": {
+            "shape": "line",
+            "ranks": 3,
+            "center": [0, 70]
+          }
+        },
+        {
+          "id": "gallic_line",
+          "troop": "swordsman",
+          "nation": "gauls",
+          "historical": 8000,
+          "deployment": {
+            "shape": "line",
+            "ranks": 3,
+            "anchor": {
+              "right_of": "battle_line",
+              "gap": 8
+            }
+          }
+        },
+        {
+          "id": "slingers",
+          "troop": "slinger",
+          "historical": 8000,
+          "deployment": {
+            "shape": "line",
+            "ranks": 2,
+            "anchor": {
+              "ahead_of": "battle_line",
+              "gap": 12
+            }
+          }
+        },
+        {
+          "id": "heavy_horse",
+          "troop": "horse_swordsman",
+          "nation": "iberians",
+          "historical": 6000,
+          "deployment": {
+            "shape": "line",
+            "ranks": 4,
+            "anchor": {
+              "left_of": "battle_line",
+              "gap": 16
+            }
+          }
+        },
+        {
+          "id": "numidians",
+          "troop": "horse_archer",
+          "historical": 4000,
+          "todo": "Numidian javelin horse; horse_archer is the nearest skirmishing horse",
+          "deployment": {
+            "shape": "line",
+            "ranks": 3,
+            "anchor": {
+              "right_of": "gallic_line",
+              "gap": 16
+            }
+          }
+        },
+        {
+          "id": "elephants",
+          "troop": "elephant",
+          "units": 3,
+          "deployment": {
+            "shape": "line",
+            "anchor": {
+              "ahead_of": "heavy_horse",
+              "gap": 10
+            }
+          }
+        }
+      ],
+      "commanders": [
+        {
+          "id": "hannibal",
+          "catalog_id": "carthage_sword_commander",
+          "with": "battle_line"
+        }
+      ]
+    },
+    {
+      "nation": "carthage",
+      "team": 2,
+      "facing": 180,
+      "id": "mago_ambush",
+      "label": "Mago's ambush",
+      "historical_strength": 2000,
+      "groups": [
+        {
+          "id": "mago_infantry",
+          "label": "Mago's men in the streambed",
+          "troop": "swordsman",
+          "historical": 1000,
+          "ambush": true,
+          "deployment": {
+            "shape": "line",
+            "ranks": 2,
+            "center": [-120, -55],
+            "facing": 60
+          }
+        },
+        {
+          "id": "mago_horse",
+          "troop": "horse_swordsman",
+          "historical": 1000,
+          "ambush": true,
+          "deployment": {
+            "shape": "line",
+            "ranks": 2,
+            "center": [-125, -25],
+            "facing": 60
+          }
+        }
+      ],
+      "commanders": [
+        {
+          "id": "mago",
+          "historical_name": "Mago Barca",
+          "catalog_id": "carthage_mago_barca",
+          "position": [-118, -40],
+          "facing": 60,
+          "ambush": true
+        }
+      ]
+    }
+  ],
+  "phases": [
+    {
+      "id": "skirmish",
+      "trigger": {
+        "type": "time",
+        "at": 2
+      },
+      "actions": [
+        {
+          "type": "attack",
+          "group": "velites",
+          "target": "slingers"
+        },
+        {
+          "type": "attack",
+          "group": "slingers",
+          "target": "velites"
+        }
+      ]
+    },
+    {
+      "id": "cavalry_and_elephants",
+      "label": "The Roman horse is driven off by the Carthaginian cavalry and elephants",
+      "trigger": {
+        "type": "phase",
+        "phase": "skirmish",
+        "delay": 8
+      },
+      "actions": [
+        {
+          "type": "charge",
+          "group": "heavy_horse",
+          "target": "roman_horse"
+        },
+        {
+          "type": "attack",
+          "group": "elephants",
+          "target": "roman_horse"
+        },
+        {
+          "type": "attack",
+          "group": "numidians",
+          "target": "allied_infantry"
+        }
+      ]
+    },
+    {
+      "id": "lines_meet",
+      "trigger": {
+        "type": "phase",
+        "phase": "skirmish",
+        "delay": 20
+      },
+      "actions": [
+        {
+          "type": "attack",
+          "groups": ["legions", "sempronius"],
+          "target": "battle_line"
+        },
+        {
+          "type": "attack",
+          "group": "allied_infantry",
+          "target": "gallic_line"
+        },
+        {
+          "type": "attack",
+          "group": "battle_line",
+          "target": "legions"
+        },
+        {
+          "type": "attack",
+          "group": "gallic_line",
+          "target": "allied_infantry"
+        }
+      ]
+    },
+    {
+      "id": "mago_strikes",
+      "label": "Mago breaks from the streambed into the Roman rear",
+      "trigger": {
+        "type": "contact",
+        "group": "legions",
+        "with": "battle_line",
+        "distance": 4,
+        "fallback_at": 90
+      },
+      "actions": [
+        {
+          "type": "reveal",
+          "group": "mago_infantry",
+          "target": "legions",
+          "delay": 6
+        },
+        {
+          "type": "reveal",
+          "group": "mago_horse",
+          "target": "legions",
+          "delay": 6
+        },
+        {
+          "type": "reveal",
+          "group": "mago",
+          "target": "legions",
+          "delay": 6
+        }
+      ]
+    },
+    {
+      "id": "legions_break_through",
+      "label": "Ten thousand legionaries cut through the centre",
+      "trigger": {
+        "type": "strength_below",
+        "group": "battle_line",
+        "fraction": 0.5,
+        "after": "mago_strikes",
+        "fallback_at": 200
+      },
+      "actions": [
+        {
+          "type": "move",
+          "group": "legions",
+          "to": [0, 180],
+          "keep_shape": false
+        }
+      ]
+    }
+  ],
+  "notes": "Each commander leads his own allied army: the game allows one living commander per owner, and an owner whose commander dies collapses."
+}

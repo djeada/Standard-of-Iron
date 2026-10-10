@@ -46,6 +46,7 @@
 #include "render/entity/healing_beam_renderer.h"
 #include "render/entity/healing_waves_renderer.h"
 #include "render/entity/production_completion_renderer.h"
+#include "render/entity/wading_effects_renderer.h"
 #include "render/geom/arrow.h"
 #include "render/geom/projectile_renderer.h"
 #include "render/geom/range_rings.h"
@@ -284,6 +285,7 @@ void ArenaViewport::paintGL() {
   float const simulation_dt = (m_paused || !sampled_frame) ? 0.0F : real_dt;
   m_environment_clock.update(simulation_dt, m_paused);
   m_environment_hour = m_environment_clock.hour();
+  apply_scenario_weather();
   m_time_of_day = Game::Map::time_of_day_for_hour(m_environment_hour);
   m_renderer->set_environment_lighting(active_lighting());
 
@@ -339,10 +341,11 @@ void ArenaViewport::paintGL() {
   if (m_flame_card_active) {
     render_flame_card(capture_frame ? m_capture_width : width(),
                       capture_frame ? m_capture_height : height());
-    ++m_flame_card_frame;
     if (capture_frame) {
       deliver_capture_frame();
+      render_capture_variants(true);
     }
+    ++m_flame_card_frame;
     if (m_scenario_runner != nullptr && sampled_frame) {
       publish_animation_clock();
       publish_commander_presentation_trace();
@@ -400,6 +403,7 @@ void ArenaViewport::paintGL() {
 
   if (capture_frame) {
     deliver_capture_frame();
+    render_capture_variants(false);
   }
 
   if (m_scenario_runner != nullptr && sampled_frame) {
@@ -475,6 +479,7 @@ void ArenaViewport::submit_world_effects(Render::GL::ResourceManager* res) {
     Render::GL::render_combat_dust(m_renderer.get(), res, m_world.get());
   }
   Render::GL::render_blood_stains(m_renderer.get(), res, m_world.get());
+  Render::GL::render_wading_effects(m_renderer.get(), res, m_world.get());
   render_attack_range_rings(res);
   render_target_focus_rings(res);
   const bool cinematic_capture = m_clean_capture || m_promo_mode ||
@@ -557,6 +562,9 @@ void ArenaViewport::paint_ui_overlays() {
 }
 
 void ArenaViewport::deliver_capture_frame() {
+  m_capture_camera = m_flame_card_active
+                         ? Arena::Promo::CameraSample{}
+                         : sample_capture_camera(m_capture_width, m_capture_height);
   stamp_capture_alpha_opaque();
   QImage const captured = m_capture_target->toImage();
   m_capture_target->release();

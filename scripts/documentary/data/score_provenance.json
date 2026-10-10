@@ -1,0 +1,4 @@
+{
+  "about": "One entry per generation batch of the documentary score: the service's render name for each cue, the date and the licence. Add a batch, never edit an old one (mirrors BATCHES in tools/audio_import/import_music.py).",
+  "batches": {}
+}

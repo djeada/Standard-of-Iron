@@ -63,6 +63,7 @@ move_to_slots(const std::vector<Engine::Core::EntityID>& unit_ids,
 select_ai_intent(const AISnapshot& snapshot,
                  const AIContext& context,
                  bool defensive_posture,
-                 bool escorting_siege) -> Game::Formation::ArmyFormationIntent;
+                 bool escorting_siege,
+                 bool field_battle = true) -> Game::Formation::ArmyFormationIntent;
 
 } // namespace Game::Systems::AI

@@ -311,6 +311,10 @@ void process_elephant(Engine::Core::Entity* entity,
   if (elephant->charge_cooldown > 0.0F) {
     elephant->charge_cooldown -= delta_time;
   }
+  if (elephant->lane_run_out_seconds > 0.0F) {
+    elephant->lane_run_out_seconds =
+        std::max(0.0F, elephant->lane_run_out_seconds - delta_time);
+  }
 
   process_charge_attack(entity, query_context, delta_time);
   process_trample_damage(entity, world, query_context, delta_time);

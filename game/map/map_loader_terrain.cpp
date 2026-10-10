@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <optional>
 #include <vector>
 
 #include "json_keys.h"
@@ -314,6 +315,85 @@ void read_terrain(const QJsonArray& arr,
   }
 }
 
+auto read_ford_profile(const QJsonValue& value) -> std::optional<FordProfile> {
+  if (value.isBool()) {
+    return value.toBool() ? std::optional<FordProfile>(FordProfile{}) : std::nullopt;
+  }
+  if (!value.isObject()) {
+    return std::nullopt;
+  }
+  const QJsonObject obj = value.toObject();
+  if (obj.contains(QStringLiteral("enabled")) &&
+      !obj.value(QStringLiteral("enabled")).toBool(true)) {
+    return std::nullopt;
+  }
+  FordProfile profile;
+  profile.depth = float(obj.value(QStringLiteral("depth")).toDouble(profile.depth));
+  profile.speed = float(obj.value(QStringLiteral("speed")).toDouble(profile.speed));
+  profile.cold = float(obj.value(QStringLiteral("cold")).toDouble(profile.cold));
+  profile.exposure =
+      float(obj.value(QStringLiteral("exposure")).toDouble(profile.exposure));
+  return profile.clamped();
+}
+
+void read_fords(const QJsonArray& arr,
+                std::vector<FordCrossing>& out,
+                const GridDefinition& grid,
+                CoordSystem coord_sys) {
+  out.clear();
+  out.reserve(arr.size());
+  int next_ford_index = 1;
+  for (const auto value : arr) {
+    const QJsonObject obj = value.toObject();
+    FordCrossing ford;
+    ford.id = obj.value(ID).toString().trimmed();
+    if (ford.id.isEmpty()) {
+      ford.id = QStringLiteral("ford_%1").arg(next_ford_index);
+    }
+    ++next_ford_index;
+
+    float raw_x = 0.0F;
+    float raw_z = 0.0F;
+    const QJsonValue position = obj.value(QStringLiteral("position"));
+    const QJsonValue start = obj.value(QStringLiteral("start"));
+    const QJsonValue end = obj.value(QStringLiteral("end"));
+    const bool drawn_across = start.isArray() && end.isArray() &&
+                              start.toArray().size() >= 2 && end.toArray().size() >= 2;
+    if (drawn_across) {
+      // Drawn like a bridge, bank to bank: the ford sits where the line
+      // meets the river and its width is how far it runs along the river.
+      const QJsonArray from = start.toArray();
+      const QJsonArray to = end.toArray();
+      raw_x = float((from.at(0).toDouble(0.0) + to.at(0).toDouble(0.0)) * 0.5);
+      raw_z = float((from.at(1).toDouble(0.0) + to.at(1).toDouble(0.0)) * 0.5);
+    } else if (position.isArray() && position.toArray().size() >= 2) {
+      const QJsonArray point = position.toArray();
+      raw_x = float(point.at(0).toDouble(0.0));
+      raw_z = float(point.at(point.size() >= 3 ? 2 : 1).toDouble(0.0));
+    } else if (position.isObject()) {
+      raw_x = float(position.toObject().value(X).toDouble(0.0));
+      raw_z = float(position.toObject().value(Z).toDouble(0.0));
+    } else if (obj.contains(X) && obj.contains(Z)) {
+      raw_x = float(obj.value(X).toDouble(0.0));
+      raw_z = float(obj.value(Z).toDouble(0.0));
+    } else {
+      qWarning() << "MapLoader: ford" << ford.id
+                 << "needs a position on a river - skipping";
+      continue;
+    }
+    ford.position = authored_position(raw_x, raw_z, grid, coord_sys);
+    const double authored_length =
+        obj.contains(QStringLiteral("length"))
+            ? obj.value(QStringLiteral("length")).toDouble()
+            : obj.value(QStringLiteral("width"))
+                  .toDouble(static_cast<double>(ford.length));
+    ford.length =
+        std::clamp(float(authored_length), k_min_ford_length, k_max_ford_length);
+    ford.profile = read_ford_profile(obj).value_or(FordProfile{});
+    out.push_back(std::move(ford));
+  }
+}
+
 void read_rivers(const QJsonArray& arr,
                  std::vector<RiverSegment>& out,
                  const GridDefinition& grid,
@@ -348,6 +428,7 @@ void read_rivers(const QJsonArray& arr,
   for (const auto river_val : arr) {
     const auto river_obj = river_val.toObject();
     const float width = float(river_obj.value("width").toDouble(default_river_width));
+    const std::optional<FordProfile> ford = read_ford_profile(river_obj.value(FORD));
     const bool authored_height = river_obj.contains("height");
     const float height = float(river_obj.value("height").toDouble(0.0));
 
@@ -398,6 +479,7 @@ void read_rivers(const QJsonArray& arr,
     out.reserve(out.size() + points.size() - 1U);
     for (std::size_t index = 1; index < points.size(); ++index) {
       RiverSegment segment{points[index - 1U], points[index], width};
+      segment.ford = ford;
       if (authored_height) {
         segment.start.setY(height);
         segment.end.setY(height);
@@ -666,6 +748,13 @@ void read_map_terrain(const QJsonObject& root, MapDefinition& out_map) {
   }
 
   trim_rivers_at_lake_boundaries(out_map.rivers, out_map.lakes);
+
+  if (root.contains(FORDS) && root.value(FORDS).isArray()) {
+    read_fords(
+        root.value(FORDS).toArray(), out_map.fords, out_map.grid, out_map.coordSystem);
+  } else {
+    out_map.fords.clear();
+  }
 
   if (root.contains(ROADS) && root.value(ROADS).isArray()) {
     read_roads(

@@ -786,13 +786,41 @@ auto resolve_humanoid_animation_selection(
     return true;
   };
 
+  auto const apply_wade_overlay = [&](HumanoidAnimationSelection& target) {
+    if (!anim.inputs.is_wading || anim.inputs.wade_amount <= 0.0F ||
+        anim.inputs.is_attacking || anim.inputs.is_casting || anim.inputs.is_mounted ||
+        anim.inputs.has_showcase_clip || anim.inputs.has_authored_action_clip ||
+        anim.inputs.is_hit_reacting || anim.inputs.is_healing ||
+        anim.inputs.is_constructing || anim.inputs.is_dying || anim.inputs.is_dead) {
+      return false;
+    }
+
+    HumanoidAnimationSelection wade = target;
+    wade.clip_id = Animation::k_humanoid_wade_clip;
+    wade.clip_variant = 0U;
+    wade.phase = std::fmod(std::max(anim.inputs.time, 0.0F),
+                           Animation::k_humanoid_wade_cycle_time) /
+                 Animation::k_humanoid_wade_cycle_time;
+    target.upper_body_overlay = playback_layer_from_selection(
+        wade,
+        std::clamp(anim.inputs.wade_amount, 0.0F, 1.0F),
+        Render::Creature::PlaybackLayerMode::UpperBodyOverlay);
+    return true;
+  };
+
   if (apply_construction_crossfade(selection, anim, spec, seed, variant)) {
     return selection;
   }
 
   if (apply_locomotion_crossfade(selection, anim, spec, seed, variant)) {
-    apply_resource_carry_overlay(selection);
-    apply_defensive_overlay(selection);
+    if (!apply_wade_overlay(selection)) {
+      apply_resource_carry_overlay(selection);
+      apply_defensive_overlay(selection);
+    }
+    return selection;
+  }
+
+  if (apply_wade_overlay(selection)) {
     return selection;
   }
 

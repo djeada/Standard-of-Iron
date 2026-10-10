@@ -457,6 +457,8 @@ void PostProcessPipeline::resolve_scene() {
                     volume.strength,
                     static_cast<float>(static_cast<int>(volume.kind)),
                     volume.start.y()));
+      m_composite_shader->set_uniform(QStringLiteral("u_mist_ceiling[%1]").arg(i),
+                                      std::max(0.0F, volume.ceiling));
     }
     m_mist_dirty = false;
   }

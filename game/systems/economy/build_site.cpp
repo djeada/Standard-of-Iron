@@ -369,8 +369,8 @@ auto find_clear_site(const Engine::Core::World& world,
                      float search_radius,
                      float facing_degrees,
                      std::span<const Engine::Core::EntityID> crew,
-                     std::span<const SiteKeepOut> keep_out)
-    -> std::optional<QVector3D> {
+                     std::span<const SiteKeepOut> keep_out,
+                     bool clear_of_troops) -> std::optional<QVector3D> {
   const auto reserved = pending_sites(world, crew);
   const auto size = BuildingCollisionRegistry::get_building_size(building_type);
   const float own_reach = (0.5F * std::max(size.width, size.depth)) + k_site_margin;
@@ -382,10 +382,14 @@ auto find_clear_site(const Engine::Core::World& world,
       return (dx * dx) + (dz * dz) < reach * reach;
     });
   };
-  if (!kept_out(wanted.x(), wanted.z()) &&
-      assess_ground(
-          world, reserved, building_type, wanted.x(), wanted.z(), 0, facing_degrees) ==
-          GroundVerdict::Clear) {
+  const auto usable = [&](float x, float z) {
+    return !kept_out(x, z) &&
+           assess_ground(world, reserved, building_type, x, z, 0, facing_degrees) ==
+               GroundVerdict::Clear &&
+           (!clear_of_troops ||
+            !troops_stand_on(world, building_type, x, z, facing_degrees, crew));
+  };
+  if (usable(wanted.x(), wanted.z())) {
     return wanted;
   }
   if (search_radius <= 0.0F) {
@@ -404,14 +408,7 @@ auto find_clear_site(const Engine::Core::World& world,
       const QVector3D candidate(wanted.x() + (radius * std::cos(angle)),
                                 wanted.y(),
                                 wanted.z() + (radius * std::sin(angle)));
-      if (!kept_out(candidate.x(), candidate.z()) &&
-          assess_ground(world,
-                        reserved,
-                        building_type,
-                        candidate.x(),
-                        candidate.z(),
-                        0,
-                        facing_degrees) == GroundVerdict::Clear) {
+      if (usable(candidate.x(), candidate.z())) {
         return candidate;
       }
     }

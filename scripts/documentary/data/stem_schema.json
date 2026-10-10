@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "soi-documentary-stems/1",
+  "title": "Stem metadata for one documentary score cue",
+  "description": "Lives beside the stems as <cue_id>/stems.json; 'score validate-stems' checks it against the plan and the audio.",
+  "type": "object",
+  "required": [
+    "schema",
+    "cue",
+    "tempo_bpm",
+    "key",
+    "duration_s",
+    "sample_rate",
+    "stems",
+    "source"
+  ],
+  "properties": {
+    "schema": { "const": "soi-documentary-stems/1" },
+    "cue": { "type": "string", "pattern": "^(ep\\d{2}|series)_[a-z0-9_]+$" },
+    "tempo_bpm": { "type": "number", "minimum": 30, "maximum": 220 },
+    "time_signature": { "type": "string", "pattern": "^\\d+/\\d+$" },
+    "key": {
+      "type": "string",
+      "pattern": "^[A-G][#b]? (major|minor|dorian|phrygian|lydian|mixolydian|aeolian|locrian)$"
+    },
+    "duration_s": { "type": "number", "exclusiveMinimum": 0 },
+    "sample_rate": { "const": 48000 },
+    "mix_lufs": { "type": "number" },
+    "stems": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "enum": ["percussion", "strings", "brass", "choir"] },
+      "additionalProperties": {
+        "type": "object",
+        "required": ["file"],
+        "properties": {
+          "file": { "type": "string" },
+          "lufs": { "type": "number" },
+          "true_peak_dbtp": { "type": "number" }
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "required": ["service", "render", "date", "licence"],
+      "properties": {
+        "service": { "type": "string" },
+        "render": {
+          "type": "string",
+          "description": "the service's own render name, kept for provenance"
+        },
+        "request_id": { "type": "string" },
+        "date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "licence": { "type": "string" }
+      }
+    }
+  }
+}

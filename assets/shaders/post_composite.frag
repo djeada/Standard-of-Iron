@@ -23,6 +23,7 @@ uniform float u_time;
 uniform int u_mist_count;
 uniform vec4 u_mist_seg[24];
 uniform vec4 u_mist_info[24];
+uniform float u_mist_ceiling[24];
 uniform vec4 u_ground_fog;
 
 out vec4 frag_color;
@@ -193,7 +194,9 @@ vec2 ground_mist(vec3 world) {
     float lateral = 1.0 - smoothstep(0.0, k_mist_bank_reach, ragged_edge);
     lateral *= lateral;
     bool is_miasma = u_mist_info[i].z > 0.5;
-    float ceiling = is_miasma ? k_mist_miasma_ceiling : k_mist_water_ceiling;
+    float ceiling = u_mist_ceiling[i] > 0.0
+                        ? u_mist_ceiling[i]
+                        : (is_miasma ? k_mist_miasma_ceiling : k_mist_water_ceiling);
     float rise = world.y - u_mist_info[i].w;
     float vertical = 1.0 - smoothstep(0.15 * ceiling, ceiling, rise);
     float amount = u_mist_info[i].y * lateral * vertical;
