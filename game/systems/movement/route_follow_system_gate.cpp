@@ -5,10 +5,10 @@
 
 #include "body_profile.h"
 #include "formation/army_formation_registry.h"
+#include "game/core/ford_rules.h"
 #include "systems/builder_product_types.h"
 #include "systems/combat_rules.h"
 #include "systems/defensive_unit_layout_service.h"
-#include "game/core/ford_rules.h"
 #include "systems/navigation/nav_grid.h"
 #include "systems/navigation/pathfinding.h"
 #include "systems/navigation/walkability.h"

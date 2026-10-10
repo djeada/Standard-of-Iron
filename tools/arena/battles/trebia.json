@@ -12,20 +12,14 @@
     "distance": 300,
     "tilt": 48,
     "yaw": 20,
-    "focus": [
-      -10,
-      10
-    ]
+    "focus": [-10, 10]
   },
   "terrain": {
     "map": "assets/maps/map_battle_trebia.json",
     "fords": [
       {
         "river": 0,
-        "at": [
-          -30,
-          -84
-        ],
+        "at": [-30, -84],
         "width": 30,
         "id": "trebia_ford",
         "depth": 0.8,
@@ -71,10 +65,7 @@
             "shape": "multi_line",
             "lines": 2,
             "ranks": 3,
-            "center": [
-              0,
-              -30
-            ],
+            "center": [0, -30],
             "stagger": true,
             "lanes": 3,
             "lane_width": 6
@@ -144,10 +135,7 @@
           "deployment": {
             "shape": "line",
             "ranks": 3,
-            "center": [
-              0,
-              70
-            ]
+            "center": [0, 70]
           }
         },
         {
@@ -243,10 +231,7 @@
           "deployment": {
             "shape": "line",
             "ranks": 2,
-            "center": [
-              -120,
-              -55
-            ],
+            "center": [-120, -55],
             "facing": 60
           }
         },
@@ -258,10 +243,7 @@
           "deployment": {
             "shape": "line",
             "ranks": 2,
-            "center": [
-              -125,
-              -25
-            ],
+            "center": [-125, -25],
             "facing": 60
           }
         }
@@ -271,10 +253,7 @@
           "id": "mago",
           "historical_name": "Mago Barca",
           "catalog_id": "carthage_mago_barca",
-          "position": [
-            -118,
-            -40
-          ],
+          "position": [-118, -40],
           "facing": 60,
           "ambush": true
         }
@@ -337,10 +316,7 @@
       "actions": [
         {
           "type": "attack",
-          "groups": [
-            "legions",
-            "sempronius"
-          ],
+          "groups": ["legions", "sempronius"],
           "target": "battle_line"
         },
         {
@@ -405,10 +381,7 @@
         {
           "type": "move",
           "group": "legions",
-          "to": [
-            0,
-            180
-          ],
+          "to": [0, 180],
           "keep_shape": false
         }
       ]

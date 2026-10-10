@@ -212,7 +212,7 @@ The current event names recognized by `promo_spec.h` are:
   optional `"battle_script_scale"`), and its shots name the script's `id` as
   their `scenario`. The dry run copies every phase the battle reached into
   `timeline.json` under its `phase:` name, so `"start_on": {"event":
-  "phase:libyans_wheel", "offset": -2}` cuts on the wheel however long the
+"phase:libyans_wheel", "offset": -2}` cuts on the wheel however long the
   centre took to give way.
 
 `StartOn` can also select a side and apply a positive or negative offset.
@@ -598,22 +598,28 @@ the vertical take never depends on two runs agreeing.
 
 ```json
 {
-  "name": "phase_one",
-  "scenario": "cine_field",
-  "start": 16.0,
-  "duration": 8.0,
-  "focus": { "mode": "point", "point": [-4, 0, 0] },
-  "camera": [
-    { "time": 0.0, "distance": 125, "pitch": 34, "yaw": 150, "fov": 38 },
-    { "time": 8.0, "distance": 110, "pitch": 30, "yaw": 178, "fov": 38 }
-  ],
-  "vertical": {
-    "focus": { "offset": [-18, 0, 0] },
+    "name": "phase_one",
+    "scenario": "cine_field",
+    "start": 16.0,
+    "duration": 8.0,
+    "focus": { "mode": "point", "point": [-4, 0, 0] },
     "camera": [
-      { "time": 0.0, "distance": 105, "pitch": 40, "yaw": 120, "fov": 46 },
-      { "time": 8.0, "distance": 95, "pitch": 36, "yaw": 140, "fov": 46 }
-    ]
-  }
+        { "time": 0.0, "distance": 125, "pitch": 34, "yaw": 150, "fov": 38 },
+        { "time": 8.0, "distance": 110, "pitch": 30, "yaw": 178, "fov": 38 }
+    ],
+    "vertical": {
+        "focus": { "offset": [-18, 0, 0] },
+        "camera": [
+            {
+                "time": 0.0,
+                "distance": 105,
+                "pitch": 40,
+                "yaw": 120,
+                "fov": 46
+            },
+            { "time": 8.0, "distance": 95, "pitch": 36, "yaw": 140, "fov": 46 }
+        ]
+    }
 }
 ```
 
@@ -711,12 +717,12 @@ An overlay description is a list of `elements`. Every element takes `start` and
 `end` (clip seconds), `fade_in`/`fade_out`, `class` (named styles) and `style`
 (inline overrides).
 
-| Element    | Fields                                                                                                                                                                                                                    |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Element    | Fields                                                                                                                                                                                                                                              |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `arrow`    | `points` (two or more anchors), `bend` (two points: the apex sits that many chord lengths to the left; negative bends right), `smooth` (spline through 3+ points), `draw` (draw-on seconds), `track` (`"fixed"` at start, `"live"`, or a clip time) |
-| `block`    | `group`: a rectangle around the group's living units, oriented by their facing and padded by `padding_m`; its leading edge is drawn heavier. Follows the group live.                                                         |
-| `frontage` | `group`: a line along the leading rank, extended by `extend_m`, drawn on from the centre. Follows the group live.                                                                                                          |
-| `label`    | `text` and `at` (one anchor), `height_m` above the ground; text is set in the display face and offset in pixels.                                                                                                          |
+| `block`    | `group`: a rectangle around the group's living units, oriented by their facing and padded by `padding_m`; its leading edge is drawn heavier. Follows the group live.                                                                                |
+| `frontage` | `group`: a line along the leading rank, extended by `extend_m`, drawn on from the centre. Follows the group live.                                                                                                                                   |
+| `label`    | `text` and `at` (one anchor), `height_m` above the ground; text is set in the display face and offset in pixels.                                                                                                                                    |
 
 An anchor is `[x, z]` (or `[x, y, z]`, y ignored) in arena metres, or a group
 reference: `{"group": "rome_swords", "at": "centroid" | "front" | "front_left" |

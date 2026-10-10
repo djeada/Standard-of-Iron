@@ -425,8 +425,7 @@ auto ArenaViewport::spawn_single_unit(int owner_id,
                                       const QVector3D& spawn_position,
                                       bool ai_controlled,
                                       const QString& commander_id,
-                                      bool keep_troop_speed)
-    -> Engine::Core::EntityID {
+                                      bool keep_troop_speed) -> Engine::Core::EntityID {
   if (m_unit_factory == nullptr || m_world == nullptr) {
     return 0U;
   }

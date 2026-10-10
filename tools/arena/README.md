@@ -1970,7 +1970,7 @@ metres in scenario space, centred on the map; yaw 0 faces +z and positive
   in 413 units.
 - `deployment`: `shape` with `center` + `facing`, or an `anchor` to another
   group: `{"behind" | "ahead_of" | "left_of" | "right_of": id, "gap": m,
-  "offset": [right, forward]}` (the facing follows the reference unless set).
+"offset": [right, forward]}` (the facing follows the reference unless set).
   Shapes: `line`/`block` (`ranks`), `column` (`files`), `crescent` (`ranks`,
   `bulge` metres toward the enemy; negative is concave), `multi_line`
   (`lines`, `split` shares, `ranks` per line, `line_gap`, `lanes`,
@@ -1990,19 +1990,19 @@ metres in scenario space, centred on the map; yaw 0 faces +z and positive
   for groups.
 - `phases[]`: `id`, `label`, `event` (default the id; exported as
   `phase:<event>`), `trigger`, `actions[]`.
-  - Triggers (`type`): `start`, `time` (`at`), `contact` (`group`, `with`,
-    `distance`), `strength_below` (`group`, `fraction` of its starting
-    health), `destroyed` (`group`), `area` (`group` centroid within `radius` of
-    `center`), `phase` (`phase` started, + `delay`). Any trigger can add
-    `after` (a phase that must have started first) and `fallback_at` (fire at
-    this second regardless, so a stalled fight still reaches its next beat).
-  - Actions (`type`, optional `delay` after the phase starts; orders take
-    `group` or `groups`): `move` (`to` a point, or `by` an offset; keeps the
-    group's shape unless `keep_shape` is false, `run` for a reforming run),
-    `attack` and `charge` (`target`), `hold` (`enabled`), `stop`, `wheel`
-    (`degrees`, `pivot` `left`/`right`/`center` or a point), `reveal` (spawns an
-    ambush group, optional `target`), `formation` (`groups`, `formation`, `at`,
-    `facing`, `frontage`) and `weather` (a weather change, below).
+    - Triggers (`type`): `start`, `time` (`at`), `contact` (`group`, `with`,
+      `distance`), `strength_below` (`group`, `fraction` of its starting
+      health), `destroyed` (`group`), `area` (`group` centroid within `radius` of
+      `center`), `phase` (`phase` started, + `delay`). Any trigger can add
+      `after` (a phase that must have started first) and `fallback_at` (fire at
+      this second regardless, so a stalled fight still reaches its next beat).
+    - Actions (`type`, optional `delay` after the phase starts; orders take
+      `group` or `groups`): `move` (`to` a point, or `by` an offset; keeps the
+      group's shape unless `keep_shape` is false, `run` for a reforming run),
+      `attack` and `charge` (`target`), `hold` (`enabled`), `stop`, `wheel`
+      (`degrees`, `pivot` `left`/`right`/`center` or a point), `reveal` (spawns an
+      ambush group, optional `target`), `formation` (`groups`, `formation`, `at`,
+      `facing`, `frontage`) and `weather` (a weather change, below).
 - Weather changes (`weather.changes[]` with `at`, or a `weather` action):
   `duration`, `fog_density`, `exposure`, `rain`, `storm`, `snow`,
   `wind_strength`, `wind_direction`, `hour`, `fog_banks[]` (`id`, `density`,

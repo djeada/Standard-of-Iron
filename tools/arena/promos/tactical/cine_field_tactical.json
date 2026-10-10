@@ -22,11 +22,7 @@
       "duration": 8.0,
       "focus": {
         "mode": "point",
-        "point": [
-          -4,
-          0,
-          0
-        ],
+        "point": [-4, 0, 0],
         "smoothing": 0
       },
       "lighting": {

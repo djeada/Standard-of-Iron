@@ -966,7 +966,9 @@ void compile_terrain(const Context& context,
     }
     const QJsonObject ford = ford_array.at(f).toObject();
     context.check_keys(
-        ford, ford_path, {"id", "river", "at", "width", "depth", "speed", "cold", "exposure"});
+        ford,
+        ford_path,
+        {"id", "river", "at", "width", "depth", "speed", "cold", "exposure"});
     FordSegment segment;
     segment.id = context.string(ford, ford_path, "id", false);
     if (segment.id.isEmpty()) {
@@ -1000,8 +1002,8 @@ void compile_terrain(const Context& context,
                                 Game::Map::k_min_ford_speed,
                                 Game::Map::k_max_ford_speed)
                         .value_or(profile.speed);
-    profile.cold =
-        context.number(ford, ford_path, "cold", profile.cold, 0.0F, 1.0F).value_or(profile.cold);
+    profile.cold = context.number(ford, ford_path, "cold", profile.cold, 0.0F, 1.0F)
+                       .value_or(profile.cold);
     profile.exposure = context
                            .number(ford,
                                    ford_path,

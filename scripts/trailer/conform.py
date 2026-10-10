@@ -95,7 +95,9 @@ def load_ref(value, base: Path):
     return json.loads(path.read_text())
 
 
-def tactical_plate(event: dict, clip: Path, work: Path, index: int, cut: dict) -> Path | None:
+def tactical_plate(
+    event: dict, clip: Path, work: Path, index: int, cut: dict
+) -> Path | None:
     """Render an event's world-registered tactical overlay as ProRes 4444.
 
     The plate covers the whole source clip frame for frame, so the event's own
@@ -401,20 +403,23 @@ def render_event(index: int, event: dict, cut: dict, clips: Path, work: Path) ->
 
     def geometry(pixel_format: str) -> str:
         """Trim, retime, blur and reframe; shared by the picture and its plates."""
-        return ",".join(
-            pre
-            + blur
-            + [
-                f"setpts=N/{fps}/TB",
-                f"format={pixel_format}",
-                f"scale={WIDTH}:{HEIGHT}:flags=lanczos",
-            ]
-            + flip
-            + [
-                f"crop={crop_w}:{crop_h}:{x0}:{y0}",
-                f"scale={WIDTH}:{scope_h}:flags=lanczos",
-            ]
-        ) + shake
+        return (
+            ",".join(
+                pre
+                + blur
+                + [
+                    f"setpts=N/{fps}/TB",
+                    f"format={pixel_format}",
+                    f"scale={WIDTH}:{HEIGHT}:flags=lanczos",
+                ]
+                + flip
+                + [
+                    f"crop={crop_w}:{crop_h}:{x0}:{y0}",
+                    f"scale={WIDTH}:{scope_h}:flags=lanczos",
+                ]
+            )
+            + shake
+        )
 
     base = geometry("gbrp16le")
     base += "," + look_filter(look, scope_h)

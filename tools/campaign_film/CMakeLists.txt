@@ -24,5 +24,8 @@ if(QT_VERSION_MAJOR EQUAL 6)
             Qt${QT_VERSION_MAJOR}::Quick
             Qt${QT_VERSION_MAJOR}::OpenGL
     )
-    set_target_properties(campaign_map_film PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    set_target_properties(
+        campaign_map_film
+        PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    )
 endif()

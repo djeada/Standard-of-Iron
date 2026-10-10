@@ -11,10 +11,7 @@
     "distance": 430,
     "tilt": 55,
     "yaw": 0,
-    "focus": [
-      0,
-      -20
-    ]
+    "focus": [0, -20]
   },
   "terrain": {
     "grid_extent": 640,
@@ -25,26 +22,11 @@
     "rivers": [
       {
         "points": [
-          [
-            -292,
-            320
-          ],
-          [
-            -286,
-            160
-          ],
-          [
-            -296,
-            0
-          ],
-          [
-            -288,
-            -160
-          ],
-          [
-            -294,
-            -320
-          ]
+          [-292, 320],
+          [-286, 160],
+          [-296, 0],
+          [-288, -160],
+          [-294, -320]
         ],
         "width": 14
       }
@@ -77,10 +59,7 @@
           "historical": 62000,
           "deployment": {
             "shape": "multi_line",
-            "center": [
-              0,
-              -100
-            ],
+            "center": [0, -100],
             "lines": 2,
             "ranks": 6,
             "line_gap": 6,
@@ -204,10 +183,7 @@
           "historical": 16000,
           "deployment": {
             "shape": "crescent",
-            "center": [
-              0,
-              70
-            ],
+            "center": [0, 70],
             "ranks": 3,
             "bulge": 30
           },
@@ -272,10 +248,7 @@
             "anchor": {
               "left_of": "gallic_centre",
               "gap": 14,
-              "offset": [
-                0,
-                -24
-              ]
+              "offset": [0, -24]
             }
           }
         },
@@ -290,10 +263,7 @@
             "anchor": {
               "right_of": "gallic_centre",
               "gap": 14,
-              "offset": [
-                0,
-                -24
-              ]
+              "offset": [0, -24]
             }
           }
         }
@@ -304,10 +274,7 @@
           "historical_name": "Mago Barca",
           "catalog_id": "carthage_mago_barca",
           "with": "iberian_centre",
-          "offset": [
-            18,
-            -14
-          ]
+          "offset": [18, -14]
         }
       ]
     },
@@ -331,10 +298,7 @@
             "anchor": {
               "left_of": "libyans_left",
               "gap": 24,
-              "offset": [
-                0,
-                24
-              ]
+              "offset": [0, 24]
             }
           }
         },
@@ -383,10 +347,7 @@
             "anchor": {
               "right_of": "libyans_right",
               "gap": 24,
-              "offset": [
-                0,
-                24
-              ]
+              "offset": [0, 24]
             }
           }
         }
@@ -433,18 +394,12 @@
       "actions": [
         {
           "type": "charge",
-          "groups": [
-            "iberian_horse",
-            "gallic_horse"
-          ],
+          "groups": ["iberian_horse", "gallic_horse"],
           "target": "roman_horse"
         },
         {
           "type": "attack",
-          "groups": [
-            "roman_horse",
-            "paullus"
-          ],
+          "groups": ["roman_horse", "paullus"],
           "target": "iberian_horse",
           "delay": 1
         },
@@ -455,10 +410,7 @@
         },
         {
           "type": "hold",
-          "groups": [
-            "allied_horse",
-            "varro"
-          ],
+          "groups": ["allied_horse", "varro"],
           "note": "Varro's horse stands while the Numidians skirmish"
         }
       ]
@@ -476,19 +428,13 @@
         {
           "type": "move",
           "group": "velites",
-          "to": [
-            0,
-            -205
-          ],
+          "to": [0, -205],
           "keep_shape": false
         },
         {
           "type": "move",
           "group": "slingers",
-          "to": [
-            0,
-            160
-          ],
+          "to": [0, 160],
           "keep_shape": false
         }
       ]
@@ -510,10 +456,7 @@
         {
           "type": "move",
           "group": "triarii",
-          "to": [
-            0,
-            -60
-          ],
+          "to": [0, -60],
           "delay": 4
         }
       ]
@@ -531,10 +474,7 @@
       "actions": [
         {
           "type": "attack",
-          "groups": [
-            "gallic_centre",
-            "iberian_centre"
-          ],
+          "groups": ["gallic_centre", "iberian_centre"],
           "target": "roman_centre"
         }
       ]
@@ -552,32 +492,17 @@
       "actions": [
         {
           "type": "move",
-          "groups": [
-            "gallic_centre",
-            "iberian_centre"
-          ],
-          "to": [
-            0,
-            135
-          ]
+          "groups": ["gallic_centre", "iberian_centre"],
+          "to": [0, 135]
         },
         {
           "type": "move",
-          "groups": [
-            "hannibal",
-            "mago"
-          ],
-          "to": [
-            0,
-            175
-          ]
+          "groups": ["hannibal", "mago"],
+          "to": [0, 175]
         },
         {
           "type": "attack",
-          "groups": [
-            "gallic_centre",
-            "iberian_centre"
-          ],
+          "groups": ["gallic_centre", "iberian_centre"],
           "target": "roman_centre",
           "delay": 14
         }
@@ -606,10 +531,7 @@
         },
         {
           "type": "attack",
-          "groups": [
-            "libyans_left",
-            "libyans_right"
-          ],
+          "groups": ["libyans_left", "libyans_right"],
           "target": "roman_centre",
           "delay": 9
         }
@@ -626,15 +548,8 @@
       "actions": [
         {
           "type": "move",
-          "groups": [
-            "iberian_horse",
-            "gallic_horse",
-            "hasdrubal"
-          ],
-          "to": [
-            -240,
-            -300
-          ],
+          "groups": ["iberian_horse", "gallic_horse", "hasdrubal"],
+          "to": [-240, -300],
           "keep_shape": false,
           "run": true
         }
@@ -646,10 +561,7 @@
       "trigger": {
         "type": "area",
         "group": "iberian_horse",
-        "center": [
-          -240,
-          -300
-        ],
+        "center": [-240, -300],
         "radius": 45,
         "after": "roman_horse_routed",
         "fallback_at": 150
@@ -657,15 +569,8 @@
       "actions": [
         {
           "type": "move",
-          "groups": [
-            "iberian_horse",
-            "gallic_horse",
-            "hasdrubal"
-          ],
-          "to": [
-            170,
-            -290
-          ],
+          "groups": ["iberian_horse", "gallic_horse", "hasdrubal"],
+          "to": [170, -290],
           "keep_shape": false,
           "run": true
         }
@@ -677,10 +582,7 @@
       "trigger": {
         "type": "area",
         "group": "iberian_horse",
-        "center": [
-          170,
-          -290
-        ],
+        "center": [170, -290],
         "radius": 60,
         "after": "hasdrubal_rides",
         "fallback_at": 230
@@ -688,18 +590,12 @@
       "actions": [
         {
           "type": "hold",
-          "groups": [
-            "allied_horse",
-            "varro"
-          ],
+          "groups": ["allied_horse", "varro"],
           "enabled": false
         },
         {
           "type": "charge",
-          "groups": [
-            "iberian_horse",
-            "gallic_horse"
-          ],
+          "groups": ["iberian_horse", "gallic_horse"],
           "target": "allied_horse"
         },
         {
@@ -727,18 +623,12 @@
       "actions": [
         {
           "type": "attack",
-          "groups": [
-            "numidians",
-            "hanno"
-          ],
+          "groups": ["numidians", "hanno"],
           "target": "allied_horse"
         },
         {
           "type": "charge",
-          "groups": [
-            "iberian_horse",
-            "gallic_horse"
-          ],
+          "groups": ["iberian_horse", "gallic_horse"],
           "target": "triarii"
         },
         {
@@ -759,19 +649,12 @@
       "actions": [
         {
           "type": "attack",
-          "groups": [
-            "slingers",
-            "hannibal",
-            "mago"
-          ],
+          "groups": ["slingers", "hannibal", "mago"],
           "target": "roman_centre"
         },
         {
           "type": "attack",
-          "groups": [
-            "triarii",
-            "servilius"
-          ],
+          "groups": ["triarii", "servilius"],
           "target": "iberian_horse"
         }
       ]

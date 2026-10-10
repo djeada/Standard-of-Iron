@@ -525,8 +525,8 @@ struct ArenaScenarioRunner::Impl {
   void stop_group(const QString& group, bool clear_attack);
   void attack_group(const QString& group, const QString& target_group, bool chase);
   void form_army(const ArenaScenarioStep& step);
-  [[nodiscard]] auto named_step_executed_at(const QString& name) const
-      -> std::optional<float>;
+  [[nodiscard]] auto
+  named_step_executed_at(const QString& name) const -> std::optional<float>;
   [[nodiscard]] auto group_strength(const QString& group) const -> std::optional<float>;
   void shape_move_group(const ArenaScenarioStep& step);
   void wheel_group(const ArenaScenarioStep& step);

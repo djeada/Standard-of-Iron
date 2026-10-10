@@ -11,10 +11,7 @@
     "distance": 260,
     "tilt": 38,
     "yaw": 200,
-    "focus": [
-      -20,
-      -10
-    ]
+    "focus": [-20, -10]
   },
   "terrain": {
     "grid_extent": 448,
@@ -24,47 +21,32 @@
     "seed": 217,
     "lakes": [
       {
-        "center": [
-          0,
-          -150
-        ],
+        "center": [0, -150],
         "width": 440,
         "depth": 170
       }
     ],
     "hills": [
       {
-        "center": [
-          -150,
-          105
-        ],
+        "center": [-150, 105],
         "radius": 80,
         "height": 9,
         "plateau": 25
       },
       {
-        "center": [
-          -10,
-          120
-        ],
+        "center": [-10, 120],
         "radius": 90,
         "height": 11,
         "plateau": 30
       },
       {
-        "center": [
-          140,
-          100
-        ],
+        "center": [140, 100],
         "radius": 80,
         "height": 9,
         "plateau": 25
       },
       {
-        "center": [
-          215,
-          -20
-        ],
+        "center": [215, -20],
         "radius": 50,
         "height": 7,
         "plateau": 10
@@ -83,14 +65,8 @@
     "fog_banks": [
       {
         "id": "lake_fog",
-        "from": [
-          -220,
-          -48
-        ],
-        "to": [
-          210,
-          -48
-        ],
+        "from": [-220, -48],
+        "to": [210, -48],
         "radius": 62,
         "height": 10,
         "density": 0.92,
@@ -114,14 +90,8 @@
       },
       {
         "id": "hill_fog",
-        "from": [
-          -200,
-          95
-        ],
-        "to": [
-          180,
-          95
-        ],
+        "from": [-200, 95],
+        "to": [180, 95],
         "radius": 70,
         "height": 14,
         "density": 0.55
@@ -154,10 +124,7 @@
           "deployment": {
             "shape": "column",
             "files": 3,
-            "center": [
-              -120,
-              -38
-            ],
+            "center": [-120, -38],
             "facing": 90
           }
         },
@@ -209,10 +176,7 @@
           "historical_name": "Gaius Flaminius",
           "catalog_id": "roman_gaius_flaminius",
           "with": "column_main",
-          "offset": [
-            6,
-            0
-          ]
+          "offset": [6, 0]
         }
       ]
     },
@@ -233,10 +197,7 @@
           "deployment": {
             "shape": "line",
             "ranks": 4,
-            "center": [
-              150,
-              -36
-            ],
+            "center": [150, -36],
             "facing": 270
           }
         },
@@ -250,10 +211,7 @@
           "deployment": {
             "shape": "line",
             "ranks": 3,
-            "center": [
-              -20,
-              60
-            ],
+            "center": [-20, 60],
             "facing": 180
           }
         },
@@ -266,10 +224,7 @@
           "deployment": {
             "shape": "line",
             "ranks": 2,
-            "center": [
-              -140,
-              62
-            ],
+            "center": [-140, 62],
             "facing": 180
           }
         }
@@ -279,10 +234,7 @@
           "id": "hannibal",
           "historical_name": "Hannibal Barca",
           "catalog_id": "carthage_sword_commander",
-          "position": [
-            170,
-            -10
-          ],
+          "position": [170, -10],
           "facing": 270,
           "ambush": true
         }
@@ -306,10 +258,7 @@
           "deployment": {
             "shape": "line",
             "ranks": 4,
-            "center": [
-              -215,
-              -30
-            ],
+            "center": [-215, -30],
             "facing": 90
           }
         }
@@ -319,10 +268,7 @@
           "id": "maharbal",
           "historical_name": "Maharbal",
           "catalog_id": "carthage_maharbal",
-          "position": [
-            -225,
-            -5
-          ],
+          "position": [-225, -5],
           "facing": 90,
           "ambush": true
         }
@@ -347,10 +293,7 @@
             "column_horse",
             "flaminius"
           ],
-          "by": [
-            180,
-            0
-          ]
+          "by": [180, 0]
         }
       ]
     },
@@ -360,10 +303,7 @@
       "trigger": {
         "type": "area",
         "group": "column_van",
-        "center": [
-          60,
-          -38
-        ],
+        "center": [60, -38],
         "radius": 45,
         "fallback_at": 90
       },

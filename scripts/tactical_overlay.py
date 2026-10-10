@@ -269,7 +269,9 @@ def column_major(values: Sequence[float]) -> list[list[float]]:
     """A 4x4 row-indexed matrix from 16 column-major values (Qt/OpenGL)."""
     if len(values) != 16:
         raise ValueError("a matrix needs 16 values")
-    return [[float(values[column * 4 + row]) for column in range(4)] for row in range(4)]
+    return [
+        [float(values[column * 4 + row]) for column in range(4)] for row in range(4)
+    ]
 
 
 def mat_mul(a: list[list[float]], b: list[list[float]]) -> list[list[float]]:
@@ -292,7 +294,9 @@ def look_at(eye: Vec3, target: Vec3, up: Vec3 = (0.0, 1.0, 0.0)) -> list[list[fl
     ]
 
 
-def perspective(fov_y: float, aspect: float, near: float, far: float) -> list[list[float]]:
+def perspective(
+    fov_y: float, aspect: float, near: float, far: float
+) -> list[list[float]]:
     """``QMatrix4x4::perspective`` -- for tests and synthetic cameras."""
     cotan = 1.0 / math.tan(math.radians(fov_y) / 2.0)
     clip = near - far
@@ -493,7 +497,9 @@ class Terrain:
         columns = int(header["columns"])
         rows = int(header["rows"])
         if len(data) != columns * rows:
-            raise ValueError(f"{path}: expected {columns * rows} heights, got {len(data)}")
+            raise ValueError(
+                f"{path}: expected {columns * rows} heights, got {len(data)}"
+            )
         origin = (float(header["origin"][0]), float(header["origin"][1]))
         return cls(data, origin, float(header["spacing"]), columns, rows)
 
@@ -599,7 +605,9 @@ def catmull_rom(points: Sequence[Vec2], segments: int) -> list[Vec2]:
     return result
 
 
-def arrow_path(points: Sequence[Vec2], bend: float = 0.0, smooth: bool = True) -> list[Vec2]:
+def arrow_path(
+    points: Sequence[Vec2], bend: float = 0.0, smooth: bool = True
+) -> list[Vec2]:
     """The centreline of an arrow in the ground plane (x, z).
 
     Two points with ``bend`` make a quadratic curve whose apex sits ``bend``
@@ -711,7 +719,11 @@ def arrow_shape(
     head_length *= scale
     head_width *= scale
     shaft_length = max(0.0, visible - head_length)
-    shaft = resample(truncate(drawn, shaft_length), step) if shaft_length > 1e-3 else [drawn[0]]
+    shaft = (
+        resample(truncate(drawn, shaft_length), step)
+        if shaft_length > 1e-3
+        else [drawn[0]]
+    )
     if len(shaft) < 2:
         shaft = [drawn[0], drawn[0]]
     tip = drawn[-1]
@@ -720,7 +732,7 @@ def arrow_shape(
     # Taper by distance along the whole path, so drawing on never fattens it.
     sections = []
     travelled = 0.0
-    for index, (point, direction) in enumerate(zip(shaft, directions)):
+    for index, (point, direction) in enumerate(zip(shaft, directions, strict=False)):
         if index > 0:
             travelled += math.dist(shaft[index - 1], point)
         if index == len(shaft) - 1:
@@ -741,7 +753,10 @@ def arrow_shape(
         rows = max(2, int(math.ceil(head_length / step)) + 1)
         for row in range(rows):
             t = row / (rows - 1)
-            centre = (base[0] + (tip[0] - base[0]) * t, base[1] + (tip[1] - base[1]) * t)
+            centre = (
+                base[0] + (tip[0] - base[0]) * t,
+                base[1] + (tip[1] - base[1]) * t,
+            )
             half = 0.5 * head_width * (1.0 - t)
             head_sections.append(
                 (
@@ -800,13 +815,17 @@ class Overlay:
         for index, raw in enumerate(description.get("elements", [])):
             kind = raw.get("type")
             if kind not in KINDS:
-                raise ValueError(f"element {index}: unknown type {kind!r} (one of {KINDS})")
+                raise ValueError(
+                    f"element {index}: unknown type {kind!r} (one of {KINDS})"
+                )
             element_styles = element_style(resolved, raw)
             fade = float(resolved.get("fade_seconds", 0.35))
             start = float(raw.get("start", 0.0))
             end = float(raw.get("end", math.inf))
             if end <= start:
-                raise ValueError(f"element {index}: end {end} is not after start {start}")
+                raise ValueError(
+                    f"element {index}: end {end} is not after start {start}"
+                )
             _validate(kind, raw, index)
             elements.append(
                 Element(
@@ -882,7 +901,9 @@ class AnchorResolver:
         at = anchor.get("at", "centroid")
         if "unit" in anchor:
             wanted = self.unit_id(name, int(anchor["unit"]))
-            unit = next((u for u in group.get("units", []) if int(u[0]) == wanted), None)
+            unit = next(
+                (u for u in group.get("units", []) if int(u[0]) == wanted), None
+            )
             if unit is None:
                 return None
             base = (float(unit[1]), float(unit[3]))
@@ -899,7 +920,10 @@ class AnchorResolver:
                 base = ((left[0] + right[0]) / 2.0, (left[2] + right[2]) / 2.0)
                 if at == "rear":
                     depth = float(group.get("depth", 0.0))
-                    base = (base[0] - forward2[0] * depth, base[1] - forward2[1] * depth)
+                    base = (
+                        base[0] - forward2[0] * depth,
+                        base[1] - forward2[1] * depth,
+                    )
         else:
             raise ValueError(f"unknown group anchor '{at}'")
         ahead = float(anchor.get("forward_m", 0.0))
@@ -934,7 +958,7 @@ class Layer:
         for polygon in self.polygons:
             xs += [p[0] for p in polygon]
             ys += [p[1] for p in polygon]
-        for line, width in self.fill_lines + self.outline_lines:
+        for line, _width in self.fill_lines + self.outline_lines:
             xs += [p[0] for p in line]
             ys += [p[1] for p in line]
         for polygon, _ in self.outline_polygons:
@@ -1003,8 +1027,14 @@ def _thick_line(draw, points: list[Vec2], width: float) -> None:
 class Renderer:
     """Renders an :class:`Overlay` for frames of one :class:`CameraTrack`."""
 
-    def __init__(self, overlay: Overlay, track: CameraTrack, terrain: Terrain,
-                 width: int | None = None, height: int | None = None):
+    def __init__(
+        self,
+        overlay: Overlay,
+        track: CameraTrack,
+        terrain: Terrain,
+        width: int | None = None,
+        height: int | None = None,
+    ):
         self.overlay = overlay
         self.track = track
         self.terrain = terrain
@@ -1027,7 +1057,9 @@ class Renderer:
     # -- anchors
     def anchor_frame(self, element: Element, frame: int) -> int:
         """Live elements read the current frame; fixed ones their start."""
-        track = element.data.get("track", "live" if element.kind != "arrow" else "fixed")
+        track = element.data.get(
+            "track", "live" if element.kind != "arrow" else "fixed"
+        )
         if track == "live":
             return frame
         if isinstance(track, (int, float)) and not isinstance(track, bool):
@@ -1075,11 +1107,17 @@ class Renderer:
         points = self.resolve_points(element, self._frame)
         if not points:
             return None
-        path = arrow_path(points, float(element.data.get("bend", 0.0)),
-                          bool(element.data.get("smooth", True)))
+        path = arrow_path(
+            points,
+            float(element.data.get("bend", 0.0)),
+            bool(element.data.get("smooth", True)),
+        )
         draw = float(element.data.get("draw", style.get("draw_seconds", 1.2)))
-        progress = 1.0 if draw <= 0 else ease(style.get("ease", "smooth"),
-                                              (t - element.start) / draw)
+        progress = (
+            1.0
+            if draw <= 0
+            else ease(style.get("ease", "smooth"), (t - element.start) / draw)
+        )
         shape = arrow_shape(
             path,
             progress,
@@ -1097,10 +1135,15 @@ class Renderer:
         drape = self.terrain.drape
 
         def quad_strip(sections):
-            for (l0, r0), (l1, r1) in zip(sections, sections[1:]):
-                polygon = camera.project_polygon([
-                    drape(*l0, lift), drape(*l1, lift), drape(*r1, lift), drape(*r0, lift)
-                ])
+            for (l0, r0), (l1, r1) in zip(sections, sections[1:], strict=False):
+                polygon = camera.project_polygon(
+                    [
+                        drape(*l0, lift),
+                        drape(*l1, lift),
+                        drape(*r1, lift),
+                        drape(*r0, lift),
+                    ]
+                )
                 if len(polygon) >= 3:
                     layer.polygons.append(polygon)
 
@@ -1114,14 +1157,16 @@ class Renderer:
                 boundary += [h[0] for h in shape.head] + [shape.tip]
                 boundary += [h[1] for h in reversed(shape.head)]
             boundary += [s[1] for s in reversed(shape.sections)]
-            for run in camera.project_polyline([drape(x, z, lift) for x, z in boundary]
-                                               + [drape(*boundary[0], lift)]):
+            for run in camera.project_polyline(
+                [drape(x, z, lift) for x, z in boundary] + [drape(*boundary[0], lift)]
+            ):
                 layer.outline_lines.append((run, outline_px * 2.0))
         return layer
 
     def block_geometry(self, element: Element, frame: int):
-        group = self.track.nearest_group(self.anchor_frame(element, frame),
-                                         element.data["group"])
+        group = self.track.nearest_group(
+            self.anchor_frame(element, frame), element.data["group"]
+        )
         if group is None:
             return None
         style = element.style
@@ -1130,12 +1175,23 @@ class Renderer:
         right = (-forward[1], forward[0])
         centre = (float(group["centroid"][0]), float(group["centroid"][2]))
         units = group.get("units") or []
-        lat = [((u[1] - centre[0]) * right[0] + (u[3] - centre[1]) * right[1]) for u in units]
-        lon = [((u[1] - centre[0]) * forward[0] + (u[3] - centre[1]) * forward[1]) for u in units]
+        lat = [
+            ((u[1] - centre[0]) * right[0] + (u[3] - centre[1]) * right[1])
+            for u in units
+        ]
+        lon = [
+            ((u[1] - centre[0]) * forward[0] + (u[3] - centre[1]) * forward[1])
+            for u in units
+        ]
         if not lat:
             lat = lon = [0.0]
-        return centre, forward, right, (min(lat) - pad, max(lat) + pad,
-                                        min(lon) - pad, max(lon) + pad), group
+        return (
+            centre,
+            forward,
+            right,
+            (min(lat) - pad, max(lat) + pad, min(lon) - pad, max(lon) + pad),
+            group,
+        )
 
     def block_layer(self, element: Element, camera: Camera, t: float):
         geometry = self.block_geometry(element, self._frame)
@@ -1147,24 +1203,35 @@ class Renderer:
         cell = max(0.5, float(style.get("cell_m", 2.0)))
 
         def at(lat, lon):
-            return self.terrain.drape(centre[0] + right[0] * lat + forward[0] * lon,
-                                      centre[1] + right[1] * lat + forward[1] * lon, lift)
+            return self.terrain.drape(
+                centre[0] + right[0] * lat + forward[0] * lon,
+                centre[1] + right[1] * lat + forward[1] * lon,
+                lift,
+            )
 
         columns = max(1, int(math.ceil((l1 - l0) / cell)))
         rows = max(1, int(math.ceil((d1 - d0) / cell)))
         layer = Layer(self.width, self.height, int(self.overlay.style["supersample"]))
-        grid = [[at(l0 + (l1 - l0) * c / columns, d0 + (d1 - d0) * r / rows)
-                 for c in range(columns + 1)] for r in range(rows + 1)]
+        grid = [
+            [
+                at(l0 + (l1 - l0) * c / columns, d0 + (d1 - d0) * r / rows)
+                for c in range(columns + 1)
+            ]
+            for r in range(rows + 1)
+        ]
         for r in range(rows):
             for c in range(columns):
                 polygon = camera.project_polygon(
-                    [grid[r][c], grid[r][c + 1], grid[r + 1][c + 1], grid[r + 1][c]])
+                    [grid[r][c], grid[r][c + 1], grid[r + 1][c + 1], grid[r + 1][c]]
+                )
                 if len(polygon) >= 3:
                     layer.polygons.append(polygon)
-        ring = ([grid[0][c] for c in range(columns + 1)]
-                + [grid[r][columns] for r in range(1, rows + 1)]
-                + [grid[rows][c] for c in range(columns - 1, -1, -1)]
-                + [grid[r][0] for r in range(rows - 1, -1, -1)])
+        ring = (
+            [grid[0][c] for c in range(columns + 1)]
+            + [grid[r][columns] for r in range(1, rows + 1)]
+            + [grid[rows][c] for c in range(columns - 1, -1, -1)]
+            + [grid[r][0] for r in range(rows - 1, -1, -1)]
+        )
         outline_px = self.px(style.get("outline_px", 0.0))
         front_px = self.px(style.get("front_px", 0.0))
         lines = []
@@ -1175,8 +1242,9 @@ class Renderer:
         return layer, lines, group
 
     def frontage_layer(self, element: Element, camera: Camera, t: float):
-        group = self.track.nearest_group(self.anchor_frame(element, self._frame),
-                                         element.data["group"])
+        group = self.track.nearest_group(
+            self.anchor_frame(element, self._frame), element.data["group"]
+        )
         if group is None:
             return None
         style = element.style
@@ -1193,20 +1261,33 @@ class Renderer:
         a = (a[0] - d[0] * extend, a[1] - d[1] * extend)
         b = (b[0] + d[0] * extend, b[1] + d[1] * extend)
         draw = float(element.data.get("draw", style.get("draw_seconds", 0.6)))
-        progress = 1.0 if draw <= 0 else ease(style.get("ease", "smooth"),
-                                              (t - element.start) / draw)
+        progress = (
+            1.0
+            if draw <= 0
+            else ease(style.get("ease", "smooth"), (t - element.start) / draw)
+        )
         middle = ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2)
-        a = (middle[0] + (a[0] - middle[0]) * progress, middle[1] + (a[1] - middle[1]) * progress)
-        b = (middle[0] + (b[0] - middle[0]) * progress, middle[1] + (b[1] - middle[1]) * progress)
+        a = (
+            middle[0] + (a[0] - middle[0]) * progress,
+            middle[1] + (a[1] - middle[1]) * progress,
+        )
+        b = (
+            middle[0] + (b[0] - middle[0]) * progress,
+            middle[1] + (b[1] - middle[1]) * progress,
+        )
         lift = float(style.get("lift_m", 0.15))
-        line = [self.terrain.drape(x, z, lift)
-                for x, z in resample([a, b], float(style.get("step_m", 1.0)))]
+        line = [
+            self.terrain.drape(x, z, lift)
+            for x, z in resample([a, b], float(style.get("step_m", 1.0)))
+        ]
         layer = Layer(self.width, self.height, int(self.overlay.style["supersample"]))
         width = self.px(style.get("width_px", 6.0))
         for run in camera.project_polyline(line):
             layer.fill_lines.append((run, width))
             if style.get("outline") and style.get("outline_px", 0) > 0:
-                layer.outline_lines.append((run, width + 2 * self.px(style["outline_px"])))
+                layer.outline_lines.append(
+                    (run, width + 2 * self.px(style["outline_px"]))
+                )
         return layer, group
 
     # -- composition
@@ -1229,31 +1310,49 @@ class Renderer:
                 layer = self.arrow_layer(element, camera, t)
                 if layer is not None:
                     owner = self._owner_of(element)
-                    self._composite(canvas, layer,
-                                    self.colour(style.get("color"), owner),
-                                    alpha * float(style.get("opacity", 1.0)),
-                                    style.get("outline"),
-                                    alpha * float(style.get("outline_opacity", 1.0)))
+                    self._composite(
+                        canvas,
+                        layer,
+                        self.colour(style.get("color"), owner),
+                        alpha * float(style.get("opacity", 1.0)),
+                        style.get("outline"),
+                        alpha * float(style.get("outline_opacity", 1.0)),
+                    )
             elif element.kind == "block":
                 built = self.block_layer(element, camera, t)
                 if built is not None:
                     layer, lines, group = built
                     colour = self.colour(style.get("color"), group.get("owner"))
-                    self._composite(canvas, layer, colour,
-                                    alpha * float(style.get("fill_opacity", 0.3)), None, 0.0)
+                    self._composite(
+                        canvas,
+                        layer,
+                        colour,
+                        alpha * float(style.get("fill_opacity", 0.3)),
+                        None,
+                        0.0,
+                    )
                     edge = Layer(self.width, self.height, layer.scale)
                     edge.fill_lines = lines
-                    self._composite(canvas, edge, colour,
-                                    alpha * float(style.get("outline_opacity", 1.0)), None, 0.0)
+                    self._composite(
+                        canvas,
+                        edge,
+                        colour,
+                        alpha * float(style.get("outline_opacity", 1.0)),
+                        None,
+                        0.0,
+                    )
             elif element.kind == "frontage":
                 built = self.frontage_layer(element, camera, t)
                 if built is not None:
                     layer, group = built
-                    self._composite(canvas, layer,
-                                    self.colour(style.get("color"), group.get("owner")),
-                                    alpha * float(style.get("opacity", 1.0)),
-                                    style.get("outline"),
-                                    alpha * float(style.get("outline_opacity", 1.0)))
+                    self._composite(
+                        canvas,
+                        layer,
+                        self.colour(style.get("color"), group.get("owner")),
+                        alpha * float(style.get("opacity", 1.0)),
+                        style.get("outline"),
+                        alpha * float(style.get("outline_opacity", 1.0)),
+                    )
             elif element.kind == "label":
                 self._label(canvas, element, camera, alpha)
         return canvas
@@ -1266,8 +1365,15 @@ class Renderer:
                     return group.get("owner")
         return element.data.get("owner")
 
-    def _composite(self, canvas, layer: Layer, colour, opacity: float,
-                   outline_colour, outline_opacity: float) -> None:
+    def _composite(
+        self,
+        canvas,
+        layer: Layer,
+        colour,
+        opacity: float,
+        outline_colour,
+        outline_opacity: float,
+    ) -> None:
         from PIL import Image
 
         pad = max([w for _, w in layer.fill_lines + layer.outline_lines] + [0.0]) + 4.0
@@ -1292,7 +1398,9 @@ class Renderer:
         from PIL import Image, ImageDraw
 
         style = element.style
-        point = self.anchors.point(element.data["at"], self.anchor_frame(element, self._frame))
+        point = self.anchors.point(
+            element.data["at"], self.anchor_frame(element, self._frame)
+        )
         if point is None:
             return
         height = float(element.data.get("height_m", style.get("height_m", 0.0)))
@@ -1310,26 +1418,34 @@ class Renderer:
         y = anchor[1] + self.px(offset[1])
         tracking = float(style.get("tracking", 0.0)) * size
         # Prefix widths keep the face's kerning pairs; tracking adds to them.
-        starts = [font.getlength(text[:index]) + tracking * index for index in range(len(text))]
+        starts = [
+            font.getlength(text[:index]) + tracking * index
+            for index in range(len(text))
+        ]
         total = font.getlength(text) + tracking * max(0, len(text) - 1)
         ascent, descent = font.getmetrics()
         left = x - total / 2.0
         top = y - (ascent + descent) / 2.0
         shadow_px = self.px(style.get("shadow_px", 0.0))
         margin = int(shadow_px * 3 + 4)
-        box = (int(left) - margin, int(top) - margin,
-               int(left + total) + margin + 1, int(top + ascent + descent) + margin + 1)
+        box = (
+            int(left) - margin,
+            int(top) - margin,
+            int(left + total) + margin + 1,
+            int(top + ascent + descent) + margin + 1,
+        )
         layer = Image.new("RGBA", (box[2] - box[0], box[3] - box[1]), (0, 0, 0, 0))
         mask = Image.new("L", layer.size, 0)
         draw = ImageDraw.Draw(mask)
-        for ch, start in zip(text, starts):
+        for ch, start in zip(text, starts, strict=False):
             draw.text((left - box[0] + start, top - box[1]), ch, font=font, fill=255)
         if shadow_px > 0 and style.get("shadow"):
             from PIL import ImageFilter
 
             ink = parse_color(style["shadow"], self.overlay.style)
             halo = mask.filter(ImageFilter.MaxFilter(3)).filter(
-                ImageFilter.GaussianBlur(shadow_px))
+                ImageFilter.GaussianBlur(shadow_px)
+            )
             plate = Image.new("RGBA", layer.size, (*ink, 0))
             shadow_alpha = alpha * float(style.get("shadow_opacity", 0.7))
             plate.putalpha(halo.point(lambda v: int(min(255, v * 1.6) * shadow_alpha)))
@@ -1340,12 +1456,17 @@ class Renderer:
         plate.putalpha(mask.point(lambda v: int(v * opacity)))
         layer = Image.alpha_composite(layer, plate)
         # Paste with clipping: the label may sit partly outside the frame.
-        dest = (max(0, box[0]), max(0, box[1]),
-                min(self.width, box[2]), min(self.height, box[3]))
+        dest = (
+            max(0, box[0]),
+            max(0, box[1]),
+            min(self.width, box[2]),
+            min(self.height, box[3]),
+        )
         if dest[2] <= dest[0] or dest[3] <= dest[1]:
             return
-        crop = layer.crop((dest[0] - box[0], dest[1] - box[1],
-                           dest[2] - box[0], dest[3] - box[1]))
+        crop = layer.crop(
+            (dest[0] - box[0], dest[1] - box[1], dest[2] - box[0], dest[3] - box[1])
+        )
         region = canvas.crop(dest)
         canvas.paste(Image.alpha_composite(region, crop), dest[:2])
 
@@ -1388,11 +1509,26 @@ def iter_frames(renderer: Renderer, first: int, last: int) -> Iterable[bytes]:
 def encode_alpha(renderer: Renderer, out: Path, first: int, last: int) -> None:
     """Write the overlay alone as ProRes 4444 with alpha."""
     cmd = [
-        "ffmpeg", "-y", "-v", "error",
-        "-f", "rawvideo", "-pix_fmt", "rgba",
-        "-s", f"{renderer.width}x{renderer.height}",
-        "-r", f"{renderer.track.fps:g}", "-i", "-",
-        "-c:v", "prores_ks", "-profile:v", "4444", "-pix_fmt", "yuva444p10le",
+        "ffmpeg",
+        "-y",
+        "-v",
+        "error",
+        "-f",
+        "rawvideo",
+        "-pix_fmt",
+        "rgba",
+        "-s",
+        f"{renderer.width}x{renderer.height}",
+        "-r",
+        f"{renderer.track.fps:g}",
+        "-i",
+        "-",
+        "-c:v",
+        "prores_ks",
+        "-profile:v",
+        "4444",
+        "-pix_fmt",
+        "yuva444p10le",
         str(out),
     ]
     _pipe(cmd, iter_frames(renderer, first, last))
@@ -1401,15 +1537,36 @@ def encode_alpha(renderer: Renderer, out: Path, first: int, last: int) -> None:
 def composite(renderer: Renderer, clip: Path, out: Path, crf: int = 16) -> None:
     """Burn the overlay into a copy of the clip (audio passes through)."""
     cmd = [
-        "ffmpeg", "-y", "-v", "error",
-        "-i", str(clip),
-        "-f", "rawvideo", "-pix_fmt", "rgba",
-        "-s", f"{renderer.width}x{renderer.height}",
-        "-r", f"{renderer.track.fps:g}", "-i", "-",
-        "-filter_complex", "[0:v][1:v]overlay=0:0:format=auto:eof_action=pass,format=yuv420p[v]",
-        "-map", "[v]", "-map", "0:a?",
-        "-c:v", "libx264", "-preset", "medium", "-crf", str(crf),
-        "-c:a", "copy",
+        "ffmpeg",
+        "-y",
+        "-v",
+        "error",
+        "-i",
+        str(clip),
+        "-f",
+        "rawvideo",
+        "-pix_fmt",
+        "rgba",
+        "-s",
+        f"{renderer.width}x{renderer.height}",
+        "-r",
+        f"{renderer.track.fps:g}",
+        "-i",
+        "-",
+        "-filter_complex",
+        "[0:v][1:v]overlay=0:0:format=auto:eof_action=pass,format=yuv420p[v]",
+        "-map",
+        "[v]",
+        "-map",
+        "0:a?",
+        "-c:v",
+        "libx264",
+        "-preset",
+        "medium",
+        "-crf",
+        str(crf),
+        "-c:a",
+        "copy",
         str(out),
     ]
     _pipe(cmd, iter_frames(renderer, 0, len(renderer.track.frames) - 1))
@@ -1427,8 +1584,13 @@ def _pipe(cmd: list[str], frames: Iterable[bytes]) -> None:
         raise SystemExit(f"ffmpeg failed: {' '.join(cmd)}")
 
 
-def build_renderer(clip: Path, overlay: dict, style: dict | None = None,
-                   width: int | None = None, height: int | None = None) -> Renderer:
+def build_renderer(
+    clip: Path,
+    overlay: dict,
+    style: dict | None = None,
+    width: int | None = None,
+    height: int | None = None,
+) -> Renderer:
     track_path, terrain_path = companions(clip)
     track = CameraTrack.load(track_path)
     terrain = Terrain.load(terrain_path) if terrain_path else Terrain.flat()
@@ -1437,19 +1599,36 @@ def build_renderer(clip: Path, overlay: dict, style: dict | None = None,
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--clip", type=Path, required=True,
-                        help="an arena clip with its .camera.jsonl beside it")
-    parser.add_argument("--overlay", type=Path, required=True,
-                        help="the overlay description (JSON)")
-    parser.add_argument("--style", type=Path,
-                        help="a style JSON (the series graphics package) to inject")
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument(
+        "--clip",
+        type=Path,
+        required=True,
+        help="an arena clip with its .camera.jsonl beside it",
+    )
+    parser.add_argument(
+        "--overlay", type=Path, required=True, help="the overlay description (JSON)"
+    )
+    parser.add_argument(
+        "--style",
+        type=Path,
+        help="a style JSON (the series graphics package) to inject",
+    )
     parser.add_argument("--out", type=Path, help="the clip with the overlay burned in")
     parser.add_argument("--alpha-out", type=Path, help="the overlay alone, ProRes 4444")
-    parser.add_argument("--frames", metavar="DIR", type=Path,
-                        help="also write RGBA PNGs of every --stills frame here")
-    parser.add_argument("--stills", type=str, default="",
-                        help="comma-separated frame numbers for --frames")
+    parser.add_argument(
+        "--frames",
+        metavar="DIR",
+        type=Path,
+        help="also write RGBA PNGs of every --stills frame here",
+    )
+    parser.add_argument(
+        "--stills",
+        type=str,
+        default="",
+        help="comma-separated frame numbers for --frames",
+    )
     args = parser.parse_args(argv)
 
     renderer = build_renderer(args.clip, load_json(args.overlay), load_json(args.style))

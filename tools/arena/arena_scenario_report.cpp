@@ -424,9 +424,9 @@ auto ArenaScenarioRunner::write_artifacts(const QString& directory,
   report_object.insert(QStringLiteral("issues"), issues);
   QJsonArray events;
   for (auto const& event : m_impl->report.events) {
-    events.append(QJsonObject{{QStringLiteral("event"), event.name},
-                              {QStringLiteral("at"),
-                               static_cast<double>(event.time_seconds)}});
+    events.append(
+        QJsonObject{{QStringLiteral("event"), event.name},
+                    {QStringLiteral("at"), static_cast<double>(event.time_seconds)}});
   }
   report_object.insert(QStringLiteral("events"), events);
   report_object.insert(

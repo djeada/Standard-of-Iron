@@ -38,13 +38,13 @@ GL context, so it runs anywhere.
 
 Outputs land in `<out>/<spec id>/`:
 
-| File | What it is |
-| --- | --- |
-| `<id>.mp4` / `<id>.mov` | The clip. H.264 CRF 10 by default; `--codec prores` writes ProRes 422 HQ 10-bit for the edit. |
-| `timeline.json` | Resolved timing: route window and every stop's progress and arrival time, marker/label/stamp/region in and out times, army keys with resolved times, the camera keys, warnings. |
-| `overlays.json` | Per frame, in output pixels (origin top-left): the route head, every marker, label and stamp with its alpha, and every army counter with its anchor position and values. |
-| `frames/frame_NNNNNN.png` | Only with `--frames`. |
-| `stills/still_TTT.TT.png` | Only with `--stills`. |
+| File                      | What it is                                                                                                                                                                      |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `<id>.mp4` / `<id>.mov`   | The clip. H.264 CRF 10 by default; `--codec prores` writes ProRes 422 HQ 10-bit for the edit.                                                                                   |
+| `timeline.json`           | Resolved timing: route window and every stop's progress and arrival time, marker/label/stamp/region in and out times, army keys with resolved times, the camera keys, warnings. |
+| `overlays.json`           | Per frame, in output pixels (origin top-left): the route head, every marker, label and stamp with its alpha, and every army counter with its anchor position and values.        |
+| `frames/frame_NNNNNN.png` | Only with `--frames`.                                                                                                                                                           |
+| `stills/still_TTT.TT.png` | Only with `--stills`.                                                                                                                                                           |
 
 Other switches: `--start`/`--end` (seconds) render a slice, written as
 `<id>_fFFFFFF-EEEEEE.mp4` and `overlays_fFFFFFF-EEEEEE.json` (first frame,
@@ -92,22 +92,22 @@ specs (`docs/PROMO_CAPTURE.md`): `time`, `ease` (`linear`, `smooth`, `in`,
 
 ### Output
 
-| Field | Default | Meaning |
-| --- | --- | --- |
-| `id`, `title` | required, id | Output directory name and a human title. |
-| `width`, `height` | 1920, 1080 | Output size. |
-| `fps` | 30 | Frame rate. |
-| `supersample` | 1 | Internal render scale, 1-4. The frame is rendered at `width*s x height*s` (the map's own 4x MSAA on top) and box-filtered down. |
-| `duration` | 10 | Seconds. |
-| `reference_height` | 1080 | Every pixel size in the spec (route width, text size, rim width) is authored at this height and scaled to the render, so a 720p proxy and the 4K take frame identically. |
-| `terrain_height_scale` | 0.10 | Relief exaggeration. The campaign screen uses 0.085 seen almost straight down; the heightmap is noisy, so oblique film angles read better lower (the shipped spec uses 0.055). |
-| `drape_radius` | 0.008 | The route, its head, markers and the camera target sit on the terrain heights averaged over this radius (UV), so the line follows the relief without zigzagging over every ridge. |
-| `borders` | false | The game's province border lines. Off: they are gameplay borders, and the regions are lit explicitly. |
-| `forbid_world_edge` | false | Fail (exit 5) if the edge of the map's land is ever in frame; see below. |
-| `province_fills` / `province_fill_alpha` | false / 0.6 | The campaign screen's owner tint per province. Off by default: the film lights regions explicitly. |
-| `symbols` | true | The map's city and mountain glyphs. |
-| `game_route` | false | The campaign screen's eight mission lines. Off: they are the game's route, not the historical march. |
-| `burn_text` | true | Draw names, labels and stamps into the frame. |
+| Field                                    | Default      | Meaning                                                                                                                                                                           |
+| ---------------------------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`, `title`                            | required, id | Output directory name and a human title.                                                                                                                                          |
+| `width`, `height`                        | 1920, 1080   | Output size.                                                                                                                                                                      |
+| `fps`                                    | 30           | Frame rate.                                                                                                                                                                       |
+| `supersample`                            | 1            | Internal render scale, 1-4. The frame is rendered at `width*s x height*s` (the map's own 4x MSAA on top) and box-filtered down.                                                   |
+| `duration`                               | 10           | Seconds.                                                                                                                                                                          |
+| `reference_height`                       | 1080         | Every pixel size in the spec (route width, text size, rim width) is authored at this height and scaled to the render, so a 720p proxy and the 4K take frame identically.          |
+| `terrain_height_scale`                   | 0.10         | Relief exaggeration. The campaign screen uses 0.085 seen almost straight down; the heightmap is noisy, so oblique film angles read better lower (the shipped spec uses 0.055).    |
+| `drape_radius`                           | 0.008        | The route, its head, markers and the camera target sit on the terrain heights averaged over this radius (UV), so the line follows the relief without zigzagging over every ridge. |
+| `borders`                                | false        | The game's province border lines. Off: they are gameplay borders, and the regions are lit explicitly.                                                                             |
+| `forbid_world_edge`                      | false        | Fail (exit 5) if the edge of the map's land is ever in frame; see below.                                                                                                          |
+| `province_fills` / `province_fill_alpha` | false / 0.6  | The campaign screen's owner tint per province. Off by default: the film lights regions explicitly.                                                                                |
+| `symbols`                                | true         | The map's city and mountain glyphs.                                                                                                                                               |
+| `game_route`                             | false        | The campaign screen's eight mission lines. Off: they are the game's route, not the historical march.                                                                              |
+| `burn_text`                              | true         | Draw names, labels and stamps into the frame.                                                                                                                                     |
 
 ### Camera keys (orbit, pan, zoom, tilt)
 
@@ -268,17 +268,17 @@ exported, not drawn.
 
 ## Source map
 
-| Concern | Source |
-| --- | --- |
-| Film CLI, render loop, encoder, outputs | `tools/campaign_film/main.cpp` |
-| Spec schema, timeline, camera spline, route timing | `tools/campaign_film/campaign_film_spec.{h,cpp}` |
-| Labels, markers, stamps | `tools/campaign_film/campaign_film_overlay.{h,cpp}` |
-| Route geometry, camera projection, frame state | `ui/campaign_route_path.h` |
-| Terrain heights for draping and projection | `ui/campaign_map_film.{h,cpp}` |
-| Film rendering in the map renderer | `ui/campaign_map_view.cpp` (`render_film`) |
-| The march | `tools/map_pipeline/hannibal_path.py` → `assets/campaign_map/hannibal_path.json` |
-| Region catalogue | `tools/campaign_film/regions.json` |
-| Tests | `tests/tools/campaign_film_spec_test.cpp`, `tests/scripts/test_hannibal_march.py` |
+| Concern                                            | Source                                                                            |
+| -------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Film CLI, render loop, encoder, outputs            | `tools/campaign_film/main.cpp`                                                    |
+| Spec schema, timeline, camera spline, route timing | `tools/campaign_film/campaign_film_spec.{h,cpp}`                                  |
+| Labels, markers, stamps                            | `tools/campaign_film/campaign_film_overlay.{h,cpp}`                               |
+| Route geometry, camera projection, frame state     | `ui/campaign_route_path.h`                                                        |
+| Terrain heights for draping and projection         | `ui/campaign_map_film.{h,cpp}`                                                    |
+| Film rendering in the map renderer                 | `ui/campaign_map_view.cpp` (`render_film`)                                        |
+| The march                                          | `tools/map_pipeline/hannibal_path.py` → `assets/campaign_map/hannibal_path.json`  |
+| Region catalogue                                   | `tools/campaign_film/regions.json`                                                |
+| Tests                                              | `tests/tools/campaign_film_spec_test.cpp`, `tests/scripts/test_hannibal_march.py` |
 
 The campaign screen never sets a film state, so the in-game map renders exactly
 as before; the film path is a separate branch of the renderer.

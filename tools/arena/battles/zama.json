@@ -12,10 +12,7 @@
     "distance": 320,
     "tilt": 50,
     "yaw": 270,
-    "focus": [
-      -10,
-      -110
-    ]
+    "focus": [-10, -110]
   },
   "terrain": {
     "map": "assets/maps/map_battle_zama.json"
@@ -41,20 +38,13 @@
           "deployment": {
             "shape": "multi_line",
             "lines": 3,
-            "split": [
-              0.4,
-              0.4,
-              0.2
-            ],
+            "split": [0.4, 0.4, 0.2],
             "ranks": 2,
             "line_gap": 10,
             "lanes": 6,
             "lane_width": 12,
             "stagger": false,
-            "center": [
-              90,
-              -110
-            ]
+            "center": [90, -110]
           },
           "formation": "triplex_acies"
         },
@@ -161,10 +151,7 @@
           "historical": 80,
           "deployment": {
             "shape": "line",
-            "center": [
-              -60,
-              -110
-            ],
+            "center": [-60, -110],
             "file_spacing": 22
           }
         },
@@ -322,10 +309,7 @@
         },
         {
           "type": "attack",
-          "groups": [
-            "roman_lines",
-            "scipio"
-          ],
+          "groups": ["roman_lines", "scipio"],
           "target": "mercenaries"
         },
         {
@@ -358,10 +342,7 @@
         },
         {
           "type": "attack",
-          "groups": [
-            "veterans",
-            "hannibal"
-          ],
+          "groups": ["veterans", "hannibal"],
           "target": "roman_lines"
         }
       ]
@@ -382,11 +363,7 @@
         },
         {
           "type": "attack",
-          "groups": [
-            "masinissa_horse",
-            "masinissa",
-            "laelius"
-          ],
+          "groups": ["masinissa_horse", "masinissa", "laelius"],
           "target": "veterans"
         }
       ]

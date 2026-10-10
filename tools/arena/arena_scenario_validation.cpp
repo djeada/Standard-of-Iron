@@ -194,9 +194,9 @@ auto validate_scenario(const ArenaScenarioDefinition& definition)
     }
     fog_bank_ids.insert(bank.id);
     if (bank.radius <= 0.0F || bank.ceiling < 0.0F) {
-      errors.push_back(
-          {field, QStringLiteral("fog bank radius must be positive and ceiling "
-                                 "non-negative")});
+      errors.push_back({field,
+                        QStringLiteral("fog bank radius must be positive and ceiling "
+                                       "non-negative")});
     }
   }
   for (std::size_t c = 0; c < definition.weather_script.changes.size(); ++c) {
@@ -260,15 +260,15 @@ auto validate_scenario(const ArenaScenarioDefinition& definition)
     }
     if (step.trigger.kind == ScenarioTriggerKind::StepExecuted &&
         !step_names.contains(step.trigger.step)) {
-      errors.push_back({field + QStringLiteral(".trigger.step"),
-                        QStringLiteral("unknown step reference '%1'")
-                            .arg(step.trigger.step)});
+      errors.push_back(
+          {field + QStringLiteral(".trigger.step"),
+           QStringLiteral("unknown step reference '%1'").arg(step.trigger.step)});
     }
     if (!step.trigger.after_step.isEmpty() &&
         !step_names.contains(step.trigger.after_step)) {
-      errors.push_back({field + QStringLiteral(".trigger.after_step"),
-                        QStringLiteral("unknown step reference '%1'")
-                            .arg(step.trigger.after_step)});
+      errors.push_back(
+          {field + QStringLiteral(".trigger.after_step"),
+           QStringLiteral("unknown step reference '%1'").arg(step.trigger.after_step)});
     }
     if (step.trigger.kind == ScenarioTriggerKind::GroupStrengthBelow &&
         (step.trigger.threshold <= 0.0F || step.trigger.threshold > 1.0F)) {
@@ -276,12 +276,11 @@ auto validate_scenario(const ArenaScenarioDefinition& definition)
                         QStringLiteral("strength threshold must be in (0, 1]")});
     }
     if (step.command == ScenarioCommandKind::SetWeather &&
-        (step.weather_change < 0 ||
-         static_cast<std::size_t>(step.weather_change) >=
-             definition.weather_script.changes.size())) {
-      errors.push_back({field + QStringLiteral(".weather_change"),
-                        QStringLiteral("unknown weather change %1")
-                            .arg(step.weather_change)});
+        (step.weather_change < 0 || static_cast<std::size_t>(step.weather_change) >=
+                                        definition.weather_script.changes.size())) {
+      errors.push_back(
+          {field + QStringLiteral(".weather_change"),
+           QStringLiteral("unknown weather change %1").arg(step.weather_change)});
     }
     if (step.trigger.kind == ScenarioTriggerKind::FirstContact ||
         step.trigger.kind == ScenarioTriggerKind::GroupsWithinDistance) {

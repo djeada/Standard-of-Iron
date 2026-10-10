@@ -133,8 +133,10 @@ vec3 ford_amount(vec2 point) {
     float along_dist = abs(dot(local, along));
     float across_dist = abs(dot(local, across));
     float amount =
-        (1.0 - smoothstep(u_ford_b[index].x - 2.5, u_ford_b[index].x + 0.5, along_dist)) *
-        (1.0 - smoothstep(u_ford_b[index].y - 0.5, u_ford_b[index].y + 0.5, across_dist));
+        (1.0 -
+         smoothstep(u_ford_b[index].x - 2.5, u_ford_b[index].x + 0.5, along_dist)) *
+        (1.0 -
+         smoothstep(u_ford_b[index].y - 0.5, u_ford_b[index].y + 0.5, across_dist));
     if (amount > result.x) {
       result = vec3(amount, along);
     }
@@ -193,9 +195,9 @@ void main() {
   if (ford_mix > 0.0) {
     float pebbles = fbm(world_pos.xz * 1.9 + vec2(3.1, -7.4));
     float bars = fbm(world_pos.xz * 0.21 + vec2(-11.0, 4.0));
-    vec3 gravel = mix(shallow_bed, max(u_soil_color, vec3(0.03)) * vec3(0.92, 0.90, 0.80),
-                      0.35) *
-                  (0.82 + 0.32 * pebbles);
+    vec3 gravel =
+        mix(shallow_bed, max(u_soil_color, vec3(0.03)) * vec3(0.92, 0.90, 0.80), 0.35) *
+        (0.82 + 0.32 * pebbles);
     vec3 ford_water = mix(gravel, shallow_water, 0.40 + 0.18 * bars);
     body_color = mix(body_color, ford_water, ford_mix * 0.62);
   }
@@ -232,8 +234,8 @@ void main() {
     float sparkle = fbm(world_pos.xz * 2.4 + vec2(time * 0.35, -time * 0.21));
     riffle = ford_mix * smoothstep(0.56, 0.84, bands) * (0.55 + 0.45 * sparkle);
   }
-  float foam = saturate(shore_foam + crest * mix(0.010, 0.022, river_energy) +
-                        riffle * 0.16);
+  float foam =
+      saturate(shore_foam + crest * mix(0.010, 0.022, river_energy) + riffle * 0.16);
   color = mix(color, vec3(0.76, 0.86, 0.84) * water_lighting, foam);
 
   color = apply_visibility_world_shading(color, world_pos.xz);
