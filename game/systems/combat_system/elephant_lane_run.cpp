@@ -53,7 +53,7 @@ auto is_line_band(BattleBand band) -> bool {
 auto formation_of(Engine::Core::World& world,
                   const Engine::Core::Entity& member) -> const ArmyFormation* {
   const auto* membership =
-      member.get_component<Engine::Core::ArmyFormationMembershipComponent>();
+      world.try_get<Engine::Core::ArmyFormationMembershipComponent>(member.get_id());
   if (membership == nullptr || !membership->is_valid()) {
     return nullptr;
   }
@@ -65,8 +65,10 @@ auto formation_of(Engine::Core::World& world,
   return formation;
 }
 
-auto elephant_radius(const Engine::Core::Entity& elephant) -> float {
-  const auto* movement = elephant.get_component<Engine::Core::MovementComponent>();
+auto elephant_radius(const Engine::Core::World& world,
+                     const Engine::Core::Entity& elephant) -> float {
+  const auto* movement =
+      world.try_get<Engine::Core::MovementComponent>(elephant.get_id());
   float const clearance =
       movement != nullptr ? movement->get_navigation_clearance() : 0.0F;
   return std::max(k_min_elephant_radius, clearance);
@@ -144,8 +146,9 @@ auto elephant_lane_goal(Engine::Core::World& world,
                         Engine::Core::Entity& elephant,
                         const Engine::Core::Entity* target)
     -> std::optional<QVector3D> {
-  auto* state = elephant.get_component<Engine::Core::ElephantComponent>();
-  const auto* transform = elephant.get_component<Engine::Core::TransformComponent>();
+  auto* state = world.try_get<Engine::Core::ElephantComponent>(elephant.get_id());
+  const auto* transform =
+      world.try_get<Engine::Core::TransformComponent>(elephant.get_id());
   if (state == nullptr || transform == nullptr) {
     return std::nullopt;
   }
@@ -201,7 +204,7 @@ auto elephant_lane_goal(Engine::Core::World& world,
     return std::nullopt;
   }
 
-  float const radius = elephant_radius(elephant);
+  float const radius = elephant_radius(world, elephant);
   auto const lanes = clear_lanes(blocks, radius);
   if (lanes.empty()) {
     state->lane_running = false;
@@ -243,8 +246,11 @@ void steer_down_lane(Engine::Core::Entity& elephant,
     return;
   }
   movement->clear_structure_approach_target();
+  const auto* registry = elephant.registry();
   if (const auto* transform =
-          elephant.get_component<Engine::Core::TransformComponent>()) {
+          registry != nullptr
+              ? registry->try_get<Engine::Core::TransformComponent>(elephant.get_id())
+              : nullptr) {
     QVector3D const here(transform->position.x, 0.0F, transform->position.z);
     if ((here - goal).lengthSquared() <= 1.0F) {
       return;

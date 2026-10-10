@@ -195,7 +195,10 @@ auto calculate_tactical_damage_multiplier(Engine::Core::Entity* attacker,
           ? target_registry->try_get<Engine::Core::WadingComponent>(target->get_id())
           : nullptr;
   bool const ranged_attack =
-      is_ranged_mode(attacker->get_component<Engine::Core::AttackComponent>());
+      is_ranged_mode(attacker_registry != nullptr
+                         ? attacker_registry->try_get<Engine::Core::AttackComponent>(
+                               attacker->get_id())
+                         : nullptr);
   if (attacker_wading != nullptr || target_wading != nullptr) {
     multiplier *=
         FordRules::damage_multiplier(attacker_wading, target_wading, ranged_attack);

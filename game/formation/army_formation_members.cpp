@@ -2,6 +2,7 @@
 #include <cmath>
 #include <unordered_map>
 
+#include "../core/ambient_session.h"
 #include "../core/component_core.h"
 #include "../core/entity.h"
 #include "../core/world.h"
@@ -105,8 +106,9 @@ auto ArmyFormationPlanner::collect_members(Engine::Core::World& world,
       member.heavy = !movement->get_can_enter_forest();
     }
     member.doctrine = doctrine_for_entity(world, id);
+    const auto* nations = Game::Session::services_for(world).nations;
     const auto* nation =
-        Game::Systems::NationRegistry::instance().get_nation(unit->nation_id);
+        nations != nullptr ? nations->get_nation(unit->nation_id) : nullptr;
     member.allied = nation != nullptr && !nation->playable;
     members.push_back(member);
   }

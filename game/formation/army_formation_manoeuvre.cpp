@@ -5,6 +5,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include "../core/ambient_session.h"
 #include "../core/component_combat.h"
 #include "../core/component_core.h"
 #include "../core/component_gameplay.h"
@@ -193,13 +194,16 @@ void advance_crescent(Engine::Core::World& world,
 auto enemy_elephant_near(Engine::Core::World& world,
                          const ArmyFormation& formation) -> bool {
   int const owner = owner_of(world, formation);
-  auto const& owners = Game::Systems::OwnerRegistry::instance();
+  auto const* owners = Game::Session::services_for(world).owners;
+  if (owners == nullptr) {
+    return false;
+  }
   float const reach_sq = k_lane_alarm_distance * k_lane_alarm_distance;
   for (auto const id : world.entities_with<Engine::Core::ElephantComponent>()) {
     const auto* unit = world.try_get<Engine::Core::UnitComponent>(id);
     const auto* transform = world.try_get<Engine::Core::TransformComponent>(id);
     if (unit == nullptr || transform == nullptr || unit->health <= 0 ||
-        !owners.are_enemies(owner, unit->owner_id)) {
+        !owners->are_enemies(owner, unit->owner_id)) {
       continue;
     }
     QVector3D const at = ground(*transform);
@@ -333,7 +337,11 @@ auto give_ground_velocity(const ArmyFormation& formation,
   if (slot == nullptr || slot->band != BattleBand::CrescentCentre) {
     return {};
   }
-  const auto* transform = entity.get_component<Engine::Core::TransformComponent>();
+  const auto* registry = entity.registry();
+  const auto* transform =
+      registry != nullptr
+          ? registry->try_get<Engine::Core::TransformComponent>(entity.get_id())
+          : nullptr;
   if (transform == nullptr) {
     return {};
   }

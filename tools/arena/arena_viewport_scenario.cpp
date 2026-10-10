@@ -904,7 +904,8 @@ auto ArenaViewport::scenario_group_samples(const Arena::Promo::GroupExport& sele
       if (entity == nullptr || !Engine::Core::is_live_entity(*entity)) {
         continue;
       }
-      auto const* transform = entity->get_component<Engine::Core::TransformComponent>();
+      auto const* transform =
+          m_world->try_get<Engine::Core::TransformComponent>(entity_id);
       if (transform == nullptr) {
         continue;
       }

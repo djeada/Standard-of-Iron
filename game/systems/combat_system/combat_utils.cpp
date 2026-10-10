@@ -673,9 +673,11 @@ auto suppresses_opportunistic_combat(Engine::Core::Entity* unit) -> bool {
 }
 
 auto runs_an_open_lane(const Engine::Core::Entity* entity) -> bool {
-  const auto* elephant = entity != nullptr
-                             ? entity->get_component<Engine::Core::ElephantComponent>()
-                             : nullptr;
+  const auto* registry = entity != nullptr ? entity->registry() : nullptr;
+  const auto* elephant =
+      registry != nullptr
+          ? registry->try_get<Engine::Core::ElephantComponent>(entity->get_id())
+          : nullptr;
   return elephant != nullptr &&
          (elephant->lane_running || elephant->lane_run_out_seconds > 0.0F);
 }

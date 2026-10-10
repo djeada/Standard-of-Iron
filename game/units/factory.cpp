@@ -50,7 +50,7 @@ auto owner_has_living_commander(Engine::Core::World& world, int owner_id) -> boo
     // Historical cameos serve beside an owner's commander and never occupy the
     // owner's single commander slot.
     if (const auto* commander =
-            entity->get_component<Engine::Core::CommanderComponent>();
+            world.try_get<Engine::Core::CommanderComponent>(entity->get_id());
         commander != nullptr && is_historical_commander_id(commander->commander_id)) {
       continue;
     }

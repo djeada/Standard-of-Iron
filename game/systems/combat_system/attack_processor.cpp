@@ -207,7 +207,7 @@ void select_ordered_target(const Attacker& attacker,
     return;
   }
 
-  if (attacker.entity->has_component<Engine::Core::ElephantComponent>()) {
+  if (ctx.world->has<Engine::Core::ElephantComponent>(attacker.entity->get_id())) {
     if (auto const lane = elephant_lane_goal(*ctx.world, *attacker.entity, target)) {
       steer_down_lane(*attacker.entity, *lane, ctx.chase_move_intents);
       return;

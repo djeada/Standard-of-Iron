@@ -127,13 +127,16 @@ auto formation_navigation_speed(const Engine::Core::Entity& entity,
   if (!std::isfinite(speed) || speed <= 0.0F) {
     speed = max_navigation_speed(unit, nullptr);
   }
+  auto const* registry = entity.registry();
   // An elephant charging down an open lane runs at its charge pace.
-  if (const auto* elephant = entity.get_component<Engine::Core::ElephantComponent>();
+  if (const auto* elephant =
+          registry != nullptr
+              ? registry->try_get<Engine::Core::ElephantComponent>(entity.get_id())
+              : nullptr;
       elephant != nullptr &&
       (elephant->lane_running || elephant->lane_run_out_seconds > 0.0F)) {
     speed *= elephant->charge_speed_multiplier;
   }
-  auto const* registry = entity.registry();
   auto const* wading =
       registry != nullptr
           ? registry->try_get<Engine::Core::WadingComponent>(entity.get_id())

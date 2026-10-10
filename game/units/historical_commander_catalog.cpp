@@ -563,13 +563,15 @@ auto historical_commander_troop_for_nation(const CommanderDefinition& definition
 auto apply_historical_commander(Engine::Core::Entity& entity,
                                 std::string_view commander_id) -> bool {
   const auto* definition = historical_commander_definition(commander_id);
-  if (definition == nullptr ||
-      entity.get_component<Engine::Core::CommanderComponent>() == nullptr) {
+  auto* registry = entity.registry();
+  if (definition == nullptr || registry == nullptr ||
+      !registry->has<Engine::Core::CommanderComponent>(entity.get_id())) {
     return false;
   }
   configure_commander_component(entity, *definition);
   if (!definition->renderer_id.empty()) {
-    if (auto* renderable = entity.get_component<Engine::Core::RenderableComponent>()) {
+    if (auto* renderable =
+            registry->try_get<Engine::Core::RenderableComponent>(entity.get_id())) {
       renderable->renderer_id = definition->renderer_id;
     }
   }
