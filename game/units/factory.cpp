@@ -65,7 +65,9 @@ auto owner_has_living_commander(Engine::Core::World& world, int owner_id) -> boo
 auto resolve_historical_spawn(const SpawnParams& params,
                               SpawnType requested) -> SpawnType {
   const auto* definition = historical_commander_definition(params.commander_id);
-  if (definition == nullptr) {
+  const auto requested_troop = spawn_typeToTroopType(requested);
+  if (definition == nullptr || !requested_troop.has_value() ||
+      !is_commander_troop(*requested_troop)) {
     return requested;
   }
   return spawn_typeFromTroopType(

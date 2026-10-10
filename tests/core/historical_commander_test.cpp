@@ -392,6 +392,17 @@ TEST_F(HistoricalCommanderSpawnTest, UnknownCameoIdSpawnsThePlainCommander) {
             "roman_veteran_consul");
 }
 
+TEST_F(HistoricalCommanderSpawnTest, CameoIdNeverPromotesARankAndFileSoldier) {
+  auto* soldier = spawn(Game::Units::SpawnType::Swordsman,
+                        1,
+                        NationID::RomanRepublic,
+                        "roman_terentius_varro");
+  ASSERT_NE(soldier, nullptr);
+  EXPECT_EQ(soldier->get_component<Engine::Core::UnitComponent>()->spawn_type,
+            Game::Units::SpawnType::Swordsman);
+  EXPECT_EQ(soldier->get_component<Engine::Core::CommanderComponent>(), nullptr);
+}
+
 TEST(HistoricalCommanderMapTest, BriefingNamesTheCameoLeadingAForce) {
   Game::Map::MapDefinition map;
   Game::Map::UnitSpawn hannibal;
