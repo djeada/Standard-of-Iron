@@ -158,8 +158,8 @@ auto straw_role_colors(const void* variant_void,
 
   const auto& variant = *static_cast<const HumanoidVariant*>(variant_void);
   const float bleach = 0.88F + (variant.pattern_seed * 0.22F);
-  out[base_count] = QVector3D(0.79F, 0.66F, 0.36F) * bleach;
-  out[base_count + 1U] = QVector3D(0.61F, 0.48F, 0.24F) * bleach;
+  out[base_count] = QVector3D(0.79F, 0.70F, 0.47F) * bleach;
+  out[base_count + 1U] = QVector3D(0.61F, 0.52F, 0.34F) * bleach;
   return base_count + k_straw_role_count;
 }
 

@@ -33,21 +33,21 @@ void register_farm_renderer_variant(EntityRendererRegistry& registry,
                                     const FarmRendererConfig& config);
 
 struct FarmFieldPalette {
-  QVector3D soil{0.36F, 0.25F, 0.15F};
-  QVector3D soil_dark{0.24F, 0.16F, 0.10F};
-  QVector3D soil_light{0.47F, 0.34F, 0.21F};
-  QVector3D sprout{0.42F, 0.66F, 0.24F};
-  QVector3D leaf{0.34F, 0.58F, 0.20F};
-  QVector3D leaf_dark{0.24F, 0.42F, 0.15F};
-  QVector3D stalk_green{0.55F, 0.66F, 0.26F};
-  QVector3D stalk_gold{0.87F, 0.80F, 0.51F};
-  QVector3D stalk_gold_dark{0.65F, 0.57F, 0.32F};
-  QVector3D head_green{0.58F, 0.66F, 0.29F};
-  QVector3D head_gold{0.91F, 0.75F, 0.36F};
-  QVector3D head_gold_light{0.98F, 0.88F, 0.56F};
-  QVector3D head_gold_dark{0.69F, 0.54F, 0.26F};
-  QVector3D awn{0.94F, 0.87F, 0.62F};
-  QVector3D stubble{0.74F, 0.62F, 0.34F};
+  QVector3D soil{0.34F, 0.27F, 0.19F};
+  QVector3D soil_dark{0.24F, 0.19F, 0.14F};
+  QVector3D soil_light{0.43F, 0.35F, 0.25F};
+  QVector3D sprout{0.39F, 0.56F, 0.27F};
+  QVector3D leaf{0.35F, 0.49F, 0.24F};
+  QVector3D leaf_dark{0.26F, 0.37F, 0.19F};
+  QVector3D stalk_green{0.51F, 0.58F, 0.32F};
+  QVector3D stalk_gold{0.78F, 0.71F, 0.48F};
+  QVector3D stalk_gold_dark{0.59F, 0.52F, 0.34F};
+  QVector3D head_green{0.55F, 0.60F, 0.34F};
+  QVector3D head_gold{0.82F, 0.72F, 0.45F};
+  QVector3D head_gold_light{0.91F, 0.83F, 0.59F};
+  QVector3D head_gold_dark{0.65F, 0.55F, 0.34F};
+  QVector3D awn{0.88F, 0.81F, 0.59F};
+  QVector3D stubble{0.70F, 0.61F, 0.41F};
   QVector3D ash{0.16F, 0.14F, 0.12F};
 };
 

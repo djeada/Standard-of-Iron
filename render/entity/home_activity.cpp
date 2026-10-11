@@ -660,8 +660,8 @@ void submit_cloth(const DrawContext& ctx,
   const float time = ctx.animation_time;
   const float breeze = k_tau * roll(seed, 1U);
   const float strength = 0.6F + (0.7F * roll(seed, 2U));
-  const float gust_rate = 0.31F + (0.20F * roll(seed, 3U));
-  const float flutter_rate = 1.15F + (0.35F * roll(seed, 4U));
+  const float gust_rate = 0.09F + (0.07F * roll(seed, 3U));
+  const float flutter_rate = 0.45F + (0.18F * roll(seed, 4U));
   const auto& strip = cloth_strip_archetype(anchor.cloth_indigo);
   const auto& tail = cloth_strip_tail_archetype(anchor.cloth_indigo);
   for (int i = 0; i < k_cloth_strips; ++i) {
@@ -669,12 +669,12 @@ void submit_cloth(const DrawContext& ctx,
     const float across = ((fi / (k_cloth_strips - 1)) - 0.5F) * anchor.cloth_span;
 
     const float gust =
-        0.5F + (0.5F * std::sin((time * gust_rate * k_tau) + breeze - (fi * 0.55F)));
-    const float lift = strength * (2.2F + (6.0F * gust * gust));
-    const float wave = std::sin((time * flutter_rate * k_tau) + breeze + (fi * 0.9F));
+        0.5F + (0.5F * std::sin((time * gust_rate * k_tau) + breeze - (fi * 0.10F)));
+    const float lift = strength * (0.9F + (3.4F * gust * gust));
+    const float wave = std::sin((time * flutter_rate * k_tau) + breeze + (fi * 0.22F));
 
     const float lag =
-        std::sin((time * flutter_rate * k_tau) + breeze + (fi * 0.9F) - 1.1F);
+        std::sin((time * flutter_rate * k_tau) + breeze + (fi * 0.22F) - 0.75F);
     const float upper = wave * lift;
     const float lower = (lag * lift * 1.35F) + (upper * 0.35F);
 
@@ -773,7 +773,7 @@ void submit_laundry(const DrawContext& ctx,
       1 + (static_cast<int>(roll(seed, 2U) * 3.0F) % std::max(1, anchor.max_laundry));
   const float time = ctx.animation_time;
   const float breeze = k_tau * roll(seed, 3U);
-  const float gust_rate = 0.27F + (0.18F * roll(seed, 4U));
+  const float gust_rate = 0.10F + (0.07F * roll(seed, 4U));
   for (int i = 0; i < pieces; ++i) {
     const auto piece = mix(seed + (static_cast<std::uint32_t>(i) * 977U));
 
@@ -796,10 +796,9 @@ void submit_laundry(const DrawContext& ctx,
         static_cast<int>(roll(piece, 5U) * static_cast<float>(k_laundry_colours));
     const float gust =
         0.5F + (0.5F * std::sin((time * gust_rate * k_tau) + breeze - (slot * 1.8F)));
-    const float sway =
-        std::sin((time * 1.05F * k_tau * (0.9F + (0.2F * roll(piece, 6U)))) + breeze +
-                 (slot * 2.4F)) *
-        (3.0F + (7.0F * gust));
+    const float sway = std::sin((time * 0.44F * k_tau * std::sqrt(0.28F / height)) +
+                                breeze + (slot * 2.4F)) *
+                       (1.5F + (4.5F * gust));
     auto model = ctx.model;
     model.translate(anchor.line_a + (axis * at));
     model.rotate(turn);

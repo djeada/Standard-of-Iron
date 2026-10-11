@@ -102,8 +102,8 @@ auto build_tower_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
     const bool even = (i % 2) == 0;
     desc.add_cylinder(QVector3D(0.0F, y0, 0.0F),
                       QVector3D(0.0F, y0 + course_height + 0.005F, 0.0F),
-                      even ? shaft_radius : shaft_radius * 0.985F,
-                      even ? c.limestone : c.limestone_shade);
+                      even ? shaft_radius : shaft_radius * 0.995F,
+                      weathered(c.limestone, i + 31, 0.045F));
   }
 
   for (const float angle : {0.0F, 1.5708F, 3.1416F, 4.7124F}) {
@@ -132,16 +132,16 @@ auto build_tower_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
           desc.add_box(centre, half, col, BuildingStateMask::All);
         },
         belt_low - 0.28F,
-        shaft_radius * 0.94F,
-        QVector3D(0.045F, 0.17F, 0.05F),
+        shaft_radius - 0.008F,
+        QVector3D(0.035F, 0.17F, 0.012F),
         c.limestone_dark * 0.45F);
     add_embrasures(
         [&desc](const QVector3D& centre, const QVector3D& half, const QVector3D& col) {
           desc.add_box(centre, half, col, BuildingStateMask::All);
         },
         belt_high + 0.26F,
-        shaft_radius * 0.90F,
-        QVector3D(0.04F, 0.13F, 0.05F),
+        shaft_radius - 0.008F,
+        QVector3D(0.032F, 0.13F, 0.012F),
         c.limestone_dark * 0.45F);
   }
 

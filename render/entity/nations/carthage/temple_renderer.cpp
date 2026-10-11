@@ -265,12 +265,12 @@ void add_cavetto_cornice(BuildingArchetypeDesc& desc,
   constexpr int k_flares = 4;
   for (int flare = 0; flare < k_flares; ++flare) {
     float const t = static_cast<float>(flare) / (k_flares - 1);
-    float const grow = 0.030F + (0.098F * t * t);
+    float const grow = 0.026F + (0.080F * t * t);
     desc.add_box(QVector3D(k_shrine_x,
                            cornice_y + 0.072F + (0.040F * static_cast<float>(flare)),
                            0.0F),
                  QVector3D(k_shrine_half_x + grow, 0.021F, k_shrine_half_z + grow),
-                 (flare % 2 == 0) ? c.sandstone : c.sandstone_light,
+                 c.sandstone * (0.98F + 0.06F * t),
                  k_building_state_mask_intact);
   }
 

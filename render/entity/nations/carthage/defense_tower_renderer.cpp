@@ -103,17 +103,17 @@ auto build_tower_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
     const float core_top_y = 0.52F + core_half_y * 2.0F;
     for (float y = 0.86F; y < core_top_y - 0.10F; y += 0.32F) {
       desc.add_box(QVector3D(0.0F, y, 0.0F),
-                   QVector3D(core_half + 0.006F, 0.011F, core_half + 0.006F),
-                   c.stone_base * 0.86F);
+                   QVector3D(core_half + 0.004F, 0.005F, core_half + 0.004F),
+                   c.stone_base * 0.95F);
     }
     if (!destroyed) {
       for (const float side : {-1.0F, 1.0F}) {
         desc.add_box(QVector3D(0.0F, 1.03F, side * (core_half + 0.025F)),
-                     QVector3D(core_half + 0.035F, 0.035F, 0.035F),
+                     QVector3D(core_half + 0.035F, 0.022F, 0.025F),
                      c.brick,
                      k_building_state_mask_intact);
         desc.add_box(QVector3D(side * (core_half + 0.025F), 1.03F, 0.0F),
-                     QVector3D(0.035F, 0.035F, core_half + 0.035F),
+                     QVector3D(0.025F, 0.022F, core_half + 0.035F),
                      c.brick,
                      k_building_state_mask_intact);
       }

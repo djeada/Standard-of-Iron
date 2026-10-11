@@ -28,7 +28,7 @@ void main() {
   float wind = clamp(u_wind_strength, 0.0, 1.35);
 
   float attached = smoothstep(0.015, 0.16, u);
-  float free_edge = attached * pow(u, 0.72);
+  float free_edge = attached * pow(u, 1.15);
   float free_edge_sq = free_edge * free_edge;
   float gust = 0.66 + 0.34 * sin(u_time * 0.43 + spatial_phase * 0.73);
   float gust_clock = u_time * 0.37 + banner_seed * 11.0;
@@ -38,19 +38,21 @@ void main() {
   float gust_b = soi_hash12_9f6e8e(vec2(gust_cell + 1.0, banner_seed));
   gust += (mix(gust_a, gust_b, gust_blend) - 0.5) * 0.16;
 
-  float primary_phase = u_time * 1.85 + u * 5.4 + v * 1.25 + spatial_phase;
-  float cross_phase = u_time * 3.65 + u * 10.8 - v * 4.1 + spatial_phase * 1.7;
-  float flutter_phase = u_time * 7.4 + u * 18.0 + v * 7.0 + spatial_phase * 2.3;
+  // Waves travel from the fastening toward the free hem.
+  float primary_phase = -u_time * 1.45 + u * 5.4 + v * 1.25 + spatial_phase;
+  float cross_phase = -u_time * 2.85 + u * 10.8 - v * 4.1 + spatial_phase * 1.7;
+  float flutter_phase = -u_time * 6.1 + u * 18.0 + v * 7.0 + spatial_phase * 2.3;
 
-  float primary_amp = wind * gust * free_edge * mix(0.055, 0.145, u);
-  float cross_amp = wind * free_edge * (0.020 + free_edge_sq * 0.030);
-  float flutter_amp = wind * free_edge_sq * 0.014;
+  float primary_amp = wind * gust * free_edge * mix(0.040, 0.110, u);
+  float cross_amp = wind * gust * free_edge * (0.012 + free_edge_sq * 0.018);
+  float flutter_amp = wind * gust * free_edge_sq * 0.008;
   float billow = sin(primary_phase) * primary_amp + sin(cross_phase) * cross_amp +
                  sin(flutter_phase) * flutter_amp;
 
   float lower_weight = smoothstep(0.38, 1.0, v);
-  float sag = wind * free_edge * (0.009 + lower_weight * 0.018);
-  float vertical_flutter = sin(cross_phase + 1.25) * wind * free_edge_sq * 0.012;
+  // Cloth retains its weight in still air; a gust lifts it slightly.
+  float sag = free_edge * (0.018 + lower_weight * 0.022) / (1.0 + wind * gust);
+  float vertical_flutter = sin(cross_phase + 1.25) * wind * gust * free_edge_sq * 0.007;
 
   pos.y += billow;
   pos.z += sag + vertical_flutter;

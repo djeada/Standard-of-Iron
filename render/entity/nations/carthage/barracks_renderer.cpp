@@ -218,6 +218,7 @@ void add_slit_x_face(BuildingArchetypeDesc& desc,
 }
 
 void add_keep(BuildingArchetypeDesc& desc, const CarthagePalette& c, const Heights& h) {
+  BuildingPartMaterial const masonry(desc, k_building_material_stone);
   const float cz = mid(k_keep_z0, k_keep_z1);
   const float hz = half(k_keep_z0, k_keep_z1);
 
@@ -249,7 +250,7 @@ void add_keep(BuildingArchetypeDesc& desc, const CarthagePalette& c, const Heigh
       c.plaster,
       k_mask_intact);
   desc.add_box(QVector3D(0.0F, k_keep_ashlar_top + 0.05F, cz),
-               QVector3D(k_keep_hx + 0.012F, 0.03F, hz + 0.012F),
+               QVector3D(k_keep_hx + 0.008F, 0.022F, hz + 0.008F),
                c.indigo,
                k_mask_intact);
   desc.add_box(QVector3D(0.0F, k_keep_ashlar_top + 0.012F, cz),
@@ -265,8 +266,8 @@ void add_keep(BuildingArchetypeDesc& desc, const CarthagePalette& c, const Heigh
                c.sandstone_dark,
                k_mask_intact);
   desc.add_box(QVector3D(0.0F, h.keep - 0.024F, cz),
-               QVector3D(k_keep_hx + 0.080F, 0.032F, hz + 0.080F),
-               c.sandstone_dark,
+               QVector3D(k_keep_hx + 0.060F, 0.032F, hz + 0.060F),
+               c.sandstone,
                k_mask_intact);
   desc.add_box(QVector3D(0.0F, h.keep + 0.02F, cz),
                QVector3D(k_keep_hx - 0.06F, 0.02F, hz - 0.06F),

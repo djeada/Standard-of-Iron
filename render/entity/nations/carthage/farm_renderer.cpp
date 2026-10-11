@@ -30,14 +30,14 @@ struct CarthageFarmPalette {
   QVector3D basalt{0.24F, 0.23F, 0.22F};
   QVector3D palm_wood = BuildingPalette::k_wood;
   QVector3D palm_dark = BuildingPalette::k_wood_dark;
-  QVector3D thatch{0.70F, 0.56F, 0.30F};
-  QVector3D thatch_dark{0.50F, 0.39F, 0.21F};
+  QVector3D thatch{0.70F, 0.60F, 0.40F};
+  QVector3D thatch_dark{0.50F, 0.42F, 0.28F};
   QVector3D indigo = BuildingPalette::k_indigo;
   QVector3D oxblood = BuildingPalette::k_oxblood;
   QVector3D clay{0.63F, 0.40F, 0.24F};
   QVector3D clay_band{0.32F, 0.15F, 0.10F};
   QVector3D sack{0.72F, 0.62F, 0.44F};
-  QVector3D straw{0.78F, 0.64F, 0.32F};
+  QVector3D straw{0.77F, 0.67F, 0.43F};
   QVector3D water{0.14F, 0.29F, 0.32F};
 };
 
@@ -154,7 +154,7 @@ void add_storehouse(BuildingArchetypeDesc& desc, const CarthageFarmPalette& c) {
 
   for (const float x : {-0.18F, 0.0F, 0.18F}) {
     desc.add_box(centre + QVector3D(x, roof_y + 0.063F, 0.0F),
-                 QVector3D(0.025F, 0.012F, k_half_z + 0.04F),
+                 QVector3D(0.016F, 0.009F, k_half_z + 0.04F),
                  c.palm_dark,
                  k_building_state_mask_intact);
   }
@@ -187,12 +187,13 @@ void add_storehouse(BuildingArchetypeDesc& desc, const CarthageFarmPalette& c) {
         centre + QVector3D(-k_half_x - 0.10F + 0.13F * t, 0.09F + (roof_y)*t, 0.02F);
     desc.add_cylinder(rung + QVector3D(0.0F, 0.0F, -0.04F),
                       rung + QVector3D(0.0F, 0.0F, 0.04F),
-                      0.008F,
+                      0.0045F,
                       c.palm_dark,
                       k_building_state_mask_intact);
   }
 
   for (int i = 0; i < 4; ++i) {
+    BuildingPartMaterial const pottery(desc, k_building_material_ceramic);
     float const x = centre.x() - k_half_x + 0.05F + static_cast<float>(i) * 0.115F;
     QVector3D const base(x, 0.09F, centre.z() + k_half_z + 0.11F);
     desc.add_cylinder(base,
@@ -341,9 +342,9 @@ auto build_farm_desc_impl(BuildingState state, int stage) -> BuildingArchetypeDe
   BuildingArchetypeDesc desc("carthage_farm_stage_" + std::to_string(stage));
 
   FarmFieldPalette field_palette;
-  field_palette.soil = QVector3D(0.46F, 0.33F, 0.19F);
-  field_palette.soil_dark = QVector3D(0.32F, 0.22F, 0.13F);
-  field_palette.soil_light = QVector3D(0.58F, 0.44F, 0.26F);
+  field_palette.soil = QVector3D(0.43F, 0.35F, 0.24F);
+  field_palette.soil_dark = QVector3D(0.31F, 0.25F, 0.17F);
+  field_palette.soil_light = QVector3D(0.53F, 0.44F, 0.31F);
   add_farm_field(desc,
                  FarmFieldSpec{.center = QVector3D(-0.08F, 0.0F, -0.22F),
                                .half_x = 0.80F,

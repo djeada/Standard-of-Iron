@@ -145,12 +145,12 @@ auto build_home_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
                  c.plaster,
                  k_building_state_mask_intact);
     desc.add_box(QVector3D(0.0F, parapet_y + 0.11F, side * 0.96F),
-                 QVector3D(1.02F, 0.025F, 0.065F),
+                 QVector3D(1.02F, 0.016F, 0.065F),
                  c.stone_light,
                  k_building_state_mask_intact);
 
     desc.add_box(QVector3D(side * 0.96F, parapet_y + 0.11F, 0.0F),
-                 QVector3D(0.065F, 0.025F, 0.895F),
+                 QVector3D(0.065F, 0.016F, 0.895F),
                  c.stone_light,
                  k_building_state_mask_intact);
   }
@@ -172,7 +172,7 @@ auto build_home_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
                    FacadeBox{.normal = FacadeNormal::PlusZ,
                              .surface = k_front_wall_face,
                              .layer = BuildingDepth::k_trim,
-                             .thickness = 0.16F,
+                             .thickness = 0.10F,
                              .center = QVector3D(0.0F, 0.92F, 0.0F),
                              .half_size = QVector3D(0.36F, 0.05F, 0.0F)},
                    c.stone_light,
@@ -185,7 +185,7 @@ auto build_home_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
                    FacadeBox{.normal = FacadeNormal::PlusZ,
                              .surface = k_front_wall_face,
                              .layer = BuildingDepth::k_trim,
-                             .thickness = 0.14F,
+                             .thickness = 0.09F,
                              .center = QVector3D(side * 0.34F, 0.535F, 0.0F),
                              .half_size = QVector3D(0.04F, 0.335F, 0.0F)},
                    c.stone_light,

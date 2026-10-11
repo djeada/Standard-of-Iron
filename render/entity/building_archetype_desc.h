@@ -125,6 +125,7 @@ private:
 };
 
 inline constexpr int k_building_material_stone = 5;
+inline constexpr int k_building_material_plant = 6;
 inline constexpr int k_building_material_metal = 1;
 inline constexpr int k_building_material_wood = 2;
 inline constexpr int k_building_material_cloth = 3;

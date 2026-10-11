@@ -95,7 +95,9 @@ void submit_brazier(ISubmitter& out,
   const float phase = hash01(seed) * k_tau;
   for (int tongue = 0; tongue < 3; ++tongue) {
     const float offset_angle = phase + static_cast<float>(tongue) * 2.1F;
-    const float flick = 0.78F + 0.22F * std::sin(time * (7.3F + tongue) + offset_angle);
+    const float flick = 0.84F +
+                        0.11F * std::sin(time * (6.7F + tongue) + offset_angle) +
+                        0.05F * std::sin(time * 11.3F + offset_angle * 1.7F);
     const QVector3D base =
         bowl + up * 0.05F +
         QVector3D(std::cos(offset_angle), 0.0F, std::sin(offset_angle)) * 0.04F;
@@ -103,7 +105,7 @@ void submit_brazier(ISubmitter& out,
         base + up * (0.30F * flick * burn) +
         QVector3D(std::sin(time * 2.9F + offset_angle), 0.0F, 0.0F) * 0.03F;
     out.mesh(unit_cone,
-             Render::Geom::cone_from_to(base, tip, 0.075F),
+             Render::Geom::cone_from_to(base, tip, 0.060F * (1.10F - 0.15F * flick)),
              tongue == 0 ? k_flame_inner : k_flame_outer,
              nullptr,
              1.0F);
@@ -113,7 +115,8 @@ void submit_brazier(ISubmitter& out,
   light.color = k_firelight;
   light.radius = 7.0F;
   light.intensity =
-      (0.35F + 1.05F * night) * (0.9F + 0.1F * std::sin(time * 8.3F + phase));
+      (0.35F + 1.05F * night) * (0.94F + 0.04F * std::sin(time * 6.7F + phase) +
+                                 0.02F * std::sin(time * 11.3F + phase * 1.7F));
   out.local_light(light);
 }
 
@@ -202,9 +205,10 @@ void submit_building_torches(const DrawContext& ctx,
     }
     const std::uint32_t seed = owner * 2654435761U + index * 40503U;
     const float phase = hash01(seed) * k_tau;
-    const float flicker = 0.80F + (0.12F * std::sin((time * 9.1F) + phase)) +
-                          (0.08F * std::sin((time * 23.7F) + (phase * 1.7F)));
-    const float sway = 0.018F * std::sin((time * 3.3F) + phase);
+    const float flicker = 0.88F + (0.08F * std::sin((time * 7.1F) + phase)) +
+                          (0.04F * std::sin((time * 13.7F) + (phase * 1.7F)));
+    const float sway = 0.012F * std::sin((time * 2.7F) + phase) +
+                       0.004F * std::sin((time * 6.1F) + (phase * 1.3F));
     const QVector3D side = QVector3D::crossProduct(up, outward).normalized();
     const QVector3D tip_drift = side * sway + outward * 0.012F;
 
