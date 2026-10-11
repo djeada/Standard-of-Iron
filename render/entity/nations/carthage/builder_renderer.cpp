@@ -1017,6 +1017,10 @@ auto carthage_civilian_variant_table()
 
 } // namespace
 
+void ensure_civilian_equipment_registered() {
+  ensure_carthage_civilian_equipment_contributions_registered();
+}
+
 void register_builder_style(const std::string& nation_id,
                             const BuilderStyleConfig& style) {
   style_registry()[nation_id] = style;

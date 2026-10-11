@@ -358,6 +358,105 @@ auto iberian_tunic_archetype() -> const RenderArchetype& {
   return archetype;
 }
 
+constexpr int k_skirt_columns = 24;
+constexpr int k_skirt_rows = 12;
+constexpr float k_skirt_waist_r = 0.165F;
+constexpr float k_skirt_hem_r = 0.300F;
+constexpr float k_skirt_depth = 0.84F;
+constexpr float k_skirt_thickness = 0.004F;
+
+struct SkirtFit {
+  QVector3D waist;
+  float hem_y{0.0F};
+};
+
+auto skirt_fit() -> SkirtFit {
+  auto const palette = Render::Humanoid::humanoid_bind_palette();
+  QVector3D const pelvis =
+      palette[static_cast<std::size_t>(HumanoidBone::Pelvis)].column(3).toVector3D();
+  QVector3D const foot_l =
+      palette[static_cast<std::size_t>(HumanoidBone::FootL)].column(3).toVector3D();
+  QVector3D const foot_r =
+      palette[static_cast<std::size_t>(HumanoidBone::FootR)].column(3).toVector3D();
+  return {pelvis + QVector3D(0.0F, 0.07F, 0.0F),
+          std::min(foot_l.y(), foot_r.y()) + 0.07F};
+}
+
+auto skirt_radius(float v) -> float {
+  float const flare = std::pow(v, 0.75F);
+  return k_skirt_waist_r + ((k_skirt_hem_r - k_skirt_waist_r) * flare);
+}
+
+auto make_stola_skirt_mesh() -> std::unique_ptr<Mesh> {
+  SkirtFit const fit = skirt_fit();
+  SheetGrid grid;
+  grid.columns = k_skirt_columns;
+  grid.rows = k_skirt_rows;
+  for (int row = 0; row < grid.rows; ++row) {
+    float const v = static_cast<float>(row) / static_cast<float>(grid.rows - 1);
+    float const y = fit.waist.y() + ((fit.hem_y - fit.waist.y()) * v);
+    float const r = skirt_radius(v);
+    for (int col = 0; col < grid.columns; ++col) {
+      float const u = static_cast<float>(col) / static_cast<float>(grid.columns - 1);
+      float const angle = u * 2.0F * std::numbers::pi_v<float>;
+      float const fold = 1.0F + (0.035F * v * std::sin(angle * 9.0F));
+      grid.positions.emplace_back(fit.waist.x() + (r * fold * std::sin(angle)),
+                                  y,
+                                  fit.waist.z() +
+                                      (r * fold * k_skirt_depth * std::cos(angle)));
+      grid.uvs.emplace_back(u, v);
+    }
+  }
+  return make_thick_sheet_mesh(grid, true, k_skirt_thickness);
+}
+
+auto stola_skirt_mesh() -> Mesh* {
+  return SharedGeometryCache::instance().get_or_build(
+      geometry_key("equipment/garments/stola_skirt"),
+      [] { return make_stola_skirt_mesh(); });
+}
+
+auto stola_skirt_archetype() -> const RenderArchetype& {
+  static const RenderArchetype archetype = [] {
+    SkirtFit const fit = skirt_fit();
+    RenderArchetypeBuilder builder{"stola_skirt"};
+    builder.add_palette_mesh(
+        stola_skirt_mesh(), QMatrix4x4{}, k_tunic_slot, nullptr, 1.0F, 1);
+    QVector3D const hem(fit.waist.x(), fit.hem_y, fit.waist.z());
+    QMatrix4x4 band;
+    band.translate(hem + QVector3D(0.0F, 0.022F, 0.0F));
+    band.scale(k_skirt_hem_r * 1.02F, 0.022F, k_skirt_hem_r * k_skirt_depth * 1.02F);
+    builder.add_palette_mesh(
+        get_unit_cylinder(), band, k_accent_slot, nullptr, 1.0F, 1);
+    return std::move(builder).build();
+  }();
+  return archetype;
+}
+
+auto stola_body_archetype() -> const RenderArchetype& {
+  static const RenderArchetype archetype = [] {
+    TunicFit const& f = tunic_fit();
+    RenderArchetypeBuilder builder{"stola_body"};
+    add_tunic_body(builder, f);
+    builder.add_palette_mesh(get_unit_cylinder(),
+                             ring_at(f, f.top - f.up * 0.010F, 0.012F, 0.80F, 0.98F),
+                             k_accent_slot,
+                             nullptr,
+                             1.0F,
+                             1);
+    QVector3D const girdle = f.bottom + ((f.top - f.bottom) * 0.42F);
+    builder.add_palette_mesh(
+        get_unit_cylinder(),
+        ring_at(f, girdle, 0.012F, k_tunic_radius * 1.03F, k_tunic_depth * 1.05F),
+        k_belt_slot,
+        nullptr,
+        1.0F,
+        1);
+    return std::move(builder).build();
+  }();
+  return archetype;
+}
+
 auto hem_band_archetype(bool left) -> RenderArchetype {
   HumanoidBone const hip = left ? HumanoidBone::HipL : HumanoidBone::HipR;
   HumanoidBone const knee = left ? HumanoidBone::KneeL : HumanoidBone::KneeR;
@@ -465,6 +564,33 @@ auto iberian_hem_band_make_static_attachment(bool left, std::uint8_t crimson_rol
   });
   spec.palette_role_remap[0] = crimson_role_byte;
   return spec;
+}
+
+auto stola_fill_role_colors(const HumanoidPalette& palette,
+                            QVector3D* out,
+                            std::size_t max) -> std::uint32_t {
+  if (max < k_allied_tunic_role_count) {
+    return 0;
+  }
+  out[k_tunic_slot] = palette.cloth;
+  out[k_accent_slot] =
+      saturate_color(palette.cloth * 0.55F + QVector3D(0.30F, 0.22F, 0.08F));
+  out[k_belt_slot] = QVector3D(0.72F, 0.56F, 0.28F);
+  out[k_ornament_slot] = QVector3D(0.80F, 0.62F, 0.32F);
+  return k_allied_tunic_role_count;
+}
+
+auto stola_make_static_attachments(std::uint8_t base_role_byte)
+    -> std::vector<Render::Creature::StaticAttachmentSpec> {
+  auto skirt = Render::Equipment::build_static_attachment({
+      .archetype = &stola_skirt_archetype(),
+      .socket_bone_index = static_cast<std::uint16_t>(HumanoidBone::Pelvis),
+  });
+  for (std::uint8_t i = 0; i < static_cast<std::uint8_t>(k_allied_tunic_role_count);
+       ++i) {
+    skirt.palette_role_remap[i] = static_cast<std::uint8_t>(base_role_byte + i);
+  }
+  return {tunic_static_attachment(stola_body_archetype(), base_role_byte), skirt};
 }
 
 } // namespace Render::GL

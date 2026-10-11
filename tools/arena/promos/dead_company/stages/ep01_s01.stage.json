@@ -1,0 +1,68 @@
+{
+ "id": "dead_company_ep01_s01",
+ "label": "The Dead Company 1: s01",
+ "duration": 40,
+ "hour": 5.25,
+ "exposure": 0.95,
+ "include": [
+  "camp.set.json"
+ ],
+ "actors": [
+  {
+   "name": "sentry_a",
+   "look": "troops/roman/camp_rest_armed",
+   "at": [
+    -14.5,
+    0.5
+   ],
+   "facing": 90
+  },
+  {
+   "name": "sentry_b",
+   "look": "troops/roman/camp_rest_armed",
+   "at": [
+    0.5,
+    -13.5
+   ],
+   "facing": 0
+  },
+  {
+   "name": "felix",
+   "look": "felix",
+   "at": [
+    -0.5,
+    9.5
+   ],
+   "facing": -90
+  }
+ ],
+ "steps": [
+  {
+   "t": 0.5,
+   "do": "walk",
+   "who": "sentry_a",
+   "to": [
+    14.5,
+    0.5
+   ]
+  },
+  {
+   "t": 1.0,
+   "do": "walk",
+   "who": "sentry_b",
+   "to": [
+    0.5,
+    13.5
+   ]
+  },
+  {
+   "t": 2.5,
+   "do": "walk",
+   "who": "felix",
+   "to": [
+    -6.5,
+    13.5
+   ]
+  }
+ ]
+}

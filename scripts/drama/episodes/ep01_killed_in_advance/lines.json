@@ -1,0 +1,1076 @@
+{
+ "schema": "soi-drama-lines/1",
+ "episode": "ep01",
+ "title": "Killed in Advance",
+ "cast": {
+  "felix": {
+   "name": "Felix",
+   "voice": "am_fenrir",
+   "speed": 1.08
+  },
+  "livia": {
+   "name": "Livia",
+   "voice": "bf_emma",
+   "speed": 1.0
+  },
+  "tiro": {
+   "name": "Tiro",
+   "voice": "am_eric",
+   "speed": 1.04
+  },
+  "bostar": {
+   "name": "Bostar",
+   "voice": "am_onyx",
+   "speed": 0.92
+  },
+  "severus": {
+   "name": "Severus",
+   "voice": "bm_george",
+   "speed": 0.9
+  },
+  "sentry": {
+   "name": "Sentry",
+   "voice": "am_liam",
+   "speed": 1.0
+  },
+  "guard_two": {
+   "name": "Guard",
+   "voice": "bm_daniel",
+   "speed": 1.05
+  },
+  "decimus": {
+   "name": "Decimus",
+   "voice": "bm_lewis",
+   "speed": 1.0
+  },
+  "tentmate": {
+   "name": "Tentmate",
+   "voice": "am_michael",
+   "speed": 0.9
+  }
+ },
+ "pronounce": {
+  "Severus": "s\u0259v\u02c8\u026a\u0279\u0259s",
+  "hastatus": "h\u00e6st\u02c8\u0251t\u0259s",
+  "Sextilis": "s\u025bkst\u02c8il\u026as",
+  "Herennius": "h\u026a\u0279\u02c8\u025bni\u0259s",
+  "Aelius": "\u02c8ili\u0259s",
+  "Ariminum": "\u0259\u0279\u02c8\u026am\u026an\u0259m",
+  "librarius": "l\u026ab\u0279\u02c8\u0251\u0279i\u0259s"
+ },
+ "scenes": [
+  {
+   "id": "s02",
+   "title": "Pay tent",
+   "lines": [
+    {
+     "id": "s02_01",
+     "who": "felix",
+     "text": "Felix, clerk. Hazardous duty allowance.",
+     "speed": 0.95,
+     "direct": "Sly whisper, grinning, very pleased with himself, savouring the words.",
+     "level": "whisper"
+    },
+    {
+     "id": "s02_02",
+     "who": "felix",
+     "text": "Hazardous. The latrines are forty paces closer to the enemy than this tent. I measured.",
+     "direct": "Indignant whisper, mock-offended, then smug: a private joke he finds hilarious.",
+     "level": "whisper"
+    },
+    {
+     "id": "s02_03",
+     "who": "felix",
+     "text": "The quaestor audits at dawn. So by dawn, this never happened. And neither did I.",
+     "direct": "Gleeful conspiratorial whisper, rapid, a thief enjoying the crime.",
+     "level": "whisper"
+    },
+    {
+     "id": "s02_04",
+     "who": "felix",
+     "text": "Returns of the dead.",
+     "direct": "Curious whisper, a little puzzled, reading a label.",
+     "level": "whisper"
+    },
+    {
+     "id": "s02_05",
+     "who": "felix",
+     "text": "Fifth day before the Kalends of Sextilis. That's three days from now.",
+     "direct": "Whispered, slowing down, frowning, the numbers not adding up.",
+     "level": "whisper"
+    },
+    {
+     "id": "s02_06",
+     "who": "felix",
+     "text": "Somebody is very organised.",
+     "direct": "Sarcastic whisper, eyebrows raised, impressed despite himself.",
+     "level": "whisper"
+    },
+    {
+     "id": "s02_07",
+     "who": "felix",
+     "text": "Gaius Petronius, dead. He isn't dead, he owes me eleven asses.",
+     "direct": "Chuckling while he reads, snorting with laughter, delighted.",
+     "level": "quiet"
+    },
+    {
+     "id": "s02_08",
+     "who": "felix",
+     "text": "Bronze ones.",
+     "direct": "Deadpan aside, tiny smug pause before it.",
+     "level": "quiet"
+    },
+    {
+     "id": "s02_09",
+     "who": "felix",
+     "text": "Marcus Calvus, dead. Saw him last night, very much alive, cheating at dice. Aulus. Septimus.",
+     "direct": "Laughing, quick, amused, then the laughter dying away as he reads the next name.",
+     "level": "quiet"
+    },
+    {
+     "id": "s02_10",
+     "who": "felix",
+     "text": "Felix. Librarius.",
+     "speed": 0.85,
+     "direct": "Very slow, every trace of humour gone, a shocked hush, reading his own name.",
+     "level": "quiet"
+    },
+    {
+     "id": "s02_11",
+     "who": "felix",
+     "text": "Killed in the service of the Republic. Pay ceases from this day.",
+     "speed": 0.9,
+     "direct": "Horrified, barely breathing, reading word by word, voice going thin.",
+     "level": "quiet"
+    },
+    {
+     "id": "s02_12",
+     "who": "felix",
+     "text": "They've stopped my pay!",
+     "direct": "EXPLODING with outrage, shouting at full volume, voice cracking with indignation, forgetting he must be quiet.",
+     "level": "shout"
+    },
+    {
+     "id": "s02_13",
+     "who": "sentry",
+     "text": "Who's in there?",
+     "direct": "Sharp suspicious bark from outside: who goes there.",
+     "level": "raised"
+    },
+    {
+     "id": "s02_14",
+     "who": "felix",
+     "text": "Nobody! Clerk. Clerk business.",
+     "direct": "Panicked, squeaky, far too fast, desperately casual.",
+     "level": "raised"
+    },
+    {
+     "id": "s02_15",
+     "who": "sentry",
+     "text": "At this hour?",
+     "direct": "Suspicious and bored, drawn out.",
+     "level": "normal"
+    },
+    {
+     "id": "s02_16",
+     "who": "felix",
+     "text": "I've just found out I'm dead.",
+     "speed": 0.95,
+     "direct": "Hollow and numb, a stunned half-laugh in his voice.",
+     "level": "quiet"
+    },
+    {
+     "id": "s02_17",
+     "who": "sentry",
+     "text": "Sorry for your loss.",
+     "speed": 0.9,
+     "direct": "Awkward, embarrassed, sincere sympathy after a long uncomfortable pause.",
+     "level": "quiet"
+    }
+   ]
+  },
+  {
+   "id": "s03",
+   "title": "Engineers' yard",
+   "lines": [
+    {
+     "id": "s03_01",
+     "who": "felix",
+     "text": "Livia. I need you to look at a document.",
+     "direct": "Breathless and urgent, wheedling, hurrying up to her.",
+     "level": "raised"
+    },
+    {
+     "id": "s03_02",
+     "who": "livia",
+     "text": "No.",
+     "direct": "Flat, instant, utterly unimpressed, without looking up.",
+     "level": "normal"
+    },
+    {
+     "id": "s03_03",
+     "who": "felix",
+     "text": "You haven't seen it.",
+     "direct": "Wounded, pleading, a little whiny.",
+     "level": "normal"
+    },
+    {
+     "id": "s03_04",
+     "who": "livia",
+     "text": "I've seen you. The last document you brought me was a requisition for forty amphorae of wine, signed by a centurion who'd been dead for a year.",
+     "direct": "Withering contempt, slow and dry, relishing the sarcastic punchline.",
+     "level": "normal"
+    },
+    {
+     "id": "s03_05",
+     "who": "felix",
+     "text": "And he would have wanted us to have it.",
+     "direct": "Charming and shameless, a cheeky grin you can hear.",
+     "level": "normal"
+    },
+    {
+     "id": "s03_06",
+     "who": "felix",
+     "text": "Is that safe?",
+     "direct": "Nervous, wary, eyeing the creaking bridge.",
+     "level": "normal"
+    },
+    {
+     "id": "s03_07",
+     "who": "livia",
+     "text": "Safe isn't a measurement. It holds eleven men in step.",
+     "direct": "Pedantic, precise, totally calm, lecturing an idiot.",
+     "level": "normal"
+    },
+    {
+     "id": "s03_08",
+     "who": "felix",
+     "text": "There are twelve on it.",
+     "direct": "Alarmed, counting quickly, voice rising.",
+     "level": "raised"
+    },
+    {
+     "id": "s03_09",
+     "who": "livia",
+     "text": "Yes. I'm finding out.",
+     "direct": "Calm, curious, faintly delighted, like a scientist.",
+     "level": "normal"
+    },
+    {
+     "id": "s03_10",
+     "who": "livia",
+     "text": "Eleven.",
+     "direct": "Flat, matter-of-fact, unbothered, making a note.",
+     "level": "normal"
+    },
+    {
+     "id": "s03_11",
+     "who": "felix",
+     "text": "I'm on a casualty list. I'm due to die in three days. They've stopped my pay.",
+     "direct": "Indignant, rapid-fire, outraged, the pay hurts him most.",
+     "level": "raised"
+    },
+    {
+     "id": "s03_12",
+     "who": "livia",
+     "text": "That's the first honest document you've ever been near.",
+     "direct": "Slow, cutting, dry amusement, savouring the insult.",
+     "level": "normal"
+    },
+    {
+     "id": "s03_13",
+     "who": "tiro",
+     "text": "Clerk Felix!",
+     "direct": "Shouting across the yard, out of breath, very serious and important.",
+     "level": "shout"
+    },
+    {
+     "id": "s03_14",
+     "who": "tiro",
+     "text": "You broke the seal on the returns of the dead. I'm placing you under arrest.",
+     "direct": "Earnest, formal, puffed up with importance, rehearsed.",
+     "level": "raised"
+    },
+    {
+     "id": "s03_15",
+     "who": "felix",
+     "text": "Can you arrest a dead man?",
+     "direct": "Quick, slippery, amused rhetorical question.",
+     "level": "normal"
+    },
+    {
+     "id": "s03_16",
+     "who": "tiro",
+     "text": "I'll have to check.",
+     "speed": 0.95,
+     "direct": "Genuinely confused, slow, thinking hard.",
+     "level": "normal"
+    },
+    {
+     "id": "s03_17",
+     "who": "felix",
+     "text": "While you check. Name?",
+     "direct": "Brisk and smooth, taking charge.",
+     "level": "normal"
+    },
+    {
+     "id": "s03_18",
+     "who": "tiro",
+     "text": "Tiro, hastatus, second maniple, sir.",
+     "direct": "Snapping to attention, loud, proud, parade-ground.",
+     "level": "shout"
+    },
+    {
+     "id": "s03_19",
+     "who": "felix",
+     "text": "Tiro, you're now on special inquiry duty.",
+     "direct": "Grand and pompous, inventing the title on the spot.",
+     "level": "raised"
+    },
+    {
+     "id": "s03_20",
+     "who": "tiro",
+     "text": "Is that a real duty?",
+     "direct": "Hopeful, wide-eyed, sincere, almost reverent.",
+     "level": "normal"
+    },
+    {
+     "id": "s03_21",
+     "who": "felix",
+     "text": "It is now.",
+     "direct": "Smug, quick, final.",
+     "level": "normal"
+    }
+   ]
+  },
+  {
+   "id": "s04",
+   "title": "Workshop tent",
+   "lines": [
+    {
+     "id": "s04_01",
+     "who": "tiro",
+     "text": "Petronius. He's not dead, he was at breakfast. Calvus, alive. Septimus, alive, but he's got a cold. Herennius, alive. He's from Capua, his wife just had twins.",
+     "direct": "Eager and cheerful, rattling off names with pride, faster and faster.",
+     "level": "raised"
+    },
+    {
+     "id": "s04_02",
+     "who": "livia",
+     "text": "You know all of these men?",
+     "direct": "Surprised, quietly impressed despite herself.",
+     "level": "quiet"
+    },
+    {
+     "id": "s04_03",
+     "who": "tiro",
+     "text": "I learn the names. Tribune Severus says a soldier's name is the only property he takes into the ground.",
+     "direct": "Reverent and sincere, quoting his hero with shining pride.",
+     "level": "normal"
+    },
+    {
+     "id": "s04_04",
+     "who": "felix",
+     "text": "Lovely. Very cheering.",
+     "direct": "Dry, sarcastic, deadpan, unimpressed.",
+     "level": "normal"
+    },
+    {
+     "id": "s04_05",
+     "who": "livia",
+     "text": "How many names do you know?",
+     "direct": "Curious, testing him, eyebrows raised.",
+     "level": "normal"
+    },
+    {
+     "id": "s04_06",
+     "who": "tiro",
+     "text": "In the legion? About three thousand.",
+     "direct": "Casual and modest, as if it is nothing at all.",
+     "level": "normal"
+    },
+    {
+     "id": "s04_07",
+     "who": "tiro",
+     "text": "But it's sealed. If it's sealed, it's correct.",
+     "direct": "Stubborn and certain, almost indignant.",
+     "level": "raised"
+    },
+    {
+     "id": "s04_08",
+     "who": "felix",
+     "text": "Tiro, I have four seals in this bag. One of them is the consul's.",
+     "direct": "Patient and amused, as if explaining to a child.",
+     "level": "normal"
+    },
+    {
+     "id": "s04_09",
+     "who": "tiro",
+     "text": "Why?",
+     "direct": "Horrified, high-pitched, scandalised.",
+     "level": "shout"
+    },
+    {
+     "id": "s04_10",
+     "who": "felix",
+     "text": "In case he's busy.",
+     "direct": "Breezy, shrugging, perfectly reasonable.",
+     "level": "normal"
+    },
+    {
+     "id": "s04_11",
+     "who": "livia",
+     "text": "This one isn't yours. It's real wax and a real ring. A tribune's ring.",
+     "direct": "Focused, examining closely, cool and certain, a detective.",
+     "level": "quiet"
+    },
+    {
+     "id": "s04_12",
+     "who": "felix",
+     "text": "Whose?",
+     "direct": "Sharp and quick, suddenly very interested.",
+     "level": "raised"
+    },
+    {
+     "id": "s04_13",
+     "who": "livia",
+     "text": "It's smudged. Someone pressed it in a hurry. And this was written three days ago. Whoever wrote it knew three days ago that these men would die in three days' time.",
+     "direct": "Thoughtful, then grim and slowing down as the horror of the implication lands.",
+     "level": "quiet"
+    },
+    {
+     "id": "s04_14",
+     "who": "livia",
+     "text": "Every name on these lists was transferred in the last ten days. Thirty different centuries. One man here, two men there. Small enough that nobody notices.",
+     "direct": "Cold and methodical, laying out the pattern piece by piece, growing tense.",
+     "level": "normal"
+    },
+    {
+     "id": "s04_15",
+     "who": "felix",
+     "text": "Detached for the road guard. Station: the ninth milestone. The ninth milestone of what?",
+     "direct": "Reading aloud, then baffled and uneasy.",
+     "level": "normal"
+    },
+    {
+     "id": "s04_16",
+     "who": "tiro",
+     "text": "Every road has a name.",
+     "direct": "Earnest and naive.",
+     "level": "normal"
+    },
+    {
+     "id": "s04_17",
+     "who": "livia",
+     "text": "That one doesn't. It runs south-west from the river, past the old tombs. The surveyors left it off the map.",
+     "speed": 0.92,
+     "direct": "Quiet and uneasy, remembering something she would rather not.",
+     "level": "quiet"
+    },
+    {
+     "id": "s04_18",
+     "who": "felix",
+     "text": "How do you know that?",
+     "direct": "Suspicious and quick.",
+     "level": "normal"
+    },
+    {
+     "id": "s04_19",
+     "who": "livia",
+     "text": "I built two gates on it in the spring.",
+     "direct": "Reluctant, quiet, guilty.",
+     "level": "quiet"
+    },
+    {
+     "id": "s04_20",
+     "who": "tiro",
+     "text": "What kind of gates?",
+     "direct": "Curious, innocent.",
+     "level": "normal"
+    },
+    {
+     "id": "s04_21",
+     "who": "livia",
+     "text": "Heavy ones. Oak with iron straps. They swing outward and bar from the outside.",
+     "direct": "Professional, defensive, a little too quick.",
+     "level": "normal"
+    },
+    {
+     "id": "s04_22",
+     "who": "tiro",
+     "text": "Why from the outside?",
+     "direct": "Innocent, puzzled.",
+     "level": "normal"
+    },
+    {
+     "id": "s04_23",
+     "who": "livia",
+     "text": "Cavalry trap. You let the horsemen in, then you shut them in.",
+     "speed": 0.92,
+     "direct": "Hesitant and unconvincing, trying to believe it herself, troubled.",
+     "level": "quiet"
+    },
+    {
+     "id": "s04_24",
+     "who": "felix",
+     "text": "Four hundred and twelve. Four hundred and twelve men, on a road that doesn't exist, about to die in three days.",
+     "direct": "Slow, grim, the weight of it crushing him.",
+     "level": "quiet"
+    },
+    {
+     "id": "s04_25",
+     "who": "felix",
+     "text": "And not one of them is being paid.",
+     "direct": "Suddenly petty and indignant again, comic.",
+     "level": "raised"
+    },
+    {
+     "id": "s04_26",
+     "who": "livia",
+     "text": "Felix.",
+     "direct": "Sharp rebuke, shocked, one word.",
+     "level": "raised"
+    },
+    {
+     "id": "s04_27",
+     "who": "felix",
+     "text": "I'm just saying, somebody is saving a fortune.",
+     "direct": "Defensive, half joking, guilty.",
+     "level": "normal"
+    },
+    {
+     "id": "s04_28",
+     "who": "felix",
+     "text": "No. Somebody's feeding them. Grain for four hundred and twelve, out on the noon convoy. If someone's feeding them, someone's counting them.",
+     "direct": "Realisation, building energy and urgency, clever and excited.",
+     "level": "raised"
+    }
+   ]
+  },
+  {
+   "id": "s05",
+   "title": "Camp gate",
+   "lines": [
+    {
+     "id": "s05_01",
+     "who": "tiro",
+     "text": "That's him. That's Tribune Severus.",
+     "speed": 0.95,
+     "direct": "Awestruck, breathless whisper, star-struck.",
+     "level": "whisper"
+    },
+    {
+     "id": "s05_02",
+     "who": "severus",
+     "text": "Your name, soldier?",
+     "direct": "Kind, calm, tired authority, warm.",
+     "level": "normal"
+    },
+    {
+     "id": "s05_03",
+     "who": "tiro",
+     "text": "Tiro, sir! Second maniple, sir!",
+     "direct": "Far too loud, overeager, nervous, parade-ground.",
+     "level": "shout"
+    },
+    {
+     "id": "s05_04",
+     "who": "severus",
+     "text": "I'll remember it.",
+     "direct": "Gentle and warm but heavy with sadness, meaning more than he says.",
+     "level": "quiet"
+    },
+    {
+     "id": "s05_05",
+     "who": "tiro",
+     "text": "He's going to remember it.",
+     "direct": "Dreamy, glowing with pride, almost giddy.",
+     "level": "quiet"
+    },
+    {
+     "id": "s05_06",
+     "who": "felix",
+     "text": "Lucky you.",
+     "direct": "Dry, flat, unimpressed.",
+     "level": "normal"
+    }
+   ]
+  },
+  {
+   "id": "s06",
+   "title": "Supply road",
+   "lines": [
+    {
+     "id": "s06_01",
+     "who": "guard_two",
+     "text": "Nobody said anything about an auditor.",
+     "direct": "Suspicious, nasal, nit-picking.",
+     "level": "normal"
+    },
+    {
+     "id": "s06_02",
+     "who": "felix",
+     "text": "That's what makes it an audit.",
+     "direct": "Smooth and confident, bluffing.",
+     "level": "normal"
+    },
+    {
+     "id": "s06_03",
+     "who": "guard_two",
+     "text": "And she is?",
+     "direct": "Suspicious.",
+     "level": "normal"
+    },
+    {
+     "id": "s06_04",
+     "who": "felix",
+     "text": "My assistant auditor.",
+     "direct": "Quick bluff.",
+     "level": "normal"
+    },
+    {
+     "id": "s06_05",
+     "who": "livia",
+     "text": "Contractor.",
+     "direct": "Flat correction, dry.",
+     "level": "normal"
+    },
+    {
+     "id": "s06_06",
+     "who": "felix",
+     "text": "Contracted assistant auditor. And this is my bodyguard.",
+     "direct": "Improvising grandly, pompous.",
+     "level": "raised"
+    },
+    {
+     "id": "s06_07",
+     "who": "tiro",
+     "text": "I'm on special inquiry duty.",
+     "direct": "Proud and sincere.",
+     "level": "raised"
+    },
+    {
+     "id": "s06_08",
+     "who": "guard_two",
+     "text": "At the gate you said you were the quartermaster.",
+     "direct": "Narrow-eyed, catching him out, triumphant.",
+     "level": "normal"
+    },
+    {
+     "id": "s06_09",
+     "who": "felix",
+     "text": "I'm the auditor's quartermaster. It's a very large audit.",
+     "direct": "Unruffled, inventing on the spot, a little too fast.",
+     "level": "normal"
+    },
+    {
+     "id": "s06_10",
+     "who": "tiro",
+     "text": "Decimus Aurelius! Third maniple, from Ariminum! Your mother makes the sausages!",
+     "direct": "Overjoyed and loud, recognising an old friend, beaming.",
+     "level": "shout"
+    },
+    {
+     "id": "s06_11",
+     "who": "decimus",
+     "text": "She does!",
+     "direct": "Pleased and baffled, laughing.",
+     "level": "raised"
+    },
+    {
+     "id": "s06_12",
+     "who": "livia",
+     "text": "They're sending the escort too.",
+     "speed": 0.92,
+     "direct": "Shaken whisper, frightened.",
+     "level": "whisper"
+    },
+    {
+     "id": "s06_13",
+     "who": "felix",
+     "text": "Then who's coming back to say what happened?",
+     "speed": 0.95,
+     "direct": "Grim, frightened whisper.",
+     "level": "whisper"
+    },
+    {
+     "id": "s06_14",
+     "who": "guard_two",
+     "text": "Since you're auditing. Sign for the cart.",
+     "direct": "Bored, officious.",
+     "level": "normal"
+    },
+    {
+     "id": "s06_15",
+     "who": "felix",
+     "text": "What did I just sign?",
+     "direct": "Dawning dread, quick.",
+     "level": "normal"
+    },
+    {
+     "id": "s06_16",
+     "who": "guard_two",
+     "text": "Custody. He's yours till the ninth stone.",
+     "direct": "Offhand, bored.",
+     "level": "normal"
+    },
+    {
+     "id": "s06_17",
+     "who": "bostar",
+     "text": "You are the worst conspirators I have ever seen.",
+     "direct": "Dry, amused, unhurried contempt.",
+     "level": "normal"
+    },
+    {
+     "id": "s06_18",
+     "who": "felix",
+     "text": "Nobody asked you.",
+     "direct": "Irritated, snappish.",
+     "level": "raised"
+    },
+    {
+     "id": "s06_19",
+     "who": "bostar",
+     "text": "The tall one counts the carts when she thinks nobody's looking. The boy salutes the oxen.",
+     "direct": "Lazy, mocking, observant, enjoying himself.",
+     "level": "normal"
+    },
+    {
+     "id": "s06_20",
+     "who": "tiro",
+     "text": "I saluted the driver.",
+     "direct": "Wounded, earnest correction.",
+     "level": "raised"
+    },
+    {
+     "id": "s06_21",
+     "who": "bostar",
+     "text": "And you, clerk, sign for things you haven't read. In Carthage we crucify generals who lose battles.",
+     "direct": "Bone dry deadpan, relishing it.",
+     "level": "normal"
+    },
+    {
+     "id": "s06_22",
+     "who": "felix",
+     "text": "Is that supposed to be better?",
+     "direct": "Incredulous.",
+     "level": "raised"
+    },
+    {
+     "id": "s06_23",
+     "who": "bostar",
+     "text": "It's very motivating.",
+     "direct": "Deadpan, serious.",
+     "level": "normal"
+    },
+    {
+     "id": "s06_24",
+     "who": "livia",
+     "text": "For the generals?",
+     "direct": "Sardonic.",
+     "level": "normal"
+    },
+    {
+     "id": "s06_25",
+     "who": "bostar",
+     "text": "For everyone watching.",
+     "direct": "Bone dry, final.",
+     "level": "normal"
+    },
+    {
+     "id": "s06_26",
+     "who": "bostar",
+     "text": "Where did you get this?",
+     "speed": 0.85,
+     "direct": "Suddenly cold and deadly serious, low, all amusement gone.",
+     "level": "quiet"
+    },
+    {
+     "id": "s06_27",
+     "who": "felix",
+     "text": "It's on all of them.",
+     "direct": "Puzzled.",
+     "level": "normal"
+    },
+    {
+     "id": "s06_28",
+     "who": "bostar",
+     "text": "That is not a Roman mark.",
+     "direct": "Low and tense, almost afraid.",
+     "level": "quiet"
+    },
+    {
+     "id": "s06_29",
+     "who": "livia",
+     "text": "What does it mean?",
+     "direct": "Uneasy, quiet.",
+     "level": "quiet"
+    },
+    {
+     "id": "s06_30",
+     "who": "bostar",
+     "text": "It means turn back.",
+     "direct": "Very quiet and ominous, after a pause, a warning.",
+     "level": "whisper"
+    },
+    {
+     "id": "s06_31",
+     "who": "bostar",
+     "text": "Your guards lock things the same way you read them.",
+     "direct": "Dry, faintly mocking, calm.",
+     "level": "normal"
+    },
+    {
+     "id": "s06_32",
+     "who": "felix",
+     "text": "You can't leave. I signed for you!",
+     "direct": "Panicked, high, outraged, squeaking.",
+     "level": "shout"
+    },
+    {
+     "id": "s06_33",
+     "who": "bostar",
+     "text": "Then next time you should read before you sign.",
+     "direct": "Calm, amused, lecturing.",
+     "level": "normal"
+    },
+    {
+     "id": "s06_34",
+     "who": "bostar",
+     "text": "Not in daylight. I leave at dark, and not by that road.",
+     "direct": "Low, serious, a grim warning.",
+     "level": "quiet"
+    }
+   ]
+  },
+  {
+   "id": "s07",
+   "title": "Fork",
+   "lines": [
+    {
+     "id": "s07_01",
+     "who": "felix",
+     "text": "Audit's complete. The prisoner comes back with me for questioning.",
+     "direct": "Smooth, official, bluffing.",
+     "level": "normal"
+    },
+    {
+     "id": "s07_02",
+     "who": "guard_two",
+     "text": "He's all yours. You signed.",
+     "direct": "Relieved, glad to be rid of him.",
+     "level": "normal"
+    },
+    {
+     "id": "s07_03",
+     "who": "tiro",
+     "text": "His mother really does make good sausages.",
+     "speed": 0.9,
+     "direct": "Quiet, wistful, sad, a catch in his voice.",
+     "level": "quiet"
+    }
+   ]
+  },
+  {
+   "id": "s08",
+   "title": "Pay tent, dusk",
+   "lines": [
+    {
+     "id": "s08_01",
+     "who": "felix",
+     "text": "Fourth maniple. Rufus. Sabinus. Quintus.",
+     "speed": 0.95,
+     "direct": "Murmuring while reading, then stopping cold, breath catching on the last name.",
+     "level": "quiet"
+    },
+    {
+     "id": "s08_02",
+     "who": "felix",
+     "text": "Quietest post in Apulia. Guarding an empty road.",
+     "speed": 0.82,
+     "direct": "Barely audible, guilty, haunted, voice breaking.",
+     "level": "whisper"
+    },
+    {
+     "id": "s08_03",
+     "who": "livia",
+     "text": "Anyone else you know?",
+     "direct": "Casual, absent-minded.",
+     "level": "normal"
+    },
+    {
+     "id": "s08_04",
+     "who": "felix",
+     "text": "No.",
+     "speed": 0.9,
+     "direct": "Too quick, a flat lie.",
+     "level": "quiet"
+    }
+   ]
+  },
+  {
+   "id": "s09",
+   "title": "Tent lines",
+   "lines": [
+    {
+     "id": "s09_01",
+     "who": "tentmate",
+     "text": "Quintus? Marched out at noon. Road guard. Lucky sod. No fighting.",
+     "direct": "Sleepy, grumbling, mumbling, half asleep, yawning.",
+     "level": "quiet"
+    }
+   ]
+  },
+  {
+   "id": "s10",
+   "title": "Camp perimeter",
+   "lines": [
+    {
+     "id": "s10_01",
+     "who": "tiro",
+     "text": "Where are you going?",
+     "direct": "Stern sentry challenge, suspicious.",
+     "level": "raised"
+    },
+    {
+     "id": "s10_02",
+     "who": "felix",
+     "text": "To bed.",
+     "direct": "Too casual.",
+     "level": "normal"
+    },
+    {
+     "id": "s10_03",
+     "who": "tiro",
+     "text": "Your tent is the other way.",
+     "direct": "Literal, puzzled.",
+     "level": "normal"
+    },
+    {
+     "id": "s10_04",
+     "who": "felix",
+     "text": "Tiro. If anyone asks, you never saw me tonight.",
+     "speed": 0.95,
+     "direct": "Quiet, serious, intense, urgent.",
+     "level": "quiet"
+    },
+    {
+     "id": "s10_05",
+     "who": "tiro",
+     "text": "But I did see you.",
+     "direct": "Honest, confused.",
+     "level": "normal"
+    },
+    {
+     "id": "s10_06",
+     "who": "felix",
+     "text": "Then lie.",
+     "direct": "Impatient, low.",
+     "level": "quiet"
+    },
+    {
+     "id": "s10_07",
+     "who": "tiro",
+     "text": "I don't know how.",
+     "speed": 0.95,
+     "direct": "Simple and honest, almost apologetic.",
+     "level": "quiet"
+    },
+    {
+     "id": "s10_08",
+     "who": "felix",
+     "text": "Good. Don't learn it from me.",
+     "speed": 0.85,
+     "direct": "Soft, moved, after a long pause, tender.",
+     "level": "whisper"
+    }
+   ]
+  },
+  {
+   "id": "s11",
+   "title": "Nameless road",
+   "lines": [
+    {
+     "id": "s11_01",
+     "who": "felix",
+     "text": "Recall order. Very official. From the consul, who is very busy.",
+     "speed": 0.95,
+     "direct": "Nervous muttering to himself, rehearsing, breath shaky, trying to reassure himself.",
+     "level": "quiet"
+    },
+    {
+     "id": "s11_02",
+     "who": "felix",
+     "text": "Quintus, you idiot. I got you the safest job in the army.",
+     "speed": 0.88,
+     "direct": "Frightened, guilty whisper, voice breaking, close to tears.",
+     "level": "whisper"
+    }
+   ]
+  },
+  {
+   "id": "s12",
+   "title": "Guard post",
+   "lines": [
+    {
+     "id": "s12_01",
+     "who": "felix",
+     "text": "There you are.",
+     "direct": "Relieved, forced cheerfulness, too loud in the silence.",
+     "level": "raised"
+    },
+    {
+     "id": "s12_02",
+     "who": "felix",
+     "text": "Right. Good news. I have a recall order. It's completely genuine. Well, it isn't, but nobody",
+     "speed": 1.05,
+     "direct": "Nervous babble, speeding up, then faltering and trailing off in fear.",
+     "level": "normal"
+    },
+    {
+     "id": "s12_03",
+     "who": "felix",
+     "text": "Quintus?",
+     "speed": 0.8,
+     "direct": "Tiny, terrified whisper, voice shaking.",
+     "level": "whisper"
+    },
+    {
+     "id": "s12_04",
+     "who": "bostar",
+     "text": "Don't step past the stone.",
+     "speed": 0.85,
+     "direct": "Urgent, intense hiss of a whisper, deadly serious.",
+     "level": "whisper"
+    },
+    {
+     "id": "s12_05",
+     "who": "felix",
+     "text": "Those are our men.",
+     "speed": 0.9,
+     "direct": "Shaken, trembling whisper, pleading.",
+     "level": "whisper"
+    },
+    {
+     "id": "s12_06",
+     "who": "bostar",
+     "text": "They were.",
+     "speed": 0.85,
+     "direct": "Very quiet, flat, final, chilling.",
+     "level": "whisper"
+    }
+   ]
+  }
+ ],
+ "voices": {
+  "felix": "A quick-witted, fast-talking man in his late twenties, light baritone, British accent, charming, slightly nasal, a born talker and liar.",
+  "livia": "A sharp, impatient, dryly sarcastic woman in her early thirties, clear alto, crisp British accent, precise engineer's diction.",
+  "tiro": "An earnest, eager young man of nineteen, bright tenor, sincere and wholesome, speaks a little too loudly and too properly.",
+  "bostar": "A quiet, cynical man around thirty, deep low bass voice, North African accent, dry, unhurried, faintly amused.",
+  "severus": "A calm, weary, commanding Roman officer in his mid forties, warm deep baritone, measured, gentle authority, British accent.",
+  "sentry": "A gruff middle-aged soldier, rough working-class London accent, bored night-watch voice.",
+  "guard_two": "A thin, officious soldier in his thirties, nasal, suspicious, nit-picking, working-class British accent.",
+  "decimus": "A big, friendly, slow-witted soldier, booming warm bass voice, cheerful rural accent.",
+  "tentmate": "A sleepy, grumbling soldier woken in the night, hoarse low voice, mumbling."
+ }
+}

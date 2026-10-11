@@ -1,0 +1,220 @@
+{
+ "id": "dead_company_ep01_s03",
+ "label": "The Dead Company 1: s03",
+ "duration": 75,
+ "hour": 8.5,
+ "include": [
+  "camp.set.json"
+ ],
+ "rivers": [
+  {
+   "from": [
+    -12.0,
+    29.0
+   ],
+   "to": [
+    40.0,
+    29.0
+   ],
+   "width": 4.5
+  }
+ ],
+ "bridges": [
+  {
+   "from": [
+    12.5,
+    25.0
+   ],
+   "to": [
+    12.5,
+    33.0
+   ],
+   "width": 2.4,
+   "height": 0.35
+  }
+ ],
+ "props": [
+  {
+   "type": "weapon_rack",
+   "at": [
+    23.5,
+    28.0
+   ]
+  },
+  {
+   "type": "supply_cart",
+   "at": [
+    25.5,
+    29.0
+   ],
+   "scale": 0.9
+  },
+  {
+   "type": "supply_cart",
+   "at": [
+    8.0,
+    23.0
+   ],
+   "scale": 0.9
+  }
+ ],
+ "actors": [
+  {
+   "name": "livia",
+   "look": "livia",
+   "at": [
+    19.5,
+    26.5
+   ],
+   "facing": -90
+  },
+  {
+   "name": "felix",
+   "look": "felix",
+   "at": [
+    24.5,
+    25.5
+   ],
+   "facing": -90
+  },
+  {
+   "name": "tiro",
+   "look": "tiro",
+   "at": [
+    30.5,
+    23.5
+   ],
+   "facing": -90
+  },
+  {
+   "name": "drill",
+   "look": "troops/roman/camp_rest_helmed",
+   "at": [
+    12.5,
+    22.5
+   ],
+   "facing": 0,
+   "individuals": 8
+  },
+  {
+   "name": "twelfth",
+   "look": "troops/roman/camp_rest_helmed",
+   "at": [
+    12.5,
+    21.5
+   ],
+   "facing": 0
+  }
+ ],
+ "steps": [
+  {
+   "t": 1.0,
+   "do": "walk",
+   "who": "drill",
+   "to": [
+    12.5,
+    34.5
+   ]
+  },
+  {
+   "t": 12.0,
+   "do": "walk",
+   "who": "drill",
+   "to": [
+    12.5,
+    22.5
+   ]
+  },
+  {
+   "t": 31.958,
+   "do": "walk",
+   "who": "drill",
+   "to": [
+    12.5,
+    34.5
+   ],
+   "at": "mark:crack-4.3"
+  },
+  {
+   "t": 51.735,
+   "do": "walk",
+   "who": "drill",
+   "to": [
+    12.5,
+    22.5
+   ],
+   "at": "mark:tiro_shout+2.8"
+  },
+  {
+   "t": 1.0,
+   "do": "walk",
+   "who": "felix",
+   "to": [
+    21.0,
+    25.5
+   ]
+  },
+  {
+   "t": 4.6,
+   "do": "face",
+   "who": "felix",
+   "toward": "livia"
+  },
+  {
+   "t": 44.317,
+   "do": "face",
+   "who": "livia",
+   "toward": "felix",
+   "at": "line:s03_12-1.0"
+  },
+  {
+   "t": 45.935,
+   "do": "run",
+   "who": "tiro",
+   "to": [
+    22.0,
+    24.0
+   ],
+   "at": "mark:tiro_shout-3.0"
+  },
+  {
+   "t": 49.135,
+   "do": "face",
+   "who": "felix",
+   "toward": "tiro",
+   "at": "mark:tiro_shout+0.2"
+  },
+  {
+   "t": 49.335,
+   "do": "face",
+   "who": "tiro",
+   "toward": "felix",
+   "at": "mark:tiro_shout+0.4"
+  },
+  {
+   "t": 52.832,
+   "do": "face",
+   "who": "livia",
+   "toward": "tiro",
+   "at": "line:s03_14+0.8"
+  },
+  {
+   "t": 31.658,
+   "do": "walk",
+   "who": "twelfth",
+   "to": [
+    12.5,
+    29.0
+   ],
+   "at": "mark:crack-4.6"
+  },
+  {
+   "t": 36.308,
+   "do": "kill",
+   "who": "twelfth",
+   "at": "mark:crack+0.05"
+  }
+ ],
+ "fog": 0.006,
+ "exposure": 1.0
+}

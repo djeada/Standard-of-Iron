@@ -1,0 +1,10 @@
+{
+  "props": [
+    {"type": "olive_tree", "count": 5, "at": [-34, -9], "spacing": [16, 0], "scale": 1.15, "yaw_spread": 180},
+    {"type": "olive_tree", "count": 4, "at": [-26, 11], "spacing": [17, 0], "scale": 1.05, "yaw_spread": 180},
+    {"type": "cypress_tree", "count": 3, "at": [-18, -14], "spacing": [19, 0], "scale": 1.2},
+    {"type": "boulder", "count": 4, "at": [-30, 4.5], "spacing": [19, 0], "scale": 0.6, "yaw_spread": 180},
+    {"type": "plant", "count": 8, "at": [-36, -4], "spacing": [9, 0], "scale": 0.9, "yaw_spread": 180},
+    {"type": "plant", "count": 8, "at": [-32, 5.5], "spacing": [9, 0], "scale": 0.8, "yaw_spread": 180}
+  ]
+}

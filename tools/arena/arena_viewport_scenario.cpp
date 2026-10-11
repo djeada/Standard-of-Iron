@@ -833,7 +833,8 @@ auto ArenaViewport::spawn_scenario_group_entity(const Arena::ArenaScenarioGroup&
       QStringList const parts = entry.split(QLatin1Char(':'));
       auto const move = Animation::humanoid_showcase_move_from_name(
           parts.value(0).trimmed().toStdString());
-      if (move == Animation::HumanoidShowcaseMove::None) {
+      bool const wait = parts.value(0).trimmed() == QStringLiteral("wait");
+      if (move == Animation::HumanoidShowcaseMove::None && !wait) {
         continue;
       }
       Engine::Core::ShowcaseRoutineComponent::Step step{};

@@ -1,0 +1,26 @@
+{
+ "tiro": [
+  [
+   9.05,
+   "gesture_talk",
+   2.217
+  ],
+  [
+   14.392,
+   "gesture_salute",
+   2.0
+  ]
+ ],
+ "severus": [
+  [
+   12.817,
+   "gesture_nod",
+   1.4
+  ],
+  [
+   17.715,
+   "gesture_nod",
+   1.4
+  ]
+ ]
+}

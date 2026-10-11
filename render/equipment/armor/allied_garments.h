@@ -5,6 +5,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <vector>
 
 #include "render/palette.h"
 #include "render/render_archetype.h"
@@ -34,5 +35,11 @@ auto iberian_tunic_make_static_attachment(std::uint8_t base_role_byte)
     -> Render::Creature::StaticAttachmentSpec;
 auto iberian_hem_band_make_static_attachment(bool left, std::uint8_t crimson_role_byte)
     -> Render::Creature::StaticAttachmentSpec;
+
+auto stola_fill_role_colors(const HumanoidPalette& palette,
+                            QVector3D* out,
+                            std::size_t max) -> std::uint32_t;
+auto stola_make_static_attachments(std::uint8_t base_role_byte)
+    -> std::vector<Render::Creature::StaticAttachmentSpec>;
 
 } // namespace Render::GL

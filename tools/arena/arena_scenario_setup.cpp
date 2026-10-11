@@ -474,6 +474,10 @@ void ArenaScenarioRunner::Impl::wheel_group(const ArenaScenarioStep& step) {
   if (members.empty()) {
     return;
   }
+  if (step.pivot_side == QStringLiteral("face")) {
+    face_group(step, members);
+    return;
+  }
   QVector3D pivot = world_origin + step.destination;
   if (!step.pivot_side.isEmpty()) {
     QVector3D sum;
@@ -520,6 +524,40 @@ void ArenaScenarioRunner::Impl::wheel_group(const ArenaScenarioStep& step) {
     auto const* transform = world.try_get<Engine::Core::TransformComponent>(entity_id);
     intent.facing_angle =
         (transform != nullptr ? transform->rotation.y : 0.0F) + step.angle_degrees;
+    intents.push_back(intent);
+  }
+  Game::Systems::CommandService::move_units(world, intents);
+  arm_response(step.group, command_name(step.command));
+}
+
+void ArenaScenarioRunner::Impl::face_group(
+    const ArenaScenarioStep& step,
+    const std::vector<std::pair<Engine::Core::EntityID, QVector3D>>& members) {
+  QVector3D target = world_origin + step.destination;
+  if (!step.target_group.isEmpty()) {
+    QVector3D sum;
+    int count = 0;
+    for (auto entity_id : ids(step.target_group)) {
+      auto const* transform =
+          world.try_get<Engine::Core::TransformComponent>(entity_id);
+      if (transform != nullptr && entity_alive(entity_id)) {
+        sum += vector_from_transform(*transform);
+        ++count;
+      }
+    }
+    if (count > 0) {
+      target = sum / static_cast<float>(count);
+    }
+  }
+  std::vector<Game::Systems::CommandService::MoveIntent> intents;
+  intents.reserve(members.size());
+  for (auto const& [entity_id, position] : members) {
+    Game::Systems::CommandService::MoveIntent intent;
+    intent.unit_id = entity_id;
+    intent.target = position;
+    intent.target.setY(0.0F);
+    intent.facing_angle = qRadiansToDegrees(
+        std::atan2(target.x() - position.x(), target.z() - position.z()));
     intents.push_back(intent);
   }
   Game::Systems::CommandService::move_units(world, intents);

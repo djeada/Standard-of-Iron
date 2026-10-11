@@ -508,6 +508,135 @@
           0.07
         ]
       }
+    },
+    "troops/roman/dead_company/felix": {
+      "armor": "gallic_tunic",
+      "facial_hair": {
+        "style": "stubble",
+        "color": [
+          0.22,
+          0.15,
+          0.09
+        ]
+      },
+      "helmet": "pileus"
+    },
+    "troops/roman/dead_company/clerk": {
+      "armor": "gallic_tunic",
+      "facial_hair": {
+        "style": "short_beard",
+        "color": [
+          0.3,
+          0.22,
+          0.14
+        ]
+      },
+      "helmet": "pileus"
+    },
+    "troops/roman/dead_company/livia": {
+      "helmet": "hair_bun",
+      "armor": "stola",
+      "facial_hair": {
+        "style": "none"
+      }
+    },
+    "troops/roman/dead_company/tiro": {
+      "sword": "sword_roman",
+      "shield": "roman_scutum",
+      "helmet": "roman_montefortino",
+      "greaves": "roman_greaves",
+      "armor": "roman_light_armor",
+      "facial_hair": {
+        "style": "none"
+      }
+    },
+    "troops/roman/dead_company/severus": {
+      "sword": "sword_roman",
+      "helmet": "roman_boeotian_cavalry",
+      "greaves": "roman_greaves",
+      "armor": "roman_anatomical_cuirass",
+      "cloak": "cloak_roman",
+      "facial_hair": {
+        "style": "short_beard",
+        "color": [
+          0.3,
+          0.27,
+          0.24
+        ],
+        "greyness": 0.6
+      }
+    },
+    "troops/carthage/dead_company/bostar": {
+      "helmet": "turban",
+      "armor": "armor_light_carthage",
+      "facial_hair": {
+        "style": "full_beard",
+        "color": [
+          0.08,
+          0.06,
+          0.05
+        ]
+      }
+    },
+    "troops/iron_sepulcher/skeleton_legionary": {
+      "sword": "sword_roman",
+      "shield": "roman_scutum",
+      "helmet": "roman_montefortino",
+      "armor": "roman_light_armor",
+      "greaves": "roman_greaves"
+    },
+    "troops/iron_sepulcher/skeleton_legionary_bare": {
+      "sword": "sword_roman",
+      "shield": "roman_scutum",
+      "armor": "roman_light_armor",
+      "greaves": "roman_greaves"
+    },
+    "troops/roman/dead_company/felix_scroll": {
+      "armor": "gallic_tunic",
+      "facial_hair": {
+        "style": "stubble",
+        "color": [
+          0.22,
+          0.15,
+          0.09
+        ]
+      },
+      "helmet": "pileus",
+      "sword": "held_scroll"
+    },
+    "troops/roman/dead_company/felix_tablet": {
+      "armor": "gallic_tunic",
+      "facial_hair": {
+        "style": "stubble",
+        "color": [
+          0.22,
+          0.15,
+          0.09
+        ]
+      },
+      "helmet": "pileus",
+      "sword": "held_wax_tablet"
+    },
+    "troops/roman/dead_company/livia_scroll": {
+      "helmet": "hair_bun",
+      "armor": "stola",
+      "facial_hair": {
+        "style": "none"
+      },
+      "sword": "held_scroll"
+    },
+    "troops/carthage/dead_company/bostar_cuffed": {
+      "helmet": "turban",
+      "armor": "armor_light_carthage",
+      "facial_hair": {
+        "style": "full_beard",
+        "color": [
+          0.08,
+          0.06,
+          0.05
+        ]
+      },
+      "shoulder": "manacles"
     }
   }
 }

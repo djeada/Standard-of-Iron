@@ -567,6 +567,11 @@ auto humanoid_showcase_clip(std::uint8_t showcase_move) noexcept -> std::uint16_
   if (taunt_ordinal < k_humanoid_taunt_clip_count) {
     return static_cast<std::uint16_t>(k_humanoid_taunt_first_clip + taunt_ordinal);
   }
+  const std::uint8_t gesture_ordinal =
+      static_cast<std::uint8_t>(taunt_ordinal - k_humanoid_taunt_clip_count);
+  if (gesture_ordinal < k_humanoid_gesture_clip_count) {
+    return static_cast<std::uint16_t>(k_humanoid_gesture_first_clip + gesture_ordinal);
+  }
   return k_unmapped_clip;
 }
 

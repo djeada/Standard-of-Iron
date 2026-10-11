@@ -1,0 +1,2170 @@
+{
+ "schema": "soi-drama-edit/1",
+ "episode": "ep01",
+ "title": "Killed in Advance",
+ "series": "Standard of Iron: The Dead Company",
+ "stage_prefix": "dead_company_ep01_",
+ "scenes": [
+  {
+   "id": "s01",
+   "stage": "s01",
+   "cameras": {
+    "crane": {
+     "keys": [
+      {
+       "eye": [
+        -4,
+        15,
+        36
+       ],
+       "look": [
+        -2,
+        0,
+        4
+       ],
+       "fov": 44,
+       "at": 0.0
+      },
+      {
+       "eye": [
+        -6,
+        9.5,
+        27
+       ],
+       "look": [
+        -5,
+        0,
+        10
+       ],
+       "fov": 42,
+       "at": 11.0
+      }
+     ]
+    }
+   },
+   "cuts": [
+    {
+     "cam": "crane",
+     "at": 0
+    }
+   ],
+   "captions": [
+    {
+     "text": "APULIA, 216 BC\nEIGHT DAYS BEFORE CANNAE",
+     "from": 2.0,
+     "to": 9.0
+    }
+   ],
+   "sound": {
+    "bed": [
+     {
+      "file": "cc0/ambience/night_crickets_almargem.wav",
+      "db": -16
+     },
+     {
+      "file": "cc0/ambience/wind_gentle_open_plain_loop.wav",
+      "db": -20
+     },
+     {
+      "file": "cc0/ambience/campfire_small_crackle.wav",
+      "db": -24,
+      "pan": -0.4
+     }
+    ],
+    "music": [
+     {
+      "file": "cc0/music/ancient_mysteries.wav",
+      "from": 0,
+      "db": -10,
+      "fade_in": 1.5,
+      "fade_out": 2.0
+     }
+    ],
+    "sfx": [
+     {
+      "file": "cc0/signals/war_horn_distant.wav",
+      "at": 1.0,
+      "db": -16,
+      "pan": 0.5
+     }
+    ]
+   },
+   "room": "night",
+   "grade": "eq=contrast=1.08:brightness=0.02:saturation=0.92:gamma=1.14,colorbalance=bs=0.05:bm=0.02:rh=0.05"
+  },
+  {
+   "id": "s02",
+   "stage": "s02",
+   "cameras": {
+    "wide": {
+     "eye": [
+      -2.4,
+      1.35,
+      14.6
+     ],
+     "look": [
+      -6.5,
+      0.45,
+      12.0
+     ],
+     "fov": 40
+    },
+    "mcu": {
+     "eye": [
+      -7.2,
+      0.42,
+      10.6
+     ],
+     "look": [
+      -6.5,
+      0.6,
+      12.5
+     ],
+     "fov": 30
+    },
+    "tight": {
+     "eye": [
+      -6.95,
+      0.44,
+      11.2
+     ],
+     "look": [
+      -6.5,
+      0.6,
+      12.5
+     ],
+     "fov": 24
+    },
+    "sentry": {
+     "eye": [
+      -3.0,
+      1.1,
+      8.2
+     ],
+     "look": [
+      -8.0,
+      0.75,
+      17.0
+     ],
+     "fov": 38
+    }
+   },
+   "cuts": [
+    {
+     "cam": "wide",
+     "at": 0
+    },
+    {
+     "cam": "mcu",
+     "at": 2.3
+    },
+    {
+     "cam": "wide",
+     "at": "mark:basket"
+    },
+    {
+     "cam": "mcu",
+     "at": "line:s02_04-0.1"
+    },
+    {
+     "graphic": "list_names",
+     "at": "line:s02_07-0.1"
+    },
+    {
+     "cam": "mcu",
+     "at": "line:s02_09+1.5"
+    },
+    {
+     "graphic": "list_felix",
+     "at": "line:s02_10-0.1"
+    },
+    {
+     "cam": "tight",
+     "at": "line:s02_11-0.9"
+    },
+    {
+     "cam": "sentry",
+     "at": "line:s02_13-0.2"
+    },
+    {
+     "cam": "mcu",
+     "at": "line:s02_16-0.2"
+    },
+    {
+     "cam": "sentry",
+     "at": "line:s02_17-0.4"
+    }
+   ],
+   "sound": {
+    "bed": [
+     {
+      "file": "cc0/ambience/campfire_crackle_2.wav",
+      "db": -13,
+      "pan": 0.35
+     },
+     {
+      "file": "cc0/ambience/night_crickets_raw.wav",
+      "db": -21
+     }
+    ],
+    "music": [
+     {
+      "file": "cc0/music/suspense_unsolved_investigation.wav",
+      "from": "line:s02_10-0.6",
+      "to": "line:s02_12-0.05",
+      "db": -15,
+      "fade_in": 1.8,
+      "fade_out": 0.05
+     }
+    ],
+    "sfx": [
+     {
+      "file": "cc0/foley/paper_rustle.wav",
+      "at": "mark:basket",
+      "db": -6
+     },
+     {
+      "file": "cc0/foley/wood_crack_1.wav",
+      "at": "mark:seal",
+      "db": -12,
+      "rate": 1.7
+     },
+     {
+      "file": "cc0/foley/parchment_unroll.wav",
+      "at": "mark:seal+0.4",
+      "db": -10,
+      "dur": 1.8
+     },
+     {
+      "file": "cc0/foley/parchment_page_flip_kenney.wav",
+      "at": "line:s02_09+1.5",
+      "db": -10
+     },
+     {
+      "file": "cc0/foley/footstep_dirt_kenney_{n}.wav",
+      "every": 0.6,
+      "from": "line:s02_13-3.0",
+      "to": "line:s02_13+0.5",
+      "db": -15,
+      "variants": 2,
+      "pan": -0.6
+     },
+     {
+      "file": "cc0/foley/footstep_dirt_kenney_{n}.wav",
+      "every": 0.6,
+      "from": "line:s02_17@end+0.3",
+      "to": "end",
+      "db": -18,
+      "variants": 2,
+      "pan": 0.6
+     }
+    ]
+   },
+   "room": "night",
+   "grade": "eq=contrast=1.08:brightness=0.02:saturation=0.92:gamma=1.14,colorbalance=bs=0.05:bm=0.02:rh=0.05"
+  },
+  {
+   "id": "title",
+   "graphic": "title",
+   "sound": {
+    "music": [
+     {
+      "file": "cc0/music/epic_production_intro_sting.wav",
+      "from": 0,
+      "db": -2,
+      "fade_in": 0.05,
+      "fade_out": 1.0
+     }
+    ]
+   }
+  },
+  {
+   "id": "s03",
+   "stage": "s03",
+   "lighting": {
+    "fog_density": 0.0
+   },
+   "grade": "eq=contrast=1.32:brightness=-0.07:saturation=1.3:gamma=0.92,colorbalance=rs=0.04:bs=-0.04",
+   "cameras": {
+    "est": {
+     "eye": [
+      26.0,
+      2.4,
+      36.0
+     ],
+     "look": [
+      16.0,
+      0.5,
+      27.0
+     ],
+     "fov": 44
+    },
+    "two": {
+     "track": "livia",
+     "eye": [
+      -1.03,
+      1.0,
+      -3.16
+     ],
+     "look": [
+      0.75,
+      0.85,
+      -0.5
+     ],
+     "fov": 34
+    },
+    "livia": {
+     "track": "livia",
+     "eye": [
+      -1.35,
+      0.98,
+      -0.35
+     ],
+     "look": [
+      0.0,
+      0.88,
+      0.0
+     ],
+     "fov": 28
+    },
+    "felix": {
+     "track": "felix",
+     "eye": [
+      -1.35,
+      0.98,
+      0.35
+     ],
+     "look": [
+      0.0,
+      0.88,
+      0.0
+     ],
+     "fov": 28
+    },
+    "bridge": {
+     "eye": [
+      9.0,
+      1.1,
+      25.0
+     ],
+     "look": [
+      12.5,
+      0.7,
+      29.5
+     ],
+     "fov": 36
+    },
+    "arrive": {
+     "eye": [
+      16.6,
+      1.15,
+      25.2
+     ],
+     "look": [
+      25.0,
+      0.8,
+      24.0
+     ],
+     "fov": 40
+    },
+    "trio": {
+     "eye": [
+      17.6,
+      1.15,
+      22.2
+     ],
+     "look": [
+      20.8,
+      0.82,
+      25.2
+     ],
+     "fov": 36
+    },
+    "tiro": {
+     "track": "tiro",
+     "eye": [
+      -1.0,
+      1.05,
+      2.22
+     ],
+     "look": [
+      0.0,
+      0.9,
+      0.0
+     ],
+     "fov": 30
+    },
+    "felix2": {
+     "track": "felix",
+     "eye": [
+      1.67,
+      1.05,
+      -1.78
+     ],
+     "look": [
+      0.0,
+      0.9,
+      0.0
+     ],
+     "fov": 30
+    }
+   },
+   "cuts": [
+    {
+     "cam": "est",
+     "at": 0
+    },
+    {
+     "cam": "two",
+     "at": "line:s03_01-0.1"
+    },
+    {
+     "cam": "livia",
+     "at": "line:s03_04-0.1"
+    },
+    {
+     "cam": "felix",
+     "at": "line:s03_05-0.1"
+    },
+    {
+     "cam": "est",
+     "at": "line:s03_06-0.2"
+    },
+    {
+     "cam": "livia",
+     "at": "line:s03_07-0.1"
+    },
+    {
+     "cam": "felix",
+     "at": "line:s03_08-0.1"
+    },
+    {
+     "cam": "livia",
+     "at": "line:s03_09-0.1"
+    },
+    {
+     "cam": "bridge",
+     "at": "mark:crack-0.6"
+    },
+    {
+     "cam": "livia",
+     "at": "line:s03_10-0.6"
+    },
+    {
+     "cam": "felix",
+     "at": "line:s03_11-0.1"
+    },
+    {
+     "cam": "two",
+     "at": "line:s03_12-0.5"
+    },
+    {
+     "cam": "arrive",
+     "at": "line:s03_13-0.4"
+    },
+    {
+     "cam": "trio",
+     "at": "line:s03_14-0.2"
+    },
+    {
+     "cam": "felix2",
+     "at": "line:s03_15-0.1"
+    },
+    {
+     "cam": "tiro",
+     "at": "line:s03_15@end+0.2"
+    },
+    {
+     "cam": "felix2",
+     "at": "line:s03_17-0.1"
+    },
+    {
+     "cam": "tiro",
+     "at": "line:s03_18-0.1"
+    },
+    {
+     "cam": "trio",
+     "at": "line:s03_19-0.3"
+    }
+   ],
+   "sound": {
+    "bed": [
+     {
+      "file": "cc0/ambience/river_small_stream.wav",
+      "db": -15
+     },
+     {
+      "file": "cc0/ambience/summer_meadow_birds.wav",
+      "db": -19
+     },
+     {
+      "file": "cc0/ambience/crowd_murmur_medium.wav",
+      "db": -25
+     }
+    ],
+    "music": [
+     {
+      "file": "cc0/music/comedy_harpsichord_flurry.wav",
+      "from": 0,
+      "to": "mark:crack-2.5",
+      "db": -19,
+      "fade_in": 1.0,
+      "fade_out": 1.2
+     },
+     {
+      "file": "cc0/music/comedy_beethoven8_allegretto_scherzando.wav",
+      "from": "line:s03_13-1.0",
+      "db": -20,
+      "fade_in": 1.5,
+      "fade_out": 2.0
+     }
+    ],
+    "sfx": [
+     {
+      "file": "cc0/foley/footstep_armored.wav",
+      "every": 0.5,
+      "from": 1.0,
+      "to": 11.0,
+      "db": -19,
+      "variants": 1
+     },
+     {
+      "file": "cc0/foley/tree_trunk_creak.wav",
+      "at": "mark:crack-2.2",
+      "db": -8
+     },
+     {
+      "file": "cc0/foley/wood_crack_1.wav",
+      "at": "mark:crack",
+      "db": -1
+     },
+     {
+      "file": "cc0/foley/water_splash_big.wav",
+      "at": "mark:crack+0.35",
+      "db": -3
+     },
+     {
+      "file": "cc0/foley/footsteps_gravel_run_stop.wav",
+      "at": "line:s03_13-2.2",
+      "db": -9
+     }
+    ]
+   },
+   "room": "open"
+  },
+  {
+   "id": "s04",
+   "stage": "s04",
+   "cameras": {
+    "master": {
+     "eye": [
+      13.5,
+      1.7,
+      1.4
+     ],
+     "look": [
+      13.5,
+      0.75,
+      6.2
+     ],
+     "fov": 36
+    },
+    "felix": {
+     "eye": [
+      13.62,
+      0.95,
+      6.32
+     ],
+     "look": [
+      12.5,
+      0.9,
+      5.5
+     ],
+     "fov": 28
+    },
+    "tiro": {
+     "eye": [
+      13.38,
+      0.95,
+      6.28
+     ],
+     "look": [
+      14.5,
+      0.9,
+      5.5
+     ],
+     "fov": 28
+    },
+    "livia": {
+     "eye": [
+      13.65,
+      0.96,
+      6.05
+     ],
+     "look": [
+      13.5,
+      0.9,
+      7.5
+     ],
+     "fov": 28
+    },
+    "livia_close": {
+     "eye": [
+      13.55,
+      0.95,
+      6.45
+     ],
+     "look": [
+      13.5,
+      0.92,
+      7.5
+     ],
+     "fov": 22
+    },
+    "pair": {
+     "eye": [
+      13.5,
+      1.25,
+      8.9
+     ],
+     "look": [
+      13.5,
+      0.85,
+      5.3
+     ],
+     "fov": 34
+    }
+   },
+   "cuts": [
+    {
+     "cam": "master",
+     "at": 0
+    },
+    {
+     "cam": "tiro",
+     "at": "line:s04_01-0.1"
+    },
+    {
+     "cam": "livia",
+     "at": "line:s04_02-0.2"
+    },
+    {
+     "cam": "tiro",
+     "at": "line:s04_03-0.1"
+    },
+    {
+     "cam": "felix",
+     "at": "line:s04_04-0.1"
+    },
+    {
+     "cam": "livia",
+     "at": "line:s04_05-0.1"
+    },
+    {
+     "cam": "tiro",
+     "at": "line:s04_06-0.1"
+    },
+    {
+     "cam": "pair",
+     "at": "line:s04_06@end+0.1"
+    },
+    {
+     "cam": "tiro",
+     "at": "line:s04_07-0.1"
+    },
+    {
+     "cam": "felix",
+     "at": "line:s04_08-0.1"
+    },
+    {
+     "cam": "tiro",
+     "at": "line:s04_09-0.1"
+    },
+    {
+     "cam": "felix",
+     "at": "line:s04_10-0.1"
+    },
+    {
+     "cam": "livia",
+     "at": "line:s04_11-0.3"
+    },
+    {
+     "graphic": "seal",
+     "at": "line:s04_11+1.6"
+    },
+    {
+     "cam": "felix",
+     "at": "line:s04_12-0.1"
+    },
+    {
+     "cam": "livia_close",
+     "at": "line:s04_13-0.1"
+    },
+    {
+     "cam": "livia",
+     "at": "line:s04_14-0.1"
+    },
+    {
+     "graphic": "rosters",
+     "at": "line:s04_14+2.2"
+    },
+    {
+     "cam": "felix",
+     "at": "line:s04_15-0.1"
+    },
+    {
+     "cam": "tiro",
+     "at": "line:s04_16-0.1"
+    },
+    {
+     "cam": "livia_close",
+     "at": "line:s04_17-0.1"
+    },
+    {
+     "graphic": "map",
+     "at": "line:s04_17+2.2"
+    },
+    {
+     "cam": "felix",
+     "at": "line:s04_18-0.1"
+    },
+    {
+     "cam": "livia",
+     "at": "line:s04_19-0.1"
+    },
+    {
+     "cam": "tiro",
+     "at": "line:s04_20-0.1"
+    },
+    {
+     "cam": "livia",
+     "at": "line:s04_21-0.1"
+    },
+    {
+     "cam": "tiro",
+     "at": "line:s04_22-0.1"
+    },
+    {
+     "cam": "livia_close",
+     "at": "line:s04_22@end+0.1"
+    },
+    {
+     "cam": "felix",
+     "at": "line:s04_24-0.1"
+    },
+    {
+     "cam": "pair",
+     "at": "line:s04_25-0.1"
+    },
+    {
+     "cam": "livia",
+     "at": "line:s04_26-0.2"
+    },
+    {
+     "cam": "felix",
+     "at": "line:s04_27-0.1"
+    },
+    {
+     "cam": "master",
+     "at": "line:s04_28+4.0"
+    }
+   ],
+   "sound": {
+    "bed": [
+     {
+      "file": "cc0/ambience/crowd_murmur_medium.wav",
+      "db": -22
+     },
+     {
+      "file": "cc0/ambience/blacksmith_hammering_workshop.wav",
+      "db": -27,
+      "pan": 0.6
+     },
+     {
+      "file": "cc0/ambience/cicadas_day.wav",
+      "db": -27
+     }
+    ],
+    "music": [
+     {
+      "file": "cc0/music/comedy_beethoven8_allegretto_scherzando.wav",
+      "from": 0,
+      "to": "line:s04_11",
+      "db": -22,
+      "offset": 20.0,
+      "fade_out": 2.5
+     },
+     {
+      "file": "cc0/music/suspense_unsolved_investigation.wav",
+      "from": "line:s04_11+1.0",
+      "db": -17,
+      "fade_in": 4.0,
+      "fade_out": 2.0
+     }
+    ],
+    "sfx": [
+     {
+      "file": "cc0/foley/parchment_unroll.wav",
+      "at": "line:s04_14-1.0",
+      "db": -14,
+      "dur": 1.6
+     }
+    ]
+   },
+   "room": "open",
+   "grade": "eq=contrast=1.12:saturation=1.12:gamma=0.97,colorbalance=rs=0.04:bs=-0.05:rm=0.03:bm=-0.03"
+  },
+  {
+   "id": "s05",
+   "stage": "s05",
+   "cameras": {
+    "gate": {
+     "eye": [
+      5.0,
+      1.7,
+      -9.5
+     ],
+     "look": [
+      0.5,
+      1.0,
+      -21.0
+     ],
+     "fov": 42
+    },
+    "tiro": {
+     "eye": [
+      0.95,
+      0.98,
+      -15.95
+     ],
+     "look": [
+      2.5,
+      0.88,
+      -15.5
+     ],
+     "fov": 30
+    },
+    "severus": {
+     "track": "severus",
+     "eye": [
+      2.78,
+      1.05,
+      1.0
+     ],
+     "look": [
+      0.0,
+      0.98,
+      0.0
+     ],
+     "fov": 30
+    },
+    "tiro_r": {
+     "track": "tiro",
+     "eye": [
+      -2.47,
+      1.1,
+      -1.63
+     ],
+     "look": [
+      0.0,
+      0.88,
+      0.0
+     ],
+     "fov": 30
+    },
+    "after": {
+     "eye": [
+      -1.5,
+      1.0,
+      -16.6
+     ],
+     "look": [
+      3.0,
+      0.85,
+      -15.2
+     ],
+     "fov": 34
+    }
+   },
+   "cuts": [
+    {
+     "cam": "gate",
+     "at": 0
+    },
+    {
+     "cam": "tiro",
+     "at": "line:s05_01-0.3"
+    },
+    {
+     "cam": "severus",
+     "at": "line:s05_01@end+0.1"
+    },
+    {
+     "cam": "tiro_r",
+     "at": "line:s05_03-0.1"
+    },
+    {
+     "cam": "severus",
+     "at": "line:s05_04-0.6"
+    },
+    {
+     "cam": "gate",
+     "at": "mark:severus_leaves"
+    },
+    {
+     "cam": "after",
+     "at": "line:s05_05-0.8"
+    }
+   ],
+   "sound": {
+    "bed": [
+     {
+      "file": "cc0/ambience/crowd_murmur_medium.wav",
+      "db": -22
+     },
+     {
+      "file": "cc0/ambience/horse_blows_farm.wav",
+      "db": -21,
+      "pan": -0.5
+     }
+    ],
+    "music": [
+     {
+      "file": "cc0/music/sad_lament_for_a_warriors_soul.wav",
+      "from": "mark:severus_stops-3",
+      "db": -19,
+      "fade_in": 3.0,
+      "fade_out": 2.0
+     }
+    ],
+    "sfx": [
+     {
+      "file": "cc0/foley/gate_wooden_creaky_open_close.wav",
+      "at": 3.4,
+      "db": -10
+     },
+     {
+      "file": "cc0/signals/horns_low_ensemble.wav",
+      "at": 4.0,
+      "db": -18,
+      "dur": 6.0
+     },
+     {
+      "file": "cc0/foley/footstep_armored.wav",
+      "every": 0.55,
+      "from": 4.6,
+      "to": 10.6,
+      "db": -15,
+      "variants": 1
+     },
+     {
+      "file": "cc0/foley/footstep_armored.wav",
+      "every": 0.55,
+      "from": 19.0,
+      "to": 24.0,
+      "db": -17,
+      "variants": 1
+     }
+    ]
+   },
+   "room": "open",
+   "grade": "eq=contrast=1.12:saturation=1.12:gamma=0.97,colorbalance=rs=0.04:bs=-0.05:rm=0.03:bm=-0.03"
+  },
+  {
+   "id": "s06",
+   "stage": "s06",
+   "cameras": {
+    "walk_front": {
+     "track": "felix",
+     "eye": [
+      3.2,
+      1.0,
+      -2.4
+     ],
+     "look": [
+      0.0,
+      0.8,
+      0.6
+     ],
+     "fov": 36
+    },
+    "walk_side": {
+     "track": "felix",
+     "eye": [
+      0.0,
+      1.1,
+      -4.6
+     ],
+     "look": [
+      0.0,
+      0.75,
+      0.6
+     ],
+     "fov": 40
+    },
+    "halt": {
+     "eye": [
+      12.0,
+      1.7,
+      -6.5
+     ],
+     "look": [
+      5.5,
+      0.6,
+      1.0
+     ],
+     "fov": 42
+    },
+    "decimus": {
+     "track": "decimus",
+     "eye": [
+      -1.2,
+      1.0,
+      3.1
+     ],
+     "look": [
+      -1.0,
+      0.85,
+      0.0
+     ],
+     "fov": 34
+    },
+    "felix_livia": {
+     "track": "felix",
+     "eye": [
+      -1.6,
+      1.0,
+      3.2
+     ],
+     "look": [
+      -1.0,
+      0.85,
+      0.1
+     ],
+     "fov": 36
+    },
+    "group": {
+     "eye": [
+      14.8,
+      1.4,
+      7.4
+     ],
+     "look": [
+      15.2,
+      0.55,
+      0.3
+     ],
+     "fov": 40
+    },
+    "bostar": {
+     "eye": [
+      15.1,
+      0.66,
+      1.0
+     ],
+     "look": [
+      15.5,
+      0.6,
+      -0.5
+     ],
+     "fov": 30
+    },
+    "bostar_up": {
+     "eye": [
+      15.2,
+      1.0,
+      1.1
+     ],
+     "look": [
+      15.5,
+      0.92,
+      -0.5
+     ],
+     "fov": 30
+    },
+    "felix": {
+     "track": "felix",
+     "eye": [
+      0.96,
+      0.85,
+      -2.58
+     ],
+     "look": [
+      0.0,
+      0.95,
+      0.0
+     ],
+     "fov": 32
+    },
+    "livia": {
+     "track": "livia",
+     "eye": [
+      0.4,
+      0.98,
+      -1.7
+     ],
+     "look": [
+      0.0,
+      0.9,
+      0.0
+     ],
+     "fov": 30
+    },
+    "tiro": {
+     "track": "tiro",
+     "eye": [
+      -0.4,
+      0.98,
+      -1.7
+     ],
+     "look": [
+      0.0,
+      0.9,
+      0.0
+     ],
+     "fov": 30
+    }
+   },
+   "cuts": [
+    {
+     "cam": "walk_front",
+     "at": 0
+    },
+    {
+     "cam": "walk_side",
+     "at": "line:s06_05-0.1"
+    },
+    {
+     "cam": "walk_front",
+     "at": "line:s06_07-0.1"
+    },
+    {
+     "cam": "walk_side",
+     "at": "line:s06_09-0.1"
+    },
+    {
+     "cam": "halt",
+     "at": "mark:halt-0.2"
+    },
+    {
+     "cam": "decimus",
+     "at": "line:s06_10-0.2"
+    },
+    {
+     "cam": "felix_livia",
+     "at": "line:s06_11@end+0.4"
+    },
+    {
+     "cam": "halt",
+     "at": "mark:guard_returns"
+    },
+    {
+     "cam": "felix_livia",
+     "at": "line:s06_14-0.1"
+    },
+    {
+     "cam": "halt",
+     "at": "line:s06_16@end"
+    },
+    {
+     "cam": "group",
+     "at": "line:s06_17-1.6"
+    },
+    {
+     "cam": "bostar",
+     "at": "line:s06_17-0.1"
+    },
+    {
+     "cam": "felix",
+     "at": "line:s06_18-0.1"
+    },
+    {
+     "cam": "bostar",
+     "at": "line:s06_19-0.1"
+    },
+    {
+     "cam": "tiro",
+     "at": "line:s06_20-0.1"
+    },
+    {
+     "cam": "bostar",
+     "at": "line:s06_21-0.1"
+    },
+    {
+     "cam": "felix",
+     "at": "line:s06_22-0.1"
+    },
+    {
+     "cam": "bostar",
+     "at": "line:s06_23-0.1"
+    },
+    {
+     "cam": "livia",
+     "at": "line:s06_24-0.1"
+    },
+    {
+     "cam": "bostar",
+     "at": "line:s06_25-0.1"
+    },
+    {
+     "cam": "group",
+     "at": "mark:gust-0.6"
+    },
+    {
+     "graphic": "mark",
+     "at": "mark:gust+0.2"
+    },
+    {
+     "cam": "bostar",
+     "at": "line:s06_26-0.2"
+    },
+    {
+     "cam": "felix",
+     "at": "line:s06_27-0.1"
+    },
+    {
+     "cam": "bostar",
+     "at": "line:s06_28-0.1"
+    },
+    {
+     "cam": "livia",
+     "at": "line:s06_29-0.1"
+    },
+    {
+     "cam": "bostar",
+     "at": "line:s06_29@end+0.1"
+    },
+    {
+     "cam": "group",
+     "at": "line:s06_31-0.8"
+    },
+    {
+     "cam": "bostar_up",
+     "at": "line:s06_31+0.6"
+    },
+    {
+     "cam": "felix",
+     "at": "line:s06_32-0.1"
+    },
+    {
+     "cam": "bostar_up",
+     "at": "line:s06_33-0.1"
+    },
+    {
+     "cam": "group",
+     "at": "line:s06_33@end+0.2"
+    },
+    {
+     "cam": "bostar_up",
+     "at": "line:s06_34-0.2"
+    }
+   ],
+   "sound": {
+    "bed": [
+     {
+      "file": "cc0/ambience/summer_meadow_wind.wav",
+      "db": -18
+     },
+     {
+      "file": "cc0/ambience/cicadas_day.wav",
+      "db": -21
+     }
+    ],
+    "music": [
+     {
+      "file": "cc0/music/comedy_recorder_jam.wav",
+      "from": 0,
+      "to": "mark:halt+2",
+      "db": -21,
+      "fade_out": 2.0
+     },
+     {
+      "file": "cc0/horror/drone_dark_atmospheric.wav",
+      "from": "mark:gust",
+      "db": -15,
+      "fade_in": 3.0,
+      "fade_out": 2.0
+     }
+    ],
+    "sfx": [
+     {
+      "file": "cc0/foley/footsteps_dirt_gravel_walk.wav",
+      "at": 0.5,
+      "db": -14,
+      "dur": 21.0
+     },
+     {
+      "file": "cc0/foley/cart_horse_old_creaking.wav",
+      "at": "mark:halt-8",
+      "db": -17,
+      "dur": 12.0
+     },
+     {
+      "file": "cc0/foley/horse_snort.wav",
+      "at": "mark:halt+1.2",
+      "db": -13,
+      "dur": 2.5
+     },
+     {
+      "file": "cc0/foley/parchment_page_flip_kenney.wav",
+      "at": "mark:gust",
+      "db": -8
+     },
+     {
+      "file": "cc0/foley/chainmail_bag_jingle.wav",
+      "at": "line:s06_31-0.8",
+      "db": -12,
+      "dur": 1.2
+     },
+     {
+      "file": "cc0/horror/sting_horror_realisation.wav",
+      "at": "line:s06_30@end+0.1",
+      "db": -11
+     }
+    ]
+   },
+   "room": "open",
+   "grade": "eq=contrast=1.12:saturation=1.12:gamma=0.97,colorbalance=rs=0.04:bs=-0.05:rm=0.03:bm=-0.03"
+  },
+  {
+   "id": "s07",
+   "stage": "s07",
+   "cameras": {
+    "fork": {
+     "eye": [
+      8.0,
+      1.9,
+      -6.5
+     ],
+     "look": [
+      -6.0,
+      0.5,
+      10.0
+     ],
+     "fov": 40
+    },
+    "felix_guard": {
+     "eye": [
+      5.5,
+      1.1,
+      4.5
+     ],
+     "look": [
+      2.0,
+      0.85,
+      0.5
+     ],
+     "fov": 38
+    },
+    "faces": {
+     "eye": [
+      -3.0,
+      1.0,
+      4.0
+     ],
+     "look": [
+      3.0,
+      0.85,
+      -1.3
+     ],
+     "fov": 28
+    }
+   },
+   "cuts": [
+    {
+     "cam": "fork",
+     "at": 0
+    },
+    {
+     "cam": "felix_guard",
+     "at": "line:s07_01-0.2"
+    },
+    {
+     "cam": "fork",
+     "at": "mark:column_leaves"
+    },
+    {
+     "cam": "faces",
+     "at": "line:s07_03-2.4"
+    },
+    {
+     "cam": "fork",
+     "at": "line:s07_03@end+1.2"
+    }
+   ],
+   "sound": {
+    "bed": [
+     {
+      "file": "cc0/ambience/wind_grass_open_plain_light.wav",
+      "db": -16
+     }
+    ],
+    "music": [
+     {
+      "file": "cc0/music/sad_grieg_death_of_aase.wav",
+      "from": "mark:column_leaves-1.5",
+      "db": -7,
+      "fade_in": 3.0,
+      "fade_out": 3.0
+     }
+    ],
+    "sfx": [
+     {
+      "file": "cc0/foley/footsteps_dirt_gravel_walk.wav",
+      "at": "mark:column_leaves",
+      "db": -16,
+      "dur": 10.0
+     },
+     {
+      "file": "cc0/foley/armor_chinks_movement.wav",
+      "at": "mark:column_leaves",
+      "db": -22,
+      "dur": 10.0
+     }
+    ]
+   },
+   "room": "open",
+   "grade": "eq=contrast=1.12:saturation=1.12:gamma=0.97,colorbalance=rs=0.04:bs=-0.05:rm=0.03:bm=-0.03"
+  },
+  {
+   "id": "s08",
+   "stage": "s08",
+   "cameras": {
+    "wide": {
+     "eye": [
+      -1.5,
+      1.6,
+      7.5
+     ],
+     "look": [
+      -6.0,
+      0.5,
+      11.5
+     ],
+     "fov": 42
+    },
+    "felix": {
+     "eye": [
+      -7.6,
+      0.98,
+      11.4
+     ],
+     "look": [
+      -6.5,
+      0.9,
+      12.5
+     ],
+     "fov": 28
+    },
+    "felix_tight": {
+     "eye": [
+      -7.25,
+      0.96,
+      11.75
+     ],
+     "look": [
+      -6.5,
+      0.92,
+      12.5
+     ],
+     "fov": 22
+    },
+    "bostar": {
+     "eye": [
+      -4.9,
+      0.66,
+      12.2
+     ],
+     "look": [
+      -3.5,
+      0.6,
+      12.5
+     ],
+     "fov": 30
+    }
+   },
+   "cuts": [
+    {
+     "cam": "wide",
+     "at": 0
+    },
+    {
+     "cam": "felix",
+     "at": "line:s08_01-0.2"
+    },
+    {
+     "graphic": "slip",
+     "at": "mark:slip"
+    },
+    {
+     "cam": "felix_tight",
+     "at": "line:s08_02-0.3"
+    },
+    {
+     "cam": "wide",
+     "at": "line:s08_03-0.3"
+    },
+    {
+     "cam": "felix_tight",
+     "at": "line:s08_04-0.6"
+    },
+    {
+     "cam": "bostar",
+     "at": "line:s08_04@end+0.3"
+    }
+   ],
+   "sound": {
+    "bed": [
+     {
+      "file": "cc0/ambience/campfire_crackle_2.wav",
+      "db": -14,
+      "pan": 0.4
+     },
+     {
+      "file": "cc0/ambience/night_crickets_short_loop.wav",
+      "db": -24
+     }
+    ],
+    "music": [
+     {
+      "file": "cc0/music/sad_albinoni_oboe_adagio.wav",
+      "from": "mark:slip-0.5",
+      "db": -15,
+      "fade_in": 2.5,
+      "fade_out": 1.5
+     }
+    ],
+    "sfx": [
+     {
+      "file": "cc0/foley/parchment_unroll.wav",
+      "at": "line:s08_01-1.2",
+      "db": -12,
+      "dur": 1.5
+     }
+    ]
+   },
+   "room": "camp",
+   "grade": "eq=contrast=1.15:saturation=1.08,colorbalance=rs=0.07:bs=-0.03:rh=0.05"
+  },
+  {
+   "id": "s09",
+   "stage": "s09",
+   "cameras": {
+    "two": {
+     "eye": [
+      -9.8,
+      1.0,
+      15.9
+     ],
+     "look": [
+      -9.8,
+      0.6,
+      12.5
+     ],
+     "fov": 36
+    },
+    "close": {
+     "eye": [
+      -9.0,
+      0.95,
+      14.7
+     ],
+     "look": [
+      -9.5,
+      0.75,
+      12.5
+     ],
+     "fov": 30
+    }
+   },
+   "cuts": [
+    {
+     "cam": "two",
+     "at": 0
+    },
+    {
+     "cam": "close",
+     "at": "line:s09_01@end+0.2"
+    }
+   ],
+   "sound": {
+    "bed": [
+     {
+      "file": "cc0/ambience/night_crickets_short_loop.wav",
+      "db": -16
+     },
+     {
+      "file": "cc0/ambience/campfire_small_crackle.wav",
+      "db": -20,
+      "pan": 0.5
+     }
+    ],
+    "music": [
+     {
+      "file": "cc0/music/sad_what_is_left.wav",
+      "from": 0,
+      "db": -21,
+      "fade_in": 1.0
+     }
+    ],
+    "sfx": [
+     {
+      "file": "cc0/ambience/owl_single_hoot.wav",
+      "at": 0.8,
+      "db": -16,
+      "pan": -0.6
+     },
+     {
+      "file": "cc0/foley/dice_cup_shake_kenney.wav",
+      "at": "line:s09_01@end+1.2",
+      "db": -8
+     }
+    ]
+   },
+   "room": "night",
+   "grade": "eq=contrast=1.08:brightness=0.02:saturation=0.92:gamma=1.14,colorbalance=bs=0.05:bm=0.02:rh=0.05"
+  },
+  {
+   "id": "s10",
+   "stage": "s10",
+   "cameras": {
+    "wide": {
+     "eye": [
+      3.5,
+      1.5,
+      10.5
+     ],
+     "look": [
+      -3.0,
+      0.6,
+      16.0
+     ],
+     "fov": 40
+    },
+    "two": {
+     "track": "tiro",
+     "eye": [
+      2.62,
+      1.0,
+      1.62
+     ],
+     "look": [
+      0.5,
+      0.85,
+      -0.5
+     ],
+     "fov": 34
+    },
+    "felix": {
+     "track": "felix",
+     "eye": [
+      -1.28,
+      1.05,
+      2.06
+     ],
+     "look": [
+      0.0,
+      0.9,
+      0.0
+     ],
+     "fov": 30
+    },
+    "tiro": {
+     "track": "tiro",
+     "eye": [
+      1.28,
+      1.05,
+      -2.06
+     ],
+     "look": [
+      0.0,
+      0.9,
+      0.0
+     ],
+     "fov": 30
+    }
+   },
+   "cuts": [
+    {
+     "cam": "wide",
+     "at": 0
+    },
+    {
+     "cam": "two",
+     "at": "line:s10_01-0.1"
+    },
+    {
+     "cam": "felix",
+     "at": "line:s10_04-0.1"
+    },
+    {
+     "cam": "tiro",
+     "at": "line:s10_05-0.1"
+    },
+    {
+     "cam": "felix",
+     "at": "line:s10_06-0.1"
+    },
+    {
+     "cam": "tiro",
+     "at": "line:s10_07-0.1"
+    },
+    {
+     "cam": "felix",
+     "at": "line:s10_07@end+0.3"
+    },
+    {
+     "cam": "wide",
+     "at": "line:s10_08@end+0.3"
+    }
+   ],
+   "sound": {
+    "bed": [
+     {
+      "file": "cc0/ambience/night_field_grasshoppers_crickets.wav",
+      "db": -16
+     },
+     {
+      "file": "cc0/ambience/wind_gentle_open_plain_loop.wav",
+      "db": -22
+     }
+    ],
+    "music": [
+     {
+      "file": "cc0/music/sad_what_is_left.wav",
+      "from": 0,
+      "db": -21,
+      "offset": 10.6,
+      "fade_out": 3.0
+     }
+    ],
+    "sfx": [
+     {
+      "file": "cc0/foley/footstep_dirt_kenney_{n}.wav",
+      "every": 0.55,
+      "from": 0.5,
+      "to": 4.2,
+      "db": -15,
+      "variants": 2
+     },
+     {
+      "file": "cc0/foley/footstep_armored.wav",
+      "every": 0.5,
+      "from": 1.0,
+      "to": 4.4,
+      "db": -17,
+      "variants": 1
+     },
+     {
+      "file": "cc0/foley/footstep_dirt_kenney_{n}.wav",
+      "every": 0.55,
+      "from": "line:s10_08@end+0.6",
+      "to": "end",
+      "db": -17,
+      "variants": 2
+     },
+     {
+      "file": "cc0/ambience/owl_tawny_hooting.wav",
+      "at": 9.0,
+      "db": -22,
+      "pan": 0.7,
+      "dur": 5.0
+     }
+    ]
+   },
+   "room": "night",
+   "grade": "eq=contrast=1.08:brightness=0.02:saturation=0.92:gamma=1.14,colorbalance=bs=0.05:bm=0.02:rh=0.05"
+  },
+  {
+   "id": "s11",
+   "stage": "s11",
+   "cameras": {
+    "side": {
+     "track": "felix",
+     "eye": [
+      0.0,
+      1.0,
+      -4.6
+     ],
+     "look": [
+      0.0,
+      0.7,
+      0.6
+     ],
+     "fov": 40
+    },
+    "front": {
+     "track": "felix",
+     "eye": [
+      3.2,
+      0.9,
+      -0.9
+     ],
+     "look": [
+      0.0,
+      0.85,
+      0.0
+     ],
+     "fov": 34
+    },
+    "lonely": {
+     "eye": [
+      -2.0,
+      2.2,
+      -5.0
+     ],
+     "look": [
+      -8.0,
+      0.4,
+      1.0
+     ],
+     "fov": 46
+    }
+   },
+   "cuts": [
+    {
+     "cam": "side",
+     "at": 0
+    },
+    {
+     "cam": "front",
+     "at": "line:s11_01-0.5"
+    },
+    {
+     "cam": "lonely",
+     "at": "line:s11_02@end+0.4"
+    },
+    {
+     "cam": "front",
+     "at": "mark:frogs_stop+1.0"
+    }
+   ],
+   "sound": {
+    "bed": [
+     {
+      "file": "cc0/ambience/night_frogs_few_stopping.wav",
+      "db": -12,
+      "until": "mark:frogs_stop",
+      "fade_out": 0.25
+     },
+     {
+      "file": "cc0/ambience/wind_eerie.wav",
+      "db": -19,
+      "from": "mark:frogs_stop-0.5",
+      "fade_in": 2.0
+     }
+    ],
+    "music": [
+     {
+      "file": "cc0/music/suspense_tension_komiku.wav",
+      "from": 0,
+      "to": "mark:frogs_stop",
+      "db": -18,
+      "fade_out": 0.4
+     },
+     {
+      "file": "cc0/horror/drone_deep_bass.wav",
+      "from": "mark:frogs_stop",
+      "db": -7,
+      "fade_in": 2.5,
+      "fade_out": 0.5
+     }
+    ],
+    "sfx": [
+     {
+      "file": "cc0/foley/footstep_dirt_kenney_{n}.wav",
+      "every": 0.48,
+      "from": 0.5,
+      "to": "end",
+      "db": -14,
+      "variants": 2
+     },
+     {
+      "file": "cc0/horror/heartbeat_80bpm.wav",
+      "at": "mark:frogs_stop+1.0",
+      "db": -6,
+      "dur": 6.0
+     }
+    ]
+   },
+   "room": "night",
+   "grade": "eq=contrast=1.08:brightness=0.02:saturation=0.92:gamma=1.14,colorbalance=bs=0.05:bm=0.02:rh=0.05"
+  },
+  {
+   "id": "s12",
+   "stage": "s12",
+   "cameras": {
+    "approach": {
+     "eye": [
+      -1.0,
+      1.0,
+      9.0
+     ],
+     "look": [
+      0.5,
+      0.8,
+      -6.0
+     ],
+     "fov": 38
+    },
+    "post": {
+     "eye": [
+      -4.6,
+      1.4,
+      4.2
+     ],
+     "look": [
+      1.0,
+      0.6,
+      -5.5
+     ],
+     "fov": 42
+    },
+    "felix": {
+     "track": "felix",
+     "eye": [
+      0.4,
+      0.98,
+      -1.5
+     ],
+     "look": [
+      0.1,
+      0.92,
+      0.0
+     ],
+     "fov": 30
+    },
+    "reveal": {
+     "eye": [
+      0.15,
+      1.0,
+      -1.3
+     ],
+     "look": [
+      0.5,
+      0.9,
+      -8.5
+     ],
+     "fov": 28
+    },
+    "two": {
+     "track": "felix",
+     "eye": [
+      0.6,
+      0.98,
+      -2.2
+     ],
+     "look": [
+      0.5,
+      0.9,
+      0.5
+     ],
+     "fov": 32
+    },
+    "face": {
+     "keys": [
+      {
+       "eye": [
+        0.4,
+        0.62,
+        -6.2
+       ],
+       "look": [
+        0.5,
+        0.98,
+        -8.5
+       ],
+       "fov": 30,
+       "at": "mark:turn-1.2"
+      },
+      {
+       "eye": [
+        0.45,
+        0.7,
+        -7.35
+       ],
+       "look": [
+        0.5,
+        1.0,
+        -8.5
+       ],
+       "fov": 24,
+       "at": "mark:turn+3.4"
+      }
+     ]
+    }
+   },
+   "cuts": [
+    {
+     "cam": "approach",
+     "at": 0
+    },
+    {
+     "cam": "post",
+     "at": 7.5
+    },
+    {
+     "cam": "reveal",
+     "at": "line:s12_02+1.0"
+    },
+    {
+     "cam": "felix",
+     "at": "mark:grip-1.2"
+    },
+    {
+     "cam": "two",
+     "at": "line:s12_04-0.1"
+    },
+    {
+     "cam": "reveal",
+     "at": "line:s12_05-0.1"
+    },
+    {
+     "cam": "two",
+     "at": "line:s12_06-0.2"
+    },
+    {
+     "cam": "face",
+     "at": "mark:turn-1.2"
+    },
+    {
+     "cam": "felix",
+     "at": "mark:turn+3.4"
+    },
+    {
+     "cam": "two",
+     "at": "mark:turn+5.2"
+    },
+    {
+     "cam": "reveal",
+     "at": "mark:second_turn-1.4"
+    },
+    {
+     "graphic": "black",
+     "at": "mark:black"
+    }
+   ],
+   "sound": {
+    "bed": [
+     {
+      "file": "cc0/ambience/wind_spooky.wav",
+      "db": -17,
+      "until": "mark:black",
+      "fade_out": 0.1
+     },
+     {
+      "file": "cc0/ambience/torch_flame_roar.wav",
+      "db": -23,
+      "from": 6.0,
+      "until": "mark:black",
+      "pan": 0.3,
+      "fade_out": 0.1
+     },
+     {
+      "file": "cc0/horror/whispers_ghostly_long.wav",
+      "db": -27,
+      "from": 11.0,
+      "until": "mark:black",
+      "fade_in": 4.0,
+      "fade_out": 0.1
+     }
+    ],
+    "music": [
+     {
+      "file": "cc0/horror/drone_dark_dungeon.wav",
+      "from": 0,
+      "to": "mark:black",
+      "db": -13,
+      "fade_in": 1.0,
+      "fade_out": 0.05
+     }
+    ],
+    "sfx": [
+     {
+      "file": "cc0/foley/footstep_dirt_kenney_{n}.wav",
+      "every": 0.5,
+      "from": 0.5,
+      "to": 8.2,
+      "db": -14,
+      "variants": 2
+     },
+     {
+      "file": "cc0/foley/footstep_dirt_kenney_{n}.wav",
+      "every": 0.6,
+      "from": 10.6,
+      "to": 12.4,
+      "db": -16,
+      "variants": 2
+     },
+     {
+      "file": "cc0/foley/footsteps_gravel_run_stop.wav",
+      "at": "mark:grip-2.2",
+      "db": -10
+     },
+     {
+      "file": "cc0/horror/heartbeat_97bpm.wav",
+      "at": "line:s12_03-0.5",
+      "db": -9,
+      "dur": 8.0
+     },
+     {
+      "file": "cc0/horror/riser_long.wav",
+      "at": "mark:turn-10.8",
+      "db": -12,
+      "dur": 11.0
+     },
+     {
+      "file": "cc0/horror/metal_scrape_lattice_slow.wav",
+      "at": "mark:turn",
+      "db": -6,
+      "dur": 3.0
+     },
+     {
+      "file": "cc0/horror/bone_cracking.wav",
+      "at": "mark:turn+0.7",
+      "db": -9,
+      "dur": 2.0
+     },
+     {
+      "file": "cc0/horror/impact_cinematic_low.wav",
+      "at": "mark:turn+3.0",
+      "db": -1
+     },
+     {
+      "file": "cc0/horror/bone_cracking.wav",
+      "at": "mark:second_turn+0.3",
+      "db": -12,
+      "dur": 1.5
+     },
+     {
+      "file": "cc0/horror/sub_drop_rumble.wav",
+      "at": "mark:black-0.2",
+      "db": -6
+     },
+     {
+      "file": "cc0/signals/war_horn_distant.wav",
+      "at": "mark:black+1.4",
+      "db": -15
+     }
+    ]
+   },
+   "room": "night",
+   "grade": "eq=contrast=1.14:brightness=0.01:saturation=0.78:gamma=1.1,colorbalance=bs=0.06:gm=0.02:rh=0.05"
+  },
+  {
+   "id": "endcard",
+   "graphic": "endcard",
+   "sound": {
+    "music": [
+     {
+      "file": "cc0/music/epic_a_legend_will_rise.wav",
+      "from": 0,
+      "db": -8,
+      "fade_in": 0.5,
+      "fade_out": 1.5
+     }
+    ]
+   }
+  }
+ ]
+}

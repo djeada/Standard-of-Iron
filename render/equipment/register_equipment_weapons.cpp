@@ -364,6 +364,21 @@ auto build_carthage_shield_attachment(std::uint8_t base_role_byte)
       Render::GL::CarthageShieldConfig{}, base_role_byte)};
 }
 
+auto build_held_scroll_attachments(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return {Render::GL::held_scroll_make_static_attachment(base_role_byte)};
+}
+
+auto build_held_wax_tablet_attachments(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return {Render::GL::held_wax_tablet_make_static_attachment(base_role_byte)};
+}
+
+auto build_manacles_attachments(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return Render::GL::manacles_make_static_attachments(base_role_byte);
+}
+
 auto build_roman_sword_attachments(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec> {
   return {

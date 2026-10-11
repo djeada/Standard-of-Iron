@@ -1,0 +1,65 @@
+{
+ "id": "dead_company_ep01_s11",
+ "label": "The Dead Company 1: s11",
+ "duration": 30,
+ "hour": 23.2,
+ "exposure": 1.15,
+ "fog": 0.04,
+ "include": [
+  "road.set.json"
+ ],
+ "roads": [
+  {
+   "from": [
+    -48,
+    0.5
+   ],
+   "to": [
+    48,
+    0.5
+   ],
+   "width": 2.6,
+   "style": "rough"
+  }
+ ],
+ "props": [
+  {
+   "type": "statue",
+   "at": [
+    -18.5,
+    2.5
+   ],
+   "scale": 0.4
+  },
+  {
+   "type": "statue",
+   "at": [
+    14.5,
+    2.5
+   ],
+   "scale": 0.4
+  }
+ ],
+ "actors": [
+  {
+   "name": "felix",
+   "look": "felix",
+   "at": [
+    -40.5,
+    0.5
+   ],
+   "facing": 90
+  }
+ ],
+ "steps": [
+  {
+   "t": 0.5,
+   "do": "walk",
+   "who": "felix",
+   "to": [
+    40.5,
+    0.5
+   ]
+  }
+ ]
+}

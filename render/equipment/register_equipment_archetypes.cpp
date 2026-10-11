@@ -6,6 +6,7 @@
 #include "helmets/carthage_heavy_helmet.h"
 #include "helmets/carthage_light_helmet.h"
 #include "helmets/commander_helmets.h"
+#include "helmets/hair_bun.h"
 #include "helmets/headwrap.h"
 #include "helmets/historical_helmets.h"
 #include "helmets/roman_heavy_helmet.h"
@@ -53,6 +54,12 @@ void register_equipment_archetypes() {
     (void)historical_helmet_archetype(HistoricalHelmet::IberianSinewCap);
   });
   ar.register_archetype("headwrap_helmet", [] { (void)headwrap_helmet_archetype(); });
+  ar.register_archetype("hair_bun", [] { (void)hair_bun_archetype(); });
+  ar.register_archetype("hair_crop", [] { (void)hair_crop_archetype(); });
+  ar.register_archetype("skull_face", [] { (void)skull_face_archetype(); });
+  ar.register_archetype("turban", [] { (void)turban_archetype(); });
+  ar.register_archetype("pileus", [] { (void)pileus_archetype(); });
+  ar.register_archetype("palla_veil", [] { (void)palla_veil_archetype(); });
   ar.register_archetype("commander_helmet_fabius", [] {
     (void)commander_helmet_archetype(CommanderHelmetStyle::Fabius);
   });

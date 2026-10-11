@@ -530,6 +530,9 @@ struct ArenaScenarioRunner::Impl {
   [[nodiscard]] auto group_strength(const QString& group) const -> std::optional<float>;
   void shape_move_group(const ArenaScenarioStep& step);
   void wheel_group(const ArenaScenarioStep& step);
+  void
+  face_group(const ArenaScenarioStep& step,
+             const std::vector<std::pair<Engine::Core::EntityID, QVector3D>>& members);
   void execute_step(std::size_t index, const ArenaScenarioStep& step);
   struct WildlifeObservation {
     bool grazing_seen{false};

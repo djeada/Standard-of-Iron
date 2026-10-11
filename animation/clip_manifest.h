@@ -264,7 +264,9 @@ inline constexpr std::uint16_t k_humanoid_javelin_throw_clip = 88U;
 // Wading a ford: an upper-body overlay with the arms raised above the water.
 inline constexpr std::uint16_t k_humanoid_wade_clip = 89U;
 inline constexpr float k_humanoid_wade_cycle_time = 1.8F;
-inline constexpr std::uint16_t k_humanoid_clip_count = 90U;
+inline constexpr std::uint16_t k_humanoid_gesture_first_clip = 90U;
+inline constexpr std::uint8_t k_humanoid_gesture_clip_count = 11U;
+inline constexpr std::uint16_t k_humanoid_clip_count = 101U;
 
 inline constexpr float k_humanoid_combat_ready_cycle_time = 2.2F;
 inline constexpr std::uint32_t k_humanoid_combat_ready_frames = 48U;
