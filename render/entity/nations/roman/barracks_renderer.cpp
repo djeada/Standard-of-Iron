@@ -152,6 +152,7 @@ void add_walls_and_dado(BuildingArchetypeDesc& desc,
                         float z0,
                         float z1,
                         float wall_top) {
+  BuildingPartMaterial const masonry(desc, k_building_material_stone);
   const float cx = mid(x0, x1);
   const float cz = mid(z0, z1);
   const float hx = half(x0, x1);
@@ -163,7 +164,7 @@ void add_walls_and_dado(BuildingArchetypeDesc& desc,
                QVector3D(hx + 0.016F, 0.05F, hz + 0.016F),
                c.limestone_dark);
   desc.add_box(QVector3D(cx, k_platform_top + 0.34F, cz),
-               QVector3D(hx + 0.010F, 0.24F, hz + 0.010F),
+               QVector3D(hx + 0.006F, 0.24F, hz + 0.006F),
                c.dado);
 
   for (const float qx : {x0, x1}) {

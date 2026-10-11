@@ -194,7 +194,7 @@ void add_shop_bays(BuildingArchetypeDesc& desc,
 
   for (float const zc : {-0.79F, 0.0F, 0.79F}) {
     {
-      BuildingPartMaterial paint(desc, k_building_material_cloth);
+      BuildingPartMaterial paint(desc, k_building_material_stone);
       desc.add_box(QVector3D(1.0965F, (k_wall_base + 0.32F) * 0.5F, zc),
                    QVector3D(0.0045F, (0.32F - k_wall_base) * 0.5F, 0.34F),
                    c.dado_black,
@@ -235,7 +235,7 @@ void add_shop_bays(BuildingArchetypeDesc& desc,
                  c.marble,
                  k_building_state_mask_intact);
     {
-      BuildingPartMaterial paint(desc, k_building_material_cloth);
+      BuildingPartMaterial paint(desc, k_building_material_stone);
       desc.add_box(QVector3D(0.5965F, 0.255F, zc),
                    QVector3D(0.0035F, 0.060F, 0.25F),
                    c.pompeian_red,
@@ -459,7 +459,7 @@ void add_gateway(BuildingArchetypeDesc& desc, float hm, const RomanMarketPalette
                c.marble,
                BuildingStateMask::Normal);
   {
-    BuildingPartMaterial paint(desc, k_building_material_cloth);
+    BuildingPartMaterial paint(desc, k_building_material_stone);
     for (int letter = 0; letter < 7; ++letter) {
       const float z = -0.27F + 0.09F * static_cast<float>(letter);
       desc.add_box(QVector3D(-1.1985F, gate_y - 0.004F, z),

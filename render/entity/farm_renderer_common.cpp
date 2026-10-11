@@ -47,13 +47,16 @@ struct StalkLook {
 
 constexpr float k_crop_height_scale = 0.62F;
 constexpr float k_crop_head_scale = 0.80F;
+constexpr float k_crop_stem_width_scale = 0.55F;
+constexpr float k_crop_head_width_scale = 0.68F;
 
 auto scaled_look(StalkLook look) -> StalkLook {
   look.height *= k_crop_height_scale;
+  look.radius *= k_crop_stem_width_scale;
   look.lean *= k_crop_height_scale;
   look.leaf_length *= k_crop_height_scale;
   look.head_length *= k_crop_head_scale;
-  look.head_radius *= k_crop_head_scale;
+  look.head_radius *= k_crop_head_scale * k_crop_head_width_scale;
   look.awn_length *= k_crop_head_scale;
   return look;
 }
@@ -87,12 +90,12 @@ auto authored_stalk_look(int stage) -> StalkLook {
   case 4:
     return {.height = 0.228F,
             .radius = 0.0027F,
-            .lean = 0.058F,
+            .lean = 0.042F,
             .head_length = 0.036F,
             .head_radius = 0.0053F,
             .awn_length = 0.030F,
             .awn_chance = 0.42F,
-            .droop = 0.62F,
+            .droop = 0.42F,
             .leaf_length = 0.030F,
             .leaf_chance = 0.36F,
             .tillers = 3,
@@ -111,6 +114,7 @@ void add_soil_bed(BuildingArchetypeDesc& desc,
                   const FarmFieldSpec& spec,
                   const FarmFieldPalette& palette,
                   int stage) {
+  BuildingPartMaterial const soil_material(desc, k_building_material_stone);
   const float y = spec.ground_y;
   const float litter_t = stage >= 4 ? 0.62F : (stage == 3 ? 0.34F : 0.0F);
   const QVector3D litter = palette.stubble * 0.46F;
@@ -186,6 +190,7 @@ void add_soil_bed(BuildingArchetypeDesc& desc,
 void add_stubble(BuildingArchetypeDesc& desc,
                  const FarmFieldSpec& spec,
                  const FarmFieldPalette& palette) {
+  BuildingPartMaterial const straw_material(desc, k_building_material_plant);
   const int rows = std::max(1, spec.rows);
   const int per_row = std::max(1, spec.stalks_per_row / 2);
   const float row_span = spec.rows_along_x ? spec.half_z : spec.half_x;
@@ -215,12 +220,12 @@ void add_stubble(BuildingArchetypeDesc& desc,
           base + QVector3D(std::cos(angle) * 0.008F, height, std::sin(angle) * 0.008F);
       desc.add_cylinder(base,
                         cut_tip,
-                        0.006F,
+                        0.0024F,
                         palette.stubble * (0.90F + hash01(seed + 13) * 0.16F),
                         k_building_state_mask_intact);
       desc.add_cylinder(base,
                         base + (cut_tip - base) * 0.7F,
-                        0.006F,
+                        0.0024F,
                         palette.ash,
                         BuildingStateMask::Destroyed);
     }
@@ -231,6 +236,7 @@ void add_crop(BuildingArchetypeDesc& desc,
               const FarmFieldSpec& spec,
               const FarmFieldPalette& palette,
               int stage) {
+  BuildingPartMaterial const crop_material(desc, k_building_material_plant);
   const StalkLook look = stalk_look(stage);
   if (look.height <= 0.0F) {
     return;
@@ -322,7 +328,7 @@ void add_crop(BuildingArchetypeDesc& desc,
                            (1.0F + gust * 0.45F);
         QVector3D const lean_dir(std::cos(lean_angle), 0.0F, std::sin(lean_angle));
 
-        const float tone = 0.93F + hash01(tiller_seed + 19) * 0.19F;
+        const float tone = 0.95F + hash01(tiller_seed + 19) * 0.12F;
         const float shade_mix = hash01(tiller_seed + 17);
         QVector3D const culm = lerp(culm_shade,
                                     culm_colour,
@@ -363,10 +369,13 @@ void add_crop(BuildingArchetypeDesc& desc,
 
         const bool wants_leaf = look.leaf && (primary || !look.has_head);
         if (wants_leaf && hash01(tiller_seed + 37) < look.leaf_chance) {
-          const float leaf_h = height * (0.42F + hash01(tiller_seed + 41) * 0.26F);
+          const float leaf_t = 0.42F + hash01(tiller_seed + 41) * 0.26F;
+          // Keep each leaf attached to its culm's existing bend.
           QVector3D const leaf_root =
-              base +
-              QVector3D(lean_dir.x() * lean * 0.4F, leaf_h, lean_dir.z() * lean * 0.4F);
+              !primary ? lerp(base, top, leaf_t)
+                       : (leaf_t <= knee_t
+                              ? lerp(base, knee, leaf_t / knee_t)
+                              : lerp(knee, top, (leaf_t - knee_t) / (1.0F - knee_t)));
           const float leaf_angle = lean_angle + 1.9F + hash01(tiller_seed + 43) * 2.6F;
           const float leaf_length =
               look.leaf_length * (0.7F + hash01(tiller_seed + 47) * 0.7F);
@@ -377,7 +386,7 @@ void add_crop(BuildingArchetypeDesc& desc,
                         std::sin(leaf_angle) * leaf_length);
           desc.add_cone(leaf_root,
                         leaf_tip,
-                        look.radius * 2.1F,
+                        look.radius * 1.7F,
                         leaf_colour * tone,
                         k_building_state_mask_intact);
         }
@@ -388,7 +397,7 @@ void add_crop(BuildingArchetypeDesc& desc,
 
         const float droop = look.droop * (0.45F + hash01(tiller_seed + 59) * 1.0F);
         const float head_length =
-            look.head_length * (0.82F + hash01(tiller_seed + 61) * 0.34F);
+            look.head_length * scale * (0.82F + hash01(tiller_seed + 61) * 0.34F);
         QVector3D const nod(
             lean_dir.x() * droop, 1.0F - droop * 0.62F, lean_dir.z() * droop);
         QVector3D const head_dir = nod.normalized();
@@ -417,7 +426,7 @@ void add_crop(BuildingArchetypeDesc& desc,
               look.awn_length * (0.6F + hash01(tiller_seed + 83) * 0.8F);
           desc.add_cone(ear_tip,
                         ear_tip + head_dir * awn_length,
-                        ear_radius * 0.34F,
+                        ear_radius * 0.20F,
                         awn_colour * tone,
                         k_building_state_mask_intact);
         }
@@ -427,6 +436,7 @@ void add_crop(BuildingArchetypeDesc& desc,
 }
 
 void add_field_margin(BuildingArchetypeDesc& desc, const FarmFieldSpec& spec) {
+  BuildingPartMaterial const grass_material(desc, k_building_material_plant);
   constexpr float k_fence_half = 0.94F;
   constexpr float k_fence_clearance = 0.035F;
   static const std::array<QVector3D, 3> k_grass{QVector3D(0.20F, 0.33F, 0.11F),
@@ -473,7 +483,7 @@ void add_field_margin(BuildingArchetypeDesc& desc, const FarmFieldSpec& spec) {
                           QVector3D(std::cos(angle) * splay,
                                     height * (0.7F + 0.15F * static_cast<float>(blade)),
                                     std::sin(angle) * splay),
-                      0.0045F + hash01(seed + 13 + blade) * 0.002F,
+                      0.0022F + hash01(seed + 13 + blade) * 0.001F,
                       green * (0.94F + 0.05F * static_cast<float>(blade)),
                       k_building_state_mask_intact);
       }

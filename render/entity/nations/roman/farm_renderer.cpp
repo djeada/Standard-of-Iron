@@ -32,11 +32,11 @@ struct RomanFarmPalette {
   QVector3D cedar_light = BuildingPalette::k_cedar_light;
   QVector3D cedar_dark = BuildingPalette::k_cedar_dark;
   QVector3D iron{0.16F, 0.16F, 0.16F};
-  QVector3D straw{0.76F, 0.62F, 0.31F};
+  QVector3D straw{0.75F, 0.66F, 0.44F};
   QVector3D cloth{0.46F, 0.11F, 0.08F};
   QVector3D clay{0.62F, 0.39F, 0.23F};
   QVector3D clay_band{0.36F, 0.16F, 0.10F};
-  QVector3D grain{0.81F, 0.67F, 0.33F};
+  QVector3D grain{0.80F, 0.71F, 0.46F};
 };
 
 void add_stone_boundary(BuildingArchetypeDesc& desc, const RomanFarmPalette& c) {
@@ -109,7 +109,7 @@ void add_granary_shed(BuildingArchetypeDesc& desc, const RomanFarmPalette& c) {
   for (const float x : {-k_half_x, k_half_x}) {
     for (const float z : {-k_half_z, k_half_z}) {
       desc.add_box(centre + QVector3D(x, 0.11F + k_wall_h * 0.5F, z),
-                   QVector3D(0.035F, k_wall_h * 0.5F, 0.035F),
+                   QVector3D(0.025F, k_wall_h * 0.5F, 0.025F),
                    c.limestone_shade,
                    k_building_state_mask_intact);
     }
@@ -138,7 +138,7 @@ void add_granary_shed(BuildingArchetypeDesc& desc, const RomanFarmPalette& c) {
 
   float const eave_y = 0.11F + k_wall_h;
   desc.add_box(centre + QVector3D(0.0F, eave_y + 0.01F, 0.0F),
-               QVector3D(k_half_x + 0.05F, 0.012F, k_half_z + 0.05F),
+               QVector3D(k_half_x + 0.05F, 0.008F, k_half_z + 0.05F),
                c.cedar,
                k_building_state_mask_intact);
   add_tiled_roof(desc,
@@ -151,6 +151,7 @@ void add_granary_shed(BuildingArchetypeDesc& desc, const RomanFarmPalette& c) {
                  true);
 
   for (int i = 0; i < 3; ++i) {
+    BuildingPartMaterial const pottery(desc, k_building_material_ceramic);
     float const x = centre.x() - k_half_x + 0.08F + static_cast<float>(i) * 0.11F;
     QVector3D const base(x, 0.11F, centre.z() + k_half_z + 0.10F);
     desc.add_cylinder(base,

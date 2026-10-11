@@ -36,7 +36,7 @@ struct CarthageMarketPalette {
   QVector3D sandstone_light = BuildingPalette::k_sandstone_light;
   QVector3D sandstone_dark = BuildingPalette::k_sandstone_dark;
   QVector3D mortar{0.63F, 0.55F, 0.42F};
-  QVector3D plaster{0.86F, 0.81F, 0.70F};
+  QVector3D plaster = BuildingPalette::k_plaster;
   QVector3D floor_earth{0.66F, 0.52F, 0.36F};
   QVector3D wood_dark = BuildingPalette::k_wood_dark;
   QVector3D wood_medium = BuildingPalette::k_wood;
@@ -174,7 +174,7 @@ void add_shop_bays(BuildingArchetypeDesc& desc,
   int bay = 0;
   for (float const zc : {-0.80F, 0.0F, 0.80F}) {
     {
-      BuildingPartMaterial paint(desc, k_building_material_cloth);
+      BuildingPartMaterial paint(desc, k_building_material_stone);
       desc.add_box(QVector3D(1.0855F, (k_wall_base + wall_top - 0.01F) * 0.5F, zc),
                    QVector3D(0.0045F, (wall_top - 0.01F - k_wall_base) * 0.5F, 0.34F),
                    c.plaster * 0.96F,
@@ -215,7 +215,7 @@ void add_shop_bays(BuildingArchetypeDesc& desc,
                  c.plaster,
                  k_building_state_mask_intact);
     {
-      BuildingPartMaterial paint(desc, k_building_material_cloth);
+      BuildingPartMaterial paint(desc, k_building_material_stone);
       desc.add_box(QVector3D(0.5965F, 0.240F, zc),
                    QVector3D(0.0035F, 0.055F, 0.25F),
                    (bay % 2 == 0) ? c.murex : c.indigo,
@@ -656,7 +656,7 @@ auto build_marketplace_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
                c.plaster,
                k_building_state_mask_intact);
   {
-    BuildingPartMaterial paint(desc, k_building_material_cloth);
+    BuildingPartMaterial paint(desc, k_building_material_stone);
     desc.add_box(QVector3D(1.238F, wall_top - 0.035F, 0.0F),
                  QVector3D(0.005F, 0.012F, 1.21F),
                  c.cloth_oxblood,

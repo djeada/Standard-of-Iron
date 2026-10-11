@@ -122,7 +122,8 @@ auto build_home_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
     }
   }
 
-  for (float const xw : {-0.92F, 0.92F}) {
+  // The side walls end at +/-0.96; keep openings on the visible face.
+  for (float const xw : {-0.968F, 0.968F}) {
     desc.add_box(QVector3D(xw, 0.58F, -0.30F),
                  QVector3D(0.015F, 0.20F, 0.16F),
                  c.cedar_dark,
@@ -132,21 +133,21 @@ auto build_home_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
                  c.cedar_dark,
                  k_building_state_mask_intact);
 
-    desc.add_box(QVector3D(xw, 0.44F, -0.30F),
-                 QVector3D(0.015F, 0.03F, 0.19F),
+    desc.add_box(QVector3D(xw, 0.38F, -0.30F),
+                 QVector3D(0.022F, 0.020F, 0.18F),
                  c.limestone_shade,
                  k_building_state_mask_intact);
-    desc.add_box(QVector3D(xw, 0.44F, 0.30F),
-                 QVector3D(0.015F, 0.03F, 0.19F),
+    desc.add_box(QVector3D(xw, 0.38F, 0.30F),
+                 QVector3D(0.022F, 0.020F, 0.18F),
                  c.limestone_shade,
                  k_building_state_mask_intact);
 
     desc.add_box(QVector3D(xw, 0.80F, -0.30F),
-                 QVector3D(0.015F, 0.04F, 0.20F),
+                 QVector3D(0.024F, 0.025F, 0.19F),
                  c.marble,
                  k_building_state_mask_intact);
     desc.add_box(QVector3D(xw, 0.80F, 0.30F),
-                 QVector3D(0.015F, 0.04F, 0.20F),
+                 QVector3D(0.024F, 0.025F, 0.19F),
                  c.marble,
                  k_building_state_mask_intact);
   }
@@ -173,7 +174,7 @@ auto build_home_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
 
     desc.add_box(
         QVector3D(col.x(), 0.16F + col_height * height_multiplier + 0.04F, col.z()),
-        QVector3D(col_radius * 1.6F, 0.07F, col_radius * 1.6F),
+        QVector3D(col_radius * 1.40F, 0.055F, col_radius * 1.40F),
         c.marble,
         k_building_state_mask_intact);
   }

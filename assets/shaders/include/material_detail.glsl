@@ -4,6 +4,7 @@ uniform bool u_has_material_detail;
 uniform vec3 u_camera_pos;
 
 const int k_material_mineral = 5;
+const int k_material_plant = 6;
 const int k_material_metal = 1;
 const int k_material_wood = 2;
 const int k_material_cloth = 3;
@@ -42,25 +43,48 @@ vec2 soi_surface_lattice(vec3 world_pos, vec3 normal) {
   return world_pos.xy;
 }
 
+vec3 soi_material_normal(vec3 world_pos, vec3 normal, int material_id) {
+  if (!u_has_material_detail ||
+      (material_id != k_material_mineral && material_id != k_material_ceramic)) {
+    return normal;
+  }
+  vec2 uv = soi_surface_lattice(world_pos, normal);
+  float detail = soi_detail_mid(uv * 9.2);
+  float footprint = max(length(dFdx(uv)), length(dFdy(uv)));
+  float relief = (detail - 0.5) * (material_id == k_material_ceramic ? 0.004 : 0.009);
+  // Filter relief before it becomes smaller than a pixel.
+  float visibility = 1.0 - smoothstep(0.035, 0.18, footprint);
+  vec3 dx = dFdx(world_pos);
+  vec3 dy = dFdy(world_pos);
+  vec3 rx = cross(dy, normal);
+  vec3 ry = cross(normal, dx);
+  float determinant = dot(dx, rx);
+  vec3 gradient = (dFdx(relief) * rx + dFdy(relief) * ry) * sign(determinant) /
+                  max(abs(determinant), 1e-8);
+  gradient *= min(1.0, 0.22 / max(length(gradient), 1e-5));
+  return normalize(normal - gradient * visibility);
+}
+
 vec3 soi_mineral_variation(vec3 base_color, vec2 uv, vec3 normal) {
   float broad = soi_detail_coarse(uv * 0.70) - 0.5;
   float mottle = soi_detail_mid(uv * 2.3) - 0.5;
   float grain = soi_detail_fine(uv * 8.5) - 0.5;
-  float upness = abs(normal.y);
+  float upness = max(normal.y, 0.0);
+  float wallness = 1.0 - abs(normal.y);
 
   vec3 cool_lime = base_color * vec3(0.965, 0.985, 1.005);
   vec3 sun_worn = base_color * vec3(1.045, 0.995, 0.91);
   vec3 variation = mix(cool_lime, sun_worn, smoothstep(-0.35, 0.35, broad));
-  variation *= 0.97 + broad * 0.10 + mottle * 0.075 + grain * 0.035;
+  variation *= 0.98 + broad * 0.14 + mottle * 0.11 + grain * 0.035;
 
   float vertical_streak =
-      smoothstep(0.60, 0.90, soi_detail_mid(vec2(uv.x * 0.42, uv.y * 2.4)));
-  vertical_streak *= (1.0 - upness) * (0.35 + 0.65 * soi_detail_coarse(uv * 0.28));
+      smoothstep(0.58, 0.86, soi_detail_mid(vec2(uv.x * 2.4, uv.y * 0.18)));
+  vertical_streak *= wallness * (0.35 + 0.65 * soi_detail_coarse(uv * 0.28));
   variation =
-      mix(variation, variation * vec3(0.72, 0.75, 0.71), vertical_streak * 0.12);
+      mix(variation, variation * vec3(0.72, 0.75, 0.71), vertical_streak * 0.24);
 
   float dust = upness * smoothstep(0.62, 0.92, soi_detail_coarse(uv * 0.46));
-  variation = mix(variation, variation * vec3(1.04, 0.995, 0.90), dust * 0.08);
+  variation = mix(variation, variation * vec3(1.04, 0.995, 0.90), dust * 0.16);
   return variation;
 }
 

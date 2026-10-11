@@ -52,14 +52,19 @@ void main() {
   vec3 normal = normalize(v_normal);
   int soi_material = u_material_id % 10;
   int soi_damage_tier = u_material_id / 10;
+  vec3 surface_normal = normal;
+  normal = soi_material_normal(v_world_pos, normal, soi_material);
   color = soi_material_variation(color, v_world_pos, normal, soi_material, vec2(0.0));
   color = soi_apply_damage_soot(color, v_world_pos, soi_damage_tier);
 
   float avg_color = (color.r + color.g + color.b) / 3.0;
   float wrap_amount = avg_color > 0.65 ? 0.38 : (avg_color > 0.40 ? 0.16 : 0.04);
+  if (soi_material == k_material_plant) {
+    wrap_amount = 0.28;
+  }
   vec3 albedo = color;
   color *= environment_lighting(normal, wrap_amount);
-  color = apply_directional_shadow(color, v_world_pos, normal);
+  color = apply_directional_shadow(color, v_world_pos, surface_normal);
   color += albedo * local_lighting(v_world_pos, normal);
   frag_color = vec4(color, soi_resolve_ghost_alpha(u_alpha));
 }

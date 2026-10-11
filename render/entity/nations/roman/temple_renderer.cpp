@@ -49,7 +49,7 @@ constexpr float k_super_x = 0.02F;
 constexpr float k_pediment_half_z = 0.86F;
 constexpr float k_pediment_rise = 0.40F;
 constexpr float k_roof_half_span_x = 1.215F;
-constexpr float k_roof_half_thick = 0.038F;
+constexpr float k_roof_half_thick = 0.026F;
 constexpr float k_roof_overhang = 0.030F;
 
 auto shaft_radius_at(float t) -> float {
@@ -130,7 +130,7 @@ void add_column_capital(BuildingArchetypeDesc& desc,
     desc.add_rotated_box(QVector3D(x + (std::cos(angle) * radius),
                                    cap_y + 0.036F,
                                    z + (std::sin(angle) * radius)),
-                         QVector3D(0.020F, 0.040F, 0.026F),
+                         QVector3D(0.014F, 0.040F, 0.020F),
                          QVector3D(0.0F, -angle * k_rad_to_deg, 0.0F),
                          c.marble_shade,
                          k_building_state_mask_intact);
@@ -185,9 +185,9 @@ void add_fluted_column(BuildingArchetypeDesc& desc,
     desc.add_rotated_box(QVector3D(x + (std::cos(angle) * radius),
                                    shaft_bottom + (shaft_span * 0.5F),
                                    z + (std::sin(angle) * radius)),
-                         QVector3D(0.018F, shaft_span * 0.47F, 0.011F),
+                         QVector3D(0.010F, shaft_span * 0.47F, 0.007F),
                          QVector3D(0.0F, -angle * k_rad_to_deg, 0.0F),
-                         c.marble_shade,
+                         c.marble * 0.91F,
                          k_building_state_mask_intact);
   }
 

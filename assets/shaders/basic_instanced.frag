@@ -59,6 +59,8 @@ void main() {
   vec3 normal = normalize(v_normal);
   int soi_material = v_material_id % 10;
   int soi_damage_tier = v_material_id / 10;
+  vec3 surface_normal = normal;
+  normal = soi_material_normal(v_world_pos, normal, soi_material);
   float tint_luma = dot(color, vec3(0.299, 0.587, 0.114));
   float tint_chroma =
       max(color.r, max(color.g, color.b)) - min(color.r, min(color.g, color.b));
@@ -66,21 +68,32 @@ void main() {
       smoothstep(0.55, 0.70, tint_luma) * (1.0 - smoothstep(0.10, 0.22, tint_chroma));
   float terracotta = smoothstep(0.18, 0.30, color.r - color.b) *
                      (1.0 - smoothstep(0.62, 0.80, tint_luma));
-  color *= mix(vec3(1.0), v_instance_tint.rgb, plaster);
-  color *= mix(1.0, v_instance_tint.a, terracotta);
+  if (soi_material == k_material_mineral || soi_material == k_material_ceramic) {
+    color *= mix(vec3(1.0), v_instance_tint.rgb, plaster);
+    color *= mix(1.0, v_instance_tint.a, terracotta);
+  }
   color = soi_material_variation(color, v_world_pos, normal, soi_material, v_tex_coord);
   color = soi_apply_damage_soot(color, v_world_pos, soi_damage_tier);
 
-  float wall_face = 1.0 - smoothstep(0.55, 0.90, abs(normal.y));
+  float wall_face = 1.0 - smoothstep(0.55, 0.90, abs(surface_normal.y));
+  float damp_line =
+      u_has_material_detail ? soi_detail_coarse(v_world_pos.xz * 1.7) * 0.28 : 0.14;
   float plinth =
-      1.0 - smoothstep(0.0, k_plinth_height, v_world_pos.y - v_ground_height);
-  color = mix(color, color * k_plinth_tint, plinth * wall_face * k_plinth_strength);
+      1.0 -
+      smoothstep(0.0, k_plinth_height, v_world_pos.y - v_ground_height - damp_line);
+  if (soi_material == k_material_mineral || soi_material == k_material_wood ||
+      soi_material == k_material_ceramic) {
+    color = mix(color, color * k_plinth_tint, plinth * wall_face * k_plinth_strength);
+  }
 
   float avg_color = (color.r + color.g + color.b) / 3.0;
   float wrap_amount = avg_color > 0.65 ? 0.38 : (avg_color > 0.40 ? 0.16 : 0.04);
+  if (soi_material == k_material_plant) {
+    wrap_amount = 0.28;
+  }
   vec3 albedo = color;
   color *= environment_lighting(normal, wrap_amount);
-  color = apply_directional_shadow(color, v_world_pos, normal);
+  color = apply_directional_shadow(color, v_world_pos, surface_normal);
   color += albedo * local_lighting(v_world_pos, normal);
 
   float night = environment_night_amount();

@@ -20,7 +20,7 @@ inline void add_tiled_roof(BuildingArchetypeDesc& desc,
   const float theta = std::atan2(rise, half_depth);
   const float angle = theta * 180.0F / 3.14159265F;
   const float slope = std::sqrt(half_depth * half_depth + rise * rise);
-  const float thickness = std::min(0.035F, half_depth * 0.08F);
+  const float thickness = std::min(0.024F, half_depth * 0.055F);
   auto point = [&](float along, float y, float across) {
     return eave_center +
            (ridge_along_z ? QVector3D(across, y, along) : QVector3D(along, y, across));
@@ -43,8 +43,10 @@ inline void add_tiled_roof(BuildingArchetypeDesc& desc,
                               static_cast<float>(rolls);
       desc.add_cylinder(point(along, lift, side * half_depth),
                         point(along, rise + lift, 0.0F),
-                        thickness * 0.65F,
-                        weathered(BuildingPalette::k_terracotta_light, i + 17, 0.035F),
+                        thickness * 0.80F,
+                        weathered(BuildingPalette::k_terracotta_light,
+                                  i + (side < 0.0F ? 17 : 53),
+                                  0.065F),
                         states);
     }
     desc.add_box(point(0.0F, -0.01F, side * half_depth),
@@ -54,7 +56,7 @@ inline void add_tiled_roof(BuildingArchetypeDesc& desc,
   }
   desc.add_cylinder(point(-half_length, rise + thickness, 0.0F),
                     point(half_length, rise + thickness, 0.0F),
-                    thickness * 1.2F,
+                    thickness * 1.35F,
                     BuildingPalette::k_terracotta_dark,
                     states);
 

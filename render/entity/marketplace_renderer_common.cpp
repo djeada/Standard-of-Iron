@@ -475,7 +475,7 @@ void submit_market_awnings(const DrawContext& ctx,
     const int stripes = std::max(1, awning.stripes);
     const float stripe_w = awning.half_width * 2.0F / static_cast<float>(stripes);
     const float seg_len = length / static_cast<float>(k_segments);
-    const float width_sag = 0.045F * awning.half_width;
+    const float width_sag = 0.065F * awning.half_width;
     for (int s = 0; s < stripes; ++s) {
       if (tattered && (s + static_cast<int>(index)) % 3 == 0) {
         continue;
@@ -494,11 +494,11 @@ void submit_market_awnings(const DrawContext& ctx,
       for (int k = 1; k <= k_segments; ++k) {
         const float t = static_cast<float>(k) / static_cast<float>(k_segments);
         const float billow =
-            std::sin(t * std::numbers::pi_v<float>) * 0.035F * length * (0.6F + gust);
-        const float ripple_phase = time * 2.3F - t * 4.2F + phase + offset * 3.0F;
+            std::sin(t * std::numbers::pi_v<float>) * length * (0.065F - 0.022F * gust);
+        const float ripple_phase = time * 1.65F - t * 4.2F + phase + offset * 1.2F;
 
         const float envelope = 4.0F * t * (1.0F - t);
-        const float ripple = std::sin(ripple_phase) * 0.012F * envelope * (0.4F + gust);
+        const float ripple = std::sin(ripple_phase) * 0.008F * envelope * gust;
         const QVector3D point = awning.back + across * offset + along * (t * length) -
                                 normal * (billow - ripple + sag * (1.0F - 0.35F * t));
         const QVector3D mid = (previous + point) * 0.5F;
@@ -507,15 +507,16 @@ void submit_market_awnings(const DrawContext& ctx,
         local.translate(mid);
         QVector3D z_axis = dir.normalized();
         QVector3D y_axis = QVector3D::crossProduct(z_axis, x_axis).normalized();
-        QMatrix4x4 basis(x_axis.x(),
+        const QVector3D cloth_across = QVector3D::crossProduct(y_axis, z_axis);
+        QMatrix4x4 basis(cloth_across.x(),
                          y_axis.x(),
                          z_axis.x(),
                          0.0F,
-                         x_axis.y(),
+                         cloth_across.y(),
                          y_axis.y(),
                          z_axis.y(),
                          0.0F,
-                         x_axis.z(),
+                         cloth_across.z(),
                          y_axis.z(),
                          z_axis.z(),
                          0.0F,
@@ -524,9 +525,8 @@ void submit_market_awnings(const DrawContext& ctx,
                          0.0F,
                          1.0F);
         local *= basis;
-        local.scale(stripe_w * 0.51F, 0.006F, std::max(dir.length(), seg_len) * 0.52F);
-        const float fold =
-            0.94F + 0.06F * std::sin(ripple_phase + 1.2F) - 0.05F * (billow / length);
+        local.scale(stripe_w * 0.51F, 0.002F, std::max(dir.length(), seg_len) * 0.51F);
+        const float fold = 0.98F - 0.05F * (billow / length);
         out.mesh(cube,
                  ctx.model * local,
                  color * (fold * weather),
@@ -536,7 +536,7 @@ void submit_market_awnings(const DrawContext& ctx,
         previous = point;
       }
       const float flap =
-          std::sin(time * 2.6F + phase + offset * 1.4F) * (0.20F + 0.25F * gust);
+          std::sin(time * 2.1F + phase + offset * 1.4F) * (0.08F + 0.18F * gust);
       const QVector3D hang_dir =
           (QVector3D(0.0F, -1.0F, 0.0F) + along * flap).normalized();
       const QVector3D z_axis = QVector3D::crossProduct(across, hang_dir).normalized();
@@ -561,7 +561,7 @@ void submit_market_awnings(const DrawContext& ctx,
       QMatrix4x4 drop;
       drop.translate((previous + tip) * 0.5F);
       drop *= drop_basis;
-      drop.scale(stripe_w * 0.49F, 0.025F, 0.005F);
+      drop.scale(stripe_w * 0.49F, 0.025F, 0.002F);
       out.mesh(
           cube, ctx.model * drop, valance * weather, nullptr, 1.0F, k_cloth_material);
 
@@ -570,7 +570,7 @@ void submit_market_awnings(const DrawContext& ctx,
       scallop.translate((tip + point_tip) * 0.5F);
       scallop *= drop_basis;
       scallop.rotate(45.0F, 0.0F, 0.0F, 1.0F);
-      scallop.scale(stripe_w * 0.26F, stripe_w * 0.26F, 0.0045F);
+      scallop.scale(stripe_w * 0.26F, stripe_w * 0.26F, 0.002F);
       out.mesh(cube,
                ctx.model * scallop,
                valance * (weather * 0.96F),
