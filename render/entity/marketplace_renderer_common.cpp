@@ -525,7 +525,7 @@ void submit_market_awnings(const DrawContext& ctx,
                          0.0F,
                          1.0F);
         local *= basis;
-        local.scale(stripe_w * 0.51F, 0.002F, std::max(dir.length(), seg_len) * 0.51F);
+        local.scale(stripe_w * 0.51F, 0.002F, std::max(dir.length(), seg_len) * 0.52F);
         const float fold = 0.98F - 0.05F * (billow / length);
         out.mesh(cube,
                  ctx.model * local,
