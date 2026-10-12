@@ -140,6 +140,10 @@ GameEngine::~GameEngine() {
   stop_simulation_thread();
   Game::Systems::PickingService::unbind_surface(m_world);
 
+  if (m_orders_view_model) {
+    m_orders_view_model->detach_from_events();
+  }
+
   if (m_saves) {
     m_saves->shutdown();
   }

@@ -2484,6 +2484,34 @@ TEST_F(CombatModeTest, MultipleArchersReleaseFromTheirOwnVisibleActions) {
   EXPECT_EQ(enemy_unit->health, 70);
 }
 
+TEST_F(CombatModeTest, SoldiersNeitherPauseNorTurnAWarElephant) {
+  auto* soldier = world->create_entity();
+  soldier->add_component<TransformComponent>(-3.0F, 0.0F, 0.0F);
+  auto* soldier_unit = soldier->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  soldier_unit->owner_id = 1;
+  soldier_unit->spawn_type = Game::Units::SpawnType::Swordsman;
+
+  auto* elephant = world->create_entity();
+  auto* elephant_transform =
+      elephant->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  elephant_transform->rotation.y = 0.0F;
+  auto* elephant_unit = elephant->add_component<UnitComponent>(5000, 5000, 1.0F, 12.0F);
+  elephant_unit->owner_id = 2;
+  elephant_unit->spawn_type = Game::Units::SpawnType::Elephant;
+  elephant->add_component<ElephantComponent>();
+  auto* combat_state = elephant->add_component<CombatStateComponent>();
+  combat_state->animation_state = CombatAnimationState::WindUp;
+  combat_state->state_duration = 1.0F;
+  combat_state->state_time = 0.25F;
+
+  Game::Systems::Combat::deal_damage(world.get(), elephant, 5, soldier->get_id());
+
+  EXPECT_FALSE(combat_state->is_hit_paused)
+      << "a crowd of blows made every stomp stutter";
+  EXPECT_FALSE(elephant_transform->has_desired_yaw)
+      << "the elephant keeps facing its own target, not each attacker";
+}
+
 TEST_F(CombatModeTest, HitPauseUsesPerUnitCombatAnimationConstant) {
   auto* attacker = world->create_entity();
   attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);

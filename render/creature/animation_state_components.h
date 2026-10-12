@@ -67,6 +67,7 @@ struct ElephantAnimationStateComponent {
   float body_yaw_time{0.0F};
   float turn_rate{0.0F};
   bool body_yaw_valid{false};
+  bool pivoting{false};
   AnimationStateId clip_state{AnimationStateId::Idle};
   float clip_phase{0.0F};
   AnimationStateId outgoing_state{AnimationStateId::Idle};

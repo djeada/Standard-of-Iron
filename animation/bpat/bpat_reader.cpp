@@ -500,6 +500,9 @@ void BpatBlob::decode_local_poses() {
       auto& pose = m_decoded_local_poses[static_cast<std::size_t>(f) * bones + b];
       pose.rotation = rotation_of(local);
       pose.translation = local.column(3).toVector3D();
+      pose.scale = QVector3D(local.column(0).toVector3D().length(),
+                             local.column(1).toVector3D().length(),
+                             local.column(2).toVector3D().length());
     }
   }
 }

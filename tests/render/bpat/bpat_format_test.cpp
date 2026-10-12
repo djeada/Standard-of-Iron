@@ -341,3 +341,53 @@ TEST(BpatPlayback, ResolvesAdjacentFrameAndLerpForSmoothRiggedPlayback) {
   EXPECT_EQ(wrap.next_frame_in_clip, 0U);
   EXPECT_GT(wrap.frame_lerp, 0.0F);
 }
+
+TEST(BpatReader, LocalPosesKeepBoneScale) {
+  // The elephant rig stores its size in bone scale. Blended (CPU) palettes are
+  // rebuilt from local poses, so a pose that forgets scale draws the creature
+  // smaller than the resident frames do, and it pulses whenever a blend runs.
+  constexpr std::uint32_t bone_count = 2U;
+  BpatWriter w(k_species_elephant, bone_count);
+  std::vector<std::uint8_t> const parents{k_no_parent_bone, 0U};
+  w.set_bone_parents(parents);
+
+  QMatrix4x4 root_bind;
+  root_bind.translate(0.0F, 1.2F, 0.0F);
+  root_bind.scale(0.55F, 0.5F, 0.35F);
+  QMatrix4x4 child_local;
+  child_local.translate(0.0F, 0.8F, 0.6F);
+  child_local.rotate(30.0F, 1.0F, 0.0F, 0.0F);
+  std::vector<QMatrix4x4> const bind{root_bind, root_bind * child_local};
+  w.set_bind_palette(bind);
+
+  QMatrix4x4 posed_root;
+  posed_root.translate(0.1F, 1.25F, -0.05F);
+  posed_root.rotate(12.0F, 0.0F, 1.0F, 0.0F);
+  posed_root.scale(0.55F, 0.5F, 0.35F);
+  QMatrix4x4 posed_child_local;
+  posed_child_local.translate(0.0F, 0.8F, 0.6F);
+  posed_child_local.rotate(-25.0F, 1.0F, 0.0F, 0.0F);
+  std::vector<QMatrix4x4> const globals{posed_root, posed_root * posed_child_local};
+
+  w.add_clip(ClipDescriptor{"fight", 1U, 30.0F, true});
+  std::vector<QMatrix4x4> const skin{globals[0] * bind[0].inverted(),
+                                     globals[1] * bind[1].inverted()};
+  w.append_clip_palettes(skin);
+
+  auto blob = BpatBlob::from_bytes(serialize(w));
+  ASSERT_TRUE(blob.loaded()) << blob.last_error();
+  auto const local = blob.frame_local_pose_view(0U);
+  ASSERT_EQ(local.size(), bone_count);
+  EXPECT_NEAR(local[0].scale.x(), 0.55F, 1.0e-4F);
+  EXPECT_NEAR(local[0].scale.y(), 0.5F, 1.0e-4F);
+  EXPECT_NEAR(local[0].scale.z(), 0.35F, 1.0e-4F);
+
+  QMatrix4x4 const rebuilt_root = local[0].matrix();
+  QMatrix4x4 const rebuilt_child = rebuilt_root * local[1].matrix();
+  for (int row = 0; row < 4; ++row) {
+    for (int col = 0; col < 4; ++col) {
+      EXPECT_NEAR(rebuilt_root(row, col), globals[0](row, col), 1.0e-4F);
+      EXPECT_NEAR(rebuilt_child(row, col), globals[1](row, col), 1.0e-4F);
+    }
+  }
+}

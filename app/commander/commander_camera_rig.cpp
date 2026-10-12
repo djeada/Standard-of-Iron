@@ -39,7 +39,9 @@ constexpr float k_breath_vert_amp = 0.005F;
 
 constexpr float k_anchor_follow_rate = 24.0F;
 constexpr float k_anchor_max_lag = 0.30F;
-constexpr float k_focus_point_follow = 12.0F;
+// The fight focus is a soldier inside a moving crowd; chasing it fast made the
+// look point lurch whenever the pressing soldier changed.
+constexpr float k_focus_point_follow = 4.5F;
 constexpr float k_focus_weight_follow = 6.0F;
 constexpr float k_occlusion_follow = 18.0F;
 
@@ -54,7 +56,10 @@ constexpr float k_framing_blend_rate = 9.0F;
 constexpr float k_aim_sway_damping = 0.72F;
 
 constexpr float k_hit_kick_decay = 9.0F;
-constexpr float k_hit_kick_dolly = 0.14F;
+constexpr float k_hit_kick_dolly = 0.07F;
+// The dolly punch rises over a few frames instead of jumping the lens forward
+// in one; an instant 0.4 m hop on heavy hits read as camera shake.
+constexpr float k_hit_kick_rise = 30.0F;
 constexpr float k_hit_kick_fov = 2.6F;
 
 constexpr float k_hit_kick_max_degrees = 3.0F;
@@ -141,6 +146,7 @@ void CommanderCameraRig::reset() {
   m_fov_current = 75.0F;
   m_aim_blend = 0.0F;
   m_hit_impact_kick = 0.0F;
+  m_hit_kick_dolly_envelope = 0.0F;
   m_threat_bias_smooth = 0.0F;
   m_smooth_valid = false;
   m_forward_valid = false;
@@ -240,6 +246,8 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
     m_hit_impact_kick = 0.0F;
   }
   float const hit_kick = m_hit_impact_kick * impulse_scale;
+  m_hit_kick_dolly_envelope +=
+      (hit_kick - m_hit_kick_dolly_envelope) * smooth_alpha(k_hit_kick_rise, dt);
 
   float const framing_fov = (m_framing_current.fov * fov_scale) +
                             ((inputs.move_running && inputs.move_speed > 0.05F)
@@ -295,7 +303,7 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
       pivot - flat_forward * m_framing_current.back +
       QVector3D(0.0F, m_framing_current.up + bob_v + breath_v, 0.0F) +
       flat_right * (side_offset + bob_l);
-  eye_desired -= flat_forward * (k_hit_kick_dolly * hit_kick);
+  eye_desired -= flat_forward * (k_hit_kick_dolly * m_hit_kick_dolly_envelope);
 
   std::optional<QVector3D> focus_world;
   float focus_weight_target = 0.0F;
@@ -508,7 +516,9 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
         std::sin(std::clamp(inputs.dodge_tilt_progress, 0.0F, 1.0F) * k_pi) * 0.12F;
     float const dot_right = inputs.dodge_direction.x() * flat_right.x() +
                             inputs.dodge_direction.z() * flat_right.z();
-    dodge_tilt_rad = tilt_curve * (dot_right > 0.0F ? 1.0F : -1.0F);
+    // Roll with the sideways part of the dodge only; a straight forward or
+    // backward roll used to tilt a full 7 degrees to whichever side noise picked.
+    dodge_tilt_rad = tilt_curve * std::clamp(dot_right * 1.5F, -1.0F, 1.0F);
   }
 
   QVector3D const up_final = (up_leaned + right_world * dodge_tilt_rad).normalized();

@@ -111,7 +111,7 @@ TEST(HistoricalCommanderTest, PickersAndSkirmishSeatsListOnlyThePlayableSix) {
                                    "carthage_bow_commander",
                                    "carthage_sword_commander"}));
 
-  for (const QString nation :
+  for (const QString& nation :
        {QStringLiteral("roman_republic"), QStringLiteral("carthage")}) {
     for (int seat = 0; seat < 24; ++seat) {
       const QString troop = Game::Mission::commander_troop_for_seat(nation, seat);

@@ -158,4 +158,25 @@ TEST(SelectionRingLayout, SingleSoldierRingKeepsConfiguredSize) {
   EXPECT_FLOAT_EQ(size, 1.2F);
 }
 
+TEST(SelectionRingLayout, ACommanderBodyFollowsItsSampleNotTheRawTransform) {
+  Engine::Core::World world;
+  auto* entity = world.create_entity();
+  auto* transform = entity->add_component<Engine::Core::TransformComponent>();
+  transform->position = {5.3F, 0.0F, 2.2F};
+  transform->rotation.y = 40.0F;
+  auto* sample =
+      entity->add_component<Engine::Core::CommanderPresentationSampleComponent>();
+  sample->valid = true;
+  sample->presented_valid = false;
+  sample->position = {5.0F, 0.0F, 2.0F};
+  sample->yaw = 35.0F;
+
+  auto const root = Render::Entity::resolve_formation_root(entity, *transform);
+  EXPECT_FLOAT_EQ(root.position.x(), 5.0F)
+      << "the body must stand where the camera's sample says, not where this "
+         "tick's contact push left the transform";
+  EXPECT_FLOAT_EQ(root.position.z(), 2.0F);
+  EXPECT_FLOAT_EQ(root.yaw, 35.0F);
+}
+
 } // namespace

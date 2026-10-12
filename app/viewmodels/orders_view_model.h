@@ -87,6 +87,8 @@ signals:
 public:
   void reset_gesture() { m_right_mouse.reset(); }
 
+  void detach_from_events() { m_context_actions_subscription.unsubscribe(); }
+
   struct HoverStats {
     std::uint64_t evaluated = 0;
     std::uint64_t throttled = 0;

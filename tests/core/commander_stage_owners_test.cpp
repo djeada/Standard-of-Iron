@@ -102,15 +102,44 @@ TEST(CommanderInputPortTest, EdgeOutcomesFeedTheSequenceCounters) {
   EXPECT_EQ(port.edges().dodge_refused_sequence, 1U);
 }
 
-TEST(CommanderBodyFacingTest, TheBodySnapsToTheViewOnFirstUseAndWhenItMustFaceIt) {
+TEST(CommanderBodyFacingTest, TheBodySnapsToTheViewOnFirstUse) {
   CommanderBodyFacing facing;
   BodyFacingInput input;
   input.view_yaw = 120.0F;
   input.dt = 0.016F;
   EXPECT_FLOAT_EQ(facing.advance(input), 120.0F);
+}
+
+TEST(CommanderBodyFacingTest, FacingTheViewTurnsQuicklyButNeverTeleports) {
+  CommanderBodyFacing facing;
+  BodyFacingInput input;
+  input.view_yaw = 120.0F;
+  input.dt = 0.016F;
+  static_cast<void>(facing.advance(input));
 
   input.view_yaw = 200.0F;
   input.must_face_view = true;
+  float const first = facing.advance(input);
+  EXPECT_GT(first, 120.0F);
+  EXPECT_LT(first, 200.0F) << "a quarter turn in one tick reads as a twitch";
+
+  float yaw = first;
+  for (int tick = 0; tick < 6; ++tick) {
+    yaw = facing.advance(input);
+  }
+  EXPECT_FLOAT_EQ(yaw, 200.0F) << "the turn still lines up within a tenth of a second";
+}
+
+TEST(CommanderBodyFacingTest, ASwingThePlayerAsksForSnapsToTheView) {
+  CommanderBodyFacing facing;
+  BodyFacingInput input;
+  input.view_yaw = 120.0F;
+  input.dt = 0.016F;
+  static_cast<void>(facing.advance(input));
+
+  input.view_yaw = 200.0F;
+  input.must_face_view = true;
+  input.snap_to_view = true;
   EXPECT_FLOAT_EQ(facing.advance(input), 200.0F);
 }
 

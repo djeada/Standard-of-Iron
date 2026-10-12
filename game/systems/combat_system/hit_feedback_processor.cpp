@@ -239,6 +239,17 @@ struct ImpactStrength {
   return strength;
 }
 
+// A war elephant does not break its swing or wheel round for every soldier
+// that lands a blow; with a crowd on it that turned each stomp into stop-go
+// stutter and a heading that jittered between attackers. Only another
+// elephant hits hard enough to interrupt one.
+[[nodiscard]] auto shrugs_off_hit(const Engine::Core::Entity& target,
+                                  const Engine::Core::Entity* attacker) -> bool {
+  return target.has_component<Engine::Core::ElephantComponent>() &&
+         (attacker == nullptr ||
+          !attacker->has_component<Engine::Core::ElephantComponent>());
+}
+
 void turn_toward_attacker(Engine::Core::Entity& target,
                           Engine::Core::TransformComponent& target_transform,
                           const Engine::Core::TransformComponent& attacker_transform) {
@@ -290,7 +301,9 @@ void apply_attacker_impulse(Engine::Core::Entity& target,
       Engine::Core::HitFeedbackComponent::k_max_knockback * 2.8F);
   feedback.knockback_x = (dx / dist) * knockback;
   feedback.knockback_z = (dz / dist) * knockback;
-  turn_toward_attacker(target, target_transform, attacker_transform);
+  if (!shrugs_off_hit(target, &attacker)) {
+    turn_toward_attacker(target, target_transform, attacker_transform);
+  }
 }
 
 void announce_new_stagger(const Engine::Core::Entity* entity, bool was_staggered) {
@@ -383,7 +396,10 @@ void apply_hit_feedback(Engine::Core::Entity* target,
   }
 
   auto* combat_state = target->get_component<Engine::Core::CombatStateComponent>();
-  if (combat_state != nullptr && reaction_pauses_swing(kind)) {
+  Engine::Core::Entity const* attacker_entity =
+      (world != nullptr && attacker_id != 0) ? world->get_entity(attacker_id) : nullptr;
+  if (combat_state != nullptr && reaction_pauses_swing(kind) &&
+      !shrugs_off_hit(*target, attacker_entity)) {
     combat_state->is_hit_paused = true;
     combat_state->hit_pause_remaining =
         Engine::Core::CombatStateComponent::k_combat_animation_hit_pause_duration;

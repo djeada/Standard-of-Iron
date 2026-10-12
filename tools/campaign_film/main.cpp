@@ -355,7 +355,7 @@ auto build_timeline_json(const Spec& spec,
   for (const QString& warning : timeline.warnings()) {
     warnings.push_back(warning);
   }
-  for (const auto& range : edge_ranges) {
+  for (const QJsonValue range : edge_ranges) {
     const QJsonArray triple = range.toArray();
     warnings.push_back(QStringLiteral("the map's %3 edge is in frame from %1 s to %2 s")
                            .arg(triple.at(0).toDouble())
@@ -672,7 +672,7 @@ auto main(int argc, char** argv) -> int {
       range_edges = edges;
     }
   }
-  for (const auto& range : edge_ranges) {
+  for (const QJsonValue range : edge_ranges) {
     log_line(QStringLiteral("warning: the map's %3 edge is in frame from %1 s to %2 s")
                  .arg(range.toArray().at(0).toDouble())
                  .arg(range.toArray().at(1).toDouble())

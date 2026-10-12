@@ -161,6 +161,7 @@ auto stations_for(const SiegeCrewFrame& frame,
   case SiegeCrewMode::Load:
     return ballista ? k_ballista_load : k_catapult_load;
   case SiegeCrewMode::Rest:
+  case SiegeCrewMode::Fallen:
     break;
   }
   return ballista ? k_ballista_rest : k_catapult_rest;
