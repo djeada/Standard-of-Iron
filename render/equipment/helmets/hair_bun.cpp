@@ -1,7 +1,9 @@
 #include "hair_bun.h"
 
 #include <array>
+#include <utility>
 
+#include "headwear_mesh.h"
 #include "helmet_alignment.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/generated_equipment.h"
@@ -17,17 +19,6 @@ enum HairPaletteSlot : std::uint8_t {
 
 const QVector3D k_auburn{0.17F, 0.09F, 0.05F};
 const QVector3D k_near_black{0.075F, 0.055F, 0.04F};
-
-auto crown(float lift) -> GeneratedEquipmentPrimitive {
-  return generated_ellipsoid(QVector3D(0.0F, 0.62F + lift, -0.12F),
-                             QVector3D(1.24F, 1.02F, 1.25F),
-                             k_hair_slot);
-}
-
-auto nape() -> GeneratedEquipmentPrimitive {
-  return generated_ellipsoid(
-      QVector3D(0.0F, 0.15F, -0.55F), QVector3D(1.2F, 0.95F, 0.85F), k_hair_slot);
-}
 
 auto attach(const RenderArchetype& archetype,
             std::uint16_t socket_bone_index,
@@ -48,20 +39,16 @@ auto attach(const RenderArchetype& archetype,
 
 auto hair_bun_archetype() -> const RenderArchetype& {
   static const RenderArchetype archetype = [] {
-    std::array<GeneratedEquipmentPrimitive, 5> const primitives{{
-        generated_ellipsoid(
-            QVector3D(0.0F, 0.18F, -0.14F), QVector3D(1.5F, 1.38F, 1.48F), k_hair_slot),
-        generated_ellipsoid(QVector3D(0.0F, -0.55F, -0.75F),
-                            QVector3D(1.36F, 0.8F, 0.85F),
-                            k_hair_slot),
-        generated_sphere(QVector3D(0.0F, -0.42F, -1.52F), 0.6F, k_hair_slot),
-        generated_sphere(QVector3D(0.0F, -0.08F, -1.58F), 0.4F, k_hair_slot),
-        generated_cylinder(QVector3D(0.0F, 0.56F, -0.13F),
-                           QVector3D(0.0F, 0.7F, -0.15F),
-                           1.53F,
-                           k_tie_slot),
-    }};
-    return build_generated_equipment_archetype("hair_bun", primitives);
+    RenderArchetypeBuilder builder("hair_bun");
+    builder.add_palette_mesh(Headwear::hair_cap(true), QMatrix4x4{}, k_hair_slot);
+    add_generated_equipment_primitive(
+        builder,
+        generated_ellipsoid(QVector3D(0.0F, -0.28F, -1.42F),
+                            QVector3D(0.49F, 0.45F, 0.28F),
+                            k_hair_slot));
+    builder.add_palette_mesh(Headwear::bun_coil(), QMatrix4x4{}, k_hair_slot);
+    builder.add_palette_mesh(Headwear::bun_tie(), QMatrix4x4{}, k_tie_slot);
+    return std::move(builder).build();
   }();
   return archetype;
 }
@@ -89,13 +76,9 @@ auto hair_bun_make_static_attachment(std::uint16_t socket_bone_index,
 
 auto hair_crop_archetype() -> const RenderArchetype& {
   static const RenderArchetype archetype = [] {
-    std::array<GeneratedEquipmentPrimitive, 2> const primitives{{
-        generated_ellipsoid(
-            QVector3D(0.0F, 0.3F, -0.16F), QVector3D(1.49F, 1.25F, 1.47F), k_hair_slot),
-        generated_ellipsoid(
-            QVector3D(0.0F, -0.3F, -0.7F), QVector3D(1.3F, 0.7F, 0.8F), k_hair_slot),
-    }};
-    return build_generated_equipment_archetype("hair_crop", primitives);
+    RenderArchetypeBuilder builder("hair_crop");
+    builder.add_palette_mesh(Headwear::hair_cap(false), QMatrix4x4{}, k_hair_slot);
+    return std::move(builder).build();
   }();
   return archetype;
 }
@@ -268,17 +251,14 @@ auto pileus_make_static_attachment(std::uint16_t socket_bone_index,
 
 auto turban_archetype() -> const RenderArchetype& {
   static const RenderArchetype archetype = [] {
-    std::array<GeneratedEquipmentPrimitive, 4> const primitives{{
-        generated_cylinder(
-            QVector3D(0.0F, 0.22F, -0.05F), QVector3D(0.0F, 0.82F, -0.08F), 1.54F, 0U),
-        generated_cylinder(
-            QVector3D(0.0F, 0.72F, -0.1F), QVector3D(0.0F, 1.22F, -0.16F), 1.46F, 1U),
+    RenderArchetypeBuilder builder("turban");
+    add_generated_equipment_primitive(
+        builder,
         generated_ellipsoid(
-            QVector3D(0.0F, 1.18F, -0.12F), QVector3D(1.4F, 0.62F, 1.4F), 0U),
-        generated_cone(
-            QVector3D(0.0F, 0.65F, -1.38F), QVector3D(0.0F, -0.75F, -1.58F), 0.48F, 1U),
-    }};
-    return build_generated_equipment_archetype("turban", primitives);
+            QVector3D(0.0F, 0.37F, -0.05F), QVector3D(1.30F, 1.14F, 1.42F), 1U));
+    builder.add_palette_mesh(Headwear::turban_wraps(), QMatrix4x4{}, 0U);
+    builder.add_palette_mesh(Headwear::turban_tail(), QMatrix4x4{}, 0U);
+    return std::move(builder).build();
   }();
   return archetype;
 }
@@ -290,7 +270,7 @@ auto turban_fill_role_colors(const HumanoidPalette&,
     return 0;
   }
   out[0] = QVector3D(0.86F, 0.83F, 0.74F);
-  out[1] = QVector3D(0.70F, 0.66F, 0.58F);
+  out[1] = QVector3D(0.78F, 0.74F, 0.65F);
   return k_turban_role_count;
 }
 
