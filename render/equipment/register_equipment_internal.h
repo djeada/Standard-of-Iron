@@ -171,6 +171,24 @@ auto build_gallic_montefortino_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec>;
 auto build_iberian_sinew_cap_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec>;
+auto build_held_scroll_attachments(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec>;
+auto build_held_wax_tablet_attachments(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec>;
+auto build_manacles_attachments(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec>;
+auto build_hair_bun_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec>;
+auto build_hair_crop_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec>;
+auto build_skull_face_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec>;
+auto build_turban_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec>;
+auto build_pileus_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec>;
+auto build_palla_veil_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec>;
 auto build_headwrap_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec>;
 auto build_fabius_helmet_attachment(std::uint8_t base_role_byte)
@@ -194,6 +212,8 @@ auto build_carthage_light_armor_attachment(std::uint8_t base_role_byte)
 auto build_carthage_heavy_armor_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec>;
 auto build_gallic_braccae_attachments(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec>;
+auto build_stola_attachments(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec>;
 auto build_gallic_tunic_attachments(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec>;
@@ -435,6 +455,10 @@ auto gallic_tunic_role_colors(const void* variant_void,
                               QVector3D* out,
                               std::uint32_t base_count,
                               std::size_t max_count) -> std::uint32_t;
+auto stola_role_colors(const void* variant_void,
+                       QVector3D* out,
+                       std::uint32_t base_count,
+                       std::size_t max_count) -> std::uint32_t;
 auto iberian_tunic_role_colors(const void* variant_void,
                                QVector3D* out,
                                std::uint32_t base_count,

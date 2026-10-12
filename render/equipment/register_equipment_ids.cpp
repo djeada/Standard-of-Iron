@@ -18,6 +18,9 @@ void register_equipment_ids(EquipmentRegistry& registry) {
   registry.register_equipment_id(EquipmentCategory::Weapon, "sword_carthage");
   registry.register_equipment_id(EquipmentCategory::Weapon, "sword_sepulcher");
   registry.register_equipment_id(EquipmentCategory::Weapon, "sword_roman");
+  registry.register_equipment_id(EquipmentCategory::Weapon, "held_scroll");
+  registry.register_equipment_id(EquipmentCategory::Weapon, "held_wax_tablet");
+  registry.register_equipment_id(EquipmentCategory::Armor, "manacles");
   registry.register_equipment_id(EquipmentCategory::Weapon, "sword_gallic");
   registry.register_equipment_id(EquipmentCategory::Weapon, "sword_falcata");
   registry.register_equipment_id(EquipmentCategory::Weapon, "sword_scipio");
@@ -43,6 +46,12 @@ void register_equipment_ids(EquipmentRegistry& registry) {
   registry.register_equipment_id(EquipmentCategory::Helmet, "gallic_montefortino");
   registry.register_equipment_id(EquipmentCategory::Helmet, "iberian_sinew_cap");
   registry.register_equipment_id(EquipmentCategory::Helmet, "headwrap");
+  registry.register_equipment_id(EquipmentCategory::Helmet, "hair_bun");
+  registry.register_equipment_id(EquipmentCategory::Helmet, "hair_crop");
+  registry.register_equipment_id(EquipmentCategory::Helmet, "skull_face");
+  registry.register_equipment_id(EquipmentCategory::Helmet, "turban");
+  registry.register_equipment_id(EquipmentCategory::Helmet, "pileus");
+  registry.register_equipment_id(EquipmentCategory::Helmet, "palla_veil");
   registry.register_equipment_id(EquipmentCategory::Helmet, "commander_fabius");
   registry.register_equipment_id(EquipmentCategory::Helmet, "commander_scipio");
   registry.register_equipment_id(EquipmentCategory::Helmet, "commander_marcellus");
@@ -67,6 +76,7 @@ void register_equipment_ids(EquipmentRegistry& registry) {
   registry.register_equipment_id(EquipmentCategory::Armor, "gallic_braccae");
   registry.register_equipment_id(EquipmentCategory::Armor, "gallic_tunic");
   registry.register_equipment_id(EquipmentCategory::Armor, "iberian_tunic");
+  registry.register_equipment_id(EquipmentCategory::Armor, "stola");
   registry.register_equipment_id(EquipmentCategory::Armor, "carthage_shoulder_cover");
   registry.register_equipment_id(EquipmentCategory::Armor,
                                  "carthage_shoulder_cover_cavalry");

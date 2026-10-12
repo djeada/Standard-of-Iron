@@ -45,6 +45,7 @@ set(RENDER_EQUIPMENT_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/helmets/commander_helmets.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/helmets/roman_heavy_helmet.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/helmets/roman_light_helmet.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/helmets/hair_bun.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/helmets/carthage_heavy_helmet.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/helmets/carthage_light_helmet.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/helmets/historical_helmets.cpp

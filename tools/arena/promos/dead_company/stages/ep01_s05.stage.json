@@ -1,0 +1,110 @@
+{
+  "id": "dead_company_ep01_s05",
+  "label": "The Dead Company 1: s05",
+  "duration": 32,
+  "hour": 12.0,
+  "include": ["camp.set.json"],
+  "actors": [
+    {
+      "name": "severus",
+      "look": "severus",
+      "at": [0.5, -29.5],
+      "facing": 0
+    },
+    {
+      "name": "aide_a",
+      "look": "troops/roman/camp_rest_armed",
+      "at": [-0.5, -31.5],
+      "facing": 0
+    },
+    {
+      "name": "aide_b",
+      "look": "troops/roman/camp_rest_armed",
+      "at": [1.5, -31.5],
+      "facing": 0
+    },
+    {
+      "name": "tiro",
+      "look": "tiro",
+      "at": [2.5, -15.5],
+      "facing": -90
+    },
+    {
+      "name": "felix",
+      "look": "felix",
+      "at": [3.5, -14.5],
+      "facing": -100
+    },
+    {
+      "name": "livia",
+      "look": "livia",
+      "at": [3.5, -16.5],
+      "facing": -80
+    }
+  ],
+  "steps": [
+    {
+      "t": 4.617,
+      "do": "walk",
+      "who": "severus",
+      "to": [0.5, -16.5],
+      "at": "mark:severus_stops-6.9"
+    },
+    {
+      "t": 4.717,
+      "do": "walk",
+      "who": "aide_a",
+      "to": [-0.5, -18.5],
+      "at": "mark:severus_stops-6.8"
+    },
+    {
+      "t": 4.717,
+      "do": "walk",
+      "who": "aide_b",
+      "to": [1.5, -18.5],
+      "at": "mark:severus_stops-6.8"
+    },
+    {
+      "t": 19.28,
+      "do": "walk",
+      "who": "severus",
+      "to": [0.5, -4.5],
+      "at": "mark:severus_leaves+0.2"
+    },
+    {
+      "t": 19.68,
+      "do": "walk",
+      "who": "aide_a",
+      "to": [-0.5, -6.5],
+      "at": "mark:severus_leaves+0.6"
+    },
+    {
+      "t": 19.68,
+      "do": "walk",
+      "who": "aide_b",
+      "to": [1.5, -6.5],
+      "at": "mark:severus_leaves+0.6"
+    },
+    {
+      "t": 11.717,
+      "do": "face",
+      "who": "severus",
+      "toward": "tiro",
+      "at": "mark:severus_stops+0.2"
+    },
+    {
+      "t": 11.917,
+      "do": "face",
+      "who": "tiro",
+      "toward": "severus",
+      "at": "mark:severus_stops+0.4"
+    },
+    {
+      "t": 21.23,
+      "do": "face",
+      "who": "felix",
+      "toward": "tiro",
+      "at": "line:s05_05-0.4"
+    }
+  ]
+}

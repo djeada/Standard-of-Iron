@@ -1,0 +1,15 @@
+{
+  "tiro": [
+    [2.55, "gesture_talk", 2.577],
+    [5.127, "gesture_talk", 2.577],
+    [7.704, "gesture_talk", 2.577],
+    [10.28, "gesture_talk", 2.577],
+    [12.857, "gesture_talk", 2.577],
+    [17.882, "gesture_talk", 2.96],
+    [20.842, "gesture_talk", 2.96],
+    [28.694, "gesture_shrug", 1.8],
+    [32.264, "gesture_talk", 3.877],
+    [42.129, "gesture_open", 2.0],
+    [85.378, "gesture_talk", 1.771]
+  ]
+}

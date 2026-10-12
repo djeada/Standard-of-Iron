@@ -272,6 +272,11 @@ auto build_gallic_tunic_attachments(std::uint8_t base_role_byte)
   return {Render::GL::gallic_tunic_make_static_attachment(base_role_byte)};
 }
 
+auto build_stola_attachments(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return Render::GL::stola_make_static_attachments(base_role_byte);
+}
+
 auto build_iberian_tunic_attachments(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec> {
   std::uint8_t const crimson_role = base_role_byte + 1U;
@@ -597,6 +602,24 @@ auto gallic_tunic_role_colors(const void* variant_void,
          std::uint32_t count,
          std::size_t max) {
         return count + Render::GL::gallic_tunic_fill_role_colors(
+                           variant.palette, colors + count, max - count);
+      },
+      out,
+      base_count,
+      max_count);
+}
+
+auto stola_role_colors(const void* variant_void,
+                       QVector3D* out,
+                       std::uint32_t base_count,
+                       std::size_t max_count) -> std::uint32_t {
+  return with_variant_palette(
+      variant_void,
+      [](const HumanoidVariant& variant,
+         QVector3D* colors,
+         std::uint32_t count,
+         std::size_t max) {
+        return count + Render::GL::stola_fill_role_colors(
                            variant.palette, colors + count, max - count);
       },
       out,

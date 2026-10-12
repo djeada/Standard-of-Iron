@@ -7,6 +7,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <vector>
 
 #include "render/equipment/i_equipment_renderer.h"
 #include "render/humanoid/runtime/humanoid_renderer.h"
@@ -91,5 +92,16 @@ auto scabbard_make_static_attachment(float sheath_r,
                                      std::uint16_t socket_bone_index,
                                      std::uint8_t base_role_byte)
     -> Render::Creature::StaticAttachmentSpec;
+
+auto held_scroll_make_static_attachment(std::uint8_t base_role_byte)
+    -> Render::Creature::StaticAttachmentSpec;
+auto held_wax_tablet_make_static_attachment(std::uint8_t base_role_byte)
+    -> Render::Creature::StaticAttachmentSpec;
+auto manacles_make_static_attachments(std::uint8_t base_role_byte)
+    -> std::vector<Render::Creature::StaticAttachmentSpec>;
+auto held_prop_fill_role_colors(bool tablet,
+                                QVector3D* out,
+                                std::size_t max) -> std::uint32_t;
+auto manacles_fill_role_colors(QVector3D* out, std::size_t max) -> std::uint32_t;
 
 } // namespace Render::GL

@@ -1,0 +1,62 @@
+{
+  "id": "dead_company_ep01_s10",
+  "label": "The Dead Company 1: s10",
+  "duration": 26,
+  "hour": 22.3,
+  "exposure": 1.0,
+  "include": ["camp.set.json"],
+  "actors": [
+    {
+      "name": "felix",
+      "look": "felix",
+      "at": [-2.5, 8.5],
+      "facing": 0
+    },
+    {
+      "name": "tiro",
+      "look": "tiro",
+      "at": [-8.5, 17.5],
+      "facing": 90
+    }
+  ],
+  "steps": [
+    {
+      "t": 0.5,
+      "do": "walk",
+      "who": "felix",
+      "to": [-2.5, 15.5]
+    },
+    {
+      "t": 1.0,
+      "do": "walk",
+      "who": "tiro",
+      "to": [-3.5, 16.5]
+    },
+    {
+      "t": 5.0,
+      "do": "face",
+      "who": "felix",
+      "toward": "tiro"
+    },
+    {
+      "t": 5.4,
+      "do": "face",
+      "who": "tiro",
+      "toward": "felix"
+    },
+    {
+      "t": 21.63,
+      "do": "walk",
+      "who": "felix",
+      "to": [0.5, 27.5],
+      "at": "line:s10_08@end+0.4"
+    }
+  ],
+  "props": [
+    {
+      "type": "fire_camp",
+      "at": [-1.0, 14.0],
+      "scale": 0.25
+    }
+  ]
+}

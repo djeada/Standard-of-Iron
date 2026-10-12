@@ -970,6 +970,10 @@ auto roman_civilian_variant_table() -> const Render::Creature::ArchetypeVariantT
 
 } // namespace
 
+void ensure_civilian_equipment_registered() {
+  ensure_roman_civilian_equipment_contributions_registered();
+}
+
 void register_builder_style(const std::string& nation_id,
                             const BuilderStyleConfig& style) {
   style_registry()[nation_id] = style;

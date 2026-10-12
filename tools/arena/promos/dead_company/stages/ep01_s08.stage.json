@@ -1,0 +1,55 @@
+{
+  "id": "dead_company_ep01_s08",
+  "label": "The Dead Company 1: s08",
+  "duration": 24,
+  "hour": 19.3,
+  "include": ["camp.set.json"],
+  "props": [
+    {
+      "type": "tent",
+      "at": [-6.5, 15.5],
+      "scale": 1.0
+    },
+    {
+      "type": "supply_cart",
+      "at": [-3.0, 15.0],
+      "scale": 0.9
+    },
+    {
+      "type": "fire_camp",
+      "at": [-5.5, 11.5],
+      "scale": 0.28
+    }
+  ],
+  "actors": [
+    {
+      "name": "felix",
+      "look": "felix_scroll",
+      "at": [-6.5, 12.5],
+      "facing": 180
+    },
+    {
+      "name": "livia",
+      "look": "livia",
+      "at": [-7.5, 10.5],
+      "facing": 45,
+      "routine": ["rest_kneel"]
+    },
+    {
+      "name": "tiro",
+      "look": "tiro",
+      "at": [-4.5, 9.5],
+      "facing": -45,
+      "routine": ["rest_kneel"]
+    },
+    {
+      "name": "bostar",
+      "look": "bostar",
+      "at": [-3.5, 12.5],
+      "facing": -90,
+      "routine": ["rest_sit"]
+    }
+  ],
+  "steps": [],
+  "exposure": 1.0
+}

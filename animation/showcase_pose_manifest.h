@@ -23,6 +23,17 @@ enum class HumanoidShowcaseMove : std::uint8_t {
   RestSitKneesDown,
   TauntDismissive,
   TauntCynical,
+  GestureTalk,
+  GesturePoint,
+  GestureShrug,
+  GestureNod,
+  GestureCrossed,
+  GestureSalute,
+  GestureChin,
+  GestureOpen,
+  GestureRead,
+  GesturePresent,
+  GestureRecoil,
   Count
 };
 
@@ -30,6 +41,12 @@ enum class HumanoidShowcaseMove : std::uint8_t {
 humanoid_showcase_move_is_taunt(HumanoidShowcaseMove move) noexcept -> bool {
   return move == HumanoidShowcaseMove::TauntDismissive ||
          move == HumanoidShowcaseMove::TauntCynical;
+}
+
+[[nodiscard]] constexpr auto
+humanoid_showcase_move_is_gesture(HumanoidShowcaseMove move) noexcept -> bool {
+  return move >= HumanoidShowcaseMove::GestureTalk &&
+         move < HumanoidShowcaseMove::Count;
 }
 
 [[nodiscard]] constexpr auto

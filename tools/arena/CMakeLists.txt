@@ -17,6 +17,7 @@ add_library(
     arena_ai_duel_scenarios.cpp
     arena_economy_scenarios.cpp
     arena_ambience_scenarios.cpp
+    arena_drama_scenarios.cpp
     arena_city_scenarios.cpp
     arena_spotlight_scenarios.cpp
     arena_engagement_scenarios.cpp

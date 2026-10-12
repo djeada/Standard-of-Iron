@@ -1,0 +1,35 @@
+{
+  "id": "dead_company_ep01_s04",
+  "label": "The Dead Company 1: s04",
+  "duration": 120,
+  "hour": 10.0,
+  "include": ["camp.set.json"],
+  "props": [],
+  "actors": [
+    {
+      "name": "livia",
+      "look": "livia_scroll",
+      "at": [13.5, 7.5],
+      "facing": 180.0,
+      "routine": ["taunt_dismissive"],
+      "routine_delay": 99.6,
+      "routine_loop": false
+    },
+    {
+      "name": "felix",
+      "look": "felix_scroll",
+      "at": [12.5, 5.5],
+      "facing": 55.0,
+      "routine": ["taunt_cynical"],
+      "routine_delay": 33.2,
+      "routine_loop": false
+    },
+    {
+      "name": "tiro",
+      "look": "tiro",
+      "at": [14.5, 5.5],
+      "facing": -55.0
+    }
+  ],
+  "steps": []
+}

@@ -15,6 +15,7 @@
 #include "arena_city_scenarios.h"
 #include "arena_combat_scenarios.h"
 #include "arena_commander_duel_scenarios.h"
+#include "arena_drama_scenarios.h"
 #include "arena_economy_scenarios.h"
 #include "arena_engagement_scenarios.h"
 #include "arena_facade_scenarios.h"
@@ -114,6 +115,7 @@ auto definitions() -> const std::vector<ArenaScenarioDefinition>& {
     append(values, build_transition_gauntlet_definitions());
     append(values, build_matchup_matrix_definitions());
     append(values, build_battle_order_definitions());
+    append(values, build_drama_definitions());
 
     for (auto& scenario : values) {
       if (scenario.rpg_mode && !scenario.rpg_commander_group.isEmpty()) {

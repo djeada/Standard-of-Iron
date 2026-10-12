@@ -360,6 +360,11 @@ const vec3 k_face_feature_tones[5] = vec3[5](vec3(0.92, 0.89, 0.82),
                                              vec3(0.30, 0.10, 0.07));
 
 vec3 apply_face_features(vec3 base, int material_id, int color_role, vec2 tex) {
+  // Authored skull meshes carry continuous cavity occlusion in their UVs.
+  if (material_id == 0 && color_role == k_humanoid_role_skin &&
+      abs(tex.x + 5.0) < 0.01) {
+    return base * clamp(tex.y, 0.06, 1.0);
+  }
   if (material_id != 0 || color_role != k_humanoid_role_skin ||
       abs(tex.x - k_face_feature_uv) > 0.5) {
     return base;

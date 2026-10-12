@@ -1,0 +1,280 @@
+{
+  "id": "dead_company_ep01_s12",
+  "label": "The Dead Company 1: s12",
+  "duration": 40,
+  "hour": 23.6,
+  "exposure": 1.1,
+  "fog": 0.05,
+  "lighting_profile": "iron_sepulcher",
+  "include": [],
+  "roads": [
+    {
+      "from": [0.5, 40],
+      "to": [0.5, -40],
+      "width": 2.6,
+      "style": "rough"
+    }
+  ],
+  "buildings": [
+    {
+      "name": "watch_post",
+      "type": "defense_tower",
+      "at": [5.0, -3.0]
+    }
+  ],
+  "props": [
+    {
+      "type": "statue",
+      "at": [2.5, 0.5],
+      "scale": 0.4
+    },
+    {
+      "type": "dead_tree",
+      "count": 2,
+      "at": [-11, -15],
+      "spacing": [24, 0],
+      "scale": 0.8
+    },
+    {
+      "type": "boulder",
+      "count": 3,
+      "at": [-7, 4],
+      "spacing": [7, -6],
+      "scale": 0.6,
+      "yaw_spread": 180
+    },
+    {
+      "type": "plant",
+      "count": 6,
+      "at": [-6, 10],
+      "spacing": [2.5, 0],
+      "scale": 0.8,
+      "yaw_spread": 180
+    },
+    {
+      "type": "cypress_tree",
+      "count": 2,
+      "at": [-10, -2],
+      "spacing": [22, 0],
+      "scale": 1.1
+    },
+    {
+      "type": "fire_camp",
+      "at": [2.0, -5.0],
+      "scale": 0.3
+    },
+    {
+      "type": "fire_camp",
+      "at": [1.9, -7.0],
+      "scale": 0.22
+    },
+    {
+      "type": "fire_camp",
+      "at": [-0.7, -1.4],
+      "scale": 0.2
+    }
+  ],
+  "actors": [
+    {
+      "name": "felix",
+      "look": "felix",
+      "at": [0.5, 16.5],
+      "facing": 180
+    },
+    {
+      "name": "bostar",
+      "look": "bostar",
+      "at": [1.5, 24.5],
+      "facing": 180
+    },
+    {
+      "name": "dead_a",
+      "look": "skeleton_legionary",
+      "at": [-1.5, -8.5],
+      "facing": 180,
+      "nation": "iron_sepulcher",
+      "troop": "skeleton_swordsman"
+    },
+    {
+      "name": "dead_b",
+      "look": "troops/iron_sepulcher/skeleton_legionary_bare",
+      "at": [0.5, -8.5],
+      "facing": 180,
+      "nation": "iron_sepulcher",
+      "troop": "skeleton_swordsman"
+    },
+    {
+      "name": "dead_c",
+      "look": "skeleton_legionary",
+      "at": [2.5, -8.5],
+      "facing": 180,
+      "nation": "iron_sepulcher",
+      "troop": "skeleton_swordsman"
+    }
+  ],
+  "steps": [
+    {
+      "t": 0.5,
+      "do": "walk",
+      "who": "felix",
+      "to": [0.5, 1.0]
+    },
+    {
+      "t": 10.835,
+      "do": "walk",
+      "who": "felix",
+      "to": [0.5, -2.5],
+      "at": "line:s12_02+0.3"
+    },
+    {
+      "t": 15.53,
+      "do": "run",
+      "who": "bostar",
+      "to": [1.5, -1.5],
+      "at": "mark:grip-6.7"
+    },
+    {
+      "t": 29.014,
+      "do": "turn",
+      "who": "dead_b",
+      "degrees": 15,
+      "at": "mark:turn+0.00"
+    },
+    {
+      "t": 29.254,
+      "do": "turn",
+      "who": "dead_b",
+      "degrees": 15,
+      "at": "mark:turn+0.24"
+    },
+    {
+      "t": 29.494,
+      "do": "turn",
+      "who": "dead_b",
+      "degrees": 15,
+      "at": "mark:turn+0.48"
+    },
+    {
+      "t": 29.734,
+      "do": "turn",
+      "who": "dead_b",
+      "degrees": 15,
+      "at": "mark:turn+0.72"
+    },
+    {
+      "t": 29.974,
+      "do": "turn",
+      "who": "dead_b",
+      "degrees": 15,
+      "at": "mark:turn+0.96"
+    },
+    {
+      "t": 30.214,
+      "do": "turn",
+      "who": "dead_b",
+      "degrees": 15,
+      "at": "mark:turn+1.20"
+    },
+    {
+      "t": 30.454,
+      "do": "turn",
+      "who": "dead_b",
+      "degrees": 15,
+      "at": "mark:turn+1.44"
+    },
+    {
+      "t": 30.694,
+      "do": "turn",
+      "who": "dead_b",
+      "degrees": 15,
+      "at": "mark:turn+1.68"
+    },
+    {
+      "t": 30.934,
+      "do": "turn",
+      "who": "dead_b",
+      "degrees": 15,
+      "at": "mark:turn+1.92"
+    },
+    {
+      "t": 31.174,
+      "do": "turn",
+      "who": "dead_b",
+      "degrees": 15,
+      "at": "mark:turn+2.16"
+    },
+    {
+      "t": 31.414,
+      "do": "turn",
+      "who": "dead_b",
+      "degrees": 15,
+      "at": "mark:turn+2.40"
+    },
+    {
+      "t": 31.654,
+      "do": "turn",
+      "who": "dead_b",
+      "degrees": 15,
+      "at": "mark:turn+2.64"
+    },
+    {
+      "t": 35.514,
+      "do": "turn",
+      "who": "dead_a",
+      "degrees": 22.5,
+      "at": "mark:second_turn+0.00"
+    },
+    {
+      "t": 35.734,
+      "do": "turn",
+      "who": "dead_a",
+      "degrees": 22.5,
+      "at": "mark:second_turn+0.22"
+    },
+    {
+      "t": 35.954,
+      "do": "turn",
+      "who": "dead_a",
+      "degrees": 22.5,
+      "at": "mark:second_turn+0.44"
+    },
+    {
+      "t": 36.174,
+      "do": "turn",
+      "who": "dead_a",
+      "degrees": 22.5,
+      "at": "mark:second_turn+0.66"
+    },
+    {
+      "t": 36.394,
+      "do": "turn",
+      "who": "dead_a",
+      "degrees": 22.5,
+      "at": "mark:second_turn+0.88"
+    },
+    {
+      "t": 36.614,
+      "do": "turn",
+      "who": "dead_a",
+      "degrees": 22.5,
+      "at": "mark:second_turn+1.10"
+    },
+    {
+      "t": 36.834,
+      "do": "turn",
+      "who": "dead_a",
+      "degrees": 22.5,
+      "at": "mark:second_turn+1.32"
+    },
+    {
+      "t": 37.054,
+      "do": "turn",
+      "who": "dead_a",
+      "degrees": 22.5,
+      "at": "mark:second_turn+1.54"
+    }
+  ],
+  "extra_gestures": {
+    "felix": [["mark:turn+2.6", "recoil"]]
+  }
+}

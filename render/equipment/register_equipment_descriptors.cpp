@@ -12,6 +12,7 @@
 #include "helmets/carthage_heavy_helmet.h"
 #include "helmets/carthage_light_helmet.h"
 #include "helmets/commander_helmets.h"
+#include "helmets/hair_bun.h"
 #include "helmets/headwrap.h"
 #include "helmets/historical_helmets.h"
 #include "helmets/roman_heavy_helmet.h"
@@ -233,6 +234,204 @@ void register_helmet_descriptors() {
        .role_count =
            static_cast<std::uint8_t>(Render::GL::k_historical_helmet_role_count)});
   register_humanoid_descriptor(
+      EquipmentCategory::Weapon,
+      "held_scroll",
+      {.build_attachments = &build_held_scroll_attachments,
+       .append_role_colors = [](const void* variant_void,
+                                QVector3D* out,
+                                std::uint32_t base_count,
+                                std::size_t max_count) -> std::uint32_t {
+         return with_variant_palette(
+             variant_void,
+             [](const HumanoidVariant&,
+                QVector3D* colors,
+                std::uint32_t count,
+                std::size_t max) {
+               return count + Render::GL::held_prop_fill_role_colors(
+                                  false, colors + count, max - count);
+             },
+             out,
+             base_count,
+             max_count);
+       },
+       .role_count = 2U});
+  register_humanoid_descriptor(
+      EquipmentCategory::Weapon,
+      "held_wax_tablet",
+      {.build_attachments = &build_held_wax_tablet_attachments,
+       .append_role_colors = [](const void* variant_void,
+                                QVector3D* out,
+                                std::uint32_t base_count,
+                                std::size_t max_count) -> std::uint32_t {
+         return with_variant_palette(
+             variant_void,
+             [](const HumanoidVariant&,
+                QVector3D* colors,
+                std::uint32_t count,
+                std::size_t max) {
+               return count + Render::GL::held_prop_fill_role_colors(
+                                  true, colors + count, max - count);
+             },
+             out,
+             base_count,
+             max_count);
+       },
+       .role_count = 2U});
+  register_humanoid_descriptor(
+      EquipmentCategory::Armor,
+      "manacles",
+      {.build_attachments = &build_manacles_attachments,
+       .append_role_colors = [](const void* variant_void,
+                                QVector3D* out,
+                                std::uint32_t base_count,
+                                std::size_t max_count) -> std::uint32_t {
+         return with_variant_palette(
+             variant_void,
+             [](const HumanoidVariant&,
+                QVector3D* colors,
+                std::uint32_t count,
+                std::size_t max) {
+               return count + Render::GL::manacles_fill_role_colors(colors + count,
+                                                                    max - count);
+             },
+             out,
+             base_count,
+             max_count);
+       },
+       .role_count = 1U});
+  register_humanoid_descriptor(
+      EquipmentCategory::Helmet,
+      "hair_bun",
+      {.build_attachments = &build_hair_bun_attachment,
+       .append_role_colors = [](const void* variant_void,
+                                QVector3D* out,
+                                std::uint32_t base_count,
+                                std::size_t max_count) -> std::uint32_t {
+         return with_variant_palette(
+             variant_void,
+             [](const HumanoidVariant& variant,
+                QVector3D* colors,
+                std::uint32_t count,
+                std::size_t max) {
+               return count + Render::GL::hair_bun_fill_role_colors(
+                                  variant.palette, colors + count, max - count);
+             },
+             out,
+             base_count,
+             max_count);
+       },
+       .role_count = static_cast<std::uint8_t>(Render::GL::k_hair_bun_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Helmet,
+      "hair_crop",
+      {.build_attachments = &build_hair_crop_attachment,
+       .append_role_colors = [](const void* variant_void,
+                                QVector3D* out,
+                                std::uint32_t base_count,
+                                std::size_t max_count) -> std::uint32_t {
+         return with_variant_palette(
+             variant_void,
+             [](const HumanoidVariant& variant,
+                QVector3D* colors,
+                std::uint32_t count,
+                std::size_t max) {
+               return count + Render::GL::hair_crop_fill_role_colors(
+                                  variant.palette, colors + count, max - count);
+             },
+             out,
+             base_count,
+             max_count);
+       },
+       .role_count = static_cast<std::uint8_t>(Render::GL::k_hair_crop_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Helmet,
+      "skull_face",
+      {.build_attachments = &build_skull_face_attachment,
+       .append_role_colors = [](const void* variant_void,
+                                QVector3D* out,
+                                std::uint32_t base_count,
+                                std::size_t max_count) -> std::uint32_t {
+         return with_variant_palette(
+             variant_void,
+             [](const HumanoidVariant& variant,
+                QVector3D* colors,
+                std::uint32_t count,
+                std::size_t max) {
+               return count + Render::GL::skull_face_fill_role_colors(
+                                  variant.palette, colors + count, max - count);
+             },
+             out,
+             base_count,
+             max_count);
+       },
+       .role_count = static_cast<std::uint8_t>(Render::GL::k_skull_face_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Helmet,
+      "turban",
+      {.build_attachments = &build_turban_attachment,
+       .append_role_colors = [](const void* variant_void,
+                                QVector3D* out,
+                                std::uint32_t base_count,
+                                std::size_t max_count) -> std::uint32_t {
+         return with_variant_palette(
+             variant_void,
+             [](const HumanoidVariant& variant,
+                QVector3D* colors,
+                std::uint32_t count,
+                std::size_t max) {
+               return count + Render::GL::turban_fill_role_colors(
+                                  variant.palette, colors + count, max - count);
+             },
+             out,
+             base_count,
+             max_count);
+       },
+       .role_count = static_cast<std::uint8_t>(Render::GL::k_turban_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Helmet,
+      "pileus",
+      {.build_attachments = &build_pileus_attachment,
+       .append_role_colors = [](const void* variant_void,
+                                QVector3D* out,
+                                std::uint32_t base_count,
+                                std::size_t max_count) -> std::uint32_t {
+         return with_variant_palette(
+             variant_void,
+             [](const HumanoidVariant& variant,
+                QVector3D* colors,
+                std::uint32_t count,
+                std::size_t max) {
+               return count + Render::GL::pileus_fill_role_colors(
+                                  variant.palette, colors + count, max - count);
+             },
+             out,
+             base_count,
+             max_count);
+       },
+       .role_count = static_cast<std::uint8_t>(Render::GL::k_pileus_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Helmet,
+      "palla_veil",
+      {.build_attachments = &build_palla_veil_attachment,
+       .append_role_colors = [](const void* variant_void,
+                                QVector3D* out,
+                                std::uint32_t base_count,
+                                std::size_t max_count) -> std::uint32_t {
+         return with_variant_palette(
+             variant_void,
+             [](const HumanoidVariant& variant,
+                QVector3D* colors,
+                std::uint32_t count,
+                std::size_t max) {
+               return count + Render::GL::palla_veil_fill_role_colors(
+                                  variant.palette, colors + count, max - count);
+             },
+             out,
+             base_count,
+             max_count);
+       },
+       .role_count = static_cast<std::uint8_t>(Render::GL::k_palla_veil_role_count)});
+  register_humanoid_descriptor(
       EquipmentCategory::Helmet,
       "headwrap",
       {.build_attachments = &build_headwrap_attachment,
@@ -335,6 +534,12 @@ void register_body_armor_descriptors() {
       "gallic_tunic",
       {.build_attachments = &build_gallic_tunic_attachments,
        .append_role_colors = &gallic_tunic_role_colors,
+       .role_count = static_cast<std::uint8_t>(Render::GL::k_allied_tunic_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Armor,
+      "stola",
+      {.build_attachments = &build_stola_attachments,
+       .append_role_colors = &stola_role_colors,
        .role_count = static_cast<std::uint8_t>(Render::GL::k_allied_tunic_role_count)});
   register_humanoid_descriptor(
       EquipmentCategory::Armor,

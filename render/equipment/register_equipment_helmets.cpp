@@ -1,6 +1,7 @@
 #include "helmets/carthage_heavy_helmet.h"
 #include "helmets/carthage_light_helmet.h"
 #include "helmets/commander_helmets.h"
+#include "helmets/hair_bun.h"
 #include "helmets/headwrap.h"
 #include "helmets/historical_helmets.h"
 #include "helmets/roman_heavy_helmet.h"
@@ -307,6 +308,42 @@ auto build_roman_heavy_helmet_attachment(std::uint8_t base_role_byte)
 auto build_roman_light_helmet_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec> {
   return {Render::GL::roman_light_helmet_make_static_attachment(
+      humanoid_head_bone(), base_role_byte, humanoid_head_bind_matrix())};
+}
+
+auto build_hair_bun_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return {Render::GL::hair_bun_make_static_attachment(
+      humanoid_head_bone(), base_role_byte, humanoid_head_bind_matrix())};
+}
+
+auto build_hair_crop_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return {Render::GL::hair_crop_make_static_attachment(
+      humanoid_head_bone(), base_role_byte, humanoid_head_bind_matrix())};
+}
+
+auto build_skull_face_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return {Render::GL::skull_face_make_static_attachment(
+      humanoid_head_bone(), base_role_byte, humanoid_head_bind_matrix())};
+}
+
+auto build_palla_veil_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return {Render::GL::palla_veil_make_static_attachment(
+      humanoid_head_bone(), base_role_byte, humanoid_head_bind_matrix())};
+}
+
+auto build_pileus_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return {Render::GL::pileus_make_static_attachment(
+      humanoid_head_bone(), base_role_byte, humanoid_head_bind_matrix())};
+}
+
+auto build_turban_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return {Render::GL::turban_make_static_attachment(
       humanoid_head_bone(), base_role_byte, humanoid_head_bind_matrix())};
 }
 

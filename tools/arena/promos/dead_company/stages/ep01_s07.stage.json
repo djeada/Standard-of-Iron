@@ -1,0 +1,97 @@
+{
+  "id": "dead_company_ep01_s07",
+  "label": "The Dead Company 1: s07",
+  "duration": 32,
+  "hour": 14.5,
+  "fog": 0.035,
+  "include": ["road.set.json"],
+  "roads": [
+    {
+      "from": [-48, 0.5],
+      "to": [48, 0.5],
+      "width": 3.0,
+      "style": "rough"
+    },
+    {
+      "from": [0.5, 0.5],
+      "to": [-30.5, 36.5],
+      "width": 2.6,
+      "style": "rough"
+    }
+  ],
+  "props": [
+    {
+      "type": "statue",
+      "at": [2.5, 3.0],
+      "scale": 0.4
+    }
+  ],
+  "actors": [
+    {
+      "name": "felix",
+      "look": "felix",
+      "at": [3.5, -1.5],
+      "facing": -40
+    },
+    {
+      "name": "bostar",
+      "look": "bostar",
+      "at": [5.5, -1.5],
+      "facing": -45
+    },
+    {
+      "name": "livia",
+      "look": "livia",
+      "at": [2.5, -2.5],
+      "facing": -40
+    },
+    {
+      "name": "tiro",
+      "look": "tiro",
+      "at": [1.5, -0.5],
+      "facing": -45
+    },
+    {
+      "name": "guard_two",
+      "look": "troops/roman/camp_rest",
+      "at": [0.5, 2.5],
+      "facing": 135
+    },
+    {
+      "name": "decimus",
+      "look": "troops/roman/camp_rest_helmed",
+      "at": [-1.5, 3.5],
+      "facing": 135
+    },
+    {
+      "name": "escort",
+      "look": "troops/roman/camp_rest_armed",
+      "at": [-3.5, 5.5],
+      "facing": -40,
+      "individuals": 5
+    }
+  ],
+  "steps": [
+    {
+      "t": 9.265,
+      "do": "walk",
+      "who": "guard_two",
+      "to": [-28.5, 34.5],
+      "at": "mark:column_leaves+0.05"
+    },
+    {
+      "t": 8.865,
+      "do": "walk",
+      "who": "escort",
+      "to": [-30.5, 36.5],
+      "at": "mark:column_leaves-0.35"
+    },
+    {
+      "t": 9.065,
+      "do": "walk",
+      "who": "decimus",
+      "to": [-29.5, 35.0],
+      "at": "mark:column_leaves-0.15"
+    }
+  ]
+}
