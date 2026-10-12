@@ -245,9 +245,12 @@ struct ImpactStrength {
 // elephant hits hard enough to interrupt one.
 [[nodiscard]] auto shrugs_off_hit(const Engine::Core::Entity& target,
                                   const Engine::Core::Entity* attacker) -> bool {
-  return target.has_component<Engine::Core::ElephantComponent>() &&
-         (attacker == nullptr ||
-          !attacker->has_component<Engine::Core::ElephantComponent>());
+  auto const* target_registry = target.registry();
+  auto const* attacker_registry = attacker != nullptr ? attacker->registry() : nullptr;
+  return target_registry != nullptr &&
+         target_registry->has<Engine::Core::ElephantComponent>(target.get_id()) &&
+         (attacker == nullptr || attacker_registry == nullptr ||
+          !attacker_registry->has<Engine::Core::ElephantComponent>(attacker->get_id()));
 }
 
 void turn_toward_attacker(Engine::Core::Entity& target,

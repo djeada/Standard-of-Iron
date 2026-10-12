@@ -582,7 +582,8 @@ void CommanderModeCoordinator::clear_controlled_commander_state_impl(
   }
   // Once nobody steers him, the commander is drawn from his own transform
   // again; a leftover presentation sample would pin his body where control ended.
-  commander->remove_component<Engine::Core::CommanderPresentationSampleComponent>();
+  world->remove<Engine::Core::CommanderPresentationSampleComponent>(
+      controlled_commander_id);
   if (auto* rpg_action =
           commander->get_component<Engine::Core::RpgCommanderActionComponent>()) {
     if (preserve_advanced_action) {
