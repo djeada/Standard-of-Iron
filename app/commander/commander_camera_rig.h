@@ -148,6 +148,7 @@ private:
   float m_fov_current{75.0F};
   float m_aim_blend{0.0F};
   float m_hit_impact_kick{0.0F};
+  float m_hit_kick_dolly_envelope{0.0F};
   float m_threat_bias_smooth{0.0F};
 
   QVector3D m_eye_smooth{};

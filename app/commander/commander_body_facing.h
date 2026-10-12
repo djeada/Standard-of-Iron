@@ -7,6 +7,8 @@ struct BodyFacingInput {
   bool attack_animation_active{false};
   float action_redirect_authority{1.0F};
   bool must_face_view{false};
+  // The player is swinging: the blow lands where they look, this tick.
+  bool snap_to_view{false};
   bool follows_travel{false};
   float dt{0.0F};
 };

@@ -618,7 +618,7 @@ auto load(const QString& path, QString* error) -> std::optional<Spec> {
 
   const QJsonArray battle_scripts =
       root.value(QStringLiteral("battle_scripts")).toArray();
-  for (const QJsonValue& entry : battle_scripts) {
+  for (const QJsonValue entry : battle_scripts) {
     QString script = entry.toString().trimmed();
     if (script.isEmpty()) {
       continue;

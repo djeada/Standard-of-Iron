@@ -21,6 +21,15 @@ auto resolve_formation_root(const Engine::Core::Entity* entity,
                       sample->presented_position.z),
             sample->presented_yaw};
   }
+  // The game publishes its render snapshot before the camera presents the
+  // tick, so the presented pose is never set here. The raw transform has
+  // already taken the tick's contact pushes, which the camera's sample has not;
+  // drawing the body there made the controlled commander shake against a
+  // camera locked to him. Use the same sample the camera follows.
+  if (sample != nullptr && sample->valid) {
+    return {QVector3D(sample->position.x, sample->position.y, sample->position.z),
+            sample->yaw};
+  }
   return {QVector3D(transform.position.x, transform.position.y, transform.position.z),
           transform.rotation.y};
 }

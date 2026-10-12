@@ -355,7 +355,11 @@ void tick_rpg_combat(Engine::Core::World* world,
     } else {
       auto* fb = Engine::Core::get_or_add_component<Engine::Core::HitFeedbackComponent>(
           staggered);
-      if (fb != nullptr) {
+      // Start the stagger reaction once; restarting it every tick pinned the
+      // pose at its first frame and then let it snap through when it ended.
+      bool const already_playing =
+          fb != nullptr && fb->is_reacting && fb->stagger_tier == stagger->tier;
+      if (fb != nullptr && !already_playing) {
         fb->is_reacting = true;
         fb->reaction_time = 0.0F;
         fb->stagger_tier = stagger->tier;

@@ -442,7 +442,7 @@ public:
     });
   }
   auto enemy_barracks() -> Ids {
-    return collect([this](EntityID, const Engine::Core::UnitComponent& u) {
+    return collect([](EntityID, const Engine::Core::UnitComponent& u) {
       return u.spawn_type == SpawnType::Barracks && u.owner_id != k_local_owner;
     });
   }

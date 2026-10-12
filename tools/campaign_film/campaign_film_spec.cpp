@@ -202,7 +202,7 @@ auto parse_march(const QJsonObject& hannibal_path,
     return std::nullopt;
   }
   March march;
-  for (const auto& value : object.value(QStringLiteral("points")).toArray()) {
+  for (const QJsonValue value : object.value(QStringLiteral("points")).toArray()) {
     QVector2D pt;
     if (!read_pair(value, &pt)) {
       fail(error, QStringLiteral("march point is not a [u, v] pair"));
@@ -210,7 +210,7 @@ auto parse_march(const QJsonObject& hannibal_path,
     }
     march.points.push_back(pt);
   }
-  for (const auto& value : object.value(QStringLiteral("stops")).toArray()) {
+  for (const QJsonValue value : object.value(QStringLiteral("stops")).toArray()) {
     const QJsonObject stop_object = value.toObject();
     MarchStop stop;
     stop.id = stop_object.value(QStringLiteral("id")).toString();
@@ -249,16 +249,17 @@ auto parse_catalog(const QJsonObject& object,
                    QString* error) -> std::optional<Catalog> {
   Catalog catalog;
   catalog.bounds = bounds;
-  for (const auto& value : object.value(QStringLiteral("regions")).toArray()) {
+  for (const QJsonValue value : object.value(QStringLiteral("regions")).toArray()) {
     const QJsonObject region_object = value.toObject();
     CatalogRegion region;
     region.id = region_object.value(QStringLiteral("id")).toString();
     region.name = region_object.value(QStringLiteral("name")).toString();
-    for (const auto& province :
+    for (const QJsonValue province :
          region_object.value(QStringLiteral("provinces")).toArray()) {
       region.provinces.push_back(province.toString());
     }
-    for (const auto& point : region_object.value(QStringLiteral("lonlat")).toArray()) {
+    for (const QJsonValue point :
+         region_object.value(QStringLiteral("lonlat")).toArray()) {
       QVector2D pair;
       if (!read_pair(point, &pair)) {
         fail(error,
@@ -548,7 +549,7 @@ auto parse_spec(const QJsonObject& object,
     }
   }
 
-  for (const auto& value : object.value(QStringLiteral("regions")).toArray()) {
+  for (const QJsonValue value : object.value(QStringLiteral("regions")).toArray()) {
     const QJsonObject region_object = value.toObject();
     RegionTrack region;
     region.id = region_object.value(QStringLiteral("id")).toString();
@@ -559,12 +560,13 @@ auto parse_spec(const QJsonObject& object,
       region.provinces = catalog_region->provinces;
       region.triangles = triangulate(catalog_region->polygon);
     }
-    for (const auto& province :
+    for (const QJsonValue province :
          region_object.value(QStringLiteral("provinces")).toArray()) {
       region.provinces.push_back(province.toString());
     }
     std::vector<QVector2D> polygon;
-    for (const auto& point : region_object.value(QStringLiteral("lonlat")).toArray()) {
+    for (const QJsonValue point :
+         region_object.value(QStringLiteral("lonlat")).toArray()) {
       QVector2D pair;
       if (read_pair(point, &pair)) {
         polygon.push_back(context.bounds.to_uv(pair.x(), pair.y()));
@@ -586,7 +588,7 @@ auto parse_spec(const QJsonObject& object,
     region.rim_px = read_float(region_object, "rim_width", region.rim_px);
     region.dim_outside = read_float(region_object, "dim_outside", region.dim_outside);
     region.window = parse_window(region_object, region.window);
-    for (const auto& key_value :
+    for (const QJsonValue key_value :
          region_object.value(QStringLiteral("keys")).toArray()) {
       const QJsonObject key_object = key_value.toObject();
       ScalarKey key;
@@ -599,7 +601,7 @@ auto parse_spec(const QJsonObject& object,
     spec.regions.push_back(region);
   }
 
-  for (const auto& value : object.value(QStringLiteral("markers")).toArray()) {
+  for (const QJsonValue value : object.value(QStringLiteral("markers")).toArray()) {
     const QJsonObject marker_object = value.toObject();
     MarkerTrack marker;
     marker.site = marker_object.value(QStringLiteral("site")).toString();
@@ -651,7 +653,7 @@ auto parse_spec(const QJsonObject& object,
     spec.markers.push_back(marker);
   }
 
-  for (const auto& value : object.value(QStringLiteral("labels")).toArray()) {
+  for (const QJsonValue value : object.value(QStringLiteral("labels")).toArray()) {
     const QJsonObject label_object = value.toObject();
     LabelTrack label;
     label.text = label_object.value(QStringLiteral("text")).toString();
@@ -677,7 +679,7 @@ auto parse_spec(const QJsonObject& object,
     spec.labels.push_back(label);
   }
 
-  for (const auto& value : object.value(QStringLiteral("stamps")).toArray()) {
+  for (const QJsonValue value : object.value(QStringLiteral("stamps")).toArray()) {
     const QJsonObject stamp_object = value.toObject();
     StampTrack stamp;
     stamp.title = stamp_object.value(QStringLiteral("title")).toString();
@@ -686,7 +688,7 @@ auto parse_spec(const QJsonObject& object,
     spec.stamps.push_back(stamp);
   }
 
-  for (const auto& value : object.value(QStringLiteral("armies")).toArray()) {
+  for (const QJsonValue value : object.value(QStringLiteral("armies")).toArray()) {
     const QJsonObject army_object = value.toObject();
     ArmyTrack army;
     army.id = army_object.value(QStringLiteral("id")).toString();
@@ -711,7 +713,8 @@ auto parse_spec(const QJsonObject& object,
                                            : target_error));
       return std::nullopt;
     }
-    for (const auto& key_value : army_object.value(QStringLiteral("keys")).toArray()) {
+    for (const QJsonValue key_value :
+         army_object.value(QStringLiteral("keys")).toArray()) {
       const QJsonObject key_object = key_value.toObject();
       ArmyKey key;
       key.time = read_float(key_object, "time", 0.0F);

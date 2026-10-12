@@ -9,9 +9,14 @@
 #include <array>
 #include <cstdio>
 #include <cstring>
-#include <gl/gl.h>
 #include <string_view>
+
+// clang-format off
+// <windows.h> defines WINGDIAPI/APIENTRY that <gl/gl.h> needs, so it must
+// come first; alphabetical include sorting would break the MSVC build.
 #include <windows.h>
+#include <gl/gl.h>
+// clang-format on
 
 #include "render/gl/context_requirements.h"
 #pragma comment(lib, "opengl32.lib")

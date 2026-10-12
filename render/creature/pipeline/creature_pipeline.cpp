@@ -418,6 +418,7 @@ void lerp_local_pose(LocalPose& io,
                                             ((flipped_bones >> bone) & 1ULL) != 0ULL);
     io[bone].translation =
         io[bone].translation * (1.0F - weight) + layer[bone].translation * weight;
+    io[bone].scale = io[bone].scale * (1.0F - weight) + layer[bone].scale * weight;
   }
 }
 
@@ -442,6 +443,7 @@ void lerp_local_pose_by_region(
                                             ((flipped_bones >> bone) & 1ULL) != 0ULL);
     io[bone].translation =
         io[bone].translation * (1.0F - weight) + layer[bone].translation * weight;
+    io[bone].scale = io[bone].scale * (1.0F - weight) + layer[bone].scale * weight;
   }
 }
 
@@ -484,9 +486,7 @@ auto skin_palette_from_local_pose(const Render::Creature::Bpat::BpatBlob& blob,
       PooledPaletteAllocator<BonePaletteArray>{});
   BonePaletteArray global{};
   for (std::uint32_t bone = 0; bone < bone_count; ++bone) {
-    QMatrix4x4 local;
-    local.translate(pose[bone].translation);
-    local.rotate(pose[bone].rotation);
+    QMatrix4x4 const local = pose[bone].matrix();
     std::uint8_t const parent = parents[bone];
     global[bone] = parent == Render::Creature::Bpat::k_no_parent_bone
                        ? local

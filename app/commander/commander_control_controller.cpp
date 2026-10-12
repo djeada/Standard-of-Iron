@@ -444,6 +444,7 @@ void CommanderControlController::face_body(const App::Core::CommanderHandles& bo
                              .attack_animation_active = facts.attack_animation_active,
                              .action_redirect_authority = action_redirect_authority,
                              .must_face_view = must_face_view,
+                             .snap_to_view = tick.primary_held,
                              .follows_travel = m_locomotion.follows_travel(),
                              .dt = dt});
   body.transform.rotation.y = body_yaw;

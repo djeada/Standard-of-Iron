@@ -194,8 +194,14 @@ auto evaluate_elephant_motion(
     state.body_yaw = *body_yaw_degrees;
     state.body_yaw_time = now;
     state.body_yaw_valid = true;
+    // Enter the pivot gait on a real turn and leave it only once the turn has
+    // died away, so heading wobble in melee does not flick walk on and off.
     constexpr float k_pivot_step_degrees_per_second = 8.0F;
-    if (!sample.is_moving && state.turn_rate > k_pivot_step_degrees_per_second) {
+    constexpr float k_pivot_release_degrees_per_second = 3.0F;
+    state.pivoting = state.pivoting
+                         ? state.turn_rate > k_pivot_release_degrees_per_second
+                         : state.turn_rate > k_pivot_step_degrees_per_second;
+    if (!sample.is_moving && state.pivoting) {
       sample.is_moving = true;
       sample.is_pivoting = true;
       g.cycle_time = Animation::k_elephant_pivot_cycle_seconds;
