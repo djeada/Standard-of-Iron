@@ -1,19 +1,7 @@
 {
- "felix": [
-  [
-   7.05,
-   "gesture_talk",
-   3.067
-  ],
-  [
-   10.117,
-   "gesture_talk",
-   3.067
-  ],
-  [
-   14.584,
-   "gesture_talk",
-   3.684
+  "felix": [
+    [7.05, "gesture_talk", 3.067],
+    [10.117, "gesture_talk", 3.067],
+    [14.584, "gesture_talk", 3.684]
   ]
- ]
 }

@@ -37,8 +37,24 @@ def main():
                 continue
             t = seg["clip_offset"] + (seg["to"] - seg["from"]) / 2
             frame = out / f"{scene['scene']}_{i:02d}.png"
-            subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-ss", f"{t:.2f}", "-i", str(found[-1]),
-                            "-frames:v", "1", "-vf", f"scale={TILE[0]}:{TILE[1]}", str(frame)], check=False)
+            subprocess.run(
+                [
+                    "ffmpeg",
+                    "-y",
+                    "-loglevel",
+                    "error",
+                    "-ss",
+                    f"{t:.2f}",
+                    "-i",
+                    str(found[-1]),
+                    "-frames:v",
+                    "1",
+                    "-vf",
+                    f"scale={TILE[0]}:{TILE[1]}",
+                    str(frame),
+                ],
+                check=False,
+            )
             if frame.exists():
                 tiles.append((frame, f"{i:02d} {seg['cam']} @{seg['from']:.1f}"))
         if not tiles:

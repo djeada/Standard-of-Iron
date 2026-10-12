@@ -55,13 +55,20 @@ class Times:
             return float(expr)
         except ValueError:
             pass
-        match = re.fullmatch(r"(line|mark|end)(?::([\w.]+))?(@end)?([+-][\d.]+)?", expr.strip())
+        match = re.fullmatch(
+            r"(line|mark|end)(?::([\w.]+))?(@end)?([+-][\d.]+)?", expr.strip()
+        )
         kind, name, at_end, offset = match.groups()
         offset = float(offset) if offset else 0.0
         if kind == "end":
             return self.scene["duration"] + offset
         if kind == "line":
-            line = next(l for s in self.tl["scenes"] for l in s["lines"] if l["id"] == name)
+            line = next(
+                entry
+                for scene in self.tl["scenes"]
+                for entry in scene["lines"]
+                if entry["id"] == name
+            )
             return (line["end"] if at_end else line["start"]) + offset
         key = name if "." in name else f"{self.scene['id']}.{name}"
         return self.tl["marks"][key] + offset
@@ -78,25 +85,85 @@ def find_clip(clips, shot):
 
 
 def encode_segment(src, out, frames, offset=None, graphic=False, push=0.0, grade=None):
-    common = ["-frames:v", str(frames), "-r", str(FPS), "-an", "-c:v", "libx264", "-preset", "fast",
-              "-crf", "15", "-pix_fmt", "yuv420p", str(out)]
+    common = [
+        "-frames:v",
+        str(frames),
+        "-r",
+        str(FPS),
+        "-an",
+        "-c:v",
+        "libx264",
+        "-preset",
+        "fast",
+        "-crf",
+        "15",
+        "-pix_fmt",
+        "yuv420p",
+        str(out),
+    ]
     if graphic:
-        zoom = (f"scale=-2:{SCOPE},pad={W}:{SCOPE}:(ow-iw)/2:0:color=0x1e160f,"
-                f"zoompan=z='1+{push}*on/{max(frames, 1)}':x='iw/2-(iw/zoom/2)':"
-                f"y='ih/2-(ih/zoom/2)':d={frames}:s={W}x{SCOPE}:fps={FPS}")
-        run(["ffmpeg", "-y", "-loglevel", "error", "-loop", "1", "-i", str(src), "-vf", zoom] + common)
+        zoom = (
+            f"scale=-2:{SCOPE},pad={W}:{SCOPE}:(ow-iw)/2:0:color=0x1e160f,"
+            f"zoompan=z='1+{push}*on/{max(frames, 1)}':x='iw/2-(iw/zoom/2)':"
+            f"y='ih/2-(ih/zoom/2)':d={frames}:s={W}x{SCOPE}:fps={FPS}"
+        )
+        run(
+            [
+                "ffmpeg",
+                "-y",
+                "-loglevel",
+                "error",
+                "-loop",
+                "1",
+                "-i",
+                str(src),
+                "-vf",
+                zoom,
+            ]
+            + common
+        )
         return
     # Captures run at twice the film rate: averaging each pair is a 180 degree shutter.
-    rate = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
-                           "stream=r_frame_rate", "-of", "csv=p=0", str(src)], capture_output=True, text=True).stdout
+    rate = subprocess.run(
+        [
+            "ffprobe",
+            "-v",
+            "error",
+            "-select_streams",
+            "v:0",
+            "-show_entries",
+            "stream=r_frame_rate",
+            "-of",
+            "csv=p=0",
+            str(src),
+        ],
+        capture_output=True,
+        text=True,
+    ).stdout
     num, _, den = rate.strip().partition("/")
     double_rate = float(num) / float(den or 1) >= 2 * FPS - 1
-    chain = ([f"tmix=frames=2:weights='1 1'"] if double_rate else []) + [f"fps={FPS}", f"scale={W}:{SCOPE}:flags=lanczos"]
+    chain = (["tmix=frames=2:weights='1 1'"] if double_rate else []) + [
+        f"fps={FPS}",
+        f"scale={W}:{SCOPE}:flags=lanczos",
+    ]
     if grade:
         chain.append(grade)
     chain.append(FILM)
-    run(["ffmpeg", "-y", "-loglevel", "error", "-ss", f"{offset:.3f}", "-i", str(src),
-         "-vf", ",".join(chain)] + common)
+    run(
+        [
+            "ffmpeg",
+            "-y",
+            "-loglevel",
+            "error",
+            "-ss",
+            f"{offset:.3f}",
+            "-i",
+            str(src),
+            "-vf",
+            ",".join(chain),
+        ]
+        + common
+    )
 
 
 def build_picture(cutlist, clips, graphics, work):
@@ -110,15 +177,42 @@ def build_picture(cutlist, clips, graphics, work):
             out = work / f"seg_{scene['scene']}_{i:02d}.mp4"
             if "graphic" in seg:
                 push = 0.0 if seg["graphic"] in ("black", "title", "endcard") else 0.06
-                encode_segment(graphics / f"{seg['graphic']}.png", out, b - a, graphic=True, push=push)
+                encode_segment(
+                    graphics / f"{seg['graphic']}.png",
+                    out,
+                    b - a,
+                    graphic=True,
+                    push=push,
+                )
             else:
-                encode_segment(find_clip(clips, seg["shot"]), out, b - a, offset=seg["clip_offset"],
-                               grade=scene.get("grade"))
+                encode_segment(
+                    find_clip(clips, seg["shot"]),
+                    out,
+                    b - a,
+                    offset=seg["clip_offset"],
+                    grade=scene.get("grade"),
+                )
             parts.append(out)
     listing = work / "parts.txt"
     listing.write_text("".join(f"file '{p.resolve()}'\n" for p in parts))
     picture = work / "picture.mp4"
-    run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", str(listing), "-c", "copy", str(picture)])
+    run(
+        [
+            "ffmpeg",
+            "-y",
+            "-loglevel",
+            "error",
+            "-f",
+            "concat",
+            "-safe",
+            "0",
+            "-i",
+            str(listing),
+            "-c",
+            "copy",
+            str(picture),
+        ]
+    )
     return picture
 
 
@@ -127,9 +221,28 @@ def build_picture(cutlist, clips, graphics, work):
 
 def load_audio(path, rate_factor=1.0, channels=2):
     with tempfile.NamedTemporaryFile(suffix=".wav") as tmp:
-        filters = f"asetrate={int(RATE * rate_factor)},aresample={RATE}" if rate_factor != 1.0 else "anull"
-        run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(path), "-af", filters, "-ac", str(channels),
-             "-ar", str(RATE), tmp.name])
+        filters = (
+            f"asetrate={int(RATE * rate_factor)},aresample={RATE}"
+            if rate_factor != 1.0
+            else "anull"
+        )
+        run(
+            [
+                "ffmpeg",
+                "-y",
+                "-loglevel",
+                "error",
+                "-i",
+                str(path),
+                "-af",
+                filters,
+                "-ac",
+                str(channels),
+                "-ar",
+                str(RATE),
+                tmp.name,
+            ]
+        )
         data, _ = sf.read(tmp.name, dtype="float32", always_2d=True)
     return data
 
@@ -192,8 +305,12 @@ def voice_room(data, room):
     """A little air around the voices so they sit in the place rather than in a booth."""
     if not room:
         return data
-    delay, decay, mix = {"night": (0.045, 0.32, 0.16), "tent": (0.018, 0.25, 0.12),
-                         "open": (0.06, 0.2, 0.08), "camp": (0.035, 0.28, 0.12)}[room]
+    delay, decay, mix = {
+        "night": (0.045, 0.32, 0.16),
+        "tent": (0.018, 0.25, 0.12),
+        "open": (0.06, 0.2, 0.08),
+        "camp": (0.035, 0.28, 0.12),
+    }[room]
     out = np.concatenate([data, np.zeros((int(0.6 * RATE), 2), dtype=np.float32)])
     wet = np.zeros_like(out)
     for k, offset in enumerate((delay, delay * 1.7, delay * 2.9, delay * 4.3)):
@@ -214,13 +331,21 @@ def speech_envelope(length, intervals, attack=0.25, release=0.6):
     down = 1.0 / (release * RATE)
     for i in range(0, length, 240):
         target = env[i : i + 240].max(initial=0.0)
-        level = min(target, level + up * 240) if target > level else max(target, level - down * 240)
+        level = (
+            min(target, level + up * 240)
+            if target > level
+            else max(target, level - down * 240)
+        )
         out[i : i + 240] = level
     return out
 
 
 def build_mix(edit, timeline, lines, vo, work):
-    level = {l["id"]: l.get("level", "normal") for sc in (lines or {}).get("scenes", []) for l in sc["lines"]}
+    level = {
+        line["id"]: line.get("level", "normal")
+        for sc in (lines or {}).get("scenes", [])
+        for line in sc["lines"]
+    }
     total = timeline["total"] + 1.0
     n = int(total * RATE)
     voices = np.zeros((n, 2), dtype=np.float32)
@@ -261,7 +386,11 @@ def build_mix(edit, timeline, lines, vo, work):
         for bed in sound.get("bed", []):
             a = times(bed.get("from", 0.0))
             b = times(bed.get("until", "end"))
-            data = pan(looped(asset(bed["file"]), int((b - a) * RATE)) * db(bed.get("db", -20)), bed.get("pan"))
+            data = pan(
+                looped(asset(bed["file"]), int((b - a) * RATE))
+                * db(bed.get("db", -20)),
+                bed.get("pan"),
+            )
             fades(data, bed.get("fade_in", 0.8), bed.get("fade_out", 0.8))
             place(beds, data, base + a)
         for cue in sound.get("music", []):
@@ -277,12 +406,18 @@ def build_mix(edit, timeline, lines, vo, work):
             if "every" in sfx:
                 t, end, k = times(sfx["from"]), times(sfx.get("to", "end")), 0
                 while t < end:
-                    data = pan(asset(sfx["file"].format(n=k % sfx.get("variants", 4) + 1)) * gain, sfx.get("pan"))
+                    data = pan(
+                        asset(sfx["file"].format(n=k % sfx.get("variants", 4) + 1))
+                        * gain,
+                        sfx.get("pan"),
+                    )
                     place(effects, data, base + t)
                     t += sfx["every"]
                     k += 1
                 continue
-            data = pan(asset(sfx["file"], sfx.get("rate", 1.0)).copy() * gain, sfx.get("pan"))
+            data = pan(
+                asset(sfx["file"], sfx.get("rate", 1.0)).copy() * gain, sfx.get("pan")
+            )
             if "dur" in sfx:
                 data = fades(data[: int(sfx["dur"] * RATE)].copy(), 0.0, 0.3)
             place(effects, data, base + times(sfx["at"]))
@@ -292,12 +427,28 @@ def build_mix(edit, timeline, lines, vo, work):
     sf.write(raw, mix, RATE, subtype="PCM_24")
     # One static gain to -16 LUFS plus a peak limiter: single-pass loudnorm is
     # dynamic and would lift the quiet beds between lines up to dialogue level.
-    probe = subprocess.run(["ffmpeg", "-hide_banner", "-i", str(raw), "-af", "ebur128", "-f", "null", "-"],
-                           capture_output=True, text=True).stderr
+    probe = subprocess.run(
+        ["ffmpeg", "-hide_banner", "-i", str(raw), "-af", "ebur128", "-f", "null", "-"],
+        capture_output=True,
+        text=True,
+    ).stderr
     integrated = float(re.findall(r"I:\s+(-?[\d.]+) LUFS", probe)[-1])
     out = work / "mix.wav"
-    run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(raw), "-af",
-         f"volume={-16.0 - integrated:.2f}dB,alimiter=limit=0.70:level=false", "-ar", str(RATE), str(out)])
+    run(
+        [
+            "ffmpeg",
+            "-y",
+            "-loglevel",
+            "error",
+            "-i",
+            str(raw),
+            "-af",
+            f"volume={-16.0 - integrated:.2f}dB,alimiter=limit=0.70:level=false",
+            "-ar",
+            str(RATE),
+            str(out),
+        ]
+    )
     return out
 
 
@@ -323,7 +474,11 @@ def chunks(text, limit=42):
                 out.append(current)
     merged = []
     for piece in out:
-        if merged and (len(merged[-1]) < 12 or len(piece) < 12) and len(merged[-1]) + 1 + len(piece) <= limit + 8:
+        if (
+            merged
+            and (len(merged[-1]) < 12 or len(piece) < 12)
+            and len(merged[-1]) + 1 + len(piece) <= limit + 8
+        ):
             merged[-1] = f"{merged[-1]} {piece}"
         else:
             merged.append(piece)
@@ -334,12 +489,14 @@ def stamp(t, srt=False):
     h, rem = divmod(max(t, 0.0), 3600)
     m, s = divmod(rem, 60)
     if srt:
-        return f"{int(h):02d}:{int(m):02d}:{int(s):02d},{int(round((s % 1) * 1000)):03d}"
+        return (
+            f"{int(h):02d}:{int(m):02d}:{int(s):02d},{int(round((s % 1) * 1000)):03d}"
+        )
     return f"{int(h)}:{int(m):02d}:{s:05.2f}"
 
 
 def build_subtitles(edit, timeline, lines, work, out_srt):
-    text = {l["id"]: l["text"] for sc in lines["scenes"] for l in sc["lines"]}
+    text = {line["id"]: line["text"] for sc in lines["scenes"] for line in sc["lines"]}
     events = []
     for scene in timeline["scenes"]:
         for line in scene["lines"]:
@@ -379,8 +536,12 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         for cap in spec.get("captions", []):
             scene = scenes[spec["id"]]
             times = Times(timeline, scene)
-            a, b = scene["start"] + times(cap["from"]), scene["start"] + times(cap["to"])
-            body.append(f"Dialogue: 1,{stamp(a)},{stamp(b)},Caption,,0,0,0,,{{\\fad(600,600)}}{cap['text'].replace(chr(10), '\\N')}")
+            a, b = scene["start"] + times(cap["from"]), scene["start"] + times(
+                cap["to"]
+            )
+            body.append(
+                f"Dialogue: 1,{stamp(a)},{stamp(b)},Caption,,0,0,0,,{{\\fad(600,600)}}{cap['text'].replace(chr(10), '\\N')}"
+            )
     ass = work / "subs.ass"
     ass.write_text(header + "\n".join(body) + "\n")
     out_srt.write_text("\n".join(srt))
@@ -412,19 +573,81 @@ def main():
         picture = build_picture(cutlist, Path(args.clips), Path(args.graphics), work)
     mix = build_mix(edit, timeline, lines, Path(args.vo), work)
     ass = build_subtitles(edit, timeline, lines, work, out.with_suffix(".en.srt"))
-    run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(picture), "-i", str(mix),
-         "-vf", f"pad={W}:{H}:0:{BAR}:black,ass={ass}:fontsdir={FONTS}", "-map", "0:v", "-map", "1:a",
-         "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p",
-         "-c:a", "aac", "-b:a", "192k", "-shortest", "-movflags", "+faststart", str(out)])
+    run(
+        [
+            "ffmpeg",
+            "-y",
+            "-loglevel",
+            "error",
+            "-i",
+            str(picture),
+            "-i",
+            str(mix),
+            "-vf",
+            f"pad={W}:{H}:0:{BAR}:black,ass={ass}:fontsdir={FONTS}",
+            "-map",
+            "0:v",
+            "-map",
+            "1:a",
+            "-c:v",
+            "libx264",
+            "-preset",
+            "medium",
+            "-crf",
+            "18",
+            "-pix_fmt",
+            "yuv420p",
+            "-c:a",
+            "aac",
+            "-b:a",
+            "192k",
+            "-shortest",
+            "-movflags",
+            "+faststart",
+            str(out),
+        ]
+    )
     for _ in range(3):
-        probe = subprocess.run(["ffmpeg", "-hide_banner", "-i", str(out), "-af", "ebur128=peak=true",
-                                "-f", "null", "-"], capture_output=True, text=True).stderr
+        probe = subprocess.run(
+            [
+                "ffmpeg",
+                "-hide_banner",
+                "-i",
+                str(out),
+                "-af",
+                "ebur128=peak=true",
+                "-f",
+                "null",
+                "-",
+            ],
+            capture_output=True,
+            text=True,
+        ).stderr
         peak = float(re.findall(r"Peak:\s+(-?[\d.]+) dBFS", probe)[-1])
         if peak <= -1.0:
             break
         fixed = out.with_suffix(".tp.mp4")
-        run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(out), "-c:v", "copy", "-af",
-             f"volume={-1.3 - peak:.2f}dB", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", str(fixed)])
+        run(
+            [
+                "ffmpeg",
+                "-y",
+                "-loglevel",
+                "error",
+                "-i",
+                str(out),
+                "-c:v",
+                "copy",
+                "-af",
+                f"volume={-1.3 - peak:.2f}dB",
+                "-c:a",
+                "aac",
+                "-b:a",
+                "192k",
+                "-movflags",
+                "+faststart",
+                str(fixed),
+            ]
+        )
         fixed.replace(out)
     print(f"wrote {out} (true peak {peak:.2f} dBTP)")
 

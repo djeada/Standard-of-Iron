@@ -1,21 +1,7 @@
 {
- "felix": [
-  [
-   8.264,
-   "gesture_talk",
-   3.703
+  "felix": [
+    [8.264, "gesture_talk", 3.703],
+    [18.994, "gesture_nod", 1.4]
   ],
-  [
-   18.994,
-   "gesture_nod",
-   1.4
-  ]
- ],
- "tiro": [
-  [
-   12.367,
-   "gesture_talk",
-   1.686
-  ]
- ]
+  "tiro": [[12.367, "gesture_talk", 1.686]]
 }

@@ -1,803 +1,803 @@
 {
- "schema": "soi-drama-beats/1",
- "episode": "ep01",
- "default_gap": 0.35,
- "scenes": [
-  {
-   "id": "s01",
-   "pre": 11.0,
-   "beats": [],
-   "post": 0.0
-  },
-  {
-   "id": "s02",
-   "pre": 2.5,
-   "post": 2.2,
-   "beats": [
+  "schema": "soi-drama-beats/1",
+  "episode": "ep01",
+  "default_gap": 0.35,
+  "scenes": [
     {
-     "line": "s02_01"
+      "id": "s01",
+      "pre": 11.0,
+      "beats": [],
+      "post": 0.0
     },
     {
-     "line": "s02_02",
-     "gap": 0.45
+      "id": "s02",
+      "pre": 2.5,
+      "post": 2.2,
+      "beats": [
+        {
+          "line": "s02_01"
+        },
+        {
+          "line": "s02_02",
+          "gap": 0.45
+        },
+        {
+          "line": "s02_03",
+          "gap": 0.9
+        },
+        {
+          "mark": "basket",
+          "gap": 0.6
+        },
+        {
+          "hold": 1.4
+        },
+        {
+          "line": "s02_04"
+        },
+        {
+          "line": "s02_05",
+          "gap": 0.6
+        },
+        {
+          "line": "s02_06",
+          "gap": 0.5
+        },
+        {
+          "mark": "seal",
+          "gap": 0.5
+        },
+        {
+          "hold": 1.1
+        },
+        {
+          "line": "s02_07"
+        },
+        {
+          "line": "s02_08",
+          "gap": 0.55
+        },
+        {
+          "line": "s02_09",
+          "gap": 0.45
+        },
+        {
+          "line": "s02_10",
+          "gap": 0.4
+        },
+        {
+          "hold": 1.4
+        },
+        {
+          "line": "s02_11",
+          "gap": 1.0
+        },
+        {
+          "hold": 2.0
+        },
+        {
+          "line": "s02_12",
+          "gap": 0.2
+        },
+        {
+          "line": "s02_13",
+          "gap": 0.8
+        },
+        {
+          "line": "s02_14",
+          "gap": 0.3
+        },
+        {
+          "line": "s02_15",
+          "gap": 0.3
+        },
+        {
+          "line": "s02_16",
+          "gap": 0.5
+        },
+        {
+          "hold": 1.5
+        },
+        {
+          "line": "s02_17",
+          "gap": 0.0
+        }
+      ]
     },
     {
-     "line": "s02_03",
-     "gap": 0.9
+      "id": "title",
+      "pre": 6.0,
+      "beats": [],
+      "post": 0.0
     },
     {
-     "mark": "basket",
-     "gap": 0.6
+      "id": "s03",
+      "pre": 6.0,
+      "post": 1.2,
+      "beats": [
+        {
+          "line": "s03_01"
+        },
+        {
+          "line": "s03_02",
+          "gap": 0.3
+        },
+        {
+          "line": "s03_03"
+        },
+        {
+          "line": "s03_04",
+          "gesture": "talk"
+        },
+        {
+          "line": "s03_05",
+          "gap": 0.4
+        },
+        {
+          "hold": 0.8
+        },
+        {
+          "line": "s03_06"
+        },
+        {
+          "line": "s03_07",
+          "gap": 0.4,
+          "gesture": "talk"
+        },
+        {
+          "line": "s03_08",
+          "gap": 0.5
+        },
+        {
+          "line": "s03_09",
+          "gap": 0.3,
+          "gesture": "chin"
+        },
+        {
+          "mark": "crack",
+          "gap": 0.7
+        },
+        {
+          "hold": 1.6
+        },
+        {
+          "line": "s03_10"
+        },
+        {
+          "line": "s03_11",
+          "gap": 0.6,
+          "gesture": "talk"
+        },
+        {
+          "line": "s03_12",
+          "gap": 0.9,
+          "gesture": "crossed"
+        },
+        {
+          "mark": "tiro_shout",
+          "gap": 0.4
+        },
+        {
+          "line": "s03_13",
+          "gap": 0.0
+        },
+        {
+          "hold": 1.8
+        },
+        {
+          "line": "s03_14",
+          "gap": 0.3,
+          "gesture": "talk"
+        },
+        {
+          "line": "s03_15",
+          "gap": 0.4
+        },
+        {
+          "hold": 1.2
+        },
+        {
+          "line": "s03_16",
+          "gap": 0.2
+        },
+        {
+          "line": "s03_17",
+          "gap": 0.3
+        },
+        {
+          "line": "s03_18",
+          "gesture": "salute"
+        },
+        {
+          "line": "s03_19",
+          "gap": 0.9,
+          "gesture": "open"
+        },
+        {
+          "line": "s03_20",
+          "gap": 0.4
+        },
+        {
+          "line": "s03_21",
+          "gap": 0.3,
+          "gesture": "point"
+        },
+        {
+          "hold": 1.3
+        }
+      ]
     },
     {
-     "hold": 1.4
+      "id": "s04",
+      "pre": 2.5,
+      "post": 1.4,
+      "beats": [
+        {
+          "line": "s04_01",
+          "gesture": "talk"
+        },
+        {
+          "line": "s04_02",
+          "gap": 0.4
+        },
+        {
+          "line": "s04_03",
+          "gesture": "talk"
+        },
+        {
+          "line": "s04_04",
+          "gap": 0.45,
+          "gesture": "shrug"
+        },
+        {
+          "line": "s04_05",
+          "gap": 0.5
+        },
+        {
+          "line": "s04_06",
+          "gesture": "shrug"
+        },
+        {
+          "hold": 0.7
+        },
+        {
+          "line": "s04_07",
+          "gap": 0.4
+        },
+        {
+          "line": "s04_08",
+          "gesture": "talk"
+        },
+        {
+          "line": "s04_09",
+          "gap": 0.3,
+          "gesture": "open"
+        },
+        {
+          "line": "s04_10",
+          "gap": 0.35,
+          "gesture": "shrug"
+        },
+        {
+          "hold": 0.6
+        },
+        {
+          "line": "s04_11",
+          "gap": 0.45,
+          "gesture": "read"
+        },
+        {
+          "line": "s04_12"
+        },
+        {
+          "line": "s04_13",
+          "gap": 0.4,
+          "gesture": "talk"
+        },
+        {
+          "line": "s04_14",
+          "gap": 0.45,
+          "gesture": "present"
+        },
+        {
+          "line": "s04_15",
+          "gap": 0.45,
+          "gesture": "read"
+        },
+        {
+          "line": "s04_16"
+        },
+        {
+          "line": "s04_17",
+          "gap": 0.5,
+          "gesture": "chin"
+        },
+        {
+          "line": "s04_18"
+        },
+        {
+          "line": "s04_19",
+          "gap": 0.4
+        },
+        {
+          "line": "s04_20"
+        },
+        {
+          "line": "s04_21",
+          "gesture": "crossed"
+        },
+        {
+          "line": "s04_22",
+          "gap": 0.4
+        },
+        {
+          "hold": 0.8
+        },
+        {
+          "line": "s04_23",
+          "gesture": "crossed"
+        },
+        {
+          "line": "s04_24",
+          "gap": 0.45,
+          "gesture": "open"
+        },
+        {
+          "line": "s04_25",
+          "gap": 0.5
+        },
+        {
+          "line": "s04_26",
+          "gap": 0.3,
+          "gesture": "point"
+        },
+        {
+          "line": "s04_27",
+          "gap": 0.3,
+          "gesture": "shrug"
+        },
+        {
+          "hold": 0.5
+        },
+        {
+          "line": "s04_28",
+          "gesture": "point"
+        }
+      ]
     },
     {
-     "line": "s02_04"
+      "id": "s05",
+      "pre": 9.0,
+      "post": 2.5,
+      "beats": [
+        {
+          "line": "s05_01"
+        },
+        {
+          "mark": "severus_stops",
+          "gap": 0.3
+        },
+        {
+          "hold": 0.9
+        },
+        {
+          "line": "s05_02",
+          "gesture": "nod"
+        },
+        {
+          "line": "s05_03",
+          "gap": 0.3,
+          "gesture": "salute"
+        },
+        {
+          "line": "s05_04",
+          "gap": 0.8,
+          "gesture": "nod"
+        },
+        {
+          "mark": "severus_leaves",
+          "gap": 0.3
+        },
+        {
+          "hold": 2.2
+        },
+        {
+          "line": "s05_05"
+        },
+        {
+          "line": "s05_06",
+          "gap": 0.5
+        }
+      ]
     },
     {
-     "line": "s02_05",
-     "gap": 0.6
+      "id": "s06",
+      "pre": 2.0,
+      "post": 1.4,
+      "beats": [
+        {
+          "line": "s06_01"
+        },
+        {
+          "line": "s06_02",
+          "gesture": "talk"
+        },
+        {
+          "line": "s06_03"
+        },
+        {
+          "line": "s06_04"
+        },
+        {
+          "line": "s06_05",
+          "gap": 0.25
+        },
+        {
+          "line": "s06_06",
+          "gap": 0.25,
+          "gesture": "open"
+        },
+        {
+          "line": "s06_07"
+        },
+        {
+          "line": "s06_08",
+          "gap": 0.6
+        },
+        {
+          "line": "s06_09",
+          "gap": 0.3,
+          "gesture": "talk"
+        },
+        {
+          "mark": "halt",
+          "gap": 0.3
+        },
+        {
+          "hold": 1.5
+        },
+        {
+          "line": "s06_10",
+          "gesture": "point"
+        },
+        {
+          "line": "s06_11",
+          "gap": 0.4
+        },
+        {
+          "hold": 1.8
+        },
+        {
+          "line": "s06_12",
+          "gap": 0.4
+        },
+        {
+          "line": "s06_13",
+          "gap": 0.5,
+          "gesture": "talk"
+        },
+        {
+          "hold": 1.8
+        },
+        {
+          "mark": "guard_returns"
+        },
+        {
+          "hold": 1.0
+        },
+        {
+          "line": "s06_14",
+          "gesture": false
+        },
+        {
+          "hold": 0.6
+        },
+        {
+          "line": "s06_15",
+          "gap": 0.3,
+          "gesture": "read"
+        },
+        {
+          "line": "s06_16"
+        },
+        {
+          "mark": "guards_leave",
+          "gap": 0.2
+        },
+        {
+          "hold": 2.6
+        },
+        {
+          "line": "s06_17"
+        },
+        {
+          "line": "s06_18",
+          "gap": 0.3
+        },
+        {
+          "line": "s06_19",
+          "gap": 0.4,
+          "gesture": "talk"
+        },
+        {
+          "line": "s06_20",
+          "gap": 0.3
+        },
+        {
+          "line": "s06_21",
+          "gap": 0.4
+        },
+        {
+          "line": "s06_22",
+          "gap": 0.4,
+          "gesture": "open"
+        },
+        {
+          "line": "s06_23",
+          "gap": 0.5
+        },
+        {
+          "line": "s06_24",
+          "gap": 0.3
+        },
+        {
+          "line": "s06_25",
+          "gap": 0.4
+        },
+        {
+          "hold": 1.2
+        },
+        {
+          "mark": "gust"
+        },
+        {
+          "hold": 1.6
+        },
+        {
+          "line": "s06_26"
+        },
+        {
+          "line": "s06_27",
+          "gap": 0.3
+        },
+        {
+          "line": "s06_28",
+          "gap": 0.4
+        },
+        {
+          "line": "s06_29",
+          "gap": 0.4
+        },
+        {
+          "hold": 1.0
+        },
+        {
+          "line": "s06_30"
+        },
+        {
+          "hold": 1.2
+        },
+        {
+          "line": "s06_31"
+        },
+        {
+          "line": "s06_32",
+          "gap": 0.3,
+          "gesture": "open"
+        },
+        {
+          "line": "s06_33",
+          "gap": 0.4
+        },
+        {
+          "hold": 1.4
+        },
+        {
+          "line": "s06_34"
+        }
+      ]
     },
     {
-     "line": "s02_06",
-     "gap": 0.5
+      "id": "s07",
+      "pre": 3.0,
+      "post": 7.0,
+      "beats": [
+        {
+          "line": "s07_01",
+          "gesture": "talk"
+        },
+        {
+          "line": "s07_02",
+          "gap": 0.4
+        },
+        {
+          "mark": "column_leaves",
+          "gap": 0.2
+        },
+        {
+          "hold": 8.0
+        },
+        {
+          "line": "s07_03"
+        }
+      ]
     },
     {
-     "mark": "seal",
-     "gap": 0.5
+      "id": "s08",
+      "pre": 3.0,
+      "post": 1.4,
+      "beats": [
+        {
+          "line": "s08_01",
+          "gesture": "read"
+        },
+        {
+          "mark": "slip",
+          "gap": 0.2
+        },
+        {
+          "hold": 3.6
+        },
+        {
+          "line": "s08_02",
+          "gap": 0.2
+        },
+        {
+          "hold": 1.4
+        },
+        {
+          "line": "s08_03"
+        },
+        {
+          "hold": 1.4
+        },
+        {
+          "line": "s08_04"
+        },
+        {
+          "hold": 1.2
+        }
+      ]
     },
     {
-     "hold": 1.1
+      "id": "s09",
+      "pre": 2.0,
+      "post": 4.0,
+      "beats": [
+        {
+          "line": "s09_01"
+        }
+      ]
     },
     {
-     "line": "s02_07"
+      "id": "s10",
+      "pre": 3.5,
+      "post": 4.0,
+      "beats": [
+        {
+          "line": "s10_01"
+        },
+        {
+          "line": "s10_02",
+          "gap": 0.4
+        },
+        {
+          "line": "s10_03",
+          "gap": 0.3
+        },
+        {
+          "line": "s10_04",
+          "gap": 0.8,
+          "gesture": "talk"
+        },
+        {
+          "line": "s10_05",
+          "gap": 0.4
+        },
+        {
+          "line": "s10_06",
+          "gap": 0.4
+        },
+        {
+          "line": "s10_07",
+          "gap": 0.5
+        },
+        {
+          "hold": 1.8
+        },
+        {
+          "line": "s10_08",
+          "gesture": "nod"
+        }
+      ]
     },
     {
-     "line": "s02_08",
-     "gap": 0.55
+      "id": "s11",
+      "pre": 7.0,
+      "post": 3.0,
+      "beats": [
+        {
+          "line": "s11_01"
+        },
+        {
+          "line": "s11_02",
+          "gap": 1.4
+        },
+        {
+          "mark": "frogs_stop",
+          "gap": 2.0
+        },
+        {
+          "hold": 4.0
+        }
+      ]
     },
     {
-     "line": "s02_09",
-     "gap": 0.45
+      "id": "s12",
+      "pre": 9.0,
+      "post": 0.0,
+      "beats": [
+        {
+          "line": "s12_01"
+        },
+        {
+          "line": "s12_02",
+          "gap": 0.6
+        },
+        {
+          "hold": 1.3
+        },
+        {
+          "line": "s12_03",
+          "gap": 0.0
+        },
+        {
+          "hold": 1.2
+        },
+        {
+          "mark": "grip"
+        },
+        {
+          "line": "s12_04",
+          "gap": 0.5
+        },
+        {
+          "line": "s12_05",
+          "gap": 0.6
+        },
+        {
+          "line": "s12_06",
+          "gap": 0.7
+        },
+        {
+          "hold": 1.4
+        },
+        {
+          "mark": "turn"
+        },
+        {
+          "hold": 6.5
+        },
+        {
+          "mark": "second_turn"
+        },
+        {
+          "hold": 1.6
+        },
+        {
+          "mark": "black"
+        },
+        {
+          "hold": 4.0
+        }
+      ],
+      "gestures": false
     },
     {
-     "line": "s02_10",
-     "gap": 0.4
-    },
-    {
-     "hold": 1.4
-    },
-    {
-     "line": "s02_11",
-     "gap": 1.0
-    },
-    {
-     "hold": 2.0
-    },
-    {
-     "line": "s02_12",
-     "gap": 0.2
-    },
-    {
-     "line": "s02_13",
-     "gap": 0.8
-    },
-    {
-     "line": "s02_14",
-     "gap": 0.3
-    },
-    {
-     "line": "s02_15",
-     "gap": 0.3
-    },
-    {
-     "line": "s02_16",
-     "gap": 0.5
-    },
-    {
-     "hold": 1.5
-    },
-    {
-     "line": "s02_17",
-     "gap": 0.0
+      "id": "endcard",
+      "pre": 5.0,
+      "beats": [],
+      "post": 0.0
     }
-   ]
-  },
-  {
-   "id": "title",
-   "pre": 6.0,
-   "beats": [],
-   "post": 0.0
-  },
-  {
-   "id": "s03",
-   "pre": 6.0,
-   "post": 1.2,
-   "beats": [
-    {
-     "line": "s03_01"
-    },
-    {
-     "line": "s03_02",
-     "gap": 0.3
-    },
-    {
-     "line": "s03_03"
-    },
-    {
-     "line": "s03_04",
-     "gesture": "talk"
-    },
-    {
-     "line": "s03_05",
-     "gap": 0.4
-    },
-    {
-     "hold": 0.8
-    },
-    {
-     "line": "s03_06"
-    },
-    {
-     "line": "s03_07",
-     "gap": 0.4,
-     "gesture": "talk"
-    },
-    {
-     "line": "s03_08",
-     "gap": 0.5
-    },
-    {
-     "line": "s03_09",
-     "gap": 0.3,
-     "gesture": "chin"
-    },
-    {
-     "mark": "crack",
-     "gap": 0.7
-    },
-    {
-     "hold": 1.6
-    },
-    {
-     "line": "s03_10"
-    },
-    {
-     "line": "s03_11",
-     "gap": 0.6,
-     "gesture": "talk"
-    },
-    {
-     "line": "s03_12",
-     "gap": 0.9,
-     "gesture": "crossed"
-    },
-    {
-     "mark": "tiro_shout",
-     "gap": 0.4
-    },
-    {
-     "line": "s03_13",
-     "gap": 0.0
-    },
-    {
-     "hold": 1.8
-    },
-    {
-     "line": "s03_14",
-     "gap": 0.3,
-     "gesture": "talk"
-    },
-    {
-     "line": "s03_15",
-     "gap": 0.4
-    },
-    {
-     "hold": 1.2
-    },
-    {
-     "line": "s03_16",
-     "gap": 0.2
-    },
-    {
-     "line": "s03_17",
-     "gap": 0.3
-    },
-    {
-     "line": "s03_18",
-     "gesture": "salute"
-    },
-    {
-     "line": "s03_19",
-     "gap": 0.9,
-     "gesture": "open"
-    },
-    {
-     "line": "s03_20",
-     "gap": 0.4
-    },
-    {
-     "line": "s03_21",
-     "gap": 0.3,
-     "gesture": "point"
-    },
-    {
-     "hold": 1.3
-    }
-   ]
-  },
-  {
-   "id": "s04",
-   "pre": 2.5,
-   "post": 1.4,
-   "beats": [
-    {
-     "line": "s04_01",
-     "gesture": "talk"
-    },
-    {
-     "line": "s04_02",
-     "gap": 0.4
-    },
-    {
-     "line": "s04_03",
-     "gesture": "talk"
-    },
-    {
-     "line": "s04_04",
-     "gap": 0.45,
-     "gesture": "shrug"
-    },
-    {
-     "line": "s04_05",
-     "gap": 0.5
-    },
-    {
-     "line": "s04_06",
-     "gesture": "shrug"
-    },
-    {
-     "hold": 0.7
-    },
-    {
-     "line": "s04_07",
-     "gap": 0.4
-    },
-    {
-     "line": "s04_08",
-     "gesture": "talk"
-    },
-    {
-     "line": "s04_09",
-     "gap": 0.3,
-     "gesture": "open"
-    },
-    {
-     "line": "s04_10",
-     "gap": 0.35,
-     "gesture": "shrug"
-    },
-    {
-     "hold": 0.6
-    },
-    {
-     "line": "s04_11",
-     "gap": 0.45,
-     "gesture": "read"
-    },
-    {
-     "line": "s04_12"
-    },
-    {
-     "line": "s04_13",
-     "gap": 0.4,
-     "gesture": "talk"
-    },
-    {
-     "line": "s04_14",
-     "gap": 0.45,
-     "gesture": "present"
-    },
-    {
-     "line": "s04_15",
-     "gap": 0.45,
-     "gesture": "read"
-    },
-    {
-     "line": "s04_16"
-    },
-    {
-     "line": "s04_17",
-     "gap": 0.5,
-     "gesture": "chin"
-    },
-    {
-     "line": "s04_18"
-    },
-    {
-     "line": "s04_19",
-     "gap": 0.4
-    },
-    {
-     "line": "s04_20"
-    },
-    {
-     "line": "s04_21",
-     "gesture": "crossed"
-    },
-    {
-     "line": "s04_22",
-     "gap": 0.4
-    },
-    {
-     "hold": 0.8
-    },
-    {
-     "line": "s04_23",
-     "gesture": "crossed"
-    },
-    {
-     "line": "s04_24",
-     "gap": 0.45,
-     "gesture": "open"
-    },
-    {
-     "line": "s04_25",
-     "gap": 0.5
-    },
-    {
-     "line": "s04_26",
-     "gap": 0.3,
-     "gesture": "point"
-    },
-    {
-     "line": "s04_27",
-     "gap": 0.3,
-     "gesture": "shrug"
-    },
-    {
-     "hold": 0.5
-    },
-    {
-     "line": "s04_28",
-     "gesture": "point"
-    }
-   ]
-  },
-  {
-   "id": "s05",
-   "pre": 9.0,
-   "post": 2.5,
-   "beats": [
-    {
-     "line": "s05_01"
-    },
-    {
-     "mark": "severus_stops",
-     "gap": 0.3
-    },
-    {
-     "hold": 0.9
-    },
-    {
-     "line": "s05_02",
-     "gesture": "nod"
-    },
-    {
-     "line": "s05_03",
-     "gap": 0.3,
-     "gesture": "salute"
-    },
-    {
-     "line": "s05_04",
-     "gap": 0.8,
-     "gesture": "nod"
-    },
-    {
-     "mark": "severus_leaves",
-     "gap": 0.3
-    },
-    {
-     "hold": 2.2
-    },
-    {
-     "line": "s05_05"
-    },
-    {
-     "line": "s05_06",
-     "gap": 0.5
-    }
-   ]
-  },
-  {
-   "id": "s06",
-   "pre": 2.0,
-   "post": 1.4,
-   "beats": [
-    {
-     "line": "s06_01"
-    },
-    {
-     "line": "s06_02",
-     "gesture": "talk"
-    },
-    {
-     "line": "s06_03"
-    },
-    {
-     "line": "s06_04"
-    },
-    {
-     "line": "s06_05",
-     "gap": 0.25
-    },
-    {
-     "line": "s06_06",
-     "gap": 0.25,
-     "gesture": "open"
-    },
-    {
-     "line": "s06_07"
-    },
-    {
-     "line": "s06_08",
-     "gap": 0.6
-    },
-    {
-     "line": "s06_09",
-     "gap": 0.3,
-     "gesture": "talk"
-    },
-    {
-     "mark": "halt",
-     "gap": 0.3
-    },
-    {
-     "hold": 1.5
-    },
-    {
-     "line": "s06_10",
-     "gesture": "point"
-    },
-    {
-     "line": "s06_11",
-     "gap": 0.4
-    },
-    {
-     "hold": 1.8
-    },
-    {
-     "line": "s06_12",
-     "gap": 0.4
-    },
-    {
-     "line": "s06_13",
-     "gap": 0.5,
-     "gesture": "talk"
-    },
-    {
-     "hold": 1.8
-    },
-    {
-     "mark": "guard_returns"
-    },
-    {
-     "hold": 1.0
-    },
-    {
-     "line": "s06_14",
-     "gesture": false
-    },
-    {
-     "hold": 0.6
-    },
-    {
-     "line": "s06_15",
-     "gap": 0.3,
-     "gesture": "read"
-    },
-    {
-     "line": "s06_16"
-    },
-    {
-     "mark": "guards_leave",
-     "gap": 0.2
-    },
-    {
-     "hold": 2.6
-    },
-    {
-     "line": "s06_17"
-    },
-    {
-     "line": "s06_18",
-     "gap": 0.3
-    },
-    {
-     "line": "s06_19",
-     "gap": 0.4,
-     "gesture": "talk"
-    },
-    {
-     "line": "s06_20",
-     "gap": 0.3
-    },
-    {
-     "line": "s06_21",
-     "gap": 0.4
-    },
-    {
-     "line": "s06_22",
-     "gap": 0.4,
-     "gesture": "open"
-    },
-    {
-     "line": "s06_23",
-     "gap": 0.5
-    },
-    {
-     "line": "s06_24",
-     "gap": 0.3
-    },
-    {
-     "line": "s06_25",
-     "gap": 0.4
-    },
-    {
-     "hold": 1.2
-    },
-    {
-     "mark": "gust"
-    },
-    {
-     "hold": 1.6
-    },
-    {
-     "line": "s06_26"
-    },
-    {
-     "line": "s06_27",
-     "gap": 0.3
-    },
-    {
-     "line": "s06_28",
-     "gap": 0.4
-    },
-    {
-     "line": "s06_29",
-     "gap": 0.4
-    },
-    {
-     "hold": 1.0
-    },
-    {
-     "line": "s06_30"
-    },
-    {
-     "hold": 1.2
-    },
-    {
-     "line": "s06_31"
-    },
-    {
-     "line": "s06_32",
-     "gap": 0.3,
-     "gesture": "open"
-    },
-    {
-     "line": "s06_33",
-     "gap": 0.4
-    },
-    {
-     "hold": 1.4
-    },
-    {
-     "line": "s06_34"
-    }
-   ]
-  },
-  {
-   "id": "s07",
-   "pre": 3.0,
-   "post": 7.0,
-   "beats": [
-    {
-     "line": "s07_01",
-     "gesture": "talk"
-    },
-    {
-     "line": "s07_02",
-     "gap": 0.4
-    },
-    {
-     "mark": "column_leaves",
-     "gap": 0.2
-    },
-    {
-     "hold": 8.0
-    },
-    {
-     "line": "s07_03"
-    }
-   ]
-  },
-  {
-   "id": "s08",
-   "pre": 3.0,
-   "post": 1.4,
-   "beats": [
-    {
-     "line": "s08_01",
-     "gesture": "read"
-    },
-    {
-     "mark": "slip",
-     "gap": 0.2
-    },
-    {
-     "hold": 3.6
-    },
-    {
-     "line": "s08_02",
-     "gap": 0.2
-    },
-    {
-     "hold": 1.4
-    },
-    {
-     "line": "s08_03"
-    },
-    {
-     "hold": 1.4
-    },
-    {
-     "line": "s08_04"
-    },
-    {
-     "hold": 1.2
-    }
-   ]
-  },
-  {
-   "id": "s09",
-   "pre": 2.0,
-   "post": 4.0,
-   "beats": [
-    {
-     "line": "s09_01"
-    }
-   ]
-  },
-  {
-   "id": "s10",
-   "pre": 3.5,
-   "post": 4.0,
-   "beats": [
-    {
-     "line": "s10_01"
-    },
-    {
-     "line": "s10_02",
-     "gap": 0.4
-    },
-    {
-     "line": "s10_03",
-     "gap": 0.3
-    },
-    {
-     "line": "s10_04",
-     "gap": 0.8,
-     "gesture": "talk"
-    },
-    {
-     "line": "s10_05",
-     "gap": 0.4
-    },
-    {
-     "line": "s10_06",
-     "gap": 0.4
-    },
-    {
-     "line": "s10_07",
-     "gap": 0.5
-    },
-    {
-     "hold": 1.8
-    },
-    {
-     "line": "s10_08",
-     "gesture": "nod"
-    }
-   ]
-  },
-  {
-   "id": "s11",
-   "pre": 7.0,
-   "post": 3.0,
-   "beats": [
-    {
-     "line": "s11_01"
-    },
-    {
-     "line": "s11_02",
-     "gap": 1.4
-    },
-    {
-     "mark": "frogs_stop",
-     "gap": 2.0
-    },
-    {
-     "hold": 4.0
-    }
-   ]
-  },
-  {
-   "id": "s12",
-   "pre": 9.0,
-   "post": 0.0,
-   "beats": [
-    {
-     "line": "s12_01"
-    },
-    {
-     "line": "s12_02",
-     "gap": 0.6
-    },
-    {
-     "hold": 1.3
-    },
-    {
-     "line": "s12_03",
-     "gap": 0.0
-    },
-    {
-     "hold": 1.2
-    },
-    {
-     "mark": "grip"
-    },
-    {
-     "line": "s12_04",
-     "gap": 0.5
-    },
-    {
-     "line": "s12_05",
-     "gap": 0.6
-    },
-    {
-     "line": "s12_06",
-     "gap": 0.7
-    },
-    {
-     "hold": 1.4
-    },
-    {
-     "mark": "turn"
-    },
-    {
-     "hold": 6.5
-    },
-    {
-     "mark": "second_turn"
-    },
-    {
-     "hold": 1.6
-    },
-    {
-     "mark": "black"
-    },
-    {
-     "hold": 4.0
-    }
-   ],
-   "gestures": false
-  },
-  {
-   "id": "endcard",
-   "pre": 5.0,
-   "beats": [],
-   "post": 0.0
-  }
- ]
+  ]
 }

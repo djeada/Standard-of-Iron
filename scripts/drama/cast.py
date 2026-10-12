@@ -35,7 +35,11 @@ def wer(ref, hyp):
     d[0, :] = range(len(h) + 1)
     for i in range(1, len(r) + 1):
         for j in range(1, len(h) + 1):
-            d[i, j] = min(d[i - 1, j] + 1, d[i, j - 1] + 1, d[i - 1, j - 1] + (r[i - 1] != h[j - 1]))
+            d[i, j] = min(
+                d[i - 1, j] + 1,
+                d[i, j - 1] + 1,
+                d[i - 1, j - 1] + (r[i - 1] != h[j - 1]),
+            )
     return d[len(r), len(h)] / max(len(r), 1)
 
 
@@ -97,7 +101,9 @@ def main():
             best = None
             for take in sorted((work / "vc").glob(f"{line['id']}_t*.wav")):
                 data, sr = load(take)
-                audio16 = torchaudio.functional.resample(torch.tensor(data)[None], sr, 16000)[0].numpy()
+                audio16 = torchaudio.functional.resample(
+                    torch.tensor(data)[None], sr, 16000
+                )[0].numpy()
                 segments, _ = asr.transcribe(audio16, beam_size=1, language="en")
                 heard = " ".join(s.text for s in segments)
                 score = {
@@ -107,17 +113,35 @@ def main():
                     "similarity": round(float(embed(data, sr) @ references[who]), 3),
                     "spread": round(pitch_spread(data, sr), 3),
                 }
-                score["rank"] = score["similarity"] + 0.5 * score["spread"] - 2.0 * max(0.0, score["wer"] - 0.1)
+                score["rank"] = (
+                    score["similarity"]
+                    + 0.5 * score["spread"]
+                    - 2.0 * max(0.0, score["wer"] - 0.1)
+                )
                 if best is None or score["rank"] > best["rank"]:
                     best = score
             if best is None:
                 continue
             final = out / f"{line['id']}.wav"
             subprocess.run(
-                ["ffmpeg", "-y", "-loglevel", "error", "-i", str(work / "vc" / f"{best['take']}.wav"), "-af",
-                 "silenceremove=start_periods=1:start_threshold=-45dB,areverse,"
-                 "silenceremove=start_periods=1:start_threshold=-45dB,areverse,adelay=40,apad=pad_dur=0.1",
-                 "-ar", str(OUT_RATE), "-ac", "1", "-c:a", "pcm_s24le", str(final)],
+                [
+                    "ffmpeg",
+                    "-y",
+                    "-loglevel",
+                    "error",
+                    "-i",
+                    str(work / "vc" / f"{best['take']}.wav"),
+                    "-af",
+                    "silenceremove=start_periods=1:start_threshold=-45dB,areverse,"
+                    "silenceremove=start_periods=1:start_threshold=-45dB,areverse,adelay=40,apad=pad_dur=0.1",
+                    "-ar",
+                    str(OUT_RATE),
+                    "-ac",
+                    "1",
+                    "-c:a",
+                    "pcm_s24le",
+                    str(final),
+                ],
                 check=True,
             )
             info = sf.info(final)
@@ -125,8 +149,11 @@ def main():
             best["who"] = who
             manifest[line["id"]] = best
             flag = "  CHECK" if best["wer"] > 0.2 else ""
-            print(f"{line['id']} {who:9s} wer {best['wer']:.2f} sim {best['similarity']:.2f} "
-                  f"spread {best['spread']:.2f}{flag}", flush=True)
+            print(
+                f"{line['id']} {who:9s} wer {best['wer']:.2f} sim {best['similarity']:.2f} "
+                f"spread {best['spread']:.2f}{flag}",
+                flush=True,
+            )
             manifest_path.write_text(json.dumps(manifest, indent=1, sort_keys=True))
 
 

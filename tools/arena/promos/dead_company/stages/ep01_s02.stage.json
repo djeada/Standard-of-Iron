@@ -1,79 +1,54 @@
 {
- "id": "dead_company_ep01_s02",
- "label": "The Dead Company 1: s02",
- "duration": 75,
- "hour": 4.6,
- "exposure": 1.1,
- "include": [
-  "camp.set.json"
- ],
- "props": [
-  {
-   "type": "tent",
-   "at": [
-    -6.5,
-    15.5
-   ],
-   "scale": 1.0
-  },
-  {
-   "type": "supply_cart",
-   "at": [
-    -3.0,
-    15.0
-   ],
-   "scale": 0.9
-  },
-  {
-   "type": "fire_camp",
-   "at": [
-    -5.5,
-    11.5
-   ],
-   "scale": 0.28
-  },
-  {
-   "type": "fire_camp",
-   "at": [
-    -7.4,
-    11.4
-   ],
-   "scale": 0.18
-  }
- ],
- "actors": [
-  {
-   "name": "felix",
-   "look": "felix_scroll",
-   "at": [
-    -6.5,
-    12.5
-   ],
-   "facing": 180,
-   "routine": [
-    "rest_kneel"
-   ]
-  },
-  {
-   "name": "sentry",
-   "look": "troops/roman/camp_rest_armed",
-   "at": [
-    -15.5,
-    18.5
-   ],
-   "facing": 90
-  }
- ],
- "steps": [
-  {
-   "t": 58.026,
-   "do": "walk",
-   "who": "sentry",
-   "to": [
-    1.5,
-    18.0
-   ],
-   "at": "line:s02_13-4.85"
-  }
- ]
+  "id": "dead_company_ep01_s02",
+  "label": "The Dead Company 1: s02",
+  "duration": 75,
+  "hour": 4.6,
+  "exposure": 1.1,
+  "include": ["camp.set.json"],
+  "props": [
+    {
+      "type": "tent",
+      "at": [-6.5, 15.5],
+      "scale": 1.0
+    },
+    {
+      "type": "supply_cart",
+      "at": [-3.0, 15.0],
+      "scale": 0.9
+    },
+    {
+      "type": "fire_camp",
+      "at": [-5.5, 11.5],
+      "scale": 0.28
+    },
+    {
+      "type": "fire_camp",
+      "at": [-7.4, 11.4],
+      "scale": 0.18
+    }
+  ],
+  "actors": [
+    {
+      "name": "felix",
+      "look": "felix_scroll",
+      "at": [-6.5, 12.5],
+      "facing": 180,
+      "routine": ["rest_kneel"]
+    },
+    {
+      "name": "sentry",
+      "look": "troops/roman/camp_rest_armed",
+      "at": [-15.5, 18.5],
+      "facing": 90
+    }
+  ],
+  "steps": [
+    {
+      "t": 58.026,
+      "do": "walk",
+      "who": "sentry",
+      "to": [1.5, 18.0],
+      "at": "line:s02_13-4.85"
+    }
+  ]
 }

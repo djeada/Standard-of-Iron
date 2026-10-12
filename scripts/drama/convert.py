@@ -26,14 +26,16 @@ def main():
     from chatterbox.vc import ChatterboxVC
 
     vc = ChatterboxVC.from_pretrained("cuda")
-    who_of = {l["id"]: l["who"] for s in spec["scenes"] for l in s["lines"]}
+    who_of = {line["id"]: line["who"] for s in spec["scenes"] for line in s["lines"]}
     for take in sorted((work / "takes").glob("*_t*.wav")):
         line_id = take.stem.rsplit("_t", 1)[0]
         if line_id not in who_of:
             continue
         out = out_dir / take.name
         reference = work / "refs" / f"{who_of[line_id]}.wav"
-        if out.exists() and out.stat().st_mtime >= max(take.stat().st_mtime, reference.stat().st_mtime):
+        if out.exists() and out.stat().st_mtime >= max(
+            take.stat().st_mtime, reference.stat().st_mtime
+        ):
             continue
         wav = vc.generate(str(take), target_voice_path=str(reference))
         sf.write(out, wav.squeeze().cpu().numpy(), vc.sr)

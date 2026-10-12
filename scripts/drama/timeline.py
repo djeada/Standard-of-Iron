@@ -52,8 +52,13 @@ class Timeline:
                     self.marks[f"{scene['id']}.{beat['mark']}"] = round(t, 3)
             t += scene.get("post", 0.0)
             self.scenes.append(
-                {"id": scene["id"], "start": round(start, 3), "duration": round(t, 3), "lines": lines,
-                 "gestures": scene.get("gestures", True)}
+                {
+                    "id": scene["id"],
+                    "start": round(start, 3),
+                    "duration": round(t, 3),
+                    "lines": lines,
+                    "gestures": scene.get("gestures", True),
+                }
             )
             start += t
         self.by_scene = {s["id"]: s for s in self.scenes}
@@ -68,7 +73,9 @@ class Timeline:
             return float(expr)
         except ValueError:
             pass
-        match = re.fullmatch(r"(line|mark|end)(?::([\w.]+))?(@end)?([+-][\d.]+)?", expr.strip())
+        match = re.fullmatch(
+            r"(line|mark|end)(?::([\w.]+))?(@end)?([+-][\d.]+)?", expr.strip()
+        )
         if not match:
             raise ValueError(f"bad time expression {expr!r}")
         kind, name, at_end, offset = match.groups()
@@ -94,8 +101,16 @@ if __name__ == "__main__":
 
     tl = Timeline(sys.argv[1], sys.argv[2])
     for scene in tl.scenes:
-        marks = {k.split(".", 1)[1]: v for k, v in tl.marks.items() if k.startswith(scene["id"] + ".")}
-        print(f"{scene['id']:8s} start {scene['start']:7.2f} dur {scene['duration']:6.2f}  marks {marks}")
+        marks = {
+            k.split(".", 1)[1]: v
+            for k, v in tl.marks.items()
+            if k.startswith(scene["id"] + ".")
+        }
+        print(
+            f"{scene['id']:8s} start {scene['start']:7.2f} dur {scene['duration']:6.2f}  marks {marks}"
+        )
         for line in scene["lines"]:
-            print(f"    {line['id']} {line['who']:9s} {line['start']:6.2f}-{line['end']:6.2f}")
+            print(
+                f"    {line['id']} {line['who']:9s} {line['start']:6.2f}-{line['end']:6.2f}"
+            )
     print(f"total {tl.total:.1f} s ({tl.total / 60:.2f} min)")

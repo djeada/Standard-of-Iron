@@ -4,11 +4,11 @@ _Standard of Iron: The Dead Company_ is a dialogue series filmed in the arena.
 An episode goes from script to finished film in five steps, all driven by files
 under `scripts/drama/episodes/<episode>/`:
 
-| File          | Holds                                                                                      |
-| ------------- | ------------------------------------------------------------------------------------------ |
-| `lines.json`  | the cast (voice, speed), pronunciations, and every spoken line by scene                    |
-| `beats.json`  | each scene as a run of lines, holds and named marks, with the gaps between them            |
-| `edit.json`   | per scene: its stage, cameras, cuts, captions, and sound (beds, music, effects)            |
+| File         | Holds                                                                           |
+| ------------ | ------------------------------------------------------------------------------- |
+| `lines.json` | the cast (voice, speed), pronunciations, and every spoken line by scene         |
+| `beats.json` | each scene as a run of lines, holds and named marks, with the gaps between them |
+| `edit.json`  | per scene: its stage, cameras, cuts, captions, and sound (beds, music, effects) |
 
 Stages, which are the staged performances the cameras film, live in
 `tools/arena/promos/dead_company/stages/*.stage.json`. The arena loads them at
@@ -35,35 +35,35 @@ python3 scripts/drama/contact_sheet.py --plan $OUT/plan --clips $OUT/clips --out
 ```
 
 1. **Voices are performed, then recast.**
-   - `perform.py` asks Qwen3-TTS VoiceDesign (Apache-2.0) for several takes of every line. The instruction is the character's `voices` description plus the line's `direct` field ("sudden furious outrage, forgetting to whisper").
-   - VoiceDesign acts well, but it invents a new voice on every call: speaker similarity between two calls was about 0.
-   - `convert.py` runs each take through Chatterbox VC (MIT) into the character's designed reference voice. The delivery survives, and similarity rises to 0.5–0.8.
-   - `cast.py` transcribes each take with faster-whisper, scores voice similarity with ECAPA and pitch spread, and keeps the best one.
-   - Lines it flags (WER over 0.2) are usually spellings, numbers or Latin words; read the `heard` field before re-rendering.
-   - Kokoro (`voice.py`) is kept for scratch reads only; it is flat.
+    - `perform.py` asks Qwen3-TTS VoiceDesign (Apache-2.0) for several takes of every line. The instruction is the character's `voices` description plus the line's `direct` field ("sudden furious outrage, forgetting to whisper").
+    - VoiceDesign acts well, but it invents a new voice on every call: speaker similarity between two calls was about 0.
+    - `convert.py` runs each take through Chatterbox VC (MIT) into the character's designed reference voice. The delivery survives, and similarity rises to 0.5–0.8.
+    - `cast.py` transcribes each take with faster-whisper, scores voice similarity with ECAPA and pitch spread, and keeps the best one.
+    - Lines it flags (WER over 0.2) are usually spellings, numbers or Latin words; read the `heard` field before re-rendering.
+    - Kokoro (`voice.py`) is kept for scratch reads only; it is flat.
 2. **Timeline.** Every time in the edit is an expression resolved against the recorded lines: `12.5`, `line:s03_05`, `line:s03_05@end+0.3`, `mark:crack-1`, `end-2`.
-   - Stage steps carry an `at` expression too. `plan.py` resolves it into the step's `t` and rewrites the stage file.
-   - Re-recording the voices therefore moves walks, turns and reveals along with the cuts. Expressive voices made episode 1 run 1:20 longer.
+    - Stage steps carry an `at` expression too. `plan.py` resolves it into the step's `t` and rewrites the stage file.
+    - Re-recording the voices therefore moves walks, turns and reveals along with the cuts. Expressive voices made episode 1 run 1:20 longer.
 3. **Gestures.** `plan.py` writes `<stage>.gestures.json` beside each stage.
-   - Each line plays a talking gesture on its speaker: `talk` by default for lines of 1.6 s or more, or the line's `gesture` in `beats.json` (`point`, `shrug`, `nod`, `crossed`, `salute`, `chin`, `open`).
-   - Gestures never overlap, and actors that already have a routine (sitting, kneeling) are left alone. A scene with `"gestures": false` stays still.
-   - The arena turns the cues into a showcase routine with `wait:` gaps.
+    - Each line plays a talking gesture on its speaker: `talk` by default for lines of 1.6 s or more, or the line's `gesture` in `beats.json` (`point`, `shrug`, `nod`, `crossed`, `salute`, `chin`, `open`).
+    - Gestures never overlap, and actors that already have a routine (sitting, kneeling) are left alone. A scene with `"gestures": false` stays still.
+    - The arena turns the cues into a showcase routine with `wait:` gaps.
 4. **Plan.**
-   - Each scene is one continuous performance. Every camera the edit cuts to is captured once, over the span it is used plus 0.35 s handles.
-   - Static cameras creep: dialogue framings push in (`push`, m/s), and wides (fov 36° and up) drift sideways (`drift`).
-   - Framings narrower than 40° get handheld sway (`shake` degrees; `steady` turns it off).
-   - A `track` camera rides a group with focus-space offsets, and `keys` give an explicit camera move.
-   - Quality presets are scope 2.35:1: `final` is 1920×816 at 48 fps, `fast` is 24 fps, `preview` is 1280×544.
+    - Each scene is one continuous performance. Every camera the edit cuts to is captured once, over the span it is used plus 0.35 s handles.
+    - Static cameras creep: dialogue framings push in (`push`, m/s), and wides (fov 36° and up) drift sideways (`drift`).
+    - Framings narrower than 40° get handheld sway (`shake` degrees; `steady` turns it off).
+    - A `track` camera rides a group with focus-space offsets, and `keys` give an explicit camera move.
+    - Quality presets are scope 2.35:1: `final` is 1920×816 at 48 fps, `fast` is 24 fps, `preview` is 1280×544.
 5. **Capture** with the guarded runner. It needs a GPU display, so suspend blanking for the run (`xset s off -dpms`) and restore it afterwards.
 6. **Assemble.**
-   - Picture:
-     - Cuts frame-accurately from the cut list. A 48 fps capture is averaged in pairs down to 24 fps, which gives a 180° shutter blur.
-     - Applies the scene's `grade` (an ffmpeg filter chain), then film grain and a vignette, and letterboxes to 1920×1080.
-   - Sound:
-     - Everything is mixed in stereo. Voices get a little `room` (`night`, `tent`, `open`, `camp`).
-     - Every bed, music and effect file is first brought to dialogue level, so an edit's `db` means "this far under the voices". `cc0/...` paths come from the CC0 library in `artifacts/drama/cc0/lib` (see its `manifest.json` for sources and licences).
-     - Beds duck 5 dB and music about 7 dB under speech. The mix is set to -16 LUFS by one static gain and a limiter.
-   - Subtitles sit in the lower letterbox bar.
+    - Picture:
+        - Cuts frame-accurately from the cut list. A 48 fps capture is averaged in pairs down to 24 fps, which gives a 180° shutter blur.
+        - Applies the scene's `grade` (an ffmpeg filter chain), then film grain and a vignette, and letterboxes to 1920×1080.
+    - Sound:
+        - Everything is mixed in stereo. Voices get a little `room` (`night`, `tent`, `open`, `camp`).
+        - Every bed, music and effect file is first brought to dialogue level, so an edit's `db` means "this far under the voices". `cc0/...` paths come from the CC0 library in `artifacts/drama/cc0/lib` (see its `manifest.json` for sources and licences).
+        - Beds duck 5 dB and music about 7 dB under speech. The mix is set to -16 LUFS by one static gain and a limiter.
+    - Subtitles sit in the lower letterbox bar.
 
 ## Staging rules learned the hard way
 

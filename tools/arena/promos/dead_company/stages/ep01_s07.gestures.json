@@ -1,28 +1,8 @@
 {
- "felix": [
-  [
-   3.05,
-   "gesture_talk",
-   3.53
+  "felix": [[3.05, "gesture_talk", 3.53]],
+  "guard_two": [[6.98, "gesture_talk", 2.085]],
+  "tiro": [
+    [17.615, "gesture_talk", 2.199],
+    [19.815, "gesture_talk", 2.199]
   ]
- ],
- "guard_two": [
-  [
-   6.98,
-   "gesture_talk",
-   2.085
-  ]
- ],
- "tiro": [
-  [
-   17.615,
-   "gesture_talk",
-   2.199
-  ],
-  [
-   19.815,
-   "gesture_talk",
-   2.199
-  ]
- ]
 }

@@ -1,44 +1,31 @@
 {
- "id": "dead_company_ep01_s09",
- "label": "The Dead Company 1: s09",
- "duration": 14,
- "hour": 21.8,
- "exposure": 1.0,
- "include": [
-  "camp.set.json"
- ],
- "props": [
-  {
-   "type": "fire_camp",
-   "at": [
-    -9.5,
-    14.5
-   ],
-   "scale": 0.3
-  }
- ],
- "actors": [
-  {
-   "name": "tentmate",
-   "look": "troops/roman/camp_rest",
-   "at": [
-    -10.5,
-    12.5
-   ],
-   "facing": 90,
-   "routine": [
-    "rest_sit_down"
-   ]
-  },
-  {
-   "name": "felix",
-   "look": "felix",
-   "at": [
-    -9.0,
-    12.5
-   ],
-   "facing": -90
-  }
- ],
- "steps": []
+  "id": "dead_company_ep01_s09",
+  "label": "The Dead Company 1: s09",
+  "duration": 14,
+  "hour": 21.8,
+  "exposure": 1.0,
+  "include": ["camp.set.json"],
+  "props": [
+    {
+      "type": "fire_camp",
+      "at": [-9.5, 14.5],
+      "scale": 0.3
+    }
+  ],
+  "actors": [
+    {
+      "name": "tentmate",
+      "look": "troops/roman/camp_rest",
+      "at": [-10.5, 12.5],
+      "facing": 90,
+      "routine": ["rest_sit_down"]
+    },
+    {
+      "name": "felix",
+      "look": "felix",
+      "at": [-9.0, 12.5],
+      "facing": -90
+    }
+  ],
+  "steps": []
 }

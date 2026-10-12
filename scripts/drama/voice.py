@@ -65,20 +65,35 @@ def main():
             voice = cast[line["who"]]["voice"]
             lang = voice[0]
             if lang not in pipelines:
-                pipelines[lang] = KPipeline(lang_code=lang, repo_id="hexgrad/Kokoro-82M")
+                pipelines[lang] = KPipeline(
+                    lang_code=lang, repo_id="hexgrad/Kokoro-82M"
+                )
             text = apply_pronunciation(line["text"], pronounce)
-            chunks = [a.numpy() for _, _, a in pipelines[lang](text, voice=voice, speed=speed)]
+            chunks = [
+                a.numpy() for _, _, a in pipelines[lang](text, voice=voice, speed=speed)
+            ]
             audio = np.concatenate(chunks)
             raw = out / f"{line['id']}.raw.wav"
             sf.write(raw, audio, SAMPLE_RATE)
             subprocess.run(
                 [
-                    "ffmpeg", "-y", "-loglevel", "error", "-i", str(raw),
+                    "ffmpeg",
+                    "-y",
+                    "-loglevel",
+                    "error",
+                    "-i",
+                    str(raw),
                     "-af",
                     "silenceremove=start_periods=1:start_threshold=-50dB,"
                     "areverse,silenceremove=start_periods=1:start_threshold=-50dB,areverse,"
                     "adelay=60,apad=pad_dur=0.12",
-                    "-ar", str(OUT_RATE), "-ac", "1", "-c:a", "pcm_s24le", str(wav),
+                    "-ar",
+                    str(OUT_RATE),
+                    "-ac",
+                    "1",
+                    "-c:a",
+                    "pcm_s24le",
+                    str(wav),
                 ],
                 check=True,
             )
@@ -90,7 +105,10 @@ def main():
                 "voice": voice,
                 "duration": round(info.frames / info.samplerate, 3),
             }
-            print(f"{line['id']} {line['who']:9s} {manifest[line['id']]['duration']:5.2f}s", flush=True)
+            print(
+                f"{line['id']} {line['who']:9s} {manifest[line['id']]['duration']:5.2f}s",
+                flush=True,
+            )
             manifest_path.write_text(json.dumps(manifest, indent=1, sort_keys=True))
     total = sum(v["duration"] for v in manifest.values())
     print(f"{len(manifest)} lines, {total:.1f} s of dialogue", file=sys.stderr)

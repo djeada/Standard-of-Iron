@@ -21,8 +21,19 @@ QUALITY = {
     "fast": {"width": 1920, "height": 816, "fps": 24, "supersample": 1},
 }
 
-GESTURE_LENGTH = {"talk": 2.6, "point": 2.2, "shrug": 1.8, "nod": 1.4, "crossed": 4.0,
-                  "salute": 2.0, "chin": 4.0, "open": 2.0, "read": 3.2, "present": 2.2, "recoil": 2.6}
+GESTURE_LENGTH = {
+    "talk": 2.6,
+    "point": 2.2,
+    "shrug": 1.8,
+    "nod": 1.4,
+    "crossed": 4.0,
+    "salute": 2.0,
+    "chin": 4.0,
+    "open": 2.0,
+    "read": 3.2,
+    "present": 2.2,
+    "recoil": 2.6,
+}
 AUTO_TALK_MIN = 1.6
 
 
@@ -32,12 +43,21 @@ def camera_keys(cam, tl, scene, offset, span):
             "focus": {"mode": "group", "group": cam["track"], "spring": True},
             "eye_space": "focus",
             "look_space": "focus",
-            "camera": [{"time": 0, "eye": cam["eye"], "look": cam["look"], "fov": cam["fov"]}],
+            "camera": [
+                {"time": 0, "eye": cam["eye"], "look": cam["look"], "fov": cam["fov"]}
+            ],
         }
     keys = []
     for key in cam.get("keys", [dict(cam, at=0.0)]):
         t = tl.resolve(key["at"], scene) - offset
-        keys.append({"time": round(min(max(t, 0.0), span), 3), "eye": key["eye"], "look": key["look"], "fov": key["fov"]})
+        keys.append(
+            {
+                "time": round(min(max(t, 0.0), span), 3),
+                "eye": key["eye"],
+                "look": key["look"],
+                "fov": key["fov"],
+            }
+        )
     if len(keys) == 1:
         keys = drift(keys[0], cam, span)
     return {
@@ -60,13 +80,21 @@ def drift(key, cam, span):
         rate = cam.get("drift", 0.03)
         sx, sz = -dz / dist, dx / dist
         end_eye = [eye[0] + sx * rate * span, eye[1], eye[2] + sz * rate * span]
-        end_look = [look[0] + sx * rate * span * 0.6, look[1], look[2] + sz * rate * span * 0.6]
+        end_look = [
+            look[0] + sx * rate * span * 0.6,
+            look[1],
+            look[2] + sz * rate * span * 0.6,
+        ]
     else:
         rate = min(cam.get("push", 0.02), 0.25 * dist / max(span, 1.0))
         end_eye = [eye[i] + (dx, dy, dz)[i] / dist * rate * span for i in range(3)]
         end_look = look
-    end = {"time": round(span, 3), "eye": [round(v, 3) for v in end_eye],
-           "look": [round(v, 3) for v in end_look], "fov": key["fov"]}
+    end = {
+        "time": round(span, 3),
+        "eye": [round(v, 3) for v in end_eye],
+        "look": [round(v, 3) for v in end_look],
+        "fov": key["fov"],
+    }
     return [key, end]
 
 
@@ -103,10 +131,14 @@ def gesture_cues(scene_timing, stage_actors):
             repeats = max(1, round(length / natural))
             each = max(1.6, length / repeats)
             for _ in range(repeats):
-                cues.setdefault(who, []).append([round(start, 3), "gesture_talk", round(each, 3)])
+                cues.setdefault(who, []).append(
+                    [round(start, 3), "gesture_talk", round(each, 3)]
+                )
                 start += each
         else:
-            cues.setdefault(who, []).append([round(start, 3), f"gesture_{move}", natural])
+            cues.setdefault(who, []).append(
+                [round(start, 3), f"gesture_{move}", natural]
+            )
             start += natural
         busy[who] = start + 0.1
     return cues
@@ -145,7 +177,9 @@ def write_gestures(edit, tl, stages):
         for who, extra in stage.get("extra_gestures", {}).items():
             for at, move in extra:
                 t = tl.resolve(at, scene["id"])
-                cues.setdefault(who, []).append([round(t, 3), f"gesture_{move}", GESTURE_LENGTH[move]])
+                cues.setdefault(who, []).append(
+                    [round(t, 3), f"gesture_{move}", GESTURE_LENGTH[move]]
+                )
             cues[who].sort()
             kept = []
             for cue in cues[who]:
@@ -156,7 +190,9 @@ def write_gestures(edit, tl, stages):
                         continue
                 kept.append(cue)
             cues[who] = kept
-        out = stage_path.with_name(stage_path.name.replace(".stage.json", ".gestures.json"))
+        out = stage_path.with_name(
+            stage_path.name.replace(".stage.json", ".gestures.json")
+        )
         if cues:
             out.write_text(json.dumps(cues, indent=1) + "\n")
         elif out.exists():
@@ -172,8 +208,16 @@ def plan(episode_dir, vo_dir, quality):
         timing = tl.by_scene[sid]
         duration = timing["duration"]
         if "graphic" in scene:
-            cutlist.append({"scene": sid, "start": timing["start"], "duration": duration,
-                            "segments": [{"graphic": scene["graphic"], "from": 0.0, "to": duration}]})
+            cutlist.append(
+                {
+                    "scene": sid,
+                    "start": timing["start"],
+                    "duration": duration,
+                    "segments": [
+                        {"graphic": scene["graphic"], "from": 0.0, "to": duration}
+                    ],
+                }
+            )
             continue
         cuts = []
         for cut in scene["cuts"]:
@@ -215,8 +259,15 @@ def plan(episode_dir, vo_dir, quality):
                 if seg.get("cam") == cam_name:
                     seg["shot"] = shot["name"]
                     seg["clip_offset"] = round(seg["from"] - start, 3)
-        cutlist.append({"scene": sid, "start": timing["start"], "duration": duration,
-                        "grade": scene.get("grade"), "segments": segments})
+        cutlist.append(
+            {
+                "scene": sid,
+                "start": timing["start"],
+                "duration": duration,
+                "grade": scene.get("grade"),
+                "segments": segments,
+            }
+        )
     spec = {
         "id": f"dead_company_{edit['episode']}",
         "title": edit["title"],
@@ -233,7 +284,11 @@ def plan(episode_dir, vo_dir, quality):
         "shots": shots,
     }
     spec.update(QUALITY[quality])
-    return spec, {"episode": edit["episode"], "total": round(tl.total, 3), "scenes": cutlist}, tl
+    return (
+        spec,
+        {"episode": edit["episode"], "total": round(tl.total, 3), "scenes": cutlist},
+        tl,
+    )
 
 
 def main():
@@ -253,7 +308,9 @@ def main():
     (out / "cutlist.json").write_text(json.dumps(cutlist, indent=1))
     (out / "timeline.json").write_text(json.dumps(tl.dump(), indent=1))
     seconds = sum(s["duration"] for s in spec["shots"])
-    print(f"{len(spec['shots'])} shots, {seconds:.0f} s to capture; episode {tl.total:.1f} s")
+    print(
+        f"{len(spec['shots'])} shots, {seconds:.0f} s to capture; episode {tl.total:.1f} s"
+    )
 
 
 if __name__ == "__main__":

@@ -126,16 +126,25 @@ def make_head(minimal):
     for lower in (False, True):
         for angle in np.linspace(-1.12, 1.12, 8):
             center = np.array(
-                [0.315 * np.sin(angle), -0.475 if lower else -0.36,
-                 0.285 + 0.325 * np.cos(angle)]
+                [
+                    0.315 * np.sin(angle),
+                    -0.475 if lower else -0.36,
+                    0.285 + 0.325 * np.cos(angle),
+                ]
             )
             radius = np.array([0.039, 0.051 if lower else 0.063, 0.055])
 
             def tooth(p, center=center, radius=radius):
                 return ellipsoid(p, center, radius, 4)
 
-            parts.append(surface(tooth, center - radius * 1.3,
-                                 center + radius * 1.3, 0.021 if minimal else 0.014))
+            parts.append(
+                surface(
+                    tooth,
+                    center - radius * 1.3,
+                    center + radius * 1.3,
+                    0.021 if minimal else 0.014,
+                )
+            )
     vertices, indices = [], []
     count = 0
     for part_index, (p, normals, faces) in enumerate(parts):
@@ -187,12 +196,24 @@ def replace_head(path, head):
     index_offset = 48
     vertex_offset = (index_offset + new_faces.nbytes + 15) // 16 * 16
     output = bytearray(vertex_offset)
-    HEADER.pack_into(output, 0, magic, version, lod, len(new_vertices),
-                     new_faces.size, reserved, index_offset, vertex_offset)
-    output[index_offset:index_offset + new_faces.nbytes] = new_faces.tobytes()
+    HEADER.pack_into(
+        output,
+        0,
+        magic,
+        version,
+        lod,
+        len(new_vertices),
+        new_faces.size,
+        reserved,
+        index_offset,
+        vertex_offset,
+    )
+    output[index_offset : index_offset + new_faces.nbytes] = new_faces.tobytes()
     output.extend(new_vertices.tobytes())
     path.write_bytes(zstandard.ZstdCompressor(level=19).compress(output))
-    print(f"{path}: preserved {len(body)} body vertices; installed {len(head[0])} skull vertices")
+    print(
+        f"{path}: preserved {len(body)} body vertices; installed {len(head[0])} skull vertices"
+    )
 
 
 def main():
