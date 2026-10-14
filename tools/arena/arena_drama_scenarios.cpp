@@ -141,6 +141,9 @@ auto parse_step(const QJsonObject& obj) -> ArenaScenarioStep {
   } else if (action == QLatin1String("kill")) {
     step.command = Command::ApplyDamage;
     step.value = 100000;
+    if (obj.contains("stay")) {
+      step.corpse_hold_seconds = static_cast<float>(obj.value("stay").toDouble());
+    }
   } else if (action == QLatin1String("stop")) {
     step.command = Command::Stop;
   } else {

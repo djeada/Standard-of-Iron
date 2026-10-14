@@ -288,6 +288,8 @@ struct ArenaScenarioStep {
   bool destination_is_offset{false};
 
   int weather_change{-1};
+
+  std::optional<float> corpse_hold_seconds;
 };
 
 enum class ArenaExpectationKind : std::uint8_t {

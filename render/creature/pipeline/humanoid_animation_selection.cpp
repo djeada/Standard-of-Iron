@@ -744,11 +744,57 @@ void blend_out_interrupted_clip(HumanoidAnimationSelection& selection,
                                     Render::Creature::PlaybackLayerMode::FullBodyBlend);
 }
 
+namespace {
+
+auto resolve_selection_layers(const UnitVisualSpec& spec,
+                              const Render::GL::HumanoidAnimationContext& anim,
+                              std::uint32_t seed,
+                              const Render::GL::HumanoidVariant* variant) noexcept
+    -> HumanoidAnimationSelection;
+
+auto gesture_rides_locomotion(const Render::GL::HumanoidAnimationContext& anim) noexcept
+    -> bool {
+  auto const clip = anim.inputs.showcase_clip;
+  return anim.inputs.has_showcase_clip &&
+         clip >= Animation::k_humanoid_gesture_first_clip &&
+         clip < Animation::k_humanoid_gesture_first_clip +
+                    Animation::k_humanoid_gesture_clip_count &&
+         Render::Creature::is_moving_animation(anim.inputs.movement_state) &&
+         !anim.inputs.is_mounted && !anim.inputs.is_attacking &&
+         !anim.inputs.is_dying && !anim.inputs.is_dead;
+}
+
+} // namespace
+
 auto resolve_humanoid_animation_selection(
     const UnitVisualSpec& spec,
     const Render::GL::HumanoidAnimationContext& anim,
     std::uint32_t seed,
     const Render::GL::HumanoidVariant* variant) noexcept -> HumanoidAnimationSelection {
+  if (!gesture_rides_locomotion(anim)) {
+    return resolve_selection_layers(spec, anim, seed, variant);
+  }
+  Render::GL::HumanoidAnimationContext walking = anim;
+  walking.inputs.has_showcase_clip = false;
+  walking.inputs.showcase_clip = Animation::k_unmapped_clip;
+  HumanoidAnimationSelection selection =
+      resolve_selection_layers(spec, walking, seed, variant);
+  HumanoidAnimationSelection gesture = selection;
+  gesture.clip_id = anim.inputs.showcase_clip;
+  gesture.clip_variant = 0U;
+  gesture.phase = std::clamp(anim.inputs.showcase_phase, 0.0F, 1.0F);
+  selection.upper_body_overlay = playback_layer_from_selection(
+      gesture, 1.0F, Render::Creature::PlaybackLayerMode::UpperBodyOverlay);
+  return selection;
+}
+
+namespace {
+
+auto resolve_selection_layers(const UnitVisualSpec& spec,
+                              const Render::GL::HumanoidAnimationContext& anim,
+                              std::uint32_t seed,
+                              const Render::GL::HumanoidVariant* variant) noexcept
+    -> HumanoidAnimationSelection {
   HumanoidAnimationSelection selection = build_selection_for_pose(
       spec, anim, Render::Creature::resolve_pose(anim.inputs), seed, variant);
 
@@ -918,5 +964,7 @@ auto resolve_humanoid_animation_selection(
 
   return selection;
 }
+
+} // namespace
 
 } // namespace Render::Creature::Pipeline
