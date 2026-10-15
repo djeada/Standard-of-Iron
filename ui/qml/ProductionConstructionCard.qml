@@ -24,6 +24,7 @@ Rectangle {
         })
     property bool is_enabled: card_state.enabled
     property bool is_hovered: cardMouseArea.containsMouse
+    readonly property bool costs_wrap: costFlow.height > Design.Typography.caption * 2
 
     width: cardWidth
     height: cardHeight
@@ -60,7 +61,7 @@ Rectangle {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         anchors.margins: 1
-        height: parent.height * 0.7
+        height: card.costs_wrap ? parent.height - 2 : parent.height * 0.7
         radius: 6
         gradient: Gradient {
             GradientStop {
@@ -93,6 +94,8 @@ Rectangle {
         font.bold: true
         fontSizeMode: card.compact ? Text.HorizontalFit : Text.FixedSize
         minimumPixelSize: Design.Typography.caption - 3
+        style: card.costs_wrap ? Text.Outline : Text.Normal
+        styleColor: "#120A05"
     }
 
     Flow {

@@ -853,6 +853,10 @@ This may be a skirmish, or objectives have not been configured.</source>
 <context>
     <name>CommanderSystem</name>
     <message>
+        <source>Your commander has fallen. The host breaks and its camps stand empty.</source>
+        <translation>سقط قائدك. تتفكك الحشود وتخلو معسكراتها.</translation>
+    </message>
+    <message>
         <source>Their commander is dead. The host breaks and its camps stand empty.</source>
         <translation>مات قائدهم. تتفكك الحشود وتخلو معسكراتها.</translation>
     </message>
@@ -5240,10 +5244,6 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>انقر بالزر الأيمن للإلغاء</translation>
     </message>
     <message>
-        <source>Automatic</source>
-        <translation>تلقائي</translation>
-    </message>
-    <message>
         <source>No specialist actions for this selection</source>
         <translation>لا توجد إجراءات خاصة لهذا التحديد</translation>
     </message>
@@ -6160,6 +6160,10 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     <message>
         <source>Army Broken</source>
         <translation>تحطّم الجيش</translation>
+    </message>
+    <message>
+        <source>Mission Failed</source>
+        <translation>فشلت المهمة</translation>
     </message>
     <message>
         <source>Every mission has fallen to your standard.</source>

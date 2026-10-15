@@ -853,6 +853,10 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
 <context>
     <name>CommanderSystem</name>
     <message>
+        <source>Your commander has fallen. The host breaks and its camps stand empty.</source>
+        <translation>Seu comandante caiu. A hoste se desfaz e seus acampamentos ficam vazios.</translation>
+    </message>
+    <message>
         <source>Their commander is dead. The host breaks and its camps stand empty.</source>
         <translation>O comandante deles está morto. A hoste se desfaz e seus acampamentos ficam vazios.</translation>
     </message>
@@ -5236,10 +5240,6 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <translation>Clique com o botão direito para cancelar</translation>
     </message>
     <message>
-        <source>Automatic</source>
-        <translation>Automático</translation>
-    </message>
-    <message>
         <source>No specialist actions for this selection</source>
         <translation>Não há ações especiais para esta seleção</translation>
     </message>
@@ -6156,6 +6156,10 @@ Cada recruta custa os homens do seu esquadrão; a reserva num quartel eleva o li
     <message>
         <source>Army Broken</source>
         <translation>Exército Destroçado</translation>
+    </message>
+    <message>
+        <source>Mission Failed</source>
+        <translation>Missão fracassada</translation>
     </message>
     <message>
         <source>Every mission has fallen to your standard.</source>

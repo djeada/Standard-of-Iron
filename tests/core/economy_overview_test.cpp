@@ -350,7 +350,7 @@ TEST_F(EconomyOverviewTest, RecruitingReportsBarracksManpowerSeparatelyFromResou
 }
 
 TEST_F(EconomyOverviewTest, TheCoachWalksGatherThenBuildThenRecruitThenArmy) {
-  const auto baseline = App::Core::capture_economy_coach_baseline(request());
+  auto baseline = App::Core::capture_economy_coach_baseline(request());
   ASSERT_TRUE(baseline.captured);
 
   QVariantMap coach = App::Core::build_economy_coach_state(request(), baseline);
@@ -374,8 +374,25 @@ TEST_F(EconomyOverviewTest, TheCoachWalksGatherThenBuildThenRecruitThenArmy) {
   EXPECT_EQ(coach.value(QStringLiteral("steps")).toList().size(), 4);
 }
 
+TEST_F(EconomyOverviewTest, TheCoachDoesNotStepBackWhenProgressIsLost) {
+  auto baseline = App::Core::capture_economy_coach_baseline(request());
+  Game::Systems::PlayerResourceRegistry::instance().add_harvested(
+      k_owner, ResourceType::Wood, Game::Systems::k_cut_tree_wood_reward);
+  add_unit(Game::Units::SpawnType::Home);
+  auto* barracks = add_unit(Game::Units::SpawnType::Barracks);
+  auto* production = barracks->add_component<Engine::Core::ProductionComponent>();
+  production->in_progress = true;
+  QVariantMap coach = App::Core::build_economy_coach_state(request(), baseline);
+  ASSERT_EQ(coach.value(QStringLiteral("step")).toString(), QStringLiteral("army"));
+
+  production->in_progress = false;
+  coach = App::Core::build_economy_coach_state(request(), baseline);
+  EXPECT_EQ(coach.value(QStringLiteral("step")).toString(), QStringLiteral("army"));
+  EXPECT_EQ(coach.value(QStringLiteral("step_index")).toInt(), 3);
+}
+
 TEST_F(EconomyOverviewTest, TheCoachFinishesOnceAnArmyHasBeenRaised) {
-  const auto baseline = App::Core::capture_economy_coach_baseline(request());
+  auto baseline = App::Core::capture_economy_coach_baseline(request());
   Game::Systems::PlayerResourceRegistry::instance().add_harvested(
       k_owner, ResourceType::Wood, 40);
   add_unit(Game::Units::SpawnType::Home);

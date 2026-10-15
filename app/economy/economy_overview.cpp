@@ -527,7 +527,7 @@ auto capture_economy_coach_baseline(const EconomyOverviewRequest& request)
 }
 
 auto build_economy_coach_state(const EconomyOverviewRequest& request,
-                               const EconomyCoachBaseline& baseline) -> QVariantMap {
+                               EconomyCoachBaseline& baseline) -> QVariantMap {
   const OwnerScan scan = scan_owner(request.world, request.owner_id);
   const int troop_manpower = troop_manpower_of(request);
   const ResourceAmounts harvested =
@@ -543,11 +543,16 @@ auto build_economy_coach_state(const EconomyOverviewRequest& request,
   const bool army_done =
       troop_manpower >= baseline.troop_manpower + k_economy_coach_army_manpower;
 
+  auto& done = baseline.steps_done;
+  done[0] = done[0] || gather_done;
+  done[1] = done[1] || build_done;
+  done[2] = done[2] || recruit_done;
+  done[3] = done[3] || army_done;
   const std::array<std::pair<const char*, bool>, 4> steps = {{
-      {"gather", gather_done},
-      {"build", build_done},
-      {"recruit", recruit_done},
-      {"army", army_done},
+      {"gather", done[0]},
+      {"build", done[1]},
+      {"recruit", done[2]},
+      {"army", done[3]},
   }};
 
   QVariantList step_list;

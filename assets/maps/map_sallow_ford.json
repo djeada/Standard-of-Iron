@@ -222,8 +222,8 @@
     {
       "id": "p1_commander",
       "type": "roman_field_commander",
-      "x": 36.0,
-      "z": 56.0,
+      "x": 33.0,
+      "z": 61.0,
       "player_id": 1,
       "team_id": 1,
       "nation": "roman_republic"

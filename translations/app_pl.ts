@@ -853,6 +853,10 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
 <context>
     <name>CommanderSystem</name>
     <message>
+        <source>Your commander has fallen. The host breaks and its camps stand empty.</source>
+        <translation>Twój dowódca poległ. Zastęp pierzcha, a jego obozy stoją puste.</translation>
+    </message>
+    <message>
         <source>Their commander is dead. The host breaks and its camps stand empty.</source>
         <translation>Ich dowódca nie żyje. Zastęp pierzcha, a jego obozy stoją puste.</translation>
     </message>
@@ -5237,10 +5241,6 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
         <translation>%1%</translation>
     </message>
     <message>
-        <source>Automatic</source>
-        <translation>Automatycznie</translation>
-    </message>
-    <message>
         <source>No specialist actions for this selection</source>
         <translation>Brak działań specjalnych dla tego zaznaczenia</translation>
     </message>
@@ -6157,6 +6157,10 @@ Każdy rekrut kosztuje ludzi swojego oddziału; rezerwa w koszarach podnosi limi
     <message>
         <source>Army Broken</source>
         <translation>Armia rozbita</translation>
+    </message>
+    <message>
+        <source>Mission Failed</source>
+        <translation>Misja nieudana</translation>
     </message>
     <message>
         <source>One side is left holding the field.</source>

@@ -853,6 +853,10 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
 <context>
     <name>CommanderSystem</name>
     <message>
+        <source>Your commander has fallen. The host breaks and its camps stand empty.</source>
+        <translation>Komutanın düştü. Ordu dağılıyor ve kampları boş kalıyor.</translation>
+    </message>
+    <message>
         <source>Their commander is dead. The host breaks and its camps stand empty.</source>
         <translation>Komutanları öldü. Ordu dağılıyor ve kampları boş kalıyor.</translation>
     </message>
@@ -5235,10 +5239,6 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
         <translation>%%1</translation>
     </message>
     <message>
-        <source>Automatic</source>
-        <translation>Otomatik</translation>
-    </message>
-    <message>
         <source>No specialist actions for this selection</source>
         <translation>Bu seçim için uzmanlık eylemi yok</translation>
     </message>
@@ -6155,6 +6155,10 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
     <message>
         <source>Army Broken</source>
         <translation>Ordu Kırıldı</translation>
+    </message>
+    <message>
+        <source>Mission Failed</source>
+        <translation>Görev Başarısız</translation>
     </message>
     <message>
         <source>One side is left holding the field.</source>

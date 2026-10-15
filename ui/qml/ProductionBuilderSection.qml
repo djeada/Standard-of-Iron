@@ -217,14 +217,13 @@ Rectangle {
                 } else if (label === "slaughter_sheep") {
                     is_collection_task = true;
                     label = qsTr("Slaughter Sheep");
-                } else if (label === "farm") {
-                    label = qsTr("Farm");
-                } else if (label === "wall_segment") {
-                    label = qsTr("Wall Segment");
-                } else if (label === "wall_gate") {
-                    label = qsTr("Wall Gate");
-                } else if (label === "wall_ladder") {
-                    label = qsTr("Ladder");
+                } else {
+                    for (var i = 0; i < builderSection.card_specs.length; i++) {
+                        if (builderSection.card_specs[i].item_type === label) {
+                            label = builderSection.card_specs[i].label;
+                            break;
+                        }
+                    }
                 }
                 return (is_collection_task ? qsTr("Task: %1") : qsTr("Building: %1")).arg(label);
             }

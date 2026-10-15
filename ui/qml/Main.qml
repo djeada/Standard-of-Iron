@@ -128,7 +128,8 @@ ApplicationWindow {
     }
 
     function confirm_leaving_battle(launch) {
-        if (!mainWindow.game_started) {
+        var battle_decided = typeof game !== 'undefined' && game.victory_state !== "";
+        if (!mainWindow.game_started || battle_decided) {
             launch();
             return;
         }

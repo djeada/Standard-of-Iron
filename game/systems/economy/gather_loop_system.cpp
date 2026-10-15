@@ -27,9 +27,10 @@ constexpr int k_work_position_search_radius = 4;
 auto find_next_node(const Engine::Core::World& world,
                     const std::string& product_type,
                     float anchor_x,
-                    float anchor_z) -> std::optional<Game::Map::WorldPropTarget> {
+                    float anchor_z,
+                    float radius = GatherLoopSystem::k_search_radius)
+    -> std::optional<Game::Map::WorldPropTarget> {
   auto const& terrain = *Game::Session::services_for(world).terrain;
-  float const radius = GatherLoopSystem::k_search_radius;
 
   if (product_type == k_builder_product_cut_tree) {
     return terrain.find_tree_near_world(anchor_x, anchor_z, radius);
@@ -403,12 +404,24 @@ void GatherLoopSystem::update(Engine::Core::World* world, float delta_time) {
       continue;
     }
 
-    auto const next = find_next_node(*world,
-                                     builder->gather_product_type,
-                                     builder->gather_anchor_x,
-                                     builder->gather_anchor_z);
+    auto next = find_next_node(*world,
+                               builder->gather_product_type,
+                               builder->gather_anchor_x,
+                               builder->gather_anchor_z);
+    if (!next.has_value()) {
+      next = find_next_node(*world,
+                            builder->gather_product_type,
+                            transform->position.x,
+                            transform->position.z,
+                            k_search_radius * 2.0F);
+      if (next.has_value()) {
+        builder->gather_anchor_x = next->x;
+        builder->gather_anchor_z = next->z;
+      }
+    }
     if (!next.has_value()) {
       builder->clear_gather_order();
+      builder->report_fault(Engine::Core::BuilderTaskFault::TargetLost);
       continue;
     }
 

@@ -18,6 +18,11 @@ Item {
     property int focused_player_index: 0
     property string validation_error: ""
     property var available_nations: []
+    readonly property var nation_colors: ({
+            "roman_republic": [0, 5],
+            "carthage": [1, 7],
+            "iron_sepulcher": [6, 2]
+        })
     property int roster_revision: 0
     property string human_nation_name: ""
     property string human_commander_name: ""
@@ -477,12 +482,14 @@ Item {
         let humanPlayerId = playerIds.indexOf(requestedPlayerId) !== -1 ? requestedPlayerId : Number(playerIds[0]);
         let defaultNation = nation_entry_at(0);
         let defaultCommander = default_commander_entry(defaultNation.id);
+        let humanColorIdx = preferred_color_index(defaultNation.id, []);
         players_model.append({
                 "player_id": humanPlayerId,
                 "playerName": qsTr("You"),
-                "colorIndex": 0,
-                "colorHex": Theme.playerColors[0].hex,
-                "colorName": Theme.playerColors[0].name,
+                "colorIndex": humanColorIdx,
+                "colorHex": Theme.playerColors[humanColorIdx].hex,
+                "colorName": Theme.playerColors[humanColorIdx].name,
+                "colorPicked": false,
                 "team_id": 0,
                 "teamIcon": Theme.teamIcons[1],
                 "nationId": defaultNation.id,
@@ -526,15 +533,9 @@ Item {
         let usedColors = [];
         for (let k = 0; k < players_model.count; k++)
             usedColors.push(players_model.get(k).colorIndex);
-        let colorIdx = 0;
-        for (let c = 0; c < Theme.playerColors.length; c++) {
-            if (usedColors.indexOf(c) === -1) {
-                colorIdx = c;
-                break;
-            }
-        }
         let defaultTeamId = players_model.count > 0 ? 1 : 0;
         let defaultNation = nation_entry_at(players_model.count);
+        let colorIdx = preferred_color_index(defaultNation.id, usedColors);
         let defaultCommander = least_used_commander_entry(defaultNation.id, -1);
         players_model.append({
                 "player_id": nextId,
@@ -542,6 +543,7 @@ Item {
                 "colorIndex": colorIdx,
                 "colorHex": Theme.playerColors[colorIdx].hex,
                 "colorName": Theme.playerColors[colorIdx].name,
+                "colorPicked": false,
                 "team_id": defaultTeamId,
                 "teamIcon": Theme.teamIcons[defaultTeamId + 1],
                 "nationId": defaultNation.id,
@@ -594,11 +596,29 @@ Item {
         }
         if (attempts >= Theme.playerColors.length)
             newIdx = (startIdx + 1) % Theme.playerColors.length;
-        players_model.setProperty(index, "colorIndex", newIdx);
-        players_model.setProperty(index, "colorHex", Theme.playerColors[newIdx].hex);
-        players_model.setProperty(index, "colorName", Theme.playerColors[newIdx].name);
+        players_model.setProperty(index, "colorPicked", true);
+        set_player_color(index, newIdx);
+    }
+
+    function set_player_color(index, colorIdx) {
+        players_model.setProperty(index, "colorIndex", colorIdx);
+        players_model.setProperty(index, "colorHex", Theme.playerColors[colorIdx].hex);
+        players_model.setProperty(index, "colorName", Theme.playerColors[colorIdx].name);
         roster_revision++;
         refresh_map_preview();
+    }
+
+    function preferred_color_index(nationId, usedColors) {
+        let preferred = nation_colors[nationId] || [];
+        for (let i = 0; i < preferred.length; i++) {
+            if (usedColors.indexOf(preferred[i]) === -1)
+                return preferred[i];
+        }
+        for (let c = 0; c < Theme.playerColors.length; c++) {
+            if (usedColors.indexOf(c) === -1)
+                return c;
+        }
+        return 0;
     }
 
     function default_difficulty() {
@@ -658,6 +678,14 @@ Item {
         players_model.setProperty(index, "nationId", nextNation.id);
         players_model.setProperty(index, "nationName", nextNation.name);
         apply_commander(index, nextCommander);
+        if (!p.colorPicked) {
+            let usedColors = [];
+            for (let i = 0; i < players_model.count; i++) {
+                if (i !== index)
+                    usedColors.push(players_model.get(i).colorIndex);
+            }
+            set_player_color(index, preferred_color_index(nextNation.id, usedColors));
+        }
         refresh_map_preview();
     }
 

@@ -64,6 +64,25 @@ TEST(RtsActionModel, GuardModeStillReportsGuardCommandMode) {
   EXPECT_EQ(App::Core::get_current_action_mode(context), QStringLiteral("guard"));
 }
 
+TEST(RtsActionModel, ASelectionOfTheDeadOffersNoOrders) {
+  Engine::Core::World world;
+  auto* selection = &Game::Session::SessionContext::active().selection();
+  ASSERT_NE(selection, nullptr);
+  selection->clear_selection();
+
+  auto* entity = add_selected_unit(world, *selection, Game::Units::SpawnType::Spearman);
+  ASSERT_TRUE(App::Core::has_commandable_selection(&world));
+  entity->get_component<Engine::Core::UnitComponent>()->health = 0;
+
+  App::Core::ActionContext context;
+  context.world = &world;
+  const auto hold =
+      App::Core::get_action_states(context)[QStringLiteral("hold")].toMap();
+  EXPECT_FALSE(App::Core::has_commandable_selection(&world));
+  EXPECT_EQ(hold[QStringLiteral("eligibleCount")].toInt(), 0);
+  selection->clear_selection();
+}
+
 TEST(RtsActionModel, SelectedCommanderAuraReflectsReadyActiveAndCooldownStates) {
   Engine::Core::World world;
   auto* selection = &Game::Session::SessionContext::active().selection();
