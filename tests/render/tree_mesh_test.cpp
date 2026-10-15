@@ -2,6 +2,7 @@
 #include <array>
 #include <cmath>
 #include <gtest/gtest.h>
+#include <utility>
 
 #include "game/map/map_definition.h"
 #include "render/gl/backend/tree_mesh.h"
