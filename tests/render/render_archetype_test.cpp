@@ -921,8 +921,8 @@ TEST(RenderArchetypeBuildings, RomanHomeDrawsNoHealthBarWhileUnderAttack) {
   const auto renderer = registry.get("troops/roman/home");
   ASSERT_TRUE(static_cast<bool>(renderer));
 
-  auto render_mesh_count = [&](bool under_attack) {
-    Engine::Core::StandaloneEntity entity_scratch(34 + (under_attack ? 1U : 0U));
+  auto render_mesh_count = [&](std::uint32_t id, bool under_attack) {
+    Engine::Core::StandaloneEntity entity_scratch(id);
     Engine::Core::Entity& entity = entity_scratch.entity();
     auto* renderable = entity.add_component<Engine::Core::RenderableComponent>();
     auto* unit = entity.add_component<Engine::Core::UnitComponent>(
@@ -956,9 +956,11 @@ TEST(RenderArchetypeBuildings, RomanHomeDrawsNoHealthBarWhileUnderAttack) {
     return submitter.meshes.size();
   };
 
-  const std::size_t idle_count = render_mesh_count(false);
-  const std::size_t under_attack_count = render_mesh_count(true);
-  EXPECT_EQ(under_attack_count, idle_count);
+  for (std::uint32_t id : {34U, 35U, 36U}) {
+    const std::size_t idle_count = render_mesh_count(id, false);
+    const std::size_t under_attack_count = render_mesh_count(id, true);
+    EXPECT_EQ(under_attack_count, idle_count);
+  }
 }
 
 TEST(RenderArchetypeBuildings, RomanHomeDrawsNoHealthBarOnRecentCombatHit) {
@@ -969,8 +971,8 @@ TEST(RenderArchetypeBuildings, RomanHomeDrawsNoHealthBarOnRecentCombatHit) {
   const auto renderer = registry.get("troops/roman/home");
   ASSERT_TRUE(static_cast<bool>(renderer));
 
-  auto render_mesh_count = [&](bool recent_hit) {
-    Engine::Core::StandaloneEntity entity_scratch(36 + (recent_hit ? 1U : 0U));
+  auto render_mesh_count = [&](std::uint32_t id, bool recent_hit) {
+    Engine::Core::StandaloneEntity entity_scratch(id);
     Engine::Core::Entity& entity = entity_scratch.entity();
     auto* renderable = entity.add_component<Engine::Core::RenderableComponent>();
     auto* unit = entity.add_component<Engine::Core::UnitComponent>(
@@ -1003,9 +1005,11 @@ TEST(RenderArchetypeBuildings, RomanHomeDrawsNoHealthBarOnRecentCombatHit) {
     return submitter.meshes.size();
   };
 
-  const std::size_t idle_count = render_mesh_count(false);
-  const std::size_t recent_hit_count = render_mesh_count(true);
-  EXPECT_EQ(recent_hit_count, idle_count);
+  for (std::uint32_t id : {34U, 35U, 36U}) {
+    const std::size_t idle_count = render_mesh_count(id, false);
+    const std::size_t recent_hit_count = render_mesh_count(id, true);
+    EXPECT_EQ(recent_hit_count, idle_count);
+  }
 }
 
 TEST(RenderArchetypeBuildings, DestroyedRomanTowerRemovesBannerTint) {

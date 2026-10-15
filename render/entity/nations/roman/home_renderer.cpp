@@ -55,7 +55,7 @@ auto home_palette_slots(const QVector3D& team)
   return {palette.team, palette.terracotta};
 }
 
-auto build_home_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
+auto build_home_desc_impl(BuildingState state, int variant) -> BuildingArchetypeDesc {
   RomanPalette const c = make_palette(QVector3D(1.0F, 1.0F, 1.0F));
   float const wall_height = 1.0F;
   float height_multiplier = 1.0F;
@@ -65,7 +65,8 @@ auto build_home_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
     height_multiplier = 0.4F;
   }
 
-  BuildingArchetypeDesc desc("roman_home");
+  BuildingArchetypeDesc desc(
+      variant == 0 ? "roman_home" : "roman_home_variant_" + std::to_string(variant));
 
   desc.add_box(
       QVector3D(0.0F, 0.04F, 0.0F), QVector3D(1.18F, 0.04F, 1.18F), c.limestone_dark);
@@ -239,14 +240,58 @@ auto build_home_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
                k_building_state_mask_intact);
 
   float const eave_y = cornice_y + 0.02F;
-  add_tiled_roof(desc,
-                 QVector3D(0.0F, eave_y, 0.0F),
-                 1.05F,
-                 1.02F,
-                 0.40F * height_multiplier,
-                 true,
-                 k_building_state_mask_intact,
-                 true);
+  if (variant == 2) {
+    BuildingPartLabel const label(desc, "courtyard_roof");
+    // Two narrow residential wings and a rear wing leave the impluvium open
+    // to the sky. Their footprint and street-facing entrance stay aligned.
+    for (float const side : {-1.0F, 1.0F}) {
+      add_tiled_roof(desc,
+                     QVector3D(side * 0.73F, eave_y, 0.0F),
+                     1.05F,
+                     0.31F,
+                     0.22F * height_multiplier,
+                     true,
+                     k_building_state_mask_intact,
+                     true);
+      desc.add_box(QVector3D(side * 0.41F, wall_cy, -0.05F),
+                   QVector3D(0.035F, wall_hy, 0.80F),
+                   c.limestone_shade,
+                   k_building_state_mask_intact);
+    }
+    add_tiled_roof(desc,
+                   QVector3D(0.0F, eave_y, -0.73F),
+                   0.41F,
+                   0.31F,
+                   0.22F * height_multiplier,
+                   false,
+                   k_building_state_mask_intact,
+                   true);
+    {
+      BuildingPartMaterial const timber(desc, k_building_material_wood);
+      for (float const side : {-1.0F, 1.0F}) {
+        desc.add_box(QVector3D(side * 0.39F, eave_y + 0.042F, 0.70F),
+                     QVector3D(0.025F, 0.028F, 0.34F),
+                     c.cedar_dark,
+                     k_building_state_mask_intact);
+      }
+      for (int slat = 0; slat < 7; ++slat) {
+        desc.add_box(QVector3D(0.0F, eave_y + 0.085F, 0.42F + slat * 0.095F),
+                     QVector3D(0.43F, 0.018F, 0.024F),
+                     c.cedar_dark * 1.22F,
+                     k_building_state_mask_intact);
+      }
+    }
+  } else {
+    BuildingPartLabel const label(desc, "gable_roof");
+    add_tiled_roof(desc,
+                   QVector3D(0.0F, eave_y, 0.0F),
+                   1.05F,
+                   1.02F,
+                   (variant == 1 ? 0.28F : 0.40F) * height_multiplier,
+                   variant == 0,
+                   k_building_state_mask_intact,
+                   true);
+  }
 
   desc.add_palette_box(QVector3D(0.0F, 0.76F, 0.97F),
                        QVector3D(0.28F, 0.12F, 0.02F),
@@ -257,14 +302,14 @@ auto build_home_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
                 HomeYardStyle{.plinth_half = 1.18F,
                               .wall_half = 0.96F,
                               .door_half_width = 0.60F,
-                              .vent = QVector3D(0.0F, 1.66F, -0.42F),
-                              .chimney_base_y = 1.30F,
+                              .vent = QVector3D(0.0F, 1.66F, -0.73F),
+                              .chimney_base_y = eave_y + 0.02F,
                               .clay_oven_chimney = false,
                               .stone = c.limestone_shade,
                               .clay = c.terracotta,
                               .clay_dark = c.terracotta_dark,
                               .chimney = c.limestone_shade,
-                              .seed = 3});
+                              .seed = 3 + variant * 17});
 
   add_ruin_dressing(desc,
                     RuinDressing{.extent = QVector3D(0.98F, 0.0F, 0.98F),
@@ -278,9 +323,12 @@ auto build_home_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
   return desc;
 }
 
-auto home_archetype(BuildingState state) -> const RenderArchetype& {
-  static const BuildingArchetypeSet& k_set = building_archetype_set("roman_home");
-  return k_set.for_state(state);
+auto home_archetype(BuildingState state, int variant) -> const RenderArchetype& {
+  static const std::array<const BuildingArchetypeSet*, k_home_visual_variant_count>
+      k_sets{&building_archetype_set("roman_home"),
+             &building_archetype_set("roman_home_variant_1"),
+             &building_archetype_set("roman_home_variant_2")};
+  return k_sets[static_cast<std::size_t>(variant)]->for_state(state);
 }
 
 const std::array<TorchMount, 2> k_torches{{
@@ -292,15 +340,15 @@ const std::array<TorchMount, 2> k_torches{{
 
 } // namespace
 
-auto build_home_desc(BuildingState state) -> BuildingArchetypeDesc {
-  return build_home_desc_impl(state);
+auto build_home_desc(BuildingState state, int variant) -> BuildingArchetypeDesc {
+  return build_home_desc_impl(state, variant);
 }
 
 void register_home_renderer(Render::GL::EntityRendererRegistry& registry) {
 
   register_home_smoke_anchor(
       false,
-      HomeSmokeAnchor{.vent = QVector3D(0.0F, 1.66F, -0.42F),
+      HomeSmokeAnchor{.vent = QVector3D(0.0F, 1.66F, -0.73F),
                       .smoke_tint = QVector3D(0.56F, 0.54F, 0.51F),
                       .plume_radius = 0.68F,
                       .doorstep = QVector3D(0.0F, 0.16F, 1.24F),

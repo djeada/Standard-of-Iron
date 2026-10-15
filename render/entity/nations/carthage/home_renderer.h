@@ -8,6 +8,6 @@ namespace Render::GL::Carthage {
 
 void register_home_renderer(EntityRendererRegistry& registry);
 
-auto build_home_desc(BuildingState state) -> BuildingArchetypeDesc;
+auto build_home_desc(BuildingState state, int variant = 0) -> BuildingArchetypeDesc;
 
 } // namespace Render::GL::Carthage

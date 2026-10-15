@@ -22,11 +22,6 @@ float saturate_val(float x) {
   return clamp(x, 0.0, 1.0);
 }
 
-mat2 rotate_2d(float a) {
-  float c = cos(a), s = sin(a);
-  return mat2(c, -s, s, c);
-}
-
 float hash_2d(vec2 p) {
   vec3 p3 = fract(vec3(p.xyx) * 0.1031);
   p3 += dot(p3, p3.yzx + 33.33);
@@ -59,11 +54,13 @@ vec2 hash_2d_vec(vec2 p) {
   return fract(vec2(n, n * 1.2154));
 }
 
-vec2 worley_f(vec2 p) {
+// Keep the winning cell so each stone has one consistent mineral tint.
+vec3 worley_f(vec2 p) {
   vec2 n = floor(p);
   vec2 f = fract(p);
   float f1 = 1e9;
   float f2 = 1e9;
+  vec2 nearest_cell = vec2(0.0);
   for (int j = -1; j <= 1; ++j) {
     for (int i = -1; i <= 1; ++i) {
       vec2 g = vec2(float(i), float(j));
@@ -73,12 +70,26 @@ vec2 worley_f(vec2 p) {
       if (d < f1) {
         f2 = f1;
         f1 = d;
+        nearest_cell = n + g;
       } else if (d < f2) {
         f2 = d;
       }
     }
   }
-  return vec2(sqrt(f1), sqrt(f2));
+  return vec3(sqrt(f1), sqrt(f2), hash_2d(nearest_cell + 71.3));
+}
+
+vec3 road_relief_normal(vec3 position, vec3 normal, float height) {
+  // Transform screen derivatives back into the surface tangent plane. Treating
+  // dFdx/dFdy as world X/Z made the relief turn with the camera and flatten hills.
+  vec3 dpdx = dFdx(position);
+  vec3 dpdy = dFdy(position);
+  vec3 tangent_x = cross(dpdy, normal);
+  vec3 tangent_y = cross(normal, dpdx);
+  float determinant = dot(dpdx, tangent_x);
+  vec3 gradient = dFdx(height) * tangent_x + dFdy(height) * tangent_y;
+  float inverse_determinant = sign(determinant) / max(abs(determinant), 1e-8);
+  return normalize(normal - gradient * inverse_determinant);
 }
 
 float fresnel_schlick(float cos_theta, float f0) {
@@ -138,50 +149,65 @@ void main() {
     vec2 stone_warp = vec2(noise_2d(uv * 0.17 + vec2(17.0, -31.0)),
                            noise_2d(uv * 0.17 + vec2(-43.0, 11.0))) -
                       0.5;
-    vec2 stone_uv = uv * 2.05 + stone_warp * 0.42;
-    vec2 worley_result = worley_f(stone_uv);
+    vec2 stone_uv = uv * 3.8 + stone_warp * 0.42;
+    vec3 worley_result = worley_f(stone_uv);
     float edge_metric = worley_result.y - worley_result.x;
-    float edge_aa = max(fwidth(edge_metric) * 1.35, 0.008);
-    float stone_mask = smoothstep(0.035 - edge_aa, 0.125 + edge_aa, edge_metric);
+    float edge_aa = max(fwidth(edge_metric) * 0.75, 0.008);
+    float footprint = max(length(dFdx(stone_uv)), length(dFdy(stone_uv)));
+    float resolved = 1.0 - smoothstep(0.28, 0.85, footprint);
+    float stone_mask = smoothstep(0.025 - edge_aa, 0.085 + edge_aa, edge_metric);
+    stone_mask = mix(0.82, stone_mask, resolved);
     float mortar_mask = 1.0 - stone_mask;
-    float stone_variation =
-        (broad - 0.5) * 0.11 + (medium - 0.5) * 0.08 + (grain - 0.5) * 0.045;
-    float stone_face = 1.0 - smoothstep(0.08, 0.48, worley_result.x);
-    vec3 stone_color = u_color * (0.92 + stone_variation + stone_face * 0.035);
-    vec3 mortar_color = mix(u_color * 0.70, vec3(0.34, 0.30, 0.21), 0.45);
+    float stone_variation = (worley_result.z - 0.5) * 0.28 * resolved +
+                            (broad - 0.5) * 0.09 + (grain - 0.5) * 0.055 * resolved;
+    vec3 mineral = mix(vec3(0.95, 0.98, 1.02),
+                       vec3(1.09, 1.04, 0.94),
+                       worley_result.z * resolved + 0.5 * (1.0 - resolved));
+    vec3 stone_color = u_color * mineral * (1.01 + stone_variation);
+    vec3 mortar_color = mix(u_color * 0.72, vec3(0.32, 0.28, 0.21), 0.35);
     base_color = mix(mortar_color, stone_color, stone_mask);
-    float cavity = smoothstep(0.0, 0.18, edge_metric);
-    ao = mix(0.80, 1.0, cavity);
-    h = (medium - 0.5) * 0.024 * stone_mask - mortar_mask * 0.032;
-    material_roughness = 0.90;
+    float verge = 1.0 - smoothstep(0.07, 0.30, edge_distance);
+    float settled_soil = verge * smoothstep(0.38, 0.67, medium) * mortar_mask;
+    base_color = mix(base_color, vec3(0.28, 0.29, 0.18), settled_soil * 0.42);
+    base_color *= 1.0 + center_wear * traveled * 0.045;
+    ao = mix(0.86, 1.0, stone_mask);
+    h = ((grain - 0.5) * 0.004 * stone_mask - mortar_mask * 0.016) * resolved;
+    material_roughness = 0.86;
   } else if (u_surface_kind == 1) {
     vec3 dry_earth = u_color * 1.02;
     vec3 compressed_earth = u_color * 0.78;
     float compacted = clamp(ruts * 0.48 + center_wear * 0.10, 0.0, 1.0);
     base_color = mix(dry_earth, compressed_earth, compacted);
 
-    vec2 gravel_cells = worley_f(uv * 3.1 + vec2(-11.0, 6.0));
-    float gravel = smoothstep(0.035, 0.16, gravel_cells.y - gravel_cells.x);
-    base_color = mix(base_color, base_color * 1.17, gravel * 0.55);
+    vec3 gravel_cells = worley_f(uv * 6.2 + vec2(-11.0, 6.0));
+    float gravel_aa = max(fwidth(gravel_cells.x), 0.01);
+    float gravel = 1.0 - smoothstep(0.10 - gravel_aa, 0.19 + gravel_aa, gravel_cells.x);
+    gravel *= 1.0 - smoothstep(0.10, 0.32, gravel_aa);
+    base_color =
+        mix(base_color, u_color * (0.90 + gravel_cells.z * 0.38), gravel * 0.65);
     base_color *= 0.88 + broad * 0.12 + medium * 0.07;
-    h = (medium - 0.5) * 0.050 - ruts * 0.042 + gravel * 0.018;
+    // Across-road UVs change direction at junctions. Keep their tire wear in
+    // the albedo; differentiating it creates false ridges between the arms.
+    h = (medium - 0.5) * 0.035 + gravel * 0.008;
     ao = 0.92 - ruts * 0.11 - (1.0 - medium) * 0.06;
     material_roughness = 0.97;
   } else {
 
-    vec2 aggregate_cells = worley_f(uv * 1.85 + vec2(3.0, -8.0));
-    float aggregate_edge = aggregate_cells.y - aggregate_cells.x;
-    float aggregate = smoothstep(0.020, 0.110, aggregate_edge);
-    float aggregate_tone = (noise_2d(uv * 1.85 + vec2(-5.0, 17.0)) - 0.5) * 0.16;
+    vec3 aggregate_cells = worley_f(uv * 7.5 + vec2(3.0, -8.0));
+    float aggregate_aa = max(fwidth(aggregate_cells.x), 0.01);
+    float aggregate =
+        1.0 - smoothstep(0.08 - aggregate_aa, 0.17 + aggregate_aa, aggregate_cells.x);
+    aggregate *= 1.0 - smoothstep(0.10, 0.32, aggregate_aa);
+    float aggregate_tone = (aggregate_cells.z - 0.5) * 0.18;
     float wear = center_wear * smoothstep(0.30, 0.68, broad);
     float shoulder = 1.0 - smoothstep(0.055, 0.20, edge_distance);
-    vec3 joint_earth = u_color * (0.76 + broad * 0.10);
+    vec3 joint_earth = u_color * (0.91 + (broad - 0.5) * 0.16 + (medium - 0.5) * 0.10);
     vec3 packed_stone = mix(u_color * 1.06, vec3(0.43, 0.39, 0.31), 0.14) *
                         (0.94 + aggregate_tone + (medium - 0.5) * 0.07);
     base_color = mix(joint_earth, packed_stone, aggregate);
     base_color *= 1.0 - wear * 0.045 - shoulder * 0.10;
-    h = (medium - 0.5) * 0.030 + aggregate * 0.032 - wear * 0.010;
-    ao = 0.88 + aggregate * 0.10 - wear * 0.018 - shoulder * 0.035;
+    h = (medium - 0.5) * 0.025 + aggregate * 0.006;
+    ao = 0.97 - ruts * 0.04 - shoulder * 0.025;
     material_roughness = 0.94;
   }
 
@@ -198,18 +224,13 @@ void main() {
   base_color *= 0.94 + (road_age - 0.5) * 0.10;
   base_color *= 1.0 - ruts * mix(0.025, 0.075, environment_wetness());
 
-  float sx = dFdx(h);
-  float sy = dFdy(h);
-  float bump_strength = 6.5;
-  vec3 n_bump = normalize(vec3(-sx * bump_strength, 1.0, -sy * bump_strength));
-
   vec3 n_geom = normalize(v_normal);
-  vec3 n_final = normalize(mix(n_geom, n_bump, 0.38));
+  vec3 n_final = road_relief_normal(v_world_pos, n_geom, h);
 
   vec3 light_dir = environment_primary_direction();
   vec3 view_dir = normalize(u_camera_pos - v_world_pos);
 
-  float steep = saturate_val(length(vec2(sx, sy)) * bump_strength);
+  float steep = saturate_val(1.0 - dot(n_geom, n_final));
   float wetness = environment_wetness();
   float puddle_field = noise_2d(uv * 0.55 + vec2(13.0, 5.0)) * 0.6 +
                        noise_2d(uv * 1.7 + vec2(-3.0, 21.0)) * 0.4;

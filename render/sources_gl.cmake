@@ -22,6 +22,7 @@ set(RENDER_GL_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/prop_mesh_builder.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/prop_parts.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/ring_loft_builder.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/tree_mesh.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/static_mesh_upload.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/vegetation_pipeline.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/vegetation_pipeline_natural.cpp

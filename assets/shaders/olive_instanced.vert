@@ -62,40 +62,19 @@ void main() {
   model_pos.x += cos(lean_yaw) * lean_angle * height_norm * height_norm;
   model_pos.z += sin(lean_yaw) * lean_angle * height_norm * height_norm;
 
+  // Grow the trunk and crown together: deforming only the foliage pulls
+  // the terminal sprays off their supporting limbs.
+  float stretch = mix(1.02, 1.20, leaf_seed);
+  float spread = mix(0.96, 1.10, fract(silhouette_seed * 7.31 + leaf_seed * 3.17));
+  model_pos.y *= stretch;
+  model_pos.xz *= spread;
+  vec3 local_normal = normalize(a_normal / vec3(spread, stretch, spread));
+
   if (foliage_mask > 0.1) {
-    float ang = atan(model_pos.z, model_pos.x);
-    float lump_base = sin(ang * 2.6 + silhouette_seed * TWO_PI) * 0.100;
-    float lump_fine = sin(ang * 5.4 + leaf_seed * TWO_PI * 1.9) * 0.050;
-    float lump_ragged =
-        sin(ang * 5.0 + a_pos.y * 16.0 + leaf_seed * TWO_PI * 3.1) * 0.056;
-    float lump_tuft =
-        sin(ang * 3.0 - a_pos.y * 23.0 + silhouette_seed * TWO_PI * 2.3) * 0.042;
-    float lump_mag = (lump_base + lump_fine + lump_ragged + lump_tuft) * foliage_mask;
-    model_pos.xz *= (1.0 + lump_mag);
-    model_pos.y += (lump_ragged + lump_tuft) * 0.55 * foliage_mask;
-
-    float canopy_height = clamp((a_pos.y - 0.34) / 0.76, 0.0, 1.0);
-    float upper_taper = mix(0.98, 0.72, canopy_height);
-    float lower_fill = mix(1.05, 0.94, canopy_height);
-    float canopy_profile =
-        mix(lower_fill, upper_taper, smoothstep(0.10, 0.96, canopy_height));
-    model_pos.xz *= canopy_profile;
-
-    float radial = length(model_pos.xz);
-    model_pos.y += canopy_height * (0.05 + leaf_seed * 0.08) -
-                   radial * radial * (0.03 + 0.02 * canopy_height);
-
-    float stretch = mix(1.02, 1.30, leaf_seed);
-    model_pos.y *= mix(1.0, stretch, foliage_mask);
-
-    float spread = mix(0.96, 1.14, fract(silhouette_seed * 7.31 + leaf_seed * 3.17));
-    model_pos.xz *= mix(1.0, spread, foliage_mask);
-
     vec3 lobe_seed = vec3(leaf_seed * 23.0, silhouette_seed * 17.0, leaf_seed * 41.0);
-    float lobe = soi_noise3(model_pos * 6.5 + lobe_seed) - 0.5;
-    float tuft = soi_noise3(model_pos * 14.0 + lobe_seed.zxy) - 0.5;
-    float billow = (lobe * 0.07 + tuft * 0.05) * foliage_mask;
-    model_pos += a_normal * billow;
+    float tuft = soi_noise3(model_pos * 14.0 + lobe_seed) - 0.5;
+    // The mesh supplies the crown outline; retain only subtle live variation.
+    model_pos += a_normal * tuft * 0.016 * foliage_mask;
   }
 
   vec3 local_pos = model_pos * scale;
@@ -128,9 +107,9 @@ void main() {
   vec2 rotated_xz = rot * local_pos.xz + wind_offset;
   local_pos = vec3(rotated_xz.x, local_pos.y, rotated_xz.y);
 
-  vec2 rotated_normal_xz = rot * a_normal.xz;
+  vec2 rotated_normal_xz = rot * local_normal.xz;
   vec3 final_normal =
-      normalize(vec3(rotated_normal_xz.x, a_normal.y, rotated_normal_xz.y));
+      normalize(vec3(rotated_normal_xz.x, local_normal.y, rotated_normal_xz.y));
 
   v_world_pos = local_pos + world_pos;
   v_normal = final_normal;

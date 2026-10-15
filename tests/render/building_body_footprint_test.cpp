@@ -13,6 +13,7 @@
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/default_content.h"
 #include "game/systems/nation_registry.h"
+#include "render/entity/home_renderer_common.h"
 #include "render/entity/registry.h"
 #include "render/submitter.h"
 
@@ -116,14 +117,15 @@ protected:
   }
 
   [[nodiscard]] auto measure(const std::string& nation,
-                             const std::string& renderer_key) -> PlanarBounds {
+                             const std::string& renderer_key,
+                             std::uint32_t entity_id = 1) -> PlanarBounds {
     Render::GL::RenderFunc const func =
         registry.get("troops/" + nation + "/" + renderer_key);
     if (!func) {
       return {};
     }
 
-    Engine::Core::StandaloneEntity entity_scratch(1);
+    Engine::Core::StandaloneEntity entity_scratch(entity_id);
     Engine::Core::Entity& entity = entity_scratch.entity();
     entity.add_component<Engine::Core::RenderableComponent>();
     entity.add_component<Engine::Core::TransformComponent>();
@@ -211,6 +213,29 @@ TEST_F(BuildingBodyFootprintTest, TheNavigationFootprintIsNotTheBody) {
            "ever match, one of the two tables has been edited by mistake.";
     EXPECT_LT(body.depth, nav.depth) << type;
   }
+}
+
+TEST_F(BuildingBodyFootprintTest, HouseVariationKeepsTheExistingCollisionFootprint) {
+  std::array<bool, Render::GL::k_home_visual_variant_count> seen{};
+  const auto body = Game::Systems::BuildingCollisionRegistry::get_building_body("home");
+  for (std::uint32_t id = 1; id <= 24; ++id) {
+    const auto variant = Render::GL::home_visual_variant(id);
+    ASSERT_GE(variant, 0);
+    ASSERT_LT(variant, static_cast<int>(seen.size()));
+    if (seen[variant]) {
+      continue;
+    }
+    seen[variant] = true;
+    for (const char* nation : {"roman", "carthage"}) {
+      const auto drawn = measure(nation, "home", id);
+      ASSERT_TRUE(drawn.valid());
+      EXPECT_LE(drawn.span_x(), body.width + 0.02F) << nation << " variant " << variant;
+      EXPECT_LE(drawn.span_z(), body.depth + 0.02F) << nation << " variant " << variant;
+      EXPECT_NEAR(drawn.center_x(), body.offset_x, 0.20F);
+      EXPECT_NEAR(drawn.center_z(), body.offset_z, 0.20F);
+    }
+  }
+  EXPECT_TRUE(std::all_of(seen.begin(), seen.end(), [](bool value) { return value; }));
 }
 
 } // namespace

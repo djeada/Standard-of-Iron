@@ -8,6 +8,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 
+#include "render/entity/building_archetype_catalog.h"
 #include "render/entity/building_archetype_desc.h"
 #include "render/entity/building_archetype_library.h"
 #include "render/entity/building_decay.h"
@@ -127,6 +128,30 @@ TEST(BuildingArchetypeDesc, LibrarySetServesTheBakedMeshPerState) {
   EXPECT_NE(set.for_state(BuildingState::Normal).merged_full->indices.size(),
             set.for_state(BuildingState::Destroyed).merged_full->indices.size());
   EXPECT_EQ(&set, &building_archetype_set("roman_home"));
+}
+
+TEST(BuildingArchetypeDesc, EveryHomeVariantIsBakedForAllDamageStates) {
+  using namespace Render::GL;
+  int homes = 0;
+  for (const auto& entry : building_archetype_catalog()) {
+    if (!entry.name.starts_with("roman_home") &&
+        !entry.name.starts_with("carthage_home")) {
+      continue;
+    }
+    ++homes;
+    const auto& set = building_archetype_set(entry.name);
+    for (auto state :
+         {BuildingState::Normal, BuildingState::Damaged, BuildingState::Destroyed}) {
+      const auto& archetype = set.for_state(state);
+      EXPECT_EQ(entry.build(state).name(), entry.name);
+      EXPECT_EQ(archetype.debug_name, building_mesh_key(entry.name, state));
+      ASSERT_NE(archetype.merged_full, nullptr) << archetype.debug_name;
+      EXPECT_FALSE(archetype.merged_full->indices.empty());
+      EXPECT_TRUE(archetype.lods[0].draws.empty())
+          << "variants must use the static building batch";
+    }
+  }
+  EXPECT_EQ(homes, 6);
 }
 
 TEST(BuildingArchetypeDesc, HealthyStateKeepsAuthoredColors) {

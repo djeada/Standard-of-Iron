@@ -8,6 +8,21 @@ and wears it. Everything here is presentation-only. No population, selection,
 collision, pathfinding, vision, resource output or replay state is added, and
 nothing reads the live simulation while drawing.
 
+## House forms
+
+Each nation has three baked house variants, selected deterministically from the
+entity ID by `home_visual_variant`. Roman homes alternate between two gable
+orientations and a courtyard house with narrow roofed wings, an open impluvium,
+and a timber shade frame. Carthaginian homes alternate between a cloth-covered
+terrace, a slatted pergola, and a terrace with an upper room. Yard planting also
+varies with the house form.
+
+Every variant is included in `building_archetype_catalog` for normal, damaged,
+and destroyed states and uses the existing static building batch. Selection,
+ownership changes, and damage preserve the chosen form. All forms retain the
+same building body and navigation footprint; the street entrance, shutters,
+cloth valance, and smoke outlets stay aligned with their activity anchors.
+
 ## Nothing in lockstep
 
 The headline rule: in a town of a hundred houses, no two may look like copies
@@ -20,16 +35,15 @@ street responds one house at a time. `tests/render/home_activity_test.cpp`
 proves this for every schedule by sweeping the night factor and counting how
 many houses flip per step.
 
-## No chimneys
+## Smoke outlets
 
-An ancient Mediterranean house has no chimney, so neither does this. Each
-nation registers a `HomeSmokeAnchor` from its own house renderer, pointing at
-an outlet that building already models:
+Each nation registers a `HomeSmokeAnchor` from its house renderer, pointing at
+the outlet modelled on every house form:
 
-| Nation   | Outlet                                                                  | Local anchor          |
-| -------- | ----------------------------------------------------------------------- | --------------------- |
-| Rome     | smoke works out through the roof tiles, above the ridge toward the rear | `(0.00, 1.66, -0.42)` |
-| Carthage | the rooftop bread oven, offset to one corner of the flat roof           | `(0.48, 1.70, -0.46)` |
+| Nation   | Outlet                                                        | Local anchor          |
+| -------- | ------------------------------------------------------------- | --------------------- |
+| Rome     | roof vent over the rear wing, clear of the open courtyard     | `(0.00, 1.66, -0.73)` |
+| Carthage | the rooftop bread oven, offset to one corner of the flat roof | `(0.48, 1.70, -0.46)` |
 
 The anchors are in house-local units and are carried through the building's own
 model matrix, so a plume scales and rotates with the house rather than floating

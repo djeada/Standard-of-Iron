@@ -60,6 +60,14 @@ void add_jar(BuildingArchetypeDesc& desc,
 
 } // namespace
 
+auto home_visual_variant(std::uint32_t entity_id) -> int {
+  // Entity identity survives capture, damage and save/load; frame order does not.
+  entity_id ^= entity_id >> 16U;
+  entity_id *= 0x7FEB352DU;
+  entity_id ^= entity_id >> 15U;
+  return static_cast<int>(entity_id % k_home_visual_variant_count);
+}
+
 void add_home_yard(BuildingArchetypeDesc& desc, const HomeYardStyle& style) {
   float const p = style.plinth_half;
   float const w = style.wall_half;
@@ -285,7 +293,11 @@ void register_home_renderer_variant(EntityRendererRegistry& registry,
         const QVector3D team = Render::entity_color(*ctx.entity);
         const auto palette_slots = config.palette_slots(team);
         submit_building_instance(
-            out, ctx, config.archetype(resolve_building_state(ctx)), palette_slots);
+            out,
+            ctx,
+            config.archetype(resolve_building_state(ctx),
+                             home_visual_variant(ctx.entity->get_id())),
+            palette_slots);
         submit_home_activity(ctx, out, config.nation_slug == "carthage");
         submit_building_torches(ctx, out, config.torches);
         draw_building_selection_overlay(out, ctx, config.selection);
