@@ -970,7 +970,7 @@ RowLayout {
                         hotkey: bottomRoot.hotkey_for(contextualCommandButton.modelData)
                         hint: contextualCommandButton.modelData.hint || ""
                         details: bottomRoot.command_details(contextualCommandButton.modelData, contextualCommandButton.state)
-                        statusText: contextualCommandButton.state.passive ? qsTr("Automatic") : bottomRoot.command_status(contextualCommandButton.modelData, contextualCommandButton.state)
+                        statusText: contextualCommandButton.state.passive ? qsTr("Auto") : bottomRoot.command_status(contextualCommandButton.modelData, contextualCommandButton.state)
                         cooldown: bottomRoot.command_cooldown(contextualCommandButton.modelData, contextualCommandButton.state)
                         disabledReason: bottomRoot.unavailable_reason(contextualCommandButton.modelData, contextualCommandButton.state)
 

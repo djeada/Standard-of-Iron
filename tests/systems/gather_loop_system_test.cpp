@@ -147,7 +147,7 @@ TEST_F(GatherLoopSystemTest, AHaulHomeIsNotMistakenForAManualMove) {
 
 TEST_F(GatherLoopSystemTest, AnExhaustedRoundIsRetiredInsteadOfRescannedForever) {
   Engine::Core::World world;
-  auto* worker = add_woodcutter(world, 6.0F, 6.0F);
+  auto* worker = add_woodcutter(world, 300.0F, 300.0F);
   auto* anchored = worker->get_component<Engine::Core::BuilderProductionComponent>();
   ASSERT_NE(anchored, nullptr);
 
@@ -161,6 +161,22 @@ TEST_F(GatherLoopSystemTest, AnExhaustedRoundIsRetiredInsteadOfRescannedForever)
   ASSERT_NE(builder, nullptr);
   EXPECT_FALSE(builder->has_gather_order);
   EXPECT_FALSE(builder->has_task_target);
+}
+
+TEST_F(GatherLoopSystemTest, AnExhaustedGroveMovesOnToStandingTreesNearTheWorker) {
+  Engine::Core::World world;
+  auto* worker = add_woodcutter(world, 6.0F, 6.0F);
+  auto* builder = worker->get_component<Engine::Core::BuilderProductionComponent>();
+  ASSERT_NE(builder, nullptr);
+  builder->gather_anchor_x = 400.0F;
+  builder->gather_anchor_z = 400.0F;
+
+  think(world);
+
+  EXPECT_TRUE(builder->has_gather_order);
+  EXPECT_TRUE(builder->has_task_target);
+  EXPECT_LT(std::abs(builder->gather_anchor_x), 32.0F);
+  EXPECT_LT(std::abs(builder->gather_anchor_z), 32.0F);
 }
 
 TEST_F(GatherLoopSystemTest, TheWorkSpotIsTheTreeItself) {

@@ -853,6 +853,10 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
 <context>
     <name>CommanderSystem</name>
     <message>
+        <source>Your commander has fallen. The host breaks and its camps stand empty.</source>
+        <translation>Euer Befehlshaber ist gefallen. Das Heer zerbricht und seine Lager stehen leer.</translation>
+    </message>
+    <message>
         <source>Their commander is dead. The host breaks and its camps stand empty.</source>
         <translation>Ihr Befehlshaber ist tot. Das Heer zerbricht und seine Lager stehen leer.</translation>
     </message>
@@ -5236,10 +5240,6 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <translation>Rechtsklick zum Abbrechen</translation>
     </message>
     <message>
-        <source>Automatic</source>
-        <translation>Automatisch</translation>
-    </message>
-    <message>
         <source>No specialist actions for this selection</source>
         <translation>Für diese Auswahl gibt es keine Spezialaktionen</translation>
     </message>
@@ -6156,6 +6156,10 @@ Jede Rekrutierung kostet die Männer ihrer Einheit; die Reserve einer Kaserne he
     <message>
         <source>Army Broken</source>
         <translation>Armee zerschlagen</translation>
+    </message>
+    <message>
+        <source>Mission Failed</source>
+        <translation>Mission gescheitert</translation>
     </message>
     <message>
         <source>Every mission has fallen to your standard.</source>

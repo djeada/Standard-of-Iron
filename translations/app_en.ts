@@ -853,6 +853,10 @@ This may be a skirmish, or objectives have not been configured.</translation>
 <context>
     <name>CommanderSystem</name>
     <message>
+        <source>Your commander has fallen. The host breaks and its camps stand empty.</source>
+        <translation>Your commander has fallen. The host breaks and its camps stand empty.</translation>
+    </message>
+    <message>
         <source>Their commander is dead. The host breaks and its camps stand empty.</source>
         <translation>Their commander is dead. The host breaks and its camps stand empty.</translation>
     </message>
@@ -5236,10 +5240,6 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Right-click to cancel</translation>
     </message>
     <message>
-        <source>Automatic</source>
-        <translation>Automatic</translation>
-    </message>
-    <message>
         <source>No specialist actions for this selection</source>
         <translation>No specialist actions for this selection</translation>
     </message>
@@ -6156,6 +6156,10 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     <message>
         <source>Army Broken</source>
         <translation>Army Broken</translation>
+    </message>
+    <message>
+        <source>Mission Failed</source>
+        <translation>Mission Failed</translation>
     </message>
     <message>
         <source>Every mission has fallen to your standard.</source>

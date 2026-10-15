@@ -233,6 +233,9 @@ auto unit_is_eligible_for_action(Engine::Core::World* world,
                                  ActionId action,
                                  const Game::Systems::OwnerRegistry& owners) -> bool {
   const auto* unit = unit_component(&entity);
+  if (unit != nullptr && unit->health <= 0) {
+    return false;
+  }
   switch (action) {
   case ActionId::Attack:
     return (unit != nullptr) && Game::Units::can_use_attack_mode(unit->spawn_type);
@@ -634,7 +637,8 @@ auto has_commandable_selection(Engine::Core::World* world) -> bool {
   }
   for (const auto entity_id : *selected) {
     const auto* unit = unit_component(world->get_entity(entity_id));
-    if ((unit != nullptr) && Game::Units::is_troop_spawn(unit->spawn_type)) {
+    if ((unit != nullptr) && unit->health > 0 &&
+        Game::Units::is_troop_spawn(unit->spawn_type)) {
       return true;
     }
   }

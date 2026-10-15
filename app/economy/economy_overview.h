@@ -3,6 +3,8 @@
 #include <QVariantList>
 #include <QVariantMap>
 
+#include <array>
+
 #include "game/systems/nation_id.h"
 #include "game/systems/resource_types.h"
 
@@ -33,6 +35,7 @@ struct EconomyCoachBaseline {
   int troop_manpower = 0;
   int building_count = 0;
   bool captured = false;
+  std::array<bool, 4> steps_done{};
 };
 
 inline constexpr int k_economy_coach_army_manpower = 80;
@@ -67,6 +70,6 @@ build_production_help(const EconomyOverviewRequest& request) -> QVariantMap;
 
 [[nodiscard]] auto
 build_economy_coach_state(const EconomyOverviewRequest& request,
-                          const EconomyCoachBaseline& baseline) -> QVariantMap;
+                          EconomyCoachBaseline& baseline) -> QVariantMap;
 
 } // namespace App::Core

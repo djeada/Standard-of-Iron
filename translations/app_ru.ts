@@ -853,6 +853,10 @@ This may be a skirmish, or objectives have not been configured.</source>
 <context>
     <name>CommanderSystem</name>
     <message>
+        <source>Your commander has fallen. The host breaks and its camps stand empty.</source>
+        <translation>Ваш полководец пал. Войско рассыпается, его лагеря пусты.</translation>
+    </message>
+    <message>
         <source>Their commander is dead. The host breaks and its camps stand empty.</source>
         <translation>Их полководец мёртв. Войско рассыпается, его лагеря пусты.</translation>
     </message>
@@ -5237,10 +5241,6 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>%1%</translation>
     </message>
     <message>
-        <source>Automatic</source>
-        <translation>Автоматически</translation>
-    </message>
-    <message>
         <source>No specialist actions for this selection</source>
         <translation>Для этого выделения особых действий нет</translation>
     </message>
@@ -6157,6 +6157,10 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     <message>
         <source>Army Broken</source>
         <translation>Армия разбита</translation>
+    </message>
+    <message>
+        <source>Mission Failed</source>
+        <translation>Миссия провалена</translation>
     </message>
     <message>
         <source>One side is left holding the field.</source>

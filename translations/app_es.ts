@@ -853,6 +853,10 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
 <context>
     <name>CommanderSystem</name>
     <message>
+        <source>Your commander has fallen. The host breaks and its camps stand empty.</source>
+        <translation>Tu comandante ha caído. La hueste se quiebra y sus campamentos quedan vacíos.</translation>
+    </message>
+    <message>
         <source>Their commander is dead. The host breaks and its camps stand empty.</source>
         <translation>Su comandante ha muerto. La hueste se quiebra y sus campamentos quedan vacíos.</translation>
     </message>
@@ -5236,10 +5240,6 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <translation>Clic derecho para cancelar</translation>
     </message>
     <message>
-        <source>Automatic</source>
-        <translation>Automático</translation>
-    </message>
-    <message>
         <source>No specialist actions for this selection</source>
         <translation>No hay acciones especiales para esta selección</translation>
     </message>
@@ -6156,6 +6156,10 @@ Cada recluta cuesta los hombres de su escuadra; la reserva de un cuartel eleva e
     <message>
         <source>Army Broken</source>
         <translation>Ejército quebrado</translation>
+    </message>
+    <message>
+        <source>Mission Failed</source>
+        <translation>Misión fallida</translation>
     </message>
     <message>
         <source>Every mission has fallen to your standard.</source>

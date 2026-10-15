@@ -54,7 +54,9 @@ Item {
         case "victory":
             return qsTr("Victory Secured");
         }
-        return qsTr("Army Broken");
+        if (!root.isCampaignMission)
+            return qsTr("Army Broken");
+        return qsTr("Mission Failed");
     }
 
     readonly property string subtitle: {
