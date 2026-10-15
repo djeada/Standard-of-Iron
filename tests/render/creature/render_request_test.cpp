@@ -408,6 +408,43 @@ TEST(HumanoidAnimationSelection, AuthoredActionClipSurvivesUpperBodyLayerSelecti
   EXPECT_FLOAT_EQ(selection.upper_body_overlay.phase, 0.58F);
 }
 
+TEST(HumanoidAnimationSelection, GestureWhileWalkingKeepsTheWalkingLegs) {
+  Render::Creature::Pipeline::UnitVisualSpec spec{};
+  spec.archetype_id = ArchetypeRegistry::k_humanoid_base;
+
+  Render::GL::HumanoidAnimationContext anim{};
+  anim.inputs.movement_state = Render::Creature::MovementAnimationState::Walk;
+  anim.inputs.has_showcase_clip = true;
+  anim.inputs.showcase_clip = Animation::k_humanoid_gesture_first_clip;
+  anim.inputs.showcase_phase = 0.4F;
+
+  auto const selection =
+      Render::Creature::Pipeline::resolve_humanoid_animation_selection(spec, anim, 0U);
+  ASSERT_TRUE(selection.clip_id.has_value());
+  EXPECT_NE(*selection.clip_id, Animation::k_humanoid_gesture_first_clip);
+  ASSERT_TRUE(selection.upper_body_overlay.active());
+  ASSERT_TRUE(selection.upper_body_overlay.clip_id.has_value());
+  EXPECT_EQ(*selection.upper_body_overlay.clip_id,
+            Animation::k_humanoid_gesture_first_clip);
+  EXPECT_FLOAT_EQ(selection.upper_body_overlay.phase, 0.4F);
+}
+
+TEST(HumanoidAnimationSelection, GestureStandingStillPlaysFullBody) {
+  Render::Creature::Pipeline::UnitVisualSpec spec{};
+  spec.archetype_id = ArchetypeRegistry::k_humanoid_base;
+
+  Render::GL::HumanoidAnimationContext anim{};
+  anim.inputs.has_showcase_clip = true;
+  anim.inputs.showcase_clip = Animation::k_humanoid_gesture_first_clip;
+  anim.inputs.showcase_phase = 0.4F;
+
+  auto const selection =
+      Render::Creature::Pipeline::resolve_humanoid_animation_selection(spec, anim, 0U);
+  ASSERT_TRUE(selection.clip_id.has_value());
+  EXPECT_EQ(*selection.clip_id, Animation::k_humanoid_gesture_first_clip);
+  EXPECT_FALSE(selection.upper_body_overlay.active());
+}
+
 TEST(SubmitRequests, EmptySpanProducesZeroStats) {
   CreaturePipeline const pipeline;
   CountingSubmitter sink;

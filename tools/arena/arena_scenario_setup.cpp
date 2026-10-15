@@ -1136,6 +1136,10 @@ void ArenaScenarioRunner::Impl::execute_step(std::size_t index,
       auto* entity = world.get_entity(entity_id);
       (void)Game::Systems::Combat::apply_unit_damage(
           &world, entity, std::max(0, step.value), attacker_id);
+      auto* death = world.try_get<Engine::Core::DeathAnimationComponent>(entity_id);
+      if (death != nullptr && step.corpse_hold_seconds.has_value()) {
+        death->dead_hold_duration = *step.corpse_hold_seconds;
+      }
     }
     break;
   }
