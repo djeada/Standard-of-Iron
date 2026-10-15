@@ -56,7 +56,7 @@ auto home_palette_slots(const QVector3D& team)
   return {palette.team, palette.tile_red};
 }
 
-auto build_home_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
+auto build_home_desc_impl(BuildingState state, int variant) -> BuildingArchetypeDesc {
   CarthagePalette const c = make_palette(QVector3D(1.0F, 1.0F, 1.0F));
   float const wall_height = 0.9F;
   float height_multiplier = 1.0F;
@@ -67,7 +67,9 @@ auto build_home_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
     height_multiplier = 0.4F;
   }
 
-  BuildingArchetypeDesc desc("carthage_home");
+  BuildingArchetypeDesc desc(variant == 0
+                                 ? "carthage_home"
+                                 : "carthage_home_variant_" + std::to_string(variant));
 
   constexpr float k_front_wall_face = 1.02F;
 
@@ -258,10 +260,47 @@ auto build_home_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
                         BuildingStateMask::Normal);
     }
   }
-  desc.add_box(QVector3D(-0.35F, roof_y + 0.49F, -0.08F),
-               QVector3D(0.40F, 0.012F, 0.43F),
-               c.indigo,
-               BuildingStateMask::Normal);
+  if (variant == 1) {
+    BuildingPartLabel const label(desc, "terrace_pergola");
+    BuildingPartMaterial const timber(desc, k_building_material_wood);
+    for (float const x : {-0.72F, 0.02F}) {
+      desc.add_box(QVector3D(x, roof_y + 0.47F, -0.08F),
+                   QVector3D(0.030F, 0.027F, 0.46F),
+                   c.wood_dark,
+                   BuildingStateMask::Normal);
+    }
+    for (int slat = 0; slat < 10; ++slat) {
+      desc.add_box(QVector3D(-0.35F, roof_y + 0.515F, -0.49F + slat * 0.09F),
+                   QVector3D(0.43F, 0.020F, 0.025F),
+                   c.wood,
+                   BuildingStateMask::Normal);
+    }
+  } else if (variant == 2) {
+    BuildingPartLabel const label(desc, "terrace_upper_room");
+    // A compact upper room at the back leaves the front terrace and its
+    // animated shade valance clear, as well as the oven's smoke vent.
+    desc.add_box(QVector3D(-0.40F, roof_y + 0.32F, -0.48F),
+                 QVector3D(0.34F, 0.27F, 0.29F),
+                 c.plaster,
+                 k_building_state_mask_intact);
+    desc.add_box(QVector3D(-0.40F, roof_y + 0.62F, -0.48F),
+                 QVector3D(0.38F, 0.035F, 0.33F),
+                 c.stone_light,
+                 k_building_state_mask_intact);
+    desc.add_box(QVector3D(-0.40F, roof_y + 0.32F, -0.184F),
+                 QVector3D(0.12F, 0.21F, 0.012F),
+                 c.wood_dark,
+                 k_building_state_mask_intact);
+    desc.add_box(QVector3D(-0.35F, roof_y + 0.49F, 0.17F),
+                 QVector3D(0.40F, 0.012F, 0.18F),
+                 c.indigo * 0.85F,
+                 BuildingStateMask::Normal);
+  } else {
+    desc.add_box(QVector3D(-0.35F, roof_y + 0.49F, -0.08F),
+                 QVector3D(0.40F, 0.012F, 0.43F),
+                 c.indigo,
+                 BuildingStateMask::Normal);
+  }
 
   desc.add_box(QVector3D(0.0F, 0.52F, -0.94F),
                QVector3D(0.22F, 0.28F, 0.02F),
@@ -303,7 +342,7 @@ auto build_home_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
                               .clay = QVector3D(0.68F, 0.43F, 0.26F),
                               .clay_dark = c.indigo,
                               .chimney = c.stone_light,
-                              .seed = 7});
+                              .seed = 7 + variant * 19});
 
   add_ruin_dressing(desc,
                     RuinDressing{.extent = QVector3D(0.94F, 0.0F, 0.94F),
@@ -317,9 +356,12 @@ auto build_home_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
   return desc;
 }
 
-auto home_archetype(BuildingState state) -> const RenderArchetype& {
-  static const BuildingArchetypeSet& k_set = building_archetype_set("carthage_home");
-  return k_set.for_state(state);
+auto home_archetype(BuildingState state, int variant) -> const RenderArchetype& {
+  static const std::array<const BuildingArchetypeSet*, k_home_visual_variant_count>
+      k_sets{&building_archetype_set("carthage_home"),
+             &building_archetype_set("carthage_home_variant_1"),
+             &building_archetype_set("carthage_home_variant_2")};
+  return k_sets[static_cast<std::size_t>(variant)]->for_state(state);
 }
 
 const std::array<TorchMount, 2> k_torches{{
@@ -331,8 +373,8 @@ const std::array<TorchMount, 2> k_torches{{
 
 } // namespace
 
-auto build_home_desc(BuildingState state) -> BuildingArchetypeDesc {
-  return build_home_desc_impl(state);
+auto build_home_desc(BuildingState state, int variant) -> BuildingArchetypeDesc {
+  return build_home_desc_impl(state, variant);
 }
 
 void register_home_renderer(Render::GL::EntityRendererRegistry& registry) {

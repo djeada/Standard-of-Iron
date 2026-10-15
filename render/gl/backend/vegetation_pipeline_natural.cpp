@@ -25,6 +25,7 @@
 #include "render/gl/backend/static_mesh_upload.h"
 #include "render/gl/platform_gl.h"
 #include "render/gl/render_constants.h"
+#include "tree_mesh.h"
 #include "vegetation_pipeline.h"
 
 namespace Render::GL::BackendPipelines {
@@ -342,196 +343,11 @@ void VegetationPipeline::initialize_olive_pipeline() {
     QVector3D normal;
   };
 
-  RingLoftBuilder loft(olive_tree_segments);
-  loft.reserve(96);
-
-  auto add_ring = [&](float radius,
-                      float y,
-                      float normal_up,
-                      float v_coord,
-                      const QVector2D& offset = QVector2D(0.0F, 0.0F)) -> int {
-    return loft.add_ring({radius, y, normal_up, v_coord, 0.0F, offset});
-  };
-  auto connect_rings = [&](int lower, int upper) {
-    loft.connect(lower, upper);
-  };
-  auto add_cap = [&](int ring, float cap_y, const QVector2D& offset, float v) {
-    loft.cap(ring, cap_y, offset, v);
-  };
-
-  int const t0 = add_ring(0.170F, -0.015F, -0.30F, 0.00F, QVector2D(-0.022F, 0.006F));
-  int const t1 = add_ring(0.140F, 0.09F, -0.05F, 0.07F, QVector2D(0.018F, -0.020F));
-  int const t2 = add_ring(0.125F, 0.18F, 0.08F, 0.14F, QVector2D(0.038F, 0.008F));
-  int const t3 = add_ring(0.092F, 0.27F, 0.20F, 0.22F, QVector2D(0.016F, 0.036F));
-  int const t4 = add_ring(0.072F, 0.34F, 0.34F, 0.29F, QVector2D(0.008F, 0.044F));
-  connect_rings(t0, t1);
-  connect_rings(t1, t2);
-  connect_rings(t2, t3);
-  connect_rings(t3, t4);
-
-  auto add_branch = [&](float dir_x,
-                        float dir_z,
-                        const QVector2D& base_offset,
-                        float base_y,
-                        float length,
-                        float rise,
-                        float branch_r,
-                        float leaf_r,
-                        float v_start,
-                        float lateral_bias) {
-    float const len = std::sqrt(dir_x * dir_x + dir_z * dir_z);
-    dir_x /= len;
-    dir_z /= len;
-
-    length *= 1.28F;
-    rise *= 0.88F;
-    leaf_r *= 1.24F;
-
-    QVector2D const dir(dir_x, dir_z);
-    QVector2D const ortho(-dir_z, dir_x);
-
-    int const b0 = add_ring(branch_r, base_y, 0.08F, v_start, base_offset);
-
-    float const mid_dist = length * 0.5F;
-    QVector2D const mid_offset =
-        base_offset + dir * mid_dist + ortho * (leaf_r * 0.16F * lateral_bias);
-    int const b1 = add_ring(
-        branch_r * 0.72F, base_y + rise * 0.48F, 0.26F, v_start + 0.08F, mid_offset);
-
-    float const tip_dist = length;
-    QVector2D const tip_offset =
-        base_offset + dir * tip_dist + ortho * (leaf_r * 0.26F * lateral_bias);
-    float const tip_y = base_y + rise;
-    int const b2 =
-        add_ring(branch_r * 0.42F, tip_y, 0.48F, v_start + 0.18F, tip_offset);
-
-    connect_rings(b0, b1);
-    connect_rings(b1, b2);
-
-    QVector2D const crown_shift = ortho * (leaf_r * 0.18F * lateral_bias);
-    float const ly = tip_y - leaf_r * 0.22F;
-    int const l0 =
-        add_ring(leaf_r * 0.30F, ly, -0.58F, 0.52F, tip_offset - crown_shift * 0.15F);
-    int const l1 = add_ring(leaf_r * 0.68F,
-                            ly + leaf_r * 0.16F,
-                            -0.18F,
-                            0.64F,
-                            tip_offset + crown_shift * 0.20F);
-    int const l2 = add_ring(leaf_r * 0.90F,
-                            ly + leaf_r * 0.38F,
-                            0.14F,
-                            0.78F,
-                            tip_offset + crown_shift * 0.58F);
-    int const l3 = add_ring(
-        leaf_r * 0.76F, ly + leaf_r * 0.62F, 0.50F, 0.92F, tip_offset + crown_shift);
-    int const l4 = add_ring(leaf_r * 0.40F,
-                            ly + leaf_r * 0.86F,
-                            0.84F,
-                            1.02F,
-                            tip_offset + crown_shift * 0.56F);
-
-    connect_rings(b2, l0);
-    connect_rings(l0, l1);
-    connect_rings(l1, l2);
-    connect_rings(l2, l3);
-    connect_rings(l3, l4);
-    add_cap(l4, ly + leaf_r * 1.02F, tip_offset + crown_shift * 0.34F, 1.10F);
-  };
-
-  add_branch(0.92F,
-             0.22F,
-             QVector2D(0.020F, 0.030F),
-             0.26F,
-             0.36F,
-             0.30F,
-             0.030F,
-             0.19F,
-             0.30F,
-             0.60F);
-  add_branch(-0.72F,
-             0.58F,
-             QVector2D(0.006F, 0.036F),
-             0.30F,
-             0.34F,
-             0.28F,
-             0.026F,
-             0.21F,
-             0.32F,
-             -0.54F);
-  add_branch(0.42F,
-             -0.91F,
-             QVector2D(0.016F, 0.028F),
-             0.28F,
-             0.33F,
-             0.27F,
-             0.024F,
-             0.18F,
-             0.34F,
-             0.42F);
-  add_branch(-0.55F,
-             -0.76F,
-             QVector2D(0.012F, 0.022F),
-             0.25F,
-             0.39F,
-             0.31F,
-             0.027F,
-             0.20F,
-             0.28F,
-             -0.36F);
-  add_branch(0.98F,
-             -0.08F,
-             QVector2D(0.014F, 0.040F),
-             0.34F,
-             0.24F,
-             0.24F,
-             0.018F,
-             0.16F,
-             0.38F,
-             0.28F);
-  add_branch(-0.08F,
-             1.0F,
-             QVector2D(0.008F, 0.044F),
-             0.36F,
-             0.22F,
-             0.23F,
-             0.018F,
-             0.15F,
-             0.40F,
-             -0.20F);
-  add_branch(0.18F,
-             0.98F,
-             QVector2D(-0.004F, 0.046F),
-             0.38F,
-             0.20F,
-             0.22F,
-             0.016F,
-             0.14F,
-             0.42F,
-             0.16F);
-  add_branch(-0.96F,
-             -0.18F,
-             QVector2D(0.010F, 0.028F),
-             0.32F,
-             0.25F,
-             0.20F,
-             0.017F,
-             0.135F,
-             0.38F,
-             -0.24F);
-  add_branch(0.70F,
-             0.71F,
-             QVector2D(0.004F, 0.042F),
-             0.39F,
-             0.19F,
-             0.19F,
-             0.014F,
-             0.12F,
-             0.44F,
-             0.18F);
+  const auto tree = build_olive_tree_mesh();
 
   std::vector<OliveVertex> vertices;
-  vertices.reserve(loft.vertices().size());
-  for (const auto& v : loft.vertices()) {
+  vertices.reserve(tree.vertices.size());
+  for (const auto& v : tree.vertices) {
     vertices.push_back({v.position, QVector2D(v.u, v.v), v.normal});
   }
 
@@ -546,8 +362,8 @@ void VegetationPipeline::initialize_olive_pipeline() {
                                vertices.size(),
                                sizeof(OliveVertex),
                                k_olive_attributes,
-                               loft.indices().data(),
-                               loft.indices().size(),
+                               tree.indices.data(),
+                               tree.indices.size(),
                                k_foliage_instance_locations);
 }
 

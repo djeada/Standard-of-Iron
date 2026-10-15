@@ -4,6 +4,7 @@
 #include <utility>
 
 #include "farm_renderer_common.h"
+#include "home_renderer_common.h"
 #include "nations/carthage/barracks_renderer.h"
 #include "nations/carthage/defense_tower_renderer.h"
 #include "nations/carthage/farm_renderer.h"
@@ -26,13 +27,19 @@ namespace {
 
 void add_nation_buildings(std::vector<BuildingArchetypeCatalogEntry>& out,
                           const std::string& nation,
-                          BuildingArchetypeDesc (*home)(BuildingState),
+                          BuildingArchetypeDesc (*home)(BuildingState, int),
                           BuildingArchetypeDesc (*barracks)(BuildingState),
                           BuildingArchetypeDesc (*tower)(BuildingState),
                           BuildingArchetypeDesc (*marketplace)(BuildingState),
                           BuildingArchetypeDesc (*temple)(BuildingState),
                           BuildingArchetypeDesc (*farm)(BuildingState, int)) {
-  out.push_back({nation + "_home", home});
+  for (int variant = 0; variant < k_home_visual_variant_count; ++variant) {
+    const std::string name =
+        nation + "_home" + (variant == 0 ? "" : "_variant_" + std::to_string(variant));
+    out.push_back({name, [home, variant](BuildingState state) {
+                     return home(state, variant);
+                   }});
+  }
   out.push_back({nation + "_barracks", barracks});
   out.push_back({nation + "_defense_tower", tower});
   out.push_back({nation + "_marketplace", marketplace});

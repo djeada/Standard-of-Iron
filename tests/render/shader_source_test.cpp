@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
+#include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <gtest/gtest.h>
@@ -1034,7 +1035,7 @@ TEST(ShaderSource, RoadsKeepPackedEarthSeparateFromPaving) {
 
   EXPECT_NE(flat.find("if (u_surface_kind == 2)"), std::string::npos);
   EXPECT_NE(flat.find("else if (u_surface_kind == 1)"), std::string::npos);
-  EXPECT_NE(flat.find("vec2 aggregate_cells = worley_f("), std::string::npos);
+  EXPECT_NE(flat.find("vec3 aggregate_cells = worley_f("), std::string::npos);
   EXPECT_NE(flat.find("float rut_left ="), std::string::npos);
   EXPECT_NE(flat.find("u_alpha * edge_alpha"), std::string::npos);
 }
@@ -1388,4 +1389,161 @@ void main() {
   target.release();
   gl.glDeleteVertexArrays(1, &vao);
   gl.glDeleteBuffers(1, &buffer);
+}
+
+namespace {
+
+class ShaderGeometry : public ::testing::Test {
+protected:
+  void SetUp() override {
+    QSurfaceFormat format;
+    format.setVersion(3, 3);
+    format.setProfile(QSurfaceFormat::CoreProfile);
+    surface.setFormat(format);
+    surface.create();
+    context.setFormat(format);
+    if (!surface.isValid() || !context.create() || !context.makeCurrent(&surface)) {
+      GTEST_SKIP() << "No OpenGL 3.3 context available";
+    }
+    ASSERT_TRUE(gl.initializeOpenGLFunctions());
+    gl.glGenVertexArrays(1, &vao);
+    gl.glBindVertexArray(vao);
+  }
+
+  void TearDown() override {
+    if (vao != 0) {
+      EXPECT_EQ(gl.glGetError(), static_cast<GLenum>(GL_NO_ERROR));
+      gl.glDeleteVertexArrays(1, &vao);
+    }
+    context.doneCurrent();
+  }
+
+  auto
+  load_probe(Render::GL::Shader& shader, const char* file, const char* probe) -> bool {
+    auto source = read_shader_with_includes(find_repo_root(), file);
+    const auto main = source.rfind("void main()");
+    if (main == std::string::npos) {
+      return false;
+    }
+    // Run the production helpers on the GPU, with an entry point that exposes
+    // their geometric result before lighting and tonemapping hide errors.
+    source.replace(main, std::string::npos, probe);
+    return shader.load_from_source(QStringLiteral(R"(#version 330 core
+void main() {
+  vec2 p = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2);
+  gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0);
+}
+)"),
+                                   QString::fromStdString(source));
+  }
+
+  auto sample() -> std::array<float, 4> {
+    gl.glDrawArrays(GL_TRIANGLES, 0, 3);
+    std::array<float, 4> pixel{};
+    gl.glReadPixels(4, 4, 1, 1, GL_RGBA, GL_FLOAT, pixel.data());
+    return pixel;
+  }
+
+  QOffscreenSurface surface;
+  QOpenGLContext context;
+  QOpenGLFunctions_3_3_Core gl;
+  GLuint vao = 0;
+};
+
+} // namespace
+
+TEST_F(ShaderGeometry, RoadReliefFollowsTheSurfaceAcrossCameraRotationAndScale) {
+  Render::GL::Shader shader;
+  ASSERT_TRUE(load_probe(shader, "road.frag", R"(
+uniform vec3 u_test_dx;
+uniform vec3 u_test_dy;
+uniform vec3 u_test_normal;
+uniform vec3 u_test_gradient;
+void main() {
+  vec3 position = u_test_dx * gl_FragCoord.x + u_test_dy * gl_FragCoord.y;
+  vec3 normal = road_relief_normal(position, u_test_normal,
+                                   dot(position, u_test_gradient));
+  frag_color = vec4(normal, 1.0);
+}
+)"));
+  QOpenGLFramebufferObjectFormat format;
+  format.setInternalTextureFormat(GL_RGBA32F);
+  QOpenGLFramebufferObject target(8, 8, format);
+  ASSERT_TRUE(target.bind());
+  gl.glViewport(0, 0, 8, 8);
+  shader.use();
+  for (const float slope : {0.0F, 0.6F}) {
+    const QVector3D normal = QVector3D(-slope, 1.0F, 0.0F).normalized();
+    const QVector3D tangent = QVector3D(1.0F, slope, 0.0F).normalized();
+    const QVector3D across(0.0F, 0.0F, 1.0F);
+    shader.set_uniform("u_test_normal", normal);
+    for (const QVector3D gradient : {QVector3D(), QVector3D(0.24F, 0.0F, -0.17F)}) {
+      shader.set_uniform("u_test_gradient", gradient);
+      const auto expected =
+          (normal - (gradient - normal * QVector3D::dotProduct(gradient, normal)))
+              .normalized();
+      for (const float angle : {0.0F, 0.7F, 1.57F, 3.14F}) {
+        for (const float scale : {0.01F, 0.5F, 4.0F}) {
+          SCOPED_TRACE(::testing::Message() << "slope=" << slope << " angle=" << angle
+                                            << " scale=" << scale);
+          shader.set_uniform("u_test_dx",
+                             (tangent * std::cos(angle) + across * std::sin(angle)) *
+                                 scale);
+          shader.set_uniform("u_test_dy",
+                             (across * std::cos(angle) - tangent * std::sin(angle)) *
+                                 scale);
+          const auto pixel = sample();
+          EXPECT_NEAR(pixel[0], expected.x(), 0.0001F);
+          EXPECT_NEAR(pixel[1], expected.y(), 0.0001F);
+          EXPECT_NEAR(pixel[2], expected.z(), 0.0001F);
+        }
+      }
+    }
+    // Degenerate projected geometry must remain finite and keep its base normal.
+    shader.set_uniform("u_test_dx", QVector3D());
+    shader.set_uniform("u_test_dy", QVector3D());
+    const auto pixel = sample();
+    EXPECT_NEAR(pixel[0], normal.x(), 0.0001F);
+    EXPECT_NEAR(pixel[1], normal.y(), 0.0001F);
+    EXPECT_NEAR(pixel[2], normal.z(), 0.0001F);
+  }
+}
+
+TEST_F(ShaderGeometry, CloudDensityAndRayIntersectionsShareTheCurvedLayer) {
+  Render::GL::Shader shader;
+  ASSERT_TRUE(load_probe(shader, "sky_box.frag", R"(
+uniform float u_test_upward;
+uniform float u_test_altitude;
+void main() {
+  vec3 ray = vec3(sqrt(max(1.0 - u_test_upward * u_test_upward, 0.0)),
+                   u_test_upward, 0.0);
+  vec3 point = ray * sky_box_layer_distance(ray.y, u_test_altitude);
+  vec3 middle = ray * sky_box_layer_distance(ray.y,
+      k_box_base_altitude + k_box_slab_span * 0.35);
+  vec3 below = ray * sky_box_layer_distance(ray.y, k_box_base_altitude - 20.0);
+  vec3 above = ray * sky_box_layer_distance(ray.y, k_box_top_altitude + 20.0);
+  frag_color = vec4(sky_box_altitude(point), sky_box_density(middle, 1.0),
+                    sky_box_density(below, 1.0), sky_box_density(above, 1.0));
+}
+)"));
+  QOpenGLFramebufferObjectFormat format;
+  format.setInternalTextureFormat(GL_RGBA32F);
+  QOpenGLFramebufferObject target(8, 8, format);
+  ASSERT_TRUE(target.bind());
+  gl.glViewport(0, 0, 8, 8);
+  shader.use();
+  shader.set_uniform("u_sky_box_time", 0.0F);
+  for (const float upward : {0.005F, 0.02F, 0.08F, 0.2F, 0.6F, 1.0F}) {
+    shader.set_uniform("u_test_upward", upward);
+    for (const float altitude : {1200.0F, 1500.0F, 1950.0F}) {
+      SCOPED_TRACE(::testing::Message()
+                   << "upward=" << upward << " altitude=" << altitude);
+      shader.set_uniform("u_test_altitude", altitude);
+      const auto pixel = sample();
+      EXPECT_NEAR(pixel[0], altitude, 0.02F);
+      EXPECT_GT(pixel[1], 0.01F) << "overcast clouds must continue toward the horizon";
+      EXPECT_FLOAT_EQ(pixel[2], 0.0F);
+      EXPECT_FLOAT_EQ(pixel[3], 0.0F);
+    }
+  }
 }

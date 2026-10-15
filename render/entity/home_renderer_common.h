@@ -3,6 +3,7 @@
 #include <QVector3D>
 
 #include <array>
+#include <cstdint>
 #include <span>
 #include <string_view>
 
@@ -14,7 +15,9 @@
 
 namespace Render::GL {
 
-using HomeArchetypeResolver = const RenderArchetype& (*)(BuildingState);
+inline constexpr int k_home_visual_variant_count = 3;
+auto home_visual_variant(std::uint32_t entity_id) -> int;
+using HomeArchetypeResolver = const RenderArchetype& (*)(BuildingState, int);
 
 inline constexpr std::size_t k_home_palette_slots = 2;
 using HomePaletteSlotsResolver =

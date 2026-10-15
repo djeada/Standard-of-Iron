@@ -141,9 +141,21 @@ float sky_box_layer_distance(float upward, float altitude) {
          along;
 }
 
+float sky_box_altitude(vec3 position) {
+  // Intersections use spherical shells; density and lighting must use the same
+  // shells. A planar Y height truncates clouds before they reach the horizon.
+  // Rationalizing the subtraction also preserves precision at the base.
+  vec3 from_center = position + vec3(0.0, k_box_planet_radius, 0.0);
+  return (dot(position, position) + 2.0 * k_box_planet_radius * position.y) /
+         (length(from_center) + k_box_planet_radius);
+}
+
 float sky_box_density(vec3 position, float coverage) {
   vec2 drift = k_box_wind * u_sky_box_time;
-  float height = clamp((position.y - k_box_base_altitude) / k_box_slab_span, 0.0, 1.0);
+  float height = (sky_box_altitude(position) - k_box_base_altitude) / k_box_slab_span;
+  if (height <= 0.0 || height >= 1.0) {
+    return 0.0;
+  }
 
   vec2 plane = (position.xz + drift) * k_box_field_scale;
   float field = mix(sky_box_fbm2(plane, SOI_SKY_BOX_FIELD_OCTAVES),
@@ -253,7 +265,9 @@ vec4 sky_box_clouds(vec3 ray, float dither) {
       float powder = k_box_powder_floor +
                      (1.0 - k_box_powder_floor) * (1.0 - exp(-density * k_box_powder));
       float height =
-          clamp((position.y - k_box_base_altitude) / k_box_slab_span, 0.0, 1.0);
+          clamp((sky_box_altitude(position) - k_box_base_altitude) / k_box_slab_span,
+                0.0,
+                1.0);
       vec3 luminance = mix(ambient_base, ambient, height) +
                        sun_color * sun_visibility * phase * powder * k_box_sun_gain;
       float sample_transmittance = exp(-density * step_length * k_box_extinction);
