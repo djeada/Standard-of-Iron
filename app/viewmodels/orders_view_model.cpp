@@ -1,5 +1,11 @@
 #include "app/viewmodels/orders_view_model.h"
 
+#include <QVector3D>
+
+#include <algorithm>
+#include <optional>
+#include <vector>
+
 #include "app/core/client_context.h"
 #include "app/economy/production_manager.h"
 #include "app/input/cursor_manager.h"
@@ -10,11 +16,13 @@
 #include "app/orders/rts_action_model.h"
 #include "app/viewmodels/commander_view_model.h"
 #include "app/viewmodels/placement_view_model.h"
+#include "game/core/component_commander.h"
 #include "game/core/presentation_coverage.h"
 #include "game/core/world.h"
 #include "game/render_bridge/picking_service.h"
 #include "game/session/selection_service.h"
 #include "game/session/session_context.h"
+#include "game/systems/cursed_gold_vein_system.h"
 #include "game/systems/match_snapshot.h"
 #include "game/systems/navigation/nav_grid.h"
 #include "scene/camera.h"
@@ -117,6 +125,129 @@ void OrdersViewModel::select_by_type(const QString& unit_type) {
   if (m_context.input != nullptr) {
     m_context.input->select_selected_units_by_type(unit_type, m_context.local_owner_id);
   }
+}
+
+namespace {
+
+struct OwnedPlace {
+  Engine::Core::EntityID id{0};
+  QVector3D position;
+};
+
+auto ground_position(Engine::Core::World& world,
+                     Engine::Core::EntityID id) -> std::optional<QVector3D> {
+  const auto* transform = world.try_get<Engine::Core::TransformComponent>(id);
+  if (transform == nullptr) {
+    return std::nullopt;
+  }
+  return QVector3D(transform->position.x, 0.0F, transform->position.z);
+}
+
+auto owned_buildings_of_type(Engine::Core::World& world,
+                             int owner_id,
+                             const QString& building_type) -> std::vector<OwnedPlace> {
+  Game::Units::SpawnType wanted{};
+  if (!Game::Units::try_parse_spawn_type(building_type, wanted) ||
+      !Game::Units::is_building_spawn(wanted)) {
+    return {};
+  }
+  std::vector<OwnedPlace> found;
+  for (auto* entity : world.get_units_owned_by(owner_id)) {
+    const auto id = entity->get_id();
+    const auto* unit = world.try_get<Engine::Core::UnitComponent>(id);
+    const auto position = ground_position(world, id);
+    if (unit != nullptr && unit->spawn_type == wanted && unit->health > 0 &&
+        position.has_value() && !Game::Systems::is_gold_vein_anchor(world, id)) {
+      found.push_back({.id = id, .position = *position});
+    }
+  }
+  std::sort(found.begin(), found.end(), [](const auto& lhs, const auto& rhs) {
+    return lhs.id < rhs.id;
+  });
+  return found;
+}
+
+void look_at_ground(Render::GL::Camera& camera, const QVector3D& target) {
+  const QVector3D offset = camera.get_position() - camera.get_target();
+  camera.look_at(target + offset, target, camera.get_up_vector());
+}
+
+} // namespace
+
+auto OrdersViewModel::owned_building_count(const QString& building_type) const -> int {
+  if (m_context.world == nullptr) {
+    return 0;
+  }
+  const auto frame_lock = m_host.try_lock_frame();
+  if (!frame_lock.owns_lock()) {
+    return -1;
+  }
+  return static_cast<int>(
+      owned_buildings_of_type(*m_context.world, m_context.local_owner_id, building_type)
+          .size());
+}
+
+auto OrdersViewModel::focus_owned_building(const QString& building_type) -> bool {
+  m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
+  if (m_context.world == nullptr || m_context.input == nullptr) {
+    return false;
+  }
+  const auto buildings = owned_buildings_of_type(
+      *m_context.world, m_context.local_owner_id, building_type);
+  if (buildings.empty()) {
+    return false;
+  }
+  auto next = buildings.front();
+  for (const auto& candidate : buildings) {
+    if (candidate.id > m_last_focused_building) {
+      next = candidate;
+      break;
+    }
+  }
+  m_last_focused_building = next.id;
+  m_context.input->select_unit_by_id(next.id, m_context.local_owner_id);
+  if (auto* camera = m_context.active_camera) {
+    look_at_ground(*camera, next.position);
+  }
+  return true;
+}
+
+auto OrdersViewModel::look_at_army(int owner_id) -> bool {
+  m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
+  auto* camera = m_context.active_camera;
+  if (m_context.world == nullptr || camera == nullptr) {
+    return false;
+  }
+  auto& world = *m_context.world;
+  std::optional<QVector3D> commander;
+  std::optional<QVector3D> barracks;
+  std::optional<QVector3D> troop;
+  for (auto* entity : world.get_units_owned_by(owner_id)) {
+    const auto id = entity->get_id();
+    const auto* unit = world.try_get<Engine::Core::UnitComponent>(id);
+    const auto position = ground_position(world, id);
+    if (unit == nullptr || unit->health <= 0 || !position.has_value()) {
+      continue;
+    }
+    if (!commander.has_value() && world.has<Engine::Core::CommanderComponent>(id)) {
+      commander = position;
+    } else if (!barracks.has_value() &&
+               unit->spawn_type == Game::Units::SpawnType::Barracks &&
+               !Game::Systems::is_gold_vein_anchor(world, id)) {
+      barracks = position;
+    } else if (!troop.has_value() && Game::Units::is_troop_spawn(unit->spawn_type)) {
+      troop = position;
+    }
+  }
+  const auto focus =
+      commander.has_value() ? commander : (barracks.has_value() ? barracks : troop);
+  if (!focus.has_value()) {
+    return false;
+  }
+  look_at_ground(*camera, *focus);
+  return true;
 }
 
 void OrdersViewModel::set_hover_at_screen(qreal sx, qreal sy) {

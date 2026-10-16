@@ -235,7 +235,8 @@ void refresh_shape_state(Engine::Core::World& world, ArmyFormation& formation) {
   bool const all_in_slot = survey.in_slot == survey.expected;
 
   if (formation.cohesion <= k_disrupted_cohesion) {
-    formation.phase = FormationPhase::Disrupted;
+    formation.phase = formation.has_destination ? FormationPhase::Reforming
+                                                : FormationPhase::Disrupted;
     return;
   }
   if (formation.morph.active) {

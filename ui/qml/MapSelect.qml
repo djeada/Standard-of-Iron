@@ -1709,7 +1709,7 @@ Item {
                                 color: "#b817120e"
                                 border.color: "#59432d"
                                 border.width: 1
-                                visible: human_commander_name !== ""
+                                visible: human_commander_name !== "" && roster_panel.height >= dossier_column.implicitHeight + Theme.spacingMedium * 2 + 68 * 2 + 96
 
                                 ColumnLayout {
                                     id: dossier_column

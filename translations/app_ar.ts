@@ -370,6 +370,10 @@
         <source>Play again</source>
         <translation>العب مجدداً</translation>
     </message>
+    <message>
+        <source>Held the field: %1</source>
+        <translation>صمدوا في الميدان: %1</translation>
+    </message>
 </context>
 <context>
     <name>BriefingLayout</name>
@@ -10991,6 +10995,14 @@ Build time: %3s</source>
     <message>
         <source>Select a barracks to recruit units</source>
         <translation>اختر ثكنة لتجنيد الوحدات</translation>
+    </message>
+    <message>
+        <source>Barracks</source>
+        <translation>الثكنات</translation>
+    </message>
+    <message>
+        <source>Go to Barracks</source>
+        <translation>اذهب إلى الثكنات</translation>
     </message>
 </context>
 <context>

@@ -119,10 +119,33 @@ TEST_F(FormationCohesionTest, AScatteredGroupReadsAsDisrupted) {
     transform->position.x = 20.0F;
     transform->position.z = 20.0F;
   }
+  formation->has_destination = false;
   ArmyFormationRuntime::refresh_shape_state(m_world, *formation);
 
   EXPECT_FLOAT_EQ(formation->cohesion, 0.0F);
   EXPECT_EQ(formation->phase, FormationPhase::Disrupted);
+}
+
+TEST_F(FormationCohesionTest, AGroupStillMarchingToItsGroundIsFormingNotDisrupted) {
+  auto const ids = build_army(16);
+  auto* formation = commit_group(ids);
+  ASSERT_NE(formation, nullptr);
+
+  for (auto const id : ids) {
+    auto* entity = m_world.get_entity(id);
+    ASSERT_NE(entity, nullptr);
+    auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+    transform->position.x = 20.0F;
+    transform->position.z = 20.0F;
+  }
+  formation->has_destination = true;
+  ArmyFormationRuntime::refresh_shape_state(m_world, *formation);
+
+  EXPECT_FLOAT_EQ(formation->cohesion, 0.0F);
+  EXPECT_EQ(formation->phase, FormationPhase::Reforming);
+  auto* member = m_world.get_entity(ids.front());
+  ASSERT_NE(member, nullptr);
+  EXPECT_FLOAT_EQ(ArmyFormationRuntime::damage_taken_multiplier(*member), 1.0F);
 }
 
 TEST_F(FormationCohesionTest, APartlyArrivedGroupIsStillReforming) {

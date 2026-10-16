@@ -11,6 +11,7 @@ Item {
     property string outcome: summaryOverlay.is_spectator ? "spectator" : (summaryOverlay.is_victory ? "victory" : "defeat")
     property string headline: ""
     property string subtitle: ""
+    property string spectatorWinners: ""
     property string factionId: ""
     property string missionName: ""
     property string durationText: ""
@@ -143,7 +144,7 @@ Item {
                     "isContender": owner.is_contender !== false,
                     "factionId": owner.nation ? owner.nation : "",
                     "factionName": owner.nation ? Design.FactionTheme.nameFor(owner.nation) : "",
-                    "isLocal": owner.id === localOwnerId,
+                    "isLocal": !summaryOverlay.is_spectator && owner.id === localOwnerId,
                     "isWinner": owner.team_id === winningTeam,
                     "kills": stats.enemiesKilled,
                     "losses": stats.losses,
@@ -152,11 +153,16 @@ Item {
                     "score": calculate_score(stats)
                 });
         }
+        var winnerNames = [];
         if (summaryOverlay.is_spectator) {
             var spectatorWinner = spectator_winning_team(roster);
-            for (var k = 0; k < roster.length; ++k)
+            for (var k = 0; k < roster.length; ++k) {
                 roster[k].isWinner = roster[k].teamId === spectatorWinner;
+                if (roster[k].isWinner && roster[k].isContender)
+                    winnerNames.push(roster[k].name);
+            }
         }
+        summaryOverlay.spectatorWinners = winnerNames.join(", ");
         roster.sort(function (a, b) {
                 return b.score - a.score;
             });
@@ -197,7 +203,7 @@ Item {
         outcome: summaryOverlay.outcome
         factionId: summaryOverlay.factionId
         headline: summaryOverlay.headline
-        subtitle: summaryOverlay.subtitle
+        subtitle: summaryOverlay.is_spectator && summaryOverlay.spectatorWinners !== "" ? qsTr("Held the field: %1").arg(summaryOverlay.spectatorWinners) : summaryOverlay.subtitle
         missionName: summaryOverlay.missionName
         durationText: summaryOverlay.durationText
         armies: summaryOverlay.armies

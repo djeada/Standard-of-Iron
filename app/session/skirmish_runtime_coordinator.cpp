@@ -5,9 +5,11 @@
 
 #include <chrono>
 #include <cstdint>
+#include <optional>
 
 #include "app/session/level_orchestrator.h"
 #include "app/session/loading_overlay.h"
+#include "game/core/component_commander.h"
 #include "game/core/component_core.h"
 #include "game/core/startup_profiler.h"
 #include "game/core/world.h"
@@ -59,6 +61,7 @@ void SkirmishRuntimeCoordinator::center_camera_on_local_forces(
 
   QVector3D troops_sum(0.0F, 0.0F, 0.0F);
   QVector3D structures_sum(0.0F, 0.0F, 0.0F);
+  std::optional<QVector3D> commander_position;
   int troops_count = 0;
   int structures_count = 0;
 
@@ -76,6 +79,10 @@ void SkirmishRuntimeCoordinator::center_camera_on_local_forces(
 
     const QVector3D pos(
         transform->position.x, transform->position.y, transform->position.z);
+    if (!commander_position.has_value() &&
+        ctx.world->has<Engine::Core::CommanderComponent>(entity->get_id())) {
+      commander_position = pos;
+    }
     if (Game::Units::is_troop_spawn(unit->spawn_type)) {
       troops_sum += pos;
       ++troops_count;
@@ -86,7 +93,9 @@ void SkirmishRuntimeCoordinator::center_camera_on_local_forces(
   }
 
   QVector3D focus;
-  if (troops_count > 0) {
+  if (commander_position.has_value()) {
+    focus = *commander_position;
+  } else if (troops_count > 0) {
     focus = troops_sum / static_cast<float>(troops_count);
   } else if (structures_count > 0) {
     focus = structures_sum / static_cast<float>(structures_count);

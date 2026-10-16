@@ -91,6 +91,18 @@ TestCase {
         host.destroy();
     }
 
+    function test_a_four_army_board_shows_one_side_per_row() {
+        var engine = engineComponent.createObject(testCase, {
+                "owner_info": testCase.fourArmyField()
+            });
+        var host = testCase.makeHud(engine);
+        var board = findChild(host.hud, "spectatorBoard");
+        verify(board !== null);
+        compare(board.columns, 2, "four armies should share the board two to a row");
+        engine.destroy();
+        host.destroy();
+    }
+
     function test_cycling_the_camera_walks_the_board() {
         var engine = engineComponent.createObject(testCase, {
                 "owner_info": testCase.fourArmyField(),

@@ -370,6 +370,10 @@
         <source>Play again</source>
         <translation>Zagraj ponownie</translation>
     </message>
+    <message>
+        <source>Held the field: %1</source>
+        <translation>Utrzymali pole: %1</translation>
+    </message>
 </context>
 <context>
     <name>BriefingLayout</name>
@@ -10982,6 +10986,14 @@ Czas budowy: %3 s</translation>
     <message>
         <source>Select a barracks to recruit units</source>
         <translation>Zaznacz koszary, by rekrutować jednostki</translation>
+    </message>
+    <message>
+        <source>Barracks</source>
+        <translation>Koszary</translation>
+    </message>
+    <message>
+        <source>Go to Barracks</source>
+        <translation>Przejdź do koszar</translation>
     </message>
 </context>
 <context>

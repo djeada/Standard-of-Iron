@@ -282,8 +282,11 @@ Item {
                 anchors.fill: parent
                 selection_tick: hud.selection_tick
                 onFollow_requested: function (owner_id) {
-                    if (typeof game !== 'undefined')
-                        game.selected_player_id = owner_id;
+                    if (typeof game === 'undefined')
+                        return;
+                    game.selected_player_id = owner_id;
+                    if (game.orders && game.orders.look_at_army)
+                        game.orders.look_at_army(owner_id);
                 }
             }
         }
@@ -319,12 +322,93 @@ Item {
         }
     }
 
+    Design.IronPanel {
+        id: activeObjectiveCard
+
+        readonly property bool canFocusTarget: hudTop.missionStaged && game.mission.active_has_target
+
+        objectName: "activeObjectiveCard"
+        anchors.top: topPanel.bottom
+        anchors.left: parent.left
+        anchors.topMargin: Design.Metrics.space8
+        anchors.leftMargin: Design.Metrics.hudZoneMargin
+        width: Math.min(Design.A11y.scaled(320), Math.max(Design.A11y.scaled(200), objectiveCardContent.implicitWidth + Design.Metrics.space24))
+        implicitHeight: objectiveCardContent.implicitHeight + Design.Metrics.space16
+        raised: true
+        visible: !hudTop.objectiveShownInline && hudTop.primaryObjectiveText !== "" && !hud.commander_rpg_mode && !(typeof game !== 'undefined' && game.is_spectator_mode)
+
+        RowLayout {
+            id: objectiveCardContent
+
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.leftMargin: Design.Metrics.space12
+            anchors.rightMargin: Design.Metrics.space12
+            spacing: Design.Metrics.space8
+
+            Text {
+                Layout.alignment: Qt.AlignTop
+                text: Design.Icons.objective
+                color: Design.Theme.accent
+                font.family: Design.Typography.family
+                font.pixelSize: Design.Typography.body
+            }
+
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: Design.Metrics.space2
+
+                Text {
+                    Layout.fillWidth: true
+                    Layout.maximumWidth: Design.A11y.scaled(270)
+                    text: hudTop.primaryObjectiveText
+                    color: Design.Theme.textPrimary
+                    font.family: Design.Typography.family
+                    font.pixelSize: Design.Typography.body
+                    font.weight: Design.Typography.medium
+                    wrapMode: Text.WordWrap
+                    maximumLineCount: 2
+                    elide: Text.ElideRight
+                }
+
+                Text {
+                    Layout.fillWidth: true
+                    Layout.maximumWidth: Design.A11y.scaled(270)
+                    visible: text !== ""
+                    text: hudTop.objectiveCompactText !== "" ? hudTop.objectiveCompactText : hudTop.objectiveDetailText
+                    color: Design.Theme.accent
+                    font.family: Design.Typography.family
+                    font.pixelSize: Design.Typography.caption
+                    elide: Text.ElideRight
+                }
+            }
+        }
+
+        MouseArea {
+            id: objectiveCardArea
+
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: activeObjectiveCard.canFocusTarget ? Qt.PointingHandCursor : Qt.ArrowCursor
+            onClicked: {
+                if (activeObjectiveCard.canFocusTarget)
+                    game.mission.focus_active_stage();
+            }
+
+            Design.IronTooltip {
+                visible: objectiveCardArea.containsMouse && text !== ""
+                text: hudTop.objective_tooltip(activeObjectiveCard.canFocusTarget)
+            }
+        }
+    }
+
     WaveTracker {
         id: waveTracker
 
         anchors.top: topPanel.bottom
         anchors.left: parent.left
-        anchors.topMargin: Design.Metrics.space8
+        anchors.topMargin: Design.Metrics.space8 + (activeObjectiveCard.visible ? activeObjectiveCard.height + Design.Metrics.space8 : 0)
         anchors.leftMargin: Design.Metrics.hudZoneMargin
 
         visible: has_waves && !hud.commander_rpg_mode && !(typeof game !== 'undefined' && game.tutorial && game.tutorial.holds_mission_clock)
@@ -336,7 +420,7 @@ Item {
         anchors.top: topPanel.bottom
         anchors.left: parent.left
         anchors.leftMargin: Design.Metrics.hudZoneMargin
-        anchors.topMargin: Design.Metrics.space8 + (waveTracker.visible ? waveTracker.height + Design.Metrics.space8 : 0)
+        anchors.topMargin: Design.Metrics.space8 + (activeObjectiveCard.visible ? activeObjectiveCard.height + Design.Metrics.space8 : 0) + (waveTracker.visible ? waveTracker.height + Design.Metrics.space8 : 0)
 
         visible: has_deadline && !hud.commander_rpg_mode
     }
@@ -347,7 +431,7 @@ Item {
         anchors.top: topPanel.bottom
         anchors.left: parent.left
         anchors.leftMargin: Design.Metrics.hudZoneMargin
-        anchors.topMargin: Design.Metrics.space8 + (waveTracker.visible ? waveTracker.height + Design.Metrics.space8 : 0) + (missionDeadline.visible ? missionDeadline.height + Design.Metrics.space8 : 0)
+        anchors.topMargin: Design.Metrics.space8 + (activeObjectiveCard.visible ? activeObjectiveCard.height + Design.Metrics.space8 : 0) + (waveTracker.visible ? waveTracker.height + Design.Metrics.space8 : 0) + (missionDeadline.visible ? missionDeadline.height + Design.Metrics.space8 : 0)
 
         economy: hud.economy
         gate: !hud.commander_rpg_mode && !!hud.economy && hud.economy.coach_visible
@@ -495,7 +579,7 @@ Item {
         anchors.top: topPanel.bottom
         anchors.left: parent.left
         anchors.leftMargin: Design.Metrics.hudZoneMargin
-        anchors.topMargin: Design.Metrics.space8 + (waveTracker.visible ? waveTracker.height + Design.Metrics.space8 : 0) + (missionDeadline.visible ? missionDeadline.height + Design.Metrics.space8 : 0) + (economyCoach.visible ? economyCoach.height + Design.Metrics.space8 : 0)
+        anchors.topMargin: Design.Metrics.space8 + (activeObjectiveCard.visible ? activeObjectiveCard.height + Design.Metrics.space8 : 0) + (waveTracker.visible ? waveTracker.height + Design.Metrics.space8 : 0) + (missionDeadline.visible ? missionDeadline.height + Design.Metrics.space8 : 0) + (economyCoach.visible ? economyCoach.height + Design.Metrics.space8 : 0)
         width: Math.max(Design.Metrics.space24 * 10, Math.min(Design.A11y.scaled(380), Math.round(hud.width * 0.36)))
         height: Math.min(objectivesCard.max_height, objectivesCard.natural_height)
         visible: hud.objectives_visible && !hud.commander_rpg_mode && !formationPanel.placing && !hud.tutorial_active && !(typeof game !== 'undefined' && game.is_spectator_mode)

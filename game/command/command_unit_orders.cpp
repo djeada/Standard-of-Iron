@@ -65,6 +65,7 @@ void apply_move(World& world, const Move& move) {
   }
 
   if (move.kind == Game::Systems::MoveOrderKind::PlayerMove ||
+      move.kind == Game::Systems::MoveOrderKind::FormationMove ||
       move.kind == Game::Systems::MoveOrderKind::AttackMove) {
     Game::Formation::ArmyFormationService::release(world, move.units);
   }

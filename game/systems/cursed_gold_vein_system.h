@@ -61,6 +61,7 @@ public:
 
   [[nodiscard]] auto vein_count() const -> std::size_t { return m_veins.size(); }
   [[nodiscard]] auto anchor_entity(std::size_t index) const -> Engine::Core::EntityID;
+  [[nodiscard]] auto is_anchor(Engine::Core::EntityID entity_id) const -> bool;
   [[nodiscard]] auto vein_world_position(std::size_t index) const -> QVector3D;
   [[nodiscard]] auto vein_owner(std::size_t index) const -> int;
   [[nodiscard]] auto vein_markers() const -> std::vector<VeinMarker>;
@@ -87,5 +88,8 @@ private:
   std::vector<RuntimeVein> m_veins;
   std::shared_ptr<Game::Units::UnitFactoryRegistry> m_factory_registry;
 };
+
+[[nodiscard]] auto is_gold_vein_anchor(Engine::Core::World& world,
+                                       Engine::Core::EntityID entity_id) -> bool;
 
 } // namespace Game::Systems

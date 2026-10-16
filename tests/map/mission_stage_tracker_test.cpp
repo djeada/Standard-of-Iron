@@ -3,8 +3,11 @@
 
 #include "game/core/component_commander.h"
 #include "game/core/world.h"
+#include "game/map/map_definition.h"
 #include "game/map/mission_stage_tracker.h"
+#include "game/map/terrain_service.h"
 #include "game/session/session_context.h"
+#include "game/systems/cursed_gold_vein_system.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
 
@@ -368,3 +371,55 @@ TEST_F(MissionStageTrackerTest, StagesWithoutATargetReportNoSettlement) {
 }
 
 } // namespace
+
+TEST_F(MissionStageTrackerTest, ACapturedGoldVeinIsNotACapturedBarracks) {
+  Game::Mission::MissionDefinition mission;
+
+  Game::Mission::MissionStage capture;
+  capture.id = QStringLiteral("capture");
+  capture.type = QStringLiteral("capture_structures");
+  capture.structure_types = {QStringLiteral("barracks")};
+  capture.required_count = 1;
+  mission.stages = {capture};
+
+  Game::Session::ScopedSession const active(session());
+  auto& world = this->world();
+
+  Game::Map::MapDefinition map_definition;
+  map_definition.grid.width = 40;
+  map_definition.grid.height = 40;
+  map_definition.grid.tile_size = 1.0F;
+  Game::Map::WorldProp vein;
+  vein.type = Game::Map::WorldProp::Type::CursedGoldVein;
+  vein.x = 20.0F;
+  vein.z = 20.0F;
+  map_definition.world_props.push_back(vein);
+  session().terrain().initialize(map_definition);
+
+  auto owned_veins = std::make_unique<Game::Systems::CursedGoldVeinSystem>(
+      Game::Systems::CursedGoldVeinSystem::Services{.terrain = session().terrain(),
+                                                    .owners = session().owners(),
+                                                    .economy = session().economy()});
+  auto* veins = owned_veins.get();
+  world.add_system(std::move(owned_veins));
+  veins->configure(map_definition);
+  veins->update(&world, 0.1F);
+
+  auto* anchor = world.get_entity(veins->anchor_entity(0));
+  ASSERT_NE(anchor, nullptr);
+  anchor->get_component<Engine::Core::UnitComponent>()->owner_id = k_local_owner;
+  auto* building = anchor->get_component<Engine::Core::BuildingComponent>();
+  if (building == nullptr) {
+    building = anchor->add_component<Engine::Core::BuildingComponent>();
+  }
+  building->original_nation_id = Game::Systems::NationID::IronSepulcher;
+  EXPECT_TRUE(Game::Systems::is_gold_vein_anchor(world, anchor->get_id()));
+
+  Game::Mission::MissionStageTracker tracker;
+  tracker.configure(mission, k_local_owner, identity_to_world());
+  tracker.update(session(), {});
+
+  ASSERT_EQ(tracker.stages().size(), 1U);
+  EXPECT_EQ(tracker.stages()[0].progress, 0);
+  EXPECT_FALSE(tracker.stages()[0].complete);
+}

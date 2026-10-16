@@ -158,6 +158,21 @@ TestCase {
         host.destroy();
     }
 
+    function test_a_spectator_is_nobody_on_the_field_and_is_told_who_won() {
+        var owners = [testCase.owner(1, "CPU I", 1, "AI", true, "roman_republic", "#c9a227"), testCase.owner(2, "CPU II", 2, "AI", false, "carthage", "#9b59b6")];
+        var byOwner = {
+            "1": testCase.stats(40, 120, 55, 0, 900),
+            "2": testCase.stats(120, 40, 60, 3, 900)
+        };
+        var engine = testCase.fakeEngine("spectator", owners, byOwner, "");
+        var host = testCase.makeSummary(engine);
+        for (var i = 0; i < host.summary.armies.length; ++i)
+            verify(!host.summary.armies[i].isLocal, host.summary.armies[i].name + " was badged as the spectator's own army");
+        compare(host.summary.spectatorWinners, "CPU II");
+        engine.destroy();
+        host.destroy();
+    }
+
     function test_only_commanders_are_listed() {
         var engine = testCase.standardMatch("victory");
         var host = testCase.makeSummary(engine);
