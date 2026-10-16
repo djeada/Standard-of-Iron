@@ -78,6 +78,7 @@
 #include "game/audio/audio_system.h"
 #include "game/audio/cue_trace.h"
 #include "game/core/component_gameplay.h"
+#include "game/core/ownership_constants.h"
 #include "game/core/startup_profiler.h"
 #include "game/core/world.h"
 #include "game/map/map_catalog.h"
@@ -562,7 +563,10 @@ void GameEngine::update_presentation(float dt) {
 
   m_order_feedback->update_markers(dt);
   announce_player_defeats(dt);
-  m_ally_announcements->announce_all(m_session.get(), m_runtime.local_owner_id);
+  m_ally_announcements->announce_all(m_session.get(),
+                                     m_level.is_spectator_mode
+                                         ? Game::Core::NEUTRAL_OWNER_ID
+                                         : m_runtime.local_owner_id);
   m_activity_view_model->advance_feedback(dt);
 
   advance_frame_orchestrator(dt);

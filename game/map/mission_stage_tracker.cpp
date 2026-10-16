@@ -9,6 +9,7 @@
 #include "game/core/component_commander.h"
 #include "game/core/world.h"
 #include "game/session/session_context.h"
+#include "game/systems/cursed_gold_vein_system.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/player_resource_registry.h"
@@ -172,6 +173,8 @@ auto MissionStageTracker::update(Game::Session::SessionContext& session,
   std::vector<StageTally> tallies(m_stages.size());
   int enemy_commanders = 0;
 
+  const auto* veins = world.get_system<Game::Systems::CursedGoldVeinSystem>();
+
   for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
     auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     if (unit == nullptr || unit->health <= 0) {
@@ -192,6 +195,7 @@ auto MissionStageTracker::update(Game::Session::SessionContext& session,
     const QString unit_type =
         QString::fromStdString(Game::Units::spawn_typeToString(unit->spawn_type));
 
+    const bool is_vein_anchor = veins != nullptr && veins->is_anchor(entity->get_id());
     bool captured_from_enemy = false;
     if (is_local) {
       const auto* building = entity->get_component<Engine::Core::BuildingComponent>();
@@ -213,7 +217,7 @@ auto MissionStageTracker::update(Game::Session::SessionContext& session,
       }
 
       if (rule.authored.structure_types.empty() ||
-          !matches_type(rule.authored.structure_types, unit_type)) {
+          !matches_type(rule.authored.structure_types, unit_type) || is_vein_anchor) {
         continue;
       }
 

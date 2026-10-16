@@ -208,7 +208,7 @@ Item {
                         font.family: "serif"
                         wrapMode: Text.WordWrap
                         Layout.fillWidth: true
-                        maximumLineCount: 3
+                        maximumLineCount: container.height < 800 ? 2 : 3
                         elide: Text.ElideRight
                     }
                 }
@@ -434,7 +434,7 @@ Item {
                 objectName: "missionDetailPanel"
 
                 Layout.fillWidth: true
-                Layout.preferredHeight: visible ? Math.max(260, Math.min(container.height * 0.38, 340)) : 0
+                Layout.preferredHeight: visible ? Math.max(220, Math.min(container.height * 0.34, 340)) : 0
                 visible: selected_mission_index >= 0
                 mission_data: selected_mission_index >= 0 && current_campaign && current_campaign.missions ? current_campaign.missions[selected_mission_index] : null
                 campaign_id: current_campaign ? current_campaign.id : ""

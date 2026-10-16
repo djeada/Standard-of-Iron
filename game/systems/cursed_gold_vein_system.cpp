@@ -4,6 +4,7 @@
 #include <QDebug>
 #include <QJsonObject>
 
+#include <algorithm>
 #include <cmath>
 
 #include "../audio/cue_ids.h"
@@ -228,6 +229,20 @@ void CursedGoldVeinSystem::update(Engine::Core::World* world, float delta_time) 
 auto CursedGoldVeinSystem::anchor_entity(std::size_t index) const
     -> Engine::Core::EntityID {
   return index < m_veins.size() ? m_veins[index].anchor_entity_id : 0;
+}
+
+auto CursedGoldVeinSystem::is_anchor(Engine::Core::EntityID entity_id) const -> bool {
+  return entity_id != 0 && std::any_of(m_veins.begin(),
+                                       m_veins.end(),
+                                       [entity_id](const RuntimeVein& vein) {
+                                         return vein.anchor_entity_id == entity_id;
+                                       });
+}
+
+auto is_gold_vein_anchor(Engine::Core::World& world,
+                         Engine::Core::EntityID entity_id) -> bool {
+  const auto* veins = world.get_system<CursedGoldVeinSystem>();
+  return veins != nullptr && veins->is_anchor(entity_id);
 }
 
 auto CursedGoldVeinSystem::vein_world_position(std::size_t index) const -> QVector3D {

@@ -788,7 +788,7 @@ Rectangle {
             }
 
             Rectangle {
-                visible: !!(mission_data && mission_data.unlocked)
+                visible: !!(mission_data && mission_data.unlocked) && root.height >= 300
                 Layout.fillWidth: true
                 implicitHeight: tempo_row.implicitHeight + Theme.spacingSmall * 2
                 Layout.preferredHeight: implicitHeight

@@ -51,8 +51,8 @@ AbstractButton {
     readonly property string displayLabel: control.showsShortLabel ? control.shortLabel : control.label
 
     readonly property real labelChromeWidth: Design.Metrics.iconMedium + Design.Metrics.space8 + Design.Metrics.space8 + Design.Metrics.space4 + hotkeyWidth
-    readonly property real minimumLabelledWidth: labelChromeWidth + labelMetrics.width
-    readonly property real minimumShortWidth: control.shortLabel !== "" ? labelChromeWidth + shortLabelMetrics.width : minimumLabelledWidth
+    readonly property real minimumLabelledWidth: labelChromeWidth + Math.ceil(Math.max(labelMetrics.width, labelMetrics.advanceWidth))
+    readonly property real minimumShortWidth: control.shortLabel !== "" ? labelChromeWidth + Math.ceil(Math.max(shortLabelMetrics.width, shortLabelMetrics.advanceWidth)) : minimumLabelledWidth
     readonly property real hotkeyWidth: control.hotkey !== "" ? hotkeyMetrics.width + Design.Metrics.space8 + Design.Metrics.space4 : 0
 
     TextMetrics {
@@ -289,7 +289,7 @@ AbstractButton {
 
             Text {
                 width: parent.width
-                visible: text !== "" && !control.tightLabel
+                visible: text !== "" && !control.tightLabel && implicitWidth <= width
                 text: control.statusText !== "" ? control.statusText : (control.placing ? qsTr("Pick a target") : control.coverageText)
                 color: Design.Theme.textSecondary
                 font.family: Design.Typography.family

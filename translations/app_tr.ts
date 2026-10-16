@@ -370,6 +370,10 @@
         <source>Play again</source>
         <translation>Yeniden oyna</translation>
     </message>
+    <message>
+        <source>Held the field: %1</source>
+        <translation>Meydanı tutanlar: %1</translation>
+    </message>
 </context>
 <context>
     <name>BriefingLayout</name>
@@ -10976,6 +10980,14 @@ Bedel: %2
     <message>
         <source>Select a barracks to recruit units</source>
         <translation>Birim devşirmek için bir kışla seç</translation>
+    </message>
+    <message>
+        <source>Barracks</source>
+        <translation>Kışla</translation>
+    </message>
+    <message>
+        <source>Go to Barracks</source>
+        <translation>Kışlaya git</translation>
     </message>
 </context>
 <context>

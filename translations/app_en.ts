@@ -370,6 +370,10 @@
         <source>Play again</source>
         <translation>Play again</translation>
     </message>
+    <message>
+        <source>Held the field: %1</source>
+        <translation>Held the field: %1</translation>
+    </message>
 </context>
 <context>
     <name>BriefingLayout</name>
@@ -10979,6 +10983,14 @@ Build time: %3s</translation>
     <message>
         <source>Select a barracks to recruit units</source>
         <translation>Select a barracks to recruit units</translation>
+    </message>
+    <message>
+        <source>Barracks</source>
+        <translation>Barracks</translation>
+    </message>
+    <message>
+        <source>Go to Barracks</source>
+        <translation>Go to Barracks</translation>
     </message>
 </context>
 <context>
