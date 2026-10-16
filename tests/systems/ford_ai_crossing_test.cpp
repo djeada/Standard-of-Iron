@@ -28,8 +28,6 @@ using Game::Map::TerrainService;
 constexpr int k_grid = 64;
 constexpr float k_tick = 1.0F / 30.0F;
 
-// A river down the middle of the map (x = 0), too deep to cross except at
-// one ford.
 auto make_ford_map() -> Game::Map::MapDefinition {
   Game::Map::MapDefinition map;
   map.coordSystem = Game::Map::CoordSystem::World;
@@ -109,7 +107,7 @@ TEST_F(FordAiCrossingTest, AnAiPlannerMoveWadesAcrossTheFord) {
   command.move_target_y = {0.0F};
   command.move_target_z = {target.z()};
   {
-    // The test world has no session queue: dispatch the AI's order at once.
+
     Game::Command::ScopedImmediateDispatch immediate_orders;
     auto const report = Game::Systems::AI::AICommandApplier::apply(world, 2, {command});
     ASSERT_EQ(report.stale_subjects, 0);

@@ -1425,8 +1425,7 @@ protected:
     if (main == std::string::npos) {
       return false;
     }
-    // Run the production helpers on the GPU, with an entry point that exposes
-    // their geometric result before lighting and tonemapping hide errors.
+
     source.replace(main, std::string::npos, probe);
     return shader.load_from_source(QStringLiteral(R"(#version 330 core
 void main() {
@@ -1499,7 +1498,7 @@ void main() {
         }
       }
     }
-    // Degenerate projected geometry must remain finite and keep its base normal.
+
     shader.set_uniform("u_test_dx", QVector3D());
     shader.set_uniform("u_test_dy", QVector3D());
     const auto pixel = sample();

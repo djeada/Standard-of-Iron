@@ -232,10 +232,6 @@ auto doctrine_intent(const AIContext& context)
   return std::nullopt;
 }
 
-// A historical battle order for an army that has the troops for it: Rome's
-// triplex acies once there are enough maniples to fill three lines, Carthage
-// and its Gallic and Iberian allies an elephant screen when elephants march with
-// the infantry, otherwise the crescent when cavalry can hold its wings.
 constexpr int k_min_triplex_infantry = 6;
 constexpr int k_min_crescent_infantry = 4;
 constexpr int k_min_crescent_cavalry = 2;
@@ -308,8 +304,7 @@ auto select_ai_intent(const AISnapshot& snapshot,
   if (enemies > 0 && friendly >= enemies * 2 && friendly >= 6) {
     return ArmyFormationIntent::Encirclement;
   }
-  // Battle orders are for armies marching out to fight; a muster or a station
-  // at home keeps its ordinary shape so gates and ramps stay open.
+
   if (field_battle) {
     if (const auto order = battle_order_intent(snapshot, context)) {
       return *order;

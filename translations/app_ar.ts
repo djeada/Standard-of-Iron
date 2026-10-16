@@ -29,7 +29,7 @@
     </message>
     <message>
         <source>Patrolling</source>
-        <translation>يدوريّ</translation>
+        <translation>في دورية</translation>
     </message>
     <message>
         <source>Walking the patrol route between its waypoints.</source>
@@ -2428,7 +2428,7 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
     <message>
         <source>Nearby allied swordsmen gain the most attack in aura range.</source>
-        <translation>يكسب المبارزون الحلفاء القريبون أكبر زيادة في الهجوم ضمن نطاق الهالة.</translation>
+        <translation>يكسب السيّافة الحلفاء القريبون أكبر زيادة في الهجوم ضمن نطاق الهالة.</translation>
     </message>
     <message>
         <source>Hold the line, Romans!</source>
@@ -2508,7 +2508,7 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
     <message>
         <source>Nearby allied swordsmen gain strong attack in aura range.</source>
-        <translation>يكسب المبارزون الحلفاء القريبون هجومًا قويًا ضمن نطاق الهالة.</translation>
+        <translation>يكسب السيّافة الحلفاء القريبون هجومًا قويًا ضمن نطاق الهالة.</translation>
     </message>
     <message>
         <source>Stand, Rome is watching!</source>
@@ -2720,11 +2720,11 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
     <message>
         <source>Commander of the Celtic and Iberian heavy horse on Hannibal&apos;s left at Cannae; not Hannibal&apos;s brother Hasdrubal Barca.</source>
-        <translation>قائد الفرسان الثقيلة الكلتية والإيبيرية على ميسرة حنبعل في كاناي؛ وليس حصدربعل برقا شقيق حنبعل.</translation>
+        <translation>قائد الخيالة الثقيلة الكلتية والإيبيرية على ميسرة حنبعل في كاناي؛ وليس حصدربعل برقا شقيق حنبعل.</translation>
     </message>
     <message>
         <source>Heavy cavalry commander who breaks a wing and rides into the rear.</source>
-        <translation>قائد فرسان ثقيلة يكسر جناحًا ويندفع إلى المؤخرة.</translation>
+        <translation>قائد خيالة ثقيلة يكسر جناحًا ويندفع إلى المؤخرة.</translation>
     </message>
     <message>
         <source>Shock and discipline in the charge.</source>
@@ -2764,7 +2764,7 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
     <message>
         <source>Light cavalry commander who harries with javelins and never stands still.</source>
-        <translation>قائد فرسان خفيفة يناوش بالحراب ولا يقف ساكنًا أبدًا.</translation>
+        <translation>قائد خيالة خفيفة يناوش بالحراب ولا يقف ساكنًا أبدًا.</translation>
     </message>
     <message>
         <source>The fastest horse in Africa.</source>
@@ -3684,7 +3684,7 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
     <message>
         <source>Sepulcher Shrine</source>
-        <translation>مزار المدفن</translation>
+        <translation>مزار الضريح</translation>
     </message>
     <message>
         <source>Ladder</source>
@@ -4315,23 +4315,23 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
     <message>
         <source>Save slot &apos;%1&apos; does not contain a battlefield and was not loaded.</source>
-        <translation>Save slot &apos;%1&apos; does not contain a battlefield and was not loaded.</translation>
+        <translation>لا تحتوي خانة الحفظ «%1» على ساحة معركة، ولم تُحمَّل.</translation>
     </message>
     <message>
         <source>&apos;%1&apos; could not be restored (%2). The battle that was running could not be kept.</source>
-        <translation>&apos;%1&apos; could not be restored (%2). The battle that was running could not be kept.</translation>
+        <translation>تعذّرت استعادة «%1» (%2). ولم يمكن الإبقاء على المعركة الجارية.</translation>
     </message>
     <message>
         <source>&apos;%1&apos; was saved by a different version of Standard of Iron (snapshot %2, this build reads %3) and cannot be imported.</source>
-        <translation>&apos;%1&apos; was saved by a different version of Standard of Iron (snapshot %2, this build reads %3) and cannot be imported.</translation>
+        <translation>حُفظ «%1» بإصدار مختلف من Standard of Iron (اللقطة %2، وهذا الإصدار يقرأ %3)، ولا يمكن استيراده.</translation>
     </message>
     <message>
         <source>&apos;%1&apos; could not be restored (%2). The battle that was running was left alone.</source>
-        <translation>&apos;%1&apos; could not be restored (%2). The battle that was running was left alone.</translation>
+        <translation>تعذّرت استعادة «%1» (%2). وبقيت المعركة الجارية على حالها.</translation>
     </message>
     <message>
         <source>&apos;%1&apos; restored no units at all, so there is no battle to return to. The save is unusable and the battle that was running was left alone.</source>
-        <translation>&apos;%1&apos; restored no units at all, so there is no battle to return to. The save is unusable and the battle that was running was left alone.</translation>
+        <translation>لم يستعد «%1» أي وحدة، فلا توجد معركة للعودة إليها. الحفظ غير صالح للاستخدام، وبقيت المعركة الجارية على حالها.</translation>
     </message>
 </context>
 <context>
@@ -4386,7 +4386,7 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
     <message>
         <source>A save is already in progress.</source>
-        <translation>A save is already in progress.</translation>
+        <translation>هناك عملية حفظ جارية بالفعل.</translation>
     </message>
     <message>
         <source>your ally</source>
@@ -5888,7 +5888,7 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     </message>
     <message>
         <source>Reserve</source>
-        <translation>السكان</translation>
+        <translation>الاحتياطي</translation>
     </message>
     <message>
         <source>Formations and lines</source>
@@ -5904,7 +5904,7 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     </message>
     <message>
         <source>Aura and Rally</source>
-        <translation>الهالة والتجمّع</translation>
+        <translation>الهالة والتجميع</translation>
     </message>
     <message>
         <source>Taking direct control</source>
@@ -6012,7 +6012,7 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     </message>
     <message>
         <source>Every card - recruit or building - lists its price. A grey card means something is short; hover it to read what. Homes cost 50 wood and 15 stone, a farm 40 wood and 10 stone, a barracks 100 wood and 60 stone, a defence tower 60 wood and 80 stone; soldiers cost wood and iron plus reserve, and civilians cost food.</source>
-        <translation>كل بطاقة - مجنّد أو مبنى - تعرض سعرها. البطاقة الرمادية تعني نقص شيء ما؛ مرّر المؤشر فوقها لقراءة ما ينقص. تكلف المنازل 50 خشبًا و15 حجرًا، والمزرعة 40 خشبًا و10 أحجار، والثكنة 100 خشب و60 حجرًا، وبرج الدفاع 60 خشبًا و80 حجرًا؛ يكلف الجنود خشبًا وحديدًا بالإضافة إلى السكان، ويكلف المدنيون طعامًا.</translation>
+        <translation>كل بطاقة - مجنّد أو مبنى - تعرض سعرها. البطاقة الرمادية تعني نقص شيء ما؛ مرّر المؤشر فوقها لقراءة ما ينقص. تكلف المنازل 50 خشبًا و15 حجرًا، والمزرعة 40 خشبًا و10 أحجار، والثكنة 100 خشب و60 حجرًا، وبرج الدفاع 60 خشبًا و80 حجرًا؛ يكلف الجنود خشبًا وحديدًا بالإضافة إلى الاحتياطي، ويكلف المدنيون طعامًا.</translation>
     </message>
     <message>
         <source>Barracks recruit soldiers and hold your stockpile yard. Homes raise families and civilians. Farms grow grain that builders reap for food. Defence towers shoot at anything in range. Marketplaces trade. Temples strengthen morale and take in healers. Walls and gates shape the field; gates open for your own troops.</source>
@@ -6028,7 +6028,7 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     </message>
     <message>
         <source>The Sepulcher</source>
-        <translation>المدفن</translation>
+        <translation>الضريح</translation>
     </message>
     <message>
         <source>Each mission states its own victory and defeat conditions in the Objectives screen (Escape, then Objectives). In battle, press O or the objectives button in the top bar to keep the full list open beside the field. In every battle your commander must survive: a nation dies with the man who leads it, and a lone commander is already lost.</source>
@@ -6052,11 +6052,11 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     </message>
     <message>
         <source>The Sepulcher Shrine</source>
-        <translation>مزار المدفن</translation>
+        <translation>مزار الضريح</translation>
     </message>
     <message>
         <source>Each zone is anchored by a Sepulcher Shrine. While its guardians still stand, the shrine cannot be harmed and attack orders on it are refused - do not waste arrows on it. Kill every wave first; only then does the shrine lie open.</source>
-        <translation>ترتكز كل منطقة على مزار المدفن. ما دام حرّاسه واقفين لا يمكن إيذاء المزار وتُرفض أوامر مهاجمته - فلا تهدر السهام عليه. اقتل كل موجة أولاً؛ عندها فقط ينكشف المزار.</translation>
+        <translation>ترتكز كل منطقة على مزار الضريح. ما دام حرّاسه واقفين لا يمكن إيذاء المزار وتُرفض أوامر مهاجمته - فلا تهدر السهام عليه. اقتل كل موجة أولاً؛ عندها فقط ينكشف المزار.</translation>
     </message>
     <message>
         <source>Purifying a shrine</source>
@@ -6343,7 +6343,7 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     </message>
     <message>
         <source>ATK</source>
-        <translation>هجم</translation>
+        <translation>هجوم</translation>
     </message>
     <message>
         <source>RNG</source>
@@ -6351,7 +6351,7 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     </message>
     <message>
         <source>SPD</source>
-        <translation>سرع</translation>
+        <translation>سرعة</translation>
     </message>
     <message>
         <source>Show what this unit is for</source>
@@ -6492,75 +6492,75 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     </message>
     <message>
         <source>Saves are unavailable: %1</source>
-        <translation>Saves are unavailable: %1</translation>
+        <translation>ملفات الحفظ غير متاحة: %1</translation>
     </message>
     <message>
         <source>The save database could not be read and a new one was started. Your previous file was kept at %1.</source>
-        <translation>The save database could not be read and a new one was started. Your previous file was kept at %1.</translation>
+        <translation>تعذّرت قراءة قاعدة بيانات الحفظ فأُنشئت قاعدة جديدة. احتُفظ بملفك السابق في %1.</translation>
     </message>
     <message>
         <source>No saved games yet. Save a battle from the menu, or press the quicksave key while you play.</source>
-        <translation>No saved games yet. Save a battle from the menu, or press the quicksave key while you play.</translation>
+        <translation>لا توجد ألعاب محفوظة بعد. احفظ معركة من القائمة، أو اضغط مفتاح الحفظ السريع أثناء اللعب.</translation>
     </message>
     <message>
         <source>Untitled save</source>
-        <translation>Untitled save</translation>
+        <translation>حفظ بلا اسم</translation>
     </message>
     <message>
         <source>Unknown map</source>
-        <translation>Unknown map</translation>
+        <translation>خريطة غير معروفة</translation>
     </message>
     <message>
         <source>Saved by a different version of the game. It is kept on disk, but this build cannot open it.</source>
-        <translation>Saved by a different version of the game. It is kept on disk, but this build cannot open it.</translation>
+        <translation>حُفظ بإصدار مختلف من اللعبة. سيبقى على القرص، لكن هذا الإصدار لا يستطيع فتحه.</translation>
     </message>
     <message>
         <source>Export failed: %1</source>
-        <translation>Export failed: %1</translation>
+        <translation>فشل التصدير: %1</translation>
     </message>
     <message>
         <source>This save will load</source>
-        <translation>This save will load</translation>
+        <translation>هذا الحفظ قابل للتحميل</translation>
     </message>
     <message>
         <source>This save will not load</source>
-        <translation>This save will not load</translation>
+        <translation>هذا الحفظ غير قابل للتحميل</translation>
     </message>
     <message>
         <source>&quot;%1&quot; decompressed cleanly and contains a complete battlefield.</source>
-        <translation>&quot;%1&quot; decompressed cleanly and contains a complete battlefield.</translation>
+        <translation>فُكّ ضغط «%1» دون أخطاء، وهو يحتوي على ساحة معركة كاملة.</translation>
     </message>
     <message>
         <source>This save was written by a different version of the game.</source>
-        <translation>This save was written by a different version of the game.</translation>
+        <translation>كُتب هذا الحفظ بإصدار مختلف من اللعبة.</translation>
     </message>
     <message>
         <source>Delete this save?</source>
-        <translation>Delete this save?</translation>
+        <translation>حذف هذا الحفظ؟</translation>
     </message>
     <message>
         <source>&quot;%1&quot; will be deleted. This cannot be undone.</source>
-        <translation>&quot;%1&quot; will be deleted. This cannot be undone.</translation>
+        <translation>سيُحذف «%1». لا يمكن التراجع عن ذلك.</translation>
     </message>
     <message>
         <source>Keep it</source>
-        <translation>Keep it</translation>
+        <translation>الإبقاء عليه</translation>
     </message>
     <message>
         <source>Deleted &quot;%1&quot;</source>
-        <translation>Deleted &quot;%1&quot;</translation>
+        <translation>حُذف «%1»</translation>
     </message>
     <message>
         <source>Close</source>
-        <translation>Close</translation>
+        <translation>إغلاق</translation>
     </message>
     <message>
         <source>Import save</source>
-        <translation>Import save</translation>
+        <translation>استيراد حفظ</translation>
     </message>
     <message>
         <source>Import failed: %1</source>
-        <translation>Import failed: %1</translation>
+        <translation>فشل الاستيراد: %1</translation>
     </message>
 </context>
 <context>
@@ -6941,7 +6941,7 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     </message>
     <message>
         <source>Hasdrubal Barca was Hannibal&apos;s brother, not his brother-in-law Hasdrubal the Fair. His attempted reinforcement ended at the Metaurus in 207 BC.</source>
-        <translation>كان صدربعل برقة شقيق حنبعل، لا صهره صدربعل الوسيم. وانتهت محاولته لإمداده بالتعزيزات عند نهر ميتاوروس عام 207 ق.م.</translation>
+        <translation>كان حصدربعل برقة شقيق حنبعل، لا صهره حصدربعل الوسيم. وانتهت محاولته لإمداده بالتعزيزات عند نهر ميتاوروس عام 207 ق.م.</translation>
     </message>
     <message>
         <source>In 218 BC Hannibal crossed the Alps with infantry, cavalry, baggage, and elephants. His exact route remains disputed.</source>
@@ -6957,7 +6957,7 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     </message>
     <message>
         <source>No one remembers who buried the first Sepulcher priest. The priest has had plenty of time to hold a grudge.</source>
-        <translation>لا أحد يذكر من دفن أول كاهن للمدفن، لكن الكاهن حظي بوقت طويل ليحمل الضغينة.</translation>
+        <translation>لا أحد يذكر من دفن أول كاهن للضريح، لكن الكاهن حظي بوقت طويل ليحمل الضغينة.</translation>
     </message>
     <message>
         <source>Scipio took New Carthage in 209 BC, seizing an important harbor, stores, and hostages instead of chasing every enemy army.</source>
@@ -6965,7 +6965,7 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     </message>
     <message>
         <source>Sepulcher legend says grave priests draw their fire from the last breaths trapped beneath the iron seals of forgotten shrines.</source>
-        <translation>تقول أسطورة المدفن إن كهنة القبور يستمدّون نارهم من الأنفاس الأخيرة المحبوسة تحت الأختام الحديدية لمزارات منسية.</translation>
+        <translation>تقول أسطورة الضريح إن كهنة القبور يستمدّون نارهم من الأنفاس الأخيرة المحبوسة تحت الأختام الحديدية لمزارات منسية.</translation>
     </message>
     <message>
         <source>Soldiers whisper that the shrine&apos;s haze repeats orders in the voices of men who never came home.</source>
@@ -6981,11 +6981,11 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     </message>
     <message>
         <source>The Sepulcher&apos;s guardians do not pursue forever. They return to the shrine as though the last watch never ended.</source>
-        <translation>لا يطارد حرّاس المدفن إلى الأبد، بل يعودون إلى المزار كأن النوبة الأخيرة لم تنتهِ قط.</translation>
+        <translation>لا يطارد حرّاس الضريح إلى الأبد، بل يعودون إلى المزار كأن النوبة الأخيرة لم تنتهِ قط.</translation>
     </message>
     <message>
         <source>The Sepulcher&apos;s iron nails are said to pin unfinished oaths beneath the earth. Its guardians are still keeping theirs.</source>
-        <translation>يُقال إن مسامير المدفن الحديدية تثبّت تحت الأرض عهودًا لم تُوفَ، وحرّاسه ما زالوا يوفون بعهودهم.</translation>
+        <translation>يُقال إن مسامير الضريح الحديدية تثبّت تحت الأرض عهودًا لم تُوفَ، وحرّاسه ما زالوا يوفون بعهودهم.</translation>
     </message>
     <message>
         <source>The best time to discover that your bridge is too narrow was before the elephants arrived.</source>
@@ -7208,19 +7208,19 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     </message>
     <message>
         <source>There is no quicksave to load.</source>
-        <translation>There is no quicksave to load.</translation>
+        <translation>لا يوجد حفظ سريع لتحميله.</translation>
     </message>
     <message>
         <source>Load the quicksave?</source>
-        <translation>Load the quicksave?</translation>
+        <translation>تحميل الحفظ السريع؟</translation>
     </message>
     <message>
         <source>The battle in progress will be replaced by the quicksave. Anything since then is lost.</source>
-        <translation>The battle in progress will be replaced by the quicksave. Anything since then is lost.</translation>
+        <translation>سيحلّ الحفظ السريع محلّ المعركة الجارية. وسيضيع كل ما حدث منذ ذلك الحين.</translation>
     </message>
     <message>
         <source>Load the quicksave</source>
-        <translation>Load the quicksave</translation>
+        <translation>تحميل الحفظ السريع</translation>
     </message>
 </context>
 <context>
@@ -7411,15 +7411,15 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     </message>
     <message>
         <source>Continue</source>
-        <translation>Continue</translation>
+        <translation>متابعة</translation>
     </message>
     <message>
         <source>Return to the most recent save</source>
-        <translation>Return to the most recent save</translation>
+        <translation>العودة إلى أحدث حفظ</translation>
     </message>
     <message>
         <source>Resume</source>
-        <translation>Resume</translation>
+        <translation>استئناف</translation>
     </message>
 </context>
 <context>
@@ -7807,7 +7807,7 @@ to see preview</source>
     </message>
     <message>
         <source>A fertile valley for two. One channel runs the whole map north to south and only two fords cross it. A cross spur on each bank means you either hug the water or swing wide to reach them, and the boomerang ridge cupping each start makes the back door terrain rather than a wall. Nothing haunts this valley: it is the plain match, with no Sepulcher to distract either side.</source>
-        <translation>واد خصيب لاثنين. مجرى واحد يشقّ الخريطة من الشمال إلى الجنوب، ولا يعبره سوى مخاضتين. نتوء عرضي على كل ضفة يفرض الاختيار: إمّا ملازمة الماء أو الالتفاف بعيدًا. والحيد المنحني كالبوميرانغ الذي يحتضن كل نقطة بداية يجعل الباب الخلفي تضاريس لا جدارًا. لا شيء يسكن هذا الوادي: إنها المباراة الصريحة، بلا مقبرة حديدية تشتّت أيًّا من الطرفين.</translation>
+        <translation>واد خصيب لاثنين. مجرى واحد يشقّ الخريطة من الشمال إلى الجنوب، ولا يعبره سوى مخاضتين. نتوء عرضي على كل ضفة يفرض الاختيار: إمّا ملازمة الماء أو الالتفاف بعيدًا. والحيد المنحني كالبوميرانغ الذي يحتضن كل نقطة بداية يجعل الباب الخلفي تضاريس لا جدارًا. لا شيء يسكن هذا الوادي: إنها المباراة الصريحة، بلا ضريح تشتّت أيًّا من الطرفين.</translation>
     </message>
     <message>
         <source>Amber Delta</source>
@@ -7859,7 +7859,7 @@ to see preview</source>
     </message>
     <message>
         <source>A redoubt above a dry ford, for one. A spur of rock runs the length of the approach and the two shoulders close the flanks, so everything coming down from the north is committed to one of two lanes -- the cart gate in the west, the goat path in the east -- and they do not meet again until the ground in front of the camp. One line cannot hold both mouths, so holding here is a question of which lane you stand in and when you leave it.</source>
-        <translation>حصنٌ فوق مخاضة جافة، مثلًا. يمتد نتوء صخري بطول مسار الاقتراب، ويغلق الكتفان الجناحين، فكل قادم من الشمال محصور في واحدة من ممرين -- بوابة العربات غربًا، ودرب الماعز شرقًا -- ولا يلتقيان مجددًا إلا في الأرض أمام المعسكر. لا يستطيع خط واحد سد الفوهتين معًا، فالصمود هنا مسألة أي ممر تقف فيه ومتى تتركه.</translation>
+        <translation>حصنٌ فوق مخاضة جافة، للاعب واحد. يمتد نتوء صخري بطول مسار الاقتراب، ويغلق الكتفان الجناحين، فكل قادم من الشمال محصور في واحدة من ممرين -- بوابة العربات غربًا، ودرب الماعز شرقًا -- ولا يلتقيان مجددًا إلا في الأرض أمام المعسكر. لا يستطيع خط واحد سد الفوهتين معًا، فالصمود هنا مسألة أي ممر تقف فيه ومتى تتركه.</translation>
     </message>
     <message>
         <source>Pinewater Cut</source>
@@ -7867,7 +7867,7 @@ to see preview</source>
     </message>
     <message>
         <source>A timber detail&apos;s cut above the Pinewater, for one. The near stand beside the camp is already half felled, so the levy is only filled out of the deep pines a long haul north-east, past the spine of rock the haul road has to swing around. The scree that gives up the stone lies the other way entirely, and the crew is not big enough to work both without splitting it.</source>
-        <translation>فرقة حطب فوق ماء الصنوبر، مثلًا. الأجمة القريبة من المعسكر قُطع نصفها بالفعل، فلا تُستكمل الحصة إلا من الصنوبر العميق في نقلة طويلة إلى الشمال الشرقي، خلف عمود الصخر الذي يلتف حوله طريق السحب. أما الحصى الذي يعطي الحجر فيقع في الاتجاه المعاكس تمامًا، والطاقم أصغر من أن يعمل على الاثنين دون أن ينقسم.</translation>
+        <translation>فرقة حطب فوق ماء الصنوبر، للاعب واحد. الأجمة القريبة من المعسكر قُطع نصفها بالفعل، فلا تُستكمل الحصة إلا من الصنوبر العميق في نقلة طويلة إلى الشمال الشرقي، خلف عمود الصخر الذي يلتف حوله طريق السحب. أما الحصى الذي يعطي الحجر فيقع في الاتجاه المعاكس تمامًا، والطاقم أصغر من أن يعمل على الاثنين دون أن ينقسم.</translation>
     </message>
     <message>
         <source>Crossing the Rhone</source>
@@ -8832,7 +8832,7 @@ to see preview</source>
     </message>
     <message>
         <source>The officer of the detail falls. Nobody else here can sign for the levy.</source>
-        <translation>يسقط ضابط الكمين. ولا أحد هنا غيره يستطيع التوقيع على الحصة.</translation>
+        <translation>يسقط ضابط الفريق. ولا أحد هنا غيره يستطيع التوقيع على الحصة.</translation>
     </message>
     <message>
         <source>The redoubt is gone. Go south, keep the spur on your left, and do not stop to look at the ford. There is nothing there now that is worth a second of your life.</source>
@@ -10515,7 +10515,7 @@ to see preview</source>
     </message>
     <message>
         <source>Hauling a load - it cannot be interrupted until the load is dropped off.</source>
-        <translation>يسحب حمولة - لا يمكن مقاطعتها حتى تسليمها.</translation>
+        <translation>يسحب حمولة - لا يمكن مقاطعته حتى يسلّمها.</translation>
     </message>
     <message>
         <source>Squad</source>
@@ -10609,7 +10609,7 @@ to see preview</source>
     </message>
     <message>
         <source>%1 slot available</source>
-        <translation>خانة %1 متاحة</translation>
+        <translation>%1 خانة متاحة</translation>
     </message>
     <message>
         <source>%1 slots available</source>
@@ -10710,7 +10710,7 @@ Shoots arrows at enemies</source>
     </message>
     <message>
         <source>Home</source>
-        <translation>مسكن</translation>
+        <translation>منزل</translation>
     </message>
     <message>
         <source>Residential building
@@ -10811,7 +10811,7 @@ Build time: %3s</source>
 %1
 Cost: %2
 Build time: %3s</source>
-        <translation>ابنِ مسكناً
+        <translation>ابنِ منزلاً
 %1
 الكلفة: %2
 زمن البناء: %3 ث</translation>
@@ -10956,7 +10956,7 @@ Build time: %3s</source>
     </message>
     <message>
         <source>%1 · %2s</source>
-        <translation>%1 · %2s</translation>
+        <translation>%1 · %2 ث</translation>
     </message>
     <message>
         <source>Ram</source>
@@ -11044,7 +11044,7 @@ Build time: %3s</source>
     <name>ProductionHomeSection</name>
     <message>
         <source>HOME RECRUITMENT</source>
-        <translation>التجنيد من المساكن</translation>
+        <translation>التجنيد من المنازل</translation>
     </message>
     <message>
         <source>Available civilians: %1 / %2</source>
@@ -11066,7 +11066,7 @@ Use Deliver mode, then click a friendly barracks to add to its reserve.</source>
     </message>
     <message>
         <source>This home already committed its 3 civilians</source>
-        <translation>هذا المسكن قدّم مدنييه الثلاثة بالفعل</translation>
+        <translation>هذا المنزل قدّم مدنييه الثلاثة بالفعل</translation>
     </message>
 </context>
 <context>
@@ -11173,7 +11173,7 @@ Use Deliver mode, then click a friendly barracks to add to its reserve.</source>
     </message>
     <message>
         <source>The ground here is too steep to build on.</source>
-        <translation>الأرض هنا شديدة الانحدار على البناء.</translation>
+        <translation>الأرض هنا أشد انحدارًا من أن يُبنى عليها.</translation>
     </message>
     <message>
         <source>That is beyond the edge of the battlefield.</source>
@@ -11309,7 +11309,7 @@ Shoots arrows at enemies</source>
     </message>
     <message>
         <source>Home</source>
-        <translation>مسكن</translation>
+        <translation>منزل</translation>
     </message>
     <message>
         <source>Residential building
@@ -11911,7 +11911,7 @@ Right-click to cancel.</source>
     </message>
     <message>
         <source>Loaded, but &apos;%1&apos; could not be read, so wildlife, undead zones and cursed veins were not restored.</source>
-        <translation>Loaded, but &apos;%1&apos; could not be read, so wildlife, undead zones and cursed veins were not restored.</translation>
+        <translation>تم التحميل، لكن تعذّرت قراءة «%1»، فلم تُستعد الحياة البرية ومناطق الموتى الأحياء والعروق الملعونة.</translation>
     </message>
 </context>
 <context>
@@ -12150,19 +12150,19 @@ Right-click to cancel.</source>
     </message>
     <message>
         <source>Name the save first.</source>
-        <translation>Name the save first.</translation>
+        <translation>سمِّ الحفظ أولاً.</translation>
     </message>
     <message>
         <source>That name is too long. Keep it under %1 characters.</source>
-        <translation>That name is too long. Keep it under %1 characters.</translation>
+        <translation>هذا الاسم طويل جداً. اجعله أقل من %1 حرفاً.</translation>
     </message>
     <message>
         <source>That name is reserved for quicksaves and autosaves, which would overwrite it without asking. Pick another one.</source>
-        <translation>That name is reserved for quicksaves and autosaves, which would overwrite it without asking. Pick another one.</translation>
+        <translation>هذا الاسم محجوز للحفظ السريع والتلقائي، وهما سيستبدلانه دون سؤال. اختر اسماً آخر.</translation>
     </message>
     <message>
         <source>Names cannot contain slashes or control characters.</source>
-        <translation>Names cannot contain slashes or control characters.</translation>
+        <translation>لا يمكن أن تحتوي الأسماء على شرطات مائلة أو محارف تحكّم.</translation>
     </message>
 </context>
 <context>
@@ -12185,79 +12185,82 @@ Right-click to cancel.</source>
     </message>
     <message>
         <source>Saves are unavailable: %1</source>
-        <translation>Saves are unavailable: %1</translation>
+        <translation>ملفات الحفظ غير متاحة: %1</translation>
     </message>
     <message>
         <source>Save name</source>
-        <translation>Save name</translation>
+        <translation>اسم الحفظ</translation>
     </message>
     <message>
         <source>Name this save...</source>
-        <translation>Name this save...</translation>
+        <translation>سمِّ هذا الحفظ...</translation>
     </message>
     <message>
         <source>A save called &quot;%1&quot; already exists. Saving replaces it.</source>
-        <translation>A save called &quot;%1&quot; already exists. Saving replaces it.</translation>
+        <translation>يوجد حفظ باسم «%1» بالفعل. الحفظ سيستبدله.</translation>
     </message>
     <message>
         <source>Press Enter to save.</source>
-        <translation>Press Enter to save.</translation>
+        <translation>اضغط Enter للحفظ.</translation>
     </message>
     <message>
         <source>Existing saves</source>
-        <translation>Existing saves</translation>
-    </message>
-    <message>
-        <source>%1 save</source>
-        <translation>%1 save</translation>
-    </message>
-    <message>
-        <source>%1 saves</source>
-        <translation>%1 saves</translation>
+        <translation>ملفات الحفظ الموجودة</translation>
     </message>
     <message>
         <source>No saves yet. The name above will create the first one.</source>
-        <translation>No saves yet. The name above will create the first one.</translation>
+        <translation>لا توجد ملفات حفظ بعد. سيُنشئ الاسم أعلاه أولها.</translation>
     </message>
     <message>
         <source>Untitled save</source>
-        <translation>Untitled save</translation>
+        <translation>حفظ بلا اسم</translation>
     </message>
     <message>
         <source>Unknown map</source>
-        <translation>Unknown map</translation>
+        <translation>خريطة غير معروفة</translation>
     </message>
     <message>
         <source>Saved by a different version of the game. It is kept, but this build cannot open it.</source>
-        <translation>Saved by a different version of the game. It is kept, but this build cannot open it.</translation>
+        <translation>حُفظ بإصدار مختلف من اللعبة. سيُحتفظ به، لكن هذا الإصدار لا يستطيع فتحه.</translation>
     </message>
     <message>
         <source>Delete</source>
-        <translation>Delete</translation>
+        <translation>حذف</translation>
     </message>
     <message>
         <source>Replace this save?</source>
-        <translation>Replace this save?</translation>
+        <translation>استبدال هذا الحفظ؟</translation>
     </message>
     <message>
         <source>&quot;%1&quot; will be replaced by the current battle. The version stored now cannot be recovered.</source>
-        <translation>&quot;%1&quot; will be replaced by the current battle. The version stored now cannot be recovered.</translation>
+        <translation>ستحلّ المعركة الحالية محلّ «%1». ولا يمكن استعادة النسخة المحفوظة الآن.</translation>
     </message>
     <message>
         <source>Replace</source>
-        <translation>Replace</translation>
+        <translation>استبدال</translation>
     </message>
     <message>
         <source>Keep it</source>
-        <translation>Keep it</translation>
+        <translation>الإبقاء عليه</translation>
     </message>
     <message>
         <source>Delete this save?</source>
-        <translation>Delete this save?</translation>
+        <translation>حذف هذا الحفظ؟</translation>
     </message>
     <message>
         <source>&quot;%1&quot; will be deleted. This cannot be undone.</source>
-        <translation>&quot;%1&quot; will be deleted. This cannot be undone.</translation>
+        <translation>سيُحذف «%1». لا يمكن التراجع عن ذلك.</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n save(s)</source>
+        <translation>
+            <numerusform>لا ملفات حفظ</numerusform>
+            <numerusform>ملف حفظ واحد</numerusform>
+            <numerusform>ملفا حفظ</numerusform>
+            <numerusform>%n ملفات حفظ</numerusform>
+            <numerusform>%n ملف حفظ</numerusform>
+            <numerusform>%n ملف حفظ</numerusform>
+        </translation>
     </message>
 </context>
 <context>
@@ -12276,58 +12279,58 @@ Right-click to cancel.</source>
     </message>
     <message>
         <source>Saved &quot;%1&quot;</source>
-        <translation>Saved &quot;%1&quot;</translation>
+        <translation>حُفظ «%1»</translation>
     </message>
     <message>
         <source>Saving &quot;%1&quot; failed.</source>
-        <translation>Saving &quot;%1&quot; failed.</translation>
+        <translation>فشل حفظ «%1».</translation>
     </message>
     <message>
         <source>Saved</source>
-        <translation>Saved</translation>
+        <translation>تم الحفظ</translation>
     </message>
 </context>
 <context>
     <name>SaveSlotRow</name>
     <message>
         <source>%1h %2m</source>
-        <translation>%1h %2m</translation>
+        <translation>%1 س %2 د</translation>
     </message>
     <message>
         <source>%1m</source>
-        <translation>%1m</translation>
+        <translation>%1 د</translation>
     </message>
     <message>
         <source>under a minute</source>
-        <translation>under a minute</translation>
+        <translation>أقل من دقيقة</translation>
     </message>
     <message>
         <source>Unknown</source>
-        <translation>Unknown</translation>
+        <translation>مجهول</translation>
     </message>
     <message>
         <source>Campaign</source>
-        <translation>Campaign</translation>
+        <translation>الحملة</translation>
     </message>
     <message>
         <source>Mission</source>
-        <translation>Mission</translation>
+        <translation>مهمة</translation>
     </message>
     <message>
         <source>Skirmish</source>
-        <translation>Skirmish</translation>
+        <translation>مناوشة</translation>
     </message>
     <message>
         <source>Autosave</source>
-        <translation>Autosave</translation>
+        <translation>الحفظ التلقائي</translation>
     </message>
     <message>
         <source>Quicksave</source>
-        <translation>Quicksave</translation>
+        <translation>حفظ سريع</translation>
     </message>
     <message>
         <source>No preview</source>
-        <translation>No preview</translation>
+        <translation>لا معاينة</translation>
     </message>
     <message>
         <source>%1 · %2 · %3</source>
@@ -12339,11 +12342,11 @@ Right-click to cancel.</source>
     </message>
     <message>
         <source>Saved %1</source>
-        <translation>Saved %1</translation>
+        <translation>حُفظ: %1</translation>
     </message>
     <message>
         <source>Played %1</source>
-        <translation>Played %1</translation>
+        <translation>مدة اللعب: %1</translation>
     </message>
 </context>
 <context>
@@ -12354,7 +12357,7 @@ Right-click to cancel.</source>
     </message>
     <message>
         <source>Save storage unavailable</source>
-        <translation>Save storage unavailable</translation>
+        <translation>مخزن الحفظ غير متاح</translation>
     </message>
 </context>
 <context>
@@ -12481,67 +12484,67 @@ Right-click to cancel.</source>
     </message>
     <message>
         <source>The save database could not be opened.</source>
-        <translation>The save database could not be opened.</translation>
+        <translation>تعذّر فتح قاعدة بيانات الحفظ.</translation>
     </message>
     <message>
         <source>The save database is unreadable and could not be moved aside: %1</source>
-        <translation>The save database is unreadable and could not be moved aside: %1</translation>
+        <translation>قاعدة بيانات الحفظ غير قابلة للقراءة وتعذّر نقلها جانباً: %1</translation>
     </message>
     <message>
         <source>integrity check failed: %1</source>
-        <translation>integrity check failed: %1</translation>
+        <translation>فشل فحص السلامة: %1</translation>
     </message>
     <message>
         <source>it was written by a newer version of the game (schema %1)</source>
-        <translation>it was written by a newer version of the game (schema %1)</translation>
+        <translation>كتبها إصدار أحدث من اللعبة (المخطط %1)</translation>
     </message>
     <message>
         <source>it is not a Standard of Iron save database</source>
-        <translation>it is not a Standard of Iron save database</translation>
+        <translation>ليست قاعدة بيانات حفظ خاصة بـ Standard of Iron</translation>
     </message>
     <message>
         <source>it could not be upgraded from schema %1: %2</source>
-        <translation>it could not be upgraded from schema %1: %2</translation>
+        <translation>تعذّرت ترقيتها من المخطط %1: %2</translation>
     </message>
     <message>
         <source>its tables do not match schema %1</source>
-        <translation>its tables do not match schema %1</translation>
+        <translation>جداولها لا تطابق المخطط %1</translation>
     </message>
     <message>
         <source>Failed to add the snapshot version column</source>
-        <translation>Failed to add the snapshot version column</translation>
+        <translation>تعذّرت إضافة عمود إصدار اللقطة</translation>
     </message>
     <message>
         <source>Refusing to write a save with an empty slot name</source>
-        <translation>Refusing to write a save with an empty slot name</translation>
+        <translation>رُفضت كتابة حفظ باسم خانة فارغ</translation>
     </message>
     <message>
         <source>&apos;%1&apos; holds a save that was not written by this rotation, so it will not be overwritten automatically. Delete it from the Load menu to free the slot.</source>
-        <translation>&apos;%1&apos; holds a save that was not written by this rotation, so it will not be overwritten automatically. Delete it from the Load menu to free the slot.</translation>
+        <translation>تحتوي «%1» على حفظ لم تكتبه هذه الدورة، لذا لن يُستبدل تلقائياً. احذفه من قائمة التحميل لتحرير الخانة.</translation>
     </message>
     <message>
         <source>The save was written but could not be read back</source>
-        <translation>The save was written but could not be read back</translation>
+        <translation>كُتب الحفظ لكن تعذّرت قراءته مجدداً</translation>
     </message>
     <message>
         <source>The save did not survive being written to disk. Nothing was lost in the match; try saving again.</source>
-        <translation>The save did not survive being written to disk. Nothing was lost in the match; try saving again.</translation>
+        <translation>لم يصمد الحفظ أثناء كتابته على القرص. لم يضع شيء من المباراة؛ حاول الحفظ مجدداً.</translation>
     </message>
     <message>
         <source>The save was written with the wrong header; try again.</source>
-        <translation>The save was written with the wrong header; try again.</translation>
+        <translation>كُتب الحفظ بترويسة خاطئة؛ حاول مجدداً.</translation>
     </message>
     <message>
         <source>&apos;%1&apos; was saved by a different version of Standard of Iron and cannot be loaded by this one. It has been left alone.</source>
-        <translation>&apos;%1&apos; was saved by a different version of Standard of Iron and cannot be loaded by this one. It has been left alone.</translation>
+        <translation>حُفظ «%1» بإصدار مختلف من Standard of Iron ولا يستطيع هذا الإصدار تحميله. لم يُمسّ الملف.</translation>
     </message>
     <message>
         <source>&apos;%1&apos; does not contain a readable world: %2</source>
-        <translation>&apos;%1&apos; does not contain a readable world: %2</translation>
+        <translation>لا يحتوي «%1» على عالم قابل للقراءة: %2</translation>
     </message>
     <message>
         <source>&apos;%1&apos; is missing the units it should contain</source>
-        <translation>&apos;%1&apos; is missing the units it should contain</translation>
+        <translation>تنقص «%1» الوحدات التي يُفترض أن يحتويها</translation>
     </message>
 </context>
 <context>
@@ -13000,7 +13003,7 @@ Right-click to cancel.</source>
     </message>
     <message>
         <source>A Home costs %1 wood and %2 stone; you have %3 wood and %4 stone. The Build card stays grey until the yard holds enough - send a builder to collect the difference.</source>
-        <translation>يكلف المنزل %1 خشبًا و%2 حجرًا؛ ولديك %3 خشبًا و%4 حجرًا. تبقى بطاقة البناء رمادية حتى يحوي الساحة ما يكفي، فأرسل بنّاءً ليجمع الفارق.</translation>
+        <translation>يكلف المنزل %1 خشبًا و%2 حجرًا؛ ولديك %3 خشبًا و%4 حجرًا. تبقى بطاقة البناء رمادية حتى تحوي الساحة ما يكفي، فأرسل بنّاءً ليجمع الفارق.</translation>
     </message>
     <message>
         <source>A red outline means the site is blocked: too close to another building, on water or on a slope. Move it onto flat, open ground and left-click to confirm. Right-click cancels.</source>
@@ -13144,7 +13147,7 @@ Right-click to cancel.</source>
     </message>
     <message>
         <source>Move the view with the arrow keys or WASD, or push the mouse to the screen edge. Scroll to zoom, Q and E rotate, Ctrl with the up and down arrows tilts, and Home returns to your camp. Follow keeps the camera on your selection. Move the camera now.</source>
-        <translation>حرّك المنظر بمفاتيح الأسهم أو WASD، أو ادفع الفأرة إلى حافة الشاشة. مرّر العجلة للتكبير، وQ وE للتدوير، وCtrl مع سهمي الأعلى والأسفل للإمالة، وHome يعيدك إلى معسكرك. المتابعة تُبقي الكاميرا على تحديدك. حرّك الكاميرا الآن.</translation>
+        <translation>حرّك المنظر بمفاتيح الأسهم أو WASD، أو ادفع الفأرة إلى حافة الشاشة. مرّر العجلة للتكبير، وQ وE للتدوير، وCtrl مع سهمي الأعلى والأسفل للإمالة، وHome يعيدك إلى معسكرك. «تتبع» يُبقي الكاميرا على تحديدك. حرّك الكاميرا الآن.</translation>
     </message>
     <message>
         <source>The top-left buttons pause the battle and set the speed, from half up to quadruple. Space pauses too, and + and - step through the speeds without reaching for the bar. The active speed stays lit while paused, and you can change it there. Change the speed or pause and resume now.</source>
@@ -14039,7 +14042,7 @@ Right-click to cancel.</source>
     </message>
     <message>
         <source>Towers taller than the wall were pushed against the curtain so a drawbridge could drop onto the parapet.</source>
-        <translation>كانت تُدفع أبراج أعلى من السور نحوه لتسقط جسر على الشرفة.</translation>
+        <translation>كانت تُدفع أبراج أعلى من السور نحوه لتُسقط جسرًا متحركًا على الشرفة.</translation>
     </message>
     <message>
         <source>Turris</source>
@@ -14047,7 +14050,7 @@ Right-click to cancel.</source>
     </message>
     <message>
         <source>Very slow, and a tall target that fire and stone-throwers bring down.</source>
-        <translation>بطيء جداً وهدف عالٍ يسقطه النار وقاذفو الحجارة.</translation>
+        <translation>بطيء جداً وهدف عالٍ تُسقطه النار وقاذفو الحجارة.</translation>
     </message>
     <message>
         <source>Gallic Cavalry</source>
@@ -14059,7 +14062,7 @@ Right-click to cancel.</source>
     </message>
     <message>
         <source>Gallic nobles fought on horseback with long swords. Under Hasdrubal at Cannae they broke the Roman horse on the river flank and rode round to close the trap.</source>
-        <translation>قاتل نبلاء الغاليين على ظهور الخيل بسيوف طويلة. وتحت قيادة صدربعل في كاناي حطّموا الفرسان الرومان عند جناح النهر والتفّوا حولهم لإغلاق الفخ.</translation>
+        <translation>قاتل نبلاء الغاليين على ظهور الخيل بسيوف طويلة. وتحت قيادة حصدربعل في كاناي حطّموا الفرسان الرومان عند جناح النهر والتفّوا حولهم لإغلاق الفخ.</translation>
     </message>
     <message>
         <source>Gauls of the Po valley joined Hannibal once he was over the Alps. At Cannae they held the centre of the crescent and fell back on purpose, drawing the legions in.</source>

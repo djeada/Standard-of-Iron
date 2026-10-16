@@ -415,8 +415,6 @@ auto validateCommanderVoices(const QString& assets_dir,
     out_library.add(std::move(*bank));
   }
 
-  // Only the playable roster speaks in full chatter banks; historical cameos
-  // (playable == false) carry short barks instead, checked separately.
   for (const auto& definition : Game::Units::all_commander_definitions()) {
     if (!definition.playable) {
       continue;

@@ -62,9 +62,6 @@ enum class CommanderBarkKind : std::uint8_t {
   FallBack,
 };
 
-// A handful of one-line battlefield shouts. Historical cameo commanders carry
-// these instead of the full chatter banks in data/commanders/voices, which
-// only the playable roster has; nothing plays them as speech.
 struct CommanderBarks {
   std::vector<std::string> rally;
   std::vector<std::string> charge;
@@ -108,42 +105,30 @@ struct CommanderDefinition {
   CommanderSignature signature{};
   CommanderDoctrine doctrine{};
 
-  // False for historical cameo commanders: they can be spawned by missions,
-  // maps and arena scenarios, but never appear in a commander picker, never
-  // need a voice bank and are never handed to a skirmish seat.
   bool playable = true;
-  // Cameos keep the body (troop_type) of a playable commander and replace its
-  // look with this renderer; empty means "use the troop profile's renderer".
+
   std::string renderer_id;
-  // One-line historical identification, shown in mission briefings.
+
   std::string historical_note;
   CommanderBarks barks{};
 };
 
-// The playable roster: the six commanders a player can pick or meet as a
-// skirmish opponent. Every entry has playable == true.
 [[nodiscard]] auto
 all_commander_definitions() -> const std::vector<CommanderDefinition>&;
 
-// Historical cameo commanders (issue #1522). Every entry has playable == false,
-// borrows the troop_type of a playable commander and is addressed by its id.
 [[nodiscard]] auto
 historical_commander_definitions() -> const std::vector<CommanderDefinition>&;
 [[nodiscard]] auto historical_commander_definition(std::string_view commander_id)
     -> const CommanderDefinition*;
 [[nodiscard]] auto is_historical_commander_id(std::string_view commander_id) -> bool;
-// Looks an id up in both rosters.
+
 [[nodiscard]] auto
 find_commander_definition(std::string_view commander_id) -> const CommanderDefinition*;
-// The commander body a cameo uses when fielded by an owner of `nation_id`: the
-// playable commander of that nation wielding the same weapon (spear, sword or
-// bow) as the cameo's own troop_type.
+
 [[nodiscard]] auto
 historical_commander_troop_for_nation(const CommanderDefinition& definition,
                                       Game::Systems::NationID nation_id) -> TroopType;
-// Gives a spawned commander the identity, aura numbers and look of a cameo.
-// Returns false (and leaves the entity untouched) for unknown ids or entities
-// that are not commanders.
+
 auto apply_historical_commander(Engine::Core::Entity& entity,
                                 std::string_view commander_id) -> bool;
 [[nodiscard]] auto
@@ -155,8 +140,7 @@ commander_definition(TroopType troop_type) -> const CommanderDefinition*;
 void configure_commander_component(Engine::Core::Entity& entity, TroopType troop_type);
 void configure_commander_component(Engine::Core::Entity& entity,
                                    const CommanderDefinition& definition);
-// Playable commanders of a nation, the list commander pickers and skirmish
-// seats draw from. Cameos (playable == false) are never in it.
+
 [[nodiscard]] auto commander_definitions_for_nation(Game::Systems::NationID nation_id)
     -> std::vector<const CommanderDefinition*>;
 

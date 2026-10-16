@@ -25,8 +25,6 @@ constexpr float k_tau = 2.0F * k_pi;
 constexpr float k_head_socket_radius = 0.16F;
 constexpr float k_attachment_scale = k_head_socket_radius * k_helmet_uniform_scale;
 
-// Match make_full_cranium(): OrientedSphere uses twice its half-extents.
-// Undo the helmet socket's scale and lift before fitting hair to the scalp.
 const QVector3D k_scalp_center(0.0F,
                                HumanProportions::HEAD_RADIUS * 0.06F /
                                        k_attachment_scale -
@@ -66,7 +64,6 @@ public:
     triangle(a, c, d);
   }
 
-  // Weld the circumferential seam so lighting stays continuous around each fold.
   template <typename Surface>
   void tube(unsigned int steps, unsigned int sides, bool closed, Surface surface) {
     auto const base = static_cast<unsigned int>(m_vertices.size());
@@ -153,7 +150,7 @@ auto make_hair_cap(bool tied_back) -> std::unique_ptr<Mesh> {
                 (row + 1U) * k_columns + col);
     }
   }
-  // A single crown vertex avoids collapsed quads and a pinched shading seam.
+
   unsigned int const top = mesh.vertex(scalp_surface(0.0F, 1.0F, tied_back));
   unsigned int const last = (k_rings - 1U) * k_columns;
   for (unsigned int col = 0; col < k_columns; ++col) {
@@ -164,7 +161,7 @@ auto make_hair_cap(bool tied_back) -> std::unique_ptr<Mesh> {
 
 auto make_bun_coil() -> std::unique_ptr<Mesh> {
   MeshBuilder mesh;
-  // A flattened spiral, with both ends tucked into the underlying hair mass.
+
   mesh.tube(96U, 10U, false, [](float u, float section) {
     float const angle = 2.35F * k_tau * u;
     float const tuck = std::pow(std::abs(2.0F * u - 1.0F), 8.0F);
@@ -184,7 +181,7 @@ auto make_bun_tie() -> std::unique_ptr<Mesh> {
   mesh.tube(48U, 8U, true, [](float u, float section) {
     float const angle = k_tau * u;
     float const edge = 0.018F * std::cos(section);
-    // A narrow textile tie sits at the base of the bun.
+
     return QVector3D((0.44F + edge) * std::cos(angle),
                      -0.28F + (0.40F + edge) * std::sin(angle),
                      -1.28F + 0.055F * std::sin(section));
@@ -213,7 +210,7 @@ auto make_turban_wraps() -> std::unique_ptr<Mesh> {
                        -0.05F + (rz + fold) * std::cos(angle));
     });
   }
-  // Carry the tucked end over the crown so the wrap does not end in a bare dome.
+
   mesh.tube(40U, 12U, false, [](float u, float section) {
     float const angle = k_pi * u;
     QVector3D const outward(std::cos(angle), std::sin(angle), 0.0F);

@@ -1061,8 +1061,7 @@ void MapData::parse_fords_array(const QJsonArray& arr) {
         obj.value(MapJsonKeys::end).isArray()) {
       applyLinearEndpoints(obj, elem);
     } else {
-      // A ford placed by its centre: give it a short bank-to-bank stroke so
-      // it can be seen and dragged; saving writes it back drawn across.
+
       QVector2D centre;
       const QJsonValue position = obj.value(QStringLiteral("position"));
       if (position.isArray()) {

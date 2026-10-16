@@ -80,8 +80,7 @@ struct Lane {
 };
 
 auto clear_lanes(const std::vector<Block>& blocks, float radius) -> std::vector<Lane> {
-  // The lanes are the gaps of the front-most line that run clear through
-  // every line behind it.
+
   float front_mean = -std::numeric_limits<float>::max();
   BattleBand front_band = BattleBand::None;
   for (BattleBand band :
@@ -194,7 +193,7 @@ auto elephant_lane_goal(Engine::Core::World& world,
     if (!state->lane_running) {
       return std::nullopt;
     }
-    // Through the lines: keep running out the back before turning.
+
     state->lane_running = false;
     state->lane_run_out_seconds = k_lane_run_out_seconds;
     return remember(*state, frame.to_world(here.x(), rear - k_lane_run_out_distance));
@@ -210,7 +209,7 @@ auto elephant_lane_goal(Engine::Core::World& world,
     state->lane_running = false;
     return std::nullopt;
   }
-  // Stay in the lane already chosen; otherwise take the nearest one.
+
   float const remembered_x =
       state->lane_running
           ? frame.to_local(QVector3D(state->lane_goal_x, 0.0F, state->lane_goal_z)).x()

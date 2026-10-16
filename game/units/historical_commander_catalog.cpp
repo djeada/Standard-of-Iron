@@ -1,8 +1,4 @@
-// Historical cameo commanders (issue #1522): the named consuls and Barcid
-// officers of the Second Punic War. They are fielded by missions, maps and
-// arena scenarios through their ids, borrow the body and signature move of a
-// playable commander, and carry their own look, aura numbers and a few
-// one-line barks. They are never playable: see CommanderDefinition::playable.
+
 
 #include <QtGlobal>
 
@@ -79,8 +75,7 @@ struct CameoSpec {
 auto make_cameo(const CameoSpec& spec) -> CommanderDefinition {
   CommanderDefinition definition;
   if (const auto* body = commander_definition(spec.body)) {
-    // Signature move and AI doctrine follow the borrowed body, so an owner
-    // fielding a cameo fights and plans exactly like the playable original.
+
     definition = *body;
   }
   definition.troop_type = spec.body;

@@ -418,8 +418,7 @@ struct PlannedGroup {
   Game::Systems::NationID nation{Game::Systems::NationID::RomanRepublic};
   int units{0};
   bool commander{false};
-  // Set for the historical cameo commanders (#1522), which spawn on a borrowed
-  // body and do not take the owner's commander slot.
+
   QString commander_id;
   bool ambush{false};
   bool hold{false};

@@ -16,7 +16,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from documentary import style  # noqa: E402
+from documentary import style
 
 W, H = 1920, 1080
 INK = (52, 34, 20)

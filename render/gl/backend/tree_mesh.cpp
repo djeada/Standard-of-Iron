@@ -63,7 +63,7 @@ public:
       triangle(start + i, start + k_sides + i, start + next);
       triangle(start + next, start + k_sides + i, start + k_sides + next);
     }
-    // Separate cap normals keep the exposed sawn tips and root underside flat.
+
     for (unsigned ring = 0; ring < 2; ++ring) {
       const auto cap = static_cast<unsigned>(mesh.vertices.size());
       const auto first = start + ring * k_sides;
@@ -82,8 +82,6 @@ public:
     }
   }
 
-  // Uneven, overlapping sprays give the crown a scalloped edge and open gaps
-  // between branches. No alpha cards or extra draw calls are needed.
   void
   crown(const QVector3D& center, const QVector3D& radii, float yaw, unsigned seed) {
     constexpr unsigned k_sides = 10;
@@ -150,8 +148,7 @@ public:
     const QVector3D up = QVector3D::crossProduct(across, along).normalized();
     const float length = 0.030F + noise(seed) * 0.018F;
     const auto start = static_cast<unsigned>(mesh.vertices.size());
-    // A closed, folded lanceolate leaf. Its silhouette and shadow are geometry,
-    // including at low quality; no alpha sorting or texture sampling is needed.
+
     const std::array<QVector3D, 6> offsets{along * length,
                                            across * length * 0.30F,
                                            -along * length,
@@ -181,8 +178,7 @@ auto build_olive_tree_mesh() -> TreeMesh {
   const QVector3D fork(0.032F, 0.31F, 0.026F);
   tree.stem(root, QVector3D(-0.018F, 0.15F, 0.012F), 0.15F, 0.10F, 11U);
   tree.stem(QVector3D(-0.018F, 0.15F, 0.012F), fork, 0.10F, 0.075F, 13U);
-  // The central crown joins the main limbs; smaller terminal sprays break its
-  // outline instead of hanging nine isolated, equally sized balls on sticks.
+
   tree.crown(
       QVector3D(0.0F, 0.70F, 0.025F), QVector3D(0.30F, 0.19F, 0.28F), 0.3F, 101U);
   for (unsigned branch = 0; branch < 6; ++branch) {

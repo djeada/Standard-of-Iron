@@ -74,9 +74,6 @@ class Times:
         return self.tl["marks"][key] + offset
 
 
-# ---------------------------------------------------------------- picture
-
-
 def find_clip(clips, shot):
     matches = sorted(clips.glob(f"**/[0-9][0-9]_{shot}.mp4"))
     if not matches:
@@ -123,7 +120,7 @@ def encode_segment(src, out, frames, offset=None, graphic=False, push=0.0, grade
             + common
         )
         return
-    # Captures run at twice the film rate: averaging each pair is a 180 degree shutter.
+
     rate = subprocess.run(
         [
             "ffprobe",
@@ -214,9 +211,6 @@ def build_picture(cutlist, clips, graphics, work):
         ]
     )
     return picture
-
-
-# ---------------------------------------------------------------- sound
 
 
 def load_audio(path, rate_factor=1.0, channels=2):
@@ -368,8 +362,7 @@ def build_mix(edit, timeline, lines, vo, work):
     cache = {}
 
     def asset(name, rate=1.0):
-        # Every asset is brought to the dialogue's level first, so an edit's dB
-        # values read as "this far under the voices" whatever the file's mastering.
+
         key = (name, rate)
         if key not in cache:
             data = load_audio(asset_path(name), rate)
@@ -425,8 +418,7 @@ def build_mix(edit, timeline, lines, vo, work):
     mix = voices + beds * (1.0 - 0.45 * duck) + music * (1.0 - 0.55 * duck) + effects
     raw = work / "mix_raw.wav"
     sf.write(raw, mix, RATE, subtype="PCM_24")
-    # One static gain to -16 LUFS plus a peak limiter: single-pass loudnorm is
-    # dynamic and would lift the quiet beds between lines up to dialogue level.
+
     probe = subprocess.run(
         ["ffmpeg", "-hide_banner", "-i", str(raw), "-af", "ebur128", "-f", "null", "-"],
         capture_output=True,
@@ -450,9 +442,6 @@ def build_mix(edit, timeline, lines, vo, work):
         ]
     )
     return out
-
-
-# ---------------------------------------------------------------- subtitles
 
 
 def chunks(text, limit=42):

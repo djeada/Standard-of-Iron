@@ -123,7 +123,6 @@ auto build_home_desc_impl(BuildingState state, int variant) -> BuildingArchetype
     }
   }
 
-  // The side walls end at +/-0.96; keep openings on the visible face.
   for (float const xw : {-0.968F, 0.968F}) {
     desc.add_box(QVector3D(xw, 0.58F, -0.30F),
                  QVector3D(0.015F, 0.20F, 0.16F),
@@ -242,8 +241,7 @@ auto build_home_desc_impl(BuildingState state, int variant) -> BuildingArchetype
   float const eave_y = cornice_y + 0.02F;
   if (variant == 2) {
     BuildingPartLabel const label(desc, "courtyard_roof");
-    // Two narrow residential wings and a rear wing leave the impluvium open
-    // to the sky. Their footprint and street-facing entrance stay aligned.
+
     for (float const side : {-1.0F, 1.0F}) {
       add_tiled_roof(desc,
                      QVector3D(side * 0.73F, eave_y, 0.0F),

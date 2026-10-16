@@ -39,8 +39,7 @@ constexpr float k_breath_vert_amp = 0.005F;
 
 constexpr float k_anchor_follow_rate = 24.0F;
 constexpr float k_anchor_max_lag = 0.30F;
-// The fight focus is a soldier inside a moving crowd; chasing it fast made the
-// look point lurch whenever the pressing soldier changed.
+
 constexpr float k_focus_point_follow = 4.5F;
 constexpr float k_focus_weight_follow = 6.0F;
 constexpr float k_occlusion_follow = 18.0F;
@@ -57,8 +56,7 @@ constexpr float k_aim_sway_damping = 0.72F;
 
 constexpr float k_hit_kick_decay = 9.0F;
 constexpr float k_hit_kick_dolly = 0.07F;
-// The dolly punch rises over a few frames instead of jumping the lens forward
-// in one; an instant 0.4 m hop on heavy hits read as camera shake.
+
 constexpr float k_hit_kick_rise = 30.0F;
 constexpr float k_hit_kick_fov = 2.6F;
 
@@ -516,8 +514,7 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
         std::sin(std::clamp(inputs.dodge_tilt_progress, 0.0F, 1.0F) * k_pi) * 0.12F;
     float const dot_right = inputs.dodge_direction.x() * flat_right.x() +
                             inputs.dodge_direction.z() * flat_right.z();
-    // Roll with the sideways part of the dodge only; a straight forward or
-    // backward roll used to tilt a full 7 degrees to whichever side noise picked.
+
     dodge_tilt_rad = tilt_curve * std::clamp(dot_right * 1.5F, -1.0F, 1.0F);
   }
 

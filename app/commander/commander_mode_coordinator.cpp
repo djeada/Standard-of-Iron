@@ -580,8 +580,7 @@ void CommanderModeCoordinator::clear_controlled_commander_state_impl(
         Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
     rpg_targets->recent_hit_timer = 0.0F;
   }
-  // Once nobody steers him, the commander is drawn from his own transform
-  // again; a leftover presentation sample would pin his body where control ended.
+
   world->remove<Engine::Core::CommanderPresentationSampleComponent>(
       controlled_commander_id);
   if (auto* rpg_action =

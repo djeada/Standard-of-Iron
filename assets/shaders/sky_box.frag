@@ -142,9 +142,7 @@ float sky_box_layer_distance(float upward, float altitude) {
 }
 
 float sky_box_altitude(vec3 position) {
-  // Intersections use spherical shells; density and lighting must use the same
-  // shells. A planar Y height truncates clouds before they reach the horizon.
-  // Rationalizing the subtraction also preserves precision at the base.
+
   vec3 from_center = position + vec3(0.0, k_box_planet_radius, 0.0);
   return (dot(position, position) + 2.0 * k_box_planet_radius * position.y) /
          (length(from_center) + k_box_planet_radius);

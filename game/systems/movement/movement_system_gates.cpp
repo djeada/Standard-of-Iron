@@ -109,9 +109,6 @@ void MovementSystem::Gates::step_melee_lock(Mover& mover,
       mover.facts, transform, mover.previous_x, mover.previous_z, mover.delta_time);
 }
 
-// A pressed troop of a yielding battle line (the crescent's centre) steps back
-// while it fights, and an enemy locked onto it presses after it, so the
-// fight moves back at the line's pace instead of breaking the lock.
 void MovementSystem::Gates::give_ground_in_melee(
     Mover& mover, const Engine::Core::AttackComponent* atk) {
   if (mover.delta_time <= 0.0F) {

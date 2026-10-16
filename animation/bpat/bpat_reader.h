@@ -33,8 +33,7 @@ struct ClipView {
 struct LocalBonePose {
   QQuaternion rotation{};
   QVector3D translation{};
-  // Bones may carry scale (the elephant rig is authored at a fraction of its
-  // world size); dropping it made blended poses shrink the whole creature.
+
   QVector3D scale{1.0F, 1.0F, 1.0F};
 
   [[nodiscard]] auto matrix() const -> QMatrix4x4 {

@@ -89,7 +89,7 @@ auto battlefield(QString id,
   s.label = std::move(label);
   s.description = std::move(description);
   s.duration_seconds = duration;
-  // Straight down on the field, high enough to hold both armies.
+
   s.camera = {175.0F, 78.0F, 0.0F};
   s.camera_focus = QVector3D(0.0F, 0.0F, 8.0F);
   s.ground_type = QStringLiteral("grass_dry");
@@ -108,11 +108,6 @@ auto battlefield(QString id,
   return s;
 }
 
-// Cannae, 216 BC. The consuls deepen their maniples and drive at the centre;
-// Hannibal's crescent of Gauls and Iberians bows out to meet them, gives
-// ground under the weight, and the Libyan wings that held back wheel in on the
-// Roman flanks while the cavalry, having beaten the Roman horse, closes the
-// rear.
 auto cannae_battle_orders() -> ArenaScenarioDefinition {
   auto s =
       battlefield(QStringLiteral("battle_order_cannae"),
@@ -156,7 +151,7 @@ auto cannae_battle_orders() -> ArenaScenarioDefinition {
             {0.0F, 0.0F, 72.0F},
             8.0F,
             180.0F),
-      // Allied contingents first: the owner's nation is the last group's.
+
       group(QStringLiteral("gallic_centre"),
             Troop::Swordsman,
             Nation::Gauls,
@@ -220,7 +215,7 @@ auto cannae_battle_orders() -> ArenaScenarioDefinition {
 
   auto crescent = form(0.3F, host, Intent::ConvexCrescent, {0.0F, 0.0F, -22.0F}, 0.0F);
   s.steps.push_back(std::move(crescent));
-  // The consuls narrowed the maniples' frontage and deepened them.
+
   auto deploy = form(0.3F, legion, Intent::TriplexAcies, {0.0F, 0.0F, 50.0F}, 180.0F);
   deploy.formation.options.depth_scale = 1.8F;
   s.steps.push_back(std::move(deploy));
@@ -264,9 +259,6 @@ auto cannae_battle_orders() -> ArenaScenarioDefinition {
   return s;
 }
 
-// Zama, 202 BC. Scipio stands his maniples one behind another so the lanes
-// run straight through the army; Hannibal's elephants charge, are funnelled
-// down the lanes and run out the back, and the legion then advances.
 auto zama_battle_orders() -> ArenaScenarioDefinition {
   auto s = battlefield(QStringLiteral("battle_order_zama"),
                        QStringLiteral("Battle Order: Zama"),

@@ -55,9 +55,7 @@ struct PlayerSetup {
   std::vector<UnitSetup> starting_units;
   std::vector<BuildingSetup> starting_buildings;
   Game::Systems::ResourceOverlay starting_resources;
-  // Ids of historical cameo commanders (game/units/historical_commander_catalog)
-  // the briefing names beside this force's commander. Briefing text only: they
-  // are fielded on the map through spawns, if at all.
+
   QStringList historical_commanders;
 };
 

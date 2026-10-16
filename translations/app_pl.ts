@@ -776,7 +776,7 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
     </message>
     <message>
         <source>216 BC: the consuls cross the Aufidus and mass Rome&apos;s greatest field army on the plain. Varro has the command and the allied horse; Paullus holds the river flank. Bow the Gallic and Iberian centre out in a crescent and let it yield, hold with the Africans, send Hasdrubal&apos;s horse along the river, then take the allied camp to the south, the consular town behind the line and the reserve camp across the river.</source>
-        <translation>216 p.n.e.: konsulowie przekraczają Aufidus i skupiają na równinie największą armię polową Rzymu. Warron ma dowództwo i jazdę sprzymierzeńców; Paulus trzyma skrzydło nad rzeką. Wygnij galijsko-iberyjskie centrum w półksiężyc i pozwól mu ustępować, trzymaj się Afrykanami, poślij jazdę Hazdrubala wzdłuż rzeki, a potem zdobądź obóz sprzymierzeńców na południu, miasto konsularne za linią i obóz odwodowy za rzeką.</translation>
+        <translation>216 p.n.e.: konsulowie przekraczają Aufidus i skupiają na równinie największą armię polową Rzymu. Warron ma dowództwo i jazdę sprzymierzeńców; Paulus trzyma skrzydło nad rzeką. Wygnij galijsko-iberyjskie centrum w półksiężyc i pozwól mu ustępować, utrzymaj linię Afrykanami, poślij jazdę Hazdrubala wzdłuż rzeki, a potem zdobądź obóz sprzymierzeńców na południu, miasto konsularne za linią i obóz odwodowy za rzeką.</translation>
     </message>
     <message>
         <source>216-211 BC: Capua has opened her gates to Hannibal, and Rome will not risk another Cannae. Fabius shadows the army down the Volturnus, the allied legions press from the south, and Marcellus brings rams and a siege tower against the walls from the east. Fortify the Punic quarter and break all three coordinated assaults - the quarter is not held until the last consular column lies dead in the streets.</source>
@@ -1801,7 +1801,7 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
     </message>
     <message>
         <source>I am short. {amount} {resource} would keep my archers in the field. If you can spare it, send it.</source>
-        <translation>Brak mi zapasów. {amount} {resource} utrzymałoby moich łuczników w polu. Jeśli możesz to zebrać, wyślij.</translation>
+        <translation>Brak mi zapasów. {amount} {resource} utrzymałoby moich łuczników w polu. Jeśli możesz to wygospodarować, wyślij.</translation>
     </message>
     <message>
         <source>I am under attack myself. My men are paid to guard my walls first, and I have read the contract.</source>
@@ -1925,7 +1925,7 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
     </message>
     <message>
         <source>My spears will march on it. They are paid for the season; they may as well earn it.</source>
-        <translation>Moje oszczepy na to ruszą. Są opłacone na cały sezon; niech więc na to zapracują.</translation>
+        <translation>Moje włócznie na to ruszą. Są opłacone na cały sezon; niech więc na to zapracują.</translation>
     </message>
     <message>
         <source>My stores of {resource} are empty. {amount} would keep my men paid and, more to the point, fighting.</source>
@@ -2029,7 +2029,7 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
     </message>
     <message>
         <source>Throw paid spears at a fortified camp? The Council would have my head. No.</source>
-        <translation>Rzucić opłacone oszczepy na ufortyfikowany obóz? Rada kazałaby mi ściąć głowę. Nie.</translation>
+        <translation>Rzucić opłacone włócznie na ufortyfikowany obóz? Rada kazałaby mi ściąć głowę. Nie.</translation>
     </message>
     <message>
         <source>Very well, it will be held. Rome defends her friends - eventually, and with paperwork.</source>
@@ -2204,7 +2204,7 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
     </message>
     <message>
         <source>Improves nearby offensive output and enables sharper counter-pushes.</source>
-        <translation>Zwiększa siłę ognia pobliskich oddziałów i umożliwia ostrzejsze kontrnatarcia.</translation>
+        <translation>Zwiększa siłę ataku pobliskich oddziałów i umożliwia ostrzejsze kontrnatarcia.</translation>
     </message>
     <message>
         <source>More vulnerable if isolated away from supporting infantry.</source>
@@ -4022,7 +4022,7 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
     </message>
     <message>
         <source>Split</source>
-        <translation>Podziel</translation>
+        <translation>Podział</translation>
     </message>
     <message>
         <source>Where archers and slingers stand. Skirmish sends them out ahead and pulls them back on contact.</source>
@@ -4315,23 +4315,23 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
     </message>
     <message>
         <source>Save slot &apos;%1&apos; does not contain a battlefield and was not loaded.</source>
-        <translation>Save slot &apos;%1&apos; does not contain a battlefield and was not loaded.</translation>
+        <translation>Slot zapisu „%1” nie zawiera pola bitwy i nie został wczytany.</translation>
     </message>
     <message>
         <source>&apos;%1&apos; could not be restored (%2). The battle that was running could not be kept.</source>
-        <translation>&apos;%1&apos; could not be restored (%2). The battle that was running could not be kept.</translation>
+        <translation>Nie udało się przywrócić „%1” (%2). Trwającej bitwy także nie udało się zachować.</translation>
     </message>
     <message>
         <source>&apos;%1&apos; was saved by a different version of Standard of Iron (snapshot %2, this build reads %3) and cannot be imported.</source>
-        <translation>&apos;%1&apos; was saved by a different version of Standard of Iron (snapshot %2, this build reads %3) and cannot be imported.</translation>
+        <translation>„%1” zapisano w innej wersji Standard of Iron (migawka %2, ta wersja czyta %3), więc nie można go zaimportować.</translation>
     </message>
     <message>
         <source>&apos;%1&apos; could not be restored (%2). The battle that was running was left alone.</source>
-        <translation>&apos;%1&apos; could not be restored (%2). The battle that was running was left alone.</translation>
+        <translation>Nie udało się przywrócić „%1” (%2). Trwająca bitwa pozostała nietknięta.</translation>
     </message>
     <message>
         <source>&apos;%1&apos; restored no units at all, so there is no battle to return to. The save is unusable and the battle that was running was left alone.</source>
-        <translation>&apos;%1&apos; restored no units at all, so there is no battle to return to. The save is unusable and the battle that was running was left alone.</translation>
+        <translation>„%1” nie przywrócił ani jednej jednostki, więc nie ma bitwy, do której można wrócić. Zapis jest bezużyteczny, a trwająca bitwa pozostała nietknięta.</translation>
     </message>
 </context>
 <context>
@@ -4386,7 +4386,7 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
     </message>
     <message>
         <source>A save is already in progress.</source>
-        <translation>A save is already in progress.</translation>
+        <translation>Zapis już trwa.</translation>
     </message>
     <message>
         <source>your ally</source>
@@ -5070,7 +5070,7 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
     </message>
     <message>
         <source>Scrap</source>
-        <translation>Złom</translation>
+        <translation>Rozbierz</translation>
     </message>
     <message>
         <source>Send builders to take one of your own buildings apart and get part of its cost back.</source>
@@ -5933,7 +5933,7 @@ Każdy rekrut kosztuje ludzi swojego oddziału; rezerwa w koszarach podnosi limi
     </message>
     <message>
         <source>Left-click a barracks and pick a soldier; healers take their vows at a temple instead. Recruits queue up to five deep and march out to the rally flag. Each costs reserve from the building&apos;s own pool as well as materials.</source>
-        <translation>Kliknij koszary lewym przyciskiem i wybierz żołnierza; uzdrowiciele składają śluby w świątyni. Rekruci ustawiają się w kolejce po pięciu i wychodzą do sztandaru zbiórki. Każdy kosztuje rezerwę z własnej puli budowli oraz materiały.</translation>
+        <translation>Kliknij koszary lewym przyciskiem i wybierz żołnierza; uzdrowiciele składają śluby w świątyni. Rekruci ustawiają się w kolejce (do pięciu naraz) i wychodzą do sztandaru zbiórki. Każdy kosztuje rezerwę z własnej puli budowli oraz materiały.</translation>
     </message>
     <message>
         <source>Reserve</source>
@@ -6483,75 +6483,75 @@ Każdy rekrut kosztuje ludzi swojego oddziału; rezerwa w koszarach podnosi limi
     </message>
     <message>
         <source>Saves are unavailable: %1</source>
-        <translation>Saves are unavailable: %1</translation>
+        <translation>Zapisy są niedostępne: %1</translation>
     </message>
     <message>
         <source>The save database could not be read and a new one was started. Your previous file was kept at %1.</source>
-        <translation>The save database could not be read and a new one was started. Your previous file was kept at %1.</translation>
+        <translation>Nie udało się odczytać bazy danych zapisów, więc utworzono nową. Poprzedni plik zachowano w %1.</translation>
     </message>
     <message>
         <source>No saved games yet. Save a battle from the menu, or press the quicksave key while you play.</source>
-        <translation>No saved games yet. Save a battle from the menu, or press the quicksave key while you play.</translation>
+        <translation>Brak zapisanych gier. Zapisz bitwę z menu albo naciśnij klawisz szybkiego zapisu podczas gry.</translation>
     </message>
     <message>
         <source>Untitled save</source>
-        <translation>Untitled save</translation>
+        <translation>Zapis bez nazwy</translation>
     </message>
     <message>
         <source>Unknown map</source>
-        <translation>Unknown map</translation>
+        <translation>Nieznana mapa</translation>
     </message>
     <message>
         <source>Saved by a different version of the game. It is kept on disk, but this build cannot open it.</source>
-        <translation>Saved by a different version of the game. It is kept on disk, but this build cannot open it.</translation>
+        <translation>Zapisano w innej wersji gry. Plik zostaje na dysku, ale ta wersja nie może go otworzyć.</translation>
     </message>
     <message>
         <source>Export failed: %1</source>
-        <translation>Export failed: %1</translation>
+        <translation>Eksport nie powiódł się: %1</translation>
     </message>
     <message>
         <source>This save will load</source>
-        <translation>This save will load</translation>
+        <translation>Ten zapis da się wczytać</translation>
     </message>
     <message>
         <source>This save will not load</source>
-        <translation>This save will not load</translation>
+        <translation>Tego zapisu nie da się wczytać</translation>
     </message>
     <message>
         <source>&quot;%1&quot; decompressed cleanly and contains a complete battlefield.</source>
-        <translation>&quot;%1&quot; decompressed cleanly and contains a complete battlefield.</translation>
+        <translation>„%1” rozpakowano bez błędów; zawiera kompletne pole bitwy.</translation>
     </message>
     <message>
         <source>This save was written by a different version of the game.</source>
-        <translation>This save was written by a different version of the game.</translation>
+        <translation>Ten zapis utworzyła inna wersja gry.</translation>
     </message>
     <message>
         <source>Delete this save?</source>
-        <translation>Delete this save?</translation>
+        <translation>Usunąć ten zapis?</translation>
     </message>
     <message>
         <source>&quot;%1&quot; will be deleted. This cannot be undone.</source>
-        <translation>&quot;%1&quot; will be deleted. This cannot be undone.</translation>
+        <translation>„%1” zostanie usunięty. Tego nie można cofnąć.</translation>
     </message>
     <message>
         <source>Keep it</source>
-        <translation>Keep it</translation>
+        <translation>Zachowaj</translation>
     </message>
     <message>
         <source>Deleted &quot;%1&quot;</source>
-        <translation>Deleted &quot;%1&quot;</translation>
+        <translation>Usunięto „%1”</translation>
     </message>
     <message>
         <source>Close</source>
-        <translation>Close</translation>
+        <translation>Zamknij</translation>
     </message>
     <message>
         <source>Import save</source>
-        <translation>Import save</translation>
+        <translation>Importuj zapis</translation>
     </message>
     <message>
         <source>Import failed: %1</source>
-        <translation>Import failed: %1</translation>
+        <translation>Import nie powiódł się: %1</translation>
     </message>
 </context>
 <context>
@@ -7199,19 +7199,19 @@ Każdy rekrut kosztuje ludzi swojego oddziału; rezerwa w koszarach podnosi limi
     </message>
     <message>
         <source>There is no quicksave to load.</source>
-        <translation>There is no quicksave to load.</translation>
+        <translation>Brak szybkiego zapisu do wczytania.</translation>
     </message>
     <message>
         <source>Load the quicksave?</source>
-        <translation>Load the quicksave?</translation>
+        <translation>Wczytać szybki zapis?</translation>
     </message>
     <message>
         <source>The battle in progress will be replaced by the quicksave. Anything since then is lost.</source>
-        <translation>The battle in progress will be replaced by the quicksave. Anything since then is lost.</translation>
+        <translation>Trwająca bitwa zostanie zastąpiona szybkim zapisem. Wszystko, co wydarzyło się od tamtej pory, przepadnie.</translation>
     </message>
     <message>
         <source>Load the quicksave</source>
-        <translation>Load the quicksave</translation>
+        <translation>Wczytaj szybki zapis</translation>
     </message>
 </context>
 <context>
@@ -7238,7 +7238,7 @@ Każdy rekrut kosztuje ludzi swojego oddziału; rezerwa w koszarach podnosi limi
     </message>
     <message>
         <source>Detail</source>
-        <translation>Szczegół</translation>
+        <translation>Zadanie</translation>
     </message>
     <message>
         <source>Campaign</source>
@@ -7402,15 +7402,15 @@ Każdy rekrut kosztuje ludzi swojego oddziału; rezerwa w koszarach podnosi limi
     </message>
     <message>
         <source>Continue</source>
-        <translation>Continue</translation>
+        <translation>Dalej</translation>
     </message>
     <message>
         <source>Return to the most recent save</source>
-        <translation>Return to the most recent save</translation>
+        <translation>Wróć do najnowszego zapisu</translation>
     </message>
     <message>
         <source>Resume</source>
-        <translation>Resume</translation>
+        <translation>Wznów</translation>
     </message>
 </context>
 <context>
@@ -7814,7 +7814,7 @@ by zobaczyć podgląd</translation>
     </message>
     <message>
         <source>Deep wet pine forest for two. A crater wall rings the shrine bowl at the centre and no road enters it - the gates cut through its rim are the only way in, so the middle belongs to whoever will fight for it on foot. Everything else is one ring road and the trees.</source>
-        <translation>Głęboki, wilgotny bór sosnowy dla dwóch. Ściana krateru otacza kotlinę ze świątynią pośrodku i nie wchodzi w nią żadna droga — jedyne wejście to bramy przecięte w jej krawędzi, więc środek należy do tego, kto stoczy o niego walkę pieszo. Cała reszta to jedna droga okrężna i drzewa.</translation>
+        <translation>Głęboki, wilgotny bór sosnowy dla dwóch. Ściana krateru otacza kotlinę z kapliczką pośrodku i nie wchodzi w nią żadna droga — jedyne wejście to bramy przecięte w jej krawędzi, więc środek należy do tego, kto stoczy o niego walkę pieszo. Cała reszta to jedna droga okrężna i drzewa.</translation>
     </message>
     <message>
         <source>Four camps in a snowed-in basin. Two melt races cross at its centre and cut the ground into quarters, so every neighbour is a bridge away: an inner crossing in the open, or a longer one out under the rim ranges. Four corner tarns and four barrow cairns fill the rest.</source>
@@ -8217,7 +8217,7 @@ by zobaczyć podgląd</translation>
     </message>
     <message>
         <source>Open Order</source>
-        <translation>Otwórz rozkaz</translation>
+        <translation>Otwarty rozkaz</translation>
     </message>
     <message>
         <source>Difficulty:</source>
@@ -8751,7 +8751,7 @@ by zobaczyć podgląd</translation>
     </message>
     <message>
         <source>The shrines you have walked past all campaign were never scenery. Zama reads back over every map behind it - and the Sepulcher has no commander to kill, so the one rule that has served you since Trasimene is the one rule that will not work here.</source>
-        <translation>Świątynie, obok których przechodziłeś przez całą kampanię, nigdy nie były dekoracją. Zama czyta wstecz każdą mapę za sobą — a Grobowiec nie ma dowódcy do zabicia, więc jedyna zasada, która służyła ci od Trazymenu, jest tą jedną, która tu nie zadziała.</translation>
+        <translation>Kapliczki, obok których przechodziłeś przez całą kampanię, nigdy nie były dekoracją. Zama czyta wstecz każdą mapę za sobą — a Grobowiec nie ma dowódcy do zabicia, więc jedyna zasada, która służyła ci od Trazymenu, jest tą jedną, która tu nie zadziała.</translation>
     </message>
     <message>
         <source>The spur splits them for us, which is the only kindness this ground offers. Cart gate west, goat path east, and they only meet where we are standing. You cannot hold both mouths. Pick one, hold it, and move when the horns tell you to.</source>
@@ -8843,7 +8843,7 @@ by zobaczyć podgląd</translation>
     </message>
     <message>
         <source>Fill the levy out of the Pinewater cut: eight hundred of timber and two hundred and ten of stone, cut and carried home before the column comes back through at dusk.</source>
-        <translation>Wypełnij daninę z wyrębu w Sosnowej Wodzie: osiemset drewna i dwieście dziesięć kamienia, ścięte i przywiezione do domu, nim kolumna wróci o zmierzchu.</translation>
+        <translation>Wypełnij pobór z wyrębu w Sosnowej Wodzie: osiemset drewna i dwieście dziesięć kamienia, ścięte i przywiezione do domu, nim kolumna wróci o zmierzchu.</translation>
     </message>
     <message>
         <source>First column on the cart gate. Spears up. Let them come to the stakes; the stakes do not get tired.</source>
@@ -8863,7 +8863,7 @@ by zobaczyć podgląd</translation>
     </message>
     <message>
         <source>Leave the axes. Leave the carts. A detail that cannot fill its own levy before the column comes through does not get to carry anything.</source>
-        <translation>Zostaw siekiery. Zostaw wozy. Drużyna, która nie wypełni swojej daniny, nim przejdzie kolumna, nie zabiera nic.</translation>
+        <translation>Zostaw siekiery. Zostaw wozy. Drużyna, która nie wypełni swojego poboru, nim przejdzie kolumna, nie zabiera nic.</translation>
     </message>
     <message>
         <source>Legionaries at your works. Not Varro&apos;s legions; mine. Men who were at Cannae and remember exactly how it felt.</source>
@@ -8871,7 +8871,7 @@ by zobaczyć podgląd</translation>
     </message>
     <message>
         <source>Light is going. Five minutes of road left in the day, and whatever is on the carts when the column reaches us is what we levied. Bring them home.</source>
-        <translation>Światło gaśnie. Zostało pięć minut drogi w tym dniu, a to, co będzie na wozach, gdy kolumna nas dogoni, jest naszą daniną. Przywieź ich do domu.</translation>
+        <translation>Światło gaśnie. Zostało pięć minut drogi w tym dniu, a to, co będzie na wozach, gdy kolumna nas dogoni, to cały nasz pobór. Przywieź ich do domu.</translation>
     </message>
     <message>
         <source>My forward town, taken by horsemen. Horsemen. My father would have said something cutting; I find I am simply cold.</source>
@@ -8907,7 +8907,7 @@ by zobaczyć podgląd</translation>
     </message>
     <message>
         <source>The column came back through and the carts were still empty. A levy that misses the road is a levy nobody signed for.</source>
-        <translation>Kolumna przeszła z powrotem, a wozy wciąż były puste. Danina, która nie zdąży na drogę, to danina, której nikt nie podpisał.</translation>
+        <translation>Kolumna przeszła z powrotem, a wozy wciąż były puste. Pobór, który nie zdąży na drogę, to pobór, którego nikt nie podpisał.</translation>
     </message>
     <message>
         <source>The high pass is sending everything it has. They have been paid in Roman silver to hold that road, and mountain men earn their silver.</source>
@@ -8923,7 +8923,7 @@ by zobaczyć podgląd</translation>
     </message>
     <message>
         <source>The last of the northern columns is moving. I have spent a year making you hold this quarter. Hold it one more hour and I will have spent it well.</source>
-        <translation>Ostatnia z północnych kolumn rusza. Przez rok kazałem ci trzymać tę ćwiartkę. Utrzymaj ją jeszcze godzinę, a rok będzie dobrze wydany.</translation>
+        <translation>Ostatnia z północnych kolumn rusza. Przez rok kazałem ci trzymać tę dzielnicę. Utrzymaj ją jeszcze godzinę, a rok będzie dobrze wydany.</translation>
     </message>
     <message>
         <source>The last pass camp. So you are through - what is left of you. Italy is below. Italy has been waiting, and Italy is not friendly.</source>
@@ -9119,7 +9119,7 @@ by zobaczyć podgląd</translation>
     </message>
     <message>
         <source>You cannot cover every gate. Watch the telegraph and move on interior lines.</source>
-        <translation>Nie zakryjesz każdej bramy. Pilnuj zapowiedzi ataku i przerzucaj siły po liniach wewnętrznych.</translation>
+        <translation>Nie obsadzisz każdej bramy. Pilnuj zapowiedzi ataku i przerzucaj siły po liniach wewnętrznych.</translation>
     </message>
     <message>
         <source>Both risings of the dead at the south-western ruins must also fall before the war ends.</source>
@@ -9727,7 +9727,7 @@ by zobaczyć podgląd</translation>
     </message>
     <message>
         <source>Victumulae is ours, and its granary with it. The army eats this winter. Let the Gauls see what happens to a town that shuts its gate on Carthage.</source>
-        <translation>Victumulae jest nasze, a z nim jego spichlerz. Armia ma co jeść tej zimy. Niech Gallowie zobaczą, co spotyka miasto, które zamyka bramę przed Kartaginą.</translation>
+        <translation>Victumulae jest nasze, a z nim jego spichlerz. Armia ma co jeść tej zimy. Niech Galowie zobaczą, co spotyka miasto, które zamyka bramę przed Kartaginą.</translation>
     </message>
     <message>
         <source>Victumulae stands on a double hill: a lower ward ringed by a curtain and four towers, and a walled citadel on the upper crown. Both gates face the camp road.</source>
@@ -10027,7 +10027,7 @@ by zobaczyć podgląd</translation>
     </message>
     <message>
         <source>The column is on the lake road in order of march, and it does not stop for mist. Close up and push on. Hannibal is ahead of us, not above us.</source>
-        <translation>Kolumna jest na drodze nad jeziorem w szyku marszowym i nie staje z powodu mgły. Zwrzeć szyk i naprzód. Hannibal jest przed nami, nie nad nami.</translation>
+        <translation>Kolumna jest na drodze nad jeziorem w szyku marszowym i nie staje z powodu mgły. Zewrzeć szyk i naprzód. Hannibal jest przed nami, nie nad nami.</translation>
     </message>
     <message>
         <source>The consul is down, and a boy has him across a saddle and is cutting a road out for him. Let them go. The screen has lost its head; take the town.</source>
@@ -10230,7 +10230,7 @@ by zobaczyć podgląd</translation>
     </message>
     <message>
         <source>OPEN ORDER</source>
-        <translation>OTWÓRZ ROZKAZ</translation>
+        <translation>ROZKAZ OTWARTY</translation>
     </message>
     <message>
         <source>COMMANDER&apos;S INTENT</source>
@@ -10530,7 +10530,7 @@ by zobaczyć podgląd</translation>
     </message>
     <message>
         <source>Army at the map&apos;s limit: %1 / %2 men in the field.</source>
-        <translation>Armia u granicy mapy: %1 / %2 ludzi w polu.</translation>
+        <translation>Armia osiągnęła limit mapy: %1 / %2 ludzi w polu.</translation>
     </message>
     <message>
         <source>The training queue is full.</source>
@@ -10947,7 +10947,7 @@ Czas budowy: %3 s</translation>
     </message>
     <message>
         <source>%1 · %2s</source>
-        <translation>%1 · %2s</translation>
+        <translation>%1 · %2 s</translation>
     </message>
     <message>
         <source>Ram</source>
@@ -11902,7 +11902,7 @@ Prawy przycisk anuluje.</translation>
     </message>
     <message>
         <source>Loaded, but &apos;%1&apos; could not be read, so wildlife, undead zones and cursed veins were not restored.</source>
-        <translation>Loaded, but &apos;%1&apos; could not be read, so wildlife, undead zones and cursed veins were not restored.</translation>
+        <translation>Wczytano, ale nie udało się odczytać „%1”, więc dzikie zwierzęta, strefy nieumarłych i przeklęte żyły nie zostały przywrócone.</translation>
     </message>
 </context>
 <context>
@@ -12141,19 +12141,19 @@ Prawy przycisk anuluje.</translation>
     </message>
     <message>
         <source>Name the save first.</source>
-        <translation>Name the save first.</translation>
+        <translation>Najpierw nazwij zapis.</translation>
     </message>
     <message>
         <source>That name is too long. Keep it under %1 characters.</source>
-        <translation>That name is too long. Keep it under %1 characters.</translation>
+        <translation>Ta nazwa jest za długa. Zmieść się w %1 znakach.</translation>
     </message>
     <message>
         <source>That name is reserved for quicksaves and autosaves, which would overwrite it without asking. Pick another one.</source>
-        <translation>That name is reserved for quicksaves and autosaves, which would overwrite it without asking. Pick another one.</translation>
+        <translation>Ta nazwa jest zarezerwowana dla szybkich zapisów i autozapisów, które nadpisałyby ją bez pytania. Wybierz inną.</translation>
     </message>
     <message>
         <source>Names cannot contain slashes or control characters.</source>
-        <translation>Names cannot contain slashes or control characters.</translation>
+        <translation>Nazwy nie mogą zawierać ukośników ani znaków sterujących.</translation>
     </message>
 </context>
 <context>
@@ -12176,79 +12176,79 @@ Prawy przycisk anuluje.</translation>
     </message>
     <message>
         <source>Saves are unavailable: %1</source>
-        <translation>Saves are unavailable: %1</translation>
+        <translation>Zapisy są niedostępne: %1</translation>
     </message>
     <message>
         <source>Save name</source>
-        <translation>Save name</translation>
+        <translation>Nazwa zapisu</translation>
     </message>
     <message>
         <source>Name this save...</source>
-        <translation>Name this save...</translation>
+        <translation>Nazwij ten zapis...</translation>
     </message>
     <message>
         <source>A save called &quot;%1&quot; already exists. Saving replaces it.</source>
-        <translation>A save called &quot;%1&quot; already exists. Saving replaces it.</translation>
+        <translation>Zapis o nazwie „%1” już istnieje. Zapisanie go zastąpi.</translation>
     </message>
     <message>
         <source>Press Enter to save.</source>
-        <translation>Press Enter to save.</translation>
+        <translation>Naciśnij Enter, aby zapisać.</translation>
     </message>
     <message>
         <source>Existing saves</source>
-        <translation>Existing saves</translation>
-    </message>
-    <message>
-        <source>%1 save</source>
-        <translation>%1 save</translation>
-    </message>
-    <message>
-        <source>%1 saves</source>
-        <translation>%1 saves</translation>
+        <translation>Istniejące zapisy</translation>
     </message>
     <message>
         <source>No saves yet. The name above will create the first one.</source>
-        <translation>No saves yet. The name above will create the first one.</translation>
+        <translation>Brak zapisów. Nazwa powyżej utworzy pierwszy.</translation>
     </message>
     <message>
         <source>Untitled save</source>
-        <translation>Untitled save</translation>
+        <translation>Zapis bez nazwy</translation>
     </message>
     <message>
         <source>Unknown map</source>
-        <translation>Unknown map</translation>
+        <translation>Nieznana mapa</translation>
     </message>
     <message>
         <source>Saved by a different version of the game. It is kept, but this build cannot open it.</source>
-        <translation>Saved by a different version of the game. It is kept, but this build cannot open it.</translation>
+        <translation>Zapisano w innej wersji gry. Zapis zostaje zachowany, ale ta wersja nie może go otworzyć.</translation>
     </message>
     <message>
         <source>Delete</source>
-        <translation>Delete</translation>
+        <translation>Usuń</translation>
     </message>
     <message>
         <source>Replace this save?</source>
-        <translation>Replace this save?</translation>
+        <translation>Zastąpić ten zapis?</translation>
     </message>
     <message>
         <source>&quot;%1&quot; will be replaced by the current battle. The version stored now cannot be recovered.</source>
-        <translation>&quot;%1&quot; will be replaced by the current battle. The version stored now cannot be recovered.</translation>
+        <translation>„%1” zostanie zastąpiony bieżącą bitwą. Obecnie zapisanej wersji nie da się odzyskać.</translation>
     </message>
     <message>
         <source>Replace</source>
-        <translation>Replace</translation>
+        <translation>Zastąp</translation>
     </message>
     <message>
         <source>Keep it</source>
-        <translation>Keep it</translation>
+        <translation>Zachowaj</translation>
     </message>
     <message>
         <source>Delete this save?</source>
-        <translation>Delete this save?</translation>
+        <translation>Usunąć ten zapis?</translation>
     </message>
     <message>
         <source>&quot;%1&quot; will be deleted. This cannot be undone.</source>
-        <translation>&quot;%1&quot; will be deleted. This cannot be undone.</translation>
+        <translation>„%1” zostanie usunięty. Tego nie można cofnąć.</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n save(s)</source>
+        <translation>
+            <numerusform>%n zapis</numerusform>
+            <numerusform>%n zapisy</numerusform>
+            <numerusform>%n zapisów</numerusform>
+        </translation>
     </message>
 </context>
 <context>
@@ -12267,58 +12267,58 @@ Prawy przycisk anuluje.</translation>
     </message>
     <message>
         <source>Saved &quot;%1&quot;</source>
-        <translation>Saved &quot;%1&quot;</translation>
+        <translation>Zapisano „%1”</translation>
     </message>
     <message>
         <source>Saving &quot;%1&quot; failed.</source>
-        <translation>Saving &quot;%1&quot; failed.</translation>
+        <translation>Nie udało się zapisać „%1”.</translation>
     </message>
     <message>
         <source>Saved</source>
-        <translation>Saved</translation>
+        <translation>Zapisano</translation>
     </message>
 </context>
 <context>
     <name>SaveSlotRow</name>
     <message>
         <source>%1h %2m</source>
-        <translation>%1h %2m</translation>
+        <translation>%1 h %2 min</translation>
     </message>
     <message>
         <source>%1m</source>
-        <translation>%1m</translation>
+        <translation>%1 min</translation>
     </message>
     <message>
         <source>under a minute</source>
-        <translation>under a minute</translation>
+        <translation>poniżej minuty</translation>
     </message>
     <message>
         <source>Unknown</source>
-        <translation>Unknown</translation>
+        <translation>Nieznane</translation>
     </message>
     <message>
         <source>Campaign</source>
-        <translation>Campaign</translation>
+        <translation>Kampania</translation>
     </message>
     <message>
         <source>Mission</source>
-        <translation>Mission</translation>
+        <translation>Misja</translation>
     </message>
     <message>
         <source>Skirmish</source>
-        <translation>Skirmish</translation>
+        <translation>Potyczka</translation>
     </message>
     <message>
         <source>Autosave</source>
-        <translation>Autosave</translation>
+        <translation>Autozapis</translation>
     </message>
     <message>
         <source>Quicksave</source>
-        <translation>Quicksave</translation>
+        <translation>Szybki zapis</translation>
     </message>
     <message>
         <source>No preview</source>
-        <translation>No preview</translation>
+        <translation>Brak podglądu</translation>
     </message>
     <message>
         <source>%1 · %2 · %3</source>
@@ -12330,11 +12330,11 @@ Prawy przycisk anuluje.</translation>
     </message>
     <message>
         <source>Saved %1</source>
-        <translation>Saved %1</translation>
+        <translation>Zapisano: %1</translation>
     </message>
     <message>
         <source>Played %1</source>
-        <translation>Played %1</translation>
+        <translation>Grano: %1</translation>
     </message>
 </context>
 <context>
@@ -12345,7 +12345,7 @@ Prawy przycisk anuluje.</translation>
     </message>
     <message>
         <source>Save storage unavailable</source>
-        <translation>Save storage unavailable</translation>
+        <translation>Magazyn zapisów niedostępny</translation>
     </message>
 </context>
 <context>
@@ -12472,67 +12472,67 @@ Prawy przycisk anuluje.</translation>
     </message>
     <message>
         <source>The save database could not be opened.</source>
-        <translation>The save database could not be opened.</translation>
+        <translation>Nie udało się otworzyć bazy danych zapisów.</translation>
     </message>
     <message>
         <source>The save database is unreadable and could not be moved aside: %1</source>
-        <translation>The save database is unreadable and could not be moved aside: %1</translation>
+        <translation>Baza danych zapisów jest nieczytelna i nie dało się jej odsunąć na bok: %1</translation>
     </message>
     <message>
         <source>integrity check failed: %1</source>
-        <translation>integrity check failed: %1</translation>
+        <translation>kontrola integralności nie powiodła się: %1</translation>
     </message>
     <message>
         <source>it was written by a newer version of the game (schema %1)</source>
-        <translation>it was written by a newer version of the game (schema %1)</translation>
+        <translation>utworzyła ją nowsza wersja gry (schemat %1)</translation>
     </message>
     <message>
         <source>it is not a Standard of Iron save database</source>
-        <translation>it is not a Standard of Iron save database</translation>
+        <translation>to nie jest baza danych zapisów Standard of Iron</translation>
     </message>
     <message>
         <source>it could not be upgraded from schema %1: %2</source>
-        <translation>it could not be upgraded from schema %1: %2</translation>
+        <translation>nie udało się jej zaktualizować ze schematu %1: %2</translation>
     </message>
     <message>
         <source>its tables do not match schema %1</source>
-        <translation>its tables do not match schema %1</translation>
+        <translation>jej tabele nie pasują do schematu %1</translation>
     </message>
     <message>
         <source>Failed to add the snapshot version column</source>
-        <translation>Failed to add the snapshot version column</translation>
+        <translation>Nie udało się dodać kolumny wersji migawki</translation>
     </message>
     <message>
         <source>Refusing to write a save with an empty slot name</source>
-        <translation>Refusing to write a save with an empty slot name</translation>
+        <translation>Odmowa zapisu: pusta nazwa slotu</translation>
     </message>
     <message>
         <source>&apos;%1&apos; holds a save that was not written by this rotation, so it will not be overwritten automatically. Delete it from the Load menu to free the slot.</source>
-        <translation>&apos;%1&apos; holds a save that was not written by this rotation, so it will not be overwritten automatically. Delete it from the Load menu to free the slot.</translation>
+        <translation>„%1” zawiera zapis, którego nie utworzyła ta rotacja, więc nie zostanie on automatycznie nadpisany. Usuń go w menu Wczytaj, aby zwolnić slot.</translation>
     </message>
     <message>
         <source>The save was written but could not be read back</source>
-        <translation>The save was written but could not be read back</translation>
+        <translation>Zapis został utworzony, ale nie dało się go odczytać</translation>
     </message>
     <message>
         <source>The save did not survive being written to disk. Nothing was lost in the match; try saving again.</source>
-        <translation>The save did not survive being written to disk. Nothing was lost in the match; try saving again.</translation>
+        <translation>Zapis nie przetrwał zapisu na dysk. W rozgrywce nic nie przepadło; spróbuj zapisać ponownie.</translation>
     </message>
     <message>
         <source>The save was written with the wrong header; try again.</source>
-        <translation>The save was written with the wrong header; try again.</translation>
+        <translation>Zapis ma nieprawidłowy nagłówek; spróbuj ponownie.</translation>
     </message>
     <message>
         <source>&apos;%1&apos; was saved by a different version of Standard of Iron and cannot be loaded by this one. It has been left alone.</source>
-        <translation>&apos;%1&apos; was saved by a different version of Standard of Iron and cannot be loaded by this one. It has been left alone.</translation>
+        <translation>„%1” zapisano w innej wersji Standard of Iron i ta wersja nie może go wczytać. Zapis pozostał nietknięty.</translation>
     </message>
     <message>
         <source>&apos;%1&apos; does not contain a readable world: %2</source>
-        <translation>&apos;%1&apos; does not contain a readable world: %2</translation>
+        <translation>„%1” nie zawiera czytelnego świata: %2</translation>
     </message>
     <message>
         <source>&apos;%1&apos; is missing the units it should contain</source>
-        <translation>&apos;%1&apos; is missing the units it should contain</translation>
+        <translation>W „%1” brakuje jednostek, które powinien zawierać</translation>
     </message>
 </context>
 <context>
@@ -13135,7 +13135,7 @@ Prawy przycisk anuluje.</translation>
     </message>
     <message>
         <source>Soldiers can be told how to behave, and the three orders are not the same. Guard: click a spot; they meet anything that comes near it, then walk back to it. Hold: they never take a step, but they reach further, hit harder and brace against a charge - archers and spearmen only. Patrol: click two waypoints and they march the beat between them, fighting whatever crosses it. Hover any of the three to read the full rules, then give one of them to your soldiers.</source>
-        <translation>Żołnierzom można powiedzieć, jak mają się zachowywać, a te trzy rozkazy nie są tym samym. Strzeż: kliknij punkt; wychodzą naprzeciw temu, co się zbliży, i wracają. Trzymaj: nie robią ani kroku, ale sięgają dalej, biją mocniej i podpierają się przed szarżą — tylko łucznicy i włócznicy. Patroluj: kliknij dwa punkty, a będą chodzić między nimi, bijąc wszystko, co przetnie trasę. Najedź na dowolny z trzech, by przeczytać pełne zasady, a potem wydaj jeden ze swoim żołnierzom.</translation>
+        <translation>Żołnierzom można powiedzieć, jak mają się zachowywać, a te trzy rozkazy nie są tym samym. Strzeż: kliknij punkt; wychodzą naprzeciw temu, co się zbliży, i wracają. Trzymaj: nie robią ani kroku, ale sięgają dalej, biją mocniej i podpierają się przed szarżą — tylko łucznicy i włócznicy. Patroluj: kliknij dwa punkty, a będą chodzić między nimi, bijąc wszystko, co przetnie trasę. Najedź na dowolny z trzech, by przeczytać pełne zasady, a potem wydaj jeden z nich swoim żołnierzom.</translation>
     </message>
     <message>
         <source>Your commander carries the standard. Troops near him fight with higher morale, and while he is selected two commands appear: Aura empowers every soldier in a ring around him for a stretch and then recharges - the button prints the radius, how long it lasts and how long until it returns - and Rally plants a flag that the army marches to. If he dies, your lines break and the mission is lost - keep him behind the spears. Trigger the Aura now.</source>
@@ -13293,11 +13293,11 @@ Prawy przycisk anuluje.</translation>
     </message>
     <message>
         <source>The shrine answers to you now. Its dead fall still.</source>
-        <translation>Świątynia słucha teraz ciebie. Jej umarli padają nieruchomo.</translation>
+        <translation>Kapliczka słucha teraz ciebie. Jej umarli padają nieruchomo.</translation>
     </message>
     <message>
         <source>The shrine is broken. Every risen guardian crumbles.</source>
-        <translation>Świątynia jest złamana. Każdy powstały strażnik rozsypuje się w proch.</translation>
+        <translation>Kapliczka jest zniszczona. Każdy powstały strażnik rozsypuje się w proch.</translation>
     </message>
     <message>
         <source>The barrow gives up its hoard: %1.</source>
@@ -13539,7 +13539,7 @@ Prawy przycisk anuluje.</translation>
     </message>
     <message>
         <source>Grave Priest</source>
-        <translation>Grobowy kapłan</translation>
+        <translation>Kapłan grobowy</translation>
     </message>
     <message>
         <source>Catapult</source>
@@ -14019,7 +14019,7 @@ Prawy przycisk anuluje.</translation>
     </message>
     <message>
         <source>Slow, blind to what is beside it, and helpless once swordsmen reach the crew.</source>
-        <translation>Powolny, ślepy na to, co dzieje się obok, i bezradny, gdy szermierze dopadną załogę.</translation>
+        <translation>Powolny, ślepy na to, co dzieje się obok, i bezradny, gdy miecznicy dopadną załogę.</translation>
     </message>
     <message>
         <source>The ram&apos;s crew worked under a roof of green hides, deaf to everything but the beat of the beam on the gate.</source>
@@ -14047,7 +14047,7 @@ Prawy przycisk anuluje.</translation>
     </message>
     <message>
         <source>Gallic nobles fought on horseback with long swords. Under Hasdrubal at Cannae they broke the Roman horse on the river flank and rode round to close the trap.</source>
-        <translation>Galijscy możni walczyli konno długimi mieczami. Pod wodzą Hasdrubala pod Kannami rozbili rzymską jazdę na skrzydle nad rzeką i objechali ją, by zamknąć pułapkę.</translation>
+        <translation>Galijscy możni walczyli konno długimi mieczami. Pod wodzą Hazdrubala pod Kannami rozbili rzymską jazdę na skrzydle nad rzeką i objechali ją, by zamknąć pułapkę.</translation>
     </message>
     <message>
         <source>Gauls of the Po valley joined Hannibal once he was over the Alps. At Cannae they held the centre of the crescent and fell back on purpose, drawing the legions in.</source>
@@ -14095,7 +14095,7 @@ Prawy przycisk anuluje.</translation>
     </message>
     <message>
         <source>Vulnerable to cavalry and sustained melee.</source>
-        <translation>Podatni na kawalerię i długotrwałą walkę wręcz.</translation>
+        <translation>Podatni na jazdę i długotrwałą walkę wręcz.</translation>
     </message>
 </context>
 <context>

@@ -173,8 +173,7 @@ auto resolve_defense_reference(Engine::Core::World& world,
   if (hall_count > 0) {
     return halls / static_cast<float>(hall_count);
   }
-  // With no camp to march on, the army is wherever its commander stands; a
-  // detachment landed far away must not drag the target into empty ground.
+
   if (commander.has_value()) {
     return *commander;
   }

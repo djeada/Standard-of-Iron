@@ -14,8 +14,7 @@ TEST(TreeMesh, BranchesAndCrownsHaveFiniteOutwardFacesWithinInstanceBudget) {
   for (const auto& mesh : {build_olive_tree_mesh()}) {
     ASSERT_FALSE(mesh.vertices.empty());
     ASSERT_EQ(mesh.indices.size() % 3U, 0U);
-    // These meshes are instanced for forests, so protect against accidental
-    // subdivision growth and the 16-bit element-buffer limit.
+
     EXPECT_LT(mesh.vertices.size(), 4096U);
     EXPECT_LT(mesh.indices.size() / 3U, 5000U);
     for (const auto& v : mesh.vertices) {

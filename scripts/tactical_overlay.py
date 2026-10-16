@@ -48,14 +48,7 @@ FONT_DIR = REPO / "assets" / "fonts"
 Vec2 = tuple[float, float]
 Vec3 = tuple[float, float, float]
 
-# ---------------------------------------------------------------------------
-# Style
-# ---------------------------------------------------------------------------
 
-#: Defaults for every element kind. Pixel sizes are authored for a 1080-pixel
-#: short side and scale with the frame; world sizes are metres. The series
-#: graphics package replaces this through ``--style`` / ``style=`` without
-#: touching any overlay description.
 DEFAULT_STYLE: dict[str, Any] = {
     "font": str(FONT_DIR / "StandardIronDisplay-Bold.ttf"),
     "font_fallback": str(FONT_DIR / "EBGaramond12-Bold.ttf"),
@@ -260,11 +253,6 @@ def owner_color(style: dict, owner: int | None) -> Any:
     return style.get("owners", {}).get(str(owner), "neutral")
 
 
-# ---------------------------------------------------------------------------
-# Camera track and projection
-# ---------------------------------------------------------------------------
-
-
 def column_major(values: Sequence[float]) -> list[list[float]]:
     """A 4x4 row-indexed matrix from 16 column-major values (Qt/OpenGL)."""
     if len(values) != 16:
@@ -459,11 +447,6 @@ class CameraTrack:
         return None
 
 
-# ---------------------------------------------------------------------------
-# Terrain
-# ---------------------------------------------------------------------------
-
-
 class Terrain:
     """The exported height field, sampled bilinearly (metres)."""
 
@@ -523,11 +506,6 @@ class Terrain:
 
     def drape(self, x: float, z: float, lift: float = 0.0) -> Vec3:
         return (x, self.height(x, z) + lift, z)
-
-
-# ---------------------------------------------------------------------------
-# Geometry
-# ---------------------------------------------------------------------------
 
 
 def _sub(a, b):
@@ -624,7 +602,7 @@ def arrow_path(
         chord = (b[0] - a[0], b[1] - a[1])
         left = (chord[1], -chord[0])
         middle = ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2)
-        # A quadratic's apex sits halfway to its control point.
+
         control = (middle[0] + left[0] * bend * 2, middle[1] + left[1] * bend * 2)
         return quadratic_bezier(tuple(a), control, tuple(b), 48)
     if smooth:
@@ -691,8 +669,8 @@ def left_of(tangent: Vec2) -> Vec2:
 class ArrowShape:
     """An arrow's ground-plane outline as ribbon cross-sections plus head."""
 
-    sections: list[tuple[Vec2, Vec2]]  # (left, right) pairs along the shaft
-    head: list[tuple[Vec2, Vec2]]  # (left, right) pairs from base to tip
+    sections: list[tuple[Vec2, Vec2]]
+    head: list[tuple[Vec2, Vec2]]
     tip: Vec2
 
 
@@ -729,7 +707,7 @@ def arrow_shape(
     tip = drawn[-1]
     directions = tangents(shaft)
     end_direction = tangents(drawn)[-1]
-    # Taper by distance along the whole path, so drawing on never fattens it.
+
     sections = []
     travelled = 0.0
     for index, (point, direction) in enumerate(zip(shaft, directions, strict=False)):
@@ -765,11 +743,6 @@ def arrow_shape(
                 )
             )
     return ArrowShape(sections, head_sections, tip)
-
-
-# ---------------------------------------------------------------------------
-# Overlay description
-# ---------------------------------------------------------------------------
 
 
 @dataclass
@@ -851,11 +824,6 @@ def _validate(kind: str, raw: dict, index: int) -> None:
         raise ValueError(f"element {index}: a label needs an 'at' anchor")
 
 
-# ---------------------------------------------------------------------------
-# Anchors
-# ---------------------------------------------------------------------------
-
-
 class AnchorResolver:
     """Turns element anchors into ground-plane points for a frame.
 
@@ -933,11 +901,6 @@ class AnchorResolver:
             base[0] + forward2[0] * ahead + right2[0] * aside + float(offset[0]),
             base[1] + forward2[1] * ahead + right2[1] * aside + float(offset[-1]),
         )
-
-
-# ---------------------------------------------------------------------------
-# Rendering
-# ---------------------------------------------------------------------------
 
 
 class Layer:
@@ -1045,7 +1008,6 @@ class Renderer:
         self._fonts: dict[tuple[str, int], Any] = {}
         self._fixed: dict[tuple[int, int], list[Vec2] | None] = {}
 
-    # -- time
     def time_of(self, frame: int) -> float:
         record = self.track.frames[frame]
         return float(record.get("t", frame / self.track.fps))
@@ -1054,7 +1016,6 @@ class Renderer:
         t = self.time_of(frame)
         return [(e, e.opacity(t)) for e in self.overlay.elements if e.opacity(t) > 0.0]
 
-    # -- anchors
     def anchor_frame(self, element: Element, frame: int) -> int:
         """Live elements read the current frame; fixed ones their start."""
         track = element.data.get(
@@ -1080,7 +1041,6 @@ class Renderer:
             self._fixed[key] = points
         return self._fixed[key]
 
-    # -- primitives
     def px(self, value: float) -> float:
         return float(value) * self.ui
 
@@ -1101,7 +1061,6 @@ class Renderer:
                 self._fonts[key] = ImageFont.truetype(style["font_fallback"], size)
         return self._fonts[key]
 
-    # -- elements
     def arrow_layer(self, element: Element, camera: Camera, t: float) -> Layer | None:
         style = element.style
         points = self.resolve_points(element, self._frame)
@@ -1290,7 +1249,6 @@ class Renderer:
                 )
         return layer, group
 
-    # -- composition
     def render(self, frame: int):
         """The overlay for one clip frame as an RGBA ``PIL.Image``."""
         from PIL import Image
@@ -1417,7 +1375,7 @@ class Renderer:
         x = anchor[0] + self.px(offset[0])
         y = anchor[1] + self.px(offset[1])
         tracking = float(style.get("tracking", 0.0)) * size
-        # Prefix widths keep the face's kerning pairs; tracking adds to them.
+
         starts = [
             font.getlength(text[:index]) + tracking * index
             for index in range(len(text))
@@ -1455,7 +1413,7 @@ class Renderer:
         opacity = alpha * float(style.get("opacity", 1.0))
         plate.putalpha(mask.point(lambda v: int(v * opacity)))
         layer = Image.alpha_composite(layer, plate)
-        # Paste with clipping: the label may sit partly outside the frame.
+
         dest = (
             max(0, box[0]),
             max(0, box[1]),
@@ -1469,11 +1427,6 @@ class Renderer:
         )
         region = canvas.crop(dest)
         canvas.paste(Image.alpha_composite(region, crop), dest[:2])
-
-
-# ---------------------------------------------------------------------------
-# Files and ffmpeg
-# ---------------------------------------------------------------------------
 
 
 def companions(clip: Path) -> tuple[Path, Path | None]:

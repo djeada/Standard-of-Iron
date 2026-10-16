@@ -343,9 +343,7 @@ TEST(BpatPlayback, ResolvesAdjacentFrameAndLerpForSmoothRiggedPlayback) {
 }
 
 TEST(BpatReader, LocalPosesKeepBoneScale) {
-  // The elephant rig stores its size in bone scale. Blended (CPU) palettes are
-  // rebuilt from local poses, so a pose that forgets scale draws the creature
-  // smaller than the resident frames do, and it pulses whenever a blend runs.
+
   constexpr std::uint32_t bone_count = 2U;
   BpatWriter w(k_species_elephant, bone_count);
   std::vector<std::uint8_t> const parents{k_no_parent_bone, 0U};

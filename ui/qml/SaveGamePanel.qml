@@ -236,7 +236,7 @@ Item {
                 }
 
                 Label {
-                    text: saveListModel.count === 1 ? qsTr("%1 save").arg(saveListModel.count) : qsTr("%1 saves").arg(saveListModel.count)
+                    text: qsTr("%n save(s)", "", saveListModel.count)
                     color: Theme.textHint
                     font.pixelSize: Design.Typography.body
                 }

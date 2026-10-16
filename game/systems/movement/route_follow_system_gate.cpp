@@ -128,7 +128,7 @@ auto formation_navigation_speed(const Engine::Core::Entity& entity,
     speed = max_navigation_speed(unit, nullptr);
   }
   auto const* registry = entity.registry();
-  // An elephant charging down an open lane runs at its charge pace.
+
   if (const auto* elephant =
           registry != nullptr
               ? registry->try_get<Engine::Core::ElephantComponent>(entity.get_id())

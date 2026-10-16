@@ -12196,14 +12196,6 @@ Right-click to cancel.</translation>
         <translation>Existing saves</translation>
     </message>
     <message>
-        <source>%1 save</source>
-        <translation>%1 save</translation>
-    </message>
-    <message>
-        <source>%1 saves</source>
-        <translation>%1 saves</translation>
-    </message>
-    <message>
         <source>No saves yet. The name above will create the first one.</source>
         <translation>No saves yet. The name above will create the first one.</translation>
     </message>
@@ -12246,6 +12238,13 @@ Right-click to cancel.</translation>
     <message>
         <source>&quot;%1&quot; will be deleted. This cannot be undone.</source>
         <translation>&quot;%1&quot; will be deleted. This cannot be undone.</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n save(s)</source>
+        <translation>
+            <numerusform>%n save</numerusform>
+            <numerusform>%n saves</numerusform>
+        </translation>
     </message>
 </context>
 <context>

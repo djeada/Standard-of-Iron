@@ -131,8 +131,6 @@ private:
     return depth;
   }
 
-  // Lateral order as the doctrine's line layout left it, so troops keep their
-  // side of the army and the Hungarian assignment has little to undo.
   void sort_by_lateral(Indices& set) const {
     std::stable_sort(set.begin(), set.end(), [&](std::size_t a, std::size_t b) {
       float const xa = m_slots[a].local_offset.x();
@@ -191,8 +189,6 @@ private:
     slot.manoeuvre_facing = 0.0F;
   }
 
-  // A loose row centred on x = 0 at depth z (its centre line), spread over at
-  // least `span` between the outermost troop centres.
   void
   place_row(const Indices& row, float z_centre, float span, BattleBand band, int rank) {
     if (row.empty()) {
@@ -211,8 +207,6 @@ private:
     }
   }
 
-  // Wings stand in columns two troops deep, from `inner_x` outward, their front
-  // rank level with `front_z`. The first member stands innermost.
   void place_wing(const Indices& wing,
                   float side,
                   float inner_x,
@@ -248,7 +242,7 @@ private:
     std::size_t const left_count = set.size() / 2U;
     left.assign(set.begin(), set.begin() + static_cast<std::ptrdiff_t>(left_count));
     right.assign(set.begin() + static_cast<std::ptrdiff_t>(left_count), set.end());
-    // Columns grow outward, so the left wing is filled from its inner end.
+
     std::reverse(left.begin(), left.end());
   }
 
@@ -310,10 +304,6 @@ private:
   float m_gap_scale{1.0F};
 };
 
-// Hastati in front, principes behind them standing on the hastati gaps (the
-// quincunx), triarii behind the principes on the hastati files again. Every
-// maniple of a line is separated from its neighbour by an open lane at least as
-// wide as a maniple.
 void BattleOrderLayout::place_triplex_acies() {
   auto parts = partition();
   auto const n = static_cast<int>(parts.infantry.size());
@@ -328,8 +318,7 @@ void BattleOrderLayout::place_triplex_acies() {
     int const floor_share =
         std::max(1, static_cast<int>(std::lround(static_cast<float>(n) / 5.0F)));
     triarii = std::clamp(spears, floor_share, std::max(floor_share, n / 3));
-    // An odd count in front lets the principes stand one fewer than the hastati,
-    // every one of them on a gap, symmetric about the centre.
+
     if ((n - triarii) % 2 == 0) {
       if ((triarii + 1) * 2 <= n) {
         ++triarii;
@@ -341,8 +330,6 @@ void BattleOrderLayout::place_triplex_acies() {
     principes = front_two / 2;
   }
 
-  // Veterans (spearmen, then heavy infantry) go to the rear line; any remaining
-  // spears stand with the principes, the youngest troops in front.
   auto seniority = [&](std::size_t i) {
     RoleTagSet const r = roles(i);
     if (has_role(r, RoleTag::SpearInfantry)) {
@@ -436,10 +423,6 @@ void BattleOrderLayout::place_triplex_acies() {
   place_rear_row(parts.other, army_rear, rank);
 }
 
-// Hannibal's lunate line: the centre bows toward the enemy and the heavy wings
-// stand back level with its ends. Allied contingents (nations that are not
-// playable, i.e. the Gauls and Iberians) take the centre when the infantry is
-// mixed; otherwise the middle half of the infantry does.
 void BattleOrderLayout::place_convex_crescent() {
   auto parts = partition();
   Indices centre;
@@ -480,7 +463,6 @@ void BattleOrderLayout::place_convex_crescent() {
   float const bulge =
       std::max(k_crescent_bulge_share * half_centre, 2.0F * centre_depth);
 
-  // Front rank first, so the outermost troops of every rank sit on the arc.
   std::size_t cursor = 0;
   for (int r = 0; r < ranks && cursor < centre.size(); ++r) {
     std::size_t const remaining = centre.size() - cursor;
@@ -552,8 +534,6 @@ void BattleOrderLayout::place_convex_crescent() {
   place_rear_row(parts.other, placed.empty() ? 0.0F : rear_of(placed), ranks + 1);
 }
 
-// War elephants spaced in a row well ahead of the army, which stands behind
-// them in its faction battle line.
 void BattleOrderLayout::place_elephant_screen() {
   Indices elephants;
   Indices body;

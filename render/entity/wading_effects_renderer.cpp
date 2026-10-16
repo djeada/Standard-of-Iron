@@ -23,8 +23,6 @@ namespace Render::GL {
 
 namespace {
 
-// Rings hug the water only where it is deep enough for the marker to float
-// rather than drape onto the bed (ground_marker.vert drapes within 0.25).
 constexpr float k_min_ring_depth = 0.26F;
 constexpr float k_ring_lift = 0.05F;
 constexpr float k_ripple_period = 1.4F;
@@ -188,7 +186,7 @@ void render_wading_effects(Renderer* renderer,
           }
 
           if (speed >= k_spray_speed && sprays < k_max_sprays) {
-            // Spray kicked up at the bow of a man pushing through the water.
+
             float const bucket = std::floor(time * 4.0F);
             if (hash01(seed ^ static_cast<std::uint64_t>(bucket)) <
                 0.25F * stir + 0.05F) {

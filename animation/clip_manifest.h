@@ -261,7 +261,6 @@ inline constexpr float k_humanoid_climb_rise_per_cycle = 0.52F;
 inline constexpr std::uint16_t k_humanoid_sling_throw_clip = 87U;
 inline constexpr std::uint16_t k_humanoid_javelin_throw_clip = 88U;
 
-// Wading a ford: an upper-body overlay with the arms raised above the water.
 inline constexpr std::uint16_t k_humanoid_wade_clip = 89U;
 inline constexpr float k_humanoid_wade_cycle_time = 1.8F;
 inline constexpr std::uint16_t k_humanoid_gesture_first_clip = 90U;

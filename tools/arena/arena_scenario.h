@@ -164,8 +164,7 @@ struct ArenaScenarioGroup {
   std::optional<Game::Units::SpawnType> spawn_type;
 
   QString renderer_override;
-  // Historical cameo commander id (game/units/historical_commander_catalog).
-  // The group spawns that commander on the cameo's body for its nation.
+
   QString commander_id;
   QStringList showcase_routine;
   float showcase_start_delay{0.0F};
@@ -442,10 +441,6 @@ enum class ArenaExpectationKind : std::uint8_t {
 
   EngagementReleasedByOrder,
 
-  // A battle order's manoeuvre reached `threshold` on the metric named by
-  // `counter_key` for the formation holding `group`: "centre_yield",
-  // "wing_wheel", "lane_shift", or "elephant_lane_runs" (the number of the
-  // group's elephants that ran a lane out the back of an enemy line).
   BattleOrderManoeuvreObserved,
 };
 
@@ -604,8 +599,7 @@ struct ArenaScenarioDefinition {
 
   std::vector<Game::Map::RockfallTrap> rockfall_traps;
   std::vector<Game::Map::RaftCrossing> rafts;
-  // Ford zones on the scenario's rivers (segment-wide fords are set on the
-  // river segments themselves).
+
   std::vector<Game::Map::FordCrossing> fords;
   std::vector<ArenaScenarioOwnerTeam> owner_teams;
   std::vector<ArenaScenarioAIProfile> ai_profiles;

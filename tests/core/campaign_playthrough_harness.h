@@ -1,18 +1,5 @@
 #pragma once
 
-// Headless, deterministic playthrough of a campaign mission.
-//
-// A mission is loaded the way GameEngine loads one (LevelOrchestrator::load_skirmish
-// followed by GameEngine::configure_loaded_match), with no renderer, and then ticked
-// the way GameEngine::simulate ticks it: per fixed 60 Hz step, the mission waves and
-// timed events, the mission stages, World::update (every runtime system, including the
-// AI, rockfall, rafts and undead zones) and finally the VictoryService.
-//
-// A scripted player plan issues orders through the same entry points the UI uses
-// (App::Utils::submit_ground_move, App::Utils::issue_attack_command, the command
-// queue), so every order is validated and drained by the command system on the next
-// tick exactly as a mouse click would be.
-
 #include <QString>
 #include <QVector3D>
 
@@ -84,7 +71,6 @@ using Ids = std::vector<EntityID>;
 
 constexpr int k_local_owner = 1;
 
-// A point in the mission/map authoring space (the numbers in the JSON files).
 struct G {
   float x = 0.0F;
   float z = 0.0F;
@@ -102,7 +88,7 @@ struct Report {
   int enemy_commanders = 0;
   int stages_complete = 0;
   int stage_count = 0;
-  // Progress, for missions the plan does not win.
+
   int commanders_killed = 0;
   int camps_captured = 0;
   int lost_by_5min = -1;
@@ -143,8 +129,6 @@ struct Report {
 
 class Mission;
 
-// One line of a plan: when `when` first holds, run `act`. With `every` > 0 the step
-// keeps firing at that interval for as long as `when` holds.
 struct Step {
   std::string label;
   std::function<bool(Mission&)> when;
@@ -169,13 +153,10 @@ public:
   auto operator=(const Mission&) -> Mission& = delete;
   auto operator=(Mission&&) -> Mission& = delete;
 
-  // Mirrors LevelOrchestrator::load_skirmish + GameEngine::configure_loaded_match for a
-  // campaign mission.
   auto load(const QString& campaign_id,
             const QString& mission_id,
             const QString& difficulty = QStringLiteral("normal")) -> bool {
-    // GameEngine composes its session with the default content (nations, troop
-    // catalogue, formations); without it every nation lookup falls back to Rome.
+
     Game::Systems::initialize_default_content(m_session->nations());
     m_world.set_presentation_enabled(false);
     Game::Systems::register_runtime_systems(m_world);
@@ -195,7 +176,6 @@ public:
                                  : mission.map_path;
     const QVariantList player_configs = build_campaign_player_configs(mission);
 
-    // --- LevelOrchestrator::load_skirmish -------------------------------------
     App::Core::SkirmishLoader loader(m_world, m_renderer, m_camera);
     int updated_player_id = selected_player_id;
     const auto load_result = loader.start(
@@ -240,7 +220,6 @@ public:
     }
     Game::Systems::NavGrid::prewarm();
 
-    // --- GameEngine::configure_loaded_match ------------------------------------
     m_runtime.set_difficulty(App::Mission::MissionRuntime::resolve_difficulty(
         &m_campaign,
         load_result.resolved_player_configs.isEmpty()
@@ -277,7 +256,6 @@ public:
 
   [[nodiscard]] auto error() const -> QString { return m_error; }
 
-  // ---- coordinates ------------------------------------------------------------
   [[nodiscard]] auto to_world(G point) const -> QVector3D {
     return Game::Mission::mission_position_to_world(
         Game::Mission::Position{.x = point.x, .z = point.z},
@@ -289,7 +267,6 @@ public:
             (world.z() - m_grid_origin.z()) / m_grid_scale_z};
   }
 
-  // ---- queries -------------------------------------------------------------------
   [[nodiscard]] auto world() -> Engine::Core::World& { return m_world; }
   [[nodiscard]] auto seconds() const -> float { return m_runtime.waves().elapsed(); }
   [[nodiscard]] auto outcome() const -> QString { return m_outcome; }
@@ -337,7 +314,6 @@ public:
         Game::Units::TroopConfig::instance().get_individuals_per_unit(u.spawn_type));
   }
 
-  // Every living unit/structure matching `filter`.
   template <typename Filter>
   auto collect(Filter filter) -> Ids {
     Ids ids;
@@ -358,7 +334,6 @@ public:
     return ids;
   }
 
-  // The local fighting troops: no commander, no builders, no civilians.
   auto army() -> Ids {
     return collect([this](EntityID id, const Engine::Core::UnitComponent& u) {
       return u.owner_id == k_local_owner &&
@@ -415,7 +390,6 @@ public:
     return out;
   }
 
-  // Named groups, frozen when tagged; `group` returns the members still alive.
   void tag(const std::string& name, const Ids& ids) { m_groups[name] = ids; }
   auto group(const std::string& name) -> Ids {
     Ids out;
@@ -508,7 +482,7 @@ public:
     const auto* status = stage(id);
     return status != nullptr && status->complete;
   }
-  // Camps the VictoryService counts as captured: local barracks of a foreign build.
+
   [[nodiscard]] auto captured_from_enemy() -> int {
     const auto* local = m_session->nations().get_nation_for_player(k_local_owner);
     int count = 0;
@@ -533,7 +507,6 @@ public:
     return count;
   }
 
-  // ---- orders (the UI's own entry points) -----------------------------------------
   auto attack_move(const Ids& ids, G target) -> bool {
     return ground_move(ids, target, Game::Systems::MoveOrderKind::AttackMove);
   }
@@ -560,7 +533,7 @@ public:
     return App::Core::submit_player_order(m_world, k_local_owner, std::move(request))
         .accepted();
   }
-  // Builders' "auto gather" with a priority product (cut_tree, collect_stone, ...).
+
   auto auto_gather(const Ids& ids, const char* product) -> bool {
     if (ids.empty()) {
       return false;
@@ -579,8 +552,6 @@ public:
     return m_session->economy().get_harvested_all(k_local_owner).get(type);
   }
 
-  // Queue one company of `product` at every local camp that can start it now (the
-  // HUD's recruit button: ProductionService decides cost, manpower and queue room).
   auto recruit(Game::Units::TroopType product) -> int {
     int queued = 0;
     for (const auto camp : barracks()) {
@@ -618,7 +589,6 @@ public:
     return true;
   }
 
-  // ---- running ---------------------------------------------------------------------
   auto run(Plan plan, float cap_seconds) -> Report {
     const auto wall_start = std::chrono::steady_clock::now();
     for (const auto id : barracks()) {
@@ -681,7 +651,7 @@ public:
       if (report.lost_by_10min < 0 && seconds() >= 600.0F) {
         report.lost_by_10min = m_losses;
       }
-      // GameEngine::simulate -> RuntimeFrameOrchestrator::advance_simulation.
+
       session.advance(tick,
                       8,
                       Game::Session::SessionContext::OverloadPolicy::DiscardBacklog,
@@ -753,7 +723,6 @@ public:
     return QStringLiteral("(none)");
   }
 
-  // Start-of-mission layout, in map coordinates, so plans can be written against it.
   void survey() {
     std::map<int, std::map<std::string, std::vector<std::string>>> by_owner;
     for (auto* entity : m_world.collect_entities_with<Engine::Core::UnitComponent>()) {
@@ -805,7 +774,6 @@ public:
     }
   }
 
-  // Per-company state of the local army and of every enemy within 40 of it.
   void dump_units() {
     auto line = [this](EntityID id) {
       auto* e = m_world.get_entity(id);
@@ -1031,7 +999,7 @@ private:
                                                          text.toStdString().c_str());
                                            }
                                          }};
-  // Captures and commander deaths, narrated as they happen.
+
   Engine::Core::ScopedEventSubscription<Engine::Core::BarrackCapturedEvent> m_captured{
       [this](const Engine::Core::BarrackCapturedEvent& e) {
         if (narrating()) {
@@ -1093,7 +1061,6 @@ private:
   QString m_error;
 };
 
-// ---- plan vocabulary --------------------------------------------------------------
 inline auto at(float seconds) -> std::function<bool(Mission&)> {
   return [seconds](Mission& m) {
     return m.seconds() >= seconds;

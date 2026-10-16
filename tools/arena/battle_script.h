@@ -97,7 +97,7 @@ struct FordSegment {
   QString id;
   int river{0};
   QVector3D at;
-  // How far the shallows run along the river (metres).
+
   float width{6.0F};
   Game::Map::FordProfile profile;
 };

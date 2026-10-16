@@ -71,9 +71,7 @@ auto Pathfinding::wade_step_penalty(const Game::Map::FordProfile* ford)
   if (ford == nullptr) {
     return 0U;
   }
-  // The time a wading step costs over a dry one, plus a premium for crossing
-  // exposed to missiles: a ford is used when the bridge is far, not when it
-  // is a short walk away.
+
   float const speed = std::clamp(ford->speed, 0.05F, 1.0F);
   float const slowdown =
       static_cast<float>(k_straight_step_cost) * ((1.0F / speed) - 1.0F);

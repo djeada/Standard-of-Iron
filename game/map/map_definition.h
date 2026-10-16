@@ -57,9 +57,6 @@ struct UnitSpawn {
 
   bool on_wall = false;
 
-  // Historical cameo commander (e.g. "roman_terentius_varro"); empty for every
-  // other spawn. Authored either as "commander_id" next to a commander type or
-  // directly as the spawn "type".
   QString commander_id;
 };
 
@@ -713,7 +710,7 @@ struct MapDefinition {
   std::vector<UndeadZone> undead_zones;
   std::vector<RockfallTrap> rockfall_traps;
   std::vector<RaftCrossing> rafts;
-  // World-space ford zones; segment-wide fords live on the river segments.
+
   std::vector<FordCrossing> fords;
 
   bool hill_rockfall_caches = true;

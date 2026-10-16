@@ -62,8 +62,6 @@ void main() {
   model_pos.x += cos(lean_yaw) * lean_angle * height_norm * height_norm;
   model_pos.z += sin(lean_yaw) * lean_angle * height_norm * height_norm;
 
-  // Grow the trunk and crown together: deforming only the foliage pulls
-  // the terminal sprays off their supporting limbs.
   float stretch = mix(1.02, 1.20, leaf_seed);
   float spread = mix(0.96, 1.10, fract(silhouette_seed * 7.31 + leaf_seed * 3.17));
   model_pos.y *= stretch;
@@ -73,7 +71,7 @@ void main() {
   if (foliage_mask > 0.1) {
     vec3 lobe_seed = vec3(leaf_seed * 23.0, silhouette_seed * 17.0, leaf_seed * 41.0);
     float tuft = soi_noise3(model_pos * 14.0 + lobe_seed) - 0.5;
-    // The mesh supplies the crown outline; retain only subtle live variation.
+
     model_pos += a_normal * tuft * 0.016 * foliage_mask;
   }
 

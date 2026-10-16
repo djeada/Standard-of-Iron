@@ -42,7 +42,6 @@ constexpr int k_grid = 64;
 constexpr float k_river_width = 8.0F;
 constexpr float k_tick = 1.0F / 30.0F;
 
-// A river running north-south down the middle of the map (x = 0).
 auto make_river_map() -> Game::Map::MapDefinition {
   Game::Map::MapDefinition map;
   map.coordSystem = Game::Map::CoordSystem::World;

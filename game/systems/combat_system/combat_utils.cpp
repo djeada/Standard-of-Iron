@@ -739,15 +739,11 @@ auto may_engage(Engine::Core::Entity* unit,
     return false;
   }
 
-  // An elephant running down an open lane of a battle line is let through: the
-  // maniples beside the lane do not step into its path (missile troops still
-  // shoot it).
   if (trigger == EngagementTrigger::Opportunity && runs_an_open_lane(enemy) &&
       (attack_comp == nullptr || !is_ranged_mode(attack_comp))) {
     return false;
   }
-  // A crescent wing holds its ground until it wheels in on the enemy flank: it
-  // answers a blow aimed at itself, nothing else.
+
   if (trigger != EngagementTrigger::Retaliation &&
       Game::Formation::ArmyFormationRuntime::holds_for_manoeuvre(*unit)) {
     return false;

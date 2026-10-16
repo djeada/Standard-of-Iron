@@ -153,8 +153,6 @@ void react_to_shortfalls(AIContext::MacroTargets& targets,
     targets.farm_count = std::max(targets.farm_count, ctx.farm_count + 1);
   }
 
-  // More homes only help while the army can still grow: at the population cap
-  // the extra civilians' manpower has nothing to buy.
   if (ctx.home_civilians_remaining == 0 && ctx.population_headroom() > 0) {
     targets.home_count = std::max(targets.home_count, ctx.home_count + 2);
 
