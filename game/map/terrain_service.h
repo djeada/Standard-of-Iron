@@ -239,7 +239,6 @@ public:
                                const HillNavigation& hills = {},
                                const std::vector<FordCrossing>& fords = {});
 
-  // Fords: shallow river crossings that land units can wade.
   [[nodiscard]] auto ford_profile_at(float world_x,
                                      float world_z) const -> const FordProfile*;
   [[nodiscard]] auto ford_water_depth_at(float world_x, float world_z) const -> float;

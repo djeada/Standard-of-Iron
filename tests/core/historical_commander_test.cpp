@@ -1,4 +1,4 @@
-// Historical cameo commanders (issue #1522): spawnable by id, never playable.
+
 
 #include <QFile>
 #include <QString>
@@ -84,8 +84,7 @@ TEST(HistoricalCommanderTest, PlayableRosterIsExactlyTheSix) {
 }
 
 TEST(HistoricalCommanderTest, PickersAndSkirmishSeatsListOnlyThePlayableSix) {
-  // commander_definitions_for_nation feeds the skirmish commander picker
-  // (MatchSetupViewModel::commanders_for_nation) and the CPU seat roster.
+
   std::set<std::string> listed;
   for (const auto nation : {NationID::RomanRepublic,
                             NationID::Carthage,
@@ -158,7 +157,6 @@ TEST(HistoricalCommanderTest, RosterHoldsTheTenNamedCommanders) {
     EXPECT_FALSE(Game::Units::is_historical_commander_id(playable.id));
   }
 
-  // The playable Scipio is Africanus; the cameo is his father, named apart.
   const auto* elder =
       Game::Units::historical_commander_definition("roman_scipio_consul_218");
   ASSERT_NE(elder, nullptr);
@@ -166,7 +164,7 @@ TEST(HistoricalCommanderTest, RosterHoldsTheTenNamedCommanders) {
       elder->display_name,
       Game::Units::commander_definition(TroopType::RomanVeteranConsul)->display_name);
   EXPECT_NE(elder->display_name.find("218"), std::string::npos);
-  // Likewise the Cannae cavalry officer is not Hasdrubal Barca.
+
   const auto* hasdrubal =
       Game::Units::historical_commander_definition("carthage_hasdrubal_cavalry");
   ASSERT_NE(hasdrubal, nullptr);
@@ -348,11 +346,11 @@ TEST_F(HistoricalCommanderSpawnTest, CameosServeBesideTheOwnersCommander) {
                   NationID::RomanRepublic,
                   "roman_aemilius_paullus"),
             nullptr);
-  // A cameo does not take the owner's single playable-commander slot...
+
   ASSERT_NE(
       spawn(Game::Units::SpawnType::RomanFieldCommander, 1, NationID::RomanRepublic),
       nullptr);
-  // ...but that slot still holds just one.
+
   EXPECT_EQ(
       spawn(Game::Units::SpawnType::RomanVeteranConsul, 1, NationID::RomanRepublic),
       nullptr);
@@ -361,8 +359,7 @@ TEST_F(HistoricalCommanderSpawnTest, CameosServeBesideTheOwnersCommander) {
 }
 
 TEST_F(HistoricalCommanderSpawnTest, CameoTakesTheBodyOfItsOwnersNation) {
-  // Authored on a Roman sword body but fielded by Carthage: Mago gets
-  // Carthage's sword-commander body and keeps his own look.
+
   auto* mago = spawn(Game::Units::SpawnType::RomanVeteranConsul,
                      2,
                      NationID::Carthage,
@@ -495,10 +492,6 @@ auto barcid_road_mission_ids() -> std::vector<QString> {
 
 } // namespace
 
-// A cameo beside Hannibal would keep the player's lose_commander rule from
-// firing and announce "Hannibal has fallen" when the officer dies, so the
-// player's officers stay in the briefing. An enemy cameo replaces its owner's
-// single commander in the same body, so speakers and seats still line up.
 TEST(HistoricalCommanderMissionTest, CampaignCameosLeadEnemyForcesTheirBriefingsName) {
   for (const auto& mission_id : barcid_road_mission_ids()) {
     SCOPED_TRACE(mission_id.toStdString());

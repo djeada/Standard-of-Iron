@@ -277,8 +277,7 @@ auto build_home_desc_impl(BuildingState state, int variant) -> BuildingArchetype
     }
   } else if (variant == 2) {
     BuildingPartLabel const label(desc, "terrace_upper_room");
-    // A compact upper room at the back leaves the front terrace and its
-    // animated shade valance clear, as well as the oven's smoke vent.
+
     desc.add_box(QVector3D(-0.40F, roof_y + 0.32F, -0.48F),
                  QVector3D(0.34F, 0.27F, 0.29F),
                  c.plaster,

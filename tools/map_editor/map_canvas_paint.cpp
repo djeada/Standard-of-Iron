@@ -640,7 +640,7 @@ void MapCanvas::draw_linear_element(QPainter& painter, int i) {
       elem.extra_fields.value(QStringLiteral("ford"))
           .toBool(elem.extra_fields.value(QStringLiteral("ford")).isObject());
   if (elem.type == "ford" || fordable_river) {
-    // Shallows: a dashed gravel-coloured centre line marks wadeable water.
+
     QPen shallows(QColor(222, 200, 140),
                   std::max(centre_width * 1.6, 2.0),
                   Qt::DashLine,

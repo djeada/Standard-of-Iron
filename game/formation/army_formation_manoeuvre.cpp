@@ -117,7 +117,7 @@ auto manoeuvre_with(const ArmyFormation& formation,
     out.offset = QVector3D(frame.pitch * 0.5F * state.lane_shift, 0.0F, 0.0F);
     break;
   case BattleBand::Screen:
-    // The skirmishers fall back through the lanes, out of the elephants' way.
+
     if (formation.intent == ArmyFormationIntent::TriplexAcies && frame.has_rear) {
       float const behind = frame.rear - k_screen_fallback_gap - slot.half_depth;
       out.offset =
@@ -177,7 +177,7 @@ void advance_crescent(Engine::Core::World& world,
         ++attackers;
       }
     }
-    // Outnumbered, the centre gives ground faster; holding its own, slower.
+
     float const odds = static_cast<float>(attackers) / centre_count;
     float const pace = std::clamp(0.5F + odds, 0.5F, 2.0F);
     state.centre_yield =

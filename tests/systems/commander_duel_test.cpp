@@ -774,8 +774,7 @@ TEST_F(CommanderDuelTest, CommanderArrowsCarryTheCommanderStyle) {
   int routine = 0;
   int signature = 0;
   int other = 0;
-  // A spent arrow's storage is reused by the next one loosed, so an address
-  // alone does not tell two arrows apart; the launch point does.
+
   std::set<std::tuple<const Game::Systems::Projectile*, float, float, float>> seen;
   for (int tick = 0; tick < 400; ++tick) {
     world.update(0.05F);

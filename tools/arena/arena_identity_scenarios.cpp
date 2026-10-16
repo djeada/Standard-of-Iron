@@ -27,9 +27,6 @@ struct HistoricalCommanderEntry {
   int owner{};
 };
 
-// The ten historical cameo commanders of issue #1522. Two owners only (1 for
-// Rome and Masinissa, 3 for Carthage), because cameos serve side by side under
-// one owner the way the battle scripts field them.
 constexpr HistoricalCommanderEntry k_historical_commanders[] = {
     {"sempronius", "roman_sempronius_longus", Nation::RomanRepublic, 1},
     {"flaminius", "roman_gaius_flaminius", Nation::RomanRepublic, 1},
@@ -108,8 +105,7 @@ auto build_identity_definitions() -> std::vector<ArenaScenarioDefinition> {
     result.push_back(std::move(s));
   }
   {
-    // Commander i stands on a ring at 36*i degrees facing outward, so
-    // `--scenario-yaw 36*i` swings the close camera onto him alone.
+
     auto s = definition(
         QString::fromLatin1(k_historical_commander_closeups_id),
         QStringLiteral("Historical Commander Close-ups"),

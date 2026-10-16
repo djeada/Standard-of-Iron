@@ -7,6 +7,7 @@ stop. These checks hold the committed asset to the generator.
 
 from __future__ import annotations
 
+import importlib
 import json
 import sys
 import unittest
@@ -15,7 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tools" / "map_pipeline"))
 
-import hannibal_path  # noqa: E402
+hannibal_path = importlib.import_module("hannibal_path")
 
 ASSET = ROOT / "assets" / "campaign_map" / "hannibal_path.json"
 BOUNDS = json.loads((ROOT / "tools" / "map_pipeline" / "map_bounds.json").read_text())

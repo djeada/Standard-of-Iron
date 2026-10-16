@@ -73,7 +73,7 @@ public:
   void channel_spell_idle();
   void carry_stave();
   void carry_resource_load();
-  // Arms raised, weapon and shield held clear of the water of a ford.
+
   void wade_arms_raised(Animation::HumanoidHeldPoseKind kind);
   void brace_spear_for_hold();
   void hold_bow_ready();

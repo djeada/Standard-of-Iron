@@ -1,9 +1,4 @@
-// Scripted playthroughs of every mission of "The Barcid Road".
-//
-// Each test loads a campaign mission headless (see campaign_playthrough_harness.h),
-// plays a short, readable plan through the UI's own order paths, and asserts that the
-// mission is won within the cap. SOI_PLAYTHROUGH_NARRATE=1 prints the start-of-mission
-// layout, each plan step, each stage change and a one-line status every game minute.
+
 
 #include <algorithm>
 #include <cstdlib>
@@ -26,8 +21,7 @@ namespace {
 using namespace Playthrough;
 
 constexpr char k_campaign[] = "second_punic_war";
-// Twenty-five game minutes; SOI_PLAYTHROUGH_CAP=<seconds> shortens it while
-// calibrating.
+
 auto cap_seconds() -> float {
   const char* value = std::getenv("SOI_PLAYTHROUGH_CAP");
   return value != nullptr && std::atof(value) > 0.0
@@ -56,7 +50,7 @@ protected:
   }
 
   static auto play(const char* mission_id, Plan plan) -> Report {
-    // SOI_PT_PLAN=default swaps the mission's plan for the generic one (calibration).
+
     if (const char* which = std::getenv("SOI_PT_PLAN");
         which != nullptr && std::string(which) == "default") {
       plan = default_plan();
@@ -78,8 +72,6 @@ protected:
     return report;
   }
 
-  // For missions no scripted plan wins yet: the new content must keep reaching the
-  // progress it reached when this was measured (2026-10-10), so a regression trips.
   struct Progress {
     int commanders_killed = 0;
     int camps_captured = 0;
@@ -100,22 +92,10 @@ protected:
   }
 };
 
-// ---- shared plan pieces ----------------------------------------------------------
-
 auto army_of(Mission& m) -> Ids {
   return m.army();
 }
 
-// The default campaign plan, "cut off the head":
-//  - `garrison` companies stand on hold in the yard of the home camp (a camp is lost
-//    to whoever outnumbers its yard three to one, so an empty yard falls to a raid);
-//  - every other company answers any enemy inside `defend_radius` of home first;
-//  - from `strike_after` on, the field army marches as one body on the next living
-//  enemy
-//    commander (a nation dies with its commander: its camp falls neutral, its troops
-//    leave the field and its queued waves stand down);
-//  - with no enemy commander left, it walks into every foreign camp still standing.
-// Calibration knobs: SOI_PT_<NAME>=<value> overrides a plan default without a rebuild.
 auto knob(const char* name, float fallback) -> float {
   const char* value = std::getenv((std::string("SOI_PT_") + name).c_str());
   return value != nullptr ? static_cast<float>(std::atof(value)) : fallback;
@@ -127,31 +107,26 @@ struct Decapitate {
   int garrison = static_cast<int>(knob("GARRISON", 3));
   float defend_radius = knob("DEFEND", 45.0F);
   float strike_after = knob("STRIKE_AFTER", 0.0F);
-  // Companies this close to the quarry are ordered to attack him directly.
+
   float strike_radius = knob("STRIKE_RADIUS", 35.0F);
-  // Seconds within strike radius of a living quarry before breaking his camp's gate.
+
   float breach_after = knob("BREACH_AFTER", 25.0F);
-  // A company with another enemy this close fights it instead of reaching for him.
+
   float engaged_radius = knob("ENGAGED_RADIUS", 10.0F);
-  // Commander owners in the order to hunt them; owners left out follow, nearest first.
-  // SOI_PT_ORDER="3,2" overrides it while calibrating.
+
   std::vector<int> order;
-  // Commanders who sit behind their camp walls: wait for them at `at`, out of tower
-  // range, and strike once one comes within `pounce` of it.
+
   struct Ambush {
     G at;
     float pounce = 60.0F;
   };
   std::map<int, Ambush> ambush;
-  // Before marching on a quarry further than this, the field army first assembles
-  // `regroup_short` short of him (0 disables).
+
   float regroup_beyond = knob("REGROUP_BEYOND", 0.0F);
   float regroup_short = knob("REGROUP_SHORT", 60.0F);
   float every = 5.0F;
 };
 
-// Keep every camp recruiting, cycling through `mix`, as a player clicking the HUD's
-// recruit buttons would; ProductionService refuses what the treasury cannot pay for.
 auto recruiting(std::vector<Game::Units::TroopType> mix = {
                     Game::Units::TroopType::Spearman,
                     Game::Units::TroopType::Swordsman,
@@ -170,8 +145,6 @@ auto recruiting(std::vector<Game::Units::TroopType> mix = {
           3.0F};
 }
 
-// Micro a player does without thinking: a company hacking at a tower or a wall while
-// enemy soldiers stand within reach turns on the soldiers.
 auto fight_men_not_stones(float reach = knob("MICRO_REACH", 14.0F)) -> Step {
   return {"turn companies from towers to the men beside them",
           always(),
@@ -279,8 +252,7 @@ auto decapitate(Decapitate spec) -> Step {
         if (troops.empty()) {
           return;
         }
-        // Returns true when the plan switches to a new mode or a new quarry; the
-        // whole field army is re-ordered then, otherwise only its idle companies.
+
         auto set_mode = [&](const QString& mode, EntityID quarry) -> bool {
           const QString kind = mode.section(QLatin1Char(' '), 0, 1);
           const bool changed = kind != state->mode.section(QLatin1Char(' '), 0, 1) ||
@@ -345,7 +317,7 @@ auto decapitate(Decapitate spec) -> Step {
                     .arg(lie_in_wait->second.at.z, 0, 'f', 0)
                     .arg(m.unit(*quarry)->owner_id),
                 0);
-            // Anything that walks into the ambush is fought where it stands.
+
             const Ids passing = m.near(
                 m.enemy_troops(), lie_in_wait->second.at, lie_in_wait->second.pounce);
             if (!passing.empty()) {
@@ -367,8 +339,7 @@ auto decapitate(Decapitate spec) -> Step {
                            .arg(at.x, 0, 'f', 0)
                            .arg(at.z, 0, 'f', 0),
                        *quarry);
-          // A long march: assemble short of him first so the horse does not arrive
-          // alone, then go in together.
+
           if (changed && spec.regroup_beyond > 0.0F &&
               Mission::distance(from, at) > spec.regroup_beyond) {
             const float d = Mission::distance(from, at);
@@ -395,8 +366,7 @@ auto decapitate(Decapitate spec) -> Step {
             state->rally.reset();
             state->aim = G{-1000.0F, -1000.0F};
           }
-          // Close enough to see him: order the attack on the man himself, or the
-          // companies stand under the camp's towers trading blows with escorts.
+
           const Ids close = m.near(troops, at, spec.strike_radius);
           if (changed) {
             state->gate = 0;
@@ -406,8 +376,7 @@ auto decapitate(Decapitate spec) -> Step {
           } else if (state->close_since < 0.0F) {
             state->close_since = m.seconds();
           }
-          // Still alive after a long look: he is behind his camp's wall. Break the
-          // nearest gate, as a player would, and go in.
+
           if (state->gate != 0 && !m.alive(state->gate)) {
             state->gate = 0;
             state->close_since = m.seconds();
@@ -456,8 +425,7 @@ auto decapitate(Decapitate spec) -> Step {
             }
           }
           if (!close.empty()) {
-            // Only companies with no other enemy at their throat go for him; the
-            // rest keep fighting whoever is fighting them.
+
             const Ids foes = m.all_but(m.enemy_troops(), {*quarry});
             Ids retarget;
             for (const auto id : close) {
@@ -475,7 +443,7 @@ auto decapitate(Decapitate spec) -> Step {
             }
             m.attack(retarget, *quarry);
           }
-          // Follow a quarry that moves: re-aim everyone not already fighting.
+
           const bool moved = Mission::distance(at, state->aim) > 12.0F;
           if (changed || moved) {
             state->aim = at;
@@ -484,8 +452,7 @@ auto decapitate(Decapitate spec) -> Step {
           m.attack_move(changed || moved ? not_fighting(m, far) : m.idle(far), at);
           return;
         }
-        // Camps worth taking: foreign, not the Sepulcher's (those stay warded),
-        // nearest first.
+
         Ids camps;
         for (const auto id : m.enemy_barracks()) {
           if (m.unit(id)->nation_id != Game::Systems::NationID::IronSepulcher) {
@@ -521,8 +488,6 @@ auto default_plan() -> Plan {
 
 } // namespace
 
-// Ferry `who` over a raft: walk to `bank` (within reach of the raft's near landing),
-// then join the raft's line, one call per company. `across` says who has landed.
 auto ferry(std::string label,
            std::function<bool(Mission&)> when,
            std::function<Ids(Mission&)> who,
@@ -549,7 +514,6 @@ auto ferry(std::string label,
           5.0F};
 }
 
-// Hold `who` in the yard of the camp at `camp` until it is ours.
 auto occupy(std::string label,
             std::function<bool(Mission&)> when,
             std::function<Ids(Mission&)> who,
@@ -568,12 +532,6 @@ auto occupy(std::string label,
           5.0F};
 }
 
-// The Rhone: the Volcae and Rome's hill fort hold the far bank at the bridges; the
-// river town stands south of the eastern branch, where no bridge reaches. The army
-// crosses at the bridges while Hanno's Iberians come down on the Volcae from upstream
-// (the default hunt sends both at the consul), then a few companies and the elephants
-// take the fallen hill fort while everyone else is rafted over the branch to finish
-// Rome's second commander and walk into the river town.
 TEST_F(CampaignPlaythroughTest, CrossingTheRhoneKeepsItsProgress) {
   static constexpr G k_hill_fort{376.0F, 38.0F};
   static constexpr G k_branch_bank{450.0F, 222.0F};
@@ -610,8 +568,7 @@ TEST_F(CampaignPlaythroughTest, CrossingTheRhoneKeepsItsProgress) {
                               if (m.commander_alive(2)) {
                                 return m.army();
                               }
-                              // On the island the army waits until (nearly) everyone
-                              // has landed, then goes in as one body.
+
                               const Ids field = field_army(m);
                               Ids landed;
                               for (const auto id : field) {
@@ -660,8 +617,6 @@ TEST_F(CampaignPlaythroughTest, CrossingTheRhoneKeepsItsProgress) {
                .survives_seconds = 1490.0F});
 }
 
-// Keep the builders on auto-gather, each on whichever of wood, stone and iron is
-// furthest behind the mission's quota.
 auto gather_quota(int wood, int stone, int iron) -> Step {
   auto assigned = std::make_shared<std::map<EntityID, std::string>>();
   return {
@@ -682,7 +637,7 @@ auto gather_quota(int wood, int stone, int iron) -> Step {
         });
         const Ids builders = m.local_of_type({SpawnType::Builder});
         for (std::size_t i = 0; i < builders.size(); ++i) {
-          // Two on the scarcest store, then one each down the list.
+
           const std::size_t pick = i < 2 ? 0 : std::min<std::size_t>(i - 1, 2);
           auto& current = (*assigned)[builders[i]];
           if (needs[pick].behind > 0.0 && current != needs[pick].product) {
@@ -703,10 +658,6 @@ TEST_F(CampaignPlaythroughTest, CrossingTheAlpsKeepsItsProgress) {
                   Progress{.stages_complete = 1, .survives_seconds = 1150.0F});
 }
 
-// Ticino is a cavalry fight. The reserve's officer waits at the bridge below his camp
-// at the start and shelters behind its wall and gate once threatened, so the horse
-// rides for him first, at once; the foot hold the home camp's yard. Scipio, in the open
-// by the forest sanctuary, is ridden down after, and the fallen camps are walked into.
 auto horse(Mission& m) -> Ids {
   return m.local_of_type(
       {SpawnType::MountedSwordsman, SpawnType::HorseArcher, SpawnType::HorseSpearman});

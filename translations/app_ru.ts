@@ -286,11 +286,11 @@
     </message>
     <message>
         <source>Reserve exhausted: %1 men held, the cheapest recruit needs %2. Civilians raised at a Home deliver more men.</source>
-        <translation>Резерв исчерпан: в запасе %1 чел., самый дешёвый рекрут требует %2. Жители, выросшие в Доме, приводят больше людей.</translation>
+        <translation>Резерв исчерпан: в запасе %1 чел., самый дешёвый рекрут требует %2. Гражданские, нанятые в Доме, приводят больше людей.</translation>
     </message>
     <message>
         <source>Men this barracks still holds. Every recruit spends the men in its squad; civilians raised at a Home deliver more.</source>
-        <translation>Люди, которых ещё держат эти казармы. Каждый рекрут расходует людей своего отряда; жители, выросшие в Доме, приводят больше.</translation>
+        <translation>Люди, которых ещё держат эти казармы. Каждый рекрут расходует людей своего отряда; гражданские, нанятые в Доме, приводят больше.</translation>
     </message>
     <message>
         <source>Ask allies to defend</source>
@@ -357,14 +357,14 @@
     </message>
     <message>
         <source>Retry mission</source>
-        <translation>Повторить миссию</translation>
+        <translation>Повторить задание</translation>
     </message>
 </context>
 <context>
     <name>BattleSummary</name>
     <message>
         <source>Retry mission</source>
-        <translation>Повторить миссию</translation>
+        <translation>Повторить задание</translation>
     </message>
     <message>
         <source>Play again</source>
@@ -847,7 +847,7 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
     <message>
         <source>Give it from your stores. Sending needs a marketplace.</source>
-        <translation>Дай из своих запасов. Для отправки нужен рынок.</translation>
+        <translation>Отдайте из своих запасов. Для отправки нужен рынок.</translation>
     </message>
 </context>
 <context>
@@ -1025,7 +1025,7 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
     <message>
         <source>I am advancing. It will not look like much. It is not meant to.</source>
-        <translation>Я наступаю. Выглядеть это будет невелико. Так и задумано.</translation>
+        <translation>Я наступаю. Выглядеть это будет скромно. Так и задумано.</translation>
     </message>
     <message>
         <source>I am at the end of what patience can buy. Come, or write to my family. Either will do; only one is useful.</source>
@@ -1277,7 +1277,7 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
     <message>
         <source>My spears are marching on them. I do not do this cheaply, so kindly make it count.</source>
-        <translation>Мои копейщики идут на них. Я делаю это недёшево, так что будь любезен, чтобы это стоило того.</translation>
+        <translation>Мои копейщики идут на них. Я делаю это недёшево, так что будь любезен, сделай так, чтобы это того стоило.</translation>
     </message>
     <message>
         <source>My spears are moving. Every one of them is paid through the season, so they will not stop for a little dying.</source>
@@ -1893,7 +1893,7 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
     <message>
         <source>I will send a cohort to hold it. Slowly, in order. It will still be there when they arrive.</source>
-        <translation>Пришлю когорту удержать это. Медленно, по порядку. Она всё ещё будет там, когда они подойдут.</translation>
+        <translation>Пришлю когорту удержать это. Медленно, по порядку. Место всё ещё будет там, когда они подойдут.</translation>
     </message>
     <message>
         <source>I will send archers to cover it. They will be on the high ground before the enemy sees them.</source>
@@ -2005,7 +2005,7 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
     <message>
         <source>Take it: {amount} {resource}. Do not sit on it.</source>
-        <translation>Держи: {amount} ед. ({resource}). Не залёживай это.</translation>
+        <translation>Держи: {amount} ед. ({resource}). Не держи это без дела.</translation>
     </message>
     <message>
         <source>Take {amount} {resource}. I would rather lose stores than lose an ally who can still surprise them.</source>
@@ -2388,7 +2388,7 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
     <message>
         <source>A historical commander fielded by missions and scenarios; not playable and never produced from a barracks.</source>
-        <translation>Исторический командир, которого выставляют миссии и сценарии; неиграбельный и никогда не обучается в казармах.</translation>
+        <translation>Исторический командир, которого выставляют задания и сценарии; неиграбельный и никогда не обучается в казармах.</translation>
     </message>
     <message>
         <source>Rallies wavering troops nearby back into fighting order.</source>
@@ -2404,7 +2404,7 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
     <message>
         <source>Consul of 218 BC, eager for battle, who sent his army across the freezing Trebia before breakfast.</source>
-        <translation>Консул 218 г. до н. э., жаждавший битвы, бросивший армию через ледяную Треббию ещё до завтрака.</translation>
+        <translation>Консул 218 г. до н. э., жаждавший битвы, бросивший армию через ледяную Требию ещё до завтрака.</translation>
     </message>
     <message>
         <source>Consular sword commander who leads the legions from the front of the attack.</source>
@@ -2604,7 +2604,7 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
     <message>
         <source>Hannibal&apos;s youngest brother, who sprang the ambush from the stream bed at the Trebia and fought in the centre at Cannae.</source>
-        <translation>Младший брат Ганнибала, ударивший из засады в русле ручья при Треббии и сражавшийся в центре при Каннах.</translation>
+        <translation>Младший брат Ганнибала, ударивший из засады в русле ручья при Требии и сражавшийся в центре при Каннах.</translation>
     </message>
     <message>
         <source>Sword commander who leads a hidden detachment into the enemy&apos;s rear.</source>
@@ -3357,7 +3357,7 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
     <message>
         <source>Opens for your troops and allies, shut to everyone else.</source>
-        <translation>Открывается вашим отрядам и союзникам, закрыта для всех прочих.</translation>
+        <translation>Открываются вашим отрядам и союзникам, закрыты для всех прочих.</translation>
     </message>
     <message>
         <source>Long-range siege engine, best against structures.</source>
@@ -3575,11 +3575,11 @@ This may be a skirmish, or objectives have not been configured.</source>
     <name>EconomyOverview</name>
     <message>
         <source>Men in the field: %1. Every soldier, rider, crew member, builder and civilian counts as one man.</source>
-        <translation>Людей в поле: %1. Каждый солдат, всадник, расчёт, строитель и житель считается за одного человека.</translation>
+        <translation>Людей в поле: %1. Каждый солдат, всадник, расчёт, строитель и гражданский считается за одного человека.</translation>
     </message>
     <message>
         <source>Men you can still raise: %1 held in reserve by your barracks and temples. Walk civilians into a barracks or build a Home to raise more.</source>
-        <translation>Людей, которых вы ещё можете поднять: %1 в резерве казарм и храмов. Приведите жителей в казармы или постройте Дом, чтобы поднять больше.</translation>
+        <translation>Людей, которых вы ещё можете поднять: %1 в резерве казарм и храмов. Приведите гражданских в казармы или постройте Дом, чтобы поднять больше.</translation>
     </message>
     <message>
         <source>This map allows %1 men per army; %2 more wait in reserve but cannot muster until the field thins.</source>
@@ -4311,23 +4311,23 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
     <message>
         <source>Save slot &apos;%1&apos; does not contain a battlefield and was not loaded.</source>
-        <translation>Save slot &apos;%1&apos; does not contain a battlefield and was not loaded.</translation>
+        <translation>Слот сохранения «%1» не содержит поля боя и не был загружен.</translation>
     </message>
     <message>
         <source>&apos;%1&apos; could not be restored (%2). The battle that was running could not be kept.</source>
-        <translation>&apos;%1&apos; could not be restored (%2). The battle that was running could not be kept.</translation>
+        <translation>Не удалось восстановить «%1» (%2). Текущее сражение сохранить тоже не удалось.</translation>
     </message>
     <message>
         <source>&apos;%1&apos; was saved by a different version of Standard of Iron (snapshot %2, this build reads %3) and cannot be imported.</source>
-        <translation>&apos;%1&apos; was saved by a different version of Standard of Iron (snapshot %2, this build reads %3) and cannot be imported.</translation>
+        <translation>«%1» сохранено другой версией Standard of Iron (снимок %2, эта версия читает %3), и импортировать его нельзя.</translation>
     </message>
     <message>
         <source>&apos;%1&apos; could not be restored (%2). The battle that was running was left alone.</source>
-        <translation>&apos;%1&apos; could not be restored (%2). The battle that was running was left alone.</translation>
+        <translation>Не удалось восстановить «%1» (%2). Текущее сражение осталось нетронутым.</translation>
     </message>
     <message>
         <source>&apos;%1&apos; restored no units at all, so there is no battle to return to. The save is unusable and the battle that was running was left alone.</source>
-        <translation>&apos;%1&apos; restored no units at all, so there is no battle to return to. The save is unusable and the battle that was running was left alone.</translation>
+        <translation>«%1» не восстановило ни одного отряда, поэтому возвращаться некуда. Сохранение непригодно, а текущее сражение осталось нетронутым.</translation>
     </message>
 </context>
 <context>
@@ -4382,7 +4382,7 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
     <message>
         <source>A save is already in progress.</source>
-        <translation>A save is already in progress.</translation>
+        <translation>Сохранение уже идёт.</translation>
     </message>
     <message>
         <source>your ally</source>
@@ -4398,7 +4398,7 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
     <message>
         <source>wood</source>
-        <translation>дерева</translation>
+        <translation>древесины</translation>
     </message>
     <message>
         <source>stone</source>
@@ -4426,7 +4426,7 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
     <message>
         <source>%1 refuses to part with any %2.</source>
-        <translation>%1 отказывается расставаться с %2.</translation>
+        <translation>%1 отказывается отдавать хоть сколько-нибудь %2.</translation>
     </message>
     <message>
         <source>No ally will join the attack.</source>
@@ -5604,7 +5604,7 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
     <message>
         <source>Following: %1</source>
-        <translation>Следите за: %1</translation>
+        <translation>Слежение: %1</translation>
     </message>
     <message>
         <source>Follow the previous army</source>
@@ -5778,7 +5778,7 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     <name>HUDVictory</name>
     <message>
         <source>Retry mission</source>
-        <translation>Повторить миссию</translation>
+        <translation>Повторить задание</translation>
     </message>
     <message>
         <source>Fight it again</source>
@@ -5929,7 +5929,7 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     </message>
     <message>
         <source>Left-click a barracks and pick a soldier; healers take their vows at a temple instead. Recruits queue up to five deep and march out to the rally flag. Each costs reserve from the building&apos;s own pool as well as materials.</source>
-        <translation>Щёлкните левой по казармам и выберите воина; целители дают обеты в храме. Новобранцы встают в очередь по пятеро и выходят к знамени сбора. Каждый стоит резерва из собственного запаса постройки, а также материалов.</translation>
+        <translation>Щёлкните левой по казармам и выберите воина; целители дают обеты в храме. В очереди может стоять до пяти новобранцев; готовые выходят к знамени сбора. Каждый стоит резерва из собственного запаса постройки, а также материалов.</translation>
     </message>
     <message>
         <source>Reserve</source>
@@ -5997,7 +5997,7 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     </message>
     <message>
         <source>The tutorial is a guided first battle on a small meadow. Each step names one goal, tells you when it is done, and explains why an order is refused. It also points: the button a step is talking about lights up in the command bar, and what you are meant to act on is ringed on the field and pinned on the minimap - press Show me to swing the camera onto it. Steps can be paused, skipped and replayed at any time.</source>
-        <translation>Обучение — это первый бой с проводником на небольшом лугу. Каждый шаг называет одну цель, говорит, когда она достигнута, и объясняет, почему приказ отклонён. Он ещё и подсказывает: кнопка, о которой идёт речь, загорается на панели команд, а то, с чем надо работать, обводится кольцом на поле и отмечается на мини-карте — нажмите «Покажи», чтобы навести туда камеру. Шаги можно в любой миг приостановить, пропустить и повторить.</translation>
+        <translation>Обучение — это первый бой с проводником на небольшом лугу. Каждый шаг называет одну цель, говорит, когда она достигнута, и объясняет, почему приказ отклонён. Он ещё и подсказывает: кнопка, о которой идёт речь, загорается на панели команд, а то, с чем надо работать, обводится кольцом на поле и отмечается на мини-карте — нажмите «Показать», чтобы навести туда камеру. Шаги можно в любой миг приостановить, пропустить и повторить.</translation>
     </message>
     <message>
         <source>%1. %2</source>
@@ -6025,7 +6025,7 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     </message>
     <message>
         <source>Each mission states its own victory and defeat conditions in the Objectives screen (Escape, then Objectives). In battle, press O or the objectives button in the top bar to keep the full list open beside the field. In every battle your commander must survive: a nation dies with the man who leads it, and a lone commander is already lost.</source>
-        <translation>Каждая миссия задаёт свои условия победы и поражения на экране Задач (Escape, затем Задачи). В бою нажмите O или кнопку задач на верхней панели, чтобы держать полный список открытым рядом с полем. В каждом бою ваш командир должен выжить: народ умирает вместе с тем, кто его ведёт, а одинокий командир уже потерян.</translation>
+        <translation>Каждое задание задаёт свои условия победы и поражения на экране Задач (Escape, затем Задачи). В бою нажмите O или кнопку задач на верхней панели, чтобы держать полный список открытым рядом с полем. В каждом бою ваш полководец должен выжить: народ умирает вместе с тем, кто его ведёт, а одинокий полководец уже потерян.</translation>
     </message>
     <message>
         <source>Undead zones</source>
@@ -6057,7 +6057,7 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     </message>
     <message>
         <source>Once the guardians have fallen, walk troops onto the shrine to capture it, or simply knock it down. Either way the zone is purified for good and it will not wake again. A purified shrine pays out: the clear reward - wood, iron and food - lands in your stores the moment the zone falls.</source>
-        <translation>Когда стражи падут, приведите войска на святилище, чтобы захватить его, или просто разрушьте. В любом случае зона очищена навсегда и больше не проснётся. Очищенное святилище платит: награда за очистку - дерево, железо и еда - попадает в ваши склады в момент падения зоны.</translation>
+        <translation>Когда стражи падут, приведите войска на святилище, чтобы захватить его, или просто разрушьте. В любом случае зона очищена навсегда и больше не проснётся. Очищенное святилище платит: награда за очистку - древесина, железо и еда - попадает в ваши склады в момент падения зоны.</translation>
     </message>
     <message>
         <source>The guardians</source>
@@ -6160,7 +6160,7 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     </message>
     <message>
         <source>Mission Failed</source>
-        <translation>Миссия провалена</translation>
+        <translation>Задание провалено</translation>
     </message>
     <message>
         <source>One side is left holding the field.</source>
@@ -6479,75 +6479,75 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     </message>
     <message>
         <source>Saves are unavailable: %1</source>
-        <translation>Saves are unavailable: %1</translation>
+        <translation>Сохранения недоступны: %1</translation>
     </message>
     <message>
         <source>The save database could not be read and a new one was started. Your previous file was kept at %1.</source>
-        <translation>The save database could not be read and a new one was started. Your previous file was kept at %1.</translation>
+        <translation>Не удалось прочитать базу данных сохранений, поэтому создана новая. Прежний файл сохранён в %1.</translation>
     </message>
     <message>
         <source>No saved games yet. Save a battle from the menu, or press the quicksave key while you play.</source>
-        <translation>No saved games yet. Save a battle from the menu, or press the quicksave key while you play.</translation>
+        <translation>Сохранённых игр пока нет. Сохраните сражение через меню или нажмите клавишу быстрого сохранения во время игры.</translation>
     </message>
     <message>
         <source>Untitled save</source>
-        <translation>Untitled save</translation>
+        <translation>Сохранение без имени</translation>
     </message>
     <message>
         <source>Unknown map</source>
-        <translation>Unknown map</translation>
+        <translation>Неизвестная карта</translation>
     </message>
     <message>
         <source>Saved by a different version of the game. It is kept on disk, but this build cannot open it.</source>
-        <translation>Saved by a different version of the game. It is kept on disk, but this build cannot open it.</translation>
+        <translation>Сохранено другой версией игры. Файл остаётся на диске, но эта версия не может его открыть.</translation>
     </message>
     <message>
         <source>Export failed: %1</source>
-        <translation>Export failed: %1</translation>
+        <translation>Не удалось экспортировать: %1</translation>
     </message>
     <message>
         <source>This save will load</source>
-        <translation>This save will load</translation>
+        <translation>Это сохранение загрузится</translation>
     </message>
     <message>
         <source>This save will not load</source>
-        <translation>This save will not load</translation>
+        <translation>Это сохранение не загрузится</translation>
     </message>
     <message>
         <source>&quot;%1&quot; decompressed cleanly and contains a complete battlefield.</source>
-        <translation>&quot;%1&quot; decompressed cleanly and contains a complete battlefield.</translation>
+        <translation>«%1» распаковано без ошибок и содержит полное поле боя.</translation>
     </message>
     <message>
         <source>This save was written by a different version of the game.</source>
-        <translation>This save was written by a different version of the game.</translation>
+        <translation>Это сохранение записано другой версией игры.</translation>
     </message>
     <message>
         <source>Delete this save?</source>
-        <translation>Delete this save?</translation>
+        <translation>Удалить это сохранение?</translation>
     </message>
     <message>
         <source>&quot;%1&quot; will be deleted. This cannot be undone.</source>
-        <translation>&quot;%1&quot; will be deleted. This cannot be undone.</translation>
+        <translation>«%1» будет удалено. Это действие нельзя отменить.</translation>
     </message>
     <message>
         <source>Keep it</source>
-        <translation>Keep it</translation>
+        <translation>Оставить</translation>
     </message>
     <message>
         <source>Deleted &quot;%1&quot;</source>
-        <translation>Deleted &quot;%1&quot;</translation>
+        <translation>«%1» удалено</translation>
     </message>
     <message>
         <source>Close</source>
-        <translation>Close</translation>
+        <translation>Закрыть</translation>
     </message>
     <message>
         <source>Import save</source>
-        <translation>Import save</translation>
+        <translation>Импортировать сохранение</translation>
     </message>
     <message>
         <source>Import failed: %1</source>
-        <translation>Import failed: %1</translation>
+        <translation>Не удалось импортировать: %1</translation>
     </message>
 </context>
 <context>
@@ -6896,7 +6896,7 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     </message>
     <message>
         <source>At the Trebia, Hannibal lured Roman troops into a winter battle; a concealed Carthaginian force struck during the fighting.</source>
-        <translation>На Треббии Ганнибал заманил римлян в зимнее сражение; скрытый карфагенский отряд ударил в разгар боя.</translation>
+        <translation>На Требии Ганнибал заманил римлян в зимнее сражение; скрытый карфагенский отряд ударил в разгар боя.</translation>
     </message>
     <message>
         <source>Fabius Maximus earned the name &apos;the Delayer&apos; by avoiding Hannibal&apos;s preferred pitched battles and harassing his movements and supplies.</source>
@@ -7195,19 +7195,19 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     </message>
     <message>
         <source>There is no quicksave to load.</source>
-        <translation>There is no quicksave to load.</translation>
+        <translation>Нет быстрого сохранения для загрузки.</translation>
     </message>
     <message>
         <source>Load the quicksave?</source>
-        <translation>Load the quicksave?</translation>
+        <translation>Загрузить быстрое сохранение?</translation>
     </message>
     <message>
         <source>The battle in progress will be replaced by the quicksave. Anything since then is lost.</source>
-        <translation>The battle in progress will be replaced by the quicksave. Anything since then is lost.</translation>
+        <translation>Текущее сражение будет заменено быстрым сохранением. Всё, что произошло с тех пор, будет потеряно.</translation>
     </message>
     <message>
         <source>Load the quicksave</source>
-        <translation>Load the quicksave</translation>
+        <translation>Загрузить быстрое сохранение</translation>
     </message>
 </context>
 <context>
@@ -7398,15 +7398,15 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     </message>
     <message>
         <source>Continue</source>
-        <translation>Continue</translation>
+        <translation>Далее</translation>
     </message>
     <message>
         <source>Return to the most recent save</source>
-        <translation>Return to the most recent save</translation>
+        <translation>Вернуться к последнему сохранению</translation>
     </message>
     <message>
         <source>Resume</source>
-        <translation>Resume</translation>
+        <translation>Продолжить</translation>
     </message>
 </context>
 <context>
@@ -7512,7 +7512,7 @@ to see preview</source>
     </message>
     <message>
         <source>This battlefield only has %1 starting bases</source>
-        <translation>На этом поле боя всего %1 стартовых баз</translation>
+        <translation>Стартовых баз на этом поле боя всего: %1</translation>
     </message>
     <message>
         <source>Every player in play needs a starting base</source>
@@ -7858,7 +7858,7 @@ to see preview</source>
     </message>
     <message>
         <source>Crossing the Rhone</source>
-        <translation>Переправа через Рону</translation>
+        <translation>Переправа через Родан</translation>
     </message>
     <message>
         <source>An enormous capital on a 768 m stage, built in rings. Farmland, orchards, quarries, lakes and a ruined old town fill the countryside; a great eight-gated wall encloses the new city with its circus, theatre, docks and insulae; an older Republican circuit holds the forum and the ancient core; and a walled citadel crowns the sacred mountain behind the whole thing, where the healers keep the temples.</source>
@@ -7870,7 +7870,7 @@ to see preview</source>
     </message>
     <message>
         <source>A Roman watch camp on the old road, the night it finds out why the shepherds stopped using it. Timber, stone and a flock are close to the camp; the barrow ruins hold the middle ground; the cursed shrine stands alone on the north-east ground. A low knoll between the camp and the barrow is the only high ground worth having, and the road runs past the dead the whole way.</source>
-        <translation>Римский сторожевой лагерь на старой дороге в ту ночь, когда он узнаёт, почему пастухи перестали по ней ходить. Лес, камень и стадо — рядом с лагерем; руины гробницы занимают середину; проклятое святилище одиноко стоит на северо-востоке. Низкий бугор между лагерем и гробницей — единственная высота, которую стоит занять, а дорога всю дорогу идёт мимо мёртвых.</translation>
+        <translation>Римский сторожевой лагерь на старой дороге в ту ночь, когда он узнаёт, почему пастухи перестали по ней ходить. Лес, камень и стадо — рядом с лагерем; руины кургана занимают середину; проклятое святилище одиноко стоит на северо-востоке. Низкий бугор между лагерем и курганом — единственная высота, которую стоит занять, а дорога всю дорогу идёт мимо мёртвых.</translation>
     </message>
     <message>
         <source>Victumulae</source>
@@ -8455,7 +8455,7 @@ to see preview</source>
     </message>
     <message>
         <source>Hold the Punic quarter through every consular column.</source>
-        <translation>Удержите пунический квартал через каждую консульскую колонну.</translation>
+        <translation>Удержите пунический квартал против каждой консульской колонны.</translation>
     </message>
     <message>
         <source>Hold the Sallow Ford</source>
@@ -8475,7 +8475,7 @@ to see preview</source>
     </message>
     <message>
         <source>Hold the southern bank through every Roman assault phase.</source>
-        <translation>Удержите южный берег через каждую римскую фазу приступа.</translation>
+        <translation>Удержите южный берег во всех римских фазах приступа.</translation>
     </message>
     <message>
         <source>If the central camp falls, the Campanian alliance dies with it.</source>
@@ -8831,19 +8831,19 @@ to see preview</source>
     </message>
     <message>
         <source>Cut and carry home eight hundred of timber and two hundred and ten of stone. The near stand was stripped bare; the deep pines and the east screen are the only timber left standing.</source>
-        <translation>Сруби и привези домой восемьсот дерева и двести десять камня. Ближнюю рощу свели подчистую; глубокие сосны и восточная завеса — единственный лес, что ещё стоит.</translation>
+        <translation>Нарубите и привезите домой восемьсот древесины и двести десять камня. Ближнюю рощу свели подчистую; глубокие сосны и восточная завеса — единственный лес, что ещё стоит.</translation>
     </message>
     <message>
         <source>Eight hundred of timber and two hundred of stone, and the near stand was stripped by the last detail. That means the deep pines, which means the long road, which means whatever is living in the deep pines gets a look at us. The column comes back through at dusk and it does not wait. Split the crew. Escort the far one.</source>
-        <translation>Восемьсот дерева и двести камня, а ближнюю рощу свела прошлая артель. Значит, глубокие сосны, значит, долгая дорога, значит, то, что живёт в глубоких соснах, на нас поглядит. Колонна возвращается в сумерках и не ждёт. Раздели артель. Дай дальней охрану.</translation>
+        <translation>Восемьсот древесины и двести камня, а ближнюю рощу свела прошлая артель. Значит, глубокие сосны, значит, долгая дорога, значит, то, что живёт в глубоких соснах, на нас поглядит. Колонна возвращается в сумерках и не ждёт. Раздели артель. Дай дальней охрану.</translation>
     </message>
     <message>
         <source>Fill the levy out of the Pinewater cut: eight hundred of timber and two hundred and ten of stone, cut and carried home before the column comes back through at dusk.</source>
-        <translation>Выполни повинность на Сосновой Воде: восемьсот дерева и двести десять камня, срубить и привезти домой, пока колонна не вернётся в сумерках.</translation>
+        <translation>Выполните набор на Сосновой Воде: восемьсот древесины и двести десять камня, срубить и привезти домой, пока колонна не вернётся в сумерках.</translation>
     </message>
     <message>
         <source>First column on the cart gate. Spears up. Let them come to the stakes; the stakes do not get tired.</source>
-        <translation>Первая колонна у обозных ворот. Копья вверх. Пусть идут на колья; колья не устают.</translation>
+        <translation>Первая колонна у тележных ворот. Копья вверх. Пусть идут на колья; колья не устают.</translation>
     </message>
     <message>
         <source>Hannibal dies in the snow. Then the elephants were for nothing, and so was the road. History will find that very tidy.</source>
@@ -8919,7 +8919,7 @@ to see preview</source>
     </message>
     <message>
         <source>The last of the northern columns is moving. I have spent a year making you hold this quarter. Hold it one more hour and I will have spent it well.</source>
-        <translation>Последняя из северных колонн двинулась. Я потратил год, заставляя тебя держать эту четверть. Удержи ещё час — и год будет потрачен хорошо.</translation>
+        <translation>Последняя из северных колонн двинулась. Я потратил год, заставляя тебя держать этот квартал. Удержи ещё час — и год будет потрачен хорошо.</translation>
     </message>
     <message>
         <source>The last pass camp. So you are through - what is left of you. Italy is below. Italy has been waiting, and Italy is not friendly.</source>
@@ -8939,7 +8939,7 @@ to see preview</source>
     </message>
     <message>
         <source>The patrols are nearly finished. So be it. I shall take the fleet back to Italy and wait for you there with the rest of the Republic.</source>
-        <translation>Дозоры почти покончены. Пусть так. Я уведу флот обратно в Италию и подожду тебя там с остальной Республикой.</translation>
+        <translation>С дозорами почти покончено. Пусть так. Я уведу флот обратно в Италию и подожду тебя там с остальной Республикой.</translation>
     </message>
     <message>
         <source>The reserve camp is yours. It was never meant to fight - it was meant to be there afterwards. There is not going to be an afterwards, is there.</source>
@@ -9039,7 +9039,7 @@ to see preview</source>
     </message>
     <message>
         <source>Lose every hall in the city and there is nothing left to recruit from, or carry a harvest to.</source>
-        <translation>Потеряйте все казармы в городе — и не останется ни откуда набирать, ни куда свозить урожай.</translation>
+        <translation>Потеряйте все казармы в городе — и набирать будет неоткуда, и свозить урожай некуда.</translation>
     </message>
     <message>
         <source>One consul and an empty city is not a garrison.</source>
@@ -9203,7 +9203,7 @@ to see preview</source>
     </message>
     <message>
         <source>Rome has paid the tribes and sent officers to hold them to the bargain. Kill the officers and the tribes go home.</source>
-        <translation>Рим подкупил племена и прислал офицеров, чтобы те держали их к сделке. Убейте офицеров — и племена разойдутся по домам.</translation>
+        <translation>Рим подкупил племена и прислал офицеров, чтобы те заставили их соблюдать сделку. Убейте офицеров — и племена разойдутся по домам.</translation>
     </message>
     <message>
         <source>Scipio holds the forest sanctuary north-east of your camp; the reserve&apos;s officer waits at the bridge below his camp.</source>
@@ -9511,7 +9511,7 @@ to see preview</source>
     </message>
     <message>
         <source>Clear the barrow ruins. Both risings of the dead must fall.</source>
-        <translation>Очистите руины гробницы. Оба восстания мёртвых должны пасть.</translation>
+        <translation>Очистите руины кургана. Оба восстания мёртвых должны пасть.</translation>
     </message>
     <message>
         <source>Fabius falls. The watch ends, and the dead keep walking.</source>
@@ -9543,15 +9543,15 @@ to see preview</source>
     </message>
     <message>
         <source>Raise a marketplace at the watch camp. Gold buys nothing buried in a barrow.</source>
-        <translation>Постройте рынок в сторожевом лагере. Золото не купит ничего из того, что зарыто в гробнице.</translation>
+        <translation>Постройте рынок в сторожевом лагере. Золото не купит ничего из того, что зарыто в кургане.</translation>
     </message>
     <message>
         <source>Rome sent sixty men to find out why the shepherds will not use the old road after dark. Build up the watch camp first, then clear the barrow ruins and take the shrine on the rise. The dead will not come to you: you choose when to wake them, and you can choose to be ready.</source>
-        <translation>Рим послал шестьдесят человек выяснить, почему пастухи не ходят по старой дороге после темноты. Сначала обустройте сторожевой лагерь, затем очистите руины гробницы и возьмите святилище на возвышенности. Мёртвые не придут к вам сами: вы выбираете, когда их разбудить, и можете выбрать быть готовыми.</translation>
+        <translation>Рим послал шестьдесят человек выяснить, почему пастухи не ходят по старой дороге после темноты. Сначала обустройте сторожевой лагерь, затем очистите руины кургана и возьмите святилище на возвышенности. Мёртвые не придут к вам сами: вы выбираете, когда их разбудить, и можете выбрать быть готовыми.</translation>
     </message>
     <message>
         <source>Sixty men and a road the shepherds will not walk after dark. The Senate wants a report. Cut timber, raise the camp, and keep everyone off that barrow until I say otherwise.</source>
-        <translation>Шестьдесят человек и дорога, по которой пастухи после темноты не ходят. Сенат хочет доклад. Рубите лес, ставьте лагерь и никого не подпускайте к той гробнице, пока я не скажу иначе.</translation>
+        <translation>Шестьдесят человек и дорога, по которой пастухи после темноты не ходят. Сенат хочет доклад. Рубите лес, ставьте лагерь и никого не подпускайте к тому кургану, пока я не скажу иначе.</translation>
     </message>
     <message>
         <source>Take the shrine on the rise: cut down its guardians, then keep troops beside it until the standard is planted.</source>
@@ -9563,7 +9563,7 @@ to see preview</source>
     </message>
     <message>
         <source>The quartermaster sent gold, and gold does not hold a shield wall. Build a market and turn it into iron. When we do go to that barrow, the archers stand still and let the dead walk onto the shields.</source>
-        <translation>Квартирмейстер прислал золото, а золото не удержит стену щитов. Постройте рынок и превратите его в железо. Когда мы всё же пойдём к той гробнице, лучники стоят на месте и дают мёртвым самим прийти на щиты.</translation>
+        <translation>Квартирмейстер прислал золото, а золото не удержит стену щитов. Постройте рынок и превратите его в железо. Когда мы всё же пойдём к тому кургану, лучники стоят на месте и дают мёртвым самим прийти на щиты.</translation>
     </message>
     <message>
         <source>Those are men. Were men. Jupiter keep us. ...Steady. Bones break like anything else. Archers, hold where you stand and let them come to the shields.</source>
@@ -9599,7 +9599,7 @@ to see preview</source>
     </message>
     <message>
         <source>Builders raise the engines in the field. A ram costs 70 wood and 15 iron and breaks gates; a siege tower costs 120 wood and 30 iron and puts men on the wall walk. Build one of each.</source>
-        <translation>Строители возводят машины в поле. Таран стоит 70 дерева и 15 железа и ломает ворота; осадная башня стоит 120 дерева и 30 железа и выводит людей на боевой ход. Постройте по одной каждого.</translation>
+        <translation>Строители возводят машины в поле. Таран стоит 70 древесины и 15 железа и ломает ворота; осадная башня стоит 120 древесины и 30 железа и выводит людей на боевой ход. Постройте по одной каждого.</translation>
     </message>
     <message>
         <source>Burn the engines at the foot of the ramp and leave the bodies where they lie. The next army that comes up this road should see what the hill costs.</source>
@@ -9727,7 +9727,7 @@ to see preview</source>
     </message>
     <message>
         <source>Victumulae stands on a double hill: a lower ward ringed by a curtain and four towers, and a walled citadel on the upper crown. Both gates face the camp road.</source>
-        <translation>Виктумулы стоят на двойном холме: нижний город, опоясанный куртиной с четырьмя башнями, и обнесённая стеной цитадель на верхней вершине. Обои ворота обращены к лагерной дороге.</translation>
+        <translation>Виктумулы стоят на двойном холме: нижний город, опоясанный куртиной с четырьмя башнями, и обнесённая стеной цитадель на верхней вершине. И те и другие ворота обращены к лагерной дороге.</translation>
     </message>
     <message>
         <source>We are feeding men to that ramp. Pull back out of bowshot and wait for the engines; walls do not get tired, but they do not get closer either.</source>
@@ -9747,7 +9747,7 @@ to see preview</source>
     </message>
     <message>
         <source>216-211 BC: after Cannae, Capua went over to Hannibal, and his army wintered there in 216-215. Rome answered by containment rather than battle: Quintus Fabius Maximus, the Delayer and &apos;shield of Rome&apos;, shadowed Hannibal and stripped the country, while Marcus Claudius Marcellus, the &apos;sword of Rome&apos;, held Nola against him in 216, 215 and 214 BC. In 212 the consuls closed a ring of siege works around Capua, and the city fell in 211 after Hannibal&apos;s march on Rome failed to draw the legions off. This mission is a dark-fantasy composite: it compresses those years into one defence, puts Fabius, the allied legions and Marcellus at the head of a siege army on the field at once, and adds the Iron Sepulcher, which history does not record.</source>
-        <translation>216–211 гг. до н. э.: после Канн Капуя перешла на сторону Ганнибала, и его армия зимовала там в 216–215 гг. Рим ответил не битвой, а сдерживанием: Квинт Фабий Максим, Медлитель и «щит Рима», тенью следовал за Ганнибалом и опустошал округу, а Марк Клавдий Марцелл, «меч Рима», удерживал против него Нолу в 216, 215 и 214 гг. до н. э. В 212 году консулы сомкнули вокруг Капуи кольцо осадных укреплений, и город пал в 211 году, после того как поход Ганнибала на Рим не сумел отвлечь легионы. Эта миссия — тёмно-фэнтезийная сводка: она сжимает эти годы в одну оборону, выводит на поле одновременно Фабия, союзные легионы и Марцелла во главе осадной армии и добавляет Железную Гробницу, о которой история молчит.</translation>
+        <translation>216–211 гг. до н. э.: после Канн Капуя перешла на сторону Ганнибала, и его армия зимовала там в 216–215 гг. Рим ответил не битвой, а сдерживанием: Квинт Фабий Максим, Медлитель и «щит Рима», тенью следовал за Ганнибалом и опустошал округу, а Марк Клавдий Марцелл, «меч Рима», удерживал против него Нолу в 216, 215 и 214 гг. до н. э. В 212 году консулы сомкнули вокруг Капуи кольцо осадных укреплений, и город пал в 211 году, после того как поход Ганнибала на Рим не сумел отвлечь легионы. Это задание — тёмно-фэнтезийная сводка: оно сжимает эти годы в одну оборону, выводит на поле одновременно Фабия, союзные легионы и Марцелла во главе осадной армии и добавляет Железную Гробницу, о которой история молчит.</translation>
     </message>
     <message>
         <source>218 BC, late autumn: Hannibal crossed the Alps in about fifteen days with a multinational army, cavalry, baggage train, and surviving elephants. At the first ascent the Allobroges held the heights above a defile; Hannibal seized their posts by night, yet they still fell on the strung-out column, and the track killed as many men and animals as their spears. Higher up, mountain Gauls who had come with olive branches led the army into a ravine and rolled rocks down onto it from above (Polybius 3.50-53; Livy 21.32-35). Ancient sources disagree on the route. Historical: the Gallic ambushes, the rockfall, the snow and the hunt for supplies. Altered: Roman officers and camps in the passes paying the tribes - no Roman force stood in the Alps - and the Iron Sepulcher&apos;s grave-lights.</source>
@@ -10238,7 +10238,7 @@ to see preview</source>
     </message>
     <message>
         <source>Nothing in the stores. Everything you spend, you gather first.</source>
-        <translation>На складах пусто. Всё, что потратишь, сперва добудешь.</translation>
+        <translation>На складах пусто. Всё, что потратите, сперва придётся добыть.</translation>
     </message>
     <message>
         <source>FIELD RECONNAISSANCE</source>
@@ -10522,7 +10522,7 @@ to see preview</source>
     </message>
     <message>
         <source>Not enough reserve: %1 / %2 men. Walk civilians into the barracks or build a Home to raise more.</source>
-        <translation>Недостаточно резерва: %1 / %2 чел. Приведите жителей в казармы или постройте Дом, чтобы поднять больше.</translation>
+        <translation>Недостаточно резерва: %1 / %2 чел. Приведите гражданских в казармы или постройте Дом, чтобы поднять больше.</translation>
     </message>
     <message>
         <source>Army at the map&apos;s limit: %1 / %2 men in the field.</source>
@@ -10943,7 +10943,7 @@ Build time: %3s</source>
     </message>
     <message>
         <source>%1 · %2s</source>
-        <translation>%1 · %2s</translation>
+        <translation>%1 · %2 с</translation>
     </message>
     <message>
         <source>Ram</source>
@@ -11511,7 +11511,7 @@ Right-click to cancel.</source>
     </message>
     <message>
         <source>Allies can only exchange gold, food, wood, stone or iron.</source>
-        <translation>Союзники могут обмениваться только золотом, едой, деревом, камнем или железом.</translation>
+        <translation>Союзники могут обмениваться только золотом, едой, древесиной, камнем или железом.</translation>
     </message>
     <message>
         <source>Choose an ally to trade with.</source>
@@ -11890,7 +11890,7 @@ Right-click to cancel.</source>
     </message>
     <message>
         <source>Loaded, but &apos;%1&apos; could not be read, so wildlife, undead zones and cursed veins were not restored.</source>
-        <translation>Loaded, but &apos;%1&apos; could not be read, so wildlife, undead zones and cursed veins were not restored.</translation>
+        <translation>Загружено, но «%1» прочитать не удалось, поэтому дикие звери, зоны нежити и проклятые жилы не восстановлены.</translation>
     </message>
 </context>
 <context>
@@ -12129,19 +12129,19 @@ Right-click to cancel.</source>
     </message>
     <message>
         <source>Name the save first.</source>
-        <translation>Name the save first.</translation>
+        <translation>Сначала назовите сохранение.</translation>
     </message>
     <message>
         <source>That name is too long. Keep it under %1 characters.</source>
-        <translation>That name is too long. Keep it under %1 characters.</translation>
+        <translation>Слишком длинное имя. Уложитесь в %1 символов.</translation>
     </message>
     <message>
         <source>That name is reserved for quicksaves and autosaves, which would overwrite it without asking. Pick another one.</source>
-        <translation>That name is reserved for quicksaves and autosaves, which would overwrite it without asking. Pick another one.</translation>
+        <translation>Это имя занято быстрыми и автосохранениями, которые перезапишут его без спроса. Выберите другое.</translation>
     </message>
     <message>
         <source>Names cannot contain slashes or control characters.</source>
-        <translation>Names cannot contain slashes or control characters.</translation>
+        <translation>Имена не могут содержать косые черты и управляющие символы.</translation>
     </message>
 </context>
 <context>
@@ -12164,79 +12164,79 @@ Right-click to cancel.</source>
     </message>
     <message>
         <source>Saves are unavailable: %1</source>
-        <translation>Saves are unavailable: %1</translation>
+        <translation>Сохранения недоступны: %1</translation>
     </message>
     <message>
         <source>Save name</source>
-        <translation>Save name</translation>
+        <translation>Имя сохранения</translation>
     </message>
     <message>
         <source>Name this save...</source>
-        <translation>Name this save...</translation>
+        <translation>Назовите сохранение...</translation>
     </message>
     <message>
         <source>A save called &quot;%1&quot; already exists. Saving replaces it.</source>
-        <translation>A save called &quot;%1&quot; already exists. Saving replaces it.</translation>
+        <translation>Сохранение «%1» уже существует. Сохранение заменит его.</translation>
     </message>
     <message>
         <source>Press Enter to save.</source>
-        <translation>Press Enter to save.</translation>
+        <translation>Нажмите Enter, чтобы сохранить.</translation>
     </message>
     <message>
         <source>Existing saves</source>
-        <translation>Existing saves</translation>
-    </message>
-    <message>
-        <source>%1 save</source>
-        <translation>%1 save</translation>
-    </message>
-    <message>
-        <source>%1 saves</source>
-        <translation>%1 saves</translation>
+        <translation>Существующие сохранения</translation>
     </message>
     <message>
         <source>No saves yet. The name above will create the first one.</source>
-        <translation>No saves yet. The name above will create the first one.</translation>
+        <translation>Сохранений пока нет. Имя выше создаст первое.</translation>
     </message>
     <message>
         <source>Untitled save</source>
-        <translation>Untitled save</translation>
+        <translation>Сохранение без имени</translation>
     </message>
     <message>
         <source>Unknown map</source>
-        <translation>Unknown map</translation>
+        <translation>Неизвестная карта</translation>
     </message>
     <message>
         <source>Saved by a different version of the game. It is kept, but this build cannot open it.</source>
-        <translation>Saved by a different version of the game. It is kept, but this build cannot open it.</translation>
+        <translation>Сохранено другой версией игры. Оно сохранится, но эта версия не может его открыть.</translation>
     </message>
     <message>
         <source>Delete</source>
-        <translation>Delete</translation>
+        <translation>Удалить</translation>
     </message>
     <message>
         <source>Replace this save?</source>
-        <translation>Replace this save?</translation>
+        <translation>Заменить это сохранение?</translation>
     </message>
     <message>
         <source>&quot;%1&quot; will be replaced by the current battle. The version stored now cannot be recovered.</source>
-        <translation>&quot;%1&quot; will be replaced by the current battle. The version stored now cannot be recovered.</translation>
+        <translation>«%1» будет заменено текущим сражением. Сохранённую сейчас версию восстановить не удастся.</translation>
     </message>
     <message>
         <source>Replace</source>
-        <translation>Replace</translation>
+        <translation>Заменить</translation>
     </message>
     <message>
         <source>Keep it</source>
-        <translation>Keep it</translation>
+        <translation>Оставить</translation>
     </message>
     <message>
         <source>Delete this save?</source>
-        <translation>Delete this save?</translation>
+        <translation>Удалить это сохранение?</translation>
     </message>
     <message>
         <source>&quot;%1&quot; will be deleted. This cannot be undone.</source>
-        <translation>&quot;%1&quot; will be deleted. This cannot be undone.</translation>
+        <translation>«%1» будет удалено. Это действие нельзя отменить.</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n save(s)</source>
+        <translation>
+            <numerusform>%n сохранение</numerusform>
+            <numerusform>%n сохранения</numerusform>
+            <numerusform>%n сохранений</numerusform>
+        </translation>
     </message>
 </context>
 <context>
@@ -12255,58 +12255,58 @@ Right-click to cancel.</source>
     </message>
     <message>
         <source>Saved &quot;%1&quot;</source>
-        <translation>Saved &quot;%1&quot;</translation>
+        <translation>«%1» сохранено</translation>
     </message>
     <message>
         <source>Saving &quot;%1&quot; failed.</source>
-        <translation>Saving &quot;%1&quot; failed.</translation>
+        <translation>Не удалось сохранить «%1».</translation>
     </message>
     <message>
         <source>Saved</source>
-        <translation>Saved</translation>
+        <translation>Сохранено</translation>
     </message>
 </context>
 <context>
     <name>SaveSlotRow</name>
     <message>
         <source>%1h %2m</source>
-        <translation>%1h %2m</translation>
+        <translation>%1 ч %2 мин</translation>
     </message>
     <message>
         <source>%1m</source>
-        <translation>%1m</translation>
+        <translation>%1 мин</translation>
     </message>
     <message>
         <source>under a minute</source>
-        <translation>under a minute</translation>
+        <translation>меньше минуты</translation>
     </message>
     <message>
         <source>Unknown</source>
-        <translation>Unknown</translation>
+        <translation>Неизвестно</translation>
     </message>
     <message>
         <source>Campaign</source>
-        <translation>Campaign</translation>
+        <translation>Кампания</translation>
     </message>
     <message>
         <source>Mission</source>
-        <translation>Mission</translation>
+        <translation>Задание</translation>
     </message>
     <message>
         <source>Skirmish</source>
-        <translation>Skirmish</translation>
+        <translation>Стычка</translation>
     </message>
     <message>
         <source>Autosave</source>
-        <translation>Autosave</translation>
+        <translation>Автосохранение</translation>
     </message>
     <message>
         <source>Quicksave</source>
-        <translation>Quicksave</translation>
+        <translation>Быстрое сохранение</translation>
     </message>
     <message>
         <source>No preview</source>
-        <translation>No preview</translation>
+        <translation>Нет превью</translation>
     </message>
     <message>
         <source>%1 · %2 · %3</source>
@@ -12318,11 +12318,11 @@ Right-click to cancel.</source>
     </message>
     <message>
         <source>Saved %1</source>
-        <translation>Saved %1</translation>
+        <translation>Сохранено: %1</translation>
     </message>
     <message>
         <source>Played %1</source>
-        <translation>Played %1</translation>
+        <translation>Сыграно: %1</translation>
     </message>
 </context>
 <context>
@@ -12333,7 +12333,7 @@ Right-click to cancel.</source>
     </message>
     <message>
         <source>Save storage unavailable</source>
-        <translation>Save storage unavailable</translation>
+        <translation>Хранилище сохранений недоступно</translation>
     </message>
 </context>
 <context>
@@ -12460,67 +12460,67 @@ Right-click to cancel.</source>
     </message>
     <message>
         <source>The save database could not be opened.</source>
-        <translation>The save database could not be opened.</translation>
+        <translation>Не удалось открыть базу данных сохранений.</translation>
     </message>
     <message>
         <source>The save database is unreadable and could not be moved aside: %1</source>
-        <translation>The save database is unreadable and could not be moved aside: %1</translation>
+        <translation>База данных сохранений не читается, и её не удалось отложить в сторону: %1</translation>
     </message>
     <message>
         <source>integrity check failed: %1</source>
-        <translation>integrity check failed: %1</translation>
+        <translation>проверка целостности не пройдена: %1</translation>
     </message>
     <message>
         <source>it was written by a newer version of the game (schema %1)</source>
-        <translation>it was written by a newer version of the game (schema %1)</translation>
+        <translation>она записана более новой версией игры (схема %1)</translation>
     </message>
     <message>
         <source>it is not a Standard of Iron save database</source>
-        <translation>it is not a Standard of Iron save database</translation>
+        <translation>это не база данных сохранений Standard of Iron</translation>
     </message>
     <message>
         <source>it could not be upgraded from schema %1: %2</source>
-        <translation>it could not be upgraded from schema %1: %2</translation>
+        <translation>её не удалось обновить со схемы %1: %2</translation>
     </message>
     <message>
         <source>its tables do not match schema %1</source>
-        <translation>its tables do not match schema %1</translation>
+        <translation>её таблицы не соответствуют схеме %1</translation>
     </message>
     <message>
         <source>Failed to add the snapshot version column</source>
-        <translation>Failed to add the snapshot version column</translation>
+        <translation>Не удалось добавить столбец версии снимка</translation>
     </message>
     <message>
         <source>Refusing to write a save with an empty slot name</source>
-        <translation>Refusing to write a save with an empty slot name</translation>
+        <translation>Сохранение с пустым именем слота не записывается</translation>
     </message>
     <message>
         <source>&apos;%1&apos; holds a save that was not written by this rotation, so it will not be overwritten automatically. Delete it from the Load menu to free the slot.</source>
-        <translation>&apos;%1&apos; holds a save that was not written by this rotation, so it will not be overwritten automatically. Delete it from the Load menu to free the slot.</translation>
+        <translation>В «%1» лежит сохранение, записанное не этой ротацией, поэтому оно не будет перезаписано автоматически. Удалите его в меню загрузки, чтобы освободить слот.</translation>
     </message>
     <message>
         <source>The save was written but could not be read back</source>
-        <translation>The save was written but could not be read back</translation>
+        <translation>Сохранение записано, но прочитать его обратно не удалось</translation>
     </message>
     <message>
         <source>The save did not survive being written to disk. Nothing was lost in the match; try saving again.</source>
-        <translation>The save did not survive being written to disk. Nothing was lost in the match; try saving again.</translation>
+        <translation>Сохранение повредилось при записи на диск. В матче ничего не потеряно; попробуйте сохранить ещё раз.</translation>
     </message>
     <message>
         <source>The save was written with the wrong header; try again.</source>
-        <translation>The save was written with the wrong header; try again.</translation>
+        <translation>Сохранение записано с неверным заголовком; попробуйте ещё раз.</translation>
     </message>
     <message>
         <source>&apos;%1&apos; was saved by a different version of Standard of Iron and cannot be loaded by this one. It has been left alone.</source>
-        <translation>&apos;%1&apos; was saved by a different version of Standard of Iron and cannot be loaded by this one. It has been left alone.</translation>
+        <translation>«%1» сохранено другой версией Standard of Iron, и эта версия не может его загрузить. Сохранение не тронуто.</translation>
     </message>
     <message>
         <source>&apos;%1&apos; does not contain a readable world: %2</source>
-        <translation>&apos;%1&apos; does not contain a readable world: %2</translation>
+        <translation>«%1» не содержит читаемого мира: %2</translation>
     </message>
     <message>
         <source>&apos;%1&apos; is missing the units it should contain</source>
-        <translation>&apos;%1&apos; is missing the units it should contain</translation>
+        <translation>В «%1» нет отрядов, которые должны там быть</translation>
     </message>
 </context>
 <context>
@@ -12807,7 +12807,7 @@ Right-click to cancel.</source>
     </message>
     <message>
         <source>About</source>
-        <translation>О игре</translation>
+        <translation>Об игре</translation>
     </message>
     <message>
         <source>Standard of Iron - RTS game</source>
@@ -12987,11 +12987,11 @@ Right-click to cancel.</source>
     </message>
     <message>
         <source>Press Deliver, then click your barracks: the civilian walks there and joins its reserve, and you can recruit again.</source>
-        <translation>Нажмите «Доставить», затем щёлкните по казарме: житель придёт туда и пополнит её резерв, и вы снова сможете набирать войска.</translation>
+        <translation>Нажмите «Доставить», затем щёлкните по казармам: гражданский придёт туда и пополнит их резерв, и вы снова сможете набирать войска.</translation>
     </message>
     <message>
         <source>A Home raises civilians, not soldiers. Recruit a civilian here, select it when it steps out, press Deliver and click your barracks to refill its reserve.</source>
-        <translation>Дом растит жителей, а не солдат. Наберите здесь жителя, выберите его, когда он выйдет, нажмите «Доставить» и щёлкните по казарме, чтобы пополнить её резерв.</translation>
+        <translation>Дом растит гражданских, а не солдат. Наберите здесь гражданского, выберите его, когда он выйдет, нажмите «Доставить» и щёлкните по казармам, чтобы пополнить их резерв.</translation>
     </message>
     <message>
         <source>Recruits come from the barracks. Left-click your barracks to open its production panel on the right.</source>
@@ -13254,7 +13254,7 @@ Right-click to cancel.</source>
     </message>
     <message>
         <source>Show me</source>
-        <translation>Покажи</translation>
+        <translation>Показать</translation>
     </message>
     <message>
         <source>Replay step</source>
@@ -13983,7 +13983,7 @@ Right-click to cancel.</source>
     </message>
     <message>
         <source>Aries</source>
-        <translation>Aries</translation>
+        <translation>Ариес</translation>
     </message>
     <message>
         <source>Assault tower</source>
@@ -14019,7 +14019,7 @@ Right-click to cancel.</source>
     </message>
     <message>
         <source>Turris</source>
-        <translation>Turris</translation>
+        <translation>Туррис</translation>
     </message>
     <message>
         <source>Very slow, and a tall target that fire and stone-throwers bring down.</source>

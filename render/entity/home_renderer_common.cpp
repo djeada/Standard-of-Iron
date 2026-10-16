@@ -61,7 +61,7 @@ void add_jar(BuildingArchetypeDesc& desc,
 } // namespace
 
 auto home_visual_variant(std::uint32_t entity_id) -> int {
-  // Entity identity survives capture, damage and save/load; frame order does not.
+
   entity_id ^= entity_id >> 16U;
   entity_id *= 0x7FEB352DU;
   entity_id ^= entity_id >> 15U;

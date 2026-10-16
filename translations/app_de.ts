@@ -157,7 +157,7 @@
     </message>
     <message>
         <source>The target cannot be worked; give a new order.</source>
-        <translation>Das Ziel kann nicht bearbeitet werden; erteilt einen neuen Befehl.</translation>
+        <translation>Das Ziel kann nicht bearbeitet werden; erteile einen neuen Befehl.</translation>
     </message>
     <message>
         <source>Interrupted</source>
@@ -165,7 +165,7 @@
     </message>
     <message>
         <source>Work stopped part-way; re-issue the order to resume.</source>
-        <translation>Die Arbeit brach ab; erteilt den Befehl erneut, um fortzufahren.</translation>
+        <translation>Die Arbeit brach ab; erteile den Befehl erneut, um fortzufahren.</translation>
     </message>
     <message>
         <source>%1 — %2</source>
@@ -286,11 +286,11 @@
     </message>
     <message>
         <source>Reserve exhausted: %1 men held, the cheapest recruit needs %2. Civilians raised at a Home deliver more men.</source>
-        <translation>Reserve erschöpft: %1 Mann vorrätig, die günstigste Rekrutierung braucht %2. In einem Haus aufgezogene Bürger bringen mehr Männer.</translation>
+        <translation>Reserve erschöpft: %1 Mann vorrätig, die günstigste Rekrutierung braucht %2. In einem Haus aufgezogene Zivilisten bringen mehr Männer.</translation>
     </message>
     <message>
         <source>Men this barracks still holds. Every recruit spends the men in its squad; civilians raised at a Home deliver more.</source>
-        <translation>Männer, die diese Kaserne noch vorrätig hat. Jede Rekrutierung verbraucht die Männer ihrer Einheit; in einem Haus aufgezogene Bürger bringen mehr.</translation>
+        <translation>Männer, die diese Kaserne noch vorrätig hat. Jede Rekrutierung verbraucht die Männer ihrer Einheit; in einem Haus aufgezogene Zivilisten bringen mehr.</translation>
     </message>
     <message>
         <source>Ask allies to defend</source>
@@ -941,7 +941,7 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
     <message>
         <source>Beaten. Fair. You held when I thought you would run and you hit when I thought you would hold. I will not forget your standard.</source>
-        <translation>Geschlagen. Redlich. Ihr hieltet, als ich Euch fliehen sah, und schlugt zu, als ich Euch halten sah. Euer Feldzeichen vergesse ich nicht.</translation>
+        <translation>Geschlagen. Redlich. Ihr hieltet, als ich dachte, Ihr würdet fliehen, und schlugt zu, als ich dachte, Ihr würdet halten. Euer Feldzeichen vergesse ich nicht.</translation>
     </message>
     <message>
         <source>Beaten. I shall write it down as an expense and you as a creditor. I pay my creditors. Eventually, and never in full.</source>
@@ -1129,7 +1129,7 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
     <message>
         <source>Keep the field, then. Rome does not lose provinces - she lends them, at interest. My accountants will be along in the spring, and they are far less pleasant than I am.</source>
-        <translation>Behaltet das Feld denn. Rom verliert keine Provinzen - sie verleiht sie, gegen Zins. Meine Rechnungsführer kommen im Frühjahr, und sie sind weit unangenehmer als ich.</translation>
+        <translation>Behaltet das Feld denn. Rom verliert keine Provinzen - es verleiht sie, gegen Zins. Meine Rechnungsführer kommen im Frühjahr, und sie sind weit unangenehmer als ich.</translation>
     </message>
     <message>
         <source>Look at that. You are bleeding out and still holding the ground. Brave. Wrong, but brave.</source>
@@ -1205,7 +1205,7 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
     <message>
         <source>My camp is taking the weight of their attack. If you were planning to come, this is the day for planning to end.</source>
-        <translation>Mein Lager trägt das Gewicht ihres Angriffs. Falls Ihr zu kommen gedachtet, ist heute der Tag, an dem das Gedenken endet.</translation>
+        <translation>Mein Lager trägt das Gewicht ihres Angriffs. Falls Ihr zu kommen gedachtet, ist heute der Tag, an dem das Planen endet.</translation>
     </message>
     <message>
         <source>My camp is under attack, and my archers are better at giving than taking. If you can come, come along the ridge.</source>
@@ -1329,7 +1329,7 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
     <message>
         <source>So it ends with a blade after all. Tell Rome I was a wolf, not a bull. She never did learn the difference.</source>
-        <translation>So endet es doch mit einer Klinge. Sagt Rom, ich sei ein Wolf gewesen, kein Stier. Den Unterschied hat sie nie gelernt.</translation>
+        <translation>So endet es doch mit einer Klinge. Sagt Rom, ich sei ein Wolf gewesen, kein Stier. Den Unterschied hat es nie gelernt.</translation>
     </message>
     <message>
         <source>So the Barcids&apos; war has found me a new opponent. Understand that I am here for the ledger, not the legend, and ledgers are much harder to kill.</source>
@@ -1945,7 +1945,7 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
     <message>
         <source>No. I have {resource}, and I am keeping it. Ask me again when you have earned it in the field.</source>
-        <translation>Nein. {resource} bleibt bei mir. Fragt erneut, sobald Ihr Euch mehr im Feld verdient habt.</translation>
+        <translation>Nein. {resource} bleibt bei mir. Fragt erneut, sobald Ihr es Euch im Feld verdient habt.</translation>
     </message>
     <message>
         <source>No. My {resource} goes to my cohorts. Win something first.</source>
@@ -2077,7 +2077,7 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
     <message>
         <source>{amount} {resource} I can spare without starving the next season. The rest stays in the stores.</source>
-        <translation>{amount} {resource} kann ich entbehren, ohne die nächste Saison zu hungern. Der Rest bleibt in den Vorräten.</translation>
+        <translation>{amount} {resource} kann ich entbehren, ohne in der nächsten Saison zu hungern. Der Rest bleibt in den Vorräten.</translation>
     </message>
     <message>
         <source>{amount} {resource} is all I can spare. Make it count.</source>
@@ -2129,7 +2129,7 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
     <message>
         <source>{amount} {resource}. Received. I shall mention you favourably to the Senate, if it comes up.</source>
-        <translation>{amount} {resource}. Erhalten. Ich werde Euch dem Senat wohlwollend erwähnen, sollte es zur Sprache kommen.</translation>
+        <translation>{amount} {resource}. Erhalten. Ich werde Euch beim Senat wohlwollend erwähnen, sollte es zur Sprache kommen.</translation>
     </message>
     <message>
         <source>{amount} {resource}. Sent. Use it fast.</source>
@@ -3010,7 +3010,7 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     <name>ControlsBindingList</name>
     <message>
         <source>Press a key or click a mouse button. Backspace clears it, Esc cancels.</source>
-        <translation>Drückt eine Taste oder klickt eine Maustaste. Rücktaste löscht, Esc bricht ab.</translation>
+        <translation>Drücke eine Taste oder klicke eine Maustaste. Rücktaste löscht, Esc bricht ab.</translation>
     </message>
     <message>
         <source>Reset all</source>
@@ -3034,7 +3034,7 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
     <message>
         <source>Taking it leaves the other command unbound.</source>
-        <translation>Übernehmt Ihr sie, bleibt der andere Befehl unbelegt.</translation>
+        <translation>Übernimmst du sie, bleibt der andere Befehl unbelegt.</translation>
     </message>
     <message>
         <source>Conflicts with %1</source>
@@ -3361,7 +3361,7 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
     <message>
         <source>%1 more %2</source>
-        <translation>%1 mehr %2</translation>
+        <translation>noch %1 %2</translation>
     </message>
     <message>
         <source>Nobody is gathering it right now.</source>
@@ -3433,7 +3433,7 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
     <message>
         <source>Send a builder to reap a ripe farm or slaughter a sheep with Collect, or leave Auto Gather running. Recruiting a civilian at a home spends it.</source>
-        <translation>Schicke einen Baumeister mit Sammeln zu einem reifen Feld oder einem Schaf, oder lass Auto-Sammeln laufen. Einen Zivilisten in einem Haus zu rekrutieren verbraucht sie.</translation>
+        <translation>Schicke einen Baumeister mit Sammeln zu einem reifen Feld oder einem Schaf, oder lass „Selbst sammeln“ laufen. Einen Zivilisten in einem Haus zu rekrutieren verbraucht sie.</translation>
     </message>
     <message>
         <source>Farm</source>
@@ -3575,11 +3575,11 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     <name>EconomyOverview</name>
     <message>
         <source>Men in the field: %1. Every soldier, rider, crew member, builder and civilian counts as one man.</source>
-        <translation>Männer im Feld: %1. Jeder Soldat, Reiter, Bediener, Bauarbeiter und Bürger zählt als ein Mann.</translation>
+        <translation>Männer im Feld: %1. Jeder Soldat, Reiter, Bediener, Baumeister und Zivilist zählt als ein Mann.</translation>
     </message>
     <message>
         <source>Men you can still raise: %1 held in reserve by your barracks and temples. Walk civilians into a barracks or build a Home to raise more.</source>
-        <translation>Männer, die du noch aufstellen kannst: %1 in Reserve bei deinen Kasernen und Tempeln. Führe Bürger in eine Kaserne oder baue ein Haus, um mehr aufzustellen.</translation>
+        <translation>Männer, die du noch aufstellen kannst: %1 in Reserve bei deinen Kasernen und Tempeln. Führe Zivilisten in eine Kaserne oder baue ein Haus, um mehr aufzustellen.</translation>
     </message>
     <message>
         <source>This map allows %1 men per army; %2 more wait in reserve but cannot muster until the field thins.</source>
@@ -3974,7 +3974,7 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
     <message>
         <source>Drag on the ground to set width and facing.</source>
-        <translation>Zieht auf dem Boden, um Breite und Ausrichtung festzulegen.</translation>
+        <translation>Ziehe auf dem Boden, um Breite und Ausrichtung festzulegen.</translation>
     </message>
     <message>
         <source>Click to deploy · Wheel to turn · Ctrl+wheel for depth · Right-click or Esc to cancel</source>
@@ -4165,7 +4165,7 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
     <message>
         <source>The line has come apart and is taking extra damage. Re-issue the formation order to reform.</source>
-        <translation>Die Linie ist auseinandergefallen und erleidet zusätzlichen Schaden. Erteilt den Formationsbefehl erneut, um sie neu zu formieren.</translation>
+        <translation>Die Linie ist auseinandergefallen und erleidet zusätzlichen Schaden. Erteile den Formationsbefehl erneut, um sie neu zu formieren.</translation>
     </message>
     <message>
         <source>Units are still moving into their slots.</source>
@@ -4311,23 +4311,23 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
     <message>
         <source>Save slot &apos;%1&apos; does not contain a battlefield and was not loaded.</source>
-        <translation>Save slot &apos;%1&apos; does not contain a battlefield and was not loaded.</translation>
+        <translation>Speicherplatz „%1“ enthält kein Schlachtfeld und wurde nicht geladen.</translation>
     </message>
     <message>
         <source>&apos;%1&apos; could not be restored (%2). The battle that was running could not be kept.</source>
-        <translation>&apos;%1&apos; could not be restored (%2). The battle that was running could not be kept.</translation>
+        <translation>„%1“ konnte nicht wiederhergestellt werden (%2). Die laufende Schlacht ließ sich nicht erhalten.</translation>
     </message>
     <message>
         <source>&apos;%1&apos; was saved by a different version of Standard of Iron (snapshot %2, this build reads %3) and cannot be imported.</source>
-        <translation>&apos;%1&apos; was saved by a different version of Standard of Iron (snapshot %2, this build reads %3) and cannot be imported.</translation>
+        <translation>„%1“ wurde mit einer anderen Version von Standard of Iron gespeichert (Snapshot %2, diese Version liest %3) und kann nicht importiert werden.</translation>
     </message>
     <message>
         <source>&apos;%1&apos; could not be restored (%2). The battle that was running was left alone.</source>
-        <translation>&apos;%1&apos; could not be restored (%2). The battle that was running was left alone.</translation>
+        <translation>„%1“ konnte nicht wiederhergestellt werden (%2). Die laufende Schlacht bleibt unberührt.</translation>
     </message>
     <message>
         <source>&apos;%1&apos; restored no units at all, so there is no battle to return to. The save is unusable and the battle that was running was left alone.</source>
-        <translation>&apos;%1&apos; restored no units at all, so there is no battle to return to. The save is unusable and the battle that was running was left alone.</translation>
+        <translation>„%1“ hat keine einzige Einheit wiederhergestellt, es gibt also keine Schlacht, in die du zurückkehren könntest. Der Spielstand ist unbrauchbar; die laufende Schlacht bleibt unberührt.</translation>
     </message>
 </context>
 <context>
@@ -4382,11 +4382,11 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
     <message>
         <source>A save is already in progress.</source>
-        <translation>A save is already in progress.</translation>
+        <translation>Es wird bereits gespeichert.</translation>
     </message>
     <message>
         <source>your ally</source>
-        <translation>deinem Verbündeten</translation>
+        <translation>dein Verbündeter</translation>
     </message>
     <message>
         <source>gold</source>
@@ -4422,7 +4422,7 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
     <message>
         <source>%1 has no %2 to spare.</source>
-        <translation>%1 hat kein %2 übrig.</translation>
+        <translation>%1 hat nichts an %2 übrig.</translation>
     </message>
     <message>
         <source>%1 refuses to part with any %2.</source>
@@ -4522,7 +4522,7 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
     <message>
         <source>%1: your men have reached the camp. Well met.</source>
-        <translation>%1: Deine Männer haben das Lager erreicht. Gut getroffen.</translation>
+        <translation>%1: Deine Männer haben das Lager erreicht. Willkommen.</translation>
     </message>
     <message>
         <source>%1: your men have joined the attack.</source>
@@ -4606,7 +4606,7 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     <name>HUDBottom</name>
     <message>
         <source>Attack</source>
-        <translation>Angreifen</translation>
+        <translation>Angriff</translation>
     </message>
     <message>
         <source>Select troops first</source>
@@ -4682,7 +4682,7 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
     <message>
         <source>Medic</source>
-        <translation>Sanitäter</translation>
+        <translation>Heiler</translation>
     </message>
     <message>
         <source>Healers automatically heal nearby allies. This is passive, not a manual order.</source>
@@ -4722,7 +4722,7 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
     <message>
         <source>Select a commander to use rally</source>
-        <translation>Wähle einen Kommandanten, um zu sammeln</translation>
+        <translation>Wähle einen Befehlshaber, um zu sammeln</translation>
     </message>
     <message>
         <source>Gate</source>
@@ -4742,7 +4742,7 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
     <message>
         <source>Select a ready commander to activate the aura</source>
-        <translation>Wähle einen bereiten Kommandanten, um die Aura zu aktivieren</translation>
+        <translation>Wähle einen bereiten Befehlshaber, um die Aura zu aktivieren</translation>
     </message>
     <message>
         <source>Repair order</source>
@@ -4825,7 +4825,7 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
     <message>
         <source>Press Guard again, or order a move or attack. Stop does not lift it.</source>
-        <translation>Erneut Bewachen drücken oder einen Bewegungs- oder Angriffsbefehl geben. Halt hebt es nicht auf.</translation>
+        <translation>Erneut Bewachen drücken oder einen Bewegungs- oder Angriffsbefehl geben. Stopp hebt es nicht auf.</translation>
     </message>
     <message>
         <source>Troops</source>
@@ -4865,7 +4865,7 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
     <message>
         <source>Press Hold again, or order a move, attack or Stop. Standing up takes a moment.</source>
-        <translation>Erneut Halten drücken oder einen Bewegungs-, Angriffs- oder Halt-Befehl geben. Das Aufstehen dauert einen Moment.</translation>
+        <translation>Erneut Halten drücken oder einen Bewegungs-, Angriffs- oder Stopp-Befehl geben. Das Aufstehen dauert einen Moment.</translation>
     </message>
     <message>
         <source>Archers and spearmen only.</source>
@@ -4893,7 +4893,7 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
     <message>
         <source>Any other order, or Stop, clears the route.</source>
-        <translation>Jeder andere Befehl oder Halt löscht die Route.</translation>
+        <translation>Jeder andere Befehl oder Stopp löscht die Route.</translation>
     </message>
     <message>
         <source>Every soldier and the commander.</source>
@@ -5153,7 +5153,7 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
     <message>
         <source>Send builders to take one of your own buildings apart and get part of its cost back.</source>
-        <translation>Schickt Bauleute, eines deiner eigenen Gebäude abzutragen und einen Teil der Kosten zurückzuholen.</translation>
+        <translation>Schickt Baumeister, um eines deiner eigenen Gebäude abzutragen und einen Teil der Kosten zurückzuholen.</translation>
     </message>
     <message>
         <source>Press Dismantle, then left-click your building. Right-click cancels.</source>
@@ -5173,11 +5173,11 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
     <message>
         <source>Builders only; up to three of them speed it up.</source>
-        <translation>Nur Bauleute; bis zu drei davon machen es schneller.</translation>
+        <translation>Nur Baumeister; bis zu drei davon machen es schneller.</translation>
     </message>
     <message>
         <source>Dismantle is only available to builders</source>
-        <translation>Abbrechen können nur Bauleute</translation>
+        <translation>Abbrechen können nur Baumeister</translation>
     </message>
     <message>
         <source>Food first</source>
@@ -5328,7 +5328,7 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
     <message>
         <source>Commander unavailable</source>
-        <translation>Kommandant nicht verfügbar</translation>
+        <translation>Befehlshaber nicht verfügbar</translation>
     </message>
     <message>
         <source>Choose destination</source>
@@ -5340,7 +5340,7 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
     <message>
         <source>Moving commander</source>
-        <translation>Kommandant marschiert</translation>
+        <translation>Befehlshaber marschiert</translation>
     </message>
     <message>
         <source>Flag active</source>
@@ -5356,11 +5356,11 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
     <message>
         <source>The commander is planting the flag. Interruptions will cancel the rally.</source>
-        <translation>Der Kommandant setzt die Flagge. Unterbrechungen brechen das Sammeln ab.</translation>
+        <translation>Der Befehlshaber setzt die Flagge. Unterbrechungen brechen das Sammeln ab.</translation>
     </message>
     <message>
         <source>The commander is marching to the chosen point before planting the flag.</source>
-        <translation>Der Kommandant marschiert zum gewählten Punkt, bevor er die Flagge setzt.</translation>
+        <translation>Der Befehlshaber marschiert zum gewählten Punkt, bevor er die Flagge setzt.</translation>
     </message>
     <message>
         <source>Troops have already received a normal move order to this rally flag.</source>
@@ -5816,7 +5816,7 @@ Jede Rekrutierung kostet die Männer ihrer Einheit; die Reserve einer Kaserne he
     </message>
     <message>
         <source>The tutorial is a guided first battle on a small meadow. Each step names one goal, tells you when it is done, and explains why an order is refused. It also points: the button a step is talking about lights up in the command bar, and what you are meant to act on is ringed on the field and pinned on the minimap - press Show me to swing the camera onto it. Steps can be paused, skipped and replayed at any time.</source>
-        <translation>Das Tutorial ist eine geführte erste Schlacht auf einer kleinen Wiese. Jeder Schritt nennt ein Ziel, sagt dir, wann es erreicht ist, und erklärt, warum ein Befehl verweigert wird. Es zeigt auch hin: Die Schaltfläche, von der ein Schritt spricht, leuchtet in der Befehlsleiste auf, und was du beachten sollst, wird auf dem Feld umringt und auf der Übersichtskarte markiert – drücke Zeig es mir, um die Kamera darauf zu schwenken. Schritte lassen sich jederzeit anhalten, überspringen und wiederholen.</translation>
+        <translation>Das Tutorial ist eine geführte erste Schlacht auf einer kleinen Wiese. Jeder Schritt nennt ein Ziel, sagt dir, wann es erreicht ist, und erklärt, warum ein Befehl verweigert wird. Es zeigt auch hin: Die Schaltfläche, von der ein Schritt spricht, leuchtet in der Befehlsleiste auf, und was du beachten sollst, wird auf dem Feld umringt und auf der Minikarte markiert – drücke Zeig es mir, um die Kamera darauf zu schwenken. Schritte lassen sich jederzeit anhalten, überspringen und wiederholen.</translation>
     </message>
     <message>
         <source>Tutorial</source>
@@ -5844,7 +5844,7 @@ Jede Rekrutierung kostet die Männer ihrer Einheit; die Reserve einer Kaserne he
     </message>
     <message>
         <source>Wood comes from pine trees, stone from boulders and iron from ore seams. A builder harvests a node with Collect (or Auto Gather), then carries the load to the stone yard beside a friendly barracks. Only when it is dropped there does the counter in the top bar rise. The yard&apos;s piles grow and shrink with your stores.</source>
-        <translation>Holz kommt von Kiefern, Stein von Felsbrocken und Eisen aus Erzadern. Ein Bauarbeiter erntet ein Vorkommen mit Sammeln (oder Automatisch sammeln) und trägt die Last dann zum Steinhof neben einer befreundeten Kaserne. Erst wenn sie dort abgelegt ist, steigt der Zähler in der oberen Leiste. Die Haufen im Hof wachsen und schrumpfen mit deinen Vorräten.</translation>
+        <translation>Holz kommt von Kiefern, Stein von Felsbrocken und Eisen aus Erzadern. Ein Baumeister erntet ein Vorkommen mit Sammeln (oder Selbst sammeln) und trägt die Last dann zum Steinhof neben einer befreundeten Kaserne. Erst wenn sie dort abgelegt ist, steigt der Zähler in der oberen Leiste. Die Haufen im Hof wachsen und schrumpfen mit deinen Vorräten.</translation>
     </message>
     <message>
         <source>Gold and trade</source>
@@ -5864,7 +5864,7 @@ Jede Rekrutierung kostet die Männer ihrer Einheit; die Reserve einer Kaserne he
     </message>
     <message>
         <source>Select a builder and press Build to open the structure list. Move the outline over the ground: green means flat, clear ground; red means it is blocked by another building, water or a slope. Scroll to rotate, left-click to confirm, right-click to cancel. The builder walks over and works until it stands.</source>
-        <translation>Wähle einen Bauarbeiter und drücke Bauen, um die Gebäudeliste zu öffnen. Bewege den Umriss über den Boden: Grün heißt flacher, freier Boden; Rot heißt, er ist durch ein anderes Gebäude, Wasser oder einen Hang blockiert. Scrolle zum Drehen, Linksklick bestätigt, Rechtsklick bricht ab. Der Bauarbeiter geht hin und arbeitet, bis es steht.</translation>
+        <translation>Wähle einen Baumeister und drücke Bauen, um die Gebäudeliste zu öffnen. Bewege den Umriss über den Boden: Grün heißt flacher, freier Boden; Rot heißt, er ist durch ein anderes Gebäude, Wasser oder einen Hang blockiert. Scrolle zum Drehen, Linksklick bestätigt, Rechtsklick bricht ab. Der Baumeister geht hin und arbeitet, bis es steht.</translation>
     </message>
     <message>
         <source>What each building does</source>
@@ -5956,7 +5956,7 @@ Jede Rekrutierung kostet die Männer ihrer Einheit; die Reserve einer Kaserne he
     </message>
     <message>
         <source>Right-click the ground to move, right-click an enemy to attack. Hold the right button and drag before releasing to choose the way the troops will face: one unit turns to face where you drag, several units are placed in formation facing it. The command grid offers Attack, Guard, Patrol, Hold, Stop and the builder and commander orders. A marker shows where troops are going and the banner above the grid confirms each order - or explains why it was refused.</source>
-        <translation>Rechtsklick auf den Boden bewegt, Rechtsklick auf einen Feind greift an. Halte die rechte Maustaste gedrückt und ziehe vor dem Loslassen, um die Blickrichtung der Truppen zu wählen: eine einzelne Einheit dreht sich dorthin, wohin du ziehst, mehrere Einheiten werden in Formation mit Blick in diese Richtung aufgestellt. Das Befehlsraster bietet Angriff, Bewachen, Patrouillieren, Halten, Stopp sowie die Bauarbeiter- und Befehlshaberbefehle. Eine Markierung zeigt, wohin Truppen gehen, und das Banner über dem Raster bestätigt jeden Befehl – oder erklärt, warum er abgelehnt wurde.</translation>
+        <translation>Rechtsklick auf den Boden bewegt, Rechtsklick auf einen Feind greift an. Halte die rechte Maustaste gedrückt und ziehe vor dem Loslassen, um die Blickrichtung der Truppen zu wählen: eine einzelne Einheit dreht sich dorthin, wohin du ziehst, mehrere Einheiten werden in Formation mit Blick in diese Richtung aufgestellt. Das Befehlsraster bietet Angriff, Bewachen, Patrouillieren, Halten, Stopp sowie die Baumeister- und Befehlshaberbefehle. Eine Markierung zeigt, wohin Truppen gehen, und das Banner über dem Raster bestätigt jeden Befehl – oder erklärt, warum er abgelehnt wurde.</translation>
     </message>
     <message>
         <source>Spearmen hold a line, archers punish from behind it, cavalry breaks flanks, healers mend nearby wounded on their own. Right-click and drag with several units selected to deploy them in a formation that faces the drag; the Formation order opens the same planner where they stand. Run trades stamina for speed.</source>
@@ -5968,7 +5968,7 @@ Jede Rekrutierung kostet die Männer ihrer Einheit; die Reserve einer Kaserne he
     </message>
     <message>
         <source>Press Guard, then left-click the ground the troops should hold. They fight anything that comes within about 10 m of that spot, let go of anything that runs past it, and walk back once the fight is over. Press Guard again, or give a move or attack order, to release them; Stop alone will not lift it. Any soldier can guard.</source>
-        <translation>Bewachen drücken, dann mit Linksklick den Boden wählen, den die Truppen halten sollen. Sie bekämpfen alles, was auf etwa 10 m an diesen Punkt herankommt, lassen alles ziehen, was daran vorbeiläuft, und kehren nach dem Kampf zurück. Erneut Bewachen drücken oder einen Bewegungs- oder Angriffsbefehl geben, um sie zu lösen; Halt allein hebt es nicht auf. Jeder Soldat kann bewachen.</translation>
+        <translation>Bewachen drücken, dann mit Linksklick den Boden wählen, den die Truppen halten sollen. Sie bekämpfen alles, was auf etwa 10 m an diesen Punkt herankommt, lassen alles ziehen, was daran vorbeiläuft, und kehren nach dem Kampf zurück. Erneut Bewachen drücken oder einen Bewegungs- oder Angriffsbefehl geben, um sie zu lösen; Stopp allein hebt es nicht auf. Jeder Soldat kann bewachen.</translation>
     </message>
     <message>
         <source>Hold - stand fast</source>
@@ -5976,7 +5976,7 @@ Jede Rekrutierung kostet die Männer ihrer Einheit; die Reserve einer Kaserne he
     </message>
     <message>
         <source>Press Hold and the troops kneel where they stand. They never take a step, but they reach further, hit harder and take more punishment than they would on the move, and braced spears gut a cavalry charge. That is the trade: pursuit for staying power. Press Hold again, or give a move, attack or Stop order, to stand them up. Only archers and spearmen can hold.</source>
-        <translation>Halten drücken, und die Truppen knien dort, wo sie stehen. Sie machen keinen Schritt, reichen aber weiter, treffen härter und stecken mehr ein als in Bewegung, und gestemmte Speere zerreißen einen Reiterangriff. Das ist der Tausch: Verfolgung gegen Standfestigkeit. Erneut Halten drücken oder einen Bewegungs-, Angriffs- oder Halt-Befehl geben, um sie aufstehen zu lassen. Nur Bogenschützen und Speerträger können halten.</translation>
+        <translation>Halten drücken, und die Truppen knien dort, wo sie stehen. Sie machen keinen Schritt, reichen aber weiter, treffen härter und stecken mehr ein als in Bewegung, und gestemmte Speere zerreißen einen Reiterangriff. Das ist der Tausch: Verfolgung gegen Standfestigkeit. Erneut Halten drücken oder einen Bewegungs-, Angriffs- oder Stopp-Befehl geben, um sie aufstehen zu lassen. Nur Bogenschützen und Speerträger können halten.</translation>
     </message>
     <message>
         <source>Patrol - walk a beat</source>
@@ -5984,7 +5984,7 @@ Jede Rekrutierung kostet die Männer ihrer Einheit; die Reserve einer Kaserne he
     </message>
     <message>
         <source>Press Patrol, left-click the first waypoint, then left-click the second. The troops march between the two points for good and attack whatever crosses the line - useful for watching a flank while you look elsewhere. Right-click cancels while you are setting it; any other order, or Stop, clears the route.</source>
-        <translation>Patrouille drücken, mit Linksklick den ersten Wegpunkt setzen, dann den zweiten. Die Truppen marschieren dauerhaft zwischen den beiden Punkten und greifen alles an, was die Linie kreuzt – nützlich, um eine Flanke zu beobachten, während du woanders hinsiehst. Rechtsklick bricht das Setzen ab; jeder andere Befehl oder Halt löscht die Route.</translation>
+        <translation>Patrouille drücken, mit Linksklick den ersten Wegpunkt setzen, dann den zweiten. Die Truppen marschieren dauerhaft zwischen den beiden Punkten und greifen alles an, was die Linie kreuzt – nützlich, um eine Flanke zu beobachten, während du woanders hinsiehst. Rechtsklick bricht das Setzen ab; jeder andere Befehl oder Stopp löscht die Route.</translation>
     </message>
     <message>
         <source>With the commander selected, Aura empowers his troops for a stretch and then has to recharge - each commander brings his own bonus, radius and timings, and the button prints them along with the time left. A glow marks every soldier inside the ring, the ring travels with him, and a wounded commander cannot call it. Rally plants a flag that your army marches to - useful for pulling a scattered force back into a line.</source>
@@ -5992,7 +5992,7 @@ Jede Rekrutierung kostet die Männer ihrer Einheit; die Reserve einer Kaserne he
     </message>
     <message>
         <source>A damaged building can be repaired by a builder with the Repair order. A building you no longer need can be taken down with the Dismantle order: pick your builders, press Dismantle and click the building. Part of what it cost comes back once the work is done, and calling the crew off before then pays nothing.</source>
-        <translation>Ein beschädigtes Gebäude kann ein Bautrupp mit dem Befehl Reparieren instand setzen. Ein Gebäude, das du nicht mehr brauchst, nimmt der Befehl Abbrechen auseinander: Bauleute wählen, Abbrechen drücken und das Gebäude anklicken. Ein Teil der Kosten kommt zurück, sobald die Arbeit fertig ist; wer den Trupp vorher abzieht, bekommt nichts.</translation>
+        <translation>Ein beschädigtes Gebäude kann ein Baumeister mit dem Befehl Reparieren instand setzen. Ein Gebäude, das du nicht mehr brauchst, nimmt der Befehl Abbrechen auseinander: Baumeister wählen, Abbrechen drücken und das Gebäude anklicken. Ein Teil der Kosten kommt zurück, sobald die Arbeit fertig ist; wer den Trupp vorher abzieht, bekommt nichts.</translation>
     </message>
     <message>
         <source>Food</source>
@@ -6000,7 +6000,7 @@ Jede Rekrutierung kostet die Männer ihrer Einheit; die Reserve einer Kaserne he
     </message>
     <message>
         <source>Food feeds your settlement: every civilian recruited at a Home costs it. A Farm grows grain in cycles; when the field turns gold a builder reaps it with Collect and hauls the grain home, and the field is sown again. Builders can also slaughter a sheep for a smaller haul. Auto Gather set to food keeps a builder working the farms.</source>
-        <translation>Nahrung ernährt deine Siedlung: Jeder in einem Haus rekrutierte Zivilist kostet sie. Ein Bauernhof baut Getreide in Zyklen an; wird das Feld golden, erntet es ein Baumeister mit Sammeln, trägt das Korn heim, und das Feld wird neu bestellt. Baumeister können auch ein Schaf für eine kleinere Ausbeute schlachten. Auto-Sammeln auf Nahrung hält einen Baumeister auf den Feldern.</translation>
+        <translation>Nahrung ernährt deine Siedlung: Jeder in einem Haus rekrutierte Zivilist kostet sie. Ein Bauernhof baut Getreide in Zyklen an; wird das Feld golden, erntet es ein Baumeister mit Sammeln, trägt das Korn heim, und das Feld wird neu bestellt. Baumeister können auch ein Schaf für eine kleinere Ausbeute schlachten. „Selbst sammeln“ auf Nahrung hält einen Baumeister auf den Feldern.</translation>
     </message>
     <message>
         <source>Every card - recruit or building - lists its price. A grey card means something is short; hover it to read what. Homes cost 50 wood and 15 stone, a farm 40 wood and 10 stone, a barracks 100 wood and 60 stone, a defence tower 60 wood and 80 stone; soldiers cost wood and iron plus reserve, and civilians cost food.</source>
@@ -6008,11 +6008,11 @@ Jede Rekrutierung kostet die Männer ihrer Einheit; die Reserve einer Kaserne he
     </message>
     <message>
         <source>Barracks recruit soldiers and hold your stockpile yard. Homes raise families and civilians. Farms grow grain that builders reap for food. Defence towers shoot at anything in range. Marketplaces trade. Temples strengthen morale and take in healers. Walls and gates shape the field; gates open for your own troops.</source>
-        <translation>Kasernen rekrutieren Soldaten und beherbergen euren Lagerhof. Häuser ziehen Familien und Zivilisten groß. Bauernhöfe bauen Getreide an, das Baumeister zu Nahrung ernten. Wehrtürme beschießen alles in Reichweite. Marktplätze handeln. Tempel stärken die Moral und nehmen Heiler auf. Mauern und Tore formen das Feld; Tore öffnen sich für eure eigenen Truppen.</translation>
+        <translation>Kasernen rekrutieren Soldaten und beherbergen deinen Lagerhof. Häuser ziehen Familien und Zivilisten groß. Bauernhöfe bauen Getreide an, das Baumeister zu Nahrung ernten. Wehrtürme beschießen alles in Reichweite. Marktplätze handeln. Tempel stärken die Moral und nehmen Heiler auf. Mauern und Tore formen das Feld; Tore öffnen sich für deine eigenen Truppen.</translation>
     </message>
     <message>
         <source>Left-click a barracks and pick a soldier; healers take their vows at a temple instead. Recruits queue up to five deep and march out to the rally flag. Each costs reserve from the building&apos;s own pool as well as materials.</source>
-        <translation>Klickt mit links auf eine Kaserne und wählt einen Soldaten; Heiler legen ihr Gelübde stattdessen in einem Tempel ab. Rekruten reihen sich bis zu fünf tief auf und marschieren zur Sammelflagge. Jeder kostet Reserve aus dem eigenen Vorrat des Gebäudes sowie Material.</translation>
+        <translation>Klicke mit links auf eine Kaserne und wähle einen Soldaten; Heiler legen ihr Gelübde stattdessen in einem Tempel ab. Rekruten reihen sich bis zu fünf tief auf und marschieren zur Sammelflagge. Jeder kostet Reserve aus dem eigenen Vorrat des Gebäudes sowie Material.</translation>
     </message>
     <message>
         <source>A barracks or temple starts with a reserve and spends it on every recruit; the card shows exactly what each one costs. Homes refill it: each Home raises families over time, a civilian can be recruited there for food and sent to either building with Deliver, and that building&apos;s reserve grows. A squad then stands in the field for what it cost, which is what the top bar counts against the map&apos;s manpower cap.</source>
@@ -6163,7 +6163,7 @@ Jede Rekrutierung kostet die Männer ihrer Einheit; die Reserve einer Kaserne he
     </message>
     <message>
         <source>Every mission has fallen to your standard.</source>
-        <translation>Jede Mission ist Eurem Feldzeichen erlegen.</translation>
+        <translation>Jede Mission ist deinem Feldzeichen erlegen.</translation>
     </message>
     <message>
         <source>Every order carried out.</source>
@@ -6179,7 +6179,7 @@ Jede Rekrutierung kostet die Männer ihrer Einheit; die Reserve einer Kaserne he
     </message>
     <message>
         <source>Your command has collapsed.</source>
-        <translation>Eure Führung ist zusammengebrochen.</translation>
+        <translation>Deine Führung ist zusammengebrochen.</translation>
     </message>
     <message>
         <source>Battle Decided</source>
@@ -6468,7 +6468,7 @@ Jede Rekrutierung kostet die Männer ihrer Einheit; die Reserve einer Kaserne he
     </message>
     <message>
         <source>Pick a saved game first.</source>
-        <translation>Wählt zuerst einen Spielstand.</translation>
+        <translation>Wähle zuerst einen Spielstand.</translation>
     </message>
     <message>
         <source>Load game</source>
@@ -6476,75 +6476,75 @@ Jede Rekrutierung kostet die Männer ihrer Einheit; die Reserve einer Kaserne he
     </message>
     <message>
         <source>Saves are unavailable: %1</source>
-        <translation>Saves are unavailable: %1</translation>
+        <translation>Spielstände nicht verfügbar: %1</translation>
     </message>
     <message>
         <source>The save database could not be read and a new one was started. Your previous file was kept at %1.</source>
-        <translation>The save database could not be read and a new one was started. Your previous file was kept at %1.</translation>
+        <translation>Die Spielstand-Datenbank war nicht lesbar, deshalb wurde eine neue angelegt. Deine bisherige Datei liegt unter %1.</translation>
     </message>
     <message>
         <source>No saved games yet. Save a battle from the menu, or press the quicksave key while you play.</source>
-        <translation>No saved games yet. Save a battle from the menu, or press the quicksave key while you play.</translation>
+        <translation>Noch keine Spielstände. Speichere eine Schlacht über das Menü oder drücke im Spiel die Schnellspeichertaste.</translation>
     </message>
     <message>
         <source>Untitled save</source>
-        <translation>Untitled save</translation>
+        <translation>Unbenannter Spielstand</translation>
     </message>
     <message>
         <source>Unknown map</source>
-        <translation>Unknown map</translation>
+        <translation>Unbekannte Karte</translation>
     </message>
     <message>
         <source>Saved by a different version of the game. It is kept on disk, but this build cannot open it.</source>
-        <translation>Saved by a different version of the game. It is kept on disk, but this build cannot open it.</translation>
+        <translation>Mit einer anderen Spielversion gespeichert. Die Datei bleibt erhalten, aber diese Version kann sie nicht öffnen.</translation>
     </message>
     <message>
         <source>Export failed: %1</source>
-        <translation>Export failed: %1</translation>
+        <translation>Export fehlgeschlagen: %1</translation>
     </message>
     <message>
         <source>This save will load</source>
-        <translation>This save will load</translation>
+        <translation>Dieser Spielstand lässt sich laden</translation>
     </message>
     <message>
         <source>This save will not load</source>
-        <translation>This save will not load</translation>
+        <translation>Dieser Spielstand lässt sich nicht laden</translation>
     </message>
     <message>
         <source>&quot;%1&quot; decompressed cleanly and contains a complete battlefield.</source>
-        <translation>&quot;%1&quot; decompressed cleanly and contains a complete battlefield.</translation>
+        <translation>„%1“ wurde fehlerfrei entpackt und enthält ein vollständiges Schlachtfeld.</translation>
     </message>
     <message>
         <source>This save was written by a different version of the game.</source>
-        <translation>This save was written by a different version of the game.</translation>
+        <translation>Dieser Spielstand stammt aus einer anderen Spielversion.</translation>
     </message>
     <message>
         <source>Delete this save?</source>
-        <translation>Delete this save?</translation>
+        <translation>Diesen Spielstand löschen?</translation>
     </message>
     <message>
         <source>&quot;%1&quot; will be deleted. This cannot be undone.</source>
-        <translation>&quot;%1&quot; will be deleted. This cannot be undone.</translation>
+        <translation>„%1“ wird gelöscht. Das lässt sich nicht rückgängig machen.</translation>
     </message>
     <message>
         <source>Keep it</source>
-        <translation>Keep it</translation>
+        <translation>Behalten</translation>
     </message>
     <message>
         <source>Deleted &quot;%1&quot;</source>
-        <translation>Deleted &quot;%1&quot;</translation>
+        <translation>„%1“ gelöscht</translation>
     </message>
     <message>
         <source>Close</source>
-        <translation>Close</translation>
+        <translation>Schließen</translation>
     </message>
     <message>
         <source>Import save</source>
-        <translation>Import save</translation>
+        <translation>Spielstand importieren</translation>
     </message>
     <message>
         <source>Import failed: %1</source>
-        <translation>Import failed: %1</translation>
+        <translation>Import fehlgeschlagen: %1</translation>
     </message>
 </context>
 <context>
@@ -6602,7 +6602,7 @@ Jede Rekrutierung kostet die Männer ihrer Einheit; die Reserve einer Kaserne he
     </message>
     <message>
         <source>Generating Minimap...</source>
-        <translation>Übersichtskarte wird erstellt ...</translation>
+        <translation>Minikarte wird erstellt ...</translation>
     </message>
     <message>
         <source>Initializing Game Systems...</source>
@@ -7129,7 +7129,7 @@ Jede Rekrutierung kostet die Männer ihrer Einheit; die Reserve einer Kaserne he
     </message>
     <message>
         <source>The Roman gladius was based on an Iberian sword. The Romans were never too proud to borrow a good idea from an enemy.</source>
-        <translation>Das römische Gladius ging auf ein iberisches Schwert zurück. Die Römer waren nie zu stolz, eine gute Idee vom Feind zu übernehmen.</translation>
+        <translation>Der römische Gladius ging auf ein iberisches Schwert zurück. Die Römer waren nie zu stolz, eine gute Idee vom Feind zu übernehmen.</translation>
     </message>
     <message>
         <source>The Roman saying &apos;it has come down to the triarii&apos; meant a situation was desperate. The veterans in the last line were the final reserve.</source>
@@ -7192,19 +7192,19 @@ Jede Rekrutierung kostet die Männer ihrer Einheit; die Reserve einer Kaserne he
     </message>
     <message>
         <source>There is no quicksave to load.</source>
-        <translation>There is no quicksave to load.</translation>
+        <translation>Es gibt keine Schnellspeicherung zum Laden.</translation>
     </message>
     <message>
         <source>Load the quicksave?</source>
-        <translation>Load the quicksave?</translation>
+        <translation>Schnellspeicherstand laden?</translation>
     </message>
     <message>
         <source>The battle in progress will be replaced by the quicksave. Anything since then is lost.</source>
-        <translation>The battle in progress will be replaced by the quicksave. Anything since then is lost.</translation>
+        <translation>Die laufende Schlacht wird durch die Schnellspeicherung ersetzt. Alles seitdem geht verloren.</translation>
     </message>
     <message>
         <source>Load the quicksave</source>
-        <translation>Load the quicksave</translation>
+        <translation>Schnellspeicherstand laden</translation>
     </message>
 </context>
 <context>
@@ -7395,15 +7395,15 @@ Jede Rekrutierung kostet die Männer ihrer Einheit; die Reserve einer Kaserne he
     </message>
     <message>
         <source>Continue</source>
-        <translation>Continue</translation>
+        <translation>Weiter</translation>
     </message>
     <message>
         <source>Return to the most recent save</source>
-        <translation>Return to the most recent save</translation>
+        <translation>Zum letzten Spielstand zurückkehren</translation>
     </message>
     <message>
         <source>Resume</source>
-        <translation>Resume</translation>
+        <translation>Fortsetzen</translation>
     </message>
 </context>
 <context>
@@ -7537,7 +7537,7 @@ um die Vorschau zu sehen</translation>
     </message>
     <message>
         <source>Skirmish</source>
-        <translation>Plänkeln</translation>
+        <translation>Scharmützel</translation>
     </message>
     <message>
         <source>Pick a battlefield, then set the colours, nations and commanders that take the field.</source>
@@ -7791,7 +7791,7 @@ um die Vorschau zu sehen</translation>
     </message>
     <message>
         <source>A fertile valley for two. One channel runs the whole map north to south and only two fords cross it. A cross spur on each bank means you either hug the water or swing wide to reach them, and the boomerang ridge cupping each start makes the back door terrain rather than a wall. Nothing haunts this valley: it is the plain match, with no Sepulcher to distract either side.</source>
-        <translation>Ein fruchtbares Tal für zwei. Ein Flusslauf durchzieht die gesamte Karte von Norden nach Süden, und nur zwei Furten queren ihn. Ein Querrücken an jedem Ufer bedeutet: entweder man klebt am Wasser oder man holt weit aus. Der bumerangförmige Grat, der jeden Startplatz umschließt, macht die Hintertür zu Gelände statt zu einer Mauer. In diesem Tal spukt nichts: Es ist das schlichte Duell, ohne Sepulcher, das eine Seite ablenken könnte.</translation>
+        <translation>Ein fruchtbares Tal für zwei. Ein Flusslauf durchzieht die gesamte Karte von Norden nach Süden, und nur zwei Furten queren ihn. Ein Querrücken an jedem Ufer bedeutet: entweder man klebt am Wasser oder man holt weit aus. Der bumerangförmige Grat, der jeden Startplatz umschließt, macht die Hintertür zu Gelände statt zu einer Mauer. In diesem Tal spukt nichts: Es ist das schlichte Duell, ohne Grabmal, das eine Seite ablenken könnte.</translation>
     </message>
     <message>
         <source>Amber Delta</source>
@@ -7843,7 +7843,7 @@ um die Vorschau zu sehen</translation>
     </message>
     <message>
         <source>A redoubt above a dry ford, for one. A spur of rock runs the length of the approach and the two shoulders close the flanks, so everything coming down from the north is committed to one of two lanes -- the cart gate in the west, the goat path in the east -- and they do not meet again until the ground in front of the camp. One line cannot hold both mouths, so holding here is a question of which lane you stand in and when you leave it.</source>
-        <translation>Eine Schanze über einer trockenen Furt zum Beispiel. Ein Felssporn zieht sich über die ganze Anmarschlinie, und die beiden Schultern schließen die Flanken, sodass alles, was von Norden herunterkommt, auf eine von zwei Gassen festgelegt ist -- das Karrentor im Westen, der Ziegenpfad im Osten -- und sie treffen erst vor dem Lager wieder aufeinander. Eine Linie kann nicht beide Mündungen halten; hier zu halten ist also die Frage, in welcher Gasse du stehst und wann du sie verlässt.</translation>
+        <translation>Eine Schanze über einer trockenen Furt, für einen Spieler. Ein Felssporn zieht sich über die ganze Anmarschlinie, und die beiden Schultern schließen die Flanken, sodass alles, was von Norden herunterkommt, auf eine von zwei Gassen festgelegt ist -- das Karrentor im Westen, der Ziegenpfad im Osten -- und sie treffen erst vor dem Lager wieder aufeinander. Eine Linie kann nicht beide Mündungen halten; hier zu halten ist also die Frage, in welcher Gasse du stehst und wann du sie verlässt.</translation>
     </message>
     <message>
         <source>Pinewater Cut</source>
@@ -7851,7 +7851,7 @@ um die Vorschau zu sehen</translation>
     </message>
     <message>
         <source>A timber detail&apos;s cut above the Pinewater, for one. The near stand beside the camp is already half felled, so the levy is only filled out of the deep pines a long haul north-east, past the spine of rock the haul road has to swing around. The scree that gives up the stone lies the other way entirely, and the crew is not big enough to work both without splitting it.</source>
-        <translation>Ein Holzkommando oberhalb des Kiefernwassers zum Beispiel. Der nahe Bestand neben dem Lager ist schon halb gefällt, also wird das Soll nur aus den tiefen Kiefern weit im Nordosten gedeckt, hinter dem Felsrücken, um den die Rückegasse herumschwenken muss. Das Geröll, das den Stein hergibt, liegt genau in der anderen Richtung, und der Trupp ist zu klein, um beides ohne Teilung zu schaffen.</translation>
+        <translation>Ein Holzkommando oberhalb des Kiefernwassers, für einen Spieler. Der nahe Bestand neben dem Lager ist schon halb gefällt, also wird das Soll nur aus den tiefen Kiefern weit im Nordosten gedeckt, hinter dem Felsrücken, um den die Rückegasse herumschwenken muss. Das Geröll, das den Stein hergibt, liegt genau in der anderen Richtung, und der Trupp ist zu klein, um beides ohne Teilung zu schaffen.</translation>
     </message>
     <message>
         <source>Crossing the Rhone</source>
@@ -8384,7 +8384,7 @@ um die Vorschau zu sehen</translation>
     </message>
     <message>
         <source>It is finished. Carthage will have terms, and the terms will be her fleet burned in her own harbour where she can watch it. You were the better general. It has not turned out to matter.</source>
-        <translation>Es ist vorbei. Karthago wird Bedingungen erhalten, und die Bedingung wird sein, dass ihre Flotte im eigenen Hafen verbrennt, wo sie zusehen kann. Du warst der bessere Feldherr. Es hat sich als unerheblich erwiesen.</translation>
+        <translation>Es ist vorbei. Karthago wird Bedingungen erhalten, und die Bedingung wird sein, dass seine Flotte im eigenen Hafen verbrennt, wo es zusehen kann. Du warst der bessere Feldherr. Es hat sich als unerheblich erwiesen.</translation>
     </message>
     <message>
         <source>Lose the river camp and the cold takes what the Romans couldn&apos;t.</source>
@@ -8660,7 +8660,7 @@ um die Vorschau zu sehen</translation>
     </message>
     <message>
         <source>Move the army up to the lower pass camp before the snow closes it.</source>
-        <translation>Führe das Heer zum unteren Passlager, ehe der Schnee ihn schließt.</translation>
+        <translation>Führe das Heer zum unteren Passlager, ehe der Schnee es schließt.</translation>
     </message>
     <message>
         <source>Nothing on the shore road survives once both ends are held.</source>
@@ -8700,7 +8700,7 @@ um die Vorschau zu sehen</translation>
     </message>
     <message>
         <source>Stand in the gate yard of the northern advance camp until it falls to Carthage.</source>
-        <translation>Halte den Torhof des nördlichen Vorpostenlagers, bis er an Karthago fällt.</translation>
+        <translation>Halte den Torhof des nördlichen Vorpostenlagers, bis es an Karthago fällt.</translation>
     </message>
     <message>
         <source>Take Scipio&apos;s town</source>
@@ -8836,7 +8836,7 @@ um die Vorschau zu sehen</translation>
     </message>
     <message>
         <source>Fill the levy out of the Pinewater cut: eight hundred of timber and two hundred and ten of stone, cut and carried home before the column comes back through at dusk.</source>
-        <translation>Erfüllt die Abgabe aus dem Pinienwasser-Schlag: achthundert Holz und zweihundertzehn Stein, geschlagen und heimgebracht, ehe die Kolonne in der Dämmerung zurückkommt.</translation>
+        <translation>Erfüllt die Abgabe aus dem Kiefernwasser-Schlag: achthundert Holz und zweihundertzehn Stein, geschlagen und heimgebracht, ehe die Kolonne in der Dämmerung zurückkommt.</translation>
     </message>
     <message>
         <source>First column on the cart gate. Spears up. Let them come to the stakes; the stakes do not get tired.</source>
@@ -10223,7 +10223,7 @@ um die Vorschau zu sehen</translation>
     </message>
     <message>
         <source>OPEN ORDER</source>
-        <translation>BEFEHL ÖFFNEN</translation>
+        <translation>OFFENER BEFEHL</translation>
     </message>
     <message>
         <source>COMMANDER&apos;S INTENT</source>
@@ -10231,11 +10231,11 @@ um die Vorschau zu sehen</translation>
     </message>
     <message>
         <source>You start with</source>
-        <translation>Ihr beginnt mit</translation>
+        <translation>Du beginnst mit</translation>
     </message>
     <message>
         <source>Nothing in the stores. Everything you spend, you gather first.</source>
-        <translation>Nichts in den Vorräten. Alles, was Ihr ausgebt, sammelt Ihr zuerst.</translation>
+        <translation>Nichts in den Vorräten. Alles, was du ausgibst, sammelst du zuerst.</translation>
     </message>
     <message>
         <source>FIELD RECONNAISSANCE</source>
@@ -10251,7 +10251,7 @@ um die Vorschau zu sehen</translation>
     </message>
     <message>
         <source>Choose a dispatch to review its field orders.</source>
-        <translation>Wählt eine Depesche, um ihre Feldbefehle zu lesen.</translation>
+        <translation>Wähle eine Depesche, um ihre Feldbefehle zu lesen.</translation>
     </message>
 </context>
 <context>
@@ -10343,7 +10343,7 @@ um die Vorschau zu sehen</translation>
     </message>
     <message>
         <source>Stop</source>
-        <translation>Halt</translation>
+        <translation>Stopp</translation>
     </message>
     <message>
         <source>Build</source>
@@ -10475,7 +10475,7 @@ um die Vorschau zu sehen</translation>
     </message>
     <message>
         <source>Your builders only take down your own buildings.</source>
-        <translation>Deine Bauleute reißen nur deine eigenen Gebäude ab.</translation>
+        <translation>Deine Baumeister reißen nur deine eigenen Gebäude ab.</translation>
     </message>
     <message>
         <source>That building cannot be taken down.</source>
@@ -10519,7 +10519,7 @@ um die Vorschau zu sehen</translation>
     </message>
     <message>
         <source>Not enough reserve: %1 / %2 men. Walk civilians into the barracks or build a Home to raise more.</source>
-        <translation>Nicht genug Reserve: %1 / %2 Mann. Führe Bürger in die Kaserne oder baue ein Haus, um mehr aufzustellen.</translation>
+        <translation>Nicht genug Reserve: %1 / %2 Mann. Führe Zivilisten in die Kaserne oder baue ein Haus, um mehr aufzustellen.</translation>
     </message>
     <message>
         <source>Army at the map&apos;s limit: %1 / %2 men in the field.</source>
@@ -10876,7 +10876,7 @@ Bauzeit: %3 s</translation>
         <source>Grows grain in cycles
 Builders reap it for the food that recruits civilians</source>
         <translation>Baut Getreide in Zyklen an
-Baumeister ernten es als Nahrung, die Zivilisten rekrutiert</translation>
+Baumeister ernten es als Nahrung für die Rekrutierung von Zivilisten</translation>
     </message>
     <message>
         <source>Battering Ram</source>
@@ -10886,7 +10886,7 @@ Baumeister ernten es als Nahrung, die Zivilisten rekrutiert</translation>
         <source>Gate-breaking siege engine
 Immune to most arrows</source>
         <translation>Torbrechende Belagerungsmaschine
-Schützt vor den meisten Pfeilen</translation>
+Immun gegen die meisten Pfeile</translation>
     </message>
     <message>
         <source>Siege Tower</source>
@@ -11009,7 +11009,7 @@ Bauzeit: %3 s</translation>
     </message>
     <message>
         <source>Send a builder with Collect, or leave Auto Gather running.</source>
-        <translation>Schicke einen Baumeister mit Sammeln oder lass Auto-Sammeln laufen.</translation>
+        <translation>Schicke einen Baumeister mit Sammeln oder lass „Selbst sammeln“ laufen.</translation>
     </message>
     <message>
         <source>Harvested %1 times so far.</source>
@@ -11389,7 +11389,7 @@ Nur für Karthago</translation>
         <source>Gate-breaking siege engine
 Immune to most arrows</source>
         <translation>Torbrechende Belagerungsmaschine
-Schützt vor den meisten Pfeilen</translation>
+Immun gegen die meisten Pfeile</translation>
     </message>
     <message>
         <source>Siege Tower</source>
@@ -11434,7 +11434,7 @@ Rechtsklick zum Abbrechen.</translation>
     </message>
     <message>
         <source>Select a barracks or temple before setting a rally point.</source>
-        <translation>Wählt eine Kaserne oder einen Tempel, bevor ihr einen Sammelpunkt setzt.</translation>
+        <translation>Wähle eine Kaserne oder einen Tempel, bevor du einen Sammelpunkt setzt.</translation>
     </message>
 </context>
 <context>
@@ -11461,7 +11461,7 @@ Rechtsklick zum Abbrechen.</translation>
     </message>
     <message>
         <source>Deliver civilians here to raise the temple&apos;s reserve</source>
-        <translation>Liefert hier Zivilisten ab, um die Reserve des Tempels zu erhöhen</translation>
+        <translation>Liefere hier Zivilisten ab, um die Reserve des Tempels zu erhöhen</translation>
     </message>
     <message>
         <source>Temple reserve: %1 / %2</source>
@@ -11571,11 +11571,11 @@ Rechtsklick zum Abbrechen.</translation>
     </message>
     <message>
         <source>Commander movement</source>
-        <translation>Bewegung des Kommandanten</translation>
+        <translation>Bewegung des Befehlshabers</translation>
     </message>
     <message>
         <source>Commander combat</source>
-        <translation>Kampf des Kommandanten</translation>
+        <translation>Kampf des Befehlshabers</translation>
     </message>
     <message>
         <source>Open menu</source>
@@ -11587,7 +11587,7 @@ Rechtsklick zum Abbrechen.</translation>
     </message>
     <message>
         <source>Switch between army and commander</source>
-        <translation>Zwischen Armee und Kommandant wechseln</translation>
+        <translation>Zwischen Armee und Befehlshaber wechseln</translation>
     </message>
     <message>
         <source>Quick save</source>
@@ -11639,7 +11639,7 @@ Rechtsklick zum Abbrechen.</translation>
     </message>
     <message>
         <source>Stop</source>
-        <translation>Halt</translation>
+        <translation>Stopp</translation>
     </message>
     <message>
         <source>Attack</source>
@@ -11671,7 +11671,7 @@ Rechtsklick zum Abbrechen.</translation>
     </message>
     <message>
         <source>Place commander rally flag</source>
-        <translation>Sammelfahne des Kommandanten setzen</translation>
+        <translation>Sammelfahne des Befehlshabers setzen</translation>
     </message>
     <message>
         <source>Move forward</source>
@@ -11855,7 +11855,7 @@ Rechtsklick zum Abbrechen.</translation>
     </message>
     <message>
         <source>Branches or finishes the current commander combo</source>
-        <translation>Verzweigt die aktuelle Kommandanten-Combo oder schließt sie ab</translation>
+        <translation>Verzweigt die aktuelle Befehlshaber-Combo oder schließt sie ab</translation>
     </message>
     <message>
         <source>Weapon special</source>
@@ -11887,7 +11887,7 @@ Rechtsklick zum Abbrechen.</translation>
     </message>
     <message>
         <source>Loaded, but &apos;%1&apos; could not be read, so wildlife, undead zones and cursed veins were not restored.</source>
-        <translation>Loaded, but &apos;%1&apos; could not be read, so wildlife, undead zones and cursed veins were not restored.</translation>
+        <translation>Geladen, aber „%1“ war nicht lesbar, daher wurden Wildtiere, Untotenzonen und verfluchte Adern nicht wiederhergestellt.</translation>
     </message>
 </context>
 <context>
@@ -12126,19 +12126,19 @@ Rechtsklick zum Abbrechen.</translation>
     </message>
     <message>
         <source>Name the save first.</source>
-        <translation>Name the save first.</translation>
+        <translation>Gib dem Spielstand zuerst einen Namen.</translation>
     </message>
     <message>
         <source>That name is too long. Keep it under %1 characters.</source>
-        <translation>That name is too long. Keep it under %1 characters.</translation>
+        <translation>Der Name ist zu lang. Bleib unter %1 Zeichen.</translation>
     </message>
     <message>
         <source>That name is reserved for quicksaves and autosaves, which would overwrite it without asking. Pick another one.</source>
-        <translation>That name is reserved for quicksaves and autosaves, which would overwrite it without asking. Pick another one.</translation>
+        <translation>Dieser Name ist für Schnell- und Autospeicherungen reserviert, die ihn ungefragt überschreiben würden. Wähle einen anderen.</translation>
     </message>
     <message>
         <source>Names cannot contain slashes or control characters.</source>
-        <translation>Names cannot contain slashes or control characters.</translation>
+        <translation>Namen dürfen keine Schrägstriche oder Steuerzeichen enthalten.</translation>
     </message>
 </context>
 <context>
@@ -12161,79 +12161,78 @@ Rechtsklick zum Abbrechen.</translation>
     </message>
     <message>
         <source>Saves are unavailable: %1</source>
-        <translation>Saves are unavailable: %1</translation>
+        <translation>Spielstände nicht verfügbar: %1</translation>
     </message>
     <message>
         <source>Save name</source>
-        <translation>Save name</translation>
+        <translation>Name des Spielstands</translation>
     </message>
     <message>
         <source>Name this save...</source>
-        <translation>Name this save...</translation>
+        <translation>Spielstand benennen...</translation>
     </message>
     <message>
         <source>A save called &quot;%1&quot; already exists. Saving replaces it.</source>
-        <translation>A save called &quot;%1&quot; already exists. Saving replaces it.</translation>
+        <translation>Es gibt bereits einen Spielstand namens „%1“. Speichern ersetzt ihn.</translation>
     </message>
     <message>
         <source>Press Enter to save.</source>
-        <translation>Press Enter to save.</translation>
+        <translation>Zum Speichern Enter drücken.</translation>
     </message>
     <message>
         <source>Existing saves</source>
-        <translation>Existing saves</translation>
-    </message>
-    <message>
-        <source>%1 save</source>
-        <translation>%1 save</translation>
-    </message>
-    <message>
-        <source>%1 saves</source>
-        <translation>%1 saves</translation>
+        <translation>Vorhandene Spielstände</translation>
     </message>
     <message>
         <source>No saves yet. The name above will create the first one.</source>
-        <translation>No saves yet. The name above will create the first one.</translation>
+        <translation>Noch keine Spielstände. Der Name oben legt den ersten an.</translation>
     </message>
     <message>
         <source>Untitled save</source>
-        <translation>Untitled save</translation>
+        <translation>Unbenannter Spielstand</translation>
     </message>
     <message>
         <source>Unknown map</source>
-        <translation>Unknown map</translation>
+        <translation>Unbekannte Karte</translation>
     </message>
     <message>
         <source>Saved by a different version of the game. It is kept, but this build cannot open it.</source>
-        <translation>Saved by a different version of the game. It is kept, but this build cannot open it.</translation>
+        <translation>Mit einer anderen Spielversion gespeichert. Der Spielstand bleibt erhalten, aber diese Version kann ihn nicht öffnen.</translation>
     </message>
     <message>
         <source>Delete</source>
-        <translation>Delete</translation>
+        <translation>Löschen</translation>
     </message>
     <message>
         <source>Replace this save?</source>
-        <translation>Replace this save?</translation>
+        <translation>Diesen Spielstand ersetzen?</translation>
     </message>
     <message>
         <source>&quot;%1&quot; will be replaced by the current battle. The version stored now cannot be recovered.</source>
-        <translation>&quot;%1&quot; will be replaced by the current battle. The version stored now cannot be recovered.</translation>
+        <translation>„%1“ wird durch die laufende Schlacht ersetzt. Der bisher gespeicherte Stand lässt sich nicht wiederherstellen.</translation>
     </message>
     <message>
         <source>Replace</source>
-        <translation>Replace</translation>
+        <translation>Ersetzen</translation>
     </message>
     <message>
         <source>Keep it</source>
-        <translation>Keep it</translation>
+        <translation>Behalten</translation>
     </message>
     <message>
         <source>Delete this save?</source>
-        <translation>Delete this save?</translation>
+        <translation>Diesen Spielstand löschen?</translation>
     </message>
     <message>
         <source>&quot;%1&quot; will be deleted. This cannot be undone.</source>
-        <translation>&quot;%1&quot; will be deleted. This cannot be undone.</translation>
+        <translation>„%1“ wird gelöscht. Das lässt sich nicht rückgängig machen.</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n save(s)</source>
+        <translation>
+            <numerusform>%n Spielstand</numerusform>
+            <numerusform>%n Spielstände</numerusform>
+        </translation>
     </message>
 </context>
 <context>
@@ -12252,58 +12251,58 @@ Rechtsklick zum Abbrechen.</translation>
     </message>
     <message>
         <source>Saved &quot;%1&quot;</source>
-        <translation>Saved &quot;%1&quot;</translation>
+        <translation>„%1“ gespeichert</translation>
     </message>
     <message>
         <source>Saving &quot;%1&quot; failed.</source>
-        <translation>Saving &quot;%1&quot; failed.</translation>
+        <translation>Speichern von „%1“ fehlgeschlagen.</translation>
     </message>
     <message>
         <source>Saved</source>
-        <translation>Saved</translation>
+        <translation>Gespeichert</translation>
     </message>
 </context>
 <context>
     <name>SaveSlotRow</name>
     <message>
         <source>%1h %2m</source>
-        <translation>%1h %2m</translation>
+        <translation>%1 Std. %2 Min.</translation>
     </message>
     <message>
         <source>%1m</source>
-        <translation>%1m</translation>
+        <translation>%1 Min.</translation>
     </message>
     <message>
         <source>under a minute</source>
-        <translation>under a minute</translation>
+        <translation>unter einer Minute</translation>
     </message>
     <message>
         <source>Unknown</source>
-        <translation>Unknown</translation>
+        <translation>Unbekannt</translation>
     </message>
     <message>
         <source>Campaign</source>
-        <translation>Campaign</translation>
+        <translation>Feldzug</translation>
     </message>
     <message>
         <source>Mission</source>
-        <translation>Mission</translation>
+        <translation>Einsatz</translation>
     </message>
     <message>
         <source>Skirmish</source>
-        <translation>Skirmish</translation>
+        <translation>Scharmützel</translation>
     </message>
     <message>
         <source>Autosave</source>
-        <translation>Autosave</translation>
+        <translation>Autospeicherung</translation>
     </message>
     <message>
         <source>Quicksave</source>
-        <translation>Quicksave</translation>
+        <translation>Schnellspeicherung</translation>
     </message>
     <message>
         <source>No preview</source>
-        <translation>No preview</translation>
+        <translation>Keine Vorschau</translation>
     </message>
     <message>
         <source>%1 · %2 · %3</source>
@@ -12315,11 +12314,11 @@ Rechtsklick zum Abbrechen.</translation>
     </message>
     <message>
         <source>Saved %1</source>
-        <translation>Saved %1</translation>
+        <translation>Gespeichert: %1</translation>
     </message>
     <message>
         <source>Played %1</source>
-        <translation>Played %1</translation>
+        <translation>Gespielt: %1</translation>
     </message>
 </context>
 <context>
@@ -12330,7 +12329,7 @@ Rechtsklick zum Abbrechen.</translation>
     </message>
     <message>
         <source>Save storage unavailable</source>
-        <translation>Save storage unavailable</translation>
+        <translation>Speicherort nicht verfügbar</translation>
     </message>
 </context>
 <context>
@@ -12457,67 +12456,67 @@ Rechtsklick zum Abbrechen.</translation>
     </message>
     <message>
         <source>The save database could not be opened.</source>
-        <translation>The save database could not be opened.</translation>
+        <translation>Die Spielstand-Datenbank konnte nicht geöffnet werden.</translation>
     </message>
     <message>
         <source>The save database is unreadable and could not be moved aside: %1</source>
-        <translation>The save database is unreadable and could not be moved aside: %1</translation>
+        <translation>Die Spielstand-Datenbank ist nicht lesbar und konnte nicht beiseitegelegt werden: %1</translation>
     </message>
     <message>
         <source>integrity check failed: %1</source>
-        <translation>integrity check failed: %1</translation>
+        <translation>Integritätsprüfung fehlgeschlagen: %1</translation>
     </message>
     <message>
         <source>it was written by a newer version of the game (schema %1)</source>
-        <translation>it was written by a newer version of the game (schema %1)</translation>
+        <translation>sie stammt aus einer neueren Spielversion (Schema %1)</translation>
     </message>
     <message>
         <source>it is not a Standard of Iron save database</source>
-        <translation>it is not a Standard of Iron save database</translation>
+        <translation>sie ist keine Spielstand-Datenbank von Standard of Iron</translation>
     </message>
     <message>
         <source>it could not be upgraded from schema %1: %2</source>
-        <translation>it could not be upgraded from schema %1: %2</translation>
+        <translation>sie konnte nicht von Schema %1 aktualisiert werden: %2</translation>
     </message>
     <message>
         <source>its tables do not match schema %1</source>
-        <translation>its tables do not match schema %1</translation>
+        <translation>ihre Tabellen passen nicht zu Schema %1</translation>
     </message>
     <message>
         <source>Failed to add the snapshot version column</source>
-        <translation>Failed to add the snapshot version column</translation>
+        <translation>Die Spalte für die Snapshot-Version konnte nicht hinzugefügt werden</translation>
     </message>
     <message>
         <source>Refusing to write a save with an empty slot name</source>
-        <translation>Refusing to write a save with an empty slot name</translation>
+        <translation>Ein Spielstand ohne Platznamen wird nicht geschrieben</translation>
     </message>
     <message>
         <source>&apos;%1&apos; holds a save that was not written by this rotation, so it will not be overwritten automatically. Delete it from the Load menu to free the slot.</source>
-        <translation>&apos;%1&apos; holds a save that was not written by this rotation, so it will not be overwritten automatically. Delete it from the Load menu to free the slot.</translation>
+        <translation>In „%1“ liegt ein Spielstand, der nicht aus dieser Rotation stammt, deshalb wird er nicht automatisch überschrieben. Lösche ihn im Lademenü, um den Platz freizugeben.</translation>
     </message>
     <message>
         <source>The save was written but could not be read back</source>
-        <translation>The save was written but could not be read back</translation>
+        <translation>Der Spielstand wurde geschrieben, ließ sich aber nicht zurücklesen</translation>
     </message>
     <message>
         <source>The save did not survive being written to disk. Nothing was lost in the match; try saving again.</source>
-        <translation>The save did not survive being written to disk. Nothing was lost in the match; try saving again.</translation>
+        <translation>Der Spielstand hat das Schreiben auf die Festplatte nicht überstanden. In der Partie ging nichts verloren; speichere einfach erneut.</translation>
     </message>
     <message>
         <source>The save was written with the wrong header; try again.</source>
-        <translation>The save was written with the wrong header; try again.</translation>
+        <translation>Der Spielstand wurde mit falschem Header geschrieben; versuche es noch einmal.</translation>
     </message>
     <message>
         <source>&apos;%1&apos; was saved by a different version of Standard of Iron and cannot be loaded by this one. It has been left alone.</source>
-        <translation>&apos;%1&apos; was saved by a different version of Standard of Iron and cannot be loaded by this one. It has been left alone.</translation>
+        <translation>„%1“ wurde mit einer anderen Version von Standard of Iron gespeichert und kann mit dieser nicht geladen werden. Der Spielstand bleibt unverändert.</translation>
     </message>
     <message>
         <source>&apos;%1&apos; does not contain a readable world: %2</source>
-        <translation>&apos;%1&apos; does not contain a readable world: %2</translation>
+        <translation>„%1“ enthält keine lesbare Welt: %2</translation>
     </message>
     <message>
         <source>&apos;%1&apos; is missing the units it should contain</source>
-        <translation>&apos;%1&apos; is missing the units it should contain</translation>
+        <translation>In „%1“ fehlen die Einheiten, die darin sein sollten</translation>
     </message>
 </context>
 <context>
@@ -12716,7 +12715,7 @@ Rechtsklick zum Abbrechen.</translation>
     </message>
     <message>
         <source>Reduces head bob and sway while leading the commander. It never limits camera movement you ask for.</source>
-        <translation>Verringert Kopfwippen und Schwanken, während Ihr den Kommandanten führt. Von Euch angeforderte Kamerabewegungen werden nie eingeschränkt.</translation>
+        <translation>Verringert Kopfwippen und Schwanken, während du den Befehlshaber führst. Von dir angeforderte Kamerabewegungen werden nie eingeschränkt.</translation>
     </message>
     <message>
         <source>Music and sound effects generated with ElevenLabs under a licence that permits commercial use.</source>
@@ -12808,7 +12807,7 @@ Rechtsklick zum Abbrechen.</translation>
     </message>
     <message>
         <source>Scales keyboard panning, zooming and rotation; drag and minimap movement stay unchanged.</source>
-        <translation>Skaliert Schwenken, Zoomen und Drehen über die Tastatur; Ziehen und Bewegungen auf der Minimap bleiben unverändert.</translation>
+        <translation>Skaliert Schwenken, Zoomen und Drehen über die Tastatur; Ziehen und Bewegungen auf der Minikarte bleiben unverändert.</translation>
     </message>
     <message>
         <source>Economy numbers</source>
@@ -12952,7 +12951,7 @@ Rechtsklick zum Abbrechen.</translation>
     </message>
     <message>
         <source>Builders cannot fight. This order needs soldiers - select the spearmen, archers or swordsmen near your camp.</source>
-        <translation>Bauleute können nicht kämpfen. Dieser Befehl braucht Soldaten – wähle die Speerträger, Bogenschützen oder Schwertkämpfer bei deinem Lager.</translation>
+        <translation>Baumeister können nicht kämpfen. Dieser Befehl braucht Soldaten – wähle die Speerträger, Bogenschützen oder Schwertkämpfer bei deinem Lager.</translation>
     </message>
     <message>
         <source>That is a building. Orders in this step need soldiers - left-click one of the troops standing near your camp.</source>
@@ -12964,11 +12963,11 @@ Rechtsklick zum Abbrechen.</translation>
     </message>
     <message>
         <source>Collect and Build are only available to builders - soldiers and buildings cannot do this work. Select a builder (the worker with the hammer) first.</source>
-        <translation>Sammeln und Bauen stehen nur Bauleuten offen – Soldaten und Gebäude können diese Arbeit nicht tun. Wähle zuerst einen Bauarbeiter (den Arbeiter mit dem Hammer).</translation>
+        <translation>Sammeln und Bauen stehen nur Baumeistern offen – Soldaten und Gebäude können diese Arbeit nicht tun. Wähle zuerst einen Baumeister (den Arbeiter mit dem Hammer).</translation>
     </message>
     <message>
         <source>No builder is selected. Left-click one of the builders standing by your barracks.</source>
-        <translation>Kein Bauarbeiter ist ausgewählt. Klicke mit links auf einen der Bauleute neben deiner Kaserne.</translation>
+        <translation>Kein Baumeister ist ausgewählt. Klicke mit links auf einen der Baumeister neben deiner Kaserne.</translation>
     </message>
     <message>
         <source>That is a building. Left-click one of the soldiers standing near your camp instead.</source>
@@ -12976,7 +12975,7 @@ Rechtsklick zum Abbrechen.</translation>
     </message>
     <message>
         <source>A Home costs %1 wood and %2 stone; you have %3 wood and %4 stone. The Build card stays grey until the yard holds enough - send a builder to collect the difference.</source>
-        <translation>Ein Haus kostet %1 Holz und %2 Stein; du hast %3 Holz und %4 Stein. Die Baukarte bleibt grau, bis der Hof genug bereithält – schicke einen Bauarbeiter, um den Rest zu sammeln.</translation>
+        <translation>Ein Haus kostet %1 Holz und %2 Stein; du hast %3 Holz und %4 Stein. Die Baukarte bleibt grau, bis der Hof genug bereithält – schicke einen Baumeister, um den Rest zu sammeln.</translation>
     </message>
     <message>
         <source>A red outline means the site is blocked: too close to another building, on water or on a slope. Move it onto flat, open ground and left-click to confirm. Right-click cancels.</source>
@@ -12996,11 +12995,11 @@ Rechtsklick zum Abbrechen.</translation>
     </message>
     <message>
         <source>The barracks has only %1 reserve left to draw on. Every recruit costs reserve; when it runs dry, build Homes - each Home raises families, and a civilian recruited there and sent to the barracks with Deliver refills it.</source>
-        <translation>Die Kaserne hat nur noch %1 Reserve, aus der sie schöpfen kann. Jeder Rekrut kostet Reserve; ist sie erschöpft, baue Häuser – jedes Haus zieht Familien groß, und ein dort ausgehobener Zivilist, der mit Abliefern zur Kaserne geschickt wird, füllt sie wieder auf.</translation>
+        <translation>Die Kaserne hat nur noch %1 Reserve, aus der sie schöpfen kann. Jeder Rekrut kostet Reserve; ist sie erschöpft, baue Häuser – jedes Haus zieht Familien groß, und ein dort ausgehobener Zivilist, der mit Liefern zur Kaserne geschickt wird, füllt sie wieder auf.</translation>
     </message>
     <message>
         <source>A recruit card turns grey when a resource is short: soldiers need wood for shafts and iron for blades. Send a builder to collect more.</source>
-        <translation>Eine Rekrutenkarte wird grau, wenn ein Rohstoff fehlt: Soldaten brauchen Holz für Schäfte und Eisen für Klingen. Schicke einen Bauarbeiter, um mehr zu sammeln.</translation>
+        <translation>Eine Rekrutenkarte wird grau, wenn ein Rohstoff fehlt: Soldaten brauchen Holz für Schäfte und Eisen für Klingen. Schicke einen Baumeister, um mehr zu sammeln.</translation>
     </message>
     <message>
         <source>The raiders are here. Keep your soldiers together near the barracks: spearmen in front, archers behind, and the commander close so his aura reaches them.</source>
@@ -13096,15 +13095,15 @@ Rechtsklick zum Abbrechen.</translation>
     </message>
     <message>
         <source>Wood pays for nearly everything. Select a builder, press Collect and click a pine tree. The builder fells it, carries the logs to the stone yard beside your barracks, and only when the load is dropped there does the wood counter in the top bar rise. Auto Gather keeps a builder working the nearest nodes on its own.</source>
-        <translation>Holz bezahlt fast alles. Wähle einen Bauarbeiter, drücke Sammeln und klicke auf eine Kiefer. Der Bauarbeiter fällt sie, trägt die Stämme zum Steinhof neben deiner Kaserne, und erst wenn die Last dort abgelegt ist, steigt der Holzzähler in der oberen Leiste. Automatisch sammeln lässt einen Bauarbeiter die nächsten Vorkommen von selbst abarbeiten.</translation>
+        <translation>Holz bezahlt fast alles. Wähle einen Baumeister, drücke Sammeln und klicke auf eine Kiefer. Der Baumeister fällt sie, trägt die Stämme zum Steinhof neben deiner Kaserne, und erst wenn die Last dort abgelegt ist, steigt der Holzzähler in der oberen Leiste. „Selbst sammeln“ lässt einen Baumeister die nächsten Vorkommen von selbst abarbeiten.</translation>
     </message>
     <message>
         <source>Boulders yield stone for buildings and towers; ore seams yield iron for blades and armour. Both are hauled to the same barracks yard, which fills up as your stores grow. Gold comes with the camp and from trade at a marketplace. Set one builder on the boulders and another on the ore.</source>
-        <translation>Felsbrocken liefern Stein für Gebäude und Türme; Erzadern liefern Eisen für Klingen und Rüstungen. Beides wird zum selben Kasernenhof getragen, der sich mit deinen Vorräten füllt. Gold kommt mit dem Lager und aus dem Handel auf einem Marktplatz. Setze einen Bauarbeiter auf die Felsen und einen anderen auf das Erz.</translation>
+        <translation>Felsbrocken liefern Stein für Gebäude und Türme; Erzadern liefern Eisen für Klingen und Rüstungen. Beides wird zum selben Kasernenhof getragen, der sich mit deinen Vorräten füllt. Gold kommt mit dem Lager und aus dem Handel auf einem Marktplatz. Setze einen Baumeister auf die Felsen und einen anderen auf das Erz.</translation>
     </message>
     <message>
         <source>Select a builder and press Build to open the structure list. Each card shows its cost in wood, stone and gold; a grey card means you cannot afford it yet. Choose Home, then move the outline: green means the ground is flat and clear, red means it is blocked. Scroll to rotate, left-click to confirm. Homes raise the families your barracks will later recruit from.</source>
-        <translation>Wähle einen Bauarbeiter und drücke Bauen, um die Gebäudeliste zu öffnen. Jede Karte zeigt ihre Kosten in Holz, Stein und Gold; eine graue Karte bedeutet, dass du sie dir noch nicht leisten kannst. Wähle Haus und bewege den Umriss: Grün heißt, der Boden ist flach und frei, Rot heißt, er ist blockiert. Scrolle zum Drehen, bestätige mit Linksklick. Häuser ziehen die Familien groß, aus denen deine Kaserne später rekrutiert.</translation>
+        <translation>Wähle einen Baumeister und drücke Bauen, um die Gebäudeliste zu öffnen. Jede Karte zeigt ihre Kosten in Holz, Stein und Gold; eine graue Karte bedeutet, dass du sie dir noch nicht leisten kannst. Wähle Haus und bewege den Umriss: Grün heißt, der Boden ist flach und frei, Rot heißt, er ist blockiert. Scrolle zum Drehen, bestätige mit Linksklick. Häuser ziehen die Familien groß, aus denen deine Kaserne später rekrutiert.</translation>
     </message>
     <message>
         <source>Left-click your barracks and pick a soldier from the production panel. Every recruit costs population and resources: the population comes from the barracks&apos; own pool, shown on the card, and refills when civilians from your Homes are delivered to it. The bar in the top panel shows your army against the map&apos;s population cap.</source>
@@ -13156,7 +13155,7 @@ Rechtsklick zum Abbrechen.</translation>
     </message>
     <message>
         <source>Build a Home with a builder</source>
-        <translation>Baue ein Haus mit einem Bauarbeiter</translation>
+        <translation>Baue ein Haus mit einem Baumeister</translation>
     </message>
     <message>
         <source>Recruit a soldier at the barracks and wait for it to march out</source>
@@ -13406,7 +13405,7 @@ Rechtsklick zum Abbrechen.</translation>
     <message numerus="yes">
         <source>Fields %n soldier(s) in one squad.</source>
         <translation>
-            <numerusform>Stellt %n Soldaten in einer Einheit.</numerusform>
+            <numerusform>Stellt %n Soldat in einer Einheit.</numerusform>
             <numerusform>Stellt %n Soldaten in einer Einheit.</numerusform>
         </translation>
     </message>
@@ -13955,7 +13954,7 @@ Rechtsklick zum Abbrechen.</translation>
     </message>
     <message>
         <source>War elephants terrified armies that had never met them, and were nearly useless against those that had.</source>
-        <translation>Kriegselefanten schreckten Heere, die ihnen nie begegnet waren, und nützten gegen jene, die es waren, fast nichts.</translation>
+        <translation>Kriegselefanten schreckten Heere, die ihnen nie begegnet waren, und nützten gegen jene, die ihnen schon begegnet waren, fast nichts.</translation>
     </message>
     <message>
         <source>Wins the straight infantry fight against spears, and overruns unescorted siege in seconds.</source>

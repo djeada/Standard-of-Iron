@@ -18,33 +18,25 @@ namespace {
 
 constexpr float k_min_tile = 0.0001F;
 
-// Room beyond the drawn water that a ford zone still claims across the river,
-// so the bank clearance strip on both sides opens with it.
 constexpr float k_ford_lateral_slack = 1.5F;
 
-// How far into the water the bed takes to fall from the bank to the full
-// ford depth. Scaled by the river, clamped so a narrow stream still gets a
-// shelf to wade in on and a wide river does not drop off a cliff.
 constexpr float k_ford_shelf_fraction = 0.22F;
 constexpr float k_ford_min_shelf = 0.6F;
 constexpr float k_ford_max_shelf = 1.6F;
 
-// A man counts as wading once the water is over his ankles.
 constexpr float k_min_wading_depth = 0.05F;
 
 struct ReachCell {
   int x;
   int z;
-  // World-space distance from the drawn centre line, signed by side.
+
   float lateral;
-  // Half-width of the drawn water at this point of the river, world units.
+
   float drawn_half_width;
-  // 0..1 position along the segment.
+
   float t;
 };
 
-// Visits every grid cell inside the blocked reach of a river segment: the
-// drawn water plus the bank clearance strip. Mirrors precompute_water_blocked.
 template <typename Visit>
 void for_each_river_reach_cell(
     const RiverSegment& river, int width, int height, float tile_size, Visit&& visit) {

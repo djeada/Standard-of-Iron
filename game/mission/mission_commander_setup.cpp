@@ -107,9 +107,6 @@ auto commander_troop_for_seat(const QString& nation, int seat) -> QString {
 
 namespace {
 
-// One commander per owner: the owner's playable commander when the map has one,
-// otherwise the first historical cameo it fields (cameos may stand beside a
-// playable commander without replacing it).
 auto owner_commander_spawns(const Game::Map::MapDefinition& map)
     -> std::map<int, const Game::Map::UnitSpawn*> {
   std::map<int, const Game::Map::UnitSpawn*> by_owner;

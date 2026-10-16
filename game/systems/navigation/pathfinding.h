@@ -212,7 +212,6 @@ private:
   [[nodiscard]] auto wade_penalty(int index) const -> int;
 
 public:
-  // Extra A* cost of stepping into a ford cell (zero off a ford).
   [[nodiscard]] static auto
   wade_step_penalty(const Game::Map::FordProfile* ford) -> std::uint8_t;
   static constexpr int k_wade_exposure_penalty = 6;

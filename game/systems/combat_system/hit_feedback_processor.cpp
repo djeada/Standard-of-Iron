@@ -239,10 +239,6 @@ struct ImpactStrength {
   return strength;
 }
 
-// A war elephant does not break its swing or wheel round for every soldier
-// that lands a blow; with a crowd on it that turned each stomp into stop-go
-// stutter and a heading that jittered between attackers. Only another
-// elephant hits hard enough to interrupt one.
 [[nodiscard]] auto shrugs_off_hit(const Engine::Core::Entity& target,
                                   const Engine::Core::Entity* attacker) -> bool {
   auto const* target_registry = target.registry();

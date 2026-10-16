@@ -1765,7 +1765,7 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>Defend it yourself. A consul does not stand guard over an ally&apos;s barn.</source>
-        <translation>Kendini kendin savun. Bir konsül, bir müttefikin ambarında nöbet tutmaz.</translation>
+        <translation>Onu kendin savun. Bir konsül, bir müttefikin ambarında nöbet tutmaz.</translation>
     </message>
     <message>
         <source>Good choice; I was looking at it too. Hit it from the front. I will be the part they did not see.</source>
@@ -2272,7 +2272,7 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>Carthaginian phalanx commander who holds ground with hired spear levies.</source>
-        <translation>Kiralık mızrak levhalarıyla mevzi tutan Kartacalı falanks komutanı.</translation>
+        <translation>Kiralık mızraklı askerlerle mevzi tutan Kartacalı falanks komutanı.</translation>
     </message>
     <message>
         <source>Bronze-spear commander coordinating disciplined mercenary infantry.</source>
@@ -2288,7 +2288,7 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>Contract Discipline knits nearby spear levies into an unbroken hedge.</source>
-        <translation>Sözleşme Disiplini yakındaki mızrak levhalarını kırılmaz bir çite dokur.</translation>
+        <translation>Sözleşme Disiplini yakındaki mızraklı askerlerini kırılmaz bir çite dokur.</translation>
     </message>
     <message>
         <source>Nearby allied spearmen recover health fastest inside the aura.</source>
@@ -2424,7 +2424,7 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>Nearby allied swordsmen gain the most attack in aura range.</source>
-        <translation>Aura menzilindeki müttefik kılıç ustaları en fazla saldırı kazanır.</translation>
+        <translation>Aura menzilindeki müttefik kılıççılar en fazla saldırı kazanır.</translation>
     </message>
     <message>
         <source>Hold the line, Romans!</source>
@@ -2444,7 +2444,7 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>Popular consul of 217 BC who marched his column into Hannibal&apos;s ambush at Lake Trasimene and died there.</source>
-        <translation>Kolonunu Trasimeno Gölü&apos;nde Hannibal&apos;in pususuna sokan ve orada ölen MÖ 217&apos;nin halkçı konsülü.</translation>
+        <translation>Kolonunu Trasimeno Gölü&apos;nde Hannibal&apos;ın pususuna sokan ve orada ölen MÖ 217&apos;nin halkçı konsülü.</translation>
     </message>
     <message>
         <source>Spear commander who keeps a marching column moving at speed.</source>
@@ -2504,7 +2504,7 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>Nearby allied swordsmen gain strong attack in aura range.</source>
-        <translation>Aura menzilindeki müttefik kılıç ustaları güçlü saldırı kazanır.</translation>
+        <translation>Aura menzilindeki müttefik kılıççılar güçlü saldırı kazanır.</translation>
     </message>
     <message>
         <source>Stand, Rome is watching!</source>
@@ -2604,7 +2604,7 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>Hannibal&apos;s youngest brother, who sprang the ambush from the stream bed at the Trebia and fought in the centre at Cannae.</source>
-        <translation>Hannibal&apos;in en küçük kardeşi; Trebia&apos;da dere yatağından pusuyu başlattı ve Cannae&apos;de merkezde savaştı.</translation>
+        <translation>Hannibal&apos;ın en küçük kardeşi; Trebia&apos;da dere yatağından pusuyu başlattı ve Cannae&apos;de merkezde savaştı.</translation>
     </message>
     <message>
         <source>Sword commander who leads a hidden detachment into the enemy&apos;s rear.</source>
@@ -2640,7 +2640,7 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>Hannibal&apos;s cavalry commander, who rounded up the survivors of Trasimene and urged a march on Rome after Cannae.</source>
-        <translation>Hannibal&apos;in süvari komutanı; Trasimeno&apos;nun hayatta kalanlarını topladı ve Cannae&apos;den sonra Roma&apos;ya yürünmesini istedi.</translation>
+        <translation>Hannibal&apos;ın süvari komutanı; Trasimeno&apos;nun hayatta kalanlarını topladı ve Cannae&apos;den sonra Roma&apos;ya yürünmesini istedi.</translation>
     </message>
     <message>
         <source>Spear-armed cavalry commander who hunts broken troops.</source>
@@ -2676,7 +2676,7 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>Hannibal&apos;s nephew, who crossed the Rhone upstream and signalled his flank attack with smoke.</source>
-        <translation>Hannibal&apos;in yeğeni; Rhône&apos;u yukarıdan geçti ve kanat saldırısını dumanla haber verdi.</translation>
+        <translation>Hannibal&apos;ın yeğeni; Rhône&apos;u yukarıdan geçti ve kanat saldırısını dumanla haber verdi.</translation>
     </message>
     <message>
         <source>Mobile commander who takes a detachment round the enemy&apos;s flank.</source>
@@ -2716,7 +2716,7 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>Commander of the Celtic and Iberian heavy horse on Hannibal&apos;s left at Cannae; not Hannibal&apos;s brother Hasdrubal Barca.</source>
-        <translation>Cannae&apos;de Hannibal&apos;in sol kanadındaki Kelt ve İber ağır süvarisinin komutanı; Hannibal&apos;in kardeşi Hasdrubal Barka değildir.</translation>
+        <translation>Cannae&apos;de Hannibal&apos;ın sol kanadındaki Kelt ve İber ağır süvarisinin komutanı; Hannibal&apos;ın kardeşi Hasdrubal Barka değildir.</translation>
     </message>
     <message>
         <source>Heavy cavalry commander who breaks a wing and rides into the rear.</source>
@@ -3680,7 +3680,7 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>Sepulcher Shrine</source>
-        <translation>Mezar Tapınağı</translation>
+        <translation>Kabir Tapınağı</translation>
     </message>
     <message>
         <source>Ladder</source>
@@ -4311,23 +4311,23 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>Save slot &apos;%1&apos; does not contain a battlefield and was not loaded.</source>
-        <translation>Save slot &apos;%1&apos; does not contain a battlefield and was not loaded.</translation>
+        <translation>&apos;%1&apos; kayıt yuvası bir savaş alanı içermiyor ve yüklenmedi.</translation>
     </message>
     <message>
         <source>&apos;%1&apos; could not be restored (%2). The battle that was running could not be kept.</source>
-        <translation>&apos;%1&apos; could not be restored (%2). The battle that was running could not be kept.</translation>
+        <translation>&apos;%1&apos; geri yüklenemedi (%2). Sürmekte olan savaş da korunamadı.</translation>
     </message>
     <message>
         <source>&apos;%1&apos; was saved by a different version of Standard of Iron (snapshot %2, this build reads %3) and cannot be imported.</source>
-        <translation>&apos;%1&apos; was saved by a different version of Standard of Iron (snapshot %2, this build reads %3) and cannot be imported.</translation>
+        <translation>&apos;%1&apos; Standard of Iron&apos;ın farklı bir sürümüyle kaydedilmiş (anlık görüntü %2, bu sürüm %3 okuyor) ve içe aktarılamaz.</translation>
     </message>
     <message>
         <source>&apos;%1&apos; could not be restored (%2). The battle that was running was left alone.</source>
-        <translation>&apos;%1&apos; could not be restored (%2). The battle that was running was left alone.</translation>
+        <translation>&apos;%1&apos; geri yüklenemedi (%2). Sürmekte olan savaşa dokunulmadı.</translation>
     </message>
     <message>
         <source>&apos;%1&apos; restored no units at all, so there is no battle to return to. The save is unusable and the battle that was running was left alone.</source>
-        <translation>&apos;%1&apos; restored no units at all, so there is no battle to return to. The save is unusable and the battle that was running was left alone.</translation>
+        <translation>&apos;%1&apos; hiç birlik geri yüklemedi, dönülecek bir savaş yok. Kayıt kullanılamaz; sürmekte olan savaşa dokunulmadı.</translation>
     </message>
 </context>
 <context>
@@ -4378,11 +4378,11 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>The previous frame is still running; the match could not be changed. Please try again.</source>
-        <translation>Önceki kare hâlâ çalışıyor; maç değiştirilemedi. Lütfen tekrar deneyin.</translation>
+        <translation>Önceki kare hâlâ çalışıyor; maç değiştirilemedi. Lütfen tekrar dene.</translation>
     </message>
     <message>
         <source>A save is already in progress.</source>
-        <translation>A save is already in progress.</translation>
+        <translation>Zaten bir kayıt sürüyor.</translation>
     </message>
     <message>
         <source>your ally</source>
@@ -4450,11 +4450,11 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>%1 asked %2 for %3 %4 and received %5.</source>
-        <translation>%1, %2 tarafından %3 %4 istedi ve %5 aldı.</translation>
+        <translation>%1, %2 komutanından %3 %4 istedi ve %5 aldı.</translation>
     </message>
     <message>
         <source>%1 asked %2 for %3 %4; %2 refused.</source>
-        <translation>%1, %2 tarafından %3 %4 istedi; %2 reddetti.</translation>
+        <translation>%1, %2 komutanından %3 %4 istedi; %2 reddetti.</translation>
     </message>
     <message>
         <source>%1 called %2 to the attack; %2 marches.</source>
@@ -4614,7 +4614,7 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>Give it</source>
-        <translation>Ver gitsin</translation>
+        <translation>Nasıl verilir</translation>
     </message>
     <message>
         <source>Press Guard, then click the ground to hold. Right-click cancels.</source>
@@ -4722,7 +4722,7 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>Nearby troops fight with steadier morale and the commander&apos;s own bonus.</source>
-        <translation>Yakındaki birlikler daha sağlam morille ve komutanın kendi desteğiyle çarpışır.</translation>
+        <translation>Yakındaki birlikler daha sağlam moralle ve komutanın kendi desteğiyle çarpışır.</translation>
     </message>
     <message>
         <source>%1 around the commander, and it moves with him.</source>
@@ -4866,7 +4866,7 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>Send the selected troops at one enemy unit or building.</source>
-        <translation>Seçili birlikleri tek bir düşman birime ya da yapısına sür.</translation>
+        <translation>Seçili birlikleri tek bir düşman birimine ya da yapısına sür.</translation>
     </message>
     <message>
         <source>Press Attack, then left-click the target. Right-click cancels. A right-click on an enemy does the same thing.</source>
@@ -5066,7 +5066,7 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>Scrap</source>
-        <translation>Hurdaya ayır</translation>
+        <translation>Sök</translation>
     </message>
     <message>
         <source>Send builders to take one of your own buildings apart and get part of its cost back.</source>
@@ -5098,7 +5098,7 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>Split</source>
-        <translation>Bölünmüş</translation>
+        <translation>Böl</translation>
     </message>
     <message>
         <source>Break the selected squad into two smaller ones so they can work or fight in two places at once.</source>
@@ -5126,7 +5126,7 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>Join</source>
-        <translation>Birleştir</translation>
+        <translation>Birleş</translation>
     </message>
     <message>
         <source>Result</source>
@@ -5134,7 +5134,7 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>Deliver</source>
-        <translation>Teslim et</translation>
+        <translation>Teslim</translation>
     </message>
     <message>
         <source>Send civilians to a barracks to refill the reserve it recruits from.</source>
@@ -5142,7 +5142,7 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>Press Deliver, then left-click a friendly barracks. Right-click cancels.</source>
-        <translation>Teslim et&apos;e bas, sonra dost bir kışlaya sol tıkla. Sağ tık iptal eder.</translation>
+        <translation>Teslim&apos;e bas, sonra dost bir kışlaya sol tıkla. Sağ tık iptal eder.</translation>
     </message>
     <message>
         <source>Civilians only; other selected units ignore it.</source>
@@ -5150,7 +5150,7 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>Deliver is only available to civilians</source>
-        <translation>Teslim et yalnızca sivillerde kullanılabilir</translation>
+        <translation>Teslim yalnızca sivillerde kullanılabilir</translation>
     </message>
     <message>
         <source>Rally</source>
@@ -5935,7 +5935,7 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
     </message>
     <message>
         <source>A barracks or temple starts with a reserve and spends it on every recruit; the card shows exactly what each one costs. Homes refill it: each Home raises families over time, a civilian can be recruited there for food and sent to either building with Deliver, and that building&apos;s reserve grows. A squad then stands in the field for what it cost, which is what the top bar counts against the map&apos;s manpower cap.</source>
-        <translation>Bir kışla ya da tapınak bir yedekle başlar ve her devşirmede ondan harcar; kart her birinin tam olarak neye mal olduğunu gösterir. Evler onu tazeler: her Ev zamanla aile yetiştirir, orada yiyecek karşılığı bir sivil devşirilip Teslim et ile iki yapıdan birine yollanabilir ve o yapının yedeği büyür. Böylece bir müfreze sahada mal olduğu kadar durur; üst çubuğun haritanın insan gücü sınırına karşı saydığı da budur.</translation>
+        <translation>Bir kışla ya da tapınak bir yedekle başlar ve her devşirmede ondan harcar; kart her birinin tam olarak neye mal olduğunu gösterir. Evler onu tazeler: her Ev zamanla aile yetiştirir, orada yiyecek karşılığı bir sivil devşirilip Teslim ile iki yapıdan birine yollanabilir ve o yapının yedeği büyür. Böylece bir müfreze sahada mal olduğu kadar durur; üst çubuğun haritanın insan gücü sınırına karşı saydığı da budur.</translation>
     </message>
     <message>
         <source>Formations and lines</source>
@@ -5951,7 +5951,7 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
     </message>
     <message>
         <source>Your commander carries the standard. Troops close to him fight with higher morale, and morale decides who breaks first. Keep him behind the spears: if he falls the mission is lost.</source>
-        <translation>Sancağı komutanın taşır. Ona yakın birlikler daha yüksek morille çarpışır ve önce kimin dağılacağına moral karar verir. Onu mızrakların gerisinde tut: düşerse görev kaybedilir.</translation>
+        <translation>Sancağı komutanın taşır. Ona yakın birlikler daha yüksek moralle çarpışır ve önce kimin dağılacağına moral karar verir. Onu mızrakların gerisinde tut: düşerse görev kaybedilir.</translation>
     </message>
     <message>
         <source>Aura and Rally</source>
@@ -6019,7 +6019,7 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
     </message>
     <message>
         <source>The Sepulcher</source>
-        <translation>Mezar</translation>
+        <translation>Kabir</translation>
     </message>
     <message>
         <source>Each mission states its own victory and defeat conditions in the Objectives screen (Escape, then Objectives). In battle, press O or the objectives button in the top bar to keep the full list open beside the field. In every battle your commander must survive: a nation dies with the man who leads it, and a lone commander is already lost.</source>
@@ -6043,11 +6043,11 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
     </message>
     <message>
         <source>The Sepulcher Shrine</source>
-        <translation>Mezar Tapınağı</translation>
+        <translation>Kabir Tapınağı</translation>
     </message>
     <message>
         <source>Each zone is anchored by a Sepulcher Shrine. While its guardians still stand, the shrine cannot be harmed and attack orders on it are refused - do not waste arrows on it. Kill every wave first; only then does the shrine lie open.</source>
-        <translation>Her bölge bir Mezar Tapınağına bağlıdır. Muhafızları ayaktayken tapınağa zarar verilemez ve ona verilen saldırı emirleri reddedilir - oklarını boşa harcama. Önce her dalgayı öldür; ancak o zaman tapınak açığa çıkar.</translation>
+        <translation>Her bölge bir Kabir Tapınağına bağlıdır. Muhafızları ayaktayken tapınağa zarar verilemez ve ona verilen saldırı emirleri reddedilir - oklarını boşa harcama. Önce her dalgayı öldür; ancak o zaman tapınak açığa çıkar.</translation>
     </message>
     <message>
         <source>Purifying a shrine</source>
@@ -6182,7 +6182,7 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
     </message>
     <message>
         <source>Your command has collapsed.</source>
-        <translation>Komutan çöktü.</translation>
+        <translation>Komutanlığın çöktü.</translation>
     </message>
     <message>
         <source>March the Campaign</source>
@@ -6250,7 +6250,7 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
     </message>
     <message>
         <source>Not engaged by your army</source>
-        <translation>Ordun tarafından çarpışmaya sokulmadı</translation>
+        <translation>Ordun buna saldırmıyor</translation>
     </message>
     <message numerus="yes">
         <source>Under attack by %n enemies</source>
@@ -6473,75 +6473,75 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
     </message>
     <message>
         <source>Saves are unavailable: %1</source>
-        <translation>Saves are unavailable: %1</translation>
+        <translation>Kayıtlar kullanılamıyor: %1</translation>
     </message>
     <message>
         <source>The save database could not be read and a new one was started. Your previous file was kept at %1.</source>
-        <translation>The save database could not be read and a new one was started. Your previous file was kept at %1.</translation>
+        <translation>Kayıt veritabanı okunamadı ve yenisi başlatıldı. Önceki dosyan %1 konumunda saklandı.</translation>
     </message>
     <message>
         <source>No saved games yet. Save a battle from the menu, or press the quicksave key while you play.</source>
-        <translation>No saved games yet. Save a battle from the menu, or press the quicksave key while you play.</translation>
+        <translation>Henüz kayıtlı oyun yok. Menüden bir savaşı kaydet ya da oynarken hızlı kayıt tuşuna bas.</translation>
     </message>
     <message>
         <source>Untitled save</source>
-        <translation>Untitled save</translation>
+        <translation>Adsız kayıt</translation>
     </message>
     <message>
         <source>Unknown map</source>
-        <translation>Unknown map</translation>
+        <translation>Bilinmeyen harita</translation>
     </message>
     <message>
         <source>Saved by a different version of the game. It is kept on disk, but this build cannot open it.</source>
-        <translation>Saved by a different version of the game. It is kept on disk, but this build cannot open it.</translation>
+        <translation>Oyunun farklı bir sürümüyle kaydedilmiş. Diskte duruyor, ama bu sürüm onu açamaz.</translation>
     </message>
     <message>
         <source>Export failed: %1</source>
-        <translation>Export failed: %1</translation>
+        <translation>Dışa aktarma başarısız: %1</translation>
     </message>
     <message>
         <source>This save will load</source>
-        <translation>This save will load</translation>
+        <translation>Bu kayıt yüklenebilir</translation>
     </message>
     <message>
         <source>This save will not load</source>
-        <translation>This save will not load</translation>
+        <translation>Bu kayıt yüklenemez</translation>
     </message>
     <message>
         <source>&quot;%1&quot; decompressed cleanly and contains a complete battlefield.</source>
-        <translation>&quot;%1&quot; decompressed cleanly and contains a complete battlefield.</translation>
+        <translation>&quot;%1&quot; sorunsuz açıldı ve eksiksiz bir savaş alanı içeriyor.</translation>
     </message>
     <message>
         <source>This save was written by a different version of the game.</source>
-        <translation>This save was written by a different version of the game.</translation>
+        <translation>Bu kayıt oyunun farklı bir sürümüyle yazılmış.</translation>
     </message>
     <message>
         <source>Delete this save?</source>
-        <translation>Delete this save?</translation>
+        <translation>Bu kayıt silinsin mi?</translation>
     </message>
     <message>
         <source>&quot;%1&quot; will be deleted. This cannot be undone.</source>
-        <translation>&quot;%1&quot; will be deleted. This cannot be undone.</translation>
+        <translation>&quot;%1&quot; silinecek. Bu işlem geri alınamaz.</translation>
     </message>
     <message>
         <source>Keep it</source>
-        <translation>Keep it</translation>
+        <translation>Kalsın</translation>
     </message>
     <message>
         <source>Deleted &quot;%1&quot;</source>
-        <translation>Deleted &quot;%1&quot;</translation>
+        <translation>&quot;%1&quot; silindi</translation>
     </message>
     <message>
         <source>Close</source>
-        <translation>Close</translation>
+        <translation>Kapat</translation>
     </message>
     <message>
         <source>Import save</source>
-        <translation>Import save</translation>
+        <translation>Kayıt içe aktar</translation>
     </message>
     <message>
         <source>Import failed: %1</source>
-        <translation>Import failed: %1</translation>
+        <translation>İçe aktarma başarısız: %1</translation>
     </message>
 </context>
 <context>
@@ -6874,7 +6874,7 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
     </message>
     <message>
         <source>At Cannae in 216 BC, Hannibal&apos;s yielding center drew Roman infantry forward while his flanks and cavalry closed around them.</source>
-        <translation>MÖ 216&apos;da Cannae&apos;de Hannibal&apos;in geri çekilen merkezi Roma piyadesini ileri çekerken kanatları ve süvarisi onların etrafını kapattı.</translation>
+        <translation>MÖ 216&apos;da Cannae&apos;de Hannibal&apos;ın geri çekilen merkezi Roma piyadesini ileri çekerken kanatları ve süvarisi onların etrafını kapattı.</translation>
     </message>
     <message>
         <source>At Ilipa in 206 BC, Scipio changed his usual deployment and attacked the Carthaginian wings with his stronger Roman infantry.</source>
@@ -6886,7 +6886,7 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
     </message>
     <message>
         <source>At Zama in 202 BC, Scipio left lanes through his infantry to blunt Hannibal&apos;s elephants. Positioning beat panic.</source>
-        <translation>MÖ 202&apos;de Zama&apos;da Scipio, Hannibal&apos;in fillerini etkisiz kılmak için piyadesinin arasında koridorlar bıraktı. Mevzilenme paniği yendi.</translation>
+        <translation>MÖ 202&apos;de Zama&apos;da Scipio, Hannibal&apos;ın fillerini etkisiz kılmak için piyadesinin arasında koridorlar bıraktı. Mevzilenme paniği yendi.</translation>
     </message>
     <message>
         <source>At the Trebia, Hannibal lured Roman troops into a winter battle; a concealed Carthaginian force struck during the fighting.</source>
@@ -6894,7 +6894,7 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
     </message>
     <message>
         <source>Fabius Maximus earned the name &apos;the Delayer&apos; by avoiding Hannibal&apos;s preferred pitched battles and harassing his movements and supplies.</source>
-        <translation>Fabius Maximus, Hannibal&apos;in tercih ettiği meydan savaşlarından kaçınıp hareketlerini ve ikmalini taciz ettiği için “Oyalayıcı” lakabını kazandı.</translation>
+        <translation>Fabius Maximus, Hannibal&apos;ın tercih ettiği meydan savaşlarından kaçınıp hareketlerini ve ikmalini taciz ettiği için “Oyalayıcı” lakabını kazandı.</translation>
     </message>
     <message>
         <source>Fabius called it patience. His critics probably called it a very long walk.</source>
@@ -6902,7 +6902,7 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
     </message>
     <message>
         <source>Hamilcar Barca, Hannibal&apos;s father, built Carthaginian power in Iberia after the First Punic War. His sons inherited a formidable campaign.</source>
-        <translation>Hannibal&apos;in babası Hamilkar Barka, Birinci Pön Savaşı&apos;ndan sonra İberya&apos;da Kartaca gücünü kurdu. Oğulları zorlu bir sefer miras aldı.</translation>
+        <translation>Hannibal&apos;ın babası Hamilkar Barka, Birinci Pön Savaşı&apos;ndan sonra İberya&apos;da Kartaca gücünü kurdu. Oğulları zorlu bir sefer miras aldı.</translation>
     </message>
     <message>
         <source>Hannibal Barca was the Carthaginian commander who brought the Second Punic War into Italy by marching across the Alps in 218 BC.</source>
@@ -6918,11 +6918,11 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
     </message>
     <message>
         <source>Hannibal&apos;s elephants crossed mountains. Your supply wagon still insists that a shallow stream is impassable.</source>
-        <translation>Hannibal&apos;in filleri dağları aştı. İkmal araban ise sığ bir derenin geçilemez olduğunda hâlâ ısrarcı.</translation>
+        <translation>Hannibal&apos;ın filleri dağları aştı. İkmal araban ise sığ bir derenin geçilemez olduğunda hâlâ ısrarcı.</translation>
     </message>
     <message>
         <source>Hasdrubal Barca was Hannibal&apos;s brother, not his brother-in-law Hasdrubal the Fair. His attempted reinforcement ended at the Metaurus in 207 BC.</source>
-        <translation>Hasdrubal Barka, Hannibal&apos;in kardeşiydi; eniştesi Güzel Hasdrubal değil. Takviye getirme girişimi MÖ 207&apos;de Metaurus&apos;ta sona erdi.</translation>
+        <translation>Hasdrubal Barka, Hannibal&apos;ın kardeşiydi; eniştesi Güzel Hasdrubal değil. Takviye getirme girişimi MÖ 207&apos;de Metaurus&apos;ta sona erdi.</translation>
     </message>
     <message>
         <source>In 218 BC Hannibal crossed the Alps with infantry, cavalry, baggage, and elephants. His exact route remains disputed.</source>
@@ -6930,7 +6930,7 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
     </message>
     <message>
         <source>Maharbal commanded cavalry under Hannibal. The famous tale that he urged an immediate march on Rome after Cannae comes from later Roman tradition.</source>
-        <translation>Maharbal, Hannibal&apos;in emrinde süvari komuta etti. Cannae&apos;den sonra hemen Roma üzerine yürümeyi önerdiğine dair ünlü hikâye daha sonraki Roma geleneğinden gelir.</translation>
+        <translation>Maharbal, Hannibal&apos;ın emrinde süvari komuta etti. Cannae&apos;den sonra hemen Roma üzerine yürümeyi önerdiğine dair ünlü hikâye daha sonraki Roma geleneğinden gelir.</translation>
     </message>
     <message>
         <source>Masinissa&apos;s Numidian horsemen fought alongside Rome at Zama. Their return to the battlefield helped decide the fight.</source>
@@ -7014,7 +7014,7 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
     </message>
     <message>
         <source>At Zama, the Romans blew trumpets and horns to frighten Hannibal&apos;s elephants. Some panicked and trampled Carthage&apos;s own cavalry.</source>
-        <translation>Zama&apos;da Romalılar, Hannibal&apos;in fillerini korkutmak için borazan ve boru çaldı. Bazı filler paniğe kapılıp Kartaca&apos;nın kendi süvarisini ezdi.</translation>
+        <translation>Zama&apos;da Romalılar, Hannibal&apos;ın fillerini korkutmak için borazan ve boru çaldı. Bazı filler paniğe kapılıp Kartaca&apos;nın kendi süvarisini ezdi.</translation>
     </message>
     <message>
         <source>Balearic slingers were famous marksmen. One ancient tale says their children were not given bread until they had hit it with a sling.</source>
@@ -7058,7 +7058,7 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
     </message>
     <message>
         <source>Hamilcar Barca&apos;s nickname, Barca, probably means &apos;lightning&apos;. Hannibal&apos;s own name means roughly &apos;grace of Baal&apos;.</source>
-        <translation>Hamilkar Barka&apos;nın lakabı Barka muhtemelen “yıldırım” anlamına gelir. Hannibal&apos;in kendi adı ise kabaca “Baal&apos;in lütfu” demektir.</translation>
+        <translation>Hamilkar Barka&apos;nın lakabı Barka muhtemelen “yıldırım” anlamına gelir. Hannibal&apos;ın kendi adı ise kabaca “Baal&apos;in lütfu” demektir.</translation>
     </message>
     <message>
         <source>Herodotus reports that Phoenician sailors circled Africa for an Egyptian pharaoh. He doubted their claim that the sun appeared on their right, which is exactly what would happen.</source>
@@ -7066,7 +7066,7 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
     </message>
     <message>
         <source>In a later war, Hannibal reportedly had pots full of snakes hurled onto enemy ships. The sailors laughed, then stopped laughing.</source>
-        <translation>Hannibal&apos;in daha sonraki bir savaşta düşman gemilerine yılan dolu çömlekler fırlattırdığı anlatılır. Denizciler güldü, sonra gülmeyi bıraktılar.</translation>
+        <translation>Hannibal&apos;ın daha sonraki bir savaşta düşman gemilerine yılan dolu çömlekler fırlattırdığı anlatılır. Denizciler güldü, sonra gülmeyi bıraktılar.</translation>
     </message>
     <message>
         <source>In the First Punic War, storms sank more Roman ships than the Carthaginian navy did. Whole fleets were lost in bad weather.</source>
@@ -7078,7 +7078,7 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
     </message>
     <message>
         <source>Livy claims Hannibal split rocks on the Alpine path by heating them with fire and dousing them with vinegar. Historians are still arguing about it.</source>
-        <translation>Livius, Hannibal&apos;in Alp yolundaki kayaları ateşle ısıtıp üzerlerine sirke dökerek yardırdığını iddia eder. Tarihçiler bunu hâlâ tartışıyor.</translation>
+        <translation>Livius, Hannibal&apos;ın Alp yolundaki kayaları ateşle ısıtıp üzerlerine sirke dökerek yardırdığını iddia eder. Tarihçiler bunu hâlâ tartışıyor.</translation>
     </message>
     <message>
         <source>Numidian horsemen rode without saddles or bridles, guiding their mounts with a light neck rope and their knees.</source>
@@ -7118,7 +7118,7 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
     </message>
     <message>
         <source>The Phoenician alphabet had 22 letters and no vowels. Through Greek and Latin, it is an ancestor of the letters you are reading now.</source>
-        <translation>Fenike alfabesinde 22 harf vardı ve hiç ünlü yoktu. Yunanca ve Latince aracılığıyla şu an okuduğunuz harflerin atasıdır.</translation>
+        <translation>Fenike alfabesinde 22 harf vardı ve hiç ünlü yoktu. Yunanca ve Latince aracılığıyla şu an okuduğun harflerin atasıdır.</translation>
     </message>
     <message>
         <source>The Roman corvus was a boarding bridge with an iron spike. It dropped onto an enemy deck and turned a sea battle into an infantry fight.</source>
@@ -7169,7 +7169,7 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
     </message>
     <message>
         <source>Leave this battle?</source>
-        <translation>Bu savaştan ayrılmak mı?</translation>
+        <translation>Bu savaştan ayrılınsın mı?</translation>
     </message>
     <message>
         <source>The battle in progress will be lost. Save it first if you want to come back to it.</source>
@@ -7189,19 +7189,19 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
     </message>
     <message>
         <source>There is no quicksave to load.</source>
-        <translation>There is no quicksave to load.</translation>
+        <translation>Yüklenecek hızlı kayıt yok.</translation>
     </message>
     <message>
         <source>Load the quicksave?</source>
-        <translation>Load the quicksave?</translation>
+        <translation>Hızlı kayıt yüklensin mi?</translation>
     </message>
     <message>
         <source>The battle in progress will be replaced by the quicksave. Anything since then is lost.</source>
-        <translation>The battle in progress will be replaced by the quicksave. Anything since then is lost.</translation>
+        <translation>Sürmekte olan savaşın yerini hızlı kayıt alacak. O zamandan beri olan her şey kaybolur.</translation>
     </message>
     <message>
         <source>Load the quicksave</source>
-        <translation>Load the quicksave</translation>
+        <translation>Hızlı kaydı yükle</translation>
     </message>
 </context>
 <context>
@@ -7252,7 +7252,7 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
     </message>
     <message>
         <source>Training</source>
-        <translation>Eğitiyor</translation>
+        <translation>Eğitim</translation>
     </message>
     <message>
         <source>Objectives</source>
@@ -7392,15 +7392,15 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
     </message>
     <message>
         <source>Continue</source>
-        <translation>Continue</translation>
+        <translation>Sürdür</translation>
     </message>
     <message>
         <source>Return to the most recent save</source>
-        <translation>Return to the most recent save</translation>
+        <translation>En son kayda dön</translation>
     </message>
     <message>
         <source>Resume</source>
-        <translation>Resume</translation>
+        <translation>Sürdür</translation>
     </message>
 </context>
 <context>
@@ -7574,7 +7574,7 @@ bir harita seç</translation>
     </message>
     <message>
         <source>Opposition</source>
-        <translation>Muhalefet</translation>
+        <translation>Rakipler</translation>
     </message>
     <message>
         <source>Scripted</source>
@@ -7726,7 +7726,7 @@ bir harita seç</translation>
     </message>
     <message>
         <source>Click to change this opponent&apos;s difficulty</source>
-        <translation>Bu rakibin zorluğunu değiştirmek için tıklayın</translation>
+        <translation>Bu rakibin zorluğunu değiştirmek için tıkla</translation>
     </message>
 </context>
 <context>
@@ -7760,7 +7760,7 @@ bir harita seç</translation>
     </message>
     <message>
         <source>A timber detail&apos;s cut above the Pinewater, for one. The near stand beside the camp is already half felled, so the levy is only filled out of the deep pines a long haul north-east, past the spine of rock the haul road has to swing around. The scree that gives up the stone lies the other way entirely, and the crew is not big enough to work both without splitting it.</source>
-        <translation>Tek kişilik, Çampınar&apos;ın üstünde bir kereste ekibinin kesim alanı. Kampın yanındaki yakın koru zaten yarı yarıya devrilmiş, bu yüzden levha ancak kuzeydoğuda, taşıma yolunun dolanmak zorunda kaldığı kaya omurgasının ötesindeki derin çamlıklardan tamamlanır. Taşı veren moloz yamaç ise tam ters yönde ve ekip, bölünmeden ikisini birden işleyecek kadar büyük değil.</translation>
+        <translation>Tek kişilik, Çampınar&apos;ın üstünde bir kereste ekibinin kesim alanı. Kampın yanındaki yakın koru zaten yarı yarıya devrilmiş, bu yüzden vergi ancak kuzeydoğuda, taşıma yolunun dolanmak zorunda kaldığı kaya omurgasının ötesindeki derin çamlıklardan tamamlanır. Taşı veren moloz yamaç ise tam ters yönde ve ekip, bölünmeden ikisini birden işleyecek kadar büyük değil.</translation>
     </message>
     <message>
         <source>Amber Delta</source>
@@ -7772,7 +7772,7 @@ bir harita seç</translation>
     </message>
     <message>
         <source>Battle of Lake Trasimene</source>
-        <translation>Trasimene Gölü Muharebesi</translation>
+        <translation>Trasimeno Gölü Muharebesi</translation>
     </message>
     <message>
         <source>Battle of Ticino</source>
@@ -7864,7 +7864,7 @@ bir harita seç</translation>
     </message>
     <message>
         <source>A Roman watch camp on the old road, the night it finds out why the shepherds stopped using it. Timber, stone and a flock are close to the camp; the barrow ruins hold the middle ground; the cursed shrine stands alone on the north-east ground. A low knoll between the camp and the barrow is the only high ground worth having, and the road runs past the dead the whole way.</source>
-        <translation>Eski yol üzerinde bir Roma gözcü kampı, çobanların o yolu neden bıraktığını öğrendiği gece. Kereste, taş ve bir sürü kampa yakındır; mezar harabeleri ortadaki araziyi tutar; lanetli tapınak kuzeydoğudaki arazide tek başına durur. Kampla mezar arasındaki alçak bir tümsek, sahip olmaya değer tek yüksek yerdir ve yol baştan sona ölülerin yanından geçer.</translation>
+        <translation>Eski yol üzerinde bir Roma gözcü kampı, çobanların o yolu neden bıraktığını öğrendiği gece. Kereste, taş ve bir koyun sürüsü kampa yakındır; mezar harabeleri ortadaki araziyi tutar; lanetli tapınak kuzeydoğudaki arazide tek başına durur. Kampla mezar arasındaki alçak bir tümsek, sahip olmaya değer tek yüksek yerdir ve yol baştan sona ölülerin yanından geçer.</translation>
     </message>
     <message>
         <source>Victumulae</source>
@@ -7872,7 +7872,7 @@ bir harita seç</translation>
     </message>
     <message>
         <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. A timber curtain with a tower at every corner rings the lower ward, where the temple and the market face each other across one street; the citadel stands on the upper crown at the back of the town behind its own wall, with the garrison hall inside it. One graded ramp climbs from the camp road to the south gate, and one short ramp climbs from the lower ward to the citadel gate. The relief columns come down the flank roads and never touch the hill.</source>
-        <translation>İnsubria ovasında, kış tarlalarının üzerinde çifte bir tepeye kurulmuş surlu bir pazar kasabası. Her köşesinde bir kule bulunan ahşap bir sur, tapınakla pazarın tek bir caddenin iki yanında karşılıklı durduğu alt avluyu çevreler; kale, kasabanın arka ucunda, kendi suruyla çevrili üst tepede durur, garnizon salonu da içindedir. Kamp yolundan güney kapısına tek bir eğimli rampa çıkar, alt avludan kale kapısına ise kısa bir rampa. Yardım sütunları yan yollardan iner ve tepeye hiç dokunmaz.</translation>
+        <translation>İnsubria ovasında, kış tarlalarının üzerinde çifte bir tepeye kurulmuş surlu bir pazar kasabası. Her köşesinde bir kule bulunan ahşap bir sur, tapınakla pazarın tek bir caddenin iki yanında karşılıklı durduğu alt avluyu çevreler; kale, kasabanın arka ucunda, kendi suruyla çevrili üst tepede durur, garnizon salonu da içindedir. Kamp yolundan güney kapısına tek bir eğimli rampa çıkar, alt avludan kale kapısına ise kısa bir rampa. Yardım kolları yan yollardan iner ve tepeye hiç dokunmaz.</translation>
     </message>
 </context>
 <context>
@@ -7918,7 +7918,7 @@ bir harita seç</translation>
     </message>
     <message>
         <source>Trasimene</source>
-        <translation>Trasimene</translation>
+        <translation>Trasimeno</translation>
     </message>
     <message>
         <source>Cannae</source>
@@ -8317,7 +8317,7 @@ bir harita seç</translation>
     </message>
     <message>
         <source>A new standard in the valley, and nobody under it who has held a spear more than twice. My outpost has orders to go and look at you. Try to still be standing when they arrive; it makes the report worth writing.</source>
-        <translation>Vadide yeni bir sancak ve altında elinde iki kereden fazla mızrak tutmuş kimse yok. Karakolumun sizi görmeye gitme emri var. Vardıklarında hâlâ ayakta olmaya çalışın; raporu yazmaya değsin.</translation>
+        <translation>Vadide yeni bir sancak ve altında elinde iki kereden fazla mızrak tutmuş kimse yok. Karakolumun seni görmeye gitme emri var. Vardıklarında hâlâ ayakta olmaya çalış; raporu yazmaya değsin.</translation>
     </message>
     <message>
         <source>An assault walks toward your camp but turns for whatever it can see. Bait it with something visible and it will take the ground you chose instead of the ground it wanted.</source>
@@ -8329,7 +8329,7 @@ bir harita seç</translation>
     </message>
     <message>
         <source>Battle of Lake Trasimene</source>
-        <translation>Trasimene Gölü Muharebesi</translation>
+        <translation>Trasimeno Gölü Muharebesi</translation>
     </message>
     <message>
         <source>Battle of Ticino</source>
@@ -8489,7 +8489,7 @@ bir harita seç</translation>
     </message>
     <message>
         <source>It is the closest camp to your hill; take it before the wings close.</source>
-        <translation>Tepenle arasındaki en yakın kamp; kanatlar kapanmadan al.</translation>
+        <translation>Tepene en yakın kamp bu; kanatlar kapanmadan al.</translation>
     </message>
     <message>
         <source>It is the closest of the four camps to your line.</source>
@@ -8521,7 +8521,7 @@ bir harita seç</translation>
     </message>
     <message>
         <source>Levy filled. Stack it by the road and let the carts argue about it. We cut a wood down to feed a siege that has not started yet — remember that the next time somebody calls this the quiet posting.</source>
-        <translation>Levha tamamlandı. Yolun kenarına yığ, bırak arabalar tartışsın. Daha başlamamış bir kuşatmayı beslemek için bir ormanı kestik — biri buraya sakin görev dediğinde bunu hatırla.</translation>
+        <translation>Vergi tamamlandı. Yolun kenarına yığ, bırak arabalar tartışsın. Daha başlamamış bir kuşatmayı beslemek için bir ormanı kestik — biri buraya sakin görev dediğinde bunu hatırla.</translation>
     </message>
     <message>
         <source>Lose the redoubt and there is nothing behind it for forty miles.</source>
@@ -8569,7 +8569,7 @@ bir harita seç</translation>
     </message>
     <message>
         <source>Overcut the levy. A surplus is the only thing a quartermaster has ever thanked anyone for.</source>
-        <translation>Levhayı fazlasıyla kes. Bir levazımcının bugüne dek birine teşekkür ettiği tek şey fazlalıktır.</translation>
+        <translation>Vergiyi fazlasıyla kes. Bir levazımcının bugüne dek birine teşekkür ettiği tek şey fazlalıktır.</translation>
     </message>
     <message>
         <source>Preserve the market and four homes: Campania is being defended for its people and supplies, not merely its walls.</source>
@@ -8693,7 +8693,7 @@ bir harita seç</translation>
     </message>
     <message>
         <source>The Timber Levy</source>
-        <translation>Kereste Levhası</translation>
+        <translation>Kereste Vergisi</translation>
     </message>
     <message>
         <source>The commander falls and the line behind him is just men standing in a dry riverbed.</source>
@@ -8721,7 +8721,7 @@ bir harita seç</translation>
     </message>
     <message>
         <source>The officer of the detail falls. Nobody else here can sign for the levy.</source>
-        <translation>Ekibin subayı düşer. Burada levhayı imzalayabilecek başka kimse yok.</translation>
+        <translation>Ekibin subayı düşer. Burada vergiyi imzalayabilecek başka kimse yok.</translation>
     </message>
     <message>
         <source>The pass keeps them, then. A word of advice to whoever reads this: do not follow the lights on the snowfield. Whatever carries a lantern at that height stopped being a shepherd a long time ago.</source>
@@ -8741,7 +8741,7 @@ bir harita seç</translation>
     </message>
     <message>
         <source>The shrines you have walked past all campaign were never scenery. Zama reads back over every map behind it - and the Sepulcher has no commander to kill, so the one rule that has served you since Trasimene is the one rule that will not work here.</source>
-        <translation>Bütün sefer boyunca yanından geçtiğin mabetler hiçbir zaman dekor değildi. Zama, arkasındaki her haritayı yeniden okur - ve Kabir&apos;in öldürülecek bir komutanı yoktur, yani Trasimene&apos;den beri işine yarayan tek kural, burada işe yaramayacak olan kuraldır.</translation>
+        <translation>Bütün sefer boyunca yanından geçtiğin mabetler hiçbir zaman dekor değildi. Zama, arkasındaki her haritayı yeniden okur - ve Kabir&apos;in öldürülecek bir komutanı yoktur, yani Trasimeno&apos;dan beri işine yarayan tek kural, burada işe yaramayacak olan kuraldır.</translation>
     </message>
     <message>
         <source>The spur splits them for us, which is the only kindness this ground offers. Cart gate west, goat path east, and they only meet where we are standing. You cannot hold both mouths. Pick one, hold it, and move when the horns tell you to.</source>
@@ -8769,7 +8769,7 @@ bir harita seç</translation>
     </message>
     <message>
         <source>There. Sit down in the mud with the others. They tell me the men who die on this road do not stay where they are put - that they rise about the third watch and go on marching north without their officers. Do continue. You are expected.</source>
-        <translation>İşte. Ötekilerle birlikte çamura otur. Bu yolda ölen adamların konuldukları yerde kalmadığını söylüyorlar - üçüncü nöbette kalkıp subaylarısız kuzeye yürümeyi sürdürdüklerini. Buyur, devam et. Bekleniyorsun.</translation>
+        <translation>İşte. Ötekilerle birlikte çamura otur. Bu yolda ölen adamların konuldukları yerde kalmadığını söylüyorlar - üçüncü nöbette kalkıp subaysız kuzeye yürümeyi sürdürdüklerini. Buyur, devam et. Bekleniyorsun.</translation>
     </message>
     <message>
         <source>There. That is what the river was for. Have your surgeons work quickly, and tell whatever is left of your baggage train that the road home goes back up the mountain.</source>
@@ -8833,7 +8833,7 @@ bir harita seç</translation>
     </message>
     <message>
         <source>Fill the levy out of the Pinewater cut: eight hundred of timber and two hundred and ten of stone, cut and carried home before the column comes back through at dusk.</source>
-        <translation>Vergiyi Çampınarı kesiminden karşıla: sekiz yüz kereste ve iki yüz on taş; kol akşam karanlığında geri geçmeden kesilip eve getirilecek.</translation>
+        <translation>Vergiyi Çampınar kesiminden karşıla: sekiz yüz kereste ve iki yüz on taş; kol akşam karanlığında geri geçmeden kesilip eve getirilecek.</translation>
     </message>
     <message>
         <source>First column on the cart gate. Spears up. Let them come to the stakes; the stakes do not get tired.</source>
@@ -8989,7 +8989,7 @@ bir harita seç</translation>
     </message>
     <message>
         <source>Your riders are dying by the ford. Numidians, I think. They ride beautifully, and they die at the ordinary speed.</source>
-        <translation>Süvarilerin geçidin başında ölüyor. Numidialılar sanırım. Muhteşem biniyorlar ve sıradan bir hızda ölüyorlar.</translation>
+        <translation>Süvarilerin geçidin başında ölüyor. Numidyalılar sanırım. Muhteşem biniyorlar ve sıradan bir hızda ölüyorlar.</translation>
     </message>
     <message>
         <source>Your veterans are dying. Italy&apos;s veterans, really; you took them from us sixteen years ago and now we are taking them back one at a time.</source>
@@ -9937,7 +9937,7 @@ bir harita seç</translation>
     </message>
     <message>
         <source>Provision the column for the descent: harvest timber, stone and iron from the pass while Allobroges war bands and Roman-paid camps contest every switchback and roll stones from the heights.</source>
-        <translation>Kolu iniş için donat: Allobrog savaş çeteleri ve Roma&apos;dan para alan kamplar her viraja itiraz edip tepelerden taş yuvarlarken geçitten kereste, taş ve demir topla.</translation>
+        <translation>Kolu iniş için donat: Allobrog savaş çeteleri ve Roma&apos;dan para alan kamplar her viraj için çarpışıp tepelerden taş yuvarlarken geçitten kereste, taş ve demir topla.</translation>
     </message>
     <message>
         <source>Scipio has drawn his maniples up one behind another, not chequered: straight lanes run through the line, and velites wait in them for the elephants. Keep your centre steady and do not let the elephants be isolated.</source>
@@ -10180,7 +10180,7 @@ bir harita seç</translation>
     </message>
     <message>
         <source>FIELD ORDERS  /  SECOND PUNIC WAR</source>
-        <translation>SAHA EMİRLERİ  /  İKİNCİ PON SAVAŞI</translation>
+        <translation>SAHA EMİRLERİ  /  İKİNCİ PÖN SAVAŞI</translation>
     </message>
     <message>
         <source>ORDERS FULFILLED</source>
@@ -10352,7 +10352,7 @@ bir harita seç</translation>
     </message>
     <message>
         <source>Deliver</source>
-        <translation>Teslim et</translation>
+        <translation>Teslim</translation>
     </message>
     <message>
         <source>Repair</source>
@@ -10508,11 +10508,11 @@ bir harita seç</translation>
     </message>
     <message>
         <source>Recruit</source>
-        <translation>Asker al</translation>
+        <translation>Devşir</translation>
     </message>
     <message>
         <source>Select a barracks, temple or home to recruit.</source>
-        <translation>Asker almak için bir kışla, tapınak veya ev seç.</translation>
+        <translation>Devşirmek için bir kışla, tapınak veya ev seç.</translation>
     </message>
     <message>
         <source>Not enough reserve: %1 / %2 men. Walk civilians into the barracks or build a Home to raise more.</source>
@@ -10894,20 +10894,20 @@ Okların çoğuna karşı dayanıklı</translation>
 %1
 Cost: %2
 Build time: %3s</source>
-        <translation>Koç başı inşa et
+        <translation>Koç Başı İnşa Et
 %1
-Maliyet: %2
-İnşa süresi: %3 sn</translation>
+Bedel: %2
+İnşa süresi: %3sn</translation>
     </message>
     <message>
         <source>Build Siege Tower
 %1
 Cost: %2
 Build time: %3s</source>
-        <translation>Kuşatma kulesi inşa et
+        <translation>Kuşatma Kulesi İnşa Et
 %1
-Maliyet: %2
-İnşa süresi: %3 sn</translation>
+Bedel: %2
+İnşa süresi: %3sn</translation>
     </message>
     <message>
         <source>Docks against an enemy wall
@@ -10937,7 +10937,7 @@ Bedel: %2
     </message>
     <message>
         <source>%1 · %2s</source>
-        <translation>%1 · %2s</translation>
+        <translation>%1 · %2sn</translation>
     </message>
     <message>
         <source>Ram</source>
@@ -11031,7 +11031,7 @@ Use Deliver mode, then click a friendly barracks to add to its reserve.</source>
         <translation>%1 devşir
 Bedel: %2
 İnşa süresi: %3sn
-Teslim et kipini kullan, sonra yedeğine eklemek için dost bir kışlaya tıkla.</translation>
+Teslim kipini kullan, sonra yedeğine eklemek için dost bir kışlaya tıkla.</translation>
     </message>
     <message>
         <source>families</source>
@@ -11158,7 +11158,7 @@ Teslim et kipini kullan, sonra yedeğine eklemek için dost bir kışlaya tıkla
     </message>
     <message>
         <source>Troops are standing here. Move them first.</source>
-        <translation>Burada askerler var. Önce onları taşıyın.</translation>
+        <translation>Burada askerler var. Önce onları taşı.</translation>
     </message>
 </context>
 <context>
@@ -11880,11 +11880,11 @@ Right-click to cancel.</source>
     </message>
     <message>
         <source>Save: the match advanced while it was being captured. Please try again.</source>
-        <translation>Kaydetme: maç yakalanırken ilerledi. Lütfen tekrar deneyin.</translation>
+        <translation>Kaydetme: maç yakalanırken ilerledi. Lütfen tekrar dene.</translation>
     </message>
     <message>
         <source>Loaded, but &apos;%1&apos; could not be read, so wildlife, undead zones and cursed veins were not restored.</source>
-        <translation>Loaded, but &apos;%1&apos; could not be read, so wildlife, undead zones and cursed veins were not restored.</translation>
+        <translation>Yüklendi, ancak &apos;%1&apos; okunamadı; yaban hayatı, ölümsüz bölgeleri ve lanetli damarlar geri yüklenmedi.</translation>
     </message>
 </context>
 <context>
@@ -11948,7 +11948,7 @@ Right-click to cancel.</source>
     </message>
     <message>
         <source>PUNISH</source>
-        <translation>KUSURSUZ</translation>
+        <translation>CEZA</translation>
     </message>
     <message>
         <source>FINISHER</source>
@@ -12123,19 +12123,19 @@ Right-click to cancel.</source>
     </message>
     <message>
         <source>Name the save first.</source>
-        <translation>Name the save first.</translation>
+        <translation>Önce kayda bir ad ver.</translation>
     </message>
     <message>
         <source>That name is too long. Keep it under %1 characters.</source>
-        <translation>That name is too long. Keep it under %1 characters.</translation>
+        <translation>Bu ad çok uzun. %1 karakterin altında tut.</translation>
     </message>
     <message>
         <source>That name is reserved for quicksaves and autosaves, which would overwrite it without asking. Pick another one.</source>
-        <translation>That name is reserved for quicksaves and autosaves, which would overwrite it without asking. Pick another one.</translation>
+        <translation>Bu ad, sormadan üzerine yazacak hızlı ve otomatik kayıtlara ayrılmış. Başka bir ad seç.</translation>
     </message>
     <message>
         <source>Names cannot contain slashes or control characters.</source>
-        <translation>Names cannot contain slashes or control characters.</translation>
+        <translation>Adlar eğik çizgi veya denetim karakteri içeremez.</translation>
     </message>
 </context>
 <context>
@@ -12158,79 +12158,77 @@ Right-click to cancel.</source>
     </message>
     <message>
         <source>Saves are unavailable: %1</source>
-        <translation>Saves are unavailable: %1</translation>
+        <translation>Kayıtlar kullanılamıyor: %1</translation>
     </message>
     <message>
         <source>Save name</source>
-        <translation>Save name</translation>
+        <translation>Kayıt adı</translation>
     </message>
     <message>
         <source>Name this save...</source>
-        <translation>Name this save...</translation>
+        <translation>Bu kayda ad ver...</translation>
     </message>
     <message>
         <source>A save called &quot;%1&quot; already exists. Saving replaces it.</source>
-        <translation>A save called &quot;%1&quot; already exists. Saving replaces it.</translation>
+        <translation>&quot;%1&quot; adında bir kayıt zaten var. Kaydetmek onun yerine geçer.</translation>
     </message>
     <message>
         <source>Press Enter to save.</source>
-        <translation>Press Enter to save.</translation>
+        <translation>Kaydetmek için Enter&apos;a bas.</translation>
     </message>
     <message>
         <source>Existing saves</source>
-        <translation>Existing saves</translation>
-    </message>
-    <message>
-        <source>%1 save</source>
-        <translation>%1 save</translation>
-    </message>
-    <message>
-        <source>%1 saves</source>
-        <translation>%1 saves</translation>
+        <translation>Mevcut kayıtlar</translation>
     </message>
     <message>
         <source>No saves yet. The name above will create the first one.</source>
-        <translation>No saves yet. The name above will create the first one.</translation>
+        <translation>Henüz kayıt yok. Yukarıdaki ad ilk kaydı oluşturacak.</translation>
     </message>
     <message>
         <source>Untitled save</source>
-        <translation>Untitled save</translation>
+        <translation>Adsız kayıt</translation>
     </message>
     <message>
         <source>Unknown map</source>
-        <translation>Unknown map</translation>
+        <translation>Bilinmeyen harita</translation>
     </message>
     <message>
         <source>Saved by a different version of the game. It is kept, but this build cannot open it.</source>
-        <translation>Saved by a different version of the game. It is kept, but this build cannot open it.</translation>
+        <translation>Oyunun farklı bir sürümüyle kaydedilmiş. Saklanıyor, ama bu sürüm onu açamaz.</translation>
     </message>
     <message>
         <source>Delete</source>
-        <translation>Delete</translation>
+        <translation>Sil</translation>
     </message>
     <message>
         <source>Replace this save?</source>
-        <translation>Replace this save?</translation>
+        <translation>Bu kayıt değiştirilsin mi?</translation>
     </message>
     <message>
         <source>&quot;%1&quot; will be replaced by the current battle. The version stored now cannot be recovered.</source>
-        <translation>&quot;%1&quot; will be replaced by the current battle. The version stored now cannot be recovered.</translation>
+        <translation>&quot;%1&quot; mevcut savaşla değiştirilecek. Şu an kayıtlı olan sürüm geri getirilemez.</translation>
     </message>
     <message>
         <source>Replace</source>
-        <translation>Replace</translation>
+        <translation>Değiştir</translation>
     </message>
     <message>
         <source>Keep it</source>
-        <translation>Keep it</translation>
+        <translation>Kalsın</translation>
     </message>
     <message>
         <source>Delete this save?</source>
-        <translation>Delete this save?</translation>
+        <translation>Bu kayıt silinsin mi?</translation>
     </message>
     <message>
         <source>&quot;%1&quot; will be deleted. This cannot be undone.</source>
-        <translation>&quot;%1&quot; will be deleted. This cannot be undone.</translation>
+        <translation>&quot;%1&quot; silinecek. Bu işlem geri alınamaz.</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n save(s)</source>
+        <translation>
+            <numerusform>%n kayıt</numerusform>
+        </translation>
     </message>
 </context>
 <context>
@@ -12249,58 +12247,58 @@ Right-click to cancel.</source>
     </message>
     <message>
         <source>Saved &quot;%1&quot;</source>
-        <translation>Saved &quot;%1&quot;</translation>
+        <translation>&quot;%1&quot; kaydedildi</translation>
     </message>
     <message>
         <source>Saving &quot;%1&quot; failed.</source>
-        <translation>Saving &quot;%1&quot; failed.</translation>
+        <translation>&quot;%1&quot; kaydedilemedi.</translation>
     </message>
     <message>
         <source>Saved</source>
-        <translation>Saved</translation>
+        <translation>Kaydedildi</translation>
     </message>
 </context>
 <context>
     <name>SaveSlotRow</name>
     <message>
         <source>%1h %2m</source>
-        <translation>%1h %2m</translation>
+        <translation>%1sa %2dk</translation>
     </message>
     <message>
         <source>%1m</source>
-        <translation>%1m</translation>
+        <translation>%1 dk</translation>
     </message>
     <message>
         <source>under a minute</source>
-        <translation>under a minute</translation>
+        <translation>bir dakikadan az</translation>
     </message>
     <message>
         <source>Unknown</source>
-        <translation>Unknown</translation>
+        <translation>Bilinmiyor</translation>
     </message>
     <message>
         <source>Campaign</source>
-        <translation>Campaign</translation>
+        <translation>Sefer</translation>
     </message>
     <message>
         <source>Mission</source>
-        <translation>Mission</translation>
+        <translation>Görev</translation>
     </message>
     <message>
         <source>Skirmish</source>
-        <translation>Skirmish</translation>
+        <translation>Çatışma</translation>
     </message>
     <message>
         <source>Autosave</source>
-        <translation>Autosave</translation>
+        <translation>Otomatik kayıt</translation>
     </message>
     <message>
         <source>Quicksave</source>
-        <translation>Quicksave</translation>
+        <translation>Hızlı kayıt</translation>
     </message>
     <message>
         <source>No preview</source>
-        <translation>No preview</translation>
+        <translation>Önizleme yok</translation>
     </message>
     <message>
         <source>%1 · %2 · %3</source>
@@ -12312,11 +12310,11 @@ Right-click to cancel.</source>
     </message>
     <message>
         <source>Saved %1</source>
-        <translation>Saved %1</translation>
+        <translation>Kaydedildi: %1</translation>
     </message>
     <message>
         <source>Played %1</source>
-        <translation>Played %1</translation>
+        <translation>Oynanan: %1</translation>
     </message>
 </context>
 <context>
@@ -12327,7 +12325,7 @@ Right-click to cancel.</source>
     </message>
     <message>
         <source>Save storage unavailable</source>
-        <translation>Save storage unavailable</translation>
+        <translation>Kaydetme deposu kullanılamıyor</translation>
     </message>
 </context>
 <context>
@@ -12454,67 +12452,67 @@ Right-click to cancel.</source>
     </message>
     <message>
         <source>The save database could not be opened.</source>
-        <translation>The save database could not be opened.</translation>
+        <translation>Kayıt veritabanı açılamadı.</translation>
     </message>
     <message>
         <source>The save database is unreadable and could not be moved aside: %1</source>
-        <translation>The save database is unreadable and could not be moved aside: %1</translation>
+        <translation>Kayıt veritabanı okunamıyor ve kenara taşınamadı: %1</translation>
     </message>
     <message>
         <source>integrity check failed: %1</source>
-        <translation>integrity check failed: %1</translation>
+        <translation>bütünlük denetimi başarısız: %1</translation>
     </message>
     <message>
         <source>it was written by a newer version of the game (schema %1)</source>
-        <translation>it was written by a newer version of the game (schema %1)</translation>
+        <translation>oyunun daha yeni bir sürümüyle yazılmış (şema %1)</translation>
     </message>
     <message>
         <source>it is not a Standard of Iron save database</source>
-        <translation>it is not a Standard of Iron save database</translation>
+        <translation>bir Standard of Iron kayıt veritabanı değil</translation>
     </message>
     <message>
         <source>it could not be upgraded from schema %1: %2</source>
-        <translation>it could not be upgraded from schema %1: %2</translation>
+        <translation>şema %1 sürümünden yükseltilemedi: %2</translation>
     </message>
     <message>
         <source>its tables do not match schema %1</source>
-        <translation>its tables do not match schema %1</translation>
+        <translation>tabloları şema %1 ile uyuşmuyor</translation>
     </message>
     <message>
         <source>Failed to add the snapshot version column</source>
-        <translation>Failed to add the snapshot version column</translation>
+        <translation>Anlık görüntü sürümü sütunu eklenemedi</translation>
     </message>
     <message>
         <source>Refusing to write a save with an empty slot name</source>
-        <translation>Refusing to write a save with an empty slot name</translation>
+        <translation>Boş yuva adlı bir kayıt yazılmıyor</translation>
     </message>
     <message>
         <source>&apos;%1&apos; holds a save that was not written by this rotation, so it will not be overwritten automatically. Delete it from the Load menu to free the slot.</source>
-        <translation>&apos;%1&apos; holds a save that was not written by this rotation, so it will not be overwritten automatically. Delete it from the Load menu to free the slot.</translation>
+        <translation>&apos;%1&apos; bu döngünün yazmadığı bir kayıt içeriyor, bu yüzden otomatik olarak üzerine yazılmayacak. Yuvayı boşaltmak için onu Yükle menüsünden sil.</translation>
     </message>
     <message>
         <source>The save was written but could not be read back</source>
-        <translation>The save was written but could not be read back</translation>
+        <translation>Kayıt yazıldı ama geri okunamadı</translation>
     </message>
     <message>
         <source>The save did not survive being written to disk. Nothing was lost in the match; try saving again.</source>
-        <translation>The save did not survive being written to disk. Nothing was lost in the match; try saving again.</translation>
+        <translation>Kayıt diske yazılırken bozuldu. Maçta hiçbir şey kaybolmadı; yeniden kaydetmeyi dene.</translation>
     </message>
     <message>
         <source>The save was written with the wrong header; try again.</source>
-        <translation>The save was written with the wrong header; try again.</translation>
+        <translation>Kayıt yanlış başlıkla yazıldı; yeniden dene.</translation>
     </message>
     <message>
         <source>&apos;%1&apos; was saved by a different version of Standard of Iron and cannot be loaded by this one. It has been left alone.</source>
-        <translation>&apos;%1&apos; was saved by a different version of Standard of Iron and cannot be loaded by this one. It has been left alone.</translation>
+        <translation>&apos;%1&apos; Standard of Iron&apos;ın farklı bir sürümüyle kaydedilmiş ve bu sürümle yüklenemez. Kayda dokunulmadı.</translation>
     </message>
     <message>
         <source>&apos;%1&apos; does not contain a readable world: %2</source>
-        <translation>&apos;%1&apos; does not contain a readable world: %2</translation>
+        <translation>&apos;%1&apos; okunabilir bir dünya içermiyor: %2</translation>
     </message>
     <message>
         <source>&apos;%1&apos; is missing the units it should contain</source>
-        <translation>&apos;%1&apos; is missing the units it should contain</translation>
+        <translation>&apos;%1&apos; içermesi gereken birlikleri içermiyor</translation>
     </message>
 </context>
 <context>
@@ -12981,11 +12979,11 @@ Right-click to cancel.</source>
     </message>
     <message>
         <source>Press Deliver, then click your barracks: the civilian walks there and joins its reserve, and you can recruit again.</source>
-        <translation>Teslim et&apos;e bas, sonra kışlana tıkla: sivil oraya yürür, yedeğine katılır ve yeniden asker toplayabilirsin.</translation>
+        <translation>Teslim&apos;e bas, sonra kışlana tıkla: sivil oraya yürür, yedeğine katılır ve yeniden asker toplayabilirsin.</translation>
     </message>
     <message>
         <source>A Home raises civilians, not soldiers. Recruit a civilian here, select it when it steps out, press Deliver and click your barracks to refill its reserve.</source>
-        <translation>Ev asker değil sivil yetiştirir. Burada bir sivil topla, dışarı çıkınca onu seç, Teslim et&apos;e bas ve yedeğini doldurmak için kışlana tıkla.</translation>
+        <translation>Ev asker değil sivil yetiştirir. Burada bir sivil devşir, dışarı çıkınca onu seç, Teslim&apos;e bas ve yedeğini doldurmak için kışlana tıkla.</translation>
     </message>
     <message>
         <source>Recruits come from the barracks. Left-click your barracks to open its production panel on the right.</source>
@@ -12993,7 +12991,7 @@ Right-click to cancel.</source>
     </message>
     <message>
         <source>The barracks has only %1 reserve left to draw on. Every recruit costs reserve; when it runs dry, build Homes - each Home raises families, and a civilian recruited there and sent to the barracks with Deliver refills it.</source>
-        <translation>Kışlanın çekebileceği yalnızca %1 yedek kaldı. Her devşirme yedek harcar; tükendiğinde Ev inşa et - her Ev aile yetiştirir ve orada devşirilip Teslim et ile kışlaya yollanan bir sivil yedeği tazeler.</translation>
+        <translation>Kışlanın çekebileceği yalnızca %1 yedek kaldı. Her devşirme yedek harcar; tükendiğinde Ev inşa et - her Ev aile yetiştirir ve orada devşirilip Teslim ile kışlaya yollanan bir sivil yedeği tazeler.</translation>
     </message>
     <message>
         <source>A recruit card turns grey when a resource is short: soldiers need wood for shafts and iron for blades. Send a builder to collect more.</source>
@@ -13121,7 +13119,7 @@ Right-click to cancel.</source>
     </message>
     <message>
         <source>Your commander carries the standard. Troops near him fight with higher morale, and while he is selected two commands appear: Aura empowers every soldier in a ring around him for a stretch and then recharges - the button prints the radius, how long it lasts and how long until it returns - and Rally plants a flag that the army marches to. If he dies, your lines break and the mission is lost - keep him behind the spears. Trigger the Aura now.</source>
-        <translation>Sancağı komutanın taşır. Ona yakın birlikler daha yüksek morille çarpışır ve o seçiliyken iki komut belirir: Aura, çevresindeki halkadaki her askeri bir süre güçlendirir ve sonra yenilenir - düğme yarıçapı, ne kadar sürdüğünü ve dönmesine ne kadar kaldığını yazar - Toplanma ise ordunun yürüdüğü bir sancak diker. Ölürse hatların dağılır ve görev kaybedilir - onu mızrakların gerisinde tut. Şimdi Aurayı tetikle.</translation>
+        <translation>Sancağı komutanın taşır. Ona yakın birlikler daha yüksek moralle çarpışır ve o seçiliyken iki komut belirir: Aura, çevresindeki halkadaki her askeri bir süre güçlendirir ve sonra yenilenir - düğme yarıçapı, ne kadar sürdüğünü ve dönmesine ne kadar kaldığını yazar - Toplanma ise ordunun yürüdüğü bir sancak diker. Ölürse hatların dağılır ve görev kaybedilir - onu mızrakların gerisinde tut. Şimdi Aurayı tetikle.</translation>
     </message>
     <message>
         <source>Move the view with the arrow keys or WASD, or push the mouse to the screen edge. Scroll to zoom, Q and E rotate, Ctrl with the up and down arrows tilts, and Home returns to your camp. Follow keeps the camera on your selection. Move the camera now.</source>
@@ -13275,11 +13273,11 @@ Right-click to cancel.</source>
     </message>
     <message>
         <source>The shrine answers to you now. Its dead fall still.</source>
-        <translation>Mabet artık sana yanıt veriyor. Ölüleri kımıldamadan yatıyor.</translation>
+        <translation>Tapınak artık sana yanıt veriyor. Ölüleri kımıldamadan yatıyor.</translation>
     </message>
     <message>
         <source>The shrine is broken. Every risen guardian crumbles.</source>
-        <translation>Mabet kırıldı. Kalkmış her bekçi ufalanıyor.</translation>
+        <translation>Tapınak kırıldı. Kalkmış her muhafız ufalanıyor.</translation>
     </message>
     <message>
         <source>The barrow gives up its hoard: %1.</source>
@@ -14047,7 +14045,7 @@ Right-click to cancel.</source>
     </message>
     <message>
         <source>The Barcids raised their best foot in Spain. Iberian swordsmen wore white tunics edged in crimson and fought with the curved falcata.</source>
-        <translation>Barkalılar en iyi piyadelerini Hispania&apos;da topladı. İberyalı kılıççılar kızıl kenarlı beyaz tunikler giyer ve kavisli falcata ile savaşırdı.</translation>
+        <translation>Barkalar en iyi piyadelerini Hispania&apos;da topladı. İberyalı kılıççılar kızıl kenarlı beyaz tunikler giyer ve kavisli falcata ile savaşırdı.</translation>
     </message>
     <message>
         <source>Balearic Slinger</source>

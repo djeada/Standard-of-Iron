@@ -1,7 +1,4 @@
-// Helmets and cloaks of the historical cameo commanders (issue #1522). Each
-// cameo reuses the commander helmet shells, the shared cloak mesh and the
-// playable commanders' armour, weapons and regalia; only the crest, plume or
-// diadem and the cloak colours are new.
+
 
 #include <array>
 #include <cstdint>

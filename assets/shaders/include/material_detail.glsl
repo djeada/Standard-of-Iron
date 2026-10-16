@@ -52,7 +52,7 @@ vec3 soi_material_normal(vec3 world_pos, vec3 normal, int material_id) {
   float detail = soi_detail_mid(uv * 9.2);
   float footprint = max(length(dFdx(uv)), length(dFdy(uv)));
   float relief = (detail - 0.5) * (material_id == k_material_ceramic ? 0.004 : 0.009);
-  // Filter relief before it becomes smaller than a pixel.
+
   float visibility = 1.0 - smoothstep(0.035, 0.18, footprint);
   vec3 dx = dFdx(world_pos);
   vec3 dy = dFdy(world_pos);

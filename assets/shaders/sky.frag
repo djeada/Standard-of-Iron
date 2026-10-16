@@ -22,7 +22,7 @@ void main() {
   vec3 sky = sky_gradient(ray);
 
 #if SOI_SURFACE_DETAIL
-  // Use the same clock and wind as the moving cloud shadows on the battlefield.
+
   vec2 cloud_plane = ray.xz / (upward + k_sky_cloud_plane_lift) +
                      k_cloud_wind * environment_cloud_time() * 0.006;
   float band_field = soi_fbm_23e5ab(cloud_plane * k_sky_band_scale);

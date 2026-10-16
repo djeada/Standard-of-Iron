@@ -33,8 +33,6 @@ auto read_engagement(const Engine::Core::Entity& commander) -> EngagementFraming
   }
   framing.fight_context = engagement->fight_context;
 
-  // An enemy straight ahead flipped the side bias with every degree of heading
-  // wobble; only threats clearly off to one side push the camera over.
   constexpr float k_bias_dead_zone_degrees = 20.0F;
   constexpr float k_bias_full_degrees = 60.0F;
   float pressure_bias = 0.0F;
@@ -43,7 +41,7 @@ auto read_engagement(const Engine::Core::Entity& commander) -> EngagementFraming
     if (!slot.pressing) {
       continue;
     }
-    // Focus the nearest pressing enemy, not whichever the world listed first.
+
     if (framing.nearest_pressing_id == 0 || slot.distance < nearest_distance) {
       framing.nearest_pressing_id = slot.entity_id;
       nearest_distance = slot.distance;

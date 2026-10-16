@@ -370,7 +370,7 @@ void add_crop(BuildingArchetypeDesc& desc,
         const bool wants_leaf = look.leaf && (primary || !look.has_head);
         if (wants_leaf && hash01(tiller_seed + 37) < look.leaf_chance) {
           const float leaf_t = 0.42F + hash01(tiller_seed + 41) * 0.26F;
-          // Keep each leaf attached to its culm's existing bend.
+
           QVector3D const leaf_root =
               !primary ? lerp(base, top, leaf_t)
                        : (leaf_t <= knee_t

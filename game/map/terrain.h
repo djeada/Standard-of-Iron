@@ -44,9 +44,6 @@ public:
 
   void add_lakes(const std::vector<Lake>& lakes);
 
-  // Marks the authored ford crossings (and every river segment flagged as a
-  // ford) as wadeable and lowers their beds so troops stand waist-deep.
-  // Call after add_river_segments and before add_bridges.
   void add_fords(const std::vector<FordCrossing>& fords);
 
   [[nodiscard]] auto get_fords() const -> const std::vector<FordCrossing>& {
@@ -55,19 +52,14 @@ public:
 
   [[nodiscard]] auto is_ford_cell(int grid_x, int grid_z) const -> bool;
 
-  // The ford profile of the cell under a world point, or null on dry land
-  // and on unfordable water.
   [[nodiscard]] auto ford_profile_at(float world_x,
                                      float world_z) const -> const FordProfile*;
 
   [[nodiscard]] auto ford_profile_at_grid(int grid_x,
                                           int grid_z) const -> const FordProfile*;
 
-  // Metres of water over the ground at a world point inside a ford; zero on
-  // dry land, on the bank, and anywhere that is not a ford.
   [[nodiscard]] auto ford_water_depth_at(float world_x, float world_z) const -> float;
 
-  // The water surface height of the ford under a world point.
   [[nodiscard]] auto ford_water_level_at(float world_x,
                                          float world_z) const -> std::optional<float>;
 

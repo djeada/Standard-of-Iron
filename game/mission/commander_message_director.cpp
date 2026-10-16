@@ -69,8 +69,6 @@ auto is_muted(const CommanderVoicesPolicy& policy,
          policy.muted_lines.end();
 }
 
-// A line spoken for an owner whose commander is a historical cameo carries
-// the cameo's own name and role rather than its body's.
 void name_cue_after_speaker(CommanderMessageCue& cue, const CommanderSpeaker& speaker) {
   if (speaker.commander_id.isEmpty()) {
     return;

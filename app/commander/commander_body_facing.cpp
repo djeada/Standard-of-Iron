@@ -12,9 +12,7 @@ namespace {
 constexpr float k_turn_in_place_threshold_degrees = 50.0F;
 constexpr float k_turn_in_place_rate_degrees = 260.0F;
 constexpr float k_body_travel_turn_rate_degrees = 900.0F;
-// Facing the view for a block, lock-on, dodge or the end of a swing is quick
-// but never a one-tick teleport: snapping a quarter turn read as a twitch.
-// Only a swing the player has just asked for snaps, so it lands on the view.
+
 constexpr float k_face_view_turn_rate_degrees = 1080.0F;
 
 auto turn_toward(float& body_yaw, float view_yaw, float step) -> bool {

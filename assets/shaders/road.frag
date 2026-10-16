@@ -54,7 +54,6 @@ vec2 hash_2d_vec(vec2 p) {
   return fract(vec2(n, n * 1.2154));
 }
 
-// Keep the winning cell so each stone has one consistent mineral tint.
 vec3 worley_f(vec2 p) {
   vec2 n = floor(p);
   vec2 f = fract(p);
@@ -80,8 +79,7 @@ vec3 worley_f(vec2 p) {
 }
 
 vec3 road_relief_normal(vec3 position, vec3 normal, float height) {
-  // Transform screen derivatives back into the surface tangent plane. Treating
-  // dFdx/dFdy as world X/Z made the relief turn with the camera and flatten hills.
+
   vec3 dpdx = dFdx(position);
   vec3 dpdy = dFdy(position);
   vec3 tangent_x = cross(dpdy, normal);
@@ -186,8 +184,7 @@ void main() {
     base_color =
         mix(base_color, u_color * (0.90 + gravel_cells.z * 0.38), gravel * 0.65);
     base_color *= 0.88 + broad * 0.12 + medium * 0.07;
-    // Across-road UVs change direction at junctions. Keep their tire wear in
-    // the albedo; differentiating it creates false ridges between the arms.
+
     h = (medium - 0.5) * 0.035 + gravel * 0.008;
     ao = 0.92 - ruts * 0.11 - (1.0 - medium) * 0.06;
     material_roughness = 0.97;

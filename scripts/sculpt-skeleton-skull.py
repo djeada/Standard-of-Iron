@@ -43,7 +43,7 @@ def union(a, b, blend=0.08):
 
 
 def sockets(p):
-    # Slightly angular orbits, tilted toward the nasal bridge, cut into bone.
+
     q = p.copy()
     q[..., 1] += (np.abs(q[..., 0]) - 0.29) * 0.18
     return ellipsoid(q, (0.29, 0.13, 0.67), (0.225, 0.19, 0.31), 2.5), ellipsoid(
@@ -52,7 +52,7 @@ def sockets(p):
 
 
 def nose(p):
-    # Narrow bridge and a wider, rounded triangular nasal opening below it.
+
     width = np.clip(0.055 - p[..., 1] * 0.28, 0.04, 0.12)
     return (
         np.sqrt(
@@ -68,7 +68,7 @@ def skull_field(p):
     cranium = ellipsoid(p, (0, 0.26, -0.09), (0.61, 0.62, 0.64))
     face = ellipsoid(p, (0, -0.025, 0.34), (0.535, 0.40, 0.37))
     skull = union(cranium, face, 0.14)
-    # Cheek arches belong to the skull surface, not separate round cheek pads.
+
     for side in (-1, 1):
         cheek = ellipsoid(p, (side * 0.46, -0.14, 0.39), (0.14, 0.14, 0.26))
         skull = union(skull, cheek)
@@ -97,7 +97,7 @@ def surface(field, low, high, step):
         values, 0, spacing=(step, step, step), allow_degenerate=False
     )
     positions += low
-    # Compute outward normals from the field; winding is checked independently.
+
     delta = 0.001
     normals = np.stack(
         [
@@ -122,7 +122,7 @@ def make_head(minimal):
     step = 0.052 if minimal else 0.028
     for field in (skull_field, jaw_field):
         parts.append(surface(field, (-0.75, -0.72, -0.8), (0.75, 0.96, 0.85), step))
-    # Individual short crowns follow the dental arch; no mouth plate or fangs.
+
     for lower in (False, True):
         for angle in np.linspace(-1.12, 1.12, 8):
             center = np.array(
@@ -149,7 +149,7 @@ def make_head(minimal):
     count = 0
     for part_index, (p, normals, faces) in enumerate(parts):
         v = np.zeros(len(p), dtype=VERTEX)
-        # Skeleton bind head: HEAD_RADIUS after skeleton proportions is .1968.
+
         v["position"] = p * 0.1968 + (0, 1.645, 0.008)
         v["normal"] = normals
         v["bones"][:, 0] = HEAD_BONE

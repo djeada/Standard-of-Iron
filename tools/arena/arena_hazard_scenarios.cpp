@@ -217,8 +217,6 @@ auto order_raft(const char* group, float at) -> ArenaScenarioStep {
 constexpr float k_ford_river_width = 12.0F;
 constexpr float k_ford_length = 30.0F;
 
-// A river too deep to cross except at one broad ford in the middle: icy, as
-// the Trebia was when the Roman army waded it at dawn.
 auto ford_crossing(const char* id,
                    const char* label,
                    const char* description,

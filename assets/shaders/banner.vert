@@ -38,7 +38,6 @@ void main() {
   float gust_b = soi_hash12_9f6e8e(vec2(gust_cell + 1.0, banner_seed));
   gust += (mix(gust_a, gust_b, gust_blend) - 0.5) * 0.16;
 
-  // Waves travel from the fastening toward the free hem.
   float primary_phase = -u_time * 1.45 + u * 5.4 + v * 1.25 + spatial_phase;
   float cross_phase = -u_time * 2.85 + u * 10.8 - v * 4.1 + spatial_phase * 1.7;
   float flutter_phase = -u_time * 6.1 + u * 18.0 + v * 7.0 + spatial_phase * 2.3;
@@ -50,7 +49,7 @@ void main() {
                  sin(flutter_phase) * flutter_amp;
 
   float lower_weight = smoothstep(0.38, 1.0, v);
-  // Cloth retains its weight in still air; a gust lifts it slightly.
+
   float sag = free_edge * (0.018 + lower_weight * 0.022) / (1.0 + wind * gust);
   float vertical_flutter = sin(cross_phase + 1.25) * wind * gust * free_edge_sq * 0.007;
 

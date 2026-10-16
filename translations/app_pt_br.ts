@@ -181,7 +181,7 @@
     </message>
     <message>
         <source>Reaping a ripe farm for food.</source>
-        <translation>Ceifa uma fazenda madura em troca de comida.</translation>
+        <translation>Ceifando uma fazenda madura para obter comida.</translation>
     </message>
     <message>
         <source>Butchering</source>
@@ -189,7 +189,7 @@
     </message>
     <message>
         <source>Slaughtering a sheep for food.</source>
-        <translation>Abate uma ovelha em troca de comida.</translation>
+        <translation>Abatendo uma ovelha para obter comida.</translation>
     </message>
     <message>
         <source>Carrying its load to the barracks; it cannot be interrupted until the load is dropped off.</source>
@@ -232,7 +232,7 @@
     </message>
     <message>
         <source>%1 calls you to arms</source>
-        <translation>%1 te chama às armas</translation>
+        <translation>%1 chama você às armas</translation>
     </message>
     <message>
         <source>Show</source>
@@ -1793,11 +1793,11 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
     </message>
     <message>
         <source>I am short of {resource}. {amount} would keep this army moving, and a moving army is a winning one.</source>
-        <translation>Estou com pouco {resource}. {amount} manteria este exército em marcha, e um exército em marcha é um exército vencedor.</translation>
+        <translation>Estou com poucas reservas de {resource}. {amount} manteria este exército em marcha, e um exército em marcha é um exército vencedor.</translation>
     </message>
     <message>
         <source>I am short. {amount} {resource} would keep my archers in the field. If you can spare it, send it.</source>
-        <translation>Estou curto. {amount} de {resource} manteria meus arqueiros em campo. Se puder ceder, envie.</translation>
+        <translation>Estou em falta. {amount} de {resource} manteria meus arqueiros em campo. Se puder ceder, envie.</translation>
     </message>
     <message>
         <source>I am under attack myself. My men are paid to guard my walls first, and I have read the contract.</source>
@@ -1993,7 +1993,7 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
     </message>
     <message>
         <source>Short on {resource}. Send {amount} and I keep attacking.</source>
-        <translation>Curto de {resource}. Envie {amount} e eu continuo atacando.</translation>
+        <translation>Estou em falta de {resource}. Envie {amount} e eu continuo atacando.</translation>
     </message>
     <message>
         <source>Straight at their walls? That is a Roman idea. Give me a reason to come from somewhere else.</source>
@@ -2847,11 +2847,11 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
     </message>
     <message>
         <source>Guard</source>
-        <translation>Guardar</translation>
+        <translation>Guarda</translation>
     </message>
     <message>
         <source>Patrol</source>
-        <translation>Patrulhar</translation>
+        <translation>Patrulha</translation>
     </message>
     <message>
         <source>Rally</source>
@@ -2899,7 +2899,7 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
     </message>
     <message>
         <source>Aggressive</source>
-        <translation>Agressivo</translation>
+        <translation>Agressiva</translation>
     </message>
     <message>
         <source>Defensive</source>
@@ -3445,7 +3445,7 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
     </message>
     <message>
         <source>Grows grain in cycles. A builder reaps it for food once it ripens.</source>
-        <translation>Cultiva grãos em ciclos. Um construtor os ceifa em troca de comida quando amadurecem.</translation>
+        <translation>Cultiva grãos em ciclos. Um construtor os ceifa para obter comida quando amadurecem.</translation>
     </message>
     <message>
         <source>Select a builder, press Collect, and click a tree, boulder, ore deposit, ripe farm or sheep. It hauls the load to a barracks yard, then goes back for more.</source>
@@ -3579,7 +3579,7 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
     </message>
     <message>
         <source>Men you can still raise: %1 held in reserve by your barracks and temples. Walk civilians into a barracks or build a Home to raise more.</source>
-        <translation>Homens que ainda podes recrutar: %1 em reserva nos teus quartéis e templos. Leva civis a um quartel ou constrói uma Casa para recrutar mais.</translation>
+        <translation>Homens que você ainda pode recrutar: %1 em reserva nos seus quartéis e templos. Leve civis a um quartel ou construa uma Casa para recrutar mais.</translation>
     </message>
     <message>
         <source>This map allows %1 men per army; %2 more wait in reserve but cannot muster until the field thins.</source>
@@ -4311,23 +4311,23 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
     </message>
     <message>
         <source>Save slot &apos;%1&apos; does not contain a battlefield and was not loaded.</source>
-        <translation>Save slot &apos;%1&apos; does not contain a battlefield and was not loaded.</translation>
+        <translation>O slot &apos;%1&apos; não contém um campo de batalha e não foi carregado.</translation>
     </message>
     <message>
         <source>&apos;%1&apos; could not be restored (%2). The battle that was running could not be kept.</source>
-        <translation>&apos;%1&apos; could not be restored (%2). The battle that was running could not be kept.</translation>
+        <translation>Não foi possível restaurar &apos;%1&apos; (%2). A batalha em andamento também não pôde ser mantida.</translation>
     </message>
     <message>
         <source>&apos;%1&apos; was saved by a different version of Standard of Iron (snapshot %2, this build reads %3) and cannot be imported.</source>
-        <translation>&apos;%1&apos; was saved by a different version of Standard of Iron (snapshot %2, this build reads %3) and cannot be imported.</translation>
+        <translation>&apos;%1&apos; foi salvo por outra versão de Standard of Iron (snapshot %2; esta versão lê %3) e não pode ser importado.</translation>
     </message>
     <message>
         <source>&apos;%1&apos; could not be restored (%2). The battle that was running was left alone.</source>
-        <translation>&apos;%1&apos; could not be restored (%2). The battle that was running was left alone.</translation>
+        <translation>Não foi possível restaurar &apos;%1&apos; (%2). A batalha em andamento continua intacta.</translation>
     </message>
     <message>
         <source>&apos;%1&apos; restored no units at all, so there is no battle to return to. The save is unusable and the battle that was running was left alone.</source>
-        <translation>&apos;%1&apos; restored no units at all, so there is no battle to return to. The save is unusable and the battle that was running was left alone.</translation>
+        <translation>&apos;%1&apos; não restaurou nenhuma unidade, então não há batalha para onde voltar. O save está inutilizável e a batalha em andamento continua intacta.</translation>
     </message>
 </context>
 <context>
@@ -4382,7 +4382,7 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
     </message>
     <message>
         <source>A save is already in progress.</source>
-        <translation>A save is already in progress.</translation>
+        <translation>Já há um salvamento em andamento.</translation>
     </message>
     <message>
         <source>your ally</source>
@@ -4614,11 +4614,11 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
     </message>
     <message>
         <source>Guard</source>
-        <translation>Guardar</translation>
+        <translation>Guarda</translation>
     </message>
     <message>
         <source>Patrol</source>
-        <translation>Patrulhar</translation>
+        <translation>Patrulha</translation>
     </message>
     <message>
         <source>Stop</source>
@@ -4674,11 +4674,11 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
     </message>
     <message>
         <source>Guard is not available for the current selection</source>
-        <translation>Guardar não está disponível para a seleção atual</translation>
+        <translation>Guarda não está disponível para a seleção atual</translation>
     </message>
     <message>
         <source>Patrol is not available for the current selection</source>
-        <translation>Patrulhar não está disponível para a seleção atual</translation>
+        <translation>Patrulha não está disponível para a seleção atual</translation>
     </message>
     <message>
         <source>Medic</source>
@@ -4977,7 +4977,7 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
     </message>
     <message>
         <source>Press Attack, then left-click the target. Right-click cancels. A right-click on an enemy does the same thing.</source>
-        <translation>Pressione Ataque e clique com o botão esquerdo no alvo. Clique direito cancela. Um clique direito num inimigo faz o mesmo.</translation>
+        <translation>Pressione Atacar e clique com o botão esquerdo no alvo. Clique direito cancela. Um clique direito num inimigo faz o mesmo.</translation>
     </message>
     <message>
         <source>Scope</source>
@@ -5149,7 +5149,7 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
     </message>
     <message>
         <source>Scrap</source>
-        <translation>Desarmar</translation>
+        <translation>Demolir</translation>
     </message>
     <message>
         <source>Send builders to take one of your own buildings apart and get part of its cost back.</source>
@@ -5540,7 +5540,7 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
     </message>
     <message>
         <source>[LMB] Strike  [RMB] Guard</source>
-        <translation>[BEM] Golpear  [BDM] Guardar</translation>
+        <translation>[BEM] Golpear  [BDM] Defender</translation>
     </message>
     <message>
         <source>[Space] Dodge  [Alt] Jump</source>
@@ -5844,7 +5844,7 @@ Cada recruta custa os homens do seu esquadrão; a reserva num quartel eleva o li
     </message>
     <message>
         <source>Wood comes from pine trees, stone from boulders and iron from ore seams. A builder harvests a node with Collect (or Auto Gather), then carries the load to the stone yard beside a friendly barracks. Only when it is dropped there does the counter in the top bar rise. The yard&apos;s piles grow and shrink with your stores.</source>
-        <translation>A madeira vem dos pinheiros, a pedra das rochas e o ferro dos veios de minério. Um construtor colhe um nó com Coletar (ou Coleta automática) e depois leva a carga ao pátio de pedra ao lado de um quartel aliado. Só quando ela é deixada ali o contador da barra superior sobe. As pilhas do pátio crescem e diminuem com seus estoques.</translation>
+        <translation>A madeira vem dos pinheiros, a pedra das rochas e o ferro dos veios de minério. Um construtor explora um recurso com Coletar (ou Coleta automática) e depois leva a carga ao pátio de pedra ao lado de um quartel aliado. Só quando ela é deixada ali o contador da barra superior sobe. As pilhas do pátio crescem e diminuem com seus estoques.</translation>
     </message>
     <message>
         <source>Gold and trade</source>
@@ -5892,7 +5892,7 @@ Cada recruta custa os homens do seu esquadrão; a reserva num quartel eleva o li
     </message>
     <message>
         <source>Your commander carries the standard. Troops close to him fight with higher morale, and morale decides who breaks first. Keep him behind the spears: if he falls the mission is lost.</source>
-        <translation>Seu comandante carrega o estandarte. Tropas perto dele lutam com mais moral, e a moral decide quem cede primeiro. Mantenha-o atrás das lanças: se ele cair, a missão está perdida.</translation>
+        <translation>Seu comandante carrega o estandarte. Tropas perto dele lutam com mais moral, e o moral decide quem cede primeiro. Mantenha-o atrás das lanças: se ele cair, a missão está perdida.</translation>
     </message>
     <message>
         <source>Aura and Rally</source>
@@ -5956,7 +5956,7 @@ Cada recruta custa os homens do seu esquadrão; a reserva num quartel eleva o li
     </message>
     <message>
         <source>Right-click the ground to move, right-click an enemy to attack. Hold the right button and drag before releasing to choose the way the troops will face: one unit turns to face where you drag, several units are placed in formation facing it. The command grid offers Attack, Guard, Patrol, Hold, Stop and the builder and commander orders. A marker shows where troops are going and the banner above the grid confirms each order - or explains why it was refused.</source>
-        <translation>Clique direito no chão para mover, clique direito em um inimigo para atacar. Segure o botão direito e arraste antes de soltar para escolher a direção que as tropas vão encarar: uma unidade gira para onde você arrasta, várias unidades são posicionadas em formação voltadas para lá. A grade de comandos oferece Atacar, Guardar, Patrulhar, Manter, Parar e as ordens de construtor e comandante. Um marcador mostra para onde as tropas vão e a faixa acima da grade confirma cada ordem – ou explica por que foi recusada.</translation>
+        <translation>Clique direito no chão para mover, clique direito em um inimigo para atacar. Segure o botão direito e arraste antes de soltar para escolher a direção que as tropas vão encarar: uma unidade gira para onde você arrasta, várias unidades são posicionadas em formação voltadas para lá. A grade de comandos oferece Atacar, Guarda, Patrulha, Manter, Parar e as ordens de construtor e comandante. Um marcador mostra para onde as tropas vão e a faixa acima da grade confirma cada ordem – ou explica por que foi recusada.</translation>
     </message>
     <message>
         <source>Spearmen hold a line, archers punish from behind it, cavalry breaks flanks, healers mend nearby wounded on their own. Right-click and drag with several units selected to deploy them in a formation that faces the drag; the Formation order opens the same planner where they stand. Run trades stamina for speed.</source>
@@ -6004,7 +6004,7 @@ Cada recruta custa os homens do seu esquadrão; a reserva num quartel eleva o li
     </message>
     <message>
         <source>Every card - recruit or building - lists its price. A grey card means something is short; hover it to read what. Homes cost 50 wood and 15 stone, a farm 40 wood and 10 stone, a barracks 100 wood and 60 stone, a defence tower 60 wood and 80 stone; soldiers cost wood and iron plus reserve, and civilians cost food.</source>
-        <translation>Cada carta, recruta ou edifício, mostra seu preço. Uma carta cinza significa que falta algo; passe o cursor para ler o quê. As casas custam 50 de madeira e 15 de pedra, uma fazenda 40 de madeira e 10 de pedra, um quartel 100 de madeira e 60 de pedra, uma torre de defesa 60 de madeira e 80 de pedra; os soldados custam madeira e ferro mais reserva, e os civis custam comida.</translation>
+        <translation>Cada cartão, recruta ou edifício, mostra seu preço. Um cartão cinza significa que falta algo; passe o cursor para ler o quê. As casas custam 50 de madeira e 15 de pedra, uma fazenda 40 de madeira e 10 de pedra, um quartel 100 de madeira e 60 de pedra, uma torre de defesa 60 de madeira e 80 de pedra; os soldados custam madeira e ferro mais reserva, e os civis custam comida.</translation>
     </message>
     <message>
         <source>Barracks recruit soldiers and hold your stockpile yard. Homes raise families and civilians. Farms grow grain that builders reap for food. Defence towers shoot at anything in range. Marketplaces trade. Temples strengthen morale and take in healers. Walls and gates shape the field; gates open for your own troops.</source>
@@ -6024,7 +6024,7 @@ Cada recruta custa os homens do seu esquadrão; a reserva num quartel eleva o li
     </message>
     <message>
         <source>Each mission states its own victory and defeat conditions in the Objectives screen (Escape, then Objectives). In battle, press O or the objectives button in the top bar to keep the full list open beside the field. In every battle your commander must survive: a nation dies with the man who leads it, and a lone commander is already lost.</source>
-        <translation>Cada missão indica as suas condições de vitória e derrota no ecrã de Objetivos (Escape e depois Objetivos). Em batalha, prime O ou o botão de objetivos na barra superior para manter a lista completa aberta ao lado do campo. Em toda batalha o teu comandante tem de sobreviver: uma nação morre com o homem que a lidera, e um comandante sozinho já está perdido.</translation>
+        <translation>Cada missão indica suas condições de vitória e derrota na tela de Objetivos (Escape e depois Objetivos). Em batalha, pressione O ou o botão de objetivos na barra superior para manter a lista completa aberta ao lado do campo. Em toda batalha seu comandante precisa sobreviver: uma nação morre com o homem que a lidera, e um comandante sozinho já está perdido.</translation>
     </message>
     <message>
         <source>Undead zones</source>
@@ -6032,7 +6032,7 @@ Cada recruta custa os homens do seu esquadrão; a reserva num quartel eleva o li
     </message>
     <message>
         <source>Some fields are dotted with dormant ruins and shrines. Nothing stirs in them until your troops walk in. The moment you cross into a zone, it wakes: the ground gives up its dead and the first wave rises to meet you. Choose the moment - and the force - you enter with.</source>
-        <translation>Alguns campos estão pontilhados de ruínas e santuários adormecidos. Nada se mexe neles até as tuas tropas entrarem. No momento em que cruzas para uma zona, ela desperta: o chão entrega os seus mortos e a primeira onda ergue-se ao teu encontro. Escolhe o momento - e a força - com que entras.</translation>
+        <translation>Alguns campos estão pontilhados de ruínas e santuários adormecidos. Nada se mexe neles até suas tropas entrarem. No momento em que você entra em uma zona, ela desperta: o chão entrega seus mortos e a primeira onda se ergue ao seu encontro. Escolha o momento - e a força - com que vai entrar.</translation>
     </message>
     <message>
         <source>Waves</source>
@@ -6040,7 +6040,7 @@ Cada recruta custa os homens do seu esquadrão; a reserva num quartel eleva o li
     </message>
     <message>
         <source>Every zone holds a set number of waves, and the announcement names each one as it comes - wave 1 of 2, then 2 of 2. When a wave rises to meet you, it is coming for the troops inside the zone. Break one and the next rises. A zone is only clear when its last wave lies still.</source>
-        <translation>Cada zona guarda um número fixo de ondas, e o anúncio nomeia cada uma quando chega - onda 1 de 2, depois 2 de 2. Quando uma onda se ergue ao teu encontro, vem pelas tropas dentro da zona. Quebra uma e a seguinte ergue-se. Uma zona só está limpa quando a sua última onda jaz imóvel.</translation>
+        <translation>Cada zona guarda um número fixo de ondas, e o anúncio nomeia cada uma quando chega - onda 1 de 2, depois 2 de 2. Quando uma onda se ergue ao seu encontro, ela vem atrás das tropas dentro da zona. Quebre uma e a seguinte se ergue. Uma zona só está limpa quando sua última onda jaz imóvel.</translation>
     </message>
     <message>
         <source>The Sepulcher Shrine</source>
@@ -6048,7 +6048,7 @@ Cada recruta custa os homens do seu esquadrão; a reserva num quartel eleva o li
     </message>
     <message>
         <source>Each zone is anchored by a Sepulcher Shrine. While its guardians still stand, the shrine cannot be harmed and attack orders on it are refused - do not waste arrows on it. Kill every wave first; only then does the shrine lie open.</source>
-        <translation>Cada zona está ancorada num Santuário do Sepulcro. Enquanto os seus guardiões estiverem de pé, o santuário não pode ser ferido e ordens de ataque contra ele são recusadas - não desperdices flechas nele. Mata primeiro cada onda; só então o santuário fica exposto.</translation>
+        <translation>Cada zona está ancorada num Santuário do Sepulcro. Enquanto seus guardiões estiverem de pé, o santuário não pode ser ferido e ordens de ataque contra ele são recusadas - não desperdice flechas nele. Mate primeiro cada onda; só então o santuário fica exposto.</translation>
     </message>
     <message>
         <source>Purifying a shrine</source>
@@ -6056,7 +6056,7 @@ Cada recruta custa os homens do seu esquadrão; a reserva num quartel eleva o li
     </message>
     <message>
         <source>Once the guardians have fallen, walk troops onto the shrine to capture it, or simply knock it down. Either way the zone is purified for good and it will not wake again. A purified shrine pays out: the clear reward - wood, iron and food - lands in your stores the moment the zone falls.</source>
-        <translation>Quando os guardiões caírem, leva tropas ao santuário para o capturar, ou simplesmente derruba-o. De qualquer forma a zona fica purificada para sempre e não voltará a despertar. Um santuário purificado paga: a recompensa de limpeza - madeira, ferro e comida - chega aos teus armazéns no momento em que a zona cai.</translation>
+        <translation>Quando os guardiões caírem, leve tropas ao santuário para capturá-lo, ou simplesmente derrube-o. De qualquer forma, a zona fica purificada para sempre e não voltará a despertar. Um santuário purificado paga: a recompensa de limpeza - madeira, ferro e comida - chega aos seus estoques no momento em que a zona cai.</translation>
     </message>
     <message>
         <source>The guardians</source>
@@ -6064,15 +6064,15 @@ Cada recruta custa os homens do seu esquadrão; a reserva num quartel eleva o li
     </message>
     <message>
         <source>The dead defend their ground. They will chase you to the edge of the zone and then turn back to it, so you can pull out to regroup and re-enter when you are ready. You cannot lure them across the map - the fight happens at the shrine.</source>
-        <translation>Os mortos defendem o seu terreno. Perseguem-te até à borda da zona e depois voltam a ela, por isso podes recuar para reagrupar e voltar a entrar quando estiveres pronto. Não podes atraí-los pelo mapa - a luta acontece no santuário.</translation>
+        <translation>Os mortos defendem seu terreno. Eles perseguem você até a borda da zona e depois voltam a ela, então você pode recuar para se reagrupar e voltar a entrar quando estiver pronto. Você não pode atraí-los pelo mapa - a luta acontece no santuário.</translation>
     </message>
     <message>
         <source>The grave priest</source>
-        <translation>O sacerdote das covas</translation>
+        <translation>O sacerdote sepulcral</translation>
     </message>
     <message>
         <source>Among the waves walks a grave priest. He heals the dead around him and throws fire at your line, so a slow slog of spearmen alone will bleed. Bring a Medicus to mend the burns and ranged troops to cut the priest down from a distance before the guardians close in. Kill him first and the dead stop mending.</source>
-        <translation>Entre as ondas caminha um sacerdote das covas. Cura os mortos à sua volta e lança fogo sobre a tua linha, por isso um avanço lento só de lanceiros vai sangrar. Traz um Medicus para tratar as queimaduras e tropas de longo alcance para abater o sacerdote à distância antes que os guardiões se aproximem. Mata-o primeiro e os mortos deixam de sarar.</translation>
+        <translation>Entre as ondas caminha um sacerdote sepulcral. Ele cura os mortos ao seu redor e lança fogo sobre a sua linha, então um avanço lento só de lanceiros vai sangrar. Leve um Medicus para tratar as queimaduras e tropas de longo alcance para abater o sacerdote à distância antes que os guardiões se aproximem. Mate-o primeiro e os mortos deixam de se curar.</translation>
     </message>
 </context>
 <context>
@@ -6476,75 +6476,75 @@ Cada recruta custa os homens do seu esquadrão; a reserva num quartel eleva o li
     </message>
     <message>
         <source>Saves are unavailable: %1</source>
-        <translation>Saves are unavailable: %1</translation>
+        <translation>Os saves estão indisponíveis: %1</translation>
     </message>
     <message>
         <source>The save database could not be read and a new one was started. Your previous file was kept at %1.</source>
-        <translation>The save database could not be read and a new one was started. Your previous file was kept at %1.</translation>
+        <translation>Não foi possível ler o banco de dados de saves, e um novo foi criado. Seu arquivo anterior foi mantido em %1.</translation>
     </message>
     <message>
         <source>No saved games yet. Save a battle from the menu, or press the quicksave key while you play.</source>
-        <translation>No saved games yet. Save a battle from the menu, or press the quicksave key while you play.</translation>
+        <translation>Ainda não há jogos salvos. Salve uma batalha pelo menu ou pressione a tecla de salvamento rápido enquanto joga.</translation>
     </message>
     <message>
         <source>Untitled save</source>
-        <translation>Untitled save</translation>
+        <translation>Save sem nome</translation>
     </message>
     <message>
         <source>Unknown map</source>
-        <translation>Unknown map</translation>
+        <translation>Mapa desconhecido</translation>
     </message>
     <message>
         <source>Saved by a different version of the game. It is kept on disk, but this build cannot open it.</source>
-        <translation>Saved by a different version of the game. It is kept on disk, but this build cannot open it.</translation>
+        <translation>Salvo por outra versão do jogo. Ele continua no disco, mas esta versão não consegue abri-lo.</translation>
     </message>
     <message>
         <source>Export failed: %1</source>
-        <translation>Export failed: %1</translation>
+        <translation>Falha na exportação: %1</translation>
     </message>
     <message>
         <source>This save will load</source>
-        <translation>This save will load</translation>
+        <translation>Este save vai carregar</translation>
     </message>
     <message>
         <source>This save will not load</source>
-        <translation>This save will not load</translation>
+        <translation>Este save não vai carregar</translation>
     </message>
     <message>
         <source>&quot;%1&quot; decompressed cleanly and contains a complete battlefield.</source>
-        <translation>&quot;%1&quot; decompressed cleanly and contains a complete battlefield.</translation>
+        <translation>“%1” foi descompactado sem erros e contém um campo de batalha completo.</translation>
     </message>
     <message>
         <source>This save was written by a different version of the game.</source>
-        <translation>This save was written by a different version of the game.</translation>
+        <translation>Este save foi gravado por outra versão do jogo.</translation>
     </message>
     <message>
         <source>Delete this save?</source>
-        <translation>Delete this save?</translation>
+        <translation>Excluir este save?</translation>
     </message>
     <message>
         <source>&quot;%1&quot; will be deleted. This cannot be undone.</source>
-        <translation>&quot;%1&quot; will be deleted. This cannot be undone.</translation>
+        <translation>“%1” será excluído. Isso não pode ser desfeito.</translation>
     </message>
     <message>
         <source>Keep it</source>
-        <translation>Keep it</translation>
+        <translation>Manter</translation>
     </message>
     <message>
         <source>Deleted &quot;%1&quot;</source>
-        <translation>Deleted &quot;%1&quot;</translation>
+        <translation>“%1” excluído</translation>
     </message>
     <message>
         <source>Close</source>
-        <translation>Close</translation>
+        <translation>Fechar</translation>
     </message>
     <message>
         <source>Import save</source>
-        <translation>Import save</translation>
+        <translation>Importar save</translation>
     </message>
     <message>
         <source>Import failed: %1</source>
-        <translation>Import failed: %1</translation>
+        <translation>Falha na importação: %1</translation>
     </message>
 </context>
 <context>
@@ -6833,19 +6833,19 @@ Cada recruta custa os homens do seu esquadrão; a reserva num quartel eleva o li
     </message>
     <message>
         <source>A cursed shrine cannot be attacked while its guardians stand. Break the guard, then purify the shrine by capturing it.</source>
-        <translation>Um santuário amaldiçoado não pode ser atacado enquanto os seus guardiões estiverem de pé. Quebra a guarda e depois purifica o santuário capturando-o.</translation>
+        <translation>Um santuário amaldiçoado não pode ser atacado enquanto seus guardiões estiverem de pé. Quebre a guarda e depois purifique o santuário capturando-o.</translation>
     </message>
     <message>
         <source>A grave priest mends the dead around it and hurls fire at the living. Strike it down before the line closes.</source>
-        <translation>Um sacerdote das covas remenda os mortos à sua volta e lança fogo sobre os vivos. Abate-o antes de as linhas se fecharem.</translation>
+        <translation>Um sacerdote sepulcral remenda os mortos ao seu redor e lança fogo sobre os vivos. Abata-o antes que as linhas se fechem.</translation>
     </message>
     <message>
         <source>Ranged troops and a Medicus make the vigil survivable. Wound the dead from a distance, and keep the wounded living.</source>
-        <translation>Tropas de longo alcance e um Medicus tornam a vigília sobrevivível. Fere os mortos à distância e mantém os feridos vivos.</translation>
+        <translation>Tropas de longo alcance e um Medicus tornam a vigília sobrevivível. Fira os mortos à distância e mantenha os feridos vivos.</translation>
     </message>
     <message>
         <source>Skeleton guardians defend their ruins and drift back to them when the fight moves on. Draw them out, or bring the fight to the stones.</source>
-        <translation>Os guardiões esqueléticos defendem as suas ruínas e regressam a elas quando a luta se afasta. Atrai-os para fora ou leva a luta às pedras.</translation>
+        <translation>Os guardiões esqueléticos defendem suas ruínas e voltam a elas quando a luta se afasta. Atraia-os para fora ou leve a luta até as pedras.</translation>
     </message>
     <message>
         <source>The dead do not tire, do not flee, and do not file complaints. They are, in every other respect, a poor garrison.</source>
@@ -7192,19 +7192,19 @@ Cada recruta custa os homens do seu esquadrão; a reserva num quartel eleva o li
     </message>
     <message>
         <source>There is no quicksave to load.</source>
-        <translation>There is no quicksave to load.</translation>
+        <translation>Não há salvamento rápido para carregar.</translation>
     </message>
     <message>
         <source>Load the quicksave?</source>
-        <translation>Load the quicksave?</translation>
+        <translation>Carregar o salvamento rápido?</translation>
     </message>
     <message>
         <source>The battle in progress will be replaced by the quicksave. Anything since then is lost.</source>
-        <translation>The battle in progress will be replaced by the quicksave. Anything since then is lost.</translation>
+        <translation>A batalha em andamento será substituída pelo salvamento rápido. Tudo o que aconteceu desde então será perdido.</translation>
     </message>
     <message>
         <source>Load the quicksave</source>
-        <translation>Load the quicksave</translation>
+        <translation>Carregar o salvamento rápido</translation>
     </message>
 </context>
 <context>
@@ -7395,15 +7395,15 @@ Cada recruta custa os homens do seu esquadrão; a reserva num quartel eleva o li
     </message>
     <message>
         <source>Continue</source>
-        <translation>Continue</translation>
+        <translation>Continuar</translation>
     </message>
     <message>
         <source>Return to the most recent save</source>
-        <translation>Return to the most recent save</translation>
+        <translation>Volte ao save mais recente</translation>
     </message>
     <message>
         <source>Resume</source>
-        <translation>Resume</translation>
+        <translation>Continuar</translation>
     </message>
 </context>
 <context>
@@ -7843,7 +7843,7 @@ para ver a prévia</translation>
     </message>
     <message>
         <source>A redoubt above a dry ford, for one. A spur of rock runs the length of the approach and the two shoulders close the flanks, so everything coming down from the north is committed to one of two lanes -- the cart gate in the west, the goat path in the east -- and they do not meet again until the ground in front of the camp. One line cannot hold both mouths, so holding here is a question of which lane you stand in and when you leave it.</source>
-        <translation>Um reduto acima de um vau seco, por exemplo. Uma esporada de rocha acompanha toda a aproximação e os dois ombros fecham os flancos, de modo que tudo que desce do norte fica preso a uma de duas vielas -- o portão de carroças a oeste, a trilha de cabras a leste -- e elas só voltam a se encontrar no terreno diante do acampamento. Uma linha não segura as duas bocas, então resistir aqui é uma questão de em qual viela você fica e quando a abandona.</translation>
+        <translation>Um reduto acima de um vau seco, para um jogador. Um esporão de rocha acompanha toda a aproximação e os dois ombros fecham os flancos, de modo que tudo que desce do norte fica preso a uma de duas vielas -- o portão de carroças a oeste, a trilha de cabras a leste -- e elas só voltam a se encontrar no terreno diante do acampamento. Uma linha não segura as duas bocas, então resistir aqui é uma questão de em qual viela você fica e quando a abandona.</translation>
     </message>
     <message>
         <source>Pinewater Cut</source>
@@ -7851,7 +7851,7 @@ para ver a prévia</translation>
     </message>
     <message>
         <source>A timber detail&apos;s cut above the Pinewater, for one. The near stand beside the camp is already half felled, so the levy is only filled out of the deep pines a long haul north-east, past the spine of rock the haul road has to swing around. The scree that gives up the stone lies the other way entirely, and the crew is not big enough to work both without splitting it.</source>
-        <translation>Um destacamento de madeira acima do Pinhágua, por exemplo. O bosque próximo ao acampamento já está meio derrubado, então a leva só se completa com os pinheiros profundos, um longo transporte a nordeste, passando a espinha de rocha que a estrada de arraste precisa contornar. O cascalho que dá a pedra fica exatamente do outro lado, e a turma não é grande o bastante para trabalhar os dois sem se dividir.</translation>
+        <translation>Um destacamento de madeira acima do Pinhágua, para um jogador. O bosque próximo ao acampamento já está meio derrubado, então a leva só se completa com os pinheiros profundos, um longo transporte a nordeste, passando a espinha de rocha que a estrada de arraste precisa contornar. O cascalho que dá a pedra fica exatamente do outro lado, e a turma não é grande o bastante para trabalhar os dois sem se dividir.</translation>
     </message>
     <message>
         <source>Crossing the Rhone</source>
@@ -8131,7 +8131,7 @@ para ver a prévia</translation>
     </message>
     <message>
         <source>Orders issued. Deploy when ready.</source>
-        <translation>Ordens emitidas. Implante quando estiver pronto.</translation>
+        <translation>Ordens emitidas. Posicione suas tropas quando estiver pronto.</translation>
     </message>
     <message>
         <source>Replay Mission</source>
@@ -8420,7 +8420,7 @@ para ver a prévia</translation>
     </message>
     <message>
         <source>So you have come down out of the rocks after all. Fewer than the count they gave me, and greyer. Well. The Ticinus is shallow, the ground beyond it is ours, and I have a great deal of time in which to be wrong about you.</source>
-        <translation>Então você desceu das rochas afinal. Menos do que me contaram, e mais grisalho. Pois bem. O Tessino é raso, o terreno além dele é nosso, e me sobra tempo para estar errado a seu respeito.</translation>
+        <translation>Então você desceu das rochas afinal. Menos do que me contaram, e mais grisalho. Pois bem. O Ticino é raso, o terreno além dele é nosso, e me sobra tempo para estar errado a seu respeito.</translation>
     </message>
     <message>
         <source>So. The Barcid crawls down to the Rhone. Cross where you like - the river is not particular about whose bones it keeps, and Rome has a great deal of patience and a very great many shovels. My surveyors are already pacing out your grave. They tell me the ground here drinks well.</source>
@@ -8536,7 +8536,7 @@ para ver a prévia</translation>
     </message>
     <message>
         <source>Masinissa&apos;s Numidian horse is entering from the north-eastern road.</source>
-        <translation>A cavalaria numídia de Masinissa está entrando pela estrada nordeste.</translation>
+        <translation>A cavalaria númida de Masinissa está entrando pela estrada nordeste.</translation>
     </message>
     <message>
         <source>Nothing new is taught here. The ridge, the bait and the beheading are all things you already know; Cannae only asks whether you can run three of them at once against four times your number.</source>
@@ -8708,7 +8708,7 @@ para ver a prévia</translation>
     </message>
     <message>
         <source>Take the Numidian camp</source>
-        <translation>Tomar o acampamento numida</translation>
+        <translation>Tomar o acampamento númida</translation>
     </message>
     <message>
         <source>Take the allied camp</source>
@@ -8820,11 +8820,11 @@ para ver a prévia</translation>
     </message>
     <message>
         <source>The redoubt is gone. Go south, keep the spur on your left, and do not stop to look at the ford. There is nothing there now that is worth a second of your life.</source>
-        <translation>O reduto se foi. Sigam para o sul, mantenham a esporada à esquerda e não parem para olhar o vau. Não há mais nada ali que valha um segundo da sua vida.</translation>
+        <translation>O reduto se foi. Sigam para o sul, mantenham o esporão à esquerda e não parem para olhar o vau. Não há mais nada ali que valha um segundo da sua vida.</translation>
     </message>
     <message>
         <source>The spur splits them for us, which is the only kindness this ground offers. Cart gate west, goat path east, and they only meet where we are standing. You cannot hold both mouths. Pick one, hold it, and move when the horns tell you to.</source>
-        <translation>A esporada os separa por nós, que é a única gentileza que este terreno oferece. Portão de carroças a oeste, trilha de cabras a leste, e eles só se encontram onde estamos. Você não segura as duas bocas. Escolha uma, segure-a e mova-se quando as trompas mandarem.</translation>
+        <translation>O esporão os separa por nós, que é a única gentileza que este terreno oferece. Portão de carroças a oeste, trilha de cabras a leste, e eles só se encontram onde estamos. Você não segura as duas bocas. Escolha uma, segure-a e mova-se quando as trompas mandarem.</translation>
     </message>
     <message>
         <source>Cut and carry home eight hundred of timber and two hundred and ten of stone. The near stand was stripped bare; the deep pines and the east screen are the only timber left standing.</source>
@@ -8836,7 +8836,7 @@ para ver a prévia</translation>
     </message>
     <message>
         <source>Fill the levy out of the Pinewater cut: eight hundred of timber and two hundred and ten of stone, cut and carried home before the column comes back through at dusk.</source>
-        <translation>Cumpra a leva com o corte de Água-de-Pinho: oitocentos de madeira e duzentos e dez de pedra, cortados e trazidos para casa antes de a coluna voltar a passar ao anoitecer.</translation>
+        <translation>Cumpra a leva com o corte do Pinhágua: oitocentos de madeira e duzentos e dez de pedra, cortados e trazidos para casa antes de a coluna voltar a passar ao anoitecer.</translation>
     </message>
     <message>
         <source>First column on the cart gate. Spears up. Let them come to the stakes; the stakes do not get tired.</source>
@@ -9504,11 +9504,11 @@ para ver a prévia</translation>
     </message>
     <message>
         <source>Break both risings at the shrine. Do not flinch when the ground tears open.</source>
-        <translation>Rompe as duas revoltas no santuário. Não vaciles quando o chão se abrir.</translation>
+        <translation>Rompa as duas revoltas no santuário. Não vacile quando o chão se abrir.</translation>
     </message>
     <message>
         <source>Clear the barrow ruins. Both risings of the dead must fall.</source>
-        <translation>Limpa as ruínas do sepulcro. As duas revoltas dos mortos devem cair.</translation>
+        <translation>Limpe as ruínas do sepulcro. As duas revoltas dos mortos devem cair.</translation>
     </message>
     <message>
         <source>Fabius falls. The watch ends, and the dead keep walking.</source>
@@ -9540,11 +9540,11 @@ para ver a prévia</translation>
     </message>
     <message>
         <source>Raise a marketplace at the watch camp. Gold buys nothing buried in a barrow.</source>
-        <translation>Ergue um mercado no acampamento de vigia. O ouro não compra nada do que jaz num sepulcro.</translation>
+        <translation>Erga um mercado no acampamento de vigia. O ouro não compra nada do que jaz num sepulcro.</translation>
     </message>
     <message>
         <source>Rome sent sixty men to find out why the shepherds will not use the old road after dark. Build up the watch camp first, then clear the barrow ruins and take the shrine on the rise. The dead will not come to you: you choose when to wake them, and you can choose to be ready.</source>
-        <translation>Roma enviou sessenta homens para descobrir por que os pastores não usam a velha estrada depois de escurecer. Fortalece primeiro o acampamento de vigia, depois limpa as ruínas do sepulcro e toma o santuário na colina. Os mortos não virão até ti: tu escolhes quando despertá-los, e podes escolher estar pronto.</translation>
+        <translation>Roma enviou sessenta homens para descobrir por que os pastores não usam a velha estrada depois de escurecer. Fortaleça primeiro o acampamento de vigia, depois limpe as ruínas do sepulcro e tome o santuário na colina. Os mortos não virão até você: você escolhe quando despertá-los, e pode escolher estar pronto.</translation>
     </message>
     <message>
         <source>Sixty men and a road the shepherds will not walk after dark. The Senate wants a report. Cut timber, raise the camp, and keep everyone off that barrow until I say otherwise.</source>
@@ -9552,7 +9552,7 @@ para ver a prévia</translation>
     </message>
     <message>
         <source>Take the shrine on the rise: cut down its guardians, then keep troops beside it until the standard is planted.</source>
-        <translation>Toma o santuário na colina: abate seus guardiões e depois mantém tropas ao lado dele até o estandarte ser plantado.</translation>
+        <translation>Tome o santuário na colina: abata seus guardiões e depois mantenha tropas ao lado dele até o estandarte ser plantado.</translation>
     </message>
     <message>
         <source>The hill as well. Of course the hill as well. Shields in front, every bow on the one in robes, and nobody chases anything into that haze.</source>
@@ -10515,11 +10515,11 @@ para ver a prévia</translation>
     </message>
     <message>
         <source>Select a barracks, temple or home to recruit.</source>
-        <translation>Seleciona um quartel, templo ou casa para recrutar.</translation>
+        <translation>Selecione um quartel, templo ou casa para recrutar.</translation>
     </message>
     <message>
         <source>Not enough reserve: %1 / %2 men. Walk civilians into the barracks or build a Home to raise more.</source>
-        <translation>Reserva insuficiente: %1 / %2 homens. Leva civis ao quartel ou constrói uma Casa para recrutar mais.</translation>
+        <translation>Reserva insuficiente: %1 / %2 homens. Leve civis ao quartel ou construa uma Casa para recrutar mais.</translation>
     </message>
     <message>
         <source>Army at the map&apos;s limit: %1 / %2 men in the field.</source>
@@ -11863,7 +11863,7 @@ Clique com o botão direito para cancelar.</translation>
     </message>
     <message>
         <source>Use while guarding to shield bash</source>
-        <translation>Use enquanto guarda para dar um golpe de escudo</translation>
+        <translation>Use enquanto se defende para dar um golpe de escudo</translation>
     </message>
     <message>
         <source>Rotate structure outline left</source>
@@ -11887,7 +11887,7 @@ Clique com o botão direito para cancelar.</translation>
     </message>
     <message>
         <source>Loaded, but &apos;%1&apos; could not be read, so wildlife, undead zones and cursed veins were not restored.</source>
-        <translation>Loaded, but &apos;%1&apos; could not be read, so wildlife, undead zones and cursed veins were not restored.</translation>
+        <translation>Carregado, mas &apos;%1&apos; não pôde ser lido, então a fauna, as zonas de mortos-vivos e os veios amaldiçoados não foram restaurados.</translation>
     </message>
 </context>
 <context>
@@ -12126,19 +12126,19 @@ Clique com o botão direito para cancelar.</translation>
     </message>
     <message>
         <source>Name the save first.</source>
-        <translation>Name the save first.</translation>
+        <translation>Dê um nome ao save primeiro.</translation>
     </message>
     <message>
         <source>That name is too long. Keep it under %1 characters.</source>
-        <translation>That name is too long. Keep it under %1 characters.</translation>
+        <translation>Esse nome é longo demais. Use menos de %1 caracteres.</translation>
     </message>
     <message>
         <source>That name is reserved for quicksaves and autosaves, which would overwrite it without asking. Pick another one.</source>
-        <translation>That name is reserved for quicksaves and autosaves, which would overwrite it without asking. Pick another one.</translation>
+        <translation>Esse nome é reservado para salvamentos rápidos e automáticos, que o sobrescreveriam sem perguntar. Escolha outro.</translation>
     </message>
     <message>
         <source>Names cannot contain slashes or control characters.</source>
-        <translation>Names cannot contain slashes or control characters.</translation>
+        <translation>Nomes não podem conter barras nem caracteres de controle.</translation>
     </message>
 </context>
 <context>
@@ -12161,79 +12161,78 @@ Clique com o botão direito para cancelar.</translation>
     </message>
     <message>
         <source>Saves are unavailable: %1</source>
-        <translation>Saves are unavailable: %1</translation>
+        <translation>Os saves estão indisponíveis: %1</translation>
     </message>
     <message>
         <source>Save name</source>
-        <translation>Save name</translation>
+        <translation>Nome do save</translation>
     </message>
     <message>
         <source>Name this save...</source>
-        <translation>Name this save...</translation>
+        <translation>Dê um nome a este save...</translation>
     </message>
     <message>
         <source>A save called &quot;%1&quot; already exists. Saving replaces it.</source>
-        <translation>A save called &quot;%1&quot; already exists. Saving replaces it.</translation>
+        <translation>Já existe um save chamado “%1”. Salvar vai substituí-lo.</translation>
     </message>
     <message>
         <source>Press Enter to save.</source>
-        <translation>Press Enter to save.</translation>
+        <translation>Pressione Enter para salvar.</translation>
     </message>
     <message>
         <source>Existing saves</source>
-        <translation>Existing saves</translation>
-    </message>
-    <message>
-        <source>%1 save</source>
-        <translation>%1 save</translation>
-    </message>
-    <message>
-        <source>%1 saves</source>
-        <translation>%1 saves</translation>
+        <translation>Saves existentes</translation>
     </message>
     <message>
         <source>No saves yet. The name above will create the first one.</source>
-        <translation>No saves yet. The name above will create the first one.</translation>
+        <translation>Ainda não há saves. O nome acima criará o primeiro.</translation>
     </message>
     <message>
         <source>Untitled save</source>
-        <translation>Untitled save</translation>
+        <translation>Save sem nome</translation>
     </message>
     <message>
         <source>Unknown map</source>
-        <translation>Unknown map</translation>
+        <translation>Mapa desconhecido</translation>
     </message>
     <message>
         <source>Saved by a different version of the game. It is kept, but this build cannot open it.</source>
-        <translation>Saved by a different version of the game. It is kept, but this build cannot open it.</translation>
+        <translation>Salvo por outra versão do jogo. Ele é mantido, mas esta versão não consegue abri-lo.</translation>
     </message>
     <message>
         <source>Delete</source>
-        <translation>Delete</translation>
+        <translation>Excluir</translation>
     </message>
     <message>
         <source>Replace this save?</source>
-        <translation>Replace this save?</translation>
+        <translation>Substituir este save?</translation>
     </message>
     <message>
         <source>&quot;%1&quot; will be replaced by the current battle. The version stored now cannot be recovered.</source>
-        <translation>&quot;%1&quot; will be replaced by the current battle. The version stored now cannot be recovered.</translation>
+        <translation>“%1” será substituído pela batalha atual. A versão salva agora não poderá ser recuperada.</translation>
     </message>
     <message>
         <source>Replace</source>
-        <translation>Replace</translation>
+        <translation>Substituir</translation>
     </message>
     <message>
         <source>Keep it</source>
-        <translation>Keep it</translation>
+        <translation>Manter</translation>
     </message>
     <message>
         <source>Delete this save?</source>
-        <translation>Delete this save?</translation>
+        <translation>Excluir este save?</translation>
     </message>
     <message>
         <source>&quot;%1&quot; will be deleted. This cannot be undone.</source>
-        <translation>&quot;%1&quot; will be deleted. This cannot be undone.</translation>
+        <translation>“%1” será excluído. Isso não pode ser desfeito.</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n save(s)</source>
+        <translation>
+            <numerusform>%n save</numerusform>
+            <numerusform>%n saves</numerusform>
+        </translation>
     </message>
 </context>
 <context>
@@ -12252,58 +12251,58 @@ Clique com o botão direito para cancelar.</translation>
     </message>
     <message>
         <source>Saved &quot;%1&quot;</source>
-        <translation>Saved &quot;%1&quot;</translation>
+        <translation>“%1” salvo</translation>
     </message>
     <message>
         <source>Saving &quot;%1&quot; failed.</source>
-        <translation>Saving &quot;%1&quot; failed.</translation>
+        <translation>Falha ao salvar “%1”.</translation>
     </message>
     <message>
         <source>Saved</source>
-        <translation>Saved</translation>
+        <translation>Salvo</translation>
     </message>
 </context>
 <context>
     <name>SaveSlotRow</name>
     <message>
         <source>%1h %2m</source>
-        <translation>%1h %2m</translation>
+        <translation>%1 h %2 min</translation>
     </message>
     <message>
         <source>%1m</source>
-        <translation>%1m</translation>
+        <translation>%1 min</translation>
     </message>
     <message>
         <source>under a minute</source>
-        <translation>under a minute</translation>
+        <translation>menos de um minuto</translation>
     </message>
     <message>
         <source>Unknown</source>
-        <translation>Unknown</translation>
+        <translation>Desconhecido</translation>
     </message>
     <message>
         <source>Campaign</source>
-        <translation>Campaign</translation>
+        <translation>Campanha</translation>
     </message>
     <message>
         <source>Mission</source>
-        <translation>Mission</translation>
+        <translation>Missão</translation>
     </message>
     <message>
         <source>Skirmish</source>
-        <translation>Skirmish</translation>
+        <translation>Escaramuça</translation>
     </message>
     <message>
         <source>Autosave</source>
-        <translation>Autosave</translation>
+        <translation>Salvamento automático</translation>
     </message>
     <message>
         <source>Quicksave</source>
-        <translation>Quicksave</translation>
+        <translation>Salvamento rápido</translation>
     </message>
     <message>
         <source>No preview</source>
-        <translation>No preview</translation>
+        <translation>Sem prévia</translation>
     </message>
     <message>
         <source>%1 · %2 · %3</source>
@@ -12315,11 +12314,11 @@ Clique com o botão direito para cancelar.</translation>
     </message>
     <message>
         <source>Saved %1</source>
-        <translation>Saved %1</translation>
+        <translation>Salvo: %1</translation>
     </message>
     <message>
         <source>Played %1</source>
-        <translation>Played %1</translation>
+        <translation>Jogado: %1</translation>
     </message>
 </context>
 <context>
@@ -12330,7 +12329,7 @@ Clique com o botão direito para cancelar.</translation>
     </message>
     <message>
         <source>Save storage unavailable</source>
-        <translation>Save storage unavailable</translation>
+        <translation>Armazenamento de saves indisponível</translation>
     </message>
 </context>
 <context>
@@ -12457,67 +12456,67 @@ Clique com o botão direito para cancelar.</translation>
     </message>
     <message>
         <source>The save database could not be opened.</source>
-        <translation>The save database could not be opened.</translation>
+        <translation>Não foi possível abrir o banco de dados de saves.</translation>
     </message>
     <message>
         <source>The save database is unreadable and could not be moved aside: %1</source>
-        <translation>The save database is unreadable and could not be moved aside: %1</translation>
+        <translation>O banco de dados de saves está ilegível e não pôde ser movido para outro lugar: %1</translation>
     </message>
     <message>
         <source>integrity check failed: %1</source>
-        <translation>integrity check failed: %1</translation>
+        <translation>a verificação de integridade falhou: %1</translation>
     </message>
     <message>
         <source>it was written by a newer version of the game (schema %1)</source>
-        <translation>it was written by a newer version of the game (schema %1)</translation>
+        <translation>foi gravado por uma versão mais nova do jogo (esquema %1)</translation>
     </message>
     <message>
         <source>it is not a Standard of Iron save database</source>
-        <translation>it is not a Standard of Iron save database</translation>
+        <translation>não é um banco de dados de saves de Standard of Iron</translation>
     </message>
     <message>
         <source>it could not be upgraded from schema %1: %2</source>
-        <translation>it could not be upgraded from schema %1: %2</translation>
+        <translation>não foi possível atualizá-lo a partir do esquema %1: %2</translation>
     </message>
     <message>
         <source>its tables do not match schema %1</source>
-        <translation>its tables do not match schema %1</translation>
+        <translation>suas tabelas não correspondem ao esquema %1</translation>
     </message>
     <message>
         <source>Failed to add the snapshot version column</source>
-        <translation>Failed to add the snapshot version column</translation>
+        <translation>Não foi possível adicionar a coluna de versão do snapshot</translation>
     </message>
     <message>
         <source>Refusing to write a save with an empty slot name</source>
-        <translation>Refusing to write a save with an empty slot name</translation>
+        <translation>Um save com nome de slot vazio não será gravado</translation>
     </message>
     <message>
         <source>&apos;%1&apos; holds a save that was not written by this rotation, so it will not be overwritten automatically. Delete it from the Load menu to free the slot.</source>
-        <translation>&apos;%1&apos; holds a save that was not written by this rotation, so it will not be overwritten automatically. Delete it from the Load menu to free the slot.</translation>
+        <translation>&apos;%1&apos; contém um save que não foi gravado por esta rotação, então ele não será sobrescrito automaticamente. Exclua-o no menu Carregar para liberar o slot.</translation>
     </message>
     <message>
         <source>The save was written but could not be read back</source>
-        <translation>The save was written but could not be read back</translation>
+        <translation>O save foi gravado, mas não pôde ser lido de volta</translation>
     </message>
     <message>
         <source>The save did not survive being written to disk. Nothing was lost in the match; try saving again.</source>
-        <translation>The save did not survive being written to disk. Nothing was lost in the match; try saving again.</translation>
+        <translation>O save não sobreviveu à gravação no disco. Nada foi perdido na partida; tente salvar de novo.</translation>
     </message>
     <message>
         <source>The save was written with the wrong header; try again.</source>
-        <translation>The save was written with the wrong header; try again.</translation>
+        <translation>O save foi gravado com o cabeçalho errado; tente de novo.</translation>
     </message>
     <message>
         <source>&apos;%1&apos; was saved by a different version of Standard of Iron and cannot be loaded by this one. It has been left alone.</source>
-        <translation>&apos;%1&apos; was saved by a different version of Standard of Iron and cannot be loaded by this one. It has been left alone.</translation>
+        <translation>&apos;%1&apos; foi salvo por outra versão de Standard of Iron e não pode ser carregado por esta. Ele não foi alterado.</translation>
     </message>
     <message>
         <source>&apos;%1&apos; does not contain a readable world: %2</source>
-        <translation>&apos;%1&apos; does not contain a readable world: %2</translation>
+        <translation>&apos;%1&apos; não contém um mundo legível: %2</translation>
     </message>
     <message>
         <source>&apos;%1&apos; is missing the units it should contain</source>
-        <translation>&apos;%1&apos; is missing the units it should contain</translation>
+        <translation>&apos;%1&apos; não tem as unidades que deveria conter</translation>
     </message>
 </context>
 <context>
@@ -13096,7 +13095,7 @@ Clique com o botão direito para cancelar.</translation>
     </message>
     <message>
         <source>Wood pays for nearly everything. Select a builder, press Collect and click a pine tree. The builder fells it, carries the logs to the stone yard beside your barracks, and only when the load is dropped there does the wood counter in the top bar rise. Auto Gather keeps a builder working the nearest nodes on its own.</source>
-        <translation>A madeira paga quase tudo. Selecione um construtor, pressione Coletar e clique em um pinheiro. O construtor o derruba, leva as toras ao pátio de pedra ao lado do seu quartel, e só quando a carga é deixada ali o contador de madeira na barra superior sobe. Coleta automática mantém um construtor trabalhando sozinho nos nós mais próximos.</translation>
+        <translation>A madeira paga quase tudo. Selecione um construtor, pressione Coletar e clique em um pinheiro. O construtor o derruba, leva as toras ao pátio de pedra ao lado do seu quartel, e só quando a carga é deixada ali o contador de madeira na barra superior sobe. Coleta automática mantém um construtor trabalhando sozinho nos recursos mais próximos.</translation>
     </message>
     <message>
         <source>Boulders yield stone for buildings and towers; ore seams yield iron for blades and armour. Both are hauled to the same barracks yard, which fills up as your stores grow. Gold comes with the camp and from trade at a marketplace. Set one builder on the boulders and another on the ore.</source>
@@ -13116,7 +13115,7 @@ Clique com o botão direito para cancelar.</translation>
     </message>
     <message>
         <source>A Roman raid is coming. The wave tracker counts it down and the minimap marks its entry point. Form up near your barracks: spearmen in front, archers behind, and the commander close so his aura reaches them. Break the raid to continue.</source>
-        <translation>Um ataque romano se aproxima. O contador de ondas faz a contagem regressiva e o minimapa marca o ponto de entrada. Forme perto do seu quartel: lanceiros na frente, arqueiros atrás e o comandante perto para que a aura dele os alcance. Repila o ataque para continuar.</translation>
+        <translation>Um ataque romano se aproxima. O contador de ondas faz a contagem regressiva e o minimapa marca o ponto de entrada. Entre em formação perto do seu quartel: lanceiros na frente, arqueiros atrás e o comandante perto para que a aura dele os alcance. Repila o ataque para continuar.</translation>
     </message>
     <message>
         <source>Move the view with the arrow keys or WASD, or push the mouse to the screen edge. Scroll to zoom, Q and E rotate, Ctrl with the up and down arrows tilts, and Home returns to your camp. Follow keeps the camera on your selection. Move the camera now.</source>
@@ -13302,7 +13301,7 @@ Clique com o botão direito para cancelar.</translation>
     </message>
     <message>
         <source>The risen guardians are put down. Hold the shrine to purify it.</source>
-        <translation>Os guardiões erguidos foram abatidos. Mantém o santuário para o purificar.</translation>
+        <translation>Os guardiões erguidos foram abatidos. Mantenha o santuário para purificá-lo.</translation>
     </message>
     <message>
         <source>The ground is moving under the dead. More are coming up.</source>
@@ -13313,7 +13312,7 @@ Clique com o botão direito para cancelar.</translation>
     <name>UnitInspectPanel</name>
     <message>
         <source>Attack</source>
-        <translation>Ataque</translation>
+        <translation>Atacar</translation>
     </message>
     <message>
         <source>Build</source>
@@ -13325,7 +13324,7 @@ Clique com o botão direito para cancelar.</translation>
     </message>
     <message>
         <source>Collect</source>
-        <translation>Recolher</translation>
+        <translation>Coletar</translation>
     </message>
     <message>
         <source>Damage per second</source>
@@ -13406,8 +13405,8 @@ Clique com o botão direito para cancelar.</translation>
     <message numerus="yes">
         <source>Fields %n soldier(s) in one squad.</source>
         <translation>
-            <numerusform>Coloca %n soldado numa esquadra.</numerusform>
-            <numerusform>Coloca %n soldados numa esquadra.</numerusform>
+            <numerusform>Coloca %n soldado num esquadrão.</numerusform>
+            <numerusform>Coloca %n soldados num esquadrão.</numerusform>
         </translation>
     </message>
 </context>
@@ -13619,7 +13618,7 @@ Clique com o botão direito para cancelar.</translation>
     </message>
     <message>
         <source>Carries more health than any squad on the field, and its reach breaks a line that stands to receive it.</source>
-        <translation>Carrega mais vida do que qualquer esquadra no campo, e o seu alcance rompe a linha que o aguarda.</translation>
+        <translation>Carrega mais vida do que qualquer esquadrão no campo, e o seu alcance rompe a linha que o aguarda.</translation>
     </message>
     <message>
         <source>Carthage bought its archers from Libya and the islands, paying in silver what Rome demanded of its citizens.</source>
@@ -13631,7 +13630,7 @@ Clique com o botão direito para cancelar.</translation>
     </message>
     <message>
         <source>Carthage took its elephants from the forests south of the Atlas, smaller than the Indian beasts but the terror of Italy.</source>
-        <translation>Cartago tirava os seus elefantes das florestas a sul do Atlas: menores que as feras indianas, mas o terror da Itália.</translation>
+        <translation>Cartago tirava os seus elefantes das florestas ao sul do Atlas: menores que as feras indianas, mas o terror da Itália.</translation>
     </message>
     <message>
         <source>Carthaginian engineers learned artillery from the Greek cities of Sicily, and then improved on it.</source>
@@ -13651,7 +13650,7 @@ Clique com o botão direito para cancelar.</translation>
     </message>
     <message>
         <source>Close-order swordsmen were the expensive core of a Mediterranean army, drilled to hold a line rather than to duel.</source>
-        <translation>Os espadachins em ordem cerrada eram o núcleo caro de um exército mediterrânico, treinados para sustentar uma linha, não para duelar.</translation>
+        <translation>Os espadachins em ordem cerrada eram o núcleo caro de um exército mediterrâneo, treinados para sustentar uma linha, não para duelar.</translation>
     </message>
     <message>
         <source>Command</source>
@@ -13719,11 +13718,11 @@ Clique com o botão direito para cancelar.</translation>
     </message>
     <message>
         <source>Gathers and delivers the resources every other unit is paid for with.</source>
-        <translation>Recolhe e entrega os recursos com que se paga todas as outras unidades.</translation>
+        <translation>Recolhe e entrega os recursos com que se pagam todas as outras unidades.</translation>
     </message>
     <message>
         <source>Has no melee worth the name, and spears punish it the moment it is caught.</source>
-        <translation>Não tem corpo a corpo digno do nome, e as lanças castigam-no assim que o apanham.</translation>
+        <translation>Não tem corpo a corpo digno do nome, e as lanças castigam-no assim que o pegam.</translation>
     </message>
     <message>
         <source>Heavy infantry</source>
@@ -13735,7 +13734,7 @@ Clique com o botão direito para cancelar.</translation>
     </message>
     <message>
         <source>Horse archers came from the steppe and the desert margins, and Mediterranean armies hired them rather than raised them.</source>
-        <translation>Os arqueiros a cavalo vinham da estepe e das margens do deserto; os exércitos mediterrânicos contratavam-nos em vez de os recrutar.</translation>
+        <translation>Os arqueiros a cavalo vinham da estepe e das margens do deserto; os exércitos mediterrâneos contratavam-nos em vez de os recrutar.</translation>
     </message>
     <message>
         <source>Hurls fire that bursts across a formation and clings to the ground where it lands.</source>
@@ -13763,7 +13762,7 @@ Clique com o botão direito para cancelar.</translation>
     </message>
     <message>
         <source>Loses the straight infantry fight to swords, and caught in the open it is only a slower line.</source>
-        <translation>Perde o combate direto de infantaria para as espadas, e apanhada em campo aberto é apenas uma linha mais lenta.</translation>
+        <translation>Perde o combate direto de infantaria para as espadas, e pega em campo aberto é apenas uma linha mais lenta.</translation>
     </message>
     <message>
         <source>Massed missile line</source>
@@ -13867,7 +13866,7 @@ Clique com o botão direito para cancelar.</translation>
     </message>
     <message>
         <source>Still cavalry. A braced spear line stops it, and it cannot trade with archers at range.</source>
-        <translation>Continua a ser cavalaria. Uma linha de lanças firmada detém-na, e não pode trocar tiros com arqueiros à distância.</translation>
+        <translation>Continua sendo cavalaria. Uma linha de lanças firmada detém-na, e não pode trocar tiros com arqueiros à distância.</translation>
     </message>
     <message>
         <source>Support</source>
@@ -13923,7 +13922,7 @@ Clique com o botão direito para cancelar.</translation>
     </message>
     <message>
         <source>The onager kicked like the wild ass it was named for, and was Rome&apos;s answer to a wall that would not fall.</source>
-        <translation>O ónagro coiceava como o asno selvagem que lhe deu nome, e era a resposta de Roma a um muro que não caía.</translation>
+        <translation>O ônagro coiceava como o asno selvagem que lhe deu nome, e era a resposta de Roma a um muro que não caía.</translation>
     </message>
     <message>
         <source>The priests who sealed the tombs learned to open them, and now walk ahead of what they woke.</source>
@@ -14035,7 +14034,7 @@ Clique com o botão direito para cancelar.</translation>
     </message>
     <message>
         <source>Gauls of the Po valley joined Hannibal once he was over the Alps. At Cannae they held the centre of the crescent and fell back on purpose, drawing the legions in.</source>
-        <translation>Gauleses do vale do Pó juntaram-se a Aníbal assim que ele cruzou os Alpes. Em Canas, mantiveram o centro do crescente e recuaram de propósito, atraindo as legiões.</translation>
+        <translation>Gauleses do vale do Pó juntaram-se a Aníbal assim que ele cruzou os Alpes. Em Canas, mantiveram o centro da meia-lua e recuaram de propósito, atraindo as legiões.</translation>
     </message>
     <message>
         <source>Iberian Cavalry</source>
@@ -14051,7 +14050,7 @@ Clique com o botão direito para cancelar.</translation>
     </message>
     <message>
         <source>The Barcids raised their best foot in Spain. Iberian swordsmen wore white tunics edged in crimson and fought with the curved falcata.</source>
-        <translation>Os Barcidas recrutaram sua melhor infantaria na Hispânia. Os espadachins iberos vestiam túnicas brancas com barra carmesim e lutavam com a falcata curva.</translation>
+        <translation>Os Bárcidas recrutaram sua melhor infantaria na Hispânia. Os espadachins iberos vestiam túnicas brancas com barra carmesim e lutavam com a falcata curva.</translation>
     </message>
     <message>
         <source>Balearic Slinger</source>

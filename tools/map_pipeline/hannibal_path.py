@@ -483,18 +483,6 @@ def simulate_cpp_rendering(lines: List[List[List[float]]]) -> bool:
     return all_valid
 
 
-# The historical march, for the campaign map film (docs/CAMPAIGN_MAP_FILM.md).
-#
-# The eight mission lines above are the game's campaign route and are left
-# exactly as they are. The march is a separate, named route that follows
-# Polybius (III.33-118) and Livy (XXI-XXII, XXX): it starts at Carthago Nova,
-# not Carthage, crosses the Alps instead of cutting from Massalia to
-# Mediolanum, and runs on to Cannae, Capua, Croton and Zama. Every stop is a
-# named place with real coordinates, so the film can reveal the line stop by
-# stop, pin markers to battle sites and anchor army figures to the head.
-#
-# kind: city | battle | crossing | pass | waypoint. Waypoints shape the line
-# and carry no label. leg: the kind of ground between this stop and the next.
 MARCH_STOPS: List[dict] = [
     {
         "id": "carthago_nova",

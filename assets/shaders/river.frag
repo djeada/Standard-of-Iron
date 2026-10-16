@@ -15,7 +15,6 @@ uniform vec3 u_soil_color;
 uniform float u_moisture_level;
 uniform float u_snow_coverage;
 
-// Fordable stretches: a = (centre.xz, along.xz), b = (half length, half width).
 uniform vec4 u_ford_a[2];
 uniform vec4 u_ford_b[2];
 uniform int u_ford_count;
@@ -120,7 +119,6 @@ vec3 procedural_sky(vec3 direction, vec3 sun_dir) {
          environment_primary_color() * environment_primary_intensity() * halo * 0.12;
 }
 
-// x: how much of a ford this point lies in (0..1); yz: the river's flow axis.
 vec3 ford_amount(vec2 point) {
   vec3 result = vec3(0.0, 1.0, 0.0);
   for (int index = 0; index < 2; ++index) {
@@ -187,7 +185,6 @@ void main() {
   bed_visibility *= 0.80 + 0.20 * fbm(world_pos.xz * 0.21 + vec2(-13.0, 5.0));
   body_color = mix(body_color, shallow_bed, bed_visibility * k_shallow_bed_amount);
 
-  // A ford: shallow water over a gravel bar, the bed showing through.
   vec3 ford = ford_amount(world_pos.xz);
   float ford_mix = ford.x;
   vec2 flow_axis = ford.yz;
@@ -227,8 +224,7 @@ void main() {
       smoothstep(0.55, 0.86, fbm(world_pos.xz * 1.15 - vec2(time * 0.18, time * 0.08)));
   float riffle = 0.0;
   if (ford_mix > 0.0) {
-    // Standing ripples where the current breaks over the bar: bands across
-    // the flow, drifting downstream.
+
     vec2 flow_uv = vec2(dot(world_pos.xz, flow_axis), dot(world_pos.xz, flow_cross));
     float bands = fbm(vec2(flow_uv.x * 1.25 - time * 0.85, flow_uv.y * 0.32));
     float sparkle = fbm(world_pos.xz * 2.4 + vec2(time * 0.35, -time * 0.21));

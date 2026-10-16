@@ -29,12 +29,7 @@ def load(name: str, relative: str):
 
 overlay = load("tactical_overlay", "scripts/tactical_overlay.py")
 
-try:
-    import PIL  # noqa: F401
-
-    HAVE_PIL = True
-except ImportError:  # CI's bare interpreter has no Pillow
-    HAVE_PIL = False
+HAVE_PIL = importlib.util.find_spec("PIL") is not None
 
 
 def synthetic_frame(
@@ -81,8 +76,7 @@ class ProjectionTest(unittest.TestCase):
         self.assertEqual(overlay.column_major(flat), matrix)
 
     def test_known_points_land_on_known_pixels(self):
-        # A 90-degree square lens at the origin looking down -z: the frustum's
-        # edges are the 45-degree diagonals, so these pixels are exact.
+
         frame = synthetic_frame((0, 0, 0), (0, 0, -1), fov=90.0, aspect=1.0, near=0.1)
         camera = overlay.Camera.from_frame(frame, 1000, 1000)
         cases = {
@@ -164,9 +158,7 @@ class RealCaptureTest(unittest.TestCase):
                 self.assertAlmostEqual(component, 0.0, delta=1e-2)
 
     def test_the_authored_focus_point_lands_on_the_frame_centre(self):
-        # The fixture's spec aims an orbit camera at the world point (-4, 0, 0):
-        # that point, authored in the spec and never touched by the exporter,
-        # must come out of the real matrices at the centre pixel.
+
         for index in range(len(self.track.frames)):
             camera = self.track.camera(index)
             x, y = camera.project((-4.0, 0.0, 0.0))
@@ -197,7 +189,7 @@ class ArrowGeometryTest(unittest.TestCase):
         self.assertIsNone(overlay.arrow_shape(path, 0.0, 3.0, 6.0, 8.0))
 
     def test_left_is_left_seen_from_above(self):
-        # Facing +x, the game's right hand is +z (right = forward x up).
+
         self.assertEqual(overlay.left_of((1.0, 0.0)), (0.0, -1.0))
         shape = overlay.arrow_shape(
             [(0.0, 0.0), (20.0, 0.0)], 1.0, 4.0, 4.0, 6.0, taper=1.0
@@ -365,7 +357,7 @@ class StyleTest(unittest.TestCase):
             )
 
     def test_series_tokens_are_translated(self):
-        # The shape ``python3 scripts/documentary style --json`` writes (#1534).
+
         tokens = {
             "fonts": {
                 "display": "assets/fonts/StandardIronDisplay-Bold.ttf",

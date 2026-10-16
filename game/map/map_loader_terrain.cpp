@@ -360,8 +360,7 @@ void read_fords(const QJsonArray& arr,
     const bool drawn_across = start.isArray() && end.isArray() &&
                               start.toArray().size() >= 2 && end.toArray().size() >= 2;
     if (drawn_across) {
-      // Drawn like a bridge, bank to bank: the ford sits where the line
-      // meets the river and its width is how far it runs along the river.
+
       const QJsonArray from = start.toArray();
       const QJsonArray to = end.toArray();
       raw_x = float((from.at(0).toDouble(0.0) + to.at(0).toDouble(0.0)) * 0.5);

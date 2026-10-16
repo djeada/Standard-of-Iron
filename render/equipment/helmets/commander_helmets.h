@@ -20,7 +20,6 @@ enum class CommanderHelmetStyle : std::uint8_t {
   Hasdrubal,
   Hannibal,
 
-  // Historical cameo commanders (issue #1522); not playable.
   Sempronius,
   Flaminius,
   Varro,

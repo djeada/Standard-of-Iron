@@ -294,7 +294,7 @@ protected:
         return;
       }
       auto const& state = live->manoeuvre;
-      // The furthest forward each centre troop got while the centre was pressed.
+
       if (state.yielding) {
         for (auto const id : centre) {
           if (!alive(id)) {
@@ -307,7 +307,7 @@ protected:
           }
         }
       }
-      // How far the centre has given ground by the time the wings wheel.
+
       if (state.wheel_ordered && result.centre_counted == 0) {
         float retreat = 0.0F;
         for (auto const& [id, furthest] : forward_at_contact) {
@@ -324,8 +324,7 @@ protected:
       result.saw_yielding = result.saw_yielding || state.yielding;
       result.centre_yield = std::max(result.centre_yield, state.centre_yield);
       result.wing_wheel = std::max(result.wing_wheel, state.wing_wheel);
-      // While the centre has given less than half its ground the fight is all
-      // at the centre; the wings must stand.
+
       if (state.centre_yield < 0.5F) {
         for (auto const id : wings) {
           if (alive(id)) {
@@ -355,12 +354,12 @@ TEST_F(BattleOrderBehaviourTest, CrescentCentreGivesGroundWhileTheWingsHold) {
   auto const result = run_crescent(80.0);
   EXPECT_TRUE(result.saw_yielding);
   EXPECT_GT(result.centre_yield, 0.7F);
-  // The pressed centre stepped back toward its own lines...
+
   EXPECT_GT(result.centre_retreat, 3.0F)
       << result.centre_counted << " centre troops measured";
-  // ...while the wings stood...
+
   EXPECT_LT(result.wing_drift_while_holding, 1.5F);
-  // ...until, given ground enough, they wheeled in.
+
   EXPECT_GT(result.wing_wheel, 0.5F);
 }
 
@@ -380,7 +379,7 @@ TEST_F(BattleOrderBehaviourTest, CrescentFightIsDeterministicTakeToTake) {
 
 TEST_F(BattleOrderBehaviourTest, ElephantsRunTheOpenLanesOfATriplexAcies) {
   open();
-  // The legion faces south (toward -z); the elephant comes from the south.
+
   auto const legion =
       row(SpawnType::Swordsman, k_rome, 9, QVector3D(0.0F, 0.0F, 30.0F), 8.0F, 180.0F);
   deploy(legion,
@@ -438,7 +437,7 @@ TEST_F(BattleOrderBehaviourTest, ElephantsRunTheOpenLanesOfATriplexAcies) {
   EXPECT_TRUE(ran_a_lane);
   EXPECT_TRUE(ran_through) << "elephant ended at z=" << position_of(elephant).z()
                            << " rear line at z=" << rear_z;
-  // The lanes absorbed the charge: the maniples lost little.
+
   EXPECT_GT(health_of(legion), legion_health * 9 / 10);
 }
 

@@ -164,7 +164,6 @@ auto validate_scenario(const ArenaScenarioDefinition& definition)
     }
   }
 
-  // On a campaign map the rivers come from the map file.
   for (std::size_t i = 0; i < definition.fords.size(); ++i) {
     if (definition.rivers.empty() && definition.campaign_map_path.isEmpty()) {
       errors.push_back({QStringLiteral("fords[%1]").arg(i),

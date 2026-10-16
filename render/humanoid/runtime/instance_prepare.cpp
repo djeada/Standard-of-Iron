@@ -104,8 +104,6 @@ constexpr float k_soldier_cull_keep_band = 5.0F;
 constexpr std::uint32_t k_soldier_visibility_memory_frames = 12U;
 constexpr std::uint32_t k_selection_refresh_period = 8U;
 
-// Water depth (world units) at which a soldier starts lifting his arms, and the
-// extra depth over which the wading pose blends fully in.
 constexpr float k_wade_pose_start_depth = 0.12F;
 constexpr float k_wade_pose_full_span = 0.20F;
 

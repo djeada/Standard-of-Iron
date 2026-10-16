@@ -37,9 +37,6 @@ struct SpawnParams {
 
   bool enables_production = true;
 
-  // Optional historical cameo commander id (see historical_commander_catalog).
-  // The factory swaps the spawn type for the cameo's commander body and gives
-  // the spawned commander that cameo's identity and look.
   std::string commander_id;
 };
 
