@@ -20,8 +20,10 @@ FocusScope {
     readonly property int preferred_columns: root.compact ? 2 : root.entries.length
     readonly property int preferred_card_width: root.compact ? root.compact_card_minimum_width : root.standard_card_width
     readonly property int preferred_width: root.preferred_columns * root.preferred_card_width + root.card_spacing * (root.preferred_columns - 1)
-    readonly property int card_width: root.compact ? Math.max(root.compact_card_minimum_width, Math.floor((column.width - root.card_spacing) / 2)) : root.standard_card_width
-    readonly property int card_height: root.compact ? 46 : 158
+    readonly property int single_row_card_minimum_width: 230
+    readonly property bool compact_single_row: root.compact && column.width >= root.entries.length * root.single_row_card_minimum_width + root.card_spacing * (root.entries.length - 1)
+    readonly property int card_width: root.compact_single_row ? Math.floor((column.width - root.card_spacing * (root.entries.length - 1)) / root.entries.length) : (root.compact ? Math.max(root.compact_card_minimum_width, Math.floor((column.width - root.card_spacing) / 2)) : root.standard_card_width)
+    readonly property int card_height: root.compact ? (root.compact_single_row ? 58 : 46) : 158
 
     function index_of(difficultyId) {
         for (let i = 0; i < root.entries.length; i++) {
@@ -192,6 +194,8 @@ FocusScope {
                                 text: card.summary_text
                                 color: Design.Theme.textSecondary
                                 font.pixelSize: Design.Typography.caption
+                                wrapMode: Text.WordWrap
+                                maximumLineCount: root.compact_single_row ? 2 : 1
                                 elide: Text.ElideRight
                             }
                         }

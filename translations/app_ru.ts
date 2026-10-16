@@ -370,6 +370,10 @@
         <source>Play again</source>
         <translation>Сыграть снова</translation>
     </message>
+    <message>
+        <source>Held the field: %1</source>
+        <translation>Удержали поле: %1</translation>
+    </message>
 </context>
 <context>
     <name>BriefingLayout</name>
@@ -10982,6 +10986,14 @@ Build time: %3s</source>
     <message>
         <source>Select a barracks to recruit units</source>
         <translation>Выделите казармы, чтобы нанимать отряды</translation>
+    </message>
+    <message>
+        <source>Barracks</source>
+        <translation>Казармы</translation>
+    </message>
+    <message>
+        <source>Go to Barracks</source>
+        <translation>К казармам</translation>
     </message>
 </context>
 <context>

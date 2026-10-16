@@ -324,6 +324,36 @@ TEST_F(ArmyCommandTest, ATroopOrderedAwayLeavesItsFormation) {
       << "the formation pulled back a troop the player had sent away";
 }
 
+TEST_F(ArmyCommandTest, AnArmySentOffByTheMinimapIsNotPulledBackToItsOldSlots) {
+  auto const army = deploy_line(6);
+  ASSERT_NE(group_of(army[0]), nullptr);
+
+  Game::Command::Move move;
+  move.units = army;
+  for (std::size_t i = 0; i < army.size(); ++i) {
+    move.targets.emplace_back(40.0F + static_cast<float>(i) * 3.0F, 0.0F, 40.0F);
+  }
+  move.kind = Game::Systems::MoveOrderKind::FormationMove;
+  Game::Command::submit(
+      m_session->world(), Game::Command::Source::LocalPlayer, k_player, move);
+  run(40.0);
+
+  for (auto const id : army) {
+    EXPECT_EQ(group_of(id), nullptr)
+        << "a troop moved by a plain ground order kept its old formation slot";
+  }
+  std::vector<QVector3D> arrived;
+  arrived.reserve(army.size());
+  for (auto const id : army) {
+    arrived.push_back(position(id));
+  }
+  run(20.0);
+  for (std::size_t i = 0; i < army.size(); ++i) {
+    EXPECT_LT((position(army[i]) - arrived[i]).length(), 1.0F)
+        << "a troop walked back towards the formation it was ordered away from";
+  }
+}
+
 TEST_F(ArmyCommandTest, AFormationClosesRanksAfterACasualty) {
   auto const army = deploy_line(6);
   auto const* formation = group_of(army[1]);

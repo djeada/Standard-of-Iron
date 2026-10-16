@@ -51,6 +51,7 @@ Item {
     }
 
     readonly property bool missionStaged: game_ready() && game.mission && game.mission.staged
+    readonly property bool objectiveShownInline: objectiveRow.visible
     readonly property bool objectivesAvailable: game_ready() && !game.is_spectator_mode && (topRoot.missionStaged || (!!game.setup && game.setup.is_mission_match === true))
 
     readonly property string primaryObjectiveText: {

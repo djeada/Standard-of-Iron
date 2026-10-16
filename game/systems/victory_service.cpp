@@ -13,6 +13,7 @@
 #include "game/core/ownership_constants.h"
 #include "game/core/world.h"
 #include "game/map/map_definition.h"
+#include "game/systems/cursed_gold_vein_system.h"
 #include "game/systems/global_stats_registry.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
@@ -435,6 +436,8 @@ auto VictoryService::summarize_world(Engine::Core::World& world) const -> WorldS
       (local_nation != nullptr) ? local_nation->id
                                 : nation_registry.default_nation_id();
 
+  const auto* veins = world.get_system<CursedGoldVeinSystem>();
+
   for (auto [entity_id, unit_ref] : world.view<Engine::Core::UnitComponent>()) {
     const auto* unit = &unit_ref;
     if (unit->health <= 0) {
@@ -471,6 +474,9 @@ auto VictoryService::summarize_world(Engine::Core::World& world) const -> WorldS
     bool const tracked_enemy =
         track_enemy_structures && m_tracked_enemy_spawn_types[spawn_index];
     if (!tracked_local && !tracked_enemy) {
+      continue;
+    }
+    if (veins != nullptr && veins->is_anchor(entity_id)) {
       continue;
     }
     QString const unit_type = Game::Units::spawn_typeToQString(unit->spawn_type);

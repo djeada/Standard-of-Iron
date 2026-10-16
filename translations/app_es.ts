@@ -370,6 +370,10 @@
         <source>Play again</source>
         <translation>Jugar de nuevo</translation>
     </message>
+    <message>
+        <source>Held the field: %1</source>
+        <translation>Mantuvieron el campo: %1</translation>
+    </message>
 </context>
 <context>
     <name>BriefingLayout</name>
@@ -10979,6 +10983,14 @@ Tiempo de construcción: %3 s</translation>
     <message>
         <source>Select a barracks to recruit units</source>
         <translation>Selecciona un cuartel para reclutar unidades</translation>
+    </message>
+    <message>
+        <source>Barracks</source>
+        <translation>Cuarteles</translation>
+    </message>
+    <message>
+        <source>Go to Barracks</source>
+        <translation>Ir a los cuarteles</translation>
     </message>
 </context>
 <context>

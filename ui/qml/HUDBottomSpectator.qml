@@ -139,14 +139,18 @@ Item {
                 }
             }
 
-            ListView {
+            GridView {
                 id: board_view
+
+                readonly property int columns: spectatorRoot.board.length > 2 ? 2 : 1
+                readonly property bool compact: board_view.columns > 1
 
                 objectName: "spectatorBoard"
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 clip: true
-                spacing: Design.Metrics.space4
+                cellWidth: Math.floor(board_view.width / board_view.columns)
+                cellHeight: Design.A11y.scaled(34) + Design.Metrics.space4
                 model: spectatorRoot.board
                 boundsBehavior: Flickable.StopAtBounds
 
@@ -160,7 +164,8 @@ Item {
                     property var army: modelData
                     readonly property bool followed: army.ownerId === spectatorRoot.followed_owner_id()
 
-                    width: board_view.width
+                    width: board_view.cellWidth - (board_view.compact ? Design.Metrics.space4 : 0)
+                    opacity: army.manpower === 0 && army.holdings === 0 ? 0.45 : 1
                     height: Design.A11y.scaled(34)
                     radius: Design.Metrics.radiusSmall
                     color: followed ? Design.Theme.backgroundRaised : "transparent"
@@ -176,7 +181,7 @@ Item {
                         anchors.fill: parent
                         anchors.leftMargin: Design.Metrics.space8
                         anchors.rightMargin: Design.Metrics.space8
-                        spacing: Design.Metrics.space12
+                        spacing: board_view.compact ? Design.Metrics.space8 : Design.Metrics.space12
 
                         Rectangle {
                             Layout.preferredWidth: Design.Metrics.space8
@@ -186,7 +191,7 @@ Item {
                         }
 
                         Text {
-                            Layout.preferredWidth: Design.A11y.scaled(150)
+                            Layout.preferredWidth: Design.A11y.scaled(board_view.compact ? 130 : 150)
                             text: army.name
                             elide: Text.ElideRight
                             color: Design.Theme.textPrimary
@@ -195,6 +200,7 @@ Item {
 
                         Text {
                             Layout.preferredWidth: Design.A11y.scaled(130)
+                            visible: !board_view.compact
                             text: army.factionName
                             elide: Text.ElideRight
                             color: Design.Theme.textDisabled
@@ -218,6 +224,7 @@ Item {
 
                         Text {
                             Layout.preferredWidth: Design.A11y.scaled(110)
+                            visible: !board_view.compact
                             text: qsTr("Trained %1").arg(army.trained)
                             color: Design.Theme.textSecondary
                             font.pixelSize: Design.Typography.caption
@@ -226,6 +233,7 @@ Item {
                         Text {
                             Layout.fillWidth: true
                             text: qsTr("Kills %1  Losses %2").arg(army.kills).arg(army.losses)
+                            elide: Text.ElideRight
                             color: Design.Theme.textSecondary
                             font.pixelSize: Design.Typography.caption
                         }
