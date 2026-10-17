@@ -1,0 +1,123 @@
+{
+  "generator": "Built-in image_gen",
+  "purpose": "Dedicated artwork replacing borrowed unit icons and filling painted HUD action gaps.",
+  "assets": [
+    {
+      "path": "assets/visuals/icons/slinger_rome.png",
+      "reference": "assets/visuals/icons/archer_rome.png",
+      "size": [
+        105,
+        105
+      ],
+      "prompt": "Create ONE square production game icon for Standard of Iron, an ancient-world RTS. The supplied image is STYLE REFERENCE ONLY, not an edit target. Match its warm ochre parchment background, thin dark brown square border, ink outlines, hand-painted sepia shading, antique illustrated game manual aesthetic, compact centered composition and readable silhouette. Flat full-bleed square tile with border very close to the edges, no surrounding page or margin. Must remain legible when downsampled to 105x105 pixels. No text, letters, numbers, watermarks or UI. Preserve generous breathing room around the subject inside the border. Create a new subject as follows: Roman auxiliary slinger, full body in a dynamic throwing stance, right hand swinging a clearly visible leather sling with two cords and stone pouch above his head, left hand holding spare sling stones near his waist. Simple short red tunic, brown belt, sandals, small stone bag. No bow, no arrows, no long spear. Main silhouette is the raised sling and unarmoured human."
+    },
+    {
+      "path": "assets/visuals/icons/slinger_cartaghe.png",
+      "reference": "assets/visuals/icons/archer_cartaghe.png",
+      "size": [
+        105,
+        105
+      ],
+      "prompt": "Create ONE square production game icon for Standard of Iron, an ancient-world RTS. The supplied image is STYLE REFERENCE ONLY, not an edit target. Match its warm ochre parchment background, thin dark brown square border, ink outlines, hand-painted sepia shading, antique illustrated game manual aesthetic, compact centered composition and readable silhouette. Flat full-bleed square tile with border very close to the edges, no surrounding page or margin. Must remain legible when downsampled to 105x105 pixels. No text, letters, numbers, watermarks or UI. Preserve generous breathing room around the subject inside the border. Create a new subject as follows: Balearic slinger serving Carthage, full body in a dynamic throwing stance, right hand swinging a clearly visible leather sling with two cords and stone pouch above his head. Sand-colored short tunic with purple sash, brown headband, sandals, pouch of stones, spare sling at waist. No bow, arrows, or long spear."
+    },
+    {
+      "path": "assets/visuals/icons/velites_rome.png",
+      "reference": "assets/visuals/icons/archer_rome.png",
+      "size": [
+        105,
+        105
+      ],
+      "prompt": "Create ONE square production game icon for Standard of Iron, an ancient-world RTS. The supplied image is STYLE REFERENCE ONLY, not an edit target. Match its warm ochre parchment background, thin dark brown square border, ink outlines, hand-painted sepia shading, antique illustrated game manual aesthetic, compact centered composition and readable silhouette. Flat full-bleed square tile with border very close to the edges, no surrounding page or margin. Must remain legible when downsampled to 105x105 pixels. No text, letters, numbers, watermarks or UI. Preserve generous breathing room around the subject inside the border. Create a new subject as follows: Roman veles light javelin skirmisher, full body, wearing a distinctive wolf-pelt hood over a simple bronze helmet, short muted red tunic, sandals. Holds a short throwing javelin raised in his right hand and a small round parma shield in his left, with two spare light javelins. The wolf hood and round shield distinguish him from a heavy spearman. No bow, rectangular shield, or heavy armour."
+    },
+    {
+      "path": "assets/visuals/icons/velites_cartaghe.png",
+      "reference": "assets/visuals/icons/archer_cartaghe.png",
+      "size": [
+        105,
+        105
+      ],
+      "prompt": "Create ONE square production game icon for Standard of Iron, an ancient-world RTS. The supplied image is STYLE REFERENCE ONLY, not an edit target. Match its warm ochre parchment background, thin dark brown square border, ink outlines, hand-painted sepia shading, antique illustrated game manual aesthetic, compact centered composition and readable silhouette. Flat full-bleed square tile with border very close to the edges, no surrounding page or margin. Must remain legible when downsampled to 105x105 pixels. No text, letters, numbers, watermarks or UI. Preserve generous breathing room around the subject inside the border. Create a new subject as follows: Punic allied light javelin skirmisher in a short sand-colored tunic with purple sash and animal-pelt hood. Full body, raised short throwing javelin in right hand, small round leather shield in left, two spare light javelins. Light unarmoured agile silhouette. No bow or heavy armour."
+    },
+    {
+      "path": "assets/visuals/icons/civilian_rome.png",
+      "reference": "assets/visuals/icons/builder_rome.png",
+      "size": [
+        105,
+        105
+      ],
+      "prompt": "Create ONE square production game icon for Standard of Iron, an ancient-world RTS. The supplied image is STYLE REFERENCE ONLY, not an edit target. Match its warm ochre parchment background, thin dark brown square border, ink outlines, hand-painted sepia shading, antique illustrated game manual aesthetic, compact centered composition and readable silhouette. Flat full-bleed square tile with border very close to the edges, no surrounding page or margin. Must remain legible when downsampled to 105x105 pixels. No text, letters, numbers, watermarks or UI. Preserve generous breathing room around the subject inside the border. Create a new subject as follows: Unarmed Roman civilian citizen, waist-up portrait in three-quarter view, simple off-white tunic and muted terracotta-red sash, short dark hair, carrying a wicker basket of grain against one hip. Friendly determined expression, bare head. Distinct from an armoured builder: no helmet, hammer, construction tools, weapons or armour."
+    },
+    {
+      "path": "assets/visuals/icons/civilian_cartaghe.png",
+      "reference": "assets/visuals/icons/archer_cartaghe.png",
+      "size": [
+        105,
+        105
+      ],
+      "prompt": "Create ONE square production game icon for Standard of Iron, an ancient-world RTS. The supplied image is STYLE REFERENCE ONLY, not an edit target. Match its warm ochre parchment background, thin dark brown square border, ink outlines, hand-painted sepia shading, antique illustrated game manual aesthetic, compact centered composition and readable silhouette. Flat full-bleed square tile with border very close to the edges, no surrounding page or margin. Must remain legible when downsampled to 105x105 pixels. No text, letters, numbers, watermarks or UI. Preserve generous breathing room around the subject inside the border. Create a new subject as follows: Unarmed Carthaginian civilian citizen, waist-up three-quarter portrait, warm olive complexion, simple cream linen tunic with muted purple sash and headcloth, carrying a wicker basket of grain against one hip. Friendly determined expression. No helmet, hammer, construction tools, weapons or armour."
+    },
+    {
+      "path": "assets/visuals/icons/ram_rome.png",
+      "reference": "assets/visuals/icons/catapult_rome.png",
+      "size": [
+        105,
+        105
+      ],
+      "prompt": "Create ONE square production game icon for Standard of Iron, an ancient-world RTS. The supplied image is STYLE REFERENCE ONLY, not an edit target. Match its warm ochre parchment background, thin dark brown square border, ink outlines, hand-painted sepia shading, antique illustrated game manual aesthetic, compact centered composition and readable silhouette. Flat full-bleed square tile with border very close to the edges, no surrounding page or margin. Must remain legible when downsampled to 105x105 pixels. No text, letters, numbers, watermarks or UI. Preserve generous breathing room around the subject inside the border. Create a new subject as follows: Roman covered battering ram siege engine, three-quarter isometric view, four chunky wooden wheels beneath a squat timber frame covered with sloped dark leather hide roof. A thick horizontal suspended battering beam with a bronze ram-head end protrudes prominently from the front. Small red cloth detail. Clearly a low wheeled covered ram, no catapult throwing arm, sling or bowl."
+    },
+    {
+      "path": "assets/visuals/icons/ram_cartaghe.png",
+      "reference": "assets/visuals/icons/catapult_cartaghe.png",
+      "size": [
+        105,
+        105
+      ],
+      "prompt": "Create ONE square production game icon for Standard of Iron, an ancient-world RTS. The supplied image is STYLE REFERENCE ONLY, not an edit target. Match its warm ochre parchment background, thin dark brown square border, ink outlines, hand-painted sepia shading, antique illustrated game manual aesthetic, compact centered composition and readable silhouette. Flat full-bleed square tile with border very close to the edges, no surrounding page or margin. Must remain legible when downsampled to 105x105 pixels. No text, letters, numbers, watermarks or UI. Preserve generous breathing room around the subject inside the border. Create a new subject as follows: Carthaginian covered battering ram siege engine, three-quarter isometric view, four chunky wooden wheels, squat reinforced timber frame with a sloping tan hide roof and muted purple cloth detail. A thick horizontal suspended battering beam with a bronze ram-head end protrudes prominently from the front. Clearly a low wheeled covered ram, no catapult throwing arm, sling or bowl."
+    },
+    {
+      "path": "assets/visuals/icons/siege_tower_rome.png",
+      "reference": "assets/visuals/icons/defense_tower_rome.png",
+      "size": [
+        105,
+        105
+      ],
+      "prompt": "Create ONE square production game icon for Standard of Iron, an ancient-world RTS. The supplied image is STYLE REFERENCE ONLY, not an edit target. Match its warm ochre parchment background, thin dark brown square border, ink outlines, hand-painted sepia shading, antique illustrated game manual aesthetic, compact centered composition and readable silhouette. Flat full-bleed square tile with border very close to the edges, no surrounding page or margin. Must remain legible when downsampled to 105x105 pixels. No text, letters, numbers, watermarks or UI. Preserve generous breathing room around the subject inside the border. Create a new subject as follows: Roman mobile wooden siege tower, three-quarter isometric view, tall three-storey timber scaffold tower with sloping hide-covered sides, clearly visible large wooden wheels beneath the base, lowered boarding bridge extending from the top toward the upper right and small muted red flag. Fit entire tower and wheels inside square. It is a wooden wheeled siege machine, no masonry or stationary stone base."
+    },
+    {
+      "path": "assets/visuals/icons/siege_tower_cartaghe.png",
+      "reference": "assets/visuals/icons/catapult_cartaghe.png",
+      "size": [
+        105,
+        105
+      ],
+      "prompt": "Create ONE square production game icon for Standard of Iron, an ancient-world RTS. The supplied image is STYLE REFERENCE ONLY, not an edit target. Match its warm ochre parchment background, thin dark brown square border, ink outlines, hand-painted sepia shading, antique illustrated game manual aesthetic, compact centered composition and readable silhouette. Flat full-bleed square tile with border very close to the edges, no surrounding page or margin. Must remain legible when downsampled to 105x105 pixels. No text, letters, numbers, watermarks or UI. Preserve generous breathing room around the subject inside the border. Create a new subject as follows: Carthaginian mobile wooden siege tower, three-quarter isometric view, tall three-storey timber scaffold tower with sloping sand-colored hide covering, clearly visible large wooden wheels beneath the base, lowered boarding bridge extending from the top toward the upper right and small muted purple flag. Fit entire tower and wheels inside square. It is a wooden wheeled siege machine, no masonry or stationary stone base."
+    },
+    {
+      "path": "assets/visuals/icons/wall_ladder.png",
+      "reference": "assets/visuals/icons/wall_rome.png",
+      "size": [
+        105,
+        105
+      ],
+      "prompt": "Create ONE square production game icon for Standard of Iron, an ancient-world RTS. The supplied image is STYLE REFERENCE ONLY, not an edit target. Match its warm ochre parchment background, thin dark brown square border, ink outlines, hand-painted sepia shading, antique illustrated game manual aesthetic, compact centered composition and readable silhouette. Flat full-bleed square tile with border very close to the edges, no surrounding page or margin. Must remain legible when downsampled to 105x105 pixels. No text, letters, numbers, watermarks or UI. Preserve generous breathing room around the subject inside the border. Create a new subject as follows: A prominent wooden wall-access ladder leaning diagonally from lower left to upper right against a short crenellated ochre stone wall. Ladder has two thick dark timber rails and seven clearly spaced rungs; ladder is the main subject and occupies most of the tile. Small stone wall section only behind the upper ladder. No troops, gates, flags or other buildings."
+    },
+    {
+      "path": "assets/visuals/icons/roll_stones_mode.png",
+      "reference": "assets/visuals/icons/attack_mode.png",
+      "size": [
+        30,
+        30
+      ],
+      "prompt": "Create ONE square production game icon for Standard of Iron, an ancient-world RTS. The supplied image is STYLE REFERENCE ONLY, not an edit target. Match its warm ochre parchment background, thin dark brown square border, ink outlines, hand-painted sepia shading, antique illustrated game manual aesthetic, compact centered composition and readable silhouette. Flat full-bleed square tile with border very close to the edges, no surrounding page or margin. Must remain legible when downsampled to 105x105 pixels. No text, letters, numbers, watermarks or UI. Preserve generous breathing room around the subject inside the border. Create a new subject as follows: ACTION ICON designed to remain readable at 30x30 pixels: three large round angular stone boulders rolling down a simple diagonal ochre slope from upper left to lower right, short clear speed strokes, thin antique bronze border. Very simple high-contrast ochre, brown and stone grey pictogram with bold ink outlines on dark umber background as in the reference. No soldiers or buildings, no text."
+    },
+    {
+      "path": "assets/visuals/icons/cross_raft_mode.png",
+      "reference": "assets/visuals/icons/attack_mode.png",
+      "size": [
+        30,
+        30
+      ],
+      "prompt": "Create ONE square production game icon for Standard of Iron, an ancient-world RTS. The supplied image is STYLE REFERENCE ONLY, not an edit target. Match its warm ochre parchment background, thin dark brown square border, ink outlines, hand-painted sepia shading, antique illustrated game manual aesthetic, compact centered composition and readable silhouette. Flat full-bleed square tile with border very close to the edges, no surrounding page or margin. Must remain legible when downsampled to 105x105 pixels. No text, letters, numbers, watermarks or UI. Preserve generous breathing room around the subject inside the border. Create a new subject as follows: ACTION ICON designed to remain readable at 30x30 pixels: simple small wooden raft made of four lashed parallel logs, floating on two bold pale wave strokes, one short right-pointing bronze arrow above the raft indicating crossing. Thin antique bronze border. Very simple high-contrast ochre and brown pictogram with bold ink outlines on dark umber background as in the reference. No sail, people, buildings or text."
+    }
+  ]
+}

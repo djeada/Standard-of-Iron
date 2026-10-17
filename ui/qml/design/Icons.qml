@@ -70,7 +70,9 @@ QtObject {
             "gate": "gate_mode.png",
             "auto_gather": "auto_gather_mode.png",
             "repair": "repair_mode.png",
-            "dismantle": "dismantle_mode.png"
+            "dismantle": "dismantle_mode.png",
+            "roll_stones": "roll_stones_mode.png",
+            "cross_raft": "cross_raft_mode.png"
         })
 
     readonly property var commandGlyphs: ({
@@ -87,12 +89,14 @@ QtObject {
             "auto_gather": root.autoGather,
             "dismantle": root.dismantle,
             "rally": root.rally,
+            "repair": root.build,
             "deliver": root.deliver,
             "aura": root.aura,
             "gate": root.gate,
             "roll_stones": "\u25D2",
             "cross_raft": "\u2248",
-            "stop": root.stop
+            "stop": root.stop,
+            "run": "\u00BB"
         })
 
     readonly property var resourceArt: ({
@@ -122,8 +126,8 @@ QtObject {
 
     readonly property var unitArtBase: ({
             "archer": "archer",
-            "slinger": "archer",
-            "velites": "spearman",
+            "slinger": "slinger",
+            "velites": "velites",
             "swordsman": "swordsman",
             "spearman": "spearman",
             "horse_archer": "horse_archer",
@@ -131,11 +135,11 @@ QtObject {
             "horse_spearman": "horse_spearman",
             "healer": "healer",
             "builder": "builder",
-            "civilian": "builder",
+            "civilian": "civilian",
             "catapult": "catapult",
             "ballista": "ballista",
-            "ram": "catapult",
-            "siege_tower": "catapult",
+            "ram": "ram",
+            "siege_tower": "siege_tower",
             "barracks": "barracks",
             "defense_tower": "defense_tower",
             "home": "house",
@@ -161,7 +165,7 @@ QtObject {
             "skeleton_archer": "skeleton_archer.png",
             "grave_priest": "grave_priest.png",
             "sheep": "sheep.png",
-            "wall_ladder": "wall.png",
+            "wall_ladder": "wall_ladder.png",
             "wolf": "wolf.png"
         })
 
