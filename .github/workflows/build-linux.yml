@@ -36,7 +36,9 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-22.04
-    timeout-minutes: 90
+    # Cold GCC/LTO links with full debug info exceed the ordinary package budget:
+    # v0.3.0 spent 33 minutes linking the baker, then timed out linking the game.
+    timeout-minutes: ${{ inputs.debug-symbols && 150 || 90 }}
     outputs:
       package: ${{ steps.package.outputs.name }}
     env:
