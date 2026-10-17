@@ -107,28 +107,29 @@ Rectangle {
             Layout.fillWidth: true
             spacing: Theme.spacingTiny
 
-            RowLayout {
+            Label {
+                objectName: "missionListTitle"
+                text: mission_glyph_prefix + root.mission_title
+                color: Theme.textMain
+                font.pixelSize: Design.Typography.bodyLarge
+                font.bold: true
+                font.family: "serif"
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+                maximumLineCount: 2
+                elide: Text.ElideRight
+            }
+
+            Flow {
                 id: heading_row
 
                 Layout.fillWidth: true
                 spacing: Theme.spacingSmall
 
-                Label {
-                    text: mission_glyph_prefix + root.mission_title
-                    color: Theme.textMain
-                    font.pixelSize: Design.Typography.bodyLarge
-                    font.bold: true
-                    font.family: "serif"
-                    Layout.fillWidth: true
-                    wrapMode: Text.WordWrap
-                    maximumLineCount: 2
-                    elide: Text.ElideRight
-                }
-
                 Rectangle {
                     visible: mission_data && mission_data.completed
-                    Layout.preferredWidth: archived_label.implicitWidth + 16
-                    Layout.preferredHeight: 20
+                    width: archived_label.implicitWidth + 16
+                    height: 20
                     radius: Theme.radiusSmall
                     color: Theme.successBg
                     border.color: Theme.successBr
@@ -147,8 +148,8 @@ Rectangle {
 
                 Rectangle {
                     visible: mission_data && mission_data.unlocked === false
-                    Layout.preferredWidth: sealed_label.implicitWidth + 16
-                    Layout.preferredHeight: 20
+                    width: sealed_label.implicitWidth + 16
+                    height: 20
                     radius: Theme.radiusSmall
                     color: Theme.disabledBg
                     border.color: Theme.border
@@ -166,8 +167,8 @@ Rectangle {
 
                 Rectangle {
                     visible: mission_data && mission_data.unlocked && !mission_data.completed
-                    Layout.preferredWidth: open_order_label.implicitWidth + 16
-                    Layout.preferredHeight: 20
+                    width: open_order_label.implicitWidth + 16
+                    height: 20
                     radius: Theme.radiusSmall
                     color: Theme.infoBg
                     border.color: Theme.infoBr

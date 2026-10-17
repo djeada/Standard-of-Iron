@@ -40,7 +40,14 @@ struct FormationLayout {
   std::vector<SoldierSlot> live_slots;
 
   std::vector<SoldierSlot> occupied_slots;
+
+  bool world_anchored{false};
 };
+
+[[nodiscard]] inline auto layout_frame_sign(const FormationLayout& layout,
+                                            bool about_faced) -> float {
+  return about_faced && !layout.world_anchored ? -1.0F : 1.0F;
+}
 
 struct FormationExtents {
   float body_radius{0.5F};
@@ -135,6 +142,8 @@ struct LayoutReach {
 void soldier_spatial_anchors_into(const Engine::Core::Entity& entity,
                                   const FormationLayout& base_layout,
                                   std::vector<SoldierSpatialAnchor>& result);
+
+[[nodiscard]] auto crew_works_a_site(const Engine::Core::Entity& entity) -> bool;
 
 auto face_about_in_place(Engine::Core::Entity& entity) -> bool;
 

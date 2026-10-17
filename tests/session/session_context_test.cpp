@@ -10,6 +10,7 @@
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
 #include "game/session/deterministic_rng.h"
+#include "game/session/selection_service.h"
 #include "game/session/session_context.h"
 #include "game/session/session_snapshot.h"
 #include "game/session/simulation_clock.h"
@@ -131,6 +132,7 @@ TEST(SessionContextTest, ResetClearsEveryPerMatchStore) {
   while (session.clock().consume_tick()) {
   }
   session.rng().next_u64();
+  session.selection().set_control_group(3, {11, 12});
 
   session.reset();
 
@@ -141,6 +143,8 @@ TEST(SessionContextTest, ResetClearsEveryPerMatchStore) {
             0);
   EXPECT_EQ(session.clock().tick(), 0U);
   EXPECT_EQ(session.rng().draw_count(), 0U);
+  EXPECT_TRUE(session.selection().control_group(3).empty())
+      << "control groups belong to the match they were made in";
 }
 
 TEST(SimulationClockTest, ConvertsVariableFramesIntoWholeFixedTicks) {

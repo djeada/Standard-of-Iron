@@ -13,6 +13,18 @@ Item {
     property int selected_mission_index: -1
     property var campaign_map_state: null
     readonly property string theater_heading: qsTr("Campaign War Table • Mediterranean Theater")
+    readonly property bool short_screen: height < Design.A11y.scaled(820)
+    readonly property int total_count: current_campaign && current_campaign.missions ? current_campaign.missions.length : 0
+    readonly property int completed_count: {
+        if (!current_campaign || !current_campaign.missions)
+            return 0;
+        var count = 0;
+        for (var i = 0; i < current_campaign.missions.length; i++) {
+            if (current_campaign.missions[i] && current_campaign.missions[i].completed)
+                count++;
+        }
+        return count;
+    }
 
     property string selected_difficulty: (typeof game !== "undefined" && game.setup) ? game.setup.preferred_difficulty : DifficultyCatalog.defaultId
 
@@ -181,8 +193,8 @@ Item {
 
         ColumnLayout {
             anchors.fill: parent
-            anchors.margins: Theme.spacingLarge
-            spacing: Theme.spacingMedium
+            anchors.margins: root.short_screen ? Theme.spacingMedium : Theme.spacingLarge
+            spacing: root.short_screen ? Theme.spacingSmall : Theme.spacingMedium
 
             RowLayout {
                 Layout.fillWidth: true
@@ -195,25 +207,29 @@ Item {
                     Label {
                         text: current_campaign ? current_campaign.title : qsTr("Campaign")
                         color: Theme.textMain
-                        font.pixelSize: Design.Typography.hero
+                        font.pixelSize: root.short_screen ? Design.Typography.title : Design.Typography.hero
                         font.bold: true
                         font.family: "serif"
                         Layout.fillWidth: true
+                        elide: Text.ElideRight
                     }
 
                     Label {
-                        text: qsTr("Campaign Chronicle • ") + (current_campaign ? current_campaign.description : "")
+                        id: campaign_description
+
+                        objectName: "campaignDescription"
+                        text: current_campaign ? current_campaign.description : ""
+                        visible: text.length > 0
                         color: Theme.textSubLite
-                        font.pixelSize: Design.Typography.bodyLarge
+                        font.pixelSize: root.short_screen ? Design.Typography.label : Design.Typography.body
                         font.family: "serif"
                         wrapMode: Text.WordWrap
                         Layout.fillWidth: true
-                        maximumLineCount: container.height < 800 ? 2 : 3
-                        elide: Text.ElideRight
                     }
                 }
 
                 StyledButton {
+                    Layout.alignment: Qt.AlignTop
                     uiSound: "none"
                     text: qsTr("← Back")
                     onClicked: root.cancelled()
@@ -221,14 +237,22 @@ Item {
             }
 
             RowLayout {
+                id: campaign_columns
+
+                readonly property int column_gap: root.short_screen ? Theme.spacingMedium : Theme.spacingLarge
+                readonly property int chronicle_width: Math.round(Math.max(Design.A11y.scaled(290), Math.min(Design.A11y.scaled(420), width * 0.26)))
+                readonly property int detail_width: Math.round(Math.max(Design.A11y.scaled(330), Math.min(Design.A11y.scaled(520), width * 0.3)))
+
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                spacing: Theme.spacingLarge
+                Layout.minimumHeight: 0
+                spacing: column_gap
 
                 Rectangle {
-                    Layout.fillWidth: true
+                    objectName: "campaignChronicle"
                     Layout.fillHeight: true
-                    Layout.preferredWidth: parent.width * 0.36
+                    Layout.preferredWidth: campaign_columns.chronicle_width
+                    Layout.maximumWidth: campaign_columns.chronicle_width
                     radius: Theme.radiusMedium
                     gradient: Gradient {
                         GradientStop {
@@ -243,11 +267,12 @@ Item {
                     }
                     border.color: "#a7814a"
                     border.width: 2
+                    clip: true
 
                     ColumnLayout {
                         anchors.fill: parent
-                        anchors.margins: Theme.spacingMedium
-                        spacing: Theme.spacingMedium
+                        anchors.margins: Theme.spacingSmall
+                        spacing: Theme.spacingSmall
 
                         Label {
                             text: qsTr("Campaign Chronicle")
@@ -255,6 +280,8 @@ Item {
                             font.pixelSize: Design.Typography.heading
                             font.bold: true
                             font.family: "serif"
+                            Layout.fillWidth: true
+                            elide: Text.ElideRight
                         }
 
                         Rectangle {
@@ -266,103 +293,81 @@ Item {
                             border.color: "#8f6d43"
                             border.width: 1
 
-                            ColumnLayout {
+                            RowLayout {
                                 id: progress_layout
 
                                 anchors.fill: parent
                                 anchors.margins: Theme.spacingSmall
                                 spacing: Theme.spacingSmall
 
-                                RowLayout {
-                                    Layout.fillWidth: true
-                                    spacing: Theme.spacingSmall
+                                Label {
+                                    text: qsTr("Progress")
+                                    color: Theme.textMain
+                                    font.pixelSize: Design.Typography.body
+                                    font.bold: true
+                                    font.family: "serif"
+                                }
 
-                                    Label {
-                                        text: qsTr("Campaign Progress:")
-                                        color: Theme.textMain
-                                        font.pixelSize: Design.Typography.body
-                                        font.bold: true
-                                        font.family: "serif"
-                                    }
+                                Rectangle {
+                                    Layout.fillWidth: true
+                                    Layout.preferredHeight: 12
+                                    radius: 6
+                                    color: Theme.disabledBg
+                                    border.color: Theme.border
+                                    border.width: 1
 
                                     Rectangle {
-                                        Layout.fillWidth: true
-                                        Layout.preferredHeight: 16
-                                        radius: 8
-                                        color: Theme.disabledBg
-                                        border.color: Theme.border
+                                        width: parent.width * (root.total_count > 0 ? root.completed_count / root.total_count : 0)
+                                        height: parent.height
+                                        radius: parent.radius
+                                        color: Theme.successBg
+                                        border.color: Theme.successBr
                                         border.width: 1
 
-                                        Rectangle {
-                                            property int completed_count: {
-                                                if (!current_campaign || !current_campaign.missions)
-                                                    return 0;
-                                                var count = 0;
-                                                for (var i = 0; i < current_campaign.missions.length; i++) {
-                                                    if (current_campaign.missions[i].completed)
-                                                        count++;
-                                                }
-                                                return count;
-                                            }
-                                            property int total_count: current_campaign && current_campaign.missions ? current_campaign.missions.length : 0
-                                            property real progress_ratio: total_count > 0 ? completed_count / total_count : 0
-
-                                            width: parent.width * progress_ratio
-                                            height: parent.height
-                                            radius: parent.radius
-                                            color: Theme.successBg
-                                            border.color: Theme.successBr
-                                            border.width: 1
-
-                                            Behavior on width  {
-                                                NumberAnimation {
-                                                    duration: Theme.animNormal
-                                                }
+                                        Behavior on width  {
+                                            NumberAnimation {
+                                                duration: Theme.animNormal
                                             }
                                         }
                                     }
+                                }
 
-                                    Label {
-                                        property int completed_count: {
-                                            if (!current_campaign || !current_campaign.missions)
-                                                return 0;
-                                            var count = 0;
-                                            for (var i = 0; i < current_campaign.missions.length; i++) {
-                                                if (current_campaign.missions[i].completed)
-                                                    count++;
-                                            }
-                                            return count;
-                                        }
-                                        property int total_count: current_campaign && current_campaign.missions ? current_campaign.missions.length : 0
-
-                                        text: Design.Numerals.ratio(completed_count, total_count)
-                                        color: Theme.textMain
-                                        font.pixelSize: Design.Typography.body
-                                        font.bold: true
-                                    }
+                                Label {
+                                    objectName: "campaignProgressCount"
+                                    text: qsTr("%1 / %2").arg(root.completed_count).arg(root.total_count)
+                                    color: Theme.textMain
+                                    font.pixelSize: Design.Typography.body
+                                    font.bold: true
                                 }
                             }
                         }
 
-                        ScrollView {
+                        ListView {
+                            id: mission_list_view
+
+                            objectName: "campaignMissionList"
                             Layout.fillWidth: true
                             Layout.fillHeight: true
+                            Layout.minimumHeight: 0
                             clip: true
+                            model: current_campaign ? current_campaign.missions : []
+                            spacing: Theme.spacingSmall
+                            currentIndex: selected_mission_index
+                            boundsBehavior: Flickable.StopAtBounds
+                            onCurrentIndexChanged: positionViewAtIndex(currentIndex, ListView.Contain)
 
-                            ListView {
-                                id: mission_list_view
+                            ScrollBar.vertical: Design.IronScrollBar {
+                                id: mission_list_scroll_bar
 
-                                model: current_campaign ? current_campaign.missions : []
-                                spacing: Theme.spacingSmall
-                                currentIndex: selected_mission_index
+                                objectName: "campaignMissionListScrollBar"
+                            }
 
-                                delegate: MissionListItem {
-                                    width: mission_list_view.width - Theme.spacingSmall
-                                    mission_data: modelData
-                                    is_selected: root.selected_mission_index === index
-                                    onClicked: {
-                                        selected_mission_index = index;
-                                    }
+                            delegate: MissionListItem {
+                                width: mission_list_view.width - (mission_list_scroll_bar.overflowing ? mission_list_scroll_bar.thickness + Theme.spacingTiny : 0)
+                                mission_data: modelData
+                                is_selected: root.selected_mission_index === index
+                                onClicked: {
+                                    selected_mission_index = index;
                                 }
                             }
                         }
@@ -372,7 +377,7 @@ Item {
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    Layout.preferredWidth: parent.width * 0.62
+                    Layout.minimumWidth: 0
                     radius: Theme.radiusMedium
                     color: "#201913"
                     border.color: "#8f6d43"
@@ -381,72 +386,77 @@ Item {
                     ColumnLayout {
                         anchors.fill: parent
                         anchors.margins: Theme.spacingSmall
-                        spacing: Theme.spacingMedium
+                        spacing: Theme.spacingSmall
 
                         Rectangle {
                             Layout.fillWidth: true
-                            Layout.preferredHeight: 36
+                            Layout.preferredHeight: theater_label.implicitHeight + Theme.spacingSmall * 2
                             radius: Theme.radiusSmall
                             color: "#5a2f23"
                             border.color: "#a7814a"
                             border.width: 1
 
                             Label {
-                                anchors.centerIn: parent
+                                id: theater_label
+
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.verticalCenter: parent.verticalCenter
+                                anchors.margins: Theme.spacingSmall
                                 text: root.theater_heading
                                 color: "#f0dfbc"
                                 font.pixelSize: Design.Typography.bodyLarge
                                 font.bold: true
                                 font.family: "serif"
+                                horizontalAlignment: Text.AlignHCenter
+                                elide: Text.ElideRight
                             }
                         }
 
                         MediterraneanMapPanel {
                             id: campaign_map_panel
 
+                            objectName: "campaignMapPanel"
                             Layout.fillWidth: true
                             Layout.fillHeight: true
+                            Layout.minimumHeight: Design.A11y.scaled(220)
                             selected_mission: selected_mission_index >= 0 && current_campaign && current_campaign.missions ? current_campaign.missions[selected_mission_index] : null
                             campaign_state: root.campaign_map_state
                             onRegion_selected: function (region_id) {
                                 select_mission_by_region(region_id);
                             }
                         }
+
+                        DifficultySelector {
+                            id: campaign_difficulty
+
+                            objectName: "campaignDifficultySelector"
+                            Layout.fillWidth: true
+                            compact: true
+                            visible: selected_mission_index >= 0
+                            selected_id: root.selected_difficulty
+                            onChosen: function (difficulty_id) {
+                                root.selected_difficulty = difficulty_id;
+                            }
+                        }
                     }
                 }
-            }
 
-            DifficultySelector {
-                id: campaign_difficulty
+                MissionDetailPanel {
+                    id: mission_detail_panel
 
-                Layout.fillWidth: true
-                compact: true
-                visible: selected_mission_index >= 0
-                selected_id: root.selected_difficulty
-                onChosen: function (difficulty_id) {
-                    root.selected_difficulty = difficulty_id;
-                }
-            }
+                    objectName: "missionDetailPanel"
 
-            MissionDetailPanel {
-                id: mission_detail_panel
-
-                objectName: "missionDetailPanel"
-
-                Layout.fillWidth: true
-                Layout.preferredHeight: visible ? Math.max(220, Math.min(container.height * 0.34, 340)) : 0
-                visible: selected_mission_index >= 0
-                mission_data: selected_mission_index >= 0 && current_campaign && current_campaign.missions ? current_campaign.missions[selected_mission_index] : null
-                campaign_id: current_campaign ? current_campaign.id : ""
-                difficulty_id: root.selected_difficulty
-                onStart_mission_clicked: {
-                    if (current_campaign && mission_data && mission_data.mission_id)
-                        root.mission_selected(current_campaign.id, mission_data.mission_id, root.selected_difficulty);
-                }
-
-                Behavior on Layout.preferredHeight  {
-                    NumberAnimation {
-                        duration: Theme.animNormal
+                    Layout.fillHeight: true
+                    Layout.preferredWidth: campaign_columns.detail_width
+                    Layout.maximumWidth: campaign_columns.detail_width
+                    visible: selected_mission_index >= 0
+                    mission_data: selected_mission_index >= 0 && current_campaign && current_campaign.missions ? current_campaign.missions[selected_mission_index] : null
+                    campaign_id: current_campaign ? current_campaign.id : ""
+                    difficulty_id: root.selected_difficulty
+                    onStart_mission_clicked: {
+                        if (current_campaign && mission_data && mission_data.mission_id)
+                            root.mission_selected(current_campaign.id, mission_data.mission_id, root.selected_difficulty);
                     }
                 }
             }

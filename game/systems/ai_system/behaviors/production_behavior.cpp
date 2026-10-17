@@ -300,6 +300,19 @@ struct ArmStrength {
   return fighting < k_bare_garrison;
 }
 
+[[nodiscard]] auto spendable_on_recruits(const AIContext& context,
+                                         const Game::Systems::ResourceAmounts& stock)
+    -> Game::Systems::ResourceAmounts {
+  if (in_no_position_to_be_choosy(context)) {
+    return stock;
+  }
+  Game::Systems::ResourceAmounts spendable = stock;
+  for (const auto type : Game::Systems::k_all_resource_types) {
+    spendable.set(type, stock.get(type) - context.saving_for_a_roof.get(type));
+  }
+  return spendable;
+}
+
 [[nodiscard]] auto order_of_battle(const AIContext& context) -> DoctrineRecruitment {
   const auto* doctrine = context.strategy_config.doctrine;
   return doctrine != nullptr ? doctrine->recruitment : default_recruitment(context);
@@ -486,6 +499,7 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
                    });
 
   const DoctrineRecruitment recruitment = order_of_battle(context);
+  const auto spendable = spendable_on_recruits(context, snapshot.resources);
   const auto candidates = recruitable_candidates(
       *nation, troop_type, recruitment, Game::Units::SpawnType::Barracks);
 
@@ -528,7 +542,7 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
       if (arm_is_at_establishment(fielded, recruitment, arm_of(*nation, *candidate))) {
         continue;
       }
-      if (affordable(*candidate, prod, snapshot.resources)) {
+      if (affordable(*candidate, prod, spendable)) {
         buying = candidate;
         break;
       }
@@ -537,7 +551,7 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
     if (buying == nullptr && in_no_position_to_be_choosy(context)) {
 
       for (const auto* candidate : candidates) {
-        if (affordable(*candidate, prod, snapshot.resources)) {
+        if (affordable(*candidate, prod, spendable)) {
           buying = candidate;
           break;
         }
@@ -549,7 +563,7 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
     }
 
     if (troop_type != nullptr && buying != troop_type &&
-        worth_waiting_for(*troop_type, prod, snapshot.resources)) {
+        worth_waiting_for(*troop_type, prod, spendable)) {
       continue;
     }
 

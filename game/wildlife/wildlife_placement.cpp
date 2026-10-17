@@ -9,6 +9,8 @@
 #include <vector>
 
 #include "../map/map_definition.h"
+#include "../map/map_loader_internal.h"
+#include "../units/spawn_type.h"
 
 namespace Game::Wildlife {
 
@@ -18,6 +20,8 @@ constexpr float k_edge_margin = 6.0F;
 constexpr float k_structure_keep_out = 24.0F;
 constexpr float k_spawn_keep_out = 15.0F;
 constexpr float k_undead_keep_out_padding = 6.0F;
+constexpr float k_den_scatter_margin = 4.0F;
+constexpr float k_min_den_radius = 4.0F;
 constexpr float k_water_padding = 3.5F;
 constexpr float k_road_padding = 2.5F;
 constexpr float k_lattice_divisions = 14.0F;
@@ -92,10 +96,41 @@ auto structure_position(const Game::Map::StructureEntry& entry)
   return {0.0F, 0.0F};
 }
 
+struct Point {
+  float x{0.0F};
+  float z{0.0F};
+};
+
+auto authored_point(const Game::Map::MapDefinition& map, float x, float z) -> Point {
+  QVector3D const world =
+      Game::Map::loader_detail::authored_position(x, z, map.grid, map.coordSystem);
+  return {world.x(), world.z()};
+}
+
+auto den_clearance(Species species, const SpeciesConfig& config) -> float {
+  if (species != Species::Wolf || config.aggression <= 0.0F) {
+    return 0.0F;
+  }
+  return (config.roam_radius * (1.0F + k_wolf_detect_multiplier)) +
+         k_den_scatter_margin;
+}
+
 class Terrain {
 public:
   explicit Terrain(const Game::Map::MapDefinition& map)
-      : m_map(map) {}
+      : m_map(map) {
+    for (const auto& spawn : map.spawns) {
+      Point const point = authored_point(map, spawn.x, spawn.z);
+      m_spawns.push_back(point);
+      if (spawn.player_id > 0 && Game::Units::is_troop_spawn(spawn.type) &&
+          !Game::Units::is_combatant_spawn(spawn.type)) {
+        m_starting_workers.push_back(point);
+      }
+    }
+    for (const auto& zone : map.undead_zones) {
+      m_undead.push_back(authored_point(map, zone.x, zone.z));
+    }
+  }
 
   [[nodiscard]] auto is_wet(float x, float z) const -> bool {
     for (const auto& lake : m_map.lakes) {
@@ -195,8 +230,16 @@ public:
       auto const [sx, sz] = structure_position(structure);
       nearest = std::min(nearest, std::hypot(x - sx, z - sz));
     }
-    for (const auto& spawn : m_map.spawns) {
+    for (const auto& spawn : m_spawns) {
       nearest = std::min(nearest, std::hypot(x - spawn.x, z - spawn.z));
+    }
+    return nearest;
+  }
+
+  [[nodiscard]] auto distance_to_starting_workers(float x, float z) const -> float {
+    float nearest = std::numeric_limits<float>::max();
+    for (const auto& worker : m_starting_workers) {
+      nearest = std::min(nearest, std::hypot(x - worker.x, z - worker.z));
     }
     return nearest;
   }
@@ -208,15 +251,16 @@ public:
         return true;
       }
     }
-    for (const auto& spawn : m_map.spawns) {
+    for (const auto& spawn : m_spawns) {
       if (std::hypot(x - spawn.x, z - spawn.z) <= k_spawn_keep_out) {
         return true;
       }
     }
-    for (const auto& zone : m_map.undead_zones) {
+    for (std::size_t i = 0; i < m_undead.size(); ++i) {
+      const auto& zone = m_map.undead_zones[i];
       float const reach =
           std::max(zone.radius, zone.leash_radius) + k_undead_keep_out_padding;
-      if (std::hypot(x - zone.x, z - zone.z) <= reach) {
+      if (std::hypot(x - m_undead[i].x, z - m_undead[i].z) <= reach) {
         return true;
       }
     }
@@ -225,6 +269,9 @@ public:
 
 private:
   const Game::Map::MapDefinition& m_map;
+  std::vector<Point> m_spawns;
+  std::vector<Point> m_starting_workers;
+  std::vector<Point> m_undead;
 };
 
 auto score_for(Species species,
@@ -256,6 +303,7 @@ auto score_for(Species species,
 auto gather_candidates(Species species,
                        const Terrain& terrain,
                        const Stage& stage,
+                       float worker_clearance,
                        std::uint32_t& rng) -> std::vector<Candidate> {
   float const step = std::max(
       k_min_lattice_step, std::min(stage.width(), stage.depth()) / k_lattice_divisions);
@@ -269,7 +317,8 @@ auto gather_candidates(Species species,
       float const pz = std::clamp(z + jitter_z, stage.min_z, stage.max_z);
 
       if (terrain.is_wet(px, pz) || terrain.is_impassable(px, pz) ||
-          terrain.is_paved(px, pz) || terrain.is_claimed(px, pz)) {
+          terrain.is_paved(px, pz) || terrain.is_claimed(px, pz) ||
+          terrain.distance_to_starting_workers(px, pz) < worker_clearance) {
         continue;
       }
 
@@ -300,7 +349,16 @@ void assign_spawn_areas(Species species,
   }
 
   std::uint32_t rng = seed | 1U;
-  auto const candidates = gather_candidates(species, terrain, stage, rng);
+  float const clearance = den_clearance(species, config);
+  auto candidates =
+      gather_candidates(species,
+                        terrain,
+                        stage,
+                        clearance > 0.0F ? clearance + config.roam_radius : 0.0F,
+                        rng);
+  if (candidates.empty() && clearance > 0.0F) {
+    candidates = gather_candidates(species, terrain, stage, 0.0F, rng);
+  }
   if (candidates.empty()) {
 
     config.spawn_areas.push_back(
@@ -331,6 +389,78 @@ void assign_spawn_areas(Species species,
   if (config.spawn_areas.empty()) {
     config.spawn_areas.push_back(
         {candidates.front().x, candidates.front().z, config.roam_radius});
+  }
+}
+
+void keep_dens_clear_of_starting_workers(Species species,
+                                         const Terrain& terrain,
+                                         const Stage& stage,
+                                         std::uint32_t seed,
+                                         SpeciesConfig& config) {
+  float const clearance = den_clearance(species, config);
+  if (!config.enabled || clearance <= 0.0F) {
+    return;
+  }
+
+  float const separation = config.roam_radius * k_separation_factor;
+  std::uint32_t rng = seed | 1U;
+  for (std::size_t index = 0; index < config.spawn_areas.size(); ++index) {
+    auto& area = config.spawn_areas[index];
+    float const authored_room = terrain.distance_to_starting_workers(area.x, area.z);
+    if (authored_room >= area.radius + clearance) {
+      continue;
+    }
+
+    auto const candidates = gather_candidates(species, terrain, stage, 0.0F, rng);
+    const Candidate* nearest_clear = nullptr;
+    const Candidate* most_remote_free = nullptr;
+    const Candidate* most_remote = nullptr;
+    float nearest_shift = std::numeric_limits<float>::max();
+    float free_remoteness = 0.0F;
+    float remoteness = 0.0F;
+    for (const auto& candidate : candidates) {
+      float const room = terrain.distance_to_starting_workers(candidate.x, candidate.z);
+      if (room > remoteness) {
+        most_remote = &candidate;
+        remoteness = room;
+      }
+      bool crowded = false;
+      for (std::size_t other = 0; other < config.spawn_areas.size(); ++other) {
+        const auto& placed = config.spawn_areas[other];
+        if (other != index &&
+            std::hypot(candidate.x - placed.x, candidate.z - placed.z) < separation) {
+          crowded = true;
+          break;
+        }
+      }
+      if (crowded) {
+        continue;
+      }
+      if (room > free_remoteness) {
+        most_remote_free = &candidate;
+        free_remoteness = room;
+      }
+      float const shift = std::hypot(candidate.x - area.x, candidate.z - area.z);
+      if (room >= clearance + k_min_den_radius && shift < nearest_shift) {
+        nearest_clear = &candidate;
+        nearest_shift = shift;
+      }
+    }
+
+    const Candidate* chosen = nearest_clear;
+    if (chosen == nullptr) {
+      chosen = most_remote_free != nullptr ? most_remote_free : most_remote;
+    }
+    if (chosen == nullptr ||
+        terrain.distance_to_starting_workers(chosen->x, chosen->z) <= authored_room) {
+      continue;
+    }
+    area.x = chosen->x;
+    area.z = chosen->z;
+    area.radius =
+        std::clamp(terrain.distance_to_starting_workers(area.x, area.z) - clearance,
+                   k_min_den_radius,
+                   area.radius);
   }
 }
 
@@ -378,6 +508,13 @@ void populate_missing_spawn_areas(const Game::Map::MapDefinition& map,
         stage,
         seed ^
             ((static_cast<std::uint32_t>(species_index(species)) + 1U) * 2654435761U),
+        config);
+    keep_dens_clear_of_starting_workers(
+        species,
+        terrain,
+        stage,
+        seed ^
+            ((static_cast<std::uint32_t>(species_index(species)) + 1U) * 2246822519U),
         config);
   }
 }

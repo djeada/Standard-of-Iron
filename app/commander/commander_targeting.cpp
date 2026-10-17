@@ -194,19 +194,19 @@ auto CommanderTargeting::locked_position(Engine::Core::World& world) const
   return std::nullopt;
 }
 
-void CommanderTargeting::cycle_lock(Engine::Core::World& world,
+auto CommanderTargeting::cycle_lock(Engine::Core::World& world,
                                     Engine::Core::EntityID commander_id,
                                     int local_owner_id,
-                                    float view_yaw) {
+                                    float view_yaw) -> bool {
   Engine::Core::Timing::ScopedAccumulator const lock_scope(
       Engine::Core::Timing::commander_targeting());
   auto* commander = controlled_commander(world, commander_id, local_owner_id);
   if (commander == nullptr) {
-    return;
+    return false;
   }
   auto* transform = commander->get_component<Engine::Core::TransformComponent>();
   if (transform == nullptr) {
-    return;
+    return false;
   }
 
   const QVector3D origin(transform->position.x, 0.0F, transform->position.z);
@@ -220,8 +220,7 @@ void CommanderTargeting::cycle_lock(Engine::Core::World& world,
     m_soft_target_slot = k_no_slot;
     m_lock_lost_timer = 0.0F;
     clear_published_lock(*commander);
-    Game::Audio::play_cue(Game::Audio::Cue::k_combat_ability_refused);
-    return;
+    return false;
   }
 
   LockCandidate const chosen = m_locked_target_id == 0
@@ -242,6 +241,7 @@ void CommanderTargeting::cycle_lock(Engine::Core::World& world,
     rpg_targets->aim_candidate_id = m_soft_target_id;
     rpg_targets->aim_candidate_soldier_slot = m_soft_target_slot;
   }
+  return true;
 }
 
 auto CommanderTargeting::measure_lock(Engine::Core::World& world,

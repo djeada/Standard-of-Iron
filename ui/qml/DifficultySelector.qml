@@ -14,7 +14,7 @@ FocusScope {
     signal chosen(string difficulty_id)
 
     readonly property var entries: DifficultyCatalog.entries
-    readonly property int compact_card_minimum_width: 260
+    readonly property int compact_card_minimum_width: 200
     readonly property int standard_card_width: 168
     readonly property int card_spacing: 8
     readonly property int preferred_columns: root.compact ? 2 : root.entries.length
@@ -22,8 +22,20 @@ FocusScope {
     readonly property int preferred_width: root.preferred_columns * root.preferred_card_width + root.card_spacing * (root.preferred_columns - 1)
     readonly property int single_row_card_minimum_width: 230
     readonly property bool compact_single_row: root.compact && column.width >= root.entries.length * root.single_row_card_minimum_width + root.card_spacing * (root.entries.length - 1)
-    readonly property int card_width: root.compact_single_row ? Math.floor((column.width - root.card_spacing * (root.entries.length - 1)) / root.entries.length) : (root.compact ? Math.max(root.compact_card_minimum_width, Math.floor((column.width - root.card_spacing) / 2)) : root.standard_card_width)
-    readonly property int card_height: root.compact ? (root.compact_single_row ? 58 : 46) : 158
+    readonly property int compact_columns: root.compact_single_row ? root.entries.length : Math.max(1, Math.min(2, Math.floor((column.width + root.card_spacing) / (root.compact_card_minimum_width + root.card_spacing))))
+    readonly property int card_width: root.compact ? Math.floor((column.width - root.card_spacing * (root.compact_columns - 1)) / root.compact_columns) : root.standard_card_width
+    property real compact_content_height: 0
+    readonly property int card_height: root.compact ? Math.max(root.compact_single_row ? 58 : 46, Math.ceil(root.compact_content_height) + 8) : 158
+
+    function refresh_compact_content_height() {
+        let tallest = 0;
+        for (let i = 0; i < card_repeater.count; i++) {
+            let card = card_repeater.itemAt(i);
+            if (card)
+                tallest = Math.max(tallest, card.compact_content_height);
+        }
+        root.compact_content_height = tallest;
+    }
 
     function index_of(difficultyId) {
         for (let i = 0; i < root.entries.length; i++) {
@@ -94,7 +106,10 @@ FocusScope {
             spacing: root.card_spacing
 
             Repeater {
+                id: card_repeater
+
                 model: root.entries
+                onItemAdded: Qt.callLater(root.refresh_compact_content_height)
 
                 delegate: Rectangle {
                     id: card
@@ -105,6 +120,9 @@ FocusScope {
                     readonly property bool selected: root.selected_id === card.modelData.id
                     readonly property bool focused: root.activeFocus && card.selected
                     readonly property string summary_text: DifficultyCatalog.summary_for(root.presets, card.modelData.id)
+                    readonly property real compact_content_height: compact_column.implicitHeight
+
+                    onCompact_content_heightChanged: Qt.callLater(root.refresh_compact_content_height)
 
                     width: root.card_width
                     height: root.card_height
@@ -178,6 +196,8 @@ FocusScope {
                         }
 
                         Column {
+                            id: compact_column
+
                             anchors.verticalCenter: parent.verticalCenter
                             width: Math.max(0, parent.width - Design.Metrics.iconMedium - 8)
                             spacing: 1
@@ -190,13 +210,12 @@ FocusScope {
                             }
 
                             Text {
+                                objectName: "difficultyCompactSummary"
                                 width: parent.width
                                 text: card.summary_text
                                 color: Design.Theme.textSecondary
                                 font.pixelSize: Design.Typography.caption
                                 wrapMode: Text.WordWrap
-                                maximumLineCount: root.compact_single_row ? 2 : 1
-                                elide: Text.ElideRight
                             }
                         }
                     }

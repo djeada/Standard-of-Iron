@@ -47,6 +47,7 @@ public:
     GL::Shader::UniformHandle wind_speed{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle light_direction{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle camera_pos{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle snow_coverage{GL::Shader::InvalidUniform};
   };
 
   FoliageUniforms m_plant_uniforms;

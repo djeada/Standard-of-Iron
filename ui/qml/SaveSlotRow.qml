@@ -20,9 +20,22 @@ Rectangle {
     property real play_time_seconds: 0
     property string thumbnail: ""
     property Component actions: null
+    readonly property bool highlighted: row.selected || hover_area.containsMouse
+    readonly property string display_title: row.human_title(row.title, row.slot_name)
 
     signal clicked
     signal double_clicked
+
+    function human_title(title, slot_name) {
+        var raw = title !== "" ? title : slot_name;
+        var match = /^(autosave|quicksave)(?:[_ -]?(\d+))?$/i.exec(raw);
+        if (!match)
+            return raw;
+        var number = match[2] !== undefined ? Number(match[2]) : 0;
+        if (match[1].toLowerCase() === "quicksave")
+            return number > 0 ? qsTr("Quicksave %1").arg(number) : qsTr("Quicksave");
+        return number > 0 ? qsTr("Autosave %1").arg(number) : qsTr("Autosave");
+    }
 
     function format_play_time(seconds) {
         if (!seconds || seconds <= 0)
@@ -64,7 +77,7 @@ Rectangle {
 
     height: Math.max(112, layout.implicitHeight + Theme.spacingMedium * 2)
     radius: Theme.radiusMedium
-    color: row.selected ? Qt.rgba(0.86, 0.72, 0.40, 0.15) : hover_area.containsMouse ? Theme.hoverBg : Qt.rgba(0, 0, 0, 0)
+    color: row.selected ? Qt.rgba(0.86, 0.72, 0.40, 0.15) : hover_area.containsMouse ? Qt.rgba(1, 1, 1, 0.06) : Qt.rgba(0, 0, 0, 0)
     border.color: row.selected ? Theme.accent : hover_area.containsMouse ? Qt.rgba(1, 1, 1, 0.12) : Theme.cardBorder
     border.width: row.selected ? 2 : 1
     opacity: row.loadable ? 1 : 0.72
@@ -134,7 +147,8 @@ Rectangle {
                 Label {
                     id: title_label
 
-                    text: row.title !== "" ? row.title : row.slot_name
+                    objectName: "saveSlotTitle"
+                    text: row.display_title
                     color: Theme.textMain
                     font.pixelSize: Design.Typography.subheading
                     font.bold: true
@@ -165,7 +179,7 @@ Rectangle {
 
             Label {
                 text: row.mission_label !== "" ? qsTr("%1 · %2 · %3").arg(row.mission_label).arg(row.describe_mode()).arg(row.map_name) : qsTr("%1 · %2").arg(row.map_name).arg(row.describe_mode())
-                color: Theme.textSub
+                color: row.highlighted ? Theme.textBright : Theme.textSub
                 font.pixelSize: Design.Typography.bodyLarge
                 Layout.fillWidth: true
                 elide: Label.ElideRight
@@ -176,15 +190,17 @@ Rectangle {
                 spacing: Theme.spacingLarge
 
                 Label {
+                    objectName: "saveSlotSavedAt"
                     text: qsTr("Saved %1").arg(row.format_timestamp(row.timestamp))
-                    color: Theme.textHint
+                    color: row.highlighted ? Theme.textMain : Theme.textSubLite
                     font.pixelSize: Design.Typography.body
                     elide: Label.ElideRight
                 }
 
                 Label {
+                    objectName: "saveSlotPlayed"
                     text: qsTr("Played %1").arg(row.format_play_time(row.play_time_seconds))
-                    color: Theme.textHint
+                    color: row.highlighted ? Theme.textMain : Theme.textSubLite
                     font.pixelSize: Design.Typography.body
                     visible: row.format_play_time(row.play_time_seconds) !== ""
                 }

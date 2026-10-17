@@ -296,6 +296,10 @@
         <source>Ask allies to defend</source>
         <translation>Pedir aos aliados que defendam</translation>
     </message>
+    <message>
+        <source>Free queue slot: up to %1 recruits can wait in line</source>
+        <translation>Vaga livre na fila: até %1 recrutas podem aguardar</translation>
+    </message>
 </context>
 <context>
     <name>BattleReportLayout</name>
@@ -426,6 +430,17 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
     <message>
         <source>%1 of %2</source>
         <translation>%1 de %2</translation>
+    </message>
+</context>
+<context>
+    <name>BuilderTask</name>
+    <message>
+        <source>Builders could not reach their construction site. The building was abandoned and its cost refunded.</source>
+        <translation>Os construtores não conseguiram chegar ao canteiro de obras. A construção foi abandonada e o custo, reembolsado.</translation>
+    </message>
+    <message>
+        <source>Builders were pulled off their construction site. The building was abandoned and its cost refunded.</source>
+        <translation>Os construtores foram retirados do canteiro de obras. A construção foi abandonada e o custo, reembolsado.</translation>
     </message>
 </context>
 <context>
@@ -740,10 +755,6 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <translation>Campanha</translation>
     </message>
     <message>
-        <source>Campaign Chronicle • </source>
-        <translation>Crônica da campanha • </translation>
-    </message>
-    <message>
         <source>← Back</source>
         <translation>← Voltar</translation>
     </message>
@@ -752,8 +763,12 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <translation>Crônica da campanha</translation>
     </message>
     <message>
-        <source>Campaign Progress:</source>
-        <translation>Progresso da campanha:</translation>
+        <source>Progress</source>
+        <translation>Progresso</translation>
+    </message>
+    <message>
+        <source>%1 / %2</source>
+        <translation>%1 / %2</translation>
     </message>
 </context>
 <context>
@@ -4547,6 +4562,17 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <source>%1/%2 walls  •  %3 wood</source>
         <translation>%1/%2 muros  •  %3 madeira</translation>
     </message>
+    <message numerus="yes">
+        <source>Group %1 holds %n unit(s)</source>
+        <translation>
+            <numerusform>O grupo %1 tem %n unidade</numerusform>
+            <numerusform>O grupo %1 tem %n unidades</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Group %1 cleared</source>
+        <translation>Grupo %1 esvaziado</translation>
+    </message>
 </context>
 <context>
     <name>GraphicsSettingsProxy</name>
@@ -6078,6 +6104,14 @@ Cada recruta custa os homens do seu esquadrão; a reserva num quartel eleva o li
         <source>Among the waves walks a grave priest. He heals the dead around him and throws fire at your line, so a slow slog of spearmen alone will bleed. Bring a Medicus to mend the burns and ranged troops to cut the priest down from a distance before the guardians close in. Kill him first and the dead stop mending.</source>
         <translation>Entre as ondas caminha um sacerdote sepulcral. Ele cura os mortos ao seu redor e lança fogo sobre a sua linha, então um avanço lento só de lanceiros vai sangrar. Leve um Medicus para tratar as queimaduras e tropas de longo alcance para abater o sacerdote à distância antes que os guardiões se aproximem. Mate-o primeiro e os mortos deixam de se curar.</translation>
     </message>
+    <message>
+        <source>Control groups</source>
+        <translation>Grupos de controle</translation>
+    </message>
+    <message>
+        <source>Hold Ctrl and press a number from 1 to 9 to store the selected troops as that group. Press the number alone to select the group again, or hold Shift to add it to what is already selected; press it twice quickly to swing the camera onto the group. Fallen soldiers drop out of their group, and groups last until the battle ends. Tab centres the camera on whatever is selected. All of these keys can be rebound under Settings › Controls.</source>
+        <translation>Segure Ctrl e pressione um número de 1 a 9 para salvar as tropas selecionadas como esse grupo. Pressione só o número para selecionar o grupo de novo, ou segure Shift para adicioná-lo ao que já está selecionado; pressione duas vezes rápido para levar a câmera até o grupo. Soldados caídos saem do grupo, e os grupos duram até o fim da batalha. Tab centraliza a câmera no que estiver selecionado. Todas essas teclas podem ser reatribuídas em Configurações › Controles.</translation>
+    </message>
 </context>
 <context>
     <name>HintCard</name>
@@ -7210,6 +7244,18 @@ Cada recruta custa os homens do seu esquadrão; a reserva num quartel eleva o li
         <source>Load the quicksave</source>
         <translation>Carregar o salvamento rápido</translation>
     </message>
+    <message>
+        <source>Restart this battle?</source>
+        <translation>Reiniciar esta batalha?</translation>
+    </message>
+    <message>
+        <source>The battle starts again from the beginning and everything won since is lost. Save it first if you want to come back to it.</source>
+        <translation>A batalha recomeça do início e tudo o que foi conquistado desde então se perde. Salve antes se quiser voltar a ela.</translation>
+    </message>
+    <message>
+        <source>Restart the battle</source>
+        <translation>Reiniciar a batalha</translation>
+    </message>
 </context>
 <context>
     <name>MainMenu</name>
@@ -7408,6 +7454,42 @@ Cada recruta custa os homens do seu esquadrão; a reserva num quartel eleva o li
     <message>
         <source>Resume</source>
         <translation>Continuar</translation>
+    </message>
+    <message>
+        <source>Abandon this battle and close the game</source>
+        <translation>Abandonar esta batalha e fechar o jogo</translation>
+    </message>
+    <message>
+        <source>Leaves the battle in progress - you will be asked first</source>
+        <translation>Sai da batalha em andamento – você será consultado antes</translation>
+    </message>
+    <message>
+        <source>Close this menu and carry on fighting</source>
+        <translation>Fechar este menu e continuar lutando</translation>
+    </message>
+    <message>
+        <source>Restart battle</source>
+        <translation>Reiniciar batalha</translation>
+    </message>
+    <message>
+        <source>Fight this battle again from the start</source>
+        <translation>Travar esta batalha de novo desde o início</translation>
+    </message>
+    <message>
+        <source>Again</source>
+        <translation>De novo</translation>
+    </message>
+    <message>
+        <source>Quit to main menu</source>
+        <translation>Sair para o menu principal</translation>
+    </message>
+    <message>
+        <source>Abandon this battle and return to the war table</source>
+        <translation>Abandonar esta batalha e voltar à mesa de guerra</translation>
+    </message>
+    <message>
+        <source>Abandon</source>
+        <translation>Abandonar</translation>
     </message>
 </context>
 <context>
@@ -7986,6 +8068,14 @@ para ver a prévia</translation>
     <message>
         <source>Arrows pan  ·  Drag to rotate  ·  Scroll or +/- to zoom  ·  Home resets</source>
         <translation>Setas deslocam  ·  Arraste para girar  ·  Role ou +/− para ampliar  ·  Home redefine</translation>
+    </message>
+    <message>
+        <source>Map controls</source>
+        <translation>Controles do mapa</translation>
+    </message>
+    <message>
+        <source>Controls ?</source>
+        <translation>Controles ?</translation>
     </message>
 </context>
 <context>
@@ -10257,6 +10347,10 @@ para ver a prévia</translation>
         <source>Choose a dispatch to review its field orders.</source>
         <translation>Escolha um despacho para rever suas ordens de campo.</translation>
     </message>
+    <message>
+        <source>%1 / %2</source>
+        <translation>%1 / %2</translation>
+    </message>
 </context>
 <context>
     <name>Nations</name>
@@ -11555,10 +11649,6 @@ Clique com o botão direito para cancelar.</translation>
         <translation>Peça a seus comandantes aliados que enviem homens para segurar este edifício. Um comandante cauteloso com homens de sobra aceita; um cujo próprio acampamento esteja ameaçado recusa.</translation>
     </message>
     <message>
-        <source>That request has already been withdrawn.</source>
-        <translation>Esse pedido já foi retirado.</translation>
-    </message>
-    <message>
         <source>Not enough %1 to give.</source>
         <translation>%1 insuficiente para dar.</translation>
     </message>
@@ -11901,6 +11991,26 @@ Clique com o botão direito para cancelar.</translation>
         <source>Loaded, but &apos;%1&apos; could not be read, so wildlife, undead zones and cursed veins were not restored.</source>
         <translation>Carregado, mas &apos;%1&apos; não pôde ser lido, então a fauna, as zonas de mortos-vivos e os veios amaldiçoados não foram restaurados.</translation>
     </message>
+    <message>
+        <source>Control groups</source>
+        <translation>Grupos de controle</translation>
+    </message>
+    <message>
+        <source>Centre the camera on the selection</source>
+        <translation>Centralizar a câmera na seleção</translation>
+    </message>
+    <message>
+        <source>Jumps the view to the selected troops. Double-click a portrait in the selection panel to jump to that unit.</source>
+        <translation>Leva a visão até as tropas selecionadas. Clique duas vezes em um retrato no painel de seleção para ir até essa unidade.</translation>
+    </message>
+    <message>
+        <source>Control group %1</source>
+        <translation>Grupo de controle %1</translation>
+    </message>
+    <message>
+        <source>Selects the group. Hold Ctrl to store the current selection in it, hold Shift to add the group to the selection, and press twice quickly to centre the camera on it.</source>
+        <translation>Seleciona o grupo. Segure Ctrl para salvar nele a seleção atual, segure Shift para adicionar o grupo à seleção e pressione duas vezes rápido para centralizar a câmera nele.</translation>
+    </message>
 </context>
 <context>
     <name>RecruitCard</name>
@@ -12080,6 +12190,10 @@ Clique com o botão direito para cancelar.</translation>
     <message>
         <source>BLADE DRAWN</source>
         <translation>LÂMINA DESEMBAINHADA</translation>
+    </message>
+    <message>
+        <source>NO TARGET IN REACH</source>
+        <translation>NENHUM ALVO AO ALCANCE</translation>
     </message>
 </context>
 <context>
@@ -12331,6 +12445,14 @@ Clique com o botão direito para cancelar.</translation>
     <message>
         <source>Played %1</source>
         <translation>Jogado: %1</translation>
+    </message>
+    <message>
+        <source>Quicksave %1</source>
+        <translation>Salvamento rápido %1</translation>
+    </message>
+    <message>
+        <source>Autosave %1</source>
+        <translation>Salvamento automático %1</translation>
     </message>
 </context>
 <context>
@@ -12818,10 +12940,6 @@ Clique com o botão direito para cancelar.</translation>
         <translation>Velocidade de rotação da câmera:</translation>
     </message>
     <message>
-        <source>Scales keyboard panning, zooming and rotation; drag and minimap movement stay unchanged.</source>
-        <translation>Ajusta a panorâmica, o zoom e a rotação pelo teclado; arrastar e mover no minimapa permanecem inalterados.</translation>
-    </message>
-    <message>
         <source>Economy numbers</source>
         <translation>Números de economia</translation>
     </message>
@@ -12872,6 +12990,14 @@ Clique com o botão direito para cancelar.</translation>
     <message>
         <source>Night</source>
         <translation>Modo noturno</translation>
+    </message>
+    <message>
+        <source>Camera speeds</source>
+        <translation>Velocidades da câmera</translation>
+    </message>
+    <message>
+        <source>The three speeds below scale keyboard panning, zooming and rotation. Mouse drag and minimap movement stay unchanged.</source>
+        <translation>As três velocidades abaixo ajustam o deslocamento, o zoom e a rotação pelo teclado. Arrastar com o mouse e o movimento pelo minimapa não mudam.</translation>
     </message>
 </context>
 <context>

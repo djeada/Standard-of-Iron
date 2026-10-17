@@ -13,6 +13,7 @@
 #include "resource_types.h"
 #include "systems/economy/build_site.h"
 #include "systems/economy/construction_cost_catalog.h"
+#include "systems/economy/production_system_shared_site.h"
 #include "systems/movement/order_service.h"
 #include "systems/navigation/nav_grid.h"
 #include "visuals/building_asset_key.h"
@@ -290,6 +291,7 @@ auto WallPlanService::commit(Engine::Core::World& world,
     if (builder == nullptr) {
       continue;
     }
+    static_cast<void>(ProductionTasks::refund_abandoned_site(world, builders[index]));
     OrderService::clear_builder_task(world, entity);
     OrderService::clear_builder_gather_order(entity);
     builder->clear_auto_gather();

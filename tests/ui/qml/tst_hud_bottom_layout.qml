@@ -78,6 +78,13 @@ TestCase {
             verify(Math.abs(zones[i].width - expected) <= 1, zones[i].objectName + " is not an equal third: " + zones[i].width + " != " + expected);
     }
 
+    function test_the_empty_specialist_hint_sits_on_its_own_backing() {
+        var hint = named("contextualEmptyHint");
+        verify(hint.visible, "with nothing selected the hint explains the empty row");
+        verify(hint.color.a >= 0.8, "the hint needs an opaque backing to read over the battlefield");
+        verify(hint.width > 0 && hint.height > 0);
+    }
+
     function test_every_command_card_has_the_same_dimensions() {
         panel.action_states = {
             "build": state(1),

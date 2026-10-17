@@ -360,6 +360,9 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
       if (uniforms.camera_pos != Shader::InvalidUniform) {
         shader->set_uniform(uniforms.camera_pos, cam.get_position());
       }
+      if (uniforms.snow_coverage != Shader::InvalidUniform) {
+        shader->set_uniform(uniforms.snow_coverage, params.snow_coverage);
+      }
 
       glBindVertexArray(foliage.mesh->vao);
       deco_cmd_.instance_buffer->bind();

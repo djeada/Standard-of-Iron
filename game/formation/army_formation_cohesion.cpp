@@ -84,6 +84,11 @@ auto slot_standing(Engine::Core::World& world,
   const auto* attack = world.try_get<Engine::Core::AttackComponent>(slot.occupant);
   const auto* hold = world.try_get<Engine::Core::HoldModeComponent>(slot.occupant);
   const auto* guard = world.try_get<Engine::Core::GuardModeComponent>(slot.occupant);
+  const auto* builder =
+      world.try_get<Engine::Core::BuilderProductionComponent>(slot.occupant);
+  if (builder != nullptr && (builder->has_construction_site || builder->in_progress)) {
+    return SlotStanding::Busy;
+  }
   if (movement->get_has_target() || (target != nullptr && target->target_id != 0U) ||
       (attack != nullptr && attack->in_melee_lock) ||
       (hold != nullptr && hold->active) || (guard != nullptr && guard->active)) {

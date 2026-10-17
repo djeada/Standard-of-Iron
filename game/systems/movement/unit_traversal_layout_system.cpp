@@ -86,7 +86,8 @@ void publish_facts(const Engine::Core::UnitTraversalLayoutStateComponent& state,
 void update_slot_states(const FormationCombat::FormationLayout& layout,
                         float step,
                         Engine::Core::UnitTraversalLayoutStateComponent& state) {
-  float const frame_sign = state.about_faced ? -1.0F : 1.0F;
+  float const frame_sign =
+      FormationCombat::layout_frame_sign(layout, state.about_faced);
   std::vector<Engine::Core::UnitTraversalSlotState> next;
   next.reserve(layout.all_slots.size());
   for (auto const& slot : layout.all_slots) {

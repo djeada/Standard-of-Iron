@@ -395,7 +395,7 @@ auto ally_resource_word(const QString& resource_key) -> QString {
 }
 
 void AllyAnnouncementPresenter::announce_all(Game::Session::SessionContext* session,
-                                             int local_owner_id) const {
+                                             int local_owner_id) {
   announce_exchanges(session, local_owner_id);
   announce_calls(session, local_owner_id);
   announce_appeals(session, local_owner_id);
@@ -441,17 +441,31 @@ void AllyAnnouncementPresenter::announce_calls(Game::Session::SessionContext* se
 }
 
 void AllyAnnouncementPresenter::announce_appeals(Game::Session::SessionContext* session,
-                                                 int local_owner_id) const {
+                                                 int local_owner_id) {
   if (session == nullptr) {
     return;
   }
   const Context ctx{*session, local_owner_id, m_sink};
   auto& board = session->alliance();
+  if (board.epoch() != m_board_epoch) {
+    m_board_epoch = board.epoch();
+    close_every_card();
+  }
+
   for (const auto& appeal : board.take_new_appeals()) {
     if (appeal.to_owner != ctx.local) {
       continue;
     }
-    m_sink.appeal_opened(build_appeal_card(ctx, appeal));
+    auto card = build_appeal_card(ctx, appeal);
+    m_tracked[appeal.appeal_id] = {.kind = appeal.kind,
+                                   .from_ally = appeal.from_ally,
+                                   .x = appeal.target_x,
+                                   .z = appeal.target_z,
+                                   .name = card.value("name").toString()};
+    if (appeal.kind != AllyAppealKind::Resources) {
+      m_markers_dirty = true;
+    }
+    m_sink.appeal_opened(card);
   }
 
   for (const auto& reply : board.take_appeal_replies()) {
@@ -462,8 +476,84 @@ void AllyAnnouncementPresenter::announce_appeals(Game::Session::SessionContext* 
         reply.follow_up != AllyAppealFollowUp::AidNeverCame) {
       m_sink.appeal_closed(reply.appeal_id);
     }
+    if (reply.follow_up == AllyAppealFollowUp::AwaitingAid) {
+      if (auto it = m_tracked.find(reply.appeal_id); it != m_tracked.end()) {
+        it->second.card_open = false;
+        it->second.pledged = true;
+        m_markers_dirty = true;
+      }
+    } else {
+      forget(reply.appeal_id);
+    }
     announce_appeal_follow_up(ctx, reply);
   }
+
+  close_withdrawn_cards(board);
+  publish_markers();
+}
+
+void AllyAnnouncementPresenter::close_every_card() {
+  for (const auto& [appeal_id, tracked] : m_tracked) {
+    if (tracked.card_open) {
+      m_sink.appeal_closed(appeal_id);
+    }
+    if (tracked.kind != AllyAppealKind::Resources) {
+      m_markers_dirty = true;
+    }
+  }
+  m_tracked.clear();
+}
+
+void AllyAnnouncementPresenter::close_withdrawn_cards(
+    const Game::Systems::AllianceBoard& board) {
+  for (auto it = m_tracked.begin(); it != m_tracked.end();) {
+    if (!it->second.card_open || board.open_appeal(it->first) != nullptr) {
+      ++it;
+      continue;
+    }
+    m_sink.appeal_closed(it->first);
+    if (it->second.kind != AllyAppealKind::Resources) {
+      m_markers_dirty = true;
+    }
+    it = m_tracked.erase(it);
+  }
+}
+
+void AllyAnnouncementPresenter::forget(quint32 appeal_id) {
+  const auto it = m_tracked.find(appeal_id);
+  if (it == m_tracked.end()) {
+    return;
+  }
+  if (it->second.kind != AllyAppealKind::Resources) {
+    m_markers_dirty = true;
+  }
+  m_tracked.erase(it);
+}
+
+void AllyAnnouncementPresenter::publish_markers() {
+  if (!m_markers_dirty) {
+    return;
+  }
+  m_markers_dirty = false;
+  if (!m_sink.appeal_markers) {
+    return;
+  }
+  QVariantList markers;
+  for (const auto& [appeal_id, tracked] : m_tracked) {
+    if (tracked.kind == AllyAppealKind::Resources) {
+      continue;
+    }
+    QVariantMap marker;
+    marker["id"] = appeal_id;
+    marker["kind"] = QLatin1String(Game::Systems::ally_appeal_kind_key(tracked.kind));
+    marker["x"] = tracked.x;
+    marker["z"] = tracked.z;
+    marker["from"] = tracked.from_ally;
+    marker["name"] = tracked.name;
+    marker["pledged"] = tracked.pledged;
+    markers.append(marker);
+  }
+  m_sink.appeal_markers(markers);
 }
 
 } // namespace App::World

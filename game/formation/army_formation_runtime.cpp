@@ -370,6 +370,7 @@ auto ArmyFormationRuntime::access() const -> Engine::Core::SystemAccess {
   return SystemAccess::declare(
       Reads<UnitComponent,
             TransformComponent,
+            BuilderProductionComponent,
             AttackTargetComponent,
             HoldModeComponent,
             GuardModeComponent>{},

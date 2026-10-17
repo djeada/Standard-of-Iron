@@ -1085,4 +1085,92 @@ TEST_F(InputCommandHandlerTest, DeadEnemiesCannotBeInspected) {
   EXPECT_EQ(selection_system->inspected_entity(), 0U);
 }
 
+TEST_F(InputCommandHandlerTest, CtrlNumberStoresOnlyLiveOwnUnitsInTheGroup) {
+  auto* a = create_unit(0.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  auto* b = create_unit(1.0F, 0.0F, 1, Game::Units::SpawnType::Spearman);
+  auto* enemy = create_unit(2.0F, 0.0F, 2, Game::Units::SpawnType::Archer);
+  ASSERT_NE(a, nullptr);
+  ASSERT_NE(b, nullptr);
+  ASSERT_NE(enemy, nullptr);
+  a->get_component<Engine::Core::UnitComponent>()->health = 10;
+  b->get_component<Engine::Core::UnitComponent>()->health = 10;
+  enemy->get_component<Engine::Core::UnitComponent>()->health = 10;
+  selection_system->select_unit(a->get_id());
+  selection_system->select_unit(b->get_id());
+  selection_system->select_unit(enemy->get_id());
+
+  EXPECT_EQ(input_handler->assign_control_group(1, 1), 2);
+  EXPECT_EQ(selection_system->control_group(1),
+            (std::vector<Engine::Core::EntityID>{a->get_id(), b->get_id()}));
+
+  selection_system->clear_selection();
+  EXPECT_EQ(input_handler->assign_control_group(1, 1), 0)
+      << "storing an empty selection clears the group";
+  EXPECT_TRUE(selection_system->control_group(1).empty());
+}
+
+TEST_F(InputCommandHandlerTest, RecallingAGroupReplacesOrExtendsTheSelection) {
+  auto* a = create_unit(0.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  auto* b = create_unit(1.0F, 0.0F, 1, Game::Units::SpawnType::Spearman);
+  auto* c = create_unit(3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  for (auto* entity : {a, b, c}) {
+    ASSERT_NE(entity, nullptr);
+    entity->get_component<Engine::Core::UnitComponent>()->health = 10;
+  }
+  selection_system->select_unit(a->get_id());
+  selection_system->select_unit(b->get_id());
+  ASSERT_EQ(input_handler->assign_control_group(4, 1), 2);
+
+  selection_system->clear_selection();
+  selection_system->select_unit(c->get_id());
+  ASSERT_TRUE(input_handler->recall_control_group(4, false, 1));
+  EXPECT_EQ(selection_system->get_selected_units(),
+            (std::vector<Engine::Core::EntityID>{a->get_id(), b->get_id()}));
+
+  selection_system->clear_selection();
+  selection_system->select_unit(c->get_id());
+  ASSERT_TRUE(input_handler->recall_control_group(4, true, 1));
+  EXPECT_EQ(
+      selection_system->get_selected_units(),
+      (std::vector<Engine::Core::EntityID>{c->get_id(), a->get_id(), b->get_id()}));
+}
+
+TEST_F(InputCommandHandlerTest, TheDeadDropOutOfAControlGroup) {
+  auto* a = create_unit(0.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  auto* b = create_unit(1.0F, 0.0F, 1, Game::Units::SpawnType::Spearman);
+  for (auto* entity : {a, b}) {
+    ASSERT_NE(entity, nullptr);
+    entity->get_component<Engine::Core::UnitComponent>()->health = 10;
+  }
+  selection_system->select_unit(a->get_id());
+  selection_system->select_unit(b->get_id());
+  ASSERT_EQ(input_handler->assign_control_group(2, 1), 2);
+
+  a->get_component<Engine::Core::UnitComponent>()->health = 0;
+  selection_system->clear_selection();
+  ASSERT_TRUE(input_handler->recall_control_group(2, false, 1));
+  EXPECT_EQ(selection_system->get_selected_units(),
+            (std::vector<Engine::Core::EntityID>{b->get_id()}));
+  EXPECT_EQ(selection_system->control_group(2),
+            (std::vector<Engine::Core::EntityID>{b->get_id()}));
+
+  b->get_component<Engine::Core::UnitComponent>()->health = 0;
+  selection_system->clear_selection();
+  EXPECT_FALSE(input_handler->recall_control_group(2, false, 1))
+      << "a wiped-out group has nothing to recall";
+  EXPECT_TRUE(selection_system->get_selected_units().empty());
+  EXPECT_TRUE(selection_system->control_group(2).empty());
+}
+
+TEST_F(InputCommandHandlerTest, SpectatorsHaveNoControlGroups) {
+  auto* a = create_unit(0.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  ASSERT_NE(a, nullptr);
+  a->get_component<Engine::Core::UnitComponent>()->health = 10;
+  selection_system->select_unit(a->get_id());
+  input_handler->set_spectator_mode(true);
+  EXPECT_EQ(input_handler->assign_control_group(1, 1), 0);
+  EXPECT_FALSE(input_handler->recall_control_group(1, false, 1));
+  input_handler->set_spectator_mode(false);
+}
+
 } // namespace

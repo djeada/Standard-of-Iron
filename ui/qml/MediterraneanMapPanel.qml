@@ -1210,27 +1210,30 @@ Rectangle {
         Rectangle {
             id: legend_plate
 
+            objectName: "campaignMapLegend"
             anchors.left: parent.left
             anchors.bottom: parent.bottom
-            anchors.margins: Theme.spacingMedium
-            width: legend_layout.implicitWidth + 16
-            height: legend_layout.implicitHeight + 16
+            anchors.margins: Theme.spacingSmall
+            width: Math.min(legend_layout.implicitWidth + 16, parent.width - map_hint_button.width - Theme.spacingSmall * 3)
+            height: legend_layout.implicitHeight + 10
             radius: 4
             color: "#f5f0e6"
             border.color: "#8b7355"
-            border.width: 2
+            border.width: 1
             opacity: 0.95
+            clip: true
+            z: 9
 
-            ColumnLayout {
+            RowLayout {
                 id: legend_layout
 
                 anchors.centerIn: parent
-                spacing: Theme.spacingTiny
+                spacing: Theme.spacingSmall
 
                 Label {
                     text: qsTr("Legend")
                     color: "#2d241c"
-                    font.pixelSize: Design.Typography.body
+                    font.pixelSize: Design.Typography.label
                     font.bold: true
                 }
 
@@ -1270,24 +1273,67 @@ Rectangle {
         }
 
         Rectangle {
+            id: map_hint_button
+
+            property bool expanded: false
+
+            objectName: "campaignMapControlsButton"
             anchors.right: parent.right
             anchors.bottom: parent.bottom
-            anchors.margins: Theme.spacingMedium
-            width: map_hint_label.implicitWidth + 14
-            height: map_hint_label.implicitHeight + 8
+            anchors.margins: Theme.spacingSmall
+            width: map_hint_button_label.implicitWidth + 16
+            height: map_hint_button_label.implicitHeight + 10
+            radius: 4
+            color: map_hint_area.containsMouse || expanded ? "#7a1f1d" : "#3b2a1d"
+            border.color: "#c29555"
+            border.width: 1
+            z: 9
+            Accessible.role: Accessible.Button
+            Accessible.name: qsTr("Map controls")
+
+            Label {
+                id: map_hint_button_label
+
+                anchors.centerIn: parent
+                text: qsTr("Controls ?")
+                color: "#f2dfba"
+                font.pixelSize: Design.Typography.label
+                font.bold: true
+            }
+
+            MouseArea {
+                id: map_hint_area
+
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: map_hint_button.expanded = !map_hint_button.expanded
+            }
+        }
+
+        Rectangle {
+            objectName: "campaignMapControlsHint"
+            visible: map_hint_button.expanded || map_hint_area.containsMouse
+            anchors.right: parent.right
+            anchors.bottom: map_hint_button.top
+            anchors.margins: Theme.spacingSmall
+            width: Math.min(map_hint_label.implicitWidth + 16, parent.width - Theme.spacingSmall * 2)
+            height: map_hint_label.implicitHeight + 10
             radius: 3
-            color: "#e0f5f0e6"
+            color: "#f0f5f0e6"
             border.color: "#8b7355"
             border.width: 1
+            z: 11
 
             Label {
                 id: map_hint_label
 
-                anchors.centerIn: parent
+                anchors.fill: parent
+                anchors.margins: 5
                 text: qsTr("Arrows pan  ·  Drag to rotate  ·  Scroll or +/- to zoom  ·  Home resets")
                 color: "#4a3f32"
-                font.pixelSize: root.town_font_px
-                renderType: Text.NativeRendering
+                font.pixelSize: Design.Typography.label
+                wrapMode: Text.WordWrap
             }
         }
 

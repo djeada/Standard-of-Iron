@@ -12,7 +12,7 @@ Item {
     signal cancelled
     signal load_requested(string slot_name)
 
-    readonly property var saves: (typeof game !== 'undefined' && game) ? game.saves : null
+    property var saves: (typeof game !== 'undefined' && game) ? game.saves : null
     readonly property bool storage_ready: root.saves ? root.saves.storage_healthy : false
 
     property string status_message: ""
@@ -308,7 +308,7 @@ Item {
                                         var check = root.saves.check_save_slot(load_row.slot_name);
                                         root.verify_result_success = check.ok;
                                         root.verify_result_title = check.ok ? qsTr("This save will load") : qsTr("This save will not load");
-                                        root.verify_result_message = check.ok ? qsTr("\"%1\" decompressed cleanly and contains a complete battlefield.").arg(load_row.slot_name) : check.reason;
+                                        root.verify_result_message = check.ok ? qsTr("\"%1\" decompressed cleanly and contains a complete battlefield.").arg(load_row.display_title) : check.reason;
                                         verifyResultDialog.open();
                                     }
                                 }
@@ -319,6 +319,7 @@ Item {
                                     implicitWidth: 84
                                     onClicked: {
                                         confirmDeleteDialog.slot_name = load_row.slot_name;
+                                        confirmDeleteDialog.display_name = load_row.display_title;
                                         confirmDeleteDialog.open();
                                     }
                                 }
@@ -361,17 +362,18 @@ Item {
         id: confirmDeleteDialog
 
         property string slot_name: ""
+        property string display_name: ""
 
         anchors.centerIn: parent
         width: Math.min(parent.width * 0.5, 460)
         title: qsTr("Delete this save?")
         tone: "danger"
-        message: qsTr("\"%1\" will be deleted. This cannot be undone.").arg(confirmDeleteDialog.slot_name)
+        message: qsTr("\"%1\" will be deleted. This cannot be undone.").arg(confirmDeleteDialog.display_name)
         primaryAction: qsTr("Delete")
         secondaryAction: qsTr("Keep it")
         onPrimaryActivated: {
             if (root.saves && root.saves.delete_save_slot && root.saves.delete_save_slot(confirmDeleteDialog.slot_name))
-                root.set_status(qsTr("Deleted \"%1\"").arg(confirmDeleteDialog.slot_name));
+                root.set_status(qsTr("Deleted \"%1\"").arg(confirmDeleteDialog.display_name));
         }
     }
 

@@ -160,15 +160,15 @@ Rectangle {
 
     function calculate_casualty_forecast() {
         if (!mission_data || !mission_data.difficulty_modifier)
-            return Design.Numerals.roman(610);
-        return Design.Numerals.roman(base_casualty_forecast + mission_data.difficulty_modifier * casualty_per_difficulty_step);
+            return Design.Numerals.grouped(610);
+        return Design.Numerals.grouped(base_casualty_forecast + mission_data.difficulty_modifier * casualty_per_difficulty_step);
     }
 
     function calculate_success_estimate() {
         if (!mission_data)
             return qsTr("Unknown");
         if (mission_data.completed)
-            return Design.Numerals.percent(100);
+            return "100%";
         if (mission_data.unlocked === false)
             return qsTr("Sealed");
         return qsTr("In Progress");
@@ -198,14 +198,15 @@ Rectangle {
     border.color: "#a7814a"
     border.width: 2
 
-    RowLayout {
+    ColumnLayout {
         anchors.fill: parent
         anchors.margins: Theme.spacingMedium
-        spacing: Theme.spacingMedium
+        spacing: Theme.spacingSmall
 
         ScrollView {
             id: mission_content_scroll
 
+            objectName: "missionDetailScroll"
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.minimumHeight: 0
@@ -213,10 +214,18 @@ Rectangle {
             clip: true
             ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
 
+            ScrollBar.vertical: Design.IronScrollBar {
+                objectName: "missionDetailScrollBar"
+                parent: mission_content_scroll
+                x: mission_content_scroll.mirrored ? 0 : mission_content_scroll.width - width
+                y: mission_content_scroll.topPadding
+                height: mission_content_scroll.availableHeight
+            }
+
             Item {
                 id: mission_content_container
 
-                width: mission_content_scroll.availableWidth > 0 ? mission_content_scroll.availableWidth : mission_content_scroll.width
+                width: Math.max(0, (mission_content_scroll.availableWidth > 0 ? mission_content_scroll.availableWidth : mission_content_scroll.width) - Design.Metrics.scrollBarThickness - Theme.spacingSmall)
                 implicitWidth: width
                 implicitHeight: mission_content_column.implicitHeight
 
@@ -520,7 +529,7 @@ Rectangle {
                                         id: unit_label
 
                                         anchors.centerIn: parent
-                                        text: Design.Numerals.roman(modelData.count) + "x " + titleize(modelData.type)
+                                        text: Design.Numerals.grouped(modelData.count) + "× " + titleize(modelData.type)
                                         color: Theme.infoText
                                         font.pixelSize: Design.Typography.label
                                     }
@@ -573,287 +582,257 @@ Rectangle {
                             }
                         }
                     }
-                }
-            }
-        }
 
-        ColumnLayout {
-            Layout.minimumWidth: 248
-            Layout.preferredWidth: 248
-            Layout.maximumWidth: 248
-            Layout.fillHeight: true
-            Layout.minimumHeight: 0
-            Layout.alignment: Qt.AlignTop
-            spacing: Theme.spacingSmall
+                    Rectangle {
+                        Layout.fillWidth: true
+                        implicitHeight: command_panel_layout.implicitHeight + Theme.spacingMedium * 2
+                        Layout.preferredHeight: implicitHeight
+                        radius: Theme.radiusSmall
+                        color: "#281e16"
+                        border.color: "#8f6d43"
+                        border.width: 1
 
-            ScrollView {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                Layout.minimumHeight: 0
-                clip: true
-                ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                        ColumnLayout {
+                            id: command_panel_layout
 
-                Item {
-                    width: parent.width
-                    implicitHeight: command_column.implicitHeight
+                            anchors.fill: parent
+                            anchors.margins: Theme.spacingMedium
+                            spacing: Theme.spacingSmall
 
-                    ColumnLayout {
-                        id: command_column
+                            Label {
+                                text: commander_title
+                                color: Theme.textMain
+                                font.pixelSize: Design.Typography.body
+                                font.bold: true
+                                font.family: "serif"
+                                Layout.fillWidth: true
+                                wrapMode: Text.WordWrap
+                            }
 
-                        width: parent.width
-                        spacing: Theme.spacingSmall
+                            Label {
+                                text: root.player_commander && root.player_commander.display_name ? root.player_commander.display_name : root.command_banner_text
+                                color: Theme.textMain
+                                font.pixelSize: Design.Typography.bodyLarge
+                                font.bold: true
+                                Layout.fillWidth: true
+                                wrapMode: Text.WordWrap
+                            }
 
-                        Rectangle {
-                            Layout.fillWidth: true
-                            implicitHeight: command_panel_layout.implicitHeight + Theme.spacingMedium * 2
-                            Layout.preferredHeight: implicitHeight
-                            radius: Theme.radiusSmall
-                            color: "#281e16"
-                            border.color: "#8f6d43"
-                            border.width: 1
+                            Label {
+                                text: root.player_commander && root.player_commander.battlefield_role ? root.player_commander.battlefield_role : root.commander_title
+                                color: Theme.textDim
+                                font.pixelSize: Design.Typography.label
+                                Layout.fillWidth: true
+                                wrapMode: Text.WordWrap
+                            }
 
-                            ColumnLayout {
-                                id: command_panel_layout
+                            Label {
+                                visible: !!(root.player_commander && root.player_commander.bonus_summary)
+                                text: root.player_commander && root.player_commander.bonus_summary ? root.player_commander.bonus_summary : ""
+                                color: Theme.textSubLite
+                                wrapMode: Text.WordWrap
+                                font.pixelSize: Design.Typography.label
+                                Layout.fillWidth: true
+                            }
 
-                                anchors.fill: parent
-                                anchors.margins: Theme.spacingMedium
-                                spacing: Theme.spacingSmall
+                            Label {
+                                text: root.historical_commanders_text(root.player_historical_commanders)
+                                visible: text.length > 0
+                                color: Theme.textDim
+                                wrapMode: Text.WordWrap
+                                font.pixelSize: Design.Typography.label
+                                font.italic: true
+                                Layout.fillWidth: true
+                            }
 
-                                Label {
-                                    text: commander_title
-                                    color: Theme.textMain
-                                    font.pixelSize: Design.Typography.body
-                                    font.bold: true
-                                    font.family: "serif"
+                            Label {
+                                text: root.reward_summary
+                                color: Theme.textSubLite
+                                wrapMode: Text.WordWrap
+                                font.pixelSize: Design.Typography.label
+                                Layout.fillWidth: true
+                            }
+
+                            Label {
+                                visible: root.opposing_forces.length > 0
+                                text: qsTr("Opposition Command")
+                                color: Theme.textDim
+                                font.pixelSize: Design.Typography.body
+                                font.bold: true
+                                Layout.fillWidth: true
+                            }
+
+                            Repeater {
+                                model: root.opposing_forces
+
+                                delegate: Rectangle {
                                     Layout.fillWidth: true
-                                    wrapMode: Text.WordWrap
-                                }
+                                    implicitHeight: opposition_force_layout.implicitHeight + Theme.spacingSmall * 2
+                                    Layout.preferredHeight: implicitHeight
+                                    radius: Theme.radiusSmall
+                                    color: "#2f241a"
+                                    border.color: "#8f6d43"
+                                    border.width: 1
 
-                                Label {
-                                    text: root.player_commander && root.player_commander.display_name ? root.player_commander.display_name : root.command_banner_text
-                                    color: Theme.textMain
-                                    font.pixelSize: Design.Typography.bodyLarge
-                                    font.bold: true
-                                    Layout.fillWidth: true
-                                    wrapMode: Text.WordWrap
-                                }
+                                    ColumnLayout {
+                                        id: opposition_force_layout
 
-                                Label {
-                                    text: root.player_commander && root.player_commander.battlefield_role ? root.player_commander.battlefield_role : root.commander_title
-                                    color: Theme.textDim
-                                    font.pixelSize: Design.Typography.label
-                                    Layout.fillWidth: true
-                                    wrapMode: Text.WordWrap
-                                }
+                                        anchors.fill: parent
+                                        anchors.margins: Theme.spacingSmall
+                                        spacing: Theme.spacingTiny
 
-                                Label {
-                                    visible: !!(root.player_commander && root.player_commander.bonus_summary)
-                                    text: root.player_commander && root.player_commander.bonus_summary ? root.player_commander.bonus_summary : ""
-                                    color: Theme.textSubLite
-                                    wrapMode: Text.WordWrap
-                                    font.pixelSize: Design.Typography.label
-                                    Layout.fillWidth: true
-                                }
+                                        RowLayout {
+                                            Layout.fillWidth: true
+                                            spacing: Theme.spacingSmall
 
-                                Label {
-                                    text: root.historical_commanders_text(root.player_historical_commanders)
-                                    visible: text.length > 0
-                                    color: Theme.textDim
-                                    wrapMode: Text.WordWrap
-                                    font.pixelSize: Design.Typography.label
-                                    font.italic: true
-                                    Layout.fillWidth: true
-                                }
-
-                                Label {
-                                    text: root.reward_summary
-                                    color: Theme.textSubLite
-                                    wrapMode: Text.WordWrap
-                                    font.pixelSize: Design.Typography.label
-                                    Layout.fillWidth: true
-                                }
-
-                                Label {
-                                    visible: root.opposing_forces.length > 0
-                                    text: qsTr("Opposition Command")
-                                    color: Theme.textDim
-                                    font.pixelSize: Design.Typography.body
-                                    font.bold: true
-                                    Layout.fillWidth: true
-                                }
-
-                                Repeater {
-                                    model: root.opposing_forces
-
-                                    delegate: Rectangle {
-                                        Layout.fillWidth: true
-                                        implicitHeight: opposition_force_layout.implicitHeight + Theme.spacingSmall * 2
-                                        Layout.preferredHeight: implicitHeight
-                                        radius: Theme.radiusSmall
-                                        color: "#2f241a"
-                                        border.color: "#8f6d43"
-                                        border.width: 1
-
-                                        ColumnLayout {
-                                            id: opposition_force_layout
-
-                                            anchors.fill: parent
-                                            anchors.margins: Theme.spacingSmall
-                                            spacing: Theme.spacingTiny
-
-                                            RowLayout {
-                                                Layout.fillWidth: true
-                                                spacing: Theme.spacingSmall
-
-                                                Label {
-                                                    text: root.command_glyph_for_setup(modelData)
-                                                    color: "#c29555"
-                                                    font.pixelSize: Design.Typography.body
-                                                    font.bold: true
-                                                }
-
-                                                Label {
-                                                    Layout.fillWidth: true
-                                                    text: modelData.commander && modelData.commander.display_name ? modelData.commander.display_name : qsTr("Field Command Pending")
-                                                    color: Theme.textMain
-                                                    font.pixelSize: Design.Typography.body
-                                                    font.bold: true
-                                                    wrapMode: Text.WordWrap
-                                                }
+                                            Label {
+                                                text: root.command_glyph_for_setup(modelData)
+                                                color: "#c29555"
+                                                font.pixelSize: Design.Typography.body
+                                                font.bold: true
                                             }
 
                                             Label {
                                                 Layout.fillWidth: true
-                                                text: root.setup_summary(modelData)
-                                                color: Theme.textDim
-                                                font.pixelSize: Design.Typography.label
+                                                text: modelData.commander && modelData.commander.display_name ? modelData.commander.display_name : qsTr("Field Command Pending")
+                                                color: Theme.textMain
+                                                font.pixelSize: Design.Typography.body
+                                                font.bold: true
                                                 wrapMode: Text.WordWrap
-                                                visible: text.length > 0
                                             }
+                                        }
 
-                                            Label {
-                                                Layout.fillWidth: true
-                                                text: modelData.commander && modelData.commander.battlefield_role ? modelData.commander.battlefield_role : root.command_banner_for_setup(modelData)
-                                                color: Theme.textSubLite
-                                                font.pixelSize: Design.Typography.label
-                                                wrapMode: Text.WordWrap
-                                            }
+                                        Label {
+                                            Layout.fillWidth: true
+                                            text: root.setup_summary(modelData)
+                                            color: Theme.textDim
+                                            font.pixelSize: Design.Typography.label
+                                            wrapMode: Text.WordWrap
+                                            visible: text.length > 0
+                                        }
 
-                                            Label {
-                                                Layout.fillWidth: true
-                                                text: modelData.commander && modelData.commander.bonus_summary ? modelData.commander.bonus_summary : qsTr("No named commander assigned to this force.")
-                                                color: Theme.textSubLite
-                                                font.pixelSize: Design.Typography.label
-                                                wrapMode: Text.WordWrap
-                                            }
+                                        Label {
+                                            Layout.fillWidth: true
+                                            text: modelData.commander && modelData.commander.battlefield_role ? modelData.commander.battlefield_role : root.command_banner_for_setup(modelData)
+                                            color: Theme.textSubLite
+                                            font.pixelSize: Design.Typography.label
+                                            wrapMode: Text.WordWrap
+                                        }
 
-                                            Label {
-                                                Layout.fillWidth: true
-                                                text: root.historical_commanders_text(modelData.historical_commanders)
-                                                visible: text.length > 0
-                                                color: Theme.textDim
-                                                font.pixelSize: Design.Typography.label
-                                                font.italic: true
-                                                wrapMode: Text.WordWrap
-                                            }
+                                        Label {
+                                            Layout.fillWidth: true
+                                            text: modelData.commander && modelData.commander.bonus_summary ? modelData.commander.bonus_summary : qsTr("No named commander assigned to this force.")
+                                            color: Theme.textSubLite
+                                            font.pixelSize: Design.Typography.label
+                                            wrapMode: Text.WordWrap
+                                        }
+
+                                        Label {
+                                            Layout.fillWidth: true
+                                            text: root.historical_commanders_text(modelData.historical_commanders)
+                                            visible: text.length > 0
+                                            color: Theme.textDim
+                                            font.pixelSize: Design.Typography.label
+                                            font.italic: true
+                                            wrapMode: Text.WordWrap
                                         }
                                     }
                                 }
                             }
                         }
                     }
-                }
-            }
 
-            Rectangle {
-                Layout.fillWidth: true
-                implicitHeight: readiness_text.implicitHeight + Theme.spacingSmall * 2
-                Layout.preferredHeight: implicitHeight
-                radius: Theme.radiusSmall
-                color: "#2f241a"
-                border.color: "#8f6d43"
-                border.width: 1
-
-                Label {
-                    id: readiness_text
-
-                    anchors.fill: parent
-                    anchors.margins: Theme.spacingSmall
-                    text: mission_data && !mission_data.unlocked ? qsTr("Orders sealed until prior victories are secured.") : (mission_data && mission_data.completed ? qsTr("Victory recorded. You may replay this engagement at will.") : qsTr("Orders issued. Deploy when ready."))
-                    color: Theme.textSubLite
-                    wrapMode: Text.WordWrap
-                    font.pixelSize: Design.Typography.label
-                    verticalAlignment: Text.AlignVCenter
-                }
-            }
-
-            Rectangle {
-                visible: !!(mission_data && mission_data.unlocked) && root.height >= 300
-                Layout.fillWidth: true
-                implicitHeight: tempo_row.implicitHeight + Theme.spacingSmall * 2
-                Layout.preferredHeight: implicitHeight
-                radius: Theme.radiusSmall
-                color: "#2f241a"
-                border.color: "#8f6d43"
-                border.width: 1
-
-                RowLayout {
-                    id: tempo_row
-
-                    anchors.fill: parent
-                    anchors.margins: Theme.spacingSmall
-                    spacing: Theme.spacingSmall
-
-                    Label {
-                        text: Design.Icons.objective
-                        font.pixelSize: Design.Typography.bodyLarge
-                        Layout.alignment: Qt.AlignTop
-                    }
-
-                    Label {
-                        text: qsTr("Battle tempo: the speed buttons sit on the top bar beside pause, from %1 up to %2. Press %3 or %4 to change speed without leaving the field.").arg(root.speed_label(root.speed_options[0])).arg(root.speed_label(root.speed_options[root.speed_options.length - 1])).arg(root.speed_shortcut("rts.speed_down")).arg(root.speed_shortcut("rts.speed_up"))
-                        color: Theme.textSubLite
-                        wrapMode: Text.WordWrap
+                    Rectangle {
+                        visible: !!(mission_data && mission_data.unlocked)
                         Layout.fillWidth: true
-                        font.pixelSize: Design.Typography.label
+                        implicitHeight: tempo_row.implicitHeight + Theme.spacingSmall * 2
+                        Layout.preferredHeight: implicitHeight
+                        radius: Theme.radiusSmall
+                        color: "#2f241a"
+                        border.color: "#8f6d43"
+                        border.width: 1
+
+                        RowLayout {
+                            id: tempo_row
+
+                            anchors.fill: parent
+                            anchors.margins: Theme.spacingSmall
+                            spacing: Theme.spacingSmall
+
+                            Label {
+                                text: Design.Icons.objective
+                                font.pixelSize: Design.Typography.bodyLarge
+                                Layout.alignment: Qt.AlignTop
+                            }
+
+                            Label {
+                                text: qsTr("Battle tempo: the speed buttons sit on the top bar beside pause, from %1 up to %2. Press %3 or %4 to change speed without leaving the field.").arg(root.speed_label(root.speed_options[0])).arg(root.speed_label(root.speed_options[root.speed_options.length - 1])).arg(root.speed_shortcut("rts.speed_down")).arg(root.speed_shortcut("rts.speed_up"))
+                                color: Theme.textSubLite
+                                wrapMode: Text.WordWrap
+                                Layout.fillWidth: true
+                                font.pixelSize: Design.Typography.label
+                            }
+                        }
                     }
                 }
             }
+        }
 
-            StyledButton {
-                Layout.fillWidth: true
-                text: mission_data && mission_data.completed ? qsTr("Replay Mission") : qsTr("Start Mission")
-                blocked: !(mission_data && mission_data.unlocked)
-                onClicked: root.start_mission_clicked()
-                ToolTip.visible: !interactive && hovered
-                ToolTip.text: {
-                    if (!mission_data)
-                        return "";
-                    if (!mission_data.unlocked)
-                        return qsTr("Complete previous missions to unlock");
+        Rectangle {
+            Layout.fillWidth: true
+            implicitHeight: readiness_text.implicitHeight + Theme.spacingSmall * 2
+            Layout.preferredHeight: implicitHeight
+            radius: Theme.radiusSmall
+            color: "#2f241a"
+            border.color: "#8f6d43"
+            border.width: 1
+
+            Label {
+                id: readiness_text
+
+                anchors.fill: parent
+                anchors.margins: Theme.spacingSmall
+                text: mission_data && !mission_data.unlocked ? qsTr("Orders sealed until prior victories are secured.") : (mission_data && mission_data.completed ? qsTr("Victory recorded. You may replay this engagement at will.") : qsTr("Orders issued. Deploy when ready."))
+                color: Theme.textSubLite
+                wrapMode: Text.WordWrap
+                font.pixelSize: Design.Typography.label
+                verticalAlignment: Text.AlignVCenter
+            }
+        }
+
+        StyledButton {
+            Layout.fillWidth: true
+            text: mission_data && mission_data.completed ? qsTr("Replay Mission") : qsTr("Start Mission")
+            blocked: !(mission_data && mission_data.unlocked)
+            onClicked: root.start_mission_clicked()
+            ToolTip.visible: !interactive && hovered
+            ToolTip.text: {
+                if (!mission_data)
                     return "";
-                }
-                ToolTip.delay: 500
+                if (!mission_data.unlocked)
+                    return qsTr("Complete previous missions to unlock");
+                return "";
             }
+            ToolTip.delay: 500
+        }
 
-            Label {
-                visible: !!(mission_data && !mission_data.unlocked)
-                text: Design.Icons.locked + " " + qsTr("Locked")
-                color: Theme.textDim
-                font.pixelSize: Design.Typography.body
-                horizontalAlignment: Text.AlignHCenter
-                Layout.alignment: Qt.AlignHCenter
-            }
+        Label {
+            visible: !!(mission_data && !mission_data.unlocked)
+            text: Design.Icons.locked + " " + qsTr("Locked")
+            color: Theme.textDim
+            font.pixelSize: Design.Typography.body
+            horizontalAlignment: Text.AlignHCenter
+            Layout.alignment: Qt.AlignHCenter
+        }
 
-            Label {
-                visible: !!(mission_data && mission_data.completed)
-                text: qsTr("✓ Completed")
-                color: Theme.successText
-                font.pixelSize: Design.Typography.body
-                font.bold: true
-                horizontalAlignment: Text.AlignHCenter
-                Layout.alignment: Qt.AlignHCenter
-            }
+        Label {
+            visible: !!(mission_data && mission_data.completed)
+            text: qsTr("✓ Completed")
+            color: Theme.successText
+            font.pixelSize: Design.Typography.body
+            font.bold: true
+            horizontalAlignment: Text.AlignHCenter
+            Layout.alignment: Qt.AlignHCenter
         }
     }
 }

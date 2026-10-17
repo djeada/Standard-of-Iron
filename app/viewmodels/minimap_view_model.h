@@ -10,6 +10,7 @@
 #include <array>
 #include <cstdint>
 #include <optional>
+#include <set>
 
 namespace App::Core {
 struct ClientContext;
@@ -38,6 +39,7 @@ class MinimapViewModel : public QObject {
   Q_PROPERTY(QImage image READ image NOTIFY image_changed)
   Q_PROPERTY(QVariantList destinations READ destinations NOTIFY destinations_changed)
   Q_PROPERTY(QVariantList landmarks READ landmarks NOTIFY landmarks_changed)
+  Q_PROPERTY(QVariantList ally_markers READ ally_markers NOTIFY ally_markers_changed)
 
 public:
   MinimapViewModel(const App::Core::ClientContext& context,
@@ -53,6 +55,7 @@ public:
   [[nodiscard]] auto image() const -> QImage;
   [[nodiscard]] auto destinations() const -> QVariantList { return m_destinations; }
   [[nodiscard]] auto landmarks() const -> QVariantList { return m_landmarks; }
+  [[nodiscard]] auto ally_markers() const -> QVariantList { return m_ally_markers; }
 
   void note_order_marker(const App::Core::OrderMarker& marker);
 
@@ -66,6 +69,8 @@ public:
 
   void set_destinations(QVariantList destinations);
   void set_landmarks(QVariantList landmarks);
+  void set_ally_markers(const QVariantList& world_markers);
+  void refresh_ally_markers();
   void clear_overlays();
 
   void notify_image_changed() { emit image_changed(); }
@@ -74,6 +79,7 @@ signals:
   void image_changed();
   void destinations_changed();
   void landmarks_changed();
+  void ally_markers_changed();
 
   void order_ping(
       qreal nx, qreal ny, const QString& color, bool rejected, qreal lifetime_seconds);
@@ -107,6 +113,9 @@ private:
 
   QVariantList m_destinations;
   QVariantList m_landmarks;
+  QVariantList m_ally_world_markers;
+  QVariantList m_ally_markers;
+  std::set<quint32> m_announced_ally_markers;
 
   QElapsedTimer m_alert_clock;
   std::array<AlertSlot, k_alert_slot_count> m_alert_slots{};

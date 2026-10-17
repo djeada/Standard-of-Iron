@@ -23,6 +23,7 @@ namespace {
 
 constexpr qint64 k_consider_interval_ms = 60;
 constexpr int k_alert_grid = 12;
+constexpr float k_ally_call_blip_seconds = 3.6F;
 
 struct AlertStyle {
   const char* kind;
@@ -283,9 +284,58 @@ void MinimapViewModel::set_landmarks(QVariantList landmarks) {
   emit landmarks_changed();
 }
 
+void MinimapViewModel::set_ally_markers(const QVariantList& world_markers) {
+  m_ally_world_markers = world_markers;
+  std::set<quint32> live;
+  for (const auto& entry : m_ally_world_markers) {
+    live.insert(entry.toMap().value("id").toUInt());
+  }
+  std::erase_if(m_announced_ally_markers,
+                [&live](quint32 id) { return !live.contains(id); });
+  refresh_ally_markers();
+}
+
+void MinimapViewModel::refresh_ally_markers() {
+  auto* minimap = m_context.minimap;
+  QVariantList markers;
+  for (const auto& entry : m_ally_world_markers) {
+    const auto world = entry.toMap();
+    float nx = 0.0F;
+    float ny = 0.0F;
+    if (minimap == nullptr ||
+        !minimap->world_to_normalized(
+            world.value("x").toFloat(), world.value("z").toFloat(), nx, ny)) {
+      continue;
+    }
+    nx = std::clamp(nx, 0.0F, 1.0F);
+    ny = std::clamp(ny, 0.0F, 1.0F);
+    QVariantMap marker;
+    marker["id"] = world.value("id");
+    marker["kind"] = world.value("kind");
+    marker["name"] = world.value("name");
+    marker["pledged"] = world.value("pledged");
+    marker["nx"] = nx;
+    marker["ny"] = ny;
+    markers.append(marker);
+    if (m_announced_ally_markers.insert(world.value("id").toUInt()).second) {
+      emit event_blip(nx,
+                      ny,
+                      QStringLiteral("ally_call"),
+                      QStringLiteral("ally"),
+                      static_cast<qreal>(k_ally_call_blip_seconds));
+    }
+  }
+  if (m_ally_markers == markers) {
+    return;
+  }
+  m_ally_markers = std::move(markers);
+  emit ally_markers_changed();
+}
+
 void MinimapViewModel::clear_overlays() {
   set_destinations({});
   set_landmarks({});
+  set_ally_markers({});
   m_alert_slots = {};
 }
 

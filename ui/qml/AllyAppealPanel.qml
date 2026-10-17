@@ -59,6 +59,10 @@ Column {
             root.close_appeal(appealId);
         }
 
+        function onMatch_ended() {
+            appeals.clear();
+        }
+
         target: root.engine
     }
 
@@ -91,7 +95,12 @@ Column {
                 interval: 1000
                 repeat: true
                 running: card.remaining > 0
-                onTriggered: card.remaining = Math.max(0, card.remaining - 1)
+                onTriggered: {
+                    if (root.engine && root.engine.paused)
+                        return;
+                    var scale = (root.engine && root.engine.time_scale > 0) ? root.engine.time_scale : 1;
+                    card.remaining = Math.max(0, card.remaining - scale);
+                }
             }
 
             ColumnLayout {

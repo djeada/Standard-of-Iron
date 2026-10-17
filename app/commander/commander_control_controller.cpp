@@ -217,7 +217,13 @@ void CommanderControlController::cycle_lock_on_target(
     Engine::Core::World& world,
     Engine::Core::EntityID commander_id,
     int local_owner_id) {
-  m_targeting.cycle_lock(world, commander_id, local_owner_id, m_look.yaw());
+  if (!m_targeting.cycle_lock(world, commander_id, local_owner_id, m_look.yaw())) {
+    m_abilities.refuse("commander.cycle_lock_on");
+  }
+}
+
+void CommanderControlController::note_refusal(const char* action) {
+  m_abilities.refuse(action);
 }
 
 auto CommanderControlController::controlled_commander(
@@ -289,7 +295,6 @@ auto CommanderControlController::hold_for_rally(Engine::Core::World& world,
                                                 const App::Core::CommanderHandles& body,
                                                 Render::GL::Camera* camera,
                                                 float dt) -> bool {
-  m_abilities.advance_cooldowns(body.commander_data, dt);
   body.commander_data->fpv_motion_vx = 0.0F;
   body.commander_data->fpv_motion_vz = 0.0F;
   body.commander_data->fpv_motion_requested = false;

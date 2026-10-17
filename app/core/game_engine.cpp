@@ -666,7 +666,8 @@ auto GameEngine::focus_inputs() -> App::World::FocusInputs {
           .visibility = m_visibility_coordinator.get(),
           .activity = m_activity_view_model.get(),
           .local_owner_id = m_runtime.local_owner_id,
-          .spectator_mode = m_level.is_spectator_mode};
+          .spectator_mode = m_level.is_spectator_mode,
+          .commander_active = m_commander_view_model->active()};
 }
 
 void GameEngine::publish_presentation_frame() {
@@ -1427,6 +1428,7 @@ void GameEngine::reset_preload_interaction_state() {
   if (m_world) {
     if (auto* selection_system = &Game::Session::session_for(*m_world).selection()) {
       selection_system->clear_selection();
+      selection_system->clear_control_groups();
     }
   }
 

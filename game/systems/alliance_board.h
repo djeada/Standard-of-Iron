@@ -120,8 +120,10 @@ public:
   [[nodiscard]] auto take_appeal_replies() -> std::vector<AllyAppealReply>;
 
   void clear();
+  [[nodiscard]] auto epoch() const -> std::uint32_t { return m_epoch; }
 
 private:
+  std::uint32_t m_epoch = 0;
   std::uint32_t m_last_call_id = 0;
   std::vector<AllyCallRequest> m_calls;
   std::vector<AllyCallAnswer> m_call_answers;

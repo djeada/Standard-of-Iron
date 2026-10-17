@@ -2,11 +2,13 @@
 
 #include <algorithm>
 #include <cmath>
+#include <numbers>
 
 #include "body_profile.h"
 #include "formation/army_formation_registry.h"
 #include "game/core/ford_rules.h"
 #include "systems/builder_product_types.h"
+#include "systems/building_collision_registry.h"
 #include "systems/combat_rules.h"
 #include "systems/defensive_unit_layout_service.h"
 #include "systems/navigation/nav_grid.h"
@@ -16,6 +18,39 @@
 namespace Game::Systems {
 
 constexpr float k_work_anchor_reach = 1.75F;
+constexpr float k_worked_field_margin = 1.5F;
+
+namespace {
+
+auto inside_worked_field(const QVector3D& pos,
+                         const Engine::Core::Entity& entity,
+                         const Engine::Core::BuilderProductionComponent& builder)
+    -> bool {
+  if (builder.product_type != k_builder_product_harvest_grain ||
+      builder.structure_task_entity_id == 0 || entity.registry() == nullptr) {
+    return false;
+  }
+  auto const* farm = entity.registry()->try_get<Engine::Core::TransformComponent>(
+      builder.structure_task_entity_id);
+  if (farm == nullptr) {
+    return false;
+  }
+  auto const size = BuildingCollisionRegistry::get_building_size("farm");
+  float const margin =
+      BuildingCollisionRegistry::get_grid_padding() + k_worked_field_margin;
+  float const yaw = farm->rotation.y * std::numbers::pi_v<float> / 180.0F;
+  float const cosine = std::cos(yaw);
+  float const sine = std::sin(yaw);
+  float const half_width = size.width * 0.5F;
+  float const half_depth = size.depth * 0.5F;
+  return std::fabs(pos.x() - farm->position.x) <= (half_width * std::fabs(cosine)) +
+                                                      (half_depth * std::fabs(sine)) +
+                                                      margin &&
+         std::fabs(pos.z() - farm->position.z) <=
+             (half_width * std::fabs(sine)) + (half_depth * std::fabs(cosine)) + margin;
+}
+
+} // namespace
 
 auto is_movement_point_allowed(const QVector3D& pos,
                                const Engine::Core::Entity& entity) -> bool {
@@ -42,6 +77,10 @@ auto is_movement_point_allowed(const QVector3D& pos,
     if (on_terrain && builder_prod->has_construction_site &&
         stands_at(builder_prod->construction_site_x,
                   builder_prod->construction_site_z)) {
+      return true;
+    }
+
+    if (on_terrain && inside_worked_field(pos, entity, *builder_prod)) {
       return true;
     }
 

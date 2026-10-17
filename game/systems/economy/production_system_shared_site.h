@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <utility>
 #include <vector>
 
@@ -8,6 +9,7 @@
 namespace Engine::Core {
 class World;
 class BuilderProductionComponent;
+enum class BuilderTaskFault : std::uint8_t;
 } // namespace Engine::Core
 
 namespace Game::Systems::ProductionTasks {
@@ -23,6 +25,14 @@ site_progress(const Engine::Core::BuilderProductionComponent& builder) -> float;
 
 using FinishedSites =
     std::vector<std::pair<Engine::Core::EntityID, std::vector<Engine::Core::EntityID>>>;
+
+auto refund_abandoned_site(Engine::Core::World& world,
+                           Engine::Core::EntityID crew) -> bool;
+
+void abandon_paid_site(Engine::Core::World& world,
+                       Engine::Core::EntityID crew,
+                       int owner_id,
+                       Engine::Core::BuilderTaskFault fault);
 
 [[nodiscard]] auto advance_shared_sites(Engine::Core::World& world,
                                         float delta_time) -> FinishedSites;

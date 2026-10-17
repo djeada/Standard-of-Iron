@@ -296,6 +296,10 @@
         <source>Ask allies to defend</source>
         <translation>Ask allies to defend</translation>
     </message>
+    <message>
+        <source>Free queue slot: up to %1 recruits can wait in line</source>
+        <translation>Free queue slot: up to %1 recruits can wait in line</translation>
+    </message>
 </context>
 <context>
     <name>BattleReportLayout</name>
@@ -426,6 +430,17 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>%1 of %2</source>
         <translation>%1 of %2</translation>
+    </message>
+</context>
+<context>
+    <name>BuilderTask</name>
+    <message>
+        <source>Builders could not reach their construction site. The building was abandoned and its cost refunded.</source>
+        <translation>Builders could not reach their construction site. The building was abandoned and its cost refunded.</translation>
+    </message>
+    <message>
+        <source>Builders were pulled off their construction site. The building was abandoned and its cost refunded.</source>
+        <translation>Builders were pulled off their construction site. The building was abandoned and its cost refunded.</translation>
     </message>
 </context>
 <context>
@@ -740,10 +755,6 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Campaign</translation>
     </message>
     <message>
-        <source>Campaign Chronicle • </source>
-        <translation>Campaign Chronicle • </translation>
-    </message>
-    <message>
         <source>← Back</source>
         <translation>← Back</translation>
     </message>
@@ -752,8 +763,12 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Campaign Chronicle</translation>
     </message>
     <message>
-        <source>Campaign Progress:</source>
-        <translation>Campaign Progress:</translation>
+        <source>Progress</source>
+        <translation>Progress</translation>
+    </message>
+    <message>
+        <source>%1 / %2</source>
+        <translation>%1 / %2</translation>
     </message>
 </context>
 <context>
@@ -4547,6 +4562,17 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <source>%1/%2 walls  •  %3 wood</source>
         <translation>%1/%2 walls  •  %3 wood</translation>
     </message>
+    <message numerus="yes">
+        <source>Group %1 holds %n unit(s)</source>
+        <translation>
+            <numerusform>Group %1 holds %n unit</numerusform>
+            <numerusform>Group %1 holds %n units</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Group %1 cleared</source>
+        <translation>Group %1 cleared</translation>
+    </message>
 </context>
 <context>
     <name>GraphicsSettingsProxy</name>
@@ -6078,6 +6104,14 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
         <source>Among the waves walks a grave priest. He heals the dead around him and throws fire at your line, so a slow slog of spearmen alone will bleed. Bring a Medicus to mend the burns and ranged troops to cut the priest down from a distance before the guardians close in. Kill him first and the dead stop mending.</source>
         <translation>Among the waves walks a grave priest. He heals the dead around him and throws fire at your line, so a slow slog of spearmen alone will bleed. Bring a Medicus to mend the burns and ranged troops to cut the priest down from a distance before the guardians close in. Kill him first and the dead stop mending.</translation>
     </message>
+    <message>
+        <source>Control groups</source>
+        <translation>Control groups</translation>
+    </message>
+    <message>
+        <source>Hold Ctrl and press a number from 1 to 9 to store the selected troops as that group. Press the number alone to select the group again, or hold Shift to add it to what is already selected; press it twice quickly to swing the camera onto the group. Fallen soldiers drop out of their group, and groups last until the battle ends. Tab centres the camera on whatever is selected. All of these keys can be rebound under Settings › Controls.</source>
+        <translation>Hold Ctrl and press a number from 1 to 9 to store the selected troops as that group. Press the number alone to select the group again, or hold Shift to add it to what is already selected; press it twice quickly to swing the camera onto the group. Fallen soldiers drop out of their group, and groups last until the battle ends. Tab centres the camera on whatever is selected. All of these keys can be rebound under Settings › Controls.</translation>
+    </message>
 </context>
 <context>
     <name>HintCard</name>
@@ -7210,6 +7244,18 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
         <source>Load the quicksave</source>
         <translation>Load the quicksave</translation>
     </message>
+    <message>
+        <source>Restart this battle?</source>
+        <translation>Restart this battle?</translation>
+    </message>
+    <message>
+        <source>The battle starts again from the beginning and everything won since is lost. Save it first if you want to come back to it.</source>
+        <translation>The battle starts again from the beginning and everything won since is lost. Save it first if you want to come back to it.</translation>
+    </message>
+    <message>
+        <source>Restart the battle</source>
+        <translation>Restart the battle</translation>
+    </message>
 </context>
 <context>
     <name>MainMenu</name>
@@ -7408,6 +7454,42 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     <message>
         <source>Resume</source>
         <translation>Resume</translation>
+    </message>
+    <message>
+        <source>Abandon this battle and close the game</source>
+        <translation>Abandon this battle and close the game</translation>
+    </message>
+    <message>
+        <source>Leaves the battle in progress - you will be asked first</source>
+        <translation>Leaves the battle in progress - you will be asked first</translation>
+    </message>
+    <message>
+        <source>Close this menu and carry on fighting</source>
+        <translation>Close this menu and carry on fighting</translation>
+    </message>
+    <message>
+        <source>Restart battle</source>
+        <translation>Restart battle</translation>
+    </message>
+    <message>
+        <source>Fight this battle again from the start</source>
+        <translation>Fight this battle again from the start</translation>
+    </message>
+    <message>
+        <source>Again</source>
+        <translation>Again</translation>
+    </message>
+    <message>
+        <source>Quit to main menu</source>
+        <translation>Quit to main menu</translation>
+    </message>
+    <message>
+        <source>Abandon this battle and return to the war table</source>
+        <translation>Abandon this battle and return to the war table</translation>
+    </message>
+    <message>
+        <source>Abandon</source>
+        <translation>Abandon</translation>
     </message>
 </context>
 <context>
@@ -7986,6 +8068,14 @@ to see preview</translation>
     <message>
         <source>Arrows pan  ·  Drag to rotate  ·  Scroll or +/- to zoom  ·  Home resets</source>
         <translation>Arrows pan  ·  Drag to rotate  ·  Scroll or +/- to zoom  ·  Home resets</translation>
+    </message>
+    <message>
+        <source>Map controls</source>
+        <translation>Map controls</translation>
+    </message>
+    <message>
+        <source>Controls ?</source>
+        <translation>Controls ?</translation>
     </message>
 </context>
 <context>
@@ -10257,6 +10347,10 @@ to see preview</translation>
         <source>Choose a dispatch to review its field orders.</source>
         <translation>Choose a dispatch to review its field orders.</translation>
     </message>
+    <message>
+        <source>%1 / %2</source>
+        <translation>%1 / %2</translation>
+    </message>
 </context>
 <context>
     <name>Nations</name>
@@ -11555,10 +11649,6 @@ Right-click to cancel.</translation>
         <translation>Ask your allied commanders to send men to hold this building. A cautious commander with men to spare agrees, one whose own camp is threatened refuses.</translation>
     </message>
     <message>
-        <source>That request has already been withdrawn.</source>
-        <translation>That request has already been withdrawn.</translation>
-    </message>
-    <message>
         <source>Not enough %1 to give.</source>
         <translation>Not enough %1 to give.</translation>
     </message>
@@ -11901,6 +11991,26 @@ Right-click to cancel.</translation>
         <source>Loaded, but &apos;%1&apos; could not be read, so wildlife, undead zones and cursed veins were not restored.</source>
         <translation>Loaded, but &apos;%1&apos; could not be read, so wildlife, undead zones and cursed veins were not restored.</translation>
     </message>
+    <message>
+        <source>Control groups</source>
+        <translation>Control groups</translation>
+    </message>
+    <message>
+        <source>Centre the camera on the selection</source>
+        <translation>Centre the camera on the selection</translation>
+    </message>
+    <message>
+        <source>Jumps the view to the selected troops. Double-click a portrait in the selection panel to jump to that unit.</source>
+        <translation>Jumps the view to the selected troops. Double-click a portrait in the selection panel to jump to that unit.</translation>
+    </message>
+    <message>
+        <source>Control group %1</source>
+        <translation>Control group %1</translation>
+    </message>
+    <message>
+        <source>Selects the group. Hold Ctrl to store the current selection in it, hold Shift to add the group to the selection, and press twice quickly to centre the camera on it.</source>
+        <translation>Selects the group. Hold Ctrl to store the current selection in it, hold Shift to add the group to the selection, and press twice quickly to centre the camera on it.</translation>
+    </message>
 </context>
 <context>
     <name>RecruitCard</name>
@@ -12080,6 +12190,10 @@ Right-click to cancel.</translation>
     <message>
         <source>BLADE DRAWN</source>
         <translation>BLADE DRAWN</translation>
+    </message>
+    <message>
+        <source>NO TARGET IN REACH</source>
+        <translation>NO TARGET IN REACH</translation>
     </message>
 </context>
 <context>
@@ -12331,6 +12445,14 @@ Right-click to cancel.</translation>
     <message>
         <source>Played %1</source>
         <translation>Played %1</translation>
+    </message>
+    <message>
+        <source>Quicksave %1</source>
+        <translation>Quicksave %1</translation>
+    </message>
+    <message>
+        <source>Autosave %1</source>
+        <translation>Autosave %1</translation>
     </message>
 </context>
 <context>
@@ -12818,10 +12940,6 @@ Right-click to cancel.</translation>
         <translation>Camera rotation speed:</translation>
     </message>
     <message>
-        <source>Scales keyboard panning, zooming and rotation; drag and minimap movement stay unchanged.</source>
-        <translation>Scales keyboard panning, zooming and rotation; drag and minimap movement stay unchanged.</translation>
-    </message>
-    <message>
         <source>Economy numbers</source>
         <translation>Economy numbers</translation>
     </message>
@@ -12872,6 +12990,14 @@ Right-click to cancel.</translation>
     <message>
         <source>Night</source>
         <translation>Night</translation>
+    </message>
+    <message>
+        <source>Camera speeds</source>
+        <translation>Camera speeds</translation>
+    </message>
+    <message>
+        <source>The three speeds below scale keyboard panning, zooming and rotation. Mouse drag and minimap movement stay unchanged.</source>
+        <translation>The three speeds below scale keyboard panning, zooming and rotation. Mouse drag and minimap movement stay unchanged.</translation>
     </message>
 </context>
 <context>

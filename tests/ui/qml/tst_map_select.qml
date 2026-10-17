@@ -342,6 +342,96 @@ TestCase {
         screen.destroy();
     }
 
+    readonly property var battlefield_list: [{
+            "name": "Four Rivers",
+            "path": "assets/maps/four.json",
+            "playerCount": 4,
+            "soloPlayable": false,
+            "player_ids": [1, 2, 3, 4]
+        }, {
+            "name": "Three Hills",
+            "path": "assets/maps/three.json",
+            "playerCount": 3,
+            "soloPlayable": false,
+            "player_ids": [1, 2, 3]
+        }, {
+            "name": "Forest Battlefield",
+            "path": "assets/maps/forest.json",
+            "playerCount": 2,
+            "soloPlayable": false,
+            "player_ids": [1, 2]
+        }, {
+            "name": "Iron Sepulcher Watch",
+            "path": "assets/maps/sepulcher.json",
+            "playerCount": 1,
+            "soloPlayable": true,
+            "player_ids": [1]
+        }]
+
+    function test_added_cpus_fill_the_smaller_side() {
+        var screen = make_screen(battlefield_list);
+        compare(screen.roster.count, 2);
+        screen.add_cpu();
+        screen.add_cpu();
+        compare(screen.roster.count, 4, "you and three CPUs");
+        var sides = [0, 0];
+        for (var i = 0; i < screen.roster.count; ++i)
+            sides[screen.roster.get(i).team_id]++;
+        compare(sides[0], 2, "a four-seat field defaults to two against two, not you alone against three");
+        compare(sides[1], 2);
+        screen.destroy();
+    }
+
+    function test_switching_battlefields_keeps_the_order_of_battle() {
+        var screen = make_screen(battlefield_list);
+        screen.add_cpu();
+        compare(screen.roster.count, 3, "you and two CPUs");
+        screen.cycle_player_team(2);
+        screen.cycle_player_team(2);
+        screen.cycle_player_difficulty(1);
+        screen.cycle_player_nation(2);
+        var teams = [screen.roster.get(0).team_id, screen.roster.get(1).team_id, screen.roster.get(2).team_id];
+        var nation = screen.roster.get(2).nationId;
+        var commander = screen.roster.get(2).commanderTroop;
+        var colour = screen.roster.get(1).colorIndex;
+        var difficulty = screen.roster.get(1).difficulty;
+        screen.select_map(1);
+        compare(screen.roster.count, 3, "a three-slot battlefield seats all three");
+        compare([screen.roster.get(0).team_id, screen.roster.get(1).team_id, screen.roster.get(2).team_id], teams, "teams survive the switch");
+        compare(screen.roster.get(2).nationId, nation);
+        compare(screen.roster.get(2).commanderTroop, commander);
+        compare(screen.roster.get(1).colorIndex, colour);
+        compare(screen.roster.get(1).difficulty, difficulty);
+        verify(screen.roster.get(0).isHuman);
+        screen.select_map(2);
+        compare(screen.roster.count, 2, "a two-slot battlefield keeps as many seats as it holds");
+        compare(screen.roster.get(1).difficulty, difficulty, "the first CPU keeps its settings");
+        verify(screen.roster.get(1).team_id < 2, "teams are clamped to what the roster can field");
+        compare(screen.roster.get(1).player_id, 2);
+        screen.select_map(3);
+        compare(screen.roster.count, 1, "a solo battlefield seats only you");
+        screen.select_map(0);
+        compare(screen.roster.count, 2, "a versus battlefield brings back an opponent");
+        screen.destroy();
+    }
+
+    function test_carried_seats_take_slots_the_new_map_actually_has() {
+        var screen = make_screen(battlefield_list);
+        screen.add_cpu();
+        screen.add_cpu();
+        compare(screen.roster.count, 4);
+        screen.select_map(1);
+        var ids = [];
+        for (var i = 0; i < screen.roster.count; ++i) {
+            var id = screen.roster.get(i).player_id;
+            verify([1, 2, 3].indexOf(id) !== -1, "seat " + i + " was given slot " + id);
+            verify(ids.indexOf(id) === -1, "slot " + id + " was handed out twice");
+            ids.push(id);
+        }
+        compare(ids.length, 3);
+        screen.destroy();
+    }
+
     Component {
         id: screenComponent
 

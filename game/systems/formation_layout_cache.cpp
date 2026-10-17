@@ -282,6 +282,7 @@ auto build_formation_layout(const Engine::Core::Entity& entity,
   result.spacing = definition.spacing;
   result.body_radius = body_radius_from_scale(transform);
   result.seed = formation_seed(entity);
+  result.world_anchored = work_site.active;
 
   result.all_slots.reserve(static_cast<std::size_t>(result.total_count));
   result.live_slots.reserve(static_cast<std::size_t>(result.total_count));

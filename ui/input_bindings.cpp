@@ -63,6 +63,23 @@ constexpr std::array<NamedBareKey, 5> k_bare_modifier_keys{{{Qt::Key_Shift, "Shi
                                                             {Qt::Key_AltGr, "AltGr"},
                                                             {Qt::Key_Meta, "Meta"}}};
 
+struct ShiftedDigit {
+  int symbol;
+  int digit;
+};
+
+constexpr std::array<ShiftedDigit, 10> k_shifted_digits{
+    {{Qt::Key_Exclam, Qt::Key_1},
+     {Qt::Key_At, Qt::Key_2},
+     {Qt::Key_NumberSign, Qt::Key_3},
+     {Qt::Key_Dollar, Qt::Key_4},
+     {Qt::Key_Percent, Qt::Key_5},
+     {Qt::Key_AsciiCircum, Qt::Key_6},
+     {Qt::Key_Ampersand, Qt::Key_7},
+     {Qt::Key_Asterisk, Qt::Key_8},
+     {Qt::Key_ParenLeft, Qt::Key_9},
+     {Qt::Key_ParenRight, Qt::Key_0}}};
+
 auto modifiers_to_string(int modifiers) -> QString {
   QString text;
   for (const auto& entry : k_modifier_names) {
@@ -114,12 +131,13 @@ auto make_catalog() -> QVector<InputBindings::ActionSpec> {
   const QString system = QObject::tr("System");
   const QString camera = QObject::tr("Camera");
   const QString selection = QObject::tr("Selection");
+  const QString groups = QObject::tr("Control groups");
   const QString orders = QObject::tr("Orders");
   const QString movement = QObject::tr("Commander movement");
   const QString combat = QObject::tr("Commander combat");
 
   QVector<Spec> catalog;
-  catalog.reserve(48);
+  catalog.reserve(64);
 
   catalog.append({QStringLiteral("global.menu"),
                   global,
@@ -275,6 +293,28 @@ auto make_catalog() -> QVector<InputBindings::ActionSpec> {
                   {},
                   QStringLiteral("X"),
                   false});
+  catalog.append({QStringLiteral("rts.center_on_selection"),
+                  rts,
+                  selection,
+                  QObject::tr("Centre the camera on the selection"),
+                  QObject::tr("Jumps the view to the selected troops. Double-click a "
+                              "portrait in the selection panel to jump to that unit."),
+                  QStringLiteral("Tab"),
+                  false});
+  for (int group = 1; group <= InputBindings::kControlGroupCount; ++group) {
+    catalog.append({QStringLiteral("%1%2")
+                        .arg(QLatin1String(InputBindings::kControlGroupPrefix))
+                        .arg(group),
+                    rts,
+                    groups,
+                    QObject::tr("Control group %1").arg(group),
+                    QObject::tr("Selects the group. Hold Ctrl to store the current "
+                                "selection in it, hold Shift to add the group to the "
+                                "selection, and press twice quickly to centre the "
+                                "camera on it."),
+                    QString::number(group),
+                    false});
+  }
   catalog.append({QStringLiteral("rts.command"),
                   rts,
                   orders,
@@ -881,6 +921,40 @@ auto InputBindings::canonical_key_for(const QString& action_id) const -> int {
     return 0;
   }
   return parse(spec->default_shortcut).key;
+}
+
+auto InputBindings::control_group_of(const QString& action_id) -> int {
+  const QLatin1String prefix(kControlGroupPrefix);
+  if (!action_id.startsWith(prefix)) {
+    return 0;
+  }
+  bool ok = false;
+  const int group = action_id.mid(prefix.size()).toInt(&ok);
+  return ok && group >= 1 && group <= kControlGroupCount ? group : 0;
+}
+
+auto InputBindings::digit_row_key(int key, quint32 native_scan_code) -> int {
+  if (key >= Qt::Key_0 && key <= Qt::Key_9) {
+    return key;
+  }
+#if defined(Q_OS_WIN)
+  constexpr quint32 k_first_digit_scan_code = 2;
+#elif defined(Q_OS_MACOS)
+  constexpr quint32 k_first_digit_scan_code = 0;
+#else
+  constexpr quint32 k_first_digit_scan_code = 10;
+#endif
+  if (k_first_digit_scan_code != 0 && native_scan_code >= k_first_digit_scan_code &&
+      native_scan_code < k_first_digit_scan_code + 10) {
+    const auto offset = static_cast<int>(native_scan_code - k_first_digit_scan_code);
+    return offset == 9 ? Qt::Key_0 : Qt::Key_1 + offset;
+  }
+  for (const auto& entry : k_shifted_digits) {
+    if (entry.symbol == key) {
+      return entry.digit;
+    }
+  }
+  return key;
 }
 
 auto InputBindings::is_modifier_key(int key) -> bool {

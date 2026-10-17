@@ -10,7 +10,12 @@
 #include "app/input/input_command_handler.h"
 #include "app/input/rts_camera_controller.h"
 #include "app/utils/engine_view_helpers.h"
+#include "game/core/component_core.h"
+#include "game/core/world.h"
+#include "game/render_bridge/camera_follow_system.h"
 #include "game/render_bridge/picking_service.h"
+#include "game/session/selection_service.h"
+#include "game/session/session_context.h"
 #include "scene/camera.h"
 
 namespace App::ViewModels {
@@ -225,6 +230,45 @@ void CameraViewModel::look_at_world(float x, float z) {
   camera->look_at(target + offset, target, camera->get_up_vector());
   set_following_selection(false);
   emit moved();
+}
+
+auto CameraViewModel::center_on_selection() -> bool {
+  m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
+  auto* camera = m_context.active_camera;
+  if (camera == nullptr || m_context.world == nullptr) {
+    return false;
+  }
+  auto& selection = Game::Session::session_for(*m_context.world).selection();
+  if (selection.get_selected_units().empty()) {
+    return false;
+  }
+  Game::Systems::CameraFollowSystem::snap_to_selection(
+      *m_context.world, selection, *camera);
+  emit moved();
+  return true;
+}
+
+auto CameraViewModel::center_on_unit(qulonglong unit_id) -> bool {
+  m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
+  auto* camera = m_context.active_camera;
+  if (camera == nullptr || m_context.world == nullptr) {
+    return false;
+  }
+  const auto* transform = m_context.world->try_get<Engine::Core::TransformComponent>(
+      static_cast<Engine::Core::EntityID>(unit_id));
+  if (transform == nullptr) {
+    return false;
+  }
+  const QVector3D target(transform->position.x,
+                         Game::Systems::PickingService::surface_height_at(
+                             transform->position.x, transform->position.z),
+                         transform->position.z);
+  const QVector3D offset = camera->get_position() - camera->get_target();
+  camera->look_at(target + offset, target, camera->get_up_vector());
+  emit moved();
+  return true;
 }
 
 void CameraViewModel::follow_selection(bool enable) {

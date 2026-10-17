@@ -20,7 +20,9 @@ Item {
     readonly property var hs: StyleGuide.historical
     readonly property int command_row_spacing: commandList.height < menuModel.count * 70 ? 4 : 9
     readonly property int command_row_height: Math.max(34, Math.min(root.narrow ? 62 : 70, Math.floor((commandList.height - command_row_spacing * (menuModel.count - 1)) / Math.max(1, menuModel.count))))
-    readonly property bool tutorial_pending: !Core.UiPreferences.tutorialCompleted
+    property bool tutorial_started: false
+    property bool can_restart: false
+    readonly property bool tutorial_pending: !Core.UiPreferences.tutorialCompleted && !root.tutorial_started && !root.game_started
     readonly property color ink: "#0B0806"
     readonly property color bronze: hs.bronze
 
@@ -34,8 +36,45 @@ Item {
             commandList.select_first_available();
     }
 
+    function rebuild_menu() {
+        var order = root.game_started ? root.match_menu_order : root.front_menu_order;
+        var previous = menuModel.count > 0 && commandList.currentIndex >= 0 && commandList.currentIndex < menuModel.count ? menuModel.get(commandList.currentIndex).idStr : "";
+        menuModel.clear();
+        for (var i = 0; i < order.length; ++i) {
+            for (var j = 0; j < menuCatalog.count; ++j) {
+                var entry = menuCatalog.get(j);
+                if (entry.idStr !== order[i])
+                    continue;
+                menuModel.append({
+                        "idStr": entry.idStr,
+                        "title": entry.title,
+                        "subtitle": root.game_started && root.leaves_battle.indexOf(entry.idStr) !== -1 ? (entry.idStr === "exit" ? QT_TR_NOOP("Abandon this battle and close the game") : QT_TR_NOOP("Leaves the battle in progress - you will be asked first")) : entry.subtitle,
+                        "detail": entry.detail,
+                        "requiresSave": entry.requiresSave,
+                        "accent": entry.accent
+                    });
+            }
+        }
+        if (typeof commandList === 'undefined' || !commandList)
+            return;
+        var restored = root.index_of_entry(previous);
+        if (restored >= 0 && root.entry_available(menuModel.get(restored)))
+            commandList.currentIndex = restored;
+        else
+            commandList.select_first_available();
+    }
+
+    function index_of_entry(id_str) {
+        for (var i = 0; i < menuModel.count; ++i) {
+            if (menuModel.get(i).idStr === id_str)
+                return i;
+        }
+        return -1;
+    }
+
     onHas_continue_saveChanged: reselect_if_unavailable()
-    onGame_startedChanged: reselect_if_unavailable()
+    onCan_restartChanged: reselect_if_unavailable()
+    onGame_startedChanged: rebuild_menu()
 
     signal continue_requested
     signal open_skirmish
@@ -49,6 +88,8 @@ Item {
     signal save_game
     signal exit_requested
     signal resume_requested
+    signal restart_requested
+    signal abandon_requested
 
     anchors.fill: parent
     z: 10
@@ -57,7 +98,7 @@ Item {
     function entry_available(entry) {
         if (!entry)
             return false;
-        if (entry.requiresGame && !root.game_started)
+        if (entry.idStr === "restart" && !root.can_restart)
             return false;
         if (entry.requiresSave && !root.has_continue_save)
             return false;
@@ -68,7 +109,13 @@ Item {
         var m = menuModel.get(index);
         if (!entry_available(m))
             return;
-        if (m.idStr === "continue")
+        if (m.idStr === "resume")
+            root.resume_requested();
+        else if (m.idStr === "restart")
+            root.restart_requested();
+        else if (m.idStr === "abandon")
+            root.abandon_requested();
+        else if (m.idStr === "continue")
             root.continue_requested();
         else if (m.idStr === "skirmish")
             root.open_skirmish();
@@ -121,15 +168,27 @@ Item {
         }
     }
 
+    readonly property var front_menu_order: ["continue", "skirmish", "missions", "campaign", "tutorial", "load", "settings", "help", "exit"]
+    readonly property var match_menu_order: ["resume", "objectives", "save", "load", "restart", "settings", "help", "skirmish", "missions", "campaign", "abandon", "exit"]
+    readonly property var leaves_battle: ["skirmish", "missions", "campaign", "exit"]
+
     ListModel {
-        id: menuModel
+        id: menuCatalog
+
+        ListElement {
+            idStr: "resume"
+            title: QT_TR_NOOP("Resume battle")
+            subtitle: QT_TR_NOOP("Close this menu and carry on fighting")
+            detail: QT_TR_NOOP("Battle")
+            requiresSave: false
+            accent: "#C29555"
+        }
 
         ListElement {
             idStr: "continue"
             title: QT_TR_NOOP("Continue")
             subtitle: QT_TR_NOOP("Return to the most recent save")
             detail: QT_TR_NOOP("Resume")
-            requiresGame: false
             requiresSave: true
             accent: "#C29555"
         }
@@ -139,7 +198,6 @@ Item {
             title: QT_TR_NOOP("Play Skirmish")
             subtitle: QT_TR_NOOP("Choose the field and deploy armies")
             detail: QT_TR_NOOP("Battle")
-            requiresGame: false
             requiresSave: false
             accent: "#B6362F"
         }
@@ -149,7 +207,6 @@ Item {
             title: QT_TR_NOOP("Missions")
             subtitle: QT_TR_NOOP("One small field, one order to carry out")
             detail: QT_TR_NOOP("Detail")
-            requiresGame: false
             requiresSave: false
             accent: "#7C5F8F"
         }
@@ -159,7 +216,6 @@ Item {
             title: QT_TR_NOOP("Campaign")
             subtitle: QT_TR_NOOP("March through the Second Punic War")
             detail: QT_TR_NOOP("War Map")
-            requiresGame: false
             requiresSave: false
             accent: "#C29555"
         }
@@ -169,7 +225,6 @@ Item {
             title: QT_TR_NOOP("Tutorial")
             subtitle: QT_TR_NOOP("Learn to command in a guided first battle")
             detail: QT_TR_NOOP("Training")
-            requiresGame: false
             requiresSave: false
             accent: "#7E8F4E"
         }
@@ -179,7 +234,6 @@ Item {
             title: QT_TR_NOOP("Objectives")
             subtitle: QT_TR_NOOP("Review active orders")
             detail: QT_TR_NOOP("Orders")
-            requiresGame: true
             requiresSave: false
             accent: "#8C6A3E"
         }
@@ -189,7 +243,6 @@ Item {
             title: QT_TR_NOOP("Save game")
             subtitle: QT_TR_NOOP("Record the current campaign state")
             detail: QT_TR_NOOP("Archive")
-            requiresGame: true
             requiresSave: false
             accent: "#A7814A"
         }
@@ -199,9 +252,17 @@ Item {
             title: QT_TR_NOOP("Load game")
             subtitle: QT_TR_NOOP("Return to a saved command")
             detail: QT_TR_NOOP("Return")
-            requiresGame: false
             requiresSave: false
             accent: "#8A7047"
+        }
+
+        ListElement {
+            idStr: "restart"
+            title: QT_TR_NOOP("Restart battle")
+            subtitle: QT_TR_NOOP("Fight this battle again from the start")
+            detail: QT_TR_NOOP("Again")
+            requiresSave: false
+            accent: "#8A5A2E"
         }
 
         ListElement {
@@ -209,7 +270,6 @@ Item {
             title: QT_TR_NOOP("Settings")
             subtitle: QT_TR_NOOP("Display, audio, and controls")
             detail: QT_TR_NOOP("Options")
-            requiresGame: false
             requiresSave: false
             accent: "#8C6A3E"
         }
@@ -219,9 +279,17 @@ Item {
             title: QT_TR_NOOP("Field Manual")
             subtitle: QT_TR_NOOP("How selection, economy, buildings and armies work")
             detail: QT_TR_NOOP("Help")
-            requiresGame: false
             requiresSave: false
             accent: "#6F7F8C"
+        }
+
+        ListElement {
+            idStr: "abandon"
+            title: QT_TR_NOOP("Quit to main menu")
+            subtitle: QT_TR_NOOP("Abandon this battle and return to the war table")
+            detail: QT_TR_NOOP("Abandon")
+            requiresSave: false
+            accent: "#7A3A2A"
         }
 
         ListElement {
@@ -229,10 +297,13 @@ Item {
             title: QT_TR_NOOP("Exit")
             subtitle: QT_TR_NOOP("Leave the war table")
             detail: QT_TR_NOOP("Retire")
-            requiresGame: false
             requiresSave: false
             accent: "#6E2B25"
         }
+    }
+
+    ListModel {
+        id: menuModel
     }
 
     MouseArea {
@@ -639,15 +710,12 @@ Item {
                 }
 
                 Component.onCompleted: {
-                    if (root.tutorial_pending) {
-                        for (var i = 0; i < menuModel.count; ++i) {
-                            if (menuModel.get(i).idStr === "tutorial") {
-                                commandList.currentIndex = i;
-                                return;
-                            }
-                        }
-                    }
-                    select_first_available();
+                    root.rebuild_menu();
+                    var tutorial_index = root.tutorial_pending ? root.index_of_entry("tutorial") : -1;
+                    if (tutorial_index >= 0)
+                        commandList.currentIndex = tutorial_index;
+                    else
+                        select_first_available();
                 }
                 readonly property int gutter: menuScrollBar.overflowing ? menuScrollBar.thickness + 6 : 0
 
@@ -673,13 +741,11 @@ Item {
                     required property string title
                     required property string subtitle
                     required property string detail
-                    required property bool requiresGame
                     required property bool requiresSave
                     required property string accent
 
                     readonly property bool item_enabled: root.entry_available({
                             "idStr": idStr,
-                            "requiresGame": requiresGame,
                             "requiresSave": requiresSave
                         })
                     readonly property bool selected: ListView.isCurrentItem && item_enabled
@@ -792,7 +858,7 @@ Item {
 
                                 Text {
                                     anchors.centerIn: parent
-                                    width: parent.width - 4
+                                    width: parent.width - 8
                                     horizontalAlignment: Text.AlignHCenter
                                     fontSizeMode: Text.HorizontalFit
                                     minimumPixelSize: 8
@@ -1194,17 +1260,42 @@ Item {
                     maximumLineCount: 1
                 }
 
-                Text {
+                Item {
                     Layout.fillWidth: true
                     Layout.topMargin: 5
-                    text: qsTr("Legions, fleets, elephants, and contested supply lines")
-                    color: Theme.textDim
-                    font.pixelSize: Design.Typography.caption
-                    font.letterSpacing: 0.4
-                    horizontalAlignment: Text.AlignHCenter
-                    wrapMode: Text.WordWrap
-                    maximumLineCount: 2
-                    elide: Text.ElideRight
+                    implicitHeight: taglineText.implicitHeight + 8
+
+                    Rectangle {
+                        objectName: "mainMenuTaglineScrim"
+                        anchors.centerIn: parent
+                        width: Math.min(parent.width, taglineText.contentWidth + 28)
+                        height: parent.height
+                        radius: height / 2
+                        color: Qt.rgba(root.ink.r, root.ink.g, root.ink.b, 0.72)
+                        border.width: 1
+                        border.color: Qt.rgba(root.bronze.r, root.bronze.g, root.bronze.b, 0.25)
+                    }
+
+                    Text {
+                        id: taglineText
+
+                        objectName: "mainMenuTagline"
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.leftMargin: 14
+                        anchors.rightMargin: 14
+                        text: qsTr("Legions, fleets, elephants, and contested supply lines")
+                        color: Theme.textSubLite
+                        style: Text.Raised
+                        styleColor: root.ink
+                        font.pixelSize: Design.Typography.caption
+                        font.letterSpacing: 0.4
+                        horizontalAlignment: Text.AlignHCenter
+                        wrapMode: Text.WordWrap
+                        maximumLineCount: 2
+                        elide: Text.ElideRight
+                    }
                 }
 
                 RowLayout {

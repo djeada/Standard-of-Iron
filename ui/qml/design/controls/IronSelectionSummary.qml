@@ -27,6 +27,52 @@ Design.IronPanel {
     signal groupActivated(string unitType)
     signal profileRequested(string unitType, string nation)
     signal allyCallRequested(var entityId)
+    signal focusRequested(var unitId)
+
+    property var pendingFocusUnit: null
+    property real pendingFocusAt: 0
+
+    function focusPending(unitId) {
+        return root.pendingFocusAt > 0 && Date.now() - root.pendingFocusAt <= Qt.styleHints.mouseDoubleClickInterval && (unitId === undefined || root.pendingFocusUnit === null || root.pendingFocusUnit === unitId);
+    }
+
+    function armFocus(unitId) {
+        root.pendingFocusUnit = unitId;
+        root.pendingFocusAt = Date.now();
+    }
+
+    function fireFocus() {
+        var unitId = root.pendingFocusUnit;
+        root.pendingFocusUnit = null;
+        root.pendingFocusAt = 0;
+        root.focusRequested(unitId);
+    }
+
+    function activateUnit(unitId) {
+        if (root.focusPending(unitId)) {
+            root.fireFocus();
+            return;
+        }
+        root.unitActivated(unitId);
+        root.armFocus(unitId);
+    }
+
+    function activateGroup(unitType) {
+        if (root.focusPending()) {
+            root.fireFocus();
+            return;
+        }
+        root.groupActivated(unitType);
+        root.armFocus(null);
+    }
+
+    function activateCard() {
+        if (root.focusPending()) {
+            root.fireFocus();
+            return;
+        }
+        root.armFocus(null);
+    }
 
     property var profileLookup: null
 
@@ -458,7 +504,7 @@ Design.IronPanel {
                     readonly property bool attack: root.inspected.allyCall === "attack"
 
                     objectName: "inspectAllyCallButton"
-                    visible: !!root.inspected.allyCall
+                    visible: !!root.inspected.allyCall && !(root.inspected.allyCall === "defend" && root.inspected.isOwn === true && root.inspected.typeKey === "barracks")
                     text: attack ? qsTr("Ask allies to attack") : qsTr("Ask allies to defend")
                     tone: attack ? "destructive" : "primary"
                     onClicked: root.allyCallRequested(root.inspected.id)
@@ -657,6 +703,7 @@ Design.IronPanel {
                 acceptedButtons: Qt.LeftButton
                 cursorShape: Qt.ArrowCursor
                 onClicked: function (mouse) {
+                    root.activateCard();
                     mouse.accepted = true;
                 }
             }
@@ -764,7 +811,7 @@ Design.IronPanel {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: root.unitActivated(chip.row.unit_id)
+                        onClicked: root.activateUnit(chip.row.unit_id)
                     }
 
                     ToolTip.visible: chipMouse.containsMouse
@@ -947,7 +994,7 @@ Design.IronPanel {
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: function (mouse) {
-                            root.groupActivated(groupCard.row.typeKey);
+                            root.activateGroup(groupCard.row.typeKey);
                             mouse.accepted = true;
                         }
                     }

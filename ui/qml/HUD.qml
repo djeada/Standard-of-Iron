@@ -14,6 +14,8 @@ Item {
     property int top_panel_height: topPanel.height
     property int bottom_panel_height: bottomPanel.height
 
+    readonly property int bottom_reserved_height: rpgFpvOverlay.visible ? Math.max(bottomPanel.height, Math.ceil(rpgFpvOverlay.reservedBottom)) : bottomPanel.height
+
     readonly property int left_stack_bottom: waveTracker.visible ? waveTracker.y + waveTracker.height : topPanel.height
 
     readonly property int right_stack_bottom: hudTop.minimapZone.height > 0 ? Math.round(hudTop.minimapZone.y + hudTop.minimapZone.height + Design.Metrics.space8) : topPanel.height + Design.Metrics.space8
@@ -30,6 +32,10 @@ Item {
 
     readonly property bool tutorial_active: typeof game !== 'undefined' && !!game.tutorial && game.tutorial.active
 
+    readonly property bool modal_panel_open: unitInspectPanel.visible || economyHelpPanel.visible
+
+    readonly property int center_stack_bottom: allyAppeals.visible && allyAppeals.height > 0 ? Math.round(allyAppeals.y + allyAppeals.height) : topPanel.height
+
     readonly property Item keyboard_owner: (hudVictory.visible && !hudVictory.collapsed) ? hudVictory : null
 
     function toggle_objectives() {
@@ -42,7 +48,7 @@ Item {
 
     function right_stack_margin(card_height) {
         var preferred = hud.right_stack_bottom - topPanel.height;
-        var latest = hud.height - topPanel.height - hud.bottom_panel_height - Design.Metrics.space8 - card_height;
+        var latest = hud.height - topPanel.height - hud.bottom_reserved_height - Design.Metrics.space8 - card_height;
         return Math.max(Design.Metrics.space8, Math.min(preferred, latest));
     }
     property int selection_tick: 0
@@ -468,6 +474,7 @@ Item {
         id: unitInspectPanel
 
         anchors.fill: parent
+        z: 300
         visible: false
         onVisibleChanged: {
             if (visible) {
@@ -484,6 +491,7 @@ Item {
         id: economyHelpPanel
 
         anchors.fill: parent
+        z: 300
         economy: hud.economy
         visible: false
         onVisibleChanged: {
@@ -692,6 +700,7 @@ Item {
         id: floatingNumbers
 
         anchors.fill: parent
+        z: -1
         source: typeof game !== 'undefined' ? game.activity : null
         projector: worldProjector
         combatEnabled: Design.A11y.damageNumbers
@@ -706,7 +715,7 @@ Item {
         anchors.rightMargin: Design.Metrics.hudZoneMargin
         anchors.top: topPanel.bottom
         anchors.topMargin: hud.right_stack_margin(commanderMessage.height)
-        maxHeight: Math.max(Design.Metrics.space24 * 6, hud.height - hud.bottom_panel_height - hud.right_stack_bottom - Design.Metrics.space16)
+        maxHeight: Math.max(Design.Metrics.space24 * 6, hud.height - hud.bottom_reserved_height - hud.right_stack_bottom - Design.Metrics.space16)
 
         z: 200
     }

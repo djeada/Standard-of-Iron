@@ -216,6 +216,16 @@ vec3 environment_lighting(vec3 normal, float wrap) {
   return soi_surface_lighting(normal);
 }
 
+const float k_near_camera_fade_start = 1.6;
+const float k_near_camera_fade_end = 5.5;
+
+float soi_near_camera_keep(vec3 world, vec3 camera, vec2 frag_xy) {
+  float keep = smoothstep(
+      k_near_camera_fade_start, k_near_camera_fade_end, length(world - camera));
+  float dither = fract(52.9829189 * fract(dot(frag_xy, vec2(0.06711056, 0.00583715))));
+  return step(dither, keep * 1.001);
+}
+
 const float k_fog_reference_span = 88.0;
 
 float atmospheric_fog_amount(float view_distance,

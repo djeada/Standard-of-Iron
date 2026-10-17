@@ -11,6 +11,7 @@ namespace Engine::Core {
 class World;
 class BuilderProductionComponent;
 class MovementComponent;
+class TransformComponent;
 } // namespace Engine::Core
 
 namespace Game::Systems {
@@ -48,6 +49,9 @@ food_target_claimed(Engine::Core::World& world,
 
 [[nodiscard]] auto owner_has_farm_near(
     Engine::Core::World& world, int owner_id, float x, float z, float radius) -> bool;
+
+[[nodiscard]] auto farm_field_work_spot(const Engine::Core::TransformComponent& farm,
+                                        const QVector3D& from) -> QVector3D;
 
 [[nodiscard]] auto food_work_position(Engine::Core::World& world,
                                       Engine::Core::EntityID worker_id,

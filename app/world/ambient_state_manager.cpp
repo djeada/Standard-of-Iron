@@ -2,6 +2,8 @@
 
 #include <QDebug>
 
+#include <algorithm>
+
 #include "app/core/game_engine.h"
 #include "game/core/component_combat.h"
 #include "game/core/ownership_constants.h"
@@ -18,22 +20,51 @@ constexpr float k_check_interval_seconds = 2.0F;
 
 constexpr float k_combat_release_seconds = 20.0F;
 
+constexpr float k_release_per_engagement_second = 0.25F;
+
+constexpr float k_max_release_extension_seconds = 25.0F;
+
+constexpr float k_reentry_window_seconds = 60.0F;
+
+constexpr float k_reentry_settle_seconds = 6.0F;
+
 constexpr float k_state_settle_seconds = 4.0F;
 
 } // namespace
 
 auto AmbientStateManager::settle_seconds(Engine::Core::AmbientState from,
-                                         Engine::Core::AmbientState to) -> float {
+                                         Engine::Core::AmbientState to) const -> float {
 
   if (to == Engine::Core::AmbientState::VICTORY ||
-      to == Engine::Core::AmbientState::DEFEAT ||
-      to == Engine::Core::AmbientState::COMBAT) {
+      to == Engine::Core::AmbientState::DEFEAT) {
     return 0.0F;
   }
+  if (to == Engine::Core::AmbientState::COMBAT) {
+    return m_seconds_since_combat_left < k_reentry_window_seconds
+               ? k_reentry_settle_seconds
+               : 0.0F;
+  }
   if (from == Engine::Core::AmbientState::COMBAT) {
-    return k_combat_release_seconds;
+    return k_combat_release_seconds +
+           std::min(k_max_release_extension_seconds,
+                    m_engagement_seconds * k_release_per_engagement_second);
   }
   return k_state_settle_seconds;
+}
+
+void AmbientStateManager::note_sample(Engine::Core::AmbientState observed,
+                                      float elapsed) {
+  if (m_current_ambient_state != Engine::Core::AmbientState::COMBAT) {
+    const bool skirmish_after_battle =
+        observed == Engine::Core::AmbientState::COMBAT &&
+        m_seconds_since_combat_left < k_reentry_window_seconds;
+    m_seconds_since_combat_left =
+        skirmish_after_battle ? 0.0F : m_seconds_since_combat_left + elapsed;
+  }
+  if (observed == Engine::Core::AmbientState::COMBAT &&
+      m_current_ambient_state == Engine::Core::AmbientState::COMBAT) {
+    m_engagement_seconds += elapsed;
+  }
 }
 
 auto AmbientStateManager::observe_state(Engine::Core::World* world,
@@ -73,6 +104,7 @@ void AmbientStateManager::update(float dt,
 
   const Engine::Core::AmbientState observed =
       observe_state(world, local_owner_id, entity_cache, victory_state);
+  note_sample(observed, elapsed);
 
   if (observed == m_current_ambient_state) {
     m_candidate_state = observed;
@@ -93,6 +125,13 @@ void AmbientStateManager::update(float dt,
   Engine::Core::AmbientState const previous_state = m_current_ambient_state;
   m_current_ambient_state = observed;
   m_candidate_seconds = 0.0F;
+  if (observed == Engine::Core::AmbientState::COMBAT) {
+    if (m_seconds_since_combat_left >= k_reentry_window_seconds) {
+      m_engagement_seconds = 0.0F;
+    }
+  } else if (previous_state == Engine::Core::AmbientState::COMBAT) {
+    m_seconds_since_combat_left = 0.0F;
+  }
 
   Engine::Core::EventManager::instance().publish(
       Engine::Core::AmbientStateChangedEvent(observed, previous_state));

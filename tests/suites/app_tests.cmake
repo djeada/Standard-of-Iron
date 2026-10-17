@@ -10,6 +10,8 @@ add_executable(
     app/session_timeline_test.cpp
     core/audio_system_test.cpp
     world/ambient_state_hysteresis_test.cpp
+    world/troops_under_attack_alarm_test.cpp
+    world/focus_tracker_commander_test.cpp
     core/audio_cues_test.cpp
     core/cue_trace_test.cpp
     core/audio_gameplay_scenarios_test.cpp
@@ -100,6 +102,7 @@ add_executable(
     map/iron_sepulcher_watch_defence_test.cpp
     map/skirmish_base_choice_test.cpp
     map/skirmish_farmland_test.cpp
+    map/skirmish_starting_strength_test.cpp
     systems/civilian_delivery_system_test.cpp
     systems/building_obstruction_lifecycle_test.cpp
     systems/command_service_test.cpp

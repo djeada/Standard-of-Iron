@@ -396,9 +396,12 @@ void BiomeRenderer::generate_grass_instances() {
   const float density_scale =
       std::clamp(GraphicsSettings::instance().profile().grass_density, 0.0F, 1.0F);
   m_generated_grass_density = density_scale;
-  scatter_profile.patch_density *= density_scale;
+  const float snow_cover = std::clamp(profiles.climate.snow_coverage, 0.0F, 1.0F);
+  const float snow_thinning = 1.0F - (0.82F * snow_cover);
+  scatter_profile.patch_density *= density_scale * snow_thinning;
 
-  scatter_profile.background_blade_density *= density_scale * 0.78F;
+  scatter_profile.background_blade_density *=
+      density_scale * 0.78F * snow_thinning * snow_thinning;
   if (scatter_profile.patch_density < 0.01F) {
     grass_instance_count = 0;
     grass_instances_dirty = false;
@@ -498,11 +501,11 @@ void BiomeRenderer::generate_grass_instances() {
         value_noise(world_x * 0.06F, world_z * 0.06F, m_noise_seed ^ 0x9235U);
     float const dryness_noise =
         value_noise(world_x * 0.12F, world_z * 0.12F, m_noise_seed ^ 0x47d2U);
-    float const dryness =
-        std::clamp(dryness_noise * 0.5F + slope * 0.3F +
-                       (1.0F - profiles.climate.moisture_level) * 0.2F,
-                   0.0F,
-                   1.0F);
+    float const dryness = std::clamp(
+        dryness_noise * 0.5F + slope * 0.3F +
+            (1.0F - profiles.climate.moisture_level) * 0.2F + snow_cover * 0.55F,
+        0.0F,
+        1.0F);
     QVector3D const lush_mix = scatter_profile.grass_primary * (1.0F - lush_noise) +
                                scatter_profile.grass_secondary * lush_noise;
     QVector3D const raw_color =

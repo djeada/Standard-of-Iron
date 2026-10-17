@@ -144,6 +144,11 @@ auto free_slot_position(const AIContext& context,
     }
     too_close_to_the_anchor = false;
 
+    if (!site_lies_on_the_map(snapshot, resolved, world_x, world_z)) {
+      occupied = true;
+      continue;
+    }
+
     const SlotOccupant occupant =
         occupant_of_slot(snapshot, resolved, world_x, world_z);
     occupied = occupant.occupied;

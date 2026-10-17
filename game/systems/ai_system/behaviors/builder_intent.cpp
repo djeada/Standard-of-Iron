@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <initializer_list>
+#include <string_view>
 #include <utility>
 
 #include "../../economy/construction_cost_catalog.h"
@@ -297,6 +298,7 @@ auto choose_construction_intent(const AISnapshot& snapshot,
   IntentChoice choice;
   ResourceType saving_for = ResourceType::Count;
   context.construction_need = ResourceAmounts{};
+  context.saving_for_a_roof = ResourceAmounts{};
   bool need_noted = false;
   for (const auto& intent : intents) {
     if (ledger.is_deferred(intent.type, snapshot.game_time)) {
@@ -318,6 +320,12 @@ auto choose_construction_intent(const AISnapshot& snapshot,
 
       if (choice.missing_resource == ResourceType::Count) {
         choice.missing_resource = verdict.missing;
+      }
+      if (intent.type != nullptr &&
+          std::string_view(intent.type) == BUILDING_TYPE_HOME &&
+          context.home_count < k_roofs_before_the_castle &&
+          context.saving_for_a_roof.empty()) {
+        context.saving_for_a_roof = construction_cost_info(intent.type).resource_costs;
       }
       const bool worth_saving_for =
           (intent.plan_slot >= 0 && (intent.type == BUILDING_TYPE_WALL_GATE ||

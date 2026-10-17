@@ -385,8 +385,7 @@ auto ProductionViewModel::answer_ally_appeal(quint32 appeal_id, bool accept) -> 
   }
   const auto* appeal = m_context.session->alliance().open_appeal(appeal_id);
   if (appeal == nullptr || appeal->to_owner != m_context.local_owner_id) {
-    emit refused(tr("That request has already been withdrawn."));
-    return false;
+    return true;
   }
   if (accept && appeal->kind == Game::Systems::AllyAppealKind::Resources &&
       m_context.session->economy().get(m_context.local_owner_id, appeal->resource) <

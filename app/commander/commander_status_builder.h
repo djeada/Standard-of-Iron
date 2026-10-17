@@ -18,6 +18,8 @@ struct CommanderStatusInput {
   bool dodge_active = false;
   Engine::Core::EntityID locked_target_id = 0;
   bool rally_placing = false;
+  std::uint32_t refusal_sequence = 0;
+  const char* refusal_action = "";
 };
 
 auto build_controlled_commander_status(const CommanderStatusInput& input)

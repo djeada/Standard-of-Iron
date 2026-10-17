@@ -45,6 +45,8 @@ struct MissionWaveBinding {
 
 class MissionWaveRuntime {
 public:
+  static constexpr const char* k_play_time_key = "play_time_seconds";
+
   [[nodiscard]] auto elapsed() const -> float { return static_cast<float>(m_elapsed); }
   [[nodiscard]] auto director() -> Game::Mission::MissionWaveDirector& {
     return m_director;

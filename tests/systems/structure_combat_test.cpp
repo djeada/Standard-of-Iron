@@ -47,7 +47,7 @@ auto add_structure(Engine::Core::World& world,
   unit->spawn_type = type;
   entity->add_component<Engine::Core::BuildingComponent>();
   Game::Systems::BuildingCollisionRegistry::instance().register_building(
-      entity->get_id(), Game::Units::spawn_typeToString(type), x, z, 2);
+      entity->get_id(), Game::Units::spawn_typeToString(type), x, z, 2, yaw);
   return entity;
 }
 
@@ -170,7 +170,11 @@ TEST_F(StructureCombatTest, AppliedDamageAndEventsUseEffectiveStructureDamage) {
       structure->get_component<Engine::Core::StructureDamagePresentationComponent>();
   ASSERT_NE(presentation, nullptr);
   ASSERT_EQ(presentation->impacts.size(), 1U);
-  EXPECT_NEAR(presentation->impacts.front().x, 3.0F, 0.001F);
+  auto const body =
+      Game::Systems::BuildingCollisionRegistry::get_building_body("barracks");
+  EXPECT_NEAR(
+      presentation->impacts.front().x, 5.0F + body.offset_x - body.width * 0.5F, 0.001F)
+      << "the blow lands on the drawn wall, not inside the building";
 }
 
 TEST_F(StructureCombatTest, ArrowHitLeavesStructureHealthAndDamageCuesUntouched) {
@@ -196,10 +200,13 @@ TEST_F(StructureCombatTest, RotatedFootprintReturnsTheVisibleFacade) {
 
   auto const contact = Game::Systems::Combat::closest_structure_surface(
       *structure, QVector3D(10.0F, 0.0F, -5.0F));
+  auto const body =
+      Game::Systems::BuildingCollisionRegistry::get_building_body("barracks");
+  float const facade_z = -body.offset_x - body.width * 0.5F;
 
   EXPECT_NEAR(contact.point.x(), 10.0F, 0.001F);
-  EXPECT_NEAR(contact.point.z(), -2.0F, 0.001F);
-  EXPECT_NEAR(contact.distance, 3.0F, 0.001F);
+  EXPECT_NEAR(contact.point.z(), facade_z, 0.001F);
+  EXPECT_NEAR(contact.distance, 5.0F + facade_z, 0.001F);
   EXPECT_NEAR(contact.outward_normal.x(), 0.0F, 0.001F);
   EXPECT_NEAR(contact.outward_normal.z(), -1.0F, 0.001F);
 }
@@ -239,13 +246,15 @@ TEST_F(StructureCombatTest, FullFormationApproachUsesItsNavigationRoot) {
 TEST_F(StructureCombatTest, MeleeApproachUsesTheClosestWalkableFacadePosition) {
   Engine::Core::World world;
   auto* attacker = add_attacker(world, Game::Units::SpawnType::Swordsman, 0.0F, 0.0F);
-  auto* structure = add_structure(world, Game::Units::SpawnType::Barracks, 0.0F, 6.0F);
+  auto* structure = add_structure(world, Game::Units::SpawnType::Home, 0.0F, 6.0F);
+  auto const body = Game::Systems::BuildingCollisionRegistry::get_building_body("home");
+  float const facade_z = 6.0F + body.offset_z - body.depth * 0.5F;
 
   auto const approach =
       Game::Systems::Combat::structure_melee_approach(*attacker, *structure);
   EXPECT_FALSE(approach.reached);
   EXPECT_NEAR(approach.desired_surface_gap, 0.62F, 0.001F);
-  EXPECT_NEAR(approach.destination.z(), 3.38F, 0.001F);
+  EXPECT_NEAR(approach.destination.z(), facade_z - 0.62F, 0.001F);
 
   auto* transform = attacker->get_component<Engine::Core::TransformComponent>();
   transform->position.x = approach.destination.x();

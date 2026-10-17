@@ -13,6 +13,8 @@ uniform vec3 u_color;
 uniform float u_alpha;
 uniform int u_surface_kind;
 uniform vec3 u_camera_pos;
+uniform float u_snow_coverage;
+uniform vec3 u_snow_color;
 
 out vec4 frag_color;
 
@@ -221,6 +223,26 @@ void main() {
   base_color *= 0.94 + (road_age - 0.5) * 0.10;
   base_color *= 1.0 - ruts * mix(0.025, 0.075, environment_wetness());
 
+  float snow_cover = clamp(u_snow_coverage, 0.0, 1.0);
+  float snow_on_road = 0.0;
+  if (snow_cover > 0.01) {
+    float drift_field = fbm_2d(uv * 0.21 + vec2(5.0, -3.0));
+    float snow_speck = noise_2d(uv * 2.3 + vec2(-7.0, 11.0));
+    float snow_packing =
+        snow_cover * (0.62 + 0.38 * smoothstep(0.30, 0.72, drift_field));
+    snow_packing *= 1.0 - ruts * 0.80 * mix(0.55, 1.0, traveled) - center_wear * 0.18;
+    float drifted_shoulder =
+        1.0 - smoothstep(0.08, 0.36, edge_distance + (drift_field - 0.5) * 0.22);
+    vec3 trodden_snow = mix(u_snow_color * vec3(0.78, 0.79, 0.82),
+                            base_color,
+                            0.22 + 0.10 * (1.0 - snow_speck));
+    base_color = mix(base_color, trodden_snow, clamp(snow_packing, 0.0, 0.92));
+    snow_on_road = clamp(max(snow_packing, drifted_shoulder * snow_cover), 0.0, 1.0);
+    base_color = mix(base_color,
+                     u_snow_color * (0.95 + snow_speck * 0.05),
+                     clamp(drifted_shoulder * snow_cover, 0.0, 1.0));
+  }
+
   vec3 n_geom = normalize(v_normal);
   vec3 n_final = road_relief_normal(v_world_pos, n_geom, h);
 
@@ -228,7 +250,7 @@ void main() {
   vec3 view_dir = normalize(u_camera_pos - v_world_pos);
 
   float steep = saturate_val(1.0 - dot(n_geom, n_final));
-  float wetness = environment_wetness();
+  float wetness = environment_wetness() * (1.0 - snow_on_road * 0.85);
   float puddle_field = noise_2d(uv * 0.55 + vec2(13.0, 5.0)) * 0.6 +
                        noise_2d(uv * 1.7 + vec2(-3.0, 21.0)) * 0.4;
   float hollow = clamp(-h * 14.0 + ruts * 0.55, 0.0, 1.0);

@@ -44,7 +44,7 @@ RpgDamageResult resolve_rpg_damage(Engine::Core::World* world,
   }
 
   float const scaled = static_cast<float>(raw_damage) *
-                       std::clamp(rpg->incoming_damage_scale, 0.05F, 4.0F);
+                       std::clamp(rpg->incoming_damage_scale, 0.05F, 1.0F);
   int effective = std::max(1,
                            static_cast<int>(std::lround(scaled)) -
                                static_cast<int>(std::lround(rpg->armor)));

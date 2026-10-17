@@ -7,6 +7,7 @@
 
 #include "arena_scenario_builders.h"
 #include "arena_scenarios.h"
+#include "game/systems/building_collision_registry.h"
 
 namespace Arena::Scenarios {
 namespace {
@@ -34,6 +35,13 @@ void add_animation_quality(ArenaScenarioDefinition& scenario,
     scenario.expectations.push_back(expectation(Expect::NoWeaponTeleport, name));
     scenario.expectations.push_back(expectation(Expect::NoPelvisSnap, name));
   }
+}
+
+auto home_facade_reach() -> float {
+  constexpr float k_reach_past_the_facade = 0.69F;
+  return (0.5F *
+          Game::Systems::BuildingCollisionRegistry::get_building_body("home").depth) +
+         k_reach_past_the_facade;
 }
 
 } // namespace
@@ -627,7 +635,7 @@ auto build_rpg_control_definitions() -> std::vector<ArenaScenarioDefinition> {
                                          QStringLiteral("close_home"),
                                          0.0F,
                                          0.0F,
-                                         1.90F));
+                                         home_facade_reach()));
     s.expectations.push_back(expectation(Expect::RpgLocomotionAnimationMatched,
                                          QStringLiteral("rpg_commander")));
     s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
@@ -684,7 +692,7 @@ auto build_rpg_control_definitions() -> std::vector<ArenaScenarioDefinition> {
                                          QStringLiteral("slide_home"),
                                          0.0F,
                                          0.0F,
-                                         1.90F));
+                                         home_facade_reach()));
     auto slide = expectation(
         Expect::RpgTravelObserved, QStringLiteral("rpg_commander"), {}, 1.50F, 2.30F);
     slide.end_seconds = 4.00F;

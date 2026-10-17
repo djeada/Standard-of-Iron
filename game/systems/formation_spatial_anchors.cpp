@@ -208,7 +208,7 @@ void soldier_spatial_anchors_into(const Engine::Core::Entity& entity,
   };
 
   float const frame_sign =
-      traversal != nullptr && traversal->about_faced ? -1.0F : 1.0F;
+      layout_frame_sign(base_layout, traversal != nullptr && traversal->about_faced);
   for (auto const& base : base_layout.live_slots) {
     SoldierSpatialAnchor anchor{
         .slot_index = base.index,
@@ -257,7 +257,7 @@ auto face_about_in_place(Engine::Core::Entity& entity) -> bool {
   auto* traversal =
       entity.get_component<Engine::Core::UnitTraversalLayoutStateComponent>();
   auto* transform = entity.get_component<Engine::Core::TransformComponent>();
-  if (traversal == nullptr || transform == nullptr) {
+  if (traversal == nullptr || transform == nullptr || crew_works_a_site(entity)) {
     return false;
   }
 

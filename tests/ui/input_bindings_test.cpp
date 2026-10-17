@@ -655,4 +655,61 @@ TEST_F(InputBindingsTest, NoQmlShortcutStealsAPlayerBinding) {
   EXPECT_GT(shortcuts_seen, 0) << "the QML shortcut scan found nothing to check";
 }
 
+TEST_F(InputBindingsTest, NumberKeysRecallControlGroupsWithCtrlAndShiftFallingThrough) {
+  auto* bindings = InputBindings::instance();
+  const QString rts = QString::fromLatin1(InputBindings::kContextRts);
+  for (int group = 1; group <= InputBindings::kControlGroupCount; ++group) {
+    const QString action = QStringLiteral("rts.control_group_%1").arg(group);
+    const int key = Qt::Key_0 + group;
+    EXPECT_EQ(InputBindings::control_group_of(action), group);
+    EXPECT_EQ(bindings->actions_for_key(key, Qt::NoModifier, rts), QStringList{action});
+    EXPECT_EQ(bindings->actions_for_key(key, Qt::ControlModifier, rts),
+              QStringList{action})
+        << "Ctrl+" << group << " has to reach the group to store it";
+    EXPECT_EQ(bindings->actions_for_key(key, Qt::ShiftModifier, rts),
+              QStringList{action})
+        << "Shift+" << group << " has to reach the group to add it";
+  }
+  EXPECT_EQ(InputBindings::control_group_of(QStringLiteral("rts.order_stop")), 0);
+  EXPECT_EQ(InputBindings::control_group_of(QStringLiteral("rts.control_group_0")), 0);
+
+  const QString commander = QString::fromLatin1(InputBindings::kContextCommander);
+  EXPECT_EQ(bindings->actions_for_key(Qt::Key_1, Qt::NoModifier, commander),
+            QStringList{QStringLiteral("commander.ability_vanguard_rush")})
+      << "the commander keeps his ability keys";
+}
+
+TEST_F(InputBindingsTest, ControlGroupsAreRebindableLikeAnyOtherCommand) {
+  auto* bindings = InputBindings::instance();
+  const QString rts = QString::fromLatin1(InputBindings::kContextRts);
+  const QString group = QStringLiteral("rts.control_group_3");
+  ASSERT_TRUE(bindings->assign(group, QStringLiteral("F3")));
+  EXPECT_EQ(bindings->actions_for_key(Qt::Key_F3, Qt::ControlModifier, rts),
+            QStringList{group});
+  EXPECT_TRUE(bindings->actions_for_key(Qt::Key_3, Qt::NoModifier, rts).isEmpty());
+}
+
+TEST_F(InputBindingsTest, ShiftedDigitsAreReadBackAsTheirNumberKey) {
+  EXPECT_EQ(InputBindings::digit_row_key(Qt::Key_4, 0), Qt::Key_4);
+  EXPECT_EQ(InputBindings::digit_row_key(Qt::Key_Exclam, 0), Qt::Key_1)
+      << "Shift+1 arrives as '!' on a US layout";
+  EXPECT_EQ(InputBindings::digit_row_key(Qt::Key_ParenLeft, 0), Qt::Key_9);
+  EXPECT_EQ(InputBindings::digit_row_key(Qt::Key_ParenRight, 0), Qt::Key_0);
+  EXPECT_EQ(InputBindings::digit_row_key(Qt::Key_A, 0), Qt::Key_A);
+#if !defined(Q_OS_WIN) && !defined(Q_OS_MACOS)
+  EXPECT_EQ(InputBindings::digit_row_key(Qt::Key_Ampersand, 10), Qt::Key_1)
+      << "the physical key decides on layouts like AZERTY";
+  EXPECT_EQ(InputBindings::digit_row_key(Qt::Key_Agrave, 19), Qt::Key_0);
+#endif
+}
+
+TEST_F(InputBindingsTest, TheSelectionCanBeCentredWithoutLosingPause) {
+  auto* bindings = InputBindings::instance();
+  const QString rts = QString::fromLatin1(InputBindings::kContextRts);
+  EXPECT_EQ(bindings->actions_for_key(Qt::Key_Tab, Qt::NoModifier, rts),
+            QStringList{QStringLiteral("rts.center_on_selection")});
+  EXPECT_EQ(bindings->actions_for_key(Qt::Key_Space, Qt::NoModifier, rts),
+            QStringList{QStringLiteral("rts.pause")});
+}
+
 } // namespace

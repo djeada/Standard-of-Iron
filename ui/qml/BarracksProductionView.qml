@@ -13,7 +13,7 @@ Item {
 
     readonly property int queueSlots: 5
     readonly property int queueTotal: (root.prod.in_progress ? 1 : 0) + (root.prod.queue_size || 0)
-    readonly property int cardHeight: Math.max(Design.A11y.scaled(48), Design.Typography.caption * 3 + Design.Metrics.space8)
+    readonly property int cardHeight: Math.max(Design.A11y.scaled(56), Design.Typography.caption * 4 + Design.Metrics.space8)
     readonly property int cardGap: Design.Metrics.space4
     readonly property int listGutter: Design.Metrics.scrollBarThickness + Design.Metrics.space4
     readonly property int minCardWidth: Design.A11y.scaled(172)
@@ -79,166 +79,175 @@ Item {
 
             objectName: "barracksHeader"
             Layout.fillWidth: true
-            Layout.preferredHeight: headerRow.implicitHeight + barracksHeader.contentPadding * 2
+            Layout.preferredHeight: headerColumn.implicitHeight + barracksHeader.contentPadding * 2
             contentPadding: Design.Metrics.space4
             raised: true
             accessibleName: qsTr("Barracks production queue")
 
-            RowLayout {
-                id: headerRow
+            ColumnLayout {
+                id: headerColumn
 
                 anchors.fill: parent
-                spacing: Design.Metrics.space8
+                spacing: Design.Metrics.space4
 
-                Column {
-                    id: identityColumn
+                RowLayout {
+                    id: headerRow
 
-                    Layout.preferredWidth: Math.min(Math.max(Design.A11y.scaled(92), reserveReadout.implicitWidth), Math.round(barracksHeader.width * 0.4))
-                    Layout.alignment: Qt.AlignVCenter
-                    spacing: 0
+                    Layout.fillWidth: true
+                    spacing: Design.Metrics.space8
 
-                    Text {
-                        width: parent.width
-                        text: qsTr("BARRACKS")
-                        color: Design.Theme.textSecondary
-                        font.family: Design.Typography.family
-                        font.pixelSize: Design.Typography.caption
-                        font.weight: Design.Typography.bold
-                        font.letterSpacing: Design.Typography.trackingWide
-                        elide: Text.ElideRight
-                    }
+                    Column {
+                        id: identityColumn
 
-                    Text {
-                        id: reserveReadout
+                        Layout.preferredWidth: Math.min(Math.max(Design.A11y.scaled(92), reserveReadout.implicitWidth), Math.round(barracksHeader.width * 0.6))
+                        Layout.alignment: Qt.AlignVCenter
+                        spacing: 0
 
-                        width: parent.width
-                        text: qsTr("Reserve %1 / %2").arg(root.prod.manpower_available || 0).arg(root.prod.max_units || 0)
-                        color: root.prod.reserve_short ? Design.Theme.danger : Design.Theme.textPrimary
-                        font.family: Design.Typography.family
-                        font.pixelSize: Design.Typography.caption
-                        elide: Text.ElideRight
+                        Text {
+                            width: parent.width
+                            text: qsTr("BARRACKS")
+                            color: Design.Theme.textSecondary
+                            font.family: Design.Typography.family
+                            font.pixelSize: Design.Typography.caption
+                            font.weight: Design.Typography.bold
+                            font.letterSpacing: Design.Typography.trackingWide
+                            elide: Text.ElideRight
+                        }
 
-                        ToolTip.visible: reserveMouse.containsMouse
-                        ToolTip.delay: Design.Metrics.tooltipDelay
-                        ToolTip.text: root.prod.reserve_short ? qsTr("Reserve exhausted: %1 men held, the cheapest recruit needs %2. Civilians raised at a Home deliver more men.").arg(root.prod.manpower_available || 0).arg(root.prod.cheapest_recruit_cost || 0) : qsTr("Men this barracks still holds. Every recruit spends the men in its squad; civilians raised at a Home deliver more.")
+                        Text {
+                            id: reserveReadout
 
-                        MouseArea {
-                            id: reserveMouse
+                            width: parent.width
+                            text: qsTr("Reserve %1 / %2").arg(root.prod.manpower_available || 0).arg(root.prod.max_units || 0)
+                            color: root.prod.reserve_short ? Design.Theme.danger : Design.Theme.textPrimary
+                            font.family: Design.Typography.family
+                            font.pixelSize: Design.Typography.caption
+                            elide: Text.ElideRight
 
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            acceptedButtons: Qt.NoButton
+                            ToolTip.visible: reserveMouse.containsMouse
+                            ToolTip.delay: Design.Metrics.tooltipDelay
+                            ToolTip.text: root.prod.reserve_short ? qsTr("Reserve exhausted: %1 men held, the cheapest recruit needs %2. Civilians raised at a Home deliver more men.").arg(root.prod.manpower_available || 0).arg(root.prod.cheapest_recruit_cost || 0) : qsTr("Men this barracks still holds. Every recruit spends the men in its squad; civilians raised at a Home deliver more.")
+
+                            MouseArea {
+                                id: reserveMouse
+
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                acceptedButtons: Qt.NoButton
+                            }
                         }
                     }
-                }
 
-                Item {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 1
+                    Item {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 1
+                    }
+
+                    Column {
+                        id: queueColumn
+
+                        readonly property int slotSize: Design.A11y.scaled(22)
+
+                        objectName: "barracksQueueColumn"
+                        Layout.alignment: Qt.AlignVCenter
+                        visible: root.queueTotal > 0
+                        spacing: Design.Metrics.space2
+
+                        Row {
+                            id: queueRow
+
+                            objectName: "barracksQueueRow"
+                            spacing: Design.Metrics.space4
+
+                            Repeater {
+                                model: root.queueSlots
+
+                                delegate: Rectangle {
+                                    id: queueSlot
+
+                                    required property int index
+                                    readonly property string unitType: root.queue_type(index)
+                                    readonly property bool occupied: unitType !== ""
+                                    readonly property bool producing: index === 0 && root.prod.in_progress === true
+
+                                    width: queueColumn.slotSize
+                                    height: width
+                                    radius: Design.Metrics.radiusSmall
+                                    color: queueSlot.occupied ? Design.Theme.panelIron : Design.Theme.backgroundDeep
+                                    border.width: queueSlot.producing ? Design.Metrics.borderFocus : Design.Metrics.borderThin
+                                    border.color: queueSlot.producing ? Design.Theme.accent : (queueSlot.occupied ? Design.Theme.borderStrong : Design.Theme.borderSubtle)
+                                    opacity: queueSlot.occupied ? 1 : 0.6
+
+                                    Image {
+                                        id: queueArt
+
+                                        anchors.fill: parent
+                                        anchors.margins: Design.Metrics.space2
+                                        source: queueSlot.occupied && root.panel ? root.panel.unit_icon_source(queueSlot.unitType, root.prod.nation_id) : ""
+                                        fillMode: Image.PreserveAspectFit
+                                        smooth: true
+                                        mipmap: true
+                                        visible: status === Image.Ready
+                                    }
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        visible: queueSlot.occupied && !queueArt.visible
+                                        text: root.panel ? root.panel.unit_icon_emoji(queueSlot.unitType) : ""
+                                        color: Design.Theme.textSecondary
+                                        font.family: Design.Typography.family
+                                        font.pixelSize: Design.Typography.caption
+                                    }
+
+                                    ToolTip.visible: queueMouse.containsMouse
+                                    ToolTip.text: queueSlot.producing ? qsTr("Recruiting now") : queueSlot.occupied ? qsTr("Queued unit %1").arg(index + 1) : qsTr("Free queue slot: up to %1 recruits can wait in line").arg(root.queueSlots)
+                                    ToolTip.delay: Design.Metrics.tooltipDelay
+
+                                    MouseArea {
+                                        id: queueMouse
+
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        acceptedButtons: Qt.NoButton
+                                    }
+                                }
+                            }
+                        }
+
+                        Design.IronProgressBar {
+                            id: productionProgress
+
+                            objectName: "barracksProductionProgress"
+                            width: queueRow.width
+                            height: Design.Metrics.space4
+                            visible: root.prod.in_progress === true
+                            value: root.progress_value()
+                            fillColor: Design.Theme.accent
+                        }
+                    }
+
+                    Design.IronIconButton {
+                        Layout.preferredWidth: Design.Metrics.minTouchTarget
+                        Layout.preferredHeight: Design.Metrics.minTouchTarget
+                        Layout.alignment: Qt.AlignVCenter
+                        iconText: Design.Icons.rally
+                        tooltip: qsTr("Set where newly recruited units will gather")
+                        accessibleName: qsTr("Set barracks rally point")
+                        blocked: root.prod.has_barracks !== true
+                        disabledReason: qsTr("Select a barracks before setting a rally point")
+                        onClicked: root.rally_requested()
+                    }
                 }
 
                 Design.IronButton {
                     objectName: "barracksAllyCallButton"
-                    Layout.alignment: Qt.AlignVCenter
+                    Layout.fillWidth: true
                     visible: root.allyCall.kind === "defend" && (root.allyCall.allies || 0) > 0
                     text: qsTr("Ask allies to defend")
                     onClicked: root.ally_call_requested()
                     ToolTip.visible: hovered
                     ToolTip.delay: Design.Metrics.tooltipDelay
                     ToolTip.text: root.allyCall.reason || ""
-                }
-
-                Column {
-                    id: queueColumn
-
-                    readonly property int slotSize: Design.A11y.scaled(22)
-
-                    Layout.alignment: Qt.AlignVCenter
-                    spacing: Design.Metrics.space2
-
-                    Row {
-                        id: queueRow
-
-                        objectName: "barracksQueueRow"
-                        spacing: Design.Metrics.space4
-
-                        Repeater {
-                            model: root.queueSlots
-
-                            delegate: Rectangle {
-                                id: queueSlot
-
-                                required property int index
-                                readonly property string unitType: root.queue_type(index)
-                                readonly property bool occupied: unitType !== ""
-                                readonly property bool producing: index === 0 && root.prod.in_progress === true
-
-                                width: queueColumn.slotSize
-                                height: width
-                                radius: Design.Metrics.radiusSmall
-                                color: queueSlot.occupied ? Design.Theme.panelIron : Design.Theme.backgroundDeep
-                                border.width: queueSlot.producing ? Design.Metrics.borderFocus : Design.Metrics.borderThin
-                                border.color: queueSlot.producing ? Design.Theme.accent : (queueSlot.occupied ? Design.Theme.borderStrong : Design.Theme.borderSubtle)
-                                opacity: queueSlot.occupied ? 1 : 0.6
-
-                                Image {
-                                    id: queueArt
-
-                                    anchors.fill: parent
-                                    anchors.margins: Design.Metrics.space2
-                                    source: queueSlot.occupied && root.panel ? root.panel.unit_icon_source(queueSlot.unitType, root.prod.nation_id) : ""
-                                    fillMode: Image.PreserveAspectFit
-                                    smooth: true
-                                    mipmap: true
-                                    visible: status === Image.Ready
-                                }
-
-                                Text {
-                                    anchors.centerIn: parent
-                                    visible: queueSlot.occupied && !queueArt.visible
-                                    text: root.panel ? root.panel.unit_icon_emoji(queueSlot.unitType) : ""
-                                    color: Design.Theme.textSecondary
-                                    font.family: Design.Typography.family
-                                    font.pixelSize: Design.Typography.caption
-                                }
-
-                                ToolTip.visible: queueMouse.containsMouse && queueSlot.occupied
-                                ToolTip.text: queueSlot.producing ? qsTr("Recruiting now") : qsTr("Queued unit %1").arg(index + 1)
-                                ToolTip.delay: Design.Metrics.tooltipDelay
-
-                                MouseArea {
-                                    id: queueMouse
-
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    acceptedButtons: Qt.NoButton
-                                }
-                            }
-                        }
-                    }
-
-                    Design.IronProgressBar {
-                        id: productionProgress
-
-                        objectName: "barracksProductionProgress"
-                        width: queueRow.width
-                        height: Design.Metrics.space4
-                        visible: root.prod.in_progress === true
-                        value: root.progress_value()
-                        fillColor: Design.Theme.accent
-                    }
-                }
-
-                Design.IronIconButton {
-                    Layout.preferredWidth: Design.Metrics.minTouchTarget
-                    Layout.preferredHeight: Design.Metrics.minTouchTarget
-                    Layout.alignment: Qt.AlignVCenter
-                    iconText: Design.Icons.rally
-                    tooltip: qsTr("Set where newly recruited units will gather")
-                    accessibleName: qsTr("Set barracks rally point")
-                    blocked: root.prod.has_barracks !== true
-                    disabledReason: qsTr("Select a barracks before setting a rally point")
-                    onClicked: root.rally_requested()
                 }
             }
         }

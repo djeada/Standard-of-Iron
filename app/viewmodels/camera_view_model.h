@@ -45,6 +45,8 @@ public:
   Q_INVOKABLE void tilt(int direction, bool shift);
   Q_INVOKABLE void reset();
   Q_INVOKABLE void look_at_world(float x, float z);
+  Q_INVOKABLE bool center_on_selection();
+  Q_INVOKABLE bool center_on_unit(qulonglong unit_id);
   Q_INVOKABLE void follow_selection(bool enable);
   Q_INVOKABLE void set_follow_lerp(float alpha);
 

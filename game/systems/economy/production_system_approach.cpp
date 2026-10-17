@@ -12,7 +12,9 @@
 #include "core/component_presentation.h"
 #include "core/event_manager.h"
 #include "core/world.h"
+#include "food_targets.h"
 #include "production_system_builder_task.h"
+#include "production_system_shared_site.h"
 #include "systems/builder_product_types.h"
 #include "systems/building_collision_registry.h"
 #include "systems/formation_combat_geometry.h"
@@ -129,33 +131,6 @@ void publish_construction_started(
   Engine::Core::EventManager::instance().publish(started);
 }
 
-auto retarget_onto_field(Engine::Core::World& world,
-                         const SiteApproachActor& actor,
-                         Engine::Core::BuilderProductionComponent& builder) -> bool {
-  if (builder.product_type != k_builder_product_harvest_grain) {
-    return false;
-  }
-  auto const* field =
-      world.try_get<Engine::Core::TransformComponent>(builder.structure_task_entity_id);
-  if (field == nullptr ||
-      !line_clear_to(world, actor, field->position.x, field->position.z)) {
-    return false;
-  }
-  float const dx = field->position.x - builder.construction_site_x;
-  float const dz = field->position.z - builder.construction_site_z;
-  if ((dx * dx) + (dz * dz) < k_work_spot_arrival_distance_sq) {
-    return false;
-  }
-  if (actor.movement != nullptr) {
-    actor.movement->stop();
-  }
-  builder.construction_site_x = field->position.x;
-  builder.construction_site_z = field->position.z;
-  reset_site_approach(builder);
-  activate_bypass_movement(&builder, field->position.x, field->position.z);
-  return true;
-}
-
 void arrive_at_site(const SiteApproachActor& actor,
                     Engine::Core::BuilderProductionComponent& builder,
                     bool work_spot) {
@@ -180,6 +155,33 @@ void arrive_at_site(const SiteApproachActor& actor,
 
   face_work_target(transform, builder);
   reset_site_approach(builder);
+}
+
+void walk_onto_field(Engine::Core::World& world,
+                     const SiteApproachActor& actor,
+                     Engine::Core::BuilderProductionComponent& builder) {
+  if (builder.product_type != k_builder_product_harvest_grain) {
+    return;
+  }
+  auto const* farm =
+      world.try_get<Engine::Core::TransformComponent>(builder.structure_task_entity_id);
+  if (farm == nullptr) {
+    return;
+  }
+  QVector3D const field = farm_field_work_spot(
+      *farm, QVector3D(actor.transform->position.x, 0.0F, actor.transform->position.z));
+  float const dx = field.x() - builder.construction_site_x;
+  float const dz = field.z() - builder.construction_site_z;
+  if ((dx * dx) + (dz * dz) < k_work_spot_arrival_distance_sq ||
+      !line_clear_to(world, actor, field.x(), field.z())) {
+    return;
+  }
+  builder.construction_site_x = field.x();
+  builder.construction_site_z = field.z();
+  if (actor.movement != nullptr) {
+    actor.movement->set_rest_position(field.x(), field.z());
+  }
+  activate_bypass_movement(&builder, field.x(), field.z());
 }
 
 void record_approach_progress(Engine::Core::World& world,
@@ -227,6 +229,8 @@ void give_up_on_site(Engine::Core::World& world,
                      const SiteApproachActor& actor,
                      Engine::Core::BuilderProductionComponent& builder) {
   abandon_site_route(builder, actor.movement);
+  abandon_paid_site(
+      world, actor.id, actor.owner_id, Engine::Core::BuilderTaskFault::Unreachable);
   builder.has_construction_site = false;
   builder.at_construction_site = false;
   builder.in_progress = false;
@@ -354,10 +358,8 @@ void advance_site_approach(Engine::Core::World& world,
   bool const stalled_at_footprint =
       reached_footprint && builder.site_approach_seconds > k_stalled_work_seconds;
   if (dist_sq < arrival_sq || stalled_within_reach || stalled_at_footprint) {
-    if (retarget_onto_field(world, actor, builder)) {
-      return;
-    }
     arrive_at_site(actor, builder, work_spot);
+    walk_onto_field(world, actor, builder);
     return;
   }
 

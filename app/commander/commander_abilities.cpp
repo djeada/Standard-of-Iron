@@ -70,11 +70,17 @@ auto is_idle_for_ability(const Engine::Core::Entity& commander) -> bool {
          combat_state->animation_state == Engine::Core::CombatAnimationState::Idle;
 }
 
-void refuse() {
-  Game::Audio::play_cue(Game::Audio::Cue::k_combat_ability_refused);
-}
+constexpr const char* k_special_action = "commander.special_action";
+constexpr const char* k_vanguard_rush_action = "commander.ability_vanguard_rush";
+constexpr const char* k_second_wind_action = "commander.ability_second_wind";
 
 } // namespace
+
+void CommanderAbilities::refuse(const char* action) {
+  Game::Audio::play_cue(Game::Audio::Cue::k_combat_ability_refused);
+  m_last_refusal.action = action;
+  ++m_last_refusal.sequence;
+}
 
 void CommanderAbilities::reset() {
   m_shield_bash_cooldown = 0.0F;
@@ -89,6 +95,11 @@ void CommanderAbilities::advance_cooldowns(Engine::Core::CommanderComponent* com
       cooldown = std::max(0.0F, cooldown - dt);
     }
   };
+  if (commander != nullptr) {
+    m_shield_bash_cooldown = commander->shield_bash_cooldown_remaining;
+    m_vanguard_rush_cooldown = commander->vanguard_rush_cooldown_remaining;
+    m_second_wind_cooldown = commander->second_wind_cooldown_remaining;
+  }
   decay(m_shield_bash_cooldown);
   decay(m_vanguard_rush_cooldown);
   decay(m_second_wind_cooldown);
@@ -177,7 +188,7 @@ auto CommanderAbilities::try_shield_bash(const CommanderAbilityContext& context)
   auto* cmd_comp = commander.get_component<Engine::Core::CommanderComponent>();
   if (guard == nullptr || !guard->active || m_shield_bash_cooldown > 0.0F ||
       context.airborne) {
-    refuse();
+    refuse(k_special_action);
     return false;
   }
 
@@ -226,7 +237,7 @@ auto CommanderAbilities::try_vanguard_rush(const CommanderAbilityContext& contex
   auto& commander = *context.commander;
 
   if (m_vanguard_rush_cooldown > 0.0F || context.dodging || context.airborne) {
-    refuse();
+    refuse(k_vanguard_rush_action);
     return false;
   }
 
@@ -234,7 +245,11 @@ auto CommanderAbilities::try_vanguard_rush(const CommanderAbilityContext& contex
   auto* unit = commander.get_component<Engine::Core::UnitComponent>();
   auto* movement = commander.get_component<Engine::Core::MovementComponent>();
   auto* cmd_comp = commander.get_component<Engine::Core::CommanderComponent>();
-  if (transform == nullptr || unit == nullptr || !is_idle_for_ability(commander)) {
+  if (transform == nullptr || unit == nullptr) {
+    return false;
+  }
+  if (!is_idle_for_ability(commander)) {
+    refuse(k_vanguard_rush_action);
     return false;
   }
 
@@ -330,12 +345,16 @@ auto CommanderAbilities::try_second_wind(const CommanderAbilityContext& context)
   auto& commander = *context.commander;
 
   if (m_second_wind_cooldown > 0.0F || context.dodging || context.airborne) {
-    refuse();
+    refuse(k_second_wind_action);
     return false;
   }
 
   auto* cmd_comp = commander.get_component<Engine::Core::CommanderComponent>();
-  if (cmd_comp == nullptr || !is_idle_for_ability(commander)) {
+  if (cmd_comp == nullptr) {
+    return false;
+  }
+  if (!is_idle_for_ability(commander)) {
+    refuse(k_second_wind_action);
     return false;
   }
 

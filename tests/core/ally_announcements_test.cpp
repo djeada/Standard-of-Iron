@@ -1,5 +1,6 @@
 #include <QString>
 #include <QStringList>
+#include <QVariantList>
 #include <QVariantMap>
 
 #include <gtest/gtest.h>
@@ -7,6 +8,7 @@
 #include <vector>
 
 #include "app/world/ally_announcements.h"
+#include "game/core/world.h"
 #include "game/session/session_context.h"
 #include "game/systems/alliance_board.h"
 #include "game/systems/economy/marketplace_system.h"
@@ -57,7 +59,37 @@ protected:
             .commander_fact =
                 [this](const Game::Mission::CommanderMessageFact& fact) {
                   m_facts.push_back(fact);
+                },
+            .appeal_markers =
+                [this](const QVariantList& markers) {
+                  m_markers = markers;
+                  ++m_marker_updates;
                 }});
+  }
+
+  auto open_appeal_to_local(AllyAppealKind kind,
+                            float x = 0.0F,
+                            float z = 0.0F) -> std::uint32_t {
+    auto& board = m_session.alliance();
+    const auto id = board.next_appeal_id();
+    board.record_appeal({.appeal_id = id,
+                         .from_ally = k_hanno,
+                         .to_owner = k_local,
+                         .kind = kind,
+                         .resource = ResourceType::Wood,
+                         .amount = 100,
+                         .target_x = x,
+                         .target_z = z});
+    return id;
+  }
+
+  void
+  reply_to_local(std::uint32_t id, AllyAppealKind kind, AllyAppealFollowUp follow_up) {
+    m_session.alliance().record_appeal_reply({.appeal_id = id,
+                                              .from_ally = k_hanno,
+                                              .to_owner = k_local,
+                                              .kind = kind,
+                                              .follow_up = follow_up});
   }
 
   Game::Session::SessionContext m_session;
@@ -66,6 +98,8 @@ protected:
   std::vector<QVariantMap> m_opened;
   std::vector<quint32> m_closed;
   std::vector<Game::Mission::CommanderMessageFact> m_facts;
+  QVariantList m_markers;
+  int m_marker_updates = 0;
 };
 
 TEST_F(AllyAnnouncementsTest, ASentGiftIsNarratedOnceForTheGiver) {
@@ -271,6 +305,83 @@ TEST_F(AllyAnnouncementsTest, AppealRepliesCloseTheCardUnlessTheyAreLateAidRepor
   EXPECT_EQ(m_exchanges[1].text,
             QStringLiteral("Hanno: your men have reached the camp. Well met."));
   EXPECT_TRUE(m_exchanges[1].positive);
+}
+
+TEST_F(AllyAnnouncementsTest, ACardWhoseAppealIsNoLongerOpenIsClosed) {
+  const auto id = open_appeal_to_local(AllyAppealKind::Resources);
+  m_presenter->announce_appeals(&m_session, k_local);
+  ASSERT_EQ(m_opened.size(), 1U);
+  m_presenter->announce_appeals(&m_session, k_local);
+  EXPECT_TRUE(m_closed.empty()) << "a live appeal keeps its card";
+
+  m_session.alliance().close_appeal(id);
+  m_presenter->announce_appeals(&m_session, k_local);
+  ASSERT_EQ(m_closed.size(), 1U)
+      << "a card must never outlive its appeal, or answering it fails";
+  EXPECT_EQ(m_closed.front(), id);
+}
+
+TEST_F(AllyAnnouncementsTest, ANewMatchClosesTheLastMatchsCardsAndKeepsIdsUnique) {
+  const auto stale = open_appeal_to_local(AllyAppealKind::Attack, 12.0F, -4.0F);
+  m_presenter->announce_appeals(&m_session, k_local);
+  ASSERT_EQ(m_opened.size(), 1U);
+  ASSERT_EQ(m_markers.size(), 1);
+
+  m_session.world().clear();
+  EXPECT_EQ(m_session.alliance().open_appeal(stale), nullptr)
+      << "clearing the world for a new match or a load empties the alliance board";
+  m_presenter->announce_appeals(&m_session, k_local);
+  ASSERT_EQ(m_closed.size(), 1U);
+  EXPECT_EQ(m_closed.front(), stale);
+  EXPECT_TRUE(m_markers.isEmpty());
+
+  const auto fresh = open_appeal_to_local(AllyAppealKind::Resources);
+  EXPECT_GT(fresh, stale) << "a stale card can never share an id with a new appeal";
+}
+
+TEST_F(AllyAnnouncementsTest, ACallToArmsKeepsAMinimapMarkerUntilThePledgeEnds) {
+  open_appeal_to_local(AllyAppealKind::Resources);
+  const auto id = open_appeal_to_local(AllyAppealKind::Attack, 40.0F, 25.0F);
+  m_presenter->announce_appeals(&m_session, k_local);
+  ASSERT_EQ(m_markers.size(), 1) << "only appeals with a target are marked";
+  auto marker = m_markers.front().toMap();
+  EXPECT_EQ(marker.value("id").toUInt(), id);
+  EXPECT_EQ(marker.value("kind").toString(), QStringLiteral("attack"));
+  EXPECT_FLOAT_EQ(marker.value("x").toFloat(), 40.0F);
+  EXPECT_FLOAT_EQ(marker.value("z").toFloat(), 25.0F);
+  EXPECT_FALSE(marker.value("pledged").toBool());
+
+  const int updates = m_marker_updates;
+  m_presenter->announce_appeals(&m_session, k_local);
+  EXPECT_EQ(m_marker_updates, updates) << "unchanged markers are not republished";
+
+  m_session.alliance().close_appeal(id);
+  reply_to_local(id, AllyAppealKind::Attack, AllyAppealFollowUp::AwaitingAid);
+  m_presenter->announce_appeals(&m_session, k_local);
+  ASSERT_EQ(m_markers.size(), 1) << "after Join the player still sees where to go";
+  EXPECT_TRUE(m_markers.front().toMap().value("pledged").toBool());
+
+  reply_to_local(id, AllyAppealKind::Attack, AllyAppealFollowUp::AidArrived);
+  m_presenter->announce_appeals(&m_session, k_local);
+  EXPECT_TRUE(m_markers.isEmpty());
+}
+
+TEST_F(AllyAnnouncementsTest, RefusedOrWithdrawnCallsDropTheirMarker) {
+  const auto refused = open_appeal_to_local(AllyAppealKind::Defend, 5.0F, 5.0F);
+  const auto ignored = open_appeal_to_local(AllyAppealKind::Attack, 9.0F, 9.0F);
+  m_presenter->announce_appeals(&m_session, k_local);
+  ASSERT_EQ(m_markers.size(), 2);
+
+  m_session.alliance().close_appeal(refused);
+  reply_to_local(refused, AllyAppealKind::Defend, AllyAppealFollowUp::HoldAlone);
+  m_presenter->announce_appeals(&m_session, k_local);
+  ASSERT_EQ(m_markers.size(), 1);
+  EXPECT_EQ(m_markers.front().toMap().value("id").toUInt(), ignored);
+
+  m_session.alliance().close_appeal(ignored);
+  reply_to_local(ignored, AllyAppealKind::Attack, AllyAppealFollowUp::Withdrawn);
+  m_presenter->announce_appeals(&m_session, k_local);
+  EXPECT_TRUE(m_markers.isEmpty());
 }
 
 TEST_F(AllyAnnouncementsTest, WithoutASessionNothingIsAnnounced) {

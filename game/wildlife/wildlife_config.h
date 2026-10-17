@@ -8,6 +8,8 @@
 
 namespace Game::Wildlife {
 
+inline constexpr float k_wolf_detect_multiplier = 1.4F;
+
 struct SpawnArea {
   float x{0.0F};
   float z{0.0F};

@@ -32,8 +32,10 @@ private:
                 const EntityCache& entity_cache,
                 const QString& victory_state) const;
 
-  [[nodiscard]] static float settle_seconds(Engine::Core::AmbientState from,
-                                            Engine::Core::AmbientState to);
+  [[nodiscard]] float settle_seconds(Engine::Core::AmbientState from,
+                                     Engine::Core::AmbientState to) const;
+
+  void note_sample(Engine::Core::AmbientState observed, float elapsed);
 
   Engine::Core::AmbientState m_current_ambient_state =
       Engine::Core::AmbientState::PEACEFUL;
@@ -41,4 +43,6 @@ private:
   Engine::Core::AmbientState m_candidate_state = Engine::Core::AmbientState::PEACEFUL;
   float m_candidate_seconds = 0.0F;
   float m_ambient_check_timer = 0.0F;
+  float m_engagement_seconds = 0.0F;
+  float m_seconds_since_combat_left = 1.0e9F;
 };

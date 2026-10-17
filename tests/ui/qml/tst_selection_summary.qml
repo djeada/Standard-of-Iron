@@ -628,6 +628,101 @@ TestCase {
         summary.destroy();
     }
 
+    function test_an_own_barracks_leaves_the_defend_call_to_its_production_panel() {
+        var focus = {
+            "name": "Barracks",
+            "typeKey": "barracks",
+            "isBuilding": true,
+            "isEnemy": false,
+            "isOwn": true,
+            "allyCall": "defend",
+            "healthRatio": 1.0,
+            "health": 1000,
+            "maxHealth": 1000
+        };
+        var summary = summaryComponent.createObject(testCase, {
+                "unitCount": 0,
+                "groups": [],
+                "inspected": makeFocus(focus)
+            });
+        verify(!findChild(summary, "inspectAllyCallButton").visible, "the barracks panel already carries this button");
+        summary.destroy();
+        focus.typeKey = "defense_tower";
+        focus.name = "Tower";
+        summary = summaryComponent.createObject(testCase, {
+                "unitCount": 0,
+                "groups": [],
+                "inspected": makeFocus(focus)
+            });
+        verify(findChild(summary, "inspectAllyCallButton").visible, "other buildings still offer the call here");
+        summary.destroy();
+    }
+
+    function test_a_second_click_on_a_portrait_centres_the_camera_on_that_unit() {
+        var summary = makeSummary(3, makeGroups([{
+                        "typeKey": "archer",
+                        "count": 3
+                    }]));
+        var activated = createTemporaryObject(spyComponent, testCase, {
+                "target": summary,
+                "signalName": "unitActivated"
+            });
+        var focused = createTemporaryObject(spyComponent, testCase, {
+                "target": summary,
+                "signalName": "focusRequested"
+            });
+        summary.activateUnit(42);
+        compare(activated.count, 1, "the first click selects the unit");
+        compare(focused.count, 0, "one click must not move the camera");
+        summary.activateCard();
+        compare(focused.count, 1, "the second click lands on the single-unit card the first one opened");
+        compare(focused.signalArguments[0][0], 42);
+        compare(activated.count, 1);
+        summary.destroy();
+    }
+
+    function test_a_slow_second_click_does_not_move_the_camera() {
+        var summary = makeSummary(1, makeGroups([{
+                        "typeKey": "archer",
+                        "count": 1
+                    }]));
+        var focused = createTemporaryObject(spyComponent, testCase, {
+                "target": summary,
+                "signalName": "focusRequested"
+            });
+        summary.activateUnit(42);
+        summary.pendingFocusAt = Date.now() - Qt.styleHints.mouseDoubleClickInterval - 50;
+        summary.activateCard();
+        compare(focused.count, 0);
+        summary.destroy();
+    }
+
+    function test_double_clicking_a_group_card_centres_on_the_new_selection() {
+        var summary = makeSummary(20, makeGroups([{
+                        "typeKey": "archer",
+                        "count": 12
+                    }, {
+                        "typeKey": "spearman",
+                        "count": 8
+                    }]));
+        var focused = createTemporaryObject(spyComponent, testCase, {
+                "target": summary,
+                "signalName": "focusRequested"
+            });
+        summary.activateGroup("archer");
+        summary.activateUnit(7);
+        compare(focused.count, 1, "the second click may land on a chip once the roster narrows");
+        compare(focused.signalArguments[0][0], null, "a group centres on the whole selection");
+        summary.destroy();
+    }
+
+    Component {
+        id: spyComponent
+
+        SignalSpy {
+        }
+    }
+
     Component {
         id: summaryComponent
 

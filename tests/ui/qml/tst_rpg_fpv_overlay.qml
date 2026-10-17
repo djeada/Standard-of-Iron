@@ -373,6 +373,58 @@ TestCase {
         host.destroy();
     }
 
+    function test_the_stamina_meter_spans_the_vitals_plate() {
+        var host = makeOverlay(1280, 720, quietStatus());
+        var health = findChild(host.overlay, "rpgHealthMeter");
+        var stamina = findChild(host.overlay, "rpgStaminaMeter");
+        verify(health !== null && stamina !== null, "vitals meters are missing");
+        verify(stamina.width > health.width * 0.6, "the stamina meter collapsed to " + stamina.width + " px");
+        host.destroy();
+    }
+
+    function test_an_ability_pressed_on_cooldown_flashes_its_tile() {
+        var status = quietStatus();
+        status["second_wind_ready"] = false;
+        status["second_wind_cooldown"] = 8.0;
+        status["second_wind_cooldown_remaining"] = 5.0;
+        status["refusal_sequence"] = 3;
+        status["refusal_action"] = "commander.ability_second_wind";
+        var host = makeOverlay(1280, 720, status);
+        var overlay = host.overlay;
+        var tile = findChild(overlay, "rpgAbilityTile_commander.ability_second_wind");
+        var rush = findChild(overlay, "rpgAbilityTile_commander.ability_vanguard_rush");
+        verify(tile !== null && rush !== null, "ability tiles are missing");
+        compare(tile.denied, 0.0, "an old refusal must not flash on entry");
+        var refused = quietStatus();
+        refused["second_wind_ready"] = false;
+        refused["second_wind_cooldown"] = 8.0;
+        refused["second_wind_cooldown_remaining"] = 4.9;
+        refused["refusal_sequence"] = 4;
+        refused["refusal_action"] = "commander.ability_second_wind";
+        overlay.status = refused;
+        wait(30);
+        verify(tile.denied > 0.0, "pressing an ability on cooldown gave no feedback");
+        compare(rush.denied, 0.0, "the refusal flashed the wrong tile");
+        host.destroy();
+    }
+
+    function test_a_lock_on_with_nothing_in_reach_says_so() {
+        var status = quietStatus();
+        status["refusal_sequence"] = 0;
+        var host = makeOverlay(1280, 720, status);
+        var overlay = host.overlay;
+        var toast = findChild(overlay, "rpgModeToast");
+        verify(toast !== null, "mode toast is missing");
+        var refused = quietStatus();
+        refused["refusal_sequence"] = 1;
+        refused["refusal_action"] = "commander.cycle_lock_on";
+        overlay.status = refused;
+        tryVerify(function () {
+                return toast.visible && toast.text.indexOf("TARGET") >= 0;
+            }, 1000, "a lock-on with nothing in reach gave no feedback");
+        host.destroy();
+    }
+
     function test_a_camera_toggle_is_announced() {
         var status = quietStatus();
         status["camera_mode"] = "Chase";

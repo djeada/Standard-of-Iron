@@ -554,10 +554,10 @@ auto build_rpg_combat_definitions() -> std::vector<ArenaScenarioDefinition> {
                             Nation::RomanRepublic,
                             1,
                             1,
-                            {0.0F, 0.0F, 5.0F});
+                            {0.0F, 0.0F, 8.6F});
     shelter.health_override = shelter.max_health_override = 8000;
     auto hidden = group(
-        QStringLiteral("hidden_enemy"), Troop::Swordsman, 2, 1, {0.0F, 0.0F, 7.6F}, 1);
+        QStringLiteral("hidden_enemy"), Troop::Swordsman, 2, 1, {0.0F, 0.0F, 11.2F}, 1);
     auto left = group(
         QStringLiteral("left_enemy"), Troop::Swordsman, 2, 1, {-1.6F, 0.0F, 6.0F}, 1);
     auto right = group(

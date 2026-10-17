@@ -58,6 +58,8 @@ auto build_controlled_commander_status(const CommanderStatusInput& input)
   result["incoming_tell_intensity"] = 0.0;
   result["last_input_outcome"] = 0;
   result["last_input_outcome_age"] = 0.0;
+  result["refusal_sequence"] = static_cast<int>(input.refusal_sequence);
+  result["refusal_action"] = QString::fromLatin1(input.refusal_action);
   result["combat_phase"] = 0;
   result["attack_direction"] = 0;
   result["is_attacking"] = false;

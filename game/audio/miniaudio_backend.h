@@ -120,6 +120,14 @@ private:
     bool active = false;
   };
 
+  struct ResumePoint {
+    int track = -1;
+    unsigned frame_pos = 0;
+    std::uint64_t left_at_frame = 0;
+  };
+
+  static constexpr int k_music_resume_window_seconds = 90;
+
   struct SoundEffect {
     Game::Audio::MixBus mix_bus = Game::Audio::MixBus::Unmixed;
     int priority = 0;
@@ -141,6 +149,8 @@ private:
   void apply_command(const Game::Audio::AudioCommand& command);
   [[nodiscard]] auto channel_for(const Game::Audio::AudioCommand& command) -> Channel*;
   void apply_play(const Game::Audio::AudioCommand& command);
+  void remember_resume_point(const Channel& channel);
+  [[nodiscard]] auto take_resume_point(int track) -> unsigned;
   void apply_stop(const Game::Audio::AudioCommand& command);
   void apply_stop_all(const Game::Audio::AudioCommand& command);
   void apply_play_sound(const Game::Audio::AudioCommand& command);
@@ -198,6 +208,9 @@ private:
   Game::Audio::GameplayMix m_gameplay_mix;
   std::atomic<Game::Audio::ListeningPreset> m_listening_preset{
       Game::Audio::ListeningPreset::Speakers};
+
+  std::array<ResumePoint, 8> m_resume_points{};
+  std::uint64_t m_rendered_frames{0};
 
   std::atomic<std::uint32_t> m_active_channel_mask{0};
   std::array<std::atomic<int>, DEFAULT_SOUND_EFFECT_SLOTS> m_active_sfx_tracks{};

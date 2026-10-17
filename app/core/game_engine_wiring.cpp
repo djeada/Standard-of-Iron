@@ -168,9 +168,23 @@ void GameEngine::wire_loading_and_saves() {
               [this]() {
                 return m_runtime.initialized && !m_runtime.loading &&
                        !m_level.map_path.isEmpty() && m_runtime.victory_state.isEmpty();
+              },
+          .commander_mode_active =
+              [this]() {
+                return m_commander_view_model->active();
               }},
       this);
   m_saves->connect_view_model();
+  connect(
+      m_commander_view_model.get(),
+      &App::ViewModels::CommanderViewModel::control_mode_changed,
+      this,
+      [this]() {
+        if (m_saves != nullptr && !m_commander_view_model->active()) {
+          m_saves->commander_mode_left();
+        }
+      },
+      Qt::QueuedConnection);
   connect(m_save_slots_view_model.get(),
           &App::ViewModels::SaveSlotsViewModel::load_requested,
           this,

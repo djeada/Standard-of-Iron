@@ -226,6 +226,42 @@ TestCase {
             }, 3000, "the commander burst is not drawn as an RTS pill");
     }
 
+    function test_a_loss_near_the_top_bar_stays_below_it() {
+        projector.topInset = 120;
+        projector.bottomInset = 150;
+        testCase.pendingBatches = [[tick({
+                        "amount": 26,
+                        "incoming": true,
+                        "killingBlow": true,
+                        "x": -398,
+                        "y": 295
+                    }), tick({
+                        "style": "burst",
+                        "amount": 8,
+                        "severity": 0.8,
+                        "x": 60,
+                        "y": 290
+                    })]];
+        tryVerify(function () {
+                return numbers.activeTicks === 1 && numbers.activeBursts === 1;
+            }, 3000);
+        var playfield = findChild(numbers, "floatingNumbersPlayfield");
+        verify(playfield !== null);
+        verify(playfield.clip, "nothing may paint over the top bar or the bottom HUD");
+        compare(playfield.y, 120);
+        compare(playfield.height, testCase.height - 120 - 150);
+        var tickItem = playfield.children[0].children[0];
+        var burstItem = playfield.children[1].children[0];
+        for (var frame = 0; frame < 4; ++frame) {
+            verify(tickItem.y >= 120, "the loss pill rose into the top bar at y=" + tickItem.y);
+            verify(tickItem.x >= 0, "the loss pill left the screen at x=" + tickItem.x);
+            verify(burstItem.y + 30 >= 120, "the burst label rose into the top bar at y=" + (burstItem.y + 30));
+            wait(40);
+        }
+        projector.topInset = 0;
+        projector.bottomInset = 0;
+    }
+
     function test_the_tick_layer_refuses_more_than_its_cap() {
         var flood = [];
         for (var i = 0; i < numbers.maxTicks + 12; ++i)

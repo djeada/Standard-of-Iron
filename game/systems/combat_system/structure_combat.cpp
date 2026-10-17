@@ -24,6 +24,12 @@ struct StructureFootprint {
   float yaw_radians{0.0F};
 };
 
+[[nodiscard]] auto is_wall_piece(Game::Units::SpawnType type) -> bool {
+  using Game::Units::SpawnType;
+  return type == SpawnType::WallSegment || type == SpawnType::WallGate ||
+         type == SpawnType::WallLadder;
+}
+
 [[nodiscard]] auto
 structure_footprint(const Engine::Core::Entity& structure) -> StructureFootprint {
   StructureFootprint result;
@@ -35,14 +41,36 @@ structure_footprint(const Engine::Core::Entity& structure) -> StructureFootprint
     result.yaw_radians = transform->rotation.y * std::numbers::pi_v<float> / 180.0F;
   }
 
+  bool const drawn_body = unit != nullptr && !is_wall_piece(unit->spawn_type);
   if (auto const* registered =
           Game::Systems::BuildingCollisionRegistry::instance().find_building(
               structure.get_id())) {
-    result.center_x = registered->center_x;
-    result.center_z = registered->center_z;
-    result.half_width = std::max(0.1F, registered->width * 0.5F);
-    result.half_depth = std::max(0.1F, registered->depth * 0.5F);
+    bool const has_body =
+        registered->body_width > 0.0F && registered->body_depth > 0.0F;
+    if (drawn_body && has_body) {
+      result.center_x = registered->body_center_x;
+      result.center_z = registered->body_center_z;
+      result.half_width = std::max(0.1F, registered->body_width * 0.5F);
+      result.half_depth = std::max(0.1F, registered->body_depth * 0.5F);
+    } else {
+      result.center_x = registered->center_x;
+      result.center_z = registered->center_z;
+      result.half_width = std::max(0.1F, registered->width * 0.5F);
+      result.half_depth = std::max(0.1F, registered->depth * 0.5F);
+    }
     result.yaw_radians = 0.0F;
+    return result;
+  }
+
+  if (drawn_body) {
+    auto const body = Game::Systems::BuildingCollisionRegistry::get_building_body(
+        Game::Units::spawn_typeToString(unit->spawn_type));
+    float const sin_yaw = std::sin(result.yaw_radians);
+    float const cos_yaw = std::cos(result.yaw_radians);
+    result.center_x += cos_yaw * body.offset_x + sin_yaw * body.offset_z;
+    result.center_z += -sin_yaw * body.offset_x + cos_yaw * body.offset_z;
+    result.half_width = std::max(0.1F, body.width * 0.5F);
+    result.half_depth = std::max(0.1F, body.depth * 0.5F);
     return result;
   }
 

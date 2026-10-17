@@ -127,6 +127,26 @@ void OrdersViewModel::select_by_type(const QString& unit_type) {
   }
 }
 
+auto OrdersViewModel::assign_control_group(int group) -> int {
+  m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
+  if (m_context.input == nullptr) {
+    return 0;
+  }
+  return m_context.input->assign_control_group(group, m_context.local_owner_id);
+}
+
+auto OrdersViewModel::recall_control_group(int group, bool additive) -> bool {
+  Engine::Core::note_coverage(Engine::Core::CoverageEvent::SelectionChange);
+  m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
+  if (m_context.input == nullptr) {
+    return false;
+  }
+  return m_context.input->recall_control_group(
+      group, additive, m_context.local_owner_id);
+}
+
 namespace {
 
 struct OwnedPlace {

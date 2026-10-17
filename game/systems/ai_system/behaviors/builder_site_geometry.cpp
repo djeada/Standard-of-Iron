@@ -33,10 +33,27 @@ auto slot_clearance(const char* building_type,
          footprint_half_extent(Game::Units::spawn_typeToString(standing)) + k_slot_gap;
 }
 
+auto site_lies_on_the_map(const AISnapshot& snapshot,
+                          const char* building_type,
+                          float world_x,
+                          float world_z) -> bool {
+  if (!snapshot.has_map_bounds || building_type == nullptr) {
+    return true;
+  }
+  const float reach =
+      std::max(MAP_EDGE_PADDING, footprint_half_extent(std::string(building_type)));
+  return world_x >= snapshot.map_min_x + reach &&
+         world_x <= snapshot.map_max_x - reach &&
+         world_z >= snapshot.map_min_z + reach && world_z <= snapshot.map_max_z - reach;
+}
+
 auto site_is_free(const AISnapshot& snapshot,
                   const char* building_type,
                   float world_x,
                   float world_z) -> bool {
+  if (!site_lies_on_the_map(snapshot, building_type, world_x, world_z)) {
+    return false;
+  }
   for (const auto& entity : snapshot.friendly_units) {
     if (!entity.is_building) {
       continue;

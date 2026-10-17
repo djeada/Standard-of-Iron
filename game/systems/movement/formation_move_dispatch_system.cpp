@@ -17,6 +17,11 @@ auto is_fighting(Engine::Core::World& world, Engine::Core::EntityID id) -> bool 
          (attack != nullptr && attack->in_melee_lock);
 }
 
+auto is_working(Engine::Core::World& world, Engine::Core::EntityID id) -> bool {
+  const auto* builder = world.try_get<Engine::Core::BuilderProductionComponent>(id);
+  return builder != nullptr && (builder->has_construction_site || builder->in_progress);
+}
+
 } // namespace
 
 void FormationMoveDispatchSystem::update(Engine::Core::World* world, float) {
@@ -52,7 +57,8 @@ void FormationMoveDispatchSystem::update(Engine::Core::World* world, float) {
     intents.reserve(formation->slot_list.size());
     for (const auto& slot : formation->slot_list) {
       if (slot.occupant == 0U || slot.status == Game::Formation::SlotStatus::Blocked ||
-          !formation->has_member(slot.occupant) || is_fighting(*world, slot.occupant)) {
+          !formation->has_member(slot.occupant) || is_fighting(*world, slot.occupant) ||
+          is_working(*world, slot.occupant)) {
         continue;
       }
       auto const target = Game::Formation::ArmyFormationRuntime::morph_target(
@@ -74,6 +80,7 @@ auto FormationMoveDispatchSystem::access() const -> Engine::Core::SystemAccess {
   using namespace Engine::Core;
   return SystemAccess::declare(
       Reads<UnitComponent,
+            BuilderProductionComponent,
             BuildingComponent,
             PendingRemovalComponent,
             AttackTargetComponent>{},

@@ -1,9 +1,12 @@
 #include "food_targets.h"
 
+#include <algorithm>
 #include <cmath>
 #include <limits>
+#include <numbers>
 
 #include "construction_cost_catalog.h"
+#include "core/component_core.h"
 #include "core/component_economy.h"
 #include "core/world.h"
 #include "systems/builder_product_types.h"
@@ -28,7 +31,35 @@ auto distance_sq(float ax, float az, float bx, float bz) -> float {
   return dx * dx + dz * dz;
 }
 
+constexpr float k_field_centre_local_x = -0.08F;
+constexpr float k_field_centre_local_z = -0.22F;
+constexpr float k_field_half_local_x = 0.80F;
+constexpr float k_field_half_local_z = 0.62F;
+constexpr float k_field_edge_inset = 1.5F;
+
 } // namespace
+
+auto farm_field_work_spot(const Engine::Core::TransformComponent& farm,
+                          const QVector3D& from) -> QVector3D {
+  float const yaw = farm.rotation.y * std::numbers::pi_v<float> / 180.0F;
+  float const cosine = std::cos(yaw);
+  float const sine = std::sin(yaw);
+  float const dx = from.x() - farm.position.x;
+  float const dz = from.z() - farm.position.z;
+  auto const clamp_into_field = [](float local, float centre, float half) {
+    float const inset = std::min(k_field_edge_inset, half * 0.5F);
+    return std::clamp(local, centre - half + inset, centre + half - inset);
+  };
+  float const local_x = clamp_into_field((cosine * dx) - (sine * dz),
+                                         k_field_centre_local_x * farm.scale.x,
+                                         k_field_half_local_x * farm.scale.x);
+  float const local_z = clamp_into_field((sine * dx) + (cosine * dz),
+                                         k_field_centre_local_z * farm.scale.z,
+                                         k_field_half_local_z * farm.scale.z);
+  return {farm.position.x + (cosine * local_x) + (sine * local_z),
+          0.0F,
+          farm.position.z - (sine * local_x) + (cosine * local_z)};
+}
 
 auto farm_is_harvestable(const Engine::Core::Entity& farm, int owner_id) -> bool {
   const auto* unit = farm.get_component<Engine::Core::UnitComponent>();

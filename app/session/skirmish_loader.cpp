@@ -86,6 +86,7 @@ SkirmishLoader::SkirmishLoader(Engine::Core::World& world,
 void SkirmishLoader::reset_game_state() {
   if (auto* selection_system = &Game::Session::session_for(m_world).selection()) {
     selection_system->clear_selection();
+    selection_system->clear_control_groups();
   }
 
   m_renderer.pause();

@@ -47,12 +47,9 @@ Item {
     Rectangle {
         id: card
 
-        anchors.right: root.top_anchored ? undefined : parent.right
-        anchors.bottom: root.top_anchored ? undefined : parent.bottom
-        anchors.horizontalCenter: root.top_anchored ? parent.horizontalCenter : undefined
-        anchors.top: root.top_anchored ? parent.top : undefined
-        anchors.margins: Theme.spacingLarge
-        anchors.topMargin: root.top_anchored ? root.top_margin + Theme.spacingLarge : Theme.spacingLarge
+        objectName: "saveProgressCard"
+        x: root.top_anchored ? Math.round((root.width - width) / 2) : root.width - width - Theme.spacingLarge
+        y: root.top_anchored ? root.top_margin + Theme.spacingLarge : root.height - height - Theme.spacingLarge
         width: 320
         height: content.implicitHeight + Theme.spacingLarge * 2
         radius: Theme.radiusPanel

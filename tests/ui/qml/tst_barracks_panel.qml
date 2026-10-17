@@ -109,6 +109,44 @@ TestCase {
     }
 
     QtObject {
+        id: idleProduction
+
+        function has_selected_type(type) {
+            return type === "barracks";
+        }
+
+        function selected_building_id() {
+            return 7;
+        }
+
+        function ally_call_state(buildingId) {
+            return {
+                "kind": "defend",
+                "allies": 1,
+                "reason": "Your ally can send troops to this barracks."
+            };
+        }
+
+        function selected_state() {
+            return {
+                "has_barracks": true,
+                "max_units": 140,
+                "queue_size": 0,
+                "in_progress": false,
+                "production_queue": [],
+                "manpower_available": 140,
+                "build_time": 10,
+                "time_remaining": 0,
+                "nation_id": "carthage"
+            };
+        }
+
+        function unit_info(unitType, nationId) {
+            return longNamedProduction.unit_info(unitType, nationId);
+        }
+    }
+
+    QtObject {
         id: fundedPlayer
 
         property var resources: ({
@@ -397,6 +435,42 @@ TestCase {
         verify(progress !== undefined, "the production progress bar is missing");
         verify(progress.visible, "a barracks that is recruiting hides its progress bar");
         verify(progress.value > 0 && progress.value < 1, "the progress bar does not read the build clock");
+        panel.destroy();
+    }
+
+    function test_an_idle_barracks_at_720p_fits_its_header_and_names() {
+        var panel = panelComponent.createObject(testCase, {
+                "width": 421,
+                "height": 184,
+                "production": idleProduction,
+                "player_state": fundedPlayer
+            });
+        panel.selection_tick = 1;
+        tryCompare(panel, "has_barracks_selection", true);
+        wait(20);
+        var view = testCase.collect(panel, "barracksProductionView")[0];
+        var header = testCase.collect(view, "barracksHeader")[0];
+        var queue = testCase.collect(view, "barracksQueueColumn")[0];
+        verify(!queue.visible, "an empty queue must not leave unlabelled squares in the header");
+        var button = testCase.collect(view, "barracksAllyCallButton")[0];
+        verify(button.visible, "the ally call is offered");
+        var left = button.mapToItem(header, 0, 0);
+        verify(left.x >= -0.5 && left.x + button.width <= header.width + 0.5, "the ally call button is clipped by the header");
+        verify(left.y + button.height <= header.height + 0.5, "the ally call button hangs below the header");
+        verify(button.implicitWidth <= button.width + 0.5, "the ally call label does not fit its button");
+        var labels = testCase.collect_text(header);
+        for (var i = 0; i < labels.length; ++i)
+            verify(!labels[i].truncated, "\"" + labels[i].text + "\" is cut short in the header");
+        var grid = testCase.collect(view, "barracksRecruitGrid")[0];
+        var names = testCase.collect(view, "recruitCardName");
+        var checked = 0;
+        for (var n = 0; n < names.length; ++n) {
+            if (!testCase.in_view(names[n], grid))
+                continue;
+            checked++;
+            verify(!names[n].truncated, "\"" + names[n].text + "\" is cut short on its recruit card");
+        }
+        verify(checked > 0, "no recruit card was in view");
         panel.destroy();
     }
 }

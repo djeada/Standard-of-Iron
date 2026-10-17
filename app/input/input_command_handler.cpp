@@ -537,6 +537,23 @@ void InputCommandHandler::select_selected_units_by_type(const QString& unit_type
   m_selection_controller->select_selected_units_by_type(unit_type, local_owner_id);
 }
 
+auto InputCommandHandler::assign_control_group(int group, int local_owner_id) -> int {
+  if (m_is_spectator_mode || m_selection_controller == nullptr) {
+    return 0;
+  }
+  return static_cast<int>(
+      m_selection_controller->assign_control_group(group, local_owner_id));
+}
+
+auto InputCommandHandler::recall_control_group(int group,
+                                               bool additive,
+                                               int local_owner_id) -> bool {
+  if (m_is_spectator_mode || m_selection_controller == nullptr) {
+    return false;
+  }
+  return m_selection_controller->recall_control_group(group, additive, local_owner_id);
+}
+
 void InputCommandHandler::set_hover_at_screen(qreal sx,
                                               qreal sy,
                                               const ViewportState& viewport) {

@@ -79,7 +79,7 @@ Item {
             var unit = mission.starting_force[i];
             if (!unit)
                 continue;
-            parts.push(qsTr("%1 × %2").arg(Design.Numerals.roman(unit.count)).arg(Design.Icons.humanise(String(unit.type))));
+            parts.push(qsTr("%1 × %2").arg(Design.Numerals.grouped(unit.count)).arg(Design.Icons.humanise(String(unit.type))));
         }
         return parts.join(", ");
     }
@@ -361,7 +361,8 @@ Item {
                         }
 
                         Text {
-                            text: Design.Numerals.ratio(root.completed_count, root.missions.length)
+                            objectName: "missionsCompletedCount"
+                            text: qsTr("%1 / %2").arg(Design.Numerals.grouped(root.completed_count)).arg(Design.Numerals.grouped(root.missions.length))
                             color: root.completed_count === root.missions.length ? Design.Theme.success : Design.Theme.accent
                             font.family: Design.Typography.displayFamily
                             font.pixelSize: Design.Typography.label
@@ -450,7 +451,7 @@ Item {
                             }
 
                             Design.IronBadge {
-                                text: Design.Numerals.roman(root.missions.length)
+                                text: Design.Numerals.grouped(root.missions.length)
                                 tone: Design.Theme.accent
                             }
                         }
@@ -574,12 +575,15 @@ Item {
                                                 spacing: Design.Metrics.space4
 
                                                 Text {
+                                                    objectName: "missionRowTitle"
                                                     Layout.fillWidth: true
                                                     text: row.modelData ? String(row.modelData.title) : ""
                                                     color: Design.Theme.textPrimary
                                                     font.family: Design.Typography.displayFamily
                                                     font.pixelSize: Design.Typography.bodyLarge
                                                     font.weight: Design.Typography.bold
+                                                    wrapMode: Text.WordWrap
+                                                    maximumLineCount: 2
                                                     elide: Text.ElideRight
                                                 }
 
@@ -1035,15 +1039,20 @@ Item {
                             Layout.fillWidth: true
                             spacing: Design.Metrics.space12
 
-                            RowLayout {
+                            Row {
+                                objectName: "missionDeployHotkey"
+                                Layout.preferredWidth: root.compact ? 0 : implicitWidth
                                 spacing: Design.Metrics.space8
-                                visible: !root.compact
+                                opacity: root.compact ? 0 : 1
+                                clip: true
 
                                 Design.IronHotkeyLabel {
+                                    anchors.verticalCenter: parent.verticalCenter
                                     text: qsTr("Enter")
                                 }
 
                                 Text {
+                                    anchors.verticalCenter: parent.verticalCenter
                                     text: qsTr("Take the field")
                                     color: Design.Theme.textDisabled
                                     font.family: Design.Typography.family

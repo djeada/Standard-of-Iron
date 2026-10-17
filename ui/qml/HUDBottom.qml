@@ -735,6 +735,14 @@ RowLayout {
             if (bottomRoot.game_ready() && game.orders.select_by_type)
                 game.orders.select_by_type(unitType);
         }
+        onFocusRequested: function (unitId) {
+            if (!bottomRoot.game_ready() || !game.camera)
+                return;
+            if (unitId !== null && unitId !== undefined && game.camera.center_on_unit)
+                game.camera.center_on_unit(unitId);
+            else if (game.camera.center_on_selection)
+                game.camera.center_on_selection();
+        }
     }
 
     ColumnLayout {
@@ -987,13 +995,31 @@ RowLayout {
                 }
             }
 
-            Text {
+            Rectangle {
+                objectName: "contextualEmptyHint"
                 anchors.centerIn: parent
                 visible: bottomRoot.contextualCommands.length === 0
-                text: bottomRoot.selection_count > 0 ? qsTr("No specialist actions for this selection") : qsTr("Select troops to reveal their specialist actions")
-                color: Design.Theme.textDisabled
-                font.family: Design.Typography.family
-                font.pixelSize: Design.Typography.caption
+                width: Math.min(parent.width, emptyHintText.implicitWidth + Design.Metrics.space16 * 2)
+                height: emptyHintText.implicitHeight + Design.Metrics.space8
+                radius: height / 2
+                color: Qt.rgba(Design.Theme.backgroundDeep.r, Design.Theme.backgroundDeep.g, Design.Theme.backgroundDeep.b, 0.88)
+                border.width: Design.Metrics.borderThin
+                border.color: Design.Theme.borderSubtle
+
+                Text {
+                    id: emptyHintText
+
+                    anchors.fill: parent
+                    anchors.leftMargin: Design.Metrics.space16
+                    anchors.rightMargin: Design.Metrics.space16
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    text: bottomRoot.selection_count > 0 ? qsTr("No specialist actions for this selection") : qsTr("Select troops to reveal their specialist actions")
+                    color: Design.Theme.textSecondary
+                    font.family: Design.Typography.family
+                    font.pixelSize: Design.Typography.caption
+                    elide: Text.ElideRight
+                }
             }
         }
     }

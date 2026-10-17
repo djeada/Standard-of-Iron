@@ -117,6 +117,10 @@ void AISystem::populate_behavior_registry(AI::AIBehaviorRegistry& registry) {
 void AISystem::reinitialize() {
   shutdown_workers();
 
+  m_total_game_time = 0.0F;
+  m_update_count = 0;
+  m_last_any_plea_at = -1.0e9F;
+  m_command_filter.reset();
   m_completed_decision_count = 0;
   m_applied_command_count = 0;
   m_decisions_over_wait_budget = 0;
@@ -368,6 +372,13 @@ void AISystem::restore_state(const QJsonObject& state) {
   m_update_count =
       static_cast<std::uint64_t>(state.value("update_count").toDouble(0.0));
   m_total_game_time = static_cast<float>(state.value("total_game_time").toDouble(0.0));
+  m_last_any_plea_at = m_total_game_time;
+  for (auto& ai : m_ai_instances) {
+    ai.last_plea_at = m_total_game_time;
+    ai.last_defend_appeal_at = m_total_game_time;
+    ai.last_attack_appeal_at = m_total_game_time;
+    ai.appealed_wave_committed_at = m_total_game_time;
+  }
   for (const auto value : state.value("players").toArray()) {
     const auto entry = value.toObject();
     const int player_id = entry.value("player_id").toInt(-1);
