@@ -9,9 +9,13 @@
 #include <array>
 #include <cstdio>
 #include <cstring>
-#include <gl/gl.h>
 #include <string_view>
+
+// The Windows OpenGL header needs windows.h's APIENTRY and WINGDIAPI macros.
+// clang-format off
 #include <windows.h>
+#include <gl/gl.h>
+// clang-format on
 
 #include "render/gl/context_requirements.h"
 #pragma comment(lib, "opengl32.lib")
