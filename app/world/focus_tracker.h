@@ -30,6 +30,7 @@ struct FocusInputs {
   App::ViewModels::ActivityViewModel* activity = nullptr;
   int local_owner_id = 1;
   bool spectator_mode = false;
+  bool commander_active = false;
 };
 
 class FocusTracker {

@@ -123,6 +123,10 @@ void GameEngine::create_feature_runtimes() {
           .commander_fact =
               [this](const Game::Mission::CommanderMessageFact& fact) {
                 m_commander_messages->director().notify_fact(fact);
+              },
+          .appeal_markers =
+              [this](const QVariantList& markers) {
+                m_minimap_view_model->set_ally_markers(markers);
               }});
 }
 
@@ -142,6 +146,21 @@ void GameEngine::wire_view_models() {
           &App::ViewModels::MatchSetupViewModel::launch_requested,
           this,
           &GameEngine::launch_match);
+  connect(m_match_setup_view_model.get(),
+          &App::ViewModels::MatchSetupViewModel::abandon_requested,
+          this,
+          [this] {
+            const WorldFreeze world_freeze(*this);
+            if (!world_freeze.acquired()) {
+              set_error(world_freeze_refused_message());
+              return;
+            }
+            if (m_commander_view_model->active()) {
+              m_commander_view_model->exit_mode();
+            }
+            reset_preload_interaction_state();
+            end_match_after_failed_load();
+          });
   connect(m_match_setup_view_model.get(),
           &App::ViewModels::MatchSetupViewModel::failed,
           this,

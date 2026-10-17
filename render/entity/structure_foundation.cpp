@@ -35,8 +35,8 @@ auto resolve_structure_foundation(const Game::Map::TerrainService& terrain,
     return foundation;
   }
 
-  auto const body =
-      Game::Units::find_building_body_extent(Game::Units::spawn_type_name(spawn_type));
+  auto const body = Game::Units::find_building_foundation_extent(
+      Game::Units::spawn_type_name(spawn_type));
   if (!body.has_value()) {
     return foundation;
   }

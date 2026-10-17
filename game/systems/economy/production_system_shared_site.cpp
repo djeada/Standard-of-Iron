@@ -1,5 +1,7 @@
 #include "production_system_shared_site.h"
 
+#include <QCoreApplication>
+
 #include <algorithm>
 #include <cmath>
 #include <iterator>
@@ -10,10 +12,12 @@
 #include "build_site.h"
 #include "construction_cost_catalog.h"
 #include "core/component_gameplay.h"
+#include "core/event_manager.h"
 #include "core/world.h"
 #include "production_system_approach.h"
 #include "production_system_builder_task.h"
 #include "systems/builder_product_types.h"
+#include "systems/player_feedback.h"
 #include "units/squad.h"
 
 namespace Game::Systems::ProductionTasks {
@@ -152,6 +156,58 @@ auto crew_gather_pace(const Engine::Core::World& world,
   }
   float const fraction = std::clamp(Game::Units::squad_fraction(*unit), 0.0F, 1.0F);
   return std::max(k_min_gather_pace, std::pow(fraction, k_gather_crew_exponent));
+}
+
+auto refund_abandoned_site(Engine::Core::World& world,
+                           Engine::Core::EntityID crew) -> bool {
+  const auto* builder = world.try_get<Engine::Core::BuilderProductionComponent>(crew);
+  if (builder == nullptr || !raises_shared_site(*builder)) {
+    return false;
+  }
+  const auto owner_of = [&world](Engine::Core::EntityID id) {
+    const auto* unit = world.try_get<Engine::Core::UnitComponent>(id);
+    return unit != nullptr ? unit->owner_id : 0;
+  };
+  const int owner_id = owner_of(crew);
+  for (auto [other_ref, other] :
+       world.entity_view<Engine::Core::BuilderProductionComponent>()) {
+    if (other_ref.get_id() != crew && raises_shared_site(other) &&
+        owner_of(other_ref.get_id()) == owner_id &&
+        other.product_type == builder->product_type &&
+        other.construction_site_x == builder->construction_site_x &&
+        other.construction_site_z == builder->construction_site_z &&
+        other.construction_site_rotation_y == builder->construction_site_rotation_y) {
+      return false;
+    }
+  }
+  const auto* transform = world.try_get<Engine::Core::TransformComponent>(crew);
+  grant_resources_at(owner_id,
+                     builder->construction_site_x,
+                     transform != nullptr ? transform->position.y : 0.0F,
+                     builder->construction_site_z,
+                     construction_cost_info(builder->product_type).resource_costs);
+  return true;
+}
+
+void abandon_paid_site(Engine::Core::World& world,
+                       Engine::Core::EntityID crew,
+                       int owner_id,
+                       Engine::Core::BuilderTaskFault fault) {
+  if (!refund_abandoned_site(world, crew)) {
+    return;
+  }
+  const QString text =
+      fault == Engine::Core::BuilderTaskFault::Unreachable
+          ? QCoreApplication::translate(
+                "BuilderTask",
+                "Builders could not reach their construction site. The building was "
+                "abandoned and its cost refunded.")
+          : QCoreApplication::translate(
+                "BuilderTask",
+                "Builders were pulled off their construction site. The building was "
+                "abandoned and its cost refunded.");
+  Engine::Core::EventManager::instance().publish(
+      Engine::Core::MissionAnnouncementEvent::for_owner(owner_id, text));
 }
 
 auto advance_shared_sites(Engine::Core::World& world,

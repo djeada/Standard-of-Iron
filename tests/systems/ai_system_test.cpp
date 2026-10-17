@@ -34,7 +34,10 @@
 #include "game/systems/ai_system/behaviors/assault_behavior.h"
 #include "game/systems/ai_system/behaviors/attack_behavior.h"
 #include "game/systems/ai_system/behaviors/builder_behavior.h"
+#include "game/systems/ai_system/behaviors/builder_catalog.h"
+#include "game/systems/ai_system/behaviors/builder_intent.h"
 #include "game/systems/ai_system/behaviors/builder_ledger.h"
+#include "game/systems/ai_system/behaviors/builder_site_geometry.h"
 #include "game/systems/ai_system/behaviors/commander_behavior.h"
 #include "game/systems/ai_system/behaviors/defend_behavior.h"
 #include "game/systems/ai_system/behaviors/economy_behavior.h"
@@ -254,6 +257,20 @@ TEST_F(AISystemTest, ReinitializePicksUpOwnersRegisteredAfterConstruction) {
   ai_system.reinitialize();
 
   EXPECT_EQ(ai_system.ai_player_count(), 1U);
+}
+
+TEST_F(AISystemTest, ReinitializeStartsANewMatchClockSoAllyPleasWaitAgain) {
+  Game::Session::SessionContext session;
+  Game::Systems::AISystem ai_system(Game::Systems::AISystem::Services{
+      .owners = session.owners(), .nations = session.nations()});
+  ai_system.update(&session.world(), 300.0F);
+  ASSERT_DOUBLE_EQ(ai_system.serialize_state().value("total_game_time").toDouble(),
+                   300.0);
+
+  ai_system.reinitialize();
+
+  EXPECT_DOUBLE_EQ(ai_system.serialize_state().value("total_game_time").toDouble(), 0.0)
+      << "the previous match's clock made allies plead the moment the next began";
 }
 
 TEST_F(AISystemTest, ReinitializeStaggersInitialUpdateTimersAcrossAIPlayers) {
@@ -5773,4 +5790,114 @@ TEST_F(AISystemTest, AnAllySharesItsSightAndCallsForHelpAndAttacks) {
   EXPECT_EQ(snapshot.allies_under_attack.front().owner_id, 4);
   ASSERT_EQ(snapshot.ally_attacks.size(), 1U);
   EXPECT_NEAR(snapshot.ally_attacks.front().pos_x, 196.0F, 1.0F);
+}
+
+TEST_F(AISystemTest, ABuildingSiteMustLieWhollyOnTheMap) {
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.has_map_bounds = true;
+  snapshot.map_min_x = -63.5F;
+  snapshot.map_max_x = 63.5F;
+  snapshot.map_min_z = -63.5F;
+  snapshot.map_max_z = 63.5F;
+
+  EXPECT_TRUE(Game::Systems::AI::site_is_free(
+      snapshot, Game::Systems::AI::BUILDING_TYPE_FARM, 38.5F, 38.5F));
+  EXPECT_FALSE(Game::Systems::AI::site_is_free(
+      snapshot, Game::Systems::AI::BUILDING_TYPE_FARM, 69.6F, 38.5F))
+      << "a field beyond the map edge was offered, so the order was clamped onto "
+         "ground the game refused and the crew stood idle";
+  EXPECT_FALSE(Game::Systems::AI::site_is_free(
+      snapshot, Game::Systems::AI::BUILDING_TYPE_HOME, 18.0F, 61.0F))
+      << "a home hanging over the map edge was offered";
+}
+
+TEST_F(AISystemTest, ATownShortOfRoofsSavesForTheNextHome) {
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.game_time = 30.0F;
+  snapshot.has_resource_snapshot = true;
+  snapshot.resources.set(Game::Systems::ResourceType::Wood, 20);
+  snapshot.resources.set(Game::Systems::ResourceType::Stone, 90);
+  snapshot.resource_nodes.push_back(
+      {77, Game::Map::WorldProp::Type::PineTree, 22.0F, 14.0F, false});
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.home_count = 2;
+
+  Game::Systems::AI::ConstructionIntent home;
+  home.type = Game::Systems::AI::BUILDING_TYPE_HOME;
+  const std::vector<Game::Systems::AI::ConstructionIntent> intents{home};
+  const Game::Systems::AI::ConstructionLedger ledger;
+
+  const auto choice =
+      Game::Systems::AI::choose_construction_intent(snapshot, context, intents, ledger);
+  EXPECT_EQ(choice.chosen, nullptr);
+  EXPECT_EQ(context.saving_for_a_roof.get(Game::Systems::ResourceType::Wood), 50)
+      << "the builders waited on timber for a home and nobody kept it for them";
+
+  context.home_count = 4;
+  (void)Game::Systems::AI::choose_construction_intent(
+      snapshot, context, intents, ledger);
+  EXPECT_TRUE(context.saving_for_a_roof.empty())
+      << "a town with its first roofs up still held its barracks back";
+}
+
+TEST_F(AISystemTest, TheBarracksDoesNotSpendTimberSavedForAHome) {
+  Game::Systems::Nation nation;
+  nation.id = Game::Systems::NationID::RomanRepublic;
+  nation.display_name = "Rome";
+  nation.playable = true;
+  nation.has_economy = true;
+  nation.ai_profile = "standard";
+  Game::Systems::TroopType spearman;
+  spearman.unit_type = Game::Units::TroopType::Spearman;
+  spearman.display_name = "Spearman";
+  spearman.is_melee = true;
+  spearman.priority = 1;
+  spearman.resource_costs.set(Game::Systems::ResourceType::Wood, 20);
+  nation.available_troops.push_back(spearman);
+  Game::Systems::NationRegistry::instance().register_nation(std::move(nation));
+  Game::Systems::NationRegistry::instance().set_player_nation(
+      3, Game::Systems::NationID::RomanRepublic);
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+  snapshot.has_resource_snapshot = true;
+  snapshot.resources.set(Game::Systems::ResourceType::Wood, 60);
+  snapshot.friendly_units = {make_barracks(50, 40.0F, 40.0F)};
+  for (Engine::Core::EntityID id = 60; id < 64; ++id) {
+    auto guard = make_unit(id, 42.0F, 40.0F);
+    guard.spawn_type = Game::Units::SpawnType::Archer;
+    snapshot.friendly_units.push_back(guard);
+  }
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.max_troops_per_player = 500;
+  Game::Systems::AI::AISnapshotBuilder::attach_nation(
+      snapshot, context.player_id, Game::Systems::NationRegistry::instance());
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+  context.melee_count = 0;
+  context.ranged_count = 4;
+
+  const auto recruits = [&] {
+    Game::Systems::AI::ProductionBehavior behavior;
+    std::vector<Game::Systems::AI::AICommand> commands;
+    behavior.execute(snapshot, context, 5.0F, commands);
+    return std::count_if(commands.begin(), commands.end(), [](const auto& command) {
+      return command.type == Game::Systems::AI::AICommandType::StartProduction &&
+             command.product_type == Game::Units::TroopType::Spearman;
+    });
+  };
+
+  ASSERT_EQ(recruits(), 1) << "the barracks should recruit with timber to spare";
+
+  context.saving_for_a_roof.set(Game::Systems::ResourceType::Wood, 50);
+  EXPECT_EQ(recruits(), 0)
+      << "the barracks spent the last of the timber the builders were saving "
+         "for a home";
+
+  context.barracks_under_threat = true;
+  EXPECT_EQ(recruits(), 1) << "a barracks under attack held back its defenders";
 }

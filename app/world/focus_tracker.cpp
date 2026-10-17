@@ -148,6 +148,11 @@ void FocusTracker::sync_target_focus_markers(const FocusInputs& inputs) {
       (snapshot != nullptr && snapshot->initialized) ? snapshot.get() : nullptr;
   request.owners = inputs.session != nullptr ? &inputs.session->owners() : nullptr;
   m_markers = Game::Systems::collect_target_focus_markers(request);
+  if (inputs.commander_active) {
+    std::erase_if(m_markers, [](const Game::Systems::TargetFocusMarker& marker) {
+      return marker.role == Game::Systems::TargetFocusRole::LockedTarget;
+    });
+  }
 }
 
 } // namespace App::World

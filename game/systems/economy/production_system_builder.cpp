@@ -65,6 +65,9 @@ auto wandered_off_site(const BuilderTick& tick) -> bool {
   }
   if (is_gather_builder_product(tick.builder.product_type) &&
       tick.movement != nullptr) {
+    if (tick.builder.bypass_movement_active) {
+      return false;
+    }
     float const dx = tick.builder.construction_site_x - tick.transform->position.x;
     float const dz = tick.builder.construction_site_z - tick.transform->position.z;
     float const reach = gather_bypass_reach(tick.movement->get_navigation_clearance()) +
@@ -78,6 +81,10 @@ auto wandered_off_site(const BuilderTick& tick) -> bool {
 
 void interrupt_task(BuilderTick& tick) {
   auto& builder = tick.builder;
+  abandon_paid_site(tick.world,
+                    tick.entity.get_id(),
+                    tick.owner_id,
+                    Engine::Core::BuilderTaskFault::Interrupted);
   builder.has_construction_site = false;
   builder.at_construction_site = false;
   builder.in_progress = false;

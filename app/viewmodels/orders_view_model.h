@@ -41,6 +41,8 @@ public:
   Q_INVOKABLE void select_all_troops();
   Q_INVOKABLE void select_unit_by_id(qulonglong unit_id);
   Q_INVOKABLE void select_by_type(const QString& unit_type);
+  Q_INVOKABLE int assign_control_group(int group);
+  Q_INVOKABLE bool recall_control_group(int group, bool additive = false);
   Q_INVOKABLE [[nodiscard]] int
   owned_building_count(const QString& building_type) const;
   Q_INVOKABLE bool focus_owned_building(const QString& building_type);

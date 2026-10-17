@@ -14,6 +14,11 @@ inline constexpr float k_slot_gap = 0.2F;
 [[nodiscard]] auto slot_clearance(const char* building_type,
                                   Game::Units::SpawnType standing) -> float;
 
+[[nodiscard]] auto site_lies_on_the_map(const AISnapshot& snapshot,
+                                        const char* building_type,
+                                        float world_x,
+                                        float world_z) -> bool;
+
 [[nodiscard]] auto site_is_free(const AISnapshot& snapshot,
                                 const char* building_type,
                                 float world_x,

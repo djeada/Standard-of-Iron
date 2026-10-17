@@ -105,10 +105,9 @@ auto AllianceBoard::take_appeal_replies() -> std::vector<AllyAppealReply> {
 }
 
 void AllianceBoard::clear() {
-  m_last_call_id = 0;
+  ++m_epoch;
   m_calls.clear();
   m_call_answers.clear();
-  m_last_appeal_id = 0;
   m_new_appeals.clear();
   m_open_appeals.clear();
   m_appeal_answers.clear();

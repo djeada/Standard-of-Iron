@@ -105,6 +105,7 @@ public:
 
   [[nodiscard]] auto can_restart() const -> bool { return m_last_launch.has_value(); }
   Q_INVOKABLE bool restart_current_match();
+  Q_INVOKABLE void abandon_current_match() { emit abandon_requested(); }
 
   void set_maps(const QVariantList& maps);
   void append_map(const QVariantMap& map);
@@ -123,6 +124,7 @@ signals:
   void preferred_difficulty_changed();
 
   void launch_requested(const App::Core::MatchLaunch& launch);
+  void abandon_requested();
 
   void failed(const QString& message);
 

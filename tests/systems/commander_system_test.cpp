@@ -1312,3 +1312,54 @@ TEST(CommanderSystemTest, NationOnlyCollapsesWhenItsLastCommanderFalls) {
 }
 
 } // namespace
+
+TEST(CommanderAbilityCooldownTest, DirectControlCooldownsRunDownInArmyView) {
+  Engine::Core::World world;
+
+  auto* commander = world.create_entity();
+  auto* commander_unit = commander->add_component<Engine::Core::UnitComponent>();
+  auto* commander_transform =
+      commander->add_component<Engine::Core::TransformComponent>();
+  auto* commander_data = commander->add_component<Engine::Core::CommanderComponent>();
+  ASSERT_NE(commander_unit, nullptr);
+  ASSERT_NE(commander_transform, nullptr);
+  ASSERT_NE(commander_data, nullptr);
+  commander_unit->owner_id = 1;
+  commander_unit->health = 100;
+  commander_data->second_wind_cooldown_remaining = 8.0F;
+  commander_data->vanguard_rush_cooldown_remaining = 4.5F;
+  commander_data->shield_bash_cooldown_remaining = 3.0F;
+
+  Game::Systems::CommanderSystem system;
+  commander_data->fpv_controlled = true;
+  system.update(&world, 1.0F);
+  EXPECT_FLOAT_EQ(commander_data->second_wind_cooldown_remaining, 8.0F);
+
+  commander_data->fpv_controlled = false;
+  system.update(&world, 1.0F);
+  EXPECT_FLOAT_EQ(commander_data->second_wind_cooldown_remaining, 7.0F);
+  EXPECT_FLOAT_EQ(commander_data->vanguard_rush_cooldown_remaining, 3.5F);
+  EXPECT_FLOAT_EQ(commander_data->shield_bash_cooldown_remaining, 2.0F);
+}
+
+TEST(CommanderAbilityCooldownTest, PostureRecoversInArmyView) {
+  Engine::Core::World world;
+
+  auto* commander = world.create_entity();
+  auto* commander_unit = commander->add_component<Engine::Core::UnitComponent>();
+  commander->add_component<Engine::Core::TransformComponent>();
+  auto* commander_data = commander->add_component<Engine::Core::CommanderComponent>();
+  ASSERT_NE(commander_unit, nullptr);
+  ASSERT_NE(commander_data, nullptr);
+  commander_unit->owner_id = 1;
+  commander_unit->health = 100;
+  commander_data->posture = 90.0F;
+
+  Game::Systems::CommanderSystem system;
+  system.update(&world, 1.0F);
+  EXPECT_LT(commander_data->posture, 90.0F);
+  for (int i = 0; i < 10; ++i) {
+    system.update(&world, 1.0F);
+  }
+  EXPECT_FLOAT_EQ(commander_data->posture, 0.0F);
+}

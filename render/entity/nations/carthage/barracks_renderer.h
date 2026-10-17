@@ -9,5 +9,7 @@ namespace Render::GL::Carthage {
 void register_barracks_renderer(EntityRendererRegistry& registry);
 
 auto build_barracks_desc(BuildingState state) -> BuildingArchetypeDesc;
+auto build_barracks_palms_desc(BuildingState state) -> BuildingArchetypeDesc;
+auto build_barracks_firs_desc(BuildingState state) -> BuildingArchetypeDesc;
 
 } // namespace Render::GL::Carthage

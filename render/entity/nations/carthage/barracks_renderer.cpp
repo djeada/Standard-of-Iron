@@ -238,7 +238,7 @@ void add_keep(BuildingArchetypeDesc& desc, const CarthagePalette& c, const Heigh
     for (const float px : {-1.00F, -0.40F, 0.40F, 1.00F}) {
       desc.add_box(QVector3D(px, mid(k_keep_plinth_top, h.keep + 0.10F), k_keep_z1),
                    QVector3D(0.06F, half(k_keep_plinth_top, h.keep + 0.10F), 0.03F),
-                   c.stone_dark,
+                   c.wood_dark,
                    BuildingStateMask::Destroyed);
     }
     return;
@@ -904,6 +904,48 @@ void add_palms(BuildingArchetypeDesc& desc, const CarthagePalette& c) {
   add_palm(desc, c, QVector3D(-1.80F, 0.0F, -0.42F), 2.30F, 0.08F, 7);
 }
 
+void add_fir(BuildingArchetypeDesc& desc,
+             const CarthagePalette& c,
+             const QVector3D& base,
+             float height,
+             int seed) {
+  const QVector3D needle{0.13F, 0.24F, 0.17F};
+  const QVector3D needle_dark{0.09F, 0.18F, 0.13F};
+  const QVector3D snow{0.86F, 0.89F, 0.94F};
+  desc.add_box(base + QVector3D(0.0F, 0.018F, 0.0F),
+               QVector3D(0.24F, 0.018F, 0.24F),
+               snow,
+               k_mask_intact);
+  desc.add_cylinder(base,
+                    base + QVector3D(0.0F, height * 0.30F, 0.0F),
+                    0.055F,
+                    weathered(c.wood_dark, seed, 0.03F),
+                    k_mask_intact);
+  constexpr int k_tiers = 3;
+  for (int tier = 0; tier < k_tiers; ++tier) {
+    const float t = static_cast<float>(tier) / k_tiers;
+    const float tier_base = height * (0.18F + 0.25F * t);
+    const float tier_top = tier_base + height * (0.46F - 0.08F * t);
+    const float radius = 0.46F - 0.12F * static_cast<float>(tier);
+    desc.add_cone(base + QVector3D(0.0F, tier_base, 0.0F),
+                  base + QVector3D(0.0F, tier_top, 0.0F),
+                  radius,
+                  (tier % 2 == 0) ? needle : needle_dark,
+                  k_mask_intact);
+    const float cap_base = tier_base + (tier_top - tier_base) * 0.42F;
+    desc.add_cone(base + QVector3D(0.0F, cap_base, 0.0F),
+                  base + QVector3D(0.0F, tier_top + 0.015F, 0.0F),
+                  radius * 0.48F,
+                  snow,
+                  k_mask_intact);
+  }
+}
+
+void add_firs(BuildingArchetypeDesc& desc, const CarthagePalette& c) {
+  add_fir(desc, c, QVector3D(1.74F, 0.0F, 1.44F), 1.85F, 3);
+  add_fir(desc, c, QVector3D(-1.80F, 0.0F, -0.42F), 2.10F, 7);
+}
+
 void add_roof_canopy(BuildingArchetypeDesc& desc,
                      const CarthagePalette& c,
                      const Heights& h) {
@@ -956,7 +998,6 @@ auto build_barracks_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
   add_donjon(desc, c, h);
   add_gatehouse(desc, c, h);
   add_drill_yard(desc, c, h);
-  add_palms(desc, c);
   add_roof_canopy(desc, c, h);
 
   if (state == BuildingState::Damaged) {
@@ -980,6 +1021,26 @@ auto build_barracks_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
                                  .scale = 1.25F,
                                  .seed = 487});
 
+  return desc;
+}
+
+auto build_barracks_greenery_desc_impl(bool cold_climate) -> BuildingArchetypeDesc {
+  CarthagePalette const c = make_palette(QVector3D(1.0F, 1.0F, 1.0F));
+  BuildingArchetypeDesc desc(cold_climate ? "carthage_barracks_firs"
+                                          : "carthage_barracks_palms");
+  if (cold_climate) {
+    add_firs(desc, c);
+  } else {
+    add_palms(desc, c);
+  }
+  for (const QVector3D& base :
+       {QVector3D(1.74F, 0.0F, 1.44F), QVector3D(-1.80F, 0.0F, -0.42F)}) {
+    desc.add_cylinder(base,
+                      base + QVector3D(0.0F, 0.16F, 0.0F),
+                      0.06F,
+                      c.stone_dark,
+                      BuildingStateMask::Destroyed);
+  }
   return desc;
 }
 
@@ -1065,6 +1126,12 @@ void draw_barracks_ornaments(const DrawContext& p,
                              const QVector3D& team,
                              const BarracksFlagRenderer::ClothBannerResources* cloth) {
   CarthagePalette const c = make_palette(team);
+  static const BuildingArchetypeSet& k_palms =
+      building_archetype_set("carthage_barracks_palms");
+  static const BuildingArchetypeSet& k_firs =
+      building_archetype_set("carthage_barracks_firs");
+  const auto& greenery = building_greenery_is_cold(p) ? k_firs : k_palms;
+  submit_building_instance(out, p, greenery.for_state(resolve_building_state(p)));
   draw_stockpile_yard(p, out, unit, white, c);
   draw_standards(p, out, unit, white, c, cloth);
   draw_rally_flag(p, out, white, c, cloth);
@@ -1085,6 +1152,14 @@ const std::array<TorchMount, 4> k_torches{{
 
 auto build_barracks_desc(BuildingState state) -> BuildingArchetypeDesc {
   return build_barracks_desc_impl(state);
+}
+
+auto build_barracks_palms_desc(BuildingState) -> BuildingArchetypeDesc {
+  return build_barracks_greenery_desc_impl(false);
+}
+
+auto build_barracks_firs_desc(BuildingState) -> BuildingArchetypeDesc {
+  return build_barracks_greenery_desc_impl(true);
 }
 
 void register_barracks_renderer(Render::GL::EntityRendererRegistry& registry) {

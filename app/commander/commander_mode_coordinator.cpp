@@ -224,11 +224,7 @@ auto CommanderModeCoordinator::enter_commander_control_mode(
       commander_data->dodge_active = false;
       commander_data->dodge_phase = 0.0F;
     }
-    commander_data->posture = 0.0F;
     commander_data->punish_window_remaining = 0.0F;
-    commander_data->shield_bash_cooldown_remaining = 0.0F;
-    commander_data->vanguard_rush_cooldown_remaining = 0.0F;
-    commander_data->second_wind_cooldown_remaining = 0.0F;
   }
 
   if (auto* stamina =
@@ -236,8 +232,10 @@ auto CommanderModeCoordinator::enter_commander_control_mode(
               context.commander)) {
     constexpr float k_commander_stamina = 180.0F;
     constexpr float k_commander_stamina_regen = 14.0F;
-    stamina->max_stamina = std::max(stamina->max_stamina, k_commander_stamina);
-    stamina->stamina = stamina->max_stamina;
+    if (stamina->max_stamina < k_commander_stamina) {
+      stamina->max_stamina = k_commander_stamina;
+      stamina->stamina = stamina->max_stamina;
+    }
     stamina->regen_rate = std::max(stamina->regen_rate, k_commander_stamina_regen);
     stamina->regen_delay_remaining = 0.0F;
   }
@@ -255,7 +253,7 @@ auto CommanderModeCoordinator::enter_commander_control_mode(
       int const pool = std::max(1, rpg_pool_for_commander(unit));
       int const own_health = unit != nullptr ? std::max(1, unit->max_health) : pool;
       rpg->incoming_damage_scale =
-          static_cast<float>(own_health) / static_cast<float>(pool);
+          std::min(1.0F, static_cast<float>(own_health) / static_cast<float>(pool));
     }
     rpg->active = true;
   }
@@ -550,11 +548,7 @@ void CommanderModeCoordinator::clear_controlled_commander_state_impl(
       commander_data->dodge_active = false;
       commander_data->dodge_phase = 0.0F;
     }
-    commander_data->posture = 0.0F;
     commander_data->punish_window_remaining = 0.0F;
-    commander_data->shield_bash_cooldown_remaining = 0.0F;
-    commander_data->vanguard_rush_cooldown_remaining = 0.0F;
-    commander_data->second_wind_cooldown_remaining = 0.0F;
   }
   if (auto* guard = commander->get_component<Engine::Core::CommanderGuardComponent>()) {
     guard->active = false;

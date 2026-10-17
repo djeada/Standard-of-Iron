@@ -205,11 +205,24 @@ void SaveSlotController::autosave() {
       m_active_job != 0) {
     return;
   }
+  if (m_hooks.commander_mode_active && m_hooks.commander_mode_active()) {
+    m_autosave_deferred = true;
+    return;
+  }
+  m_autosave_deferred = false;
 
   const int retention = m_slots->autosave_slot_count();
   begin_save(m_service->next_autosave_slot(retention),
              Game::Systems::Save::SlotKind::Autosave,
              retention);
+}
+
+void SaveSlotController::commander_mode_left() {
+  if (!m_autosave_deferred) {
+    return;
+  }
+  m_autosave_deferred = false;
+  autosave();
 }
 
 void SaveSlotController::cancel_active_save() {

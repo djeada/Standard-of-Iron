@@ -27,7 +27,7 @@ Item {
     }
 
     function blipSpan(kind) {
-        return (kind === "capture_finished" || kind === "structure_lost") ? Design.Metrics.space16 : Design.Metrics.space12;
+        return (kind === "capture_finished" || kind === "structure_lost" || kind === "ally_call") ? Design.Metrics.space16 : Design.Metrics.space12;
     }
 
     function mapX(nx) {
@@ -138,6 +138,97 @@ Item {
                 height: Math.max(1, Design.Metrics.borderThin)
                 color: landmarkPin.tint
                 opacity: landmarkPin.pulse * 0.9
+            }
+        }
+    }
+
+    Repeater {
+        id: allyMarkerPins
+
+        model: overlayRoot.minimap ? overlayRoot.minimap.ally_markers : []
+
+        delegate: Item {
+            id: allyPin
+
+            required property var modelData
+
+            readonly property bool attack: (modelData.kind || "") === "attack"
+            readonly property bool pledged: !!modelData.pledged
+            readonly property color tint: overlayRoot.relationColor("ally")
+
+            property real pulse: 1
+
+            objectName: "allyCallMarker"
+            visible: overlayRoot.placeable
+            x: overlayRoot.mapX(modelData.nx || 0)
+            y: overlayRoot.mapY(modelData.ny || 0)
+            z: 12
+
+            SequentialAnimation on pulse  {
+                running: !allyPin.pledged && !Design.A11y.reducedMotion
+                loops: Animation.Infinite
+
+                NumberAnimation {
+                    from: 1
+                    to: 0.4
+                    duration: 900
+                    easing.type: Easing.InOutQuad
+                }
+
+                NumberAnimation {
+                    to: 1
+                    duration: 900
+                    easing.type: Easing.InOutQuad
+                }
+            }
+
+            Rectangle {
+                anchors.centerIn: parent
+                width: Design.Metrics.space16
+                height: width
+                radius: width / 2
+                color: "transparent"
+                border.width: Design.Metrics.borderFocus
+                border.color: overlayRoot.inkShadow
+            }
+
+            Rectangle {
+                anchors.centerIn: parent
+                width: Design.Metrics.space16 - Design.Metrics.borderFocus
+                height: width
+                radius: width / 2
+                color: "transparent"
+                border.width: Design.Metrics.borderFocus
+                border.color: allyPin.tint
+                opacity: allyPin.pulse
+            }
+
+            Rectangle {
+                anchors.centerIn: parent
+                visible: allyPin.attack
+                width: Design.Metrics.space8
+                height: Design.Metrics.borderFocus
+                rotation: 45
+                color: allyPin.tint
+            }
+
+            Rectangle {
+                anchors.centerIn: parent
+                visible: allyPin.attack
+                width: Design.Metrics.space8
+                height: Design.Metrics.borderFocus
+                rotation: -45
+                color: allyPin.tint
+            }
+
+            Rectangle {
+                anchors.centerIn: parent
+                visible: !allyPin.attack
+                width: Design.Metrics.space4 + Design.Metrics.space2
+                height: width
+                color: allyPin.pledged ? allyPin.tint : "transparent"
+                border.width: Design.Metrics.borderThin
+                border.color: allyPin.tint
             }
         }
     }
@@ -276,6 +367,18 @@ Item {
                 radius: width / 2
                 color: blip.tint
                 opacity: 1 - blip.ease * 0.6
+            }
+
+            Rectangle {
+                anchors.centerIn: parent
+                visible: blip.kind === "ally_call"
+                width: Design.A11y.reducedMotion ? blip.span * 0.6 : blip.span * (0.3 + 0.6 * blip.ease)
+                height: width
+                radius: width / 2
+                color: "transparent"
+                border.width: Design.Metrics.borderThin
+                border.color: blip.tint
+                opacity: 1 - blip.ease
             }
 
             Rectangle {

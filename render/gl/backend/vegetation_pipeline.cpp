@@ -143,6 +143,7 @@ void VegetationPipeline::cache_uniforms() {
     u.wind_speed = shader->uniform_handle("u_wind_speed");
     u.light_direction = shader->optional_uniform_handle("u_light_direction");
     u.camera_pos = shader->optional_uniform_handle("u_camera_pos");
+    u.snow_coverage = shader->optional_uniform_handle("u_snow_coverage");
   };
 
   cache_foliage_uniforms(m_plant_uniforms, m_plant_shader);

@@ -445,8 +445,11 @@ void MiniaudioBackend::apply_play(const Game::Audio::AudioCommand& command) {
   if (channel == nullptr) {
     return;
   }
+  if (channel->active && channel->looping && channel->track != command.track) {
+    remember_resume_point(*channel);
+  }
   channel->track = command.track;
-  channel->frame_pos = 0;
+  channel->frame_pos = command.loop ? take_resume_point(command.track) : 0U;
   channel->looping = command.loop;
   channel->paused = false;
   channel->active = true;
@@ -454,10 +457,51 @@ void MiniaudioBackend::apply_play(const Game::Audio::AudioCommand& command) {
   begin_channel_fade(*channel, command.volume, command.fade_samples);
 }
 
+void MiniaudioBackend::remember_resume_point(const Channel& channel) {
+  if (channel.track < 0) {
+    return;
+  }
+  ResumePoint* slot = &m_resume_points.front();
+  for (ResumePoint& point : m_resume_points) {
+    if (point.track == channel.track) {
+      slot = &point;
+      break;
+    }
+    if (point.left_at_frame < slot->left_at_frame) {
+      slot = &point;
+    }
+  }
+  slot->track = channel.track;
+  slot->frame_pos = channel.frame_pos + channel.fade_samples;
+  slot->left_at_frame = m_rendered_frames;
+}
+
+auto MiniaudioBackend::take_resume_point(int track) -> unsigned {
+  const auto window = static_cast<std::uint64_t>(k_music_resume_window_seconds) *
+                      static_cast<std::uint64_t>(std::max(m_sample_rate, 1));
+  for (ResumePoint& point : m_resume_points) {
+    if (point.track != track) {
+      continue;
+    }
+    const unsigned frame_pos = point.frame_pos;
+    const bool recent = m_rendered_frames - point.left_at_frame <= window;
+    point = ResumePoint{};
+    const DecodedTrack* decoded = m_tracks.track(static_cast<std::size_t>(track));
+    if (!recent || decoded == nullptr || decoded->frames == 0) {
+      return 0U;
+    }
+    return frame_pos % decoded->frames;
+  }
+  return 0U;
+}
+
 void MiniaudioBackend::apply_stop(const Game::Audio::AudioCommand& command) {
   Channel* channel = channel_for(command);
   if (channel == nullptr || !channel->active) {
     return;
+  }
+  if (channel->looping) {
+    remember_resume_point(*channel);
   }
   begin_channel_fade(*channel, MIN_VOLUME, command.fade_samples);
   channel->looping = false;
@@ -848,6 +892,7 @@ void MiniaudioBackend::on_audio(float* output, unsigned frames) {
 
   mix_music_channels(output, frames, master, gains);
   mix_sound_effects(output, frames, master, gains);
+  m_rendered_frames += frames;
 
   publish_state();
 

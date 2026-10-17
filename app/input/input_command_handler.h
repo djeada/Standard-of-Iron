@@ -128,6 +128,8 @@ public:
   void select_all_units_of_type(const QString& unit_type, int local_owner_id);
   void select_unit_by_id(Engine::Core::EntityID unit_id, int local_owner_id);
   void select_selected_units_by_type(const QString& unit_type, int local_owner_id);
+  auto assign_control_group(int group, int local_owner_id) -> int;
+  auto recall_control_group(int group, bool additive, int local_owner_id) -> bool;
   void set_hover_at_screen(qreal sx, qreal sy, const ViewportState& viewport);
 
   void set_spectator_mode(bool is_spectator) { m_is_spectator_mode = is_spectator; }

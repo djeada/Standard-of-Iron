@@ -23,6 +23,9 @@ Item {
             "heading": qsTr("Selecting"),
             "body": qsTr("Left-click a unit to select it, or hold the left button and drag a box around several. Hold Ctrl to add to the selection. Selected units show a ring at their feet, and the panel at the bottom lists them by type - click a type to keep only those.")
         }, {
+            "heading": qsTr("Control groups"),
+            "body": qsTr("Hold Ctrl and press a number from 1 to 9 to store the selected troops as that group. Press the number alone to select the group again, or hold Shift to add it to what is already selected; press it twice quickly to swing the camera onto the group. Fallen soldiers drop out of their group, and groups last until the battle ends. Tab centres the camera on whatever is selected. All of these keys can be rebound under Settings › Controls.")
+        }, {
             "heading": qsTr("Giving orders"),
             "body": qsTr("Right-click the ground to move, right-click an enemy to attack. Hold the right button and drag before releasing to choose the way the troops will face: one unit turns to face where you drag, several units are placed in formation facing it. The command grid offers Attack, Guard, Patrol, Hold, Stop and the builder and commander orders. A marker shows where troops are going and the banner above the grid confirms each order - or explains why it was refused.")
         }, {
@@ -217,13 +220,105 @@ Item {
                 }
             }
 
-            Design.IronTabBar {
+            Rectangle {
                 id: tabBar
 
+                readonly property int tab_padding: Design.Metrics.space24
+                property real widest_tab: 0
+                readonly property int fitting_columns: Math.max(1, Math.min(root.tabs.length, Math.floor(width / Math.max(1, widest_tab + tab_padding))))
+                readonly property int rows: Math.ceil(root.tabs.length / fitting_columns)
+                readonly property int columns: Math.ceil(root.tabs.length / rows)
+
+                function refresh_widest() {
+                    var widest = 0;
+                    for (var i = 0; i < tab_repeater.count; ++i) {
+                        var tab = tab_repeater.itemAt(i);
+                        if (tab)
+                            widest = Math.max(widest, tab.needed_width);
+                    }
+                    tabBar.widest_tab = widest;
+                }
+
+                objectName: "fieldManualTabs"
                 Layout.fillWidth: true
-                tabs: root.tabs
-                currentIndex: root.current_tab
-                onCurrentIndexChanged: root.current_tab = currentIndex
+                implicitHeight: tab_grid.implicitHeight
+                color: Design.Theme.backgroundRaised
+                border.width: Design.Metrics.borderThin
+                border.color: Design.Theme.borderSubtle
+
+                Grid {
+                    id: tab_grid
+
+                    width: parent.width
+                    columns: tabBar.columns
+
+                    Repeater {
+                        id: tab_repeater
+
+                        model: root.tabs
+                        onItemAdded: Qt.callLater(tabBar.refresh_widest)
+
+                        delegate: TabButton {
+                            id: tab
+
+                            required property int index
+                            required property var modelData
+
+                            readonly property real needed_width: bold_metrics.implicitWidth
+                            readonly property bool showFocusRing: visualFocus || (Design.A11y.alwaysShowFocus && activeFocus)
+
+                            objectName: "fieldManualTab" + index
+                            width: Math.floor(tab_grid.width / tabBar.columns)
+                            implicitHeight: Design.Metrics.controlHeight
+                            text: modelData
+                            checkable: true
+                            checked: root.current_tab === index
+                            Accessible.name: modelData
+                            onNeeded_widthChanged: Qt.callLater(tabBar.refresh_widest)
+                            onClicked: {
+                                if (root.current_tab !== index)
+                                    Design.UiSound.tabSwitch();
+                                root.current_tab = index;
+                            }
+
+                            Text {
+                                id: bold_metrics
+
+                                visible: false
+                                text: tab.modelData
+                                font.family: Design.Typography.family
+                                font.pixelSize: Design.Typography.label
+                                font.weight: Design.Typography.medium
+                            }
+
+                            contentItem: Text {
+                                text: tab.modelData
+                                color: tab.checked ? Design.Theme.textPrimary : Design.Theme.textSecondary
+                                font.family: Design.Typography.family
+                                font.pixelSize: Design.Typography.label
+                                font.weight: tab.checked ? Design.Typography.medium : Design.Typography.regular
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                                elide: Text.ElideRight
+                            }
+
+                            background: Rectangle {
+                                color: tab.checked ? Design.Theme.panelIron : "transparent"
+                                border.width: tab.showFocusRing ? Design.Metrics.borderFocus : 0
+                                border.color: Design.Theme.focus
+
+                                Rectangle {
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.bottom: parent.bottom
+                                    height: Design.Metrics.borderFocus
+                                    color: Design.Theme.accent
+                                    visible: tab.checked
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             ScrollView {

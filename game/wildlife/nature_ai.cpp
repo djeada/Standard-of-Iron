@@ -23,7 +23,6 @@ constexpr float k_graze_chance = 0.55F;
 constexpr float k_graze_dwell_min = 3.0F;
 constexpr float k_graze_dwell_max = 8.5F;
 constexpr float k_alarm_duration = 3.5F;
-constexpr float k_wolf_detect_multiplier = 1.4F;
 constexpr float k_wolf_defend_leash_multiplier = 2.2F;
 constexpr float k_livestock_preference = 0.7F;
 constexpr float k_pack_slot_arc = 0.95F;

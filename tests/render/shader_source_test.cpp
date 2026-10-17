@@ -915,8 +915,11 @@ TEST(ShaderSource, AlpineSnowPatchesRenderAcrossTerrain) {
 
   EXPECT_NE(flat_terrain.find("if (u_ground_type == 3 && u_snow_coverage > 0.01)"),
             std::string::npos);
-  EXPECT_NE(flat_terrain.find("alpine_snow_accumulation * u_snow_coverage"),
+  EXPECT_NE(flat_terrain.find("alpine_snow_accumulation * alpine_snow_depth"),
             std::string::npos);
+  EXPECT_NE(flat_terrain.find("0.66 - alpine_snow_shift, 0.72 - alpine_snow_shift"),
+            std::string::npos)
+      << "heavy snow cover must widen the patches, not only brighten them";
   EXPECT_NE(flat_terrain.find("mountain_surface * altitude_snow"), std::string::npos);
 }
 

@@ -18,6 +18,9 @@ Item {
     property string construction_preview_reason: typeof game !== 'undefined' ? game.placement.construction_preview_reason : ""
     property var pressed_keys: ({})
     property var pan_axis: ({})
+    property int last_recalled_group: 0
+    property real last_recalled_at: 0
+    property int group_notice_id: 0
 
     readonly property bool camera_pan_active: renderArea.key_pan_count > 0 || renderArea.mouse_pan_active
     readonly property bool command_input_suspended: (typeof mainWindow !== 'undefined' && mainWindow.simulation_suspended) || (typeof game !== 'undefined' && game.victory_state !== "")
@@ -149,6 +152,37 @@ Item {
         game.placement.set_formation_intent(intent_id);
     }
 
+    function perform_control_group(group, event) {
+        if (event.isAutoRepeat)
+            return true;
+        if (!game.orders.assign_control_group || !game.orders.recall_control_group)
+            return false;
+        if ((event.modifiers & Qt.ControlModifier) !== 0) {
+            var count = game.orders.assign_control_group(group);
+            last_recalled_group = 0;
+            if (group_notice_id > 0)
+                Design.Notifications.dismiss(group_notice_id);
+            group_notice_id = Design.Notifications.ambient(count > 0 ? qsTr("Group %1 holds %n unit(s)", "", count).arg(group) : qsTr("Group %1 cleared").arg(group));
+            return true;
+        }
+        var additive = (event.modifiers & Qt.ShiftModifier) !== 0;
+        var now = Date.now();
+        var double_tap = !additive && last_recalled_group === group && now - last_recalled_at <= Qt.styleHints.mouseDoubleClickInterval;
+        if (!game.orders.recall_control_group(group, additive)) {
+            last_recalled_group = 0;
+            return true;
+        }
+        if (double_tap) {
+            last_recalled_group = 0;
+            if (game.camera.center_on_selection)
+                game.camera.center_on_selection();
+            return true;
+        }
+        last_recalled_group = additive ? 0 : group;
+        last_recalled_at = now;
+        return true;
+    }
+
     function perform_global_action(actionId, event) {
         switch (actionId) {
         case "global.toggle_control_mode":
@@ -272,6 +306,10 @@ Item {
                 return false;
             game.orders.select_all_troops();
             return true;
+        case "rts.center_on_selection":
+            if (!event.isAutoRepeat && game.has_units_selected && game.camera.center_on_selection)
+                game.camera.center_on_selection();
+            return true;
         case "rts.build_rotate_left":
         case "rts.build_rotate_right":
             if (!game.placement.construction_preview_rotatable || !game.placement.construction_preview_rotatable())
@@ -279,6 +317,9 @@ Item {
             game.placement.on_construction_scroll(actionId === "rts.build_rotate_left" ? -1 : 1);
             return true;
         }
+        var group = InputBindings.control_group_of(actionId);
+        if (group > 0)
+            return perform_control_group(group, event);
         return false;
     }
 
@@ -363,8 +404,9 @@ Item {
             event.accepted = true;
             return;
         }
-        if (game.placement.is_placing_formation && event.key >= Qt.Key_0 && event.key <= Qt.Key_9) {
-            game_view.select_formation_intent_slot(event.key === Qt.Key_0 ? 9 : event.key - Qt.Key_1);
+        var digit_key = InputBindings.digit_row_key(event.key, event.nativeScanCode);
+        if (game.placement.is_placing_formation && digit_key >= Qt.Key_0 && digit_key <= Qt.Key_9) {
+            game_view.select_formation_intent_slot(digit_key === Qt.Key_0 ? 9 : digit_key - Qt.Key_1);
             event.accepted = true;
             return;
         }
@@ -374,6 +416,8 @@ Item {
             return;
         }
         var candidates = InputBindings.actions_for_key(event.key, event.modifiers, input_context());
+        if (candidates.length === 0 && digit_key !== event.key)
+            candidates = InputBindings.actions_for_key(digit_key, event.modifiers, input_context());
         for (var i = 0; i < candidates.length; ++i) {
             if (dispatch_key_action(candidates[i], event)) {
                 event.accepted = true;

@@ -41,7 +41,7 @@ Item {
     Text {
         id: countLabel
 
-        text: "(" + Design.Numerals.roman(list.count || 0) + ")"
+        text: "(" + Design.Numerals.grouped(list.count || 0) + ")"
         color: colors.textSubLite
         font.pixelSize: Design.Typography.caption
 

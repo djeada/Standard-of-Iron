@@ -14,6 +14,7 @@
 
 #include "game/map/scatter/ground_utils.h"
 #include "game/map/terrain.h"
+#include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
 #include "render/draw_commands.h"
 #include "render/gl/mesh.h"
@@ -97,6 +98,14 @@ void RoadRenderer::submit(Renderer& renderer, ResourceManager* resources) {
     vis_res = renderer.visibility_mask();
   }
 
+  float snow_coverage = 0.0F;
+  QVector3D snow_color{0.92F, 0.94F, 0.98F};
+  if (const auto* terrain = renderer.world_view().terrain(); terrain != nullptr) {
+    const auto climate = Game::Map::make_climate_profile(terrain->biome_settings());
+    snow_coverage = std::clamp(climate.snow_coverage, 0.0F, 1.0F);
+    snow_color = climate.snow_color;
+  }
+
   QMatrix4x4 model;
   model.setToIdentity();
   for (const auto& surface : m_surfaces) {
@@ -119,6 +128,8 @@ void RoadRenderer::submit(Renderer& renderer, ResourceManager* resources) {
     cmd.color = road_color_for_style(surface.style);
     cmd.road_surface_kind = road_surface_for_style(surface.style);
 
+    cmd.biome_snow_coverage = snow_coverage;
+    cmd.biome_snow_color = snow_color;
     cmd.alpha = 0.995F;
     cmd.visibility = vis_res;
     renderer.terrain_feature(cmd);

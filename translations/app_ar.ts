@@ -296,6 +296,10 @@
         <source>Ask allies to defend</source>
         <translation>اطلب من الحلفاء الدفاع</translation>
     </message>
+    <message>
+        <source>Free queue slot: up to %1 recruits can wait in line</source>
+        <translation>خانة فارغة في الطابور: يمكن أن ينتظر حتى %1 من المجندين</translation>
+    </message>
 </context>
 <context>
     <name>BattleReportLayout</name>
@@ -426,6 +430,17 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>%1 of %2</source>
         <translation>%1 من %2</translation>
+    </message>
+</context>
+<context>
+    <name>BuilderTask</name>
+    <message>
+        <source>Builders could not reach their construction site. The building was abandoned and its cost refunded.</source>
+        <translation>تعذّر على البنّائين الوصول إلى موقع البناء. تُرك المبنى واستُردّت تكلفته.</translation>
+    </message>
+    <message>
+        <source>Builders were pulled off their construction site. The building was abandoned and its cost refunded.</source>
+        <translation>سُحب البنّاؤون من موقع البناء. تُرك المبنى واستُردّت تكلفته.</translation>
     </message>
 </context>
 <context>
@@ -740,10 +755,6 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>الحملة</translation>
     </message>
     <message>
-        <source>Campaign Chronicle • </source>
-        <translation>سجل الحملة • </translation>
-    </message>
-    <message>
         <source>← Back</source>
         <translation>→ رجوع</translation>
     </message>
@@ -752,8 +763,12 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>سجل الحملة</translation>
     </message>
     <message>
-        <source>Campaign Progress:</source>
-        <translation>تقدّم الحملة:</translation>
+        <source>Progress</source>
+        <translation>التقدّم</translation>
+    </message>
+    <message>
+        <source>%1 / %2</source>
+        <translation>%1 / %2</translation>
     </message>
 </context>
 <context>
@@ -4547,6 +4562,21 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>%1/%2 walls  •  %3 wood</source>
         <translation>%1/%2 من الأسوار  •  %3 خشب</translation>
     </message>
+    <message numerus="yes">
+        <source>Group %1 holds %n unit(s)</source>
+        <translation>
+            <numerusform>المجموعة %1 لا تضم أي وحدة</numerusform>
+            <numerusform>المجموعة %1 تضم وحدة واحدة</numerusform>
+            <numerusform>المجموعة %1 تضم وحدتين</numerusform>
+            <numerusform>المجموعة %1 تضم %n وحدات</numerusform>
+            <numerusform>المجموعة %1 تضم %n وحدة</numerusform>
+            <numerusform>المجموعة %1 تضم %n وحدة</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Group %1 cleared</source>
+        <translation>أُفرغت المجموعة %1</translation>
+    </message>
 </context>
 <context>
     <name>GraphicsSettingsProxy</name>
@@ -6082,6 +6112,14 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
         <source>Among the waves walks a grave priest. He heals the dead around him and throws fire at your line, so a slow slog of spearmen alone will bleed. Bring a Medicus to mend the burns and ranged troops to cut the priest down from a distance before the guardians close in. Kill him first and the dead stop mending.</source>
         <translation>بين الموجات يسير كاهن قبور. يشفي الموتى من حوله ويقذف النار على صفّك، فالزحف البطيء بالرماحة وحدهم سينزف. أحضر طبيباً ليداوي الحروق وقوات رماية لإسقاط الكاهن من بعيد قبل أن يقترب الحرّاس. اقتله أولاً فيكفّ الموتى عن الالتئام.</translation>
     </message>
+    <message>
+        <source>Control groups</source>
+        <translation>مجموعات التحكّم</translation>
+    </message>
+    <message>
+        <source>Hold Ctrl and press a number from 1 to 9 to store the selected troops as that group. Press the number alone to select the group again, or hold Shift to add it to what is already selected; press it twice quickly to swing the camera onto the group. Fallen soldiers drop out of their group, and groups last until the battle ends. Tab centres the camera on whatever is selected. All of these keys can be rebound under Settings › Controls.</source>
+        <translation>اضغط مع الاستمرار على Ctrl واضغط رقمًا من 1 إلى 9 لحفظ القوات المحددة في تلك المجموعة. اضغط الرقم وحده لتحديد المجموعة مجددًا، أو اضغط مع الاستمرار على Shift لإضافتها إلى ما هو محدد بالفعل؛ واضغطه مرتين بسرعة لتوجيه الكاميرا إلى المجموعة. يخرج الجنود القتلى من مجموعتهم، وتبقى المجموعات حتى نهاية المعركة. يضع Tab الكاميرا في وسط ما هو محدد. يمكن إعادة تعيين كل هذه المفاتيح من الإعدادات › التحكّم.</translation>
+    </message>
 </context>
 <context>
     <name>HintCard</name>
@@ -7222,6 +7260,18 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
         <source>Load the quicksave</source>
         <translation>تحميل الحفظ السريع</translation>
     </message>
+    <message>
+        <source>Restart this battle?</source>
+        <translation>إعادة بدء هذه المعركة؟</translation>
+    </message>
+    <message>
+        <source>The battle starts again from the beginning and everything won since is lost. Save it first if you want to come back to it.</source>
+        <translation>تبدأ المعركة من جديد ويضيع كل ما كسبته منذ بدايتها. احفظها أولًا إن أردت العودة إليها.</translation>
+    </message>
+    <message>
+        <source>Restart the battle</source>
+        <translation>أعد بدء المعركة</translation>
+    </message>
 </context>
 <context>
     <name>MainMenu</name>
@@ -7420,6 +7470,42 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     <message>
         <source>Resume</source>
         <translation>استئناف</translation>
+    </message>
+    <message>
+        <source>Abandon this battle and close the game</source>
+        <translation>التخلّي عن هذه المعركة وإغلاق اللعبة</translation>
+    </message>
+    <message>
+        <source>Leaves the battle in progress - you will be asked first</source>
+        <translation>يغادر المعركة الجارية – سيُطلب منك التأكيد أولًا</translation>
+    </message>
+    <message>
+        <source>Close this menu and carry on fighting</source>
+        <translation>أغلق هذه القائمة وتابع القتال</translation>
+    </message>
+    <message>
+        <source>Restart battle</source>
+        <translation>إعادة بدء المعركة</translation>
+    </message>
+    <message>
+        <source>Fight this battle again from the start</source>
+        <translation>خض هذه المعركة مجددًا من البداية</translation>
+    </message>
+    <message>
+        <source>Again</source>
+        <translation>مجددًا</translation>
+    </message>
+    <message>
+        <source>Quit to main menu</source>
+        <translation>الخروج إلى القائمة الرئيسية</translation>
+    </message>
+    <message>
+        <source>Abandon this battle and return to the war table</source>
+        <translation>التخلّي عن هذه المعركة والعودة إلى طاولة الحرب</translation>
+    </message>
+    <message>
+        <source>Abandon</source>
+        <translation>تخلَّ</translation>
     </message>
 </context>
 <context>
@@ -7998,6 +8084,14 @@ to see preview</source>
     <message>
         <source>Arrows pan  ·  Drag to rotate  ·  Scroll or +/- to zoom  ·  Home resets</source>
         <translation>الأسهم للتحريك  ·  السحب للتدوير  ·  العجلة أو +/- للتقريب  ·  Home لإعادة الضبط</translation>
+    </message>
+    <message>
+        <source>Map controls</source>
+        <translation>عناصر التحكّم بالخريطة</translation>
+    </message>
+    <message>
+        <source>Controls ?</source>
+        <translation>التحكّم ؟</translation>
     </message>
 </context>
 <context>
@@ -10269,6 +10363,10 @@ to see preview</source>
         <source>Choose a dispatch to review its field orders.</source>
         <translation>اختر إرسالية لمراجعة أوامرها الميدانية.</translation>
     </message>
+    <message>
+        <source>%1 / %2</source>
+        <translation>%1 / %2</translation>
+    </message>
 </context>
 <context>
     <name>Nations</name>
@@ -11567,10 +11665,6 @@ Right-click to cancel.</source>
         <translation>اطلب من قادتك الحلفاء إرسال رجال لحماية هذا المبنى. القائد الحذر الذي لديه رجال يستغني عنهم يوافق، ومن يتهدد معسكره يرفض.</translation>
     </message>
     <message>
-        <source>That request has already been withdrawn.</source>
-        <translation>سُحب ذلك الطلب بالفعل.</translation>
-    </message>
-    <message>
         <source>Not enough %1 to give.</source>
         <translation>لا يوجد ما يكفي من %1 للعطاء.</translation>
     </message>
@@ -11913,6 +12007,26 @@ Right-click to cancel.</source>
         <source>Loaded, but &apos;%1&apos; could not be read, so wildlife, undead zones and cursed veins were not restored.</source>
         <translation>تم التحميل، لكن تعذّرت قراءة «%1»، فلم تُستعد الحياة البرية ومناطق الموتى الأحياء والعروق الملعونة.</translation>
     </message>
+    <message>
+        <source>Control groups</source>
+        <translation>مجموعات التحكّم</translation>
+    </message>
+    <message>
+        <source>Centre the camera on the selection</source>
+        <translation>توسيط الكاميرا على التحديد</translation>
+    </message>
+    <message>
+        <source>Jumps the view to the selected troops. Double-click a portrait in the selection panel to jump to that unit.</source>
+        <translation>ينقل العرض إلى القوات المحددة. انقر نقرًا مزدوجًا على صورة في لوحة التحديد للانتقال إلى تلك الوحدة.</translation>
+    </message>
+    <message>
+        <source>Control group %1</source>
+        <translation>مجموعة التحكّم %1</translation>
+    </message>
+    <message>
+        <source>Selects the group. Hold Ctrl to store the current selection in it, hold Shift to add the group to the selection, and press twice quickly to centre the camera on it.</source>
+        <translation>يحدد المجموعة. اضغط مع الاستمرار على Ctrl لحفظ التحديد الحالي فيها، أو على Shift لإضافة المجموعة إلى التحديد، واضغط مرتين بسرعة لتوسيط الكاميرا عليها.</translation>
+    </message>
 </context>
 <context>
     <name>RecruitCard</name>
@@ -12092,6 +12206,10 @@ Right-click to cancel.</source>
     <message>
         <source>BLADE DRAWN</source>
         <translation>النصل مسلول</translation>
+    </message>
+    <message>
+        <source>NO TARGET IN REACH</source>
+        <translation>لا هدف في المتناول</translation>
     </message>
 </context>
 <context>
@@ -12347,6 +12465,14 @@ Right-click to cancel.</source>
     <message>
         <source>Played %1</source>
         <translation>مدة اللعب: %1</translation>
+    </message>
+    <message>
+        <source>Quicksave %1</source>
+        <translation>حفظ سريع %1</translation>
+    </message>
+    <message>
+        <source>Autosave %1</source>
+        <translation>حفظ تلقائي %1</translation>
     </message>
 </context>
 <context>
@@ -12834,10 +12960,6 @@ Right-click to cancel.</source>
         <translation>سرعة تدوير الكاميرا:</translation>
     </message>
     <message>
-        <source>Scales keyboard panning, zooming and rotation; drag and minimap movement stay unchanged.</source>
-        <translation>يضبط التحريك والتقريب والتدوير بلوحة المفاتيح؛ يبقى السحب والحركة عبر الخريطة المصغرة دون تغيير.</translation>
-    </message>
-    <message>
         <source>Economy numbers</source>
         <translation>أرقام الاقتصاد</translation>
     </message>
@@ -12888,6 +13010,14 @@ Right-click to cancel.</source>
     <message>
         <source>Night</source>
         <translation>الوضع الليلي</translation>
+    </message>
+    <message>
+        <source>Camera speeds</source>
+        <translation>سرعات الكاميرا</translation>
+    </message>
+    <message>
+        <source>The three speeds below scale keyboard panning, zooming and rotation. Mouse drag and minimap movement stay unchanged.</source>
+        <translation>تتحكّم السرعات الثلاث أدناه في تحريك العرض والتكبير والتدوير بلوحة المفاتيح. يبقى السحب بالفأرة والتنقّل عبر الخريطة المصغّرة دون تغيير.</translation>
     </message>
 </context>
 <context>

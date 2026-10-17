@@ -2,6 +2,7 @@ import QtQml 2.15
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.3
+import QtQuick.Window 2.15
 import StandardOfIron 1.0
 import StandardOfIron.Design 1.0 as Design
 import StandardOfIron.Core 1.0
@@ -60,6 +61,10 @@ Item {
         }
     }
 
+    function percent_text(value) {
+        return Math.round(Number(value)) + "%";
+    }
+
     function window_mode_label(mode) {
         switch (mode) {
         case "borderless":
@@ -69,6 +74,32 @@ Item {
         default:
             return qsTr("Fullscreen");
         }
+    }
+
+    readonly property var host_window: Window.window
+    readonly property string current_window_mode: {
+        var win = root.host_window;
+        if (!win)
+            return UiPreferences.displayWindowMode;
+        if (win.visibility === Window.FullScreen)
+            return "fullscreen";
+        if (win.flags & Qt.FramelessWindowHint)
+            return "borderless";
+        return "windowed";
+    }
+
+    function apply_window_mode(mode) {
+        UiPreferences.displayWindowMode = mode;
+        var win = root.host_window;
+        if (!win)
+            return;
+        win.flags = mode === "borderless" ? (Qt.Window | Qt.FramelessWindowHint) : Qt.Window;
+        if (mode === "windowed")
+            win.visibility = Window.Windowed;
+        else if (mode === "borderless")
+            win.visibility = Window.Maximized;
+        else
+            win.visibility = Window.FullScreen;
     }
 
     function set_audio_slider_values() {
@@ -200,14 +231,24 @@ Item {
             }
 
             ScrollView {
+                id: settings_scroll
+
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 clip: true
+                contentWidth: availableWidth
                 ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
-                ScrollBar.vertical.policy: ScrollBar.AsNeeded
+
+                ScrollBar.vertical: Design.IronScrollBar {
+                    objectName: "settingsScrollBar"
+                    parent: settings_scroll
+                    x: settings_scroll.mirrored ? 0 : settings_scroll.width - width
+                    y: settings_scroll.topPadding
+                    height: settings_scroll.availableHeight
+                }
 
                 ColumnLayout {
-                    width: container.width - Theme.spacingXLarge * 2
+                    width: settings_scroll.availableWidth - Design.Metrics.scrollBarThickness - Theme.spacingSmall
                     spacing: Theme.spacingLarge
 
                     ColumnLayout {
@@ -276,7 +317,7 @@ Item {
                                 }
 
                                 Label {
-                                    text: Design.Numerals.percent(master_volume_slider.value)
+                                    text: root.percent_text(master_volume_slider.value)
                                     color: Theme.textSub
                                     font.pixelSize: Design.Typography.bodyLarge
                                     Layout.minimumWidth: 88
@@ -307,7 +348,7 @@ Item {
                                 }
 
                                 Label {
-                                    text: Design.Numerals.percent(music_volume_slider.value)
+                                    text: root.percent_text(music_volume_slider.value)
                                     color: Theme.textSub
                                     font.pixelSize: Design.Typography.bodyLarge
                                     Layout.minimumWidth: 88
@@ -338,7 +379,7 @@ Item {
                                 }
 
                                 Label {
-                                    text: Design.Numerals.percent(sfx_volume_slider.value)
+                                    text: root.percent_text(sfx_volume_slider.value)
                                     color: Theme.textSub
                                     font.pixelSize: Design.Typography.bodyLarge
                                     Layout.minimumWidth: 88
@@ -369,7 +410,7 @@ Item {
                                 }
 
                                 Label {
-                                    text: Design.Numerals.percent(voice_volume_slider.value)
+                                    text: root.percent_text(voice_volume_slider.value)
                                     color: Theme.textSub
                                     font.pixelSize: Design.Typography.bodyLarge
                                     Layout.minimumWidth: 88
@@ -400,7 +441,7 @@ Item {
                                 }
 
                                 Label {
-                                    text: Design.Numerals.percent(ambience_volume_slider.value)
+                                    text: root.percent_text(ambience_volume_slider.value)
                                     color: Theme.textSub
                                     font.pixelSize: Design.Typography.bodyLarge
                                     Layout.minimumWidth: 88
@@ -450,10 +491,11 @@ Item {
 
                                 Layout.fillWidth: true
                                 model: UiPreferences.displayWindowModes
-                                currentIndex: Math.max(0, UiPreferences.displayWindowModes.indexOf(UiPreferences.displayWindowMode))
+                                objectName: "windowModeComboBox"
+                                currentIndex: Math.max(0, UiPreferences.displayWindowModes.indexOf(root.current_window_mode))
                                 displayText: root.window_mode_label(currentText)
                                 onActivated: function (index) {
-                                    UiPreferences.displayWindowMode = UiPreferences.displayWindowModes[index];
+                                    root.apply_window_mode(UiPreferences.displayWindowModes[index]);
                                 }
                                 delegate_text: function (data) {
                                     return root.window_mode_label(data);
@@ -601,7 +643,7 @@ Item {
                                 }
 
                                 Label {
-                                    text: Design.Numerals.percent(edge_scroll_slider.value * 100)
+                                    text: root.percent_text(edge_scroll_slider.value * 100)
                                     color: Theme.textMain
                                     font.pixelSize: Design.Typography.bodyLarge
                                     Layout.preferredWidth: 96
@@ -617,6 +659,27 @@ Item {
                                 font.pixelSize: Design.Typography.label
                                 wrapMode: Text.WordWrap
                                 enabled: UiPreferences.edgeScrollEnabled
+                            }
+
+                            Label {
+                                objectName: "cameraSpeedGroupHeading"
+                                Layout.columnSpan: 2
+                                Layout.fillWidth: true
+                                Layout.topMargin: Theme.spacingSmall
+                                text: qsTr("Camera speeds")
+                                color: Theme.textMain
+                                font.pixelSize: Design.Typography.bodyLarge
+                                font.bold: true
+                            }
+
+                            Label {
+                                objectName: "cameraSpeedGroupDescription"
+                                text: qsTr("The three speeds below scale keyboard panning, zooming and rotation. Mouse drag and minimap movement stay unchanged.")
+                                color: Theme.textDim
+                                font.pixelSize: Design.Typography.label
+                                wrapMode: Text.WordWrap
+                                Layout.columnSpan: 2
+                                Layout.fillWidth: true
                             }
 
                             Label {
@@ -642,7 +705,7 @@ Item {
                                 }
 
                                 Label {
-                                    text: Design.Numerals.percent(camera_pan_speed_slider.value * 100)
+                                    text: root.percent_text(camera_pan_speed_slider.value * 100)
                                     color: Theme.textMain
                                     font.pixelSize: Design.Typography.bodyLarge
                                     Layout.preferredWidth: 96
@@ -673,7 +736,7 @@ Item {
                                 }
 
                                 Label {
-                                    text: Design.Numerals.percent(camera_zoom_speed_slider.value * 100)
+                                    text: root.percent_text(camera_zoom_speed_slider.value * 100)
                                     color: Theme.textMain
                                     font.pixelSize: Design.Typography.bodyLarge
                                     Layout.preferredWidth: 96
@@ -704,21 +767,12 @@ Item {
                                 }
 
                                 Label {
-                                    text: Design.Numerals.percent(camera_rotation_speed_slider.value * 100)
+                                    text: root.percent_text(camera_rotation_speed_slider.value * 100)
                                     color: Theme.textMain
                                     font.pixelSize: Design.Typography.bodyLarge
                                     Layout.preferredWidth: 96
                                     horizontalAlignment: Text.AlignRight
                                 }
-                            }
-
-                            Label {
-                                text: qsTr("Scales keyboard panning, zooming and rotation; drag and minimap movement stay unchanged.")
-                                color: Theme.textDim
-                                font.pixelSize: Design.Typography.label
-                                wrapMode: Text.WordWrap
-                                Layout.columnSpan: 2
-                                Layout.fillWidth: true
                             }
                         }
 
@@ -783,7 +837,7 @@ Item {
                                 }
 
                                 Label {
-                                    text: Design.Numerals.roman(autosave_slot_slider.value)
+                                    text: Math.round(autosave_slot_slider.value)
                                     color: Theme.textMain
                                     font.pixelSize: Design.Typography.bodyLarge
                                     Layout.preferredWidth: 56
@@ -817,7 +871,7 @@ Item {
                                 }
 
                                 Label {
-                                    text: autosave_interval_slider.value <= 0 ? qsTr("Off") : qsTr("%1 min").arg(Design.Numerals.roman(autosave_interval_slider.value))
+                                    text: autosave_interval_slider.value <= 0 ? qsTr("Off") : qsTr("%1 min").arg(Math.round(autosave_interval_slider.value))
                                     color: Theme.textMain
                                     font.pixelSize: Design.Typography.bodyLarge
                                     Layout.preferredWidth: 104
@@ -890,7 +944,7 @@ Item {
                                 }
 
                                 Label {
-                                    text: Design.Numerals.percent(ui_scale_slider.value * 100)
+                                    text: root.percent_text(ui_scale_slider.value * 100)
                                     color: Theme.textMain
                                     font.pixelSize: Design.Typography.bodyLarge
                                     Layout.preferredWidth: 96
@@ -1034,7 +1088,7 @@ Item {
                                 }
 
                                 Label {
-                                    text: screen_effect_slider.value <= 0 ? qsTr("Off") : Design.Numerals.percent(screen_effect_slider.value * 100)
+                                    text: screen_effect_slider.value <= 0 ? qsTr("Off") : root.percent_text(screen_effect_slider.value * 100)
                                     color: Theme.textMain
                                     font.pixelSize: Design.Typography.bodyLarge
                                     Layout.preferredWidth: 96
@@ -1065,7 +1119,7 @@ Item {
                                 }
 
                                 Label {
-                                    text: camera_motion_slider.value <= 0 ? qsTr("Off") : Design.Numerals.percent(camera_motion_slider.value * 100)
+                                    text: camera_motion_slider.value <= 0 ? qsTr("Off") : root.percent_text(camera_motion_slider.value * 100)
                                     color: Theme.textMain
                                     font.pixelSize: Design.Typography.bodyLarge
                                     Layout.preferredWidth: 96

@@ -33,6 +33,7 @@ add_executable(
     render/carried_load_renderer_test.cpp
     render/building_archetype_desc_test.cpp
     render/farm_activity_test.cpp
+    render/snowy_biome_dressing_test.cpp
     render/home_activity_test.cpp
     render/siege_crew_test.cpp
     render/market_awning_test.cpp

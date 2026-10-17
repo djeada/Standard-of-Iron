@@ -38,6 +38,7 @@ struct SaveSlotHooks {
   std::function<void(const QString& message)> report_error;
   std::function<void()> leave_commander_mode;
   std::function<bool()> autosave_allowed;
+  std::function<bool()> commander_mode_active;
 };
 
 class SaveSlotController {
@@ -57,6 +58,8 @@ public:
   void save_game_to_slot(const QString& slot_name);
   void quicksave();
   void autosave();
+  void commander_mode_left();
+  [[nodiscard]] auto autosave_deferred() const -> bool { return m_autosave_deferred; }
   void cancel_active_save();
 
   void drain_pending_capture();
@@ -91,6 +94,7 @@ private:
   QString m_screenshot_target_slot;
   QString m_progress_slot;
   QTimer m_autosave_timer;
+  bool m_autosave_deferred = false;
 };
 
 } // namespace App::Core

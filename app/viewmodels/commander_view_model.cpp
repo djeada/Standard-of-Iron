@@ -404,6 +404,14 @@ void CommanderViewModel::trigger_aura() {
   if (commander_entity == nullptr) {
     return;
   }
+  if (active()) {
+    auto const* commander_data =
+        world->try_get<Engine::Core::CommanderComponent>(commander_entity->get_id());
+    if (commander_data == nullptr || !commander_data->can_activate_aura_ability()) {
+      m_control.note_refusal("commander.ability_aura");
+      return;
+    }
+  }
   Game::Command::submit(*world,
                         Game::Command::Source::LocalPlayer,
                         owner,
@@ -503,6 +511,10 @@ void CommanderViewModel::start_flag_rally() {
                                                    : CursorMode::Normal)});
   if (effects.should_exit_commander_mode) {
     exit_mode();
+    return;
+  }
+  if (active() && !effects.cursor_mode.has_value()) {
+    m_control.note_refusal("commander.rally");
     return;
   }
   if (effects.reset_commander_input) {
@@ -767,6 +779,8 @@ void CommanderViewModel::publish_frame() {
   input.dodge_active = m_control.is_dodge_rolling();
   input.locked_target_id = m_control.locked_target_id();
   input.rally_placing = is_placing_rally();
+  input.refusal_sequence = m_control.last_refusal().sequence;
+  input.refusal_action = m_control.last_refusal().action;
   m_status.publish(App::Core::build_controlled_commander_status(input));
 }
 

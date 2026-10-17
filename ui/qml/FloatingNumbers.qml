@@ -65,6 +65,21 @@ Item {
         return key.length > 0 ? Design.Icons.resourceGlyph(key) : "";
     }
 
+    readonly property real playfieldTop: root.projector !== null ? root.projector.topInset : 0
+    readonly property real playfieldBottom: root.height - (root.projector !== null ? root.projector.bottomInset : 0)
+
+    function view_x(x, w) {
+        return Math.max(4, Math.min(root.width - w - 4, x));
+    }
+
+    function view_y(y, h) {
+        var low = root.playfieldTop + 4;
+        var high = root.playfieldBottom - h - 4;
+        if (high <= low)
+            return y;
+        return Math.max(low, Math.min(high, y));
+    }
+
     function signed(amount) {
         return (amount > 0 ? "+" : "") + amount.toString();
     }
@@ -159,8 +174,8 @@ Item {
             width: label.implicitWidth + 14
             height: label.implicitHeight + 6
             visible: projection !== null
-            x: (projection !== null ? projection.x : 0) - width / 2 + drift * progress
-            y: (projection !== null ? root.projector.clamped_y(projection.y, height) : 0) - 18 - rise * progress
+            x: root.view_x((projection !== null ? projection.x : 0) - width / 2 + drift * progress, width)
+            y: root.view_y((projection !== null ? root.projector.clamped_y(projection.y, height) : 0) - 18 - rise * progress, height)
             opacity: progress < 0.55 ? 1.0 : Math.max(0.0, 1.0 - ((progress - 0.55) / 0.45))
             scale: root.reducedMotion ? 1.0 : (progress < 0.12 ? 0.8 + progress * 2.2 : Math.max(0.92, 1.06 - progress * 0.14))
 
@@ -294,8 +309,8 @@ Item {
             width: 260
             height: 220
             visible: projection !== null
-            x: (projection !== null ? projection.x : 0) - width / 2 + driftX * Math.pow(progress, 0.8)
-            y: (projection !== null ? root.projector.clamped_y(projection.y, 60) : 0) - 140 - Math.abs(lane) * 8 - riseDistance * progress
+            x: root.view_x((projection !== null ? projection.x : 0) - width / 2 + driftX * Math.pow(progress, 0.8), width)
+            y: root.view_y((projection !== null ? root.projector.clamped_y(projection.y, 60) : 0) - 140 - Math.abs(lane) * 8 - riseDistance * progress + labelContainer.y, labelContainer.height) - labelContainer.y
             opacity: progress < 0.56 ? 1.0 : Math.max(0.0, 1.0 - ((progress - 0.56) / 0.44))
 
             SequentialAnimation {
@@ -461,15 +476,30 @@ Item {
     }
 
     Item {
-        id: tickLayer
+        id: playfield
 
-        anchors.fill: parent
-    }
+        objectName: "floatingNumbersPlayfield"
+        x: 0
+        y: root.playfieldTop
+        width: root.width
+        height: Math.max(0, root.playfieldBottom - root.playfieldTop)
+        clip: true
 
-    Item {
-        id: burstLayer
+        Item {
+            id: tickLayer
 
-        anchors.fill: parent
+            y: -playfield.y
+            width: root.width
+            height: root.height
+        }
+
+        Item {
+            id: burstLayer
+
+            y: -playfield.y
+            width: root.width
+            height: root.height
+        }
     }
 
     Timer {

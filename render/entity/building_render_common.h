@@ -20,6 +20,7 @@ struct BuildingSelectionStyle {
 auto resolve_building_health_ratio(const DrawContext& ctx) -> float;
 
 auto resolve_building_state(const DrawContext& ctx) -> BuildingState;
+[[nodiscard]] auto building_greenery_is_cold(const DrawContext& ctx) -> bool;
 
 auto building_state_transition_age(std::uint32_t entity_id, float now) -> float;
 auto building_renderer_key(std::string_view nation_slug,

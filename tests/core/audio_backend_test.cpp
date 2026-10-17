@@ -75,6 +75,44 @@ auto write_unclosed_bed_wav(const QString& path, int frames, float amplitude) ->
   return file.write(data) == data.size();
 }
 
+auto write_low_then_high_pitch_wav(const QString& path, int frames) -> bool {
+  QByteArray data;
+  QDataStream stream(&data, QIODevice::WriteOnly);
+  stream.setByteOrder(QDataStream::LittleEndian);
+
+  const std::uint32_t payload = std::uint32_t(frames) * CHANNELS * 2;
+  stream.writeRawData("RIFF", 4);
+  stream << std::uint32_t(36 + payload);
+  stream.writeRawData("WAVEfmt ", 8);
+  stream << std::uint32_t(16) << std::uint16_t(1) << std::uint16_t(CHANNELS)
+         << std::uint32_t(SAMPLE_RATE) << std::uint32_t(SAMPLE_RATE * CHANNELS * 2)
+         << std::uint16_t(CHANNELS * 2) << std::uint16_t(16);
+  stream.writeRawData("data", 4);
+  stream << payload;
+  for (int frame = 0; frame < frames; ++frame) {
+    const double pitch = frame < frames / 2 ? 220.0 : 1760.0;
+    const double phase = 2.0 * std::numbers::pi * pitch * frame / SAMPLE_RATE;
+    const auto value = static_cast<std::int16_t>(0.4 * std::sin(phase) * 32000.0);
+    stream << value << value;
+  }
+
+  QFile file(path);
+  if (!file.open(QIODevice::WriteOnly)) {
+    return false;
+  }
+  return file.write(data) == data.size();
+}
+
+auto zero_crossings_of(const std::vector<float>& buffer) -> int {
+  int crossings = 0;
+  for (std::size_t i = CHANNELS; i < buffer.size(); i += CHANNELS) {
+    if ((buffer[i] >= 0.0F) != (buffer[i - CHANNELS] >= 0.0F)) {
+      ++crossings;
+    }
+  }
+  return crossings;
+}
+
 auto peak_of(const std::vector<float>& buffer) -> float {
   float peak = 0.0F;
   for (const float sample : buffer) {
@@ -233,6 +271,31 @@ TEST_F(AudioBackendTest, MonoSourcesAreStoredOnceAndStillPlayInStereo) {
   for (std::size_t frame = 0; frame < 1024; ++frame) {
     EXPECT_FLOAT_EQ(buffer[frame * CHANNELS], buffer[(frame * CHANNELS) + 1]);
   }
+}
+
+TEST_F(AudioBackendTest, MusicReturnedToSoonAfterResumesWhereItLeftOff) {
+  const QString path = m_directory.filePath("score.wav");
+  ASSERT_TRUE(write_low_then_high_pitch_wav(path, SAMPLE_RATE));
+  ASSERT_TRUE(m_backend.request_track(
+      QStringLiteral("score"), path, Mastering::Material::Effect));
+  ASSERT_TRUE(m_backend.request_track(
+      QStringLiteral("calm"), m_path, Mastering::Material::Music));
+  m_backend.wait_for_decodes();
+
+  m_backend.play(0, QStringLiteral("score"), 1.0F, true, 0);
+  const int opening = zero_crossings_of(render(1024));
+  render(SAMPLE_RATE * 3 / 4 - 1024);
+  const int later = zero_crossings_of(render(1024));
+  ASSERT_GT(later, opening * 4) << "the score climbs from a low note to a high one";
+
+  m_backend.stop(0, 0);
+  m_backend.play(1, QStringLiteral("calm"), 1.0F, true, 0);
+  render(SAMPLE_RATE / 2);
+  m_backend.stop(1, 0);
+
+  m_backend.play(0, QStringLiteral("score"), 1.0F, true, 0);
+  EXPECT_GT(zero_crossings_of(render(1024)), opening * 4)
+      << "coming back to the score must not restart it from the top";
 }
 
 TEST_F(AudioBackendTest, ALoopingBedWrapsWithoutAClick) {

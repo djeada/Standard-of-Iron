@@ -107,3 +107,97 @@ TEST(AmbientStateHysteresisTest, DefeatIsNeverHeldBackByTheSettle) {
 
   EXPECT_EQ(manager.current_state(), Engine::Core::AmbientState::DEFEAT);
 }
+
+namespace {
+
+struct Battlefield {
+  Engine::Core::World world;
+  EntityCache cache;
+  Engine::Core::TransformComponent* enemy = nullptr;
+  AmbientStateManager manager;
+  int changes = 0;
+
+  Battlefield() {
+    cache.player_barracks_alive = true;
+    cache.enemy_barracks_alive = true;
+    add_unit(world, k_local_owner, 0.0F);
+    enemy = add_unit(world, k_enemy_owner, 40.0F)
+                ->get_component<Engine::Core::TransformComponent>();
+  }
+
+  void sample(bool contact, int samples = 1) {
+    enemy->position.x = contact ? 5.0F : 40.0F;
+    for (int i = 0; i < samples; ++i) {
+      const auto before = manager.current_state();
+      manager.update(2.0F, &world, k_local_owner, cache, QString{});
+      if (manager.current_state() != before) {
+        ++changes;
+      }
+    }
+  }
+
+  [[nodiscard]] auto state() const -> Engine::Core::AmbientState {
+    return manager.current_state();
+  }
+};
+
+} // namespace
+
+TEST(AmbientStateHysteresisTest, StrayContactsAfterABattleDoNotFlapTheScore) {
+  Battlefield field;
+  field.sample(true);
+  ASSERT_EQ(field.state(), Engine::Core::AmbientState::COMBAT);
+
+  for (int minute = 0; minute < 9; ++minute) {
+    for (int burst = 0; burst < 3; ++burst) {
+      field.sample(false, 10);
+      field.sample(true);
+    }
+  }
+
+  EXPECT_LE(field.changes, 2)
+      << "a lone contact every twenty seconds must not swap the music each time";
+  EXPECT_EQ(field.state(), Engine::Core::AmbientState::TENSE);
+}
+
+TEST(AmbientStateHysteresisTest, ARenewedFightSoonAfterReturnsOnceItIsSustained) {
+  Battlefield field;
+  field.sample(true);
+  field.sample(false, 11);
+  ASSERT_EQ(field.state(), Engine::Core::AmbientState::TENSE);
+
+  field.sample(true, 2);
+  EXPECT_EQ(field.state(), Engine::Core::AmbientState::TENSE)
+      << "a re-entry right after a battle waits for the fight to hold";
+  field.sample(true);
+  EXPECT_EQ(field.state(), Engine::Core::AmbientState::COMBAT);
+}
+
+TEST(AmbientStateHysteresisTest, ALongBattleRidesOutALull) {
+  Battlefield field;
+  field.sample(true, 60);
+  ASSERT_EQ(field.state(), Engine::Core::AmbientState::COMBAT);
+
+  field.sample(false, 15);
+  EXPECT_EQ(field.state(), Engine::Core::AmbientState::COMBAT)
+      << "thirty quiet seconds in a two-minute battle is a lull, not the end";
+  field.sample(true);
+  field.sample(false, 15);
+  EXPECT_EQ(field.state(), Engine::Core::AmbientState::COMBAT);
+
+  field.sample(false, 10);
+  EXPECT_EQ(field.state(), Engine::Core::AmbientState::TENSE)
+      << "the release is longer, not endless";
+  EXPECT_EQ(field.changes, 2);
+}
+
+TEST(AmbientStateHysteresisTest, AFightLongAfterTheLastStartsTheScoreAtOnce) {
+  Battlefield field;
+  field.sample(true);
+  field.sample(false, 11);
+  ASSERT_EQ(field.state(), Engine::Core::AmbientState::TENSE);
+
+  field.sample(false, 31);
+  field.sample(true);
+  EXPECT_EQ(field.state(), Engine::Core::AmbientState::COMBAT);
+}

@@ -308,6 +308,8 @@ void apply_commander_death_shock(Engine::Core::World* world,
 
 } // namespace
 
+constexpr float k_posture_recovery_per_second = 18.0F;
+
 void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
   if (world == nullptr) {
     return;
@@ -336,6 +338,17 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
         std::max(0.0F, commander->rally_feedback_time - delta_time);
     commander->aura_ability_cooldown_remaining =
         std::max(0.0F, commander->aura_ability_cooldown_remaining - delta_time);
+
+    if (!commander->fpv_controlled) {
+      commander->shield_bash_cooldown_remaining =
+          std::max(0.0F, commander->shield_bash_cooldown_remaining - delta_time);
+      commander->vanguard_rush_cooldown_remaining =
+          std::max(0.0F, commander->vanguard_rush_cooldown_remaining - delta_time);
+      commander->second_wind_cooldown_remaining =
+          std::max(0.0F, commander->second_wind_cooldown_remaining - delta_time);
+      commander->posture = std::max(
+          0.0F, commander->posture - k_posture_recovery_per_second * delta_time);
+    }
 
     commander->signature_cooldown_remaining =
         std::max(0.0F, commander->signature_cooldown_remaining - delta_time);

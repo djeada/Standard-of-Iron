@@ -583,6 +583,7 @@ struct AIContext {
   AttackWave wave;
 
   Game::Systems::ResourceAmounts construction_need{};
+  Game::Systems::ResourceAmounts saving_for_a_roof{};
 
   std::vector<Engine::Core::EntityID> garrison_unit_ids;
 

@@ -18,6 +18,7 @@ in vec2 v_local_pos_xz;
 in vec3 v_local_pos;
 
 uniform vec3 u_camera_pos;
+uniform float u_snow_coverage;
 
 out vec4 frag_color;
 
@@ -36,6 +37,9 @@ float noise2_d(vec2 p) {
 }
 
 void main() {
+  if (soi_near_camera_keep(v_world_pos, u_camera_pos, gl_FragCoord.xy) < 0.5) {
+    discard;
+  }
 
   vec3 geometric_normal = normalize(v_normal);
   vec3 l = environment_primary_direction();
@@ -161,6 +165,11 @@ void main() {
   bark_color *= mix(0.72, 1.0, smoothstep(0.0, 0.14, v_local_pos.y));
 
   vec3 base_color = mix(bark_color, leaf_color, v_foliage_mask);
+  float snow_dust =
+      clamp(u_snow_coverage, 0.0, 1.0) * v_foliage_mask *
+      smoothstep(0.10, 0.70, geometric_normal.y + (leaf_clump - 0.5) * 0.45);
+  base_color =
+      mix(base_color, vec3(0.86, 0.89, 0.94), clamp(snow_dust * 0.80, 0.0, 0.75));
   vec3 color = base_color * illumination * ao * environment_exposure();
 
   float translucency =

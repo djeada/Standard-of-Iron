@@ -18,7 +18,7 @@ ApplicationWindow {
     property bool suppress_modals: false
 
     readonly property bool overlay_active: mainWindow.menu_visible || mapSelect.visible || missions_screen.visible || campaign_screen.visible || save_game_panel.visible || load_game_panel.visible || settingsPanel.visible || objectivesPanel.visible || help_panel.visible || commander_preview.visible
-    readonly property bool simulation_suspended: mainWindow.game_started && (mainWindow.game_paused || mainWindow.overlay_active)
+    readonly property bool simulation_suspended: mainWindow.game_started && (mainWindow.game_paused || mainWindow.overlay_active || hud.modal_panel_open)
 
     property bool capture_view_ready: false
     property bool capture_view_settled: false
@@ -127,13 +127,14 @@ ApplicationWindow {
             });
     }
 
-    function confirm_leaving_battle(launch) {
+    function confirm_leaving_battle(launch, restarting) {
         var battle_decided = typeof game !== 'undefined' && game.victory_state !== "";
         if (!mainWindow.game_started || battle_decided) {
             launch();
             return;
         }
         mainWindow.pending_launch = launch;
+        abandon_battle_dialog.restarting = restarting === true;
         abandon_battle_dialog.open();
     }
 
@@ -438,7 +439,7 @@ ApplicationWindow {
         anchors.leftMargin: Design.Metrics.hudZoneMargin
         max_height: Math.max(Design.Metrics.space24 * 6, hud.height - hud.bottom_panel_height - anchors.topMargin - Design.Metrics.space12)
         z: 10.5
-        visible: active && mainWindow.game_started && !mainWindow.overlay_active && !hud.commander_rpg_mode
+        visible: active && mainWindow.game_started && !mainWindow.overlay_active && !hud.commander_rpg_mode && !hud.modal_panel_open
         game_is_paused: mainWindow.game_paused
         onPause_requested: {
             mainWindow.game_paused = !mainWindow.game_paused;
@@ -454,6 +455,7 @@ ApplicationWindow {
         anchors.right: parent.right
         anchors.topMargin: hud.visible ? hud.right_column_bottom + Design.Metrics.space8 : Design.Metrics.space24 * 3
         anchors.rightMargin: Design.Metrics.space16
+        maxHeight: hud.visible && hud.commander_rpg_mode ? Math.max(0, hud.height - hud.bottom_reserved_height - anchors.topMargin - Design.Metrics.space8) : -1
         z: 12
         visible: mainWindow.game_started && !mainWindow.menu_visible
     }
@@ -461,38 +463,40 @@ ApplicationWindow {
     Rectangle {
         id: pause_overlay
 
-        anchors.fill: parent
+        objectName: "pauseBanner"
+        anchors.top: parent.top
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.topMargin: hud.center_stack_bottom + Design.Metrics.space8
         z: 10
-        visible: mainWindow.game_paused && game_started
-        color: Qt.rgba(8 / 255, 6 / 255, 4 / 255, 0.72)
+        visible: mainWindow.game_paused && game_started && !mainWindow.overlay_active && !hud.modal_panel_open
+        width: pauseRow.implicitWidth + Design.Metrics.space24 * 2
+        height: pauseRow.implicitHeight + Design.Metrics.space12
+        radius: height / 2
+        color: Theme.panelBase
+        opacity: 0.94
+        border.color: Theme.panelBr
+        border.width: 1
 
-        Rectangle {
+        Row {
+            id: pauseRow
+
             anchors.centerIn: parent
-            width: 300
-            height: 150
-            color: Theme.panelBase
-            radius: 8
-            border.color: Theme.panelBr
-            border.width: 2
+            spacing: Design.Metrics.space12
 
-            Column {
-                anchors.centerIn: parent
-                spacing: 20
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: qsTr("PAUSED")
+                color: Theme.textMain
+                font.pixelSize: Design.Typography.label
+                font.bold: true
+                font.letterSpacing: 1.5
+            }
 
-                Text {
-                    text: qsTr("PAUSED")
-                    color: Theme.textMain
-                    font.pixelSize: Design.Typography.hero
-                    font.bold: true
-                    anchors.horizontalCenter: parent.horizontalCenter
-                }
-
-                Text {
-                    text: qsTr("Press %1 to resume").arg(InputBindings.display_shortcut_for("rts.pause"))
-                    color: Theme.textSubLite
-                    font.pixelSize: Design.Typography.label
-                    anchors.horizontalCenter: parent.horizontalCenter
-                }
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: qsTr("Press %1 to resume").arg(InputBindings.display_shortcut_for("rts.pause"))
+                color: Theme.textSubLite
+                font.pixelSize: Design.Typography.caption
             }
         }
     }
@@ -536,6 +540,18 @@ ApplicationWindow {
         }
         has_continue_save: mainWindow.continue_slot !== null
         continue_label: mainWindow.describe_slot(mainWindow.continue_slot)
+        can_restart: typeof game !== 'undefined' && game.setup ? game.setup.can_restart : false
+        onRestart_requested: function () {
+            mainWindow.confirm_leaving_battle(function () {
+                    mainWindow.restart_current_match();
+                }, true);
+        }
+        onAbandon_requested: function () {
+            mainWindow.confirm_leaving_battle(function () {
+                    if (typeof game !== 'undefined' && game.setup && game.setup.abandon_current_match)
+                        game.setup.abandon_current_match();
+                });
+        }
         onResume_requested: function () {
             if (mainWindow.game_started)
                 mainWindow.menu_visible = false;
@@ -561,6 +577,7 @@ ApplicationWindow {
             mainWindow.menu_visible = false;
         }
         onOpen_tutorial: function () {
+            mainMenu.tutorial_started = true;
             mainWindow.start_tutorial();
         }
         onOpen_help: function () {
@@ -586,8 +603,10 @@ ApplicationWindow {
             mainWindow.note_objectives_opened();
         }
         onExit_requested: function () {
-            if (typeof game !== 'undefined' && game.exit_game)
-                game.exit_game();
+            mainWindow.confirm_leaving_battle(function () {
+                    if (typeof game !== 'undefined' && game.exit_game)
+                        game.exit_game();
+                });
         }
     }
 
@@ -1000,12 +1019,14 @@ ApplicationWindow {
     Design.IronDialog {
         id: abandon_battle_dialog
 
+        property bool restarting: false
+
         anchors.centerIn: parent
         width: Math.min(parent.width * 0.6, 520)
-        title: qsTr("Leave this battle?")
+        title: restarting ? qsTr("Restart this battle?") : qsTr("Leave this battle?")
         tone: "warning"
-        message: qsTr("The battle in progress will be lost. Save it first if you want to come back to it.")
-        primaryAction: qsTr("Leave the battle")
+        message: restarting ? qsTr("The battle starts again from the beginning and everything won since is lost. Save it first if you want to come back to it.") : qsTr("The battle in progress will be lost. Save it first if you want to come back to it.")
+        primaryAction: restarting ? qsTr("Restart the battle") : qsTr("Leave the battle")
         secondaryAction: qsTr("Keep fighting")
         onPrimaryActivated: {
             var launch = mainWindow.pending_launch;

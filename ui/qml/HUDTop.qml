@@ -897,8 +897,10 @@ Item {
             MouseArea {
                 id: minimapMouse
 
+                property bool tipDismissed: false
+
                 Design.IronTooltip {
-                    visible: minimapMouse.containsMouse
+                    visible: minimapMouse.containsMouse && !minimapMouse.pressed && !minimapMouse.tipDismissed
                     text: qsTr("Left click moves the camera, right click orders selected troops.\nVisible: currently scouted, enemies shown.\nExplored: seen before, terrain only.\nUnseen: never scouted.")
                 }
 
@@ -924,8 +926,10 @@ Item {
                 hoverEnabled: true
                 cursorShape: containsMouse ? Qt.PointingHandCursor : Qt.ArrowCursor
                 onPressed: function (mouse) {
+                    minimapMouse.tipDismissed = true;
                     minimapMouse.dispatch(mouse.button, mouse.x, mouse.y);
                 }
+                onExited: minimapMouse.tipDismissed = false
                 onPositionChanged: function (mouse) {
                     if (mouse.buttons & Qt.LeftButton)
                         minimapMouse.dispatch(Qt.LeftButton, mouse.x, mouse.y);

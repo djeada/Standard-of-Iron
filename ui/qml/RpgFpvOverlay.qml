@@ -12,6 +12,8 @@ Item {
     property var status: ({})
     property var projector: null
 
+    readonly property real reservedBottom: hudBand.height + hudBand.anchors.bottomMargin + root.scaled(12)
+
     readonly property real resolutionScale: Math.max(0.75, Math.min(2.0, height / 1080))
     readonly property real uiScale: Math.max(0.75, Math.min(4.0, root.resolutionScale * Design.A11y.uiScale))
 
@@ -1118,7 +1120,6 @@ Item {
                     Text {
                         objectName: "rpgStaminaDenied"
 
-                        Layout.fillWidth: true
                         text: qsTr("WINDED")
                         color: root.ember
                         opacity: root.staminaDenied
@@ -1378,19 +1379,24 @@ Item {
                         id: abilityTile
                         required property var modelData
 
+                        readonly property real denied: root.deniedAction === abilityTile.modelData.action ? root.deniedPulse : 0.0
                         readonly property bool isActive: abilityTile.modelData.activeKey !== undefined && root.status_value(abilityTile.modelData.activeKey, false) === true
                         readonly property bool isReady: !abilityTile.isActive && root.status_value(abilityTile.modelData.readyKey, true) === true
                         readonly property real cdRatio: abilityTile.isActive ? (abilityTile.modelData.activeRemainingKey !== undefined ? 1.0 - root.cooldown_ratio(abilityTile.modelData.activeRemainingKey, abilityTile.modelData.activeTotalKey) : 0.0) : root.cooldown_ratio(abilityTile.modelData.cdKey, abilityTile.modelData.totalKey)
 
+                        objectName: "rpgAbilityTile_" + abilityTile.modelData.action
                         width: Math.max(abilityColumn.tileSize, tileLabels.implicitWidth + root.scaled(22))
                         height: Math.max(abilityColumn.tileSize, tileLabels.implicitHeight + keycap.height + root.scaled(20))
+                        transform: Translate {
+                            x: Design.Motion.reducedMotion ? 0 : Math.sin(abilityTile.denied * Math.PI * 6.0) * root.scaled(3) * abilityTile.denied
+                        }
 
                         Rectangle {
                             id: tileFace
                             anchors.fill: parent
                             radius: Design.Metrics.radiusMedium
-                            border.color: abilityTile.isActive ? root.bronzeBright : (abilityTile.isReady ? root.shade(root.bronze, 0.95) : root.shade(root.bone, 0.24))
-                            border.width: abilityTile.isActive ? Design.Metrics.borderFocus : Design.Metrics.borderThin
+                            border.color: abilityTile.denied > 0.0 ? root.ember : (abilityTile.isActive ? root.bronzeBright : (abilityTile.isReady ? root.shade(root.bronze, 0.95) : root.shade(root.bone, 0.24)))
+                            border.width: abilityTile.isActive || abilityTile.denied > 0.0 ? Design.Metrics.borderFocus : Design.Metrics.borderThin
                             clip: true
                             gradient: Gradient {
                                 GradientStop {
@@ -1491,6 +1497,26 @@ Item {
     }
 
     property real staminaDenied: 0.0
+    property string deniedAction: ""
+    property real deniedPulse: 0.0
+
+    NumberAnimation on deniedPulse  {
+        id: deniedPulseFade
+        running: false
+        from: 1.0
+        to: 0.0
+        duration: 650
+        easing.type: Easing.OutQuad
+    }
+
+    function deny(action) {
+        if (action === "commander.cycle_lock_on") {
+            modeToast.show(qsTr("NO TARGET IN REACH"));
+            return;
+        }
+        root.deniedAction = action;
+        deniedPulseFade.restart();
+    }
 
     NumberAnimation on staminaDenied  {
         id: staminaDeniedFade
@@ -1504,6 +1530,7 @@ Item {
     property string _prevCameraMode: ""
     property string _prevWeaponStance: ""
     property real _prevOutcomeAge: -1.0
+    property int _prevRefusalSequence: -1
     property real _prevHealth: -1.0
     property bool _prevAttacking: false
     property bool _prevGuardBroken: false
@@ -1552,6 +1579,10 @@ Item {
         if (Number(root.status_value("last_input_outcome", 0)) === 2 && _prevOutcomeAge >= 0.0 && outcomeAge < _prevOutcomeAge)
             staminaDeniedFade.restart();
         _prevOutcomeAge = outcomeAge;
+        var refusalSequence = Number(root.status_value("refusal_sequence", -1));
+        if (_prevRefusalSequence >= 0 && refusalSequence >= 0 && refusalSequence !== _prevRefusalSequence)
+            root.deny(String(root.status_value("refusal_action", "")));
+        _prevRefusalSequence = refusalSequence;
         if (hasLockedTarget && !_prevLockedTarget) {
             combatEntryFlash.accentColor = root.bronze;
             combatEntryFlash.opacity = 0.14;

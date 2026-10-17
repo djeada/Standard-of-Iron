@@ -21,6 +21,10 @@ out vec4 frag_color;
 const float TWO_PI = 6.28318530718;
 
 void main() {
+  if (soi_near_camera_keep(v_world_pos, u_camera_pos, gl_FragCoord.xy) < 0.5) {
+    discard;
+  }
+
   vec3 geometric_normal = normalize(v_normal);
   if (!gl_FrontFacing) {
     geometric_normal = -geometric_normal;

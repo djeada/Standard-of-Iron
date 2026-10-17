@@ -296,6 +296,10 @@
         <source>Ask allies to defend</source>
         <translation>Müttefiklerden savunmasını iste</translation>
     </message>
+    <message>
+        <source>Free queue slot: up to %1 recruits can wait in line</source>
+        <translation>Boş sıra yeri: en fazla %1 acemi sırada bekleyebilir</translation>
+    </message>
 </context>
 <context>
     <name>BattleReportLayout</name>
@@ -426,6 +430,17 @@
 This may be a skirmish, or objectives have not been configured.</source>
         <translation>Görev hedefi bulunmuyor.
 Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
+    </message>
+</context>
+<context>
+    <name>BuilderTask</name>
+    <message>
+        <source>Builders could not reach their construction site. The building was abandoned and its cost refunded.</source>
+        <translation>İnşaatçılar şantiyeye ulaşamadı. Bina terk edildi ve bedeli iade edildi.</translation>
+    </message>
+    <message>
+        <source>Builders were pulled off their construction site. The building was abandoned and its cost refunded.</source>
+        <translation>İnşaatçılar şantiyeden çekildi. Bina terk edildi ve bedeli iade edildi.</translation>
     </message>
 </context>
 <context>
@@ -740,10 +755,6 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
         <translation>Sefer</translation>
     </message>
     <message>
-        <source>Campaign Chronicle • </source>
-        <translation>Sefer Vakayinamesi • </translation>
-    </message>
-    <message>
         <source>← Back</source>
         <translation>← Geri</translation>
     </message>
@@ -752,8 +763,12 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
         <translation>Sefer Vakayinamesi</translation>
     </message>
     <message>
-        <source>Campaign Progress:</source>
-        <translation>Sefer İlerlemesi:</translation>
+        <source>Progress</source>
+        <translation>İlerleme</translation>
+    </message>
+    <message>
+        <source>%1 / %2</source>
+        <translation>%1 / %2</translation>
     </message>
 </context>
 <context>
@@ -4547,6 +4562,16 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
         <source>%1/%2 walls  •  %3 wood</source>
         <translation>%1/%2 sur  •  %3 odun</translation>
     </message>
+    <message numerus="yes">
+        <source>Group %1 holds %n unit(s)</source>
+        <translation>
+            <numerusform>%1. grupta %n birlik var</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Group %1 cleared</source>
+        <translation>%1. grup boşaltıldı</translation>
+    </message>
 </context>
 <context>
     <name>GraphicsSettingsProxy</name>
@@ -6077,6 +6102,14 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
         <source>Among the waves walks a grave priest. He heals the dead around him and throws fire at your line, so a slow slog of spearmen alone will bleed. Bring a Medicus to mend the burns and ranged troops to cut the priest down from a distance before the guardians close in. Kill him first and the dead stop mending.</source>
         <translation>Dalgaların arasında bir mezar rahibi yürür. Çevresindeki ölüleri iyileştirir ve hattına ateş fırlatır; bu yüzden yalnız mızraklılarla yavaş bir ilerleyiş kan kaybettirir. Yanıkları sarmak için bir Medicus ve muhafızlar yaklaşmadan rahibi uzaktan indirmek için menzilli birlikler getir. Önce onu öldür, ölüler iyileşmeyi bıraksın.</translation>
     </message>
+    <message>
+        <source>Control groups</source>
+        <translation>Kontrol grupları</translation>
+    </message>
+    <message>
+        <source>Hold Ctrl and press a number from 1 to 9 to store the selected troops as that group. Press the number alone to select the group again, or hold Shift to add it to what is already selected; press it twice quickly to swing the camera onto the group. Fallen soldiers drop out of their group, and groups last until the battle ends. Tab centres the camera on whatever is selected. All of these keys can be rebound under Settings › Controls.</source>
+        <translation>Seçili birlikleri o grup olarak kaydetmek için Ctrl&apos;yi basılı tutup 1&apos;den 9&apos;a kadar bir rakama basın. Grubu yeniden seçmek için yalnızca rakama basın ya da zaten seçili olanlara eklemek için Shift&apos;i basılı tutun; kamerayı gruba çevirmek için rakama hızlıca iki kez basın. Düşen askerler gruplarından çıkar ve gruplar savaş bitene kadar korunur. Tab, kamerayı seçili olana ortalar. Bu tuşların hepsi Ayarlar › Kontroller altından yeniden atanabilir.</translation>
+    </message>
 </context>
 <context>
     <name>HintCard</name>
@@ -7207,6 +7240,18 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
         <source>Load the quicksave</source>
         <translation>Hızlı kaydı yükle</translation>
     </message>
+    <message>
+        <source>Restart this battle?</source>
+        <translation>Bu savaş yeniden başlatılsın mı?</translation>
+    </message>
+    <message>
+        <source>The battle starts again from the beginning and everything won since is lost. Save it first if you want to come back to it.</source>
+        <translation>Savaş baştan başlar ve o zamandan beri kazanılan her şey kaybolur. Geri dönmek istiyorsanız önce kaydedin.</translation>
+    </message>
+    <message>
+        <source>Restart the battle</source>
+        <translation>Savaşı yeniden başlat</translation>
+    </message>
 </context>
 <context>
     <name>MainMenu</name>
@@ -7405,6 +7450,42 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
     <message>
         <source>Resume</source>
         <translation>Sürdür</translation>
+    </message>
+    <message>
+        <source>Abandon this battle and close the game</source>
+        <translation>Bu savaşı bırak ve oyunu kapat</translation>
+    </message>
+    <message>
+        <source>Leaves the battle in progress - you will be asked first</source>
+        <translation>Süren savaştan çıkar – önce onayınız istenir</translation>
+    </message>
+    <message>
+        <source>Close this menu and carry on fighting</source>
+        <translation>Bu menüyü kapat ve savaşmaya devam et</translation>
+    </message>
+    <message>
+        <source>Restart battle</source>
+        <translation>Savaşı yeniden başlat</translation>
+    </message>
+    <message>
+        <source>Fight this battle again from the start</source>
+        <translation>Bu savaşı baştan yeniden ver</translation>
+    </message>
+    <message>
+        <source>Again</source>
+        <translation>Yeniden</translation>
+    </message>
+    <message>
+        <source>Quit to main menu</source>
+        <translation>Ana menüye dön</translation>
+    </message>
+    <message>
+        <source>Abandon this battle and return to the war table</source>
+        <translation>Bu savaşı bırak ve savaş masasına dön</translation>
+    </message>
+    <message>
+        <source>Abandon</source>
+        <translation>Bırak</translation>
     </message>
 </context>
 <context>
@@ -7983,6 +8064,14 @@ bir harita seç</translation>
     <message>
         <source>Arrows pan  ·  Drag to rotate  ·  Scroll or +/- to zoom  ·  Home resets</source>
         <translation>Oklar kaydırır  ·  Döndürmek için sürükle  ·  Yakınlaştırmak için tekerlek ya da +/-  ·  Home sıfırlar</translation>
+    </message>
+    <message>
+        <source>Map controls</source>
+        <translation>Harita kontrolleri</translation>
+    </message>
+    <message>
+        <source>Controls ?</source>
+        <translation>Kontroller ?</translation>
     </message>
 </context>
 <context>
@@ -10254,6 +10343,10 @@ bir harita seç</translation>
         <source>Choose a dispatch to review its field orders.</source>
         <translation>Saha emirlerini incelemek için bir sevk yazısı seç.</translation>
     </message>
+    <message>
+        <source>%1 / %2</source>
+        <translation>%1 / %2</translation>
+    </message>
 </context>
 <context>
     <name>Nations</name>
@@ -11552,10 +11645,6 @@ Right-click to cancel.</source>
         <translation>Müttefik komutanlarından bu yapıyı tutmak için adam göndermelerini iste. Ayıracak adamı olan tedbirli bir komutan kabul eder, kendi ordugâhı tehdit altındaki ise reddeder.</translation>
     </message>
     <message>
-        <source>That request has already been withdrawn.</source>
-        <translation>Bu istek zaten geri çekildi.</translation>
-    </message>
-    <message>
         <source>Not enough %1 to give.</source>
         <translation>Verecek kadar %1 yok.</translation>
     </message>
@@ -11898,6 +11987,26 @@ Right-click to cancel.</source>
         <source>Loaded, but &apos;%1&apos; could not be read, so wildlife, undead zones and cursed veins were not restored.</source>
         <translation>Yüklendi, ancak &apos;%1&apos; okunamadı; yaban hayatı, ölümsüz bölgeleri ve lanetli damarlar geri yüklenmedi.</translation>
     </message>
+    <message>
+        <source>Control groups</source>
+        <translation>Kontrol grupları</translation>
+    </message>
+    <message>
+        <source>Centre the camera on the selection</source>
+        <translation>Kamerayı seçime ortala</translation>
+    </message>
+    <message>
+        <source>Jumps the view to the selected troops. Double-click a portrait in the selection panel to jump to that unit.</source>
+        <translation>Görünümü seçili birliklere taşır. O birliğe gitmek için seçim panelindeki bir portreye çift tıklayın.</translation>
+    </message>
+    <message>
+        <source>Control group %1</source>
+        <translation>Kontrol grubu %1</translation>
+    </message>
+    <message>
+        <source>Selects the group. Hold Ctrl to store the current selection in it, hold Shift to add the group to the selection, and press twice quickly to centre the camera on it.</source>
+        <translation>Grubu seçer. Geçerli seçimi gruba kaydetmek için Ctrl&apos;yi, grubu seçime eklemek için Shift&apos;i basılı tutun; kamerayı gruba ortalamak için hızlıca iki kez basın.</translation>
+    </message>
 </context>
 <context>
     <name>RecruitCard</name>
@@ -12077,6 +12186,10 @@ Right-click to cancel.</source>
     <message>
         <source>BLADE DRAWN</source>
         <translation>KILIÇ ÇEKİLDİ</translation>
+    </message>
+    <message>
+        <source>NO TARGET IN REACH</source>
+        <translation>MENZİLDE HEDEF YOK</translation>
     </message>
 </context>
 <context>
@@ -12327,6 +12440,14 @@ Right-click to cancel.</source>
     <message>
         <source>Played %1</source>
         <translation>Oynanan: %1</translation>
+    </message>
+    <message>
+        <source>Quicksave %1</source>
+        <translation>Hızlı kayıt %1</translation>
+    </message>
+    <message>
+        <source>Autosave %1</source>
+        <translation>Otomatik kayıt %1</translation>
     </message>
 </context>
 <context>
@@ -12690,10 +12811,6 @@ Right-click to cancel.</source>
         <translation>Kamera döndürme hızı:</translation>
     </message>
     <message>
-        <source>Scales keyboard panning, zooming and rotation; drag and minimap movement stay unchanged.</source>
-        <translation>Klavyeyle kaydırmayı, yakınlaştırmayı ve döndürmeyi ölçekler; sürükleme ve mini harita hareketi değişmez.</translation>
-    </message>
-    <message>
         <source>Autosave</source>
         <translation>Otomatik kayıt</translation>
     </message>
@@ -12868,6 +12985,14 @@ Right-click to cancel.</source>
     <message>
         <source>Night</source>
         <translation>Gece Modu</translation>
+    </message>
+    <message>
+        <source>Camera speeds</source>
+        <translation>Kamera hızları</translation>
+    </message>
+    <message>
+        <source>The three speeds below scale keyboard panning, zooming and rotation. Mouse drag and minimap movement stay unchanged.</source>
+        <translation>Aşağıdaki üç hız, klavyeyle kaydırma, yakınlaştırma ve döndürmeyi ölçekler. Fareyle sürükleme ve mini harita hareketi değişmez.</translation>
     </message>
 </context>
 <context>

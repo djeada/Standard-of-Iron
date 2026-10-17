@@ -1095,19 +1095,25 @@ void main() {
                               alpine_aspect * 0.24 + terrain_cavity * 0.14 +
                               gully_mask * 0.08 + alpine_height_bias * 0.05 -
                               low_ground * 0.06 - ridge_mask * 0.06;
-    float alpine_snow_core = smoothstep(0.66, 0.72, alpine_snow_field);
-    float alpine_snow_thin = smoothstep(0.57, 0.67, alpine_snow_field);
+    float alpine_cover = clamp(u_snow_coverage, 0.0, 1.0);
+    float alpine_snow_shift = alpine_cover * alpine_cover * 0.40;
+    float alpine_snow_core = smoothstep(
+        0.66 - alpine_snow_shift, 0.72 - alpine_snow_shift, alpine_snow_field);
+    float alpine_snow_thin = smoothstep(
+        0.57 - alpine_snow_shift, 0.67 - alpine_snow_shift, alpine_snow_field);
     float alpine_snow_accumulation =
         max(alpine_snow_core, alpine_snow_thin * 0.38 * (1.15 - tuft_light * 0.70));
 
-    float alpine_snow_slope_retention = 1.0 - smoothstep(0.16, 0.42, slope);
+    float alpine_snow_slope_retention =
+        1.0 - smoothstep(0.16 + alpine_cover * 0.10, 0.42 + alpine_cover * 0.10, slope);
     float alpine_snow_shelter = 0.86 + terrain_cavity * 0.20;
-    float alpine_snow_mask =
-        clamp(alpine_snow_accumulation * u_snow_coverage *
-                  mix(0.68, 1.38, alpine_height_bias) * alpine_snow_slope_retention *
-                  alpine_snow_shelter,
-              0.0,
-              0.88);
+    float alpine_snow_depth = mix(alpine_cover, 1.0, alpine_cover * alpine_cover);
+    float alpine_snow_mask = clamp(
+        alpine_snow_accumulation * alpine_snow_depth *
+            mix(mix(0.68, 1.0, alpine_cover * alpine_cover), 1.38, alpine_height_bias) *
+            alpine_snow_slope_retention * alpine_snow_shelter,
+        0.0,
+        mix(0.88, 0.96, alpine_cover * alpine_cover));
     vec3 alpine_snow_color = u_snow_color * vec3(0.94, 0.97, 1.01) *
                              (0.96 + surface_detail * 0.030 + surface_grain * 0.018);
     alpine_snow_color = mix(alpine_snow_color * vec3(0.86, 0.85, 0.82),

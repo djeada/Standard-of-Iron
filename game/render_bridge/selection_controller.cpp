@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <utility>
 #include <vector>
 
 #include "../core/component_structures.h"
@@ -296,6 +297,59 @@ void SelectionController::select_selected_units_by_type(const QString& unit_type
   sync_selection_flags();
   play_selection_cue(m_selection_system->get_selected_units().size());
   emit selection_changed();
+}
+
+auto SelectionController::control_group_members(int group, int local_owner_id)
+    -> std::vector<Engine::Core::EntityID> {
+  std::vector<Engine::Core::EntityID> alive;
+  if (m_selection_system == nullptr || m_world == nullptr) {
+    return alive;
+  }
+  for (const auto id : m_selection_system->control_group(group)) {
+    const auto* unit = m_world->try_get<Engine::Core::UnitComponent>(id);
+    if (unit != nullptr && unit->health > 0 && unit->owner_id == local_owner_id) {
+      alive.push_back(id);
+    }
+  }
+  m_selection_system->set_control_group(group, alive);
+  return alive;
+}
+
+auto SelectionController::assign_control_group(int group,
+                                               int local_owner_id) -> std::size_t {
+  if (m_selection_system == nullptr || m_world == nullptr ||
+      !Game::Session::SelectionService::is_control_group(group)) {
+    return 0;
+  }
+  std::vector<Engine::Core::EntityID> members;
+  for (const auto id : m_selection_system->get_selected_units()) {
+    const auto* unit = m_world->try_get<Engine::Core::UnitComponent>(id);
+    if (unit != nullptr && unit->health > 0 && unit->owner_id == local_owner_id) {
+      members.push_back(id);
+    }
+  }
+  const std::size_t count = members.size();
+  m_selection_system->set_control_group(group, std::move(members));
+  return count;
+}
+
+auto SelectionController::recall_control_group(int group,
+                                               bool additive,
+                                               int local_owner_id) -> bool {
+  const auto members = control_group_members(group, local_owner_id);
+  if (members.empty()) {
+    return false;
+  }
+  if (!additive) {
+    m_selection_system->clear_selection();
+  }
+  for (const auto id : members) {
+    m_selection_system->select_unit(id);
+  }
+  sync_selection_flags();
+  play_selection_cue(m_selection_system->get_selected_units().size());
+  emit selection_changed();
+  return true;
 }
 
 auto SelectionController::has_units_selected() const -> bool {

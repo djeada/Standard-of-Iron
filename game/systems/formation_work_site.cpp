@@ -9,6 +9,26 @@
 #include "building_collision_registry.h"
 #include "formation_geometry_internal.h"
 
+namespace Game::Systems::FormationCombat {
+namespace {
+
+auto working_builder(const Engine::Core::Entity& entity)
+    -> const Engine::Core::BuilderProductionComponent* {
+  auto const* builder =
+      entity.get_component<Engine::Core::BuilderProductionComponent>();
+  return builder != nullptr && builder->in_progress && builder->at_construction_site
+             ? builder
+             : nullptr;
+}
+
+} // namespace
+
+auto crew_works_a_site(const Engine::Core::Entity& entity) -> bool {
+  return working_builder(entity) != nullptr;
+}
+
+} // namespace Game::Systems::FormationCombat
+
 namespace Game::Systems::FormationCombat::Detail {
 namespace {
 
@@ -18,9 +38,8 @@ constexpr float k_work_site_clearance = 0.35F;
 
 auto work_site_for(const Engine::Core::Entity& entity,
                    const Engine::Core::TransformComponent& transform) -> WorkSite {
-  auto const* builder =
-      entity.get_component<Engine::Core::BuilderProductionComponent>();
-  if (builder == nullptr || !builder->in_progress || !builder->at_construction_site) {
+  auto const* builder = working_builder(entity);
+  if (builder == nullptr) {
     return {};
   }
   WorkSite site;

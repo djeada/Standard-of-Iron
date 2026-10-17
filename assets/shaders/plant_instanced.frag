@@ -15,6 +15,8 @@ in vec3 v_tangent;
 in vec3 v_bitangent;
 in vec3 v_world_pos;
 
+uniform vec3 u_camera_pos;
+
 out vec4 frag_color;
 
 float h11(float n) {
@@ -113,6 +115,10 @@ vec2 sdf_grad(vec2 uv, float type_val, float seed, float step_uv) {
 }
 
 void main() {
+  if (soi_near_camera_keep(v_world_pos, u_camera_pos, gl_FragCoord.xy) < 0.5) {
+    discard;
+  }
+
   float type_val = (mod(floor(v_type + 0.5), 3.0) + 0.5) / 3.0;
   float sdf = plant_sdf(v_tex_coord, type_val, v_seed);
 

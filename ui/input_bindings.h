@@ -22,6 +22,8 @@ public:
   static constexpr char kContextGlobal[] = "global";
   static constexpr char kContextRts[] = "rts";
   static constexpr char kContextCommander[] = "commander";
+  static constexpr char kControlGroupPrefix[] = "rts.control_group_";
+  static constexpr int kControlGroupCount = 9;
 
   enum Slot {
     Primary = 0,
@@ -102,6 +104,10 @@ public:
   actions_for_mouse(int button, int modifiers, const QString& context) const;
 
   Q_INVOKABLE [[nodiscard]] int canonical_key_for(const QString& action_id) const;
+
+  Q_INVOKABLE [[nodiscard]] static int control_group_of(const QString& action_id);
+
+  Q_INVOKABLE [[nodiscard]] static int digit_row_key(int key, quint32 native_scan_code);
 
   [[nodiscard]] static auto parse(const QString& shortcut) -> Chord;
   [[nodiscard]] static auto format(const Chord& chord) -> QString;

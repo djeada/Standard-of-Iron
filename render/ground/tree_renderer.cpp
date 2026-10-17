@@ -103,6 +103,8 @@ void TreeRenderer::configure(const Game::Map::TerrainHeightMap& height_map,
   params.time = 0.0F;
   params.wind_strength = wind_profile.sway_strength;
   params.wind_speed = wind_profile.sway_speed;
+  params.snow_coverage = std::clamp(
+      Game::Map::make_climate_profile(m_biome_settings).snow_coverage, 0.0F, 1.0F);
 
   rebuild_instances();
 }

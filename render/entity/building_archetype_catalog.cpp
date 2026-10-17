@@ -105,6 +105,9 @@ auto build_catalog() -> std::vector<BuildingArchetypeCatalogEntry> {
                        &Carthage::build_temple_desc,
                        &Carthage::build_farm_desc);
 
+  out.push_back({"carthage_barracks_palms", &Carthage::build_barracks_palms_desc});
+  out.push_back({"carthage_barracks_firs", &Carthage::build_barracks_firs_desc});
+
   add_nation_walls(out, "roman", Roman::wall_palette(), Roman::wall_geometry());
   add_nation_walls(
       out, "carthage", Carthage::wall_palette(), Carthage::wall_geometry());

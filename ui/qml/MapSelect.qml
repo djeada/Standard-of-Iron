@@ -464,9 +464,92 @@ Item {
         selected_map_index = index;
         selected_map_data = get_map_data(index);
         selected_map_path = selected_map_data ? (selected_map_data.path || selected_map_data.file || "") : "";
+        let carried = snapshot_roster();
         map_slots = player_ids_for_map(selected_map_data);
         refresh_map_bases();
-        initialize_players(selected_map_data);
+        if (carried.length > 0)
+            carry_players(selected_map_data, carried);
+        else
+            initialize_players(selected_map_data);
+    }
+
+    readonly property var roster_roles: ["player_id", "playerName", "colorIndex", "colorHex", "colorName", "colorPicked", "team_id", "teamIcon", "nationId", "nationName", "commanderTroop", "commanderName", "commanderRole", "commanderBonus", "commanderAura", "commanderRally", "isHuman", "isEnabled", "difficulty", "baseKey", "baseName"]
+
+    function snapshot_roster() {
+        let rows = [];
+        for (let i = 0; i < players_model.count; i++) {
+            let seat = players_model.get(i);
+            let row = {};
+            for (let r = 0; r < roster_roles.length; r++)
+                row[roster_roles[r]] = seat[roster_roles[r]];
+            rows.push(row);
+        }
+        return rows;
+    }
+
+    function carry_players(mapData, rows) {
+        let playerIds = map_slots.map(function (id) {
+                return Number(id);
+            });
+        let human = null;
+        let cpus = [];
+        for (let i = 0; i < rows.length; i++) {
+            if (rows[i].isHuman && human === null)
+                human = rows[i];
+            else if (!rows[i].isHuman)
+                cpus.push(rows[i]);
+        }
+        if (!mapData || playerIds.length === 0 || human === null) {
+            initialize_players(mapData);
+            return;
+        }
+        cpus = cpus.slice(0, playerIds.length - 1);
+        let seats = [human].concat(cpus);
+        let used = [];
+        let ids = [];
+        for (let k = 0; k < seats.length; k++) {
+            let wanted = Number(seats[k].player_id);
+            let keep = playerIds.indexOf(wanted) !== -1 && used.indexOf(wanted) === -1;
+            ids.push(keep ? wanted : -1);
+            if (keep)
+                used.push(wanted);
+        }
+        for (let m = 0; m < seats.length; m++) {
+            if (ids[m] !== -1)
+                continue;
+            for (let n = 0; n < playerIds.length; n++) {
+                if (used.indexOf(playerIds[n]) === -1) {
+                    ids[m] = playerIds[n];
+                    used.push(playerIds[n]);
+                    break;
+                }
+            }
+        }
+        let teamCount = Math.max(2, Math.min(8, seats.length));
+        players_model.clear();
+        focused_player_index = 0;
+        for (let s = 0; s < seats.length; s++) {
+            let row = Object.assign({}, seats[s]);
+            let team = Math.max(0, Math.min(teamCount - 1, Number(row.team_id || 0)));
+            row.player_id = ids[s];
+            if (!row.isHuman)
+                row.playerName = qsTr("CPU %1").arg(Design.Numerals.roman(ids[s]));
+            row.team_id = team;
+            row.teamIcon = Theme.teamIcons[team + 1];
+            row.baseKey = "";
+            row.baseName = "";
+            players_model.append(row);
+        }
+        if (typeof game !== "undefined" && Number(game.selected_player_id) !== ids[0])
+            game.selected_player_id = ids[0];
+        if (players_model.count === 1 && playerIds.length > 1)
+            add_cpu();
+        ensure_focus_is_seated();
+        reseat_bases();
+        refresh_commander_dossier();
+        roster_revision++;
+        update_validation_error();
+        refresh_map_preview();
     }
 
     function initialize_players(mapData) {
@@ -533,7 +616,13 @@ Item {
         let usedColors = [];
         for (let k = 0; k < players_model.count; k++)
             usedColors.push(players_model.get(k).colorIndex);
-        let defaultTeamId = players_model.count > 0 ? 1 : 0;
+        let teamSizes = [0, 0];
+        for (let t = 0; t < players_model.count; t++) {
+            let seatTeam = players_model.get(t).team_id;
+            if (seatTeam === 0 || seatTeam === 1)
+                teamSizes[seatTeam]++;
+        }
+        let defaultTeamId = players_model.count > 0 && teamSizes[0] < teamSizes[1] ? 0 : (players_model.count > 0 ? 1 : 0);
         let defaultNation = nation_entry_at(players_model.count);
         let colorIdx = preferred_color_index(defaultNation.id, usedColors);
         let defaultCommander = least_used_commander_entry(defaultNation.id, -1);
@@ -1063,7 +1152,7 @@ Item {
                             }
 
                             Design.IronBadge {
-                                text: Design.Numerals.roman(list.count)
+                                text: Design.Numerals.grouped(list.count)
                                 visible: list.count > 0
                             }
                         }
@@ -1193,7 +1282,7 @@ Item {
                                         Design.IronBadge {
                                             id: slot_badge
 
-                                            text: Design.Icons.population + " " + Design.Numerals.roman(map_card.slot_count)
+                                            text: Design.Icons.population + " " + Design.Numerals.grouped(map_card.slot_count)
                                             tone: map_card.current ? Theme.accentBright : Theme.textSub
                                             visible: map_card.slot_count > 0
 
@@ -1374,7 +1463,7 @@ Item {
                                         width: 92
                                         height: implicitHeight
                                         caption: qsTr("Slots")
-                                        value: Design.Numerals.roman(map_slots.length)
+                                        value: Design.Numerals.grouped(map_slots.length)
                                         tooltip_text: qsTr("Player slots this battlefield was authored for")
                                     }
 
@@ -1382,7 +1471,7 @@ Item {
                                         width: 92
                                         height: implicitHeight
                                         caption: qsTr("In play")
-                                        value: Design.Numerals.roman(roster_revision >= 0 ? enabled_player_count() : 0)
+                                        value: Design.Numerals.grouped(roster_revision >= 0 ? enabled_player_count() : 0)
                                         outline: validation_error === "" ? Theme.thumbBr : Theme.removeColor
                                         tooltip_text: qsTr("Players that will take the field")
                                     }
@@ -1393,7 +1482,7 @@ Item {
                                         width: 92
                                         height: implicitHeight
                                         caption: qsTr("Sides")
-                                        value: Design.Numerals.roman(sides)
+                                        value: Design.Numerals.grouped(sides)
                                         outline: (sides >= 2 || map_is_solo_playable(selected_map_data)) ? Theme.thumbBr : Theme.removeColor
                                         tooltip_text: qsTr("Distinct teams among the players in play")
                                     }

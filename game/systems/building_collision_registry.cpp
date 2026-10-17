@@ -126,7 +126,7 @@ auto BuildingCollisionRegistry::get_building_size(std::string_view building_type
 
 auto BuildingCollisionRegistry::get_building_body(const std::string& building_type)
     -> BuildingCollisionRegistry::BuildingBody {
-  if (auto const extent = Game::Units::find_building_body_extent(building_type);
+  if (auto const extent = Game::Units::find_building_body_world_extent(building_type);
       extent.has_value()) {
     return {extent->width, extent->depth, extent->offset_x, extent->offset_z};
   }

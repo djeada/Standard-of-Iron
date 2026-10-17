@@ -9,6 +9,7 @@
 #include <unordered_map>
 
 #include "game/core/component_core.h"
+#include "game/map/terrain_service.h"
 #include "game/systems/nation_id.h"
 #include "game/visuals/building_asset_key.h"
 #include "render/geom/transforms.h"
@@ -61,6 +62,17 @@ auto resolve_building_health_ratio(const DrawContext& ctx) -> float {
   }
 
   return std::clamp(unit->health / float(std::max(1, unit->max_health)), 0.0F, 1.0F);
+}
+
+auto building_greenery_is_cold(const DrawContext& ctx) -> bool {
+  constexpr float k_cold_snow_coverage = 0.30F;
+  const auto* terrain = ctx.world_view.terrain();
+  if (terrain == nullptr) {
+    return false;
+  }
+  const auto& biome = terrain->biome_settings();
+  return biome.ground_type == Game::Map::GroundType::AlpineMix ||
+         biome.snow_coverage >= k_cold_snow_coverage;
 }
 
 auto resolve_building_state(const DrawContext& ctx) -> BuildingState {

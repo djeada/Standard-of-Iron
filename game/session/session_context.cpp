@@ -86,6 +86,8 @@ SessionContext::SessionContext(const Config& config)
   services.commands = &m_state->commands;
 
   m_state->building_collision.bind_navigation(&m_state->navigation);
+  m_state->world.add_world_cleared_observer(
+      [state = m_state.get()]() { state->alliance.clear(); });
 
   bind_world_services(m_state->world, &m_state->services);
 }
@@ -281,6 +283,7 @@ void SessionContext::reset() {
   m_state->stats.clear();
   m_state->troop_counts.clear();
   m_state->selection.clear_selection();
+  m_state->selection.clear_control_groups();
   m_state->building_collision.clear();
   m_state->navigation.clear();
   m_state->army_formations.clear();

@@ -203,6 +203,9 @@ void WaterPipeline::cache_road_uniforms() {
       m_road_shader->optional_uniform_handle("u_explored_alpha");
   m_road_uniforms.has_visibility =
       m_road_shader->optional_uniform_handle("u_has_visibility");
+  m_road_uniforms.snow_coverage =
+      m_road_shader->optional_uniform_handle("u_snow_coverage");
+  m_road_uniforms.snow_color = m_road_shader->optional_uniform_handle("u_snow_color");
 }
 
 } // namespace Render::GL::BackendPipelines

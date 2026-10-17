@@ -1,12 +1,16 @@
 #include <algorithm>
+#include <cmath>
 #include <gtest/gtest.h>
 #include <memory>
+#include <numbers>
 #include <vector>
 
 #include "game/command/command.h"
 #include "game/command/command_queue.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
+#include "game/formation/army_formation_registry.h"
+#include "game/game_config.h"
 #include "game/map/map_definition.h"
 #include "game/map/map_transformer.h"
 #include "game/map/terrain_service.h"
@@ -16,6 +20,7 @@
 #include "game/systems/default_content.h"
 #include "game/systems/economy/build_site.h"
 #include "game/systems/economy/construction_cost_catalog.h"
+#include "game/systems/formation_combat_geometry.h"
 #include "game/systems/navigation/nav_grid.h"
 #include "game/systems/navigation/pathfinding.h"
 #include "game/systems/owner_registry.h"
@@ -462,6 +467,180 @@ TEST_F(BuilderCrewsTest, AHalfCrewGathersFarSlowerThanAWholeOne) {
       << "; splitting a crew must not multiply what it gathers";
   EXPECT_GT(Game::Systems::construction_build_time("cut_tree"), 11.0F)
       << "gathering takes twice as long as it did";
+}
+
+TEST_F(BuilderCrewsTest, ACrewDeployedWithTheArmyLeavesItToRaiseAHouse) {
+  const EntityID crew = spawn_builder(30, 48);
+  const std::vector<EntityID> army{crew, spawn_squad(30, 52), spawn_squad(30, 44)};
+  for (const auto id : army) {
+    ASSERT_NE(id, 0U);
+  }
+  auto& world = m_session->world();
+  Game::Command::DeployFormation deploy;
+  deploy.units = army;
+  deploy.anchor = Game::Systems::NavGrid::grid_to_world({34, 48});
+  deploy.spacing = Game::GameConfig::instance().gameplay().formation_spacing_default;
+  ASSERT_TRUE(Game::Command::submit(
+      world, Game::Command::Source::LocalPlayer, k_player, deploy));
+  run(15.0);
+  auto& registry = Game::Formation::ArmyFormationRegistry::for_world(world);
+  ASSERT_NE(registry.group_of(crew), Game::Formation::k_invalid_group)
+      << "the crew must start in the army's formation like the tutorial's";
+
+  auto& economy = m_session->economy();
+  economy.add(k_player, Game::Systems::ResourceType::Wood, 500);
+  economy.add(k_player, Game::Systems::ResourceType::Stone, 500);
+  const int wood_before = economy.get(k_player, Game::Systems::ResourceType::Wood);
+  const QVector3D site = Game::Systems::NavGrid::grid_to_world({34, 66});
+  ASSERT_TRUE(Game::Command::submit(
+      world,
+      Game::Command::Source::LocalPlayer,
+      k_player,
+      Game::Command::StartConstruction{
+          .units = {crew}, .construction_type = "home", .site = site}));
+
+  const double tick = m_session->clock().tick_seconds();
+  bool worked = false;
+  for (double elapsed = 0.0; elapsed < 90.0; elapsed += tick) {
+    step();
+    const auto* builder = builder_of(crew);
+    worked = worked || (builder->at_construction_site && builder->in_progress);
+    if (count_of(Game::Units::SpawnType::Home) > 0) {
+      break;
+    }
+  }
+  const auto* builder = builder_of(crew);
+  EXPECT_TRUE(worked) << "the crew never reached its site; fault "
+                      << static_cast<int>(builder->fault);
+  EXPECT_EQ(count_of(Game::Units::SpawnType::Home), 1)
+      << "a paid-for house was never raised";
+  EXPECT_LT(economy.get(k_player, Game::Systems::ResourceType::Wood), wood_before);
+  EXPECT_EQ(registry.group_of(crew), Game::Formation::k_invalid_group)
+      << "the army kept a builder sent to work as one of its slots";
+}
+
+TEST_F(BuilderCrewsTest, AnAbandonedHouseRefundsWhatTheOrderPaid) {
+  const EntityID crew = spawn_builder(30, 48);
+  ASSERT_NE(crew, 0U);
+  auto& world = m_session->world();
+  auto& economy = m_session->economy();
+  economy.add(k_player, Game::Systems::ResourceType::Wood, 500);
+  economy.add(k_player, Game::Systems::ResourceType::Stone, 500);
+  const int wood_before = economy.get(k_player, Game::Systems::ResourceType::Wood);
+  const int stone_before = economy.get(k_player, Game::Systems::ResourceType::Stone);
+  const QVector3D site = Game::Systems::NavGrid::grid_to_world({40, 48});
+  ASSERT_TRUE(Game::Command::submit(
+      world,
+      Game::Command::Source::LocalPlayer,
+      k_player,
+      Game::Command::StartConstruction{
+          .units = {crew}, .construction_type = "home", .site = site}));
+  step();
+  ASSERT_LT(economy.get(k_player, Game::Systems::ResourceType::Wood), wood_before)
+      << "the order never paid for the house";
+
+  const double tick = m_session->clock().tick_seconds();
+  for (double elapsed = 0.0; elapsed < 30.0 && !builder_of(crew)->at_construction_site;
+       elapsed += tick) {
+    step();
+  }
+  ASSERT_TRUE(builder_of(crew)->at_construction_site);
+  auto* transform = world.try_get<Engine::Core::TransformComponent>(crew);
+  const QVector3D away = Game::Systems::NavGrid::grid_to_world({20, 48});
+  transform->position.x = away.x();
+  transform->position.z = away.z();
+  step();
+
+  const auto* builder = builder_of(crew);
+  EXPECT_FALSE(builder->has_construction_site);
+  EXPECT_EQ(builder->fault, Engine::Core::BuilderTaskFault::Interrupted)
+      << "the player must be told the house was abandoned";
+  EXPECT_EQ(economy.get(k_player, Game::Systems::ResourceType::Wood), wood_before)
+      << "an abandoned house kept the wood it was paid";
+  EXPECT_EQ(economy.get(k_player, Game::Systems::ResourceType::Stone), stone_before);
+
+  ASSERT_TRUE(Game::Command::submit(
+      world,
+      Game::Command::Source::LocalPlayer,
+      k_player,
+      Game::Command::StartConstruction{
+          .units = {crew}, .construction_type = "home", .site = site}));
+  step();
+  ASSERT_LT(economy.get(k_player, Game::Systems::ResourceType::Wood), wood_before);
+  const QVector3D tree_spot = Game::Systems::NavGrid::grid_to_world({20, 30});
+  ASSERT_TRUE(Game::Command::submit(
+      world,
+      Game::Command::Source::LocalPlayer,
+      k_player,
+      Game::Command::StartHarvest{.units = {crew},
+                                  .construction_type = "cut_tree",
+                                  .resource_target =
+                                      tree_at(tree_spot.x(), tree_spot.z()),
+                                  .site = tree_spot}));
+  step();
+  EXPECT_EQ(economy.get(k_player, Game::Systems::ResourceType::Wood), wood_before)
+      << "sending the crew to other work before the house rose kept its wood";
+}
+
+TEST_F(BuilderCrewsTest, WorkingMenFaceTheirSiteEvenWhenTheCrewHasFacedAbout) {
+  auto& world = m_session->world();
+  auto& economy = m_session->economy();
+  economy.add(k_player, Game::Systems::ResourceType::Wood, 2000);
+  economy.add(k_player, Game::Systems::ResourceType::Stone, 2000);
+  const double tick = m_session->clock().tick_seconds();
+  bool saw_about_faced_crew_at_work = false;
+  for (const bool faced_about : {false, true}) {
+    SCOPED_TRACE(faced_about ? "faced about" : "facing forward");
+    const int lane = faced_about ? 30 : 66;
+    const EntityID crew = spawn_builder(30, lane);
+    ASSERT_NE(crew, 0U);
+    step();
+    if (faced_about) {
+      ASSERT_TRUE(
+          Game::Systems::FormationCombat::face_about_in_place(*world.get_entity(crew)));
+    }
+    const QVector3D site = Game::Systems::NavGrid::grid_to_world({42, lane});
+    ASSERT_TRUE(Game::Command::submit(
+        world,
+        Game::Command::Source::LocalPlayer,
+        k_player,
+        Game::Command::StartConstruction{
+            .units = {crew}, .construction_type = "home", .site = site}));
+    double worked_for = 0.0;
+    for (double elapsed = 0.0; elapsed < 40.0 && worked_for < 4.0; elapsed += tick) {
+      step();
+      const auto* builder = builder_of(crew);
+      if (builder->at_construction_site && builder->in_progress) {
+        worked_for += tick;
+      }
+    }
+    ASSERT_GE(worked_for, 4.0) << "the crew never settled to work";
+    const auto* traversal =
+        world.try_get<Engine::Core::UnitTraversalLayoutStateComponent>(crew);
+    saw_about_faced_crew_at_work = saw_about_faced_crew_at_work ||
+                                   (traversal != nullptr && traversal->about_faced);
+
+    const auto* formation =
+        world.try_get<Engine::Core::FormationPresentationComponent>(crew);
+    ASSERT_NE(formation, nullptr);
+    int checked = 0;
+    for (const auto& man : formation->soldiers) {
+      if (!man.alive || !man.world_motion_valid) {
+        continue;
+      }
+      const float to_site = std::atan2(site.x() - man.world_x, site.z() - man.world_z) *
+                            180.0F / std::numbers::pi_v<float>;
+      float off = std::fmod(std::fabs(man.world_yaw - to_site), 360.0F);
+      off = off > 180.0F ? 360.0F - off : off;
+      EXPECT_LT(off, 60.0F) << "man " << man.slot_index << " at (" << man.world_x
+                            << ", " << man.world_z << ") faces " << off
+                            << " degrees away from the house he is building";
+      ++checked;
+    }
+    EXPECT_GT(checked, 0);
+  }
+  EXPECT_TRUE(saw_about_faced_crew_at_work)
+      << "the case under test never had a faced-about crew at work";
 }
 
 } // namespace

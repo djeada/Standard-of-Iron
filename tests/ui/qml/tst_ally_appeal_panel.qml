@@ -19,6 +19,8 @@ TestCase {
         testCase.answers = [];
         testCase.looks = [];
         testCase.accept_answers = true;
+        engine.paused = false;
+        engine.time_scale = 1;
     }
 
     function appeal(id, kind) {
@@ -118,8 +120,38 @@ TestCase {
         panel.destroy();
     }
 
+    function test_the_countdown_follows_game_time() {
+        var panel = make_panel();
+        engine.time_scale = 3;
+        engine.ally_appeal_opened(appeal(11, "attack"));
+        tryCompare(panel, "visible", true);
+        var card = cards(panel)[0];
+        tryVerify(function () {
+                return card.remaining <= 42;
+            }, 2500, "the ally withdraws in game seconds, so a faster game drains the bar faster");
+        engine.paused = true;
+        var held = card.remaining;
+        wait(1300);
+        compare(card.remaining, held, "a paused game freezes the countdown");
+        panel.destroy();
+    }
+
+    function test_cards_do_not_survive_the_match_they_were_made_in() {
+        var panel = make_panel();
+        engine.ally_appeal_opened(appeal(12, "attack"));
+        engine.ally_appeal_opened(appeal(13, "resources"));
+        tryCompare(panel, "visible", true);
+        engine.match_ended();
+        compare(cards(panel).length, 0, "a load or a new match must not inherit live cards");
+        verify(!panel.visible);
+        panel.destroy();
+    }
+
     QtObject {
         id: engine
+
+        property bool paused: false
+        property real time_scale: 1
 
         property QtObject production: QtObject {
             function answer_ally_appeal(id, accept) {
@@ -135,6 +167,7 @@ TestCase {
 
         signal ally_appeal_opened(var appeal)
         signal ally_appeal_closed(var appeal_id)
+        signal match_ended
     }
 
     Component {

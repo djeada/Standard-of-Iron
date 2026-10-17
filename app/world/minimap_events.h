@@ -1,5 +1,8 @@
 #pragma once
 
+#include <cstdint>
+#include <unordered_map>
+
 #include "game/core/event_manager.h"
 
 class MinimapManager;
@@ -17,6 +20,20 @@ class MinimapViewModel;
 }
 
 namespace App::World {
+
+class TroopsUnderAttackAlarm {
+public:
+  static constexpr float k_cell_metres = 24.0F;
+  static constexpr double k_quiet_seconds = 20.0;
+  static constexpr double k_cooldown_seconds = 30.0;
+
+  [[nodiscard]] auto note_hit(float world_x, float world_z, double now_seconds) -> bool;
+  void reset();
+
+private:
+  std::unordered_map<std::int64_t, double> m_last_hit_by_cell;
+  double m_last_alarm_seconds = -1.0e9;
+};
 
 struct MinimapEventSources {
   MinimapManager* manager = nullptr;
@@ -43,8 +60,14 @@ private:
   [[nodiscard]] auto minimap_ready() const -> bool;
   void publish_landmarks();
 
+  void sound_troops_under_attack(const Engine::Core::CombatHitEvent& event,
+                                 float world_x,
+                                 float world_z);
+
   MinimapEventSources m_sources;
   float m_landmark_poll_accumulator = 0.0F;
+  double m_elapsed_seconds = 0.0;
+  TroopsUnderAttackAlarm m_troops_alarm;
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>
       m_unit_died_subscription;
   Engine::Core::ScopedEventSubscription<Engine::Core::UndeadZoneAwakenedEvent>

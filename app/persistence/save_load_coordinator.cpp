@@ -17,6 +17,7 @@
 #include "game/map/map_transformer.h"
 #include "game/map/terrain_service.h"
 #include "game/mission/campaign_manager.h"
+#include "game/mission/mission_wave_runtime.h"
 #include "game/render_bridge/game_state_serializer.h"
 #include "game/save/serialization.h"
 #include "game/session/deterministic_rng.h"
@@ -303,7 +304,10 @@ auto SaveLoadCoordinator::load_from_slot(const LoadFromSlotContext& context) con
   }
 
   if (context.restore_mission_waves) {
-    context.restore_mission_waves(metadata.value("mission_waves").toObject());
+    QJsonObject wave_state = metadata.value("mission_waves").toObject();
+    wave_state.insert(QLatin1String(Game::Mission::MissionWaveRuntime::k_play_time_key),
+                      record.play_time_seconds);
+    context.restore_mission_waves(wave_state);
   }
   if (context.restore_mission_stages) {
     context.restore_mission_stages(metadata.value("mission_stages").toObject());

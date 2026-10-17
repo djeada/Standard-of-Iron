@@ -103,6 +103,8 @@ public:
     GL::Shader::UniformHandle visibility_tile_size{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle explored_alpha{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle has_visibility{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle snow_coverage{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle snow_color{GL::Shader::InvalidUniform};
   };
 
   GL::Shader* m_water_shader = nullptr;

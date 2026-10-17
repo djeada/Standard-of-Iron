@@ -10,6 +10,7 @@
 #include "game/render_bridge/selection_controller.h"
 #include "game/session/selection_service.h"
 #include "game/session/session_context.h"
+#include "game/systems/alliance_board.h"
 #include "game/systems/economy/marketplace_system.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/player_resource_registry.h"
@@ -121,6 +122,47 @@ TEST_F(ProductionViewModelTradeTest, ResourcesGoToAnAllyAndARequestIsQueuedForIt
   EXPECT_EQ(asked.front().requester, 1);
   EXPECT_EQ(asked.front().resource, ResourceType::Gold);
   EXPECT_EQ(asked.front().amount, 50);
+}
+
+TEST_F(ProductionViewModelTradeTest, AnsweringAnAppealThatLapsedClosesTheCardQuietly) {
+  m_session.owners().register_owner_with_id(3, Game::Systems::OwnerType::AI, "Hanno");
+  m_session.owners().set_owner_team(1, 1);
+  m_session.owners().set_owner_team(3, 1);
+  auto& economy = m_session.economy();
+  economy.set(1, ResourceType::Wood, 300);
+  economy.set(3, ResourceType::Wood, 0);
+  int refusals = 0;
+  QObject::connect(m_view_model.get(),
+                   &App::ViewModels::ProductionViewModel::refused,
+                   [&refusals](const QString&) { ++refusals; });
+
+  auto& board = m_session.alliance();
+  const auto lapsed = board.next_appeal_id();
+  board.record_appeal({.appeal_id = lapsed,
+                       .from_ally = 3,
+                       .to_owner = 1,
+                       .kind = Game::Systems::AllyAppealKind::Resources,
+                       .resource = ResourceType::Wood,
+                       .amount = 100});
+  board.close_appeal(lapsed);
+  EXPECT_TRUE(m_view_model->answer_ally_appeal(lapsed, true))
+      << "a lapsed card is done with: the panel must drop it";
+  EXPECT_EQ(refusals, 0) << "no blocking error for an appeal that already closed";
+  m_session.commands().drain(m_session.world(), 1);
+  EXPECT_EQ(economy.get(1, ResourceType::Wood), 300) << "nothing is given for it";
+
+  const auto live = board.next_appeal_id();
+  board.record_appeal({.appeal_id = live,
+                       .from_ally = 3,
+                       .to_owner = 1,
+                       .kind = Game::Systems::AllyAppealKind::Resources,
+                       .resource = ResourceType::Wood,
+                       .amount = 100});
+  EXPECT_TRUE(m_view_model->answer_ally_appeal(live, true));
+  m_session.commands().drain(m_session.world(), 1);
+  EXPECT_EQ(economy.get(1, ResourceType::Wood), 200);
+  EXPECT_EQ(economy.get(3, ResourceType::Wood), 100);
+  EXPECT_EQ(refusals, 0);
 }
 
 } // namespace

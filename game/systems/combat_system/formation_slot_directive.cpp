@@ -35,6 +35,7 @@ constexpr float k_contact_turn_degrees = 180.0F;
 constexpr float k_contact_yaw_hold_seconds = 0.6F;
 constexpr float k_disengage_turn_degrees = 120.0F;
 constexpr float k_weapon_contact_distance = 0.72F;
+constexpr float k_facade_body_gap_fraction = 0.5F;
 
 struct SlotContext {
   const FormationCombat::SoldierSlot& original;
@@ -61,8 +62,11 @@ void keep_directive_off_facade(const EntityFrame& frame, Soldier& directive) {
       local_to_world(*frame.actor, directive.local_x, directive.local_z);
   float const facade_gap = QVector3D::dotProduct(rendered - structure.facade.point,
                                                  structure.facade.outward_normal);
-  if (facade_gap < 0.0F) {
-    QVector3D const correction = structure.facade.outward_normal * (-facade_gap);
+  float const body_gap = structure_attack_profile(&frame.entity).contact_clearance *
+                         k_facade_body_gap_fraction;
+  if (facade_gap < body_gap) {
+    QVector3D const correction =
+        structure.facade.outward_normal * (body_gap - facade_gap);
     auto const [correction_x, correction_z] =
         world_vector_to_local(*frame.actor, correction.x(), correction.z());
     directive.local_x += correction_x;

@@ -18,6 +18,7 @@
 #include "game/systems/navigation/nav_grid.h"
 #include "game/systems/navigation/pathfinding.h"
 #include "game/systems/navigation/terrain_alignment_system.h"
+#include "game/systems/rpg_combat_system/rpg_damage_resolver.h"
 #include "game/systems/rpg_combat_system/rpg_targeting.h"
 #include "render/entity/registry.h"
 #include "render/gl/humanoid/animation/animation_inputs.h"
@@ -1082,6 +1083,69 @@ TEST_F(CommanderControlControllerTest, SecondWindRestoresPostureAndStamina) {
   EXPECT_GT(commander_data->second_wind_cooldown_remaining, 0.0F);
 }
 
+TEST_F(CommanderControlControllerTest, LeavingAndReenteringKeepsAbilityCooldowns) {
+  Engine::Core::World world;
+  auto* commander = create_commander(world, 0.0F, 0.0F);
+  ASSERT_NE(commander, nullptr);
+  auto* commander_data = commander->get_component<Engine::Core::CommanderComponent>();
+  ASSERT_NE(commander_data, nullptr);
+
+  App::Core::CommanderModeCoordinator coordinator;
+  CommanderControlController controller;
+  Render::GL::Camera camera;
+  App::Core::CommanderModeContext const context{.world = &world,
+                                                .commander = commander,
+                                                .commander_camera = &camera,
+                                                .commander_control = &controller,
+                                                .controlled_commander_id =
+                                                    commander->get_id(),
+                                                .local_owner_id = 1};
+  ASSERT_TRUE(coordinator.enter_commander_control_mode(context).entered);
+  controller.reset();
+  controller.request_second_wind();
+  ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.016F));
+  float const spent = commander_data->second_wind_cooldown_remaining;
+  ASSERT_GT(spent, 1.0F);
+
+  auto* stamina = commander->get_component<Engine::Core::StaminaComponent>();
+  ASSERT_NE(stamina, nullptr);
+  stamina->stamina = 20.0F;
+  commander_data->posture = 90.0F;
+
+  static_cast<void>(coordinator.exit_commander_control_mode(context));
+  controller.reset();
+  ASSERT_TRUE(coordinator.enter_commander_control_mode(context).entered);
+  controller.reset();
+  EXPECT_FLOAT_EQ(stamina->stamina, 20.0F)
+      << "toggling direct control refilled stamina";
+  EXPECT_FLOAT_EQ(commander_data->posture, 90.0F)
+      << "toggling direct control wiped a nearly broken guard";
+  ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.016F));
+  EXPECT_GT(commander_data->second_wind_cooldown_remaining, spent - 0.1F)
+      << "toggling direct control refreshed second wind";
+
+  float const before = commander_data->posture = 40.0F;
+  controller.request_second_wind();
+  ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.016F));
+  EXPECT_GT(commander_data->posture, before - 2.0F) << "second wind fired on cooldown";
+  EXPECT_STREQ(controller.last_refusal().action, "commander.ability_second_wind")
+      << "a refused ability must say which one, or its tile cannot react";
+}
+
+TEST_F(CommanderControlControllerTest, ALockOnWithNothingInReachIsReported) {
+  Engine::Core::World world;
+  auto* commander = create_commander(world, 0.0F, 0.0F);
+  ASSERT_NE(commander, nullptr);
+  commander->get_component<Engine::Core::CommanderComponent>()->fpv_controlled = true;
+
+  CommanderControlController controller;
+  auto const before = controller.last_refusal().sequence;
+  controller.cycle_lock_on_target(world, commander->get_id(), 1);
+  EXPECT_EQ(controller.last_refusal().sequence, before + 1U);
+  EXPECT_STREQ(controller.last_refusal().action, "commander.cycle_lock_on");
+  EXPECT_EQ(controller.locked_target_id(), 0U);
+}
+
 TEST_F(CommanderControlControllerTest, SecondaryActionActivatesCommanderGuard) {
   Engine::Core::World world;
   auto* commander = create_commander(world, 0.0F, 0.0F);
@@ -1098,7 +1162,7 @@ TEST_F(CommanderControlControllerTest, SecondaryActionActivatesCommanderGuard) {
   EXPECT_TRUE(guard->active);
 }
 
-TEST_F(CommanderControlControllerTest, CommanderRpgPoolStaysInPlayableBand) {
+TEST_F(CommanderControlControllerTest, DirectControlNeverMakesTheCommanderFrailer) {
   Engine::Core::World world;
   auto* commander = create_commander(world, 0.0F, 0.0F);
   ASSERT_NE(commander, nullptr);
@@ -1122,14 +1186,23 @@ TEST_F(CommanderControlControllerTest, CommanderRpgPoolStaysInPlayableBand) {
   auto* rpg = commander->get_component<Engine::Core::RpgHealthComponent>();
   ASSERT_NE(rpg, nullptr);
   EXPECT_TRUE(rpg->active);
+  EXPECT_GT(rpg->incoming_damage_scale, 0.0F);
+  EXPECT_LE(rpg->incoming_damage_scale, 1.0F);
 
-  ASSERT_GT(rpg->incoming_damage_scale, 0.0F);
-  auto const* commander_unit = commander->get_component<Engine::Core::UnitComponent>();
-  ASSERT_NE(commander_unit, nullptr);
-  float const effective_pool =
-      static_cast<float>(commander_unit->max_health) / rpg->incoming_damage_scale;
-  EXPECT_GE(effective_pool, 130.0F);
-  EXPECT_LE(effective_pool, 220.0F);
+  rpg->crit_chance = 0.0F;
+  rpg->armor = 0.0F;
+  constexpr int k_raw_damage = 40;
+  auto const result =
+      Game::Systems::RpgCombat::resolve_rpg_damage(&world, commander, k_raw_damage, 0);
+  EXPECT_LE(result.effective_damage, k_raw_damage);
+  EXPECT_GE(unit->health, 4200 - k_raw_damage);
+
+  rpg->incoming_damage_scale = 22.0F;
+  unit->health = 4200;
+  auto const legacy =
+      Game::Systems::RpgCombat::resolve_rpg_damage(&world, commander, k_raw_damage, 0);
+  EXPECT_LE(legacy.effective_damage, k_raw_damage)
+      << "a scale saved before the cap must not multiply incoming hits";
 }
 
 TEST_F(CommanderControlControllerTest,

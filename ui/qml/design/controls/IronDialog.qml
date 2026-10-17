@@ -49,7 +49,7 @@ Dialog {
 
     Overlay.modal: Rectangle {
         color: Design.Theme.backgroundDeep
-        opacity: 0.82
+        opacity: 0.6
     }
 
     header: Item {

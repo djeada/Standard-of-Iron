@@ -1,9 +1,13 @@
 #include "app/world/minimap_events.h"
 
 #include <algorithm>
+#include <cmath>
 
 #include "app/viewmodels/minimap_view_model.h"
 #include "app/world/minimap_manager.h"
+#include "game/audio/audio_cues.h"
+#include "game/audio/cue_ids.h"
+#include "game/core/component_combat.h"
 #include "game/core/component_gameplay.h"
 #include "game/core/local_audience.h"
 #include "game/core/world.h"
@@ -20,6 +24,28 @@ namespace {
 constexpr float k_landmark_poll_interval = 0.5F;
 
 } // namespace
+
+auto TroopsUnderAttackAlarm::note_hit(float world_x,
+                                      float world_z,
+                                      double now_seconds) -> bool {
+  const auto cell_x = static_cast<std::int64_t>(std::floor(world_x / k_cell_metres));
+  const auto cell_z = static_cast<std::int64_t>(std::floor(world_z / k_cell_metres));
+  const std::int64_t key = (cell_x << 32) ^ (cell_z & 0xffffffffLL);
+  const auto previous = m_last_hit_by_cell.find(key);
+  const bool fresh = previous == m_last_hit_by_cell.end() ||
+                     now_seconds - previous->second >= k_quiet_seconds;
+  m_last_hit_by_cell[key] = now_seconds;
+  if (!fresh || now_seconds - m_last_alarm_seconds < k_cooldown_seconds) {
+    return false;
+  }
+  m_last_alarm_seconds = now_seconds;
+  return true;
+}
+
+void TroopsUnderAttackAlarm::reset() {
+  m_last_hit_by_cell.clear();
+  m_last_alarm_seconds = -1.0e9;
+}
 
 MinimapEvents::MinimapEvents(const MinimapEventSources& sources)
     : m_sources(sources) {
@@ -45,6 +71,7 @@ auto MinimapEvents::minimap_ready() const -> bool {
 
 void MinimapEvents::reset() {
   m_landmark_poll_accumulator = 0.0F;
+  m_troops_alarm.reset();
   if (m_sources.view_model != nullptr) {
     m_sources.view_model->clear_overlays();
   }
@@ -71,6 +98,9 @@ void MinimapEvents::note_combat_hit(const Engine::Core::CombatHitEvent& event) {
   }
 
   const bool is_building = Game::Units::is_building_spawn(unit->spawn_type);
+  if (!is_building && unit->owner_id == local && event.attacker_owner_id != local) {
+    sound_troops_under_attack(event, transform->position.x, transform->position.z);
+  }
   m_sources.view_model->note_alert(
       is_building ? App::ViewModels::MinimapAlert::StructureAttacked
                   : App::ViewModels::MinimapAlert::TroopsAttacked,
@@ -78,6 +108,26 @@ void MinimapEvents::note_combat_hit(const Engine::Core::CombatHitEvent& event) {
       transform->position.z,
       unit->owner_id,
       event.attacker_owner_id);
+}
+
+void MinimapEvents::sound_troops_under_attack(const Engine::Core::CombatHitEvent& event,
+                                              float world_x,
+                                              float world_z) {
+  if (m_sources.session != nullptr) {
+    const auto& owners = m_sources.session->owners();
+    const int local = *m_sources.local_owner_id;
+    if (!owners.is_player(local) || owners.are_allies(local, event.attacker_owner_id)) {
+      return;
+    }
+  }
+  const auto* engaged =
+      m_sources.world->try_get<Engine::Core::AttackTargetComponent>(event.target_id);
+  if (engaged != nullptr && engaged->target_id != 0) {
+    return;
+  }
+  if (m_troops_alarm.note_hit(world_x, world_z, m_elapsed_seconds)) {
+    Game::Audio::play_cue(Game::Audio::Cue::k_alert_base_under_attack);
+  }
 }
 
 void MinimapEvents::note_unit_died(const Engine::Core::UnitDiedEvent& event) {
@@ -143,6 +193,7 @@ void MinimapEvents::publish_overlays(float dt) {
   }
   auto& manager = *m_sources.manager;
   auto& view_model = *m_sources.view_model;
+  m_elapsed_seconds += static_cast<double>(std::max(dt, 0.0F));
 
   for (const auto& alert : manager.capture_alerts()) {
     view_model.note_alert(alert.contested
@@ -223,6 +274,7 @@ void MinimapEvents::publish_landmarks() {
     }
   }
   m_sources.view_model->set_landmarks(landmarks);
+  m_sources.view_model->refresh_ally_markers();
 }
 
 } // namespace App::World

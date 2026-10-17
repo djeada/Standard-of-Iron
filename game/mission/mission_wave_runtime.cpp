@@ -1,5 +1,7 @@
 #include "game/mission/mission_wave_runtime.h"
 
+#include <algorithm>
+
 #include "game/core/world.h"
 #include "game/mission/campaign_manager.h"
 #include "game/session/session_context.h"
@@ -44,6 +46,9 @@ void MissionWaveRuntime::restore(const MissionWaveBinding& binding,
   m_waves.clear();
   m_events.clear();
   m_director.reset();
+  const double saved_play_time =
+      std::max(0.0, wave_state.value(QLatin1String(k_play_time_key)).toDouble(0.0));
+  m_elapsed = saved_play_time;
 
   if (binding.world == nullptr || binding.campaign == nullptr ||
       binding.level == nullptr ||
@@ -67,7 +72,8 @@ void MissionWaveRuntime::restore(const MissionWaveBinding& binding,
 
   m_director.bind(&m_waves, binding.world);
   m_director.restore(wave_state);
-  m_elapsed = m_director.elapsed();
+  m_elapsed = std::max(saved_play_time, static_cast<double>(m_director.elapsed()));
+  m_director.set_elapsed(static_cast<float>(m_elapsed));
   for (auto& event : m_events) {
     event.fired = m_elapsed >= static_cast<double>(event.trigger_time);
   }

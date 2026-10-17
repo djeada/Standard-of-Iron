@@ -97,6 +97,7 @@ struct FoliageBatchParams {
   float time = 0.0F;
   float wind_strength = k_default_wind_strength;
   float wind_speed = k_default_wind_speed;
+  float snow_coverage = 0.0F;
 };
 
 struct FireCampInstanceGpu {

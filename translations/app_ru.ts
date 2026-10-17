@@ -296,6 +296,10 @@
         <source>Ask allies to defend</source>
         <translation>Просить союзников защитить</translation>
     </message>
+    <message>
+        <source>Free queue slot: up to %1 recruits can wait in line</source>
+        <translation>Свободное место в очереди: ждать могут до %1 новобранцев</translation>
+    </message>
 </context>
 <context>
     <name>BattleReportLayout</name>
@@ -426,6 +430,17 @@
 This may be a skirmish, or objectives have not been configured.</source>
         <translation>Задачи не заданы.
 Это либо стычка, либо задачи не были настроены.</translation>
+    </message>
+</context>
+<context>
+    <name>BuilderTask</name>
+    <message>
+        <source>Builders could not reach their construction site. The building was abandoned and its cost refunded.</source>
+        <translation>Строители не смогли добраться до стройки. Здание брошено, его стоимость возвращена.</translation>
+    </message>
+    <message>
+        <source>Builders were pulled off their construction site. The building was abandoned and its cost refunded.</source>
+        <translation>Строителей сняли со стройки. Здание брошено, его стоимость возвращена.</translation>
     </message>
 </context>
 <context>
@@ -740,10 +755,6 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>Кампания</translation>
     </message>
     <message>
-        <source>Campaign Chronicle • </source>
-        <translation>Хроника кампании • </translation>
-    </message>
-    <message>
         <source>← Back</source>
         <translation>← Назад</translation>
     </message>
@@ -752,8 +763,12 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>Хроника кампании</translation>
     </message>
     <message>
-        <source>Campaign Progress:</source>
-        <translation>Ход кампании:</translation>
+        <source>Progress</source>
+        <translation>Прогресс</translation>
+    </message>
+    <message>
+        <source>%1 / %2</source>
+        <translation>%1 / %2</translation>
     </message>
 </context>
 <context>
@@ -4547,6 +4562,18 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>%1/%2 walls  •  %3 wood</source>
         <translation>стены %1/%2  •  древесина %3</translation>
     </message>
+    <message numerus="yes">
+        <source>Group %1 holds %n unit(s)</source>
+        <translation>
+            <numerusform>В группе %1 %n отряд</numerusform>
+            <numerusform>В группе %1 %n отряда</numerusform>
+            <numerusform>В группе %1 %n отрядов</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Group %1 cleared</source>
+        <translation>Группа %1 очищена</translation>
+    </message>
 </context>
 <context>
     <name>GraphicsSettingsProxy</name>
@@ -6079,6 +6106,14 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
         <source>Among the waves walks a grave priest. He heals the dead around him and throws fire at your line, so a slow slog of spearmen alone will bleed. Bring a Medicus to mend the burns and ranged troops to cut the priest down from a distance before the guardians close in. Kill him first and the dead stop mending.</source>
         <translation>Среди волн ходит могильный жрец. Он исцеляет мёртвых вокруг себя и мечет огонь в ваш строй, так что медленный натиск одних копейщиков истечёт кровью. Возьмите медика лечить ожоги и стрелков, чтобы сразить жреца издали, прежде чем стражи подойдут. Убейте его первым - и мёртвые перестанут исцеляться.</translation>
     </message>
+    <message>
+        <source>Control groups</source>
+        <translation>Группы управления</translation>
+    </message>
+    <message>
+        <source>Hold Ctrl and press a number from 1 to 9 to store the selected troops as that group. Press the number alone to select the group again, or hold Shift to add it to what is already selected; press it twice quickly to swing the camera onto the group. Fallen soldiers drop out of their group, and groups last until the battle ends. Tab centres the camera on whatever is selected. All of these keys can be rebound under Settings › Controls.</source>
+        <translation>Удерживайте Ctrl и нажмите цифру от 1 до 9, чтобы сохранить выбранные войска в этой группе. Нажмите одну цифру, чтобы снова выбрать группу, или удерживайте Shift, чтобы добавить её к уже выбранному; нажмите её дважды быстро, чтобы перевести камеру на группу. Павшие солдаты выбывают из группы, а группы сохраняются до конца битвы. Tab центрирует камеру на выбранном. Все эти клавиши можно переназначить в разделе Настройки › Управление.</translation>
+    </message>
 </context>
 <context>
     <name>HintCard</name>
@@ -7213,6 +7248,18 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
         <source>Load the quicksave</source>
         <translation>Загрузить быстрое сохранение</translation>
     </message>
+    <message>
+        <source>Restart this battle?</source>
+        <translation>Начать эту битву заново?</translation>
+    </message>
+    <message>
+        <source>The battle starts again from the beginning and everything won since is lost. Save it first if you want to come back to it.</source>
+        <translation>Битва начнётся с самого начала, и всё достигнутое с тех пор будет потеряно. Сначала сохраните её, если хотите к ней вернуться.</translation>
+    </message>
+    <message>
+        <source>Restart the battle</source>
+        <translation>Начать битву заново</translation>
+    </message>
 </context>
 <context>
     <name>MainMenu</name>
@@ -7411,6 +7458,42 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     <message>
         <source>Resume</source>
         <translation>Продолжить</translation>
+    </message>
+    <message>
+        <source>Abandon this battle and close the game</source>
+        <translation>Покинуть эту битву и закрыть игру</translation>
+    </message>
+    <message>
+        <source>Leaves the battle in progress - you will be asked first</source>
+        <translation>Покидает текущую битву — сначала будет запрошено подтверждение</translation>
+    </message>
+    <message>
+        <source>Close this menu and carry on fighting</source>
+        <translation>Закрыть меню и продолжить бой</translation>
+    </message>
+    <message>
+        <source>Restart battle</source>
+        <translation>Начать битву заново</translation>
+    </message>
+    <message>
+        <source>Fight this battle again from the start</source>
+        <translation>Провести эту битву с самого начала</translation>
+    </message>
+    <message>
+        <source>Again</source>
+        <translation>Заново</translation>
+    </message>
+    <message>
+        <source>Quit to main menu</source>
+        <translation>Выйти в главное меню</translation>
+    </message>
+    <message>
+        <source>Abandon this battle and return to the war table</source>
+        <translation>Покинуть эту битву и вернуться к военному столу</translation>
+    </message>
+    <message>
+        <source>Abandon</source>
+        <translation>Покинуть</translation>
     </message>
 </context>
 <context>
@@ -7989,6 +8072,14 @@ to see preview</source>
     <message>
         <source>Arrows pan  ·  Drag to rotate  ·  Scroll or +/- to zoom  ·  Home resets</source>
         <translation>Стрелки двигают  ·  Тяните, чтобы повернуть  ·  Колесо или +/- приближает  ·  Home сбрасывает</translation>
+    </message>
+    <message>
+        <source>Map controls</source>
+        <translation>Управление картой</translation>
+    </message>
+    <message>
+        <source>Controls ?</source>
+        <translation>Управление ?</translation>
     </message>
 </context>
 <context>
@@ -10260,6 +10351,10 @@ to see preview</source>
         <source>Choose a dispatch to review its field orders.</source>
         <translation>Выберите депешу, чтобы прочесть её полевые приказы.</translation>
     </message>
+    <message>
+        <source>%1 / %2</source>
+        <translation>%1 / %2</translation>
+    </message>
 </context>
 <context>
     <name>Nations</name>
@@ -11558,10 +11653,6 @@ Right-click to cancel.</source>
         <translation>Просите своих союзных командиров прислать людей удержать эту постройку. Осторожный командир с лишними людьми согласится, а тот, чей лагерь под угрозой, откажет.</translation>
     </message>
     <message>
-        <source>That request has already been withdrawn.</source>
-        <translation>Эта просьба уже отозвана.</translation>
-    </message>
-    <message>
         <source>Not enough %1 to give.</source>
         <translation>Недостаточно ресурса «%1», чтобы дать.</translation>
     </message>
@@ -11904,6 +11995,26 @@ Right-click to cancel.</source>
         <source>Loaded, but &apos;%1&apos; could not be read, so wildlife, undead zones and cursed veins were not restored.</source>
         <translation>Загружено, но «%1» прочитать не удалось, поэтому дикие звери, зоны нежити и проклятые жилы не восстановлены.</translation>
     </message>
+    <message>
+        <source>Control groups</source>
+        <translation>Группы управления</translation>
+    </message>
+    <message>
+        <source>Centre the camera on the selection</source>
+        <translation>Центрировать камеру на выбранном</translation>
+    </message>
+    <message>
+        <source>Jumps the view to the selected troops. Double-click a portrait in the selection panel to jump to that unit.</source>
+        <translation>Переносит вид к выбранным войскам. Дважды щёлкните портрет на панели выбора, чтобы перейти к этому отряду.</translation>
+    </message>
+    <message>
+        <source>Control group %1</source>
+        <translation>Группа управления %1</translation>
+    </message>
+    <message>
+        <source>Selects the group. Hold Ctrl to store the current selection in it, hold Shift to add the group to the selection, and press twice quickly to centre the camera on it.</source>
+        <translation>Выбирает группу. Удерживайте Ctrl, чтобы сохранить в ней текущий выбор, удерживайте Shift, чтобы добавить группу к выбору, и нажмите дважды быстро, чтобы центрировать на ней камеру.</translation>
+    </message>
 </context>
 <context>
     <name>RecruitCard</name>
@@ -12083,6 +12194,10 @@ Right-click to cancel.</source>
     <message>
         <source>BLADE DRAWN</source>
         <translation>КЛИНОК ОБНАЖЁН</translation>
+    </message>
+    <message>
+        <source>NO TARGET IN REACH</source>
+        <translation>НЕТ ЦЕЛИ В ДОСЯГАЕМОСТИ</translation>
     </message>
 </context>
 <context>
@@ -12335,6 +12450,14 @@ Right-click to cancel.</source>
     <message>
         <source>Played %1</source>
         <translation>Сыграно: %1</translation>
+    </message>
+    <message>
+        <source>Quicksave %1</source>
+        <translation>Быстрое сохранение %1</translation>
+    </message>
+    <message>
+        <source>Autosave %1</source>
+        <translation>Автосохранение %1</translation>
     </message>
 </context>
 <context>
@@ -12698,10 +12821,6 @@ Right-click to cancel.</source>
         <translation>Скорость поворота камеры:</translation>
     </message>
     <message>
-        <source>Scales keyboard panning, zooming and rotation; drag and minimap movement stay unchanged.</source>
-        <translation>Масштабирует сдвиг, приближение и поворот с клавиатуры; движение перетаскиванием и мини-картой не меняется.</translation>
-    </message>
-    <message>
         <source>Autosave</source>
         <translation>Автосохранение</translation>
     </message>
@@ -12876,6 +12995,14 @@ Right-click to cancel.</source>
     <message>
         <source>Night</source>
         <translation>Ночной режим</translation>
+    </message>
+    <message>
+        <source>Camera speeds</source>
+        <translation>Скорости камеры</translation>
+    </message>
+    <message>
+        <source>The three speeds below scale keyboard panning, zooming and rotation. Mouse drag and minimap movement stay unchanged.</source>
+        <translation>Три скорости ниже задают прокрутку, масштабирование и вращение с клавиатуры. Перетаскивание мышью и перемещение по миникарте не меняются.</translation>
     </message>
 </context>
 <context>

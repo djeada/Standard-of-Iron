@@ -90,7 +90,7 @@ Item {
         Text {
             id: playerSectionTitle
 
-            text: qsTr("Players (%1)").arg(Design.Numerals.roman(players_model ? players_model.count : 0))
+            text: qsTr("Players (%1)").arg(Design.Numerals.grouped(players_model ? players_model.count : 0))
             color: colors.textMain
             font.pixelSize: Design.Typography.body
             font.bold: true
@@ -234,7 +234,7 @@ Item {
                 var available = current_map_data.player_ids.length - players_model.count;
                 if (available <= 0)
                     return qsTr("Max players reached");
-                return available === 1 ? qsTr("%1 slot available").arg(Design.Numerals.roman(available)) : qsTr("%1 slots available").arg(Design.Numerals.roman(available));
+                return available === 1 ? qsTr("%1 slot available").arg(Design.Numerals.grouped(available)) : qsTr("%1 slots available").arg(Design.Numerals.grouped(available));
             }
             color: colors.textSubLite
             font.pixelSize: Design.Typography.caption

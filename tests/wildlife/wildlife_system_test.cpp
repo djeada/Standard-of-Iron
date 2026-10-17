@@ -29,6 +29,7 @@
 #include "game/systems/owner_registry.h"
 #include "game/wildlife/bird_flock.h"
 #include "game/wildlife/wildlife_config.h"
+#include "game/wildlife/wildlife_placement.h"
 #include "game/wildlife/wildlife_system.h"
 
 namespace {
@@ -1113,6 +1114,63 @@ TEST_F(WildlifeSystemTest, ReleasedWolfWavesSurviveASaveLoadRoundTrip) {
 
   EXPECT_EQ(count_species(world, Species::Wolf), 3)
       << "a restored mission must not release an already-spent pack again";
+}
+
+auto map_with_one_start(Game::Units::SpawnType type) -> Game::Map::MapDefinition {
+  Game::Map::MapDefinition map;
+  map.grid.width = 240;
+  map.grid.height = 240;
+  map.grid.tile_size = 1.0F;
+  map.coordSystem = Game::Map::CoordSystem::Grid;
+  Game::Map::UnitSpawn spawn;
+  spawn.type = type;
+  spawn.player_id = 1;
+  spawn.x = 61.9F;
+  spawn.z = 54.83F;
+  map.spawns.push_back(spawn);
+  return map;
+}
+
+auto wolves_denned_beside_the_start() -> WildlifeSettings {
+  WildlifeSettings settings = Game::Wildlife::default_settings();
+  settings.enabled = true;
+  settings.wolves.enabled = true;
+  settings.wolves.group_count = 1;
+  settings.wolves.roam_radius = 26.0F;
+  settings.wolves.aggression = 0.45F;
+  settings.wolves.spawn_areas = {{60.0F - 119.5F, 44.0F - 119.5F, 18.0F}};
+  return settings;
+}
+
+TEST(WildlifePlacementTest,
+     AWolfDenAuthoredOnAStartingWorkPartyMovesOutOfHuntingRange) {
+  const auto map = map_with_one_start(Game::Units::SpawnType::Builder);
+  WildlifeSettings settings = wolves_denned_beside_the_start();
+
+  Game::Wildlife::populate_missing_spawn_areas(map, settings);
+
+  ASSERT_EQ(settings.wolves.spawn_areas.size(), 1U);
+  const auto& den = settings.wolves.spawn_areas.front();
+  const float start_x = map.spawns.front().x - 119.5F;
+  const float start_z = map.spawns.front().z - 119.5F;
+  const float hunting_reach =
+      settings.wolves.roam_radius * (1.0F + Game::Wildlife::k_wolf_detect_multiplier);
+  EXPECT_GE(std::hypot(den.x - start_x, den.z - start_z) - den.radius, hunting_reach)
+      << "a pack anchored anywhere in its den must not sense the builders standing at "
+         "their start";
+}
+
+TEST(WildlifePlacementTest, AWolfDenBesideAStartingArmyStaysWhereItWasAuthored) {
+  const auto map = map_with_one_start(Game::Units::SpawnType::Spearman);
+  WildlifeSettings settings = wolves_denned_beside_the_start();
+  const auto authored = settings.wolves.spawn_areas.front();
+
+  Game::Wildlife::populate_missing_spawn_areas(map, settings);
+
+  ASSERT_EQ(settings.wolves.spawn_areas.size(), 1U);
+  EXPECT_FLOAT_EQ(settings.wolves.spawn_areas.front().x, authored.x);
+  EXPECT_FLOAT_EQ(settings.wolves.spawn_areas.front().z, authored.z);
+  EXPECT_FLOAT_EQ(settings.wolves.spawn_areas.front().radius, authored.radius);
 }
 
 } // namespace

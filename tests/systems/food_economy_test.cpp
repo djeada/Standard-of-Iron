@@ -25,6 +25,7 @@
 #include "game/systems/harvest_yields.h"
 #include "game/systems/interaction_targeting.h"
 #include "game/systems/movement/movement_pipeline.h"
+#include "game/systems/movement/route_follow_system_gate.h"
 #include "game/systems/navigation/nav_grid.h"
 #include "game/systems/navigation/pathfinding.h"
 #include "game/systems/owner_registry.h"
@@ -455,7 +456,7 @@ TEST_F(FoodEconomyTest, TheButchersWalkOntoTheSheepTheyTake) {
   for (int step = 0; step < 600 && !arrived; ++step) {
     movement.update(&world, 0.05F);
     production.update(&world, 0.05F);
-    arrived = builder->at_construction_site;
+    arrived = builder->at_construction_site && !builder->bypass_movement_active;
   }
 
   ASSERT_TRUE(arrived) << "the butchers never closed on the animal";
@@ -496,19 +497,125 @@ TEST_F(FoodEconomyTest, TheReapersWorkInTheMiddleOfTheField) {
   for (int step = 0; step < 600 && !arrived; ++step) {
     movement.update(&world, 0.05F);
     production.update(&world, 0.05F);
-    arrived = builder->at_construction_site;
+    arrived = builder->at_construction_site && !builder->bypass_movement_active;
   }
   ASSERT_TRUE(arrived) << "the reapers never reached the field";
 
-  EXPECT_NEAR(transform->position.x, 4.0F, 0.15F)
+  const QVector3D field(
+      builder->construction_site_x, 0.0F, builder->construction_site_z);
+  EXPECT_LT(std::hypot(field.x() - 4.0F, field.z()), 1.0F)
+      << "the reapers' spot is not on the field";
+  EXPECT_NEAR(transform->position.x, field.x(), 0.15F)
       << "the reapers stood beside the field instead of in the crop";
-  EXPECT_NEAR(transform->position.z, 0.0F, 0.15F);
+  EXPECT_NEAR(transform->position.z, field.z(), 0.15F);
   for (int step = 0; step < 40; ++step) {
     movement.update(&world, 0.05F);
     production.update(&world, 0.05F);
   }
   EXPECT_TRUE(builder->at_construction_site && builder->in_progress)
       << "standing in the field must not count as leaving the job";
+}
+
+TEST_F(FoodEconomyTest, ReapersCrossTheFarmBoundaryIntoTheCropRows) {
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = 48;
+  map_def.grid.height = 48;
+  map_def.grid.tile_size = 1.0F;
+  map_def.biome.procedural_trees_enabled = false;
+  map_def.biome.procedural_boulders_enabled = false;
+  map_def.biome.procedural_iron_ore_enabled = false;
+  Game::Map::TerrainService::instance().initialize(map_def);
+  Game::Map::VisibilityService::instance().initialize(48, 48, 1.0F);
+  Game::Map::VisibilityService::instance().reveal_all();
+  Game::Systems::NavGrid::initialize(48, 48);
+
+  Engine::Core::World world;
+  auto* farm = add_farm(world, 6.0F, 0.0F, 1.0F);
+  auto* farm_transform = farm->get_component<Engine::Core::TransformComponent>();
+  farm_transform->scale = {7.14F, 5.1F, 7.14F};
+  farm_transform->rotation.y = 90.0F;
+  Game::Systems::BuildingCollisionRegistry::instance().register_building(
+      farm->get_id(), "farm", 6.0F, 0.0F, k_owner, 90.0F);
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
+  ASSERT_NE(pathfinder, nullptr);
+  pathfinder->update_navigation_grid();
+
+  auto* reaper = add_builder(world, -14.0F, 2.0F);
+  auto* transform = reaper->get_component<Engine::Core::TransformComponent>();
+  reaper->get_component<Engine::Core::UnitComponent>()->speed = 2.0F;
+  Game::Command::dispatch(
+      world,
+      Game::Command::Command{.source = Game::Command::Source::LocalPlayer,
+                             .owner_id = k_owner,
+                             .payload = Game::Command::StartHarvest{
+                                 .units = {reaper->get_id()},
+                                 .construction_type = std::string(
+                                     Game::Systems::k_builder_product_harvest_grain),
+                                 .resource_target = farm->get_id(),
+                                 .site = QVector3D(6.0F, 0.0F, 0.0F)}});
+  auto* builder = reaper->get_component<Engine::Core::BuilderProductionComponent>();
+  ASSERT_TRUE(builder->has_construction_site);
+  builder->build_time = 1000.0F;
+  builder->time_remaining = builder->build_time;
+
+  Game::Systems::MovementPipeline movement;
+  Game::Systems::ProductionSystem production;
+  bool arrived = false;
+  for (int step = 0; step < 1200 && !arrived; ++step) {
+    movement.update(&world, 0.05F);
+    production.update(&world, 0.05F);
+    arrived = builder->at_construction_site && !builder->bypass_movement_active;
+  }
+  ASSERT_TRUE(arrived) << "the reapers never reached the farm";
+  EXPECT_LT(builder->time_remaining, builder->build_time)
+      << "walking into the crop must not delay the harvest";
+
+  const QVector3D field(
+      builder->construction_site_x, 0.0F, builder->construction_site_z);
+  const float field_x = -(field.z() - farm_transform->position.z) / 7.14F;
+  const float field_z = (field.x() - farm_transform->position.x) / 7.14F;
+  EXPECT_GT(field_x, -0.88F + 0.14F) << "the reapers' spot is not in the crop rows";
+  EXPECT_LT(field_x, 0.72F - 0.14F) << "the reapers' spot is not in the crop rows";
+  EXPECT_GT(field_z, -0.84F + 0.14F) << "the reapers' spot is not in the crop rows";
+  EXPECT_LT(field_z, 0.40F - 0.14F) << "the reapers' spot is not in the crop rows";
+  EXPECT_GT(std::hypot(field_x - 0.50F, field_z - 0.68F) * 7.14F, 3.0F)
+      << "the reapers worked beside the farmhouse";
+  EXPECT_LT(
+      std::hypot(transform->position.x - field.x(), transform->position.z - field.z()),
+      0.3F)
+      << "the reapers worked from (" << transform->position.x << ", "
+      << transform->position.z << ") instead of the crop rows at (" << field.x() << ", "
+      << field.z() << ")";
+  for (int step = 0; step < 60; ++step) {
+    movement.update(&world, 0.05F);
+    production.update(&world, 0.05F);
+  }
+  EXPECT_TRUE(builder->at_construction_site && builder->in_progress)
+      << "standing among the crop must not count as leaving the job";
+
+  builder->time_remaining = 0.0F;
+  production.update(&world, 0.05F);
+  ASSERT_FALSE(builder->has_construction_site);
+  Game::Command::dispatch(
+      world,
+      Game::Command::Command{
+          .source = Game::Command::Source::LocalPlayer,
+          .owner_id = k_owner,
+          .payload = Game::Command::Move{.units = {reaper->get_id()},
+                                         .targets = {QVector3D(-14.0F, 0.0F, 2.0F)}}});
+  for (int step = 0; step < 600; ++step) {
+    movement.update(&world, 0.05F);
+    production.update(&world, 0.05F);
+  }
+  EXPECT_LT(std::hypot(transform->position.x + 14.0F, transform->position.z - 2.0F),
+            1.0F)
+      << "a reaper that finished stayed penned inside the farm at ("
+      << transform->position.x << ", " << transform->position.z << ")";
+
+  auto* walker = add_builder(world, -14.0F, -2.0F);
+  walker->get_component<Engine::Core::UnitComponent>()->speed = 2.0F;
+  EXPECT_FALSE(Game::Systems::is_movement_point_allowed(field, *walker))
+      << "the farm stopped blocking units that are not reaping it";
 }
 
 TEST_F(FoodEconomyTest, AnUnripeFarmRefusesTheHarvestOrder) {

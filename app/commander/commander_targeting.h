@@ -52,10 +52,10 @@ public:
   [[nodiscard]] auto
   locked_position(Engine::Core::World& world) const -> std::optional<QVector3D>;
 
-  void cycle_lock(Engine::Core::World& world,
+  auto cycle_lock(Engine::Core::World& world,
                   Engine::Core::EntityID commander_id,
                   int local_owner_id,
-                  float view_yaw);
+                  float view_yaw) -> bool;
 
   [[nodiscard]] auto steer_view_toward_lock(Engine::Core::World& world,
                                             Engine::Core::Entity& commander,

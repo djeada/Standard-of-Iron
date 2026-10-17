@@ -435,6 +435,14 @@ void Backend::execute_water_linear_commands(const PreparedBatch& prepared,
                                    k_road_vis_texture_unit);
         }
       }
+      const auto& road_uniforms = m_water_pipeline->m_road_uniforms;
+      if (road_uniforms.snow_coverage != Shader::InvalidUniform) {
+        road_shader->set_uniform(road_uniforms.snow_coverage,
+                                 feature.biome_snow_coverage);
+      }
+      if (road_uniforms.snow_color != Shader::InvalidUniform) {
+        road_shader->set_uniform(road_uniforms.snow_color, feature.biome_snow_color);
+      }
       {
         PolygonOffsetScope const poly(-1.0F, -1.0F);
         draw_feature_model(road_shader,

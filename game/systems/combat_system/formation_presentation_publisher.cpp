@@ -261,7 +261,8 @@ void publish_entity(Engine::Core::World& world,
   frame.squad_speed = squad_speed_of(world, id);
   frame.passability = passability_of(world, id);
   frame.mounted = Game::Units::is_cavalry(unit.spawn_type);
-  frame.frame_sign = traversal != nullptr && traversal->about_faced ? -1.0F : 1.0F;
+  frame.frame_sign = FormationCombat::layout_frame_sign(
+      layout, traversal != nullptr && traversal->about_faced);
 
   bool const soldiers_changed = publish_soldiers(frame);
   finish_squad_reform(world, entity, frame.reform, layout);

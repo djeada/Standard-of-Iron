@@ -8,6 +8,7 @@
 #include "game/core/world.h"
 #include "game/mission/mission_setup_coordinator.h"
 #include "game/mission/mission_wave_director.h"
+#include "game/mission/mission_wave_runtime.h"
 #include "game/mission/mission_waves.h"
 #include "game/session/session_context.h"
 
@@ -557,4 +558,17 @@ TEST(MissionWaveBuild, ArchetypesExpandOnTopOfTheAuthoredComposition) {
   ASSERT_EQ(waves.size(), 1U);
   EXPECT_GT(waves[0].composition.size(), 1U);
   EXPECT_GT(Game::Mission::wave_unit_total(waves[0]), 2);
+}
+
+TEST(MissionWaveRuntime, ALoadedMatchContinuesTheSavedPlayTimeWithoutAMission) {
+  Game::Mission::MissionWaveRuntime runtime;
+  QJsonObject state;
+  state.insert(QLatin1String(Game::Mission::MissionWaveRuntime::k_play_time_key),
+               1080.0);
+  runtime.restore({}, state);
+  EXPECT_FLOAT_EQ(runtime.elapsed(), 1080.0F)
+      << "a skirmish save has no mission waves, but its play time must carry on";
+
+  runtime.restore({}, QJsonObject{});
+  EXPECT_FLOAT_EQ(runtime.elapsed(), 0.0F);
 }

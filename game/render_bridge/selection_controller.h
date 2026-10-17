@@ -3,6 +3,7 @@
 #include <QObject>
 #include <QString>
 
+#include <cstddef>
 #include <functional>
 #include <utility>
 #include <vector>
@@ -54,6 +55,11 @@ public:
     m_inspect_filter = std::move(filter);
   }
   void select_selected_units_by_type(const QString& unit_type, int local_owner_id);
+
+  auto assign_control_group(int group, int local_owner_id) -> std::size_t;
+  auto recall_control_group(int group, bool additive, int local_owner_id) -> bool;
+  [[nodiscard]] auto control_group_members(int group, int local_owner_id)
+      -> std::vector<Engine::Core::EntityID>;
 
   [[nodiscard]] auto has_units_selected() const -> bool;
   void get_selected_unit_ids(std::vector<Engine::Core::EntityID>& out) const;

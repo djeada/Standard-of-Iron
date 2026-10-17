@@ -91,6 +91,10 @@ public:
   void cycle_lock_on_target(Engine::Core::World& world,
                             Engine::Core::EntityID commander_id,
                             int local_owner_id);
+  void note_refusal(const char* action);
+  [[nodiscard]] auto last_refusal() const -> const App::Core::CommanderRefusal& {
+    return m_abilities.last_refusal();
+  }
   [[nodiscard]] Engine::Core::EntityID locked_target_id() const;
   [[nodiscard]] Engine::Core::EntityID focus_target_id() const;
   [[nodiscard]] bool is_dodge_rolling() const {

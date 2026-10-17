@@ -12,7 +12,7 @@ Item {
     signal cancelled
     signal save_requested(string slot_name)
 
-    readonly property var saves: (typeof game !== 'undefined' && game) ? game.saves : null
+    property var saves: (typeof game !== 'undefined' && game) ? game.saves : null
     readonly property bool storage_ready: root.saves ? root.saves.storage_healthy : false
 
     property string name_problem: ""
@@ -269,6 +269,8 @@ Item {
                     ListView {
                         id: saveListView
 
+                        property int selected_index: -1
+
                         spacing: Theme.spacingSmall
 
                         model: ListModel {
@@ -312,6 +314,7 @@ Item {
                             id: save_row
 
                             width: saveListView.width
+                            selected: saveListView.selected_index === index
                             slot_name: model.slot_name
                             title: model.title
                             map_name: model.map_name
@@ -324,6 +327,7 @@ Item {
                             loadable: model.loadable
                             blocked_reason: model.loadable ? "" : qsTr("Saved by a different version of the game. It is kept, but this build cannot open it.")
                             onClicked: {
+                                saveListView.selected_index = index;
                                 if (model.kind === "manual")
                                     saveNameField.text = model.slot_name;
                             }
@@ -354,6 +358,7 @@ Item {
                                     implicitWidth: 84
                                     onClicked: {
                                         confirmDeleteDialog.slot_name = save_row.slot_name;
+                                        confirmDeleteDialog.display_name = save_row.display_title;
                                         confirmDeleteDialog.open();
                                     }
                                 }
@@ -386,12 +391,13 @@ Item {
         id: confirmDeleteDialog
 
         property string slot_name: ""
+        property string display_name: ""
 
         anchors.centerIn: parent
         width: Math.min(parent.width * 0.5, 460)
         title: qsTr("Delete this save?")
         tone: "danger"
-        message: qsTr("\"%1\" will be deleted. This cannot be undone.").arg(confirmDeleteDialog.slot_name)
+        message: qsTr("\"%1\" will be deleted. This cannot be undone.").arg(confirmDeleteDialog.display_name)
         primaryAction: qsTr("Delete")
         secondaryAction: qsTr("Keep it")
         onPrimaryActivated: {

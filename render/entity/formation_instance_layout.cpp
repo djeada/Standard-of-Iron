@@ -181,7 +181,8 @@ void apply_authoritative_formation_slots(
   }
 
   auto const layout = Game::Systems::FormationCombat::resolve_layout(*entity);
-  float const frame_sign = about_faced ? -1.0F : 1.0F;
+  float const frame_sign =
+      Game::Systems::FormationCombat::layout_frame_sign(layout, about_faced);
   for (auto const& slot : layout.occupied_slots) {
     if (slot.index >= instances.size()) {
       continue;

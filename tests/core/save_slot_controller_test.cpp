@@ -56,9 +56,10 @@ protected:
             .lock_frame = [this]() { return std::unique_lock(frame_mutex); },
             .report_error = [this](const QString& message) { errors << message; },
             .leave_commander_mode = [this]() { ++left_commander_mode; },
-            .autosave_allowed =
-                []() {
-                  return true;
+            .autosave_allowed = []() { return true; },
+            .commander_mode_active =
+                [this]() {
+                  return commander_active;
                 }},
         &context);
     controller->connect_view_model();
@@ -81,6 +82,7 @@ protected:
   std::unique_ptr<SaveSlotController> controller;
   int captures = 0;
   int left_commander_mode = 0;
+  bool commander_active = false;
   QStringList errors;
 
   static QString s_saved_application_name;
@@ -98,6 +100,30 @@ TEST_F(SaveSlotControllerTest, AutosaveCapturesOnceAndClearsProgressWhenRefused)
   ASSERT_EQ(errors.size(), 1);
   EXPECT_EQ(errors.front(), QStringLiteral("no world in this fixture"));
   EXPECT_FALSE(slot_model->save_in_progress());
+}
+
+TEST_F(SaveSlotControllerTest, AnAutosaveWaitsUntilTheCommanderIsHandedBack) {
+  commander_active = true;
+  controller->autosave();
+
+  EXPECT_EQ(captures, 0);
+  EXPECT_EQ(left_commander_mode, 0);
+  EXPECT_TRUE(controller->autosave_deferred());
+
+  commander_active = false;
+  controller->commander_mode_left();
+  EXPECT_EQ(captures, 1);
+  EXPECT_FALSE(controller->autosave_deferred());
+
+  controller->commander_mode_left();
+  EXPECT_EQ(captures, 1);
+}
+
+TEST_F(SaveSlotControllerTest, AManualSaveStillLeavesCommanderMode) {
+  commander_active = true;
+  controller->quicksave();
+  EXPECT_EQ(left_commander_mode, 1);
+  EXPECT_EQ(captures, 1);
 }
 
 TEST_F(SaveSlotControllerTest, TheAutosaveSignalFromTheViewModelReachesTheController) {

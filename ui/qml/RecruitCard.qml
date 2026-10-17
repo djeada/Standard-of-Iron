@@ -121,8 +121,10 @@ Rectangle {
             font.family: Design.Typography.family
             font.pixelSize: Design.Typography.caption
             font.weight: Design.Typography.bold
-            wrapMode: Text.WordWrap
+            wrapMode: Text.Wrap
             maximumLineCount: 2
+            fontSizeMode: Text.Fit
+            minimumPixelSize: Design.Typography.minimumSize
             elide: Text.ElideRight
         }
 

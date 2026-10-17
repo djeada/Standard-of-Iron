@@ -40,6 +40,11 @@ struct CommanderAbilityOutcome {
   bool rescan_primary_target{false};
 };
 
+struct CommanderRefusal {
+  std::uint32_t sequence{0};
+  const char* action{""};
+};
+
 class CommanderAbilities {
 public:
   void advance_cooldowns(Engine::Core::CommanderComponent* commander, float dt);
@@ -59,6 +64,11 @@ public:
 
   void reset();
 
+  void refuse(const char* action);
+  [[nodiscard]] auto last_refusal() const -> const CommanderRefusal& {
+    return m_last_refusal;
+  }
+
 private:
   [[nodiscard]] auto resolve_target(const CommanderAbilityContext& context,
                                     float max_range) const -> Engine::Core::EntityID;
@@ -70,6 +80,7 @@ private:
   float m_shield_bash_cooldown{0.0F};
   float m_vanguard_rush_cooldown{0.0F};
   float m_second_wind_cooldown{0.0F};
+  CommanderRefusal m_last_refusal;
 };
 
 } // namespace App::Core

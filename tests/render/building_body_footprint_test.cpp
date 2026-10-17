@@ -13,8 +13,12 @@
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/default_content.h"
 #include "game/systems/nation_registry.h"
+#include "game/units/building_body.h"
+#include "game/units/building_spawn_setup.h"
+#include "render/entity/building_archetype_catalog.h"
 #include "render/entity/home_renderer_common.h"
 #include "render/entity/registry.h"
+#include "render/gl/mesh.h"
 #include "render/submitter.h"
 
 namespace {
@@ -145,7 +149,21 @@ protected:
     BoundsSubmitter submitter;
     submitter.skip_yard = renderer_key == "home";
     func(ctx, submitter);
-    return submitter.bounds;
+    return to_world_metres(submitter.bounds, renderer_key);
+  }
+
+  [[nodiscard]] static auto
+  to_world_metres(PlanarBounds bounds,
+                  const std::string& building_type) -> PlanarBounds {
+    if (!bounds.valid()) {
+      return bounds;
+    }
+    const QVector3D scale = Game::Units::building_transform_scale(building_type);
+    bounds.min_x *= scale.x();
+    bounds.max_x *= scale.x();
+    bounds.min_z *= scale.z();
+    bounds.max_z *= scale.z();
+    return bounds;
   }
 
   Render::GL::EntityRendererRegistry registry;
@@ -173,6 +191,8 @@ TEST_F(BuildingBodyFootprintTest, RegisteredBodyCoversTheDrawnBuilding) {
 
       const auto body = Game::Systems::BuildingCollisionRegistry::get_building_body(
           entry.collision_type);
+      const float padding_limit =
+          0.35F * Game::Units::building_transform_scale(entry.collision_type).x();
 
       EXPECT_GE(body.width + 0.02F, drawn.span_x())
           << nation << "/" << entry.collision_type << ": the commander's collider is "
@@ -183,11 +203,11 @@ TEST_F(BuildingBodyFootprintTest, RegisteredBodyCoversTheDrawnBuilding) {
           << body.depth << " m deep but the building is drawn " << drawn.span_z()
           << " m deep";
 
-      EXPECT_LE(body.width, drawn.span_x() + 0.35F)
+      EXPECT_LE(body.width, drawn.span_x() + padding_limit)
           << nation << "/" << entry.collision_type
           << ": the collider is padded well past the drawn wall; that padding "
              "belongs to the navigation footprint, not the body";
-      EXPECT_LE(body.depth, drawn.span_z() + 0.35F)
+      EXPECT_LE(body.depth, drawn.span_z() + padding_limit)
           << nation << "/" << entry.collision_type
           << ": the collider is padded well past the drawn wall";
 
@@ -236,6 +256,80 @@ TEST_F(BuildingBodyFootprintTest, HouseVariationKeepsTheExistingCollisionFootpri
     }
   }
   EXPECT_TRUE(std::all_of(seen.begin(), seen.end(), [](bool value) { return value; }));
+}
+
+auto standing_archetype_bounds(const std::string& catalog_name,
+                               float head_height) -> PlanarBounds {
+  PlanarBounds bounds;
+  for (const auto& entry : Render::GL::building_archetype_catalog()) {
+    if (entry.name != catalog_name) {
+      continue;
+    }
+    const auto archetype = Render::GL::build_building_archetype(
+        entry.build(Render::GL::BuildingState::Normal),
+        Render::GL::BuildingState::Normal);
+    for (const auto& draw :
+         archetype.lods[static_cast<std::size_t>(Render::GL::RenderArchetypeLod::Full)]
+             .draws) {
+      if (draw.mesh == nullptr) {
+        continue;
+      }
+      for (const auto& vertex : draw.mesh->get_vertices()) {
+        const QVector3D point = draw.local_model.map(
+            QVector3D(vertex.position[0], vertex.position[1], vertex.position[2]));
+        if (point.y() <= head_height) {
+          bounds.include(point);
+        }
+      }
+    }
+  }
+  return bounds;
+}
+
+TEST_F(BuildingBodyFootprintTest, BarracksBodyIsTheKeepNotTheStockpileYard) {
+  constexpr float k_head_height_m = 1.8F;
+  const auto body = Game::Units::find_building_body_extent("barracks");
+  ASSERT_TRUE(body.has_value());
+  const float vertical = Game::Units::building_transform_scale("barracks").y();
+  for (const char* nation : {"roman", "carthage"}) {
+    const auto drawn = standing_archetype_bounds(std::string(nation) + "_barracks",
+                                                 k_head_height_m / vertical);
+    ASSERT_TRUE(drawn.valid()) << nation;
+    EXPECT_GE(body->width + 0.02F, drawn.span_x()) << nation;
+    EXPECT_GE(body->depth + 0.02F, drawn.span_z()) << nation;
+    EXPECT_LE(body->width, drawn.span_x() + 0.20F)
+        << nation << ": the walk-through stockpile yard is not part of the body";
+    EXPECT_LE(body->depth, drawn.span_z() + 0.20F) << nation;
+    EXPECT_NEAR(body->offset_x, drawn.center_x(), 0.10F) << nation;
+    EXPECT_NEAR(body->offset_z, drawn.center_z(), 0.10F) << nation;
+  }
+}
+
+TEST_F(BuildingBodyFootprintTest, BarracksFoundationStillLevelsTheStockpileYard) {
+  const auto foundation = Game::Units::find_building_foundation_extent("barracks");
+  ASSERT_TRUE(foundation.has_value());
+  for (const char* nation : {"roman", "carthage"}) {
+    const auto drawn =
+        standing_archetype_bounds(std::string(nation) + "_barracks", 1.0e6F);
+    ASSERT_TRUE(drawn.valid()) << nation;
+    EXPECT_GE(foundation->width + 0.30F, drawn.span_x()) << nation;
+    EXPECT_GE(foundation->depth + 0.30F, drawn.span_z()) << nation;
+  }
+}
+
+TEST_F(BuildingBodyFootprintTest, RegisteredBodyIsMeasuredInWorldMetres) {
+  for (const auto& extent : Game::Units::k_building_body_extents) {
+    const std::string type(extent.type);
+    const QVector3D scale = Game::Units::building_transform_scale(type);
+    const auto world =
+        Game::Systems::BuildingCollisionRegistry::get_building_body(type);
+    EXPECT_NEAR(world.width, extent.width * scale.x(), 1.0e-4F)
+        << type
+        << ": the building is drawn at its spawn scale, so its body must be too";
+    EXPECT_NEAR(world.depth, extent.depth * scale.z(), 1.0e-4F) << type;
+    EXPECT_NEAR(world.offset_x, extent.offset_x * scale.x(), 1.0e-4F) << type;
+    EXPECT_NEAR(world.offset_z, extent.offset_z * scale.z(), 1.0e-4F) << type;
+  }
 }
 
 } // namespace
