@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(StandardOfIron VERSION 0.2.0 LANGUAGES CXX)
+project(StandardOfIron VERSION 0.3.0 LANGUAGES CXX)
 
 # This file is the composition root: project-level settings, the order in which
 # the pieces below are brought in, and the subdirectories. Each cmake/*.cmake

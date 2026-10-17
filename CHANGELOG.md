@@ -9,6 +9,8 @@ may change in any release — see [Save compatibility](#save-compatibility).
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-10-17
+
 ### Added
 
 - **Gauls and Iberians fight for Carthage.** Two allied nations, each with a
@@ -1428,6 +1430,7 @@ While the project is at 0.x this is the intended behaviour, and any release may
 trigger it. Before 1.0 the policy needs to become one of: migrate forward, or
 warn the player before the wipe rather than only writing to the log.
 
-[unreleased]: https://github.com/djeada/Standard-of-Iron/compare/v0.2.0...HEAD
+[unreleased]: https://github.com/djeada/Standard-of-Iron/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/djeada/Standard-of-Iron/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/djeada/Standard-of-Iron/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/djeada/Standard-of-Iron/releases/tag/v0.1.0
