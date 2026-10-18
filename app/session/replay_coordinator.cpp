@@ -10,6 +10,7 @@
 #include <memory>
 
 #include "game/mission/difficulty_profile.h"
+#include "game/session/selection_service.h"
 #include "game/session/session_context.h"
 #include "game/session/simulation_clock.h"
 
@@ -24,6 +25,7 @@ auto ReplayCoordinator::begin_playback(
   }
   const Game::Command::ReplayHeader header = file->header;
   m_pending = std::move(file);
+  m_playback_path = path;
 
   const QString difficulty = Game::Mission::normalize_difficulty_id(
       header.launch.value(QLatin1String("difficulty")).toString());
@@ -53,8 +55,13 @@ void ReplayCoordinator::arm_for_started_match(Game::Session::SessionContext* ses
             << file.commands.size() << "commands, last tick" << file.last_tick();
     session->set_replay_player(
         std::make_unique<Game::Command::ReplayPlayer>(std::move(file)));
+    if (m_view.load(ReplayViewTrack::sidecar_path(m_playback_path))) {
+      qInfo() << "Replay: following the recorded view from"
+              << ReplayViewTrack::sidecar_path(m_playback_path);
+    }
     return;
   }
+  m_view.clear();
   if (m_record_path.isEmpty()) {
     return;
   }
@@ -73,6 +80,26 @@ void ReplayCoordinator::arm_for_started_match(Game::Session::SessionContext* ses
   }
   qInfo() << "Replay: recording to" << m_record_path;
   session->set_replay_recorder(std::move(recorder));
+  if (!m_view.begin_recording(ReplayViewTrack::sidecar_path(m_record_path))) {
+    qWarning() << "Replay: cannot write the view track beside" << m_record_path;
+  }
+}
+
+void ReplayCoordinator::present_view(Game::Session::SessionContext* session,
+                                     Render::GL::Camera* camera) {
+  if (session == nullptr || camera == nullptr) {
+    return;
+  }
+  const std::uint64_t tick = session->clock().tick();
+  if (session->replay_player() != nullptr) {
+    if (m_view.loaded()) {
+      m_view.apply(tick, *camera, session->selection());
+    }
+    return;
+  }
+  if (m_view.recording() && session->replay_recorder() != nullptr) {
+    m_view.record(tick, *camera, session->selection().get_selected_units());
+  }
 }
 
 void ReplayCoordinator::finish_verification_if_done(

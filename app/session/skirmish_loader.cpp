@@ -31,6 +31,7 @@
 #include <vector>
 
 #include "app/session/level_loader.h"
+#include "game/command/command_queue.h"
 #include "game/core/component_core.h"
 #include "game/core/world.h"
 #include "game/map/json_keys.h"
@@ -38,8 +39,10 @@
 #include "game/map/map_transformer.h"
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
+#include "game/session/deterministic_rng.h"
 #include "game/session/selection_service.h"
 #include "game/session/session_context.h"
+#include "game/session/simulation_clock.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/global_stats_registry.h"
@@ -48,6 +51,7 @@
 #include "game/systems/navigation/nav_grid.h"
 #include "game/systems/navigation/wall_network_service.h"
 #include "game/systems/owner_registry.h"
+#include "game/systems/runtime_system_registry.h"
 #include "game/systems/troop_count_registry.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
@@ -102,6 +106,9 @@ void SkirmishLoader::reset_game_state() {
 
   m_world.clear();
 
+  m_world.shutdown_systems();
+  Game::Systems::register_runtime_systems(m_world);
+
   m_renderer.clear_entity_render_caches();
 
   auto& session = Game::Session::session_for(m_world);
@@ -118,6 +125,12 @@ void SkirmishLoader::reset_game_state() {
   session.troop_counts().clear();
 
   session.nations().clear_player_assignments();
+
+  session.commands().clear();
+
+  session.clock().reset();
+
+  session.rng().reseed(session.rng_seed());
 
   if (m_fog != nullptr) {
     m_fog->set_enabled(true);

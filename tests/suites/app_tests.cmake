@@ -35,6 +35,7 @@ add_executable(
     core/simulation_lifecycle_test.cpp
     core/deferred_presentation_queue_test.cpp
     core/replay_coordinator_test.cpp
+    core/replay_view_track_test.cpp
     core/loading_overlay_test.cpp
     core/battle_stats_test.cpp
     core/ally_announcements_test.cpp

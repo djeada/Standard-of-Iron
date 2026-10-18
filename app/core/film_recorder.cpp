@@ -9,6 +9,7 @@
 #include <QImage>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QLineF>
 #include <QPainter>
 #include <QPainterPath>
 #include <QPen>
@@ -44,6 +45,8 @@ constexpr double k_cursor_lead_seconds = 0.9;
 constexpr double k_ripple_seconds = 0.38;
 
 constexpr double k_drag_seconds = 0.45;
+
+constexpr double k_replay_drag_pixels = 6.0;
 
 } // namespace
 
@@ -230,6 +233,27 @@ void FilmRecorder::advance_cursor(double dt) {
   }
 }
 
+void FilmRecorder::follow_replay_pointer() {
+  const auto pointer = m_engine->replay_view_pointer();
+  if (!pointer.has_value()) {
+    return;
+  }
+  const QPointF at(pointer->position.x() * m_config.width,
+                   pointer->position.y() * m_config.height);
+  const int pressed = pointer->buttons & ~m_replay_pointer_buttons;
+  if (pressed != 0) {
+    m_ripples.push_back({.at = at, .age = 0.0});
+  }
+  if ((pressed & App::Session::ReplayViewPointer::k_left) != 0) {
+    m_drag_origin = at;
+  }
+  m_drag_active = (pointer->buttons & App::Session::ReplayViewPointer::k_left) != 0 &&
+                  QLineF(m_drag_origin, at).length() > k_replay_drag_pixels;
+  m_replay_pointer_buttons = pointer->buttons;
+  m_cursor = at;
+  m_cursor_valid = true;
+}
+
 void FilmRecorder::paint_cursor(QImage& frame) const {
   const qreal scale = std::max(1.0, frame.height() / 1080.0) * 1.7;
   QPainter painter(&frame);
@@ -329,6 +353,9 @@ void FilmRecorder::pump() {
   }
   const auto step_start = std::chrono::steady_clock::now();
   m_engine->film_step(static_cast<float>(dt));
+  if (m_config.draw_cursor) {
+    follow_replay_pointer();
+  }
   const auto step_end = std::chrono::steady_clock::now();
 
   const int written_before = m_frames_written;

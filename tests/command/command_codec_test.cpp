@@ -138,6 +138,20 @@ TEST(CommandCodecTest, EveryPayloadSurvivesTheRoundTrip) {
   }
 }
 
+TEST(CommandCodecTest, ADeployWithTheLastValueOfEveryOptionSurvivesTheRoundTrip) {
+  Game::Command::DeployFormation deploy;
+  deploy.units = {1};
+  deploy.intent = Game::Formation::ArmyFormationIntent::ElephantScreen;
+  deploy.options.flank_preference = Game::Formation::FlankPreference::Split;
+  deploy.options.movement_policy = Game::Formation::MovementPolicy::DoctrineDefault;
+  deploy.options.ranged_placement = Game::Formation::RangedPlacement::Automatic;
+  deploy.options.mixed_policy = Game::Formation::MixedDoctrinePolicy::MajorityDoctrine;
+  const Command original{.owner_id = 1, .payload = deploy};
+  const auto decoded = Game::Command::from_json(Game::Command::to_json(original));
+  ASSERT_TRUE(decoded.has_value());
+  EXPECT_TRUE(same_wire(original, *decoded));
+}
+
 TEST(CommandCodecTest, RefusesAnUnknownTypeOrAMissingField) {
   auto object = Game::Command::to_json(
       Command{.owner_id = 1, .payload = Game::Command::Stop{.units = {1}}});

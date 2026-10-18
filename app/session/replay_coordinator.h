@@ -6,10 +6,15 @@
 #include <functional>
 #include <optional>
 
+#include "app/session/replay_view_track.h"
 #include "game/command/replay.h"
 
 namespace Game::Session {
 class SessionContext;
+}
+
+namespace Render::GL {
+class Camera;
 }
 
 namespace App::Session {
@@ -54,11 +59,17 @@ public:
 
   void finish_verification_if_done(Game::Session::SessionContext* session);
 
+  void present_view(Game::Session::SessionContext* session, Render::GL::Camera* camera);
+
+  [[nodiscard]] auto view_track() -> ReplayViewTrack& { return m_view; }
+
 private:
   bool m_verify_exit = false;
   ReplayLaunch m_launch;
   QString m_record_path;
+  QString m_playback_path;
   std::optional<Game::Command::ReplayFile> m_pending;
+  ReplayViewTrack m_view;
 };
 
 } // namespace App::Session

@@ -63,11 +63,13 @@ public:
                        bool spectator_mode,
                        const std::vector<Game::Map::ScoutedArea>& scouted_areas = {});
 
-  void update(Engine::Core::World& world,
-              int local_owner_id,
-              float dt,
-              float update_interval,
-              bool spectator_mode);
+  void advance_simulation(Engine::Core::World& world,
+                          int local_owner_id,
+                          float tick_seconds,
+                          float update_interval,
+                          bool spectator_mode);
+
+  void update(bool spectator_mode);
 
   void publish_current_frame(bool force = false);
   void clear_presenters();

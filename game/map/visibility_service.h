@@ -61,6 +61,8 @@ public:
   auto update(Engine::Core::World& world, int player_id) -> bool;
   void compute_immediate(Engine::Core::World& world, int player_id);
 
+  auto step(Engine::Core::World& world, int player_id) -> bool;
+
   auto is_initialized() const -> bool { return m_initialized; }
 
   auto get_width() const -> int { return m_width; }

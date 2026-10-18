@@ -874,10 +874,39 @@ TEST(VisibilityCoordinatorTest, UpdateSkipsPresenterRepublishWhenVersionIsUnchan
   coordinator.set_frame_presenters(&fog_presenter, &minimap_presenter);
   coordinator.initialize_for_world(*world, 1, 32, 32, 1.0F, false);
 
-  coordinator.update(*world, 1, 0.01F, 10.0F, false);
+  coordinator.update(false);
 
   EXPECT_EQ(fog_presenter.applied_versions.size(), 1U);
   EXPECT_EQ(minimap_presenter.applied_versions.size(), 1U);
+}
+
+TEST(VisibilityCoordinatorTest, ExplorationFollowsSimulationTicksNotTheFrameClock) {
+  auto world = std::make_unique<Engine::Core::World>();
+  auto* scout = add_unit(*world, -10.0F, -10.0F, 1);
+  auto* scout_unit = scout->get_component<Engine::Core::UnitComponent>();
+  ASSERT_NE(scout_unit, nullptr);
+  scout_unit->vision_range = 2.0F;
+
+  auto& visibility = Game::Session::SessionContext::active().visibility();
+  VisibilityCoordinator coordinator(visibility);
+  coordinator.initialize_for_world(*world, 1, 32, 32, 1.0F, false);
+  ASSERT_FALSE(visibility.is_explored_world(10.0F, 10.0F));
+
+  auto* transform = scout->get_component<Engine::Core::TransformComponent>();
+  transform->position.x = 10.0F;
+  transform->position.z = 10.0F;
+
+  constexpr float k_tick = 1.0F / 60.0F;
+  coordinator.update(false);
+  coordinator.advance_simulation(*world, 1, k_tick, 0.075F, false);
+  EXPECT_FALSE(visibility.is_explored_world(10.0F, 10.0F))
+      << "one tick is shorter than the update interval";
+  for (int tick = 0; tick < 4; ++tick) {
+    coordinator.advance_simulation(*world, 1, k_tick, 0.075F, false);
+  }
+  EXPECT_TRUE(visibility.is_explored_world(10.0F, 10.0F))
+      << "the fifth tick reveals the scout's new ground in the same call, so the "
+         "simulation reads the same fog live and in a replay";
 }
 
 TEST(VisibilityCoordinatorTest, SpectatorToggleClearsAndRepublishesAllPresenters) {
@@ -894,13 +923,13 @@ TEST(VisibilityCoordinatorTest, SpectatorToggleClearsAndRepublishesAllPresenters
   coordinator.set_frame_presenters(&fog_presenter, &minimap_presenter);
   coordinator.initialize_for_world(*world, 1, 32, 32, 1.0F, false);
 
-  coordinator.update(*world, 1, 0.01F, 10.0F, true);
+  coordinator.update(true);
 
   EXPECT_EQ(fog_presenter.clear_count, 1);
   EXPECT_EQ(minimap_presenter.clear_count, 1);
   EXPECT_EQ(coordinator.last_published_version(), 0U);
 
-  coordinator.update(*world, 1, 0.01F, 10.0F, false);
+  coordinator.update(false);
 
   ASSERT_EQ(fog_presenter.applied_versions.size(), 2U);
   ASSERT_EQ(minimap_presenter.applied_versions.size(), 2U);

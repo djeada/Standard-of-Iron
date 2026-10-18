@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <vector>
 
 #include "app/core/app_scene_context.h"
@@ -26,6 +27,7 @@
 #include "app/platform/match_stats_reporter.h"
 #include "app/platform/session_timeline.h"
 #include "app/session/loading_overlay.h"
+#include "app/session/replay_view_track.h"
 #include "game/command/command_validator.h"
 #include "game/core/event_manager.h"
 #include "game/systems/match_snapshot.h"
@@ -238,6 +240,8 @@ public:
   void set_replay_record_path(const QString& path);
   auto start_replay(const QString& path) -> bool;
   [[nodiscard]] auto replay_playing() const -> bool;
+  [[nodiscard]] auto
+  replay_view_pointer() const -> std::optional<App::Session::ReplayViewPointer>;
 
   void set_replay_verify_exit(bool enabled);
   Q_INVOKABLE void open_settings();
