@@ -2,7 +2,7 @@
 
 Food connects settlement growth to military production. Farms grow grain, builders harvest grain or slaughter sheep, homes spend food to recruit civilians, and civilians become manpower when they reach a barracks. The result is an economic loop in which food drives population while wood, stone, and iron continue to fund buildings and equipment.
 
-For the mechanics that credit a delivered load, see [RESOURCE_STOCKPILE.md](RESOURCE_STOCKPILE.md). For the UI that explains the resource counters to the player, see [ECONOMY_GUIDANCE.md](ECONOMY_GUIDANCE.md).
+For delivered food loads and barracks yards, see [Two ways to collect food](#two-ways-to-collect-food). For the UI that explains the resource counters to the player, see [ECONOMY_GUIDANCE.md](ECONOMY_GUIDANCE.md).
 
 ## The settlement loop
 

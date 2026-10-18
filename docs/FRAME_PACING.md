@@ -445,7 +445,7 @@ Frame pacing begins after a playable measurement barrier.
 
 Startup/map-load work has its own instrumentation and readiness contracts. Moving expensive work earlier can be a valid way to remove first-use hitches, but that work still needs to fit the startup/loading experience.
 
-See [MISSION_STARTUP.md](MISSION_STARTUP.md) for startup readiness and [PERFORMANCE_INSTRUMENTATION.md](PERFORMANCE_INSTRUMENTATION.md) for broader profiling.
+See [MISSION_STARTUP.md](MISSION_STARTUP.md) for startup readiness and [PERFORMANCE.md](PERFORMANCE.md) for broader profiling.
 
 ## Relationship to simulation performance
 
