@@ -112,11 +112,22 @@ void VisibilityCoordinator::initialize_for_world(
   publish_current_frame(true);
 }
 
-void VisibilityCoordinator::update(Engine::Core::World& world,
-                                   int local_owner_id,
-                                   float dt,
-                                   float update_interval,
-                                   bool spectator_mode) {
+void VisibilityCoordinator::advance_simulation(Engine::Core::World& world,
+                                               int local_owner_id,
+                                               float tick_seconds,
+                                               float update_interval,
+                                               bool spectator_mode) {
+  if (!m_visibility.is_initialized() || spectator_mode) {
+    return;
+  }
+  m_update_accumulator += tick_seconds;
+  if (m_update_accumulator >= update_interval) {
+    m_update_accumulator = 0.0F;
+    (void)m_visibility.step(world, local_owner_id);
+  }
+}
+
+void VisibilityCoordinator::update(bool spectator_mode) {
   if (!m_visibility.is_initialized()) {
     clear_presenters();
     return;
@@ -139,12 +150,6 @@ void VisibilityCoordinator::update(Engine::Core::World& world,
       m_fog->set_enabled(true);
     }
     publish_current_frame(true);
-  }
-
-  m_update_accumulator += dt;
-  if (m_update_accumulator >= update_interval) {
-    m_update_accumulator = 0.0F;
-    m_visibility.update(world, local_owner_id);
   }
 
   publish_current_frame(false);

@@ -12,7 +12,7 @@ namespace Game::Command {
 
 void CommandQueue::submit(Command command) {
   const std::lock_guard<std::mutex> lock(m_mutex);
-  if (m_replay_only && command.source != Source::Replay) {
+  if (m_replay_only && !command.replayed && command.source != Source::Replay) {
     ++m_dropped;
     return;
   }

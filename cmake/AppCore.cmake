@@ -48,6 +48,7 @@ add_library(
     app/session/loading_progress_tracker.cpp
     app/session/renderer_bootstrap.cpp
     app/session/replay_coordinator.cpp
+    app/session/replay_view_track.cpp
     app/session/skirmish_loader.cpp
     app/session/skirmish_runtime_coordinator.cpp
     app/session/world_bootstrap.cpp

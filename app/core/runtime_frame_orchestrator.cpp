@@ -126,12 +126,7 @@ void RuntimeFrameOrchestrator::update(const AppSceneContext& scene,
     if (scene.visibility_coordinator != nullptr) {
       Render::Profiling::AccumulatorScope const visibility_scope(
           &Render::Profiling::global_profile().visibility_update_us);
-      scene.visibility_coordinator->update(
-          *scene.world,
-          state.local_owner_id,
-          dt,
-          Game::GameConfig::instance().gameplay().visibility_update_interval,
-          state.spectator_mode);
+      scene.visibility_coordinator->update(state.spectator_mode);
     }
 
     if (scene.minimap_manager != nullptr) {

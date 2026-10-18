@@ -60,6 +60,7 @@ private:
   void enqueue_save(QString path, QImage frame);
   void drain_saves();
   void advance_cursor(double dt);
+  void follow_replay_pointer();
   void paint_cursor(QImage& frame) const;
 
   QPointer<GameEngine> m_engine;
@@ -83,6 +84,7 @@ private:
   std::vector<ClickRipple> m_ripples;
   bool m_drag_active{false};
   QPointF m_drag_origin;
+  int m_replay_pointer_buttons{0};
 
   struct PendingSave {
     QString path;

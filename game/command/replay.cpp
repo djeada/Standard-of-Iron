@@ -373,7 +373,7 @@ void ReplayPlayer::feed(std::uint64_t tick, CommandQueue& queue) {
   while (m_next < m_file.commands.size() &&
          m_file.commands[m_next].submitted_tick <= tick) {
     Command command = m_file.commands[m_next];
-    command.source = Source::Replay;
+    command.replayed = true;
     queue.submit(std::move(command));
     ++m_next;
   }

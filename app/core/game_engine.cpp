@@ -81,6 +81,7 @@
 #include "game/core/ownership_constants.h"
 #include "game/core/startup_profiler.h"
 #include "game/core/world.h"
+#include "game/game_config.h"
 #include "game/map/map_catalog.h"
 #include "game/map/map_context.h"
 #include "game/mission/campaign_manager.h"
@@ -552,6 +553,14 @@ void GameEngine::simulate(float dt) {
         update_mission_waves(step_dt);
         update_mission_stages(step_dt);
         update_active_runtime_simulation(step_dt);
+        if (m_world != nullptr && m_visibility_coordinator != nullptr) {
+          m_visibility_coordinator->advance_simulation(
+              *m_world,
+              m_runtime.local_owner_id,
+              step_dt,
+              Game::GameConfig::instance().gameplay().visibility_update_interval,
+              m_level.is_spectator_mode);
+        }
       });
   note_dropped_simulation_ticks(frame_state.dropped_simulation_ticks, dt);
 }
@@ -571,6 +580,7 @@ void GameEngine::update_presentation(float dt) {
 
   advance_frame_orchestrator(dt);
   update_control_presentation(dt);
+  m_replay->present_view(m_session.get(), m_camera);
   {
     Render::Profiling::AccumulatorScope const sync_scope(
         &Render::Profiling::global_profile().view_model_sync_us);
@@ -1031,6 +1041,15 @@ auto GameEngine::player_troop_count() const -> int {
 
 void GameEngine::set_replay_record_path(const QString& path) {
   m_replay->set_record_path(path);
+  if (m_window != nullptr && !path.isEmpty()) {
+    m_window->installEventFilter(
+        new App::Session::ReplayPointerTap(m_replay->view_track(), this));
+  }
+}
+
+auto GameEngine::replay_view_pointer() const
+    -> std::optional<App::Session::ReplayViewPointer> {
+  return m_replay->view_track().pointer();
 }
 
 void GameEngine::set_replay_verify_exit(bool enabled) {

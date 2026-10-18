@@ -122,6 +122,19 @@ void VisibilityService::compute_immediate(Engine::Core::World& world, int player
   reset_throttle();
 }
 
+auto VisibilityService::step(Engine::Core::World& world, int player_id) -> bool {
+  if (!m_initialized) {
+    return false;
+  }
+  auto sources = gather_vision_sources(world, player_id);
+  if (sources == m_last_sources) {
+    return false;
+  }
+  m_last_sources = std::move(sources);
+  integrate_result(execute_job(compose_job_payload(m_last_sources)));
+  return true;
+}
+
 auto VisibilityService::gather_vision_sources(
     Engine::Core::World& world, int player_id) const -> std::vector<VisionSource> {
   std::vector<VisionSource> sources;

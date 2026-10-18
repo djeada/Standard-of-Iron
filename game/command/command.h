@@ -250,6 +250,8 @@ struct Command {
 
   std::uint64_t submitted_tick = 0;
   Payload payload;
+
+  bool replayed = false;
 };
 
 [[nodiscard]] auto source_name(Source source) -> const char*;
