@@ -697,7 +697,7 @@ Measured/reportable areas include:
 - frame interval timing; and
 - budget verdicts.
 
-[FRAME_PACING.md](FRAME_PACING.md) defines the current presentation-budget gate. [PERFORMANCE_INSTRUMENTATION.md](PERFORMANCE_INSTRUMENTATION.md) covers the broader runtime measurement system.
+[FRAME_PACING.md](FRAME_PACING.md) defines the current presentation-budget gate. [PERFORMANCE.md](PERFORMANCE.md) covers the broader runtime measurement system.
 
 ## Playable-frame resource discipline
 

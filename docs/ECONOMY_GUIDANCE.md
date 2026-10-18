@@ -249,7 +249,7 @@ The UI does not use “population” for either concept.
 
 ## Related systems
 
-- [RESOURCE_STOCKPILE.md](RESOURCE_STOCKPILE.md) covers carried loads, barracks yards, and resource crediting.
-- [SETTLEMENT_LIFE.md](SETTLEMENT_LIFE.md) covers standing gather rounds.
+- [Resource counters](#resource-counters) describes stored materials and their presentation in the top bar.
+- [Standing orders and Auto Gather](FOOD_AND_FARMS.md#standing-orders-and-auto-gather) covers recurring gather rounds.
 - [FOOD_AND_FARMS.md](FOOD_AND_FARMS.md) covers farms, food jobs, civilians, and the food-to-manpower loop.
 - [UI_DESIGN_SYSTEM.md](UI_DESIGN_SYSTEM.md) covers the components used by the economy surfaces.
