@@ -508,6 +508,10 @@ auto melee_walk_around_length(Engine::Core::Entity* attacker,
   if (shortfall > geometry.contact_center_distance + k_walk_around_arrival_slack) {
     return std::nullopt;
   }
+  if (shortfall > k_contact_separation_exemption &&
+      structure_separates_positions(previous, goal)) {
+    return std::nullopt;
+  }
   return length + shortfall;
 }
 

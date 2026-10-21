@@ -216,7 +216,9 @@ ApplicationWindow {
             return "";
         var when = new Date(slot.timestamp);
         var stamp = isNaN(when.getTime()) ? "" : Qt.formatDateTime(when, "d MMM hh:mm");
-        var name = slot.title || slot.slot_name;
+        var generated = /^(autosave|quicksave)([_ -]?\d+)?$/i.test(slot.title || slot.slot_name || "");
+        var place = (slot.metadata && slot.metadata.mission_title) ? slot.metadata.mission_title : (slot.map_name || "");
+        var name = generated && place !== "" ? place : (slot.title || slot.slot_name);
         return stamp === "" ? name : qsTr("%1 · %2").arg(name).arg(stamp);
     }
 
@@ -259,6 +261,15 @@ ApplicationWindow {
     function return_to_main_menu() {
         mainWindow.menu_visible = true;
         mainMenu.forceActiveFocus();
+    }
+
+    function leave_decided_battle() {
+        var decided = mainWindow.game_started && typeof game !== 'undefined' && game.victory_state !== "";
+        if (decided && game.setup && game.setup.abandon_current_match) {
+            game.setup.abandon_current_match();
+            return;
+        }
+        mainWindow.return_to_main_menu();
     }
 
     function restart_current_match() {
@@ -404,7 +415,7 @@ ApplicationWindow {
             gameViewItem.forceActiveFocus();
         }
         onReturn_to_main_menu_requested: {
-            mainWindow.return_to_main_menu();
+            mainWindow.leave_decided_battle();
         }
         onCampaign_requested: {
             mainWindow.menu_visible = false;
@@ -1159,6 +1170,24 @@ ApplicationWindow {
 
     SystemVoice {
         engine: typeof game !== 'undefined' ? game : null
+    }
+
+    Connections {
+        function onHome_attacked(text, world_x, world_z) {
+            if (!text || !mainWindow.game_started)
+                return;
+            Design.Notifications.urgent(text, {
+                    "channel": "home-attacked",
+                    "detail": qsTr("Click to look"),
+                    "icon": Design.Icons.warning,
+                    "activate": function () {
+                        if (typeof game !== 'undefined' && game.camera && game.camera.look_at_world)
+                            game.camera.look_at_world(world_x, world_z);
+                    }
+                });
+        }
+
+        target: (typeof game !== 'undefined' && game) ? game.minimap : null
     }
 
     Connections {

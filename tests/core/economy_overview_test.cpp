@@ -408,6 +408,17 @@ TEST_F(EconomyOverviewTest, TheCoachFinishesOnceAnArmyHasBeenRaised) {
       << coach.value(QStringLiteral("step")).toString().toStdString();
 }
 
+TEST_F(EconomyOverviewTest, AResumedMatchDoesNotRestartTheCoach) {
+  Game::Systems::PlayerResourceRegistry::instance().add_harvested(
+      k_owner, ResourceType::Wood, Game::Systems::k_cut_tree_wood_reward);
+
+  auto baseline = App::Core::capture_economy_coach_baseline(request());
+  const QVariantMap coach = App::Core::build_economy_coach_state(request(), baseline);
+  EXPECT_TRUE(coach.value(QStringLiteral("complete")).toBool())
+      << "a save loaded 25 minutes in should not tell the player to build a Home; step "
+      << coach.value(QStringLiteral("step")).toString().toStdString();
+}
+
 TEST_F(EconomyOverviewTest, AnotherOwnersWorkForceIsNotCounted) {
   auto* builder = add_unit(Game::Units::SpawnType::Builder, 2);
   auto* production = builder->add_component<Engine::Core::BuilderProductionComponent>();

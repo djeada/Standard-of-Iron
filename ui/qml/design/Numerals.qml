@@ -117,10 +117,10 @@ QtObject {
         var minutes = Math.floor((total % 3600) / 60);
         var rest = total % 60;
         if (hours > 0)
-            return qsTr("%1h %2m").arg(root.roman(hours)).arg(root.roman(minutes));
+            return qsTr("%1h %2m").arg(hours).arg(minutes);
         if (minutes > 0)
-            return qsTr("%1m %2s").arg(root.roman(minutes)).arg(root.roman(rest));
-        return qsTr("%1s").arg(root.roman(rest));
+            return qsTr("%1m %2s").arg(minutes).arg(rest);
+        return qsTr("%1s").arg(rest);
     }
 
     function ordinal(index) {

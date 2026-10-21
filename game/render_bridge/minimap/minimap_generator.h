@@ -44,6 +44,9 @@ private:
   void render_bridges(QImage& image,
                       const MapDefinition& map_def,
                       const MinimapProjection& projection);
+  void render_fords(QImage& image,
+                    const MapDefinition& map_def,
+                    const MinimapProjection& projection);
   void render_undead_zones(QImage& image,
                            const MapDefinition& map_def,
                            const MinimapProjection& projection);

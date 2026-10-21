@@ -325,6 +325,30 @@ TEST_F(MinimapGeneratorTest, RoadsRenderBelowTerrainFeatures) {
             region_distance(combined, road_only, sample, 5));
 }
 
+TEST_F(MinimapGeneratorTest, AFordIsMarkedAcrossItsRiver) {
+  RiverSegment river;
+  river.start = QVector3D(0.0F, 0.0F, -40.0F);
+  river.end = QVector3D(0.0F, 0.0F, 40.0F);
+  river.width = 8.0F;
+  test_map.rivers.push_back(river);
+
+  MinimapGenerator generator;
+  const QImage plain = generator.generate(test_map);
+
+  FordCrossing ford;
+  ford.position = QVector3D(0.0F, 0.0F, 0.0F);
+  ford.length = 12.0F;
+  test_map.fords.push_back(ford);
+  const QImage forded = generator.generate(test_map);
+
+  const QPoint centre(plain.width() / 2, plain.height() / 2);
+  EXPECT_GT(region_distance(forded, plain, centre, 3), 60)
+      << "a player reading the minimap cannot tell where the river can be waded";
+  const QPoint upstream(plain.width() / 2, plain.height() / 2 - plain.height() / 4);
+  EXPECT_EQ(region_distance(forded, plain, upstream, 2), 0)
+      << "the ford marking spilled along the whole river";
+}
+
 TEST_F(MinimapGeneratorTest, RoadIntersectionsDoNotDarkenAgainstSingleSegment) {
   RoadSegment horizontal;
   horizontal.start = QVector3D(-15.0F, 0.0F, 0.0F);

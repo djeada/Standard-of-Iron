@@ -293,12 +293,16 @@
         <translation>Hombres que este cuartel aún conserva. Cada recluta gasta los hombres de su escuadra; los civiles criados en una Casa traen más.</translation>
     </message>
     <message>
-        <source>Ask allies to defend</source>
-        <translation>Pedir a los aliados que defiendan</translation>
-    </message>
-    <message>
         <source>Free queue slot: up to %1 recruits can wait in line</source>
         <translation>Hueco libre en la cola: hasta %1 reclutas pueden esperar</translation>
+    </message>
+    <message>
+        <source>Call allies</source>
+        <translation>Llamar aliados</translation>
+    </message>
+    <message>
+        <source>Ask allies to defend this barracks.</source>
+        <translation>Pide a tus aliados que defiendan este cuartel.</translation>
     </message>
 </context>
 <context>
@@ -7256,6 +7260,10 @@ Cada recluta cuesta los hombres de su escuadra; la reserva de un cuartel eleva e
         <source>Restart the battle</source>
         <translation>Reiniciar la batalla</translation>
     </message>
+    <message>
+        <source>Click to look</source>
+        <translation>Haz clic para verlo</translation>
+    </message>
 </context>
 <context>
     <name>MainMenu</name>
@@ -7666,14 +7674,6 @@ para ver la vista previa</translation>
         <translation>Oposición</translation>
     </message>
     <message>
-        <source>Scripted</source>
-        <translation>Guionizada</translation>
-    </message>
-    <message>
-        <source>Players only</source>
-        <translation>Solo jugadores</translation>
-    </message>
-    <message>
         <source>This battlefield brings its own enemies, so you can start alone</source>
         <translation>Este campo de batalla trae sus propios enemigos, así que puedes empezar en solitario</translation>
     </message>
@@ -7816,6 +7816,14 @@ para ver la vista previa</translation>
     <message>
         <source>Click to change this opponent&apos;s difficulty</source>
         <translation>Haz clic para cambiar la dificultad de este oponente</translation>
+    </message>
+    <message>
+        <source>Built-in foes</source>
+        <translation>Enemigos propios</translation>
+    </message>
+    <message>
+        <source>Needs a rival</source>
+        <translation>Requiere un rival</translation>
     </message>
 </context>
 <context>
@@ -8076,6 +8084,17 @@ para ver la vista previa</translation>
     <message>
         <source>Controls ?</source>
         <translation>Controles ?</translation>
+    </message>
+</context>
+<context>
+    <name>MinimapViewModel</name>
+    <message>
+        <source>Your troops are under attack</source>
+        <translation>Tus tropas están siendo atacadas</translation>
+    </message>
+    <message>
+        <source>Your %1 is under attack</source>
+        <translation>Atacan tu edificio: %1</translation>
     </message>
 </context>
 <context>
@@ -10153,8 +10172,8 @@ para ver la vista previa</translation>
         <translation>El campamento de retaguardia cae. Lo sostuve como los triarios lo sostienen todo: lo suficiente, y ni un momento más. Escipión se las arreglará sin mis tiendas.</translation>
     </message>
     <message>
-        <source>The river runs north to south across the middle of the valley; the nearest crossing is due east of camp. Hanno&apos;s Iberians wait upstream on the far bank - strike the Volcae from both sides at once.</source>
-        <translation>El río corre de norte a sur por el centro del valle; el cruce más cercano está justo al este del campamento. Los íberos de Hanón esperan río arriba en la otra orilla: golpea a los volcos por ambos lados a la vez.</translation>
+        <source>The river runs north to south across the middle of the valley; the nearest crossing is due east of camp. Upstream of Hanno&apos;s Iberians the Rhône runs wide and shallow enough to wade - strike the Volcae from both sides at once.</source>
+        <translation>El río corre de norte a sur por el centro del valle; el cruce más cercano está justo al este del campamento. Río arriba de los íberos de Hanón, el Ródano se ensancha y es lo bastante bajo para vadearlo: golpea a los volcos por ambos lados a la vez.</translation>
     </message>
     <message>
         <source>The road runs east along the lake. Bring the Gauls down off the western heights to shut its mouth, and the column has only one way left to go.</source>
@@ -12386,6 +12405,10 @@ Clic derecho para cancelar.</translation>
     <message>
         <source>Saved</source>
         <translation>Guardado</translation>
+    </message>
+    <message>
+        <source>Autosave</source>
+        <translation>Guardado automático</translation>
     </message>
 </context>
 <context>

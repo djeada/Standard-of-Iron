@@ -84,6 +84,20 @@ TestCase {
         verify(!Notifications.dismiss(first), "dismissing twice should report no-op");
     }
 
+    function test_activating_an_entry_runs_its_action_and_dismisses_it() {
+        var looked = 0;
+        var id = Notifications.urgent("Your Barracks is under attack", {
+                "activate": function () {
+                    looked += 1;
+                }
+            });
+        verify(Notifications.activate(id));
+        compare(looked, 1, "clicking an alert should take the player to it");
+        compare(Notifications.count, 0);
+        var plain = Notifications.info("Spearmen ready");
+        verify(Notifications.activate(plain), "an entry without an action still dismisses");
+    }
+
     function test_host_renders_the_top_of_the_queue() {
         Notifications.info("Spearmen ready");
         Notifications.critical("Commander lost");

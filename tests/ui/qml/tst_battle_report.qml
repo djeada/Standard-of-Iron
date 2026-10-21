@@ -132,11 +132,10 @@ TestCase {
         host.destroy();
     }
 
-    function test_the_duration_keeps_its_roman_chrome() {
+    function test_the_duration_reads_in_arabic_figures() {
         var host = testCase.makeReport(1280, 720);
         host.report.durationText = Numerals.span(1834);
-        compare(host.report.durationText, Numerals.span(1834));
-        verify(Numerals.span(1834).indexOf("X") !== -1, "the duration lost its roman styling");
+        compare(host.report.durationText, "30m 34s", "a roman duration such as XXXm XXXIVs is unreadable at a glance");
         host.destroy();
     }
 

@@ -69,8 +69,8 @@ Rectangle {
                 color: "#00120A05"
             }
             GradientStop {
-                position: 0.45
-                color: "#CC120A05"
+                position: 0.35
+                color: "#D9120A05"
             }
             GradientStop {
                 position: 1.0
@@ -94,7 +94,7 @@ Rectangle {
         font.bold: true
         fontSizeMode: card.compact ? Text.HorizontalFit : Text.FixedSize
         minimumPixelSize: Design.Typography.caption - 3
-        style: card.costs_wrap ? Text.Outline : Text.Normal
+        style: Text.Outline
         styleColor: "#120A05"
     }
 

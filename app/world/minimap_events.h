@@ -63,6 +63,8 @@ private:
   void sound_troops_under_attack(const Engine::Core::CombatHitEvent& event,
                                  float world_x,
                                  float world_z);
+  [[nodiscard]] auto
+  attacked_by_an_enemy(const Engine::Core::CombatHitEvent& event) const -> bool;
 
   MinimapEventSources m_sources;
   float m_landmark_poll_accumulator = 0.0F;

@@ -84,7 +84,10 @@ auto heading_reference(const Engine::Core::Entity& entity,
       }
     }
   }
-  if (formation && movement.get_has_target()) {
+  bool const steers_by_heading =
+      formation ||
+      (unit != nullptr && Game::Units::heading_locked_locomotion(unit->spawn_type));
+  if (steers_by_heading && movement.get_has_target()) {
     float const to_target_x = movement.get_target_x() - transform.position.x;
     float const to_target_z = movement.get_target_y() - transform.position.z;
     float const remaining =

@@ -129,6 +129,17 @@ void PlacementViewModel::publish_frame() {
   const bool preview_valid_changed =
       !previous ||
       previous->construction_preview_valid != readout.construction_preview_valid;
+  const bool preview_reason_changed =
+      !previous ||
+      previous->construction_preview_reason != readout.construction_preview_reason;
+  const bool preview_summary_changed =
+      !previous ||
+      previous->construction_preview_segment_count !=
+          readout.construction_preview_segment_count ||
+      previous->construction_preview_valid_segment_count !=
+          readout.construction_preview_valid_segment_count ||
+      previous->construction_preview_total_cost !=
+          readout.construction_preview_total_cost;
   m_readout.publish(std::move(readout));
 
   if (formation_changed) {
@@ -146,6 +157,12 @@ void PlacementViewModel::publish_frame() {
   }
   if (preview_valid_changed) {
     emit construction_preview_valid_changed();
+  }
+  if (preview_reason_changed) {
+    emit construction_preview_reason_changed();
+  }
+  if (preview_summary_changed) {
+    emit construction_preview_summary_changed();
   }
 }
 

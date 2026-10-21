@@ -67,6 +67,8 @@ public:
                   int subject_owner_id,
                   int actor_owner_id);
 
+  void note_home_attacked(const QString& structure_name, float world_x, float world_z);
+
   void set_destinations(QVariantList destinations);
   void set_landmarks(QVariantList landmarks);
   void set_ally_markers(const QVariantList& world_markers);
@@ -89,6 +91,8 @@ signals:
                   const QString& kind,
                   const QString& relation,
                   qreal lifetime_seconds);
+
+  void home_attacked(const QString& text, qreal world_x, qreal world_z);
 
 private:
   struct AlertSlot {
@@ -118,6 +122,7 @@ private:
   std::set<quint32> m_announced_ally_markers;
 
   QElapsedTimer m_alert_clock;
+  qint64 m_last_home_alert_ms = -1;
   std::array<AlertSlot, k_alert_slot_count> m_alert_slots{};
   qint64 m_last_considered_ms = 0;
 };

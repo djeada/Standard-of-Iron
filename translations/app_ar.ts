@@ -293,12 +293,16 @@
         <translation>الرجال الذين لا تزال هذه الثكنة تحتفظ بهم. كل مجنّد يستهلك رجال فرقته؛ والمدنيون الذين يُربَّون في منزل يجلبون المزيد.</translation>
     </message>
     <message>
-        <source>Ask allies to defend</source>
-        <translation>اطلب من الحلفاء الدفاع</translation>
-    </message>
-    <message>
         <source>Free queue slot: up to %1 recruits can wait in line</source>
         <translation>خانة فارغة في الطابور: يمكن أن ينتظر حتى %1 من المجندين</translation>
+    </message>
+    <message>
+        <source>Call allies</source>
+        <translation>استدعِ الحلفاء</translation>
+    </message>
+    <message>
+        <source>Ask allies to defend this barracks.</source>
+        <translation>اطلب من الحلفاء الدفاع عن هذه الثكنة.</translation>
     </message>
 </context>
 <context>
@@ -7272,6 +7276,10 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
         <source>Restart the battle</source>
         <translation>أعد بدء المعركة</translation>
     </message>
+    <message>
+        <source>Click to look</source>
+        <translation>انقر للنظر</translation>
+    </message>
 </context>
 <context>
     <name>MainMenu</name>
@@ -7682,14 +7690,6 @@ to see preview</source>
         <translation>الخصوم</translation>
     </message>
     <message>
-        <source>Scripted</source>
-        <translation>مُبرمَجة</translation>
-    </message>
-    <message>
-        <source>Players only</source>
-        <translation>اللاعبون فقط</translation>
-    </message>
-    <message>
         <source>This battlefield brings its own enemies, so you can start alone</source>
         <translation>تأتي ساحة المعركة هذه بأعدائها الخاصين، لذا يمكنك البدء وحدك</translation>
     </message>
@@ -7832,6 +7832,14 @@ to see preview</source>
     <message>
         <source>Click to change this opponent&apos;s difficulty</source>
         <translation>انقر لتغيير صعوبة هذا الخصم</translation>
+    </message>
+    <message>
+        <source>Built-in foes</source>
+        <translation>أعداء مدمجون</translation>
+    </message>
+    <message>
+        <source>Needs a rival</source>
+        <translation>يحتاج إلى خصم</translation>
     </message>
 </context>
 <context>
@@ -8092,6 +8100,17 @@ to see preview</source>
     <message>
         <source>Controls ?</source>
         <translation>التحكّم ؟</translation>
+    </message>
+</context>
+<context>
+    <name>MinimapViewModel</name>
+    <message>
+        <source>Your troops are under attack</source>
+        <translation>قواتك تتعرض للهجوم</translation>
+    </message>
+    <message>
+        <source>Your %1 is under attack</source>
+        <translation>مبناك يتعرض للهجوم: %1</translation>
     </message>
 </context>
 <context>
@@ -10169,8 +10188,8 @@ to see preview</source>
         <translation>سقط معسكر المؤخرة. أمسكته كما يمسك التّرياري كل شيء - مدة كافية، ولا أكثر. سيتدبّر سكيبيو أمره بدون خيامي.</translation>
     </message>
     <message>
-        <source>The river runs north to south across the middle of the valley; the nearest crossing is due east of camp. Hanno&apos;s Iberians wait upstream on the far bank - strike the Volcae from both sides at once.</source>
-        <translation>يجري النهر من الشمال إلى الجنوب عبر وسط الوادي؛ وأقرب معبر شرق المعسكر مباشرة. أيبيريو حنون ينتظرون أعلى النهر على الضفة البعيدة - اضرب الفولكاي من الجانبين معًا.</translation>
+        <source>The river runs north to south across the middle of the valley; the nearest crossing is due east of camp. Upstream of Hanno&apos;s Iberians the Rhône runs wide and shallow enough to wade - strike the Volcae from both sides at once.</source>
+        <translation>يجري النهر من الشمال إلى الجنوب عبر وسط الوادي؛ وأقرب معبر شرق المعسكر مباشرة. أعلى النهر بعد أيبيريي حنون يتّسع الرون ويضحل بما يكفي لخوضه - اضرب الفولكاي من الجانبين معًا.</translation>
     </message>
     <message>
         <source>The road runs east along the lake. Bring the Gauls down off the western heights to shut its mouth, and the column has only one way left to go.</source>
@@ -12406,6 +12425,10 @@ Right-click to cancel.</source>
     <message>
         <source>Saved</source>
         <translation>تم الحفظ</translation>
+    </message>
+    <message>
+        <source>Autosave</source>
+        <translation>الحفظ التلقائي</translation>
     </message>
 </context>
 <context>

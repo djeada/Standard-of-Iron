@@ -337,6 +337,9 @@ void GameEngine::ensure_initialized() {
   if (!m_renderer || (m_camera == nullptr)) {
     return;
   }
+  if (!m_runtime.initialized && QOpenGLContext::currentContext() == nullptr) {
+    return;
+  }
   const bool was_initialized = m_runtime.initialized;
   QString error;
   App::Core::WorldBootstrap::ensure_initialized(m_runtime.initialized,

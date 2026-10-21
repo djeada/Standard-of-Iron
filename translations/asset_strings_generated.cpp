@@ -391,7 +391,7 @@ namespace {
     QT_TRANSLATE_NOOP("Missions", "The reserve's vanguard"),
     QT_TRANSLATE_NOOP("Missions", "The river garrison is on the road. That is every man Placentia can spare, and a few it cannot."),
     QT_TRANSLATE_NOOP("Missions", "The river reserve"),
-    QT_TRANSLATE_NOOP("Missions", "The river runs north to south across the middle of the valley; the nearest crossing is due east of camp. Hanno's Iberians wait upstream on the far bank - strike the Volcae from both sides at once."),
+    QT_TRANSLATE_NOOP("Missions", "The river runs north to south across the middle of the valley; the nearest crossing is due east of camp. Upstream of Hanno's Iberians the Rhône runs wide and shallow enough to wade - strike the Volcae from both sides at once."),
     QT_TRANSLATE_NOOP("Missions", "The road runs east along the lake. Bring the Gauls down off the western heights to shut its mouth, and the column has only one way left to go."),
     QT_TRANSLATE_NOOP("Missions", "The scouts are not coming back, then. Well - everyone begins somewhere, and you have begun by breaking an outpost full of men who were expecting their lunch. Rome will send someone who counts next time."),
     QT_TRANSLATE_NOOP("Missions", "The screen is coming across the flats. Javelin-men and the Gallic horse in front, my own horse behind them, the usual arrangement. Please try to stand still; it makes the reports so much tidier."),

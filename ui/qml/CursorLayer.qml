@@ -854,7 +854,7 @@ Item {
         border.width: 1
         width: chipRow.implicitWidth + 16
         height: chipRow.implicitHeight + 8
-        x: Math.min(Math.max(0, root.pointerX + 22), root.width - width)
+        x: root.pointerX + 22 + width > root.width * 0.8 ? Math.max(0, root.pointerX - width - 12) : Math.min(Math.max(0, root.pointerX + 22), root.width - width)
         y: Math.min(Math.max(0, root.pointerY + 24), root.height - height)
 
         Timer {

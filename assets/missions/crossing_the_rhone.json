@@ -149,7 +149,7 @@
       "type": "reach_position",
       "title": "Reach the Rhone crossing",
       "description": "Bring the column to the pontoon bridge on the near bank. The Volcae hold its far end.",
-      "hint": "The river runs north to south across the middle of the valley; the nearest crossing is due east of camp. Hanno's Iberians wait upstream on the far bank - strike the Volcae from both sides at once.",
+      "hint": "The river runs north to south across the middle of the valley; the nearest crossing is due east of camp. Upstream of Hanno's Iberians the Rhône runs wide and shallow enough to wade - strike the Volcae from both sides at once.",
       "target": {
         "x": 240.9,
         "z": 189.5

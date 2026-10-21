@@ -977,6 +977,29 @@ TEST_F(UndeadAwakeningSystemTest, AwakeningAndDefeatEachAnnounceExactlyOnce) {
   EXPECT_TRUE(announcements.back().contains(QStringLiteral("shrine")));
 }
 
+TEST_F(UndeadAwakeningSystemTest, AnAwakeningIsAnnouncedOnlyToTheSideThatWokeIt) {
+  Engine::Core::World world;
+  Game::Systems::UndeadAwakeningSystem system(undead_services());
+
+  std::vector<int> audiences;
+  Engine::Core::ScopedEventSubscription<Engine::Core::MissionAnnouncementEvent> const
+      subscription([&audiences](const Engine::Core::MissionAnnouncementEvent& e) {
+        audiences.push_back(e.owner_id);
+      });
+
+  const Game::Map::MapDefinition map_definition = make_shrine_map();
+  Game::Map::TerrainService::instance().initialize(map_definition);
+  system.configure(map_definition);
+
+  add_intruder(world, {0.5F, 0.0F, 0.5F});
+  system.update(&world, 0.1F);
+  system.update(&world, 0.1F);
+
+  ASSERT_EQ(audiences.size(), 1U);
+  EXPECT_EQ(audiences.front(), 1)
+      << "a cairn an AI wakes across the map must not flash on every player's screen";
+}
+
 TEST_F(UndeadAwakeningSystemTest, KillingEveryWaveLeavesTheShrineToBeTaken) {
   Engine::Core::World world;
   Game::Systems::UndeadAwakeningSystem system(undead_services());
