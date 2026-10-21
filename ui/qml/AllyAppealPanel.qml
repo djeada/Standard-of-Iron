@@ -24,7 +24,7 @@ Column {
                 "declineLabel": appeal.decline || qsTr("Refuse"),
                 "targetX": Number(appeal.x) || 0,
                 "targetZ": Number(appeal.z) || 0,
-                "seconds": Number(appeal.seconds) || 45
+                "seconds": Number(appeal.seconds) || 90
             });
     }
 

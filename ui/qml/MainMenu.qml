@@ -881,7 +881,7 @@ Item {
                                     text: qsTr(commandItem.title)
                                     color: commandItem.selected ? Theme.textMain : Theme.textBright
                                     font.family: "serif"
-                                    font.pixelSize: root.narrow ? Design.Typography.bodyLarge : Design.Typography.subheading
+                                    font.pixelSize: root.narrow || root.command_row_height < 56 ? Design.Typography.bodyLarge : Design.Typography.subheading
                                     font.bold: true
                                     font.letterSpacing: commandItem.selected ? 0.9 : 0.3
                                     elide: Text.ElideRight

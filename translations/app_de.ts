@@ -293,12 +293,16 @@
         <translation>Männer, die diese Kaserne noch vorrätig hat. Jede Rekrutierung verbraucht die Männer ihrer Einheit; in einem Haus aufgezogene Zivilisten bringen mehr.</translation>
     </message>
     <message>
-        <source>Ask allies to defend</source>
-        <translation>Verbündete um Verteidigung bitten</translation>
-    </message>
-    <message>
         <source>Free queue slot: up to %1 recruits can wait in line</source>
         <translation>Freier Platz in der Warteschlange: bis zu %1 Rekruten können warten</translation>
+    </message>
+    <message>
+        <source>Call allies</source>
+        <translation>Verbündete rufen</translation>
+    </message>
+    <message>
+        <source>Ask allies to defend this barracks.</source>
+        <translation>Verbündete bitten, diese Kaserne zu verteidigen.</translation>
     </message>
 </context>
 <context>
@@ -7256,6 +7260,10 @@ Jede Rekrutierung kostet die Männer ihrer Einheit; die Reserve einer Kaserne he
         <source>Restart the battle</source>
         <translation>Schlacht neu starten</translation>
     </message>
+    <message>
+        <source>Click to look</source>
+        <translation>Zum Ansehen klicken</translation>
+    </message>
 </context>
 <context>
     <name>MainMenu</name>
@@ -7666,14 +7674,6 @@ um die Vorschau zu sehen</translation>
         <translation>Gegner</translation>
     </message>
     <message>
-        <source>Scripted</source>
-        <translation>Vorgegeben</translation>
-    </message>
-    <message>
-        <source>Players only</source>
-        <translation>Nur Spieler</translation>
-    </message>
-    <message>
         <source>This battlefield brings its own enemies, so you can start alone</source>
         <translation>Dieses Schlachtfeld bringt eigene Feinde mit, du kannst also allein starten</translation>
     </message>
@@ -7816,6 +7816,14 @@ um die Vorschau zu sehen</translation>
     <message>
         <source>Click to change this opponent&apos;s difficulty</source>
         <translation>Klicken, um die Schwierigkeit dieses Gegners zu ändern</translation>
+    </message>
+    <message>
+        <source>Built-in foes</source>
+        <translation>Eigene Gegner</translation>
+    </message>
+    <message>
+        <source>Needs a rival</source>
+        <translation>Braucht einen Gegner</translation>
     </message>
 </context>
 <context>
@@ -8076,6 +8084,17 @@ um die Vorschau zu sehen</translation>
     <message>
         <source>Controls ?</source>
         <translation>Steuerung ?</translation>
+    </message>
+</context>
+<context>
+    <name>MinimapViewModel</name>
+    <message>
+        <source>Your troops are under attack</source>
+        <translation>Deine Truppen werden angegriffen</translation>
+    </message>
+    <message>
+        <source>Your %1 is under attack</source>
+        <translation>Angriff auf dein Gebäude: %1</translation>
     </message>
 </context>
 <context>
@@ -10153,8 +10172,8 @@ um die Vorschau zu sehen</translation>
         <translation>Das Nachhutlager fällt. Ich hielt es, wie die Triarier alles halten - lange genug, und nicht länger. Scipio kommt ohne meine Zelte aus.</translation>
     </message>
     <message>
-        <source>The river runs north to south across the middle of the valley; the nearest crossing is due east of camp. Hanno&apos;s Iberians wait upstream on the far bank - strike the Volcae from both sides at once.</source>
-        <translation>Der Fluss fließt von Norden nach Süden mitten durch das Tal; der nächste Übergang liegt genau östlich des Lagers. Hannos Iberer warten flussaufwärts am anderen Ufer – greif die Volcae von beiden Seiten zugleich an.</translation>
+        <source>The river runs north to south across the middle of the valley; the nearest crossing is due east of camp. Upstream of Hanno&apos;s Iberians the Rhône runs wide and shallow enough to wade - strike the Volcae from both sides at once.</source>
+        <translation>Der Fluss fließt von Norden nach Süden mitten durch das Tal; der nächste Übergang liegt genau östlich des Lagers. Oberhalb von Hannos Iberern wird die Rhône breit und flach genug zum Durchwaten – greif die Volcae von beiden Seiten zugleich an.</translation>
     </message>
     <message>
         <source>The road runs east along the lake. Bring the Gauls down off the western heights to shut its mouth, and the column has only one way left to go.</source>
@@ -12386,6 +12405,10 @@ Rechtsklick zum Abbrechen.</translation>
     <message>
         <source>Saved</source>
         <translation>Gespeichert</translation>
+    </message>
+    <message>
+        <source>Autosave</source>
+        <translation>Autospeicherung</translation>
     </message>
 </context>
 <context>

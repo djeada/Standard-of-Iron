@@ -1158,7 +1158,7 @@ void draw_chevron(Renderer* renderer,
     model.translate(tip);
     model.rotate(yaw + side * 135.0F, 0.0F, 1.0F, 0.0F);
     model.translate(0.0F, 0.0F, arm * 0.5F);
-    model.scale(0.13F * size, 0.03F, arm);
+    model.scale(0.065F * size, 0.015F, arm * 0.5F);
     renderer->mesh(cube, model, color, nullptr, alpha);
   }
 }

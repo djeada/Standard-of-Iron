@@ -19,6 +19,8 @@ Rectangle {
     property string tooltip_text: ""
 
     readonly property bool engaged: chip_mouse.containsMouse && interactive
+    readonly property bool roomy: chip.width >= Design.Metrics.space24 * 5
+    readonly property bool value_fits: value_metrics.advanceWidth <= text_area.width
 
     signal activated
 
@@ -36,9 +38,9 @@ Rectangle {
     Image {
         id: emblem
 
-        width: chip.emblem_source !== "" ? Design.Metrics.iconMedium : 0
-        height: width
-        visible: chip.emblem_source !== ""
+        width: emblem.visible ? Design.Metrics.iconMedium : 0
+        height: Design.Metrics.iconMedium
+        visible: chip.emblem_source !== "" && chip.roomy
         source: chip.emblem_source
         fillMode: Image.PreserveAspectFit
         smooth: true
@@ -54,9 +56,9 @@ Rectangle {
     Design.IronVectorIcon {
         id: glyph
 
-        width: chip.vector_icon !== "" ? Design.Metrics.iconMedium : 0
-        height: width
-        visible: chip.vector_icon !== ""
+        width: glyph.visible ? Design.Metrics.iconMedium : 0
+        height: Design.Metrics.iconMedium
+        visible: chip.vector_icon !== "" && chip.roomy
         iconId: chip.vector_icon
         accent: chip.vector_accent
 
@@ -87,7 +89,7 @@ Rectangle {
             Text {
                 width: parent.width
                 text: chip.caption
-                visible: chip.caption !== ""
+                visible: chip.caption !== "" && chip.value_fits
                 color: Theme.textSubLite
                 font.pixelSize: Design.Typography.caption
                 horizontalAlignment: Text.AlignHCenter
@@ -101,8 +103,18 @@ Rectangle {
                 font.pixelSize: Design.Typography.caption
                 font.bold: true
                 horizontalAlignment: Text.AlignHCenter
+                wrapMode: Text.Wrap
+                maximumLineCount: chip.value_fits ? 1 : 2
                 elide: Text.ElideRight
             }
+        }
+
+        TextMetrics {
+            id: value_metrics
+
+            text: chip.value
+            font.pixelSize: Design.Typography.caption
+            font.bold: true
         }
     }
 

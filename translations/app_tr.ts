@@ -293,12 +293,16 @@
         <translation>Bu kışlanın hâlâ elinde tuttuğu adamlar. Her asker mangasındaki adamları harcar; bir Evde yetişen siviller daha fazlasını getirir.</translation>
     </message>
     <message>
-        <source>Ask allies to defend</source>
-        <translation>Müttefiklerden savunmasını iste</translation>
-    </message>
-    <message>
         <source>Free queue slot: up to %1 recruits can wait in line</source>
         <translation>Boş sıra yeri: en fazla %1 acemi sırada bekleyebilir</translation>
+    </message>
+    <message>
+        <source>Call allies</source>
+        <translation>Müttefikleri çağır</translation>
+    </message>
+    <message>
+        <source>Ask allies to defend this barracks.</source>
+        <translation>Müttefiklerden bu kışlayı savunmalarını iste.</translation>
     </message>
 </context>
 <context>
@@ -7252,6 +7256,10 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
         <source>Restart the battle</source>
         <translation>Savaşı yeniden başlat</translation>
     </message>
+    <message>
+        <source>Click to look</source>
+        <translation>Bakmak için tıkla</translation>
+    </message>
 </context>
 <context>
     <name>MainMenu</name>
@@ -7662,14 +7670,6 @@ bir harita seç</translation>
         <translation>Rakipler</translation>
     </message>
     <message>
-        <source>Scripted</source>
-        <translation>Betikli</translation>
-    </message>
-    <message>
-        <source>Players only</source>
-        <translation>Yalnızca oyuncular</translation>
-    </message>
-    <message>
         <source>This battlefield brings its own enemies, so you can start alone</source>
         <translation>Bu savaş alanı kendi düşmanlarını getirir, bu yüzden yalnız başlayabilirsin</translation>
     </message>
@@ -7812,6 +7812,14 @@ bir harita seç</translation>
     <message>
         <source>Click to change this opponent&apos;s difficulty</source>
         <translation>Bu rakibin zorluğunu değiştirmek için tıkla</translation>
+    </message>
+    <message>
+        <source>Built-in foes</source>
+        <translation>Kendi düşmanları</translation>
+    </message>
+    <message>
+        <source>Needs a rival</source>
+        <translation>Rakip gerekir</translation>
     </message>
 </context>
 <context>
@@ -8072,6 +8080,17 @@ bir harita seç</translation>
     <message>
         <source>Controls ?</source>
         <translation>Kontroller ?</translation>
+    </message>
+</context>
+<context>
+    <name>MinimapViewModel</name>
+    <message>
+        <source>Your troops are under attack</source>
+        <translation>Birliklerin saldırı altında</translation>
+    </message>
+    <message>
+        <source>Your %1 is under attack</source>
+        <translation>Binan saldırı altında: %1</translation>
     </message>
 </context>
 <context>
@@ -10149,8 +10168,8 @@ bir harita seç</translation>
         <translation>Artçı ordugâhı düşüyor. Onu triarii&apos;nin her şeyi tuttuğu gibi tuttum: yetecek kadar, bir an fazla değil. Scipio benim çadırlarım olmadan da idare eder.</translation>
     </message>
     <message>
-        <source>The river runs north to south across the middle of the valley; the nearest crossing is due east of camp. Hanno&apos;s Iberians wait upstream on the far bank - strike the Volcae from both sides at once.</source>
-        <translation>Nehir vadinin ortasından kuzeyden güneye akar; en yakın geçit kampın tam doğusunda. Hanno&apos;nun İberleri karşı kıyıda, nehrin yukarısında bekliyor - Volcae&apos;ye iki yandan aynı anda vur.</translation>
+        <source>The river runs north to south across the middle of the valley; the nearest crossing is due east of camp. Upstream of Hanno&apos;s Iberians the Rhône runs wide and shallow enough to wade - strike the Volcae from both sides at once.</source>
+        <translation>Nehir vadinin ortasından kuzeyden güneye akar; en yakın geçit kampın tam doğusunda. Hanno&apos;nun İberlerinin yukarısında Rhône genişler ve yürüyerek geçilecek kadar sığlaşır - Volcae&apos;ye iki yandan aynı anda vur.</translation>
     </message>
     <message>
         <source>The road runs east along the lake. Bring the Gauls down off the western heights to shut its mouth, and the column has only one way left to go.</source>
@@ -12381,6 +12400,10 @@ Right-click to cancel.</source>
     <message>
         <source>Saved</source>
         <translation>Kaydedildi</translation>
+    </message>
+    <message>
+        <source>Autosave</source>
+        <translation>Otomatik kayıt</translation>
     </message>
 </context>
 <context>

@@ -293,12 +293,16 @@
         <translation>Homens que este quartel ainda mantém. Cada recruta gasta os homens do seu esquadrão; civis criados numa Casa trazem mais.</translation>
     </message>
     <message>
-        <source>Ask allies to defend</source>
-        <translation>Pedir aos aliados que defendam</translation>
-    </message>
-    <message>
         <source>Free queue slot: up to %1 recruits can wait in line</source>
         <translation>Vaga livre na fila: até %1 recrutas podem aguardar</translation>
+    </message>
+    <message>
+        <source>Call allies</source>
+        <translation>Chamar aliados</translation>
+    </message>
+    <message>
+        <source>Ask allies to defend this barracks.</source>
+        <translation>Peça aos aliados que defendam este quartel.</translation>
     </message>
 </context>
 <context>
@@ -7256,6 +7260,10 @@ Cada recruta custa os homens do seu esquadrão; a reserva num quartel eleva o li
         <source>Restart the battle</source>
         <translation>Reiniciar a batalha</translation>
     </message>
+    <message>
+        <source>Click to look</source>
+        <translation>Clique para ver</translation>
+    </message>
 </context>
 <context>
     <name>MainMenu</name>
@@ -7666,14 +7674,6 @@ para ver a prévia</translation>
         <translation>Oposição</translation>
     </message>
     <message>
-        <source>Scripted</source>
-        <translation>Roteirizada</translation>
-    </message>
-    <message>
-        <source>Players only</source>
-        <translation>Somente jogadores</translation>
-    </message>
-    <message>
         <source>This battlefield brings its own enemies, so you can start alone</source>
         <translation>Este campo de batalha traz os próprios inimigos, então você pode começar sozinho</translation>
     </message>
@@ -7816,6 +7816,14 @@ para ver a prévia</translation>
     <message>
         <source>Click to change this opponent&apos;s difficulty</source>
         <translation>Clique para mudar a dificuldade deste oponente</translation>
+    </message>
+    <message>
+        <source>Built-in foes</source>
+        <translation>Inimigos próprios</translation>
+    </message>
+    <message>
+        <source>Needs a rival</source>
+        <translation>Precisa de um rival</translation>
     </message>
 </context>
 <context>
@@ -8076,6 +8084,17 @@ para ver a prévia</translation>
     <message>
         <source>Controls ?</source>
         <translation>Controles ?</translation>
+    </message>
+</context>
+<context>
+    <name>MinimapViewModel</name>
+    <message>
+        <source>Your troops are under attack</source>
+        <translation>Suas tropas estão sob ataque</translation>
+    </message>
+    <message>
+        <source>Your %1 is under attack</source>
+        <translation>Seu prédio está sob ataque: %1</translation>
     </message>
 </context>
 <context>
@@ -10153,8 +10172,8 @@ para ver a prévia</translation>
         <translation>O acampamento da retaguarda cai. Segurei-o como os triários seguram tudo: o bastante, e nem um instante mais. Cipião se vira sem as minhas tendas.</translation>
     </message>
     <message>
-        <source>The river runs north to south across the middle of the valley; the nearest crossing is due east of camp. Hanno&apos;s Iberians wait upstream on the far bank - strike the Volcae from both sides at once.</source>
-        <translation>O rio corre de norte a sul pelo meio do vale; a travessia mais próxima fica bem a leste do acampamento. Os iberos de Hanão esperam rio acima, na outra margem — ataque os volcas pelos dois lados ao mesmo tempo.</translation>
+        <source>The river runs north to south across the middle of the valley; the nearest crossing is due east of camp. Upstream of Hanno&apos;s Iberians the Rhône runs wide and shallow enough to wade - strike the Volcae from both sides at once.</source>
+        <translation>O rio corre de norte a sul pelo meio do vale; a travessia mais próxima fica bem a leste do acampamento. Acima dos iberos de Hanão, o Ródano fica largo e raso o bastante para vadear — ataque os volcas pelos dois lados ao mesmo tempo.</translation>
     </message>
     <message>
         <source>The road runs east along the lake. Bring the Gauls down off the western heights to shut its mouth, and the column has only one way left to go.</source>
@@ -12386,6 +12405,10 @@ Clique com o botão direito para cancelar.</translation>
     <message>
         <source>Saved</source>
         <translation>Salvo</translation>
+    </message>
+    <message>
+        <source>Autosave</source>
+        <translation>Salvamento automático</translation>
     </message>
 </context>
 <context>

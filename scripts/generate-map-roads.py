@@ -314,6 +314,7 @@ class RoutingField:
         self._raster_terrain()
         self.bridges = self._move_bridges_off_protected_terrain(self.bridges)
         self._raster_water()
+        self._open_fords()
         self._open_bridges()
         self._component_labels: list[int] | None = None
         self.rafts = self._read_rafts()
@@ -798,6 +799,56 @@ class RoutingField:
                 depth * 0.5 + self.clearance,
                 float(lake.get("rotation", lake.get("rotation_deg", 0.0))),
             )
+
+    def _open_fords(self) -> None:
+        """A ford is a stretch of river men wade, so a road may run straight through it."""
+        for river in self.definition.get("rivers") or []:
+            if not river.get("ford"):
+                continue
+            points = [self.coords.to_grid(point) for point in river_points(river)]
+            radius = self.coords.distance_to_grid(float(river.get("width", 3.0))) * 0.5
+            radius += self.clearance
+            for start, end in zip(points, points[1:], strict=False):
+                self._raster_capsule(self.water, start, end, radius, value=0)
+        for ford in self.definition.get("fords") or []:
+            position = ford.get("position")
+            if position is None and "x" in ford and "z" in ford:
+                position = [ford["x"], ford["z"]]
+            if not position:
+                continue
+            centre = self.coords.to_grid(position)
+            host = min(
+                self.river_segments,
+                key=lambda segment: point_segment_distance(
+                    centre, segment[0], segment[1]
+                ),
+                default=None,
+            )
+            if host is None:
+                continue
+            start, end, width = host
+            along = normalized(sub(end, start))
+            half_length = (
+                self.coords.distance_to_grid(float(ford.get("length", 14.0))) * 0.5
+            )
+            half_span = width * 0.5 + self.clearance + 2.0
+            across = (-along[1], along[0])
+            reach = math.hypot(half_length, half_span)
+            for z in range(
+                max(0, int(math.floor(centre[1] - reach))),
+                min(self.height - 1, int(math.ceil(centre[1] + reach))) + 1,
+            ):
+                for x in range(
+                    max(0, int(math.floor(centre[0] - reach))),
+                    min(self.width - 1, int(math.ceil(centre[0] + reach))) + 1,
+                ):
+                    offset = sub((x, z), centre)
+                    if (
+                        abs(offset[0] * along[0] + offset[1] * along[1]) <= half_length
+                        and abs(offset[0] * across[0] + offset[1] * across[1])
+                        <= half_span
+                    ):
+                        self.water[self.index(x, z)] = 0
 
     def _open_bridges(self) -> None:
         for bridge_id, bridge in enumerate(self.bridges):

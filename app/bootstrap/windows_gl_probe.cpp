@@ -2,6 +2,9 @@
 
 #ifdef Q_OS_WIN
 
+#include <windows.h>
+#pragma comment(lib, "opengl32.lib")
+
 #include <QByteArray>
 #include <QDebug>
 #include <QString>
@@ -9,16 +12,10 @@
 #include <array>
 #include <cstdio>
 #include <cstring>
+#include <gl/gl.h>
 #include <string_view>
 
-// The Windows OpenGL header needs windows.h's APIENTRY and WINGDIAPI macros.
-// clang-format off
-#include <windows.h>
-#include <gl/gl.h>
-// clang-format on
-
 #include "render/gl/context_requirements.h"
-#pragma comment(lib, "opengl32.lib")
 
 #ifndef WGL_CONTEXT_MAJOR_VERSION_ARB
 #define WGL_CONTEXT_MAJOR_VERSION_ARB 0x2091

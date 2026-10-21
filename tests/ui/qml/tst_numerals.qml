@@ -120,10 +120,10 @@ TestCase {
     }
 
     function test_a_span_names_its_units() {
-        compare(Numerals.span(0), "Ns");
-        compare(Numerals.span(34), "XXXIVs");
-        compare(Numerals.span(754), "XIIm XXXIVs");
-        compare(Numerals.span(3661), "Ih Im");
+        compare(Numerals.span(0), "0s");
+        compare(Numerals.span(34), "34s");
+        compare(Numerals.span(754), "12m 34s");
+        compare(Numerals.span(3661), "1h 1m");
     }
 
     function test_non_numeric_input_yields_empty_text() {

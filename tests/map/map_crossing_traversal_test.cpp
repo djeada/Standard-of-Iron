@@ -3,8 +3,10 @@
 #include <QString>
 #include <QVector3D>
 
+#include <algorithm>
 #include <cmath>
 #include <gtest/gtest.h>
+#include <limits>
 #include <optional>
 #include <vector>
 
@@ -22,6 +24,7 @@
 #include "game/systems/navigation/walkability.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/runtime_system_registry.h"
+#include "game/units/factory.h"
 #include "units/spawn_type.h"
 
 namespace {
@@ -270,4 +273,146 @@ TEST_F(MapCrossingTraversalTest, ASquadOrderedOverEveryShippedFordReachesTheFarB
     EXPECT_GT(crossings_tested, 0)
         << file_name.toStdString() << " has bridges but none could be approached";
   }
+}
+
+TEST_F(MapCrossingTraversalTest, ASquadOrderedAcrossEveryShippedFordWadesToTheFarBank) {
+  const QStringList maps = {QStringLiteral("map_rivers.json"),
+                            QStringLiteral("map_crossing_rhone.json"),
+                            QStringLiteral("map_battle_cannae.json"),
+                            QStringLiteral("map_battle_trebia.json")};
+
+  for (const QString& file_name : maps) {
+    auto map = load_map(file_name);
+    ASSERT_FALSE(map.fords.empty()) << file_name.toStdString() << " lost its fords";
+    build_navigation(map);
+
+    const auto& terrain = Game::Map::TerrainService::instance();
+    const auto* height_map = terrain.get_height_map();
+    ASSERT_NE(height_map, nullptr) << file_name.toStdString();
+    ASSERT_EQ(height_map->get_fords().size(), map.fords.size())
+        << file_name.toStdString() << ": a ford was dropped as not lying on a river";
+
+    for (const auto& ford : height_map->get_fords()) {
+      const Game::Map::RiverSegment* host = nullptr;
+      float host_distance = std::numeric_limits<float>::max();
+      for (const auto& river : height_map->get_river_segments()) {
+        const QVector3D span = river.end - river.start;
+        const float length_sq = span.x() * span.x() + span.z() * span.z();
+        if (length_sq < 1.0e-6F) {
+          continue;
+        }
+        const float t = std::clamp(((ford.position.x() - river.start.x()) * span.x() +
+                                    (ford.position.z() - river.start.z()) * span.z()) /
+                                       length_sq,
+                                   0.0F,
+                                   1.0F);
+        const float d =
+            std::hypot(ford.position.x() - (river.start.x() + span.x() * t),
+                       ford.position.z() - (river.start.z() + span.z() * t));
+        if (d < host_distance) {
+          host_distance = d;
+          host = &river;
+        }
+      }
+      ASSERT_NE(host, nullptr)
+          << file_name.toStdString() << " " << ford.id.toStdString();
+      QVector3D along = host->end - host->start;
+      along.setY(0.0F);
+      along.normalize();
+      const QVector3D across(-along.z(), 0.0F, along.x());
+      const float reach = host->width * 0.5F + k_approach_metres;
+
+      const auto start = standable(ford.position - across * reach);
+      const auto target = standable(ford.position + across * reach);
+      ASSERT_TRUE(start.has_value() && target.has_value())
+          << file_name.toStdString() << " " << ford.id.toStdString()
+          << ": no dry ground on one of its banks";
+
+      Engine::Core::World world;
+      Game::Systems::register_runtime_systems(world);
+      constexpr int k_squad_size = 8;
+      const auto squad = spawn_squad(world, *start, k_squad_size);
+      Game::Systems::CommandService::move_units(
+          world, squad, std::vector<QVector3D>(squad.size(), *target));
+
+      bool waded = false;
+      for (int tick = 0; tick < k_crossing_seconds * 30; ++tick) {
+        world.update(k_tick_seconds);
+        if (tick % 15 != 0) {
+          continue;
+        }
+        for (const auto id : squad) {
+          const auto* transform =
+              world.get_entity(id)->get_component<Engine::Core::TransformComponent>();
+          waded = waded || terrain.ford_water_depth_at(transform->position.x,
+                                                       transform->position.z) > 0.0F;
+        }
+        if (waded && arrived_count(world, squad, *target, 10.0F) == k_squad_size) {
+          break;
+        }
+      }
+
+      EXPECT_TRUE(waded) << file_name.toStdString() << " " << ford.id.toStdString()
+                         << ": the squad went round instead of wading the ford";
+      const int arrived = arrived_count(world, squad, *target, 10.0F);
+      EXPECT_GE(arrived, (k_squad_size * 3) / 4)
+          << file_name.toStdString() << " " << ford.id.toStdString() << ": only "
+          << arrived << " of " << k_squad_size << " bodies waded across in "
+          << k_crossing_seconds << "s; worst stuck time "
+          << worst_stuck_time(world, squad) << "s";
+    }
+  }
+}
+
+TEST_F(MapCrossingTraversalTest, AnElephantWadesTheRhoneShallowsWhereHannoCrossed) {
+  auto map = load_map(QStringLiteral("map_crossing_rhone.json"));
+  build_navigation(map);
+
+  Engine::Core::World world;
+  Game::Systems::register_runtime_systems(world);
+  Game::Units::UnitFactoryRegistry factory;
+  Game::Units::register_built_in_units(factory);
+
+  const auto grid = [&](float x, float z) {
+    return QVector3D(
+        x - (map.grid.width * 0.5F - 0.5F), 0.0F, z - (map.grid.height * 0.5F - 0.5F));
+  };
+  const auto start = standable(grid(205.0F, 58.0F));
+  const auto target = standable(grid(272.0F, 58.0F));
+  ASSERT_TRUE(start.has_value() && target.has_value());
+
+  Game::Units::SpawnParams params;
+  params.position = *start;
+  params.player_id = 1;
+  params.spawn_type = Game::Units::SpawnType::Elephant;
+  params.nation_id = Game::Systems::NationID::Carthage;
+  params.is_initial_spawn = true;
+  auto elephant = factory.create(Game::Units::SpawnType::Elephant, world, params);
+  ASSERT_TRUE(elephant);
+  const auto id = elephant->id();
+
+  Game::Systems::CommandService::move_units(world, {id}, {*target});
+  const auto& terrain = Game::Map::TerrainService::instance();
+  float closest = 1.0e9F;
+  bool waded = false;
+  for (int tick = 0; tick < 150 * 30; ++tick) {
+    world.update(k_tick_seconds);
+    const auto* transform =
+        world.get_entity(id)->get_component<Engine::Core::TransformComponent>();
+    waded = waded || terrain.ford_water_depth_at(transform->position.x,
+                                                 transform->position.z) > 0.0F;
+    closest = std::min(closest,
+                       std::hypot(transform->position.x - target->x(),
+                                  transform->position.z - target->z()));
+    if (closest < 6.0F) {
+      break;
+    }
+  }
+  const auto* transform =
+      world.get_entity(id)->get_component<Engine::Core::TransformComponent>();
+  EXPECT_TRUE(waded) << "the elephant walked round to a bridge instead of wading";
+  EXPECT_LT(closest, 6.0F) << "the elephant stopped at ("
+                           << transform->position.x + 324.5F << ","
+                           << transform->position.z + 324.5F
+                           << ") in map coords, short of the far bank";
 }

@@ -64,7 +64,7 @@ Item {
                 detail: modelData.detail
                 icon: modelData.icon
                 count: modelData.repeats
-                onDismissRequested: Design.Notifications.dismiss(modelData.id)
+                onDismissRequested: Design.Notifications.activate(modelData.id)
 
                 Timer {
                     id: dwellTimer

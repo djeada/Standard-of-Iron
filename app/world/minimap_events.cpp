@@ -4,6 +4,7 @@
 #include <cmath>
 
 #include "app/viewmodels/minimap_view_model.h"
+#include "app/world/focus_target.h"
 #include "app/world/minimap_manager.h"
 #include "game/audio/audio_cues.h"
 #include "game/audio/cue_ids.h"
@@ -101,6 +102,11 @@ void MinimapEvents::note_combat_hit(const Engine::Core::CombatHitEvent& event) {
   if (!is_building && unit->owner_id == local && event.attacker_owner_id != local) {
     sound_troops_under_attack(event, transform->position.x, transform->position.z);
   }
+  if (is_building && unit->owner_id == local && attacked_by_an_enemy(event)) {
+    m_sources.view_model->note_home_attacked(App::Core::building_display_name(*unit),
+                                             transform->position.x,
+                                             transform->position.z);
+  }
   m_sources.view_model->note_alert(
       is_building ? App::ViewModels::MinimapAlert::StructureAttacked
                   : App::ViewModels::MinimapAlert::TroopsAttacked,
@@ -108,6 +114,16 @@ void MinimapEvents::note_combat_hit(const Engine::Core::CombatHitEvent& event) {
       transform->position.z,
       unit->owner_id,
       event.attacker_owner_id);
+}
+
+auto MinimapEvents::attacked_by_an_enemy(
+    const Engine::Core::CombatHitEvent& event) const -> bool {
+  if (m_sources.session == nullptr) {
+    return event.attacker_owner_id != *m_sources.local_owner_id;
+  }
+  const auto& owners = m_sources.session->owners();
+  const int local = *m_sources.local_owner_id;
+  return owners.is_player(local) && owners.are_enemies(local, event.attacker_owner_id);
 }
 
 void MinimapEvents::sound_troops_under_attack(const Engine::Core::CombatHitEvent& event,
@@ -127,6 +143,7 @@ void MinimapEvents::sound_troops_under_attack(const Engine::Core::CombatHitEvent
   }
   if (m_troops_alarm.note_hit(world_x, world_z, m_elapsed_seconds)) {
     Game::Audio::play_cue(Game::Audio::Cue::k_alert_base_under_attack);
+    m_sources.view_model->note_home_attacked({}, world_x, world_z);
   }
 }
 

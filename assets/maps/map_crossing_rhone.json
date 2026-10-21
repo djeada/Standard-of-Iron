@@ -11857,5 +11857,19 @@
                 240.7
             ]
         }
+    ],
+    "fords": [
+        {
+            "id": "rhone_island_shallows",
+            "position": [
+                238.4,
+                58.0
+            ],
+            "length": 30,
+            "depth": 0.6,
+            "speed": 0.5,
+            "cold": 0.15,
+            "exposure": 1.3
+        }
     ]
 }

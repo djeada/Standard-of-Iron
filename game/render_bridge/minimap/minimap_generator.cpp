@@ -8,6 +8,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
+#include <utility>
 #include <variant>
 
 #include "minimap_decor.h"
@@ -84,6 +86,7 @@ auto MinimapGenerator::generate(const MapDefinition& map_def) -> QImage {
   render_roads(image, map_def, projection);
   paint_water_layer(image, map_def, projection);
   paint_terrain_features(image, map_def, projection);
+  render_fords(image, map_def, projection);
   render_bridges(image, map_def, projection);
   render_undead_zones(image, map_def, projection);
   render_world_props(image, map_def, projection);
@@ -213,6 +216,81 @@ void MinimapGenerator::render_bridges(QImage& image,
         painter.drawLine(QPointF(plank_x - perp_x, plank_y - perp_y),
                          QPointF(plank_x + perp_x, plank_y + perp_y));
       }
+    }
+  }
+}
+
+void MinimapGenerator::render_fords(QImage& image,
+                                    const MapDefinition& map_def,
+                                    const MinimapProjection& projection) {
+  if (map_def.fords.empty()) {
+    return;
+  }
+
+  QPainter painter(&image);
+  painter.setRenderHint(QPainter::Antialiasing, true);
+
+  for (const auto& ford : map_def.fords) {
+    const RiverSegment* host = nullptr;
+    float host_distance = std::numeric_limits<float>::max();
+    for (const auto& river : map_def.rivers) {
+      const float dx = river.end.x() - river.start.x();
+      const float dz = river.end.z() - river.start.z();
+      const float length_sq = dx * dx + dz * dz;
+      if (length_sq < 1.0e-6F) {
+        continue;
+      }
+      const float t = std::clamp(((ford.position.x() - river.start.x()) * dx +
+                                  (ford.position.z() - river.start.z()) * dz) /
+                                     length_sq,
+                                 0.0F,
+                                 1.0F);
+      const float distance = std::hypot(ford.position.x() - (river.start.x() + dx * t),
+                                        ford.position.z() - (river.start.z() + dz * t));
+      if (distance < host_distance) {
+        host_distance = distance;
+        host = &river;
+      }
+    }
+    if (host == nullptr || host_distance > host->width + ford.length) {
+      continue;
+    }
+
+    const float along_x = host->end.x() - host->start.x();
+    const float along_z = host->end.z() - host->start.z();
+    const float along_length = std::hypot(along_x, along_z);
+    const float ux = along_x / along_length;
+    const float uz = along_z / along_length;
+    const float half_length = ford.length * 0.5F;
+    const float half_span = host->width * 0.5F + 1.5F;
+
+    QPolygonF shallows;
+    for (const auto [sa, sc] : {std::pair{-1.0F, -1.0F},
+                                std::pair{1.0F, -1.0F},
+                                std::pair{1.0F, 1.0F},
+                                std::pair{-1.0F, 1.0F}}) {
+      const float wx = ford.position.x() + ux * half_length * sa - uz * half_span * sc;
+      const float wz = ford.position.z() + uz * half_length * sa + ux * half_span * sc;
+      const auto [px, py] = projection.to_pixel(wx, wz);
+      shallows << QPointF(px, py);
+    }
+    QColor sand = Palette::ROAD_HIGHLIGHT;
+    sand.setAlpha(150);
+    painter.setPen(QPen(Palette::INK_MEDIUM, 0.8, Qt::DashLine));
+    painter.setBrush(sand);
+    painter.drawPolygon(shallows);
+
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(Palette::INK_MEDIUM);
+    const int stones = 5;
+    for (int i = 0; i < stones; ++i) {
+      const float across =
+          (static_cast<float>(i) / static_cast<float>(stones - 1)) * 2.0F - 1.0F;
+      const float wx = ford.position.x() - uz * half_span * across * 0.8F;
+      const float wz = ford.position.z() + ux * half_span * across * 0.8F;
+      const auto [px, py] = projection.to_pixel(wx, wz);
+      const float dot = std::max(0.9F, projection.to_pixel_size(1.2F));
+      painter.drawEllipse(QPointF(px, py), dot, dot);
     }
   }
 }

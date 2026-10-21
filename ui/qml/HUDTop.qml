@@ -151,7 +151,7 @@ Item {
         var owners = game_ready() ? (game.owner_info || []) : [];
         var count = 0;
         for (var i = 0; i < owners.length; ++i) {
-            if (owners[i].type === type)
+            if (owners[i].type === type && owners[i].is_contender !== false)
                 count++;
         }
         return count;
@@ -161,7 +161,9 @@ Item {
         var owners = game_ready() ? (game.owner_info || []) : [];
         var lines = [];
         for (var i = 0; i < owners.length; ++i) {
-            var line = owners[i].id + ": " + owners[i].name + " (" + owners[i].type + ")";
+            if (owners[i].is_contender === false || (owners[i].type !== "Player" && owners[i].type !== "AI"))
+                continue;
+            var line = owners[i].name;
             if (owners[i].isLocal)
                 line += qsTr(" [You]");
             lines.push(line);

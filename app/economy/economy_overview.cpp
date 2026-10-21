@@ -521,9 +521,16 @@ auto build_production_help(const EconomyOverviewRequest& request) -> QVariantMap
 auto capture_economy_coach_baseline(const EconomyOverviewRequest& request)
     -> EconomyCoachBaseline {
   const OwnerScan scan = scan_owner(request.world, request.owner_id);
-  return {.troop_manpower = troop_manpower_of(request),
-          .building_count = scan.building_count,
-          .captured = true};
+  EconomyCoachBaseline baseline{.troop_manpower = troop_manpower_of(request),
+                                .building_count = scan.building_count,
+                                .captured = true};
+  const bool match_under_way =
+      request.resources != nullptr &&
+      !request.resources->get_harvested_all(request.owner_id).empty();
+  if (match_under_way) {
+    baseline.steps_done.fill(true);
+  }
+  return baseline;
 }
 
 auto build_economy_coach_state(const EconomyOverviewRequest& request,

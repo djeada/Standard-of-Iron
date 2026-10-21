@@ -40,6 +40,7 @@ auto build_walkable_terrain(const Game::Map::MapDefinition& map)
   height_map.build_from_features(map.terrain);
   height_map.add_lakes(map.lakes);
   height_map.add_river_segments(map.rivers);
+  height_map.add_fords(map.fords);
   height_map.add_bridges(map.bridges);
   return height_map;
 }

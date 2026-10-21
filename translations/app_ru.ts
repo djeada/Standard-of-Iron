@@ -293,12 +293,16 @@
         <translation>Люди, которых ещё держат эти казармы. Каждый рекрут расходует людей своего отряда; гражданские, нанятые в Доме, приводят больше.</translation>
     </message>
     <message>
-        <source>Ask allies to defend</source>
-        <translation>Просить союзников защитить</translation>
-    </message>
-    <message>
         <source>Free queue slot: up to %1 recruits can wait in line</source>
         <translation>Свободное место в очереди: ждать могут до %1 новобранцев</translation>
+    </message>
+    <message>
+        <source>Call allies</source>
+        <translation>Позвать союзников</translation>
+    </message>
+    <message>
+        <source>Ask allies to defend this barracks.</source>
+        <translation>Попросить союзников защитить эти казармы.</translation>
     </message>
 </context>
 <context>
@@ -7260,6 +7264,10 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
         <source>Restart the battle</source>
         <translation>Начать битву заново</translation>
     </message>
+    <message>
+        <source>Click to look</source>
+        <translation>Нажмите, чтобы посмотреть</translation>
+    </message>
 </context>
 <context>
     <name>MainMenu</name>
@@ -7670,14 +7678,6 @@ to see preview</source>
         <translation>Противники</translation>
     </message>
     <message>
-        <source>Scripted</source>
-        <translation>По сценарию</translation>
-    </message>
-    <message>
-        <source>Players only</source>
-        <translation>Только игроки</translation>
-    </message>
-    <message>
         <source>This battlefield brings its own enemies, so you can start alone</source>
         <translation>Это поле боя приводит своих врагов, так что начать можно и одному</translation>
     </message>
@@ -7820,6 +7820,14 @@ to see preview</source>
     <message>
         <source>Click to change this opponent&apos;s difficulty</source>
         <translation>Нажмите, чтобы изменить сложность этого противника</translation>
+    </message>
+    <message>
+        <source>Built-in foes</source>
+        <translation>Свои враги</translation>
+    </message>
+    <message>
+        <source>Needs a rival</source>
+        <translation>Нужен соперник</translation>
     </message>
 </context>
 <context>
@@ -8080,6 +8088,17 @@ to see preview</source>
     <message>
         <source>Controls ?</source>
         <translation>Управление ?</translation>
+    </message>
+</context>
+<context>
+    <name>MinimapViewModel</name>
+    <message>
+        <source>Your troops are under attack</source>
+        <translation>Ваши войска атакованы</translation>
+    </message>
+    <message>
+        <source>Your %1 is under attack</source>
+        <translation>Ваше здание атаковано: %1</translation>
     </message>
 </context>
 <context>
@@ -10157,8 +10176,8 @@ to see preview</source>
         <translation>Лагерь арьергарда падает. Я держал его так, как триарии держат всё: достаточно долго и ни мгновением дольше. Сципион обойдётся без моих шатров.</translation>
     </message>
     <message>
-        <source>The river runs north to south across the middle of the valley; the nearest crossing is due east of camp. Hanno&apos;s Iberians wait upstream on the far bank - strike the Volcae from both sides at once.</source>
-        <translation>Река течёт с севера на юг через середину долины; ближайшая переправа лежит прямо к востоку от лагеря. Иберы Ганнона ждут выше по течению на дальнем берегу — ударьте по волькам с двух сторон разом.</translation>
+        <source>The river runs north to south across the middle of the valley; the nearest crossing is due east of camp. Upstream of Hanno&apos;s Iberians the Rhône runs wide and shallow enough to wade - strike the Volcae from both sides at once.</source>
+        <translation>Река течёт с севера на юг через середину долины; ближайшая переправа лежит прямо к востоку от лагеря. Выше иберов Ганнона Рона разливается широко и так мелко, что её можно перейти вброд — ударьте по волькам с двух сторон разом.</translation>
     </message>
     <message>
         <source>The road runs east along the lake. Bring the Gauls down off the western heights to shut its mouth, and the column has only one way left to go.</source>
@@ -12391,6 +12410,10 @@ Right-click to cancel.</source>
     <message>
         <source>Saved</source>
         <translation>Сохранено</translation>
+    </message>
+    <message>
+        <source>Autosave</source>
+        <translation>Автосохранение</translation>
     </message>
 </context>
 <context>

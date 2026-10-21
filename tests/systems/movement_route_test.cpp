@@ -493,6 +493,28 @@ TEST_F(MovementMotorTest, AnElephantTurnsItsBodyInsteadOfDriftingSideways) {
       << "the elephant slid sideways relative to where its body faced";
 }
 
+TEST_F(MovementMotorTest, AnElephantOrderedAwayFromItsFacingStillSetsOff) {
+  const EntityID id = spawn(Game::Units::SpawnType::Elephant, world_of(36, 24));
+  ASSERT_NE(id, 0U);
+  auto* transform =
+      m_session->world().get_entity(id)->get_component<TransformComponent>();
+  transform->rotation.y = 90.0F;
+  transform->desired_yaw = 90.0F;
+  transform->has_desired_yaw = true;
+
+  CommandService::move_unit(m_session->world(), id, world_of(8, 24));
+  const QVector3D start = position_of(id);
+  const double step = m_session->clock().tick_seconds();
+  for (int tick = 0; tick < 300; ++tick) {
+    transform->desired_yaw = 90.0F;
+    transform->has_desired_yaw = true;
+    run_for(step);
+  }
+  EXPECT_LT(position_of(id).x(), start.x() - 4.0F)
+      << "an elephant whose resting facing points away from its route turned back to "
+         "that facing every tick and never left the spot (Zama, 21 Oct 2026)";
+}
+
 TEST_F(MovementMotorTest, AUnitBoxedInByBuildingsWalksOutWhenOrdered) {
   for (int offset = 21; offset <= 27; ++offset) {
     block_cell(offset, 21);

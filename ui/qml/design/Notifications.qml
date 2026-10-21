@@ -29,6 +29,7 @@ QtObject {
                     merged[i] = Object.assign({}, merged[i], {
                             "repeats": merged[i].repeats + 1,
                             "message": message,
+                            "activate": opts.activate || merged[i].activate,
                             "priority": root.rank(normalized) < root.rank(merged[i].priority) ? normalized : merged[i].priority
                         });
                     root.queue = root.sorted(merged);
@@ -44,6 +45,7 @@ QtObject {
             "icon": opts.icon || "",
             "channel": channel,
             "sticky": opts.sticky === true,
+            "activate": opts.activate || null,
             "repeats": 1,
             "sequence": ++root.m_sequence
         };
@@ -82,6 +84,16 @@ QtObject {
         root.queue = remaining;
         root.dismissed(removed);
         return true;
+    }
+
+    function activate(id) {
+        for (var i = 0; i < root.queue.length; ++i) {
+            if (root.queue[i].id === id && typeof root.queue[i].activate === "function") {
+                root.queue[i].activate();
+                break;
+            }
+        }
+        return root.dismiss(id);
     }
 
     function dismissCurrent() {

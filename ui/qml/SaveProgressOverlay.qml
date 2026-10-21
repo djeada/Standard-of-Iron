@@ -13,25 +13,31 @@ Item {
     property bool top_anchored: false
     property real top_margin: 0
     property string notice_text: ""
+    property bool notice_shown: false
     property bool notice_is_bad: false
     readonly property bool saving: root.saves ? root.saves.save_in_progress : false
 
+    function display_name(slot_name) {
+        return /^(autosave|quicksave)([_ -]?\d+)?$/i.test(slot_name || "") ? qsTr("Autosave") : slot_name;
+    }
+
     function show_notice(text, bad) {
         root.notice_text = text;
+        root.notice_shown = true;
         root.notice_is_bad = bad === true;
         notice_timer.restart();
     }
 
     anchors.fill: parent
-    visible: root.saving || root.notice_text !== ""
+    visible: root.saving || root.notice_shown
 
     Connections {
         function onSave_completed(slot_name, success, error) {
             if (success) {
-                root.show_notice(qsTr("Saved \"%1\"").arg(slot_name), false);
+                root.show_notice(root.display_name(slot_name) === slot_name ? qsTr("Saved \"%1\"").arg(slot_name) : "", false);
                 return;
             }
-            root.show_notice(error !== "" ? error : qsTr("Saving \"%1\" failed.").arg(slot_name), true);
+            root.show_notice(error !== "" ? error : qsTr("Saving \"%1\" failed.").arg(root.display_name(slot_name)), true);
         }
 
         target: root.saves
@@ -41,7 +47,10 @@ Item {
         id: notice_timer
 
         interval: root.notice_is_bad ? 9000 : 2600
-        onTriggered: root.notice_text = ""
+        onTriggered: {
+            root.notice_shown = false;
+            root.notice_text = "";
+        }
     }
 
     Rectangle {
@@ -66,7 +75,7 @@ Item {
             spacing: Theme.spacingSmall
 
             Label {
-                text: root.saving ? qsTr("Saving \"%1\"").arg(root.saves ? root.saves.save_progress_slot : "") : root.notice_is_bad ? qsTr("Save failed") : qsTr("Saved")
+                text: root.saving ? qsTr("Saving \"%1\"").arg(root.saves ? root.display_name(root.saves.save_progress_slot) : "") : root.notice_is_bad ? qsTr("Save failed") : qsTr("Saved")
                 color: Theme.textMain
                 font.pixelSize: Design.Typography.bodyLarge
                 font.bold: true

@@ -424,7 +424,8 @@ void UndeadAwakeningSystem::announce_wave(const UndeadRuntimeZone& zone) const {
                                                          "%1 claws out of the ground.")
                                  .arg(progress);
   Engine::Core::EventManager::instance().publish(
-      Engine::Core::MissionAnnouncementEvent(text));
+      Engine::Core::MissionAnnouncementEvent::for_owner(zone.awakened_by_owner_id,
+                                                        text));
 }
 
 void UndeadAwakeningSystem::announce_zone_cleared(UndeadRuntimeZone& zone) const {
@@ -434,11 +435,13 @@ void UndeadAwakeningSystem::announce_zone_cleared(UndeadRuntimeZone& zone) const
                                          Engine::Core::UndeadZonePhase::Cleared,
                                          zone.definition.owner_id));
   Engine::Core::EventManager::instance().publish(
-      Engine::Core::MissionAnnouncementEvent(QCoreApplication::translate(
-          "UndeadAwakeningSystem",
-          "The risen guardians are put down. Hold the shrine to purify it.")));
-  Engine::Core::EventManager::instance().publish(
-      Engine::Core::AudioCueEvent("alert.objective_complete"));
+      Engine::Core::MissionAnnouncementEvent::for_owner(
+          zone.awakened_by_owner_id,
+          QCoreApplication::translate(
+              "UndeadAwakeningSystem",
+              "The risen guardians are put down. Hold the shrine to purify it.")));
+  Engine::Core::EventManager::instance().publish(Engine::Core::AudioCueEvent::for_owner(
+      zone.awakened_by_owner_id, "alert.objective_complete"));
 }
 
 void UndeadAwakeningSystem::update_zone(Engine::Core::World& world,

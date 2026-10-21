@@ -59,6 +59,13 @@ Rectangle {
         return Qt.formatDateTime(when, "d MMM yyyy · hh:mm");
     }
 
+    function same_place(first, second) {
+        var fold = function (text) {
+            return String(text).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+        };
+        return fold(first) === fold(second);
+    }
+
     function describe_mode() {
         if (row.mode === "campaign")
             return qsTr("Campaign");
@@ -178,7 +185,7 @@ Rectangle {
             }
 
             Label {
-                text: row.mission_label !== "" ? qsTr("%1 · %2 · %3").arg(row.mission_label).arg(row.describe_mode()).arg(row.map_name) : qsTr("%1 · %2").arg(row.map_name).arg(row.describe_mode())
+                text: row.mission_label !== "" && !row.same_place(row.mission_label, row.map_name) ? qsTr("%1 · %2 · %3").arg(row.mission_label).arg(row.describe_mode()).arg(row.map_name) : qsTr("%1 · %2").arg(row.mission_label !== "" ? row.mission_label : row.map_name).arg(row.describe_mode())
                 color: row.highlighted ? Theme.textBright : Theme.textSub
                 font.pixelSize: Design.Typography.bodyLarge
                 Layout.fillWidth: true

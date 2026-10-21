@@ -15,6 +15,7 @@
 #include "game/session/session_context.h"
 #include "game/session/simulation_clock.h"
 #include "game/systems/building_collision_registry.h"
+#include "game/systems/combat_system/combat_utils.h"
 #include "game/systems/combat_system/structure_combat.h"
 #include "game/systems/default_content.h"
 #include "game/systems/nation_registry.h"
@@ -538,6 +539,51 @@ TEST_F(WallSiegeTest, ShutGateKeepsRaidersOffTheTroopsBehindIt) {
   EXPECT_FALSE(defender_wounded) << "defender was hit through a shut gate";
   EXPECT_LT(position_of(*session, raider).z(), besieged_face_z())
       << "raider walked in through a shut gate";
+}
+
+TEST_F(WallSiegeTest, AWallStillSeparatesFightersWithinContactReachOfIt) {
+  auto session = make_match();
+  const ScopedSession scope(*session);
+
+  constexpr int k_gate_grid_x = k_map_size - 8;
+  for (int grid_x = -8; grid_x <= k_map_size + 8; grid_x += k_wall_pitch) {
+    if (grid_x == k_gate_grid_x) {
+      continue;
+    }
+    add_wall_segment(*session, grid_x, k_wall_grid_z);
+  }
+  const EntityID gate = add_wall_piece(
+      *session, Game::Units::SpawnType::WallGate, k_gate_grid_x, k_wall_grid_z);
+  Game::Systems::WallNetworkService::refresh_world(session->world());
+  ASSERT_NE(gate, 0U);
+  Game::Systems::GateService::set_manual_mode(
+      *session->world().get_entity(gate),
+      Engine::Core::GateComponent::ManualMode::ForcedClosed);
+  run_for(*session, 0.5);
+
+  for (const auto type : {Game::Units::SpawnType::Spearman,
+                          Game::Units::SpawnType::Elephant,
+                          Game::Units::SpawnType::Swordsman}) {
+    const EntityID raider =
+        spawn_troop(*session, type, k_raider, 0.0F, besieged_face_z() - 1.0F);
+    const EntityID defender = spawn_troop(*session,
+                                          Game::Units::SpawnType::Swordsman,
+                                          k_defender,
+                                          0.0F,
+                                          defended_face_z() + 1.2F);
+    ASSERT_NE(raider, 0U);
+    ASSERT_NE(defender, 0U);
+
+    EXPECT_TRUE(Game::Systems::Combat::melee_walled_off_from(
+        session->world().get_entity(raider),
+        session->world().get_entity(defender),
+        Game::Systems::Combat::k_answering_walk_around_detour))
+        << Game::Units::spawn_type_name(type)
+        << " counted a route that stops short of the wall as a way round it, so it "
+           "locked onto a man it could never reach and stood under the towers";
+    demolish(*session, raider);
+    demolish(*session, defender);
+  }
 }
 
 TEST_F(WallSiegeTest, RaiderCannotReachATargetBehindAnIntactWall) {

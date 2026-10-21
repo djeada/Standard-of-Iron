@@ -1606,14 +1606,32 @@ void Renderer::render_construction_previews(Engine::Core::World* world,
     (*fn)(ctx, *this);
     if (auto const ghost_type = preview_structure_spawn_type(*world, entity->get_id());
         ghost_type.has_value()) {
-
+      auto const foundation = Render::GL::resolve_structure_foundation(
+          world_view().terrain_or_empty(), *ghost_type, model_matrix);
       Render::GL::submit_structure_foundation(
-          Render::GL::resolve_structure_foundation(
-              world_view().terrain_or_empty(), *ghost_type, model_matrix),
+          foundation,
           model_matrix,
           *this,
           nullptr,
           (resources() != nullptr) ? resources()->white() : nullptr);
+      if (!under_construction && foundation.half_width > 0.0F &&
+          !Game::Units::is_wall_network_spawn(*ghost_type)) {
+        QVector3D const centre =
+            model_matrix.map(QVector3D(foundation.center_x, 0.0F, foundation.center_z));
+        QVector3D const corner =
+            model_matrix.map(QVector3D(foundation.center_x + foundation.half_width,
+                                       0.0F,
+                                       foundation.center_z + foundation.half_depth));
+        GroundMarkerCmd outline;
+        outline.center =
+            QVector3D(centre.x(), transform->position.y + 0.06F, centre.z());
+        outline.outer_radius =
+            std::hypot(corner.x() - centre.x(), corner.z() - centre.z()) + 0.2F;
+        outline.thickness = 0.18F;
+        outline.color = marker_color;
+        outline.alpha = 0.85F;
+        ground_marker(outline);
+      }
     }
     m_ghost_coverage = 0.0F;
 

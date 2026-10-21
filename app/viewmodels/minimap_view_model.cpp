@@ -24,6 +24,7 @@ namespace {
 constexpr qint64 k_consider_interval_ms = 60;
 constexpr int k_alert_grid = 12;
 constexpr float k_ally_call_blip_seconds = 3.6F;
+constexpr qint64 k_home_alert_cooldown_ms = 20000;
 
 struct AlertStyle {
   const char* kind;
@@ -216,6 +217,22 @@ auto MinimapViewModel::accept_alert(MinimapAlert kind, float nx, float ny) -> bo
   return true;
 }
 
+void MinimapViewModel::note_home_attacked(const QString& structure_name,
+                                          float world_x,
+                                          float world_z) {
+  const qint64 now = m_alert_clock.elapsed();
+  if (m_last_home_alert_ms >= 0 &&
+      now - m_last_home_alert_ms < k_home_alert_cooldown_ms) {
+    return;
+  }
+  m_last_home_alert_ms = now;
+  emit home_attacked(structure_name.isEmpty()
+                         ? tr("Your troops are under attack")
+                         : tr("Your %1 is under attack").arg(structure_name),
+                     world_x,
+                     world_z);
+}
+
 void MinimapViewModel::note_alert(MinimapAlert kind,
                                   float world_x,
                                   float world_z,
@@ -337,6 +354,7 @@ void MinimapViewModel::clear_overlays() {
   set_landmarks({});
   set_ally_markers({});
   m_alert_slots = {};
+  m_last_home_alert_ms = -1;
 }
 
 } // namespace App::ViewModels

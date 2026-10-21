@@ -344,32 +344,23 @@
     }
   ],
   "lakes": [],
-  "bridges": [
+  "bridges": [],
+  "fords": [
     {
       "id": "north_ford",
-      "start": [
-        79.47,
-        60.62
+      "position": [
+        82.9,
+        60.0
       ],
-      "end": [
-        86.35,
-        59.37
-      ],
-      "width": 10.0,
-      "height": 0.6
+      "length": 12
     },
     {
       "id": "south_ford",
-      "start": [
-        89.65,
-        116.63
+      "position": [
+        93.1,
+        116.0
       ],
-      "end": [
-        96.53,
-        115.38
-      ],
-      "width": 10.0,
-      "height": 0.6
+      "length": 12
     }
   ],
   "roads": [

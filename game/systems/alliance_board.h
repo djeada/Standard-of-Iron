@@ -95,7 +95,7 @@ struct AllyAppealReply {
   int amount = 0;
 };
 
-inline constexpr float k_ally_appeal_answer_seconds = 45.0F;
+inline constexpr float k_ally_appeal_answer_seconds = 90.0F;
 
 class AllianceBoard {
 public:

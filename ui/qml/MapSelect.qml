@@ -1491,7 +1491,7 @@ Item {
                                         width: 132
                                         height: implicitHeight
                                         caption: qsTr("Opposition")
-                                        value: map_is_solo_playable(selected_map_data) ? qsTr("Scripted") : qsTr("Players only")
+                                        value: map_is_solo_playable(selected_map_data) ? qsTr("Built-in foes") : qsTr("Needs a rival")
                                         tooltip_text: map_is_solo_playable(selected_map_data) ? qsTr("This battlefield brings its own enemies, so you can start alone") : qsTr("This battlefield needs at least two opposing players")
                                     }
 

@@ -226,6 +226,18 @@ Item {
                         }
                     }
 
+                    Design.IronButton {
+                        objectName: "barracksAllyCallButton"
+                        Layout.alignment: Qt.AlignVCenter
+                        Layout.preferredWidth: implicitWidth
+                        visible: root.allyCall.kind === "defend" && (root.allyCall.allies || 0) > 0
+                        text: qsTr("Call allies")
+                        onClicked: root.ally_call_requested()
+                        ToolTip.visible: hovered
+                        ToolTip.delay: Design.Metrics.tooltipDelay
+                        ToolTip.text: root.allyCall.reason ? qsTr("Ask allies to defend this barracks.") + "\n" + root.allyCall.reason : qsTr("Ask allies to defend this barracks.")
+                    }
+
                     Design.IronIconButton {
                         Layout.preferredWidth: Design.Metrics.minTouchTarget
                         Layout.preferredHeight: Design.Metrics.minTouchTarget
@@ -237,17 +249,6 @@ Item {
                         disabledReason: qsTr("Select a barracks before setting a rally point")
                         onClicked: root.rally_requested()
                     }
-                }
-
-                Design.IronButton {
-                    objectName: "barracksAllyCallButton"
-                    Layout.fillWidth: true
-                    visible: root.allyCall.kind === "defend" && (root.allyCall.allies || 0) > 0
-                    text: qsTr("Ask allies to defend")
-                    onClicked: root.ally_call_requested()
-                    ToolTip.visible: hovered
-                    ToolTip.delay: Design.Metrics.tooltipDelay
-                    ToolTip.text: root.allyCall.reason || ""
                 }
             }
         }
