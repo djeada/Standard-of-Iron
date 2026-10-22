@@ -235,8 +235,10 @@ auto strike_structure_in_reach(Engine::Core::World& world,
       !Game::Systems::CombatRules::is_player_driven(&attacker)) {
     return false;
   }
-  auto const* attacker_unit = attacker.get_component<Engine::Core::UnitComponent>();
-  auto const* transform = attacker.get_component<Engine::Core::TransformComponent>();
+  auto const* attacker_unit =
+      world.try_get<Engine::Core::UnitComponent>(attacker.get_id());
+  auto const* transform =
+      world.try_get<Engine::Core::TransformComponent>(attacker.get_id());
   if (attacker_unit == nullptr || transform == nullptr) {
     return false;
   }
@@ -278,7 +280,8 @@ auto strike_structure_in_reach(Engine::Core::World& world,
   }
 
   int damage = 10;
-  if (auto const* attack = attacker.get_component<Engine::Core::AttackComponent>()) {
+  if (auto const* attack =
+          world.try_get<Engine::Core::AttackComponent>(attacker.get_id())) {
     damage = std::max(1, attack->get_current_damage());
   }
   deal_damage(&world, struck, damage, attacker.get_id());

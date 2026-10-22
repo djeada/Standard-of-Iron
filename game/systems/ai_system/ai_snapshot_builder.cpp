@@ -769,7 +769,7 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
     contact.spawn_type = unit->spawn_type;
     contact.holds_ground = garrison_owners.holds_ground(unit->owner_id);
     if (auto const* commander =
-            entity->get_component<Engine::Core::CommanderComponent>()) {
+            world.try_get<Engine::Core::CommanderComponent>(contact.id)) {
       contact.player_driven = commander->fpv_controlled;
     }
 

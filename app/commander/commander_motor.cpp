@@ -149,7 +149,11 @@ auto CommanderMotor::is_walkable_at(const Engine::Core::Entity& commander,
 }
 
 auto CommanderMotor::is_on_wall(const Engine::Core::Entity& commander) -> bool {
-  auto const* walker = commander.get_component<Engine::Core::WallWalkerComponent>();
+  auto const* registry = commander.registry();
+  auto const* walker =
+      registry == nullptr
+          ? nullptr
+          : registry->try_get<Engine::Core::WallWalkerComponent>(commander.get_id());
   return walker != nullptr && walker->player_driven;
 }
 
@@ -158,15 +162,15 @@ auto CommanderMotor::wall_step(const Engine::Core::Entity& commander,
                                const CommanderMotorRequest& request)
     -> std::optional<CommanderMotorResult> {
   constexpr float k_wall_reach = 14.0F;
-  auto* entity = m_world->get_entity(commander.get_id());
-  auto const* unit = commander.get_component<Engine::Core::UnitComponent>();
-  if (entity == nullptr || unit == nullptr) {
+  auto const commander_id = commander.get_id();
+  auto const* unit = m_world->try_get<Engine::Core::UnitComponent>(commander_id);
+  if (m_world->get_entity(commander_id) == nullptr || unit == nullptr) {
     return std::nullopt;
   }
-  auto* walker = entity->get_component<Engine::Core::WallWalkerComponent>();
+  auto* walker = m_world->try_get<Engine::Core::WallWalkerComponent>(commander_id);
   if (walker != nullptr && !walker->player_driven) {
     if (!walker->aloft()) {
-      entity->remove_component<Engine::Core::WallWalkerComponent>();
+      m_world->remove<Engine::Core::WallWalkerComponent>(commander_id);
       walker = nullptr;
     } else {
       walker->player_driven = true;
@@ -181,7 +185,7 @@ auto CommanderMotor::wall_step(const Engine::Core::Entity& commander,
       *m_world, unit->owner_id, request.from.x(), request.from.z(), k_wall_reach);
   if (nodes.empty()) {
     if (aloft) {
-      entity->remove_component<Engine::Core::WallWalkerComponent>();
+      m_world->remove<Engine::Core::WallWalkerComponent>(commander_id);
     }
     return std::nullopt;
   }
@@ -212,8 +216,7 @@ auto CommanderMotor::wall_step(const Engine::Core::Entity& commander,
     if (!boarding || request.airborne) {
       return std::nullopt;
     }
-    walker =
-        Engine::Core::get_or_add_component<Engine::Core::WallWalkerComponent>(entity);
+    walker = m_world->emplace<Engine::Core::WallWalkerComponent>(commander_id);
     if (walker == nullptr) {
       return std::nullopt;
     }
@@ -229,7 +232,7 @@ auto CommanderMotor::wall_step(const Engine::Core::Entity& commander,
   auto const here = WallDeck::surface_at(nodes, request.from.x(), request.from.z());
   if (here.has_value() && here->on_access &&
       here->elevation <= WallDeck::k_board_elevation) {
-    entity->remove_component<Engine::Core::WallWalkerComponent>();
+    m_world->remove<Engine::Core::WallWalkerComponent>(commander_id);
     return std::nullopt;
   }
 
