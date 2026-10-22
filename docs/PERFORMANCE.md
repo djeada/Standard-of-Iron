@@ -317,9 +317,9 @@ panel is selected; selection changes still bump it immediately.
 
 ## Build time
 
-Every translation unit parsed ~120k lines of standard-library and Qt headers. One
-precompiled header (`cmake/soi_pch.h`, applied to larger project targets by
-`cmake/PrecompiledHeaders.cmake`) cuts a clean build of the game and tools from
+Every translation unit parsed ~120k lines of standard-library and Qt headers. The
+initial per-target precompiled header (`cmake/soi_pch.h`, applied by
+`cmake/PrecompiledHeaders.cmake`) cut a clean build of the game and tools from
 2758 to 2041 CPU-seconds (−26%) and from 728 to 508 s wall at `-j3`.
 
 - The header holds only headers that never change. Every Qt header defines the
