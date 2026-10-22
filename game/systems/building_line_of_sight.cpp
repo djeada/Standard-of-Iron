@@ -78,7 +78,8 @@ auto first_building_body_intersection_fraction(
     const QVector3D& start,
     const QVector3D& end,
     float radius,
-    unsigned int ignore_entity_id) -> float {
+    unsigned int ignore_entity_id,
+    bool skip_wall_links) -> float {
   auto const& buildings = registry.get_all_buildings();
   float best_fraction = 1.0F;
   const QVector3D delta = end - start;
@@ -89,6 +90,9 @@ auto first_building_body_intersection_fraction(
       continue;
     }
     if (ignore_entity_id != 0 && building.entity_id == ignore_entity_id) {
+      continue;
+    }
+    if (skip_wall_links && building.wall_link) {
       continue;
     }
 
@@ -126,7 +130,8 @@ auto first_building_body_intersection_fraction(
 
 auto depenetrate_from_building_bodies(const BuildingCollisionRegistry& registry,
                                       const QVector3D& point,
-                                      float radius) -> QVector3D {
+                                      float radius,
+                                      bool skip_wall_links) -> QVector3D {
   auto const& buildings = registry.get_all_buildings();
   QVector3D resolved = point;
   float const grow = std::max(0.0F, radius);
@@ -134,7 +139,7 @@ auto depenetrate_from_building_bodies(const BuildingCollisionRegistry& registry,
   for (int pass = 0; pass < 4; ++pass) {
     bool moved = false;
     for (const auto& building : buildings) {
-      if (!building.blocks_navigation) {
+      if (!building.blocks_navigation || (skip_wall_links && building.wall_link)) {
         continue;
       }
       float const half_width = (building.body_width * 0.5F) + grow;
@@ -164,11 +169,12 @@ auto depenetrate_from_building_bodies(const BuildingCollisionRegistry& registry,
 }
 
 auto nearest_building_body_clearance(const BuildingCollisionRegistry& registry,
-                                     const QVector3D& point) -> float {
+                                     const QVector3D& point,
+                                     bool skip_wall_links) -> float {
   auto const& buildings = registry.get_all_buildings();
   float clearance = std::numeric_limits<float>::max();
   for (const auto& building : buildings) {
-    if (!building.blocks_navigation) {
+    if (!building.blocks_navigation || (skip_wall_links && building.wall_link)) {
       continue;
     }
     float const half_width = building.body_width * 0.5F;

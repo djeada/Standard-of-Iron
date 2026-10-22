@@ -5,6 +5,9 @@
 #include <limits>
 
 #include "game/core/nav_profile.h"
+#include "game/map/bridge_geometry.h"
+#include "game/map/terrain.h"
+#include "game/map/terrain_service.h"
 #include "gate_service.h"
 #include "nav_grid.h"
 #include "systems/building_collision_registry.h"
@@ -63,6 +66,34 @@ auto building_body_penetration(float x, float z, float radius) -> float {
   };
   registry().for_each_blocker_near(x, z, std::max(radius, 0.0F), measure);
   return std::max(0.0F, deepest);
+}
+
+auto bridge_parapet_penetration(const Pathfinding* pathfinder,
+                                float x,
+                                float z,
+                                float radius) -> float {
+  auto const* terrain = pathfinder != nullptr ? pathfinder->terrain_service() : nullptr;
+  if (terrain == nullptr || !terrain->is_initialized()) {
+    return 0.0F;
+  }
+  auto const* height_map = terrain->get_height_map();
+  if (height_map == nullptr) {
+    return 0.0F;
+  }
+  float deepest = 0.0F;
+  for (auto const& bridge : height_map->get_bridges()) {
+    deepest =
+        std::max(deepest, Game::Map::bridge_parapet_penetration(bridge, x, z, radius));
+  }
+  return deepest;
+}
+
+auto facade_penetration(const Pathfinding* pathfinder,
+                        float x,
+                        float z,
+                        float radius) -> float {
+  return std::max(building_body_penetration(x, z, radius),
+                  bridge_parapet_penetration(pathfinder, x, z, radius));
 }
 
 auto cell_is_open(const Pathfinding& pathfinder,
@@ -154,7 +185,7 @@ auto can_stand_on(Pathfinding* pathfinder,
     return false;
   }
   if (profile.stops_at_building_facade) {
-    return building_body_penetration(position.x(), position.z(), profile.radius) <=
+    return facade_penetration(pathfinder, position.x(), position.z(), profile.radius) <=
            0.0F;
   }
   return true;
@@ -176,7 +207,7 @@ auto penetration(const QVector3D& position, const BodyProfile& profile) -> float
   auto* pathfinder = current_pathfinder();
   float deepest =
       profile.stops_at_building_facade
-          ? building_body_penetration(position.x(), position.z(), profile.radius)
+          ? facade_penetration(pathfinder, position.x(), position.z(), profile.radius)
           : 0.0F;
   if (pathfinder == nullptr) {
     return deepest;

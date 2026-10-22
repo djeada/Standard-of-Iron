@@ -128,3 +128,21 @@ TEST(RiverBankWalkabilityTest, DeckWalkableWidthIsInsetFromTheParapet) {
               Game::Map::bridge_walkable_half_width(26.0F) * 2.0F,
               2.0F);
 }
+
+TEST(RiverBankWalkabilityTest, AParapetStopsAPersonBeforeItCutsThroughHim) {
+  const Game::Map::Bridge bridge{{0.0F, 0.0F, -3.0F}, {0.0F, 0.0F, 3.0F}, 8.0F, 0.5F};
+  constexpr float k_radius = 0.34F;
+  const float parapet = Game::Map::bridge_parapet_centre_offset(4.0F, 8.0F);
+  const float inner_face = parapet - Game::Map::bridge_parapet_half_thickness(8.0F);
+
+  EXPECT_EQ(Game::Map::bridge_parapet_penetration(bridge, 0.0F, 0.0F, k_radius), 0.0F);
+  EXPECT_EQ(Game::Map::bridge_parapet_penetration(
+                bridge, inner_face - k_radius - 0.01F, 0.0F, k_radius),
+            0.0F);
+  EXPECT_GT(Game::Map::bridge_parapet_penetration(bridge, 3.2F, 0.0F, k_radius), 0.0F)
+      << "the commander walked 3.2 m off the centre of an 8 m bridge with the stone "
+         "rail through his body";
+  EXPECT_GT(Game::Map::bridge_parapet_penetration(bridge, -3.2F, 1.0F, k_radius), 0.0F);
+  EXPECT_EQ(Game::Map::bridge_parapet_penetration(bridge, 3.2F, -4.0F, k_radius), 0.0F)
+      << "past the span the rail has ramped away and the bank is open";
+}

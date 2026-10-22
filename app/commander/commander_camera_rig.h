@@ -56,6 +56,7 @@ struct CommanderCameraTrace {
   float occlusion_fraction{1.0F};
   float terrain_lift{0.0F};
   float eye_clearance{0.0F};
+  float crowd_lift{0.0F};
 
   bool sight_line_clear{true};
   float fov{0.0F};
@@ -89,6 +90,7 @@ struct CommanderCameraInputs {
   std::optional<QVector3D> soft_focus_position;
   Engine::Core::FightContext fight_context{};
   float threat_side_bias{0.0F};
+  float crowd_density{0.0F};
   const Game::Map::TerrainService* terrain{nullptr};
   const Game::Systems::BuildingCollisionRegistry* buildings{nullptr};
 };
@@ -150,6 +152,9 @@ private:
   float m_hit_impact_kick{0.0F};
   float m_hit_kick_dolly_envelope{0.0F};
   float m_threat_bias_smooth{0.0F};
+  float m_crowd_smooth{0.0F};
+  float m_shoulder{1.0F};
+  float m_shoulder_target{1.0F};
 
   QVector3D m_eye_smooth{};
   QVector3D m_target_smooth{};

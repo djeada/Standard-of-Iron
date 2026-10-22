@@ -196,6 +196,30 @@ TEST_F(CommanderMotorTest, AWallDoesNotResetTheWholeMotor) {
                                << " m sideways while pressed against the wall";
 }
 
+TEST_F(CommanderMotorTest, WalkingStraightIntoABoulderGlancesAroundIt) {
+  Engine::Core::World world;
+  auto* commander = create_commander(world, 0.0F, 0.0F);
+  ASSERT_NE(commander, nullptr);
+  auto* transform = commander->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(transform, nullptr);
+
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
+  ASSERT_NE(pathfinder, nullptr);
+  auto const boulder = Game::Systems::NavGrid::world_to_grid(0.0F, 2.0F);
+  pathfinder->set_obstacle(boulder.x, boulder.y, true);
+
+  CommanderControlController controller;
+  Render::GL::Camera camera;
+  controller.input().forward = true;
+  for (int frame = 0; frame < 180; ++frame) {
+    ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 1.0F / 60.0F));
+  }
+
+  EXPECT_GT(transform->position.z, 3.0F)
+      << "walking straight at a one-cell boulder stopped the commander dead at z = "
+      << transform->position.z << "; he must glance off it";
+}
+
 TEST_F(CommanderMotorTest, NoDisplacementTunnelsThroughAThinWall) {
   Engine::Core::World world;
   auto* commander = create_commander(world, 0.0F, 0.0F);

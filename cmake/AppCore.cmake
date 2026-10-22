@@ -64,6 +64,7 @@ add_library(
     app/commander/commander_look.cpp
     app/commander/commander_lunge.cpp
     app/commander/commander_motor.cpp
+    app/commander/commander_wall_deck.cpp
     app/commander/commander_latency_probe.cpp
     app/commander/commander_mode_coordinator.cpp
     app/commander/commander_presentation.cpp

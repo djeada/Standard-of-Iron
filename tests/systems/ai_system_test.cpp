@@ -5213,6 +5213,48 @@ TEST_F(AISystemTest, ARaidWaveDoesNotDrawTheCommanderOutOfHisCamp) {
   }
 }
 
+TEST_F(AISystemTest, ACommanderAnswersAPlayerCommandersChallengeOnlyWhenItIsOneOnOne) {
+  auto commands_for =
+      [](const std::vector<Game::Systems::AI::ContactSnapshot>& enemies) {
+        Game::Systems::AI::CommanderBehavior behavior;
+        Game::Systems::AI::AISnapshot snapshot;
+        auto commander = make_unit(1, 0.0F, 0.0F);
+        commander.is_commander = true;
+        snapshot.friendly_units.push_back(commander);
+        snapshot.visible_enemies = enemies;
+        Game::Systems::AI::AIContext context;
+        context.player_id = 3;
+        context.commander_ids = {1};
+        context.has_base_anchor = true;
+        context.base_pos_x = 40.0F;
+        context.station.x = 40.0F;
+        std::vector<Game::Systems::AI::AICommand> commands;
+        behavior.execute(snapshot, context, 5.0F, commands);
+        return commands;
+      };
+  auto attacks = [](const std::vector<Game::Systems::AI::AICommand>& commands,
+                    Engine::Core::EntityID target) {
+    return std::any_of(commands.begin(), commands.end(), [&](const auto& command) {
+      return command.type == Game::Systems::AI::AICommandType::AttackTarget &&
+             command.target_id == target;
+    });
+  };
+
+  auto challenger = make_enemy(50, 8.0F, 0.0F);
+  challenger.spawn_type = Game::Units::SpawnType::CarthageSwordCommander;
+  challenger.player_driven = true;
+  EXPECT_TRUE(attacks(commands_for({challenger}), 50))
+      << "the enemy commander ran from the player's commander, so the duel the "
+         "player walked up to never happened";
+
+  auto rts_commander = challenger;
+  rts_commander.player_driven = false;
+  EXPECT_FALSE(attacks(commands_for({rts_commander}), 50));
+
+  EXPECT_FALSE(attacks(commands_for({challenger, make_enemy(51, 10.0F, 2.0F)}), 50))
+      << "a challenger who brought his troops is still a threat to step away from";
+}
+
 namespace {
 
 auto committed_wave_context(Game::Systems::AI::AIDoctrine& doctrine)

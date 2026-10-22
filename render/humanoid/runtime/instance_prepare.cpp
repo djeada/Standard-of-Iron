@@ -1196,8 +1196,11 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
 
   const float lens_gap_visibility =
       ctx.submission_visibility != nullptr
-          ? ctx.submission_visibility->lens_gap_visibility(early_world_pos,
-                                                           ctx_entity_id)
+          ? ctx.submission_visibility->lens_gap_visibility(
+                early_world_pos,
+                ctx_entity_id,
+                is_mounted_spawn ? SubmissionVisibilityPolicy::k_mounted_body_radius
+                                 : SubmissionVisibilityPolicy::k_default_body_radius)
           : 1.0F;
   const bool blocks_lens_gap = lens_gap_visibility <= 0.0F;
   if (outside_frustum || hidden_by_fog || blocks_lens_gap) {

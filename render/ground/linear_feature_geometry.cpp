@@ -516,7 +516,8 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
   float const deck_thickness = std::clamp(bridge_width * 0.26F, 0.55F, 1.05F);
 
   float const parapet_height = std::clamp(bridge_width * 0.13F, 0.55F, 0.92F);
-  float const parapet_half_width = std::clamp(bridge_width * 0.045F, 0.16F, 0.34F);
+  float const parapet_half_width =
+      Game::Map::bridge_parapet_half_thickness(bridge_width);
   float const side_bevel = std::clamp(bridge_width * 0.12F, 0.10F, 0.30F);
 
   float const lake_padding = Game::Map::drawn_lake_padding(tile_size);
@@ -621,7 +622,7 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
     float const ring_parapet_height =
         parapet_height * (0.46F + 0.54F * profile_blend) * landing;
     float const ring_parapet_offset =
-        std::max(ring_half_width - parapet_half_width * 0.45F, ring_half_width * 0.72F);
+        Game::Map::bridge_parapet_centre_offset(ring_half_width, bridge_width);
 
     float const deck_y = deck_height + stone_noise * (0.55F + 0.45F * profile_blend);
     float const underside_y = deck_y - ring_thickness;

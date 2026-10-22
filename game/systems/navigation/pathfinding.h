@@ -71,6 +71,9 @@ public:
   void set_grid_offset(float offset_x, float offset_z);
 
   auto get_grid_offset_x() const -> float { return m_grid_offset_x; }
+  [[nodiscard]] auto terrain_service() const -> const Game::Map::TerrainService* {
+    return m_terrain;
+  }
   auto get_grid_offset_z() const -> float { return m_grid_offset_z; }
 
   [[nodiscard]] auto grid_cell_size() const -> float { return m_grid_cell_size; }

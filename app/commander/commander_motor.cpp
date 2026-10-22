@@ -1,11 +1,15 @@
 #include "app/commander/commander_motor.h"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 
+#include "app/commander/commander_wall_deck.h"
 #include "game/core/component_core.h"
+#include "game/core/component_gameplay.h"
 #include "game/core/entity.h"
 #include "game/core/simulation_timing.h"
+#include "game/core/world.h"
 #include "game/map/terrain_service.h"
 #include "game/session/session_context.h"
 #include "game/systems/building_collision_registry.h"
@@ -65,6 +69,18 @@ auto resolve_ground_step(const Game::Systems::BodyProfile& profile,
   }
   if (slide_z_free) {
     return {.x = from_x, .z = to_z, .moved = true};
+  }
+
+  constexpr std::array<float, 4> k_deflections{0.52F, -0.52F, 1.05F, -1.05F};
+  for (float const angle : k_deflections) {
+    float const cosine = std::cos(angle);
+    float const sine = std::sin(angle);
+    float const deflected_x = ((delta_x * cosine) - (delta_z * sine)) * cosine;
+    float const deflected_z = ((delta_x * sine) + (delta_z * cosine)) * cosine;
+    if (traversable_step(
+            profile, from_x, from_z, from_x + deflected_x, from_z + deflected_z)) {
+      return {.x = from_x + deflected_x, .z = from_z + deflected_z, .moved = true};
+    }
   }
 
   QVector3D const here(from_x, 0.0F, from_z);
@@ -132,12 +148,133 @@ auto CommanderMotor::is_walkable_at(const Engine::Core::Entity& commander,
   return walkable_point(Game::Systems::motor_profile_for(commander), x, z);
 }
 
+auto CommanderMotor::is_on_wall(const Engine::Core::Entity& commander) -> bool {
+  auto const* registry = commander.registry();
+  auto const* walker =
+      registry == nullptr
+          ? nullptr
+          : registry->try_get<Engine::Core::WallWalkerComponent>(commander.get_id());
+  return walker != nullptr && walker->player_driven;
+}
+
+auto CommanderMotor::wall_step(const Engine::Core::Entity& commander,
+                               Engine::Core::TransformComponent& transform,
+                               const CommanderMotorRequest& request)
+    -> std::optional<CommanderMotorResult> {
+  constexpr float k_wall_reach = 14.0F;
+  auto const commander_id = commander.get_id();
+  auto const* unit = m_world->try_get<Engine::Core::UnitComponent>(commander_id);
+  if (m_world->get_entity(commander_id) == nullptr || unit == nullptr) {
+    return std::nullopt;
+  }
+  auto* walker = m_world->try_get<Engine::Core::WallWalkerComponent>(commander_id);
+  if (walker != nullptr && !walker->player_driven) {
+    if (!walker->aloft()) {
+      m_world->remove<Engine::Core::WallWalkerComponent>(commander_id);
+      walker = nullptr;
+    } else {
+      walker->player_driven = true;
+      walker->phase = Engine::Core::WallWalkerComponent::Phase::OnDeck;
+      walker->path.clear();
+      walker->exit_chain.clear();
+      walker->has_goal = false;
+    }
+  }
+  bool const aloft = walker != nullptr;
+  auto const nodes = WallDeck::gather(
+      *m_world, unit->owner_id, request.from.x(), request.from.z(), k_wall_reach);
+  if (nodes.empty()) {
+    if (aloft) {
+      m_world->remove<Engine::Core::WallWalkerComponent>(commander_id);
+    }
+    return std::nullopt;
+  }
+
+  auto settle = [&](float x, float z, const WallDeck::Surface& surface) {
+    CommanderMotorResult result;
+    result.source = request.source;
+    result.moved = true;
+    result.slid = std::abs(x - request.to.x()) > 1.0e-5F ||
+                  std::abs(z - request.to.z()) > 1.0e-5F;
+    float const inverse_dt = request.dt > 0.0F ? 1.0F / request.dt : 0.0F;
+    result.velocity = QVector3D(
+        (x - request.from.x()) * inverse_dt, 0.0F, (z - request.from.z()) * inverse_dt);
+    transform.position.x = x;
+    transform.position.z = z;
+    walker->elevation = surface.elevation;
+    walker->wall_id = surface.node_id;
+    result.position = QVector3D(x, transform.position.y, z);
+    return result;
+  };
+
+  auto const target = WallDeck::surface_at(nodes, request.to.x(), request.to.z());
+  if (!aloft) {
+    auto const here = WallDeck::surface_at(nodes, request.from.x(), request.from.z());
+    bool const boarding = target.has_value() && target->on_access &&
+                          target->elevation <= WallDeck::k_board_elevation &&
+                          (!here.has_value() || target->elevation >= here->elevation);
+    if (!boarding || request.airborne) {
+      return std::nullopt;
+    }
+    walker = m_world->emplace<Engine::Core::WallWalkerComponent>(commander_id);
+    if (walker == nullptr) {
+      return std::nullopt;
+    }
+    walker->player_driven = true;
+    walker->phase = Engine::Core::WallWalkerComponent::Phase::OnDeck;
+    return settle(request.to.x(), request.to.z(), *target);
+  }
+
+  if (target.has_value()) {
+    return settle(request.to.x(), request.to.z(), *target);
+  }
+
+  auto const here = WallDeck::surface_at(nodes, request.from.x(), request.from.z());
+  if (here.has_value() && here->on_access &&
+      here->elevation <= WallDeck::k_board_elevation) {
+    m_world->remove<Engine::Core::WallWalkerComponent>(commander_id);
+    return std::nullopt;
+  }
+
+  bool const x_first = std::abs(request.to.x() - request.from.x()) >=
+                       std::abs(request.to.z() - request.from.z());
+  for (int pass = 0; pass < 2; ++pass) {
+    bool const along_x = (pass == 0) == x_first;
+    float const x = along_x ? request.to.x() : request.from.x();
+    float const z = along_x ? request.from.z() : request.to.z();
+    if (auto const slide = WallDeck::surface_at(nodes, x, z); slide.has_value()) {
+      return settle(x, z, *slide);
+    }
+  }
+
+  if (!here.has_value()) {
+    if (auto const deck =
+            WallDeck::nearest_deck_point(nodes, request.from.x(), request.from.z());
+        deck.has_value()) {
+      return settle(deck->x, deck->z, deck->surface);
+    }
+  }
+
+  CommanderMotorResult blocked;
+  blocked.source = request.source;
+  blocked.blocked = true;
+  blocked.position = request.from;
+  return blocked;
+}
+
 auto CommanderMotor::advance(const Engine::Core::Entity& commander,
                              Engine::Core::TransformComponent& transform,
                              const CommanderMotorRequest& request)
     -> CommanderMotorResult {
   Engine::Core::Timing::ScopedAccumulator const scope(
       Engine::Core::Timing::commander_motor());
+  if (m_world != nullptr) {
+    if (auto const on_wall = wall_step(commander, transform, request);
+        on_wall.has_value()) {
+      m_last = *on_wall;
+      return *on_wall;
+    }
+  }
   auto const profile = Game::Systems::motor_profile_for(commander);
   GroundMove const step = request.airborne
                               ? airborne_step(request.to.x(), request.to.z())

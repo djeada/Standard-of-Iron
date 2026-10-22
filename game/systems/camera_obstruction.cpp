@@ -11,6 +11,7 @@
 
 #include "building_collision_registry.h"
 #include "building_line_of_sight.h"
+#include "game/core/wall_walk_geometry.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
 
@@ -27,7 +28,10 @@ struct PropOccluder {
   float half_z{0.0F};
   float top_y{0.0F};
   float bounding_radius{0.0F};
+  bool stem{false};
 };
+
+constexpr float k_camera_stem_half_extent = 0.30F;
 
 constexpr float k_prop_cell_size = 8.0F;
 
@@ -58,8 +62,12 @@ public:
         continue;
       }
       auto const [world_x, world_z] = terrain.world_prop_world_xz(prop);
-      auto const extents =
-          Game::Map::world_prop_ground_half_extents(prop.type, prop.scale);
+      bool const stem = Game::Map::world_prop_blocks_only_its_stem(prop.type);
+      auto extents = Game::Map::world_prop_ground_half_extents(prop.type, prop.scale);
+      if (stem) {
+        extents.x = std::min(extents.x, k_camera_stem_half_extent);
+        extents.z = std::min(extents.z, k_camera_stem_half_extent);
+      }
       PropOccluder occluder;
       occluder.x = world_x;
       occluder.z = world_z;
@@ -70,6 +78,7 @@ public:
       occluder.top_y =
           terrain.resolve_surface_world_y(world_x, world_z, 0.0F, 0.0F) + height;
       occluder.bounding_radius = std::hypot(extents.x, extents.z);
+      occluder.stem = stem;
       m_max_bounding_radius = std::max(m_max_bounding_radius, occluder.bounding_radius);
       m_occluders.push_back(occluder);
     }
@@ -223,22 +232,76 @@ auto overlaps(const PropOccluder& occluder,
          std::abs(local.z) < occluder.half_z + radius;
 }
 
+auto wall_crest_occluder(const BuildingFootprint& wall,
+                         const Game::Map::TerrainService& terrain) -> PropOccluder {
+  PropOccluder occluder;
+  occluder.x = wall.body_center_x;
+  occluder.z = wall.body_center_z;
+  occluder.half_x = wall.body_width * 0.5F;
+  occluder.half_z = wall.body_depth * 0.5F;
+  occluder.top_y = terrain.resolve_surface_world_y(occluder.x, occluder.z, 0.0F, 0.0F) +
+                   WallWalk::k_crest_height;
+  occluder.bounding_radius = std::hypot(occluder.half_x, occluder.half_z);
+  return occluder;
+}
+
+template <typename Fn>
+void for_each_wall_crest(const CameraObstructionField& field,
+                         float min_x,
+                         float max_x,
+                         float min_z,
+                         float max_z,
+                         Fn&& fn) {
+  if (field.buildings == nullptr || field.terrain == nullptr ||
+      !field.terrain->is_initialized()) {
+    return;
+  }
+  for (auto const& building : field.buildings->get_all_buildings()) {
+    if (!building.blocks_navigation || !building.wall_link) {
+      continue;
+    }
+    float const reach =
+        std::hypot(building.body_width, building.body_depth) * 0.5F + field.radius;
+    if (building.body_center_x + reach < min_x ||
+        building.body_center_x - reach > max_x ||
+        building.body_center_z + reach < min_z ||
+        building.body_center_z - reach > max_z) {
+      continue;
+    }
+    fn(wall_crest_occluder(building, *field.terrain));
+  }
+}
+
+auto walls_are_crest_limited(const CameraObstructionField& field) -> bool {
+  return field.terrain != nullptr && field.terrain->is_initialized();
+}
+
 } // namespace
 
 auto camera_boom_clear_fraction(const CameraObstructionField& field,
                                 const QVector3D& pivot,
                                 const QVector3D& eye) -> float {
   float clear = 1.0F;
+  bool const crest_limited = walls_are_crest_limited(field);
   if (field.buildings != nullptr) {
     clear = first_building_body_intersection_fraction(
-        *field.buildings, pivot, eye, field.radius);
+        *field.buildings, pivot, eye, field.radius, 0, crest_limited);
   }
   if (clear <= 0.0F) {
     return 0.0F;
   }
-  if (field.terrain == nullptr || !field.terrain->is_initialized()) {
+  if (!crest_limited) {
     return clear;
   }
+  for_each_wall_crest(field,
+                      std::min(pivot.x(), eye.x()),
+                      std::max(pivot.x(), eye.x()),
+                      std::min(pivot.z(), eye.z()),
+                      std::max(pivot.z(), eye.z()),
+                      [&](const PropOccluder& wall) {
+                        clear = std::min(
+                            clear, prop_entry_fraction(wall, pivot, eye, field.radius));
+                      });
 
   auto const& index = prop_occluders(*field.terrain);
   index.for_each_near(
@@ -247,6 +310,9 @@ auto camera_boom_clear_fraction(const CameraObstructionField& field,
       std::min(pivot.z(), eye.z()),
       std::max(pivot.z(), eye.z()),
       [&](const PropOccluder& occluder) {
+        if (occluder.stem) {
+          return;
+        }
         clear =
             std::min(clear, prop_entry_fraction(occluder, pivot, eye, field.radius));
       });
@@ -256,73 +322,72 @@ auto camera_boom_clear_fraction(const CameraObstructionField& field,
 auto camera_body_clearance(const CameraObstructionField& field,
                            const QVector3D& point) -> float {
   float clearance = std::numeric_limits<float>::max();
+  bool const crest_limited = walls_are_crest_limited(field);
   if (field.buildings != nullptr) {
-    clearance = nearest_building_body_clearance(*field.buildings, point);
+    clearance = nearest_building_body_clearance(*field.buildings, point, crest_limited);
   }
-  if (field.terrain == nullptr || !field.terrain->is_initialized()) {
+  if (!crest_limited) {
     return clearance;
   }
 
+  auto measure = [&](const PropOccluder& occluder) {
+    if (point.y() > occluder.top_y) {
+      return;
+    }
+    LocalPoint const local = to_local(occluder, point);
+    float const gap_x = std::abs(local.x) - occluder.half_x;
+    float const gap_z = std::abs(local.z) - occluder.half_z;
+    float distance = 0.0F;
+    if (gap_x > 0.0F || gap_z > 0.0F) {
+      distance = std::hypot(std::max(gap_x, 0.0F), std::max(gap_z, 0.0F));
+    } else {
+      distance = std::max(gap_x, gap_z);
+    }
+    clearance = std::min(clearance, distance);
+  };
+  for_each_wall_crest(field, point.x(), point.x(), point.z(), point.z(), measure);
   auto const& index = prop_occluders(*field.terrain);
-  index.for_each_near(
-      point.x(), point.x(), point.z(), point.z(), [&](const PropOccluder& occluder) {
-        if (point.y() > occluder.top_y) {
-          return;
-        }
-        LocalPoint const local = to_local(occluder, point);
-        float const gap_x = std::abs(local.x) - occluder.half_x;
-        float const gap_z = std::abs(local.z) - occluder.half_z;
-        float distance = 0.0F;
-        if (gap_x > 0.0F || gap_z > 0.0F) {
-          distance = std::hypot(std::max(gap_x, 0.0F), std::max(gap_z, 0.0F));
-        } else {
-          distance = std::max(gap_x, gap_z);
-        }
-        clearance = std::min(clearance, distance);
-      });
+  index.for_each_near(point.x(), point.x(), point.z(), point.z(), measure);
   return clearance;
 }
 
 auto camera_depenetrated_point(const CameraObstructionField& field,
                                const QVector3D& point) -> QVector3D {
   QVector3D resolved = point;
+  bool const crest_limited = walls_are_crest_limited(field);
+  auto push_out = [&](const PropOccluder& occluder) {
+    LocalPoint local = to_local(occluder, resolved);
+    if (!overlaps(occluder, resolved, local, field.radius)) {
+      return;
+    }
+    float const half_x = occluder.half_x + field.radius;
+    float const half_z = occluder.half_z + field.radius;
+    float const overlap_x = half_x - std::abs(local.x);
+    float const overlap_z = half_z - std::abs(local.z);
+    if (overlap_x <= overlap_z) {
+      local.x = local.x >= 0.0F ? half_x : -half_x;
+    } else {
+      local.z = local.z >= 0.0F ? half_z : -half_z;
+    }
+    resolved.setX(occluder.x + (occluder.cosine * local.x) - (occluder.sine * local.z));
+    resolved.setZ(occluder.z + (occluder.sine * local.x) + (occluder.cosine * local.z));
+  };
   constexpr int k_passes = 4;
   for (int pass = 0; pass < k_passes; ++pass) {
     QVector3D const before = resolved;
 
     if (field.buildings != nullptr) {
-      QVector3D const cleared =
-          depenetrate_from_building_bodies(*field.buildings, resolved, field.radius);
+      QVector3D const cleared = depenetrate_from_building_bodies(
+          *field.buildings, resolved, field.radius, crest_limited);
       resolved.setX(cleared.x());
       resolved.setZ(cleared.z());
     }
 
-    if (field.terrain != nullptr && field.terrain->is_initialized()) {
-      auto const& index = prop_occluders(*field.terrain);
+    if (crest_limited) {
       QVector3D const probe = resolved;
-      index.for_each_near(probe.x(),
-                          probe.x(),
-                          probe.z(),
-                          probe.z(),
-                          [&](const PropOccluder& occluder) {
-                            LocalPoint local = to_local(occluder, resolved);
-                            if (!overlaps(occluder, resolved, local, field.radius)) {
-                              return;
-                            }
-                            float const half_x = occluder.half_x + field.radius;
-                            float const half_z = occluder.half_z + field.radius;
-                            float const overlap_x = half_x - std::abs(local.x);
-                            float const overlap_z = half_z - std::abs(local.z);
-                            if (overlap_x <= overlap_z) {
-                              local.x = local.x >= 0.0F ? half_x : -half_x;
-                            } else {
-                              local.z = local.z >= 0.0F ? half_z : -half_z;
-                            }
-                            resolved.setX(occluder.x + (occluder.cosine * local.x) -
-                                          (occluder.sine * local.z));
-                            resolved.setZ(occluder.z + (occluder.sine * local.x) +
-                                          (occluder.cosine * local.z));
-                          });
+      for_each_wall_crest(field, probe.x(), probe.x(), probe.z(), probe.z(), push_out);
+      prop_occluders(*field.terrain)
+          .for_each_near(probe.x(), probe.x(), probe.z(), probe.z(), push_out);
     }
 
     if ((resolved - before).lengthSquared() <= 1.0e-8F) {

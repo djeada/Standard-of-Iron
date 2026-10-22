@@ -48,6 +48,8 @@ struct LensGapExclusion {
   static constexpr float k_hidden_core_fraction = 0.35F;
   static constexpr float k_end_fade_metres = 0.6F;
   static constexpr float k_start_fade_metres = 0.4F;
+  static constexpr float k_lens_hidden_metres = 0.45F;
+  static constexpr float k_lens_clear_metres = 1.3F;
 
   [[nodiscard]] auto visibility(const QVector3D& point,
                                 float body_radius) const noexcept -> float {
@@ -56,9 +58,13 @@ struct LensGapExclusion {
     }
     const float offset_x = point.x() - eye_x;
     const float offset_z = point.z() - eye_z;
+    const float lens_clearance =
+        std::sqrt((offset_x * offset_x) + (offset_z * offset_z)) - body_radius;
+    const float beside_lens =
+        ramp(k_lens_hidden_metres, k_lens_clear_metres, lens_clearance);
     const float along = (offset_x * axis_x) + (offset_z * axis_z);
     if (along < 0.0F || along > length) {
-      return 1.0F;
+      return beside_lens;
     }
     const float perpendicular_x = offset_x - (axis_x * along);
     const float perpendicular_z = offset_z - (axis_z * along);
@@ -68,7 +74,7 @@ struct LensGapExclusion {
     const float across = ramp(limit * k_hidden_core_fraction, limit, perpendicular);
     const float near_end = 1.0F - ramp(0.0F, k_start_fade_metres, along);
     const float far_end = ramp(length - k_end_fade_metres, length, along);
-    return std::max({across, near_end, far_end});
+    return std::min(beside_lens, std::max({across, near_end, far_end}));
   }
 
   [[nodiscard]] auto contains(const QVector3D& point,
@@ -88,6 +94,7 @@ public:
   static constexpr float k_frustum_guard_band = 1.5F;
 
   static constexpr float k_default_body_radius = 0.42F;
+  static constexpr float k_mounted_body_radius = 0.95F;
 
   void reset(const Camera* camera,
              const Game::Map::VisibilityService::Snapshot* snapshot) noexcept {

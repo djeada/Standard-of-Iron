@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "../../core/component_combat.h"
+#include "../../core/component_commander.h"
 #include "../../core/component_economy.h"
 #include "../../core/wall_walk_geometry.h"
 #include "../../core/world.h"
@@ -767,6 +768,10 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
     contact.max_health = unit->max_health;
     contact.spawn_type = unit->spawn_type;
     contact.holds_ground = garrison_owners.holds_ground(unit->owner_id);
+    if (auto const* commander =
+            world.try_get<Engine::Core::CommanderComponent>(contact.id)) {
+      contact.player_driven = commander->fpv_controlled;
+    }
 
     snapshot.visible_enemies.push_back(std::move(contact));
   }
