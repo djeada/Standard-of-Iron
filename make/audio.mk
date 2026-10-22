@@ -36,7 +36,7 @@ audio-battle:
 .PHONY: audio-preview
 audio-preview:
 	@echo "$(BOLD)$(BLUE)Rendering audio mastering preview...$(RESET)"
-	@cmake --build $(BUILD_DIR) -j$$(nproc) --target audio_master_preview
+	@$(CMAKE) --build $(BUILD_DIR) --parallel $(BUILD_JOBS) --target audio_master_preview
 	@$(BUILD_DIR)/bin/audio_master_preview --out artifacts/audio_preview $(AUDIO_PREVIEW_ARGS)
 
 ## Audit the cue catalogue, the manifest and the files on disk.

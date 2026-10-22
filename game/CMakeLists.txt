@@ -571,7 +571,13 @@ if(GIT_FOUND)
         set(SOI_SIMULATION_BUILD_ID "${SOI_GIT_REV}")
     endif()
 endif()
-target_compile_definitions(game_sim PRIVATE SOI_SIMULATION_BUILD_ID="${SOI_SIMULATION_BUILD_ID}")
+# Only replay.cpp reads the build ID. A target-wide definition would invalidate
+# every simulation object and its precompiled header whenever HEAD changes.
+set_property(
+    SOURCE command/replay.cpp
+    APPEND
+    PROPERTY COMPILE_DEFINITIONS SOI_SIMULATION_BUILD_ID="${SOI_SIMULATION_BUILD_ID}"
+)
 
 # engine_core once linked game_sim as well, in a declared cycle.
 #
