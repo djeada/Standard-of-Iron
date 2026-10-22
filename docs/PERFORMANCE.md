@@ -349,6 +349,10 @@ The game already depends on that target, so `make build` and `make build-app`
 need no second baker invocation. `make bake-bpat` uses the same dependency graph:
 it builds a missing baker, regenerates stale assets, and skips current outputs
 in both the source tree and the staged runtime tree.
+Source `.cmesh` packages, troop/nation/formation/construction JSON and equipment
+loadouts are explicit bake dependencies. A stable snapshot of that input list
+also invalidates the bake when an input is removed. Generated bake outputs and
+unrelated textures do not invalidate it.
 
 The simulation's Git build ID is defined only for `game/command/replay.cpp`,
 which is the only source that reads it. Changing commits therefore invalidates

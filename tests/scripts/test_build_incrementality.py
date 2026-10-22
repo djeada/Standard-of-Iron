@@ -106,13 +106,19 @@ class BuildIncrementalityTest(unittest.TestCase):
         shutil.copytree(ROOT / "make", self.source / "make")
         (self.source / "scripts").mkdir()
         shutil.copy(ROOT / "scripts/run-map-pipeline.sh", self.source / "scripts")
-        (self.source / "recipe.txt").write_text("first recipe\n")
+        recipe = self.source / "assets/creatures/horse/horse.cmesh"
+        nation = self.source / "assets/data/nations/rome.json"
+        loadouts = self.source / "assets/visuals/unit_equipment_loadouts.json"
+        for path in (recipe, nation, loadouts):
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("first recipe\n")
         (self.source / "CMakeLists.txt").write_text(
             "cmake_minimum_required(VERSION 3.21)\n"
             "project(MakeIncrementality NONE)\n"
+            f'include("{ROOT.as_posix()}/cmake/CreatureBakeInputs.cmake")\n'
             "add_custom_command(OUTPUT baked.txt\n"
-            '  COMMAND "${CMAKE_COMMAND}" -E copy "${CMAKE_CURRENT_SOURCE_DIR}/recipe.txt" baked.txt\n'
-            '  DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/recipe.txt")\n'
+            '  COMMAND "${CMAKE_COMMAND}" -E copy "${CMAKE_CURRENT_SOURCE_DIR}/assets/creatures/horse/horse.cmesh" baked.txt\n'
+            "  DEPENDS ${SOI_CREATURE_BAKE_INPUTS})\n"
             "add_custom_target(bake_creature_assets DEPENDS baked.txt)\n"
             "add_custom_target(standard_of_iron ALL)\n"
             "add_dependencies(standard_of_iron bake_creature_assets)\n"
@@ -140,10 +146,34 @@ class BuildIncrementalityTest(unittest.TestCase):
                 for target in ("build-app", "build", "bake-bpat"):
                     make(target)
                     self.assertEqual(baked.stat().st_mtime_ns, timestamp, target)
-                (self.source / "recipe.txt").write_text("changed recipe\n")
+                recipe.write_text("changed recipe\n")
                 os.utime(baked, ns=(0, 0))
                 make("bake-bpat")
                 self.assertEqual(baked.read_text(), "changed recipe\n")
+                for content in (nation, loadouts):
+                    timestamp = baked.stat().st_mtime_ns
+                    content.write_text("changed content\n")
+                    os.utime(content, ns=(timestamp + 1_000_000_000,) * 2)
+                    make("bake-bpat")
+                    self.assertNotEqual(baked.stat().st_mtime_ns, timestamp)
+                    os.utime(content, ns=(0, 0))
+                # Adding an old package and removing it must both rebake.
+                extra = recipe.with_name("extra.cmesh")
+                for action in ("add", "remove"):
+                    timestamp = baked.stat().st_mtime_ns
+                    if action == "add":
+                        extra.write_text("extra package\n")
+                        os.utime(extra, ns=(0, 0))
+                    else:
+                        extra.unlink()
+                    make("bake-bpat")
+                    self.assertNotEqual(baked.stat().st_mtime_ns, timestamp, action)
+                # Generated outputs and unrelated textures must not rebake.
+                timestamp = baked.stat().st_mtime_ns
+                for suffix in ("bpat", "png"):
+                    recipe.with_suffix(f".{suffix}").write_text("unrelated\n")
+                make("bake-bpat")
+                self.assertEqual(baked.stat().st_mtime_ns, timestamp)
 
     @unittest.skipUnless(
         shutil.which("git") and shutil.which("c++"),
