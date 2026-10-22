@@ -473,6 +473,10 @@ void CommanderLocomotion::recover_from_fall(const CommanderHandles& body,
   if (!m_jump_safe_position_valid || jump_active) {
     return;
   }
+  if (CommanderMotor::is_on_wall(body.entity)) {
+    m_jump_safe_position_valid = false;
+    return;
+  }
   auto& transform = body.transform;
   if (!CommanderMotor::is_walkable_at(
           body.entity, transform.position.x, transform.position.z)) {

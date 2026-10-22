@@ -229,6 +229,29 @@ auto nearest_threat_to(const AISnapshot& snapshot,
   return nearest;
 }
 
+constexpr float k_challenge_accept_health = 0.5F;
+
+auto accepts_challenge(const AISnapshot& snapshot,
+                       const EntitySnapshot& commander,
+                       const ContactSnapshot& challenger) -> bool {
+  if (!challenger.player_driven || commander.max_health <= 0 ||
+      static_cast<float>(commander.health) <
+          static_cast<float>(commander.max_health) * k_challenge_accept_health) {
+    return false;
+  }
+  return std::none_of(snapshot.visible_enemies.begin(),
+                      snapshot.visible_enemies.end(),
+                      [&](const ContactSnapshot& enemy) {
+                        if (enemy.id == challenger.id || enemy.health <= 0 ||
+                            enemy.is_building || !is_war_contact(enemy)) {
+                          return false;
+                        }
+                        float const dx = enemy.pos_x - commander.pos_x;
+                        float const dz = enemy.pos_z - commander.pos_z;
+                        return (dx * dx) + (dz * dz) <= k_commander_danger_radius_sq;
+                      });
+}
+
 struct HomePost {
   float x = 0.0F;
   float z = 0.0F;
@@ -322,6 +345,23 @@ void CommanderBehavior::execute(const AISnapshot& snapshot,
           army.z + enemy_dir_z * station.along_axis + enemy_dir_x * station.lateral;
     } else if (const ContactSnapshot* threat =
                    nearest_threat_to(snapshot, snap->pos_x, snap->pos_z)) {
+      if (accepts_challenge(snapshot, *snap, *threat)) {
+        auto duellist = claim_units({commander_id},
+                                    get_priority(),
+                                    "commander_duel",
+                                    context,
+                                    snapshot.game_time,
+                                    1.5F);
+        if (!duellist.empty()) {
+          AICommand attack;
+          attack.type = AICommandType::AttackTarget;
+          attack.units = std::move(duellist);
+          attack.target_id = threat->id;
+          attack.should_chase = true;
+          out_commands.push_back(std::move(attack));
+        }
+        continue;
+      }
 
       float away_x = snap->pos_x - threat->pos_x;
       float away_z = snap->pos_z - threat->pos_z;

@@ -87,6 +87,36 @@ auto soft_focus_position(Engine::Core::World& world,
   return std::nullopt;
 }
 
+auto crowd_density(Engine::Core::World& world,
+                   Engine::Core::EntityID commander_id,
+                   const QVector3D& centre) -> float {
+  constexpr float k_crowd_radius = 3.5F;
+  constexpr float k_unit_reach = 18.0F;
+  constexpr float k_crowded_bodies = 9.0F;
+  int bodies = 0;
+  for (auto [candidate, unit, transform] :
+       world.entity_view<Engine::Core::UnitComponent,
+                         Engine::Core::TransformComponent>()) {
+    if (candidate.get_id() == commander_id || unit.health <= 0) {
+      continue;
+    }
+    float const unit_dx = transform.position.x - centre.x();
+    float const unit_dz = transform.position.z - centre.z();
+    if ((unit_dx * unit_dx) + (unit_dz * unit_dz) > k_unit_reach * k_unit_reach) {
+      continue;
+    }
+    for (auto const& soldier :
+         Game::Systems::RpgCombat::live_soldier_targets(candidate)) {
+      float const dx = soldier.position.x() - centre.x();
+      float const dz = soldier.position.z() - centre.z();
+      if ((dx * dx) + (dz * dz) <= k_crowd_radius * k_crowd_radius) {
+        ++bodies;
+      }
+    }
+  }
+  return std::clamp(static_cast<float>(bodies) / k_crowded_bodies, 0.0F, 1.0F);
+}
+
 } // namespace
 
 void CommanderPresentation::publish_sample(
@@ -185,6 +215,8 @@ auto build_camera_inputs(Engine::Core::World& world,
   }
   inputs.fight_context = framing.fight_context;
   inputs.threat_side_bias = framing.threat_side_bias;
+  inputs.crowd_density =
+      crowd_density(world, commander.get_id(), inputs.commander_position);
   auto& camera_session = Game::Session::session_for(world);
   inputs.terrain = &camera_session.terrain();
   inputs.buildings = &camera_session.building_collision();

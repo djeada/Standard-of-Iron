@@ -2,11 +2,14 @@
 
 #include <QVector3D>
 
+#include <optional>
+
 #include "app/commander/commander_presentation_trace.h"
 
 namespace Engine::Core {
 class Entity;
 class TransformComponent;
+class World;
 } // namespace Engine::Core
 
 namespace Game::Session {
@@ -39,6 +42,10 @@ public:
   [[nodiscard]] static auto
   is_walkable_at(const Engine::Core::Entity& commander, float x, float z) -> bool;
 
+  [[nodiscard]] static auto is_on_wall(const Engine::Core::Entity& commander) -> bool;
+
+  void bind_world(Engine::Core::World* world) { m_world = world; }
+
   [[nodiscard]] static auto
   reachable_ground_position(Game::Session::SessionContext& session,
                             const Engine::Core::Entity& commander,
@@ -61,7 +68,13 @@ public:
   void reset() { m_last = {}; }
 
 private:
+  auto wall_step(const Engine::Core::Entity& commander,
+                 Engine::Core::TransformComponent& transform,
+                 const CommanderMotorRequest& request)
+      -> std::optional<CommanderMotorResult>;
+
   CommanderMotorResult m_last;
+  Engine::Core::World* m_world{nullptr};
 };
 
 } // namespace App::Core

@@ -233,6 +233,8 @@ struct ContactSnapshot {
   int health = 0;
   int max_health = 0;
   Game::Units::SpawnType spawn_type = Game::Units::SpawnType::Archer;
+
+  bool player_driven = false;
 };
 
 struct WallPostSnapshot {

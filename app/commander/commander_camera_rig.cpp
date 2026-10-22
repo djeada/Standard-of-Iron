@@ -1,7 +1,10 @@
 #include "app/commander/commander_camera_rig.h"
 
+#include <QtGlobal>
+
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 #include <numbers>
 
 #include "animation/locomotion_manifest.h"
@@ -64,6 +67,16 @@ constexpr float k_hit_kick_max_degrees = 3.0F;
 constexpr float k_fov_max_degrees_per_second = 45.0F;
 
 constexpr float k_threat_bias_follow = 3.0F;
+
+constexpr float k_shoulder_swap_below = 0.55F;
+constexpr float k_shoulder_swap_margin = 0.30F;
+constexpr float k_shoulder_follow = 5.0F;
+constexpr float k_retracted_rise = 0.75F;
+
+constexpr float k_crowd_follow = 1.6F;
+constexpr float k_crowd_lift = 1.7F;
+constexpr float k_crowd_pull_back = 0.9F;
+constexpr float k_crowd_side_tuck = 0.55F;
 constexpr float k_threat_bias_side = 0.30F;
 
 constexpr float k_camera_body_radius = 0.28F;
@@ -146,6 +159,9 @@ void CommanderCameraRig::reset() {
   m_hit_impact_kick = 0.0F;
   m_hit_kick_dolly_envelope = 0.0F;
   m_threat_bias_smooth = 0.0F;
+  m_crowd_smooth = 0.0F;
+  m_shoulder = 1.0F;
+  m_shoulder_target = 1.0F;
   m_smooth_valid = false;
   m_forward_valid = false;
   m_ground_valid = false;
@@ -238,6 +254,10 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
 
   m_threat_bias_smooth += (inputs.threat_side_bias - m_threat_bias_smooth) *
                           smooth_alpha(k_threat_bias_follow, dt);
+  m_crowd_smooth += (std::clamp(inputs.crowd_density, 0.0F, 1.0F) - m_crowd_smooth) *
+                    smooth_alpha(k_crowd_follow, dt);
+  float const crowd = m_crowd_smooth * (1.0F - aim_blend);
+  float const crowd_lift = k_crowd_lift * crowd;
 
   m_hit_impact_kick *= std::exp(-k_hit_kick_decay * std::max(dt, 0.0F));
   if (m_hit_impact_kick < 0.001F) {
@@ -294,12 +314,38 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
                         m_ground_y + inputs.jump_height_offset + k_focus_height,
                         m_state.visual_anchor.z());
 
+  Game::Systems::CameraObstructionField const obstruction{.buildings = inputs.buildings,
+                                                          .terrain = inputs.terrain,
+                                                          .radius =
+                                                              k_camera_body_radius};
+
+  float const shoulder_side =
+      m_framing_current.side * (1.0F - (k_crowd_side_tuck * crowd));
+  if (inputs.terrain != nullptr || inputs.buildings != nullptr) {
+    auto shoulder_clearance = [&](float shoulder) {
+      QVector3D const eye = pivot - flat_forward * m_framing_current.back +
+                            QVector3D(0.0F, m_framing_current.up + crowd_lift, 0.0F) +
+                            flat_right * (shoulder_side * shoulder);
+      return Game::Systems::camera_boom_clear_fraction(obstruction, pivot, eye);
+    };
+    float const held = shoulder_clearance(m_shoulder_target);
+    if (held < k_shoulder_swap_below) {
+      float const other = shoulder_clearance(-m_shoulder_target);
+      if (other > held + k_shoulder_swap_margin) {
+        m_shoulder_target = -m_shoulder_target;
+      }
+    } else if (m_shoulder_target < 0.0F && shoulder_clearance(1.0F) >= 1.0F) {
+      m_shoulder_target = 1.0F;
+    }
+  }
+  m_shoulder += (m_shoulder_target - m_shoulder) * smooth_alpha(k_shoulder_follow, dt);
+
   float const side_offset =
-      m_framing_current.side +
+      (shoulder_side * m_shoulder) +
       (k_threat_bias_side * m_threat_bias_smooth * (1.0F - aim_blend));
   QVector3D eye_desired =
-      pivot - flat_forward * m_framing_current.back +
-      QVector3D(0.0F, m_framing_current.up + bob_v + breath_v, 0.0F) +
+      pivot - flat_forward * (m_framing_current.back + (k_crowd_pull_back * crowd)) +
+      QVector3D(0.0F, m_framing_current.up + crowd_lift + bob_v + breath_v, 0.0F) +
       flat_right * (side_offset + bob_l);
   eye_desired -= flat_forward * (k_hit_kick_dolly * m_hit_kick_dolly_envelope);
 
@@ -352,16 +398,11 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
     }
   }
 
-  target_desired -=
-      QVector3D(0.0F, m_framing_current.look_drop * (1.0F - aim_blend), 0.0F);
+  target_desired -= QVector3D(
+      0.0F, (m_framing_current.look_drop * (1.0F - aim_blend)) + crowd_lift, 0.0F);
 
   QVector3D const eye_unconstrained = eye_desired;
   QVector3D const target_unconstrained = target_desired;
-
-  Game::Systems::CameraObstructionField const obstruction{.buildings = inputs.buildings,
-                                                          .terrain = inputs.terrain,
-                                                          .radius =
-                                                              k_camera_body_radius};
 
   float const boom_length = (eye_unconstrained - pivot).length();
   float const boom_floor =
@@ -421,6 +462,8 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
   }
   if (m_occlusion_fraction < 0.999F) {
     eye_desired = pivot + (eye_desired - pivot) * m_occlusion_fraction;
+    eye_desired.setY(eye_desired.y() +
+                     (k_retracted_rise * (1.0F - m_occlusion_fraction)));
   }
 
   if (Game::Systems::camera_body_clearance(obstruction, eye_desired) <
@@ -482,6 +525,7 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
   m_trace.terrain_clear_fraction = terrain_clear;
   m_trace.occlusion_fraction = m_occlusion_fraction;
   m_trace.terrain_lift = terrain_lift;
+  m_trace.crowd_lift = crowd_lift;
   m_trace.eye_clearance =
       Game::Systems::camera_body_clearance(obstruction, eye_desired);
   m_trace.sight_line_clear =

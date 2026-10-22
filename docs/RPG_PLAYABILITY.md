@@ -198,6 +198,8 @@ The direct-control motor stores planar velocity as a vector, so a direction reve
 
 The direct-control movement-state floor is `CommanderComponent::k_direct_control_gait_floor_speed` at 0.60 m/s. Published component velocity, per-tick displacement, and `fpv_motion_requested` all honor that floor during coast-down, allowing locomotion presence to fade while the motor finishes braking.
 
+A step that is blocked straight ahead and on both axis slides is retried at 30° and then 60° to either side. Its length is scaled by the cosine of the angle, so the deflection never moves the commander faster than he asked to go. A one-cell boulder or a trunk met head-on is therefore skirted rather than stopping him dead; at Trebia he stood against a bank boulder for eleven seconds with forward held. A wall met square-on still stops him, because every rotated step still points into it. `WalkingStraightIntoABoulderGlancesAroundIt` covers this.
+
 The direct-control sprint target is exactly 2.5 times `unit->speed` through `k_fpv_walk_speed_scale` and the run multiplier. Movement continuity thresholds therefore include explicit headroom rather than relying on asymptotic approach to top speed.
 
 ## Person-scale geometry
@@ -209,6 +211,20 @@ RTS navigation footprints and person-scale collision bodies are separate concept
 `BuildingBodyFootprintTest` rebuilds building geometry through a recording submitter and requires the person-scale body to cover the rendered span without unnecessary padding. It also requires the person body and navigation footprint to remain distinct.
 
 The barracks navigation footprint is smaller than its rendered geometry; that is an RTS pathing issue and is not corrected by the RPG person-scale body.
+
+## Bridges and wall walks
+
+Bridge parapets are solid to a person-scale body. The navigation grid marks the whole deck width, parapets included, as walkable, so a direct-control commander could walk 3.2 m off the centre line of an 8 m bridge with the stone rail through his body. `Walkability` adds `Game::Map::bridge_parapet_penetration` to the facade test, using the same parapet offset and thickness as the bridge mesh (`bridge_parapet_centre_offset`, `bridge_parapet_half_thickness`). RTS routing is unchanged.
+
+A direct-control commander can climb his own side's walls. `App::Core::WallDeck` describes the standing surfaces of every wall segment within 14 m:
+
+- the deck strip, 1.05 m either side of the node along the wall and 0.56–1.22 m inward, at `WallWalk::k_deck_height`;
+- the stair of a stair node, on the commander's side or an ally's;
+- a standing ladder, on any wall.
+
+Stairs and ladders are ramps from the ground at their foot to the deck height at the deck edge.
+
+`CommanderMotor::advance` tries the wall first. Stepping onto a stair or ladder within 0.45 m of the ground boards the wall: the commander gets a `WallWalkerComponent` with `player_driven` set, and `TerrainAlignmentSystem` lifts him by its elevation exactly as it lifts an RTS garrison. While he is aloft, each step must land on a deck or ramp surface. Otherwise he slides along one axis, or, if a push left him off every surface, he is put back on the nearest deck point. Walking back off the foot of a stair returns him to ground movement. `WallWalkSystem` skips a player-driven walker while the commander is under direct control. When control returns to the RTS, it takes him over on the deck, or drops him if he was low on a stair. When the player takes control again, an RTS walker already aloft is adopted rather than left to fight the ground motor.
 
 ## Locomotion continuity
 
@@ -241,7 +257,11 @@ A full eight-way authored locomotion set and a dedicated metric for foot slip du
 
 `camera_obstruction` resolves boom clearance, body clearance, and depenetration against buildings and every solid world prop. Prop obstruction data is indexed from `TerrainService::world_props_revision` rather than rebuilt every frame.
 
-Buildings are treated as vertically blocking across the chase-camera range. Props use `world_prop_occluder_height`, including model scaling, so tall ruins, tents, and trunks can retract the camera while low boulders, ore seams, and fallen logs below the eye do not. Tree canopies are intentionally excluded; the solid trunk is the collision object.
+Buildings are treated as vertically blocking across the chase-camera range, except wall segments and gates, which block only up to the wall crest (`WallWalk::k_crest_height`, 2.95 m above the ground). A commander on a wall walk has his pivot above the crest, so the wall he stands on does not swallow the boom. Props use `world_prop_occluder_height`, including model scaling, so tall ruins and tents can retract the camera while low boulders, ore seams, and fallen logs below the eye do not.
+
+Trees never shorten the boom. A trunk is slender and only crosses the sight line for a moment; when it was a collision box (its navigation footprint is at least a metre square), walking past a pine snapped the lens a metre forward in one frame, and a walk through a wood pumped the camera continuously. A stem still keeps the eye out of itself through depenetration, with a 0.30 m half-extent. Tree canopies are excluded as before.
+
+When the boom on the current shoulder is less than 55% clear and the other shoulder is at least 30 points clearer, the rig moves the lens to the other shoulder, easing the side offset over about 0.2 s. It returns to the right shoulder once that side is fully clear again. Walking along a house or tent therefore swings the camera to the open side instead of driving it into the commander's head. Whenever the boom is retracted, the eye also rises by up to 0.75 m, in proportion to the retraction, so a close camera looks down over the head rather than through it.
 
 The boom shortens before any sideways escape. Its minimum resolved length is 0.55 m rather than a fixed fraction of nominal boom length. Sideways depenetration is reserved for a pivot that is itself buried and may not increase planar distance from the commander. `ABuriedPivotNeverPushesTheLensAwayFromTheBody` requires the resolved eye to remain within 0.75 m of a commander inside a temple footprint.
 
@@ -255,6 +275,8 @@ Obstruction retraction is immediate. Extension is eased and capped at 6 m/s. Eye
 
 Soldiers standing between the chase camera and the commander would fill the screen, so `Renderer::compute_rpg_lens_gap` lays a corridor along the ground from the eye to the commander, and `LensGapExclusion::visibility` dims bodies inside it. It returns a visibility from 0 to 1, not an in/out test. The old edge of the corridor is still where fading begins, so nothing that used to be fully visible thins out. A body reaches zero only in the inner core (35 % of the corridor's half-width) around the sight line. The corridor also fades over 0.4 m at the lens end and 0.6 m at the commander's end. A hard cut used to drop a soldier in one frame as the commander walked past, while he was still plainly in view.
 
+Anything within 1.3 m of the lens, measured to the edge of its body, also dissolves, fully gone inside 0.45 m. A soldier beside the camera fills half the screen even though he is nowhere near the sight line. Mounted soldiers use a 0.95 m body radius in both tests, because a horse a metre off the sight line still covers it.
+
 `instance_prepare` records the batch's request count before a soldier is appended. It multiplies the visibility into every request added after that count, which covers riders, mounts and attachments too. `CreaturePipeline` stamps it on each `RiggedCreatureCmd`. The character fragment shaders turn alpha into a screen-door dither (`character_fade_discards`) rather than blending. A fading body therefore stays opaque, writes depth and never shows its own insides. Soldier shadows come from the shadow pass, which the lens gap has never touched, so a body faded out of the corridor keeps its shadow on the ground.
 
 ## Camera motion and framing
@@ -267,11 +289,15 @@ Anchor lag is radial rather than per axis, so diagonal travel does not produce a
 
 `camera_motion_scale = 0` is a complete motion-free camera: no bob, breathing, roll, sprint FOV change, impulse, or entry settle. `CommanderCameraRig.TheNeutralCameraIsCompletelyStill` holds eye, FOV, and horizon to `1e-4` across idle and running samples.
 
+Crowd framing lifts the lens over a melee. `build_camera_inputs` counts living soldiers within 3.5 m of the commander, from units whose centre is within 18 m. Nine bodies count as a full crowd. The rig eases a smoothed density in over about 0.6 s and, at full density, raises the eye 1.7 m, pulls it 0.9 m back and tucks the shoulder offset in by 55%. It lowers the look target by the same height, so the frame stays on the commander and the camera looks down over the helmets. Before this, a commander fighting a wave was framed from shoulder height behind a wall of shields and was not visible at all. Bow aim cancels the lift.
+
 Framing uses `look_drop` to keep the commander inside the viewport. The ordinary framings place the feet around normalized screen y 0.83–0.89 and the head around 0.51–0.59. The drop is applied after lock-on target blending so duel framing does not dilute it. Bow aim intentionally uses zero drop because the reticle is the camera axis.
 
 `LookingUpAndDownKeepsTheCommanderOnScreen` covers the practical combat pitch band from -60° to +10°.
 
 ## Lock-on
+
+Lock-on reaches 20 m within 70° of the view and drops a target beyond 26 m. At the earlier 12 m, a formation charging the commander could not be locked until it was already in contact.
 
 Lock-on selection and cycling are screen-space operations. Initial lock chooses the target nearest the view center. Cycling steps to the next target to the right and wraps from the rightmost target to the leftmost.
 
@@ -309,6 +335,18 @@ Ordinary blocking uses the authored guard arc through `frontal_arc_dot`, vertica
 
 `RpgHealthComponent` counts resolved contacts by outcome: blocked, perfect, dodged, damaging, and guard-broken. Feedback is emitted from changes in those resolved counters rather than from the input request itself.
 
+A blade swing that finds no soldier during its active window strikes the nearest enemy structure in reach: within the action's `hit_shape.reach` plus 0.35 m of the building's surface, and inside about 65° of the commander's facing. It deals the commander's attack damage once per swing through the ordinary `deal_damage` path, so structure multipliers, impact dust and building damage states apply exactly as they do for RTS melee. Previously the weapon trace refused buildings outright, and a commander standing at a gate could not dent it.
+
+## Duels
+
+An AI commander who is not marching with his army steps away from any threat inside 15 m. That kept him alive against raids, but it also meant a player who walked up alone to fight him only ever saw his back. `CommanderBehavior` now accepts the challenge, issuing an `AttackTarget` on the challenger, when three things hold:
+
+- the nearest threat is a commander under direct control, marked by `ContactSnapshot::player_driven`;
+- no other enemy unit is inside that 15 m;
+- the AI commander has at least half his health.
+
+Otherwise he retreats as before. AI-against-AI play never sets `player_driven`, so it is unchanged.
+
 ## Stamina
 
 A light attack costs 12 stamina and regeneration is 10 stamina per second. Any spend pauses regeneration for 0.75 s through `StaminaComponent::spend`, so repeated attacks eventually produce a real refusal and recovery cycle.
@@ -328,6 +366,8 @@ Attacker selection is deterministic through `deterministic_unit_roll(entity_id, 
 At most one active presser may come from outside the 100° visible arc. An incumbent presser receives a `+2.4` selection penalty after three seconds in the slot, replacing its normal `-0.55` incumbency preference and forcing the ring to rotate rather than pinning the same attackers indefinitely.
 
 ## Combat feedback
+
+Each health loss flashes the damage vignette at no less than 30% strength, rising with the size of the hit. The old curve scaled only with the fraction of health lost, and a 4200-health commander losing 80 per blow drew a vignette at about 3% opacity, so being hit had no visible feedback at all.
 
 Player-controlled hit pause is presentation-local at 0.045 s and never stops the mechanical action timeline. Other units may retain their stronger per-entity presentation pause.
 
@@ -398,6 +438,8 @@ Direct control has no bottom bar. The pointer is captured, so the commander bar'
 
 `sync_attack_range_rings` publishes no RTS reach rings while direct control is active. The controlled commander stays selected, and a bow stance's ring otherwise lies across the chase view as a line on the horizon.
 
+Commander dialogue uses the compact card in direct control: a small portrait, a column a fifth of the screen wide, and no faction row or "Click to dismiss" line, since a captured pointer cannot click it. The full card covered a third of the fight.
+
 When the match reaches a verdict, `GameEngine` leaves commander mode on the GUI thread. Otherwise the captured, recentred pointer could never reach the verdict's buttons.
 
 The autosave and save-progress card moves to the top centre in direct control, clear of the vitals and ability plates.
@@ -433,6 +475,8 @@ The following integration items remain open: moving the pointer to a top-bar con
 - Arena `--fps` changes simulation timestep, so it cannot yet prove identical behavior under different presentation sampling rates.
 - The barracks RTS navigation footprint is smaller than its rendered geometry; the RPG person-scale body does not change RTS pathing.
 - Two HUD/integration issues remain: mouse-look over top-bar controls and the empty-production wording.
+- Climbing a stair or ladder plays the ordinary walk cycle; there are no climb clips.
+- At Ticino, the bridge at grid (338, 416) crosses the first of two rivers that run about 7 m apart and lands in the second, so on foot it is a dead end. The map needs one bridge spanning both channels.
 
 ## Related
 

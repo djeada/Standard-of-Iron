@@ -716,6 +716,7 @@ Item {
         anchors.top: topPanel.bottom
         anchors.topMargin: hud.right_stack_margin(commanderMessage.height)
         maxHeight: Math.max(Design.Metrics.space24 * 6, hud.height - hud.bottom_reserved_height - hud.right_stack_bottom - Design.Metrics.space16)
+        compact: hud.commander_rpg_mode
 
         z: 200
     }

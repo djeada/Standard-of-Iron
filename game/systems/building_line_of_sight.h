@@ -22,15 +22,18 @@ first_building_body_intersection_fraction(const BuildingCollisionRegistry& build
                                           const QVector3D& start,
                                           const QVector3D& end,
                                           float radius,
-                                          unsigned int ignore_entity_id = 0) -> float;
+                                          unsigned int ignore_entity_id = 0,
+                                          bool skip_wall_links = false) -> float;
 
 [[nodiscard]] auto
 depenetrate_from_building_bodies(const BuildingCollisionRegistry& buildings,
                                  const QVector3D& point,
-                                 float radius) -> QVector3D;
+                                 float radius,
+                                 bool skip_wall_links = false) -> QVector3D;
 
 [[nodiscard]] auto
 nearest_building_body_clearance(const BuildingCollisionRegistry& buildings,
-                                const QVector3D& point) -> float;
+                                const QVector3D& point,
+                                bool skip_wall_links = false) -> float;
 
 } // namespace Game::Systems

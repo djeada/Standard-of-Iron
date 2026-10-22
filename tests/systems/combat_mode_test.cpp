@@ -3825,6 +3825,29 @@ TEST_F(CombatModeTest, CommanderLauncherBreaksPoiseAndCreatesBallisticLift) {
   EXPECT_GT(action->hit_target_count, 0U);
 }
 
+TEST_F(CombatModeTest, ACommandersBladeDentsTheEnemyHouseInFrontOfHim) {
+  auto* commander = make_fpv_commander(*world, 0.0F, 0.0F);
+  ASSERT_NE(commander, nullptr);
+  commander->get_component<UnitComponent>()->spawn_type =
+      Game::Units::SpawnType::CarthageSwordCommander;
+  auto* house = world->create_entity();
+  house->add_component<TransformComponent>(0.0F, 0.0F, 3.2F);
+  auto* house_unit = house->add_component<UnitComponent>(800, 800, 0.0F, 12.0F);
+  house_unit->owner_id = 2;
+  house_unit->spawn_type = Game::Units::SpawnType::Home;
+  house->add_component<BuildingComponent>();
+
+  ASSERT_NE(begin_commander_strike(commander, 0), nullptr);
+  auto* action = start_authored_action_at(
+      commander, Game::Systems::CombatActions::CombatActionId::RpgSwordThrust, 0.0F);
+  ASSERT_NE(action, nullptr);
+  complete_authored_action(*world, *commander);
+
+  EXPECT_LT(house_unit->health, 800)
+      << "a commander hacking at an enemy house a pace in front of him did no damage";
+  EXPECT_EQ(action->hit_target_count, 1U);
+}
+
 TEST_F(CombatModeTest, CommanderRadialFinisherDamagesNearbyEnemies) {
   auto* commander = make_fpv_commander(*world, 0.0F, 0.0F);
   auto* primary = make_enemy_soldier(*world, 0.0F, 1.25F);

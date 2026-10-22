@@ -1546,7 +1546,7 @@ Item {
         var dodgeActive = root.status_value("dodge_active", false) === true;
         var hasLockedTarget = root.lockedOn;
         if (_prevHealth >= 0.0 && hp < _prevHealth) {
-            var damage_severity = Math.min(1.0, (_prevHealth - hp) * 3.0);
+            var damage_severity = Math.min(1.0, 0.3 + (_prevHealth - hp) * 8.0);
             damageVignette.opacity = damage_severity * 0.8 * Design.A11y.screenEffectIntensity;
             damageDecay.restart();
         }

@@ -28,10 +28,10 @@ namespace App::Core {
 
 namespace {
 
-constexpr float k_lock_range = 12.0F;
+constexpr float k_lock_range = 20.0F;
 constexpr float k_lock_range_sq = k_lock_range * k_lock_range;
 constexpr float k_lock_max_angle_degrees = 70.0F;
-constexpr float k_lock_drop_sq = 18.0F * 18.0F;
+constexpr float k_lock_drop_sq = 26.0F * 26.0F;
 constexpr float k_lock_lost_seconds = 0.35F;
 constexpr float k_lock_minimum_distance = 0.75F;
 constexpr float k_lock_full_authority_distance = 2.0F;

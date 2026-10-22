@@ -20,8 +20,9 @@ Item {
     readonly property bool asking: showing && (request.amount || 0) > 0 && !!request.resource
 
     property real maxHeight: 0
-    readonly property real columnWidth: Math.max(Design.Metrics.space24 * 15, Math.min(Design.Metrics.space24 * 20, (messageRoot.parent ? messageRoot.parent.width : 0) * 0.27))
-    readonly property real chromeHeight: Design.Metrics.space12 * 2 + Design.Metrics.space24 * 4
+    property bool compact: false
+    readonly property real columnWidth: compact ? Math.max(Design.Metrics.space24 * 10, Math.min(Design.Metrics.space24 * 14, (messageRoot.parent ? messageRoot.parent.width : 0) * 0.2)) : Math.max(Design.Metrics.space24 * 15, Math.min(Design.Metrics.space24 * 20, (messageRoot.parent ? messageRoot.parent.width : 0) * 0.27))
+    readonly property real chromeHeight: Design.Metrics.space12 * 2 + Design.Metrics.space24 * (compact ? 2 : 4)
     readonly property real lineRoom: maxHeight > 0 ? Math.max(Design.Typography.caption * 3, maxHeight - chromeHeight) : 100000
 
     signal requestAnswered(bool accepted)
@@ -117,8 +118,8 @@ Item {
 
             Item {
                 Layout.alignment: Qt.AlignTop
-                implicitWidth: Design.Metrics.space24 * 5
-                implicitHeight: Design.Metrics.space24 * 6
+                implicitWidth: Design.Metrics.space24 * (messageRoot.compact ? 2.5 : 5)
+                implicitHeight: Design.Metrics.space24 * (messageRoot.compact ? 3 : 6)
 
                 Rectangle {
                     id: portraitFrame
@@ -223,6 +224,7 @@ Item {
 
                 RowLayout {
                     Layout.fillWidth: true
+                    visible: !messageRoot.compact || messageRoot.allySpeaker
                     spacing: Design.Metrics.space8
 
                     Text {
@@ -304,7 +306,7 @@ Item {
                 Text {
                     Layout.fillWidth: true
                     Layout.topMargin: Design.Metrics.space4
-                    visible: !messageRoot.asking
+                    visible: !messageRoot.asking && !messageRoot.compact
                     text: qsTr("Click to dismiss")
                     color: Design.Theme.textDisabled
                     horizontalAlignment: Text.AlignRight

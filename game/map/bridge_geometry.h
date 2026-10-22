@@ -82,6 +82,45 @@ bridge_walkable_half_width(float bridge_width) -> float {
   return std::max((bridge_width * 0.5F) - k_water_bank_clearance, bridge_width * 0.25F);
 }
 
+[[nodiscard]] inline constexpr auto
+bridge_parapet_half_thickness(float bridge_width) -> float {
+  return std::clamp(bridge_width * 0.045F, 0.16F, 0.34F);
+}
+
+[[nodiscard]] inline constexpr auto
+bridge_parapet_centre_offset(float deck_half_width, float bridge_width) -> float {
+  return std::max(deck_half_width -
+                      (bridge_parapet_half_thickness(bridge_width) * 0.45F),
+                  deck_half_width * 0.72F);
+}
+
+[[nodiscard]] inline auto bridge_parapet_penetration(const Bridge& bridge,
+                                                     float world_x,
+                                                     float world_z,
+                                                     float radius) -> float {
+  QVector3D dir = bridge.end - bridge.start;
+  dir.setY(0.0F);
+  float const length = dir.length();
+  if (length < 0.01F) {
+    return 0.0F;
+  }
+  dir /= length;
+  float const offset_x = world_x - bridge.start.x();
+  float const offset_z = world_z - bridge.start.z();
+  float const along = (offset_x * dir.x()) + (offset_z * dir.z());
+  if (along < 0.0F || along > length) {
+    return 0.0F;
+  }
+  float const across = std::abs((offset_x * -dir.z()) + (offset_z * dir.x()));
+  float const bridge_width = std::max(bridge.width, k_min_bridge_width);
+  float const thickness = bridge_parapet_half_thickness(bridge_width);
+  float const centre = bridge_parapet_centre_offset(bridge_width * 0.5F, bridge_width);
+  if (across <= centre) {
+    return std::max(0.0F, across + radius - (centre - thickness));
+  }
+  return std::max(0.0F, (centre + thickness + radius) - across);
+}
+
 inline constexpr float k_bridge_min_bank_landing = 1.0F;
 
 inline constexpr float k_bridge_max_bank_landing = 1.5F;

@@ -386,6 +386,38 @@ TEST(CommanderCameraRig, TheOrdinaryViewKeepsTheWholeCommanderInFrame) {
   }
 }
 
+TEST(CommanderCameraRig, ACrowdLiftsTheLensOverTheHeadsWithoutLosingTheCommander) {
+  Game::Accessibility::CommanderInput::reset_to_defaults();
+  CommanderCameraRig open_rig;
+  Render::GL::Camera open_camera;
+  auto inputs = default_inputs();
+  inputs.view_pitch_degrees = k_commander_rest_view_pitch_degrees;
+  inputs.fight_context = FightContext::Skirmish;
+  settle(open_rig, open_camera, inputs);
+  float const open_eye_y = open_rig.trace().eye_resolved.y();
+
+  CommanderCameraRig rig;
+  Render::GL::Camera camera;
+  settle(rig, camera, inputs);
+  inputs.crowd_density = 1.0F;
+  float previous_y = rig.trace().eye_resolved.y();
+  float worst_step = 0.0F;
+  for (int frame = 0; frame < 240; ++frame) {
+    rig.update(camera, inputs);
+    float const eye_y = rig.trace().eye_resolved.y();
+    worst_step = std::max(worst_step, std::abs(eye_y - previous_y));
+    previous_y = eye_y;
+  }
+  EXPECT_GT(previous_y, open_eye_y + 1.2F)
+      << "a commander buried in a melee was framed from shoulder height, behind a "
+         "wall of helmets";
+  EXPECT_LT(worst_step, 0.05F) << "the crowd lift must ease in, not jump";
+
+  auto const framing = body_framing(rig, camera, inputs, 16.0F / 9.0F);
+  EXPECT_LT(framing.feet, 0.94F);
+  EXPECT_GT(framing.head, 0.15F);
+}
+
 TEST(CommanderCameraRig, LookingUpAndDownKeepsTheCommanderOnScreen) {
   Game::Accessibility::CommanderInput::reset_to_defaults();
 
@@ -662,6 +694,48 @@ TEST_F(CommanderCameraCollisionTest, AFallenLogIsNotAnObstructionToAChaseLens) {
   auto const trace = settled_trace(looking_south(QVector3D(0.0F, 0.0F, 0.0F), true));
   EXPECT_NEAR(trace.boom_resolved, trace.boom_unconstrained, 1.0e-3F);
   EXPECT_TRUE(trace.sight_line_clear);
+}
+
+TEST_F(CommanderCameraCollisionTest, ATreeTrunkBesideTheBoomDoesNotPullTheLensIn) {
+  load_flat_ground_with_props(
+      {prop_at(Game::Map::WorldProp::Type::PineTree, 0.9F, 2.0F)});
+  auto const trace = settled_trace(looking_south(QVector3D(0.0F, 0.0F, 0.0F), true));
+  EXPECT_NEAR(trace.boom_resolved, trace.boom_unconstrained, 1.0e-3F)
+      << "walking past a pine snapped the chase camera a metre forward in one "
+         "frame; a slender trunk may cross the sight line";
+}
+
+TEST_F(CommanderCameraCollisionTest, TheLensNeverStandsInsideATreeTrunk) {
+  auto const free = settled_trace(looking_south(QVector3D(0.0F, 0.0F, 0.0F), false));
+  QVector3D const eye = free.eye_resolved;
+  load_flat_ground_with_props(
+      {prop_at(Game::Map::WorldProp::Type::PineTree, eye.x(), eye.z())});
+  auto const trace = settled_trace(looking_south(QVector3D(0.0F, 0.0F, 0.0F), true));
+  EXPECT_GT(trace.eye_clearance, 0.0F);
+}
+
+TEST_F(CommanderCameraCollisionTest, AHouseAtTheShoulderSwapsTheLensToTheOtherSide) {
+  Game::Systems::BuildingCollisionRegistry::instance().register_building(
+      1U, "home", 2.55F, 3.0F, 1, 0.0F);
+  CommanderCameraRig rig;
+  Render::GL::Camera camera;
+  auto const inputs = looking_south(QVector3D(0.0F, 0.0F, 0.0F), false);
+  float worst_step = 0.0F;
+  QVector3D previous{};
+  for (int frame = 0; frame < 120; ++frame) {
+    static_cast<void>(rig.update(camera, inputs));
+    QVector3D const eye = rig.trace().eye_resolved;
+    if (frame > 0) {
+      worst_step = std::max(worst_step, (eye - previous).length());
+    }
+    previous = eye;
+  }
+  auto const& trace = rig.trace();
+  EXPECT_LT(trace.eye_resolved.x(), 0.0F)
+      << "a house beside the right shoulder crushed the chase camera into the "
+         "commander's head instead of taking the open left shoulder";
+  EXPECT_NEAR(trace.boom_resolved, trace.boom_unconstrained, 0.05F);
+  EXPECT_LT(worst_step, 0.2F) << "the shoulder swap must glide, not cut";
 }
 
 TEST_F(CommanderCameraCollisionTest, TheBoomRetractsAtOnceButIsReleasedInMetres) {

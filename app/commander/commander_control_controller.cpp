@@ -777,6 +777,7 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
   }
 
   steer_view(world, *commander, dt);
+  m_motor.bind_world(&world);
   auto const motion = advance_motion(world, body, facts, dt);
   face_body(body, facts, motion, dt);
   present_tick(world, body, camera, dt);

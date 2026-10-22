@@ -13,6 +13,7 @@
 
 #include "../core/ambient_session.h"
 #include "../core/component_combat.h"
+#include "../core/component_commander.h"
 #include "../core/component_core.h"
 #include "../core/component_gameplay.h"
 #include "../core/component_presentation.h"
@@ -1286,6 +1287,18 @@ void WallWalkSystem::update(Engine::Core::World* world, float delta_time) {
     if (unit->health <= 0 || world->has<Engine::Core::PendingRemovalComponent>(id)) {
       leave_wall(*world, id, unit);
       continue;
+    }
+    if (walker->player_driven) {
+      auto const* commander = world->try_get<Engine::Core::CommanderComponent>(id);
+      if (commander != nullptr && commander->fpv_controlled) {
+        continue;
+      }
+      walker->player_driven = false;
+      if (walker->elevation < WW::k_deck_height * 0.5F) {
+        leave_wall(*world, id, unit);
+        continue;
+      }
+      walker->phase = Phase::OnDeck;
     }
 
     auto const* anchor_unit = world->try_get<UnitComponent>(walker->wall_id);

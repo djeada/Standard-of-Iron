@@ -271,6 +271,8 @@ A wave whose objective is sealed off counts as stalled from its first decision. 
 
 `CommanderBehavior` manages the commander separately from line units. It positions the commander relative to the force, uses commander abilities, and respects doctrine/health/escort constraints.
 
+A commander who is not marching with the army steps away from threats within 15 m. There is one exception: when the threat is an enemy commander under direct player control, with no other enemy unit inside that radius, and the AI commander is at half health or better, he answers the challenge with an `AttackTarget` instead of retreating. The snapshot marks such contacts with `ContactSnapshot::player_driven`. See "Duels" in `RPG_PLAYABILITY.md`.
+
 This prevents the commander from being treated as merely another infantry entity in a bulk movement pool.
 
 The "army" the commander stations on is the muster only (`stands_in_the_muster`): living line units that are not part of a mission assault wave. Waves march on the enemy under their own orders, and counting them once walked the tutorial's Roman commander out of his outpost behind the raid and into the player's camp — his threat step averages its retreat point with the army centre, so an army centre inside the enemy camp drags him there.

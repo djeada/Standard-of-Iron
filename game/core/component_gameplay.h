@@ -261,6 +261,8 @@ struct WallWalkerComponent {
   float elevation{k_wall_top_height};
   Phase phase{Phase::OnDeck};
 
+  bool player_driven{false};
+
   float boarding_seconds{0.0F};
   float door_x{0.0F};
   float door_z{0.0F};

@@ -514,7 +514,7 @@ TEST_F(CommanderControlControllerTest, LockOnRequiresIntentionalRangeAndCone) {
   Engine::Core::World world;
   auto* commander = create_commander(world, 0.0F, 0.0F);
   auto* side_enemy = create_enemy(world, 6.0F, 0.0F);
-  auto* far_enemy = create_enemy(world, 0.0F, 14.0F);
+  auto* far_enemy = create_enemy(world, 0.0F, 24.0F);
   ASSERT_NE(commander, nullptr);
   ASSERT_NE(side_enemy, nullptr);
   ASSERT_NE(far_enemy, nullptr);

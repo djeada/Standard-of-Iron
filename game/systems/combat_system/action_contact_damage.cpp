@@ -3,12 +3,17 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <numbers>
 #include <span>
 
+#include "../../core/component_combat.h"
+#include "../../core/component_commander.h"
+#include "../../core/component_core.h"
 #include "../../core/world.h"
 #include "../combat_actions/body_impact.h"
 #include "../combat_actions/combat_action_events.h"
 #include "../combat_actions/weapon_trace.h"
+#include "../combat_rules.h"
 #include "../rpg_combat_system/rpg_targeting.h"
 #include "authored_action_reaction.h"
 #include "combat_action_predicates.h"
@@ -16,7 +21,9 @@
 #include "combat_utils.h"
 #include "commander_signature_effects.h"
 #include "damage_application.h"
+#include "damage_processor.h"
 #include "rts_melee_contact.h"
+#include "structure_combat.h"
 #include "target_rules.h"
 
 namespace Game::Systems::Combat {
@@ -214,6 +221,78 @@ resolve_rts_swing_contact(Engine::Core::World& world,
   return true;
 }
 
+auto strike_structure_in_reach(Engine::Core::World& world,
+                               Engine::Core::Entity& attacker,
+                               Engine::Core::CombatStateComponent* presentation_state,
+                               ActionRef& action,
+                               const CA::CombatActionDefinition& definition) -> bool {
+  constexpr float k_structure_reach_slack = 0.35F;
+  constexpr float k_structure_arc_cosine = 0.42F;
+  constexpr float k_structure_contact_speed = 4.0F;
+  bool const blade = definition.weapon_family == CA::WeaponFamily::Sword ||
+                     definition.weapon_family == CA::WeaponFamily::Spear;
+  if (!blade || action.hit_target_count > 0U ||
+      !Game::Systems::CombatRules::is_player_driven(&attacker)) {
+    return false;
+  }
+  auto const* attacker_unit = attacker.get_component<Engine::Core::UnitComponent>();
+  auto const* transform = attacker.get_component<Engine::Core::TransformComponent>();
+  if (attacker_unit == nullptr || transform == nullptr) {
+    return false;
+  }
+  QVector3D const origin(
+      transform->position.x, transform->position.y, transform->position.z);
+  float const yaw = transform->rotation.y * (std::numbers::pi_v<float> / 180.0F);
+  float const forward_x = std::sin(yaw);
+  float const forward_z = std::cos(yaw);
+  float const reach =
+      std::max(definition.hit_shape.reach, 1.2F) + k_structure_reach_slack;
+
+  Engine::Core::Entity* struck = nullptr;
+  float nearest = reach;
+  for (auto [candidate, candidate_unit] :
+       world.entity_view<Engine::Core::UnitComponent>()) {
+    (void)candidate_unit;
+    if (&candidate == &attacker || !is_building(&candidate) ||
+        !may_attack(attacker_unit,
+                    &candidate,
+                    {.intent = EngagementIntent::Ordered, .allow_buildings = true})) {
+      continue;
+    }
+    auto const surface = closest_structure_surface(candidate, origin);
+    float const dx = surface.point.x() - origin.x();
+    float const dz = surface.point.z() - origin.z();
+    float const distance = std::hypot(dx, dz);
+    if (distance >= nearest) {
+      continue;
+    }
+    if (distance > 0.05F &&
+        ((dx * forward_x) + (dz * forward_z)) / distance < k_structure_arc_cosine) {
+      continue;
+    }
+    nearest = distance;
+    struck = &candidate;
+  }
+  if (struck == nullptr) {
+    return false;
+  }
+
+  int damage = 10;
+  if (auto const* attack = attacker.get_component<Engine::Core::AttackComponent>()) {
+    damage = std::max(1, attack->get_current_damage());
+  }
+  deal_damage(&world, struck, damage, attacker.get_id());
+  if (presentation_state != nullptr) {
+    present_trace_impact(*presentation_state, definition, k_structure_contact_speed);
+  }
+  action.last_contact_speed = k_structure_contact_speed;
+  record_hit_on_action(action,
+                       struck->get_id(),
+                       Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot,
+                       damage);
+  return true;
+}
+
 } // namespace
 
 void deal_radial_action_damage(
@@ -318,6 +397,8 @@ void deal_weapon_trace_damage(
       ignored.ids,
       ignored.slot_span);
   if (contact.target_id == 0) {
+    static_cast<void>(strike_structure_in_reach(
+        world, attacker, presentation_state, action, definition));
     return;
   }
   if (resolve_rts_swing_contact(
