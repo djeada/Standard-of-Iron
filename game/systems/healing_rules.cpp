@@ -5,6 +5,7 @@
 
 #include "../core/component.h"
 #include "../core/entity.h"
+#include "../units/spawn_type.h"
 
 namespace Game::Systems::HealingRules {
 
@@ -39,6 +40,7 @@ auto maximum_recoverable_health(const Engine::Core::Entity& target) -> int {
 auto can_receive_healing(const Engine::Core::Entity& target) -> bool {
   auto const* unit = target.get_component<Engine::Core::UnitComponent>();
   return unit != nullptr && unit->health > 0 &&
+         !Game::Units::is_mended_by_builders(unit->spawn_type) &&
          unit->health < maximum_recoverable_health(target);
 }
 

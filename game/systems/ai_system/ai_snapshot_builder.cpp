@@ -528,7 +528,7 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
       data.production.build_time = production->build_time;
       data.production.time_remaining = production->time_remaining;
       data.production.produced_count = production->produced_count;
-      data.production.max_units = production->max_units;
+      data.production.max_units = production->manpower_limit();
       data.production.manpower_available = production->manpower_available;
       data.production.product_type = production->product_type;
       data.production.rally_set = production->rally_set;
@@ -593,7 +593,6 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
   }
   {
     constexpr int k_least_walls_for_a_ward = 8;
-    constexpr float k_ward_apron = 6.0F;
     float min_x = std::numeric_limits<float>::max();
     float max_x = std::numeric_limits<float>::lowest();
     float min_z = std::numeric_limits<float>::max();
@@ -615,10 +614,10 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
     }
     if (walls >= k_least_walls_for_a_ward) {
       snapshot.has_ward = true;
-      snapshot.ward_x = 0.5F * (min_x + max_x);
-      snapshot.ward_z = 0.5F * (min_z + max_z);
-      snapshot.ward_half_x = (0.5F * (max_x - min_x)) + k_ward_apron;
-      snapshot.ward_half_z = (0.5F * (max_z - min_z)) + k_ward_apron;
+      snapshot.ward.x = 0.5F * (min_x + max_x);
+      snapshot.ward.z = 0.5F * (min_z + max_z);
+      snapshot.ward.wall_half_x = 0.5F * (max_x - min_x);
+      snapshot.ward.wall_half_z = 0.5F * (max_z - min_z);
     }
   }
 

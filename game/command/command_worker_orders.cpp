@@ -310,7 +310,7 @@ void apply_deliver_civilians(World& world,
   }
 
   const int free_population =
-      std::max(0, production->max_units - production->manpower_available);
+      std::max(0, production->manpower_limit() - production->manpower_available);
   int remaining = free_population / Game::Systems::k_civilian_delivery_reserve_grant;
   if (remaining <= 0) {
     return;
@@ -355,14 +355,14 @@ void apply_deliver_civilians(World& world,
 }
 void apply_repair_structure(World& world, int owner_id, const RepairStructure& order) {
   auto* structure = world.get_entity(order.structure);
-  if (structure == nullptr ||
-      !structure->has_component<Engine::Core::BuildingComponent>()) {
+  if (structure == nullptr) {
     return;
   }
   const auto* structure_unit = structure->get_component<Engine::Core::UnitComponent>();
   const auto* structure_transform =
       structure->get_component<Engine::Core::TransformComponent>();
   if (structure_unit == nullptr || structure_transform == nullptr ||
+      !Game::Units::is_mended_by_builders(structure_unit->spawn_type) ||
       structure_unit->health <= 0 ||
       structure_unit->health >= structure_unit->max_health) {
     return;

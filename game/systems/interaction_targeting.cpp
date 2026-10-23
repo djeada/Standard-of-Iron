@@ -151,13 +151,14 @@ void collect_sheep(const InteractionTargetingRequest& request,
 void collect_buildings(const InteractionTargetingRequest& request,
                        float max_distance_sq,
                        std::vector<Scored>& out) {
-  for (auto [entity, building, unit_ref, transform_ref] :
-       request.world->entity_view<Engine::Core::BuildingComponent,
-                                  Engine::Core::UnitComponent,
+  for (auto [entity, unit_ref, transform_ref] :
+       request.world->entity_view<Engine::Core::UnitComponent,
                                   Engine::Core::TransformComponent>()) {
-    (void)building;
     const auto* unit = &unit_ref;
     const auto* transform = &transform_ref;
+    if (!Game::Units::is_mended_by_builders(unit->spawn_type)) {
+      continue;
+    }
 
     const auto action = building_action(request, entity, *unit);
     if (action == InteractionAction::None ||

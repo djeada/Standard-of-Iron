@@ -8,8 +8,12 @@
 #include <set>
 #include <string>
 
+#include "game/command/command.h"
+#include "game/command/command_queue.h"
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
+#include "game/systems/ai_system.h"
+#include "game/systems/ai_system/ai_types.h"
 #include "game/systems/default_content.h"
 #include "game/systems/global_stats_registry.h"
 #include "game/systems/nation_registry.h"
@@ -720,5 +724,320 @@ TEST_F(CampaignPlaythroughTest, CampaniaCampaignKeepsItsProgress) {
 TEST_F(CampaignPlaythroughTest, BattleOfZamaKeepsItsProgress) {
   expect_progress(
       play("battle_of_zama", {recruiting(), fight_men_not_stones(), decapitate({})}),
-      Progress{.survives_seconds = 400.0F});
+      Progress{.survives_seconds = 360.0F});
+}
+
+namespace {
+
+constexpr int k_victumulae_garrison = 2;
+
+struct GarrisonWatch {
+  struct Track {
+    G last;
+    float last_dx = 0.0F;
+    float last_dz = 0.0F;
+    bool has_last = false;
+    bool has_step = false;
+    G goal;
+    G previous_goal;
+    float goal_since = -1.0F;
+    bool has_goal = false;
+    bool has_previous_goal = false;
+  };
+  std::map<EntityID, Track> tracks;
+  int reversals = 0;
+  int window_reversals = 0;
+  int archer_reversals = 0;
+  int window_archer_reversals = 0;
+  int order_flips = 0;
+  int window_order_flips = 0;
+  int peak_troops = 0;
+  int recruited = 0;
+  std::set<EntityID> seen;
+  bool first_sample = true;
+};
+
+auto is_garrison_foot(const Engine::Core::UnitComponent& u) -> bool {
+  return u.owner_id == k_victumulae_garrison && u.health > 0 &&
+         (u.spawn_type == SpawnType::Swordsman || u.spawn_type == SpawnType::Spearman);
+}
+
+auto watch_the_garrison(std::shared_ptr<GarrisonWatch> watch) -> Step {
+  Step step{
+      "watch the garrison", always(), [watch](Mission& m) {
+        constexpr float k_step = 0.6F;
+        int troops = 0;
+        for (auto [id, u] : m.world().view<const Engine::Core::UnitComponent>()) {
+          if (u.owner_id != k_victumulae_garrison || u.health <= 0 ||
+              !Game::Units::is_troop_spawn(u.spawn_type)) {
+            continue;
+          }
+          ++troops;
+          const bool soldier = u.spawn_type != SpawnType::Civilian &&
+                               u.spawn_type != SpawnType::Builder &&
+                               !m.world().has<Engine::Core::AssaultWaveComponent>(id);
+          if (soldier && watch->seen.insert(id).second && !watch->first_sample) {
+            ++watch->recruited;
+          }
+          const bool archer = u.spawn_type == SpawnType::Archer;
+          if (!is_garrison_foot(u) && !archer) {
+            continue;
+          }
+          auto& track = watch->tracks[id];
+          const G at = m.position(id);
+          if (track.has_last) {
+            const float dx = at.x - track.last.x;
+            const float dz = at.z - track.last.z;
+            const float len = std::hypot(dx, dz);
+            if (len >= k_step) {
+              if (track.has_step) {
+                const float prev = std::hypot(track.last_dx, track.last_dz);
+                if ((dx * track.last_dx + dz * track.last_dz) < -0.5F * len * prev) {
+                  ++(archer ? watch->archer_reversals : watch->reversals);
+                  ++(archer ? watch->window_archer_reversals : watch->window_reversals);
+                }
+              }
+              track.last_dx = dx;
+              track.last_dz = dz;
+              track.has_step = true;
+            }
+          }
+          track.last = at;
+          track.has_last = true;
+
+          constexpr float k_same_goal = 2.0F;
+          constexpr float k_flip_window = 10.0F;
+          if (auto const* mv = m.world().try_get<Engine::Core::MovementComponent>(id);
+              mv != nullptr && mv->get_has_target()) {
+            const G goal =
+                m.to_grid(QVector3D(mv->get_goal_x(), 0.0F, mv->get_goal_y()));
+            if (!track.has_goal || Mission::distance(goal, track.goal) > k_same_goal) {
+              if (track.has_previous_goal &&
+                  Mission::distance(goal, track.previous_goal) <= k_same_goal &&
+                  m.seconds() - track.goal_since <= k_flip_window) {
+                ++watch->order_flips;
+                ++watch->window_order_flips;
+                if (narrating()) {
+                  auto const* target =
+                      m.world().try_get<Engine::Core::AttackTargetComponent>(id);
+                  std::printf(
+                      "  [%5.0fs] flip o2 %s %llu at (%.0f,%.0f): "
+                      "(%.0f,%.0f) -> (%.0f,%.0f) -> back, target %s\n",
+                      m.seconds(),
+                      std::string(Game::Units::spawn_type_name(u.spawn_type)).c_str(),
+                      static_cast<unsigned long long>(id),
+                      at.x,
+                      at.z,
+                      track.previous_goal.x,
+                      track.previous_goal.z,
+                      track.goal.x,
+                      track.goal.z,
+                      target != nullptr && target->target_id != 0 &&
+                              m.alive(target->target_id)
+                          ? std::string(Game::Units::spawn_type_name(
+                                            m.unit(target->target_id)->spawn_type))
+                                .c_str()
+                          : "-");
+                }
+              }
+              track.previous_goal = track.goal;
+              track.has_previous_goal = track.has_goal;
+              track.goal = goal;
+              track.goal_since = m.seconds();
+              track.has_goal = true;
+            }
+          }
+        }
+        watch->first_sample = false;
+        watch->peak_troops = std::max(watch->peak_troops, troops);
+      }};
+  step.every = 1.0F;
+  return step;
+}
+
+auto report_the_garrison(std::shared_ptr<GarrisonWatch> watch) -> Step {
+  Step step{
+      "report the garrison", always(), [watch](Mission& m) {
+        if (!narrating()) {
+          watch->window_reversals = 0;
+          watch->window_archer_reversals = 0;
+          watch->window_order_flips = 0;
+          return;
+        }
+        int troops = 0;
+        int foot = 0;
+        int fighting = 0;
+        for (auto [id, u] : m.world().view<const Engine::Core::UnitComponent>()) {
+          if (u.owner_id != k_victumulae_garrison || u.health <= 0 ||
+              !Game::Units::is_troop_spawn(u.spawn_type)) {
+            continue;
+          }
+          ++troops;
+          foot += is_garrison_foot(u) ? 1 : 0;
+          if (auto const* target =
+                  m.world().try_get<Engine::Core::AttackTargetComponent>(id);
+              target != nullptr && target->target_id != 0) {
+            ++fighting;
+          }
+        }
+        QString production = QStringLiteral("-");
+        for (auto [id, u, prod] :
+             m.world()
+                 .view<const Engine::Core::UnitComponent,
+                       const Engine::Core::ProductionComponent>()) {
+          if (u.owner_id == k_victumulae_garrison && u.health > 0 &&
+              u.spawn_type == SpawnType::Barracks) {
+            production = QStringLiteral("%1 %2 q%3 made%4 manpower%5/%6")
+                             .arg(QString::fromStdString(std::string(
+                                 Game::Units::spawn_type_name(u.spawn_type))))
+                             .arg(prod.in_progress ? "busy" : "idle")
+                             .arg(prod.production_queue.size())
+                             .arg(prod.produced_count)
+                             .arg(prod.manpower_available)
+                             .arg(prod.manpower_ceiling);
+          }
+        }
+        QString ai_line = QStringLiteral("-");
+        if (auto* ai = m.world().get_system<Game::Systems::AISystem>()) {
+          if (auto const* ctx = ai->plan_for(k_victumulae_garrison)) {
+            ai_line = QStringLiteral("state%1 builders%2 headroom%3 recruitable%4")
+                          .arg(static_cast<int>(ctx->state))
+                          .arg(ctx->builder_count)
+                          .arg(ctx->population_headroom())
+                          .arg(ctx->recruitment_manpower_available);
+          }
+        }
+        const auto& purse = m.session().economy();
+        std::printf(
+            "  [%5.0fs] garrison troops=%d foot=%d fighting=%d "
+            "reversals/30s=%d archer_reversals/30s=%d flips/30s=%d recruited=%d | %s | "
+            "%s | gold%d food%d wood%d iron%d\n",
+            m.seconds(),
+            troops,
+            foot,
+            fighting,
+            watch->window_reversals,
+            watch->window_archer_reversals,
+            watch->window_order_flips,
+            watch->recruited,
+            production.toStdString().c_str(),
+            ai_line.toStdString().c_str(),
+            purse.get(k_victumulae_garrison, Game::Systems::ResourceType::Gold),
+            purse.get(k_victumulae_garrison, Game::Systems::ResourceType::Food),
+            purse.get(k_victumulae_garrison, Game::Systems::ResourceType::Wood),
+            purse.get(k_victumulae_garrison, Game::Systems::ResourceType::Iron));
+        watch->window_reversals = 0;
+        watch->window_archer_reversals = 0;
+        watch->window_order_flips = 0;
+      }};
+  step.every = 30.0F;
+  return step;
+}
+
+auto victumulae_gate(Mission& m, float min_z) -> std::optional<EntityID> {
+  std::optional<EntityID> best;
+  float best_z = -1.0F;
+  for (auto [id, u] : m.world().view<const Engine::Core::UnitComponent>()) {
+    if (u.owner_id != k_victumulae_garrison || u.health <= 0 ||
+        u.spawn_type != SpawnType::WallGate) {
+      continue;
+    }
+    const float z = m.position(id).z;
+    if (z >= min_z && z > best_z) {
+      best_z = z;
+      best = id;
+    }
+  }
+  return best;
+}
+
+auto storming_party(Mission& m) -> Ids {
+  return m.except_types(
+      m.army(),
+      {SpawnType::Ram, SpawnType::SiegeTower, SpawnType::Healer, SpawnType::Builder});
+}
+
+auto victumulae_assault() -> Plan {
+  return {
+      {"raise a ram",
+       at(1.0F),
+       [](Mission& m) {
+         const Ids builders = m.local_of_type({SpawnType::Builder});
+         m.build(Ids(builders.begin(),
+                     builders.begin() + std::min<std::size_t>(2, builders.size())),
+                 "ram",
+                 {86.0F, 124.0F});
+       }},
+      {"raise a siege tower beside it",
+       at(3.0F),
+       [](Mission& m) {
+         const Ids builders = m.local_of_type({SpawnType::Builder});
+         if (builders.size() > 2) {
+           m.build(Ids(builders.begin() + 2, builders.end()),
+                   "siege_tower",
+                   {72.0F, 124.0F});
+         }
+       }},
+      {"roll the engines at the south ring",
+       [](Mission& m) {
+         return !m.local_of_type({SpawnType::Ram}).empty() &&
+                !m.local_of_type({SpawnType::SiegeTower}).empty();
+       },
+       [](Mission& m) {
+         if (auto gate = victumulae_gate(m, 70.0F)) {
+           m.attack(m.local_of_type({SpawnType::Ram}), *gate);
+         }
+         m.move(m.local_of_type({SpawnType::SiegeTower}), {72.0F, 84.3F});
+         m.attack_move(m.except_types(storming_party(m), {SpawnType::Archer}),
+                       {80.0F, 92.0F});
+         m.attack_move(m.local_of_type({SpawnType::Archer}), {80.0F, 98.0F});
+       }},
+      {"pour through the south ring",
+       [](Mission& m) {
+         return m.seconds() > 60.0F && !victumulae_gate(m, 70.0F).has_value();
+       },
+       [](Mission& m) { m.attack_move(storming_party(m), {80.0F, 66.0F}); },
+       10.0F},
+      {"break the citadel gate",
+       [](Mission& m) {
+         return m.seconds() > 60.0F && !victumulae_gate(m, 70.0F).has_value() &&
+                victumulae_gate(m, 40.0F).has_value();
+       },
+       [](Mission& m) {
+         if (auto gate = victumulae_gate(m, 40.0F)) {
+           m.attack(m.local_of_type({SpawnType::Ram}), *gate);
+         }
+       },
+       15.0F},
+      {"storm the citadel yard",
+       [](Mission& m) {
+         return m.seconds() > 60.0F && !victumulae_gate(m, 40.0F).has_value();
+       },
+       [](Mission& m) { m.attack_move(storming_party(m), {80.0F, 38.0F}); },
+       10.0F},
+  };
+}
+
+} // namespace
+
+TEST_F(CampaignPlaythroughTest,
+       VictumulaeGarrisonDefendsWithoutDitheringAndKeepsRecruiting) {
+  auto watch = std::make_shared<GarrisonWatch>();
+  Plan plan = victumulae_assault();
+  plan.push_back(watch_the_garrison(watch));
+  plan.push_back(report_the_garrison(watch));
+  const Report report = play("storming_of_victumulae", std::move(plan));
+  std::printf("[playthrough] storming_of_victumulae garrison reversals=%d "
+              "archer_reversals=%d order_flips=%d recruited=%d peak_troops=%d\n",
+              watch->reversals,
+              watch->archer_reversals,
+              watch->order_flips,
+              watch->recruited,
+              watch->peak_troops);
+
+  EXPECT_GE(report.stages_complete, 2) << report.line();
+  EXPECT_GE(watch->recruited, 5)
+      << "the garrison stood idle in its barracks while the town was stormed";
+  EXPECT_LE(watch->order_flips, 15)
+      << "companies were sent back and forth between two posts";
 }

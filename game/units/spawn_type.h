@@ -504,6 +504,10 @@ inline auto is_building_spawn(SpawnType type) -> bool {
          type == SpawnType::WallLadder;
 }
 
+[[nodiscard]] inline auto is_mended_by_builders(SpawnType type) -> bool {
+  return is_building_spawn(type) || is_siege_engine_spawn(type);
+}
+
 inline auto is_troop_spawn(SpawnType type) -> bool {
   return !is_building_spawn(type) && !is_wildlife_spawn(type);
 }

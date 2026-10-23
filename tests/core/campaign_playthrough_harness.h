@@ -18,6 +18,7 @@
 #include <utility>
 #include <vector>
 
+#include "app/economy/placement_orders.h"
 #include "app/mission/mission_runtime.h"
 #include "app/orders/movement_utils.h"
 #include "app/orders/order_submission.h"
@@ -45,6 +46,7 @@
 #include "game/session/simulation_clock.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/default_content.h"
+#include "game/systems/economy/build_site.h"
 #include "game/systems/economy/production_service.h"
 #include "game/systems/global_stats_registry.h"
 #include "game/systems/match_snapshot.h"
@@ -268,6 +270,7 @@ public:
   }
 
   [[nodiscard]] auto world() -> Engine::Core::World& { return m_world; }
+  [[nodiscard]] auto session() -> Game::Session::SessionContext& { return *m_session; }
   [[nodiscard]] auto seconds() const -> float { return m_runtime.waves().elapsed(); }
   [[nodiscard]] auto outcome() const -> QString { return m_outcome; }
 
@@ -532,6 +535,32 @@ public:
     request.payload = Game::Command::SetHold{.units = ids, .active = active};
     return App::Core::submit_player_order(m_world, k_local_owner, std::move(request))
         .accepted();
+  }
+
+  auto build(const Ids& builders, const char* construction_type, G site) -> bool {
+    if (builders.empty()) {
+      return false;
+    }
+
+    const auto clear = Game::Systems::find_clear_site(
+        m_world, construction_type, to_world(site), 24.0F, 0.0F, builders, {}, true);
+    if (!clear.has_value()) {
+      note_order(construction_type,
+                 builders.size(),
+                 site,
+                 false,
+                 QStringLiteral("no clear ground"));
+      return false;
+    }
+    site = to_grid(*clear);
+    const auto outcome = App::Core::submit_player_order(
+        m_world,
+        k_local_owner,
+        App::Economy::structure_build_order(
+            builders, QString::fromLatin1(construction_type), *clear, 0.0F));
+    note_order(
+        construction_type, builders.size(), site, outcome.accepted(), outcome.reason);
+    return outcome.accepted();
   }
 
   auto auto_gather(const Ids& ids, const char* product) -> bool {

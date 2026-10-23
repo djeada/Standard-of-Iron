@@ -63,8 +63,8 @@ auto issue_civilian_delivery_command(
         target_unit != nullptr ? target_id : 0);
   }
 
-  int const free_population =
-      std::max(0, target_production->max_units - target_production->manpower_available);
+  int const free_population = std::max(
+      0, target_production->manpower_limit() - target_production->manpower_available);
   if (free_population / Game::Systems::k_civilian_delivery_reserve_grant <= 0) {
     return App::Core::rejected_order_on(
         OrderKind::Deliver, App::Core::barracks_full_reason(), target_id);
@@ -115,14 +115,15 @@ auto issue_builder_repair_command(Engine::Core::World* world,
   Engine::Core::EntityID const target_id = picking_service->pick_unit_first(
       float(sx), float(sy), *world, *camera, viewport_width, viewport_height, 0);
   auto* target_entity = target_id != 0U ? world->get_entity(target_id) : nullptr;
-  if (target_entity == nullptr ||
-      !target_entity->has_component<Engine::Core::BuildingComponent>()) {
+  auto* target_unit = target_entity != nullptr
+                          ? target_entity->get_component<Engine::Core::UnitComponent>()
+                          : nullptr;
+  if (target_unit == nullptr ||
+      !Game::Units::is_mended_by_builders(target_unit->spawn_type)) {
     return App::Core::rejected_order(
         OrderKind::Repair, App::Core::no_target_under_cursor_reason(OrderKind::Repair));
   }
-  auto* target_unit = target_entity->get_component<Engine::Core::UnitComponent>();
-  if ((target_unit == nullptr) || (target_unit->owner_id != local_owner_id) ||
-      target_unit->health <= 0) {
+  if ((target_unit->owner_id != local_owner_id) || target_unit->health <= 0) {
     return App::Core::rejected_order_on(
         OrderKind::Repair,
         App::Core::no_target_under_cursor_reason(OrderKind::Repair),

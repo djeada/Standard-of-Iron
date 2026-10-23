@@ -2984,6 +2984,43 @@ TEST_F(CombatModeTest, GravePriestHealingTargetsUndeadAndLivingHealersSkipThem) 
   EXPECT_EQ(living_unit->health, 54);
 }
 
+TEST_F(CombatModeTest, HealersMendTroopsButNotBuildingsOrSiegeEngines) {
+  HealingSystem healing_system;
+
+  auto* healer_entity = world->create_entity();
+  healer_entity->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* healer_unit =
+      healer_entity->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  healer_unit->owner_id = 1;
+  auto* healer = healer_entity->add_component<HealerComponent>();
+  healer->healing_range = 8.0F;
+  healer->healing_amount = 10;
+  healer->healing_cooldown = 1.0F;
+  healer->time_since_last_heal = 1.0F;
+
+  auto add_wounded = [&](float x, Game::Units::SpawnType type) {
+    auto* entity = world->create_entity();
+    entity->add_component<TransformComponent>(x, 0.0F, 0.0F);
+    auto* unit = entity->add_component<UnitComponent>(50, 100, 1.0F, 12.0F);
+    unit->owner_id = 1;
+    unit->spawn_type = type;
+    return entity;
+  };
+
+  auto* tower = add_wounded(1.0F, Game::Units::SpawnType::DefenseTower);
+  tower->add_component<BuildingComponent>();
+  auto* ram = add_wounded(2.0F, Game::Units::SpawnType::Ram);
+  auto* catapult = add_wounded(3.0F, Game::Units::SpawnType::Catapult);
+  auto* swordsman = add_wounded(4.0F, Game::Units::SpawnType::Swordsman);
+
+  healing_system.update(world.get(), 0.1F);
+
+  EXPECT_EQ(tower->get_component<UnitComponent>()->health, 50);
+  EXPECT_EQ(ram->get_component<UnitComponent>()->health, 50);
+  EXPECT_EQ(catapult->get_component<UnitComponent>()->health, 50);
+  EXPECT_EQ(swordsman->get_component<UnitComponent>()->health, 60);
+}
+
 TEST_F(CombatModeTest, HealingRestoresSurvivorsWithoutResurrectingFormationCasualties) {
   HealingSystem healing_system;
 

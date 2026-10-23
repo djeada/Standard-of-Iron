@@ -45,6 +45,11 @@ standing_in_the_order_of_battle(const std::vector<std::string>& preferred,
   return static_cast<int>(std::distance(preferred.begin(), it));
 }
 
+[[nodiscard]] auto is_worker_recruit(Game::Units::TroopType type) -> bool {
+  return type == Game::Units::TroopType::Builder ||
+         type == Game::Units::TroopType::Civilian;
+}
+
 [[nodiscard]] auto recruitable_candidates(const Game::Systems::Nation& nation,
                                           const Game::Systems::TroopType* preferred,
                                           const DoctrineRecruitment& recruitment,
@@ -55,6 +60,7 @@ standing_in_the_order_of_battle(const std::vector<std::string>& preferred,
   if (preferred != nullptr && is_recruitable_from(*preferred, building)) {
     candidates.push_back(preferred);
   }
+
   for (const auto& troop : nation.available_troops) {
     if (!is_recruitable_from(troop, building) || &troop == preferred) {
       continue;
@@ -223,8 +229,7 @@ struct ArmStrength {
                        context.cavalry_count,
                        context.siege_count};
   auto count = [&](Game::Units::TroopType type) {
-    if (type == Game::Units::TroopType::Builder ||
-        type == Game::Units::TroopType::Civilian) {
+    if (is_worker_recruit(type)) {
       return;
     }
     if (const auto* troop = nation.get_troop(type)) {
@@ -335,8 +340,7 @@ choose_recruit(const Game::Systems::Nation& nation,
   const Game::Systems::TroopType* fallback = nullptr;
   for (const auto& troop : nation.available_troops) {
     if (!is_recruitable_from(troop, Game::Units::SpawnType::Barracks) ||
-        troop.unit_type == Game::Units::TroopType::Builder ||
-        troop.unit_type == Game::Units::TroopType::Civilian) {
+        is_worker_recruit(troop.unit_type)) {
       continue;
     }
     if (fallback == nullptr || troop.priority > fallback->priority) {
@@ -381,9 +385,16 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
   }
 
   constexpr int BUILDER_PRODUCTION_INTERVAL = 3;
-  const int minimum_builders = std::max(1, context.macro_targets.builder_count - 1);
-  const int desired_builders =
-      std::max(minimum_builders, context.macro_targets.builder_count);
+
+  constexpr int k_besieged_builders = 2;
+  const bool besieged = context.barracks_under_threat ||
+                        context.any_base_under_threat ||
+                        !context.buildings_under_attack.empty();
+  const int builder_target =
+      besieged ? std::min(context.macro_targets.builder_count, k_besieged_builders)
+               : context.macro_targets.builder_count;
+  const int minimum_builders = std::max(1, builder_target - 1);
+  const int desired_builders = std::max(minimum_builders, builder_target);
 
   bool should_produce_builder = false;
 
@@ -537,9 +548,21 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
       }
     }
 
+    auto const asked_for_worker =
+        [troop_type](const Game::Systems::TroopType* candidate) {
+          return candidate == troop_type && is_worker_recruit(candidate->unit_type);
+        };
+    auto const stand_in_worker =
+        [troop_type](const Game::Systems::TroopType* candidate) {
+          return candidate != troop_type && is_worker_recruit(candidate->unit_type);
+        };
+
     const Game::Systems::TroopType* buying = nullptr;
     for (const auto* candidate : candidates) {
-      if (arm_is_at_establishment(fielded, recruitment, arm_of(*nation, *candidate))) {
+      if ((besieged && stand_in_worker(candidate)) ||
+          (!asked_for_worker(candidate) &&
+           arm_is_at_establishment(
+               fielded, recruitment, arm_of(*nation, *candidate)))) {
         continue;
       }
       if (affordable(*candidate, prod, spendable)) {
@@ -551,6 +574,9 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
     if (buying == nullptr && in_no_position_to_be_choosy(context)) {
 
       for (const auto* candidate : candidates) {
+        if (besieged && stand_in_worker(candidate)) {
+          continue;
+        }
         if (affordable(*candidate, prod, spendable)) {
           buying = candidate;
           break;
@@ -563,6 +589,7 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
     }
 
     if (troop_type != nullptr && buying != troop_type &&
+        !affordable(*troop_type, prod, spendable) &&
         worth_waiting_for(*troop_type, prod, spendable)) {
       continue;
     }

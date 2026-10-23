@@ -45,8 +45,8 @@ auto choose_front(const AISnapshot& snapshot, const AIContext& context) -> Front
     return {nearest->pos_x, nearest->pos_z};
   }
 
-  const float centre_x = snapshot.has_ward ? snapshot.ward_x : context.base_pos_x;
-  const float centre_z = snapshot.has_ward ? snapshot.ward_z : context.base_pos_z;
+  const float centre_x = snapshot.has_ward ? snapshot.ward.x : context.base_pos_x;
+  const float centre_z = snapshot.has_ward ? snapshot.ward.z : context.base_pos_z;
   const EntitySnapshot* outer_gate = nullptr;
   float farthest = -1.0F;
   for (const auto& unit : snapshot.friendly_units) {

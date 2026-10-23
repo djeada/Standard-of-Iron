@@ -531,7 +531,8 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
                 : 1.0F;
         const float aura_value = commander->aura_bonus_value * affinity;
 
-        if (candidate_is_troop && commander->bonus_type == "health_regen") {
+        if (candidate_is_troop && commander->bonus_type == "health_regen" &&
+            !Game::Units::is_mended_by_builders(candidate_unit->spawn_type)) {
           auto* buff =
               candidate->get_component<Engine::Core::CommanderAuraBuffComponent>();
           if (buff != nullptr) {

@@ -267,6 +267,43 @@ protected:
                   census.barracks,
                   economy.get(k_owner, Game::Systems::ResourceType::Wood),
                   economy.get(k_owner, Game::Systems::ResourceType::Stone));
+      if (qEnvironmentVariableIsSet("SOI_TOWN_CREW")) {
+        int builders = 0;
+        int civilians = 0;
+        int soldiers = 0;
+        int reserve = 0;
+        int queued = 0;
+        for (auto [id, u] : session.world().view<const Engine::Core::UnitComponent>()) {
+          if (u.owner_id != k_owner || u.health <= 0) {
+            continue;
+          }
+          if (u.spawn_type == Game::Units::SpawnType::Builder) {
+            ++builders;
+          } else if (u.spawn_type == Game::Units::SpawnType::Civilian) {
+            ++civilians;
+          } else if (Game::Units::is_combatant_spawn(u.spawn_type)) {
+            ++soldiers;
+          }
+          if (u.spawn_type == Game::Units::SpawnType::Barracks) {
+            if (auto const* prod =
+                    session.world().try_get<Engine::Core::ProductionComponent>(id)) {
+              reserve += prod->manpower_available;
+              queued += static_cast<int>(prod->production_queue.size()) +
+                        (prod->in_progress ? 1 : 0);
+            }
+          }
+        }
+        std::printf("          crew builders %d soldiers %d civilians %d reserve %d "
+                    "queued %d food %d iron %d gold %d\n",
+                    builders,
+                    soldiers,
+                    civilians,
+                    reserve,
+                    queued,
+                    economy.get(k_owner, Game::Systems::ResourceType::Food),
+                    economy.get(k_owner, Game::Systems::ResourceType::Iron),
+                    economy.get(k_owner, Game::Systems::ResourceType::Gold));
+      }
       std::fflush(stdout);
     }
   }

@@ -309,7 +309,7 @@ auto ProductionService::get_selected_barracks_state(
     out_state.time_remaining = p->time_remaining;
     out_state.build_time = p->build_time;
     out_state.produced_count = p->produced_count;
-    out_state.max_units = p->max_units;
+    out_state.max_units = p->manpower_limit();
     out_state.villager_cost = p->villager_cost;
     out_state.manpower_available = p->manpower_available;
     out_state.queue_size = static_cast<int>(p->production_queue.size());
@@ -347,7 +347,7 @@ auto ProductionService::get_selected_home_state(
     out_state.time_remaining = p->time_remaining;
     out_state.build_time = p->build_time;
     out_state.produced_count = p->produced_count;
-    out_state.max_units = p->max_units;
+    out_state.max_units = p->manpower_limit();
     out_state.villager_cost = p->villager_cost;
     out_state.manpower_available = p->manpower_available;
     out_state.queue_size = static_cast<int>(p->production_queue.size());
@@ -378,7 +378,7 @@ auto ProductionService::get_selected_temple_state(
     out_state.time_remaining = p->time_remaining;
     out_state.build_time = p->build_time;
     out_state.produced_count = p->produced_count;
-    out_state.max_units = p->max_units;
+    out_state.max_units = p->manpower_limit();
     out_state.villager_cost = p->villager_cost;
     out_state.manpower_available = p->manpower_available;
     out_state.queue_size = static_cast<int>(p->production_queue.size());
