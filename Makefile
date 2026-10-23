@@ -36,6 +36,9 @@ MESH_OUTPUT_DIR ?= dist/mesh
 SUPPORTED_MESH_SPECIES := horse elephant
 MESH_SPECIES ?= $(word 2,$(MAKECMDGOALS))
 MESH_PART ?= full
+CMAKE ?= cmake
+CMAKE_ARGS ?=
+BUILD_JOBS ?= $(shell command -v nproc >/dev/null 2>&1 && nproc || sysctl -n hw.ncpu 2>/dev/null || echo 4)
 
 # Clang-tidy auto-fixer (git-only by default; --all scans whole project)
 CLANG_TIDY_FIXER := scripts/run-clang-tidy-fixes.sh
@@ -178,31 +181,29 @@ configure: build-dir
 		       "$(BUILD_DIR)/_deps/googletest-build" \
 		       "$(BUILD_DIR)/_deps/googletest-subbuild"; \
 	fi
-	@cd $(BUILD_DIR) && cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_CLANG_TIDY=OFF -DDEFAULT_LANG=$(DEFAULT_LANG) ..
+	@$(CMAKE) -S . -B $(BUILD_DIR) -DCMAKE_BUILD_TYPE=Release -DENABLE_CLANG_TIDY=OFF -DDEFAULT_LANG=$(DEFAULT_LANG) $(CMAKE_ARGS)
 	@echo "$(GREEN)✓ Configuration complete$(RESET)"
 
 # Build the project
 .PHONY: build
 build: run-map-pipeline configure
 	@echo "$(BOLD)$(BLUE)Building project...$(RESET)"
-	@cd $(BUILD_DIR) && make -j$$(nproc)
-	@$(MAKE) bake-bpat
+	@$(CMAKE) --build $(BUILD_DIR) --parallel $(BUILD_JOBS)
 	@echo "$(GREEN)✓ Build complete$(RESET)"
 
 # Build only the runnable application and runtime assets.
 .PHONY: build-app
 build-app: run-map-pipeline configure
 	@echo "$(BOLD)$(BLUE)Building Standard of Iron...$(RESET)"
-	@cd $(BUILD_DIR) && cmake --build . -j$$(nproc) --target $(BINARY_NAME)
-	@$(MAKE) bake-bpat
+	@$(CMAKE) --build $(BUILD_DIR) --parallel $(BUILD_JOBS) --target $(BINARY_NAME)
 	@echo "$(GREEN)✓ Application build complete$(RESET)"
 
-# Bake creature animation textures (BPAT) into assets/creatures/.
-# Runs after build so the bpat_baker binary exists. Idempotent.
+# CMake owns the baker's inputs and outputs, including the staged runtime copy.
+# Building the target also builds the baker when needed and skips current assets.
 .PHONY: bake-bpat
-bake-bpat:
+bake-bpat: configure
 	@echo "$(BOLD)$(BLUE)Baking creature animation textures (BPAT)...$(RESET)"
-	@$(BUILD_DIR)/bin/bpat_baker assets/creatures
+	@$(CMAKE) --build $(BUILD_DIR) --parallel $(BUILD_JOBS) --target bake_creature_assets
 	@echo "$(GREEN)✓ BPAT baking complete$(RESET)"
 
 # Build with clang-tidy enabled
@@ -210,9 +211,9 @@ bake-bpat:
 build-tidy:
 	@echo "$(BOLD)$(BLUE)Configuring build with clang-tidy enabled...$(RESET)"
 	@mkdir -p $(BUILD_TIDY_DIR)
-	@cd $(BUILD_TIDY_DIR) && cmake -DENABLE_CLANG_TIDY=ON -DDEFAULT_LANG=$(DEFAULT_LANG) ..
+	@$(CMAKE) -S . -B $(BUILD_TIDY_DIR) -DENABLE_CLANG_TIDY=ON -DDEFAULT_LANG=$(DEFAULT_LANG) $(CMAKE_ARGS)
 	@echo "$(BOLD)$(BLUE)Building with clang-tidy analysis...$(RESET)"
-	@cd $(BUILD_TIDY_DIR) && make -j$$(nproc)
+	@$(CMAKE) --build $(BUILD_TIDY_DIR) --parallel $(BUILD_JOBS)
 	@echo "$(GREEN)✓ Build with clang-tidy complete$(RESET)"
 
 # Build everything (alias for build)
@@ -231,7 +232,7 @@ mesh: configure
 	esac
 	@echo "$(BOLD)$(BLUE)Rendering $(MESH_SPECIES) mesh comparison views ($(MESH_PART))...$(RESET)"
 	@mkdir -p "$(MESH_OUTPUT_DIR)"
-	@cmake --build $(BUILD_DIR) -j$$(nproc) --target mesh_preview
+	@$(CMAKE) --build $(BUILD_DIR) --parallel $(BUILD_JOBS) --target mesh_preview
 	@QT_QPA_PLATFORM=offscreen "$(BUILD_DIR)/bin/mesh_preview" "$(MESH_SPECIES)" "$(MESH_OUTPUT_DIR)" "$(MESH_PART)"
 	@echo "$(GREEN)✓ Mesh sheet written under $(MESH_OUTPUT_DIR)$(RESET)"
 
@@ -293,14 +294,14 @@ run-headless: build
 .PHONY: editor
 editor: run-map-pipeline configure
 	@echo "$(BOLD)$(BLUE)Building Map Editor...$(RESET)"
-	@cmake --build $(BUILD_DIR) -j$$(nproc) --target $(MAP_EDITOR_BINARY)
+	@$(CMAKE) --build $(BUILD_DIR) --parallel $(BUILD_JOBS) --target $(MAP_EDITOR_BINARY)
 	@echo "$(BOLD)$(BLUE)Running Map Editor...$(RESET)"
 	@cd $(BUILD_DIR) && ./bin/$(MAP_EDITOR_BINARY)
 
 .PHONY: arena
 arena: run-map-pipeline configure
 	@echo "$(BOLD)$(BLUE)Building Arena playground...$(RESET)"
-	@cmake --build $(BUILD_DIR) -j$$(nproc) --target $(ARENA_BINARY)
+	@$(CMAKE) --build $(BUILD_DIR) --parallel $(BUILD_JOBS) --target $(ARENA_BINARY)
 	@echo "$(BOLD)$(BLUE)Running Arena playground...$(RESET)"
 	@cd $(BUILD_DIR) && \
 	BIN_PATH="./bin/$(ARENA_BINARY)"; \
@@ -353,7 +354,7 @@ dev: install build
 .PHONY: test-build
 test-build: configure
 	@echo "$(BOLD)$(BLUE)Building test binaries...$(RESET)"
-	@cmake --build $(BUILD_DIR) -j$$(nproc) --target soi_test_binaries
+	@$(CMAKE) --build $(BUILD_DIR) --parallel $(BUILD_JOBS) --target soi_test_binaries
 	@echo "$(GREEN)✓ Test binaries built$(RESET)"
 
 # Incrementally build and run tests.
@@ -578,9 +579,9 @@ tidy-all:
 debug:
 	@echo "$(BOLD)$(BLUE)Configuring debug build with GDB support and runtime tracing...$(RESET)"
 	@mkdir -p $(DEBUG_BUILD_DIR)
-	@cd $(DEBUG_BUILD_DIR) && cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_CLANG_TIDY=OFF -DDEFAULT_LANG=$(DEFAULT_LANG) ..
+	@$(CMAKE) -S . -B $(DEBUG_BUILD_DIR) -DCMAKE_BUILD_TYPE=Debug -DENABLE_CLANG_TIDY=OFF -DDEFAULT_LANG=$(DEFAULT_LANG) $(CMAKE_ARGS)
 	@echo "$(BOLD)$(BLUE)Building debug version...$(RESET)"
-	@cd $(DEBUG_BUILD_DIR) && make -j$$(nproc)
+	@$(CMAKE) --build $(DEBUG_BUILD_DIR) --parallel $(BUILD_JOBS)
 	@echo "$(GREEN)✓ Debug build complete$(RESET)"
 	@echo "$(BOLD)Debug Info:$(RESET)"
 	@echo "  Debug symbols: $(GREEN)Enabled (-g3 -ggdb3)$(RESET)"
@@ -596,8 +597,8 @@ debug:
 .PHONY: release
 release: build-dir
 	@echo "$(BOLD)$(BLUE)Configuring release build...$(RESET)"
-	@cd $(BUILD_DIR) && cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_CLANG_TIDY=OFF ..
-	@cd $(BUILD_DIR) && make -j$$(nproc)
+	@$(CMAKE) -S . -B $(BUILD_DIR) -DCMAKE_BUILD_TYPE=Release -DENABLE_CLANG_TIDY=OFF $(CMAKE_ARGS)
+	@$(CMAKE) --build $(BUILD_DIR) --parallel $(BUILD_JOBS)
 	@echo "$(GREEN)✓ Release build complete$(RESET)"
 
 # Show build info

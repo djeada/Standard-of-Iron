@@ -1,7 +1,9 @@
 # Every translation unit parses roughly 120k lines of standard library and Qt
 # headers before it reaches its own code. Precompiling that shared prefix once
-# per target cuts compile time by about a third. The header holds only headers
-# that never change and never define keyword macros (no QObject, no QDebug).
+# per larger target cuts compile time by about a third. For one- and two-source
+# targets, generating the PCH costs more than the parsing it saves, so they
+# compile normally. Count C++ sources, not headers, resources or AUTOMOC's empty
+# generated translation unit. The header holds only stable library headers.
 # Configure with -DCMAKE_DISABLE_PRECOMPILE_HEADERS=ON to build without it.
 # OBJECT libraries are skipped: CMake lists their .gch among the objects
 # linked into consumers, and the linker rejects it. The header is C++ only, so
@@ -28,6 +30,12 @@ function(soi_precompile_common_headers)
         endif()
         string(FIND "${source_dir}" "${CMAKE_BINARY_DIR}" in_build_tree)
         if(in_build_tree EQUAL 0)
+            continue()
+        endif()
+        get_target_property(sources ${target} SOURCES)
+        list(FILTER sources INCLUDE REGEX "\\.(cc|cpp|cxx)(>|$)")
+        list(LENGTH sources source_count)
+        if(source_count LESS 3)
             continue()
         endif()
         target_precompile_headers(

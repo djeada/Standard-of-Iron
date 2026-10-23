@@ -317,9 +317,9 @@ panel is selected; selection changes still bump it immediately.
 
 ## Build time
 
-Every translation unit parsed ~120k lines of standard-library and Qt headers. One
-precompiled header (`cmake/soi_pch.h`, applied to every project target by
-`cmake/PrecompiledHeaders.cmake`) cuts a clean build of the game and tools from
+Every translation unit parsed ~120k lines of standard-library and Qt headers. The
+initial per-target precompiled header (`cmake/soi_pch.h`, applied by
+`cmake/PrecompiledHeaders.cmake`) cut a clean build of the game and tools from
 2758 to 2041 CPU-seconds (−26%) and from 728 to 508 s wall at `-j3`.
 
 - The header holds only headers that never change. Every Qt header defines the
@@ -329,6 +329,50 @@ precompiled header (`cmake/soi_pch.h`, applied to every project target by
   which the CI workflows set.
 - Release links use LTO; re-linking one small tool costs ~160 CPU-seconds because
   whole-program optimisation reruns over every static library.
+
+Targets with only one or two C++ sources now compile without a PCH. In a Linux
+Debug configuration this reduces PCH generation from 55 targets to 29. A clean
+build of `audio_master_preview` (including `soi_audio_mastering`) and `scene_core`
+with GCC 13.3, Qt 6.4.2, Ninja, `BUILD_TESTING=OFF`, `SOI_DEBUG_INFO=lines`, mold,
+`-j3` and no compiler cache took 35.4 s before and 15.7 s afterwards. This measures
+those small targets, not a whole-game clean build; larger targets retain their PCH.
+
+### Avoiding redundant rebuilds
+
+Repeated configuration preserves the timestamps of the generated campaign-map
+and translation resource manifests when their contents are unchanged. Previously
+every `make build-app` rewrote both `.qrc` files, so even a build with no source
+changes ran the resource compiler and linked the game again.
+
+The Makefile now delegates asset baking to CMake's `bake_creature_assets` target.
+The game already depends on that target, so `make build` and `make build-app`
+need no second baker invocation. `make bake-bpat` uses the same dependency graph:
+it builds a missing baker, regenerates stale assets, and skips current outputs
+in both the source tree and the staged runtime tree.
+Source `.cmesh` packages, troop/nation/formation/construction JSON and equipment
+loadouts are explicit bake dependencies. A stable snapshot of that input list
+also invalidates the bake when an input is removed. Generated bake outputs and
+unrelated textures do not invalidate it.
+
+The simulation's Git build ID is defined only for `game/command/replay.cpp`,
+which is the only source that reads it. Changing commits therefore invalidates
+one compiler invocation instead of all 47 in `game_sim` (including its PCH and
+AUTOMOC object in the Linux Debug configuration). Replay compatibility checks
+still receive the current commit ID.
+
+`make` invokes `cmake --build`, so an existing Ninja build directory works with
+the developer targets too. Set `CMAKE_GENERATOR=Ninja` for a fresh build tree,
+`BUILD_JOBS` to limit parallel work, and `CMAKE_ARGS` for extra configure flags.
+
+Run the small build-graph regression checks without building the game:
+
+```sh
+python3 -m unittest discover -s tests/scripts -p test_build_incrementality.py -v
+```
+
+They check unchanged and changed manifests, a commit change's compile-command
+invalidation, and incremental Makefile builds and bakes with Make and Ninja
+(when installed). They also run with the script tests in the quality workflow.
 
 ### The CI Debug build from scratch
 

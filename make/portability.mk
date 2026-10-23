@@ -24,9 +24,9 @@ portability-lint:
 ## Compile the whole project with the portability warning set promoted to errors.
 portability-build:
 	@echo "$(BOLD)$(BLUE)Building with SOI_STRICT_WARNINGS...$(RESET)"
-	@cmake -S . -B $(BUILD_STRICT_DIR) -G Ninja -DCMAKE_BUILD_TYPE=Release \
+	@$(CMAKE) -S . -B $(BUILD_STRICT_DIR) -G Ninja -DCMAKE_BUILD_TYPE=Release \
 		-DSOI_STRICT_WARNINGS=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-	@cmake --build $(BUILD_STRICT_DIR) -j$$(nproc)
+	@$(CMAKE) --build $(BUILD_STRICT_DIR) --parallel $(BUILD_JOBS)
 	@echo "$(GREEN)✓ Strict build clean$(RESET)"
 
 ## Both portability gates.

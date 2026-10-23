@@ -185,6 +185,19 @@ The first map-pipeline run may download/generate campaign-map source data. Force
 make run-map-pipeline map_pipeline_rebuild=1
 ```
 
+For faster iteration, `make build-app` builds the game and its runtime assets.
+To use Ninja, choose it when creating a fresh build directory:
+
+```sh
+CMAKE_GENERATOR=Ninja make build-app BUILD_DIR=build-ninja BUILD_JOBS=4
+```
+
+Subsequent builds reuse that directory's generator. `BUILD_JOBS` controls
+parallel compilation and defaults to the available CPU count; `CMAKE_ARGS`
+forwards extra configure options, such as `CMAKE_ARGS="-DSOI_LINKER=mold"`
+on Linux with mold installed. See [build-time notes](docs/PERFORMANCE.md#build-time)
+for the incremental-build guarantees and regression checks.
+
 See [CONTRIBUTING.md](CONTRIBUTING.md) for platform setup, formatting, tests, and pull-request requirements.
 
 ## Default controls

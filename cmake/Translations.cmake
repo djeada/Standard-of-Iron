@@ -82,9 +82,13 @@ foreach(_ts IN LISTS SOI_TS_FILES)
 endforeach()
 
 set(SOI_TRANSLATIONS_QRC "${CMAKE_CURRENT_BINARY_DIR}/translations_generated.qrc")
+# An unchanged configure must not trigger resource compilation and a game link.
 file(
-    WRITE "${SOI_TRANSLATIONS_QRC}"
-    "<RCC>\n    <qresource prefix=\"/translations\">\n${_soi_qm_qrc_entries}    </qresource>\n</RCC>\n"
+    CONFIGURE
+    OUTPUT "${SOI_TRANSLATIONS_QRC}"
+    CONTENT
+        "<RCC>\n    <qresource prefix=\"/translations\">\n${_soi_qm_qrc_entries}    </qresource>\n</RCC>\n"
+    @ONLY
 )
 # AUTORCC reads the .qrc at build time but does not know the listed files are
 # generated, so the dependency has to be spelled out or a clean build races.

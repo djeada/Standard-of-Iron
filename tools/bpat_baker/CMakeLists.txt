@@ -87,6 +87,8 @@ foreach(_asset_name IN LISTS _soi_mesh_asset_names)
     )
 endforeach()
 
+include(${CMAKE_SOURCE_DIR}/cmake/CreatureBakeInputs.cmake)
+
 add_custom_command(
     OUTPUT ${_soi_creature_asset_outputs}
     COMMAND "${CMAKE_COMMAND}" -E make_directory "${_soi_creature_assets_source_dir}"
@@ -99,7 +101,7 @@ add_custom_command(
     COMMAND
         "${CMAKE_COMMAND}" -E copy ${_soi_creature_asset_baked} "${_soi_creature_assets_source_dir}"
     COMMAND "${CMAKE_COMMAND}" -E copy ${_soi_mesh_asset_baked} "${_soi_mesh_assets_source_dir}"
-    DEPENDS bpat_baker
+    DEPENDS bpat_baker ${SOI_CREATURE_BAKE_INPUTS}
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
     COMMENT "Baking creature animation and static mesh assets"
     VERBATIM

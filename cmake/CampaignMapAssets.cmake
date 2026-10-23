@@ -40,9 +40,14 @@ if(ENABLE_GENERATED_CAMPAIGN_MAP_ASSETS)
             "        <file alias=\"${_campaign_map_resource}\">${CMAKE_CURRENT_SOURCE_DIR}/${_campaign_map_resource}</file>\n"
         )
     endforeach()
+    # Preserve the timestamp on an unchanged configure: rewriting the manifest
+    # makes AUTORCC rebuild it and forces another (potentially LTO) game link.
     file(
-        WRITE "${GENERATED_CAMPAIGN_MAP_QRC}"
-        "<RCC>\n    <qresource prefix=\"/\">\n${_campaign_map_qrc_entries}    </qresource>\n</RCC>\n"
+        CONFIGURE
+        OUTPUT "${GENERATED_CAMPAIGN_MAP_QRC}"
+        CONTENT
+            "<RCC>\n    <qresource prefix=\"/\">\n${_campaign_map_qrc_entries}    </qresource>\n</RCC>\n"
+        @ONLY
     )
 else()
     message(STATUS "Generated campaign map assets disabled")
