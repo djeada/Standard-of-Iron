@@ -311,6 +311,8 @@ void apply_commander(CreaturePresentationComponent& next, const Entity& entity) 
   next.jump_height_offset = commander->jump_height_offset;
   next.dodge_active = commander->dodge_active;
   next.dodge_phase = commander->dodge_phase;
+  next.dodge_dir_x = commander->dodge_dir_x;
+  next.dodge_dir_z = commander->dodge_dir_z;
   next.flag_rally_planting = commander->is_flag_rally_planting();
   next.flag_rally_animation_timer = commander->flag_rally_animation_timer;
   next.flag_rally_cost = commander->flag_rally_cost;
@@ -395,6 +397,8 @@ presentation_changed(const CreaturePresentationComponent& current,
          current.hold_requested != next.hold_requested ||
          current.dodge_active != next.dodge_active ||
          current.dodge_phase != next.dodge_phase ||
+         current.dodge_dir_x != next.dodge_dir_x ||
+         current.dodge_dir_z != next.dodge_dir_z ||
          current.showcase_active != next.showcase_active ||
          current.showcase_move != next.showcase_move ||
          current.showcase_phase != next.showcase_phase;

@@ -425,7 +425,20 @@ void CommanderViewModel::trigger_rally() {
   if (!active()) {
     return;
   }
-  start_flag_rally();
+  const auto effects = m_mode->rally_where_the_commander_stands(
+      {.world = m_context.world,
+       .local_commander = find_local_commander(),
+       .controlled_commander = controlled_commander_entity(),
+       .local_owner_id = m_context.local_owner_id,
+       .commander_mode_active = active(),
+       .cursor_mode = (m_context.cursor != nullptr ? m_context.cursor->mode()
+                                                   : CursorMode::Normal)});
+  if (!effects.reset_commander_input) {
+    m_control.note_refusal("commander.rally");
+    return;
+  }
+  reset_input();
+  m_rally_preview.reset();
 }
 
 void CommanderViewModel::dodge() {

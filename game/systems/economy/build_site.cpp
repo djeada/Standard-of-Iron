@@ -151,6 +151,7 @@ reserved_footprint(const std::string& building_type,
       BuildingCollisionRegistry::get_building_size(building_type), facing_degrees);
   BuildingFootprint footprint(x, z, size.width, size.depth, 0, holder);
   footprint.wall_link = is_wall_link_building_type(building_type);
+  footprint.wall_gate = building_type == "wall_gate";
   footprint.wall_tower = is_wall_tower_building_type(building_type);
   return footprint;
 }

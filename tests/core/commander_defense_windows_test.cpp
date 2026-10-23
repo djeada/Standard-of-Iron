@@ -420,7 +420,7 @@ TEST_F(CommanderDefenseWindowsTest, AnUnblockableContactIsNotCountedAsABlock) {
   EXPECT_EQ(rpg->damaging_contacts, 1U);
 }
 
-TEST_F(CommanderDefenseWindowsTest, ADodgeRejectsOnlyTheContactItRolledAwayFrom) {
+TEST_F(CommanderDefenseWindowsTest, ADodgeRejectsEveryContactInsideItsWindow) {
   constexpr float k_dt = 1.0F / 60.0F;
   Engine::Core::World world;
   auto* commander = make_commander(world);
@@ -442,8 +442,9 @@ TEST_F(CommanderDefenseWindowsTest, ADodgeRejectsOnlyTheContactItRolledAwayFrom)
 
   auto const rolled_into = Game::Systems::RpgCombat::deal_damage_to_rpg_commander(
       &world, commander, 24, behind->get_id(), {}, body_point(*commander, -0.34F));
-  EXPECT_FALSE(rolled_into.dodged)
-      << "i-frames are directional: rolling into a blow does not avoid it";
+  EXPECT_TRUE(rolled_into.dodged)
+      << "i-frames hold whichever way the roll goes; inside a crowd every roll is "
+         "toward somebody";
 }
 
 TEST_F(CommanderDefenseWindowsTest, EveryResolvedContactIsCountedExactlyOnce) {

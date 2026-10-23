@@ -13,6 +13,7 @@
 #include "../navigation/pathfinding.h"
 #include "formation_foreign_grid.h"
 #include "formation_structure_facade.h"
+#include "formation_surround.h"
 
 namespace Game::Systems::Combat {
 
@@ -79,6 +80,7 @@ struct EntityFrame {
   bool mounted{false};
   float frame_sign{1.0F};
   float delta_time{0.0F};
+  const std::vector<SurroundSpot>* surround{nullptr};
 };
 
 [[nodiscard]] auto publish_soldiers(const EntityFrame& frame) -> bool;

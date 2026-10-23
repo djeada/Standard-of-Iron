@@ -150,7 +150,8 @@ void FocusTracker::sync_target_focus_markers(const FocusInputs& inputs) {
   m_markers = Game::Systems::collect_target_focus_markers(request);
   if (inputs.commander_active) {
     std::erase_if(m_markers, [](const Game::Systems::TargetFocusMarker& marker) {
-      return marker.role == Game::Systems::TargetFocusRole::LockedTarget;
+      return marker.role == Game::Systems::TargetFocusRole::LockedTarget ||
+             marker.role == Game::Systems::TargetFocusRole::IncomingAttacker;
     });
   }
 }

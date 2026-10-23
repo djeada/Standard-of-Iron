@@ -17,6 +17,25 @@
 
 namespace Game::Systems {
 
+auto gate_tower_bodies(const BuildingFootprint& gate) -> std::array<GateTowerBody, 2> {
+  constexpr float k_passage_half = Engine::Core::GateComponent::k_passage_half_width;
+  constexpr float k_span_half = Engine::Core::GateComponent::k_structure_half_span;
+  constexpr float k_tower_half_along = (k_span_half - k_passage_half) * 0.5F;
+  constexpr float k_tower_offset = k_passage_half + k_tower_half_along;
+  constexpr float k_tower_half_across = 0.6F;
+  bool const along_x = gate.width >= gate.depth;
+  std::array<GateTowerBody, 2> towers{};
+  for (std::size_t side = 0; side < towers.size(); ++side) {
+    float const sign = side == 0 ? -1.0F : 1.0F;
+    towers[side] = {
+        .center_x = gate.center_x + (along_x ? sign * k_tower_offset : 0.0F),
+        .center_z = gate.center_z + (along_x ? 0.0F : sign * k_tower_offset),
+        .half_x = along_x ? k_tower_half_along : k_tower_half_across,
+        .half_z = along_x ? k_tower_half_across : k_tower_half_along};
+  }
+  return towers;
+}
+
 auto BuildingCollisionRegistry::instance() -> BuildingCollisionRegistry& {
   return *Game::Session::ambient_services().building_collision;
 }
@@ -293,6 +312,7 @@ void BuildingCollisionRegistry::register_building(Engine::Core::EntityID entity_
                               entity_id,
                               get_building_grid_padding(building_type));
   footprint.wall_link = is_wall_link_building_type(building_type);
+  footprint.wall_gate = building_type == "wall_gate";
   footprint.wall_tower = is_wall_tower_building_type(building_type);
 
   m_buildings.push_back(footprint);

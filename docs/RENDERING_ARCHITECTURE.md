@@ -459,6 +459,10 @@ Every cell scatter already jitters each instance anywhere in its cell, so repeti
 - **Junction caps.** Caps fill the gaps between river segments at bends. Their radial UV makes the whole rim read as shore, so drawn over the ribbon they showed as rings and shards mid-river. River caps now sit `junction_sink` (3 cm) below the ribbon, so the ribbon wins wherever both exist.
 - **Wet bank.** `riverbank.frag` darkens a wet band (`k_wet_band_reach`, `k_wet_band_darkening`) and keeps the core opaque over a wider strip, so water meets darker soil instead of dry grass.
 
+### River mist
+
+`post_composite.frag` lays water mist over every pixel within `k_mist_bank_reach` (7 m) of a river or lake and below `k_mist_water_ceiling` (1.7 m) above the bank, at up to `k_water_mist_strength` (0.42). The amount is applied at the surface the pixel shows, so it also has to account for how much mist lies between the lens and that surface: it is scaled by `1 - exp(-view_distance / k_mist_view_reach)` with a 9 m reach. Without that, a chase camera standing on a bridge saw the commander and the men beside him, three metres away, through the same milky veil as the far bank.
+
 ## Environment lighting
 
 `scene/environment_lighting.h` defines the shared outdoor environment-lighting state.

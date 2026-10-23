@@ -4,6 +4,7 @@
 #include <cmath>
 #include <vector>
 
+#include "../core/component_commander.h"
 #include "../core/component_gameplay.h"
 #include "../core/entity.h"
 #include "../core/event_manager.h"
@@ -163,7 +164,12 @@ void GateSystem::update(Engine::Core::World* world, float delta_time) {
         continue;
       }
 
-      const bool loitering = movement != nullptr && !movement->get_has_target() &&
+      auto const* commander =
+          world->try_get<Engine::Core::CommanderComponent>(entity_id);
+      const bool player_walking = commander != nullptr && commander->fpv_controlled &&
+                                  commander->fpv_motion_requested;
+      const bool loitering = !player_walking && movement != nullptr &&
+                             !movement->get_has_target() &&
                              !movement->get_has_requested_goal();
       const float radius = record.gate->trigger_radius;
       if (!loitering && (dx * dx) + (dz * dz) <= radius * radius) {
@@ -240,6 +246,7 @@ auto GateSystem::access() const -> Engine::Core::SystemAccess {
   using namespace Engine::Core;
   return SystemAccess::declare(Reads<TransformComponent,
                                      UnitComponent,
+                                     CommanderComponent,
                                      MovementComponent,
                                      WallWalkerComponent,
                                      PendingRemovalComponent>{},

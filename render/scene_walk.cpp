@@ -440,7 +440,8 @@ void Renderer::enqueue_selection_ring(Engine::Core::Entity* entity,
                                       Engine::Core::UnitComponent* unit_comp,
                                       bool selected,
                                       bool hovered) {
-  if ((!selected && !hovered) || (transform == nullptr) || m_view.cinematic_mode()) {
+  if ((!selected && !hovered) || (transform == nullptr) ||
+      !selection_markers_visible()) {
     return;
   }
 
@@ -666,6 +667,8 @@ auto Renderer::compute_rpg_lens_gap(Engine::Core::World& world) const
   rpg_lens_gap.axis_z = to_focus_z / focus_distance;
   rpg_lens_gap.length = gap_length;
   rpg_lens_gap.focus_radius = k_rpg_lens_gap_focus_radius;
+  rpg_lens_gap.focus_x = focus_transform->position.x;
+  rpg_lens_gap.focus_z = focus_transform->position.z;
   return rpg_lens_gap;
 }
 

@@ -14,6 +14,8 @@
 #include "formation_local_frame.h"
 #include "formation_slot_directive.h"
 #include "formation_structure_facade.h"
+#include "formation_surround.h"
+#include "target_rules.h"
 
 namespace Game::Systems::Combat {
 namespace {
@@ -155,6 +157,76 @@ auto read_front_facts(const Engine::Core::AttackComponent* attack,
   return facts;
 }
 
+auto single_body_opponent(Engine::Core::World& world,
+                          Engine::Core::EntityID id) -> Engine::Core::Entity* {
+  auto* opponent = world.get_entity(id);
+  if (opponent == nullptr || is_building(opponent) ||
+      FormationCombat::has_formation_slots(*opponent) ||
+      world.has<Engine::Core::ElephantComponent>(id) ||
+      world.has<Engine::Core::WildlifeComponent>(id)) {
+    return nullptr;
+  }
+  return opponent;
+}
+
+auto surrounds_its_opponent(Engine::Core::World& world,
+                            Engine::Core::Entity& entity,
+                            const FrontFacts& facts) -> Engine::Core::Entity* {
+  auto const id = entity.get_id();
+  if (!facts.melee_ordered || facts.display_target == 0U ||
+      world.has<Engine::Core::WallWalkerComponent>(id) ||
+      world.has<Engine::Core::RaftRiderComponent>(id)) {
+    return nullptr;
+  }
+  auto* opponent = single_body_opponent(world, facts.display_target);
+  auto const* actor = world.try_get<Engine::Core::TransformComponent>(id);
+  auto const* target =
+      opponent != nullptr
+          ? world.try_get<Engine::Core::TransformComponent>(opponent->get_id())
+          : nullptr;
+  if (actor == nullptr || target == nullptr ||
+      std::hypot(actor->position.x - target->position.x,
+                 actor->position.z - target->position.z) > k_surround_reach) {
+    return nullptr;
+  }
+  return opponent;
+}
+
+void enlist_surrounders(Engine::Core::World& world,
+                        LayoutCache& layouts,
+                        SurroundBoard& board) {
+  board.clear();
+  for (auto [entity_ref, entity_unit] :
+       world.entity_view<Engine::Core::UnitComponent>()) {
+    if (entity_unit.health <= 0 || !FormationCombat::has_formation_slots(entity_ref)) {
+      continue;
+    }
+    auto const id = entity_ref.get_id();
+    auto const facts =
+        read_front_facts(world.try_get<Engine::Core::AttackComponent>(id),
+                         world.try_get<Engine::Core::AttackTargetComponent>(id),
+                         world.try_get<Engine::Core::FormationContactComponent>(id));
+    auto* opponent = surrounds_its_opponent(world, entity_ref, facts);
+    if (opponent == nullptr) {
+      continue;
+    }
+    auto const& layout = layouts.for_entity(entity_ref);
+    if (layout.live_slots.size() < 2U) {
+      continue;
+    }
+    auto const& actor = *world.try_get<Engine::Core::TransformComponent>(id);
+    auto const& target =
+        *world.try_get<Engine::Core::TransformComponent>(opponent->get_id());
+    board.enlist(
+        opponent->get_id(),
+        id,
+        surround_approach(
+            target.position.x, target.position.z, actor.position.x, actor.position.z),
+        static_cast<int>(layout.live_slots.size()));
+  }
+  board.allot();
+}
+
 auto squad_speed_of(Engine::Core::World& world, Engine::Core::EntityID id) -> float {
   if (auto const* movement = world.try_get<Engine::Core::MovementComponent>(id)) {
     return std::hypot(movement->get_vx(), movement->get_vz());
@@ -205,6 +277,7 @@ void publish_entity(Engine::Core::World& world,
                     const Engine::Core::UnitComponent& unit,
                     LayoutCache& layouts,
                     ForeignFighters& foreign,
+                    const SurroundBoard& board,
                     float delta_time) {
   if (!FormationCombat::has_formation_slots(entity)) {
     return;
@@ -263,6 +336,27 @@ void publish_entity(Engine::Core::World& world,
   frame.mounted = Game::Units::is_cavalry(unit.spawn_type);
   frame.frame_sign = FormationCombat::layout_frame_sign(
       layout, traversal != nullptr && traversal->about_faced);
+  thread_local std::vector<SurroundSpot> surround_spots;
+  if (auto const sector = board.sector_of(facts.display_target, id);
+      sector.has_value() && frame.actor != nullptr &&
+      frame.display_opponent != nullptr) {
+    auto const& target = *world.try_get<Engine::Core::TransformComponent>(
+        frame.display_opponent->get_id());
+    auto const& opponent_layout = layouts.for_entity(*frame.display_opponent);
+    float const weapon_reach = attack != nullptr ? attack->melee_range : 1.5F;
+    plan_surround(
+        {.actor = *frame.actor,
+         .layout = layout,
+         .previous = presentation->soldiers,
+         .sector = *sector,
+         .target_x = target.position.x,
+         .target_z = target.position.z,
+         .first_ring_radius =
+             layout.body_radius + opponent_layout.body_radius + weapon_reach * 0.35F,
+         .frame_sign = frame.frame_sign},
+        surround_spots);
+    frame.surround = &surround_spots;
+  }
 
   bool const soldiers_changed = publish_soldiers(frame);
   finish_squad_reform(world, entity, frame.reform, layout);
@@ -274,11 +368,13 @@ void publish_entity(Engine::Core::World& world,
 void publish_formation_presentation(Engine::Core::World& world, float delta_time) {
   thread_local LayoutCache layouts;
   thread_local ForeignFighters foreign;
+  thread_local SurroundBoard board;
   layouts.begin_tick();
   collect_foreign_fighters(world, foreign.grid);
+  enlist_surrounders(world, layouts, board);
   for (auto [entity_ref, entity_unit] :
        world.entity_view<Engine::Core::UnitComponent>()) {
-    publish_entity(world, entity_ref, entity_unit, layouts, foreign, delta_time);
+    publish_entity(world, entity_ref, entity_unit, layouts, foreign, board, delta_time);
   }
 }
 

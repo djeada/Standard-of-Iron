@@ -134,7 +134,7 @@ auto ReplayViewTrack::load(const QString& path) -> bool {
     }
     if (line.contains("sel")) {
       ReplayViewSelection entry{.tick = tick};
-      for (const auto& id : line.value("sel").toArray()) {
+      for (const QJsonValue id : line.value("sel").toArray()) {
         entry.units.push_back(static_cast<Engine::Core::EntityID>(id.toDouble()));
       }
       m_selections.push_back(std::move(entry));

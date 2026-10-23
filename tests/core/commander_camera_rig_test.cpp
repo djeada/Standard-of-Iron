@@ -11,9 +11,12 @@
 #include "core/component_commander.h"
 #include "game/accessibility/commander_input_settings.h"
 #include "game/accessibility/motion_settings.h"
+#include "game/core/component_gameplay.h"
+#include "game/core/world.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
+#include "game/systems/navigation/gate_service.h"
 #include "scene/camera.h"
 
 using App::Core::CommanderCameraInputs;
@@ -418,6 +421,39 @@ TEST(CommanderCameraRig, ACrowdLiftsTheLensOverTheHeadsWithoutLosingTheCommander
   EXPECT_GT(framing.head, 0.15F);
 }
 
+TEST(CommanderCameraRig, LockingOnEasesTheViewInsteadOfJoltingIt) {
+  Game::Accessibility::CommanderInput::reset_to_defaults();
+  CommanderCameraRig rig;
+  Render::GL::Camera camera;
+  auto inputs = default_inputs();
+  inputs.view_pitch_degrees = k_commander_rest_view_pitch_degrees;
+  settle(rig, camera, inputs);
+
+  inputs.lock_target_active = true;
+  inputs.lock_target_position = QVector3D(1.5F, 0.0F, 8.0F);
+  QVector3D previous = rig.trace().target_resolved;
+  float first_step = -1.0F;
+  float worst_step = 0.0F;
+  for (int frame = 0; frame < 90; ++frame) {
+    rig.update(camera, inputs);
+    float const step = (rig.trace().target_resolved - previous).length();
+    if (first_step < 0.0F) {
+      first_step = step;
+    }
+    worst_step = std::max(worst_step, step);
+    previous = rig.trace().target_resolved;
+  }
+  EXPECT_LT(first_step, 0.12F)
+      << "locking on threw the look target a metre in the first frame";
+  EXPECT_GT(worst_step, first_step)
+      << "the blend must accelerate, not start at full speed";
+
+  QVector3D const settled = rig.trace().target_resolved;
+  rig.update(camera, inputs);
+  EXPECT_LT((rig.trace().target_resolved - settled).length(), 0.02F)
+      << "the lock framing has to have settled within a second and a half";
+}
+
 TEST(CommanderCameraRig, LookingUpAndDownKeepsTheCommanderOnScreen) {
   Game::Accessibility::CommanderInput::reset_to_defaults();
 
@@ -782,6 +818,70 @@ TEST_F(CommanderCameraCollisionTest, AWallOnlyEverShortensTheBoomAlongItsOwnAxis
   EXPECT_NEAR(off_axis, 0.0F, 1.0e-3F)
       << "the eye left the boom axis, so something pushed it sideways instead of "
          "pulling it in toward the commander";
+}
+
+TEST_F(CommanderCameraCollisionTest, AGatePassageIsOpenAndOnlyItsTowersBlock) {
+  load_flat_ground_with_props({});
+  Game::Systems::BuildingCollisionRegistry::instance().register_building(
+      1U, "wall_gate", 0.0F, 0.0F, 1, 0.0F);
+
+  auto const through = settled_trace(looking_south(QVector3D(0.0F, 0.0F, 0.0F), true));
+  ASSERT_TRUE(through.valid);
+  EXPECT_GT(through.boom_clear_fraction, 0.95F)
+      << "a commander walking through his own gate was treated as standing inside "
+         "it, and the lens collapsed into the gate tower";
+
+  auto along = looking_south(QVector3D(0.0F, 0.0F, 0.0F), true);
+  along.view_yaw_degrees = 90.0F;
+  auto const toward_tower = settled_trace(along);
+  ASSERT_TRUE(toward_tower.valid);
+  EXPECT_LT(toward_tower.boom_resolved, toward_tower.boom_unconstrained - 0.3F)
+      << "the gate towers still stop the boom";
+}
+
+TEST_F(CommanderCameraCollisionTest, AShutGateStopsTheBoomAtItsDoors) {
+  load_flat_ground_with_props({});
+  Engine::Core::World world;
+  auto* gate = world.create_entity();
+  gate->add_component<Engine::Core::TransformComponent>(0.0F, 0.0F, 0.0F);
+  gate->add_component<Engine::Core::UnitComponent>(700, 700, 0.0F, 0.0F);
+  gate->add_component<Engine::Core::GateComponent>()->open_amount = 0.0F;
+  Game::Systems::GateService::refresh_blockers(world);
+  ASSERT_FALSE(Game::Systems::GateService::blockers().empty());
+  Game::Systems::BuildingCollisionRegistry::instance().register_building(
+      gate->get_id(), "wall_gate", 0.0F, 0.0F, 1, 0.0F);
+
+  auto inputs = looking_south(QVector3D(0.0F, 0.0F, -1.6F), true);
+  inputs.shut_gates = Game::Systems::GateService::blockers();
+  auto const trace = settled_trace(inputs);
+  Game::Systems::GateService::clear_blockers();
+  ASSERT_TRUE(trace.valid);
+  EXPECT_LT(trace.boom_resolved, trace.boom_unconstrained - 0.5F)
+      << "with the passage left open to the camera, a commander standing at his "
+         "shut gate was framed from the far side of the doors";
+}
+
+TEST_F(CommanderCameraCollisionTest, AShutGateBlocksItsWholeDoorwayNotOnlyItsLane) {
+  load_flat_ground_with_props({});
+  Engine::Core::World world;
+  auto* gate = world.create_entity();
+  gate->add_component<Engine::Core::TransformComponent>(0.0F, 0.0F, 0.0F);
+  gate->add_component<Engine::Core::UnitComponent>(700, 700, 0.0F, 0.0F);
+  gate->add_component<Engine::Core::GateComponent>()->open_amount = 0.0F;
+  Game::Systems::GateService::refresh_blockers(world);
+  ASSERT_FALSE(Game::Systems::GateService::blockers().empty());
+  Game::Systems::BuildingCollisionRegistry::instance().register_building(
+      gate->get_id(), "wall_gate", 0.0F, 0.0F, 1, 0.0F);
+
+  auto inputs = looking_south(QVector3D(1.9F, 0.0F, -1.6F), true);
+  inputs.shut_gates = Game::Systems::GateService::blockers();
+  auto const trace = settled_trace(inputs);
+  Game::Systems::GateService::clear_blockers();
+  ASSERT_TRUE(trace.valid);
+  EXPECT_LT(trace.boom_resolved, trace.boom_unconstrained - 0.5F)
+      << "the shut doors only blocked the one-cell nav lane in the middle of the "
+         "doorway, so a commander standing beside it was framed from behind the "
+         "gate leaves";
 }
 
 TEST_F(CommanderCameraCollisionTest, ABuriedPivotNeverPushesTheLensAwayFromTheBody) {

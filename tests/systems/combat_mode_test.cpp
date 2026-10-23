@@ -22,6 +22,7 @@
 #include "systems/combat_actions/combat_action_service.h"
 #include "systems/combat_actions/weapon_trace.h"
 #include "systems/combat_status_effect_system.h"
+#include "systems/combat_system/arrow_volley.h"
 #include "systems/combat_system/attack_processor.h"
 #include "systems/combat_system/auto_engagement.h"
 #include "systems/combat_system/combat_action_processor.h"
@@ -2388,6 +2389,10 @@ TEST_F(CombatModeTest, RangedAttackAgainstRpgCommanderSpawnsOneFocusedArrow) {
   EXPECT_EQ(arrow->visual_style(), Game::Systems::ArrowVisualStyle::Focused);
   EXPECT_TRUE(arrow->should_apply_damage());
   EXPECT_EQ(arrow->get_target_id(), commander->get_id());
+  EXPECT_LT(arrow->get_damage(), 17)
+      << "a squad's whole volley used to land on one man; two skeleton archer "
+         "squads did three quarters of a dead commander's damage";
+  EXPECT_GT(arrow->get_damage(), 0);
 }
 
 TEST_F(CombatModeTest, InterruptedBowActionCreatesNoProjectileOrDamage) {
@@ -3999,6 +4004,59 @@ TEST_F(CombatModeTest, ARollAwayFromAnUnblockableHeavyStillBeatsIt) {
   EXPECT_TRUE(result.damage.dodged);
   EXPECT_EQ(commander->get_component<UnitComponent>()->health, 100)
       << "the answer to an unblockable is the dodge; i-frames must still work";
+}
+
+TEST_F(CombatModeTest, OnlyPartOfASquadVolleyIsAimedAtTheCommander) {
+  auto* commander = make_fpv_commander(*world, 0.0F, 0.0F);
+  auto* rpg = commander->add_component<RpgHealthComponent>();
+  rpg->active = true;
+  auto* archers = make_enemy_soldier(*world, 0.0F, 8.0F);
+  auto* other_squad = make_enemy_soldier(*world, 3.0F, 8.0F);
+
+  int const on_commander =
+      Game::Systems::Combat::volley_damage_on_target(*archers, *commander, 26);
+  EXPECT_LT(on_commander, 26)
+      << "skeleton archers fire through the bow action, which used to land the "
+         "whole squad's volley on one man";
+  EXPECT_GT(on_commander, 0);
+  EXPECT_EQ(Game::Systems::Combat::volley_damage_on_target(*archers, *other_squad, 26),
+            26);
+  EXPECT_EQ(Game::Systems::Combat::volley_damage_on_target(*commander, *archers, 26),
+            26);
+}
+
+TEST_F(CombatModeTest, ARollThroughTheAttackerStillBeatsItsBlade) {
+  auto* commander = make_fpv_commander(*world, 0.0F, 0.0F);
+  auto* rpg = commander->add_component<RpgHealthComponent>();
+  rpg->active = true;
+
+  rpg->dodge_grace_remaining = 0.10F;
+  rpg->dodge_dir_x = 0.0F;
+  rpg->dodge_dir_z = 1.0F;
+  auto* enemy = make_enemy_soldier(*world, 0.0F, 1.4F);
+
+  auto const* heavy = Game::Systems::CombatActions::find_combat_action_definition(
+      Game::Systems::CombatActions::CombatActionId::RtsHeavyOverhead);
+  ASSERT_NE(heavy, nullptr);
+
+  auto const result = Game::Systems::Combat::resolve_commander_action_hit(
+      world.get(),
+      {.contact = {.attacker_id = enemy->get_id(),
+                   .target_id = commander->get_id(),
+                   .action_id = heavy->id,
+                   .weapon_family = heavy->weapon_family,
+                   .attack_family = heavy->attack_family,
+                   .attack_direction = heavy->attack_direction,
+                   .contact_point = QVector3D(0.0F, 1.0F, 0.7F),
+                   .distance = 1.4F,
+                   .local_forward = 1.4F},
+       .damage_profile = heavy->damage});
+
+  ASSERT_TRUE(result.attempted);
+  EXPECT_TRUE(result.damage.dodged)
+      << "inside a crowd every roll is toward somebody; the i-frames have to hold "
+         "whichever way the commander rolls";
+  EXPECT_EQ(commander->get_component<UnitComponent>()->health, 100);
 }
 
 TEST_F(CombatModeTest, AnOrdinaryStrikeIsStillStoppedByTheGuard) {

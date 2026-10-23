@@ -231,7 +231,7 @@ auto CommanderModeCoordinator::enter_commander_control_mode(
           Engine::Core::get_or_add_component<Engine::Core::StaminaComponent>(
               context.commander)) {
     constexpr float k_commander_stamina = 180.0F;
-    constexpr float k_commander_stamina_regen = 14.0F;
+    constexpr float k_commander_stamina_regen = 30.0F;
     if (stamina->max_stamina < k_commander_stamina) {
       stamina->max_stamina = k_commander_stamina;
       stamina->stamina = stamina->max_stamina;
@@ -402,6 +402,39 @@ auto CommanderModeCoordinator::confirm_commander_flag_rally(
 
   effects.clear_rally_preview = true;
   effects.cursor_mode = CursorMode::Normal;
+  return effects;
+}
+
+auto CommanderModeCoordinator::rally_where_the_commander_stands(
+    const CommanderRallyContext& context) const -> CommanderRallyEffects {
+  CommanderRallyEffects effects;
+  auto* commander = active_commander(context);
+  if (context.world == nullptr || commander == nullptr) {
+    return effects;
+  }
+  auto const id = commander->get_id();
+  auto* unit = context.world->try_get<Engine::Core::UnitComponent>(id);
+  auto* commander_data = context.world->try_get<Engine::Core::CommanderComponent>(id);
+  auto const* transform = context.world->try_get<Engine::Core::TransformComponent>(id);
+  if (unit == nullptr || commander_data == nullptr || transform == nullptr ||
+      commander_data->flag_rally_in_progress ||
+      unit->owner_id != context.local_owner_id || unit->health <= 0) {
+    return effects;
+  }
+
+  if (context.commander_mode_active) {
+    commander_data->fpv_controlled = false;
+    effects.reset_commander_input = true;
+  }
+  Game::Command::submit(
+      *context.world,
+      Game::Command::Source::LocalPlayer,
+      context.local_owner_id,
+      Game::Command::UseCommanderAbility{
+          .commander = commander->get_id(),
+          .ability = Game::Command::CommanderAbility::FlagRally,
+          .target = QVector3D(transform->position.x, 0.0F, transform->position.z)});
+  effects.clear_rally_preview = true;
   return effects;
 }
 

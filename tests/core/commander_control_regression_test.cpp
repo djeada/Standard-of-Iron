@@ -387,11 +387,13 @@ TEST(CommanderControlRegressionTest, CommanderCameraUsesChaseOffsetView) {
                "QVector3D const free_look_target =\n"
                "      eye_desired + forward_vec * m_framing_current.distance;"));
 
-  EXPECT_TRUE(
-      contains(source,
-               "  target_desired -= QVector3D(\n"
-               "      0.0F, (m_framing_current.look_drop * (1.0F - aim_blend)) + "
-               "crowd_lift, 0.0F);"));
+  EXPECT_TRUE(contains(
+      source,
+      "  target_desired -= QVector3D(0.0F,\n"
+      "                              (m_framing_current.look_drop * (1.0F - "
+      "aim_blend)) +\n"
+      "                                  (crowd_lift * k_crowd_look_drop_share),\n"
+      "                              0.0F);"));
   EXPECT_FALSE(contains(source, "target_desired = pivot + forward_vec"));
 
   EXPECT_TRUE(

@@ -25,6 +25,8 @@ build_pending_mission_events(const Game::Mission::MissionDefinition& mission)
 
 [[nodiscard]] auto wave_unit_total(const PendingMissionWave& wave) -> int;
 
+[[nodiscard]] auto wave_soldier_total(const PendingMissionWave& wave) -> int;
+
 [[nodiscard]] auto
 wave_incoming_announcement(const PendingMissionWave& wave) -> QString;
 [[nodiscard]] auto wave_cleared_announcement(const PendingMissionWave& wave) -> QString;

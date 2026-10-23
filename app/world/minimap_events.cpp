@@ -9,6 +9,7 @@
 #include "game/audio/audio_cues.h"
 #include "game/audio/cue_ids.h"
 #include "game/core/component_combat.h"
+#include "game/core/component_commander.h"
 #include "game/core/component_gameplay.h"
 #include "game/core/local_audience.h"
 #include "game/core/world.h"
@@ -23,6 +24,7 @@ namespace App::World {
 namespace {
 
 constexpr float k_landmark_poll_interval = 0.5F;
+constexpr float k_commander_in_hand_hearing = 30.0F;
 
 } // namespace
 
@@ -141,10 +143,31 @@ void MinimapEvents::sound_troops_under_attack(const Engine::Core::CombatHitEvent
   if (engaged != nullptr && engaged->target_id != 0) {
     return;
   }
+  if (beside_the_commander_in_hand(world_x, world_z)) {
+    return;
+  }
   if (m_troops_alarm.note_hit(world_x, world_z, m_elapsed_seconds)) {
     Game::Audio::play_cue(Game::Audio::Cue::k_alert_base_under_attack);
     m_sources.view_model->note_home_attacked({}, world_x, world_z);
   }
+}
+
+auto MinimapEvents::beside_the_commander_in_hand(float world_x,
+                                                 float world_z) const -> bool {
+  for (auto [entity_id, commander, unit, transform] :
+       m_sources.world->view<const Engine::Core::CommanderComponent,
+                             const Engine::Core::UnitComponent,
+                             const Engine::Core::TransformComponent>()) {
+    (void)entity_id;
+    if (!commander.fpv_controlled || unit.owner_id != *m_sources.local_owner_id) {
+      continue;
+    }
+    if (std::hypot(transform.position.x - world_x, transform.position.z - world_z) <=
+        k_commander_in_hand_hearing) {
+      return true;
+    }
+  }
+  return false;
 }
 
 void MinimapEvents::note_unit_died(const Engine::Core::UnitDiedEvent& event) {

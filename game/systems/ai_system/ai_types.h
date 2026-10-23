@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <limits>
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -488,6 +489,7 @@ struct AIContext {
     float assignment_time = 0.0F;
     const char* assigned_task = "";
     int base_id = 0;
+    float claimed_since = std::numeric_limits<float>::max();
   };
   std::unordered_map<Engine::Core::EntityID, UnitAssignment> assigned_units;
 

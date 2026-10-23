@@ -141,6 +141,8 @@ public:
   float airborne_velocity{0.0F};
   bool dodge_active{false};
   float dodge_phase{0.0F};
+  float dodge_dir_x{0.0F};
+  float dodge_dir_z{1.0F};
   bool dive_attack_active{false};
   float fpv_motion_vx{0.0F};
   float fpv_motion_vz{0.0F};

@@ -534,6 +534,12 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
       continue;
     }
 
+    if (s.rotation.has_value()) {
+      if (auto* transform =
+              world.try_get<Engine::Core::TransformComponent>(e->get_id())) {
+        transform->rotation.y = *s.rotation;
+      }
+    }
     apply_authored_unit_behavior(*e, authored_behavior, s, sp.position, def);
     if (s.on_wall) {
 

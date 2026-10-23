@@ -118,6 +118,26 @@ TEST_F(CommanderSharedTraversalTest, TheCommanderMotorAsksTheSharedWalkabilityLa
   EXPECT_GT(sampled, 0);
 }
 
+TEST_F(CommanderSharedTraversalTest, AnOpenGatePassageIsOpenToTheCommanderBody) {
+  Engine::Core::World world;
+  auto* commander = spawn_commander(world, 0.0F, -6.0F);
+
+  auto& registry = Game::Systems::BuildingCollisionRegistry::instance();
+  registry.register_building(9002U, "wall_gate", 0.0F, 0.0F, 1, 0.0F);
+  Game::Systems::Walkability::refresh();
+
+  auto const profile = Game::Systems::motor_profile_for(*commander);
+  EXPECT_LE(
+      Game::Systems::Walkability::penetration(QVector3D(0.0F, 0.0F, 0.0F), profile),
+      0.0F)
+      << "the gate's body was a box in the middle of its own passage, so a "
+         "commander walking straight through his open gate stopped dead in it";
+  EXPECT_GT(
+      Game::Systems::Walkability::penetration(QVector3D(3.7F, 0.0F, 0.0F), profile),
+      0.0F)
+      << "the gate towers are still solid";
+}
+
 TEST_F(CommanderSharedTraversalTest, SwitchingControlModeDoesNotChangeTraversal) {
   Engine::Core::World world;
   auto* commander = spawn_commander(world, 0.0F, -6.0F);

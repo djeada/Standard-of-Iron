@@ -4,6 +4,9 @@
 
 #include <cstdint>
 #include <optional>
+#include <span>
+
+#include "game/systems/nav_grid_types.h"
 
 namespace Engine::Core {
 enum class FightContext : std::uint8_t;
@@ -93,6 +96,7 @@ struct CommanderCameraInputs {
   float crowd_density{0.0F};
   const Game::Map::TerrainService* terrain{nullptr};
   const Game::Systems::BuildingCollisionRegistry* buildings{nullptr};
+  std::span<const Game::Systems::GateBlocker> shut_gates{};
 };
 
 class CommanderCameraRig {
@@ -140,6 +144,7 @@ private:
 
   CommanderFramingState m_framing_state{CommanderFramingState::Explore};
   Framing m_framing_current{};
+  Framing m_framing_velocity{0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F};
   bool m_framing_valid{false};
 
   float m_bob_phase{0.0F};
@@ -164,6 +169,8 @@ private:
   bool m_focus_point_valid{false};
   float m_focus_weight_smooth{0.0F};
   float m_focus_side_nudge_smooth{0.0F};
+  float m_focus_weight_velocity{0.0F};
+  float m_focus_side_nudge_velocity{0.0F};
   float m_occlusion_fraction{1.0F};
 
   QVector3D m_forward{0.0F, 0.0F, 1.0F};

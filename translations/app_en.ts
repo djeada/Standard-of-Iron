@@ -7971,6 +7971,14 @@ to see preview</translation>
         <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. A timber curtain with a tower at every corner rings the lower ward, where the temple and the market face each other across one street; the citadel stands on the upper crown at the back of the town behind its own wall, with the garrison hall inside it. One graded ramp climbs from the camp road to the south gate, and one short ramp climbs from the lower ward to the citadel gate. The relief columns come down the flank roads and never touch the hill.</source>
         <translation>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. A timber curtain with a tower at every corner rings the lower ward, where the temple and the market face each other across one street; the citadel stands on the upper crown at the back of the town behind its own wall, with the garrison hall inside it. One graded ramp climbs from the camp road to the south gate, and one short ramp climbs from the lower ward to the citadel gate. The relief columns come down the flank roads and never touch the hill.</translation>
     </message>
+    <message>
+        <source>One stone bridge over the Grey Water, and nothing else for a day&apos;s march either way. The south bank rises in two ridges that close on a gated wall across the bridgehead, so whatever crosses the bridge has to cross it under the bows on both ridges and then break the gate. The north bank is barrows and dead wood, and that is where the dead come from.</source>
+        <translation>One stone bridge over the Grey Water, and nothing else for a day&apos;s march either way. The south bank rises in two ridges that close on a gated wall across the bridgehead, so whatever crosses the bridge has to cross it under the bows on both ridges and then break the gate. The north bank is barrows and dead wood, and that is where the dead come from.</translation>
+    </message>
+    <message>
+        <source>The Sepulcher Bridge</source>
+        <translation>The Sepulcher Bridge</translation>
+    </message>
 </context>
 <context>
     <name>MatchSetupViewModel</name>
@@ -10226,6 +10234,74 @@ to see preview</translation>
     <message>
         <source>Your men are dying too. Every one of them is a Carthaginian I will not have to chase back to Africa.</source>
         <translation>Your men are dying too. Every one of them is a Carthaginian I will not have to chase back to Africa.</translation>
+    </message>
+    <message>
+        <source>Break all four risings. The bridge is held when the last of the dead lies still on it.</source>
+        <translation>Break all four risings. The bridge is held when the last of the dead lies still on it.</translation>
+    </message>
+    <message>
+        <source>Hold the Sepulcher Bridge</source>
+        <translation>Hold the Sepulcher Bridge</translation>
+    </message>
+    <message>
+        <source>Keep the bridge gate standing. Once it falls, the camp is the only thing left between them and the road south.</source>
+        <translation>Keep the bridge gate standing. Once it falls, the camp is the only thing left between them and the road south.</translation>
+    </message>
+    <message>
+        <source>Lose the camp and there is nothing left to hold the bridge for.</source>
+        <translation>Lose the camp and there is nothing left to hold the bridge for.</translation>
+    </message>
+    <message>
+        <source>One bridge, two ridges and a gate. Bows on both ridges, spears behind the gate, and nobody stands on that bridge unless I am standing on it with him. The dead do not tire, so we do not stand where they can reach us for longer than we must.</source>
+        <translation>One bridge, two ridges and a gate. Bows on both ridges, spears behind the gate, and nobody stands on that bridge unless I am standing on it with him. The dead do not tire, so we do not stand where they can reach us for longer than we must.</translation>
+    </message>
+    <message>
+        <source>One officer and no line. The dead do not slow down for one man.</source>
+        <translation>One officer and no line. The dead do not slow down for one man.</translation>
+    </message>
+    <message>
+        <source>Pull the broken files back behind the gate and put fresh men on the ridge. Nobody fights the dead on open ground.</source>
+        <translation>Pull the broken files back behind the gate and put fresh men on the ridge. Nobody fights the dead on open ground.</translation>
+    </message>
+    <message>
+        <source>That is the whole of the barrows on the road, kings and all. Hold this one and nothing else comes out of the ground until spring.</source>
+        <translation>That is the whole of the barrows on the road, kings and all. Hold this one and nothing else comes out of the ground until spring.</translation>
+    </message>
+    <message>
+        <source>The barrows are opening. Let them come to the bridge; every one of them has to cross it, and it is only seven paces wide.</source>
+        <translation>The barrows are opening. Let them come to the bridge; every one of them has to cross it, and it is only seven paces wide.</translation>
+    </message>
+    <message>
+        <source>The barrows on the north bank have opened, and everything in them is walking south. There is one bridge over the Grey Water. Hold it through four risings of the dead, each larger than the last, with a wall, two ridges and far too few men.</source>
+        <translation>The barrows on the north bank have opened, and everything in them is walking south. There is one bridge over the Grey Water. Hold it through four risings of the dead, each larger than the last, with a wall, two ridges and far too few men.</translation>
+    </message>
+    <message>
+        <source>The bridge is gone. Take the south road and do not stop, and do not look back at who is following.</source>
+        <translation>The bridge is gone. Take the south road and do not stop, and do not look back at who is following.</translation>
+    </message>
+    <message>
+        <source>The bridge is ours and the barrows are empty. Burn what is lying on it before it remembers how to stand.</source>
+        <translation>The bridge is ours and the barrows are empty. Burn what is lying on it before it remembers how to stand.</translation>
+    </message>
+    <message>
+        <source>The commander falls on the bridge, and by morning he is walking south with them.</source>
+        <translation>The commander falls on the bridge, and by morning he is walking south with them.</translation>
+    </message>
+    <message>
+        <source>The first rising</source>
+        <translation>The first rising</translation>
+    </message>
+    <message>
+        <source>The last rising</source>
+        <translation>The last rising</translation>
+    </message>
+    <message>
+        <source>The second rising</source>
+        <translation>The second rising</translation>
+    </message>
+    <message>
+        <source>The third rising</source>
+        <translation>The third rising</translation>
     </message>
 </context>
 <context>

@@ -331,6 +331,7 @@ inline auto claim_units(const std::vector<Engine::Core::EntityID>& requested_uni
       AIContext::UnitAssignment assignment;
       assignment.owner_priority = priority;
       assignment.assignment_time = current_time;
+      assignment.claimed_since = current_time;
       assignment.assigned_task = task_name;
       assignment.base_id = base_id;
       context.assigned_units[unit_id] = assignment;
@@ -338,7 +339,8 @@ inline auto claim_units(const std::vector<Engine::Core::EntityID>& requested_uni
 
     } else {
       auto& existing = it->second;
-      float const assignment_age = current_time - existing.assignment_time;
+      float const assignment_age =
+          current_time - std::min(existing.claimed_since, existing.assignment_time);
       bool const same_task = (existing.owner_priority == priority) &&
                              (std::string_view(existing.assigned_task) == task_name);
 
@@ -357,6 +359,7 @@ inline auto claim_units(const std::vector<Engine::Core::EntityID>& requested_uni
         AIContext::UnitAssignment assignment;
         assignment.owner_priority = priority;
         assignment.assignment_time = current_time;
+        assignment.claimed_since = current_time;
         assignment.assigned_task = task_name;
         assignment.base_id = base_id;
         context.assigned_units[unit_id] = assignment;

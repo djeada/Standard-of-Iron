@@ -53,6 +53,23 @@ auto building_body_penetration(float x, float z, float radius) -> float {
     if (!footprint.blocks_navigation) {
       return;
     }
+    auto box_penetration = [x, z, radius](float center_x,
+                                          float center_z,
+                                          float half_x,
+                                          float half_z) -> float {
+      float const dx = x - std::clamp(x, center_x - half_x, center_x + half_x);
+      float const dz = z - std::clamp(z, center_z - half_z, center_z + half_z);
+      return radius - std::hypot(dx, dz);
+    };
+    if (footprint.wall_gate) {
+      for (GateTowerBody const& tower : gate_tower_bodies(footprint)) {
+        deepest =
+            std::max(deepest,
+                     box_penetration(
+                         tower.center_x, tower.center_z, tower.half_x, tower.half_z));
+      }
+      return;
+    }
     float const half_width = footprint.body_width * 0.5F;
     float const half_depth = footprint.body_depth * 0.5F;
     float const closest_x = std::clamp(

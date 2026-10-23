@@ -5,6 +5,9 @@
 #include <string>
 
 #include "app/commander/commander_mode_coordinator.h"
+#include "game/core/component_commander.h"
+#include "game/core/world.h"
+#include "game/session/session_context.h"
 
 namespace {
 
@@ -129,3 +132,29 @@ TEST(CommanderModeTransitionTest, QmlReadsTheCoordinatorStateInsteadOfPairedFlag
 }
 
 } // namespace
+
+TEST(CommanderModeTransitionTest, ARallyInDirectControlNeedsNoCursorPlacement) {
+  Game::Session::SessionContext session;
+  auto& world = session.world();
+  world.set_presentation_enabled(false);
+  auto* commander = world.create_entity();
+  commander->add_component<Engine::Core::TransformComponent>(3.0F, 0.0F, 4.0F);
+  auto* unit =
+      commander->add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+  unit->owner_id = 1;
+  auto* data = commander->add_component<Engine::Core::CommanderComponent>();
+  data->fpv_controlled = true;
+
+  CommanderModeCoordinator coordinator;
+  auto const effects =
+      coordinator.rally_where_the_commander_stands({.world = &world,
+                                                    .controlled_commander = commander,
+                                                    .local_owner_id = 1,
+                                                    .commander_mode_active = true});
+
+  EXPECT_FALSE(effects.cursor_mode.has_value())
+      << "a rally in the middle of a melee freed the cursor and opened a placement "
+         "mode while the wave kept cutting at the commander";
+  EXPECT_TRUE(effects.reset_commander_input);
+  EXPECT_FALSE(data->fpv_controlled) << "the commander plants the flag where he stands";
+}

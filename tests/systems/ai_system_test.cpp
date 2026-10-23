@@ -560,6 +560,39 @@ TEST_F(AISystemTest, ClaimUnitsRefreshesExistingSameTaskAssignments) {
   EXPECT_FLOAT_EQ(context.assigned_units.at(7).assignment_time, 5.0F);
 }
 
+TEST_F(AISystemTest, ARefreshedLowClaimYieldsToAHigherOneOnceItsLockHasRun) {
+  Game::Systems::AI::AIContext context;
+  for (float t = 0.0F; t <= 3.0F; t += 0.5F) {
+    ASSERT_EQ(
+        Game::Systems::AI::claim_units(
+            {7}, Game::Systems::AI::BehaviorPriority::Low, "gathering", context, t)
+            .size(),
+        1U);
+  }
+
+  const auto stolen = Game::Systems::AI::claim_units(
+      {7}, Game::Systems::AI::BehaviorPriority::High, "defending", context, 3.0F);
+
+  ASSERT_EQ(stolen.size(), 1U)
+      << "a gather station re-claiming its unit every update reset the lock each "
+         "time, so no higher priority could ever take the unit";
+  EXPECT_STREQ(context.assigned_units.at(7).assigned_task, "defending");
+}
+
+TEST_F(AISystemTest, AFreshLowClaimStillHoldsForItsLock) {
+  Game::Systems::AI::AIContext context;
+  ASSERT_EQ(
+      Game::Systems::AI::claim_units(
+          {7}, Game::Systems::AI::BehaviorPriority::Low, "gathering", context, 0.0F)
+          .size(),
+      1U);
+
+  EXPECT_TRUE(
+      Game::Systems::AI::claim_units(
+          {7}, Game::Systems::AI::BehaviorPriority::High, "defending", context, 1.0F)
+          .empty());
+}
+
 TEST_F(AISystemTest, CleanupDeadUnitsRemovesStaleAssignmentsForAliveUnits) {
   Game::Systems::AI::AISnapshot snapshot;
   snapshot.game_time = 10.0F;
@@ -5253,6 +5286,50 @@ TEST_F(AISystemTest, ACommanderAnswersAPlayerCommandersChallengeOnlyWhenItIsOneO
 
   EXPECT_FALSE(attacks(commands_for({challenger, make_enemy(51, 10.0F, 2.0F)}), 50))
       << "a challenger who brought his troops is still a threat to step away from";
+
+  auto approaching = challenger;
+  approaching.pos_x = 21.0F;
+  EXPECT_TRUE(attacks(commands_for({approaching}), 50))
+      << "the enemy commander walked home in front of a challenger twenty metres "
+         "away, so he could never be caught";
+
+  auto distant = challenger;
+  distant.pos_x = 30.0F;
+  EXPECT_FALSE(attacks(commands_for({distant}), 50));
+}
+
+TEST_F(AISystemTest, AGatherStationDoesNotHoldACommanderBackFromADuel) {
+  Game::Systems::AI::CommanderBehavior behavior;
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.game_time = 30.0F;
+  auto commander = make_unit(1, 0.0F, 0.0F);
+  commander.is_commander = true;
+  snapshot.friendly_units.push_back(commander);
+  auto challenger = make_enemy(50, 12.0F, 0.0F);
+  challenger.spawn_type = Game::Units::SpawnType::CarthageSwordCommander;
+  challenger.player_driven = true;
+  snapshot.visible_enemies = {challenger};
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.commander_ids = {1};
+  context.has_base_anchor = true;
+  context.base_pos_x = 40.0F;
+  context.station.x = 40.0F;
+  context.assigned_units[1] = {
+      Game::Systems::AI::BehaviorPriority::Low, snapshot.game_time, "gathering"};
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 5.0F, commands);
+  EXPECT_TRUE(std::any_of(commands.begin(),
+                          commands.end(),
+                          [](const auto& command) {
+                            return command.type ==
+                                       Game::Systems::AI::AICommandType::AttackTarget &&
+                                   command.target_id == 50;
+                          }))
+      << "the gather station re-claimed the commander every update, so the duel "
+         "claim could never take him and Scipio walked off to his muster point";
 }
 
 namespace {

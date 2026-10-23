@@ -7971,6 +7971,14 @@ para ver la vista previa</translation>
         <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. A timber curtain with a tower at every corner rings the lower ward, where the temple and the market face each other across one street; the citadel stands on the upper crown at the back of the town behind its own wall, with the garrison hall inside it. One graded ramp climbs from the camp road to the south gate, and one short ramp climbs from the lower ward to the citadel gate. The relief columns come down the flank roads and never touch the hill.</source>
         <translation>Una ciudad mercado amurallada de la llanura insubra, alzada sobre una doble colina por encima de los campos de invierno. Una cortina de madera con una torre en cada esquina rodea el recinto inferior, donde el templo y el mercado se miran a través de una sola calle; la ciudadela se alza en la cima superior, al fondo de la ciudad, tras su propia muralla, con el salón de la guarnición en su interior. Una sola rampa trazada sube desde el camino del campamento hasta la puerta sur, y una rampa corta sube desde el recinto inferior hasta la puerta de la ciudadela. Las columnas de socorro bajan por los caminos de los flancos y nunca tocan la colina.</translation>
     </message>
+    <message>
+        <source>One stone bridge over the Grey Water, and nothing else for a day&apos;s march either way. The south bank rises in two ridges that close on a gated wall across the bridgehead, so whatever crosses the bridge has to cross it under the bows on both ridges and then break the gate. The north bank is barrows and dead wood, and that is where the dead come from.</source>
+        <translation>Un puente de piedra sobre el Agua Gris y nada más en un día de marcha en ninguna dirección. La orilla sur se eleva en dos crestas que se cierran sobre un muro con puerta a través de la cabeza de puente, así que todo lo que cruce el puente debe hacerlo bajo los arcos de ambas crestas y luego romper la puerta. La orilla norte son túmulos y madera muerta, y de allí vienen los muertos.</translation>
+    </message>
+    <message>
+        <source>The Sepulcher Bridge</source>
+        <translation>El Puente del Sepulcro</translation>
+    </message>
 </context>
 <context>
     <name>MatchSetupViewModel</name>
@@ -10226,6 +10234,74 @@ para ver la vista previa</translation>
     <message>
         <source>Your men are dying too. Every one of them is a Carthaginian I will not have to chase back to Africa.</source>
         <translation>Tus hombres también mueren. Cada uno de ellos es un cartaginés al que no tendré que perseguir de vuelta hasta África.</translation>
+    </message>
+    <message>
+        <source>Break all four risings. The bridge is held when the last of the dead lies still on it.</source>
+        <translation>Rompe los cuatro alzamientos. El puente estará a salvo cuando el último de los muertos yazca inmóvil sobre él.</translation>
+    </message>
+    <message>
+        <source>Hold the Sepulcher Bridge</source>
+        <translation>Defiende el Puente del Sepulcro</translation>
+    </message>
+    <message>
+        <source>Keep the bridge gate standing. Once it falls, the camp is the only thing left between them and the road south.</source>
+        <translation>Mantén en pie la puerta del puente. Si cae, el campamento es lo único que queda entre ellos y el camino del sur.</translation>
+    </message>
+    <message>
+        <source>Lose the camp and there is nothing left to hold the bridge for.</source>
+        <translation>Si pierdes el campamento, ya no queda nada por lo que defender el puente.</translation>
+    </message>
+    <message>
+        <source>One bridge, two ridges and a gate. Bows on both ridges, spears behind the gate, and nobody stands on that bridge unless I am standing on it with him. The dead do not tire, so we do not stand where they can reach us for longer than we must.</source>
+        <translation>Un puente, dos crestas y una puerta. Arcos en ambas crestas, lanzas tras la puerta, y nadie pisa ese puente si yo no estoy en él a su lado. Los muertos no se cansan, así que no nos quedamos a su alcance más de lo necesario.</translation>
+    </message>
+    <message>
+        <source>One officer and no line. The dead do not slow down for one man.</source>
+        <translation>Un oficial y ninguna línea. Los muertos no frenan por un solo hombre.</translation>
+    </message>
+    <message>
+        <source>Pull the broken files back behind the gate and put fresh men on the ridge. Nobody fights the dead on open ground.</source>
+        <translation>Retira las filas rotas detrás de la puerta y pon hombres frescos en la cresta. Nadie lucha contra los muertos en campo abierto.</translation>
+    </message>
+    <message>
+        <source>That is the whole of the barrows on the road, kings and all. Hold this one and nothing else comes out of the ground until spring.</source>
+        <translation>Ahí va todo lo que había en los túmulos, reyes incluidos. Resiste esta y nada más saldrá de la tierra hasta la primavera.</translation>
+    </message>
+    <message>
+        <source>The barrows are opening. Let them come to the bridge; every one of them has to cross it, and it is only seven paces wide.</source>
+        <translation>Los túmulos se abren. Que vengan al puente; todos tienen que cruzarlo, y solo mide siete pasos de ancho.</translation>
+    </message>
+    <message>
+        <source>The barrows on the north bank have opened, and everything in them is walking south. There is one bridge over the Grey Water. Hold it through four risings of the dead, each larger than the last, with a wall, two ridges and far too few men.</source>
+        <translation>Los túmulos de la orilla norte se han abierto y todo lo que contenían camina hacia el sur. Solo hay un puente sobre el Agua Gris. Defiéndelo durante cuatro alzamientos de muertos, cada uno mayor que el anterior, con un muro, dos crestas y muy pocos hombres.</translation>
+    </message>
+    <message>
+        <source>The bridge is gone. Take the south road and do not stop, and do not look back at who is following.</source>
+        <translation>El puente está perdido. Toma el camino del sur y no te detengas, y no mires atrás para ver quién te sigue.</translation>
+    </message>
+    <message>
+        <source>The bridge is ours and the barrows are empty. Burn what is lying on it before it remembers how to stand.</source>
+        <translation>El puente es nuestro y los túmulos están vacíos. Quema lo que yace sobre él antes de que recuerde cómo levantarse.</translation>
+    </message>
+    <message>
+        <source>The commander falls on the bridge, and by morning he is walking south with them.</source>
+        <translation>El comandante cae en el puente, y al amanecer camina hacia el sur con ellos.</translation>
+    </message>
+    <message>
+        <source>The first rising</source>
+        <translation>El primer alzamiento</translation>
+    </message>
+    <message>
+        <source>The last rising</source>
+        <translation>El último alzamiento</translation>
+    </message>
+    <message>
+        <source>The second rising</source>
+        <translation>El segundo alzamiento</translation>
+    </message>
+    <message>
+        <source>The third rising</source>
+        <translation>El tercer alzamiento</translation>
     </message>
 </context>
 <context>

@@ -163,6 +163,12 @@ The number of squads in each rising follows the player's difficulty preset; see 
 
 Awakening also publishes `Engine::Core::UndeadZoneAwakenedEvent` with the anchor position. `GameEngine` turns it into a `MinimapAlert::ShrineStirred` ping so a player looking elsewhere gets a spatial cue as well as the toast and the sound.
 
+## Mission waves of the dead
+
+Undead zones are not the only way the Sepulcher takes the field. A mission `ai_setups` entry with `"nation": "iron_sepulcher"` carries ordinary mission waves, and `MissionWaves::spawn` raises `skeleton_swordsman`, `skeleton_archer` and `grave_priest` squads at the entry points exactly as it raises Carthaginians. Those squads march on the defenders' camp; they are an assault, not a garrison.
+
+`hold_the_sepulcher_bridge` is built this way. Four risings of 8, 12, 17 and 26 squads (about 145, 200, 270 and 430 skeletons) come down the north bank of the Grey Water, and the only crossing is a single seven-metre stone bridge. The south bank is closed by two ridges whose ramps open only from the camp, and whose tips pinch the bridge exit to a mouth about twelve metres wide; behind the mouth a palisade with one gate closes the gap between them. The ridge tips have to sit that close: Roman archers reach 7.6 m, and with the crowns 23 m from the bridge the "bows on both ridges" never touched the fight. The Roman line starts in guard mode at the mouth, the archers on the two crown tips, and the commander behind the gate, facing the bridge (map spawns accept a `rotation`). Recruits cost barracks reserve, wood and iron, so each rising's reward is wood and iron, and the map's troop cap (800) leaves room above the starting army. Played hands-off, the line holds the first two risings and breaks in the third; the commander's own fighting and the player's recruiting decide the rest. Later risings bring grave priests, and the last one two elite "barrow kings". The announcement counts soldiers, not squads (`wave_soldier_total`), so the first rising is "roughly 144 troops", not 8.
+
 ## Save and load
 
 `serialize_state()` and `restore_state()` preserve the runtime state needed to resume an active zone:

@@ -1,6 +1,7 @@
 #include "camera_obstruction.h"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdint>
 #include <limits>
@@ -11,6 +12,7 @@
 
 #include "building_collision_registry.h"
 #include "building_line_of_sight.h"
+#include "game/core/component_gameplay.h"
 #include "game/core/wall_walk_geometry.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
@@ -245,6 +247,26 @@ auto wall_crest_occluder(const BuildingFootprint& wall,
   return occluder;
 }
 
+constexpr float k_shut_door_half_thickness = 0.3F;
+
+auto gate_tower_occluders(const BuildingFootprint& gate,
+                          const Game::Map::TerrainService& terrain)
+    -> std::array<PropOccluder, 2> {
+  std::array<PropOccluder, 2> towers{};
+  auto const bodies = gate_tower_bodies(gate);
+  for (std::size_t side = 0; side < bodies.size(); ++side) {
+    PropOccluder& tower = towers[side];
+    tower.x = bodies[side].center_x;
+    tower.z = bodies[side].center_z;
+    tower.half_x = bodies[side].half_x;
+    tower.half_z = bodies[side].half_z;
+    tower.top_y = terrain.resolve_surface_world_y(tower.x, tower.z, 0.0F, 0.0F) +
+                  WallWalk::k_gate_crest_height;
+    tower.bounding_radius = std::hypot(tower.half_x, tower.half_z);
+  }
+  return towers;
+}
+
 template <typename Fn>
 void for_each_wall_crest(const CameraObstructionField& field,
                          float min_x,
@@ -261,14 +283,41 @@ void for_each_wall_crest(const CameraObstructionField& field,
       continue;
     }
     float const reach =
-        std::hypot(building.body_width, building.body_depth) * 0.5F + field.radius;
+        (building.wall_gate
+             ? Engine::Core::GateComponent::k_structure_half_span
+             : std::hypot(building.body_width, building.body_depth) * 0.5F) +
+        field.radius;
     if (building.body_center_x + reach < min_x ||
         building.body_center_x - reach > max_x ||
         building.body_center_z + reach < min_z ||
         building.body_center_z - reach > max_z) {
       continue;
     }
-    fn(wall_crest_occluder(building, *field.terrain));
+    if (!building.wall_gate) {
+      fn(wall_crest_occluder(building, *field.terrain));
+      continue;
+    }
+    for (PropOccluder const& tower : gate_tower_occluders(building, *field.terrain)) {
+      fn(tower);
+    }
+    for (GateBlocker const& shut : field.shut_gates) {
+      if (shut.entity_id != building.entity_id) {
+        continue;
+      }
+      bool const along_x = building.width >= building.depth;
+      PropOccluder doors;
+      doors.x = building.center_x;
+      doors.z = building.center_z;
+      doors.half_x = along_x ? Engine::Core::GateComponent::k_passage_half_width
+                             : k_shut_door_half_thickness;
+      doors.half_z = along_x ? k_shut_door_half_thickness
+                             : Engine::Core::GateComponent::k_passage_half_width;
+      doors.top_y =
+          field.terrain->resolve_surface_world_y(doors.x, doors.z, 0.0F, 0.0F) +
+          WallWalk::k_gate_crest_height;
+      doors.bounding_radius = std::hypot(doors.half_x, doors.half_z);
+      fn(doors);
+    }
   }
 }
 

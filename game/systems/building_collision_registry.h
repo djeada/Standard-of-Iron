@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <atomic>
 #include <cstdint>
 #include <functional>
@@ -51,6 +52,8 @@ struct BuildingFootprint {
 
   bool wall_link{false};
 
+  bool wall_gate{false};
+
   bool wall_tower{false};
 
   float body_center_x{0.0F};
@@ -77,6 +80,16 @@ struct BuildingFootprint {
       , body_width(w)
       , body_depth(d) {}
 };
+
+struct GateTowerBody {
+  float center_x{0.0F};
+  float center_z{0.0F};
+  float half_x{0.0F};
+  float half_z{0.0F};
+};
+
+[[nodiscard]] auto
+gate_tower_bodies(const BuildingFootprint& gate) -> std::array<GateTowerBody, 2>;
 
 struct NavigationPassage {
   float center_x{0.0F};

@@ -125,7 +125,7 @@ auto Pathfinding::goal_in_start_region(const Point& start,
                                        Passability passability,
                                        float one_man) -> Point {
   std::lock_guard<std::mutex> const region_lock(m_region_mutex);
-  auto const& map = current_region_map(passability);
+  auto const& map = current_gate_sealed_region_map(passability);
   std::uint32_t const start_region = label_at(map, start);
   if (label_at(map, end) == start_region) {
     return end;

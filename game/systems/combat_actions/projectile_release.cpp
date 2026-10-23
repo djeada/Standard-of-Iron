@@ -8,6 +8,7 @@
 #include "../../core/component_gameplay.h"
 #include "../../core/world.h"
 #include "../../visuals/team_colors.h"
+#include "../combat_system/arrow_volley.h"
 #include "../combat_system/combat_types.h"
 #include "../combat_system/combat_utils.h"
 #include "../combat_system/structure_combat.h"
@@ -130,13 +131,15 @@ auto release_projectile_for_action(Engine::Core::World* world,
     friendly_fire = special_attack->friendly_fire;
   }
 
-  int const damage =
+  int const damage = Game::Systems::Combat::volley_damage_on_target(
+      attacker,
+      *target,
       explicit_damage > 0
           ? explicit_damage
           : std::max(1,
                      static_cast<int>(
                          std::round(static_cast<float>(attack->get_current_damage()) *
-                                    definition.damage.base_multiplier)));
+                                    definition.damage.base_multiplier))));
   QVector3D const team_color =
       Game::Visuals::team_colorForOwner(attacker_unit->owner_id);
   QVector3D const start =

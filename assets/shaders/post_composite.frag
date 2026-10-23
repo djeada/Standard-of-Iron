@@ -63,6 +63,7 @@ const float k_mist_water_ceiling = 1.7;
 const float k_mist_miasma_ceiling = 2.8;
 const float k_mist_miasma_gain = 0.72;
 const float k_mist_bank_reach = 7.0;
+const float k_mist_view_reach = 9.0;
 const vec3 k_mist_water_lift = vec3(1.18, 1.18, 1.16);
 const vec3 k_mist_miasma_tint = vec3(0.92, 1.03, 1.02);
 const vec3 k_mist_miasma_floor = vec3(0.008, 0.014, 0.014);
@@ -210,7 +211,9 @@ vec2 ground_mist(vec3 world) {
   }
   float patch = smoothstep(0.30, 0.72, 0.62 * drift + 0.38 * swirl);
   float breakup = 0.25 + 0.75 * patch;
-  return clamp(vec2(water, miasma) * breakup, 0.0, 1.0);
+  float view_distance = length(u_camera_position - world);
+  float depth_through = 1.0 - exp(-view_distance / k_mist_view_reach);
+  return clamp(vec2(water, miasma) * breakup * depth_through, 0.0, 1.0);
 }
 
 float night_amount() {

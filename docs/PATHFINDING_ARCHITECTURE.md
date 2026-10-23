@@ -18,6 +18,19 @@ frame, with `update_ms` at 922 ms in the same frame, four times in a ten-minute 
 `GateBlocker` already carries exact world bounds, so the publisher now marks only the
 regions the blockers vacated and the ones they occupy.
 
+A goal behind a shut gate used to cost an exhaustive A*. The region map joins regions
+across closed gates on purpose -- `can_reach` must say an enemy outside a wall can reach
+the men behind it, or nobody would ever march on the gate -- but `goal_in_start_region`
+read the same map, so it kept the goal inside the camp and the search then expanded every
+cell on the near side of the wall before giving up and returning the partial path to the
+cell nearest the goal. At the Sepulcher Bridge each of the 39 squads of the last rising
+did that when the wave was ordered forward: 30-40 ms in one tick, four times a mission.
+`goal_in_start_region` now reads a second labelling, `current_gate_sealed_region_map`,
+in which a shut gate seals like any other wall, so the goal is moved to the nearest
+reachable cell before the search starts. The route ends where the partial path ended, in
+front of the gate, and the search is directed instead of exhaustive. `can_reach` and every
+other region query still use the gate-joined map.
+
 The shared grid geometry those queries are built from lives in
 `game/systems/nav_grid_types.h`: `body_cell_range` and `cell_gap` give the cell box and
 edge distance for a body circle (`Walkability::can_stand` and

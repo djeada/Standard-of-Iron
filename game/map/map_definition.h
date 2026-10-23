@@ -58,6 +58,8 @@ struct UnitSpawn {
   bool on_wall = false;
 
   QString commander_id;
+
+  std::optional<float> rotation;
 };
 
 struct PointStructureGeometry {
