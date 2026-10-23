@@ -23,6 +23,8 @@ namespace Game::Systems::Combat {
 
 namespace {
 
+constexpr float k_volley_share_on_hero = 0.45F;
+
 struct VolleyStyle {
   ArrowVisualStyle style = ArrowVisualStyle::Volley;
   float lateral_scale = 1.0F;
@@ -91,6 +93,7 @@ void spawn_focused_arrow_at_rpg_target(Engine::Core::Entity* attacker,
                           direction * Constants::k_arrow_start_offset;
   QVector3D const end = t_pos + QVector3D(0.0F, 1.25F, 0.0F) - direction * 0.42F;
   auto const missile = missile_profile(*attacker, ArrowVisualStyle::Focused);
+  int const landed_damage = volley_damage_on_target(*attacker, *target, damage);
   projectile_sys->spawn_arrow(start,
                               end,
                               color,
@@ -98,7 +101,7 @@ void spawn_focused_arrow_at_rpg_target(Engine::Core::Entity* attacker,
                               false,
                               missile.kind,
                               true,
-                              std::max(1, damage),
+                              std::max(1, landed_damage),
                               attacker->get_id(),
                               target->get_id(),
                               0.0F,
@@ -246,6 +249,18 @@ void spawn_volley_arrow(Engine::Core::Entity* attacker,
 }
 
 } // namespace
+
+auto volley_damage_on_target(const Engine::Core::Entity& attacker,
+                             const Engine::Core::Entity& target,
+                             int damage) -> int {
+  if (!Game::Systems::CombatRules::uses_rpg_combat_rules(&target) ||
+      attacker.has_component<Engine::Core::CommanderComponent>()) {
+    return damage;
+  }
+  return std::max(1,
+                  static_cast<int>(std::lround(static_cast<float>(damage) *
+                                               k_volley_share_on_hero)));
+}
 
 void spawn_rts_arrow_volley(Engine::Core::Entity* attacker,
                             Engine::Core::Entity* target,

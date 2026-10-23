@@ -1,3 +1,4 @@
+#include <cmath>
 #include <gtest/gtest.h>
 
 #include "game/map/visibility_service.h"
@@ -55,6 +56,19 @@ TEST(RendererVisibilityPolicyTest, OrderMarkersBelongOnlyToTheLocalHumanViewer) 
   renderer.set_local_owner_id(4);
   EXPECT_FALSE(renderer.order_markers_visible_for_owner(3));
   EXPECT_TRUE(renderer.order_markers_visible_for_owner(4));
+}
+
+TEST(RendererVisibilityPolicyTest, TheChaseViewDrawsNoSelectionOrHoverRings) {
+  Render::GL::Renderer renderer;
+  EXPECT_TRUE(renderer.selection_markers_visible());
+
+  renderer.set_world_render_mode(Render::GL::Renderer::WorldRenderMode::Rpg);
+  EXPECT_FALSE(renderer.selection_markers_visible())
+      << "the commander stays selected in direct control, so his gold selection "
+         "ring sat under his feet and the hover ring followed the crosshair";
+
+  renderer.set_world_render_mode(Render::GL::Renderer::WorldRenderMode::Rts);
+  EXPECT_TRUE(renderer.selection_markers_visible());
 }
 
 TEST(RendererVisibilityPolicyTest, SpectatorModeHidesEveryOrderMarker) {
@@ -326,4 +340,27 @@ TEST(RendererVisibilityPolicyTest, LensGapLeavesTheFlankFullyVisible) {
 
   EXPECT_EQ(policy.lens_gap_visibility(QVector3D(0.9F, 0.0F, -1.4F)), 1.0F);
   EXPECT_EQ(policy.lens_gap_visibility(QVector3D(-0.9F, 0.0F, -1.4F)), 1.0F);
+}
+
+TEST(RendererVisibilityPolicyTest, BodiesInsideTheCommanderAreDrawnAtHisShoulder) {
+  Render::GL::SubmissionVisibilityPolicy policy;
+  policy.reset(nullptr, nullptr);
+  auto gap = make_chase_lens_gap();
+  gap.focus_x = 0.0F;
+  gap.focus_z = 0.0F;
+  policy.set_lens_gap(gap);
+
+  QVector3D const inside(0.20F, 0.0F, 0.10F);
+  QVector3D const pushed = inside + policy.focus_body_push(inside, 42U);
+  EXPECT_NEAR(std::hypot(pushed.x(), pushed.z()),
+              Render::GL::LensGapExclusion::k_focus_body_clearance,
+              1.0e-4F)
+      << "a skeleton of the wave standing inside the commander's body was drawn "
+         "through him";
+  EXPECT_GT(pushed.x(), inside.x()) << "the push keeps the side the body was on";
+
+  QVector3D const clear(1.5F, 0.0F, 0.0F);
+  EXPECT_TRUE(policy.focus_body_push(clear, 42U).isNull());
+  EXPECT_TRUE(policy.focus_body_push(QVector3D(), gap.focus_entity_id).isNull())
+      << "the commander himself is never pushed";
 }

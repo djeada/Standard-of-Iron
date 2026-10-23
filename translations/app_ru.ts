@@ -7975,6 +7975,14 @@ to see preview</source>
         <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. A timber curtain with a tower at every corner rings the lower ward, where the temple and the market face each other across one street; the citadel stands on the upper crown at the back of the town behind its own wall, with the garrison hall inside it. One graded ramp climbs from the camp road to the south gate, and one short ramp climbs from the lower ward to the citadel gate. The relief columns come down the flank roads and never touch the hill.</source>
         <translation>Обнесённый стеной торговый город инсубрийской равнины, поднятый на двойном холме над зимними полями. Деревянная куртина с башней в каждом углу опоясывает нижний двор, где храм и рынок стоят друг против друга через единственную улицу; цитадель стоит на верхней вершине в глубине города за собственной стеной, и в ней находится зал гарнизона. Одна выровненная рампа поднимается от лагерной дороги к южным воротам, а одна короткая рампа ведёт из нижнего двора к воротам цитадели. Колонны подкрепления спускаются по боковым дорогам и никогда не касаются холма.</translation>
     </message>
+    <message>
+        <source>One stone bridge over the Grey Water, and nothing else for a day&apos;s march either way. The south bank rises in two ridges that close on a gated wall across the bridgehead, so whatever crosses the bridge has to cross it under the bows on both ridges and then break the gate. The north bank is barrows and dead wood, and that is where the dead come from.</source>
+        <translation>Один каменный мост через Серую Воду, и больше ничего на день пути в обе стороны. Южный берег поднимается двумя гребнями, которые смыкаются на стене с воротами поперёк предмостья, так что всё, что переходит мост, переходит его под луками с обоих гребней, а потом должно сломать ворота. Северный берег — это курганы и мёртвый лес, и оттуда приходят мёртвые.</translation>
+    </message>
+    <message>
+        <source>The Sepulcher Bridge</source>
+        <translation>Мост Гробницы</translation>
+    </message>
 </context>
 <context>
     <name>MatchSetupViewModel</name>
@@ -10230,6 +10238,74 @@ to see preview</source>
     <message>
         <source>Your men are dying too. Every one of them is a Carthaginian I will not have to chase back to Africa.</source>
         <translation>Твои люди тоже гибнут. Каждый из них — карфагенянин, которого мне не придётся гнать обратно в Африку.</translation>
+    </message>
+    <message>
+        <source>Break all four risings. The bridge is held when the last of the dead lies still on it.</source>
+        <translation>Отбейте все четыре восстания. Мост удержан, когда последний из мёртвых неподвижно ляжет на нём.</translation>
+    </message>
+    <message>
+        <source>Hold the Sepulcher Bridge</source>
+        <translation>Удержать Мост Гробницы</translation>
+    </message>
+    <message>
+        <source>Keep the bridge gate standing. Once it falls, the camp is the only thing left between them and the road south.</source>
+        <translation>Сохраните ворота у моста. Если они падут, между ними и дорогой на юг останется только лагерь.</translation>
+    </message>
+    <message>
+        <source>Lose the camp and there is nothing left to hold the bridge for.</source>
+        <translation>Потеряете лагерь, и мост больше незачем будет удерживать.</translation>
+    </message>
+    <message>
+        <source>One bridge, two ridges and a gate. Bows on both ridges, spears behind the gate, and nobody stands on that bridge unless I am standing on it with him. The dead do not tire, so we do not stand where they can reach us for longer than we must.</source>
+        <translation>Один мост, два гребня и ворота. Луки на оба гребня, копья за ворота, и никто не встаёт на этот мост, если я не стою там рядом. Мёртвые не устают, так что мы не стоим у них на пути дольше, чем нужно.</translation>
+    </message>
+    <message>
+        <source>One officer and no line. The dead do not slow down for one man.</source>
+        <translation>Один офицер и ни одной шеренги. Мёртвые не замедлятся ради одного человека.</translation>
+    </message>
+    <message>
+        <source>Pull the broken files back behind the gate and put fresh men on the ridge. Nobody fights the dead on open ground.</source>
+        <translation>Отведите разбитые ряды за ворота и поставьте на гребень свежих людей. С мёртвыми никто не дерётся в открытом поле.</translation>
+    </message>
+    <message>
+        <source>That is the whole of the barrows on the road, kings and all. Hold this one and nothing else comes out of the ground until spring.</source>
+        <translation>Это все курганы разом, вместе с королями. Выдержите эту волну, и до весны из земли больше ничего не выйдет.</translation>
+    </message>
+    <message>
+        <source>The barrows are opening. Let them come to the bridge; every one of them has to cross it, and it is only seven paces wide.</source>
+        <translation>Курганы раскрываются. Пусть идут к мосту: каждому из них придётся по нему пройти, а он всего семь шагов в ширину.</translation>
+    </message>
+    <message>
+        <source>The barrows on the north bank have opened, and everything in them is walking south. There is one bridge over the Grey Water. Hold it through four risings of the dead, each larger than the last, with a wall, two ridges and far too few men.</source>
+        <translation>Курганы на северном берегу раскрылись, и всё, что в них лежало, идёт на юг. Через Серую Воду ведёт лишь один мост. Удержите его против четырёх восстаний мёртвых, каждое больше предыдущего, имея стену, два гребня и слишком мало людей.</translation>
+    </message>
+    <message>
+        <source>The bridge is gone. Take the south road and do not stop, and do not look back at who is following.</source>
+        <translation>Мост потерян. Уходите по южной дороге, не останавливайтесь и не оглядывайтесь на тех, кто идёт следом.</translation>
+    </message>
+    <message>
+        <source>The bridge is ours and the barrows are empty. Burn what is lying on it before it remembers how to stand.</source>
+        <translation>Мост наш, курганы пусты. Сожгите то, что лежит на нём, пока оно не вспомнило, как вставать.</translation>
+    </message>
+    <message>
+        <source>The commander falls on the bridge, and by morning he is walking south with them.</source>
+        <translation>Командир падает на мосту, а к утру уже идёт с ними на юг.</translation>
+    </message>
+    <message>
+        <source>The first rising</source>
+        <translation>Первое восстание</translation>
+    </message>
+    <message>
+        <source>The last rising</source>
+        <translation>Последнее восстание</translation>
+    </message>
+    <message>
+        <source>The second rising</source>
+        <translation>Второе восстание</translation>
+    </message>
+    <message>
+        <source>The third rising</source>
+        <translation>Третье восстание</translation>
     </message>
 </context>
 <context>

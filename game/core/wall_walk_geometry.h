@@ -22,6 +22,8 @@ inline constexpr int k_stair_phase = 1;
 
 inline constexpr float k_crest_height = 2.95F;
 
+inline constexpr float k_gate_crest_height = 3.95F;
+
 inline constexpr float k_ladder_run = 1.05F;
 inline constexpr float k_ladder_half_width = 0.24F;
 inline constexpr int k_ladder_rungs = 7;

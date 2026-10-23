@@ -9,6 +9,7 @@
 #include "game/core/world.h"
 #include "game/session/session_context.h"
 #include "game/systems/combat_actions/commander_defense_timeline.h"
+#include "game/systems/navigation/gate_service.h"
 #include "game/systems/rpg_combat_system/rpg_targeting.h"
 
 namespace App::Core {
@@ -220,6 +221,7 @@ auto build_camera_inputs(Engine::Core::World& world,
   auto& camera_session = Game::Session::session_for(world);
   inputs.terrain = &camera_session.terrain();
   inputs.buildings = &camera_session.building_collision();
+  inputs.shut_gates = Game::Systems::GateService::blockers();
   return inputs;
 }
 

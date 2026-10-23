@@ -123,46 +123,11 @@ auto contact_meets_guard_plate(Engine::Core::Entity* target,
   return (*contact_point - plate_centre).lengthSquared() <= radius * radius;
 }
 
-auto dodge_beats_contact(Engine::Core::Entity* target,
-                         Engine::Core::Entity* attacker,
-                         std::optional<QVector3D> contact_point) -> bool {
+auto dodge_beats_contact(Engine::Core::Entity* target) -> bool {
   auto const* rpg = target != nullptr
                         ? target->get_component<Engine::Core::RpgHealthComponent>()
                         : nullptr;
-  if (rpg == nullptr || !rpg->active || rpg->dodge_grace_remaining <= 0.0F) {
-    return false;
-  }
-  auto const* target_transform =
-      target->get_component<Engine::Core::TransformComponent>();
-  if (target_transform == nullptr) {
-    return false;
-  }
-
-  QVector3D from = contact_point.value_or(QVector3D(0.0F, 0.0F, 0.0F));
-  if (!contact_point.has_value()) {
-    auto const* attacker_transform =
-        attacker != nullptr
-            ? attacker->get_component<Engine::Core::TransformComponent>()
-            : nullptr;
-    if (attacker_transform == nullptr) {
-      return false;
-    }
-    from =
-        QVector3D(attacker_transform->position.x, 0.0F, attacker_transform->position.z);
-  }
-
-  QVector3D away(target_transform->position.x - from.x(),
-                 0.0F,
-                 target_transform->position.z - from.z());
-  if (away.lengthSquared() <= 0.0001F) {
-    return false;
-  }
-  away.normalize();
-  QVector3D const roll(rpg->dodge_dir_x, 0.0F, rpg->dodge_dir_z);
-  if (roll.lengthSquared() <= 0.0001F) {
-    return false;
-  }
-  return QVector3D::dotProduct(away, roll.normalized()) > 0.15F;
+  return rpg != nullptr && rpg->active && rpg->dodge_grace_remaining > 0.0F;
 }
 
 void apply_posture_pressure(Engine::Core::Entity* target, float pressure) {
@@ -456,8 +421,7 @@ deal_damage_to_rpg_commander(Engine::Core::World* world,
     return result;
   }
 
-  auto* attacker = world->get_entity(attacker_id);
-  if (dodge_beats_contact(commander, attacker, contact_point)) {
+  if (dodge_beats_contact(commander)) {
     result.dodged = true;
     record_resolved_contact(commander, result);
     return result;

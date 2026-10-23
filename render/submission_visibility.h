@@ -45,6 +45,11 @@ struct LensGapExclusion {
 
   float focus_radius = 0.0F;
 
+  float focus_x = 0.0F;
+  float focus_z = 0.0F;
+
+  static constexpr float k_focus_body_clearance = 0.62F;
+
   static constexpr float k_hidden_core_fraction = 0.35F;
   static constexpr float k_end_fade_metres = 0.6F;
   static constexpr float k_start_fade_metres = 0.4F;
@@ -75,6 +80,24 @@ struct LensGapExclusion {
     const float near_end = 1.0F - ramp(0.0F, k_start_fade_metres, along);
     const float far_end = ramp(length - k_end_fade_metres, length, along);
     return std::min(beside_lens, std::max({across, near_end, far_end}));
+  }
+
+  [[nodiscard]] auto
+  focus_body_push(const QVector3D& point) const noexcept -> QVector3D {
+    if (!enabled) {
+      return {};
+    }
+    const float offset_x = point.x() - focus_x;
+    const float offset_z = point.z() - focus_z;
+    const float distance = std::sqrt((offset_x * offset_x) + (offset_z * offset_z));
+    if (distance >= k_focus_body_clearance) {
+      return {};
+    }
+    if (distance <= 1.0e-3F) {
+      return {axis_x * k_focus_body_clearance, 0.0F, axis_z * k_focus_body_clearance};
+    }
+    const float depth = (k_focus_body_clearance - distance) / distance;
+    return {offset_x * depth, 0.0F, offset_z * depth};
   }
 
   [[nodiscard]] auto contains(const QVector3D& point,
@@ -119,6 +142,15 @@ public:
       return false;
     }
     return m_lens_gap.contains(body_position, body_radius);
+  }
+
+  [[nodiscard]] auto
+  focus_body_push(const QVector3D& body_position,
+                  std::uint32_t entity_id) const noexcept -> QVector3D {
+    if (entity_id != 0 && entity_id == m_lens_gap.focus_entity_id) {
+      return {};
+    }
+    return m_lens_gap.focus_body_push(body_position);
   }
 
   [[nodiscard]] auto lens_gap_visibility(

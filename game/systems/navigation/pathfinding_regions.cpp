@@ -30,7 +30,9 @@ auto Pathfinding::label_at(const RegionMap& map,
   return index < map.labels.size() ? map.labels[index] : k_unreachable_region;
 }
 
-void Pathfinding::rebuild_region_map(RegionMap& map, Passability passability) const {
+void Pathfinding::rebuild_region_map(RegionMap& map,
+                                     Passability passability,
+                                     bool gates_seal) const {
   auto const cell_count = static_cast<std::size_t>(std::max(m_width, 0)) *
                           static_cast<std::size_t>(std::max(m_height, 0));
   map.labels.assign(cell_count, k_unreachable_region);
@@ -39,7 +41,8 @@ void Pathfinding::rebuild_region_map(RegionMap& map, Passability passability) co
     return;
   }
 
-  auto const gates = closed_gate_cells(0, m_width - 1, 0, m_height - 1);
+  auto const gates = gates_seal ? std::vector<int>{}
+                                : closed_gate_cells(0, m_width - 1, 0, m_height - 1);
   auto const connects = [&](int x, int y) {
     return region_connects(x, y, passability, gates);
   };
@@ -93,14 +96,17 @@ auto Pathfinding::region_connects(int x,
 
 auto Pathfinding::region_map_survives(const RegionMap& map,
                                       Passability passability,
-                                      std::uint64_t revision) -> bool {
+                                      std::uint64_t revision,
+                                      bool gates_seal) -> bool {
   std::vector<NavChange> changes;
   if (!navigation_changes_since(map.revision, revision, changes)) {
     return false;
   }
   for (NavChange change : changes) {
     auto const gates =
-        closed_gate_cells(change.min_x, change.max_x, change.min_z, change.max_z);
+        gates_seal
+            ? std::vector<int>{}
+            : closed_gate_cells(change.min_x, change.max_x, change.min_z, change.max_z);
     if (!clamp_to_grid(change.min_x, change.max_x, change.min_z, change.max_z)) {
       continue;
     }
@@ -122,6 +128,19 @@ auto Pathfinding::current_region_map(Passability passability) -> const RegionMap
   if (map.revision != revision && !region_map_survives(map, passability, revision)) {
     Engine::Core::count_nav(Engine::Core::NavCounter::RegionMapRebuilds);
     rebuild_region_map(map, passability);
+  }
+  map.revision = revision;
+  return map;
+}
+
+auto Pathfinding::current_gate_sealed_region_map(Passability passability)
+    -> const RegionMap& {
+  std::uint64_t const revision = navigation_revision();
+  auto& map = m_gate_sealed_region_maps[static_cast<std::size_t>(passability)];
+  if (map.revision != revision &&
+      !region_map_survives(map, passability, revision, true)) {
+    Engine::Core::count_nav(Engine::Core::NavCounter::RegionMapRebuilds);
+    rebuild_region_map(map, passability, true);
   }
   map.revision = revision;
   return map;

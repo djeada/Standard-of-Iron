@@ -2,6 +2,10 @@
 
 #include <QVector3D>
 
+#include <span>
+
+#include "nav_grid_types.h"
+
 namespace Game::Map {
 class TerrainService;
 }
@@ -13,6 +17,8 @@ class BuildingCollisionRegistry;
 struct CameraObstructionField {
   const BuildingCollisionRegistry* buildings{nullptr};
   const Game::Map::TerrainService* terrain{nullptr};
+
+  std::span<const GateBlocker> shut_gates{};
 
   float radius{0.0F};
 };

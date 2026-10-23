@@ -63,6 +63,8 @@ private:
   void sound_troops_under_attack(const Engine::Core::CombatHitEvent& event,
                                  float world_x,
                                  float world_z);
+  [[nodiscard]] auto beside_the_commander_in_hand(float world_x,
+                                                  float world_z) const -> bool;
   [[nodiscard]] auto
   attacked_by_an_enemy(const Engine::Core::CombatHitEvent& event) const -> bool;
 

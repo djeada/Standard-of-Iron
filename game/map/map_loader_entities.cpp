@@ -153,6 +153,9 @@ void read_spawns(const QJsonArray& arr, std::vector<UnitSpawn>& out) {
     spawn.group = spawn_obj.value(GROUP).toString();
     spawn.x = float(spawn_obj.value(X).toDouble(0.0));
     spawn.z = float(spawn_obj.value(Z).toDouble(0.0));
+    if (spawn_obj.contains(ROTATION)) {
+      spawn.rotation = float(spawn_obj.value(ROTATION).toDouble(0.0));
+    }
 
     if (spawn_obj.contains(PLAYER_ID) && !spawn_obj.value(PLAYER_ID).isNull()) {
       spawn.player_id = spawn_obj.value(PLAYER_ID).toInt(0);

@@ -36,6 +36,7 @@
 #include "game/systems/nation_registry.h"
 #include "game/systems/navigation/nav_grid.h"
 #include "game/systems/owner_registry.h"
+#include "game/systems/troop_profile_service.h"
 #include "game/units/factory.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
@@ -191,6 +192,24 @@ auto wave_unit_total(const PendingMissionWave& wave) -> int {
   return total;
 }
 
+auto wave_soldier_total(const PendingMissionWave& wave) -> int {
+  int total = 0;
+  for (const auto& comp : wave.composition) {
+    int men = 1;
+    Game::Units::TroopType troop_type{};
+    if (Game::Units::try_parse_troop_type(comp.type, troop_type)) {
+      const auto nation =
+          Game::Systems::authored_nation_or(comp.nation, wave.nation_id);
+      men = std::max(1,
+                     Game::Systems::TroopProfileService::instance()
+                         .get_profile_ref(nation, troop_type)
+                         .individuals_per_unit);
+    }
+    total += std::max(1, comp.count) * men;
+  }
+  return total;
+}
+
 namespace {
 
 auto wave_display_name(const PendingMissionWave& wave) -> QString {
@@ -253,7 +272,7 @@ auto wave_incoming_announcement(const PendingMissionWave& wave) -> QString {
       .arg(wave.phase_index)
       .arg(wave.phase_count)
       .arg(wave_direction(wave), wave_display_name(wave))
-      .arg(wave_unit_total(wave));
+      .arg(wave_soldier_total(wave));
 }
 
 auto wave_cleared_announcement(const PendingMissionWave& wave) -> QString {

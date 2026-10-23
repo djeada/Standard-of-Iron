@@ -42,6 +42,7 @@ struct SlotContext {
   const FormationCombat::SoldierSlot* live{nullptr};
   const Soldier* previous{nullptr};
   const Engine::Core::UnitTraversalSlotState* traversal_slot{nullptr};
+  const SurroundSpot* surround{nullptr};
   SoldierAssignment assignment;
   float anchor_local_x{0.0F};
   float anchor_local_z{0.0F};
@@ -200,7 +201,8 @@ void press_toward_target(const EntityFrame& frame,
           : std::clamp(contact_vector.distance - contact_distance,
                        0.0F,
                        layout.spacing * (single_opponent ? 1.6F : 0.20F));
-  if (contact_vector.distance > 0.0001F) {
+  bool const waits_behind = slot.surround != nullptr && slot.surround->ring > 0U;
+  if (contact_vector.distance > 0.0001F && !waits_behind) {
     directive.local_x += contact_vector.x / contact_vector.distance * pull_distance;
     directive.local_z += contact_vector.z / contact_vector.distance * pull_distance;
   }
@@ -526,7 +528,8 @@ void walk_slot(const EntityFrame& frame,
        .mounted = frame.mounted,
        .engaged = frame.melee_ordered,
        .external_reform = frame.reform != nullptr,
-       .position_is_authored = slot.traversal_slot != nullptr && !frame.mounted,
+       .position_is_authored =
+           slot.traversal_slot != nullptr && !frame.mounted && slot.surround == nullptr,
        .walking_to_work_posts = works_a_site(frame),
        .worker = frame.unit.spawn_type == Game::Units::SpawnType::Builder,
        .passability = frame.passability,
@@ -977,10 +980,53 @@ void pin_to_raft(const EntityFrame& frame,
   directive.elevation = std::max(0.0F, rider->deck_y - ground);
 }
 
+void take_surround_spot(const SlotContext& slot, Soldier& directive) {
+  if (slot.surround == nullptr || !directive.alive) {
+    return;
+  }
+  directive.local_x = slot.surround->local_x;
+  directive.local_z = slot.surround->local_z;
+}
+
+void wait_in_the_outer_rings(const EntityFrame& frame,
+                             const SlotContext& slot,
+                             Soldier& directive) {
+  if (slot.surround == nullptr || !directive.alive || frame.actor == nullptr ||
+      frame.display_opponent == nullptr) {
+    return;
+  }
+  auto const* opponent_transform =
+      frame.world.try_get<Engine::Core::TransformComponent>(
+          frame.display_opponent->get_id());
+  if (opponent_transform == nullptr) {
+    return;
+  }
+  auto const toward = local_contact_vector(*frame.actor,
+                                           directive.local_x,
+                                           directive.local_z,
+                                           opponent_transform->position.x,
+                                           opponent_transform->position.z);
+  float const prior_yaw =
+      slot.previous != nullptr ? slot.previous->local_yaw : directive.local_yaw;
+  if (toward.distance > 0.0001F) {
+    directive.local_yaw =
+        turn_yaw_toward(prior_yaw,
+                        toward.yaw,
+                        k_contact_turn_degrees * std::max(0.0F, frame.delta_time));
+  }
+  if (slot.surround->ring == 0U ||
+      brawls_as_a_crowd(frame.world, frame.entity.get_id())) {
+    return;
+  }
+  directive.combat_role = Engine::Core::FormationSoldierCombatRole::Ready;
+  directive.action = action_for_role(directive.combat_role);
+}
+
 auto build_slot_directive(const EntityFrame& frame,
                           SlotContext& slot,
                           const std::vector<Soldier>& previous_soldiers) -> Soldier {
   Soldier directive = seed_directive(frame, slot);
+  take_surround_spot(slot, directive);
   slot.anchor_local_x = directive.local_x;
   slot.anchor_local_z = directive.local_z;
   slot.assignment =
@@ -990,6 +1036,7 @@ auto build_slot_directive(const EntityFrame& frame,
 
   apply_engagement(frame, slot, directive);
   hold_unassigned_yaw(frame, slot, directive);
+  wait_in_the_outer_rings(frame, slot, directive);
   carry_fallen_soldier_offset(frame, slot, directive);
   limit_contact_close_speed(frame, slot, directive);
   if (frame.reform != nullptr && directive.alive && frame.actor != nullptr) {
@@ -1032,6 +1079,10 @@ auto publish_soldiers(const EntityFrame& frame) -> bool {
                               ? frame.traversal->slot_for(original_slot.index)
                               : nullptr,
     };
+    if (frame.surround != nullptr && original_slot.index < frame.surround->size() &&
+        (*frame.surround)[original_slot.index].active) {
+      slot.surround = &(*frame.surround)[original_slot.index];
+    }
     Soldier const directive = build_slot_directive(frame, slot, previous_soldiers);
     soldiers_changed =
         soldiers_changed || slot.previous == nullptr || *slot.previous != directive;

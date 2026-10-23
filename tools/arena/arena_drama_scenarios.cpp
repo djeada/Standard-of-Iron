@@ -90,7 +90,7 @@ auto parse_actor(const QJsonObject& obj) -> ArenaScenarioGroup {
   if (obj.contains("look")) {
     group.renderer_override = renderer_for(obj.value("look").toString());
   }
-  for (auto const& move : obj.value("routine").toArray()) {
+  for (QJsonValue const move : obj.value("routine").toArray()) {
     group.showcase_routine.push_back(move.toString());
   }
   group.showcase_start_delay =

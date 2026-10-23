@@ -228,6 +228,8 @@ Multiple behaviors can notice the same unit. The AI resolves this through explic
 
 `AICommandFilter::arbitrate_move_ownership()` gives movement ownership to the highest-priority claim when competing behaviors try to move one subject in the same decision batch.
 
+Across decisions, `claim_units` keeps a unit with the behavior that claimed it until that claim is older than the lock (2 s unless the caller passes another), after which a higher priority may take it. The lock is measured from `UnitAssignment::claimed_since`, the first claim, not from `assignment_time`, the last refresh. Measured from the refresh, a low-priority behavior that re-claims its unit on every update (the gather muster does) held it forever against every higher priority. `assignment_time` still drives the 4.5 s stale-claim sweep.
+
 The application side also validates subjects before applying commands. A command cannot act on an entity merely because the entity ID existed in an older snapshot. Ownership, lifetime, and current validity are checked again at application time.
 
 This protects against cases such as:

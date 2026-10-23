@@ -173,6 +173,8 @@ public:
       const CommanderRallyContext& context) const -> CommanderRallyEffects;
   [[nodiscard]] auto confirm_commander_flag_rally(
       const CommanderRallyContext& context) const -> CommanderRallyEffects;
+  [[nodiscard]] auto rally_where_the_commander_stands(
+      const CommanderRallyContext& context) const -> CommanderRallyEffects;
   [[nodiscard]] auto
   cancel_commander_flag_rally(CursorMode cursor_mode) const -> CommanderRallyEffects;
 

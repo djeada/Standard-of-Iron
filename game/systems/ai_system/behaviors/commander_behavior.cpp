@@ -230,6 +230,28 @@ auto nearest_threat_to(const AISnapshot& snapshot,
 }
 
 constexpr float k_challenge_accept_health = 0.5F;
+constexpr float k_challenge_radius = 25.0F;
+constexpr float k_challenge_radius_sq = k_challenge_radius * k_challenge_radius;
+
+auto nearest_challenger_to(const AISnapshot& snapshot,
+                           float pos_x,
+                           float pos_z) -> const ContactSnapshot* {
+  const ContactSnapshot* nearest = nullptr;
+  float nearest_sq = k_challenge_radius_sq;
+  for (const auto& enemy : snapshot.visible_enemies) {
+    if (!enemy.player_driven || enemy.health <= 0) {
+      continue;
+    }
+    const float dx = enemy.pos_x - pos_x;
+    const float dz = enemy.pos_z - pos_z;
+    const float dist_sq = dx * dx + dz * dz;
+    if (dist_sq < nearest_sq) {
+      nearest_sq = dist_sq;
+      nearest = &enemy;
+    }
+  }
+  return nearest;
+}
 
 auto accepts_challenge(const AISnapshot& snapshot,
                        const EntitySnapshot& commander,
@@ -337,32 +359,45 @@ void CommanderBehavior::execute(const AISnapshot& snapshot,
     float target_x;
     float target_z;
 
+    const ContactSnapshot* const challenger =
+        nearest_challenger_to(snapshot, snap->pos_x, snap->pos_z);
+    const ContactSnapshot* const threat =
+        nearest_threat_to(snapshot, snap->pos_x, snap->pos_z);
+    const ContactSnapshot* const duel_target =
+        challenger != nullptr && accepts_challenge(snapshot, *snap, *challenger)
+            ? challenger
+            : nullptr;
+
+    if (duel_target != nullptr && !commander_marches_with_army(context, *snap, army)) {
+      if (auto const held = context.assigned_units.find(commander_id);
+          held != context.assigned_units.end() &&
+          held->second.owner_priority < get_priority()) {
+        release_units({commander_id}, context);
+      }
+      auto duellist = claim_units({commander_id},
+                                  get_priority(),
+                                  "commander_duel",
+                                  context,
+                                  snapshot.game_time,
+                                  1.5F);
+      if (!duellist.empty()) {
+        AICommand attack;
+        attack.type = AICommandType::AttackTarget;
+        attack.units = std::move(duellist);
+        attack.target_id = duel_target->id;
+        attack.should_chase = true;
+        out_commands.push_back(std::move(attack));
+      }
+      continue;
+    }
+
     if (commander_marches_with_army(context, *snap, army)) {
       const CommanderStation station = station_for(config);
       target_x =
           army.x + enemy_dir_x * station.along_axis - enemy_dir_z * station.lateral;
       target_z =
           army.z + enemy_dir_z * station.along_axis + enemy_dir_x * station.lateral;
-    } else if (const ContactSnapshot* threat =
-                   nearest_threat_to(snapshot, snap->pos_x, snap->pos_z)) {
-      if (accepts_challenge(snapshot, *snap, *threat)) {
-        auto duellist = claim_units({commander_id},
-                                    get_priority(),
-                                    "commander_duel",
-                                    context,
-                                    snapshot.game_time,
-                                    1.5F);
-        if (!duellist.empty()) {
-          AICommand attack;
-          attack.type = AICommandType::AttackTarget;
-          attack.units = std::move(duellist);
-          attack.target_id = threat->id;
-          attack.should_chase = true;
-          out_commands.push_back(std::move(attack));
-        }
-        continue;
-      }
-
+    } else if (threat != nullptr) {
       float away_x = snap->pos_x - threat->pos_x;
       float away_z = snap->pos_z - threat->pos_z;
       const float away_len = std::sqrt(away_x * away_x + away_z * away_z);

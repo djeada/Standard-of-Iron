@@ -44,7 +44,7 @@ constexpr float k_anchor_follow_rate = 24.0F;
 constexpr float k_anchor_max_lag = 0.30F;
 
 constexpr float k_focus_point_follow = 4.5F;
-constexpr float k_focus_weight_follow = 6.0F;
+constexpr float k_focus_blend_omega = 7.5F;
 constexpr float k_occlusion_follow = 18.0F;
 
 constexpr float k_lean_max_deg = 1.1F;
@@ -54,7 +54,7 @@ constexpr float k_fov_run_boost = 7.0F;
 constexpr float k_fov_lerp = 5.0F;
 
 constexpr float k_aim_blend_rate = 9.0F;
-constexpr float k_framing_blend_rate = 9.0F;
+constexpr float k_framing_blend_omega = 12.0F;
 constexpr float k_aim_sway_damping = 0.72F;
 
 constexpr float k_hit_kick_decay = 9.0F;
@@ -74,8 +74,9 @@ constexpr float k_shoulder_follow = 5.0F;
 constexpr float k_retracted_rise = 0.75F;
 
 constexpr float k_crowd_follow = 1.6F;
-constexpr float k_crowd_lift = 1.7F;
-constexpr float k_crowd_pull_back = 0.9F;
+constexpr float k_crowd_lift = 1.3F;
+constexpr float k_crowd_pull_back = 0.7F;
+constexpr float k_crowd_look_drop_share = 0.4F;
 constexpr float k_crowd_side_tuck = 0.55F;
 constexpr float k_threat_bias_side = 0.30F;
 
@@ -96,6 +97,17 @@ constexpr float k_camera_terrain_max_lift = 2.5F;
 
 auto smooth_alpha(float rate, float dt) -> float {
   return 1.0F - std::exp(-rate * std::max(dt, 0.0F));
+}
+
+void critically_damped_step(
+    float& value, float& velocity, float target, float omega, float dt) {
+  float const step = omega * std::max(dt, 0.0F);
+  float const decay =
+      1.0F / (1.0F + step + (0.48F * step * step) + (0.235F * step * step * step));
+  float const change = value - target;
+  float const pull = (velocity + (omega * change)) * std::max(dt, 0.0F);
+  velocity = (velocity - (omega * pull)) * decay;
+  value = target + ((change + pull) * decay);
 }
 
 auto signed_degrees_between(float target, float current) -> float {
@@ -148,6 +160,7 @@ auto CommanderCameraRig::framing_for(CommanderFramingState state,
 void CommanderCameraRig::reset() {
   m_framing_state = CommanderFramingState::Explore;
   m_framing_current = {};
+  m_framing_velocity = {0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F};
   m_framing_valid = false;
   m_bob_phase = 0.0F;
   m_bob_amplitude = 0.0F;
@@ -169,6 +182,8 @@ void CommanderCameraRig::reset() {
   m_focus_point_valid = false;
   m_focus_weight_smooth = 0.0F;
   m_focus_side_nudge_smooth = 0.0F;
+  m_focus_weight_velocity = 0.0F;
+  m_focus_side_nudge_velocity = 0.0F;
   m_occlusion_fraction = 1.0F;
   m_trace = {};
 }
@@ -203,22 +218,41 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
   Framing const framing_target = framing_for(m_framing_state, inputs.close_camera_mode);
   if (!m_framing_valid) {
     m_framing_current = framing_target;
+    m_framing_velocity = {0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F};
     m_framing_valid = true;
 
     m_fov_current = framing_target.fov * fov_scale;
   } else {
-    float const framing_alpha = smooth_alpha(k_framing_blend_rate, dt);
-    m_framing_current.back +=
-        (framing_target.back - m_framing_current.back) * framing_alpha;
-    m_framing_current.up += (framing_target.up - m_framing_current.up) * framing_alpha;
-    m_framing_current.side +=
-        (framing_target.side - m_framing_current.side) * framing_alpha;
-    m_framing_current.distance +=
-        (framing_target.distance - m_framing_current.distance) * framing_alpha;
-    m_framing_current.fov +=
-        (framing_target.fov - m_framing_current.fov) * framing_alpha;
-    m_framing_current.look_drop +=
-        (framing_target.look_drop - m_framing_current.look_drop) * framing_alpha;
+    critically_damped_step(m_framing_current.back,
+                           m_framing_velocity.back,
+                           framing_target.back,
+                           k_framing_blend_omega,
+                           dt);
+    critically_damped_step(m_framing_current.up,
+                           m_framing_velocity.up,
+                           framing_target.up,
+                           k_framing_blend_omega,
+                           dt);
+    critically_damped_step(m_framing_current.side,
+                           m_framing_velocity.side,
+                           framing_target.side,
+                           k_framing_blend_omega,
+                           dt);
+    critically_damped_step(m_framing_current.distance,
+                           m_framing_velocity.distance,
+                           framing_target.distance,
+                           k_framing_blend_omega,
+                           dt);
+    critically_damped_step(m_framing_current.fov,
+                           m_framing_velocity.fov,
+                           framing_target.fov,
+                           k_framing_blend_omega,
+                           dt);
+    critically_damped_step(m_framing_current.look_drop,
+                           m_framing_velocity.look_drop,
+                           framing_target.look_drop,
+                           k_framing_blend_omega,
+                           dt);
   }
 
   m_aim_blend += ((inputs.aiming_bow ? 1.0F : 0.0F) - m_aim_blend) *
@@ -314,10 +348,11 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
                         m_ground_y + inputs.jump_height_offset + k_focus_height,
                         m_state.visual_anchor.z());
 
-  Game::Systems::CameraObstructionField const obstruction{.buildings = inputs.buildings,
-                                                          .terrain = inputs.terrain,
-                                                          .radius =
-                                                              k_camera_body_radius};
+  Game::Systems::CameraObstructionField const obstruction{
+      .buildings = inputs.buildings,
+      .terrain = inputs.terrain,
+      .shut_gates = inputs.shut_gates,
+      .radius = k_camera_body_radius};
 
   float const shoulder_side =
       m_framing_current.side * (1.0F - (k_crowd_side_tuck * crowd));
@@ -371,10 +406,16 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
                               smooth_alpha(k_focus_point_follow, dt);
     }
   }
-  m_focus_weight_smooth += (focus_weight_target - m_focus_weight_smooth) *
-                           smooth_alpha(k_focus_weight_follow, dt);
-  m_focus_side_nudge_smooth += (focus_side_nudge_target - m_focus_side_nudge_smooth) *
-                               smooth_alpha(k_focus_weight_follow, dt);
+  critically_damped_step(m_focus_weight_smooth,
+                         m_focus_weight_velocity,
+                         focus_weight_target,
+                         k_focus_blend_omega,
+                         dt);
+  critically_damped_step(m_focus_side_nudge_smooth,
+                         m_focus_side_nudge_velocity,
+                         focus_side_nudge_target,
+                         k_focus_blend_omega,
+                         dt);
   float const focus_weight = std::clamp(m_focus_weight_smooth, 0.0F, 1.0F);
   if (focus_weight <= 0.001F && !focus_world.has_value()) {
     m_focus_point_valid = false;
@@ -398,8 +439,10 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
     }
   }
 
-  target_desired -= QVector3D(
-      0.0F, (m_framing_current.look_drop * (1.0F - aim_blend)) + crowd_lift, 0.0F);
+  target_desired -= QVector3D(0.0F,
+                              (m_framing_current.look_drop * (1.0F - aim_blend)) +
+                                  (crowd_lift * k_crowd_look_drop_share),
+                              0.0F);
 
   QVector3D const eye_unconstrained = eye_desired;
   QVector3D const target_unconstrained = target_desired;
@@ -471,6 +514,7 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
     Game::Systems::CameraObstructionField const escape{
         .buildings = inputs.buildings,
         .terrain = inputs.terrain,
+        .shut_gates = inputs.shut_gates,
         .radius = k_camera_body_radius + k_camera_depenetration_margin};
     QVector3D const pushed =
         Game::Systems::camera_depenetrated_point(escape, eye_desired);

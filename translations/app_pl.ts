@@ -7975,6 +7975,14 @@ by zobaczyć podgląd</translation>
         <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. A timber curtain with a tower at every corner rings the lower ward, where the temple and the market face each other across one street; the citadel stands on the upper crown at the back of the town behind its own wall, with the garrison hall inside it. One graded ramp climbs from the camp road to the south gate, and one short ramp climbs from the lower ward to the citadel gate. The relief columns come down the flank roads and never touch the hill.</source>
         <translation>Obwarowane miasto targowe na równinie Insubrów, wzniesione na podwójnym wzgórzu ponad zimowymi polami. Drewniana kurtyna z wieżą w każdym narożniku opasuje dolny gród, w którym świątynia i targ stoją naprzeciw siebie po dwóch stronach jednej ulicy; cytadela stoi na górnym szczycie na tyłach miasta, za własnym murem, a w jej wnętrzu mieści się sala garnizonu. Jedna wyrównana rampa wspina się od drogi obozowej do bramy południowej, a jedna krótka rampa wiedzie z dolnego grodu do bramy cytadeli. Kolumny odsieczy schodzą bocznymi drogami i nigdy nie dotykają wzgórza.</translation>
     </message>
+    <message>
+        <source>One stone bridge over the Grey Water, and nothing else for a day&apos;s march either way. The south bank rises in two ridges that close on a gated wall across the bridgehead, so whatever crosses the bridge has to cross it under the bows on both ridges and then break the gate. The north bank is barrows and dead wood, and that is where the dead come from.</source>
+        <translation>Jeden kamienny most nad Szarą Wodą i nic więcej na dzień marszu w obie strony. Południowy brzeg wznosi się w dwa grzbiety, które zamykają się na murze z bramą w poprzek przyczółka, więc wszystko, co przejdzie przez most, musi przejść pod łukami z obu grzbietów, a potem rozbić bramę. Północny brzeg to kurhany i martwe drzewa, i stamtąd przychodzą umarli.</translation>
+    </message>
+    <message>
+        <source>The Sepulcher Bridge</source>
+        <translation>Most Grobowca</translation>
+    </message>
 </context>
 <context>
     <name>MatchSetupViewModel</name>
@@ -10230,6 +10238,74 @@ by zobaczyć podgląd</translation>
     <message>
         <source>Your men are dying too. Every one of them is a Carthaginian I will not have to chase back to Africa.</source>
         <translation>Twoi ludzie też giną. Każdy z nich to Kartagińczyk, którego nie będę musiał gonić z powrotem do Afryki.</translation>
+    </message>
+    <message>
+        <source>Break all four risings. The bridge is held when the last of the dead lies still on it.</source>
+        <translation>Rozbij wszystkie cztery powstania. Most jest utrzymany, gdy ostatni z umarłych legnie na nim bez ruchu.</translation>
+    </message>
+    <message>
+        <source>Hold the Sepulcher Bridge</source>
+        <translation>Utrzymaj Most Grobowca</translation>
+    </message>
+    <message>
+        <source>Keep the bridge gate standing. Once it falls, the camp is the only thing left between them and the road south.</source>
+        <translation>Utrzymaj bramę mostu. Gdy padnie, między nimi a drogą na południe zostanie już tylko obóz.</translation>
+    </message>
+    <message>
+        <source>Lose the camp and there is nothing left to hold the bridge for.</source>
+        <translation>Strać obóz, a nie zostanie nic, dla czego warto trzymać most.</translation>
+    </message>
+    <message>
+        <source>One bridge, two ridges and a gate. Bows on both ridges, spears behind the gate, and nobody stands on that bridge unless I am standing on it with him. The dead do not tire, so we do not stand where they can reach us for longer than we must.</source>
+        <translation>Jeden most, dwa grzbiety i brama. Łuki na obu grzbietach, włócznie za bramą, i nikt nie staje na tym moście, jeśli ja nie stoję na nim razem z nim. Umarli się nie męczą, więc nie stoimy w ich zasięgu dłużej, niż musimy.</translation>
+    </message>
+    <message>
+        <source>One officer and no line. The dead do not slow down for one man.</source>
+        <translation>Jeden oficer i żadnej linii. Umarli nie zwolnią dla jednego człowieka.</translation>
+    </message>
+    <message>
+        <source>Pull the broken files back behind the gate and put fresh men on the ridge. Nobody fights the dead on open ground.</source>
+        <translation>Wycofaj rozbite szeregi za bramę i postaw świeżych ludzi na grzbiecie. Nikt nie walczy z umarłymi w otwartym polu.</translation>
+    </message>
+    <message>
+        <source>That is the whole of the barrows on the road, kings and all. Hold this one and nothing else comes out of the ground until spring.</source>
+        <translation>To już wszystko, co było w kurhanach, razem z królami. Utrzymaj tę falę, a do wiosny nic więcej nie wyjdzie z ziemi.</translation>
+    </message>
+    <message>
+        <source>The barrows are opening. Let them come to the bridge; every one of them has to cross it, and it is only seven paces wide.</source>
+        <translation>Kurhany się otwierają. Niech przyjdą do mostu; każdy z nich musi go przejść, a ma on tylko siedem kroków szerokości.</translation>
+    </message>
+    <message>
+        <source>The barrows on the north bank have opened, and everything in them is walking south. There is one bridge over the Grey Water. Hold it through four risings of the dead, each larger than the last, with a wall, two ridges and far too few men.</source>
+        <translation>Kurhany na północnym brzegu się otworzyły i wszystko, co w nich było, idzie na południe. Nad Szarą Wodą jest tylko jeden most. Utrzymaj go przez cztery powstania umarłych, każde większe od poprzedniego, mając mur, dwa grzbiety i o wiele za mało ludzi.</translation>
+    </message>
+    <message>
+        <source>The bridge is gone. Take the south road and do not stop, and do not look back at who is following.</source>
+        <translation>Most stracony. Ruszaj drogą na południe i nie zatrzymuj się, i nie oglądaj się, kto za tobą idzie.</translation>
+    </message>
+    <message>
+        <source>The bridge is ours and the barrows are empty. Burn what is lying on it before it remembers how to stand.</source>
+        <translation>Most jest nasz, a kurhany puste. Spal to, co na nim leży, zanim przypomni sobie, jak się wstaje.</translation>
+    </message>
+    <message>
+        <source>The commander falls on the bridge, and by morning he is walking south with them.</source>
+        <translation>Dowódca pada na moście, a o świcie idzie razem z nimi na południe.</translation>
+    </message>
+    <message>
+        <source>The first rising</source>
+        <translation>Pierwsze powstanie</translation>
+    </message>
+    <message>
+        <source>The last rising</source>
+        <translation>Ostatnie powstanie</translation>
+    </message>
+    <message>
+        <source>The second rising</source>
+        <translation>Drugie powstanie</translation>
+    </message>
+    <message>
+        <source>The third rising</source>
+        <translation>Trzecie powstanie</translation>
     </message>
 </context>
 <context>

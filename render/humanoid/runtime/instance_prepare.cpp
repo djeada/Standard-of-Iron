@@ -1163,6 +1163,15 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
     inst_model.rotate(applied_yaw, 0.0F, 1.0F, 0.0F);
   }
 
+  if (ctx.submission_visibility != nullptr) {
+    QVector3D const push = ctx.submission_visibility->focus_body_push(
+        inst_model.map(QVector3D(0.0F, 0.0F, 0.0F)), ctx_entity_id);
+    if (!push.isNull()) {
+      QMatrix4x4 clear_of_focus;
+      clear_of_focus.translate(push);
+      inst_model = clear_of_focus * inst_model;
+    }
+  }
   const QVector3D early_world_pos = inst_model.map(QVector3D(0.0F, 0.0F, 0.0F));
 
   constexpr float k_soldier_cull_center_y = 0.9F;
@@ -1735,9 +1744,17 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
     float const eased = phase * phase * (3.0F - 2.0F * phase);
     QVector3D const root = RCP::model_world_origin(inst_ctx.model);
     QVector3D const pivot = root + QVector3D(0.0F, 0.68F, 0.0F);
+    QVector3D roll_axis =
+        QVector3D::crossProduct(QVector3D(0.0F, 1.0F, 0.0F),
+                                QVector3D(creature_presentation->dodge_dir_x,
+                                          0.0F,
+                                          creature_presentation->dodge_dir_z));
+    if (roll_axis.lengthSquared() < 1.0e-4F) {
+      roll_axis = right;
+    }
     QMatrix4x4 roll;
     roll.translate(pivot);
-    roll.rotate(-360.0F * eased, right);
+    roll.rotate(-360.0F * eased, roll_axis.normalized());
     roll.translate(-pivot);
     inst_ctx.model = roll * inst_ctx.model;
 

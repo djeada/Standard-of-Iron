@@ -403,11 +403,15 @@ private:
                      Passability passability,
                      std::uint32_t& first_label,
                      std::uint32_t& second_label);
-  void rebuild_region_map(RegionMap& map, Passability passability) const;
+  void rebuild_region_map(RegionMap& map,
+                          Passability passability,
+                          bool gates_seal = false) const;
   auto current_region_map(Passability passability) -> const RegionMap&;
+  auto current_gate_sealed_region_map(Passability passability) -> const RegionMap&;
   auto region_map_survives(const RegionMap& map,
                            Passability passability,
-                           std::uint64_t revision) -> bool;
+                           std::uint64_t revision,
+                           bool gates_seal = false) -> bool;
   [[nodiscard]] auto closed_gate_cells(int min_x,
                                        int max_x,
                                        int min_z,
@@ -478,6 +482,7 @@ private:
   std::vector<NavChange> m_nav_changes;
   mutable std::mutex m_region_mutex;
   std::array<RegionMap, k_passability_count> m_region_maps;
+  std::array<RegionMap, k_passability_count> m_gate_sealed_region_maps;
 };
 
 } // namespace Game::Systems

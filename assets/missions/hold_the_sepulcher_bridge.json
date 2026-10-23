@@ -1,0 +1,425 @@
+{
+  "id": "hold_the_sepulcher_bridge",
+  "menu_order": 25,
+  "title": "Hold the Sepulcher Bridge",
+  "summary": "The barrows on the north bank have opened, and everything in them is walking south. There is one bridge over the Grey Water. Hold it through four risings of the dead, each larger than the last, with a wall, two ridges and far too few men.",
+  "map_path": ":/assets/maps/map_sepulcher_bridge.json",
+  "player_setup": {
+    "nation": "roman_republic",
+    "faction": "roman",
+    "color": "red",
+    "starting_units": [
+      {
+        "type": "spearman",
+        "count": 3,
+        "position": {
+          "x": 48.0,
+          "z": 53.0
+        },
+        "behavior": "guard",
+        "guard_radius": 6.0
+      },
+      {
+        "type": "swordsman",
+        "count": 2,
+        "position": {
+          "x": 45.0,
+          "z": 56.5
+        },
+        "behavior": "guard",
+        "guard_radius": 6.0
+      },
+      {
+        "type": "swordsman",
+        "count": 2,
+        "position": {
+          "x": 51.0,
+          "z": 56.5
+        },
+        "behavior": "guard",
+        "guard_radius": 6.0
+      },
+      {
+        "type": "archer",
+        "count": 3,
+        "position": {
+          "x": 37.5,
+          "z": 53.5
+        },
+        "behavior": "guard",
+        "guard_radius": 4.0
+      },
+      {
+        "type": "archer",
+        "count": 3,
+        "position": {
+          "x": 58.5,
+          "z": 53.5
+        },
+        "behavior": "guard",
+        "guard_radius": 4.0
+      },
+      {
+        "type": "spearman",
+        "count": 2,
+        "position": {
+          "x": 48.0,
+          "z": 67.0
+        }
+      },
+      {
+        "type": "swordsman",
+        "count": 1,
+        "position": {
+          "x": 43.0,
+          "z": 70.0
+        }
+      },
+      {
+        "type": "healer",
+        "count": 2,
+        "position": {
+          "x": 48.0,
+          "z": 72.0
+        }
+      },
+      {
+        "type": "builder",
+        "count": 1,
+        "position": {
+          "x": 44.0,
+          "z": 80.0
+        }
+      }
+    ],
+    "starting_buildings": [],
+    "starting_resources": {
+      "gold": 300,
+      "food": 300,
+      "wood": 300,
+      "stone": 150,
+      "iron": 220
+    }
+  },
+  "ai_setups": [
+    {
+      "id": "the_risen_barrows",
+      "nation": "iron_sepulcher",
+      "faction": "iron_sepulcher",
+      "color": "black",
+      "team_id": 99,
+      "difficulty": "medium",
+      "strategy": "aggressive",
+      "personality": {
+        "aggression": 1.0,
+        "defense": 0.0,
+        "harassment": 0.2
+      },
+      "starting_units": [],
+      "starting_buildings": [],
+      "wave_escalation": 0.0,
+      "waves": [
+        {
+          "timing": 60.0,
+          "composition": [
+            {
+              "type": "skeleton_swordsman",
+              "count": 6
+            },
+            {
+              "type": "skeleton_archer",
+              "count": 2
+            }
+          ],
+          "entry_point": {
+            "x": 48.0,
+            "z": 4.0
+          },
+          "entry_points": [
+            {
+              "x": 36.0,
+              "z": 6.0
+            },
+            {
+              "x": 60.0,
+              "z": 6.0
+            }
+          ],
+          "phase": 1,
+          "warning_seconds": 20.0,
+          "label": "The first rising",
+          "clear_reward": {
+            "wood": 120,
+            "iron": 120
+          }
+        },
+        {
+          "timing": 0.0,
+          "composition": [
+            {
+              "type": "skeleton_swordsman",
+              "count": 9
+            },
+            {
+              "type": "skeleton_archer",
+              "count": 2
+            },
+            {
+              "type": "grave_priest",
+              "count": 1
+            }
+          ],
+          "entry_point": {
+            "x": 48.0,
+            "z": 4.0
+          },
+          "entry_points": [
+            {
+              "x": 30.0,
+              "z": 6.0
+            },
+            {
+              "x": 48.0,
+              "z": 4.0
+            },
+            {
+              "x": 66.0,
+              "z": 6.0
+            }
+          ],
+          "phase": 2,
+          "warning_seconds": 20.0,
+          "label": "The second rising",
+          "trigger": "after_previous_cleared",
+          "grace_seconds": 35.0,
+          "clear_reward": {
+            "wood": 150,
+            "iron": 150
+          }
+        },
+        {
+          "timing": 0.0,
+          "composition": [
+            {
+              "type": "skeleton_swordsman",
+              "count": 12
+            },
+            {
+              "type": "skeleton_archer",
+              "count": 3
+            },
+            {
+              "type": "grave_priest",
+              "count": 2
+            }
+          ],
+          "entry_point": {
+            "x": 48.0,
+            "z": 4.0
+          },
+          "entry_points": [
+            {
+              "x": 26.0,
+              "z": 6.0
+            },
+            {
+              "x": 48.0,
+              "z": 4.0
+            },
+            {
+              "x": 70.0,
+              "z": 6.0
+            }
+          ],
+          "phase": 3,
+          "warning_seconds": 20.0,
+          "label": "The third rising",
+          "trigger": "after_previous_cleared",
+          "grace_seconds": 35.0,
+          "clear_reward": {
+            "wood": 180,
+            "iron": 180
+          }
+        },
+        {
+          "timing": 0.0,
+          "composition": [
+            {
+              "type": "skeleton_swordsman",
+              "count": 18
+            },
+            {
+              "type": "skeleton_archer",
+              "count": 4
+            },
+            {
+              "type": "grave_priest",
+              "count": 2
+            },
+            {
+              "type": "skeleton_swordsman",
+              "count": 2,
+              "elite": true,
+              "title": "The barrow kings"
+            }
+          ],
+          "entry_point": {
+            "x": 48.0,
+            "z": 4.0
+          },
+          "entry_points": [
+            {
+              "x": 24.0,
+              "z": 6.0
+            },
+            {
+              "x": 40.0,
+              "z": 4.0
+            },
+            {
+              "x": 56.0,
+              "z": 4.0
+            },
+            {
+              "x": 72.0,
+              "z": 6.0
+            }
+          ],
+          "phase": 4,
+          "warning_seconds": 24.0,
+          "label": "The last rising",
+          "trigger": "after_previous_cleared",
+          "grace_seconds": 40.0,
+          "clear_reward": {
+            "gold": 300,
+            "food": 200
+          }
+        }
+      ]
+    }
+  ],
+  "victory_mode": "all",
+  "victory_conditions": [
+    {
+      "type": "survive_waves",
+      "wave_count": 4,
+      "description": "Break all four risings. The bridge is held when the last of the dead lies still on it."
+    }
+  ],
+  "optional_objectives": [
+    {
+      "type": "control_structures",
+      "structure_types": [
+        "wall_gate"
+      ],
+      "min_count": 1,
+      "description": "Keep the bridge gate standing. Once it falls, the camp is the only thing left between them and the road south."
+    }
+  ],
+  "defeat_conditions": [
+    {
+      "type": "lose_structure",
+      "structure_type": "barracks",
+      "description": "Lose the camp and there is nothing left to hold the bridge for."
+    },
+    {
+      "type": "lose_commander",
+      "description": "The commander falls on the bridge, and by morning he is walking south with them."
+    },
+    {
+      "type": "only_commander_remaining",
+      "description": "One officer and no line. The dead do not slow down for one man."
+    }
+  ],
+  "events": [],
+  "commander_messages": [
+    {
+      "id": "sepulcher_bridge_open",
+      "speaker": "roman_field_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "mission_start",
+        "delay": 2.0
+      },
+      "text": "One bridge, two ridges and a gate. Bows on both ridges, spears behind the gate, and nobody stands on that bridge unless I am standing on it with him. The dead do not tire, so we do not stand where they can reach us for longer than we must.",
+      "voice_cue": "alert.commander_message",
+      "duration": 10.0,
+      "priority": 100
+    },
+    {
+      "id": "sepulcher_bridge_first_rising",
+      "speaker": "roman_field_commander",
+      "pose": "cynical",
+      "trigger": {
+        "type": "wave_incoming",
+        "owner_id": 2,
+        "delay": 0.5,
+        "final_wave": false
+      },
+      "text": "The barrows are opening. Let them come to the bridge; every one of them has to cross it, and it is only seven paces wide.",
+      "voice_cue": "alert.commander_message",
+      "duration": 8.0,
+      "priority": 60
+    },
+    {
+      "id": "sepulcher_bridge_last_rising",
+      "speaker": "roman_field_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "wave_incoming",
+        "owner_id": 2,
+        "delay": 0.5,
+        "final_wave": true
+      },
+      "text": "That is the whole of the barrows on the road, kings and all. Hold this one and nothing else comes out of the ground until spring.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 65
+    },
+    {
+      "id": "sepulcher_bridge_losses",
+      "speaker": "roman_field_commander",
+      "pose": "cynical",
+      "trigger": {
+        "type": "heavy_losses",
+        "owner_id": "player",
+        "cooldown": 120
+      },
+      "text": "Pull the broken files back behind the gate and put fresh men on the ridge. Nobody fights the dead on open ground.",
+      "voice_cue": "alert.commander_message",
+      "duration": 8.0,
+      "priority": 40,
+      "once": false
+    },
+    {
+      "id": "sepulcher_bridge_victory",
+      "speaker": "roman_field_commander",
+      "pose": "cynical",
+      "trigger": {
+        "type": "mission_victory",
+        "delay": 1.0
+      },
+      "text": "The bridge is ours and the barrows are empty. Burn what is lying on it before it remembers how to stand.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 120
+    },
+    {
+      "id": "sepulcher_bridge_defeat",
+      "speaker": "roman_field_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "mission_defeat",
+        "delay": 1.0
+      },
+      "text": "The bridge is gone. Take the south road and do not stop, and do not look back at who is following.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 120
+    }
+  ],
+  "theme": "Seven paces of stone, and everything in the barrows has to walk across it.",
+  "commander_voices": {
+    "generic": false
+  }
+}

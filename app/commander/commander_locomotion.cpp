@@ -462,6 +462,8 @@ auto CommanderLocomotion::advance_motion(const CommanderHandles& body,
   if (body.commander_data != nullptr) {
     body.commander_data->dodge_active = report.dodge_pose_active;
     body.commander_data->dodge_phase = report.dodge_pose_phase;
+    body.commander_data->dodge_dir_x = m_dodge_direction.x();
+    body.commander_data->dodge_dir_z = m_dodge_direction.z();
   }
   return report;
 }

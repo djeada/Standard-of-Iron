@@ -7967,6 +7967,14 @@ bir harita seç</translation>
         <source>A walled market town of the Insubrian plain, raised on a double hill above the winter fields. A timber curtain with a tower at every corner rings the lower ward, where the temple and the market face each other across one street; the citadel stands on the upper crown at the back of the town behind its own wall, with the garrison hall inside it. One graded ramp climbs from the camp road to the south gate, and one short ramp climbs from the lower ward to the citadel gate. The relief columns come down the flank roads and never touch the hill.</source>
         <translation>İnsubria ovasında, kış tarlalarının üzerinde çifte bir tepeye kurulmuş surlu bir pazar kasabası. Her köşesinde bir kule bulunan ahşap bir sur, tapınakla pazarın tek bir caddenin iki yanında karşılıklı durduğu alt avluyu çevreler; kale, kasabanın arka ucunda, kendi suruyla çevrili üst tepede durur, garnizon salonu da içindedir. Kamp yolundan güney kapısına tek bir eğimli rampa çıkar, alt avludan kale kapısına ise kısa bir rampa. Yardım kolları yan yollardan iner ve tepeye hiç dokunmaz.</translation>
     </message>
+    <message>
+        <source>One stone bridge over the Grey Water, and nothing else for a day&apos;s march either way. The south bank rises in two ridges that close on a gated wall across the bridgehead, so whatever crosses the bridge has to cross it under the bows on both ridges and then break the gate. The north bank is barrows and dead wood, and that is where the dead come from.</source>
+        <translation>Gri Su&apos;nun üzerinde tek bir taş köprü ve her iki yönde bir günlük yürüyüş boyunca başka hiçbir şey yok. Güney kıyısı, köprübaşını kesen kapılı bir surda birleşen iki sırta yükselir; köprüyü geçen her şey iki sırttaki yayların altından geçmek ve sonra kapıyı kırmak zorundadır. Kuzey kıyısı höyükler ve ölü ağaçlardan ibarettir ve ölüler oradan gelir.</translation>
+    </message>
+    <message>
+        <source>The Sepulcher Bridge</source>
+        <translation>Kabir Köprüsü</translation>
+    </message>
 </context>
 <context>
     <name>MatchSetupViewModel</name>
@@ -10222,6 +10230,74 @@ bir harita seç</translation>
     <message>
         <source>Your men are dying too. Every one of them is a Carthaginian I will not have to chase back to Africa.</source>
         <translation>Senin adamların da ölüyor. Her biri, Afrika&apos;ya kadar kovalamak zorunda kalmayacağım bir Kartacalı.</translation>
+    </message>
+    <message>
+        <source>Break all four risings. The bridge is held when the last of the dead lies still on it.</source>
+        <translation>Dört dirilişin hepsini kır. Ölülerin sonuncusu üzerinde hareketsiz yattığında köprü tutulmuş olur.</translation>
+    </message>
+    <message>
+        <source>Hold the Sepulcher Bridge</source>
+        <translation>Kabir Köprüsü&apos;nü Tut</translation>
+    </message>
+    <message>
+        <source>Keep the bridge gate standing. Once it falls, the camp is the only thing left between them and the road south.</source>
+        <translation>Köprü kapısını ayakta tut. Düşerse, onlarla güney yolu arasında yalnızca kamp kalır.</translation>
+    </message>
+    <message>
+        <source>Lose the camp and there is nothing left to hold the bridge for.</source>
+        <translation>Kampı kaybedersen köprüyü uğruna tutacak hiçbir şey kalmaz.</translation>
+    </message>
+    <message>
+        <source>One bridge, two ridges and a gate. Bows on both ridges, spears behind the gate, and nobody stands on that bridge unless I am standing on it with him. The dead do not tire, so we do not stand where they can reach us for longer than we must.</source>
+        <translation>Bir köprü, iki sırt ve bir kapı. Yaylar iki sırtta, mızraklar kapının ardında; ben yanında durmadıkça kimse o köprüde durmaz. Ölüler yorulmaz, bu yüzden onların erişebileceği yerde gerekenden uzun kalmayız.</translation>
+    </message>
+    <message>
+        <source>One officer and no line. The dead do not slow down for one man.</source>
+        <translation>Bir subay ve hiç saf yok. Ölüler tek bir adam için yavaşlamaz.</translation>
+    </message>
+    <message>
+        <source>Pull the broken files back behind the gate and put fresh men on the ridge. Nobody fights the dead on open ground.</source>
+        <translation>Dağılan sıraları kapının arkasına çek ve sırta taze adamlar koy. Kimse ölülerle açık arazide savaşmaz.</translation>
+    </message>
+    <message>
+        <source>That is the whole of the barrows on the road, kings and all. Hold this one and nothing else comes out of the ground until spring.</source>
+        <translation>Yoldakiler höyüklerin hepsi, kralları dahil. Bunu tutarsan bahara kadar yerden başka hiçbir şey çıkmaz.</translation>
+    </message>
+    <message>
+        <source>The barrows are opening. Let them come to the bridge; every one of them has to cross it, and it is only seven paces wide.</source>
+        <translation>Höyükler açılıyor. Köprüye gelsinler; her biri onu geçmek zorunda ve köprü yalnızca yedi adım genişliğinde.</translation>
+    </message>
+    <message>
+        <source>The barrows on the north bank have opened, and everything in them is walking south. There is one bridge over the Grey Water. Hold it through four risings of the dead, each larger than the last, with a wall, two ridges and far too few men.</source>
+        <translation>Kuzey kıyısındaki höyükler açıldı ve içlerindeki her şey güneye yürüyor. Gri Su&apos;nun üzerinde tek bir köprü var. Bir sur, iki sırt ve çok az adamla, her biri öncekinden büyük dört ölü dirilişine karşı onu tut.</translation>
+    </message>
+    <message>
+        <source>The bridge is gone. Take the south road and do not stop, and do not look back at who is following.</source>
+        <translation>Köprü düştü. Güney yolunu tut ve durma, kimin peşinden geldiğine de dönüp bakma.</translation>
+    </message>
+    <message>
+        <source>The bridge is ours and the barrows are empty. Burn what is lying on it before it remembers how to stand.</source>
+        <translation>Köprü bizim, höyükler boş. Üzerinde yatanı, nasıl ayağa kalkacağını hatırlamadan yak.</translation>
+    </message>
+    <message>
+        <source>The commander falls on the bridge, and by morning he is walking south with them.</source>
+        <translation>Komutan köprüde düşer ve sabaha onlarla birlikte güneye yürür.</translation>
+    </message>
+    <message>
+        <source>The first rising</source>
+        <translation>İlk diriliş</translation>
+    </message>
+    <message>
+        <source>The last rising</source>
+        <translation>Son diriliş</translation>
+    </message>
+    <message>
+        <source>The second rising</source>
+        <translation>İkinci diriliş</translation>
+    </message>
+    <message>
+        <source>The third rising</source>
+        <translation>Üçüncü diriliş</translation>
     </message>
 </context>
 <context>

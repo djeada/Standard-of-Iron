@@ -388,6 +388,8 @@ public:
   float jump_height_offset{0.0F};
   bool dodge_active{false};
   float dodge_phase{0.0F};
+  float dodge_dir_x{0.0F};
+  float dodge_dir_z{1.0F};
   bool flag_rally_planting{false};
   float flag_rally_animation_timer{0.0F};
   float flag_rally_cost{0.0F};

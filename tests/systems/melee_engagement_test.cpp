@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <array>
 #include <cmath>
 #include <gtest/gtest.h>
 #include <string>
@@ -429,6 +431,75 @@ INSTANTIATE_TEST_SUITE_P(
     [](const testing::TestParamInfo<BareHandedCase>& info) {
       return sanitized_case_name(info.param.name);
     });
+
+TEST_F(MeleeEngagementTest, SquadsOnOneCommanderSurroundHimInsteadOfStackingOnHim) {
+  Engine::Core::World world;
+  Game::Systems::register_runtime_systems(world);
+  auto* commander = spawn(world,
+                          Game::Units::SpawnType::CarthageSwordCommander,
+                          1,
+                          {0.0F, 0.0F, 0.0F},
+                          Game::Systems::NationID::RomanRepublic);
+  ASSERT_NE(commander, nullptr);
+  commander->get_component<UnitComponent>()->health =
+      commander->get_component<UnitComponent>()->max_health = 1000000;
+  std::vector<Engine::Core::Entity*> squads;
+  for (float x : {-2.5F, 0.0F, 2.5F}) {
+    auto* squad = spawn_formation(world,
+                                  Game::Units::SpawnType::Swordsman,
+                                  2,
+                                  {x, 0.0F, -9.0F},
+                                  Game::Systems::NationID::Carthage);
+    ASSERT_NE(squad, nullptr);
+    squad->get_component<UnitComponent>()->health =
+        squad->get_component<UnitComponent>()->max_health = 1000000;
+    order_attack(*squad, *commander);
+    squads.push_back(squad);
+  }
+
+  for (int tick = 0; tick < 300; ++tick) {
+    world.update(0.05F);
+  }
+
+  auto const* centre = commander->get_component<TransformComponent>();
+  float const commander_radius =
+      Game::Systems::FormationCombat::resolve_layout(*commander).body_radius;
+  int inside = 0;
+  int near = 0;
+  std::array<int, 4> quadrants{};
+  std::string seen;
+  for (auto* squad : squads) {
+    float const soldier_radius =
+        Game::Systems::FormationCombat::resolve_layout(*squad).body_radius;
+    auto const* presentation =
+        squad->get_component<Engine::Core::FormationPresentationComponent>();
+    ASSERT_NE(presentation, nullptr);
+    for (auto const& soldier : presentation->soldiers) {
+      if (!soldier.alive || !soldier.world_motion_valid) {
+        continue;
+      }
+      float const dx = soldier.world_x - centre->position.x;
+      float const dz = soldier.world_z - centre->position.z;
+      float const distance = std::hypot(dx, dz);
+      seen += " (" + std::to_string(dx) + "," + std::to_string(dz) + ")";
+      if (distance < commander_radius + soldier_radius - 0.15F) {
+        ++inside;
+      }
+      if (distance < 4.5F) {
+        ++near;
+        quadrants[(dx >= 0.0F ? 1U : 0U) + (dz >= 0.0F ? 2U : 0U)] += 1;
+      }
+    }
+  }
+  EXPECT_EQ(inside, 0) << "soldiers stood inside the commander they were fighting:"
+                       << seen;
+  EXPECT_GT(near, 12) << "the squads never closed on the commander:" << seen;
+  int const sides = static_cast<int>(
+      std::count_if(quadrants.begin(), quadrants.end(), [](int n) { return n > 0; }));
+  EXPECT_GE(sides, 3) << "three squads arriving from one side should wrap round a "
+                         "lone commander, not pile up in front of him:"
+                      << seen;
+}
 
 TEST_F(MeleeEngagementTest, AHealerNeverPicksItsOwnFight) {
   Engine::Core::World world;

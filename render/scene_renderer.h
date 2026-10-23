@@ -147,6 +147,10 @@ public:
   order_markers_visible_for_owner(int owner_id) const noexcept -> bool {
     return m_view.order_markers_visible_for_owner(owner_id);
   }
+  [[nodiscard]] auto selection_markers_visible() const noexcept -> bool {
+    return !m_view.cinematic_mode() &&
+           m_view.world_render_mode() != WorldRenderMode::Rpg;
+  }
   void set_force_full_creature_lod(bool enabled) {
     m_view.set_force_full_creature_lod(enabled);
   }
