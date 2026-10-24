@@ -360,8 +360,8 @@ auto MissionSetupCoordinator::apply_mission_setup(
         }
 
         if (unit_setup.facing.has_value()) {
-          if (auto* transform =
-                  entity->get_component<Engine::Core::TransformComponent>()) {
+          if (auto* transform = ctx.world.try_get<Engine::Core::TransformComponent>(
+                  entity->get_id())) {
             transform->rotation.y = *unit_setup.facing;
             transform->desired_yaw = *unit_setup.facing;
             transform->has_desired_yaw = true;
