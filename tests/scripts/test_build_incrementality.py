@@ -46,8 +46,7 @@ class BuildIncrementalityTest(unittest.TestCase):
             "terrain_height.json",
         ):
             (assets / name).write_text("fixture\n")
-        # Manifest generation needs the LinguistTools target, but the test does
-        # not compile catalogues or require a Qt installation.
+
         (self.source / "Qt6Config.cmake").write_text(
             "set(Qt6LinguistTools_FOUND TRUE)\n"
             "add_executable(Qt6::lrelease IMPORTED)\n"
@@ -157,7 +156,7 @@ class BuildIncrementalityTest(unittest.TestCase):
                     make("bake-bpat")
                     self.assertNotEqual(baked.stat().st_mtime_ns, timestamp)
                     os.utime(content, ns=(0, 0))
-                # Adding an old package and removing it must both rebake.
+
                 extra = recipe.with_name("extra.cmesh")
                 for action in ("add", "remove"):
                     timestamp = baked.stat().st_mtime_ns
@@ -168,7 +167,7 @@ class BuildIncrementalityTest(unittest.TestCase):
                         extra.unlink()
                     make("bake-bpat")
                     self.assertNotEqual(baked.stat().st_mtime_ns, timestamp, action)
-                # Generated outputs and unrelated textures must not rebake.
+
                 timestamp = baked.stat().st_mtime_ns
                 for suffix in ("bpat", "png"):
                     recipe.with_suffix(f".{suffix}").write_text("unrelated\n")

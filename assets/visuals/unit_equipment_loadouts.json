@@ -47,13 +47,7 @@
       "helmet": "roman_montefortino",
       "armor": "roman_light_armor",
       "facial_hair": {
-        "style": "short_beard",
-        "color": [
-          0.22,
-          0.16,
-          0.11
-        ],
-        "greyness": 0.35
+        "style": "none"
       }
     },
     "troops/carthage/healer": {

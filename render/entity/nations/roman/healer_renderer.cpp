@@ -10,11 +10,13 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <memory>
 #include <numbers>
 #include <optional>
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include <vector>
 
 #include "animation/rig/humanoid_proportions.h"
 #include "game/core/component.h"
@@ -82,7 +84,7 @@ auto senator_fill_role_colors(const HumanoidPalette& palette,
   out[k_toga_cloth_slot] = QVector3D(0.94F, 0.92F, 0.86F);
   out[k_toga_shade_slot] = QVector3D(0.79F, 0.76F, 0.69F);
   out[k_toga_clavus_slot] = Render::GL::Humanoid::saturate_color(
-      palette.cloth * 0.62F + QVector3D(0.15F, 0.01F, 0.17F));
+      palette.cloth * 0.08F + QVector3D(0.48F, 0.025F, 0.035F));
   out[k_toga_gold_slot] = Render::GL::Humanoid::saturate_color(
       palette.metal * 0.45F + QVector3D(0.46F, 0.34F, 0.10F));
   out[k_toga_leather_slot] = palette.leather;
@@ -233,22 +235,55 @@ auto senator_toga_archetype() -> const RenderArchetype& {
         -chest_w * 0.14F, drape_mid_y, drape_mid_section.depth * 1.04F);
     QVector3D const drape_low(
         waist_w * 0.94F, y_waist + 0.01F, drape_low_section.depth * 0.86F);
-    constexpr int k_drape_steps = 16;
-    for (int step = 0; step <= k_drape_steps; ++step) {
-      float const t = static_cast<float>(step) / k_drape_steps;
-      float const inv = 1.0F - t;
-      QVector3D const point =
-          drape_top * (inv * inv) + drape_mid * (2.0F * inv * t) + drape_low * (t * t);
-      builder.add_palette_mesh(
-          get_unit_sphere(),
-          local_scale_model(point, QVector3D(0.046F, 0.046F, 0.020F)),
-          k_toga_clavus_slot);
-      builder.add_palette_mesh(
-          get_unit_sphere(),
-          local_scale_model(point + QVector3D(0.030F, -0.036F, 0.005F),
-                            QVector3D(0.013F, 0.013F, 0.011F)),
-          k_toga_gold_slot);
-    }
+
+    static const auto drape = [&] {
+      constexpr unsigned int steps = 24;
+      constexpr unsigned int columns = 5;
+      std::vector<Vertex> vertices;
+      std::vector<unsigned int> indices;
+      for (unsigned int row = 0; row <= steps; ++row) {
+        float const t = static_cast<float>(row) / steps;
+        float const inv = 1.0F - t;
+        QVector3D const center = drape_top * (inv * inv) +
+                                 drape_mid * (2.0F * inv * t) + drape_low * (t * t);
+        for (unsigned int col = 0; col < columns; ++col) {
+          float const u = static_cast<float>(col) / (columns - 1);
+          float const y = center.y() + (u - 0.5F) * 0.16F;
+          auto const section = torso_at(y);
+          float const x = center.x();
+          float const ratio = std::clamp(x / section.width, -0.98F, 0.98F);
+          float const z = section.depth * std::sqrt(1.0F - ratio * ratio) + 0.016F +
+                          std::sin(u * std::numbers::pi_v<float>) * 0.026F;
+          vertices.push_back({{x, y, z}, {0.0F, 0.0F, 1.0F}, {t, u}});
+        }
+      }
+      for (unsigned int row = 0; row < steps; ++row) {
+        for (unsigned int col = 0; col + 1 < columns; ++col) {
+          unsigned int const a = row * columns + col;
+          indices.insert(indices.end(),
+                         {a, a + columns, a + 1, a + 1, a + columns, a + columns + 1});
+        }
+      }
+      std::vector<QVector3D> normals(vertices.size());
+      auto point = [&](unsigned int index) {
+        auto const& p = vertices[index].position;
+        return QVector3D(p[0], p[1], p[2]);
+      };
+      for (std::size_t i = 0; i < indices.size(); i += 3) {
+        QVector3D const normal =
+            QVector3D::crossProduct(point(indices[i + 1]) - point(indices[i]),
+                                    point(indices[i + 2]) - point(indices[i]));
+        for (std::size_t j = 0; j < 3; ++j) {
+          normals[indices[i + j]] += normal;
+        }
+      }
+      for (std::size_t i = 0; i < vertices.size(); ++i) {
+        QVector3D const normal = normals[i].normalized();
+        vertices[i].normal = {normal.x(), normal.y(), normal.z()};
+      }
+      return std::make_unique<Mesh>(vertices, indices);
+    }();
+    builder.add_palette_mesh(drape.get(), QMatrix4x4{}, k_toga_shade_slot);
 
     builder.add_palette_mesh(
         get_unit_sphere(),
@@ -325,20 +360,21 @@ auto senator_laurel_archetype() -> const RenderArchetype& {
             0.0F, k_head_silhouette_r * k_head_silhouette_r - k_ring_y * k_ring_y)) *
         1.03F;
 
-    constexpr int k_leaves = 16;
+    constexpr int k_leaves = 18;
     for (int i = 0; i < k_leaves; ++i) {
-      float const a = (static_cast<float>(i) / k_leaves) * 2.0F * pi;
+
+      float const a = (0.18F + static_cast<float>(i) / (k_leaves - 1) * 1.64F) * pi;
       float const s = std::sin(a);
       float const c = std::cos(a);
       QVector3D const base(s * ring_r, k_ring_y, c * ring_r);
       builder.add_palette_mesh(
           get_unit_sphere(),
-          local_scale_model(base, QVector3D(0.026F, 0.015F, 0.026F)),
+          local_scale_model(base, QVector3D(0.025F, 0.009F, 0.014F)),
           k_toga_laurel_slot);
       builder.add_palette_mesh(
           get_unit_sphere(),
           local_scale_model(base + QVector3D(s * 0.008F, 0.026F, c * 0.008F),
-                            QVector3D(0.020F, 0.026F, 0.020F)),
+                            QVector3D(0.016F, 0.023F, 0.009F)),
           k_toga_laurel_slot);
     }
 
