@@ -110,6 +110,7 @@ auto default_loadouts() -> LoadoutMap {
   EquipmentLoadoutIds roman_healer{};
   roman_healer.helmet = "roman_light";
   roman_healer.armor = "roman_light_armor";
+  roman_healer.facial_hair = FacialHairParams{.style = FacialHairStyle::None};
   map.emplace("troops/roman/healer", std::move(roman_healer));
 
   EquipmentLoadoutIds carthage_healer{};

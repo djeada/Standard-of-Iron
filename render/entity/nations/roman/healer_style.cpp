@@ -15,7 +15,7 @@ constexpr QVector3D k_roman_gold{0.82F, 0.66F, 0.32F};
 
 constexpr QVector3D k_roman_wood{0.52F, 0.42F, 0.28F};
 
-constexpr QVector3D k_roman_clavus{0.42F, 0.12F, 0.34F};
+constexpr QVector3D k_roman_clavus{0.56F, 0.055F, 0.065F};
 } // namespace
 
 namespace Render::GL::Roman {

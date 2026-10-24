@@ -7,7 +7,7 @@
 
 namespace {
 
-constexpr QVector3D k_carthage_tunic{0.072F, 0.064F, 0.104F};
+constexpr QVector3D k_carthage_tunic{0.25F, 0.11F, 0.30F};
 
 constexpr QVector3D k_carthage_skin{0.30F, 0.24F, 0.20F};
 constexpr QVector3D k_sepulcher_skin = Render::GL::Sepulcher::k_bone;
@@ -27,7 +27,7 @@ constexpr QVector3D k_carthage_bronze{0.52F, 0.40F, 0.20F};
 
 constexpr QVector3D k_carthage_wood{0.28F, 0.22F, 0.16F};
 
-constexpr QVector3D k_carthage_purple{0.04F, 0.04F, 0.045F};
+constexpr QVector3D k_carthage_purple{0.18F, 0.075F, 0.23F};
 } // namespace
 
 namespace Render::GL::Carthage {

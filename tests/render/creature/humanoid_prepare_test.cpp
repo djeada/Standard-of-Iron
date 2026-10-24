@@ -105,7 +105,7 @@
 namespace {
 
 constexpr std::uint32_t k_roman_senator_role_count = 6;
-constexpr std::uint32_t k_carthage_dark_mage_role_count = 6;
+constexpr std::uint32_t k_carthage_dark_mage_role_count = 7;
 constexpr std::uint32_t k_civilian_pack_role_count = 3;
 constexpr std::uint32_t k_roman_builder_tunic_role_count = 2;
 constexpr std::uint32_t k_roman_civilian_mantle_role_count = 2;

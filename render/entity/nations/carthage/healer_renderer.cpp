@@ -103,7 +103,7 @@ namespace {
 constexpr auto k_profile =
     Render::GL::Humanoid::k_support_proportion_profile.with_offset({.x = 0.01F});
 
-constexpr std::uint32_t k_dark_mage_role_count = 6;
+constexpr std::uint32_t k_dark_mage_role_count = 7;
 
 constexpr auto k_dark_mage_base_role =
     static_cast<std::uint8_t>(Render::Humanoid::k_humanoid_role_count + 1U);
@@ -115,6 +115,7 @@ enum DarkMagePaletteSlot : std::uint8_t {
   k_mage_metal_slot = 3U,
   k_mage_bone_slot = 4U,
   k_mage_shadow_slot = 5U,
+  k_mage_wood_slot = 6U,
 };
 
 auto dark_mage_fill_role_colors(const HumanoidPalette& palette,
@@ -124,17 +125,18 @@ auto dark_mage_fill_role_colors(const HumanoidPalette& palette,
     return 0U;
   }
   QVector3D const robe = Render::GL::Humanoid::saturate_color(
-      palette.cloth * 0.42F + QVector3D(0.055F, 0.048F, 0.088F));
+      palette.cloth * 0.68F + QVector3D(0.10F, 0.025F, 0.12F));
   out[k_mage_robe_slot] = robe;
   out[k_mage_robe_lit_slot] = Render::GL::Humanoid::saturate_color(
-      robe * 2.30F + QVector3D(0.035F, 0.028F, 0.070F));
+      robe * 1.35F + QVector3D(0.035F, 0.018F, 0.045F));
 
   out[k_mage_glyph_slot] = Render::GL::Humanoid::saturate_color(
       QVector3D(0.62F, 0.86F, 0.80F) * 0.82F + palette.cloth * 0.18F);
   out[k_mage_metal_slot] = Render::GL::Humanoid::saturate_color(
-      palette.metal * 0.55F + QVector3D(0.10F, 0.07F, 0.02F));
-  out[k_mage_bone_slot] = QVector3D(0.78F, 0.75F, 0.66F);
-  out[k_mage_shadow_slot] = QVector3D(0.022F, 0.020F, 0.034F);
+      palette.metal * 0.80F + QVector3D(0.18F, 0.12F, 0.035F));
+  out[k_mage_bone_slot] = QVector3D(0.86F, 0.79F, 0.62F);
+  out[k_mage_wood_slot] = palette.wood;
+  out[k_mage_shadow_slot] = QVector3D(0.12F, 0.045F, 0.15F);
   return k_dark_mage_role_count;
 }
 
@@ -194,8 +196,7 @@ auto dark_mage_robe_archetype() -> const RenderArchetype& {
     });
     builder.add_palette_mesh(shell.get(), QMatrix4x4{}, k_mage_robe_slot);
 
-    add_band(
-        y_hem + 0.020F, 0.038F, hem_w * 1.015F, hem_d * 1.015F, k_mage_shadow_slot);
+    add_band(y_hem + 0.020F, 0.038F, hem_w * 1.015F, hem_d * 1.015F, k_mage_metal_slot);
     add_band(y_hem + 0.048F, 0.010F, hem_w * 1.008F, hem_d * 1.008F, k_mage_glyph_slot);
 
     {
@@ -205,7 +206,7 @@ auto dark_mage_robe_archetype() -> const RenderArchetype& {
       model.translate(0.0F, (mantle_bottom + mantle_top) * 0.5F, 0.0F);
       model.scale(tr * 1.40F, mantle_top - mantle_bottom, tr * 1.00F);
       builder.add_palette_mesh(
-          get_unit_tapered_cylinder(1.0F, 0.74F, 18), model, k_mage_robe_slot);
+          get_unit_tapered_cylinder(1.0F, 0.74F, 18), model, k_mage_bone_slot);
       add_band(
           mantle_bottom + 0.013F, 0.022F, tr * 1.385F, tr * 0.99F, k_mage_metal_slot);
       constexpr int k_collar = 10;
@@ -215,8 +216,8 @@ auto dark_mage_robe_archetype() -> const RenderArchetype& {
                                  local_scale_model(QVector3D(std::sin(a) * tr * 0.94F,
                                                              mantle_top - 0.008F,
                                                              std::cos(a) * tr * 0.70F),
-                                                   QVector3D(0.028F, 0.026F, 0.028F)),
-                                 k_mage_robe_slot);
+                                                   QVector3D(0.022F, 0.018F, 0.022F)),
+                                 k_mage_metal_slot);
       }
     }
 
@@ -305,79 +306,54 @@ auto dark_mage_hood_archetype() -> const RenderArchetype& {
 
     RenderArchetypeBuilder builder{"carthage_dark_mage_hood"};
 
-    constexpr int k_lobes = 14;
-    for (int i = 0; i < k_lobes; ++i) {
-      float const t = static_cast<float>(i) / (k_lobes - 1);
-      float const a = (0.26F + t * 1.48F) * pi;
-      float const sa = std::sin(a);
-      float const ca = std::cos(a);
-      builder.add_palette_mesh(
-          get_unit_sphere(),
-          local_scale_model(
-              QVector3D(sa * k_head_r * 1.10F, 0.006F, ca * k_head_r * 1.10F),
-              QVector3D(0.042F, 0.086F, 0.042F)),
-          k_mage_robe_slot);
-    }
-
-    builder.add_palette_mesh(
-        get_unit_sphere(),
-        local_scale_model(
-            QVector3D(0.0F, 0.058F, -0.010F),
-            QVector3D(k_head_r * 1.10F, k_head_r * 0.80F, k_head_r * 1.12F)),
-        k_mage_robe_slot);
-
-    builder.add_palette_mesh(
-        get_unit_cone(),
-        Render::Geom::cone_from_to(QVector3D(0.0F, 0.086F, -0.006F),
-                                   QVector3D(0.0F, 0.232F, -0.030F),
-                                   k_head_r * 0.74F),
-        k_mage_robe_slot);
     builder.add_palette_mesh(get_unit_sphere(),
-                             local_scale_model(QVector3D(0.0F, 0.236F, -0.030F),
-                                               QVector3D(0.026F, 0.026F, 0.026F)),
-                             k_mage_metal_slot);
-
-    constexpr int k_diadem = 12;
-    for (int i = 0; i < k_diadem; ++i) {
-      float const a = (static_cast<float>(i) / k_diadem) * 2.0F * pi;
+                             local_scale_model(QVector3D(0.0F, 0.068F, -0.020F),
+                                               QVector3D(0.179F, 0.132F, 0.177F)),
+                             k_mage_robe_slot);
+    for (int wrap = 0; wrap < 4; ++wrap) {
+      float const y = 0.075F + static_cast<float>(wrap) * 0.026F;
+      float const radius = k_head_r * (1.10F - 0.055F * wrap);
+      QMatrix4x4 model;
+      model.translate(0.0F, y, -0.018F);
+      model.rotate(wrap % 2 == 0 ? 5.0F : -5.0F, 0.0F, 0.0F, 1.0F);
+      model.scale(radius, 0.025F, radius * 1.03F);
+      builder.add_palette_mesh(
+          get_unit_tapered_cylinder(1.0F, 0.96F, 24), model, k_mage_bone_slot);
+    }
+    for (int side = -1; side <= 1; side += 2) {
+      float const sx = static_cast<float>(side);
       builder.add_palette_mesh(
           get_unit_sphere(),
-          local_scale_model(QVector3D(std::sin(a) * k_head_r * 1.09F,
-                                      0.086F,
-                                      std::cos(a) * k_head_r * 1.11F),
-                            QVector3D(0.021F, 0.016F, 0.021F)),
+          local_scale_model(QVector3D(sx * 0.163F, -0.075F, -0.065F),
+                            QVector3D(0.044F, 0.160F, 0.072F)),
+          k_mage_bone_slot);
+      builder.add_palette_mesh(
+          get_unit_sphere(),
+          local_scale_model(QVector3D(sx * 0.166F, -0.188F, -0.058F),
+                            QVector3D(0.045F, 0.016F, 0.064F)),
           k_mage_metal_slot);
     }
 
-    for (int step = 0; step < 5; ++step) {
-      float const t = static_cast<float>(step) / 4.0F;
+    constexpr int segments = 24;
+    for (int i = 0; i < segments; ++i) {
+      float const a = static_cast<float>(i) / segments * 2.0F * pi;
+      float const b = static_cast<float>(i + 1) / segments * 2.0F * pi;
       builder.add_palette_mesh(
-          get_unit_sphere(),
-          local_scale_model(
-              QVector3D(0.0F, 0.020F - t * 0.072F, -(k_head_r * 1.06F + t * 0.014F)),
-              QVector3D(0.074F - 0.008F * t, 0.048F, 0.032F)),
-          (step % 2 == 0) ? k_mage_robe_slot : k_mage_robe_lit_slot);
+          get_unit_cylinder(),
+          cylinder_between(
+              QVector3D(std::sin(a) * 0.184F, 0.068F, std::cos(a) * 0.185F - 0.018F),
+              QVector3D(std::sin(b) * 0.184F, 0.068F, std::cos(b) * 0.185F - 0.018F),
+              0.008F),
+          k_mage_metal_slot);
     }
-
-    for (int side = -1; side <= 1; side += 2) {
-      float const sx = static_cast<float>(side);
-      for (int step = 0; step < 4; ++step) {
-        float const t = static_cast<float>(step) / 3.0F;
-        builder.add_palette_mesh(
-            get_unit_sphere(),
-            local_scale_model(QVector3D(sx * k_head_r * (1.02F + 0.06F * t),
-                                        -0.010F - t * 0.070F,
-                                        -k_head_r * (0.30F + 0.16F * t)),
-                              QVector3D(0.034F, 0.046F, 0.030F)),
-            k_mage_robe_slot);
-      }
-    }
-
-    builder.add_palette_mesh(
-        get_unit_sphere(),
-        local_scale_model(QVector3D(0.0F, -0.030F, k_head_r * 0.44F),
-                          QVector3D(0.100F, 0.086F, 0.062F)),
-        k_mage_shadow_slot);
+    builder.add_palette_mesh(get_unit_sphere(),
+                             local_scale_model(QVector3D(0.0F, 0.086F, 0.172F),
+                                               QVector3D(0.031F, 0.039F, 0.012F)),
+                             k_mage_metal_slot);
+    builder.add_palette_mesh(get_unit_sphere(),
+                             local_scale_model(QVector3D(0.0F, 0.086F, 0.184F),
+                                               QVector3D(0.018F, 0.025F, 0.009F)),
+                             k_mage_glyph_slot);
 
     return std::move(builder).build();
   }();
@@ -395,11 +371,11 @@ auto dark_mage_stave_archetype() -> const RenderArchetype& {
     QVector3D const crown(0.004F, 0.70F, 0.002F);
 
     builder.add_palette_mesh(
-        get_unit_cylinder(), cylinder_between(foot, grip, 0.016F), k_mage_bone_slot);
+        get_unit_cylinder(), cylinder_between(foot, grip, 0.018F), k_mage_wood_slot);
     builder.add_palette_mesh(
-        get_unit_cylinder(), cylinder_between(grip, neck, 0.018F), k_mage_bone_slot);
+        get_unit_cylinder(), cylinder_between(grip, neck, 0.020F), k_mage_wood_slot);
     builder.add_palette_mesh(
-        get_unit_cylinder(), cylinder_between(neck, crown, 0.015F), k_mage_bone_slot);
+        get_unit_cylinder(), cylinder_between(neck, crown, 0.017F), k_mage_wood_slot);
 
     for (float y : {-0.34F, -0.02F, 0.34F}) {
       builder.add_palette_mesh(get_unit_sphere(),
@@ -408,21 +384,22 @@ auto dark_mage_stave_archetype() -> const RenderArchetype& {
                                k_mage_metal_slot);
     }
 
-    constexpr int k_crescent = 9;
+    constexpr int k_crescent = 20;
     for (int i = 0; i < k_crescent; ++i) {
-      float const t = static_cast<float>(i) / (k_crescent - 1);
-      float const a = (-0.42F + t * 0.84F) * pi;
+      auto point = [&](int step) {
+        float const a = (-0.65F + static_cast<float>(step) / k_crescent * 1.30F) * pi;
+        return crown +
+               QVector3D(std::sin(a) * 0.092F, 0.105F - std::cos(a) * 0.092F, 0.0F);
+      };
+      float const taper = std::sin((static_cast<float>(i) + 0.5F) / k_crescent * pi);
       builder.add_palette_mesh(
-          get_unit_sphere(),
-          local_scale_model(crown + QVector3D(std::sin(a) * 0.070F,
-                                              0.058F + std::cos(a) * 0.070F,
-                                              0.0F),
-                            QVector3D(0.017F, 0.017F, 0.014F)),
+          get_unit_cylinder(),
+          cylinder_between(point(i), point(i + 1), 0.005F + 0.010F * taper),
           k_mage_metal_slot);
     }
     builder.add_palette_mesh(get_unit_sphere(),
-                             local_scale_model(crown + QVector3D(0.0F, 0.058F, 0.0F),
-                                               QVector3D(0.030F, 0.030F, 0.022F)),
+                             local_scale_model(crown + QVector3D(0.0F, 0.105F, 0.0F),
+                                               QVector3D(0.028F, 0.028F, 0.022F)),
                              k_mage_glyph_slot);
 
     return std::move(builder).build();
