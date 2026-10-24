@@ -277,8 +277,13 @@ auto within_guard_reach(const Engine::Core::Entity* entity,
   if (transform == nullptr) {
     return true;
   }
-  float const margin =
+  float margin =
       rule == GuardReachRule::AnswersFire ? guard_answer_fire_margin(target) : 0.0F;
+
+  if (auto const reach = guard_reach_of(entity); reach.has_value() && reach->boxed) {
+    auto const weapon = resolve_attack_range(*entity);
+    margin = weapon.ranged ? weapon.max_range : 0.0F;
+  }
   return within_guard_reach(
       entity, transform->position.x, transform->position.z, margin);
 }

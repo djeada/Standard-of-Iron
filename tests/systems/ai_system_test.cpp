@@ -4,6 +4,7 @@
 #include <chrono>
 #include <cmath>
 #include <gtest/gtest.h>
+#include <map>
 #include <string_view>
 #include <unordered_map>
 #include <vector>
@@ -2242,6 +2243,129 @@ TEST_F(AISystemTest, ProductionBehaviorSetsRallyPointPerBase) {
   EXPECT_FLOAT_EQ(rally_by_building[70].second, 140.0F);
 }
 
+namespace {
+
+void register_priced_roman_nation() {
+  Game::Systems::Nation nation;
+  nation.id = Game::Systems::NationID::RomanRepublic;
+  nation.display_name = "Rome";
+  nation.playable = true;
+  nation.has_economy = true;
+  nation.ai_profile = "standard";
+  auto troop =
+      [&nation](Game::Units::TroopType type, int cost, int wood, int iron, bool melee) {
+        Game::Systems::TroopType entry;
+        entry.unit_type = type;
+        entry.cost = cost;
+        entry.is_melee = melee;
+        entry.priority = 1;
+        entry.resource_costs.set(Game::Systems::ResourceType::Wood, wood);
+        entry.resource_costs.set(Game::Systems::ResourceType::Iron, iron);
+        nation.available_troops.push_back(entry);
+      };
+  troop(Game::Units::TroopType::Builder, 12, 20, 0, true);
+  troop(Game::Units::TroopType::Spearman, 24, 30, 15, true);
+  troop(Game::Units::TroopType::Archer, 20, 30, 10, false);
+  Game::Systems::NationRegistry::instance().register_nation(std::move(nation));
+  Game::Systems::NationRegistry::instance().set_player_nation(
+      3, Game::Systems::NationID::RomanRepublic);
+}
+
+auto started_products(const std::vector<Game::Systems::AI::AICommand>& commands)
+    -> std::vector<Game::Units::TroopType> {
+  std::vector<Game::Units::TroopType> started;
+  for (const auto& command : commands) {
+    if (command.type == Game::Systems::AI::AICommandType::StartProduction) {
+      started.push_back(command.product_type);
+    }
+  }
+  return started;
+}
+
+} // namespace
+
+TEST_F(AISystemTest, AFootHeavyTownStillRaisesTheBuilderItHasNone) {
+  register_priced_roman_nation();
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+  auto barracks = make_barracks(50, 40.0F, 40.0F);
+  barracks.production.manpower_available = 42;
+  snapshot.friendly_units.push_back(barracks);
+  for (Engine::Core::EntityID id = 1; id <= 6; ++id) {
+    snapshot.friendly_units.push_back(
+        make_unit(id, 40.0F + static_cast<float>(id), 50.0F));
+  }
+  snapshot.resources.set(Game::Systems::ResourceType::Wood, 320);
+  snapshot.resources.set(Game::Systems::ResourceType::Iron, 130);
+  snapshot.has_resource_snapshot = true;
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.max_troops_per_player = 500;
+  Game::Systems::AI::AISnapshotBuilder::attach_nation(
+      snapshot, context.player_id, Game::Systems::NationRegistry::instance());
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+  ASSERT_EQ(context.builder_count, 0);
+
+  Game::Systems::AI::ProductionBehavior behavior;
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 5.0F, commands);
+
+  const auto started = started_products(commands);
+  ASSERT_FALSE(started.empty())
+      << "the barracks waited for a builder it had already passed over";
+  EXPECT_EQ(started.front(), Game::Units::TroopType::Builder)
+      << "a builder is a worker, not a share of the foot";
+}
+
+TEST_F(AISystemTest, ABesiegedTownSpendsNoTimberOnASpareBuilder) {
+  register_priced_roman_nation();
+
+  auto spare_builder_bought = [this](bool besieged) {
+    Game::Systems::AI::AISnapshot snapshot;
+    snapshot.player_id = 3;
+    snapshot.game_time = 10.0F;
+    auto barracks = make_barracks(50, 40.0F, 40.0F);
+    barracks.production.manpower_available = 42;
+    snapshot.friendly_units.push_back(barracks);
+    for (Engine::Core::EntityID id = 1; id <= 6; ++id) {
+      auto archer = make_unit(id, 40.0F + static_cast<float>(id), 50.0F);
+      archer.spawn_type = Game::Units::SpawnType::Archer;
+      snapshot.friendly_units.push_back(archer);
+    }
+    for (Engine::Core::EntityID id = 20; id <= 27; ++id) {
+      auto builder = make_unit(id, 30.0F + static_cast<float>(id - 20), 30.0F);
+      builder.spawn_type = Game::Units::SpawnType::Builder;
+      snapshot.friendly_units.push_back(builder);
+    }
+    snapshot.resources.set(Game::Systems::ResourceType::Wood, 25);
+    snapshot.has_resource_snapshot = true;
+
+    Game::Systems::AI::AIContext context;
+    context.player_id = 3;
+    context.max_troops_per_player = 500;
+    Game::Systems::AI::AISnapshotBuilder::attach_nation(
+        snapshot, context.player_id, Game::Systems::NationRegistry::instance());
+    Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+    context.barracks_under_threat = besieged;
+
+    Game::Systems::AI::ProductionBehavior behavior;
+    std::vector<Game::Systems::AI::AICommand> commands;
+    behavior.execute(snapshot, context, 5.0F, commands);
+    const auto started = started_products(commands);
+    return std::find(started.begin(), started.end(), Game::Units::TroopType::Builder) !=
+           started.end();
+  };
+
+  EXPECT_TRUE(spare_builder_bought(false))
+      << "a quiet town that cannot afford a soldier puts the timber into another crew";
+  EXPECT_FALSE(spare_builder_bought(true))
+      << "the last of the timber went on a ninth builder while the walls were under "
+         "attack";
+}
+
 TEST_F(AISystemTest, ProductionBehaviorRespectsPerBaseQueueLimit) {
   register_economy_nation();
   Game::Systems::AI::ProductionBehavior behavior;
@@ -2681,10 +2805,7 @@ TEST_F(AISystemTest, WithNoEnemyInSightAGarrisonMansTheWallOverItsOuterGate) {
   snapshot.friendly_units = {archer, citadel_gate, outer_gate};
   snapshot.wall_posts = {{80.0F, 21.0F}, {74.0F, 81.0F}};
   snapshot.has_ward = true;
-  snapshot.ward_x = 80.0F;
-  snapshot.ward_z = 51.0F;
-  snapshot.ward_half_x = 44.0F;
-  snapshot.ward_half_z = 37.0F;
+  snapshot.ward = {.x = 80.0F, .z = 51.0F, .wall_half_x = 38.0F, .wall_half_z = 31.0F};
 
   Game::Systems::AI::AIContext context;
   context.player_id = 3;
@@ -2776,10 +2897,7 @@ auto walled_town_snapshot() -> Game::Systems::AI::AISnapshot {
   Game::Systems::AI::AISnapshot snapshot;
   snapshot.player_id = 3;
   snapshot.has_ward = true;
-  snapshot.ward_x = 80.0F;
-  snapshot.ward_z = 50.0F;
-  snapshot.ward_half_x = 30.0F + Game::Systems::AI::GarrisonBehavior::k_ward_apron;
-  snapshot.ward_half_z = 25.0F + Game::Systems::AI::GarrisonBehavior::k_ward_apron;
+  snapshot.ward = {.x = 80.0F, .z = 50.0F, .wall_half_x = 30.0F, .wall_half_z = 25.0F};
   return snapshot;
 }
 
@@ -2863,6 +2981,43 @@ TEST_F(AISystemTest, AnEscortedRamDrawsNoSally) {
       << "two companies walk beside the ram: going out is how a garrison is cut off";
 }
 
+TEST_F(AISystemTest, ASallyUnderWayIsNotRecalledTheMomentOneCompanyWalksUp) {
+  auto snapshot = walled_town_snapshot();
+  for (Engine::Core::EntityID id = 1; id <= 6; ++id) {
+    snapshot.friendly_units.push_back(
+        make_unit(id, 60.0F + (6.0F * static_cast<float>(id)), 60.0F));
+  }
+  auto ram = make_enemy(50, 80.0F, 85.0F);
+  ram.spawn_type = Game::Units::SpawnType::Ram;
+  snapshot.visible_enemies = {ram};
+  auto context = garrison_context();
+
+  Game::Systems::AI::GarrisonBehavior behavior;
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 1.1F, commands);
+  ASSERT_EQ(
+      attacks_on(commands, 50).size(),
+      static_cast<std::size_t>(Game::Systems::AI::GarrisonBehavior::k_sally_party));
+
+  snapshot.visible_enemies.push_back(make_enemy(51, 77.0F, 88.0F));
+  snapshot.visible_enemies.push_back(make_enemy(52, 83.0F, 88.0F));
+  snapshot.game_time = 2.0F;
+  commands.clear();
+  behavior.execute(snapshot, context, 1.1F, commands);
+  EXPECT_FALSE(attacks_on(commands, 50).empty())
+      << "two companies came up and the party ran home with the ram at its mercy";
+
+  for (Engine::Core::EntityID id = 53; id <= 55; ++id) {
+    snapshot.visible_enemies.push_back(
+        make_enemy(id, 76.0F + static_cast<float>(id - 53) * 4.0F, 82.0F));
+  }
+  snapshot.game_time = 3.0F;
+  commands.clear();
+  behavior.execute(snapshot, context, 1.1F, commands);
+  EXPECT_TRUE(attacks_on(commands, 50).empty())
+      << "outnumbered at the ram, the party should come back in";
+}
+
 TEST_F(AISystemTest, EveryGarrisonCompanyTurnsOnTheEnemyInsideTheWalls) {
   auto snapshot = walled_town_snapshot();
   for (Engine::Core::EntityID id = 1; id <= 6; ++id) {
@@ -2901,6 +3056,138 @@ TEST_F(AISystemTest, AGarrisonCompanyDrawnFromItsPostIsSentBack) {
   EXPECT_EQ(commands.front().units.front(), 1U);
   EXPECT_FLOAT_EQ(commands.front().move_target_x.front(), 70.0F);
   EXPECT_FLOAT_EQ(commands.front().move_target_z.front(), 60.0F);
+}
+
+namespace {
+
+class GarrisonBreachTest : public AISystemTest {
+protected:
+  static auto battered_gate_snapshot() -> Game::Systems::AI::AISnapshot {
+    auto snapshot = walled_town_snapshot();
+    const float posts[][2] = {{56.0F, 30.0F},
+                              {104.0F, 30.0F},
+                              {60.0F, 50.0F},
+                              {100.0F, 50.0F},
+                              {70.0F, 70.0F},
+                              {90.0F, 70.0F}};
+    Engine::Core::EntityID id = 1;
+    for (const auto& post : posts) {
+      snapshot.friendly_units.push_back(make_unit(id++, post[0], post[1]));
+    }
+    auto gate = make_unit(20, 80.0F, 75.0F);
+    gate.is_building = true;
+    gate.spawn_type = Game::Units::SpawnType::WallGate;
+    snapshot.friendly_units.push_back(gate);
+    return snapshot;
+  }
+
+  static void press_the_gate(Game::Systems::AI::AISnapshot& snapshot) {
+    auto ram = make_enemy(50, 80.0F, 77.0F);
+    ram.spawn_type = Game::Units::SpawnType::Ram;
+    snapshot.visible_enemies = {ram,
+                                make_enemy(51, 77.0F, 80.0F),
+                                make_enemy(52, 83.0F, 80.0F),
+                                make_enemy(53, 80.0F, 81.0F)};
+  }
+};
+
+auto moved_to(const std::vector<Game::Systems::AI::AICommand>& commands)
+    -> std::map<Engine::Core::EntityID, std::pair<float, float>> {
+  std::map<Engine::Core::EntityID, std::pair<float, float>> targets;
+  for (const auto& command : commands) {
+    if (command.type != Game::Systems::AI::AICommandType::MoveUnits) {
+      continue;
+    }
+    for (std::size_t i = 0; i < command.units.size(); ++i) {
+      targets[command.units[i]] = {command.move_target_x[i], command.move_target_z[i]};
+    }
+  }
+  return targets;
+}
+
+} // namespace
+
+TEST_F(GarrisonBreachTest, TheGarrisonMassesBehindTheGateARamIsBattering) {
+  auto snapshot = battered_gate_snapshot();
+  auto context = garrison_context();
+  Game::Systems::AI::GarrisonBehavior behavior;
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 1.1F, commands);
+  EXPECT_TRUE(moved_to(commands).empty()) << "a quiet town keeps its posts";
+
+  press_the_gate(snapshot);
+  snapshot.game_time = 2.0F;
+  commands.clear();
+  behavior.execute(snapshot, context, 1.1F, commands);
+
+  const auto targets = moved_to(commands);
+  EXPECT_EQ(targets.size(), 6U) << "every free company answers the breach";
+  for (const auto& [id, at] : targets) {
+    EXPECT_LT(std::abs(at.first - 80.0F), 14.0F) << "company " << id;
+    EXPECT_LT(at.second, 75.0F) << "company " << id << " formed outside the gate";
+    EXPECT_GT(at.second, 58.0F) << "company " << id << " stayed deep in the town";
+  }
+}
+
+TEST_F(GarrisonBreachTest, ACrowdAlongTheCurtainDoesNotDrawTheMusterFromTheRam) {
+  auto snapshot = battered_gate_snapshot();
+  auto curtain = make_unit(21, 104.0F, 75.0F);
+  curtain.is_building = true;
+  curtain.spawn_type = Game::Units::SpawnType::WallSegment;
+  snapshot.friendly_units.push_back(curtain);
+  press_the_gate(snapshot);
+  for (Engine::Core::EntityID id = 60; id < 68; ++id) {
+    snapshot.visible_enemies.push_back(
+        make_enemy(id, 100.0F + static_cast<float>(id - 60), 79.0F));
+  }
+  auto context = garrison_context();
+  Game::Systems::AI::GarrisonBehavior behavior;
+  std::vector<Game::Systems::AI::AICommand> commands;
+  snapshot.game_time = 2.0F;
+  behavior.execute(snapshot, context, 1.1F, commands);
+
+  const auto targets = moved_to(commands);
+  ASSERT_FALSE(targets.empty());
+  for (const auto& [id, at] : targets) {
+    EXPECT_LT(std::abs(at.first - 80.0F), 14.0F)
+        << "company " << id << " left the battered gate for men standing at a wall";
+  }
+}
+
+TEST_F(GarrisonBreachTest, TheBreachMusterHoldsThroughALullThenStandsDown) {
+  auto snapshot = battered_gate_snapshot();
+  auto context = garrison_context();
+  Game::Systems::AI::GarrisonBehavior behavior;
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 1.1F, commands);
+  press_the_gate(snapshot);
+  snapshot.game_time = 2.0F;
+  commands.clear();
+  behavior.execute(snapshot, context, 1.1F, commands);
+  const auto muster = moved_to(commands);
+  ASSERT_FALSE(muster.empty());
+  for (auto& unit : snapshot.friendly_units) {
+    if (const auto slot = muster.find(unit.id); slot != muster.end()) {
+      unit.pos_x = slot->second.first;
+      unit.pos_z = slot->second.second;
+    }
+  }
+
+  snapshot.visible_enemies.clear();
+  snapshot.game_time = 8.0F;
+  commands.clear();
+  behavior.execute(snapshot, context, 1.1F, commands);
+  EXPECT_TRUE(moved_to(commands).empty())
+      << "the assault drew back for breath and the garrison walked away from the gate";
+
+  snapshot.game_time =
+      2.0F + Game::Systems::AI::GarrisonBehavior::k_breach_linger_seconds + 2.0F;
+  commands.clear();
+  behavior.execute(snapshot, context, 1.1F, commands);
+  const auto home = moved_to(commands);
+  ASSERT_TRUE(home.contains(1U)) << "the muster never stood down";
+  EXPECT_FLOAT_EQ(home.at(1U).first, 56.0F);
+  EXPECT_FLOAT_EQ(home.at(1U).second, 30.0F);
 }
 
 TEST_F(AISystemTest, ASallyOrderSlipsTheLeashTheMomentItIsGiven) {
@@ -2946,9 +3233,9 @@ TEST_F(AISystemTest, SnapshotOffersTheWallWalkAndWardOfAWalledTown) {
   EXPECT_EQ(snapshot.wall_posts.size(), 12U)
       << "every stretch of balcony is a place to stand once one stair reaches it";
   ASSERT_TRUE(snapshot.has_ward);
-  EXPECT_NEAR(snapshot.ward_x, 61.0F, 0.1F);
-  EXPECT_NEAR(snapshot.ward_half_x, 17.0F, 0.1F);
-  EXPECT_GT(snapshot.ward_half_z, 0.0F);
+  EXPECT_NEAR(snapshot.ward.x, 61.0F, 0.1F);
+  EXPECT_NEAR(snapshot.ward.wall_half_x, 11.0F, 0.1F);
+  EXPECT_GE(snapshot.ward.wall_half_z, 0.0F);
 
   Engine::Core::World bare;
   auto* lone = add_world_unit(bare, 3, 10.0F, 10.0F, 20.0F, true);

@@ -684,6 +684,47 @@ TEST(CommandPipelineTest, RepairPutsTheCrewOnTheStructure) {
             std::string(Game::Systems::k_builder_product_repair));
 }
 
+TEST(CommandPipelineTest, RepairPutsTheCrewOnADamagedSiegeEngine) {
+  Match match;
+  auto [builder_id, builder] = spawn_builder(match, 1);
+  const EntityID ram = match.spawn(1, 20.0F, 20.0F);
+  auto* unit = match.session.world()
+                   .get_entity(ram)
+                   ->get_component<Engine::Core::UnitComponent>();
+  unit->spawn_type = Game::Units::SpawnType::Ram;
+  unit->health = 40;
+
+  Game::Command::submit(
+      match.session.world(),
+      Source::LocalPlayer,
+      1,
+      Game::Command::RepairStructure{.units = {builder_id}, .structure = ram});
+  drain(match);
+
+  EXPECT_TRUE(builder->has_construction_site);
+  EXPECT_EQ(builder->structure_task_entity_id, ram);
+}
+
+TEST(CommandPipelineTest, RepairIsRefusedOnAWoundedSoldier) {
+  Match match;
+  auto [builder_id, builder] = spawn_builder(match, 1);
+  const EntityID soldier = match.spawn(1, 20.0F, 20.0F);
+  auto* unit = match.session.world()
+                   .get_entity(soldier)
+                   ->get_component<Engine::Core::UnitComponent>();
+  unit->spawn_type = Game::Units::SpawnType::Swordsman;
+  unit->health = 40;
+
+  Game::Command::submit(
+      match.session.world(),
+      Source::LocalPlayer,
+      1,
+      Game::Command::RepairStructure{.units = {builder_id}, .structure = soldier});
+  drain(match);
+
+  EXPECT_FALSE(builder->has_construction_site) << "builders do not mend men";
+}
+
 TEST(CommandPipelineTest, RepairIsRefusedOnSomeoneElsesStructure) {
   Match match;
   auto [builder_id, builder] = spawn_builder(match, 1);
@@ -696,6 +737,34 @@ TEST(CommandPipelineTest, RepairIsRefusedOnSomeoneElsesStructure) {
                                                                   .structure = tower}};
   EXPECT_EQ(Game::Command::validate(match.session.world(), command).rejection,
             Rejection::NotOwnedBuilding);
+}
+
+TEST(CommandPipelineTest, DeliveryFillsASmallBarracksUpToItsManpowerCeiling) {
+  Match match;
+  auto& world = match.session.world();
+  const EntityID barracks =
+      spawn_structure(match, 1, Game::Units::SpawnType::Barracks, 100);
+  auto* production =
+      world.get_entity(barracks)->add_component<Engine::Core::ProductionComponent>();
+  production->max_units = 6;
+  production->manpower_ceiling = 44;
+  production->manpower_available = 6;
+
+  const EntityID civilian = match.spawn(1, 0.0F, 0.0F);
+  world.get_entity(civilian)->get_component<Engine::Core::UnitComponent>()->spawn_type =
+      Game::Units::SpawnType::Civilian;
+
+  Game::Command::submit(
+      world,
+      Source::LocalPlayer,
+      1,
+      Game::Command::DeliverCivilians{.units = {civilian}, .barracks = barracks});
+  drain(match);
+
+  EXPECT_NE(world.get_entity(civilian)
+                ->get_component<Engine::Core::CivilianDeliveryComponent>(),
+            nullptr)
+      << "a hall authored for six could never take the men its dearest recruit costs";
 }
 
 TEST(CommandPipelineTest, DeliverySendsOnlyAsManyCiviliansAsTheBarracksCanTake) {

@@ -41,7 +41,7 @@ void DefenseTower::init(const SpawnParams& params) {
   m_u->max_health = 2000;
   m_u->speed = 0.0F;
   m_u->owner_id = params.player_id;
-  m_u->vision_range = 20.0F;
+  m_u->vision_range = 24.0F;
   m_u->nation_id = nation_id;
 
   if (params.ai_controlled) {
@@ -51,7 +51,7 @@ void DefenseTower::init(const SpawnParams& params) {
   m_r = add_building_renderable(*e, nation_id, m_type_string);
 
   m_atk = e->add_component<Engine::Core::AttackComponent>();
-  m_atk->range = 18.0F;
+  m_atk->range = 22.0F;
   m_atk->damage = 30;
   m_atk->cooldown = 1.8F;
   m_atk->can_ranged = true;

@@ -205,6 +205,15 @@ TEST_F(SiegeSpecialProcessorTest, TowerAttacksEnemyWithinHeightDifference) {
   EXPECT_EQ(arrow_count(), 2U);
 }
 
+TEST_F(SiegeSpecialProcessorTest, HilltopTowerShootsDownTheSlopeBelowIt) {
+  make_tower(0.0F, 9.0F, 0.0F, 1, 18.0F, 4.0F);
+  make_enemy(10.0F, 0.0F, 0.0F, 2);
+
+  update(0.1F);
+
+  EXPECT_EQ(arrow_count(), 2U);
+}
+
 TEST_F(SiegeSpecialProcessorTest, TowerFiresVolleyOfTwoArrows) {
   make_tower(0.0F, 0.0F, 0.0F, 1);
   make_enemy(10.0F, 0.0F, 0.0F, 2);

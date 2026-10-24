@@ -360,10 +360,11 @@ void process_loading_siege_unit(Engine::Core::World* world,
             Game::Units::SpawnType::DefenseTower) {
       return false;
     }
+
     float const dy =
         candidate->get_component<Engine::Core::TransformComponent>()->position.y -
         tower_y;
-    return std::fabs(dy) <= attack.max_height_difference;
+    return dy <= attack.max_height_difference;
   };
   return find_nearest_enemy(
       tower,

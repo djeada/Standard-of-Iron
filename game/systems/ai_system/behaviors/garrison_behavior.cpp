@@ -15,27 +15,13 @@ namespace Game::Systems::AI {
 
 namespace {
 
-constexpr float k_inside_margin = 0.5F;
-
 auto is_engine(const ContactSnapshot& contact) -> bool {
   return contact.spawn_type == Game::Units::SpawnType::Ram ||
          contact.spawn_type == Game::Units::SpawnType::SiegeTower;
 }
 
-auto inside_walls(const AISnapshot& snapshot, float x, float z) -> bool {
-  float const half_x =
-      snapshot.ward_half_x - GarrisonBehavior::k_ward_apron - k_inside_margin;
-  float const half_z =
-      snapshot.ward_half_z - GarrisonBehavior::k_ward_apron - k_inside_margin;
-  return std::abs(x - snapshot.ward_x) < half_x &&
-         std::abs(z - snapshot.ward_z) < half_z;
-}
-
 auto within_sally_reach(const AISnapshot& snapshot, float x, float z) -> bool {
-  float const half_x = snapshot.ward_half_x + GarrisonBehavior::k_sally_reach;
-  float const half_z = snapshot.ward_half_z + GarrisonBehavior::k_sally_reach;
-  return std::abs(x - snapshot.ward_x) < half_x &&
-         std::abs(z - snapshot.ward_z) < half_z;
+  return snapshot.ward.contains(x, z, Ward::k_apron + GarrisonBehavior::k_sally_reach);
 }
 
 auto planar_distance_sq(float ax, float az, float bx, float bz) -> float {
@@ -103,6 +89,8 @@ void GarrisonBehavior::execute(const AISnapshot& snapshot,
   }
   std::erase_if(m_posts,
                 [&alive](const auto& entry) { return !alive.contains(entry.first); });
+  std::erase_if(m_breach_slots,
+                [&alive](const auto& entry) { return !alive.contains(entry.first); });
   std::erase_if(m_sally_party,
                 [&alive](Engine::Core::EntityID id) { return !alive.contains(id); });
   if (infantry.empty()) {
@@ -126,8 +114,169 @@ void GarrisonBehavior::execute(const AISnapshot& snapshot,
   if (counterattack(snapshot, infantry, out_commands)) {
     return;
   }
+  update_breach(snapshot, infantry);
   sally(snapshot, infantry, out_commands);
   hold_posts(snapshot, infantry, context, out_commands);
+}
+
+auto GarrisonBehavior::find_breach(const AISnapshot& snapshot)
+    -> std::optional<Breach> {
+  std::vector<const ContactSnapshot*> attackers;
+  for (const auto& enemy : snapshot.visible_enemies) {
+    bool const ladder = enemy.spawn_type == Game::Units::SpawnType::WallLadder;
+    if ((enemy.is_building && !ladder) || !is_war_contact(enemy) ||
+        !snapshot.ward.within_apron(enemy.pos_x, enemy.pos_z)) {
+      continue;
+    }
+    attackers.push_back(&enemy);
+  }
+  if (attackers.empty()) {
+    return std::nullopt;
+  }
+
+  auto const outranks = [](const Breach& a, const Breach& b) {
+    if ((a.engines > 0) != (b.engines > 0)) {
+      return a.engines > 0;
+    }
+    return a.pressure > b.pressure;
+  };
+  std::optional<Breach> worst;
+  float const watch_sq = k_breach_watch * k_breach_watch;
+  for (const auto& piece : snapshot.friendly_units) {
+    if (!piece.is_building || piece.health <= 0 ||
+        !Game::Units::is_wall_network_spawn(piece.spawn_type)) {
+      continue;
+    }
+    Breach candidate{.piece = piece.id, .x = piece.pos_x, .z = piece.pos_z};
+    int counted = 0;
+    for (const auto* enemy : attackers) {
+      if (planar_distance_sq(enemy->pos_x, enemy->pos_z, piece.pos_x, piece.pos_z) >
+          watch_sq) {
+        continue;
+      }
+      bool const breaker =
+          is_engine(*enemy) || enemy->spawn_type == Game::Units::SpawnType::WallLadder;
+      candidate.pressure += breaker ? k_engine_pressure : 1.0F;
+      candidate.engines += breaker ? 1 : 0;
+      candidate.attackers_x += enemy->pos_x;
+      candidate.attackers_z += enemy->pos_z;
+      ++counted;
+    }
+    if (counted == 0) {
+      continue;
+    }
+    candidate.attackers_x /= static_cast<float>(counted);
+    candidate.attackers_z /= static_cast<float>(counted);
+
+    float const needed =
+        candidate.engines > 0 ? k_breach_pressure : 2.0F * k_breach_pressure;
+    if (candidate.pressure < needed) {
+      continue;
+    }
+    if (!worst.has_value() || outranks(candidate, *worst)) {
+      worst = candidate;
+    }
+  }
+  return worst;
+}
+
+void GarrisonBehavior::update_breach(
+    const AISnapshot& snapshot, const std::vector<const EntitySnapshot*>& infantry) {
+  auto const found = find_breach(snapshot);
+  bool reform = false;
+  if (found.has_value()) {
+
+    bool const same_front =
+        m_breach.has_value() &&
+        planar_distance_sq(found->x, found->z, m_breach->x, m_breach->z) <=
+            k_breach_watch * k_breach_watch;
+    if (same_front) {
+      m_breach->pressure = found->pressure;
+      m_breach->engines = found->engines;
+      m_breach->attackers_x = found->attackers_x;
+      m_breach->attackers_z = found->attackers_z;
+      m_breach_last_pressed = snapshot.game_time;
+    } else if (!m_breach.has_value() ||
+               (found->engines >= m_breach->engines &&
+                found->pressure >= m_breach->pressure * k_breach_switch_ratio)) {
+      m_breach = found;
+      m_breach_last_pressed = snapshot.game_time;
+      reform = true;
+    }
+  }
+  if (m_breach.has_value() &&
+      snapshot.game_time - m_breach_last_pressed > k_breach_linger_seconds) {
+    m_breach.reset();
+    m_breach_slots.clear();
+  }
+  if (!m_breach.has_value()) {
+    return;
+  }
+
+  std::vector<const EntitySnapshot*> muster;
+  for (const auto* unit : infantry) {
+    if (std::find(m_sally_party.begin(), m_sally_party.end(), unit->id) ==
+        m_sally_party.end()) {
+      muster.push_back(unit);
+    }
+  }
+  bool const new_faces =
+      std::any_of(muster.begin(), muster.end(), [this](const EntitySnapshot* unit) {
+        return !m_breach_slots.contains(unit->id);
+      });
+  if (!reform && !new_faces) {
+    return;
+  }
+
+  float in_x = m_breach->x - m_breach->attackers_x;
+  float in_z = m_breach->z - m_breach->attackers_z;
+  if (std::hypot(in_x, in_z) < 0.5F) {
+    in_x = snapshot.ward.x - m_breach->x;
+    in_z = snapshot.ward.z - m_breach->z;
+  }
+
+  if (std::abs(in_x) >= std::abs(in_z)) {
+    in_x = in_x >= 0.0F ? 1.0F : -1.0F;
+    in_z = 0.0F;
+  } else {
+    in_x = 0.0F;
+    in_z = in_z >= 0.0F ? 1.0F : -1.0F;
+  }
+  float muster_x = m_breach->x + (in_x * k_breach_muster_depth);
+  float muster_z = m_breach->z + (in_z * k_breach_muster_depth);
+  if (!snapshot.ward.inside(muster_x, muster_z)) {
+    muster_x = m_breach->x + ((snapshot.ward.x - m_breach->x) * 0.25F);
+    muster_z = m_breach->z + ((snapshot.ward.z - m_breach->z) * 0.25F);
+  }
+
+  std::sort(muster.begin(), muster.end(), [this](const auto* lhs, const auto* rhs) {
+    float const dl =
+        planar_distance_sq(lhs->pos_x, lhs->pos_z, m_breach->x, m_breach->z);
+    float const dr =
+        planar_distance_sq(rhs->pos_x, rhs->pos_z, m_breach->x, m_breach->z);
+    return dl != dr ? dl < dr : lhs->id < rhs->id;
+  });
+  float const across_x = -in_z;
+  float const across_z = in_x;
+  m_breach_slots.clear();
+  for (std::size_t i = 0; i < muster.size(); ++i) {
+    auto const rank = static_cast<float>(i / k_breach_files);
+    auto const file = static_cast<float>(i % k_breach_files) -
+                      (static_cast<float>(k_breach_files - 1) * 0.5F);
+    float const x = muster_x + (in_x * rank * k_breach_rank_depth) +
+                    (across_x * file * k_breach_file_width);
+    float const z = muster_z + (in_z * rank * k_breach_rank_depth) +
+                    (across_z * file * k_breach_file_width);
+    m_breach_slots[muster[i]->id] = {x, z};
+  }
+}
+
+auto GarrisonBehavior::post_of(Engine::Core::EntityID unit) const -> const Post* {
+  if (auto const slot = m_breach_slots.find(unit); slot != m_breach_slots.end()) {
+    return &slot->second;
+  }
+  auto const home = m_posts.find(unit);
+  return home != m_posts.end() ? &home->second : nullptr;
 }
 
 auto GarrisonBehavior::counterattack(const AISnapshot& snapshot,
@@ -139,7 +288,7 @@ auto GarrisonBehavior::counterattack(const AISnapshot& snapshot,
     if (enemy.is_building || !is_war_contact(enemy) || is_engine(enemy)) {
       continue;
     }
-    if (inside_walls(snapshot, enemy.pos_x, enemy.pos_z)) {
+    if (snapshot.ward.inside(enemy.pos_x, enemy.pos_z)) {
       intruders.push_back(&enemy);
     }
   }
@@ -205,7 +354,7 @@ void GarrisonBehavior::sally(const AISnapshot& snapshot,
           continue;
         }
         float const d = planar_distance_sq(
-            enemy.pos_x, enemy.pos_z, snapshot.ward_x, snapshot.ward_z);
+            enemy.pos_x, enemy.pos_z, snapshot.ward.x, snapshot.ward.z);
         if (d < best) {
           best = d;
           engine = &enemy;
@@ -224,7 +373,11 @@ void GarrisonBehavior::sally(const AISnapshot& snapshot,
         ++escort;
       }
     }
-    bool const lonely = escort <= k_lonely_escort;
+
+    bool const under_way = m_sally_target == engine->id && !m_sally_party.empty();
+    int const tolerated =
+        under_way ? static_cast<int>(m_sally_party.size()) : k_lonely_escort;
+    bool const lonely = escort <= tolerated;
     if (!lonely) {
       if (!m_sally_party.empty()) {
 
@@ -285,18 +438,17 @@ void GarrisonBehavior::hold_posts(const AISnapshot& snapshot,
         unit->engaged) {
       continue;
     }
-    auto const post = m_posts.find(unit->id);
-    if (post == m_posts.end()) {
+    const Post* post = post_of(unit->id);
+    if (post == nullptr) {
       continue;
     }
-    float const off = std::sqrt(
-        planar_distance_sq(unit->pos_x, unit->pos_z, post->second.x, post->second.z));
+    float const off =
+        std::sqrt(planar_distance_sq(unit->pos_x, unit->pos_z, post->x, post->z));
     bool const heading_home =
         unit->movement.has_target && unit->movement.has_objective &&
-        std::sqrt(planar_distance_sq(unit->movement.objective_x,
-                                     unit->movement.objective_z,
-                                     post->second.x,
-                                     post->second.z)) < k_post_slack;
+        std::sqrt(planar_distance_sq(
+            unit->movement.objective_x, unit->movement.objective_z, post->x, post->z)) <
+            k_post_slack;
     if (off <= k_post_slack || heading_home) {
       continue;
     }
@@ -308,19 +460,16 @@ void GarrisonBehavior::hold_posts(const AISnapshot& snapshot,
                       snapshot.visible_enemies.end(),
                       [unit, &snapshot](const ContactSnapshot& enemy) {
                         return enemy.id == unit->attack_target_id &&
-                               std::abs(enemy.pos_x - snapshot.ward_x) <
-                                   inner_half(snapshot.ward_half_x) &&
-                               std::abs(enemy.pos_z - snapshot.ward_z) <
-                                   inner_half(snapshot.ward_half_z);
+                               snapshot.ward.within_reach(enemy.pos_x, enemy.pos_z);
                       });
       if (target_within_reach) {
         continue;
       }
     }
     move.units.push_back(unit->id);
-    move.move_target_x.push_back(post->second.x);
+    move.move_target_x.push_back(post->x);
     move.move_target_y.push_back(0.0F);
-    move.move_target_z.push_back(post->second.z);
+    move.move_target_z.push_back(post->z);
   }
   if (!move.units.empty()) {
     out_commands.push_back(std::move(move));

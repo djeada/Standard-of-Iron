@@ -160,12 +160,10 @@ void leash_garrison(Engine::Core::World& world,
     const bool in_the_ward =
         snapshot.has_ward && !sallying && (wave == nullptr || !wave->active);
 
-    controlled.leash_x = snapshot.ward_x;
-    controlled.leash_z = snapshot.ward_z;
-    controlled.leash_half_x =
-        in_the_ward ? AI::GarrisonBehavior::inner_half(snapshot.ward_half_x) : 0.0F;
-    controlled.leash_half_z =
-        in_the_ward ? AI::GarrisonBehavior::inner_half(snapshot.ward_half_z) : 0.0F;
+    controlled.leash_x = snapshot.ward.x;
+    controlled.leash_z = snapshot.ward.z;
+    controlled.leash_half_x = in_the_ward ? snapshot.ward.reach_half_x() : 0.0F;
+    controlled.leash_half_z = in_the_ward ? snapshot.ward.reach_half_z() : 0.0F;
   }
 }
 

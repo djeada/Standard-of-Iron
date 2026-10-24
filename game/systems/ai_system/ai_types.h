@@ -3,6 +3,7 @@
 #include <QString>
 
 #include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <limits>
 #include <memory>
@@ -238,6 +239,37 @@ struct ContactSnapshot {
   bool player_driven = false;
 };
 
+struct Ward {
+  static constexpr float k_apron = 6.0F;
+  static constexpr float k_gateway_depth = 1.5F;
+  static constexpr float k_inside_margin = 0.5F;
+
+  float x = 0.0F;
+  float z = 0.0F;
+  float wall_half_x = 0.0F;
+  float wall_half_z = 0.0F;
+
+  [[nodiscard]] auto contains(float px, float pz, float grow) const -> bool {
+    return std::abs(px - x) < wall_half_x + grow &&
+           std::abs(pz - z) < wall_half_z + grow;
+  }
+  [[nodiscard]] auto inside(float px, float pz) const -> bool {
+    return contains(px, pz, -k_inside_margin);
+  }
+  [[nodiscard]] auto reach_half_x() const -> float {
+    return wall_half_x + k_gateway_depth;
+  }
+  [[nodiscard]] auto reach_half_z() const -> float {
+    return wall_half_z + k_gateway_depth;
+  }
+  [[nodiscard]] auto within_reach(float px, float pz) const -> bool {
+    return contains(px, pz, k_gateway_depth);
+  }
+  [[nodiscard]] auto within_apron(float px, float pz) const -> bool {
+    return contains(px, pz, k_apron);
+  }
+};
+
 struct WallPostSnapshot {
   float pos_x = 0.0F;
   float pos_z = 0.0F;
@@ -289,10 +321,7 @@ struct AISnapshot {
   std::vector<WallPostSnapshot> wall_garrison;
 
   bool has_ward = false;
-  float ward_x = 0.0F;
-  float ward_z = 0.0F;
-  float ward_half_x = 0.0F;
-  float ward_half_z = 0.0F;
+  Ward ward;
   ResourceAmounts resources;
   bool has_resource_snapshot = false;
 
