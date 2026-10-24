@@ -199,19 +199,26 @@ auto prop_entry_fraction(const PropOccluder& occluder,
       !slab(local.start_z, local.delta_z, half_z, t_enter, t_exit)) {
     return 1.0F;
   }
-  if (t_enter > 1.0F || t_exit < 0.0F) {
+  if (t_enter > 1.0F || t_exit < 0.0F || t_enter < 0.0F) {
     return 1.0F;
   }
 
-  float const clamped_enter = std::clamp(t_enter, 0.0F, 1.0F);
-  float const clamped_exit = std::clamp(t_exit, 0.0F, 1.0F);
-  float const lowest = pivot.y() + (delta.y() * std::min(clamped_enter, clamped_exit));
-  float const highest = pivot.y() + (delta.y() * std::max(clamped_enter, clamped_exit));
-  if (std::min(lowest, highest) > occluder.top_y) {
-
+  constexpr float k_epsilon = 1.0e-5F;
+  float const start_y = pivot.y();
+  if (std::abs(delta.y()) > k_epsilon) {
+    float const t_top = (occluder.top_y - start_y) / delta.y();
+    if (delta.y() > 0.0F) {
+      t_exit = std::min(t_exit, t_top);
+    } else {
+      t_enter = std::max(t_enter, t_top);
+    }
+  } else if (start_y > occluder.top_y) {
     return 1.0F;
   }
-  return clamped_enter;
+  if (t_enter > t_exit || t_enter > 1.0F || t_exit < 0.0F) {
+    return 1.0F;
+  }
+  return std::clamp(t_enter, 0.0F, 1.0F);
 }
 
 struct LocalPoint {

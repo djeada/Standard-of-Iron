@@ -2387,6 +2387,7 @@ auto apply_ground_stance_for_profile(Render::GL::HumanoidPoseController& ctrl,
                                      bool moving = false) -> bool {
   switch (profile) {
   case BakeProfile::SwordReady:
+  case BakeProfile::Skeleton:
     ctrl.carry_sword_and_shield();
     return true;
   case BakeProfile::SpearReady:
@@ -2402,7 +2403,6 @@ auto apply_ground_stance_for_profile(Render::GL::HumanoidPoseController& ctrl,
     ctrl.carry_stave();
     break;
   case BakeProfile::Default:
-  case BakeProfile::Skeleton:
     break;
   }
   return false;
@@ -2943,7 +2943,8 @@ void bake_humanoid_clip_frame(BakeProfile profile,
 
   bool const shield_axis_applied = hold_shield_upright(profile, pose);
   pose.shield_faces_outward =
-      profile == BakeProfile::SwordReady && !shield_raised_to_front(profile, clip);
+      (profile == BakeProfile::SwordReady || profile == BakeProfile::Skeleton) &&
+      !shield_raised_to_front(profile, clip);
 
   if (grip_oriented_by_stance || shield_axis_applied ||
       clip.showcase_type != BakerShowcaseType::None || is_rpg_sword_clip(clip) ||

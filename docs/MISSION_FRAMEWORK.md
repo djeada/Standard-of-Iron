@@ -111,8 +111,11 @@ A starting-unit entry describes:
 - position;
 - behavior;
 - guard radius;
-- optional patrol waypoints; and
+- optional patrol waypoints;
+- optional `facing` (degrees, the same convention as a map spawn's `rotation`: `180` faces north, towards smaller `z`), applied to the squad's yaw and its resting layout yaw once it is placed, so a line authored at a choke faces the enemy instead of the map's south; and
 - optional `difficulty_scaling` (default `true`), which holds this spawn group at its authored count on every difficulty preset.
+
+A squad is placed on the nearest clear ground to its authored position that fits its whole envelope (every slot plus the body radius) without overlapping another squad and without a wall between it and the authored point. Two squads authored closer together than the sum of their envelopes do not stand side by side: the second one walks the search rings outward, and on a map with a wall behind the line that ground is in front of it. On the Sepulcher Bridge two spear squads authored 6 m apart at a 15 m wide mouth put the second squad on the bridge; 9.5 m apart they both hold the mouth.
 
 Supported behavior values map to the current runtime behaviors:
 

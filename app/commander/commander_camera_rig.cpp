@@ -1,10 +1,7 @@
 #include "app/commander/commander_camera_rig.h"
 
-#include <QtGlobal>
-
 #include <algorithm>
 #include <cmath>
-#include <cstdio>
 #include <numbers>
 
 #include "animation/locomotion_manifest.h"
@@ -71,12 +68,13 @@ constexpr float k_threat_bias_follow = 3.0F;
 constexpr float k_shoulder_swap_below = 0.55F;
 constexpr float k_shoulder_swap_margin = 0.30F;
 constexpr float k_shoulder_follow = 5.0F;
+constexpr float k_shoulder_swap_dwell = 0.6F;
 constexpr float k_retracted_rise = 0.75F;
 
 constexpr float k_crowd_follow = 1.6F;
-constexpr float k_crowd_lift = 1.3F;
-constexpr float k_crowd_pull_back = 0.7F;
-constexpr float k_crowd_look_drop_share = 0.4F;
+constexpr float k_crowd_lift = 0.55F;
+constexpr float k_crowd_pull_back = 0.45F;
+constexpr float k_crowd_look_drop_share = 0.3F;
 constexpr float k_crowd_side_tuck = 0.55F;
 constexpr float k_threat_bias_side = 0.30F;
 
@@ -88,6 +86,7 @@ constexpr float k_camera_min_boom = 0.55F;
 constexpr float k_camera_boom_backoff = 0.06F;
 
 constexpr float k_camera_boom_release_speed = 6.0F;
+constexpr float k_camera_boom_pull_in_speed = 20.0F;
 
 constexpr float k_commander_near_plane = 0.05F;
 constexpr float k_camera_terrain_clearance = 0.55F;
@@ -175,6 +174,7 @@ void CommanderCameraRig::reset() {
   m_crowd_smooth = 0.0F;
   m_shoulder = 1.0F;
   m_shoulder_target = 1.0F;
+  m_shoulder_swap_cooldown = 0.0F;
   m_smooth_valid = false;
   m_forward_valid = false;
   m_ground_valid = false;
@@ -363,14 +363,27 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
                             flat_right * (shoulder_side * shoulder);
       return Game::Systems::camera_boom_clear_fraction(obstruction, pivot, eye);
     };
+    m_shoulder_swap_cooldown = std::max(0.0F, m_shoulder_swap_cooldown - dt);
     float const held = shoulder_clearance(m_shoulder_target);
-    if (held < k_shoulder_swap_below) {
-      float const other = shoulder_clearance(-m_shoulder_target);
-      if (other > held + k_shoulder_swap_margin) {
-        m_shoulder_target = -m_shoulder_target;
+    if (m_shoulder_swap_cooldown <= 0.0F) {
+      if (held < k_shoulder_swap_below) {
+        float best_side = m_shoulder_target;
+        float best_clear = held;
+        for (float const candidate : {-m_shoulder_target, 0.0F}) {
+          float const clear = shoulder_clearance(candidate);
+          if (clear > best_clear + k_shoulder_swap_margin) {
+            best_side = candidate;
+            best_clear = clear;
+          }
+        }
+        if (best_side != m_shoulder_target) {
+          m_shoulder_target = best_side;
+          m_shoulder_swap_cooldown = k_shoulder_swap_dwell;
+        }
+      } else if (m_shoulder_target < 1.0F && shoulder_clearance(1.0F) >= 1.0F) {
+        m_shoulder_target = 1.0F;
+        m_shoulder_swap_cooldown = k_shoulder_swap_dwell;
       }
-    } else if (m_shoulder_target < 0.0F && shoulder_clearance(1.0F) >= 1.0F) {
-      m_shoulder_target = 1.0F;
     }
   }
   m_shoulder += (m_shoulder_target - m_shoulder) * smooth_alpha(k_shoulder_follow, dt);
@@ -487,12 +500,38 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
   float const body_clear_fraction =
       Game::Systems::camera_boom_clear_fraction(obstruction, pivot, eye_desired);
   float const clear_fraction = std::min(body_clear_fraction, terrain_clear);
-  float const occlusion_target =
+  float occlusion_target =
       clear_fraction < 1.0F
           ? std::clamp(clear_fraction - k_camera_boom_backoff, boom_floor, 1.0F)
           : 1.0F;
-  if (occlusion_target < m_occlusion_fraction) {
+  {
+    constexpr int k_retract_steps = 12;
+    QVector3D const boom = eye_unconstrained - pivot;
+    for (int step = 0; step <= k_retract_steps; ++step) {
+      float const fraction = occlusion_target - ((occlusion_target - boom_floor) *
+                                                 static_cast<float>(step) /
+                                                 static_cast<float>(k_retract_steps));
+      QVector3D candidate = pivot + (boom * fraction);
+      candidate.setY(candidate.y() + (k_retracted_rise * (1.0F - fraction)));
+      if (Game::Systems::camera_body_clearance(obstruction, candidate) >=
+          k_camera_depenetration_margin) {
+        occlusion_target = fraction;
+        break;
+      }
+      if (step == k_retract_steps) {
+        occlusion_target = boom_floor;
+      }
+    }
+  }
+  if (!m_smooth_valid) {
     m_occlusion_fraction = occlusion_target;
+  } else if (occlusion_target < m_occlusion_fraction) {
+    float const pull_in_step =
+        boom_length > 1.0e-4F
+            ? (k_camera_boom_pull_in_speed * std::max(dt, 0.0F)) / boom_length
+            : 1.0F;
+    m_occlusion_fraction =
+        std::max(occlusion_target, m_occlusion_fraction - pull_in_step);
   } else {
     float const eased =
         m_occlusion_fraction + (occlusion_target - m_occlusion_fraction) *

@@ -2,7 +2,7 @@
   "id": "hold_the_sepulcher_bridge",
   "menu_order": 25,
   "title": "Hold the Sepulcher Bridge",
-  "summary": "The barrows on the north bank have opened, and everything in them is walking south. There is one bridge over the Grey Water. Hold it through four risings of the dead, each larger than the last, with a wall, two ridges and far too few men.",
+  "summary": "The barrows on the north bank have opened, and everything in them is walking south. There is one bridge over the Grey Water. Hold it through four risings of the dead, each larger than the last, with a wall, two ridges and a hundred men.",
   "map_path": ":/assets/maps/map_sepulcher_bridge.json",
   "player_setup": {
     "nation": "roman_republic",
@@ -11,77 +11,65 @@
     "starting_units": [
       {
         "type": "spearman",
-        "count": 3,
+        "count": 1,
         "position": {
-          "x": 48.0,
-          "z": 53.0
-        },
-        "behavior": "guard",
-        "guard_radius": 6.0
-      },
-      {
-        "type": "swordsman",
-        "count": 2,
-        "position": {
-          "x": 45.0,
-          "z": 56.5
-        },
-        "behavior": "guard",
-        "guard_radius": 6.0
-      },
-      {
-        "type": "swordsman",
-        "count": 2,
-        "position": {
-          "x": 51.0,
-          "z": 56.5
-        },
-        "behavior": "guard",
-        "guard_radius": 6.0
-      },
-      {
-        "type": "archer",
-        "count": 3,
-        "position": {
-          "x": 37.5,
+          "x": 43.5,
           "z": 53.5
         },
-        "behavior": "guard",
-        "guard_radius": 4.0
-      },
-      {
-        "type": "archer",
-        "count": 3,
-        "position": {
-          "x": 58.5,
-          "z": 53.5
-        },
-        "behavior": "guard",
-        "guard_radius": 4.0
+        "behavior": "hold",
+        "facing": 180.0
       },
       {
         "type": "spearman",
-        "count": 2,
+        "count": 1,
         "position": {
-          "x": 48.0,
-          "z": 67.0
-        }
+          "x": 53.0,
+          "z": 53.5
+        },
+        "behavior": "hold",
+        "facing": 180.0
       },
       {
         "type": "swordsman",
         "count": 1,
         "position": {
-          "x": 43.0,
-          "z": 70.0
-        }
+          "x": 48.0,
+          "z": 59.5
+        },
+        "behavior": "guard",
+        "guard_radius": 5.0,
+        "facing": 180.0
+      },
+      {
+        "type": "archer",
+        "count": 1,
+        "position": {
+          "x": 36.0,
+          "z": 55.0
+        },
+        "behavior": "hold",
+        "facing": 180.0
+      },
+      {
+        "type": "archer",
+        "count": 1,
+        "position": {
+          "x": 60.0,
+          "z": 55.0
+        },
+        "behavior": "hold",
+        "facing": 180.0
       },
       {
         "type": "healer",
-        "count": 2,
+        "count": 1,
         "position": {
           "x": 48.0,
-          "z": 72.0
-        }
+          "z": 64.5
+        },
+        "behavior": "guard",
+        "guard_radius": 4.0,
+        "facing": 180.0
       },
       {
         "type": "builder",
@@ -89,16 +77,17 @@
         "position": {
           "x": 44.0,
           "z": 80.0
-        }
+        },
+        "facing": 180.0
       }
     ],
     "starting_buildings": [],
     "starting_resources": {
       "gold": 300,
       "food": 300,
-      "wood": 300,
+      "wood": 360,
       "stone": 150,
-      "iron": 220
+      "iron": 260
     }
   },
   "ai_setups": [
@@ -120,7 +109,7 @@
       "wave_escalation": 0.0,
       "waves": [
         {
-          "timing": 60.0,
+          "timing": 45.0,
           "composition": [
             {
               "type": "skeleton_swordsman",
