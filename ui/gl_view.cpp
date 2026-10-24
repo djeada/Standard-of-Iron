@@ -394,6 +394,7 @@ void GLView::GLRenderer::reset_runtime_benchmark_samples() {
   m_benchmark_rigged_instanced_instances = 0;
   m_benchmark_rigged_single_draws = 0;
   m_benchmark_shadow_cache_hits = 0;
+  m_benchmark_shadow_casters_dropped = 0;
   m_benchmark_shadow_cache_misses = 0;
   m_benchmark_shadow_cache_bypasses = 0;
   m_benchmark_triangles_by_type.fill(0);
@@ -520,6 +521,7 @@ void GLView::GLRenderer::observe_runtime_benchmark(
   m_benchmark_rigged_instanced_instances += profile.rigged_instanced_instances;
   m_benchmark_rigged_single_draws += profile.rigged_single_draws;
   m_benchmark_shadow_cache_hits += profile.shadow_static_cache_hits;
+  m_benchmark_shadow_casters_dropped += profile.shadow_rigged_casters_dropped;
   m_benchmark_shadow_cache_misses += profile.shadow_static_cache_misses;
   m_benchmark_shadow_cache_bypasses += profile.shadow_static_cache_bypasses;
   for (std::size_t i = 0; i < m_benchmark_triangles_by_type.size(); ++i) {
@@ -651,7 +653,9 @@ void GLView::GLRenderer::finish_runtime_benchmark() {
            {QStringLiteral("single_draws"),
             sample_count > 0.0
                 ? static_cast<double>(m_benchmark_rigged_single_draws) / sample_count
-                : 0.0}}}};
+                : 0.0}}},
+      {QStringLiteral("shadow_rigged_casters_dropped"),
+       static_cast<qint64>(m_benchmark_shadow_casters_dropped)}};
 
   QJsonObject draw_cmd_average;
   for (std::size_t i = 0; i < m_benchmark_draw_cmd_counts.size(); ++i) {

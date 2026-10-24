@@ -308,6 +308,8 @@ void Renderer::end_frame() {
           static_cast<std::uint64_t>(stats.rigged_single_draws);
       profile.shadow_static_cache_hits =
           static_cast<std::uint64_t>(stats.shadow_static_cache_hits);
+      profile.shadow_rigged_casters_dropped =
+          static_cast<std::uint64_t>(stats.shadow_rigged_casters_dropped);
       profile.shadow_static_cache_misses =
           static_cast<std::uint64_t>(stats.shadow_static_cache_misses);
       profile.shadow_static_cache_bypasses =

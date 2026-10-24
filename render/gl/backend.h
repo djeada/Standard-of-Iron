@@ -73,6 +73,7 @@ public:
     std::size_t shadow_rigged_instanced_draws{0};
     std::size_t shadow_rigged_instanced_instances{0};
     std::size_t shadow_rigged_single_draws{0};
+    std::size_t shadow_rigged_casters_dropped{0};
     std::size_t shadow_static_single_draws{0};
     std::size_t shadow_static_instanced_draws{0};
     std::size_t shadow_static_instanced_instances{0};

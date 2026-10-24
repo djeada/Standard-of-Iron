@@ -109,6 +109,7 @@ private:
     std::uint64_t m_benchmark_rigged_instanced_instances = 0;
     std::uint64_t m_benchmark_rigged_single_draws = 0;
     std::uint64_t m_benchmark_shadow_cache_hits = 0;
+    std::uint64_t m_benchmark_shadow_casters_dropped = 0;
     std::uint64_t m_benchmark_shadow_cache_misses = 0;
     std::uint64_t m_benchmark_shadow_cache_bypasses = 0;
     std::array<std::uint64_t, 16> m_benchmark_triangles_by_type{};

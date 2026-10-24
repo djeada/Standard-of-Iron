@@ -39,6 +39,12 @@ TEST(GraphicsLightingSettingsTest, PresetsScaleDirectionalShadowCost) {
 
   EXPECT_GE(graphics.contact_shadow_budget().max_casters, 5000);
 
+  EXPECT_GT(medium.max_rigged_casters_per_cascade, 0);
+  EXPECT_GT(high.max_rigged_casters_per_cascade, medium.max_rigged_casters_per_cascade);
+  EXPECT_GT(ultra.max_rigged_casters_per_cascade, high.max_rigged_casters_per_cascade);
+  EXPECT_LE(ultra.max_rigged_casters_per_cascade, 400)
+      << "a crowd must still cap the directional casters on Ultra";
+
   graphics.set_quality(Render::k_default_graphics_quality);
 }
 

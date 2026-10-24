@@ -529,14 +529,16 @@ Directional shadows are configured by `DirectionalShadowSettings` in the active 
 
 Current profile behavior is:
 
-| Profile | Directional shadows                         |
-| ------- | ------------------------------------------- |
-| Low     | disabled                                    |
-| Medium  | 2 cascades, 1024 resolution                 |
-| High    | 4 cascades, 4096 resolution, 200 m envelope |
-| Ultra   | full High-style cascade envelope            |
+| Profile | Directional shadows                         | Rigged casters per cascade |
+| ------- | ------------------------------------------- | -------------------------- |
+| Low     | disabled                                    | 60                         |
+| Medium  | 2 cascades, 1024 resolution                 | 100                        |
+| High    | 4 cascades, 4096 resolution, 200 m envelope | 160                        |
+| Ultra   | full High-style cascade envelope            | 240                        |
 
 Cascade fitting, bias, filtering, light-space culling, and sampling are implemented in `render/gl/` and shared shader includes.
+
+`max_rigged_casters_per_cascade` caps how many soldiers, horses and elephants cast into each cascade. For every cascade the pass ranks the rigged commands that fall in that cascade's range by distance to the camera and keeps the nearest ones, across all rigged batches, so the budget is spent on the soldiers that are large on screen; the rest keep only their contact shadow, which is blended against the directional term anyway and reads as the same grounding at that size. A duel or a small fight never reaches the cap, so nothing changes there. On the Sepulcher Bridge's last rising (about 280 soldiers in view at preset High, 1280x720) the unlimited shadow pass cost 4.6 ms average and 7.6 ms at the 95th percentile; at 220 casters it was 3.2 / 3.9, at 120 it was 2.7 / 3.2 and at 60 it was 2.6 / 3.0, where the remaining cost is static casters and terrain. The benchmark report counts the dropped casters in `shadow_rigged_casters_dropped`.
 
 Those implementation sources are the correct place to read exact shadow mechanics. The profile table documents the quality envelope rather than duplicating every internal shadow constant into multiple articles.
 

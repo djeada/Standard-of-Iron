@@ -104,6 +104,7 @@ struct FrameProfile {
   std::uint64_t rigged_instanced_instances{0};
   std::uint64_t rigged_single_draws{0};
   std::uint64_t shadow_static_cache_hits{0};
+  std::uint64_t shadow_rigged_casters_dropped{0};
   std::uint64_t shadow_static_cache_misses{0};
   std::uint64_t shadow_static_cache_bypasses{0};
 
@@ -170,6 +171,7 @@ struct FrameProfile {
     rigged_instanced_instances = 0;
     rigged_single_draws = 0;
     shadow_static_cache_hits = 0;
+    shadow_rigged_casters_dropped = 0;
     shadow_static_cache_misses = 0;
     shadow_static_cache_bypasses = 0;
     triangles = 0;
