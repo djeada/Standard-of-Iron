@@ -10268,8 +10268,8 @@ bir harita seç</translation>
         <translation>Höyükler açılıyor. Köprüye gelsinler; her biri onu geçmek zorunda ve köprü yalnızca yedi adım genişliğinde.</translation>
     </message>
     <message>
-        <source>The barrows on the north bank have opened, and everything in them is walking south. There is one bridge over the Grey Water. Hold it through four risings of the dead, each larger than the last, with a wall, two ridges and far too few men.</source>
-        <translation>Kuzey kıyısındaki höyükler açıldı ve içlerindeki her şey güneye yürüyor. Gri Su&apos;nun üzerinde tek bir köprü var. Bir sur, iki sırt ve çok az adamla, her biri öncekinden büyük dört ölü dirilişine karşı onu tut.</translation>
+        <source>The barrows on the north bank have opened, and everything in them is walking south. There is one bridge over the Grey Water. Hold it through four risings of the dead, each larger than the last, with a wall, two ridges and a hundred men.</source>
+        <translation>Kuzey kıyısındaki höyükler açıldı ve içlerindeki her şey güneye yürüyor. Gri Su&apos;nun üzerinde tek bir köprü var. Bir sur, iki sırt ve yüz adamla, her biri öncekinden büyük dört ölü dirilişine karşı onu tut.</translation>
     </message>
     <message>
         <source>The bridge is gone. Take the south road and do not stop, and do not look back at who is following.</source>

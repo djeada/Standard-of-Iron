@@ -327,7 +327,7 @@ namespace {
     QT_TRANSLATE_NOOP("Missions", "The allied wing is on the southern road. They know this country - they own most of it, or did, before you started eating it."),
     QT_TRANSLATE_NOOP("Missions", "The assault is spent and there is nobody left to carry a ladder."),
     QT_TRANSLATE_NOOP("Missions", "The barrows are opening. Let them come to the bridge; every one of them has to cross it, and it is only seven paces wide."),
-    QT_TRANSLATE_NOOP("Missions", "The barrows on the north bank have opened, and everything in them is walking south. There is one bridge over the Grey Water. Hold it through four risings of the dead, each larger than the last, with a wall, two ridges and far too few men."),
+    QT_TRANSLATE_NOOP("Missions", "The barrows on the north bank have opened, and everything in them is walking south. There is one bridge over the Grey Water. Hold it through four risings of the dead, each larger than the last, with a wall, two ridges and a hundred men."),
     QT_TRANSLATE_NOOP("Missions", "The bridge column"),
     QT_TRANSLATE_NOOP("Missions", "The bridge is gone. Take the south road and do not stop, and do not look back at who is following."),
     QT_TRANSLATE_NOOP("Missions", "The bridge is ours and the barrows are empty. Burn what is lying on it before it remembers how to stand."),

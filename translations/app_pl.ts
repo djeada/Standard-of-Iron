@@ -10276,8 +10276,8 @@ by zobaczyć podgląd</translation>
         <translation>Kurhany się otwierają. Niech przyjdą do mostu; każdy z nich musi go przejść, a ma on tylko siedem kroków szerokości.</translation>
     </message>
     <message>
-        <source>The barrows on the north bank have opened, and everything in them is walking south. There is one bridge over the Grey Water. Hold it through four risings of the dead, each larger than the last, with a wall, two ridges and far too few men.</source>
-        <translation>Kurhany na północnym brzegu się otworzyły i wszystko, co w nich było, idzie na południe. Nad Szarą Wodą jest tylko jeden most. Utrzymaj go przez cztery powstania umarłych, każde większe od poprzedniego, mając mur, dwa grzbiety i o wiele za mało ludzi.</translation>
+        <source>The barrows on the north bank have opened, and everything in them is walking south. There is one bridge over the Grey Water. Hold it through four risings of the dead, each larger than the last, with a wall, two ridges and a hundred men.</source>
+        <translation>Kurhany na północnym brzegu się otworzyły i wszystko, co w nich było, idzie na południe. Nad Szarą Wodą jest tylko jeden most. Utrzymaj go przez cztery powstania umarłych, każde większe od poprzedniego, mając mur, dwa grzbiety i stu ludzi.</translation>
     </message>
     <message>
         <source>The bridge is gone. Take the south road and do not stop, and do not look back at who is following.</source>
