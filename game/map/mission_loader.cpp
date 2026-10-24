@@ -57,6 +57,9 @@ auto MissionLoader::parse_unit_setup(const QJsonObject& obj) -> UnitSetup {
   unit.position = parse_position(obj["position"].toObject());
   unit.behavior = parse_unit_behavior(obj["behavior"].toString());
   unit.guard_radius = static_cast<float>(obj["guard_radius"].toDouble(10.0));
+  if (obj.contains("facing")) {
+    unit.facing = static_cast<float>(obj["facing"].toDouble(0.0));
+  }
   unit.difficulty_scaling = obj["difficulty_scaling"].toBool(true);
 
   const QJsonArray patrol_waypoints = obj["patrol_waypoints"].toArray();

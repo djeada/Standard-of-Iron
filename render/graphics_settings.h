@@ -79,6 +79,8 @@ struct DirectionalShadowSettings {
 
   float normal_bias = 1.40F;
   float cascade_blend = 0.12F;
+
+  int max_rigged_casters_per_cascade = 160;
 };
 
 struct PostProcessSettings {
@@ -142,7 +144,8 @@ inline constexpr std::array<GraphicsProfile, k_graphics_quality_count>
                                     .distance = 25.0F,
                                     .depth_bias = 0.040F,
                                     .normal_bias = 1.80F,
-                                    .cascade_blend = 0.0F},
+                                    .cascade_blend = 0.0F,
+                                    .max_rigged_casters_per_cascade = 60},
             .post_process = {.bloom = false,
                              .godrays = false,
                              .ambient_occlusion = false,
@@ -175,7 +178,8 @@ inline constexpr std::array<GraphicsProfile, k_graphics_quality_count>
                                     .distance = 50.0F,
                                     .depth_bias = 0.035F,
                                     .normal_bias = 1.60F,
-                                    .cascade_blend = 0.08F},
+                                    .cascade_blend = 0.08F,
+                                    .max_rigged_casters_per_cascade = 100},
             .post_process = {.bloom = true,
                              .godrays = false,
                              .ambient_occlusion = true,
@@ -207,7 +211,8 @@ inline constexpr std::array<GraphicsProfile, k_graphics_quality_count>
                                     .distance = 200.0F,
                                     .depth_bias = 0.025F,
                                     .normal_bias = 1.20F,
-                                    .cascade_blend = 0.15F},
+                                    .cascade_blend = 0.15F,
+                                    .max_rigged_casters_per_cascade = 160},
             .post_process = {.bloom = true,
                              .godrays = true,
                              .ambient_occlusion = true,
@@ -239,7 +244,8 @@ inline constexpr std::array<GraphicsProfile, k_graphics_quality_count>
                                     .distance = 200.0F,
                                     .depth_bias = 0.025F,
                                     .normal_bias = 1.20F,
-                                    .cascade_blend = 0.15F},
+                                    .cascade_blend = 0.15F,
+                                    .max_rigged_casters_per_cascade = 240},
             .post_process = {.bloom = true,
                              .godrays = true,
                              .ambient_occlusion = true,

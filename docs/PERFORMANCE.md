@@ -177,6 +177,10 @@ view went from 42 to 50 fps, GPU colour pass 14.8 to 11.7 ms and frame-lock wait
 indicative only. The intended comparison records a played session with
 `--record-replay` and replays it on both builds with `--replay`.
 
+## October 2026 shadow caster budget
+
+With the sepulcher waves the GPU, not the simulation, capped a crowded frame: 468 skeletons plus a hundred Romans tick in 0.73 ms, while the shadow pass drew every rigged soldier in range into every cascade. `DirectionalShadowSettings::max_rigged_casters_per_cascade` now keeps the nearest casters per cascade (60/100/160/240 by preset). Measured on the last rising with a fixed camera on the bridge mouth (`--action-fixture` with `camera_look_at`, preset High, 1280x720, about 280 soldiers visible): shadow 4.64 ms average / 7.62 ms p95 unlimited, 3.24 / 3.90 at 220, 2.72 / 3.16 at 120, 2.56 / 2.98 at 60; GPU p95 13.1 ms down to 8.6 ms at 120. Below about 120 the curve is flat because the rest is static casters and terrain.
+
 ## Simulation
 
 **Unreachable goals.** A* used to flood the whole reachable region whenever the goal

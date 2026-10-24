@@ -119,6 +119,8 @@ auto default_loadouts() -> LoadoutMap {
 
   EquipmentLoadoutIds sepulcher_swordsman{};
   sepulcher_swordsman.sword = "sword_sepulcher";
+  sepulcher_swordsman.shield = "shield_caetra";
+  sepulcher_swordsman.helmet = "gallic_montefortino";
   map.emplace("troops/iron_sepulcher/skeleton_swordsman",
               std::move(sepulcher_swordsman));
 

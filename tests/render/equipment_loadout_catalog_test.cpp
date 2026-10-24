@@ -130,14 +130,17 @@ TEST_F(EquipmentLoadoutCatalogTest, CarthageHealerLoadoutResolvesSupportArmor) {
   EXPECT_NE(loadout.armor_handle, k_invalid_equipment_handle);
 }
 
-TEST_F(EquipmentLoadoutCatalogTest, IronSepulcherLoadoutsExposeBonesAndPriestCloak) {
+TEST_F(EquipmentLoadoutCatalogTest, IronSepulcherLoadoutsWearGraveGearAndPriestCloak) {
   const auto swordsman = Render::GL::Nation::resolve_equipment_loadout(
       "troops/iron_sepulcher/skeleton_swordsman");
   ASSERT_TRUE(swordsman.found);
   EXPECT_EQ(swordsman.ids.sword, "sword_sepulcher");
-  EXPECT_TRUE(swordsman.ids.shield.empty());
+  EXPECT_EQ(swordsman.ids.shield, "shield_caetra");
+  EXPECT_EQ(swordsman.ids.helmet, "gallic_montefortino");
   EXPECT_NE(swordsman.sword_handle, k_invalid_equipment_handle);
-  EXPECT_EQ(swordsman.shield_handle, k_invalid_equipment_handle);
+  EXPECT_NE(swordsman.shield_handle, k_invalid_equipment_handle);
+  EXPECT_NE(swordsman.helmet_handle, k_invalid_equipment_handle);
+  EXPECT_TRUE(swordsman.ids.armor.empty());
 
   const auto priest = Render::GL::Nation::resolve_equipment_loadout(
       "troops/iron_sepulcher/grave_priest");

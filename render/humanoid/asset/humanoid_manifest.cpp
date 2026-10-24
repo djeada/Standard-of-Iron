@@ -2305,7 +2305,7 @@ void bake_hold_pose(BakeProfile profile,
                               hold_type == BakerHoldType::CarthageShieldWallRight;
     kneels = !carthaginian;
     kneel_depth = hold_type == BakerHoldType::TestudoFront ? 0.70F : 0.95F;
-  } else if (profile == BakeProfile::SwordReady) {
+  } else if (profile == BakeProfile::SwordReady || profile == BakeProfile::Skeleton) {
     kneel_depth = 0.825F;
   } else if (hold_type == BakerHoldType::Bow) {
     kneel_depth = 1.125F;
@@ -2329,7 +2329,7 @@ void bake_hold_pose(BakeProfile profile,
   }
   if (is_defensive_shield_hold(hold_type)) {
     ctrl.guard_sword_and_shield_formation(defensive_shield_pose(hold_type), 1.0F);
-  } else if (profile == BakeProfile::SwordReady) {
+  } else if (profile == BakeProfile::SwordReady || profile == BakeProfile::Skeleton) {
     ctrl.guard_sword_and_shield_for_defense();
   } else if (hold_type == BakerHoldType::Bow) {
     ctrl.hold_bow_ready();
@@ -2387,6 +2387,7 @@ auto apply_ground_stance_for_profile(Render::GL::HumanoidPoseController& ctrl,
                                      bool moving = false) -> bool {
   switch (profile) {
   case BakeProfile::SwordReady:
+  case BakeProfile::Skeleton:
     ctrl.carry_sword_and_shield();
     return true;
   case BakeProfile::SpearReady:
@@ -2402,7 +2403,6 @@ auto apply_ground_stance_for_profile(Render::GL::HumanoidPoseController& ctrl,
     ctrl.carry_stave();
     break;
   case BakeProfile::Default:
-  case BakeProfile::Skeleton:
     break;
   }
   return false;
@@ -2482,7 +2482,8 @@ auto shield_raised_to_front(BakeProfile profile, const HumanoidClipSpec& clip) -
       clip.riding_type == BakerRidingType::SwordStrike) {
     return true;
   }
-  return profile == BakeProfile::SwordReady && clip.hold_type == BakerHoldType::Spear;
+  return (profile == BakeProfile::SwordReady || profile == BakeProfile::Skeleton) &&
+         clip.hold_type == BakerHoldType::Spear;
 }
 
 auto hold_shield_upright(BakeProfile profile, Render::GL::HumanoidPose& pose) -> bool {
@@ -2712,7 +2713,7 @@ void bake_humanoid_clip_frame(BakeProfile profile,
     Render::GL::tune_mounted_swordsman_frame(horse_profile.dims, mount);
 
     Render::GL::MountedPoseController ctrl(pose, anim_ctx_r);
-    if (profile == BakeProfile::SwordReady &&
+    if ((profile == BakeProfile::SwordReady || profile == BakeProfile::Skeleton) &&
         clip.riding_type != BakerRidingType::BowShot &&
         clip.riding_type != BakerRidingType::SwordStrike &&
         clip.riding_type != BakerRidingType::SpearThrust) {
@@ -2943,7 +2944,8 @@ void bake_humanoid_clip_frame(BakeProfile profile,
 
   bool const shield_axis_applied = hold_shield_upright(profile, pose);
   pose.shield_faces_outward =
-      profile == BakeProfile::SwordReady && !shield_raised_to_front(profile, clip);
+      (profile == BakeProfile::SwordReady || profile == BakeProfile::Skeleton) &&
+      !shield_raised_to_front(profile, clip);
 
   if (grip_oriented_by_stance || shield_axis_applied ||
       clip.showcase_type != BakerShowcaseType::None || is_rpg_sword_clip(clip) ||

@@ -10257,7 +10257,7 @@ to see preview</source>
     </message>
     <message>
         <source>One bridge, two ridges and a gate. Bows on both ridges, spears behind the gate, and nobody stands on that bridge unless I am standing on it with him. The dead do not tire, so we do not stand where they can reach us for longer than we must.</source>
-        <translation>Один мост, два гребня и ворота. Луки на оба гребня, копья за ворота, и никто не встаёт на этот мост, если я не стою там рядом. Мёртвые не устают, так что мы не стоим у них на пути дольше, чем нужно.</translation>
+        <translation>Один мост, два гребня и сотню человек.</translation>
     </message>
     <message>
         <source>One officer and no line. The dead do not slow down for one man.</source>
@@ -10276,7 +10276,7 @@ to see preview</source>
         <translation>Курганы раскрываются. Пусть идут к мосту: каждому из них придётся по нему пройти, а он всего семь шагов в ширину.</translation>
     </message>
     <message>
-        <source>The barrows on the north bank have opened, and everything in them is walking south. There is one bridge over the Grey Water. Hold it through four risings of the dead, each larger than the last, with a wall, two ridges and far too few men.</source>
+        <source>The barrows on the north bank have opened, and everything in them is walking south. There is one bridge over the Grey Water. Hold it through four risings of the dead, each larger than the last, with a wall, two ridges and a hundred men.</source>
         <translation>Курганы на северном берегу раскрылись, и всё, что в них лежало, идёт на юг. Через Серую Воду ведёт лишь один мост. Удержите его против четырёх восстаний мёртвых, каждое больше предыдущего, имея стену, два гребня и слишком мало людей.</translation>
     </message>
     <message>

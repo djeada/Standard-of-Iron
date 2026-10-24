@@ -54,7 +54,9 @@
       "armor": "armor_light_carthage"
     },
     "troops/iron_sepulcher/skeleton_swordsman": {
-      "sword": "sword_sepulcher"
+      "sword": "sword_sepulcher",
+      "shield": "shield_caetra",
+      "helmet": "gallic_montefortino"
     },
     "troops/iron_sepulcher/skeleton_archer": {
       "bow": "bow_carthage",

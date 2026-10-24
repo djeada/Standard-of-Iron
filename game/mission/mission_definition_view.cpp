@@ -103,6 +103,9 @@ auto build_unit_setup_list(const std::vector<Game::Mission::UnitSetup>& units)
     entry["count"] = unit.count;
     entry["x"] = unit.position.x;
     entry["z"] = unit.position.z;
+    if (unit.facing.has_value()) {
+      entry["facing"] = *unit.facing;
+    }
     switch (unit.behavior) {
     case Game::Mission::UnitBehavior::Guard:
       entry["behavior"] = QStringLiteral("guard");

@@ -10288,8 +10288,8 @@ to see preview</source>
         <translation>المدافن تنفتح. دعهم يأتون إلى الجسر؛ على كل واحد منهم أن يعبره، وعرضه سبع خطوات فقط.</translation>
     </message>
     <message>
-        <source>The barrows on the north bank have opened, and everything in them is walking south. There is one bridge over the Grey Water. Hold it through four risings of the dead, each larger than the last, with a wall, two ridges and far too few men.</source>
-        <translation>انفتحت المدافن على الضفة الشمالية، وكل ما كان فيها يسير جنوبًا. ثمة جسر واحد فوق المياه الرمادية. احمِه في وجه أربع نهضات للموتى، كل واحدة أكبر من سابقتها، بسور وتلّين وعدد قليل جدًا من الرجال.</translation>
+        <source>The barrows on the north bank have opened, and everything in them is walking south. There is one bridge over the Grey Water. Hold it through four risings of the dead, each larger than the last, with a wall, two ridges and a hundred men.</source>
+        <translation>انفتحت المدافن على الضفة الشمالية، وكل ما كان فيها يسير جنوبًا. ثمة جسر واحد فوق المياه الرمادية. احمِه في وجه أربع نهضات للموتى، كل واحدة أكبر من سابقتها، بسور وتلّين ومئة رجل.</translation>
     </message>
     <message>
         <source>The bridge is gone. Take the south road and do not stop, and do not look back at who is following.</source>

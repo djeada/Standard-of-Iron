@@ -10272,8 +10272,8 @@ um die Vorschau zu sehen</translation>
         <translation>Die Hügelgräber öffnen sich. Lasst sie zur Brücke kommen; jeder von ihnen muss hinüber, und sie ist nur sieben Schritte breit.</translation>
     </message>
     <message>
-        <source>The barrows on the north bank have opened, and everything in them is walking south. There is one bridge over the Grey Water. Hold it through four risings of the dead, each larger than the last, with a wall, two ridges and far too few men.</source>
-        <translation>Die Hügelgräber am Nordufer haben sich geöffnet, und alles, was in ihnen lag, zieht nach Süden. Über das Graue Wasser führt nur eine Brücke. Haltet sie gegen vier Erhebungen der Toten, jede größer als die vorige, mit einer Mauer, zwei Kämmen und viel zu wenigen Männern.</translation>
+        <source>The barrows on the north bank have opened, and everything in them is walking south. There is one bridge over the Grey Water. Hold it through four risings of the dead, each larger than the last, with a wall, two ridges and a hundred men.</source>
+        <translation>Die Hügelgräber am Nordufer haben sich geöffnet, und alles, was in ihnen lag, zieht nach Süden. Über das Graue Wasser führt nur eine Brücke. Haltet sie gegen vier Erhebungen der Toten, jede größer als die vorige, mit einer Mauer, zwei Kämmen und hundert Männern.</translation>
     </message>
     <message>
         <source>The bridge is gone. Take the south road and do not stop, and do not look back at who is following.</source>

@@ -160,6 +160,7 @@ private:
   float m_crowd_smooth{0.0F};
   float m_shoulder{1.0F};
   float m_shoulder_target{1.0F};
+  float m_shoulder_swap_cooldown{0.0F};
 
   QVector3D m_eye_smooth{};
   QVector3D m_target_smooth{};

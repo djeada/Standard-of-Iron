@@ -359,6 +359,15 @@ auto MissionSetupCoordinator::apply_mission_setup(
                      << "- it stands where the mission file put it";
         }
 
+        if (unit_setup.facing.has_value()) {
+          if (auto* transform = ctx.world.try_get<Engine::Core::TransformComponent>(
+                  entity->get_id())) {
+            transform->rotation.y = *unit_setup.facing;
+            transform->desired_yaw = *unit_setup.facing;
+            transform->has_desired_yaw = true;
+          }
+        }
+
         if (unit_setup.behavior == Game::Mission::UnitBehavior::Guard) {
           auto* guard = entity->get_component<Engine::Core::GuardModeComponent>();
           if (guard == nullptr) {

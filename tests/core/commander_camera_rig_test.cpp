@@ -411,9 +411,11 @@ TEST(CommanderCameraRig, ACrowdLiftsTheLensOverTheHeadsWithoutLosingTheCommander
     worst_step = std::max(worst_step, std::abs(eye_y - previous_y));
     previous_y = eye_y;
   }
-  EXPECT_GT(previous_y, open_eye_y + 1.2F)
+  EXPECT_GT(previous_y, open_eye_y + 0.4F)
       << "a commander buried in a melee was framed from shoulder height, behind a "
          "wall of helmets";
+  EXPECT_LT(previous_y, open_eye_y + 1.0F)
+      << "a crowd must not turn the chase camera into an aerial view of the melee";
   EXPECT_LT(worst_step, 0.05F) << "the crowd lift must ease in, not jump";
 
   auto const framing = body_framing(rig, camera, inputs, 16.0F / 9.0F);

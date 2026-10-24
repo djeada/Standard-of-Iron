@@ -1191,6 +1191,46 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
       ++m_last_playback_stats.shadow_rigged_single_draws;
     };
 
+    const auto rigged_casts_in_cascade = [&](const RiggedCreatureCmd& rigged,
+                                             float camera_distance) {
+      return rigged.mesh != nullptr && rigged.bone_palette != nullptr &&
+             rigged.alpha >= k_opaque_threshold &&
+             camera_distance <= cascade_far + rigged_shadow_slack &&
+             camera_distance + rigged_shadow_slack >= cascade_near;
+    };
+    const auto rigged_camera_distance = [&](const RiggedCreatureCmd& rigged) {
+      return (rigged.world.column(3).toVector3D() - cam.get_position()).length();
+    };
+
+    float caster_cutoff = std::numeric_limits<float>::max();
+    if (settings.max_rigged_casters_per_cascade > 0) {
+      const auto budget =
+          static_cast<std::size_t>(settings.max_rigged_casters_per_cascade);
+      thread_local std::vector<float> caster_distances;
+      caster_distances.clear();
+      for (const PreparedBatch& prepared : queue.prepared_batches()) {
+        if (prepared.count == 0U || prepared.type != DrawCmdType::RiggedCreature) {
+          continue;
+        }
+        for (std::size_t index = prepared.start; index < prepared.end(); ++index) {
+          const auto& rigged =
+              std::get<RiggedCreatureCmdIndex>(queue.get_sorted(index));
+          const float camera_distance = rigged_camera_distance(rigged);
+          if (rigged_casts_in_cascade(rigged, camera_distance)) {
+            caster_distances.push_back(camera_distance);
+          }
+        }
+      }
+      if (caster_distances.size() > budget) {
+        std::nth_element(caster_distances.begin(),
+                         caster_distances.begin() + static_cast<std::ptrdiff_t>(budget),
+                         caster_distances.end());
+        caster_cutoff = caster_distances[budget];
+        m_last_playback_stats.shadow_rigged_casters_dropped +=
+            caster_distances.size() - budget;
+      }
+    }
+
     thread_local std::vector<const RiggedCreatureCmd*> visible_rigged;
     for (const PreparedBatch& prepared : queue.prepared_batches()) {
       if (prepared.count == 0U || prepared.type != DrawCmdType::RiggedCreature) {
@@ -1199,12 +1239,9 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
       visible_rigged.clear();
       for (std::size_t index = prepared.start; index < prepared.end(); ++index) {
         const auto& rigged = std::get<RiggedCreatureCmdIndex>(queue.get_sorted(index));
-        const float camera_distance =
-            (rigged.world.column(3).toVector3D() - cam.get_position()).length();
-        if (rigged.mesh == nullptr || rigged.bone_palette == nullptr ||
-            rigged.alpha < k_opaque_threshold ||
-            camera_distance > cascade_far + rigged_shadow_slack ||
-            camera_distance + rigged_shadow_slack < cascade_near) {
+        const float camera_distance = rigged_camera_distance(rigged);
+        if (!rigged_casts_in_cascade(rigged, camera_distance) ||
+            camera_distance >= caster_cutoff) {
           continue;
         }
         visible_rigged.push_back(&rigged);

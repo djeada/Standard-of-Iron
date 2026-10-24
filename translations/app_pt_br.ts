@@ -10272,8 +10272,8 @@ para ver a prévia</translation>
         <translation>Os túmulos estão se abrindo. Deixe-os vir até a ponte; todos eles têm de atravessá-la, e ela tem só sete passos de largura.</translation>
     </message>
     <message>
-        <source>The barrows on the north bank have opened, and everything in them is walking south. There is one bridge over the Grey Water. Hold it through four risings of the dead, each larger than the last, with a wall, two ridges and far too few men.</source>
-        <translation>Os túmulos da margem norte se abriram, e tudo o que havia neles marcha para o sul. Há uma única ponte sobre a Água Cinzenta. Defenda-a contra quatro levas de mortos, cada uma maior que a anterior, com um muro, duas cristas e homens de menos.</translation>
+        <source>The barrows on the north bank have opened, and everything in them is walking south. There is one bridge over the Grey Water. Hold it through four risings of the dead, each larger than the last, with a wall, two ridges and a hundred men.</source>
+        <translation>Os túmulos da margem norte se abriram, e tudo o que havia neles marcha para o sul. Há uma única ponte sobre a Água Cinzenta. Defenda-a contra quatro levas de mortos, cada uma maior que a anterior, com um muro, duas cristas e cem homens.</translation>
     </message>
     <message>
         <source>The bridge is gone. Take the south road and do not stop, and do not look back at who is following.</source>

@@ -33,6 +33,7 @@ struct UnitSetup {
   Position position;
   UnitBehavior behavior = UnitBehavior::Strategic;
   float guard_radius = 10.0F;
+  std::optional<float> facing;
   std::vector<Position> patrol_waypoints;
 
   bool difficulty_scaling = true;
