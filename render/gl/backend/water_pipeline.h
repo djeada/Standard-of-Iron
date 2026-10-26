@@ -43,6 +43,17 @@ public:
     std::array<GL::Shader::UniformHandle, 2> ford_b{GL::Shader::InvalidUniform,
                                                     GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle ford_count{GL::Shader::InvalidUniform};
+    std::array<GL::Shader::UniformHandle, 4> neighbor_segment{
+        GL::Shader::InvalidUniform,
+        GL::Shader::InvalidUniform,
+        GL::Shader::InvalidUniform,
+        GL::Shader::InvalidUniform};
+    std::array<GL::Shader::UniformHandle, 4> neighbor_radius{
+        GL::Shader::InvalidUniform,
+        GL::Shader::InvalidUniform,
+        GL::Shader::InvalidUniform,
+        GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle neighbor_count{GL::Shader::InvalidUniform};
   };
 
   struct RiverbankUniforms {

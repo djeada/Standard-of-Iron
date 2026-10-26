@@ -186,6 +186,8 @@ auto make_view_projection(const Bounds& bounds,
 }
 
 float g_farm_growth = 1.0F;
+float g_at_x = 0.0F;
+float g_at_z = 0.0F;
 float g_animation_time = 0.0F;
 float g_gate_open = 0.0F;
 
@@ -212,7 +214,9 @@ auto render_building(EntityRendererRegistry& registry,
   Engine::Core::StandaloneEntity entity_scratch(1);
   Engine::Core::Entity& entity = entity_scratch.entity();
   entity.add_component<Engine::Core::RenderableComponent>();
-  entity.add_component<Engine::Core::TransformComponent>();
+  auto* transform = entity.add_component<Engine::Core::TransformComponent>();
+  transform->position.x = g_at_x;
+  transform->position.z = g_at_z;
   auto* unit = entity.add_component<Engine::Core::UnitComponent>();
 
   unit->owner_id = preview_owner_id;
@@ -321,6 +325,9 @@ auto main(int argc, char** argv) -> int {
       g_animation_time = QString::fromLatin1(argv[++i]).toFloat();
     } else if (arg == "--gate-open" && i + 1 < argc) {
       g_gate_open = std::clamp(QString::fromLatin1(argv[++i]).toFloat(), 0.0F, 1.0F);
+    } else if (arg == "--at" && i + 2 < argc) {
+      g_at_x = QString::fromLatin1(argv[++i]).toFloat();
+      g_at_z = QString::fromLatin1(argv[++i]).toFloat();
     } else if (arg == "--growth" && i + 1 < argc) {
       g_farm_growth = QString::fromLatin1(argv[++i]).toFloat();
     } else {

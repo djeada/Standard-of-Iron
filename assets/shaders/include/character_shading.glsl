@@ -59,6 +59,28 @@ const int k_humanoid_role_leather = 3;
 const int k_humanoid_role_leather_dark = 4;
 const int k_humanoid_role_metal = 6;
 const int k_humanoid_role_cloth_dark = 7;
+const int k_humanoid_last_body_role = 8;
+const float k_metal_diffuse_scale = 0.64;
+const float k_metal_environment_gain = 0.55;
+const float k_metal_sheen_gain = 0.20;
+const float k_night_direct_keep = 0.84;
+const float k_night_shadow_floor_keep = 0.66;
+const float k_night_rim_boost = 3.2;
+const float k_cloth_wet_darken = 0.32;
+
+float humanoid_equipment_metal_weight(vec3 base) {
+  float high = max(max(base.r, base.g), base.b);
+  float low = min(min(base.r, base.g), base.b);
+  float chroma = high - low;
+  float warm_order = step(base.b, base.g) * step(base.g, base.r);
+  float hue = (base.g - base.b) / max(base.r - base.b, 1e-4);
+  float bronze = warm_order * smoothstep(0.42, 0.56, high) *
+                 smoothstep(0.20, 0.30, chroma) * smoothstep(0.38, 0.48, hue) *
+                 (1.0 - smoothstep(0.82, 0.92, hue));
+  float iron = (1.0 - smoothstep(0.045, 0.085, chroma)) * smoothstep(0.24, 0.32, high) *
+               (1.0 - smoothstep(0.58, 0.68, high));
+  return max(bronze, iron);
+}
 
 vec3 shade_readable_character(vec3 base,
                               vec3 surface_normal,
@@ -90,10 +112,16 @@ vec3 shade_readable_character(vec3 base,
   float fill = readable_ambient * (0.78 + hemisphere * 0.22);
 
   float direct = wrapped_diffuse * environment_primary_intensity() *
-                 mix(1.0, 0.50, environment_night_amount());
+                 mix(1.0, k_night_direct_keep, environment_night_amount());
   vec3 ambient_light =
       mix(environment_ground_bounce_color(), sky_color, hemisphere) * readable_ambient;
-  vec3 color = base * (ambient_light + sun_color * direct) * environment_exposure();
+  float metal_weight = float(material_id == 2 ||
+                             (material_id == 0 && color_role == k_humanoid_role_metal));
+  if (material_id == 0 && color_role > k_humanoid_last_body_role) {
+    metal_weight = humanoid_equipment_metal_weight(base);
+  }
+  vec3 color = base * (ambient_light + sun_color * direct) * environment_exposure() *
+               mix(1.0, k_metal_diffuse_scale, metal_weight);
 
   float shadow_side = 1.0 - wrapped_diffuse;
   color += base * sky_color * fill * shadow_side *
@@ -101,7 +129,8 @@ vec3 shade_readable_character(vec3 base,
 
 #if SOI_CHARACTER_HIGHLIGHTS
   float rim = pow(1.0 - max(dot(surface_normal, view_dir), 0.0), 3.0);
-  color += sky_color * rim * mix(k_readable_rim_near, k_readable_rim_far, zoom);
+  color += sky_color * rim * mix(k_readable_rim_near, k_readable_rim_far, zoom) *
+           (1.0 + k_night_rim_boost * environment_night_amount());
 
   float back_facing = clamp(dot(-view_dir, light_dir), 0.0, 1.0);
   float sun_rim = pow(1.0 - max(dot(surface_normal, view_dir), 0.0), k_sun_rim_power) *
@@ -119,15 +148,25 @@ vec3 shade_readable_character(vec3 base,
   vec3 half_vector = normalize(light_dir + view_dir);
   float n_dot_h = max(dot(surface_normal, half_vector), 0.0);
   float fresnel = pow(1.0 - max(dot(surface_normal, view_dir), 0.0), 4.0);
-  if (material_id == 2 || (material_id == 0 && color_role == k_humanoid_role_metal)) {
+  if (metal_weight > 0.0) {
 
-    float metal_glint = pow(n_dot_h, mix(48.0, 24.0, zoom));
+    float glint_power = mix(mix(48.0, 24.0, zoom), 64.0, wetness * 0.5);
+    float metal_glint = pow(n_dot_h, glint_power);
     float metal_sheen = pow(n_dot_h, 9.0);
     vec3 metal_tint = mix(base, sqrt(max(base, vec3(0.0))), 0.35);
-    color += sun_color * environment_primary_intensity() *
-             (metal_glint * mix(0.48, 0.32, zoom) + metal_sheen * 0.10) * metal_tint;
-    color += sky_color * (0.06 + fresnel * 0.18) * metal_tint;
-    color += local_lighting_specular(world_position, surface_normal, view_dir, 1.0);
+    vec3 reflected = reflect(-view_dir, surface_normal);
+    float sky_view = smoothstep(-0.30, 0.70, reflected.y);
+    vec3 reflected_environment =
+        mix(environment_ground_bounce_color() * 0.45, sky_color, sky_view);
+    color += metal_weight * sun_color * environment_primary_intensity() *
+             (metal_glint * mix(0.52, 0.36, zoom) * (1.0 + wetness * 0.35) +
+              metal_sheen * k_metal_sheen_gain) *
+             metal_tint;
+    color += metal_weight * reflected_environment * metal_tint *
+             (k_metal_environment_gain * (0.35 + 0.65 * fresnel) + 0.05) *
+             environment_exposure() * mix(1.0, 1.35, environment_darkness_amount());
+    color += metal_weight *
+             local_lighting_specular(world_position, surface_normal, view_dir, 1.0);
   } else if (material_id == 0 && (color_role == k_humanoid_role_leather ||
                                   color_role == k_humanoid_role_leather_dark)) {
 
@@ -148,6 +187,9 @@ vec3 shade_readable_character(vec3 base,
     float cloth_sheen = pow(n_dot_h, 6.0);
     color +=
         base * mix(sky_color, sun_color, 0.30) * cloth_sheen * mix(0.018, 0.028, zoom);
+    float cloth_edge = pow(1.0 - max(dot(surface_normal, view_dir), 0.0), 2.5);
+    color += base * sky_color * cloth_edge * 0.05 * (1.0 - wetness);
+    color = mix(color, color * k_wet_darken, wetness * k_cloth_wet_darken);
   } else if (wetness > 0.0) {
 
     bool coat = false;
@@ -228,7 +270,7 @@ vec3 soi_finish_character(vec3 color,
                        : material_id == k_wildlife_material ? k_wildlife_shadow_floor
                                                             : k_readable_shadow_floor;
 
-  shadow_floor *= mix(1.0, 0.30, environment_night_amount());
+  shadow_floor *= mix(1.0, k_night_shadow_floor_keep, environment_night_amount());
   color = max(color, base * sky_color * shadow_floor);
 #if SOI_CHARACTER_WANTS(SOI_CHARACTER_WILDLIFE)
   if (material_id == k_wildlife_material) {

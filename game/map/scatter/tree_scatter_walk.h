@@ -13,6 +13,7 @@
 #include "game/map/scatter/scatter_composition_context.h"
 #include "game/map/scatter/scatter_rules.h"
 #include "game/map/scatter/spawn_validator.h"
+#include "game/map/scatter/value_noise.h"
 
 namespace Render::Ground {
 
@@ -21,6 +22,17 @@ inline constexpr float k_forest_canopy_cluster = 1.15F;
 inline constexpr float k_forest_canopy_multiplier = 1.6F;
 inline constexpr float k_tree_density_area_scale = 16.0F / 36.0F;
 inline constexpr float k_tree_edge_padding_scale = 0.35F;
+
+[[nodiscard]] inline auto
+forest_stand_density(float world_x, float world_z, std::uint32_t seed) -> float {
+
+  float const broad = value_noise(world_x / 18.0F, world_z / 18.0F, seed ^ 0x51A7U);
+  float const detail = value_noise(world_x / 8.0F, world_z / 8.0F, seed ^ 0xB39DU);
+  float stand = std::clamp((0.8F * broad + 0.2F * detail - 0.28F) / 0.44F, 0.0F, 1.0F);
+  stand = stand * stand * (3.0F - 2.0F * stand);
+
+  return 0.08F + 1.90F * stand;
+}
 
 enum class SceneChannel : std::uint8_t {
   None = 0,
@@ -299,8 +311,13 @@ void walk_tree_scatter(const TreeScatterProfile& profile,
           hash_coords(x / 4, z / 4, input.noise_seed ^ profile.mid_salt);
       float const mid_noise = rand_01(mid_state);
       float const cluster_noise = macro_noise * 0.65F + mid_noise * 0.35F;
+      float world_x = 0.0F;
+      float world_z = 0.0F;
+      validator.grid_to_world(
+          static_cast<float>(sample_x), static_cast<float>(sample_z), world_x, world_z);
       float const cluster_mult =
-          in_forest ? k_forest_canopy_cluster
+          in_forest ? k_forest_canopy_cluster *
+                          forest_stand_density(world_x, world_z, input.noise_seed)
                     : profile.cluster_base +
                           cluster_noise * cluster_noise * profile.cluster_gain;
       if (!in_forest) {

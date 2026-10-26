@@ -10,6 +10,7 @@ auto resolve_humanoid_held_pose(const HumanoidHeldPoseInputs& inputs) noexcept
     -> HumanoidHeldPoseSample {
   float const shoulder_y = inputs.shoulder_y;
   float const run_mix = inputs.running ? 1.0F : 0.0F;
+  float const march_mix = inputs.moving && !inputs.running ? 1.0F : 0.0F;
   float const hold_cycle =
       std::sin(inputs.sample_time * (2.0F * std::numbers::pi_v<float>) / 1.8F);
   HumanoidHeldPoseSample sample{};
@@ -18,13 +19,14 @@ auto resolve_humanoid_held_pose(const HumanoidHeldPoseInputs& inputs) noexcept
   case HumanoidHeldPoseKind::SpearIdle:
 
     sample.right_hand = {
-        0.26F - 0.04F * run_mix,
-        shoulder_y - 0.36F - 0.04F * run_mix,
-        0.10F + 0.14F * run_mix,
+        0.26F - 0.04F * run_mix - 0.02F * march_mix,
+        shoulder_y - 0.36F - 0.04F * run_mix - 0.04F * march_mix,
+        0.10F + 0.14F * run_mix - 0.02F * march_mix,
     };
     sample.use_offhand_spear_grip = true;
-    sample.offhand_spear_direction = inputs.running ? PoseVec3{0.030F, 0.420F, 0.907F}
-                                                    : PoseVec3{0.040F, 0.616F, 0.787F};
+    sample.offhand_spear_direction = inputs.running  ? PoseVec3{0.030F, 0.420F, 0.907F}
+                                     : inputs.moving ? PoseVec3{0.035F, 0.860F, 0.509F}
+                                                     : PoseVec3{0.040F, 0.616F, 0.787F};
     sample.offhand_along_offset = 0.44F - 0.06F * run_mix;
     sample.offhand_y_drop = 0.0F;
     sample.offhand_lateral_offset = -0.04F;
@@ -132,12 +134,14 @@ auto resolve_humanoid_held_pose(const HumanoidHeldPoseInputs& inputs) noexcept
   }
   case HumanoidHeldPoseKind::SwordShieldCarry: {
     float const moving_mix = inputs.moving ? 1.0F : 0.0F;
-    sample.right_hand = {0.38F + moving_mix * 0.03F - run_mix * 0.09F,
-                         shoulder_y - 0.14F - moving_mix * 0.05F - run_mix * 0.07F,
-                         0.52F + moving_mix * 0.06F + run_mix * 0.09F};
-    sample.left_hand = {-0.32F - moving_mix * 0.03F + run_mix * 0.07F,
-                        shoulder_y - 0.02F - moving_mix * 0.03F + run_mix * 0.03F,
-                        0.28F + moving_mix * 0.05F + run_mix * 0.13F};
+    sample.right_hand = {
+        0.38F + moving_mix * 0.03F - run_mix * 0.09F - march_mix * 0.11F,
+        shoulder_y - 0.14F - moving_mix * 0.05F - run_mix * 0.07F - march_mix * 0.19F,
+        0.52F + moving_mix * 0.06F + run_mix * 0.09F - march_mix * 0.30F};
+    sample.left_hand = {
+        -0.32F - moving_mix * 0.03F + run_mix * 0.07F + march_mix * 0.04F,
+        shoulder_y - 0.02F - moving_mix * 0.03F + run_mix * 0.03F - march_mix * 0.15F,
+        0.28F + moving_mix * 0.05F + run_mix * 0.13F - march_mix * 0.09F};
     sample.shoulder_r_y_delta = -0.020F * run_mix;
     sample.shoulder_l_y_delta = -0.010F * run_mix;
     sample.shoulder_r_z_delta = 0.045F * run_mix;
@@ -147,10 +151,14 @@ auto resolve_humanoid_held_pose(const HumanoidHeldPoseInputs& inputs) noexcept
     sample.head_z_delta = 0.030F * run_mix;
 
     sample.has_blade_direction = true;
-    sample.blade_direction = {0.05F, 0.985F, 0.17F + 0.03F * run_mix};
+    sample.blade_direction = {0.05F,
+                              0.985F - 0.030F * march_mix,
+                              0.17F + 0.03F * run_mix + 0.10F * march_mix};
 
     sample.has_offhand_axis = true;
-    sample.offhand_axis = {-0.10F - 0.04F * run_mix, 0.98F, 0.17F + 0.06F * run_mix};
+    sample.offhand_axis = {-0.10F - 0.04F * run_mix + 0.04F * march_mix,
+                           0.98F,
+                           0.17F + 0.06F * run_mix - 0.07F * march_mix};
     break;
   }
   case HumanoidHeldPoseKind::WadeSwordShield: {
@@ -212,6 +220,27 @@ auto resolve_humanoid_held_pose(const HumanoidHeldPoseInputs& inputs) noexcept
     sample.neck_z_delta = 0.012F;
     break;
   }
+  }
+
+  if (march_mix > 0.0F) {
+    float const sway =
+        std::sin((inputs.cycle_phase - 0.30F) * 2.0F * std::numbers::pi_v<float>);
+    float const settle =
+        std::cos((inputs.cycle_phase - 0.30F) * 4.0F * std::numbers::pi_v<float>);
+    switch (inputs.kind) {
+    case HumanoidHeldPoseKind::SwordShieldCarry:
+      sample.right_hand.z -= 0.050F * sway;
+      sample.right_hand.y -= 0.012F * sway + 0.008F * settle;
+      sample.left_hand.z += 0.022F * sway;
+      sample.left_hand.y -= 0.008F * settle;
+      break;
+    case HumanoidHeldPoseKind::SpearIdle:
+      sample.right_hand.z -= 0.035F * sway;
+      sample.right_hand.y -= 0.008F * settle;
+      break;
+    default:
+      break;
+    }
   }
 
   if (inputs.running) {

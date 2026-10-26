@@ -138,6 +138,7 @@ struct SoldierAnimationDebugSample {
   bool persistent_valid{false};
   float persistent_last_sample_time{0.0F};
   float hit_reaction_tilt_degrees{0.0F};
+  bool combat_ready_stance{false};
 
   float submitted_body_up_y{1.0F};
   float submitted_body_tilt_degrees{0.0F};

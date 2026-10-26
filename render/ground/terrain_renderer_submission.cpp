@@ -8,11 +8,13 @@
 #include <cmath>
 #include <cstddef>
 
+#include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
 #include "render/gl/gl_resource_tracking.h"
 #include "render/gl/shader.h"
 #include "render/gl/texture.h"
 #include "render/graphics_settings.h"
+#include "render/ground/ground_ecology.h"
 #include "render/scene_renderer.h"
 #include "terrain_renderer.h"
 
@@ -34,6 +36,7 @@ constexpr float k_openness_dir_x[k_openness_directions] = {
 constexpr float k_openness_dir_z[k_openness_directions] = {
     0.0F, 0.866F, 0.866F, 0.0F, -0.866F, -0.866F};
 constexpr std::size_t k_terrain_field_channels = 4U;
+constexpr std::size_t k_cover_channels = 4U;
 
 constexpr int k_microdetail_size_full = 1024;
 constexpr int k_microdetail_size_low = 512;
@@ -50,37 +53,178 @@ constexpr float k_microdetail_cells = 32.0F;
 void TerrainRenderer::bake_cover_mask() {
   const auto count =
       static_cast<std::size_t>(m_width) * static_cast<std::size_t>(m_height);
-  std::vector<float> wood(count, 0.0F);
-  for (std::size_t index = 0; index < count && index < m_terrain_types.size();
-       ++index) {
-    wood[index] =
-        m_terrain_types[index] == Game::Map::TerrainType::Forest ? 1.0F : 0.0F;
+  if (m_ecology == nullptr || m_ecology->width != m_width ||
+      m_ecology->height != m_height) {
+    const auto* terrain = world().terrain();
+    const auto* height_map = terrain != nullptr ? terrain->get_height_map() : nullptr;
+    if (height_map != nullptr && height_map->get_width() == m_width &&
+        height_map->get_height() == m_height) {
+      m_ecology =
+          Render::Ground::shared_ground_ecology(terrain, *height_map, m_noise_seed);
+    } else {
+      m_ecology = std::make_shared<const Render::Ground::GroundEcologyField>(
+          Render::Ground::build_ground_ecology(
+              m_height_data,
+              m_terrain_types,
+              m_width,
+              m_height,
+              m_tile_size,
+              Render::Ground::ecology_seed(m_noise_seed),
+              nullptr));
+    }
   }
-  constexpr int k_feather_passes = 2;
-  std::vector<float> pass(count, 0.0F);
-  for (int iteration = 0; iteration < k_feather_passes; ++iteration) {
-    for (int z = 0; z < m_height; ++z) {
-      for (int x = 0; x < m_width; ++x) {
-        float sum = 0.0F;
-        int taken = 0;
-        for (int dz = -1; dz <= 1; ++dz) {
-          for (int dx = -1; dx <= 1; ++dx) {
-            const int nx = x + dx;
-            const int nz = z + dz;
-            if (nx < 0 || nz < 0 || nx >= m_width || nz >= m_height) {
-              continue;
-            }
-            sum += wood[static_cast<std::size_t>(nz * m_width + nx)];
-            ++taken;
+  m_cover_data.assign(count * k_cover_channels, 0.0F);
+  auto copy_layer = [&](const std::vector<float>& layer, std::size_t channel) {
+    if (layer.size() < count) {
+      return;
+    }
+    for (std::size_t index = 0; index < count; ++index) {
+      m_cover_data[index * k_cover_channels + channel] = layer[index];
+    }
+  };
+  copy_layer(m_ecology->forest, 0U);
+  copy_layer(m_ecology->road_proximity, 1U);
+  copy_layer(m_ecology->margin, 2U);
+  copy_layer(m_ecology->talus, 3U);
+  stamp_building_ground();
+}
+
+void TerrainRenderer::stamp_building_ground() {
+  using Render::Ground::ecology_detail::step_between;
+  if (m_building_footprints.empty() || m_width <= 0 || m_height <= 0) {
+    return;
+  }
+  const float tile = std::max(m_tile_size, 1e-4F);
+  const float half_extent_x = static_cast<float>(m_width) * 0.5F - 0.5F;
+  const float half_extent_z = static_cast<float>(m_height) * 0.5F - 0.5F;
+  constexpr float k_verge_scale = 0.36F;
+  constexpr float k_wall_foot = 0.9F;
+  constexpr float k_path_reach = 36.0F;
+  constexpr float k_path_value = 1.25F;
+  constexpr float k_yard_encoding = 2.0F;
+  constexpr float k_deg_to_rad = 0.017453292F;
+
+  auto texel = [&](int x, int z, std::size_t channel) -> float& {
+    return m_cover_data[(static_cast<std::size_t>(z) *
+                             static_cast<std::size_t>(m_width) +
+                         static_cast<std::size_t>(x)) *
+                            k_cover_channels +
+                        channel];
+  };
+  auto for_cells =
+      [&](float min_wx, float max_wx, float min_wz, float max_wz, auto&& visit) {
+        int const x0 =
+            std::max(0, static_cast<int>(std::floor(min_wx / tile + half_extent_x)));
+        int const x1 = std::min(
+            m_width - 1, static_cast<int>(std::ceil(max_wx / tile + half_extent_x)));
+        int const z0 =
+            std::max(0, static_cast<int>(std::floor(min_wz / tile + half_extent_z)));
+        int const z1 = std::min(
+            m_height - 1, static_cast<int>(std::ceil(max_wz / tile + half_extent_z)));
+        for (int z = z0; z <= z1; ++z) {
+          float const wz = (static_cast<float>(z) - half_extent_z) * tile;
+          for (int x = x0; x <= x1; ++x) {
+            visit(x, z, (static_cast<float>(x) - half_extent_x) * tile, wz);
           }
         }
-        pass[static_cast<std::size_t>(z * m_width + x)] =
-            taken > 0 ? sum / static_cast<float>(taken) : 0.0F;
+      };
+
+  const std::vector<Game::Map::RoadSegment>* roads = nullptr;
+  if (const auto* terrain = world().terrain(); terrain != nullptr) {
+    roads = &terrain->road_segments();
+  }
+
+  for (const auto& footprint : m_building_footprints) {
+    float const parcel = Render::Ground::hash_to_01(
+        Render::Ground::hash_coords(static_cast<int>(std::lround(footprint.x * 4.0F)),
+                                    static_cast<int>(std::lround(footprint.z * 4.0F)),
+                                    0x2C1B3C6DU));
+    float const reach = 1.5F + 1.7F * parcel;
+    float const yaw = footprint.yaw_degrees * k_deg_to_rad;
+    float const c = std::cos(yaw);
+    float const s = std::sin(yaw);
+    float const outer = reach / k_verge_scale;
+    float const radius = std::sqrt(footprint.half_width * footprint.half_width +
+                                   footprint.half_depth * footprint.half_depth) +
+                         outer;
+    for_cells(footprint.x - radius,
+              footprint.x + radius,
+              footprint.z - radius,
+              footprint.z + radius,
+              [&](int x, int z, float wx, float wz) {
+                float const dx = wx - footprint.x;
+                float const dz = wz - footprint.z;
+                float const local_x = c * dx - s * dz;
+                float const local_z = s * dx + c * dz;
+                float const ox =
+                    std::max(std::abs(local_x) - footprint.half_width, 0.0F);
+                float const oz =
+                    std::max(std::abs(local_z) - footprint.half_depth, 0.0F);
+                float const distance = std::sqrt(ox * ox + oz * oz);
+                float const trodden =
+                    std::clamp(1.0F - k_verge_scale * distance / reach, 0.0F, 1.0F);
+                float& verge = texel(x, z, 1U);
+                verge = std::max(verge, trodden * k_yard_encoding);
+                float const foot = 1.0F - step_between(0.0F, k_wall_foot, distance);
+                if (foot > 0.0F) {
+                  float& apron = texel(x, z, 3U);
+                  apron = std::max(apron, 1.0F + foot);
+                }
+              });
+
+    if (roads == nullptr || roads->empty()) {
+      continue;
+    }
+    float best = k_path_reach;
+    float target_x = 0.0F;
+    float target_z = 0.0F;
+    for (const auto& road : *roads) {
+      float const ax = road.start.x();
+      float const az = road.start.z();
+      float const rx = road.end.x() - ax;
+      float const rz = road.end.z() - az;
+      float const length_sq = rx * rx + rz * rz;
+      float t = 0.0F;
+      if (length_sq > 1e-6F) {
+        t = std::clamp(((footprint.x - ax) * rx + (footprint.z - az) * rz) / length_sq,
+                       0.0F,
+                       1.0F);
+      }
+      float const px = ax + rx * t;
+      float const pz = az + rz * t;
+      float const gap =
+          std::hypot(px - footprint.x, pz - footprint.z) - road.width * 0.5F;
+      if (gap < best) {
+        best = gap;
+        target_x = px;
+        target_z = pz;
       }
     }
-    wood.swap(pass);
+    float const clearance = std::max(footprint.half_width, footprint.half_depth);
+    if (best >= k_path_reach || best <= clearance) {
+      continue;
+    }
+    float const path_half = 0.55F + 0.35F * parcel;
+    float const sx = footprint.x;
+    float const sz = footprint.z;
+    float const ex = target_x - sx;
+    float const ez = target_z - sz;
+    float const path_length_sq = std::max(ex * ex + ez * ez, 1e-6F);
+    for_cells(std::min(sx, target_x) - path_half - 1.0F,
+              std::max(sx, target_x) + path_half + 1.0F,
+              std::min(sz, target_z) - path_half - 1.0F,
+              std::max(sz, target_z) + path_half + 1.0F,
+              [&](int x, int z, float wx, float wz) {
+                float const t = std::clamp(
+                    ((wx - sx) * ex + (wz - sz) * ez) / path_length_sq, 0.0F, 1.0F);
+                float const off = std::hypot(sx + ex * t - wx, sz + ez * t - wz);
+                float const value =
+                    k_path_value *
+                    (1.0F - step_between(path_half * 0.5F, path_half, off));
+                float& verge = texel(x, z, 1U);
+                verge = std::max(verge, value);
+              });
   }
-  m_cover_data = std::move(wood);
 }
 
 void TerrainRenderer::bake_terrain_fields() {
@@ -421,7 +565,9 @@ void TerrainRenderer::bake_terrain_noise_atlas() {
   qInfo() << "TerrainRenderer: baked terrain noise atlas" << atlas_size << "squared";
 }
 
-auto TerrainRenderer::update_height_texture() -> TerrainSurfaceCmd::HeightResources {
+auto TerrainRenderer::update_height_texture(
+    const Render::Ground::BuildingGroundSet& building_ground)
+    -> TerrainSurfaceCmd::HeightResources {
   TerrainSurfaceCmd::HeightResources resources;
   if (m_width <= 0 || m_height <= 0 || m_height_data.empty()) {
     return resources;
@@ -502,13 +648,18 @@ auto TerrainRenderer::update_height_texture() -> TerrainSurfaceCmd::HeightResour
                                   m_cover_texture->get_height() != m_height;
   if (cover_size_changed) {
     m_cover_texture = std::make_unique<Texture>();
-    if (!m_cover_texture->create_empty(m_width, m_height, Texture::Format::R32F)) {
+    if (!m_cover_texture->create_empty(m_width, m_height, Texture::Format::RGBA16F)) {
       m_cover_texture.reset();
     } else {
       m_cover_texture->set_filter(Texture::Filter::Linear, Texture::Filter::Linear);
       m_cover_texture->set_wrap(Texture::Wrap::ClampToEdge, Texture::Wrap::ClampToEdge);
       m_cover_dirty = true;
     }
+  }
+  if (building_ground.revision != m_building_ground_revision) {
+    m_building_ground_revision = building_ground.revision;
+    m_building_footprints = building_ground.footprints;
+    m_cover_dirty = true;
   }
   if (m_cover_texture != nullptr && m_cover_dirty) {
     bake_cover_mask();
@@ -519,11 +670,11 @@ auto TerrainRenderer::update_height_texture() -> TerrainSurfaceCmd::HeightResour
                         0,
                         m_width,
                         m_height,
-                        GL_RED,
+                        GL_RGBA,
                         GL_FLOAT,
                         m_cover_data.data());
     note_texture_transfer(texture_transfer_bytes(
-        static_cast<std::size_t>(m_width), static_cast<std::size_t>(m_height), 4U));
+        static_cast<std::size_t>(m_width), static_cast<std::size_t>(m_height), 16U));
     m_cover_dirty = false;
   }
 
@@ -559,7 +710,8 @@ void TerrainRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   Q_UNUSED(resources);
 
   TerrainSurfaceCmd::VisibilityResources visibility_resources;
-  const TerrainSurfaceCmd::HeightResources height_resources = update_height_texture();
+  const TerrainSurfaceCmd::HeightResources height_resources =
+      update_height_texture(renderer.building_ground());
   renderer.set_terrain_height_resources(height_resources);
   renderer.set_ground_fog(m_ground_fog);
   if (renderer.static_world_visibility_filter_enabled()) {

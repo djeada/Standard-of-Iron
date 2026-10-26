@@ -62,9 +62,15 @@ const vec3 k_ground_fog_lift = vec3(1.02, 1.03, 1.04);
 const float k_mist_water_ceiling = 1.7;
 const float k_mist_miasma_ceiling = 2.8;
 const float k_mist_miasma_gain = 0.72;
-const float k_mist_bank_reach = 7.0;
+const float k_mist_bank_reach = 3.6;
+const float k_mist_bank_ragged = 3.2;
 const float k_mist_view_reach = 9.0;
-const vec3 k_mist_water_lift = vec3(1.18, 1.18, 1.16);
+const vec3 k_mist_water_lift = vec3(1.02, 1.04, 1.06);
+const float k_mist_water_clear_day = 0.12;
+const float k_mist_water_night = 0.65;
+const float k_mist_water_low_sun = 1.00;
+const float k_mist_water_weather = 1.00;
+const float k_mist_water_wetness = 0.70;
 const vec3 k_mist_miasma_tint = vec3(0.92, 1.03, 1.02);
 const vec3 k_mist_miasma_floor = vec3(0.008, 0.014, 0.014);
 
@@ -173,6 +179,16 @@ float valley_fog(vec3 world) {
                k_ground_fog_max_opacity);
 }
 
+float water_mist_condition() {
+  float night = environment_night_amount() * k_mist_water_night;
+  float low_sun = environment_low_sun_amount() * k_mist_water_low_sun;
+  float weather =
+      smoothstep(0.005, 0.024, environment_fog_density()) * k_mist_water_weather;
+  float wet = environment_wetness() * k_mist_water_wetness;
+  float condition = clamp(max(max(night, low_sun), max(weather, wet)), 0.0, 1.0);
+  return mix(k_mist_water_clear_day, 1.0, condition);
+}
+
 vec2 ground_mist(vec3 world) {
   if (u_mist_count == 0) {
     return vec2(0.0);
@@ -191,7 +207,7 @@ vec2 ground_mist(vec3 world) {
     vec2 ba = b - a;
     float t = clamp(dot(pa, ba) / max(dot(ba, ba), 1e-4), 0.0, 1.0);
     float edge = length(pa - ba * t) - u_mist_info[i].x;
-    float ragged_edge = edge + (drift - 0.5) * 2.6;
+    float ragged_edge = edge + (drift - 0.5) * k_mist_bank_ragged;
     float lateral = 1.0 - smoothstep(0.0, k_mist_bank_reach, ragged_edge);
     lateral *= lateral;
     bool is_miasma = u_mist_info[i].z > 0.5;
@@ -210,10 +226,16 @@ vec2 ground_mist(vec3 world) {
     }
   }
   float patch = smoothstep(0.30, 0.72, 0.62 * drift + 0.38 * swirl);
-  float breakup = 0.25 + 0.75 * patch;
   float view_distance = length(u_camera_position - world);
   float depth_through = 1.0 - exp(-view_distance / k_mist_view_reach);
-  return clamp(vec2(water, miasma) * breakup * depth_through, 0.0, 1.0);
+  float water_patch = smoothstep(0.40, 0.80, 0.62 * drift + 0.38 * swirl);
+  float water_breakup = 0.05 + 0.95 * water_patch;
+  float miasma_breakup = 0.25 + 0.75 * patch;
+  return clamp(
+      vec2(water * water_breakup * water_mist_condition(), miasma * miasma_breakup) *
+          depth_through,
+      0.0,
+      1.0);
 }
 
 float night_amount() {

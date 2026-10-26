@@ -22,10 +22,15 @@ inline constexpr float k_forest_outline_reach = 1.2F;
 [[nodiscard]] inline auto
 forest_outline_scale(float seed, float dx, float dz) -> float {
   constexpr float k_tau = 6.2831853F;
-  float const angle = std::atan2(dz, dx);
-  return 1.0F + (0.10F * std::sin((2.0F * angle) + (seed * k_tau))) +
-         (0.06F * std::sin((3.0F * angle) + (seed * 2.0F * k_tau) + 1.3F)) +
-         (0.04F * std::sin((5.0F * angle) + (seed * 3.0F * k_tau) + 2.1F));
+  float const angle = std::atan2(dz, dx) - seed * k_tau;
+  float const along = std::cos(angle) / 1.18F;
+  float const across = std::sin(angle) / 0.94F;
+  float const ellipse = 1.0F / std::sqrt(along * along + across * across);
+  float const inlet = 0.5F + 0.5F * std::sin(3.0F * angle + seed * k_tau + 1.3F);
+  float const inlet_squared = inlet * inlet;
+
+  return ellipse - 0.20F * inlet_squared * inlet_squared +
+         0.02F * std::sin(5.0F * angle + 2.1F);
 }
 
 } // namespace Game::Map

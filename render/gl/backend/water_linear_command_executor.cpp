@@ -177,6 +177,23 @@ void Backend::execute_water_linear_commands(const PreparedBatch& prepared,
               }
             }
           }
+          if (uniforms.neighbor_count != Shader::InvalidUniform) {
+            int const neighbors = std::clamp(single.water_neighbor_count,
+                                             0,
+                                             TerrainFeatureCmd::k_max_water_neighbors);
+            water_shader->set_uniform(uniforms.neighbor_count, neighbors);
+            for (int neighbor = 0; neighbor < neighbors; ++neighbor) {
+              auto const slot = static_cast<std::size_t>(neighbor);
+              if (uniforms.neighbor_segment[slot] != Shader::InvalidUniform) {
+                water_shader->set_uniform(uniforms.neighbor_segment[slot],
+                                          single.water_neighbor_segment[slot]);
+              }
+              if (uniforms.neighbor_radius[slot] != Shader::InvalidUniform) {
+                water_shader->set_uniform(uniforms.neighbor_radius[slot],
+                                          single.water_neighbor_radius[slot]);
+              }
+            }
+          }
           water_shader->set_uniform(m_water_pipeline->m_water_uniforms.model,
                                     single.model);
           if (m_water_pipeline->m_water_uniforms.segment_visibility !=

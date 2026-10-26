@@ -3,12 +3,14 @@
 #include <cmath>
 #include <gtest/gtest.h>
 #include <limits>
+#include <span>
 #include <string_view>
 #include <utility>
 #include <variant>
 #include <vector>
 
 #include "animation/elephant_gait_manifest.h"
+#include "animation/elephant_motion_manifest.h"
 #include "render/creature/schema/creature_runtime_manifest.h"
 #include "render/creature/skeleton.h"
 #include "render/elephant/elephant_manifest.h"
@@ -20,6 +22,54 @@
 namespace {
 
 using Render::Creature::Quadruped::CustomMeshNode;
+
+TEST(ElephantSourceAssetTest, SwingLiftEasesIntoContactAndLeavesStanceFeetLevel) {
+  for (auto const* shape :
+       {&Animation::elephant_walk_shape(), &Animation::elephant_run_shape()}) {
+    for (auto const leg : {Animation::ElephantLeg::FrontLeft,
+                           Animation::ElephantLeg::FrontRight,
+                           Animation::ElephantLeg::BackLeft,
+                           Animation::ElephantLeg::BackRight}) {
+      float const offset = Animation::elephant_leg_phase_offset_lateral(leg);
+      constexpr float step = 0.0001F;
+      auto const lifting =
+          Animation::sample_elephant_leg(*shape, leg, offset + shape->duty + step);
+      auto const landing =
+          Animation::sample_elephant_leg(*shape, leg, offset + 1.0F - step);
+
+      EXPECT_LT(std::abs(lifting.knee_degrees) / step, 1.0F);
+      EXPECT_LT(std::abs(landing.knee_degrees) / step, 1.0F);
+      auto const mid_swing = Animation::sample_elephant_leg(
+          *shape, leg, offset + shape->duty + (1.0F - shape->duty) * 0.5F);
+      EXPECT_NEAR(mid_swing.knee_degrees, shape->lift_knee_degrees, 0.001F);
+      for (int frame = 0; frame < 100; ++frame) {
+        auto const sample = Animation::sample_elephant_leg(
+            *shape, leg, offset + shape->duty * frame / 100.0F);
+        EXPECT_NEAR(sample.thigh_degrees + sample.knee_degrees + sample.foot_degrees,
+                    0.0F,
+                    0.001F);
+      }
+    }
+  }
+}
+
+TEST(ElephantSourceAssetTest, SecondaryMotionLoopsWithRestrainedBodyRotation) {
+  for (auto const* shape :
+       {&Animation::elephant_walk_shape(), &Animation::elephant_run_shape()}) {
+    for (int frame = 0; frame < 128; ++frame) {
+      float const phase = frame / 128.0F;
+      auto const a = Animation::elephant_locomotion_secondary(*shape, phase);
+      auto const b = Animation::elephant_locomotion_secondary(*shape, phase + 1.0F);
+      EXPECT_LE(std::abs(a.body_roll_degrees), 1.0F);
+      EXPECT_LE(std::abs(a.body_pitch_degrees), 0.3F);
+      EXPECT_NEAR(a.body_roll_degrees, b.body_roll_degrees, 0.0001F);
+      EXPECT_NEAR(a.ear_left_degrees, b.ear_left_degrees, 0.0001F);
+      EXPECT_NEAR(a.ear_right_degrees, b.ear_right_degrees, 0.0001F);
+      EXPECT_LE(std::abs(a.ear_left_degrees), shape->ear_flap_degrees);
+      EXPECT_LE(std::abs(a.ear_right_degrees), shape->ear_flap_degrees);
+    }
+  }
+}
 
 TEST(ElephantSourceAssetTest, ProductionTopologyAndSkinWeightsAreExact) {
   auto const& status = Render::Elephant::elephant_source_asset_status();
@@ -81,16 +131,67 @@ TEST(ElephantSourceAssetTest, ProductionMeshCarriesBothEyes) {
   EXPECT_TRUE(found_eyes);
 }
 
-TEST(ElephantSourceAssetTest, ManifestRendersTheSourceMeshUnmodified) {
+TEST(ElephantSourceAssetTest, FullLodRefinesTheSkinAndMinimalKeepsTheCage) {
   auto const source = Render::Elephant::elephant_source_mesh_nodes();
-  for (auto const& lod : {Render::Elephant::elephant_runtime_manifest().lod_full,
-                          Render::Elephant::elephant_runtime_manifest().lod_minimal}) {
-    ASSERT_EQ(lod.mesh_nodes.size(), source.size());
-    for (std::size_t index = 0U; index < source.size(); ++index) {
-      EXPECT_EQ(lod.mesh_nodes[index].debug_name, source[index].debug_name);
-      EXPECT_EQ(std::get<CustomMeshNode>(lod.mesh_nodes[index].data).indices.size(),
-                std::get<CustomMeshNode>(source[index].data).indices.size());
+  auto const& manifest = Render::Elephant::elephant_runtime_manifest();
+  ASSERT_EQ(manifest.lod_full.mesh_nodes.size(), source.size());
+  ASSERT_EQ(manifest.lod_minimal.mesh_nodes.size(), source.size());
+  for (std::size_t index = 0U; index < source.size(); ++index) {
+    auto const source_triangles =
+        std::get<CustomMeshNode>(source[index].data).indices.size() / 3U;
+    auto const full_triangles =
+        std::get<CustomMeshNode>(manifest.lod_full.mesh_nodes[index].data)
+            .indices.size() /
+        3U;
+    auto const minimal_triangles =
+        std::get<CustomMeshNode>(manifest.lod_minimal.mesh_nodes[index].data)
+            .indices.size() /
+        3U;
+    EXPECT_EQ(manifest.lod_full.mesh_nodes[index].debug_name, source[index].debug_name);
+    EXPECT_EQ(minimal_triangles, source_triangles);
+    if (source[index].debug_name == "elephant.production.skin") {
+      EXPECT_GE(full_triangles, source_triangles * 15U);
+    } else {
+      EXPECT_EQ(full_triangles, source_triangles);
     }
+  }
+}
+
+TEST(ElephantSourceAssetTest, RefinedSkinKeepsWeightsGroundAndSilhouette) {
+  auto const bind = Render::Elephant::elephant_source_bind_palette();
+  auto const& manifest = Render::Elephant::elephant_runtime_manifest();
+  auto bounds = [&](std::span<const Render::Creature::Quadruped::MeshNode> nodes) {
+    QVector3D lo(std::numeric_limits<float>::max(),
+                 std::numeric_limits<float>::max(),
+                 std::numeric_limits<float>::max());
+    QVector3D hi(std::numeric_limits<float>::lowest(),
+                 std::numeric_limits<float>::lowest(),
+                 std::numeric_limits<float>::lowest());
+    for (auto const& node : nodes) {
+      auto const& mesh = std::get<CustomMeshNode>(node.data);
+      QMatrix4x4 const root = bind[static_cast<std::size_t>(node.anchor_bone)];
+      for (auto const& vertex : mesh.vertices) {
+        float weight_sum = 0.0F;
+        for (float const weight : vertex.bone_weights) {
+          weight_sum += weight;
+        }
+        EXPECT_NEAR(weight_sum, 1.0F, 1.0e-4F);
+        QVector3D const point = root.map(
+            QVector3D(vertex.position[0], vertex.position[1], vertex.position[2]));
+        for (int axis = 0; axis < 3; ++axis) {
+          lo[axis] = std::min(lo[axis], point[axis]);
+          hi[axis] = std::max(hi[axis], point[axis]);
+        }
+      }
+    }
+    return std::make_pair(lo, hi);
+  };
+  auto const [full_lo, full_hi] = bounds(manifest.lod_full.mesh_nodes);
+  auto const [cage_lo, cage_hi] = bounds(manifest.lod_minimal.mesh_nodes);
+  EXPECT_NEAR(full_lo.y(), cage_lo.y(), 0.01F) << "the soles must stay on the ground";
+  for (int axis = 0; axis < 3; ++axis) {
+    EXPECT_NEAR(full_hi[axis] - full_lo[axis], cage_hi[axis] - cage_lo[axis], 0.08F)
+        << "the refined silhouette drifted from the cage on axis " << axis;
   }
 }
 

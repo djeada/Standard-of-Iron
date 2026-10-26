@@ -16,6 +16,8 @@
 #include "render/draw_commands.h"
 #include "render/gl/mesh.h"
 #include "render/gl/texture.h"
+#include "render/ground/building_ground.h"
+#include "render/ground/ground_ecology.h"
 #include "render/i_render_pass.h"
 #include "render/mist_volume.h"
 #include "render/world_chunk.h"
@@ -140,9 +142,11 @@ private:
                             int chunk_max_z,
                             std::size_t& total_triangles);
 
-  auto update_height_texture() -> TerrainSurfaceCmd::HeightResources;
+  auto update_height_texture(const Render::Ground::BuildingGroundSet& building_ground)
+      -> TerrainSurfaceCmd::HeightResources;
   void bake_terrain_fields();
   void bake_cover_mask();
+  void stamp_building_ground();
   void bake_terrain_noise_atlas();
   void bake_terrain_microdetail();
   [[nodiscard]] static auto section_for(Game::Map::TerrainType type) -> int;
@@ -192,6 +196,9 @@ private:
   bool m_terrain_fields_dirty = true;
   std::unique_ptr<Texture> m_cover_texture;
   std::vector<float> m_cover_data;
+  std::shared_ptr<const Render::Ground::GroundEcologyField> m_ecology;
+  std::vector<Render::Ground::BuildingGroundFootprint> m_building_footprints;
+  std::uint64_t m_building_ground_revision = 0U;
   bool m_cover_dirty = true;
   std::unique_ptr<Shader> m_noise_bake_shader;
   std::unique_ptr<Shader> m_microdetail_bake_shader;

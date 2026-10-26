@@ -124,8 +124,12 @@ void main() {
 
   float boundary = clamp(v_tex_coord.y, 0.0, 1.0);
   float edge_noise = fbm_2d(uv * 0.42 + vec2(19.0, -7.0)) - 0.5;
+  float edge_tufts = noise_2d(uv * 2.3 + vec2(-5.0, 9.0)) - 0.5;
+  float edge_threshold =
+      clamp(0.40 + edge_noise * 0.62 + edge_tufts * 0.26, 0.10, 0.82);
   float edge_alpha =
-      smoothstep(0.02, 0.92, clamp(boundary + edge_noise * 0.34, 0.0, 1.0));
+      smoothstep(edge_threshold - 0.20, edge_threshold + 0.16, boundary) *
+      smoothstep(0.0, 0.14, boundary);
   float edge_distance = boundary * 0.5;
 
   float broad = fbm_2d(uv * 0.055 + vec2(7.0, 13.0));
@@ -204,7 +208,15 @@ void main() {
     vec3 packed_stone = mix(u_color * 1.06, vec3(0.43, 0.39, 0.31), 0.14) *
                         (0.94 + aggregate_tone + (medium - 0.5) * 0.07);
     base_color = mix(joint_earth, packed_stone, aggregate);
-    base_color *= 1.0 - wear * 0.045 - shoulder * 0.10;
+    base_color *= 1.0 - wear * 0.045 - shoulder * 0.06;
+    float rut_track = ruts * mix(0.55, 1.0, traveled);
+    base_color = mix(base_color, u_color * vec3(0.78, 0.75, 0.70), rut_track * 0.42);
+    float crown = 1.0 - smoothstep(0.05, 0.14, abs(across - 0.5 - rut_wander));
+    float crown_grass =
+        crown * smoothstep(0.52, 0.80, medium) * (1.0 - traveled * 0.65);
+    base_color = mix(base_color, vec3(0.38, 0.40, 0.23), crown_grass * 0.34);
+    float dust_patch = smoothstep(0.50, 0.78, broad * 0.6 + road_age * 0.4);
+    base_color *= 0.94 + dust_patch * 0.12;
     h = (medium - 0.5) * 0.025 + aggregate * 0.006;
     ao = 0.97 - ruts * 0.04 - shoulder * 0.025;
     material_roughness = 0.94;
@@ -212,15 +224,17 @@ void main() {
 
   float ground_detail =
       mix(1.0, 0.40, ground_tactical_distance(length(u_camera_pos - v_world_pos)));
-  base_color = mix(u_color * 0.92, base_color, ground_detail);
+  vec3 distant_color =
+      u_color * (0.86 + broad * 0.16 + (road_age - 0.5) * 0.18) * (1.0 - ruts * 0.12);
+  base_color = mix(distant_color, base_color, ground_detail);
   ao = mix(1.0, ao, ground_detail);
   h *= ground_detail;
 
   float shoulder_grit =
       1.0 - smoothstep(0.045, 0.19, edge_distance + edge_noise * 0.025);
-  vec3 shoulder_color = mix(base_color * 0.70, u_color * 0.58, 0.34);
-  base_color = mix(base_color, shoulder_color, shoulder_grit * 0.48);
-  base_color *= 0.94 + (road_age - 0.5) * 0.10;
+  vec3 shoulder_color = mix(base_color * 1.04, vec3(0.44, 0.42, 0.27), 0.30);
+  base_color = mix(base_color, shoulder_color, shoulder_grit * 0.40);
+  base_color *= 0.93 + (road_age - 0.5) * 0.20;
   base_color *= 1.0 - ruts * mix(0.025, 0.075, environment_wetness());
 
   float snow_cover = clamp(u_snow_coverage, 0.0, 1.0);

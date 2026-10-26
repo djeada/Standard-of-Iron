@@ -1049,7 +1049,7 @@ void snap_chain_ends_to_bridges(RoadGraph& graph,
 } // namespace
 
 auto road_edge_fade_width(float road_width) -> float {
-  return std::clamp(road_width * 0.09F, 0.12F, 0.45F);
+  return std::clamp(road_width * 0.18F, 0.12F, 0.70F);
 }
 
 auto build_road_network_surfaces(const std::vector<Game::Map::RoadSegment>& segments,

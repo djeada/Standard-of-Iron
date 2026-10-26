@@ -12,7 +12,7 @@ std::atomic<std::uint32_t> g_runtime_generation{0U};
 } // namespace
 
 auto humanoid_current_frame() -> std::uint32_t {
-  return Render::Humanoid::current_humanoid_runtime_context().frame_index;
+  return Render::Humanoid::humanoid_frame_serial();
 }
 
 void begin_humanoid_frame() {
@@ -21,6 +21,7 @@ void begin_humanoid_frame() {
 
 void reset_humanoid_runtime_context() {
   Render::Humanoid::current_humanoid_runtime_context().reset();
+  Render::Humanoid::advance_humanoid_frame_serial();
   g_runtime_generation.fetch_add(1U, std::memory_order_relaxed);
 }
 

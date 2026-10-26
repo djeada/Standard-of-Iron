@@ -2,12 +2,14 @@
 
 #include <QVector3D>
 
+#include <memory>
 #include <vector>
 
 #include "game/map/biome_settings.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain.h"
 #include "render/decoration_gpu.h"
+#include "render/ground/ground_ecology.h"
 #include "scatter_renderer_base.h"
 
 namespace Render::Ground {
@@ -46,6 +48,7 @@ private:
 
   Game::Map::TreeSpecies m_species;
   const Render::Ground::TreeScatterProfile* m_profile;
+  std::shared_ptr<const Render::Ground::GroundEcologyField> m_ecology;
 };
 
 } // namespace Render::GL

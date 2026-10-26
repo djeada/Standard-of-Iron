@@ -21,6 +21,7 @@
 #include "map/terrain.h"
 #include "map/terrain_service.h"
 #include "render/gl/buffer.h"
+#include "render/ground/ground_ecology.h"
 #include "render/scene_renderer.h"
 #include "scatter_runtime.h"
 #include "stone_ground_fit.h"
@@ -49,6 +50,8 @@ void StoneRenderer::configure(const Game::Map::TerrainHeightMap& height_map,
   stone_params.light_direction = m_light_direction;
   stone_params.time = 0.0F;
 
+  m_ecology = Render::Ground::shared_ground_ecology(
+      world().terrain(), height_map, m_noise_seed);
   generate_stone_instances();
 }
 
@@ -98,6 +101,9 @@ void StoneRenderer::generate_stone_instances() {
   SpawnValidator validator(terrain_cache, config);
   ScatterCompositionContext composition(
       terrain_cache, m_width, m_height, m_tile_size, m_biome_settings, m_world_props);
+
+  static const GroundEcologyField k_no_ecology;
+  const GroundEcologyField& ecology = m_ecology ? *m_ecology : k_no_ecology;
 
   auto add_stone = [&](float gx, float gz, uint32_t& state) -> bool {
     if (!validator.can_spawn_at_grid(gx, gz)) {
@@ -151,6 +157,16 @@ void StoneRenderer::generate_stone_instances() {
                 (k_reference_scatter_extent * k_reference_scatter_extent));
   int const sampling_scale = std::max(1, static_cast<int>(std::round(area_scale)));
   int const cell_span = 4 * sampling_scale;
+  float const ecology_norm = ecology_density_normaliser(
+      ecology,
+      terrain_cache,
+      m_width,
+      m_height,
+      cell_span,
+      [](const GroundEcologyField& field,
+         const SpawnTerrainCache& cache,
+         int x,
+         int z) { return stone_ecology_density(field, cache, x, z); });
   for (int z = 0; z < m_height; z += cell_span) {
     for (int x = 0; x < m_width; x += cell_span) {
       int const idx = z * m_width + x;
@@ -178,6 +194,9 @@ void StoneRenderer::generate_stone_instances() {
       if (terrain_type == Game::Map::TerrainType::Hill) {
         density_mult *= 1.22F;
       }
+      density_mult *=
+          stone_ecology_density(ecology, terrain_cache, sample_x, sample_z) *
+          ecology_norm;
       float const cluster_mult = scatter_patch_multiplier(cell_scene.cluster_bias);
       float const effective_density =
           stone_density * density_mult * cluster_mult * 1.20F;

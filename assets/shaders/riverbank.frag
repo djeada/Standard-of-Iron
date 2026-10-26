@@ -30,8 +30,9 @@ uniform float u_snow_coverage;
 uniform float u_ambient_boost;
 uniform vec3 u_camera_pos;
 
-const float k_wet_band_reach = 0.36;
-const float k_wet_band_darkening = 0.30;
+const float k_wet_band_reach = 0.40;
+const float k_wet_band_darkening = 0.36;
+const vec3 k_wet_band_tint = vec3(0.94, 0.97, 1.02);
 
 float saturate(float value) {
   return clamp(value, 0.0, 1.0);
@@ -321,9 +322,12 @@ void main() {
 
   vec3 contact_color = color * vec3(0.68, 0.73, 0.70);
 
-  color = mix(color, contact_color, contact * 0.28);
-  float wet_soil = 1.0 - smoothstep(0.05, k_wet_band_reach, shore_t);
-  color *= 1.0 - wet_soil * k_wet_band_darkening;
+  color = mix(color, contact_color, contact * 0.16);
+  float wet_reach = k_wet_band_reach * (0.55 + 0.90 * edge_macro) *
+                    (0.80 + 0.40 * max(moisture, environment_wetness()));
+  float wet_soil = 1.0 - smoothstep(0.03, max(wet_reach, 0.08), shore_t);
+  wet_soil *= 0.70 + 0.30 * smoothstep(0.30, 0.70, deposit_field);
+  color *= mix(vec3(1.0), k_wet_band_tint * (1.0 - k_wet_band_darkening), wet_soil);
 
   float segment_visibility = saturate(u_segment_visibility);
 

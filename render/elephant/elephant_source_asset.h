@@ -20,6 +20,10 @@ inline constexpr float k_elephant_mesh_scale_y = 0.275F;
 inline constexpr float k_elephant_mesh_scale_z = 0.1925F;
 inline constexpr float k_elephant_mesh_ground_y = -3.3134756088F;
 
+inline constexpr int k_elephant_full_subdivision_levels = 2;
+inline constexpr float k_elephant_full_volume_keep = 1.0F;
+inline constexpr float k_elephant_full_sole_band = 0.03F;
+
 } // namespace Render::Elephant
 
 namespace Render::GL {

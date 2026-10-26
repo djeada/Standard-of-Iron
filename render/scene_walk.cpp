@@ -48,6 +48,7 @@
 #include "game/map/render_visibility_rules.h"
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
+#include "game/systems/building_collision_registry.h"
 #include "game/systems/formation_combat_geometry.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
@@ -1324,6 +1325,21 @@ void Renderer::render_world(Engine::Core::World* world) {
   m_home_activity.begin_frame(world, m_accumulated_time, simulation_world);
 
   m_cached_world = simulation_world;
+
+  Render::Ground::refresh_building_ground<Engine::Core::World,
+                                          Engine::Core::BuildingComponent,
+                                          Engine::Core::TransformComponent,
+                                          Engine::Core::UnitComponent>(
+      *world,
+      m_building_ground,
+      m_building_ground_signature,
+      [](const Engine::Core::UnitComponent& unit, float facing_degrees) {
+        using Registry = Game::Systems::BuildingCollisionRegistry;
+        return Registry::rotate_body_offset(
+            Registry::get_building_body(
+                std::string(Game::Units::spawn_type_name(unit.spawn_type))),
+            facing_degrees);
+      });
 
   const bool visibility_enabled = world_view().has_visibility();
   std::span<const Engine::Core::EntityID> const unit_ids = world->render_unit_ids();

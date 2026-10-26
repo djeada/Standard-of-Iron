@@ -501,6 +501,29 @@ a map edge, receiving riverbank, or exact lake shoreline. The Arena overview is 
 check the non-mechanical questions: clear sectors, useful route choices,
 formation room, objective placement, and visual readability.
 
+## Reviewed topology exceptions
+
+The Arena terrain review (`arena_app --batch --campaign-terrain`) writes the
+`terrain_topology_audit` result into each map's `report.json`. On 26 Oct 2026
+every flag on the eight campaign maps was reviewed; accidental road breaks
+(feeder roads ending 2-9 m short of the network) were snapped onto it and
+contested hills gained a second ramp on their authored rim. What is left is
+intentional and pinned by `CampaignMapTopology` in `simulation_tests`:
+
+- Roads: `map_crossing_rhone` keeps two networks because the river town is
+  reached only by raft (`RhoneRiverTownCanOnlyBeReachedByRaft`).
+  `map_battle_ticino` keeps two because the southern road leaves the consular
+  town by its south gate and the western road enters by its west gate; the
+  town's streets join them, and the audit only sees roads.
+- Single-approach hills: map-edge backdrops (Trasimene t8, Zama t0, Campania
+  t11, t15, t16), off-route rises more than ~40 m from any road and away from
+  every objective (Cannae t4, Ticino t1, t8, Trebia t2, Zama t4, t6, t8,
+  Campania t14), and Zama t11, the terraced inner fort of `zama_north_camp`,
+  which has one gate by plan.
+
+A new hill beside a route or an objective needs two entrances that the audit
+counts as distinct (`scripts/mapgen/validate.py` `entrance_clusters`).
+
 ## Trasimene reference layout
 
 Lake Trasimene is the closed side of the ambush basin. The Via Flaminia follows

@@ -539,6 +539,7 @@ void ArenaScenarioRunner::Impl::check_combat_expectation(
     auto missing = living_soldiers_by_group.value(expectation.group);
     missing.subtract(attacking_soldiers_by_group.value(expectation.group));
     missing.subtract(guarding_soldiers_by_group.value(expectation.group));
+    missing.subtract(ready_soldiers_by_group.value(expectation.group));
     if (!missing.isEmpty()) {
       add_issue(QStringLiteral("soldiers_never_fought"),
                 QStringLiteral("%1 had %2 living soldiers that never "

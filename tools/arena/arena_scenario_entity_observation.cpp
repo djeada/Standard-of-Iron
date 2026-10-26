@@ -32,6 +32,8 @@ constexpr float k_default_pelvis_step = 70.0F;
 
 constexpr float k_default_attack_torso_sweep = 6.0F;
 
+constexpr float k_fight_hit_recovery_seconds = 0.6F;
+
 constexpr float k_locomotion_restart_presence = 0.5F;
 
 constexpr float k_fastest_cycle_phase_rate = 2.5F;
@@ -946,12 +948,30 @@ void ArenaScenarioRunner::Impl::observe_entity(Engine::Core::EntityID entity_id,
   auto& previous = entity_states[entity_id];
 
   if (attack != nullptr && attack->in_melee_lock && !combat_indicator_submitted) {
+    bool const indicator_drawn_for_owner =
+        !host.order_markers_visible_for_owner ||
+        host.order_markers_visible_for_owner(unit->owner_id);
+    auto const* creature =
+        world.try_get<Engine::Core::CreaturePresentationComponent>(entity_id);
+    bool const shows_fight_activity =
+        creature != nullptr && creature->snapshot_valid &&
+        creature->activity.kind == Game::Systems::ActivityKind::Attack;
     for (auto const& expectation : scenario.expectations) {
-      if (expectation.kind == ArenaExpectationKind::CombatIndicatorIsContinuous &&
-          expectation_active(expectation) && applies_to(expectation, group)) {
+      if (expectation.kind != ArenaExpectationKind::CombatIndicatorIsContinuous ||
+          !expectation_active(expectation) || !applies_to(expectation, group)) {
+        continue;
+      }
+      if (indicator_drawn_for_owner) {
         add_issue(QStringLiteral("missing_combat_indicator"),
                   QStringLiteral("%1 entity %2 had a melee lock but submitted no "
                                  "fight-mode indicator in the rendered frame")
+                      .arg(group)
+                      .arg(entity_id),
+                  entity_id);
+      } else if (!shows_fight_activity) {
+        add_issue(QStringLiteral("missing_combat_indicator"),
+                  QStringLiteral("%1 entity %2 had a melee lock but its presented "
+                                 "activity would not draw the fight-mode indicator")
                       .arg(group)
                       .arg(entity_id),
                   entity_id);
@@ -1592,7 +1612,8 @@ void ArenaScenarioRunner::Impl::observe_soldiers(Engine::Core::EntityID entity_i
          static_cast<int>(soldier.lod),
          soldier.pelvis_yaw_degrees,
          soldier.torso_yaw_degrees,
-         soldier.attack_is_melee});
+         soldier.attack_is_melee,
+         soldier.combat_ready_stance});
 
     std::uint64_t const key = soldier_key(entity_id, soldier.soldier_index);
     const bool continuity_alive =
@@ -1651,6 +1672,23 @@ void ArenaScenarioRunner::Impl::observe_soldiers(Engine::Core::EntityID entity_i
         soldier.visual_state == Render::Profiling::SoldierVisualState::Hold;
     if (observed_guard) {
       guarding_soldiers_by_group[group].insert(key);
+    }
+    bool const waits_without_a_blow =
+        directive != nullptr &&
+        (directive->action == Engine::Core::FormationSoldierAction::MeleeReady ||
+         directive->action == Engine::Core::FormationSoldierAction::MeleeReposition);
+    if (soldier.visual_state == Render::Profiling::SoldierVisualState::HitReaction) {
+      previous.fight_hit_reaction_at = elapsed;
+    }
+    bool const recovering_from_hit =
+        previous.fight_hit_reaction_at >= 0.0F &&
+        elapsed - previous.fight_hit_reaction_at <= k_fight_hit_recovery_seconds;
+    bool const observed_ready =
+        living_formation_fighter && (waits_without_a_blow || recovering_from_hit) &&
+        soldier.combat_ready_stance &&
+        soldier.visual_state == Render::Profiling::SoldierVisualState::Idle;
+    if (observed_ready) {
+      ready_soldiers_by_group[group].insert(key);
     }
     if (!living_formation_fighter) {
       previous.fight_idle_since = -1.0F;
@@ -1988,7 +2026,7 @@ void ArenaScenarioRunner::Impl::observe_soldiers(Engine::Core::EntityID entity_i
 
       if (expectation.kind == ArenaExpectationKind::AllLivingSoldiersFight &&
           living_formation_fighter) {
-        if (observed_attack || observed_guard ||
+        if (observed_attack || observed_guard || observed_ready ||
             soldier.visual_state ==
                 Render::Profiling::SoldierVisualState::HitReaction) {
           previous.fight_idle_since = -1.0F;

@@ -191,6 +191,10 @@ struct TerrainFeatureCmd {
   std::array<QVector4D, k_max_ford_patches> ford_patch_a{};
   std::array<QVector4D, k_max_ford_patches> ford_patch_b{};
   int ford_patch_count = 0;
+  static constexpr int k_max_water_neighbors = 4;
+  std::array<QVector4D, k_max_water_neighbors> water_neighbor_segment{};
+  std::array<float, k_max_water_neighbors> water_neighbor_radius{};
+  int water_neighbor_count = 0;
   LinearFeatureKind kind = LinearFeatureKind::Water;
   WaterSurfaceKind water_kind = WaterSurfaceKind::River;
   RoadSurfaceKind road_surface_kind = RoadSurfaceKind::PackedEarth;

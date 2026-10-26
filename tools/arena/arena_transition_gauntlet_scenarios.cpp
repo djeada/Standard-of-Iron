@@ -58,6 +58,7 @@ auto staged(QString id,
       std::move(id), std::move(label), std::move(description), duration, camera);
   s.camera_focus = focus;
   s.suppress_terrain_scatter = true;
+  s.suppress_procedural_props = true;
   s.select_spawned_units = false;
   s.suppress_spawn_anchor = true;
   s.suppress_ui_overlays = true;

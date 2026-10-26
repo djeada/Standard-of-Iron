@@ -315,6 +315,65 @@ vec3 soi_material_variation(
   return clamp(variation, 0.0, 1.0);
 }
 
+struct SoiSurfaceResponse {
+  float gloss;
+  float strength;
+  float metallic;
+  float sky_reflect;
+  float wet_gain;
+};
+
+SoiSurfaceResponse soi_surface_response(int material_id) {
+  if (material_id == k_material_metal) {
+    return SoiSurfaceResponse(52.0, 0.55, 1.0, 0.30, 0.25);
+  }
+  if (material_id == k_material_ceramic) {
+    return SoiSurfaceResponse(30.0, 0.075, 0.0, 0.06, 1.0);
+  }
+  if (material_id == k_material_mineral) {
+    return SoiSurfaceResponse(9.0, 0.030, 0.0, 0.02, 1.0);
+  }
+  if (material_id == k_material_leather) {
+    return SoiSurfaceResponse(18.0, 0.065, 0.0, 0.03, 0.6);
+  }
+  if (material_id == k_material_wood) {
+    return SoiSurfaceResponse(12.0, 0.022, 0.0, 0.015, 0.8);
+  }
+  return SoiSurfaceResponse(1.0, 0.0, 0.0, 0.0, 0.0);
+}
+
+vec3 soi_material_response(vec3 albedo, vec3 normal, vec3 world_pos, int material_id) {
+  SoiSurfaceResponse response = soi_surface_response(material_id);
+  float wet = environment_wetness();
+  float strength = response.strength + wet * response.wet_gain * 0.10;
+  if (strength <= 0.0) {
+    return vec3(0.0);
+  }
+  vec3 view_dir = normalize(u_camera_pos - world_pos);
+  vec3 light_dir = environment_primary_direction();
+  vec3 half_dir = normalize(light_dir + view_dir);
+  float n_dot_l = max(dot(normal, light_dir), 0.0);
+  float n_dot_h = max(dot(normal, half_dir), 0.0);
+  float n_dot_v = clamp(dot(normal, view_dir), 0.0, 1.0);
+  float fresnel = pow(1.0 - n_dot_v, 5.0);
+  float gloss = mix(response.gloss, max(response.gloss, 48.0), wet * response.wet_gain);
+  vec3 tint = mix(
+      vec3(1.0), mix(albedo, sqrt(max(albedo, vec3(0.0))), 0.35), response.metallic);
+  float normalisation = (gloss + 8.0) / 64.0;
+  vec3 sun = environment_primary_color() * environment_primary_intensity();
+  vec3 highlight =
+      sun * tint * (pow(n_dot_h, gloss) * n_dot_l * normalisation * strength);
+  vec3 reflected = reflect(-view_dir, normal);
+  float sky_view = smoothstep(-0.30, 0.70, reflected.y);
+  vec3 environment =
+      mix(environment_ground_bounce_color() * 0.45, environment_sky_color(), sky_view) *
+      environment_ambient_intensity();
+  float sky_weight = response.sky_reflect * (0.25 + 0.75 * fresnel) *
+                     (1.0 + wet * response.wet_gain * 0.8);
+  vec3 reflection = environment * tint * sky_weight * 2.0;
+  return (highlight + reflection) * environment_exposure();
+}
+
 vec3 soi_apply_damage_soot(vec3 color, vec3 world_pos, int damage_tier) {
   if (damage_tier <= 0 || !u_has_material_detail) {
     return color;

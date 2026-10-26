@@ -816,6 +816,8 @@ struct ArenaScenarioHost {
 
   std::function<ArenaAIDoctrineSample(int)> sample_ai_doctrine;
 
+  std::function<bool(int)> order_markers_visible_for_owner;
+
   Game::Map::TerrainService* terrain = nullptr;
   Game::Systems::BuildingCollisionRegistry* building_collision = nullptr;
 };

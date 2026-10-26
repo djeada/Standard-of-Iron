@@ -63,7 +63,9 @@ void tick_formation_hit(Engine::Core::Entity& entity, float delta_time) {
   hit->remaining = std::max(0.0F, hit->remaining - std::max(0.0F, delta_time));
   if (hit->remaining <= 0.0F) {
     entity.remove_component<Engine::Core::FormationHitPresentationComponent>();
+    return;
   }
+  ++hit->revision;
 }
 
 auto collect_damage_carriers(Engine::Core::Entity& entity,

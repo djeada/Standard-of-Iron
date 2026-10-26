@@ -3,6 +3,7 @@
 #include <QMatrix4x4>
 #include <QVector4D>
 
+#include <cstddef>
 #include <memory>
 #include <vector>
 
@@ -42,16 +43,27 @@ private:
     QVector4D a;
     QVector4D b;
   };
+  struct WaterNeighbor {
+    QVector4D segment;
+    float radius = 0.0F;
+  };
   struct SurfaceMesh {
     std::unique_ptr<Mesh> mesh;
     WaterSurfaceKind kind = WaterSurfaceKind::River;
     QVector3D visibility_start;
     QVector3D visibility_end;
     std::vector<FordPatch> fords;
+    std::vector<WaterNeighbor> neighbors;
   };
   [[nodiscard]] auto fords_near(const QVector3D& start,
                                 const QVector3D& end,
                                 float width) const -> std::vector<FordPatch>;
+  [[nodiscard]] auto
+  water_neighbors_near(const QVector3D& start,
+                       const QVector3D& end,
+                       float reach,
+                       std::ptrdiff_t own_river,
+                       std::ptrdiff_t own_lake) const -> std::vector<WaterNeighbor>;
   std::vector<SurfaceMesh> m_meshes;
 };
 

@@ -305,7 +305,7 @@ void ArenaViewport::paintGL() {
   }
   apply_cinematic_view();
 
-  if (!m_paused) {
+  if (!m_paused && simulation_dt > 0.0F) {
     step_world(simulation_dt);
   }
   m_feedback.advance(simulation_dt);

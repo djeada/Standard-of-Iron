@@ -538,6 +538,10 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
     return sample;
   };
 
+  host.order_markers_visible_for_owner = [this](int owner_id) {
+    return m_renderer != nullptr &&
+           m_renderer->order_markers_visible_for_owner(owner_id);
+  };
   host.set_force_full_creature_lod = [this](bool enabled) {
     set_force_full_creature_lod(enabled);
   };

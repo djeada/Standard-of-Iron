@@ -108,7 +108,7 @@ void settle_death_pose(float phase, Render::Elephant::BonePalette& palette) {
     skin[bone] = palette[bone] * bind[bone].inverted();
   }
   float lowest = std::numeric_limits<float>::max();
-  for (auto const& node : elephant_source_mesh_nodes()) {
+  for (auto const& node : elephant_runtime_manifest().lod_full.mesh_nodes) {
     auto const& mesh = std::get<Render::Creature::Quadruped::CustomMeshNode>(node.data);
     for (auto const& vertex : mesh.vertices) {
       QVector3D const rest = bind[node.anchor_bone].map(

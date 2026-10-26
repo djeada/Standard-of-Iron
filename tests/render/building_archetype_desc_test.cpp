@@ -13,6 +13,7 @@
 #include "render/entity/building_archetype_library.h"
 #include "render/entity/building_decay.h"
 #include "render/entity/building_ornaments.h"
+#include "render/entity/home_renderer_common.h"
 #include "render/entity/nations/roman/home_renderer.h"
 #include "render/gl/primitives.h"
 #include "render/material_classification.h"
@@ -151,7 +152,7 @@ TEST(BuildingArchetypeDesc, EveryHomeVariantIsBakedForAllDamageStates) {
           << "variants must use the static building batch";
     }
   }
-  EXPECT_EQ(homes, 6);
+  EXPECT_EQ(homes, 2 * Render::GL::k_home_visual_variant_count);
 }
 
 TEST(BuildingArchetypeDesc, HealthyStateKeepsAuthoredColors) {
