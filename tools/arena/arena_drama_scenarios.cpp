@@ -221,7 +221,7 @@ auto road_style(const QString& style) -> const char* {
 }
 
 void apply_layer(ArenaScenarioDefinition& s, const QJsonObject& obj) {
-  for (auto const& value : obj.value("props").toArray()) {
+  for (QJsonValue const value : obj.value("props").toArray()) {
     auto const prop = value.toObject();
     QByteArray const type = prop.value("type").toString().toLatin1();
     auto patch_value = patch(type.constData(),
@@ -234,24 +234,24 @@ void apply_layer(ArenaScenarioDefinition& s, const QJsonObject& obj) {
     patch_value.yaw_spread = static_cast<float>(prop.value("yaw_spread").toDouble());
     s.resource_patches.push_back(std::move(patch_value));
   }
-  for (auto const& value : obj.value("buildings").toArray()) {
+  for (QJsonValue const value : obj.value("buildings").toArray()) {
     s.groups.push_back(parse_building(value.toObject()));
   }
-  for (auto const& value : obj.value("roads").toArray()) {
+  for (QJsonValue const value : obj.value("roads").toArray()) {
     auto const road = value.toObject();
     s.roads.push_back(street(point(road.value("from")),
                              point(road.value("to")),
                              static_cast<float>(road.value("width").toDouble(3.0)),
                              road_style(road.value("style").toString())));
   }
-  for (auto const& value : obj.value("rivers").toArray()) {
+  for (QJsonValue const value : obj.value("rivers").toArray()) {
     auto const river = value.toObject();
     s.rivers.push_back(Game::Map::RiverSegment{
         point(river.value("from")),
         point(river.value("to")),
         static_cast<float>(river.value("width").toDouble(2.0))});
   }
-  for (auto const& value : obj.value("bridges").toArray()) {
+  for (QJsonValue const value : obj.value("bridges").toArray()) {
     auto const bridge = value.toObject();
     s.bridges.push_back(
         Game::Map::Bridge{point(bridge.value("from")),
@@ -262,7 +262,7 @@ void apply_layer(ArenaScenarioDefinition& s, const QJsonObject& obj) {
   if (obj.contains("rampart")) {
     add_rampart(s, obj.value("rampart").toObject());
   }
-  for (auto const& value : obj.value("actors").toArray()) {
+  for (QJsonValue const value : obj.value("actors").toArray()) {
     s.groups.push_back(parse_actor(value.toObject()));
   }
   auto const gestures = obj.value("gestures").toObject();
@@ -272,7 +272,7 @@ void apply_layer(ArenaScenarioDefinition& s, const QJsonObject& obj) {
       continue;
     }
     float clock = 0.0F;
-    for (auto const& entry : timed) {
+    for (QJsonValue const entry : timed) {
       auto const cue = entry.toArray();
       float const at = static_cast<float>(cue.at(0).toDouble());
       float const length = static_cast<float>(cue.at(2).toDouble());
@@ -287,7 +287,7 @@ void apply_layer(ArenaScenarioDefinition& s, const QJsonObject& obj) {
     }
     group.showcase_loop = false;
   }
-  for (auto const& value : obj.value("steps").toArray()) {
+  for (QJsonValue const value : obj.value("steps").toArray()) {
     s.steps.push_back(parse_step(value.toObject()));
   }
 }
@@ -331,7 +331,7 @@ auto parse_stage(const QDir& dir,
   s.owner_teams = {{.owner_id = k_roman_owner, .team_id = 1},
                    {.owner_id = k_punic_owner, .team_id = 1},
                    {.owner_id = k_dead_owner, .team_id = 1}};
-  for (auto const& include : obj.value("include").toArray()) {
+  for (QJsonValue const include : obj.value("include").toArray()) {
     apply_layer(s, read_json(dir.filePath(include.toString())));
   }
   auto layer = obj;

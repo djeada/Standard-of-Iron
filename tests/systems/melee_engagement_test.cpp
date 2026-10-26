@@ -8,11 +8,13 @@
 #include "core/entity.h"
 #include "core/world.h"
 #include "game/command/command_queue.h"
+#include "game/core/nav_profile.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/combat_system/combat_utils.h"
 #include "game/systems/default_content.h"
 #include "game/systems/formation_combat_geometry.h"
+#include "game/systems/movement/command_service.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/navigation/nav_grid.h"
 #include "game/systems/navigation/pathfinding.h"
@@ -917,6 +919,64 @@ TEST_F(MeleeEngagementTest, SquadOrderedThroughAWallMarchesAroundItBeforeFightin
       << "the attacker never marched around the wall (furthest x=" << furthest_x << ")";
   EXPECT_LT(defender_unit->health, defender_unit->max_health)
       << "the attacker reached the defender's side but never struck";
+}
+
+TEST_F(MeleeEngagementTest, MovingTroopsOnlyPlanDetoursWhenTheyCanAnswer) {
+  Engine::Core::World world;
+  ASSERT_NE(spawn(world,
+                  Game::Units::SpawnType::WallSegment,
+                  1,
+                  QVector3D(4.0F, 0.0F, 0.0F),
+                  Game::Systems::NationID::RomanRepublic),
+            nullptr);
+  auto* attacker = spawn(world,
+                         Game::Units::SpawnType::Swordsman,
+                         2,
+                         QVector3D(0.0F, 0.0F, 0.0F),
+                         Game::Systems::NationID::Carthage);
+  auto* defender = spawn(world,
+                         Game::Units::SpawnType::Swordsman,
+                         1,
+                         QVector3D(11.0F, 0.0F, 0.0F),
+                         Game::Systems::NationID::RomanRepublic);
+  ASSERT_NE(attacker, nullptr);
+  ASSERT_NE(defender, nullptr);
+  ASSERT_TRUE(
+      Game::Systems::Combat::structure_separates_combatants(attacker, defender));
+
+  Game::Systems::CommandService::move_unit(
+      world, attacker->get_id(), QVector3D(-10.0F, 0.0F, 0.0F));
+  ASSERT_TRUE(
+      attacker->get_component<Engine::Core::MovementComponent>()->get_has_target());
+
+  auto& profile = Engine::Core::nav_profile();
+  profile.clear();
+  profile.set_enabled(true);
+  bool opportunity = false;
+  {
+    Engine::Core::NavTickScope const tick;
+    opportunity = Game::Systems::Combat::may_engage(
+        attacker, defender, Game::Systems::Combat::EngagementTrigger::Opportunity);
+  }
+  auto const opportunity_routes =
+      profile.total(Engine::Core::NavCounter::IndividualRoutes);
+  bool retaliation = false;
+  {
+    Engine::Core::NavTickScope const tick;
+    retaliation = Game::Systems::Combat::may_engage(
+        attacker, defender, Game::Systems::Combat::EngagementTrigger::Retaliation);
+  }
+  auto const retaliation_routes =
+      profile.last_tick(Engine::Core::NavCounter::IndividualRoutes);
+  profile.set_enabled(false);
+  profile.clear();
+
+  EXPECT_FALSE(opportunity);
+  EXPECT_EQ(opportunity_routes, 0U)
+      << "a moving troop searched for a detour before refusing the opportunity";
+  EXPECT_TRUE(retaliation);
+  EXPECT_GT(retaliation_routes, 0U)
+      << "answering fire still needs to check the route around the wall";
 }
 
 TEST_F(MeleeEngagementTest, BypassDestinationStandsOnTheTargetSideOfTheWall) {
