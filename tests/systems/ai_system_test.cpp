@@ -2323,7 +2323,7 @@ TEST_F(AISystemTest, AFootHeavyTownStillRaisesTheBuilderItHasNone) {
 TEST_F(AISystemTest, ABesiegedTownSpendsNoTimberOnASpareBuilder) {
   register_priced_roman_nation();
 
-  auto spare_builder_bought = [this](bool besieged) {
+  auto spare_builder_bought = [](bool besieged) {
     Game::Systems::AI::AISnapshot snapshot;
     snapshot.player_id = 3;
     snapshot.game_time = 10.0F;
