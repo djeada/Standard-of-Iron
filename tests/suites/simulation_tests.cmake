@@ -32,6 +32,7 @@ add_executable(
     map/map_weather_coverage_test.cpp
     map/map_wildlife_config_test.cpp
     map/terrain_topology_audit_test.cpp
+    map/campaign_map_topology_test.cpp
     map/map_transformer_test.cpp
     map/hill_crown_geometry_test.cpp
     map/hill_navigation_test.cpp

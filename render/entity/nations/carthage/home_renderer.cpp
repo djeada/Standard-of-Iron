@@ -4,6 +4,8 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
+#include <cstdint>
 
 #include "building_palette.h"
 #include "game/core/component.h"
@@ -50,15 +52,62 @@ inline auto make_palette(const QVector3D& team) -> CarthagePalette {
   return p;
 }
 
-auto home_palette_slots(const QVector3D& team)
+constexpr std::array<QVector3D, 5> k_roof_finishes{
+    BuildingPalette::k_tile_red,
+    QVector3D(0.80F, 0.76F, 0.66F),
+    QVector3D(0.70F, 0.52F, 0.33F),
+    QVector3D(0.47F, 0.29F, 0.22F),
+    QVector3D(0.73F, 0.52F, 0.43F),
+};
+
+auto home_palette_slots(const QVector3D& team, std::uint32_t seed, BuildingState state)
     -> std::array<QVector3D, k_home_palette_slots> {
   const auto palette = make_palette(team);
-  return {palette.team, palette.tile_red};
+  QVector3D roof = k_roof_finishes[home_tint_pick(seed, k_roof_finishes.size())] *
+                   (1.0F + home_tint_jitter(seed) * 0.08F);
+  roof = decayed_color(clamp_vec_01(roof), state, static_cast<int>(seed & 0xFFFFU));
+  return {palette.team, roof};
+}
+
+struct CarthageHomeTraits {
+  float wall_height{0.9F};
+  bool stepped_parapet{false};
+  bool light_well{false};
+  bool roof_planters{false};
+  bool cistern{false};
+  QVector3D awning{BuildingPalette::k_indigo};
+  float awning_center_z{-0.08F};
+  float awning_half_z{0.43F};
+};
+
+auto carthage_home_traits(int variant) -> CarthageHomeTraits {
+  switch (variant) {
+  case 3:
+    return {.wall_height = 1.0F,
+            .stepped_parapet = true,
+            .cistern = true,
+            .awning = BuildingPalette::k_oxblood,
+            .awning_center_z = 0.04F,
+            .awning_half_z = 0.31F};
+  case 4:
+    return {.light_well = true,
+            .awning = BuildingPalette::k_saffron,
+            .awning_center_z = 0.21F,
+            .awning_half_z = 0.21F};
+  case 5:
+    return {.wall_height = 0.98F,
+            .roof_planters = true,
+            .awning_center_z = 0.02F,
+            .awning_half_z = 0.33F};
+  default:
+    return {};
+  }
 }
 
 auto build_home_desc_impl(BuildingState state, int variant) -> BuildingArchetypeDesc {
   CarthagePalette const c = make_palette(QVector3D(1.0F, 1.0F, 1.0F));
-  float const wall_height = 0.9F;
+  CarthageHomeTraits const traits = carthage_home_traits(variant);
+  float const wall_height = traits.wall_height;
   float height_multiplier = 1.0F;
 
   if (state == BuildingState::Damaged) {
@@ -131,10 +180,67 @@ auto build_home_desc_impl(BuildingState state, int variant) -> BuildingArchetype
   }
 
   float const roof_y = wall_height * height_multiplier + 0.24F;
-  desc.add_palette_box(QVector3D(0.0F, roof_y, 0.0F),
-                       QVector3D(1.02F, 0.05F, 1.02F),
-                       k_home_roof_slot,
-                       k_building_state_mask_intact);
+  if (traits.light_well) {
+    BuildingPartLabel const label(desc, "light_well_roof");
+    constexpr float k_well_x0 = -0.62F;
+    constexpr float k_well_x1 = 0.10F;
+    constexpr float k_well_z0 = -0.62F;
+    constexpr float k_well_z1 = -0.08F;
+    desc.add_palette_box(QVector3D(0.0F, roof_y, (-1.02F + k_well_z0) * 0.5F),
+                         QVector3D(1.02F, 0.05F, (k_well_z0 + 1.02F) * 0.5F),
+                         k_home_roof_slot,
+                         k_building_state_mask_intact);
+    desc.add_palette_box(QVector3D(0.0F, roof_y + 0.0004F, (k_well_z1 + 1.02F) * 0.5F),
+                         QVector3D(1.02F, 0.05F, (1.02F - k_well_z1) * 0.5F),
+                         k_home_roof_slot,
+                         k_building_state_mask_intact);
+    float const mid_z = (k_well_z0 + k_well_z1) * 0.5F;
+    float const half_z = (k_well_z1 - k_well_z0) * 0.5F;
+    desc.add_palette_box(
+        QVector3D((-1.02F + k_well_x0) * 0.5F, roof_y + 0.0008F, mid_z),
+        QVector3D((k_well_x0 + 1.02F) * 0.5F, 0.05F, half_z),
+        k_home_roof_slot,
+        k_building_state_mask_intact);
+    desc.add_palette_box(QVector3D((k_well_x1 + 1.02F) * 0.5F, roof_y + 0.0012F, mid_z),
+                         QVector3D((1.02F - k_well_x1) * 0.5F, 0.05F, half_z),
+                         k_home_roof_slot,
+                         k_building_state_mask_intact);
+    float const lip_y = roof_y + 0.0695F;
+    float const mid_x = (k_well_x0 + k_well_x1) * 0.5F;
+    float const half_x = (k_well_x1 - k_well_x0) * 0.5F;
+    for (float const side : {-1.0F, 1.0F}) {
+      desc.add_box(QVector3D(mid_x, lip_y, mid_z + side * (half_z + 0.026F)),
+                   QVector3D(half_x + 0.052F, 0.018F, 0.026F),
+                   c.stone_light,
+                   k_building_state_mask_intact);
+      desc.add_box(QVector3D(mid_x + side * (half_x + 0.026F), lip_y - 0.001F, mid_z),
+                   QVector3D(0.025F, 0.017F, half_z - 0.001F),
+                   c.stone_light,
+                   k_building_state_mask_intact);
+    }
+    BuildingPartMaterial const plant(desc, k_building_material_plant);
+    QVector3D const tree(mid_x + 0.02F, 0.215F, mid_z - 0.02F);
+    desc.add_cylinder(tree,
+                      tree + QVector3D(0.0F, roof_y - 0.10F, 0.0F),
+                      0.030F,
+                      c.wood_dark,
+                      k_building_state_mask_intact);
+    desc.add_cone(tree + QVector3D(0.0F, roof_y - 0.42F, 0.0F),
+                  tree + QVector3D(0.0F, roof_y + 0.12F, 0.0F),
+                  0.22F,
+                  QVector3D(0.27F, 0.42F, 0.17F),
+                  k_building_state_mask_intact);
+    desc.add_cone(tree + QVector3D(0.0F, roof_y - 0.05F, 0.0F),
+                  tree + QVector3D(0.0F, roof_y + 0.36F, 0.0F),
+                  0.16F,
+                  QVector3D(0.33F, 0.50F, 0.20F),
+                  k_building_state_mask_intact);
+  } else {
+    desc.add_palette_box(QVector3D(0.0F, roof_y, 0.0F),
+                         QVector3D(1.02F, 0.05F, 1.02F),
+                         k_home_roof_slot,
+                         k_building_state_mask_intact);
+  }
 
   const float parapet_y = roof_y + 0.13F;
   for (const float side : {-1.0F, 1.0F}) {
@@ -253,11 +359,65 @@ auto build_home_desc_impl(BuildingState state, int variant) -> BuildingArchetype
                k_building_state_mask_intact);
   for (const float x : {-0.70F, 0.0F}) {
     for (const float z : {-0.46F, 0.30F}) {
-      desc.add_cylinder(QVector3D(x, roof_y + 0.05F, z),
-                        QVector3D(x, roof_y + 0.48F, z),
+      float const post_z = traits.light_well ? (z < 0.0F ? 0.02F : 0.40F) : z;
+      desc.add_cylinder(QVector3D(x, roof_y + 0.05F, post_z),
+                        QVector3D(x, roof_y + 0.48F, post_z),
                         0.025F,
                         c.wood,
                         BuildingStateMask::Normal);
+    }
+  }
+  if (traits.stepped_parapet) {
+    BuildingPartLabel const label(desc, "stepped_parapet");
+    float const cap_top = roof_y + 0.13F + 0.11F + 0.016F;
+    for (int i = 0; i < 7; ++i) {
+      float const along = -0.84F + 0.28F * static_cast<float>(i);
+      float const tall = (i % 2 == 0) ? 0.070F : 0.045F;
+      for (float const side : {-1.0F, 1.0F}) {
+        desc.add_box(QVector3D(along, cap_top + 0.001F + tall, side * 0.96F),
+                     QVector3D(0.062F, tall, 0.048F),
+                     weathered(c.plaster, i * 2 + (side < 0.0F ? 0 : 1)),
+                     k_building_state_mask_intact);
+        if (std::abs(along) < 0.80F) {
+          desc.add_box(QVector3D(side * 0.96F, cap_top + 0.0015F + tall, along),
+                       QVector3D(0.047F, tall - 0.0005F, 0.061F),
+                       weathered(c.plaster, i * 2 + 31 + (side < 0.0F ? 0 : 1)),
+                       k_building_state_mask_intact);
+        }
+      }
+    }
+  }
+  if (traits.cistern) {
+    BuildingPartLabel const label(desc, "roof_cistern");
+    QVector3D const base(0.66F, roof_y + 0.05F, 0.10F);
+    desc.add_cylinder(base,
+                      base + QVector3D(0.0F, 0.20F, 0.0F),
+                      0.15F,
+                      c.stone_base,
+                      k_building_state_mask_intact);
+    desc.add_cylinder(base + QVector3D(0.0F, 0.20F, 0.0F),
+                      base + QVector3D(0.0F, 0.225F, 0.0F),
+                      0.165F,
+                      c.stone_light,
+                      k_building_state_mask_intact);
+  }
+  if (traits.roof_planters) {
+    BuildingPartLabel const label(desc, "roof_planters");
+    for (int pot = 0; pot < 4; ++pot) {
+      QVector3D const base(
+          -0.75F + 0.5F * static_cast<float>(pot), roof_y + 0.05F, 0.78F);
+      desc.add_cylinder(base,
+                        base + QVector3D(0.0F, 0.11F, 0.0F),
+                        0.065F,
+                        QVector3D(0.66F, 0.42F, 0.27F),
+                        k_building_state_mask_intact);
+      BuildingPartMaterial const plant(desc, k_building_material_plant);
+      desc.add_cone(
+          base + QVector3D(0.0F, 0.10F, 0.0F),
+          base + QVector3D(0.0F, 0.26F + 0.04F * static_cast<float>(pot % 2), 0.0F),
+          0.085F,
+          QVector3D(0.26F + 0.03F * static_cast<float>(pot % 3), 0.43F, 0.18F),
+          k_building_state_mask_intact);
     }
   }
   if (variant == 1) {
@@ -295,9 +455,10 @@ auto build_home_desc_impl(BuildingState state, int variant) -> BuildingArchetype
                  c.indigo * 0.85F,
                  BuildingStateMask::Normal);
   } else {
-    desc.add_box(QVector3D(-0.35F, roof_y + 0.49F, -0.08F),
-                 QVector3D(0.40F, 0.012F, 0.43F),
-                 c.indigo,
+    BuildingPartMaterial const cloth(desc, k_building_material_cloth);
+    desc.add_box(QVector3D(-0.35F, roof_y + 0.49F, traits.awning_center_z),
+                 QVector3D(0.40F, 0.012F, traits.awning_half_z),
+                 traits.awning,
                  BuildingStateMask::Normal);
   }
 
@@ -341,7 +502,12 @@ auto build_home_desc_impl(BuildingState state, int variant) -> BuildingArchetype
                               .clay = QVector3D(0.68F, 0.43F, 0.26F),
                               .clay_dark = c.indigo,
                               .chimney = c.stone_light,
-                              .seed = 7 + variant * 19});
+                              .seed = 7 + variant * 19,
+                              .variant = variant,
+                              .wall_foot_y = 0.20F,
+                              .wall_face = 1.04F,
+                              .wall_foot_door_gap = 0.36F,
+                              .wall_foot = c.stone_dark * 0.95F});
 
   add_ruin_dressing(desc,
                     RuinDressing{.extent = QVector3D(0.94F, 0.0F, 0.94F),
@@ -359,7 +525,10 @@ auto home_archetype(BuildingState state, int variant) -> const RenderArchetype& 
   static const std::array<const BuildingArchetypeSet*, k_home_visual_variant_count>
       k_sets{&building_archetype_set("carthage_home"),
              &building_archetype_set("carthage_home_variant_1"),
-             &building_archetype_set("carthage_home_variant_2")};
+             &building_archetype_set("carthage_home_variant_2"),
+             &building_archetype_set("carthage_home_variant_3"),
+             &building_archetype_set("carthage_home_variant_4"),
+             &building_archetype_set("carthage_home_variant_5")};
   return k_sets[static_cast<std::size_t>(variant)]->for_state(state);
 }
 

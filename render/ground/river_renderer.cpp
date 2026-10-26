@@ -128,6 +128,96 @@ auto WaterRenderer::fords_near(const QVector3D& start,
   return patches;
 }
 
+namespace {
+
+constexpr float k_river_neighbor_core = 0.48F;
+constexpr float k_lake_neighbor_core = 0.40F;
+constexpr float k_neighbor_search_margin = 2.0F;
+
+auto distance_to_segment_xz(const QVector3D& point,
+                            const QVector3D& start,
+                            const QVector3D& end) -> float {
+  float const dx = end.x() - start.x();
+  float const dz = end.z() - start.z();
+  float const length_sq = dx * dx + dz * dz;
+  float const t =
+      length_sq > 1.0e-6F
+          ? std::clamp(((point.x() - start.x()) * dx + (point.z() - start.z()) * dz) /
+                           length_sq,
+                       0.0F,
+                       1.0F)
+          : 0.0F;
+  return std::hypot(point.x() - (start.x() + dx * t), point.z() - (start.z() + dz * t));
+}
+
+auto segment_gap_xz(const QVector3D& a0,
+                    const QVector3D& a1,
+                    const QVector3D& b0,
+                    const QVector3D& b1) -> float {
+  return std::min({distance_to_segment_xz(a0, b0, b1),
+                   distance_to_segment_xz(a1, b0, b1),
+                   distance_to_segment_xz(b0, a0, a1),
+                   distance_to_segment_xz(b1, a0, a1)});
+}
+
+} // namespace
+
+auto WaterRenderer::water_neighbors_near(const QVector3D& start,
+                                         const QVector3D& end,
+                                         float reach,
+                                         std::ptrdiff_t own_river,
+                                         std::ptrdiff_t own_lake) const
+    -> std::vector<WaterNeighbor> {
+  struct Candidate {
+    WaterNeighbor neighbor;
+    float gap = 0.0F;
+  };
+  std::vector<Candidate> candidates;
+  for (std::size_t index = 0; index < m_river_segments.size(); ++index) {
+    if (static_cast<std::ptrdiff_t>(index) == own_river) {
+      continue;
+    }
+    const auto& segment = m_river_segments[index];
+    float const radius = segment.width * k_river_neighbor_core;
+    float const gap = segment_gap_xz(start, end, segment.start, segment.end);
+    if (gap > reach + radius + k_neighbor_search_margin) {
+      continue;
+    }
+    candidates.push_back(
+        {{QVector4D(
+              segment.start.x(), segment.start.z(), segment.end.x(), segment.end.z()),
+          radius},
+         gap});
+  }
+  for (std::size_t index = 0; index < m_lakes.size(); ++index) {
+    if (static_cast<std::ptrdiff_t>(index) == own_lake) {
+      continue;
+    }
+    const auto& lake = m_lakes[index];
+    float const radius = std::min(lake.width, lake.depth) * k_lake_neighbor_core;
+    float const gap = distance_to_segment_xz(lake.center, start, end);
+    if (gap > reach + radius + k_neighbor_search_margin) {
+      continue;
+    }
+    candidates.push_back(
+        {{QVector4D(lake.center.x(), lake.center.z(), lake.center.x(), lake.center.z()),
+          radius},
+         gap});
+  }
+  std::sort(candidates.begin(), candidates.end(), [](const auto& lhs, const auto& rhs) {
+    return lhs.gap < rhs.gap;
+  });
+  std::vector<WaterNeighbor> neighbors;
+  for (const auto& candidate : candidates) {
+    if (neighbors.size() >=
+        static_cast<std::size_t>(TerrainFeatureCmd::k_max_water_neighbors)) {
+      break;
+    }
+    neighbors.push_back(candidate.neighbor);
+  }
+  return neighbors;
+}
+
 void WaterRenderer::build_meshes() {
   m_meshes.clear();
 
@@ -150,27 +240,40 @@ void WaterRenderer::build_meshes() {
       Ground::build_linear_feature_junction_meshes(segments, m_tile_size, settings);
   m_meshes.reserve(river_meshes.size() + river_junctions.size() + m_lakes.size());
   for (std::size_t index = 0; index < river_meshes.size(); ++index) {
-    m_meshes.push_back({std::move(river_meshes[index]),
-                        WaterSurfaceKind::River,
-                        m_river_segments[index].start,
-                        m_river_segments[index].end,
-                        fords_near(m_river_segments[index].start,
-                                   m_river_segments[index].end,
-                                   m_river_segments[index].width)});
+    const auto& segment = m_river_segments[index];
+    m_meshes.push_back(
+        {std::move(river_meshes[index]),
+         WaterSurfaceKind::River,
+         segment.start,
+         segment.end,
+         fords_near(segment.start, segment.end, segment.width),
+         water_neighbors_near(segment.start,
+                              segment.end,
+                              Game::Map::river_drawn_half_width(segment.width),
+                              static_cast<std::ptrdiff_t>(index),
+                              -1)});
   }
   for (auto& junction : river_junctions) {
-    m_meshes.push_back({std::move(junction.mesh),
-                        WaterSurfaceKind::River,
-                        junction.center,
-                        junction.center,
-                        fords_near(junction.center, junction.center, 4.0F)});
+    m_meshes.push_back(
+        {std::move(junction.mesh),
+         WaterSurfaceKind::River,
+         junction.center,
+         junction.center,
+         fords_near(junction.center, junction.center, 4.0F),
+         water_neighbors_near(junction.center, junction.center, 4.0F, -1, -1)});
   }
-  for (const auto& lake : m_lakes) {
+  for (std::size_t index = 0; index < m_lakes.size(); ++index) {
+    const auto& lake = m_lakes[index];
     m_meshes.push_back({Ground::build_lake_surface_mesh(lake, m_tile_size),
                         WaterSurfaceKind::Lake,
                         lake.center,
                         lake.center,
-                        {}});
+                        {},
+                        water_neighbors_near(lake.center,
+                                             lake.center,
+                                             std::max(lake.width, lake.depth) * 0.55F,
+                                             -1,
+                                             static_cast<std::ptrdiff_t>(index))});
   }
 }
 
@@ -223,6 +326,11 @@ void WaterRenderer::submit(Renderer& renderer, ResourceManager* resources) {
     for (std::size_t patch = 0; patch < surface.fords.size(); ++patch) {
       cmd.ford_patch_a[patch] = surface.fords[patch].a;
       cmd.ford_patch_b[patch] = surface.fords[patch].b;
+    }
+    cmd.water_neighbor_count = static_cast<int>(surface.neighbors.size());
+    for (std::size_t neighbor = 0; neighbor < surface.neighbors.size(); ++neighbor) {
+      cmd.water_neighbor_segment[neighbor] = surface.neighbors[neighbor].segment;
+      cmd.water_neighbor_radius[neighbor] = surface.neighbors[neighbor].radius;
     }
     cmd.visibility = vis_res;
     renderer.terrain_feature(cmd);

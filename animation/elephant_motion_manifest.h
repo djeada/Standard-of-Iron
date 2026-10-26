@@ -17,7 +17,7 @@ struct ElephantGaitShape {
   float lift_knee_degrees{38.0F};
   float lift_compensation{0.42F};
   float foot_curl_degrees{14.0F};
-  float roll_degrees{1.3F};
+  float roll_degrees{0.65F};
   float head_nod_degrees{2.2F};
   float trunk_swing_degrees{7.0F};
   float ear_flap_degrees{7.0F};

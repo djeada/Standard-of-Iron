@@ -133,6 +133,7 @@ struct ArenaScenarioRunner::Impl {
     bool attack_yaw_tracked{false};
     float observed_at{0.0F};
     float fight_idle_since{-1.0F};
+    float fight_hit_reaction_at{-1.0F};
     float terminal_pose_since{-1.0F};
     bool initialized{false};
     bool culled{false};
@@ -221,6 +222,7 @@ struct ArenaScenarioRunner::Impl {
     float pelvis_yaw_degrees{0.0F};
     float torso_yaw_degrees{0.0F};
     bool attack_is_melee{false};
+    bool combat_ready{false};
   };
   struct TraceAnimal {
     Engine::Core::EntityID entity_id{0};
@@ -361,6 +363,7 @@ struct ArenaScenarioRunner::Impl {
   QHash<QString, QSet<std::uint64_t>> engaged_soldiers_by_group;
   QHash<QString, QSet<std::uint64_t>> attacking_soldiers_by_group;
   QHash<QString, QSet<std::uint64_t>> guarding_soldiers_by_group;
+  QHash<QString, QSet<std::uint64_t>> ready_soldiers_by_group;
   QHash<std::uint64_t, int> attack_entries_by_soldier;
   QHash<QString, bool> staggered_attack_phases;
   QHash<QString, bool> damage_seen;

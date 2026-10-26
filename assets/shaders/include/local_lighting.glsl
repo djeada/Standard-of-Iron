@@ -1,3 +1,7 @@
+#ifndef SOI_LOCAL_LIGHT_GAIN
+#define SOI_LOCAL_LIGHT_GAIN 1.0
+#endif
+
 const int SOI_MAX_LOCAL_LIGHTS = 16;
 #if defined(SOI_QUALITY_TIER) && SOI_QUALITY_TIER <= 0
 const int SOI_LOCAL_LIGHT_BUDGET = 4;
@@ -55,7 +59,7 @@ vec3 local_lighting(vec3 world_position, vec3 normal) {
     result += u_local_color_intensity[i].rgb *
               (u_local_color_intensity[i].w * falloff * diffuse);
   }
-  return result;
+  return result * SOI_LOCAL_LIGHT_GAIN;
 }
 
 vec3 local_lighting_specular(vec3 world_position,

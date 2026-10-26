@@ -84,6 +84,16 @@ float environment_low_sun_amount() {
          (1.0 - environment_night_amount());
 }
 
+float environment_dim_daylight_amount() {
+  return (1.0 - smoothstep(0.50, 0.90, environment_primary_intensity())) *
+         (1.0 - environment_night_amount());
+}
+
+float environment_dim_sky_fill_weight() {
+  float low_sun = 1.0 - smoothstep(0.20, 0.50, environment_primary_direction().y);
+  return environment_dim_daylight_amount() * mix(0.40, 1.0, low_sun);
+}
+
 const float k_horizon_sky_share = 0.42;
 
 vec3 environment_horizon_haze() {
@@ -133,6 +143,8 @@ float environment_cloud_shadow_amount(vec3 world_position) {
 
 const float k_soi_sun_bounce_gain = 0.50;
 const float k_soi_horizon_fill_gain = 1.00;
+const float k_soi_dim_sky_fill = 0.85;
+const float k_soi_dim_fill_warmth = 0.55;
 
 vec3 environment_sun_bounce() {
   float sun_height = clamp(environment_primary_direction().y, 0.0, 1.0);
@@ -140,14 +152,29 @@ vec3 environment_sun_bounce() {
          (environment_primary_intensity() * sun_height * k_soi_sun_bounce_gain);
 }
 
+float environment_dim_fill_gain() {
+  return 1.0 + environment_dim_sky_fill_weight() * k_soi_dim_sky_fill;
+}
+
+#ifndef SOI_LOCAL_LIGHT_GAIN
+#define SOI_LOCAL_LIGHT_GAIN environment_dim_fill_gain()
+#endif
+
 vec3 environment_ambient_light(vec3 normal) {
   float hemisphere = clamp(normal.y * 0.5 + 0.5, 0.0, 1.0);
+  vec3 primary = environment_primary_color();
+  vec3 fill_tint = mix(vec3(1.0),
+                       primary / max(dot(primary, vec3(0.2126, 0.7152, 0.0722)), 0.05),
+                       k_soi_dim_fill_warmth);
+  vec3 sky_fill =
+      vec3(1.0) + clamp(fill_tint, vec3(0.0), vec3(2.0)) *
+                      (environment_dim_sky_fill_weight() * k_soi_dim_sky_fill);
   vec3 dome =
       mix(environment_ground_bounce_color(), environment_sky_color(), hemisphere) *
-      environment_ambient_intensity();
+      (environment_ambient_intensity() * sky_fill);
   float horizon_view = 1.0 - abs(normal.y);
   vec3 horizon = environment_sky_color() * environment_ambient_intensity() *
-                 (horizon_view * k_soi_horizon_fill_gain);
+                 (horizon_view * k_soi_horizon_fill_gain * sky_fill);
   return dome + horizon + environment_sun_bounce() * (1.0 - hemisphere);
 }
 

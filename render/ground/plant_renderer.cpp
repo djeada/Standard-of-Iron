@@ -18,6 +18,7 @@
 #include "map/biome_settings.h"
 #include "map/terrain.h"
 #include "map/terrain_service.h"
+#include "render/ground/ground_ecology.h"
 #include "render/scene_renderer.h"
 #include "render/terrain_contact.h"
 #include "scatter_runtime.h"
@@ -32,6 +33,7 @@ constexpr int k_plant_cell_span = 2;
 constexpr float k_plant_density_area_scale = 4.0F / 9.0F;
 constexpr float k_plant_edge_padding_scale = 0.35F;
 constexpr float k_reference_scatter_extent = 220.0F;
+constexpr float k_plant_yard_clearance = 2.8F;
 
 constexpr float k_plant_type_shrub = 0.0F;
 constexpr float k_plant_type_rosette = 1.0F;
@@ -67,6 +69,8 @@ void PlantRenderer::configure(const Game::Map::TerrainHeightMap& height_map,
   plant_params.wind_strength = wind_profile.sway_strength;
   plant_params.wind_speed = wind_profile.sway_speed;
 
+  m_ecology = Render::Ground::shared_ground_ecology(
+      world().terrain(), height_map, m_noise_seed);
   generate_plant_instances();
 }
 
@@ -152,10 +156,19 @@ void PlantRenderer::generate_plant_instances() {
   config.grid_height = m_height;
   config.tile_size = m_tile_size;
   config.edge_padding = scatter_profile.spawn_edge_padding * k_plant_edge_padding_scale;
+  config.building_clearance = k_plant_yard_clearance;
 
   SpawnValidator validator(terrain_cache, config);
   ScatterCompositionContext composition(
       terrain_cache, m_width, m_height, m_tile_size, m_biome_settings, m_world_props);
+
+  static const GroundEcologyField k_no_ecology;
+  const GroundEcologyField& ecology = m_ecology ? *m_ecology : k_no_ecology;
+  auto scrub_growth = [&](float gx, float gz) {
+    return std::min(2.0F * ecology.sample(ecology.margin, gx, gz) +
+                        0.6F * ecology.sample(ecology.talus, gx, gz),
+                    2.2F);
+  };
 
   auto add_plant = [&](float gx, float gz, uint32_t& state) -> bool {
     if (!validator.can_spawn_at_grid(gx, gz)) {
@@ -176,7 +189,8 @@ void PlantRenderer::generate_plant_instances() {
     float const world_y = terrain_cache.sample_height_at(sgx, sgz);
 
     float const scale = remap(rand_01(state), 0.15F, 0.40F) * tile_safe *
-                        scatter_scale_bias(ScatterRuleSpecies::Plant, scene);
+                        scatter_scale_bias(ScatterRuleSpecies::Plant, scene) *
+                        (1.0F + scrub_growth(sgx, sgz));
 
     float plant_type = 0.0F;
     if (scene.archetype == ScatterSceneArchetype::RiverFringe ||
@@ -229,6 +243,16 @@ void PlantRenderer::generate_plant_instances() {
                 (k_reference_scatter_extent * k_reference_scatter_extent));
   int const sampling_scale = std::max(1, static_cast<int>(std::round(area_scale)));
   int const cell_span = k_plant_cell_span * sampling_scale;
+  float const ecology_norm = ecology_density_normaliser(
+      ecology,
+      terrain_cache,
+      m_width,
+      m_height,
+      cell_span,
+      [](const GroundEcologyField& field,
+         const SpawnTerrainCache& cache,
+         int x,
+         int z) { return plant_ecology_density(field, cache, x, z); });
   for (int z = 0; z < m_height; z += cell_span) {
     for (int x = 0; x < m_width; x += cell_span) {
       int const sample_x = std::min(x + cell_span / 2, m_width - 1);
@@ -257,6 +281,9 @@ void PlantRenderer::generate_plant_instances() {
         density_mult = 0.6F;
       }
       density_mult *= scatter_density_multiplier(ScatterRuleSpecies::Plant, cell_scene);
+      density_mult *=
+          plant_ecology_density(ecology, terrain_cache, sample_x, sample_z) *
+          ecology_norm;
       float const cluster_mult = scatter_patch_multiplier(cell_scene.cluster_bias);
 
       float const effective_density = plant_density * density_mult * cluster_mult *

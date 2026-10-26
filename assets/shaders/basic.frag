@@ -64,6 +64,7 @@ void main() {
   }
   vec3 albedo = color;
   color *= environment_lighting(normal, wrap_amount);
+  color += soi_material_response(albedo, normal, v_world_pos, soi_material);
   color = apply_directional_shadow(color, v_world_pos, surface_normal);
   color += albedo * local_lighting(v_world_pos, normal);
   frag_color = vec4(color, soi_resolve_ghost_alpha(u_alpha));

@@ -80,9 +80,38 @@ constexpr auto make_full_chest() noexcept -> Creature::PrimitiveInstance {
   p.params.anchor_bone = bone(HumanoidBone::Chest);
   p.params.tail_bone = bone(HumanoidBone::Chest);
   p.params.tail_offset = QVector3D(0.0F, -0.17F, 0.0F);
-  p.params.radius = HP::TORSO_TOP_R * 0.86F;
+  p.params.radius = HP::TORSO_TOP_R * 1.02F;
 
-  p.params.depth_radius = HP::TORSO_TOP_R * 0.54F;
+  p.params.depth_radius = HP::TORSO_TOP_R * 0.60F;
+  p.color_role = Cloth;
+  p.lod_mask = Creature::k_lod_full;
+  return p;
+}
+
+constexpr auto make_full_upper_chest() noexcept -> Creature::PrimitiveInstance {
+  Creature::PrimitiveInstance p{};
+  p.debug_name = "humanoid_full_upper_chest";
+  p.shape = Creature::PrimitiveShape::OrientedCylinder;
+  p.params.anchor_bone = bone(HumanoidBone::Chest);
+  p.params.tail_bone = bone(HumanoidBone::Chest);
+  p.params.head_offset = QVector3D(0.0F, -0.03F, 0.0F);
+  p.params.tail_offset = QVector3D(0.0F, 0.21F, -0.012F);
+
+  p.params.radius = HP::TORSO_TOP_R * 1.12F;
+  p.params.depth_radius = HP::TORSO_TOP_R * 0.62F;
+  p.color_role = Cloth;
+  p.lod_mask = Creature::k_lod_full;
+  return p;
+}
+
+constexpr auto make_full_shoulder_yoke() noexcept -> Creature::PrimitiveInstance {
+  Creature::PrimitiveInstance p{};
+  p.debug_name = "humanoid_full_shoulder_yoke";
+  p.shape = Creature::PrimitiveShape::OrientedSphere;
+  p.params.anchor_bone = bone(HumanoidBone::Chest);
+  p.params.head_offset = QVector3D(0.0F, 0.245F, -0.008F);
+  p.params.half_extents = QVector3D(
+      HP::TORSO_TOP_R * 1.04F, HP::TORSO_TOP_R * 0.26F, HP::TORSO_TOP_R * 0.44F);
   p.color_role = Cloth;
   p.lod_mask = Creature::k_lod_full;
   return p;
@@ -93,10 +122,10 @@ constexpr auto make_full_pectoral(bool left) noexcept -> Creature::PrimitiveInst
   p.debug_name = left ? "humanoid_full_pectoral_l" : "humanoid_full_pectoral_r";
   p.shape = Creature::PrimitiveShape::OrientedSphere;
   p.params.anchor_bone = bone(HumanoidBone::Chest);
-  float const x = left ? -HP::TORSO_TOP_R * 0.42F : HP::TORSO_TOP_R * 0.42F;
-  p.params.head_offset = QVector3D(x, -0.04F, HP::TORSO_TOP_R * 0.26F);
+  float const x = left ? -HP::TORSO_TOP_R * 0.48F : HP::TORSO_TOP_R * 0.48F;
+  p.params.head_offset = QVector3D(x, 0.11F, HP::TORSO_TOP_R * 0.50F);
   p.params.half_extents = QVector3D(
-      HP::TORSO_TOP_R * 0.28F, HP::TORSO_TOP_R * 0.20F, HP::TORSO_TOP_R * 0.12F);
+      HP::TORSO_TOP_R * 0.32F, HP::TORSO_TOP_R * 0.34F, HP::TORSO_TOP_R * 0.16F);
   p.color_role = Cloth;
   p.lod_mask = Creature::k_lod_full;
   return p;
@@ -110,7 +139,7 @@ constexpr auto make_full_upper_back() noexcept -> Creature::PrimitiveInstance {
 
   p.params.head_offset = QVector3D(0.0F, 0.16F, -HP::TORSO_TOP_R * 0.40F);
   p.params.half_extents = QVector3D(
-      HP::TORSO_TOP_R * 0.64F, HP::TORSO_TOP_R * 0.34F, HP::TORSO_TOP_R * 0.16F);
+      HP::TORSO_TOP_R * 0.84F, HP::TORSO_TOP_R * 0.38F, HP::TORSO_TOP_R * 0.22F);
   p.color_role = Cloth;
   p.lod_mask = Creature::k_lod_full;
   return p;
@@ -123,8 +152,8 @@ constexpr auto make_full_abdomen() noexcept -> Creature::PrimitiveInstance {
   p.shape = Creature::PrimitiveShape::OrientedCylinder;
   p.params.anchor_bone = bone(HumanoidBone::Spine);
   p.params.tail_bone = bone(HumanoidBone::Chest);
-  p.params.radius = HP::TORSO_BOT_R * 0.78F;
-  p.params.depth_radius = HP::TORSO_BOT_R * 0.55F;
+  p.params.radius = HP::TORSO_BOT_R * 0.86F;
+  p.params.depth_radius = HP::TORSO_BOT_R * 0.60F;
   p.color_role = Cloth;
   p.lod_mask = Creature::k_lod_full;
   return p;
@@ -165,8 +194,22 @@ constexpr auto make_full_deltoid(bool left) noexcept -> Creature::PrimitiveInsta
   p.params.anchor_bone = bone(left ? HumanoidBone::ShoulderL : HumanoidBone::ShoulderR);
   p.params.head_offset = QVector3D(0.0F, 0.0F, 0.0F);
 
-  float const r = HP::UPPER_ARM_R * 0.80F;
+  float const r = HP::UPPER_ARM_R * 1.04F;
   p.params.half_extents = QVector3D(r, r * 0.84F, r * 0.96F);
+  p.color_role = Cloth;
+  p.lod_mask = Creature::k_lod_full;
+  return p;
+}
+
+constexpr auto
+make_full_deltoid_cap(bool left) noexcept -> Creature::PrimitiveInstance {
+  Creature::PrimitiveInstance p{};
+  p.debug_name = left ? "humanoid_full_deltoid_cap_l" : "humanoid_full_deltoid_cap_r";
+  p.shape = Creature::PrimitiveShape::OrientedSphere;
+  p.params.anchor_bone = bone(left ? HumanoidBone::UpperArmL : HumanoidBone::UpperArmR);
+  p.params.head_offset = QVector3D(0.0F, HP::UPPER_ARM_LEN * 0.17F, 0.0F);
+  p.params.half_extents = QVector3D(
+      HP::UPPER_ARM_R * 1.02F, HP::UPPER_ARM_R * 1.20F, HP::UPPER_ARM_R * 0.96F);
   p.color_role = Cloth;
   p.lod_mask = Creature::k_lod_full;
   return p;
@@ -224,8 +267,8 @@ make_full_upper_arm_proximal(bool left) noexcept -> Creature::PrimitiveInstance 
                            left ? HumanoidBone::UpperArmL : HumanoidBone::UpperArmR,
                            0.0F,
                            k_upper_arm_half,
-                           HP::UPPER_ARM_R * 1.18F,
-                           HP::UPPER_ARM_R * 1.00F,
+                           HP::UPPER_ARM_R * 1.28F,
+                           HP::UPPER_ARM_R * 1.06F,
                            Cloth);
 }
 
@@ -236,8 +279,8 @@ make_full_upper_arm_distal(bool left) noexcept -> Creature::PrimitiveInstance {
                                left ? HumanoidBone::UpperArmL : HumanoidBone::UpperArmR,
                                left ? HumanoidBone::ForearmL : HumanoidBone::ForearmR,
                                k_upper_arm_half,
-                               HP::UPPER_ARM_R * 1.00F,
-                               HP::UPPER_ARM_R * 0.86F,
+                               HP::UPPER_ARM_R * 1.06F,
+                               HP::UPPER_ARM_R * 0.90F,
                                Cloth);
 }
 
@@ -246,7 +289,7 @@ constexpr auto make_full_elbow(bool left) noexcept -> Creature::PrimitiveInstanc
   p.debug_name = left ? "humanoid_full_elbow_l" : "humanoid_full_elbow_r";
   p.shape = Creature::PrimitiveShape::Sphere;
   p.params.anchor_bone = bone(left ? HumanoidBone::ForearmL : HumanoidBone::ForearmR);
-  p.params.radius = HP::UPPER_ARM_R * 0.90F;
+  p.params.radius = HP::UPPER_ARM_R * 0.98F;
   p.color_role = Skin;
   p.lod_mask = Creature::k_lod_full;
   return p;
@@ -259,8 +302,8 @@ make_full_forearm_proximal(bool left) noexcept -> Creature::PrimitiveInstance {
                            left ? HumanoidBone::ForearmL : HumanoidBone::ForearmR,
                            0.0F,
                            HP::FORE_ARM_LEN * 0.28F,
-                           HP::FORE_ARM_R * 1.10F,
-                           HP::FORE_ARM_R * 1.22F,
+                           HP::FORE_ARM_R * 1.18F,
+                           HP::FORE_ARM_R * 1.34F,
                            Skin);
 }
 
@@ -271,8 +314,8 @@ make_full_forearm_distal(bool left) noexcept -> Creature::PrimitiveInstance {
                                left ? HumanoidBone::ForearmL : HumanoidBone::ForearmR,
                                left ? HumanoidBone::HandL : HumanoidBone::HandR,
                                HP::FORE_ARM_LEN * 0.28F,
-                               HP::FORE_ARM_R * 1.22F,
-                               HP::FORE_ARM_R * 0.80F,
+                               HP::FORE_ARM_R * 1.34F,
+                               HP::FORE_ARM_R * 0.86F,
                                Skin);
 }
 
@@ -282,9 +325,9 @@ constexpr auto make_full_hand(bool left) noexcept -> Creature::PrimitiveInstance
   p.debug_name = left ? "humanoid_full_hand_l" : "humanoid_full_hand_r";
   p.shape = Creature::PrimitiveShape::OrientedSphere;
   p.params.anchor_bone = bone(left ? HumanoidBone::HandL : HumanoidBone::HandR);
-  p.params.head_offset = QVector3D(0.0F, HP::HAND_RADIUS * 0.65F, 0.0F);
+  p.params.head_offset = QVector3D(0.0F, HP::HAND_RADIUS * 0.86F, 0.0F);
   p.params.half_extents = QVector3D(
-      HP::HAND_RADIUS * 1.18F, HP::HAND_RADIUS * 1.38F, HP::HAND_RADIUS * 0.56F);
+      HP::HAND_RADIUS * 1.48F, HP::HAND_RADIUS * 1.60F, HP::HAND_RADIUS * 0.92F);
   p.color_role = Skin;
   p.lod_mask = Creature::k_lod_full;
   return p;
@@ -443,8 +486,8 @@ make_minimal_upper_arm(bool left) noexcept -> Creature::PrimitiveInstance {
       left ? HumanoidBone::UpperArmL : HumanoidBone::UpperArmR,
       left ? HumanoidBone::ForearmL : HumanoidBone::ForearmR,
       0.0F,
-      HP::UPPER_ARM_R * 1.18F,
-      HP::UPPER_ARM_R * 0.86F,
+      HP::UPPER_ARM_R * 1.28F,
+      HP::UPPER_ARM_R * 0.90F,
       Cloth));
 }
 
@@ -454,8 +497,8 @@ constexpr auto make_minimal_forearm(bool left) noexcept -> Creature::PrimitiveIn
       left ? HumanoidBone::ForearmL : HumanoidBone::ForearmR,
       left ? HumanoidBone::HandL : HumanoidBone::HandR,
       0.0F,
-      HP::FORE_ARM_R * 1.10F,
-      HP::FORE_ARM_R * 0.80F,
+      HP::FORE_ARM_R * 1.18F,
+      HP::FORE_ARM_R * 0.86F,
       Skin));
 }
 
@@ -481,8 +524,9 @@ constexpr auto make_minimal_calf(bool left) noexcept -> Creature::PrimitiveInsta
       Skin));
 }
 
-constexpr std::array<Creature::PrimitiveInstance, 17> k_minimal_parts = {
+constexpr std::array<Creature::PrimitiveInstance, 18> k_minimal_parts = {
     as_minimal(make_full_chest()),
+    as_minimal(make_full_upper_chest()),
     as_minimal(make_full_abdomen()),
     as_minimal(make_full_pelvis_block()),
 
@@ -504,9 +548,11 @@ constexpr std::array<Creature::PrimitiveInstance, 17> k_minimal_parts = {
     as_minimal(make_full_foot(false)),
 };
 
-constexpr std::array<Creature::PrimitiveInstance, 38> k_full_parts = {
+constexpr std::array<Creature::PrimitiveInstance, 42> k_full_parts = {
 
     make_full_chest(),
+    make_full_upper_chest(),
+    make_full_shoulder_yoke(),
     make_full_pectoral(true),
     make_full_pectoral(false),
     make_full_upper_back(),
@@ -517,6 +563,8 @@ constexpr std::array<Creature::PrimitiveInstance, 38> k_full_parts = {
 
     make_full_deltoid(true),
     make_full_deltoid(false),
+    make_full_deltoid_cap(true),
+    make_full_deltoid_cap(false),
 
     make_full_upper_arm_proximal(true),
     make_full_upper_arm_proximal(false),
@@ -621,8 +669,8 @@ auto smooth_limb_mesh(float tail_radius,
 auto tunic_hem_mesh() -> Render::GL::Mesh* {
   static auto mesh = []() {
     auto shell = Render::GL::make_garment_shell({
-        {-0.20F, 0.215F, 0.150F},
-        {-0.07F, 0.202F, 0.115F},
+        {-0.215F, 0.230F, 0.162F},
+        {-0.07F, 0.202F, 0.117F},
         {0.02F, 0.140F, 0.075F},
         {0.12F, 0.108F, 0.055F},
     });

@@ -10,6 +10,7 @@
 #include "game/map/map_definition.h"
 #include "game/map/terrain.h"
 #include "render/decoration_gpu.h"
+#include "render/ground/ground_ecology.h"
 #include "scatter_renderer_base.h"
 
 namespace Render::GL {
@@ -33,6 +34,8 @@ public:
 
 private:
   void generate_plant_instances();
+
+  std::shared_ptr<const Render::Ground::GroundEcologyField> m_ecology;
 };
 
 } // namespace Render::GL

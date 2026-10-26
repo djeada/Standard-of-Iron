@@ -3432,19 +3432,28 @@ TEST(AnimationCoreHoldPoseManifest, BowReadyAndSwordShieldCarryExposeStableTarge
   EXPECT_LT(bow.right_hand.y, 1.20F);
   EXPECT_LT(bow.left_hand.y, 1.20F);
 
-  EXPECT_FLOAT_EQ(shield_moving.right_hand.x, 0.41F);
-  EXPECT_FLOAT_EQ(shield_moving.right_hand.y, 1.01F);
-  EXPECT_FLOAT_EQ(shield_moving.right_hand.z, 0.58F);
-  EXPECT_FLOAT_EQ(shield_moving.left_hand.x, -0.35F);
-  EXPECT_FLOAT_EQ(shield_moving.left_hand.y, 1.15F);
-  EXPECT_FLOAT_EQ(shield_moving.left_hand.z, 0.33F);
+  auto const shield_idle = Animation::resolve_humanoid_held_pose({
+      .kind = Animation::HumanoidHeldPoseKind::SwordShieldCarry,
+      .shoulder_y = 1.20F,
+  });
 
-  EXPECT_LT(shield_running.right_hand.x, shield_moving.right_hand.x);
-  EXPECT_LT(shield_running.right_hand.y, shield_moving.right_hand.y);
-  EXPECT_GT(shield_running.right_hand.z, shield_moving.right_hand.z);
-  EXPECT_GT(shield_running.left_hand.x, shield_moving.left_hand.x);
-  EXPECT_GT(shield_running.left_hand.y, shield_moving.left_hand.y);
-  EXPECT_GT(shield_running.left_hand.z, shield_moving.left_hand.z);
+  EXPECT_NEAR(shield_moving.right_hand.x, 0.30F, 0.06F);
+  EXPECT_NEAR(shield_moving.right_hand.y, 0.82F, 0.03F);
+  EXPECT_NEAR(shield_moving.right_hand.z, 0.28F, 0.06F);
+  EXPECT_NEAR(shield_moving.left_hand.x, -0.31F, 0.01F);
+  EXPECT_NEAR(shield_moving.left_hand.y, 1.00F, 0.03F);
+  EXPECT_NEAR(shield_moving.left_hand.z, 0.24F, 0.03F);
+
+  EXPECT_LT(shield_moving.right_hand.y, shield_idle.right_hand.y - 0.15F);
+  EXPECT_LT(shield_moving.right_hand.z, shield_idle.right_hand.z - 0.15F);
+  EXPECT_LT(shield_moving.left_hand.y, shield_idle.left_hand.y - 0.10F);
+  EXPECT_LT(shield_moving.right_hand.y, shield_running.right_hand.y);
+  EXPECT_LT(shield_moving.right_hand.z, shield_running.right_hand.z);
+  EXPECT_LT(shield_running.right_hand.x, shield_idle.right_hand.x);
+  EXPECT_LT(shield_running.right_hand.y, shield_idle.right_hand.y);
+  EXPECT_GT(shield_running.right_hand.z, shield_idle.right_hand.z);
+  EXPECT_GT(shield_running.left_hand.x, shield_idle.left_hand.x);
+  EXPECT_GT(shield_running.left_hand.z, shield_idle.left_hand.z);
   EXPECT_GT(shield_running.shoulder_l_z_delta, 0.05F);
 
   ASSERT_TRUE(shield_moving.has_blade_direction);

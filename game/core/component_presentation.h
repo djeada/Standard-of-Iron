@@ -190,6 +190,8 @@ struct FormationSoldierPresentation {
 
   bool climbing{false};
 
+  float stranded_seconds{0.0F};
+
   auto operator==(const FormationSoldierPresentation&) const -> bool = default;
 };
 

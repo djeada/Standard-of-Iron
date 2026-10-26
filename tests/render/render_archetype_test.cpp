@@ -13,6 +13,7 @@
 #include "game/core/component_gameplay.h"
 #include "game/core/entity.h"
 #include "game/core/world.h"
+#include "render/entity/home_renderer_common.h"
 #include "render/entity/nations/carthage/ballista_renderer.h"
 #include "render/entity/nations/carthage/barracks_renderer.h"
 #include "render/entity/nations/carthage/catapult_renderer.h"
@@ -718,12 +719,21 @@ TEST(RenderArchetypeBuildings, RomanAndCarthageHomesRemainDistinctSilhouettes) {
         k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
     EXPECT_NE(renderable, nullptr);
     EXPECT_NE(unit, nullptr);
+    float lot_x = 0.0F;
+    for (int lot = 0; lot < 256; ++lot) {
+      const float x = static_cast<float>(lot) * 5.0F;
+      if (home_visual_variant(home_placement_seed(x, 0.0F, entity_id)) == 0) {
+        lot_x = x;
+        break;
+      }
+    }
 
     DrawContext ctx;
     ResourceManager resources;
     ctx.entity = &entity;
     ctx.resources = &resources;
     ctx.model = QMatrix4x4{};
+    ctx.model.translate(lot_x, 0.0F, 0.0F);
 
     RecordingSubmitter submitter;
     renderer(ctx, submitter);

@@ -77,7 +77,7 @@ auto elephant_run_shape() noexcept -> const ElephantGaitShape& {
                                        .lift_knee_degrees = 50.0F,
                                        .lift_compensation = 0.46F,
                                        .foot_curl_degrees = 20.0F,
-                                       .roll_degrees = 2.0F,
+                                       .roll_degrees = 1.0F,
                                        .head_nod_degrees = 3.4F,
                                        .trunk_swing_degrees = 10.0F,
                                        .ear_flap_degrees = 12.0F,
@@ -113,7 +113,9 @@ auto sample_elephant_leg(const ElephantGaitShape& shape,
   } else {
     float const v = (q - duty) / (1.0F - duty);
     fore_aft = -1.0F + 2.0F * smoothstep01(v);
-    lift = std::sin(std::numbers::pi_v<float> * v);
+    float const swing_arc = std::sin(std::numbers::pi_v<float> * v);
+
+    lift = swing_arc * swing_arc;
     sample.in_stance = false;
   }
   float const reach = std::sin(shape.sweep_degrees * k_degrees_to_radians);
@@ -149,7 +151,8 @@ auto elephant_locomotion_secondary(const ElephantGaitShape& shape,
   float const trunk = shape.trunk_swing_degrees;
   ElephantSecondaryMotion motion{};
   motion.body_roll_degrees = shape.roll_degrees * wave(p, 1.0F, 0.125F);
-  motion.body_pitch_degrees = 0.5F * wave(p, 2.0F, 0.05F);
+
+  motion.body_pitch_degrees = 0.3F * wave(p, 2.0F, 0.05F);
   motion.head_pitch_degrees = shape.head_nod_degrees * wave(p, 2.0F, 0.20F);
   motion.head_yaw_degrees = 1.6F * wave(p, 1.0F, 0.10F);
   motion.trunk_yaw_degrees = {trunk * wave(p, 1.0F, 0.15F),
@@ -158,8 +161,10 @@ auto elephant_locomotion_secondary(const ElephantGaitShape& shape,
   motion.trunk_pitch_degrees = {trunk * 0.45F * wave(p, 2.0F, 0.20F),
                                 trunk * 0.55F * wave(p, 2.0F, 0.34F),
                                 trunk * 0.75F * wave(p, 2.0F, 0.48F)};
-  motion.ear_left_degrees = shape.ear_flap_degrees * wave(p, 2.0F, 0.0F);
-  motion.ear_right_degrees = -shape.ear_flap_degrees * wave(p, 2.0F, 0.12F);
+  motion.ear_left_degrees = shape.ear_flap_degrees * (0.70F * wave(p, 1.0F, 0.18F) +
+                                                      0.30F * wave(p, 2.0F, 0.32F));
+  motion.ear_right_degrees = -shape.ear_flap_degrees * (0.70F * wave(p, 1.0F, 0.30F) +
+                                                        0.30F * wave(p, 2.0F, 0.46F));
   motion.tail_degrees = shape.tail_swing_degrees * wave(p, 1.0F, 0.30F);
   return motion;
 }

@@ -3,6 +3,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QSet>
+#include <QStringList>
 #include <QTemporaryDir>
 
 #include <algorithm>
@@ -750,6 +751,128 @@ TEST(ArenaScenarioRunnerTest, RenderProbeRejectsMissingIndicatorDuringMeleeLock)
   EXPECT_EQ(runner.report().issues.front().code,
             QStringLiteral("missing_combat_indicator"));
   diagnostics.set_enabled(false);
+}
+
+TEST(ArenaScenarioRunnerTest, HiddenIndicatorStillRequiresTheFightActivity) {
+  Engine::Core::World world;
+  auto scenario = minimal_definition();
+  scenario.groups.resize(1);
+  scenario.steps.clear();
+  scenario.expectations = {{Arena::ArenaExpectationKind::CombatIndicatorIsContinuous,
+                            QStringLiteral("blue")}};
+  auto host = make_entity_host(world);
+  host.order_markers_visible_for_owner = [](int) {
+    return false;
+  };
+  Arena::ArenaScenarioRunner runner(world, std::move(host), scenario);
+  ASSERT_TRUE(runner.start());
+
+  auto const entity_id = runner.group_entities(QStringLiteral("blue")).front();
+  auto* entity = world.get_entity(entity_id);
+  auto* attack = entity->get_component<Engine::Core::AttackComponent>();
+  ASSERT_NE(attack, nullptr);
+  attack->in_melee_lock = true;
+  attack->melee_lock_target_id = 99U;
+  auto* creature = entity->add_component<Engine::Core::CreaturePresentationComponent>();
+  creature->snapshot_valid = true;
+  creature->activity.kind = Game::Systems::ActivityKind::Attack;
+
+  auto& diagnostics = Render::Profiling::CombatAnimationDiagnostics::instance();
+  diagnostics.set_enabled(true);
+  diagnostics.begin_frame(1);
+  runner.observe_rendered_frame(0.5);
+  EXPECT_TRUE(runner.report().passed());
+
+  creature->activity.kind = Game::Systems::ActivityKind::Idle;
+  diagnostics.begin_frame(2);
+  runner.observe_rendered_frame(0.5);
+  ASSERT_FALSE(runner.report().passed());
+  EXPECT_EQ(runner.report().issues.front().code,
+            QStringLiteral("missing_combat_indicator"));
+  diagnostics.set_enabled(false);
+}
+
+namespace {
+
+auto formation_fight_issues(Engine::Core::FormationSoldierAction waiting_action,
+                            bool combat_ready_stance,
+                            std::uint32_t hit_frames = 0U) -> QStringList {
+  Engine::Core::World world;
+  auto scenario = minimal_definition();
+  scenario.duration_seconds = 5.0F;
+  scenario.groups.resize(1);
+  scenario.steps.clear();
+  scenario.expectations = {
+      {Arena::ArenaExpectationKind::AllLivingSoldiersFight, QStringLiteral("blue")}};
+  Arena::ArenaScenarioRunner runner(world, make_entity_host(world), scenario);
+  EXPECT_TRUE(runner.start());
+
+  auto const entity_id = runner.group_entities(QStringLiteral("blue")).front();
+  auto* formation = world.get_entity(entity_id)
+                        ->add_component<Engine::Core::FormationPresentationComponent>();
+  formation->melee_ordered = true;
+  formation->target_alive = true;
+  for (std::uint16_t slot = 0; slot < 2U; ++slot) {
+    Engine::Core::FormationSoldierPresentation soldier;
+    soldier.slot_index = slot;
+    soldier.alive = true;
+    soldier.action = slot == 0U ? Engine::Core::FormationSoldierAction::MeleeEngaged
+                                : waiting_action;
+    formation->soldiers.push_back(soldier);
+  }
+
+  auto& diagnostics = Render::Profiling::CombatAnimationDiagnostics::instance();
+  diagnostics.set_enabled(true);
+  for (std::uint32_t frame = 1U; frame <= 8U; ++frame) {
+    diagnostics.begin_frame(frame);
+    Render::Profiling::SoldierAnimationDebugSample striker;
+    striker.soldier_index = 0;
+    striker.is_attacking = true;
+    striker.animation_state = Render::Creature::AnimationStateId::AttackSword;
+    diagnostics.record_soldier_sample(entity_id, striker);
+    Render::Profiling::SoldierAnimationDebugSample waiting;
+    waiting.soldier_index = 1;
+    waiting.is_hit_reacting = frame <= hit_frames;
+    waiting.combat_ready_stance = combat_ready_stance && !waiting.is_hit_reacting;
+    diagnostics.record_soldier_sample(entity_id, waiting);
+    runner.observe_rendered_frame(1.0);
+    runner.update(0.1F);
+  }
+  diagnostics.set_enabled(false);
+  QStringList codes;
+  for (auto const& issue : runner.report().issues) {
+    codes << issue.code;
+  }
+  return codes;
+}
+
+} // namespace
+
+TEST(ArenaScenarioRunnerTest, SoldiersWaitingOutOfReachMayStandInTheCombatReadyStance) {
+  EXPECT_FALSE(
+      formation_fight_issues(Engine::Core::FormationSoldierAction::MeleeReady, true)
+          .contains(QStringLiteral("living_soldier_idle_in_fight")));
+  EXPECT_FALSE(formation_fight_issues(
+                   Engine::Core::FormationSoldierAction::MeleeReposition, true)
+                   .contains(QStringLiteral("living_soldier_idle_in_fight")));
+}
+
+TEST(ArenaScenarioRunnerTest, AStrikerMayRecoverInTheReadyStanceAfterAHit) {
+  EXPECT_FALSE(formation_fight_issues(
+                   Engine::Core::FormationSoldierAction::MeleeEngaged, true, 2U)
+                   .contains(QStringLiteral("living_soldier_idle_in_fight")));
+  EXPECT_TRUE(formation_fight_issues(
+                  Engine::Core::FormationSoldierAction::MeleeEngaged, false, 2U)
+                  .contains(QStringLiteral("living_soldier_idle_in_fight")));
+}
+
+TEST(ArenaScenarioRunnerTest, AnOrdinaryIdleOrAStrikerAtEaseStillFailsTheFight) {
+  EXPECT_TRUE(
+      formation_fight_issues(Engine::Core::FormationSoldierAction::MeleeReady, false)
+          .contains(QStringLiteral("living_soldier_idle_in_fight")));
+  EXPECT_TRUE(
+      formation_fight_issues(Engine::Core::FormationSoldierAction::MeleeEngaged, true)
+          .contains(QStringLiteral("living_soldier_idle_in_fight")));
 }
 
 TEST(ArenaScenarioRunnerTest, RenderProbeRejectsVisibleSoldierBecomingCulled) {

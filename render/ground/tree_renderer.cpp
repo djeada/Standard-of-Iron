@@ -65,6 +65,30 @@ auto bed_tree_base(const Game::Map::TerrainService& terrain_service,
                                      k_max_bed_scale * scale);
 }
 
+auto canopy_height_factor(const Render::Ground::GroundEcologyField* ecology,
+                          float world_x,
+                          float world_z) -> float {
+  using Render::Ground::ecology_detail::fbm;
+  using Render::Ground::ecology_detail::step_between;
+  constexpr std::uint32_t k_canopy_salt = 0x7F4A7C15U;
+  float const canopy = step_between(
+      0.30F, 0.72F, fbm(world_z * 0.034F, world_x * 0.034F, k_canopy_salt));
+  float factor = 0.80F + 0.20F * canopy;
+  if (ecology != nullptr && !ecology->empty() && !ecology->coverage.empty()) {
+    float const gx = Render::Ground::ecology_grid_from_world(
+        world_x, ecology->width, ecology->tile_size);
+    float const gz = Render::Ground::ecology_grid_from_world(
+        world_z, ecology->height, ecology->tile_size);
+    float const authored = ecology->sample(ecology->coverage, gx, gz);
+    if (authored > 0.05F) {
+      float const stand =
+          step_between(0.12F, 0.70F, ecology->sample(ecology->forest, gx, gz));
+      factor *= 0.36F + 0.64F * stand;
+    }
+  }
+  return std::clamp(factor, 0.3F, 1.0F);
+}
+
 auto draw_species(Game::Map::TreeSpecies species)
     -> Render::GL::TerrainScatterCmd::Species {
   using S = Render::GL::TerrainScatterCmd::Species;
@@ -106,6 +130,9 @@ void TreeRenderer::configure(const Game::Map::TerrainHeightMap& height_map,
   params.snow_coverage = std::clamp(
       Game::Map::make_climate_profile(m_biome_settings).snow_coverage, 0.0F, 1.0F);
 
+  m_ecology = Render::Ground::shared_ground_ecology(
+      world().terrain(), height_map, m_noise_seed);
+
   rebuild_instances();
 }
 
@@ -144,8 +171,9 @@ void TreeRenderer::append_world_prop_trees() {
       continue;
     }
     const QVector3D surface = terrain_service.world_prop_world_position(prop);
-    const float scale =
-        prop.scale * Game::Map::world_prop_render_scale(profile.prop_type);
+    const float scale = prop.scale *
+                        Game::Map::world_prop_render_scale(profile.prop_type) *
+                        canopy_height_factor(m_ecology.get(), surface.x(), surface.z());
     const QVector3D pos(surface.x(),
                         bed_tree_base(terrain_service, m_species, surface, scale),
                         surface.z());

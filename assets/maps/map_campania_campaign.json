@@ -1068,14 +1068,14 @@
                 648
             ],
             "start": [
-                392,
-                528
+                391.0,
+                526.0
             ],
             "style": "default",
             "waypoints": [
                 [
-                    392,
-                    528
+                    391.0,
+                    526.0
                 ],
                 [
                     382,
@@ -1126,8 +1126,8 @@
         },
         {
             "end": [
-                163.78,
-                103.09
+                163.93,
+                108.96
             ],
             "start": [
                 300,
@@ -1176,8 +1176,8 @@
                     92.98
                 ],
                 [
-                    163.78,
-                    103.09
+                    163.93,
+                    108.96
                 ]
             ],
             "width": 3.2
@@ -1188,14 +1188,14 @@
                 155.21
             ],
             "start": [
-                409.41,
-                174.14000000000001
+                408.0,
+                176.0
             ],
             "style": "default",
             "waypoints": [
                 [
-                    409.41,
-                    174.14000000000001
+                    408.0,
+                    176.0
                 ],
                 [
                     420.15000000000003,
@@ -1386,8 +1386,8 @@
                 413
             ],
             "start": [
-                345,
-                347
+                344.69,
+                341.47
             ],
             "style": "default",
             "width": 3
@@ -1434,20 +1434,20 @@
                 358
             ],
             "start": [
-                222,
-                341
+                222.83,
+                335.03
             ],
             "style": "default",
             "width": 3
         },
         {
             "end": [
-                144,
-                373
+                142.0,
+                374.0
             ],
             "start": [
-                199,
-                361
+                201.0,
+                358.0
             ],
             "style": "default",
             "width": 3
@@ -1470,8 +1470,8 @@
                 409
             ],
             "start": [
-                143,
-                390
+                141.0,
+                387.0
             ],
             "style": "default",
             "width": 3
@@ -1494,8 +1494,8 @@
                 444
             ],
             "start": [
-                100,
-                439
+                101.1,
+                437.5
             ],
             "style": "default",
             "width": 3
@@ -1506,8 +1506,8 @@
                 457
             ],
             "start": [
-                81,
-                447
+                81.0,
+                444.0
             ],
             "style": "default",
             "width": 3
@@ -1542,8 +1542,8 @@
                 526
             ],
             "start": [
-                386,
-                509
+                385.0,
+                507.0
             ],
             "style": "default",
             "width": 3
@@ -1554,8 +1554,8 @@
                 164
             ],
             "start": [
-                499,
-                177
+                497.21,
+                178.29
             ],
             "style": "default",
             "width": 3
@@ -1574,8 +1574,8 @@
         },
         {
             "end": [
-                451,
-                151
+                449.0,
+                151.0
             ],
             "start": [
                 471,
@@ -1646,8 +1646,8 @@
         },
         {
             "end": [
-                207,
-                177
+                205.0,
+                176.0
             ],
             "start": [
                 245,
@@ -1686,8 +1686,8 @@
                 239
             ],
             "start": [
-                492,
-                281
+                491.19,
+                283.1
             ],
             "style": "default",
             "width": 3
@@ -1698,8 +1698,8 @@
                 186
             ],
             "start": [
-                505,
-                238
+                503.0,
+                239.0
             ],
             "style": "default",
             "width": 3
@@ -2328,8 +2328,8 @@
             "max_population": -1,
             "player_id": 1,
             "type": "horse_swordsman",
-            "x": 384,
-            "z": 262
+            "x": 383.62,
+            "z": 262.29
         }
     ],
     "starting_resources": {
@@ -2477,8 +2477,8 @@
             "player_id": 2,
             "settlement": "campania_northeast_camp",
             "type": "defense_tower",
-            "x": 454.0,
-            "z": 145.0
+            "x": 453.71,
+            "z": 144.47
         },
         {
             "authored": true,
@@ -5140,6 +5140,11 @@
                     "radius": 7.58,
                     "x": 265.5,
                     "z": 291.88
+                },
+                {
+                    "radius": 7.58,
+                    "x": 250.79,
+                    "z": 230.9
                 }
             ],
             "height": 3.6,
@@ -5156,6 +5161,11 @@
                     "radius": 9.41,
                     "x": 111.60000000000001,
                     "z": 266.6
+                },
+                {
+                    "radius": 9.41,
+                    "x": 146.37,
+                    "z": 297.65
                 }
             ],
             "height": 2.5,
@@ -5172,6 +5182,11 @@
                     "radius": 5.57,
                     "x": 429.91,
                     "z": 306.64
+                },
+                {
+                    "radius": 5.57,
+                    "x": 418.89,
+                    "z": 257.89
                 }
             ],
             "height": 2.5,
@@ -5188,6 +5203,11 @@
                     "radius": 11.15,
                     "x": 216.04,
                     "z": 381.04
+                },
+                {
+                    "radius": 10.0,
+                    "x": 263.55,
+                    "z": 384.68
                 }
             ],
             "height": 2.7,
@@ -5225,6 +5245,11 @@
                     "radius": 7.84,
                     "x": 415.55,
                     "z": 167.9
+                },
+                {
+                    "radius": 7.84,
+                    "x": 430.58,
+                    "z": 126.84
                 }
             ],
             "height": 2.3000000000000003,
@@ -5258,6 +5283,11 @@
                     "radius": 7.16,
                     "x": 450.93,
                     "z": 209.8
+                },
+                {
+                    "radius": 7.16,
+                    "x": 452.57,
+                    "z": 265.47
                 }
             ],
             "height": 2,
@@ -5295,6 +5325,11 @@
                     "radius": 4.03,
                     "x": 366.5,
                     "z": 440
+                },
+                {
+                    "radius": 5.5,
+                    "x": 380.77,
+                    "z": 414.96
                 }
             ],
             "height": 2.4,
@@ -5311,6 +5346,11 @@
                     "radius": 7.67,
                     "x": 149.71,
                     "z": 47.36
+                },
+                {
+                    "radius": 7.67,
+                    "x": 155.46,
+                    "z": 84.71
                 }
             ],
             "height": 2.2,
@@ -5360,6 +5400,11 @@
                     "radius": 7.25,
                     "x": 551.5,
                     "z": 130.21
+                },
+                {
+                    "radius": 7.25,
+                    "x": 511.3,
+                    "z": 109.31
                 }
             ],
             "height": 3.6,
@@ -5651,14 +5696,7 @@
             "scale": 1,
             "type": "tent",
             "x": 266.81,
-            "z": 269.84
-        },
-        {
-            "rotation": 1.2,
-            "scale": 1,
-            "type": "supply_cart",
-            "x": 257.83,
-            "z": 231.56
+            "z": 268.47
         },
         {
             "rotation": 3.5,
@@ -5671,8 +5709,8 @@
             "rotation": 0.7000000000000001,
             "scale": 1,
             "type": "supply_cart",
-            "x": 133.27,
-            "z": 271.48
+            "x": 133.71,
+            "z": 271.28
         },
         {
             "rotation": 2.1,
@@ -5794,8 +5832,8 @@
             "radius": 3.8000000000000003,
             "scale": 1,
             "type": "firecamp",
-            "x": 255.88,
-            "z": 255.88
+            "x": 255.62,
+            "z": 256.46
         },
         {
             "intensity": 1,
@@ -5803,8 +5841,8 @@
             "radius": 3,
             "scale": 1,
             "type": "firecamp",
-            "x": 121.88,
-            "z": 290.07
+            "x": 122.89,
+            "z": 286.3
         },
         {
             "intensity": 1,
@@ -5814,15 +5852,6 @@
             "type": "firecamp",
             "x": 390.8,
             "z": 288.44
-        },
-        {
-            "intensity": 0.9500000000000001,
-            "persistent": true,
-            "radius": 2.8000000000000003,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 256.68,
-            "z": 383.16
         },
         {
             "intensity": 0.85,
@@ -5921,8 +5950,8 @@
             "rotation": 51.5,
             "scale": 0.9,
             "type": "supply_cart",
-            "x": 251.72,
-            "z": 303.31
+            "x": 251.76,
+            "z": 304.08
         },
         {
             "rotation": 204.20000000000002,
@@ -5955,13 +5984,6 @@
             "type": "weapon_rack",
             "x": 232.82,
             "z": 300.28000000000003
-        },
-        {
-            "rotation": 264.7,
-            "scale": 1.03,
-            "type": "tent",
-            "x": 169.98,
-            "z": 64.96
         },
         {
             "rotation": 109.3,
@@ -6544,8 +6566,8 @@
             "radius": 3.4,
             "scale": 1,
             "type": "firecamp",
-            "x": 383.99,
-            "z": 531.81
+            "x": 383.28,
+            "z": 531.31
         },
         {
             "authored_camp": true,
@@ -6686,16 +6708,16 @@
         },
         {
             "type": "cypress_tree",
-            "x": 413.62,
-            "z": 250.83,
+            "x": 407.29,
+            "z": 247.6,
             "scale": 0.91,
             "rotation": 3.357,
             "dressing": "campania_appian_way"
         },
         {
             "type": "cypress_tree",
-            "x": 422.17,
-            "z": 251.58,
+            "x": 432.05,
+            "z": 250.02,
             "scale": 1.02,
             "rotation": 4.493,
             "dressing": "campania_appian_way"
@@ -6710,8 +6732,8 @@
         },
         {
             "type": "cypress_tree",
-            "x": 429.35,
-            "z": 264.49,
+            "x": 428.01,
+            "z": 264.78,
             "scale": 0.91,
             "rotation": 4.081,
             "dressing": "campania_appian_way"
@@ -6734,32 +6756,24 @@
         },
         {
             "type": "cypress_tree",
-            "x": 445.3,
-            "z": 272.38,
+            "x": 435.71,
+            "z": 272.88,
             "scale": 0.91,
             "rotation": 5.64,
             "dressing": "campania_appian_way"
         },
         {
             "type": "cypress_tree",
-            "x": 453.43,
-            "z": 275.97,
-            "scale": 0.94,
-            "rotation": 2.646,
-            "dressing": "campania_appian_way"
-        },
-        {
-            "type": "cypress_tree",
-            "x": 466.18,
-            "z": 266.8,
+            "x": 468.44,
+            "z": 269.06,
             "scale": 1.03,
             "rotation": 0.25,
             "dressing": "campania_appian_way"
         },
         {
             "type": "cypress_tree",
-            "x": 462.2,
-            "z": 279.01,
+            "x": 463.79,
+            "z": 280.44,
             "scale": 1.0,
             "rotation": 2.051,
             "dressing": "campania_appian_way"
@@ -6823,7 +6837,7 @@
         {
             "type": "ruins",
             "x": 251.18,
-            "z": 252.39,
+            "z": 257.66,
             "scale": 0.96,
             "rotation": 6.441,
             "dressing": "campania_villa_ruin"
@@ -6857,8 +6871,8 @@
         },
         {
             "type": "dead_tree",
-            "x": 254.22,
-            "z": 259.98,
+            "x": 254.31,
+            "z": 260.04,
             "scale": 1.0,
             "rotation": 5.344,
             "dressing": "campania_villa_ruin"
@@ -7908,8 +7922,8 @@
         },
         {
             "type": "dead_tree",
-            "x": 210.87,
-            "z": 343.16,
+            "x": 210.34,
+            "z": 342.65,
             "scale": 1.0,
             "rotation": 3.926,
             "dressing": "campania_south_bridge"
@@ -10076,64 +10090,40 @@
             "rotation": 90.0,
             "scale": 1.0,
             "type": "abandoned_home",
-            "x": 173.0,
-            "z": 297.0
-        },
-        {
-            "landmark": "campania_woodside_hamlet",
-            "rotation": 270.0,
-            "scale": 1.0,
-            "type": "abandoned_home",
-            "x": 162.0,
-            "z": 290.0
-        },
-        {
-            "landmark": "campania_woodside_hamlet",
-            "rotation": 270.0,
-            "scale": 1.0,
-            "type": "abandoned_home",
-            "x": 160.0,
-            "z": 305.0
+            "x": 179.16,
+            "z": 293.45
         },
         {
             "landmark": "campania_woodside_hamlet",
             "rotation": 90.0,
             "scale": 0.9,
             "type": "abandoned_home",
-            "x": 172.0,
-            "z": 309.0
+            "x": 177.15,
+            "z": 310.09
         },
         {
             "landmark": "campania_woodside_hamlet",
             "rotation": 90.0,
             "scale": 1.1,
             "type": "ruins",
-            "x": 170.0,
-            "z": 285.0
-        },
-        {
-            "landmark": "campania_woodside_hamlet",
-            "rotation": 270.0,
-            "scale": 0.9,
-            "type": "ruins",
-            "x": 149.65,
-            "z": 300.8
+            "x": 171.83,
+            "z": 278.18
         },
         {
             "landmark": "campania_woodside_hamlet",
             "rotation": 90.0,
             "scale": 1.0,
             "type": "dead_tree",
-            "x": 179.0,
-            "z": 293.0
+            "x": 177.28,
+            "z": 292.14
         },
         {
             "landmark": "campania_woodside_hamlet",
             "rotation": 270.0,
             "scale": 0.9,
             "type": "dead_tree",
-            "x": 165.0,
-            "z": 313.0
+            "x": 167.63,
+            "z": 317.56
         },
         {
             "landmark": "campania_north_sanctuary",
@@ -10330,8 +10320,8 @@
             "landmark": "campania_vesuvian_shrine",
             "scale": 1.1,
             "type": "statue",
-            "x": 196.14,
-            "z": 358.96
+            "x": 195.43,
+            "z": 356.34
         },
         {
             "landmark": "campania_vesuvian_shrine",

@@ -26,6 +26,9 @@ inline constexpr float k_horse_mesh_scale_y = 0.59F * Render::GL::k_horse_scale;
 inline constexpr float k_horse_mesh_scale_z = 0.5015F * Render::GL::k_horse_scale;
 inline constexpr float k_horse_mesh_ground_y = -0.0112192873F;
 
+inline constexpr int k_horse_full_subdivision_levels = 1;
+inline constexpr float k_horse_full_volume_keep = 1.0F;
+
 [[nodiscard]] auto horse_source_mesh_nodes() noexcept
     -> std::span<const Render::Creature::Quadruped::MeshNode>;
 

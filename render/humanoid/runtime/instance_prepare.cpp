@@ -881,6 +881,7 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
   auto& animation_diagnostics = *u.animation_diagnostics;
   bool swing_recoil_active = false;
   bool last_swing_is_melee = false;
+  bool shows_combat_ready_stance = false;
   auto record_soldier_debug = [&](int soldier_index,
                                   const AnimationInputs&,
                                   const AnimationInputs& resolved_anim,
@@ -939,6 +940,7 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
     sample.action_link_weight = action_link_weight;
     sample.persistent_valid = persistent_valid;
     sample.persistent_last_sample_time = persistent_last_sample_time;
+    sample.combat_ready_stance = shows_combat_ready_stance;
     animation_diagnostics.record_soldier_sample(ctx.entity->get_id(), sample);
   };
 
@@ -2127,6 +2129,8 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
     layout_cache_comp->visibility_frames[visibility_index] = frame_index + 1U;
   }
   if (record_animation_diagnostics) {
+    shows_combat_ready_stance = graph_output.humanoid_selection->clip_id ==
+                                Animation::k_humanoid_combat_ready_clip;
     record_soldier_debug(idx,
                          soldier_render_anim,
                          anim_ctx.inputs,

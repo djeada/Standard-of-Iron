@@ -598,7 +598,7 @@ TEST_F(HumanoidPoseControllerTest, CarrySwordAndShieldPositionsHandsCorrectly) {
   EXPECT_GT((pose.elbow_l - pose.shoulder_l).length(), 0.0F);
 }
 
-TEST_F(HumanoidPoseControllerTest, SwordAndShieldCarryMovesForwardWhileMoving) {
+TEST_F(HumanoidPoseControllerTest, SwordAndShieldCarryRelaxesIntoAMarchWhileWalking) {
   HumanoidPose idle_pose = pose;
   HumanoidAnimationContext const idle_anim = anim_ctx;
   HumanoidPoseController idle_controller(idle_pose, idle_anim);
@@ -611,10 +611,9 @@ TEST_F(HumanoidPoseControllerTest, SwordAndShieldCarryMovesForwardWhileMoving) {
   HumanoidPoseController moving_controller(moving_pose, moving_anim);
   moving_controller.carry_sword_and_shield();
 
-  EXPECT_GT(moving_pose.hand_r.z(), idle_pose.hand_r.z());
-  EXPECT_LT(moving_pose.hand_r.y(), idle_pose.hand_r.y());
-  EXPECT_GT(moving_pose.hand_l.z(), idle_pose.hand_l.z());
-  EXPECT_LT(moving_pose.hand_l.y(), idle_pose.hand_l.y());
+  EXPECT_LT(moving_pose.hand_r.z(), idle_pose.hand_r.z() - 0.10F);
+  EXPECT_LT(moving_pose.hand_r.y(), idle_pose.hand_r.y() - 0.10F);
+  EXPECT_LT(moving_pose.hand_l.y(), idle_pose.hand_l.y() - 0.08F);
 }
 
 TEST_F(HumanoidPoseControllerTest, BraceSpearForHoldAnglesTheHeadUpTheApproach) {

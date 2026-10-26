@@ -91,16 +91,16 @@
     ],
     "camera": {
         "center": [
-            375.71,
+            360.0,
             0,
-            364.84000000000003
+            430.0
         ],
         "distance": 336,
         "far": 1800,
         "fov_y": 45,
         "near": 1,
         "tilt_deg": 48,
-        "yaw": 225
+        "yaw": 300
     },
     "coord_system": "grid",
     "environment": {
@@ -1290,8 +1290,8 @@
         },
         {
             "end": [
-                116.49000000000001,
-                470.11
+                119.0,
+                473.0
             ],
             "start": [
                 2,
@@ -1336,8 +1336,8 @@
                     462.65000000000003
                 ],
                 [
-                    116.49000000000001,
-                    470.11
+                    119.0,
+                    473.0
                 ]
             ],
             "width": 3.2
@@ -1404,8 +1404,8 @@
                 570
             ],
             "start": [
-                591,
-                535
+                591.27,
+                532.97
             ],
             "style": "default",
             "width": 3
@@ -1416,8 +1416,8 @@
                 579
             ],
             "start": [
-                589,
-                571
+                591.0,
+                570.0
             ],
             "style": "default",
             "width": 3
@@ -1508,8 +1508,8 @@
         },
         {
             "end": [
-                46,
-                477
+                45.68,
+                475.05
             ],
             "start": [
                 60,
@@ -1532,8 +1532,8 @@
         },
         {
             "end": [
-                447,
-                558
+                451.0,
+                566.0
             ],
             "start": [
                 345,
@@ -1560,8 +1560,8 @@
                 528
             ],
             "start": [
-                593,
-                465
+                594.0,
+                463.0
             ],
             "style": "default",
             "width": 3
@@ -4867,6 +4867,11 @@
                     "radius": 9.450000000000001,
                     "x": 562.5500000000001,
                     "z": 357.05
+                },
+                {
+                    "radius": 9.45,
+                    "x": 553.08,
+                    "z": 266.46
                 }
             ],
             "height": 2.4,
@@ -4904,6 +4909,11 @@
                     "radius": 7,
                     "x": 260,
                     "z": 507
+                },
+                {
+                    "radius": 7.0,
+                    "x": 269.11,
+                    "z": 472.39
                 }
             ],
             "height": 1.8,
@@ -5325,18 +5335,11 @@
             "z": 467
         },
         {
-            "rotation": 1,
-            "scale": 1,
-            "type": "tent",
-            "x": 542.21,
-            "z": 258.82
-        },
-        {
             "rotation": 4.4,
             "scale": 1,
             "type": "weapon_rack",
-            "x": 587.78,
-            "z": 340.33
+            "x": 593.28,
+            "z": 341.8
         },
         {
             "rotation": 4.3,
@@ -6359,16 +6362,16 @@
         },
         {
             "type": "plant",
-            "x": 421.3,
-            "z": 563.31,
+            "x": 421.39,
+            "z": 561.64,
             "scale": 1.07,
             "rotation": 6.212,
             "dressing": "zama_oasis_bank"
         },
         {
             "type": "plant",
-            "x": 423.21,
-            "z": 562.58,
+            "x": 423.24,
+            "z": 562.01,
             "scale": 1.16,
             "rotation": 3.84,
             "dressing": "zama_oasis_bank"
@@ -6767,26 +6770,10 @@
         },
         {
             "type": "palm_tree",
-            "x": 541.76,
-            "z": 270.7,
+            "x": 529.82,
+            "z": 280.73,
             "scale": 1.08,
             "rotation": 0.327,
-            "dressing": "zama_scipio_avenue"
-        },
-        {
-            "type": "palm_tree",
-            "x": 550.78,
-            "z": 255.49,
-            "scale": 0.93,
-            "rotation": 3.0,
-            "dressing": "zama_scipio_avenue"
-        },
-        {
-            "type": "palm_tree",
-            "x": 560.8,
-            "z": 252.04,
-            "scale": 0.93,
-            "rotation": 2.928,
             "dressing": "zama_scipio_avenue"
         },
         {
@@ -7308,8 +7295,8 @@
         },
         {
             "type": "dead_tree",
-            "x": 456.5,
-            "z": 243.0,
+            "x": 456.53,
+            "z": 243,
             "scale": 1.0,
             "rotation": 1.625,
             "dressing": "zama_north_ramp"
@@ -9488,20 +9475,12 @@
             "z": 152.72
         },
         {
-            "dressing": "zama_north_fields_2",
-            "rotation": 0.0,
-            "scale": 1.0,
-            "type": "supply_cart",
-            "x": 452.17,
-            "z": 114.72
-        },
-        {
             "dressing": "zama_north_fields_3",
             "rotation": 0.0,
             "scale": 1.0,
             "type": "supply_cart",
-            "x": 456.17,
-            "z": 232.72
+            "x": 462.02,
+            "z": 238.57
         },
         {
             "dressing": "zama_rearguard_fields_1",
@@ -9636,8 +9615,8 @@
             "rotation": 90,
             "scale": 1,
             "type": "firecamp",
-            "x": 105.7,
-            "z": 466.47
+            "x": 105.57,
+            "z": 466.64
         },
         {
             "landmark": "zama_south_hamlet",

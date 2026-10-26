@@ -1,11 +1,61 @@
+#include <algorithm>
+#include <cmath>
 #include <gtest/gtest.h>
+#include <numbers>
 
+#include "game/map/forest_outline.h"
 #include "game/map/map_definition.h"
 #include "game/map/scatter/scatter_composition.h"
 #include "game/map/scatter/spawn_validator.h"
+#include "game/map/scatter/tree_scatter_walk.h"
 #include "game/map/terrain_service.h"
 
 namespace {
+
+TEST(ForestCompositionTest, IrregularOutlinesStayInsideTerrainAndNavigationBounds) {
+  for (int variant = 0; variant < 32; ++variant) {
+    float const seed = Game::Map::forest_outline_seed(variant * 13.0F, -17.0F);
+    float smallest = Game::Map::k_forest_outline_reach;
+    float largest = 0.0F;
+    float area_ratio = 0.0F;
+    for (int sample = 0; sample < 360; ++sample) {
+      float const angle = sample * std::numbers::pi_v<float> / 180.0F;
+      float const radius =
+          Game::Map::forest_outline_scale(seed, std::cos(angle), std::sin(angle));
+      EXPECT_GT(radius, 0.70F);
+      EXPECT_LE(radius, Game::Map::k_forest_outline_reach);
+      smallest = std::min(smallest, radius);
+      largest = std::max(largest, radius);
+      area_ratio += radius * radius / 360.0F;
+    }
+    EXPECT_GT(largest - smallest, 0.25F);
+
+    EXPECT_GT(area_ratio, 0.80F);
+    EXPECT_LT(area_ratio, 1.15F);
+    EXPECT_NEAR(Game::Map::forest_outline_scale(seed, -1.0F, 0.00001F),
+                Game::Map::forest_outline_scale(seed, -1.0F, -0.00001F),
+                0.0001F);
+  }
+}
+
+TEST(ForestCompositionTest, StandDensityCreatesCoherentGladesAndDensePatches) {
+  float smallest = 2.0F;
+  float largest = 0.0F;
+  for (int z = -128; z <= 128; z += 4) {
+    for (int x = -128; x <= 128; x += 4) {
+      float const density = Render::Ground::forest_stand_density(x, z, 135U);
+      EXPECT_GE(density, 0.08F);
+      EXPECT_LE(density, 1.98F);
+
+      EXPECT_NEAR(
+          density, Render::Ground::forest_stand_density(x + 0.01F, z, 135U), 0.01F);
+      smallest = std::min(smallest, density);
+      largest = std::max(largest, density);
+    }
+  }
+  EXPECT_LT(smallest, 0.3F);
+  EXPECT_GT(largest, 1.7F);
+}
 
 class ScatterCompositionTest : public ::testing::Test {
 protected:

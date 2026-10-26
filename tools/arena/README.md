@@ -398,6 +398,13 @@ bands — and fails on any visible cut: a stride restarting
 checks. `transition_gauntlet_flanked` is one 12-man swordsman unit fighting a
 commander, a civilian and a healer on two flanks and the rear.
 
+The gauntlets hide terrain scatter, so they also turn off the procedural trees,
+boulders and ore: those are solid world props, and a hidden one still stops a
+soldier. Until October 2026 they stayed solid but invisible, and a batch run
+(where entity generations change every unit's formation seed) could steer a
+spearman into an unseen boulder. He was held there for eleven seconds, then
+snapped 5.65 m back to his slot.
+
 A failure names the joint and the animation state. To see why, read the
 soldier's frames out of `trace.jsonl` (`hand_*_world`, `foot_*_world`,
 `root_yaw_degrees`, `cycle_phase`, `attack_phase`, `lod`) and remove the root
@@ -1548,8 +1555,18 @@ shore contact, and water/terrain overlap after renderer changes.
 It fails when any of these rules are violated:
 
 - Formation roots lock only after deep formation overlap, not first-rank contact.
-- Every living soldier receives an opponent lane and is observed striking or
-  guarding during the engagement. An ordinary idle pose does not count as guarding.
+- Every living soldier is observed striking, guarding, or - while the formation
+  has no blow for him (a rank waiting out of reach, a man stepping out between
+  blows) - standing in the combat-ready stance. The trace marks that stance as
+  `combat_ready`; it counts only for `melee_ready` and `melee_reposition`
+  soldiers whose rendered selection really is the combat-ready clip. An ordinary
+  idle pose does not count, and a `melee_engaged` soldier must strike - except
+  for up to 0.6 s after a hit reaction, while he waits in the ready stance for
+  his next beat (`late_join_after_hit` in `animation/combat_manifest.cpp`).
+- The fight-mode indicator must be drawn for every melee-locked unit whose owner
+  the renderer shows order markers for. Where the capture hides them (clean
+  capture, enemy units), the unit's presented activity must still be the
+  attack activity that would draw it.
 - Per-soldier fight phases must contain visible deterministic staggering.
 - A melee lock cannot disappear, change target, navigate, translate, or rotate
   while the locked opponent remains alive.

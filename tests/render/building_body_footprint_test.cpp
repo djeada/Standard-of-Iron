@@ -2,6 +2,7 @@
 #include <QVector3D>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <gtest/gtest.h>
 #include <limits>
@@ -122,7 +123,8 @@ protected:
 
   [[nodiscard]] auto measure(const std::string& nation,
                              const std::string& renderer_key,
-                             std::uint32_t entity_id = 1) -> PlanarBounds {
+                             std::uint32_t entity_id = 1,
+                             QVector3D placed_at = {}) -> PlanarBounds {
     Render::GL::RenderFunc const func =
         registry.get("troops/" + nation + "/" + renderer_key);
     if (!func) {
@@ -132,7 +134,9 @@ protected:
     Engine::Core::StandaloneEntity entity_scratch(entity_id);
     Engine::Core::Entity& entity = entity_scratch.entity();
     entity.add_component<Engine::Core::RenderableComponent>();
-    entity.add_component<Engine::Core::TransformComponent>();
+    auto* transform = entity.add_component<Engine::Core::TransformComponent>();
+    transform->position.x = placed_at.x();
+    transform->position.z = placed_at.z();
     auto* unit = entity.add_component<Engine::Core::UnitComponent>();
     if (unit != nullptr) {
       unit->owner_id = 1;
@@ -238,8 +242,11 @@ TEST_F(BuildingBodyFootprintTest, TheNavigationFootprintIsNotTheBody) {
 TEST_F(BuildingBodyFootprintTest, HouseVariationKeepsTheExistingCollisionFootprint) {
   std::array<bool, Render::GL::k_home_visual_variant_count> seen{};
   const auto body = Game::Systems::BuildingCollisionRegistry::get_building_body("home");
-  for (std::uint32_t id = 1; id <= 24; ++id) {
-    const auto variant = Render::GL::home_visual_variant(id);
+  for (std::uint32_t id = 1; id <= 96; ++id) {
+    const QVector3D placed_at(
+        static_cast<float>(id) * 5.0F, 0.0F, static_cast<float>(id % 7) * 3.5F);
+    const auto variant = Render::GL::home_visual_variant(
+        Render::GL::home_placement_seed(placed_at.x(), placed_at.z(), id));
     ASSERT_GE(variant, 0);
     ASSERT_LT(variant, static_cast<int>(seen.size()));
     if (seen[variant]) {
@@ -247,7 +254,7 @@ TEST_F(BuildingBodyFootprintTest, HouseVariationKeepsTheExistingCollisionFootpri
     }
     seen[variant] = true;
     for (const char* nation : {"roman", "carthage"}) {
-      const auto drawn = measure(nation, "home", id);
+      const auto drawn = measure(nation, "home", id, placed_at);
       ASSERT_TRUE(drawn.valid());
       EXPECT_LE(drawn.span_x(), body.width + 0.02F) << nation << " variant " << variant;
       EXPECT_LE(drawn.span_z(), body.depth + 0.02F) << nation << " variant " << variant;
@@ -256,6 +263,43 @@ TEST_F(BuildingBodyFootprintTest, HouseVariationKeepsTheExistingCollisionFootpri
     }
   }
   EXPECT_TRUE(std::all_of(seen.begin(), seen.end(), [](bool value) { return value; }));
+}
+
+TEST(HomeStreetVariation, NeighbouringHousesRarelyRepeatTheSameVariant) {
+  for (const float pitch : {4.6F, 5.0F, 5.5F, 6.0F}) {
+    int repeats = 0;
+    int pairs = 0;
+    std::array<int, Render::GL::k_home_visual_variant_count> used{};
+    for (const float offset : {0.37F, 1.9F, 3.3F}) {
+      for (const bool along_x : {true, false}) {
+        int previous = -1;
+        for (int lot = -15; lot <= 15; ++lot) {
+          const float along = static_cast<float>(lot) * pitch + offset;
+          const float x = along_x ? along : 6.0F + offset;
+          const float z = along_x ? -3.5F + offset : along;
+          const int variant = Render::GL::home_visual_variant(
+              Render::GL::home_placement_seed(x, z, 1U));
+          if (previous >= 0) {
+            ++pairs;
+            repeats += variant == previous ? 1 : 0;
+          }
+          previous = variant;
+          ++used[static_cast<std::size_t>(variant)];
+        }
+      }
+    }
+    EXPECT_LE(repeats * 10, pairs)
+        << repeats << " of " << pairs << " neighbouring houses " << pitch
+        << " m apart drew the same variant";
+    EXPECT_EQ(std::count_if(used.begin(), used.end(), [](int n) { return n > 0; }),
+              Render::GL::k_home_visual_variant_count)
+        << "a street should show the whole variant set";
+  }
+}
+
+TEST(HomeStreetVariation, PlacementSeedIsStableForAPosition) {
+  EXPECT_EQ(Render::GL::home_placement_seed(12.25F, -40.5F, 7U),
+            Render::GL::home_placement_seed(12.25F, -40.5F, 99U));
 }
 
 auto standing_archetype_bounds(const std::string& catalog_name,

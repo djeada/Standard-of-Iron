@@ -34,15 +34,21 @@ const float k_soi_tuft_light = 1.10;
 const float k_soi_sod_amount = 0.30;
 const float k_soi_earth_fleck_amount = 0.55;
 const float k_soi_terrain_relief_damping = 0.68;
-const float k_soi_meadow_drift_strength = 0.8;
+const float k_soi_meadow_drift_strength = 0.66;
 const float k_soi_meadow_frequency = 0.030;
 const float k_soi_normal_field_curvature_trust = 0.0;
 const float k_soi_terrain_hue_scale = 0.042;
 const float k_soi_terrain_hue_amount = 0.32;
 const float k_soi_terrain_earth_scale = 0.016;
 const float k_soi_terrain_earth_amount = 0.44;
-const vec3 k_soi_terrain_shade_moss = vec3(0.74, 0.86, 0.92);
-const float k_soi_terrain_shade_amount = 0.48;
+const vec3 k_soi_terrain_shade_moss = vec3(0.80, 0.86, 0.85);
+const float k_soi_terrain_shade_amount = 0.40;
+const float k_soi_forest_floor_amount = 0.80;
+const float k_soi_forest_margin_amount = 0.14;
+const float k_soi_wall_foot_amount = 0.68;
+const float k_soi_yard_amount = 0.78;
+const float k_soi_road_verge_amount = 0.52;
+const float k_soi_talus_amount = 0.50;
 const float k_soi_terrain_saturation = 0.90;
 const vec3 k_soi_terrain_hue_warm = vec3(1.075, 1.018, 0.900);
 const vec3 k_soi_terrain_hue_cool = vec3(0.925, 1.010, 1.065);
@@ -125,6 +131,10 @@ float gradient_fbm_with_footprint(vec2 p, float footprint) {
 
 vec2 cellular_distances(vec2 p) {
   return soi_terrain_cellular_distances_9e14b7(p);
+}
+
+float ecology_noise(vec2 p) {
+  return (HAS_MICRODETAIL) ? micro_sample(p).g : gradient_fbm(p);
 }
 
 float curvature_from_normal_field(vec3 shading_normal) {
@@ -441,6 +451,12 @@ void main() {
 
   vec4 baked_fields =
       (u_has_field_tex == 1) ? texture(u_field_tex, height_uv) : vec4(0.0);
+  vec4 ground_ecology =
+      (u_has_cover_tex == 1) ? texture(u_cover_tex, height_uv) : vec4(0.0);
+  float road_verge = min(ground_ecology.g, 1.0);
+  float yard_ground = clamp(ground_ecology.g - 1.0, 0.0, 1.0);
+  float talus_apron = min(ground_ecology.a, 1.0);
+  float wall_foot = clamp(ground_ecology.a - 1.0, 0.0, 1.0);
 
   if (u_has_height_tex == 1) {
     vec3 hm_n = (u_has_field_tex == 1)
@@ -574,6 +590,19 @@ void main() {
   vec2 surface_detail_coord = world_coord * detail_scale * 2.8 + vec2(5.7, -2.1);
   float surface_detail = (HAS_MICRODETAIL) ? micro_sample(surface_detail_coord).g
                                            : gradient_fbm(surface_detail_coord);
+  float worn_breakup = ecology_noise(world_coord * 0.085 + vec2(-19.0, 53.0));
+  float slope_soil_breakup = ecology_noise(world_coord * 0.21 + vec2(-31.0, 7.0));
+  float verge_breakup = ecology_noise(world_coord * 0.48 + vec2(7.0, 41.0));
+  float verge_drift = ecology_noise(world_coord * 0.12 + vec2(-61.0, -17.0));
+  float talus_breakup = ecology_noise(world_coord * 0.36 + vec2(23.0, -47.0));
+  float understory_patch = ecology_noise(world_coord * 0.16 + vec2(-5.0, 21.0));
+  float forest_edge_noise = ecology_noise(world_coord * 0.065 + vec2(-37.0, 19.0));
+  float forest_cover =
+      clamp(ground_ecology.r +
+                forest_edge_noise * 1.6 * ground_ecology.r * (1.0 - ground_ecology.r),
+            0.0,
+            1.0);
+  float forest_margin = ground_ecology.b;
   float grain_frequency = detail_scale * 11.0;
   float granular_frequency = detail_scale * 31.0;
   float speck_frequency = detail_scale * 92.0;
@@ -812,12 +841,13 @@ void main() {
       (HAS_MICRODETAIL) ? micro_sample(meadow_coord).g : gradient_fbm(meadow_coord);
   float meadow_fine = (HAS_MICRODETAIL) ? micro_sample(meadow_fine_coord).g
                                         : gradient_fbm(meadow_fine_coord);
-  float meadow_drift = clamp(0.5 + meadow_broad * 1.1 + meadow_fine * 0.45 +
-                                 (regional_field - 0.5) * 0.6,
+  float meadow_drift = clamp(0.5 + meadow_broad * 0.95 + meadow_fine * 0.62 +
+                                 (regional_field - 0.5) * 0.45 +
+                                 (exposure_field - drainage_field) * 0.38,
                              0.0,
                              1.0);
-  vec3 sunlit_meadow = mix(grass_color, u_grass_dry, 0.55) * 1.08;
-  vec3 deep_meadow = mix(grass_color, u_grass_secondary, 0.55) * 0.84;
+  vec3 sunlit_meadow = mix(grass_color, u_grass_dry, 0.55) * 1.06;
+  vec3 deep_meadow = mix(grass_color, u_grass_secondary, 0.55) * 0.88;
   vec3 meadow_tone =
       mix(deep_meadow, sunlit_meadow, smoothstep(0.20, 0.80, meadow_drift));
   grass_color = mix(grass_color, meadow_tone, k_soi_meadow_drift_strength);
@@ -904,6 +934,14 @@ void main() {
   soil_mix = max(soil_mix,
                  entry_signal * 0.26 + entry_face * 0.06 + entry_shelter * 0.03 +
                      entry_toe * 0.012 + toe_soil);
+  float slope_band =
+      smoothstep(0.06, 0.22, slope) * (1.0 - smoothstep(0.42, 0.66, slope));
+  float slope_soil =
+      slope_band *
+      (0.22 + 0.16 * ridge_mask + 0.10 * exposure_field + slope_soil_breakup * 0.55) *
+      (1.0 - 0.60 * entry_core) * (1.0 - 0.50 * gully_mask);
+  soil_mix = max(soil_mix, slope_soil);
+  soil_mix = max(soil_mix, talus_apron * (0.30 + 0.25 * talus_breakup));
   soil_mix = clamp(soil_mix, 0.0, 0.78);
   vec3 ground_soil = mix(u_soil_color, u_grass_dry, level_ground * 0.30);
   vec3 varied_soil =
@@ -956,6 +994,12 @@ void main() {
       clamp(rock_mask + hill_outcrop + hill_face * (0.34 + weathered_exposure * 0.32),
             0.0,
             1.0);
+
+  float outcrop_break =
+      smoothstep(-0.18, 0.22, slope_soil_breakup + (rock_breakup - 0.5) * 0.6);
+  rock_mask *= mix(1.0,
+                   0.45 + 0.75 * outcrop_break,
+                   hill_surface * (1.0 - smoothstep(0.55, 0.80, slope)));
 
   float mountain_altitude = smoothstep(1.8, 8.5, v_world_pos.y);
   float mountain_face =
@@ -1052,6 +1096,27 @@ void main() {
   }
 
   vec3 terrain_color = mix(soil_blend, rock_color, rock_mask);
+
+  float talus_weight = talus_apron * (1.0 - rock_mask * 0.6) *
+                       (1.0 - 0.6 * clamp(u_snow_coverage, 0.0, 1.0)) *
+                       (1.0 - 0.6 * entry_core);
+  if (talus_weight > 0.003) {
+    float scree_fade = band_limit(coord_footprint, 0.7);
+    float scree_stones = 0.0;
+    if (scree_fade > k_soi_band_epsilon) {
+      vec2 scree_cells = cellular_distances(world_coord * 0.7 + vec2(13.0, -29.0));
+      scree_stones = (1.0 - smoothstep(0.18, 0.46, scree_cells.x)) * scree_fade;
+    }
+    vec3 stony_soil = mix(u_soil_color, u_rock_low, 0.50);
+    vec3 talus_soil = mix(terrain_color, stony_soil, 0.60) * 0.97;
+    vec3 talus_stone = mix(u_rock_low, u_rock_high, 0.45 + 0.30 * scree_stones);
+    vec3 talus_color = mix(talus_soil, talus_stone, 0.12 + 0.38 * scree_stones);
+    float talus_patch = smoothstep(-0.16, 0.22, talus_breakup);
+    terrain_color = mix(terrain_color,
+                        talus_color,
+                        clamp(talus_weight * (0.35 + 0.85 * talus_patch), 0.0, 1.0) *
+                            k_soi_talus_amount);
+  }
 
   float crack_fade = band_limit(coord_footprint, 2.6);
   if (u_crack_intensity > 0.01 && crack_fade > k_soi_band_epsilon) {
@@ -1185,26 +1250,66 @@ void main() {
   float clearing_dryness = 1.0 - clamp(u_moisture_level, 0.0, 1.0);
   float worn_ground = smoothstep(0.22, 0.56, earth_field) * (1.0 - rock_mask) *
                       (1.0 - u_snow_coverage) * clamp(1.0 - slope * 1.5, 0.0, 1.0);
+  worn_ground *= 0.40 + 0.80 * smoothstep(-0.22, 0.22, worn_breakup);
   worn_ground *= mix(0.60, 1.0, clearing_dryness) * (1.0 - terrain_cavity * 0.25);
   vec3 worn_color = mix(u_grass_dry, u_soil_color, 0.48) * 0.94;
   terrain_color =
       mix(terrain_color, worn_color, worn_ground * k_soi_terrain_earth_amount);
-  if (u_has_cover_tex == 1) {
-    float forest_floor = texture(u_cover_tex, height_uv).r * (1.0 - rock_mask) *
-                         (1.0 - 0.55 * u_snow_coverage);
-    if (forest_floor > 0.002) {
-      float litter = gradient_noise(world_coord * 0.9 + vec2(13.0, -7.0)) * 0.5 + 0.5;
-      float moss_patch =
-          smoothstep(0.35,
-                     0.75,
-                     gradient_noise(world_coord * 0.23 + vec2(-5.0, 21.0)) * 0.5 + 0.5);
-      vec3 needle_litter =
-          mix(u_soil_color, u_grass_dry, 0.25) * vec3(0.66, 0.56, 0.42);
-      vec3 moss = u_grass_primary * vec3(0.52, 0.70, 0.46);
-      vec3 floor_color = mix(needle_litter, moss, moss_patch * 0.65);
-      floor_color *= 0.86 + 0.20 * litter;
-      terrain_color = mix(terrain_color, floor_color, forest_floor * 0.88);
-    }
+  float open_ground = (1.0 - rock_mask) * (1.0 - 0.55 * u_snow_coverage);
+  float forest_floor = forest_cover * open_ground;
+  if (forest_floor + forest_margin > 0.002) {
+    float litter = gradient_noise(world_coord * 0.9 + vec2(13.0, -7.0)) * 0.5 + 0.5;
+    float moss_patch = smoothstep(-0.22, 0.24, understory_patch);
+    vec3 understory =
+        mix(terrain_color, mix(u_grass_secondary, u_grass_primary, 0.40), 0.45) *
+        vec3(0.74, 0.82, 0.68);
+    vec3 needle_litter =
+        mix(terrain_color, mix(u_soil_color, u_grass_dry, 0.35), 0.55) *
+        vec3(0.84, 0.76, 0.64);
+    float litter_share = clamp(0.30 + 0.22 * biome_dry + 0.10 * biome_rocky -
+                                   0.12 * biome_fertile + (1.0 - moss_patch) * 0.30,
+                               0.0,
+                               0.85);
+    vec3 floor_color = mix(understory, needle_litter, litter_share);
+    floor_color *= 0.86 + 0.20 * litter;
+    terrain_color =
+        mix(terrain_color, floor_color, forest_floor * k_soi_forest_floor_amount);
+    vec3 scrub_sward =
+        mix(terrain_color, mix(u_grass_secondary, u_grass_primary, 0.50), 0.40) *
+        vec3(0.88, 0.93, 0.84);
+    terrain_color =
+        mix(terrain_color,
+            scrub_sward,
+            forest_margin * (1.0 - forest_floor) * open_ground *
+                smoothstep(-0.20, 0.20, understory_patch) * k_soi_forest_margin_amount);
+  }
+  float verge_reach = 0.64 + verge_drift * 0.90 + verge_breakup * 0.32;
+  float verge_shape = smoothstep(verge_reach - 0.10, verge_reach + 0.08, road_verge);
+  float verge_weight = verge_shape * (1.0 - rock_mask * 0.7) *
+                       (1.0 - 0.45 * clamp(u_snow_coverage, 0.0, 1.0));
+  if (verge_weight > 0.002) {
+    vec3 trampled_sward =
+        mix(terrain_color, mix(u_grass_dry, u_soil_color, 0.25), 0.40) * 1.04;
+    vec3 compacted_verge = mix(u_soil_color, u_grass_dry, 0.42) * 1.04;
+    vec3 verge_color = mix(trampled_sward,
+                           compacted_verge,
+                           smoothstep(0.84, 0.97, road_verge + verge_breakup * 0.20));
+    verge_color *= 0.94 + 0.10 * smoothstep(-0.25, 0.25, verge_breakup);
+    terrain_color =
+        mix(terrain_color, verge_color, verge_weight * k_soi_road_verge_amount);
+    float yard_threshold = 0.36 + verge_breakup * 0.40 + verge_drift * 0.25;
+    float yard = smoothstep(yard_threshold - 0.10, yard_threshold + 0.10, yard_ground) *
+                 (1.0 - rock_mask * 0.7);
+    vec3 packed_earth = mix(u_soil_color, u_grass_dry, 0.30) *
+                        (0.90 + 0.14 * smoothstep(-0.25, 0.25, talus_breakup));
+    terrain_color = mix(terrain_color, packed_earth, yard * k_soi_yard_amount);
+  }
+  if (wall_foot > 0.002) {
+    vec3 wet_foot = mix(u_soil_color, u_rock_low, 0.35) * 0.60;
+    float foot_weight = wall_foot *
+                        (0.70 + 0.30 * smoothstep(-0.20, 0.20, talus_breakup)) *
+                        (1.0 - 0.50 * clamp(u_snow_coverage, 0.0, 1.0));
+    terrain_color = mix(terrain_color, wet_foot, foot_weight * k_soi_wall_foot_amount);
   }
   vec3 sunward_landform_tint = vec3(1.055, 1.018, 0.950);
   vec3 leeward_landform_tint = vec3(0.900, 0.965, 1.045);
@@ -1279,7 +1384,8 @@ void main() {
             0.18,
             0.96);
   float relief_amp = 0.055 + (0.055 + 0.060 * u_soil_roughness) * soil_mix +
-                     0.07 * rock_mask + 0.025 * exposed_ground + 0.040 * bare_patch;
+                     0.07 * rock_mask + 0.025 * exposed_ground + 0.040 * bare_patch +
+                     0.050 * talus_weight;
   relief_amp *= mix(1.0, 0.75, tactical);
   relief_amp *= k_soi_terrain_relief_damping;
   relief_amp *= 1.0 - snow_cover * 0.70;

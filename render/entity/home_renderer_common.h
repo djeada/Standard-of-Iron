@@ -13,15 +13,26 @@
 #include "registry.h"
 #include "render/render_archetype.h"
 
+namespace Engine::Core {
+class Entity;
+}
+
 namespace Render::GL {
 
-inline constexpr int k_home_visual_variant_count = 3;
-auto home_visual_variant(std::uint32_t entity_id) -> int;
+inline constexpr int k_home_visual_variant_count = 6;
+auto home_visual_variant(std::uint32_t seed) -> int;
 using HomeArchetypeResolver = const RenderArchetype& (*)(BuildingState, int);
 
+[[nodiscard]] auto home_placement_seed(float world_x,
+                                       float world_z,
+                                       std::uint32_t fallback) -> std::uint32_t;
+
+[[nodiscard]] auto home_tint_pick(std::uint32_t seed, std::size_t count) -> std::size_t;
+[[nodiscard]] auto home_tint_jitter(std::uint32_t seed) -> float;
+
 inline constexpr std::size_t k_home_palette_slots = 2;
-using HomePaletteSlotsResolver =
-    std::array<QVector3D, k_home_palette_slots> (*)(const QVector3D&);
+using HomePaletteSlotsResolver = std::array<QVector3D, k_home_palette_slots> (*)(
+    const QVector3D& team, std::uint32_t seed, BuildingState state);
 
 struct HomeRendererConfig {
   std::string_view nation_slug;
@@ -45,6 +56,12 @@ struct HomeYardStyle {
   QVector3D clay_dark{0.46F, 0.25F, 0.15F};
   QVector3D chimney{0.58F, 0.54F, 0.49F};
   int seed{1};
+
+  int variant{0};
+  float wall_foot_y{0.16F};
+  float wall_face{0.96F};
+  float wall_foot_door_gap{0.30F};
+  QVector3D wall_foot{0.45F, 0.40F, 0.33F};
 };
 
 void add_home_yard(BuildingArchetypeDesc& desc, const HomeYardStyle& style);

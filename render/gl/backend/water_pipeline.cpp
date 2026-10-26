@@ -3,6 +3,8 @@
 #include <QDebug>
 #include <qglobal.h>
 
+#include <array>
+
 #include "render/gl/shader_cache.h"
 
 namespace Render::GL::BackendPipelines {
@@ -92,6 +94,24 @@ void WaterPipeline::cache_water_uniforms() {
   m_water_uniforms.ford_b[0] = m_water_shader->optional_uniform_handle("u_ford_b[0]");
   m_water_uniforms.ford_b[1] = m_water_shader->optional_uniform_handle("u_ford_b[1]");
   m_water_uniforms.ford_count = m_water_shader->optional_uniform_handle("u_ford_count");
+  static constexpr std::array<const char*, 4> k_neighbor_segment_names{
+      "u_water_neighbor_segment[0]",
+      "u_water_neighbor_segment[1]",
+      "u_water_neighbor_segment[2]",
+      "u_water_neighbor_segment[3]"};
+  static constexpr std::array<const char*, 4> k_neighbor_radius_names{
+      "u_water_neighbor_radius[0]",
+      "u_water_neighbor_radius[1]",
+      "u_water_neighbor_radius[2]",
+      "u_water_neighbor_radius[3]"};
+  for (std::size_t slot = 0; slot < k_neighbor_segment_names.size(); ++slot) {
+    m_water_uniforms.neighbor_segment[slot] =
+        m_water_shader->optional_uniform_handle(k_neighbor_segment_names[slot]);
+    m_water_uniforms.neighbor_radius[slot] =
+        m_water_shader->optional_uniform_handle(k_neighbor_radius_names[slot]);
+  }
+  m_water_uniforms.neighbor_count =
+      m_water_shader->optional_uniform_handle("u_water_neighbor_count");
 }
 
 void WaterPipeline::cache_riverbank_uniforms() {

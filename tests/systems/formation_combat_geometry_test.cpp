@@ -5,6 +5,9 @@
 
 #include "core/component.h"
 #include "core/world.h"
+#include "map/map_definition.h"
+#include "map/scatter/world_prop_clearance_index.h"
+#include "map/terrain_service.h"
 #include "systems/builder_product_types.h"
 #include "systems/building_collision_registry.h"
 #include "systems/combat_actions/combat_action_definition.h"
@@ -1531,6 +1534,68 @@ TEST_F(FormationCombatGeometry,
     EXPECT_LT(step, 0.5F) << "but he walks there instead of appearing in it";
     EXPECT_LT(next.world_x, -13.0F);
   }
+}
+
+TEST_F(FormationCombatGeometry,
+       ASoldierPinnedBehindABoulderNeverTeleportsOrSinksIntoIt) {
+  Game::Map::MapDefinition map;
+  map.grid.width = k_map;
+  map.grid.height = k_map;
+  map.grid.tile_size = 1.0F;
+  map.biome.procedural_boulders_enabled = false;
+  map.biome.procedural_iron_ore_enabled = false;
+  map.biome.procedural_trees_enabled = false;
+  auto& terrain = Game::Map::TerrainService::instance();
+  terrain.initialize(map);
+  Game::Map::WorldProp boulder;
+  boulder.type = Game::Map::WorldProp::Type::Boulder;
+  boulder.scale = 1.6F;
+  ASSERT_NE(terrain.add_world_prop_at_world(boulder, 0.0F, 0.0F), 0U);
+  Game::Systems::NavGrid::initialize(k_map, k_map);
+  Game::Systems::NavGrid::get_pathfinder()->update_navigation_grid();
+  auto const props = Game::Map::shared_world_prop_clearance_index();
+  ASSERT_TRUE(props->overlaps(0.0F, 0.0F, 0.25F));
+
+  Engine::Core::TransformComponent root;
+  root.position = {0.0F, 0.0F, 5.0F};
+  Engine::Core::FormationPresentationComponent formation;
+  formation.motion_root_valid = true;
+  formation.motion_root_x = root.position.x;
+  formation.motion_root_z = root.position.z;
+  Engine::Core::FormationSoldierPresentation previous;
+  previous.alive = true;
+  previous.world_motion_valid = true;
+  previous.world_x = 0.0F;
+  previous.world_z = -3.5F;
+  std::vector<Game::Systems::Combat::ForeignSoldier> foreign;
+  float worst_step = 0.0F;
+  float worst_depth = 0.0F;
+  for (int tick = 0; tick < 900; ++tick) {
+    std::vector<Engine::Core::FormationSoldierPresentation> neighbors{previous};
+    auto next = previous;
+    next.local_x = 0.0F;
+    next.local_z = 0.0F;
+    Game::Systems::Combat::walk_formation_slot({.actor = root,
+                                                .formation = formation,
+                                                .neighbors = neighbors,
+                                                .foreign_neighbors = foreign,
+                                                .squad_speed = 1.5F,
+                                                .march_speed = 1.5F,
+                                                .spacing = 0.6F,
+                                                .delta_time = 1.0F / 60.0F},
+                                               &previous,
+                                               next);
+    worst_step = std::max(
+        worst_step,
+        std::hypot(next.world_x - previous.world_x, next.world_z - previous.world_z));
+    worst_depth =
+        std::max(worst_depth, props->overlap_depth(next.world_x, next.world_z, 0.2F));
+    previous = next;
+  }
+  terrain.clear();
+  Game::Systems::NavGrid::initialize(k_map, k_map);
+  EXPECT_LT(worst_step, 0.1F) << "the soldier must walk, not appear in his slot";
+  EXPECT_LT(worst_depth, 0.05F) << "and he never sinks into the boulder";
 }
 
 TEST_F(FormationCombatGeometry, RepairAndDismantlePostsSurroundTheTargetBuilding) {

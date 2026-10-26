@@ -2,7 +2,12 @@ const float k_soi_grade_exposure = 2.15;
 const float k_soi_grade_white_point = 3.70;
 const float k_soi_grade_contrast = 1.10;
 const float k_soi_grade_pivot = 0.38;
-const float k_soi_grade_saturation = 1.20;
+const float k_soi_grade_saturation = 1.24;
+const float k_soi_grade_ground_saturation = 1.14;
+const float k_soi_grade_chroma_low = 0.10;
+const float k_soi_grade_chroma_high = 0.30;
+const float k_soi_grade_ground_luma_low = 0.18;
+const float k_soi_grade_ground_luma_high = 0.30;
 const vec3 k_soi_grade_shadow_lift = vec3(0.0092, 0.0100, 0.0156);
 const vec3 k_soi_grade_highlight_tint = vec3(1.012, 1.000, 0.980);
 const vec3 k_soi_grade_shadow_tone = vec3(0.93, 0.96, 1.07);
@@ -51,7 +56,17 @@ vec3 soi_grade(vec3 mapped_color) {
   contrasted = max(contrasted, vec3(0.0));
   float luma = dot(contrasted, k_soi_grade_luma);
 
-  float saturation = mix(k_soi_grade_saturation, 1.0, smoothstep(0.55, 0.95, luma));
+  float source_chroma = max(max(contrasted.r, contrasted.g), contrasted.b) -
+                        min(min(contrasted.r, contrasted.g), contrasted.b);
+  float chroma_weight =
+      max(smoothstep(k_soi_grade_chroma_low, k_soi_grade_chroma_high, source_chroma),
+          1.0 - smoothstep(k_soi_grade_ground_luma_low,
+                           k_soi_grade_ground_luma_high,
+                           dot(contrasted, k_soi_grade_luma)));
+  float saturation =
+      mix(mix(k_soi_grade_ground_saturation, k_soi_grade_saturation, chroma_weight),
+          1.0,
+          smoothstep(0.55, 0.95, luma));
   vec3 saturated = mix(vec3(luma), contrasted, saturation);
   saturated = max(saturated, vec3(0.0));
   vec3 tinted =

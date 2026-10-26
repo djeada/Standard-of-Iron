@@ -6,12 +6,18 @@
 
 namespace Render::Humanoid {
 
+[[nodiscard]] auto humanoid_frame_serial() noexcept -> std::uint32_t;
+void advance_humanoid_frame_serial() noexcept;
+
 struct HumanoidRuntimeContext {
 
   std::uint32_t frame_index{0U};
   Render::GL::HumanoidRenderStats stats;
 
-  void begin_frame() noexcept { ++frame_index; }
+  void begin_frame() noexcept {
+    ++frame_index;
+    advance_humanoid_frame_serial();
+  }
   void reset_stats() noexcept { stats.reset(); }
   void reset() noexcept {
     frame_index = 0U;

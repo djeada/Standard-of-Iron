@@ -763,6 +763,9 @@ void HumanoidPoseController::hold_spear_idle() {
   auto const sample = Animation::resolve_humanoid_held_pose({
       .kind = Animation::HumanoidHeldPoseKind::SpearIdle,
       .shoulder_y = HP::SHOULDER_Y,
+      .moving =
+          Render::Creature::is_moving_animation(m_anim_ctx.inputs.movement_state) ||
+          m_anim_ctx.gait.speed > 0.1F,
       .running = is_running_locomotion(m_anim_ctx),
       .sample_time = m_anim_ctx.inputs.time,
       .cycle_phase = m_anim_ctx.gait.cycle_phase,

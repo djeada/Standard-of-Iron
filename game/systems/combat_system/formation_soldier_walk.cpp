@@ -44,6 +44,8 @@ constexpr float k_mounted_settle_slot_speed = 0.25F;
 constexpr float k_stranded_distance = 2.0F;
 constexpr float k_lost_distance = 12.0F;
 constexpr float k_stranded_walk_progress = 0.25F;
+constexpr float k_route_around_after_seconds = 0.3F;
+constexpr float k_walk_through_after_seconds = 3.0F;
 
 [[nodiscard]] auto personal_space_of(float spacing) -> float {
   return std::max(0.28F, spacing * 0.72F);
@@ -71,6 +73,8 @@ struct SlotAim {
   float dx{0.0F};
   float dz{0.0F};
   float distance{0.0F};
+  float slot_distance{0.0F};
+  bool routed{false};
 };
 
 struct CatchDirection {
@@ -292,9 +296,16 @@ auto aim_at_slot(const SlotWalk& walk,
 
   SlotAim aim;
   aim.obstructed = destination != slot_destination || previous.relocation_blocked;
-  if (walk.worker && pathfinder != nullptr) {
+  aim.slot_distance =
+      std::hypot(destination.x() - soldier.world_x, destination.z() - soldier.world_z);
+  bool const route_around =
+      !walk.worker && previous.stranded_seconds >= k_route_around_after_seconds;
+  if ((walk.worker || route_around) && pathfinder != nullptr) {
+    bool held_short = false;
     auto const waypoint =
-        worker_waypoint(walk, soldier, destination, *pathfinder, aim.held_short);
+        worker_waypoint(walk, soldier, destination, *pathfinder, held_short);
+    aim.held_short = walk.worker && held_short;
+    aim.routed = route_around && waypoint != destination;
     aim.obstructed = aim.obstructed || waypoint != destination;
     destination = waypoint;
   }
@@ -624,9 +635,22 @@ void land_step(const SlotWalk& walk,
   float const dt = timing.dt;
   bool const stopped_dead =
       plan.wanted > 1.0e-4F && std::hypot(plan.x, plan.z) < 1.0e-4F;
-  bool const stranded = (stopped_dead && aim.distance > k_stranded_distance) ||
-                        aim.distance > k_lost_distance;
-  bool snapped = false;
+  float const progress = aim.distance > 1.0e-4F
+                             ? (plan.x * aim.dx + plan.z * aim.dz) / aim.distance
+                             : 0.0F;
+  bool const stalled =
+      plan.wanted > 1.0e-4F && progress < k_stranded_walk_progress * plan.wanted;
+  bool const far_from_slot = aim.slot_distance > k_stranded_distance;
+  bool const lost = aim.slot_distance > k_lost_distance;
+  bool const held_up = (stalled && soldier.relocation_blocked) || lost || aim.routed;
+  if (dt > 0.0F) {
+    soldier.stranded_seconds = !walk.worker && far_from_slot && held_up
+                                   ? previous.stranded_seconds + dt
+                                   : 0.0F;
+  } else {
+    soldier.stranded_seconds = previous.stranded_seconds;
+  }
+  bool const stranded = (stopped_dead && far_from_slot) || lost;
   if (!walk.worker && dt > 0.0F && stranded && aim.distance > 1.0e-4F) {
     float const wanted =
         std::min(aim.distance, timing.max_speed * k_obstacle_catch_up_ratio * dt);
@@ -636,6 +660,8 @@ void land_step(const SlotWalk& walk,
       constrain_step_to_terrain(
           *pathfinder, soldier.world_x, soldier.world_z, slip_x, slip_z);
     }
+    float const on_ground_x = slip_x;
+    float const on_ground_z = slip_z;
     float landing_x = soldier.world_x + slip_x;
     float landing_z = soldier.world_z + slip_z;
     if (props.push_out(landing_x, landing_z, prop_clearance_of(walk))) {
@@ -645,14 +671,28 @@ void land_step(const SlotWalk& walk,
     if (std::hypot(slip_x, slip_z) > k_stranded_walk_progress * wanted) {
       plan.x = slip_x;
       plan.z = slip_z;
-    } else if ((pathfinder == nullptr || terrain_walkable_at(*pathfinder,
-                                                             aim.destination.x(),
-                                                             aim.destination.z())) &&
-               !props.overlaps(
-                   aim.destination.x(), aim.destination.z(), prop_clearance_of(walk))) {
-      plan.x = aim.dx;
-      plan.z = aim.dz;
-      snapped = true;
+    } else if (lost && soldier.stranded_seconds >= k_walk_through_after_seconds) {
+      plan.x = on_ground_x;
+      plan.z = on_ground_z;
+    }
+  }
+  if (pathfinder != nullptr && dt > 0.0F &&
+      !terrain_walkable_at(*pathfinder, soldier.world_x, soldier.world_z)) {
+    QVector3D ground = aim.destination;
+    auto const here = pathfinder->world_to_grid(soldier.world_x, soldier.world_z);
+    if (auto const standable = NavGrid::find_nearest_walkable_grid(here, 3)) {
+      ground = pathfinder->grid_to_world(*standable);
+    } else if (!terrain_walkable_at(*pathfinder, ground.x(), ground.z())) {
+      ground = QVector3D(walk.actor.position.x, 0.0F, walk.actor.position.z);
+    }
+    float const back_x = ground.x() - soldier.world_x;
+    float const back_z = ground.z() - soldier.world_z;
+    float const back = std::hypot(back_x, back_z);
+    if (back > 1.0e-4F) {
+      float const pace =
+          std::min(back, timing.max_speed * k_obstacle_catch_up_ratio * dt);
+      plan.x = back_x / back * pace;
+      plan.z = back_z / back * pace;
     }
   }
   if (walk.worker) {
@@ -668,8 +708,8 @@ void land_step(const SlotWalk& walk,
   soldier.world_x += plan.x;
   soldier.world_z += plan.z;
   if (dt > 0.0F) {
-    soldier.world_velocity_x = snapped ? 0.0F : plan.x / dt;
-    soldier.world_velocity_z = snapped ? 0.0F : plan.z / dt;
+    soldier.world_velocity_x = plan.x / dt;
+    soldier.world_velocity_z = plan.z / dt;
     if (walk.position_is_authored) {
       float const blend = std::min(1.0F, dt / k_authored_velocity_smoothing_seconds);
       soldier.world_velocity_x =

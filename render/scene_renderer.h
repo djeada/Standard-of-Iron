@@ -26,6 +26,7 @@
 #include "gl/mesh.h"
 #include "gl/resources.h"
 #include "gl/texture.h"
+#include "ground/building_ground.h"
 #include "i_render_backend.h"
 #include "prepare_worker_pool.h"
 #include "render/async_template_prewarm.h"
@@ -465,6 +466,11 @@ public:
     return m_snapshot_mesh_cache;
   }
 
+  [[nodiscard]] auto
+  building_ground() const noexcept -> const Render::Ground::BuildingGroundSet& {
+    return m_building_ground;
+  }
+
 private:
   struct VisibilityModeConfig {
     bool filter_non_local_units = true;
@@ -611,6 +617,8 @@ private:
   ModelMatrixCache m_model_matrix_cache;
   RiggedMeshCache m_rigged_mesh_cache;
   SnapshotMeshCache m_snapshot_mesh_cache;
+  Render::Ground::BuildingGroundSet m_building_ground;
+  std::uint64_t m_building_ground_signature = 0U;
   StaticBuildingBatch m_static_buildings;
   std::uint32_t m_frame_counter{0};
 
