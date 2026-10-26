@@ -736,13 +736,6 @@ auto may_engage(Engine::Core::Entity* unit,
   bool const answering_a_blow = trigger != EngagementTrigger::Opportunity;
   bool const answering_fire = trigger == EngagementTrigger::Retaliation ||
                               trigger == EngagementTrigger::SquadAlert;
-  if (melee_walled_off_from(unit,
-                            enemy,
-                            answering_a_blow ? k_answering_walk_around_detour
-                                             : k_opportunity_walk_around_detour)) {
-    return false;
-  }
-
   auto const* attack_comp = unit->get_component<Engine::Core::AttackComponent>();
   if (attack_comp != nullptr && attack_comp->in_melee_lock) {
     return false;
@@ -765,22 +758,24 @@ auto may_engage(Engine::Core::Entity* unit,
     return false;
   }
 
-  if (trigger == EngagementTrigger::Retaliation ||
-      trigger == EngagementTrigger::SquadAlert) {
-
-    return true;
+  if (!answering_fire) {
+    auto* attack_target = unit->get_component<Engine::Core::AttackTargetComponent>();
+    if (attack_target != nullptr && attack_target->target_id != 0) {
+      return false;
+    }
+    if (suppresses_opportunistic_combat(unit)) {
+      return false;
+    }
+    auto* movement = unit->get_component<Engine::Core::MovementComponent>();
+    if (movement != nullptr && movement->get_has_target() &&
+        !is_returning_to_guard_post(unit)) {
+      return false;
+    }
   }
-
-  auto* attack_target = unit->get_component<Engine::Core::AttackTargetComponent>();
-  if (attack_target != nullptr && attack_target->target_id != 0) {
-    return false;
-  }
-  if (suppresses_opportunistic_combat(unit)) {
-    return false;
-  }
-  auto* movement = unit->get_component<Engine::Core::MovementComponent>();
-  return movement == nullptr || !movement->get_has_target() ||
-         is_returning_to_guard_post(unit);
+  return !melee_walled_off_from(unit,
+                                enemy,
+                                answering_a_blow ? k_answering_walk_around_detour
+                                                 : k_opportunity_walk_around_detour);
 }
 
 auto is_unit_idle(Engine::Core::Entity* unit) -> bool {

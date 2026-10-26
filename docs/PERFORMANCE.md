@@ -195,6 +195,19 @@ iteration cap is gone because every cell can be closed only once.
 too. A partial result depends on the whole reachable region, so any navigation change
 drops it; a complete path is dropped only when a change crosses its bounds.
 
+**Target detours and counter baseline (26 October 2026).** Engagement checks apply
+activity, formation and guard restrictions before searching around an obstruction.
+Retaliation and squad alerts still check the detour before accepting a target.
+The 1,000/2,000-unit fixtures use 578/1,031 route-cache misses instead of 603/1,118,
+with identical battle digests before and after this ordering change.
+
+The September counter baseline predates the current melee-detour rules. Refreshing
+its deterministic counters also tightens the search-work limits: the fixtures now
+expand 17,437/31,032 cells, down from the baseline's 111,031/133,321. Cache misses and
+evictions increase with the additional target-detour queries; flushes, region-map
+rebuilds and dirty-cell work remain zero. Wall-clock timing budgets retain their
+previous measurements because this counter refresh used different hardware.
+
 **Region map.** A closed gate's cells are treated identically by the grid and by
 `connects()` (one sorted `closed_gate_cells` list), so a gate toggle can never change
 which cells connect. After a navigation change the region map is reused when every

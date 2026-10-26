@@ -361,8 +361,8 @@
     {
       "id": "p1_tower_west",
       "type": "defense_tower",
-      "x": 35.0,
-      "z": 55.5,
+      "x": 33.4,
+      "z": 55.33,
       "player_id": 1,
       "team_id": 1,
       "nation": "roman_republic",
@@ -371,8 +371,8 @@
     {
       "id": "p1_tower_east",
       "type": "defense_tower",
-      "x": 61.0,
-      "z": 55.5,
+      "x": 61.23,
+      "z": 55.36,
       "player_id": 1,
       "team_id": 1,
       "nation": "roman_republic",
@@ -463,8 +463,8 @@
     },
     {
       "id": "camp_fire",
-      "x": 48.0,
-      "z": 76.0,
+      "x": 44.2,
+      "z": 76,
       "intensity": 1.1,
       "radius": 3.6
     },
@@ -484,8 +484,8 @@
     },
     {
       "id": "barrow_fire",
-      "x": 34.0,
-      "z": 9.0,
+      "x": 34.61,
+      "z": 9,
       "intensity": 0.6,
       "radius": 2.2
     }
@@ -529,22 +529,22 @@
     {
       "id": "bridgehead_stone_west",
       "type": "boulder",
-      "x": 40.0,
-      "z": 51.0,
+      "x": 40.49,
+      "z": 50.9,
       "scale": 1.1
     },
     {
       "id": "bridgehead_stone_east",
       "type": "boulder",
-      "x": 56.5,
-      "z": 50.5,
+      "x": 55.59,
+      "z": 50.26,
       "scale": 1.2
     },
     {
       "id": "west_bank_snag",
       "type": "dead_tree",
-      "x": 30.0,
-      "z": 48.5,
+      "x": 29.88,
+      "z": 48.07,
       "scale": 1.0
     },
     {
