@@ -39,6 +39,7 @@
 #include "game/systems/ai_system/behaviors/builder_intent.h"
 #include "game/systems/ai_system/behaviors/builder_ledger.h"
 #include "game/systems/ai_system/behaviors/builder_site_geometry.h"
+#include "game/systems/ai_system/behaviors/builder_town_plan.h"
 #include "game/systems/ai_system/behaviors/commander_behavior.h"
 #include "game/systems/ai_system/behaviors/defend_behavior.h"
 #include "game/systems/ai_system/behaviors/economy_behavior.h"
@@ -4374,6 +4375,42 @@ TEST_F(AISystemTest, AHorseDoctrineStillRecruitsHorseOnceTheTownIsGrown) {
       << "a grown town whose doctrine wants a third of its army mounted must recruit "
          "horse; it asked for: "
       << (asked.empty() ? std::string("nothing") : asked);
+}
+
+TEST_F(AISystemTest, BuilderCatalogPreservesConstructionNameIdentity) {
+  using namespace Game::Systems::AI;
+  for (const char* name : {BUILDING_TYPE_HOME,
+                           BUILDING_TYPE_DEFENSE_TOWER,
+                           BUILDING_TYPE_WALL_SEGMENT,
+                           BUILDING_TYPE_WALL_GATE,
+                           BUILDING_TYPE_BARRACKS,
+                           BUILDING_TYPE_MARKETPLACE,
+                           BUILDING_TYPE_CATAPULT,
+                           BUILDING_TYPE_BALLISTA,
+                           BUILDING_TYPE_RAM,
+                           BUILDING_TYPE_SIEGE_TOWER,
+                           BUILDING_TYPE_FARM}) {
+    EXPECT_EQ(building_type_name(name), name) << name;
+  }
+}
+
+TEST_F(AISystemTest, AuthoredTownPlanAdvancesPastCompletedHomes) {
+  using namespace Game::Systems::AI;
+  TownPlan plan;
+  plan.steps = {{.building = "home", .x = 12.0F, .z = 12.0F},
+                {.building = "farm", .x = 24.0F, .z = 12.0F}};
+  AIDoctrine doctrine;
+  doctrine.town_plan = &plan;
+  AIContext context;
+  context.strategy_config.doctrine = &doctrine;
+  SettlementAssessment town;
+  town.standing.homes = 2;
+  town.targets.homes = 2;
+  town.targets.farms = 1;
+  PlanStepChoice choice;
+  ASSERT_TRUE(authored_plan_step(context, {}, town, nullptr, {}, choice));
+  EXPECT_STREQ(choice.building, "farm");
+  EXPECT_EQ(choice.slot, 1);
 }
 
 TEST_F(AISystemTest, BuilderBehaviorTurnsPlannedWallsIntoTheSettlementFrame) {
