@@ -10,6 +10,15 @@ It exists for generated content. Aurelia's placement repair originally rejected 
 
 Deleting scenery can only remove defects, so the cleanup runs after the pushes and takes the lower-priority side of each pair still in conflict. The Aurelia repair used travel budgets of 16 m for scenery and 8 m for fill buildings and spawns. Generated maps should pass the engine-backed audit before being committed; `tools/city_export` uses a nearby walkable cell in `stands_on_ground`, which does not establish that the entire authored footprint is level and clear.
 
+To apply the same bounded repair to a regenerated Aurelia map:
+
+```sh
+PYTHONHASHSEED=0 python3 scripts/fix-map-prop-overlaps.py \
+  assets/maps/map_aurelia_magna.json --surface require \
+  --max-travel 16 --max-travel-structure 8 --max-travel-spawn 8 \
+  --drop-unplaceable
+```
+
 ## The goods yard beside a building
 
 A barracks draws a goods yard beside itself: `k_stockpile_center_x` in `game/systems/resource_stockpile.h` puts it 5.20 m along the building's own x with half extents 1.45 x 2.10, and `render/entity/barracks_stockpile.cpp` lays the crib and the wood, stone and iron bays out from there. The yard reaches 6.65 m while the barracks body itself stops at 4.325, so its last 2.3 m is ground that carries no object in the map file and was invisible to the audit. On `map_pinewater_cut` a firecamp stood inside the timber camp's yard and nothing reported it; once the yard was modelled, 33 defects of that class appeared across eleven maps, on maps that had audited clean for months.
