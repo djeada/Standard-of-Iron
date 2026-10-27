@@ -489,6 +489,9 @@ class Placeable:
 
     def overlap_with(self, other: "Placeable", clearance: float) -> float:
         """How deep the two solid bodies intersect; <= 0 when they are clear."""
+        reach = self.radius + other.radius + clearance
+        if math.hypot(self.x - other.x, self.z - other.z) > reach:
+            return -math.inf
         return self.separation_from(other, clearance)[0]
 
     def exempt_from(self, other: "Placeable") -> bool:
@@ -776,6 +779,8 @@ class Segment:
         a chain of capsules and a body is a rotated rectangle, and stepping the
         centre line is both exact enough at these tolerances and impossible to
         get subtly wrong."""
+        if self.distance(item.x, item.z) > item.radius + self.half_width + margin:
+            return -math.inf
         length = self.length()
         if length <= 1e-6:
             return item.contains_depth(self.x1, self.z1, self.half_width + margin)
@@ -1047,6 +1052,8 @@ class Terrain:
     width: float = 0.0
     height: float = 0.0
     bounded: bool = False
+    min_x: float = 0.0
+    min_z: float = 0.0
     roads: list[Segment] = field(default_factory=list)
     water: list[Segment] = field(default_factory=list)
     lakes: list[tuple[float, float, float]] = field(default_factory=list)
@@ -1066,10 +1073,17 @@ def read_terrain(map_data: dict, surface: SurfaceField | None = None) -> Terrain
     grid = map_data.get("grid") or {}
     width = float(grid.get("width", 0) or 0)
     height = float(grid.get("height", 0) or 0)
+    world_space = str(map_data.get("coord_system", "grid")).lower() == "world"
+    if world_space:
+        tile_size = float(grid.get("tile_size", 1.0) or 1.0)
+        width *= tile_size
+        height *= tile_size
     return Terrain(
         width=width,
         height=height,
         bounded=width > 0.0 and height > 0.0,
+        min_x=-width * 0.5 if world_space else 0.0,
+        min_z=-height * 0.5 if world_space else 0.0,
         roads=collect_roads(map_data),
         water=collect_water(map_data),
         lakes=collect_lakes(map_data),
@@ -1160,7 +1174,8 @@ def is_placeable_spot(
     margin: float,
 ) -> bool:
     if terrain.bounded and not (
-        margin <= x <= terrain.width - margin and margin <= z <= terrain.height - margin
+        terrain.min_x + margin <= x <= terrain.min_x + terrain.width - margin
+        and terrain.min_z + margin <= z <= terrain.min_z + terrain.height - margin
     ):
         return False
     probe = Placeable(
@@ -1292,9 +1307,16 @@ def try_move(
         angle = (hash(mover.name) % 360) * math.pi / 180.0
         unit_x, unit_z = math.cos(angle), math.sin(angle)
 
+    remaining = max(0.0, budget - mover.moved)
+    nearby = [
+        candidate
+        for candidate in items
+        if math.hypot(candidate.x - mover.x, candidate.z - mover.z)
+        <= mover.radius + candidate.radius + clearance + remaining
+    ]
     depth_before = {
         candidate.key: mover.overlap_with(candidate, clearance)
-        for candidate in items
+        for candidate in nearby
         if candidate.key != mover.key
         and not mover.exempt_from(candidate)
         and mover.overlap_with(candidate, clearance) > 1e-3
@@ -1319,7 +1341,7 @@ def try_move(
         if any(
             mover.overlap_with(candidate, clearance)
             > max(depth_before.get(candidate.key, 0.0), 1e-3)
-            for candidate in items
+            for candidate in nearby
             if candidate.key != mover.key
             and (must_clear is None or candidate.key != must_clear.key)
             and candidate.priority >= mover.priority
