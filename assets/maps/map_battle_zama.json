@@ -2992,8 +2992,8 @@
             "rotation": 90.0,
             "settlement": "zama_north_camp",
             "type": "home",
-            "x": 406.0,
-            "z": 184.0
+            "x": 408.99,
+            "z": 178.82
         },
         {
             "dressing": "zama_scipio_fields_1",

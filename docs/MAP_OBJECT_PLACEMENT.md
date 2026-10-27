@@ -6,9 +6,9 @@ An object authored in map JSON has to become two things that agree with each oth
 
 `--drop-unplaceable` deletes world props and firecamps that no push could place. It never touches a structure or a spawn: a building is a decision, a spawn is a seat in the match, and a wall is geometry a settlement depends on.
 
-It exists for generated content. `map_aurelia_magna.json` carried 1,454 defects and every push the ladder could make left 1,327 of them standing, because a planned city has no slack to push dressing into; 1,556 of the bodies named in those defects were world props — plants on broken ground, tents inside one another, trees over the forum. Deleting a body can only remove defects, never create one, so the pass runs after the pushes and takes the lower-priority side of each pair that is still in conflict. On that map it drops 831 of 2,074 props and brings 1,454 defects down to 145.
+It exists for generated content. Aurelia's placement repair originally rejected negative world coordinates, so it could not use legal ground near many of the objects it needed to move. With the centred bounds corrected, bounded nudges reduced 1,319 defects to 269 while preserving every object. The cleanup pass then removed 197 of 2,421 scenery props and left zero defects, retaining all 1,028 structures and 842 spawns.
 
-The 145 that survive are the generator's to fix, not the repair's: 129 fill buildings on ground that breaks under them, 14 spawns standing in water, 6 structures in a road and 5 structure-on-spawn overlaps, none of which has settled ground within 8 m to move to. `tools/city_export` checks placements with `stands_on_ground`, which accepts any walkable cell within six tiles of an object's centre — that is why a spawn can sit in a river and a house can straddle a break. A city planner that consulted the heightfield across each footprint, the water it writes and the roads it lays would not need this pass at all.
+Deleting scenery can only remove defects, so the cleanup runs after the pushes and takes the lower-priority side of each pair still in conflict. The Aurelia repair used travel budgets of 16 m for scenery and 8 m for fill buildings and spawns. Generated maps should pass the engine-backed audit before being committed; `tools/city_export` uses a nearby walkable cell in `stands_on_ground`, which does not establish that the entire authored footprint is level and clear.
 
 ## The goods yard beside a building
 
@@ -23,7 +23,7 @@ When the lower-priority body of an overlapping pair has nowhere legal to go, the
 
 ## The coordinate contract
 
-Map JSON is authored in **grid coordinates**. `x` and `z` range from `0` to `grid.width` / `grid.height`, with `grid.tile_size` metres represented by each cell.
+Map JSON defaults to **grid coordinates**. `x` and `z` range from `0` to `grid.width` / `grid.height`, with `grid.tile_size` metres represented by each cell. Maps with `coord_system: "world"` already use metres about the map's centre. Repair candidates on those maps must use the centred bounds on both axes, including negative coordinates; applying grid bounds rejects valid ground across most of Aurelia.
 
 The rest of the engine reasons in **world coordinates**, centred on the map. The conversion is:
 
@@ -92,6 +92,8 @@ python3 scripts/fix-map-prop-overlaps.py
 ```
 
 The `--check` form exits non-zero when defects are found.
+
+Spawns explicitly marked `on_wall: true` may overlap a wall's ground footprint because the engine places them on its deck. This exception does not apply to ordinary ground troops or to overlaps with other buildings.
 
 ## Ground shape must be measured from the engine
 
