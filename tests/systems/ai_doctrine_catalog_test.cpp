@@ -55,6 +55,23 @@ TEST_F(AIDoctrineCatalogTest, ShippedDataLoadsAndCoversEveryCommander) {
   }
 }
 
+TEST_F(AIDoctrineCatalogTest, EnsureReloadsShippedDataAfterReset) {
+  reset_ai_doctrine_catalog();
+  ensure_ai_doctrine_catalog_loaded();
+  ASSERT_TRUE(ai_doctrine_catalog_loaded());
+
+  reset_ai_doctrine_catalog();
+  ensure_ai_doctrine_catalog_loaded();
+  ASSERT_TRUE(ai_doctrine_catalog_loaded());
+  const auto profile =
+      doctrine_profile_for_troop(Game::Units::TroopType::RomanLegionOrganizer);
+  ASSERT_TRUE(profile.has_value());
+  ASSERT_NE(profile->doctrine, nullptr);
+  EXPECT_NE(profile->doctrine->town_plan, nullptr);
+  ASSERT_FALSE(profile->doctrine->recruitment.preferred.empty());
+  EXPECT_EQ(profile->doctrine->recruitment.preferred.back(), "ballista");
+}
+
 TEST_F(AIDoctrineCatalogTest, ShippedTownPlansAreDistinctAndNonEmpty) {
   reset_ai_doctrine_catalog();
   ASSERT_TRUE(load_default_ai_doctrine_catalog());
@@ -82,6 +99,8 @@ TEST_F(AIDoctrineCatalogTest, MissingFilesLeaveTheBuiltInDoctrinesInPlace) {
   ASSERT_TRUE(profile.has_value());
   EXPECT_EQ(profile->strategy, AIStrategy::Defensive);
   EXPECT_EQ(profile->posture, AIPosture::Garrison);
+  EXPECT_EQ(profile->doctrine, nullptr)
+      << "an explicit failed load must retain the built-in fallback";
 }
 
 TEST_F(AIDoctrineCatalogTest, MalformedJsonIsRefusedRatherThanHalfApplied) {
@@ -155,6 +174,9 @@ TEST_F(AIDoctrineCatalogTest, DefaultsFillTheGapsInAPartialEntry) {
   EXPECT_EQ(doctrine->strategy, "defensive");
   EXPECT_EQ(doctrine->posture, "field");
   EXPECT_EQ(doctrine->garrison.minimum_units, 7);
+  ensure_ai_doctrine_catalog_loaded();
+  EXPECT_EQ(authored_doctrine("roman_veteran_consul")->garrison.minimum_units, 7)
+      << "ensuring the catalog must preserve an explicitly loaded profile";
 }
 
 TEST_F(AIDoctrineCatalogTest, OutOfRangeNumbersAreClampedNotTrusted) {

@@ -24,6 +24,7 @@ namespace {
 Q_LOGGING_CATEGORY(logger, "soi.ai.doctrine")
 
 struct Catalog {
+  bool load_attempted = false;
   bool loaded = false;
   std::unordered_map<std::string, TownPlan> town_plans;
   std::unordered_map<std::string, AIDoctrine> doctrines;
@@ -264,7 +265,9 @@ void parse_doctrine_body(const QJsonObject& object,
 
 auto load_ai_doctrine_catalog(const QString& doctrines_path,
                               const QString& town_plans_path) -> bool {
+  catalog().load_attempted = true;
   Catalog parsed;
+  parsed.load_attempted = true;
 
   QJsonObject town_root;
   if (!town_plans_path.isEmpty() && read_json_object(town_plans_path, town_root)) {
@@ -322,6 +325,7 @@ auto load_ai_doctrine_catalog(const QString& doctrines_path,
 }
 
 auto load_default_ai_doctrine_catalog() -> bool {
+  catalog().load_attempted = true;
   const QString doctrines = Game::Units::TroopCatalogLoader::resolve_data_path(
       "assets/data/ai/doctrines.json");
   if (doctrines.isEmpty()) {
@@ -334,8 +338,11 @@ auto load_default_ai_doctrine_catalog() -> bool {
 }
 
 void ensure_ai_doctrine_catalog_loaded() {
-  static std::once_flag once;
-  std::call_once(once, [] { load_default_ai_doctrine_catalog(); });
+  static std::mutex mutex;
+  std::lock_guard lock(mutex);
+  if (!catalog().load_attempted) {
+    load_default_ai_doctrine_catalog();
+  }
 }
 
 void reset_ai_doctrine_catalog() {
