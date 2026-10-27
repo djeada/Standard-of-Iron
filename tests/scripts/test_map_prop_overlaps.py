@@ -78,6 +78,22 @@ class MapPropRepairTest(unittest.TestCase):
         wall.body_type = "barracks"
         self.assertFalse(wall.exempt_from(defender))
 
+    def test_cleanup_preserves_capturable_landmarks(self):
+        data = {
+            "world_props": [
+                {"type": kind, "x": 0, "z": 0}
+                for kind in ["magic_shrine", "cursed_gold_vein", "tent"]
+            ]
+        }
+        items = REPAIR.collect(data, "map.json")
+        violations = [REPAIR.Violation("slope", item, 1.0) for item in items]
+        self.assertEqual(REPAIR.drop_unplaceable(data, items, violations), 1)
+        self.assertEqual(
+            [prop["type"] for prop in data["world_props"]],
+            ["magic_shrine", "cursed_gold_vein"],
+        )
+        self.assertEqual(len(items), 2)
+
     def test_escape_search_keeps_obstacles_along_the_whole_travel_budget(self):
         mover = self.body()
         anchor = self.body(0.5, 0.0)

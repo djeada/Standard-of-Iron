@@ -1367,12 +1367,19 @@ match, and a wall is geometry a settlement depends on; a plant that cannot stand
 anywhere legal is a plant the generator should not have scattered there.
 """
 
+CAPTURABLE_PROP_TYPES = {"magic_shrine", "cursed_gold_vein"}
+"""Props that become capturable buildings at runtime and must be preserved."""
+
 DROP_KEY = re.compile(r"^([A-Za-z_]+)\[(\d+)\]$")
 
 
 def droppable(item: Placeable) -> bool:
     """Whether this body is dressing the repair is allowed to delete."""
-    return item.kind in DROPPABLE_KINDS and DROP_KEY.match(item.key) is not None
+    return (
+        item.kind in DROPPABLE_KINDS
+        and item.body_type not in CAPTURABLE_PROP_TYPES
+        and DROP_KEY.match(item.key) is not None
+    )
 
 
 def drop_unplaceable(

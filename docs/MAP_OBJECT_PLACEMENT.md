@@ -4,11 +4,11 @@ An object authored in map JSON has to become two things that agree with each oth
 
 ## Dressing a repair is allowed to delete
 
-`--drop-unplaceable` deletes world props and firecamps that no push could place. It never touches a structure or a spawn: a building is a decision, a spawn is a seat in the match, and a wall is geometry a settlement depends on.
+`--drop-unplaceable` deletes world props and firecamps that no push could place. It preserves structures, spawns, magic shrines and cursed gold veins: capturable props become gameplay buildings at runtime and need a valid placement rather than deletion.
 
-It exists for generated content. Aurelia's placement repair originally rejected negative world coordinates, so it could not use legal ground near many of the objects it needed to move. With the centred bounds corrected, bounded nudges reduced 1,319 defects to 269 while preserving every object. The cleanup pass then removed 197 of 2,421 scenery props and left zero defects, retaining all 1,028 structures and 842 spawns.
+It exists for generated content. Aurelia's placement repair originally rejected negative world coordinates, so it could not use legal ground near many of the objects it needed to move. With the centred bounds corrected, bounded nudges reduced 1,319 defects to 269 while preserving every object. Removing 195 of 2,421 scenery props and relocating two shrines to clear ground left zero defects, retaining all 1,028 structures, 842 spawns and three capturable shrines.
 
-Deleting scenery can only remove defects, so the cleanup runs after the pushes and takes the lower-priority side of each pair still in conflict. The Aurelia repair used travel budgets of 16 m for scenery and 8 m for fill buildings and spawns. Generated maps should pass the engine-backed audit before being committed; `tools/city_export` uses a nearby walkable cell in `stands_on_ground`, which does not establish that the entire authored footprint is level and clear.
+Deleting scenery can only remove defects, so the cleanup runs after the pushes and takes the lower-priority side of each pair still in conflict. The Aurelia repair used travel budgets of 16 m for scenery and 8 m for fill buildings and spawns; its two side shrines were separately moved 34.5 m to clear ground near the capital. Generated maps should pass the engine-backed audit before being committed; `tools/city_export` uses a nearby walkable cell in `stands_on_ground`, which does not establish that the entire authored footprint is level and clear.
 
 To apply the same bounded repair to a regenerated Aurelia map:
 
@@ -18,6 +18,8 @@ PYTHONHASHSEED=0 python3 scripts/fix-map-prop-overlaps.py \
   --max-travel 16 --max-travel-structure 8 --max-travel-spawn 8 \
   --drop-unplaceable
 ```
+
+Run the reporting audit afterward. Capturable landmarks that still have no valid placement within the travel budget remain reported and need to be placed on clear ground.
 
 ## The goods yard beside a building
 
