@@ -658,7 +658,8 @@ TEST(HumanoidGoldenParity, PipelineMatchesRecordedGolden) {
       ASSERT_TRUE(numeric) << "line " << i << " token " << t << ": expected '" << want
                            << "' got '" << got << "'";
       EXPECT_NEAR(want_value, got_value, tolerance)
-          << "line " << i << " token " << t << " of '" << expected[i] << "'";
+          << "line " << i << " token " << t << " of '" << expected[i] << "' got '"
+          << got << "'";
     }
   }
 }
