@@ -15,6 +15,13 @@ using HP = Render::GL::HumanProportions;
 
 } // namespace
 
+auto hip_position(const QVector3D& pelvis,
+                  Render::GL::Side side) noexcept -> QVector3D {
+  float const sign = side == Render::GL::Side::Left ? -1.0F : 1.0F;
+  return pelvis +
+         QVector3D(sign * HP::HIP_LATERAL_OFFSET, HP::HIP_VERTICAL_OFFSET, 0.0F);
+}
+
 auto arm_reach_limit(float upper_arm_len,
                      float fore_arm_len,
                      float fraction) noexcept -> float {

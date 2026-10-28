@@ -1223,9 +1223,13 @@ DISPLAY=:0 SOI_ARENA_RPG_TRACE=1 build/bin/arena_app --scenario rpg_strike_lunge
 
 Click in the viewport, then press **Tab** to take control of the local
 commander. WASD moves, the mouse looks, Shift runs, left click attacks, and Tab
-again gives control back. There is no on-screen prompt for it.
+again gives control back. Health, stamina, and RPG control hints remain visible
+when taking over a scenario that suppresses arena diagnostics; F1 hides the hints.
+Space dodges and Ctrl jumps. These gameplay keys take priority over toolbar
+shortcuts while the viewport has RPG focus. After using a panel, click the
+viewport once to restore mouse look; that click does not attack.
 
-Two things make this path work and neither is obvious:
+The input routing has two important details:
 
 - Tab reaches the viewport only because it overrides `focusNextPrevChild`.
   `QWidget::event()` offers a Tab press to focus navigation _before_
@@ -1233,6 +1237,9 @@ Two things make this path work and neither is obvious:
   always a next widget, so before that override Tab quietly moved focus into the
   terrain panel and takeover never happened. `ArenaInteractiveTakeoverTest`
   pins it.
+- The viewport accepts `ShortcutOverride` during RPG control. Without it the
+  toolbar consumes Space as pause before the commander receives the dodge key,
+  and Ctrl+R can regenerate the world while jumping and cycling targets.
 - Interactive control writes no `trace.jsonl`; that is batch-only.
   `SOI_ARENA_RPG_TRACE=1` prints one `SOI_RPG_INTERACTIVE` line a second with the
   commander's position, view angles and the attack/dodge/jump edge counters, so

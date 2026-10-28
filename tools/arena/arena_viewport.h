@@ -352,6 +352,7 @@ protected:
   void paintGL() override;
 
   auto focusNextPrevChild(bool next) -> bool override;
+  bool event(QEvent* event) override;
 
   void keyPressEvent(QKeyEvent* event) override;
   void keyReleaseEvent(QKeyEvent* event) override;
@@ -482,7 +483,8 @@ private:
   void submit_terrain_layers();
   void submit_world_effects(Render::GL::ResourceManager* res);
   void record_render_profile(Arena::ArenaRenderedFrameTimings& timings) const;
-  void paint_ui_overlays();
+  void paint_ui_overlays(bool show_debug_overlays);
+  [[nodiscard]] auto hide_gameplay_overlays() const -> bool;
   void deliver_capture_frame();
   void render_capture_variants(bool flame_card);
   [[nodiscard]] auto

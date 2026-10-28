@@ -430,8 +430,9 @@ void append_primitive_vertices(const PrimitiveInstance& prim,
 
   auto const base_vertex = static_cast<std::uint32_t>(out.vertices.size());
   auto const anchor = static_cast<std::uint8_t>(prim.params.anchor_bone);
-  bool const two_bone = is_two_bone_blend(prim.shape);
-  if (!two_bone && prim.shape != PrimitiveShape::Mesh && prim.alpha >= 1.0F) {
+  bool const span = is_two_bone_blend(prim.shape);
+  bool const two_bone = span && prim.span_skinning == SpanSkinning::LinearBlend;
+  if (!span && prim.shape != PrimitiveShape::Mesh && prim.alpha >= 1.0F) {
     add_enclosing_solid(unit_mesh, unit_model, anchor, solids);
   }
   auto const tail =

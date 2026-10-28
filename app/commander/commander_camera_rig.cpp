@@ -86,7 +86,6 @@ constexpr float k_camera_min_boom = 0.55F;
 constexpr float k_camera_boom_backoff = 0.06F;
 
 constexpr float k_camera_boom_release_speed = 6.0F;
-constexpr float k_camera_boom_pull_in_speed = 20.0F;
 
 constexpr float k_commander_near_plane = 0.05F;
 constexpr float k_camera_terrain_clearance = 0.55F;
@@ -523,15 +522,10 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
       }
     }
   }
-  if (!m_smooth_valid) {
+  // Collision is a hard constraint: damping retraction lets a quick turn put
+  // the lens inside a wall. Only release back to the preferred boom is eased.
+  if (!m_smooth_valid || occlusion_target < m_occlusion_fraction) {
     m_occlusion_fraction = occlusion_target;
-  } else if (occlusion_target < m_occlusion_fraction) {
-    float const pull_in_step =
-        boom_length > 1.0e-4F
-            ? (k_camera_boom_pull_in_speed * std::max(dt, 0.0F)) / boom_length
-            : 1.0F;
-    m_occlusion_fraction =
-        std::max(occlusion_target, m_occlusion_fraction - pull_in_step);
   } else {
     float const eased =
         m_occlusion_fraction + (occlusion_target - m_occlusion_fraction) *

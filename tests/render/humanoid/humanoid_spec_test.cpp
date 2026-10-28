@@ -10,12 +10,14 @@
 #include <limits>
 #include <span>
 #include <string_view>
+#include <utility>
 
 #include "render/creature/pipeline/unit_visual_spec.h"
 #include "render/creature/primitive_geometry.h"
 #include "render/creature/spec.h"
 #include "render/humanoid/asset/humanoid_spec.h"
 #include "render/humanoid/runtime/skeleton_evaluator.h"
+#include "render/rigged_mesh_bake.h"
 #include "render/submitter.h"
 
 namespace {
@@ -509,6 +511,79 @@ TEST(HumanoidSpecTest, CurvedLimbSectionsMeetWithContinuousSurfaceNormals) {
             QVector3D::crossProduct(position(matrix, b) - position(matrix, a),
                                     position(matrix, c) - position(matrix, a));
         EXPECT_GT(QVector3D::dotProduct(face, normal(matrix, a)), 0.0F);
+      }
+    }
+  }
+}
+
+TEST(HumanoidSpecTest, LimbSurfacesStayRigidWhenTheNextJointBendsOrTwists) {
+  using namespace Render::Creature;
+  auto const bind = Render::Humanoid::humanoid_bind_palette();
+  constexpr std::array chains{
+      std::pair{HumanoidBone::UpperArmL, HumanoidBone::ForearmL},
+      std::pair{HumanoidBone::UpperArmR, HumanoidBone::ForearmR},
+      std::pair{HumanoidBone::ForearmL, HumanoidBone::HandL},
+      std::pair{HumanoidBone::ForearmR, HumanoidBone::HandR},
+      std::pair{HumanoidBone::HipL, HumanoidBone::KneeL},
+      std::pair{HumanoidBone::HipR, HumanoidBone::KneeR},
+      std::pair{HumanoidBone::KneeL, HumanoidBone::FootL},
+      std::pair{HumanoidBone::KneeR, HumanoidBone::FootR}};
+  for (auto const* spec :
+       {&humanoid_creature_spec(), &skeleton_humanoid_creature_spec()}) {
+    for (auto const* graph : {&spec->lod_full, &spec->lod_minimal}) {
+      auto const lod =
+          graph == &spec->lod_full ? CreatureLOD::Full : CreatureLOD::Minimal;
+      for (auto const [from, to] : chains) {
+        auto const anchor = static_cast<BoneIndex>(from);
+        auto const joint = static_cast<BoneIndex>(to);
+        int checked = 0;
+        for (auto const& part : graph->primitives) {
+          if (part.params.anchor_bone != anchor ||
+              (part.params.tail_bone != anchor && part.params.tail_bone != joint)) {
+            continue;
+          }
+          SCOPED_TRACE(part.debug_name);
+          PartGraph const isolated{std::span(&part, 1)};
+          auto const baked = bake_rigged_mesh_cpu({&isolated, bind, {}, lod});
+          ASSERT_FALSE(baked.vertices.empty());
+          ++checked;
+          // Move the whole limb, then flex/twist only the next joint. A wrist
+          // must not bow the forearm; an ankle must not corkscrew the shin.
+          QMatrix4x4 motion;
+          motion.translate(0.2F, -0.1F, 0.3F);
+          motion.rotate(38.0F, QVector3D(1.0F, 0.0F, 1.0F));
+          for (auto const axis :
+               {QVector3D(1.0F, 0.0F, 0.0F), bind[anchor].column(1).toVector3D()}) {
+            std::array<QMatrix4x4, k_bone_count> skin;
+            skin.fill(motion);
+            auto const pivot = bind[joint].column(3).toVector3D();
+            skin[joint].translate(pivot);
+            skin[joint].rotate(110.0F, axis);
+            skin[joint].translate(-pivot);
+            float max_position_error = 0.0F;
+            float max_normal_error = 0.0F;
+            for (auto const& v : baked.vertices) {
+              QVector3D const p(v.position_bone_local[0],
+                                v.position_bone_local[1],
+                                v.position_bone_local[2]);
+              QVector3D const n(v.normal_bone_local[0],
+                                v.normal_bone_local[1],
+                                v.normal_bone_local[2]);
+              QVector3D posed, normal;
+              for (std::size_t i = 0; i < v.bone_indices.size(); ++i) {
+                posed += skin[v.bone_indices[i]].map(p) * v.bone_weights[i];
+                normal += skin[v.bone_indices[i]].mapVector(n) * v.bone_weights[i];
+              }
+              max_position_error =
+                  std::max(max_position_error, (posed - motion.map(p)).length());
+              max_normal_error =
+                  std::max(max_normal_error, (normal - motion.mapVector(n)).length());
+            }
+            EXPECT_LT(max_position_error, 1.0e-5F);
+            EXPECT_LT(max_normal_error, 1.0e-5F);
+          }
+        }
+        EXPECT_GT(checked, 0) << "missing limb " << static_cast<int>(anchor);
       }
     }
   }

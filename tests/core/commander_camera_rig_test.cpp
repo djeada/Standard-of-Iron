@@ -822,6 +822,54 @@ TEST_F(CommanderCameraCollisionTest, AWallOnlyEverShortensTheBoomAlongItsOwnAxis
          "pulling it in toward the commander";
 }
 
+TEST_F(CommanderCameraCollisionTest, TurningIntoAWallResolvesCollisionOnTheFirstFrame) {
+  Game::Systems::BuildingCollisionRegistry::instance().register_building(
+      1U, "home", 0.0F, 0.0F, 1, 0.0F);
+
+  for (float const dt : {1.0F / 30.0F, 1.0F / 60.0F, 1.0F / 144.0F}) {
+    SCOPED_TRACE(dt);
+    CommanderCameraRig rig;
+    Render::GL::Camera camera;
+    auto inputs = looking_south(QVector3D(0.0F, 0.0F, -3.0F), false);
+    inputs.dt = dt;
+    inputs.view_yaw_degrees = 0.0F;
+    settle(rig, camera, inputs);
+    ASSERT_GT(rig.trace().eye_clearance, 0.0F);
+
+    inputs.view_yaw_degrees = 180.0F;
+    for (int frame = 0; frame < 12; ++frame) {
+      SCOPED_TRACE(frame);
+      rig.update(camera, inputs);
+      EXPECT_GE(rig.trace().eye_clearance, 0.0F);
+      EXPECT_TRUE(rig.trace().sight_line_clear);
+      QVector3D const wanted = rig.trace().eye_unconstrained - rig.trace().pivot;
+      QVector3D const resolved = rig.trace().eye_resolved - rig.trace().pivot;
+      EXPECT_NEAR(wanted.x() * resolved.z() - wanted.z() * resolved.x(), 0.0F, 1.0e-3F);
+    }
+  }
+}
+
+TEST_F(CommanderCameraCollisionTest, AFacadeCloserThanTheMinimumBoomKeepsTheLensClear) {
+  Game::Systems::BuildingCollisionRegistry::instance().register_building(
+      1U, "home", 0.0F, 0.0F, 1, 0.0F);
+
+  CommanderCameraRig rig;
+  Render::GL::Camera camera;
+  auto inputs = looking_south(QVector3D(-0.075F, 0.0F, -2.48F), false);
+  inputs.dt = 1.0F / 30.0F;
+  inputs.view_yaw_degrees = 0.0F;
+  settle(rig, camera, inputs);
+
+  inputs.view_yaw_degrees = 180.0F;
+  for (int frame = 0; frame < 30; ++frame) {
+    SCOPED_TRACE(frame);
+    rig.update(camera, inputs);
+    EXPECT_GE(rig.trace().eye_clearance, 0.0F);
+    EXPECT_TRUE(rig.trace().sight_line_clear);
+    EXPECT_LT(rig.trace().boom_resolved, 1.5F);
+  }
+}
+
 TEST_F(CommanderCameraCollisionTest, AGatePassageIsOpenAndOnlyItsTowersBlock) {
   load_flat_ground_with_props({});
   Game::Systems::BuildingCollisionRegistry::instance().register_building(
