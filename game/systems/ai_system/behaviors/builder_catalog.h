@@ -7,8 +7,6 @@
 
 namespace Game::Systems::AI {
 
-// Construction choices use these addresses as interned names across translation
-// units. Inline arrays have one identity even when string literals are not pooled.
 inline constexpr char BUILDING_TYPE_HOME[] = "home";
 inline constexpr char BUILDING_TYPE_DEFENSE_TOWER[] = "defense_tower";
 inline constexpr char BUILDING_TYPE_WALL_SEGMENT[] = "wall_segment";

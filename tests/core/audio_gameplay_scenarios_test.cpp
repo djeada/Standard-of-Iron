@@ -1,3 +1,4 @@
+#include <QCoreApplication>
 #include <QString>
 #include <QVector3D>
 
@@ -143,6 +144,15 @@ protected:
     Game::Map::TerrainService::instance().clear();
     Game::Systems::BuildingCollisionRegistry::instance().clear();
     CueTrace::instance().reset();
+  }
+
+  static void let_the_music_player_catch_up() {
+    const auto deadline =
+        std::chrono::steady_clock::now() + std::chrono::milliseconds(500);
+    while (std::chrono::steady_clock::now() < deadline) {
+      QCoreApplication::processEvents();
+      std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    }
   }
 
   static auto heard(const char* cue_id) -> bool {
@@ -755,6 +765,48 @@ TEST_F(AudioGameplayScenarioTest, FightingUnderTheCameraNeverBecomesADistantBed)
       << "a melee at the camera was replaced by a distant rumble";
 
   AudioSystem::get_instance().set_listener({});
+}
+
+TEST_F(AudioGameplayScenarioTest, TheLastWaveHoldsTheHardestMusicUntilItIsDecided) {
+  const std::string calm = "music.base.sunlight_olive_groves";
+  const std::string battle = "music.combat.dust_of_trasimene";
+  const std::string finale = "music.combat.siege_at_dawn";
+  const std::string fanfare = "music.stinger.victory_fanfare";
+  for (const auto& id : {calm, battle, finale, fanfare}) {
+    AudioResourceLoader::ensure_audio_resource_loaded(QString::fromStdString(id));
+  }
+  m_handler->load_ambient_music(Engine::Core::AmbientState::PEACEFUL,
+                                std::vector<std::string>{calm});
+  m_handler->load_ambient_music(Engine::Core::AmbientState::COMBAT,
+                                std::vector<std::string>{battle});
+  m_handler->load_ambient_music(Engine::Core::AmbientState::VICTORY,
+                                std::vector<std::string>{fanfare});
+  m_handler->load_final_assault_music({finale});
+
+  m_handler->rotate_ambient_music(Engine::Core::AmbientState::COMBAT);
+  ASSERT_EQ(m_handler->current_music_id(), battle);
+
+  Engine::Core::EventManager::instance().publish(
+      Engine::Core::MissionWaveIncomingEvent(k_enemy_owner, 3, 4, false));
+  EXPECT_EQ(m_handler->current_music_id(), battle)
+      << "an ordinary wave keeps the battle rotation";
+
+  Engine::Core::EventManager::instance().publish(
+      Engine::Core::MissionWaveIncomingEvent(k_enemy_owner, 4, 4, true));
+  EXPECT_EQ(m_handler->current_music_id(), finale)
+      << "the last wave is announced with the hardest track";
+
+  m_handler->rotate_ambient_music(Engine::Core::AmbientState::PEACEFUL);
+  EXPECT_EQ(m_handler->current_music_id(), finale)
+      << "a lull while the last wave marches must not fall back to a peaceful bed";
+  m_handler->rotate_ambient_music(Engine::Core::AmbientState::COMBAT);
+  EXPECT_EQ(m_handler->current_music_id(), finale);
+
+  m_handler->rotate_ambient_music(Engine::Core::AmbientState::VICTORY);
+  EXPECT_EQ(m_handler->current_music_id(), fanfare);
+
+  AudioSystem::get_instance().stop_music();
+  let_the_music_player_catch_up();
 }
 
 TEST_F(AudioGameplayScenarioTest, EveryScenarioCueReachedTheMixerFromRealGameplay) {

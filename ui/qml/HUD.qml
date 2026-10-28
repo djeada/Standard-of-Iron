@@ -704,7 +704,7 @@ Item {
         source: typeof game !== 'undefined' ? game.activity : null
         projector: worldProjector
         combatEnabled: Design.A11y.damageNumbers
-        economyEnabled: Design.A11y.economyNumbers && !hud.commander_rpg_mode
+        economyEnabled: Design.A11y.economyNumbers
         visible: !hud.commander_rally_overlay_blocked
     }
 

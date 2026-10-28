@@ -6,6 +6,7 @@
 
 #include "app/core/game_engine.h"
 #include "game/core/component_combat.h"
+#include "game/core/component_gameplay.h"
 #include "game/core/ownership_constants.h"
 #include "game/core/world.h"
 #include "game/session/session_context.h"
@@ -80,7 +81,8 @@ auto AmbientStateManager::observe_state(Engine::Core::World* world,
       return Engine::Core::AmbientState::DEFEAT;
     }
   }
-  if (is_player_in_combat(world, local_owner_id)) {
+  if (is_player_in_combat(world, local_owner_id) ||
+      is_assault_on_the_field(world, local_owner_id)) {
     return Engine::Core::AmbientState::COMBAT;
   }
   if (entity_cache.enemy_barracks_alive && entity_cache.player_barracks_alive) {
@@ -197,5 +199,28 @@ auto AmbientStateManager::is_player_in_combat(Engine::Core::World* world,
     }
   }
 
+  return false;
+}
+
+auto AmbientStateManager::is_assault_on_the_field(Engine::Core::World* world,
+                                                  int local_owner_id) const -> bool {
+  if (!world) {
+    return false;
+  }
+  const auto* session = Game::Session::SessionContext::for_world(*world);
+  for (auto* entity :
+       world->collect_entities_with<Engine::Core::AssaultWaveComponent>()) {
+    auto* assault = entity->get_component<Engine::Core::AssaultWaveComponent>();
+    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+    if (assault == nullptr || !assault->active || unit == nullptr ||
+        unit->health <= 0 || unit->owner_id == local_owner_id ||
+        Game::Core::is_neutral_owner(unit->owner_id)) {
+      continue;
+    }
+    if (session == nullptr ||
+        session->owners().are_enemies(local_owner_id, unit->owner_id)) {
+      return true;
+    }
+  }
   return false;
 }

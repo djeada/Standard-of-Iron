@@ -41,6 +41,7 @@ constexpr float k_anchor_follow_rate = 24.0F;
 constexpr float k_anchor_max_lag = 0.30F;
 
 constexpr float k_focus_point_follow = 4.5F;
+constexpr float k_focus_min_reach = 4.5F;
 constexpr float k_focus_blend_omega = 7.5F;
 constexpr float k_occlusion_follow = 18.0F;
 
@@ -397,16 +398,24 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
       flat_right * (side_offset + bob_l);
   eye_desired -= flat_forward * (k_hit_kick_dolly * m_hit_kick_dolly_envelope);
 
+  auto const reach_out = [&pivot](QVector3D focus) {
+    QVector3D const flat(focus.x() - pivot.x(), 0.0F, focus.z() - pivot.z());
+    float const reach = flat.length();
+    if (reach > 1.0e-3F && reach < k_focus_min_reach) {
+      focus += flat * ((k_focus_min_reach - reach) / reach);
+    }
+    return focus;
+  };
   std::optional<QVector3D> focus_world;
   float focus_weight_target = 0.0F;
   float focus_side_nudge_target = 0.0F;
   if (inputs.lock_target_position.has_value()) {
-    focus_world = *inputs.lock_target_position + QVector3D(0.0F, 1.1F, 0.0F);
+    focus_world = reach_out(*inputs.lock_target_position + QVector3D(0.0F, 1.1F, 0.0F));
     focus_weight_target = 0.60F * (1.0F - aim_blend);
     focus_side_nudge_target =
         (inputs.close_camera_mode ? 0.24F : 0.38F) * (1.0F - aim_blend);
   } else if (inputs.soft_focus_position.has_value()) {
-    focus_world = *inputs.soft_focus_position + QVector3D(0.0F, 1.1F, 0.0F);
+    focus_world = reach_out(*inputs.soft_focus_position + QVector3D(0.0F, 1.1F, 0.0F));
     focus_weight_target = 0.32F * (1.0F - aim_blend);
   }
 

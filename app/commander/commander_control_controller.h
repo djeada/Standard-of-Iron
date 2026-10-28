@@ -6,6 +6,7 @@
 
 #include <cstdint>
 #include <optional>
+#include <utility>
 
 #include "app/commander/commander_abilities.h"
 #include "app/commander/commander_body_facing.h"
@@ -174,7 +175,9 @@ private:
     float dodge_grace_remaining{0.0F};
   };
 
-  void capture_input(Engine::Core::World& world, Engine::Core::EntityID commander_id);
+  void capture_input(Engine::Core::World& world,
+                     Engine::Core::EntityID commander_id,
+                     float dt);
   [[nodiscard]] auto hold_for_rally(Engine::Core::World& world,
                                     const App::Core::CommanderHandles& body,
                                     Render::GL::Camera* camera,
@@ -266,6 +269,7 @@ private:
   App::Core::CommanderInputPort m_input_port;
   App::Core::CommanderLook m_look;
   App::Core::CommanderCameraRig m_camera_rig;
+  std::optional<std::pair<QVector3D, QVector3D>> m_tick_aim_ray;
   App::Core::CommanderMotor m_motor;
   App::Core::CommanderLocomotion m_locomotion;
   App::Core::CommanderBodyFacing m_body_facing;

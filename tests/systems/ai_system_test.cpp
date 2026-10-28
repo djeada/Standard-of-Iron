@@ -3664,6 +3664,69 @@ TEST_F(AISystemTest, AssaultBehaviorEngagesTargetsItHasAlreadyReached) {
   EXPECT_TRUE(commands.front().should_chase);
 }
 
+TEST_F(AISystemTest, AssaultSpreadsAWaveOverTheDefendersItReached) {
+  Game::Systems::AI::AssaultBehavior behavior;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+  for (Engine::Core::EntityID id = 20; id < 28; ++id) {
+    auto wave_unit = make_unit(id, 118.0F + static_cast<float>(id - 20) * 0.5F, 36.0F);
+    wave_unit.is_assault = true;
+    snapshot.friendly_units.push_back(wave_unit);
+  }
+  auto commander = make_enemy(200, 120.0F, 40.0F);
+  commander.spawn_type = Game::Units::SpawnType::RomanFieldCommander;
+  commander.player_driven = true;
+  snapshot.visible_enemies = {
+      commander, make_enemy(201, 116.0F, 42.0F), make_enemy(202, 124.0F, 42.0F)};
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.assault_unit_count = 8;
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 2.0F, commands);
+
+  std::map<Engine::Core::EntityID, std::size_t> assailants;
+  std::size_t assigned = 0;
+  for (const auto& command : commands) {
+    ASSERT_EQ(command.type, Game::Systems::AI::AICommandType::AttackTarget);
+    EXPECT_TRUE(command.should_chase);
+    assailants[command.target_id] += command.units.size();
+    assigned += command.units.size();
+  }
+  EXPECT_EQ(assigned, 8U) << "every unit that reached the fight gets a target";
+  EXPECT_LE(assailants[200], 3U) << "a commander draws three squads, not the wave";
+  EXPECT_GT(assailants[201], 0U);
+  EXPECT_GT(assailants[202], 0U);
+}
+
+TEST_F(AISystemTest, AssaultKeepsAUnitOnTheDefenderItIsAlreadyFighting) {
+  Game::Systems::AI::AssaultBehavior behavior;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+  auto wave_unit = make_unit(20, 118.0F, 40.0F);
+  wave_unit.is_assault = true;
+  wave_unit.attack_target_id = 202;
+  snapshot.friendly_units = {wave_unit};
+  snapshot.visible_enemies = {make_enemy(201, 119.0F, 40.0F),
+                              make_enemy(202, 126.0F, 40.0F)};
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.assault_unit_count = 1;
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 2.0F, commands);
+
+  ASSERT_EQ(commands.size(), 1U);
+  EXPECT_EQ(commands.front().target_id, 202U)
+      << "a squad already locked in a fight is not re-pointed at a closer man";
+}
+
 TEST_F(AISystemTest, LocalEngagementRespondsWithNearbyUnitsOnly) {
   Game::Systems::AI::LocalEngagementBehavior behavior;
 

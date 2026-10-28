@@ -276,6 +276,18 @@ auto AudioEventHandler::initialize() -> bool {
             on_barrack_captured(event);
           });
 
+  m_wave_incoming_sub =
+      Engine::Core::ScopedEventSubscription<Engine::Core::MissionWaveIncomingEvent>(
+          [this](const Engine::Core::MissionWaveIncomingEvent& event) {
+            on_wave_incoming(event);
+          });
+
+  m_wave_cleared_sub =
+      Engine::Core::ScopedEventSubscription<Engine::Core::MissionWaveClearedEvent>(
+          [this](const Engine::Core::MissionWaveClearedEvent& event) {
+            on_wave_cleared(event);
+          });
+
   m_initialized = true;
   return true;
 }
@@ -296,6 +308,8 @@ void AudioEventHandler::shutdown() {
   m_unit_died_sub.unsubscribe();
   m_building_attacked_sub.unsubscribe();
   m_barrack_captured_sub.unsubscribe();
+  m_wave_incoming_sub.unsubscribe();
+  m_wave_cleared_sub.unsubscribe();
 
   m_unit_voice_map.clear();
   m_ambient_music_map.clear();
@@ -305,6 +319,8 @@ void AudioEventHandler::shutdown() {
   m_current_music_id.clear();
   m_current_music_group.clear();
   m_music_state_left_at.clear();
+  m_final_assault_music.clear();
+  m_final_assault = false;
 
   m_initialized = false;
 }
@@ -479,7 +495,66 @@ void AudioEventHandler::on_unit_died(const Engine::Core::UnitDiedEvent& event) {
   }
 }
 
+void AudioEventHandler::load_final_assault_music(
+    const std::vector<std::string>& music_ids) {
+  m_final_assault_music.clear();
+  for (const auto& music_id : music_ids) {
+    if (!music_id.empty()) {
+      m_final_assault_music.push_back(music_id);
+    }
+  }
+  m_final_assault = false;
+}
+
+auto AudioEventHandler::play_final_assault_music() -> bool {
+  if (std::find(m_final_assault_music.begin(),
+                m_final_assault_music.end(),
+                m_current_music_id) != m_final_assault_music.end()) {
+    return true;
+  }
+  const std::string group_key =
+      ambient_music_group_key(Engine::Core::AmbientState::COMBAT);
+  const std::string music_id = choose_loaded_variant(m_final_assault_music);
+  if (music_id.empty()) {
+    return false;
+  }
+  if (!m_current_music_group.empty() && m_current_music_group != group_key) {
+    m_music_state_left_at[m_current_music_group] = std::chrono::steady_clock::now();
+  }
+  AudioSystem::get_instance().play_music(music_id);
+  m_last_sound_group_id[group_key] = music_id;
+  m_current_music_id = music_id;
+  m_current_music_group = group_key;
+  qInfo().noquote() << QStringLiteral("Ambient music: %1 (final assault)")
+                           .arg(QString::fromStdString(music_id));
+  return true;
+}
+
+void AudioEventHandler::on_wave_incoming(
+    const Engine::Core::MissionWaveIncomingEvent& event) {
+  if (!event.final_wave || m_audience.is_local(event.owner_id)) {
+    return;
+  }
+  m_final_assault = true;
+  play_final_assault_music();
+}
+
+void AudioEventHandler::on_wave_cleared(
+    const Engine::Core::MissionWaveClearedEvent& event) {
+  if (event.final_wave) {
+    m_final_assault = false;
+  }
+}
+
 auto AudioEventHandler::rotate_ambient_music(Engine::Core::AmbientState state) -> bool {
+  const bool decided = state == Engine::Core::AmbientState::VICTORY ||
+                       state == Engine::Core::AmbientState::DEFEAT;
+  if (decided) {
+    m_final_assault = false;
+  } else if (m_final_assault && play_final_assault_music()) {
+    return false;
+  }
+
   auto it = m_ambient_music_map.find(state);
   if (it == m_ambient_music_map.end() || it->second.empty()) {
     return false;
@@ -518,6 +593,9 @@ auto AudioEventHandler::rotate_ambient_music(Engine::Core::AmbientState state) -
 void AudioEventHandler::on_ambient_state_changed(
     const Engine::Core::AmbientStateChangedEvent& event) {
   rotate_ambient_music(event.new_state);
+  if (m_final_assault) {
+    return;
+  }
 
   if (event.new_state == Engine::Core::AmbientState::VICTORY) {
     play_cue(Cue::k_state_victory);

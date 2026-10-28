@@ -758,7 +758,7 @@
       "category": "music",
       "load_policy": "lazy",
       "tags": {
-        "ambient_state": "combat",
+        "ambient_state": "tense",
         "faction": "roman",
         "variant": "shieldwall"
       },
@@ -773,9 +773,9 @@
       "category": "music",
       "load_policy": "lazy",
       "tags": {
-        "ambient_state": "combat",
+        "ambient_state": "defeat",
         "faction": "roman",
-        "variant": "defensive"
+        "variant": "last_stand"
       },
       "provenance": {
         "origin": "ElevenLabs render `The_Last_Defensive_Wall_2026-08-28T210210`, batch `2026-08-punic` of `tools/audio_import/import_music.py`",
@@ -932,7 +932,8 @@
       "load_policy": "lazy",
       "tags": {
         "ambient_state": "combat",
-        "variant": "siege"
+        "variant": "siege",
+        "intensity": "final_assault"
       },
       "provenance": {
         "origin": "ElevenLabs render `Siege_at_Dawn_2026-09-01T083842`, batch `2026-09-iron` of `tools/audio_import/import_music.py`",

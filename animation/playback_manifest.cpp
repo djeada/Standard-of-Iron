@@ -113,7 +113,7 @@ auto resolve_humanoid_playback_phase(const HumanoidPlaybackPhaseInputs& inputs) 
     return normalize_clip_phase(
         inputs.construction_progress + inputs.construction_jitter_seed, true);
   }
-  if (is_attack_state(inputs.state)) {
+  if (is_attack_state(inputs.state) || inputs.state == StateId::AttackMelee) {
     return inputs.attack_phase;
   }
   if (inputs.state == StateId::Idle &&
