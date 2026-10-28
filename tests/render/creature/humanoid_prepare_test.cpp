@@ -7354,6 +7354,37 @@ auto every_action_a_commander_can_pick(
   return picked;
 }
 
+auto clip_a_commander_swings(const Render::GL::HumanoidRendererBase& preparer,
+                             Engine::Core::Entity& entity) -> std::uint16_t {
+  Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
+  ctx.force_single_soldier = true;
+  ctx.allow_template_cache = false;
+  ctx.animation_time = 10.0F;
+  ctx.entity = &entity;
+
+  auto const anim = Render::GL::sample_anim_state(ctx);
+  EXPECT_TRUE(anim.is_attacking);
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(
+      preparer, ctx, anim, test_runtime(0U), prep);
+  auto const& requests = prep.bodies.requests();
+  if (requests.empty()) {
+    ADD_FAILURE() << "the commander produced no body request";
+    return Animation::k_unmapped_clip;
+  }
+
+  auto const clip_of = [](const auto& layer) {
+    return layer.clip_id != Animation::k_unmapped_clip
+               ? layer.clip_id
+               : Render::Creature::ArchetypeRegistry::instance().resolve_bpat_clip(
+                     layer.archetype, layer.state, layer.clip_variant);
+  };
+  auto const& request = requests.front();
+  return request.upper_body_overlay.active() ? clip_of(request.upper_body_overlay)
+                                             : clip_of(request);
+}
+
 } // namespace
 
 TEST(HumanoidPrepare, EveryCommanderFightsWithTheWeaponHeCarries) {
@@ -7425,48 +7456,41 @@ TEST(HumanoidPrepare, EveryCommanderFightsWithTheWeaponHeCarries) {
           action->action_running = true;
           action->normalized_action_time = 0.45F;
 
-          Render::GL::DrawContext ctx{};
-          ctx.world_view =
-              Render::WorldView::of(Game::Session::SessionContext::active());
-          ctx.force_single_soldier = true;
-          ctx.allow_template_cache = false;
-          ctx.animation_time = 10.0F;
-          ctx.entity = &entity;
-
-          auto const anim = Render::GL::sample_anim_state(ctx);
-          ASSERT_TRUE(anim.is_attacking);
-          Render::Humanoid::HumanoidPreparation prep;
-          Render::Humanoid::prepare_humanoid_instances(
-              *preparer, ctx, anim, test_runtime(0U), prep);
-          auto const& requests = prep.bodies.requests();
-          ASSERT_FALSE(requests.empty());
-
-          auto const& request = requests.front();
-          auto const clip_of = [](Render::Creature::ArchetypeId archetype,
-                                  Render::Creature::AnimationStateId state,
-                                  std::uint8_t variant,
-                                  std::uint16_t explicit_clip) {
-            return explicit_clip != Animation::k_unmapped_clip
-                       ? explicit_clip
-                       : Render::Creature::ArchetypeRegistry::instance()
-                             .resolve_bpat_clip(archetype, state, variant);
-          };
-          std::uint16_t const swing =
-              request.upper_body_overlay.active()
-                  ? clip_of(request.upper_body_overlay.archetype,
-                            request.upper_body_overlay.state,
-                            request.upper_body_overlay.clip_variant,
-                            request.upper_body_overlay.clip_id)
-                  : clip_of(request.archetype,
-                            request.state,
-                            request.clip_variant,
-                            request.clip_id);
+          std::uint16_t const swing = clip_a_commander_swings(*preparer, entity);
           EXPECT_EQ(weapon_a_clip_swings(swing), carried)
               << (player_controlled ? "player" : "AI") << " action " << int(action_id)
               << " plays clip " << swing << " ("
               << held_weapon_name(weapon_a_clip_swings(swing))
               << ") but the commander holds a " << held_weapon_name(carried);
         }
+      }
+
+      for (std::uint8_t variant = 0; variant < 3U; ++variant) {
+        Engine::Core::StandaloneEntity entity_scratch(78);
+        Engine::Core::Entity& entity = entity_scratch.entity();
+        auto* unit =
+            entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+        auto* attack = entity.add_component<Engine::Core::AttackComponent>();
+        auto* combat_state = entity.add_component<Engine::Core::CombatStateComponent>();
+        ASSERT_NE(unit, nullptr);
+        ASSERT_NE(attack, nullptr);
+        ASSERT_NE(combat_state, nullptr);
+        ASSERT_NE(entity.add_component<Engine::Core::CommanderComponent>(), nullptr);
+        unit->spawn_type = spawn;
+        unit->nation_id = nation;
+        attack->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
+        combat_state->animation_state = Engine::Core::CombatAnimationState::Strike;
+        combat_state->attack_family = melee_family;
+        combat_state->attack_variant = variant;
+        combat_state->state_time = 0.15F;
+        combat_state->state_duration =
+            Engine::Core::CombatStateComponent::k_strike_duration;
+
+        std::uint16_t const swing = clip_a_commander_swings(*preparer, entity);
+        EXPECT_EQ(weapon_a_clip_swings(swing), carried)
+            << "RTS melee swing " << int(variant) << " plays clip " << swing << " ("
+            << held_weapon_name(weapon_a_clip_swings(swing))
+            << ") but the commander holds a " << held_weapon_name(carried);
       }
     }
     commanders_checked.insert(renderer_id);
