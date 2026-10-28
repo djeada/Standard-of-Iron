@@ -3,6 +3,7 @@
 #include <QDebug>
 
 #include <algorithm>
+#include <mutex>
 
 #include "app/core/game_engine.h"
 #include "game/core/component_combat.h"
@@ -208,17 +209,17 @@ auto AmbientStateManager::is_assault_on_the_field(Engine::Core::World* world,
     return false;
   }
   const auto* session = Game::Session::SessionContext::for_world(*world);
-  for (auto* entity :
-       world->collect_entities_with<Engine::Core::AssaultWaveComponent>()) {
-    auto* assault = entity->get_component<Engine::Core::AssaultWaveComponent>();
-    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    if (assault == nullptr || !assault->active || unit == nullptr ||
-        unit->health <= 0 || unit->owner_id == local_owner_id ||
-        Game::Core::is_neutral_owner(unit->owner_id)) {
+  const std::lock_guard<std::recursive_mutex> lock(world->get_entity_mutex());
+  for (auto [entity_id, assault, unit] :
+       world->view<const Engine::Core::AssaultWaveComponent,
+                   const Engine::Core::UnitComponent>()) {
+    (void)entity_id;
+    if (!assault.active || unit.health <= 0 || unit.owner_id == local_owner_id ||
+        Game::Core::is_neutral_owner(unit.owner_id)) {
       continue;
     }
     if (session == nullptr ||
-        session->owners().are_enemies(local_owner_id, unit->owner_id)) {
+        session->owners().are_enemies(local_owner_id, unit.owner_id)) {
       return true;
     }
   }

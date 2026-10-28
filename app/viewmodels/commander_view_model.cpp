@@ -896,8 +896,9 @@ void CommanderViewModel::release_for_rally() {
   if (!active()) {
     return;
   }
-  if (auto* commander = controlled_commander_entity(); commander != nullptr) {
-    if (auto* data = commander->get_component<Engine::Core::CommanderComponent>()) {
+  if (auto* world = m_context.world; world != nullptr) {
+    if (auto* data = world->try_get<Engine::Core::CommanderComponent>(
+            m_controlled_commander_id)) {
       data->fpv_controlled = false;
     }
   }
