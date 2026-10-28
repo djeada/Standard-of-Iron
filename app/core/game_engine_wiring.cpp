@@ -100,11 +100,13 @@ void GameEngine::on_match_outcome(const QString& state) {
       state == "defeat" ? m_victory_service->get_defeat_description() : QString();
   emit victory_state_changed();
 
-  if (!state.isEmpty() && m_commander_view_model->active()) {
+  if (!state.isEmpty() && m_commander_view_model->active() &&
+      !m_commander_view_model->follows_replay()) {
     QMetaObject::invokeMethod(
         this,
         [this]() {
-          if (!m_runtime.victory_state.isEmpty() && m_commander_view_model->active()) {
+          if (!m_runtime.victory_state.isEmpty() && m_commander_view_model->active() &&
+              !m_commander_view_model->follows_replay()) {
             m_commander_view_model->exit_mode();
           }
         },

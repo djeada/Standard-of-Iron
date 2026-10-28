@@ -18,6 +18,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "animation/clip_manifest.h"
 #include "animation/rig/humanoid_proportions.h"
 #include "game/core/component.h"
 #include "game/core/entity.h"
@@ -477,6 +478,8 @@ roman_healer_visual_spec(std::string_view,
     out.archetype_id = resolve_humanoid_equipment_archetype(
         "troops/roman/healer", k_healer_base_archetype, handles);
     out.creature_asset_id = Render::Creature::Pipeline::k_caster_humanoid_asset;
+    out.animation_manifest.melee_clip_for_variant =
+        &Animation::humanoid_unarmed_melee_clip;
     return out;
   }();
   return spec;

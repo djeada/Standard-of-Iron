@@ -68,6 +68,8 @@ struct HumanoidAnimationManifest {
 
   std::uint16_t melee_clip_override{0xFFFFU};
   std::uint16_t ranged_clip_override{0xFFFFU};
+
+  std::uint16_t (*melee_clip_for_variant)(std::uint8_t variant) noexcept {nullptr};
 };
 
 struct ProportionScaling {

@@ -98,6 +98,7 @@ struct HumanoidBowDrawPoseInputs {
 struct HumanoidBowDrawPoseSample {
   PoseVec3 right_hand{};
   PoseVec3 left_hand{};
+  PoseVec3 string_elbow_pole{};
   float shoulder_l_y_delta{0.0F};
   float shoulder_r_y_delta{0.0F};
   float shoulder_l_z_delta{0.0F};

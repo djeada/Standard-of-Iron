@@ -357,6 +357,7 @@ TEST(CommanderInputRecordTest, AFrameRoundTripsThroughItsJsonForm) {
   Game::Command::CommanderInputFrame frame;
   frame.commander = 4242;
   frame.view_yaw = -37.5F;
+  frame.view_pitch = -11.25F;
   frame.sequence = 19;
   frame.dodge_direction = QVector3D(0.0F, 0.0F, -1.0F);
   frame.set(Game::Command::CommanderInputFrame::Forward, true);
@@ -372,10 +373,29 @@ TEST(CommanderInputRecordTest, AFrameRoundTripsThroughItsJsonForm) {
   EXPECT_EQ(decoded->buttons, frame.buttons);
   EXPECT_EQ(decoded->sequence, frame.sequence);
   EXPECT_FLOAT_EQ(decoded->view_yaw, frame.view_yaw);
+  EXPECT_FLOAT_EQ(decoded->view_pitch, frame.view_pitch);
   EXPECT_EQ(decoded->dodge_direction, frame.dodge_direction);
   EXPECT_TRUE(decoded->held(Game::Command::CommanderInputFrame::Forward));
   EXPECT_TRUE(decoded->held(Game::Command::CommanderInputFrame::HeavyPressed));
   EXPECT_FALSE(decoded->held(Game::Command::CommanderInputFrame::JumpPressed));
+}
+
+TEST(CommanderInputRecordTest, TheBowAimRayRoundTripsWithTheFrame) {
+  Game::Command::CommanderInputFrame frame;
+  frame.commander = 9;
+  frame.aim_origin = QVector3D(1.25F, 3.5F, -7.0F);
+  frame.aim_forward = QVector3D(0.0F, -0.1F, -0.995F);
+  frame.set(Game::Command::CommanderInputFrame::HasAimRay, true);
+
+  const auto decoded =
+      Game::Command::commander_input_from_json(Game::Command::to_json(frame));
+
+  ASSERT_TRUE(decoded.has_value());
+  EXPECT_TRUE(decoded->held(Game::Command::CommanderInputFrame::HasAimRay))
+      << "the bow fires along the camera, which is presentation state; a replay "
+         "has to carry the ray the simulation used";
+  EXPECT_EQ(decoded->aim_origin, frame.aim_origin);
+  EXPECT_EQ(decoded->aim_forward, frame.aim_forward);
 }
 
 TEST(CommanderInputRecordTest, RecordedFramesComeBackAtTheTickTheyWereAppliedOn) {
@@ -435,4 +455,67 @@ TEST(CommanderInputRecordTest, AFileWithoutCommanderInputStillLoads) {
   auto file = Game::Command::ReplayFile::load(path, &error);
   ASSERT_TRUE(file.has_value()) << error.toStdString();
   EXPECT_TRUE(file->commander_inputs.empty());
+}
+
+TEST(CommanderInputRecordTest, ModeAndLockActionsReplayOnceBeforeTheFollowingTick) {
+  QTemporaryDir dir;
+  ASSERT_TRUE(dir.isValid());
+  const QString path = dir.filePath("commander_actions.soireplay");
+
+  Game::Command::CommandQueue queue;
+  Game::Command::ReplayHeader header;
+  header.kind = QStringLiteral("skirmish");
+  header.digest_interval = 0;
+
+  {
+    Game::Command::ReplayRecorder recorder;
+    ASSERT_TRUE(recorder.begin(path, header, queue));
+    recorder.record_commander_action(
+        40, {.action = Game::Command::CommanderAction::EnterControl});
+    recorder.record_commander_action(
+        52,
+        {.action = Game::Command::CommanderAction::CycleLockOn,
+         .view_yaw = 171.5F,
+         .view_pitch = -6.0F});
+    recorder.record_commander_action(
+        52, {.action = Game::Command::CommanderAction::ToggleWeaponStance});
+    recorder.record_commander_action(
+        90, {.action = Game::Command::CommanderAction::ExitControl});
+    recorder.finish();
+  }
+
+  QString error;
+  auto file = Game::Command::ReplayFile::load(path, &error);
+  ASSERT_TRUE(file.has_value()) << error.toStdString();
+  ASSERT_EQ(file->commander_actions.size(), 4U);
+
+  Game::Command::ReplayPlayer player(std::move(*file));
+  EXPECT_TRUE(player.take_commander_actions(40).empty());
+  const auto entered = player.take_commander_actions(41);
+  ASSERT_EQ(entered.size(), 1U);
+  EXPECT_EQ(entered.front().action, Game::Command::CommanderAction::EnterControl);
+  EXPECT_TRUE(player.take_commander_actions(41).empty());
+
+  const auto locked = player.take_commander_actions(53);
+  ASSERT_EQ(locked.size(), 2U);
+  EXPECT_EQ(locked[0].action, Game::Command::CommanderAction::CycleLockOn);
+  EXPECT_FLOAT_EQ(locked[0].view_yaw, 171.5F);
+  EXPECT_FLOAT_EQ(locked[0].view_pitch, -6.0F);
+  EXPECT_EQ(locked[1].action, Game::Command::CommanderAction::ToggleWeaponStance);
+
+  const auto exited = player.take_commander_actions(1000);
+  ASSERT_EQ(exited.size(), 1U);
+  EXPECT_EQ(exited.front().action, Game::Command::CommanderAction::ExitControl);
+}
+
+TEST(CommanderInputRecordTest, AnUnknownCommanderActionIsAMalformedReplay) {
+  QTemporaryDir dir;
+  const QString path = dir.filePath("bad_action.soireplay");
+  Game::Command::ReplayHeader header;
+  header.kind = QStringLiteral("skirmish");
+  ASSERT_TRUE(write_replay(
+      path, header.to_json(), R"({"commander_action":"teleport","tick":3})"));
+  QString error;
+  EXPECT_FALSE(Game::Command::ReplayFile::load(path, &error).has_value());
+  EXPECT_TRUE(error.contains("commander action")) << error.toStdString();
 }

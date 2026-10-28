@@ -1657,6 +1657,60 @@ TEST_F(CommanderControlControllerTest, StrikeCarriesTheCommanderIntoATargetOutOf
   EXPECT_LT(transform->position.z, 2.2F);
 }
 
+TEST_F(CommanderControlControllerTest,
+       AStrikeAtAFarLockDoesNotSlideTheCommanderAcrossTheField) {
+  Engine::Core::World world;
+  auto* commander = create_commander(world, 0.0F, 0.0F);
+  auto* enemy = create_enemy(world, 0.0F, 9.0F);
+  ASSERT_NE(commander, nullptr);
+  ASSERT_NE(enemy, nullptr);
+
+  auto* commander_data = commander->get_component<Engine::Core::CommanderComponent>();
+  auto* transform = commander->get_component<Engine::Core::TransformComponent>();
+  auto* enemy_unit = enemy->get_component<Engine::Core::UnitComponent>();
+  ASSERT_NE(commander_data, nullptr);
+  ASSERT_NE(transform, nullptr);
+  ASSERT_NE(enemy_unit, nullptr);
+  commander_data->fpv_controlled = true;
+  enemy_unit->render_individuals_per_unit_override = 1;
+  auto* attack = commander->add_component<Engine::Core::AttackComponent>();
+  ASSERT_NE(attack, nullptr);
+  attack->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
+
+  CommanderControlController controller;
+  controller.set_view_yaw(0.0F);
+  controller.cycle_lock_on_target(world, commander->get_id(), 1);
+  ASSERT_EQ(controller.locked_target_id(), enemy->get_id());
+  Render::GL::Camera camera;
+
+  controller.primary_action_down();
+  ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.016F));
+  controller.primary_action_up();
+  auto* action = commander->get_component<Engine::Core::RpgCommanderActionComponent>();
+  ASSERT_NE(action, nullptr);
+  ASSERT_TRUE(action->action_running);
+  auto const* definition = Game::Systems::CombatActions::find_combat_action_definition(
+      static_cast<Game::Systems::CombatActions::CombatActionId>(
+          action->combat_action_id));
+  ASSERT_NE(definition, nullptr);
+
+  const float start_z = transform->position.z;
+  float fastest = 0.0F;
+  constexpr float k_dt = 0.016F;
+  for (int frame = 0; frame < 60; ++frame) {
+    const float before = transform->position.z;
+    (void)Game::Systems::CombatActions::advance_combat_action_events(
+        *action, k_dt, *definition);
+    ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, k_dt));
+    fastest = std::max(fastest, (transform->position.z - before) / k_dt);
+  }
+
+  EXPECT_LT(transform->position.z - start_z, 2.5F)
+      << "a swing at a lock nine metres away slid the commander most of the way to it";
+  EXPECT_LT(fastest, 20.0F) << "the strike lunge moved the commander at " << fastest
+                            << " m/s, which reads as a teleport";
+}
+
 } // namespace
 
 TEST_F(CommanderControlControllerTest, FrameIntentMirrorsHeldCommanderInput) {

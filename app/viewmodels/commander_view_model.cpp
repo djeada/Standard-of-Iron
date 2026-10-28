@@ -18,12 +18,14 @@
 #include "game/audio/audio_system.h"
 #include "game/command/command.h"
 #include "game/command/command_queue.h"
+#include "game/command/replay.h"
 #include "game/core/component_commander.h"
 #include "game/core/event_manager.h"
 #include "game/core/world.h"
 #include "game/render_bridge/picking_service.h"
 #include "game/session/selection_service.h"
 #include "game/session/session_context.h"
+#include "game/session/simulation_clock.h"
 #include "game/systems/match_snapshot.h"
 #include "game/systems/navigation/nav_grid.h"
 #include "render/scene_renderer.h"
@@ -146,6 +148,9 @@ auto CommanderViewModel::controlled_commander_entity() const -> Engine::Core::En
 }
 
 void CommanderViewModel::toggle_mode() {
+  if (ignores_player_input()) {
+    return;
+  }
   const auto frame_lock = m_host.lock_frame();
   if (active()) {
     exit_mode();
@@ -215,6 +220,7 @@ void CommanderViewModel::enter_mode() {
   }
   select_controlled_commander();
   m_mode->complete_transition();
+  record_action(Game::Command::CommanderAction::EnterControl);
   if (m_context.feedback != nullptr) {
     App::Core::PlayerFeedbackEvent event;
     event.type = App::Core::PlayerFeedbackType::CommanderModeEntered;
@@ -253,6 +259,7 @@ void CommanderViewModel::exit_mode() {
   m_mode->force_inactive();
 
   if (was_active) {
+    record_action(Game::Command::CommanderAction::ExitControl);
     if (m_context.feedback != nullptr) {
       App::Core::PlayerFeedbackEvent event;
       event.type = App::Core::PlayerFeedbackType::CommanderModeExited;
@@ -312,12 +319,18 @@ void CommanderViewModel::restore_rts_selection() {
 }
 
 void CommanderViewModel::key_down(int key, int modifiers) {
+  if (ignores_player_input()) {
+    return;
+  }
   const auto frame_lock = m_host.lock_frame();
   (void)modifiers;
   m_control.key_down(key);
 }
 
 void CommanderViewModel::key_up(int key, int modifiers) {
+  if (ignores_player_input()) {
+    return;
+  }
   const auto frame_lock = m_host.lock_frame();
   (void)modifiers;
   m_control.key_up(key);
@@ -328,36 +341,57 @@ void CommanderViewModel::reset_input() {
 }
 
 void CommanderViewModel::release_input() {
+  if (ignores_player_input()) {
+    return;
+  }
   const auto frame_lock = m_host.lock_frame();
   m_control.release_all_input();
 }
 
 void CommanderViewModel::primary_action_down() {
+  if (ignores_player_input()) {
+    return;
+  }
   const auto frame_lock = m_host.lock_frame();
   m_control.primary_action_down();
 }
 
 void CommanderViewModel::primary_action_up() {
+  if (ignores_player_input()) {
+    return;
+  }
   const auto frame_lock = m_host.lock_frame();
   m_control.primary_action_up();
 }
 
 void CommanderViewModel::heavy_action() {
+  if (ignores_player_input()) {
+    return;
+  }
   const auto frame_lock = m_host.lock_frame();
   m_control.request_heavy_action();
 }
 
 void CommanderViewModel::secondary_action_down() {
+  if (ignores_player_input()) {
+    return;
+  }
   const auto frame_lock = m_host.lock_frame();
   m_control.secondary_action_down();
 }
 
 void CommanderViewModel::secondary_action_up() {
+  if (ignores_player_input()) {
+    return;
+  }
   const auto frame_lock = m_host.lock_frame();
   m_control.secondary_action_up();
 }
 
 void CommanderViewModel::mouse_move(qreal dx, qreal dy) {
+  if (ignores_player_input()) {
+    return;
+  }
   const auto frame_lock = m_host.lock_frame();
   m_control.mouse_move(dx, dy);
 }
@@ -366,16 +400,25 @@ void CommanderViewModel::mouse_look_at(qreal sx,
                                        qreal sy,
                                        qreal center_sx,
                                        qreal center_sy) {
+  if (ignores_player_input()) {
+    return;
+  }
   const auto frame_lock = m_host.lock_frame();
   m_control.mouse_look_at(sx, sy, center_sx, center_sy, m_context.window);
 }
 
 void CommanderViewModel::center_mouse(qreal center_sx, qreal center_sy) {
+  if (ignores_player_input()) {
+    return;
+  }
   const auto frame_lock = m_host.lock_frame();
   m_control.center_mouse(center_sx, center_sy, m_context.window);
 }
 
 void CommanderViewModel::trigger_aura() {
+  if (ignores_player_input()) {
+    return;
+  }
   const auto frame_lock = m_host.lock_frame();
   auto* world = m_context.world;
   if (world == nullptr) {
@@ -421,6 +464,9 @@ void CommanderViewModel::trigger_aura() {
 }
 
 void CommanderViewModel::trigger_rally() {
+  if (ignores_player_input()) {
+    return;
+  }
   const auto frame_lock = m_host.lock_frame();
   if (!active()) {
     return;
@@ -437,11 +483,15 @@ void CommanderViewModel::trigger_rally() {
     m_control.note_refusal("commander.rally");
     return;
   }
+  record_action(Game::Command::CommanderAction::ReleaseForRally);
   reset_input();
   m_rally_preview.reset();
 }
 
 void CommanderViewModel::dodge() {
+  if (ignores_player_input()) {
+    return;
+  }
   const auto frame_lock = m_host.lock_frame();
   if (active()) {
     m_control.request_dodge();
@@ -449,6 +499,9 @@ void CommanderViewModel::dodge() {
 }
 
 void CommanderViewModel::jump() {
+  if (ignores_player_input()) {
+    return;
+  }
   const auto frame_lock = m_host.lock_frame();
   if (active()) {
     m_control.request_jump();
@@ -456,16 +509,23 @@ void CommanderViewModel::jump() {
 }
 
 void CommanderViewModel::cycle_lock_on() {
+  if (ignores_player_input()) {
+    return;
+  }
   const auto frame_lock = m_host.lock_frame();
   auto* world = m_context.world;
   if (!active() || world == nullptr) {
     return;
   }
+  record_action(Game::Command::CommanderAction::CycleLockOn);
   m_control.cycle_lock_on_target(
       *world, m_controlled_commander_id, m_context.local_owner_id);
 }
 
 void CommanderViewModel::special_action() {
+  if (ignores_player_input()) {
+    return;
+  }
   const auto frame_lock = m_host.lock_frame();
   if (active()) {
     m_control.special_action();
@@ -473,6 +533,9 @@ void CommanderViewModel::special_action() {
 }
 
 void CommanderViewModel::vanguard_rush() {
+  if (ignores_player_input()) {
+    return;
+  }
   const auto frame_lock = m_host.lock_frame();
   if (active()) {
     m_control.request_vanguard_rush();
@@ -480,6 +543,9 @@ void CommanderViewModel::vanguard_rush() {
 }
 
 void CommanderViewModel::second_wind() {
+  if (ignores_player_input()) {
+    return;
+  }
   const auto frame_lock = m_host.lock_frame();
   if (active()) {
     m_control.request_second_wind();
@@ -487,21 +553,29 @@ void CommanderViewModel::second_wind() {
 }
 
 void CommanderViewModel::toggle_camera_mode() {
+  if (ignores_player_input()) {
+    return;
+  }
   const auto frame_lock = m_host.lock_frame();
   auto* world = m_context.world;
   if (!active() || world == nullptr) {
     return;
   }
+  record_action(Game::Command::CommanderAction::ToggleCameraMode);
   m_control.toggle_close_camera_mode(
       *world, m_controlled_commander_id, m_context.local_owner_id);
 }
 
 void CommanderViewModel::toggle_weapon_stance() {
+  if (ignores_player_input()) {
+    return;
+  }
   const auto frame_lock = m_host.lock_frame();
   auto* world = m_context.world;
   if (!active() || world == nullptr) {
     return;
   }
+  record_action(Game::Command::CommanderAction::ToggleWeaponStance);
   m_control.toggle_weapon_stance(
       *world, m_controlled_commander_id, m_context.local_owner_id);
 }
@@ -513,6 +587,9 @@ auto CommanderViewModel::is_placing_rally() const -> bool {
 }
 
 void CommanderViewModel::start_flag_rally() {
+  if (ignores_player_input()) {
+    return;
+  }
   const auto frame_lock = m_host.lock_frame();
   const auto effects = m_mode->begin_commander_flag_rally(
       {.world = m_context.world,
@@ -545,6 +622,9 @@ void CommanderViewModel::start_flag_rally() {
 }
 
 void CommanderViewModel::confirm_flag_rally(qreal sx, qreal sy) {
+  if (ignores_player_input()) {
+    return;
+  }
   const auto frame_lock = m_host.lock_frame();
   const auto& viewport = *m_context.viewport;
   const auto effects = m_mode->confirm_commander_flag_rally(
@@ -562,6 +642,7 @@ void CommanderViewModel::confirm_flag_rally(qreal sx, qreal sy) {
        .cursor_mode = (m_context.cursor != nullptr ? m_context.cursor->mode()
                                                    : CursorMode::Normal)});
   if (effects.reset_commander_input) {
+    record_action(Game::Command::CommanderAction::ReleaseForRally);
     reset_input();
   }
   if (effects.clear_rally_preview) {
@@ -573,6 +654,9 @@ void CommanderViewModel::confirm_flag_rally(qreal sx, qreal sy) {
 }
 
 void CommanderViewModel::cancel_flag_rally() {
+  if (ignores_player_input()) {
+    return;
+  }
   const auto frame_lock = m_host.lock_frame();
   const auto effects = m_mode->cancel_commander_flag_rally(
       (m_context.cursor != nullptr ? m_context.cursor->mode() : CursorMode::Normal));
@@ -726,6 +810,102 @@ void CommanderViewModel::restore_direct_control_if_ready() {
   }
 }
 
+auto CommanderViewModel::follows_replay() const -> bool {
+  auto* world = m_context.world;
+  if (world == nullptr) {
+    return false;
+  }
+  auto* session = Game::Session::SessionContext::for_world(*world);
+  return session != nullptr && session->replay_player() != nullptr;
+}
+
+auto CommanderViewModel::ignores_player_input() const -> bool {
+  return !m_applying_replay && follows_replay();
+}
+
+void CommanderViewModel::record_action(Game::Command::CommanderAction action) {
+  auto* world = m_context.world;
+  if (m_applying_replay || world == nullptr) {
+    return;
+  }
+  auto* session = Game::Session::SessionContext::for_world(*world);
+  auto* recorder = session != nullptr ? session->replay_recorder() : nullptr;
+  if (recorder == nullptr) {
+    return;
+  }
+  recorder->record_commander_action(session->clock().tick(),
+                                    {.action = action,
+                                     .view_yaw = m_control.view_yaw(),
+                                     .view_pitch = m_control.view_pitch()});
+}
+
+void CommanderViewModel::apply_replayed_actions() {
+  auto* world = m_context.world;
+  if (world == nullptr) {
+    return;
+  }
+  auto* session = Game::Session::SessionContext::for_world(*world);
+  auto* player = session != nullptr ? session->replay_player() : nullptr;
+  if (player == nullptr) {
+    return;
+  }
+  const auto due = player->take_commander_actions(session->clock().tick());
+  if (due.empty()) {
+    return;
+  }
+  m_applying_replay = true;
+  const ScopeExit restore([this]() { m_applying_replay = false; });
+  for (const auto& record : due) {
+    apply_replayed_action(record);
+  }
+}
+
+void CommanderViewModel::apply_replayed_action(
+    const Game::Command::CommanderActionRecord& record) {
+  using Game::Command::CommanderAction;
+  switch (record.action) {
+  case CommanderAction::EnterControl:
+    if (!active()) {
+      enter_mode();
+    }
+    break;
+  case CommanderAction::ExitControl:
+    if (active()) {
+      exit_mode();
+    }
+    break;
+  case CommanderAction::CycleLockOn:
+    m_control.set_view_yaw(record.view_yaw);
+    m_control.set_view_pitch(record.view_pitch);
+    cycle_lock_on();
+    break;
+  case CommanderAction::ToggleCameraMode:
+    toggle_camera_mode();
+    break;
+  case CommanderAction::ToggleWeaponStance:
+    toggle_weapon_stance();
+    break;
+  case CommanderAction::ReleaseForRally:
+    release_for_rally();
+    break;
+  }
+}
+
+void CommanderViewModel::release_for_rally() {
+  const auto frame_lock = m_host.lock_frame();
+  if (!active()) {
+    return;
+  }
+  if (auto* world = m_context.world; world != nullptr) {
+    if (auto* data = world->try_get<Engine::Core::CommanderComponent>(
+            m_controlled_commander_id)) {
+      data->fpv_controlled = false;
+    }
+  }
+  reset_input();
+  m_rally_preview.reset();
+}
+
 auto CommanderViewModel::time_effect_scale(float scaled_dt, bool paused) -> float {
 
   static_cast<void>(scaled_dt);
@@ -802,10 +982,21 @@ auto CommanderViewModel::classify_hit(const Engine::Core::CombatHitEvent& event)
   if (m_context.world == nullptr || m_controlled_commander_id == 0) {
     return HitRouting::Rts;
   }
-  if (event.attacker_id != m_controlled_commander_id) {
+  if (event.attacker_id == m_controlled_commander_id) {
+    return HitRouting::CommanderBurst;
+  }
+  const auto* commander = m_context.world->try_get<Engine::Core::TransformComponent>(
+      m_controlled_commander_id);
+  const auto* target =
+      m_context.world->try_get<Engine::Core::TransformComponent>(event.target_id);
+  if (commander == nullptr || target == nullptr) {
     return HitRouting::Suppressed;
   }
-  return HitRouting::CommanderBurst;
+  const float dx = target->position.x - commander->position.x;
+  const float dz = target->position.z - commander->position.z;
+  return dx * dx + dz * dz <= k_hit_tick_radius * k_hit_tick_radius
+             ? HitRouting::Rts
+             : HitRouting::Suppressed;
 }
 
 } // namespace App::ViewModels

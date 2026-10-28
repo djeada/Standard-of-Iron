@@ -227,6 +227,9 @@ TestCase {
     }
 
     function test_a_loss_near_the_top_bar_stays_below_it() {
+        tryVerify(function () {
+                return numbers.activeTicks === 0 && numbers.activeBursts === 0;
+            }, 4000, "numbers from the previous case are still rising");
         projector.topInset = 120;
         projector.bottomInset = 150;
         testCase.pendingBatches = [[tick({

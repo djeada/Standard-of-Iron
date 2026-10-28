@@ -3,6 +3,8 @@
 #include <QVector3D>
 
 #include <cstdint>
+#include <optional>
+#include <utility>
 
 #include "game/command/commander_input.h"
 #include "game/core/entity_id.h"
@@ -47,12 +49,17 @@ struct CommanderInputSnapshot {
     return (right ? 1 : 0) - (left ? 1 : 0);
   }
 
-  [[nodiscard]] auto to_record(Engine::Core::EntityID commander, float view_yaw) const
+  [[nodiscard]] auto
+  to_record(Engine::Core::EntityID commander,
+            float view_yaw,
+            float view_pitch,
+            const std::optional<std::pair<QVector3D, QVector3D>>& aim_ray) const
       -> Game::Command::CommanderInputFrame {
     using Frame = Game::Command::CommanderInputFrame;
     Frame frame;
     frame.commander = commander;
     frame.view_yaw = view_yaw;
+    frame.view_pitch = view_pitch;
     frame.sequence = sequence;
     frame.dodge_direction = dodge_direction;
     frame.set(Frame::Forward, forward);
@@ -73,6 +80,11 @@ struct CommanderInputSnapshot {
     frame.set(Frame::VanguardRushPressed, vanguard_rush_pressed);
     frame.set(Frame::SecondWindPressed, second_wind_pressed);
     frame.set(Frame::HasDodgeDirection, has_dodge_direction);
+    if (aim_ray.has_value()) {
+      frame.aim_origin = aim_ray->first;
+      frame.aim_forward = aim_ray->second;
+      frame.set(Frame::HasAimRay, true);
+    }
     return frame;
   }
 

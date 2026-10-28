@@ -177,6 +177,17 @@ void ReplayRecorder::record_commander_input(std::uint64_t tick,
   m_file->write("\n");
 }
 
+void ReplayRecorder::record_commander_action(std::uint64_t tick,
+                                             const CommanderActionRecord& record) {
+  if (!m_file) {
+    return;
+  }
+  QJsonObject object = to_json(record);
+  object["tick"] = static_cast<qint64>(tick);
+  m_file->write(QJsonDocument(object).toJson(QJsonDocument::Compact));
+  m_file->write("\n");
+}
+
 void ReplayRecorder::finish() {
   if (m_queue != nullptr) {
     m_queue->set_observer({});
@@ -292,6 +303,21 @@ auto ReplayFile::load(const QString& path,
           {static_cast<std::uint64_t>(tick.toDouble()), *frame});
       continue;
     }
+    if (object.contains(QLatin1String("commander_action"))) {
+      auto record = commander_action_from_json(object);
+      const auto tick = object.value(QLatin1String("tick"));
+      if (!record.has_value() || !tick.isDouble()) {
+        if (error != nullptr) {
+          *error = QStringLiteral("%1:%2: malformed commander action line")
+                       .arg(path)
+                       .arg(line_number);
+        }
+        return std::nullopt;
+      }
+      replay.commander_actions.push_back(
+          {static_cast<std::uint64_t>(tick.toDouble()), *record});
+      continue;
+    }
     auto command = from_json(object);
     if (!command.has_value()) {
       if (error != nullptr) {
@@ -367,6 +393,17 @@ auto ReplayPlayer::commander_input(std::uint64_t tick) const
     return nullptr;
   }
   return &found->frame;
+}
+
+auto ReplayPlayer::take_commander_actions(std::uint64_t tick)
+    -> std::vector<CommanderActionRecord> {
+  std::vector<CommanderActionRecord> due;
+  while (m_next_action < m_file.commander_actions.size() &&
+         m_file.commander_actions[m_next_action].tick < tick) {
+    due.push_back(m_file.commander_actions[m_next_action].record);
+    ++m_next_action;
+  }
+  return due;
 }
 
 void ReplayPlayer::feed(std::uint64_t tick, CommandQueue& queue) {

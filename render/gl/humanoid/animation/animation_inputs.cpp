@@ -110,12 +110,13 @@ void reset_humanoid_animation_state(
   return state;
 }
 
-[[nodiscard]] auto humanoid_action_flags(const AnimationInputs& anim) noexcept
+[[nodiscard]] auto humanoid_action_flags(const AnimationInputs& anim,
+                                         bool stands_for_melee) noexcept
     -> Animation::HumanoidActionBlockInputs {
   return {
-      .is_attacking = anim.is_attacking,
-      .is_melee = anim.is_melee,
-      .preserves_hold_pose = anim.hold_attack_preserves_pose,
+      .is_attacking = anim.is_attacking || stands_for_melee,
+      .is_melee = anim.is_melee || stands_for_melee,
+      .preserves_hold_pose = anim.hold_attack_preserves_pose && !stands_for_melee,
       .is_hit_reacting = anim.is_hit_reacting,
       .is_constructing = anim.is_constructing,
       .is_healing = anim.is_healing,
@@ -127,7 +128,8 @@ void reset_humanoid_animation_state(
 [[nodiscard]] auto resolve_stance_targets(
     const Engine::Core::CreaturePresentationComponent& presentation,
     const Render::Creature::HumanoidAnimationStateComponent* humanoid_state,
-    const AnimationInputs& anim) noexcept -> Animation::HumanoidStanceTargets {
+    const AnimationInputs& anim,
+    bool stands_for_melee) noexcept -> Animation::HumanoidStanceTargets {
   return Animation::resolve_humanoid_stance_targets({
       .hold_requested = presentation.hold_requested,
       .hold_exit_requested = presentation.hold_exit_requested,
@@ -137,7 +139,7 @@ void reset_humanoid_animation_state(
       .hold_exit_progress = presentation.hold_exit_progress,
       .previous_hold_pose_progress =
           humanoid_state != nullptr ? humanoid_state->hold_pose_progress : 0.0F,
-      .action = humanoid_action_flags(anim),
+      .action = humanoid_action_flags(anim, stands_for_melee),
   });
 }
 
@@ -533,11 +535,13 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
     anim.is_carrying_load = true;
   }
 
+  bool fights_standing_in_melee = false;
   if (auto const* unit = ctx.entity->get_component<Engine::Core::UnitComponent>();
       unit != nullptr) {
     anim.hold_attack_preserves_pose =
         unit->spawn_type == Game::Units::SpawnType::Spearman ||
         unit->spawn_type == Game::Units::SpawnType::Archer;
+    fights_standing_in_melee = unit->spawn_type == Game::Units::SpawnType::Archer;
   }
 
   if (auto const* morale = ctx.entity->get_component<Engine::Core::MoraleComponent>();
@@ -558,6 +562,12 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
     anim.visual_movement = resolve_visual_movement_state(ctx);
     anim.movement_state = anim.visual_movement.movement_state;
     apply_presentation_sample(anim, *presentation);
+    bool const stands_for_melee =
+        fights_standing_in_melee &&
+        (anim.is_in_melee_lock || (anim.is_attacking && anim.is_melee));
+    if (stands_for_melee) {
+      anim.hold_attack_preserves_pose = false;
+    }
     if (anim.hold_attack_preserves_pose && presentation->hold_requested) {
       anim.is_hit_reacting = false;
       anim.hit_reaction_intensity = 0.0F;
@@ -632,7 +642,8 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
       }
     }
 
-    auto const stance = resolve_stance_targets(*presentation, humanoid_state, anim);
+    auto const stance =
+        resolve_stance_targets(*presentation, humanoid_state, anim, stands_for_melee);
     apply_persistent_stance(ctx,
                             humanoid_state,
                             stance,

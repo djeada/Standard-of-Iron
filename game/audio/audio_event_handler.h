@@ -36,8 +36,12 @@ public:
                           const std::vector<std::string>& music_ids);
   void load_ambient_state_sfx(Engine::Core::AmbientState state,
                               const std::vector<std::string>& sound_ids);
+  void load_final_assault_music(const std::vector<std::string>& music_ids);
 
   auto rotate_ambient_music(Engine::Core::AmbientState state) -> bool;
+  [[nodiscard]] auto current_music_id() const -> const std::string& {
+    return m_current_music_id;
+  }
 
   void set_voice_sound_category(bool use_voice_category);
   void set_local_owner_id(int owner_id);
@@ -54,6 +58,9 @@ private:
   static void on_music_trigger(const Engine::Core::MusicTriggerEvent& event);
   static void on_music_stop(const Engine::Core::MusicStopEvent& event);
   void on_combat_hit(const Engine::Core::CombatHitEvent& event);
+  void on_wave_incoming(const Engine::Core::MissionWaveIncomingEvent& event);
+  void on_wave_cleared(const Engine::Core::MissionWaveClearedEvent& event);
+  auto play_final_assault_music() -> bool;
 
   void note_distant_impact(const Game::Audio::WorldPoint& where);
 
@@ -76,6 +83,8 @@ private:
   std::unordered_map<std::string, std::chrono::steady_clock::time_point>
       m_last_sound_group_time;
   std::unordered_map<std::string, std::string> m_last_sound_group_id;
+  std::vector<std::string> m_final_assault_music;
+  bool m_final_assault{false};
 
   bool m_use_voice_category{true};
 
@@ -114,6 +123,10 @@ private:
       m_building_attacked_sub;
   Engine::Core::ScopedEventSubscription<Engine::Core::BarrackCapturedEvent>
       m_barrack_captured_sub;
+  Engine::Core::ScopedEventSubscription<Engine::Core::MissionWaveIncomingEvent>
+      m_wave_incoming_sub;
+  Engine::Core::ScopedEventSubscription<Engine::Core::MissionWaveClearedEvent>
+      m_wave_cleared_sub;
 
   bool m_initialized{false};
 };

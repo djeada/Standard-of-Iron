@@ -16,6 +16,7 @@
 #include <string_view>
 #include <unordered_map>
 
+#include "animation/clip_manifest.h"
 #include "animation/rig/humanoid_proportions.h"
 #include "game/core/component.h"
 #include "game/core/entity.h"
@@ -544,6 +545,8 @@ const Render::Creature::Pipeline::UnitVisualSpec& carthage_healer_visual_spec(
     out.archetype_id = carthage_dark_mage_archetype();
     out.creature_asset_id = Render::Creature::Pipeline::k_stave_caster_humanoid_asset;
     out.animation_manifest.variant_table = &carthage_healer_variant_table();
+    out.animation_manifest.melee_clip_for_variant =
+        &Animation::humanoid_unarmed_melee_clip;
     return out;
   }();
   static const auto grave_priest_spec =

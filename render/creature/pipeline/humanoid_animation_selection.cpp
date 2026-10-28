@@ -149,6 +149,25 @@ void apply_showcase_clip(HumanoidAnimationSelection& selection,
   selection.upper_body_overlay = {};
 }
 
+[[nodiscard]] constexpr auto melee_variant_for_combo_step(
+    Animation::SwordAttackAnimation step) noexcept -> std::uint8_t {
+  switch (step) {
+  case Animation::SwordAttackAnimation::RpgSlashLeft:
+  case Animation::SwordAttackAnimation::InfantrySlashA:
+    return 1U;
+  case Animation::SwordAttackAnimation::RpgSlashRight:
+  case Animation::SwordAttackAnimation::RpgOverhead:
+  case Animation::SwordAttackAnimation::InfantrySlashB:
+  case Animation::SwordAttackAnimation::MountedSlash:
+    return 2U;
+  case Animation::SwordAttackAnimation::RpgThrust:
+  case Animation::SwordAttackAnimation::RpgFinisher:
+  case Animation::SwordAttackAnimation::InfantrySlashC:
+    return 0U;
+  }
+  return 0U;
+}
+
 void apply_role_specific_combat_clip(
     HumanoidAnimationSelection& selection,
     const UnitVisualSpec& spec,
@@ -157,14 +176,17 @@ void apply_role_specific_combat_clip(
     return;
   }
 
+  float const attack_phase = std::clamp(anim.attack_phase, 0.0F, 1.0F);
   if (anim.inputs.is_in_hold_mode) {
     if (anim.inputs.attack_family == Engine::Core::CombatAttackFamily::Spear) {
       selection.clip_id = Animation::k_humanoid_hold_spear_attack_clip;
       selection.clip_variant = 0U;
+      selection.phase = attack_phase;
     } else if (!anim.inputs.is_melee &&
                anim.inputs.attack_family == Engine::Core::CombatAttackFamily::Bow) {
       selection.clip_id = Animation::k_humanoid_hold_bow_attack_clip;
       selection.clip_variant = 0U;
+      selection.phase = attack_phase;
     }
   }
 
@@ -177,8 +199,21 @@ void apply_role_specific_combat_clip(
                           : std::clamp(anim.attack_phase, 0.0F, 1.0F);
   }
 
-  if (anim.inputs.is_melee &&
-      spec.animation_manifest.melee_clip_override != Animation::k_unmapped_clip) {
+  if (!anim.inputs.is_melee) {
+    return;
+  }
+  if (spec.animation_manifest.melee_clip_for_variant != nullptr) {
+    std::uint8_t const variant =
+        anim.inputs.has_sword_attack_animation
+            ? melee_variant_for_combo_step(anim.inputs.sword_attack_animation)
+            : anim.inputs.attack_variant;
+    selection.clip_id = spec.animation_manifest.melee_clip_for_variant(variant);
+    selection.clip_variant = 0U;
+    selection.phase = anim.inputs.has_authored_action_phase
+                          ? std::clamp(anim.inputs.authored_action_phase, 0.0F, 1.0F)
+                          : attack_phase;
+  } else if (spec.animation_manifest.melee_clip_override !=
+             Animation::k_unmapped_clip) {
     selection.clip_id = spec.animation_manifest.melee_clip_override;
     selection.clip_variant = 0U;
   }
@@ -922,6 +957,8 @@ auto resolve_selection_layers(const UnitVisualSpec& spec,
   bool const moving =
       Render::Creature::is_moving_animation(anim.inputs.movement_state) &&
       base_selection.state != Render::Creature::AnimationStateId::Idle;
+  bool const action_keeps_hold_stance =
+      action_selection.clip_id == Animation::k_humanoid_hold_bow_attack_clip;
 
   auto const policy = Animation::resolve_combat_playback_layer_policy({
       .has_authoritative_combat = true,
@@ -933,7 +970,7 @@ auto resolve_selection_layers(const UnitVisualSpec& spec,
       .mounted = anim.inputs.is_mounted,
       .moving = moving,
       .forced_displacement = anim.inputs.visual_movement.forced_displacement,
-      .preserve_base_stance = anim.inputs.is_in_hold_mode,
+      .preserve_base_stance = anim.inputs.is_in_hold_mode && !action_keeps_hold_stance,
       .rooted_action = anim.inputs.is_in_melee_lock,
       .action_state_differs_from_base = action_selection.state != base_selection.state,
       .selection_state_differs_from_base = selection.state != base_selection.state,

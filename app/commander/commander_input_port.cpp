@@ -226,7 +226,8 @@ void CommanderInputPort::capture_tick() {
 
 auto CommanderInputPort::exchange_recorded(Engine::Core::World& world,
                                            Engine::Core::EntityID commander_id,
-                                           float view_yaw) -> std::optional<float> {
+                                           RecordedView view)
+    -> std::optional<RecordedView> {
   auto* session = Game::Session::SessionContext::for_world(world);
   if (session == nullptr) {
     return std::nullopt;
@@ -237,13 +238,17 @@ auto CommanderInputPort::exchange_recorded(Engine::Core::World& world,
   if (auto* player = session->replay_player()) {
     if (const auto* recorded = player->commander_input(tick)) {
       m_tick_input = CommanderInputSnapshot::from_record(*recorded);
-      return recorded->view_yaw;
+      RecordedView replayed{.yaw = recorded->view_yaw, .pitch = recorded->view_pitch};
+      if (recorded->held(Game::Command::CommanderInputFrame::HasAimRay)) {
+        replayed.aim_ray = std::make_pair(recorded->aim_origin, recorded->aim_forward);
+      }
+      return replayed;
     }
   }
 
   if (auto* recorder = session->replay_recorder()) {
-    recorder->record_commander_input(tick,
-                                     m_tick_input.to_record(commander_id, view_yaw));
+    recorder->record_commander_input(
+        tick, m_tick_input.to_record(commander_id, view.yaw, view.pitch, view.aim_ray));
   }
   return std::nullopt;
 }

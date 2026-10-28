@@ -15,6 +15,7 @@
 #include "app/commander/commander_mode_coordinator.h"
 #include "app/commander/rts_camera_bookmark.h"
 #include "app/core/frame_snapshot.h"
+#include "game/command/commander_input.h"
 #include "render/entity/combat_dust_renderer.h"
 
 namespace Engine::Core {
@@ -121,6 +122,8 @@ public:
   }
 
   void restore_direct_control_if_ready();
+  void apply_replayed_actions();
+  [[nodiscard]] auto follows_replay() const -> bool;
   void render_effects();
   [[nodiscard]] auto time_effect_scale(float scaled_dt, bool paused) -> float;
 
@@ -129,6 +132,7 @@ public:
     CommanderBurst,
     Suppressed,
   };
+  static constexpr float k_hit_tick_radius = 30.0F;
   [[nodiscard]] auto
   classify_hit(const Engine::Core::CombatHitEvent& event) const -> HitRouting;
   void reset_for_new_match();
@@ -175,6 +179,10 @@ private:
   void exit_commander_runtime_mode();
   void cancel_active_placement();
   void seed_flag_rally_preview_from_view_center();
+  [[nodiscard]] auto ignores_player_input() const -> bool;
+  void record_action(Game::Command::CommanderAction action);
+  void apply_replayed_action(const Game::Command::CommanderActionRecord& record);
+  void release_for_rally();
 
   const App::Core::ClientContext& m_context;
   App::Core::ClientHost& m_host;
@@ -196,6 +204,7 @@ private:
   App::Core::Published<QVariantMap> m_status;
 
   bool m_status_published_empty = false;
+  bool m_applying_replay = false;
 };
 
 } // namespace App::ViewModels

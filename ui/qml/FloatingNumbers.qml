@@ -106,16 +106,27 @@ Item {
         return root.economyEnabled;
     }
 
+    readonly property var resourceAccents: ({
+            "gold": "#f5c400",
+            "food": "#ff9a1f",
+            "wood": "#b8742c",
+            "stone": "#8d9bab",
+            "iron": "#4f9be8"
+        })
+
     function accent_for(ev) {
-        if (ev.kind === "resource")
-            return Number(ev.amount) < 0 ? "#e4a05d" : "#8fe0a8";
+        if (ev.kind === "resource") {
+            if (Number(ev.amount) < 0)
+                return "#c2463c";
+            return root.resourceAccents[root.resource_key(Number(ev.resource === undefined ? -1 : ev.resource))] || "#3fbf5f";
+        }
         if (ev.kind === "reserve")
-            return "#9db8ff";
+            return Number(ev.amount) < 0 ? "#7a5bd6" : "#9b7bff";
         if (ev.kind === "heal")
-            return "#8fe0a8";
+            return "#1fbf6a";
         if (ev.killingBlow)
-            return ev.incoming ? "#ff8a6a" : "#ffe08a";
-        return ev.incoming ? "#ff6b5a" : "#ffd36b";
+            return ev.incoming ? "#b5122e" : "#ffb000";
+        return ev.incoming ? "#e5322d" : "#f07f13";
     }
 
     function body_for(ev) {
@@ -154,7 +165,8 @@ Item {
                     "amount": amount,
                     "killingBlow": killingBlow,
                     "incoming": incoming,
-                    "severity": severity
+                    "severity": severity,
+                    "resource": resource
                 })
 
             readonly property var projection: {
@@ -166,18 +178,19 @@ Item {
 
             property real progress: 0.0
             readonly property real weight: Math.max(0.0, Math.min(1.0, severity * 1.4))
-            readonly property real rise: root.reducedMotion ? 6 : (34 + weight * 22 + (killingBlow ? 12 : 0))
-            readonly property real drift: root.reducedMotion ? 0 : lane * 9
+            readonly property real rise: root.reducedMotion ? 6 : (46 + weight * 28 + (killingBlow ? 16 : 0))
+            readonly property real drift: root.reducedMotion ? 0 : lane * 12
             readonly property color accent: root.accent_for(tick.event)
-            readonly property real fontSize: Design.Typography.display((focused ? 17 : 14) + (killingBlow ? 4 : 0) + weight * 3)
+            readonly property real fontSize: Design.Typography.display((focused ? 24 : 21) + (killingBlow ? 5 : 0) + weight * 4)
+            readonly property real pop: root.reducedMotion ? 1.0 : (progress < 0.08 ? 0.55 + progress * 8.0 : (progress < 0.2 ? 1.18 - (progress - 0.08) * 1.5 : 1.0))
 
-            width: label.implicitWidth + 14
-            height: label.implicitHeight + 6
+            width: label.implicitWidth + 26
+            height: label.implicitHeight + 10
             visible: projection !== null
             x: root.view_x((projection !== null ? projection.x : 0) - width / 2 + drift * progress, width)
-            y: root.view_y((projection !== null ? root.projector.clamped_y(projection.y, height) : 0) - 18 - rise * progress, height)
-            opacity: progress < 0.55 ? 1.0 : Math.max(0.0, 1.0 - ((progress - 0.55) / 0.45))
-            scale: root.reducedMotion ? 1.0 : (progress < 0.12 ? 0.8 + progress * 2.2 : Math.max(0.92, 1.06 - progress * 0.14))
+            y: root.view_y((projection !== null ? root.projector.clamped_y(projection.y, height) : 0) - 22 - rise * progress, height)
+            opacity: progress < 0.62 ? 1.0 : Math.max(0.0, 1.0 - ((progress - 0.62) / 0.38))
+            scale: pop
 
             SequentialAnimation {
                 running: true
@@ -187,7 +200,7 @@ Item {
                     property: "progress"
                     from: 0.0
                     to: 1.0
-                    duration: root.reducedMotion ? 700 : (tick.killingBlow ? 1050 : 850)
+                    duration: root.reducedMotion ? 800 : (tick.killingBlow ? 1350 : 1150)
                     easing.type: Easing.OutCubic
                 }
 
@@ -201,10 +214,38 @@ Item {
 
             Rectangle {
                 anchors.fill: parent
+                anchors.topMargin: 3
+                anchors.bottomMargin: -3
                 radius: height / 2
-                color: tick.killingBlow ? "#e0200a04" : "#c8100c08"
-                border.width: tick.focused || tick.killingBlow ? 2 : 1
-                border.color: tick.accent
+                color: "#73000000"
+            }
+
+            Rectangle {
+                id: pill
+
+                anchors.fill: parent
+                radius: height / 2
+                border.width: tick.focused || tick.killingBlow ? 3 : 2
+                border.color: Qt.lighter(tick.accent, 1.55)
+                gradient: Gradient {
+                    GradientStop {
+                        position: 0.0
+                        color: Qt.lighter(tick.accent, 1.22)
+                    }
+                    GradientStop {
+                        position: 1.0
+                        color: Qt.darker(tick.accent, 1.45)
+                    }
+                }
+            }
+
+            Rectangle {
+                x: pill.height * 0.32
+                y: 3
+                width: pill.width - pill.height * 0.64
+                height: pill.height * 0.36
+                radius: height / 2
+                color: Qt.rgba(1.0, 1.0, 1.0, 0.26)
             }
 
             Row {
@@ -217,55 +258,65 @@ Item {
                     visible: tick.killingBlow
                     anchors.verticalCenter: parent.verticalCenter
                     text: "☠"
-                    color: tick.accent
+                    color: "#ffffff"
                     font.pixelSize: tick.fontSize
                     font.bold: true
+                    style: Text.Outline
+                    styleColor: "#a6000000"
                 }
 
                 Text {
                     visible: tick.resource >= 0
                     anchors.verticalCenter: parent.verticalCenter
                     text: root.resource_glyph(tick.resource)
-                    color: tick.accent
+                    color: "#ffffff"
                     font.pixelSize: tick.fontSize
                     font.bold: true
+                    style: Text.Outline
+                    styleColor: "#a6000000"
                 }
 
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: root.body_for(tick.event)
-                    color: tick.incoming && tick.kind === "damage" ? "#ffe6df" : "#fff6d6"
+                    color: "#ffffff"
                     font.pixelSize: tick.fontSize
                     font.bold: true
                     style: Text.Outline
-                    styleColor: tick.accent
+                    styleColor: "#b3000000"
                 }
 
                 Text {
                     visible: tick.kind === "reserve"
                     anchors.verticalCenter: parent.verticalCenter
                     text: qsTr("POP")
-                    color: tick.accent
-                    font.pixelSize: Math.max(Design.Typography.minimumSize, tick.fontSize - 5)
+                    color: "#ffffff"
+                    font.pixelSize: Math.max(Design.Typography.minimumSize, tick.fontSize - 6)
                     font.bold: true
+                    style: Text.Outline
+                    styleColor: "#a6000000"
                 }
 
                 Text {
                     visible: tick.pairedResource >= 0
                     anchors.verticalCenter: parent.verticalCenter
                     text: "→ " + root.resource_glyph(tick.pairedResource) + root.signed(tick.pairedAmount)
-                    color: "#8fe0a8"
-                    font.pixelSize: Math.max(Design.Typography.minimumSize, tick.fontSize - 2)
+                    color: "#f2ffe8"
+                    font.pixelSize: Math.max(Design.Typography.minimumSize, tick.fontSize - 3)
                     font.bold: true
+                    style: Text.Outline
+                    styleColor: "#a6000000"
                 }
 
                 Text {
                     visible: tick.hits > 1 && tick.kind === "damage"
                     anchors.verticalCenter: parent.verticalCenter
                     text: "×" + tick.hits
-                    color: tick.accent
-                    font.pixelSize: Math.max(Design.Typography.minimumSize, tick.fontSize - 5)
+                    color: "#ffffff"
+                    font.pixelSize: Math.max(Design.Typography.minimumSize, tick.fontSize - 6)
                     font.bold: true
+                    style: Text.Outline
+                    styleColor: "#a6000000"
                 }
             }
         }
@@ -305,13 +356,14 @@ Item {
             readonly property real ringSize: 76 + severity * 44
             readonly property color accentColor: killingBlow ? "#ffd36b" : (severity >= 0.72 ? "#ff784e" : (severity >= 0.46 ? "#ffae42" : "#ffffff"))
             readonly property color sparkColor: killingBlow ? "#fff6c2" : (severity >= 0.72 ? "#ffd0b0" : "#ffe4ad")
+            readonly property color pillColor: killingBlow ? "#f0a000" : (severity >= 0.72 ? "#e0401f" : (severity >= 0.46 ? "#ee7a10" : "#d98a1c"))
 
             width: 260
             height: 220
             visible: projection !== null
             x: root.view_x((projection !== null ? projection.x : 0) - width / 2 + driftX * Math.pow(progress, 0.8), width)
             y: root.view_y((projection !== null ? root.projector.clamped_y(projection.y, 60) : 0) - 140 - Math.abs(lane) * 8 - riseDistance * progress + labelContainer.y, labelContainer.height) - labelContainer.y
-            opacity: progress < 0.56 ? 1.0 : Math.max(0.0, 1.0 - ((progress - 0.56) / 0.44))
+            opacity: progress < 0.68 ? 1.0 : Math.max(0.0, 1.0 - ((progress - 0.68) / 0.32))
 
             SequentialAnimation {
                 running: true
@@ -322,7 +374,7 @@ Item {
                         property: "progress"
                         from: 0.0
                         to: 1.0
-                        duration: burst.killingBlow ? 780 : 680
+                        duration: burst.killingBlow ? 1250 : 1050
                         easing.type: Easing.OutCubic
                     }
 
@@ -431,20 +483,38 @@ Item {
 
                 Rectangle {
                     anchors.fill: parent
+                    anchors.topMargin: 4
+                    anchors.bottomMargin: -4
                     radius: height / 2
-                    color: burst.killingBlow ? "#d92b0900" : "#c4000000"
-                    border.width: burst.killingBlow ? 2 : 1
-                    border.color: burst.killingBlow ? "#ccffd36b" : "#88ffffff"
-                    opacity: 0.92
+                    color: "#80000000"
                 }
 
                 Rectangle {
+                    id: burstPill
+
                     anchors.fill: parent
-                    anchors.margins: 3
                     radius: height / 2
-                    color: "transparent"
-                    border.width: 1
-                    border.color: Qt.rgba(1.0, 1.0, 1.0, burst.killingBlow ? 0.36 : 0.22)
+                    border.width: burst.killingBlow ? 3 : 2
+                    border.color: Qt.lighter(burst.pillColor, 1.6)
+                    gradient: Gradient {
+                        GradientStop {
+                            position: 0.0
+                            color: Qt.lighter(burst.pillColor, 1.25)
+                        }
+                        GradientStop {
+                            position: 1.0
+                            color: Qt.darker(burst.pillColor, 1.5)
+                        }
+                    }
+                }
+
+                Rectangle {
+                    x: burstPill.height * 0.32
+                    y: 4
+                    width: burstPill.width - burstPill.height * 0.64
+                    height: burstPill.height * 0.36
+                    radius: height / 2
+                    color: Qt.rgba(1.0, 1.0, 1.0, 0.28)
                 }
 
                 Text {
@@ -464,12 +534,12 @@ Item {
 
                     anchors.centerIn: parent
                     text: burst.amount.toString()
-                    color: burst.killingBlow ? "#fff3bf" : (burst.severity >= 0.72 ? "#ffebe3" : (burst.severity >= 0.46 ? "#fff0c6" : "#ffffff"))
+                    color: "#ffffff"
                     font.pixelSize: Design.Typography.display(burst.killingBlow ? 42 : (burst.severity >= 0.72 ? 36 : 30))
                     font.bold: true
                     font.letterSpacing: burst.severity >= 0.72 ? 0.6 : 0.2
                     style: Text.Outline
-                    styleColor: burst.killingBlow ? "#ff7420" : (burst.severity >= 0.72 ? "#d93d16" : "#000000")
+                    styleColor: "#b3000000"
                 }
             }
         }

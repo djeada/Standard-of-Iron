@@ -29,13 +29,17 @@ struct CommanderInputFrame {
     ShieldBashPressed = 1U << 14U,
     VanguardRushPressed = 1U << 15U,
     SecondWindPressed = 1U << 16U,
-    HasDodgeDirection = 1U << 17U
+    HasDodgeDirection = 1U << 17U,
+    HasAimRay = 1U << 18U
   };
 
   Engine::Core::EntityID commander = 0;
   std::uint32_t buttons = 0;
   float view_yaw = 0.0F;
+  float view_pitch = 0.0F;
   QVector3D dodge_direction;
+  QVector3D aim_origin;
+  QVector3D aim_forward;
   std::uint64_t sequence = 0;
 
   [[nodiscard]] auto held(Button button) const -> bool {
@@ -55,5 +59,25 @@ struct CommanderInputFrame {
 
 [[nodiscard]] auto commander_input_from_json(const QJsonObject& object)
     -> std::optional<CommanderInputFrame>;
+
+enum class CommanderAction : std::uint8_t {
+  EnterControl,
+  ExitControl,
+  CycleLockOn,
+  ToggleCameraMode,
+  ToggleWeaponStance,
+  ReleaseForRally
+};
+
+struct CommanderActionRecord {
+  CommanderAction action = CommanderAction::EnterControl;
+  float view_yaw = 0.0F;
+  float view_pitch = 0.0F;
+};
+
+[[nodiscard]] auto to_json(const CommanderActionRecord& record) -> QJsonObject;
+
+[[nodiscard]] auto commander_action_from_json(const QJsonObject& object)
+    -> std::optional<CommanderActionRecord>;
 
 } // namespace Game::Command

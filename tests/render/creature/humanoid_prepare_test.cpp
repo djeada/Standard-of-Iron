@@ -12,6 +12,7 @@
 #include <numbers>
 #include <numeric>
 #include <optional>
+#include <set>
 #include <string>
 #include <string_view>
 #include <unordered_set>
@@ -44,6 +45,10 @@
 #include "game/map/ground_type.h"
 #include "game/map/terrain_service.h"
 #include "game/session/session_context.h"
+#include "game/systems/combat_actions/combat_action_definition.h"
+#include "game/units/commander_catalog.h"
+#include "game/units/spawn_type.h"
+#include "game/units/troop_catalog.h"
 #include "render/creature/animation_state_components.h"
 #include "render/creature/archetype_registry.h"
 #include "render/creature/humanoid_clip_ids.h"
@@ -58,6 +63,7 @@
 #include "render/creature/render_request.h"
 #include "render/creature/runtime_bake_guard.h"
 #include "render/entity/humanoid_pose_policies.h"
+#include "render/entity/nations/equipment_loadout_catalog.h"
 #include "render/entity/registry.h"
 #include "render/equipment/armor/arm_guards_renderer.h"
 #include "render/equipment/armor/armor_heavy_carthage.h"
@@ -69,6 +75,7 @@
 #include "render/equipment/armor/roman_shoulder_cover.h"
 #include "render/equipment/armor/tool_belt_renderer.h"
 #include "render/equipment/armor/work_apron_renderer.h"
+#include "render/equipment/equipment_registry.h"
 #include "render/equipment/helmets/carthage_heavy_helmet.h"
 #include "render/equipment/helmets/historical_helmets.h"
 #include "render/equipment/helmets/roman_heavy_helmet.h"
@@ -3257,14 +3264,15 @@ TEST(AnimationCoreAttackPoseManifest, HumanoidBowDrawStartsAtAimPose) {
       .shoulder_y = 1.20F,
   });
 
-  EXPECT_FLOAT_EQ(sample.left_hand.x, -0.02F);
-  EXPECT_FLOAT_EQ(sample.left_hand.y, 1.38F);
-  EXPECT_FLOAT_EQ(sample.left_hand.z, 0.42F);
-  EXPECT_FLOAT_EQ(sample.right_hand.x, 0.03F);
-  EXPECT_FLOAT_EQ(sample.right_hand.y, 1.28F);
-  EXPECT_FLOAT_EQ(sample.right_hand.z, 0.62F);
+  EXPECT_FLOAT_EQ(sample.left_hand.x, 0.03F);
+  EXPECT_FLOAT_EQ(sample.left_hand.y, 1.18F);
+  EXPECT_FLOAT_EQ(sample.left_hand.z, 0.40F);
+  EXPECT_FLOAT_EQ(sample.right_hand.x, 0.10F);
+  EXPECT_FLOAT_EQ(sample.right_hand.y, 1.16F);
+  EXPECT_FLOAT_EQ(sample.right_hand.z, 0.50F);
   EXPECT_FLOAT_EQ(sample.shoulder_r_z_delta, 0.10F);
   EXPECT_FLOAT_EQ(sample.pelvis_z_delta, 0.0F);
+  EXPECT_LT(sample.string_elbow_pole.y, 0.0F);
 }
 
 TEST(AnimationCoreAttackPoseManifest, HumanoidBowDrawBuildsTension) {
@@ -3274,13 +3282,75 @@ TEST(AnimationCoreAttackPoseManifest, HumanoidBowDrawBuildsTension) {
       .shoulder_y = 1.20F,
   });
 
-  EXPECT_GT(sample.left_hand.z, 0.13F);
-  EXPECT_LT(sample.left_hand.z, 0.22F);
-  EXPECT_GT(sample.right_hand.z, 0.62F);
+  EXPECT_GT(sample.left_hand.z, 0.05F);
+  EXPECT_LT(sample.left_hand.z, 0.44F);
+  EXPECT_GT(sample.left_hand.y, 1.30F);
+  EXPECT_GT(sample.right_hand.z, 0.60F);
   EXPECT_LT(sample.shoulder_r_y_delta, 0.0F);
   EXPECT_GT(sample.shoulder_r_z_delta, 0.10F);
   EXPECT_GT(sample.neck_z_delta, 0.0F);
   EXPECT_LT(sample.pelvis_z_delta, 0.0F);
+}
+
+TEST(AnimationCoreAttackPoseManifest, HumanoidBowDrawAnchorsTheStringHandAtTheFace) {
+  constexpr float k_shoulder_y = 1.20F;
+  auto const nocked = Animation::resolve_humanoid_bow_draw_pose(
+      {.draw_phase = 0.0F, .shoulder_y = k_shoulder_y});
+  auto const full = Animation::resolve_humanoid_bow_draw_pose(
+      {.draw_phase = 0.50F, .shoulder_y = k_shoulder_y});
+  auto const loosed = Animation::resolve_humanoid_bow_draw_pose(
+      {.draw_phase = 0.58F, .shoulder_y = k_shoulder_y});
+
+  auto const travel = [](Animation::PoseVec3 a, Animation::PoseVec3 b) {
+    float const dx = a.x - b.x;
+    float const dy = a.y - b.y;
+    float const dz = a.z - b.z;
+    return std::sqrt((dx * dx) + (dy * dy) + (dz * dz));
+  };
+  EXPECT_GT(travel(nocked.left_hand, full.left_hand), 0.35F);
+  EXPECT_LT(full.left_hand.z, 0.10F);
+  EXPECT_GT(full.left_hand.y, k_shoulder_y + 0.10F);
+  EXPECT_LT(full.left_hand.x, 0.0F);
+  EXPECT_GT(full.right_hand.y, nocked.right_hand.y + 0.10F);
+  EXPECT_GT(full.string_elbow_pole.y, 0.0F);
+  EXPECT_LT(full.string_elbow_pole.z, 0.0F);
+  EXPECT_LT(loosed.left_hand.z, full.left_hand.z - 0.10F);
+}
+
+TEST(AnimationCoreAttackPoseManifest, ArcherMeleeVariantsAreDistinctBowStrikes) {
+  auto const sample = [](std::uint8_t variant, float phase) {
+    return Animation::resolve_humanoid_weapon_attack_pose({
+        .kind = Animation::HumanoidWeaponAttackKind::BowMeleeStrike,
+        .attack_phase = phase,
+        .variant = variant,
+        .shoulder_y = 1.20F,
+        .waist_y = 0.75F,
+    });
+  };
+  for (std::uint8_t variant = 0U; variant < 3U; ++variant) {
+    auto const strike = sample(variant, 0.50F);
+    EXPECT_TRUE(strike.has_blade_direction) << int(variant);
+    EXPECT_FALSE(strike.use_offhand_spear_grip) << int(variant);
+  }
+
+  auto const sweep_chamber = sample(1U, 0.30F);
+  auto const sweep_strike = sample(1U, 0.50F);
+  EXPECT_GT(sweep_chamber.right_hand.x, 0.25F);
+  EXPECT_LT(sweep_strike.right_hand.x, 0.0F);
+  EXPECT_GT(sweep_chamber.blade_direction.x, 0.3F);
+  EXPECT_LT(sweep_strike.blade_direction.x, -0.5F);
+
+  auto const chop_chamber = sample(2U, 0.30F);
+  auto const chop_strike = sample(2U, 0.50F);
+  EXPECT_GT(chop_chamber.right_hand.y, 1.20F + 0.30F);
+  EXPECT_LT(chop_strike.right_hand.y, 1.20F);
+  EXPECT_LT(chop_chamber.blade_direction.z, -0.5F);
+  EXPECT_LT(chop_strike.blade_direction.y, 0.0F);
+  EXPECT_GT(chop_strike.blade_direction.z, 0.8F);
+
+  auto const ram_strike = sample(0U, 0.50F);
+  EXPECT_GT(std::abs(ram_strike.blade_direction.x), 0.9F);
+  EXPECT_GT(ram_strike.right_hand.z, 0.55F);
 }
 
 TEST(AnimationCoreAttackPoseManifest, HumanoidBowDrawRecoversToAimPose) {
@@ -3290,12 +3360,12 @@ TEST(AnimationCoreAttackPoseManifest, HumanoidBowDrawRecoversToAimPose) {
       .shoulder_y = 1.20F,
   });
 
-  EXPECT_FLOAT_EQ(sample.left_hand.x, -0.02F);
-  EXPECT_FLOAT_EQ(sample.left_hand.y, 1.38F);
-  EXPECT_FLOAT_EQ(sample.left_hand.z, 0.42F);
-  EXPECT_FLOAT_EQ(sample.right_hand.x, 0.03F);
-  EXPECT_FLOAT_EQ(sample.right_hand.y, 1.28F);
-  EXPECT_FLOAT_EQ(sample.right_hand.z, 0.62F);
+  EXPECT_FLOAT_EQ(sample.left_hand.x, 0.03F);
+  EXPECT_FLOAT_EQ(sample.left_hand.y, 1.18F);
+  EXPECT_FLOAT_EQ(sample.left_hand.z, 0.40F);
+  EXPECT_FLOAT_EQ(sample.right_hand.x, 0.10F);
+  EXPECT_FLOAT_EQ(sample.right_hand.y, 1.16F);
+  EXPECT_FLOAT_EQ(sample.right_hand.z, 0.50F);
   EXPECT_FLOAT_EQ(sample.shoulder_r_z_delta, 0.10F);
   EXPECT_NEAR(sample.head_z_delta, 0.0F, 0.0001F);
 }
@@ -6199,7 +6269,7 @@ TEST(HumanoidPrepare, HeldSpearCombatKeepsCompleteKneelingWeaponPose) {
   EXPECT_FALSE(selection.full_body_blend.active());
 }
 
-TEST(HumanoidPrepare, HeldBowCombatKeepsCompleteKneelingWeaponPose) {
+TEST(HumanoidPrepare, HeldBowCombatPlaysTheKneelingDrawClip) {
   using Render::Creature::AnimationStateId;
   using Render::Creature::ArchetypeRegistry;
   using Render::Creature::CombatVisualTransactionPhase;
@@ -6227,11 +6297,11 @@ TEST(HumanoidPrepare, HeldBowCombatKeepsCompleteKneelingWeaponPose) {
 
   auto const selection = resolve_humanoid_animation_selection(spec, anim, 43U);
 
-  EXPECT_EQ(selection.state, AnimationStateId::Hold);
-  EXPECT_GE(selection.phase, 0.0F);
-  EXPECT_LT(selection.phase, 1.0F);
+  EXPECT_EQ(selection.state, AnimationStateId::AttackRanged);
+  ASSERT_TRUE(selection.clip_id.has_value());
+  EXPECT_EQ(*selection.clip_id, Animation::k_humanoid_hold_bow_attack_clip);
+  EXPECT_FLOAT_EQ(selection.phase, 0.52F);
   EXPECT_FALSE(selection.upper_body_overlay.active());
-  EXPECT_FALSE(selection.full_body_blend.active());
 }
 
 TEST(HumanoidPrepare, FormationMeleeKeepsLowerBodyOnRootedBaseLayer) {
@@ -7033,6 +7103,401 @@ TEST(HumanoidPrepare, RoleSpecificClipsSeparateArcherMeleeAndHeldAttacks) {
   auto held_bow = resolve_humanoid_animation_selection(spec, anim, 7U);
   ASSERT_TRUE(held_bow.clip_id.has_value());
   EXPECT_EQ(*held_bow.clip_id, Animation::k_humanoid_hold_bow_attack_clip);
+}
+
+TEST(HumanoidPrepare, ArcherMeleeCyclesBowStrikesInsteadOfFists) {
+  using Render::Creature::ArchetypeRegistry;
+  using Render::Creature::Pipeline::resolve_humanoid_animation_selection;
+  using Render::Creature::Pipeline::UnitVisualSpec;
+
+  UnitVisualSpec spec{};
+  spec.archetype_id = ArchetypeRegistry::k_humanoid_base;
+  spec.animation_manifest.melee_clip_for_variant =
+      &Animation::humanoid_archer_melee_clip;
+
+  Render::GL::HumanoidAnimationContext anim{};
+  anim.inputs.is_attacking = true;
+  anim.inputs.is_melee = true;
+  anim.inputs.attack_family = Engine::Core::CombatAttackFamily::Sword;
+
+  std::array<std::uint16_t, 4> const expected{
+      Animation::k_humanoid_archer_melee_clip,
+      Animation::k_humanoid_archer_melee_sweep_clip,
+      Animation::k_humanoid_archer_melee_chop_clip,
+      Animation::k_humanoid_archer_melee_clip};
+  for (std::uint8_t variant = 0U; variant < expected.size(); ++variant) {
+    anim.inputs.attack_variant = variant;
+    auto const selection = resolve_humanoid_animation_selection(spec, anim, 7U);
+    ASSERT_TRUE(selection.clip_id.has_value()) << int(variant);
+    EXPECT_EQ(*selection.clip_id, expected[variant]) << int(variant);
+    EXPECT_TRUE(*selection.clip_id < Animation::k_humanoid_unarmed_jab_clip ||
+                *selection.clip_id >= Animation::k_humanoid_unarmed_jab_clip +
+                                          Animation::k_humanoid_unarmed_variant_count)
+        << "archers fight with the bow, not bare fists";
+  }
+}
+
+TEST(AnimationCorePlaybackManifest, UnarmedStrikesFollowTheAttackTimeline) {
+  for (float const attack_phase : {0.10F, 0.48F, 0.90F}) {
+    EXPECT_FLOAT_EQ(Animation::resolve_humanoid_playback_phase({
+                        .state = Animation::StateId::AttackMelee,
+                        .is_attacking = true,
+                        .is_melee = true,
+                        .attack_phase = attack_phase,
+                        .gait_cycle_phase = 0.33F,
+                    }),
+                    attack_phase)
+        << "a builder's punch must land on its own swing, not on the gait cycle";
+  }
+}
+
+TEST(HumanoidPrepare, BuiltInArchersAndHealersPickTheirOwnMeleeFamily) {
+  Render::GL::EntityRendererRegistry registry;
+  Render::GL::register_built_in_entity_renderers(registry);
+  auto const spec_of =
+      [&](const char* id) -> const Render::Creature::Pipeline::UnitVisualSpec* {
+    auto const* humanoid = dynamic_cast<const Render::GL::HumanoidRendererBase*>(
+        registry.get_preparer(registry.get_handle(id)));
+    return humanoid != nullptr ? &humanoid->visual_spec() : nullptr;
+  };
+
+  for (auto const* id : {"troops/roman/archer",
+                         "troops/carthage/archer",
+                         "troops/roman/commanders/marcellus"}) {
+    auto const* spec = spec_of(id);
+    ASSERT_NE(spec, nullptr) << id;
+    EXPECT_EQ(spec->animation_manifest.melee_clip_for_variant,
+              &Animation::humanoid_archer_melee_clip)
+        << id;
+  }
+  for (auto const* id : {"troops/roman/healer", "troops/carthage/healer"}) {
+    auto const* spec = spec_of(id);
+    ASSERT_NE(spec, nullptr) << id;
+    EXPECT_EQ(spec->animation_manifest.melee_clip_for_variant,
+              &Animation::humanoid_unarmed_melee_clip)
+        << id;
+  }
+  EXPECT_EQ(Animation::humanoid_unarmed_melee_clip(0U),
+            Animation::k_humanoid_unarmed_jab_clip);
+  EXPECT_EQ(Animation::humanoid_unarmed_melee_clip(1U),
+            Animation::k_humanoid_unarmed_cross_clip);
+  EXPECT_EQ(Animation::humanoid_unarmed_melee_clip(2U),
+            Animation::k_humanoid_unarmed_hook_clip);
+}
+
+TEST(HumanoidPrepare, ArcherCommanderFightsInMeleeWithTheBowHeCarries) {
+  using Render::Creature::Pipeline::resolve_humanoid_animation_selection;
+
+  Render::GL::EntityRendererRegistry registry;
+  Render::GL::register_built_in_entity_renderers(registry);
+  auto const* commander = dynamic_cast<const Render::GL::HumanoidRendererBase*>(
+      registry.get_preparer(registry.get_handle("troops/roman/commanders/marcellus")));
+  ASSERT_NE(commander, nullptr);
+  EXPECT_EQ(
+      Render::GL::Nation::resolve_equipment_loadout("troops/roman/commanders/marcellus")
+          .sword_handle,
+      Render::GL::k_invalid_equipment_handle)
+      << "Marcellus carries a bow; a sword in his hand is a weapon he does not own";
+  auto const& bow = commander->visual_spec();
+  ASSERT_NE(bow.animation_manifest.melee_clip_for_variant, nullptr);
+
+  Render::GL::HumanoidAnimationContext anim{};
+  anim.inputs.is_attacking = true;
+  anim.inputs.is_melee = true;
+  anim.inputs.attack_family = Engine::Core::CombatAttackFamily::Sword;
+  anim.inputs.has_sword_attack_animation = true;
+  anim.inputs.has_authored_action_phase = true;
+  anim.inputs.authored_action_phase = 0.4F;
+  anim.attack_phase = 0.9F;
+
+  std::set<std::uint16_t> strikes;
+  for (auto const step : {Animation::SwordAttackAnimation::RpgSlashLeft,
+                          Animation::SwordAttackAnimation::RpgSlashRight,
+                          Animation::SwordAttackAnimation::RpgThrust}) {
+    anim.inputs.sword_attack_animation = step;
+    auto const selection = resolve_humanoid_animation_selection(bow, anim, 5U);
+    ASSERT_TRUE(selection.clip_id.has_value());
+    EXPECT_TRUE(*selection.clip_id == Animation::k_humanoid_archer_melee_clip ||
+                *selection.clip_id == Animation::k_humanoid_archer_melee_sweep_clip ||
+                *selection.clip_id == Animation::k_humanoid_archer_melee_chop_clip)
+        << "combo step " << int(step) << " must strike with the bow, not a sword clip";
+    EXPECT_FLOAT_EQ(selection.phase, 0.4F)
+        << "the commander's own action timeline drives the bow strike";
+    strikes.insert(*selection.clip_id);
+  }
+  EXPECT_EQ(strikes.size(), 3U)
+      << "slash left, slash right and thrust read as sweep, chop and ram";
+}
+
+namespace {
+
+enum class HeldWeapon : std::uint8_t {
+  None,
+  Sword,
+  Spear,
+  Bow
+};
+
+auto held_weapon_name(HeldWeapon weapon) -> const char* {
+  switch (weapon) {
+  case HeldWeapon::Sword:
+    return "sword";
+  case HeldWeapon::Spear:
+    return "spear";
+  case HeldWeapon::Bow:
+    return "bow";
+  case HeldWeapon::None:
+    break;
+  }
+  return "nothing";
+}
+
+auto weapon_in_hand(std::string_view renderer_id) -> HeldWeapon {
+  auto const loadout = Render::GL::Nation::resolve_equipment_loadout(renderer_id);
+  int carried = 0;
+  HeldWeapon weapon = HeldWeapon::None;
+  if (loadout.sword_handle != Render::GL::k_invalid_equipment_handle) {
+    ++carried;
+    weapon = HeldWeapon::Sword;
+  }
+  if (loadout.spear_handle != Render::GL::k_invalid_equipment_handle) {
+    ++carried;
+    weapon = HeldWeapon::Spear;
+  }
+  if (loadout.bow_handle != Render::GL::k_invalid_equipment_handle) {
+    ++carried;
+    weapon = HeldWeapon::Bow;
+  }
+  return carried == 1 ? weapon : HeldWeapon::None;
+}
+
+auto weapon_a_clip_swings(std::uint16_t clip) -> HeldWeapon {
+  switch (clip) {
+  case Animation::k_humanoid_attack_sword_a_clip:
+  case Animation::k_humanoid_attack_sword_b_clip:
+  case Animation::k_humanoid_attack_sword_c_clip:
+  case Animation::k_humanoid_rpg_sword_slash_left_clip:
+  case Animation::k_humanoid_rpg_sword_slash_right_clip:
+  case Animation::k_humanoid_rpg_sword_overhead_clip:
+  case Animation::k_humanoid_rpg_sword_thrust_clip:
+  case Animation::k_humanoid_rpg_sword_finisher_clip:
+    return HeldWeapon::Sword;
+  case Animation::k_humanoid_attack_spear_a_clip:
+  case Animation::k_humanoid_attack_spear_b_clip:
+  case Animation::k_humanoid_attack_spear_c_clip:
+  case Animation::k_humanoid_hold_spear_attack_clip:
+  case Animation::k_humanoid_rpg_spear_thrust_clip:
+  case Animation::k_humanoid_rpg_spear_sweep_clip:
+  case Animation::k_humanoid_rpg_spear_launcher_clip:
+  case Animation::k_humanoid_rpg_spear_finisher_clip:
+    return HeldWeapon::Spear;
+  case Animation::k_humanoid_attack_bow_clip:
+  case Animation::k_humanoid_hold_bow_attack_clip:
+  case Animation::k_humanoid_archer_melee_clip:
+  case Animation::k_humanoid_archer_melee_sweep_clip:
+  case Animation::k_humanoid_archer_melee_chop_clip:
+    return HeldWeapon::Bow;
+  default:
+    break;
+  }
+  return HeldWeapon::None;
+}
+
+auto signature_action(Game::Units::CommanderSignatureMove move)
+    -> Game::Systems::CombatActions::CombatActionId {
+  using Game::Systems::CombatActions::CombatActionId;
+  switch (move) {
+  case Game::Units::CommanderSignatureMove::BracingThrust:
+  case Game::Units::CommanderSignatureMove::PhalanxSweep:
+    return CombatActionId::RtsCommanderThrust;
+  case Game::Units::CommanderSignatureMove::ConsularRiposte:
+  case Game::Units::CommanderSignatureMove::EncirclingCut:
+    return CombatActionId::RtsCommanderCut;
+  case Game::Units::CommanderSignatureMove::PointBlankVolley:
+  case Game::Units::CommanderSignatureMove::HuntingShot:
+    return CombatActionId::RtsCommanderShot;
+  case Game::Units::CommanderSignatureMove::None:
+    break;
+  }
+  return CombatActionId::None;
+}
+
+auto every_action_a_commander_can_pick(
+    Game::Systems::CombatActions::WeaponFamily weapon)
+    -> std::set<Game::Systems::CombatActions::CombatActionId> {
+  using Game::Systems::CombatActions::CombatActionId;
+  std::vector<CombatActionId> from{CombatActionId::None};
+  for (auto const& definition :
+       Game::Systems::CombatActions::all_combat_action_definitions()) {
+    from.push_back(definition.id);
+  }
+  std::set<CombatActionId> picked;
+  for (auto const current : from) {
+    for (auto const intent : {Engine::Core::CommanderCombatIntentType::Light,
+                              Engine::Core::CommanderCombatIntentType::Heavy,
+                              Engine::Core::CommanderCombatIntentType::Jump,
+                              Engine::Core::CommanderCombatIntentType::Dodge,
+                              Engine::Core::CommanderCombatIntentType::Guard,
+                              Engine::Core::CommanderCombatIntentType::Special,
+                              Engine::Core::CommanderCombatIntentType::WeaponSwitch}) {
+      for (bool const airborne : {false, true}) {
+        for (bool const beyond_reach : {false, true}) {
+          auto const id = Game::Systems::CombatActions::resolve_commander_action(
+              current, intent, weapon, airborne, beyond_reach);
+          if (id != CombatActionId::None) {
+            picked.insert(id);
+          }
+        }
+      }
+    }
+  }
+  return picked;
+}
+
+auto clip_a_commander_swings(const Render::GL::HumanoidRendererBase& preparer,
+                             Engine::Core::Entity& entity) -> std::uint16_t {
+  Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
+  ctx.force_single_soldier = true;
+  ctx.allow_template_cache = false;
+  ctx.animation_time = 10.0F;
+  ctx.entity = &entity;
+
+  auto const anim = Render::GL::sample_anim_state(ctx);
+  EXPECT_TRUE(anim.is_attacking);
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(
+      preparer, ctx, anim, test_runtime(0U), prep);
+  auto const& requests = prep.bodies.requests();
+  if (requests.empty()) {
+    ADD_FAILURE() << "the commander produced no body request";
+    return Animation::k_unmapped_clip;
+  }
+
+  auto const clip_of = [](const auto& layer) {
+    return layer.clip_id != Animation::k_unmapped_clip
+               ? layer.clip_id
+               : Render::Creature::ArchetypeRegistry::instance().resolve_bpat_clip(
+                     layer.archetype, layer.state, layer.clip_variant);
+  };
+  auto const& request = requests.front();
+  return request.upper_body_overlay.active() ? clip_of(request.upper_body_overlay)
+                                             : clip_of(request);
+}
+
+} // namespace
+
+TEST(HumanoidPrepare, EveryCommanderFightsWithTheWeaponHeCarries) {
+  using Game::Systems::CombatActions::CombatActionId;
+
+  Render::GL::EntityRendererRegistry registry;
+  Render::GL::register_built_in_entity_renderers(registry);
+
+  std::vector<const Game::Units::CommanderDefinition*> roster;
+  for (auto const& definition : Game::Units::all_commander_definitions()) {
+    roster.push_back(&definition);
+  }
+  for (auto const& definition : Game::Units::historical_commander_definitions()) {
+    roster.push_back(&definition);
+  }
+
+  std::set<std::string> commanders_checked;
+  for (auto const* listed : roster) {
+    auto const& definition = *listed;
+    std::string renderer_id = definition.renderer_id;
+    if (renderer_id.empty()) {
+      auto const* troop_class =
+          Game::Units::TroopCatalog::instance().get_class(definition.troop_type);
+      ASSERT_NE(troop_class, nullptr);
+      renderer_id = troop_class->visuals.renderer_id;
+    }
+    SCOPED_TRACE(renderer_id);
+    HeldWeapon const carried = weapon_in_hand(renderer_id);
+    ASSERT_NE(carried, HeldWeapon::None)
+        << "a commander's model carries exactly one weapon";
+    auto const* preparer = dynamic_cast<const Render::GL::HumanoidRendererBase*>(
+        registry.get_preparer(registry.get_handle(renderer_id)));
+    ASSERT_NE(preparer, nullptr);
+
+    for (auto const nation :
+         {Game::Systems::NationID::RomanRepublic, Game::Systems::NationID::Carthage}) {
+      auto const troop =
+          Game::Units::historical_commander_troop_for_nation(definition, nation);
+      auto const spawn = Game::Units::spawn_typeFromTroopType(troop);
+      auto const melee_family = Engine::Core::resolve_combat_attack_family(
+          spawn, Engine::Core::AttackComponent::CombatMode::Melee);
+      auto const weapon = melee_family == Engine::Core::CombatAttackFamily::Spear
+                              ? Game::Systems::CombatActions::WeaponFamily::Spear
+                              : Game::Systems::CombatActions::WeaponFamily::Sword;
+
+      auto actions = every_action_a_commander_can_pick(weapon);
+      if (auto const* body = Game::Units::commander_definition(troop)) {
+        actions.insert(signature_action(body->signature.move));
+      }
+      actions.erase(CombatActionId::None);
+      ASSERT_FALSE(actions.empty());
+
+      for (auto const action_id : actions) {
+        for (bool const player_controlled : {true, false}) {
+          Engine::Core::StandaloneEntity entity_scratch(77);
+          Engine::Core::Entity& entity = entity_scratch.entity();
+          auto* unit =
+              entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+          auto* commander = entity.add_component<Engine::Core::CommanderComponent>();
+          auto* action =
+              entity.add_component<Engine::Core::RpgCommanderActionComponent>();
+          ASSERT_NE(unit, nullptr);
+          ASSERT_NE(commander, nullptr);
+          ASSERT_NE(action, nullptr);
+          unit->spawn_type = spawn;
+          unit->nation_id = nation;
+          commander->fpv_controlled = player_controlled;
+          action->combat_action_id = static_cast<std::uint8_t>(action_id);
+          action->action_running = true;
+          action->normalized_action_time = 0.45F;
+
+          std::uint16_t const swing = clip_a_commander_swings(*preparer, entity);
+          EXPECT_EQ(weapon_a_clip_swings(swing), carried)
+              << (player_controlled ? "player" : "AI") << " action " << int(action_id)
+              << " plays clip " << swing << " ("
+              << held_weapon_name(weapon_a_clip_swings(swing))
+              << ") but the commander holds a " << held_weapon_name(carried);
+        }
+      }
+
+      for (std::uint8_t variant = 0; variant < 3U; ++variant) {
+        Engine::Core::StandaloneEntity entity_scratch(78);
+        Engine::Core::Entity& entity = entity_scratch.entity();
+        auto* unit =
+            entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+        auto* attack = entity.add_component<Engine::Core::AttackComponent>();
+        auto* combat_state = entity.add_component<Engine::Core::CombatStateComponent>();
+        ASSERT_NE(unit, nullptr);
+        ASSERT_NE(attack, nullptr);
+        ASSERT_NE(combat_state, nullptr);
+        ASSERT_NE(entity.add_component<Engine::Core::CommanderComponent>(), nullptr);
+        unit->spawn_type = spawn;
+        unit->nation_id = nation;
+        attack->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
+        combat_state->animation_state = Engine::Core::CombatAnimationState::Strike;
+        combat_state->attack_family = melee_family;
+        combat_state->attack_variant = variant;
+        combat_state->state_time = 0.15F;
+        combat_state->state_duration =
+            Engine::Core::CombatStateComponent::k_strike_duration;
+
+        std::uint16_t const swing = clip_a_commander_swings(*preparer, entity);
+        EXPECT_EQ(weapon_a_clip_swings(swing), carried)
+            << "RTS melee swing " << int(variant) << " plays clip " << swing << " ("
+            << held_weapon_name(weapon_a_clip_swings(swing))
+            << ") but the commander holds a " << held_weapon_name(carried);
+      }
+    }
+    commanders_checked.insert(renderer_id);
+  }
+  EXPECT_EQ(commanders_checked.size(), roster.size())
+      << "every commander has his own model";
+  EXPECT_GE(commanders_checked.size(), 16U);
 }
 
 TEST(HumanoidPrepare, BuiltInArchersKeepBowVisibleWhileMoving) {

@@ -19,6 +19,7 @@ namespace {
 constexpr float k_strike_body_overlap_radius = 0.16F;
 constexpr float k_strike_recoil_share = 0.45F;
 constexpr float k_strike_circle_share = 0.85F;
+constexpr float k_strike_max_gap_close = 1.2F;
 
 struct StrikeTarget {
   bool valid{false};
@@ -212,7 +213,7 @@ void drive_lunge(StrikeCarry& carry,
         std::abs(lunge_step.authored_distance) * (1.0F - lunge_step.progress.before);
     float const gap = target.distance - target.stop_distance;
     if (gap > remaining_authored) {
-      step += (gap - remaining_authored) * advanced;
+      step += std::min(gap - remaining_authored, k_strike_max_gap_close) * advanced;
     }
     carry.requested += step;
     float const allowed = std::min(step, std::max(0.0F, gap));

@@ -5,6 +5,7 @@
 #include <QMap>
 #include <QSet>
 #include <QString>
+#include <QStringList>
 
 #include <algorithm>
 #include <chrono>
@@ -137,6 +138,32 @@ TEST(AudioCueCatalogTest, EveryMusicTrackIsReachableByTheTagsThatSelectMusic) {
         << " is not returned by the query the audio "
            "coordinator runs for its own tags";
   }
+}
+
+TEST(AudioCueCatalogTest, TheLastWaveGetsTheHardestTrackWhicheverSideHoldsTheGate) {
+  QFile file(QStringLiteral("assets/audio/audio_manifest.json"));
+  ASSERT_TRUE(file.open(QIODevice::ReadOnly));
+  const QJsonArray tracks = QJsonDocument::fromJson(file.readAll())
+                                .object()
+                                .value(QStringLiteral("tracks"))
+                                .toArray();
+
+  QStringList finale;
+  for (const QJsonValue value : tracks) {
+    const QJsonObject track = value.toObject();
+    const QJsonObject tags = track.value(QStringLiteral("tags")).toObject();
+    if (tags.value(QStringLiteral("intensity")).toString() !=
+        QStringLiteral("final_assault")) {
+      continue;
+    }
+    const QString track_id = track.value(QStringLiteral("id")).toString();
+    finale.append(track_id);
+    EXPECT_FALSE(tags.contains(QStringLiteral("faction")))
+        << track_id.toStdString()
+        << " is faction-tagged, but the fallback query still offers it to the other "
+           "side, so the climax becomes a coin toss";
+  }
+  EXPECT_EQ(finale, QStringList{QStringLiteral("music.combat.siege_at_dawn")});
 }
 
 class ShippedAudioTest : public ::testing::Test {

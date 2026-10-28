@@ -377,6 +377,27 @@ void AudioCoordinator::configure_audio_ambient_mappings(int local_owner_id) {
     return collect_matching_resource_ids(AudioCategory::SFX, queries, false);
   };
 
+  {
+    std::vector<QMap<QString, QString>> queries;
+    QMap<QString, QString> tags;
+    tags.insert(QStringLiteral("ambient_state"),
+                ambient_state_tag(Engine::Core::AmbientState::COMBAT));
+    tags.insert(QStringLiteral("intensity"), QStringLiteral("final_assault"));
+    if (!faction_tag.isEmpty()) {
+      QMap<QString, QString> faction_tags = tags;
+      faction_tags.insert(QStringLiteral("faction"), faction_tag);
+      queries.push_back(std::move(faction_tags));
+    }
+    queries.push_back(std::move(tags));
+    std::vector<std::string> music_ids;
+    for (const QString& track_id :
+         collect_matching_resource_ids(AudioCategory::MUSIC, queries, true)) {
+      AudioResourceLoader::ensure_audio_resource_loaded(track_id);
+      music_ids.push_back(track_id.toStdString());
+    }
+    m_event_handler->load_final_assault_music(music_ids);
+  }
+
   static constexpr Engine::Core::AmbientState k_states[] = {
       Engine::Core::AmbientState::PEACEFUL,
       Engine::Core::AmbientState::TENSE,
