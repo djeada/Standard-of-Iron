@@ -265,7 +265,28 @@ inline constexpr std::uint16_t k_humanoid_wade_clip = 89U;
 inline constexpr float k_humanoid_wade_cycle_time = 1.8F;
 inline constexpr std::uint16_t k_humanoid_gesture_first_clip = 90U;
 inline constexpr std::uint8_t k_humanoid_gesture_clip_count = 11U;
-inline constexpr std::uint16_t k_humanoid_clip_count = 101U;
+inline constexpr std::uint16_t k_humanoid_archer_melee_sweep_clip = 101U;
+inline constexpr std::uint16_t k_humanoid_archer_melee_chop_clip = 102U;
+inline constexpr std::uint8_t k_humanoid_archer_melee_variant_count = 3U;
+inline constexpr std::uint16_t k_humanoid_clip_count = 103U;
+
+[[nodiscard]] constexpr auto
+humanoid_archer_melee_clip(std::uint8_t variant) noexcept -> std::uint16_t {
+  switch (variant % k_humanoid_archer_melee_variant_count) {
+  case 1U:
+    return k_humanoid_archer_melee_sweep_clip;
+  case 2U:
+    return k_humanoid_archer_melee_chop_clip;
+  default:
+    return k_humanoid_archer_melee_clip;
+  }
+}
+
+[[nodiscard]] constexpr auto
+humanoid_unarmed_melee_clip(std::uint8_t variant) noexcept -> std::uint16_t {
+  return static_cast<std::uint16_t>(k_humanoid_unarmed_jab_clip +
+                                    (variant % k_humanoid_unarmed_variant_count));
+}
 
 inline constexpr float k_humanoid_combat_ready_cycle_time = 2.2F;
 inline constexpr std::uint32_t k_humanoid_combat_ready_frames = 48U;

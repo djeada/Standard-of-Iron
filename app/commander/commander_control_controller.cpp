@@ -282,12 +282,25 @@ void CommanderControlController::update_camera_presentation(
 }
 
 void CommanderControlController::capture_input(Engine::Core::World& world,
-                                               Engine::Core::EntityID commander_id) {
+                                               Engine::Core::EntityID commander_id,
+                                               float dt) {
   m_input_port.capture_tick();
-  if (auto const replayed_yaw =
-          m_input_port.exchange_recorded(world, commander_id, m_look.yaw());
-      replayed_yaw.has_value()) {
-    m_look.set_yaw(*replayed_yaw);
+  if (dt <= 0.0F) {
+    return;
+  }
+  std::optional<std::pair<QVector3D, QVector3D>> live_ray;
+  if (m_camera_rig.eye_valid() && m_camera_rig.forward_valid()) {
+    live_ray = std::make_pair(m_camera_rig.eye(), m_camera_rig.forward());
+  }
+  m_tick_aim_ray = live_ray;
+  if (auto const replayed = m_input_port.exchange_recorded(
+          world,
+          commander_id,
+          {.yaw = m_look.yaw(), .pitch = m_look.pitch(), .aim_ray = live_ray});
+      replayed.has_value()) {
+    m_look.set_yaw(replayed->yaw);
+    m_look.set_pitch(replayed->pitch);
+    m_tick_aim_ray = replayed->aim_ray;
   }
 }
 
@@ -468,10 +481,12 @@ auto CommanderControlController::sync_direct_control(
        .move_speed = m_locomotion.move_speed(),
        .running = m_locomotion.move_running(),
        .primary_held = m_input_port.tick().primary_held,
-       .camera_origin = m_camera_rig.eye(),
-       .camera_origin_valid = m_camera_rig.eye_valid(),
-       .camera_forward = m_camera_rig.forward(),
-       .camera_forward_valid = m_camera_rig.forward_valid(),
+       .camera_origin =
+           m_tick_aim_ray.has_value() ? m_tick_aim_ray->first : QVector3D(),
+       .camera_origin_valid = m_tick_aim_ray.has_value(),
+       .camera_forward = m_tick_aim_ray.has_value() ? m_tick_aim_ray->second
+                                                    : QVector3D(0.0F, 0.0F, 1.0F),
+       .camera_forward_valid = m_tick_aim_ray.has_value(),
        .camera_fov_degrees = m_camera_rig.fov()});
   m_locomotion.publish_fpv_motion(body, motion.report.requested_speed);
   sync.traced_stamina = m_locomotion.engage_manual_motion(body, m_latency_probe);
@@ -762,7 +777,7 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
     return false;
   }
 
-  capture_input(world, commander_id);
+  capture_input(world, commander_id, dt);
   auto const body = resolve_handles(*commander, *transform, *unit);
   auto const facts = read_tick_facts(*commander);
 

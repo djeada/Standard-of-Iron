@@ -548,8 +548,7 @@ TEST_F(CommanderVoiceSkirmishTest, AnAllyShortOfGoldAsksThePlayerAndTheGiftArriv
   auto& session = make_alliance_match();
   auto& economy = session.economy();
   economy.set(k_human, Game::Systems::ResourceType::Gold, 2000);
-  // Isolate the gold shortage: food depletion otherwise wins the appeal before
-  // this fixture observes it, and construction also needs timber and stone.
+
   for (const auto type : Game::Systems::k_all_resource_types) {
     economy.set(k_player, type, 10000);
   }

@@ -27,13 +27,16 @@ auto get_commander_aura_color(Game::Systems::NationID nation_id) -> QVector3D {
 }
 
 constexpr float k_aura_ring_lift = 0.06F;
-constexpr float k_aura_boundary_thickness = 0.22F;
-constexpr float k_aura_boundary_alpha = 0.62F;
-constexpr float k_aura_boundary_pulse = 0.14F;
+constexpr float k_aura_field_intensity = 0.14F;
+constexpr float k_aura_boundary_thickness = 0.12F;
+constexpr float k_aura_boundary_alpha = 0.24F;
+constexpr float k_aura_boundary_pulse = 0.06F;
 constexpr float k_aura_pulse_seconds = 0.9F;
 constexpr float k_aura_pulse_thickness = 0.9F;
 constexpr float k_aura_pulse_alpha = 0.95F;
-constexpr float k_buff_ring_thickness = 0.10F;
+constexpr float k_buff_ring_thickness = 0.035F;
+constexpr float k_buff_ring_alpha = 0.18F;
+constexpr float k_buff_ring_pulse = 0.05F;
 
 } // namespace
 
@@ -108,7 +111,8 @@ void render_commander_auras(Renderer* renderer,
     float const elapsed = std::max(
         0.0F, commander->aura_ability_duration - commander->aura_ability_remaining);
 
-    renderer->healer_aura(position, banner_color, radius, 1.0F, animation_time);
+    renderer->healer_aura(
+        position, banner_color, radius, k_aura_field_intensity, animation_time);
 
     GroundMarkerCmd boundary;
     boundary.center = QVector3D(transform->position.x,
@@ -159,15 +163,17 @@ void render_commander_auras(Renderer* renderer,
       }
     }
 
-    const float pulse = 0.72F + 0.18F * std::sin(animation_time * 5.5F +
-                                                 static_cast<float>(entity->get_id()));
+    const float pulse =
+        k_buff_ring_alpha +
+        k_buff_ring_pulse *
+            std::sin(animation_time * 5.5F + static_cast<float>(entity->get_id()));
     std::span<const Engine::Core::FormationSoldierPresentation> soldiers;
     if (auto const* formation =
             entity->get_component<Engine::Core::FormationPresentationComponent>()) {
       soldiers = formation->soldiers;
     }
     const float footprint = std::max(transform->scale.x, transform->scale.z);
-    const float glow_radius = std::clamp(0.72F + footprint * 0.35F, 0.78F, 1.15F);
+    const float glow_radius = std::clamp(0.34F + footprint * 0.16F, 0.42F, 0.56F);
     auto const root = Render::Entity::resolve_formation_root(entity, *transform);
     const auto placements = build_selection_ring_layout({.soldiers = soldiers,
                                                          .ring_size = glow_radius,

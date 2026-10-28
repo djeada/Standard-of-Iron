@@ -8,6 +8,8 @@
 #include <vector>
 
 #include "../../../core/ownership_constants.h"
+#include "../../../units/spawn_type.h"
+#include "../../../units/troop_type.h"
 #include "../ai_utils.h"
 #include "systems/ai_system/ai_types.h"
 
@@ -26,6 +28,8 @@ constexpr float k_barrier_search_radius = 120.0F;
 constexpr float k_breach_stand_off = 2.0F;
 constexpr float k_breach_spread = 1.6F;
 constexpr float k_breach_engage_radius = 4.0F;
+
+constexpr std::size_t k_max_assailants_on_a_commander = 3;
 
 constexpr float k_advance_stall_seconds = 8.0F;
 constexpr float k_advance_gain_epsilon = 1.0F;
@@ -111,6 +115,107 @@ auto select_breach_target(const AISnapshot& snapshot,
 
 auto is_wave_quarry(const ContactSnapshot& contact) -> bool {
   return !Game::Core::is_neutral_owner(contact.owner_id) && contact.health > 0;
+}
+
+auto is_commander_contact(const ContactSnapshot& contact) -> bool {
+  const auto troop = Game::Units::spawn_typeToTroopType(contact.spawn_type);
+  return troop.has_value() && Game::Units::is_commander_troop(*troop);
+}
+
+struct Engagement {
+  Engine::Core::EntityID target_id = 0;
+  std::vector<Engine::Core::EntityID> units;
+};
+
+auto all_on(Engine::Core::EntityID target_id,
+            const std::vector<const EntitySnapshot*>& engaging) -> Engagement {
+  Engagement engagement{.target_id = target_id};
+  engagement.units.reserve(engaging.size());
+  for (const auto* unit : engaging) {
+    engagement.units.push_back(unit->id);
+  }
+  return engagement;
+}
+
+auto spread_engagements(const std::vector<const EntitySnapshot*>& engaging,
+                        const AISnapshot& snapshot,
+                        const ContactSnapshot& objective,
+                        float engage_radius) -> std::vector<Engagement> {
+  std::vector<const ContactSnapshot*> quarries;
+  const float reach_sq = engage_radius * engage_radius;
+  for (const auto& contact : snapshot.visible_enemies) {
+    if (contact.is_building || !is_wave_quarry(contact)) {
+      continue;
+    }
+    if (distance_squared(contact.pos_x,
+                         0.0F,
+                         contact.pos_z,
+                         objective.pos_x,
+                         0.0F,
+                         objective.pos_z) <= reach_sq) {
+      quarries.push_back(&contact);
+    }
+  }
+  if (quarries.size() < 2) {
+    return {all_on(objective.id, engaging)};
+  }
+
+  const std::size_t fair_share = std::max<std::size_t>(
+      2, (engaging.size() + quarries.size() - 1) / quarries.size() + 1);
+  const auto cap_for = [&](const ContactSnapshot& quarry) {
+    return is_commander_contact(quarry) ? k_max_assailants_on_a_commander : fair_share;
+  };
+
+  std::vector<Engagement> engagements(quarries.size());
+  for (std::size_t index = 0; index < quarries.size(); ++index) {
+    engagements[index].target_id = quarries[index]->id;
+  }
+  std::vector<const EntitySnapshot*> unassigned;
+  for (const auto* unit : engaging) {
+    const auto kept = std::find_if(
+        quarries.begin(), quarries.end(), [unit](const ContactSnapshot* q) {
+          return q->id == unit->attack_target_id;
+        });
+    if (kept != quarries.end()) {
+      const auto slot = static_cast<std::size_t>(kept - quarries.begin());
+      if (engagements[slot].units.size() < cap_for(**kept)) {
+        engagements[slot].units.push_back(unit->id);
+        continue;
+      }
+    }
+    unassigned.push_back(unit);
+  }
+  for (const auto* unit : unassigned) {
+    std::size_t best = quarries.size();
+    float best_distance = std::numeric_limits<float>::infinity();
+    for (std::size_t index = 0; index < quarries.size(); ++index) {
+      if (engagements[index].units.size() >= cap_for(*quarries[index])) {
+        continue;
+      }
+      const float distance = distance_squared(unit->pos_x,
+                                              0.0F,
+                                              unit->pos_z,
+                                              quarries[index]->pos_x,
+                                              0.0F,
+                                              quarries[index]->pos_z);
+      if (distance < best_distance) {
+        best_distance = distance;
+        best = index;
+      }
+    }
+    if (best == quarries.size()) {
+      const auto objective_slot = std::find_if(
+          quarries.begin(), quarries.end(), [&objective](const ContactSnapshot* q) {
+            return q->id == objective.id;
+          });
+      best = objective_slot != quarries.end()
+                 ? static_cast<std::size_t>(objective_slot - quarries.begin())
+                 : 0;
+    }
+    engagements[best].units.push_back(unit->id);
+  }
+  std::erase_if(engagements, [](const Engagement& e) { return e.units.empty(); });
+  return engagements;
 }
 
 auto select_assault_target(const AISnapshot& snapshot,
@@ -294,7 +399,7 @@ void AssaultBehavior::execute(const AISnapshot& snapshot,
     target = breach;
   }
 
-  std::vector<Engine::Core::EntityID> engage_ids;
+  std::vector<const EntitySnapshot*> engaging;
   std::vector<Engine::Core::EntityID> advance_ids;
   std::vector<float> advance_x;
   std::vector<float> advance_y;
@@ -336,7 +441,7 @@ void AssaultBehavior::execute(const AISnapshot& snapshot,
 
     if (target != nullptr &&
         (distance_to_target_sq <= engage_radius_sq || hostile_gate_ahead)) {
-      engage_ids.push_back(unit->id);
+      engaging.push_back(unit);
       continue;
     }
 
@@ -360,15 +465,25 @@ void AssaultBehavior::execute(const AISnapshot& snapshot,
     advance_z.push_back(approach_z + std::sin(angle) * ring);
   }
 
-  if (!engage_ids.empty()) {
-    auto claimed = claim_units(
-        engage_ids, get_priority(), "assaulting", context, snapshot.game_time, 1.0F);
-    if (!claimed.empty()) {
+  if (!engaging.empty()) {
+    const auto engagements =
+        breaching || target->is_building
+            ? std::vector<Engagement>{all_on(target->id, engaging)}
+            : spread_engagements(engaging, snapshot, *target, engage_radius);
+    for (const auto& engagement : engagements) {
+      auto claimed = claim_units(engagement.units,
+                                 get_priority(),
+                                 "assaulting",
+                                 context,
+                                 snapshot.game_time,
+                                 1.0F);
+      if (claimed.empty()) {
+        continue;
+      }
       AICommand attack;
       attack.type = AICommandType::AttackTarget;
       attack.units = std::move(claimed);
-      attack.target_id = target->id;
-
+      attack.target_id = engagement.target_id;
       attack.should_chase = true;
       out_commands.push_back(std::move(attack));
     }

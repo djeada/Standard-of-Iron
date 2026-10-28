@@ -513,6 +513,8 @@ auto authored_humanoid_clip_markers(
             .recover_unlocked = 0.70F,
             .exit_safe = 0.90F};
   case k_humanoid_archer_melee_clip:
+  case k_humanoid_archer_melee_sweep_clip:
+  case k_humanoid_archer_melee_chop_clip:
     return attack_sword_markers(false);
   case k_humanoid_hold_spear_attack_clip:
     return attack_spear_markers();

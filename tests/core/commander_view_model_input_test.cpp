@@ -8,6 +8,7 @@
 #include "app/viewmodels/commander_view_model.h"
 #include "app/viewmodels/placement_view_model.h"
 #include "game/core/component_commander.h"
+#include "game/core/event_manager.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
@@ -284,6 +285,38 @@ TEST_F(CommanderViewModelInputTest, LandingAHitNeverSlowsTheSimulationClock) {
   }
   EXPECT_TRUE(commander_data->just_struck_enemy)
       << "the hit flag belongs to the combo chain; the view model must not eat it";
+}
+
+TEST_F(CommanderViewModelInputTest, TheFightAroundTheCommanderStillShowsItsNumbers) {
+  using HitRouting = App::ViewModels::CommanderViewModel::HitRouting;
+  auto* commander = spawn_commander(0.0F, 0.0F);
+  auto* near_enemy = spawn_enemy(0.0F, 12.0F);
+  auto* far_enemy = spawn_enemy(0.0F, 90.0F);
+  auto* soldier = spawn_commander(4.0F, 10.0F);
+  ASSERT_NE(commander, nullptr);
+  ASSERT_NE(near_enemy, nullptr);
+  ASSERT_NE(far_enemy, nullptr);
+  ASSERT_NE(soldier, nullptr);
+  soldier->remove_component<Engine::Core::CommanderComponent>();
+  m_commander->enter_mode();
+  ASSERT_EQ(m_commander->controlled_commander_id(), commander->get_id());
+
+  const auto hit = [](Engine::Core::Entity* attacker, Engine::Core::Entity* target) {
+    return Engine::Core::CombatHitEvent(attacker->get_id(),
+                                        target->get_id(),
+                                        12,
+                                        Game::Units::SpawnType::Swordsman,
+                                        false);
+  };
+
+  EXPECT_EQ(m_commander->classify_hit(hit(commander, near_enemy)),
+            HitRouting::CommanderBurst);
+  EXPECT_EQ(m_commander->classify_hit(hit(near_enemy, soldier)), HitRouting::Rts)
+      << "a soldier wounded beside the commander shows the red badge";
+  EXPECT_EQ(m_commander->classify_hit(hit(soldier, near_enemy)), HitRouting::Rts)
+      << "a blow his men land beside him shows the orange badge";
+  EXPECT_EQ(m_commander->classify_hit(hit(soldier, far_enemy)), HitRouting::Suppressed)
+      << "a fight far off the commander's view stays quiet";
 }
 
 TEST_F(CommanderViewModelInputTest, ADeadCommanderLeavesTheModeAndTheCursorBehind) {

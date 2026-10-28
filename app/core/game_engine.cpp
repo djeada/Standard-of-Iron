@@ -441,14 +441,14 @@ void GameEngine::update_active_runtime_simulation(float dt) {
   if (profile_simulation) {
     m_world->system_profiler().set_enabled(true);
   }
+  m_commander_view_model->apply_replayed_actions();
   if (m_commander_view_model->active()) {
     m_commander_view_model->update_control_mode(dt);
     m_world->update(dt);
     m_commander_view_model->restore_direct_control_if_ready();
-    return;
+  } else {
+    m_world->update(dt);
   }
-
-  m_world->update(dt);
   m_replay->finish_verification_if_done(m_session.get());
 }
 

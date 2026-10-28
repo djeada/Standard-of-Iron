@@ -5,6 +5,7 @@
 #include "app/core/entity_cache.h"
 #include "app/world/ambient_state_manager.h"
 #include "game/core/component_core.h"
+#include "game/core/component_gameplay.h"
 #include "game/core/world.h"
 
 namespace {
@@ -200,4 +201,27 @@ TEST(AmbientStateHysteresisTest, AFightLongAfterTheLastStartsTheScoreAtOnce) {
   field.sample(false, 31);
   field.sample(true);
   EXPECT_EQ(field.state(), Engine::Core::AmbientState::COMBAT);
+}
+
+TEST(AmbientStateHysteresisTest, AWaveMarchingOnThePlayerKeepsTheBattleScore) {
+  Engine::Core::World world;
+  EntityCache cache;
+  add_unit(world, k_local_owner, 0.0F);
+  auto* raider = add_unit(world, k_enemy_owner, 5.0F);
+
+  AmbientStateManager manager;
+  advance(manager, world, cache, 1);
+  ASSERT_EQ(manager.current_state(), Engine::Core::AmbientState::COMBAT);
+
+  auto* wave = add_unit(world, k_enemy_owner, 90.0F);
+  wave->add_component<Engine::Core::AssaultWaveComponent>();
+  raider->get_component<Engine::Core::UnitComponent>()->health = 0;
+  advance(manager, world, cache, 30);
+  EXPECT_EQ(manager.current_state(), Engine::Core::AmbientState::COMBAT)
+      << "the next wave is still on its way, so the battle is not over";
+
+  wave->get_component<Engine::Core::UnitComponent>()->health = 0;
+  advance(manager, world, cache, 30);
+  EXPECT_EQ(manager.current_state(), Engine::Core::AmbientState::PEACEFUL)
+      << "once the wave is dead the score releases as before";
 }

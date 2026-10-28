@@ -551,22 +551,34 @@ void HumanoidPoseController::aim_bow(float draw_phase) {
   auto const sample = Animation::resolve_humanoid_bow_draw_pose({
       .draw_phase = draw_phase,
       .jitter_seed = m_anim_ctx.jitter_seed,
-      .shoulder_y = HP::SHOULDER_Y,
+      .shoulder_y = 0.5F * (m_pose.shoulder_l.y() + m_pose.shoulder_r.y()),
   });
   apply_bow_draw_body_deltas(m_pose, sample);
   place_hand_at(Side::Right, to_qvec(sample.right_hand));
   place_hand_at(Side::Left, to_qvec(sample.left_hand));
+  m_pose.elbow_l = Render::Humanoid::PosePrimitives::solve_arm_ik(
+      m_pose.shoulder_l,
+      m_pose.hand_l,
+      {.upper_arm_len = HP::UPPER_ARM_LEN,
+       .fore_arm_len = HP::FORE_ARM_LEN,
+       .bend_preference = to_qvec(sample.string_elbow_pole)});
   aim_held_weapon(m_pose, QVector3D(0.0F, 1.0F, 0.0F), k_baked_bow_axis);
 }
 
-void HumanoidPoseController::bow_melee_strike(float attack_phase) {
-  auto const sample = Animation::resolve_humanoid_weapon_attack_pose(
+void HumanoidPoseController::bow_melee_strike(float attack_phase,
+                                              std::uint8_t variant) {
+  auto sample = Animation::resolve_humanoid_weapon_attack_pose(
       weapon_attack_pose_inputs(Animation::HumanoidWeaponAttackKind::BowMeleeStrike,
                                 m_anim_ctx,
                                 attack_phase,
-                                0U,
+                                variant,
                                 1.0F));
+  bool const orients_bow = sample.has_blade_direction;
+  sample.has_blade_direction = false;
   apply_weapon_attack_sample(*this, m_pose, sample);
+  if (orients_bow) {
+    aim_held_weapon(m_pose, to_qvec(sample.blade_direction), k_baked_bow_axis);
+  }
 }
 
 void HumanoidPoseController::melee_strike(float strike_phase) {

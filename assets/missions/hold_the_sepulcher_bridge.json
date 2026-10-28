@@ -34,7 +34,7 @@
         "count": 1,
         "position": {
           "x": 48.0,
-          "z": 59.5
+          "z": 71.5
         },
         "behavior": "guard",
         "guard_radius": 5.0,

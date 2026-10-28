@@ -509,6 +509,28 @@ TEST(CommanderCameraRig, MeleeFramingLooksDownAtTheFightButAimingDoesNot) {
       << "the exploring framing does look down; the aiming one does not";
 }
 
+TEST(CommanderCameraRig, AnEnemyAtArmsLengthDoesNotTipTheLensIntoTheGround) {
+  Game::Accessibility::CommanderInput::reset_to_defaults();
+  auto forward_y_with_lock_at = [](float distance) {
+    CommanderCameraRig rig;
+    Render::GL::Camera camera;
+    auto inputs = default_inputs();
+    inputs.view_pitch_degrees = k_commander_rest_view_pitch_degrees;
+    inputs.fight_context = FightContext::Skirmish;
+    inputs.crowd_density = 1.0F;
+    inputs.lock_target_active = true;
+    inputs.lock_target_position = QVector3D(0.0F, 0.0F, distance);
+    settle(rig, camera, inputs);
+    return rig.forward().y();
+  };
+  float const point_blank = forward_y_with_lock_at(1.2F);
+  float const at_reach = forward_y_with_lock_at(4.5F);
+  EXPECT_NEAR(point_blank, at_reach, 0.02F)
+      << "a skeleton a pace away pulled the look point down to the commander's feet";
+  EXPECT_GT(point_blank, std::sin(-26.0F * 0.017453292519943295F))
+      << "a melee lock framed the fight from above, looking at the ground";
+}
+
 TEST(CommanderCameraRig, ResetClearsSmoothedState) {
   CommanderCameraRig rig;
   Render::GL::Camera camera;

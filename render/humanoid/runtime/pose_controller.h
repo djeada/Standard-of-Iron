@@ -41,7 +41,7 @@ public:
   void place_hand_at(Side side, const QVector3D& requested_position);
 
   void aim_bow(float draw_phase);
-  void bow_melee_strike(float attack_phase);
+  void bow_melee_strike(float attack_phase, std::uint8_t variant = 0U);
   void melee_strike(float strike_phase);
   void unarmed_strike(float strike_phase, std::uint8_t variant);
   void grasp_two_handed(const QVector3D& grip_center, float hand_separation);

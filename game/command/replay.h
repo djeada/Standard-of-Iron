@@ -18,7 +18,7 @@ namespace Game::Command {
 
 class CommandQueue;
 
-inline constexpr int k_replay_format_version = 5;
+inline constexpr int k_replay_format_version = 6;
 
 [[nodiscard]] auto simulation_build_id() -> QString;
 
@@ -59,6 +59,8 @@ public:
 
   void record_commander_input(std::uint64_t tick, const CommanderInputFrame& frame);
 
+  void record_commander_action(std::uint64_t tick, const CommanderActionRecord& record);
+
   void finish();
 
   [[nodiscard]] auto recording() const -> bool;
@@ -85,6 +87,11 @@ struct RecordedCommanderInput {
   CommanderInputFrame frame;
 };
 
+struct RecordedCommanderAction {
+  std::uint64_t tick = 0;
+  CommanderActionRecord record;
+};
+
 struct ReplayDivergence {
   std::uint64_t tick = 0;
   std::uint64_t recorded = 0;
@@ -98,6 +105,7 @@ struct ReplayFile {
   std::vector<Command> commands;
   std::vector<RecordedDigest> digests;
   std::vector<RecordedCommanderInput> commander_inputs;
+  std::vector<RecordedCommanderAction> commander_actions;
 
   static auto load(const QString& path,
                    QString* error = nullptr) -> std::optional<ReplayFile>;
@@ -121,6 +129,9 @@ public:
     return m_file.commander_inputs.size();
   }
 
+  [[nodiscard]] auto
+  take_commander_actions(std::uint64_t tick) -> std::vector<CommanderActionRecord>;
+
   [[nodiscard]] auto finished() const -> bool {
     return m_next >= m_file.commands.size();
   }
@@ -135,6 +146,7 @@ private:
   ReplayFile m_file;
   std::size_t m_next = 0;
   std::size_t m_next_digest = 0;
+  std::size_t m_next_action = 0;
   std::size_t m_checked = 0;
   std::optional<ReplayDivergence> m_divergence;
 };

@@ -148,8 +148,8 @@ public:
         m_base_archetype,
         std::span<const EquipmentHandle>(handles.data(), m_profile.loadout_slot_count));
     spec.creature_asset_id = m_creature_asset_id;
-    spec.animation_manifest.melee_clip_override =
-        Render::Creature::k_humanoid_archer_melee_clip;
+    spec.animation_manifest.melee_clip_for_variant =
+        &Animation::humanoid_archer_melee_clip;
     spec.animation_manifest.pose_policy = m_pose_policy;
     return spec;
   }

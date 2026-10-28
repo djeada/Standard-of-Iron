@@ -127,6 +127,7 @@ auto default_loadouts() -> LoadoutMap {
   EquipmentLoadoutIds sepulcher_archer{};
   sepulcher_archer.bow = "bow_carthage";
   sepulcher_archer.quiver = "quiver_carthage";
+  sepulcher_archer.helmet = "skull_face";
   map.emplace("troops/iron_sepulcher/skeleton_archer", std::move(sepulcher_archer));
 
   EquipmentLoadoutIds grave_priest{};

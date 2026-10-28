@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <mutex>
 #include <optional>
+#include <utility>
 
 #include "app/commander/commander_input_snapshot.h"
 #include "app/commander/commander_latency_probe.h"
@@ -71,10 +72,17 @@ public:
   }
   [[nodiscard]] auto edges() const -> const CommanderInputTrace& { return m_edges; }
 
+  struct RecordedView {
+    float yaw = 0.0F;
+    float pitch = 0.0F;
+    std::optional<std::pair<QVector3D, QVector3D>> aim_ray;
+  };
+
   void capture_tick();
-  [[nodiscard]] auto exchange_recorded(Engine::Core::World& world,
-                                       Engine::Core::EntityID commander_id,
-                                       float view_yaw) -> std::optional<float>;
+  [[nodiscard]] auto
+  exchange_recorded(Engine::Core::World& world,
+                    Engine::Core::EntityID commander_id,
+                    RecordedView view) -> std::optional<RecordedView>;
   void consume_press_edges(bool primary_consumed);
   void settle_primary_press();
   void clear_jump_edge();

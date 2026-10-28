@@ -1646,6 +1646,32 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      30.0F,
      2.600F,
      true},
+    {"archer_melee_sweep",
+     Render::GL::HumanoidMotionState::Attacking,
+     BakerAttackType::BowMelee,
+     1,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     32U,
+     24.0F,
+     1.0F,
+     false},
+    {"archer_melee_chop",
+     Render::GL::HumanoidMotionState::Attacking,
+     BakerAttackType::BowMelee,
+     2,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     32U,
+     24.0F,
+     1.0F,
+     false},
 }};
 
 struct HumanoidSocketSpec {
@@ -2612,7 +2638,7 @@ void bake_humanoid_clip_frame(BakeProfile profile,
       ctrl.aim_bow(phase);
       break;
     case BakerAttackType::BowMelee:
-      ctrl.bow_melee_strike(phase);
+      ctrl.bow_melee_strike(phase, clip.attack_variant);
       break;
     case BakerAttackType::SpearFromHold:
       ctrl.kneel(0.875F);
