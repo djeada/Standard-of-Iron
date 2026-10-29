@@ -1229,6 +1229,21 @@ Space dodges and Ctrl jumps. These gameplay keys take priority over toolbar
 shortcuts while the viewport has RPG focus. After using a panel, click the
 viewport once to restore mouse look; that click does not attack.
 
+Taking control cancels the active scenario script and its validation, while leaving
+the world and existing enemy orders running. A cancelled run is recorded as
+`cancelled: true`, `completed: false`, and `passed: false`; manual play cannot
+produce a scripted acceptance result. Leaving direct control does not restart the
+script. Load the scenario again to run its authored sequence.
+
+Takeover resumes a paused simulation and preserves the commander's current stamina,
+posture, and guard-break penalties. Moving or resizing the window recentres mouse
+look without turning the view. Shift+Tab exits direct control while running.
+
+The interactive HUD reads the shared commander status. In bow stance it shows draw
+progress, full draw, hold strain, and an aim circle sized from the actual spread and
+camera field of view. Damage numbers remain visible when scenario diagnostics are
+hidden. Control hints switch between melee attacks and drawing/releasing the bow.
+
 The input routing has two important details:
 
 - Tab reaches the viewport only because it overrides `focusNextPrevChild`.

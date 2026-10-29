@@ -8,6 +8,7 @@
 #include "../../core/event_manager.h"
 #include "../../core/world.h"
 #include "../../units/spawn_type.h"
+#include "../rpg_combat_system/rpg_bow_draw.h"
 #include "combat_action_events.h"
 #include "melee_intent_solver.h"
 
@@ -299,13 +300,6 @@ auto CombatActionService::request_attack(
                                          commander->jump_active,
                                          false);
     definition = find_combat_action_definition(action_id);
-    if (aim != nullptr) {
-      aim->draw_stage = Engine::Core::BowDrawStage::Drawing;
-      aim->draw_progress = 0.0F;
-      aim->full_draw_hold = 0.0F;
-      aim->shot_power = 0.0F;
-      aim->relaxed_from_overhold = false;
-    }
   }
 
   auto* stamina = attacker->get_component<Engine::Core::StaminaComponent>();
@@ -382,6 +376,13 @@ auto CombatActionService::request_attack(
   }
 
   if (commander != nullptr) {
+    if (aim != nullptr) {
+      Game::Systems::RpgCombat::clear_bow_draw(*aim);
+      if (action_id == CombatActionId::RpgBowShot) {
+        aim->draw_stage = Engine::Core::BowDrawStage::Drawing;
+      }
+      aim->relaxed_from_overhold = false;
+    }
     if (auto* action = Engine::Core::get_or_add_component<
             Engine::Core::RpgCommanderActionComponent>(attacker)) {
       action->phase = Engine::Core::RpgCommanderActionPhase::Strike;

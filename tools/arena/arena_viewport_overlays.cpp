@@ -9,6 +9,7 @@
 #include <array>
 #include <cmath>
 #include <limits>
+#include <utility>
 
 #include "app/commander/commander_control_controller.h"
 #include "arena_viewport.h"
@@ -65,9 +66,6 @@ void ArenaViewport::draw_debug_overlay(QPainter& painter) {
   }
   if (m_combat_debug_overlay_enabled) {
     draw_combat_animation_overlay(painter);
-  }
-  if (!m_clean_capture) {
-    draw_floating_numbers(painter);
   }
 }
 
@@ -427,17 +425,11 @@ void ArenaViewport::draw_rpg_hud(QPainter& painter) {
       width() <= 0 || height() <= 0) {
     return;
   }
-  auto* commander = m_world->get_entity(m_rpg_commander_id);
-  if (commander == nullptr) {
+  auto const status = rpg_commander_status();
+  if (!status.value("has_commander").toBool()) {
     return;
   }
-
-  auto const* rpg = commander->get_component<Engine::Core::RpgHealthComponent>();
-  auto const* stamina = commander->get_component<Engine::Core::StaminaComponent>();
-  auto const* guard = commander->get_component<Engine::Core::CommanderGuardComponent>();
-  auto const* motion =
-      commander->get_component<Engine::Core::MotionPresentationComponent>();
-  auto const* combat = commander->get_component<Engine::Core::CombatStateComponent>();
+  bool const bow = status.value("weapon_stance").toString() == QStringLiteral("bow");
 
   int const bar_w = 240;
   int const bar_h = 14;
@@ -463,69 +455,27 @@ void ArenaViewport::draw_rpg_hud(QPainter& painter) {
   hud_font.setBold(true);
   painter.setFont(hud_font);
 
-  auto const* commander_unit = commander->get_component<Engine::Core::UnitComponent>();
-  if (commander_unit != nullptr && commander_unit->max_health > 0) {
-    float const ratio = static_cast<float>(commander_unit->health) /
-                        static_cast<float>(commander_unit->max_health);
-    draw_bar(ratio,
-             QColor(196, 62, 54, 225),
-             QStringLiteral("HP  %1 / %2")
-                 .arg(commander_unit->health)
-                 .arg(commander_unit->max_health));
-  }
-  if (stamina != nullptr && stamina->max_stamina > 0.0F) {
-    draw_bar(stamina->get_stamina_ratio(),
-             stamina->is_running ? QColor(214, 168, 54, 225) : QColor(86, 150, 92, 225),
-             QStringLiteral("STA %1%").arg(
-                 static_cast<int>(stamina->get_stamina_ratio() * 100.0F)));
-  }
+  draw_bar(status.value("health_ratio").toFloat(),
+           QColor(196, 62, 54, 225),
+           QStringLiteral("HP  %1 / %2")
+               .arg(status.value("health").toInt())
+               .arg(status.value("max_health").toInt()));
+  draw_bar(status.value("stamina_ratio").toFloat(),
+           status.value("is_running").toBool() ? QColor(214, 168, 54, 225)
+                                               : QColor(86, 150, 92, 225),
+           QStringLiteral("STA %1%").arg(
+               static_cast<int>(status.value("stamina_ratio").toFloat() * 100.0F)));
 
-  QStringList state_parts;
-  if (motion != nullptr) {
-    switch (motion->state) {
-    case Engine::Core::MotionPresentationState::Run:
-      state_parts << QStringLiteral("RUN");
-      break;
-    case Engine::Core::MotionPresentationState::Walk:
-      state_parts << QStringLiteral("WALK");
-      break;
-    case Engine::Core::MotionPresentationState::Turning:
-      state_parts << QStringLiteral("TURN");
-      break;
-    case Engine::Core::MotionPresentationState::Yielding:
-      state_parts << QStringLiteral("YIELD");
-      break;
-    case Engine::Core::MotionPresentationState::Recovering:
-      state_parts << QStringLiteral("RECOVER");
-      break;
-    case Engine::Core::MotionPresentationState::ForcedDisplacement:
-      state_parts << QStringLiteral("FORCED");
-      break;
-    default:
-      state_parts << QStringLiteral("IDLE");
-      break;
+  QStringList state_parts{bow ? QStringLiteral("BOW") : QStringLiteral("MELEE")};
+  for (auto const& state : {std::pair{"is_running", "RUN"},
+                            std::pair{"dodge_active", "DODGE"},
+                            std::pair{"guard_active", "GUARD"},
+                            std::pair{"guard_broken", "GUARD BREAK"},
+                            std::pair{"is_attacking", "ATTACK"},
+                            std::pair{"focus_marker_locked", "LOCKED"}}) {
+    if (status.value(QLatin1String(state.first)).toBool()) {
+      state_parts << QString::fromLatin1(state.second);
     }
-  }
-  if (m_rpg_commander_controller != nullptr &&
-      m_rpg_commander_controller->is_dodge_rolling()) {
-    state_parts << QStringLiteral("DODGE");
-  }
-  if (guard != nullptr && guard->active) {
-    state_parts << QStringLiteral("GUARD");
-  }
-  if (guard != nullptr && guard->guard_break_remaining > 0.0F) {
-    state_parts << QStringLiteral("GUARD-BREAK");
-  }
-  if (rpg != nullptr && rpg->dodge_grace_remaining > 0.0F) {
-    state_parts << QStringLiteral("ROLLING");
-  }
-  if (combat != nullptr &&
-      combat->animation_state != Engine::Core::CombatAnimationState::Idle) {
-    state_parts << QStringLiteral("ATTACK");
-  }
-  if (m_rpg_commander_controller != nullptr &&
-      m_rpg_commander_controller->locked_target_id() != 0) {
-    state_parts << QStringLiteral("LOCKED");
   }
 
   painter.setPen(QColor(240, 240, 240, 235));
@@ -537,6 +487,38 @@ void ArenaViewport::draw_rpg_hud(QPainter& painter) {
   painter.drawLine(center.x() + 2, center.y(), center.x() + 7, center.y());
   painter.drawLine(center.x(), center.y() - 7, center.x(), center.y() - 2);
   painter.drawLine(center.x(), center.y() + 2, center.x(), center.y() + 7);
+  if (bow) {
+    painter.save();
+    painter.setRenderHint(QPainter::Antialiasing, true);
+    float const fov = m_camera != nullptr ? m_camera->get_fov() : 68.0F;
+    float const focal_pixels =
+        height() * 0.5F / std::tan(qDegreesToRadians(fov * 0.5F));
+    float const spread =
+        std::clamp(status.value("bow_spread_degrees").toFloat(), 0.0F, 28.0F);
+    float const radius = std::clamp(
+        focal_pixels * std::tan(qDegreesToRadians(spread)), 10.0F, height() * 0.24F);
+    bool const strained = status.value("bow_hold_strained").toBool();
+    QColor const accent = strained ? QColor(238, 101, 74) : QColor(237, 197, 110);
+    painter.setBrush(Qt::NoBrush);
+    painter.setPen(QPen(QColor(255, 255, 255, 140), 1.0));
+    painter.drawEllipse(QPointF(center), radius, radius);
+    if (status.value("bow_drawing").toBool()) {
+      float const draw =
+          std::clamp(status.value("bow_draw_progress").toFloat(), 0.0F, 1.0F);
+      painter.setPen(QPen(accent, 3.0));
+      painter.drawArc(QRectF(center.x() - 16, center.y() - 16, 32, 32),
+                      90 * 16,
+                      -static_cast<int>(draw * 360.0F * 16.0F));
+      QString const label =
+          strained ? QStringLiteral("Aim strained - release")
+          : status.value("bow_full_draw").toBool()
+              ? QStringLiteral("Full draw - release")
+              : QStringLiteral("Drawing %1%").arg(static_cast<int>(draw * 100.0F));
+      painter.drawText(
+          QRect(center.x() - 120, center.y() + 26, 240, 22), Qt::AlignCenter, label);
+    }
+    painter.restore();
+  }
 }
 
 void ArenaViewport::draw_controls_overlay(QPainter& painter) {
@@ -552,11 +534,14 @@ void ArenaViewport::draw_controls_overlay(QPainter& painter) {
 
   if (m_rpg_interactive) {
     QString const rpg_title = QStringLiteral("RPG Commander Controls");
+    bool const bow = rpg_commander_status().value("weapon_stance").toString() ==
+                     QStringLiteral("bow");
     QStringList const rpg_lines{
         QStringLiteral("W A S D: move (relative to view)"),
         QStringLiteral("Mouse: look"),
         QStringLiteral("Shift: run"),
-        QStringLiteral("LMB: attack (hold to chain)"),
+        bow ? QStringLiteral("LMB: hold to draw, release to fire")
+            : QStringLiteral("LMB: attack (hold to chain)"),
         QStringLiteral("MMB: heavy attack"),
         QStringLiteral("RMB: guard"),
         QStringLiteral("Space: dodge roll"),

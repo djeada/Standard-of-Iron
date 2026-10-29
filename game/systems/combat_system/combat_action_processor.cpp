@@ -260,8 +260,13 @@ void process_authored_combat_action(
   if (world == nullptr) {
     return;
   }
-  auto* action = entity.get_component<Engine::Core::RpgCommanderActionComponent>();
-  if (action == nullptr || action->combat_action_id == 0U) {
+  auto* action =
+      world->try_get<Engine::Core::RpgCommanderActionComponent>(entity.get_id());
+  auto* aim = world->try_get<Engine::Core::RpgCommanderAimComponent>(entity.get_id());
+  if (action == nullptr || action->combat_action_id == 0U || !action->action_running) {
+    if (aim != nullptr) {
+      Game::Systems::RpgCombat::clear_bow_draw(*aim);
+    }
     return;
   }
   auto const action_id = static_cast<CA::CombatActionId>(action->combat_action_id);
@@ -272,6 +277,9 @@ void process_authored_combat_action(
 
   if (fpv_commander_is_staggered_out(entity, *action)) {
     cancel_authored_action(*action, presentation_state);
+    if (aim != nullptr) {
+      Game::Systems::RpgCombat::clear_bow_draw(*aim);
+    }
     return;
   }
   if (is_rts_attack_action(action_id) &&

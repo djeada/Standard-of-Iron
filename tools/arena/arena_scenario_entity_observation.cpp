@@ -1,5 +1,6 @@
 #include <QQuaternion>
 
+#include "animation/clip_manifest.h"
 #include "arena_scenario_internal.h"
 
 namespace Arena {
@@ -1600,6 +1601,8 @@ void ArenaScenarioRunner::Impl::observe_soldiers(Engine::Core::EntityID entity_i
          directive != nullptr ? directive->engagement_surface_gap : 0.0F,
          QString::fromLatin1(
              Render::Profiling::animation_state_name(soldier.animation_state)),
+         soldier.animation_clip.has_value() ? static_cast<int>(*soldier.animation_clip)
+                                            : -1,
          QString::fromLatin1(
              Render::Profiling::soldier_visual_state_name(soldier.visual_state)),
          soldier.is_swing_recoiling,
@@ -2067,8 +2070,13 @@ void ArenaScenarioRunner::Impl::observe_soldiers(Engine::Core::EntityID entity_i
       }
       if (expectation.kind == ArenaExpectationKind::HoldPoseMaintained && !culled) {
         auto const* hold = world.try_get<Engine::Core::HoldModeComponent>(entity_id);
+        bool const kneeling_bow_attack =
+            soldier.animation_state ==
+                Render::Creature::AnimationStateId::AttackRanged &&
+            soldier.animation_clip == Animation::k_humanoid_hold_bow_attack_clip;
         if (hold != nullptr && hold->active && hold->kneel_entry_progress >= 0.999F &&
-            soldier.animation_state != Render::Creature::AnimationStateId::Hold) {
+            soldier.animation_state != Render::Creature::AnimationStateId::Hold &&
+            !kneeling_bow_attack) {
           add_issue(
               QStringLiteral("hold_pose_replaced"),
               QStringLiteral("%1 entity %2 soldier %3 rendered %4 while Hold was "

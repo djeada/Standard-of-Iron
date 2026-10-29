@@ -559,6 +559,9 @@ void ArenaViewport::paint_ui_overlays(bool show_debug_overlays) {
     if (show_debug_overlays) {
       draw_stats_overlay(stats_painter);
     }
+    if (!hide_gameplay_overlays()) {
+      draw_floating_numbers(stats_painter);
+    }
     draw_rpg_hud(stats_painter);
     if (m_controls_overlay_visible) {
       draw_controls_overlay(stats_painter);
@@ -585,6 +588,9 @@ void ArenaViewport::deliver_capture_frame() {
 
 void ArenaViewport::publish_scenario_frame(
     const Arena::ArenaRenderedFrameTimings& timings) {
+  if (m_rpg_interactive || m_scenario_runner->report().cancelled) {
+    return;
+  }
   publish_animation_clock();
   publish_commander_presentation_trace();
   m_scenario_runner->observe_rendered_frame(timings);

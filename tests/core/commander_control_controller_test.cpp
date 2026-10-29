@@ -888,6 +888,35 @@ TEST_F(CommanderControlControllerTest, PrimaryActionUsesBowActionForRangedComman
                 Game::Systems::CombatActions::CombatActionId::RpgBowShot));
 }
 
+TEST_F(CommanderControlControllerTest, GuardCancelsBowDrawBeforeCameraPresentation) {
+  Engine::Core::World world;
+  auto* commander = create_commander(world, 0.0F, 0.0F);
+  commander->get_component<Engine::Core::UnitComponent>()->spawn_type =
+      Game::Units::SpawnType::RomanFieldCommander;
+  commander->get_component<Engine::Core::CommanderComponent>()->fpv_controlled = true;
+  auto* attack = commander->add_component<Engine::Core::AttackComponent>();
+  attack->can_melee = true;
+  attack->can_ranged = true;
+  attack->damage = 40;
+  attack->melee_damage = 12;
+
+  CommanderControlController controller;
+  controller.primary_action_down();
+  ASSERT_TRUE(controller.update_simulation(world, commander->get_id(), 1, 0.016F));
+  auto* aim = commander->get_component<Engine::Core::RpgCommanderAimComponent>();
+  ASSERT_NE(aim, nullptr);
+  ASSERT_TRUE(aim->is_drawing());
+
+  controller.secondary_action_down();
+  ASSERT_TRUE(controller.update_simulation(world, commander->get_id(), 1, 0.016F));
+  auto* guard = commander->get_component<Engine::Core::CommanderGuardComponent>();
+  ASSERT_NE(guard, nullptr);
+  EXPECT_TRUE(guard->active);
+  EXPECT_FALSE(aim->is_drawing());
+  EXPECT_FALSE(commander->get_component<Engine::Core::RpgCommanderActionComponent>()
+                   ->action_running);
+}
+
 TEST_F(CommanderControlControllerTest, PrimaryActionUsesDedicatedFinisherSwordSway) {
   Engine::Core::World world;
   auto* commander = create_commander(world, 0.0F, 0.0F);

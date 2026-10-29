@@ -3,8 +3,10 @@
 #include <memory>
 
 #include "core/component_commander.h"
+#include "core/component_gameplay.h"
 #include "core/world.h"
 #include "systems/combat_actions/combat_action_definition.h"
+#include "systems/combat_actions/combat_action_service.h"
 #include "systems/combat_system/combat_action_processor.h"
 #include "systems/owner_registry.h"
 #include "systems/projectile_system.h"
@@ -114,6 +116,97 @@ TEST_F(RpgBowTest, HeldStringStopsTheShotAtFullDraw) {
   EXPECT_EQ(aim.draw_stage, BowDrawStage::FullDraw);
   EXPECT_LT(action.action_elapsed_time, release_gate());
   EXPECT_GT(aim.full_draw_hold, 0.4F);
+}
+
+TEST_F(RpgBowTest, RefusedShotDoesNotStartDrawing) {
+  auto* commander = make_archer_commander(world, 0.0F, 0.0F);
+  auto* aim =
+      Game::Systems::RpgCombat::sync_commander_aim(*commander, {.primary_held = true});
+  commander->add_component<StaminaComponent>()->stamina = 0.0F;
+
+  auto const result = Game::Systems::CombatActions::CombatActionService::request_attack(
+      world, {.attacker_id = commander->get_id()});
+
+  EXPECT_FALSE(result.accepted);
+  EXPECT_EQ(result.outcome, CombatIntentOutcome::InsufficientStamina);
+  EXPECT_FALSE(aim->is_drawing());
+  EXPECT_EQ(aim->draw_stage, BowDrawStage::None);
+}
+
+TEST_F(RpgBowTest, PowerShotDoesNotLeaveAHeldDrawAfterItsAutomaticRelease) {
+  auto* commander = make_archer_commander(world, 0.0F, 0.0F);
+  auto* aim = Game::Systems::RpgCombat::sync_commander_aim(*commander, {});
+
+  auto const result = Game::Systems::CombatActions::CombatActionService::request_attack(
+      world,
+      {.attacker_id = commander->get_id(),
+       .intent_type = CommanderCombatIntentType::Heavy});
+  ASSERT_TRUE(result.accepted);
+  ASSERT_FALSE(result.buffered);
+  ASSERT_NE(result.action_id, CombatActionId::RpgBowShot);
+
+  auto* presentation = commander->get_component<CombatStateComponent>();
+  for (int frame = 0; frame < 180; ++frame) {
+    Game::Systems::Combat::process_authored_combat_action(
+        &world, *commander, presentation, 1.0F / 60.0F);
+    EXPECT_FALSE(aim->is_drawing());
+  }
+}
+
+TEST_F(RpgBowTest, CancelledDrawCannotRestartOrDrainStaminaWhileTheButtonStaysHeld) {
+  world.add_system(std::make_unique<Game::Systems::ProjectileSystem>());
+  auto* commander = make_archer_commander(world, 0.0F, 0.0F);
+  auto* aim =
+      Game::Systems::RpgCombat::sync_commander_aim(*commander, {.primary_held = true});
+  auto* action = commander->add_component<RpgCommanderActionComponent>();
+  action->combat_action_id = static_cast<std::uint8_t>(CombatActionId::RpgBowShot);
+  action->action_duration = bow_definition().duration_seconds;
+  action->action_running = false;
+  draw_for(*aim, *action, release_gate() + 0.5F);
+  ASSERT_TRUE(aim->is_drawing());
+  auto* stamina = commander->add_component<StaminaComponent>();
+  stamina->stamina = 40.0F;
+
+  for (int frame = 0; frame < 120; ++frame) {
+    Game::Systems::Combat::process_authored_combat_action(
+        &world, *commander, nullptr, 1.0F / 60.0F);
+  }
+
+  EXPECT_FALSE(aim->is_drawing());
+  EXPECT_FLOAT_EQ(aim->draw_progress, 0.0F);
+  EXPECT_FLOAT_EQ(aim->full_draw_hold, 0.0F);
+  EXPECT_TRUE(aim->draw_held);
+  EXPECT_FALSE(aim->relaxed_from_overhold);
+  EXPECT_FLOAT_EQ(stamina->stamina, 40.0F);
+  EXPECT_TRUE(
+      world.get_system<Game::Systems::ProjectileSystem>()->projectiles().empty());
+
+  aim->relaxed_from_overhold = true;
+  Game::Systems::Combat::process_authored_combat_action(
+      &world, *commander, nullptr, 1.0F / 60.0F);
+  EXPECT_TRUE(aim->relaxed_from_overhold);
+}
+
+TEST_F(RpgBowTest, StaggerImmediatelyClearsDrawAndItStaysClearAfterRecovery) {
+  auto* commander = make_archer_commander(world, 0.0F, 0.0F);
+  auto* aim =
+      Game::Systems::RpgCombat::sync_commander_aim(*commander, {.primary_held = true});
+  auto* action = commander->add_component<RpgCommanderActionComponent>();
+  action->combat_action_id = static_cast<std::uint8_t>(CombatActionId::RpgBowShot);
+  action->action_duration = bow_definition().duration_seconds;
+  action->action_running = true;
+  draw_for(*aim, *action, release_gate() + 0.5F);
+  auto* stagger = commander->add_component<StaggerComponent>();
+  stagger->tier = StaggerTier::HeavyStagger;
+
+  Game::Systems::Combat::process_authored_combat_action(
+      &world, *commander, nullptr, 1.0F / 60.0F);
+  EXPECT_FALSE(action->action_running);
+  EXPECT_FALSE(aim->is_drawing());
+  commander->remove_component<StaggerComponent>();
+  Game::Systems::Combat::process_authored_combat_action(
+      &world, *commander, nullptr, 1.0F / 60.0F);
+  EXPECT_FALSE(aim->is_drawing());
 }
 
 TEST_F(RpgBowTest, ReleasingEarlyLoosesAWeakerArrowThanAFullDraw) {

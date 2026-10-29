@@ -289,6 +289,12 @@ void ArenaViewport::mousePressEvent(QMouseEvent* event) {
 void ArenaViewport::mouseMoveEvent(QMouseEvent* event) {
   if (m_rpg_interactive && m_rpg_commander_controller != nullptr) {
     if (m_rpg_mouse_captured) {
+      QPoint const center = mapToGlobal(QPoint(width() / 2, height() / 2));
+      if (center != m_rpg_mouse_center) {
+        recenter_rpg_mouse();
+        event->accept();
+        return;
+      }
       QPoint const global_pos = event->globalPosition().toPoint();
       QPoint const look_delta = global_pos - m_rpg_mouse_center;
       if (!look_delta.isNull()) {

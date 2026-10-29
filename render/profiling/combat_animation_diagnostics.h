@@ -3,6 +3,7 @@
 #include <QVector3D>
 
 #include <cstdint>
+#include <optional>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -118,6 +119,7 @@ struct SoldierAnimationDebugSample {
       Render::Creature::MovementAnimationState::Idle};
   Render::Creature::AnimationStateId animation_state{
       Render::Creature::AnimationStateId::Idle};
+  std::optional<std::uint16_t> animation_clip;
   std::uint8_t lod{0U};
   SoldierCullReason cull_reason{SoldierCullReason::None};
   SoldierVisualState visual_state{SoldierVisualState::Idle};

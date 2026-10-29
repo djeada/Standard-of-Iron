@@ -409,6 +409,7 @@ private:
   [[nodiscard]] auto terrain_review_max_camera_distance() const -> float;
   void update_active_scenario(float simulation_dt);
   void configure_rpg_scenario_commander(Engine::Core::EntityID entity_id);
+  [[nodiscard]] auto activate_rpg_commander(Engine::Core::EntityID entity_id) -> bool;
   [[nodiscard]] auto take_due_presentation_hitch() -> float;
   void publish_animation_clock();
   void publish_commander_presentation_trace();

@@ -710,6 +710,7 @@ struct ArenaNarrowLayoutOutcome {
 
 struct ArenaScenarioReport {
   QString scenario_id;
+  bool cancelled{false};
   float elapsed_seconds{0.0F};
   std::uint64_t rendered_frames{0};
   std::uint64_t rendered_soldier_samples{0};
@@ -747,7 +748,9 @@ struct ArenaScenarioReport {
   std::uint64_t world_digest{0};
   std::vector<ArenaScenarioIssue> issues;
 
-  [[nodiscard]] auto passed() const noexcept -> bool { return issues.empty(); }
+  [[nodiscard]] auto passed() const noexcept -> bool {
+    return !cancelled && issues.empty();
+  }
   [[nodiscard]] auto summary() const -> QString;
 };
 
@@ -861,6 +864,8 @@ public:
   auto operator=(const ArenaScenarioRunner&) -> ArenaScenarioRunner& = delete;
 
   [[nodiscard]] auto start() -> bool;
+  // Stop scripted commands and validation without destroying the playable world.
+  void cancel();
   void update(float simulation_dt);
   void observe_rendered_frame(double frame_time_ms);
   void observe_rendered_frame(const ArenaRenderedFrameTimings& timings);

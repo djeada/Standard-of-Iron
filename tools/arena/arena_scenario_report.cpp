@@ -278,6 +278,11 @@ auto narrow_layout_summary(const std::vector<ArenaNarrowLayoutOutcome>& outcomes
 }
 
 auto ArenaScenarioReport::summary() const -> QString {
+  if (cancelled) {
+    return QStringLiteral("CANCELLED %1 at %2 s")
+        .arg(scenario_id)
+        .arg(elapsed_seconds, 0, 'f', 2);
+  }
   if (passed()) {
     QString result = QStringLiteral("PASS %1: %2 frames, %3 s")
                          .arg(scenario_id)
@@ -321,6 +326,7 @@ auto ArenaScenarioRunner::write_artifacts(const QString& directory,
   QJsonObject report_object;
   report_object.insert(QStringLiteral("scenario"), m_impl->report.scenario_id);
   report_object.insert(QStringLiteral("completed"), m_impl->complete);
+  report_object.insert(QStringLiteral("cancelled"), m_impl->report.cancelled);
   report_object.insert(QStringLiteral("passed"),
                        m_impl->complete && m_impl->report.passed());
   report_object.insert(QStringLiteral("elapsed_seconds"),
@@ -648,6 +654,7 @@ auto ArenaScenarioRunner::write_artifacts(const QString& directory,
           {QStringLiteral("declared_target_slot"), soldier.declared_target_slot},
           {QStringLiteral("declared_surface_gap"), soldier.declared_surface_gap},
           {QStringLiteral("animation"), soldier.animation},
+          {QStringLiteral("animation_clip"), soldier.animation_clip},
           {QStringLiteral("visual"), soldier.visual},
           {QStringLiteral("swing_recoil"), soldier.swing_recoil},
           {QStringLiteral("hit_reaction_tilt_degrees"),
