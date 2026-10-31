@@ -166,6 +166,6 @@ Arabic is intentionally outside the title face's coverage and falls back to the 
 
 ## Licensing
 
-The bundled third-party font families use OFL-1.1 and permit commercial use under that license. See [THIRD_PARTY_LICENSES.md](../THIRD_PARTY_LICENSES.md) and the license files in [assets/fonts/](../assets/fonts/).
+The bundled third-party font families use OFL-1.1 and permit commercial use under that license. See [THIRD_PARTY_LICENSES.md](https://github.com/djeada/Standard-of-Iron/blob/main/THIRD_PARTY_LICENSES.md) and the license files in [assets/fonts/](https://github.com/djeada/Standard-of-Iron/tree/main/assets/fonts).
 
 The typography system is successful when the same content looks intentional in a game build, an editor tool, a screenshot, and a promotional reel—and when a missing glyph or accidental fallback fails loudly instead of becoming machine-dependent visual drift.

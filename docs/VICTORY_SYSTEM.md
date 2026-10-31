@@ -282,7 +282,7 @@ The core implementation and tests live in:
 - `game/map/mission_victory_rules.h`;
 - `game/map/mission_victory_rules.cpp`;
 - `game/map/map_definition.h`;
-- [MISSION_FRAMEWORK.md](MISSION_FRAMEWORK.md);
+- [MISSION_FRAMEWORK.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/MISSION_FRAMEWORK.md);
 - `tests/systems/victory_service_test.cpp`;
 - `tests/map/mission_victory_rules_test.cpp`; and
 - `tests/map/mission_asset_rules_test.cpp`.

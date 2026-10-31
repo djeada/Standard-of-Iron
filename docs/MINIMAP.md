@@ -163,7 +163,7 @@ Dormant, awakened, and cleared shrines receive different treatments, and awakene
 
 ### Cursed gold veins
 
-`CursedGoldVeinSystem::vein_markers()` uses the same landmark channel with kind `gold_vein` and state `neutral`, `owned`, `enemy`, or `destroyed`. Those states map to gold, success, danger, and disabled treatments respectively. See [CURSED_GOLD_VEIN.md](CURSED_GOLD_VEIN.md).
+`CursedGoldVeinSystem::vein_markers()` uses the same landmark channel with kind `gold_vein` and state `neutral`, `owned`, `enemy`, or `destroyed`. Those states map to gold, success, danger, and disabled treatments respectively. See [CURSED_GOLD_VEIN.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/CURSED_GOLD_VEIN.md).
 
 ## Coordinate conversion
 

@@ -156,7 +156,7 @@ Examples include:
 
 A unit's base stats should not be interpreted as the entire combat result in isolation from these runtime systems.
 
-See [FORMATION_ARCHITECTURE.md](FORMATION_ARCHITECTURE.md) and [COMBAT_SYSTEM.md](COMBAT_SYSTEM.md).
+See [FORMATION_ARCHITECTURE.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/FORMATION_ARCHITECTURE.md) and [COMBAT_SYSTEM.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/COMBAT_SYSTEM.md).
 
 ## Production cost is data-driven
 
@@ -185,7 +185,7 @@ Those quantities have different balance purposes:
 
 Changing one should not automatically be described as changing the other.
 
-See [ECONOMY_GUIDANCE.md](ECONOMY_GUIDANCE.md) for the current production/readout contract.
+See [ECONOMY_GUIDANCE.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/ECONOMY_GUIDANCE.md) for the current production/readout contract.
 
 ## Battlefield roles
 
@@ -383,8 +383,8 @@ The current balance workflow depends on these invariants:
 | Fixture data             | `assets/balance/*.json`                                |
 | Simulator                | `tools/balance_sim/`                                   |
 | Test gate                | `tests/tools/balance_sim_test.cpp`                     |
-| Economy explanation      | [ECONOMY_GUIDANCE.md](ECONOMY_GUIDANCE.md)             |
-| Combat pipeline          | [COMBAT_SYSTEM.md](COMBAT_SYSTEM.md)                   |
-| Formation/stance effects | [FORMATION_ARCHITECTURE.md](FORMATION_ARCHITECTURE.md) |
+| Economy explanation      | [ECONOMY_GUIDANCE.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/ECONOMY_GUIDANCE.md)             |
+| Combat pipeline          | [COMBAT_SYSTEM.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/COMBAT_SYSTEM.md)                   |
+| Formation/stance effects | [FORMATION_ARCHITECTURE.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/FORMATION_ARCHITECTURE.md) |
 
 The active unit-balance contract is the combination of current production data, current combat rules, and deterministic fixtures. Historical one-number efficiency formulas are not a substitute for that executable system.

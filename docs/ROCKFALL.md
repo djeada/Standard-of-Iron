@@ -63,7 +63,7 @@ Choose a release point on the slope itself, not on a peak. Boulders follow the t
 - **`ai`**: the trap's owner has to be AI-controlled. The AI waits for the column: it releases once `ai_min_targets` hostile troops are in the zone, or after `k_rockfall_ai_patience_seconds` (3 s) with at least one there. Under a human owner the trap only fires by script.
 - **`scripted`**: fires only from a mission event or an arena step.
 
-Mission events release a trap by id with a `rockfall` action. See _Mission events_ in [MISSION_FRAMEWORK.md](MISSION_FRAMEWORK.md). Arena scenarios use the `TriggerRockfall` step command with `zone_id` set to the trap id.
+Mission events release a trap by id with a `rockfall` action. See _Mission events_ in [MISSION_FRAMEWORK.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/MISSION_FRAMEWORK.md). Arena scenarios use the `TriggerRockfall` step command with `zone_id` set to the trap id.
 
 ## Runtime behaviour
 

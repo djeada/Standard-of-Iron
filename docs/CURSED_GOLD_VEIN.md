@@ -69,7 +69,7 @@ The query is bounded by the world spatial index. The system searches only the re
 
 ## AI opponents
 
-AI opponents claim veins: `GoldVeinBehavior` sends a pair of soldiers to the nearest vein the AI does not hold and releases them once it is won, so they leave the curse radius. See "Gold veins and the market" in [AI_ARCHITECTURE.md](AI_ARCHITECTURE.md).
+AI opponents claim veins: `GoldVeinBehavior` sends a pair of soldiers to the nearest vein the AI does not hold and releases them once it is won, so they leave the curse radius. See "Gold veins and the market" in [AI_ARCHITECTURE.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/AI_ARCHITECTURE.md).
 
 ## Ownership changes and destruction
 

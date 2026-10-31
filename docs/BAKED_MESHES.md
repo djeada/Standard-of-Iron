@@ -6,7 +6,7 @@ This document explains why, how the bake is organised, what keeps a new building
 
 ## Why
 
-Profiling real battles (Siege of Aurelia Magna, four-AI skirmishes; see [FRAME_PACING.md](FRAME_PACING.md)) showed procedural assembly costing presentation time in three ways:
+Profiling real battles (Siege of Aurelia Magna, four-AI skirmishes; see [FRAME_PACING.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/FRAME_PACING.md)) showed procedural assembly costing presentation time in three ways:
 
 - **First-use spikes.** A building's merged mesh was built the first time the building was drawn. On Aurelia Magna that put a 538 ms stall on the first playable frame.
 - **Mid-battle creation.** Equipment and creature meshes were merged and uploaded lazily, so new troops or wildlife arriving in view created GL buffers during play (over 400 in a 40-second AI match).

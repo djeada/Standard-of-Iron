@@ -199,7 +199,7 @@ string is used (saves, commands, film/battle scripts, AI doctrine data). Only
 a doctrine with its own template offers one: Rome the triplex acies, Carthage
 (and with it the allied Gauls and Iberians) the crescent and the elephant
 screen, the neutral composite doctrine all three. See
-[Battle orders](#battle-orders).
+[Battle orders](https://github.com/djeada/Standard-of-Iron/blob/main/docs/FORMATION_ARCHITECTURE.md#battle-orders).
 
 Intent describes the tactical deployment requested by the player or AI.
 
@@ -322,7 +322,7 @@ members + doctrine + intent + options
 ```
 
 `plan()` is the combined convenience path: `build_layout()` followed by
-`fit_to_ground()` (see [Terrain fitting](#terrain-fitting)). The placement preview
+`fit_to_ground()` (see [Terrain fitting](https://github.com/djeada/Standard-of-Iron/blob/main/docs/FORMATION_ARCHITECTURE.md#terrain-fitting)). The placement preview
 runs the same `fit_to_ground()` on its cached layout, so the preview is the plan
 the commit will produce.
 
@@ -352,7 +352,7 @@ short in a dense block, a front-to-back sweep then moves any slot that still
 touches an earlier one directly behind it. Slots only ever move rearward in the
 sweep, so rank order is kept and the pass always terminates. The same pass runs
 again after previous slot ids are restored (see
-[Slot identity](#slot-identity)), so no reshuffle can reopen an overlap.
+[Slot identity](https://github.com/djeada/Standard-of-Iron/blob/main/docs/FORMATION_ARCHITECTURE.md#slot-identity)), so no reshuffle can reopen an overlap.
 `ArmyFormationPlanner::first_overlap()` checks a placed plan on world positions.
 
 ## Slot identity
@@ -416,7 +416,7 @@ gaps (1.6 m between troops, 2 m between ranks, scaled by the spacing option).
   `max_frontage` (counting the wings) and `max_depth` (a column too deep gains a
   file).
 - The battle orders own their geometry entirely
-  (`formation_battle_orders.cpp`); see [Battle orders](#battle-orders).
+  (`formation_battle_orders.cpp`); see [Battle orders](https://github.com/djeada/Standard-of-Iron/blob/main/docs/FORMATION_ARCHITECTURE.md#battle-orders).
 - Troop sizes are measured, not estimated: `layout_reach_for_files()` returns the
   real soldier extents for every file count a template may ask for, so a
   reshaped troop (a column's deep blocks, riders who keep their own shape) is
@@ -926,7 +926,7 @@ AI station/muster logic decides where a group should assemble, but it still reli
 
 This prevents the AI from bypassing the same terrain and role constraints the player sees.
 
-See [AI_ARCHITECTURE.md](AI_ARCHITECTURE.md) for station resolution and committed attack-wave behavior.
+See [AI_ARCHITECTURE.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/AI_ARCHITECTURE.md) for station resolution and committed attack-wave behavior.
 
 # Persistence
 

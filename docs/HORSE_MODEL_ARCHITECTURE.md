@@ -156,7 +156,7 @@ Species manifests map gameplay/presentation actions to authored animation clips.
 
 The BPAT system carries pre-baked bone palettes, markers, sockets, contact data, bind pose, and hierarchy information used by the runtime animation path. The horse/elephant renderer then consumes the current clip/phase rather than rebuilding skeletal animation from source channels every frame.
 
-See [CREATURE_BPAT_FORMAT.md](CREATURE_BPAT_FORMAT.md) for the binary animation contract.
+See [CREATURE_BPAT_FORMAT.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/CREATURE_BPAT_FORMAT.md) for the binary animation contract.
 
 ## Root motion vs mesh pose
 

@@ -244,7 +244,7 @@ Damage can be modified by several independent systems, including:
 - army-formation cohesion state; and
 - special attack context.
 
-The exact current counter constants live in `game/systems/combat_system/combat_types.h` and current troop data. [UNIT_BALANCE.md](UNIT_BALANCE.md) documents the active relationships and deterministic balance fixtures.
+The exact current counter constants live in `game/systems/combat_system/combat_types.h` and current troop data. [UNIT_BALANCE.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/UNIT_BALANCE.md) documents the active relationships and deterministic balance fixtures.
 
 ### Formation and defensive-layout multipliers
 
@@ -252,7 +252,7 @@ Defensive unit layouts and army formations are separate systems, and their comba
 
 For example, the defensive-layout service can apply its context-sensitive protection while `ArmyFormationRuntime::damage_taken_multiplier()` applies the group cohesion modifier. One does not replace the other.
 
-This matches the architecture described in [FORMATION_ARCHITECTURE.md](FORMATION_ARCHITECTURE.md): internal soldier layout and army-scale grouping are independent layers.
+This matches the architecture described in [FORMATION_ARCHITECTURE.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/FORMATION_ARCHITECTURE.md): internal soldier layout and army-scale grouping are independent layers.
 
 ## Deterministic melee exchange
 
@@ -285,7 +285,7 @@ Single-body one-on-one combat can use duel footwork around the lock. Formation m
 
 **Locked squads strike whatever they are locked to.** A multi-body squad's root yaw is frozen in a lock (`lock_combatant_facing`), and its soldiers turn individually towards the contact. The 80° facing check in `deal_rts_melee_contact_damage` looks at the root yaw. A squad caught on the flank while marching kept facing its march direction, swung, and landed nothing. That check is waived when both sides are formations and the striker is locked to this target.
 
-**Any two enemies that touch are locked.** `lock_touching_enemies`, at the start of `process_attacks`, locks every pair of hostile units whose bodies touch, whatever orders they carry. Builders, civilians, archers and marching troops used to walk through an enemy block unless someone had attacked them explicitly. For formation slots, touching means `surface_gap <= 0.001`, the same threshold a locked squad needs to land a blow. For single bodies, it means the centre distance is within the contact or body-contact distance plus 5 cm. Both units take the other as a `MeleeLock` target and stop their movement. The rule leaves out elephants (they trample through), wildlife (it never holds a lock, see [AMBIENT_WILDLIFE.md](AMBIENT_WILDLIFE.md)), buildings, the dead, non-participants and units without an `AttackComponent`. `ArmyCommandTest.AnyTwoEnemiesThatTouchAreLockedInMelee` pins a builder crew walking into swordsmen, swordsmen walking into builders, and spearmen marching into archers.
+**Any two enemies that touch are locked.** `lock_touching_enemies`, at the start of `process_attacks`, locks every pair of hostile units whose bodies touch, whatever orders they carry. Builders, civilians, archers and marching troops used to walk through an enemy block unless someone had attacked them explicitly. For formation slots, touching means `surface_gap <= 0.001`, the same threshold a locked squad needs to land a blow. For single bodies, it means the centre distance is within the contact or body-contact distance plus 5 cm. Both units take the other as a `MeleeLock` target and stop their movement. The rule leaves out elephants (they trample through), wildlife (it never holds a lock, see [AMBIENT_WILDLIFE.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/AMBIENT_WILDLIFE.md)), buildings, the dead, non-participants and units without an `AttackComponent`. `ArmyCommandTest.AnyTwoEnemiesThatTouchAreLockedInMelee` pins a builder crew walking into swordsmen, swordsmen walking into builders, and spearmen marching into archers.
 
 ## Formation contact
 
@@ -300,7 +300,7 @@ The result helps keep several views of the fight aligned:
 - hit/weapon origin placement; and
 - visual front lines between formations.
 
-See [FORMATION_ARCHITECTURE.md](FORMATION_ARCHITECTURE.md) for soldier anchors, stable slots, traversal layouts, and army-group state.
+See [FORMATION_ARCHITECTURE.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/FORMATION_ARCHITECTURE.md) for soldier anchors, stable slots, traversal layouts, and army-group state.
 
 ## Hit feedback
 
@@ -387,7 +387,7 @@ An `UnderAttack` alert recruits every free ally within `threat_alert_radius()` o
 
 Alerts are pushed once per second from the unit that was hit, so an ally that was busy at that moment would miss the fight. `AutoEngagement` therefore also _pulls_: an idle AI-controlled unit with nothing in its own acquisition range joins the nearest troop fight of an ally within its vision range (`Combat::ally_fight_to_join`, recorded as `EngagementOutcome::AssistedAlly`). The joined target must pass `may_engage(..., SquadAlert)`, so guard reach, walls and hold rules still apply, and only a fight against an armed enemy is joined: an ally battering a building or chasing an unarmed scout fights alone (`MissionWaveAssaultTest.GarrisonAnswersAScoutWithAFewUnitsAndHoldsTheRest`). Player units do not do this; they fight what they see and what hits them.
 
-A ranged unit answering an attack or an alert chases into range (`TargetSource::Answering`, see [Chase policy](#chase-policy)). Opportunistic acquisition still uses weapon range only, so archers do not wander after targets they merely see.
+A ranged unit answering an attack or an alert chases into range (`TargetSource::Answering`, see [Chase policy](https://github.com/djeada/Standard-of-Iron/blob/main/docs/COMBAT_SYSTEM.md#chase-policy)). Opportunistic acquisition still uses weapon range only, so archers do not wander after targets they merely see.
 
 Threat alerts can feed higher-level systems such as AI local response and player presentation, but they are not another source of damage or targeting authority.
 
@@ -438,7 +438,7 @@ Combat tuning is checked with production simulation rather than a standalone pap
 
 `balance_sim` loads current troop/combat data and executes deterministic fixtures that encode important matchup relationships. The fixtures cover mirrors and current counter relationships such as spear/cavalry, infantry/siege, archer/elephant, spear/sword, faction line matchups, commander/line interactions, and other maintained cases.
 
-See [UNIT_BALANCE.md](UNIT_BALANCE.md) for the current fixture catalogue and combat constants.
+See [UNIT_BALANCE.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/UNIT_BALANCE.md) for the current fixture catalogue and combat constants.
 
 ## Common invariants
 

@@ -54,7 +54,7 @@ That rule gives the AI two separate clocks:
 
 Only the second one affects gameplay.
 
-The startup path uses the same worker system. Mission loading can wait for the initial decision set before hiding the loading overlay; see [MISSION_STARTUP.md](MISSION_STARTUP.md).
+The startup path uses the same worker system. Mission loading can wait for the initial decision set before hiding the loading overlay; see [MISSION_STARTUP.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/MISSION_STARTUP.md).
 
 ## Snapshot: what the AI can observe
 
@@ -377,7 +377,7 @@ Mission waves are authored reinforcements. When spawned, their units receive the
 
 That distinction lets a scenario author say, for example, “this fortress AI remains a garrison, but these three assault columns attack from authored entry points.”
 
-See [MISSION_FRAMEWORK.md](MISSION_FRAMEWORK.md) for wave schema and the built-in archetype catalogue.
+See [MISSION_FRAMEWORK.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/MISSION_FRAMEWORK.md) for wave schema and the built-in archetype catalogue.
 
 ## Economy and production
 
@@ -401,7 +401,7 @@ Its macro context tracks needs such as:
 
 Builder and production behaviors share strategic configuration so settlement growth, workforce allocation, recruitment, and fortification operate as one plan rather than unrelated fixed thresholds.
 
-Food and manpower are part of this loop. Farms and food collection support homes, homes produce civilians, and civilians feed reserve/manpower into production buildings through the same systems documented in [FOOD_AND_FARMS.md](FOOD_AND_FARMS.md).
+Food and manpower are part of this loop. Farms and food collection support homes, homes produce civilians, and civilians feed reserve/manpower into production buildings through the same systems documented in [FOOD_AND_FARMS.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/FOOD_AND_FARMS.md).
 
 ## Commander doctrines
 
@@ -475,7 +475,7 @@ AI strategic movement uses the same army-formation planning infrastructure as pl
 
 The planner returns per-slot placement status. Commands are emitted for placeable slots; blocked slots are not turned into impossible movement orders.
 
-That means AI formation behavior inherits the same terrain fitting, doctrine templates, movement policies, and slot semantics documented in [FORMATION_ARCHITECTURE.md](FORMATION_ARCHITECTURE.md).
+That means AI formation behavior inherits the same terrain fitting, doctrine templates, movement policies, and slot semantics documented in [FORMATION_ARCHITECTURE.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/FORMATION_ARCHITECTURE.md).
 
 ## Defence model
 

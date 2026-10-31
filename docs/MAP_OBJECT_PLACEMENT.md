@@ -68,7 +68,7 @@ The rule is therefore explicit:
 
 The magic shrine and cursed gold vein are world props that receive a capturable `Barracks` entity at runtime through `UndeadAwakeningSystem` and `CursedGoldVeinSystem`.
 
-The capturable entity uses the barracks collision body, which is larger than the visible prop footprint. Map authors should therefore leave several metres of clear ground around either object. See [IRON_SEPULCHER.md](IRON_SEPULCHER.md) and [CURSED_GOLD_VEIN.md](CURSED_GOLD_VEIN.md).
+The capturable entity uses the barracks collision body, which is larger than the visible prop footprint. Map authors should therefore leave several metres of clear ground around either object. See [IRON_SEPULCHER.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/IRON_SEPULCHER.md) and [CURSED_GOLD_VEIN.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/CURSED_GOLD_VEIN.md).
 
 ## Physical footprints
 

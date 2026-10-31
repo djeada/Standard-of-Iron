@@ -4,7 +4,7 @@ This document explains the purpose of every campaign mission: what the player is
 
 It is intentionally not a specification sheet. Troop counts, wave timings, starting purses, enemy strengths, and other tuning values live in `assets/campaigns/second_punic_war.json`, `assets/missions/*.json`, and the maps they reference. Those values change during balancing, so duplicating them here would create documentation that drifts out of date. **Read the JSON for numbers; read this page for design intent.**
 
-For schema details, see [MISSION_FRAMEWORK.md](MISSION_FRAMEWORK.md). Each mission's `teaching_goal` remains the authoritative statement of its lesson; the table below is the concise version.
+For schema details, see [MISSION_FRAMEWORK.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/MISSION_FRAMEWORK.md). Each mission's `teaching_goal` remains the authoritative statement of its lesson; the table below is the concise version.
 
 The roster is also checked by `tests/map/campaign_roster_test.cpp`. The test re-reads the campaign and fails if this page lists missions in the wrong order or region, assigns the wrong goal type, or claims a starting base that the map does not provide. It finds the relevant columns by header name rather than position, so prose can be improved and columns can be added without breaking the test. Only those design claims are pinned; tuning numbers are not.
 
@@ -36,7 +36,7 @@ The column is derived, not decorative. `TheGoalColumnAgreesWithTheVictoryConditi
 
 Every mission uses `victory_mode: "all"`, and every mission includes `eliminate_commanders`. A nation effectively dies with the commander who leads it: when that commander is killed, the nation's barracks become neutral, its other works come down, and its troops leave the field. Any wave it had not yet sent stands down too, and counts as broken, so a `survive_waves` objective still completes. `MissionWaveDirector` does this for every owner it has seen with a living commander; an owner that never fielded one keeps its schedule.
 
-This makes decapitation the shortest route to a capture objective rather than a way around one. It is also why a commander belongs inside his own camp or at the head of his army, not at a lightly guarded post behind the player's lines: a cheap kill there cancels a whole nation's schedule. A neutral camp is still a camp the player must occupy. `MissionAssetRulesTest.DecapitationObjectivesHaveCommandersToKill` fails the build if an AI force ships without a commander spawn, because the elimination rule only arms after an enemy commander has been seen. An unarmed rule would make the mission unwinnable. Commanders are authored in the map's `spawns[]`; see [MISSION_FRAMEWORK.md](MISSION_FRAMEWORK.md).
+This makes decapitation the shortest route to a capture objective rather than a way around one. It is also why a commander belongs inside his own camp or at the head of his army, not at a lightly guarded post behind the player's lines: a cheap kill there cancels a whole nation's schedule. A neutral camp is still a camp the player must occupy. `MissionAssetRulesTest.DecapitationObjectivesHaveCommandersToKill` fails the build if an AI force ships without a commander spawn, because the elimination rule only arms after an enemy commander has been seen. An unarmed rule would make the mission unwinnable. Commanders are authored in the map's `spawns[]`; see [MISSION_FRAMEWORK.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/MISSION_FRAMEWORK.md).
 
 _The Battle of Lake Trasimene is the only mission that can be lost to the clock._ Every other timer is an optional objective or part of a wave schedule.
 
@@ -57,11 +57,11 @@ Everywhere else, the starting purse is designed to support reinforcement rather 
 
 ## Ground worth taking
 
-Every mission contains at least one dead zone. Clearing its garrison grants a `clear_reward`: spendable resources that are never counted as harvested. This lets a hoard finance the next push without accidentally satisfying the Alps gathering objective. See [IRON_SEPULCHER.md](IRON_SEPULCHER.md).
+Every mission contains at least one dead zone. Clearing its garrison grants a `clear_reward`: spendable resources that are never counted as harvested. This lets a hoard finance the next push without accidentally satisfying the Alps gathering objective. See [IRON_SEPULCHER.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/IRON_SEPULCHER.md).
 
 Every standalone sanctuary has one or two wardens. Two soldiers do not create a battle; they simply ensure that taking a shrine has a cost.
 
-Wildlife is authored per map rather than inherited from a derived default. Each map includes a sheep pasture worth a detour and a wolf range placed in forest terrain. From the Alps onward, maps also introduce scheduled wolf packs. Wolves can pass through forest while cavalry cannot, which creates threats a mounted column cannot simply chase down. See [AMBIENT_WILDLIFE.md](AMBIENT_WILDLIFE.md) and [RTS_MAP_DESIGN.md](../scripts/RTS_MAP_DESIGN.md).
+Wildlife is authored per map rather than inherited from a derived default. Each map includes a sheep pasture worth a detour and a wolf range placed in forest terrain. From the Alps onward, maps also introduce scheduled wolf packs. Wolves can pass through forest while cavalry cannot, which creates threats a mounted column cannot simply chase down. See [AMBIENT_WILDLIFE.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/AMBIENT_WILDLIFE.md) and [RTS_MAP_DESIGN.md](https://github.com/djeada/Standard-of-Iron/blob/main/scripts/RTS_MAP_DESIGN.md).
 
 ## History underneath the campaign
 
@@ -98,7 +98,7 @@ list and the mission detail panel both ask it, so the star row and the Roman
 tactical rating always describe the same mission the same way. This is the
 scenario's _inherent_ challenge and has nothing to do with the Easy/Normal/Hard/
 Brutal preset the player picks before deploying — see
-[DIFFICULTY.md](DIFFICULTY.md). Never feed `difficulty_modifier` into a force,
+[DIFFICULTY.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/DIFFICULTY.md). Never feed `difficulty_modifier` into a force,
 resource or wave multiplier.
 
 ## Guidance for mission tuning

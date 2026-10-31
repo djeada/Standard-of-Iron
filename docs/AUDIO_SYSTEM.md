@@ -2,7 +2,7 @@
 
 Everything the player hears goes through one path: a **cue** is requested by gameplay or QML, the cue registry picks a **resource** from the manifest, `AudioSystem` decides whether it may play, and the miniaudio backend mixes it. Music and ambience beds are chosen by **tags** in the manifest rather than by ID in code, so the asset set can change without touching C++ or QML.
 
-Where each file came from and under what licence is in [AUDIO_LICENSES.md](AUDIO_LICENSES.md).
+Where each file came from and under what licence is in [AUDIO_LICENSES.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/AUDIO_LICENSES.md).
 
 ## Where things live
 
@@ -27,7 +27,7 @@ Where each file came from and under what licence is in [AUDIO_LICENSES.md](AUDIO
 | `app/audio/weather_audio.*`                                      | Rain and snow layer over the mission bed                                           |
 | `app/audio/audio_system_proxy.*`                                 | QML entry point (`audioSystem.play_cue`, volume sliders)                           |
 | `third_party/miniaudio.h`, `stb_vorbis`                          | Device output and Vorbis decoding                                                  |
-| `tools/audio_synth`, `tools/audio_field`, `tools/audio_import`   | The three asset pipelines, see [Asset pipelines](#asset-pipelines)                 |
+| `tools/audio_synth`, `tools/audio_field`, `tools/audio_import`   | The three asset pipelines, see [Asset pipelines](https://github.com/djeada/Standard-of-Iron/blob/main/docs/AUDIO_SYSTEM.md#asset-pipelines)                 |
 
 ## The path of one cue
 
@@ -89,10 +89,10 @@ The source location is captured with `std::source_location`, so no call site pas
 | `id`, `aliases`                                              | Resource ID; aliases resolve to the same resource                                                                     |
 | `path`                                                       | Relative to `assets/audio/`                                                                                           |
 | `category`                                                   | `sfx`, `voice`, `ambience` (or `ambient`), `music` — picks the volume slider, channel cap and mastering profile       |
-| `load_policy`                                                | See [Loading](#loading)                                                                                               |
+| `load_policy`                                                | See [Loading](https://github.com/djeada/Standard-of-Iron/blob/main/docs/AUDIO_SYSTEM.md#loading)                                                                                               |
 | `tags`                                                       | Free-form string pairs used by tag queries (`screen_context`, `ambient_state`, `faction`, `unit`, `biome`, `source`…) |
 | `priority`, `cooldown_ms`, `max_instances`, `volume`, `loop` | Per-resource playback limits, applied on the audio thread                                                             |
-| `provenance`                                                 | Origin and licence; required on every track and rendered into [AUDIO_LICENSES.md](AUDIO_LICENSES.md)                  |
+| `provenance`                                                 | Origin and licence; required on every track and rendered into [AUDIO_LICENSES.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/AUDIO_LICENSES.md)                  |
 
 ### `audio_cues.json` — the cues
 
@@ -132,7 +132,7 @@ With more than one resource, `CueRegistry` avoids the last `pool / 2` picks, pre
 | `mission` | When a mission or skirmish starts, and when a save is loaded                                                   | Mission teardown |
 | `lazy`    | Only on demand, through `AudioResourceLoader::ensure_audio_resource_loaded` (most music, some voices and beds) | Mission teardown |
 
-Loading only queues a decode; the decode worker does the work (see [Decode-time mastering](#decode-time-mastering)). A one-shot asked for before its decode lands is skipped, and a looping bed is held and starts the moment it lands. `AudioSystem::is_resource_ready` does not mean decoded: it only says the resource is loaded, off cooldown and under its instance limit.
+Loading only queues a decode; the decode worker does the work (see [Decode-time mastering](https://github.com/djeada/Standard-of-Iron/blob/main/docs/AUDIO_SYSTEM.md#decode-time-mastering)). A one-shot asked for before its decode lands is skipped, and a looping bed is held and starts the moment it lands. `AudioSystem::is_resource_ready` does not mean decoded: it only says the resource is loaded, off cooldown and under its instance limit.
 
 Resident decoded PCM is tracked against a budget (`SOI_AUDIO_PCM_BUDGET_MB` overrides it; the default is 320 MB); overruns are counted and logged, not refused.
 

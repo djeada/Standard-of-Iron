@@ -2,7 +2,7 @@
 
 How a creature in Standard of Iron goes from _"this unit is attacking"_ to _moving geometry on screen_ — and why it is fast enough to do for thousands of units at once.
 
-This document is the conceptual map. For the binary file format see [`CREATURE_BPAT_FORMAT.md`](CREATURE_BPAT_FORMAT.md); for the wider render thread see [`RENDERING_ARCHITECTURE.md`](RENDERING_ARCHITECTURE.md).
+This document is the conceptual map. For the binary file format see [`CREATURE_BPAT_FORMAT.md`](https://github.com/djeada/Standard-of-Iron/blob/main/docs/CREATURE_BPAT_FORMAT.md); for the wider render thread see [`RENDERING_ARCHITECTURE.md`](https://github.com/djeada/Standard-of-Iron/blob/main/docs/RENDERING_ARCHITECTURE.md).
 
 ## Overview
 

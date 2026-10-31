@@ -5,7 +5,7 @@ Pathfinding in Standard of Iron is deliberately simple at the core: the game kee
 Per-tick navigation counters -- position tests, standability tests and the cells they
 scan, nearest-standable searches, group and individual routes, cache hits, cells
 expanded, heap operations and dirty cells rebuilt -- are described in
-[PERFORMANCE.md](PERFORMANCE.md). Enable them with
+[PERFORMANCE.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/PERFORMANCE.md). Enable them with
 `arena --profile`, `sim_benchmark`, or a runtime benchmark run before claiming any
 navigation cost has changed.
 

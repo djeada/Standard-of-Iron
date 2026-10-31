@@ -151,7 +151,7 @@ The main ingredients are:
 
 `subsystem_digests()` hashes per-entity lines (identity, movement, combat, status, economy, wildlife), the session clock, RNG draw count and resource stock. It also hashes a `systems` part: the `digest` view of every registered `SessionSnapshot` contributor, serialized as compact JSON. Today those are AI runtime state, undead zones, cursed gold veins, and wildlife groups (without the bird flocks, which are cosmetic and follow the camera).
 
-A contributor opts in by providing `SnapshotContributor::digest`. The victory contributor does not: `VictoryService` and the mission-wave runtime are owned by `GameEngine`, so a headless replay would not produce the same part. Their timers are still tick-driven (see [VICTORY_SYSTEM.md](VICTORY_SYSTEM.md)), but a divergence there is not caught by the digest until they move into the session.
+A contributor opts in by providing `SnapshotContributor::digest`. The victory contributor does not: `VictoryService` and the mission-wave runtime are owned by `GameEngine`, so a headless replay would not produce the same part. Their timers are still tick-driven (see [VICTORY_SYSTEM.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/VICTORY_SYSTEM.md)), but a divergence there is not caught by the digest until they move into the session.
 
 Digests are recorded every `digest_interval` ticks (30 by default). A reported divergence is therefore the first checkpoint whose digest differs, which can be up to one interval after the first divergent tick.
 
@@ -182,7 +182,7 @@ That boundary provides three useful properties:
 
 The production renderer does not use a live-world fallback when a render snapshot is unavailable. The frame can be skipped rather than violating ownership.
 
-See [RENDERING_ARCHITECTURE.md](RENDERING_ARCHITECTURE.md) for the full scene-walk and backend path.
+See [RENDERING_ARCHITECTURE.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/RENDERING_ARCHITECTURE.md) for the full scene-walk and backend path.
 
 ## Persistence boundary
 
@@ -199,7 +199,7 @@ World entities are serialized through `game/save/serialization.*`. Non-entity au
 
 That classification is important because a save file should not accidentally promote a cache to a second source of truth. Spatial indexes, transient movement facts, and renderer interpolation state are rebuilt. Simulation time, deterministic RNG, explored visibility, mission progress, AI strategic state, and other authoritative fields are explicitly preserved where required.
 
-Load restoration is staged before the live match is replaced, and the storage layer adds compression, checksums, database schema migration, integrity checks, and quarantine/recovery. See [SAVE_LOAD_SYSTEM.md](SAVE_LOAD_SYSTEM.md).
+Load restoration is staged before the live match is replaced, and the storage layer adds compression, checksums, database schema migration, integrity checks, and quarantine/recovery. See [SAVE_LOAD_SYSTEM.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/SAVE_LOAD_SYSTEM.md).
 
 ## AI boundary
 
@@ -209,7 +209,7 @@ The main thread builds immutable AI snapshots from the match. Worker threads rea
 
 Workers therefore do not own the live ECS world. This keeps AI threading from turning ordinary gameplay components into shared mutable state.
 
-See [AI_ARCHITECTURE.md](AI_ARCHITECTURE.md).
+See [AI_ARCHITECTURE.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/AI_ARCHITECTURE.md).
 
 ## Mission and campaign boundary
 
@@ -219,7 +219,7 @@ Maps define battlefield geometry and world authoring. Missions reference maps an
 
 The runtime translates mission data into the same simulation systems used elsewhere: AI setup becomes AI configuration, mission objectives become victory/defeat rules, and mission waves become runtime assault units rather than a private combat implementation.
 
-See [MISSION_FRAMEWORK.md](MISSION_FRAMEWORK.md).
+See [MISSION_FRAMEWORK.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/MISSION_FRAMEWORK.md).
 
 ## Application and UI boundary
 
@@ -319,16 +319,16 @@ These are current implementation constraints. They are not a list of proposed fe
 
 ## Navigation guides
 
-- [app/README.md](../app/README.md) and [game/README.md](../game/README.md) say what each directory owns and trace four production call paths (issuing an order, advancing a frame, loading a match, saving and restoring). `scripts/check-navigation-guides.py` fails when a step names a file or symbol that no longer exists.
+- [app/README.md](https://github.com/djeada/Standard-of-Iron/blob/main/app/README.md) and [game/README.md](https://github.com/djeada/Standard-of-Iron/blob/main/game/README.md) say what each directory owns and trace four production call paths (issuing an order, advancing a frame, loading a match, saving and restoring). `scripts/check-navigation-guides.py` fails when a step names a file or symbol that no longer exists.
 
 ## Related architecture references
 
-- [RENDERING_ARCHITECTURE.md](RENDERING_ARCHITECTURE.md) — snapshot consumption, scene submission, graphics profiles, and render backends.
-- [AI_ARCHITECTURE.md](AI_ARCHITECTURE.md) — snapshots, workers, strategies, behaviors, and command production.
-- [FORMATION_ARCHITECTURE.md](FORMATION_ARCHITECTURE.md) — unit layouts, army formations, terrain fitting, cohesion, and traversal.
-- [COMBAT_SYSTEM.md](COMBAT_SYSTEM.md) — combat update order, targeting, contact, damage, and special processors.
-- [SAVE_LOAD_SYSTEM.md](SAVE_LOAD_SYSTEM.md) — save snapshot composition, storage, migration, recovery, and restoration.
-- [MISSION_FRAMEWORK.md](MISSION_FRAMEWORK.md) — mission schema, AI setup, waves, objectives, and campaign membership.
-- [MISSION_STARTUP.md](MISSION_STARTUP.md) — map-context reuse, startup readiness, and initial AI preparation.
-- [FRAME_PACING.md](FRAME_PACING.md) — presentation performance budgets and qualification workflow.
-- [BAKED_MESHES.md](BAKED_MESHES.md) — procedural meshes merged at build time: building and equipment packs, tessellation, adding content.
+- [RENDERING_ARCHITECTURE.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/RENDERING_ARCHITECTURE.md) — snapshot consumption, scene submission, graphics profiles, and render backends.
+- [AI_ARCHITECTURE.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/AI_ARCHITECTURE.md) — snapshots, workers, strategies, behaviors, and command production.
+- [FORMATION_ARCHITECTURE.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/FORMATION_ARCHITECTURE.md) — unit layouts, army formations, terrain fitting, cohesion, and traversal.
+- [COMBAT_SYSTEM.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/COMBAT_SYSTEM.md) — combat update order, targeting, contact, damage, and special processors.
+- [SAVE_LOAD_SYSTEM.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/SAVE_LOAD_SYSTEM.md) — save snapshot composition, storage, migration, recovery, and restoration.
+- [MISSION_FRAMEWORK.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/MISSION_FRAMEWORK.md) — mission schema, AI setup, waves, objectives, and campaign membership.
+- [MISSION_STARTUP.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/MISSION_STARTUP.md) — map-context reuse, startup readiness, and initial AI preparation.
+- [FRAME_PACING.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/FRAME_PACING.md) — presentation performance budgets and qualification workflow.
+- [BAKED_MESHES.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/BAKED_MESHES.md) — procedural meshes merged at build time: building and equipment packs, tessellation, adding content.

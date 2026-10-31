@@ -2,7 +2,7 @@
 
 Food connects settlement growth to military production. Farms grow grain, builders harvest grain or slaughter sheep, homes spend food to recruit civilians, and civilians become manpower when they reach a barracks. The result is an economic loop in which food drives population while wood, stone, and iron continue to fund buildings and equipment.
 
-For delivered food loads and barracks yards, see [Two ways to collect food](#two-ways-to-collect-food). For the UI that explains the resource counters to the player, see [ECONOMY_GUIDANCE.md](ECONOMY_GUIDANCE.md).
+For delivered food loads and barracks yards, see [Two ways to collect food](https://github.com/djeada/Standard-of-Iron/blob/main/docs/FOOD_AND_FARMS.md#two-ways-to-collect-food). For the UI that explains the resource counters to the player, see [ECONOMY_GUIDANCE.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/ECONOMY_GUIDANCE.md).
 
 ## The settlement loop
 
@@ -81,7 +81,7 @@ The pointer looks for a sheep on its own before it falls back to the generic uni
 
 A sheep can move while a builder approaches. The job follows the animal until the builder is within working range. At that point the sheep is held through `WildlifeComponent::held_timer`, keeping it in place during the slaughter action.
 
-While the mallet comes down the sheep is _dazed_ (`WildlifeComponent::dazed_timer`, presentation only): it sways on its feet with a halo of stars circling its head. When the job completes, the sheep uses the same death sequence as a sheep killed by a wolf, and every sheep death is a cartoon one (see [Slaughter is slapstick](#slaughter-is-slapstick)). The herd later respawns according to the map's wildlife timer. Mutton is therefore renewable but slow; farms remain the reliable source of food.
+While the mallet comes down the sheep is _dazed_ (`WildlifeComponent::dazed_timer`, presentation only): it sways on its feet with a halo of stars circling its head. When the job completes, the sheep uses the same death sequence as a sheep killed by a wolf, and every sheep death is a cartoon one (see [Slaughter is slapstick](https://github.com/djeada/Standard-of-Iron/blob/main/docs/FOOD_AND_FARMS.md#slaughter-is-slapstick)). The herd later respawns according to the map's wildlife timer. Mutton is therefore renewable but slow; farms remain the reliable source of food.
 
 ## Standing orders and Auto Gather
 

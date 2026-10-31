@@ -171,7 +171,7 @@ Each entry in `ai_setups[]` defines one computer-controlled force.
 
 Personality values default to `0.5` when omitted.
 
-`difficulty` is the _authored_ tuning for this opponent and is independent of the difficulty the player selects before a match. The player's preset is documented in [docs/DIFFICULTY.md](DIFFICULTY.md); the two are applied once each and never compounded into one another.
+`difficulty` is the _authored_ tuning for this opponent and is independent of the difficulty the player selects before a match. The player's preset is documented in [docs/DIFFICULTY.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/DIFFICULTY.md); the two are applied once each and never compounded into one another.
 
 ## AI strategy
 
@@ -191,7 +191,7 @@ The AI system also recognizes its special Sepulcher/undead defensive strategy al
 
 Unknown values are normalized by the AI parser rather than silently creating an author-defined strategy with no runtime implementation.
 
-See [AI_ARCHITECTURE.md](AI_ARCHITECTURE.md) for the complete strategy/posture/behavior model.
+See [AI_ARCHITECTURE.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/AI_ARCHITECTURE.md) for the complete strategy/posture/behavior model.
 
 ## AI posture
 
@@ -381,7 +381,7 @@ lose_commander
 only_commander_remaining (tracking barracks)
 ```
 
-The `only_commander_remaining` rule has startup/arming behavior documented in [VICTORY_SYSTEM.md](VICTORY_SYSTEM.md), which also covers rule evaluation, save state, and timers.
+The `only_commander_remaining` rule has startup/arming behavior documented in [VICTORY_SYSTEM.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/VICTORY_SYSTEM.md), which also covers rule evaluation, save state, and timers.
 
 ## Optional objectives
 
@@ -430,7 +430,7 @@ That is an important authoring rule: mission data selects implemented event type
 The runtime currently implements one trigger, `timer` (with `time` in seconds), and two actions:
 
 - `show_message` announces `text`; and
-- `rockfall` releases the map's rockfall trap named by `trap`, and announces `text` if one is given. See [ROCKFALL.md](ROCKFALL.md).
+- `rockfall` releases the map's rockfall trap named by `trap`, and announces `text` if one is given. See [ROCKFALL.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/ROCKFALL.md).
 
 ```json
 {
@@ -563,7 +563,7 @@ Campaign completion, mission unlock state, and mission results are stored by the
 
 They are not embedded into the mission definition or map file because they are player-specific runtime data, not authored content.
 
-See [SAVE_LOAD_SYSTEM.md](SAVE_LOAD_SYSTEM.md) for the relevant campaign persistence tables.
+See [SAVE_LOAD_SYSTEM.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/SAVE_LOAD_SYSTEM.md) for the relevant campaign persistence tables.
 
 ## Standalone missions and skirmish separation
 
@@ -577,13 +577,13 @@ Loading a mission involves more than parsing its JSON.
 
 The application resolves/reuses map context, builds the world, initializes AI, prepares terrain/render resources, and waits on startup readiness gates before presenting the battle as ready.
 
-The current loading readiness includes terrain-scatter GPU readiness and initial AI decision readiness, with bounded wait behavior documented in [MISSION_STARTUP.md](MISSION_STARTUP.md).
+The current loading readiness includes terrain-scatter GPU readiness and initial AI decision readiness, with bounded wait behavior documented in [MISSION_STARTUP.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/MISSION_STARTUP.md).
 
 Mission schema correctness and mission startup readiness are therefore separate concerns: a valid mission file can still reveal runtime startup work if its map/assets/AI need preparation.
 
 ## Relationship to the AI system
 
-Mission AI setup configures the same strategic AI described in [AI_ARCHITECTURE.md](AI_ARCHITECTURE.md).
+Mission AI setup configures the same strategic AI described in [AI_ARCHITECTURE.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/AI_ARCHITECTURE.md).
 
 Mission data supplies:
 

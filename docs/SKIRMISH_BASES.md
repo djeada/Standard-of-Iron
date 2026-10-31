@@ -91,7 +91,7 @@ This fallback protects saved or externally supplied configurations from turning 
 ## Every base has room for fields
 
 A base is only a real start if its player can feed a household from it. Food
-comes from farms (see [FOOD_AND_FARMS.md](FOOD_AND_FARMS.md)), and a farm is a
+comes from farms (see [FOOD_AND_FARMS.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/FOOD_AND_FARMS.md)), and a farm is a
 13.6 m square that needs level, open ground. Every authored starting seat
 therefore has room for at least **three** farm plots within 42 m of its
 barracks, and every neutral base at least **two**. A neutral outpost may trade

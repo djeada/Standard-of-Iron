@@ -322,7 +322,7 @@ Species that ship a `*_minimal.bpsm` (horse, elephant, sheep, wolf) and carry no
 
 It used to require the `snapshot` flag in both cases, and the clip manifest clears that flag for `Die` because a humanoid's runtime-baked fall would cost a mesh per frame. The prebaked species inherited the exclusion by accident, and the pipeline's answer for a non-snapshot state at a prebaked Minimal LOD was to submit nothing: a sheep or horse dying more than 20 m from the camera (12 m on Low) vanished for the whole fall and reappeared as a settled corpse. Measured in `wildlife_pack_takedown` at `--graphics-quality low`, all 144 `Die` submissions for the two sheep were dropped while the 122 `Dead` submissions were drawn. Humanoids were never affected: they have no `.bpsm`, so their Minimal LOD falls through to the rigged path in both states.
 
-See [CREATURE_BPAT_FORMAT.md](CREATURE_BPAT_FORMAT.md) for the baked format and [HORSE_MODEL_ARCHITECTURE.md](HORSE_MODEL_ARCHITECTURE.md) for mounted creature asset structure.
+See [CREATURE_BPAT_FORMAT.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/CREATURE_BPAT_FORMAT.md) for the baked format and [HORSE_MODEL_ARCHITECTURE.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/HORSE_MODEL_ARCHITECTURE.md) for mounted creature asset structure.
 
 ## Animation ownership
 
@@ -346,7 +346,7 @@ Formation and combat systems can publish soldier-level presentation anchors. The
 
 That rule is especially important during traversal and combat, where presentation may need to show soldiers reflowing inside a unit while the authoritative troop root follows navigation.
 
-The formation article documents the shared anchor precedence in detail: [FORMATION_ARCHITECTURE.md](FORMATION_ARCHITECTURE.md).
+The formation article documents the shared anchor precedence in detail: [FORMATION_ARCHITECTURE.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/FORMATION_ARCHITECTURE.md).
 
 ## Terrain and world geometry
 
@@ -354,7 +354,7 @@ Terrain, scatter, authored props, buildings, walls, and other world geometry fee
 
 Terrain/world-prop positions are resolved from authored map/grid space through the terrain/map services before rendering. Renderer code should not invent a second coordinate convention for map objects.
 
-See [MAP_OBJECT_PLACEMENT.md](MAP_OBJECT_PLACEMENT.md) for the placement contract.
+See [MAP_OBJECT_PLACEMENT.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/MAP_OBJECT_PLACEMENT.md) for the placement contract.
 
 ### Terrain contact
 
@@ -438,7 +438,7 @@ The frame parts in `weapon_rack_parts.h` are still the source for `PropModelFoot
 
 Terrain scatter has an explicit GPU-readiness state.
 
-Mission startup can keep the loading overlay visible while terrain scatter exists but is not yet ready for presentation. That state is one of the startup readiness gates described in [MISSION_STARTUP.md](MISSION_STARTUP.md).
+Mission startup can keep the loading overlay visible while terrain scatter exists but is not yet ready for presentation. That state is one of the startup readiness gates described in [MISSION_STARTUP.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/MISSION_STARTUP.md).
 
 The startup system therefore distinguishes “simulation world exists” from “the main visual environment is ready enough to reveal the battle.”
 
@@ -699,7 +699,7 @@ The minimap follows the same ownership principle as the main renderer. It consum
 
 Other UI/presentation systems use the same pattern: simulation publishes facts; presentation derives visual state; presentation caches remain disposable.
 
-See [MINIMAP.md](MINIMAP.md).
+See [MINIMAP.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/MINIMAP.md).
 
 ## Resource generation and quality changes
 
@@ -731,7 +731,7 @@ Measured/reportable areas include:
 - frame interval timing; and
 - budget verdicts.
 
-[FRAME_PACING.md](FRAME_PACING.md) defines the current presentation-budget gate. [PERFORMANCE.md](PERFORMANCE.md) covers the broader runtime measurement system.
+[FRAME_PACING.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/FRAME_PACING.md) defines the current presentation-budget gate. [PERFORMANCE.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/PERFORMANCE.md) covers the broader runtime measurement system.
 
 ## Playable-frame resource discipline
 
@@ -753,7 +753,7 @@ Simulation code should not include renderer implementation simply to ask a gamep
 
 The build graph and architecture/source checks enforce selected parts of this direction.
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for the repository-wide dependency boundary.
+See [ARCHITECTURE.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/ARCHITECTURE.md) for the repository-wide dependency boundary.
 
 ## Failure modes by layer
 

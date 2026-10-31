@@ -249,7 +249,7 @@ The UI does not use “population” for either concept.
 
 ## Related systems
 
-- [Resource counters](#resource-counters) describes stored materials and their presentation in the top bar.
-- [Standing orders and Auto Gather](FOOD_AND_FARMS.md#standing-orders-and-auto-gather) covers recurring gather rounds.
-- [FOOD_AND_FARMS.md](FOOD_AND_FARMS.md) covers farms, food jobs, civilians, and the food-to-manpower loop.
-- [UI_DESIGN_SYSTEM.md](UI_DESIGN_SYSTEM.md) covers the components used by the economy surfaces.
+- [Resource counters](https://github.com/djeada/Standard-of-Iron/blob/main/docs/ECONOMY_GUIDANCE.md#resource-counters) describes stored materials and their presentation in the top bar.
+- [Standing orders and Auto Gather](https://github.com/djeada/Standard-of-Iron/blob/main/docs/FOOD_AND_FARMS.md#standing-orders-and-auto-gather) covers recurring gather rounds.
+- [FOOD_AND_FARMS.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/FOOD_AND_FARMS.md) covers farms, food jobs, civilians, and the food-to-manpower loop.
+- [UI_DESIGN_SYSTEM.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/UI_DESIGN_SYSTEM.md) covers the components used by the economy surfaces.

@@ -4,7 +4,7 @@ Standard of Iron's interface uses the `StandardOfIron.Design` QML module as the 
 
 The design system exists to keep the product coherent across battle HUDs, menus, mission screens, settings, save/load panels, overlays, and tooling. Screens are expected to compose shared design primitives and live application state rather than carrying their own independent visual language.
 
-Typography asset rules are documented in [TYPOGRAPHY.md](TYPOGRAPHY.md). Input and accessibility behavior is documented in [ACCESSIBILITY.md](ACCESSIBILITY.md).
+Typography asset rules are documented in [TYPOGRAPHY.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/TYPOGRAPHY.md). Input and accessibility behavior is documented in [ACCESSIBILITY.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/ACCESSIBILITY.md).
 
 ## Module packaging
 
@@ -154,7 +154,7 @@ Lower text rungs respect `Typography.minimumSize`, and interactive geometry resp
 
 Typography is therefore a combination of font family, scale, minimum legibility, tracking, and context—not simply a font-size constant.
 
-`scripts/check-typography.py` enforces the tokenized typography rules in QML. See [TYPOGRAPHY.md](TYPOGRAPHY.md) for bundled font ownership and glyph coverage.
+`scripts/check-typography.py` enforces the tokenized typography rules in QML. See [TYPOGRAPHY.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/TYPOGRAPHY.md) for bundled font ownership and glyph coverage.
 
 ## Title and body faces
 
@@ -541,7 +541,7 @@ The current UI design system depends on these invariants:
 | Persistent preferences | `ui/preferences.h` and implementation |
 | Design tests           | `tests/ui/qml/` and related C++ tests |
 | Typography checks      | `scripts/check-typography.py`         |
-| Font architecture      | [TYPOGRAPHY.md](TYPOGRAPHY.md)        |
-| Input/accessibility    | [ACCESSIBILITY.md](ACCESSIBILITY.md)  |
+| Font architecture      | [TYPOGRAPHY.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/TYPOGRAPHY.md)        |
+| Input/accessibility    | [ACCESSIBILITY.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/ACCESSIBILITY.md)  |
 
 The design system is defined by the current `StandardOfIron.Design` module and the preference/application state that feeds it. Historical issue notes about how individual controls were introduced are not part of the present design contract.

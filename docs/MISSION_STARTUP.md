@@ -144,7 +144,7 @@ The current mission setup path applies concepts such as:
 - commander setup/message state; and
 - other mission runtime data.
 
-See [MISSION_FRAMEWORK.md](MISSION_FRAMEWORK.md) for the schema and runtime ownership of those features.
+See [MISSION_FRAMEWORK.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/MISSION_FRAMEWORK.md) for the schema and runtime ownership of those features.
 
 ## Commander setup ordering
 
@@ -195,7 +195,7 @@ The world-owning thread builds each `AISnapshot` and submits it to the worker. W
 
 That ownership model is the same one used after the mission becomes playable; startup does not create a special shared-world AI path.
 
-See [AI_ARCHITECTURE.md](AI_ARCHITECTURE.md).
+See [AI_ARCHITECTURE.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/AI_ARCHITECTURE.md).
 
 ## Deterministic AI result timing
 
@@ -294,7 +294,7 @@ Terrain scatter is part of rendering/presentation, but its readiness participate
 
 The startup gate does not wait for every possible renderer cache in the application. It waits on the explicit current readiness contract exposed by terrain scatter, AI initial decisions, the deferred unit templates and the mission audio decodes.
 
-See [RENDERING_ARCHITECTURE.md](RENDERING_ARCHITECTURE.md) for the rendering ownership model.
+See [RENDERING_ARCHITECTURE.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/RENDERING_ARCHITECTURE.md) for the rendering ownership model.
 
 ## Startup tracing
 
@@ -366,7 +366,7 @@ Inspect the pending-component log. The timeout should identify whether terrain s
 
 ### First playable frames are slow
 
-Startup may have released before expensive presentation work was completely prewarmed. Compare startup traces with [FRAME_PACING.md](FRAME_PACING.md) and post-playable asset-work counters.
+Startup may have released before expensive presentation work was completely prewarmed. Compare startup traces with [FRAME_PACING.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/FRAME_PACING.md) and post-playable asset-work counters.
 
 ## Relationship to frame pacing
 
@@ -386,7 +386,7 @@ Mission startup begins from authored map/mission data. Save/load begins from a v
 
 Both ultimately need a stable simulation state and fresh presentation state before the player can interact normally.
 
-See [SAVE_LOAD_SYSTEM.md](SAVE_LOAD_SYSTEM.md).
+See [SAVE_LOAD_SYSTEM.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/SAVE_LOAD_SYSTEM.md).
 
 ## Startup tests
 

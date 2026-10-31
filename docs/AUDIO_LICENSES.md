@@ -1,8 +1,8 @@
 # Audio Licences
 
-Where every `.ogg` under `assets/audio/` came from, and under what licence. For how the files are used, see [AUDIO_SYSTEM.md](AUDIO_SYSTEM.md).
+Where every `.ogg` under `assets/audio/` came from, and under what licence. For how the files are used, see [AUDIO_SYSTEM.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/AUDIO_SYSTEM.md).
 
-[`THIRD_PARTY_LICENSES.md`](../THIRD_PARTY_LICENSES.md) ships inside every release package and stays authoritative for attribution wording. This page answers the narrower question "where did this file come from, and may we ship it".
+[`THIRD_PARTY_LICENSES.md`](https://github.com/djeada/Standard-of-Iron/blob/main/THIRD_PARTY_LICENSES.md) ships inside every release package and stays authoritative for attribution wording. This page answers the narrower question "where did this file come from, and may we ship it".
 
 ## Where the rows come from
 
