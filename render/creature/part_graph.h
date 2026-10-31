@@ -42,6 +42,14 @@ enum class MeshSkinning : std::uint8_t {
   Authored,
 };
 
+// Endpoint placement and deformation are independent. For cylinder/capsule
+// spans (including custom span meshes), the tail can locate the end without
+// rotating the surface toward the next articulated bone.
+enum class SpanSkinning : std::uint8_t {
+  LinearBlend = 0,
+  AnchorRigid,
+};
+
 enum class CreatureLOD : std::uint8_t {
   Full = 0,
   Minimal = 1,
@@ -86,6 +94,7 @@ struct PrimitiveInstance {
 
   Render::GL::Mesh* custom_mesh{nullptr};
   MeshSkinning mesh_skinning{MeshSkinning::Rigid};
+  SpanSkinning span_skinning{SpanSkinning::LinearBlend};
 
   QVector3D color{1.0F, 1.0F, 1.0F};
   std::uint8_t color_role{0};

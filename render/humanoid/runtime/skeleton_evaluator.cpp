@@ -10,6 +10,7 @@
 #include "animation/rig/humanoid_proportions.h"
 #include "animation/rig/side.h"
 #include "render/creature/skeleton.h"
+#include "render/humanoid/runtime/pose_primitives.h"
 
 namespace Render::Humanoid {
 
@@ -217,11 +218,8 @@ void evaluate_skeleton(const Render::GL::HumanoidPose& pose,
     ctx.body_up.normalize();
   }
 
-  using HP = Render::GL::HumanProportions;
-  ctx.hip_l =
-      ctx.pelvis + QVector3D(-HP::HIP_LATERAL_OFFSET, HP::HIP_VERTICAL_OFFSET, 0.0F);
-  ctx.hip_r =
-      ctx.pelvis + QVector3D(HP::HIP_LATERAL_OFFSET, HP::HIP_VERTICAL_OFFSET, 0.0F);
+  ctx.hip_l = PosePrimitives::hip_position(ctx.pelvis, Render::GL::Side::Left);
+  ctx.hip_r = PosePrimitives::hip_position(ctx.pelvis, Render::GL::Side::Right);
 
   Creature::evaluate_skeleton(
       humanoid_topology(),

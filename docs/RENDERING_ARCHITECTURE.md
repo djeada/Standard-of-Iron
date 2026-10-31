@@ -595,6 +595,34 @@ Renderer-side registries resolve those facts into:
 
 The renderer does not become the gameplay registry for what equipment a unit owns. If a simulation rule needs equipment data, it must read simulation/content data rather than reverse-querying a render asset choice.
 
+### Limb geometry and skinning
+
+A span primitive's `anchor_bone` and `tail_bone` locate its endpoints. Its
+`SpanSkinning` policy separately controls deformation during the rigged bake:
+`LinearBlend` distributes influence along the span, while `AnchorRigid` attaches
+the entire surface to the anchor's frame. Custom span geometry uses the same
+policy; `MeshSkinning` continues to describe standalone mesh weights.
+
+Humanoid arm and leg segments use `AnchorRigid` at both detail levels, including
+the skeleton body. Their anchor frame already aims along the segment: `Forearm`
+runs from elbow to wrist and `Knee` from knee to ankle. The hand and foot frames
+control the extremities and equipment sockets independently. Blending toward
+those frames across the limb shaft makes a wrist turn bow or pinch the forearm
+and an ankle rotation twist the calf. Joint spheres cover articulation while the
+two smooth sections of each limb retain their shared surface and normal.
+
+Pose solvers and the skeleton evaluator share `PosePrimitives::hip_position`.
+Leg-length correction must use that actual pelvis-relative joint, not infer a
+hip from the moving knee. The latter stretched the held pose's thigh by about
+26% and left a gap once its mesh stopped deforming toward the knee. Baked held
+poses are checked against the rig's hip, knee, and ankle origins on every frame.
+
+The humanoid mesh regression bends and twists every downstream joint and checks
+the skinned positions and normals on both sides and at both detail levels.
+After changes, rebuild `bake_creature_assets` and inspect the Arena's
+`humanoid_gait_review`, `humanoid_gait_review_carthage`, `sword_duel`, and
+`promo_humanoid_showcase` scenarios; the bind pose alone cannot expose this fault.
+
 ## Shader system
 
 The OpenGL backend compiles shader programs from `assets/shaders/`.

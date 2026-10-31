@@ -47,6 +47,13 @@ constexpr float k_gate_margin_seconds = 0.001F;
 
 } // namespace
 
+void clear_bow_draw(Engine::Core::RpgCommanderAimComponent& aim) {
+  aim.draw_stage = Engine::Core::BowDrawStage::None;
+  aim.draw_progress = 0.0F;
+  aim.full_draw_hold = 0.0F;
+  aim.shot_power = 0.0F;
+}
+
 auto aim_spread_degrees(const Aim& aim, float stamina_ratio) -> float {
   constexpr float k_planted_spread = 0.28F;
   constexpr float k_undrawn_penalty = 3.6F;

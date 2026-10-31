@@ -11,6 +11,7 @@
 #include <memory>
 #include <vector>
 
+#include "animation/clip_manifest.h"
 #include "game/core/component.h"
 #include "game/core/component_economy.h"
 #include "game/core/component_gameplay.h"
@@ -690,6 +691,95 @@ TEST(ArenaScenarioRunnerTest, RenderProbeRejectsOverextendedAliveSoldierArm) {
   ASSERT_FALSE(runner.report().passed());
   EXPECT_EQ(runner.report().issues.front().code, QStringLiteral("limb_overextension"));
   diagnostics.set_enabled(false);
+}
+
+TEST(ArenaScenarioRunnerTest, CancellationStopsCommandsAndValidationButKeepsTheWorld) {
+  Engine::Core::World world;
+  auto scenario = minimal_definition();
+  scenario.steps.front().trigger.time_seconds = 0.5F;
+  Arena::ArenaScenarioRunner runner(world, make_entity_host(world), scenario);
+  ASSERT_TRUE(runner.start());
+  runner.update(0.1F);
+  runner.observe_rendered_frame(4.0);
+  auto const entity_id = runner.group_entities(QStringLiteral("blue")).front();
+  auto const frames = runner.report().rendered_frames;
+  auto const events = runner.events().size();
+
+  runner.cancel();
+  auto const digest = runner.report().world_digest;
+  world.try_get<Engine::Core::UnitComponent>(entity_id)->health -= 1;
+  runner.update(2.0F);
+  runner.observe_rendered_frame(1000.0);
+  runner.cancel();
+
+  EXPECT_TRUE(runner.finished());
+  EXPECT_TRUE(runner.report().cancelled);
+  EXPECT_FALSE(runner.report().passed());
+  EXPECT_TRUE(runner.report().issues.empty());
+  EXPECT_FLOAT_EQ(runner.elapsed_seconds(), 0.1F);
+  EXPECT_EQ(runner.report().rendered_frames, frames);
+  EXPECT_EQ(runner.events().size(), events);
+  EXPECT_EQ(runner.report().world_digest, digest);
+  ASSERT_NE(world.get_entity(entity_id), nullptr);
+  EXPECT_EQ(world.try_get<Engine::Core::AttackTargetComponent>(entity_id), nullptr);
+
+  QTemporaryDir artifacts;
+  ASSERT_TRUE(artifacts.isValid());
+  ASSERT_TRUE(runner.write_artifacts(artifacts.path()));
+  QFile file(artifacts.filePath(QStringLiteral("report.json")));
+  ASSERT_TRUE(file.open(QIODevice::ReadOnly));
+  auto const report = QJsonDocument::fromJson(file.readAll()).object();
+  EXPECT_TRUE(report.value(QStringLiteral("cancelled")).toBool());
+  EXPECT_FALSE(report.value(QStringLiteral("completed")).toBool());
+  EXPECT_FALSE(report.value(QStringLiteral("passed")).toBool());
+}
+
+TEST(ArenaScenarioRunnerTest, CancellationPreservesAnAlreadyCompletedReport) {
+  Engine::Core::World world;
+  auto scenario = minimal_definition();
+  Arena::ArenaScenarioRunner runner(world, make_entity_host(world), scenario);
+  ASSERT_TRUE(runner.start());
+  runner.update(2.0F);
+  ASSERT_TRUE(runner.finished());
+  auto const summary = runner.report().summary();
+  runner.cancel();
+  EXPECT_FALSE(runner.report().cancelled);
+  EXPECT_EQ(runner.report().summary(), summary);
+}
+
+TEST(ArenaScenarioRunnerTest, HoldProbeDistinguishesKneelingAndStandingBowAttacks) {
+  for (auto const clip :
+       {std::optional<std::uint16_t>{},
+        std::optional<std::uint16_t>{Animation::k_humanoid_attack_bow_clip},
+        std::optional<std::uint16_t>{Animation::k_humanoid_hold_bow_attack_clip}}) {
+    SCOPED_TRACE(clip.value_or(0));
+    Engine::Core::World world;
+    auto scenario = minimal_definition();
+    scenario.groups.resize(1);
+    scenario.steps.clear();
+    scenario.expectations = {
+        {Arena::ArenaExpectationKind::HoldPoseMaintained, QStringLiteral("blue")}};
+    Arena::ArenaScenarioRunner runner(world, make_entity_host(world), scenario);
+    ASSERT_TRUE(runner.start());
+    auto const entity_id = runner.group_entities(QStringLiteral("blue")).front();
+    auto* hold =
+        world.get_entity(entity_id)->add_component<Engine::Core::HoldModeComponent>();
+    hold->active = true;
+    hold->kneel_entry_progress = 1.0F;
+
+    auto& diagnostics = Render::Profiling::CombatAnimationDiagnostics::instance();
+    diagnostics.set_enabled(true);
+    diagnostics.begin_frame(1);
+    Render::Profiling::SoldierAnimationDebugSample sample;
+    sample.animation_state = Render::Creature::AnimationStateId::AttackRanged;
+    sample.animation_clip = clip;
+    sample.is_attacking = true;
+    diagnostics.record_soldier_sample(entity_id, sample);
+    runner.observe_rendered_frame(4.0);
+    EXPECT_EQ(runner.report().passed(),
+              clip == Animation::k_humanoid_hold_bow_attack_clip);
+    diagnostics.set_enabled(false);
+  }
 }
 
 TEST(ArenaScenarioRunnerTest, RenderProbeRejectsAttackClipReplacingActiveHoldPose) {

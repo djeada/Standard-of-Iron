@@ -365,11 +365,7 @@ void ArenaViewport::paintGL() {
   m_renderer->set_order_marker_all_owners(m_capture_gameplay_ui_all_owners);
 
   m_renderer->set_rpg_lens_detached(m_cinematic_view_valid);
-  m_renderer->set_cinematic_mode(
-      !m_capture_gameplay_ui &&
-      (m_clean_capture || m_promo_mode ||
-       (m_scenario_runner != nullptr &&
-        m_scenario_runner->definition().suppress_ui_overlays)));
+  m_renderer->set_cinematic_mode(hide_gameplay_overlays());
 
   m_renderer->set_world_view(Render::WorldView::of(m_session));
   m_renderer->begin_frame();
@@ -391,13 +387,15 @@ void ArenaViewport::paintGL() {
   bool const capture_keeps_overlays =
       m_scenario_runner != nullptr &&
       m_scenario_runner->definition().capture_ui_overlays;
-  bool const suppress_ui_overlays =
-      m_clean_capture || m_terrain_review_mode || m_promo_mode ||
-      (capture_frame && !capture_keeps_overlays) ||
-      (m_scenario_runner != nullptr &&
-       m_scenario_runner->definition().suppress_ui_overlays);
-  if (!suppress_ui_overlays) {
-    paint_ui_overlays();
+  bool const clean_view = m_clean_capture || m_terrain_review_mode || m_promo_mode ||
+                          (capture_frame && !capture_keeps_overlays);
+  bool const show_debug_overlays =
+      m_scenario_runner == nullptr ||
+      !m_scenario_runner->definition().suppress_ui_overlays;
+  // Scripted captures may hide arena diagnostics, but taking control still
+  // needs health, stamina and gameplay help.
+  if (!clean_view && (show_debug_overlays || m_rpg_interactive)) {
+    paint_ui_overlays(show_debug_overlays);
   }
   timings.overlays_ms = elapsed_phase_ms();
 
@@ -482,10 +480,8 @@ void ArenaViewport::submit_world_effects(Render::GL::ResourceManager* res) {
   Render::GL::render_wading_effects(m_renderer.get(), res, m_world.get());
   render_attack_range_rings(res);
   render_target_focus_rings(res);
-  const bool cinematic_capture = m_clean_capture || m_promo_mode ||
-                                 (m_scenario_runner != nullptr &&
-                                  m_scenario_runner->definition().suppress_ui_overlays);
-  if (m_rpg_commander_id != 0 && m_rpg_telegraphs != nullptr && !cinematic_capture) {
+  if (m_rpg_commander_id != 0 && m_rpg_telegraphs != nullptr &&
+      !hide_gameplay_overlays()) {
     Engine::Core::EntityID locked_target_id = 0;
     if (auto* commander = m_world->get_entity(m_rpg_commander_id)) {
       if (auto const* targets =
@@ -529,7 +525,14 @@ void ArenaViewport::record_render_profile(
   timings.gpu_wait_ms = playback_stats.gpu_wait_ms;
 }
 
-void ArenaViewport::paint_ui_overlays() {
+auto ArenaViewport::hide_gameplay_overlays() const -> bool {
+  return !m_capture_gameplay_ui &&
+         (m_clean_capture || m_promo_mode ||
+          (!m_rpg_interactive && m_scenario_runner != nullptr &&
+           m_scenario_runner->definition().suppress_ui_overlays));
+}
+
+void ArenaViewport::paint_ui_overlays(bool show_debug_overlays) {
   if (QOpenGLContext::currentContext() != nullptr) {
     auto* gl = QOpenGLContext::currentContext()->functions();
     gl->glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -544,7 +547,7 @@ void ArenaViewport::paint_ui_overlays() {
     gl->glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
   }
 
-  {
+  if (show_debug_overlays) {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing, true);
     draw_debug_overlay(painter);
@@ -553,7 +556,12 @@ void ArenaViewport::paint_ui_overlays() {
   {
     QPainter stats_painter(this);
     stats_painter.setRenderHint(QPainter::Antialiasing, false);
-    draw_stats_overlay(stats_painter);
+    if (show_debug_overlays) {
+      draw_stats_overlay(stats_painter);
+    }
+    if (!hide_gameplay_overlays()) {
+      draw_floating_numbers(stats_painter);
+    }
     draw_rpg_hud(stats_painter);
     if (m_controls_overlay_visible) {
       draw_controls_overlay(stats_painter);
@@ -580,6 +588,9 @@ void ArenaViewport::deliver_capture_frame() {
 
 void ArenaViewport::publish_scenario_frame(
     const Arena::ArenaRenderedFrameTimings& timings) {
+  if (m_rpg_interactive || m_scenario_runner->report().cancelled) {
+    return;
+  }
   publish_animation_clock();
   publish_commander_presentation_trace();
   m_scenario_runner->observe_rendered_frame(timings);
@@ -624,10 +635,7 @@ void ArenaViewport::render_target_focus_rings(Render::GL::ResourceManager* resou
   if (selection == nullptr || m_world == nullptr || m_renderer == nullptr) {
     return;
   }
-  const bool cinematic_capture = m_clean_capture || m_promo_mode ||
-                                 (m_scenario_runner != nullptr &&
-                                  m_scenario_runner->definition().suppress_ui_overlays);
-  if (cinematic_capture) {
+  if (hide_gameplay_overlays()) {
     return;
   }
   Game::Systems::TargetFocusRequest request;

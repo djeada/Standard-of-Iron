@@ -2437,22 +2437,17 @@ auto apply_ground_stance_for_profile(Render::GL::HumanoidPoseController& ctrl,
 void restore_leg_lengths(Render::GL::HumanoidPose& pose, bool knees_over_toes) {
   using HP = Render::GL::HumanProportions;
   constexpr float k_length_tolerance = 0.03F;
-  constexpr int k_hip_iterations = 4;
-
-  auto skeleton_hip = [&](const QVector3D& knee) {
-    QVector3D const to_knee = knee - pose.pelvis_pos;
-    return pose.pelvis_pos + QVector3D(to_knee.x(), 0.0F, to_knee.z()) * 0.3F;
-  };
   auto restore = [&](QVector3D& knee, const QVector3D& foot, float lateral_sign) {
+    QVector3D const hip = Render::Humanoid::PosePrimitives::hip_position(
+        pose.pelvis_pos,
+        lateral_sign < 0.0F ? Render::GL::Side::Left : Render::GL::Side::Right);
     auto lengths_hold = [&]() {
-      QVector3D const hip = skeleton_hip(knee);
       float const thigh = (knee - hip).length() / HP::UPPER_LEG_LEN;
       float const shin = (foot - knee).length() / HP::LOWER_LEG_LEN;
       return std::abs(thigh - 1.0F) <= k_length_tolerance &&
              std::abs(shin - 1.0F) <= k_length_tolerance;
     };
     auto hinges_forward = [&]() {
-      QVector3D const hip = skeleton_hip(knee);
       QVector3D const line = foot - hip;
       float const t = std::clamp(QVector3D::dotProduct(knee - hip, line) /
                                      std::max(1.0e-6F, line.lengthSquared()),
@@ -2469,30 +2464,29 @@ void restore_leg_lengths(Render::GL::HumanoidPose& pose, bool knees_over_toes) {
 
     constexpr float k_min_forward_bend = 0.04F;
     constexpr float k_max_outward_per_forward = 0.25F;
-    QVector3D const authored_knee = knee;
-    for (int round = 0; round < k_hip_iterations; ++round) {
-      QVector3D const hip = skeleton_hip(knee);
-      QVector3D bend = authored_knee - (hip + foot) * 0.5F;
-      float const forward = bend.z();
-      float const outward = bend.x() * lateral_sign;
-      if (!knees_over_toes) {
-        if (bend.lengthSquared() < 1.0e-6F) {
-          bend = QVector3D(lateral_sign * 0.24F, 0.0F, 0.95F);
-        }
-      } else if (forward < k_min_forward_bend) {
+    QVector3D bend = knee - (hip + foot) * 0.5F;
+    float const forward = bend.z();
+    float const outward = bend.x() * lateral_sign;
+    if (!knees_over_toes) {
+      if (bend.lengthSquared() < 1.0e-6F) {
         bend = QVector3D(lateral_sign * 0.24F, 0.0F, 0.95F);
-      } else {
-        float const limit = forward * k_max_outward_per_forward;
-        bend.setX(lateral_sign * std::clamp(outward, -limit, limit));
       }
-      knee = Render::Humanoid::PosePrimitives::solve_knee_ik(
-          hip,
-          foot,
-          {.upper_leg_len = HP::UPPER_LEG_LEN,
-           .lower_leg_len = HP::LOWER_LEG_LEN,
-           .knee_floor = HP::GROUND_Y + pose.foot_y_offset * 0.5F,
-           .bend_preference = bend});
+    } else if (forward < k_min_forward_bend) {
+      bend = QVector3D(lateral_sign * 0.24F, 0.0F, 0.95F);
+    } else {
+      float const limit = forward * k_max_outward_per_forward;
+      bend.setX(lateral_sign * std::clamp(outward, -limit, limit));
+      // A ground-facing knee pole must not inherit the authored knee's vertical
+      // offset: projecting that offset onto a lunging leg can swing it sideways.
+      bend.setY(0.0F);
     }
+    knee = Render::Humanoid::PosePrimitives::solve_knee_ik(
+        hip,
+        foot,
+        {.upper_leg_len = HP::UPPER_LEG_LEN,
+         .lower_leg_len = HP::LOWER_LEG_LEN,
+         .knee_floor = HP::GROUND_Y + pose.foot_y_offset * 0.5F,
+         .bend_preference = bend});
   };
   restore(pose.knee_l, pose.foot_l, -1.0F);
   restore(pose.knee_r, pose.foot_r, 1.0F);

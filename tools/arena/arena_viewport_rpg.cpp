@@ -5,6 +5,7 @@
 
 #include "app/commander/commander_control_controller.h"
 #include "app/commander/commander_status_builder.h"
+#include "arena_scenario.h"
 #include "arena_viewport.h"
 #include "arena_viewport_internal.h"
 #include "game/core/world.h"
@@ -21,9 +22,9 @@ constexpr int k_scripted_attack_hold_ticks = 3;
 
 } // namespace
 
-void ArenaViewport::configure_rpg_scenario_commander(Engine::Core::EntityID entity_id) {
+auto ArenaViewport::activate_rpg_commander(Engine::Core::EntityID entity_id) -> bool {
   if (m_world == nullptr || m_rpg_commander_controller == nullptr) {
-    return;
+    return false;
   }
   auto* entity = m_world->get_entity(entity_id);
   auto* unit = entity != nullptr ? entity->get_component<Engine::Core::UnitComponent>()
@@ -35,19 +36,43 @@ void ArenaViewport::configure_rpg_scenario_commander(Engine::Core::EntityID enti
                         ? entity->get_component<Engine::Core::TransformComponent>()
                         : nullptr;
   if (entity == nullptr || unit == nullptr || commander == nullptr ||
-      transform == nullptr) {
-    return;
+      transform == nullptr || unit->owner_id != k_local_owner_id || unit->health <= 0) {
+    return false;
   }
 
+  if (m_rpg_commander_id != 0 && m_rpg_commander_id != entity_id) {
+    clear_rpg_scenario_state();
+  }
   m_rpg_commander_id = entity_id;
   m_rpg_commander_controller->reset();
   m_rpg_commander_controller->set_presentation_trace_enabled(true);
   m_rpg_commander_controller->set_view_yaw(transform->rotation.y);
   m_rpg_commander_controller->set_view_pitch(k_commander_rest_view_pitch_degrees);
   commander->fpv_controlled = true;
+  Game::Systems::CombatRules::clear_rts_combat_tracking(entity);
+  Game::Systems::ensure_run_stamina(*entity);
+  Engine::Core::get_or_add_component<Engine::Core::RpgHealthComponent>(entity)->active =
+      true;
+  if (m_renderer != nullptr) {
+    m_renderer->set_world_render_mode(Render::GL::Renderer::WorldRenderMode::Rpg);
+    m_renderer->set_rpg_camera_focus(entity_id);
+  }
+  if (m_rpg_telegraphs != nullptr) {
+    m_rpg_telegraphs->clear();
+  }
+  return true;
+}
+
+void ArenaViewport::configure_rpg_scenario_commander(Engine::Core::EntityID entity_id) {
+  if (!activate_rpg_commander(entity_id)) {
+    return;
+  }
+  // Fixture setup is separate from taking control: Tab must not refill stamina
+  // or remove posture and guard-break penalties from an ongoing fight.
+  auto* entity = m_world->get_entity(entity_id);
+  auto* commander = entity->get_component<Engine::Core::CommanderComponent>();
   commander->posture = 0.0F;
   commander->punish_window_remaining = 0.0F;
-  Game::Systems::CombatRules::clear_rts_combat_tracking(entity);
 
   if (auto* stamina = Game::Systems::ensure_run_stamina(*entity)) {
     stamina->max_stamina = std::max(stamina->max_stamina, 180.0F);
@@ -79,13 +104,6 @@ void ArenaViewport::configure_rpg_scenario_commander(Engine::Core::EntityID enti
               entity)) {
     *targets = Engine::Core::RpgCommanderTargetComponent{};
   }
-  if (m_renderer != nullptr) {
-    m_renderer->set_world_render_mode(Render::GL::Renderer::WorldRenderMode::Rpg);
-    m_renderer->set_rpg_camera_focus(entity_id);
-  }
-  if (m_rpg_telegraphs != nullptr) {
-    m_rpg_telegraphs->clear();
-  }
 }
 
 auto ArenaViewport::rpg_commander_status() const -> QVariantMap {
@@ -98,6 +116,9 @@ auto ArenaViewport::rpg_commander_status() const -> QVariantMap {
   input.controlled_commander_id = m_rpg_commander_id;
   input.dodge_active = m_rpg_commander_controller->is_dodge_rolling();
   input.locked_target_id = m_rpg_commander_controller->locked_target_id();
+  auto const& refusal = m_rpg_commander_controller->last_refusal();
+  input.refusal_sequence = refusal.sequence;
+  input.refusal_action = refusal.action;
   return App::Core::build_controlled_commander_status(input);
 }
 
@@ -252,12 +273,20 @@ auto ArenaViewport::enter_rpg_interactive_control(Engine::Core::EntityID entity_
     return false;
   }
 
-  configure_rpg_scenario_commander(target_id);
-  if (m_rpg_commander_id == 0) {
+  if (!activate_rpg_commander(target_id)) {
     return false;
   }
 
   m_rpg_interactive = true;
+  if (m_scenario_runner != nullptr) {
+    m_scenario_runner->cancel();
+  }
+  m_rpg_scripted_attack_ticks = 0;
+  clear_camera_key_state();
+  clear_cinematic_view();
+  m_capture_orbit_ready = false;
+  m_capture_stabilize_seconds = 0.0F;
+  pause_simulation(false);
   select_entity(0);
   setMouseTracking(true);
   setCursor(Qt::BlankCursor);
@@ -304,6 +333,7 @@ auto ArenaViewport::rpg_interactive_key_press(QKeyEvent* event) -> bool {
   switch (event->key()) {
   case Qt::Key_Escape:
   case Qt::Key_Tab:
+  case Qt::Key_Backtab:
     exit_rpg_interactive_control();
     return true;
   case Qt::Key_Space:

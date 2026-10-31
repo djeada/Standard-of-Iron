@@ -211,6 +211,7 @@ struct ArenaScenarioRunner::Impl {
     int declared_target_slot{-1};
     float declared_surface_gap{0.0F};
     QString animation;
+    int animation_clip{-1};
     QString visual;
     bool swing_recoil{false};
     float hit_reaction_tilt_degrees{0.0F};

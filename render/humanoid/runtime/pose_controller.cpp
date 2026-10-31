@@ -689,11 +689,9 @@ void HumanoidPoseController::climb_ladder(float cycle_phase) {
   m_pose.foot_pitch_l = -0.35F * left_step;
   m_pose.foot_pitch_r = -0.35F * right_step;
   QVector3D const hip_l =
-      m_pose.pelvis_pos +
-      QVector3D(-HP::HIP_LATERAL_OFFSET, HP::HIP_VERTICAL_OFFSET, 0.0F);
+      Render::Humanoid::PosePrimitives::hip_position(m_pose.pelvis_pos, Side::Left);
   QVector3D const hip_r =
-      m_pose.pelvis_pos +
-      QVector3D(HP::HIP_LATERAL_OFFSET, HP::HIP_VERTICAL_OFFSET, 0.0F);
+      Render::Humanoid::PosePrimitives::hip_position(m_pose.pelvis_pos, Side::Right);
   m_pose.knee_l = solve_knee_ik(Side::Left, hip_l, m_pose.foot_l, 1.0F);
   m_pose.knee_r = solve_knee_ik(Side::Right, hip_r, m_pose.foot_r, 1.0F);
 
@@ -1104,11 +1102,9 @@ void HumanoidPoseController::crouch(float depth) {
   m_pose.elbow_r.setY(m_pose.elbow_r.y() - depth);
 
   QVector3D const hip_l =
-      m_pose.pelvis_pos +
-      QVector3D(-HP::HIP_LATERAL_OFFSET, HP::HIP_VERTICAL_OFFSET, 0.0F);
+      Render::Humanoid::PosePrimitives::hip_position(m_pose.pelvis_pos, Side::Left);
   QVector3D const hip_r =
-      m_pose.pelvis_pos +
-      QVector3D(HP::HIP_LATERAL_OFFSET, HP::HIP_VERTICAL_OFFSET, 0.0F);
+      Render::Humanoid::PosePrimitives::hip_position(m_pose.pelvis_pos, Side::Right);
   m_pose.knee_l = solve_knee_ik(Side::Left, hip_l, m_pose.foot_l, 1.0F);
   m_pose.knee_r = solve_knee_ik(Side::Right, hip_r, m_pose.foot_r, 1.0F);
 }

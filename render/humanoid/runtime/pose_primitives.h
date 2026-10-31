@@ -10,6 +10,11 @@ struct HumanoidPose;
 
 namespace Render::Humanoid::PosePrimitives {
 
+// Shared joint placement for pose solvers and the skeleton evaluator. A hip
+// stays attached to the pelvis; it must never be inferred from the moving knee.
+[[nodiscard]] auto hip_position(const QVector3D& pelvis,
+                                Render::GL::Side side) noexcept -> QVector3D;
+
 struct KneeIkParams {
   float upper_leg_len{0.0F};
   float lower_leg_len{0.0F};

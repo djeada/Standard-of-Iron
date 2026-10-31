@@ -232,6 +232,7 @@ make_limb_segment(std::string_view name,
   p.params.tail_bone = b;
   p.params.head_offset = QVector3D(0.0F, from_along, 0.0F);
   p.params.tail_offset = QVector3D(0.0F, to_along, 0.0F);
+  p.span_skinning = Creature::SpanSkinning::AnchorRigid;
   p.params.radius = head_radius;
   p.params.tail_radius = tail_radius;
   p.color_role = role;
@@ -253,6 +254,9 @@ make_limb_end_segment(std::string_view name,
   p.params.anchor_bone = bone(segment_bone);
   p.params.tail_bone = bone(joint_bone);
   p.params.head_offset = QVector3D(0.0F, from_along, 0.0F);
+  // The anchor already aims down this limb. The end joint locates the mesh
+  // endpoint, but its independent bend/twist must not deform the limb shaft.
+  p.span_skinning = Creature::SpanSkinning::AnchorRigid;
   p.params.radius = head_radius;
   p.params.tail_radius = tail_radius;
   p.color_role = role;
@@ -820,17 +824,20 @@ auto smooth_minimal_parts() {
   return parts;
 }
 
-constexpr auto
-make_skeleton_minimal_bone(const char* name,
-                           HumanoidBone anchor,
-                           HumanoidBone tail,
-                           float radius) noexcept -> Creature::PrimitiveInstance {
+constexpr auto make_skeleton_minimal_bone(
+    const char* name,
+    HumanoidBone anchor,
+    HumanoidBone tail,
+    float radius,
+    Creature::SpanSkinning skinning = Creature::SpanSkinning::LinearBlend) noexcept
+    -> Creature::PrimitiveInstance {
   Creature::PrimitiveInstance p{};
   p.debug_name = name;
   p.shape = Creature::PrimitiveShape::Cylinder;
   p.params.anchor_bone = bone(anchor);
   p.params.tail_bone = bone(tail);
   p.params.radius = radius;
+  p.span_skinning = skinning;
   p.color_role = Skin;
   p.lod_mask = Creature::k_lod_minimal;
   return p;
@@ -899,35 +906,43 @@ constexpr std::array<Creature::PrimitiveInstance, 18> k_skeleton_minimal_parts =
     make_skeleton_minimal_bone("skeleton_minimal_upper_arm_l",
                                HumanoidBone::UpperArmL,
                                HumanoidBone::ForearmL,
-                               HP::UPPER_ARM_R * 0.48F),
+                               HP::UPPER_ARM_R * 0.48F,
+                               Creature::SpanSkinning::AnchorRigid),
     make_skeleton_minimal_bone("skeleton_minimal_upper_arm_r",
                                HumanoidBone::UpperArmR,
                                HumanoidBone::ForearmR,
-                               HP::UPPER_ARM_R * 0.48F),
+                               HP::UPPER_ARM_R * 0.48F,
+                               Creature::SpanSkinning::AnchorRigid),
     make_skeleton_minimal_bone("skeleton_minimal_forearm_l",
                                HumanoidBone::ForearmL,
                                HumanoidBone::HandL,
-                               HP::FORE_ARM_R * 0.44F),
+                               HP::FORE_ARM_R * 0.44F,
+                               Creature::SpanSkinning::AnchorRigid),
     make_skeleton_minimal_bone("skeleton_minimal_forearm_r",
                                HumanoidBone::ForearmR,
                                HumanoidBone::HandR,
-                               HP::FORE_ARM_R * 0.44F),
+                               HP::FORE_ARM_R * 0.44F,
+                               Creature::SpanSkinning::AnchorRigid),
     make_skeleton_minimal_bone("skeleton_minimal_thigh_l",
                                HumanoidBone::HipL,
                                HumanoidBone::KneeL,
-                               HP::UPPER_LEG_R * 0.46F),
+                               HP::UPPER_LEG_R * 0.46F,
+                               Creature::SpanSkinning::AnchorRigid),
     make_skeleton_minimal_bone("skeleton_minimal_thigh_r",
                                HumanoidBone::HipR,
                                HumanoidBone::KneeR,
-                               HP::UPPER_LEG_R * 0.46F),
+                               HP::UPPER_LEG_R * 0.46F,
+                               Creature::SpanSkinning::AnchorRigid),
     make_skeleton_minimal_bone("skeleton_minimal_calf_l",
                                HumanoidBone::KneeL,
                                HumanoidBone::FootL,
-                               HP::LOWER_LEG_R * 0.44F),
+                               HP::LOWER_LEG_R * 0.44F,
+                               Creature::SpanSkinning::AnchorRigid),
     make_skeleton_minimal_bone("skeleton_minimal_calf_r",
                                HumanoidBone::KneeR,
                                HumanoidBone::FootR,
-                               HP::LOWER_LEG_R * 0.44F),
+                               HP::LOWER_LEG_R * 0.44F,
+                               Creature::SpanSkinning::AnchorRigid),
     make_skeleton_minimal_bone("skeleton_minimal_neck",
                                HumanoidBone::Neck,
                                HumanoidBone::Head,
@@ -1124,6 +1139,7 @@ make_skeleton_limb(const char* name,
   p.params.anchor_bone = bone(anchor);
   p.params.tail_bone = bone(tail);
   p.params.radius = radius;
+  p.span_skinning = Creature::SpanSkinning::AnchorRigid;
   p.color_role = Skin;
   p.lod_mask = Creature::k_lod_full;
   return p;

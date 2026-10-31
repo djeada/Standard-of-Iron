@@ -173,8 +173,15 @@ auto ArenaScenarioRunner::start() -> bool {
   return true;
 }
 
+void ArenaScenarioRunner::cancel() {
+  if (m_impl->started && !finished()) {
+    m_impl->report.cancelled = true;
+    m_impl->report.world_digest = Game::Session::world_digest(m_impl->world);
+  }
+}
+
 void ArenaScenarioRunner::update(float simulation_dt) {
-  if (!m_impl->started || m_impl->complete || simulation_dt <= 0.0F) {
+  if (!m_impl->started || finished() || simulation_dt <= 0.0F) {
     return;
   }
   m_impl->elapsed += simulation_dt;
@@ -236,7 +243,7 @@ void ArenaScenarioRunner::observe_commander_presentation(
 
 void ArenaScenarioRunner::observe_rendered_frame(
     const ArenaRenderedFrameTimings& timings) {
-  if (!m_impl->started) {
+  if (!m_impl->started || m_impl->report.cancelled) {
     return;
   }
   ++m_impl->report.rendered_frames;
@@ -338,7 +345,7 @@ auto ArenaScenarioRunner::elapsed_seconds() const noexcept -> float {
 }
 
 auto ArenaScenarioRunner::finished() const noexcept -> bool {
-  return m_impl->complete;
+  return m_impl->complete || m_impl->report.cancelled;
 }
 
 auto ArenaScenarioRunner::report() const noexcept -> const ArenaScenarioReport& {

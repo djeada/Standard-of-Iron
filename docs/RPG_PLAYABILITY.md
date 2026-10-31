@@ -74,7 +74,7 @@ Artifacts live under `artifacts/rpg-gates/`. The comparison baseline is `artifac
 
 Completion, behavior, and performance are separate axes.
 
-`completed: false` means watchdog termination, crash, or missing report. It is `INCOMPLETE`, or `TIMEOUT` when `timeout.txt` identifies the wall-clock watchdog, and it always fails the gate.
+`completed: false` means cancellation, watchdog termination, crash, or missing report. It is `INCOMPLETE`, or `TIMEOUT` when `timeout.txt` identifies the wall-clock watchdog, and it always fails the gate. Manual takeover is explicitly marked `cancelled: true`.
 
 Behavior covers every non-performance issue code and is hardware-independent enough for normal CI enforcement.
 
@@ -142,7 +142,7 @@ Arena expectations convert traces into explicit pass/fail rules. The standard co
 | `CommanderContactCountAtMost`          | One running action produces no more contacts than authored                                        |
 | `CommanderCameraKeepsCommanderInSight` | Opaque geometry cannot remain between the lens and commander beyond the allowed run               |
 
-Each expectation has synthetic positive and negative coverage in `ArenaCommanderMetricsTest`. Retraction itself is not treated as a discontinuity because collision safety requires the camera to shorten quickly when necessary. It is rate-limited to 20 m/s (a third of a metre per frame at 60 Hz) rather than instant: a boom that sweeps across a wall corner while the player turns used to move the lens 2.6 m in one frame, which reads as a camera snap; now it closes over a few frames, and the depenetration step below keeps the eye out of the body in the meantime. Tiny boom reversals below 5 mm are numerical noise rather than pumping.
+Each expectation has synthetic positive and negative coverage in `ArenaCommanderMetricsTest`. Retraction is immediate: easing it allowed the lens to enter a wall during a sharp turn. Outward release remains damped and bounded in metres per second. The close-quarters regression checks clearance on the first frame of a turn at 30, 60, and 144 Hz, including a facade closer than the preferred minimum boom. Tiny boom reversals below 5 mm are numerical noise rather than pumping.
 
 Per-frame geometric budgets scale by `frame_time * 60`, with a minimum scale of 1, so the same physical-rate limit applies to ordinary frames and authored hitch frames.
 
@@ -159,6 +159,16 @@ View angles are intentionally outside the input mutex. `m_view_yaw` and `m_view_
 Focus loss, menu transitions, Arena focus-out, and interactive exit all route through `release_all_input()`. This releases held movement and mouse actions rather than dropping a local key map while leaving simulation state held.
 
 Arena scripted attacks use real press edges. Interactive takeover keeps the viewport as the raw-key owner by making `ArenaViewport::focusNextPrevChild` refuse Tab focus navigation. With `SOI_ARENA_RPG_TRACE=1`, interactive mode logs commander position, view angles, and input-edge counters once per second so manual takeover remains observable.
+
+Interactive takeover cancels the scenario runner before the next scripted command.
+Cancellation freezes its report and does not count as completion or success; the
+world continues to simulate for manual play. Scenario fixture initialization is
+separate from control activation, so entering control does not refill stamina or
+clear posture and guard-break penalties.
+
+Soldier diagnostics record the selected animation clip as well as its semantic
+state. The hold-pose check accepts the authored kneeling bow attack even though its
+state is `AttackRanged`, and still rejects ordinary standing attacks.
 
 ## Presented pose
 
@@ -319,7 +329,9 @@ The lock still writes `m_view_yaw`, which is also the player's stored free-look 
 
 ## Combat input and buffering
 
-One physical press requests one melee attack. Holding the primary attack button does not auto-repeat.
+One physical press requests one melee attack. Holding the primary button queues
+the next sword or spear attack at the authored recovery window and restarts after
+a short delay when idle. Bow stance uses the held button to draw and release.
 
 `CombatIntentQueueComponent` uses an authored 0.15 s buffer and counts every outcome class: accepted, buffered, refused, expired, and overflow. `expire_stale_intents` records expiration, and `push` records overflow when the queue exceeds its supported pending capacity.
 
@@ -330,6 +342,13 @@ Plain attacks play at their authored timeline speed. `resolve_melee_intent` star
 The render-side attack visual may outlive `action_running` by `exit_blend_duration` of 0.10 s; that interval is the blend into the base stance rather than part of the mechanical action.
 
 ## Strike direction and commitment
+
+Only an accepted held bow shot starts a draw. Power shots and evasive shots follow
+their authored release events without entering the held-draw state. Guard, dodge,
+stagger, weapon switching, and completed actions clear the transient bow state
+through `clear_bow_draw`; stopped actions cannot advance a draw or drain stamina.
+The overhold latch remains set until the player releases the button. Camera zoom,
+movement restrictions, and both HUDs read this same state.
 
 `melee_interruption_at` publishes phase-specific `redirect_authority`: full authority in windup, reduced authority in the early strike, and zero authority once the strike is committed. Body yaw follows view yaw only by that authored amount, so the player can aim the startup without rotating an active committed blade arbitrarily through the camera.
 

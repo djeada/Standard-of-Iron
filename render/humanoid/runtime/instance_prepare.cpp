@@ -903,7 +903,8 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
                                   float travel_lateral_share,
                                   float action_link_weight,
                                   bool persistent_valid,
-                                  float persistent_last_sample_time) {
+                                  float persistent_last_sample_time,
+                                  std::optional<std::uint16_t> animation_clip = {}) {
     if (!record_animation_diagnostics || ctx.entity == nullptr) {
       return;
     }
@@ -924,6 +925,7 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
     sample.transient_recovery_override = transient_recovery_override;
     sample.locomotion_state = resolved_anim.movement_state;
     sample.animation_state = animation_state;
+    sample.animation_clip = animation_clip;
     sample.lod = static_cast<std::uint8_t>(lod);
     sample.cull_reason = cull_reason;
     sample.root_position = root_position;
@@ -2152,7 +2154,8 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
                          anim_ctx.gait.turn_amount,
                          anim_ctx.inputs.action_link_weight,
                          anim_ctx.gait.persistent_valid,
-                         anim_ctx.gait.persistent_last_sample_time);
+                         anim_ctx.gait.persistent_last_sample_time,
+                         graph_output.humanoid_selection->clip_id);
   }
 
   RCP::HumanoidShadowStateInputs shadow_inputs{};

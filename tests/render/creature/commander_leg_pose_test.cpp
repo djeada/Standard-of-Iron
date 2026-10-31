@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+#include "animation/rig/humanoid_proportions.h"
 #include "render/creature/bake/creature_bake_recipe.h"
 #include "render/creature/schema/creature_runtime_manifest.h"
 #include "render/humanoid/asset/humanoid_manifest.h"
@@ -46,6 +47,39 @@ auto leg_offset(const std::vector<QMatrix4x4>& palette, bool left) -> LegOffset 
 }
 
 } // namespace
+
+TEST(HumanoidLegPose, HeldPosesKeepBothSegmentsConnectedToTheRigHips) {
+  using HP = Render::GL::HumanProportions;
+  for (auto const profile : Render::Humanoid::humanoid_bake_profiles()) {
+    auto const& recipe = Render::Humanoid::humanoid_bake_recipe(profile);
+    for (std::size_t c = 0; c < recipe.clips.size(); ++c) {
+      auto const& clip = recipe.clips[c];
+      if (!clip.name.starts_with("hold")) {
+        continue;
+      }
+      SCOPED_TRACE(std::string(clip.name));
+      SCOPED_TRACE(static_cast<int>(profile));
+      for (std::uint32_t f = 0; f < clip.frame_count; ++f) {
+        SCOPED_TRACE(f);
+        std::vector<QMatrix4x4> palette;
+        recipe.bake_clip_frame(c, f, palette, nullptr);
+        ASSERT_GE(palette.size(), Render::Humanoid::k_bone_count);
+        for (bool const left : {true, false}) {
+          auto const hip =
+              origin(palette, left ? HumanoidBone::HipL : HumanoidBone::HipR);
+          auto const knee =
+              origin(palette, left ? HumanoidBone::KneeL : HumanoidBone::KneeR);
+          auto const foot =
+              origin(palette, left ? HumanoidBone::FootL : HumanoidBone::FootR);
+          EXPECT_NEAR(
+              (knee - hip).length(), HP::UPPER_LEG_LEN, HP::UPPER_LEG_LEN * 0.031F);
+          EXPECT_NEAR(
+              (foot - knee).length(), HP::LOWER_LEG_LEN, HP::LOWER_LEG_LEN * 0.031F);
+        }
+      }
+    }
+  }
+}
 
 TEST(CommanderLegPose, LungesBendTheKneesForwardOverTheToes) {
   constexpr float k_max_behind = 0.03F;

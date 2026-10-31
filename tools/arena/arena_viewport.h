@@ -352,6 +352,7 @@ protected:
   void paintGL() override;
 
   auto focusNextPrevChild(bool next) -> bool override;
+  bool event(QEvent* event) override;
 
   void keyPressEvent(QKeyEvent* event) override;
   void keyReleaseEvent(QKeyEvent* event) override;
@@ -408,6 +409,7 @@ private:
   [[nodiscard]] auto terrain_review_max_camera_distance() const -> float;
   void update_active_scenario(float simulation_dt);
   void configure_rpg_scenario_commander(Engine::Core::EntityID entity_id);
+  [[nodiscard]] auto activate_rpg_commander(Engine::Core::EntityID entity_id) -> bool;
   [[nodiscard]] auto take_due_presentation_hitch() -> float;
   void publish_animation_clock();
   void publish_commander_presentation_trace();
@@ -482,7 +484,8 @@ private:
   void submit_terrain_layers();
   void submit_world_effects(Render::GL::ResourceManager* res);
   void record_render_profile(Arena::ArenaRenderedFrameTimings& timings) const;
-  void paint_ui_overlays();
+  void paint_ui_overlays(bool show_debug_overlays);
+  [[nodiscard]] auto hide_gameplay_overlays() const -> bool;
   void deliver_capture_frame();
   void render_capture_variants(bool flame_card);
   [[nodiscard]] auto

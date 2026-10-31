@@ -89,6 +89,17 @@ auto ArenaViewport::focusNextPrevChild(bool next) -> bool {
   return false;
 }
 
+bool ArenaViewport::event(QEvent* event) {
+  // Gameplay owns the keyboard while the viewport has focus. Otherwise the
+  // window's Space (pause) and Ctrl+R (regenerate) actions steal RPG input
+  // before keyPressEvent can dispatch it to the commander.
+  if (m_rpg_interactive && event->type() == QEvent::ShortcutOverride) {
+    event->accept();
+    return true;
+  }
+  return QOpenGLWidget::event(event);
+}
+
 void ArenaViewport::keyPressEvent(QKeyEvent* event) {
   if (event == nullptr) {
     return;
@@ -244,6 +255,14 @@ void ArenaViewport::focusOutEvent(QFocusEvent* event) {
 void ArenaViewport::mousePressEvent(QMouseEvent* event) {
   setFocus(Qt::MouseFocusReason);
   if (m_rpg_interactive && m_rpg_commander_controller != nullptr) {
+    if (!m_rpg_mouse_captured) {
+      // The first click after using a panel restores look control without
+      // spending stamina on an unintended strike.
+      setCursor(Qt::BlankCursor);
+      recenter_rpg_mouse();
+      event->accept();
+      return;
+    }
     if (event->button() == Qt::LeftButton) {
       m_rpg_commander_controller->primary_action_down();
     } else if (event->button() == Qt::MiddleButton) {
@@ -270,6 +289,12 @@ void ArenaViewport::mousePressEvent(QMouseEvent* event) {
 void ArenaViewport::mouseMoveEvent(QMouseEvent* event) {
   if (m_rpg_interactive && m_rpg_commander_controller != nullptr) {
     if (m_rpg_mouse_captured) {
+      QPoint const center = mapToGlobal(QPoint(width() / 2, height() / 2));
+      if (center != m_rpg_mouse_center) {
+        recenter_rpg_mouse();
+        event->accept();
+        return;
+      }
       QPoint const global_pos = event->globalPosition().toPoint();
       QPoint const look_delta = global_pos - m_rpg_mouse_center;
       if (!look_delta.isNull()) {

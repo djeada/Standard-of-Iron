@@ -11,6 +11,7 @@
 #include "../building_line_of_sight.h"
 #include "../combat_system/combat_utils.h"
 #include "../combat_system/target_rules.h"
+#include "rpg_bow_draw.h"
 
 namespace Game::Systems::RpgCombat {
 
@@ -199,10 +200,7 @@ auto toggle_weapon_stance(Engine::Core::Entity& commander) -> bool {
                     ? Engine::Core::FpvWeaponStance::Melee
                     : Engine::Core::FpvWeaponStance::Bow;
   aim->stance_resolved = true;
-  aim->draw_stage = Engine::Core::BowDrawStage::None;
-  aim->draw_progress = 0.0F;
-  aim->full_draw_hold = 0.0F;
-  aim->shot_power = 0.0F;
+  clear_bow_draw(*aim);
   return true;
 }
 

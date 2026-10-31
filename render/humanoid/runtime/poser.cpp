@@ -139,11 +139,11 @@ void HumanoidRendererBase::compute_locomotion_pose(uint32_t seed,
   }
 
   QVector3D const hip_l =
-      pose.pelvis_pos +
-      QVector3D(-HP::HIP_LATERAL_OFFSET, HP::HIP_VERTICAL_OFFSET, 0.0F) + hip_delta_l;
+      Render::Humanoid::PosePrimitives::hip_position(pose.pelvis_pos, Side::Left) +
+      hip_delta_l;
   QVector3D const hip_r =
-      pose.pelvis_pos +
-      QVector3D(HP::HIP_LATERAL_OFFSET, HP::HIP_VERTICAL_OFFSET, 0.0F) + hip_delta_r;
+      Render::Humanoid::PosePrimitives::hip_position(pose.pelvis_pos, Side::Right) +
+      hip_delta_r;
 
   auto solve_leg =
       [&](const QVector3D& hip, const QVector3D& foot, Side side) -> QVector3D {
