@@ -375,14 +375,14 @@ The current balance workflow depends on these invariants:
 
 ## Source map
 
-| Concern                  | Source                                                 |
-| ------------------------ | ------------------------------------------------------ |
-| Base troop data          | `assets/data/troops/base.json`                         |
-| Nation overrides         | `assets/data/nations/*.json`                           |
-| Combat/counter constants | `game/systems/combat_system/combat_types.h`            |
-| Fixture data             | `assets/balance/*.json`                                |
-| Simulator                | `tools/balance_sim/`                                   |
-| Test gate                | `tests/tools/balance_sim_test.cpp`                     |
+| Concern                  | Source                                                                                                           |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| Base troop data          | `assets/data/troops/base.json`                                                                                   |
+| Nation overrides         | `assets/data/nations/*.json`                                                                                     |
+| Combat/counter constants | `game/systems/combat_system/combat_types.h`                                                                      |
+| Fixture data             | `assets/balance/*.json`                                                                                          |
+| Simulator                | `tools/balance_sim/`                                                                                             |
+| Test gate                | `tests/tools/balance_sim_test.cpp`                                                                               |
 | Economy explanation      | [ECONOMY_GUIDANCE.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/ECONOMY_GUIDANCE.md)             |
 | Combat pipeline          | [COMBAT_SYSTEM.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/COMBAT_SYSTEM.md)                   |
 | Formation/stance effects | [FORMATION_ARCHITECTURE.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/FORMATION_ARCHITECTURE.md) |

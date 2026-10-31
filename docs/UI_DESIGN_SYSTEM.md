@@ -533,15 +533,15 @@ The current UI design system depends on these invariants:
 
 ## Source map
 
-| Concern                | Source                                |
-| ---------------------- | ------------------------------------- |
-| Design module          | `ui/qml/design/`                      |
-| Module manifest        | `ui/qml/design/qmldir`                |
-| QML resources          | `design_resources.qrc`                |
-| Persistent preferences | `ui/preferences.h` and implementation |
-| Design tests           | `tests/ui/qml/` and related C++ tests |
-| Typography checks      | `scripts/check-typography.py`         |
-| Font architecture      | [TYPOGRAPHY.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/TYPOGRAPHY.md)        |
-| Input/accessibility    | [ACCESSIBILITY.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/ACCESSIBILITY.md)  |
+| Concern                | Source                                                                                         |
+| ---------------------- | ---------------------------------------------------------------------------------------------- |
+| Design module          | `ui/qml/design/`                                                                               |
+| Module manifest        | `ui/qml/design/qmldir`                                                                         |
+| QML resources          | `design_resources.qrc`                                                                         |
+| Persistent preferences | `ui/preferences.h` and implementation                                                          |
+| Design tests           | `tests/ui/qml/` and related C++ tests                                                          |
+| Typography checks      | `scripts/check-typography.py`                                                                  |
+| Font architecture      | [TYPOGRAPHY.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/TYPOGRAPHY.md)       |
+| Input/accessibility    | [ACCESSIBILITY.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/ACCESSIBILITY.md) |
 
 The design system is defined by the current `StandardOfIron.Design` module and the preference/application state that feeds it. Historical issue notes about how individual controls were introduced are not part of the present design contract.
