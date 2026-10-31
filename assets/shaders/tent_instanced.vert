@@ -5,9 +5,7 @@ layout(location = 1) in vec3 a_normal;
 layout(location = 2) in vec4 a_pos_scale;
 layout(location = 3) in vec4 a_color_rot;
 
-layout(std140) uniform FrameData {
-  mat4 u_view_proj;
-};
+#include "frame_data.glsl"
 
 uniform float u_time;
 

@@ -206,7 +206,8 @@ auto Backend::bind_mesh_shader(Shader* active_shader,
 }
 
 auto Backend::supports_static_batch() const noexcept -> bool {
-  return m_building_merged_shader != nullptr && m_mesh_instancing_pipeline != nullptr &&
+  return m_building_merged_shader != nullptr && m_building_ghost_shader != nullptr &&
+         m_mesh_instancing_pipeline != nullptr &&
          m_mesh_instancing_pipeline->is_initialized() &&
          m_directional_shadow_depth_instanced_shader != nullptr;
 }
@@ -240,11 +241,12 @@ void Backend::execute_static_batch(const StaticBuildingBatch& batch,
     context.polygon_offset_enabled = false;
   }
   for (const StaticBatchDraw& draw : batch.draws()) {
+    Shader* const shader =
+        draw.ghost ? m_building_ghost_shader : m_building_merged_shader;
     for (const MergedBuildingRange& range : draw.mesh->ranges) {
       Texture* const texture =
           range.texture != nullptr ? range.texture : draw.default_texture;
-      if (bind_mesh_shader(m_building_merged_shader, texture, 0, false, context)
-              .shader == nullptr) {
+      if (bind_mesh_shader(shader, texture, 0, false, context).shader == nullptr) {
         return;
       }
       m_mesh_instancing_pipeline->draw_merged(

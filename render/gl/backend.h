@@ -225,6 +225,7 @@ private:
   void upload_frame_uniform_buffers(const QMatrix4x4& view_proj,
                                     const DrawQueue& queue,
                                     const Camera& cam);
+  void upload_frame_data(const QMatrix4x4& view_proj, bool depth_only);
 
   void set_ground_plane_uniforms(Shader& shader,
                                  const TerrainSurfaceCmd& single,
@@ -425,6 +426,7 @@ private:
   Shader* m_directional_shadow_depth_shader = nullptr;
   Shader* m_directional_shadow_depth_instanced_shader = nullptr;
   Shader* m_building_merged_shader = nullptr;
+  Shader* m_building_ghost_shader = nullptr;
   Shader* m_directional_shadow_rigged_shader = nullptr;
   Shader::UniformHandle m_shadow_depth_light_vp = Shader::InvalidUniform;
   Shader::UniformHandle m_shadow_depth_model = Shader::InvalidUniform;

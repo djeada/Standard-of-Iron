@@ -1,6 +1,7 @@
 #version 330 core
 #include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
+#include "frame_data.glsl"
 #include "local_lighting.glsl"
 #include "noise.glsl"
 #include "visibility_mask.glsl"
@@ -483,6 +484,9 @@ float smith_visibility(float n_dot_l, float n_dot_v, float roughness) {
 }
 
 void main() {
+  if (soi_depth_only_pass()) {
+    return;
+  }
   int material = int(v_material + 0.5);
   RackSurface surf = rack_surface(material);
 

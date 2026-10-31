@@ -890,18 +890,7 @@ auto GLView::GLRenderer::createFramebufferObject(const QSize& size)
 
   QOpenGLFramebufferObjectFormat fmt;
   fmt.setAttachment(QOpenGLFramebufferObject::Depth);
-  const auto& graphics = Render::GraphicsSettings::instance();
-  int const requested_samples = graphics.presentation().msaa_samples;
-  m_fbo_msaa_samples = requested_samples;
-  m_fbo_graphics_generation = graphics.generation();
-  fmt.setSamples(requested_samples);
-  auto* target = new QOpenGLFramebufferObject(size, fmt);
-  if (requested_samples > 0 && !target->isValid()) {
-    delete target;
-    fmt.setSamples(0);
-    target = new QOpenGLFramebufferObject(size, fmt);
-  }
-  return target;
+  return new QOpenGLFramebufferObject(size, fmt);
 }
 
 void GLView::GLRenderer::synchronize(QQuickFramebufferObject* item) {
@@ -916,13 +905,5 @@ void GLView::GLRenderer::synchronize(QQuickFramebufferObject* item) {
 
   if (m_engine != nullptr) {
     m_pending_commander_speakers = m_engine->commander_message_speakers();
-  }
-
-  const auto& graphics = Render::GraphicsSettings::instance();
-  if (graphics.generation() != m_fbo_graphics_generation) {
-    m_fbo_graphics_generation = graphics.generation();
-    if (graphics.presentation().msaa_samples != m_fbo_msaa_samples) {
-      invalidateFramebufferObject();
-    }
   }
 }

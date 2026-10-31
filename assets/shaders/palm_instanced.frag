@@ -1,6 +1,7 @@
 #version 330 core
 #include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
+#include "frame_data.glsl"
 #include "local_lighting.glsl"
 #include "noise.glsl"
 #include "visibility_mask.glsl"
@@ -21,6 +22,9 @@ out vec4 frag_color;
 const float TWO_PI = 6.28318530718;
 
 void main() {
+  if (soi_depth_only_pass()) {
+    return;
+  }
   if (soi_near_camera_keep(v_world_pos, u_camera_pos, gl_FragCoord.xy) < 0.5) {
     discard;
   }

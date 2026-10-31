@@ -10,9 +10,7 @@ layout(location = 5) in float i_radius;
 layout(location = 6) in float i_alpha;
 layout(location = 7) in vec3 i_color;
 
-layout(std140) uniform FrameData {
-  mat4 u_view_proj;
-};
+#include "frame_data.glsl"
 
 out vec3 v_world_pos;
 out vec3 v_normal;

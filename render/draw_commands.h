@@ -118,6 +118,8 @@ struct TerrainScatterCmd {
   const Material* material = nullptr;
   Buffer* instance_buffer = nullptr;
   std::size_t instance_count = 0;
+  QVector3D bounds_center;
+  float bounds_radius = 0.0F;
 
   GrassBatchParams grass{};
   StoneBatchParams stone{};

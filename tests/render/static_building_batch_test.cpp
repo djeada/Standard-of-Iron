@@ -409,6 +409,27 @@ TEST(StaticBuildingBatch, PreviewsAndGhostsDrawTheBakedMesh) {
   EXPECT_FLOAT_EQ(ghost, 0.5F);
 }
 
+TEST(StaticBuildingBatch, GhostsDrawSeparatelyAfterTheOpaqueBuildings) {
+  const RenderArchetype archetype = baked_two_part_archetype();
+  const std::array<QVector3D, 1> palette{QVector3D(0.8F, 0.1F, 0.1F)};
+  StaticBuildingBatch batch;
+  batch.begin_frame();
+  EXPECT_TRUE(batch.place(instance_at(archetype, 10.0F, palette), 0.5F));
+  EXPECT_TRUE(batch.place(instance_at(archetype, 0.0F, palette)));
+  EXPECT_TRUE(batch.place(instance_at(archetype, 20.0F, palette)));
+  batch.finish_frame();
+
+  ASSERT_EQ(batch.draws().size(), 2U);
+  const StaticBatchDraw& opaque = batch.draws()[0];
+  const StaticBatchDraw& ghost = batch.draws()[1];
+  EXPECT_FALSE(opaque.ghost);
+  EXPECT_EQ(opaque.count, 2U);
+  EXPECT_TRUE(ghost.ghost);
+  EXPECT_EQ(ghost.count, 1U);
+  EXPECT_EQ(ghost.first, 2U);
+  EXPECT_FLOAT_EQ(batch.instances()[ghost.first].state[2], 0.5F);
+}
+
 TEST(StaticBuildingBatch, UnseenSubmitterMarksForwardedInstances) {
   struct Capture final : Render::GL::ISubmitter {
     RenderInstance last;

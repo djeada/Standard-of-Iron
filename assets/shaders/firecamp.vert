@@ -7,9 +7,7 @@ layout(location = 3) in vec4 i_pos_intensity;
 layout(location = 4) in vec4 i_radius_phase;
 layout(location = 5) in vec4 i_ground;
 
-layout(std140) uniform FrameData {
-  mat4 u_view_proj;
-};
+#include "frame_data.glsl"
 uniform float u_time;
 uniform float u_flicker_speed;
 uniform float u_flicker_amount;

@@ -24,6 +24,9 @@ const vec3 k_plinth_tint = vec3(0.66, 0.60, 0.52);
 const vec3 k_lamplight_spill = vec3(0.30, 0.17, 0.07);
 
 float soi_resolve_ghost_alpha(float alpha) {
+#ifdef SOI_OPAQUE_ONLY
+  return alpha;
+#else
   if (alpha <= 1.0) {
     return alpha;
   }
@@ -48,6 +51,7 @@ float soi_resolve_ghost_alpha(float alpha) {
     discard;
   }
   return 1.0;
+#endif
 }
 
 void main() {

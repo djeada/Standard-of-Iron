@@ -236,22 +236,31 @@ auto StaticBuildingBatch::place(const RenderInstance& instance,
 }
 
 void StaticBuildingBatch::finish_frame() {
-  std::sort(m_placed.begin(), m_placed.end(), [](const Placed& lhs, const Placed& rhs) {
-    if (lhs.mesh->id != rhs.mesh->id) {
-      return lhs.mesh->id < rhs.mesh->id;
-    }
-    return std::less<const Texture*>{}(lhs.default_texture, rhs.default_texture);
-  });
+  const auto ghost = [](const Placed& placed) {
+    return placed.record.state[2] > 0.0F;
+  };
+  std::sort(
+      m_placed.begin(), m_placed.end(), [&](const Placed& lhs, const Placed& rhs) {
+        if (ghost(lhs) != ghost(rhs)) {
+          return ghost(rhs);
+        }
+        if (lhs.mesh->id != rhs.mesh->id) {
+          return lhs.mesh->id < rhs.mesh->id;
+        }
+        return std::less<const Texture*>{}(lhs.default_texture, rhs.default_texture);
+      });
   m_instances.clear();
   m_bounds.clear();
   m_draws.clear();
   for (const Placed& placed : m_placed) {
     if (m_draws.empty() || m_draws.back().mesh != placed.mesh ||
-        m_draws.back().default_texture != placed.default_texture) {
+        m_draws.back().default_texture != placed.default_texture ||
+        m_draws.back().ghost != ghost(placed)) {
       m_draws.push_back(
           StaticBatchDraw{.mesh = placed.mesh,
                           .default_texture = placed.default_texture,
-                          .first = static_cast<std::uint32_t>(m_instances.size())});
+                          .first = static_cast<std::uint32_t>(m_instances.size()),
+                          .ghost = ghost(placed)});
     }
     ++m_draws.back().count;
     m_instances.push_back(placed.record);

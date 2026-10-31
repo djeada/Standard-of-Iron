@@ -1,6 +1,7 @@
 #version 330 core
 #include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
+#include "frame_data.glsl"
 #include "ground_readability.glsl"
 #include "local_lighting.glsl"
 #include "visibility_mask.glsl"
@@ -52,6 +53,9 @@ vec3 relief_normal(vec3 N, vec3 p, float strength) {
 }
 
 void main() {
+  if (soi_depth_only_pass()) {
+    return;
+  }
   vec3 N_face = normalize(v_normal);
   vec3 L = environment_primary_direction();
   vec3 V = normalize(u_camera_pos - v_world_pos);

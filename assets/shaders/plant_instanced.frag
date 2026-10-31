@@ -1,6 +1,7 @@
 #version 330 core
 #include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
+#include "frame_data.glsl"
 #include "local_lighting.glsl"
 #include "visibility_mask.glsl"
 
@@ -115,7 +116,9 @@ vec2 sdf_grad(vec2 uv, float type_val, float seed, float step_uv) {
 }
 
 void main() {
-  if (soi_near_camera_keep(v_world_pos, u_camera_pos, gl_FragCoord.xy) < 0.5) {
+  bool depth_only = soi_depth_only_pass();
+  if (!depth_only &&
+      soi_near_camera_keep(v_world_pos, u_camera_pos, gl_FragCoord.xy) < 0.5) {
     discard;
   }
 
@@ -128,6 +131,9 @@ void main() {
 
   if (coverage <= 0.003)
     discard;
+  if (depth_only) {
+    return;
+  }
 
   float dryness = mix(0.35, 0.92, h11(v_seed * 2.7 + v_type * 0.73));
 

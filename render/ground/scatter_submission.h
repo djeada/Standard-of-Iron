@@ -19,6 +19,8 @@ void submit_visible_chunks(Render::GL::Renderer& renderer,
     }
     command.instance_buffer = chunk.buffer.get();
     command.instance_count = chunk.visible_count;
+    command.bounds_center = chunk.center;
+    command.bounds_radius = chunk.radius;
     renderer.terrain_scatter(command);
   }
 }
@@ -42,6 +44,8 @@ void submit_visible_chunks_lod(Render::GL::Renderer& renderer,
     }
     command.instance_buffer = chunk.buffer.get();
     command.instance_count = std::min(budget, chunk.visible_count);
+    command.bounds_center = chunk.center;
+    command.bounds_radius = chunk.radius;
     renderer.terrain_scatter(command);
   }
 }

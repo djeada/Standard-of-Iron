@@ -1247,6 +1247,82 @@ TEST(ShaderSource, LocalLightingBlockMatchesTheUploadedStruct) {
       << "pack_local_lights_std140 writes these in declaration order";
 }
 
+TEST(ShaderSource, FrameDataBlockMatchesTheUploadedSize) {
+  const auto root = find_repo_root();
+  const auto glsl =
+      read_text(root / "assets" / "shaders" / "include" / "frame_data.glsl");
+  ASSERT_FALSE(glsl.empty());
+
+  const auto block = parse_std140_block(glsl, "FrameData", {});
+  ASSERT_FALSE(block.member_names.empty()) << "FrameData block not found";
+  EXPECT_EQ(block.float_count * sizeof(float), Render::GL::k_frame_data_bytes)
+      << "Backend::upload_frame_data fills k_frame_data_bytes; the block must match";
+  const std::vector<std::string> expected_order{"u_view_proj", "u_frame_depth_only"};
+  EXPECT_EQ(block.member_names, expected_order);
+
+  for (const auto& entry :
+       std::filesystem::directory_iterator(root / "assets" / "shaders")) {
+    if (!entry.is_regular_file()) {
+      continue;
+    }
+    EXPECT_EQ(read_text(entry.path()).find("uniform FrameData"), std::string::npos)
+        << entry.path().filename()
+        << " declares its own FrameData block; include frame_data.glsl so every "
+           "program sees the same layout";
+  }
+}
+
+TEST(ShaderSource, ShadowCastingScatterSkipsLightingInTheDepthPass) {
+  const auto root = find_repo_root();
+  const std::array<const char*, 14> casters = {"stone",
+                                               "plant",
+                                               "pine",
+                                               "olive",
+                                               "palm",
+                                               "tent",
+                                               "supply_cart",
+                                               "weapon_rack",
+                                               "ruins",
+                                               "dead_tree",
+                                               "iron_ore",
+                                               "magic_shrine",
+                                               "statue",
+                                               "cursed_gold_vein"};
+  for (const auto* name : casters) {
+    const auto frag = read_text(root / "assets" / "shaders" /
+                                (std::string(name) + "_instanced.frag"));
+    ASSERT_FALSE(frag.empty()) << name;
+    const auto flat = collapse_whitespace(frag);
+    const auto depth_pass = flat.find("soi_depth_only_pass()");
+    const auto colour_output = flat.rfind("frag_color =");
+    ASSERT_NE(depth_pass, std::string::npos)
+        << name
+        << " is drawn into every shadow cascade with its colour shader; without the "
+           "depth-only early return it runs its full lighting per shadow texel";
+    ASSERT_NE(colour_output, std::string::npos) << name;
+    EXPECT_LT(depth_pass, colour_output) << name;
+  }
+}
+
+TEST(ShaderSource, OpaqueMergedBuildingsCompileWithoutTheGhostDiscard) {
+  const auto root = find_repo_root();
+  const auto frag = read_text(root / "assets" / "shaders" / "basic_instanced.frag");
+  ASSERT_FALSE(frag.empty());
+  const auto opaque_branch = frag.find("#ifdef SOI_OPAQUE_ONLY");
+  ASSERT_NE(opaque_branch, std::string::npos);
+  const auto ghost_branch = frag.find("#else", opaque_branch);
+  const auto branch_end = frag.find("#endif", opaque_branch);
+  ASSERT_NE(ghost_branch, std::string::npos);
+  ASSERT_NE(branch_end, std::string::npos);
+  const auto discard = frag.find("discard");
+  ASSERT_NE(discard, std::string::npos);
+  EXPECT_GT(discard, ghost_branch);
+  EXPECT_LT(discard, branch_end)
+      << "a discard anywhere in the opaque building program turns off early depth "
+         "testing for every building pixel; only the ghost variant may dither";
+  EXPECT_EQ(frag.find("discard", discard + 1), std::string::npos);
+}
+
 TEST(ShaderSource, BothSkiesShareOneGradientSoTheRpgCrossFadeStaysClean) {
   const auto root = find_repo_root();
   const auto shader_dir = root / "assets" / "shaders";

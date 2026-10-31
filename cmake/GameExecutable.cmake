@@ -134,6 +134,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
         assets/shaders/include/noise.glsl
         assets/shaders/include/foliage_bump.glsl
         assets/shaders/include/terrain_noise.glsl
+        assets/shaders/include/frame_data.glsl
         assets/shaders/directional_shadow_depth.vert
         assets/shaders/directional_shadow_depth_instanced.vert
         assets/shaders/directional_shadow_rigged.vert

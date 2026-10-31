@@ -185,8 +185,11 @@ auto Backend::initialize() -> bool {
   glGenBuffers(1, &m_frame_ubo);
   note_buffers_created(1);
   glBindBuffer(GL_UNIFORM_BUFFER, m_frame_ubo);
-  glBufferData(GL_UNIFORM_BUFFER, 64, nullptr, GL_DYNAMIC_DRAW);
-  note_buffer_storage(static_cast<std::size_t>(64), false);
+  glBufferData(GL_UNIFORM_BUFFER,
+               static_cast<GLsizeiptr>(k_frame_data_bytes),
+               nullptr,
+               GL_DYNAMIC_DRAW);
+  note_buffer_storage(k_frame_data_bytes, false);
   glBindBufferBase(GL_UNIFORM_BUFFER, k_frame_data_binding_point, m_frame_ubo);
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
   glGenBuffers(1, &m_environment_lighting_ubo);
@@ -342,7 +345,12 @@ auto Backend::initialize() -> bool {
   m_directional_shadow_depth_instanced_shader = m_shader_cache->get_or_load(
       QStringLiteral(":/assets/shaders/directional_shadow_depth_instanced.vert"),
       QStringLiteral(":/assets/shaders/directional_shadow_depth.frag"));
-  m_building_merged_shader = m_shader_cache->get_or_load(
+  m_building_merged_shader =
+      m_shader_cache->load(QStringLiteral("building_merged"),
+                           QStringLiteral(":/assets/shaders/building_merged.vert"),
+                           QStringLiteral(":/assets/shaders/basic_instanced.frag"),
+                           QStringLiteral("#define SOI_OPAQUE_ONLY 1\n"));
+  m_building_ghost_shader = m_shader_cache->get_or_load(
       QStringLiteral(":/assets/shaders/building_merged.vert"),
       QStringLiteral(":/assets/shaders/basic_instanced.frag"));
   m_directional_shadow_rigged_shader = m_shader_cache->get_or_load(
@@ -956,17 +964,6 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
   const StaticBuildingBatch* const static_batch =
       can_instance_shadow_casters ? queue.static_batch() : nullptr;
 
-  const QMatrix4x4 camera_view_projection = view_projection;
-  const auto upload_frame_view_projection = [this](const QMatrix4x4& matrix) {
-    if (m_frame_ubo == 0) {
-      return;
-    }
-    glBindBuffer(GL_UNIFORM_BUFFER, m_frame_ubo);
-    glBufferSubData(GL_UNIFORM_BUFFER, 0, 64, matrix.constData());
-    note_buffer_transfer(static_cast<std::size_t>(64));
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
-  };
-
   const GLuint parked = directional_shadow_fallback_texture();
   glActiveTexture(GL_TEXTURE0 + TextureUnit::directional_shadow_map);
   glBindTexture(GL_TEXTURE_2D_ARRAY, parked);
@@ -1288,7 +1285,7 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
                                            0.0F,
                                            shadow_polygon_offset_enabled};
 
-    upload_frame_view_projection(light_vp);
+    upload_frame_data(light_vp, true);
     m_last_bound_shader = nullptr;
     m_last_bound_texture = nullptr;
     for (const PreparedBatch& prepared : queue.prepared_batches()) {
@@ -1300,14 +1297,15 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
 
       if (scatter == nullptr ||
           scatter->species == TerrainScatterCmd::Species::FireCamp ||
-          scatter->species == TerrainScatterCmd::Species::Grass) {
+          scatter->species == TerrainScatterCmd::Species::Grass ||
+          !cull.accepts(scatter->bounds_center, scatter->bounds_radius)) {
         continue;
       }
       execute_scatter_commands(prepared, shadow_context);
     }
     cascade_near = cascade_far;
   }
-  upload_frame_view_projection(camera_view_projection);
+  upload_frame_data(view_projection, false);
   m_last_bound_shader = nullptr;
   m_last_bound_texture = nullptr;
   glDisable(GL_POLYGON_OFFSET_FILL);
@@ -1366,17 +1364,25 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
   bind_directional_shadow_textures();
 }
 
+void Backend::upload_frame_data(const QMatrix4x4& view_proj, bool depth_only) {
+  if (m_frame_ubo == 0) {
+    return;
+  }
+  std::array<float, k_frame_data_bytes / sizeof(float)> block{};
+  std::memcpy(block.data(), view_proj.constData(), sizeof(float) * 16U);
+  block[16] = depth_only ? 1.0F : 0.0F;
+  glBindBuffer(GL_UNIFORM_BUFFER, m_frame_ubo);
+  glBufferSubData(
+      GL_UNIFORM_BUFFER, 0, static_cast<GLsizeiptr>(k_frame_data_bytes), block.data());
+  note_buffer_transfer(k_frame_data_bytes);
+  glBindBufferBase(GL_UNIFORM_BUFFER, k_frame_data_binding_point, m_frame_ubo);
+  glBindBuffer(GL_UNIFORM_BUFFER, 0);
+}
+
 void Backend::upload_frame_uniform_buffers(const QMatrix4x4& view_proj,
                                            const DrawQueue& queue,
                                            const Camera& cam) {
-  if (m_frame_ubo != 0) {
-    glBindBuffer(GL_UNIFORM_BUFFER, m_frame_ubo);
-    glBufferSubData(GL_UNIFORM_BUFFER, 0, 64, view_proj.constData());
-    note_buffer_transfer(static_cast<std::size_t>(64));
-
-    glBindBufferBase(GL_UNIFORM_BUFFER, k_frame_data_binding_point, m_frame_ubo);
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
-  }
+  upload_frame_data(view_proj, false);
   if (m_environment_lighting_ubo != 0) {
     EnvironmentLightingState frame_lighting = m_environment_lighting;
     frame_lighting.cloud_time = m_animation_time;

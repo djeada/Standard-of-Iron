@@ -64,6 +64,7 @@ struct StaticBatchDraw {
   Texture* default_texture = nullptr;
   std::uint32_t first = 0;
   std::uint32_t count = 0;
+  bool ghost = false;
 };
 
 inline constexpr std::size_t k_merged_building_palette_capacity = 2;

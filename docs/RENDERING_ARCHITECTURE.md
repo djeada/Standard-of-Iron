@@ -189,7 +189,7 @@ Backend/shader capability uses:
 - `High`; and
 - `Ultra`.
 
-A graphics profile contains many decisions beyond shader quality: LOD/culling, shadow cascades, post effects, batching, MSAA, weather density, grass density, and resource budgets.
+A graphics profile contains many decisions beyond shader quality: LOD/culling, shadow cascades, post effects, batching, weather density, grass density, and resource budgets.
 
 `High` is the current default through `k_default_graphics_quality`.
 
@@ -204,7 +204,6 @@ A profile controls:
 - directional-shadow settings;
 - post-processing switches;
 - weather-particle scale;
-- MSAA sample count;
 - template/prewarm budget; and
 - grass density.
 
@@ -223,11 +222,14 @@ Current Low settings include:
 - god rays disabled;
 - ambient occlusion disabled;
 - FXAA disabled;
-- MSAA disabled;
 - weather-particle scale `0.30`; and
 - grass density `0.30`.
 
 Low is therefore not merely “High with smaller textures.” It changes several rendering features and content densities together.
+
+### Anti-aliasing
+
+Every frame renders the world into the post-process scene target, a single-sample float texture, and only the final composite reaches the Qt framebuffer. Multisampling that framebuffer therefore smoothed nothing but one fullscreen triangle while Qt resolved it every frame, so the presets carry no MSAA setting; edges are smoothed by the FXAA pass. Multisampled world edges would need a multisampled scene target and a resolve before the post chain.
 
 ### Low on an old or software GPU
 
@@ -264,7 +266,6 @@ Current Medium settings include:
 - ambient occlusion enabled;
 - FXAA enabled;
 - god rays disabled;
-- 2× MSAA;
 - weather-particle scale `0.60`; and
 - grass density `0.65`.
 
@@ -283,7 +284,6 @@ Current High settings include:
 - god rays enabled;
 - ambient occlusion enabled;
 - FXAA enabled;
-- 4× MSAA;
 - full weather-particle scale; and
 - full grass density.
 
@@ -296,8 +296,7 @@ Ultra keeps the full-detail High envelope and raises the expensive quality tier 
 - Ultra shader tier;
 - the same full creature-detail policy;
 - the same four-cascade directional-shadow envelope;
-- the full post-processing chain;
-- 8× MSAA; and
+- the full post-processing chain; and
 - full weather/grass density.
 
 The exact profile tables in `render/graphics_settings.h` are authoritative. Articles should not preserve older preset descriptions when the code table changes.
@@ -523,6 +522,10 @@ Cost, offscreen Crossing the Alps at 720p on the RTX 5060, three interleaved pai
 
 `building_merged.vert` passes each merged building's instance origin (its ground contact) as `v_ground_height`, and `basic_instanced.frag` darkens and warms wall faces within `k_plinth_height` of it, so houses sit in the soil instead of on it. `basic_instanced.vert` draws individual parts whose origin is not the ground, so it passes `k_no_ground_contact` and the effect is off. Buildings outside the static batch (under construction, damaged, or on a backend without it) do not get the foot.
 
+### Opaque and ghost buildings
+
+The static batch draws first so the terrain behind buildings fails the depth test. That only pays if building pixels themselves pass through early depth testing, and a `discard` anywhere in a program turns early testing off for it. Ghost instances (construction previews and fading buildings, `state[2]` coverage above zero) need the Bayer-dither `discard` in `soi_resolve_ghost_alpha`; opaque instances never take that branch. The batch therefore links `basic_instanced.frag` twice: `building_merged` with `SOI_OPAQUE_ONLY` defined, which compiles the dither out, and a ghost program with it. `StaticBuildingBatch::finish_frame` sorts ghosts after the opaque instances and gives them their own draws. On Siege of Aurelia Magna at 1920x1080 Ultra the building pass fell from 5.5 to 3.3 ms of GPU time.
+
 ## Directional shadows
 
 Directional shadows are configured by `DirectionalShadowSettings` in the active graphics profile.
@@ -539,6 +542,8 @@ Current profile behavior is:
 Cascade fitting, bias, filtering, light-space culling, and sampling are implemented in `render/gl/` and shared shader includes.
 
 `max_rigged_casters_per_cascade` caps how many soldiers, horses and elephants cast into each cascade. For every cascade the pass ranks the rigged commands that fall in that cascade's range by distance to the camera and keeps the nearest ones, across all rigged batches, so the budget is spent on the soldiers that are large on screen; the rest keep only their contact shadow, which is blended against the directional term anyway and reads as the same grounding at that size. A duel or a small fight never reaches the cap, so nothing changes there. On the Sepulcher Bridge's last rising (about 280 soldiers in view at preset High, 1280x720) the unlimited shadow pass cost 4.6 ms average and 7.6 ms at the 95th percentile; at 220 casters it was 3.2 / 3.9, at 120 it was 2.7 / 3.2 and at 60 it was 2.6 / 3.0, where the remaining cost is static casters and terrain. The benchmark report counts the dropped casters in `shadow_rigged_casters_dropped`.
+
+Terrain scatter (trees, plants, rocks and camp props) casts with its own colour shaders, because their vertex stages place and sway each instance. The pass uploads `FrameData` with `u_frame_depth_only` set, and every scatter fragment shader returns through `soi_depth_only_pass()` before its lighting, keeping only the cutouts that shape the shadow: plant leaves and the trunk base of pines and olives. Without that, each 4096² cascade ran the full foliage lighting per shadow texel; on Cannae at 1920x1080 Ultra the scatter shadows cost 4.4 ms of a 5.8 ms shadow pass and 0.8 ms after. Each scatter command also carries its chunk's bounding sphere, so a chunk is drawn only into the cascades whose receivers its shadow can reach; on Crossing the Alps that took scatter shadows from 0.46 to 0.26 ms.
 
 Those implementation sources are the correct place to read exact shadow mechanics. The profile table documents the quality envelope rather than duplicating every internal shadow constant into multiple articles.
 
@@ -710,7 +715,6 @@ This is preferable to re-reading dozens of mutable options for every entity ever
 A quality change may require operations such as:
 
 - shader recompilation/reselection;
-- MSAA target recreation;
 - shadow resource changes;
 - LOD/cull policy changes;
 - post-process chain changes; or
@@ -803,6 +807,28 @@ Renderer behavior is covered by several kinds of checks:
 - screenshot/video/manual review for visual changes that are inherently perceptual.
 
 Arena is especially useful because it can isolate a known authored state without requiring a full campaign path to reproduce it.
+
+### Creature pipeline goldens
+
+`HumanoidGoldenParity` and `QuadrupedGoldenParity` replay fixed poses through the
+creature pipeline and compare every rigged draw with
+`tests/render/creature/golden/*_pipeline_golden.txt` (regenerate with
+`SOI_WRITE_HUMANOID_GOLDEN=1` / `SOI_WRITE_QUADRUPED_GOLDEN=1`, run from the
+repository root). Each `draw` line carries:
+
+- `topology`, a hash of vertex and index counts and the index buffer;
+- `binding`, a hash of each vertex's bone indices and colour role, all integers;
+- `weights`, two moments of the skin weights (the bone-index-weighted mean and the
+  mean square per vertex), compared with the scalar tolerance like the matrices.
+
+The weights used to be rounded to 1/4096 and hashed. That made the golden depend on
+the build type: the bake's weights are dyadic fractions (2308.5/4096, 15/16) and
+float blends, so thousands of them sit on or next to a rounding boundary, and the
+last bit that Debug and Release codegen disagree on decided the hash. CI (Debug) and
+local Release builds recorded different `binding` values, and either golden failed
+on the other build. No rounding grid or offset avoided it (every one tried left
+weights within float noise of a boundary), which is why the weights are compared as
+tolerant moments instead. Any golden change must still pass under both build types.
 
 ## Architectural invariants
 
