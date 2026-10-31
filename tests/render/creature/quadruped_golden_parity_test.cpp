@@ -87,17 +87,38 @@ auto mesh_binding_hash(const Render::GL::RiggedMesh* mesh) -> std::uint64_t {
   for (const auto& vertex : mesh->get_vertices()) {
     hash = fnv1a(hash, vertex.bone_indices.data(), vertex.bone_indices.size());
     hash = fnv1a(hash, &vertex.color_role, sizeof(vertex.color_role));
-    for (float weight : vertex.bone_weights) {
-      const auto quantized = static_cast<std::int32_t>(std::lround(weight * 4096.0F));
-      hash = fnv1a(hash, &quantized, sizeof(quantized));
-    }
   }
   return hash;
+}
+
+struct WeightMoments {
+  double bone_weighted{0.0};
+  double squared{0.0};
+};
+
+auto mesh_weight_moments(const Render::GL::RiggedMesh* mesh) -> WeightMoments {
+  WeightMoments moments;
+  if (mesh == nullptr || mesh->get_vertices().empty()) {
+    return moments;
+  }
+  for (const auto& vertex : mesh->get_vertices()) {
+    for (std::size_t slot = 0; slot < vertex.bone_weights.size(); ++slot) {
+      const double weight = vertex.bone_weights[slot];
+      moments.bone_weighted +=
+          weight * (static_cast<double>(vertex.bone_indices[slot]) + 1.0);
+      moments.squared += weight * weight;
+    }
+  }
+  const auto count = static_cast<double>(mesh->get_vertices().size());
+  moments.bone_weighted /= count;
+  moments.squared /= count;
+  return moments;
 }
 
 struct RiggedRecord {
   std::uint64_t topology{0};
   std::uint64_t binding{0};
+  WeightMoments weights{};
   std::uint32_t bone_count{0};
   std::uint32_t role_color_count{0};
   QVector3D color{};
@@ -124,6 +145,7 @@ public:
     RiggedRecord record;
     record.topology = mesh_topology_hash(cmd.mesh);
     record.binding = mesh_binding_hash(cmd.mesh);
+    record.weights = mesh_weight_moments(cmd.mesh);
     record.bone_count = cmd.bone_count;
     record.role_color_count = cmd.role_color_count;
     record.color = cmd.color;
@@ -510,7 +532,8 @@ void write_case(std::ostream& out,
     key << name << '#' << i;
     out << "  draw " << key.str() << " topology " << record.topology << " binding "
         << record.binding << " bones " << record.bone_count << " roles "
-        << record.role_color_count << '\n';
+        << record.role_color_count << " weights " << record.weights.bone_weighted << ' '
+        << record.weights.squared << '\n';
     out << "  color " << key.str() << ' ' << record.color.x() << ' ' << record.color.y()
         << ' ' << record.color.z() << " wear " << record.wear.x() << ' '
         << record.wear.y() << ' ' << record.wear.z() << ' ' << record.wear.w() << '\n';

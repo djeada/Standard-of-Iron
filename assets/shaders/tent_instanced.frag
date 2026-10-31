@@ -1,6 +1,7 @@
 #version 330 core
 #include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
+#include "frame_data.glsl"
 #include "local_lighting.glsl"
 #include "noise.glsl"
 #include "visibility_mask.glsl"
@@ -60,6 +61,9 @@ vec3 crease_normal(vec3 local_n, float detail) {
 }
 
 void main() {
+  if (soi_depth_only_pass()) {
+    return;
+  }
   float is_canvas = step(k_canvas_threshold, v_material);
   float is_lining = step(k_lining_threshold, v_material) - is_canvas;
   float is_wood =

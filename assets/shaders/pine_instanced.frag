@@ -2,6 +2,7 @@
 #include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "foliage_bump.glsl"
+#include "frame_data.glsl"
 #include "local_lighting.glsl"
 #include "noise.glsl"
 #include "visibility_mask.glsl"
@@ -22,6 +23,7 @@ uniform float u_snow_coverage;
 out vec4 frag_color;
 
 const float k_needle_scatter = 0.45;
+const float k_trunk_base_cut = 0.028;
 
 #ifdef SOI_CYPRESS
 const vec3 k_needle_grain = vec3(36.0, 9.0, 36.0);
@@ -43,6 +45,11 @@ const float PI = 3.14159265359;
 const float TWO_PI = 6.28318530718;
 
 void main() {
+  if (soi_depth_only_pass()) {
+    if (v_tex_coord.y < k_trunk_base_cut)
+      discard;
+    return;
+  }
   if (soi_near_camera_keep(v_world_pos, u_camera_pos, gl_FragCoord.xy) < 0.5) {
     discard;
   }
@@ -157,7 +164,7 @@ void main() {
   color += sun * needle_spec;
   color += sky * rim;
 
-  if (v_tex_coord.y < 0.028)
+  if (v_tex_coord.y < k_trunk_base_cut)
     discard;
 
   color = apply_directional_shadow(color, v_world_pos, geometric_normal);

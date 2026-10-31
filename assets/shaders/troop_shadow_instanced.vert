@@ -9,9 +9,7 @@ layout(location = 4) in vec4 a_instance_model_col1;
 layout(location = 5) in vec4 a_instance_model_col2;
 layout(location = 6) in vec4 a_instance_color_alpha;
 
-layout(std140) uniform FrameData {
-  mat4 u_view_proj;
-};
+#include "frame_data.glsl"
 
 out vec2 v_tex_coord;
 out vec3 v_world_pos;

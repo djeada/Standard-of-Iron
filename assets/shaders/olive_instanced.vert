@@ -8,9 +8,7 @@ layout(location = 3) in vec4 a_pos_scale;
 layout(location = 4) in vec4 a_color_sway;
 layout(location = 5) in vec4 a_rotation;
 
-layout(std140) uniform FrameData {
-  mat4 u_view_proj;
-};
+#include "frame_data.glsl"
 uniform float u_time;
 uniform float u_wind_strength;
 uniform float u_wind_speed;

@@ -94,10 +94,6 @@ struct WeatherBudget {
   float particle_scale = 1.0F;
 };
 
-struct PresentationSettings {
-  int msaa_samples = 4;
-};
-
 struct TemplatePrewarmBudget {
   std::size_t items_per_tick = 160;
   std::uint32_t tick_budget_us = 2000;
@@ -113,7 +109,6 @@ struct GraphicsProfile {
   DirectionalShadowSettings directional_shadows{};
   PostProcessSettings post_process{};
   WeatherBudget weather{};
-  PresentationSettings presentation{};
   TemplatePrewarmBudget prewarm{};
 
   float grass_density = 1.0F;
@@ -151,7 +146,6 @@ inline constexpr std::array<GraphicsProfile, k_graphics_quality_count>
                              .ambient_occlusion = false,
                              .fxaa = false},
             .weather = {.particle_scale = 0.30F},
-            .presentation = {.msaa_samples = 0},
             .prewarm = {.items_per_tick = 96,
                         .tick_budget_us = 1200,
                         .template_cache_budget = 256},
@@ -185,7 +179,6 @@ inline constexpr std::array<GraphicsProfile, k_graphics_quality_count>
                              .ambient_occlusion = true,
                              .fxaa = true},
             .weather = {.particle_scale = 0.60F},
-            .presentation = {.msaa_samples = 2},
             .prewarm = {.items_per_tick = 160,
                         .tick_budget_us = 2000,
                         .template_cache_budget = 512},
@@ -218,7 +211,6 @@ inline constexpr std::array<GraphicsProfile, k_graphics_quality_count>
                              .ambient_occlusion = true,
                              .fxaa = true},
             .weather = {.particle_scale = 1.00F},
-            .presentation = {.msaa_samples = 4},
             .prewarm = {.items_per_tick = 320,
                         .tick_budget_us = 4000,
                         .template_cache_budget = 2048},
@@ -251,7 +243,6 @@ inline constexpr std::array<GraphicsProfile, k_graphics_quality_count>
                              .ambient_occlusion = true,
                              .fxaa = true},
             .weather = {.particle_scale = 1.00F},
-            .presentation = {.msaa_samples = 8},
             .prewarm = {.items_per_tick = 320,
                         .tick_budget_us = 4000,
                         .template_cache_budget = 2048},
@@ -321,9 +312,6 @@ public:
   }
   [[nodiscard]] auto weather_budget() const noexcept -> const WeatherBudget& {
     return profile().weather;
-  }
-  [[nodiscard]] auto presentation() const noexcept -> const PresentationSettings& {
-    return profile().presentation;
   }
   [[nodiscard]] auto post_process() const noexcept -> const PostProcessSettings& {
     return profile().post_process;

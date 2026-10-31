@@ -25,7 +25,6 @@
 #include "render/creature/pipeline/creature_bone_probe.h"
 #include "render/creature/runtime_bake_guard.h"
 #include "render/gl/primitives.h"
-#include "render/graphics_settings.h"
 #include "render/humanoid/schema/skeleton_schema.h"
 #include "render/palette.h"
 #include "render/profiling/frame_profile.h"
@@ -383,16 +382,7 @@ public:
 
     QOpenGLFramebufferObjectFormat format;
     format.setAttachment(QOpenGLFramebufferObject::Depth);
-    const int samples =
-        Render::GraphicsSettings::instance().presentation().msaa_samples;
-    format.setSamples(samples);
-    auto* fbo = new QOpenGLFramebufferObject(target, format);
-    if (samples > 0 && !fbo->isValid()) {
-      delete fbo;
-      format.setSamples(0);
-      fbo = new QOpenGLFramebufferObject(target, format);
-    }
-    return fbo;
+    return new QOpenGLFramebufferObject(target, format);
   }
 
   void synchronize(QQuickFramebufferObject* item) override {

@@ -23,6 +23,7 @@
         <file>assets/shaders/include/character_wear.glsl</file>
         <file>assets/shaders/include/character_shading.glsl</file>
         <file>assets/shaders/include/terrain_noise.glsl</file>
+        <file>assets/shaders/include/frame_data.glsl</file>
         <file>assets/shaders/include/tonemap.glsl</file>
         <file>assets/shaders/include/sky_common.glsl</file>
         <file>assets/shaders/include/quality.glsl</file>

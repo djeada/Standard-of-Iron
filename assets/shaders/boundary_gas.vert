@@ -6,9 +6,7 @@ layout(location = 1) in vec3 a_normal;
 layout(location = 2) in vec2 a_tex_coord;
 
 uniform mat4 u_model;
-layout(std140) uniform FrameData {
-  mat4 u_view_proj;
-};
+#include "frame_data.glsl"
 uniform float u_time;
 
 out vec2 v_tex_coord;

@@ -2,6 +2,7 @@
 #include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "foliage_bump.glsl"
+#include "frame_data.glsl"
 #include "local_lighting.glsl"
 #include "noise.glsl"
 #include "visibility_mask.glsl"
@@ -36,7 +37,14 @@ float noise2_d(vec2 p) {
   return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
 }
 
+const float k_trunk_base_cut = 0.035;
+
 void main() {
+  if (soi_depth_only_pass()) {
+    if (v_tex_coord.y < k_trunk_base_cut)
+      discard;
+    return;
+  }
   if (soi_near_camera_keep(v_world_pos, u_camera_pos, gl_FragCoord.xy) < 0.5) {
     discard;
   }
@@ -184,7 +192,7 @@ void main() {
   color += sun * leaf_spec;
   color += sky * rim;
 
-  if (v_tex_coord.y < 0.035)
+  if (v_tex_coord.y < k_trunk_base_cut)
     discard;
 
   color = apply_directional_shadow(color, v_world_pos, geometric_normal);

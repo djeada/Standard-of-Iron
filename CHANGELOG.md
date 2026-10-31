@@ -9,6 +9,22 @@ may change in any release — see [Save compatibility](#save-compatibility).
 
 ## [Unreleased]
 
+### Changed
+
+- **Ultra spends 8–30% less GPU time per frame at 1080p, with the same
+  picture.** At 1920x1080 Ultra on an RTX 5060, interleaved against the previous
+  build, the GPU frame went from 11.3 to 7.8 ms on Cannae, 15.4 to 12.5 ms on
+  the Siege of Aurelia Magna, 4.8 to 3.6 ms on Hold the Sepulcher Bridge and 7.9
+  to 7.3 ms on Crossing the Alps. Deterministic film frames of the 3D scene are
+  identical before and after. Trees, plants, rocks and camp props cast their
+  shadows with depth-only fragment work instead of their full lighting shader,
+  and each scatter chunk draws only into the cascades its shadow can reach.
+  Opaque buildings use a variant of their shader without the ghost-dither
+  `discard`, so early depth testing works for them again. The MSAA presets (8x
+  Ultra, 4x High, 2x Medium) are gone: the world renders through a
+  single-sample post-process target, so they only multisampled the final
+  composite.
+
 ## [0.3.0] — 2026-10-17
 
 ### Added

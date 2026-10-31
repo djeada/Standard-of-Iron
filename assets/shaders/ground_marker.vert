@@ -8,9 +8,7 @@ layout(location = 3) in vec4 i_center_radius;
 layout(location = 4) in vec4 i_color_alpha;
 layout(location = 5) in vec4 i_shape;
 
-layout(std140) uniform FrameData {
-  mat4 u_view_proj;
-};
+#include "frame_data.glsl"
 
 uniform int u_has_height_tex;
 uniform sampler2D u_height_tex;

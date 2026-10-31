@@ -1,6 +1,7 @@
 #version 330 core
 #include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
+#include "frame_data.glsl"
 #include "local_lighting.glsl"
 #include "noise.glsl"
 #include "visibility_mask.glsl"
@@ -29,6 +30,9 @@ float noise21(vec2 p) {
 }
 
 void main() {
+  if (soi_depth_only_pass()) {
+    return;
+  }
   vec3 normal = normalize(v_normal);
   vec3 local_normal = normalize(v_local_normal);
   vec3 light_dir = environment_primary_direction();

@@ -14,9 +14,7 @@ layout(location = 8) in vec4 a_instance_state;
 layout(location = 9) in vec4 a_part_color_alpha;
 layout(location = 10) in vec4 a_part_material;
 
-layout(std140) uniform FrameData {
-  mat4 u_view_proj;
-};
+#include "frame_data.glsl"
 
 out vec3 v_normal;
 out vec2 v_tex_coord;
