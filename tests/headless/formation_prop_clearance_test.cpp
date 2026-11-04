@@ -38,6 +38,7 @@ using Game::Units::SpawnType;
 
 constexpr int k_owner = 1;
 constexpr float k_soldier_radius = 0.25F;
+constexpr float k_spawn_clearance = 8.0F;
 
 struct PropHit {
   float soldier_seconds{0.0F};
@@ -108,12 +109,44 @@ protected:
     return out;
   }
 
+  static auto spawn_offset(int index) -> QVector3D {
+    return QVector3D(-15.0F + static_cast<float>(index) * 10.0F, 0.0F, -40.0F);
+  }
+
+  static auto target_offset() -> QVector3D { return QVector3D(0.0F, 0.0F, 40.0F); }
+
+  static auto is_fair_march(const QVector3D& patch,
+                            const std::vector<SolidProp>& props) -> bool {
+    auto* pathfinder = NavGrid::get_pathfinder();
+    if (pathfinder == nullptr) {
+      return false;
+    }
+    QVector3D const target = patch + target_offset();
+    auto const goal = pathfinder->world_to_grid(target.x(), target.z());
+    for (int i = 0; i < 4; ++i) {
+      QVector3D const start = patch + spawn_offset(i);
+      if (!pathfinder->can_reach(pathfinder->world_to_grid(start.x(), start.z()),
+                                 goal)) {
+        return false;
+      }
+      for (const auto& solid : props) {
+        if (std::hypot(solid.x - start.x(), solid.z - start.z()) < k_spawn_clearance) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
   auto densest_prop_patch(const std::vector<SolidProp>& props,
                           float half) -> QVector3D {
     QVector3D best;
     int best_count = -1;
     for (const auto& candidate : props) {
       if (std::abs(candidate.x) > 230.0F || std::abs(candidate.z) > 230.0F) {
+        continue;
+      }
+      if (!is_fair_march(QVector3D(candidate.x, 0.0F, candidate.z), props)) {
         continue;
       }
       int count = 0;
@@ -218,14 +251,13 @@ TEST_F(FormationPropClearance, SoldiersMarchAroundSolidProps) {
                                      SpawnType::Swordsman,
                                      SpawnType::Spearman};
   for (int i = 0; i < 4; ++i) {
-    auto const id = spawn(kinds[static_cast<std::size_t>(i)],
-                          patch + QVector3D(-15.0F + i * 10.0F, 0.0F, -40.0F));
+    auto const id = spawn(kinds[static_cast<std::size_t>(i)], patch + spawn_offset(i));
     if (id != 0U) {
       units.push_back(id);
     }
   }
   ASSERT_EQ(units.size(), 4U);
-  QVector3D const target = patch + QVector3D(0.0F, 0.0F, 40.0F);
+  QVector3D const target = patch + target_offset();
   march(units, target);
 
   auto const hit = measure(units, props, 45.0);

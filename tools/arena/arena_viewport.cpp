@@ -392,8 +392,7 @@ void ArenaViewport::paintGL() {
   bool const show_debug_overlays =
       m_scenario_runner == nullptr ||
       !m_scenario_runner->definition().suppress_ui_overlays;
-  // Scripted captures may hide arena diagnostics, but taking control still
-  // needs health, stamina and gameplay help.
+
   if (!clean_view && (show_debug_overlays || m_rpg_interactive)) {
     paint_ui_overlays(show_debug_overlays);
   }

@@ -42,9 +42,6 @@ enum class MeshSkinning : std::uint8_t {
   Authored,
 };
 
-// Endpoint placement and deformation are independent. For cylinder/capsule
-// spans (including custom span meshes), the tail can locate the end without
-// rotating the surface toward the next articulated bone.
 enum class SpanSkinning : std::uint8_t {
   LinearBlend = 0,
   AnchorRigid,

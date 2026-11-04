@@ -531,8 +531,7 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
       }
     }
   }
-  // Collision is a hard constraint: damping retraction lets a quick turn put
-  // the lens inside a wall. Only release back to the preferred boom is eased.
+
   if (!m_smooth_valid || occlusion_target < m_occlusion_fraction) {
     m_occlusion_fraction = occlusion_target;
   } else {

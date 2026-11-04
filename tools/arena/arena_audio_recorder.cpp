@@ -329,6 +329,7 @@ auto AudioRecorder::delivered_peak_ceiling_dbfs() -> float {
 auto AudioRecorder::mux(const QString& clip_path,
                         const QString& wav_path,
                         float gain_db,
+                        float slow_motion,
                         QString* error) -> bool {
   const QString ffmpeg = QStandardPaths::findExecutable(QStringLiteral("ffmpeg"));
   if (ffmpeg.isEmpty()) {
@@ -352,12 +353,20 @@ auto AudioRecorder::mux(const QString& clip_path,
                         QStringLiteral("1:a:0"),
                         QStringLiteral("-c:v"),
                         QStringLiteral("copy")};
-  if (gain_db > 0.0F) {
-    arguments << QStringLiteral("-filter:a")
-              << QStringLiteral("volume=%1dB,alimiter=limit=%2:level=disabled")
-                     .arg(QString::number(gain_db, 'f', 2),
-                          QString::number(k_reel_true_peak_ceiling, 'f', 3));
+  QStringList filters;
+  if (slow_motion > 1.0F) {
+    filters << QStringLiteral("asetrate=%1,aresample=%2")
+                   .arg(QString::number(
+                            static_cast<double>(k_sample_rate) / slow_motion, 'f', 3),
+                        QString::number(k_sample_rate));
   }
+  if (gain_db > 0.0F) {
+    filters << QStringLiteral("volume=%1dB,alimiter=limit=%2:level=disabled")
+                   .arg(QString::number(gain_db, 'f', 2),
+                        QString::number(k_reel_true_peak_ceiling, 'f', 3));
+  }
+  filters << QStringLiteral("apad");
+  arguments << QStringLiteral("-filter:a") << filters.join(QLatin1Char(','));
   arguments << QStringLiteral("-c:a") << QStringLiteral("aac") << QStringLiteral("-b:a")
             << QStringLiteral("256k") << QStringLiteral("-shortest")
             << QStringLiteral("-movflags") << QStringLiteral("+faststart") << muxed;

@@ -254,8 +254,7 @@ make_limb_end_segment(std::string_view name,
   p.params.anchor_bone = bone(segment_bone);
   p.params.tail_bone = bone(joint_bone);
   p.params.head_offset = QVector3D(0.0F, from_along, 0.0F);
-  // The anchor already aims down this limb. The end joint locates the mesh
-  // endpoint, but its independent bend/twist must not deform the limb shaft.
+
   p.span_skinning = Creature::SpanSkinning::AnchorRigid;
   p.params.radius = head_radius;
   p.params.tail_radius = tail_radius;

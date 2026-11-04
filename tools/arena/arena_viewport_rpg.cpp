@@ -50,7 +50,7 @@ auto ArenaViewport::activate_rpg_commander(Engine::Core::EntityID entity_id) -> 
   m_rpg_commander_controller->set_view_pitch(k_commander_rest_view_pitch_degrees);
   commander->fpv_controlled = true;
   Game::Systems::CombatRules::clear_rts_combat_tracking(entity);
-  Game::Systems::ensure_run_stamina(*entity);
+  (void)Game::Systems::ensure_run_stamina(*entity);
   Engine::Core::get_or_add_component<Engine::Core::RpgHealthComponent>(entity)->active =
       true;
   if (m_renderer != nullptr) {
@@ -67,8 +67,7 @@ void ArenaViewport::configure_rpg_scenario_commander(Engine::Core::EntityID enti
   if (!activate_rpg_commander(entity_id)) {
     return;
   }
-  // Fixture setup is separate from taking control: Tab must not refill stamina
-  // or remove posture and guard-break penalties from an ongoing fight.
+
   auto* entity = m_world->get_entity(entity_id);
   auto* commander = entity->get_component<Engine::Core::CommanderComponent>();
   commander->posture = 0.0F;

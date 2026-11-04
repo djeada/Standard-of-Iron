@@ -2476,8 +2476,7 @@ void restore_leg_lengths(Render::GL::HumanoidPose& pose, bool knees_over_toes) {
     } else {
       float const limit = forward * k_max_outward_per_forward;
       bend.setX(lateral_sign * std::clamp(outward, -limit, limit));
-      // A ground-facing knee pole must not inherit the authored knee's vertical
-      // offset: projecting that offset onto a lunging leg can swing it sideways.
+
       bend.setY(0.0F);
     }
     knee = Render::Humanoid::PosePrimitives::solve_knee_ik(

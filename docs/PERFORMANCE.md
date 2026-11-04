@@ -208,6 +208,19 @@ evictions increase with the additional target-detour queries; flushes, region-ma
 rebuilds and dirty-cell work remain zero. Wall-clock timing budgets retain their
 previous measurements because this counter refresh used different hardware.
 
+**Stranded soldiers route around (November 2026).** Since #1615 a formation soldier
+held up for 0.3 s behind an obstacle asks the pathfinder for a way to his slot
+(`aim_at_slot` → `worker_waypoint` in `formation_soldier_walk.cpp`), as builders
+already did. In the 1,000-unit fixture that is 22,950 of the 23,549 individual routes
+over 240 ticks, about 96 a tick. Each search is small (about 14 cells), and successive
+ticks from the same cell hit the cache, so the route-cache hit ratio rose from 0.03
+to 0.94. The counters were refreshed for this work: 1,000/2,000 units now expand
+31,231/50,120 cells, with 2,504/3,967 misses and 2,048/3,584 evictions (the soldiers'
+start cells cycle the 2,048-entry cache). Flushes, region-map rebuilds and dirty-cell
+work stay zero, and the wall-clock budgets are unchanged. Sending a stranded soldier
+toward his unit's centre first, when it is in sight, removed only 12% of the searches,
+so the shortcut was not taken.
+
 **Region map.** A closed gate's cells are treated identically by the grid and by
 `connects()` (one sorted `closed_gate_cells` list), so a gate toggle can never change
 which cells connect. After a navigation change the region map is reused when every

@@ -864,7 +864,7 @@ public:
   auto operator=(const ArenaScenarioRunner&) -> ArenaScenarioRunner& = delete;
 
   [[nodiscard]] auto start() -> bool;
-  // Stop scripted commands and validation without destroying the playable world.
+
   void cancel();
   void update(float simulation_dt);
   void observe_rendered_frame(double frame_time_ms);
