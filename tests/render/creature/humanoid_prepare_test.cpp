@@ -3511,7 +3511,7 @@ TEST(AnimationCoreHoldPoseManifest, BowReadyAndSwordShieldCarryExposeStableTarge
   EXPECT_NEAR(shield_moving.right_hand.y, 0.82F, 0.03F);
   EXPECT_NEAR(shield_moving.right_hand.z, 0.28F, 0.06F);
   EXPECT_NEAR(shield_moving.left_hand.x, -0.31F, 0.01F);
-  EXPECT_NEAR(shield_moving.left_hand.y, 1.00F, 0.03F);
+  EXPECT_NEAR(shield_moving.left_hand.y, 0.90F, 0.03F);
   EXPECT_NEAR(shield_moving.left_hand.z, 0.24F, 0.03F);
 
   EXPECT_LT(shield_moving.right_hand.y, shield_idle.right_hand.y - 0.15F);

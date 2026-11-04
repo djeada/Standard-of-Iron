@@ -720,3 +720,20 @@ TEST(BakedAttachmentWorldPosition, BowUsesGripSocketPose) {
 }
 
 } // namespace
+
+TEST(BakedAttachmentWorldPosition, RomanScutumHandleMeetsTheGripSocket) {
+  auto const spec = Render::GL::roman_scutum_make_static_attachment(0);
+  ASSERT_NE(spec.archetype, nullptr);
+  auto const& frames = Render::Humanoid::humanoid_bind_body_frames();
+  bool found_handle = false;
+  for (auto const& draw : spec.archetype->lods[0].draws) {
+    if (draw.palette_slot != 6U) {
+      continue;
+    }
+    found_handle = true;
+    QVector3D const handle = (spec.local_offset * draw.local_model).map(QVector3D{});
+    EXPECT_LT((handle - frames.grip_l.origin).length(), 0.005F)
+        << "The handle must sit inside the fist, not float beside it";
+  }
+  EXPECT_TRUE(found_handle);
+}
