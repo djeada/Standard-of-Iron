@@ -67,8 +67,7 @@ void ArenaViewport::configure_rpg_scenario_commander(Engine::Core::EntityID enti
   if (!activate_rpg_commander(entity_id)) {
     return;
   }
-  // Fixture setup is separate from taking control: Tab must not refill stamina
-  // or remove posture and guard-break penalties from an ongoing fight.
+
   auto* entity = m_world->get_entity(entity_id);
   auto* commander = entity->get_component<Engine::Core::CommanderComponent>();
   commander->posture = 0.0F;

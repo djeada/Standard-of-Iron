@@ -547,8 +547,7 @@ TEST(HumanoidSpecTest, LimbSurfacesStayRigidWhenTheNextJointBendsOrTwists) {
           auto const baked = bake_rigged_mesh_cpu({&isolated, bind, {}, lod});
           ASSERT_FALSE(baked.vertices.empty());
           ++checked;
-          // Move the whole limb, then flex/twist only the next joint. A wrist
-          // must not bow the forearm; an ankle must not corkscrew the shin.
+
           QMatrix4x4 motion;
           motion.translate(0.2F, -0.1F, 0.3F);
           motion.rotate(38.0F, QVector3D(1.0F, 0.0F, 1.0F));

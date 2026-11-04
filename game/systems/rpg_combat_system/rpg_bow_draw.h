@@ -26,7 +26,6 @@ struct BowDrawTick {
   float shot_power{0.0F};
 };
 
-// Clear the shot without releasing held input or bypassing the overhold latch.
 void clear_bow_draw(Engine::Core::RpgCommanderAimComponent& aim);
 
 [[nodiscard]] auto aim_spread_degrees(const Engine::Core::RpgCommanderAimComponent& aim,
