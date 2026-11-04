@@ -6,6 +6,7 @@
 #include <unordered_set>
 
 #include "animation/ambient_pose_manifest.h"
+#include "animation/hold_pose_manifest.h"
 #include "animation/rig/humanoid_proportions.h"
 #include "game/core/component_economy.h"
 #include "game/core/entity.h"
@@ -1109,4 +1110,58 @@ TEST_F(HumanoidPoseControllerTest, ArcherHoldKneelsDeeperThanSpearmanHold) {
 
   EXPECT_GT(spear_pose.pelvis_pos.y(), archer_pose.pelvis_pos.y())
       << "Spearman (0.875) should kneel less deeply than archer (1.125)";
+}
+
+TEST(ShieldPoseContinuity, SwordCutsKeepTheShieldSupportedBesideTheSwordArm) {
+  for (auto kind : {Animation::HumanoidWeaponAttackKind::SwordSlash,
+                    Animation::HumanoidWeaponAttackKind::CombatSwordSlash}) {
+    for (unsigned variant = 0; variant < 3; ++variant) {
+      Animation::HumanoidWeaponAttackPoseInputs inputs{};
+      inputs.kind = kind;
+      inputs.variant = static_cast<std::uint8_t>(variant);
+      inputs.shoulder_y = HumanProportions::SHOULDER_Y;
+      QVector3D previous;
+      for (int frame = 0; frame <= 120; ++frame) {
+        inputs.attack_phase = static_cast<float>(frame) / 120.0F;
+        auto const sample = Animation::resolve_humanoid_weapon_attack_pose(inputs);
+        QVector3D const hand(
+            sample.left_hand.x, sample.left_hand.y, sample.left_hand.z);
+        EXPECT_LT(hand.x(), -0.20F) << "Shield crosses into the sword arm";
+        EXPECT_LT(hand.y(), inputs.shoulder_y - 0.08F);
+        EXPECT_GT(hand.z(), 0.24F) << "Shield pulled into the torso";
+        EXPECT_LT(hand.z(), 0.42F) << "Shield arm overextended";
+        if (frame > 0) {
+          EXPECT_LT((hand - previous).length(), 0.012F);
+        }
+        previous = hand;
+      }
+    }
+  }
+}
+
+TEST(ShieldPoseContinuity, LoadedWristWalkAndRunCyclesCloseWithoutAPop) {
+  for (bool running : {false, true}) {
+    Animation::HumanoidHeldPoseInputs inputs{};
+    inputs.kind = Animation::HumanoidHeldPoseKind::SwordShieldCarry;
+    inputs.shoulder_y = HumanProportions::SHOULDER_Y;
+    inputs.moving = true;
+    inputs.running = running;
+    auto const first = Animation::resolve_humanoid_held_pose(inputs);
+    QVector3D previous_axis(
+        first.offhand_axis.x, first.offhand_axis.y, first.offhand_axis.z);
+    for (int frame = 1; frame <= 120; ++frame) {
+      inputs.cycle_phase = static_cast<float>(frame) / 120.0F;
+      auto const sample = Animation::resolve_humanoid_held_pose(inputs);
+      QVector3D const axis(
+          sample.offhand_axis.x, sample.offhand_axis.y, sample.offhand_axis.z);
+      EXPECT_LT((axis - previous_axis).length(), 0.003F);
+      EXPECT_GT(axis.normalized().y(), 0.94F);
+      if (frame == 120) {
+        EXPECT_NEAR(sample.left_hand.y, first.left_hand.y, 1.0e-6F);
+        EXPECT_NEAR(sample.left_hand.z, first.left_hand.z, 1.0e-6F);
+        EXPECT_NEAR(sample.offhand_axis.z, first.offhand_axis.z, 1.0e-6F);
+      }
+      previous_axis = axis;
+    }
+  }
 }

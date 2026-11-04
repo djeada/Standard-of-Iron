@@ -140,7 +140,7 @@ auto resolve_humanoid_held_pose(const HumanoidHeldPoseInputs& inputs) noexcept
         0.52F + moving_mix * 0.06F + run_mix * 0.09F - march_mix * 0.30F};
     sample.left_hand = {
         -0.32F - moving_mix * 0.03F + run_mix * 0.07F + march_mix * 0.04F,
-        shoulder_y - 0.02F - moving_mix * 0.03F + run_mix * 0.03F - march_mix * 0.15F,
+        shoulder_y - 0.16F - moving_mix * 0.03F + run_mix * 0.09F - march_mix * 0.12F,
         0.28F + moving_mix * 0.05F + run_mix * 0.13F - march_mix * 0.09F};
     sample.shoulder_r_y_delta = -0.020F * run_mix;
     sample.shoulder_l_y_delta = -0.010F * run_mix;
@@ -233,6 +233,10 @@ auto resolve_humanoid_held_pose(const HumanoidHeldPoseInputs& inputs) noexcept
       sample.right_hand.y -= 0.012F * sway + 0.008F * settle;
       sample.left_hand.z += 0.022F * sway;
       sample.left_hand.y -= 0.008F * settle;
+      // The loaded wrist yields slightly after each step; the shield does not
+      // pump as freely as the sword arm.
+      sample.offhand_axis.z += 0.025F * sway;
+      sample.offhand_axis.x += 0.012F * settle;
       break;
     case HumanoidHeldPoseKind::SpearIdle:
       sample.right_hand.z -= 0.035F * sway;
@@ -253,8 +257,9 @@ auto resolve_humanoid_held_pose(const HumanoidHeldPoseInputs& inputs) noexcept
     case HumanoidHeldPoseKind::SwordShieldCarry:
       sample.right_hand.z -= 0.10F * pump;
       sample.right_hand.y -= 0.035F * pump;
-      sample.left_hand.z += 0.045F * pump;
-      sample.left_hand.y += 0.020F * pump;
+      sample.left_hand.z += 0.030F * pump;
+      sample.left_hand.y += 0.012F * pump;
+      sample.offhand_axis.z += 0.035F * pump;
       break;
     case HumanoidHeldPoseKind::SpearIdle:
       sample.right_hand.z -= 0.045F * pump;

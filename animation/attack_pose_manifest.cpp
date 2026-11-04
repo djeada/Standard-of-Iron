@@ -396,9 +396,11 @@ resolve_sword_pose(const HumanoidWeaponAttackPoseInputs& inputs,
     PoseVec3 hand, offhand, blade;
     float twist, lean, shoulder, step;
   };
-  PoseVec3 const offhand_guard{-0.22F, shoulder_y - 0.02F, 0.18F};
-  PoseVec3 const offhand_loaded{-0.22F, shoulder_y - 0.05F, 0.22F};
-  PoseVec3 const offhand_contact{-0.10F, shoulder_y - 0.12F, 0.46F};
+  // Keep the shield supported on the left with a bent elbow. A sword cut
+  // braces it forward modestly instead of punching it across the sword path.
+  PoseVec3 const offhand_guard{-0.30F, shoulder_y - 0.16F, 0.28F};
+  PoseVec3 const offhand_loaded{-0.31F, shoulder_y - 0.14F, 0.30F};
+  PoseVec3 const offhand_contact{-0.25F, shoulder_y - 0.12F, 0.38F};
   float const drive = combat_variant ? 1.0F : 0.8F;
 
   std::array const keys{

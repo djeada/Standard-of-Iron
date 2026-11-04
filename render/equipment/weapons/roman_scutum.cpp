@@ -45,6 +45,8 @@ constexpr float k_half_height = 0.55F;
 constexpr float k_corner_radius = 0.12F;
 constexpr float k_curve_depth = 0.082F;
 constexpr float k_board_thickness = 0.034F;
+// Leave room for the closed fist behind the board.
+constexpr float k_grip_standoff = 0.065F;
 constexpr float k_boss_plate_half_width = 0.105F;
 constexpr float k_boss_plate_half_height = 0.18F;
 constexpr float k_boss_plate_half_depth = 0.010F;
@@ -276,8 +278,8 @@ auto roman_scutum_archetype() -> const RenderArchetype& {
 
     builder.add_palette_mesh(
         get_unit_cylinder(),
-        cylinder_between(QVector3D(-0.055F, 0.0F, -k_board_thickness - 0.020F),
-                         QVector3D(0.055F, 0.0F, -k_board_thickness - 0.020F),
+        cylinder_between(QVector3D(-0.055F, 0.0F, -k_board_thickness - k_grip_standoff),
+                         QVector3D(0.055F, 0.0F, -k_board_thickness - k_grip_standoff),
                          0.012F),
         k_leather_grip);
 
@@ -296,7 +298,9 @@ auto shield_basis_transform(const QMatrix4x4& parent,
 auto scutum_local_pose() -> QMatrix4x4 {
   QMatrix4x4 pose;
   pose.rotate(90.0F, 0.0F, 1.0F, 0.0F);
-  pose.translate(0.0F, 0.0F, 0.13F);
+  // Put the centre of the rear handle on the grip socket. An arbitrary
+  // clearance here leaves the fist visibly floating behind the handle.
+  pose.translate(0.0F, 0.0F, k_board_thickness + k_grip_standoff);
   return pose;
 }
 
