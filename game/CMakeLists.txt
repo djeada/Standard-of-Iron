@@ -637,6 +637,11 @@ add_library(
 )
 target_include_directories(soi_strategic PUBLIC .)
 target_link_libraries(soi_strategic PUBLIC Qt${QT_VERSION_MAJOR}::Core)
+# Fast math can replace division by the rounding scale with a reciprocal
+# multiply. Keep canonical JSON and definition fingerprints build-independent.
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    set_property(SOURCE strategic/strategic_json.cpp APPEND PROPERTY COMPILE_OPTIONS -fno-fast-math)
+endif()
 # The shared precompiled header pulls in QtGui; this library links Core only.
 set_target_properties(soi_strategic PROPERTIES DISABLE_PRECOMPILE_HEADERS ON)
 
