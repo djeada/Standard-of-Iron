@@ -7,6 +7,8 @@
 #include <cmath>
 #include <functional>
 #include <limits>
+#include <utility>
+#include <vector>
 
 namespace Game::Strategic {
 

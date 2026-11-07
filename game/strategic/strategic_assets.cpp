@@ -8,6 +8,8 @@
 #include <QJsonObject>
 #include <QRegularExpression>
 
+#include <utility>
+
 #include "strategic_json.h"
 
 namespace Game::Strategic {

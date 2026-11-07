@@ -8,6 +8,7 @@
 #include <QWidget>
 
 #include <map>
+#include <utility>
 
 #include "game/strategic/strategic_graph.h"
 #include "game/strategic/strategic_world.h"

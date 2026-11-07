@@ -6,6 +6,7 @@
 #include <QVector>
 
 #include <map>
+#include <utility>
 
 #include "strategic_world.h"
 

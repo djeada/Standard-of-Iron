@@ -1,6 +1,7 @@
 #include "strategic_supply.h"
 
 #include <algorithm>
+#include <utility>
 
 namespace Game::Strategic {
 

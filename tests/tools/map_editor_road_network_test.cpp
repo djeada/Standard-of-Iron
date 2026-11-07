@@ -6,6 +6,7 @@
 #include <QTemporaryDir>
 
 #include <gtest/gtest.h>
+#include <string>
 
 #include "map_data.h"
 #include "road_network.h"

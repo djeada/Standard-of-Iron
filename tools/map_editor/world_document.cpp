@@ -9,6 +9,7 @@
 #include <limits>
 #include <optional>
 #include <tuple>
+#include <utility>
 
 #include "game/strategic/strategic_events.h"
 #include "game/strategic/strategic_json.h"

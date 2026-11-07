@@ -6,6 +6,7 @@
 #include <QVector>
 
 #include <array>
+#include <cstddef>
 #include <map>
 #include <optional>
 

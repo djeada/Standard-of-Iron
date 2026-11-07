@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <cmath>
 #include <numbers>
+#include <utility>
 
 #include "game/strategic/strategic_assets.h"
 #include "game/strategic/strategic_encounter.h"

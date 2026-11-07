@@ -39,6 +39,7 @@
 #include <cmath>
 #include <functional>
 #include <tuple>
+#include <utility>
 
 #include "game/strategic/strategic_assets.h"
 #include "game/strategic/strategic_encounter.h"

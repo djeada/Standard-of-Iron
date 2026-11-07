@@ -7,6 +7,8 @@
 #include <cmath>
 #include <limits>
 #include <map>
+#include <tuple>
+#include <utility>
 
 #include "strategic_encounter.h"
 #include "strategic_events.h"
