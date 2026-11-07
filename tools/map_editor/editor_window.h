@@ -5,6 +5,7 @@
 #include <QPlainTextEdit>
 #include <QWidget>
 
+#include "command_palette.h"
 #include "map_canvas.h"
 #include "map_data.h"
 #include "mission_data.h"
@@ -12,11 +13,17 @@
 #include "tool_panel.h"
 
 class QScrollArea;
+class QStackedWidget;
 class QTabWidget;
+class QTextBrowser;
+class QToolBar;
+class QToolButton;
 
 namespace MapEditor {
 
 class GeneratorPanel;
+class CampaignWorkspace;
+class CommandPalette;
 
 class EditorWindow : public QMainWindow {
   Q_OBJECT
@@ -25,7 +32,17 @@ public:
   explicit EditorWindow(QWidget* parent = nullptr);
   ~EditorWindow() override;
 
+  enum class Workspace {
+    Campaign,
+    Battlefield,
+    Mission
+  };
+
   bool load_file(const QString& file_path);
+  auto open_campaign(const QString& path = {}) -> CampaignWorkspace*;
+  void set_workspace(Workspace workspace);
+  [[nodiscard]] auto workspace() const -> Workspace { return m_workspace; }
+  void open_command_palette();
   void select_sidebar_tab(const QString& title);
 
 private slots:
@@ -50,11 +67,21 @@ private slots:
   void refresh_json_preview();
   void on_mission_map_path_changed(const QString& map_path);
   void validate_mission();
+  void check_road_network();
   void launch_mission_game();
   void launch_mission_arena();
 
 private:
   void setup_ui();
+  auto build_workspace_bar() -> QWidget*;
+  void refresh_workspace_bar();
+  void refresh_campaign_context(const QString& site);
+  void ensure_campaign();
+  void ensure_campaign_context_world();
+  void open_battlefield_from_campaign(const QString& map_path,
+                                      const QString& mission_id,
+                                      const QString& site_id);
+  [[nodiscard]] auto palette_entries() -> QVector<PaletteEntry>;
   void setup_menus();
   void reset_to_new_map();
   void update_window_title();
@@ -84,6 +111,20 @@ private:
   ToolPanel* m_tool_panel = nullptr;
   MissionPanel* m_mission_panel = nullptr;
   GeneratorPanel* m_generator_panel = nullptr;
+  CampaignWorkspace* m_campaign = nullptr;
+  CommandPalette* m_palette = nullptr;
+  QStackedWidget* m_stack = nullptr;
+  QWidget* m_battlefield_page = nullptr;
+  QToolBar* m_main_toolbar = nullptr;
+  QToolButton* m_campaign_tab = nullptr;
+  QToolButton* m_battlefield_tab = nullptr;
+  QToolButton* m_mission_tab = nullptr;
+  QLabel* m_breadcrumb = nullptr;
+  QToolButton* m_problem_badge = nullptr;
+  QTextBrowser* m_campaign_context = nullptr;
+  QAction* m_save_action = nullptr;
+  QString m_anchor_site;
+  Workspace m_workspace = Workspace::Battlefield;
   QTabWidget* m_sidebar_tabs = nullptr;
   QScrollArea* m_mission_scroll = nullptr;
   QLabel* m_feedback_label = nullptr;

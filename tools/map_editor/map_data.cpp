@@ -127,6 +127,32 @@ auto applyLinearEndpoints(const QJsonObject& obj, LinearElement& elem) -> void {
   }
 }
 
+auto keepAuthoredRoadEndpoints(const QJsonObject& obj, LinearElement& elem) -> void {
+  QVector2D start;
+  QVector2D end;
+  if (elem.waypoints.isEmpty() || !obj.value(MapJsonKeys::start).isArray() ||
+      !obj.value(MapJsonKeys::end).isArray() ||
+      !readLinearPoint(obj.value(MapJsonKeys::start).toArray(), start) ||
+      !readLinearPoint(obj.value(MapJsonKeys::end).toArray(), end) || start == end) {
+    return;
+  }
+  constexpr double k_same_point = 1e-3;
+  const auto differs = [](const QPointF& waypoint, const QVector2D& point) {
+    return std::hypot(waypoint.x() - static_cast<double>(point.x()),
+                      waypoint.y() - static_cast<double>(point.y())) > k_same_point;
+  };
+  if (differs(elem.waypoints.first(), start)) {
+    elem.waypoints.prepend(
+        QPointF(static_cast<double>(start.x()), static_cast<double>(start.y())));
+    elem.start = start;
+  }
+  if (differs(elem.waypoints.last(), end)) {
+    elem.waypoints.append(
+        QPointF(static_cast<double>(end.x()), static_cast<double>(end.y())));
+    elem.end = end;
+  }
+}
+
 auto syncLinearWaypointsWithEndpoints(LinearElement& elem) -> void {
   if (elem.waypoints.size() < 2) {
     return;
@@ -1039,6 +1065,7 @@ void MapData::parse_roads_array(const QJsonArray& arr) {
     elem.width = static_cast<float>(obj[MapJsonKeys::width].toDouble(3.0));
     elem.style = obj[MapJsonKeys::style].toString("default");
     elem.waypoints = waypoints_from_json(obj[MapJsonKeys::waypoints].toArray());
+    keepAuthoredRoadEndpoints(obj, elem);
 
     const QStringList known_keys = {MapJsonKeys::start,
                                     MapJsonKeys::end,

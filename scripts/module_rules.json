@@ -72,6 +72,16 @@
       ],
       "may_use": ["domain_types"]
     },
+    "strategic": {
+      "targets": ["soi_strategic"],
+      "_comment": [
+        "The strategic world above the battlefield: regions, sites, routes,",
+        "armies, supply and campaign events. Plain data and graph queries; it",
+        "uses nothing else in game/ so tools read it without the simulation."
+      ],
+      "paths": ["game/strategic/"],
+      "may_use": []
+    },
     "unit_catalog": {
       "targets": ["soi_world"],
       "_comment": [

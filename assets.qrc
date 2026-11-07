@@ -181,6 +181,7 @@
         <file>assets/campaign_map/hannibal_path.json</file>
         <file>assets/campaign_map/campaign_state.json</file>
         <file>assets/campaign_map/valid_provinces.json</file>
+        <file>assets/world/second_punic_war.json</file>
 
         <!-- Mission files -->
         <file>assets/missions/battle_of_trebia.json</file>

@@ -10,7 +10,10 @@ add_executable(content_validator main.cpp)
 # copies of every symbol in the link, resolved in favour of whichever the linker
 # reached first -- so the validator could pass against a translation unit built
 # with different flags from the one the game ships.
-target_link_libraries(content_validator PRIVATE Qt${QT_VERSION_MAJOR}::Core soi_missions)
+target_link_libraries(
+    content_validator
+    PRIVATE Qt${QT_VERSION_MAJOR}::Core soi_missions soi_strategic
+)
 
 target_include_directories(content_validator PRIVATE ${CMAKE_SOURCE_DIR})
 

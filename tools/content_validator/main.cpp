@@ -6,6 +6,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QSet>
 
 #include <algorithm>
 #include <cmath>
@@ -22,6 +23,8 @@
 #include "game/formation/formation_data_loader.h"
 #include "game/mission/commander_voice_bank.h"
 #include "game/session/session_context.h"
+#include "game/strategic/strategic_assets.h"
+#include "game/strategic/strategic_validation.h"
 #include "game/units/commander_catalog.h"
 #include "game/units/troop_catalog_loader.h"
 #include "game/units/troop_type.h"
@@ -662,6 +665,51 @@ void printResults(const ValidationResult& result, const QString& file_name) {
 
 } // namespace
 
+auto validateStrategicWorlds(const QString& assets_dir) -> bool {
+  const QDir world_dir = QDir(assets_dir).filePath(QStringLiteral("world"));
+  if (!world_dir.exists()) {
+    std::cout << "\nNo world directory found (this is OK)" << '\n';
+    return true;
+  }
+  const QStringList files =
+      world_dir.entryList({QStringLiteral("*.json")}, QDir::Files);
+  std::cout << "\nValidating " << files.size() << " strategic world(s)..." << '\n';
+  QSet<QString> commander_ids;
+  for (const auto& definition : Game::Units::all_commander_definitions()) {
+    commander_ids.insert(QString::fromStdString(definition.id));
+  }
+  for (const auto& definition : Game::Units::historical_commander_definitions()) {
+    commander_ids.insert(QString::fromStdString(definition.id));
+  }
+  const QString root = QFileInfo(assets_dir).absoluteDir().absolutePath();
+  bool all_valid = true;
+  for (const auto& file : files) {
+    QString error;
+    auto bundle =
+        Game::Strategic::load_world_bundle(world_dir.filePath(file), root, &error);
+    ValidationResult result;
+    if (!bundle.has_value()) {
+      result.addError(QString("Strategic world %1: %2").arg(file, error));
+    } else {
+      bundle->context.commander_catalog_ids = commander_ids;
+      const auto report =
+          Game::Strategic::validate_world(bundle->definition, bundle->context);
+      for (const auto& issue : report.issues) {
+        const QString line = QString("Strategic world %1: [%2] %3: %4")
+                                 .arg(file, issue.code, issue.entity, issue.message);
+        if (issue.severity == Game::Strategic::Severity::Error) {
+          result.addError(line);
+        } else if (issue.severity == Game::Strategic::Severity::Warning) {
+          result.addWarning(line);
+        }
+      }
+    }
+    printResults(result, QString("world/") + file);
+    all_valid = all_valid && result.success;
+  }
+  return all_valid;
+}
+
 auto validateFormationContent(const QString& assets_dir) -> bool {
   const QString root = QDir(assets_dir).filePath(QStringLiteral("data/formations"));
   if (!QDir(root).exists()) {
@@ -824,6 +872,10 @@ auto main(int argc, char* argv[]) -> int {
   }
 
   if (!validateFormationContent(assets_dir)) {
+    all_valid = false;
+  }
+
+  if (!validateStrategicWorlds(assets_dir)) {
     all_valid = false;
   }
 
