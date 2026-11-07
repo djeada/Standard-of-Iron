@@ -19,6 +19,29 @@
 #include "tools/arena/arena_scenarios.h"
 #include "tools/arena/arena_structure_lifecycle_scenarios.h"
 
+TEST(ArenaScenariosTest, HarmlessStructureMatchupsNeverRequireRetaliation) {
+  using Expect = Arena::ArenaExpectationKind;
+  for (auto const* id : {"matchup_swordsman_vs_home",
+                         "matchup_spearman_vs_barracks",
+                         "matchup_elephant_vs_home",
+                         "matchup_elephant_vs_barracks"}) {
+    auto const* scenario = Arena::Scenarios::find_definition(QString::fromLatin1(id));
+    ASSERT_NE(scenario, nullptr) << id;
+    bool protects_attacker = false;
+    for (auto const& check : scenario->expectations) {
+      protects_attacker |= check.kind == Expect::GroupHealthUnchanged &&
+                           check.group == QStringLiteral("attacker");
+      EXPECT_FALSE(check.kind == Expect::GroupHealthReduced &&
+                   check.group == QStringLiteral("attacker"))
+          << id;
+      EXPECT_FALSE(check.kind == Expect::AttackHasVisibleContact &&
+                   check.group == QStringLiteral("defender"))
+          << id;
+    }
+    EXPECT_TRUE(protects_attacker) << id;
+  }
+}
+
 TEST(ArenaScenariosTest, MagicReviewsAssertBodyContinuityAsWellAsProjectileTiming) {
   using Expect = Arena::ArenaExpectationKind;
   for (auto const* id : {"sepulcher_spell_fx_showcase", "sepulcher_fireball_review"}) {

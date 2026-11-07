@@ -75,6 +75,36 @@ void keep_directive_off_facade(const EntityFrame& frame, Soldier& directive) {
   }
 }
 
+void keep_walk_off_facade(const EntityFrame& frame, Soldier& directive) {
+  auto const& structure = frame.structure;
+  if (!directive.alive || !directive.world_motion_valid ||
+      !structure.attacks_structure || frame.actor == nullptr) {
+    return;
+  }
+  QVector3D const position(
+      directive.world_x, frame.actor->position.y, directive.world_z);
+  auto const& normal = structure.facade.outward_normal;
+  float const gap = QVector3D::dotProduct(position - structure.facade.point, normal);
+  float const body_gap = structure_attack_profile(&frame.entity).contact_clearance *
+                         k_facade_body_gap_fraction;
+  if (gap >= body_gap) {
+    return;
+  }
+  QVector3D const correction = normal * (body_gap - gap);
+  directive.world_x += correction.x();
+  directive.world_z += correction.z();
+  auto const [local_x, local_z] =
+      world_vector_to_local(*frame.actor, correction.x(), correction.z());
+  directive.local_x += local_x;
+  directive.local_z += local_z;
+  float const inward =
+      directive.world_velocity_x * normal.x() + directive.world_velocity_z * normal.z();
+  if (inward < 0.0F) {
+    directive.world_velocity_x -= normal.x() * inward;
+    directive.world_velocity_z -= normal.z() * inward;
+  }
+}
+
 auto seed_directive(const EntityFrame& frame, const SlotContext& slot) -> Soldier {
   auto const& original = slot.original;
   auto const* live = slot.live;
@@ -1050,6 +1080,7 @@ auto build_slot_directive(const EntityFrame& frame,
   track_relocation(frame, slot, directive);
   keep_directive_off_facade(frame, directive);
   walk_slot(frame, slot, previous_soldiers, directive);
+  keep_walk_off_facade(frame, directive);
   pin_to_wall_walk(frame, slot, previous_soldiers, directive);
   pin_to_raft(frame, slot, directive);
   return directive;

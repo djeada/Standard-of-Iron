@@ -278,7 +278,8 @@ auto matchup(const Matchup& pair) -> ArenaScenarioDefinition {
            troop == Troop::Swordsman || troop == Troop::Spearman ||
            troop == Troop::MountedSwordsman || troop == Troop::HorseSpearman;
   };
-  bool const mixed_melee = !wolves && melee_fighter(pair.attacker.troop) &&
+  bool const mixed_melee = !wolves && !defender_is_structure &&
+                           melee_fighter(pair.attacker.troop) &&
                            (pair.defender.troop == Troop::Swordsman ||
                             pair.defender.troop == Troop::Spearman);
   if (mixed_melee) {
@@ -319,6 +320,56 @@ auto matchup(const Matchup& pair) -> ArenaScenarioDefinition {
   return s;
 }
 
+auto catapult_range_matchup(bool close) -> ArenaScenarioDefinition {
+  auto s = definition(
+      close ? QStringLiteral("matchup_catapult_vs_spearman_close")
+            : QStringLiteral("matchup_catapult_vs_spearman_far"),
+      close ? QStringLiteral("Matchup: Catapult Under Melee Attack")
+            : QStringLiteral("Matchup: Catapult At Firing Range"),
+      close ? QStringLiteral("A spearman attacks a catapult at arm's length. The "
+                             "crew must not keep loading or fire into the melee.")
+            : QStringLiteral("A catapult fires repeatedly at a distant held spearman. "
+                             "Damage must arrive with the stone's impact."),
+      12.0F,
+      {close ? 10.0F : 24.0F, 40.0F, 35.0F});
+  s.camera_focus = QVector3D(0.0F, 0.0F, close ? 1.0F : 8.0F);
+  s.suppress_terrain_scatter = true;
+  s.select_spawned_units = false;
+  s.suppress_spawn_anchor = true;
+  s.suppress_ui_overlays = true;
+  s.collect_animation_diagnostics = true;
+
+  QString const engine = QStringLiteral("catapult");
+  QString const infantry = QStringLiteral("spearman");
+  auto target = make_side(k_spearman,
+                          infantry,
+                          k_defender_owner,
+                          {0.0F, 0.0F, close ? 2.5F : 16.0F},
+                          180.0F);
+  target.individuals_per_unit = 1;
+  s.groups = {make_side(k_catapult, engine, k_attacker_owner, {}, 0.0F), target};
+  s.steps = {at(0.0F, Command::Attack, engine, infantry)};
+  if (close) {
+    s.steps.push_back(at(0.0F, Command::Attack, infantry, engine));
+    s.expectations.push_back(expectation(Expect::GroupHealthReduced, engine));
+    s.expectations.push_back(expectation(Expect::GroupHealthUnchanged, infantry));
+    s.expectations.push_back(expectation(Expect::AttackAnimationObserved, infantry));
+  } else {
+    s.steps.push_back(at(0.0F, Command::Hold, infantry));
+    s.expectations.push_back(expectation(Expect::GroupHealthReduced, infantry));
+    s.expectations.push_back(
+        expectation(Expect::ProjectileImpactSynchronized, engine, infantry));
+    s.expectations.push_back(expectation(Expect::GroupHealthUnchanged, engine));
+    auto held =
+        expectation(Expect::GroupReachedDestination, infantry, {}, 0.0F, 0.0F, 0.5F);
+    held.position = target.origin;
+    s.expectations.push_back(held);
+  }
+  add_transition_continuity(s, {infantry});
+  add_motion_smoothness(s, {engine, infantry});
+  return s;
+}
+
 } // namespace
 
 auto build_matchup_matrix_definitions() -> std::vector<ArenaScenarioDefinition> {
@@ -330,6 +381,8 @@ auto build_matchup_matrix_definitions() -> std::vector<ArenaScenarioDefinition> 
   for (auto const& engine : {k_ram, k_catapult, k_ballista, k_siege_tower}) {
     result.push_back(siege_wreck(engine));
   }
+  result.push_back(catapult_range_matchup(true));
+  result.push_back(catapult_range_matchup(false));
   return result;
 }
 
