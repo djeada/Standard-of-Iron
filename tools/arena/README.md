@@ -437,6 +437,11 @@ Commander and elephant matchups against swordsmen and spearmen also require
 visible infantry strikes and damage on both sides. The commander must show
 repeated attack cycles, so an idle pose cannot pass just because health decreased.
 
+`matchup_catapult_vs_spearman_close` orders both sides to attack at arm's length:
+the spearman must damage the engine without taking point-blank siege damage.
+`matchup_catapult_vs_spearman_far` holds the spearman at firing range and checks
+that the stone's impact, rather than its launch, applies the damage.
+
 ## Local batch inspection
 
 Batch mode intentionally opens the real Arena OpenGL window. It requires a

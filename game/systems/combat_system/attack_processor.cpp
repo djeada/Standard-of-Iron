@@ -173,7 +173,9 @@ auto reached_by_range_or_contact(const Attacker& attacker,
                                  Engine::Core::Entity* target,
                                  float range) -> bool {
   bool reached = is_in_range(attacker.entity, target, range);
-  if (!reached || is_ranged_mode(attacker.attack)) {
+  // Building reach is measured at its facade by is_in_range. Formation contact
+  // geometry describes troop bodies and would require entering large buildings.
+  if (!reached || is_ranged_mode(attacker.attack) || is_building(target)) {
     return reached;
   }
   auto const geometry = FormationCombat::contact_geometry(*attacker.entity, *target);

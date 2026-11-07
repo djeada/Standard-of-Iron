@@ -205,6 +205,29 @@ TEST_P(StructureMeleeClearance, AttackersStandOutsideTheDrawnBuilding) {
   EXPECT_LT(clipping.worst_depth, 0.15F) << GetParam().name;
 }
 
+TEST_P(StructureMeleeClearance, FrontalAttackReachesTheFacadeAndDealsDamage) {
+  EntityID const structure =
+      spawn(GetParam().structure, k_defender_owner, QVector3D(0.5F, 0.0F, 6.5F));
+  ASSERT_NE(structure, 0U);
+  NavGrid::get_pathfinder()->update_navigation_grid();
+  EntityID const attacker =
+      spawn(GetParam().attacker, k_attacker_owner, QVector3D(0.5F, 0.0F, -5.5F));
+  ASSERT_NE(attacker, 0U);
+  auto* health = m_session->world().try_get<Engine::Core::UnitComponent>(structure);
+  ASSERT_NE(health, nullptr);
+  int const initial_health = health->health;
+
+  order_attack(m_session->world(), attacker, structure);
+  Clipping const clipping = measure({attacker}, drawn_rect(structure), 12.0);
+
+  health = m_session->world().try_get<Engine::Core::UnitComponent>(structure);
+  ASSERT_NE(health, nullptr);
+  EXPECT_LT(health->health, initial_health)
+      << GetParam().name << ": a formation reached the building but never struck it";
+  EXPECT_LT(clipping.soldier_seconds, 0.5F);
+  EXPECT_LT(clipping.worst_depth, 0.15F);
+}
+
 TEST_P(StructureMeleeClearance, AMeleeBesideTheBuildingStaysOutOfIt) {
   EntityID const structure =
       spawn(GetParam().structure, k_defender_owner, QVector3D(0.0F, 0.0F, 0.0F));
